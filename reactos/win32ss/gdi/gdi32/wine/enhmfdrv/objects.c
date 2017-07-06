@@ -34,7 +34,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(enhmetafile);
  */
 static UINT EMFDRV_AddHandle( PHYSDEV dev, HGDIOBJ obj )
 {
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE *)dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
     UINT index;
 
     for(index = 0; index < physDev->handles_size; index++)
@@ -59,7 +59,7 @@ static UINT EMFDRV_AddHandle( PHYSDEV dev, HGDIOBJ obj )
  */
 static UINT EMFDRV_FindObject( PHYSDEV dev, HGDIOBJ obj )
 {
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE*) dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
     UINT index;
 
     for(index = 0; index < physDev->handles_size; index++)
@@ -77,7 +77,7 @@ static UINT EMFDRV_FindObject( PHYSDEV dev, HGDIOBJ obj )
 BOOL EMFDRV_DeleteObject( PHYSDEV dev, HGDIOBJ obj )
 {
     EMRDELETEOBJECT emr;
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE*) dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
     UINT index;
     BOOL ret = TRUE;
 
@@ -136,8 +136,11 @@ DWORD EMFDRV_CreateBrushIndirect( PHYSDEV dev, HBRUSH hBrush )
     case BS_DIBPATTERN:
       {
         EMRCREATEDIBPATTERNBRUSHPT *emr;
-        char buffer[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)]; // ros!
-        //char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+#ifdef __REACTOS__
+        char buffer[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)]; // ros
+#else
+        char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+#endif
         BITMAPINFO *info = (BITMAPINFO *)buffer;
         DWORD info_size;
         void *bits;
@@ -162,7 +165,7 @@ DWORD EMFDRV_CreateBrushIndirect( PHYSDEV dev, HBRUSH hBrush )
             emr->emr.iType = EMR_CREATEMONOBRUSH;
             usage = DIB_PAL_MONO;
             /* FIXME: There is an extra DWORD written by native before the BMI.
-             *        Not sure what its meant to contain.
+             *        Not sure what it's meant to contain.
              */
             emr->offBmi = sizeof( EMRCREATEDIBPATTERNBRUSHPT ) + sizeof(DWORD);
             emr->cbBmi = sizeof( BITMAPINFOHEADER );
@@ -201,7 +204,7 @@ DWORD EMFDRV_CreateBrushIndirect( PHYSDEV dev, HBRUSH hBrush )
  */
 HBRUSH EMFDRV_SelectBrush( PHYSDEV dev, HBRUSH hBrush, const struct brush_pattern *pattern )
 {
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE*)dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
     EMRSELECTOBJECT emr;
     DWORD index;
     int i;
@@ -280,7 +283,7 @@ static BOOL EMFDRV_CreateFontIndirect(PHYSDEV dev, HFONT hFont )
  */
 HFONT EMFDRV_SelectFont( PHYSDEV dev, HFONT hFont, UINT *aa_flags )
 {
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE*)dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
     EMRSELECTOBJECT emr;
     DWORD index;
     int i;
@@ -365,7 +368,7 @@ static DWORD EMFDRV_CreatePenIndirect(PHYSDEV dev, HPEN hPen)
  */
 HPEN EMFDRV_SelectPen(PHYSDEV dev, HPEN hPen, const struct brush_pattern *pattern )
 {
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE*)dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
     EMRSELECTOBJECT emr;
     DWORD index;
     int i;
@@ -433,7 +436,7 @@ static DWORD EMFDRV_CreatePalette(PHYSDEV dev, HPALETTE hPal)
  */
 HPALETTE EMFDRV_SelectPalette( PHYSDEV dev, HPALETTE hPal, BOOL force )
 {
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE*)dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
     EMRSELECTPALETTE emr;
     DWORD index;
 
@@ -463,12 +466,17 @@ found:
  */
 COLORREF EMFDRV_SetDCBrushColor( PHYSDEV dev, COLORREF color )
 {
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE*)dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
+#ifndef __REACTOS__
+    DC *dc = get_physdev_dc( dev );
+#endif
     EMRSELECTOBJECT emr;
     DWORD index;
-
+#ifdef __REACTOS__
     if (GetCurrentObject( dev->hdc, OBJ_BRUSH ) != GetStockObject( DC_BRUSH )) return color;
-
+#else
+    if (dc->hBrush != GetStockObject( DC_BRUSH )) return color;
+#endif
     if (physDev->dc_brush) DeleteObject( physDev->dc_brush );
     if (!(physDev->dc_brush = CreateSolidBrush( color ))) return CLR_INVALID;
     if (!(index = EMFDRV_CreateBrushIndirect(dev, physDev->dc_brush ))) return CLR_INVALID;
@@ -484,13 +492,18 @@ COLORREF EMFDRV_SetDCBrushColor( PHYSDEV dev, COLORREF color )
  */
 COLORREF EMFDRV_SetDCPenColor( PHYSDEV dev, COLORREF color )
 {
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE*)dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
+#ifndef __REACTOS__
+    DC *dc = get_physdev_dc( dev );
+#endif
     EMRSELECTOBJECT emr;
     DWORD index;
     LOGPEN logpen = { PS_SOLID, { 0, 0 }, color };
-
+#ifdef __REACTOS__
     if (GetCurrentObject( dev->hdc, OBJ_PEN ) != GetStockObject( DC_PEN )) return color;
-
+#else
+    if (dc->hPen != GetStockObject( DC_PEN )) return color;
+#endif
     if (physDev->dc_pen) DeleteObject( physDev->dc_pen );
     if (!(physDev->dc_pen = CreatePenIndirect( &logpen ))) return CLR_INVALID;
     if (!(index = EMFDRV_CreatePenIndirect(dev, physDev->dc_pen))) return CLR_INVALID;

@@ -1038,8 +1038,21 @@ BOOL
 WINAPI
 GdiAddGlsBounds(HDC hdc,LPRECT prc)
 {
-    //FIXME: Lookup what 0x8000 means
-    return NtGdiSetBoundsRect(hdc, prc, 0x8000 |  DCB_ACCUMULATE ) ? TRUE : FALSE;
+    return NtGdiSetBoundsRect(hdc, prc, DCB_WINDOWMGR|DCB_ACCUMULATE ) ? TRUE : FALSE;
+}
+
+BOOL
+WINAPI
+GetBoundsRectAlt(HDC hdc,LPRECT prc,UINT flags)
+{
+    return NtGdiGetBoundsRect(hdc, prc, flags);
+}
+
+BOOL
+WINAPI
+SetBoundsRectAlt(HDC hdc,LPRECT prc,UINT flags)
+{
+    return NtGdiSetBoundsRect(hdc, prc, flags );
 }
 
 /*

@@ -2,6 +2,7 @@
  * Enhanced MetaFile driver dc value functions
  *
  * Copyright 1999 Huw D M Davies
+ * Copyright 2016 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,10 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
 #include "enhmfdrv/enhmetafiledrv.h"
-#include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(enhmetafile);
+/* get the emf physdev from the path physdev */
+static inline PHYSDEV get_emfdev( PHYSDEV path )
+{
+    return &CONTAINING_RECORD( path, EMFDRV_PDEVICE, pathdev )->dev;
+}
+
+static const struct gdi_dc_funcs emfpath_driver;
 
 INT EMFDRV_SaveDC( PHYSDEV dev )
 {
@@ -41,8 +48,8 @@ INT EMFDRV_SaveDC( PHYSDEV dev )
 BOOL EMFDRV_RestoreDC( PHYSDEV dev, INT level )
 {
     PHYSDEV next = GET_NEXT_PHYSDEV( dev, pRestoreDC );
-    EMFDRV_PDEVICE* physDev = (EMFDRV_PDEVICE*)dev;
-    DC *dc = get_dc_ptr( dev->hdc );
+    EMFDRV_PDEVICE* physDev = get_emf_physdev( dev );
+    DC *dc = get_physdev_dc( dev );
     EMRRESTOREDC emr;
     BOOL ret;
 
@@ -53,7 +60,6 @@ BOOL EMFDRV_RestoreDC( PHYSDEV dev, INT level )
         emr.iRelative = level;
     else
         emr.iRelative = level - dc->saveLevel - 1;
-    release_dc_ptr( dc );
 
     physDev->restoring++;
     ret = next->funcs->pRestoreDC( next, level );
@@ -94,7 +100,7 @@ INT EMFDRV_SetBkMode( PHYSDEV dev, INT mode )
 COLORREF EMFDRV_SetBkColor( PHYSDEV dev, COLORREF color )
 {
     EMRSETBKCOLOR emr;
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE *)dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
 
     if (physDev->restoring) return color;  /* don't output records during RestoreDC */
 
@@ -108,7 +114,7 @@ COLORREF EMFDRV_SetBkColor( PHYSDEV dev, COLORREF color )
 COLORREF EMFDRV_SetTextColor( PHYSDEV dev, COLORREF color )
 {
     EMRSETTEXTCOLOR emr;
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE *)dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
 
     if (physDev->restoring) return color;  /* don't output records during RestoreDC */
 
@@ -420,12 +426,21 @@ BOOL EMFDRV_AbortPath( PHYSDEV dev )
 
 BOOL EMFDRV_BeginPath( PHYSDEV dev )
 {
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pBeginPath );
     EMRBEGINPATH emr;
+    DC *dc = get_physdev_dc( dev );
 
     emr.emr.iType = EMR_BEGINPATH;
     emr.emr.nSize = sizeof(emr);
 
-    return EMFDRV_WriteRecord( dev, &emr.emr );
+    if (!EMFDRV_WriteRecord( dev, &emr.emr )) return FALSE;
+    if (physDev->path) return TRUE;  /* already open */
+
+    if (!next->funcs->pBeginPath( next )) return FALSE;
+    push_dc_driver( &dc->physDev, &physDev->pathdev, &emfpath_driver );
+    physDev->path = TRUE;
+    return TRUE;
 }
 
 BOOL EMFDRV_CloseFigure( PHYSDEV dev )
@@ -435,7 +450,8 @@ BOOL EMFDRV_CloseFigure( PHYSDEV dev )
     emr.emr.iType = EMR_CLOSEFIGURE;
     emr.emr.nSize = sizeof(emr);
 
-    return EMFDRV_WriteRecord( dev, &emr.emr );
+    EMFDRV_WriteRecord( dev, &emr.emr );
+    return FALSE;  /* always fails without a path */
 }
 
 BOOL EMFDRV_EndPath( PHYSDEV dev )
@@ -445,21 +461,8 @@ BOOL EMFDRV_EndPath( PHYSDEV dev )
     emr.emr.iType = EMR_ENDPATH;
     emr.emr.nSize = sizeof(emr);
 
-    return EMFDRV_WriteRecord( dev, &emr.emr );
-}
-
-BOOL EMFDRV_FillPath( PHYSDEV dev )
-{
-    EMRFILLPATH emr;
-
-    emr.emr.iType = EMR_FILLPATH;
-    emr.emr.nSize = sizeof(emr);
-    FIXME("Bounds\n");
-    emr.rclBounds.left = 0;
-    emr.rclBounds.top = 0;
-    emr.rclBounds.right = 0;
-    emr.rclBounds.bottom = 0;
-    return EMFDRV_WriteRecord( dev, &emr.emr );
+    EMFDRV_WriteRecord( dev, &emr.emr );
+    return FALSE;  /* always fails without a path */
 }
 
 BOOL EMFDRV_FlattenPath( PHYSDEV dev )
@@ -474,43 +477,24 @@ BOOL EMFDRV_FlattenPath( PHYSDEV dev )
 
 BOOL EMFDRV_SelectClipPath( PHYSDEV dev, INT iMode )
 {
-    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pSelectClipPath );
+ //   PHYSDEV next = GET_NEXT_PHYSDEV( dev, pSelectClipPath ); This HACK breaks test_emf_clipping
     EMRSELECTCLIPPATH emr;
+ //   BOOL ret = FALSE;
+ //   HRGN hrgn;
 
     emr.emr.iType = EMR_SELECTCLIPPATH;
     emr.emr.nSize = sizeof(emr);
     emr.iMode = iMode;
 
     if (!EMFDRV_WriteRecord( dev, &emr.emr )) return FALSE;
-    return next->funcs->pSelectClipPath( next, iMode );
-}
-
-BOOL EMFDRV_StrokeAndFillPath( PHYSDEV dev )
-{
-    EMRSTROKEANDFILLPATH emr;
-
-    emr.emr.iType = EMR_STROKEANDFILLPATH;
-    emr.emr.nSize = sizeof(emr);
-    FIXME("Bounds\n");
-    emr.rclBounds.left = 0;
-    emr.rclBounds.top = 0;
-    emr.rclBounds.right = 0;
-    emr.rclBounds.bottom = 0;
-    return EMFDRV_WriteRecord( dev, &emr.emr );
-}
-
-BOOL EMFDRV_StrokePath( PHYSDEV dev )
-{
-    EMRSTROKEPATH emr;
-
-    emr.emr.iType = EMR_STROKEPATH;
-    emr.emr.nSize = sizeof(emr);
-    FIXME("Bounds\n");
-    emr.rclBounds.left = 0;
-    emr.rclBounds.top = 0;
-    emr.rclBounds.right = 0;
-    emr.rclBounds.bottom = 0;
-    return EMFDRV_WriteRecord( dev, &emr.emr );
+/*    hrgn = PathToRegion( dev->hdc );
+    if (hrgn)
+    {
+        ret = next->funcs->pExtSelectClipRgn( next, hrgn, iMode );
+        DeleteObject( hrgn );
+    } ERR("EMFDRV_SelectClipPath ret %d\n",ret);
+    return ret;*/
+    return TRUE;
 }
 
 BOOL EMFDRV_WidenPath( PHYSDEV dev )
@@ -525,7 +509,448 @@ BOOL EMFDRV_WidenPath( PHYSDEV dev )
 
 INT EMFDRV_GetDeviceCaps(PHYSDEV dev, INT cap)
 {
-    EMFDRV_PDEVICE *physDev = (EMFDRV_PDEVICE*) dev;
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
 
     return GetDeviceCaps( physDev->ref_dc, cap );
 }
+
+
+/***********************************************************************
+ *           emfpathdrv_AbortPath
+ */
+static BOOL emfpathdrv_AbortPath( PHYSDEV dev )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pAbortPath );
+    DC *dc = get_physdev_dc( dev );
+
+    emfpath_driver.pDeleteDC( pop_dc_driver( dc, &emfpath_driver ));
+    emfdev->funcs->pAbortPath( emfdev );
+    return next->funcs->pAbortPath( next );
+}
+
+/***********************************************************************
+ *           emfpathdrv_AngleArc
+ */
+static BOOL emfpathdrv_AngleArc( PHYSDEV dev, INT x, INT y, DWORD radius, FLOAT start, FLOAT sweep )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pAngleArc );
+
+    return (emfdev->funcs->pAngleArc( emfdev, x, y, radius, start, sweep ) &&
+            next->funcs->pAngleArc( next, x, y, radius, start, sweep ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_Arc
+ */
+static BOOL emfpathdrv_Arc( PHYSDEV dev, INT left, INT top, INT right, INT bottom,
+                            INT xstart, INT ystart, INT xend, INT yend )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pArc );
+
+    return (emfdev->funcs->pArc( emfdev, left, top, right, bottom, xstart, ystart, xend, yend ) &&
+            next->funcs->pArc( next, left, top, right, bottom, xstart, ystart, xend, yend ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_ArcTo
+ */
+static BOOL emfpathdrv_ArcTo( PHYSDEV dev, INT left, INT top, INT right, INT bottom,
+                              INT xstart, INT ystart, INT xend, INT yend )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pArcTo );
+
+    return (emfdev->funcs->pArcTo( emfdev, left, top, right, bottom, xstart, ystart, xend, yend ) &&
+            next->funcs->pArcTo( next, left, top, right, bottom, xstart, ystart, xend, yend ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_BeginPath
+ */
+static BOOL emfpathdrv_BeginPath( PHYSDEV dev )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pBeginPath );
+
+    return (emfdev->funcs->pBeginPath( emfdev ) && next->funcs->pBeginPath( next ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_Chord
+ */
+static BOOL emfpathdrv_Chord( PHYSDEV dev, INT left, INT top, INT right, INT bottom,
+                              INT xstart, INT ystart, INT xend, INT yend )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pChord );
+
+    return (emfdev->funcs->pChord( emfdev, left, top, right, bottom, xstart, ystart, xend, yend ) &&
+            next->funcs->pChord( next, left, top, right, bottom, xstart, ystart, xend, yend ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_CloseFigure
+ */
+static BOOL emfpathdrv_CloseFigure( PHYSDEV dev )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pCloseFigure );
+
+    emfdev->funcs->pCloseFigure( emfdev );
+    return next->funcs->pCloseFigure( next );
+}
+
+/***********************************************************************
+ *           emfpathdrv_CreateDC
+ */
+static BOOL emfpathdrv_CreateDC( PHYSDEV *dev, LPCWSTR driver, LPCWSTR device,
+                                 LPCWSTR output, const DEVMODEW *devmode )
+{
+    assert( 0 );  /* should never be called */
+    return TRUE;
+}
+
+/*************************************************************
+ *           emfpathdrv_DeleteDC
+ */
+static BOOL emfpathdrv_DeleteDC( PHYSDEV dev )
+{
+    EMFDRV_PDEVICE *physdev = (EMFDRV_PDEVICE *)get_emfdev( dev );
+
+    physdev->path = FALSE;
+    return TRUE;
+}
+
+/***********************************************************************
+ *           emfpathdrv_Ellipse
+ */
+static BOOL emfpathdrv_Ellipse( PHYSDEV dev, INT x1, INT y1, INT x2, INT y2 )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pEllipse );
+
+    return (emfdev->funcs->pEllipse( emfdev, x1, y1, x2, y2 ) &&
+            next->funcs->pEllipse( next, x1, y1, x2, y2 ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_EndPath
+ */
+static BOOL emfpathdrv_EndPath( PHYSDEV dev )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pEndPath );
+    DC *dc = get_physdev_dc( dev );
+
+    emfpath_driver.pDeleteDC( pop_dc_driver( dc, &emfpath_driver ));
+    emfdev->funcs->pEndPath( emfdev );
+    return next->funcs->pEndPath( next );
+}
+
+/***********************************************************************
+ *           emfpathdrv_ExtTextOut
+ */
+static BOOL emfpathdrv_ExtTextOut( PHYSDEV dev, INT x, INT y, UINT flags, const RECT *rect,
+                                   LPCWSTR str, UINT count, const INT *dx )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pExtTextOut );
+
+    return (emfdev->funcs->pExtTextOut( emfdev, x, y, flags, rect, str, count, dx ) &&
+            next->funcs->pExtTextOut( next, x, y, flags, rect, str, count, dx ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_LineTo
+ */
+static BOOL emfpathdrv_LineTo( PHYSDEV dev, INT x, INT y )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pLineTo );
+
+    return (emfdev->funcs->pLineTo( emfdev, x, y ) && next->funcs->pLineTo( next, x, y ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_MoveTo
+ */
+static BOOL emfpathdrv_MoveTo( PHYSDEV dev, INT x, INT y )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pMoveTo );
+
+    return (emfdev->funcs->pMoveTo( emfdev, x, y ) && next->funcs->pMoveTo( next, x, y ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_Pie
+ */
+static BOOL emfpathdrv_Pie( PHYSDEV dev, INT left, INT top, INT right, INT bottom,
+                            INT xstart, INT ystart, INT xend, INT yend )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pPie );
+
+    return (emfdev->funcs->pPie( emfdev, left, top, right, bottom, xstart, ystart, xend, yend ) &&
+            next->funcs->pPie( next, left, top, right, bottom, xstart, ystart, xend, yend ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_PolyBezier
+ */
+static BOOL emfpathdrv_PolyBezier( PHYSDEV dev, const POINT *pts, DWORD count )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pPolyBezier );
+
+    return (emfdev->funcs->pPolyBezier( emfdev, pts, count ) &&
+            next->funcs->pPolyBezier( next, pts, count ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_PolyBezierTo
+ */
+static BOOL emfpathdrv_PolyBezierTo( PHYSDEV dev, const POINT *pts, DWORD count )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pPolyBezierTo );
+
+    return (emfdev->funcs->pPolyBezierTo( emfdev, pts, count ) &&
+            next->funcs->pPolyBezierTo( next, pts, count ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_PolyDraw
+ */
+static BOOL emfpathdrv_PolyDraw( PHYSDEV dev, const POINT *pts, const BYTE *types, DWORD count )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pPolyDraw );
+
+    return (emfdev->funcs->pPolyDraw( emfdev, pts, types, count ) &&
+            next->funcs->pPolyDraw( next, pts, types, count ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_PolyPolygon
+ */
+static BOOL emfpathdrv_PolyPolygon( PHYSDEV dev, const POINT *pts, const INT *counts, UINT polygons )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pPolyPolygon );
+
+    return (emfdev->funcs->pPolyPolygon( emfdev, pts, counts, polygons ) &&
+            next->funcs->pPolyPolygon( next, pts, counts, polygons ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_PolyPolyline
+ */
+static BOOL emfpathdrv_PolyPolyline( PHYSDEV dev, const POINT *pts, const DWORD *counts, DWORD polylines )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pPolyPolyline );
+
+    return (emfdev->funcs->pPolyPolyline( emfdev, pts, counts, polylines ) &&
+            next->funcs->pPolyPolyline( next, pts, counts, polylines ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_Polygon
+ */
+static BOOL emfpathdrv_Polygon( PHYSDEV dev, const POINT *pts, INT count )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pPolygon );
+
+    return (emfdev->funcs->pPolygon( emfdev, pts, count ) &&
+            next->funcs->pPolygon( next, pts, count ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_Polyline
+ */
+static BOOL emfpathdrv_Polyline( PHYSDEV dev, const POINT *pts, INT count )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pPolyline );
+
+    return (emfdev->funcs->pPolyline( emfdev, pts, count ) &&
+            next->funcs->pPolyline( next, pts, count ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_PolylineTo
+ */
+static BOOL emfpathdrv_PolylineTo( PHYSDEV dev, const POINT *pts, INT count )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pPolylineTo );
+
+    return (emfdev->funcs->pPolylineTo( emfdev, pts, count ) &&
+            next->funcs->pPolylineTo( next, pts, count ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_Rectangle
+ */
+static BOOL emfpathdrv_Rectangle( PHYSDEV dev, INT x1, INT y1, INT x2, INT y2 )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pRectangle );
+
+    return (emfdev->funcs->pRectangle( emfdev, x1, y1, x2, y2 ) &&
+            next->funcs->pRectangle( next, x1, y1, x2, y2 ));
+}
+
+/***********************************************************************
+ *           emfpathdrv_RoundRect
+ */
+static BOOL emfpathdrv_RoundRect( PHYSDEV dev, INT x1, INT y1, INT x2, INT y2,
+                                  INT ell_width, INT ell_height )
+{
+    PHYSDEV emfdev = get_emfdev( dev );
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pRoundRect );
+
+    return (emfdev->funcs->pRoundRect( emfdev, x1, y1, x2, y2, ell_width, ell_height ) &&
+            next->funcs->pRoundRect( next, x1, y1, x2, y2, ell_width, ell_height ));
+}
+
+static const struct gdi_dc_funcs emfpath_driver =
+{
+    NULL,                               /* pAbortDoc */
+    emfpathdrv_AbortPath,               /* pAbortPath */
+    NULL,                               /* pAlphaBlend */
+    emfpathdrv_AngleArc,                /* pAngleArc */
+    emfpathdrv_Arc,                     /* pArc */
+    emfpathdrv_ArcTo,                   /* pArcTo */
+    emfpathdrv_BeginPath,               /* pBeginPath */
+    NULL,                               /* pBlendImage */
+    emfpathdrv_Chord,                   /* pChord */
+    emfpathdrv_CloseFigure,             /* pCloseFigure */
+    NULL,                               /* pCreateCompatibleDC */
+    emfpathdrv_CreateDC,                /* pCreateDC */
+    emfpathdrv_DeleteDC,                /* pDeleteDC */
+    NULL,                               /* pDeleteObject */
+    NULL,                               /* pDeviceCapabilities */
+    emfpathdrv_Ellipse,                 /* pEllipse */
+    NULL,                               /* pEndDoc */
+    NULL,                               /* pEndPage */
+    emfpathdrv_EndPath,                 /* pEndPath */
+    NULL,                               /* pEnumFonts */
+    NULL,                               /* pEnumICMProfiles */
+    NULL,                               /* pExcludeClipRect */
+    NULL,                               /* pExtDeviceMode */
+    NULL,                               /* pExtEscape */
+    NULL,                               /* pExtFloodFill */
+    NULL,                               /* pExtSelectClipRgn */
+    emfpathdrv_ExtTextOut,              /* pExtTextOut */
+    NULL,                               /* pFillPath */
+    NULL,                               /* pFillRgn */
+    NULL,                               /* pFlattenPath */
+    NULL,                               /* pFontIsLinked */
+    NULL,                               /* pFrameRgn */
+    NULL,                               /* pGdiComment */
+    NULL,                               /* pGetBoundsRect */
+    NULL,                               /* pGetCharABCWidths */
+    NULL,                               /* pGetCharABCWidthsI */
+    NULL,                               /* pGetCharWidth */
+#ifdef __REACTOS__
+    EMFDRV_GetDeviceCaps, //// Work around HACK.
+#else
+    NULL,                               /* pGetDeviceCaps */
+#endif
+    NULL,                               /* pGetDeviceGammaRamp */
+    NULL,                               /* pGetFontData */
+    NULL,                               /* pGetFontRealizationInfo */
+    NULL,                               /* pGetFontUnicodeRanges */
+    NULL,                               /* pGetGlyphIndices */
+    NULL,                               /* pGetGlyphOutline */
+    NULL,                               /* pGetICMProfile */
+    NULL,                               /* pGetImage */
+    NULL,                               /* pGetKerningPairs */
+    NULL,                               /* pGetNearestColor */
+    NULL,                               /* pGetOutlineTextMetrics */
+    NULL,                               /* pGetPixel */
+    NULL,                               /* pGetSystemPaletteEntries */
+    NULL,                               /* pGetTextCharsetInfo */
+    NULL,                               /* pGetTextExtentExPoint */
+    NULL,                               /* pGetTextExtentExPointI */
+    NULL,                               /* pGetTextFace */
+    NULL,                               /* pGetTextMetrics */
+    NULL,                               /* pGradientFill */
+    NULL,                               /* pIntersectClipRect */
+    NULL,                               /* pInvertRgn */
+    emfpathdrv_LineTo,                  /* pLineTo */
+    NULL,                               /* pModifyWorldTransform */
+    emfpathdrv_MoveTo,                  /* pMoveTo */
+    NULL,                               /* pOffsetClipRgn */
+    NULL,                               /* pOffsetViewportOrg */
+    NULL,                               /* pOffsetWindowOrg */
+    NULL,                               /* pPaintRgn */
+    NULL,                               /* pPatBlt */
+    emfpathdrv_Pie,                     /* pPie */
+    emfpathdrv_PolyBezier,              /* pPolyBezier */
+    emfpathdrv_PolyBezierTo,            /* pPolyBezierTo */
+    emfpathdrv_PolyDraw,                /* pPolyDraw */
+    emfpathdrv_PolyPolygon,             /* pPolyPolygon */
+    emfpathdrv_PolyPolyline,            /* pPolyPolyline */
+    emfpathdrv_Polygon,                 /* pPolygon */
+    emfpathdrv_Polyline,                /* pPolyline */
+    emfpathdrv_PolylineTo,              /* pPolylineTo */
+    NULL,                               /* pPutImage */
+    NULL,                               /* pRealizeDefaultPalette */
+    NULL,                               /* pRealizePalette */
+    emfpathdrv_Rectangle,               /* pRectangle */
+    NULL,                               /* pResetDC */
+    NULL,                               /* pRestoreDC */
+    emfpathdrv_RoundRect,               /* pRoundRect */
+    NULL,                               /* pSaveDC */
+    NULL,                               /* pScaleViewportExt */
+    NULL,                               /* pScaleWindowExt */
+    NULL,                               /* pSelectBitmap */
+    NULL,                               /* pSelectBrush */
+    NULL,                               /* pSelectClipPath */
+    NULL,                               /* pSelectFont */
+    NULL,                               /* pSelectPalette */
+    NULL,                               /* pSelectPen */
+    NULL,                               /* pSetArcDirection */
+    NULL,                               /* pSetBkColor */
+    NULL,                               /* pSetBkMode */
+    NULL,                               /* pSetDCBrushColor */
+    NULL,                               /* pSetDCPenColor */
+    NULL,                               /* pSetDIBColorTable */
+    NULL,                               /* pSetDIBitsToDevice */
+    NULL,                               /* pSetDeviceClipping */
+    NULL,                               /* pSetDeviceGammaRamp */
+    NULL,                               /* pSetLayout */
+    NULL,                               /* pSetMapMode */
+    NULL,                               /* pSetMapperFlags */
+    NULL,                               /* pSetPixel */
+    NULL,                               /* pSetPolyFillMode */
+    NULL,                               /* pSetROP2 */
+    NULL,                               /* pSetRelAbs */
+    NULL,                               /* pSetStretchBltMode */
+    NULL,                               /* pSetTextAlign */
+    NULL,                               /* pSetTextCharacterExtra */
+    NULL,                               /* pSetTextColor */
+    NULL,                               /* pSetTextJustification */
+    NULL,                               /* pSetViewportExt */
+    NULL,                               /* pSetViewportOrg */
+    NULL,                               /* pSetWindowExt */
+    NULL,                               /* pSetWindowOrg */
+    NULL,                               /* pSetWorldTransform */
+    NULL,                               /* pStartDoc */
+    NULL,                               /* pStartPage */
+    NULL,                               /* pStretchBlt */
+    NULL,                               /* pStretchDIBits */
+    NULL,                               /* pStrokeAndFillPath */
+    NULL,                               /* pStrokePath */
+    NULL,                               /* pUnrealizePalette */
+    NULL,                               /* pWidenPath */
+    NULL,                               /* wine_get_wgl_driver */
+    GDI_PRIORITY_PATH_DRV + 1           /* priority */
+};

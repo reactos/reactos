@@ -6,11 +6,26 @@
 #define NDEBUG
 #include <debug.h>
 
+WINEDC *get_nulldrv_dc( PHYSDEV dev );
+
+BOOL nulldrv_BeginPath( PHYSDEV dev );
+BOOL nulldrv_EndPath( PHYSDEV dev );
+BOOL nulldrv_AbortPath( PHYSDEV dev );
+BOOL nulldrv_CloseFigure( PHYSDEV dev );
+BOOL nulldrv_SelectClipPath( PHYSDEV dev, INT mode );
+BOOL nulldrv_FillPath( PHYSDEV dev );
+BOOL nulldrv_StrokeAndFillPath( PHYSDEV dev );
+BOOL nulldrv_StrokePath( PHYSDEV dev );
+BOOL nulldrv_FlattenPath( PHYSDEV dev );
+BOOL nulldrv_WidenPath( PHYSDEV dev );
+
+static INT i = 0;
+
 static
 INT_PTR
 NULL_Unused()
 {
-    DPRINT1("NULL_Unused\n");
+    DPRINT1("NULL_Unused %d\n",i);
     // __debugbreak();
     return 0;
 }
@@ -31,15 +46,16 @@ static INT   NULL_ExcludeClipRect(PHYSDEV dev, INT left, INT top, INT right, INT
 static const struct gdi_dc_funcs DummyPhysDevFuncs =
 {
     (PVOID)NULL_Unused, //INT      (*pAbortDoc)(PHYSDEV);
-    (PVOID)NULL_Unused, //BOOL     (*pAbortPath)(PHYSDEV);
+    nulldrv_AbortPath,  //BOOL     (*pAbortPath)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pAlphaBlend)(PHYSDEV,struct bitblt_coords*,PHYSDEV,struct bitblt_coords*,BLENDFUNCTION);
     (PVOID)NULL_Unused, //BOOL     (*pAngleArc)(PHYSDEV,INT,INT,DWORD,FLOAT,FLOAT);
     (PVOID)NULL_Unused, //BOOL     (*pArc)(PHYSDEV,INT,INT,INT,INT,INT,INT,INT,INT);
     (PVOID)NULL_Unused, //BOOL     (*pArcTo)(PHYSDEV,INT,INT,INT,INT,INT,INT,INT,INT);
-    (PVOID)NULL_Unused, //BOOL     (*pBeginPath)(PHYSDEV);
+    nulldrv_BeginPath,  //BOOL     (*pBeginPath)(PHYSDEV);
     (PVOID)NULL_Unused, //DWORD    (*pBlendImage)(PHYSDEV,BITMAPINFO*,const struct gdi_image_bits*,struct bitblt_coords*,struct bitblt_coords*,BLENDFUNCTION);
     (PVOID)NULL_Unused, //BOOL     (*pChord)(PHYSDEV,INT,INT,INT,INT,INT,INT,INT,INT);
-    (PVOID)NULL_Unused, //BOOL     (*pCloseFigure)(PHYSDEV);
+    nulldrv_CloseFigure, //BOOL     (*pCloseFigure)(PHYSDEV);
+
     (PVOID)NULL_Unused, //BOOL     (*pCreateCompatibleDC)(PHYSDEV,PHYSDEV*);
     (PVOID)NULL_Unused, //BOOL     (*pCreateDC)(PHYSDEV*,LPCWSTR,LPCWSTR,LPCWSTR,const DEVMODEW*);
     (PVOID)NULL_Unused, //BOOL     (*pDeleteDC)(PHYSDEV);
@@ -48,8 +64,9 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //BOOL     (*pEllipse)(PHYSDEV,INT,INT,INT,INT);
     (PVOID)NULL_Unused, //INT      (*pEndDoc)(PHYSDEV);
     (PVOID)NULL_Unused, //INT      (*pEndPage)(PHYSDEV);
-    (PVOID)NULL_Unused, //BOOL     (*pEndPath)(PHYSDEV);
+    nulldrv_EndPath,    //BOOL     (*pEndPath)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pEnumFonts)(PHYSDEV,LPLOGFONTW,FONTENUMPROCW,LPARAM);
+
     (PVOID)NULL_Unused, //INT      (*pEnumICMProfiles)(PHYSDEV,ICMENUMPROCW,LPARAM);
     NULL_ExcludeClipRect, //INT      (*pExcludeClipRect)(PHYSDEV,INT,INT,INT,INT);
     (PVOID)NULL_Unused, //INT      (*pExtDeviceMode)(LPSTR,HWND,LPDEVMODEA,LPSTR,LPSTR,LPDEVMODEA,LPSTR,DWORD);
@@ -57,13 +74,13 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //BOOL     (*pExtFloodFill)(PHYSDEV,INT,INT,COLORREF,UINT);
     NULL_ExtSelectClipRgn, //INT      (*pExtSelectClipRgn)(PHYSDEV,HRGN,INT);
     (PVOID)NULL_Unused, //BOOL     (*pExtTextOut)(PHYSDEV,INT,INT,UINT,const RECT*,LPCWSTR,UINT,const INT*);
-    (PVOID)NULL_Unused, //BOOL     (*pFillPath)(PHYSDEV);
+    nulldrv_FillPath,   //BOOL     (*pFillPath)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pFillRgn)(PHYSDEV,HRGN,HBRUSH);
-    (PVOID)NULL_Unused, //BOOL     (*pFlattenPath)(PHYSDEV);
+    nulldrv_FlattenPath, //BOOL     (*pFlattenPath)(PHYSDEV);
+
     (PVOID)NULL_Unused, //BOOL     (*pFontIsLinked)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pFrameRgn)(PHYSDEV,HRGN,HBRUSH,INT,INT);
     (PVOID)NULL_Unused, //BOOL     (*pGdiComment)(PHYSDEV,UINT,const BYTE*);
-    (PVOID)NULL_Unused, //BOOL     (*pGdiRealizationInfo)(PHYSDEV,void*);
     (PVOID)NULL_Unused, //UINT     (*pGetBoundsRect)(PHYSDEV,RECT*,UINT);
     (PVOID)NULL_Unused, //BOOL     (*pGetCharABCWidths)(PHYSDEV,UINT,UINT,LPABC);
     (PVOID)NULL_Unused, //BOOL     (*pGetCharABCWidthsI)(PHYSDEV,UINT,UINT,WORD*,LPABC);
@@ -71,6 +88,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //INT      (*pGetDeviceCaps)(PHYSDEV,INT);
     (PVOID)NULL_Unused, //BOOL     (*pGetDeviceGammaRamp)(PHYSDEV,LPVOID);
     (PVOID)NULL_Unused, //DWORD    (*pGetFontData)(PHYSDEV,DWORD,DWORD,LPVOID,DWORD);
+    (PVOID)NULL_Unused, //BOOL     (*pGetFontRealizationInfo)(PHYSDEV,void*);
     (PVOID)NULL_Unused, //DWORD    (*pGetFontUnicodeRanges)(PHYSDEV,LPGLYPHSET);
     (PVOID)NULL_Unused, //DWORD    (*pGetGlyphIndices)(PHYSDEV,LPCWSTR,INT,LPWORD,DWORD);
     (PVOID)NULL_Unused, //DWORD    (*pGetGlyphOutline)(PHYSDEV,UINT,UINT,LPGLYPHMETRICS,DWORD,LPVOID,const MAT2*);
@@ -111,15 +129,15 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //UINT     (*pRealizePalette)(PHYSDEV,HPALETTE,BOOL);
     (PVOID)NULL_Unused, //BOOL     (*pRectangle)(PHYSDEV,INT,INT,INT,INT);
     (PVOID)NULL_Unused, //HDC      (*pResetDC)(PHYSDEV,const DEVMODEW*);
-    NULL_RestoreDC, //BOOL     (*pRestoreDC)(PHYSDEV,INT);
+    NULL_RestoreDC,     //BOOL     (*pRestoreDC)(PHYSDEV,INT);
     (PVOID)NULL_Unused, //BOOL     (*pRoundRect)(PHYSDEV,INT,INT,INT,INT,INT,INT);
-    NULL_SaveDC, //INT      (*pSaveDC)(PHYSDEV);
+    NULL_SaveDC,        //INT      (*pSaveDC)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pScaleViewportExtEx)(PHYSDEV,INT,INT,INT,INT,SIZE*);
     (PVOID)NULL_Unused, //BOOL     (*pScaleWindowExtEx)(PHYSDEV,INT,INT,INT,INT,SIZE*);
     (PVOID)NULL_Unused, //HBITMAP  (*pSelectBitmap)(PHYSDEV,HBITMAP);
     (PVOID)NULL_Unused, //HBRUSH   (*pSelectBrush)(PHYSDEV,HBRUSH,const struct brush_pattern*);
-    (PVOID)NULL_Unused, //BOOL     (*pSelectClipPath)(PHYSDEV,INT);
-    NULL_SelectFont, //HFONT    (*pSelectFont)(PHYSDEV,HFONT,UINT*);
+    nulldrv_SelectClipPath, //BOOL     (*pSelectClipPath)(PHYSDEV,INT);
+    NULL_SelectFont,    //HFONT    (*pSelectFont)(PHYSDEV,HFONT,UINT*);
     (PVOID)NULL_Unused, //HPALETTE (*pSelectPalette)(PHYSDEV,HPALETTE,BOOL);
     (PVOID)NULL_Unused, //HPEN     (*pSelectPen)(PHYSDEV,HPEN,const struct brush_pattern*);
     (PVOID)NULL_Unused, //INT      (*pSetArcDirection)(PHYSDEV,INT);
@@ -132,7 +150,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //VOID     (*pSetDeviceClipping)(PHYSDEV,HRGN);
     (PVOID)NULL_Unused, //BOOL     (*pSetDeviceGammaRamp)(PHYSDEV,LPVOID);
     (PVOID)NULL_Unused, //DWORD    (*pSetLayout)(PHYSDEV,DWORD);
-    NULL_SetMapMode, //INT      (*pSetMapMode)(PHYSDEV,INT);
+    NULL_SetMapMode,    //INT      (*pSetMapMode)(PHYSDEV,INT);
     (PVOID)NULL_Unused, //DWORD    (*pSetMapperFlags)(PHYSDEV,DWORD);
     (PVOID)NULL_Unused, //COLORREF (*pSetPixel)(PHYSDEV,INT,INT,COLORREF);
     (PVOID)NULL_Unused, //INT      (*pSetPolyFillMode)(PHYSDEV,INT);
@@ -152,13 +170,25 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //INT      (*pStartPage)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pStretchBlt)(PHYSDEV,struct bitblt_coords*,PHYSDEV,struct bitblt_coords*,DWORD);
     (PVOID)NULL_Unused, //INT      (*pStretchDIBits)(PHYSDEV,INT,INT,INT,INT,INT,INT,INT,INT,const void*,BITMAPINFO*,UINT,DWORD);
-    (PVOID)NULL_Unused, //BOOL     (*pStrokeAndFillPath)(PHYSDEV);
-    (PVOID)NULL_Unused, //BOOL     (*pStrokePath)(PHYSDEV);
+    nulldrv_StrokeAndFillPath, //BOOL     (*pStrokeAndFillPath)(PHYSDEV);
+    nulldrv_StrokePath, //BOOL     (*pStrokePath)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pUnrealizePalette)(HPALETTE);
-    (PVOID)NULL_Unused, //BOOL     (*pWidenPath)(PHYSDEV);
+    nulldrv_WidenPath,  //BOOL     (*pWidenPath)(PHYSDEV);
     (PVOID)NULL_Unused, //struct opengl_funcs * (*wine_get_wgl_driver)(PHYSDEV,UINT);
     0 // UINT       priority;
 };
+
+WINEDC *get_nulldrv_dc( PHYSDEV dev )
+{
+    return CONTAINING_RECORD( dev, WINEDC, NullPhysDev );
+}
+
+WINEDC* get_physdev_dc( PHYSDEV dev )
+{
+    while (dev->funcs != &DummyPhysDevFuncs)
+        dev = dev->next;
+    return get_nulldrv_dc( dev );
+}
 
 static
 GDILOOBJTYPE
@@ -368,6 +398,7 @@ push_dc_driver_ros(
     PHYSDEV physdev,
     const struct gdi_dc_funcs *funcs)
 {
+    while ((*dev)->funcs->priority > funcs->priority) dev = &(*dev)->next;
     physdev->funcs = funcs;
     physdev->next = *dev;
     physdev->hdc = CONTAINING_RECORD(dev, WINEDC, physDev)->hdc;
@@ -692,6 +723,15 @@ DRIVER_SelectBrush(PHYSDEV physdev, HBRUSH hbrush, const struct brush_pattern *p
 }
 
 static
+HRGN
+DRIVER_PathToRegion(PHYSDEV physdev)
+{
+    DPRINT1("DRIVER_PathToRegion\n");
+    return (HRGN)physdev->funcs->pAbortPath( physdev );
+}
+
+
+static
 DWORD_PTR
 DRIVER_Dispatch(
     _In_ PHYSDEV physdev,
@@ -858,10 +898,8 @@ DRIVER_Dispatch(
                                                  _va_arg_n(argptr, const POINT*, 0),
                                                  _va_arg_n(argptr, DWORD, 1));
         case DCFUNC_PolyDraw:
-            DPRINT1("DCFUNC_PolyDraw not implemented\n");
-            return FALSE;
-            return physdev->funcs->pPolyDraw(physdev,
-                                             _va_arg_n(argptr, const POINT*, 1),
+           return physdev->funcs->pPolyDraw(physdev,
+                                             _va_arg_n(argptr, const POINT*, 0),
                                              _va_arg_n(argptr, const BYTE*, 1),
                                              _va_arg_n(argptr, DWORD, 2));
         case DCFUNC_Polygon:
@@ -873,8 +911,6 @@ DRIVER_Dispatch(
                                              _va_arg_n(argptr, const POINT*, 0),
                                              _va_arg_n(argptr, INT, 1));
         case DCFUNC_PolylineTo:
-            DPRINT1("DCFUNC_PolylineTo not implemented\n");
-            return FALSE;
             return physdev->funcs->pPolylineTo(physdev,
                                                _va_arg_n(argptr, const POINT*, 0),
                                                _va_arg_n(argptr, INT, 1));
@@ -1027,15 +1063,36 @@ DRIVER_Dispatch(
             return physdev->funcs->pStrokePath(physdev);
         case DCFUNC_WidenPath:
             return physdev->funcs->pWidenPath(physdev);
-
+        case DCFUNC_AngleArc:
+            return physdev->funcs->pAngleArc(physdev,
+                                             _va_arg_n(argptr, INT, 0),
+                                             _va_arg_n(argptr, INT, 1),
+                                             _va_arg_n(argptr, DWORD, 2),
+                                             _va_arg_n(argptr, FLOAT, 3),
+                                             _va_arg_n(argptr, FLOAT, 4 ));
+        case DCFUNC_ArcTo:
+            return physdev->funcs->pArcTo(physdev,
+                                          _va_arg_n(argptr, INT, 0),
+                                          _va_arg_n(argptr, INT, 1),
+                                          _va_arg_n(argptr, INT, 2),
+                                          _va_arg_n(argptr, INT, 3),
+                                          _va_arg_n(argptr, INT, 4),
+                                          _va_arg_n(argptr, INT, 5),
+                                          _va_arg_n(argptr, INT, 6),
+                                          _va_arg_n(argptr, INT, 7));
+        case DCFUNC_GradientFill:
+            return physdev->funcs->pGradientFill(physdev,
+                                                 _va_arg_n(argptr, TRIVERTEX *, 0), 
+                                                 _va_arg_n(argptr, ULONG, 1),
+                                                 _va_arg_n(argptr, void *, 2),
+                                                 _va_arg_n(argptr, ULONG , 3),
+                                                 _va_arg_n(argptr, ULONG , 4));
+        case DCFUNC_PathToRegion:
+            return (DWORD_PTR)DRIVER_PathToRegion(physdev);
 
         /* These are not implemented in wine */
         case DCFUNC_AlphaBlend:
-        case DCFUNC_AngleArc:
-        case DCFUNC_ArcTo:
-        case DCFUNC_GradientFill:
         case DCFUNC_MaskBlt:
-        case DCFUNC_PathToRegion:
         case DCFUNC_PlgBlt:
         case DCFUNC_TransparentBlt:
             UNIMPLEMENTED;
@@ -1074,9 +1131,11 @@ METADC_Dispatch(
         return TRUE;
     }
 
+    i = eFunction;
     va_start(argptr, hdc);
     *pdwResult = DRIVER_Dispatch(physdev, eFunction, argptr);
     va_end(argptr);
+    i = 0;
 
     /* Return TRUE to indicate that we want to return from the parent  */
     return ((GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) ||
