@@ -146,30 +146,22 @@ DceSetDrawable( PWND Window OPTIONAL,
                 ULONG Flags,
                 BOOL SetClipOrigin)
 {
-  DC *dc = DC_LockDc(hDC);
-  if(!dc)
-      return;
+  RECTL rect;
 
-  if (Window == NULL)
-  {
-      dc->ptlDCOrig.x = 0;
-      dc->ptlDCOrig.y = 0;
-  }
-  else
+  if (Window)
   {
       if (Flags & DCX_WINDOW)
       {
-         dc->ptlDCOrig.x = Window->rcWindow.left;
-         dc->ptlDCOrig.y = Window->rcWindow.top;
+         rect = Window->rcWindow;
       }
       else
       {
-         dc->ptlDCOrig.x = Window->rcClient.left;
-         dc->ptlDCOrig.y = Window->rcClient.top;
+         rect = Window->rcClient;
       }
   }
-  dc->fs |= DC_FLAG_DIRTY_RAO;
-  DC_UnlockDc(dc);
+
+  /* Set DC Origin and Window Rectangle */
+  GreSetDCOrg( hDC, rect.left, rect.top, &rect);
 }
 
 
