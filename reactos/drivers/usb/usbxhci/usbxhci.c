@@ -14,6 +14,7 @@ XHCI_OpenEndpoint(IN PVOID xhciExtension,
                   IN PVOID endpointParameters,
                   IN PVOID xhciEndpoint)
 {
+    DPRINT1("XHCI_OpenEndpoint: function initiated\n");
     return MP_STATUS_SUCCESS;
 }
 
@@ -23,6 +24,7 @@ XHCI_ReopenEndpoint(IN PVOID xhciExtension,
                     IN PVOID endpointParameters,
                     IN PVOID xhciEndpoint)
 {
+    DPRINT1("XHCI_ReopenEndpoint: function initiated\n");
     return MP_STATUS_SUCCESS;
 }
 
@@ -32,7 +34,7 @@ XHCI_QueryEndpointRequirements(IN PVOID xhciExtension,
                                IN PVOID endpointParameters,
                                IN PULONG EndpointRequirements)
 {
-    
+    DPRINT1("XHCI_QueryEndpointRequirements: function initiated\n");
 }
 
 VOID
@@ -50,13 +52,24 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
                         IN PVOID resourcesStartVA,
                         IN PVOID resourcesStartPA)
 {
+    DPRINT1("XHCI_InitializeResources: function initiated\n");
     PXHCI_HC_RESOURCES HcResourcesVA;
     PHYSICAL_ADDRESS HcResourcesPA;
+    PULONG BaseIoAdress;
+    PULONG OperationalRegs;
+    
+    
+    PULONG  RunTimeRegisterBase;
+    XHCI_INTERRUPTER_MANAGEMENT Iman;
+    XHCI_INTERRUPTER_MODERATION Imod;
+    XHCI_EVENT_RING_TABLE_SIZE erstz;
+    XHCI_EVENT_RING_TABLE_BASE_ADDR erstba;
+    XHCI_EVENT_RING_DEQUEUE_POINTER erstdp;
+    XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
     
     XHCI_COMMAND_RING_CONTROL CommandRingControlRegister;
     
     XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER DCBAAPointer;
-    PULONG OperationalRegs;
     unsigned long X, Y;
     
     DPRINT_XHCI("XHCI_InitializeResources: BaseVA - %p, BasePA - %p\n",
@@ -65,17 +78,19 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
                 
     HcResourcesVA = (PXHCI_HC_RESOURCES)resourcesStartVA;
     HcResourcesPA.QuadPart = (ULONG_PTR)resourcesStartPA;
-
-    DCBAAPointer.AsULONGULONG =  HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, DCBAA);
     
+    //DCBAA init
+    DCBAAPointer.AsULONGLONG =  HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, DCBAA);
+    
+    BaseIoAdress = XhciExtension->BaseIoAdress;
     OperationalRegs = XhciExtension->OperationalRegs;
-    //DCBAAPointer.RsvdZ =0;
+    
     WRITE_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP, DCBAAPointer.DCBAAPointerLo | DCBAAPointer.RsvdZ );
     WRITE_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP + 1, DCBAAPointer.DCBAAPointerHi);
     
     X = READ_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP) ;
     Y = READ_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP + 1) ;   
-    DCBAAPointer.AsULONGULONG = Y|X ;
+    DCBAAPointer.AsULONGLONG = Y|X ;
     ASSERT(DCBAAPointer.RsvdZ == 0);
     
     // command ring intialisation.
@@ -88,17 +103,42 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     HcResourcesVA->CommandRing.CREnquePointer=  &HcResourcesVA->CommandRing.Segment[0];
     HcResourcesVA->CommandRing.CRDequePointer= HcResourcesVA->CommandRing.CREnquePointer;
     
-    CommandRingControlRegister.AsULONGULONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.Segment);
+    CommandRingControlRegister.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.Segment);
     ASSERT(CommandRingControlRegister.RingCycleState == 0);
     ASSERT(CommandRingControlRegister.CommandStop == 0);
     ASSERT(CommandRingControlRegister.CommandAbort == 0);
     ASSERT(CommandRingControlRegister.CommandRingRunning == 0);
     ASSERT(CommandRingControlRegister.RsvdP == 0);
     
-    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CRCR, CommandRingControlRegister.AsULONGULONG);
+    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CRCR, CommandRingControlRegister.AsULONGLONG);
     WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CRCR + 1, CommandRingControlRegister.CommandRingPointerHi);
+    // end of command ring init
     
-    DbgBreakPoint();
+    //Primary Interrupter init
+    RunTimeRegisterBase =  XhciExtension -> RunTimeRegisterBase;
+    
+    Iman.InterruptEnable = 1;
+    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_IMAN , Iman.AsULONG);
+    
+    // dont change imod now
+    erstz.EventRingSegTableSize = 1;
+    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTSZ , erstz.AsULONG);
+    
+    erstba.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRingSegTable);
+    
+    EventRingSegTable.RingSegmentBaseAddr = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing);
+    EventRingSegTable.RingSegmentSize = 16;
+    HcResourcesVA->EventRingSegTable = EventRingSegTable;
+    
+    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTBA, erstba.AsULONGLONG);
+    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTBA + 1, erstba.AsULONGLONG >> 32);
+    // intially enque and deque are equal. 
+    erstdp.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing);
+    erstdp.DequeueERSTIndex =0;
+    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
+    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTDP + 1, erstdp.AsULONGLONG >> 32);
+    
+    //DbgBreakPoint();
     return MP_STATUS_SUCCESS;
 }
 
@@ -106,8 +146,11 @@ MPSTATUS
 NTAPI
 XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
 {
+    DPRINT1("XHCI_InitializeHardware: function initiated\n");
     PULONG BaseIoAdress;
     PULONG OperationalRegs;
+    
+    
     XHCI_USB_COMMAND Command;
     XHCI_USB_STATUS Status;
     LARGE_INTEGER CurrentTime = {{0, 0}};
@@ -119,8 +162,7 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
 
     OperationalRegs = XhciExtension->OperationalRegs;
     BaseIoAdress = XhciExtension->BaseIoAdress;
-    
-    
+   
     KeQuerySystemTime(&CurrentTime);
     CurrentTime.QuadPart += 100 * 10000; // 100 msec
     
@@ -166,7 +208,7 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
     // Device Context base aaddress array to be defined
     // Commnad ring deque pointer to be defined in CRCR
     
-    DbgBreakPoint();
+    //DbgBreakPoint();
     return MP_STATUS_SUCCESS;
 }
 
@@ -175,15 +217,19 @@ NTAPI
 XHCI_StartController(IN PVOID xhciExtension,
                      IN PUSBPORT_RESOURCES Resources)
 {
+    DPRINT1("XHCI_StartController: function initiated\n");
     PXHCI_EXTENSION XhciExtension;
     PULONG BaseIoAdress;
     PULONG OperationalRegs;
+    PULONG  RunTimeRegisterBase;
+    
     MPSTATUS MPStatus;
     XHCI_USB_COMMAND Command;
+    XHCI_RT_REGISTER_SPACE_OFFSET RTSOffsetRegister;
     UCHAR CapabilityRegLength;
     UCHAR Fladj;
 
-    DPRINT1("XHCI_StartController: function initiated\n");
+    
 
     if ((Resources->TypesResources & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
                                      (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT))
@@ -199,9 +245,14 @@ XHCI_StartController(IN PVOID xhciExtension,
     XhciExtension->BaseIoAdress = BaseIoAdress;
 
     CapabilityRegLength = (UCHAR)READ_REGISTER_ULONG(BaseIoAdress);
-    OperationalRegs = (PULONG)((ULONG)BaseIoAdress + CapabilityRegLength);
+    OperationalRegs = (PULONG)((ULONG_PTR)BaseIoAdress + CapabilityRegLength);
     XhciExtension->OperationalRegs = OperationalRegs;
+     
+    RTSOffsetRegister.AsULONG = READ_REGISTER_ULONG(BaseIoAdress + XHCI_RTSOFF);
+    RunTimeRegisterBase = BaseIoAdress + RTSOffsetRegister.AsULONG ;
 
+    XhciExtension->RunTimeRegisterBase = RunTimeRegisterBase;
+    
     DPRINT("XHCI_StartController: BaseIoAdress    - %p\n", BaseIoAdress);
     DPRINT("XHCI_StartController: OperationalRegs - %p\n", OperationalRegs);
     
@@ -230,7 +281,9 @@ XHCI_StartController(IN PVOID xhciExtension,
         DPRINT1("XHCI_StartController: Unsuccessful InitializeSchedule()\n");
         return MPStatus;
     }
-
+    
+    //Command.RunStop =1;
+    //WRITE_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD, Command.AsULONG );
     //DPRINT1("XHCI_StartController: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
 }
@@ -247,13 +300,14 @@ VOID
 NTAPI
 XHCI_SuspendController(IN PVOID xhciExtension)
 {
-    
+    DPRINT1("XHCI_SuspendController: function initiated\n");
 }
 
 MPSTATUS
 NTAPI
 XHCI_ResumeController(IN PVOID xhciExtension)
 {
+    DPRINT1("XHCI_ResumeController: function initiated\n");
     return MP_STATUS_SUCCESS;
 }
 
@@ -262,6 +316,7 @@ NTAPI
 XHCI_HardwarePresent(IN PXHCI_EXTENSION xhciExtension,
                      IN BOOLEAN IsInvalidateController)
 {
+    DPRINT1("XHCI_HardwarePresent: function initiated\n");
     return TRUE;
 }
 
@@ -269,6 +324,29 @@ BOOLEAN
 NTAPI
 XHCI_InterruptService(IN PVOID xhciExtension)
 {
+    DPRINT1("XHCI_InterruptService: function initiated\n");
+    XHCI_RT_REGISTER_SPACE_OFFSET RTSOffsetRegister;
+    PULONG  RunTimeRegisterBase;
+    XHCI_INTERRUPTER_MANAGEMENT Iman;
+    PXHCI_EXTENSION XhciExtension;
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    XHCI_EVENT_RING_DEQUEUE_POINTER erstdp;
+    
+    RunTimeRegisterBase = XhciExtension-> RunTimeRegisterBase;
+    
+    Iman.AsULONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_IMAN);
+    
+    Iman.InterruptPending =0;
+    
+    WRITE_REGISTER_ULONG(RunTimeRegisterBase + XHCI_IMAN, Iman.AsULONG);
+    DPRINT1("XHCI_InterruptService: Succesful Interupt\n");
+    // changing the enque pointer
+    erstdp.AsULONGLONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP + 1)||READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP);
+    erstdp.AsULONGLONG = erstdp.AsULONGLONG +2;
+    erstdp.DequeueERSTIndex =0;
+    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
+    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTDP + 1, erstdp.AsULONGLONG >> 32);
+    
     return TRUE;
 }
 
@@ -277,7 +355,7 @@ NTAPI
 XHCI_InterruptDpc(IN PVOID xhciExtension,
                   IN BOOLEAN IsDoEnableInterrupts)
 {
-    
+    DPRINT1("XHCI_InterruptDpc: function initiated\n");
 }
 
 MPSTATUS
@@ -288,7 +366,7 @@ XHCI_SubmitTransfer(IN PVOID xhciExtension,
                     IN PVOID xhciTransfer,
                     IN PVOID sgList)
 {
-    
+    DPRINT1("XHCI_SubmitTransfer: function initiated\n");
     return MP_STATUS_SUCCESS;
 }
 
@@ -319,7 +397,7 @@ XHCI_AbortAsyncTransfer(IN PXHCI_EXTENSION xhciExtension,
                         IN PXHCI_ENDPOINT xhciEndpoint,
                         IN PXHCI_TRANSFER xhciTransfer)
 {
-    
+    DPRINT1("XHCI_AbortAsyncTransfer: function initiated\n");
 }
 
 VOID
@@ -329,7 +407,7 @@ XHCI_AbortTransfer(IN PVOID xhciExtension,
                    IN PVOID xhciTransfer,
                    IN PULONG CompletedLength)
 {
-    
+    DPRINT1("XHCI_AbortTransfer: function initiated\n");
 }
 
 ULONG
@@ -347,7 +425,7 @@ XHCI_SetEndpointState(IN PVOID xhciExtension,
                       IN PVOID xhciEndpoint,
                       IN ULONG EndpointState)
 {
-    
+    DPRINT1("XHCI_SetEndpointState: function initiated\n");
 }
 
 VOID
@@ -355,20 +433,21 @@ NTAPI
 XHCI_PollEndpoint(IN PVOID xhciExtension,
                   IN PVOID xhciEndpoint)
 {
-    
+    DPRINT1("XHCI_PollEndpoint: function initiated\n");
 }
 
 VOID
 NTAPI
 XHCI_CheckController(IN PVOID xhciExtension)
 {
-    
+    DPRINT1("XHCI_CheckController: function initiated\n");
 }
 
 ULONG
 NTAPI
 XHCI_Get32BitFrameNumber(IN PVOID xhciExtension)
 {
+    DPRINT1("XHCI_Get32BitFrameNumber: function initiated\n");
     return 0;
 }
 
@@ -376,27 +455,40 @@ VOID
 NTAPI
 XHCI_InterruptNextSOF(IN PVOID xhciExtension)
 {
-  
+    DPRINT1("XHCI_InterruptNextSOF: function initiated\n");
 }
 
 VOID
 NTAPI
 XHCI_EnableInterrupts(IN PVOID xhciExtension)
 {
-    
+    DPRINT1("XHCI_EnableInterrupts: function initiated\n");
+    PXHCI_EXTENSION XhciExtension;
+    PULONG OperationalRegs;
+    XHCI_USB_COMMAND usbCommand;
+   
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    OperationalRegs = XhciExtension->OperationalRegs;
+    usbCommand.AsULONG =READ_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD);
+   
+    usbCommand.InterrupterEnable = 1;
+   
+    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD,usbCommand.AsULONG );
+     DPRINT1("XHCI_EnableInterrupts: Interrupts enabled\n");
 }
 
 VOID
 NTAPI
 XHCI_DisableInterrupts(IN PVOID xhciExtension)
 {
+    DPRINT1("XHCI_DisableInterrupts: function initiated\n");
 }
 
 VOID
 NTAPI
 XHCI_PollController(IN PVOID xhciExtension)
 {
-    
+    DPRINT1("XHCI_PollController: function initiated\n");
 }
 
 VOID
@@ -405,7 +497,7 @@ XHCI_SetEndpointDataToggle(IN PVOID xhciExtension,
                            IN PVOID xhciEndpoint,
                            IN ULONG DataToggle)
 {
-    
+    DPRINT1("XHCI_SetEndpointDataToggle: function initiated\n");
 }
 
 ULONG
@@ -413,7 +505,7 @@ NTAPI
 XHCI_GetEndpointStatus(IN PVOID xhciExtension,
                        IN PVOID xhciEndpoint)
 {
-    
+    DPRINT1("XHCI_GetEndpointStatus: function initiated\n");
     return 0;
 }
 
@@ -423,6 +515,7 @@ XHCI_SetEndpointStatus(IN PVOID xhciExtension,
                        IN PVOID xhciEndpoint,
                        IN ULONG EndpointStatus)
 {
+    DPRINT1("XHCI_SetEndpointStatus: function initiated\n");
 }
 
 MPSTATUS
@@ -479,7 +572,7 @@ VOID
 NTAPI
 XHCI_FlushInterrupts(IN PVOID xhciExtension)
 {
-   
+    DPRINT1("XHCI_FlushInterrupts: function initiated\n");
 }
 
 MPSTATUS

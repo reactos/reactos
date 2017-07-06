@@ -5,7 +5,8 @@
 #define XHCI_HCSP3            3
 #define XHCI_HCCP1            4
 #define XHCI_DBOFF            5
-#define XHCI_HCCP2            6
+#define XHCI_RTSOFF           6
+#define XHCI_HCCP2            7
 
 #define XHCI_USBCMD           0
 #define XHCI_USBSTS           1
@@ -13,8 +14,15 @@
 #define XHCI_CRCR             6
 #define XHCI_DCBAAP           12
 #define XHCI_CONFIG           14
+#define XHCI_PORTSC           100
 
-typedef unsigned long long ULONGULONG ;
+#define XHCI_IMAN             0
+#define XHCI_IMOD             1
+#define XHCI_ERSTSZ           2
+#define XHCI_ERSTBA           4
+#define XHCI_ERSTDP           6
+
+
 
 typedef union _XHCI_HC_STRUCTURAL_PARAMS_1 {
   struct {
@@ -77,8 +85,8 @@ typedef union _XHCI_DOORBELL_OFFSET {
 
 typedef union _XHCI_RT_REGISTER_SPACE_OFFSET { //RUNTIME REGISTER SPACE OFFSET
   struct {
-    ULONG Rsvd               : 2;
-    ULONG RTSOffset          : 30;
+    ULONG Rsvd               : 5;
+    ULONG RTSOffset          : 27;
   };
   ULONG AsULONG;
 } XHCI_RT_REGISTER_SPACE_OFFSET;
@@ -149,12 +157,34 @@ typedef union _XHCI_DEVICE_NOTIFICATION_CONTROL {
   ULONG AsULONG;
 } XHCI_DEVICE_NOTIFICATION_CONTROL;
 
+typedef union _XHCI_COMMAND_RING_CONTROL { 
+  struct {
+    ULONGLONG RingCycleState           : 1;
+    ULONGLONG CommandStop              : 1;
+    ULONGLONG CommandAbort             : 1;
+    ULONGLONG CommandRingRunning       : 1;
+    ULONGLONG RsvdP                    : 2;
+    ULONGLONG CommandRingPointerLo     : 26;
+    ULONGLONG CommandRingPointerHi     : 32;
+  };
+  ULONGLONG AsULONGLONG;
+} XHCI_COMMAND_RING_CONTROL;
+
+typedef union _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER { 
+  struct {
+    ULONGLONG RsvdZ                       : 6;
+    ULONGLONG DCBAAPointerLo              : 26;
+    ULONGLONG DCBAAPointerHi              : 32;
+  };
+  ULONGLONG AsULONGLONG;
+} XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER;
+
 typedef union _XHCI_CONFIGURE { 
   struct {
     ULONG MaxDeviceSlotsEnabled        : 8;
     ULONG U3EntryEnable                : 1;
     ULONG ConfigurationInfoEnable      : 1;
-    ULONG Rsvd                         : 21;
+    ULONG Rsvd                         : 22;
   };
   ULONG AsULONG;
 } XHCI_CONFIGURE;
@@ -189,25 +219,45 @@ typedef union _XHCI_PORT_STATUS_CONTROL {
   ULONG AsULONG;
 } XHCI_PORT_STATUS_CONTROL;
 
-typedef union _XHCI_COMMAND_RING_CONTROL { 
-  struct {
-    ULONGULONG RingCycleState           : 1;
-    ULONGULONG CommandStop              : 1;
-    ULONGULONG CommandAbort             : 1;
-    ULONGULONG CommandRingRunning       : 1;
-    ULONGULONG RsvdP                    : 2;
-    ULONGULONG CommandRingPointerLo     : 26;
-    ULONGULONG CommandRingPointerHi     : 32;
-  };
-  ULONGULONG AsULONGULONG;
-} XHCI_COMMAND_RING_CONTROL;
+// Interrupt Register Set
+typedef union _XHCI_INTERRUPTER_MANAGEMENT {
+    struct {
+        ULONG InterruptPending  : 1;
+        ULONG InterruptEnable   : 1;
+        ULONG RsvdP             : 30;
+    };
+    ULONG AsULONG;
+} XHCI_INTERRUPTER_MANAGEMENT;
 
-typedef union _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER { 
-  struct {
-    ULONGULONG RsvdZ                       : 6;
-    ULONGULONG DCBAAPointerLo              : 26;
-    ULONGULONG DCBAAPointerHi              : 32;
-  };
-  ULONGULONG AsULONGULONG;
-} XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER;
+typedef union _XHCI_INTERRUPTER_MODERATION {
+    struct {
+        ULONG InterruptModIterval  : 16;
+        ULONG InterruptModCounter  : 16;
+    };
+    ULONG AsULONG;
+} XHCI_INTERRUPTER_MODERATION;
 
+typedef union _XHCI_EVENT_RING_TABLE_SIZE {
+    struct {
+        ULONG EventRingSegTableSize  : 16;
+        ULONG RsvdP                  : 16;
+    };
+    ULONG AsULONG;
+} XHCI_EVENT_RING_TABLE_SIZE;
+
+typedef union _XHCI_EVENT_RING_TABLE_BASE_ADDR { 
+  struct {
+    ULONGLONG RsvdP                       : 6;
+    ULONGLONG EventRingSegTableBaseAddr   : 58;
+  };
+  ULONGLONG AsULONGLONG;
+} XHCI_EVENT_RING_TABLE_BASE_ADDR;
+
+typedef union _XHCI_EVENT_RING_DEQUEUE_POINTER { 
+  struct {
+    ULONGLONG DequeueERSTIndex            : 3;
+    ULONGLONG EventHandlerBusy            : 1;
+    ULONGLONG EventRingSegDequeuePointer  : 60;
+  };
+  ULONGLONG AsULONGLONG;
+} XHCI_EVENT_RING_DEQUEUE_POINTER;

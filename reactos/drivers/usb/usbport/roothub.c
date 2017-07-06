@@ -3,7 +3,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define NDEBUG_USBPORT_CORE
+//#define NDEBUG_USBPORT_CORE
 #include "usbdebug.h"
 
 RHSTATUS
