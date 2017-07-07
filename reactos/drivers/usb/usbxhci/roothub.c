@@ -42,6 +42,7 @@ XHCI_RH_GetStatus(IN PVOID xhciExtension,
                   IN PUSHORT Status)
 {
     DPRINT1("XHCI_RH_GetStatus: function initiated\n");
+    *Status = 1;
     return 0;
 }
 
@@ -61,7 +62,7 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     PortStatusReg = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
     PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusReg) ;
-    
+    PortStatusRegister.AsULONG = 0;
     *PortStatus = PortStatusRegister.AsULONG;
     
     return MP_STATUS_SUCCESS;
@@ -73,6 +74,7 @@ XHCI_RH_GetHubStatus(IN PVOID xhciExtension,
                      IN PULONG HubStatus)
 {
     DPRINT1("XHCI_RH_GetHubStatus: function initiated\n");
+    *HubStatus = 0;
     return 0;
 }
 
@@ -214,7 +216,7 @@ NTAPI
 XHCI_RH_DisableIrq(IN PVOID xhciExtension)
 {
    DPRINT1("XHCI_RH_DisableIrq: function initiated\n");
-   PXHCI_EXTENSION XhciExtension;
+   /*PXHCI_EXTENSION XhciExtension;
    PULONG OperationalRegs;
    XHCI_USB_COMMAND usbCommand;
    
@@ -225,7 +227,7 @@ XHCI_RH_DisableIrq(IN PVOID xhciExtension)
    usbCommand.InterrupterEnable = 0;
    
    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD,usbCommand.AsULONG );
-   DPRINT1("XHCI_RH_DisableIrq: Disable Interupts succesfull\n");
+   DPRINT1("XHCI_RH_DisableIrq: Disable Interupts succesfull\n");*/
 }
 
 VOID

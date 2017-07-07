@@ -12,7 +12,7 @@
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
-
+#define XHCI_FLAGS_CONTROLLER_SUSPEND 0x01
 //Data structures
 typedef struct  _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY {
    PHYSICAL_ADDRESS ContextBaseAddr [256];
@@ -222,109 +222,109 @@ typedef struct _XHCI_TRANSFER {
 VOID
 NTAPI
 XHCI_RH_GetRootHubData(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN PVOID rootHubData);
 
 MPSTATUS
 NTAPI
 XHCI_RH_GetStatus(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN PUSHORT Status);
 
 MPSTATUS
 NTAPI
 XHCI_RH_GetPortStatus(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port,
   IN PULONG PortStatus);
 
 MPSTATUS
 NTAPI
 XHCI_RH_GetHubStatus(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN PULONG HubStatus);
 
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortReset(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortPower(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortEnable(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_SetFeaturePortSuspend(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortEnable(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortPower(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortSuspend(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortEnableChange(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortConnectChange(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortResetChange(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortSuspendChange(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 MPSTATUS
 NTAPI
 XHCI_RH_ClearFeaturePortOvercurrentChange(
-  IN PVOID ohciExtension,
+  IN PVOID xhciExtension,
   IN USHORT Port);
 
 VOID
 NTAPI
 XHCI_RH_DisableIrq(
-  IN PVOID ohciExtension);
+  IN PVOID xhciExtension);
 
 VOID
 NTAPI
 XHCI_RH_EnableIrq(
-  IN PVOID ohciExtension);
+  IN PVOID xhciExtension);
 
 
 #endif /* USBXHCI_H__ */
