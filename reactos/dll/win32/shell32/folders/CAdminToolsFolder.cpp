@@ -175,8 +175,6 @@ HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
         return E_OUTOFMEMORY;
 
     return SHELL32_CoCreateInitSF(m_pidlInner, 
-                                  NULL,
-                                  NULL,
                                   &CLSID_ShellFSFolder,
                                   CSIDL_COMMON_ADMINTOOLS,
                                   IID_PPV_ARG(IShellFolder2, &m_pisfInner));

@@ -339,24 +339,11 @@ HRESULT WINAPI CRegFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserve
         return E_INVALIDARG;
     }
 
-    LPITEMIDLIST pidlChild = ILCloneFirst (pidl);
-    if (!pidlChild)
-        return E_OUTOFMEMORY;
-
-    CComPtr<IShellFolder> psf;
-    hr = SHELL32_CoCreateInitSF(m_pidlRoot, NULL, pidlChild, pGUID, -1, IID_PPV_ARG(IShellFolder, &psf));
-    ILFree(pidlChild);
-    if (FAILED(hr))
+    hr = SHELL32_BindToSF(m_pidlRoot, NULL, pidl, pGUID, riid, ppvOut);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (_ILIsPidlSimple (pidl))
-    {
-        return psf->QueryInterface(riid, ppvOut);
-    }
-    else
-    {
-        return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
-    }
+    return S_OK;
 }
 
 HRESULT WINAPI CRegFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
@@ -485,7 +472,14 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
         }
         else
         {
-            return HCR_GetClassName(m_guid, strRet);
+            BOOL bRet;
+            WCHAR wstrName[MAX_PATH+1];
+            bRet = HCR_GetClassNameW(m_guid, wstrName, MAX_PATH);
+            if (!bRet)
+                return E_FAIL;
+
+            return SHSetStrRet(strRet, wstrName);
+
         }
     }
 

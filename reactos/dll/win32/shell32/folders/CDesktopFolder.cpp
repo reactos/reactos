@@ -270,8 +270,6 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
 
     /* Create the inner fs folder */
     hr = SHELL32_CoCreateInitSF(pidlRoot, 
-                                NULL,
-                                NULL,
                                 &CLSID_ShellFSFolder,
                                 CSIDL_DESKTOPDIRECTORY,
                                 IID_PPV_ARG(IShellFolder2, &m_DesktopFSFolder));
@@ -280,8 +278,6 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
 
     /* Create the inner shared fs folder. Dont fail on failure. */
     hr = SHELL32_CoCreateInitSF(pidlRoot, 
-                                NULL,
-                                NULL,
                                 &CLSID_ShellFSFolder,
                                 CSIDL_COMMON_DESKTOPDIRECTORY,
                                 IID_PPV_ARG(IShellFolder2, &m_SharedDesktopFSFolder));

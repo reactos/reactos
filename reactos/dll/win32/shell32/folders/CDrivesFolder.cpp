@@ -390,31 +390,25 @@ HRESULT WINAPI CDrivesFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcRese
     if (_ILIsSpecialFolder(pidl))
         return m_regFolder->BindToObject(pidl, pbcReserved, riid, ppvOut);
 
-    LPITEMIDLIST pidlChild = ILCloneFirst (pidl);
-    if (!pidlChild)
-        return E_OUTOFMEMORY;
+    CHAR* pchDrive = _ILGetDataPointer(pidl)->u.drive.szDriveName;
+    
+    PERSIST_FOLDER_TARGET_INFO pfti = {0};
+    pfti.dwAttributes = -1;
+    pfti.csidl = -1;
+    pfti.szTargetParsingName[0] = *pchDrive;
+    pfti.szTargetParsingName[1] = L':';
+    pfti.szTargetParsingName[2] = L'\\';
 
-    CComPtr<IShellFolder> psf;
-    HRESULT hr = SHELL32_CoCreateInitSF(pidlRoot, 
-                                        NULL, 
-                                        pidlChild, 
-                                        &CLSID_ShellFSFolder, 
-                                        -1, 
-                                        IID_PPV_ARG(IShellFolder, &psf));
-
-    ILFree(pidlChild);
-
-    if (FAILED(hr))
+    HRESULT hr = SHELL32_BindToSF(pidlRoot,
+                                  &pfti,
+                                  pidl,
+                                  &CLSID_ShellFSFolder,
+                                  riid,
+                                  ppvOut);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (_ILIsPidlSimple (pidl))
-    {
-        return psf->QueryInterface(riid, ppvOut);
-    }
-    else
-    {
-        return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
-    }
+    return S_OK;
 }
 
 /**************************************************************************

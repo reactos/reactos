@@ -175,8 +175,6 @@ HRESULT WINAPI CMyDocsFolder::Initialize(LPCITEMIDLIST pidl)
         return E_OUTOFMEMORY;
 
     return SHELL32_CoCreateInitSF(m_pidlInner, 
-                                  NULL,
-                                  NULL,
                                   &CLSID_ShellFSFolder,
                                   CSIDL_PERSONAL,
                                   IID_PPV_ARG(IShellFolder2, &m_pisfInner));

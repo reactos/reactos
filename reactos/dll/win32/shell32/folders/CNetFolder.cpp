@@ -283,31 +283,13 @@ HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
 HRESULT WINAPI CNetFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
 #ifdef HACKY_UNC_PATHS
-    PITEMID_CHILD pidlChild = ILCloneFirst (pidl);
-    if (!pidlChild)
-        return E_FAIL;
+    /* Create the target folder info */
+    PERSIST_FOLDER_TARGET_INFO pfti = {0};
+    pfti.dwAttributes = -1;
+    pfti.csidl = -1;
+    StringCchCopyW(pfti.szTargetParsingName, MAX_PATH, (WCHAR*)pidl->mkid.abID);
 
-    PIDLIST_ABSOLUTE pidlAbsolute = ILCombine(pidlRoot,pidlChild);
-    if (!pidlAbsolute)
-        return E_FAIL;
-
-    CComPtr<IShellFolder> psf;
-    HRESULT hr = SHELL32_CoCreateInitSF(pidlAbsolute, 
-                                        (WCHAR*)pidl->mkid.abID, 
-                                        NULL, 
-                                        &CLSID_ShellFSFolder, 
-                                        -1, 
-                                        IID_PPV_ARG(IShellFolder, &psf));
-    ILFree(pidlChild);
-    ILFree(pidlAbsolute);
-
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    if (_ILIsPidlSimple (pidl))
-        return psf->QueryInterface(riid, ppvOut);
-    else
-        return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
+    return SHELL32_BindToSF(pidlRoot, &pfti, pidl, &CLSID_ShellFSFolder, riid, ppvOut);
 #else
     return E_NOTIMPL;
 #endif
