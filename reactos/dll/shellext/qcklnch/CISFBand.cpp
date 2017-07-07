@@ -7,7 +7,6 @@
  */
 
 #include "precomp.h"
-#include <mshtmcid.h>
 #include <commoncontrols.h>
 
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
@@ -26,7 +25,7 @@ BOOL WINAPI _ILIsDesktop(LPCITEMIDLIST pidl)
 // *** CISFBand *** 
 
 CISFBand::CISFBand() :
-    m_BandID(0),        
+    m_BandID(0),    
     m_pidl(NULL),
     m_textFlag(true),
     m_iconFlag(true)
@@ -34,84 +33,10 @@ CISFBand::CISFBand() :
 }
 
 CISFBand::~CISFBand() 
-{
+{    
 }
 
-// *** CWindowImpl ***
-// Subclassing 
-
-LRESULT CISFBand::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    TBBUTTON tb;
-    POINT pt;
-    DWORD pos = GetMessagePos();    
-    pt.x = GET_X_LPARAM(pos);
-    pt.y = GET_Y_LPARAM(pos);
-    ScreenToClient(&pt);
-
-    int index = SendMessage(m_hWnd, TB_HITTEST, 0, (LPARAM)&pt);
-    bool chk = SendMessage(m_hWnd, TB_GETBUTTON, abs(index), (LPARAM)&tb);    
-    if(chk) 
-        SHInvokeDefaultCommand(m_hWnd, m_pISF, (LPITEMIDLIST)tb.dwData);    
-
-    return 0;
-}
-
-LRESULT CISFBand::OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    HRESULT hr;
-    CComPtr<IContextMenu> picm;
-    HMENU fmenu = CreatePopupMenu();
-    TBBUTTON tb;    
-    POINT pt;
-    DWORD pos = GetMessagePos();
-    pt.x = GET_X_LPARAM(pos);
-    pt.y = GET_Y_LPARAM(pos);
-    ScreenToClient(&pt);    
-
-    int index = SendMessage(m_hWnd, TB_HITTEST, 0, (LPARAM)&pt);
-    bool chk = SendMessage(m_hWnd, TB_GETBUTTON, abs(index), (LPARAM)&tb);
-    LPITEMIDLIST pidl = (LPITEMIDLIST)tb.dwData;
-
-    if (chk)
-    {
-        ClientToScreen(&pt);
-        hr = m_pISF->GetUIObjectOf(m_hWnd, 1, &pidl, IID_NULL_PPV_ARG(IContextMenu, &picm));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        hr = picm->QueryContextMenu(fmenu, 0, 1, 0x7FFF, CMF_DEFAULTONLY);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        int id = TrackPopupMenuEx(fmenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, m_hWnd, 0);
-        if (id > 0)
-        {
-            CMINVOKECOMMANDINFOEX info = { 0 };
-            info.cbSize = sizeof(info);
-            info.fMask = CMIC_MASK_UNICODE | CMIC_MASK_PTINVOKE;
-            if (GetKeyState(VK_CONTROL) < 0)
-            {
-                info.fMask |= CMIC_MASK_CONTROL_DOWN;
-            }
-            if (GetKeyState(VK_SHIFT) < 0)
-            {
-                info.fMask |= CMIC_MASK_SHIFT_DOWN;
-            }
-            info.hwnd = m_hWnd;
-            info.lpVerb = MAKEINTRESOURCEA(id - 1);
-            info.lpVerbW = MAKEINTRESOURCEW(id - 0x7FFF);
-            info.nShow = SW_SHOWNORMAL;
-            info.ptInvoke = pt;
-            picm->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
-        }            
-    }
-
-    DestroyMenu(fmenu);    
-    return 0;
-}
-
-// ToolbarTest
+// Toolbar
 HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 {
     // Declare and initialize local constants.     
@@ -159,9 +84,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
              StrRetToBuf(&stret, pidl, sz, _countof(sz));            
 
          TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, buttonStyles,{ 0 }, (DWORD_PTR)pidl, (INT_PTR)sz };
-         SendMessage(m_hWnd, TB_INSERTBUTTONW, 0, (LPARAM)&tb);
-         //CoTaskMemFree(pidl);         
-    } 
+         SendMessage(m_hWnd, TB_INSERTBUTTONW, i, (LPARAM)&tb);
+         //CoTaskMemFree(pidl);
+    }   
 
     // Resize the toolbar, and then show it.
     SendMessage(m_hWnd, TB_AUTOSIZE, 0, 0);
@@ -189,11 +114,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         
         hr = CreateSimpleToolbar(hwndParent);
         if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        hr = SubclassWindow(m_hWnd);
-        if (FAILED_UNEXPECTEDLY(hr)) 
-            return hr;
+            return hr;        
 
         return S_OK;
     }
@@ -386,20 +307,83 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     }
 
     STDMETHODIMP CISFBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
-    {          
-       /* switch (uMsg)
+    {        
+        switch (uMsg)
         {
             case WM_COMMAND:
             {
-                MessageBox(L"Button Clicked", L"Test", MB_OKCANCEL | MB_ICONINFORMATION);
+                TBBUTTON tb;                
+                bool chk = SendMessage(m_hWnd, TB_GETBUTTON, LOWORD(wParam), (LPARAM)&tb);
+                if (chk)
+                    SHInvokeDefaultCommand(m_hWnd, m_pISF, (LPITEMIDLIST)tb.dwData);
+
+                *theResult = TRUE;
+                break;
+            }            
+            case WM_NOTIFY:
+            {
+                switch (((LPNMHDR)lParam)->code)
+                {
+                    case NM_RCLICK:
+                    {                         
+                        HRESULT hr;
+                        POINT pt = ((LPNMMOUSE)lParam)->pt;
+                        CComPtr<IContextMenu> picm;
+                        HMENU fmenu = CreatePopupMenu();
+                        TBBUTTON tb;
+
+                        bool chk = SendMessage(m_hWnd, TB_GETBUTTON, ((LPNMMOUSE)lParam)->dwItemSpec, (LPARAM)&tb);
+                        LPITEMIDLIST pidl = (LPITEMIDLIST)tb.dwData;
+
+                        if (chk)
+                        {
+                            ClientToScreen(&pt);
+                            hr = m_pISF->GetUIObjectOf(m_hWnd, 1, &pidl, IID_NULL_PPV_ARG(IContextMenu, &picm));
+                            if (FAILED_UNEXPECTEDLY(hr))
+                                return hr;
+
+                            hr = picm->QueryContextMenu(fmenu, 0, 1, 0x7FFF, CMF_DEFAULTONLY);
+                            if (FAILED_UNEXPECTEDLY(hr))
+                                return hr;
+
+                            int id = TrackPopupMenuEx(fmenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, m_hWnd, 0);
+                            if (id > 0)
+                            {
+                                CMINVOKECOMMANDINFOEX info = { 0 };
+                                info.cbSize = sizeof(info);
+                                info.fMask = CMIC_MASK_UNICODE | CMIC_MASK_PTINVOKE;
+                                if (GetKeyState(VK_CONTROL) < 0)
+                                {
+                                    info.fMask |= CMIC_MASK_CONTROL_DOWN;
+                                }
+                                if (GetKeyState(VK_SHIFT) < 0)
+                                {
+                                    info.fMask |= CMIC_MASK_SHIFT_DOWN;
+                                }
+                                info.hwnd = m_hWnd;
+                                info.lpVerb = MAKEINTRESOURCEA(id - 1);
+                                info.lpVerbW = MAKEINTRESOURCEW(id - 0x7FFF);
+                                info.nShow = SW_SHOWNORMAL;
+                                info.ptInvoke = pt;
+                                picm->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
+                            }
+                        }
+                        DestroyMenu(fmenu);
+                        
+                        *theResult = TRUE;
+                        break;
+                    }
+                    default:
+                        *theResult = FALSE;
+                }
 
                 break;
             }
+            default: 
+                *theResult = FALSE;
         }
-        return DefSubclassProc(hWnd, uMsg, wParam, lParam);*/
 
-        UNIMPLEMENTED;
-        return E_NOTIMPL;
+        return S_OK;              
     }
 
     STDMETHODIMP CISFBand::IsWindowOwner(HWND hWnd)

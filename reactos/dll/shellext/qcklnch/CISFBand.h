@@ -9,7 +9,7 @@
 
 // COM class for cisfband
 class CISFBand :
-    public CWindowImpl<CISFBand>,
+    public CWindow,
     public CComCoClass<CISFBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,    
     public IObjectWithSite,
@@ -24,9 +24,9 @@ class CISFBand :
     DWORD m_BandID;
     CComPtr<IUnknown> m_Site;
 
-    // Toolbar        
+    // Toolbar     
     CComPtr<IShellFolder> m_pISF;     
-    PCIDLIST_ABSOLUTE m_pidl;    
+    PCIDLIST_ABSOLUTE m_pidl;   
 
     // Menu      
     BOOL m_textFlag;
@@ -39,8 +39,6 @@ public:
 
 // Personal Methods
     HRESULT CreateSimpleToolbar(HWND hWndParent);
-    LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     
 // IObjectWithSite
 
@@ -182,11 +180,7 @@ public:
         UINT uFlags
     );
     
-//*****************************************************************************************************
-    BEGIN_MSG_MAP(CISFBand)
-        MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
-        MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
-    END_MSG_MAP()
+//*****************************************************************************************************   
 
     DECLARE_NOT_AGGREGATABLE(CISFBand)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
