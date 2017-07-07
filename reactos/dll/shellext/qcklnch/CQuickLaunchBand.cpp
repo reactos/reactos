@@ -253,13 +253,6 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
 
 /*****************************************************************************/
 // IWinEventHandler
-    STDMETHODIMP CQuickLaunchBand::ProcessMessage(IN HWND hWnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam, OUT LRESULT *plrResult)
-    {
-        TRACE("CQuickLaunchBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
-                
-        return E_NOTIMPL;
-    }
-
     STDMETHODIMP CQuickLaunchBand::ContainsWindow(IN HWND hWnd)
     {
         return E_NOTIMPL;

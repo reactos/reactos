@@ -102,15 +102,7 @@ public:
         IN BOOL    fClearDirty
     );
 
-// IWinEventHandler
-
-    virtual STDMETHODIMP ProcessMessage(
-        IN HWND hWnd,
-        IN UINT uMsg,
-        IN WPARAM wParam,
-        IN LPARAM lParam,
-        OUT LRESULT *plrResult
-    );
+// IWinEventHandler    
 
     virtual STDMETHODIMP ContainsWindow(
         IN HWND hWnd

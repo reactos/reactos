@@ -33,7 +33,8 @@ CISFBand::CISFBand() :
 }
 
 CISFBand::~CISFBand() 
-{    
+{
+    CloseDW(0);
 }
 
 // Toolbar
@@ -62,8 +63,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     // Enumerate objects
     CComPtr<IEnumIDList> pEndl;    
     LPITEMIDLIST pidl;
-    STRRET stret;  
-    ULONG count = 0;
+    STRRET stret;     
     hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS, &pEndl);
     if (FAILED_UNEXPECTEDLY(hr)) 
     {
@@ -71,7 +71,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         return hr;
     }
 
-    for (int i=0; pEndl->Next(1, &pidl, NULL) != S_FALSE; i++, count++)
+    for (int i=0; pEndl->Next(1, &pidl, NULL) != S_FALSE; i++)
     {
          WCHAR sz[MAX_PATH];
          int index = SHMapPIDLToSystemImageListIndex(m_pISF, pidl, NULL);            
@@ -84,8 +84,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
              StrRetToBuf(&stret, pidl, sz, _countof(sz));            
 
          TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, buttonStyles,{ 0 }, (DWORD_PTR)pidl, (INT_PTR)sz };
-         SendMessage(m_hWnd, TB_INSERTBUTTONW, i, (LPARAM)&tb);
-         //CoTaskMemFree(pidl);
+         SendMessage(m_hWnd, TB_INSERTBUTTONW, i, (LPARAM)&tb);         
     }   
 
     // Resize the toolbar, and then show it.
@@ -169,6 +168,18 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         if (m_hWnd)
         {
             ShowWindow(SW_HIDE);
+
+            CComPtr<IEnumIDList> pEndl;
+            LPITEMIDLIST pidl;                        
+            HRESULT hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS, &pEndl);
+            if (FAILED_UNEXPECTEDLY(hr))
+            {
+                DestroyWindow();
+                return hr;
+            }
+            while (pEndl->Next(1, &pidl, NULL) != S_FALSE)
+                CoTaskMemFree(pidl);
+
             DestroyWindow();
             m_hWnd = NULL;
             return S_OK;
@@ -287,14 +298,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     }    
 
 /*****************************************************************************/
-// *** IWinEventHandler *** 
-    STDMETHODIMP CISFBand::ProcessMessage(IN HWND hWnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam, OUT LRESULT *plrResult)
-    {
-        TRACE("CISFBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
-        
-        return E_NOTIMPL;
-    }
-
+// *** IWinEventHandler ***     
     STDMETHODIMP CISFBand::ContainsWindow(IN HWND hWnd)
     {        
         if (hWnd == m_hWnd || IsChild(hWnd))
@@ -351,7 +355,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
                             {
                                 CMINVOKECOMMANDINFOEX info = { 0 };
                                 info.cbSize = sizeof(info);
-                                info.fMask = CMIC_MASK_UNICODE | CMIC_MASK_PTINVOKE;
+                                info.fMask = CMIC_MASK_PTINVOKE;
                                 if (GetKeyState(VK_CONTROL) < 0)
                                 {
                                     info.fMask |= CMIC_MASK_CONTROL_DOWN;
@@ -361,8 +365,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
                                     info.fMask |= CMIC_MASK_SHIFT_DOWN;
                                 }
                                 info.hwnd = m_hWnd;
-                                info.lpVerb = MAKEINTRESOURCEA(id - 1);
-                                info.lpVerbW = MAKEINTRESOURCEW(id - 0x7FFF);
+                                info.lpVerb = MAKEINTRESOURCEA(id - 1);                                
                                 info.nShow = SW_SHOWNORMAL;
                                 info.ptInvoke = pt;
                                 picm->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
@@ -536,25 +539,25 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
     STDMETHODIMP CISFBand::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {        
-        HMENU qMenu = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDM_POPUPMENU));
-        UINT idMax = Shell_MergeMenus(hmenu, GetSubMenu(qMenu, 0), indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS);
-        
+        HMENU qMenu = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDM_POPUPMENU));        
         if(m_textFlag) 
-            CheckMenuItem(hmenu, IDM_SHOW_TEXT, MF_CHECKED);
+            CheckMenuItem(qMenu, IDM_SHOW_TEXT, MF_CHECKED);
         else 
-            CheckMenuItem(hmenu, IDM_SHOW_TEXT, MF_UNCHECKED);
+            CheckMenuItem(qMenu, IDM_SHOW_TEXT, MF_UNCHECKED);
 
         if (m_iconFlag)
         {
-            CheckMenuItem(hmenu, IDM_SMALL_ICONS, MF_CHECKED);
-            CheckMenuItem(hmenu, IDM_LARGE_ICONS, MF_UNCHECKED);
+            CheckMenuItem(qMenu, IDM_SMALL_ICONS, MF_CHECKED);
+            CheckMenuItem(qMenu, IDM_LARGE_ICONS, MF_UNCHECKED);
         }
         else
         {
-            CheckMenuItem(hmenu, IDM_LARGE_ICONS, MF_CHECKED);
-            CheckMenuItem(hmenu, IDM_SMALL_ICONS, MF_UNCHECKED);
+            CheckMenuItem(qMenu, IDM_LARGE_ICONS, MF_CHECKED);
+            CheckMenuItem(qMenu, IDM_SMALL_ICONS, MF_UNCHECKED);
         }
 
+        UINT idMax = Shell_MergeMenus(hmenu, GetSubMenu(qMenu, 0), indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS);
+        DestroyMenu(qMenu);
         return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(idMax - idCmdFirst +1));         
     }
 

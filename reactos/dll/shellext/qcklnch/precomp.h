@@ -37,8 +37,5 @@
 #include <wine/unicode.h>
 
 #include "resource.h"
-
-#undef DbgPrint
-
 #include "CQuickLaunchBand.h"
 #include "CISFBand.h"
