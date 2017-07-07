@@ -169,16 +169,11 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         {
             ShowWindow(SW_HIDE);
 
-            CComPtr<IEnumIDList> pEndl;
-            LPITEMIDLIST pidl;                        
-            HRESULT hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS, &pEndl);
-            if (FAILED_UNEXPECTEDLY(hr))
+            TBBUTTON tb;
+            for (int i = 0; SendMessage(m_hWnd, TB_GETBUTTON, i, (LPARAM)&tb); i++)
             {
-                DestroyWindow();
-                return hr;
-            }
-            while (pEndl->Next(1, &pidl, NULL) != S_FALSE)
-                CoTaskMemFree(pidl);
+                CoTaskMemFree((LPITEMIDLIST)tb.dwData);
+            }            
 
             DestroyWindow();
             m_hWnd = NULL;
