@@ -205,10 +205,7 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
     ASSERT(Command.RunStop==0); //required before setting max device slots enabled.
     Config.MaxDeviceSlotsEnabled = 1; // max possible value is number of slots HCSPARAMS1
     WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CONFIG, Config.AsULONG);
-    // Device Context base aaddress array to be defined
-    // Commnad ring deque pointer to be defined in CRCR
     
-    //DbgBreakPoint();
     return MP_STATUS_SUCCESS;
 }
 
@@ -282,8 +279,8 @@ XHCI_StartController(IN PVOID xhciExtension,
         return MPStatus;
     }
     
-    //Command.RunStop =1;
-    //WRITE_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD, Command.AsULONG );
+    Command.RunStop =1;
+    WRITE_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD, Command.AsULONG );
     //DPRINT1("XHCI_StartController: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
 }
@@ -300,6 +297,10 @@ VOID
 NTAPI
 XHCI_SuspendController(IN PVOID xhciExtension)
 {
+    PXHCI_EXTENSION XhciExtension;
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    
+    XhciExtension->Flags |= XHCI_FLAGS_CONTROLLER_SUSPEND;
     DPRINT1("XHCI_SuspendController: function initiated\n");
 }
 
@@ -308,6 +309,10 @@ NTAPI
 XHCI_ResumeController(IN PVOID xhciExtension)
 {
     DPRINT1("XHCI_ResumeController: function initiated\n");
+    PXHCI_EXTENSION XhciExtension;
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    
+    XhciExtension->Flags &= ~XHCI_FLAGS_CONTROLLER_SUSPEND;
     return MP_STATUS_SUCCESS;
 }
 
@@ -335,13 +340,16 @@ XHCI_InterruptService(IN PVOID xhciExtension)
     RunTimeRegisterBase = XhciExtension-> RunTimeRegisterBase;
     
     Iman.AsULONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_IMAN);
-    
-    Iman.InterruptPending =0;
+    if (Iman.InterruptPending == 0)
+    {
+        return FALSE;
+    }
+    Iman.InterruptPending =1;
     
     WRITE_REGISTER_ULONG(RunTimeRegisterBase + XHCI_IMAN, Iman.AsULONG);
     DPRINT1("XHCI_InterruptService: Succesful Interupt\n");
     // changing the enque pointer
-    erstdp.AsULONGLONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP + 1)||READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP);
+    erstdp.AsULONGLONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP + 1)|READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP);
     erstdp.AsULONGLONG = erstdp.AsULONGLONG +2;
     erstdp.DequeueERSTIndex =0;
     WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
@@ -440,6 +448,7 @@ VOID
 NTAPI
 XHCI_CheckController(IN PVOID xhciExtension)
 {
+    //RegPacket.UsbPortInvalidateController(xhciExtension, 2);
     DPRINT1("XHCI_CheckController: function initiated\n");
 }
 
@@ -489,6 +498,22 @@ NTAPI
 XHCI_PollController(IN PVOID xhciExtension)
 {
     DPRINT1("XHCI_PollController: function initiated\n");
+    PXHCI_EXTENSION XhciExtension;
+    PULONG OperationalRegs;
+    //ULONG Port;
+    //XHCI_PORT_STATUS_CONTROL PortSC;
+
+
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    OperationalRegs = XhciExtension->OperationalRegs;
+
+    if (!(XhciExtension->Flags & XHCI_FLAGS_CONTROLLER_SUSPEND))
+    {
+        RegPacket.UsbPortInvalidateRootHub(XhciExtension);
+        return;
+    }
+    //RegPacket.UsbPortInvalidateRootHub(xhciExtension);
+    
 }
 
 VOID
