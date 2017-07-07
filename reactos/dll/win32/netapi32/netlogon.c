@@ -170,8 +170,7 @@ DsEnumerateDomainTrustsA(
 {
     FIXME("DsEnumerateDomainTrustsA(%s, %x, %p, %p)\n",
           debugstr_a(ServerName), Flags, Domains, DomainCount);
-
-    return ERROR_NO_LOGON_SERVERS;
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -185,8 +184,7 @@ DsEnumerateDomainTrustsW(
 {
     FIXME("DsEnumerateDomainTrustsW(%s, %x, %p, %p)\n",
           debugstr_w(ServerName), Flags, Domains, DomainCount);
-
-    return ERROR_NO_LOGON_SERVERS;
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -203,7 +201,6 @@ DsGetDcNameA(
     FIXME("DsGetDcNameA(%s, %s, %s, %s, %08x, %p): stub\n",
           debugstr_a(ComputerName), debugstr_a(DomainName), debugstr_guid(DomainGuid),
           debugstr_a(SiteName), Flags, DomainControllerInfo);
-
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -250,7 +247,7 @@ DsGetDcSiteCoverageW(
     ULONG BufferSize, i;
     NET_API_STATUS status;
 
-    TRACE("DsGetDcSiteCoverageA(%s, %p, %p)\n",
+    TRACE("DsGetDcSiteCoverageW(%s, %p, %p)\n",
           debugstr_w(ServerName), EntryCount, SiteNames);
 
     *EntryCount = 0;
@@ -308,6 +305,37 @@ DsGetDcSiteCoverageW(
 
 DWORD
 WINAPI
+DsGetForestTrustInformationW(
+    _In_opt_ LPCWSTR ServerName,
+    _In_opt_ LPCWSTR TrustedDomainName,
+    _In_ DWORD Flags,
+    _Out_ PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo)
+{
+    NET_API_STATUS status;
+
+    TRACE("DsGetForestTrustInformationW(%s, %s, 0x%08lx, %p)\n",
+          debugstr_w(ServerName), debugstr_w(TrustedDomainName),
+          Flags, ForestTrustInfo);
+
+    RpcTryExcept
+    {
+        status = DsrGetForestTrustInformation((PWSTR)ServerName,
+                                              (PWSTR)TrustedDomainName,
+                                              Flags,
+                                              ForestTrustInfo);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+DWORD
+WINAPI
 DsGetSiteNameA(
     _In_ LPCSTR ComputerName,
     _Out_ LPSTR *SiteName)
@@ -341,6 +369,21 @@ DsGetSiteNameW(
     RpcEndExcept;
 
     return status;
+}
+
+
+DWORD
+WINAPI
+DsMergeForestTrustInformationW(
+    _In_ LPCWSTR DomainName,
+    _In_ PLSA_FOREST_TRUST_INFORMATION NewForestTrustInfo,
+    _In_opt_ PLSA_FOREST_TRUST_INFORMATION OldForestTrustInfo,
+    _Out_ PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo)
+{
+    FIXME("DsMergeForestTrustInformationW(%s, %p, %p, %p)\n",
+          debugstr_w(DomainName), NewForestTrustInfo,
+          OldForestTrustInfo, ForestTrustInfo);
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 

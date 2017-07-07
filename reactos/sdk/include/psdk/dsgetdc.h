@@ -138,6 +138,34 @@ DsGetDcSiteCoverageW(
 	PULONG EntryCount,
 	LPWSTR **SiteNames);
 
+DWORD
+WINAPI
+DsGetForestTrustInformationW(
+	LPCWSTR ServerName,
+	LPCWSTR TrustedDomainName,
+	DWORD Flags,
+	PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo);
+
+DWORD
+WINAPI
+DsGetSiteNameA(
+	LPCSTR ComputerName,
+	LPSTR *SiteName);
+
+DWORD
+WINAPI
+DsGetSiteNameW(
+	LPCWSTR ComputerName,
+	LPWSTR *SiteName);
+
+DWORD
+WINAPI
+DsMergeForestTrustInformationW(
+	LPCWSTR DomainName,
+	PLSA_FOREST_TRUST_INFORMATION NewForestTrustInfo,
+	PLSA_FOREST_TRUST_INFORMATION OldForestTrustInfo,
+	PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo);
+
 #ifdef UNICODE
 typedef DOMAIN_CONTROLLER_INFOW DOMAIN_CONTROLLER_INFO, *PDOMAIN_CONTROLLER_INFO;
 typedef DS_DOMAIN_TRUSTSW DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
@@ -146,6 +174,7 @@ typedef DS_DOMAIN_TRUSTSW DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
 #define DsEnumerateDomainTrusts DsEnumerateDomainTrustsW
 #define DsGetDcName DsGetDcNameW
 #define DsGetDcSiteCoverage DsGetDcSiteCoverageW
+#define DsGetSiteName DsGetSiteNameW
 #else
 typedef DOMAIN_CONTROLLER_INFOA DOMAIN_CONTROLLER_INFO, *PDOMAIN_CONTROLLER_INFO;
 typedef DS_DOMAIN_TRUSTSA DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
@@ -154,6 +183,7 @@ typedef DS_DOMAIN_TRUSTSA DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
 #define DsEnumerateDomainTrusts DsEnumerateDomainTrustsA
 #define DsGetDcName DsGetDcNameA
 #define DsGetDcSiteCoverage DsGetDcSiteCoverageA
+#define DsGetSiteName DsGetSiteNameA
 #endif
 
 #ifdef __cplusplus
