@@ -4,6 +4,7 @@
 
 /* Bitmaps */
 #define IDB_ROSLOGO          100
+#define IDB_ROSMASK          101
 
 #define IDC_STATIC -1
 
@@ -26,8 +27,6 @@
 /* Strings */
 #define IDS_SHELL_FAIL       600
 #define IDS_INSTALLER_FAIL   601
-
-
-
+#define IDS_CANCEL_CONFIRM   602
 
 #define IDS_SPAIN 3900

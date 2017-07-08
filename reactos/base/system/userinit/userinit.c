@@ -570,6 +570,34 @@ StartInstaller(VOID)
     return TRUE;
 }
 
+/* Used to get the shutdown privilege */
+static BOOL
+EnablePrivilege(LPCWSTR lpszPrivilegeName, BOOL bEnablePrivilege)
+{
+    BOOL   Success;
+    HANDLE hToken;
+    TOKEN_PRIVILEGES tp;
+
+    Success = OpenProcessToken(GetCurrentProcess(),
+                               TOKEN_ADJUST_PRIVILEGES,
+                               &hToken);
+    if (!Success) return Success;
+
+    Success = LookupPrivilegeValueW(NULL,
+                                    lpszPrivilegeName,
+                                    &tp.Privileges[0].Luid);
+    if (!Success) goto Quit;
+
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Attributes = (bEnablePrivilege ? SE_PRIVILEGE_ENABLED : 0);
+
+    Success = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL);
+
+Quit:
+    CloseHandle(hToken);
+    return Success;
+}
+
 
 int WINAPI
 wWinMain(IN HINSTANCE hInst,
@@ -603,15 +631,30 @@ Restart:
         RunLiveCD(&State);
     }
 
-    if (State.Run == SHELL)
+    switch (State.Run)
     {
-        Success = StartShell();
-        if (Success)
-            NotifyLogon();
-    }
-    else if (State.Run == INSTALLER)
-    {
-        Success = StartInstaller();
+        case SHELL:
+            Success = StartShell();
+            if (Success)
+                NotifyLogon();
+            break;
+
+        case INSTALLER:
+            Success = StartInstaller();
+            break;
+
+        case REBOOT:
+        {
+            EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+            ExitWindowsEx(EWX_REBOOT, 0);
+            EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
+            Success = TRUE;
+            break;
+        }
+
+        default:
+            Success = FALSE;
+            break;
     }
 
     /*
