@@ -116,6 +116,9 @@ RxMapSystemBuffer(
 #define FCB_MODE_SHARED_WAIT_FOR_EXCLUSIVE 3
 #define FCB_MODE_SHARED_STARVE_EXCLUSIVE 4
 
+#define CHANGE_BUFFERING_STATE_CONTEXT ((PRX_CONTEXT)IntToPtr(0xffffffff))
+#define CHANGE_BUFFERING_STATE_CONTEXT_WAIT ((PRX_CONTEXT)IntToPtr(0xfffffffe))
+
 NTSTATUS
 __RxAcquireFcb(
     _Inout_ PFCB Fcb,
@@ -372,6 +375,18 @@ RxFindOrConstructVirtualNetRoot(
     _In_ PUNICODE_STRING CanonicalName,
     _In_ NET_ROOT_TYPE NetRootType,
     _In_ PUNICODE_STRING RemainingName);
+#endif
+
+#if (_WIN32_WINNT >= 0x0600)
+NTSTATUS
+RxLowIoLockControlShell(
+    _In_ PRX_CONTEXT RxContext,
+    _In_ PIRP Irp,
+    _In_ PFCB Fcb);
+#else
+NTSTATUS
+RxLowIoLockControlShell(
+    _In_ PRX_CONTEXT RxContext);
 #endif
 
 NTSTATUS

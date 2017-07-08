@@ -5116,7 +5116,7 @@ RxLowIoCompletionTail(
     DPRINT("RxLowIoCompletionTail(%p)\n", RxContext);
 
     /* Only continue if we're at APC_LEVEL or lower */
-    if (KeGetCurrentIrql() >= DISPATCH_LEVEL &&
+    if (RxShouldPostCompletion() &&
         !BooleanFlagOn(RxContext->LowIoContext.Flags, LOWIO_CONTEXT_FLAG_CAN_COMPLETE_AT_DPC_LEVEL))
     {
         return STATUS_MORE_PROCESSING_REQUIRED;
@@ -5755,7 +5755,8 @@ RxpDereferenceAndFinalizeNetFcb(
 
             if (!RxAcquireFcbTableLockExclusive(&NetRoot->FcbTable, FALSE))
             {
-                if (RxContext != NULL && RxContext != (PVOID)-1 && RxContext != (PVOID)-2)
+                if (RxContext != NULL && RxContext != CHANGE_BUFFERING_STATE_CONTEXT &&
+                    RxContext != CHANGE_BUFFERING_STATE_CONTEXT_WAIT)
                 {
                     RxContext->Flags |= RX_CONTEXT_FLAG_BYPASS_VALIDOP_CHECK;
                 }
@@ -7807,11 +7808,11 @@ RxTrackerUpdateHistory(
     {
         Case = RX_FCBTRACKER_CASE_NULLCONTEXT;
     }
-    else if ((ULONG_PTR)RxContext == -1)
+    else if (RxContext == CHANGE_BUFFERING_STATE_CONTEXT)
     {
         Case = RX_FCBTRACKER_CASE_CBS_CONTEXT;
     }
-    else if ((ULONG_PTR)RxContext == -2)
+    else if (RxContext == CHANGE_BUFFERING_STATE_CONTEXT_WAIT)
     {
         Case = RX_FCBTRACKER_CASE_CBS_WAIT_CONTEXT;
     }
@@ -8211,7 +8212,7 @@ __RxAcquireFcb(
     SpecialContext = FALSE;
     ContextIsPresent = FALSE;
     /* Check for special context */
-    if ((ULONG_PTR)RxContext == -1 || (ULONG_PTR)RxContext == -2)
+    if (RxContext == CHANGE_BUFFERING_STATE_CONTEXT || RxContext == CHANGE_BUFFERING_STATE_CONTEXT_WAIT)
     {
         SpecialContext = TRUE;
     }
@@ -8374,7 +8375,7 @@ __RxReleaseFcb(
     RxAcquireSerializationMutex();
 
     BufferingPending = BooleanFlagOn(MrxFcb->FcbState, FCB_STATE_BUFFERING_STATE_CHANGE_PENDING);
-    IsExclusive = BooleanFlagOn(MrxFcb->Header.Resource->Flag, ResourceOwnedExclusive);
+    IsExclusive = !!RxIsResourceOwnershipStateExclusive(MrxFcb->Header.Resource);
 
     /* If no buffering pending, or no exclusive lock (we can only handle with an exclusive lock),
      * then just release the FCB
@@ -8421,7 +8422,7 @@ __RxReleaseFcbForThread(
     RxAcquireSerializationMutex();
 
     BufferingPending = BooleanFlagOn(MrxFcb->FcbState, FCB_STATE_BUFFERING_STATE_CHANGE_PENDING);
-    IsExclusive = BooleanFlagOn(MrxFcb->Header.Resource->Flag, ResourceOwnedExclusive);
+    IsExclusive = !!RxIsResourceOwnershipStateExclusive(MrxFcb->Header.Resource);
 
     /* If no buffering pending, or no exclusive lock (we can only handle with an exclusive lock),
      * then just release the FCB

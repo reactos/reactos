@@ -9,8 +9,12 @@
 #define RxAllocatePoolWithTag ExAllocatePoolWithTag
 #define RxFreePool ExFreePool
 
+#define RxIsResourceOwnershipStateExclusive(Resource) (FlagOn((Resource)->Flag, ResourceOwnedExclusive))
+
 #define RxMdlIsLocked(Mdl) ((Mdl)->MdlFlags & MDL_PAGES_LOCKED)
 #define RxMdlSourceIsNonPaged(Mdl) ((Mdl)->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL)
+
+#define RxGetRequestorProcess(RxContext) IoGetRequestorProcess(RxContext->CurrentIrp)
 
 #define RxAdjustAllocationSizeforCC(Fcb)                                                       \
 {                                                                                              \
