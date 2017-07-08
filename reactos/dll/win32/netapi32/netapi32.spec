@@ -1,7 +1,7 @@
 @ stub CredpValidateTargetName
 @ stdcall DsAddressToSiteNamesA(str long ptr str)
-@ stub DsAddressToSiteNamesExA
-@ stub DsAddressToSiteNamesExW
+@ stdcall DsAddressToSiteNamesExA(str long ptr str str)
+@ stdcall DsAddressToSiteNamesExW(wstr long ptr wstr wstr)
 @ stdcall DsAddressToSiteNamesW(wstr long ptr wstr)
 @ stdcall DsDeregisterDnsHostRecordsA(str str ptr ptr str)
 @ stdcall DsDeregisterDnsHostRecordsW(wstr wstr ptr ptr wstr)
