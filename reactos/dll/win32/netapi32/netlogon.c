@@ -162,6 +162,55 @@ DsAddressToSiteNamesW(
 
 DWORD
 WINAPI
+DsDeregisterDnsHostRecordsA(
+    _In_opt_ LPSTR ServerName,
+    _In_opt_ LPSTR DnsDomainName,
+    _In_opt_ GUID *DomainGuid,
+    _In_opt_ GUID *DsaGuid,
+    _In_ LPSTR DnsHostName)
+{
+    FIXME("DsDeregisterDnsHostRecordsA(%s, %s, %p, %p, %s)\n",
+          debugstr_a(ServerName), debugstr_a(DnsDomainName),
+          DomainGuid, DsaGuid, debugstr_a(DnsHostName));
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+DWORD
+WINAPI
+DsDeregisterDnsHostRecordsW(
+    _In_opt_ LPWSTR ServerName,
+    _In_opt_ LPWSTR DnsDomainName,
+    _In_opt_ GUID *DomainGuid,
+    _In_opt_ GUID *DsaGuid,
+    _In_ LPWSTR DnsHostName)
+{
+    NET_API_STATUS status;
+
+    TRACE("DsDeregisterDnsHostRecordsW(%s, %s, %p, %p, %s)\n",
+          debugstr_w(ServerName), debugstr_w(DnsDomainName),
+          DomainGuid, DsaGuid, debugstr_w(DnsHostName));
+
+    RpcTryExcept
+    {
+        status = DsrDeregisterDnsHostRecords(ServerName,
+                                             DnsDomainName,
+                                             DomainGuid,
+                                             DsaGuid,
+                                             DnsHostName);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+DWORD
+WINAPI
 DsEnumerateDomainTrustsA(
     _In_opt_ LPSTR ServerName,
     _In_ ULONG Flags,

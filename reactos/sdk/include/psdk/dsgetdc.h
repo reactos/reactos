@@ -93,6 +93,22 @@ DsAddressToSiteNamesExW(
 	LPWSTR **SubnetNames);
 
 DWORD WINAPI
+DsDeregisterDnsHostRecordsA(
+	LPSTR ServerName,
+	LPSTR DnsDomainName,
+	GUID *DomainGuid,
+	GUID *DsaGuid,
+	LPSTR DnsHostName);
+
+DWORD WINAPI
+DsDeregisterDnsHostRecordsW(
+	LPWSTR ServerName,
+	LPWSTR DnsDomainName,
+	GUID *DomainGuid,
+	GUID *DsaGuid,
+	LPWSTR DnsHostName);
+
+DWORD WINAPI
 DsEnumerateDomainTrustsA(
 	LPSTR ServerName,
 	ULONG Flags,
@@ -124,42 +140,36 @@ DsGetDcNameW(
 	ULONG Flags,
 	PDOMAIN_CONTROLLER_INFOW* DomainControllerInfo);
 
-DWORD
-WINAPI
+DWORD WINAPI
 DsGetDcSiteCoverageA(
 	LPCSTR ServerName,
 	PULONG EntryCount,
 	LPSTR **SiteNames);
 
-DWORD
-WINAPI
+DWORD WINAPI
 DsGetDcSiteCoverageW(
 	LPCWSTR ServerName,
 	PULONG EntryCount,
 	LPWSTR **SiteNames);
 
-DWORD
-WINAPI
+DWORD WINAPI
 DsGetForestTrustInformationW(
 	LPCWSTR ServerName,
 	LPCWSTR TrustedDomainName,
 	DWORD Flags,
 	PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo);
 
-DWORD
-WINAPI
+DWORD WINAPI
 DsGetSiteNameA(
 	LPCSTR ComputerName,
 	LPSTR *SiteName);
 
-DWORD
-WINAPI
+DWORD WINAPI
 DsGetSiteNameW(
 	LPCWSTR ComputerName,
 	LPWSTR *SiteName);
 
-DWORD
-WINAPI
+DWORD WINAPI
 DsMergeForestTrustInformationW(
 	LPCWSTR DomainName,
 	PLSA_FOREST_TRUST_INFORMATION NewForestTrustInfo,
