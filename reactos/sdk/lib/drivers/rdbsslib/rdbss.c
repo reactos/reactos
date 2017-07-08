@@ -1260,7 +1260,7 @@ RxCloseAssociatedSrvOpen(
 
         /* Get the FCB from RX_CONTEXT */
         Fcb = (PFCB)RxContext->pFcb;
-        SrvOpen == NULL;
+        SrvOpen = NULL;
     }
 
     /* If we don't have RX_CONTEXT, allocte one, we'll need it */
