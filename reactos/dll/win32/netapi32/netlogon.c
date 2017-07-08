@@ -436,13 +436,25 @@ DsMergeForestTrustInformationW(
 }
 
 
-VOID
+DWORD
 WINAPI
-DsRoleFreeMemory(
-    _In_ PVOID Buffer)
+DsValidateSubnetNameA(
+    _In_ LPCSTR SubnetName)
 {
-    TRACE("DsRoleFreeMemory(%p)\n", Buffer);
-    HeapFree(GetProcessHeap(), 0, Buffer);
+    FIXME("DsValidateSubnetNameA(%s)\n",
+          debugstr_a(SubnetName));
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+DWORD
+WINAPI
+DsValidateSubnetNameW(
+    _In_ LPCWSTR SubnetName)
+{
+    FIXME("DsValidateSubnetNameW(%s)\n",
+          debugstr_w(SubnetName));
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 

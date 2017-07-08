@@ -36,8 +36,8 @@
 @ stub DsRoleIfmHandleFree
 @ stub DsRoleServerSaveStateForUpgrade
 @ stub DsRoleUpgradeDownlevelServer
-@ stub DsValidateSubnetNameA
-@ stub DsValidateSubnetNameW
+@ stdcall DsValidateSubnetNameA(str)
+@ stdcall DsValidateSubnetNameW(wstr)
 @ stub I_BrowserDebugCall
 @ stdcall I_BrowserDebugTrace(wstr str)
 @ stdcall I_BrowserQueryEmulatedDomains(wstr ptr ptr)

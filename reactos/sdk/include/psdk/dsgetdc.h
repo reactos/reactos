@@ -176,6 +176,14 @@ DsMergeForestTrustInformationW(
 	PLSA_FOREST_TRUST_INFORMATION OldForestTrustInfo,
 	PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo);
 
+DWORD WINAPI
+DsValidateSubnetNameA(
+	LPCSTR SubnetName);
+
+DWORD WINAPI
+DsValidateSubnetNameW(
+	LPCWSTR SubnetName);
+
 #ifdef UNICODE
 typedef DOMAIN_CONTROLLER_INFOW DOMAIN_CONTROLLER_INFO, *PDOMAIN_CONTROLLER_INFO;
 typedef DS_DOMAIN_TRUSTSW DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
@@ -185,6 +193,7 @@ typedef DS_DOMAIN_TRUSTSW DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
 #define DsGetDcName DsGetDcNameW
 #define DsGetDcSiteCoverage DsGetDcSiteCoverageW
 #define DsGetSiteName DsGetSiteNameW
+#define DsValidateSubnetName DsValidateSubnetNameW
 #else
 typedef DOMAIN_CONTROLLER_INFOA DOMAIN_CONTROLLER_INFO, *PDOMAIN_CONTROLLER_INFO;
 typedef DS_DOMAIN_TRUSTSA DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
@@ -194,6 +203,7 @@ typedef DS_DOMAIN_TRUSTSA DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
 #define DsGetDcName DsGetDcNameA
 #define DsGetDcSiteCoverage DsGetDcSiteCoverageA
 #define DsGetSiteName DsGetSiteNameA
+#define DsValidateSubnetName DsValidateSubnetNameA
 #endif
 
 #ifdef __cplusplus
