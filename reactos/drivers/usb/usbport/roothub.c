@@ -907,7 +907,7 @@ USBPORT_RootHubCreateDevice(IN PDEVICE_OBJECT FdoDevice,
 
 ULONG
 NTAPI
-USBPORT_InvalidateRootHub(PVOID Context)
+USBPORT_InvalidateRootHub(PVOID MiniPortExtension)
 {
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     PDEVICE_OBJECT FdoDevice;
@@ -917,7 +917,7 @@ USBPORT_InvalidateRootHub(PVOID Context)
 
     DPRINT("USBPORT_InvalidateRootHub ... \n");
 
-    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)Context -
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)MiniPortExtension -
                                                sizeof(USBPORT_DEVICE_EXTENSION));
 
     FdoDevice = FdoExtension->CommonExtension.SelfDevice;

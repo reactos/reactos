@@ -1372,7 +1372,7 @@ Exit:
             if (!(FdoCommonExtension->PnpStateFlags & USBPORT_PNP_STATE_FAILED))
             {
                 USBPORT_InvalidateControllerHandler(FdoDevice,
-                                                    INVALIDATE_CONTROLLER_SURPRISE_REMOVE);
+                                                    USBPORT_INVALIDATE_CONTROLLER_SURPRISE_REMOVE);
             }
             goto ForwardIrp;
 

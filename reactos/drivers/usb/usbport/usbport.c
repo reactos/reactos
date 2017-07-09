@@ -363,7 +363,7 @@ USBPORT_GetRegistryKeyValueFullInfo(IN PDEVICE_OBJECT FdoDevice,
 
 MPSTATUS
 NTAPI
-USBPORT_GetMiniportRegistryKeyValue(IN PVOID Context,
+USBPORT_GetMiniportRegistryKeyValue(IN PVOID MiniPortExtension,
                                     IN BOOL UseDriverKey,
                                     IN PCWSTR SourceString,
                                     IN SIZE_T LengthStr,
@@ -374,18 +374,15 @@ USBPORT_GetMiniportRegistryKeyValue(IN PVOID Context,
     PDEVICE_OBJECT FdoDevice;
     NTSTATUS Status;
 
-    DPRINT("USBPORT_GetMiniportRegistryKeyValue: Context - %p, UseDriverKey - %x, SourceString - %S, LengthStr - %x, Buffer - %p, BufferLength - %x\n",
-           Context,
+    DPRINT("USBPORT_GetMiniportRegistryKeyValue: MiniPortExtension - %p, UseDriverKey - %x, SourceString - %S, LengthStr - %x, Buffer - %p, BufferLength - %x\n",
+           MiniPortExtension,
            UseDriverKey,
            SourceString,
            LengthStr,
            Buffer,
            BufferLength);
 
-    //DbgBreakPoint();
-
-    //FdoExtension->MiniPortExt = (PVOID)((ULONG_PTR)FdoExtension + sizeof(USBPORT_DEVICE_EXTENSION));
-    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)Context -
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)MiniPortExtension -
                                                sizeof(USBPORT_DEVICE_EXTENSION));
 
     FdoDevice = FdoExtension->CommonExtension.SelfDevice;
@@ -449,7 +446,7 @@ USBPORT_GetSetConfigSpaceData(IN PDEVICE_OBJECT FdoDevice,
 
 MPSTATUS
 NTAPI
-USBPORT_ReadWriteConfigSpace(IN PVOID Context,
+USBPORT_ReadWriteConfigSpace(IN PVOID MiniPortExtension,
                              IN BOOLEAN IsReadData,
                              IN PVOID Buffer,
                              IN ULONG Offset,
@@ -462,7 +459,7 @@ USBPORT_ReadWriteConfigSpace(IN PVOID Context,
     DPRINT("USBPORT_ReadWriteConfigSpace: ... \n");
 
     //FdoExtension->MiniPortExt = (PVOID)((ULONG_PTR)FdoExtension + sizeof(USBPORT_DEVICE_EXTENSION));
-    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)Context -
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)MiniPortExtension -
                                                sizeof(USBPORT_DEVICE_EXTENSION));
 
     FdoDevice = FdoExtension->CommonExtension.SelfDevice;
@@ -536,7 +533,7 @@ USBPORT_USBDStatusToNtStatus(IN PURB Urb,
 
 NTSTATUS
 NTAPI
-USBPORT_Wait(IN PVOID Context,
+USBPORT_Wait(IN PVOID MiniPortExtension,
              IN ULONG Milliseconds)
 {
     LARGE_INTEGER Interval = {{0, 0}};
@@ -640,15 +637,15 @@ USBPORT_InvalidateControllerHandler(IN PDEVICE_OBJECT FdoDevice,
 
     switch (Type)
     {
-        case INVALIDATE_CONTROLLER_RESET:
+        case USBPORT_INVALIDATE_CONTROLLER_RESET:
             DPRINT1("USBPORT_InvalidateControllerHandler: INVALIDATE_CONTROLLER_RESET UNIMPLEMENTED. FIXME. \n");
             break;
 
-        case INVALIDATE_CONTROLLER_SURPRISE_REMOVE:
+        case USBPORT_INVALIDATE_CONTROLLER_SURPRISE_REMOVE:
             DPRINT1("USBPORT_InvalidateControllerHandler: INVALIDATE_CONTROLLER_SURPRISE_REMOVE UNIMPLEMENTED. FIXME. \n");
             break;
 
-        case INVALIDATE_CONTROLLER_SOFT_INTERRUPT:
+        case USBPORT_INVALIDATE_CONTROLLER_SOFT_INTERRUPT:
             if (InterlockedIncrement(&FdoExtension->IsrDpcCounter))
             {
                 InterlockedDecrement(&FdoExtension->IsrDpcCounter);
@@ -663,7 +660,7 @@ USBPORT_InvalidateControllerHandler(IN PDEVICE_OBJECT FdoDevice,
 
 ULONG
 NTAPI
-USBPORT_InvalidateController(IN PVOID Context,
+USBPORT_InvalidateController(IN PVOID MiniPortExtension,
                              IN ULONG Type)
 {
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
@@ -672,7 +669,7 @@ USBPORT_InvalidateController(IN PVOID Context,
     DPRINT("USBPORT_InvalidateController: Invalidate Type - %x\n", Type);
 
     //FdoExtension->MiniPortExt = (PVOID)((ULONG_PTR)FdoExtension + sizeof(USBPORT_DEVICE_EXTENSION));
-    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)Context -
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)MiniPortExtension -
                                                sizeof(USBPORT_DEVICE_EXTENSION));
     FdoDevice = FdoExtension->CommonExtension.SelfDevice;
 
@@ -683,8 +680,8 @@ USBPORT_InvalidateController(IN PVOID Context,
 
 ULONG
 NTAPI
-USBPORT_NotifyDoubleBuffer(IN PVOID Context1,
-                           IN PVOID Context2,
+USBPORT_NotifyDoubleBuffer(IN PVOID MiniPortExtension,
+                           IN PVOID MiniPortTransfer,
                            IN PVOID Buffer,
                            IN SIZE_T Length)
 {
@@ -2011,7 +2008,7 @@ USBPORT_AsyncTimerDpc(IN PRKDPC Dpc,
 
 ULONG
 NTAPI
-USBPORT_RequestAsyncCallback(IN PVOID Context,
+USBPORT_RequestAsyncCallback(IN PVOID MiniPortExtension,
                              IN ULONG TimerValue,
                              IN PVOID Buffer,
                              IN SIZE_T Length,
@@ -2024,7 +2021,7 @@ USBPORT_RequestAsyncCallback(IN PVOID Context,
 
     DPRINT("USBPORT_RequestAsyncCallback: ... \n");
 
-    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)Context -
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)MiniPortExtension -
                                                sizeof(USBPORT_DEVICE_EXTENSION));
 
     FdoDevice = FdoExtension->CommonExtension.SelfDevice;
@@ -2096,8 +2093,8 @@ USBPORT_GetMappedVirtualAddress(IN PVOID PhysicalAddress,
 
 ULONG
 NTAPI
-USBPORT_InvalidateEndpoint(IN PVOID Context1,
-                           IN PVOID Context2)
+USBPORT_InvalidateEndpoint(IN PVOID MiniPortExtension,
+                           IN PVOID MiniPortEndpoint)
 {
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     PDEVICE_OBJECT FdoDevice;
@@ -2105,26 +2102,25 @@ USBPORT_InvalidateEndpoint(IN PVOID Context1,
 
     DPRINT_CORE("USBPORT_InvalidateEndpoint: ... \n");
 
-    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)Context1 -
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)((ULONG_PTR)MiniPortExtension -
                                                sizeof(USBPORT_DEVICE_EXTENSION));
 
     FdoDevice = FdoExtension->CommonExtension.SelfDevice;
 
-    Endpoint = (PUSBPORT_ENDPOINT)((ULONG_PTR)Context2 -
-                                   sizeof(USBPORT_ENDPOINT));
-
-    if (Context2)
-    {
-        USBPORT_InvalidateEndpointHandler(FdoDevice,
-                                          Endpoint,
-                                          INVALIDATE_ENDPOINT_ONLY);
-    }
-    else
+    if (!MiniPortEndpoint)
     {
         USBPORT_InvalidateEndpointHandler(FdoDevice,
                                           NULL,
                                           INVALIDATE_ENDPOINT_ONLY);
+        return 0;
     }
+
+    Endpoint = (PUSBPORT_ENDPOINT)((ULONG_PTR)MiniPortEndpoint -
+                                   sizeof(USBPORT_ENDPOINT));
+
+    USBPORT_InvalidateEndpointHandler(FdoDevice,
+                                      Endpoint,
+                                      INVALIDATE_ENDPOINT_ONLY);
 
     return 0;
 }
@@ -2698,7 +2694,7 @@ USBPORT_RegisterUSBPortDriver(IN PDRIVER_OBJECT DriverObject,
     DPRINT("USBPORT_RegisterUSBPortDriver: sizeof(USBPORT_DEVICE_EXTENSION)   - %x\n",
            sizeof(USBPORT_DEVICE_EXTENSION));
 
-    if (Version < 100) // 100 - USB1.1; 200 - USB2.0
+    if (Version < USB10_MINIPORT_INTERFACE_VERSION)
     {
         return STATUS_UNSUCCESSFUL;
     }

@@ -9,7 +9,7 @@
 
 ULONG
 NTAPI
-USBPORT_DbgPrint(IN PVOID Context,
+USBPORT_DbgPrint(IN PVOID MiniPortExtension,
                  IN ULONG Level,
                  IN PCH Format,
                  ...)
@@ -20,7 +20,7 @@ USBPORT_DbgPrint(IN PVOID Context,
 
 ULONG
 NTAPI
-USBPORT_TestDebugBreak(IN PVOID Context)
+USBPORT_TestDebugBreak(IN PVOID MiniPortExtension)
 {
     DPRINT("USBPORT_TestDebugBreak: UNIMPLEMENTED. FIXME. \n");
     return 0;
@@ -28,7 +28,7 @@ USBPORT_TestDebugBreak(IN PVOID Context)
 
 ULONG
 NTAPI
-USBPORT_AssertFailure(PVOID Context,
+USBPORT_AssertFailure(PVOID MiniPortExtension,
                       PVOID FailedAssertion,
                       PVOID FileName,
                       ULONG LineNumber,
@@ -41,7 +41,7 @@ USBPORT_AssertFailure(PVOID Context,
 
 VOID
 NTAPI
-USBPORT_BugCheck(IN PVOID Context)
+USBPORT_BugCheck(IN PVOID MiniPortExtension)
 {
     DPRINT1("USBPORT_BugCheck: FIXME \n");
     //KeBugCheckEx(BUGCODE_USB_DRIVER, ...);
@@ -50,15 +50,15 @@ USBPORT_BugCheck(IN PVOID Context)
 
 ULONG
 NTAPI
-USBPORT_LogEntry(IN PVOID BusContext,
+USBPORT_LogEntry(IN PVOID MiniPortExtension,
                  IN ULONG DriverTag,
                  IN ULONG EnumTag,
                  IN ULONG P1,
                  IN ULONG P2,
                  IN ULONG P3)
 {
-    DPRINT_MINIPORT("USBPORT_LogEntry: BusContext - %p, EnumTag - %lx, P1 - %lx, P2 - %lx, P3 - %lx\n",
-           BusContext,
+    DPRINT_MINIPORT("USBPORT_LogEntry: MiniPortExtension - %p, EnumTag - %lx, P1 - %lx, P2 - %lx, P3 - %lx\n",
+           MiniPortExtension,
            EnumTag,
            P1,
            P2,

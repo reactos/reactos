@@ -26,10 +26,6 @@
 #define USBPORT_RECIPIENT_ROOT_HUB  BMREQUEST_TO_DEVICE
 #define USBPORT_RECIPIENT_ROOT_PORT BMREQUEST_TO_OTHER
 
-#define INVALIDATE_CONTROLLER_RESET           1
-#define INVALIDATE_CONTROLLER_SURPRISE_REMOVE 2
-#define INVALIDATE_CONTROLLER_SOFT_INTERRUPT  3
-
 #define INVALIDATE_ENDPOINT_ONLY           0
 #define INVALIDATE_ENDPOINT_WORKER_THREAD  1
 #define INVALIDATE_ENDPOINT_WORKER_DPC     2
@@ -414,7 +410,7 @@ USBPORT_USBDStatusToNtStatus(
 NTSTATUS
 NTAPI
 USBPORT_Wait(
-  IN PVOID Context,
+  IN PVOID MiniPortExtension,
   IN ULONG Milliseconds);
 
 VOID
@@ -570,7 +566,7 @@ USBPORT_InvalidateControllerHandler(
 ULONG
 NTAPI
 USBPORT_DbgPrint(
-  IN PVOID Context,
+  IN PVOID MiniPortExtension,
   IN ULONG Level,
   IN PCH Format,
   ...);
@@ -578,12 +574,12 @@ USBPORT_DbgPrint(
 ULONG
 NTAPI
 USBPORT_TestDebugBreak(
-  IN PVOID Context);
+  IN PVOID MiniPortExtension);
 
 ULONG
 NTAPI
 USBPORT_AssertFailure(
-  PVOID Context,
+  PVOID MiniPortExtension,
   PVOID FailedAssertion,
   PVOID FileName,
   ULONG LineNumber,
@@ -592,12 +588,12 @@ USBPORT_AssertFailure(
 VOID
 NTAPI
 USBPORT_BugCheck(
-  IN PVOID Context);
+  IN PVOID MiniPortExtension);
 
 ULONG
 NTAPI
 USBPORT_LogEntry(
-  IN PVOID BusContext,
+  IN PVOID MiniPortExtension,
   IN ULONG DriverTag,
   IN ULONG EnumTag,
   IN ULONG P1,
@@ -1090,7 +1086,7 @@ USBPORT_RootHubCreateDevice(
 ULONG
 NTAPI
 USBPORT_InvalidateRootHub(
-  PVOID Context);
+  PVOID MiniPortExtension);
 
 VOID
 NTAPI
