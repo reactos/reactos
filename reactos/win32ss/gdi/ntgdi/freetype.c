@@ -52,8 +52,6 @@ static const WORD gusEnglishUS = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
 
 /* special font names */
 static const UNICODE_STRING MarlettW = RTL_CONSTANT_STRING(L"Marlett");
-static const UNICODE_STRING SystemW = RTL_CONSTANT_STRING(L"System");
-static const UNICODE_STRING FixedSysW = RTL_CONSTANT_STRING(L"FixedSys");
 
 /* registry */
 static UNICODE_STRING FontRegPath =
@@ -3979,7 +3977,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     ULONG   Penalty = 0;
     BYTE    Byte;
     LONG    Long;
-    BOOL    fFixedSys = FALSE, fNeedScaling = FALSE;
+    BOOL    fNeedScaling = FALSE;
     const BYTE UserCharSet = CharSetFromLangID(gusLanguageID);
     const TEXTMETRICW * TM = &Otm->otmTextMetrics;
     WCHAR* ActualNameW;
@@ -3993,62 +3991,38 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     /* FIXME: SmallPenalty Penalty 1 */
     /* FIXME: FaceNameSubst Penalty 500 */
 
-    if (_wcsicmp(LogFont->lfFaceName, L"System") == 0)
+    Byte = LogFont->lfCharSet;
+    if (Byte == DEFAULT_CHARSET)
     {
-        /* "System" font */
-        if (TM->tmCharSet != UserCharSet)
+        if (_wcsicmp(LogFont->lfFaceName, L"Marlett") == 0)
         {
-            /* CharSet Penalty 65000 */
-            /* Requested charset does not match the candidate's. */
-            Penalty += 65000;
-        }
-    }
-    else if (_wcsicmp(LogFont->lfFaceName, L"FixedSys") == 0)
-    {
-        /* "FixedSys" font */
-        if (TM->tmCharSet != UserCharSet)
-        {
-            /* CharSet Penalty 65000 */
-            /* Requested charset does not match the candidate's. */
-            Penalty += 65000;
-        }
-        fFixedSys = TRUE;
-    }
-    else    /* Request is non-"System" font */
-    {
-        Byte = LogFont->lfCharSet;
-        if (Byte == DEFAULT_CHARSET)
-        {
-            if (_wcsicmp(LogFont->lfFaceName, L"Marlett") == 0)
+            if (Byte == ANSI_CHARSET)
             {
-                if (Byte == ANSI_CHARSET)
-                {
-                    DPRINT("Warning: FIXME: It's Marlett but ANSI_CHARSET.\n");
-                }
-                /* We assume SYMBOL_CHARSET for "Marlett" font */
-                Byte = SYMBOL_CHARSET;
+                DPRINT("Warning: FIXME: It's Marlett but ANSI_CHARSET.\n");
             }
+            /* We assume SYMBOL_CHARSET for "Marlett" font */
+            Byte = SYMBOL_CHARSET;
         }
+    }
 
-        if (Byte != TM->tmCharSet)
+    if (Byte != TM->tmCharSet)
+    {
+        if (Byte != DEFAULT_CHARSET && Byte != ANSI_CHARSET)
         {
-            if (Byte != DEFAULT_CHARSET && Byte != ANSI_CHARSET)
+            /* CharSet Penalty 65000 */
+            /* Requested charset does not match the candidate's. */
+            Penalty += 65000;
+        }
+        else
+        {
+            if (UserCharSet != TM->tmCharSet)
             {
-                /* CharSet Penalty 65000 */
-                /* Requested charset does not match the candidate's. */
-                Penalty += 65000;
-            }
-            else
-            {
-                if (UserCharSet != TM->tmCharSet)
+                /* UNDOCUMENTED */
+                Penalty += 100;
+                if (ANSI_CHARSET != TM->tmCharSet)
                 {
                     /* UNDOCUMENTED */
                     Penalty += 100;
-                    if (ANSI_CHARSET != TM->tmCharSet)
-                    {
-                        /* UNDOCUMENTED */
-                        Penalty += 100;
-                    }
                 }
             }
         }
@@ -4083,11 +4057,6 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     Byte = (LogFont->lfPitchAndFamily & 0x0F);
     if (Byte == DEFAULT_PITCH)
         Byte = VARIABLE_PITCH;
-    if (fFixedSys)
-    {
-        /* "FixedSys" font should be fixed-pitch */
-        Byte = FIXED_PITCH;
-    }
     if (Byte == FIXED_PITCH)
     {
         if (TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH)
