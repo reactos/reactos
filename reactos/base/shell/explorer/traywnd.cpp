@@ -190,7 +190,8 @@ class CTrayWindow :
     public CWindowImpl < CTrayWindow, CWindow, CControlWinTraits >,
     public ITrayWindow,
     public IShellDesktopTray,
-    public IOleWindow
+    public IOleWindow,
+    public IContextMenu
 {
     CStartButton m_StartButton;
 
@@ -198,6 +199,7 @@ class CTrayWindow :
     CComPtr<IMenuPopup> m_StartMenuPopup;
 
     CComPtr<IDeskBand> m_TaskBand;
+    CComPtr<IContextMenu> m_ContextMenu;
     HTHEME m_Theme;
 
     HFONT m_Font;
@@ -2078,8 +2080,44 @@ ChangePos:
     }
 
 
+    /*
+     *  IContextMenu
+     */
+    HRESULT STDMETHODCALLTYPE QueryContextMenu(HMENU hPopup,
+                                               UINT indexMenu,
+                                               UINT idCmdFirst,
+                                               UINT idCmdLast,
+                                               UINT uFlags)
+    {
+        if (!m_ContextMenu)
+        {
+            HRESULT hr = TrayWindowCtxMenuCreator(this, m_hWnd, &m_ContextMenu);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
 
+        return m_ContextMenu->QueryContextMenu(hPopup, indexMenu, idCmdFirst, idCmdLast, uFlags);
+    }
 
+    HRESULT STDMETHODCALLTYPE InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
+    {
+        if (!m_ContextMenu)
+            return E_INVALIDARG;
+
+        return m_ContextMenu->InvokeCommand(lpici);
+    }
+
+    HRESULT STDMETHODCALLTYPE GetCommandString(UINT_PTR idCmd,
+                                               UINT uType,
+                                               UINT *pwReserved,
+                                               LPSTR pszName,
+                                               UINT cchMax)
+    {
+        if (!m_ContextMenu)
+            return E_INVALIDARG;
+
+        return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);        
+    }
 
 
     /**********************************************************
@@ -2590,9 +2628,7 @@ ChangePos:
             {
 HandleTrayContextMenu:
                 /* Tray the default tray window context menu */
-                CComPtr<IContextMenu> ctxMenu;
-                TrayWindowCtxMenuCreator(this, m_hWnd, &ctxMenu);
-                TrackCtxMenu(ctxMenu, ppt, NULL, FALSE, this);
+                TrackCtxMenu(this, ppt, NULL, FALSE, this);
             }
         }
         return Ret;
@@ -2998,6 +3034,7 @@ HandleTrayContextMenu:
         /*COM_INTERFACE_ENTRY_IID(IID_ITrayWindow, ITrayWindow)*/
         COM_INTERFACE_ENTRY_IID(IID_IShellDesktopTray, IShellDesktopTray)
         COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()
 };
 
@@ -3009,12 +3046,14 @@ class CTrayWindowCtxMenu :
     HWND hWndOwner;
     CComPtr<CTrayWindow> TrayWnd;
     CComPtr<IContextMenu> pcm;
+    UINT m_idCmdCmFirst;
 
 public:
     HRESULT Initialize(ITrayWindow * pTrayWnd, IN HWND hWndOwner)
     {
         this->TrayWnd = (CTrayWindow *) pTrayWnd;
         this->hWndOwner = hWndOwner;
+        this->m_idCmdCmFirst = 0;
         return S_OK;
     }
 
@@ -3026,30 +3065,8 @@ public:
                          UINT uFlags)
     {
         HMENU menubase = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TRAYWND));
-
         if (!menubase)
             return HRESULT_FROM_WIN32(GetLastError());
-
-        int count = ::GetMenuItemCount(menubase);
-
-        for (int i = 0; i < count; i++)
-        {
-            WCHAR label[128];
-
-            MENUITEMINFOW mii = { 0 };
-            mii.cbSize = sizeof(mii);
-            mii.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_CHECKMARKS 
-                | MIIM_DATA | MIIM_STRING | MIIM_BITMAP | MIIM_FTYPE;
-            mii.dwTypeData = label;
-            mii.cch = _countof(label);
-            ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
-
-            TRACE("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
-
-            ::InsertMenuItemW(hPopup, i + 1, TRUE, &mii);
-        }
-
-        ::DestroyMenu(menubase);
 
         if (SHRestricted(REST_CLASSICSHELL) != 0)
         {
@@ -3062,13 +3079,19 @@ public:
                       ID_LOCKTASKBAR,
                       MF_BYCOMMAND | (TrayWnd->Locked ? MF_CHECKED : MF_UNCHECKED));
 
+        UINT idCmdNext;
+        idCmdNext = Shell_MergeMenus(hPopup, menubase, indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS | MM_ADDSEPARATOR);
+        m_idCmdCmFirst = idCmdNext - idCmdFirst;
+
+        ::DestroyMenu(menubase);
+
         if (TrayWnd->m_TrayBandSite != NULL)
         {
             if (FAILED(TrayWnd->m_TrayBandSite->AddContextMenus(
                 hPopup,
-                0,
-                ID_SHELL_CMD_FIRST,
-                ID_SHELL_CMD_LAST,
+                indexMenu,
+                idCmdNext,
+                idCmdLast,
                 CMF_NORMAL,
                 &pcm)))
             {
@@ -3086,7 +3109,7 @@ public:
         UINT uiCmdId = (UINT) lpici->lpVerb;
         if (uiCmdId != 0)
         {
-            if (uiCmdId >= ID_SHELL_CMD_FIRST && uiCmdId <= ID_SHELL_CMD_LAST)
+            if (uiCmdId >= m_idCmdCmFirst)
             {
                 CMINVOKECOMMANDINFO cmici = { 0 };
 
@@ -3095,7 +3118,7 @@ public:
                     /* Setup and invoke the shell command */
                     cmici.cbSize = sizeof(cmici);
                     cmici.hwnd = hWndOwner;
-                    cmici.lpVerb = (LPCSTR) MAKEINTRESOURCEW(uiCmdId - ID_SHELL_CMD_FIRST);
+                    cmici.lpVerb = (LPCSTR) MAKEINTRESOURCEW(uiCmdId - m_idCmdCmFirst);
                     cmici.nShow = SW_NORMAL;
 
                     pcm->InvokeCommand(&cmici);
