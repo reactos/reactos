@@ -286,7 +286,7 @@ IntEngGradientFillRect(
   x[line] = a->x; \
   sx[line] =  a->x + pptlDitherOrg->x; \
   dx[line] = abs(b->x - a->x); \
-  dy[line] = abs(b->y - a->y); \
+  dy[line] = max(abs(b->y - a->y),1); \
   incx[line] = LINC[b->x > a->x]; \
   ex[line] = -(dy[line]>>1); \
   destx[line] = b->x
@@ -319,19 +319,19 @@ IntEngGradientFillTriangle(
 {
     SURFOBJ *psoOutput;
     PTRIVERTEX v1, v2, v3;
-    //RECT_ENUM RectEnum;
-    //BOOL EnumMore;
-    //ULONG i;
+    RECT_ENUM RectEnum;
+    BOOL EnumMore;
+    ULONG i;
     POINTL Translate;
     INTENG_ENTER_LEAVE EnterLeave;
     RECTL FillRect = { 0, 0, 0, 0 };
-    //ULONG Color;
+    ULONG Color;
 
-    //BOOL sx[NLINES];
-    //LONG x[NLINES], dx[NLINES], dy[NLINES], incx[NLINES], ex[NLINES], destx[NLINES];
-    //LONG c[NLINES][3], dc[NLINES][3], ec[NLINES][3], ic[NLINES][3]; /* colors on lines */
-    //LONG g, gx, gxi, gc[3], gd[3], ge[3], gi[3]; /* colors in triangle */
-    //LONG sy, y, bt;
+    BOOL sx[NLINES];
+    LONG x[NLINES], dx[NLINES], dy[NLINES], incx[NLINES], ex[NLINES], destx[NLINES];
+    LONG c[NLINES][3], dc[NLINES][3], ec[NLINES][3], ic[NLINES][3]; /* colors on lines */
+    LONG g, gx, gxi, gc[3], gd[3], ge[3], gi[3]; /* colors in triangle */
+    LONG sy, y, bt;
 
     v1 = (pVertex + gTriangle->Vertex1);
     v2 = (pVertex + gTriangle->Vertex2);
@@ -363,94 +363,94 @@ IntEngGradientFillTriangle(
         return FALSE;
     }
 
-    //if (VCMPCLRS(v1, v2, v3))
-    //{
-    //  CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
-    //  do
-    //  {
-    //    EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
-    //    for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
-    //    {
-    //      if (RECTL_bIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
-    //      {
-    //        BOOL InY;
+    if (VCMPCLRS(v1, v2, v3))
+    {
+      CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
+      do
+      {
+        EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+        for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
+        {
+          if (RECTL_bIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
+          {
+            BOOL InY;
 
-    //        DOINIT(v1, v3, 0);
-    //        DOINIT(v1, v2, 1);
-    //        DOINIT(v2, v3, 2);
+            DOINIT(v1, v3, 0);
+            DOINIT(v1, v2, 1);
+            DOINIT(v2, v3, 2);
 
-    //        y = v1->y;
-    //        sy = v1->y + pptlDitherOrg->y;
-    //        bt = min(v3->y + pptlDitherOrg->y, FillRect.bottom);
+            y = v1->y;
+            sy = v1->y + pptlDitherOrg->y;
+            bt = min(v3->y + pptlDitherOrg->y, FillRect.bottom);
 
-    //        while (sy < bt)
-    //        {
-    //          InY = !(sy < FillRect.top || sy >= FillRect.bottom);
-    //          GOLINE(v1, v3, 0);
-    //          DOLINE(v1, v3, 0);
-    //          ENDLINE(v1, v3, 0);
+            while (sy < bt)
+            {
+              InY = !(sy < FillRect.top || sy >= FillRect.bottom);
+              GOLINE(v1, v3, 0);
+              DOLINE(v1, v3, 0);
+              ENDLINE(v1, v3, 0);
 
-    //          GOLINE(v1, v2, 1);
-    //          DOLINE(v1, v2, 1);
-    //          FILLLINE(0, 1);
-    //          ENDLINE(v1, v2, 1);
+              GOLINE(v1, v2, 1);
+              DOLINE(v1, v2, 1);
+              FILLLINE(0, 1);
+              ENDLINE(v1, v2, 1);
 
-    //          GOLINE(v2, v3, 2);
-    //          DOLINE(v2, v3, 2);
-    //          FILLLINE(0, 2);
-    //          ENDLINE(23, v3, 2);
+              GOLINE(v2, v3, 2);
+              DOLINE(v2, v3, 2);
+              FILLLINE(0, 2);
+              ENDLINE(23, v3, 2);
 
-    //          y++;
-    //          sy++;
-    //        }
-    //      }
-    //    }
-    //  } while (EnumMore);
+              y++;
+              sy++;
+            }
+          }
+        }
+      } while (EnumMore);
 
-    //  return IntEngLeave(&EnterLeave);
-    //}
+      return IntEngLeave(&EnterLeave);
+    }
 
-    ///* fill triangle with one solid color */
+    /* fill triangle with one solid color */
 
-    //Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red >> 8, v1->Green >> 8, v1->Blue >> 8));
-    //CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
-    //do
-    //{
-    //  EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
-    //  for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
-    //  {
-    //    if (RECTL_bIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
-    //    {
-    //      S_INITLINE(v1, v3, 0);
-    //      S_INITLINE(v1, v2, 1);
-    //      S_INITLINE(v2, v3, 2);
+    Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red >> 8, v1->Green >> 8, v1->Blue >> 8));
+    CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
+    do
+    {
+      EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+      for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
+      {
+        if (RECTL_bIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
+        {
+          S_INITLINE(v1, v3, 0);
+          S_INITLINE(v1, v2, 1);
+          S_INITLINE(v2, v3, 2);
 
-    //      y = v1->y;
-    //      sy = v1->y + pptlDitherOrg->y;
-    //      bt = min(v3->y + pptlDitherOrg->y, FillRect.bottom);
+          y = v1->y;
+          sy = v1->y + pptlDitherOrg->y;
+          bt = min(v3->y + pptlDitherOrg->y, FillRect.bottom);
 
-    //      while (sy < bt)
-    //      {
-    //        S_GOLINE(v1, v3, 0);
-    //        S_DOLINE(v1, v3, 0);
-    //        S_ENDLINE(v1, v3, 0);
+          while (sy < bt)
+          {
+            S_GOLINE(v1, v3, 0);
+            S_DOLINE(v1, v3, 0);
+            S_ENDLINE(v1, v3, 0);
 
-    //        S_GOLINE(v1, v2, 1);
-    //        S_DOLINE(v1, v2, 1);
-    //        S_FILLLINE(0, 1);
-    //        S_ENDLINE(v1, v2, 1);
+            S_GOLINE(v1, v2, 1);
+            S_DOLINE(v1, v2, 1);
+            S_FILLLINE(0, 1);
+            S_ENDLINE(v1, v2, 1);
 
-    //        S_GOLINE(v2, v3, 2);
-    //        S_DOLINE(v2, v3, 2);
-    //        S_FILLLINE(0, 2);
-    //        S_ENDLINE(23, v3, 2);
+            S_GOLINE(v2, v3, 2);
+            S_DOLINE(v2, v3, 2);
+            S_FILLLINE(0, 2);
+            S_ENDLINE(23, v3, 2);
 
-    //        y++;
-    //        sy++;
-    //      }
-    //    }
-    //  }
-    //} while (EnumMore);
+            y++;
+            sy++;
+          }
+        }
+      }
+    } while (EnumMore);
 
     return IntEngLeave(&EnterLeave);
 }
