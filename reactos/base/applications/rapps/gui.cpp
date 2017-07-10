@@ -1148,12 +1148,12 @@ private:
 
         /* Get version info */
         GetApplicationString(ItemInfo->hSubKey, L"DisplayVersion", szText);
-        ListView_SetItemText(hListView, Index, 1, szText.GetBuffer(MAX_PATH));
+        ListView_SetItemText(hListView, Index, 1, szText.GetBuffer());
         szText.ReleaseBuffer();
 
         /* Get comments */
         GetApplicationString(ItemInfo->hSubKey, L"Comments", szText);
-        ListView_SetItemText(hListView, Index, 2, szText.GetBuffer(MAX_PATH));
+        ListView_SetItemText(hListView, Index, 2, szText.GetBuffer());
         szText.ReleaseBuffer();
         return TRUE;
     }
@@ -1163,8 +1163,7 @@ private:
         INT Index;
         HICON hIcon = NULL;
         ATL::CStringW szIconPath;
-        HIMAGELIST hImageListView = NULL;
-        hImageListView = ListView_GetImageList(hListView, LVSIL_SMALL);
+        HIMAGELIST hImageListView = ListView_GetImageList(hListView, LVSIL_SMALL);
 
         if (!SearchPatternMatch(Info->szName, szSearchPattern) &&
             !SearchPatternMatch(Info->szDesc, szSearchPattern))
@@ -1195,10 +1194,10 @@ private:
         Index = ListViewAddItem(Info->Category, Index, Info->szName, (LPARAM) Info);
         hImageListView = ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
 
-        ListView_SetItemText(hListView, Index, 1, Info->szVersion.GetBuffer(MAX_PATH));
+        ListView_SetItemText(hListView, Index, 1, Info->szVersion.GetBuffer());
         Info->szVersion.ReleaseBuffer();
 
-        ListView_SetItemText(hListView, Index, 2, Info->szDesc.GetBuffer(MAX_PATH));
+        ListView_SetItemText(hListView, Index, 2, Info->szDesc.GetBuffer());
         Info->szDesc.ReleaseBuffer();
         return TRUE;
     }

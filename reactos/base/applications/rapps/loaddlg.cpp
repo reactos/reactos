@@ -366,11 +366,8 @@ ThreadFunc(LPVOID Context)
 
     memset(&urlComponents, 0, sizeof(urlComponents));
     urlComponents.dwStructSize = sizeof(urlComponents);
-    
-    if (AppInfo->szUrlDownload.GetLength() > urlLength)
-        goto end;
 
-    urlLength /= sizeof(WCHAR);
+    urlLength = AppInfo->szUrlDownload.GetLength();
     urlComponents.dwSchemeLength = urlLength + 1;
     urlComponents.lpszScheme = (LPWSTR) malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
     urlComponents.dwHostNameLength = urlLength + 1;
