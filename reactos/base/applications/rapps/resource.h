@@ -173,9 +173,9 @@
 #define IDS_STATUS_INSTALLING         805
 
 /* App license names */
-#define IDS_LICENSE_OPENSOURCE  900
-#define IDS_LICENSE_FREEWARE 901
-#define IDS_LICENSE_TRIAL 902
+#define IDS_LICENSE_OPENSOURCE      900
+#define IDS_LICENSE_FREEWARE        901
+#define IDS_LICENSE_TRIAL           902
 
 /* Accelerators */
 #define HOTKEYS                  715

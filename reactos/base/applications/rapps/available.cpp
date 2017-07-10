@@ -5,79 +5,79 @@
  * PURPOSE:         Functions for working with available applications
  * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+ *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
  */
 
 #include "rapps.h"
 
-inline void _AddText(UINT a, LPCWSTR b, DWORD c, DWORD d)
+ATL::CAtlList<PAPPLICATION_INFO> InfoList;
+
+inline void InsertTextAfterLoaded_RichEdit(UINT uStringID, const ATL::CStringW& szText, DWORD StringFlags, DWORD TextFlags)
 {
-    if (b[0] != '\0')
+    ATL::CStringW szLoadedText;
+    if (!szText.IsEmpty() && szLoadedText.LoadStringW(hInst, uStringID))
     {
-        WCHAR szText[MAX_STR_LEN];
-        LoadStringW(hInst, a, szText, _countof(szText));
-        InsertRichEditText(szText, c);
-        InsertRichEditText(b, d);
+        InsertRichEditText(szLoadedText, StringFlags);
+        InsertRichEditText(szText, TextFlags);
     }
 }
 
-inline void _AddTextNewl(UINT a, DWORD b)
+inline void InsertLoadedTextNewl_RichEdit(UINT uStringID, DWORD StringFlags)
 {
-    WCHAR szText[MAX_STR_LEN];
-    LoadStringW(hInst, a, szText, _countof(szText));
-    InsertRichEditText(L"\n", 0);
-    InsertRichEditText(szText, b);
-    InsertRichEditText(L"\n", 0);
-}
-
-template<typename T, size_t N, size_t N2>
-inline BOOL _GetString(LPCWSTR a, T(&b)[N], T(&cFileName)[N2])
-{
-    return ParserGetString(a, b, N, cFileName);
-}
-
-template<typename T, size_t N, size_t N2>
-inline void _GetStringNullFailure(LPCWSTR a, T(&b)[N], T(&cFileName)[N2])
-{
-    if (!_GetString(a, b, cFileName))
+    ATL::CStringW szLoadedText;
+    if (szLoadedText.LoadStringW(hInst, uStringID))
     {
-        b[0] = '\0';
+        InsertRichEditText(L"\n", 0);
+        InsertRichEditText(szLoadedText, StringFlags);
+        InsertRichEditText(L"\n", 0);
     }
+}
+
+inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString, const ATL::CStringW& cFileName)
+{
+    if (!ParserGetString(lpKeyName, cFileName, ReturnedString))
+    {
+        ReturnedString.Empty();
+        return FALSE;
+    }
+    return TRUE;
 }
 
 //App is "installed" if the RegName or Name is in the registry
-inline BOOL _AppInstallCheckWithKey(PAPPLICATION_INFO Info, REGSAM key)
+inline BOOL IsAppInstalledKey(PAPPLICATION_INFO Info, REGSAM key)
 {
-    return (*Info->szRegName
-        && (IsInstalledApplication(Info->szRegName, TRUE, key)
-        || IsInstalledApplication(Info->szRegName, FALSE, key)))
-        || (*Info->szName && (IsInstalledApplication(Info->szName, TRUE, key)
-            || IsInstalledApplication(Info->szName, FALSE, key)));
+    return (!Info->szRegName.IsEmpty()
+            && (IsInstalledApplication(Info->szRegName, TRUE, key)
+                || IsInstalledApplication(Info->szRegName, FALSE, key)))
+        || (!Info->szName.IsEmpty()
+            && (IsInstalledApplication(Info->szName, TRUE, key)
+                || IsInstalledApplication(Info->szName, FALSE, key)));
 }
 
 
 //Check both registry keys in 64bit system
 //TODO: check system type beforehand to avoid double checks?
-inline BOOL _AppInstallCheck(PAPPLICATION_INFO Info)
+inline BOOL IsAppInstalled(PAPPLICATION_INFO Info)
 {
-    return  _AppInstallCheckWithKey(Info, KEY_WOW64_32KEY)
-        || _AppInstallCheckWithKey(Info, KEY_WOW64_64KEY);
+    return  IsAppInstalledKey(Info, KEY_WOW64_32KEY)
+        || IsAppInstalledKey(Info, KEY_WOW64_64KEY);
 }
 
 //App is "installed" if the RegName or Name is in the registry
-inline BOOL _GetInstalledVersionWithKey(PAPPLICATION_INFO Info, LPWSTR szVersion, UINT iVersionSize, REGSAM key)
+inline BOOL GetInstalledVersionWithKey(PAPPLICATION_INFO Info, ATL::CStringW& szVersion, REGSAM key)
 {
-    return (*Info->szRegName
-        && (InstalledVersion(szVersion, iVersionSize, Info->szRegName, TRUE, key)
-        || InstalledVersion(szVersion, iVersionSize, Info->szRegName, FALSE, key)))
-        || (*Info->szName && (InstalledVersion(szVersion, iVersionSize, Info->szName, TRUE, key)
-            || InstalledVersion(szVersion, iVersionSize, Info->szName, FALSE, key)));
+    return (!Info->szRegName.IsEmpty()
+            && (InstalledVersion(szVersion, Info->szRegName, TRUE, key)
+                || InstalledVersion(szVersion, Info->szRegName, FALSE, key)))
+        || (!Info->szName.IsEmpty()
+            && (InstalledVersion(szVersion, Info->szName, TRUE, key)
+                || InstalledVersion(szVersion, Info->szName, FALSE, key)));
 }
 
-//App is "installed" if the RegName or Name is in the registry
-inline BOOL _GetInstalledVersion(PAPPLICATION_INFO Info, LPWSTR szVersion, UINT iVersionSize)
+inline BOOL GetInstalledVersion(PAPPLICATION_INFO Info, ATL::CStringW& szVersion)
 {
-    return  _GetInstalledVersionWithKey(Info, szVersion, iVersionSize, KEY_WOW64_32KEY)
-        || _GetInstalledVersionWithKey(Info, szVersion, iVersionSize, KEY_WOW64_64KEY);
+    return  GetInstalledVersionWithKey(Info, szVersion, KEY_WOW64_32KEY)
+        || GetInstalledVersionWithKey(Info, szVersion, KEY_WOW64_64KEY);
 }
 
 LIST_ENTRY CachedEntriesHead = {&CachedEntriesHead, &CachedEntriesHead};
@@ -87,10 +87,10 @@ BOOL
 ShowAvailableAppInfo(INT Index)
 {
     PAPPLICATION_INFO Info = (PAPPLICATION_INFO) ListViewGetlParam(Index);
-    WCHAR szVersion[MAX_PATH] = L"\0";
-    WCHAR szLicense[MAX_PATH] = L"\0";
-    BOOL bIsInstalled = _AppInstallCheck(Info), 
-        bHasVersion = _GetInstalledVersion(Info, szVersion, _countof(szVersion));
+    ATL::CStringW szVersion;
+    ATL::CStringW szLicense;
+    BOOL bIsInstalled = IsAppInstalled(Info),
+        bHasVersion = GetInstalledVersion(Info, szVersion);
 
     if (!Info) return FALSE;
 
@@ -100,50 +100,51 @@ ShowAvailableAppInfo(INT Index)
     {
         if (bHasVersion)
         {
-            if (CompareVersionsStrings(Info->szVersion, szVersion))
-                _AddTextNewl(IDS_STATUS_UPDATE_AVAILABLE, CFE_ITALIC);
+            if (Info->szVersion.Compare(szVersion) > 0)
+                InsertLoadedTextNewl_RichEdit(IDS_STATUS_UPDATE_AVAILABLE, CFE_ITALIC);
             else
-                _AddTextNewl(IDS_STATUS_INSTALLED, CFE_ITALIC);
+                InsertLoadedTextNewl_RichEdit(IDS_STATUS_INSTALLED, CFE_ITALIC);
 
-            _AddText(IDS_AINFO_VERSION, szVersion, CFE_BOLD, 0);
-        } 
+            InsertTextAfterLoaded_RichEdit(IDS_AINFO_VERSION, szVersion, CFE_BOLD, 0);
+        }
         else
-            _AddTextNewl(IDS_STATUS_INSTALLED, CFE_ITALIC);
+            InsertLoadedTextNewl_RichEdit(IDS_STATUS_INSTALLED, CFE_ITALIC);
 
     }
     else
-        _AddTextNewl(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
+        InsertLoadedTextNewl_RichEdit(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
 
-
-    _AddText(IDS_AINFO_AVAILABLEVERSION, Info->szVersion, CFE_BOLD, 0);
+    InsertTextAfterLoaded_RichEdit(IDS_AINFO_AVAILABLEVERSION, Info->szVersion, CFE_BOLD, 0);
     //license
     switch (Info->LicenseType)
     {
-        case LICENSE_TYPE::OpenSource:
-            LoadStringW(hInst, IDS_LICENSE_OPENSOURCE, szLicense, _countof(szLicense));
-            break;
-        case LICENSE_TYPE::Freeware:
-            LoadStringW(hInst, IDS_LICENSE_FREEWARE, szLicense, _countof(szLicense));
-            break;
-        case LICENSE_TYPE::Trial:
-            LoadStringW(hInst, IDS_LICENSE_TRIAL, szLicense, _countof(szLicense));
-            break;
-        default:
-            break;
+    case LICENSE_TYPE::OpenSource:
+        szLicense.LoadStringW(hInst, IDS_LICENSE_OPENSOURCE);
+        break;
+    case LICENSE_TYPE::Freeware:
+        szLicense.LoadStringW(hInst, IDS_LICENSE_FREEWARE);
+        break;
+    case LICENSE_TYPE::Trial:
+        szLicense.LoadStringW(hInst, IDS_LICENSE_TRIAL);
+        break;
+    default:
+        break;
     }
-    if (szLicense[0] != '\0')
+
+    if (szLicense.IsEmpty())
     {
-        StringCbPrintfW(szLicense, _countof(szLicense), L"%ls (%ls)", szLicense, Info->szLicense);
-        _AddText(IDS_AINFO_LICENSE, szLicense, CFE_BOLD, 0);
+        InsertTextAfterLoaded_RichEdit(IDS_AINFO_LICENSE, Info->szLicense, CFE_BOLD, 0);
     }
     else
     {
-        _AddText(IDS_AINFO_LICENSE, Info->szLicense, CFE_BOLD, 0);
+        szLicense.Format(L"(%ls)", Info->szLicense);
+        InsertTextAfterLoaded_RichEdit(IDS_AINFO_LICENSE, szLicense, CFE_BOLD, 0);
     }
-    _AddText(IDS_AINFO_SIZE, Info->szSize, CFE_BOLD, 0);
-    _AddText(IDS_AINFO_URLSITE, Info->szUrlSite, CFE_BOLD, CFE_LINK);
-    _AddText(IDS_AINFO_DESCRIPTION, Info->szDesc, CFE_BOLD, 0);
-    _AddText(IDS_AINFO_URLDOWNLOAD, Info->szUrlDownload, CFE_BOLD, CFE_LINK);
+
+    InsertTextAfterLoaded_RichEdit(IDS_AINFO_SIZE, Info->szSize, CFE_BOLD, 0);
+    InsertTextAfterLoaded_RichEdit(IDS_AINFO_URLSITE, Info->szUrlSite, CFE_BOLD, CFE_LINK);
+    InsertTextAfterLoaded_RichEdit(IDS_AINFO_DESCRIPTION, Info->szDesc, CFE_BOLD, 0);
+    InsertTextAfterLoaded_RichEdit(IDS_AINFO_URLDOWNLOAD, Info->szUrlDownload, CFE_BOLD, CFE_LINK);
 
     return TRUE;
 }
@@ -153,88 +154,59 @@ DeleteCurrentAppsDB(VOID)
 {
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
-    WCHAR szCabPath[MAX_PATH];
-    WCHAR szSearchPath[MAX_PATH];
-    WCHAR szPath[MAX_PATH];
-    WCHAR szTmp[MAX_PATH];
-    HRESULT hr;
+    ATL::CStringW szCabPath;
+    ATL::CStringW szSearchPath;
+    ATL::CStringW szPath;
     BOOL result = TRUE;
 
-    if (!GetStorageDirectory(szPath, _countof(szPath)))
+    if (!GetStorageDirectory(szPath))
         return FALSE;
 
-    hr = StringCbPrintfW(szCabPath, sizeof(szCabPath),
-        L"%ls\\rappmgr.cab",
-        szPath);
-    if (FAILED(hr))
-        return FALSE;
+    szCabPath = szPath + L"\\rappmgr.cab";
+    result = result && DeleteFileW(szCabPath.GetString());
 
-    result = result && DeleteFileW(szCabPath);
+    szPath += L"\\rapps\\";
+    szSearchPath = szPath + L"*.txt";
 
-    hr = StringCbCatW(szPath, sizeof(szPath), L"\\rapps\\");
-
-    if (FAILED(hr))
-        return FALSE;
-
-    hr = StringCbPrintfW(szSearchPath, sizeof(szSearchPath),
-        L"%ls*.txt",
-        szPath);
-    if (FAILED(hr))
-        return FALSE;
-
-    hFind = FindFirstFileW(szSearchPath, &FindFileData);
+    hFind = FindFirstFileW(szSearchPath.GetString(), &FindFileData);
 
     if (hFind == INVALID_HANDLE_VALUE)
         return result;
 
+    ATL::CStringW szTmp;
     do
     {
-        hr = StringCbPrintfW(szTmp, sizeof(szTmp),
-            L"%ls%ls",
-            szPath, FindFileData.cFileName);
-        if (FAILED(hr))
-            continue;
-        result = result && DeleteFileW(szTmp);
-
-    }
-    while (FindNextFileW(hFind, &FindFileData) != 0);
+        szTmp = szPath + FindFileData.cFileName;
+        result = result && DeleteFileW(szTmp.GetString());
+    } while (FindNextFileW(hFind, &FindFileData) != 0);
 
     FindClose(hFind);
 
     return result;
 }
 
-
 BOOL
 UpdateAppsDB(VOID)
 {
-    WCHAR szPath[MAX_PATH];
-    WCHAR szAppsPath[MAX_PATH];
-    WCHAR szCabPath[MAX_PATH];
+    ATL::CStringW szPath;
+    ATL::CStringW szAppsPath;
+    ATL::CStringW szCabPath;
 
     if (!DeleteCurrentAppsDB())
         return FALSE;
 
     DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
-    if (!GetStorageDirectory(szPath, _countof(szPath)))
+    if (!GetStorageDirectory(szPath))
         return FALSE;
 
-    if (FAILED(StringCbPrintfW(szCabPath, sizeof(szCabPath),
-        L"%ls\\rappmgr.cab",
-        szPath)))
+    szCabPath = szPath + L"\\rappmgr.cab";
+    szAppsPath = szPath + L"\\rapps\\";
+
+    if (!ExtractFilesFromCab(szCabPath, szAppsPath))
     {
         return FALSE;
     }
-
-    if (FAILED(StringCbPrintfW(szAppsPath, sizeof(szAppsPath),
-        L"%ls\\rapps\\",
-        szPath)))
-    {
-        return FALSE;
-    }
-
-    ExtractFilesFromCab(szCabPath, szAppsPath);
 
     return TRUE;
 }
@@ -245,43 +217,27 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
 {
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
-    WCHAR szPath[MAX_PATH];
-    WCHAR szAppsPath[MAX_PATH];
-    WCHAR szCabPath[MAX_PATH];
+    ATL::CStringW szPath;
+    ATL::CStringW szAppsPath;
+    ATL::CStringW szCabPath;
     PAPPLICATION_INFO Info;
-    HRESULT hr;
 
-    if (!GetStorageDirectory(szPath, _countof(szPath)))
+
+    if (!GetStorageDirectory(szPath))
         return FALSE;
 
-    hr = StringCbPrintfW(szCabPath, sizeof(szCabPath),
-        L"%ls\\rappmgr.cab",
-        szPath);
-    if (FAILED(hr))
-        return FALSE;
+    szCabPath = szPath + L"\\rappmgr.cab";
+    szPath += L"\\rapps\\";
+    szAppsPath = szPath;
 
-    hr = StringCbCatW(szPath, sizeof(szPath), L"\\rapps\\");
-
-    if (FAILED(hr))
-        return FALSE;
-
-    hr = StringCbCopyW(szAppsPath, sizeof(szAppsPath), szPath);
-
-    if (FAILED(hr))
-        return FALSE;
-
-    if (!CreateDirectory(szPath, NULL) &&
+    if (!CreateDirectoryW(szPath.GetString(), NULL) &&
         GetLastError() != ERROR_ALREADY_EXISTS)
     {
         return FALSE;
     }
 
-    hr = StringCbCatW(szPath, sizeof(szPath), L"*.txt");
-
-    if (FAILED(hr))
-        return FALSE;
-
-    hFind = FindFirstFileW(szPath, &FindFileData);
+    szPath += L"*.txt";
+    hFind = FindFirstFileW(szPath.GetString(), &FindFileData);
 
     if (hFind == INVALID_HANDLE_VALUE)
     {
@@ -298,32 +254,34 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
     do
     {
         /* loop for all the cached entries */
-        for (pCachedEntry = CachedEntriesHead.Flink; pCachedEntry != &CachedEntriesHead; pCachedEntry = pCachedEntry->Flink)
+        POSITION CurrentListPosition = InfoList.GetHeadPosition();
+
+        while (CurrentListPosition != NULL)
         {
-            Info = CONTAINING_RECORD(pCachedEntry, APPLICATION_INFO, List);
+            POSITION LastListPosition = CurrentListPosition;
+            Info = InfoList.GetNext(CurrentListPosition);
 
             /* do we already have this entry in cache? */
-            if (_wcsicmp(FindFileData.cFileName, Info->cFileName) == 0)
+            if (!Info->cFileName.Compare(FindFileData.cFileName))
             {
                 /* is it current enough, or the file has been modified since our last time here? */
                 if (CompareFileTime(&FindFileData.ftLastWriteTime, &Info->ftCacheStamp) == 1)
                 {
                     /* recreate our cache, this is the slow path */
-                    RemoveEntryList(&Info->List);
-                    HeapFree(GetProcessHeap(), 0, Info);
+                    InfoList.RemoveAt(LastListPosition);
+                    delete Info;
+                    break;
                 }
                 else
                 {
                     /* speedy path, compare directly, we already have the data */
                     goto skip_if_cached;
                 }
-
-                break;
             }
         }
 
         /* create a new entry */
-        Info = (PAPPLICATION_INFO) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(APPLICATION_INFO));
+        Info = new APPLICATION_INFO();
 
         if (!Info)
             break;
@@ -336,13 +294,13 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
         }
 
         /* copy the cache-related fields for the next time */
-        RtlCopyMemory(&Info->cFileName, &FindFileData.cFileName, MAX_PATH);
+        Info->cFileName = FindFileData.cFileName;
         RtlCopyMemory(&Info->ftCacheStamp, &FindFileData.ftLastWriteTime, sizeof(FILETIME));
 
         /* add our cached entry to the cached list */
-        InsertTailList(&CachedEntriesHead, &Info->List);
+        InfoList.AddTail(Info);
 
-    skip_if_cached:
+skip_if_cached:
 
         if (Info->Category == FALSE)
             continue;
@@ -353,30 +311,29 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
         /* if our cache hit was only partial, we need to parse
            and lazily fill the rest of fields only when needed */
 
-        if (Info->szUrlDownload[0] == 0)
+        if (Info->szUrlDownload.IsEmpty())
         {
-            if (!_GetString(L"Name", Info->szName, FindFileData.cFileName)
-                || !_GetString(L"URLDownload", Info->szUrlDownload, FindFileData.cFileName))
+            if (!GetString(L"Name", Info->szName, FindFileData.cFileName)
+                || !GetString(L"URLDownload", Info->szUrlDownload, FindFileData.cFileName))
             {
                 continue;
             }
 
-            _GetStringNullFailure(L"RegName", Info->szRegName, FindFileData.cFileName);
-            _GetStringNullFailure(L"Version", Info->szVersion, FindFileData.cFileName);
-            _GetStringNullFailure(L"License", Info->szLicense, FindFileData.cFileName);
-            _GetStringNullFailure(L"Description", Info->szDesc, FindFileData.cFileName);
-            _GetStringNullFailure(L"Size", Info->szSize, FindFileData.cFileName);
-            _GetStringNullFailure(L"URLSite", Info->szUrlSite, FindFileData.cFileName);
-            _GetStringNullFailure(L"CDPath", Info->szCDPath, FindFileData.cFileName);
-            _GetStringNullFailure(L"Language", Info->szRegName, FindFileData.cFileName);
-            _GetStringNullFailure(L"SHA1", Info->szSHA1, FindFileData.cFileName);
+            GetString(L"RegName", Info->szRegName, FindFileData.cFileName);
+            GetString(L"Version", Info->szVersion, FindFileData.cFileName);
+            GetString(L"License", Info->szLicense, FindFileData.cFileName);
+            GetString(L"Description", Info->szDesc, FindFileData.cFileName);
+            GetString(L"Size", Info->szSize, FindFileData.cFileName);
+            GetString(L"URLSite", Info->szUrlSite, FindFileData.cFileName);
+            GetString(L"CDPath", Info->szCDPath, FindFileData.cFileName);
+            GetString(L"Language", Info->szRegName, FindFileData.cFileName);
+            GetString(L"SHA1", Info->szSHA1, FindFileData.cFileName);
         }
 
         if (!lpEnumProc(Info))
             break;
 
-    }
-    while (FindNextFileW(hFind, &FindFileData) != 0);
+    } while (FindNextFileW(hFind, &FindFileData) != 0);
 
     FindClose(hFind);
 
@@ -386,17 +343,16 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
 VOID FreeCachedAvailableEntries(VOID)
 {
     PAPPLICATION_INFO Info;
-
+    POSITION InfoListPosition = InfoList.GetHeadPosition();
     /* loop and deallocate all the cached app infos in the list */
-    for (pCachedEntry = CachedEntriesHead.Flink; pCachedEntry != &CachedEntriesHead;)
+    while (InfoListPosition)
     {
-        Info = CONTAINING_RECORD(pCachedEntry, APPLICATION_INFO, List);
-
-        /* grab a reference to the next linked entry before getting rid of the current one */
-        pCachedEntry = pCachedEntry->Flink;
+        Info = InfoList.GetAt(InfoListPosition);
+        InfoList.RemoveHead();
 
         /* flush them down the toilet :D */
-        RemoveEntryList(&Info->List);
-        HeapFree(GetProcessHeap(), 0, Info);
+        delete Info;
+
+        InfoListPosition = InfoList.GetHeadPosition();
     }
 }

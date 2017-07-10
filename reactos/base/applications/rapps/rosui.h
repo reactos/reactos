@@ -488,10 +488,15 @@ public:
         }
     };
 
-public:
     virtual ~CUiWindow()
     {
         T::DestroyWindow();
+    }
+
+    void GetWindowTextW(ATL::CStringW& szText)
+    {
+        CWindow::GetWindowText(szText.GetBuffer(MAX_STR_LEN), MAX_STR_LEN);
+        szText.ReleaseBuffer();
     }
 };
 
@@ -523,7 +528,6 @@ public:
     CUiMeasure m_Width;
     CUiMeasure m_Height;
 
-public:
     CUiSplitPanel()
     {
         m_Width = CUiMeasure::FitParent();

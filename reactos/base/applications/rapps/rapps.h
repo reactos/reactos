@@ -25,7 +25,8 @@
 #include <stdio.h>
 #include <strsafe.h>
 #include <ndk/rtlfuncs.h>
-
+#include <atlcoll.h>
+#include <atlstr.h> 
 #include <rappsmsg.h>
 
 #include "resource.h"
@@ -39,7 +40,6 @@
 
 #define SPLIT_WIDTH 4
 #define MAX_STR_LEN 256
-#define MAX_VERSION 10
 #define LISTVIEW_ICON_SIZE 24
 #define TREEVIEW_ICON_SIZE 24
 
@@ -91,32 +91,33 @@ typedef struct
 {
     INT Category;
     LICENSE_TYPE LicenseType;
-    WCHAR szName[MAX_PATH];
-    WCHAR szRegName[MAX_PATH];
-    WCHAR szVersion[MAX_PATH];
-    WCHAR szLicense[MAX_PATH];
-    WCHAR szDesc[MAX_PATH];
-    WCHAR szSize[MAX_PATH];
-    WCHAR szUrlSite[MAX_PATH];
-    WCHAR szUrlDownload[MAX_PATH];
-    WCHAR szCDPath[MAX_PATH];
-    WCHAR szLanguages[MAX_PATH];
+    ATL::CStringW szName;
+    ATL::CStringW szRegName;
+    ATL::CStringW szVersion;
+    ATL::CStringW szLicense;
+    ATL::CStringW szDesc;
+    ATL::CStringW szSize;
+    ATL::CStringW szUrlSite;
+    ATL::CStringW szUrlDownload;
+    ATL::CStringW szCDPath;
+    ATL::CStringW szLanguages;
 
     /* caching mechanism related entries */
-    WCHAR cFileName[MAX_PATH];
+    ATL::CStringW cFileName;
     FILETIME ftCacheStamp;
-    LIST_ENTRY List;
 
     /* optional integrity checks (SHA-1 digests are 160 bit = 40 characters in hex string form) */
-    WCHAR szSHA1[40 + 1];
+    ATL::CStringW szSHA1;
 
 } APPLICATION_INFO, *PAPPLICATION_INFO;
+
+extern ATL::CAtlList<PAPPLICATION_INFO> InfoList;
 
 typedef struct
 {
     HKEY hRootKey;
     HKEY hSubKey;
-    WCHAR szKeyName[MAX_PATH];
+    ATL::CStringW szKeyName;
 
 } INSTALLED_INFO, *PINSTALLED_INFO;
 
@@ -140,14 +141,6 @@ typedef struct
 
 } SETTINGS_INFO, *PSETTINGS_INFO;
 
-typedef struct
-{
-    INT arrVersion[MAX_VERSION];
-    UINT VersionSize;
-    WCHAR cVersionSuffix = (WCHAR) NULL;
-    WCHAR szVersion[MAX_PATH];
-} VERSION_INFO, *PVERSION_INFO;
-
 /* available.cpp */
 typedef BOOL (CALLBACK *AVAILENUMPROC)(PAPPLICATION_INFO Info);
 BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
@@ -155,20 +148,21 @@ BOOL ShowAvailableAppInfo(INT Index);
 BOOL UpdateAppsDB(VOID);
 VOID FreeCachedAvailableEntries(VOID);
 
-
 /* installdlg.cpp */
 BOOL InstallApplication(INT Index);
 
 /* installed.cpp */
-typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, LPWSTR lpName, PINSTALLED_INFO Info);
+typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, ATL::CStringW &lpName, PINSTALLED_INFO Info);
 BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc);
-BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString);
+BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString);
+BOOL GetApplicationString(HKEY hKey, LPCWSTR RegName, ATL::CStringW& String);
+
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
-BOOL IsInstalledApplication(LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow);
+BOOL IsInstalledApplication(const ATL::CStringW& RegName, BOOL IsUserKey, REGSAM keyWow);
 VOID RemoveAppFromRegistry(INT Index);
 
-BOOL InstalledVersion(LPWSTR szVersionResult, UINT iVersionResultSize, LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow);
+BOOL InstalledVersion(ATL::CStringW& szVersionResult, const ATL::CStringW& RegName, BOOL IsUserKey, REGSAM keyWow);
 
 /* winmain.cpp */
 extern HWND hMainWnd;
@@ -191,19 +185,16 @@ int GetClientWindowHeight(HWND hwnd);
 VOID CopyTextToClipboard(LPCWSTR lpszText);
 VOID SetWelcomeText(VOID);
 VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem);
+BOOL StartProcess(ATL::CStringW & Path, BOOL Wait);
 BOOL StartProcess(LPWSTR lpPath, BOOL Wait);
-BOOL GetStorageDirectory(PWCHAR lpDirectory, DWORD cch);
-BOOL ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath);
+BOOL GetStorageDirectory(ATL::CStringW &lpDirectory);
+BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath);
 VOID InitLogs(VOID);
 VOID FreeLogs(VOID);
-BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg);
+BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg);
 
-UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName);
-UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName);
-
-BOOL ParseVersion(_In_z_ LPCWSTR szVersion, _Outptr_ PVERSION_INFO parrVersion);
-BOOL CompareVersionsStrings(_In_z_ LPCWSTR sczVersionLeft, _In_z_ LPCWSTR sczVersionRight);
-BOOL CompareVersions(_In_ PVERSION_INFO LeftVersion, _In_ PVERSION_INFO RightVersion);
+UINT ParserGetString(const ATL::CStringW& KeyName, const ATL::CStringW& FileName, ATL::CStringW& ReturnedString);
+UINT ParserGetInt(const ATL::CStringW& KeyName, const ATL::CStringW& FileName);
 
 /* settingsdlg.cpp */
 VOID CreateSettingsDlg(HWND hwnd);
@@ -211,12 +202,17 @@ VOID CreateSettingsDlg(HWND hwnd);
 /* gui.cpp */
 HWND CreateMainWindow();
 DWORD_PTR ListViewGetlParam(INT item);
-INT ListViewAddItem(INT ItemIndex, INT IconIndex, PWSTR lpName, LPARAM lParam);
-VOID SetStatusBarText(PCWSTR szText);
-VOID NewRichEditText(PCWSTR szText, DWORD flags);
-VOID InsertRichEditText(PCWSTR szText, DWORD flags);
+INT ListViewAddItem(INT ItemIndex, INT IconIndex, LPWSTR lpName, LPARAM lParam);
+VOID SetStatusBarText(LPCWSTR szText);
+VOID NewRichEditText(LPCWSTR szText, DWORD flags);
+VOID InsertRichEditText(LPCWSTR szText, DWORD flags);
+
+VOID SetStatusBarText(const ATL::CStringW& szText);
+INT ListViewAddItem(INT ItemIndex, INT IconIndex, ATL::CStringW & Name, LPARAM lParam);
+VOID NewRichEditText(const ATL::CStringW& szText, DWORD flags);
+VOID InsertRichEditText(const ATL::CStringW& szText, DWORD flags);
 extern HWND hListView;
-extern WCHAR szSearchPattern[MAX_STR_LEN];
+extern ATL::CStringW szSearchPattern;
 
 /* integrity.cpp */
 BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName);
@@ -224,6 +220,5 @@ BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName);
 //extern HWND hTreeView;
 //BOOL CreateTreeView(HWND hwnd);
 //HTREEITEM TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam);
-
 
 #endif /* _RAPPS_H */

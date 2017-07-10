@@ -3,13 +3,22 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/rapps/installed.cpp
  * PURPOSE:         Functions for working with installed applications
- * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
+ * PROGRAMMERS:     Dmitry Chapyshev            (dmitry@reactos.org)
+ *                  Alexander Shaposhnikov      (chaez.san@gmail.com)
  */
 
 #include "rapps.h"
 
 BOOL
-GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString)
+GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, ATL::CStringW& String)
+{
+    BOOL result = GetApplicationString(hKey, lpKeyName, String.GetBuffer(MAX_PATH));
+    String.ReleaseBuffer();
+    return result;
+}
+
+BOOL
+GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
 {
     DWORD dwSize = MAX_PATH * sizeof(WCHAR);
 
@@ -17,26 +26,22 @@ GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString)
                          lpKeyName,
                          NULL,
                          NULL,
-                         (LPBYTE)lpString,
+                         (LPBYTE) szString,
                          &dwSize) == ERROR_SUCCESS)
     {
         return TRUE;
     }
 
-    (VOID)StringCchCopyW(lpString, MAX_PATH, L"---");
-
+    szString = L"---";
     return FALSE;
 }
 
-
-
 BOOL
-IsInstalledApplication(LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow)
+IsInstalledApplication(const ATL::CStringW &RegName, BOOL IsUserKey, REGSAM keyWow)
 {
     HKEY hKey = NULL;
     BOOL IsInstalled = FALSE;
-    WCHAR szPath[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
-    StringCbPrintfW(szPath, _countof(szPath), L"%ls\\%ls", szPath, lpRegName);
+    ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
 
     if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
         szPath, 0, keyWow | KEY_READ,
@@ -49,33 +54,36 @@ IsInstalledApplication(LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow)
 }
 
 BOOL
-InstalledVersion(LPWSTR szVersionResult, UINT iVersionResultSize, LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow)
+InstalledVersion(ATL::CStringW& szVersionResult, const ATL::CStringW& RegName, BOOL IsUserKey, REGSAM keyWow)
 {
-    DWORD dwSize = MAX_PATH;
-    DWORD dwType = REG_SZ;
-    WCHAR szVersion[MAX_PATH] = L"";
     HKEY hKey;
     BOOL bHasVersion = FALSE;
-    iVersionResultSize = 0;
-    WCHAR szPath[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
-    StringCbPrintfW(szPath, _countof(szPath), L"%ls\\%ls", szPath, lpRegName);
+    ATL::CStringW szVersion;
+    ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
 
     if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-        szPath, 0, keyWow | KEY_READ,
+        szPath.GetString(), 0, keyWow | KEY_READ,
         &hKey) == ERROR_SUCCESS)
     {
-        dwSize = MAX_PATH;
+        DWORD dwSize = MAX_PATH;
+        DWORD dwType = REG_SZ;
         if (RegQueryValueExW(hKey,
             L"DisplayVersion",
             NULL,
             &dwType,
-            (LPBYTE) szVersion,
+            (LPBYTE) szVersion.GetBuffer(dwSize),
             &dwSize) == ERROR_SUCCESS)
         {
-            StringCbCopyW(szVersionResult, dwSize, szVersion);
+            szVersion.ReleaseBuffer();
+            szVersionResult = szVersion;
             bHasVersion = TRUE;
         }
+        else
+        {
+            szVersion.ReleaseBuffer();
+        }
     }
+
     RegCloseKey(hKey);
     return bHasVersion;
 }
@@ -84,8 +92,8 @@ InstalledVersion(LPWSTR szVersionResult, UINT iVersionResultSize, LPCWSTR lpRegN
 BOOL
 UninstallApplication(INT Index, BOOL bModify)
 {
-    WCHAR szModify[] = L"ModifyPath";
-    WCHAR szUninstall[] = L"UninstallString";
+    LPCWSTR szModify = L"ModifyPath";
+    LPCWSTR szUninstall = L"UninstallString";
     WCHAR szPath[MAX_PATH];
     WCHAR szAppName[MAX_STR_LEN];
     DWORD dwType, dwSize;
@@ -127,7 +135,7 @@ UninstallApplication(INT Index, BOOL bModify)
                          bModify ? szModify : szUninstall,
                          NULL,
                          &dwType,
-                         (LPBYTE)szPath,
+                         (LPBYTE) szPath,
                          &dwSize) != ERROR_SUCCESS)
     {
         return FALSE;
@@ -140,20 +148,20 @@ UninstallApplication(INT Index, BOOL bModify)
 BOOL
 ShowInstalledAppInfo(INT Index)
 {
-    WCHAR szText[MAX_PATH], szInfo[MAX_PATH];
+    ATL::CStringW szText;
+    ATL::CStringW szInfo;
     PINSTALLED_INFO Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
 
     if (!Info || !Info->hSubKey) return FALSE;
 
     GetApplicationString(Info->hSubKey, L"DisplayName", szText);
     NewRichEditText(szText, CFE_BOLD);
-
     InsertRichEditText(L"\n", 0);
 
 #define GET_INFO(a, b, c, d) \
     if (GetApplicationString(Info->hSubKey, a, szInfo)) \
     { \
-        LoadStringW(hInst, b, szText, _countof(szText)); \
+        szText.LoadStringW(hInst, b); \
         InsertRichEditText(szText, c); \
         InsertRichEditText(szInfo, d); \
     } \
@@ -185,7 +193,7 @@ RemoveAppFromRegistry(INT Index)
 {
     PINSTALLED_INFO Info;
     WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
-    WCHAR szMsgText[MAX_STR_LEN], szMsgTitle[MAX_STR_LEN];
+    ATL::CStringW szMsgText, szMsgTitle;
     INT ItemIndex = SendMessage(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
 
     if (!IS_INSTALLED_ENUM(SelectedEnumType))
@@ -194,13 +202,13 @@ RemoveAppFromRegistry(INT Index)
     Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
     if (!Info || !Info->hSubKey || (ItemIndex == -1)) return;
 
-    if (!LoadStringW(hInst, IDS_APP_REG_REMOVE, szMsgText, _countof(szMsgText)) ||
-        !LoadStringW(hInst, IDS_INFORMATION, szMsgTitle, _countof(szMsgTitle)))
+    if (!szMsgText.LoadStringW(hInst, IDS_APP_REG_REMOVE) ||
+        !szMsgTitle.LoadStringW(hInst, IDS_INFORMATION))
         return;
 
     if (MessageBoxW(hMainWnd, szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
-        wcsncat(szFullName, Info->szKeyName, MAX_PATH - wcslen(szFullName));
+        wcsncat(szFullName, Info->szKeyName.GetString(), MAX_PATH - wcslen(szFullName));
 
         if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)
         {
@@ -208,10 +216,10 @@ RemoveAppFromRegistry(INT Index)
             return;
         }
 
-        if (!LoadStringW(hInst, IDS_UNABLE_TO_REMOVE, szMsgText, _countof(szMsgText)))
+        if (!szMsgText.LoadStringW(hInst, IDS_UNABLE_TO_REMOVE))
             return;
 
-        MessageBoxW(hMainWnd, szMsgText, NULL, MB_OK | MB_ICONERROR);
+        MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
     }
 }
 
@@ -221,8 +229,8 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
 {
     DWORD dwSize = MAX_PATH, dwType, dwValue;
     BOOL bIsSystemComponent, bIsUpdate;
-    WCHAR pszParentKeyName[MAX_PATH];
-    WCHAR pszDisplayName[MAX_PATH];
+    ATL::CStringW szParentKeyName;
+    ATL::CStringW szDisplayName;
     INSTALLED_INFO Info;
     HKEY hKey;
     LONG ItemIndex = 0;
@@ -236,9 +244,10 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
         return FALSE;
     }
 
-    while (RegEnumKeyExW(hKey, ItemIndex, Info.szKeyName, &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+    while (RegEnumKeyExW(hKey, ItemIndex, Info.szKeyName.GetBuffer(MAX_PATH), &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
-        if (RegOpenKeyW(hKey, Info.szKeyName, &Info.hSubKey) == ERROR_SUCCESS)
+        Info.szKeyName.ReleaseBuffer();
+        if (RegOpenKeyW(hKey, Info.szKeyName.GetString(), &Info.hSubKey) == ERROR_SUCCESS)
         {
             dwType = REG_DWORD;
             dwSize = sizeof(DWORD);
@@ -247,7 +256,7 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
                                  L"SystemComponent",
                                  NULL,
                                  &dwType,
-                                 (LPBYTE)&dwValue,
+                                 (LPBYTE) &dwValue,
                                  &dwSize) == ERROR_SUCCESS)
             {
                 bIsSystemComponent = (dwValue == 0x1);
@@ -258,22 +267,24 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
             }
 
             dwType = REG_SZ;
-            dwSize = sizeof(pszParentKeyName);
+            dwSize = MAX_PATH;
             bIsUpdate = (RegQueryValueExW(Info.hSubKey,
                                           L"ParentKeyName",
                                           NULL,
                                           &dwType,
-                                          (LPBYTE)pszParentKeyName,
+                                          (LPBYTE) szParentKeyName.GetBuffer(dwSize),
                                           &dwSize) == ERROR_SUCCESS);
+            szParentKeyName.ReleaseBuffer();
 
-            dwSize = sizeof(pszDisplayName);
+            dwSize = sizeof(szDisplayName);
             if (RegQueryValueExW(Info.hSubKey,
                                  L"DisplayName",
                                  NULL,
                                  &dwType,
-                                 (LPBYTE)pszDisplayName,
+                                 (LPBYTE) szDisplayName.GetBuffer(dwSize),
                                  &dwSize) == ERROR_SUCCESS)
             {
+                szDisplayName.ReleaseBuffer();
                 if (EnumType < ENUM_ALL_COMPONENTS || EnumType > ENUM_UPDATES)
                     EnumType = ENUM_ALL_COMPONENTS;
 
@@ -283,7 +294,7 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
                         ((EnumType == ENUM_APPLICATIONS) && (!bIsUpdate)) || /* Applications only */
                         ((EnumType == ENUM_UPDATES) && (bIsUpdate))) /* Updates only */
                     {
-                        if (!lpEnumProc(ItemIndex, pszDisplayName, &Info))
+                        if (!lpEnumProc(ItemIndex, szDisplayName, &Info))
                             break;
                     }
                     else
@@ -298,6 +309,7 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
             }
             else
             {
+                szDisplayName.ReleaseBuffer();
                 RegCloseKey(Info.hSubKey);
             }
         }
@@ -306,6 +318,7 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
         ItemIndex++;
     }
 
+    Info.szKeyName.ReleaseBuffer();
     RegCloseKey(hKey);
 
     return TRUE;

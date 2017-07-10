@@ -5,21 +5,21 @@
  * PURPOSE:         Misc functions
  * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+ *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
  */
 
 #include "rapps.h"
-#include <atlsimpcoll.h>
-#include <atlstr.h> 
 
-/* SESSION Operation */
+ /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
 #define EXTRACT_EXTRACTFILES  0x00000002
 
 static HANDLE hLog = NULL;
-WCHAR szCachedINISectionLocale[MAX_PATH] = L"Section.";
-WCHAR szCachedINISectionLocaleNeutral[MAX_PATH] = {0};
+ATL::CStringW szCachedINISectionLocale = L"Section.";
+ATL::CStringW szCachedINISectionLocaleNeutral;
 BYTE bCachedSectionStatus = FALSE;
 
+#define LOCALIZED_STRING_LEN MAX_PATH
 #define STR_VERSION_CURRENT L"CURRENT"
 
 typedef struct
@@ -70,12 +70,12 @@ GetSystemColorDepth(VOID)
 
     switch (pDevMode.dmBitsPerPel)
     {
-        case 32: ColorDepth = ILC_COLOR32; break;
-        case 24: ColorDepth = ILC_COLOR24; break;
-        case 16: ColorDepth = ILC_COLOR16; break;
-        case  8: ColorDepth = ILC_COLOR8;  break;
-        case  4: ColorDepth = ILC_COLOR4;  break;
-        default: ColorDepth = ILC_COLOR;   break;
+    case 32: ColorDepth = ILC_COLOR32; break;
+    case 24: ColorDepth = ILC_COLOR24; break;
+    case 16: ColorDepth = ILC_COLOR16; break;
+    case  8: ColorDepth = ILC_COLOR8;  break;
+    case  4: ColorDepth = ILC_COLOR4;  break;
+    default: ColorDepth = ILC_COLOR;   break;
     }
 
     return ColorDepth;
@@ -131,7 +131,7 @@ CopyTextToClipboard(LPCWSTR lpszText)
         EmptyClipboard();
         cchBuffer = wcslen(lpszText) + 1;
         ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
-        Buffer = (PWCHAR)GlobalLock(ClipBuffer);
+        Buffer = (PWCHAR) GlobalLock(ClipBuffer);
         hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
         GlobalUnlock(ClipBuffer);
 
@@ -145,15 +145,15 @@ CopyTextToClipboard(LPCWSTR lpszText)
 VOID
 SetWelcomeText(VOID)
 {
-    WCHAR szText[MAX_STR_LEN*3];
+    ATL::CStringW szText;
 
-    LoadStringW(hInst, IDS_WELCOME_TITLE, szText, _countof(szText));
+    szText.LoadStringW(hInst, IDS_WELCOME_TITLE);
     NewRichEditText(szText, CFE_BOLD);
 
-    LoadStringW(hInst, IDS_WELCOME_TEXT, szText, _countof(szText));
+    szText.LoadStringW(hInst, IDS_WELCOME_TEXT);
     InsertRichEditText(szText, 0);
 
-    LoadStringW(hInst, IDS_WELCOME_URL, szText, _countof(szText));
+    szText.LoadStringW(hInst, IDS_WELCOME_URL);
     InsertRichEditText(szText, CFM_LINK);
 }
 
@@ -188,6 +188,14 @@ ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
 
     if (hMenu)
         DestroyMenu(hMenu);
+}
+
+BOOL
+StartProcess(ATL::CStringW &Path, BOOL Wait)
+{
+    BOOL result = StartProcess(Path.GetBuffer(), Wait);
+    Path.ReleaseBuffer();
+    return result;
 }
 
 BOOL
@@ -242,28 +250,28 @@ StartProcess(LPWSTR lpPath, BOOL Wait)
 }
 
 BOOL
-GetStorageDirectory(PWCHAR lpDirectory, DWORD cch)
+GetStorageDirectory(ATL::CStringW& Directory)
 {
-    if (cch < MAX_PATH)
-        return FALSE;
-
-    if (!SHGetSpecialFolderPathW(NULL, lpDirectory, CSIDL_LOCAL_APPDATA, TRUE))
-        return FALSE;
-
-    if (FAILED(StringCchCatW(lpDirectory, cch, L"\\rapps")))
-        return FALSE;
-
-    if (!CreateDirectoryW(lpDirectory, NULL) &&
-        GetLastError() != ERROR_ALREADY_EXISTS)
+    if (!SHGetSpecialFolderPathW(NULL, Directory.GetBuffer(MAX_PATH), CSIDL_LOCAL_APPDATA, TRUE))
     {
+        Directory.ReleaseBuffer();
         return FALSE;
     }
 
-    return TRUE;
+    Directory.ReleaseBuffer();
+    Directory += L"\\rapps";
+
+    return (CreateDirectoryW(Directory.GetString(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS);
 }
 
 BOOL
-ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
+ExtractFilesFromCab(const ATL::CStringW &CabName, const ATL::CStringW &OutputPath)
+{
+    return ExtractFilesFromCab(CabName.GetString(), OutputPath.GetString());
+}
+
+BOOL
+ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
 {
     HINSTANCE hCabinetDll;
     CHAR szCabName[MAX_PATH];
@@ -326,21 +334,21 @@ InitLogs(VOID)
                        L"EventMessageFile",
                        0,
                        REG_EXPAND_SZ,
-                       (LPBYTE)szPath,
-                       (DWORD)(wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
+                       (LPBYTE) szPath,
+                       (DWORD) (wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         return;
     }
 
     dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE |
-             EVENTLOG_INFORMATION_TYPE;
+        EVENTLOG_INFORMATION_TYPE;
 
     if (RegSetValueExW(hKey,
                        L"TypesSupported",
                        0,
                        REG_DWORD,
-                       (LPBYTE)&dwData,
+                       (LPBYTE) &dwData,
                        sizeof(DWORD)) != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
@@ -351,8 +359,8 @@ InitLogs(VOID)
                        L"CategoryMessageFile",
                        0,
                        REG_EXPAND_SZ,
-                       (LPBYTE)szPath,
-                       (DWORD)(wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
+                       (LPBYTE) szPath,
+                       (DWORD) (wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         return;
@@ -362,7 +370,7 @@ InitLogs(VOID)
                        L"CategoryCount",
                        0,
                        REG_DWORD,
-                       (LPBYTE)&dwCategoryNum,
+                       (LPBYTE) &dwCategoryNum,
                        sizeof(DWORD)) != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
@@ -383,19 +391,12 @@ FreeLogs(VOID)
 
 
 BOOL
-WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg)
+WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
 {
     if (!SettingsInfo.bLogEnabled) return TRUE;
 
-    if (!ReportEventW(hLog,
-                      wType,
-                      0,
-                      dwEventID,
-                      NULL,
-                      1,
-                      0,
-                      (LPCWSTR*)&lpMsg,
-                      NULL))
+    if (!ReportEventW(hLog, wType, 0, dwEventID,
+                      NULL, 1, 0, &lpMsg, NULL))
     {
         return FALSE;
     }
@@ -404,211 +405,98 @@ WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg)
 }
 
 
-LPWSTR GetINIFullPath(LPCWSTR lpFileName)
+ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName)
 {
-           WCHAR szDir[MAX_PATH];
-    static WCHAR szBuffer[MAX_PATH];
+    ATL::CStringW szDir;
+    static ATL::CStringW szBuffer;
 
-    GetStorageDirectory(szDir, _countof(szDir));
-    StringCbPrintfW(szBuffer, sizeof(szBuffer), L"%ls\\rapps\\%ls", szDir, lpFileName);
+    GetStorageDirectory(szDir);
+    szBuffer.Format(L"%ls\\rapps\\%ls", szDir, FileName);
 
     return szBuffer;
 }
 
-
-UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName)
+UINT ParserGetString(const ATL::CStringW& KeyName, const ATL::CStringW& FileName, ATL::CStringW& ResultString)
 {
-    PWSTR lpFullFileName = GetINIFullPath(lpFileName);
+    ATL::CStringW FullFileName = GetINIFullPath(FileName);
     DWORD dwResult;
 
     /* we don't have cached section strings for the current system language, create them */
-    if(bCachedSectionStatus == FALSE)
+    if (bCachedSectionStatus == FALSE)
     {
-        WCHAR szLocale[4 + 1];
-        DWORD len;
+        ATL::CStringW szLocale;
+        const INT LocaleSize = 5;
 
         /* find out what is the current system lang code (e.g. "0a") and append it to SectionLocale */
         GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
-                       szLocale, _countof(szLocale));
-
-        StringCbCatW(szCachedINISectionLocale, sizeof(szCachedINISectionLocale), szLocale);
-
-        /* copy the locale-dependent string into the buffer of the future neutral one */
-        StringCbCopyW(szCachedINISectionLocaleNeutral,
-                      sizeof(szCachedINISectionLocaleNeutral),
-                      szCachedINISectionLocale);
+                       szLocale.GetBuffer(LocaleSize), LocaleSize);
+        szLocale.ReleaseBuffer();
 
         /* turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part */
-        len = wcslen(szCachedINISectionLocale);
-
-        memmove((szCachedINISectionLocaleNeutral + len) - 4,
-                (szCachedINISectionLocaleNeutral + len) - 2,
-                (2 * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+        szCachedINISectionLocaleNeutral = szCachedINISectionLocale + szLocale.Right(2);
+        szCachedINISectionLocale += szLocale;
 
         /* finally, mark us as cache-friendly for the next time */
         bCachedSectionStatus = TRUE;
     }
 
+    LPWSTR ResultStringBuffer = ResultString.GetBuffer(MAX_PATH);
     /* 1st - find localized strings (e.g. "Section.0c0a") */
-    dwResult = GetPrivateProfileStringW(szCachedINISectionLocale,
-                                        lpKeyName,
+    dwResult = GetPrivateProfileStringW(szCachedINISectionLocale.GetString(),
+                                        KeyName.GetString(),
                                         NULL,
-                                        lpReturnedString,
-                                        nSize,
-                                        lpFullFileName);
+                                        ResultStringBuffer,
+                                        LOCALIZED_STRING_LEN,
+                                        FullFileName.GetString());
 
-    if (dwResult != 0)
-        return TRUE;
+    if (!dwResult)
+    {
+        /* 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a") */
+        dwResult = GetPrivateProfileStringW(szCachedINISectionLocaleNeutral.GetString(),
+                                            KeyName.GetString(),
+                                            NULL,
+                                            ResultStringBuffer,
+                                            LOCALIZED_STRING_LEN,
+                                            FullFileName.GetString());
+        if (!dwResult)
+        {
+            /* 3rd - if they weren't present fallback to standard english strings (just "Section") */
+            dwResult = GetPrivateProfileStringW(L"Section",
+                                                KeyName.GetString(),
+                                                NULL,
+                                                ResultStringBuffer,
+                                                LOCALIZED_STRING_LEN,
+                                                FullFileName.GetString());
+        }
+    }
 
-    /* 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a") */
-    dwResult = GetPrivateProfileStringW(szCachedINISectionLocaleNeutral,
-                                        lpKeyName,
-                                        NULL,
-                                        lpReturnedString,
-                                        nSize,
-                                        lpFullFileName);
-
-    if (dwResult != 0)
-        return TRUE;
-
-    /* 3rd - if they weren't present fallback to standard english strings (just "Section") */
-    dwResult = GetPrivateProfileStringW(L"Section",
-                                        lpKeyName,
-                                        NULL,
-                                        lpReturnedString,
-                                        nSize,
-                                        lpFullFileName);
-
+    ResultString.ReleaseBuffer();
     return (dwResult != 0 ? TRUE : FALSE);
 }
 
-UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName)
+UINT ParserGetInt(const ATL::CStringW& KeyName, const ATL::CStringW& FileName)
 {
-    WCHAR Buffer[30];
+    ATL::CStringW Buffer;
     UNICODE_STRING BufferW;
     ULONG Result;
 
     /* grab the text version of our entry */
-    if (!ParserGetString(lpKeyName, Buffer, _countof(Buffer), lpFileName))
+    if (!ParserGetString(KeyName, FileName, Buffer))
         return FALSE;
 
-    if (!Buffer[0])
+    if (Buffer.IsEmpty())
         return FALSE;
 
     /* convert it to an actual integer */
-    RtlInitUnicodeString(&BufferW, Buffer);
+    RtlInitUnicodeString(&BufferW, Buffer.GetString());
     RtlUnicodeStringToInteger(&BufferW, 0, &Result);
 
-    return (UINT)Result;
+    return (UINT) Result;
 }
 
-template<typename XCHAR>
-inline BOOL IsCharNumeric(XCHAR ch)
+LPWSTR HeapBufferFromCStringW(const ATL::CStringW& String)
 {
-    return IsCharAlphaNumeric(ch) && !IsCharAlpha(ch);
-}
-
-
-//Parses version string that can be formatted as 1.2.3-4b (or CURRENT)
-//Returns int buffer and it's size
-BOOL
-ParseVersion(_In_z_ LPCWSTR szVersion, _Outptr_ PVERSION_INFO Version)
-{
-    ATL::CStringW szVersionSingleInt = L"";
-    BOOL bHasParsed = TRUE;
-    INT VersionCharCount = 0;
-    INT VersionLength = lstrlenW(szVersion);
-    StringCbCopyW(Version->szVersion, VersionLength * sizeof(szVersion), szVersion);
-    //CURRENT
-    if (!StrCmpW(szVersion, STR_VERSION_CURRENT))
-    {
-        Version->VersionSize = NULL;
-        return bHasParsed;
-    }
-
-    Version->VersionSize = 0;
-    //int expected every iteration, quit the loop if its not a number
-    while (Version->VersionSize < MAX_VERSION 
-        && IsCharNumeric(szVersion[VersionCharCount]) 
-        && VersionCharCount < VersionLength)
-    {
-        for (; IsCharNumeric(szVersion[VersionCharCount]) && VersionCharCount < VersionLength; ++VersionCharCount)
-        {
-            szVersionSingleInt += szVersion[VersionCharCount];
-        }
-        if (szVersionSingleInt.IsEmpty())
-        {
-            bHasParsed = FALSE;
-            continue;
-        }
-        INT IntResult = StrToIntW(szVersionSingleInt.GetBuffer());
-        Version->arrVersion[Version->VersionSize] = IntResult;
-        ++Version->VersionSize;
-        szVersionSingleInt.Empty();
-        ++VersionCharCount;
-    }
-
-    if (IsCharAlphaW(szVersion[VersionCharCount]))
-    {
-        Version->cVersionSuffix = szVersion[VersionCharCount];
-    }
-    else
-        Version->cVersionSuffix = NULL;
-    return bHasParsed;
-}
-
-//Compares versions 
-//In:   Zero terminated strings of versions
-//Out:  TRUE if first is bigger than second, FALSE if else
-BOOL
-CompareVersionsStrings(_In_z_ LPCWSTR sczVersionLeft, _In_z_ LPCWSTR sczVersionRight)
-{
-    VERSION_INFO LeftVersion, RightVersion;
-
-    if (!ParseVersion(sczVersionLeft, &LeftVersion)
-        || !ParseVersion(sczVersionRight, &RightVersion))
-    {
-        return FALSE;
-    }
-
-    return CompareVersions(&LeftVersion, &RightVersion);  
-}
-
-BOOL
-CompareVersions(_In_ PVERSION_INFO LeftVersion, _In_ PVERSION_INFO RightVersion)
-{
-    //CURRENT 
-    if (!LeftVersion->VersionSize || !RightVersion->VersionSize)
-    {
-        return FALSE;
-    }
-    //1.2.3 > 1.2
-    INT SizeDiff = LeftVersion->VersionSize - RightVersion->VersionSize;
-    if (SizeDiff > 0)
-    {
-        return TRUE;
-    }
-    if (SizeDiff < 0)
-    {
-        return FALSE;
-    }
-    //2.0.0 > 1.9.9
-    for (INT i = 0; i < LeftVersion->VersionSize && i < RightVersion->VersionSize && i < MAX_VERSION; ++i)
-    {
-        if (LeftVersion->arrVersion[i] > RightVersion->arrVersion[i])
-        {
-            return TRUE;
-        }
-        if (LeftVersion->arrVersion[i] < RightVersion->arrVersion[i])
-        {
-            return FALSE;
-        }
-    }
-    //1.2.3b > 1.2.3
-    if (LeftVersion->cVersionSuffix > RightVersion->cVersionSuffix)
-    {
-        return TRUE;
-    }
-
-    return FALSE;
+    LPWSTR szBuffer = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
+    ATL::CString::CopyChars(szBuffer, MAX_PATH, String.GetString(), String.GetLength() + 1);
+    return szBuffer;
 }

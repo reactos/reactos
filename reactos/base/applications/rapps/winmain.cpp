@@ -5,6 +5,7 @@
  * PURPOSE:         Main program
  * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+ *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
  */
 
 #include "rapps.h"
@@ -18,7 +19,7 @@ HINSTANCE hInst;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 SETTINGS_INFO SettingsInfo;
 
-WCHAR szSearchPattern[MAX_STR_LEN] = L"";
+ATL::CStringW szSearchPattern;
 
 class CRAppsModule : public CComModule
 {
@@ -28,13 +29,13 @@ public:
 BEGIN_OBJECT_MAP(ObjectMap)
 END_OBJECT_MAP()
 
-CRAppsModule                             gModule;
-CAtlWinModule                               gWinModule;
+CRAppsModule gModule;
+CAtlWinModule gWinModule;
 
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
+//void *operator new (size_t, void *buf)
+//{
+//    return buf;
+//}
 
 static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 {
@@ -51,30 +52,35 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 VOID
 FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 {
+    ATL::CStringW szDownloadDir;
     pSettingsInfo->bSaveWndPos = TRUE;
     pSettingsInfo->bUpdateAtStart = FALSE;
     pSettingsInfo->bLogEnabled = TRUE;
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, pSettingsInfo->szDownloadDir)))
+
+    if (FAILED(SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szDownloadDir.GetBuffer(MAX_PATH))))
     {
-        StringCchCatW(pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir), L"\\RAPPS Downloads");
-    } 
-    else
-    {
-        ExpandEnvironmentStringsW(L"%SystemDrive%\\RAPPS Downloads", 
-            pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir));
+        szDownloadDir.ReleaseBuffer();
+        if (!szDownloadDir.GetEnvironmentVariableW(L"SystemDrive"))
+        {
+            szDownloadDir = L"C:";
+        }
     }
+    else
+        szDownloadDir.ReleaseBuffer();
+
+    szDownloadDir += L"\\RAPPS Downloads";
+    StringCchCopyW(pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir), szDownloadDir.GetString());
 
     pSettingsInfo->bDelInstaller = FALSE;
-
     pSettingsInfo->Maximized = FALSE;
     pSettingsInfo->Left = CW_USEDEFAULT;
     pSettingsInfo->Top = CW_USEDEFAULT;
     pSettingsInfo->Width = 680;
     pSettingsInfo->Height = 450;
-
     pSettingsInfo->Proxy = 0;
+
     StringCbCopyW(pSettingsInfo->szProxyServer, sizeof(pSettingsInfo->szProxyServer), L"");
-    StringCbCopyW(pSettingsInfo->szNoProxyFor,  sizeof(pSettingsInfo->szNoProxyFor),  L"");
+    StringCbCopyW(pSettingsInfo->szNoProxyFor, sizeof(pSettingsInfo->szNoProxyFor), L"");
 }
 
 static BOOL
@@ -86,7 +92,7 @@ LoadSettings(VOID)
     if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         dwSize = sizeof(SettingsInfo);
-        if (RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
+        if (RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE) &SettingsInfo, &dwSize) == ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return TRUE;
@@ -110,16 +116,16 @@ SaveSettings(HWND hwnd)
         GetWindowPlacement(hwnd, &wp);
 
         SettingsInfo.Left = wp.rcNormalPosition.left;
-        SettingsInfo.Top  = wp.rcNormalPosition.top;
-        SettingsInfo.Width  = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+        SettingsInfo.Top = wp.rcNormalPosition.top;
+        SettingsInfo.Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
         SettingsInfo.Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
         SettingsInfo.Maximized = (wp.showCmd == SW_MAXIMIZE || (wp.showCmd == SW_SHOWMINIMIZED && (wp.flags & WPF_RESTORETOMAXIMIZED)));
     }
 
     if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, NULL,
-        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+                        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SettingsInfo));
+        RegSetValueExW(hKey, L"Settings", 0, REG_BINARY, (LPBYTE) &SettingsInfo, sizeof(SettingsInfo));
         RegCloseKey(hKey);
     }
 }
@@ -136,12 +142,12 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
 
     switch (GetUserDefaultUILanguage())
     {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
-            break;
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+        SetProcessDefaultLayout(LAYOUT_RTL);
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 
     hInst = hInstance;

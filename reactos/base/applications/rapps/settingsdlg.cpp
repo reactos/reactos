@@ -3,7 +3,8 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/rapps/settingsdlg.cpp
  * PURPOSE:         Settings Dialog
- * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
+ * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
+ *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
  */
 
 #include "rapps.h"
@@ -18,27 +19,31 @@ ChooseFolder(HWND hwnd)
 {
     BOOL bRet = FALSE;
     BROWSEINFO bi;
-    WCHAR szPath[MAX_PATH], szBuf[MAX_STR_LEN];
+    ATL::CStringW szBuf;
 
-    LoadStringW(hInst, IDS_CHOOSE_FOLDER_TEXT, szBuf, _countof(szBuf));
+    szBuf.LoadStringW(hInst, IDS_CHOOSE_FOLDER_TEXT);
 
     ZeroMemory(&bi, sizeof(bi));
     bi.hwndOwner = hwnd;
-    bi.pidlRoot  = NULL;
-    bi.lpszTitle = szBuf;
-    bi.ulFlags   = BIF_USENEWUI | BIF_DONTGOBELOWDOMAIN | BIF_RETURNONLYFSDIRS | /* BIF_BROWSEFILEJUNCTIONS | */ BIF_VALIDATE;
+    bi.pidlRoot = NULL;
+    bi.lpszTitle = szBuf.GetString();
+    bi.ulFlags = BIF_USENEWUI | BIF_DONTGOBELOWDOMAIN | BIF_RETURNONLYFSDIRS | /* BIF_BROWSEFILEJUNCTIONS | */ BIF_VALIDATE;
 
+    szBuf.Empty();
     if (SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)))
     {
         LPITEMIDLIST lpItemList = SHBrowseForFolder(&bi);
-        if (lpItemList && SHGetPathFromIDList(lpItemList, szPath))
+        if (lpItemList && SHGetPathFromIDList(lpItemList, szBuf.GetBuffer(MAX_PATH)))
         {
-            if (szPath[0] != 0)
+            szBuf.ReleaseBuffer();
+            if (!szBuf.IsEmpty())
             {
-                SetDlgItemTextW(hwnd, IDC_DOWNLOAD_DIR_EDIT, szPath);
+                SetDlgItemTextW(hwnd, IDC_DOWNLOAD_DIR_EDIT, szBuf.GetString());
                 bRet = TRUE;
             }
         }
+        else
+            szBuf.ReleaseBuffer();
 
         CoTaskMemFree(lpItemList);
         CoUninitialize();
@@ -58,9 +63,9 @@ InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
     SetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
                    Info->szDownloadDir);
 
-    CheckRadioButton(hDlg, IDC_PROXY_DEFAULT, IDC_USE_PROXY, IDC_PROXY_DEFAULT+Info->Proxy);
+    CheckRadioButton(hDlg, IDC_PROXY_DEFAULT, IDC_USE_PROXY, IDC_PROXY_DEFAULT + Info->Proxy);
 
-    if(IDC_PROXY_DEFAULT + Info->Proxy == IDC_USE_PROXY)
+    if (IDC_PROXY_DEFAULT + Info->Proxy == IDC_USE_PROXY)
     {
         EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
         EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
@@ -76,120 +81,127 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch (Msg)
     {
-        case WM_INITDIALOG:
-        {
-            NewSettingsInfo = SettingsInfo;
-            InitSettingsControls(hDlg, &SettingsInfo);
-        }
-        break;
+    case WM_INITDIALOG:
+    {
+        NewSettingsInfo = SettingsInfo;
+        InitSettingsControls(hDlg, &SettingsInfo);
+    }
+    break;
 
-        case WM_COMMAND:
+    case WM_COMMAND:
+    {
+        switch (LOWORD(wParam))
         {
-            switch (LOWORD(wParam))
+        case IDC_CHOOSE:
+            ChooseFolder(hDlg);
+            break;
+
+        case IDC_SAVE_WINDOW_POS:
+            IS_CHECKED(NewSettingsInfo.bSaveWndPos, IDC_SAVE_WINDOW_POS);
+            break;
+
+        case IDC_UPDATE_AVLIST:
+            IS_CHECKED(NewSettingsInfo.bUpdateAtStart, IDC_UPDATE_AVLIST);
+            break;
+
+        case IDC_LOG_ENABLED:
+            IS_CHECKED(NewSettingsInfo.bLogEnabled, IDC_LOG_ENABLED);
+            break;
+
+        case IDC_DEL_AFTER_INSTALL:
+            IS_CHECKED(NewSettingsInfo.bDelInstaller, IDC_DEL_AFTER_INSTALL);
+            break;
+
+        case IDC_PROXY_DEFAULT:
+            NewSettingsInfo.Proxy = 0;
+            EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
+            EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
+            break;
+
+        case IDC_NO_PROXY:
+            NewSettingsInfo.Proxy = 1;
+            EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
+            EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
+            break;
+
+        case IDC_USE_PROXY:
+            NewSettingsInfo.Proxy = 2;
+            EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
+            EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
+            break;
+
+        case IDC_DEFAULT_SETTINGS:
+            FillDefaultSettings(&NewSettingsInfo);
+            InitSettingsControls(hDlg, &NewSettingsInfo);
+            break;
+
+        case IDOK:
+        {
+            ATL::CStringW szDir;
+            ATL::CStringW szProxy;
+            ATL::CStringW szNoProxy;
+            DWORD dwAttr;
+
+            GetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
+                           szDir.GetBuffer(MAX_PATH), MAX_PATH);
+            szDir.ReleaseBuffer();
+
+            GetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER),
+                           szProxy.GetBuffer(MAX_PATH), MAX_PATH);
+            szProxy.ReleaseBuffer();
+            ATL::CStringW::CopyChars(NewSettingsInfo.szProxyServer,
+                                     _countof(NewSettingsInfo.szProxyServer),
+                                     szProxy.GetString(),
+                                     szProxy.GetLength() + 1);
+
+            GetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR),
+                           szNoProxy.GetBuffer(MAX_PATH), MAX_PATH);
+            szNoProxy.ReleaseBuffer();
+            ATL::CStringW::CopyChars(NewSettingsInfo.szNoProxyFor,
+                                     _countof(NewSettingsInfo.szNoProxyFor),
+                                     szNoProxy.GetString(),
+                                     szNoProxy.GetLength() + 1);
+
+            dwAttr = GetFileAttributesW(szDir.GetString());
+            if (dwAttr != INVALID_FILE_ATTRIBUTES &&
+                (dwAttr & FILE_ATTRIBUTE_DIRECTORY))
             {
-                case IDC_CHOOSE:
-                    ChooseFolder(hDlg);
-                    break;
-
-                case IDC_SAVE_WINDOW_POS:
-                    IS_CHECKED(NewSettingsInfo.bSaveWndPos, IDC_SAVE_WINDOW_POS);
-                    break;
-
-                case IDC_UPDATE_AVLIST:
-                    IS_CHECKED(NewSettingsInfo.bUpdateAtStart, IDC_UPDATE_AVLIST);
-                    break;
-
-                case IDC_LOG_ENABLED:
-                    IS_CHECKED(NewSettingsInfo.bLogEnabled, IDC_LOG_ENABLED);
-                    break;
-
-                case IDC_DEL_AFTER_INSTALL:
-                    IS_CHECKED(NewSettingsInfo.bDelInstaller, IDC_DEL_AFTER_INSTALL);
-                    break;
-
-                case IDC_PROXY_DEFAULT:
-                    NewSettingsInfo.Proxy = 0;
-                    EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
-                    EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
-                    break;
-
-                case IDC_NO_PROXY:
-                    NewSettingsInfo.Proxy = 1;
-                    EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
-                    EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
-                    break;
-
-                case IDC_USE_PROXY:
-                    NewSettingsInfo.Proxy = 2;
-                    EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
-                    EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
-                    break;
-
-                case IDC_DEFAULT_SETTINGS:
-                    FillDefaultSettings(&NewSettingsInfo);
-                    InitSettingsControls(hDlg, &NewSettingsInfo);
-                    break;
-
-                case IDOK:
-                {
-                    WCHAR szDir[MAX_PATH];
-                    WCHAR szProxy[MAX_PATH];
-                    WCHAR szNoProxy[MAX_PATH];
-                    DWORD dwAttr;
-
-                    GetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
-                                   szDir, MAX_PATH);
-
-                    GetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER),
-                                   szProxy, MAX_PATH);
-                    StringCbCopyW(NewSettingsInfo.szProxyServer, sizeof(NewSettingsInfo.szProxyServer), szProxy);
-
-                    GetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR),
-                                   szNoProxy, MAX_PATH);
-                    StringCbCopyW(NewSettingsInfo.szNoProxyFor, sizeof(NewSettingsInfo.szNoProxyFor), szNoProxy);
-
-                    dwAttr = GetFileAttributesW(szDir);
-                    if (dwAttr != INVALID_FILE_ATTRIBUTES &&
-                        (dwAttr & FILE_ATTRIBUTE_DIRECTORY))
-                    {
-                        StringCbCopyW(NewSettingsInfo.szDownloadDir,
-                                      sizeof(NewSettingsInfo.szDownloadDir),
-                                      szDir);
-                    }
-                    else
-                    {
-                        WCHAR szMsgText[MAX_STR_LEN];
-
-                        LoadStringW(hInst,
-                                    IDS_CHOOSE_FOLDER_ERROR,
-                                    szMsgText, _countof(szMsgText));
-
-                        if (MessageBoxW(hDlg, szMsgText, NULL, MB_YESNO) == IDYES)
-                        {
-                            if (CreateDirectoryW(szDir, NULL))
-                            {
-                                EndDialog(hDlg, LOWORD(wParam));
-                            }
-                        }
-                        else
-                        {
-                            SetFocus(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT));
-                            break;
-                        }
-                    }
-
-                    SettingsInfo = NewSettingsInfo;
-                    SaveSettings(GetParent(hDlg));
-                    EndDialog(hDlg, LOWORD(wParam));
-                }
-                break;
-
-                case IDCANCEL:
-                    EndDialog(hDlg, LOWORD(wParam));
-                    break;
+                ATL::CStringW::CopyChars(NewSettingsInfo.szDownloadDir,
+                                         _countof(NewSettingsInfo.szDownloadDir),
+                                         szDir.GetString(),
+                                         szDir.GetLength() + 1);
             }
+            else
+            {
+                ATL::CStringW szMsgText;
+                szMsgText.LoadStringW(hInst, IDS_CHOOSE_FOLDER_ERROR);
+
+                if (MessageBoxW(hDlg, szMsgText.GetString(), NULL, MB_YESNO) == IDYES)
+                {
+                    if (CreateDirectoryW(szDir.GetString(), NULL))
+                    {
+                        EndDialog(hDlg, LOWORD(wParam));
+                    }
+                }
+                else
+                {
+                    SetFocus(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT));
+                    break;
+                }
+            }
+
+            SettingsInfo = NewSettingsInfo;
+            SaveSettings(GetParent(hDlg));
+            EndDialog(hDlg, LOWORD(wParam));
         }
         break;
+
+        case IDCANCEL:
+            EndDialog(hDlg, LOWORD(wParam));
+            break;
+        }
+    }
+    break;
     }
 
     return FALSE;
