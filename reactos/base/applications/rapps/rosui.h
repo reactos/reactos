@@ -495,7 +495,8 @@ public:
 
     void GetWindowTextW(ATL::CStringW& szText)
     {
-        CWindow::GetWindowText(szText.GetBuffer(MAX_STR_LEN), MAX_STR_LEN);
+        INT length = CWindow::GetWindowTextLengthW();
+        CWindow::GetWindowText(szText.GetBuffer(length), length);
         szText.ReleaseBuffer();
     }
 };

@@ -493,10 +493,3 @@ UINT ParserGetInt(const ATL::CStringW& KeyName, const ATL::CStringW& FileName)
 
     return (UINT) Result;
 }
-
-LPWSTR HeapBufferFromCStringW(const ATL::CStringW& String)
-{
-    LPWSTR szBuffer = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    ATL::CString::CopyChars(szBuffer, MAX_PATH, String.GetString(), String.GetLength() + 1);
-    return szBuffer;
-}

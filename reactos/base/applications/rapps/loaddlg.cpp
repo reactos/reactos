@@ -366,8 +366,8 @@ ThreadFunc(LPVOID Context)
 
     memset(&urlComponents, 0, sizeof(urlComponents));
     urlComponents.dwStructSize = sizeof(urlComponents);
-
-    if (FAILED(StringCbLengthW(AppInfo->szUrlDownload, sizeof(AppInfo->szUrlDownload), &urlLength)))
+    
+    if (AppInfo->szUrlDownload.GetLength() > urlLength)
         goto end;
 
     urlLength /= sizeof(WCHAR);

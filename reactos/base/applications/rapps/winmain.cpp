@@ -69,7 +69,10 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
         szDownloadDir.ReleaseBuffer();
 
     szDownloadDir += L"\\RAPPS Downloads";
-    StringCchCopyW(pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir), szDownloadDir.GetString());
+    ATL::CStringW::CopyChars(pSettingsInfo->szDownloadDir, 
+                             _countof(pSettingsInfo->szDownloadDir),
+                             szDownloadDir.GetString(),
+                             szDownloadDir.GetLength() + 1);
 
     pSettingsInfo->bDelInstaller = FALSE;
     pSettingsInfo->Maximized = FALSE;
@@ -79,8 +82,8 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->Height = 450;
     pSettingsInfo->Proxy = 0;
 
-    StringCbCopyW(pSettingsInfo->szProxyServer, sizeof(pSettingsInfo->szProxyServer), L"");
-    StringCbCopyW(pSettingsInfo->szNoProxyFor, sizeof(pSettingsInfo->szNoProxyFor), L"");
+    pSettingsInfo->szProxyServer[0] = UNICODE_NULL;
+    pSettingsInfo->szNoProxyFor[0] = UNICODE_NULL;
 }
 
 static BOOL

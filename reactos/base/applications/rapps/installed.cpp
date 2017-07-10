@@ -32,7 +32,7 @@ GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
         return TRUE;
     }
 
-    szString = L"---";
+    StringCchCopyW(szString, MAX_PATH, L"---");
     return FALSE;
 }
 
@@ -44,8 +44,8 @@ IsInstalledApplication(const ATL::CStringW &RegName, BOOL IsUserKey, REGSAM keyW
     ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
 
     if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-        szPath, 0, keyWow | KEY_READ,
-                    &hKey) == ERROR_SUCCESS)
+                      szPath, 0, keyWow | KEY_READ,
+                      &hKey) == ERROR_SUCCESS)
     {
         IsInstalled = TRUE;
     }
@@ -62,17 +62,17 @@ InstalledVersion(ATL::CStringW& szVersionResult, const ATL::CStringW& RegName, B
     ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
 
     if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-        szPath.GetString(), 0, keyWow | KEY_READ,
-        &hKey) == ERROR_SUCCESS)
+                      szPath.GetString(), 0, keyWow | KEY_READ,
+                      &hKey) == ERROR_SUCCESS)
     {
-        DWORD dwSize = MAX_PATH;
+        DWORD dwSize = MAX_PATH * sizeof(WCHAR);
         DWORD dwType = REG_SZ;
         if (RegQueryValueExW(hKey,
-            L"DisplayVersion",
-            NULL,
-            &dwType,
-            (LPBYTE) szVersion.GetBuffer(dwSize),
-            &dwSize) == ERROR_SUCCESS)
+                             L"DisplayVersion",
+                             NULL,
+                             &dwType,
+                             (LPBYTE) szVersion.GetBuffer(MAX_PATH),
+                             &dwSize) == ERROR_SUCCESS)
         {
             szVersion.ReleaseBuffer();
             szVersionResult = szVersion;
@@ -126,11 +126,11 @@ UninstallApplication(INT Index, BOOL bModify)
     if (!ListView_GetItem(hListView, &Item))
         return FALSE;
 
-    ItemInfo = (PINSTALLED_INFO)Item.lParam;
+    ItemInfo = (PINSTALLED_INFO) Item.lParam;
     hKey = ItemInfo->hSubKey;
 
     dwType = REG_SZ;
-    dwSize = sizeof(szPath);
+    dwSize = MAX_PATH * sizeof(WCHAR);
     if (RegQueryValueExW(hKey,
                          bModify ? szModify : szUninstall,
                          NULL,
@@ -208,11 +208,14 @@ RemoveAppFromRegistry(INT Index)
 
     if (MessageBoxW(hMainWnd, szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
-        wcsncat(szFullName, Info->szKeyName.GetString(), MAX_PATH - wcslen(szFullName));
+        ATL::CStringW::CopyChars(szFullName, 
+                                 MAX_PATH, 
+                                 Info->szKeyName.GetString(), 
+                                 MAX_PATH - wcslen(szFullName));
 
         if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)
         {
-            (VOID) ListView_DeleteItem(hListView, ItemIndex);
+            ListView_DeleteItem(hListView, ItemIndex);
             return;
         }
 
@@ -267,21 +270,22 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
             }
 
             dwType = REG_SZ;
-            dwSize = MAX_PATH;
+            dwSize = MAX_PATH * sizeof(WCHAR);
             bIsUpdate = (RegQueryValueExW(Info.hSubKey,
                                           L"ParentKeyName",
                                           NULL,
                                           &dwType,
-                                          (LPBYTE) szParentKeyName.GetBuffer(dwSize),
+                                          (LPBYTE) szParentKeyName.GetBuffer(MAX_PATH),
                                           &dwSize) == ERROR_SUCCESS);
             szParentKeyName.ReleaseBuffer();
 
-            dwSize = sizeof(szDisplayName);
+            dwType = REG_SZ;
+            dwSize = MAX_PATH * sizeof(WCHAR);
             if (RegQueryValueExW(Info.hSubKey,
                                  L"DisplayName",
                                  NULL,
                                  &dwType,
-                                 (LPBYTE) szDisplayName.GetBuffer(dwSize),
+                                 (LPBYTE) szDisplayName.GetBuffer(MAX_PATH),
                                  &dwSize) == ERROR_SUCCESS)
             {
                 szDisplayName.ReleaseBuffer();
