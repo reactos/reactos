@@ -1,4 +1,5 @@
 #define UHCI_FRAME_LIST_MAX_ENTRIES  1024 // Number of frames in Frame List
+#define UHCI_NUM_ROOT_HUB_PORTS      2
 
 /* UHCI HC I/O Registers offset (PUSHORT) */
 #define UHCI_USBCMD     0  // USB Command R/W
@@ -98,6 +99,17 @@ typedef union _UHCI_PORT_STATUS_CONTROL {
   };
   USHORT AsUSHORT;
 } UHCI_PORT_STATUS_CONTROL;
+
+typedef struct _UHCI_HW_REGISTERS {
+  UHCI_USB_COMMAND HcCommand; // R/W
+  UHCI_USB_STATUS HcStatus; // R/WC
+  UHCI_INTERRUPT_ENABLE HcInterruptEnable; // R/W
+  USHORT FrameNumber; // R/W WORD writeable only
+  ULONG FrameAddress; // R/W
+  UCHAR SOF_Modify; // R/W
+  UCHAR Reserved[3];
+  UHCI_PORT_STATUS_CONTROL PortControl[UHCI_NUM_ROOT_HUB_PORTS]; // R/WC WORD writeable only
+} UHCI_HW_REGISTERS, *PUHCI_HW_REGISTERS;
 
 /* Transfer Descriptor (TD) */
 #define UHCI_TD_STS_ACTIVE            (1 << 7)
