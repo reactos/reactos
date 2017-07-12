@@ -541,7 +541,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                               USB_MINIPORT_FLAGS_POLLING |
                               USB_MINIPORT_FLAGS_WAKE_SUPPORT;
 
-    RegPacket.MiniPortBusBandwidth = 12000;
+    RegPacket.MiniPortBusBandwidth = TOTAL_USB11_BUS_BANDWIDTH;
 
     RegPacket.MiniPortExtensionSize = sizeof(UHCI_EXTENSION);
     RegPacket.MiniPortEndpointSize = sizeof(UHCI_ENDPOINT);
@@ -598,5 +598,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     DriverObject->DriverUnload = NULL;
 
-    return USBPORT_RegisterUSBPortDriver(DriverObject, 100, &RegPacket);
+    return USBPORT_RegisterUSBPortDriver(DriverObject,
+                                         USB10_MINIPORT_INTERFACE_VERSION,
+                                         &RegPacket);
 }
