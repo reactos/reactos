@@ -12,7 +12,7 @@
 SETTINGS_INFO NewSettingsInfo;
 
 #define IS_CHECKED(a, b) \
-    a = (SendDlgItemMessage(hDlg, b, BM_GETCHECK, 0, 0) == BST_CHECKED) ? TRUE : FALSE
+    a = (SendDlgItemMessageW(hDlg, b, BM_GETCHECK, 0, 0) == BST_CHECKED) ? TRUE : FALSE
 
 BOOL
 ChooseFolder(HWND hwnd)
@@ -32,13 +32,13 @@ ChooseFolder(HWND hwnd)
     szBuf.Empty();
     if (SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)))
     {
-        LPITEMIDLIST lpItemList = SHBrowseForFolder(&bi);
-        if (lpItemList && SHGetPathFromIDList(lpItemList, szBuf.GetBuffer(MAX_PATH)))
+        LPITEMIDLIST lpItemList = SHBrowseForFolderW(&bi);
+        if (lpItemList && SHGetPathFromIDListW(lpItemList, szBuf.GetBuffer(MAX_PATH)))
         {
             szBuf.ReleaseBuffer();
             if (!szBuf.IsEmpty())
             {
-                SetDlgItemTextW(hwnd, IDC_DOWNLOAD_DIR_EDIT, szBuf.GetString());
+                SetDlgItemTextW(hwnd, IDC_DOWNLOAD_DIR_EDIT, szBuf);
                 bRet = TRUE;
             }
         }
@@ -55,10 +55,10 @@ ChooseFolder(HWND hwnd)
 static VOID
 InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
 {
-    SendDlgItemMessage(hDlg, IDC_SAVE_WINDOW_POS, BM_SETCHECK, Info->bSaveWndPos, 0);
-    SendDlgItemMessage(hDlg, IDC_UPDATE_AVLIST, BM_SETCHECK, Info->bUpdateAtStart, 0);
-    SendDlgItemMessage(hDlg, IDC_LOG_ENABLED, BM_SETCHECK, Info->bLogEnabled, 0);
-    SendDlgItemMessage(hDlg, IDC_DEL_AFTER_INSTALL, BM_SETCHECK, Info->bDelInstaller, 0);
+    SendDlgItemMessageW(hDlg, IDC_SAVE_WINDOW_POS, BM_SETCHECK, Info->bSaveWndPos, 0);
+    SendDlgItemMessageW(hDlg, IDC_UPDATE_AVLIST, BM_SETCHECK, Info->bUpdateAtStart, 0);
+    SendDlgItemMessageW(hDlg, IDC_LOG_ENABLED, BM_SETCHECK, Info->bLogEnabled, 0);
+    SendDlgItemMessageW(hDlg, IDC_DEL_AFTER_INSTALL, BM_SETCHECK, Info->bDelInstaller, 0);
 
     SetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
                    Info->szDownloadDir);

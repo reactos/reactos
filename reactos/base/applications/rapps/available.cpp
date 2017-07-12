@@ -42,43 +42,30 @@ inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString, const AT
     }
     return TRUE;
 }
-
-//App is "installed" if the RegName or Name is in the registry
-inline BOOL IsAppInstalledKey(PAPPLICATION_INFO Info, REGSAM key)
-{
-    return (!Info->szRegName.IsEmpty()
-            && (IsInstalledApplication(Info->szRegName, TRUE, key)
-                || IsInstalledApplication(Info->szRegName, FALSE, key)))
-        || (!Info->szName.IsEmpty()
-            && (IsInstalledApplication(Info->szName, TRUE, key)
-                || IsInstalledApplication(Info->szName, FALSE, key)));
-}
-
-
 //Check both registry keys in 64bit system
 //TODO: check system type beforehand to avoid double checks?
-inline BOOL IsAppInstalled(PAPPLICATION_INFO Info)
-{
-    return  IsAppInstalledKey(Info, KEY_WOW64_32KEY)
-        || IsAppInstalledKey(Info, KEY_WOW64_64KEY);
-}
 
-//App is "installed" if the RegName or Name is in the registry
-inline BOOL GetInstalledVersionWithKey(PAPPLICATION_INFO Info, ATL::CStringW& szVersion, REGSAM key)
+inline BOOL GetInstalledVersionEx(PAPPLICATION_INFO Info, ATL::CStringW* szVersion, REGSAM key)
 {
     return (!Info->szRegName.IsEmpty()
-            && (InstalledVersion(szVersion, Info->szRegName, TRUE, key)
-                || InstalledVersion(szVersion, Info->szRegName, FALSE, key)))
+            && (GetInstalledVersion_WowUser(szVersion, Info->szRegName, TRUE, key)
+                || GetInstalledVersion_WowUser(szVersion, Info->szRegName, FALSE, key)))
         || (!Info->szName.IsEmpty()
-            && (InstalledVersion(szVersion, Info->szName, TRUE, key)
-                || InstalledVersion(szVersion, Info->szName, FALSE, key)));
+            && (GetInstalledVersion_WowUser(szVersion, Info->szName, TRUE, key)
+                || GetInstalledVersion_WowUser(szVersion, Info->szName, FALSE, key)));
 }
 
-inline BOOL GetInstalledVersion(PAPPLICATION_INFO Info, ATL::CStringW& szVersion)
+inline BOOL GetInstalledVersion(PAPPLICATION_INFO Info, ATL::CStringW* szVersion)
 {
-    return  GetInstalledVersionWithKey(Info, szVersion, KEY_WOW64_32KEY)
-        || GetInstalledVersionWithKey(Info, szVersion, KEY_WOW64_64KEY);
+    return  GetInstalledVersionEx(Info, szVersion, KEY_WOW64_32KEY)
+        || GetInstalledVersionEx(Info, szVersion, KEY_WOW64_64KEY);
 }
+
+inline BOOL IsAppInstalled(PAPPLICATION_INFO Info)
+{
+    return GetInstalledVersion(Info, NULL);
+}
+
 
 LIST_ENTRY CachedEntriesHead = {&CachedEntriesHead, &CachedEntriesHead};
 PLIST_ENTRY pCachedEntry = &CachedEntriesHead;
@@ -90,7 +77,7 @@ ShowAvailableAppInfo(INT Index)
     ATL::CStringW szVersion;
     ATL::CStringW szLicense;
     BOOL bIsInstalled = IsAppInstalled(Info),
-        bHasVersion = GetInstalledVersion(Info, szVersion);
+        bHasVersion = GetInstalledVersion(Info, &szVersion);
 
     if (!Info) return FALSE;
 
@@ -222,7 +209,6 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
     ATL::CStringW szCabPath;
     PAPPLICATION_INFO Info;
 
-
     if (!GetStorageDirectory(szPath))
         return FALSE;
 
@@ -301,7 +287,6 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
         InfoList.AddTail(Info);
 
 skip_if_cached:
-
         if (Info->Category == FALSE)
             continue;
 
@@ -349,10 +334,8 @@ VOID FreeCachedAvailableEntries(VOID)
     {
         Info = InfoList.GetAt(InfoListPosition);
         InfoList.RemoveHead();
-
-        /* flush them down the toilet :D */
-        delete Info;
-
         InfoListPosition = InfoList.GetHeadPosition();
+        
+        delete Info;
     }
 }

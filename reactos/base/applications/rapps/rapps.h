@@ -159,10 +159,9 @@ BOOL GetApplicationString(HKEY hKey, LPCWSTR RegName, ATL::CStringW& String);
 
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
-BOOL IsInstalledApplication(const ATL::CStringW& RegName, BOOL IsUserKey, REGSAM keyWow);
 VOID RemoveAppFromRegistry(INT Index);
 
-BOOL InstalledVersion(ATL::CStringW& szVersionResult, const ATL::CStringW& RegName, BOOL IsUserKey, REGSAM keyWow);
+BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult, const ATL::CStringW& RegName, BOOL IsUserKey, REGSAM keyWow);
 
 /* winmain.cpp */
 extern HWND hMainWnd;

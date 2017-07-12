@@ -22,7 +22,7 @@ class CRichEdit :
 public:
     VOID SetRangeFormatting(LONG Start, LONG End, DWORD dwEffects)
     {
-        CHARFORMAT2 CharFormat;
+        CHARFORMAT2W CharFormat;
 
         SendMessageW(EM_SETSEL, Start, End);
 

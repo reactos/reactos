@@ -37,27 +37,10 @@ GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
 }
 
 BOOL
-IsInstalledApplication(const ATL::CStringW &RegName, BOOL IsUserKey, REGSAM keyWow)
-{
-    HKEY hKey = NULL;
-    BOOL IsInstalled = FALSE;
-    ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
-
-    if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-                      szPath, 0, keyWow | KEY_READ,
-                      &hKey) == ERROR_SUCCESS)
-    {
-        IsInstalled = TRUE;
-    }
-    RegCloseKey(hKey);
-    return IsInstalled;
-}
-
-BOOL
-InstalledVersion(ATL::CStringW& szVersionResult, const ATL::CStringW& RegName, BOOL IsUserKey, REGSAM keyWow)
+GetInstalledVersion_WowUser(_Out_opt_ ATL::CStringW* szVersionResult, _In_z_ const ATL::CStringW& RegName, _In_ BOOL IsUserKey, _In_ REGSAM keyWow)
 {
     HKEY hKey;
-    BOOL bHasVersion = FALSE;
+    BOOL bHasSucceded = FALSE;
     ATL::CStringW szVersion;
     ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
 
@@ -65,27 +48,36 @@ InstalledVersion(ATL::CStringW& szVersionResult, const ATL::CStringW& RegName, B
                       szPath.GetString(), 0, keyWow | KEY_READ,
                       &hKey) == ERROR_SUCCESS)
     {
-        DWORD dwSize = MAX_PATH * sizeof(WCHAR);
-        DWORD dwType = REG_SZ;
-        if (RegQueryValueExW(hKey,
-                             L"DisplayVersion",
-                             NULL,
-                             &dwType,
-                             (LPBYTE) szVersion.GetBuffer(MAX_PATH),
-                             &dwSize) == ERROR_SUCCESS)
+        if (szVersionResult)
         {
-            szVersion.ReleaseBuffer();
-            szVersionResult = szVersion;
-            bHasVersion = TRUE;
+            DWORD dwSize = MAX_PATH * sizeof(WCHAR);
+            DWORD dwType = REG_SZ;
+            if (RegQueryValueExW(hKey,
+                                 L"DisplayVersion",
+                                 NULL,
+                                 &dwType,
+                                 (LPBYTE) szVersion.GetBuffer(MAX_PATH),
+                                 &dwSize) == ERROR_SUCCESS)
+            {
+                szVersion.ReleaseBuffer();
+                *szVersionResult = szVersion;
+                bHasSucceded = TRUE;
+            }
+            else
+            {
+                szVersion.ReleaseBuffer();
+            }
         }
         else
         {
+            bHasSucceded = TRUE;
             szVersion.ReleaseBuffer();
         }
+        
     }
 
     RegCloseKey(hKey);
-    return bHasVersion;
+    return bHasSucceded;
 }
 
 

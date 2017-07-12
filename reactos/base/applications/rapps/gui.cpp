@@ -37,12 +37,12 @@ class CMainToolbar :
     {
         HICON hImage;
 
-        if (!(hImage = (HICON) LoadImage(hInst,
-                                         MAKEINTRESOURCE(ImageIndex),
-                                         IMAGE_ICON,
-                                         TOOLBAR_HEIGHT,
-                                         TOOLBAR_HEIGHT,
-                                         0)))
+        if (!(hImage = (HICON) LoadImageW(hInst,
+                                          MAKEINTRESOURCE(ImageIndex),
+                                          IMAGE_ICON,
+                                          TOOLBAR_HEIGHT,
+                                          TOOLBAR_HEIGHT,
+                                          0)))
         {
             /* TODO: Error message */
         }
@@ -266,7 +266,7 @@ public:
     INT CompareFunc(LPARAM lParam1, LPARAM lParam2, INT iSubItem)
     {
         ATL::CStringW Item1, Item2;
-        LVFINDINFO IndexInfo;
+        LVFINDINFOW IndexInfo;
         INT Index;
 
         IndexInfo.flags = LVFI_PARAM;
@@ -366,7 +366,7 @@ class CSearchBar :
 public:
     VOID SetText(LPCWSTR lpszText)
     {
-        SendMessage(SB_SETTEXT, SBT_NOBORDERS, (LPARAM) lpszText);
+        SendMessageW(SB_SETTEXT, SBT_NOBORDERS, (LPARAM) lpszText);
     }
 
     HWND Create(HWND hwndParent)
@@ -626,21 +626,31 @@ private:
         /* Size tool bar */
         m_Toolbar->AutoSize();
 
-
         RECT r = {0, 0, LOWORD(lParam), HIWORD(lParam)};
-
         HDWP hdwp = NULL;
-
         int count = m_ClientPanel->CountSizableChildren();
+
         hdwp = BeginDeferWindowPos(count);
-        if (hdwp) hdwp = m_ClientPanel->OnParentSize(r, hdwp);
-        if (hdwp) EndDeferWindowPos(hdwp);
+        if (hdwp)
+        {
+            hdwp = m_ClientPanel->OnParentSize(r, hdwp);
+        }
+        if (hdwp)
+        {
+            EndDeferWindowPos(hdwp);
+        }
 
         // TODO: Sub-layouts for children of children
         count = m_SearchBar->CountSizableChildren();
         hdwp = BeginDeferWindowPos(count);
-        if (hdwp) hdwp = m_SearchBar->OnParentSize(r, hdwp);
-        if (hdwp) EndDeferWindowPos(hdwp);
+        if (hdwp)
+        {
+            hdwp = m_SearchBar->OnParentSize(r, hdwp);
+        }
+        if (hdwp)
+        {
+            EndDeferWindowPos(hdwp);
+        }
     }
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
@@ -781,10 +791,10 @@ private:
                     EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_ENABLED);
                     EnableMenuItem(lvwMenu, ID_MODIFY, MF_ENABLED);
 
-                    m_Toolbar->SendMessage(TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
-                    m_Toolbar->SendMessage(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
-                    m_Toolbar->SendMessage(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
-                    m_Toolbar->SendMessage(TB_ENABLEBUTTON, ID_MODIFY, TRUE);
+                    m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, TRUE);
+                    m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
+                    m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
+                    m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);
                 }
                 else
                 {
@@ -798,10 +808,10 @@ private:
                     EnableMenuItem(lvwMenu, ID_UNINSTALL, MF_GRAYED);
                     EnableMenuItem(lvwMenu, ID_MODIFY, MF_GRAYED);
 
-                    m_Toolbar->SendMessage(TB_ENABLEBUTTON, ID_REGREMOVE, FALSE);
-                    m_Toolbar->SendMessage(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
-                    m_Toolbar->SendMessage(TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
-                    m_Toolbar->SendMessage(TB_ENABLEBUTTON, ID_MODIFY, FALSE);
+                    m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_REGREMOVE, FALSE);
+                    m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
+                    m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
+                    m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, FALSE);
                 }
             }
             break;
@@ -905,10 +915,10 @@ private:
         case WM_SYSCOLORCHANGE:
         {
             /* Forward WM_SYSCOLORCHANGE to common controls */
-            m_ListView->SendMessage(WM_SYSCOLORCHANGE, 0, 0);
-            m_TreeView->SendMessage(WM_SYSCOLORCHANGE, 0, 0);
-            m_Toolbar->SendMessage(WM_SYSCOLORCHANGE, 0, 0);
-            m_ListView->SendMessage(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
+            m_ListView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
+            m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
+            m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, 0, 0);
+            m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
         }
         break;
 
@@ -1028,7 +1038,7 @@ private:
                 }
 
                 DWORD dwDelay;
-                SystemParametersInfo(SPI_GETMENUSHOWDELAY, 0, &dwDelay, 0);
+                SystemParametersInfoW(SPI_GETMENUSHOWDELAY, 0, &dwDelay, 0);
                 SetTimer(SEARCH_TIMER_ID, dwDelay);
             }
             break;
@@ -1186,7 +1196,7 @@ private:
         if (!hIcon)
         {
             /* Load default icon */
-            hIcon = (HICON) LoadIcon(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+            hIcon = (HICON) LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
         }
         Index = ImageList_AddIcon(hImageListView, hIcon);
         DestroyIcon(hIcon);
@@ -1208,7 +1218,7 @@ private:
         ATL::CStringW szBuffer1, szBuffer2;
         HIMAGELIST hImageListView = NULL;
 
-        m_ListView->SendMessage(WM_SETREDRAW, FALSE, 0);
+        m_ListView->SendMessageW(WM_SETREDRAW, FALSE, 0);
 
         if (EnumType < 0) EnumType = SelectedEnumType;
 
@@ -1244,7 +1254,7 @@ private:
         if (ListView_GetItemCount(hListView) > 0)
             ListView_SetColumnWidth(hListView, 0, LVSCW_AUTOSIZE);
 
-        SendMessage(hListView, WM_SETREDRAW, TRUE, 0);
+        SendMessageW(hListView, WM_SETREDRAW, TRUE, 0);
     }
 
 public:
@@ -1253,12 +1263,20 @@ public:
         DWORD csStyle = CS_VREDRAW | CS_HREDRAW;
         static ATL::CWndClassInfo wc =
         {
-            { sizeof(WNDCLASSEX), csStyle, StartWindowProc,
-            0, 0, NULL,
-            LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAIN)),
-            LoadCursor(NULL, IDC_ARROW),
-            (HBRUSH) (COLOR_BTNFACE + 1), MAKEINTRESOURCE(IDR_MAINMENU),
-            L"RAppsWnd", NULL },
+            { 
+                sizeof(WNDCLASSEX), 
+                csStyle, 
+                StartWindowProc,
+                0, 
+                0, 
+                NULL,
+                LoadIconW(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCEW(IDI_MAIN)),
+                LoadCursorW(NULL, IDC_ARROW),
+                (HBRUSH) (COLOR_BTNFACE + 1), 
+                MAKEINTRESOURCEW(IDR_MAINMENU),
+                L"RAppsWnd", 
+                NULL
+            },
             NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
         };
         return wc;
