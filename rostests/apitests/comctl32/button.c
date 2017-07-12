@@ -444,7 +444,15 @@ static LRESULT CALLBACK subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LP
     case WM_NOTIFY:
     {
         NMHDR* pnmhdr = (NMHDR*)lParam;
-        RECORD_MESSAGE(iwnd, message, SENT, pnmhdr->idFrom,pnmhdr->code);
+        if (pnmhdr->code == NM_CUSTOMDRAW)
+        {
+            NMCUSTOMDRAW* pnmcd = (NMCUSTOMDRAW*)lParam;
+            RECORD_MESSAGE(iwnd, message, SENT, pnmhdr->code, pnmcd->dwDrawStage);
+        }
+        else
+        {
+            RECORD_MESSAGE(iwnd, message, SENT, pnmhdr->idFrom,pnmhdr->code);
+        }
         break;
     }
     default:
@@ -460,7 +468,15 @@ static LRESULT CALLBACK TestProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     if (iwnd != 0  && message == WM_NOTIFY)
     {
         NMHDR* pnmhdr = (NMHDR*)lParam;
-        RECORD_MESSAGE(iwnd, message, SENT, pnmhdr->idFrom,pnmhdr->code);
+        if (pnmhdr->code == NM_CUSTOMDRAW)
+        {
+            NMCUSTOMDRAW* pnmcd = (NMCUSTOMDRAW*)lParam;
+            RECORD_MESSAGE(iwnd, message, SENT, pnmhdr->code, pnmcd->dwDrawStage);
+        }
+        else
+        {
+            RECORD_MESSAGE(iwnd, message, SENT, pnmhdr->idFrom,pnmhdr->code);
+        }
     }
     else if (iwnd != 0 && message < WM_USER && message != WM_GETICON)
     {
@@ -491,15 +507,15 @@ MSG_ENTRY paint_sequence[]={
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY paint_nonthemed_sequence[]={
     {2, WM_PAINT, POST},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY redraw_sequence[]={
@@ -508,29 +524,29 @@ MSG_ENTRY redraw_sequence[]={
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY redraw_nonthemed_sequence[]={
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY printclnt_nonthemed_sequence[]={
     {2, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY printclnt_sequence[]={
     {2, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
     {0,0}};
 
 MSG_ENTRY pseudomove_sequence[]={
@@ -543,8 +559,8 @@ MSG_ENTRY pseudomove_sequence[]={
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY pseudomove_nonthemed_sequence[]={
@@ -555,8 +571,8 @@ MSG_ENTRY pseudomove_nonthemed_sequence[]={
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY pseudohover_sequence[]={
@@ -578,8 +594,8 @@ MSG_ENTRY mouseenter_sequence[]={
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY mouseenter_nonthemed_sequence[]={
@@ -591,8 +607,8 @@ MSG_ENTRY mouseenter_nonthemed_sequence[]={
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY mousemove_sequence[]={
@@ -610,8 +626,8 @@ MSG_ENTRY mouseleave_sequence[]={
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 MSG_ENTRY mouseleave_nonthemed_sequence[]={
@@ -620,8 +636,8 @@ MSG_ENTRY mouseleave_nonthemed_sequence[]={
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
-    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREERASE},
+    {1, WM_NOTIFY, SENT, NM_CUSTOMDRAW, CDDS_PREPAINT},
     {0,0}};
 
 void Test_MessagesNonThemed()
