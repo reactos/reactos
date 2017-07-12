@@ -51,7 +51,7 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
     LARGE_INTEGER FirstTime;
     LARGE_INTEGER CurrentTime;
     ULONG ResourcesTypes;
-    PUSHORT BaseRegister;
+    PUHCI_HW_REGISTERS BaseRegister;
     PUSHORT StatusRegister;
     UHCI_PCI_LEGSUP LegacySupport;
     UHCI_USB_COMMAND Command;
@@ -70,7 +70,7 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
     }
 
     BaseRegister = UhciExtension->BaseRegister;
-    StatusRegister = BaseRegister + UHCI_USBSTS;
+    StatusRegister = &BaseRegister->HcStatus.AsUSHORT;
 
     RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
                                            TRUE,
@@ -80,14 +80,13 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
 
     UhciDisableInterrupts(UhciExtension);
 
-    Command.AsUSHORT = READ_PORT_USHORT(BaseRegister + UHCI_USBCMD);
+    Command.AsUSHORT = READ_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT);
 
     Command.Run = 0;
     Command.GlobalReset = 0;
     Command.ConfigureFlag = 0;
 
-    WRITE_PORT_USHORT(UhciExtension->BaseRegister + UHCI_USBCMD,
-                      Command.AsUSHORT);
+    WRITE_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT, Command.AsUSHORT);
 
     KeQuerySystemTime(&FirstTime);
     FirstTime.QuadPart += 100 * 10000; // 100 ms.
@@ -147,7 +146,7 @@ MPSTATUS
 NTAPI
 UhciInitializeHardware(IN PUHCI_EXTENSION UhciExtension)
 {
-    PUSHORT BaseRegister;
+    PUHCI_HW_REGISTERS BaseRegister;
     UHCI_USB_COMMAND Command;
     UHCI_USB_STATUS StatusMask;
 
@@ -156,27 +155,26 @@ UhciInitializeHardware(IN PUHCI_EXTENSION UhciExtension)
     BaseRegister = UhciExtension->BaseRegister;
 
     /* Save SOF Timing Value */
-    UhciExtension->SOF_Modify = READ_PORT_UCHAR((PUCHAR)(BaseRegister +
-                                                UHCI_SOFMOD));
+    UhciExtension->SOF_Modify = READ_PORT_UCHAR(&BaseRegister->SOF_Modify);
 
     RegPacket.UsbPortWait(UhciExtension, 20);
 
-    Command.AsUSHORT = READ_PORT_USHORT(BaseRegister + UHCI_USBCMD);
+    Command.AsUSHORT = READ_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT);
 
     /* Global Reset */
     Command.AsUSHORT = 0;
     Command.GlobalReset = 1;
-    WRITE_PORT_USHORT(BaseRegister + UHCI_USBCMD, Command.AsUSHORT);
+    WRITE_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT, Command.AsUSHORT);
 
     RegPacket.UsbPortWait(UhciExtension, 20);
 
     Command.AsUSHORT = 0;
-    WRITE_PORT_USHORT(BaseRegister + UHCI_USBCMD, Command.AsUSHORT);
+    WRITE_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT, Command.AsUSHORT);
 
     /* Set MaxPacket for full speed bandwidth reclamation */
     Command.AsUSHORT = 0;
     Command.MaxPacket = 1; // 64 bytes
-    WRITE_PORT_USHORT(BaseRegister + UHCI_USBCMD, Command.AsUSHORT);
+    WRITE_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT, Command.AsUSHORT);
 
     /* Restore SOF Timing Value */
     WRITE_PORT_UCHAR((PUCHAR)(BaseRegister + UHCI_SOFMOD),
@@ -396,7 +394,7 @@ NTAPI
 UhciEnableInterrupts(IN PVOID uhciExtension)
 {
     PUHCI_EXTENSION UhciExtension = uhciExtension;
-    PUSHORT BaseRegister;
+    PUHCI_HW_REGISTERS BaseRegister;
     UHCI_PCI_LEGSUP LegacySupport;
 
     DPRINT("UhciEnableInterrupts: ...\n");
@@ -404,20 +402,20 @@ UhciEnableInterrupts(IN PVOID uhciExtension)
     BaseRegister = UhciExtension->BaseRegister;
 
     RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
-                                           TRUE,
-                                           &LegacySupport.AsUSHORT,
-                                           PCI_LEGSUP,
-                                           sizeof(USHORT));
+                                          TRUE,
+                                          &LegacySupport.AsUSHORT,
+                                          PCI_LEGSUP,
+                                          sizeof(USHORT));
 
     LegacySupport.UsbPIRQ = 1;
 
     RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
-                                           FALSE,
-                                           &LegacySupport.AsUSHORT,
-                                           PCI_LEGSUP,
-                                           sizeof(USHORT));
+                                          FALSE,
+                                          &LegacySupport.AsUSHORT,
+                                          PCI_LEGSUP,
+                                          sizeof(USHORT));
 
-    WRITE_PORT_USHORT(BaseRegister + UHCI_USBSTS,
+    WRITE_PORT_USHORT(&BaseRegister->HcInterruptEnable.AsUSHORT,
                       UhciExtension->StatusMask.AsUSHORT);
 }
 
@@ -426,27 +424,29 @@ NTAPI
 UhciDisableInterrupts(IN PVOID uhciExtension)
 {
     PUHCI_EXTENSION UhciExtension = uhciExtension;
-    ULONG HcFlavor;
+    PUHCI_HW_REGISTERS BaseRegister;
+    USB_CONTROLLER_FLAVOR HcFlavor;
     UHCI_PCI_LEGSUP LegacySupport;
 
-    WRITE_PORT_USHORT(UhciExtension->BaseRegister + UHCI_USBSTS, 0);
+    BaseRegister = UhciExtension->BaseRegister;
+    WRITE_PORT_USHORT(&BaseRegister->HcInterruptEnable.AsUSHORT, 0);
 
     HcFlavor = UhciExtension->HcFlavor;
     DPRINT("UhciDisableInterrupts: FIXME HcFlavor - %lx\n", HcFlavor);
 
     RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
-                                           TRUE,
-                                           &LegacySupport.AsUSHORT,
-                                           PCI_LEGSUP,
-                                           sizeof(USHORT));
+                                          TRUE,
+                                          &LegacySupport.AsUSHORT,
+                                          PCI_LEGSUP,
+                                          sizeof(USHORT));
 
     LegacySupport.UsbPIRQ = 0;
 
     RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
-                                           FALSE,
-                                           &LegacySupport.AsUSHORT,
-                                           PCI_LEGSUP,
-                                           sizeof(USHORT));
+                                          FALSE,
+                                          &LegacySupport.AsUSHORT,
+                                          PCI_LEGSUP,
+                                          sizeof(USHORT));
 }
 
 VOID
