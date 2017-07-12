@@ -13,8 +13,8 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Bun venit"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Bun venit în Sistemul de Operare ReactOS.\n\nAlegeți o opțiune din stânga."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Bun venit în Sistemul de Operare ReactOS.\n\nAlegeți o opțiune din stânga."
 
     IDS_CHECKTEXT "&Afișează acest dialog și altă dată"
     IDS_CLOSETEXT "&Ieșire"
@@ -23,23 +23,23 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Instalare &ReactOS"
-    IDS_TOPICBUTTON1 "&Explorare CD"
-    IDS_TOPICBUTTON2 "&Ieșire"
+    IDS_TOPIC_BUTTON0 "Instalare &ReactOS"
+    IDS_TOPIC_BUTTON1 "&Explorare CD"
+    IDS_TOPIC_BUTTON2 "&Ieșire"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Instalare ReactOS"
-    IDS_TOPICTITLE1 "Explorare CD"
-    IDS_TOPICTITLE2 "Ieșire"
+    IDS_TOPIC_TITLE0 "Instalare ReactOS"
+    IDS_TOPIC_TITLE1 "Explorare CD"
+    IDS_TOPIC_TITLE2 "Ieșire"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Creați o instalare nouă sau actualizați o instalare existentă."
-    IDS_TOPICDESC1 "Explorați conținutul acestui CD."
-    IDS_TOPICDESC2 "Apăsați pentru a ieși din aplicație."
+    IDS_TOPIC_DESC0 "Creați o instalare nouă sau actualizați o instalare existentă."
+    IDS_TOPIC_DESC1 "Explorați conținutul acestui CD."
+    IDS_TOPIC_DESC2 "Apăsați pentru a ieși din aplicație."
 END

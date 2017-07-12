@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS welcome/autorun application
+ * PROJECT:     ReactOS "Welcome"/AutoRun application
  * FILE:        base/setup/welcome/welcome.c
  * PROGRAMMERS: Eric Kohl
  *              Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -40,7 +40,7 @@
 #include <shellapi.h>
 #include <strsafe.h>
 
-#include <reactos/version.h>
+#include <reactos/buildno.h>
 
 #include "resource.h"
 
@@ -62,7 +62,7 @@ HWND hWndMain = NULL;
 HWND hWndCheckButton = NULL;
 HWND hWndCloseButton = NULL;
 
-BOOL bDisplayCheckBox = FALSE; // FIXME: We should also repaint the OS version correctly!
+BOOL bDisplayCheckBox = FALSE;
 BOOL bDisplayExitBtn  = TRUE;
 
 #define BUFFER_SIZE 1024
@@ -74,10 +74,18 @@ typedef struct _TOPIC
 {
     HBITMAP hBitmap;
     HWND hWndButton;
+
+    /*
+     * TRUE : szCommand contains a command (e.g. executable to run);
+     * FALSE: szCommand contains a custom "Welcome"/AutoRun action.
+     */
+    BOOL bIsCommand;
+
     TCHAR szText[80];
     TCHAR szTitle[TOPIC_TITLE_LENGTH];
     TCHAR szDesc[TOPIC_DESC_LENGTH];
-    TCHAR szAction[512];
+    TCHAR szCommand[512];
+    TCHAR szArgs[512];
 } TOPIC, *PTOPIC;
 
 DWORD dwNumberTopics = 0;
@@ -202,6 +210,174 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
     }
 }
 
+VOID InitializeTopicList(VOID)
+{
+    dwNumberTopics = 0;
+    pTopics = NULL;
+}
+
+PTOPIC AddNewTopic(VOID)
+{
+    PTOPIC pTopic, *pTopicsTmp;
+
+    /* Allocate (or reallocate) the list of topics */
+    if (!pTopics)
+        pTopicsTmp = HeapAlloc(GetProcessHeap(), 0, (dwNumberTopics + 1) * sizeof(*pTopics));
+    else
+        pTopicsTmp = HeapReAlloc(GetProcessHeap(), 0, pTopics, (dwNumberTopics + 1) * sizeof(*pTopics));
+    if (!pTopicsTmp)
+        return NULL; // Cannot reallocate more
+    pTopics = pTopicsTmp;
+
+    /* Allocate a new topic entry */
+    pTopic = HeapAlloc(GetProcessHeap(), 0, sizeof(*pTopic));
+    if (!pTopic)
+        return NULL; // Cannot reallocate more
+    pTopics[dwNumberTopics++] = pTopic;
+
+    /* Return the allocated topic entry */
+    return pTopic;
+}
+
+PTOPIC AddNewTopicEx(
+    IN LPTSTR szText  OPTIONAL,
+    IN LPTSTR szTitle OPTIONAL,
+    IN LPTSTR szDesc  OPTIONAL,
+    IN LPTSTR szCommand OPTIONAL,
+    IN LPTSTR szArgs    OPTIONAL,
+    IN LPTSTR szAction  OPTIONAL)
+{
+    PTOPIC pTopic = AddNewTopic();
+    if (!pTopic)
+        return NULL;
+
+    if (szText && *szText)
+        StringCchCopy(pTopic->szText, ARRAYSIZE(pTopic->szText), szText);
+    else
+        *pTopic->szText = 0;
+
+    if (szTitle && *szTitle)
+        StringCchCopy(pTopic->szTitle, ARRAYSIZE(pTopic->szTitle), szTitle);
+    else
+        *pTopic->szTitle = 0;
+
+    if (szDesc && *szDesc)
+    {
+        StringCchCopy(pTopic->szDesc, ARRAYSIZE(pTopic->szDesc), szDesc);
+        TranslateEscapes(pTopic->szDesc);
+    }
+    else
+    {
+        *pTopic->szDesc = 0;
+    }
+
+    if (szCommand && *szCommand)
+    {
+        pTopic->bIsCommand = TRUE;
+        StringCchCopy(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand), szCommand);
+    }
+    else
+    {
+        pTopic->bIsCommand = FALSE;
+        *pTopic->szCommand = 0;
+    }
+
+    /* Only care about command arguments if we actually have a command */
+    if (*pTopic->szCommand)
+    {
+        if (szArgs && *szArgs)
+        {
+            StringCchCopy(pTopic->szArgs, ARRAYSIZE(pTopic->szArgs), szArgs);
+        }
+        else
+        {
+            /* Check for special applications: ReactOS Shell */
+            if (/* pTopic->szCommand && */ *pTopic->szCommand &&
+                _tcsicmp(pTopic->szCommand, TEXT("explorer.exe")) == 0)
+            {
+#if 0
+                TCHAR CurrentDir[MAX_PATH];
+                GetCurrentDirectory(ARRAYSIZE(CurrentDir), CurrentDir);
+#endif
+                StringCchCopy(pTopic->szArgs, ARRAYSIZE(pTopic->szArgs), TEXT("\\"));
+            }
+            else
+            {
+                *pTopic->szArgs = 0;
+            }
+        }
+    }
+    else
+    {
+        *pTopic->szArgs = 0;
+    }
+
+    /* Only care about custom actions if we actually don't have a command */
+    if (!*pTopic->szCommand && szAction && *szAction)
+    {
+        /*
+         * Re-use the pTopic->szCommand member. We distinguish with respect to
+         * a regular command by using the pTopic->bIsCommand flag.
+         */
+        pTopic->bIsCommand = FALSE;
+        StringCchCopy(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand), szAction);
+        TranslateEscapes(pTopic->szCommand);
+    }
+
+    return pTopic;
+}
+
+static VOID
+LoadLocalizedResourcesInternal(VOID)
+{
+#define MAX_NUMBER_INTERNAL_TOPICS  3
+
+    UINT i;
+    LPTSTR lpszCommand, lpszAction;
+    TOPIC newTopic, *pTopic;
+
+    for (i = 0; i < MAX_NUMBER_INTERNAL_TOPICS; ++i)
+    {
+        lpszCommand = NULL, lpszAction = NULL;
+
+        /* Retrieve the information */
+        if (!LoadString(hInstance, IDS_TOPIC_BUTTON0 + i, newTopic.szText, ARRAYSIZE(newTopic.szText)))
+            *newTopic.szText = 0;
+        if (!LoadString(hInstance, IDS_TOPIC_TITLE0 + i, newTopic.szTitle, ARRAYSIZE(newTopic.szTitle)))
+            *newTopic.szTitle = 0;
+        if (!LoadString(hInstance, IDS_TOPIC_DESC0 + i, newTopic.szDesc, ARRAYSIZE(newTopic.szDesc)))
+            *newTopic.szDesc = 0;
+
+        if (!LoadString(hInstance, IDS_TOPIC_COMMAND0 + i, newTopic.szCommand, ARRAYSIZE(newTopic.szCommand)))
+            *newTopic.szCommand = 0;
+
+        /* Only care about command arguments if we actually have a command */
+        if (*newTopic.szCommand)
+        {
+            lpszCommand = newTopic.szCommand;
+            if (!LoadString(hInstance, IDS_TOPIC_CMD_ARGS0 + i, newTopic.szArgs, ARRAYSIZE(newTopic.szArgs)))
+                *newTopic.szArgs = 0;
+        }
+        /* Only care about custom actions if we actually don't have a command */
+        else // if (!*newTopic.szCommand)
+        {
+            lpszAction = newTopic.szCommand;
+            if (!LoadString(hInstance, IDS_TOPIC_ACTION0 + i, newTopic.szCommand, ARRAYSIZE(newTopic.szCommand)))
+                *newTopic.szCommand = 0;
+        }
+
+        /* Allocate a new topic */
+        pTopic = AddNewTopicEx(newTopic.szText,
+                               newTopic.szTitle,
+                               newTopic.szDesc,
+                               lpszCommand,
+                               newTopic.szArgs,
+                               lpszAction);
+        if (!pTopic)
+            break; // Cannot reallocate more
+    }
+}
+
 static BOOL
 LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
 {
@@ -210,7 +386,8 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
     TCHAR szBuffer[LOCALE_NAME_MAX_LENGTH];
     TCHAR szIniPath[MAX_PATH];
     LPTSTR lpszSections = NULL, lpszSection = NULL;
-    PTOPIC pTopic, *pTopicsTmp;
+    LPTSTR lpszCommand, lpszAction;
+    TOPIC newTopic, *pTopic;
 
     /* Retrieve the locale name (on which the INI file name is based) */
     dwRet = (DWORD)GetLocaleName(Locale, szBuffer, ARRAYSIZE(szBuffer));
@@ -221,35 +398,28 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
     }
 
     /* Build the INI file name */
-    StringCchCopy(szIniPath, ARRAYSIZE(szIniPath), lpResPath);
-    StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT("\\"));
-    StringCchCat(szIniPath, ARRAYSIZE(szIniPath), szBuffer);
-    StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT(".ini"));
+    StringCchPrintf(szIniPath, ARRAYSIZE(szIniPath),
+                    TEXT("%s\\%s.ini"), lpResPath, szBuffer);
 
     /* Verify that the file exists, otherwise fall back to english (US) */
     if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
     {
         StringCchCopy(szBuffer, ARRAYSIZE(szBuffer), TEXT("en-US"));
 
-        StringCchCopy(szIniPath, ARRAYSIZE(szIniPath), lpResPath);
-        StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT("\\"));
-        StringCchCat(szIniPath, ARRAYSIZE(szIniPath), szBuffer);
-        StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT(".ini"));
+        StringCchPrintf(szIniPath, ARRAYSIZE(szIniPath),
+                        TEXT("%s\\%s.ini"), lpResPath, szBuffer);
     }
 
     /* Verify that the file exists, otherwise fall back to internal (localized) resource */
     if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
-        return FALSE; // TODO: For localized resource, see the general function.
+        return FALSE; // For localized resources, see the general function.
 
     /* Try to load the default localized strings */
-    GetPrivateProfileString(TEXT("Defaults"), TEXT("AppTitle"), TEXT("ReactOS Welcome") /* default */,
+    GetPrivateProfileString(TEXT("Defaults"), TEXT("AppTitle"), TEXT("ReactOS - Welcome") /* default */,
                             szAppTitle, ARRAYSIZE(szAppTitle), szIniPath);
-    if (!GetPrivateProfileString(TEXT("Defaults"), TEXT("DefaultTopicTitle"), NULL /* default */,
-                                 szDefaultTitle, ARRAYSIZE(szDefaultTitle), szIniPath))
-    {
-        *szDefaultTitle = 0;
-    }
-    if (!GetPrivateProfileString(TEXT("Defaults"), TEXT("DefaultTopicDescription"), NULL /* default */,
+    GetPrivateProfileString(TEXT("Defaults"), TEXT("DefaultTopicTitle"), TEXT("") /* default */,
+                            szDefaultTitle, ARRAYSIZE(szDefaultTitle), szIniPath);
+    if (!GetPrivateProfileString(TEXT("Defaults"), TEXT("DefaultTopicDescription"), TEXT("") /* default */,
                                  szDefaultDesc, ARRAYSIZE(szDefaultDesc), szIniPath))
     {
         *szDefaultDesc = 0;
@@ -271,60 +441,51 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
         HeapFree(GetProcessHeap(), 0, lpszSections);
     }
 
-    dwNumberTopics = 0;
-    pTopics = NULL;
-
     /* Loop over the sections and load the topics */
     lpszSection = lpszSections;
     for (; lpszSection && *lpszSection; lpszSection += (_tcslen(lpszSection) + 1))
     {
-        if (_tcsnicmp(lpszSection, TEXT("Topic"), 5) == 0)
+        /* Ignore everything that is not a topic */
+        if (_tcsnicmp(lpszSection, TEXT("Topic"), 5) != 0)
+            continue;
+
+        lpszCommand = NULL, lpszAction = NULL;
+
+        /* Retrieve the information */
+        GetPrivateProfileString(lpszSection, TEXT("MenuText"), TEXT("") /* default */,
+                                newTopic.szText, ARRAYSIZE(newTopic.szText), szIniPath);
+        GetPrivateProfileString(lpszSection, TEXT("Title"), TEXT("") /* default */,
+                                newTopic.szTitle, ARRAYSIZE(newTopic.szTitle), szIniPath);
+        GetPrivateProfileString(lpszSection, TEXT("Description"), TEXT("") /* default */,
+                                newTopic.szDesc, ARRAYSIZE(newTopic.szDesc), szIniPath);
+
+        GetPrivateProfileString(lpszSection, TEXT("ConfigCommand"), TEXT("") /* default */,
+                                newTopic.szCommand, ARRAYSIZE(newTopic.szCommand), szIniPath);
+
+        /* Only care about command arguments if we actually have a command */
+        if (*newTopic.szCommand)
         {
-            /* Allocate (or reallocate) the list of topics */
-            if (!pTopics)
-                pTopicsTmp = HeapAlloc(GetProcessHeap(), 0, (dwNumberTopics + 1) * sizeof(*pTopics));
-            else
-                pTopicsTmp = HeapReAlloc(GetProcessHeap(), 0, pTopics, (dwNumberTopics + 1) * sizeof(*pTopics));
-            if (!pTopicsTmp)
-                break; // Cannot reallocate more
-            pTopics = pTopicsTmp;
-
-            /* Allocate a new topic */
-            pTopic = HeapAlloc(GetProcessHeap(), 0, sizeof(*pTopic));
-            if (!pTopic)
-                break; // Cannot reallocate more
-            pTopics[dwNumberTopics++] = pTopic;
-
-            /* Retrieve the information */
-            if (!GetPrivateProfileString(lpszSection, TEXT("Button"), NULL /* default */,
-                                         pTopic->szText, ARRAYSIZE(pTopic->szText), szIniPath))
-            {
-                *pTopic->szText = 0;
-            }
-            if (!GetPrivateProfileString(lpszSection, TEXT("Title"), NULL /* default */,
-                                         pTopic->szTitle, ARRAYSIZE(pTopic->szTitle), szIniPath))
-            {
-                *pTopic->szTitle = 0;
-            }
-            if (!GetPrivateProfileString(lpszSection, TEXT("Description"), NULL /* default */,
-                                         pTopic->szDesc, ARRAYSIZE(pTopic->szDesc), szIniPath))
-            {
-                *pTopic->szDesc = 0;
-            }
-            else
-            {
-                TranslateEscapes(pTopic->szDesc);
-            }
-            if (!GetPrivateProfileString(lpszSection, TEXT("Action"), NULL /* default */,
-                                         pTopic->szAction, ARRAYSIZE(pTopic->szAction), szIniPath))
-            {
-                *pTopic->szAction = 0;
-            }
-            else
-            {
-                TranslateEscapes(pTopic->szAction);
-            }
+            lpszCommand = newTopic.szCommand;
+            GetPrivateProfileString(lpszSection, TEXT("ConfigArgs"), TEXT("") /* default */,
+                                    newTopic.szArgs, ARRAYSIZE(newTopic.szArgs), szIniPath);
         }
+        /* Only care about custom actions if we actually don't have a command */
+        else // if (!*newTopic.szCommand)
+        {
+            lpszAction = newTopic.szCommand;
+            GetPrivateProfileString(lpszSection, TEXT("Action"), TEXT("") /* default */,
+                                    newTopic.szCommand, ARRAYSIZE(newTopic.szCommand), szIniPath);
+        }
+
+        /* Allocate a new topic */
+        pTopic = AddNewTopicEx(newTopic.szText,
+                               newTopic.szTitle,
+                               newTopic.szDesc,
+                               lpszCommand,
+                               newTopic.szArgs,
+                               lpszAction);
+        if (!pTopic)
+            break; // Cannot reallocate more
     }
 
     HeapFree(GetProcessHeap(), 0, lpszSections);
@@ -332,62 +493,73 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
     return TRUE;
 }
 
-static BOOL
-LoadLocalizedResources(LPTSTR lpResPath)
+static VOID
+LoadConfiguration(VOID)
 {
-#define MAX_NUMBER_INTERNAL_TOPICS  3
+    BOOL  bLoadDefaultResources;
+    TCHAR szAppPath[MAX_PATH];
+    TCHAR szIniPath[MAX_PATH];
+    TCHAR szResPath[MAX_PATH];
 
-    UINT i;
-    PTOPIC pTopic, *pTopicsTmp;
-
-    dwNumberTopics = 0;
-    pTopics = NULL;
+    /* Initialize the topic list */
+    InitializeTopicList();
 
     /*
      * First, try to load the default internal (localized) strings.
      * They can be redefined by the localized INI files.
      */
     if (!LoadString(hInstance, IDS_APPTITLE, szAppTitle, ARRAYSIZE(szAppTitle)))
-        StringCchCopy(szAppTitle, ARRAYSIZE(szAppTitle), TEXT("ReactOS Welcome"));
-    if (!LoadString(hInstance, IDS_DEFAULTTOPICTITLE, szDefaultTitle, ARRAYSIZE(szDefaultTitle)))
+        StringCchCopy(szAppTitle, ARRAYSIZE(szAppTitle), TEXT("ReactOS - Welcome"));
+    if (!LoadString(hInstance, IDS_DEFAULT_TOPIC_TITLE, szDefaultTitle, ARRAYSIZE(szDefaultTitle)))
         *szDefaultTitle = 0;
-    if (!LoadString(hInstance, IDS_DEFAULTTOPICDESC, szDefaultDesc, ARRAYSIZE(szDefaultDesc)))
+    if (!LoadString(hInstance, IDS_DEFAULT_TOPIC_DESC, szDefaultDesc, ARRAYSIZE(szDefaultDesc)))
         *szDefaultDesc = 0;
 
-    /* Try to load the resources from INI file */
-    if (*lpResPath && LoadLocalizedResourcesFromINI(LOCALE_USER_DEFAULT, lpResPath))
-        return TRUE;
-
-    /* We failed, fall back to internal (localized) resource */
-    for (i = 0; i < MAX_NUMBER_INTERNAL_TOPICS; ++i)
+    /* Retrieve the full path to this application */
+    GetModuleFileName(NULL, szAppPath, ARRAYSIZE(szAppPath));
+    if (*szAppPath)
     {
-        /* Allocate (or reallocate) the list of topics */
-        if (!pTopics)
-            pTopicsTmp = HeapAlloc(GetProcessHeap(), 0, (dwNumberTopics + 1) * sizeof(*pTopics));
+        LPTSTR lpFileName = _tcsrchr(szAppPath, _T('\\'));
+        if (lpFileName)
+            *lpFileName = 0;
         else
-            pTopicsTmp = HeapReAlloc(GetProcessHeap(), 0, pTopics, (dwNumberTopics + 1) * sizeof(*pTopics));
-        if (!pTopicsTmp)
-            break; // Cannot reallocate more
-        pTopics = pTopicsTmp;
-
-        /* Allocate a new topic */
-        pTopic = HeapAlloc(GetProcessHeap(), 0, sizeof(*pTopic));
-        if (!pTopic)
-            break; // Cannot reallocate more
-        pTopics[dwNumberTopics++] = pTopic;
-
-        /* Retrieve the information */
-        if (!LoadString(hInstance, IDS_TOPICBUTTON0 + i, pTopic->szText, ARRAYSIZE(pTopic->szText)))
-            *pTopic->szText = 0;
-        if (!LoadString(hInstance, IDS_TOPICTITLE0 + i, pTopic->szTitle, ARRAYSIZE(pTopic->szTitle)))
-            *pTopic->szTitle = 0;
-        if (!LoadString(hInstance, IDS_TOPICDESC0 + i, pTopic->szDesc, ARRAYSIZE(pTopic->szDesc)))
-            *pTopic->szDesc = 0;
-        if (!LoadString(hInstance, IDS_TOPICACTION0 + i, pTopic->szAction, ARRAYSIZE(pTopic->szAction)))
-            *pTopic->szAction = 0;
+            *szAppPath = 0;
     }
 
-    return TRUE;
+    /* Build the full INI file path name */
+    StringCchPrintf(szIniPath, ARRAYSIZE(szIniPath), TEXT("%s\\welcome.ini"), szAppPath);
+
+    /* Verify that the file exists, otherwise use the default configuration */
+    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+    {
+        /* Use the default internal (localized) resources */
+        LoadLocalizedResourcesInternal();
+        return;
+    }
+
+    /* Load the settings from the INI configuration file */
+    bDisplayCheckBox = !!GetPrivateProfileInt(TEXT("Welcome"), TEXT("DisplayCheckBox"),  FALSE /* default */, szIniPath);
+    bDisplayExitBtn  = !!GetPrivateProfileInt(TEXT("Welcome"), TEXT("DisplayExitButton"), TRUE /* default */, szIniPath);
+
+    /* Load the default internal (localized) resources if needed */
+    bLoadDefaultResources = !!GetPrivateProfileInt(TEXT("Welcome"), TEXT("LoadDefaultResources"), FALSE /* default */, szIniPath);
+    if (bLoadDefaultResources)
+        LoadLocalizedResourcesInternal();
+
+    GetPrivateProfileString(TEXT("Welcome"), TEXT("ResourceDir"), TEXT("") /* default */,
+                            szResPath, ARRAYSIZE(szResPath), szIniPath);
+
+    /* Set the current directory to the one of this application, and retrieve the resources */
+    SetCurrentDirectory(szAppPath);
+    if (!LoadLocalizedResourcesFromINI(LOCALE_USER_DEFAULT, szResPath))
+    {
+        /*
+         * Loading localized resources from INI file failed, try to load the
+         * internal resources only if they were not already loaded earlier.
+         */
+        if (!bLoadDefaultResources)
+            LoadLocalizedResourcesInternal();
+    }
 }
 
 static VOID
@@ -404,50 +576,6 @@ FreeResources(VOID)
     HeapFree(GetProcessHeap(), 0, pTopics);
     pTopics = NULL;
     dwNumberTopics = 0;
-}
-
-static BOOL
-LoadConfiguration(VOID)
-{
-    TCHAR szAppPath[MAX_PATH];
-    TCHAR szIniPath[MAX_PATH];
-    TCHAR szResPath[MAX_PATH];
-
-    /* Retrieve the full path to this application */
-    GetModuleFileName(NULL, szAppPath, ARRAYSIZE(szAppPath));
-    if (*szAppPath)
-    {
-        LPTSTR lpFileName = _tcsrchr(szAppPath, _T('\\'));
-        if (lpFileName)
-            *lpFileName = 0;
-        else
-            *szAppPath = 0;
-    }
-
-    /* Build the full INI file path name */
-    StringCchCopy(szIniPath, ARRAYSIZE(szIniPath), szAppPath);
-    StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT("\\welcome.ini"));
-
-    /* Verify that the file exists, otherwise use the default configuration */
-    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
-    {
-        /* Use the default configuration and retrieve the default resources */
-        return LoadLocalizedResources(TEXT(""));
-    }
-
-    /* Load the settings from the INI configuration file */
-    bDisplayCheckBox = !!GetPrivateProfileInt(TEXT("Welcome"), TEXT("DisplayCheckBox"),  FALSE /* default */, szIniPath);
-    bDisplayExitBtn  = !!GetPrivateProfileInt(TEXT("Welcome"), TEXT("DisplayExitButton"), TRUE /* default */, szIniPath);
-
-    if (!GetPrivateProfileString(TEXT("Welcome"), TEXT("ResourceDir"), NULL /* default */,
-                                 szResPath, ARRAYSIZE(szResPath), szIniPath))
-    {
-        *szResPath = 0;
-    }
-
-    /* Set the current directory to the one of this application, and retrieve the resources */
-    SetCurrentDirectory(szAppPath);
-    return LoadLocalizedResources(szResPath);
 }
 
 #if 0
@@ -503,6 +631,22 @@ _tWinMain(HINSTANCE hInst,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpszCmdLine);
 
+    /* Ensure only one instance is running */
+    hMutex = CreateMutex(NULL, FALSE, szWindowClass);
+    if (hMutex && (GetLastError() == ERROR_ALREADY_EXISTS))
+    {
+        /* If already started, find its window */
+        hWndMain = FindWindow(szWindowClass, NULL);
+
+        /* Activate window */
+        ShowWindow(hWndMain, SW_SHOWNORMAL);
+        SetForegroundWindow(hWndMain);
+
+        /* Close the mutex handle and quit */
+        CloseHandle(hMutex);
+        return 0;
+    }
+
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
@@ -515,27 +659,11 @@ _tWinMain(HINSTANCE hInst,
 
     hInstance = hInst;
 
-    /* Ensure only one instance is running */
-    hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
-    if (hMutex && (GetLastError() == ERROR_ALREADY_EXISTS))
-    {
-        /* If already started, find its window */
-        hWndMain = FindWindowW(szWindowClass, NULL);
-
-        /* Activate window */
-        ShowWindow(hWndMain, SW_SHOWNORMAL);
-        SetForegroundWindow(hWndMain);
-
-        /* Close the mutex handle and quit */
-        CloseHandle(hMutex);
-        return 0;
-    }
-
     /* Load icons */
     hMainIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
 
     /* Register the window class */
-    wndclass.cbSize = sizeof(WNDCLASSEX);
+    wndclass.cbSize = sizeof(wndclass);
     wndclass.style = CS_HREDRAW | CS_VREDRAW;
     wndclass.lpfnWndProc = (WNDPROC)MainWndProc;
     wndclass.cbClsExtra = 0;
@@ -551,10 +679,10 @@ _tWinMain(HINSTANCE hInst,
     RegisterClassEx(&wndclass);
 
     /* Load the banner bitmap, and compute the window dimensions */
-    hTitleBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TITLEBITMAP));
+    hTitleBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TITLE_BITMAP));
     if (hTitleBitmap)
     {
-        GetObject(hTitleBitmap, sizeof(BITMAP), &BitmapInfo);
+        GetObject(hTitleBitmap, sizeof(BitmapInfo), &BitmapInfo);
         ulInnerWidth = BitmapInfo.bmWidth;
         ulInnerHeight = (ulInnerWidth * 3) / 4;
         ulTitleHeight = BitmapInfo.bmHeight + 3;
@@ -711,42 +839,36 @@ ButtonSubclassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static BOOL
 RunAction(INT nTopic)
 {
-    // TCHAR CurrentDir[MAX_PATH];
-    TCHAR Parameters[2];
-    TCHAR AppName[MAX_PATH];
-
-    InvalidateRect(hWndMain, NULL, TRUE);
+    PCWSTR Command = NULL, Args = NULL;
 
     if (nTopic < 0)
         return TRUE;
 
-    // GetCurrentDirectory(ARRAYSIZE(CurrentDir), CurrentDir);
-
-    StringCchCopy(AppName, ARRAYSIZE(AppName), pTopics[nTopic]->szAction);
-    if (!*AppName)
+    Command = pTopics[nTopic]->szCommand;
+    if (/* !Command && */ !*Command)
         return TRUE;
 
-    if (!_tcsicmp(AppName, TEXT("<exit>")))
-        return FALSE;
-
-    if (!_tcsnicmp(AppName, TEXT("<msg>"), 5))
+    /* Check for known actions */
+    if (!pTopics[nTopic]->bIsCommand)
     {
-        MessageBox(hWndMain, AppName + 5, TEXT("ReactOS"), MB_OK | MB_TASKMODAL);
-        return TRUE;
-    }
+        if (!_tcsicmp(Command, TEXT("<exit>")))
+            return FALSE;
 
-    if (_tcsicmp(AppName, TEXT("explorer.exe")) == 0)
-    {
-        // StringCchCat(AppName, ARRAYSIZE(AppName), TEXT(" "));
-        // StringCchCat(AppName, ARRAYSIZE(AppName), CurrentDir);
-        _tcscpy(Parameters, TEXT("\\"));
+        if (!_tcsnicmp(Command, TEXT("<msg>"), 5))
+        {
+            MessageBox(hWndMain, Command + 5, TEXT("ReactOS"), MB_OK | MB_TASKMODAL);
+            return TRUE;
+        }
     }
     else
+    /* Run the command */
     {
-        *Parameters = 0;
+        Args = pTopics[nTopic]->szArgs;
+        if (!*Args) Args = NULL;
+        ShellExecute(NULL, NULL,
+                     Command, Args,
+                     NULL, SW_SHOWDEFAULT);
     }
-
-    ShellExecute(NULL, NULL, AppName, Parameters, NULL, SW_SHOWDEFAULT);
 
     return TRUE;
 }
@@ -777,12 +899,13 @@ GetButtonHeight(HDC hDC,
 static LRESULT
 OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    TCHAR szText[80];
     UINT i;
     INT nLength;
     HDC ScreenDC;
+    LOGFONT lf;
     DWORD dwTop;
     DWORD dwHeight = 0;
+    TCHAR szText[80];
 
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
@@ -790,46 +913,46 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     hbrLightBlue = CreateSolidBrush(LIGHT_BLUE);
     hbrDarkBlue  = CreateSolidBrush(DARK_BLUE);
 
+    ZeroMemory(&lf, sizeof(lf));
+
+    lf.lfEscapement  = 0;
+    lf.lfOrientation = 0; // TA_BASELINE;
+    // lf.lfItalic = lf.lfUnderline = lf.lfStrikeOut = FALSE;
+    lf.lfCharSet = ANSI_CHARSET;
+    lf.lfOutPrecision  = OUT_DEFAULT_PRECIS;
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf.lfQuality = DEFAULT_QUALITY;
+    lf.lfPitchAndFamily = FF_DONTCARE;
+    StringCchCopy(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), TEXT("Tahoma"));
+
     /* Topic title font */
-    hFontTopicTitle = CreateFont(-18, 0, 0, 0, FW_NORMAL,
-                                 FALSE, FALSE, FALSE,
-                                 ANSI_CHARSET,
-                                 OUT_DEFAULT_PRECIS,
-                                 CLIP_DEFAULT_PRECIS,
-                                 DEFAULT_QUALITY,
-                                 FF_DONTCARE,
-                                 TEXT("Tahoma"));
+    lf.lfHeight = -18;
+    lf.lfWidth  = 0;
+    lf.lfWeight = FW_NORMAL;
+    hFontTopicTitle = CreateFontIndirect(&lf);
 
     /* Topic description font */
-    hFontTopicDescription = CreateFont(-11, 0, 0, 0, FW_THIN,
-                                       FALSE, FALSE, FALSE,
-                                       ANSI_CHARSET,
-                                       OUT_DEFAULT_PRECIS,
-                                       CLIP_DEFAULT_PRECIS,
-                                       DEFAULT_QUALITY,
-                                       FF_DONTCARE,
-                                       TEXT("Tahoma"));
+    lf.lfHeight = -11;
+    lf.lfWidth  = 0;
+    lf.lfWeight = FW_THIN;
+    hFontTopicDescription = CreateFontIndirect(&lf);
 
     /* Topic button font */
-    hFontTopicButton = CreateFont(-11, 0, 0, 0, FW_BOLD,
-                                  FALSE, FALSE, FALSE,
-                                  ANSI_CHARSET,
-                                  OUT_DEFAULT_PRECIS,
-                                  CLIP_DEFAULT_PRECIS,
-                                  DEFAULT_QUALITY,
-                                  FF_DONTCARE,
-                                  TEXT("Tahoma"));
+    lf.lfHeight = -11;
+    lf.lfWidth  = 0;
+    lf.lfWeight = FW_BOLD;
+    hFontTopicButton = CreateFontIndirect(&lf);
 
     /* Load title bitmap */
     if (hTitleBitmap)
-        hTitleBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TITLEBITMAP));
+        hTitleBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TITLE_BITMAP));
 
     /* Load topic bitmaps */
-    hDefaultTopicBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DEFAULTTOPICBITMAP));
+    hDefaultTopicBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DEFAULT_TOPIC_BITMAP));
     for (i = 0; i < dwNumberTopics; i++)
     {
         // FIXME: Not implemented yet!
-        // pTopics[i]->hBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TOPICBITMAP0 + i));
+        // pTopics[i]->hBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TOPIC_BITMAP0 + i));
         pTopics[i]->hBitmap = NULL;
     }
 
@@ -877,14 +1000,10 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
         nLength = LoadString(hInstance, IDS_CHECKTEXT, szText, ARRAYSIZE(szText));
         if (nLength > 0)
         {
-            hFontCheckButton = CreateFont(-10, 0, 0, 0, FW_THIN,
-                                          FALSE, FALSE, FALSE,
-                                          ANSI_CHARSET,
-                                          OUT_DEFAULT_PRECIS,
-                                          CLIP_DEFAULT_PRECIS,
-                                          DEFAULT_QUALITY,
-                                          FF_DONTCARE,
-                                          TEXT("Tahoma"));
+            lf.lfHeight = -10;
+            lf.lfWidth  = 0;
+            lf.lfWeight = FW_THIN;
+            hFontCheckButton = CreateFontIndirect(&lf);
 
             hWndCheckButton = CreateWindow(TEXT("BUTTON"),
                                            szText,
@@ -915,8 +1034,8 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
             hWndCloseButton = CreateWindow(TEXT("BUTTON"),
                                            szText,
                                            WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_FLAT,
-                                           rcRightPanel.right - 10 - 57,
-                                           rcRightPanel.bottom - 10 - 21,
+                                           rcRightPanel.right - 8 - 57,
+                                           rcRightPanel.bottom - 8 - 21,
                                            57,
                                            21,
                                            hWnd,
@@ -941,13 +1060,17 @@ OnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
 
-    if (LOWORD(wParam) == IDC_CLOSEBUTTON)
+    /* Retrieve the low-word from wParam */
+    wParam = LOWORD(wParam);
+
+    /* Execute action */
+    if (wParam == IDC_CLOSEBUTTON)
     {
         DestroyWindow(hWnd);
     }
-    else if ((LOWORD(wParam) - TOPIC_BTN_ID_BASE < dwNumberTopics))
+    else if (wParam - TOPIC_BTN_ID_BASE < dwNumberTopics)
     {
-        if (RunAction(LOWORD(wParam) - TOPIC_BTN_ID_BASE) == FALSE)
+        if (RunAction(wParam - TOPIC_BTN_ID_BASE) == FALSE)
             DestroyWindow(hWnd); // Corresponds to a <exit> action.
     }
 
@@ -995,7 +1118,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     HFONT hOldFont;
     RECT rcTitle, rcDescription;
     BITMAP bmpInfo;
-    TCHAR version[50];
+    TCHAR szVersion[50];
     LPTSTR lpTitle = NULL, lpDesc = NULL;
 
     UNREFERENCED_PARAMETER(wParam);
@@ -1037,7 +1160,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     /* Draw topic bitmap */
     if ((nTopic == -1) && (hDefaultTopicBitmap))
     {
-        GetObject(hDefaultTopicBitmap, sizeof(BITMAP), &bmpInfo);
+        GetObject(hDefaultTopicBitmap, sizeof(bmpInfo), &bmpInfo);
         hOldBitmap = (HBITMAP)SelectObject(hdcMem, hDefaultTopicBitmap);
         BitBlt(hdc,
                rcRightPanel.right - bmpInfo.bmWidth,
@@ -1051,7 +1174,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     }
     else if ((nTopic != -1) && (pTopics[nTopic]->hBitmap))
     {
-        GetObject(pTopics[nTopic]->hBitmap, sizeof(BITMAP), &bmpInfo);
+        GetObject(pTopics[nTopic]->hBitmap, sizeof(bmpInfo), &bmpInfo);
         hOldBitmap = (HBITMAP)SelectObject(hdcMem, pTopics[nTopic]->hBitmap);
         BitBlt(hdc,
                rcRightPanel.right - bmpInfo.bmWidth,
@@ -1078,18 +1201,28 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     SetBkMode(hdc, TRANSPARENT);
 
     /* Draw version information */
-    _stprintf(version, TEXT("ReactOS %d.%d.%d"),
-              KERNEL_VERSION_MAJOR,
-              KERNEL_VERSION_MINOR,
-              KERNEL_VERSION_PATCH_LEVEL);
+    StringCchCopy(szVersion, ARRAYSIZE(szVersion),
+                  TEXT("ReactOS ") TEXT(KERNEL_VERSION_STR));
 
-    rcTitle.left = rcLeftPanel.left + 8;
-    rcTitle.right = rcLeftPanel.right - 5;
-    rcTitle.top = rcLeftPanel.bottom - 40;
-    rcTitle.bottom = rcLeftPanel.bottom - 5;
+    /*
+     * Compute the original rect (position & size) of the version info,
+     * depending whether the checkbox is displayed (version info in the
+     * right panel) or not (version info in the left panel).
+     */
+    if (bDisplayCheckBox)
+        rcTitle = rcRightPanel;
+    else
+        rcTitle = rcLeftPanel;
+
+    rcTitle.left   = rcTitle.left + 8;
+    rcTitle.right  = rcTitle.right - 5;
+    rcTitle.top    = rcTitle.bottom - 43;
+    rcTitle.bottom = rcTitle.bottom - 8;
+
     hOldFont = (HFONT)SelectObject(hdc, hFontTopicDescription);
-    DrawText(hdc, version, -1, &rcTitle, DT_BOTTOM | DT_CALCRECT | DT_SINGLELINE);
-    DrawText(hdc, version, -1, &rcTitle, DT_BOTTOM | DT_SINGLELINE);
+    DrawText(hdc, szVersion, -1, &rcTitle, DT_BOTTOM | DT_CALCRECT | DT_SINGLELINE);
+    SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+    DrawText(hdc, szVersion, -1, &rcTitle, DT_BOTTOM | DT_SINGLELINE);
     SelectObject(hdc, hOldFont);
 
     /* Draw topic title */
@@ -1099,22 +1232,21 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     rcTitle.bottom = rcTitle.top + 57;
     hOldFont = (HFONT)SelectObject(hdc, hFontTopicTitle);
     DrawText(hdc, lpTitle, -1, &rcTitle, DT_TOP | DT_CALCRECT);
-
     SetTextColor(hdc, DARK_BLUE);
     DrawText(hdc, lpTitle, -1, &rcTitle, DT_TOP);
+    SelectObject(hdc, hOldFont);
 
     /* Draw topic description */
     rcDescription.left = rcRightPanel.left + 12;
     rcDescription.right = rcRightPanel.right - 8;
     rcDescription.top = rcTitle.bottom + 8;
     rcDescription.bottom = rcRightPanel.bottom - 20;
-
-    SelectObject(hdc, hFontTopicDescription);
+    hOldFont = (HFONT)SelectObject(hdc, hFontTopicDescription);
     SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
     DrawText(hdc, lpDesc, -1, &rcDescription, DT_TOP | DT_WORDBREAK);
+    SelectObject(hdc, hOldFont);
 
     SetBkMode(hdc, OPAQUE);
-    SelectObject(hdc, hOldFont);
 
     SelectObject(hdcMem, hOldBrush);
     SelectObject(hdcMem, hOldBitmap);
