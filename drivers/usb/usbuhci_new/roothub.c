@@ -8,7 +8,26 @@ NTAPI
 UhciRHGetRootHubData(IN PVOID uhciExtension,
                      IN PVOID rootHubData)
 {
-    DPRINT("UhciRHGetRootHubData: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUSBPORT_ROOT_HUB_DATA RootHubData = rootHubData;
+    USBPORT_HUB_11_CHARACTERISTICS HubCharacteristics;
+
+    DPRINT("UhciRHGetRootHubData: ...\n");
+
+    HubCharacteristics.AsUSHORT = 0;
+    HubCharacteristics.PowerControlMode = TRUE;
+    HubCharacteristics.NoPowerSwitching = TRUE;
+    HubCharacteristics.OverCurrentProtectionMode = TRUE;
+
+    if (UhciExtension->HcFlavor != UHCI_Piix4)
+    {
+        HubCharacteristics.NoOverCurrentProtection = TRUE;
+    }
+
+    RootHubData->NumberOfPorts = UHCI_NUM_ROOT_HUB_PORTS;
+    RootHubData->HubCharacteristics.Usb11HubCharacteristics = HubCharacteristics;
+    RootHubData->PowerOnToPowerGood = 1;
+    RootHubData->HubControlCurrent = 0;
 }
 
 MPSTATUS
