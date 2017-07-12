@@ -210,11 +210,13 @@ NTAPI
 UhciStartController(IN PVOID uhciExtension,
                     IN PUSBPORT_RESOURCES Resources)
 {
-    PUHCI_EXTENSION UhciExtension;
-    PUSHORT BaseRegister;
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_HW_REGISTERS BaseRegister;
     MPSTATUS MpStatus;
-
-    UhciExtension = uhciExtension;
+    PUSHORT PortControlRegister;
+    UHCI_PORT_STATUS_CONTROL PortControl;
+    UHCI_USB_COMMAND Command;
+    USHORT Port;
 
     DPRINT("UhciStartController: uhciExtension - %p\n", uhciExtension);
 
@@ -240,11 +242,31 @@ UhciStartController(IN PVOID uhciExtension,
         }
     }
 
-    WRITE_PORT_ULONG((PULONG)(BaseRegister + UHCI_FRBASEADD),
+    WRITE_PORT_ULONG(&BaseRegister->FrameAddress,
                      (ULONG)UhciExtension->HcResourcesPA->FrameList);
 
-//ASSERT(FALSE);
-    DPRINT("UhciStartController: UNIMPLEMENTED. FIXME\n");
+    if (MpStatus == MP_STATUS_SUCCESS)
+    {
+        Command.AsUSHORT = READ_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT);
+        Command.Run = 1;
+        WRITE_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT, Command.AsUSHORT);
+
+        for (Port = 0; Port < UHCI_NUM_ROOT_HUB_PORTS; Port++)
+        {
+            PortControlRegister = &BaseRegister->PortControl[Port].AsUSHORT;
+            PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
+
+            PortControl.ConnectStatusChange = 0;
+            PortControl.Suspend = 0;
+
+            WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
+        }
+
+        DPRINT("UhciStartController: FIXME\n");
+ASSERT(FALSE);
+        //UhciExtension->HcResourcesVA->FrameList[0] = ;
+    }
+
     return MP_STATUS_SUCCESS;
 }
 
