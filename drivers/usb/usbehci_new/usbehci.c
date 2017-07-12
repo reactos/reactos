@@ -1084,11 +1084,13 @@ EHCI_HardwarePresent(IN PEHCI_EXTENSION EhciExtension,
     DPRINT1("EHCI_HardwarePresent: IsInvalidateController - %x\n",
             IsInvalidateController);
 
-    if (IsInvalidateController)
+    if (!IsInvalidateController)
     {
-        RegPacket.UsbPortInvalidateController(EhciExtension, 2);
+        return FALSE;
     }
 
+    RegPacket.UsbPortInvalidateController(EhciExtension,
+                                          USBPORT_INVALIDATE_CONTROLLER_SURPRISE_REMOVE);
     return FALSE;
 }
 
@@ -1178,7 +1180,7 @@ EHCI_InterruptDpc(IN PVOID ehciExtension,
         (UCHAR)EhciExtension->InterruptMask.AsULONG &
         0x23)
     {
-        RegPacket.UsbPortInvalidateEndpoint(EhciExtension, 0);
+        RegPacket.UsbPortInvalidateEndpoint(EhciExtension, NULL);
     }
 
     if ((UCHAR)iStatus.AsULONG &
@@ -2573,7 +2575,8 @@ EHCI_InterruptNextSOF(IN PVOID ehciExtension)
     DPRINT_EHCI("EHCI_InterruptNextSOF: ... \n");
 
     EhciExtension = ehciExtension;
-    RegPacket.UsbPortInvalidateController(EhciExtension, 3);
+    RegPacket.UsbPortInvalidateController(EhciExtension,
+                                          USBPORT_INVALIDATE_CONTROLLER_SOFT_INTERRUPT);
 }
 
 USBD_STATUS
@@ -3351,7 +3354,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                               USB_MINIPORT_FLAGS_POLLING |
                               USB_MINIPORT_FLAGS_WAKE_SUPPORT;
 
-    RegPacket.MiniPortBusBandwidth = 400000;
+    RegPacket.MiniPortBusBandwidth = TOTAL_USB20_BUS_BANDWIDTH;
 
     RegPacket.MiniPortExtensionSize = sizeof(EHCI_EXTENSION);
     RegPacket.MiniPortEndpointSize = sizeof(EHCI_ENDPOINT);
@@ -3411,5 +3414,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     DriverObject->DriverUnload = EHCI_Unload;
 
-    return USBPORT_RegisterUSBPortDriver(DriverObject, 200, &RegPacket);
+    return USBPORT_RegisterUSBPortDriver(DriverObject,
+                                         USB20_MINIPORT_INTERFACE_VERSION,
+                                         &RegPacket);
 }
