@@ -213,8 +213,141 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
                        IN PUHCI_HC_RESOURCES HcResourcesVA,
                        IN PUHCI_HC_RESOURCES HcResourcesPA)
 {
-    DPRINT("UhciInitializeSchedule: UNIMPLEMENTED. FIXME\n");
+    PUHCI_HCD_QH IntQH;
+    ULONG_PTR IntQhPA;
+    PUHCI_HCD_QH StaticControlHead;
+    ULONG_PTR StaticControlHeadPA;
+    PUHCI_HCD_QH StaticBulkHead;
+    ULONG_PTR StaticBulkHeadPA;
+    PUHCI_HCD_TD StaticBulkTD;
+    ULONG_PTR StaticBulkTdPA;
+    ULONG Idx;
+    ULONG HeadIdx;
+    ULONG_PTR PhysicalAddress;
+    PUHCI_HCD_TD StaticTD;
+    ULONG_PTR StaticTdPA;
+    UCHAR FrameIdx;
+
+    DPRINT("UhciInitializeSchedule: ...\n");
+
+    /* Build structure (tree) of static QHs
+       for interrupt and isochronous transfers */
+    for (FrameIdx = 0; FrameIdx < INTERRUPT_ENDPOINTs; FrameIdx++)
+    {
+        IntQH = &HcResourcesVA->StaticIntHead[FrameIdx];
+        IntQhPA = (ULONG_PTR)&HcResourcesPA->StaticIntHead[FrameIdx];
+
+        RtlZeroMemory(IntQH, sizeof(UHCI_HCD_QH));
+
+        IntQH->HwQH.NextElement |= UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+        IntQH->PhysicalAddress = IntQhPA;
+
+        UhciExtension->IntQH[FrameIdx] = IntQH;
+
+        if (FrameIdx == 0)
+        {
+            UhciSetNextQH(UhciExtension,
+                          IntQH,
+                          UhciExtension->IntQH[0]);
+        }
+        else
+        {
+            UhciSetNextQH(UhciExtension,
+                          IntQH,
+                          UhciExtension->IntQH[(FrameIdx - 1) / 2]);
+        }
+    }
+
+    /* Initialize static QH for control transfers */
+    StaticControlHead = &HcResourcesVA->StaticControlHead;
+    StaticControlHeadPA = (ULONG_PTR)&HcResourcesPA->StaticControlHead;
+
+    RtlZeroMemory(StaticControlHead, sizeof(UHCI_HCD_QH));
+
+    StaticControlHead->HwQH.NextElement |= UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+    StaticControlHead->PhysicalAddress = StaticControlHeadPA;
+
+    UhciSetNextQH(UhciExtension,
+                  UhciExtension->IntQH[0],
+                  StaticControlHead);
+
+    UhciExtension->ControlQH = StaticControlHead;
+
+    /* Initialize static QH for bulk transfers */
+    StaticBulkHead = &HcResourcesVA->StaticBulkHead;
+    StaticBulkHeadPA = (ULONG_PTR)&HcResourcesPA->StaticBulkHead;
+
+    RtlZeroMemory(StaticBulkHead, sizeof(UHCI_HCD_QH));
+
+    StaticBulkHead->PhysicalAddress = StaticBulkHeadPA;
+
+    StaticBulkHeadPA |= UHCI_QH_ELEMENT_LINK_PTR_QH |
+                        UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+
+    StaticBulkHead->HwQH.NextElement = StaticBulkHeadPA;
+
+    UhciSetNextQH(UhciExtension,
+                  StaticControlHead,
+                  StaticBulkHead);
+
+    UhciExtension->BulkQH = StaticBulkHead;
+    UhciExtension->BulkTailQH = StaticBulkHead;
+
+    /* Initialize static TD for bulk transfers */
+    StaticBulkTD = &HcResourcesVA->StaticBulkTD;
+    StaticBulkTdPA = (ULONG_PTR)&HcResourcesPA->StaticBulkTD;
+
+    StaticBulkTD->HwTD.NextElement = StaticBulkTdPA | UHCI_TD_LINK_PTR_TD;
+
+    StaticBulkTD->HwTD.ControlStatus.AsULONG = 0;
+    StaticBulkTD->HwTD.ControlStatus.IsochronousType = TRUE;
+
+    StaticBulkTD->HwTD.Token.AsULONG = 0;
+    StaticBulkTD->HwTD.Token.Endpoint = 1;
+    StaticBulkTD->HwTD.Token.MaximumLength = UHCI_TD_MAX_LENGTH_NULL;
+    StaticBulkTD->HwTD.Token.PIDCode = UHCI_TD_PID_OUT;
+
+    StaticBulkTD->HwTD.Buffer = 0;
+
+    StaticBulkTD->PhysicalAddress = StaticBulkTdPA;
+    StaticBulkTD->NextHcdTD = NULL;
+    StaticBulkTD->Flags = UHCI_HCD_TD_FLAG_PROCESSED;
+
+    StaticBulkTdPA |= UHCI_QH_ELEMENT_LINK_PTR_TD;
+    UhciExtension->BulkQH->HwQH.NextElement = StaticBulkTdPA;
+
+    /* Set Frame List pointers */
+    for (Idx = 0; Idx < UHCI_FRAME_LIST_MAX_ENTRIES; Idx++)
+    {
+        HeadIdx = (INTERRUPT_ENDPOINTs - ENDPOINT_INTERRUPT_32ms) +
+                  (Idx & (ENDPOINT_INTERRUPT_32ms - 1));
+
+        PhysicalAddress = UhciExtension->IntQH[HeadIdx]->PhysicalAddress;
+        PhysicalAddress |= UHCI_FRAME_LIST_POINTER_QH;
+        HcResourcesVA->FrameList[Idx] = PhysicalAddress;
+    }
+
+    /* Initialize static TD for first frame */
+    StaticTD = &HcResourcesVA->StaticTD;
+    StaticTdPA = (ULONG_PTR)&HcResourcesPA->StaticTD;
+
+    RtlZeroMemory(StaticTD, sizeof(UHCI_HCD_TD));
+
+    StaticTD->PhysicalAddress = StaticTdPA;
+
+    StaticTD->HwTD.ControlStatus.InterruptOnComplete = TRUE;
+
+    HeadIdx = (INTERRUPT_ENDPOINTs - ENDPOINT_INTERRUPT_32ms);
+    PhysicalAddress = UhciExtension->IntQH[HeadIdx]->PhysicalAddress;
+    StaticTD->HwTD.NextElement = PhysicalAddress | UHCI_TD_LINK_PTR_QH;
+
+    StaticTD->HwTD.Token.PIDCode = UHCI_TD_PID_IN;
+
+    UhciExtension->StaticTD = StaticTD;
+
+    DPRINT("UhciInitializeSchedule: Initialize StaticSofTD - FIXME\n");
 //ASSERT(FALSE);
+
     return MP_STATUS_SUCCESS;
 }
 
@@ -275,9 +408,8 @@ UhciStartController(IN PVOID uhciExtension,
             WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
         }
 
-        DPRINT("UhciStartController: FIXME\n");
-ASSERT(FALSE);
-        //UhciExtension->HcResourcesVA->FrameList[0] = ;
+        UhciExtension->HcResourcesVA->
+                       FrameList[0] = UhciExtension->StaticTD->PhysicalAddress;
     }
 
     return MP_STATUS_SUCCESS;

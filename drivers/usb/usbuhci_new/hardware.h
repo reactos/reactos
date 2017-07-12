@@ -136,6 +136,14 @@ typedef union _UHCI_CONTROL_STATUS {
   ULONG AsULONG;
 } UHCI_CONTROL_STATUS;
 
+#define UHCI_TD_PID_IN     0x69
+#define UHCI_TD_PID_OUT    0xE1
+#define UHCI_TD_PID_SETUP  0x2D
+
+#define UHCI_TD_MAX_VALID_LENGTH    0x4FF
+#define UHCI_TD_MAX_LENGTH_INVALID  0x7FE
+#define UHCI_TD_MAX_LENGTH_NULL     0x7FF
+
 typedef union _UHCI_TD_TOKEN {
   struct {
     ULONG PIDCode       : 8;
@@ -147,6 +155,13 @@ typedef union _UHCI_TD_TOKEN {
   };
   ULONG AsULONG;
 } UHCI_TD_TOKEN;
+
+#define UHCI_TD_LINK_PTR_VALID          (0 << 0)
+#define UHCI_TD_LINK_PTR_TERMINATE      (1 << 0)
+#define UHCI_TD_LINK_PTR_TD             (0 << 1)
+#define UHCI_TD_LINK_PTR_QH             (1 << 1)
+#define UHCI_TD_LINK_PTR_BREADTH_FIRST  (0 << 2)
+#define UHCI_TD_LINK_PTR_DEPTH_FIRST    (1 << 2)
 
 typedef struct _UHCI_TD {  // Transfer Descriptors always aligned on 16-byte boundaries
   //Hardware

@@ -11,12 +11,21 @@
 #include "hardware.h"
 
 /* Host Controller Driver Transfer Descriptor (HCD TD) */
+#define UHCI_HCD_TD_FLAG_ALLOCATED     0x00000001
+#define UHCI_HCD_TD_FLAG_PROCESSED     0x00000002
+#define UHCI_HCD_TD_FLAG_DONE          0x00000008
+#define UHCI_HCD_TD_FLAG_NOT_ACCESSED  0x00000010
+#define UHCI_HCD_TD_FLAG_DATA_BUFFER   0x00000020
+#define UHCI_HCD_TD_FLAG_CONTROLL      0x00000400
+
 typedef struct _UHCI_HCD_TD {
   /* Hardware */
   UHCI_TD HwTD;
   /* Software */
-  struct _UHCI_HCD_TD * PhysicalAddress;
-  ULONG Padded[11];
+  ULONG_PTR PhysicalAddress;
+  ULONG Flags;
+  struct _UHCI_HCD_TD * NextHcdTD;
+  ULONG Padded[9];
 } UHCI_HCD_TD, *PUHCI_HCD_TD;
 
 C_ASSERT(sizeof(UHCI_HCD_TD) == 0x40);
@@ -46,11 +55,20 @@ typedef struct _UHCI_TRANSFER {
   ULONG Reserved;
 } UHCI_TRANSFER, *PUHCI_TRANSFER;
 
+#define UHCI_FRAME_LIST_POINTER_VALID      (0 << 0) 
+#define UHCI_FRAME_LIST_POINTER_TERMINATE  (1 << 0) 
+#define UHCI_FRAME_LIST_POINTER_TD         (0 << 1) 
+#define UHCI_FRAME_LIST_POINTER_QH         (1 << 1) 
+
+#define UHCI_FRAME_LIST_INDEX_MASK         0x3FF
+
 typedef struct _UHCI_HC_RESOURCES {
   ULONG_PTR FrameList[UHCI_FRAME_LIST_MAX_ENTRIES]; // The 4-Kbyte Frame List Table is aligned on a 4-Kbyte boundary
   UHCI_HCD_QH StaticIntHead[INTERRUPT_ENDPOINTs];
   UHCI_HCD_QH StaticControlHead;
   UHCI_HCD_QH StaticBulkHead;
+  UHCI_HCD_TD StaticBulkTD;
+  UHCI_HCD_TD StaticTD;
 } UHCI_HC_RESOURCES, *PUHCI_HC_RESOURCES;
 
 typedef struct _UHCI_EXTENSION {
@@ -62,6 +80,11 @@ typedef struct _UHCI_EXTENSION {
   USHORT Padded1;
   UCHAR SOF_Modify;
   UCHAR Padded2[3];
+  PUHCI_HCD_QH IntQH[INTERRUPT_ENDPOINTs];
+  PUHCI_HCD_QH ControlQH;
+  PUHCI_HCD_QH BulkQH;
+  PUHCI_HCD_QH BulkTailQH;
+  PUHCI_HCD_TD StaticTD;
 } UHCI_EXTENSION, *PUHCI_EXTENSION;
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
