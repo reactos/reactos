@@ -4550,28 +4550,23 @@ IntGetFullFileName(
 }
 
 static BOOL
-EqualFamilyInfo(FONTFAMILYINFO *pInfo1, FONTFAMILYINFO *pInfo2)
+EqualFamilyInfo(const FONTFAMILYINFO *pInfo1, const FONTFAMILYINFO *pInfo2)
 {
-    UNICODE_STRING Str1, Str2;
-    ENUMLOGFONTEXW *pLog1 = &pInfo1->EnumLogFontEx;
-    ENUMLOGFONTEXW *pLog2 = &pInfo2->EnumLogFontEx;
-    RtlInitUnicodeString(&Str1, pLog1->elfLogFont.lfFaceName);
-    RtlInitUnicodeString(&Str2, pLog2->elfLogFont.lfFaceName);
-    if (!RtlEqualUnicodeString(&Str1, &Str2, TRUE))
+    const ENUMLOGFONTEXW *pLog1 = &pInfo1->EnumLogFontEx;
+    const ENUMLOGFONTEXW *pLog2 = &pInfo2->EnumLogFontEx;
+    const LOGFONTW *plf1 = &pLog1->elfLogFont;
+    const LOGFONTW *plf2 = &pLog2->elfLogFont;
+
+    if (_wcsicmp(plf1->lfFaceName, plf2->lfFaceName) != 0)
     {
         return FALSE;
     }
-    if ((pLog1->elfStyle != NULL) != (pLog2->elfStyle != NULL))
-        return FALSE;
-    if (pLog1->elfStyle != NULL)
+
+    if (_wcsicmp(pLog1->elfStyle, pLog2->elfStyle) != 0)
     {
-        RtlInitUnicodeString(&Str1, pLog1->elfStyle);
-        RtlInitUnicodeString(&Str2, pLog2->elfStyle);
-        if (!RtlEqualUnicodeString(&Str1, &Str2, TRUE))
-        {
-            return FALSE;
-        }
+        return FALSE;
     }
+
     return TRUE;
 }
 
