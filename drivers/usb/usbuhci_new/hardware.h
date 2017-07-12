@@ -159,6 +159,16 @@ typedef struct _UHCI_TD {  // Transfer Descriptors always aligned on 16-byte bou
 C_ASSERT(sizeof(UHCI_TD) == 16);
 
 /* Queue Header (QH) */
+#define UHCI_QH_HEAD_LINK_PTR_VALID         (0 << 0)
+#define UHCI_QH_HEAD_LINK_PTR_TERMINATE     (1 << 0)
+#define UHCI_QH_HEAD_LINK_PTR_TD            (0 << 1)
+#define UHCI_QH_HEAD_LINK_PTR_QH            (1 << 1)
+
+#define UHCI_QH_ELEMENT_LINK_PTR_VALID      (0 << 0)
+#define UHCI_QH_ELEMENT_LINK_PTR_TERMINATE  (1 << 0)
+#define UHCI_QH_ELEMENT_LINK_PTR_TD         (0 << 1)
+#define UHCI_QH_ELEMENT_LINK_PTR_QH         (1 << 1)
+
 typedef struct _UHCI_QH { // Queue Heads must be aligned on a 16-byte boundary
   //Hardware
   ULONG_PTR NextQH;

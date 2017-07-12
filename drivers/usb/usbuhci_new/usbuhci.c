@@ -5,6 +5,21 @@
 
 USBPORT_REGISTRATION_PACKET RegPacket;
 
+VOID
+NTAPI
+UhciSetNextQH(IN PUHCI_EXTENSION UhciExtension,
+              IN PUHCI_HCD_QH QH,
+              IN PUHCI_HCD_QH NextQH)
+{
+    DPRINT("UhciSetNextQH: QH - %p, NextQH - %p\n", QH, NextQH);
+
+    QH->HwQH.NextQH = NextQH->PhysicalAddress | UHCI_QH_HEAD_LINK_PTR_QH;
+    QH->NextHcdQH = NextQH;
+
+    NextQH->PrevHcdQH = QH;
+    NextQH->QhFlags |= UHCI_HCD_QH_FLAG_ACTIVE;
+}
+
 MPSTATUS
 NTAPI
 UhciOpenEndpoint(IN PVOID uhciExtension,

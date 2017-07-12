@@ -22,12 +22,18 @@ typedef struct _UHCI_HCD_TD {
 C_ASSERT(sizeof(UHCI_HCD_TD) == 0x40);
 
 /* Host Controller Driver Queue Header (HCD QH) */
+#define UHCI_HCD_QH_FLAG_ACTIVE  0x00000001
+#define UHCI_HCD_QH_FLAG_REMOVE  0x00000002
+
 typedef struct _UHCI_HCD_QH {
   /* Hardware */
   UHCI_QH HwQH;
   /* Software */
-  struct _UHCI_HCD_QH * PhysicalAddress;
-  ULONG Padded[13];
+  ULONG_PTR PhysicalAddress;
+  ULONG QhFlags;
+  struct _UHCI_HCD_QH * NextHcdQH;
+  struct _UHCI_HCD_QH * PrevHcdQH;
+  ULONG Padded[10];
 } UHCI_HCD_QH, *PUHCI_HCD_QH;
 
 C_ASSERT(sizeof(UHCI_HCD_QH) == 0x40);
