@@ -46,7 +46,87 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
                     IN USHORT Port,
                     IN PUSB_PORT_STATUS_AND_CHANGE PortStatus)
 {
-    DPRINT("UhciRHGetPortStatus: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_HW_REGISTERS BaseRegister;
+    PUSHORT PortControlRegister;
+    UHCI_PORT_STATUS_CONTROL PortControl;
+    ULONG port;
+    USB_20_PORT_STATUS portStatus;
+    USB_20_PORT_CHANGE portChange;
+
+    //DPRINT("UhciRHGetPortStatus: ...\n");
+
+    BaseRegister = UhciExtension->BaseRegister;
+    PortControlRegister = &BaseRegister->PortControl[Port-1].AsUSHORT;
+    PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
+
+    portStatus.AsUshort16 = 0;
+    portChange.AsUshort16 = 0;
+
+    portStatus.CurrentConnectStatus = PortControl.CurrentConnectStatus;
+    portStatus.PortEnabledDisabled = PortControl.PortEnabledDisabled;
+
+    if (PortControl.Suspend == TRUE &&
+        PortControl.PortEnabledDisabled == TRUE)
+    {
+        portStatus.Suspend = TRUE;
+    }
+    else
+    {
+        portStatus.Suspend = FALSE;
+    }
+
+    // FIXME HcFlavor in usbport
+    //if (UhciExtension->HcFlavor == UHCI_Piix4)
+    if (TRUE)
+    {
+        portStatus.OverCurrent = PortControl.Reserved2 & 1;
+        portStatus.PortPower = (~PortControl.Reserved2 & 1);
+        portChange.OverCurrentIndicatorChange = (PortControl.Reserved2 & 2) != 0;
+    }
+    else
+    {
+        portStatus.OverCurrent = FALSE;
+        portStatus.PortPower = TRUE;
+        portChange.OverCurrentIndicatorChange = FALSE;
+    }
+
+    portStatus.HighSpeedDeviceAttached = FALSE;
+
+    portStatus.Reset = PortControl.PortReset;
+    portStatus.LowSpeedDeviceAttached = PortControl.LowSpeedDevice;
+    portChange.ConnectStatusChange = PortControl.ConnectStatusChange;
+
+    port = 1 << (Port - 1);
+
+    if (UhciExtension->ResetPortMask & port)
+    {
+        portChange.ConnectStatusChange = FALSE;
+        portChange.PortEnableDisableChange = FALSE;
+    }
+    else
+    {
+        portChange.PortEnableDisableChange = PortControl.PortEnableDisableChange;
+    }
+
+    if (UhciExtension->SuspendChangePortMask & port)
+    {
+        portChange.SuspendChange = TRUE;
+    }
+
+    if (UhciExtension->ResetChangePortMask & port)
+    {
+        portChange.ResetChange = TRUE;
+    }
+
+    PortStatus->PortStatus.Usb20PortStatus = portStatus;
+    PortStatus->PortChange.Usb20PortChange = portChange;
+
+    DPRINT("UhciRHGetPortStatus: PortControl.AsUSHORT[%x] - %X, PortStatus - %X\n",
+           Port,
+           PortControl.AsUSHORT,
+           PortStatus->AsUlong32);
+
     return MP_STATUS_SUCCESS;
 }
 
