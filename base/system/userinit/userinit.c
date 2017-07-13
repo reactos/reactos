@@ -230,14 +230,13 @@ StartAutoApplications(
 }
 
 static BOOL
-TryToStartShell(
-    IN LPCWSTR Shell)
+StartProcess(
+    IN LPWSTR CommandLine)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
-    WCHAR ExpandedShell[MAX_PATH];
 
-    TRACE("(%s)\n", debugstr_w(Shell));
+    TRACE("(%s)\n", debugstr_w(CommandLine));
 
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
@@ -245,10 +244,8 @@ TryToStartShell(
     si.wShowWindow = SW_SHOWNORMAL;
     ZeroMemory(&pi, sizeof(pi));
 
-    ExpandEnvironmentStringsW(Shell, ExpandedShell, ARRAYSIZE(ExpandedShell));
-
     if (!CreateProcessW(NULL,
-                        ExpandedShell,
+                        CommandLine,
                         NULL,
                         NULL,
                         FALSE,
@@ -258,14 +255,30 @@ TryToStartShell(
                         &si,
                         &pi))
     {
-        WARN("CreateProcess() failed with error %lu\n", GetLastError());
+        WARN("CreateProcessW() failed with error %lu\n", GetLastError());
         return FALSE;
     }
 
-    StartAutoApplications(CSIDL_STARTUP);
-    StartAutoApplications(CSIDL_COMMON_STARTUP);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
+    return TRUE;
+}
+
+static BOOL
+TryToStartShell(
+    IN LPCWSTR Shell)
+{
+    WCHAR ExpandedShell[MAX_PATH];
+
+    TRACE("(%s)\n", debugstr_w(Shell));
+
+    ExpandEnvironmentStringsW(Shell, ExpandedShell, ARRAYSIZE(ExpandedShell));
+
+    if (!StartProcess(ExpandedShell))
+        return FALSE;
+
+    StartAutoApplications(CSIDL_STARTUP);
+    StartAutoApplications(CSIDL_COMMON_STARTUP);
     return TRUE;
 }
 
@@ -552,22 +565,101 @@ NotifyLogon(VOID)
 static BOOL
 StartInstaller(VOID)
 {
-    WCHAR Shell[MAX_PATH];
+    SYSTEM_INFO SystemInfo;
+    PWSTR ptr;
+    WCHAR Installer[MAX_PATH];
     WCHAR szMsg[RC_STRING_MAX_SIZE];
 
-    if (GetWindowsDirectoryW(Shell, ARRAYSIZE(Shell) - 12))
-        wcscat(Shell, L"\\reactos.exe");
-    else
-        wcscpy(Shell, L"reactos.exe");
+    /*
+     * First, check whether we can start the installer from either the current
+     * ReactOS installation directory, or from our current directory.
+     */
+    *Installer = UNICODE_NULL;
+    /* Alternatively one can use SharedUserData->NtSystemRoot */
+    if (GetSystemWindowsDirectoryW(Installer, ARRAYSIZE(Installer) - 12))
+        wcscat(Installer, L"\\");
+    wcscat(Installer, L"reactos.exe");
 
-    if (!TryToStartShell(Shell))
+    if (StartProcess(Installer))
+        return TRUE;
+
+    ERR("Failed to start the installer: '%s', trying alternative.\n", debugstr_w(Installer));
+
+    /*
+     * We failed. Try using the default drive, under the directory whose
+     * name corresponds to the currently-runnning CPU architecture.
+     */
+    GetSystemInfo(&SystemInfo);
+
+    *Installer = UNICODE_NULL;
+    /* Alternatively one can use SharedUserData->NtSystemRoot */
+    GetSystemWindowsDirectoryW(Installer, ARRAYSIZE(Installer) - 12);
+    ptr = wcschr(Installer, L'\\');
+    if (ptr)
+        *++ptr = UNICODE_NULL;
+    else
+        *Installer = UNICODE_NULL;
+
+    /* Append the corresponding CPU architecture */
+    switch (SystemInfo.wProcessorArchitecture)
     {
-        WARN("Failed to start the installer: %s\n", debugstr_w(Shell));
-        LoadStringW(GetModuleHandle(NULL), IDS_INSTALLER_FAIL, szMsg, ARRAYSIZE(szMsg));
-        MessageBoxW(NULL, szMsg, NULL, MB_OK);
-        return FALSE;
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            wcscat(Installer, L"I386");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_MIPS:
+            wcscat(Installer, L"MIPS");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA:
+            wcscat(Installer, L"ALPHA");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_PPC:
+            wcscat(Installer, L"PPC");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_SHX:
+            wcscat(Installer, L"SHX");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ARM:
+            wcscat(Installer, L"ARM");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_IA64:
+            wcscat(Installer, L"IA64");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA64:
+            wcscat(Installer, L"ALPHA64");
+            break;
+
+#if 0 // .NET CPU-independent code
+        case PROCESSOR_ARCHITECTURE_MSIL:
+            wcscat(Installer, L"MSIL");
+            break;
+#endif
+
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            wcscat(Installer, L"AMD64");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_UNKNOWN:
+        default:
+            break;
     }
-    return TRUE;
+
+    wcscat(Installer, L"\\reactos.exe");
+
+    if (StartProcess(Installer))
+        return TRUE;
+
+    /* We failed. Display an error message and quit. */
+    ERR("Failed to start the installer: '%s'.\n", debugstr_w(Installer));
+    LoadStringW(GetModuleHandle(NULL), IDS_INSTALLER_FAIL, szMsg, ARRAYSIZE(szMsg));
+    MessageBoxW(NULL, szMsg, NULL, MB_OK);
+    return FALSE;
 }
 
 /* Used to get the shutdown privilege */
