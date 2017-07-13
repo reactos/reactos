@@ -142,11 +142,76 @@ UhciRHGetHubStatus(IN PVOID uhciExtension,
 
 VOID
 NTAPI
-UhciRHPortResetComplete(IN PVOID ehciExtension,
-                        IN PVOID Context)
+UhciRHPortResetComplete(IN PVOID uhciExtension,
+                        IN PVOID pPort)
 {
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    ULONG ix;
+    PUHCI_HW_REGISTERS BaseRegister;
+    PUSHORT PortControlRegister;
+    UHCI_PORT_STATUS_CONTROL PortControl;
+    USHORT Port;
+
     DPRINT("UhciRHPortResetComplete: ...\n");
-    DbgBreakPoint();
+
+    BaseRegister = UhciExtension->BaseRegister;
+    Port = *(PUSHORT)pPort - 1;
+
+    PortControlRegister = &BaseRegister->PortControl[Port].AsUSHORT;
+    PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
+
+    PortControl.ConnectStatusChange = FALSE;
+    PortControl.PortEnableDisableChange = FALSE;
+    PortControl.PortReset = FALSE;
+
+    WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
+
+    while (UhciHardwarePresent(UhciExtension))
+    {
+        PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
+
+        if (PortControl.PortReset == TRUE)
+        {
+            continue;
+        }
+
+        for (ix = 0; ix < 10; ++ix)
+        {
+            KeStallExecutionProcessor(50);
+
+            PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
+
+            if (PortControl.PortEnabledDisabled == TRUE)
+            {
+                break;
+            }
+
+            PortControl.PortEnabledDisabled = TRUE;
+            WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
+        }
+
+        PortControl.ConnectStatusChange = TRUE;
+        PortControl.PortEnableDisableChange = TRUE;
+        WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
+
+        if (UhciExtension->HcFlavor == UHCI_VIA &&
+            UhciExtension->HcFlavor == UHCI_VIA_x01 &&
+            UhciExtension->HcFlavor == UHCI_VIA_x02 &&
+            UhciExtension->HcFlavor == UHCI_VIA_x03 &&
+            UhciExtension->HcFlavor == UHCI_VIA_x04)
+        {
+            DPRINT("UhciRHPortResetComplete: Via chip. FIXME\n");
+            DbgBreakPoint();
+            return;
+        }
+
+        UhciExtension->ResetChangePortMask |= (1 << Port);
+        UhciExtension->ResetPortMask &= ~(1 << Port);
+
+        RegPacket.UsbPortInvalidateRootHub(UhciExtension);
+
+        return;
+    }
 }
 
 VOID

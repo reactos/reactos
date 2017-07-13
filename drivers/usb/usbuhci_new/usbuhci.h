@@ -222,4 +222,9 @@ NTAPI
 UhciGet32BitFrameNumber(
   IN PVOID uhciExtension);
 
+BOOLEAN
+NTAPI
+UhciHardwarePresent(
+  IN PUHCI_EXTENSION UhciExtension);
+
 #endif /* USBUHCI_H__ */
