@@ -73,7 +73,7 @@ NTAPI
 UhciRHSetFeaturePortPower(IN PVOID uhciExtension,
                           IN USHORT Port)
 {
-    DPRINT("UhciRHSetFeaturePortPower: UNIMPLEMENTED. FIXME\n");
+    DPRINT("UhciRHSetFeaturePortPower: ...\n");
     return MP_STATUS_SUCCESS;
 }
 
