@@ -72,29 +72,6 @@ EngComputeGlyphSet(
 /*
  * @unimplemented
  */
-PATHOBJ*
-APIENTRY
-EngCreatePath(VOID)
-{
-    // www.osr.com/ddk/graphics/gdifncs_4aav.htm
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-VOID
-APIENTRY
-EngDeletePath(IN PATHOBJ *ppo)
-{
-    // www.osr.com/ddk/graphics/gdifncs_3fl3.htm
-    UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 EngEnumForms(
@@ -496,103 +473,6 @@ HT_Get8BPPFormatPalette(
     // www.osr.com/ddk/graphics/gdifncs_8kvb.htm
     UNIMPLEMENTED;
     return 0;
-}
-
-BOOL
-APIENTRY
-PATHOBJ_bCloseFigure(IN PATHOBJ *ppo)
-{
-    // www.osr.com/ddk/graphics/gdifncs_5mhz.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL
-APIENTRY
-PATHOBJ_bEnum(
-    IN  PATHOBJ   *ppo,
-    OUT PATHDATA  *ppd)
-{
-    // www.osr.com/ddk/graphics/gdifncs_98o7.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL
-APIENTRY
-PATHOBJ_bEnumClipLines(
-    IN PATHOBJ  *ppo,
-    IN ULONG  cb,
-    OUT CLIPLINE  *pcl)
-{
-    // www.osr.com/ddk/graphics/gdifncs_4147.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL
-APIENTRY
-PATHOBJ_bMoveTo(
-    IN PATHOBJ  *ppo,
-    IN POINTFIX  ptfx)
-{
-    // www.osr.com/ddk/graphics/gdifncs_70vb.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL
-APIENTRY
-PATHOBJ_bPolyBezierTo(
-    IN PATHOBJ  *ppo,
-    IN POINTFIX  *pptfx,
-    IN ULONG  cptfx)
-{
-    // www.osr.com/ddk/graphics/gdifncs_2c9z.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL
-APIENTRY
-PATHOBJ_bPolyLineTo(
-    IN PATHOBJ  *ppo,
-    IN POINTFIX  *pptfx,
-    IN ULONG  cptfx)
-{
-    // www.osr.com/ddk/graphics/gdifncs_0x47.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-VOID
-APIENTRY
-PATHOBJ_vEnumStart(IN PATHOBJ *ppo)
-{
-    // www.osr.com/ddk/graphics/gdifncs_74br.htm
-    UNIMPLEMENTED;
-}
-
-VOID
-APIENTRY
-PATHOBJ_vEnumStartClipLines(
-    IN PATHOBJ  *ppo,
-    IN CLIPOBJ  *pco,
-    IN SURFOBJ  *pso,
-    IN LINEATTRS  *pla)
-{
-    // www.osr.com/ddk/graphics/gdifncs_5grr.htm
-    UNIMPLEMENTED;
-}
-
-VOID
-APIENTRY
-PATHOBJ_vGetBounds(
-    IN PATHOBJ  *ppo,
-    OUT PRECTFX  prectfx)
-{
-    // www.osr.com/ddk/graphics/gdifncs_8qp3.htm
-    UNIMPLEMENTED;
 }
 
 /*
