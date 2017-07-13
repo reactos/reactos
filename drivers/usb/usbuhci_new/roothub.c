@@ -136,7 +136,25 @@ NTAPI
 UhciRHClearFeaturePortConnectChange(IN PVOID uhciExtension,
                                     IN USHORT Port)
 {
-    DPRINT("UhciRHClearFeaturePortConnectChange: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_HW_REGISTERS BaseRegister;
+    PUSHORT PortControlRegister;
+    UHCI_PORT_STATUS_CONTROL PortControl;
+
+    DPRINT("UhciRHClearFeaturePortConnectChange: Port - %04X\n", Port);
+
+    BaseRegister = UhciExtension->BaseRegister;
+    PortControlRegister = (PUSHORT)&BaseRegister->PortControl[Port - 1];
+    PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
+
+    if (PortControl.ConnectStatusChange == TRUE)
+    {
+        /* WC (Write Clear) bits */
+        PortControl.PortEnableDisableChange = FALSE;
+        PortControl.ConnectStatusChange = TRUE;
+        WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
+    }
+
     return MP_STATUS_SUCCESS;
 }
 
