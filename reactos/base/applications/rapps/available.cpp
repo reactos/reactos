@@ -111,6 +111,16 @@ HasNativeLanguage(PAPPLICATION_INFO Info)
     //TODO: make the actual check
     return TRUE;
 }
+BOOL
+HasEnglishLanguage(PAPPLICATION_INFO Info)
+{
+    if (!Info)
+    {
+        return FALSE;
+    }
+    //TODO: make the actual check
+    return TRUE;
+}
 
 LICENSE_TYPE
 ParserGetLicenseType(const ATL::CStringW& szFileName)
@@ -145,12 +155,15 @@ InsertVersionInfo_RichEdit(PAPPLICATION_INFO Info)
             InsertTextAfterLoaded_RichEdit(IDS_AINFO_VERSION, szVersion, CFE_BOLD, 0);
         }
         else
+        {
             InsertLoadedTextNewl_RichEdit(IDS_STATUS_INSTALLED, CFE_ITALIC);
-
+        }
     }
     else
+    {
         InsertLoadedTextNewl_RichEdit(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
-
+    }
+    
     InsertTextAfterLoaded_RichEdit(IDS_AINFO_AVAILABLEVERSION, Info->szVersion, CFE_BOLD, 0);
 }
 
@@ -185,6 +198,38 @@ InsertLicenseInfo_RichEdit(PAPPLICATION_INFO Info)
 
 }
 
+VOID
+InsertLanguageInfo_RichEdit(PAPPLICATION_INFO Info)
+{
+    const INT nTranslations = Info->Languages.GetSize();
+    ATL::CStringW szLangInfo;
+    ATL::CStringW szLoadedTextAvailability;
+    ATL::CStringW szLoadedAInfoText;
+    szLoadedAInfoText.LoadStringW(IDS_AINFO_LANGUAGES);
+
+    if(HasNativeLanguage(Info))
+    {
+        szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_AVAILABLE_TRANSLATION);
+    }
+    else if (HasEnglishLanguage(Info))
+    {
+        szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_ENGLISH_TRANSLATION);
+    }
+    else
+    {
+        szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_NO_TRANSLATION);
+    }
+
+    if (nTranslations > 1)
+    {
+        szLangInfo.Format(L" (+%d more)", nTranslations - 1);
+    }
+
+    InsertRichEditText(szLoadedAInfoText, CFE_BOLD);
+    InsertRichEditText(szLoadedTextAvailability, NULL);
+    InsertRichEditText(szLangInfo, CFE_ITALIC);
+}
+
 BOOL
 ShowAvailableAppInfo(INT Index)
 {
@@ -194,6 +239,7 @@ ShowAvailableAppInfo(INT Index)
     NewRichEditText(Info->szName, CFE_BOLD);
     InsertVersionInfo_RichEdit(Info);
     InsertLicenseInfo_RichEdit(Info);
+    InsertLanguageInfo_RichEdit(Info);
 
     InsertTextAfterLoaded_RichEdit(IDS_AINFO_SIZE, Info->szSize, CFE_BOLD, 0);
     InsertTextAfterLoaded_RichEdit(IDS_AINFO_URLSITE, Info->szUrlSite, CFE_BOLD, CFE_LINK);

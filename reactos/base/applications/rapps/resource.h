@@ -145,6 +145,7 @@
 #define IDS_AINFO_LICENSE            354
 #define IDS_AINFO_URLDOWNLOAD        355
 #define IDS_AINFO_AVAILABLEVERSION   356
+#define IDS_AINFO_LANGUAGES          357
 
 
 /* Names of categories */
@@ -176,6 +177,12 @@
 #define IDS_LICENSE_OPENSOURCE      900
 #define IDS_LICENSE_FREEWARE        901
 #define IDS_LICENSE_TRIAL           902
+
+/* Language related strings */
+#define IDS_LANGUAGE_AVAILABLE_TRANSLATION      910
+#define IDS_LANGUAGE_NO_TRANSLATION             911
+#define IDS_LANGUAGE_NOT_AVAILABLE              912
+#define IDS_LANGUAGE_ENGLISH_TRANSLATION        913
 
 /* Accelerators */
 #define HOTKEYS                  715

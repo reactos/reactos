@@ -9,14 +9,17 @@ class CRichEdit :
         SETTEXTEX SetText;
         LONG Len = GetTextLen();
 
-        /* Insert new text */
-        SetText.flags = ST_SELECTION;
-        SetText.codepage = 1200;
+        if (InsertedTextLen)
+        {
+            /* Insert new text */
+            SetText.flags = ST_SELECTION;
+            SetText.codepage = 1200;
 
-        SendMessageW(EM_SETTEXTEX, (WPARAM) &SetText, (LPARAM) lpszText);
+            SendMessageW(EM_SETTEXTEX, (WPARAM) &SetText, (LPARAM) lpszText);
 
-        SetRangeFormatting(Len, Len + InsertedTextLen,
-            (dwEffects == CFM_LINK) ? (PathIsURLW(lpszText) ? dwEffects : 0) : dwEffects);
+            SetRangeFormatting(Len, Len + InsertedTextLen,
+                (dwEffects == CFM_LINK) ? (PathIsURLW(lpszText) ? dwEffects : 0) : dwEffects);
+        }
     }
 
 public:
