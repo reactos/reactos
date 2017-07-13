@@ -140,12 +140,48 @@ UhciRHGetHubStatus(IN PVOID uhciExtension,
     return MP_STATUS_SUCCESS;
 }
 
+VOID
+NTAPI
+UhciRHSetFeaturePortResetWorker(IN PUHCI_EXTENSION UhciExtension,
+                                IN PUSHORT pPort)
+{
+    DPRINT("UhciRHSetFeaturePortResetWorker: UNIMPLEMENTED. FIXME\n");
+    DbgBreakPoint();
+}
+
 MPSTATUS
 NTAPI
 UhciRHSetFeaturePortReset(IN PVOID uhciExtension,
                           IN USHORT Port)
 {
-    DPRINT("UhciRHSetFeaturePortReset: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    ULONG ResetPortMask;
+    ULONG port;
+
+    DPRINT("UhciRHSetFeaturePortReset: ...\n");
+
+    ResetPortMask = UhciExtension->ResetPortMask;
+    port = 1 << (Port - 1);
+
+    if (ResetPortMask & port)
+    {
+        return MP_STATUS_FAILURE;
+    }
+
+    UhciExtension->ResetPortMask = ResetPortMask | port;
+
+    if (UhciExtension->HcFlavor == UHCI_VIA &&
+        UhciExtension->HcFlavor == UHCI_VIA_x01 &&
+        UhciExtension->HcFlavor == UHCI_VIA_x02 &&
+        UhciExtension->HcFlavor == UHCI_VIA_x03 &&
+        UhciExtension->HcFlavor == UHCI_VIA_x04)
+    {
+        DPRINT1("UhciRHSetFeaturePortReset: Via chip. FIXME\n");
+        return MP_STATUS_SUCCESS;
+    }
+
+    UhciRHSetFeaturePortResetWorker(UhciExtension, &Port);
+
     return MP_STATUS_SUCCESS;
 }
 
