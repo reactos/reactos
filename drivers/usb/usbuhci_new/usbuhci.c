@@ -366,6 +366,7 @@ UhciStartController(IN PVOID uhciExtension,
 
     DPRINT("UhciStartController: uhciExtension - %p\n", uhciExtension);
 
+    UhciExtension->Flags &= ~UHCI_EXTENSION_FLAG_SUSPENDED;
     UhciExtension->BaseRegister = Resources->ResourceBase;
     BaseRegister = UhciExtension->BaseRegister;
 
@@ -618,7 +619,34 @@ VOID
 NTAPI
 UhciPollController(IN PVOID uhciExtension)
 {
-    DPRINT("UhciPollController: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_HW_REGISTERS BaseRegister;
+    PUSHORT PortRegister;
+    UHCI_PORT_STATUS_CONTROL PortControl;
+    USHORT Port;
+
+    DPRINT("UhciPollController: ...\n");
+
+    BaseRegister = UhciExtension->BaseRegister;
+
+    if (!(UhciExtension->Flags & UHCI_EXTENSION_FLAG_SUSPENDED))
+    {
+        UhciCleanupFrameList(UhciExtension, FALSE);
+        UhciUpdateCounter(UhciExtension);
+        RegPacket.UsbPortInvalidateRootHub(UhciExtension);
+        return;
+    }
+
+    for (Port = 0; Port < UHCI_NUM_ROOT_HUB_PORTS; Port++)
+    {
+        PortRegister = (PUSHORT)&BaseRegister->PortControl[Port];
+        PortControl.AsUSHORT = READ_PORT_USHORT(PortRegister);
+
+        if (PortControl.ConnectStatusChange == 1)
+        {
+            RegPacket.UsbPortInvalidateRootHub(UhciExtension);
+        }
+    }
 }
 
 VOID
