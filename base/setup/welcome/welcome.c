@@ -210,6 +210,104 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
     }
 }
 
+/*
+ * Expands the path for the ReactOS Installer "reactos.exe".
+ * See also base/system/userinit/userinit.c!StartInstaller()
+ */
+VOID ExpandInstallerPath(IN OUT LPTSTR lpInstallerPath, IN SIZE_T PathSize)
+{
+    SYSTEM_INFO SystemInfo;
+    PTSTR ptr;
+    DWORD dwAttribs;
+
+#if 0
+    if (_tcsicmp(lpInstallerPath, TEXT("reactos.exe")) != 0)
+        return;
+#endif
+
+    /*
+     * First, try to find the installer using the default drive, under
+     * the directory whose name corresponds to the currently-running
+     * CPU architecture.
+     */
+    GetSystemInfo(&SystemInfo);
+
+    *lpInstallerPath = 0;
+    GetModuleFileName(NULL, lpInstallerPath, PathSize);
+    ptr = _tcschr(lpInstallerPath, _T('\\'));
+    if (ptr)
+        *++ptr = 0;
+    else
+        *lpInstallerPath = 0;
+
+    /* Append the corresponding CPU architecture */
+    switch (SystemInfo.wProcessorArchitecture)
+    {
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("I386"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_MIPS:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("MIPS"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("ALPHA"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_PPC:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("PPC"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_SHX:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("SHX"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ARM:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("ARM"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_IA64:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("IA64"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA64:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("ALPHA64"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("AMD64"));
+            break;
+
+        // case PROCESSOR_ARCHITECTURE_MSIL: /* .NET CPU-independent code */
+        case PROCESSOR_ARCHITECTURE_UNKNOWN:
+        default:
+            SystemInfo.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_UNKNOWN;
+            break;
+    }
+
+    if (SystemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
+        StringCchCat(lpInstallerPath, PathSize, TEXT("\\"));
+    StringCchCat(lpInstallerPath, PathSize, TEXT("reactos.exe"));
+
+    dwAttribs = GetFileAttributes(lpInstallerPath);
+    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
+        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* We have found the installer */
+        return;
+    }
+
+    /*
+     * We failed. Try to find the installer from either the current
+     * ReactOS installation directory, or from our current directory.
+     */
+    *lpInstallerPath = 0;
+    if (GetWindowsDirectory(lpInstallerPath, PathSize - 12))
+        StringCchCat(lpInstallerPath, PathSize, TEXT("\\"));
+    StringCchCat(lpInstallerPath, PathSize, TEXT("reactos.exe"));
+}
+
 VOID InitializeTopicList(VOID)
 {
     dwNumberTopics = 0;
@@ -275,6 +373,10 @@ PTOPIC AddNewTopicEx(
     {
         pTopic->bIsCommand = TRUE;
         StringCchCopy(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand), szCommand);
+
+        /* Check for special applications: ReactOS Installer */
+        if (_tcsicmp(pTopic->szCommand, TEXT("reactos.exe")) == 0)
+            ExpandInstallerPath(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand));
     }
     else
     {
@@ -382,6 +484,7 @@ static BOOL
 LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
 {
     DWORD dwRet;
+    DWORD dwAttribs;
     DWORD dwSize;
     TCHAR szBuffer[LOCALE_NAME_MAX_LENGTH];
     TCHAR szIniPath[MAX_PATH];
@@ -402,7 +505,9 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
                     TEXT("%s\\%s.ini"), lpResPath, szBuffer);
 
     /* Verify that the file exists, otherwise fall back to english (US) */
-    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+    dwAttribs = GetFileAttributes(szIniPath);
+    if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+        (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
     {
         StringCchCopy(szBuffer, ARRAYSIZE(szBuffer), TEXT("en-US"));
 
@@ -411,8 +516,12 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
     }
 
     /* Verify that the file exists, otherwise fall back to internal (localized) resource */
-    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+    dwAttribs = GetFileAttributes(szIniPath);
+    if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+        (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
         return FALSE; // For localized resources, see the general function.
+    }
 
     /* Try to load the default localized strings */
     GetPrivateProfileString(TEXT("Defaults"), TEXT("AppTitle"), TEXT("ReactOS - Welcome") /* default */,
@@ -496,6 +605,7 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
 static VOID
 LoadConfiguration(VOID)
 {
+    DWORD dwAttribs;
     BOOL  bLoadDefaultResources;
     TCHAR szAppPath[MAX_PATH];
     TCHAR szIniPath[MAX_PATH];
@@ -530,7 +640,9 @@ LoadConfiguration(VOID)
     StringCchPrintf(szIniPath, ARRAYSIZE(szIniPath), TEXT("%s\\welcome.ini"), szAppPath);
 
     /* Verify that the file exists, otherwise use the default configuration */
-    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+    dwAttribs = GetFileAttributes(szIniPath);
+    if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+        (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
     {
         /* Use the default internal (localized) resources */
         LoadLocalizedResourcesInternal();
