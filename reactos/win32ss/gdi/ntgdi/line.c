@@ -202,7 +202,7 @@ IntGdiLineTo(DC  *dc,
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
             Ret = IntEngLineTo(&psurf->SurfObj,
-                               &dc->co.ClipObj,
+                               (CLIPOBJ *)&dc->co,
                                &dc->eboLine.BrushObject,
                                Points[0].x, Points[0].y,
                                Points[1].x, Points[1].y,
@@ -334,7 +334,7 @@ IntGdiPolyline(DC      *dc,
             }
 
             Ret = IntEngPolyline(&psurf->SurfObj,
-                                 &dc->co.ClipObj,
+                                 (CLIPOBJ *)&dc->co,
                                  &dc->eboLine.BrushObject,
                                  Points,
                                  Count,

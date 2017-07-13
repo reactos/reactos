@@ -130,7 +130,7 @@ NtGdiAlphaBlend(
     TRACE("Performing the alpha blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
-                               &DCDest->co.ClipObj,
+                               (CLIPOBJ *)&DCDest->co,
                                &exlo.xlo,
                                &DestRect,
                                &SourceRect,
@@ -295,7 +295,7 @@ NtGdiTransparentBlt(
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        &DCDest->co.ClipObj, &exlo.xlo, &rcDest, &rcSrc,
+        (CLIPOBJ *)&DCDest->co, &exlo.xlo, &rcDest, &rcSrc,
         TransparentColor, 0);
 
     EXLATEOBJ_vCleanup(&exlo);
@@ -485,12 +485,11 @@ NtGdiMaskBlt(
         XlateObj = &exlo.xlo;
     }
 
-
     /* Perform the bitblt operation */
     Status = IntEngBitBlt(&BitmapDest->SurfObj,
                           BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                           psurfMask ? &psurfMask->SurfObj : NULL,
-                          &DCDest->co.ClipObj,
+                          (CLIPOBJ *)&DCDest->co,
                           XlateObj,
                           &DestRect,
                           &SourcePoint,
@@ -708,7 +707,7 @@ GreStretchBltMask(
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,
                               BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                               BitmapMask ? &BitmapMask->SurfObj : NULL,
-                              &DCDest->co.ClipObj,
+                              (CLIPOBJ *)&DCDest->co,
                               XlateObj,
                               &DCDest->dclevel.ca,
                               &DestRect,
@@ -848,7 +847,7 @@ IntPatBlt(
     ret = IntEngBitBlt(&psurf->SurfObj,
                        NULL,
                        NULL,
-                       &pdc->co.ClipObj,
+                       (CLIPOBJ *)&pdc->co,
                        NULL,
                        &DestRect,
                        NULL,
@@ -1105,7 +1104,7 @@ IntGdiBitBltRgn(
     bResult = IntEngBitBlt(&pdc->dclevel.pSurface->SurfObj,
                            NULL,
                            NULL,
-                           &xcoClip.ClipObj,
+                           (CLIPOBJ *)&xcoClip,
                            NULL,
                            &prgnClip->rdh.rcBound,
                            NULL,
@@ -1210,7 +1209,7 @@ IntGdiFillRgn(
 
     /* Call the internal function */
     bRet = IntEngPaint(&pdc->dclevel.pSurface->SurfObj,
-                       &xcoClip.ClipObj,
+                       (CLIPOBJ *)&xcoClip,
                        pbo,
                        &pdc->pdcattr->ptlBrushOrigin,
                        mix);

@@ -16,16 +16,15 @@ XCLIPOBJ gxcoTrivial =
 {
     /* CLIPOBJ */
     {
-        {
-            0, /* iUniq */
-            {LONG_MIN, LONG_MIN, LONG_MAX, LONG_MAX}, /* rclBounds */
-            DC_TRIVIAL,    /* idCOmplexity */
-            FC_RECT,       /* iFComplexity */
-            TC_RECTANGLES, /* iMode */
-            0              /* fjOptions */
-        },
+        0, /* iUniq */
+        {LONG_MIN, LONG_MIN, LONG_MAX, LONG_MAX}, /* rclBounds */
+        DC_TRIVIAL,    /* idCOmplexity */
+        FC_RECT,       /* iFComplexity */
+        TC_RECTANGLES, /* iMode */
+        0              /* fjOptions */
     },
-    0, 0, 0
+    { 0, {0,0,0,0}, 0},
+    0, {0,0,0,0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 typedef BOOLEAN (APIENTRY *PBLTRECTFUNC)(SURFOBJ* OutputObj,
@@ -649,7 +648,7 @@ IntEngBitBlt(
             pco = NULL;
     }
     else
-        pco = &gxcoTrivial.ClipObj;
+        pco = (CLIPOBJ *)&gxcoTrivial;
 
     if (ROP4_USES_SOURCE(Rop4))
     {

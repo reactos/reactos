@@ -491,7 +491,7 @@ EngGradientFill(
     if (pco == NULL)
     {
         /* Use the trivial one instead */
-        pco = &gxcoTrivial.ClipObj;
+        pco = (CLIPOBJ *)&gxcoTrivial;//.coClient;
     }
 
     switch(ulMode)

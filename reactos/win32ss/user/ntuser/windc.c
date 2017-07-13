@@ -951,7 +951,7 @@ UserGetWindowDC(PWND Wnd)
 HWND FASTCALL
 UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
 {
-  XCLIPOBJ* Clip;
+  EWNDOBJ* Clip;
   PWND Wnd;
   HWND hWnd;
 
@@ -959,11 +959,11 @@ UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
 
   if (hWnd && (Wnd = UserGetWindowObject(hWnd)))
   {
-     Clip = (XCLIPOBJ*)UserGetProp(Wnd, AtomWndObj, TRUE);
+     Clip = (EWNDOBJ*)UserGetProp(Wnd, AtomWndObj, TRUE);
 
      if ( Clip && Clip->Hwnd == hWnd )
      {
-        if (pwndo) *pwndo = &Clip->WndObj;
+        if (pwndo) *pwndo = (PWNDOBJ)Clip;
      }
   }
   return hWnd;

@@ -390,7 +390,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     //ASSERT(!RECTL_bIsEmptyRect(SourceRect)); // FIXME!
 
     /* If no clip object is given, use trivial one */
-    if (!ClipRegion) ClipRegion = &gxcoTrivial.ClipObj;
+    if (!ClipRegion) ClipRegion = (CLIPOBJ *)&gxcoTrivial;
 
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 

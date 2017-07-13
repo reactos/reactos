@@ -5170,7 +5170,7 @@ GreExtTextOutW(
             &psurf->SurfObj,
             NULL,
             NULL,
-            &dc->co.ClipObj,
+            (CLIPOBJ *)&dc->co,
             NULL,
             &DestRect,
             &SourcePoint,
@@ -5440,7 +5440,7 @@ GreExtTextOutW(
                 &psurf->SurfObj,
                 NULL,
                 NULL,
-                &dc->co.ClipObj,
+                (CLIPOBJ *)&dc->co,
                 NULL,
                 &DestRect,
                 &SourcePoint,
@@ -5576,7 +5576,7 @@ GreExtTextOutW(
                 &psurf->SurfObj,
                 NULL,
                 NULL,
-                &dc->co.ClipObj,
+                (CLIPOBJ *)&dc->co,
                 NULL,
                 &DestRect,
                 &SourcePoint,
@@ -5649,7 +5649,7 @@ GreExtTextOutW(
             if (!IntEngMaskBlt(
                 SurfObj,
                 SourceGlyphSurf,
-                &dc->co.ClipObj,
+                (CLIPOBJ *)&dc->co,
                 &exloRGB2Dst.xlo,
                 &exloDst2RGB.xlo,
                 &DestRect,
@@ -5686,7 +5686,7 @@ GreExtTextOutW(
             for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
             {
                 EngLineTo(SurfObj,
-                          &dc->co.ClipObj,
+                          (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
                           (TextLeft >> 6),
                           TextTop + yoff - position + i,
@@ -5702,7 +5702,7 @@ GreExtTextOutW(
             for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
             {
                 EngLineTo(SurfObj,
-                          &dc->co.ClipObj,
+                          (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
                           (TextLeft >> 6),
                           TextTop + yoff - (fixAscender >> 6) / 3 + i,

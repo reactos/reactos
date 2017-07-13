@@ -18,7 +18,7 @@ INT gcountPWO = 0;
 VOID
 FASTCALL
 IntEngWndCallChangeProc(
-    _In_ XCLIPOBJ *Clip,
+    _In_ EWNDOBJ *Clip,
     _In_ FLONG   flChanged)
 {
     if (Clip->ChangeProc == NULL)
@@ -40,7 +40,7 @@ IntEngWndCallChangeProc(
     if (flChanged == WOC_CHANGED)
         Clip->ChangeProc(NULL, flChanged);
     else
-        Clip->ChangeProc(&Clip->WndObj, flChanged);
+        Clip->ChangeProc((WNDOBJ *)Clip, flChanged);
 }
 
 /*
@@ -49,7 +49,7 @@ IntEngWndCallChangeProc(
 BOOLEAN
 FASTCALL
 IntEngWndUpdateClipObj(
-    XCLIPOBJ* Clip,
+    EWNDOBJ* Clip,
     PWND Window)
 {
     PREGION visRgn;
@@ -61,7 +61,7 @@ IntEngWndUpdateClipObj(
     {
         if (visRgn->rdh.nCount > 0)
         {
-            IntEngUpdateClipRegion(Clip, visRgn->rdh.nCount, visRgn->Buffer, &visRgn->rdh.rcBound);
+            IntEngUpdateClipRegion((XCLIPOBJ*)Clip, visRgn->rdh.nCount, visRgn->Buffer, &visRgn->rdh.rcBound);
             TRACE("Created visible region with %lu rects\n", visRgn->rdh.nCount);
             TRACE("  BoundingRect: %d, %d  %d, %d\n",
                    visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
@@ -81,12 +81,12 @@ IntEngWndUpdateClipObj(
     else
     {
         /* Fall back to client rect */
-        IntEngUpdateClipRegion(Clip, 1, &Window->rcClient, &Window->rcClient);
+        IntEngUpdateClipRegion((XCLIPOBJ*)Clip, 1, &Window->rcClient, &Window->rcClient);
     }
 
     /* Update the WNDOBJ */
-    Clip->WndObj.rclClient = Window->rcClient;
-    Clip->WndObj.coClient.iUniq++;
+    Clip->rclClient = Window->rcClient;
+    Clip->iUniq++;
 
     return TRUE;
 }
@@ -100,7 +100,7 @@ IntEngWindowChanged(
     _In_    PWND  Window,
     _In_    FLONG flChanged)
 {
-    XCLIPOBJ *Clip;
+    EWNDOBJ *Clip;
 
     ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
@@ -111,7 +111,7 @@ IntEngWindowChanged(
     }
 
     ASSERT(Clip->Hwnd == Window->head.h);
-    // if (Clip->WndObj.pvConsumer != NULL)
+    // if (Clip->pvConsumer != NULL)
     {
         /* Update the WNDOBJ */
         switch (flChanged)
@@ -149,7 +149,7 @@ EngCreateWnd(
     FLONG             fl,
     int               iPixelFormat)
 {
-    XCLIPOBJ *Clip = NULL;
+    EWNDOBJ *Clip = NULL;
     WNDOBJ *WndObjUser = NULL;
     PWND Window;
     BOOL calledFromUser;
@@ -176,13 +176,13 @@ EngCreateWnd(
     }
 
     /* Create WNDOBJ */
-    Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof (XCLIPOBJ), GDITAG_WNDOBJ);
+    Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof (EWNDOBJ), GDITAG_WNDOBJ);
     if (Clip == NULL)
     {
         ERR("Failed to allocate memory for a WND structure!\n");
         RETURN( NULL);
     }
-    IntEngInitClipObj(Clip);
+    IntEngInitClipObj((XCLIPOBJ*)Clip);
 
     /* Fill the clipobj */
     if (!IntEngWndUpdateClipObj(Clip, Window))
@@ -192,7 +192,7 @@ EngCreateWnd(
     }
 
     /* Fill user object */
-    WndObjUser = &Clip->WndObj;
+    WndObjUser = (WNDOBJ *)Clip;
     WndObjUser->psoOwner = pso;
     WndObjUser->pvConsumer = NULL;
 
@@ -233,7 +233,7 @@ APIENTRY
 EngDeleteWnd(
     IN WNDOBJ *pwo)
 {
-    XCLIPOBJ* Clip = CONTAINING_RECORD(pwo, XCLIPOBJ, WndObj);
+    EWNDOBJ* Clip = (EWNDOBJ *)pwo;//CONTAINING_RECORD(pwo, XCLIPOBJ, WndObj);
     PWND Window;
     BOOL calledFromUser;
 
@@ -262,7 +262,7 @@ EngDeleteWnd(
     }
 
     /* Free resources */
-    IntEngFreeClipResources(Clip);
+    IntEngFreeClipResources((XCLIPOBJ*)Clip);
     EngFreeMem(Clip);
 }
 
@@ -308,7 +308,7 @@ WNDOBJ_vSetConsumer(
     IN WNDOBJ  *pwo,
     IN PVOID  pvConsumer)
 {
-    XCLIPOBJ* Clip = CONTAINING_RECORD(pwo, XCLIPOBJ, WndObj);
+    EWNDOBJ* Clip = (EWNDOBJ *)pwo;//CONTAINING_RECORD(pwo, XCLIPOBJ, WndObj);
     BOOL Hack;
 
     TRACE("WNDOBJ_vSetConsumer: pwo = 0x%p, pvConsumer = 0x%p\n", pwo, pvConsumer);
