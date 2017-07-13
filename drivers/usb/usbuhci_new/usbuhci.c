@@ -7,6 +7,97 @@ USBPORT_REGISTRATION_PACKET RegPacket;
 
 VOID
 NTAPI
+UhciCleanupFrameListEntry(IN PUHCI_EXTENSION UhciExtension,
+                          IN ULONG Index)
+{
+    PUHCI_HC_RESOURCES UhciResources;
+    ULONG_PTR PhysicalAddress;
+    ULONG HeadIdx;
+
+    UhciResources = UhciExtension->HcResourcesVA;
+
+    if (Index == 0)
+    {
+        PhysicalAddress = UhciExtension->StaticTD->PhysicalAddress;
+
+        UhciResources->FrameList[0] = PhysicalAddress |
+                                      UHCI_FRAME_LIST_POINTER_TD;
+    }
+    else
+    {
+        HeadIdx = (INTERRUPT_ENDPOINTs - ENDPOINT_INTERRUPT_32ms) +
+                  (Index & (ENDPOINT_INTERRUPT_32ms - 1));
+
+        PhysicalAddress = UhciExtension->IntQH[HeadIdx]->PhysicalAddress;
+
+        UhciResources->FrameList[Index] = PhysicalAddress |
+                                          UHCI_FRAME_LIST_POINTER_QH;
+    }
+}
+
+VOID
+NTAPI 
+UhciCleanupFrameList(IN PUHCI_EXTENSION UhciExtension,
+                     IN BOOLEAN IsAllEntries)
+{
+    ULONG NewFrameNumber;
+    ULONG OldFrameNumber;
+    ULONG ix;
+
+    DPRINT("UhciCleanupFrameList: IsAllEntries - %x\n", IsAllEntries);
+
+    if (InterlockedIncrement(&UhciExtension->LockFrameList) != 1)
+    {
+        InterlockedDecrement(&UhciExtension->LockFrameList);
+        return;
+    }
+
+    NewFrameNumber = UhciGet32BitFrameNumber(UhciExtension);
+    OldFrameNumber = UhciExtension->FrameNumber;
+
+    if ((NewFrameNumber - OldFrameNumber) < UHCI_FRAME_LIST_MAX_ENTRIES &&
+        IsAllEntries == FALSE)
+    {
+        for (ix = OldFrameNumber & UHCI_FRAME_LIST_INDEX_MASK;
+             ix != (NewFrameNumber & UHCI_FRAME_LIST_INDEX_MASK);
+             ix = (ix + 1) & UHCI_FRAME_LIST_INDEX_MASK)
+        {
+            UhciCleanupFrameListEntry(UhciExtension, ix);
+        }
+    }
+    else
+    {
+        for (ix = 0; ix < UHCI_FRAME_LIST_MAX_ENTRIES; ++ix)
+        {
+            UhciCleanupFrameListEntry(UhciExtension, ix);
+        }
+    }
+
+    UhciExtension->FrameNumber = NewFrameNumber;
+
+    InterlockedDecrement(&UhciExtension->LockFrameList);
+}
+
+VOID
+NTAPI
+UhciUpdateCounter(IN PUHCI_EXTENSION UhciExtension)
+{
+    ULONG FrameNumber;
+
+    FrameNumber = READ_PORT_USHORT(&UhciExtension->BaseRegister->FrameNumber);
+    FrameNumber &= UHCI_FRNUM_FRAME_MASK;
+
+    if ((FrameNumber ^ UhciExtension->FrameHighPart) & UHCI_FRNUM_OVERFLOW_LIST)
+    {
+        UhciExtension->FrameHighPart += UHCI_FRAME_LIST_MAX_ENTRIES;
+
+        DPRINT("UhciUpdateCounter: UhciExtension->FrameHighPart - %lX\n",
+                UhciExtension->FrameHighPart);
+    }
+}
+
+VOID
+NTAPI
 UhciSetNextQH(IN PUHCI_EXTENSION UhciExtension,
               IN PUHCI_HCD_QH QH,
               IN PUHCI_HCD_QH NextQH)
@@ -445,8 +536,108 @@ BOOLEAN
 NTAPI
 UhciInterruptService(IN PVOID uhciExtension)
 {
-    DPRINT("UhciInterruptService: UNIMPLEMENTED. FIXME\n");
-    return TRUE;
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_HW_REGISTERS BaseRegister;
+    PUSHORT StatusReg;
+    UHCI_USB_STATUS HcStatus;
+    PUSHORT InterruptEnableReg;
+    UHCI_INTERRUPT_ENABLE IntEnable;
+    PUHCI_HCD_QH BulkTailQH;
+    PUHCI_HCD_QH QH;
+    BOOLEAN Result = FALSE;
+
+    DPRINT("UhciInterruptService: ...\n");
+
+    BaseRegister = UhciExtension->BaseRegister;
+    StatusReg = &BaseRegister->HcStatus.AsUSHORT;
+    InterruptEnableReg = &BaseRegister->HcInterruptEnable.AsUSHORT;
+
+    Result = UhciHardwarePresent(UhciExtension);
+
+    if (Result == FALSE)
+    {
+        return Result;
+    }
+
+    HcStatus.AsUSHORT = READ_PORT_USHORT(StatusReg);
+    HcStatus.AsUSHORT &= UHCI_USB_STATUS_MASK;
+
+    if (HcStatus.ResumeDetect == FALSE &&
+        HcStatus.HcProcessError == FALSE &&
+        (HcStatus.Interrupt |
+         HcStatus.ErrorInterrupt |
+         HcStatus.HostSystemError |
+         HcStatus.HcHalted) == TRUE)
+    {
+        UhciExtension->HcScheduleError = 0;
+    }
+
+    if (HcStatus.Interrupt == TRUE ||
+        HcStatus.ErrorInterrupt == TRUE ||
+        HcStatus.ResumeDetect == TRUE ||
+        HcStatus.HostSystemError == TRUE ||
+        HcStatus.HcProcessError == TRUE)
+    {
+        UhciExtension->HcStatus.AsUSHORT = HcStatus.AsUSHORT;
+        WRITE_PORT_USHORT(StatusReg, HcStatus.AsUSHORT);
+        WRITE_PORT_USHORT(InterruptEnableReg, 0);
+        Result = TRUE;
+    }
+
+    if (HcStatus.Interrupt == FALSE)
+    {
+        goto NextProcess;
+    }
+
+    UhciUpdateCounter(UhciExtension);
+
+    BulkTailQH = UhciExtension->BulkTailQH;
+
+    if (BulkTailQH->HwQH.NextQH & UHCI_QH_HEAD_LINK_PTR_TERMINATE)
+    {
+        goto NextProcess;
+    }
+
+    QH = UhciExtension->BulkQH;
+
+    while (TRUE)
+    {
+        QH = QH->NextHcdQH;
+
+        if (!QH)
+        {
+            BulkTailQH->HwQH.NextQH |= UHCI_QH_HEAD_LINK_PTR_TERMINATE;
+            break;
+        }
+
+        if ((QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_PTR_TERMINATE) ==
+            UHCI_QH_ELEMENT_LINK_PTR_VALID)
+        {
+            break;
+        }
+    }
+
+NextProcess:
+
+    if (HcStatus.HcProcessError == TRUE)
+    {
+        UhciCleanupFrameList(UhciExtension, TRUE);
+
+        if (UhciExtension->HcScheduleError < UHCI_MAX_HC_SCHEDULE_ERRORS)
+        {
+            IntEnable.AsUSHORT = READ_PORT_USHORT(InterruptEnableReg);
+            IntEnable.TimeoutCRC = TRUE;
+            WRITE_PORT_USHORT(InterruptEnableReg, IntEnable.AsUSHORT);
+        }
+
+        UhciExtension->HcScheduleError++;
+    }
+    else if (HcStatus.Interrupt == TRUE && UhciExtension->ExtensionLock != 0)
+    {
+        UhciCleanupFrameList(UhciExtension, FALSE);
+    }
+
+    return Result;
 }
 
 VOID
@@ -611,97 +802,6 @@ UhciDisableInterrupts(IN PVOID uhciExtension)
                                           &LegacySupport.AsUSHORT,
                                           PCI_LEGSUP,
                                           sizeof(USHORT));
-}
-
-VOID
-NTAPI
-UhciUpdateCounter(IN PUHCI_EXTENSION UhciExtension)
-{
-    ULONG FrameNumber;
-
-    FrameNumber = READ_PORT_USHORT(&UhciExtension->BaseRegister->FrameNumber);
-    FrameNumber &= UHCI_FRNUM_FRAME_MASK;
-
-    if ((FrameNumber ^ UhciExtension->FrameHighPart) & UHCI_FRNUM_OVERFLOW_LIST)
-    {
-        UhciExtension->FrameHighPart += UHCI_FRAME_LIST_MAX_ENTRIES;
-
-        DPRINT("UhciUpdateCounter: UhciExtension->FrameHighPart - %lX\n",
-                UhciExtension->FrameHighPart);
-    }
-}
-
-VOID
-NTAPI
-UhciCleanupFrameListEntry(IN PUHCI_EXTENSION UhciExtension,
-                          IN ULONG Index)
-{
-    PUHCI_HC_RESOURCES UhciResources;
-    ULONG_PTR PhysicalAddress;
-    ULONG HeadIdx;
-
-    UhciResources = UhciExtension->HcResourcesVA;
-
-    if (Index == 0)
-    {
-        PhysicalAddress = UhciExtension->StaticTD->PhysicalAddress;
-
-        UhciResources->FrameList[0] = PhysicalAddress |
-                                      UHCI_FRAME_LIST_POINTER_TD;
-    }
-    else
-    {
-        HeadIdx = (INTERRUPT_ENDPOINTs - ENDPOINT_INTERRUPT_32ms) +
-                  (Index & (ENDPOINT_INTERRUPT_32ms - 1));
-
-        PhysicalAddress = UhciExtension->IntQH[HeadIdx]->PhysicalAddress;
-
-        UhciResources->FrameList[Index] = PhysicalAddress |
-                                          UHCI_FRAME_LIST_POINTER_QH;
-    }
-}
-
-VOID
-NTAPI 
-UhciCleanupFrameList(IN PUHCI_EXTENSION UhciExtension,
-                     IN BOOLEAN IsAllEntries)
-{
-    ULONG NewFrameNumber;
-    ULONG OldFrameNumber;
-    ULONG ix;
-
-    DPRINT("UhciCleanupFrameList: IsAllEntries - %x\n", IsAllEntries);
-
-    if (InterlockedIncrement(&UhciExtension->LockFrameList) != 1)
-    {
-        InterlockedDecrement(&UhciExtension->LockFrameList);
-        return;
-    }
-
-    NewFrameNumber = UhciGet32BitFrameNumber(UhciExtension);
-    OldFrameNumber = UhciExtension->FrameNumber;
-
-    if ((NewFrameNumber - OldFrameNumber) < UHCI_FRAME_LIST_MAX_ENTRIES &&
-        IsAllEntries == FALSE)
-    {
-        for (ix = OldFrameNumber & UHCI_FRAME_LIST_INDEX_MASK;
-             ix != (NewFrameNumber & UHCI_FRAME_LIST_INDEX_MASK);
-             ix = (ix + 1) & UHCI_FRAME_LIST_INDEX_MASK)
-        {
-            UhciCleanupFrameListEntry(UhciExtension, ix);
-        }
-    }
-    else
-    {
-        for (ix = 0; ix < UHCI_FRAME_LIST_MAX_ENTRIES; ++ix)
-        {
-            UhciCleanupFrameListEntry(UhciExtension, ix);
-        }
-    }
-
-    UhciExtension->FrameNumber = NewFrameNumber;
-
-    InterlockedDecrement(&UhciExtension->LockFrameList);
 }
 
 VOID

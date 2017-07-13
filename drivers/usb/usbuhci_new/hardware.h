@@ -56,6 +56,8 @@ typedef union _UHCI_USB_COMMAND {
 } UHCI_USB_COMMAND;
 
 /* USBSTS Status register */
+#define UHCI_USB_STATUS_MASK  0x3F
+
 typedef union _UHCI_USB_STATUS {
   struct {
     USHORT Interrupt       : 1; // due to IOC (Interrupt On Complete)

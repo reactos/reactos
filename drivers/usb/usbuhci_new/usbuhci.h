@@ -10,6 +10,8 @@
 #include <drivers/usbport/usbmport.h>
 #include "hardware.h"
 
+#define UHCI_MAX_HC_SCHEDULE_ERRORS        16
+
 /* Host Controller Driver Transfer Descriptor (HCD TD) */
 #define UHCI_HCD_TD_FLAG_ALLOCATED     0x00000001
 #define UHCI_HCD_TD_FLAG_PROCESSED     0x00000002
@@ -90,9 +92,11 @@ typedef struct _UHCI_EXTENSION {
   ULONG ResetPortMask;
   ULONG ResetChangePortMask;
   ULONG SuspendChangePortMask;
+  ULONG HcScheduleError;
+  LONG ExtensionLock;
 
   UHCI_USB_STATUS StatusMask;
-  USHORT Padded1;
+  UHCI_USB_STATUS HcStatus;
   UCHAR SOF_Modify;
   UCHAR Padded2[3];
 } UHCI_EXTENSION, *PUHCI_EXTENSION;
@@ -211,6 +215,11 @@ UhciRHEnableIrq(
 VOID
 NTAPI
 UhciDisableInterrupts(
+  IN PVOID uhciExtension);
+
+ULONG
+NTAPI
+UhciGet32BitFrameNumber(
   IN PVOID uhciExtension);
 
 #endif /* USBUHCI_H__ */
