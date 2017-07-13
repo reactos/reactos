@@ -20,15 +20,27 @@ typedef enum tagGdiPathState
    PATH_Closed
 } GdiPathState;
 
+// Path type flags
+#define PATHTYPE_KEEPME 1
+#define PATHTYPE_STACK  2
+
 typedef struct _PATH
 {
   BASEOBJECT   BaseObject;
-
+  //PVOID        ppachain;
   RECTFX       rcfxBoundBox;
   POINTFX      ptfxSubPathStart;
+  FLONG        flType;
+  //PEXTPATHDATA ppdFirst;
+  //PEXTPATHDATA ppdLast;
+  FLONG        flags;   // PATHDATA flags.
+  //PEXTPATHDATA ppdCurrent;
+  // PATHOBJ;
+  FLONG        fl;      // Saved flags.
+  ULONG        cCurves; // Saved number of lines and Bezier.
 
-  // Things to convert from:
-  DWORD        state;
+  // Wine/ReactOS Things to convert from:
+  FLONG        state;
   POINT        *pPoints;
   BYTE         *pFlags;
   int          numEntriesUsed;
@@ -39,8 +51,9 @@ typedef struct _PATH
 
 typedef struct _EPATHOBJ
 {
-  PATHOBJ po;
-  PPATH   pPath;
+  PATHOBJ  po;
+  PPATH    pPath;
+  CLIPOBJ *pco;
 } EPATHOBJ, *PEPATHOBJ;
 
 #define  PATH_AllocPath() ((PPATH) GDIOBJ_AllocObj(GDIObjType_PATH_TYPE))
