@@ -142,11 +142,43 @@ UhciRHGetHubStatus(IN PVOID uhciExtension,
 
 VOID
 NTAPI
+UhciRHPortResetComplete(IN PVOID ehciExtension,
+                        IN PVOID Context)
+{
+    DPRINT("UhciRHPortResetComplete: ...\n");
+    DbgBreakPoint();
+}
+
+VOID
+NTAPI
 UhciRHSetFeaturePortResetWorker(IN PUHCI_EXTENSION UhciExtension,
                                 IN PUSHORT pPort)
 {
-    DPRINT("UhciRHSetFeaturePortResetWorker: UNIMPLEMENTED. FIXME\n");
-    DbgBreakPoint();
+    PUHCI_HW_REGISTERS BaseRegister;
+    PUSHORT PortControlRegister;
+    UHCI_PORT_STATUS_CONTROL PortControl;
+    USHORT Port;
+
+    DPRINT("UhciRHSetFeaturePortResetWorker: ...\n");
+
+    BaseRegister = UhciExtension->BaseRegister;
+
+    Port = *pPort - 1;
+
+    PortControlRegister = &BaseRegister->PortControl[Port].AsUSHORT;
+    PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
+
+    PortControl.ConnectStatusChange = FALSE;
+    PortControl.PortEnableDisableChange = FALSE;
+    PortControl.PortReset = TRUE;
+
+    WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
+
+    RegPacket.UsbPortRequestAsyncCallback(UhciExtension,
+                                          10, // TimerValue
+                                          pPort,
+                                          sizeof(pPort),
+                                          UhciRHPortResetComplete);
 }
 
 MPSTATUS
