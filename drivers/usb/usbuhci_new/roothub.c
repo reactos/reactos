@@ -35,7 +35,8 @@ NTAPI
 UhciRHGetStatus(IN PVOID uhciExtension,
                 IN PUSHORT Status)
 {
-    DPRINT("UhciRHGetStatus: UNIMPLEMENTED. FIXME\n");
+    DPRINT("UhciRHGetStatus: ...\n");
+    *Status = 1;
     return MP_STATUS_SUCCESS;
 }
 
