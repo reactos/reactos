@@ -135,7 +135,8 @@ NTAPI
 UhciRHGetHubStatus(IN PVOID uhciExtension,
                    IN PUSB_HUB_STATUS_AND_CHANGE HubStatus)
 {
-    DPRINT("UhciRHGetHubStatus: UNIMPLEMENTED. FIXME\n");
+    DPRINT("UhciRHGetHubStatus: ...\n");
+    HubStatus->AsUlong32 = 0;
     return MP_STATUS_SUCCESS;
 }
 
