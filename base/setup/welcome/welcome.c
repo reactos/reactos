@@ -210,6 +210,87 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
     }
 }
 
+/*
+ * Expands the path for the ReactOS Installer "reactos.exe".
+ * See also base/system/userinit/userinit.c!StartInstaller()
+ */
+VOID ExpandInstallerPath(IN OUT LPTSTR lpInstallerPath, IN SIZE_T PathSize)
+{
+    SYSTEM_INFO SystemInfo;
+    PTSTR ptr;
+
+#if 0
+    if (_tcsicmp(lpInstallerPath, TEXT("reactos.exe")) != 0)
+        return;
+#endif
+
+    /*
+     * Using the default drive, under the directory whose name
+     * corresponds to the currently-runnning CPU architecture.
+     */
+    GetSystemInfo(&SystemInfo);
+
+    *lpInstallerPath = UNICODE_NULL;
+    GetModuleFileName(NULL, lpInstallerPath, PathSize);
+    ptr = _tcschr(lpInstallerPath, _T('\\'));
+    if (ptr)
+        *++ptr = UNICODE_NULL;
+    else
+        *lpInstallerPath = UNICODE_NULL;
+
+    /* Append the corresponding CPU architecture */
+    switch (SystemInfo.wProcessorArchitecture)
+    {
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("I386"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_MIPS:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("MIPS"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("ALPHA"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_PPC:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("PPC"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_SHX:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("SHX"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ARM:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("ARM"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_IA64:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("IA64"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA64:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("ALPHA64"));
+            break;
+
+#if 0 // .NET CPU-independent code
+        case PROCESSOR_ARCHITECTURE_MSIL:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("MSIL"));
+            break;
+#endif
+
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("AMD64"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_UNKNOWN:
+        default:
+            break;
+    }
+
+    StringCchCat(lpInstallerPath, PathSize, TEXT("\\reactos.exe"));
+}
+
 VOID InitializeTopicList(VOID)
 {
     dwNumberTopics = 0;
@@ -275,6 +356,10 @@ PTOPIC AddNewTopicEx(
     {
         pTopic->bIsCommand = TRUE;
         StringCchCopy(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand), szCommand);
+
+        /* Check for special applications: ReactOS Installer */
+        if (_tcsicmp(pTopic->szCommand, TEXT("reactos.exe")) == 0)
+            ExpandInstallerPath(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand));
     }
     else
     {
