@@ -528,8 +528,22 @@ ULONG
 NTAPI
 UhciGet32BitFrameNumber(IN PVOID uhciExtension)
 {
-    DPRINT("UhciGet32BitFrameNumber: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    PUHCI_EXTENSION UhciExtension = (PUHCI_EXTENSION)uhciExtension;
+    ULONG Uhci32BitFrame;
+    USHORT Fn; // FrameNumber
+    ULONG Hp; // FrameHighPart
+
+    Fn = READ_PORT_USHORT(&UhciExtension->BaseRegister->FrameNumber);
+    Fn &= UHCI_FRNUM_FRAME_MASK;
+    Hp = UhciExtension->FrameHighPart;
+
+    Uhci32BitFrame = Hp;
+    Uhci32BitFrame += ((USHORT)Hp ^ Fn) & UHCI_FRNUM_OVERFLOW_LIST;
+    Uhci32BitFrame |= Fn;
+
+    DPRINT("UhciGet32BitFrameNumber: Uhci32BitFrame - %lX\n", Uhci32BitFrame);
+
+    return Uhci32BitFrame;
 }
 
 VOID
