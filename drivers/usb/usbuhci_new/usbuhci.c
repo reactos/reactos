@@ -618,6 +618,36 @@ UhciUpdateCounter(IN PUHCI_EXTENSION UhciExtension)
 }
 
 VOID
+NTAPI
+UhciCleanupFrameListEntry(IN PUHCI_EXTENSION UhciExtension,
+                          IN ULONG Index)
+{
+    PUHCI_HC_RESOURCES UhciResources;
+    ULONG_PTR PhysicalAddress;
+    ULONG HeadIdx;
+
+    UhciResources = UhciExtension->HcResourcesVA;
+
+    if (Index == 0)
+    {
+        PhysicalAddress = UhciExtension->StaticTD->PhysicalAddress;
+
+        UhciResources->FrameList[0] = PhysicalAddress |
+                                      UHCI_FRAME_LIST_POINTER_TD;
+    }
+    else
+    {
+        HeadIdx = (INTERRUPT_ENDPOINTs - ENDPOINT_INTERRUPT_32ms) +
+                  (Index & (ENDPOINT_INTERRUPT_32ms - 1));
+
+        PhysicalAddress = UhciExtension->IntQH[HeadIdx]->PhysicalAddress;
+
+        UhciResources->FrameList[Index] = PhysicalAddress |
+                                          UHCI_FRAME_LIST_POINTER_QH;
+    }
+}
+
+VOID
 NTAPI 
 UhciCleanupFrameList(IN PUHCI_EXTENSION UhciExtension,
                      IN BOOLEAN IsAllEntries)
