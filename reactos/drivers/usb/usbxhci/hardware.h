@@ -1,5 +1,5 @@
 /* XHCI hardware registers */
-
+// base io addr register offsets
 #define XHCI_HCSP1            1
 #define XHCI_HCSP2            2
 #define XHCI_HCSP3            3
@@ -7,7 +7,7 @@
 #define XHCI_DBOFF            5
 #define XHCI_RTSOFF           6
 #define XHCI_HCCP2            7
-
+// operational register offsets
 #define XHCI_USBCMD           0
 #define XHCI_USBSTS           1
 #define XHCI_DNCTRL           5
@@ -15,16 +15,24 @@
 #define XHCI_DCBAAP           12
 #define XHCI_CONFIG           14
 #define XHCI_PORTSC           100
+// runtime register offsets
+#define XHCI_IMAN             8
+#define XHCI_IMOD             9
+#define XHCI_ERSTSZ           10
+#define XHCI_ERSTBA           12
+#define XHCI_ERSTDP           14
 
-#define XHCI_IMAN             0
-#define XHCI_IMOD             1
-#define XHCI_ERSTSZ           2
-#define XHCI_ERSTBA           4
-#define XHCI_ERSTDP           6
 
+typedef volatile union _XHCI_CAPLENGHT_INTERFACE_VERSION {
+  struct {
+    ULONG CapabilityRegistersLength                         : 8; 
+    ULONG Rsvd                                              : 8; 
+    ULONG HostControllerInterfaceVersion                    : 16;
+  };
+  ULONG AsULONG;
+} XHCI_CAPLENGHT_INTERFACE_VERSION;
 
-
-typedef union _XHCI_HC_STRUCTURAL_PARAMS_1 {
+typedef volatile union _XHCI_HC_STRUCTURAL_PARAMS_1 {
   struct {
     ULONG NumberOfDeviceSlots     : 8; // MAXSLOTS
     ULONG NumberOfInterrupters    : 11; // MAXINTRS
@@ -34,7 +42,7 @@ typedef union _XHCI_HC_STRUCTURAL_PARAMS_1 {
   ULONG AsULONG;
 } XHCI_HC_STRUCTURAL_PARAMS_1;
 
-typedef union _XHCI_HC_STRUCTURAL_PARAMS_2 {
+typedef volatile union _XHCI_HC_STRUCTURAL_PARAMS_2 {
   struct {
     ULONG Ist               : 4; // Isochronous Scheduling Treshold 
     ULONG ERSTMax           : 4; //Even ring segment table max
@@ -46,7 +54,7 @@ typedef union _XHCI_HC_STRUCTURAL_PARAMS_2 {
   ULONG AsULONG;
 } XHCI_HC_STRUCTURAL_PARAMS_2;
 
-typedef union _XHCI_HC_STRUCTURAL_PARAMS_3 {
+typedef volatile union _XHCI_HC_STRUCTURAL_PARAMS_3 {
   struct {
     ULONG U1DeviceExitLatecy : 8;
     ULONG Rsvd               : 8;
@@ -55,7 +63,7 @@ typedef union _XHCI_HC_STRUCTURAL_PARAMS_3 {
   ULONG AsULONG;
 } XHCI_HC_STRUCTURAL_PARAMS_3;
 
-typedef union _XHCI_HC_CAPABILITY_PARAMS_1 {  // need to comment full forms, pg 291 in xHCI documentation 
+typedef volatile union _XHCI_HC_CAPABILITY_PARAMS_1 {  // need to comment full forms, pg 291 in xHCI documentation 
   struct {
     ULONG AC64               : 1;
     ULONG BNC                : 1;
@@ -75,7 +83,7 @@ typedef union _XHCI_HC_CAPABILITY_PARAMS_1 {  // need to comment full forms, pg 
   ULONG AsULONG;
 } XHCI_HC_CAPABILITY_PARAMS_1;
 
-typedef union _XHCI_DOORBELL_OFFSET {
+typedef volatile union _XHCI_DOORBELL_OFFSET {
   struct {
     ULONG Rsvd               : 2;
     ULONG DBArrayOffset      : 30;
@@ -83,7 +91,7 @@ typedef union _XHCI_DOORBELL_OFFSET {
   ULONG AsULONG;
 } XHCI_DOORBELL_OFFSET;
 
-typedef union _XHCI_RT_REGISTER_SPACE_OFFSET { //RUNTIME REGISTER SPACE OFFSET
+typedef volatile union _XHCI_RT_REGISTER_SPACE_OFFSET { //RUNTIME REGISTER SPACE OFFSET
   struct {
     ULONG Rsvd               : 5;
     ULONG RTSOffset          : 27;
@@ -91,7 +99,7 @@ typedef union _XHCI_RT_REGISTER_SPACE_OFFSET { //RUNTIME REGISTER SPACE OFFSET
   ULONG AsULONG;
 } XHCI_RT_REGISTER_SPACE_OFFSET;
 
-typedef union _XHCI_HC_CAPABILITY_PARAMS_2 {
+typedef volatile union _XHCI_HC_CAPABILITY_PARAMS_2 {
   struct {
     ULONG U3C                : 1;
     ULONG CMC                : 1;
@@ -104,7 +112,7 @@ typedef union _XHCI_HC_CAPABILITY_PARAMS_2 {
   ULONG AsULONG;
 } XHCI_HC_CAPABILITY_PARAMS_2;
 
-typedef union _XHCI_USB_COMMAND {
+typedef volatile union _XHCI_USB_COMMAND {
   struct {
     ULONG RunStop                    : 1;
     ULONG HCReset                    : 1;
@@ -123,7 +131,7 @@ typedef union _XHCI_USB_COMMAND {
   ULONG AsULONG;
 } XHCI_USB_COMMAND;
 
-typedef union _XHCI_USB_STATUS {
+typedef volatile union _XHCI_USB_STATUS {
   struct {
     ULONG HCHalted               : 1;
     ULONG RsvdZ1                 : 1;
@@ -141,7 +149,7 @@ typedef union _XHCI_USB_STATUS {
   ULONG AsULONG;
 } XHCI_USB_STATUS;
 
-typedef union _XHCI_PAGE_SIZE { 
+typedef volatile union _XHCI_PAGE_SIZE { 
   struct {
     ULONG PageSize           : 16;
     ULONG Rsvd               : 16;
@@ -149,7 +157,7 @@ typedef union _XHCI_PAGE_SIZE {
   ULONG AsULONG;
 } XHCI_PAGE_SIZE;
 
-typedef union _XHCI_DEVICE_NOTIFICATION_CONTROL { 
+typedef volatile union _XHCI_DEVICE_NOTIFICATION_CONTROL { 
   struct {
     ULONG NotificationEnable : 16;
     ULONG Rsvd               : 16;
@@ -157,7 +165,7 @@ typedef union _XHCI_DEVICE_NOTIFICATION_CONTROL {
   ULONG AsULONG;
 } XHCI_DEVICE_NOTIFICATION_CONTROL;
 
-typedef union _XHCI_COMMAND_RING_CONTROL { 
+typedef volatile union _XHCI_COMMAND_RING_CONTROL { 
   struct {
     ULONGLONG RingCycleState           : 1;
     ULONGLONG CommandStop              : 1;
@@ -170,7 +178,7 @@ typedef union _XHCI_COMMAND_RING_CONTROL {
   ULONGLONG AsULONGLONG;
 } XHCI_COMMAND_RING_CONTROL;
 
-typedef union _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER { 
+typedef volatile union _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER { 
   struct {
     ULONGLONG RsvdZ                       : 6;
     ULONGLONG DCBAAPointerLo              : 26;
@@ -179,7 +187,7 @@ typedef union _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER {
   ULONGLONG AsULONGLONG;
 } XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER;
 
-typedef union _XHCI_CONFIGURE { 
+typedef volatile union _XHCI_CONFIGURE { 
   struct {
     ULONG MaxDeviceSlotsEnabled        : 8;
     ULONG U3EntryEnable                : 1;
@@ -189,7 +197,7 @@ typedef union _XHCI_CONFIGURE {
   ULONG AsULONG;
 } XHCI_CONFIGURE;
 
-typedef union _XHCI_PORT_STATUS_CONTROL {
+typedef volatile union _XHCI_PORT_STATUS_CONTROL {
   struct {
     ULONG CCS                : 1;
     ULONG PED                : 1;
@@ -220,7 +228,7 @@ typedef union _XHCI_PORT_STATUS_CONTROL {
 } XHCI_PORT_STATUS_CONTROL;
 
 // Interrupt Register Set
-typedef union _XHCI_INTERRUPTER_MANAGEMENT {
+typedef volatile union _XHCI_INTERRUPTER_MANAGEMENT {
     struct {
         ULONG InterruptPending  : 1;
         ULONG InterruptEnable   : 1;
@@ -229,7 +237,7 @@ typedef union _XHCI_INTERRUPTER_MANAGEMENT {
     ULONG AsULONG;
 } XHCI_INTERRUPTER_MANAGEMENT;
 
-typedef union _XHCI_INTERRUPTER_MODERATION {
+typedef volatile union _XHCI_INTERRUPTER_MODERATION {
     struct {
         ULONG InterruptModIterval  : 16;
         ULONG InterruptModCounter  : 16;
@@ -237,7 +245,7 @@ typedef union _XHCI_INTERRUPTER_MODERATION {
     ULONG AsULONG;
 } XHCI_INTERRUPTER_MODERATION;
 
-typedef union _XHCI_EVENT_RING_TABLE_SIZE {
+typedef volatile union _XHCI_EVENT_RING_TABLE_SIZE {
     struct {
         ULONG EventRingSegTableSize  : 16;
         ULONG RsvdP                  : 16;
@@ -245,7 +253,7 @@ typedef union _XHCI_EVENT_RING_TABLE_SIZE {
     ULONG AsULONG;
 } XHCI_EVENT_RING_TABLE_SIZE;
 
-typedef union _XHCI_EVENT_RING_TABLE_BASE_ADDR { 
+typedef volatile union _XHCI_EVENT_RING_TABLE_BASE_ADDR { 
   struct {
     ULONGLONG RsvdP                       : 6;
     ULONGLONG EventRingSegTableBaseAddr   : 58;
@@ -253,7 +261,7 @@ typedef union _XHCI_EVENT_RING_TABLE_BASE_ADDR {
   ULONGLONG AsULONGLONG;
 } XHCI_EVENT_RING_TABLE_BASE_ADDR;
 
-typedef union _XHCI_EVENT_RING_DEQUEUE_POINTER { 
+typedef volatile union _XHCI_EVENT_RING_DEQUEUE_POINTER { 
   struct {
     ULONGLONG DequeueERSTIndex            : 3;
     ULONGLONG EventHandlerBusy            : 1;
@@ -261,3 +269,13 @@ typedef union _XHCI_EVENT_RING_DEQUEUE_POINTER {
   };
   ULONGLONG AsULONGLONG;
 } XHCI_EVENT_RING_DEQUEUE_POINTER;
+
+// Doorbell register
+typedef volatile union _XHCI_DOORBELL {
+  struct {
+    ULONG DoorBellTarget        : 8;
+    ULONG RsvdZ                 : 8;
+    ULONG DoorbellStreamID      : 16;
+  };
+  ULONG AsULONG;
+} XHCI_DOORBELL;

@@ -42,29 +42,30 @@ typedef union _XHCI_LINK_TRB{
     };
     ULONG AsULONG;
 } XHCI_LINK_TRB;
+//----------------------------------------generic trb----------------------------------------------------------------
+typedef struct _XHCI_GENERIC_TRB {
+    ULONG Word0;
+    ULONG Word1;
+    ULONG Word2;
+    ULONG Word3;
+}XHCI_GENERIC_TRB, *PXHCI_GENERIC_TRB;
 //----------------------------------------Command TRBs----------------------------------------------------------------
-typedef union _XHCI_COMMAND_NO_OP_TRB {
-    struct {
-        ULONG RsvdZ1                     : 5;
-    };
-    struct {
-        ULONG RsvdZ2                     : 5;
-    };
-    struct {
-        ULONG RsvdZ3                     : 5;
-    };
-    struct {
-        ULONG CycleBit                  : 1;
-        ULONG RsvdZ4                    : 4;
-        ULONG TRBType                   : 6;
-        ULONG RsvdZ5                    : 14;
-    };
-    ULONG AsULONG;
+typedef struct _XHCI_COMMAND_NO_OP_TRB {
+        ULONG RsvdZ1;
+        ULONG RsvdZ2;
+        ULONG RsvdZ3;
+        struct{
+            ULONG CycleBit                  : 1;
+            ULONG RsvdZ4                    : 4;
+            ULONG TRBType                   : 6;
+            ULONG RsvdZ5                    : 14;
+        };
 } XHCI_COMMAND_NO_OP_TRB;
 
 typedef union _XHCI_COMMAND_TRB {
-    XHCI_COMMAND_NO_OP_TRB NoOperation[4];
+    XHCI_COMMAND_NO_OP_TRB NoOperation;
     XHCI_LINK_TRB Link[4];
+    XHCI_GENERIC_TRB GenericTRB;
 }XHCI_COMMAND_TRB, *PXHCI_COMMAND_TRB;
 
 typedef struct _XHCI_COMMAND_RING {
@@ -170,8 +171,11 @@ typedef struct _XHCI_EVENT_TRB {
 
 typedef struct _XHCI_EVENT_RING_SEGMENT_TABLE{
     ULONGLONG RingSegmentBaseAddr;
-    ULONGLONG RingSegmentSize : 16;
-    ULONGLONG RsvdZ           :  48;
+    struct {
+        ULONGLONG RingSegmentSize : 16;
+        ULONGLONG RsvdZ           :  48;
+    };
+    
     
 } XHCI_EVENT_RING_SEGMENT_TABLE;
 //------------------------------------main structs-----------------------
@@ -184,7 +188,7 @@ typedef union _XHCI_TRB {
 } XHCI_TRB, *PXHCI_TRB;
 
 typedef struct _XHCI_RING {
-    XHCI_TRB ring[16];
+    XHCI_TRB XhciTrb[16];
     //PXHCI_TRB dequeue_pointer;
 }XHCI_RING , *PXHCI_RING;
 
@@ -194,6 +198,7 @@ typedef struct _XHCI_EXTENSION {
   PULONG BaseIoAdress;
   PULONG OperationalRegs;
   PULONG RunTimeRegisterBase;
+  PULONG DoorBellRegisterBase;
   UCHAR FrameLengthAdjustment;
   BOOLEAN IsStarted;
   USHORT HcSystemErrors;
@@ -205,8 +210,9 @@ typedef struct _XHCI_EXTENSION {
 
 typedef struct _XHCI_HC_RESOURCES {
   XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY DCBAA;
-  XHCI_COMMAND_RING CommandRing;
+  //XHCI_COMMAND_RING CommandRing;
   XHCI_RING         EventRing;
+  XHCI_RING         CommandRing;
   XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
 } XHCI_HC_RESOURCES, *PXHCI_HC_RESOURCES;
 
