@@ -629,7 +629,7 @@ UhciInterruptService(IN PVOID uhciExtension)
         }
 
         if ((QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_PTR_TERMINATE) ==
-            UHCI_QH_ELEMENT_LINK_PTR_VALID)
+                                    UHCI_QH_ELEMENT_LINK_PTR_VALID)
         {
             break;
         }
@@ -663,7 +663,27 @@ NTAPI
 UhciInterruptDpc(IN PVOID uhciExtension,
                  IN BOOLEAN IsDoEnableInterrupts)
 {
-    DPRINT("UhciInterruptDpc: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_HW_REGISTERS BaseRegister;
+    UHCI_USB_STATUS HcStatus;
+
+    DPRINT("UhciInterruptDpc: ...\n");
+
+    BaseRegister = UhciExtension->BaseRegister;
+
+    HcStatus = UhciExtension->HcStatus;
+    UhciExtension->HcStatus.AsUSHORT = 0;
+
+    if ((HcStatus.Interrupt | HcStatus.ErrorInterrupt) == TRUE)
+    {
+        RegPacket.UsbPortInvalidateEndpoint(UhciExtension, 0);
+    }
+
+    if (IsDoEnableInterrupts)
+    {
+        WRITE_PORT_USHORT(&BaseRegister->HcInterruptEnable.AsUSHORT,
+                          UhciExtension->StatusMask.AsUSHORT);
+    }
 }
 
 MPSTATUS
