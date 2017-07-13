@@ -598,6 +598,24 @@ UhciDisableInterrupts(IN PVOID uhciExtension)
 
 VOID
 NTAPI
+UhciUpdateCounter(IN PUHCI_EXTENSION UhciExtension)
+{
+    ULONG FrameNumber;
+
+    FrameNumber = READ_PORT_USHORT(&UhciExtension->BaseRegister->FrameNumber);
+    FrameNumber &= UHCI_FRNUM_FRAME_MASK;
+
+    if ((FrameNumber ^ UhciExtension->FrameHighPart) & UHCI_FRNUM_OVERFLOW_LIST)
+    {
+        UhciExtension->FrameHighPart += UHCI_FRAME_LIST_MAX_ENTRIES;
+
+        DPRINT("UhciUpdateCounter: UhciExtension->FrameHighPart - %lX\n",
+                UhciExtension->FrameHighPart);
+    }
+}
+
+VOID
+NTAPI
 UhciPollController(IN PVOID uhciExtension)
 {
     DPRINT("UhciPollController: UNIMPLEMENTED. FIXME\n");

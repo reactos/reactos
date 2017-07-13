@@ -85,6 +85,8 @@ typedef struct _UHCI_EXTENSION {
   PUHCI_HCD_QH BulkQH;
   PUHCI_HCD_QH BulkTailQH;
   PUHCI_HCD_TD StaticTD;
+  ULONG FrameNumber;
+  ULONG FrameHighPart;
 } UHCI_EXTENSION, *PUHCI_EXTENSION;
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;

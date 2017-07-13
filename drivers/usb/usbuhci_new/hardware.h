@@ -81,6 +81,11 @@ typedef union _UHCI_INTERRUPT_ENABLE {
   USHORT AsUSHORT;
 } UHCI_INTERRUPT_ENABLE;
 
+/* FRNUM Frame Number register */
+#define UHCI_FRNUM_FRAME_MASK     0x7FF 
+#define UHCI_FRNUM_INDEX_MASK     0x3FF 
+#define UHCI_FRNUM_OVERFLOW_LIST  0x400 
+
 /* PORTSC(1|2) USB port status and control registers */
 typedef union _UHCI_PORT_STATUS_CONTROL {
   struct {
