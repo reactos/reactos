@@ -26,6 +26,7 @@
 #include <strsafe.h>
 #include <ndk/rtlfuncs.h>
 #include <atlcoll.h>
+#include <atlsimpcoll.h>
 #include <atlstr.h> 
 #include <rappsmsg.h>
 
@@ -100,7 +101,7 @@ typedef struct
     ATL::CStringW szUrlSite;
     ATL::CStringW szUrlDownload;
     ATL::CStringW szCDPath;
-    ATL::CStringW szLanguages;
+    ATL::CSimpleArray<ATL::CStringW> Languages;
 
     /* caching mechanism related entries */
     ATL::CStringW cFileName;

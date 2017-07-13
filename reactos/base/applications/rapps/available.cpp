@@ -12,7 +12,8 @@
 
 ATL::CAtlList<PAPPLICATION_INFO> InfoList;
 
-inline void InsertTextAfterLoaded_RichEdit(UINT uStringID, const ATL::CStringW& szText, DWORD StringFlags, DWORD TextFlags)
+inline VOID 
+InsertTextAfterLoaded_RichEdit(UINT uStringID, const ATL::CStringW& szText, DWORD StringFlags, DWORD TextFlags)
 {
     ATL::CStringW szLoadedText;
     if (!szText.IsEmpty() && szLoadedText.LoadStringW(hInst, uStringID))
@@ -22,7 +23,8 @@ inline void InsertTextAfterLoaded_RichEdit(UINT uStringID, const ATL::CStringW& 
     }
 }
 
-inline void InsertLoadedTextNewl_RichEdit(UINT uStringID, DWORD StringFlags)
+inline VOID 
+InsertLoadedTextNewl_RichEdit(UINT uStringID, DWORD StringFlags)
 {
     ATL::CStringW szLoadedText;
     if (szLoadedText.LoadStringW(hInst, uStringID))
@@ -33,7 +35,8 @@ inline void InsertLoadedTextNewl_RichEdit(UINT uStringID, DWORD StringFlags)
     }
 }
 
-inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString, const ATL::CStringW& cFileName)
+inline BOOL 
+GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString, const ATL::CStringW& cFileName)
 {
     if (!ParserGetString(lpKeyName, cFileName, ReturnedString))
     {
@@ -42,10 +45,11 @@ inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString, const AT
     }
     return TRUE;
 }
+
 //Check both registry keys in 64bit system
 //TODO: check system type beforehand to avoid double checks?
-
-inline BOOL GetInstalledVersionEx(PAPPLICATION_INFO Info, ATL::CStringW* szVersion, REGSAM key)
+inline BOOL 
+GetInstalledVersionEx(PAPPLICATION_INFO Info, ATL::CStringW* szVersion, REGSAM key)
 {
     return (!Info->szRegName.IsEmpty()
             && (GetInstalledVersion_WowUser(szVersion, Info->szRegName, TRUE, key)
@@ -55,34 +59,80 @@ inline BOOL GetInstalledVersionEx(PAPPLICATION_INFO Info, ATL::CStringW* szVersi
                 || GetInstalledVersion_WowUser(szVersion, Info->szName, FALSE, key)));
 }
 
-inline BOOL GetInstalledVersion(PAPPLICATION_INFO Info, ATL::CStringW* szVersion)
+inline BOOL 
+GetInstalledVersion(PAPPLICATION_INFO Info, ATL::CStringW* szVersion)
 {
     return  GetInstalledVersionEx(Info, szVersion, KEY_WOW64_32KEY)
         || GetInstalledVersionEx(Info, szVersion, KEY_WOW64_64KEY);
 }
 
-inline BOOL IsAppInstalled(PAPPLICATION_INFO Info)
+inline BOOL 
+IsAppInstalled(PAPPLICATION_INFO Info)
 {
     return GetInstalledVersion(Info, NULL);
 }
 
+ATL::CSimpleArray<ATL::CStringW> 
+ParserGetAppLanguages(const ATL::CStringW& szFileName)
+{
+    const WCHAR cDelimiter = L'|';
+    ATL::CStringW szBuffer;
+
+    if (!ParserGetString(L"Languages", szFileName, szBuffer))
+        return CSimpleArray<ATL::CStringW>();
+
+    ATL::CStringW szLocale;
+    ATL::CSimpleArray<ATL::CStringW> arrLocalesResult;
+    for (INT i = 0; szBuffer[i] != UNICODE_NULL; ++i)
+    {
+        if (szBuffer[i] != cDelimiter)
+        {
+            szLocale += szBuffer[i];
+        } else {
+            arrLocalesResult.Add(szLocale);
+            szLocale.Empty();
+        }
+    }
+    // For the text after delimiter
+    if (!szLocale.IsEmpty())
+    {
+        arrLocalesResult.Add(szLocale);
+    }
+    return arrLocalesResult;
+}
+
+BOOL
+HasNativeLanguage(PAPPLICATION_INFO Info)
+{
+    if (!Info)
+    {
+        return FALSE;
+    }
+    //TODO: make the actual check
+    return TRUE;
+}
+
+LICENSE_TYPE
+ParserGetLicenseType(const ATL::CStringW& szFileName)
+{
+    INT IntBuffer = ParserGetInt(L"LicenseType", szFileName);
+    if (IntBuffer < 0 || IntBuffer > LICENSE_TYPE::Max)
+    {
+        return LICENSE_TYPE::None;
+    }
+    return (LICENSE_TYPE) IntBuffer;
+}
 
 LIST_ENTRY CachedEntriesHead = {&CachedEntriesHead, &CachedEntriesHead};
 PLIST_ENTRY pCachedEntry = &CachedEntriesHead;
 
-BOOL
-ShowAvailableAppInfo(INT Index)
+VOID 
+InsertVersionInfo_RichEdit(PAPPLICATION_INFO Info)
 {
-    PAPPLICATION_INFO Info = (PAPPLICATION_INFO) ListViewGetlParam(Index);
     ATL::CStringW szVersion;
-    ATL::CStringW szLicense;
     BOOL bIsInstalled = IsAppInstalled(Info),
         bHasVersion = GetInstalledVersion(Info, &szVersion);
 
-    if (!Info) return FALSE;
-
-    NewRichEditText(Info->szName, CFE_BOLD);
-    //installed status
     if (bIsInstalled)
     {
         if (bHasVersion)
@@ -102,7 +152,12 @@ ShowAvailableAppInfo(INT Index)
         InsertLoadedTextNewl_RichEdit(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
 
     InsertTextAfterLoaded_RichEdit(IDS_AINFO_AVAILABLEVERSION, Info->szVersion, CFE_BOLD, 0);
-    //license
+}
+
+VOID
+InsertLicenseInfo_RichEdit(PAPPLICATION_INFO Info)
+{
+    ATL::CStringW szLicense;
     switch (Info->LicenseType)
     {
     case LICENSE_TYPE::OpenSource:
@@ -127,6 +182,18 @@ ShowAvailableAppInfo(INT Index)
         szLicense.Format(L"(%ls)", Info->szLicense);
         InsertTextAfterLoaded_RichEdit(IDS_AINFO_LICENSE, szLicense, CFE_BOLD, 0);
     }
+
+}
+
+BOOL
+ShowAvailableAppInfo(INT Index)
+{
+    PAPPLICATION_INFO Info = (PAPPLICATION_INFO) ListViewGetlParam(Index);
+    if (!Info) return FALSE;
+
+    NewRichEditText(Info->szName, CFE_BOLD);
+    InsertVersionInfo_RichEdit(Info);
+    InsertLicenseInfo_RichEdit(Info);
 
     InsertTextAfterLoaded_RichEdit(IDS_AINFO_SIZE, Info->szSize, CFE_BOLD, 0);
     InsertTextAfterLoaded_RichEdit(IDS_AINFO_URLSITE, Info->szUrlSite, CFE_BOLD, CFE_LINK);
@@ -273,11 +340,8 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
             break;
 
         Info->Category = ParserGetInt(L"Category", FindFileData.cFileName);
-        INT IntBuffer = ParserGetInt(L"LicenseType", FindFileData.cFileName);
-        if (IntBuffer < LICENSE_TYPE::Max)
-        {
-            Info->LicenseType = (LICENSE_TYPE) IntBuffer;
-        }
+        Info->LicenseType = ParserGetLicenseType(FindFileData.cFileName);
+        Info->Languages = ParserGetAppLanguages(FindFileData.cFileName);
 
         /* copy the cache-related fields for the next time */
         Info->cFileName = FindFileData.cFileName;
@@ -329,6 +393,7 @@ VOID FreeCachedAvailableEntries(VOID)
 {
     PAPPLICATION_INFO Info;
     POSITION InfoListPosition = InfoList.GetHeadPosition();
+
     /* loop and deallocate all the cached app infos in the list */
     while (InfoListPosition)
     {
