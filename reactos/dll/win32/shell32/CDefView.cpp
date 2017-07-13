@@ -103,10 +103,11 @@ class CDefView :
         BOOL                      m_isEditing;
 
         CLSID m_Category;
-        BOOL m_Destroyed;
-    private:
+        BOOL  m_Destroyed;
 
+    private:
         HRESULT _MergeToolbar();
+        BOOL _Sort();
 
     public:
         CDefView();
@@ -688,6 +689,40 @@ INT CALLBACK CDefView::ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPAR
     return nDiff;
 }
 
+BOOL CDefView::_Sort()
+{
+    HWND hHeader;
+    HDITEM hColumn;
+
+    if ((m_ListView.GetWindowLongPtr(GWL_STYLE) & ~LVS_NOSORTHEADER) == 0)
+        return TRUE;
+
+    hHeader = (HWND)m_ListView.SendMessage(LVM_GETHEADER, 0, 0);
+    ZeroMemory(&hColumn, sizeof(hColumn));
+
+    /* If the sorting column changed, remove the sorting style from the old column */
+    if ( (m_sortInfo.nLastHeaderID != -1) &&
+         (m_sortInfo.nLastHeaderID != m_sortInfo.nHeaderID) )
+    {
+        hColumn.mask = HDI_FORMAT;
+        Header_GetItem(hHeader, m_sortInfo.nLastHeaderID, &hColumn);
+        hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+        Header_SetItem(hHeader, m_sortInfo.nLastHeaderID, &hColumn);
+    }
+
+    /* Set the sorting style to the new column */
+    hColumn.mask = HDI_FORMAT;
+    Header_GetItem(hHeader, m_sortInfo.nHeaderID, &hColumn);
+
+    hColumn.fmt &= (m_sortInfo.bIsAscending ? ~HDF_SORTDOWN : ~HDF_SORTUP );
+    hColumn.fmt |= (m_sortInfo.bIsAscending ?  HDF_SORTUP   : HDF_SORTDOWN);
+    Header_SetItem(hHeader, m_sortInfo.nHeaderID, &hColumn);
+
+    /* Sort the list, using the current values of nHeaderID and bIsAscending */
+    m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
+    return m_ListView.SortItems(ListViewCompareItems, this);
+}
+
 PCUITEMID_CHILD CDefView::_PidlByItem(int i)
 {
     return reinterpret_cast<PCUITEMID_CHILD>(m_ListView.GetItemData(i));
@@ -906,8 +941,7 @@ HRESULT CDefView::FillList()
         FIXME("no m_pSF2Parent\n");
     }
     m_sortInfo.bIsAscending = TRUE;
-    m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
-    m_ListView.SortItems(ListViewCompareItems, this);
+    _Sort();
 
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
@@ -1525,15 +1559,14 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             CheckToolbar();
             break;
 
-            /* the menu-ID's for sorting are 0x30... see shrec.rc */
+        /* the menu-ID's for sorting are 0x30... see shrec.rc */
         case 0x30:
         case 0x31:
         case 0x32:
         case 0x33:
             m_sortInfo.nHeaderID = dwCmdID - 0x30;
             m_sortInfo.bIsAscending = TRUE;
-            m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
-            m_ListView.SortItems(ListViewCompareItems, this);
+            _Sort();
             break;
 
         case FCIDM_SHVIEW_SNAPTOGRID:
@@ -1669,9 +1702,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 m_sortInfo.bIsAscending = !m_sortInfo.bIsAscending;
             else
                 m_sortInfo.bIsAscending = TRUE;
-            m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
-
-            m_ListView.SortItems(ListViewCompareItems, this);
+            _Sort();
             break;
 
         case LVN_GETDISPINFOA:
