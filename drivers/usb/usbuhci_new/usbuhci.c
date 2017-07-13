@@ -386,6 +386,8 @@ UhciStartController(IN PVOID uhciExtension,
             MpStatus = UhciInitializeSchedule(UhciExtension,
                                               UhciExtension->HcResourcesVA,
                                               UhciExtension->HcResourcesPA);
+
+            UhciExtension->LockFrameList = 0;
         }
     }
 
@@ -613,6 +615,49 @@ UhciUpdateCounter(IN PUHCI_EXTENSION UhciExtension)
         DPRINT("UhciUpdateCounter: UhciExtension->FrameHighPart - %lX\n",
                 UhciExtension->FrameHighPart);
     }
+}
+
+VOID
+NTAPI 
+UhciCleanupFrameList(IN PUHCI_EXTENSION UhciExtension,
+                     IN BOOLEAN IsAllEntries)
+{
+    ULONG NewFrameNumber;
+    ULONG OldFrameNumber;
+    ULONG ix;
+
+    DPRINT("UhciCleanupFrameList: IsAllEntries - %x\n", IsAllEntries);
+
+    if (InterlockedIncrement(&UhciExtension->LockFrameList) != 1)
+    {
+        InterlockedDecrement(&UhciExtension->LockFrameList);
+        return;
+    }
+
+    NewFrameNumber = UhciGet32BitFrameNumber(UhciExtension);
+    OldFrameNumber = UhciExtension->FrameNumber;
+
+    if ((NewFrameNumber - OldFrameNumber) < UHCI_FRAME_LIST_MAX_ENTRIES &&
+        IsAllEntries == FALSE)
+    {
+        for (ix = OldFrameNumber & UHCI_FRAME_LIST_INDEX_MASK;
+             ix != (NewFrameNumber & UHCI_FRAME_LIST_INDEX_MASK);
+             ix = (ix + 1) & UHCI_FRAME_LIST_INDEX_MASK)
+        {
+            UhciCleanupFrameListEntry(UhciExtension, ix);
+        }
+    }
+    else
+    {
+        for (ix = 0; ix < UHCI_FRAME_LIST_MAX_ENTRIES; ++ix)
+        {
+            UhciCleanupFrameListEntry(UhciExtension, ix);
+        }
+    }
+
+    UhciExtension->FrameNumber = NewFrameNumber;
+
+    InterlockedDecrement(&UhciExtension->LockFrameList);
 }
 
 VOID

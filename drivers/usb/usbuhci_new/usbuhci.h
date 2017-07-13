@@ -90,6 +90,7 @@ typedef struct _UHCI_EXTENSION {
   ULONG FrameNumber;
   ULONG FrameHighPart;
   ULONG Flags;
+  LONG LockFrameList;
 } UHCI_EXTENSION, *PUHCI_EXTENSION;
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
