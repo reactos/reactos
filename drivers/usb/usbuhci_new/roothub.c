@@ -377,7 +377,9 @@ NTAPI
 UhciRHClearFeaturePortResetChange(IN PVOID uhciExtension,
                                   IN USHORT Port)
 {
-    DPRINT("UhciRHClearFeaturePortResetChange: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    DPRINT("UhciRHClearFeaturePortResetChange: ...\n");
+    UhciExtension->ResetChangePortMask &= ~(1 << (Port - 1));
     return MP_STATUS_SUCCESS;
 }
 
