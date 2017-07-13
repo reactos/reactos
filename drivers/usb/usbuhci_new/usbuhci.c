@@ -534,6 +534,24 @@ UhciResumeController(IN PVOID uhciExtension)
 
 BOOLEAN
 NTAPI
+UhciHardwarePresent(IN PUHCI_EXTENSION UhciExtension)
+{
+    UHCI_USB_STATUS UhciStatus;
+    PUSHORT StatusReg;
+
+    StatusReg = &UhciExtension->BaseRegister->HcStatus.AsUSHORT;
+    UhciStatus.AsUSHORT = READ_PORT_USHORT(StatusReg);
+
+    if (UhciStatus.AsUSHORT == MAXUSHORT)
+    {
+        DPRINT("UhciHardwarePresent: HW not present\n");
+    }
+
+    return UhciStatus.AsUSHORT != MAXUSHORT;
+}
+
+BOOLEAN
+NTAPI
 UhciInterruptService(IN PVOID uhciExtension)
 {
     PUHCI_EXTENSION UhciExtension = uhciExtension;
