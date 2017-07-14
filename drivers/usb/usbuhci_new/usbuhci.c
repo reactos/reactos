@@ -448,6 +448,8 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
     ULONG_PTR StaticBulkHeadPA;
     PUHCI_HCD_TD StaticBulkTD;
     ULONG_PTR StaticBulkTdPA;
+    PUHCI_HCD_TD StaticSofTD;
+    ULONG_PTR StaticSofTdPA;
     ULONG Idx;
     ULONG HeadIdx;
     ULONG_PTR PhysicalAddress;
@@ -572,8 +574,24 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     UhciExtension->StaticTD = StaticTD;
 
-    DPRINT("UhciInitializeSchedule: Initialize StaticSofTD - FIXME\n");
-//ASSERT(FALSE);
+    /* Initialize StaticSofTDs for UhciInterruptNextSOF() */
+    UhciExtension->SOF_HcdTDs = &HcResourcesVA->StaticSofTD[0];
+    StaticSofTdPA = (ULONG_PTR)&HcResourcesPA->StaticSofTD;
+
+    for (Idx = 0; Idx < UHCI_MAX_STATIC_SOF_TDS; Idx++)
+    {
+        StaticSofTD = UhciExtension->SOF_HcdTDs + Idx;
+        RtlZeroMemory(StaticSofTD, sizeof(UHCI_HCD_TD));
+        DPRINT("UhciInitializeSchedule: StaticSofTD - %p\n", StaticSofTD);
+
+        PhysicalAddress = UhciExtension->IntQH[HeadIdx]->PhysicalAddress;
+        StaticSofTD->HwTD.NextElement = PhysicalAddress | UHCI_TD_LINK_PTR_QH;
+
+        StaticSofTD->HwTD.ControlStatus.InterruptOnComplete = TRUE;
+
+        StaticSofTD->PhysicalAddress = StaticSofTdPA;
+        StaticSofTdPA += sizeof(UHCI_HCD_TD);
+    }
 
     return MP_STATUS_SUCCESS;
 }
@@ -1070,7 +1088,7 @@ ULONG
 NTAPI
 UhciGet32BitFrameNumber(IN PVOID uhciExtension)
 {
-    PUHCI_EXTENSION UhciExtension = (PUHCI_EXTENSION)uhciExtension;
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
     ULONG Uhci32BitFrame;
     USHORT Fn; // FrameNumber
     ULONG Hp; // FrameHighPart
@@ -1092,7 +1110,62 @@ VOID
 NTAPI
 UhciInterruptNextSOF(IN PVOID uhciExtension)
 {
-    DPRINT("UhciInterruptNextSOF: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_HC_RESOURCES UhciResources;
+    ULONG CurrentFrame;
+    PUHCI_HCD_TD SOF_HcdTDs;
+    ULONG ix;
+    ULONG NextFrame;
+    ULONG SofFrame;
+    ULONG Idx;
+
+    DPRINT1("UhciInterruptNextSOF: ...\n");
+
+    CurrentFrame = UhciGet32BitFrameNumber(UhciExtension);
+
+    SOF_HcdTDs = UhciExtension->SOF_HcdTDs;
+    NextFrame = CurrentFrame + 2;
+
+    for (ix = 0; ix < UHCI_MAX_STATIC_SOF_TDS; ++ix)
+    {
+        SofFrame = SOF_HcdTDs->Frame;
+
+        if (SofFrame == NextFrame)
+        {
+            break;
+        }
+
+        if (SofFrame < CurrentFrame)
+        {
+            SOF_HcdTDs->Frame = NextFrame;
+            SOF_HcdTDs->Flags |= UHCI_HCD_TD_FLAG_GOOD_FRAME;
+
+            /* Insert SOF_HcdTD (InterruptOnComplete = TRUE) in Frame List */
+            UhciResources = UhciExtension->HcResourcesVA;
+            Idx = SOF_HcdTDs->Frame & UHCI_FRAME_LIST_INDEX_MASK;
+
+            InterlockedExchangePointer((PVOID)&SOF_HcdTDs->HwTD.NextElement,
+                                       (PVOID)UhciResources->FrameList[Idx]);
+
+            UhciResources->FrameList[Idx] = SOF_HcdTDs->PhysicalAddress;
+            break;
+        }
+
+        /* Go to next SOF_HcdTD */
+        SOF_HcdTDs += 1;
+    }
+
+    for (ix = 0; ix < UHCI_MAX_STATIC_SOF_TDS; ++ix)
+    {
+        SOF_HcdTDs = &UhciExtension->SOF_HcdTDs[ix];
+
+        if (SOF_HcdTDs->Frame &&
+            (SOF_HcdTDs->Frame < CurrentFrame ||
+             (SOF_HcdTDs->Frame - CurrentFrame) > UHCI_FRAME_LIST_MAX_ENTRIES))
+        {
+            SOF_HcdTDs->Frame = 0;
+        }
+    }
 }
 
 VOID

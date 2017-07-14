@@ -23,6 +23,7 @@
 #define UHCI_HCD_TD_FLAG_DONE          0x00000008
 #define UHCI_HCD_TD_FLAG_NOT_ACCESSED  0x00000010
 #define UHCI_HCD_TD_FLAG_DATA_BUFFER   0x00000020
+#define UHCI_HCD_TD_FLAG_GOOD_FRAME    0x00000040
 #define UHCI_HCD_TD_FLAG_CONTROLL      0x00000400
 
 typedef struct _UHCI_ENDPOINT *PUHCI_ENDPOINT;
@@ -35,7 +36,11 @@ typedef struct _UHCI_HCD_TD {
   ULONG_PTR PhysicalAddress;
   ULONG Flags;
   struct _UHCI_HCD_TD * NextHcdTD;
-  ULONG Padded[9];
+  _ANONYMOUS_UNION union {
+    PUHCI_TRANSFER UhciTransfer;
+    ULONG Frame; // for SOF_HcdTDs only
+  } DUMMYUNIONNAME;
+  ULONG Padded[8];
 } UHCI_HCD_TD, *PUHCI_HCD_TD;
 
 C_ASSERT(sizeof(UHCI_HCD_TD) == 0x40);
@@ -87,6 +92,7 @@ typedef struct _UHCI_TRANSFER {
 #define UHCI_FRAME_LIST_POINTER_QH         (1 << 1) 
 
 #define UHCI_FRAME_LIST_INDEX_MASK         0x3FF
+#define UHCI_MAX_STATIC_SOF_TDS            8
 
 typedef struct _UHCI_HC_RESOURCES {
   ULONG_PTR FrameList[UHCI_FRAME_LIST_MAX_ENTRIES]; // The 4-Kbyte Frame List Table is aligned on a 4-Kbyte boundary
@@ -95,6 +101,7 @@ typedef struct _UHCI_HC_RESOURCES {
   UHCI_HCD_QH StaticBulkHead;
   UHCI_HCD_TD StaticBulkTD;
   UHCI_HCD_TD StaticTD;
+  UHCI_HCD_TD StaticSofTD[UHCI_MAX_STATIC_SOF_TDS];
 } UHCI_HC_RESOURCES, *PUHCI_HC_RESOURCES;
 
 #define UHCI_EXTENSION_FLAG_SUSPENDED  0x00000002
@@ -109,6 +116,7 @@ typedef struct _UHCI_EXTENSION {
   PUHCI_HCD_QH BulkQH;
   PUHCI_HCD_QH BulkTailQH;
   PUHCI_HCD_TD StaticTD;
+  PUHCI_HCD_TD SOF_HcdTDs; // pointer to array StaticSofTD[UHCI_MAX_STATIC_SOF_TDS]
   ULONG FrameNumber;
   ULONG FrameHighPart;
   ULONG Flags;
