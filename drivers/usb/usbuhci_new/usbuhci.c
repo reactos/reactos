@@ -901,7 +901,66 @@ NTAPI
 UhciUnlinkQH(IN PUHCI_EXTENSION UhciExtension,
              IN PUHCI_HCD_QH QH)
 {
-    DPRINT("UhciUnlinkQH: UNIMPLEMENTED. FIXME\n");
+    PUHCI_HCD_QH NextHcdQH;
+    PUHCI_HCD_QH PrevHcdQH;
+    PUHCI_HCD_QH BulkQH;
+
+    DPRINT("UhciUnlinkQH: ... \n");
+
+    NextHcdQH = QH->NextHcdQH;
+    PrevHcdQH = QH->PrevHcdQH;
+
+    if (UhciExtension->BulkTailQH == QH)
+    {
+        UhciExtension->BulkTailQH = PrevHcdQH;
+    }
+
+    PrevHcdQH->HwQH.NextQH = QH->HwQH.NextQH;
+    PrevHcdQH->NextHcdQH = NextHcdQH;
+
+    if (NextHcdQH)
+    {
+        NextHcdQH->PrevHcdQH = PrevHcdQH;
+    }
+
+    QH->PrevHcdQH = QH;
+    QH->NextHcdQH = QH;
+
+    if (!(QH->UhciEndpoint->EndpointProperties.TransferType ==
+          USBPORT_TRANSFER_TYPE_BULK))
+    {
+        QH->QhFlags &= ~UHCI_HCD_QH_FLAG_ACTIVE;
+        return;
+    }
+
+    if ((UhciExtension->BulkTailQH->HwQH.NextQH & UHCI_QH_HEAD_LINK_PTR_TERMINATE)
+                                               == UHCI_QH_HEAD_LINK_PTR_TERMINATE)
+    {
+        QH->QhFlags &= ~UHCI_HCD_QH_FLAG_ACTIVE;
+        return;
+    }
+
+    BulkQH = UhciExtension->BulkQH;
+
+    while (TRUE)
+    {
+        BulkQH = BulkQH->NextHcdQH;
+
+        if (!BulkQH)
+        {
+            break;
+        }
+
+        if (!(BulkQH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_PTR_TERMINATE))
+        {
+            QH->QhFlags &= ~UHCI_HCD_QH_FLAG_ACTIVE;
+            return;
+        }
+    }
+
+    UhciExtension->BulkTailQH->HwQH.NextQH |= UHCI_QH_HEAD_LINK_PTR_TERMINATE;
+
+    QH->QhFlags &= ~UHCI_HCD_QH_FLAG_ACTIVE;
 }
 
 VOID
