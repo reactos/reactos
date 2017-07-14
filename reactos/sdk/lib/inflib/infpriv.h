@@ -65,6 +65,7 @@ typedef struct _INFCACHE
 typedef struct _INFCONTEXT
 {
   PINFCACHE Inf;
+  PINFCACHE CurrentInf;
   PINFCACHESECTION Section;
   PINFCACHELINE Line;
 } INFCONTEXT;
