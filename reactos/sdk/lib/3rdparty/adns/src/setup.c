@@ -715,3 +715,6 @@ void adns_addserver(adns_state ads, struct in_addr addr) {
 void adns_ccf_search(adns_state ads, const char *fn, int lno, const char *buf) {
     ccf_search(ads, fn, lno, buf);
 }
+int adns_numservers(adns_state ads) {
+    return ads->nservers;
+}
