@@ -264,7 +264,7 @@ PATHOBJ_bPolyLineTo(
     }
     else
     {
-        /* concatnate ppdLast->pd.pptfx and pptfx */
+        /* concatenate ppdLast->pd.pptfx and pptfx */
         size = (ppdLast->pd.count + cptfx) * sizeof(POINTFIX);
         pptfxNew = ExAllocatePoolWithTag(PagedPool, size, GDITAG_PATHOBJ);
         if (pptfxNew == NULL)
@@ -276,7 +276,7 @@ PATHOBJ_bPolyLineTo(
         RtlCopyMemory(&pptfxNew[ppdLast->pd.count], pptfx, size);
 
         pptfxOld = ppdLast->pd.pptfx;
-        ppd->pd.pptfx = pptfxNew;
+        ppdLast->pd.pptfx = pptfxNew;
         ExFreePoolWithTag(pptfxOld, GDITAG_PATHOBJ);
     }
 
@@ -293,8 +293,8 @@ PATHOBJ_bPolyBezierTo(
     IN POINTFIX  *pptfx,
     IN ULONG  cptfx)
 {
-    PEXTPATHDATA ppd, ppdLast;
     PEXTPATHOBJ pPathObj;
+    PEXTPATHDATA ppd, ppdLast;
     PPOINTFIX pptfxNew, pptfxOld;
     ULONG size;
 
@@ -360,7 +360,7 @@ PATHOBJ_bPolyBezierTo(
     }
     else
     {
-        /* concatnate ppdLast->pd.pptfx and pptfx */
+        /* concatenate ppdLast->pd.pptfx and pptfx */
         size = (ppdLast->pd.count + cptfx) * sizeof(POINTFIX);
         pptfxNew = ExAllocatePoolWithTag(PagedPool, size, GDITAG_PATHOBJ);
         if (pptfxNew == NULL)
@@ -372,7 +372,7 @@ PATHOBJ_bPolyBezierTo(
         RtlCopyMemory(&pptfxNew[ppdLast->pd.count], pptfx, size);
 
         pptfxOld = ppdLast->pd.pptfx;
-        ppd->pd.pptfx = pptfxNew;
+        ppdLast->pd.pptfx = pptfxNew;
         ExFreePoolWithTag(pptfxOld, GDITAG_PATHOBJ);
     }
 
