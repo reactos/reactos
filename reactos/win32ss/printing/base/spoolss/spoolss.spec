@@ -22,7 +22,7 @@
 @ stub AppendPrinterNotifyInfoData
 @ stub bGetDevModePerUser
 @ stub bSetDevModePerUser
-@ stub BuildOtherNamesFromMachineName
+@ stdcall BuildOtherNamesFromMachineName(ptr ptr)
 @ stub CacheAddName
 @ stub CacheCreateAndAddNode
 @ stub CacheCreateAndAddNodeWithIPAddresses
