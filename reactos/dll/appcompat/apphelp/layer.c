@@ -159,7 +159,7 @@ BOOL SdbpBuildSignMediaId(PSDB_TMP_STR LongPath)
             FindClose(FindHandle);
             SdbpResizeTempStr(LongPath, (LongPath->Str.Length >> 1) + 20);
             StringCbPrintfW(LongPath->Str.Buffer, LongPath->Str.MaximumLength, SIGN_MEDIA_FMT, SignMedia, Scratch.Str.Buffer + 3);
-            LongPath->Str.Length = wcslen(LongPath->Str.Buffer) * sizeof(WCHAR);
+            LongPath->Str.Length = (USHORT)wcslen(LongPath->Str.Buffer) * sizeof(WCHAR);
             SdbpFreeTempStr(&Scratch);
             return TRUE;
         }
@@ -217,7 +217,7 @@ NTSTATUS SdbpOpenKey(PUNICODE_STRING FullPath, BOOL bMachine, ACCESS_MASK Access
             return Status;
         }
     }
-    FullPath->MaximumLength = BasePath.Length + (wcslen(LayersKey) + 1) * sizeof(WCHAR);
+    FullPath->MaximumLength = (USHORT)(BasePath.Length + (wcslen(LayersKey) + 1) * sizeof(WCHAR));
     FullPath->Buffer = SdbAlloc(FullPath->MaximumLength);
     FullPath->Length = 0;
     RtlAppendUnicodeStringToString(FullPath, &BasePath);

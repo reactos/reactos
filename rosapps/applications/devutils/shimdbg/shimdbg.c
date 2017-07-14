@@ -10,23 +10,16 @@
 #include <ctype.h>
 #include <ntndk.h>
 
-void __stdcall OutputDebugStringA(PCSTR);
+NTSYSAPI ULONG NTAPI vDbgPrintEx(_In_ ULONG ComponentId, _In_ ULONG Level, _In_z_ PCCH Format, _In_ va_list ap);
+#define DPFLTR_ERROR_LEVEL 0
 
 void xprintf(const char *fmt, ...)
 {
     va_list ap;
-    int length;
-    char *buf;
 
     va_start(ap, fmt);
-    length = _vscprintf(fmt, ap);
-    buf = malloc(length + 1);
-    vsprintf(buf, fmt, ap);
-    buf[length] = '\0';
-    va_end(ap);
-
-    fputs(buf, stdout);
-    OutputDebugStringA(buf);
+    vprintf(fmt, ap);
+    vDbgPrintEx(-1, DPFLTR_ERROR_LEVEL, fmt, ap);
 }
 
 

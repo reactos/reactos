@@ -577,7 +577,7 @@ BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size)
 
     if (!default_dir)
     {
-        WCHAR* tmp = NULL;
+        WCHAR* tmp;
         UINT len = GetSystemWindowsDirectoryW(NULL, 0) + lstrlenW(szAppPatch);
         tmp = SdbAlloc((len + 1)* sizeof(WCHAR));
         if (tmp)
@@ -706,7 +706,7 @@ BOOL WINAPI SdbPackAppCompatData(HSDB hsdb, PSDBQUERYRESULT pQueryResult, PVOID*
     pData->unknown = 0;
     pData->szLayer[0] = UNICODE_NULL;   /* TODO */
 
-    SHIM_INFO("\ndwFlags    0x%x\ndwMagic    0x%x\ntrExe      0x%x\ntrLayer    0x%x",
+    SHIM_INFO("\ndwFlags    0x%x\ndwMagic    0x%x\ntrExe      0x%x\ntrLayer    0x%x\n",
               pData->Query.dwFlags, pData->dwMagic, pData->Query.atrExes[0], pData->Query.atrLayers[0]);
 
     /* Database List */
