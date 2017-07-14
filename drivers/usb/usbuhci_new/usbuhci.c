@@ -871,7 +871,29 @@ UhciInsertQH(IN PUHCI_EXTENSION UhciExtension,
              IN PUHCI_HCD_QH StaticQH,
              IN PUHCI_HCD_QH QH)
 {
-    DPRINT("UhciInsertQH: UNIMPLEMENTED. FIXME\n");
+    PUHCI_HCD_QH NextHcdQH;
+
+    DPRINT("UhciInsertQH: ...\n");
+
+    QH->HwQH.NextQH = StaticQH->HwQH.NextQH;
+    NextHcdQH = StaticQH->NextHcdQH;
+
+    QH->PrevHcdQH = StaticQH;
+    QH->NextHcdQH = NextHcdQH;
+
+    if (NextHcdQH)
+    {
+        NextHcdQH->PrevHcdQH = QH;
+    }
+    else
+    {
+        UhciExtension->BulkTailQH = QH;
+    }
+
+    StaticQH->HwQH.NextQH = QH->PhysicalAddress | UHCI_QH_HEAD_LINK_PTR_QH;
+    StaticQH->NextHcdQH = QH;
+
+    QH->QhFlags |= UHCI_HCD_QH_FLAG_ACTIVE;
 }
 
 VOID
