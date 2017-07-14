@@ -842,13 +842,83 @@ UhciInterruptDpc(IN PVOID uhciExtension,
 
 MPSTATUS
 NTAPI
+UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
+                    IN PUHCI_ENDPOINT UhciEndpoint,
+                    IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
+                    IN PUHCI_TRANSFER UhciTransfer,
+                    IN PUSBPORT_SCATTER_GATHER_LIST SgList)
+{
+    DPRINT("UhciControlTransfer: UNIMPLEMENTED. FIXME\n");
+    return MP_STATUS_SUCCESS;
+}
+
+MPSTATUS
+NTAPI
+UhciBulkOrInterruptTransfer(IN PUHCI_EXTENSION UhciExtension,
+                            IN PUHCI_ENDPOINT UhciEndpoint,
+                            IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
+                            IN PUHCI_TRANSFER UhciTransfer,
+                            IN PUSBPORT_SCATTER_GATHER_LIST SgList)
+{
+    DPRINT("UhciBulkOrInterruptTransfer: UNIMPLEMENTED. FIXME\n");
+    return MP_STATUS_SUCCESS;
+}
+
+MPSTATUS
+NTAPI
 UhciSubmitTransfer(IN PVOID uhciExtension,
                    IN PVOID uhciEndpoint,
                    IN PVOID transferParameters,
                    IN PVOID uhciTransfer,
                    IN PVOID sgList)
 {
-    DPRINT("UhciSubmitTransfer: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters = transferParameters;
+    PUHCI_TRANSFER UhciTransfer = uhciTransfer;
+    PUSBPORT_SCATTER_GATHER_LIST SgList = sgList;
+    ULONG TransferType;
+
+    DPRINT("UhciSubmitTransfer: ...\n");
+
+    InterlockedIncrement(&UhciEndpoint->EndpointLock);
+
+    TransferType = UhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS && 
+        InterlockedIncrement(&UhciExtension->ExtensionLock) == 1)
+    {
+        UhciExtension->FrameNumber = UhciGet32BitFrameNumber(UhciExtension);
+    }
+
+    RtlZeroMemory(UhciTransfer, sizeof(UHCI_TRANSFER));
+
+    UhciTransfer->TransferParameters = TransferParameters;
+    UhciTransfer->USBDStatus = USBD_STATUS_SUCCESS;
+    UhciTransfer->UhciEndpoint = UhciEndpoint;
+
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
+    {
+        return UhciControlTransfer(UhciExtension,
+                                   UhciEndpoint,
+                                   TransferParameters,
+                                   UhciTransfer,
+                                   SgList);
+    }
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_BULK ||
+        TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        return UhciBulkOrInterruptTransfer(UhciExtension,
+                                           UhciEndpoint,
+                                           TransferParameters,
+                                           UhciTransfer,
+                                           SgList);
+    }
+
+    DPRINT1("UhciSubmitTransfer: Error TransferType - %x\n", TransferType);
+
     return MP_STATUS_SUCCESS;
 }
 
