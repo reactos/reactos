@@ -405,13 +405,15 @@ VOID
 NTAPI
 UhciRHDisableIrq(IN PVOID uhciExtension)
 {
-    DPRINT("UhciRHDisableIrq: UNIMPLEMENTED. FIXME\n");
+    //DPRINT("UhciRHDisableIrq: \n");
+    return;
 }
 
 VOID
 NTAPI
 UhciRHEnableIrq(IN PVOID uhciExtension)
 {
-    DPRINT("UhciRHEnableIrq: UNIMPLEMENTED. FIXME\n");
+    //DPRINT("UhciRHEnableIrq: \n");
+    return;
 }
 

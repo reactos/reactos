@@ -1040,7 +1040,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     RegPacket.RH_ClearFeaturePortResetChange = UhciRHClearFeaturePortResetChange;
     RegPacket.RH_ClearFeaturePortSuspendChange = UhciRHClearFeaturePortSuspendChange;
     RegPacket.RH_ClearFeaturePortOvercurrentChange = UhciRHClearFeaturePortOvercurrentChange;
-    RegPacket.RH_DisableIrq = UhciRHEnableIrq;
+    RegPacket.RH_DisableIrq = UhciRHDisableIrq;
     RegPacket.RH_EnableIrq = UhciRHEnableIrq;
     RegPacket.StartSendOnePacket = UhciStartSendOnePacket;
     RegPacket.EndSendOnePacket = UhciEndSendOnePacket;
