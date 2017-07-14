@@ -25,6 +25,9 @@
 #define UHCI_HCD_TD_FLAG_DATA_BUFFER   0x00000020
 #define UHCI_HCD_TD_FLAG_CONTROLL      0x00000400
 
+typedef struct _UHCI_ENDPOINT *PUHCI_ENDPOINT;
+typedef struct _UHCI_TRANSFER *PUHCI_TRANSFER;
+
 typedef struct _UHCI_HCD_TD {
   /* Hardware */
   UHCI_TD HwTD;
@@ -49,13 +52,29 @@ typedef struct _UHCI_HCD_QH {
   ULONG QhFlags;
   struct _UHCI_HCD_QH * NextHcdQH;
   struct _UHCI_HCD_QH * PrevHcdQH;
-  ULONG Padded[10];
+  PUHCI_ENDPOINT UhciEndpoint;
+  ULONG Padded[9];
 } UHCI_HCD_QH, *PUHCI_HCD_QH;
 
 C_ASSERT(sizeof(UHCI_HCD_QH) == 0x40);
 
+#define UHCI_ENDPOINT_FLAG_HALTED           1
+#define UHCI_ENDPOINT_FLAG_RESERVED         2
+#define UHCI_ENDPOINT_FLAG_CONTROLL_OR_ISO  4
+
 typedef struct _UHCI_ENDPOINT {
-  ULONG Reserved;
+  ULONG Flags;
+  LONG EndpointLock;
+  USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+  PUHCI_HCD_QH QH;
+  PUHCI_HCD_TD TailTD;
+  PUHCI_HCD_TD HeadTD;
+  PUHCI_HCD_TD FirstTD;
+  ULONG MaxTDs;
+  ULONG AlloccatedTDs;
+  ULONG AllocTdCounter;
+  LIST_ENTRY ListTDs;
+  BOOL DataToggle;
 } UHCI_ENDPOINT, *PUHCI_ENDPOINT;
 
 typedef struct _UHCI_TRANSFER {

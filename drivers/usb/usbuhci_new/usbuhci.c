@@ -117,7 +117,84 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
                  IN PVOID endpointParameters,
                  IN PVOID uhciEndpoint)
 {
-    DPRINT("UhciOpenEndpoint: UNIMPLEMENTED. FIXME\n");
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointParameters = endpointParameters;
+    PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
+    ULONG TransferType;
+    ULONG_PTR BufferVA;
+    ULONG_PTR BufferPA;
+    ULONG ix;
+    ULONG TdCount;
+    PUHCI_HCD_TD TD;
+    SIZE_T BufferLength;
+    PUHCI_HCD_QH QH;
+
+    RtlCopyMemory(&UhciEndpoint->EndpointProperties,
+                  EndpointParameters,
+                  sizeof(UhciEndpoint->EndpointProperties));
+
+    InitializeListHead(&UhciEndpoint->ListTDs);
+
+    UhciEndpoint->EndpointLock = 0;
+    UhciEndpoint->DataToggle = 0;
+    UhciEndpoint->Flags = 0;
+
+    TransferType = EndpointParameters->TransferType;
+
+    DPRINT("UhciOpenEndpoint: UhciEndpoint - %p, TransferType - %x\n",
+           UhciEndpoint,
+           TransferType);
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
+        TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_CONTROLL_OR_ISO;
+    }
+
+    BufferVA = EndpointParameters->BufferVA;
+    BufferPA = EndpointParameters->BufferPA;
+
+    BufferLength = EndpointParameters->BufferLength;
+
+    /* For Isochronous transfers not used QHs (only TDs) */
+    if (EndpointParameters->TransferType != USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        /* Initialize HCD Queue Head */
+        UhciEndpoint->QH = (PUHCI_HCD_QH)BufferVA;
+
+        QH = UhciEndpoint->QH;
+
+        QH->HwQH.NextElement |= UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+        QH->PhysicalAddress = BufferPA;
+
+        QH->NextHcdQH = QH;
+        QH->PrevHcdQH = QH;
+        QH->UhciEndpoint = UhciEndpoint;
+
+        BufferVA += sizeof(UHCI_HCD_QH);
+        BufferPA += sizeof(UHCI_HCD_QH);
+
+        BufferLength -= sizeof(UHCI_HCD_QH);
+    }
+
+    /* Initialize HCD Transfer Descriptors */
+    TdCount = BufferLength / sizeof(UHCI_HCD_TD);
+    UhciEndpoint->MaxTDs = TdCount;
+
+    UhciEndpoint->FirstTD = (PVOID)BufferVA;
+    UhciEndpoint->AlloccatedTDs = 0;
+
+    RtlZeroMemory(UhciEndpoint->FirstTD, TdCount * sizeof(UHCI_HCD_TD));
+
+    for (ix = 0; ix < UhciEndpoint->MaxTDs; ++ix)
+    {
+        TD = &UhciEndpoint->FirstTD[ix];
+        TD->PhysicalAddress = BufferPA;
+        BufferPA += sizeof(UHCI_HCD_TD);
+    }
+
+    UhciEndpoint->TailTD = NULL;
+    UhciEndpoint->HeadTD = NULL;
+
     return MP_STATUS_SUCCESS;
 }
 
