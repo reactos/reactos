@@ -750,7 +750,16 @@ VOID
 NTAPI
 UhciCheckController(IN PVOID uhciExtension)
 {
-    DPRINT("UhciCheckController: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+
+    if (!UhciHardwarePresent(UhciExtension) ||
+        UhciExtension->HcScheduleError >= UHCI_MAX_HC_SCHEDULE_ERRORS)
+    {
+       DPRINT1("UhciCheckController: INVALIDATE_CONTROLLER_SURPRISE_REMOVE !!!\n");
+
+       RegPacket.UsbPortInvalidateController(UhciExtension,
+                                             USBPORT_INVALIDATE_CONTROLLER_SURPRISE_REMOVE);
+    }
 }
 
 ULONG
