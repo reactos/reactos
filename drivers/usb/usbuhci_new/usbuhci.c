@@ -867,11 +867,98 @@ UhciGetEndpointState(IN PVOID uhciExtension,
 
 VOID
 NTAPI
+UhciInsertQH(IN PUHCI_EXTENSION UhciExtension,
+             IN PUHCI_HCD_QH StaticQH,
+             IN PUHCI_HCD_QH QH)
+{
+    DPRINT("UhciInsertQH: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
+UhciUnlinkQH(IN PUHCI_EXTENSION UhciExtension,
+             IN PUHCI_HCD_QH QH)
+{
+    DPRINT("UhciUnlinkQH: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
 UhciSetEndpointState(IN PVOID uhciExtension,
                      IN PVOID uhciEndpoint,
                      IN ULONG EndpointState)
 {
-    DPRINT("UhciSetEndpointState: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
+    ULONG TransferType;
+    PUHCI_HCD_QH QH;
+    ULONG Idx;
+
+    TransferType = UhciEndpoint->EndpointProperties.TransferType;
+    QH = UhciEndpoint->QH;
+
+    DPRINT("UhciSetEndpointState: EndpointState - %x, TransferType - %x\n",
+           EndpointState,
+           TransferType);
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        return;
+    }
+
+    if (TransferType != USBPORT_TRANSFER_TYPE_CONTROL &&
+        TransferType != USBPORT_TRANSFER_TYPE_BULK &&
+        TransferType != USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        DPRINT("UhciSetEndpointState: Unknown TransferType - %x\n",
+               TransferType);
+    }
+
+    switch (EndpointState)
+    {
+        case USBPORT_ENDPOINT_PAUSED:
+            UhciUnlinkQH(UhciExtension, QH);
+            return;
+
+        case USBPORT_ENDPOINT_ACTIVE:
+            switch (TransferType)
+            {
+                case USBPORT_TRANSFER_TYPE_CONTROL:
+                    UhciInsertQH(UhciExtension,
+                                 UhciExtension->ControlQH,
+                                 UhciEndpoint->QH);
+                    break;
+
+                case USBPORT_TRANSFER_TYPE_BULK:
+                    UhciInsertQH(UhciExtension,
+                                 UhciExtension->BulkQH,
+                                 UhciEndpoint->QH);
+                    break;
+
+                case USBPORT_TRANSFER_TYPE_INTERRUPT:
+                    Idx = UhciEndpoint->EndpointProperties.Period +
+                          UhciEndpoint->EndpointProperties.ScheduleOffset;
+
+                    UhciInsertQH(UhciExtension,
+                                 UhciExtension->IntQH[Idx - 1],
+                                 UhciEndpoint->QH);
+                    break;
+                default:
+                    ASSERT(FALSE);
+                    break;
+            }
+
+            break;
+
+        case USBPORT_ENDPOINT_REMOVE:
+            QH->QhFlags |= UHCI_HCD_QH_FLAG_REMOVE;
+            UhciUnlinkQH(UhciExtension, QH);
+            break;
+
+        default:
+            ASSERT(FALSE);
+            break;
+    }
 }
 
 VOID
