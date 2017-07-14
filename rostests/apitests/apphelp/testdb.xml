@@ -9,7 +9,7 @@
         <!-- Verify that we are able to match this -->
         <EXE>
             <NAME>test_match0.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
+            <APP_NAME>test_match0.exe</APP_NAME>
             <VENDOR>Succeed</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
@@ -28,7 +28,7 @@
         <!-- Verify that we are able to match this -->
         <EXE>
             <NAME>test_match1.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
+            <APP_NAME>test_match1.exe</APP_NAME>
             <VENDOR>Succeed</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
@@ -47,8 +47,8 @@
         <!-- SIZE wrong -->
         <EXE>
             <NAME>test_match2.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match2.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2047</SIZE>
@@ -64,8 +64,8 @@
         <!-- CHECKSUM wrong -->
         <EXE>
             <NAME>test_match3.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match3.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>
@@ -81,8 +81,8 @@
         <!-- PRODUCT_VERSION too high -->
         <EXE>
             <NAME>test_match4.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match4.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>
@@ -98,8 +98,8 @@
         <!-- PRODUCT_VERSION too low -->
         <EXE>
             <NAME>test_match5.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match5.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>
@@ -115,8 +115,8 @@
         <!-- FILE_VERSION wrong -->
         <EXE>
             <NAME>test_match6.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match6.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>
@@ -132,8 +132,8 @@
         <!-- FILE_DESCRIPTION wrong -->
         <EXE>
             <NAME>test_match7.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match7.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>
@@ -149,8 +149,8 @@
         <!-- COMPANY_NAME wrong -->
         <EXE>
             <NAME>test_match8.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match8.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>
@@ -166,8 +166,8 @@
         <!-- ORIGINAL_FILENAME wrong -->
         <EXE>
             <NAME>test_match9.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match9.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>
@@ -183,8 +183,8 @@
         <!-- INTERNAL_NAME wrong -->
         <EXE>
             <NAME>test_match10.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match10.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>
@@ -200,8 +200,8 @@
         <!-- Show that strings are checked for the full length(1) -->
         <EXE>
             <NAME>test_match11.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match11.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>
@@ -217,8 +217,8 @@
         <!-- Show that strings are checked for the full length(2) -->
         <EXE>
             <NAME>test_match12.exe</NAME>
-            <APP_NAME>Generic name</APP_NAME>
-            <VENDOR>Generic Description</VENDOR>
+            <APP_NAME>test_match12.exe</APP_NAME>
+            <VENDOR>Fail</VENDOR>
             <MATCHING_FILE>
                 <NAME>*</NAME>
                 <SIZE>2048</SIZE>

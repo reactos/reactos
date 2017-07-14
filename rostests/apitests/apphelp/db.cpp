@@ -110,6 +110,7 @@
 #define TAG_APP_NAME (0x6 | TAG_TYPE_STRINGREF)
 #define TAG_COMMAND_LINE (0x8 | TAG_TYPE_STRINGREF)
 #define TAG_COMPANY_NAME (0x9 | TAG_TYPE_STRINGREF)
+#define TAG_WILDCARD_NAME (0xB | TAG_TYPE_STRINGREF)
 #define TAG_PRODUCT_NAME (0x10 | TAG_TYPE_STRINGREF)
 #define TAG_PRODUCT_VERSION (0x11 | TAG_TYPE_STRINGREF)
 #define TAG_FILE_DESCRIPTION (0x12 | TAG_TYPE_STRINGREF)
@@ -1265,17 +1266,12 @@ static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, int cur)
 
     if (RtlDosPathNameToNtPathName_U(exename, &exenameNT, NULL, NULL))
     {
+        /*
+        ERROR,AslPathGetLongFileNameLongpath,110,Long path conversion failed 123 [c0000001]
+        ERROR,AslPathBuildSignatureLongpath,1086,AslPathGetLongFileNameLongpath failed for \??\C:\Users\MARK~1.DEV\AppData\Local\Temp\apphelp_test\test_allow.exe [c0000001]
+        */
         ret = pSdbGetMatchingExe(hsdb, exenameNT.Buffer, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
-        if (!ret && g_WinVersion >= WINVER_WIN10)
-        {
-            /*
-            ERROR,AslPathGetLongFileNameLongpath,110,Long path conversion failed 123 [c0000001]
-            ERROR,AslPathBuildSignatureLongpath,1086,AslPathGetLongFileNameLongpath failed for \??\C:\Users\MARK~1.DEV\AppData\Local\Temp\apphelp_test\test_allow.exe [c0000001]
-            */
-            trace("Using DOS path for Win10\n");
-            ret = pSdbGetMatchingExe(hsdb, exename, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
-        }
-        ok(ret, "SdbGetMatchingExe should not fail for %d.\n", cur);
+        ok(!ret, "SdbGetMatchingExe should not succeed for %d.\n", cur);
 
         RtlFreeUnicodeString(&exenameNT);
     }
@@ -1372,51 +1368,56 @@ static bool extract_resource(const WCHAR* Filename, LPCWSTR ResourceName)
 }
 
 template<typename SDBQUERYRESULT_T>
-static BOOL test_match_ex(const WCHAR* workdir, HSDB hsdb, int cur)
+static void test_match_ex(const WCHAR* workdir, HSDB hsdb)
 {
     WCHAR exename[MAX_PATH];
-    WCHAR* Vendor;
+    PWCHAR Vendor, AppName, TestName;
     SDBQUERYRESULT_T query;
-    TAGID tagid, exetag;
+    TAGID dbtag, exetag, tagid;
     BOOL ret, Succeed;
     PDB pdb;
 
     memset(&query, 0xab, sizeof(query));
 
-    swprintf(exename, L"%s\\test_match%d.exe", workdir, cur);
-
     ret = pSdbTagRefToTagID(hsdb, 0, &pdb, &tagid);
     ok(pdb != NULL && pdb != (PDB)0x12345678, "Expected pdb to be set to a valid pdb, was: %p\n", pdb);
 
-    tagid = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
-    ok(tagid != TAGID_NULL, "Expected to get a valid TAG_DATABASE\n");
+    dbtag = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
+    ok(dbtag != TAGID_NULL, "Expected to get a valid TAG_DATABASE\n");
 
-    exetag = pSdbFindFirstNamedTag(pdb, tagid, TAG_EXE, TAG_NAME, exename + wcslen(workdir) + 1);
-
-    if (!exetag)
+    for (exetag = pSdbFindFirstTag(pdb, dbtag, TAG_EXE); exetag; exetag = pSdbFindNextTag(pdb, dbtag, exetag))
     {
-        /* Test done */
-        return FALSE;
+        tagid = pSdbFindFirstTag(pdb, exetag, TAG_VENDOR);
+        Vendor = pSdbGetStringTagPtr(pdb, tagid);
+        if (!Vendor)
+            continue;
+        Succeed = !wcsicmp(Vendor, L"Succeed");
+        if (!Succeed && wcsicmp(Vendor, L"Fail"))
+            continue;
+        tagid = pSdbFindFirstTag(pdb, exetag, TAG_APP_NAME);
+        AppName = pSdbGetStringTagPtr(pdb, tagid);
+        if (!AppName)
+            continue;
+
+        tagid = pSdbFindFirstTag(pdb, exetag, TAG_NAME);
+        TestName = pSdbGetStringTagPtr(pdb, tagid);
+        if (!TestName)
+            continue;
+
+        swprintf(exename, L"%s\\%s", workdir, AppName);
+        test_create_exe(exename, 0);
+
+        ret = pSdbGetMatchingExe(hsdb, exename, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
+        DWORD exe_count = Succeed ? 1 : 0;
+
+        if (Succeed)
+            ok(ret, "SdbGetMatchingExe should not fail for %s.\n", wine_dbgstr_w(TestName));
+        else
+            ok(!ret, "SdbGetMatchingExe should not succeed for %s.\n", wine_dbgstr_w(TestName));
+
+        ok(query.dwExeCount == exe_count, "Expected dwExeCount to be %d, was %d for %s\n", exe_count, query.dwExeCount, wine_dbgstr_w(TestName));
+        DeleteFileW(exename);
     }
-
-    tagid = pSdbFindFirstTag(pdb, exetag, TAG_VENDOR);
-    Vendor = pSdbGetStringTagPtr(pdb, tagid);
-    Succeed = tagid != TAGID_NULL && Vendor && !wcsicmp(Vendor, L"Succeed");
-
-    test_create_exe(exename, 0);
-
-    ret = pSdbGetMatchingExe(hsdb, exename, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
-    DWORD exe_count = Succeed ? 1 : 0;
-
-    if (Succeed)
-        ok(ret, "SdbGetMatchingExe should not fail for %d.\n", cur);
-    else
-        ok(!ret, "SdbGetMatchingExe should not succeed for %d.\n", cur);
-
-    ok(query.dwExeCount == exe_count, "Expected dwExeCount to be %d, was %d for %d\n", exe_count, query.dwExeCount, cur);
-    DeleteFileW(exename);
-    /* Try the next file */
-    return TRUE;
 }
 
 
@@ -1449,13 +1450,8 @@ static void test_MatchApplicationsEx(void)
         }
         else
         {
-            size_t n;
             /* now that our enviroment is setup, let's go ahead and run the actual tests.. */
-            for (n = 0;; ++n)
-            {
-                if (!test_match_ex<SDBQUERYRESULT_T>(workdir, hsdb, n))
-                    break;
-            }
+            test_match_ex<SDBQUERYRESULT_T>(workdir, hsdb);
             pSdbReleaseDatabase(hsdb);
         }
     }
