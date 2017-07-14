@@ -840,6 +840,56 @@ UhciInterruptDpc(IN PVOID uhciExtension,
     }
 }
 
+PUHCI_HCD_TD
+NTAPI
+UhciAllocateTD(IN PUHCI_EXTENSION UhciExtension,
+               IN PUHCI_ENDPOINT UhciEndpoint)
+{
+    PUHCI_HCD_TD TD;
+    ULONG AllocTdCounter;
+    ULONG ix;
+
+    DPRINT("UhciAllocateTD: ...\n");
+
+    if (UhciEndpoint->MaxTDs == 0)
+    {
+        return NULL;
+    }
+
+    AllocTdCounter = UhciEndpoint->AllocTdCounter;
+
+    for (ix = 0; ix < UhciEndpoint->MaxTDs; ++ix)
+    {
+        TD = &UhciEndpoint->FirstTD[AllocTdCounter];
+
+        if (!(TD->Flags & UHCI_HCD_TD_FLAG_ALLOCATED))
+        {
+            break;
+        }
+
+        if (AllocTdCounter < UhciEndpoint->MaxTDs - 1)
+        {
+            AllocTdCounter++;
+        }
+        else
+        {
+            AllocTdCounter = 0;
+        }
+    }
+
+    if (ix >= UhciEndpoint->MaxTDs)
+    {
+        return NULL;
+    }
+
+    TD->Flags |= UHCI_HCD_TD_FLAG_ALLOCATED;
+
+    UhciEndpoint->AllocatedTDs++;
+    UhciEndpoint->AllocTdCounter = AllocTdCounter;
+
+    return TD;
+}
+
 MPSTATUS
 NTAPI
 UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
@@ -894,9 +944,8 @@ UhciSubmitTransfer(IN PVOID uhciExtension,
     RtlZeroMemory(UhciTransfer, sizeof(UHCI_TRANSFER));
 
     UhciTransfer->TransferParameters = TransferParameters;
-    UhciTransfer->USBDStatus = USBD_STATUS_SUCCESS;
     UhciTransfer->UhciEndpoint = UhciEndpoint;
-
+    UhciTransfer->USBDStatus = USBD_STATUS_SUCCESS;
 
     if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
     {
