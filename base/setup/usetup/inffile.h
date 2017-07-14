@@ -21,7 +21,8 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/inffile.h
  * PURPOSE:         .inf files support functions
- * PROGRAMMER:      Hervé Poussineau
+ * PROGRAMMERS:     Hervé Poussineau
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once
@@ -32,41 +33,8 @@
 
 #else /* __REACTOS__ */
 
+/* Functions from the INFLIB library */
 #include <infcommon.h>
-
-extern VOID InfSetHeap(PVOID Heap);
-extern VOID InfCloseFile(HINF InfHandle);
-extern BOOLEAN InfFindNextLine(PINFCONTEXT ContextIn,
-                               PINFCONTEXT ContextOut);
-extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PUCHAR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
-extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
-                                  ULONG FieldIndex,
-                                  PWSTR ReturnBuffer,
-                                  ULONG ReturnBufferSize,
-                                  PULONG RequiredSize);
-extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PWSTR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
-
-#define SetupCloseInfFile InfCloseFile
-#define SetupFindNextLine InfFindNextLine
-#define SetupGetBinaryField InfGetBinaryField
-#define SetupGetMultiSzFieldW InfGetMultiSzField
-#define SetupGetStringFieldW InfGetStringField
-
-
-#define SetupFindFirstLineW InfpFindFirstLineW
-#define SetupGetFieldCount InfGetFieldCount
-#define SetupGetIntField InfGetIntField
-
-// SetupOpenInfFileW with support for a user-provided LCID
-#define SetupOpenInfFileExW InfpOpenInfFileW
 
 #define INF_STYLE_WIN4 0x00000002
 
@@ -81,17 +49,72 @@ typedef struct _INFCONTEXT
 } INFCONTEXT;
 C_ASSERT(sizeof(INFCONTEXT) == 2 * sizeof(PVOID) + 2 * sizeof(UINT));
 
+extern VOID InfSetHeap(PVOID Heap);
+
+// #define SetupCloseInfFile InfCloseFile
+VOID
+WINAPI
+SetupCloseInfFile(HINF InfHandle);
+
+// #define SetupFindFirstLineW InfpFindFirstLineW
 BOOL
 WINAPI
-InfpFindFirstLineW(
+SetupFindFirstLineW(
     IN HINF InfHandle,
     IN PCWSTR Section,
     IN PCWSTR Key,
     IN OUT PINFCONTEXT Context);
 
+// #define SetupFindNextLine InfFindNextLine
+BOOL
+WINAPI
+SetupFindNextLine(PINFCONTEXT ContextIn,
+                  PINFCONTEXT ContextOut);
+
+// #define SetupGetFieldCount InfGetFieldCount
+LONG
+WINAPI
+SetupGetFieldCount(PINFCONTEXT Context);
+
+// #define SetupGetIntField InfGetIntField
+BOOLEAN
+WINAPI
+SetupGetIntField(PINFCONTEXT Context,
+                 ULONG FieldIndex,
+                 INT *IntegerValue);
+
+// #define SetupGetBinaryField InfGetBinaryField
+BOOL
+WINAPI
+SetupGetBinaryField(PINFCONTEXT Context,
+                    ULONG FieldIndex,
+                    PUCHAR ReturnBuffer,
+                    ULONG ReturnBufferSize,
+                    PULONG RequiredSize);
+
+// #define SetupGetMultiSzFieldW InfGetMultiSzField
+BOOL
+WINAPI
+SetupGetMultiSzFieldW(PINFCONTEXT Context,
+                      ULONG FieldIndex,
+                      PWSTR ReturnBuffer,
+                      ULONG ReturnBufferSize,
+                      PULONG RequiredSize);
+
+// #define SetupGetStringFieldW InfGetStringField
+BOOL
+WINAPI
+SetupGetStringFieldW(PINFCONTEXT Context,
+                     ULONG FieldIndex,
+                     PWSTR ReturnBuffer,
+                     ULONG ReturnBufferSize,
+                     PULONG RequiredSize);
+
+/* SetupOpenInfFileW with support for a user-provided LCID */
+// #define SetupOpenInfFileExW InfpOpenInfFileW
 HINF
 WINAPI
-InfpOpenInfFileW(
+SetupOpenInfFileExW(
     IN PCWSTR FileName,
     IN PCWSTR InfClass,
     IN DWORD InfStyle,
@@ -99,6 +122,9 @@ InfpOpenInfFileW(
     OUT PUINT ErrorLine);
 
 #endif /* __REACTOS__ */
+
+
+/* HELPER FUNCTIONS **********************************************************/
 
 BOOLEAN
 INF_GetData(

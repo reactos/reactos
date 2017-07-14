@@ -29,96 +29,13 @@
 
 #include "precomp.h"
 #include "filesup.h"
+#include "infsupp.h"
 #include "regutil.h"
 
 #include "registry.h"
 
 #define NDEBUG
 #include <debug.h>
-
-
-/*
- * INF stuff -- Check usetup/inffile.h
- */
-// #include <infcommon.h>
-#include <setupapi.h>
-
-extern LONG InfGetFieldCount(PINFCONTEXT Context);
-extern BOOLEAN InfGetIntField(PINFCONTEXT Context,
-                              ULONG FieldIndex,
-                              INT *IntegerValue);
-extern BOOL
-WINAPI
-InfpFindFirstLineW(
-    IN HINF InfHandle,
-    IN PCWSTR Section,
-    IN PCWSTR Key,
-    IN OUT PINFCONTEXT Context);
-
-extern VOID InfCloseFile(HINF InfHandle);
-extern BOOLEAN InfFindNextLine(PINFCONTEXT ContextIn,
-                               PINFCONTEXT ContextOut);
-extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PUCHAR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
-extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
-                                  ULONG FieldIndex,
-                                  PWSTR ReturnBuffer,
-                                  ULONG ReturnBufferSize,
-                                  PULONG RequiredSize);
-extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PWSTR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
-
-#define SetupCloseInfFile InfCloseFile
-#define SetupFindNextLine InfFindNextLine
-#define SetupGetBinaryField InfGetBinaryField
-#define SetupGetMultiSzFieldW InfGetMultiSzField
-#define SetupGetStringFieldW InfGetStringField
-
-#define SetupFindFirstLineW InfpFindFirstLineW
-#define SetupGetFieldCount InfGetFieldCount
-#define SetupGetIntField InfGetIntField
-
-// SetupOpenInfFileW with support for a user-provided LCID
-#define SetupOpenInfFileExW InfpOpenInfFileW
-
-HINF
-WINAPI
-InfpOpenInfFileW(
-    IN PCWSTR FileName,
-    IN PCWSTR InfClass,
-    IN DWORD InfStyle,
-    IN LCID LocaleId,
-    OUT PUINT ErrorLine);
-
-/*******************************************/
-
-
-
-// HACK!! These functions should actually be moved in the setup lib!
-// For the moment, see usetup/filesup.c (or .h)
-#if 1
-
-NTSTATUS
-SetupCopyFile(
-    IN PCWSTR SourceFileName,
-    IN PCWSTR DestinationFileName,
-    IN BOOLEAN FailIfExists);
-
-#define MOVEFILE_REPLACE_EXISTING   1
-
-NTSTATUS
-SetupMoveFile(
-    IN PCWSTR ExistingFileName,
-    IN PCWSTR NewFileName,
-    IN ULONG Flags);
-
-#endif
 
 
 // #ifdef __REACTOS__
