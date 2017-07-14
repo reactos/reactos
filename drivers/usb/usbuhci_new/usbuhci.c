@@ -181,7 +181,7 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
     UhciEndpoint->MaxTDs = TdCount;
 
     UhciEndpoint->FirstTD = (PVOID)BufferVA;
-    UhciEndpoint->AlloccatedTDs = 0;
+    UhciEndpoint->AllocatedTDs = 0;
 
     RtlZeroMemory(UhciEndpoint->FirstTD, TdCount * sizeof(UHCI_HCD_TD));
 
@@ -840,6 +840,30 @@ UhciInterruptDpc(IN PVOID uhciExtension,
     }
 }
 
+VOID
+NTAPI
+UhciQueueTransfer(IN PUHCI_EXTENSION UhciExtension,
+                  IN PUHCI_ENDPOINT UhciEndpoint,
+                  IN PUHCI_HCD_TD FirstTD,
+                  IN PUHCI_HCD_TD LastTD)
+{
+    DPRINT("UhciQueueTransfer: ...\n");
+    DbgBreakPoint();
+}
+
+VOID
+NTAPI
+UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
+                          IN PUHCI_ENDPOINT UhciEndpoint,
+                          IN PUHCI_TRANSFER UhciTransfer,
+                          OUT PUHCI_HCD_TD * OutFirstTD,
+                          OUT PUHCI_HCD_TD * OutLastTD,
+                          IN PUSBPORT_SCATTER_GATHER_LIST SgList)
+{
+    DPRINT("UhciMapAsyncTransferToTDs: ...\n");
+    DbgBreakPoint();
+}
+
 PUHCI_HCD_TD
 NTAPI
 UhciAllocateTD(IN PUHCI_EXTENSION UhciExtension,
@@ -898,7 +922,144 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
                     IN PUHCI_TRANSFER UhciTransfer,
                     IN PUSBPORT_SCATTER_GATHER_LIST SgList)
 {
-    DPRINT("UhciControlTransfer: UNIMPLEMENTED. FIXME\n");
+    PUHCI_HCD_TD FirstTD;
+    PUHCI_HCD_TD FirstTdPA;
+    PUHCI_HCD_TD LastTD;
+    PUHCI_HCD_TD DataFirstTD;
+    PUHCI_HCD_TD DataLastTD;
+    UHCI_CONTROL_STATUS ControlStatus;
+    USB_DEVICE_SPEED DeviceSpeed;
+    USHORT EndpointAddress;
+    USHORT DeviceAddress;
+    ULONG_PTR PhysicalAddress;
+
+    DPRINT("UhciControlTransfer: ...\n");
+
+    if (UhciEndpoint->EndpointLock > 1)
+    {
+        InterlockedDecrement(&UhciEndpoint->EndpointLock);
+
+        if (UhciEndpoint->EndpointProperties.TransferType ==
+            USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+        {
+            InterlockedDecrement(&UhciExtension->ExtensionLock);
+        }
+
+        DPRINT("UhciControlTransfer: end MP_STATUS_FAILURE\n");
+        return MP_STATUS_FAILURE;
+    }
+
+    DeviceSpeed = UhciEndpoint->EndpointProperties.DeviceSpeed;
+    EndpointAddress = UhciEndpoint->EndpointProperties.EndpointAddress;
+    DeviceAddress = UhciEndpoint->EndpointProperties.DeviceAddress;
+
+    /* Allocate and setup first TD */
+    UhciTransfer->PendingTds++;
+    FirstTD = UhciAllocateTD(UhciExtension, UhciEndpoint);
+    FirstTD->Flags |= UHCI_HCD_TD_FLAG_PROCESSED;
+
+    FirstTD->HwTD.NextElement = 0;
+
+    ControlStatus.AsULONG = 0;
+    ControlStatus.LowSpeedDevice = (DeviceSpeed == UsbLowSpeed);
+    ControlStatus.Status |= UHCI_TD_STS_ACTIVE;
+    ControlStatus.ErrorCounter = 3;
+    FirstTD->HwTD.ControlStatus = ControlStatus;
+
+    FirstTD->HwTD.Token.AsULONG = 0;
+    FirstTD->HwTD.Token.Endpoint = EndpointAddress;
+    FirstTD->HwTD.Token.DeviceAddress = DeviceAddress;
+
+    FirstTD->HwTD.Token.MaximumLength = sizeof(USB_DEFAULT_PIPE_SETUP_PACKET);
+    FirstTD->HwTD.Token.MaximumLength--;
+    FirstTD->HwTD.Token.PIDCode = UHCI_TD_PID_SETUP;
+    FirstTD->HwTD.Token.DataToggle = UHCI_TD_PID_DATA0;
+
+    RtlCopyMemory(&FirstTD->SetupPacket,
+                  &TransferParameters->SetupPacket,
+                  sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+
+    FirstTdPA = (PUHCI_HCD_TD)FirstTD->PhysicalAddress;
+    FirstTD->HwTD.Buffer = (ULONG_PTR)&FirstTdPA->SetupPacket;
+
+    FirstTD->NextHcdTD = NULL;
+    FirstTD->UhciTransfer = UhciTransfer;
+
+    /* Allocate and setup last TD */
+    UhciTransfer->PendingTds++;
+    LastTD = UhciAllocateTD(UhciExtension, UhciEndpoint);
+    LastTD->Flags |= UHCI_HCD_TD_FLAG_PROCESSED;
+
+    LastTD->HwTD.NextElement = 0;
+
+    LastTD->HwTD.ControlStatus.AsULONG = 0;
+    LastTD->HwTD.ControlStatus.LowSpeedDevice = (DeviceSpeed == UsbLowSpeed);
+    LastTD->HwTD.ControlStatus.Status |= UHCI_TD_STS_ACTIVE;
+    LastTD->HwTD.ControlStatus.ErrorCounter = 3;
+
+    LastTD->HwTD.Token.AsULONG = 0;
+    LastTD->HwTD.Token.Endpoint = EndpointAddress;
+    LastTD->HwTD.Token.DeviceAddress = DeviceAddress;
+
+    LastTD->UhciTransfer = UhciTransfer;
+    LastTD->NextHcdTD = NULL;
+
+    /* Allocate and setup TDs for data */
+    DataFirstTD = NULL;
+    DataLastTD = NULL;
+
+    UhciMapAsyncTransferToTDs(UhciExtension,
+                              UhciEndpoint,
+                              UhciTransfer,
+                              &DataFirstTD,
+                              &DataLastTD,
+                              SgList);
+
+    if (DataFirstTD)
+    {
+        PhysicalAddress = DataFirstTD->PhysicalAddress;
+        PhysicalAddress &= UHCI_TD_LINK_POINTER_MASK;
+        FirstTD->HwTD.NextElement = PhysicalAddress;
+        FirstTD->NextHcdTD = DataFirstTD;
+
+        PhysicalAddress = LastTD->PhysicalAddress;
+        PhysicalAddress &= UHCI_TD_LINK_POINTER_MASK;
+        DataLastTD->HwTD.NextElement = PhysicalAddress;
+        DataLastTD->NextHcdTD = LastTD;
+    }
+    else
+    {
+        PhysicalAddress = LastTD->PhysicalAddress;
+        PhysicalAddress &= UHCI_TD_LINK_POINTER_MASK;
+        FirstTD->HwTD.NextElement = PhysicalAddress;
+        FirstTD->NextHcdTD = LastTD;
+    }
+
+    LastTD->HwTD.Buffer = 0;
+    LastTD->HwTD.ControlStatus.InterruptOnComplete = TRUE;
+
+    LastTD->HwTD.Token.DataToggle = UHCI_TD_PID_DATA1;
+    LastTD->HwTD.Token.MaximumLength = UHCI_TD_MAX_LENGTH_NULL;
+
+    if (UhciTransfer->TransferParameters->TransferFlags &
+        USBD_TRANSFER_DIRECTION_IN)
+    {
+        LastTD->HwTD.Token.PIDCode = UHCI_TD_PID_IN;
+    }
+    else
+    {
+        LastTD->HwTD.Token.PIDCode = UHCI_TD_PID_OUT;
+    }
+
+    LastTD->HwTD.NextElement = UHCI_TD_LINK_PTR_TERMINATE;
+
+    LastTD->Flags |= UHCI_HCD_TD_FLAG_CONTROLL;
+    LastTD->NextHcdTD = NULL;
+
+    /* Link this transfer to queue */
+    UhciQueueTransfer(UhciExtension, UhciEndpoint, FirstTD, LastTD);
+
+    DPRINT("UhciControlTransfer: end MP_STATUS_SUCCESS\n");
     return MP_STATUS_SUCCESS;
 }
 

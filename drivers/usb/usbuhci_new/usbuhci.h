@@ -33,6 +33,7 @@ typedef struct _UHCI_HCD_TD {
   /* Hardware */
   UHCI_TD HwTD;
   /* Software */
+  USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
   ULONG_PTR PhysicalAddress;
   ULONG Flags;
   struct _UHCI_HCD_TD * NextHcdTD;
@@ -40,7 +41,7 @@ typedef struct _UHCI_HCD_TD {
     PUHCI_TRANSFER UhciTransfer;
     ULONG Frame; // for SOF_HcdTDs only
   } DUMMYUNIONNAME;
-  ULONG Padded[8];
+  ULONG Padded[6];
 } UHCI_HCD_TD, *PUHCI_HCD_TD;
 
 C_ASSERT(sizeof(UHCI_HCD_TD) == 0x40);
@@ -76,7 +77,7 @@ typedef struct _UHCI_ENDPOINT {
   PUHCI_HCD_TD HeadTD;
   PUHCI_HCD_TD FirstTD;
   ULONG MaxTDs;
-  ULONG AlloccatedTDs;
+  ULONG AllocatedTDs;
   ULONG AllocTdCounter;
   LIST_ENTRY ListTDs;
   BOOL DataToggle;
@@ -86,6 +87,7 @@ typedef struct _UHCI_TRANSFER {
   PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
   PUHCI_ENDPOINT UhciEndpoint;
   USBD_STATUS USBDStatus;
+  ULONG PendingTds;
 } UHCI_TRANSFER, *PUHCI_TRANSFER;
 
 #define UHCI_FRAME_LIST_POINTER_VALID      (0 << 0) 
