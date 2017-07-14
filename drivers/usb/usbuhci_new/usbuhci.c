@@ -137,7 +137,66 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
                               IN PVOID endpointParameters,
                               IN PULONG EndpointRequirements)
 {
-    DPRINT("UhciQueryEndpointRequirements: UNIMPLEMENTED. FIXME\n");
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
+    ULONG TransferType;
+    ULONG TdCont;
+
+    DPRINT("UhciQueryEndpointRequirements: ... \n");
+
+    TransferType = EndpointProperties->TransferType;
+
+    switch (TransferType)
+    {
+        case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
+            DPRINT("UhciQueryEndpointRequirements: IsoTransfer\n");
+            TdCont = 2 * UHCI_MAX_ISO_TD_COUNT;
+
+            EndpointRequirements[0] = 0 + // Iso queue is have not Queue Heads
+                                      TdCont * sizeof(UHCI_HCD_TD);
+
+            EndpointRequirements[1] = UHCI_MAX_ISO_TRANSFER_SIZE;
+            break;
+
+        case USBPORT_TRANSFER_TYPE_CONTROL:
+            DPRINT("UhciQueryEndpointRequirements: ControlTransfer\n");
+            TdCont = EndpointProperties->MaxTransferSize /
+                     EndpointProperties->TotalMaxPacketSize;
+            TdCont += 2; // First + Last TDs
+
+            EndpointRequirements[0] = sizeof(UHCI_HCD_QH) +
+                                      TdCont * sizeof(UHCI_HCD_TD);
+
+            EndpointRequirements[1] = EndpointProperties->MaxTransferSize;
+            break;
+
+        case USBPORT_TRANSFER_TYPE_BULK:
+            DPRINT("UhciQueryEndpointRequirements: BulkTransfer\n");
+            TdCont = 2 * UHCI_MAX_BULK_TRANSFER_SIZE /
+                     EndpointProperties->TotalMaxPacketSize;
+
+            EndpointRequirements[0] = sizeof(UHCI_HCD_QH) +
+                                      TdCont * sizeof(UHCI_HCD_TD);
+
+            EndpointRequirements[1] = UHCI_MAX_BULK_TRANSFER_SIZE;
+            break;
+
+        case USBPORT_TRANSFER_TYPE_INTERRUPT:
+            DPRINT("UhciQueryEndpointRequirements: InterruptTransfer\n");
+            TdCont = 2 * UHCI_MAX_INTERRUPT_TD_COUNT;
+
+            EndpointRequirements[0] = sizeof(UHCI_HCD_QH) +
+                                      TdCont * sizeof(UHCI_HCD_TD);
+
+            EndpointRequirements[1] = UHCI_MAX_INTERRUPT_TD_COUNT *
+                                      EndpointProperties->TotalMaxPacketSize;
+            break;
+
+        default:
+            DPRINT1("UhciQueryEndpointRequirements: Unknown TransferType - %x\n",
+                    TransferType);
+            DbgBreakPoint();
+            break;
+    }
 }
 
 VOID
