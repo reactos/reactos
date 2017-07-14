@@ -847,8 +847,75 @@ UhciQueueTransfer(IN PUHCI_EXTENSION UhciExtension,
                   IN PUHCI_HCD_TD FirstTD,
                   IN PUHCI_HCD_TD LastTD)
 {
+    PUHCI_HCD_QH QH;
+    PUHCI_HCD_QH BulkTailQH;
+    PUHCI_HCD_TD TailTD;
+    ULONG_PTR PhysicalAddress;
+
     DPRINT("UhciQueueTransfer: ...\n");
-    DbgBreakPoint();
+
+    TailTD = UhciEndpoint->TailTD;
+    QH = UhciEndpoint->QH;
+
+    if (UhciEndpoint->HeadTD)
+    {
+        TailTD->NextHcdTD = FirstTD;
+
+        TailTD->HwTD.NextElement = FirstTD->PhysicalAddress;
+        TailTD->HwTD.NextElement |= UHCI_TD_LINK_PTR_TD;
+
+        PhysicalAddress = QH->HwQH.NextElement;
+
+        PhysicalAddress &= ~(UHCI_TD_LINK_PTR_TERMINATE |
+                             UHCI_TD_LINK_PTR_QH |
+                             UHCI_TD_LINK_PTR_DEPTH_FIRST);
+
+        if ((FirstTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE) != 0)
+        {
+            if (PhysicalAddress == TailTD->PhysicalAddress &&
+                !(TailTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE))
+            {
+                QH->HwQH.NextElement = FirstTD->PhysicalAddress;
+
+                QH->HwQH.NextElement &= ~(UHCI_QH_ELEMENT_LINK_PTR_TERMINATE |
+                                          UHCI_QH_ELEMENT_LINK_PTR_QH);
+            }
+        }
+    }
+    else
+    {
+        if (FirstTD)
+        {
+            UhciEndpoint->HeadTD = FirstTD;
+        }
+        else
+        {
+            UhciEndpoint->TailTD = NULL;
+            UhciEndpoint->HeadTD = NULL;
+        }
+
+        if (FirstTD == NULL ||
+            (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED) != 0)
+        {
+            PhysicalAddress = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+        }
+        else
+        {
+            PhysicalAddress = FirstTD->PhysicalAddress;
+            PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+        }
+
+        QH->HwQH.NextElement = PhysicalAddress & ~UHCI_QH_ELEMENT_LINK_PTR_QH;
+    }
+
+    if (UhciEndpoint->EndpointProperties.TransferType ==
+        USBPORT_TRANSFER_TYPE_BULK)
+    {
+        BulkTailQH = UhciExtension->BulkTailQH;
+        BulkTailQH->HwQH.NextQH &= ~UHCI_QH_HEAD_LINK_PTR_TERMINATE;
+    }
+
+    UhciEndpoint->TailTD = LastTD;
 }
 
 PUHCI_HCD_TD
@@ -926,9 +993,9 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
     BOOL DataToggle;
     UCHAR PIDCode;
     BOOLEAN IsLastTd = TRUE;
-    BOOLEAN ZeroLengthTransfer;
+    BOOLEAN ZeroLengthTransfer = TRUE;
 
-    DPRINT("UhciMapAsyncTransferToTds: ...\n");
+    DPRINT("UhciMapAsyncTransferToTDs: ...\n");
 
     TotalMaxPacketSize = UhciEndpoint->EndpointProperties.TotalMaxPacketSize;
     DeviceSpeed = UhciEndpoint->EndpointProperties.DeviceSpeed;
@@ -937,7 +1004,7 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
     TransferType = UhciEndpoint->EndpointProperties.TransferType;
 
     if (SgList->SgElementCount != 0 ||
-        (ZeroLengthTransfer = TRUE, TransferType == USBPORT_TRANSFER_TYPE_CONTROL))
+        TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
     {
         ZeroLengthTransfer = FALSE;
     }
