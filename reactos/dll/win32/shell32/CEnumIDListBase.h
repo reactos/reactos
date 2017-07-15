@@ -37,7 +37,6 @@ public:
 	BOOL AddToEnumList(LPITEMIDLIST pidl);
 	BOOL DeleteList();
 	BOOL HasItemWithCLSID(LPITEMIDLIST pidl);
-	BOOL CreateFolderEnumList(LPCWSTR lpszPath, DWORD dwFlags);
 
 	// *** IEnumIDList methods ***
 	virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched);

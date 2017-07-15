@@ -57,9 +57,65 @@ CFileSysEnum::~CFileSysEnum()
 {
 }
 
-HRESULT WINAPI CFileSysEnum::Initialize(LPWSTR sPathTarget, DWORD dwFlags)
+HRESULT WINAPI CFileSysEnum::Initialize(LPWSTR lpszPath, DWORD dwFlags)
 {
-    return CreateFolderEnumList(sPathTarget, dwFlags);
+    WIN32_FIND_DATAW stffile;
+    HANDLE hFile;
+    WCHAR  szPath[MAX_PATH];
+    BOOL succeeded = TRUE;
+    static const WCHAR stars[] = { '*','.','*',0 };
+    static const WCHAR dot[] = { '.',0 };
+    static const WCHAR dotdot[] = { '.','.',0 };
+
+    TRACE("(%p)->(path=%s flags=0x%08x)\n", this, debugstr_w(lpszPath), dwFlags);
+
+    if(!lpszPath || !lpszPath[0]) return FALSE;
+
+    wcscpy(szPath, lpszPath);
+    PathAddBackslashW(szPath);
+    wcscat(szPath,stars);
+
+    hFile = FindFirstFileW(szPath,&stffile);
+    if ( hFile != INVALID_HANDLE_VALUE )
+    {
+        BOOL findFinished = FALSE;
+
+        do
+        {
+            if ( !(stffile.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+             || (dwFlags & SHCONTF_INCLUDEHIDDEN) )
+            {
+                LPITEMIDLIST pidl = NULL;
+
+                if ( (stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
+                 dwFlags & SHCONTF_FOLDERS &&
+                 strcmpW(stffile.cFileName, dot) && strcmpW(stffile.cFileName, dotdot))
+                {
+                    pidl = _ILCreateFromFindDataW(&stffile);
+                    succeeded = succeeded && AddToEnumList(pidl);
+                }
+                else if (!(stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                 && dwFlags & SHCONTF_NONFOLDERS)
+                {
+                    pidl = _ILCreateFromFindDataW(&stffile);
+                    succeeded = succeeded && AddToEnumList(pidl);
+                }
+            }
+            if (succeeded)
+            {
+                if (!FindNextFileW(hFile, &stffile))
+                {
+                    if (GetLastError() == ERROR_NO_MORE_FILES)
+                        findFinished = TRUE;
+                    else
+                        succeeded = FALSE;
+                }
+            }
+        } while (succeeded && !findFinished);
+        FindClose(hFile);
+    }
+
+    return succeeded;
 }
 
 CFSFolder::CFSFolder()

@@ -53,7 +53,7 @@ class CDesktopFolderEnum :
     public:
         CDesktopFolderEnum();
         ~CDesktopFolderEnum();
-        HRESULT WINAPI Initialize(CDesktopFolder *desktopFolder, HWND hwndOwner, DWORD dwFlags);
+        HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags, IEnumIDList *pDesktopEnumerator, IEnumIDList *pCommonDesktopEnumerator);
 
         BEGIN_COM_MAP(CDesktopFolderEnum)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
@@ -119,10 +119,10 @@ IsNamespaceExtensionHidden(const WCHAR *iid)
  *  CreateDesktopEnumList()
  */
 
-HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWND hwndOwner, DWORD dwFlags)
+HRESULT WINAPI CDesktopFolderEnum::Initialize(HWND hwndOwner, DWORD dwFlags, IEnumIDList *pDesktopEnumerator, IEnumIDList *pCommonDesktopEnumerator)
 {
     BOOL ret = TRUE;
-    WCHAR szPath[MAX_PATH];
+    LPITEMIDLIST pidl;
 
     static const WCHAR MyDocumentsClassString[] = L"{450D8FBA-AD25-11D0-98A8-0800361B1103}";
     static const WCHAR Desktop_NameSpaceW[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Desktop\\Namespace";
@@ -153,7 +153,6 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
             if (dwResult == ERROR_SUCCESS)
             {
                 WCHAR iid[50];
-                LPITEMIDLIST pidl;
                 int i = 0;
 
                 while (ret)
@@ -213,7 +212,7 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
                     {
                         if (Val == 0 && dwType == REG_DWORD)
                         {
-                            LPITEMIDLIST pidl = _ILCreateGuidFromStrW(iid);
+                            pidl = _ILCreateGuidFromStrW(iid);
                             if (pidl != NULL)
                             {
                                 if (!HasItemWithCLSID(pidl))
@@ -238,12 +237,20 @@ HRESULT WINAPI CDesktopFolderEnum::Initialize(CDesktopFolder *desktopFolder, HWN
         }
     }
 
-    /* enumerate the elements in %windir%\desktop */
-    ret = ret && SHGetSpecialFolderPathW(0, szPath, CSIDL_DESKTOPDIRECTORY, FALSE);
-    ret = ret && CreateFolderEnumList(szPath, dwFlags);
+    DWORD dwFetched;
 
-    ret = ret && SHGetSpecialFolderPathW(0, szPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
-    ret = ret && CreateFolderEnumList(szPath, dwFlags);
+    /* Enumerate the items in the two fs folders */
+    if (pDesktopEnumerator)
+    {
+        while((S_OK == pDesktopEnumerator->Next(1, &pidl, &dwFetched)) && dwFetched)
+            AddToEnumList(pidl);
+    }
+
+    if (pCommonDesktopEnumerator)
+    {
+        while((S_OK == pCommonDesktopEnumerator->Next(1, &pidl, &dwFetched)) && dwFetched)
+            AddToEnumList(pidl);
+    }
 
     return ret ? S_OK : E_FAIL;
 }
@@ -439,7 +446,19 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
  */
 HRESULT WINAPI CDesktopFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CDesktopFolderEnum>(this, hwndOwner, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
+    CComPtr<IEnumIDList> pDesktopEnumerator;
+    CComPtr<IEnumIDList> pCommonDesktopEnumerator;
+    HRESULT hr;
+
+    hr = m_DesktopFSFolder->EnumObjects(hwndOwner, dwFlags, &pDesktopEnumerator);
+    if (FAILED(hr))
+        ERR("EnumObjects for desktop fs folder failed\n");
+
+    hr = m_SharedDesktopFSFolder->EnumObjects(hwndOwner, dwFlags, &pCommonDesktopEnumerator);
+    if (FAILED(hr))
+        ERR("EnumObjects for shared desktop fs folder failed\n");
+
+    return ShellObjectCreatorInit<CDesktopFolderEnum>(hwndOwner, dwFlags, pDesktopEnumerator, pCommonDesktopEnumerator, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************
