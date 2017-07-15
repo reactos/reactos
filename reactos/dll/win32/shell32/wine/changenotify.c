@@ -723,6 +723,20 @@ _NotificationCompletion(DWORD dwErrorCode, // completion code
     }
 #endif
 
+#ifdef __REACTOS__
+    /* This is to avoid double-free and potential use after free
+     * In case it failed, _BeginRead() already deferenced item
+     * But if failure comes the FSD, the APC routine (us) will
+     * be called as well, which will cause a double-free on quit.
+     * Avoid this by deferencing only once in case of failure and thus,
+     * incrementing reference count here
+     */
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        InterlockedIncrement(&item->pParent->wQueuedCount);
+    }
+#endif
+
     /* This likely means overflow, so force whole directory refresh. */
     if (!dwNumberOfBytesTransfered)
     {
