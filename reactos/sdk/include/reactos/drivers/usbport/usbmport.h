@@ -580,6 +580,7 @@ typedef struct _USBPORT_MINIPORT_INTERFACE {
 
 C_ASSERT(sizeof(USBPORT_MINIPORT_INTERFACE) == 336);
 
+#define USBPORT_TRANSFER_DIRECTION_OUT  1 // From host to device
 typedef struct _USBPORT_ENDPOINT_PROPERTIES {
   USHORT DeviceAddress;
   USHORT EndpointAddress;
