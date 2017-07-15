@@ -90,6 +90,7 @@ typedef struct _UHCI_TRANSFER {
   PUHCI_ENDPOINT UhciEndpoint;
   USBD_STATUS USBDStatus;
   ULONG PendingTds;
+  SIZE_T TransferLen;
 } UHCI_TRANSFER, *PUHCI_TRANSFER;
 
 #define UHCI_FRAME_LIST_POINTER_VALID      (0 << 0) 

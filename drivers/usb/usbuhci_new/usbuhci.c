@@ -1600,12 +1600,99 @@ UhciPollIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
     DPRINT("UhciPollIsoEndpoint: UNIMPLEMENTED. FIXME\n");
 }
 
+USBD_STATUS
+NTAPI
+UhciGetErrorFromTD(IN PUHCI_EXTENSION UhciExtension,
+                   IN PUHCI_HCD_TD TD)
+{
+    DPRINT1("UhciGetErrorFromTD: UNIMPLEMENTED. FIXME\n");
+    return USBD_STATUS_SUCCESS;
+}
+
 VOID
 NTAPI
 UhciProcessDoneNonIsoTD(IN PUHCI_EXTENSION UhciExtension,
                         IN PUHCI_HCD_TD TD)
 {
-    DPRINT("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
+    PUHCI_ENDPOINT UhciEndpoint;
+    PUHCI_TRANSFER UhciTransfer;
+    USBD_STATUS USBDStatus = USBD_STATUS_SUCCESS;
+    SIZE_T TransferedLen;
+
+    DPRINT("UhciProcessDoneNonIsoTD: ...\n");
+
+    UhciTransfer = TD->UhciTransfer;
+    UhciTransfer->PendingTds--;
+
+    TransferParameters = UhciTransfer->TransferParameters;
+    UhciEndpoint = UhciTransfer->UhciEndpoint;
+
+    if (TD->Flags & UHCI_HCD_TD_FLAG_NOT_ACCESSED)
+    {
+        goto ProcessDoneTD;
+    }
+
+    if (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
+    {
+        USBDStatus = UhciGetErrorFromTD(UhciExtension, TD);
+    }
+
+    if (USBDStatus != USBD_STATUS_SUCCESS ||
+        (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL))
+    {
+        TransferedLen = 0;
+    }
+    else
+    {
+        TransferedLen = TD->HwTD.ControlStatus.ActualLength + 1;
+    }
+
+    if (TD->HwTD.Token.PIDCode != UHCI_TD_PID_SETUP)
+    {
+        UhciTransfer->TransferLen += TransferedLen;
+    }
+
+    if (TD->HwTD.Token.PIDCode == UHCI_TD_PID_IN &&
+        TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
+    {
+        DPRINT1("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
+    }
+
+    if (USBDStatus != USBD_STATUS_SUCCESS)
+    {
+        UhciTransfer->USBDStatus = USBDStatus;
+    }
+
+ProcessDoneTD:
+
+    if (TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
+    {
+        DPRINT1("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
+    }
+
+    UhciEndpoint->AllocatedTDs--;
+
+    TD->HwTD.NextElement = 0;
+    TD->UhciTransfer = NULL;
+    TD->Flags = 0;
+
+    if (UhciTransfer->PendingTds == 0)
+    {
+        InterlockedDecrement(&UhciEndpoint->EndpointLock);
+
+        if (UhciEndpoint->EndpointProperties.TransferType ==
+            USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+        {
+            InterlockedDecrement(&UhciExtension->ExtensionLock);
+        }
+
+        RegPacket.UsbPortCompleteTransfer(UhciExtension,
+                                          UhciEndpoint,
+                                          TransferParameters,
+                                          UhciTransfer->USBDStatus,
+                                          UhciTransfer->TransferLen);
+    }
 }
 
 VOID
