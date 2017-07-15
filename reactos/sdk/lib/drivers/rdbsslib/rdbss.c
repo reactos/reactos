@@ -906,11 +906,81 @@ RxAllocateCanonicalNameBuffer(
     return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxCancelNotifyChangeDirectoryRequestsForFobx(
    PFOBX Fobx)
 {
-    UNIMPLEMENTED;
+    KIRQL OldIrql;
+    PLIST_ENTRY Entry;
+    PRX_CONTEXT Context;
+    LIST_ENTRY ContextsToCancel;
+
+    /* Init a list for the contexts to cancel */
+    InitializeListHead(&ContextsToCancel);
+
+    /* Lock our list lock */
+    KeAcquireSpinLock(&RxStrucSupSpinLock, &OldIrql);
+
+    /* Now, browse all the active contexts, to find the associated ones */
+    Entry = RxActiveContexts.Flink;
+    while (Entry != &RxActiveContexts)
+    {
+        Context = CONTAINING_RECORD(Entry, RX_CONTEXT, ContextListEntry);
+        Entry = Entry->Flink;
+
+        /* Not the IRP we're looking for, ignore */
+        if (Context->MajorFunction != IRP_MJ_DIRECTORY_CONTROL ||
+            Context->MinorFunction != IRP_MN_NOTIFY_CHANGE_DIRECTORY)
+        {
+            continue;
+        }
+
+        /* Not the FOBX we're looking for, ignore */
+        if ((PFOBX)Context->pFobx != Fobx)
+        {
+            continue;
+        }
+
+        /* No cancel routine (can't be cancel, then), ignore */
+        if (Context->MRxCancelRoutine == NULL)
+        {
+            continue;
+        }
+
+        /* Mark our context as cancelled */
+        SetFlag(Context->Flags, RX_CONTEXT_FLAG_CANCELLED);
+
+        /* Move it to our list */
+        RemoveEntryList(&Context->ContextListEntry);
+        InsertTailList(&ContextsToCancel, &Context->ContextListEntry);
+
+        InterlockedIncrement((volatile long *)&Context->ReferenceCount);
+    }
+
+    /* Done with the contexts */
+    KeReleaseSpinLock(&RxStrucSupSpinLock, OldIrql);
+
+    /* Now, handle all our "extracted" contexts */
+    while (!IsListEmpty(&ContextsToCancel))
+    {
+        Entry = RemoveHeadList(&ContextsToCancel);
+        Context = CONTAINING_RECORD(Entry, RX_CONTEXT, ContextListEntry);
+
+        /* If they had an associated IRP (should be always true) */
+        if (Context->CurrentIrp != NULL)
+        {
+            /* Then, call cancel routine */
+            ASSERT(Context->MRxCancelRoutine != NULL);
+            DPRINT1("Canceling %p with %p\n", Context, Context->MRxCancelRoutine);
+            Context->MRxCancelRoutine(Context);
+        }
+
+        /* And delete the context */
+        RxDereferenceAndDeleteRxContext(Context);
+    }
 }
 
 /*
