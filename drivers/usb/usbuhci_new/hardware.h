@@ -128,6 +128,10 @@ typedef struct _UHCI_HW_REGISTERS {
 #define UHCI_TD_STS_BITSTUFF_ERROR    (1 << 1)
 //#define UHCI_TD_STS_Reserved        (1 << 0)
 
+#define UHCI_TD_VALID_LENGTH    0x4FF
+#define UHCI_TD_LENGTH_INVALID  0x7FE
+#define UHCI_TD_LENGTH_NULL     0x7FF
+
 typedef union _UHCI_CONTROL_STATUS {
   struct {
     ULONG ActualLength        : 11; // encoded as n - 1
@@ -150,10 +154,6 @@ typedef union _UHCI_CONTROL_STATUS {
 #define UHCI_TD_PID_DATA0  0
 #define UHCI_TD_PID_DATA1  1
 
-#define UHCI_TD_MAX_VALID_LENGTH    0x4FF
-#define UHCI_TD_MAX_LENGTH_INVALID  0x7FE
-#define UHCI_TD_MAX_LENGTH_NULL     0x7FF
-
 typedef union _UHCI_TD_TOKEN {
   struct {
     ULONG PIDCode       : 8;
@@ -172,7 +172,6 @@ typedef union _UHCI_TD_TOKEN {
 #define UHCI_TD_LINK_PTR_QH             (1 << 1)
 #define UHCI_TD_LINK_PTR_BREADTH_FIRST  (0 << 2)
 #define UHCI_TD_LINK_PTR_DEPTH_FIRST    (1 << 2)
-
 #define UHCI_TD_LINK_POINTER_MASK       0xFFFFFFF0
 
 typedef struct _UHCI_TD {  // Transfer Descriptors always aligned on 16-byte boundaries
@@ -190,11 +189,13 @@ C_ASSERT(sizeof(UHCI_TD) == 16);
 #define UHCI_QH_HEAD_LINK_PTR_TERMINATE     (1 << 0)
 #define UHCI_QH_HEAD_LINK_PTR_TD            (0 << 1)
 #define UHCI_QH_HEAD_LINK_PTR_QH            (1 << 1)
+#define UHCI_QH_HEAD_LINK_POINTER_MASK      0xFFFFFFF0
 
 #define UHCI_QH_ELEMENT_LINK_PTR_VALID      (0 << 0)
 #define UHCI_QH_ELEMENT_LINK_PTR_TERMINATE  (1 << 0)
 #define UHCI_QH_ELEMENT_LINK_PTR_TD         (0 << 1)
 #define UHCI_QH_ELEMENT_LINK_PTR_QH         (1 << 1)
+#define UHCI_QH_ELEMENT_LINK_POINTER_MASK   0xFFFFFFF0
 
 typedef struct _UHCI_QH { // Queue Heads must be aligned on a 16-byte boundary
   //Hardware
