@@ -217,7 +217,6 @@ PATHOBJ_bPolyLineTo(
         /* store data */
         RtlZeroMemory(ppd, sizeof(EXTPATHDATA));
         ppd->pd.flags = PD_BEGINSUBPATH;
-        ppd->pd.count = cptfx;
 
         size = cptfx * sizeof(POINTFIX);
         pptfxNew = ExAllocatePoolWithTag(PagedPool, size, GDITAG_PATHOBJ);
@@ -228,6 +227,7 @@ PATHOBJ_bPolyLineTo(
         }
         RtlCopyMemory(pptfxNew, pptfx, size);
         ppd->pd.pptfx = pptfxNew;
+        ppd->pd.count = cptfx;
 
         /* set the subpath */
         pPathObj->ppdLast = pPathObj->ppdFirst = ppd;
@@ -277,6 +277,7 @@ PATHOBJ_bPolyLineTo(
 
         pptfxOld = ppdLast->pd.pptfx;
         ppdLast->pd.pptfx = pptfxNew;
+        ppdLast->pd.count += cptfx;
         ExFreePoolWithTag(pptfxOld, GDITAG_PATHOBJ);
     }
 
@@ -313,7 +314,6 @@ PATHOBJ_bPolyBezierTo(
         /* store data */
         RtlZeroMemory(ppd, sizeof(EXTPATHDATA));
         ppd->pd.flags = PD_BEGINSUBPATH | PD_BEZIERS;
-        ppd->pd.count = cptfx;
 
         size = cptfx * sizeof(POINTFIX);
         pptfxNew = ExAllocatePoolWithTag(PagedPool, size, GDITAG_PATHOBJ);
@@ -324,6 +324,7 @@ PATHOBJ_bPolyBezierTo(
         }
         RtlCopyMemory(pptfxNew, pptfx, size);
         ppd->pd.pptfx = pptfxNew;
+        ppd->pd.count = cptfx;
 
         /* set the subpath */
         pPathObj->ppdLast = pPathObj->ppdFirst = ppd;
@@ -373,6 +374,7 @@ PATHOBJ_bPolyBezierTo(
 
         pptfxOld = ppdLast->pd.pptfx;
         ppdLast->pd.pptfx = pptfxNew;
+        ppdLast->pd.count += cptfx;
         ExFreePoolWithTag(pptfxOld, GDITAG_PATHOBJ);
     }
 
