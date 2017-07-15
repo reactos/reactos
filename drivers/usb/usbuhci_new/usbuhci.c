@@ -1655,8 +1655,21 @@ NTAPI
 UhciGetEndpointStatus(IN PVOID uhciExtension,
                       IN PVOID uhciEndpoint)
 {
-    DPRINT("UhciGetEndpointStatus: UNIMPLEMENTED. FIXME\n");
-    return USBPORT_ENDPOINT_RUN;
+    PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
+    ULONG EndpointStatus;
+
+    DPRINT_UHCI("UhciGetEndpointStatus: ...\n");
+
+    if (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
+    {
+        EndpointStatus = USBPORT_ENDPOINT_HALT;
+    }
+    else
+    {
+        EndpointStatus = USBPORT_ENDPOINT_RUN;
+    }
+
+    return EndpointStatus;
 }
 
 VOID
