@@ -913,13 +913,100 @@ RxCancelNotifyChangeDirectoryRequestsForFobx(
     UNIMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 RxCancelNotifyChangeDirectoryRequestsForVNetRoot(
    PV_NET_ROOT VNetRoot,
    BOOLEAN ForceFilesClosed)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    KIRQL OldIrql;
+    NTSTATUS Status;
+    PLIST_ENTRY Entry;
+    PRX_CONTEXT Context;
+    LIST_ENTRY ContextsToCancel;
+
+    /* Init a list for the contexts to cancel */
+    InitializeListHead(&ContextsToCancel);
+
+    /* Lock our list lock */
+    KeAcquireSpinLock(&RxStrucSupSpinLock, &OldIrql);
+
+    /* Now, browse all the active contexts, to find the associated ones */
+    Entry = RxActiveContexts.Flink;
+    while (Entry != &RxActiveContexts)
+    {
+        Context = CONTAINING_RECORD(Entry, RX_CONTEXT, ContextListEntry);
+        Entry = Entry->Flink;
+
+        /* Not the IRP we're looking for, ignore */
+        if (Context->MajorFunction != IRP_MJ_DIRECTORY_CONTROL ||
+            Context->MinorFunction != IRP_MN_NOTIFY_CHANGE_DIRECTORY)
+        {
+            continue;
+        }
+
+        /* Not the VNetRoot we're looking for, ignore */
+        if (Context->pFcb == NULL ||
+            (PV_NET_ROOT)Context->NotifyChangeDirectory.pVNetRoot != VNetRoot)
+        {
+            continue;
+        }
+
+        /* No cancel routine (can't be cancel, then), ignore */
+        if (Context->MRxCancelRoutine == NULL)
+        {
+            continue;
+        }
+
+        /* At that point, we found a matching context
+         * If we're not asked to force close, then fail - it's still open
+         */
+        if (!ForceFilesClosed)
+        {
+            Status = STATUS_FILES_OPEN;
+            break;
+        }
+
+        /* Mark our context as cancelled */
+        SetFlag(Context->Flags, RX_CONTEXT_FLAG_CANCELLED);
+
+        /* Move it to our list */
+        RemoveEntryList(&Context->ContextListEntry);
+        InsertTailList(&ContextsToCancel, &Context->ContextListEntry);
+
+        InterlockedIncrement((volatile long *)&Context->ReferenceCount);
+    }
+
+    /* Done with the contexts */
+    KeReleaseSpinLock(&RxStrucSupSpinLock, OldIrql);
+
+    if (Status != STATUS_SUCCESS)
+    {
+        return Status;
+    }
+
+    /* Now, handle all our "extracted" contexts */
+    while (!IsListEmpty(&ContextsToCancel))
+    {
+        Entry = RemoveHeadList(&ContextsToCancel);
+        Context = CONTAINING_RECORD(Entry, RX_CONTEXT, ContextListEntry);
+
+        /* If they had an associated IRP (should be always true) */
+        if (Context->CurrentIrp != NULL)
+        {
+            /* Then, call cancel routine */
+            ASSERT(Context->MRxCancelRoutine != NULL);
+            DPRINT1("Canceling %p with %p\n", Context, Context->MRxCancelRoutine);
+            Context->MRxCancelRoutine(Context);
+        }
+
+        /* And delete the context */
+        RxDereferenceAndDeleteRxContext(Context);
+    }
+
+    return Status;
 }
 
 VOID
@@ -5329,6 +5416,25 @@ RxLowIoLockControlShell(
  * @implemented
  */
 NTSTATUS
+NTAPI
+RxLowIoNotifyChangeDirectoryCompletion(
+    PRX_CONTEXT RxContext)
+{
+    PAGED_CODE();
+
+    DPRINT("Completing NCD with: %lx, %lx\n", RxContext->IoStatusBlock.Status, RxContext->IoStatusBlock.Information);
+
+    /* Just copy back the IO_STATUS to the IRP */
+    RxSetIoStatusStatus(RxContext, RxContext->IoStatusBlock.Status);
+    RxSetIoStatusInfo(RxContext, RxContext->IoStatusBlock.Information);
+
+    return RxContext->IoStatusBlock.Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
 RxLowIoReadShell(
     PRX_CONTEXT RxContext)
 {
@@ -5469,12 +5575,63 @@ RxLowIoReadShellCompletion(
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 RxNotifyChangeDirectory(
     PRX_CONTEXT RxContext)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIRP Irp;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+
+    PAGED_CODE();
+
+    /* The IRP can abviously wait */
+    SetFlag(RxContext->Flags, RX_CONTEXT_FLAG_WAIT);
+
+    /* Initialize its lowio */
+    RxInitializeLowIoContext(&RxContext->LowIoContext, LOWIO_OP_NOTIFY_CHANGE_DIRECTORY);
+
+    _SEH2_TRY
+    {
+        /* Lock user buffer */
+        Stack = RxContext->CurrentIrpSp;
+        RxLockUserBuffer(RxContext, IoWriteAccess, Stack->Parameters.NotifyDirectory.Length);
+
+        /* Copy parameters from IO_STACK */
+        RxContext->LowIoContext.ParamsFor.NotifyChangeDirectory.WatchTree = BooleanFlagOn(Stack->Flags, SL_WATCH_TREE);
+        RxContext->LowIoContext.ParamsFor.NotifyChangeDirectory.CompletionFilter = Stack->Parameters.NotifyDirectory.CompletionFilter;
+        RxContext->LowIoContext.ParamsFor.NotifyChangeDirectory.NotificationBufferLength = Stack->Parameters.NotifyDirectory.Length;
+
+        /* If we have an associated MDL */
+        Irp = RxContext->CurrentIrp;
+        if (Irp->MdlAddress != NULL)
+        {
+            /* Then, call mini-rdr */
+            RxContext->LowIoContext.ParamsFor.NotifyChangeDirectory.pNotificationBuffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+            if (RxContext->LowIoContext.ParamsFor.NotifyChangeDirectory.pNotificationBuffer != NULL)
+            {
+                Status = RxLowIoSubmit(RxContext, RxLowIoNotifyChangeDirectoryCompletion);
+            }
+            else
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+        }
+        else
+        {
+            Status = STATUS_INVALID_PARAMETER;
+        }
+    }
+    _SEH2_FINALLY
+    {
+        /* All correct */
+    }
+    _SEH2_END;
+
+    return Status;
 }
 
 NTSTATUS

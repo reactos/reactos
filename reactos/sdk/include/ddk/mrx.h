@@ -1,6 +1,9 @@
 #ifndef _RXMINIRDR_
 #define _RXMINIRDR_
 
+#define RxSetIoStatusStatus(R, S) (R)->CurrentIrp->IoStatus.Status = (S)
+#define RxSetIoStatusInfo(R, I) (R)->CurrentIrp->IoStatus.Information = (I)
+
 #define RxShouldPostCompletion() ((KeGetCurrentIrql() >= DISPATCH_LEVEL))
 
 #define RX_REGISTERMINI_FLAG_DONT_PROVIDE_UNCS 0x00000001
