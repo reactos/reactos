@@ -1305,7 +1305,80 @@ UhciBulkOrInterruptTransfer(IN PUHCI_EXTENSION UhciExtension,
                             IN PUHCI_TRANSFER UhciTransfer,
                             IN PUSBPORT_SCATTER_GATHER_LIST SgList)
 {
-    DPRINT("UhciBulkOrInterruptTransfer: UNIMPLEMENTED. FIXME\n");
+    PUHCI_HCD_TD DataFirstTD;
+    PUHCI_HCD_TD DataLastTD;
+    ULONG TotalMaxPacketSize;
+    ULONG SgCount;
+    ULONG TransferLength;
+    ULONG TDs;
+    ULONG ix;
+
+    //DPRINT("UhciBulkOrInterruptTransfer: ...\n");
+
+    TotalMaxPacketSize = UhciEndpoint->EndpointProperties.TotalMaxPacketSize;
+
+    SgCount = SgList->SgElementCount;
+
+    if (SgCount == 0)
+    {
+        DPRINT("UhciBulkOrInterruptTransfer: SgCount == 0 \n");
+        TDs = 1;
+    }
+    else
+    {
+        TransferLength = 0;
+
+        for (ix = 0; ix < SgCount; ++ix)
+        {
+            TransferLength += SgList->SgElement[ix].SgTransferLength;
+        }
+
+        DPRINT("UhciBulkOrInterruptTransfer: SgCount - %X, TransferLength - %X\n",
+               SgList->SgElementCount,
+               TransferLength);
+
+        if (TransferLength)
+        {
+            TDs = TransferLength + (TotalMaxPacketSize - 1);
+            TDs /= TotalMaxPacketSize;
+        }
+        else
+        {
+            TDs = 1;
+        }
+    }
+
+    if ((UhciEndpoint->MaxTDs - UhciEndpoint->AllocatedTDs) < TDs)
+    {
+        DPRINT1("UhciBulkOrInterruptTransfer: Not enough TDs \n");
+        return MP_STATUS_FAILURE;
+    }
+
+    DataFirstTD = NULL;
+    DataLastTD = NULL;
+
+    UhciMapAsyncTransferToTDs(UhciExtension,
+                              UhciEndpoint,
+                              UhciTransfer,
+                              &DataFirstTD,
+                              &DataLastTD,
+                              SgList);
+
+    if (DataLastTD == NULL || DataFirstTD == NULL)
+    {
+        DPRINT1("UhciBulkOrInterruptTransfer: !DataLastTD || !DataFirstTD\n");
+        return MP_STATUS_FAILURE;
+    }
+
+    DataLastTD->HwTD.NextElement = UHCI_TD_LINK_PTR_TERMINATE;
+    DataLastTD->HwTD.ControlStatus.InterruptOnComplete = TRUE;
+    DataLastTD->NextHcdTD = NULL;
+
+    UhciQueueTransfer(UhciExtension,
+                      UhciEndpoint,
+                      DataFirstTD,
+                      DataLastTD);
+
     return MP_STATUS_SUCCESS;
 }
 
