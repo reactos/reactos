@@ -735,6 +735,15 @@ _NotificationCompletion(DWORD dwErrorCode, // completion code
     {
         InterlockedIncrement(&item->pParent->wQueuedCount);
     }
+
+    /* If the FSD doesn't support directory change notifications, there's no
+     * no need to retry and requeue notification
+     */
+    if (dwErrorCode == ERROR_INVALID_FUNCTION)
+    {
+        WARN("Directory watching not supported\n");
+        goto quit;
+    }
 #endif
 
     /* This likely means overflow, so force whole directory refresh. */
