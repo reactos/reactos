@@ -3,6 +3,9 @@
 //#define NDEBUG
 #include <debug.h>
 
+#define NDEBUG_UHCI_TRACE
+#include "dbg_uhci.h"
+
 USBPORT_REGISTRATION_PACKET RegPacket;
 
 VOID
@@ -53,7 +56,7 @@ UhciCleanupFrameList(IN PUHCI_EXTENSION UhciExtension,
     ULONG OldFrameNumber;
     ULONG ix;
 
-    DPRINT("UhciCleanupFrameList: IsAllEntries - %x\n", IsAllEntries);
+    DPRINT_UHCI("UhciCleanupFrameList: IsAllEntries - %x\n", IsAllEntries);
 
     if (InterlockedIncrement(&UhciExtension->LockFrameList) != 1)
     {
@@ -100,8 +103,8 @@ UhciUpdateCounter(IN PUHCI_EXTENSION UhciExtension)
     {
         UhciExtension->FrameHighPart += UHCI_FRAME_LIST_MAX_ENTRIES;
 
-        DPRINT("UhciUpdateCounter: UhciExtension->FrameHighPart - %lX\n",
-                UhciExtension->FrameHighPart);
+        DPRINT_UHCI("UhciUpdateCounter: UhciExtension->FrameHighPart - %lX\n",
+                    UhciExtension->FrameHighPart);
     }
 }
 
@@ -707,7 +710,7 @@ UhciHardwarePresent(IN PUHCI_EXTENSION UhciExtension)
 
     if (UhciStatus.AsUSHORT == MAXUSHORT)
     {
-        DPRINT("UhciHardwarePresent: HW not present\n");
+        DPRINT_UHCI("UhciHardwarePresent: HW not present\n");
     }
 
     return UhciStatus.AsUSHORT != MAXUSHORT;
@@ -727,7 +730,7 @@ UhciInterruptService(IN PVOID uhciExtension)
     PUHCI_HCD_QH QH;
     BOOLEAN Result = FALSE;
 
-    DPRINT("UhciInterruptService: ...\n");
+    DPRINT_UHCI("UhciInterruptService: ...\n");
 
     BaseRegister = UhciExtension->BaseRegister;
     StatusReg = &BaseRegister->HcStatus.AsUSHORT;
@@ -830,7 +833,7 @@ UhciInterruptDpc(IN PVOID uhciExtension,
     PUHCI_HW_REGISTERS BaseRegister;
     UHCI_USB_STATUS HcStatus;
 
-    DPRINT("UhciInterruptDpc: ...\n");
+    DPRINT_UHCI("UhciInterruptDpc: ...\n");
 
     BaseRegister = UhciExtension->BaseRegister;
 
@@ -861,7 +864,7 @@ UhciQueueTransfer(IN PUHCI_EXTENSION UhciExtension,
     PUHCI_HCD_TD TailTD;
     ULONG_PTR PhysicalAddress;
 
-    DPRINT("UhciQueueTransfer: ...\n");
+    DPRINT_UHCI("UhciQueueTransfer: ...\n");
 
     TailTD = UhciEndpoint->TailTD;
     QH = UhciEndpoint->QH;
@@ -936,7 +939,7 @@ UhciAllocateTD(IN PUHCI_EXTENSION UhciExtension,
     ULONG AllocTdCounter;
     ULONG ix;
 
-    DPRINT("UhciAllocateTD: ...\n");
+    DPRINT_UHCI("UhciAllocateTD: ...\n");
 
     if (UhciEndpoint->MaxTDs == 0)
     {
@@ -1004,7 +1007,7 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
     BOOLEAN IsLastTd = TRUE;
     BOOLEAN ZeroLengthTransfer = TRUE;
 
-    DPRINT("UhciMapAsyncTransferToTDs: ...\n");
+    DPRINT_UHCI("UhciMapAsyncTransferToTDs: ...\n");
 
     TotalMaxPacketSize = UhciEndpoint->EndpointProperties.TotalMaxPacketSize;
     DeviceSpeed = UhciEndpoint->EndpointProperties.DeviceSpeed;
@@ -1167,7 +1170,7 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
     USHORT DeviceAddress;
     ULONG_PTR PhysicalAddress;
 
-    DPRINT("UhciControlTransfer: ...\n");
+    DPRINT_UHCI("UhciControlTransfer: ...\n");
 
     if (UhciEndpoint->EndpointLock > 1)
     {
@@ -1293,7 +1296,7 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
     /* Link this transfer to queue */
     UhciQueueTransfer(UhciExtension, UhciEndpoint, FirstTD, LastTD);
 
-    DPRINT("UhciControlTransfer: end MP_STATUS_SUCCESS\n");
+    DPRINT_UHCI("UhciControlTransfer: end MP_STATUS_SUCCESS\n");
     return MP_STATUS_SUCCESS;
 }
 
@@ -1313,7 +1316,7 @@ UhciBulkOrInterruptTransfer(IN PUHCI_EXTENSION UhciExtension,
     ULONG TDs;
     ULONG ix;
 
-    //DPRINT("UhciBulkOrInterruptTransfer: ...\n");
+    DPRINT_UHCI("UhciBulkOrInterruptTransfer: ...\n");
 
     TotalMaxPacketSize = UhciEndpoint->EndpointProperties.TotalMaxPacketSize;
 
@@ -1397,7 +1400,7 @@ UhciSubmitTransfer(IN PVOID uhciExtension,
     PUSBPORT_SCATTER_GATHER_LIST SgList = sgList;
     ULONG TransferType;
 
-    DPRINT("UhciSubmitTransfer: ...\n");
+    DPRINT_UHCI("UhciSubmitTransfer: ...\n");
 
     InterlockedIncrement(&UhciEndpoint->EndpointLock);
 
@@ -1693,7 +1696,7 @@ UhciProcessDoneNonIsoTD(IN PUHCI_EXTENSION UhciExtension,
     USBD_STATUS USBDStatus = USBD_STATUS_SUCCESS;
     SIZE_T TransferedLen;
 
-    DPRINT("UhciProcessDoneNonIsoTD: ...\n");
+    DPRINT_UHCI("UhciProcessDoneNonIsoTD: ...\n");
 
     UhciTransfer = TD->UhciTransfer;
     UhciTransfer->PendingTds--;
@@ -1784,7 +1787,7 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
     ULONG TdStatus;
     ULONG TransferCounter;
 
-    DPRINT("UhciPollNonIsoEndpoint: ...\n");
+    DPRINT_UHCI("UhciPollNonIsoEndpoint: ...\n");
 
     if (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
     {
@@ -2090,7 +2093,7 @@ UhciPollEndpoint(IN PVOID uhciExtension,
     PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
     ULONG TransferType;
 
-    DPRINT("UhciPollEndpoint: ...\n");
+    DPRINT_UHCI("UhciPollEndpoint: ...\n");
 
     TransferType = UhciEndpoint->EndpointProperties.TransferType;
 
@@ -2141,7 +2144,8 @@ UhciGet32BitFrameNumber(IN PVOID uhciExtension)
     Uhci32BitFrame += ((USHORT)Hp ^ Fn) & UHCI_FRNUM_OVERFLOW_LIST;
     Uhci32BitFrame |= Fn;
 
-    DPRINT("UhciGet32BitFrameNumber: Uhci32BitFrame - %lX\n", Uhci32BitFrame);
+    DPRINT_UHCI("UhciGet32BitFrameNumber: Uhci32BitFrame - %lX\n",
+                Uhci32BitFrame);
 
     return Uhci32BitFrame;
 }
@@ -2159,7 +2163,7 @@ UhciInterruptNextSOF(IN PVOID uhciExtension)
     ULONG SofFrame;
     ULONG Idx;
 
-    DPRINT1("UhciInterruptNextSOF: ...\n");
+    DPRINT_UHCI("UhciInterruptNextSOF: ...\n");
 
     CurrentFrame = UhciGet32BitFrameNumber(UhciExtension);
 
