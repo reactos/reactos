@@ -24,7 +24,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "編輯相容模式"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    EDITTEXT IDC_NEWCOMPATIBILITYMODE, 9, 6, 148, 14, ES_AUTOHSCROLL
+    COMBOBOX IDC_NEWCOMPATIBILITYMODE, 9, 6, 148, 14, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL
     LISTBOX IDC_COMPATIBILITYMODE, 9, 25, 148, 86, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_BORDER
     PUSHBUTTON "添加...(&A)", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
     PUSHBUTTON "編輯...(&E)", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
@@ -38,4 +38,5 @@ BEGIN
     IDS_TABTITLE "Compatibility"
     IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
     IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
+    IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"
 END

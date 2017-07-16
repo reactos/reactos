@@ -23,6 +23,7 @@
 #define IDS_TABTITLE                    2000
 #define IDS_FAILED_NETWORK              2001
 #define IDS_FAILED_PROTECTED            2002
+#define IDS_YOU_DID_NOT_ADD             2003
 
 
 /* registry stuff */

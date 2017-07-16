@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -442,9 +442,36 @@ static void ListboxChanged(HWND hWnd)
     EnableWindow(GetDlgItem(hWnd, IDC_DELETE), Sel >= 0);
 }
 
+static void OnAdd(HWND hWnd)
+{
+    HWND Combo = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
+    
+    int Length = ComboBox_GetTextLength(Combo);
+    CComBSTR Str(Length);
+    ComboBox_GetText(Combo, Str, Length+1);
+    HWND List = GetDlgItem(hWnd, IDC_COMPATIBILITYMODE);
+    int Index = ListBox_FindStringExact(List, -1, Str);
+    if (Index == LB_ERR)
+        Index = ListBox_AddString(List, Str);
+    ListBox_SetCurSel(List, Index);
+    ListboxChanged(hWnd);
+    ComboBox_SetText(Combo, TEXT(""));
+    SetFocus(Combo);
+}
+
+static BOOL ComboHasData(HWND hWnd)
+{
+    HWND Combo = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
+    if (ComboBox_GetCurSel(Combo) >= 0)
+        return TRUE;
+    ULONG Len = ComboBox_GetTextLength(Combo);
+    return Len > 0;
+}
+
 INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     CLayerUIPropPage* page = NULL;
+
     switch (uMsg)
     {
     case WM_INITDIALOG:
@@ -452,19 +479,16 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
         page->AddRef();
         SetProp(hWnd, ACP_WNDPROP, page);
         {
-            CComPtr<IAutoComplete> autoComplete;
-            HRESULT hr = CoCreateInstance(CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IAutoComplete, &autoComplete));
-            if (SUCCEEDED(hr))
+            HWND Combo = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
+            CComObject<CLayerStringList> pList;
+
+            while (TRUE)
             {
-                CComPtr<IAutoComplete2> autoComplete2;
-                hr = autoComplete->QueryInterface(IID_PPV_ARG(IAutoComplete2, &autoComplete2));
-                if (SUCCEEDED(hr))
-                {
-                    autoComplete2->SetOptions(ACO_AUTOSUGGEST | ACO_UPDOWNKEYDROPSLIST);
-                    HWND Edit = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
-                    CComObject<CLayerStringList>* pList = new CComObject<CLayerStringList>();
-                    hr = autoComplete2->Init(Edit, pList, NULL, NULL);
-                }
+                CComBSTR str;
+                HRESULT hr = pList.Next(1, &str, NULL);
+                if (hr != S_OK)
+                    break;
+                ComboBox_AddString(Combo, str);
             }
 
             HWND List = GetDlgItem(hWnd, IDC_COMPATIBILITYMODE);
@@ -483,24 +507,12 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
         RemoveProp(hWnd, ACP_WNDPROP);
         page->Release();
         break;
+
     case WM_COMMAND:
         switch(LOWORD(wParam))
         {
         case IDC_ADD:
-        {
-            HWND Edit = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
-            int Length = GetWindowTextLengthW(Edit);
-            CComBSTR Str(Length);
-            GetWindowTextW(Edit, Str, Length+1);
-            HWND List = GetDlgItem(hWnd, IDC_COMPATIBILITYMODE);
-            int Index = ListBox_FindStringExact(List, -1, Str);
-            if (Index == LB_ERR)
-                Index = ListBox_AddString(List, Str);
-            ListBox_SetCurSel(List, Index);
-            ListboxChanged(hWnd);
-            Edit_SetText(Edit, TEXT(""));
-            SetFocus(Edit);
-        }
+            OnAdd(hWnd);
             break;
         case IDC_EDIT:
         {
@@ -510,11 +522,11 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
             CComBSTR Str(Length);
             ListBox_GetText(List, Cur, Str);
             ListBox_DeleteString(List, Cur);
-            HWND Edit = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
-            Edit_SetText(Edit, Str);
+            HWND Combo = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
+            ComboBox_SetText(Combo, Str);
             ListboxChanged(hWnd);
-            Edit_SetSel(Edit, 30000, 30000);
-            SetFocus(Edit);
+            ComboBox_SetEditSel(Combo, 30000, 30000);
+            SetFocus(Combo);
         }
             break;
         case IDC_DELETE:
@@ -528,11 +540,31 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
             ListboxChanged(hWnd);
             break;
         case IDC_NEWCOMPATIBILITYMODE:
-            EnableWindow(GetDlgItem(hWnd, IDC_ADD), Edit_GetTextLength(GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE)) > 0);
+        {
+            EnableWindow(GetDlgItem(hWnd, IDC_ADD), ComboHasData(hWnd));
+        }
             break;
         case IDOK:
             /* Copy from list! */
         {
+            if (ComboHasData(hWnd))
+            {
+                CComBSTR question, title;
+                title.LoadString(g_hModule, IDS_TABTITLE);
+                question.LoadString(g_hModule, IDS_YOU_DID_NOT_ADD);
+                int result = MessageBoxW(hWnd, question, title, MB_YESNOCANCEL | MB_ICONQUESTION);
+                switch (result)
+                {
+                case IDYES:
+                    OnAdd(hWnd);
+                    break;
+                case IDNO:
+                    break;
+                case IDCANCEL:
+                    return FALSE;
+                }
+            }
+
             page = (CLayerUIPropPage*)GetProp(hWnd, ACP_WNDPROP);
 
             HWND List = GetDlgItem(hWnd, IDC_COMPATIBILITYMODE);

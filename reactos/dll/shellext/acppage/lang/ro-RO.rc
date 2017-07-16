@@ -22,7 +22,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Modurile de compatibilitate"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    EDITTEXT IDC_NEWCOMPATIBILITYMODE, 9, 6, 148, 14, ES_AUTOHSCROLL
+    COMBOBOX IDC_NEWCOMPATIBILITYMODE, 9, 6, 148, 14, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL
     LISTBOX IDC_COMPATIBILITYMODE, 9, 25, 148, 86, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_BORDER
     PUSHBUTTON "&Adăugare…", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
     PUSHBUTTON "E&ditare…", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
@@ -36,5 +36,6 @@ BEGIN
     IDS_TABTITLE "Compatibilitate"
     IDS_FAILED_NETWORK "Modurile de compatibilitate nu pot fi instituite pentru acest program deoarece rezidă pe o unitate de stocare în rețea."
     IDS_FAILED_PROTECTED "Modurile de compatibilitate nu pot fi instituite pentru acest program deoarece este parte din ReactOS."
+    IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"
 END
 
