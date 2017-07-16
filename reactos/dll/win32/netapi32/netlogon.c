@@ -271,8 +271,6 @@ DsAddressToSiteNamesExW(
     RpcEndExcept;
 
     return status;
-
-    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
