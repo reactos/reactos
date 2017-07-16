@@ -1579,7 +1579,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Type",0x00010001,0x00000001
 ; Multiple UNC provider driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"Network"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ImagePath",0x00020000,"system32\drivers\mup.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Type",0x00010001,0x00000002
