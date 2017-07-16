@@ -181,6 +181,80 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
     return initIcon->QueryInterface(iid, ppvOut);
 }
 
+class CRegFolderEnum :
+    public CEnumIDListBase
+{
+    public:
+        CRegFolderEnum();
+        ~CRegFolderEnum();
+        HRESULT Initialize(LPCWSTR lpszEnumKeyName, DWORD dwFlags);
+        HRESULT AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath);
+
+        BEGIN_COM_MAP(CRegFolderEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
+};
+
+CRegFolderEnum::CRegFolderEnum()
+{
+}
+
+CRegFolderEnum::~CRegFolderEnum()
+{
+}
+
+HRESULT CRegFolderEnum::Initialize(LPCWSTR lpszEnumKeyName, DWORD dwFlags)
+{
+    WCHAR KeyName[MAX_PATH];
+    static const WCHAR KeyNameFormat[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\%s\\Namespace";
+
+    if (!(dwFlags & SHCONTF_FOLDERS))
+        return S_OK;
+
+    HRESULT hr = StringCchPrintfW(KeyName, MAX_PATH, KeyNameFormat, lpszEnumKeyName);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    AddItemsFromKey(HKEY_LOCAL_MACHINE, KeyName);
+    AddItemsFromKey(HKEY_CURRENT_USER, KeyName);
+
+    return S_OK;
+}
+
+HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
+{
+    WCHAR name[MAX_PATH];
+    HKEY hkey;
+
+    if (RegOpenKeyW(hkey_root, szRepPath, &hkey) != ERROR_SUCCESS)
+        return S_FALSE;
+
+    for (int idx = 0; ; idx++)
+    {
+        if (RegEnumKeyW(hkey, idx, name, MAX_PATH) != ERROR_SUCCESS)
+            break;
+
+        /* If the name of the key is not a guid try to get the default value of the key */
+        if (name[0] != L'{')
+        {
+            DWORD dwSize = sizeof(name);
+            RegGetValueW(hkey, name, NULL, RRF_RT_REG_SZ, NULL, name, &dwSize);
+        }
+
+        if (*name == '{')
+        {
+            LPITEMIDLIST pidl = _ILCreateGuidFromStrW(name);
+
+            if (pidl)
+                AddToEnumList(pidl);
+        }
+    }
+
+    RegCloseKey(hkey);
+
+    return S_OK;
+}
+
 class CRegFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2
@@ -188,13 +262,14 @@ class CRegFolder :
     private:
         GUID m_guid;
         CAtlStringW m_rootPath;
+        CAtlStringW m_enumKeyName;
         CComHeapPtr<ITEMIDLIST> m_pidlRoot;
 
         HRESULT GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
     public:
         CRegFolder();
         ~CRegFolder();
-        HRESULT WINAPI Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath);
+        HRESULT WINAPI Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName);
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes);
@@ -235,12 +310,16 @@ CRegFolder::~CRegFolder()
 {
 }
 
-HRESULT WINAPI CRegFolder::Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath)
+HRESULT WINAPI CRegFolder::Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName)
 {
     memcpy(&m_guid, pGuid, sizeof(m_guid));
 
     m_rootPath = lpszPath;
     if (!m_rootPath)
+        return E_OUTOFMEMORY;
+
+    m_enumKeyName = lpszEnumKeyName;
+    if (!m_enumKeyName)
         return E_OUTOFMEMORY;
 
     m_pidlRoot.Attach(ILClone(pidlRoot));
@@ -319,7 +398,7 @@ HRESULT WINAPI CRegFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR l
 
 HRESULT WINAPI CRegFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return E_NOTIMPL;
+    return ShellObjectCreatorInit<CRegFolderEnum>(m_enumKeyName, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 HRESULT WINAPI CRegFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
@@ -677,7 +756,7 @@ HRESULT WINAPI CRegFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 }
 
 /* In latest windows version this is exported but it takes different arguments! */
-HRESULT CRegFolder_CreateInstance(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, REFIID riid, void **ppv)
+HRESULT CRegFolder_CreateInstance(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName, REFIID riid, void **ppv)
 {
-    return ShellObjectCreatorInit<CRegFolder>(pGuid, pidlRoot, lpszPath, riid, ppv);
+    return ShellObjectCreatorInit<CRegFolder>(pGuid, pidlRoot, lpszPath, lpszEnumKeyName, riid, ppv);
 }

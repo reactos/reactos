@@ -167,10 +167,28 @@ class CDrivesFolderEnum :
     public CEnumIDListBase
 {
     public:
-        CDrivesFolderEnum();
-        ~CDrivesFolderEnum();
-        HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags);
-        BOOL CreateMyCompEnumList(DWORD dwFlags);
+        HRESULT WINAPI Initialize(HWND hwndOwner, DWORD dwFlags, IEnumIDList* pRegEnumerator)
+        {
+            /* enumerate the folders */
+            if (dwFlags & SHCONTF_FOLDERS)
+            {
+                WCHAR wszDriveName[] = {'A', ':', '\\', '\0'};
+                DWORD dwDrivemap = GetLogicalDrives();
+
+                while (wszDriveName[0] <= 'Z')
+                {
+                    if(dwDrivemap & 0x00000001L)
+                        AddToEnumList(_ILCreateDrive(wszDriveName));
+                    wszDriveName[0]++;
+                    dwDrivemap = dwDrivemap >> 1;
+                }
+            }
+
+            /* Enumerate the items of the reg folder */
+            AppendItemsFromEnumerator(pRegEnumerator);
+
+            return S_OK;
+        }
 
         BEGIN_COM_MAP(CDrivesFolderEnum)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
@@ -200,92 +218,6 @@ static const DWORD dwDriveAttributes =
     SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
     SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANRENAME | SFGAO_CANLINK;
 
-CDrivesFolderEnum::CDrivesFolderEnum()
-{
-}
-
-CDrivesFolderEnum::~CDrivesFolderEnum()
-{
-}
-
-HRESULT WINAPI CDrivesFolderEnum::Initialize(HWND hwndOwner, DWORD dwFlags)
-{
-    if (CreateMyCompEnumList(dwFlags) == FALSE)
-        return E_FAIL;
-
-    return S_OK;
-}
-
-/**************************************************************************
- *  CDrivesFolderEnum::CreateMyCompEnumList()
- */
-
-BOOL CDrivesFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
-{
-    BOOL bRet = TRUE;
-    static const WCHAR MyComputer_NameSpaceW[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\Namespace";
-
-    TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
-
-    /* enumerate the folders */
-    if (dwFlags & SHCONTF_FOLDERS)
-    {
-        WCHAR wszDriveName[] = {'A', ':', '\\', '\0'};
-        DWORD dwDrivemap = GetLogicalDrives();
-        HKEY hKey;
-        UINT i;
-
-        while (bRet && wszDriveName[0] <= 'Z')
-        {
-            if(dwDrivemap & 0x00000001L)
-                bRet = AddToEnumList(_ILCreateDrive(wszDriveName));
-            wszDriveName[0]++;
-            dwDrivemap = dwDrivemap >> 1;
-        }
-
-        TRACE("-- (%p)-> enumerate (mycomputer shell extensions)\n", this);
-        for (i = 0; i < 2; i++)
-        {
-            if (bRet && ERROR_SUCCESS == RegOpenKeyExW(i == 0 ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
-                    MyComputer_NameSpaceW, 0, KEY_READ, &hKey))
-            {
-                WCHAR wszBuf[50];
-                DWORD dwSize, j = 0;
-                LONG ErrorCode;
-                LPITEMIDLIST pidl;
-
-                while (bRet)
-                {
-                    dwSize = sizeof(wszBuf) / sizeof(wszBuf[0]);
-                    ErrorCode = RegEnumKeyExW(hKey, j, wszBuf, &dwSize, 0, NULL, NULL, NULL);
-                    if (ERROR_SUCCESS == ErrorCode)
-                    {
-                        if (wszBuf[0] != L'{')
-                        {
-                            dwSize = sizeof(wszBuf);
-                            RegGetValueW(hKey, wszBuf, NULL, RRF_RT_REG_SZ, NULL, wszBuf, &dwSize);
-                        }
-
-                        /* FIXME: shell extensions - the type should be PT_SHELLEXT (tested) */
-                        pidl = _ILCreateGuidFromStrW(wszBuf);
-                        if (pidl != NULL)
-                            bRet = AddToEnumList(pidl);
-                        else
-                            ERR("Invalid MyComputer namespace extesion: %s\n", wszBuf);
-                        j++;
-                    }
-                    else if (ERROR_NO_MORE_ITEMS == ErrorCode)
-                        break;
-                    else
-                        bRet = FALSE;
-                }
-                RegCloseKey(hKey);
-            }
-        }
-    }
-    return bRet;
-}
-
 CDrivesFolder::CDrivesFolder()
 {
     pidlRoot = NULL;
@@ -306,6 +238,7 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     HRESULT hr = CRegFolder_CreateInstance(&CLSID_MyComputer, 
                                            pidlRoot, 
                                            L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 
+                                           L"MyComputer",
                                            IID_PPV_ARG(IShellFolder2, &m_regFolder));
 
     return hr;
@@ -376,7 +309,10 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
 */
 HRESULT WINAPI CDrivesFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CDrivesFolderEnum>(hwndOwner, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
+    CComPtr<IEnumIDList> pRegEnumerator;
+    m_regFolder->EnumObjects(hwndOwner, dwFlags, &pRegEnumerator);
+
+    return ShellObjectCreatorInit<CDrivesFolderEnum>(hwndOwner, dwFlags, pRegEnumerator, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************

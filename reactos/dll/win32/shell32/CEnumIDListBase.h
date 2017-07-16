@@ -37,6 +37,7 @@ public:
 	BOOL AddToEnumList(LPITEMIDLIST pidl);
 	BOOL DeleteList();
 	BOOL HasItemWithCLSID(LPITEMIDLIST pidl);
+    HRESULT AppendItemsFromEnumerator(IEnumIDList* pEnum);
 
 	// *** IEnumIDList methods ***
 	virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched);

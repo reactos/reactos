@@ -123,6 +123,22 @@ BOOL CEnumIDListBase::HasItemWithCLSID(LPITEMIDLIST pidl)
     return FALSE;
 }
 
+HRESULT CEnumIDListBase::AppendItemsFromEnumerator(IEnumIDList* pEnum)
+{
+    LPITEMIDLIST pidl;
+    DWORD dwFetched;
+
+    if (!pEnum)
+        return E_INVALIDARG;
+
+    pEnum->Reset();
+
+    while((S_OK == pEnum->Next(1, &pidl, &dwFetched)) && dwFetched)
+        AddToEnumList(pidl);
+
+    return S_OK;
+}
+
 /**************************************************************************
  *  IEnumIDList_fnNext
  */

@@ -33,10 +33,9 @@ class CControlPanelEnum :
     public:
         CControlPanelEnum();
         ~CControlPanelEnum();
-        HRESULT WINAPI Initialize(DWORD dwFlags);
+        HRESULT WINAPI Initialize(DWORD dwFlags, IEnumIDList* pRegEnumerator);
         BOOL RegisterCPanelApp(LPCWSTR path);
         int RegisterRegistryCPanelApps(HKEY hkey_root, LPCWSTR szRepPath);
-        int RegisterCPanelFolders(HKEY hkey_root, LPCWSTR szRepPath);
         BOOL CreateCPanelEnumList(DWORD dwFlags);
 
         BEGIN_COM_MAP(CControlPanelEnum)
@@ -63,10 +62,11 @@ CControlPanelEnum::~CControlPanelEnum()
 {
 }
 
-HRESULT WINAPI CControlPanelEnum::Initialize(DWORD dwFlags)
+HRESULT WINAPI CControlPanelEnum::Initialize(DWORD dwFlags, IEnumIDList* pRegEnumerator)
 {
     if (CreateCPanelEnumList(dwFlags) == FALSE)
         return E_FAIL;
+    AppendItemsFromEnumerator(pRegEnumerator);
     return S_OK;
 }
 
@@ -203,35 +203,6 @@ int CControlPanelEnum::RegisterRegistryCPanelApps(HKEY hkey_root, LPCWSTR szRepP
     return cnt;
 }
 
-int CControlPanelEnum::RegisterCPanelFolders(HKEY hkey_root, LPCWSTR szRepPath)
-{
-    WCHAR name[MAX_PATH];
-    HKEY hkey;
-
-    int cnt = 0;
-
-    if (RegOpenKeyW(hkey_root, szRepPath, &hkey) == ERROR_SUCCESS)
-    {
-        for (int idx = 0; ; idx++)
-        {
-            if (RegEnumKeyW(hkey, idx, name, MAX_PATH) != ERROR_SUCCESS)
-                break;
-
-            if (*name == '{')
-            {
-                LPITEMIDLIST pidl = _ILCreateGuidFromStrW(name);
-
-                if (pidl && AddToEnumList(pidl))
-                    ++cnt;
-            }
-        }
-
-        RegCloseKey(hkey);
-    }
-
-    return cnt;
-}
-
 /**************************************************************************
  *  CControlPanelEnum::CreateCPanelEnumList()
  */
@@ -242,10 +213,6 @@ BOOL CControlPanelEnum::CreateCPanelEnumList(DWORD dwFlags)
     HANDLE hFile;
 
     TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
-
-    /* enumerate control panel folders */
-    if (dwFlags & SHCONTF_FOLDERS)
-        RegisterCPanelFolders(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace");
 
     /* enumerate the control panel applets */
     if (dwFlags & SHCONTF_NONFOLDERS)
@@ -311,7 +278,10 @@ HRESULT WINAPI CControlPanelFolder::ParseDisplayName(
 */
 HRESULT WINAPI CControlPanelFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CControlPanelEnum>(dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
+    CComPtr<IEnumIDList> pRegEnumerator;
+    m_regFolder->EnumObjects(hwndOwner, dwFlags, &pRegEnumerator);
+
+    return ShellObjectCreatorInit<CControlPanelEnum>(dwFlags, pRegEnumerator, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************
@@ -657,6 +627,7 @@ HRESULT WINAPI CControlPanelFolder::Initialize(LPCITEMIDLIST pidl)
     hr = CRegFolder_CreateInstance(&CLSID_ControlPanel,
                                    pidlRoot,
                                    pszCPanelPath, 
+                                   L"ControlPanel",
                                    IID_PPV_ARG(IShellFolder2, &m_regFolder));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
