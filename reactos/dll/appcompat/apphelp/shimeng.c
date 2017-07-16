@@ -19,6 +19,7 @@
 #define WIN32_NO_STATUS
 #include "windows.h"
 #include "ntndk.h"
+#define IN_APPHELP
 #include "shimlib.h"
 #include <strsafe.h>
 /* Make sure we don't include apphelp logging */

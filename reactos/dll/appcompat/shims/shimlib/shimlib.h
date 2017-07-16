@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Shim Engine
  * FILE:            dll/appcompat/shims/shimlib/shimlib.h
  * PURPOSE:         ReactOS Shim Engine
- * PROGRAMMER:      Mark Jansen
+ * PROGRAMMER:      Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once
@@ -58,12 +58,19 @@ typedef enum _SEI_LOG_LEVEL {
 BOOL WINAPIV SeiDbgPrint(SEI_LOG_LEVEL Level, PCSTR Function, PCSTR Format, ...);
 extern ULONG g_ShimEngDebugLevel;
 
+#if defined(IN_APPHELP)
+/* Apphelp shimeng logging uses the function name */
 #define SHIMENG_MSG(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_MSG, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
 #define SHIMENG_FAIL(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_FAIL, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
 #define SHIMENG_WARN(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_WARN, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
 #define SHIMENG_INFO(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_INFO, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
-
-
+#else
+/* Shims use the shim name */
+#define SHIM_MSG(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_MSG, SHIM_OBJ_NAME(g_szModuleName), fmt, ##__VA_ARGS__ ); } while (0)
+#define SHIM_FAIL(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_FAIL, SHIM_OBJ_NAME(g_szModuleName), fmt, ##__VA_ARGS__ ); } while (0)
+#define SHIM_WARN(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_WARN, SHIM_OBJ_NAME(g_szModuleName), fmt, ##__VA_ARGS__ ); } while (0)
+#define SHIM_INFO(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_INFO, SHIM_OBJ_NAME(g_szModuleName), fmt, ##__VA_ARGS__ ); } while (0)
+#endif
 
 typedef PHOOKAPI (WINAPI* _PVGetHookAPIs)(DWORD, PCSTR, PDWORD);
 typedef BOOL (WINAPI* _PVNotify)(DWORD, PVOID);
