@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -790,13 +790,13 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
         TAGID ShimRef;
         if (SdbTagRefToTagID(hsdb, Data[n], &pdb, &ShimRef))
         {
-            LPCWSTR ShimName, DllName;
+            LPCWSTR ShimName, DllName, CommandLine = NULL;
             TAGID ShimTag;
             WCHAR FullNameBuffer[MAX_PATH];
             UNICODE_STRING UnicodeDllName;
             PVOID BaseAddress;
             PSHIMMODULE pShimInfo = NULL;
-            const char* szCommandLine = "";
+            ANSI_STRING AnsiCommandLine = RTL_CONSTANT_STRING("");
             PHOOKAPIEX pHookApi;
             DWORD dwHookCount;
 
@@ -805,6 +805,21 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
             {
                 SHIMENG_FAIL("Failed to retrieve the name for 0x%x\n", Data[n]);
                 continue;
+            }
+
+            CommandLine = SeiGetStringPtr(pdb, ShimRef, TAG_COMMAND_LINE);
+            if (CommandLine && *CommandLine)
+            {
+                RtlInitUnicodeString(&UnicodeDllName, CommandLine);
+                if (NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiCommandLine, &UnicodeDllName, TRUE)))
+                {
+                    SHIMENG_INFO("COMMAND LINE %s for %S", AnsiCommandLine.Buffer, ShimName);
+                }
+                else
+                {
+                    AnsiCommandLine.Buffer = "";
+                    CommandLine = NULL;
+                }
             }
 
             ShimTag = SeiGetDWORD(pdb, ShimRef, TAG_SHIM_TAGID);
@@ -829,11 +844,6 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
                 continue;
             }
 
-            /* TODO:
-            SeiGetShimCommandLine();
-            [SeiInit] COMMAND_LINE VirtualRegistry(WINNT;VistaRTMLie) from AcLayers.DLL
-            */
-
             RtlInitUnicodeString(&UnicodeDllName, FullNameBuffer);
             if (NT_SUCCESS(LdrGetDllHandle(NULL, NULL, &UnicodeDllName, &BaseAddress)))
             {
@@ -857,11 +867,13 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
             SHIMENG_INFO("Shim DLL 0x%p \"%wZ\" loaded\n", BaseAddress, &UnicodeDllName);
             SHIMENG_INFO("Using SHIM \"%S!%S\"\n", DllName, ShimName);
 
-
-            pHookApi = pShimInfo->pGetHookAPIs(szCommandLine, ShimName, &dwHookCount);
+            pHookApi = pShimInfo->pGetHookAPIs(AnsiCommandLine.Buffer, ShimName, &dwHookCount);
             SHIMENG_INFO("GetHookAPIs returns %d hooks for DLL \"%wZ\" SHIM \"%S\"\n", dwHookCount, &UnicodeDllName, ShimName);
             if (dwHookCount)
                 SeiAppendHookInfo(pShimInfo, pHookApi, dwHookCount);
+
+            if (CommandLine && *CommandLine)
+                RtlFreeAnsiString(&AnsiCommandLine);
 
             dwTotalHooks += dwHookCount;
             /*SeiBuildInclExclList*/
