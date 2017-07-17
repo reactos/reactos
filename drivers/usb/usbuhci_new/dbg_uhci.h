@@ -10,18 +10,38 @@
         } while (0)
     #else
         #if defined(_MSC_VER)
-            #define DPRINT_UHCI __noop
+            #define DPRINT_UHCI  __noop
         #else
             #define DPRINT_UHCI(...) do {if(0) {DbgPrint(__VA_ARGS__);}} while(0)
         #endif
     #endif
 
+    #ifndef NDEBUG_UHCI_IMPLEMENT
+
+        #define DPRINT_IMPL(fmt, ...) do { \
+            if (DbgPrint("(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__))  \
+                DbgPrint("(%s:%d) DbgPrint() failed!\n", __RELFILE__, __LINE__); \
+        } while (0)
+
+    #else
+
+        #if defined(_MSC_VER)
+            #define DPRINT_IMPL  __noop
+        #else
+            #define DPRINT_IMPL(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+        #endif
+
+    #endif
+
+
 #else /* not DBG */
 
     #if defined(_MSC_VER)
-        #define DPRINT_UHCI __noop
+        #define DPRINT_UHCI  __noop
+        #define DPRINT_IMPL  __noop
     #else
         #define DPRINT_UHCI(...) do {if(0) {DbgPrint(__VA_ARGS__);}} while(0)
+        #define DPRINT_IMPL(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #endif /* _MSC_VER */
 
 #endif /* not DBG */
