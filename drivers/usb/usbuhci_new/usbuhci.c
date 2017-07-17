@@ -1695,8 +1695,78 @@ NTAPI
 UhciGetErrorFromTD(IN PUHCI_EXTENSION UhciExtension,
                    IN PUHCI_HCD_TD TD)
 {
-    DPRINT_IMPL("UhciGetErrorFromTD: UNIMPLEMENTED. FIXME\n");
-    return USBD_STATUS_SUCCESS;
+    USBD_STATUS USBDStatus;
+    UCHAR TdStatus;
+
+    //DPRINT("UhciGetErrorFromTD: ...\n");
+
+    TdStatus = TD->HwTD.ControlStatus.Status;
+
+    if (TdStatus == UHCI_TD_STS_ACTIVE)
+    {
+        if (TD->HwTD.Token.MaximumLength == UHCI_TD_LENGTH_NULL)
+        {
+            return USBD_STATUS_SUCCESS;
+        }
+
+        if (TD->HwTD.ControlStatus.ActualLength + 1 >=
+            TD->HwTD.Token.MaximumLength + 1)
+        {
+            return USBD_STATUS_SUCCESS;
+        }
+
+        if (TD->HwTD.ControlStatus.InterruptOnComplete == TRUE)
+        {
+            return USBD_STATUS_SUCCESS;
+        }
+
+        return USBD_STATUS_ERROR_SHORT_TRANSFER;
+    }
+
+    if ((TdStatus & UHCI_TD_STS_BABBLE_DETECTED) != 0 &&
+        (TdStatus & UHCI_TD_STS_STALLED) != 0)
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_BUFFER_OVERRUN, TD - %p\n", TD);
+        return USBD_STATUS_BUFFER_OVERRUN;
+    }
+
+    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0 &&
+        (TdStatus & UHCI_TD_STS_STALLED) != 0 )
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DEV_NOT_RESPONDING, TD - %p\n", TD);
+        return USBD_STATUS_DEV_NOT_RESPONDING;
+    }
+
+    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0 )
+    {
+        if (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL)
+        {
+            DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DEV_NOT_RESPONDING, TD - %p\n", TD);
+            return USBD_STATUS_DEV_NOT_RESPONDING;
+        }
+        else
+        {
+            DPRINT1("UhciGetErrorFromTD: USBD_STATUS_CRC, TD - %p\n", TD);
+            return USBD_STATUS_CRC;
+        }
+    }
+    else if ((TdStatus & UHCI_TD_STS_DATA_BUFFER_ERROR) != 0 )
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DATA_OVERRUN, TD - %p\n", TD);
+        USBDStatus = USBD_STATUS_DATA_OVERRUN;
+    }
+    else if ((TdStatus & UHCI_TD_STS_STALLED) != 0 )
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_STALL_PID, TD - %p\n", TD);
+        USBDStatus = USBD_STATUS_STALL_PID;
+    }
+    else
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_INTERNAL_HC_ERROR, TD - %p\n", TD);
+        USBDStatus = USBD_STATUS_INTERNAL_HC_ERROR;
+    }
+
+    return USBDStatus;
 }
 
 VOID
