@@ -143,7 +143,7 @@ HRESULT CSysTray::SysTrayMessageLoop()
 }
 
 HRESULT CSysTray::SysTrayThreadProc()
-{
+{    
     WCHAR strFileName[MAX_PATH];
     GetModuleFileNameW(g_hInstance, strFileName, MAX_PATH);
     HMODULE hLib = LoadLibraryW(strFileName);

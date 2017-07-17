@@ -4,8 +4,14 @@
  * FILE:        dll/shellext/stobject/power.cpp
  * PURPOSE:     Power notification icon handler
  * PROGRAMMERS: Eric Kohl <eric.kohl@reactos.org>
+                Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  *              David Quintana <gigaherz@gmail.com>
  */
+
+#include <Windows.h>
+#include <SetupAPI.h>
+#include <devguid.h>
+#include <BatClass.h> 
 
 #include "precomp.h"
 #include "powrprof.h"
@@ -13,10 +19,16 @@
 #include <mmsystem.h>
 #include <mmddk.h>
 
+#define GBS_HASBATTERY 0x1
+#define GBS_ONBATTERY  0x2
+
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 WINE_DEFAULT_DEBUG_CHANNEL(stobject);
+
+int br_icons[5] = { IDI_BATTCAP0, IDI_BATTCAP1, IDI_BATTCAP2, IDI_BATTCAP3, IDI_BATTCAP4 };
+int bc_icons[5] = { IDI_BATTCHA0, IDI_BATTCHA1, IDI_BATTCHA2, IDI_BATTCHA3, IDI_BATTCHA4 };
 
 typedef struct _PWRSCHEMECONTEXT
 {
@@ -25,66 +37,181 @@ typedef struct _PWRSCHEMECONTEXT
     UINT uiLast;
 } PWRSCHEMECONTEXT, *PPWRSCHEMECONTEXT;
 
-//static HICON g_hIconBattery = NULL;
+static float g_batCap = 0;
+static HICON g_hIconBattery = NULL;
 static HICON g_hIconAC = NULL;
 
 static BOOL g_IsRunning = FALSE;
 
+/*** This function enumerates the available battery devices and provides the remaining capacity
+@param      cap: if no error occurs, then this will contatin average remaining capacity
+@param dwResult: helps in making battery type checks
+{
+Returned value includes GBS_HASBATTERY if the system has a non-UPS battery, and GBS_ONBATTERY if the system is running on a battery.
+dwResult & GBS_ONBATTERY means we have not yet found AC power.
+dwResult & GBS_HASBATTERY means we have found a non-UPS battery.
+}
+@return        : error checking
+*/
+static HRESULT GetBatteryState(float& cap, DWORD& dwResult)
+{
+    cap = 0;
+    dwResult = GBS_ONBATTERY;
+
+    HDEVINFO hdev = SetupDiGetClassDevs(&GUID_DEVCLASS_BATTERY, 0, 0, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+    if (INVALID_HANDLE_VALUE == hdev)
+        return E_HANDLE;
+
+    // Limit search to 100 batteries max
+    for (int idev = 0, count = 0; idev < 100; idev++)
+    {
+        SP_DEVICE_INTERFACE_DATA did = { 0 };
+        did.cbSize = sizeof(did);
+
+        if (SetupDiEnumDeviceInterfaces(hdev, 0, &GUID_DEVCLASS_BATTERY, idev, &did))
+        {
+            DWORD cbRequired = 0;
+
+            SetupDiGetDeviceInterfaceDetail(hdev, &did, 0, 0, &cbRequired, 0);
+            if (ERROR_INSUFFICIENT_BUFFER == GetLastError())
+            {
+                PSP_DEVICE_INTERFACE_DETAIL_DATA pdidd = (PSP_DEVICE_INTERFACE_DETAIL_DATA)LocalAlloc(LPTR, cbRequired);
+                if (pdidd)
+                {
+                    pdidd->cbSize = sizeof(*pdidd);
+                    if (SetupDiGetDeviceInterfaceDetail(hdev, &did, pdidd, cbRequired, &cbRequired, 0))
+                    {
+                        // Enumerated a battery.  Ask it for information.
+                        HANDLE hBattery = CreateFile(pdidd->DevicePath, GENERIC_READ | GENERIC_WRITE,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+                        if (INVALID_HANDLE_VALUE != hBattery)
+                        {
+                            // Ask the battery for its tag.
+                            BATTERY_QUERY_INFORMATION bqi = { 0 };
+
+                            DWORD dwWait = 0;
+                            DWORD dwOut;
+
+                            if (DeviceIoControl(hBattery, IOCTL_BATTERY_QUERY_TAG, &dwWait, sizeof(dwWait), &bqi.BatteryTag,
+                                sizeof(bqi.BatteryTag), &dwOut, NULL) && bqi.BatteryTag)
+                            {
+                                // With the tag, you can query the battery info.
+                                BATTERY_INFORMATION bi = { 0 };
+                                bqi.InformationLevel = BatteryInformation;
+
+                                if (DeviceIoControl(hBattery, IOCTL_BATTERY_QUERY_INFORMATION, &bqi, sizeof(bqi), &bi,
+                                    sizeof(bi), &dwOut, NULL))
+                                {
+                                    // Only non-UPS system batteries count
+                                    if (bi.Capabilities & BATTERY_SYSTEM_BATTERY)
+                                    {
+                                        if (!(bi.Capabilities & BATTERY_IS_SHORT_TERM))
+                                            dwResult |= GBS_HASBATTERY;
+
+                                        // Query the battery status.
+                                        BATTERY_WAIT_STATUS bws = { 0 };
+                                        bws.BatteryTag = bqi.BatteryTag;
+
+                                        BATTERY_STATUS bs;
+                                        if (DeviceIoControl(hBattery, IOCTL_BATTERY_QUERY_STATUS, &bws, sizeof(bws),
+                                            &bs, sizeof(bs), &dwOut, NULL))
+                                        {
+                                            if (bs.PowerState & BATTERY_POWER_ON_LINE)
+                                                dwResult &= ~GBS_ONBATTERY;
+
+                                            // Take average of total capacity of batteries detected!
+                                            cap = cap*(count)+(float)bs.Capacity / bi.FullChargedCapacity * 100;
+                                            cap /= count + 1;
+                                            count++;
+                                        }
+                                    }
+                                }
+                            }
+                            CloseHandle(hBattery);
+                        }
+                    }
+                    LocalFree(pdidd);
+                }
+            }
+        }
+        else  if (ERROR_NO_MORE_ITEMS == GetLastError())
+        {
+            break;  // Enumeration failed - perhaps we're out of items
+        }
+    }
+    SetupDiDestroyDeviceInfoList(hdev);
+
+    //  Final cleanup:  If we didn't find a battery, then presume that we
+    //  are on AC power.
+
+    if (!(dwResult & GBS_HASBATTERY))
+        dwResult &= ~GBS_ONBATTERY;
+
+    return S_OK;
+}
+
+/*** This function quantizes the mentioned quantity to nearest level
+@param   p: should be a quantity in percentage
+@param lvl: quantization level, default is 10
+@return   : nearest quantized level
+*/
+static UINT Quantize(float p, UINT lvl = 10)
+{
+    int i = 0;
+    float f, q = (float)100 / lvl, d = q / 2;
+    for (f = 0; f < p; f += q, i++);
+
+    if ((f - d) <= p)
+        return i;
+    else
+        return i - 1;
+}
+
+static HICON DynamicLoadIcon(HINSTANCE hinst)
+{
+    HICON hBatIcon;
+    float cap = 0;
+    DWORD dw = 0;
+    UINT index = -1;
+    HRESULT hr = GetBatteryState(cap, dw);
+    if (!FAILED(hr) && (dw & GBS_HASBATTERY))
+    {
+        index = Quantize(cap, 4);
+        g_batCap = cap;
+    }
+
+    if (dw & GBS_ONBATTERY)
+        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(index<0 ? IDI_BATTCAP_ERR : br_icons[index]));
+    else
+        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(index<0 ? IDI_BATTCAP_ERR : bc_icons[index]));
+        
+    return hBatIcon;
+}
 
 HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray)
-{
+{    
     WCHAR strTooltip[128];
-
-    TRACE("Power_Init\n");
-
-//    g_hIconBattery = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_BATTERY));
-    g_hIconAC = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_BATTERY));
-
-
     HICON icon;
-//    if (g_IsMute)
-//        icon = g_hIconBattery;
-//    else
-        icon = g_hIconAC;
 
-    LoadStringW(g_hInstance, IDS_PWR_AC, strTooltip, _countof(strTooltip));
+    TRACE("Power_Init\n");    
 
+    g_hIconBattery = DynamicLoadIcon(g_hInstance);    
+    swprintf(strTooltip, L"%.2f %% Remaining", g_batCap);    
     g_IsRunning = TRUE;
 
-    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_POWER, icon, strTooltip);
+    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_POWER, g_hIconBattery, strTooltip);
 }
 
 HRESULT STDMETHODCALLTYPE Power_Update(_In_ CSysTray * pSysTray)
 {
-//    BOOL PrevState;
-
     TRACE("Power_Update\n");
 
-#if 0
-    PrevState = g_IsMute;
-    Volume_IsMute();
+    WCHAR strTooltip[128];
+    g_hIconBattery = DynamicLoadIcon(g_hInstance);
+    swprintf(strTooltip, L"%.2f %% Remaining", g_batCap);
 
-    if (PrevState != g_IsMute)
-    {
-        WCHAR strTooltip[128];
-        HICON icon;
-        if (g_IsMute) {
-            icon = g_hIconMute;
-            LoadStringW(g_hInstance, IDS_VOL_MUTED, strTooltip, _countof(strTooltip));
-        }
-        else {
-            icon = g_hIconVolume;
-            LoadStringW(g_hInstance, IDS_VOL_VOLUME, strTooltip, _countof(strTooltip));
-        }
-
-        return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_POWER, icon, strTooltip);
-    }
-    else
-    {
-        return S_OK;
-    }
-#endif
-    return S_OK;
+    return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_POWER, g_hIconBattery, strTooltip);
 }
 
 HRESULT STDMETHODCALLTYPE Power_Shutdown(_In_ CSysTray * pSysTray)

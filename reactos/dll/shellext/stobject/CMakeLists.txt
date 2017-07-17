@@ -29,6 +29,7 @@ set_module_type(stobject win32dll UNICODE)
 target_link_libraries(stobject uuid wine atlnew)
 
 add_importlibs(stobject
+    setupapi
     advapi32
     winmm
     ole32

@@ -11,6 +11,21 @@ IDI_EXTRACT ICON "resources/2.ico"
 IDI_VOLUME  ICON "resources/3.ico"
 IDI_VOLMUTE ICON "resources/4.ico"
 
+IDI_BATTCAP0 ICON "resources/battery/0.ico"
+IDI_BATTCAP1 ICON "resources/battery/1.ico"
+IDI_BATTCAP2 ICON "resources/battery/2.ico"
+IDI_BATTCAP3 ICON "resources/battery/3.ico"
+IDI_BATTCAP4 ICON "resources/battery/4.ico"
+IDI_BATTCAP5 ICON "resources/battery/5.ico"
+
+IDI_BATTCHA0 ICON "resources/battery/charging0.ico"
+IDI_BATTCHA1 ICON "resources/battery/charging1.ico"
+IDI_BATTCHA2 ICON "resources/battery/charging2.ico"
+IDI_BATTCHA3 ICON "resources/battery/charging3.ico"
+IDI_BATTCHA4 ICON "resources/battery/charging4.ico"
+
+IDI_BATTCAP_ERR ICON "resources/battery/error.ico"
+
 IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
 
 #include <reactos/manifest_dll.rc>
