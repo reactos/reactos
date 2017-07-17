@@ -7228,7 +7228,7 @@ RxScavengerTimerRoutine(
             /* Otherwise, we're inactive again */
             else
             {
-                Scavenger->State == RDBSS_SCAVENGER_INACTIVE;
+                Scavenger->State = RDBSS_SCAVENGER_INACTIVE;
             }
         }
 
