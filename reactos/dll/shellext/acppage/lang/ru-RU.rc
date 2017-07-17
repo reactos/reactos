@@ -38,5 +38,5 @@ BEGIN
     IDS_TABTITLE "Совместимость"
     IDS_FAILED_NETWORK "Режим совместимости не может быть установлен для этой программы, потому что она находится на сетевом диске."
     IDS_FAILED_PROTECTED "Режим совместимости не может быть использован для компонентов ReactOS."
-    IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"
+    IDS_YOU_DID_NOT_ADD "Вы не добавили режим, добавить его сейчас?"
 END

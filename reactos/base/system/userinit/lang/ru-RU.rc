@@ -37,7 +37,7 @@ STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Ошибка запуска оболочки при инициализации пользовательского сеанса!"
     IDS_INSTALLER_FAIL "Ошибка запуска программы установки!"
-    IDS_CANCEL_CONFIRM "Are you sure you want to quit the ReactOS LiveCD?\nIf you choose to do so, your computer might restart."
+    IDS_CANCEL_CONFIRM "Вы действительно хотите выйти из ReactOS LiveCD?\nВаш компьютер будет перезагружен."
 END
 
 STRINGTABLE

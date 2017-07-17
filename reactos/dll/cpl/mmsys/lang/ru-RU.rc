@@ -264,6 +264,6 @@ BEGIN
     IDS_REACTOS_LOGOFF "Выход из ReactOS"
     IDS_REACTOS_LOGON "Вход в ReactOS"
     5854 "Проводник ReactOS"
-    IDS_BROWSE_FOR_SOUND "Search for new sounds"
-    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
+    IDS_BROWSE_FOR_SOUND "Поиск звука"
+    IDS_WAVE_FILES_FILTER "Звукозаписи (*.wav)|*.wav|"
 END
