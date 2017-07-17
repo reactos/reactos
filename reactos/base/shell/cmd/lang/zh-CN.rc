@@ -351,9 +351,18 @@ SET [变量[=][字符串]]\n\n\
   字符串      指定要赋给该环境变量的一系列字符。\n\n\
 执行不带参数的 SET 将会显示当前所有环境变量。\n"
     STRING_START_HELP1 "启动一个命令。\n\n\
-START 命令\n\n\
-  命令        要启动的命令。\n\n\
-现在所有的命令是异步启动的。\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  命令         要启动的命令。\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "设置命令提示符窗口的标题。\n\n\
 TITLE [字符串]\n\n\
 字符串         指定命令提示符窗口的标题。\n"

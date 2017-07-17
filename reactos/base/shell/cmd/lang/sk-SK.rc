@@ -382,9 +382,18 @@ SET [variable[=][string]]\n\n\
   string    Specifies a series of characters to assign to the variable.\n\n\
 Type SET without parameters to display the current environment variables.\n"
     STRING_START_HELP1 "Starts a command.\n\n\
-START command\n\n\
-  command     Specifies the command to run.\n\n\
-At the moment all commands are started asynchronously.\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  command     Specifies the command or program to run.\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Sets the window title for the command prompt window.\n\n\
 TITLE [string]\n\n\
 string       Specifies the title for the command prompt window.\n"

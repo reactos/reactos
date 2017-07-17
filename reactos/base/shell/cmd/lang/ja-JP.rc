@@ -385,9 +385,18 @@ SET [変数名[=]文字列]]\n\n\
   文字列   変数に割り当てる文字列を指定します。\n\n\
 現在の環境変数を表示するには、パラメータを指定せずに SET と入力してください。\n"
     STRING_START_HELP1 "別のウィンドウを起動し、指定したプログラムまたはコマンドを実行します。\n\n\
-START コマンド\n\n\
-  コマンド    実行するコマンドを指定します。\n\n\
-現時点では、コマンドはすべて同期せずに開始されます。\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  コマンド       実行するコマンドを指定します。\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "コマンド プロンプト ウィンドウのウィンドウ タイトルを設定します。\n\n\
 TITLE [文字列]\n\n\
 文字列       コマンド プロンプト ウィンドウのタイトルを指定します。\n"

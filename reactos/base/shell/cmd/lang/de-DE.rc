@@ -373,9 +373,18 @@ SET [Variable[=][Zeichenfolge]]\n\n\
   Zeichenfolge Eine Zeichenfolge, die der Variable zugewiesen werden soll.\n\n\
 Der Befehl SET ohne Parameter zeigt die aktuellen Umgebungsvariablen an.\n"
     STRING_START_HELP1 "Startet einen Befehl.\n\n\
-START Befehl\n\n\
-  Befehl     Befehl welcher ausgeführt werden soll\n\n\
-Achtung: Derzeit werden alle Befehle asynchron ausgeführt.\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  Befehl      Befehl welcher ausgeführt werden soll.\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Legt den Fenstertitel für das Eingabeaufforderungsfenster fest.\n\n\
 TITLE [Zeichenfolge]\n\n\
   Zeichenfolge      Bezeichnet den Titel des Eingabeaufforderungsfensters."

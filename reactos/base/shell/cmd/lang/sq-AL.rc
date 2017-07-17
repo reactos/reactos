@@ -380,9 +380,18 @@ SET [variable[=][string]]\n\n\
   string    Specifikon një seri karakteresh që i përkasim variablave.\n\n\
 Shkuaj SET pa parametra te paraqitura ne ekran për variablet e mjedisit.\n"
     STRING_START_HELP1 "Fillon në komandë.\n\n\
-START komande\n\n\
-  command     Specifiko komandën për të filluar.\n\n\
-Në këtë moment të gjithë komandat janë nisur sipas sinkronizimit.\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  komande     Specifiko komandën për të filluar.\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Vendos titullin e dritares për dritaren e komandëns se shpejtë.\n\n\
 TITLE [string]\n\n\
 string       Specifikon titullin e dritares për dritaren e komandëns se shpejtë.\n"

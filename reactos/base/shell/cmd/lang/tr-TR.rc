@@ -382,9 +382,18 @@ SET [değişken[=][dizgi]]\n\n\
   string    Değişkene atamak için bir dizi damgayı belirtir.\n\n\
 Şimdiki ortam değişkenlerini görüntülemek için değişkensiz SET yazınız.\n"
     STRING_START_HELP1 "Bir komut başlatır.\n\n\
-START komut\n\n\
-  komut       Çalıştırılacak komutu belirtir.\n\n\
-Şu anda tüm komutlar eş zamanlı olmadan çalıştırılmıştır.\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  komut       Çalıştırılacak komutu belirtir.\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Komut istemi penceresi için pencere başlığını ayarlar.\n\n\
 TITLE [dizgi]\n\n\
 dizgi        Komut istemi penceresi için başlığı belirtir.\n"

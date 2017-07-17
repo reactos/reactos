@@ -385,9 +385,18 @@ SET [переменная[=][значение]]\n\n\
   значение    Строка символов, присваиваемая указанной переменной.\n\n\
 SET без параметров выводит текущие значения переменных среды.\n"
     STRING_START_HELP1 "Запуск указанной программы или команды.\n\n\
-START команда\n\n\
-  команда     Команда или программа для запуска.\n\n\
-В данный момент все команды запускаются асинхронно.\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  команда     Команда или программа для запуска.\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Изменение заголовка окна командной строки.\n\n\
 TITLE [строка]\n\n\
 строка       Будущий заголовок окна командной строки.\n"

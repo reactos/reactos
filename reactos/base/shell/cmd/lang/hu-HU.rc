@@ -360,9 +360,18 @@ SET [változó[=][érték]]\n\n\
   érték    A beállítandó érték.\n\n\
 Paraméterek nélkül megjeleníti az összes környezetiváltozót.\n"
     STRING_START_HELP1 "Végrehajt egy parancsot.\n\n\
-START parancs\n\n\
-  parancs     Végrehajtja a megadott parancsot.\n\n\
-Jelenleg minden parancs aszinkron hajtódik végre.\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  parancs     Végrehajtja a megadott parancsot.\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Beállítja az ablak címsorának szövegét.\n\n\
 TITLE [szöveg]\n\n\
 szöveg       Beállítja az ablak címsorának szövegét.\n"

@@ -412,9 +412,18 @@ SET [variablă[=][șir]]\n\n\
   șir       Seria de caractere asociate variabilei.\n\n\
 Tastați SET fără argumente pentru afișarea variabilelor curente.\n"
     STRING_START_HELP1 "Lansează o comandă.\n\n\
-START comandă\n\n\
-  comandă     Comanda specificată pentru lansare.\n\n\
-La moment toate comenzile sunt lansate asincron.\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  comandă     Comanda specificată pentru lansare.\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Stabilește titlul pentru fereastra consolei.\n\n\
 TITLE [șir]\n\n\
   șir       Titlul specificat pentru fereastra consolei.\n"
