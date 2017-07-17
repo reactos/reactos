@@ -52,7 +52,7 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
     TRACE(MK_STR(_tpopen)"('%"sT"', '%"sT"')\n", cm, md);
 
     if (cm == NULL)
-        return( NULL );
+        return NULL;
 
     szComSpec = _tgetenv(_T("COMSPEC"));
     if (szComSpec == NULL)
@@ -161,6 +161,7 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
     return ret;
 
 error:
+    _munlock(_POPEN_LOCK);
     if (ProcessInformation.hProcess != 0)
         CloseHandle(ProcessInformation.hProcess);
     return NULL;
