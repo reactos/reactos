@@ -113,6 +113,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         /* Deinit of the WINE code */
         msvcrt_free_io();
         if (reserved) break;
+        msvcrt_free_popen_data();
         msvcrt_free_mt_locks();
         //msvcrt_free_console();
         //msvcrt_free_args();

@@ -95,6 +95,7 @@ extern void msvcrt_init_args(void);
 extern void msvcrt_free_args(void);
 extern void msvcrt_init_signals(void);
 extern void msvcrt_free_signals(void);
+extern void msvcrt_free_popen_data(void);
 
 extern unsigned create_io_inherit_block(WORD*, BYTE**);
 
