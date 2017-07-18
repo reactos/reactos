@@ -138,6 +138,7 @@ CreateBTreeFromIndex(PNTFS_ATTR_CONTEXT IndexRootContext,
     PB_TREE Tree = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE), TAG_NTFS);
     PB_TREE_FILENAME_NODE RootNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
     PB_TREE_KEY CurrentKey = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_KEY), TAG_NTFS);
+    ULONG CurrentOffset = IndexRoot->Header.FirstEntryOffset;
 
     DPRINT1("CreateBTreeFromIndex(%p, %p, %p)\n", IndexRootContext, IndexRoot, NewTree);
 
@@ -161,11 +162,21 @@ CreateBTreeFromIndex(PNTFS_ATTR_CONTEXT IndexRootContext,
     RootNode->FirstKey = CurrentKey;
     Tree->RootNode = RootNode;
 
-    // Create a key for each entry in the node
+    // Make sure we won't try reading past the attribute-end
+    if (FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header) + IndexRoot->Header.TotalSizeOfEntries > IndexRootContext->Record.Resident.ValueLength)
+    {
+        DPRINT1("Filesystem corruption detected!\n");
+        DestroyBTree(Tree);
+        return STATUS_FILE_CORRUPT_ERROR;
+    }
+
+    // Start at the first node entry
     CurrentNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexRoot
                                                 + FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)
                                                 + IndexRoot->Header.FirstEntryOffset);
-    while (TRUE)
+
+    // Create a key for each entry in the node
+    while (CurrentOffset < IndexRoot->Header.TotalSizeOfEntries)
     {
         // Allocate memory for the current entry
         CurrentKey->IndexEntry = ExAllocatePoolWithTag(NonPagedPool, CurrentNodeEntry->Length, TAG_NTFS);
@@ -207,6 +218,7 @@ CreateBTreeFromIndex(PNTFS_ATTR_CONTEXT IndexRootContext,
             }
 
             // Advance to the next entry
+            CurrentOffset += CurrentNodeEntry->Length;
             CurrentNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)CurrentNodeEntry + CurrentNodeEntry->Length);
             CurrentKey = NextKey;
         }
@@ -336,7 +348,7 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
         // Add Length of Current Entry to Total Size of Entries
         NewIndexRoot->Header.TotalSizeOfEntries += CurrentNodeEntry->Length;
 
-        // Go to the next node
+        // Go to the next node entry
         CurrentNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)CurrentNodeEntry + CurrentNodeEntry->Length);
 
         CurrentKey = CurrentKey->NextKey;
@@ -533,16 +545,12 @@ NtfsInsertKey(ULONGLONG FileReference,
     {
         // Should the New Key go before the current key?
         LONG Comparison = CompareTreeKeys(NewKey, CurrentKey, CaseSensitive);
-        if (Comparison == 0)
-        {
-            DPRINT1("DRIVER ERROR: Asked to insert key into tree that already has it!\n");
-            ExFreePoolWithTag(NewKey, TAG_NTFS);
-            ExFreePoolWithTag(NewEntry, TAG_NTFS);
-            return STATUS_INVALID_PARAMETER;
-        }
+
+        ASSERT(Comparison != 0);
+
+        // Is NewKey < CurrentKey?
         if (Comparison < 0)
         {
-            // NewKey is < CurrentKey
             // Insert New Key before Current Key
             NewKey->NextKey = CurrentKey;
 

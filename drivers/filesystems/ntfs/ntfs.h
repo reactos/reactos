@@ -193,6 +193,7 @@ typedef enum
 #define NTFS_FILE_QUOTA                9
 #define NTFS_FILE_UPCASE            10
 #define NTFS_FILE_EXTEND            11
+#define NTFS_FILE_FIRST_USER_FILE   16
 
 #define NTFS_MFT_MASK 0x0000FFFFFFFFFFFFULL
 
@@ -222,6 +223,9 @@ typedef enum
 #define NTFS_FILE_TYPE_REPARSE    0x400
 #define NTFS_FILE_TYPE_COMPRESSED 0x800
 #define NTFS_FILE_TYPE_DIRECTORY  0x10000000
+
+/* Indexed Flag in Resident attributes - still somewhat speculative */
+#define RA_INDEXED    0x01
 
 typedef struct
 {
@@ -740,13 +744,6 @@ NtfsDeviceControl(PNTFS_IRP_CONTEXT IrpContext);
 
 /* dirctl.c */
 
-NTSTATUS
-NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
-                           ULONGLONG DirectoryMftIndex,
-                           ULONGLONG FileReferenceNumber,
-                           PFILENAME_ATTRIBUTE FilenameAttribute,
-                           BOOLEAN CaseSensitive);
-
 ULONGLONG
 NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
                 PFILE_RECORD_HEADER FileRecord,
@@ -888,6 +885,13 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* mft.c */
+NTSTATUS
+NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
+                           ULONGLONG DirectoryMftIndex,
+                           ULONGLONG FileReferenceNumber,
+                           PFILENAME_ATTRIBUTE FilenameAttribute,
+                           BOOLEAN CaseSensitive);
+
 NTSTATUS
 AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
                PDEVICE_EXTENSION DeviceExt,
