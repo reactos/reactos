@@ -183,8 +183,9 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     ShowWindow(hMainWnd, (SettingsInfo.bSaveWndPos && SettingsInfo.Maximized ? SW_MAXIMIZE : nShowCmd));
     UpdateWindow(hMainWnd);
 
+    //TODO: get around the ugliness
     if (SettingsInfo.bUpdateAtStart)
-        UpdateAppsDB();
+        GetAvailableApps()->UpdateAppsDB();
 
     /* Load the menu hotkeys */
     KeyBrd = LoadAccelerators(NULL, MAKEINTRESOURCE(HOTKEYS));

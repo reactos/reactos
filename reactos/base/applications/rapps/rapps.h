@@ -104,7 +104,7 @@ typedef struct
     ATL::CSimpleArray<ATL::CStringW> Languages;
 
     /* caching mechanism related entries */
-    ATL::CStringW cFileName;
+    ATL::CStringW sFileName;
     FILETIME ftCacheStamp;
 
     /* optional integrity checks (SHA-1 digests are 160 bit = 40 characters in hex string form) */
@@ -143,11 +143,66 @@ typedef struct
 } SETTINGS_INFO, *PSETTINGS_INFO;
 
 /* available.cpp */
-typedef BOOL (CALLBACK *AVAILENUMPROC)(PAPPLICATION_INFO Info);
-BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
-BOOL ShowAvailableAppInfo(INT Index);
-BOOL UpdateAppsDB(VOID);
-VOID FreeCachedAvailableEntries(VOID);
+typedef BOOL (CALLBACK *AVAILENUMPROC)(PAPPLICATION_INFO Info, LPCWSTR szFolderPath);
+struct CAvailableApplicationInfo : public APPLICATION_INFO
+{
+    ATL::CStringW szInstalledVersion;
+
+    CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam);
+
+    // Load all info from the file
+    VOID RefreshAppInfo();
+
+
+
+    BOOL HasLanguageInfo() const;
+    BOOL HasNativeLanguage() const;
+    BOOL HasEnglishLanguage() const;
+    BOOL IsInstalled() const;
+    BOOL HasInstalledVersion() const;
+    BOOL HasUpdate() const;
+
+    // Set a timestamp
+    VOID SetLastWriteTime(FILETIME* ftTime);
+
+private:
+    BOOL m_IsInstalled = FALSE;
+    BOOL m_HasLanguageInfo = FALSE;
+    BOOL m_HasInstalledVersion = FALSE;
+
+    inline BOOL GetString(LPCWSTR lpKeyName, 
+                          ATL::CStringW& ReturnedString);
+
+    // Lazily load general info from the file
+    BOOL RetrieveGeneralInfo();
+    VOID RetrieveInstalledStatus();
+    VOID RetrieveInstalledVersion();
+    BOOL RetrieveLanguages();
+    VOID RetrieveLicenseType();
+    VOID RetrieveCategory();
+};
+
+class CAvailableApps
+{
+    ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
+    ATL::CStringW m_szPath;
+    ATL::CStringW m_szCabPath;
+    ATL::CStringW m_szAppsPath;
+    ATL::CStringW m_szSearchPath;
+
+public:
+    CAvailableApps();
+    VOID FreeCachedEntries();
+    BOOL DeleteCurrentAppsDB();
+    BOOL UpdateAppsDB();
+    BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
+    const ATL::CStringW& GetFolderPath();
+    const ATL::CStringW& GetAppPath();
+    const ATL::CStringW& GetCabPath();
+    const LPCWSTR GetFolderPathString();
+    const LPCWSTR GetAppPathString();
+    const LPCWSTR GetCabPathString();
+};
 
 /* installdlg.cpp */
 BOOL InstallApplication(INT Index);
@@ -162,7 +217,7 @@ BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
 VOID RemoveAppFromRegistry(INT Index);
 
-BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult, const ATL::CStringW& RegName, BOOL IsUserKey, REGSAM keyWow);
+BOOL GetInstalledVersion(ATL::CStringW* pszVersion, const ATL::CStringW& szRegName);
 
 /* winmain.cpp */
 extern HWND hMainWnd;
@@ -211,6 +266,7 @@ VOID SetStatusBarText(const ATL::CStringW& szText);
 INT ListViewAddItem(INT ItemIndex, INT IconIndex, ATL::CStringW & Name, LPARAM lParam);
 VOID NewRichEditText(const ATL::CStringW& szText, DWORD flags);
 VOID InsertRichEditText(const ATL::CStringW& szText, DWORD flags);
+CAvailableApps * GetAvailableApps();
 extern HWND hListView;
 extern ATL::CStringW szSearchPattern;
 

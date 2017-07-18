@@ -111,8 +111,7 @@ public:
                                   uiPercentage,
                                   szProgress,
                                   szProgressMax);
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) m_ProgressText.GetBuffer());
-            m_ProgressText.ReleaseBuffer();
+            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) m_ProgressText.GetString());
         }
 
         Item = GetDlgItem(m_hDialog, IDC_DOWNLOAD_STATUS);
@@ -134,8 +133,7 @@ public:
             }
 
             /* paste it into our dialog and don't do it again in this instance */
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) buf.GetBuffer());
-            buf.ReleaseBuffer();
+            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) buf.GetString());
             m_UrlHasBeenCopied = TRUE;
         }
 
@@ -436,8 +434,7 @@ ThreadFunc(LPVOID Context)
             goto end;
 
         SetWindowText(Dlg, szMsgText.GetString());
-        SendMessageW(GetDlgItem(Dlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetBuffer());
-        Path.ReleaseBuffer();
+        SendMessageW(GetDlgItem(Dlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetString());
 
         /* this may take a while, depending on the file size */
         if (!VerifyInteg(AppInfo->szSHA1, Path.GetString()))

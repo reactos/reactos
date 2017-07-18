@@ -83,7 +83,6 @@ public:
 
     HWND Create(HWND hwndParent)
     {
-        // TODO: FreeLibrary when the window is destroyed
         LoadedLibrary = LoadLibraryW(L"riched20.dll");
 
         m_hWnd = CreateWindowExW(0,

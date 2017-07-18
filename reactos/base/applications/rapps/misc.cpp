@@ -193,8 +193,7 @@ ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
 BOOL
 StartProcess(ATL::CStringW &Path, BOOL Wait)
 {
-    BOOL result = StartProcess(Path.GetBuffer(), Wait);
-    Path.ReleaseBuffer();
+    BOOL result = StartProcess(const_cast<LPWSTR>(Path.GetString()), Wait);
     return result;
 }
 

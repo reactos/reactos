@@ -37,7 +37,10 @@ GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
 }
 
 BOOL
-GetInstalledVersion_WowUser(_Out_opt_ ATL::CStringW* szVersionResult, _In_z_ const ATL::CStringW& RegName, _In_ BOOL IsUserKey, _In_ REGSAM keyWow)
+GetInstalledVersion_WowUser(_Out_opt_ ATL::CStringW* szVersionResult, 
+                            _In_z_ const ATL::CStringW& RegName, 
+                            _In_ BOOL IsUserKey, 
+                            _In_ REGSAM keyWow)
 {
     HKEY hKey;
     BOOL bHasSucceded = FALSE;
@@ -48,7 +51,7 @@ GetInstalledVersion_WowUser(_Out_opt_ ATL::CStringW* szVersionResult, _In_z_ con
                       szPath.GetString(), 0, keyWow | KEY_READ,
                       &hKey) == ERROR_SUCCESS)
     {
-        if (szVersionResult)
+        if (szVersionResult != NULL)
         {
             DWORD dwSize = MAX_PATH * sizeof(WCHAR);
             DWORD dwType = REG_SZ;
@@ -80,6 +83,14 @@ GetInstalledVersion_WowUser(_Out_opt_ ATL::CStringW* szVersionResult, _In_z_ con
     return bHasSucceded;
 }
 
+BOOL GetInstalledVersion(ATL::CStringW* pszVersion, const ATL::CStringW& szRegName)
+{
+    return (!szRegName.IsEmpty()
+            && (::GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_32KEY)
+                || ::GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_32KEY)
+                || ::GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_64KEY)
+                || ::GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_64KEY)));
+}
 
 BOOL
 UninstallApplication(INT Index, BOOL bModify)
