@@ -245,7 +245,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
 
     AttributeAddress->Resident.ValueLength = FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + FilenameNoPath.Length;
     AttributeAddress->Resident.ValueOffset = ResidentHeaderLength;
-    AttributeAddress->Resident.Flags = 1; // indexed
+    AttributeAddress->Resident.Flags = RA_INDEXED;
 
     // move the attribute-end and file-record-end markers to the end of the file record
     AttributeAddress = (PNTFS_ATTR_RECORD)((ULONG_PTR)AttributeAddress + AttributeAddress->Length);

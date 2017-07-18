@@ -185,7 +185,7 @@ NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT1("NtfsOpenFileById(%p, %p, %I64x, %p)\n", DeviceExt, FileObject, MftId, FoundFCB);
 
-    ASSERT(MftId < 0x10);
+    ASSERT(MftId < NTFS_FILE_FIRST_USER_FILE);
     if (MftId > 0xb) /* No entries are used yet beyond this */
     {
         return STATUS_OBJECT_NAME_NOT_FOUND;
@@ -375,7 +375,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             return STATUS_INVALID_PARAMETER;
 
         MFTId = (*(PULONGLONG)FileObject->FileName.Buffer) & NTFS_MFT_MASK;
-        if (MFTId < 0x10)
+        if (MFTId < NTFS_FILE_FIRST_USER_FILE)
         {
             Status = NtfsOpenFileById(DeviceExt, FileObject, MFTId, &Fcb);
         }
