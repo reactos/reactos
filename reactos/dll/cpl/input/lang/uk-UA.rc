@@ -168,6 +168,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Мальдівська (фонетична)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Мальдівська (друкарська машинка)"
     IDS_DUTCH_LAYOUT "Нідерландська"
+    IDS_ESPERANTO_LAYOUT "Есперанто"
     IDS_ESTONIAN_LAYOUT "Естонська"
     IDS_FAEROESE_LAYOUT "Фарерська"
     IDS_FARSI_LAYOUT "Перська"

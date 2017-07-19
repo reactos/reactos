@@ -162,6 +162,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi (fonetică)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi (dactilografică)"
     IDS_DUTCH_LAYOUT "Olandeză"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estonă"
     IDS_FAEROESE_LAYOUT "Feroeză"
     IDS_FARSI_LAYOUT "Persană"

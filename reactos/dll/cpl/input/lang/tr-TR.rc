@@ -162,6 +162,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi Tüm Seslik"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Yazı Makinesi"
     IDS_DUTCH_LAYOUT "Hollandaca"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estçe"
     IDS_FAEROESE_LAYOUT "Faroece"
     IDS_FARSI_LAYOUT "Farsça"

@@ -162,6 +162,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi (fonético)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi (Máq. de escribir)"
     IDS_DUTCH_LAYOUT "Holandés"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estonio"
     IDS_FAEROESE_LAYOUT "Faroés"
     IDS_FARSI_LAYOUT "Farsí"
