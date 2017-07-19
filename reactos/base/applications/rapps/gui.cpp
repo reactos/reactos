@@ -555,7 +555,7 @@ public:
     CMainWindow() :
         m_ClientPanel(NULL),
         pLink(NULL),
-        SearchEnabled(TRUE)
+        SearchEnabled(FALSE)
     {
     }
 private:
@@ -574,7 +574,7 @@ private:
         szText.LoadStringW(hInst, IDS_APP_DESCRIPTION);
         m_ListView->AddColumn(3, szText, 250, LVCFMT_LEFT);
 
-        UpdateApplicationsList(ENUM_ALL_COMPONENTS);
+        //UpdateApplicationsList(ENUM_ALL_COMPONENTS);
     }
 
     HTREEITEM AddCategory(HTREEITEM hRootItem, UINT TextIndex, UINT IconIndex)
@@ -1068,7 +1068,8 @@ private:
             if (wParam == SEARCH_TIMER_ID)
             {
                 ::KillTimer(hwnd, SEARCH_TIMER_ID);
-                UpdateApplicationsList(-1);
+                if(SearchEnabled)
+                    UpdateApplicationsList(-1);
             }
             break;
         }
