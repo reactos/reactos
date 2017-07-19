@@ -143,18 +143,38 @@ typedef struct
 } SETTINGS_INFO, *PSETTINGS_INFO;
 
 /* available.cpp */
+class CConfigParser
+{
+    // Loacale names cache
+    static ATL::CStringW m_szLocale;
+    const static INT m_cchLocaleSize = 5;
+    static ATL::CStringW m_szCachedINISectionLocale;
+    static ATL::CStringW m_szCachedINISectionLocaleNeutral;
+
+    const LPCWSTR STR_VERSION_CURRENT = L"CURRENT";
+    const ATL::CStringW szConfigPath;
+
+    static ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName);
+    static VOID CacheINILocaleLazy();
+
+public:
+    static const ATL::CStringW& GetLocale();
+    static INT CConfigParser::GetLocaleSize();
+
+    CConfigParser(const ATL::CStringW& FileName);
+
+    UINT GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString);
+    UINT GetInt(const ATL::CStringW& KeyName);
+};
+
 typedef BOOL (CALLBACK *AVAILENUMPROC)(PAPPLICATION_INFO Info, LPCWSTR szFolderPath);
 struct CAvailableApplicationInfo : public APPLICATION_INFO
 {
     ATL::CStringW szInstalledVersion;
-
     CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam);
 
     // Load all info from the file
     VOID RefreshAppInfo();
-
-
-
     BOOL HasLanguageInfo() const;
     BOOL HasNativeLanguage() const;
     BOOL HasEnglishLanguage() const;
@@ -169,17 +189,17 @@ private:
     BOOL m_IsInstalled = FALSE;
     BOOL m_HasLanguageInfo = FALSE;
     BOOL m_HasInstalledVersion = FALSE;
+    CConfigParser m_Parser;
 
     inline BOOL GetString(LPCWSTR lpKeyName, 
                           ATL::CStringW& ReturnedString);
 
     // Lazily load general info from the file
-    BOOL RetrieveGeneralInfo();
+    VOID RetrieveGeneralInfo();
     VOID RetrieveInstalledStatus();
     VOID RetrieveInstalledVersion();
-    BOOL RetrieveLanguages();
+    VOID RetrieveLanguages();
     VOID RetrieveLicenseType();
-    VOID RetrieveCategory();
 };
 
 class CAvailableApps
@@ -247,9 +267,6 @@ BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath);
 VOID InitLogs(VOID);
 VOID FreeLogs(VOID);
 BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg);
-
-UINT ParserGetString(const ATL::CStringW& KeyName, const ATL::CStringW& FileName, ATL::CStringW& ReturnedString);
-UINT ParserGetInt(const ATL::CStringW& KeyName, const ATL::CStringW& FileName);
 
 /* settingsdlg.cpp */
 VOID CreateSettingsDlg(HWND hwnd);

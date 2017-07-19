@@ -181,9 +181,8 @@
 /* Language related strings */
 #define IDS_LANGUAGE_AVAILABLE_TRANSLATION      910
 #define IDS_LANGUAGE_NO_TRANSLATION             911
-#define IDS_LANGUAGE_NOT_AVAILABLE              912
-#define IDS_LANGUAGE_ENGLISH_TRANSLATION        913
-#define IDS_LANGUAGE_SINGLE                     914
+#define IDS_LANGUAGE_ENGLISH_TRANSLATION        912
+#define IDS_LANGUAGE_SINGLE                     913
 
 /* Accelerators */
 #define HOTKEYS                  715

@@ -13,48 +13,49 @@
  // CAvailableApplicationInfo
 
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
+    : m_Parser(sFileNameParam)
 {
     LicenseType = LICENSE_TYPE::None;
     sFileName = sFileNameParam;
-    RetrieveCategory();
+
+    RetrieveGeneralInfo();
 }
 
 VOID CAvailableApplicationInfo::RefreshAppInfo()
 {
-    if (RetrieveGeneralInfo())
+    if (szUrlDownload.IsEmpty())
     {
-        RetrieveLicenseType();
-        RetrieveLanguages();
-        RetrieveInstalledStatus();
-        if (m_IsInstalled)
-        {
-            RetrieveInstalledVersion();
-        }
+        RetrieveGeneralInfo();
     }
 }
 
-BOOL CAvailableApplicationInfo::RetrieveGeneralInfo()
+VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
 {
-    if (szUrlDownload.IsEmpty())
-    {
-        if (!GetString(L"Name", szName)
-            || !GetString(L"URLDownload", szUrlDownload))
-        {
-            return FALSE;
-        }
+    Category = m_Parser.GetInt(L"Category");
 
-        GetString(L"RegName", szRegName);
-        GetString(L"Version", szVersion);
-        GetString(L"License", szLicense);
-        GetString(L"Description", szDesc);
-        GetString(L"Size", szSize);
-        GetString(L"URLSite", szUrlSite);
-        GetString(L"CDPath", szCDPath);
-        GetString(L"Language", szRegName);
-        GetString(L"SHA1", szSHA1);
-        return TRUE;
+    if (!GetString(L"Name", szName)
+        || !GetString(L"URLDownload", szUrlDownload))
+    {
+        return;
     }
-    return FALSE;
+
+    GetString(L"RegName", szRegName);
+    GetString(L"Version", szVersion);
+    GetString(L"License", szLicense);
+    GetString(L"Description", szDesc);
+    GetString(L"Size", szSize);
+    GetString(L"URLSite", szUrlSite);
+    GetString(L"CDPath", szCDPath);
+    GetString(L"Language", szRegName);
+    GetString(L"SHA1", szSHA1);
+
+    RetrieveLicenseType();
+    RetrieveLanguages();
+    RetrieveInstalledStatus();
+    if (m_IsInstalled)
+    {
+        RetrieveInstalledVersion();
+    }
 }
 
 VOID CAvailableApplicationInfo::RetrieveInstalledStatus()
@@ -69,42 +70,45 @@ VOID CAvailableApplicationInfo::RetrieveInstalledVersion()
         || ::GetInstalledVersion(&szInstalledVersion, szName);
 }
 
-BOOL CAvailableApplicationInfo::RetrieveLanguages()
+VOID CAvailableApplicationInfo::RetrieveLanguages()
 {
     const WCHAR cDelimiter = L'|';
     ATL::CStringW szBuffer;
 
     // TODO: Get multiline parameter
-    if (!ParserGetString(L"Languages", sFileName, szBuffer))
-        return FALSE;
+    if (!m_Parser.GetString(L"Languages", szBuffer))
+    {
+        m_HasLanguageInfo = FALSE;
+        return;
+    }
 
     // Parse parameter string
-    ATL::CStringW szLocale;
+    ATL::CStringW m_szLocale;
     for (INT i = 0; szBuffer[i] != UNICODE_NULL; ++i)
     {
         if (szBuffer[i] != cDelimiter)
         {
-            szLocale += szBuffer[i];
+            m_szLocale += szBuffer[i];
         }
         else
         {
-            Languages.Add(szLocale);
-            szLocale.Empty();
+            Languages.Add(m_szLocale);
+            m_szLocale.Empty();
         }
     }
 
     // For the text after delimiter
-    if (!szLocale.IsEmpty())
+    if (!m_szLocale.IsEmpty())
     {
-        Languages.Add(szLocale);
+        Languages.Add(m_szLocale);
     }
 
-    return TRUE;
+    m_HasLanguageInfo = TRUE;
 }
 
 VOID CAvailableApplicationInfo::RetrieveLicenseType()
 {
-    INT IntBuffer = ParserGetInt(L"LicenseType", sFileName);
+    INT IntBuffer = m_Parser.GetInt(L"LicenseType");
 
     if (IntBuffer < 0 || IntBuffer > LICENSE_TYPE::Max)
     {
@@ -114,11 +118,6 @@ VOID CAvailableApplicationInfo::RetrieveLicenseType()
     {
         LicenseType = (LICENSE_TYPE) IntBuffer;
     }
-}
-
-VOID CAvailableApplicationInfo::RetrieveCategory()
-{
-    Category = ParserGetInt(L"Category", sFileName);
 }
 
 BOOL CAvailableApplicationInfo::HasLanguageInfo() const
@@ -133,19 +132,52 @@ BOOL CAvailableApplicationInfo::HasNativeLanguage() const
         return FALSE;
     }
 
-    //TODO: make the actual check
-    return TRUE;
+    //Find locale code in the list
+    const INT nLanguagesSize = Languages.GetSize();
+    for (INT i = 0; i < nLanguagesSize; ++i)
+    {
+        if (Languages[i] == CConfigParser::GetLocale())
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 BOOL CAvailableApplicationInfo::HasEnglishLanguage() const
 {
+    static ATL::CStringW szEnglishLocaleID;
+    const INT cchLocaleSize = m_Parser.GetLocaleSize();
     if (!m_HasLanguageInfo)
     {
         return FALSE;
     }
 
-    //TODO: make the actual check
-    return TRUE;
+    //Get English locale code
+    if (szEnglishLocaleID.IsEmpty())
+    {
+        INT result = GetLocaleInfoW(MAKELCID(LANG_ENGLISH, SORT_DEFAULT), LOCALE_ILANGUAGE,
+                                    szEnglishLocaleID.GetBuffer(cchLocaleSize), cchLocaleSize);
+        szEnglishLocaleID.ReleaseBuffer();
+        if (result != ERROR_SUCCESS)
+        {
+            return FALSE;
+        }
+
+    }
+
+    //Find locale code in the list
+    const INT nLanguagesSize = Languages.GetSize();
+    for (INT i = 0; i < nLanguagesSize; ++i)
+    {
+        if (Languages[i] == szEnglishLocaleID)
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 BOOL CAvailableApplicationInfo::IsInstalled() const
@@ -170,13 +202,14 @@ VOID CAvailableApplicationInfo::SetLastWriteTime(FILETIME* ftTime)
 
 inline BOOL CAvailableApplicationInfo::GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString)
 {
-    if (!ParserGetString(lpKeyName, sFileName, ReturnedString))
+    if (!m_Parser.GetString(lpKeyName, ReturnedString))
     {
         ReturnedString.Empty();
         return FALSE;
     }
     return TRUE;
 }
+// CAvailableApplicationInfo 
 
 // CAvailableApps
 CAvailableApps::CAvailableApps()
@@ -277,7 +310,7 @@ BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnu
 
     do
     {
-        /* loop for all the cached entries */
+        // loop for all the cached entries
         POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
         CAvailableApplicationInfo* Info = NULL;
 
@@ -286,13 +319,13 @@ BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnu
             POSITION LastListPosition = CurrentListPosition;
             Info = m_InfoList.GetNext(CurrentListPosition);
 
-            /* do we already have this entry in cache? */
+            // do we already have this entry in cache?
             if (Info->sFileName == FindFileData.cFileName)
             {
-                /* is it current enough, or the file has been modified since our last time here? */
+                // is it current enough, or the file has been modified since our last time here?
                 if (CompareFileTime(&FindFileData.ftLastWriteTime, &Info->ftCacheStamp) == 1)
                 {
-                    /* recreate our cache, this is the slow path */
+                    // recreate our cache, this is the slow path
                     m_InfoList.RemoveAt(LastListPosition);
 
                     delete Info;
@@ -301,16 +334,16 @@ BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnu
                 }
                 else
                 {
-                    /* speedy path, compare directly, we already have the data */
+                    // speedy path, compare directly, we already have the data
                     goto skip_if_cached;
                 }
             }
         }
 
-        /* create a new entry */
+        // create a new entry
         Info = new CAvailableApplicationInfo(FindFileData.cFileName);
 
-        /* set a timestamp for the next time */
+        // set a timestamp for the next time
         Info->SetLastWriteTime(&FindFileData.ftLastWriteTime);
         m_InfoList.AddTail(Info);
 
@@ -361,3 +394,112 @@ const LPCWSTR CAvailableApps::GetCabPathString()
 {
     return m_szPath.GetString();
 }
+// CAvailableApps
+
+// CConfigParser
+ATL::CStringW CConfigParser::m_szLocale;
+ATL::CStringW CConfigParser::m_szCachedINISectionLocale;
+ATL::CStringW CConfigParser::m_szCachedINISectionLocaleNeutral;
+
+CConfigParser::CConfigParser(const ATL::CStringW& FileName) : szConfigPath(GetINIFullPath(FileName))
+{
+    // we don't have cached section strings for the current system language, create them, lazy
+    CacheINILocaleLazy();
+}
+
+ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
+{
+    ATL::CStringW szDir;
+    static ATL::CStringW szBuffer;
+
+    GetStorageDirectory(szDir);
+    szBuffer.Format(L"%ls\\rapps\\%ls", szDir, FileName);
+
+    return szBuffer;
+}
+
+VOID CConfigParser::CacheINILocaleLazy()
+{
+    if (m_szLocale.IsEmpty())
+    {
+        // TODO: Set default locale if call fails
+        // find out what is the current system lang code (e.g. "0a") and append it to SectionLocale
+        GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_ILANGUAGE,
+                       m_szLocale.GetBuffer(m_cchLocaleSize), m_cchLocaleSize);
+        m_szLocale.ReleaseBuffer();
+        m_szCachedINISectionLocale = L"Section." + m_szLocale;
+
+        // turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part
+        m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale + m_szLocale.Right(2);
+    }
+}
+
+const ATL::CStringW& CConfigParser::GetLocale()
+{
+    CacheINILocaleLazy();
+    return m_szLocale;
+}
+
+INT CConfigParser::GetLocaleSize()
+{
+    return m_cchLocaleSize;
+}
+
+UINT CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
+{
+    DWORD dwResult;
+
+    LPWSTR ResultStringBuffer = ResultString.GetBuffer(MAX_PATH);
+    // 1st - find localized strings (e.g. "Section.0c0a")
+    dwResult = GetPrivateProfileStringW(m_szCachedINISectionLocale.GetString(),
+                                        KeyName.GetString(),
+                                        NULL,
+                                        ResultStringBuffer,
+                                        MAX_PATH,
+                                        szConfigPath.GetString());
+
+    if (!dwResult)
+    {
+        // 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a")
+        dwResult = GetPrivateProfileStringW(m_szCachedINISectionLocaleNeutral.GetString(),
+                                            KeyName.GetString(),
+                                            NULL,
+                                            ResultStringBuffer,
+                                            MAX_PATH,
+                                            szConfigPath.GetString());
+        if (!dwResult)
+        {
+            // 3rd - if they weren't present fallback to standard english strings (just "Section")
+            dwResult = GetPrivateProfileStringW(L"Section",
+                                                KeyName.GetString(),
+                                                NULL,
+                                                ResultStringBuffer,
+                                                MAX_PATH,
+                                                szConfigPath.GetString());
+        }
+    }
+
+    ResultString.ReleaseBuffer();
+    return (dwResult != 0 ? TRUE : FALSE);
+}
+
+UINT CConfigParser::GetInt(const ATL::CStringW& KeyName)
+{
+    ATL::CStringW Buffer;
+    UNICODE_STRING BufferW;
+    ULONG Result;
+
+    // grab the text version of our entry
+    if (!GetString(KeyName, Buffer))
+        return FALSE;
+
+    if (Buffer.IsEmpty())
+        return FALSE;
+
+    // convert it to an actual integer
+    RtlInitUnicodeString(&BufferW, Buffer.GetString());
+    RtlUnicodeStringToInteger(&BufferW, 0, &Result);
+
+    return (UINT) Result;
+}
+// CConfigParser

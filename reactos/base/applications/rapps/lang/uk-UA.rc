@@ -232,3 +232,11 @@ BEGIN
     IDS_LICENSE_FREEWARE "Безкоштовне ПЗ"
     IDS_LICENSE_TRIAL "Пробна версія"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Є переклад вашою мовою"
+    IDS_LANGUAGE_NO_TRANSLATION "Доступно іншими мовами"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Є переклад Англійською"
+    IDS_LANGUAGE_SINGLE "Одна мова"
+END

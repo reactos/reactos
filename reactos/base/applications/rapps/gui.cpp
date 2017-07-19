@@ -102,33 +102,48 @@ class CAvailableAppView
 
     static VOID InsertLanguageInfo_RichEdit(CAvailableApplicationInfo* Info)
     {
+        if (!Info->HasLanguageInfo())
+        {
+            return;
+        }
+
         const INT nTranslations = Info->Languages.GetSize();
         ATL::CStringW szLangInfo;
         ATL::CStringW szLoadedTextAvailability;
         ATL::CStringW szLoadedAInfoText;
         szLoadedAInfoText.LoadStringW(IDS_AINFO_LANGUAGES);
 
+
+        //TODO: replace those hardcoded strings
         if (Info->HasNativeLanguage())
         {
             szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_AVAILABLE_TRANSLATION);
+            if (nTranslations > 1)
+            {
+                szLangInfo.Format(L" (+%d more)", nTranslations - 1);
+            }
+            else
+            {
+                szLangInfo.LoadStringW(IDS_LANGUAGE_SINGLE);
+                szLangInfo = L" (" + szLangInfo + L")";
+            }
         }
         else if (Info->HasEnglishLanguage())
         {
             szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_ENGLISH_TRANSLATION);
+            if (nTranslations > 1)
+            {
+                szLangInfo.Format(L" (+%d available)", nTranslations - 1);
+            }
+            else
+            {
+                szLangInfo.LoadStringW(IDS_LANGUAGE_SINGLE);
+                szLangInfo = L" (" + szLangInfo + L")";
+            }
         }
         else
         {
             szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_NO_TRANSLATION);
-        }
-
-        if (nTranslations > 1)
-        {
-            szLangInfo.Format(L" (+%d more)", nTranslations - 1);
-        }
-        else
-        {
-            szLangInfo.LoadStringW(IDS_LANGUAGE_SINGLE);
-            szLangInfo = L" (" + szLangInfo + L")";
         }
 
         InsertRichEditText(szLoadedAInfoText, CFE_BOLD);

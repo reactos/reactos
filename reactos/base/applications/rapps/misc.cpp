@@ -15,12 +15,6 @@
 #define EXTRACT_EXTRACTFILES  0x00000002
 
 static HANDLE hLog = NULL;
-ATL::CStringW szCachedINISectionLocale = L"Section.";
-ATL::CStringW szCachedINISectionLocaleNeutral;
-BYTE bCachedSectionStatus = FALSE;
-
-#define LOCALIZED_STRING_LEN MAX_PATH
-#define STR_VERSION_CURRENT L"CURRENT"
 
 typedef struct
 {
@@ -404,91 +398,4 @@ WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
 }
 
 
-ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName)
-{
-    ATL::CStringW szDir;
-    static ATL::CStringW szBuffer;
 
-    GetStorageDirectory(szDir);
-    szBuffer.Format(L"%ls\\rapps\\%ls", szDir, FileName);
-
-    return szBuffer;
-}
-
-UINT ParserGetString(const ATL::CStringW& KeyName, const ATL::CStringW& FileName, ATL::CStringW& ResultString)
-{
-    ATL::CStringW FullFileName = GetINIFullPath(FileName);
-    DWORD dwResult;
-
-    /* we don't have cached section strings for the current system language, create them */
-    if (bCachedSectionStatus == FALSE)
-    {
-        ATL::CStringW szLocale;
-        const INT LocaleSize = 5;
-
-        /* find out what is the current system lang code (e.g. "0a") and append it to SectionLocale */
-        GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
-                       szLocale.GetBuffer(LocaleSize), LocaleSize);
-        szLocale.ReleaseBuffer();
-
-        /* turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part */
-        szCachedINISectionLocaleNeutral = szCachedINISectionLocale + szLocale.Right(2);
-        szCachedINISectionLocale += szLocale;
-
-        /* finally, mark us as cache-friendly for the next time */
-        bCachedSectionStatus = TRUE;
-    }
-
-    LPWSTR ResultStringBuffer = ResultString.GetBuffer(MAX_PATH);
-    /* 1st - find localized strings (e.g. "Section.0c0a") */
-    dwResult = GetPrivateProfileStringW(szCachedINISectionLocale.GetString(),
-                                        KeyName.GetString(),
-                                        NULL,
-                                        ResultStringBuffer,
-                                        LOCALIZED_STRING_LEN,
-                                        FullFileName.GetString());
-
-    if (!dwResult)
-    {
-        /* 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a") */
-        dwResult = GetPrivateProfileStringW(szCachedINISectionLocaleNeutral.GetString(),
-                                            KeyName.GetString(),
-                                            NULL,
-                                            ResultStringBuffer,
-                                            LOCALIZED_STRING_LEN,
-                                            FullFileName.GetString());
-        if (!dwResult)
-        {
-            /* 3rd - if they weren't present fallback to standard english strings (just "Section") */
-            dwResult = GetPrivateProfileStringW(L"Section",
-                                                KeyName.GetString(),
-                                                NULL,
-                                                ResultStringBuffer,
-                                                LOCALIZED_STRING_LEN,
-                                                FullFileName.GetString());
-        }
-    }
-
-    ResultString.ReleaseBuffer();
-    return (dwResult != 0 ? TRUE : FALSE);
-}
-
-UINT ParserGetInt(const ATL::CStringW& KeyName, const ATL::CStringW& FileName)
-{
-    ATL::CStringW Buffer;
-    UNICODE_STRING BufferW;
-    ULONG Result;
-
-    /* grab the text version of our entry */
-    if (!ParserGetString(KeyName, FileName, Buffer))
-        return FALSE;
-
-    if (Buffer.IsEmpty())
-        return FALSE;
-
-    /* convert it to an actual integer */
-    RtlInitUnicodeString(&BufferW, Buffer.GetString());
-    RtlUnicodeStringToInteger(&BufferW, 0, &Result);
-
-    return (UINT) Result;
-}

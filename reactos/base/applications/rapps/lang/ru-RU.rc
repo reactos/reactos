@@ -224,3 +224,11 @@ BEGIN
     IDS_LICENSE_FREEWARE "Бесплатное ПО"
     IDS_LICENSE_TRIAL "Пробная версия"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Доступно на вашем языке"
+    IDS_LANGUAGE_NO_TRANSLATION "Доступно на других языках"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Доступно на Английском"
+    IDS_LANGUAGE_SINGLE "Один язык"
+END
