@@ -3729,7 +3729,7 @@ static BOOL FASTCALL MENU_KeyEscape(MTRACKER *pmt, UINT Flags)
  *
  * Handle a VK_LEFT key event in a menu.
  */
-static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags)
+static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags, UINT msg)
 {
   PMENU MenuTmp, MenuPrev;
   UINT PrevCol;
@@ -3765,7 +3765,7 @@ static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags)
           /* A sublevel menu was displayed - display the next one
            * unless there is another displacement coming up */
 
-          if (!MENU_SuspendPopup(pmt, WM_KEYDOWN))
+          if (!MENU_SuspendPopup(pmt, msg))
               pmt->CurrentMenu = MENU_ShowSubPopup(pmt->OwnerWnd, pmt->TopMenu,
                                                  TRUE, Flags);
       }
@@ -3777,7 +3777,7 @@ static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags)
  *
  * Handle a VK_RIGHT key event in a menu.
  */
-static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags)
+static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags, UINT msg)
 {
     PMENU menutmp;
     UINT NextCol;
@@ -3822,7 +3822,7 @@ static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags)
 
        if ( menutmp || pmt->TrackFlags & TF_SUSPENDPOPUP )
        {
-           if ( !MENU_SuspendPopup(pmt, WM_KEYDOWN) )
+           if ( !MENU_SuspendPopup(pmt, msg) )
                pmt->CurrentMenu = MENU_ShowSubPopup(pmt->OwnerWnd, pmt->TopMenu, TRUE, Flags);
        }
     }
@@ -4038,11 +4038,11 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                         break;
 
                     case VK_LEFT:
-                        MENU_KeyLeft( &mt, wFlags );
+                        MENU_KeyLeft( &mt, wFlags, msg.message );
                         break;
 
                     case VK_RIGHT:
-                        MENU_KeyRight( &mt, wFlags );
+                        MENU_KeyRight( &mt, wFlags, msg.message );
                         break;
 
                     case VK_ESCAPE:
