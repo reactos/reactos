@@ -4158,6 +4158,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
        mt.TopMenu->TimeToHide = FALSE;
     }
 
+    EngSetLastError( ERROR_SUCCESS );
     /* The return value is only used by TrackPopupMenu */
     if (!(wFlags & TPM_RETURNCMD)) return TRUE;
     if (executedMenuId == -1) executedMenuId = 0;
@@ -4251,7 +4252,7 @@ static BOOL FASTCALL MENU_ExitTracking(PWND pWnd, BOOL bPopup, UINT wFlags)
  */
 VOID MENU_TrackMouseMenuBar( PWND pWnd, ULONG ht, POINT pt)
 {
-    PMENU pMenu = (ht == HTSYSMENU) ? IntGetSystemMenu(pWnd, FALSE) : IntGetMenu( UserHMGetHandle(pWnd) );
+    PMENU pMenu = (ht == HTSYSMENU) ? IntGetSystemMenu(pWnd, FALSE) : IntGetMenu( UserHMGetHandle(pWnd) ); // See 74276 and CORE-12801
     UINT wFlags = TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
 
     TRACE("wnd=%p ht=0x%04x (%ld,%ld)\n", pWnd, ht, pt.x, pt.y);
@@ -4383,14 +4384,6 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
           MsqSetStateWindow(pti, MSQ_STATE_MENUOWNER, NULL);
           pti->MessageQueue->QF_flags &= ~QF_CAPTURELOCKED;
           co_UserSetCapture(NULL); /* release the capture */
-       }
-
-       //
-       // HACK : Until back trace fault in co_IntUpdateWindows and MENU_TrackMenu.
-       //
-       if (EngGetLastError() == ERROR_ACCESS_DENIED)
-       {
-          EngSetLastError(NO_ERROR);
        }
 
        MENU_ExitTracking(pWnd, TRUE, wFlags);
