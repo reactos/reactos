@@ -3936,7 +3936,6 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
             break;
         }
 
-        IntTranslateKbdMessage(&msg, 0);
         mt.Pt = msg.pt;
 
         if ( (msg.hwnd == mt.CurrentMenu->hWnd) || ((msg.message!=WM_TIMER) && (msg.message!=WM_SYSTIMER)) )
@@ -4066,6 +4065,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     }
 
                     default:
+                        IntTranslateKbdMessage(&msg, 0);
                         break;
                 }
                 break;  /* WM_KEYDOWN */
