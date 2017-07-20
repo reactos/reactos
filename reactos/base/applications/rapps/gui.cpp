@@ -179,6 +179,7 @@ class CMainToolbar :
     WCHAR szInstallBtn[MAX_STR_LEN];
     WCHAR szUninstallBtn[MAX_STR_LEN];
     WCHAR szModifyBtn[MAX_STR_LEN];
+    WCHAR szSelectAll[MAX_STR_LEN];
 
     VOID AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex)
     {
@@ -217,6 +218,7 @@ class CMainToolbar :
         AddImageToImageList(hImageList, IDI_INSTALL);
         AddImageToImageList(hImageList, IDI_UNINSTALL);
         AddImageToImageList(hImageList, IDI_MODIFY);
+        AddImageToImageList(hImageList, IDI_CHECK_ALL);
         AddImageToImageList(hImageList, IDI_REFRESH);
         AddImageToImageList(hImageList, IDI_UPDATE_DB);
         AddImageToImageList(hImageList, IDI_SETTINGS);
@@ -272,17 +274,19 @@ public:
             { 0, ID_INSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szInstallBtn },
             { 1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szUninstallBtn },
             { 2, ID_MODIFY, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szModifyBtn },
-            { 5, 0, TBSTATE_ENABLED, BTNS_SEP, { 0 }, 0, 0 },
-            { 3, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
-            { 4, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, {0}, 0, 0},
-            { 5, 0, TBSTATE_ENABLED, BTNS_SEP, { 0 }, 0, 0 },
-            { 5, ID_SETTINGS, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
-            { 6, ID_EXIT, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 }
+            { 3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE,{0}, 0, (INT_PTR) szSelectAll},
+            {-1, 0, TBSTATE_ENABLED, BTNS_SEP, { 0 }, 0, 0 },
+            { 4, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
+            { 5, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
+            {-1, 0, TBSTATE_ENABLED, BTNS_SEP, { 0 }, 0, 0 },
+            { 6, ID_SETTINGS, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
+            { 7, ID_EXIT, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
         };
 
         LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
         LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
         LoadStringW(hInst, IDS_MODIFY, szModifyBtn, _countof(szModifyBtn));
+        LoadStringW(hInst, IDS_SELECT_ALL, szSelectAll, _countof(szSelectAll));
 
         m_hWnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL,
                                  WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_LIST,
@@ -324,6 +328,7 @@ class CAppsListView :
         int iSubItem;
     };
 
+    BOOL HasAllChecked;
 public:
     BOOL bAscending;
 
@@ -443,11 +448,20 @@ public:
         HWND hwnd = CListView::Create(hwndParent, r, NULL, style, WS_EX_CLIENTEDGE, menu);
 
         if (hwnd)
-            SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+        {
+            SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT );
+        }
 
         return hwnd;
     }
 
+    VOID CheckAll()
+    {
+        if (HasAllChecked)
+        {
+            
+        }
+    }
 };
 
 class CSideTreeView :
@@ -558,8 +572,8 @@ public:
         SearchEnabled(FALSE)
     {
     }
-private:
 
+private:
     VOID InitApplicationsList(VOID)
     {
         ATL::CStringW szText;
@@ -574,7 +588,8 @@ private:
         szText.LoadStringW(hInst, IDS_APP_DESCRIPTION);
         m_ListView->AddColumn(3, szText, 250, LVCFMT_LEFT);
 
-        //UpdateApplicationsList(ENUM_ALL_COMPONENTS);
+        // Unnesesary since the list updates on every TreeView selection
+        // UpdateApplicationsList(ENUM_ALL_COMPONENTS);
     }
 
     HTREEITEM AddCategory(HTREEITEM hRootItem, UINT TextIndex, UINT IconIndex)
@@ -1012,7 +1027,7 @@ private:
                 if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
                 {
                     /* this won't do anything if the program is already installed */
-                    SendMessage(hwnd, WM_COMMAND, ID_INSTALL, 0);
+                    SendMessageW(hwnd, WM_COMMAND, ID_INSTALL, 0);
                 }
             }
             break;
@@ -1068,7 +1083,7 @@ private:
             if (wParam == SEARCH_TIMER_ID)
             {
                 ::KillTimer(hwnd, SEARCH_TIMER_ID);
-                if(SearchEnabled)
+                if (SearchEnabled)
                     UpdateApplicationsList(-1);
             }
             break;
@@ -1247,6 +1262,9 @@ private:
 
         case ID_ABOUT:
             ShowAboutDialog();
+            break;
+
+        case ID_CHECK_ALL:
             break;
         }
     }

@@ -602,7 +602,7 @@ DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return FALSE;
 
     case WM_CLOSE:
-        EndDialog(Dlg, 0);
+        DestroyWindow(Dlg);
         return TRUE;
 
     default:
@@ -622,7 +622,7 @@ DownloadApplication(INT Index)
 
     WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_INSTALL, AppInfo->szName.GetString());
 
-    DialogBoxW(hInst,
+    CreateDialogW(hInst,
                MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
                hMainWnd,
                DownloadDlgProc);
@@ -638,7 +638,7 @@ DownloadApplicationsDB(LPCWSTR lpUrl)
 
     AppInfo = &IntInfo;
 
-    DialogBoxW(hInst,
+    CreateDialogW(hInst,
                MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
                hMainWnd,
                DownloadDlgProc);

@@ -84,23 +84,30 @@ VOID CAvailableApplicationInfo::RetrieveLanguages()
 
     // Parse parameter string
     ATL::CStringW m_szLocale;
+    int iLCID;
     for (INT i = 0; szBuffer[i] != UNICODE_NULL; ++i)
     {
-        if (szBuffer[i] != cDelimiter)
+        if (szBuffer[i] != cDelimiter && szBuffer[i] != L'\n')
         {
             m_szLocale += szBuffer[i];
         }
         else
         {
-            Languages.Add(m_szLocale);
-            m_szLocale.Empty();
+            if (StrToIntExW(m_szLocale.GetString(), STIF_DEFAULT, &iLCID))
+            {
+                Languages.Add(static_cast<LCID>(iLCID));
+                m_szLocale.Empty();
+            }
         }
     }
 
     // For the text after delimiter
     if (!m_szLocale.IsEmpty())
     {
-        Languages.Add(m_szLocale);
+        if (StrToIntExW(m_szLocale.GetString(), STIF_DEFAULT, &iLCID))
+        {
+            Languages.Add(static_cast<LCID>(iLCID));
+        }
     }
 
     m_HasLanguageInfo = TRUE;
@@ -120,6 +127,26 @@ VOID CAvailableApplicationInfo::RetrieveLicenseType()
     }
 }
 
+BOOL CAvailableApplicationInfo::FindInLanguages(LCID what) const
+{
+    if (!m_HasLanguageInfo)
+    {
+        return FALSE;
+    }
+
+    //Find locale code in the list
+    const INT nLanguagesSize = Languages.GetSize();
+    for (INT i = 0; i < nLanguagesSize; ++i)
+    {
+        if (Languages[i] == what)
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 BOOL CAvailableApplicationInfo::HasLanguageInfo() const
 {
     return m_HasLanguageInfo;
@@ -127,57 +154,12 @@ BOOL CAvailableApplicationInfo::HasLanguageInfo() const
 
 BOOL CAvailableApplicationInfo::HasNativeLanguage() const
 {
-    if (!m_HasLanguageInfo)
-    {
-        return FALSE;
-    }
-
-    //Find locale code in the list
-    const INT nLanguagesSize = Languages.GetSize();
-    for (INT i = 0; i < nLanguagesSize; ++i)
-    {
-        if (Languages[i] == CConfigParser::GetLocale())
-        {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
+    return FindInLanguages(GetUserDefaultLCID());
 }
 
 BOOL CAvailableApplicationInfo::HasEnglishLanguage() const
 {
-    static ATL::CStringW szEnglishLocaleID;
-    const INT cchLocaleSize = m_Parser.GetLocaleSize();
-    if (!m_HasLanguageInfo)
-    {
-        return FALSE;
-    }
-
-    //Get English locale code
-    if (szEnglishLocaleID.IsEmpty())
-    {
-        INT result = GetLocaleInfoW(MAKELCID(LANG_ENGLISH, SORT_DEFAULT), LOCALE_ILANGUAGE,
-                                    szEnglishLocaleID.GetBuffer(cchLocaleSize), cchLocaleSize);
-        szEnglishLocaleID.ReleaseBuffer();
-        if (result != ERROR_SUCCESS)
-        {
-            return FALSE;
-        }
-
-    }
-
-    //Find locale code in the list
-    const INT nLanguagesSize = Languages.GetSize();
-    for (INT i = 0; i < nLanguagesSize; ++i)
-    {
-        if (Languages[i] == szEnglishLocaleID)
-        {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
+    return FindInLanguages(MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), SORT_DEFAULT));
 }
 
 BOOL CAvailableApplicationInfo::IsInstalled() const
@@ -397,7 +379,7 @@ const LPCWSTR CAvailableApps::GetCabPathString()
 // CAvailableApps
 
 // CConfigParser
-ATL::CStringW CConfigParser::m_szLocale;
+ATL::CStringW CConfigParser::m_szLocaleID;
 ATL::CStringW CConfigParser::m_szCachedINISectionLocale;
 ATL::CStringW CConfigParser::m_szCachedINISectionLocaleNeutral;
 
@@ -410,7 +392,7 @@ CConfigParser::CConfigParser(const ATL::CStringW& FileName) : szConfigPath(GetIN
 ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
 {
     ATL::CStringW szDir;
-    static ATL::CStringW szBuffer;
+    ATL::CStringW szBuffer;
 
     GetStorageDirectory(szDir);
     szBuffer.Format(L"%ls\\rapps\\%ls", szDir, FileName);
@@ -420,24 +402,25 @@ ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
 
 VOID CConfigParser::CacheINILocaleLazy()
 {
-    if (m_szLocale.IsEmpty())
+    if (m_szLocaleID.IsEmpty())
     {
         // TODO: Set default locale if call fails
         // find out what is the current system lang code (e.g. "0a") and append it to SectionLocale
-        GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_ILANGUAGE,
-                       m_szLocale.GetBuffer(m_cchLocaleSize), m_cchLocaleSize);
-        m_szLocale.ReleaseBuffer();
-        m_szCachedINISectionLocale = L"Section." + m_szLocale;
+        GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
+                       m_szLocaleID.GetBuffer(m_cchLocaleSize), m_cchLocaleSize);
+
+        m_szLocaleID.ReleaseBuffer();
+        m_szCachedINISectionLocale = L"Section." + m_szLocaleID;
 
         // turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part
-        m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale + m_szLocale.Right(2);
+        m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale + m_szLocaleID.Right(2);
     }
 }
 
 const ATL::CStringW& CConfigParser::GetLocale()
 {
     CacheINILocaleLazy();
-    return m_szLocale;
+    return m_szLocaleID;
 }
 
 INT CConfigParser::GetLocaleSize()
@@ -486,8 +469,6 @@ UINT CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& Resul
 UINT CConfigParser::GetInt(const ATL::CStringW& KeyName)
 {
     ATL::CStringW Buffer;
-    UNICODE_STRING BufferW;
-    ULONG Result;
 
     // grab the text version of our entry
     if (!GetString(KeyName, Buffer))
@@ -497,9 +478,8 @@ UINT CConfigParser::GetInt(const ATL::CStringW& KeyName)
         return FALSE;
 
     // convert it to an actual integer
-    RtlInitUnicodeString(&BufferW, Buffer.GetString());
-    RtlUnicodeStringToInteger(&BufferW, 0, &Result);
+    int result = StrToIntW(Buffer.GetString());
 
-    return (UINT) Result;
+    return (UINT) (result <= 0) ? 0 : result;
 }
 // CConfigParser

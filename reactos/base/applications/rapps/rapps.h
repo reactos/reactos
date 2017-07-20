@@ -101,7 +101,7 @@ typedef struct
     ATL::CStringW szUrlSite;
     ATL::CStringW szUrlDownload;
     ATL::CStringW szCDPath;
-    ATL::CSimpleArray<ATL::CStringW> Languages;
+    ATL::CSimpleArray<LCID> Languages;
 
     /* caching mechanism related entries */
     ATL::CStringW sFileName;
@@ -146,7 +146,7 @@ typedef struct
 class CConfigParser
 {
     // Loacale names cache
-    static ATL::CStringW m_szLocale;
+    static ATL::CStringW m_szLocaleID;
     const static INT m_cchLocaleSize = 5;
     static ATL::CStringW m_szCachedINISectionLocale;
     static ATL::CStringW m_szCachedINISectionLocaleNeutral;
@@ -200,6 +200,7 @@ private:
     VOID RetrieveInstalledVersion();
     VOID RetrieveLanguages();
     VOID RetrieveLicenseType();
+    inline BOOL FindInLanguages(LCID what) const;
 };
 
 class CAvailableApps

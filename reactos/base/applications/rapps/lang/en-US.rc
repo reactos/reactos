@@ -91,7 +91,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE 
 CAPTION "Downloading..."
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -207,6 +207,8 @@ BEGIN
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
+    IDS_SELECT_ALL "Select/Desellect All"
+    IDS_INSTALL_SELECTED "Install Selected"
 END
 
 STRINGTABLE

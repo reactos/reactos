@@ -12,6 +12,7 @@
 #define IDI_APPUPD               18
 #define IDI_CATEGORY             19
 #define IDI_UPDATE_DB            20
+#define IDI_CHECK_ALL            21
 
 /* Icons for categories */
 #define IDI_CAT_AUDIO            50
@@ -76,6 +77,7 @@
 #define ID_REFRESH               559
 #define ID_REGREMOVE             560
 #define ID_RESETDB               561
+#define ID_CHECK_ALL            562
 
 /* Strings */
 #define IDS_APPTITLE             100
@@ -103,6 +105,8 @@
 #define IDS_INTEG_CHECK_FAIL     123
 #define IDS_INTERRUPTED_DOWNLOAD 124
 #define IDS_UNABLE_TO_WRITE      125
+#define IDS_SELECT_ALL           126
+#define IDS_INSTALL_SELECTED     127
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200

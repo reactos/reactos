@@ -188,15 +188,15 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
         GetAvailableApps()->UpdateAppsDB();
 
     /* Load the menu hotkeys */
-    KeyBrd = LoadAccelerators(NULL, MAKEINTRESOURCE(HOTKEYS));
+    KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCE(HOTKEYS));
 
     /* Message Loop */
     while (GetMessage(&Msg, NULL, 0, 0))
     {
-        if (!TranslateAccelerator(hMainWnd, KeyBrd, &Msg))
+        if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
         {
             TranslateMessage(&Msg);
-            DispatchMessage(&Msg);
+            DispatchMessageW(&Msg);
         }
     }
 
