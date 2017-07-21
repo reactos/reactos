@@ -104,6 +104,8 @@ public:
 
         if (m_hWnd != NULL)
         {
+            HWND hwndToolbar = ::GetWindow(m_hWnd, GW_CHILD);
+
             /* The task band never has a title */
             pdbi->dwMask &= ~DBIM_TITLE;
 
@@ -125,13 +127,11 @@ public:
             }
             else
             {
-                /* When the band is horizontal its minimum height is the height of the start button */
-                RECT rcButton;
-                GetWindowRect(m_hWndStartButton, &rcButton);
-                pdbi->ptMinSize.y = rcButton.bottom - rcButton.top;
-                pdbi->ptIntegral.y = pdbi->ptMinSize.y + (3 * GetSystemMetrics(SM_CYEDGE) / 2); /* FIXME: Query metrics */
-                /* We're not going to allow task bands where not even the minimum button size fits into the band */
-                pdbi->ptMinSize.x = pdbi->ptIntegral.y;
+                /* Obtain the button size, to be used as the integral size */
+                DWORD size = SendMessageW(hwndToolbar, TB_GETBUTTONSIZE, 0, 0);
+                pdbi->ptIntegral.x = 0;
+                pdbi->ptIntegral.y = GET_Y_LPARAM(size);
+                pdbi->ptMinSize = pdbi->ptIntegral;
             }
 
             /* Ignored: pdbi->ptMaxSize.x */

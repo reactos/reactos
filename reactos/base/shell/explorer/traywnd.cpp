@@ -1532,6 +1532,13 @@ ChangePos:
 
         Horizontal = IsPosHorizontal();
 
+        IUnknown_Exec(m_TrayBandSite,
+                      IID_IDeskBand,
+                      DBID_BANDINFOCHANGED,
+                      0,
+                      NULL,
+                      NULL);
+
         /* We're about to resize/move the start button, the rebar control and
            the tray notification control */
         dwp = BeginDeferWindowPos(3);
@@ -1545,6 +1552,16 @@ ChangePos:
         StartSize = m_StartButton.GetSize();
         if (StartSize.cx > rcClient.right)
             StartSize.cx = rcClient.right;
+
+        if (!m_Theme)
+        {
+            HWND hwndTaskToolbar = ::GetWindow(m_TaskSwitch, GW_CHILD);
+            if (hwndTaskToolbar)
+            {
+                DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
+                StartSize.cy = HIWORD(size);
+            }
+        }
 
         if (m_StartButton.m_hWnd != NULL)
         {
@@ -1646,15 +1663,16 @@ ChangePos:
     void FitToRebar(PRECT pRect)
     {
         /* Get the rect of the rebar */
-        RECT rebarRect, taskbarRect;
+        RECT rebarRect, taskbarRect, clientRect;
         ::GetWindowRect(m_Rebar, &rebarRect);
         ::GetWindowRect(m_hWnd, &taskbarRect);
+        ::GetClientRect(m_hWnd, &clientRect);
         OffsetRect(&rebarRect, -taskbarRect.left, -taskbarRect.top);
 
         /* Calculate the difference of size of the taskbar and the rebar */
         SIZE margins;
-        margins.cx = taskbarRect.right - taskbarRect.left - rebarRect.right + rebarRect.left;
-        margins.cy = taskbarRect.bottom - taskbarRect.top - rebarRect.bottom + rebarRect.top;
+        margins.cx = taskbarRect.right - taskbarRect.left - clientRect.right + clientRect.left;
+        margins.cy = taskbarRect.bottom - taskbarRect.top - clientRect.bottom + clientRect.top;
 
         /* Calculate the new size of the rebar and make it resize, then change the new taskbar size */
         switch (m_Position)

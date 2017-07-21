@@ -1142,9 +1142,25 @@ public:
         LONG NewBtnSize;
         BOOL Horizontal;
 
-        int cx = GetSystemMetrics(SM_CXMINIMIZED);
-        int cy = m_ButtonSize.cy = GetSystemMetrics(SM_CYSIZE);
-        m_TaskBar.SetButtonSize(cx, cy);
+        /* Update the size of the image list if needed */
+        int cx, cy;
+        ImageList_GetIconSize(m_ImageList, &cx, &cy);
+        if (cx != GetSystemMetrics(SM_CXSMICON) || cy != GetSystemMetrics(SM_CYSMICON))
+        {
+            ImageList_SetIconSize(m_ImageList, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
+
+            /* SetIconSize removes all icons so we have to reinsert them */
+            PTASK_ITEM TaskItem = m_TaskItems;
+            PTASK_ITEM LastTaskItem = m_TaskItems + m_TaskItemCount;
+            while (TaskItem != LastTaskItem)
+            {
+                TaskItem->IconIndex = -1;
+                UpdateTaskItemButton(TaskItem);
+
+                TaskItem++;
+            }
+            m_TaskBar.SetImageList(m_ImageList);
+        }
 
         if (GetClientRect(&rcClient) && !IsRectEmpty(&rcClient))
         {
@@ -1286,7 +1302,7 @@ public:
         return EnumWindows(s_EnumWindowsProc, (LPARAM)this);
     }
 
-    LRESULT OnThemeChanged()
+    LRESULT OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         TRACE("OmThemeChanged\n");
 
@@ -1301,20 +1317,14 @@ public:
         return TRUE;
     }
 
-    LRESULT OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        return OnThemeChanged();
-    }
-
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         if (!m_TaskBar.Initialize(m_hWnd))
             return FALSE;
 
         SetWindowTheme(m_TaskBar.m_hWnd, L"TaskBand", NULL);
-        OnThemeChanged();
 
-        m_ImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
+        m_ImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);
         m_TaskBar.SetImageList(m_ImageList);
 
         /* Set proper spacing between buttons */
@@ -1371,7 +1381,7 @@ public:
         return Ret;
     }
 
-    LRESULT HandleShellHookMsg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    LRESULT OnShellHook(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         BOOL Ret = FALSE;
 
@@ -1447,14 +1457,6 @@ public:
         }
 
         return Ret;
-    }
-
-    VOID EnableGrouping(IN BOOL bEnable)
-    {
-        m_IsGroupingEnabled = bEnable;
-
-        /* Collapse or expand groups if necessary */
-        UpdateButtonsSize(FALSE);
     }
 
     VOID HandleTaskItemClick(IN OUT PTASK_ITEM TaskItem)
@@ -1648,16 +1650,6 @@ public:
         return Ret;
     }
 
-    LRESULT DrawBackground(HDC hdc)
-    {
-        RECT rect;
-
-        GetClientRect(&rect);
-        DrawThemeParentBackground(m_hWnd, hdc, &rect);
-
-        return TRUE;
-    }
-
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         HDC hdc = (HDC) wParam;
@@ -1668,7 +1660,11 @@ public:
             return 0;
         }
 
-        return DrawBackground(hdc);
+        RECT rect;
+        GetClientRect(&rect);
+        DrawThemeParentBackground(m_hWnd, hdc, &rect);
+
+        return TRUE;
     }
 
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1724,7 +1720,10 @@ public:
         LRESULT Ret = m_IsGroupingEnabled;
         if ((BOOL)wParam != m_IsGroupingEnabled)
         {
-            EnableGrouping((BOOL) wParam);
+            m_IsGroupingEnabled = (BOOL)wParam;
+
+            /* Collapse or expand groups if necessary */
+            UpdateButtonsSize(FALSE);
         }
         return Ret;
     }
@@ -1833,7 +1832,7 @@ public:
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
-        MESSAGE_HANDLER(m_ShellHookMsg, HandleShellHookMsg)
+        MESSAGE_HANDLER(m_ShellHookMsg, OnShellHook)
         MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
         MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
     END_MSG_MAP()
