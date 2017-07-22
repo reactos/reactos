@@ -2265,6 +2265,9 @@ ChangePos:
 
     LRESULT OnDisplayChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        /* Load the saved tray window settings */
+        RegLoadSettings();
+
         /* Move the tray window to the right position and resize it if necessary */
         CheckTrayWndPosition();
 
