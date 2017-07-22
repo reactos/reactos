@@ -15,6 +15,7 @@ GamesShortcuts=2, %GAMES%
 
 [SystemToolsShortcuts]
 %SystemRoot%\system32\fontsub.exe, %FONTSUB_TITLE%, %FONTSUB_DESC%, 0
+%SystemRoot%\system32\screenshot.exe, %SCREENSHOT_TITLE%, %SCREENSHOT_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 ;-------------------------------- STRINGS -------------------------------
 
@@ -28,6 +29,8 @@ GAMES=Games
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Take screenshot
 
 ; Bulgarian
 [Strings.0402]
@@ -40,6 +43,8 @@ GAMES=Игри
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Снимка
+SCREENSHOT_DESC=Заснемане на екрана
 
 ; Czech
 [Strings.0405]
@@ -52,6 +57,8 @@ GAMES=Hry
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Sejmout obrazovku
+SCREENSHOT_DESC=Sejmout obrazovku
 
 ; German
 [Strings.0407]
@@ -64,6 +71,8 @@ GAMES=Spiele
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Screenshot erstellen
 
 ; Greek
 [Strings.0408]
@@ -76,6 +85,8 @@ GAMES=Παιχνίδια
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Take screenshot
 
 ; Spanish
 [Strings.0a]
@@ -88,6 +99,8 @@ GAMES=Juegos
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Captura de pantalla
+SCREENSHOT_DESC=Guarda secciones de la pantalla como un archivo de imagen.
 
 ; Estonian
 [Strings.0425]
@@ -100,6 +113,8 @@ GAMES=Mängud
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Tee ekraanitõmmis
 
 ; French
 [Strings.040C]
@@ -112,6 +127,8 @@ GAMES=Jeux
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Capture d'écran
+SCREENSHOT_DESC=Faire une capture d'écran
 
 ; Hebrew
 [Strings.040D]
@@ -124,6 +141,8 @@ GAMES=משחקים
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=צילום מסך
 
 ; Hungarian
 [Strings.040E]
@@ -136,6 +155,8 @@ GAMES=Játékok
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Take screenshot
 
 ; Indonesian
 [Strings.0421]
@@ -148,6 +169,8 @@ GAMES=Games
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Ambil foto layar
 
 ; Italian
 [Strings.0410]
@@ -160,6 +183,8 @@ GAMES=Giochi
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Salva una schermata
 
 ; Japanese
 [Strings.0411]
@@ -172,6 +197,8 @@ GAMES=ゲーム
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=フォント代替エディタ
+SCREENSHOT_TITLE=スナップショット
+SCREENSHOT_DESC=スクリーンショットを撮ります
 
 ; Dutch
 [Strings.0413]
@@ -184,6 +211,8 @@ GAMES=Games
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Take screenshot
 
 ; Norwegian
 [Strings.0414]
@@ -196,6 +225,8 @@ GAMES=Spill
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Ta skjermbilde
 
 ; Polish
 [Strings.0415]
@@ -208,6 +239,8 @@ GAMES=Gry
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Zrzut ekranu
+SCREENSHOT_DESC=Zrób zrzut ekranu
 
 ; Portuguese - Brazil
 [Strings.0416]
@@ -220,6 +253,8 @@ GAMES=Jogos
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=SnapShot
+SCREENSHOT_DESC=Capturar Tela
 
 ; Romanian
 [Strings.0418]
@@ -232,6 +267,8 @@ GAMES=Jocuri
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Captură de ecran
+SCREENSHOT_DESC=Program pentru executarea de capturi de ecran.
 
 ; Russian
 [Strings.0419]
@@ -244,6 +281,8 @@ GAMES=Игры
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Скриншот
+SCREENSHOT_DESC=Сделать снимок экрана
 
 ; Slovak
 [Strings.041B]
@@ -256,6 +295,8 @@ GAMES=Hry
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Momentka //SnapShot
+SCREENSHOT_DESC=Uložiť obrazovku
 
 ; Turkish
 [Strings.041f]
@@ -268,6 +309,8 @@ GAMES=Oyunlar
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Ekran Görüntüsü
+SCREENSHOT_DESC=Ekran görüntüsü al
 
 ; Ukrainian
 [Strings.0422]
@@ -280,6 +323,8 @@ GAMES=Ігри
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=Знімок екрану
+SCREENSHOT_DESC=Зробити знімок екрана
 
 ; Chinese
 [Strings.0804]
@@ -292,3 +337,5 @@ GAMES=游戏
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=屏幕截图
+SCREENSHOT_DESC=屏幕截图
