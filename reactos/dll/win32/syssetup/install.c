@@ -1273,6 +1273,20 @@ InstallReactOS(VOID)
 
     SetupCloseInfFile(hShortcutsInf);
 
+    hShortcutsInf = SetupOpenInfFileW(L"rosapps_shortcuts.inf",
+                                       NULL,
+                                       INF_STYLE_WIN4,
+                                       NULL);
+    if (hShortcutsInf != INVALID_HANDLE_VALUE)
+    {
+        if (!CreateShortcuts(hShortcutsInf, L"ShortcutFolders"))
+        {
+            FatalError("CreateShortcuts(rosapps) failed");
+            return 0;
+        }
+        SetupCloseInfFile(hShortcutsInf);
+    }
+
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
 

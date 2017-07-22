@@ -1,0 +1,294 @@
+[Version]
+Signature = $Windows NT$
+ClassGUID = {00000000-0000-0000-0000-000000000000}
+
+[ShortcutFolders]
+DesktopShortcuts=0,
+ProgramShortcuts=2,
+AdminToolsShortcuts=47,
+AccessoriesShortcuts=2, %ACCESSORIES%
+SystemToolsShortcuts=2, %ACCESSORIES%\%SYSTOOLS%
+AccessibilityShortcuts=2, %ACCESSORIES%\%ACCESSIBILITY%
+EntertainmentShortcuts=2, %ACCESSORIES%\%ENTERTAINMENT%
+CommunicationsShortcuts=2, %ACCESSORIES%\%COMMUNICATIONS%
+GamesShortcuts=2, %GAMES%
+
+[SystemToolsShortcuts]
+%SystemRoot%\system32\fontsub.exe, %FONTSUB_TITLE%, %FONTSUB_DESC%, 0
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ACCESSORIES=Accessories
+SYSTOOLS=System Tools
+ACCESSIBILITY=Accessibility
+ENTERTAINMENT=Entertainment
+COMMUNICATIONS=Communications
+GAMES=Games
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Bulgarian
+[Strings.0402]
+ACCESSORIES=Принадлежности
+SYSTOOLS=Системни средства
+ACCESSIBILITY=Достъпност
+ENTERTAINMENT=Забавление
+COMMUNICATIONS=Communications
+GAMES=Игри
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Czech
+[Strings.0405]
+ACCESSORIES=Příslušenství
+SYSTOOLS=Systémové nástroje
+ACCESSIBILITY=Usnadnění
+ENTERTAINMENT=Zábava
+COMMUNICATIONS=Communications
+GAMES=Hry
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; German
+[Strings.0407]
+ACCESSORIES=Zubehör
+SYSTOOLS=Systemprogramme
+ACCESSIBILITY=Eingabehilfen
+ENTERTAINMENT=Unterhaltung
+COMMUNICATIONS=Kommunikation
+GAMES=Spiele
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Greek
+[Strings.0408]
+ACCESSORIES=Βοηθήματα
+SYSTOOLS=Εργαλεία Συστήματος
+ACCESSIBILITY=Για άτομα με ειδικές ανάγκες
+ENTERTAINMENT=Διασκέδαση
+COMMUNICATIONS=Communications
+GAMES=Παιχνίδια
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Spanish
+[Strings.0a]
+ACCESSORIES=Accesorios
+SYSTOOLS=Herramientas del sistema
+ACCESSIBILITY=Accesibilidad
+ENTERTAINMENT=Entretenimiento
+COMMUNICATIONS=Comunicaciones
+GAMES=Juegos
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Estonian
+[Strings.0425]
+ACCESSORIES=Tarvikud
+SYSTOOLS=Süsteemi tööriistad
+ACCESSIBILITY=Ligipääsetavus
+ENTERTAINMENT=Meelelahutus
+COMMUNICATIONS=Communications
+GAMES=Mängud
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; French
+[Strings.040C]
+ACCESSORIES=Accessoires
+SYSTOOLS=Outils système
+ACCESSIBILITY=Accessibilité
+ENTERTAINMENT=Divertissement
+COMMUNICATIONS=Communications
+GAMES=Jeux
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Hebrew
+[Strings.040D]
+ACCESSORIES=עזרים
+SYSTOOLS=כלי מערכת
+ACCESSIBILITY=נגישות
+ENTERTAINMENT=בידור
+COMMUNICATIONS=Communications
+GAMES=משחקים
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Hungarian
+[Strings.040E]
+ACCESSORIES=Accessories
+SYSTOOLS=System Tools
+ACCESSIBILITY=Accessibility
+ENTERTAINMENT=Entertainment
+COMMUNICATIONS=Communications
+GAMES=Játékok
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Indonesian
+[Strings.0421]
+ACCESSORIES=Aksesoris
+SYSTOOLS=System Tools
+ACCESSIBILITY=Accessibility
+ENTERTAINMENT=Entertainment
+COMMUNICATIONS=Communications
+GAMES=Games
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Italian
+[Strings.0410]
+ACCESSORIES=Accessori
+SYSTOOLS=Strumenti di sistema
+ACCESSIBILITY=Accessibilità
+ENTERTAINMENT=Divertimento
+COMMUNICATIONS=Comunicazioni
+GAMES=Giochi
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Japanese
+[Strings.0411]
+ACCESSORIES=アクセサリ
+SYSTOOLS=システムツール
+ACCESSIBILITY=アクセシビリティ
+ENTERTAINMENT=エンターテイメント
+COMMUNICATIONS=Communications
+GAMES=ゲーム
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=フォント代替エディタ
+
+; Dutch
+[Strings.0413]
+ACCESSORIES=Accessories
+SYSTOOLS=System Tools
+ACCESSIBILITY=Accessibility
+ENTERTAINMENT=Entertainment
+COMMUNICATIONS=Communications
+GAMES=Games
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Norwegian
+[Strings.0414]
+ACCESSORIES=Tilbehør
+SYSTOOLS=Systemverktøy
+ACCESSIBILITY=Tilgjengelighet
+ENTERTAINMENT=Underholdning
+COMMUNICATIONS=Communications
+GAMES=Spill
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Polish
+[Strings.0415]
+ACCESSORIES=Akcesoria
+SYSTOOLS=Narzędzia systemowe
+ACCESSIBILITY=Ułatwienia dostępu
+ENTERTAINMENT=Rozrywka
+COMMUNICATIONS=Komunikacja
+GAMES=Gry
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Portuguese - Brazil
+[Strings.0416]
+ACCESSORIES=Acessórios
+SYSTOOLS=Ferramentas de Sistema
+ACCESSIBILITY=Acessibilidade
+ENTERTAINMENT=Entretenimento
+COMMUNICATIONS=Communications
+GAMES=Jogos
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Romanian
+[Strings.0418]
+ACCESSORIES=Accesorii
+SYSTOOLS=Instrumente de sistem
+ACCESSIBILITY=Accesibilitate
+ENTERTAINMENT=Divertisment
+COMMUNICATIONS=Communicații
+GAMES=Jocuri
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Russian
+[Strings.0419]
+ACCESSORIES=Стандартные
+SYSTOOLS=Служебные
+ACCESSIBILITY=Специальные возможности
+ENTERTAINMENT=Развлечения
+COMMUNICATIONS=Связь
+GAMES=Игры
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Slovak
+[Strings.041B]
+ACCESSORIES=Príslušenstvo
+SYSTOOLS=Systémové nástroje
+ACCESSIBILITY=Zjednodušenie ovládania
+ENTERTAINMENT=Zábava
+COMMUNICATIONS=Communications
+GAMES=Hry
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Turkish
+[Strings.041f]
+ACCESSORIES=Donatılar
+SYSTOOLS=Dizge Araçları
+ACCESSIBILITY=Erişilebilirlik
+ENTERTAINMENT=Eğlence
+COMMUNICATIONS=İletişim
+GAMES=Oyunlar
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Ukrainian
+[Strings.0422]
+ACCESSORIES=Допоміжні програми
+SYSTOOLS=Службові
+ACCESSIBILITY=Спеціальні можливості
+ENTERTAINMENT=Розваги
+COMMUNICATIONS=Communications
+GAMES=Ігри
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+
+; Chinese
+[Strings.0804]
+ACCESSORIES=附件
+SYSTOOLS=系统工具
+ACCESSIBILITY=辅助功能
+ENTERTAINMENT=娱乐
+COMMUNICATIONS=通信
+GAMES=游戏
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
