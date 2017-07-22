@@ -40,15 +40,11 @@ class CTaskBand :
     CComPtr<IUnknown> m_Site;
 
     HWND m_hWnd;
-    HWND m_hWndStartButton;
-    DWORD m_BandID;
 
 public:
     CTaskBand() :
-        m_hWnd(NULL),
-        m_BandID(0)
+        m_hWnd(NULL)
     {
-
     }
 
     virtual ~CTaskBand() { }
@@ -117,32 +113,30 @@ public:
             /* FIXME: What about DBIMF_NOGRIPPER and DBIMF_ALWAYSGRIPPER */
             pdbi->dwModeFlags = DBIMF_VARIABLEHEIGHT;
 
+            /* Obtain the button size, to be used as the minimum size */
+            DWORD size = SendMessageW(hwndToolbar, TB_GETBUTTONSIZE, 0, 0);
+            pdbi->ptMinSize.x = 0;
+            pdbi->ptMinSize.y = GET_Y_LPARAM(size);
+
             if (dwViewMode & DBIF_VIEWMODE_VERTICAL)
             {
+                pdbi->ptIntegral.x = 0;
                 pdbi->ptIntegral.y = 1;
-                pdbi->ptMinSize.y = 1;
-                /* FIXME: Get the button metrics from the task bar object!!! */
-                pdbi->ptMinSize.x = (3 * GetSystemMetrics(SM_CXEDGE) / 2) + /* FIXME: Might be wrong if only one column! */
-                    GetSystemMetrics(SM_CXSIZE) + (2 * GetSystemMetrics(SM_CXEDGE)); /* FIXME: Min button size, query!!! */
             }
             else
             {
-                /* Obtain the button size, to be used as the integral size */
-                DWORD size = SendMessageW(hwndToolbar, TB_GETBUTTONSIZE, 0, 0);
                 pdbi->ptIntegral.x = 0;
                 pdbi->ptIntegral.y = GET_Y_LPARAM(size);
-                pdbi->ptMinSize = pdbi->ptIntegral;
             }
 
             /* Ignored: pdbi->ptMaxSize.x */
             pdbi->ptMaxSize.y = -1;
 
+            RECT rcToolbar;
+            ::GetWindowRect(hwndToolbar, &rcToolbar);
             /* FIXME: We should query the height from the task bar object!!! */
-            pdbi->ptActual.y = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
-
-            /* Save the band ID for future use in case we need to check whether a given band
-               is the task band */
-            m_BandID = dwBandID;
+            pdbi->ptActual.x = rcToolbar.right - rcToolbar.left;
+            pdbi->ptActual.y = rcToolbar.bottom - rcToolbar.top;
 
             TRACE("H: %d, Min: %d,%d, Integral.y: %d Actual: %d,%d\n", (dwViewMode & DBIF_VIEWMODE_VERTICAL) == 0,
                 pdbi->ptMinSize.x, pdbi->ptMinSize.y, pdbi->ptIntegral.y,
@@ -334,8 +328,6 @@ public:
     HRESULT STDMETHODCALLTYPE Initialize(IN OUT ITrayWindow *tray, HWND hWndStartButton)
     {
         m_Tray = tray;
-        m_BandID = (DWORD) -1;
-        m_hWndStartButton = hWndStartButton;
         return S_OK;
     }
 

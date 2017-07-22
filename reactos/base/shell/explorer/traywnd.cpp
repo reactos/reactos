@@ -1688,8 +1688,14 @@ ChangePos:
             pRect->top = pRect->bottom - (rebarRect.bottom - rebarRect.top + margins.cy);
             break;
         case ABE_LEFT:
+            rebarRect.right = rebarRect.left + (pRect->right - pRect->left - margins.cx);
+            ::SendMessageW(m_Rebar, RB_SIZETORECT, RBSTR_CHANGERECT,  (LPARAM)&rebarRect);
+            pRect->right = pRect->left + (rebarRect.right - rebarRect.left + margins.cx);
+            break;
         case ABE_RIGHT:
-            /* FIXME: what to do here? */
+            rebarRect.left = rebarRect.right - (pRect->right - pRect->left - margins.cx);
+            ::SendMessageW(m_Rebar, RB_SIZETORECT, RBSTR_CHANGERECT,  (LPARAM)&rebarRect);
+            pRect->left = pRect->right - (rebarRect.right - rebarRect.left + margins.cx);
             break;
         }
 
