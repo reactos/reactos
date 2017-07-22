@@ -19,8 +19,8 @@ MBRInstallType=2
 
 FullName="MyName"
 ;OrgName="MyOrg"
-ComputerName="MYCOMPUTERNAME";
-AdminPassword="MyPassword"
+ComputerName="MYCOMPUTERNAME"
+;AdminPassword="MyPassword"
 
 ; TimeZone is set GMT as default
 TimeZoneIndex=85

@@ -19,8 +19,8 @@ MBRInstallType=2
 
 FullName="MyName"
 ;OrgName="MyOrg"
-ComputerName="MYCOMPUTERNAME";
-AdminPassword="MyPassword"
+ComputerName="MYCOMPUTERNAME"
+;AdminPassword="MyPassword"
 
 ; TimeZone is set GMT as default
 TimeZoneIndex=85
@@ -48,7 +48,6 @@ DisableGeckoInst = no
 ; specify language in 2nd mode setup
 ; see hivesys.inf for available languages
 LocaleID = 409
-
 
 ; enable this section to automatically launch programs
 ; after 3rd boot
