@@ -383,6 +383,8 @@ LRESULT CDesktopBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         ::ShowWindow(m_hWnd, SW_RESTORE);
     }
 
+    ::InvalidateRect(m_hWndShellView, NULL, TRUE);
+
     return 0;
 }
 

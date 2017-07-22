@@ -1346,8 +1346,13 @@ IntPaintDesktop(HDC hDC)
 
         if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &Rect, 0))
         {
+            Rect.left = Rect.top = 0;
             Rect.right  = UserGetSystemMetrics(SM_CXSCREEN);
             Rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+        }
+        else
+        {
+            RECTL_vOffsetRect(&Rect, -Rect.left, -Rect.top);
         }
 
         /*
