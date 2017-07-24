@@ -37,6 +37,10 @@ __RxInitializeTopLevelIrpContext(
 
 #define RxInitializeTopLevelIrpContext(a,b,c) __RxInitializeTopLevelIrpContext(a,b,c,0)
 
+PIRP
+RxGetTopIrpIfRdbssIrp(
+    VOID);
+
 PRDBSS_DEVICE_OBJECT
 RxGetTopDeviceObjectIfRdbssIrp(
     VOID);
@@ -307,6 +311,14 @@ typedef enum
     RX_CONTEXT_FLAG_MINIRDR_INITIATED = 0x80000000,
 } RX_CONTEXT_FLAGS;
 
+#define RX_CONTEXT_PRESERVED_FLAGS (RX_CONTEXT_FLAG_FROM_POOL |              \
+                                    RX_CONTEXT_FLAG_MUST_SUCCEED_ALLOCATED | \
+                                    RX_CONTEXT_FLAG_IN_FSP)
+
+#define RX_CONTEXT_INITIALIZATION_FLAGS (RX_CONTEXT_FLAG_WAIT |         \
+                                         RX_CONTEXT_FLAG_MUST_SUCCEED | \
+                                         RX_CONTEXT_FLAG_MUST_SUCCEED_NONBLOCKING)
+
 typedef enum
 {
     RX_CONTEXT_CREATE_FLAG_UNC_NAME = 0x1,
@@ -328,6 +340,23 @@ typedef enum {
     RXCONTEXT_FLAG4LOWIO_LOCK_OPERATION_COMPLETED = 0x100,
     RXCONTEXT_FLAG4LOWIO_LOCK_BUFFERED_ON_ENTRY = 0x200
 } RX_CONTEXT_LOWIO_FLAGS;
+
+#if DBG
+#define RxSaveAndSetExceptionNoBreakpointFlag(R, F)                \
+{                                                                  \
+    F = FlagOn(R->Flags, RX_CONTEXT_FLAG_NO_EXCEPTION_BREAKPOINT); \
+    SetFlag(R->Flags, RX_CONTEXT_FLAG_NO_EXCEPTION_BREAKPOINT);    \
+}
+
+#define RxRestoreExceptionNoBreakpointFlag(R, F)                  \
+{                                                                 \
+    ClearFlag(R->Flags, RX_CONTEXT_FLAG_NO_EXCEPTION_BREAKPOINT); \
+    SetFlag(R->Flags, F);                                         \
+}
+#else
+#define RxSaveAndSetExceptionNoBreakpointFlag(R, F)
+#define RxRestoreExceptionNoBreakpointFlag(R, F)
+#endif
 
 #if DBG
 VOID
@@ -469,6 +498,11 @@ VOID
 NTAPI
 RxDereferenceAndDeleteRxContext_Real(
     _In_ PRX_CONTEXT RxContext);
+
+VOID
+NTAPI
+RxReinitializeContext(
+   _Inout_ PRX_CONTEXT RxContext);
 
 #if DBG
 #define RxDereferenceAndDeleteRxContext(RXCONTEXT) \

@@ -35,6 +35,16 @@ VOID
 RxMarkFobxOnClose(
     _In_ PFOBX Fobx);
 
+NTSTATUS
+RxPurgeRelatedFobxs(
+    PNET_ROOT NetRoot,
+    PRX_CONTEXT RxContext,
+    BOOLEAN AttemptFinalization,
+    PFCB PurgingFcb);
+
+#define DONT_ATTEMPT_FINALIZE_ON_PURGE FALSE
+#define ATTEMPT_FINALIZE_ON_PURGE TRUE
+
 typedef enum _RDBSS_SCAVENGER_STATE
 {
     RDBSS_SCAVENGER_INACTIVE,
@@ -115,6 +125,12 @@ RxInitializePurgeSyncronizationContext(
 BOOLEAN
 RxScavengeRelatedFobxs(
     _In_ PFCB Fcb);
+
+VOID
+RxScavengeFobxsForNetRoot(
+    PNET_ROOT NetRoot,
+    PFCB PurgingFcb,
+    BOOLEAN SynchronizeWithScavenger);
 
 VOID
 RxpMarkInstanceForScavengedFinalization(

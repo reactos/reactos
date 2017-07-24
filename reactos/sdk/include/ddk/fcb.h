@@ -296,6 +296,9 @@ typedef struct _SRV_OPEN
 #define FOBX_FLAG_UNC_NAME 0x2000000
 #define FOBX_FLAG_ENCLOSED_ALLOCATED 0x4000000
 #define FOBX_FLAG_MARKED_AS_DORMANT 0x8000000
+#ifdef __REACTOS__
+#define FOBX_FLAG_DISABLE_COLLAPSING 0x20000000
+#endif
 
 typedef struct _FOBX
 {
@@ -349,6 +352,7 @@ typedef struct _FOBX
 #define RDBSS_REF_TRACK_NETFCB   0x00000010
 #define RDBSS_REF_TRACK_SRVOPEN  0x00000020
 #define RX_PRINT_REF_TRACKING    0x40000000
+#define RX_LOG_REF_TRACKING      0x80000000
 
 extern ULONG RdbssReferenceTracingValue;
 
@@ -367,12 +371,21 @@ RxpTrackDereference(
     _In_ PVOID Instance);
 
 #define REF_TRACING_ON(TraceMask) (TraceMask & RdbssReferenceTracingValue)
+#ifndef __REACTOS__
 #define PRINT_REF_COUNT(TYPE, Count)                          \
     if (REF_TRACING_ON( RDBSS_REF_TRACK_ ## TYPE) &&          \
         (RdbssReferenceTracingValue & RX_PRINT_REF_TRACKING)) \
     {                                                         \
         DbgPrint("%ld\n", Count);                             \
     }
+#else
+#define PRINT_REF_COUNT(TYPE, Count)                                     \
+    if (REF_TRACING_ON( RDBSS_REF_TRACK_ ## TYPE) &&                     \
+        (RdbssReferenceTracingValue & RX_PRINT_REF_TRACKING))            \
+    {                                                                    \
+        DbgPrint("(%s:%d) %s: %ld\n", __FILE__, __LINE__, #TYPE, Count); \
+    }
+#endif
 
 #define RxReferenceSrvCall(SrvCall)                                          \
     RxpTrackReference(RDBSS_REF_TRACK_SRVCALL, __FILE__, __LINE__, SrvCall); \
@@ -499,6 +512,11 @@ RxFinalizeVNetRoot(
 
 #define RxWaitForStableVNetRoot(V, R) RxWaitForStableCondition(&(V)->Condition, &(V)->TransitionWaitList, (R), NULL)
 #define RxTransitionVNetRoot(V, C) RxUpdateCondition((C), &(V)->Condition, &(V)->TransitionWaitList)
+
+VOID
+RxSetFileSizeWithLock(
+    _Inout_ PFCB Fcb,
+    _In_ PLONGLONG FileSize);
 
 VOID
 RxGetFileSizeWithLock(

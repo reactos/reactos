@@ -344,6 +344,15 @@ NTAPI
 RxLowIoReadShellCompletion(
     PRX_CONTEXT RxContext);
 
+NTSTATUS
+RxLowIoWriteShell(
+    IN PRX_CONTEXT RxContext);
+
+NTSTATUS
+NTAPI
+RxLowIoWriteShellCompletion(
+    PRX_CONTEXT RxContext);
+
 PVOID
 RxNewMapUserBuffer(
     PRX_CONTEXT RxContext);
@@ -566,6 +575,7 @@ UCHAR RxSpaceForTheWrappersDeviceObject[sizeof(*RxFileSystemDeviceObject)];
 KSPIN_LOCK TopLevelIrpSpinLock;
 LIST_ENTRY TopLevelIrpAllocatedContextsList;
 BOOLEAN RxForceQFIPassThrough = FALSE;
+BOOLEAN RxNoAsync = FALSE;
 
 DECLARE_CONST_UNICODE_STRING(unknownId, L"???");
 
@@ -648,6 +658,59 @@ __RxInitializeTopLevelIrpContext(
     }
 }
 
+/*
+ * @implemented
+ */
+VOID
+__RxWriteReleaseResources(
+    PRX_CONTEXT RxContext,
+    BOOLEAN ResourceOwnerSet,
+    ULONG LineNumber,
+    PCSTR FileName,
+    ULONG SerialNumber)
+{
+    PFCB Fcb;
+
+    PAGED_CODE();
+
+    ASSERT(RxContext != NULL);
+
+    Fcb = (PFCB)RxContext->pFcb;
+    ASSERT(Fcb != NULL);
+
+    /* If FCB resource was acquired, release it */
+    if (RxContext->FcbResourceAcquired)
+    {
+        /* Taking care of owner */
+        if (ResourceOwnerSet)
+        {
+            RxReleaseFcbForThread(RxContext, Fcb, RxContext->LowIoContext.ResourceThreadId);
+        }
+        else
+        {
+            RxReleaseFcb(RxContext, Fcb);
+        }
+
+        RxContext->FcbResourceAcquired = FALSE;
+    }
+
+    /* If FCB paging resource was acquired, release it */
+    if (RxContext->FcbPagingIoResourceAcquired)
+    {
+        /* Taking care of owner */
+        if (ResourceOwnerSet)
+        {
+            RxReleasePagingIoResourceForThread(RxContext, Fcb, RxContext->LowIoContext.ResourceThreadId);
+        }
+        else
+        {
+            RxReleasePagingIoResource(RxContext, Fcb);
+        }
+
+        /* No need to release boolean here, RxReleasePagingIoResource() takes care of it */
+    }
+}
+
 NTSTATUS
 NTAPI
 RxAcquireExclusiveFcbResourceInMRx(
@@ -718,6 +781,7 @@ RxAddToTopLevelIrpAllocatedContextsList(
  * @implemented
  */
 VOID
+NTAPI
 RxAddToWorkque(
     IN PRX_CONTEXT RxContext,
     IN PIRP Irp)
@@ -1514,7 +1578,7 @@ RxCloseAssociatedSrvOpen(
             RxDereferenceAndDeleteRxContext(LocalContext);
         }
 
-        return STATUS_SUCCESS;        
+        return STATUS_SUCCESS;
     }
 
     ASSERT(RxIsFcbAcquiredExclusive(Fcb));
@@ -1735,6 +1799,9 @@ RxCollapseOrCreateSrvOpen(
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 RxCommonCleanup(
@@ -2035,11 +2102,49 @@ RxCommonCleanup(
             RxRemoveShareAccess(FileObject, &Fcb->ShareAccess, "Cleanup the share access", "ClnUpShr");
         }
 
-        /* In case there's caching, on a file, update file metadata */
-        if (NodeType(Fcb) == RDBSS_NTC_STORAGE_TYPE_FILE && BooleanFlagOn(Fobx->Flags, 0x20000000) &&
-            BooleanFlagOn(Fcb->FcbState, FCB_STATE_WRITECACHING_ENABLED) && !BooleanFlagOn(Fobx->pSrvOpen->Flags, SRVOPEN_FLAG_DONTUSE_WRITE_CACHING))
+        /* In case there's caching, on a file, and we were asked to drop collapsing, handle it */
+        if (NodeType(Fcb) == RDBSS_NTC_STORAGE_TYPE_FILE && BooleanFlagOn(Fobx->Flags, FOBX_FLAG_DISABLE_COLLAPSING) &&
+            RxWriteCacheingAllowed(Fcb, Fobx->pSrvOpen))
         {
-            UNIMPLEMENTED;
+            NTSTATUS InternalStatus;
+            PRX_CONTEXT InternalContext;
+
+            /* If we can properly set EOF, there's no need to drop collapsing, try to do it */
+            InternalStatus = STATUS_UNSUCCESSFUL;
+            InternalContext = RxCreateRxContext(Context->CurrentIrp,
+                                                Fcb->RxDeviceObject,
+                                                RX_CONTEXT_FLAG_WAIT | RX_CONTEXT_FLAG_MUST_SUCCEED_NONBLOCKING);
+            if (InternalContext != NULL)
+            {
+                FILE_END_OF_FILE_INFORMATION FileEOF;
+
+                InternalStatus = STATUS_SUCCESS;
+
+                /* Initialize the context for file information set */
+                InternalContext->pFcb = RX_GET_MRX_FCB(Fcb);
+                InternalContext->pFobx = (PMRX_FOBX)Fobx;
+                InternalContext->pRelevantSrvOpen = Fobx->pSrvOpen;
+
+                /* Get EOF from the FCB */
+                FileEOF.EndOfFile.QuadPart = Fcb->Header.FileSize.QuadPart;
+                InternalContext->Info.FileInformationClass = FileEndOfFileInformation;
+                InternalContext->Info.Buffer = &FileEOF;
+                InternalContext->Info.Length = sizeof(FileEOF);
+
+                /* Call the mini-rdr */
+                MINIRDR_CALL_THROUGH(InternalStatus, Fcb->MRxDispatch, MRxSetFileInfo, (InternalContext));
+
+                /* We're done */
+                RxDereferenceAndDeleteRxContext(InternalContext);
+            }
+
+            /* We tried, so, clean the FOBX flag */
+            ClearFlag(Fobx->Flags, FOBX_FLAG_DISABLE_COLLAPSING);
+            /* If it failed, then, disable collapsing on the FCB */
+            if (!NT_SUCCESS(InternalStatus))
+            {
+                ClearFlag(Fcb->FcbState, FCB_STATE_COLLAPSING_ENABLED);
+            }
         }
 
         /* We're clean! */
@@ -2219,6 +2324,9 @@ RxCommonClose(
 #undef BugCheckFileId
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 RxCommonCreate(
@@ -2341,7 +2449,65 @@ RxCommonCreate(
                 Status = RxCreateFromNetRoot(Context, &NetRootName);
                 if (Status == STATUS_SHARING_VIOLATION)
                 {
-                    UNIMPLEMENTED;
+                    ASSERT(!BooleanFlagOn(Context->Create.Flags, RX_CONTEXT_CREATE_FLAG_REPARSE));
+
+                    /* If that happens for file creation, fail for real */
+                    if (Context->Create.NtCreateParameters.Disposition == FILE_CREATE)
+                    {
+                        Status = STATUS_OBJECT_NAME_COLLISION;
+                    }
+                    else
+                    {
+                        /* Otherwise, if possible, attempt to scavenger current FOBX
+                         * to check whether a dormant FOBX is the reason for sharing violation
+                         */
+                        if (Context->Create.TryForScavengingOnSharingViolation &&
+                            !Context->Create.ScavengingAlreadyTried)
+                        {
+                            /* Only doable with a VNetRoot */
+                            if (Context->Create.pVNetRoot != NULL)
+                            {
+                                PV_NET_ROOT VNetRoot;
+                                NT_CREATE_PARAMETERS SavedParameters;
+
+                                /* Save create parameters */
+                                RtlCopyMemory(&SavedParameters, &Context->Create.NtCreateParameters, sizeof(NT_CREATE_PARAMETERS));
+
+                                /* Reference the VNetRoot for the scavenging time */
+                                VNetRoot = (PV_NET_ROOT)Context->Create.pVNetRoot;
+                                RxReferenceVNetRoot(VNetRoot);
+
+                                /* Prepare the RX_CONTEXT for reuse */
+                                RxpPrepareCreateContextForReuse(Context);
+                                RxReinitializeContext(Context);
+
+                                /* Copy what we saved */
+                                RtlCopyMemory(&Context->Create.NtCreateParameters, &SavedParameters, sizeof(NT_CREATE_PARAMETERS));
+
+                                /* And recopy what can be */
+                                RxCopyCreateParameters(Context);
+
+                                /* And start purging, then scavenging FOBX */
+                                RxPurgeRelatedFobxs((PNET_ROOT)VNetRoot->pNetRoot, Context,
+                                                    DONT_ATTEMPT_FINALIZE_ON_PURGE, NULL);
+                                RxScavengeFobxsForNetRoot((PNET_ROOT)VNetRoot->pNetRoot,
+                                                          NULL, TRUE);
+
+                                /* Ask for a second round */
+                                Status = STATUS_MORE_PROCESSING_REQUIRED;
+
+                                /* Keep track we already scavenged */
+                                Context->Create.ScavengingAlreadyTried = TRUE;
+
+                                /* Reference our SRV_CALL for CBS handling */
+                                RxReferenceSrvCall(VNetRoot->pNetRoot->pSrvCall);
+                                RxpProcessChangeBufferingStateRequests((PSRV_CALL)VNetRoot->pNetRoot->pSrvCall, FALSE);
+
+                                /* Drop our extra reference */
+                                RxDereferenceVNetRoot(VNetRoot, LHS_LockNotHeld);
+                            }
+                        }
+                    }
                 }
                 else if (Status == STATUS_REPARSE)
                 {
@@ -2589,6 +2755,18 @@ NTAPI
 RxCommonFileSystemControl(
     PRX_CONTEXT Context)
 {
+    PIRP Irp;
+    ULONG ControlCode;
+    PIO_STACK_LOCATION Stack;
+
+    PAGED_CODE();
+
+    Irp = Context->CurrentIrp;
+    Stack = Context->CurrentIrpSp;
+    ControlCode = Stack->Parameters.FileSystemControl.FsControlCode;
+
+    DPRINT1("RxCommonFileSystemControl: %p, %p, %d, %lx\n", Context, Irp, Stack->MinorFunction, ControlCode);
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -3405,21 +3583,978 @@ RxCommonUnimplemented(
 NTSTATUS
 NTAPI
 RxCommonWrite(
-    PRX_CONTEXT Context)
+    PRX_CONTEXT RxContext)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIRP Irp;
+    PFCB Fcb;
+    PFOBX Fobx;
+    NTSTATUS Status;
+    PNET_ROOT NetRoot;
+    PSRV_OPEN SrvOpen;
+    PFILE_OBJECT FileObject;
+    PIO_STACK_LOCATION Stack;
+    LARGE_INTEGER ByteOffset;
+    NODE_TYPE_CODE NodeTypeCode;
+    PLOWIO_CONTEXT LowIoContext;
+    PRDBSS_DEVICE_OBJECT RxDeviceObject;
+    ULONG WriteLength, CapturedRxContextSerialNumber = RxContext->SerialNumber;
+    LONGLONG FileSize, ValidDataLength, InitialFileSize, InitialValidDataLength;
+    BOOLEAN CanWait, PagingIo, NoCache, Sync, NormalFile, WriteToEof, IsPipe, NoPreposting, InFsp, RecursiveWriteThrough, CalledByLazyWriter, SwitchBackToAsync, ExtendingFile, ExtendingValidData, UnwindOutstandingAsync, ResourceOwnerSet, PostIrp, ContextReferenced;
+
+    PAGED_CODE();
+
+    Fcb = (PFCB)RxContext->pFcb;
+    NodeTypeCode = NodeType(Fcb);
+    /* Validate FCB type */
+    if (NodeTypeCode != RDBSS_NTC_STORAGE_TYPE_FILE && NodeTypeCode != RDBSS_NTC_VOLUME_FCB &&
+        NodeTypeCode != RDBSS_NTC_SPOOLFILE && NodeTypeCode != RDBSS_NTC_MAILSLOT)
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* We'll write to file, keep track of it */
+    Fcb->IsFileWritten = TRUE;
+
+    Stack = RxContext->CurrentIrpSp;
+    /* Set write through if asked */
+    if (BooleanFlagOn(Stack->Flags, SL_WRITE_THROUGH))
+    {
+        SetFlag(RxContext->Flags, RX_CONTEXT_FLAG_WRITE_THROUGH);
+    }
+
+    Fobx = (PFOBX)RxContext->pFobx;
+    DPRINT("RxCommonWrite(%p) FOBX: %p, FCB: %p\n", RxContext, Fobx, Fcb);
+
+    /* Get some parameters */
+    Irp = RxContext->CurrentIrp;
+    NoPreposting = BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_NO_PREPOSTING_NEEDED);
+    InFsp = BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_IN_FSP);
+    CanWait = BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_WAIT);
+    PagingIo = BooleanFlagOn(Irp->Flags, IRP_PAGING_IO);
+    NoCache = BooleanFlagOn(Irp->Flags, IRP_NOCACHE);
+    Sync = !BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_ASYNC_OPERATION);
+    WriteLength = Stack->Parameters.Write.Length;
+    ByteOffset.QuadPart = Stack->Parameters.Write.ByteOffset.QuadPart;
+    DPRINT("Writing: %lx@%I64x %s %s %s %s\n", WriteLength, ByteOffset.QuadPart,
+           (CanWait ? "CW" : "!CW"), (PagingIo ? "PI" : "!PI"), (NoCache ? "NC" : "!NC"), (Sync ? "S" : "!S"));
+
+    RxItsTheSameContext();
+
+    RxContext->FcbResourceAcquired = FALSE;
+    RxContext->FcbPagingIoResourceAcquired = FALSE;
+
+    LowIoContext = &RxContext->LowIoContext;
+    CheckForLoudOperations(RxContext);
+    if (BooleanFlagOn(LowIoContext->Flags, LOWIO_CONTEXT_FLAG_LOUDOPS))
+    {
+        DPRINT("LoudWrite %I64x/%lx on %lx vdl/size/alloc %I64x/%I64x/%I64x\n",
+                ByteOffset, WriteLength,
+                Fcb, Fcb->Header.ValidDataLength, Fcb->Header.FileSize, Fcb->Header.AllocationSize);
+    }
+
+    RxDeviceObject = RxContext->RxDeviceObject;
+    /* Update stats */
+    if (!BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_IN_FSP) && Fcb->CachedNetRootType == NET_ROOT_DISK)
+    {
+        InterlockedIncrement((volatile long *)&RxDeviceObject->WriteOperations);
+
+        if (ByteOffset.QuadPart != Fobx->Specific.DiskFile.PredictedWriteOffset)
+        {
+            InterlockedIncrement((volatile long *)&RxDeviceObject->RandomWriteOperations);
+        }
+        Fobx->Specific.DiskFile.PredictedWriteOffset = ByteOffset.QuadPart + WriteLength;
+
+        if (PagingIo)
+        {
+            ExInterlockedAddLargeStatistic(&RxDeviceObject->PagingWriteBytesRequested, WriteLength);
+        }
+        else if (NoCache)
+        {
+            ExInterlockedAddLargeStatistic(&RxDeviceObject->NonPagingWriteBytesRequested, WriteLength);
+        }
+        else
+        {
+            ExInterlockedAddLargeStatistic(&RxDeviceObject->CacheWriteBytesRequested, WriteLength);
+        }
+    }
+
+    NetRoot = (PNET_ROOT)Fcb->NetRoot;
+    IsPipe = (NetRoot->Type == NET_ROOT_PIPE);
+    /* Keep track for normal writes */
+    if (NetRoot->Type == NET_ROOT_DISK || NetRoot->Type == NET_ROOT_WILD)
+    {
+        NormalFile = TRUE;
+    }
+    else
+    {
+        NormalFile = FALSE;
+    }
+
+    /* Zero-length write is immediate success */
+    if (NormalFile && WriteLength == 0)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Check whether we have input data */
+    if (Irp->UserBuffer == NULL && Irp->MdlAddress == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Are we writting to EOF? */
+    WriteToEof = ((ByteOffset.LowPart == FILE_WRITE_TO_END_OF_FILE) && (ByteOffset.HighPart == -1));
+    /* FIXME: validate length/offset */
+
+    /* Get our SRV_OPEN in case of normal write */
+    if (Fobx != NULL)
+    {
+        SrvOpen = (PSRV_OPEN)Fobx->pSrvOpen;
+    }
+    else
+    {
+        SrvOpen = NULL;
+    }
+
+    FileObject = Stack->FileObject;
+
+    /* If we have caching enabled, check whether we have to defer write */
+    if (!NoCache)
+    {
+        if (RxWriteCacheingAllowed(Fcb, SrvOpen))
+        {
+            if (!CcCanIWrite(FileObject, WriteLength,
+                             (CanWait && !BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_IN_FSP)),
+                             BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_DEFERRED_WRITE)))
+            {
+                BOOLEAN Retrying;
+
+                Retrying = BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_DEFERRED_WRITE);
+
+                RxPrePostIrp(RxContext, Irp);
+
+                SetFlag(RxContext->Flags, RX_CONTEXT_FLAG_DEFERRED_WRITE);
+
+                CcDeferWrite(FileObject, (PCC_POST_DEFERRED_WRITE)RxAddToWorkque, RxContext, Irp, WriteLength, Retrying);
+
+                return STATUS_PENDING;
+            }
+        }
+    }
+
+    /* Initialize the low IO context for write */
+    RxInitializeLowIoContext(LowIoContext, LOWIO_OP_WRITE);
+
+    /* Initialize our (many) booleans */
+    RecursiveWriteThrough = FALSE;
+    CalledByLazyWriter = FALSE;
+    SwitchBackToAsync = FALSE;
+    ExtendingFile = FALSE;
+    ExtendingValidData = FALSE;
+    UnwindOutstandingAsync = FALSE;
+    ResourceOwnerSet = FALSE;
+    PostIrp = FALSE;
+    ContextReferenced = FALSE;
+
+#define _SEH2_TRY_RETURN(S) S; goto try_exit
+
+    _SEH2_TRY
+    {
+        /* No volume FCB here! */
+        ASSERT((NodeTypeCode == RDBSS_NTC_STORAGE_TYPE_FILE) ||
+               (NodeTypeCode == RDBSS_NTC_SPOOLFILE) ||
+               (NodeTypeCode == RDBSS_NTC_MAILSLOT));
+
+        /* Writing to EOF on a paging file is non sense */
+        ASSERT(!(WriteToEof && PagingIo));
+
+        RxItsTheSameContext();
+
+        /* Start locking stuff */
+        if (!PagingIo && !NoPreposting)
+        {
+            /* If it's already acquired, all fine */
+            if (RxContext->FcbResourceAcquired)
+            {
+                ASSERT(!IsPipe);
+            }
+            else
+            {
+                /* Otherwise, try to acquire shared (excepted for pipes) */
+                if (IsPipe)
+                {
+                    Status = RxAcquireExclusiveFcb(RxContext, Fcb);
+                }
+                else if (CanWait ||
+                         (!NoCache && RxWriteCacheingAllowed(Fcb, SrvOpen)))
+                {
+                    Status = RxAcquireSharedFcb(RxContext, Fcb);
+                }
+                else
+                {
+                    Status = RxAcquireSharedFcbWaitForEx(RxContext, Fcb);
+                }
+
+                /* We'll post IRP to retry */
+                if (Status == STATUS_LOCK_NOT_GRANTED)
+                {
+                    PostIrp = TRUE;
+                    DPRINT1("Failed to acquire lock!\n");
+                    _SEH2_TRY_RETURN(Status);
+                }
+
+                /* We'll just fail */
+                if (Status != STATUS_SUCCESS)
+                {
+                    _SEH2_TRY_RETURN(Status);
+                }
+
+                /* Resource acquired */
+                RxContext->FcbResourceAcquired = TRUE;
+            }
+
+            /* At that point, resource is acquired */
+            if (IsPipe)
+            {
+                ASSERT(RxContext->FcbResourceAcquired);
+            }
+            else
+            {
+                BOOLEAN IsDormant;
+
+                /* Now, check whether we have to promote shared lock */
+                if (NodeTypeCode == RDBSS_NTC_STORAGE_TYPE_FILE && Fobx != NULL)
+                {
+                    IsDormant = BooleanFlagOn(Fobx->Flags, FOBX_FLAG_MARKED_AS_DORMANT);
+                }
+                else
+                {
+                    IsDormant = FALSE;
+                }
+
+                /* We're writing beyond VDL, we'll need an exclusive lock if not dormant */
+                if (RxIsFcbAcquiredShared(Fcb) &&
+                    ByteOffset.QuadPart + WriteLength > Fcb->Header.ValidDataLength.QuadPart)
+                {
+                    if (!IsDormant)
+                    {
+                        RxReleaseFcb(RxContext, Fcb);
+                        RxContext->FcbResourceAcquired = FALSE;
+
+                        Status = RxAcquireExclusiveFcb(RxContext, Fcb);
+                        if (Status == STATUS_LOCK_NOT_GRANTED)
+                        {
+                            PostIrp = TRUE;
+                            DPRINT1("Failed to acquire lock!\n");
+                            _SEH2_TRY_RETURN(Status);
+                        }
+
+                        if (Status != STATUS_SUCCESS)
+                        {
+                            _SEH2_TRY_RETURN(Status);
+                        }
+
+                        RxContext->FcbResourceAcquired = TRUE;
+                    }
+                }
+
+                /* If we're writing in VDL, or if we're dormant, shared lock is enough */
+                if (ByteOffset.QuadPart + WriteLength <= Fcb->Header.ValidDataLength.QuadPart ||
+                    IsDormant)
+                {
+                    if (RxIsFcbAcquiredExclusive(Fcb))
+                    {
+                        RxConvertToSharedFcb(RxContext, Fcb);
+                    }
+                }
+                else
+                {
+                    /* We're extending file, disable collapsing */
+                    ASSERT(RxIsFcbAcquiredExclusive(Fcb));
+
+                    DPRINT("Disabling collapsing\n");
+
+                    if (NodeTypeCode == RDBSS_NTC_STORAGE_TYPE_FILE && Fobx != NULL)
+                    {
+                        SetFlag(Fobx->Flags, FOBX_FLAG_DISABLE_COLLAPSING);
+                    }
+                }
+
+                ASSERT(RxContext->FcbResourceAcquired);
+            }
+
+            /* Keep track of the acquired resource */
+            LowIoContext->Resource = Fcb->Header.Resource;
+        }
+        else
+        {
+            /* Paging IO */
+            ASSERT(!IsPipe);
+
+            /* Lock the paging resource */
+            RxAcquirePagingIoResourceShared(RxContext, Fcb, TRUE);
+
+            /* Keep track of the acquired resource */
+            LowIoContext->Resource = Fcb->Header.PagingIoResource;
+        }
+
+        if (IsPipe)
+        {
+            UNIMPLEMENTED;
+            _SEH2_TRY_RETURN(Status = STATUS_NOT_IMPLEMENTED);
+        }
+
+        /* If it's a non cached write, or if caching is disallowed */
+        if (NoCache || !RxWriteCacheingAllowed(Fcb, SrvOpen))
+        {
+            /* If cache was previously enabled, we'll have to flush before writing */
+            if (!PagingIo && Fcb->NonPaged->SectionObjectPointers.DataSectionObject != NULL)
+            {
+                LARGE_INTEGER FlushOffset;
+
+                /* FCB is lock */
+                ASSERT(RxIsFcbAcquiredExclusive(Fcb) || RxIsFcbAcquiredShared(Fcb));
+
+                /* If shared, we'll have to relock exclusive */
+                if (!RxIsFcbAcquiredExclusive(Fcb))
+                {
+                    /* Release and retry exclusive */
+                    RxReleaseFcb(RxContext, Fcb);
+                    RxContext->FcbResourceAcquired = FALSE;
+
+                    Status = RxAcquireExclusiveFcb(RxContext, Fcb);
+                    if (Status == STATUS_LOCK_NOT_GRANTED)
+                    {
+                        PostIrp = TRUE;
+                        DPRINT1("Failed to acquire lock for flush!\n");
+                        _SEH2_TRY_RETURN(Status);
+                    }
+
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        _SEH2_TRY_RETURN(Status);
+                    }
+
+                    RxContext->FcbResourceAcquired = TRUE;
+                }
+
+                /* Get the length to flush */
+                if (WriteToEof)
+                {
+                    RxGetFileSizeWithLock(Fcb, &FlushOffset.QuadPart);
+                }
+                else
+                {
+                    FlushOffset.QuadPart = ByteOffset.QuadPart;
+                }
+
+                /* Perform the flushing */
+                RxAcquirePagingIoResource(RxContext, Fcb);
+                CcFlushCache(&Fcb->NonPaged->SectionObjectPointers, &FlushOffset,
+                             WriteLength, &Irp->IoStatus);
+                RxReleasePagingIoResource(RxContext, Fcb);
+
+                /* Cannot continue if flushing failed */
+                if (!NT_SUCCESS(Irp->IoStatus.Status))
+                {
+                    _SEH2_TRY_RETURN(Status = Irp->IoStatus.Status);
+                }
+
+                /* Synchronize */
+                RxAcquirePagingIoResource(RxContext, Fcb);
+                RxReleasePagingIoResource(RxContext, Fcb);
+
+                /* And purge */
+                CcPurgeCacheSection(&Fcb->NonPaged->SectionObjectPointers,
+                                    &FlushOffset, WriteLength, FALSE);
+            }
+        }
+
+        /* If not paging IO, check if write is allowed */
+        if (!PagingIo)
+        {
+            if (!FsRtlCheckLockForWriteAccess(&Fcb->Specific.Fcb.FileLock, Irp))
+            {
+                _SEH2_TRY_RETURN(Status = STATUS_FILE_LOCK_CONFLICT);
+            }
+        }
+
+        /* Get file sizes */
+        ValidDataLength = Fcb->Header.ValidDataLength.QuadPart;
+        RxGetFileSizeWithLock(Fcb, &FileSize);
+        ASSERT(ValidDataLength <= FileSize);
+
+        /* If paging IO, we cannot write past file size
+         * so fix write length if needed
+         */
+        if (PagingIo)
+        {
+            if (ByteOffset.QuadPart >= FileSize)
+            {
+                _SEH2_TRY_RETURN(Status = STATUS_SUCCESS);
+            }
+
+            if (WriteLength > FileSize - ByteOffset.QuadPart)
+            {
+                WriteLength = FileSize - ByteOffset.QuadPart;
+            }
+        }
+
+        /* If we're being called by the lazywrite */
+        if (Fcb->Specific.Fcb.LazyWriteThread == PsGetCurrentThread())
+        {
+            CalledByLazyWriter = TRUE;
+
+            /* Fail if we're beyong VDL */
+            if (BooleanFlagOn(Fcb->Header.Flags, FSRTL_FLAG_USER_MAPPED_FILE))
+            {
+                if ((ByteOffset.QuadPart + WriteLength > ValidDataLength) &&
+                    (ByteOffset.QuadPart < FileSize))
+                {
+                    if (ByteOffset.QuadPart + WriteLength > ((ValidDataLength + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1)))
+                    {
+                        _SEH2_TRY_RETURN(Status = STATUS_FILE_LOCK_CONFLICT);
+                    }
+                }
+            }
+        }
+
+        /* If that's a recursive synchronous page write */
+        if (BooleanFlagOn(Irp->Flags, IRP_SYNCHRONOUS_PAGING_IO) &&
+            BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_RECURSIVE_CALL))
+        {
+            PIRP TopIrp;
+
+            /* Check the top level IRP on the FastIO path */
+            TopIrp = RxGetTopIrpIfRdbssIrp();
+            if (TopIrp != NULL && (ULONG_PTR)TopIrp > FSRTL_FAST_IO_TOP_LEVEL_IRP)
+            {
+                PIO_STACK_LOCATION IrpStack;
+
+                ASSERT(NodeType(TopIrp) == IO_TYPE_IRP);
+
+                /* If the top level IRP was a cached write for this file, keep track */
+                IrpStack = IoGetCurrentIrpStackLocation(TopIrp);
+                if (IrpStack->MajorFunction == IRP_MJ_WRITE &&
+                    IrpStack->FileObject->FsContext == FileObject->FsContext)
+                {
+                    RecursiveWriteThrough = TRUE;
+                    SetFlag(RxContext->Flags, RX_CONTEXT_FLAG_WRITE_THROUGH);
+                }
+            }
+        }
+
+        /* Now, deal with file size and VDL */
+        if (!CalledByLazyWriter && !RecursiveWriteThrough &&
+            (WriteToEof || ByteOffset.QuadPart + WriteLength > ValidDataLength))
+        {
+            /* Not sync? Let's make it sync, just the time we extended */
+            if (!Sync)
+            {
+                CanWait = TRUE;
+                SetFlag(RxContext->Flags, RX_CONTEXT_FLAG_WAIT);
+                ClearFlag(RxContext->Flags, RX_CONTEXT_FLAG_ASYNC_OPERATION);
+                Sync = TRUE;
+
+                /* Keep track we'll have to switch back to async */
+                if (NoCache)
+                {
+                    SwitchBackToAsync = TRUE;
+                }
+            }
+
+            /* Release all the locks */
+            RxWriteReleaseResources(RxContext, 0);
+
+            /* Acquire exclusive */
+            Status = RxAcquireExclusiveFcb(RxContext, Fcb);
+            if (Status == STATUS_LOCK_NOT_GRANTED)
+            {
+                PostIrp = TRUE;
+                DPRINT1("Failed to acquire lock for extension!\n");
+                _SEH2_TRY_RETURN(Status);
+            }
+
+            if (Status != STATUS_SUCCESS)
+            {
+                _SEH2_TRY_RETURN(Status);
+            }
+
+            RxContext->FcbResourceAcquired = TRUE;
+
+            RxItsTheSameContext();
+
+            /* Get the sizes again, to be sure they didn't change in the meantime */
+            ValidDataLength = Fcb->Header.ValidDataLength.QuadPart;
+            RxGetFileSizeWithLock(Fcb, &FileSize);
+            ASSERT(ValidDataLength <= FileSize);
+
+            /* Check we can switch back to async? */
+            if ((SwitchBackToAsync && Fcb->NonPaged->SectionObjectPointers.DataSectionObject != NULL) ||
+                (ByteOffset.QuadPart + WriteLength > FileSize) || RxNoAsync)
+            {
+                SwitchBackToAsync = FALSE;
+            }
+
+            /* If paging IO, check we don't try to extend the file */
+            if (PagingIo)
+            {
+                if (ByteOffset.QuadPart >= FileSize)
+                {
+                    _SEH2_TRY_RETURN(Status = STATUS_SUCCESS);
+                }
+
+                if (WriteLength > FileSize - ByteOffset.QuadPart)
+                {
+                    WriteLength = FileSize - ByteOffset.QuadPart;
+                }
+            }
+        }
+
+        /* Save our initial sizes for potential rollback */
+        InitialFileSize = FileSize;
+        InitialValidDataLength = ValidDataLength;
+        /* If writing to EOF, update byte offset with file size */
+        if (WriteToEof)
+        {
+            ByteOffset.QuadPart = FileSize;
+        }
+
+        /* Check again whether we're allowed to write */
+        if (!PagingIo)
+        {
+            if (!FsRtlCheckLockForWriteAccess(&Fcb->Specific.Fcb.FileLock, Irp ))
+            {
+                _SEH2_TRY_RETURN(Status = STATUS_FILE_LOCK_CONFLICT);
+            }
+
+            /* Do we have to extend? */
+            if (NormalFile && (ByteOffset.QuadPart + WriteLength > FileSize))
+            {
+                DPRINT("Need to extend file\n");
+                ExtendingFile = TRUE;
+                SetFlag(LowIoContext->ParamsFor.ReadWrite.Flags, LOWIO_READWRITEFLAG_EXTENDING_FILESIZE);
+            }
+        }
+
+        /* Let's start to extend */
+        if (ExtendingFile)
+        {
+            /* If we're past allocating, inform mini-rdr */
+            FileSize = ByteOffset.QuadPart + WriteLength;
+            if (FileSize > Fcb->Header.AllocationSize.QuadPart)
+            {
+                LARGE_INTEGER NewAllocationSize;
+
+                DPRINT("Extending %p\n", RxContext);
+
+                if (NoCache)
+                {
+                    C_ASSERT(sizeof(LONGLONG) == sizeof(LARGE_INTEGER));
+                    MINIRDR_CALL(Status, RxContext, Fcb->MRxDispatch, MRxExtendForNonCache,
+                                 (RxContext, (PLARGE_INTEGER)&FileSize, &NewAllocationSize));
+                }
+                else
+                {
+                    C_ASSERT(sizeof(LONGLONG) == sizeof(LARGE_INTEGER));
+                    MINIRDR_CALL(Status, RxContext, Fcb->MRxDispatch, MRxExtendForCache,
+                                 (RxContext, (PLARGE_INTEGER)&FileSize, &NewAllocationSize));
+                }
+
+                if (!NT_SUCCESS(Status))
+                {
+                    _SEH2_TRY_RETURN(Status);
+                }
+
+                if (FileSize > NewAllocationSize.QuadPart)
+                {
+                    NewAllocationSize.QuadPart = FileSize;
+                }
+
+                /* And update FCB */
+                Fcb->Header.AllocationSize.QuadPart = NewAllocationSize.QuadPart;
+            }
+
+            /* Set the new sizes */
+            RxSetFileSizeWithLock(Fcb, &FileSize);
+            RxAdjustAllocationSizeforCC(Fcb);
+
+            /* And inform Cc */
+            if (CcIsFileCached(FileObject))
+            {
+                CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
+            }
+        }
+
+        /* Do we have to extend VDL? */
+        if (!CalledByLazyWriter && !RecursiveWriteThrough)
+        {
+            if (WriteToEof || ByteOffset.QuadPart + WriteLength > ValidDataLength)
+            {
+                ExtendingValidData = TRUE;
+                SetFlag(LowIoContext->ParamsFor.ReadWrite.Flags, LOWIO_READWRITEFLAG_EXTENDING_VDL);
+            }
+        }
+
+        /* If none cached write */
+        if (PagingIo || NoCache || !RxWriteCacheingAllowed(Fcb, SrvOpen))
+        {
+            /* Switch back to async, if asked to */
+            if (SwitchBackToAsync)
+            {
+                CanWait = FALSE;
+                Sync = FALSE;
+
+                ClearFlag(RxContext->Flags, RX_CONTEXT_FLAG_WAIT);
+                SetFlag(RxContext->Flags, RX_CONTEXT_FLAG_ASYNC_OPERATION);
+            }
+
+            /* If not synchronous, keep track of writes to be finished */
+            if (!Sync)
+            {
+                if (Fcb->NonPaged->OutstandingAsyncEvent == NULL)
+                {
+                    Fcb->NonPaged->OutstandingAsyncEvent = &Fcb->NonPaged->TheActualEvent;
+                    KeInitializeEvent(Fcb->NonPaged->OutstandingAsyncEvent,
+                                      NotificationEvent, FALSE);
+                }
+
+                if (ExInterlockedAddUlong(&Fcb->NonPaged->OutstandingAsyncWrites,
+                                          1,
+                                          &RxStrucSupSpinLock) == 0)
+                {
+                    KeResetEvent(Fcb->NonPaged->OutstandingAsyncEvent);
+                }
+
+                UnwindOutstandingAsync = TRUE;
+                LowIoContext->ParamsFor.ReadWrite.NonPagedFcb = Fcb->NonPaged;
+            }
+
+            /* Set our LOWIO_CONTEXT information */
+            LowIoContext->ParamsFor.ReadWrite.ByteOffset = ByteOffset.QuadPart;
+            LowIoContext->ParamsFor.ReadWrite.ByteCount = WriteLength;
+
+            RxItsTheSameContext();
+
+            /* We have to be locked */
+            ASSERT(RxContext->FcbResourceAcquired || RxContext->FcbPagingIoResourceAcquired);
+
+            /* Update thread ID if we're in FSP */
+            if (InFsp)
+            {
+                LowIoContext->ResourceThreadId = (ULONG_PTR)RxContext | 3;
+
+                if (RxContext->FcbResourceAcquired)
+                {
+                    ExSetResourceOwnerPointer(Fcb->Header.Resource, (PVOID)((ULONG_PTR)RxContext | 3));
+                }
+
+                if (RxContext->FcbPagingIoResourceAcquired)
+                {
+                    ExSetResourceOwnerPointer(Fcb->Header.PagingIoResource, (PVOID)((ULONG_PTR)RxContext | 3));
+                }
+
+                ResourceOwnerSet = TRUE;
+            }
+
+            /* And perform the write */
+            Status = RxLowIoWriteShell(RxContext);
+
+            RxItsTheSameContext();
+
+            /* Not outstanding write anymore */
+            if (UnwindOutstandingAsync && Status == STATUS_PENDING)
+            {
+                UnwindOutstandingAsync = FALSE;
+            }
+        }
+        /* Cached write */
+        else
+        {
+            /* If cache wasn't enabled yet, do it */
+            if (FileObject->PrivateCacheMap == NULL)
+            {
+                if (BooleanFlagOn(FileObject->Flags, FO_CLEANUP_COMPLETE))
+                {
+                    _SEH2_TRY_RETURN(Status = STATUS_FILE_CLOSED);
+                }
+
+                RxAdjustAllocationSizeforCC(Fcb);
+
+                CcInitializeCacheMap(FileObject, (PCC_FILE_SIZES)&Fcb->Header.AllocationSize,
+                                     FALSE, &RxData.CacheManagerCallbacks, Fcb);
+
+                CcSetReadAheadGranularity(FileObject, NetRoot->DiskParameters.ReadAheadGranularity);
+            }
+
+            /* If that's a MDL backed write */
+            if (BooleanFlagOn(RxContext->MinorFunction, IRP_MN_MDL))
+            {
+                /* Shouldn't happen */
+                ASSERT(FALSE);
+                ASSERT(CanWait);
+
+                /* Perform it, though */
+                CcPrepareMdlWrite(FileObject, &ByteOffset, WriteLength,
+                                  &Irp->MdlAddress, &Irp->IoStatus);
+
+                Status = Irp->IoStatus.Status;
+            }
+            else
+            {
+                PVOID SystemBuffer;
+                ULONG BreakpointsSave;
+
+                /* Map the user buffer */
+                SystemBuffer = RxNewMapUserBuffer(RxContext);
+                if (SystemBuffer == NULL)
+                {
+                    _SEH2_TRY_RETURN(Status = STATUS_INSUFFICIENT_RESOURCES);
+                }
+
+                RxSaveAndSetExceptionNoBreakpointFlag(RxContext, BreakpointsSave);
+
+                RxItsTheSameContext();
+
+                /* And deal with Cc */
+                if (!CcCopyWrite(FileObject, &ByteOffset, WriteLength, CanWait,
+                                 SystemBuffer))
+                {
+                    RxRestoreExceptionNoBreakpointFlag(RxContext, BreakpointsSave);
+
+                    RxItsTheSameContext();
+
+                    DPRINT1("CcCopyWrite failed for: %p %I64d %d %lx\n",
+                            FileObject, Fcb->Header.FileSize.QuadPart, WriteLength, Status);
+
+                    PostIrp = TRUE;
+                }
+                else
+                {
+                    Irp->IoStatus.Status = STATUS_SUCCESS;
+                    Irp->IoStatus.Information = WriteLength;
+
+                    RxRestoreExceptionNoBreakpointFlag(RxContext, BreakpointsSave);
+
+                    RxItsTheSameContext();
+
+                    DPRINT("CcCopyWrite succeed for: %p %I64d %d %lx\n",
+                           FileObject, Fcb->Header.FileSize.QuadPart, WriteLength, Status);
+                }
+            }
+        }
+
+try_exit: NOTHING;
+
+        /* If we've to post the IRP */
+        if (PostIrp)
+        {
+            /* Reset the file size if required */
+            if (ExtendingFile && !IsPipe)
+            {
+                ASSERT(RxWriteCacheingAllowed(Fcb, SrvOpen));
+                ASSERT(Fcb->Header.PagingIoResource != NULL);
+
+                RxAcquirePagingIoResource(RxContext, Fcb);
+                RxSetFileSizeWithLock(Fcb, &InitialFileSize);
+                RxReleasePagingIoResource(RxContext, Fcb);
+
+                if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
+                {
+                    *CcGetFileSizePointer(FileObject) = Fcb->Header.FileSize;
+                }
+            }
+
+            InterlockedIncrement((volatile long *)&RxContext->ReferenceCount);
+            ContextReferenced = TRUE;
+
+            /* Release locks */
+            ASSERT(!ResourceOwnerSet);
+            RxWriteReleaseResources(RxContext, ResourceOwnerSet);
+
+#ifdef RDBSS_TRACKER
+            ASSERT(RxContext->AcquireReleaseFcbTrackerX == 0);
+#endif
+
+            /* And post the request */
+            Status = RxFsdPostRequest(RxContext);
+        }
+        else
+        {
+            if (!IsPipe)
+            {
+                /* Update FILE_OBJECT if synchronous write succeed */
+                if (!PagingIo)
+                {
+                    if (NT_SUCCESS(Status) && BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+                    {
+                        FileObject->CurrentByteOffset.QuadPart = ByteOffset.QuadPart + Irp->IoStatus.Information;
+                    }
+                }
+
+                /* If write succeed, ,also update FILE_OBJECT flags */
+                if (NT_SUCCESS(Status) && Status != STATUS_PENDING)
+                {
+                    /* File was modified */
+                    if (!PagingIo)
+                    {
+                        SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
+                    }
+
+                    /* If was even extended */
+                    if (ExtendingFile)
+                    {
+                        SetFlag(FileObject->Flags, FO_FILE_SIZE_CHANGED);
+                    }
+
+                    /* If VDL was extended, update FCB and inform Cc */
+                    if (ExtendingValidData)
+                    {
+                        LONGLONG LastOffset;
+
+                        LastOffset = ByteOffset.QuadPart + Irp->IoStatus.Information;
+                        if (FileSize < LastOffset)
+                        {
+                            LastOffset = FileSize;
+                        }
+
+                        Fcb->Header.ValidDataLength.QuadPart = LastOffset;
+
+                        if (NoCache && CcIsFileCached(FileObject))
+                        {
+                            CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    _SEH2_FINALLY
+    {
+        /* Finally, if we failed while extension was required */
+        if (_SEH2_AbnormalTermination() && (ExtendingFile || ExtendingValidData))
+        {
+            /* Rollback! */
+            if (!IsPipe)
+            {
+                ASSERT(Fcb->Header.PagingIoResource != NULL);
+
+                RxAcquirePagingIoResource(RxContext, Fcb);
+                RxSetFileSizeWithLock(Fcb, &InitialFileSize);
+                Fcb->Header.ValidDataLength.QuadPart = InitialValidDataLength;
+                RxReleasePagingIoResource(RxContext, Fcb);
+
+                if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
+                {
+                    *CcGetFileSizePointer(FileObject) = Fcb->Header.FileSize;
+                }
+            }
+        }
+
+        /* One async write less */
+        if (UnwindOutstandingAsync)
+        {
+            ASSERT(!IsPipe);
+
+            ExInterlockedAddUlong(&Fcb->NonPaged->OutstandingAsyncWrites, -1, &RxStrucSupSpinLock);
+            KeSetEvent(Fcb->NonPaged->OutstandingAsyncEvent, IO_NO_INCREMENT, FALSE);
+        }
+
+        /* And now, cleanup everything */
+        if (_SEH2_AbnormalTermination() || Status != STATUS_PENDING || PostIrp)
+        {
+            /* If we didn't post, release every lock (for posting, it's already done) */
+            if (!PostIrp)
+            {
+                RxWriteReleaseResources(RxContext, ResourceOwnerSet);
+            }
+
+            /* If the context was referenced - posting, dereference it */
+            if (ContextReferenced)
+            {
+                RxDereferenceAndDeleteRxContext(RxContext);
+            }
+
+            /* If that's a pipe operation, resume any blocked one */
+            if (!PostIrp)
+            {
+                if (BooleanFlagOn(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_PIPE_SYNC_OPERATION))
+                {
+                    RxResumeBlockedOperations_Serially(RxContext, &Fobx->Specific.NamedPipe.ReadSerializationQueue);
+                }
+            }
+
+            /* Sanity check for write */
+            if (Status == STATUS_SUCCESS)
+            {
+                ASSERT(Irp->IoStatus.Information <= Stack->Parameters.Write.Length);
+            }
+        }
+        /* Just dereference our context */
+        else
+        {
+            ASSERT(!Sync);
+            RxDereferenceAndDeleteRxContext(RxContext);
+        }
+    }
+    _SEH2_END;
+
+    return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 RxCompleteMdl(
     IN PRX_CONTEXT RxContext)
 {
+    PIRP Irp;
+    PFILE_OBJECT FileObject;
+    PIO_STACK_LOCATION Stack;
+
+#define BugCheckFileId RDBSS_BUG_CHECK_CACHESUP
+
     PAGED_CODE();
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    Irp = RxContext->CurrentIrp;
+    Stack = RxContext->CurrentIrpSp;
+    FileObject = Stack->FileObject;
+
+    /* We can only complete for IRP_MJ_READ and IRP_MJ_WRITE */
+    switch (RxContext->MajorFunction)
+    {
+        /* Call the Cc function */
+        case IRP_MJ_READ:
+            CcMdlReadComplete(FileObject, Irp->MdlAddress);
+            break;
+
+        case IRP_MJ_WRITE:
+            /* If here, we can wait */
+            ASSERT(BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_WAIT));
+
+            /* Call the Cc function */
+            CcMdlWriteComplete(FileObject, &Stack->Parameters.Write.ByteOffset, Irp->MdlAddress);
+
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            break;
+
+        default:
+            DPRINT1("Invalid major for RxCompleteMdl: %d\n", RxContext->MajorFunction);
+            RxBugCheck(RxContext->MajorFunction, 0, 0);
+            break;
+    }
+
+    /* MDL was freed */
+    Irp->MdlAddress = NULL;
+
+    /* And complete the IRP */
+    RxCompleteRequest(RxContext, STATUS_SUCCESS);
+
+#undef BugCheckFileId
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -5118,6 +6253,25 @@ RxGetTopDeviceObjectIfRdbssIrp(
 /*
  * @implemented
  */
+PIRP
+RxGetTopIrpIfRdbssIrp(
+    VOID)
+{
+    PIRP Irp = NULL;
+    PRX_TOPLEVELIRP_CONTEXT TopLevel;
+
+    TopLevel = (PRX_TOPLEVELIRP_CONTEXT)IoGetTopLevelIrp();
+    if (RxIsThisAnRdbssTopLevelContext(TopLevel))
+    {
+        Irp = TopLevel->Irp;
+    }
+
+    return Irp;
+}
+
+/*
+ * @implemented
+ */
 LUID
 RxGetUid(
     IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext)
@@ -5641,6 +6795,176 @@ RxLowIoReadShellCompletion(
     ASSERT(Status != STATUS_RETRY);
     ASSERT(Irp->IoStatus.Information <= Stack->Parameters.Read.Length);
     ASSERT(RxContext->MajorFunction == IRP_MJ_READ);
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+RxLowIoWriteShell(
+    IN PRX_CONTEXT RxContext)
+{
+    PFCB Fcb;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    DPRINT("RxLowIoWriteShell(%p)\n", RxContext);
+
+    Fcb = (PFCB)RxContext->pFcb;
+
+    ASSERT(!BooleanFlagOn(Fcb->FcbState, FCB_STATE_FILE_IS_BUF_COMPRESSED) &&
+           !BooleanFlagOn(Fcb->FcbState, FCB_STATE_FILE_IS_DISK_COMPRESSED));
+
+    /* Always update stats for disks */
+    if (Fcb->CachedNetRootType == NET_ROOT_DISK)
+    {
+        ExInterlockedAddLargeStatistic(&RxContext->RxDeviceObject->NetworkWriteBytesRequested, RxContext->LowIoContext.ParamsFor.ReadWrite.ByteCount);
+    }
+
+    /* And forward the write to the mini-rdr */
+    Status = RxLowIoSubmit(RxContext, RxLowIoWriteShellCompletion);
+    DPRINT("RxLowIoWriteShell(%p), Status: %lx\n", RxContext, Status);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RxLowIoWriteShellCompletion(
+    PRX_CONTEXT RxContext)
+{
+    PIRP Irp;
+    PFCB Fcb;
+    NTSTATUS Status;
+    BOOLEAN PagingIo;
+    PLOWIO_CONTEXT LowIoContext;
+
+    PAGED_CODE();
+
+    DPRINT("RxLowIoWriteShellCompletion(%p)\n", RxContext);
+
+    Status = RxContext->IoStatusBlock.Status;
+    DPRINT("In %p, Status: %lx, Information: %lx\n", RxContext, Status, RxContext->IoStatusBlock.Information);
+
+    Irp = RxContext->CurrentIrp;
+
+    /* Set IRP information from the RX_CONTEXT status block */
+    Irp->IoStatus.Information = RxContext->IoStatusBlock.Information;
+
+    LowIoContext = &RxContext->LowIoContext;
+    ASSERT(RxLowIoIsBufferLocked(LowIoContext));
+
+    /* Perform a few sanity checks */
+    Fcb = (PFCB)RxContext->pFcb;
+    if (Status == STATUS_SUCCESS)
+    {
+        if (BooleanFlagOn(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_THIS_IO_BUFFERED))
+        {
+            ASSERT(!BooleanFlagOn(Fcb->FcbState, FCB_STATE_FILE_IS_BUF_COMPRESSED) &&
+                   !BooleanFlagOn(Fcb->FcbState, FCB_STATE_FILE_IS_DISK_COMPRESSED));
+        }
+
+        ASSERT(!BooleanFlagOn(Fcb->FcbState, FCB_STATE_FILE_IS_SHADOWED));
+    }
+
+    PagingIo = BooleanFlagOn(Irp->Flags, IRP_PAGING_IO);
+    if (Status != STATUS_SUCCESS && PagingIo)
+    {
+        DPRINT1("Paging IO failed %p (%p) %lx\n", Fcb, Fcb->NetRoot, Status);
+    }
+
+    /* In case of async call, perform last bits not done in RxCommonWrite */
+    if (!BooleanFlagOn(LowIoContext->Flags, LOWIO_CONTEXT_FLAG_SYNCCALL))
+    {
+        PFILE_OBJECT FileObject;
+        PIO_STACK_LOCATION Stack;
+
+        /* We only succeed if we wrote what was asked for */
+        if (NT_SUCCESS(Status) && !BooleanFlagOn(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_PIPE_OPERATION))
+        {
+            ASSERT(Irp->IoStatus.Information == LowIoContext->ParamsFor.ReadWrite.ByteCount);
+        }
+
+        /* If write succeed, ,also update FILE_OBJECT flags */
+        Stack = RxContext->CurrentIrpSp;
+        FileObject = Stack->FileObject;
+        if (!PagingIo)
+        {
+            SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
+        }
+
+        if (BooleanFlagOn(LowIoContext->ParamsFor.ReadWrite.Flags, LOWIO_READWRITEFLAG_EXTENDING_FILESIZE))
+        {
+            SetFlag(FileObject->Flags, FO_FILE_SIZE_CHANGED);
+        }
+
+        /* If VDL was extended, fix attributes */
+        if (BooleanFlagOn(LowIoContext->ParamsFor.ReadWrite.Flags, LOWIO_READWRITEFLAG_EXTENDING_VDL))
+        {
+            LONGLONG LastOffset, FileSize;
+
+            LastOffset = LowIoContext->ParamsFor.ReadWrite.ByteOffset +
+                         Irp->IoStatus.Information;
+            RxGetFileSizeWithLock(Fcb, &FileSize);
+
+            if (FileSize < LastOffset)
+            {
+                LastOffset = FileSize;
+            }
+
+            Fcb->Header.ValidDataLength.QuadPart = LastOffset;
+        }
+
+        /* One less outstanding write */
+        if (!BooleanFlagOn(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_PIPE_SYNC_OPERATION))
+        {
+            PNON_PAGED_FCB NonPagedFcb;
+
+            NonPagedFcb = LowIoContext->ParamsFor.ReadWrite.NonPagedFcb;
+            if (NonPagedFcb != NULL)
+            {
+                if (ExInterlockedAddUlong(&NonPagedFcb->OutstandingAsyncWrites,
+                                          -1, &RxStrucSupSpinLock) == 1)
+                {
+                    KeSetEvent(NonPagedFcb->OutstandingAsyncEvent, IO_NO_INCREMENT, FALSE);
+                }
+            }
+        }
+
+        /* Release paging resource if acquired */
+        if (RxContext->FcbPagingIoResourceAcquired)
+        {
+            RxReleasePagingIoResourceForThread(RxContext, Fcb, LowIoContext->ResourceThreadId);
+        }
+
+        /* Resume blocked operations for pipes */
+        if (BooleanFlagOn(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_PIPE_SYNC_OPERATION))
+        {
+            RxResumeBlockedOperations_Serially(RxContext,
+                                               &((PFOBX)RxContext->pFobx)->Specific.NamedPipe.WriteSerializationQueue);
+        }
+        else
+        {
+            /* And release FCB only for files */
+            if (RxContext->FcbResourceAcquired)
+            {
+                RxReleaseFcbForThread(RxContext, Fcb, LowIoContext->ResourceThreadId);
+            }
+        }
+
+        /* Final sanity checks */
+        ASSERT(Status != STATUS_RETRY);
+        ASSERT((Status != STATUS_SUCCESS) || (Irp->IoStatus.Information <= Stack->Parameters.Write.Length));
+        ASSERT(RxContext->MajorFunction == IRP_MJ_WRITE);
+
+        if (BooleanFlagOn(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_PIPE_OPERATION))
+        {
+            UNIMPLEMENTED;
+        }
+    }
 
     return Status;
 }

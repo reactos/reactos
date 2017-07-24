@@ -121,7 +121,14 @@ BOOLEAN RxStopOnLoudCompletion = TRUE;
 BOOLEAN RxSrvCallConstructionDispatcherActive = FALSE;
 LIST_ENTRY RxSrvCalldownList;
 RX_SPIN_LOCK RxStrucSupSpinLock;
-ULONG RdbssReferenceTracingValue;
+#if 0
+ULONG RdbssReferenceTracingValue = (RDBSS_REF_TRACK_SRVCALL | RDBSS_REF_TRACK_NETROOT |
+                                    RDBSS_REF_TRACK_VNETROOT | RDBSS_REF_TRACK_NETFOBX |
+                                    RDBSS_REF_TRACK_NETFCB | RDBSS_REF_TRACK_SRVOPEN |
+                                    RX_PRINT_REF_TRACKING);
+#else
+ULONG RdbssReferenceTracingValue = 0;
+#endif
 LARGE_INTEGER RxWorkQueueWaitInterval[RxMaximumWorkQueue];
 LARGE_INTEGER RxSpinUpDispatcherWaitInterval;
 RX_DISPATCHER RxDispatcher;
@@ -2906,7 +2913,7 @@ RxFinalizeNetRoot(
             HashBucket = &FcbTable->HashBuckets[Bucket];
             ListEntry = HashBucket->Flink;
             while (ListEntry != HashBucket)
-            {    
+            {
                 PFCB Fcb;
 
                 Fcb = CONTAINING_RECORD(ListEntry, FCB, FcbTableEntry.HashLinks);
@@ -3866,7 +3873,7 @@ RxFinishFcbInitialization(
     {
         /* If our FCB newly points to a file, initiliaze everything related */
         if (FileType == RDBSS_NTC_STORAGE_TYPE_FILE)
-            
+
         {
             if (OldType != RDBSS_NTC_STORAGE_TYPE_FILE)
             {
@@ -6302,7 +6309,7 @@ RxPrefixTableLookupName(
     {
         NODE_TYPE_CODE Type;
 
-        Type = NodeType(Container);
+        Type = (NodeType(Container) & ~RX_SCAVENGER_MASK);
         switch (Type)
         {
             case RDBSS_NTC_SRVCALL:
@@ -6318,7 +6325,9 @@ RxPrefixTableLookupName(
                 break;
 
             default:
+                DPRINT1("Invalid node type: %x\n", Type);
                 ASSERT(FALSE);
+                RxReference(Container);
                 break;
         }
     }
@@ -6479,6 +6488,43 @@ RxProcessFcbChangeBufferingStateRequest(
     UNIMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
+VOID
+RxpScavengeFobxs(
+    PRDBSS_SCAVENGER Scavenger,
+    PLIST_ENTRY FobxToScavenge)
+{
+    /* Explore the whole list of FOBX to scavenge */
+    while (!IsListEmpty(FobxToScavenge))
+    {
+        PFCB Fcb;
+        PFOBX Fobx;
+        PLIST_ENTRY Entry;
+
+        Entry = RemoveHeadList(FobxToScavenge);
+        Fobx = CONTAINING_RECORD(Entry, FOBX, ScavengerFinalizationList);
+        Fcb = (PFCB)Fobx->SrvOpen->pFcb;
+
+        /* Try to acquire the lock exclusively to perform finalization */
+        if (RxAcquireExclusiveFcb(NULL, Fcb) != STATUS_SUCCESS)
+        {
+            RxDereferenceNetRoot(Fobx, LHS_LockNotHeld);
+        }
+        else
+        {
+            RxReferenceNetFcb(Fcb);
+            RxDereferenceNetRoot(Fobx, LHS_ExclusiveLockHeld);
+
+            if (!RxDereferenceAndFinalizeNetFcb(Fcb, NULL, FALSE, FALSE))
+            {
+                RxReleaseFcb(NULL, Fcb);
+            }
+        }
+    }
+}
+
 BOOLEAN
 RxpTrackDereference(
     _In_ ULONG TraceType,
@@ -6486,6 +6532,9 @@ RxpTrackDereference(
     _In_ ULONG Line,
     _In_ PVOID Instance)
 {
+    PCSTR InstanceType;
+    ULONG ReferenceCount;
+
     PAGED_CODE();
 
     if (!BooleanFlagOn(RdbssReferenceTracingValue, TraceType))
@@ -6493,7 +6542,53 @@ RxpTrackDereference(
         return TRUE;
     }
 
-    UNIMPLEMENTED;
+    switch (TraceType)
+    {
+        case RDBSS_REF_TRACK_SRVCALL:
+            InstanceType = "SrvCall";
+            ReferenceCount = ((PSRV_CALL)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_NETROOT:
+            InstanceType = "NetRoot";
+            ReferenceCount = ((PNET_ROOT)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_VNETROOT:
+            InstanceType = "VNetRoot";
+            ReferenceCount = ((PV_NET_ROOT)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_NETFOBX:
+            InstanceType = "NetFobx";
+            ReferenceCount = ((PFOBX)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_NETFCB:
+            InstanceType = "NetFcb";
+            ReferenceCount = ((PFCB)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_SRVOPEN:
+            InstanceType = "SrvOpen";
+            ReferenceCount = ((PSRV_OPEN)Instance)->NodeReferenceCount;
+            break;
+
+        default:
+            DPRINT1("Invalid node type!\n");
+            return TRUE;
+    }
+
+    if (BooleanFlagOn(RdbssReferenceTracingValue, RX_LOG_REF_TRACKING))
+    {
+        UNIMPLEMENTED;
+    }
+
+    if (BooleanFlagOn(RdbssReferenceTracingValue, RX_PRINT_REF_TRACKING))
+    {
+        DbgPrint("(%s:%d) %p (%s) dereferenced from %d\n", FileName, Line, Instance, InstanceType, ReferenceCount);
+    }
+
     return TRUE;
 }
 
@@ -6504,12 +6599,60 @@ RxpTrackReference(
     _In_ ULONG Line,
     _In_ PVOID Instance)
 {
+    PCSTR InstanceType;
+    ULONG ReferenceCount;
+
     if (!BooleanFlagOn(RdbssReferenceTracingValue, TraceType))
     {
         return;
     }
 
-    UNIMPLEMENTED;
+    switch (TraceType)
+    {
+        case RDBSS_REF_TRACK_SRVCALL:
+            InstanceType = "SrvCall";
+            ReferenceCount = ((PSRV_CALL)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_NETROOT:
+            InstanceType = "NetRoot";
+            ReferenceCount = ((PNET_ROOT)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_VNETROOT:
+            InstanceType = "VNetRoot";
+            ReferenceCount = ((PV_NET_ROOT)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_NETFOBX:
+            InstanceType = "NetFobx";
+            ReferenceCount = ((PFOBX)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_NETFCB:
+            InstanceType = "NetFcb";
+            ReferenceCount = ((PFCB)Instance)->NodeReferenceCount;
+            break;
+
+        case RDBSS_REF_TRACK_SRVOPEN:
+            InstanceType = "SrvOpen";
+            ReferenceCount = ((PSRV_OPEN)Instance)->NodeReferenceCount;
+            break;
+
+        default:
+            DPRINT1("Invalid node type!\n");
+            return;
+    }
+
+    if (BooleanFlagOn(RdbssReferenceTracingValue, RX_LOG_REF_TRACKING))
+    {
+        UNIMPLEMENTED;
+    }
+
+    if (BooleanFlagOn(RdbssReferenceTracingValue, RX_PRINT_REF_TRACKING))
+    {
+        DbgPrint("(%s:%d) %p (%s) referenced from %d\n", FileName, Line, Instance, InstanceType, ReferenceCount);
+    }
 }
 
 /*
@@ -6701,6 +6844,42 @@ RxPurgeFcbInSystemCache(
 /*
  * @implemented
  */
+BOOLEAN
+RxPurgeFobx(
+    PFOBX pFobx)
+{
+    NTSTATUS Status;
+    PFCB FcbToBePurged;
+
+    PAGED_CODE();
+
+    /* Get the associated FCB */
+    FcbToBePurged = (PFCB)pFobx->pSrvOpen->pFcb;
+    Status = RxAcquireExclusiveFcb(NULL, FcbToBePurged);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    /* Purge it */
+    Status = RxPurgeFcbInSystemCache(FcbToBePurged, NULL, 0, FALSE, TRUE);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("Purge failed for %p (%p)\n", FcbToBePurged, pFobx);
+        return FALSE;
+    }
+
+    /* And flush */
+    if (!MmFlushImageSection(&FcbToBePurged->NonPaged->SectionObjectPointers, MmFlushForWrite))
+    {
+        DPRINT1("Image section flush failed for %p (%p)\n", FcbToBePurged, pFobx);
+        return FALSE;
+    }
+
+    DPRINT("Purge OK for %p (%p)\n", FcbToBePurged, pFobx);
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
 NTSTATUS
 RxPurgeFobxFromCache(
     PFOBX FobxToBePurged)
@@ -6742,6 +6921,155 @@ RxPurgeFobxFromCache(
     }
 
     return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+RxPurgeRelatedFobxs(
+    PNET_ROOT NetRoot,
+    PRX_CONTEXT RxContext,
+    BOOLEAN AttemptFinalization,
+    PFCB PurgingFcb)
+{
+    PLIST_ENTRY Entry;
+    ULONG SuccessfullPurge;
+    PRDBSS_SCAVENGER Scavenger;
+    PRDBSS_DEVICE_OBJECT RxDeviceObject;
+    PPURGE_SYNCHRONIZATION_CONTEXT PurgeSyncCtx;
+
+    PAGED_CODE();
+
+    RxDeviceObject = RxContext->RxDeviceObject;
+    Scavenger = RxDeviceObject->pRdbssScavenger;
+    PurgeSyncCtx = &NetRoot->PurgeSyncronizationContext;
+
+    RxAcquireScavengerMutex();
+
+    /* If there's already a purge in progress */
+    if (PurgeSyncCtx->PurgeInProgress)
+    {
+        /* Add our RX_CONTEXT to the current run */
+        InsertTailList(&PurgeSyncCtx->ContextsAwaitingPurgeCompletion,
+                       &RxContext->RxContextSerializationQLinks);
+
+        /* And wait until it's done */
+        RxReleaseScavengerMutex();
+        RxWaitSync(RxContext);
+        RxAcquireScavengerMutex();
+    }
+
+    /* Start the purge */
+    PurgeSyncCtx->PurgeInProgress = TRUE;
+
+    /* While the purge is still handling our NET_ROOT, do nothing but wait */
+    while (Scavenger->CurrentNetRootForClosePendingProcessing == NetRoot)
+    {
+        RxReleaseScavengerMutex();
+        KeWaitForSingleObject(&Scavenger->ClosePendingProcessingSyncEvent, Executive,
+                              KernelMode, TRUE, NULL);
+        RxAcquireScavengerMutex();
+    }
+
+    /* Now, for all the entries */
+    SuccessfullPurge = 0;
+    Entry = Scavenger->ClosePendingFobxsList.Flink;
+    while (Entry != &Scavenger->ClosePendingFobxsList)
+    {
+        PFCB Fcb;
+        PFOBX Fobx;
+        BOOLEAN Success;
+
+        Fobx = CONTAINING_RECORD(Entry, FOBX, ClosePendingList);
+        DPRINT("Dealing with FOBX: %p\n", Fobx);
+
+        Entry = Entry->Flink;
+
+        /* If it's not matching our NET_ROOT, ignore */
+        if (Fobx->pSrvOpen == NULL ||
+            Fobx->pSrvOpen->pFcb == NULL ||
+            ((PFCB)Fobx->pSrvOpen->pFcb)->VNetRoot == NULL ||
+            (PNET_ROOT)((PFCB)Fobx->pSrvOpen->pFcb)->VNetRoot->pNetRoot != NetRoot)
+        {
+            continue;
+        }
+
+        /* Determine if it matches our FCB */
+        Fcb = (PFCB)Fobx->pSrvOpen->pFcb;
+        if (PurgingFcb != NULL && NodeType(PurgingFcb) != RDBSS_NTC_STORAGE_TYPE_DIRECTORY &&
+            PurgingFcb != Fcb)
+        {
+            NTSTATUS Status;
+
+            MINIRDR_CALL_THROUGH(Status, RxDeviceObject->Dispatch, MRxAreFilesAliased, (Fcb, PurgingFcb));
+            if (Status == STATUS_SUCCESS)
+            {
+                continue;
+            }
+        }
+
+        /* Matching, we'll purge it */
+        RemoveEntryList(&Fobx->ClosePendingList);
+
+        /* Reference it so that it doesn't disappear */
+        RxReferenceNetFobx(Fobx);
+
+        RxReleaseScavengerMutex();
+
+        /* And purge */
+        Success = RxPurgeFobx(Fobx);
+        if (Success)
+        {
+            ++SuccessfullPurge;
+        }
+
+        /* If we don't have to finalize it (or if we cannot acquire lock exclusively
+         * Just normally dereference
+         */
+        if ((AttemptFinalization == DONT_ATTEMPT_FINALIZE_ON_PURGE) ||
+            RxAcquireExclusiveFcb(NULL, Fcb) != STATUS_SUCCESS)
+        {
+            RxDereferenceNetFobx(Fobx, LHS_LockNotHeld);
+        }
+        /* Otherwise, finalize */
+        else
+        {
+            RxReferenceNetFcb(Fcb);
+            RxDereferenceNetFobx(Fobx, LHS_ExclusiveLockHeld);
+            if (!RxDereferenceAndFinalizeNetFcb(Fcb, NULL, FALSE, FALSE))
+            {
+                RxReleaseFcb(NULL, Fcb);
+            }
+        }
+
+        if (!Success)
+        {
+            DPRINT1("Failed purging %p (%p)\n", Fcb, Fobx);
+        }
+
+        RxAcquireScavengerMutex();
+    }
+
+    /* If no contexts left, purge is not running */
+    if (IsListEmpty(&PurgeSyncCtx->ContextsAwaitingPurgeCompletion))
+    {
+        PurgeSyncCtx->PurgeInProgress = FALSE;
+    }
+    /* Otherwise, notify a waiter it can start */
+    else
+    {
+        PRX_CONTEXT Context;
+
+        Entry = RemoveHeadList(&PurgeSyncCtx->ContextsAwaitingPurgeCompletion);
+        Context = CONTAINING_RECORD(Entry, RX_CONTEXT, RxContextSerializationQLinks);
+
+        RxSignalSynchronousWaiter(Context);
+    }
+
+    RxReleaseScavengerMutex();
+
+    return (SuccessfullPurge > 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 /*
@@ -6958,6 +7286,38 @@ RxReference(
  * @implemented
  */
 VOID
+NTAPI
+RxReinitializeContext(
+   IN OUT PRX_CONTEXT RxContext)
+{
+    PIRP Irp;
+    PRDBSS_DEVICE_OBJECT RxDeviceObject;
+    ULONG InitialContextFlags, SavedFlags;
+
+    PAGED_CODE();
+
+    /* Backup a few flags */
+    Irp = RxContext->CurrentIrp;
+    RxDeviceObject = RxContext->RxDeviceObject;
+    SavedFlags = RxContext->Flags & RX_CONTEXT_PRESERVED_FLAGS;
+    InitialContextFlags = RxContext->Flags & RX_CONTEXT_INITIALIZATION_FLAGS;
+
+    /* Reset our context */
+    RxPrepareContextForReuse(RxContext);
+
+    /* Zero everything */
+    RtlZeroMemory(&RxContext->MajorFunction, sizeof(RX_CONTEXT) - FIELD_OFFSET(RX_CONTEXT, MajorFunction));
+
+    /* Restore saved flags */
+    RxContext->Flags = SavedFlags;
+    /* And reinit the context */
+    RxInitializeContext(Irp, RxDeviceObject, InitialContextFlags, RxContext);
+}
+
+/*
+ * @implemented
+ */
+VOID
 RxRemoveNameNetFcb(
     OUT PFCB ThisFcb)
 {
@@ -7104,6 +7464,110 @@ RxResumeBlockedOperations_Serially(
     UNIMPLEMENTED;
 
     RxReleaseSerializationMutex();
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxSetFileSizeWithLock(
+    IN OUT PFCB Fcb,
+    IN PLONGLONG FileSize)
+{
+    PAGED_CODE();
+
+    /* Set attribute and increase version */
+    Fcb->Header.FileSize.QuadPart = *FileSize;
+    ++Fcb->ulFileSizeVersion;
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxScavengeFobxsForNetRoot(
+    PNET_ROOT NetRoot,
+    PFCB PurgingFcb,
+    BOOLEAN SynchronizeWithScavenger)
+{
+    PRDBSS_SCAVENGER Scavenger;
+    PRDBSS_DEVICE_OBJECT RxDeviceObject;
+
+    PAGED_CODE();
+
+    RxDeviceObject = NetRoot->pSrvCall->RxDeviceObject;
+    Scavenger = RxDeviceObject->pRdbssScavenger;
+
+    /* Wait for the scavenger, if asked to */
+    if (SynchronizeWithScavenger)
+    {
+        KeWaitForSingleObject(&Scavenger->SyncEvent, Executive, KernelMode, FALSE, NULL);
+    }
+
+    RxAcquireScavengerMutex();
+
+    /* If there's nothing left to do... */
+    if (Scavenger->FobxsToBeFinalized <= 0)
+    {
+        RxReleaseScavengerMutex();
+    }
+    else
+    {
+        PLIST_ENTRY Entry;
+        LIST_ENTRY FobxToScavenge;
+
+        InitializeListHead(&FobxToScavenge);
+
+        /* Browse all the FOBXs to finalize */
+        Entry = Scavenger->FobxFinalizationList.Flink;
+        while (Entry != &Scavenger->FobxFinalizationList)
+        {
+            PFOBX Fobx;
+
+            Fobx = CONTAINING_RECORD(Entry, FOBX, ScavengerFinalizationList);
+            Entry = Entry->Flink;
+
+            if (Fobx->SrvOpen != NULL)
+            {
+                PFCB Fcb;
+
+                Fcb = (PFCB)Fobx->SrvOpen->pFcb;
+
+                /* If it matches our NET_ROOT */
+                if ((PNET_ROOT)Fcb->pNetRoot == NetRoot)
+                {
+                    NTSTATUS Status;
+
+                    /* Check whether it matches our FCB */
+                    Status = STATUS_MORE_PROCESSING_REQUIRED;
+                    if (PurgingFcb != NULL && PurgingFcb != Fcb)
+                    {
+                        MINIRDR_CALL_THROUGH(Status, RxDeviceObject->Dispatch, MRxAreFilesAliased, (Fcb, PurgingFcb));
+                    }
+
+                    /* If so, add it to the list of the FOBXs to scavenge */
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        RxReferenceNetFobx(Fobx);
+                        ASSERT(NodeType(Fobx) == RDBSS_NTC_FOBX);
+
+                        RemoveEntryList(&Fobx->ScavengerFinalizationList);
+                        InsertTailList(&FobxToScavenge, &Fobx->ScavengerFinalizationList);
+                    }
+                }
+            }
+        }
+
+        RxReleaseScavengerMutex();
+
+        /* Now, scavenge all the extracted FOBX */
+        RxpScavengeFobxs(Scavenger, &FobxToScavenge);
+    }
+
+    if (SynchronizeWithScavenger)
+    {
+        KeSetEvent(&Scavenger->SyncEvent, IO_NO_INCREMENT, FALSE);
+    }
 }
 
 /*

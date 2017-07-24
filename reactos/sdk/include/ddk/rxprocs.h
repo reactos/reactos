@@ -222,6 +222,7 @@ RxTrackPagingIoResource(
     }                                                                     \
     RxTrackPagingIoResource(Fcb, 1, __LINE__, __FILE__)
 
+#ifndef __REACTOS__
 #define RxAcquirePagingIoResourceShared(RxContext, Fcb, Flag)             \
     ExAcquireResourceSharedLite((Fcb)->Header.PagingIoResource, Flag);    \
     if (AcquiredFile)                                                     \
@@ -232,6 +233,21 @@ RxTrackPagingIoResource(
         }                                                                 \
         RxTrackPagingIoResource(Fcb, 2, __LINE__, __FILE__);              \
     }
+#else
+#define RxAcquirePagingIoResourceShared(RxContext, Fcb, Flag)                             \
+    {                                                                                     \
+        BOOLEAN AcquiredFile;                                                             \
+        AcquiredFile = ExAcquireResourceSharedLite((Fcb)->Header.PagingIoResource, Flag); \
+        if (AcquiredFile)                                                                 \
+        {                                                                                 \
+            if (RxContext != NULL)                                                        \
+	    {                                                                             \
+                ((PRX_CONTEXT)RxContext)->FcbPagingIoResourceAcquired = TRUE;             \
+            }                                                                             \
+            RxTrackPagingIoResource(Fcb, 2, __LINE__, __FILE__);                          \
+        }                                                                                 \
+    }
+#endif
 
 #define RxReleasePagingIoResource(RxContext, Fcb)         \
     RxTrackPagingIoResource(Fcb, 3, __LINE__, __FILE__);  \
@@ -248,6 +264,26 @@ RxTrackPagingIoResource(
         (RxContext)->FcbPagingIoResourceAcquired = FALSE;          \
     }                                                              \
     ExReleaseResourceForThreadLite((Fcb)->Header.PagingIoResource, (Thread))
+
+#ifdef __REACTOS__
+VOID
+__RxWriteReleaseResources(
+    PRX_CONTEXT RxContext,
+    BOOLEAN ResourceOwnerSet
+#ifdef RDBSS_TRACKER
+    ,
+    ULONG LineNumber,
+    PCSTR FileName,
+    ULONG SerialNumber
+#endif
+    );
+
+#ifdef  RDBSS_TRACKER
+#define RxWriteReleaseResources(R, B) __RxWriteReleaseResources((R), (B), __LINE__, __FILE__, 0)
+#else
+#define RxWriteReleaseResources(R, B) __RxWriteReleaseResources((R), (B))
+#endif
+#endif
 
 BOOLEAN
 NTAPI
@@ -294,6 +330,7 @@ RxPrePostIrp(
     _In_ PIRP Irp);
 
 VOID
+NTAPI
 RxAddToWorkque(
     _In_ PRX_CONTEXT RxContext,
     _In_ PIRP Irp);
@@ -574,6 +611,10 @@ NTSTATUS
 RxPurgeFobxFromCache(
     PFOBX FobxToBePurged);
 
+BOOLEAN
+RxPurgeFobx(
+    PFOBX pFobx);
+
 VOID
 RxUndoScavengerFinalizationMarking(
     PVOID Instance);
@@ -744,5 +785,11 @@ NTAPI
 RxCancelRoutine(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp);
+
+#ifdef __REACTOS__
+#define RxWriteCacheingAllowed(F, S) (                              \
+    BooleanFlagOn((F)->FcbState, FCB_STATE_WRITECACHING_ENABLED) && \
+    !BooleanFlagOn((S)->Flags, SRVOPEN_FLAG_DONTUSE_WRITE_CACHING))
+#endif
 
 #endif
