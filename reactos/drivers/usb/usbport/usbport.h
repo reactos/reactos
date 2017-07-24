@@ -359,11 +359,17 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
   /* Miniport extension should be aligned on 0x100 */
 #if !defined(_M_X64)
   ULONG Padded[34];
+#else
+  ULONG Padded[0];
 #endif
 
 } USBPORT_DEVICE_EXTENSION, *PUSBPORT_DEVICE_EXTENSION;
 
+#if !defined(_M_X64)
 C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x400);
+#else
+C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x600);
+#endif
 
 typedef struct _USBPORT_RH_DESCRIPTORS {
   USB_DEVICE_DESCRIPTOR DeviceDescriptor;
@@ -397,7 +403,7 @@ typedef struct _USBPORT_ASYNC_CALLBACK_DATA {
   ULONG CallbackContext;
 } USBPORT_ASYNC_CALLBACK_DATA, *PUSBPORT_ASYNC_CALLBACK_DATA;
 
-C_ASSERT(sizeof(USBPORT_ASYNC_CALLBACK_DATA) == 84 + sizeof(PVOID));
+C_ASSERT(sizeof(USBPORT_ASYNC_CALLBACK_DATA) == 16 + 18 * sizeof(PVOID));
 
 typedef struct _TIMER_WORK_QUEUE_ITEM {
   WORK_QUEUE_ITEM WqItem;
