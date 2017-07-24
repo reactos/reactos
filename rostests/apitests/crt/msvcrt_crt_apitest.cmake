@@ -66,7 +66,7 @@ list(APPEND SOURCE_MSVCRT
 #    __doserrno.c
 #    __fpecode.c
 #    __get_app_type.c
-    __getmainargs.c
+#    __getmainargs.c
 #    __initenv
 #    __iob_func.c
 #    __isascii.c
@@ -1267,6 +1267,7 @@ list(APPEND SOURCE_MSVCRT
 
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE_MSVCRT
+        __getmainargs.c ##FIXME: Moved here because it doesn't work on x64
     #    _CIacos.c
     #    _CIasin.c
     #    _CIatan.c

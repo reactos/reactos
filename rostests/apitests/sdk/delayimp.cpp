@@ -127,7 +127,7 @@ static void CheckDliDone_imp()
 
 
 /* Replacement functions */
-int __stdcall MyFunction()
+INT_PTR WINAPI MyFunction()
 {
     return 123;
 }

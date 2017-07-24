@@ -33,7 +33,9 @@ const struct test winetest_testlist[] =
     { "error", func_error },
     { "exception", func_exception },
     { "file", func_file },
+#ifdef _M_IX86
     { "generated", func_generated },
+#endif
     { "info", func_info },
     { "large_int", func_large_int },
     { "om", func_om },
