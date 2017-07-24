@@ -111,7 +111,7 @@ FileExtFromFilter(LPTSTR pExt, LPCTSTR pTitle, OPENFILENAME *pOFN)
 }
 
 // Hook procedure for OPENFILENAME to change the file name extension
-static UINT APIENTRY
+static UINT_PTR APIENTRY
 OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hParent;
