@@ -146,7 +146,7 @@ DceSetDrawable( PWND Window OPTIONAL,
                 ULONG Flags,
                 BOOL SetClipOrigin)
 {
-  RECTL rect;
+  RECTL rect = {0,0,0,0};
 
   if (Window)
   {
