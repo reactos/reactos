@@ -33,12 +33,12 @@ typedef struct {
 
 #ifdef	PROTOTYPES
 static void
-_cput(char c, long l)
+_cput(char c, intptr_t l)
 #else
 static void
 _cput(c, l)
 	char	c;
-	long	l;
+	intptr_t	l;
 #endif
 {
 	register BUF	bp = (BUF)l;
@@ -78,7 +78,7 @@ js_snprintf(buf, maxcnt, form, va_alist)
 #else
 	va_start(args);
 #endif
-	cnt = format(_cput, (long)&bb, form,  args);
+	cnt = format(_cput, (intptr_t)&bb, form,  args);
 	va_end(args);
 	if (maxcnt > 0)
 		*(bb.ptr) = '\0';

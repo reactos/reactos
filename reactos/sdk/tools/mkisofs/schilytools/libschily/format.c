@@ -138,9 +138,9 @@ typedef struct f_args {
 	char	*ptr;			/* Current ptr in buf		*/
 	int	cnt;			/* Free char count in buf	*/
 #else
-	void  (*outf)__PR((char, long)); /* Func from format(fun, arg)	*/
+	void  (*outf)__PR((char, intptr_t)); /* Func from format(fun, arg)	*/
 #endif
-	long	farg;			/* Arg from format (fun, arg)	*/
+	intptr_t	farg;			/* Arg from format (fun, arg)	*/
 	int	minusflag;		/* Fieldwidth is negative	*/
 	int	flags;			/* General flags (+-#)		*/
 	int	fldwidth;		/* Field width as in %3d	*/
@@ -227,7 +227,7 @@ xflsbuf(c, ap)
 #define	FORMAT_FUNC_NAME	format
 #define	FORMAT_FUNC_PARM
 
-#define	FORMAT_FUNC_PROTO_DECL	void (*fun)(char, long),
+#define	FORMAT_FUNC_PROTO_DECL	void (*fun)(char, intptr_t),
 #define	FORMAT_FUNC_KR_DECL	register void (*fun)();
 #define	FORMAT_FUNC_KR_ARGS	fun,
 
@@ -243,14 +243,14 @@ xflsbuf(c, ap)
 #ifdef	PROTOTYPES
 EXPORT int
 FORMAT_FUNC_NAME(FORMAT_FUNC_PROTO_DECL
-			long farg,
+			intptr_t farg,
 			const char *fmt,
 			va_list oargs)
 #else
 EXPORT int
 FORMAT_FUNC_NAME(FORMAT_FUNC_KR_ARGS farg, fmt, oargs)
 	FORMAT_FUNC_KR_DECL
-	register long	farg;
+	register intptr_t	farg;
 	register char	*fmt;
 	va_list		oargs;
 #endif
@@ -292,7 +292,7 @@ FORMAT_FUNC_NAME(FORMAT_FUNC_KR_ARGS farg, fmt, oargs)
 		fa.ptr	= fa.iobuf;
 		fa.fp	= (FILE *)farg;
 		fa.err	= 0;
-		farg	= fa.farg = (long)&fa;
+		farg	= fa.farg = (intptr_t)&fa;
 	} else {			/* recursion		*/
 		farg &= ~1;
 	}
@@ -1023,7 +1023,7 @@ error sizeof (ptrdiff_t) is unknown
 	}
 out:
 #ifdef	FORMAT_BUFFER
-	if (farg == (long)&fa) {	/* Top level call, flush buffer */
+	if (farg == (intptr_t)&fa) {	/* Top level call, flush buffer */
 		if (fa.err)
 			return (EOF);
 		if ((fa.ptr != fa.iobuf) &&
@@ -1208,9 +1208,9 @@ prbuf(s, fa)
 {
 	register int diff;
 	register int rfillc;
-	register long arg			= fa->farg;
+	register intptr_t arg			= fa->farg;
 #ifdef	FORMAT_FUNC_PARM
-	register void (*fun) __PR((char, long))	= fa->outf;
+	register void (*fun) __PR((char, intptr_t))	= fa->outf;
 #endif
 	register int count;
 	register int lzero = 0;
@@ -1274,9 +1274,9 @@ prc(c, fa)
 {
 	register int diff;
 	register int rfillc;
-	register long arg			= fa->farg;
+	register intptr_t arg			= fa->farg;
 #ifdef	FORMAT_FUNC_PARM
-	register void (*fun) __PR((char, long))	= fa->outf;
+	register void (*fun) __PR((char, intptr_t))	= fa->outf;
 #endif
 	register int count;
 
