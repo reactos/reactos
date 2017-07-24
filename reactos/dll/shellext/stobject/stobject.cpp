@@ -21,11 +21,6 @@ END_OBJECT_MAP()
 HINSTANCE  g_hInstance;
 CComModule g_Module;
 
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
-
 STDAPI_(BOOL)
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {

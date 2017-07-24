@@ -313,11 +313,6 @@ STDAPI DllGetVersion(DLLVERSIONINFO *pdvi)
  */
 HINSTANCE    shell32_hInstance;
 
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
-
 /*************************************************************************
  * SHELL32 DllMain
  *

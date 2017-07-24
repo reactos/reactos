@@ -147,11 +147,6 @@ END_OBJECT_MAP()
 CBrowseUIModule                             gModule;
 CAtlWinModule                               gWinModule;
 
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
-
 /*************************************************************************
  * BROWSEUI DllMain
  */

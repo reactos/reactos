@@ -69,11 +69,6 @@ DWORD WINAPI WinList_Init(void)
     return 0;
 }
 
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
-
 class CRShellModule : public CComModule
 {
 public:
