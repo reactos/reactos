@@ -448,6 +448,38 @@ RxSearchForCollapsibleOpen(
     ACCESS_MASK DesiredAccess,
     ULONG ShareAccess);
 
+NTSTATUS
+RxSetAllocationInfo(
+    PRX_CONTEXT RxContext);
+
+NTSTATUS
+RxSetBasicInfo(
+    PRX_CONTEXT RxContext);
+
+NTSTATUS
+RxSetDispositionInfo(
+    PRX_CONTEXT RxContext);
+
+NTSTATUS
+RxSetEndOfFileInfo(
+    PRX_CONTEXT RxContext);
+
+NTSTATUS
+RxSetPipeInfo(
+    PRX_CONTEXT RxContext);
+
+NTSTATUS
+RxSetPositionInfo(
+    PRX_CONTEXT RxContext);
+
+NTSTATUS
+RxSetRenameInfo(
+    PRX_CONTEXT RxContext);
+
+NTSTATUS
+RxSetSimpleInfo(
+    PRX_CONTEXT RxContext);
+
 VOID
 RxSetupNetFileObject(
     PRX_CONTEXT RxContext);
@@ -3535,13 +3567,249 @@ RxCommonSetEa(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 RxCommonSetInformation(
     PRX_CONTEXT Context)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIRP Irp;
+    PFCB Fcb;
+    PFOBX Fobx;
+    NTSTATUS Status;
+    PNET_ROOT NetRoot;
+    PIO_STACK_LOCATION Stack;
+    FILE_INFORMATION_CLASS Class;
+    BOOLEAN CanWait, FcbTableAcquired, FcbAcquired;
+
+    PAGED_CODE();
+
+    Fcb = (PFCB)Context->pFcb;
+    Fobx = (PFOBX)Context->pFobx;
+    DPRINT("RxCommonSetInformation(%p), FCB: %p, FOBX: %p\n", Context, Fcb, Fobx);
+
+    Irp = Context->CurrentIrp;
+    Stack = Context->CurrentIrpSp;
+    Class = Stack->Parameters.SetFile.FileInformationClass;
+    DPRINT("Buffer: %p, Length: %lx, Class: %ld, ReplaceIfExists: %d\n",
+           Irp->AssociatedIrp.SystemBuffer, Stack->Parameters.SetFile.Length,
+           Class, Stack->Parameters.SetFile.ReplaceIfExists);
+
+    Status = STATUS_SUCCESS;
+    CanWait = BooleanFlagOn(Context->Flags, RX_CONTEXT_FLAG_WAIT);
+    FcbTableAcquired = FALSE;
+    FcbAcquired = FALSE;
+    NetRoot = (PNET_ROOT)Fcb->pNetRoot;
+
+#define _SEH2_TRY_RETURN(S) S; goto try_exit
+
+    _SEH2_TRY
+    {
+        /* Valide the node type first */
+        if (NodeType(Fcb) != RDBSS_NTC_STORAGE_TYPE_UNKNOWN &&
+            NodeType(Fcb) != RDBSS_NTC_STORAGE_TYPE_DIRECTORY)
+        {
+            if (NodeType(Fcb) == RDBSS_NTC_STORAGE_TYPE_FILE)
+            {
+                if (!BooleanFlagOn(Fcb->FcbState, FCB_STATE_PAGING_FILE))
+                {
+                    Status = STATUS_SUCCESS;
+                }
+            }
+            else if (NodeType(Fcb) != RDBSS_NTC_SPOOLFILE)
+            {
+                if (NodeType(Fcb) == RDBSS_NTC_MAILSLOT)
+                {
+                    _SEH2_TRY_RETURN(Status = STATUS_NOT_IMPLEMENTED);
+                }
+                else
+                {
+                    DPRINT1("Illegal type of file provided: %x\n", NodeType(Fcb));
+                    _SEH2_TRY_RETURN(Status = STATUS_INVALID_PARAMETER);
+                }
+            }
+        }
+
+        /* We don't autorize advance operation */
+        if (Class == FileEndOfFileInformation && Stack->Parameters.SetFile.AdvanceOnly)
+        {
+            DPRINT1("Not allowed\n");
+
+            _SEH2_TRY_RETURN(Status = STATUS_SUCCESS);
+        }
+
+        /* For these to classes, we'll have to deal with the FCB table (removal)
+         * We thus need the exclusive FCB table lock
+         */
+        if (Class == FileDispositionInformation || Class == FileRenameInformation)
+        {
+            RxPurgeRelatedFobxs(NetRoot, Context, TRUE, Fcb);
+            RxScavengeFobxsForNetRoot(NetRoot, Fcb, TRUE);
+
+            if (!RxAcquireFcbTableLockExclusive(&NetRoot->FcbTable, CanWait))
+            {
+                Context->PostRequest = TRUE;
+                _SEH2_TRY_RETURN(Status = STATUS_PENDING);
+            }
+
+            FcbTableAcquired = TRUE;
+        }
+
+        /* Finally, if not paging file, we need exclusive FCB lock */
+        if (!BooleanFlagOn(Fcb->FcbState, FCB_STATE_PAGING_FILE))
+        {
+            Status = RxAcquireExclusiveFcb(Context, Fcb);
+            if (Status == STATUS_LOCK_NOT_GRANTED)
+            {
+                Context->PostRequest = TRUE;
+                _SEH2_TRY_RETURN(Status = STATUS_SUCCESS);
+            }
+            else if (Status != STATUS_SUCCESS)
+            {
+                _SEH2_LEAVE;
+            }
+
+            FcbAcquired = TRUE;
+        }
+
+        Status = STATUS_SUCCESS;
+
+        /* And now, perform the job! */
+        switch (Class)
+        {
+            case FileBasicInformation:
+                Status = RxSetBasicInfo(Context);
+                break;
+
+            case FileDispositionInformation:
+            {
+                PFILE_DISPOSITION_INFORMATION FDI;
+
+                /* Check whether user wants deletion */
+                FDI = Irp->AssociatedIrp.SystemBuffer;
+                if (FDI->DeleteFile)
+                {
+                    /* If so, check whether it's doable */
+                    if (!MmFlushImageSection(&Fcb->NonPaged->SectionObjectPointers, MmFlushForDelete))
+                    {
+                        Status = STATUS_CANNOT_DELETE;
+                    }
+
+                    /* And if doable, already remove from FCB table */
+                    if (Status == STATUS_SUCCESS)
+                    {
+                        ASSERT(FcbAcquired && FcbTableAcquired);
+                        RxRemoveNameNetFcb(Fcb);
+
+                        RxReleaseFcbTableLock(&NetRoot->FcbTable);
+                        FcbTableAcquired = FALSE;
+                    }
+                }
+
+                /* If it succeed, perform the operation */
+                if (Status == STATUS_SUCCESS)
+                {
+                    Status = RxSetDispositionInfo(Context);
+                }
+
+                break;
+            }
+
+            case FilePositionInformation:
+                Status = RxSetPositionInfo(Context);
+                break;
+
+            case FileAllocationInformation:
+                Status = RxSetAllocationInfo(Context);
+                break;
+
+            case FileEndOfFileInformation:
+                Status = RxSetEndOfFileInfo(Context);
+                break;
+
+            case FilePipeInformation:
+            case FilePipeLocalInformation:
+            case FilePipeRemoteInformation:
+                Status = RxSetPipeInfo(Context);
+                break;
+
+            case FileRenameInformation:
+            case FileLinkInformation:
+            case FileMoveClusterInformation:
+                /* If we can wait, try to perform the operation right now */
+                if (CanWait)
+                {
+                    /* Of course, collapsing is not doable anymore, file is
+                     * in an inbetween state
+                     */
+                    ClearFlag(Fcb->FcbState, FCB_STATE_COLLAPSING_ENABLED);
+
+                    /* Set the information */
+                    Status = RxSetRenameInfo(Context);
+                    /* If it succeed, drop the current entry from FCB table */
+                    if (Status == STATUS_SUCCESS && Class == FileRenameInformation)
+                    {
+                        ASSERT(FcbAcquired && FcbTableAcquired);
+                        RxRemoveNameNetFcb(Fcb);
+                    }
+                    _SEH2_TRY_RETURN(Status);
+                }
+                /* Can't wait? Post for async retry */
+                else
+                {
+                    Status = RxFsdPostRequest(Context);
+                    _SEH2_TRY_RETURN(Status);
+                }
+                break;
+
+            case FileValidDataLengthInformation:
+                if (!MmCanFileBeTruncated(&Fcb->NonPaged->SectionObjectPointers, NULL))
+                {
+                    Status = STATUS_USER_MAPPED_FILE;
+                }
+                break;
+
+            case FileShortNameInformation:
+                Status = RxSetSimpleInfo(Context);
+                break;
+
+            default:
+                DPRINT1("Insupported class: %x\n", Class);
+                Status = STATUS_INVALID_PARAMETER;
+
+                break;
+        }
+
+try_exit: NOTHING;
+        /* If mini-rdr was OK and wants a re-post on this, do it */
+        if (Status == STATUS_SUCCESS)
+        {
+            if (Context->PostRequest)
+            {
+                Status = RxFsdPostRequest(Context);
+            }
+        }
+    }
+    _SEH2_FINALLY
+    {
+        /* Release any acquired lock */
+        if (FcbAcquired)
+        {
+            RxReleaseFcb(Context, Fcb);
+        }
+
+        if (FcbTableAcquired)
+        {
+            RxReleaseFcbTableLock(&NetRoot->FcbTable);
+        }
+    }
+    _SEH2_END;
+
+#undef _SEH2_TRY_RETURN
+
+    return Status;
 }
 
 NTSTATUS
@@ -4498,6 +4766,8 @@ try_exit: NOTHING;
         }
     }
     _SEH2_END;
+
+#undef _SEH2_TRY_RETURN
 
     return Status;
 }
@@ -7279,6 +7549,29 @@ RxPrePostIrp(
     IoMarkIrpPending(Irp);
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+RxpSetInfoMiniRdr(
+    PRX_CONTEXT RxContext,
+    FILE_INFORMATION_CLASS Class)
+{
+    PFCB Fcb;
+    NTSTATUS Status;
+
+    /* Initialize parameters in RX_CONTEXT */
+    RxContext->Info.FileInformationClass = Class;
+    RxContext->Info.Buffer = RxContext->CurrentIrp->AssociatedIrp.SystemBuffer;
+    RxContext->Info.Length = RxContext->CurrentIrpSp->Parameters.SetFile.Length;
+
+    /* And call mini-rdr */
+    Fcb = (PFCB)RxContext->pFcb;
+    MINIRDR_CALL(Status, RxContext, Fcb->MRxDispatch, MRxSetFileInfo, (RxContext));
+
+    return Status;
+}
+
 VOID
 NTAPI
 RxpUnregisterMinirdr(
@@ -8146,6 +8439,157 @@ TryAgain:
     return Status;
 }
 
+NTSTATUS
+RxSetAllocationInfo(
+    PRX_CONTEXT RxContext)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+RxSetBasicInfo(
+    PRX_CONTEXT RxContext)
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+#define FILE_ATTRIBUTE_VOLUME 0x8
+#define VALID_FILE_ATTRIBUTES (                                   \
+    FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN |             \
+    FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_VOLUME |               \
+    FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_DEVICE |              \
+    FILE_ATTRIBUTE_TEMPORARY | FILE_ATTRIBUTE_SPARSE_FILE |       \
+    FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_COMPRESSED |    \
+    FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_NOT_CONTENT_INDEXED | \
+    FILE_ATTRIBUTE_ENCRYPTED | FILE_ATTRIBUTE_INTEGRITY_STREAM)
+#define VALID_DIR_ATTRIBUTES (VALID_FILE_ATTRIBUTES | FILE_ATTRIBUTE_DIRECTORY)
+
+    /* First of all, call the mini-rdr */
+    Status = RxpSetInfoMiniRdr(RxContext, FileBasicInformation);
+    /* If it succeed, perform last bits */
+    if (NT_SUCCESS(Status))
+    {
+        PIRP Irp;
+        PFCB Fcb;
+        PFOBX Fobx;
+        PFILE_OBJECT FileObject;
+        ULONG Attributes, CleanAttr;
+        PFILE_BASIC_INFORMATION BasicInfo;
+
+        Fcb = (PFCB)RxContext->pFcb;
+        Fobx = (PFOBX)RxContext->pFobx;
+        Irp = RxContext->CurrentIrp;
+        BasicInfo = Irp->AssociatedIrp.SystemBuffer;
+        FileObject = RxContext->CurrentIrpSp->FileObject;
+
+        /* If caller provided flags, handle the change */
+        Attributes = BasicInfo->FileAttributes;
+        if (Attributes != 0)
+        {
+            /* Clean our flags first, with only stuff we support */
+            if (NodeType(Fcb) == RDBSS_NTC_STORAGE_TYPE_DIRECTORY)
+            {
+                CleanAttr = (Attributes & VALID_DIR_ATTRIBUTES) | FILE_ATTRIBUTE_DIRECTORY;
+            }
+            else
+            {
+                CleanAttr = Attributes & VALID_FILE_ATTRIBUTES;
+            }
+
+            /* Handle the temporary mark (set/unset depending on caller) */
+            if (BooleanFlagOn(Attributes, FILE_ATTRIBUTE_TEMPORARY))
+            {
+                SetFlag(Fcb->FcbState, FCB_STATE_TEMPORARY);
+                SetFlag(FileObject->Flags, FO_TEMPORARY_FILE);
+            }
+            else
+            {
+                ClearFlag(Fcb->FcbState, FCB_STATE_TEMPORARY);
+                ClearFlag(FileObject->Flags, FO_TEMPORARY_FILE);
+            }
+
+            /* And set new attributes */
+            Fcb->Attributes = CleanAttr;
+        }
+
+        /* If caller provided a creation time, set it */
+        if (BasicInfo->CreationTime.QuadPart != 0LL)
+        {
+            Fcb->CreationTime.QuadPart = BasicInfo->CreationTime.QuadPart;
+            SetFlag(Fobx->Flags, FOBX_FLAG_USER_SET_CREATION);
+        }
+
+        /* If caller provided a last access time, set it */
+        if (BasicInfo->LastAccessTime.QuadPart != 0LL)
+        {
+            Fcb->LastAccessTime.QuadPart = BasicInfo->LastAccessTime.QuadPart;
+            SetFlag(Fobx->Flags, FOBX_FLAG_USER_SET_LAST_ACCESS);
+        }
+
+        /* If caller provided a last write time, set it */
+        if (BasicInfo->LastWriteTime.QuadPart != 0LL)
+        {
+            Fcb->LastWriteTime.QuadPart = BasicInfo->LastWriteTime.QuadPart;
+            SetFlag(Fobx->Flags, FOBX_FLAG_USER_SET_LAST_WRITE);
+        }
+
+        /* If caller provided a last change time, set it */
+        if (BasicInfo->ChangeTime.QuadPart != 0LL)
+        {
+            Fcb->LastChangeTime.QuadPart = BasicInfo->ChangeTime.QuadPart;
+            SetFlag(Fobx->Flags, FOBX_FLAG_USER_SET_LAST_CHANGE);
+        }
+    }
+
+    /* Done */
+    return Status;
+}
+
+NTSTATUS
+RxSetDispositionInfo(
+    PRX_CONTEXT RxContext)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+RxSetEndOfFileInfo(
+    PRX_CONTEXT RxContext)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+RxSetPipeInfo(
+    PRX_CONTEXT RxContext)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+RxSetPositionInfo(
+    PRX_CONTEXT RxContext)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+RxSetRenameInfo(
+    PRX_CONTEXT RxContext)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*
  * @implemented
  */
@@ -8163,6 +8607,14 @@ RxSetShareAccess(
     RxDumpCurrentAccess(where, "before", wherelogtag, ShareAccess);
     IoSetShareAccess(DesiredAccess, DesiredShareAccess, FileObject, ShareAccess);
     RxDumpCurrentAccess(where, "after", wherelogtag, ShareAccess);
+}
+
+NTSTATUS
+RxSetSimpleInfo(
+    PRX_CONTEXT RxContext)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
