@@ -61,7 +61,9 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
 
 Quit:
     /* If we reach this point, something went wrong before, therefore reboot */
+#if defined(__i386__) || defined(_M_AMD64)
     DiskStopFloppyMotor();
+#endif
     Reboot();
 }
 
