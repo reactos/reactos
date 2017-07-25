@@ -31,7 +31,7 @@ IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
 #include <reactos/manifest_dll.rc>
 
 // Strings common to all languages
-STRINGTABLE
+/*STRINGTABLE
 BEGIN
     // Power related strings
     IDS_PWR_RUN         "shell32.dll,Control_RunDLL PowerCfg.cpl"
@@ -41,7 +41,7 @@ BEGIN
 
     // Volume related strings
     IDS_VOL_RUN         "SNDVOL32.EXE"
-END
+END*/
 
 /* UTF-8 */
 #pragma code_page(65001)

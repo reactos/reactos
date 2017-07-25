@@ -18,12 +18,10 @@
 
 #include <mmsystem.h>
 #include <mmddk.h>
+#include <atlstr.h>
 
 #define GBS_HASBATTERY 0x1
 #define GBS_ONBATTERY  0x2
-
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
@@ -37,10 +35,9 @@ typedef struct _PWRSCHEMECONTEXT
     UINT uiLast;
 } PWRSCHEMECONTEXT, *PPWRSCHEMECONTEXT;
 
+CString  g_strTooltip;
 static float g_batCap = 0;
 static HICON g_hIconBattery = NULL;
-static HICON g_hIconAC = NULL;
-
 static BOOL g_IsRunning = FALSE;
 
 /*** This function enumerates the available battery devices and provides the remaining capacity
@@ -168,56 +165,67 @@ static UINT Quantize(float p, UINT lvl = 10)
         return i - 1;
 }
 
+/*** This function returns the respective icon as per the current battery capacity.
+     It also does the work of setting global parameters of battery capacity and tooltips.
+@param hinst: instance handle
+@return     : icon handle
+*/
 static HICON DynamicLoadIcon(HINSTANCE hinst)
-{
+{    
     HICON hBatIcon;
     float cap = 0;
     DWORD dw = 0;
     UINT index = -1;
     HRESULT hr = GetBatteryState(cap, dw);
+    
     if (!FAILED(hr) && (dw & GBS_HASBATTERY))
     {
         index = Quantize(cap, 4);
         g_batCap = cap;
     }
+    else
+    {        
+        g_batCap = 0;
+        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_BATTCAP_ERR));        
+        g_strTooltip.LoadStringW(IDS_PWR_UNKNOWN_REMAINING);
+        return hBatIcon;
+    }
 
     if (dw & GBS_ONBATTERY)
-        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(index<0 ? IDI_BATTCAP_ERR : br_icons[index]));
+    {
+        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(br_icons[index]));
+        g_strTooltip.Format(IDS_PWR_PERCENT_REMAINING, cap);        
+        
+    }
     else
-        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(index<0 ? IDI_BATTCAP_ERR : bc_icons[index]));
+    {
+        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(bc_icons[index])); 
+        g_strTooltip.Format(IDS_PWR_CHARGING, cap);        
+    }
         
     return hBatIcon;
 }
 
 HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray)
-{    
-    WCHAR strTooltip[128];
-    HICON icon;
-
-    TRACE("Power_Init\n");    
-
-    g_hIconBattery = DynamicLoadIcon(g_hInstance);    
-    swprintf(strTooltip, L"%.2f %% Remaining", g_batCap);    
+{ 
+    TRACE("Power_Init\n");
+    g_hIconBattery = DynamicLoadIcon(g_hInstance);
     g_IsRunning = TRUE;
-
-    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_POWER, g_hIconBattery, strTooltip);
+    
+    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_POWER, g_hIconBattery, g_strTooltip);
 }
 
 HRESULT STDMETHODCALLTYPE Power_Update(_In_ CSysTray * pSysTray)
 {
-    TRACE("Power_Update\n");
+    TRACE("Power_Update\n");    
+    g_hIconBattery = DynamicLoadIcon(g_hInstance);    
 
-    WCHAR strTooltip[128];
-    g_hIconBattery = DynamicLoadIcon(g_hInstance);
-    swprintf(strTooltip, L"%.2f %% Remaining", g_batCap);
-
-    return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_POWER, g_hIconBattery, strTooltip);
+    return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_POWER, g_hIconBattery, g_strTooltip);
 }
 
 HRESULT STDMETHODCALLTYPE Power_Shutdown(_In_ CSysTray * pSysTray)
 {
     TRACE("Power_Shutdown\n");
-
     g_IsRunning = FALSE;
 
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_POWER, NULL, NULL);
@@ -230,22 +238,18 @@ static void _RunPower()
 
 static void _ShowContextMenu(CSysTray * pSysTray)
 {
-    WCHAR strOpen[128];
-
-    LoadStringW(g_hInstance, IDS_PWR_PROPERTIES, strOpen, _countof(strOpen));
-
-    HMENU hPopup = CreatePopupMenu();
-    AppendMenuW(hPopup, MF_STRING, IDS_PWR_PROPERTIES, strOpen);
-
-    DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
-    DWORD msgPos = GetMessagePos();
-
+    CString strOpen((LPCSTR)IDS_PWR_PROPERTIES);
+    HMENU hPopup = CreatePopupMenu();      
+    AppendMenuW(hPopup, MF_STRING, IDS_PWR_PROPERTIES, strOpen);    
+    
     SetForegroundWindow(pSysTray->GetHWnd());
+    DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
+    POINT pt;
+    GetCursorPos(&pt);
+    
     DWORD id = TrackPopupMenuEx(hPopup, flags,
-        GET_X_LPARAM(msgPos), GET_Y_LPARAM(msgPos),
-        pSysTray->GetHWnd(), NULL);
-
-    DestroyMenu(hPopup);
+        pt.x, pt.y,
+        pSysTray->GetHWnd(), NULL);  
 
     switch (id)
     {
@@ -253,6 +257,7 @@ static void _ShowContextMenu(CSysTray * pSysTray)
             _RunPower();
             break;
     }
+    DestroyMenu(hPopup);
 }
 
 static
@@ -287,8 +292,8 @@ ShowPowerSchemesPopupMenu(
 {
     PWRSCHEMECONTEXT PowerSchemeContext = {NULL, 0, 0};
     UINT uiActiveScheme;
-    DWORD id, msgPos;
-
+    DWORD id;
+    POINT pt;
     PowerSchemeContext.hPopup = CreatePopupMenu();
     EnumPwrSchemes(PowerSchemesEnumProc, (LPARAM)&PowerSchemeContext);
 
@@ -301,13 +306,13 @@ ShowPowerSchemesPopupMenu(
                            MF_BYCOMMAND);
     }
 
-    msgPos = GetMessagePos();
-
     SetForegroundWindow(pSysTray->GetHWnd());
+    GetCursorPos(&pt);
+    
     id = TrackPopupMenuEx(PowerSchemeContext.hPopup,
                           TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN,
-                          GET_X_LPARAM(msgPos),
-                          GET_Y_LPARAM(msgPos),
+                          pt.x,
+                          pt.y,
                           pSysTray->GetHWnd(),
                           NULL);
 
@@ -363,7 +368,7 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
                     break;
 
                 case WM_RBUTTONUP:
-                    _ShowContextMenu(pSysTray);
+                    _ShowContextMenu(pSysTray);                    
                     break;
 
                 case WM_RBUTTONDBLCLK:

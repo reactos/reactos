@@ -243,11 +243,12 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     AppendMenuW(hPopup, MF_STRING, IDS_VOL_ADJUST, strAdjust);
 
     DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
-    DWORD msgPos = GetMessagePos();
-
+    POINT pt;
     SetForegroundWindow(pSysTray->GetHWnd());
+    GetCursorPos(&pt);
+    
     DWORD id = TrackPopupMenuEx(hPopup, flags,
-        GET_X_LPARAM(msgPos), GET_Y_LPARAM(msgPos),
+        pt.x, pt.y,
         pSysTray->GetHWnd(), NULL);
 
     DestroyMenu(hPopup);
