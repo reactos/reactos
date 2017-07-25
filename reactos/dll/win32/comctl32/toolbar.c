@@ -126,6 +126,7 @@ typedef struct
 #ifdef __REACTOS__
     SIZE     szBarPadding;       /* padding values around the toolbar (NOT USED BUT STORED) */
     SIZE     szSpacing;       /* spacing values between buttons */
+    MARGINS  themeMargins;
 #endif
     INT      iTopMargin;      /* the top margin */
     INT      iListGap;        /* default gap between text and image for toolbar with list style */
@@ -1706,6 +1707,12 @@ static inline SIZE TOOLBAR_MeasureButton(const TOOLBAR_INFO *infoPtr, SIZE sizeS
                 max(2*GetSystemMetrics(SM_CXEDGE) + sizeString.cx, infoPtr->nBitmapWidth);
         }
     }
+
+#ifdef __REACTOS__
+    sizeButton.cx += infoPtr->themeMargins.cxLeftWidth + infoPtr->themeMargins.cxRightWidth;
+    sizeButton.cy += infoPtr->themeMargins.cyTopHeight + infoPtr->themeMargins.cyBottomHeight;
+#endif
+
     return sizeButton;
 }
 
@@ -2064,16 +2071,6 @@ TOOLBAR_RelayEvent (HWND hwndTip, HWND hwndMsg, UINT uMsg,
     SendMessageW (hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
 }
 
-#ifdef __REACTOS__
-static LRESULT
-TOOLBAR_ThemeChanged(HWND hwnd)
-{
-    HTHEME theme = GetWindowTheme(hwnd);
-    CloseThemeData(theme);
-    OpenThemeData(hwnd, themeClass);
-    return 0;
-}
-#endif
 
 static void
 TOOLBAR_TooltipAddTool(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *button)
@@ -4601,8 +4598,13 @@ TOOLBAR_SetButtonSize (TOOLBAR_INFO *infoPtr, LPARAM lParam)
     if (cx == 0) cx = 24;
     if (cy == 0) cy = 22;
 
+#ifdef __REACTOS__
+    cx = max(cx, infoPtr->szPadding.cx + infoPtr->nBitmapWidth + infoPtr->themeMargins.cxLeftWidth + infoPtr->themeMargins.cxRightWidth);
+    cy = max(cy, infoPtr->szPadding.cy + infoPtr->nBitmapHeight + infoPtr->themeMargins.cyTopHeight + infoPtr->themeMargins.cyBottomHeight);
+#else
     cx = max(cx, infoPtr->szPadding.cx + infoPtr->nBitmapWidth);
     cy = max(cy, infoPtr->szPadding.cy + infoPtr->nBitmapHeight);
+#endif
 
     if (cx != infoPtr->nButtonWidth || cy != infoPtr->nButtonHeight ||
         top != infoPtr->iTopMargin)
@@ -5463,8 +5465,16 @@ TOOLBAR_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
 
     SystemParametersInfoW (SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
     infoPtr->hFont = infoPtr->hDefaultFont = CreateFontIndirectW (&logFont);
-    
+
+#ifdef __REACTOS__
+    {
+        HTHEME theme = OpenThemeData (hwnd, themeClass);
+        if (theme)
+            GetThemeMargins(theme, NULL, TP_BUTTON, TS_NORMAL, TMT_CONTENTMARGINS, NULL, &infoPtr->themeMargins);
+    }
+#else
     OpenThemeData (hwnd, themeClass);
+#endif
 
     TOOLBAR_CheckStyle (infoPtr);
 
@@ -6239,6 +6249,7 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs)
 #ifdef __REACTOS__
     infoPtr->szSpacing.cx = DEFSPACE_CX;
     infoPtr->szSpacing.cy = DEFSPACE_CY;
+    memset(&infoPtr->themeMargins, 0 , sizeof(infoPtr->themeMargins));
 #endif
     infoPtr->iListGap = DEFLISTGAP;
     infoPtr->iTopMargin = default_top_margin(infoPtr);
@@ -6649,8 +6660,22 @@ TOOLBAR_SysColorChange (void)
     return 0;
 }
 
-#ifndef __REACTOS__
+#ifdef __REACTOS__
 /* update theme after a WM_THEMECHANGED message */
+static LRESULT theme_changed (TOOLBAR_INFO *infoPtr)
+{
+    HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
+    CloseThemeData (theme);
+    OpenThemeData (infoPtr->hwndSelf, themeClass);
+    theme = GetWindowTheme (infoPtr->hwndSelf);
+    if (theme)
+        GetThemeMargins(theme, NULL, TP_BUTTON, TS_NORMAL, TMT_CONTENTMARGINS, NULL, &infoPtr->themeMargins);
+    else
+        memset(&infoPtr->themeMargins, 0 ,sizeof(infoPtr->themeMargins));
+
+    return 0;
+}
+#else
 static LRESULT theme_changed (HWND hwnd)
 {
     HTHEME theme = GetWindowTheme (hwnd);
@@ -7056,10 +7081,9 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SYSCOLORCHANGE:
 	    return TOOLBAR_SysColorChange ();
-            
-        case WM_THEMECHANGED:
+    case WM_THEMECHANGED:
 #ifdef __REACTOS__
-        return TOOLBAR_ThemeChanged(hwnd);
+            return theme_changed (infoPtr);
 #else
             return theme_changed (hwnd);
 #endif
