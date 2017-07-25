@@ -44,7 +44,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stddef.h>
+#ifndef __REACTOS__
+// Not actually used
 #include <emmintrin.h>
+#endif /* __REACTOS__ */
 #include "btrfs.h"
 #include "btrfsioctl.h"
 

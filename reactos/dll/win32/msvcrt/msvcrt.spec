@@ -163,7 +163,7 @@
 @ cdecl -arch=arm ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z() MSVCRT__set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
 @ cdecl -arch=arm ?_set_new_mode@@YAHH@Z() MSVCRT__set_new_mode # int __cdecl _set_new_mode(int)
 @ cdecl -arch=arm ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z() MSVCRT__set_se_translator # void (__cdecl*__cdecl _set_se_translator(void (__cdecl*)(unsigned int,struct _EXCEPTION_POINTERS *)))(unsigned int,struct _EXCEPTION_POINTERS *)
-@ cdecl -arch=arm ?before@type_info@@QBAHABV1@@Z() MSVCRT_type_info_before# public: int __cdecl type_info::before(class type_info const &)const
+@ cdecl -arch=arm ?before@type_info@@QBAHABV1@@Z() MSVCRT_type_info_before # public: int __cdecl type_info::before(class type_info const &)const
 @ cdecl -arch=arm ?name@type_info@@QBAPBDXZ() MSVCRT_type_info_name # public: char const * __cdecl type_info::name(void)const
 @ cdecl -arch=arm ?raw_name@type_info@@QBAPBDXZ() MSVCRT_type_info_raw_name # public: char const * __cdecl type_info::raw_name(void)const
 @ cdecl -arch=arm ?set_terminate@@YAP6AXXZP6AXXZ@Z() MSVCRT_set_terminate # void (__cdecl*__cdecl set_terminate(void (__cdecl*)(void)))(void)

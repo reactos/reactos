@@ -21,6 +21,7 @@ BlpTimeMeasureTscFrequency (
     VOID
     )
 {
+#if defined(_M_IX86) || defined(_M_X64)
     ULONG Count;
     INT CpuInfo[4];
     ULONGLONG TimeStamp1, TimeStamp2, Delta;
@@ -51,6 +52,10 @@ BlpTimeMeasureTscFrequency (
     /* Set the frequency based on the two measurements we took */
     BlpTimePerformanceFrequency = 125 * (Delta - (TimeStamp2 - TimeStamp1)) & 0x1FFFFFFFFFFFFFF;
     return STATUS_SUCCESS;
+#else
+    EfiPrintf(L"BlpTimeMeasureTscFrequency not implemented for this platform.\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 NTSTATUS
@@ -58,6 +63,7 @@ BlpTimeCalibratePerformanceCounter (
     VOID
     )
 {
+#if defined(_M_IX86) || defined(_M_X64)
     INT CpuInfo[4];
 
     /* Check if the ISVM bit it set, meaning we're in a hypervisor */
@@ -85,6 +91,10 @@ BlpTimeCalibratePerformanceCounter (
 
     /* On other systems, compute it */
     return BlpTimeMeasureTscFrequency();
+#else
+    EfiPrintf(L"BlpTimeCalibratePerformanceCounter not implemented for this platform.\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 ULONGLONG
@@ -92,6 +102,7 @@ BlTimeQueryPerformanceCounter (
     _Out_opt_ PLARGE_INTEGER Frequency
     )
 {
+#if defined(_M_IX86) || defined(_M_X64)
     /* Check if caller wants frequency */
     if (Frequency)
     {
@@ -101,4 +112,8 @@ BlTimeQueryPerformanceCounter (
 
     /* Return the TSC value */
     return __rdtsc();
+#else
+    EfiPrintf(L"BlTimeQueryPerformanceCounter not implemented for this platform.\r\n");
+    return 0;
+#endif
 };

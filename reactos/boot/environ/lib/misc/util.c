@@ -832,6 +832,7 @@ BlUtlCheckSum (
     return PartialSum;
 }
 
+#if defined(_M_IX86) || defined(_M_X64)
 BOOLEAN
 Archx86IsCpuidSupported (
     VOID
@@ -849,12 +850,14 @@ Archx86IsCpuidSupported (
     /* Check if the bit stuck */
     return (((CallerFlags ^ Flags) >> 21) & 1) ^ 1;
 }
+#endif
 
 BOOLEAN
 BlArchIsCpuIdFunctionSupported (
     _In_ ULONG Function
     )
 {
+#if defined(_M_IX86) || defined(_M_X64)
     BOOLEAN Supported;
     INT CpuInfo[4];
 
@@ -887,6 +890,9 @@ BlArchIsCpuIdFunctionSupported (
     {
         return TRUE;
     }
+#else
+    EfiPrintf(L"BlArchIsCpuIdFunctionSupported not implemented for this platform.\r\n");
+#endif
 
     /* Nope */
     return FALSE;
@@ -897,6 +903,7 @@ BlArchGetPerformanceCounter (
     VOID
     )
 {
+#if defined(_M_IX86) || defined(_M_X64)
     INT CpuInfo[4];
 
     /* Serialize with CPUID, if it exists */
@@ -907,6 +914,10 @@ BlArchGetPerformanceCounter (
 
     /* Read the TSC */
     return __rdtsc();
+#else
+    EfiPrintf(L"BlArchGetPerformanceCounter not implemented for this platform.\r\n");
+    return 0;
+#endif
 }
 
 VOID
@@ -916,6 +927,8 @@ BlArchCpuId (
     _Out_ INT* Result
     )
 {
+#if defined(_M_IX86) || defined(_M_X64)
     /* Use the intrinsic */
     __cpuidex(Result, Function, SubFunction);
+#endif
 }

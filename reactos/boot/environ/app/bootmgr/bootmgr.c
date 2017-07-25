@@ -2755,7 +2755,12 @@ BmMain (
     RebootOnError = FALSE;
 
     /* Save the start/end-of-POST time */
+#if defined(_M_IX86) || defined(_M_X64)
     ApplicationStartTime = __rdtsc();
+#else
+    EfiPrintf(L"No time source defined for this platform\r\n");
+    ApplicationStartTime = 0;
+#endif
     PostTime = ApplicationStartTime;
 
     /* Setup the boot library parameters for this application */

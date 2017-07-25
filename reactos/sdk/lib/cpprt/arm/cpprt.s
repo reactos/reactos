@@ -27,4 +27,7 @@ _Target SETS "|$Target|"
     ; void __cdecl operator delete[](void *,struct std::nothrow_t const &)
     DEFINE_ALIAS ??_V@YAXPAXABUnothrow_t@std@@@Z, ??3@YAXPAX@Z
 
+    ; void __cdecl operator delete(void *,unsigned int)
+    DEFINE_ALIAS ??3@YAXPAXI@Z, ??3@YAXPAX@Z
+
     END

@@ -17,6 +17,7 @@ ULONG IapAllocatedTableEntries;
 ULONG IapTableEntries;
 PVOID* IapImageTable;
 
+#ifndef _M_ARM
 KDESCRIPTOR GdtRegister;
 KDESCRIPTOR IdtRegister;
 KDESCRIPTOR BootAppGdtRegister;
@@ -24,6 +25,7 @@ KDESCRIPTOR BootAppIdtRegister;
 PVOID BootApp32EntryRoutine;
 PBOOT_APPLICATION_PARAMETER_BLOCK BootApp32Parameters;
 PVOID BootApp32Stack;
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1832,6 +1834,7 @@ ImgArchEfiStartBootApplication (
     _In_ PBL_RETURN_ARGUMENTS ReturnArguments
     )
 {
+#ifndef _M_ARM
     KDESCRIPTOR Gdt, Idt;
     ULONG BootSizeNeeded;
     NTSTATUS Status;
@@ -1916,6 +1919,9 @@ Quickie:
         /* Free it */
         MmPapFreePages(BootData, BL_MM_INCLUDE_MAPPED_ALLOCATED);
     }
+#else
+    EfiPrintf(L"ImgArchEfiStartBootApplication not implemented for this platform.\r\n");
+#endif
 
     /* All done */
     return STATUS_NOT_IMPLEMENTED;

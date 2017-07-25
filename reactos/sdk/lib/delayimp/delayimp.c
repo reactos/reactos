@@ -34,6 +34,9 @@ extern PfnDliHook __pfnDliFailureHook2Default = NULL;
 #elif defined (_M_IA64) || defined (_M_AMD64)
 #pragma comment(linker, "/alternatename:__pfnDliNotifyHook2=__pfnDliNotifyHook2Default")
 #pragma comment(linker, "/alternatename:__pfnDliFailureHook2=__pfnDliFailureHook2Default")
+#elif defined (_M_ARM)
+#pragma comment(linker, "/alternatename:__pfnDliNotifyHook2=__pfnDliNotifyHook2Default")
+#pragma comment(linker, "/alternatename:__pfnDliFailureHook2=__pfnDliFailureHook2Default")
 #else
 #error Unsupported platform, please find the correct decoration for your arch!
 #endif

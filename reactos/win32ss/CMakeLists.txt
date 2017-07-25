@@ -246,3 +246,4 @@ set_source_files_properties(sys-stubs.S PROPERTIES OBJECT_DEPENDS ${CMAKE_CURREN
 add_asm_files(win32ksys_asm sys-stubs.S)
 add_library(win32ksys ${win32ksys_asm})
 set_target_properties(win32ksys PROPERTIES LINKER_LANGUAGE "C")
+add_dependencies(win32ksys asm)
