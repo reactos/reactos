@@ -1023,7 +1023,7 @@ private:
                     /* Check if the item is checked */
                     if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
                     {
-                        BOOL checked = m_ListView->GetCheckState(pnic->iItem);
+                        BOOL checked = ListView_GetCheckState(pnic->hdr.hwndFrom, pnic->iItem);
                         nSelectedApps += (checked) ? 1 : -1;
                         UpdateStatusBarText();
                     }
