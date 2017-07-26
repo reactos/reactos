@@ -18,7 +18,7 @@ typedef struct  _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY {
    PHYSICAL_ADDRESS ContextBaseAddr [256];
 } XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY, *PXHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY;
 //----------------------------------------LINK TRB--------------------------------------------------------------------
-typedef union _XHCI_LINK_TRB{
+typedef struct _XHCI_LINK_TRB{
     struct {
         ULONG RsvdZ1                     : 4;
         ULONG RingSegmentPointerLo       : 28;
@@ -40,7 +40,7 @@ typedef union _XHCI_LINK_TRB{
         ULONG TRBType                   : 6;
         ULONG RsvdZ5                    : 16;
     };
-    ULONG AsULONG;
+    //ULONG AsULONG;
 } XHCI_LINK_TRB;
 //----------------------------------------generic trb----------------------------------------------------------------
 typedef struct _XHCI_GENERIC_TRB {
@@ -64,15 +64,15 @@ typedef struct _XHCI_COMMAND_NO_OP_TRB {
 
 typedef union _XHCI_COMMAND_TRB {
     XHCI_COMMAND_NO_OP_TRB NoOperation;
-    XHCI_LINK_TRB Link[4];
+    XHCI_LINK_TRB Link;
     XHCI_GENERIC_TRB GenericTRB;
 }XHCI_COMMAND_TRB, *PXHCI_COMMAND_TRB;
 
-typedef struct _XHCI_COMMAND_RING {
+/*typedef struct _XHCI_COMMAND_RING {
     XHCI_COMMAND_TRB Segment[4];
     PXHCI_COMMAND_TRB CREnquePointer;
     PXHCI_COMMAND_TRB CRDequePointer;
-} XHCI_COMMAND_RING;
+} XHCI_COMMAND_RING;*/
 //----------------------------------------CONTROL TRANSFER DATA STRUCTUERS--------------------------------------------
 
 typedef union _XHCI_CONTROL_SETUP_TRB {
@@ -187,10 +187,20 @@ typedef union _XHCI_TRB {
     XHCI_EVENT_TRB      EventTRB;
 } XHCI_TRB, *PXHCI_TRB;
 
+typedef struct _XHCI_SEGMENT {
+    XHCI_TRB XhciTrb[256];
+    PVOID nextSegment;
+}XHCI_SEGMENT , *PXHCI_SEGMENT;
+
 typedef struct _XHCI_RING {
-    XHCI_TRB XhciTrb[16];
-    //PXHCI_TRB dequeue_pointer;
-}XHCI_RING , *PXHCI_RING;
+    //XHCI_TRB XhciTrb[256];
+    XHCI_SEGMENT firstSeg;
+    PXHCI_TRB dequeue_pointer;
+    PXHCI_TRB enqueue_pointer;
+    PXHCI_SEGMENT enqueue_segment;
+    PXHCI_SEGMENT dequeue_segment;
+    ULONGLONG Padding;
+} XHCI_RING , *PXHCI_RING;
 
 typedef struct _XHCI_EXTENSION {
   ULONG Reserved;
@@ -211,8 +221,8 @@ typedef struct _XHCI_EXTENSION {
 typedef struct _XHCI_HC_RESOURCES {
   XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY DCBAA;
   //XHCI_COMMAND_RING CommandRing;
-  XHCI_RING         EventRing;
-  XHCI_RING         CommandRing;
+  XHCI_RING         EventRing ;
+  XHCI_RING         CommandRing ;
   XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
 } XHCI_HC_RESOURCES, *PXHCI_HC_RESOURCES;
 
