@@ -5364,6 +5364,9 @@ RxDumpWantedAccess(
     PAGED_CODE();
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 RxFastIoCheckIfPossible(
@@ -5376,6 +5379,7 @@ RxFastIoCheckIfPossible(
 {
     PFCB Fcb;
     PSRV_OPEN SrvOpen;
+    LARGE_INTEGER LargeLength;
 
     PAGED_CODE();
 
@@ -5436,11 +5440,11 @@ RxFastIoCheckIfPossible(
     RxProcessChangeBufferingStateRequestsForSrvOpen(SrvOpen);
     FsRtlExitFileSystem();
 
+    LargeLength.QuadPart = Length;
+
     /* If operation to come is a read operation */
     if (CheckForReadOperation)
     {
-        LARGE_INTEGER LargeLength;
-
         /* Check that read cache is enabled */
         if (!BooleanFlagOn(Fcb->FcbState, FCB_STATE_READCACHING_ENABLED))
         {
@@ -5449,7 +5453,6 @@ RxFastIoCheckIfPossible(
         }
 
         /* Check whether there's a lock conflict */
-        LargeLength.QuadPart = Length;
         if (!FsRtlFastCheckLockForRead(&Fcb->Specific.Fcb.FileLock,
                                        FileOffset,
                                        &LargeLength,
@@ -5464,8 +5467,26 @@ RxFastIoCheckIfPossible(
         return TRUE;
     }
 
-    UNIMPLEMENTED;
-    return FALSE;
+    /* Check that write cache is enabled */
+    if (!BooleanFlagOn(Fcb->FcbState, FCB_STATE_WRITECACHING_ENABLED))
+    {
+        DPRINT1("Write caching disabled\n");
+        return FALSE;
+    }
+
+    /* Check whether there's a lock conflict */
+    if (!FsRtlFastCheckLockForWrite(&Fcb->Specific.Fcb.FileLock,
+                                    FileOffset,
+                                    &LargeLength,
+                                    LockKey,
+                                    FileObject,
+                                    PsGetCurrentProcess()))
+    {
+        DPRINT1("FsRtlFastCheckLockForWrite failed\n");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 BOOLEAN
@@ -5536,6 +5557,9 @@ RxFastIoRead(
     return Ret;
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 RxFastIoWrite(
@@ -5548,8 +5572,39 @@ RxFastIoWrite(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PFOBX Fobx;
+    BOOLEAN Ret;
+    RX_TOPLEVELIRP_CONTEXT TopLevelContext;
+
+    PAGED_CODE();
+
+    Fobx = (PFOBX)FileObject->FsContext2;
+    if (BooleanFlagOn(Fobx->Flags, FOBX_FLAG_BAD_HANDLE))
+    {
+        return FALSE;
+    }
+
+    DPRINT("RxFastIoWrite: %p (%p, %p)\n", FileObject, FileObject->FsContext,
+                                           FileObject->FsContext2);
+    DPRINT("Writing %ld at %I64x\n", Length, FileOffset->QuadPart);
+
+    /* Prepare a TLI context */
+    ASSERT(RxIsThisTheTopLevelIrp(NULL));
+    RxInitializeTopLevelIrpContext(&TopLevelContext, (PIRP)FSRTL_FAST_IO_TOP_LEVEL_IRP,
+                                   (PRDBSS_DEVICE_OBJECT)DeviceObject);
+
+    Ret = FsRtlCopyWrite2(FileObject, FileOffset, Length, Wait, LockKey, Buffer,
+                          IoStatus, DeviceObject, &TopLevelContext);
+    if (Ret)
+    {
+        DPRINT("Write OK\n");
+    }
+    else
+    {
+        DPRINT1("Write failed!\n");
+    }
+
+    return Ret;
 }
 
 NTSTATUS
