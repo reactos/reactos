@@ -548,8 +548,7 @@ FsRtlCopyWrite2(
             {
                 WriteOffset.LowPart = Fcb->FileSize.LowPart;
                 LastOffset.LowPart = WriteOffset.LowPart + Length;
-                AboveFour = (((LARGE_INTEGER)LastOffset).LowPart <
-                             Fcb->FileSize.LowPart);
+                AboveFour = (LastOffset.LowPart < Fcb->FileSize.LowPart);
             }
 
             /* Make sure caching is still enabled */
@@ -580,7 +579,6 @@ FsRtlCopyWrite2(
         {
             PFAST_IO_DISPATCH FastIoDispatch;
             PDEVICE_OBJECT RelatedDeviceObject;
-            C_ASSERT(sizeof(LARGE_INTEGER) == sizeof(LONGLONG));
 
             RelatedDeviceObject = IoGetRelatedDeviceObject(FileObject);
             FastIoDispatch = RelatedDeviceObject->DriverObject->FastIoDispatch;
