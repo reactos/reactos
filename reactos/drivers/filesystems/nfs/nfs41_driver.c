@@ -2375,6 +2375,92 @@ NTSTATUS nfs41_DevFcbXXXControlFile(
             if (RxContext->RxDeviceObject->NumberOfActiveFcbs > 0) {
                 DbgP("device has open handles %d\n",
                     RxContext->RxDeviceObject->NumberOfActiveFcbs);
+#ifdef __REACTOS__
+                if (RxContext->RxDeviceObject->pRxNetNameTable != NULL)
+                {
+#define DUMP_FCB_TABLE_FROM_NETROOT(N)                                               \
+{                                                                                    \
+    USHORT Bucket2;                                                                  \
+    BOOLEAN Release2 = FALSE;                                                        \
+    if (!RxIsFcbTableLockAcquired(&(N)->FcbTable))                                   \
+    {                                                                                \
+        RxAcquireFcbTableLockExclusive(&(N)->FcbTable, TRUE);                        \
+        Release2 = TRUE;                                                             \
+    }                                                                                \
+    for (Bucket2 = 0; Bucket2 < (N)->FcbTable.NumberOfBuckets; ++Bucket2)            \
+    {                                                                                \
+        PLIST_ENTRY Entry2;                                                          \
+        for (Entry2 = (N)->FcbTable.HashBuckets[Bucket2].Flink;                      \
+             Entry2 != &(N)->FcbTable.HashBuckets[Bucket2];                          \
+             Entry2 = Entry2->Flink)                                                 \
+        {                                                                            \
+            PFCB Fcb;                                                                \
+            Fcb = CONTAINING_RECORD(Entry2, FCB, FcbTableEntry.HashLinks);           \
+            DbgP("Fcb: %p still has %d references\n", Fcb, Fcb->NodeReferenceCount); \
+            DbgP("It is for: %wZ\n", &Fcb->FcbTableEntry.Path);                      \
+        }                                                                            \
+    }                                                                                \
+    if (Release2)                                                                    \
+    {                                                                                \
+        RxReleaseFcbTableLock(&(N)->FcbTable);                                       \
+    }                                                                                \
+}
+                    USHORT Bucket;
+                    BOOLEAN Release = FALSE;
+
+                    if (!RxIsPrefixTableLockAcquired(RxContext->RxDeviceObject->pRxNetNameTable))
+                    {
+                        RxAcquirePrefixTableLockExclusive(RxContext->RxDeviceObject->pRxNetNameTable, TRUE);
+                        Release = TRUE;
+                    }
+
+                    for (Bucket = 0; Bucket < RxContext->RxDeviceObject->pRxNetNameTable->TableSize; ++Bucket)
+                    {
+                        PLIST_ENTRY Entry;
+
+                        for (Entry = RxContext->RxDeviceObject->pRxNetNameTable->HashBuckets[Bucket].Flink;
+                             Entry != &RxContext->RxDeviceObject->pRxNetNameTable->HashBuckets[Bucket];
+                             Entry = Entry->Flink)
+                        {
+                            PVOID Container;
+
+                            Container = CONTAINING_RECORD(Entry, RX_PREFIX_ENTRY, HashLinks)->ContainingRecord;
+                            switch (NodeType(Container) & ~RX_SCAVENGER_MASK)
+                            {
+                                case RDBSS_NTC_NETROOT:
+                                {
+                                    PNET_ROOT NetRoot;
+
+                                    NetRoot = Container;
+                                    DUMP_FCB_TABLE_FROM_NETROOT(NetRoot);
+                                    break;
+                                }
+
+                                case RDBSS_NTC_V_NETROOT:
+                                {
+                                    PV_NET_ROOT VNetRoot;
+
+                                    VNetRoot = Container;
+                                    if (VNetRoot->NetRoot != NULL)
+                                    {
+                                        PNET_ROOT NetRoot;
+
+                                        NetRoot = VNetRoot->NetRoot;
+                                        DUMP_FCB_TABLE_FROM_NETROOT(NetRoot);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (Release)
+                    {
+                        RxReleasePrefixTableLock(RxContext->RxDeviceObject->pRxNetNameTable);
+                    }
+#undef DUMP_FCB_TABLE_FROM_NETROOT
+                }
+#endif
                 status = STATUS_REDIRECTOR_HAS_OPEN_HANDLES;
                 break;
             }
