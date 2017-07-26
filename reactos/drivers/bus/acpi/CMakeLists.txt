@@ -156,6 +156,7 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utownerid.c
     acpica/utilities/utpredef.c
     # acpica/utilities/utprint.c
+    # acpica/utilities/utresdecode.c
     acpica/utilities/utresrc.c
     acpica/utilities/utstate.c
     acpica/utilities/utstring.c

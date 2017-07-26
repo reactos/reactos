@@ -94,6 +94,12 @@ AcpiExCreateAlias (
         TargetNode = ACPI_CAST_PTR (ACPI_NAMESPACE_NODE, TargetNode->Object);
     }
 
+    /* Ensure that the target node is valid */
+    if (!TargetNode)
+    {
+        return_ACPI_STATUS (AE_NULL_OBJECT);
+    }
+
     /*
      * For objects that can never change (i.e., the NS node will
      * permanently point to the same object), we can simply attach

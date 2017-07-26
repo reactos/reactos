@@ -118,6 +118,10 @@ AcGetAllTablesFromFile (
     UINT8                   GetOnlyAmlTables,
     ACPI_NEW_TABLE_DESC     **ReturnListHead);
 
+void
+AcDeleteTableList (
+    ACPI_NEW_TABLE_DESC     *ListHead);
+
 BOOLEAN
 AcIsFileBinary (
     FILE                    *File);

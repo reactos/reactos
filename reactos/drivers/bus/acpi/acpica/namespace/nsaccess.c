@@ -656,6 +656,13 @@ AcpiNsLookup (
                     ThisNode = (ACPI_NAMESPACE_NODE *) ThisNode->Object;
                 }
             }
+#ifdef ACPI_ASL_COMPILER
+            if (!AcpiGbl_DisasmFlag &&
+                (ThisNode->Flags & ANOBJ_IS_EXTERNAL))
+            {
+                ThisNode->Flags |= IMPLICIT_EXTERNAL;
+            }
+#endif
         }
 
         /* Special handling for the last segment (NumSegments == 0) */

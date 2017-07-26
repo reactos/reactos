@@ -133,7 +133,9 @@ typedef struct acpi_object_integer
     UINT32                          Length;
 
 
-typedef struct acpi_object_string   /* Null terminated, ASCII characters only */
+/* Null terminated, ASCII characters only */
+
+typedef struct acpi_object_string
 {
     ACPI_OBJECT_COMMON_HEADER
     ACPI_COMMON_BUFFER_INFO         (char)              /* String in AML stream or allocated string */
@@ -251,8 +253,9 @@ typedef struct acpi_object_method
     union acpi_operand_object       *NotifyList[2];     /* Handlers for system/device notifies */\
     union acpi_operand_object       *Handler;           /* Handler for Address space */
 
+/* COMMON NOTIFY for POWER, PROCESSOR, DEVICE, and THERMAL */
 
-typedef struct acpi_object_notify_common    /* COMMON NOTIFY for POWER, PROCESSOR, DEVICE, and THERMAL */
+typedef struct acpi_object_notify_common
 {
     ACPI_OBJECT_COMMON_HEADER
     ACPI_COMMON_NOTIFY_INFO
@@ -323,8 +326,9 @@ typedef struct acpi_object_thermal_zone
     UINT8                           StartFieldBitOffset;/* Bit offset within first field datum (0-63) */\
     UINT8                           AccessLength;       /* For serial regions/fields */
 
+/* COMMON FIELD (for BUFFER, REGION, BANK, and INDEX fields) */
 
-typedef struct acpi_object_field_common                 /* COMMON FIELD (for BUFFER, REGION, BANK, and INDEX fields) */
+typedef struct acpi_object_field_common
 {
     ACPI_OBJECT_COMMON_HEADER
     ACPI_COMMON_FIELD_INFO
