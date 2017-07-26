@@ -7,6 +7,15 @@
 
 USBPORT_REGISTRATION_PACKET RegPacket;
 
+VOID
+NTAPI
+XHCI_Write64bitReg(IN PULONG baseAddr,
+                  IN ULONGLONG data)
+{
+    DPRINT1("XHCI_Write64bitReg: function initiated\n");
+    WRITE_REGISTER_ULONG(baseAddr, data);
+    WRITE_REGISTER_ULONG(baseAddr+1, data >> 32);
+}
 
 MPSTATUS
 NTAPI
@@ -79,7 +88,7 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
     trb.CommandTRB.NoOperation.TRBType = 8;
     trb.CommandTRB.NoOperation.RsvdZ5 = 0;
     
-    HcResourcesVA -> CommandRing.XhciTrb[0] = trb;
+    HcResourcesVA -> CommandRing.firstSeg.XhciTrb[0] = trb;
     // ring the commmand ring door bell register
     DoorBellRegisterBase = XhciExtension->DoorBellRegisterBase;
     Doorbell_0.DoorBellTarget = 0;
@@ -98,7 +107,7 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
         }
     }
     // check for event completion trb
-    eventtrb =  HcResourcesVA -> EventRing.XhciTrb[0];
+    eventtrb =  HcResourcesVA -> EventRing.firstSeg.XhciTrb[0];
     DPRINT("XHCI_ControllerWorkTest: eventtrb word0    - %p\n", eventtrb.EventTRB.Word0);
     DPRINT("XHCI_ControllerWorkTest: eventtrb word1    - %p\n", eventtrb.EventTRB.Word1);
     DPRINT("XHCI_ControllerWorkTest: eventtrb word2    - %p\n", eventtrb.EventTRB.Word2);
@@ -114,14 +123,14 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
     DPRINT("XHCI_ControllerWorkTest: Status     - %p\n", Status.AsULONG);
     // command ring check
     HcResourcesPA.QuadPart = (ULONG_PTR)resourcesStartPA;
-    CommandRingAddr = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.XhciTrb[0]);
+    CommandRingAddr = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.firstSeg.XhciTrb[0]);
     DPRINT("XHCI_ControllerWorkTest: CommandRingAddr     - %x\n", CommandRingAddr);
     CommandRingControlRegister.AsULONGLONG = READ_REGISTER_ULONG(XhciExtension->OperationalRegs + XHCI_CRCR+1) | READ_REGISTER_ULONG(XhciExtension->OperationalRegs + XHCI_CRCR );
     DPRINT("XHCI_ControllerWorkTest: CommandRingControlRegister     - %x\n", CommandRingControlRegister.AsULONGLONG);
         DPRINT("XHCI_ControllerWorkTest: CommandRingControlRegister1     - %p\n", READ_REGISTER_ULONG(XhciExtension->OperationalRegs + XHCI_CRCR ));
         DPRINT("XHCI_ControllerWorkTest: CommandRingControlRegister2     - %p\n", READ_REGISTER_ULONG(XhciExtension->OperationalRegs + XHCI_CRCR + 1 ));
     // event ring dprints
-    EventRingAddr = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing.XhciTrb[0]);
+    EventRingAddr = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing.firstSeg.XhciTrb[0]);
     DPRINT("XHCI_ControllerWorkTest: EventRingSegTable.RingSegmentBaseAddr     - %x\n", HcResourcesVA -> EventRingSegTable.RingSegmentBaseAddr);
     DPRINT("XHCI_ControllerWorkTest: EventRingSegTable.RingSegmentSize     - %i\n", HcResourcesVA -> EventRingSegTable.RingSegmentSize);
     DPRINT("XHCI_ControllerWorkTest: event ring addr     - %x\n", EventRingAddr);
@@ -167,7 +176,6 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     XHCI_COMMAND_RING_CONTROL CommandRingControlRegister, CommandRingControlRegister_temp;
     
     XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER DCBAAPointer;
-    unsigned long X, Y;
     
     DPRINT_XHCI("XHCI_InitializeResources: BaseVA - %p, BasePA - %p\n",
                 resourcesStartVA,
@@ -177,60 +185,27 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     HcResourcesPA.QuadPart = (ULONG_PTR)resourcesStartPA;
     BaseIoAdress = XhciExtension->BaseIoAdress;
     OperationalRegs = XhciExtension->OperationalRegs;
+    
     //DCBAA init
     DCBAAPointer.AsULONGLONG =  HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, DCBAA);
-    
-    
-    
-    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP, DCBAAPointer.DCBAAPointerLo | DCBAAPointer.RsvdZ );
-    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP + 1, DCBAAPointer.DCBAAPointerHi);
-    
-    X = READ_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP) ;
-    Y = READ_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP + 1) ;   
-    DCBAAPointer.AsULONGLONG = Y|X ;
-    ASSERT(DCBAAPointer.RsvdZ == 0);
-    
+    DPRINT1("XHCI_InitializeResources  : DCBAAPointer   %p\n",DCBAAPointer.AsULONGLONG );
+
+    XHCI_Write64bitReg (OperationalRegs + XHCI_DCBAAP,DCBAAPointer.AsULONGLONG);
+
     // command ring intialisation.
-    /*
-    HcResourcesVA->CommandRing.Segment[0].Link[0].AsULONG = 0;
-    HcResourcesVA->CommandRing.Segment[0].Link[1].AsULONG = 0;
-    HcResourcesVA->CommandRing.Segment[0].Link[2].AsULONG = 0;
-    HcResourcesVA->CommandRing.Segment[0].Link[3].AsULONG = 0;
-    
-    HcResourcesVA->CommandRing.CREnquePointer=  &HcResourcesVA->CommandRing.Segment[0];
-    HcResourcesVA->CommandRing.CRDequePointer= HcResourcesVA->CommandRing.CREnquePointer;
-    
-    CommandRingControlRegister.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.Segment);
-    ASSERT(CommandRingControlRegister.RingCycleState == 0);
-    ASSERT(CommandRingControlRegister.CommandStop == 0);
-    ASSERT(CommandRingControlRegister.CommandAbort == 0);
-    ASSERT(CommandRingControlRegister.CommandRingRunning == 0);
-    ASSERT(CommandRingControlRegister.RsvdP == 0);
-    
-    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CRCR, CommandRingControlRegister.AsULONGLONG);
-    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CRCR + 1, CommandRingControlRegister.CommandRingPointerHi);
-    */
-    // end of command ring init
-    // command ring intialisation.
-    for(int i=0; i<16; i++){
-        HcResourcesVA->CommandRing.XhciTrb[i].CommandTRB.GenericTRB.Word0=0;
-        HcResourcesVA->CommandRing.XhciTrb[i].CommandTRB.GenericTRB.Word1=0;
-        HcResourcesVA->CommandRing.XhciTrb[i].CommandTRB.GenericTRB.Word2=0;
-        HcResourcesVA->CommandRing.XhciTrb[i].CommandTRB.GenericTRB.Word3=0;
+    for(int i=0; i<256; i++){
+        HcResourcesVA->CommandRing.firstSeg.XhciTrb[i].CommandTRB.GenericTRB.Word0=0;
+        HcResourcesVA->CommandRing.firstSeg.XhciTrb[i].CommandTRB.GenericTRB.Word1=0;
+        HcResourcesVA->CommandRing.firstSeg.XhciTrb[i].CommandTRB.GenericTRB.Word2=0;
+        HcResourcesVA->CommandRing.firstSeg.XhciTrb[i].CommandTRB.GenericTRB.Word3=0;
     }
-    CommandRingControlRegister.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.XhciTrb[0]);
-    ASSERT(CommandRingControlRegister.RingCycleState == 0);
-    ASSERT(CommandRingControlRegister.CommandStop == 0);
-    ASSERT(CommandRingControlRegister.CommandAbort == 0);
-    ASSERT(CommandRingControlRegister.CommandRingRunning == 0);
-    //ASSERT(CommandRingControlRegister.RsvdP == 0);
+    CommandRingControlRegister.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.firstSeg);
     CommandRingControlRegister_temp.AsULONGLONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_CRCR + 1) |  READ_REGISTER_ULONG(OperationalRegs + XHCI_CRCR);
-    
     CommandRingControlRegister.RsvdP = CommandRingControlRegister_temp.RsvdP;
     DPRINT1("XHCI_InitializeResources  : CommandRingControlRegister   %p\n",CommandRingControlRegister.AsULONGLONG );
-    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CRCR, CommandRingControlRegister.AsULONGLONG);
-    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CRCR + 1, CommandRingControlRegister.AsULONGLONG >> 32);
+    XHCI_Write64bitReg (OperationalRegs + XHCI_CRCR, CommandRingControlRegister.AsULONGLONG);
     // end of command ring init
+    
     //Primary Interrupter init
     RunTimeRegisterBase =  XhciExtension -> RunTimeRegisterBase;
     
@@ -240,30 +215,28 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     DPRINT1("XHCI_InitializeResources  : erstz.AsULONG   %p\n",erstz.AsULONG );
     WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTSZ , erstz.AsULONG);
     // event ring dequeue pointer.
-    erstdp.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing);
+    erstdp.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing.firstSeg);
+    //ASSERT(erstdp.AsULONGLONG & 0x0F == 0);
     erstdp.DequeueERSTIndex =0;
     DPRINT1("XHCI_InitializeResources  : erstdp.AsULONGLONG   %p\n",erstdp.AsULONGLONG );
-    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
-    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTDP + 1, erstdp.AsULONGLONG >> 32);
+    XHCI_Write64bitReg(RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
     // event ring segment table base address array
     
     erstba.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRingSegTable);
-    EventRingSegTable.RingSegmentBaseAddr = (ULONGLONG)HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing.XhciTrb[0]);
-    //EventRingSegTable.RingSegmentBaseAddr = &(HcResourcesVA -> EventRing.XhciTrb[0]);
+    EventRingSegTable.RingSegmentBaseAddr = (ULONGLONG)HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing.firstSeg.XhciTrb[0]);
     EventRingSegTable.RingSegmentSize = 16;
     EventRingSegTable.RsvdZ = 0;
     HcResourcesVA->EventRingSegTable = EventRingSegTable;
     DPRINT1("XHCI_InitializeResources  : erstba.AsULONGLONG   %p\n",erstba.AsULONGLONG );
-    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTBA, erstba.AsULONGLONG);
-    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTBA + 1, erstba.AsULONGLONG >> 32);
+    XHCI_Write64bitReg(RunTimeRegisterBase + XHCI_ERSTBA, erstba.AsULONGLONG);
     // intially enque and deque are equal. 
     
     
-    for(int i=0; i<16; i++){
-        HcResourcesVA->EventRing.XhciTrb[i].EventTRB.Word0=0;
-        HcResourcesVA->EventRing.XhciTrb[i].EventTRB.Word1=0;
-        HcResourcesVA->EventRing.XhciTrb[i].EventTRB.Word2=0;
-        HcResourcesVA->EventRing.XhciTrb[i].EventTRB.Word3=0;
+    for(int i=0; i<256; i++){
+        HcResourcesVA->EventRing.firstSeg.XhciTrb[i].EventTRB.Word0=0;
+        HcResourcesVA->EventRing.firstSeg.XhciTrb[i].EventTRB.Word1=0;
+        HcResourcesVA->EventRing.firstSeg.XhciTrb[i].EventTRB.Word2=0;
+        HcResourcesVA->EventRing.firstSeg.XhciTrb[i].EventTRB.Word3=0;
     }
     
     //DbgBreakPoint();
@@ -349,7 +322,6 @@ XHCI_StartController(IN PVOID xhciExtension,
     PULONG RunTimeRegisterBase;
     PULONG DoorBellRegisterBase;
     XHCI_CAPLENGHT_INTERFACE_VERSION CapLenReg;
-    
     XHCI_DOORBELL_OFFSET DoorBellOffsetRegister;
     MPSTATUS MPStatus;
     XHCI_USB_COMMAND Command;
@@ -367,6 +339,7 @@ XHCI_StartController(IN PVOID xhciExtension,
 
         return MP_STATUS_ERROR;
     }
+    
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
 
     BaseIoAdress = (PULONG)Resources->ResourceBase;
@@ -418,6 +391,7 @@ XHCI_StartController(IN PVOID xhciExtension,
         return MPStatus;
     }
     
+    // starting the controller
     Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
     Command.RunStop =1;
     WRITE_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD, Command.AsULONG );
@@ -495,8 +469,7 @@ XHCI_InterruptService(IN PVOID xhciExtension)
     erstdp.AsULONGLONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP + 1)|READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP);
     erstdp.AsULONGLONG = erstdp.AsULONGLONG +2;
     erstdp.DequeueERSTIndex =0;
-    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
-    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTDP + 1, erstdp.AsULONGLONG >> 32);
+    XHCI_Write64bitReg (RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
     
     return TRUE;
 }
@@ -641,6 +614,25 @@ NTAPI
 XHCI_DisableInterrupts(IN PVOID xhciExtension)
 {
     DPRINT1("XHCI_DisableInterrupts: function initiated\n");
+    PXHCI_EXTENSION XhciExtension;
+    PULONG OperationalRegs;
+    PULONG  RunTimeRegisterBase;
+    XHCI_INTERRUPTER_MANAGEMENT Iman;
+    XHCI_USB_COMMAND usbCommand;
+    
+    
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    OperationalRegs = XhciExtension->OperationalRegs;
+    //usbCommand.AsULONG =READ_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD);
+    RunTimeRegisterBase =  XhciExtension -> RunTimeRegisterBase;
+    Iman.AsULONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_IMAN) ;
+    Iman.InterruptEnable = 0;
+    WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_IMAN , Iman.AsULONG);
+    
+    //usbCommand.InterrupterEnable = 1;
+   
+    //WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD,usbCommand.AsULONG );
+     DPRINT1("XHCI_EnableInterrupts: Interrupts enabled\n");
 }
 
 VOID
