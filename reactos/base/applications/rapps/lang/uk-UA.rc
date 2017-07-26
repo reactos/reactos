@@ -99,7 +99,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_SYSMENU | WS_VISIBLE
 CAPTION "Завантаження..."
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -194,7 +194,7 @@ BEGIN
     IDS_INSTALL "Встановити"
     IDS_UNINSTALL "Видалити"
     IDS_MODIFY "Змінити"
-    IDS_APPS_COUNT "Kількість додатків: %d"
+    IDS_APPS_COUNT "Kількість додатків: %d; Обрано: %d"
     IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків ReactOS!\n\n"
     IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка ReactOS: "
     IDS_WELCOME_URL "http://www.reactos.org"

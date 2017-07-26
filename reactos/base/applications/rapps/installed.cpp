@@ -101,7 +101,7 @@ UninstallApplication(INT Index, BOOL bModify)
     WCHAR szAppName[MAX_STR_LEN];
     DWORD dwType, dwSize;
     INT ItemIndex;
-    LVITEM Item;
+    LVITEMW Item;
     HKEY hKey;
     PINSTALLED_INFO ItemInfo;
 

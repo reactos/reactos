@@ -110,6 +110,16 @@ BEGIN
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
 
+IDD_DOWNLOAD_DIALOG_MULTI DIALOGEX 0, 0, 220, 72
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE 
+CAPTION "Downloading (multiple)..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Cancel", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
 STRINGTABLE
 BEGIN
     IDS_TOOLTIP_INSTALL "Install"
@@ -187,7 +197,7 @@ BEGIN
     IDS_INSTALL "Install"
     IDS_UNINSTALL "Uninstall"
     IDS_MODIFY "Modify"
-    IDS_APPS_COUNT "Applications count: %d"
+    IDS_APPS_COUNT "Applications count: %d; Selected: %d"
     IDS_WELCOME_TITLE "Welcome to ReactOS Applications Manager!\n\n"
     IDS_WELCOME_TEXT "Choose a category on the left, then choose an application to install or uninstall.\nReactOS Web Site: "
     IDS_WELCOME_URL "http://www.reactos.org"

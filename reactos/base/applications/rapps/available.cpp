@@ -11,7 +11,6 @@
 #include "rapps.h"
 
  // CAvailableApplicationInfo
-
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
     : m_Parser(sFileNameParam)
 {
@@ -311,7 +310,7 @@ BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnu
                     m_InfoList.RemoveAt(LastListPosition);
 
                     delete Info;
-                    Info = nullptr;
+                    Info = NULL;
                     break;
                 }
                 else

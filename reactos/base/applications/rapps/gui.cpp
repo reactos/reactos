@@ -111,8 +111,8 @@ class CAvailableAppView
         ATL::CStringW szLangInfo;
         ATL::CStringW szLoadedTextAvailability;
         ATL::CStringW szLoadedAInfoText;
-        szLoadedAInfoText.LoadStringW(IDS_AINFO_LANGUAGES);
 
+        szLoadedAInfoText.LoadStringW(IDS_AINFO_LANGUAGES);
 
         //TODO: replace those hardcoded strings
         if (Info->HasNativeLanguage())
@@ -199,7 +199,7 @@ class CMainToolbar :
         DeleteObject(hImage);
     }
 
-    HIMAGELIST InitImageList(VOID)
+    HIMAGELIST InitImageList()
     {
         HIMAGELIST hImageList;
 
@@ -328,13 +328,14 @@ class CAppsListView :
         int iSubItem;
     };
 
-    BOOL HasAllChecked;
-public:
+    BOOL bHasAllChecked;
     BOOL bAscending;
 
-    CAppsListView()
+public:
+    CAppsListView() :
+        bAscending(TRUE),
+        bHasAllChecked(FALSE)
     {
-        bAscending = TRUE;
     }
 
     VOID ColumnClick(LPNMLISTVIEW pnmv)
@@ -349,7 +350,7 @@ public:
     PVOID GetLParam(INT Index)
     {
         INT ItemIndex;
-        LVITEM Item;
+        LVITEMW Item;
 
         if (Index == -1)
         {
@@ -379,13 +380,13 @@ public:
 
     BOOL AddColumn(INT Index, LPWSTR lpText, INT Width, INT Format)
     {
-        LV_COLUMN Column;
+        LV_COLUMNW Column;
 
         ZeroMemory(&Column, sizeof(Column));
 
         Column.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
         Column.iSubItem = Index;
-        Column.pszText = (LPTSTR) lpText;
+        Column.pszText = lpText;
         Column.cx = Width;
         Column.fmt = Format;
 
@@ -449,18 +450,39 @@ public:
 
         if (hwnd)
         {
-            SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT );
+            SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
         }
 
         return hwnd;
     }
 
+    BOOL GetCheckState(INT item)
+    {
+        return (BOOL) GetItemState(item, LVIS_STATEIMAGEMASK);
+    }
+
+    VOID SetCheckState(INT item, BOOL fCheck)
+    {
+        SetItemState(item, INDEXTOSTATEIMAGEMASK((fCheck) ? 2 : 1), LVIS_STATEIMAGEMASK);
+    }
+
     VOID CheckAll()
     {
-        if (HasAllChecked)
+        bHasAllChecked = !bHasAllChecked;
+        SetCheckState(-1, bHasAllChecked);
+    }
+
+    ATL::CAtlList<PAPPLICATION_INFO> GetCheckedItems()
+    {
+        ATL::CAtlList<PAPPLICATION_INFO> list;
+        for (INT i = 0; i != -1; i = GetNextItem(i, LVNI_ALL))
         {
-            
+            if (GetCheckState(i) != FALSE)
+            {
+                list.AddTail((PAPPLICATION_INFO) GetItemData(i));
+            }
         }
+        return list;
     }
 };
 
@@ -558,23 +580,24 @@ class CMainWindow :
     CUiWindow<CRichEdit> * m_RichEdit;
 
     CUiWindow<CSearchBar> * m_SearchBar;
+    CAvailableApps m_AvailableApps;
 
     LPWSTR pLink;
 
-    BOOL SearchEnabled;
+    INT nSelectedApps;
 
-    CAvailableApps m_AvailableApps;
-
+    BOOL bSearchEnabled;
+    BOOL bUpdating;
 public:
     CMainWindow() :
         m_ClientPanel(NULL),
         pLink(NULL),
-        SearchEnabled(FALSE)
+        bSearchEnabled(FALSE)
     {
     }
 
 private:
-    VOID InitApplicationsList(VOID)
+    VOID InitApplicationsList()
     {
         ATL::CStringW szText;
 
@@ -597,7 +620,7 @@ private:
         return m_TreeView->AddCategory(hRootItem, TextIndex, IconIndex);
     }
 
-    VOID InitCategoriesList(VOID)
+    VOID InitCategoriesList()
     {
         HTREEITEM hRootItem;
 
@@ -703,7 +726,7 @@ private:
         return m_HSplitter->Create(m_hWnd) != NULL;
     }
 
-    BOOL CreateSearchBar(VOID)
+    BOOL CreateSearchBar()
     {
         m_SearchBar = new CUiWindow<CSearchBar>();
         m_SearchBar->m_VerticalAlignment = UiAlign_LeftTop;
@@ -716,7 +739,8 @@ private:
 
     BOOL CreateLayout()
     {
-        bool b = TRUE;
+        BOOL b = TRUE;
+        bUpdating = TRUE;
 
         m_ClientPanel = new CUiPanel();
         m_ClientPanel->m_VerticalAlignment = UiAlign_Stretch;
@@ -754,6 +778,7 @@ private:
             m_VSplitter->m_Margin.bottom = rBottom.bottom - rBottom.top;
         }
 
+        bUpdating = FALSE;
         return b;
     }
 
@@ -761,16 +786,13 @@ private:
     {
         if (CreateLayout())
         {
-            ATL::CStringW szBuffer1, szBuffer2;
 
             InitApplicationsList();
-
             InitCategoriesList();
 
-            szBuffer2.LoadStringW(hInst, IDS_APPS_COUNT);
-            szBuffer1.Format(szBuffer2, m_ListView->GetItemCount());
+            nSelectedApps = 0;
+            UpdateStatusBarText();
 
-            m_StatusBar->SetText(szBuffer1);
             return TRUE;
         }
 
@@ -998,6 +1020,13 @@ private:
                         if (IS_AVAILABLE_ENUM(SelectedEnumType))
                             CAvailableAppView::ShowAvailableAppInfo(ItemIndex);
                     }
+                    /* Check if the item is checked */
+                    if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
+                    {
+                        BOOL checked = m_ListView->GetCheckState(pnic->iItem);
+                        nSelectedApps += (checked) ? 1 : -1;
+                        UpdateStatusBarText();
+                    }
                 }
             }
             break;
@@ -1083,10 +1112,10 @@ private:
             if (wParam == SEARCH_TIMER_ID)
             {
                 ::KillTimer(hwnd, SEARCH_TIMER_ID);
-                if (SearchEnabled)
+                if (bSearchEnabled)
                     UpdateApplicationsList(-1);
             }
-            break;
+        break;
         }
 
         return FALSE;
@@ -1119,7 +1148,7 @@ private:
         }
     }
 
-    BOOL IsSelectedNodeInstalled(void)
+    BOOL IsSelectedNodeInstalled()
     {
         HTREEITEM hSelectedItem = m_TreeView->GetSelection();
         TV_ITEM tItem;
@@ -1156,7 +1185,7 @@ private:
                 m_SearchBar->GetWindowTextW(szWndText);
                 if (szBuf == szWndText)
                 {
-                    SearchEnabled = FALSE;
+                    bSearchEnabled = FALSE;
                     m_SearchBar->SetWindowTextW(L"");
                 }
             }
@@ -1168,7 +1197,7 @@ private:
                 if (szBuf.IsEmpty())
                 {
                     szBuf.LoadStringW(hInst, IDS_SEARCH_TEXT);
-                    SearchEnabled = FALSE;
+                    bSearchEnabled = FALSE;
                     m_SearchBar->SetWindowTextW(szBuf.GetString());
                 }
             }
@@ -1178,9 +1207,9 @@ private:
             {
                 ATL::CStringW szWndText;
 
-                if (!SearchEnabled)
+                if (!bSearchEnabled)
                 {
-                    SearchEnabled = TRUE;
+                    bSearchEnabled = TRUE;
                     break;
                 }
 
@@ -1265,13 +1294,14 @@ private:
             break;
 
         case ID_CHECK_ALL:
+            m_ListView->CheckAll();
             break;
         }
     }
 
-    VOID FreeInstalledAppList(VOID)
+    VOID FreeInstalledAppList()
     {
-        INT Count = ListView_GetItemCount(hListView) - 1;
+        INT Count = m_ListView->GetItemCount() - 1;
         PINSTALLED_INFO Info;
 
         while (Count >= 0)
@@ -1369,32 +1399,44 @@ private:
         return TRUE;
     }
 
+    VOID UpdateStatusBarText()
+    {
+        if (m_StatusBar)
+        {
+            ATL::CStringW szBuffer1, szBuffer2;
+
+            szBuffer2.LoadStringW(hInst, IDS_APPS_COUNT);
+            szBuffer1.Format(szBuffer2, m_ListView->GetItemCount(), nSelectedApps);
+            m_StatusBar->SetText(szBuffer1);
+        }
+    }
 
     VOID UpdateApplicationsList(INT EnumType)
     {
         ATL::CStringW szBuffer1, szBuffer2;
         HIMAGELIST hImageListView;
+        bUpdating = TRUE;
 
-        m_ListView->SendMessageW(WM_SETREDRAW, FALSE, 0);
+        m_ListView->SetRedraw(FALSE);
 
+        nSelectedApps = 0;
         if (EnumType < 0) EnumType = SelectedEnumType;
 
         if (IS_INSTALLED_ENUM(SelectedEnumType))
             FreeInstalledAppList();
 
-        (VOID) ListView_DeleteAllItems(hListView);
+        m_ListView->DeleteAllItems();
 
         /* Create new ImageList */
         hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
                                           LISTVIEW_ICON_SIZE,
                                           GetSystemColorDepth() | ILC_MASK,
                                           0, 1);
-        HIMAGELIST hImageListBuf = ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
+        HIMAGELIST hImageListBuf = m_ListView->SetImageList(hImageListView, LVSIL_SMALL);
         if (hImageListBuf)
         {
             ImageList_Destroy(hImageListBuf);
         }
-
 
         if (IS_AVAILABLE_ENUM(EnumType))
         {
@@ -1404,17 +1446,16 @@ private:
 
         SelectedEnumType = EnumType;
 
-        szBuffer2.LoadStringW(hInst, IDS_APPS_COUNT);
-        szBuffer1.Format(szBuffer2, ListView_GetItemCount(hListView));
-        SetStatusBarText(szBuffer1);
+        UpdateStatusBarText();
 
         SetWelcomeText();
 
         /* set automatic column width for program names if the list is not empty */
-        if (ListView_GetItemCount(hListView) > 0)
-            ListView_SetColumnWidth(hListView, 0, LVSCW_AUTOSIZE);
+        if (m_ListView->GetItemCount() > 0)
+            ListView_SetColumnWidth(m_ListView->GetWindow(), 0, LVSCW_AUTOSIZE);
 
-        SendMessageW(hListView, WM_SETREDRAW, TRUE, 0);
+        bUpdating = FALSE;
+        m_ListView->SetRedraw(TRUE);
     }
 
 public:
