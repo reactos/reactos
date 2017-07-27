@@ -148,7 +148,7 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
     DPRINT("XHCI_ControllerWorkTest: pointer erstba     - %p %p\n", XhciExtension->RunTimeRegisterBase + XHCI_ERSTBA+1 , XhciExtension->RunTimeRegisterBase + XHCI_ERSTBA);
     
     
-    DbgBreakPoint();
+    //DbgBreakPoint();
     return MP_STATUS_SUCCESS;
 }
 MPSTATUS
