@@ -173,7 +173,7 @@ static void DeleteNode(LPNOTIFICATIONLIST item)
         TRACE("Not freeing, still %d queued events\n", queued);
         return;
     }
-    TRACE("Freeing for real!\n");
+    TRACE("Freeing for real! %p (%d) \n", item, item->cidl);
 #endif
 
     /* remove item from list */
@@ -693,7 +693,7 @@ BOOL _OpenDirectory(LPNOTIFYREGISTER item)
 static void CALLBACK _RequestTermination(ULONG_PTR arg)
 {
     LPNOTIFYREGISTER item = (LPNOTIFYREGISTER) arg;
-    TRACE("_RequestTermination %p \n", item->hDirectory);
+    TRACE("_RequestTermination %p %p \n", item, item->hDirectory);
     if (!item->hDirectory || item->hDirectory == INVALID_HANDLE_VALUE) return;
 
     CancelIo(item->hDirectory);
@@ -724,18 +724,6 @@ _NotificationCompletion(DWORD dwErrorCode, // completion code
 #endif
 
 #ifdef __REACTOS__
-    /* This is to avoid double-free and potential use after free
-     * In case it failed, _BeginRead() already deferenced item
-     * But if failure comes the FSD, the APC routine (us) will
-     * be called as well, which will cause a double-free on quit.
-     * Avoid this by deferencing only once in case of failure and thus,
-     * incrementing reference count here
-     */
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        InterlockedIncrement(&item->pParent->wQueuedCount);
-    }
-
     /* If the FSD doesn't support directory change notifications, there's no
      * no need to retry and requeue notification
      */
@@ -807,7 +795,9 @@ static VOID _BeginRead(LPNOTIFYREGISTER item )
 #ifdef __REACTOS__
     {
 #endif
-        ERR("ReadDirectoryChangesW failed. (%p, %p, %p, %p) Code: %u \n",
+        ERR("ReadDirectoryChangesW failed. (%p, %p, %p, %p, %p, %p) Code: %u \n",
+            item,
+            item->pParent,
             item->hDirectory,
             item->buffer,
             &item->overlapped,
