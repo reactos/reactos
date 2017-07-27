@@ -511,6 +511,18 @@ DumpBTree(PB_TREE Tree)
     DumpBTreeNode(Tree->RootNode, 0, 0);
 }
 
+// Calculates start of Index Buffer relative to the index allocation, given the node's VCN
+ULONGLONG
+GetAllocationOffsetFromVCN(PDEVICE_EXTENSION DeviceExt,
+                           ULONG IndexBufferSize,
+                           ULONGLONG Vcn)
+{
+    if (IndexBufferSize < DeviceExt->NtfsInfo.BytesPerCluster)
+        return Vcn * DeviceExt->NtfsInfo.BytesPerSector;
+
+    return Vcn * DeviceExt->NtfsInfo.BytesPerCluster;
+}
+
 /**
 * @name NtfsInsertKey
 * @implemented
