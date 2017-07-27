@@ -1,7 +1,7 @@
 /*
  * Copyright 2011 André Hentschel
  * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -46,7 +46,7 @@ typedef struct SHIM_ALLOC_ENTRY
     PVOID Prev;
 } SHIM_ALLOC_ENTRY, *PSHIM_ALLOC_ENTRY;
 
-
+/* FIXME: This is not threadsafe */
 static RTL_AVL_TABLE g_SdbpAllocationTable;
 
 
@@ -109,12 +109,10 @@ static void SdbpUpdateAllocation(PVOID address, PVOID newaddress, SIZE_T size, i
 
 static void SdbpRemoveAllocation(PVOID address, int line, const char* file)
 {
-    char buf[512];
     SHIM_ALLOC_ENTRY Lookup = {0};
     PSHIM_ALLOC_ENTRY Entry;
 
-    sprintf(buf, "\r\n===============\r\n%s(%d): SdbpFree called, tracing alloc:\r\n", file, line);
-    OutputDebugStringA(buf);
+    DbgPrint("\r\n===============\r\n%s(%d): SdbpFree called, tracing alloc:\r\n", file, line);
 
     Lookup.Address = address;
     while (Lookup.Address)
@@ -125,9 +123,8 @@ static void SdbpRemoveAllocation(PVOID address, int line, const char* file)
             Lookup = *Entry;
             RtlDeleteElementGenericTableAvl(&g_SdbpAllocationTable, Entry);
 
-            sprintf(buf, " > %s(%d): %s%sAlloc( %d ) ==> %p\r\n", Lookup.File, Lookup.Line,
+            DbgPrint(" > %s(%d): %s%sAlloc( %d ) ==> %p\r\n", Lookup.File, Lookup.Line,
                 Lookup.Next ? "Invalidated " : "", Lookup.Prev ? "Re" : "", Lookup.Size, Lookup.Address);
-            OutputDebugStringA(buf);
             Lookup.Address = Lookup.Prev;
         }
         else
@@ -135,8 +132,7 @@ static void SdbpRemoveAllocation(PVOID address, int line, const char* file)
             Lookup.Address = NULL;
         }
     }
-    sprintf(buf, "\r\n===============\r\n");
-    OutputDebugStringA(buf);
+    DbgPrint("===============\r\n");
 }
 
 #endif
@@ -155,7 +151,22 @@ void SdbpHeapDeinit(void)
 {
 #if SDBAPI_DEBUG_ALLOC
     if (g_SdbpAllocationTable.NumberGenericTableElements != 0)
-        __debugbreak();
+    {
+        PSHIM_ALLOC_ENTRY Entry;
+
+        DbgPrint("\r\n===============\r\n===============\r\nSdbpHeapDeinit: Dumping leaks\r\n");
+        Entry = RtlEnumerateGenericTableAvl(&g_SdbpAllocationTable, TRUE);
+
+        while (Entry)
+        {
+            DbgPrint(" > %s(%d): %s%sAlloc( %d ) ==> %p\r\n", Entry->File, Entry->Line,
+                     Entry->Next ? "Invalidated " : "", Entry->Prev ? "Re" : "", Entry->Size, Entry->Address);
+
+            Entry = RtlEnumerateGenericTableAvl(&g_SdbpAllocationTable, FALSE);
+        }
+        DbgPrint("===============\r\n===============\r\n");
+    }
+    /*__debugbreak();*/
 #endif
     HeapDestroy(g_Heap);
 }
@@ -267,7 +278,7 @@ DWORD SdbpStrsize(PCWSTR string)
 
 PWSTR SdbpStrDup(LPCWSTR string)
 {
-    PWSTR ret = SdbpAlloc(SdbpStrsize(string));
+    PWSTR ret = SdbAlloc(SdbpStrsize(string));
     lstrcpyW(ret, string);
     return ret;
 }

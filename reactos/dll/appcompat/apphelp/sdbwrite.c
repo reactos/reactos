@@ -1,7 +1,7 @@
 /*
  * Copyright 2011 André Hentschel
  * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -62,7 +62,7 @@ static BOOL WINAPI SdbpGetOrAddStringRef(PDB db, LPCWSTR string, TAGID* tagid)
     PDB buf = db->string_buffer;
     if (db->string_buffer == NULL)
     {
-        db->string_buffer = buf = SdbpAlloc(sizeof(DB));
+        db->string_buffer = buf = SdbAlloc(sizeof(DB));
         if (buf == NULL)
             return FALSE;
         buf->size = 128;

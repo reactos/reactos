@@ -1,7 +1,7 @@
 /*
  * Copyright 2011 André Hentschel
  * Copyright 2013 Mislav Blaževic
- * Copyright 2015 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -97,7 +97,7 @@ static void WINAPI SdbpSetStringAttrFromAnsiString(PATTRINFO attr, TAG tag, PBYT
 
     attr->type = tag;
     attr->flags = ATTRIBUTE_AVAILABLE;
-    dest = attr->lpattr = SdbpAlloc((len+1) * sizeof(WCHAR));
+    dest = attr->lpattr = SdbAlloc((len+1) * sizeof(WCHAR));
     while (len--)
         *(dest++) = *(string++);
     *dest = 0;
