@@ -208,6 +208,9 @@ typedef enum
 #define INDEX_ROOT_SMALL 0x0
 #define INDEX_ROOT_LARGE 0x1
 
+#define INDEX_NODE_SMALL 0x0
+#define INDEX_NODE_LARGE 0x1
+
 #define NTFS_INDEX_ENTRY_NODE            1
 #define NTFS_INDEX_ENTRY_END            2
 
@@ -701,7 +704,20 @@ VOID
 DestroyBTree(PB_TREE Tree);
 
 VOID
+DestroyBTreeNode(PB_TREE_FILENAME_NODE Node);
+
+VOID
 DumpBTree(PB_TREE Tree);
+
+VOID
+DumpBTreeNode(PB_TREE_FILENAME_NODE Node,
+              ULONG Number,
+              ULONG Depth);
+
+ULONGLONG
+GetAllocationOffsetFromVCN(PDEVICE_EXTENSION DeviceExt,
+                           ULONG IndexBufferSize,
+                           ULONGLONG Vcn);
 
 NTSTATUS
 NtfsInsertKey(ULONGLONG FileReference,

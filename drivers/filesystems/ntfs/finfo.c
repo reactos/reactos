@@ -289,6 +289,128 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
     return Status;
 }
 
+// Convert enum value to friendly name
+const PCSTR
+GetInfoClassName(FILE_INFORMATION_CLASS infoClass)
+{
+    const PCSTR fileInfoClassNames[] = { "???????",
+        "FileDirectoryInformation",
+        "FileFullDirectoryInformation",
+        "FileBothDirectoryInformation",
+        "FileBasicInformation",
+        "FileStandardInformation",
+        "FileInternalInformation",
+        "FileEaInformation",
+        "FileAccessInformation",
+        "FileNameInformation",
+        "FileRenameInformation",
+        "FileLinkInformation",
+        "FileNamesInformation",
+        "FileDispositionInformation",
+        "FilePositionInformation",
+        "FileFullEaInformation",
+        "FileModeInformation",
+        "FileAlignmentInformation",
+        "FileAllInformation",
+        "FileAllocationInformation",
+        "FileEndOfFileInformation",
+        "FileAlternateNameInformation",
+        "FileStreamInformation",
+        "FilePipeInformation",
+        "FilePipeLocalInformation",
+        "FilePipeRemoteInformation",
+        "FileMailslotQueryInformation",
+        "FileMailslotSetInformation",
+        "FileCompressionInformation",
+        "FileObjectIdInformation",
+        "FileCompletionInformation",
+        "FileMoveClusterInformation",
+        "FileQuotaInformation",
+        "FileReparsePointInformation",
+        "FileNetworkOpenInformation",
+        "FileAttributeTagInformation",
+        "FileTrackingInformation",
+        "FileIdBothDirectoryInformation",
+        "FileIdFullDirectoryInformation",
+        "FileValidDataLengthInformation",
+        "FileShortNameInformation",
+        "FileIoCompletionNotificationInformation",
+        "FileIoStatusBlockRangeInformation",
+        "FileIoPriorityHintInformation",
+        "FileSfioReserveInformation",
+        "FileSfioVolumeInformation",
+        "FileHardLinkInformation",
+        "FileProcessIdsUsingFileInformation",
+        "FileNormalizedNameInformation",
+        "FileNetworkPhysicalNameInformation",
+        "FileIdGlobalTxDirectoryInformation",
+        "FileIsRemoteDeviceInformation",
+        "FileAttributeCacheInformation",
+        "FileNumaNodeInformation",
+        "FileStandardLinkInformation",
+        "FileRemoteProtocolInformation",
+        "FileReplaceCompletionInformation",
+        "FileMaximumInformation",
+        "FileDirectoryInformation",
+        "FileFullDirectoryInformation",
+        "FileBothDirectoryInformation",
+        "FileBasicInformation",
+        "FileStandardInformation",
+        "FileInternalInformation",
+        "FileEaInformation",
+        "FileAccessInformation",
+        "FileNameInformation",
+        "FileRenameInformation",
+        "FileLinkInformation",
+        "FileNamesInformation",
+        "FileDispositionInformation",
+        "FilePositionInformation",
+        "FileFullEaInformation",
+        "FileModeInformation",
+        "FileAlignmentInformation",
+        "FileAllInformation",
+        "FileAllocationInformation",
+        "FileEndOfFileInformation",
+        "FileAlternateNameInformation",
+        "FileStreamInformation",
+        "FilePipeInformation",
+        "FilePipeLocalInformation",
+        "FilePipeRemoteInformation",
+        "FileMailslotQueryInformation",
+        "FileMailslotSetInformation",
+        "FileCompressionInformation",
+        "FileObjectIdInformation",
+        "FileCompletionInformation",
+        "FileMoveClusterInformation",
+        "FileQuotaInformation",
+        "FileReparsePointInformation",
+        "FileNetworkOpenInformation",
+        "FileAttributeTagInformation",
+        "FileTrackingInformation",
+        "FileIdBothDirectoryInformation",
+        "FileIdFullDirectoryInformation",
+        "FileValidDataLengthInformation",
+        "FileShortNameInformation",
+        "FileIoCompletionNotificationInformation",
+        "FileIoStatusBlockRangeInformation",
+        "FileIoPriorityHintInformation",
+        "FileSfioReserveInformation",
+        "FileSfioVolumeInformation",
+        "FileHardLinkInformation",
+        "FileProcessIdsUsingFileInformation",
+        "FileNormalizedNameInformation",
+        "FileNetworkPhysicalNameInformation",
+        "FileIdGlobalTxDirectoryInformation",
+        "FileIsRemoteDeviceInformation",
+        "FileAttributeCacheInformation",
+        "FileNumaNodeInformation",
+        "FileStandardLinkInformation",
+        "FileRemoteProtocolInformation",
+        "FileReplaceCompletionInformation",
+        "FileMaximumInformation" };
+    return fileInfoClassNames[infoClass];
+}
+
 /*
  * FUNCTION: Retrieve the specified file information
  */
@@ -376,12 +498,12 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
 
         case FileAlternateNameInformation:
         case FileAllInformation:
-            DPRINT1("Unimplemented information class %u\n", FileInformationClass);
+            DPRINT1("Unimplemented information class: %s\n", GetInfoClassName(FileInformationClass));
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
         default:
-            DPRINT1("Unimplemented information class %u\n", FileInformationClass);
+            DPRINT1("Unimplemented information class: %s\n", GetInfoClassName(FileInformationClass));
             Status = STATUS_INVALID_PARAMETER;
     }
 
@@ -645,7 +767,7 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
         // TODO: all other information classes
 
         default:
-            DPRINT1("FIXME: Unimplemented information class %u\n", FileInformationClass);
+            DPRINT1("FIXME: Unimplemented information class: %s\n", GetInfoClassName(FileInformationClass));
             Status = STATUS_NOT_IMPLEMENTED;
     }
 
