@@ -32,6 +32,47 @@
 
 /* FUNCTIONS ****************************************************************/
 
+// TEMP FUNCTION for diagnostic purposes.
+// Prints VCN of every node in an index allocation
+VOID
+PrintAllVCNs(PDEVICE_EXTENSION Vcb,
+             PNTFS_ATTR_CONTEXT IndexAllocationContext,
+             ULONG NodeSize)
+{
+    ULONGLONG CurrentOffset = 0;
+    PINDEX_BUFFER CurrentNode, Buffer;
+    ULONGLONG BufferSize = AttributeDataLength(&IndexAllocationContext->Record);
+    ULONGLONG i;
+    int Count = 0;
+
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, BufferSize, TAG_NTFS);
+
+    ULONG BytesRead = ReadAttribute(Vcb, IndexAllocationContext, 0, (PCHAR)Buffer, BufferSize);
+
+    ASSERT(BytesRead = BufferSize);
+
+    CurrentNode = Buffer;
+
+    // loop through all the nodes
+    for (i = 0; i < BufferSize; i += NodeSize)
+    {
+        NTSTATUS Status = FixupUpdateSequenceArray(Vcb, &CurrentNode->Ntfs);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERROR: Fixing fixup failed!\n");
+            continue;
+        }
+
+        DPRINT1("Node #%d, VCN: %I64u\n", Count, CurrentNode->VCN);
+
+        CurrentNode = (PINDEX_BUFFER)((ULONG_PTR)CurrentNode + NodeSize);
+        CurrentOffset += NodeSize;
+        Count++;
+    }
+
+    ExFreePoolWithTag(Buffer, TAG_NTFS);
+}
+
 /**
 * @name CompareTreeKeys
 * @implemented
@@ -62,6 +103,7 @@ CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
     UNICODE_STRING Key1Name, Key2Name;
     LONG Comparison;
 
+    // Key1 must not be the final key (AKA the dummy key)
     ASSERT(!(Key1->IndexEntry->Flags & NTFS_INDEX_ENTRY_END));
 
     // If Key2 is the "dummy key", key 1 will always come first
@@ -89,7 +131,7 @@ CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
         // Compare the names of the same length
         Comparison = RtlCompareUnicodeString(&Key1Name, &Key2Name, !CaseSensitive);
 
-        // If the truncated files are the same length, the shorter one comes first
+        // If the truncated names are the same length, the shorter one comes first
         if (Comparison == 0)
             return -1;
     }
@@ -102,7 +144,7 @@ CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
         // Compare the names of the same length
         Comparison = RtlCompareUnicodeString(&Key1Name, &Key2Name, !CaseSensitive);
 
-        // If the truncated files are the same length, the shorter one comes first
+        // If the truncated names are the same length, the shorter one comes first
         if (Comparison == 0)
             return 1;
     }

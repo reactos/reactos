@@ -2018,25 +2018,29 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     // we must create an index allocation and index bitmap (TODO). Also TODO: support file records with
     // $ATTRIBUTE_LIST's.
     AttributeLength = NewIndexRoot->Header.AllocatedSize + FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header);
-    DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset);
-
-    // Find the attribute (or attribute-end marker) after the index root
-    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)DestinationAttribute + DestinationAttribute->Length);
-    if (NextAttribute->Type != AttributeEnd)
+    
+    if (AttributeLength != IndexRootContext->Record.Resident.ValueLength)
     {
-        DPRINT1("FIXME: For now, only resizing index root at the end of a file record is supported!\n");
-        ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
-        ReleaseAttributeContext(IndexRootContext);
-        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
-        return STATUS_NOT_IMPLEMENTED;
-    }
+        DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset);
 
-    // Update the length of the attribute in the file record of the parent directory
-    InternalSetResidentAttributeLength(IndexRootContext,
-                                       ParentFileRecord,
-                                       IndexRootOffset,
-                                       AttributeLength);
+        // Find the attribute (or attribute-end marker) after the index root
+        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)DestinationAttribute + DestinationAttribute->Length);
+        if (NextAttribute->Type != AttributeEnd)
+        {
+            DPRINT1("FIXME: For now, only resizing index root at the end of a file record is supported!\n");
+            ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+            ReleaseAttributeContext(IndexRootContext);
+            ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+            ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
+        // Update the length of the attribute in the file record of the parent directory
+        InternalSetResidentAttributeLength(IndexRootContext,
+                                           ParentFileRecord,
+                                           IndexRootOffset,
+                                           AttributeLength);
+    }
 
     NT_ASSERT(ParentFileRecord->BytesInUse <= DeviceExt->NtfsInfo.BytesPerFileRecord);
 
