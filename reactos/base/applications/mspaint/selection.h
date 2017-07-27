@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/selection.h
  * PURPOSE:     Window procedure of the selection window
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 class CSelectionWindow : public CWindowImpl<CSelectionWindow>
@@ -23,6 +24,8 @@ public:
         MESSAGE_HANDLER(WM_PALETTEMODELCOLORCHANGED, OnPaletteModelColorChanged)
         MESSAGE_HANDLER(WM_TOOLSMODELSETTINGSCHANGED, OnToolsModelSettingsChanged)
         MESSAGE_HANDLER(WM_SELECTIONMODELREFRESHNEEDED, OnSelectionModelRefreshNeeded)
+        MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
+        MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
     END_MSG_MAP()
 
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -36,6 +39,8 @@ public:
     LRESULT OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSelectionModelRefreshNeeded(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 private:
     static const LPCTSTR m_lpszCursorLUT[9];

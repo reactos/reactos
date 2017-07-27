@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/sizebox.cpp
  * PURPOSE:     Window procedure of the size boxes
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -98,13 +99,25 @@ LRESULT CSizeboxWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             imageModel.Crop(imgXRes + xRel, imgYRes + yRel, 0, 0);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) _T(""));
     }
+    resizing = FALSE;
     ReleaseCapture();
+    return 0;
+}
+
+LRESULT CSizeboxWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
     resizing = FALSE;
     return 0;
 }
 
-LRESULT CSizeboxWindow::OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CSizeboxWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    resizing = FALSE;
+    if (wParam == VK_ESCAPE)
+    {
+        if (GetCapture() == m_hWnd)
+        {
+            ReleaseCapture();
+        }
+    }
     return 0;
 }

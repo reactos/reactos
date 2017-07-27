@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/sizebox.h
  * PURPOSE:     Window procedure of the size boxes
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 class CSizeboxWindow : public CWindowImpl<CSizeboxWindow>
@@ -16,12 +17,14 @@ public:
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
-        MESSAGE_HANDLER(WM_CANCELMODE, OnCancelMode)
+        MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
+        MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
     END_MSG_MAP()
 
     LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };

@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/selection.cpp
  * PURPOSE:     Window procedure of the selection window
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -226,6 +227,39 @@ LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         placeSelWin();
         ShowWindow(SW_HIDE);
         ShowWindow(SW_SHOW);
+    }
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (m_bMoving)
+    {
+        m_bMoving = FALSE;
+        if (m_iAction == ACTION_MOVE)
+        {
+            // FIXME: dirty hack
+            placeSelWin();
+            imageModel.Undo();
+            imageModel.Undo();
+        }
+        else
+        {
+            m_iAction = ACTION_MOVE;
+        }
+        ShowWindow(SW_HIDE);
+    }
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (wParam == VK_ESCAPE)
+    {
+        if (GetCapture() == m_hWnd)
+        {
+            ReleaseCapture();
+        }
     }
     return 0;
 }

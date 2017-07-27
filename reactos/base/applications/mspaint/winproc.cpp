@@ -5,6 +5,7 @@
  * PURPOSE:     Window procedure of the main window and all children apart from
  *              hPalWin, hToolSettings and hSelection
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -333,18 +334,33 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 {
     if (wParam == VK_ESCAPE)
     {
-        if (!imageArea.drawing)
+        HWND hwndCapture = GetCapture();
+        if (hwndCapture)
         {
-            /* Deselect */
-            if ((toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
+            if (selectionWindow.m_hWnd == hwndCapture ||
+                imageArea.m_hWnd == hwndCapture ||
+                fullscreenWindow.m_hWnd == hwndCapture ||
+                sizeboxLeftTop.m_hWnd == hwndCapture ||
+                sizeboxCenterTop.m_hWnd == hwndCapture ||
+                sizeboxRightTop.m_hWnd == hwndCapture ||
+                sizeboxLeftCenter.m_hWnd == hwndCapture ||
+                sizeboxRightCenter.m_hWnd == hwndCapture ||
+                sizeboxLeftBottom.m_hWnd == hwndCapture ||
+                sizeboxCenterBottom.m_hWnd == hwndCapture ||
+                sizeboxRightBottom.m_hWnd == hwndCapture)
             {
-                startPaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-                whilePaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-                endPaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-                selectionWindow.ShowWindow(SW_HIDE);
+                SendMessage(hwndCapture, nMsg, wParam, lParam);
             }
         }
-        /* FIXME: also cancel current drawing underway */
+        else
+        {
+            switch (toolsModel.GetActiveTool())
+            {
+                case TOOL_SHAPE: case TOOL_BEZIER:
+                    imageArea.SendMessage(nMsg, wParam, lParam);
+                    break;
+            }
+        }
     }
     return 0;
 }
