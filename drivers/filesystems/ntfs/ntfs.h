@@ -406,20 +406,26 @@ typedef struct
     FILENAME_ATTRIBUTE    FileName;
 } INDEX_ENTRY_ATTRIBUTE, *PINDEX_ENTRY_ATTRIBUTE;
 
+struct _B_TREE_FILENAME_NODE;
+typedef struct _B_TREE_FILENAME_NODE B_TREE_FILENAME_NODE;
+
 // Keys are arranged in nodes as an ordered, linked list
 typedef struct _B_TREE_KEY
 {
     struct _B_TREE_KEY *NextKey;
-    // PB_TREE_FILENAME_NODE LesserChild; // we aren't worried about multi-level trees yet
-    PINDEX_ENTRY_ATTRIBUTE IndexEntry;   // must be last member for FIELD_OFFSET
+    B_TREE_FILENAME_NODE *LesserChild;  // Child-Node. All the keys in this node will be sorted before IndexEntry
+    PINDEX_ENTRY_ATTRIBUTE IndexEntry;  // must be last member for FIELD_OFFSET
 }B_TREE_KEY, *PB_TREE_KEY;
 
 // Every Node is just an ordered list of keys.
 // Sub-nodes can be found attached to a key (if they exist).
 // A key's sub-node precedes that key in the ordered list.
-typedef struct
+typedef struct _B_TREE_FILENAME_NODE
 {
     ULONG KeyCount;
+    BOOLEAN ExistsOnDisk;
+    BOOLEAN DiskNeedsUpdating;
+    ULONGLONG NodeNumber;
     PB_TREE_KEY FirstKey;
 } B_TREE_FILENAME_NODE, *PB_TREE_FILENAME_NODE;
 
@@ -688,7 +694,9 @@ CompareTreeKeys(PB_TREE_KEY Key1,
                 BOOLEAN CaseSensitive);
 
 NTSTATUS
-CreateBTreeFromIndex(/*PDEVICE_EXTENSION Vcb,*/
+CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
+                     PFILE_RECORD_HEADER FileRecordWithIndex,
+                     /*PCWSTR IndexName,*/
                      PNTFS_ATTR_CONTEXT IndexRootContext,
                      PINDEX_ROOT_ATTRIBUTE IndexRoot,
                      PB_TREE *NewTree);
@@ -724,6 +732,19 @@ NtfsInsertKey(ULONGLONG FileReference,
               PFILENAME_ATTRIBUTE FileNameAttribute,
               PB_TREE_FILENAME_NODE Node,
               BOOLEAN CaseSensitive);
+
+NTSTATUS
+UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
+                      PB_TREE Tree,
+                      ULONG IndexBufferSize,
+                      PFILE_RECORD_HEADER FileRecord);
+
+NTSTATUS
+UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
+                PB_TREE_FILENAME_NODE Node,
+                ULONG IndexBufferSize,
+                PNTFS_ATTR_CONTEXT IndexAllocationContext,
+                PNTFS_ATTR_CONTEXT BitmapContext);
 
 /* close.c */
 
