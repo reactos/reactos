@@ -1969,7 +1969,11 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     // Convert the index to a B*Tree
-    Status = CreateBTreeFromIndex(IndexRootContext, I30IndexRoot, &NewTree);
+    Status = CreateBTreeFromIndex(DeviceExt,
+                                  ParentFileRecord,
+                                  IndexRootContext,
+                                  I30IndexRoot,
+                                  &NewTree);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to create B-Tree from Index!\n");
@@ -1995,7 +1999,19 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 
     DumpBTree(NewTree);
 
-    // Convert B*Tree back to Index Root
+    // Convert B*Tree back to Index
+    Status = UpdateIndexAllocation(DeviceExt, NewTree, I30IndexRoot->SizeOfEntry, ParentFileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to update index allocation from B-Tree!\n");
+        DestroyBTree(NewTree);
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // Create the Index Root from the B*Tree
     Status = CreateIndexRootFromBTree(DeviceExt, NewTree, MaxIndexSize, &NewIndexRoot, &BtreeIndexLength);
     if (!NT_SUCCESS(Status))
     {
