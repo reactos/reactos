@@ -54,14 +54,92 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
 {
     DPRINT1("XHCI_RH_GetPortStatus: function initiated\n");
     PXHCI_EXTENSION XhciExtension;
-    PULONG PortStatusReg;
+    PULONG PortStatusRegPointer;
     XHCI_PORT_STATUS_CONTROL PortStatusRegister;
-    //USB_30_PORT_STATUS x;
+    USBHUB_PORT_STATUS portstatus;
+    
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
-    PortStatusReg = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
-    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusReg) ;
-    PortStatusRegister.AsULONG = 0;
-    *PortStatus = PortStatusRegister.AsULONG;
+    PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    
+    /*
+    ULONG ConnectStatus          : 1; // Current Connect Status
+    ULONG EnableStatus           : 1; // Port Enabled/Disabled
+    ULONG SuspendStatus          : 1;
+    ULONG OverCurrent            : 1;
+    ULONG ResetStatus            : 1;
+    ULONG Reserved1              : 3;
+    ULONG PowerStatus            : 1;
+    ULONG LsDeviceAttached       : 1; // Low-Speed Device Attached
+    ULONG HsDeviceAttached       : 1; // High-speed Device Attached
+    ULONG TestMode               : 1; // Port Test Mode
+    ULONG IndicatorControl       : 1; // Port Indicator Control
+    ULONG Reserved2              : 3;
+    ULONG ConnectStatusChange    : 1;
+    ULONG EnableStatusChange     : 1;
+    ULONG SuspendStatusChange    : 1;
+    ULONG OverCurrentChange      : 1;
+    ULONG ResetStatusChange      : 1;
+    ULONG Reserved3              : 3;
+    ULONG PowerStatusChange      : 1;
+    ULONG LsDeviceAttachedChange : 1;
+    ULONG HsDeviceAttachedChange : 1;
+    ULONG TestModeChange         : 1;
+    ULONG IndicatorControlChange : 1;
+    ULONG Reserved4              : 3;
+    */
+    /*
+    ULONG CurrentConnectStatus                  : 1;
+    ULONG PortEnableDisable                     : 1;
+    ULONG RsvdZ1                                : 1;
+    ULONG OverCurrentActive                     : 1;
+    ULONG PortReset                             : 1;
+    ULONG PortLinkState                         : 4;
+    ULONG PortPower                             : 1;
+    ULONG PortSpeed                             : 4;
+    ULONG PortIndicatorControl                  : 2;
+    ULONG LinkWriteStrobe                       : 1;
+    ULONG ConnectStatusChange                   : 1;
+    ULONG PortEnableDisableChange               : 1;
+    ULONG WarmResetChange                       : 1;
+    ULONG OverCurrentChange                     : 1;
+    ULONG PortResetChange                       : 1;
+    ULONG PortLinkStateChange                   : 1;
+    ULONG ConfigErrorChange                     : 1;
+    ULONG ColdAttachStatus                      : 1;
+    ULONG WakeONConnectEnable                   : 1;
+    ULONG WakeONDisconnectEnable                : 1;
+    ULONG WakeONOverCurrentEnable               : 1;
+    ULONG RsvdZ2                                : 2;
+    ULONG DeviceRemovable                       : 1;
+    ULONG WarmPortReset                         : 1;
+    */
+    portstatus.AsULONG = 0;
+    portstatus.UsbPortStatus.ConnectStatus = PortStatusRegister.CurrentConnectStatus;
+    portstatus.UsbPortStatus.EnableStatus = PortStatusRegister.PortEnableDisable;
+    portstatus.UsbPortStatus.SuspendStatus = 0;//PortStatusRegister.PortEnableDisable;
+    portstatus.UsbPortStatus.OverCurrent = PortStatusRegister.OverCurrentActive;
+    portstatus.UsbPortStatus.ResetStatus = PortStatusRegister.PortReset;
+    portstatus.UsbPortStatus.PowerStatus = PortStatusRegister.PortPower;
+    portstatus.UsbPortStatus.LsDeviceAttached = 0;//PortStatusRegister.PortEnableDisable;
+   // if (PortStatusRegister.PortSpeed) {
+        portstatus.UsbPortStatus.HsDeviceAttached =  PortStatusRegister.CurrentConnectStatus;
+   // }
+    portstatus.UsbPortStatus.TestMode = 0;//PortStatusRegister.PortPower;
+    portstatus.UsbPortStatus.IndicatorControl = 0;//PortStatusRegister.PortIndicatorControl;
+    
+    portstatus.UsbPortStatusChange.ConnectStatusChange = PortStatusRegister.ConnectStatusChange;
+    portstatus.UsbPortStatusChange.EnableStatusChange = PortStatusRegister.PortEnableDisableChange;
+    portstatus.UsbPortStatusChange.SuspendStatusChange = 0;//PortStatusRegister.ConnectStatusChange;
+    portstatus.UsbPortStatusChange.OverCurrentChange = PortStatusRegister.OverCurrentChange;
+    portstatus.UsbPortStatusChange.ResetStatusChange = PortStatusRegister.PortResetChange;
+    portstatus.UsbPortStatusChange.PowerStatusChange = 0;//PortStatusRegister.ConnectStatusChange;
+    portstatus.UsbPortStatusChange.LsDeviceAttachedChange = 0;//PortStatusRegister.ConnectStatusChange;
+    portstatus.UsbPortStatusChange.HsDeviceAttachedChange = PortStatusRegister.ConnectStatusChange;
+    portstatus.UsbPortStatusChange.TestModeChange = 0;//PortStatusRegister.ConnectStatusChange;
+    portstatus.UsbPortStatusChange.IndicatorControlChange =0;// PortStatusRegister.ConnectStatusChange;
+   
+    *PortStatus = portstatus.AsULONG;
     
     return MP_STATUS_SUCCESS;
 }
@@ -225,7 +303,7 @@ XHCI_RH_DisableIrq(IN PVOID xhciExtension)
    usbCommand.InterrupterEnable = 0;
    
    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD,usbCommand.AsULONG );
-   DPRINT1("XHCI_RH_DisableIrq: Disable Interupts succesfull\n");
+  //DPRINT1("XHCI_RH_DisableIrq: Disable Interupts succesfull\n");
 }
 
 VOID
@@ -244,6 +322,6 @@ XHCI_RH_EnableIrq(IN PVOID xhciExtension)
    usbCommand.InterrupterEnable = 1;
    
    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD,usbCommand.AsULONG );
-   DPRINT1("XHCI_RH_EnableIrq: Enable Interupts\n");
+   //DPRINT1("XHCI_RH_EnableIrq: Enable Interupts\n");
    
 }
