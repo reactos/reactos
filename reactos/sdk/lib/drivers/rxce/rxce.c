@@ -412,6 +412,8 @@ RxAllocateFcbObject(
         FsRtlSetupAdvancedHeader(Fcb, &NonPagedFcb->AdvancedFcbHeaderMutex);
     }
 
+    DPRINT("Allocated %p\n", Buffer);
+
     return Buffer;
 }
 
@@ -3158,17 +3160,18 @@ RxFinalizeSrvOpen(
         RemoveEntryList(&ThisSrvOpen->SrvOpenQLinks);
     }
 
-    /* If enclosed allocation, mark the memory zone free and dereference FCB */
+    /* If enclosed allocation, mark the memory zone free */
     if (BooleanFlagOn(ThisSrvOpen->Flags, SRVOPEN_FLAG_ENCLOSED_ALLOCATED))
     {
         ClearFlag(Fcb->FcbState, FCB_STATE_SRVOPEN_USED);
-        RxDereferenceNetFcb(Fcb);
     }
     /* Otherwise, free the memory */
     else
     {
         RxFreeFcbObject(ThisSrvOpen);
     }
+
+    RxDereferenceNetFcb(Fcb);
 
     return TRUE;
 }
@@ -4088,6 +4091,8 @@ RxFreeFcbObject(
     PVOID Object)
 {
     PAGED_CODE();
+
+    DPRINT("Freeing %p\n", Object);
 
     /* If that's a FOBX/SRV_OPEN, nothing to do, just free it */
     if (NodeType(Object) == RDBSS_NTC_FOBX || NodeType(Object) == RDBSS_NTC_SRVOPEN)

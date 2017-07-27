@@ -5664,6 +5664,11 @@ RxFindOrCreateFcb(
     /* If FCB was not found or is not covering full path, prepare for more work */
     if (Fcb == NULL || Fcb->FcbTableEntry.Path.Length != NetRootName->Length)
     {
+        if (Fcb != NULL)
+        {
+            DPRINT1("FCB was found and it's not covering the whole path: %wZ - %wZ\n", &Fcb->FcbTableEntry.Path, NetRootName);
+        }
+
         if (!AcquiredExclusive)
         {
             RxReleaseFcbTableLock(&NetRoot->FcbTable);
@@ -6354,7 +6359,7 @@ RxFspDispatch(
         RxContext->LastExecutionThread = PsGetCurrentThread();
         SetFlag(RxContext->Flags, (RX_CONTEXT_FLAG_IN_FSP | RX_CONTEXT_FLAG_WAIT));
 
-        DPRINT("Dispatch: MN: %d, Ctxt: %p, IRP: %p, THRD: %lx #%lx", RxContext->MinorFunction,
+        DPRINT("Dispatch: MN: %d, Ctxt: %p, IRP: %p, THRD: %lx #%lx\n", RxContext->MinorFunction,
                RxContext, RxContext->CurrentIrp, RxContext->LastExecutionThread,
                RxContext->SerialNumber);
 
