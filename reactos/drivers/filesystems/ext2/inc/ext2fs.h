@@ -789,6 +789,7 @@ typedef struct _EXT2_VCB {
 #define VCB_DEVICE_REMOVED      0x00008000
 #define VCB_JOURNAL_RECOVER     0x00080000
 #define VCB_ARRIVAL_NOTIFIED    0x00800000
+#define VCB_RO_COMPAT_READ_ONLY 0x01000000
 #define VCB_READ_ONLY           0x08000000
 #define VCB_WRITE_PROTECTED     0x10000000
 #define VCB_FLOPPY_DISK         0x20000000
@@ -800,6 +801,7 @@ typedef struct _EXT2_VCB {
 #define IsMounted(Vcb)     (IsFlagOn((Vcb)->Flags, VCB_MOUNTED))
 #define IsDispending(Vcb)  (IsFlagOn((Vcb)->Flags, VCB_DISMOUNT_PENDING))
 #define IsVcbReadOnly(Vcb) (IsFlagOn((Vcb)->Flags, VCB_READ_ONLY) ||    \
+                            IsFlagOn((Vcb)->Flags, VCB_RO_COMPAT_READ_ONLY) ||    \
                             IsFlagOn((Vcb)->Flags, VCB_WRITE_PROTECTED))
 
 
