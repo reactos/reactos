@@ -15,6 +15,7 @@ list(APPEND SOURCE
 
 add_library(kernel32_vista SHARED ${SOURCE})
 set_module_type(kernel32_vista win32dll ENTRYPOINT DllMain 12)
-add_importlibs(kernel32_vista kernel32 ntdll_vista ntdll)
+add_importlibs(kernel32_vista kernel32 ntdll)
+add_delay_importlibs(kernel32_vista ntdll_vista)
 add_dependencies(kernel32_vista psdk)
 add_cd_file(TARGET kernel32_vista DESTINATION reactos/system32 FOR all)
