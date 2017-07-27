@@ -580,8 +580,18 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
                 return Status;
             }
 
-            // Now we should be able to open the file
-            return NtfsCreateFile(DeviceObject, IrpContext);
+            // Before we open the file we just created, we need to change the disposition (upper 8 bits of ULONG)
+            // from create to open, since we already created the file
+            Stack->Parameters.Create.Options = (ULONG)FILE_OPEN << 24 | RequestedOptions;
+
+            // Now we should be able to open the file using NtfsCreateFile()
+            Status = NtfsCreateFile(DeviceObject, IrpContext);
+            if (NT_SUCCESS(Status))
+            {
+                // We need to change Irp->IoStatus.Information to reflect creation
+                Irp->IoStatus.Information = FILE_CREATED;
+            }
+            return Status;
         }
     }
 
