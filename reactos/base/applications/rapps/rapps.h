@@ -226,7 +226,7 @@ public:
 };
 
 /* installdlg.cpp */
-BOOL InstallApplication(INT Index);
+//BOOL InstallApplication(INT Index);
 
 /* installed.cpp */
 typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, ATL::CStringW &lpName, PINSTALLED_INFO Info);
@@ -249,8 +249,26 @@ VOID SaveSettings(HWND hwnd);
 VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 
 /* loaddlg.cpp */
-BOOL DownloadApplication(INT Index);
-VOID DownloadApplicationsDB(LPCWSTR lpUrl);
+
+class DownloadManager
+{
+    static PAPPLICATION_INFO AppInfo;
+public:
+
+    static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK DownloadProgressProc(HWND hWnd, 
+                                                 UINT uMsg, 
+                                                 WPARAM wParam, 
+                                                 LPARAM lParam, 
+                                                 UINT_PTR uIdSubclass, 
+                                                 DWORD_PTR dwRefData);
+
+    static DWORD WINAPI ThreadFunc(LPVOID Context);
+    static BOOL DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList);
+    static BOOL DownloadApplication(PAPPLICATION_INFO pAppInfo);
+    static VOID DownloadApplicationsDB(LPCWSTR lpUrl);
+    static VOID LaunchDownloadDialog();
+};
 
 /* misc.cpp */
 INT GetSystemColorDepth(VOID);

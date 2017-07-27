@@ -39,8 +39,6 @@
 #include <shellutils.h>
 #include <windowsx.h>
 
-static PAPPLICATION_INFO AppInfo;
-
 class CDownloadDialog :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IBindStatusCallback
@@ -250,9 +248,151 @@ MessageBox_LoadString(HWND hMainWnd, INT StringID)
         MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
 }
 
-static
-DWORD WINAPI
-ThreadFunc(LPVOID Context)
+// DownloadManager
+
+PAPPLICATION_INFO DownloadManager::AppInfo = NULL;
+
+INT_PTR CALLBACK DownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HANDLE Thread;
+    DWORD ThreadId;
+    HWND Item;
+
+    switch (uMsg)
+    {
+    case WM_INITDIALOG:
+    {
+        HICON hIconSm, hIconBg;
+        WCHAR szCaption[MAX_PATH];
+        ATL::CStringW szNewCaption;
+
+        hIconBg = (HICON) GetClassLongW(hMainWnd, GCLP_HICON);
+        hIconSm = (HICON) GetClassLongW(hMainWnd, GCLP_HICONSM);
+
+        if (hIconBg && hIconSm)
+        {
+            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) hIconBg);
+            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIconSm);
+        }
+
+        // Change caption to show the currently downloaded app
+        GetWindowTextW(Dlg, szCaption, MAX_PATH);
+        szNewCaption.Format(szCaption, AppInfo->szName.GetString());
+        SetWindowTextW(Dlg, szNewCaption.GetString());
+
+        SetWindowLongW(Dlg, GWLP_USERDATA, 0);
+        Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
+        if (Item)
+        {
+            // initialize the default values for our nifty progress bar
+            // and subclass it so that it learns to print a status text 
+            SendMessageW(Item, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
+            SendMessageW(Item, PBM_SETPOS, 0, 0);
+            
+            SetWindowSubclass(Item, DownloadProgressProc, 0, 0);
+        }
+
+        // add a neat placeholder until the download URL is retrieved
+        SetDlgItemTextW(Dlg, IDC_DOWNLOAD_STATUS, L"\x2022 \x2022 \x2022");
+
+        Thread = CreateThread(NULL, 0, ThreadFunc, Dlg, 0, &ThreadId);
+        if (!Thread)
+            return FALSE;
+        CloseHandle(Thread);
+        return TRUE;
+    }
+    case WM_COMMAND:
+        if (wParam == IDCANCEL)
+        {
+            SetWindowLongPtrW(Dlg, GWLP_USERDATA, 1);
+            PostMessageW(Dlg, WM_CLOSE, 0, 0);
+        }
+        return FALSE;
+
+    case WM_CLOSE:
+        DestroyWindow(Dlg);
+        return TRUE;
+
+    default:
+        return FALSE;
+    }
+}
+
+LRESULT CALLBACK DownloadManager::DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+    static ATL::CStringW szProgressText;
+
+    switch (uMsg)
+    {
+    case WM_SETTEXT:
+    {
+        if (lParam)
+        {
+            szProgressText = (PCWSTR) lParam;
+        }
+        return TRUE;
+    }
+
+    case WM_ERASEBKGND:
+    case WM_PAINT:
+    {
+        PAINTSTRUCT  ps;
+        HDC hDC = BeginPaint(hWnd, &ps), hdcMem;
+        HBITMAP hbmMem;
+        HANDLE hOld;
+        RECT myRect;
+        UINT win_width, win_height;
+
+        GetClientRect(hWnd, &myRect);
+
+        /* grab the progress bar rect size */
+        win_width = myRect.right - myRect.left;
+        win_height = myRect.bottom - myRect.top;
+
+        /* create an off-screen DC for double-buffering */
+        hdcMem = CreateCompatibleDC(hDC);
+        hbmMem = CreateCompatibleBitmap(hDC, win_width, win_height);
+
+        hOld = SelectObject(hdcMem, hbmMem);
+
+        /* call the original draw code and redirect it to our memory buffer */
+        DefSubclassProc(hWnd, uMsg, (WPARAM) hdcMem, lParam);
+
+        /* draw our nifty progress text over it */
+        SelectFont(hdcMem, GetStockFont(DEFAULT_GUI_FONT));
+        DrawShadowText(hdcMem, szProgressText.GetString(), szProgressText.GetLength(),
+                       &myRect,
+                       DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE,
+                       GetSysColor(COLOR_CAPTIONTEXT),
+                       GetSysColor(COLOR_3DSHADOW),
+                       1, 1);
+
+        /* transfer the off-screen DC to the screen */
+        BitBlt(hDC, 0, 0, win_width, win_height, hdcMem, 0, 0, SRCCOPY);
+
+        /* free the off-screen DC */
+        SelectObject(hdcMem, hOld);
+        DeleteObject(hbmMem);
+        DeleteDC(hdcMem);
+
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
+
+    /* Raymond Chen says that we should safely unsubclass all the things!
+    (http://blogs.msdn.com/b/oldnewthing/archive/2003/11/11/55653.aspx) */
+    case WM_NCDESTROY:
+    {
+        szProgressText.Empty();
+        RemoveWindowSubclass(hWnd, DownloadProgressProc, uIdSubclass);
+    }
+    /* Fall-through */
+    default:
+        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+}
+
+DWORD WINAPI DownloadManager::ThreadFunc(LPVOID Context)
 {
     CComPtr<IBindStatusCallback> dl;
     ATL::CStringW Path;
@@ -272,9 +412,15 @@ ThreadFunc(LPVOID Context)
     URL_COMPONENTS urlComponents;
     size_t urlLength, filenameLength;
 
+    if (!AppInfo)
+    {
+        MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
+        goto end;
+    }
+
     /* build the path for the download */
-    p = wcsrchr(AppInfo->szUrlDownload, L'/');
-    q = wcsrchr(AppInfo->szUrlDownload, L'?');
+    p = wcsrchr(AppInfo->szUrlDownload.GetString(), L'/');
+    q = wcsrchr(AppInfo->szUrlDownload.GetString(), L'?');
 
     /* do we have a final slash separator? */
     if (!p)
@@ -284,7 +430,7 @@ ThreadFunc(LPVOID Context)
     filenameLength = wcslen(p) * sizeof(WCHAR);
 
     /* do we have query arguments in the target URL after the filename? account for them
-      (e.g. https://example.org/myfile.exe?no_adware_plz) */
+    (e.g. https://example.org/myfile.exe?no_adware_plz) */
     if (q && q > p && (q - p) > 0)
         filenameLength -= wcslen(q - 1) * sizeof(WCHAR);
 
@@ -424,7 +570,7 @@ ThreadFunc(LPVOID Context)
         goto end;
 
     /* if this thing isn't a RAPPS update and it has a SHA-1 checksum
-       verify its integrity by using the native advapi32.A_SHA1 functions */
+    verify its integrity by using the native advapi32.A_SHA1 functions */
     if (!bCab && AppInfo->szSHA1[0] != 0)
     {
         ATL::CStringW szMsgText;
@@ -472,174 +618,49 @@ end:
     return 0;
 }
 
-
-LRESULT CALLBACK
-DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+//TODO: Maybe launch this (similar function) in a seperate thread, so the list could be updated
+BOOL DownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList)
 {
-    static ATL::CStringW szProgressText;
+    BOOL bResult = TRUE;
 
-    switch (uMsg)
+    for (INT i = 0; i < AppsList.GetSize(); ++i)
     {
-    case WM_SETTEXT:
-    {
-        if (lParam)
-        {
-            szProgressText = (PCWSTR) lParam;
-        }
-        return TRUE;
+        bResult = DownloadApplication(AppsList[i]) && bResult;
     }
-
-    case WM_ERASEBKGND:
-    case WM_PAINT:
-    {
-        PAINTSTRUCT  ps;
-        HDC hDC = BeginPaint(hWnd, &ps), hdcMem;
-        HBITMAP hbmMem;
-        HANDLE hOld;
-        RECT myRect;
-        UINT win_width, win_height;
-
-        GetClientRect(hWnd, &myRect);
-
-        /* grab the progress bar rect size */
-        win_width = myRect.right - myRect.left;
-        win_height = myRect.bottom - myRect.top;
-
-        /* create an off-screen DC for double-buffering */
-        hdcMem = CreateCompatibleDC(hDC);
-        hbmMem = CreateCompatibleBitmap(hDC, win_width, win_height);
-
-        hOld = SelectObject(hdcMem, hbmMem);
-
-        /* call the original draw code and redirect it to our memory buffer */
-        DefSubclassProc(hWnd, uMsg, (WPARAM) hdcMem, lParam);
-
-        /* draw our nifty progress text over it */
-        SelectFont(hdcMem, GetStockFont(DEFAULT_GUI_FONT));
-        DrawShadowText(hdcMem, szProgressText.GetString(), szProgressText.GetLength(),
-                       &myRect,
-                       DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE,
-                       GetSysColor(COLOR_CAPTIONTEXT),
-                       GetSysColor(COLOR_3DSHADOW),
-                       1, 1);
-
-        /* transfer the off-screen DC to the screen */
-        BitBlt(hDC, 0, 0, win_width, win_height, hdcMem, 0, 0, SRCCOPY);
-
-        /* free the off-screen DC */
-        SelectObject(hdcMem, hOld);
-        DeleteObject(hbmMem);
-        DeleteDC(hdcMem);
-
-        EndPaint(hWnd, &ps);
-        return 0;
-    }
-
-    /* Raymond Chen says that we should safely unsubclass all the things!
-      (http://blogs.msdn.com/b/oldnewthing/archive/2003/11/11/55653.aspx) */
-    case WM_NCDESTROY:
-    {
-        szProgressText.Empty();
-        RemoveWindowSubclass(hWnd, DownloadProgressProc, uIdSubclass);
-    }
-    /* Fall-through */
-    default:
-        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-    }
+    return bResult;
 }
 
-static
-INT_PTR CALLBACK
-DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+BOOL DownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo)
 {
-    HANDLE Thread;
-    DWORD ThreadId;
-    HWND Item;
-
-    switch (uMsg)
+    if (!pAppInfo)
     {
-    case WM_INITDIALOG:
-    {
-        HICON hIconSm = NULL, hIconBg = NULL;
-
-        hIconBg = (HICON) GetClassLongPtr(hMainWnd, GCLP_HICON);
-        hIconSm = (HICON) GetClassLongPtr(hMainWnd, GCLP_HICONSM);
-
-        if (hIconBg && hIconSm)
-        {
-            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) hIconBg);
-            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIconSm);
-        }
-
-        SetWindowLongPtrW(Dlg, GWLP_USERDATA, 0);
-        Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
-        if (Item)
-        {
-            /* initialize the default values for our nifty progress bar
-               and subclass it so that it learns to print a status text */
-            SendMessageW(Item, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
-            SendMessageW(Item, PBM_SETPOS, 0, 0);
-
-            SetWindowSubclass(Item, DownloadProgressProc, 0, 0);
-        }
-
-        /* add a neat placeholder until the download URL is retrieved */
-        Item = GetDlgItem(Dlg, IDC_DOWNLOAD_STATUS);
-        SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) L"\x2022 \x2022 \x2022");
-
-        Thread = CreateThread(NULL, 0, ThreadFunc, Dlg, 0, &ThreadId);
-        if (!Thread)
-            return FALSE;
-        CloseHandle(Thread);
-        return TRUE;
-    }
-    case WM_COMMAND:
-        if (wParam == IDCANCEL)
-        {
-            SetWindowLongPtrW(Dlg, GWLP_USERDATA, 1);
-            PostMessageW(Dlg, WM_CLOSE, 0, 0);
-        }
-        return FALSE;
-
-    case WM_CLOSE:
-        DestroyWindow(Dlg);
-        return TRUE;
-
-    default:
         return FALSE;
     }
-}
 
-BOOL
-DownloadApplication(INT Index)
-{
-    if (!IS_AVAILABLE_ENUM(SelectedEnumType))
-        return FALSE;
-
-    AppInfo = (PAPPLICATION_INFO) ListViewGetlParam(Index);
-    if (!AppInfo)
-        return FALSE;
+    // Create a dialog and issue a download process
+    AppInfo = pAppInfo;
+    LaunchDownloadDialog();
 
     WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_INSTALL, AppInfo->szName.GetString());
-
-    CreateDialogW(hInst,
-               MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
-               hMainWnd,
-               DownloadDlgProc);
 
     return TRUE;
 }
 
-VOID
-DownloadApplicationsDB(LPCWSTR lpUrl)
+VOID DownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
 {
     APPLICATION_INFO IntInfo;
     IntInfo.szUrlDownload = lpUrl;
 
     AppInfo = &IntInfo;
 
+    LaunchDownloadDialog();
+}
+
+//TODO: Reuse the dialog
+VOID DownloadManager::LaunchDownloadDialog()
+{
     CreateDialogW(hInst,
-               MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
-               hMainWnd,
-               DownloadDlgProc);
+                  MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
+                  hMainWnd,
+                  DownloadDlgProc);
 }

@@ -458,7 +458,7 @@ public:
 
     BOOL GetCheckState(INT item)
     {
-        return (BOOL) GetItemState(item, LVIS_STATEIMAGEMASK);
+        return (BOOL) (GetItemState(item, LVIS_STATEIMAGEMASK) >> 12) - 1;
     }
 
     VOID SetCheckState(INT item, BOOL fCheck)
@@ -472,14 +472,15 @@ public:
         SetCheckState(-1, bHasAllChecked);
     }
 
-    ATL::CAtlList<PAPPLICATION_INFO> GetCheckedItems()
+    ATL::CSimpleArray<PAPPLICATION_INFO> GetCheckedItems()
     {
-        ATL::CAtlList<PAPPLICATION_INFO> list;
-        for (INT i = 0; i != -1; i = GetNextItem(i, LVNI_ALL))
+        ATL::CSimpleArray<PAPPLICATION_INFO> list;
+        for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
         {
             if (GetCheckState(i) != FALSE)
             {
-                list.AddTail((PAPPLICATION_INFO) GetItemData(i));
+                PAPPLICATION_INFO pAppInfo = (PAPPLICATION_INFO) GetItemData(i);
+                list.Add(pAppInfo);
             }
         }
         return list;
@@ -1255,11 +1256,16 @@ private:
             break;
 
         case ID_INSTALL:
-            if (DownloadApplication(-1))
-                /* TODO: Implement install dialog
-                *   if (InstallApplication(-1))
-                */
+            if (nSelectedApps)
+            {
+                DownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
                 UpdateApplicationsList(-1);
+            } 
+            else if(DownloadManager::DownloadApplication((PAPPLICATION_INFO) m_ListView->GetSelectionMark()))
+            {
+                UpdateApplicationsList(-1);
+            }
+            
             break;
 
         case ID_UNINSTALL:
@@ -1403,11 +1409,10 @@ private:
     {
         if (m_StatusBar)
         {
-            ATL::CStringW szBuffer1, szBuffer2;
+            ATL::CStringW szBuffer;
 
-            szBuffer2.LoadStringW(hInst, IDS_APPS_COUNT);
-            szBuffer1.Format(szBuffer2, m_ListView->GetItemCount(), nSelectedApps);
-            m_StatusBar->SetText(szBuffer1);
+            szBuffer.Format(IDS_APPS_COUNT, m_ListView->GetItemCount(), nSelectedApps);
+            m_StatusBar->SetText(szBuffer);
         }
     }
 
