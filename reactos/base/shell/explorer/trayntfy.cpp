@@ -36,8 +36,6 @@ typedef struct _SYS_PAGER_COPY_DATA
 class CNotifyToolbar :
     public CWindowImplBaseT< CToolbar<NOTIFYICONDATA>, CControlWinTraits >
 {
-    static const int ICON_SIZE = 16;
-
     HIMAGELIST m_ImageList;
     int m_VisibleButtonCount;
 
@@ -110,6 +108,7 @@ public:
 
         if (iconData->uFlags & NIF_ICON)
         {
+            notifyItem->hIcon = (HICON)CopyImage(iconData->hIcon, IMAGE_ICON, 0, 0, 0);
             tbBtn.iBitmap = ImageList_AddIcon(m_ImageList, iconData->hIcon);
         }
 
@@ -133,7 +132,7 @@ public:
         /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
 
         CToolbar::AddButton(&tbBtn);
-        SetButtonSize(ICON_SIZE, ICON_SIZE);
+        SetButtonSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
 
         return TRUE;
     }
@@ -160,6 +159,8 @@ public:
 
         if (iconData->uFlags & NIF_ICON)
         {
+            DestroyIcon(notifyItem->hIcon);
+            notifyItem->hIcon = (HICON)CopyImage(iconData->hIcon, IMAGE_ICON, 0, 0, 0);
             tbbi.dwMask |= TBIF_IMAGE;
             tbbi.iImage = ImageList_ReplaceIcon(m_ImageList, index, iconData->hIcon);
         }
@@ -211,6 +212,8 @@ public:
             m_VisibleButtonCount--;
         }
 
+        DestroyIcon(notifyItem->hIcon);
+
         delete notifyItem;
 
         ImageList_Remove(m_ImageList, index);
@@ -241,6 +244,37 @@ public:
         {
             StringCchCopy(szTip, cchTip, notifyItem->szTip);
         }
+    }
+
+    VOID ResizeImagelist()
+    {
+        int cx, cy;
+        HIMAGELIST iml;
+
+        if (!ImageList_GetIconSize(m_ImageList, &cx, &cy))
+            return;
+
+        if (cx == GetSystemMetrics(SM_CXSMICON) && cy == GetSystemMetrics(SM_CYSMICON))
+            return;
+
+        iml = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);
+        if (!iml)
+            return;
+
+        ImageList_Destroy(m_ImageList);
+        m_ImageList = iml;
+        SetImageList(m_ImageList);
+
+        int count = GetButtonCount();
+        for (int i = 0; i < count; i++)
+        {
+            NOTIFYICONDATA * data = GetItemData(i);
+            INT iIcon = ImageList_AddIcon(iml, data->hIcon);
+            TBBUTTONINFO tbbi = { sizeof(tbbi), TBIF_BYINDEX | TBIF_IMAGE, 0, iIcon};
+            SetButtonInfo(i, &tbbi);
+        }
+
+        SetButtonSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
     }
 
 private:
@@ -402,10 +436,18 @@ public:
 
         SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
 
-        m_ImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
+        m_ImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);        
         SetImageList(m_ImageList);
 
-        SetButtonSize(ICON_SIZE, ICON_SIZE);
+        TBMETRICS tbm = {sizeof(tbm)};
+        tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING | TBMF_PAD;
+        tbm.cxPad = 1;
+        tbm.cyPad = 1;
+        tbm.cxButtonSpacing = 1;
+        tbm.cyButtonSpacing = 1;
+        SetMetrics(&tbm);
+
+        SetButtonSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
     }
 };
 
@@ -500,25 +542,39 @@ public:
         return TRUE;
     }
 
-    void GetSize(IN WPARAM wParam, IN PSIZE size)
+    void GetSize(IN BOOL IsHorizontal, IN PSIZE size)
     {
+        /* Get the ideal height or width */
+#if 0 
+        /* Unfortunately this doens't work correctly in ros */
+        Toolbar.GetIdealSize(!IsHorizontal, size);
+
+        /* Make the reference dimension an exact multiple of the icon size */
+        if (IsHorizontal)
+            size->cy -= size->cy % GetSystemMetrics(SM_CYSMICON);
+        else
+            size->cx -= size->cx % GetSystemMetrics(SM_CXSMICON);
+
+#else
         INT rows = 0;
+        INT columns = 0;
+        INT cyButton = GetSystemMetrics(SM_CYSMICON) + 2;
+        INT cxButton = GetSystemMetrics(SM_CXSMICON) + 2;
         int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
 
-        if (wParam) /* horizontal */
+        if (IsHorizontal)
         {
-            rows = size->cy / 24;
-            if (rows == 0)
-                rows++;
-            size->cx = (VisibleButtonCount + rows - 1) / rows * 24;
+            rows = max(size->cy / cyButton, 1);
+            columns = max((VisibleButtonCount + rows) / rows, 1);
         }
         else
         {
-            rows = size->cx / 24;
-            if (rows == 0)
-                rows++;
-            size->cy = (VisibleButtonCount + rows - 1) / rows * 24;
+            columns = max(size->cx / cxButton, 1);
+            rows = max((VisibleButtonCount + columns) / columns, 1);
         }
+        size->cx = columns * cxButton;
+        size->cy = rows * cyButton;
+#endif
     }
 
     LRESULT OnGetInfoTip(INT uCode, LPNMHDR hdr, BOOL& bHandled)
@@ -553,15 +609,6 @@ public:
 
         if (Toolbar)
         {
-            TBMETRICS tbm;
-            tbm.cbSize = sizeof(tbm);
-            tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
-            tbm.cxBarPad = tbm.cyBarPad = 0;
-            tbm.cxButtonSpacing = 0;
-            tbm.cyButtonSpacing = 0;
-
-            Toolbar.SetMetrics(&tbm);
-
             Toolbar.SetWindowPos(NULL, 0, 0, szClient.cx, szClient.cy, SWP_NOZORDER);
             Toolbar.AutoSize();
 
@@ -582,6 +629,11 @@ public:
     {
         bHandled = TRUE;
         return 0;
+    }
+
+    void ResizeImagelist()
+    {
+        Toolbar.ResizeImagelist();
     }
 
     DECLARE_WND_CLASS_EX(szSysPagerWndClass, CS_DBLCLKS, COLOR_3DFACE)
@@ -1239,8 +1291,8 @@ public:
 
 static const WCHAR szTrayNotifyWndClass [] = TEXT("TrayNotifyWnd");
 
-#define TRAY_NOTIFY_WND_SPACING_X   2
-#define TRAY_NOTIFY_WND_SPACING_Y   2
+#define TRAY_NOTIFY_WND_SPACING_X   1
+#define TRAY_NOTIFY_WND_SPACING_Y   1
 
 class CTrayNotifyWnd :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -1430,19 +1482,23 @@ public:
                 szClock.cy,
                 SWP_NOZORDER);
 
+            POINT ptPager;
+
             if (IsHorizontal)
             {
-                ptClock.x -= szTrayNotify.cx;
+                ptPager.x = ptClock.x - szTrayNotify.cx;
+                ptPager.y = (pszClient->cy - szTrayNotify.cy)/2;
             }
             else
             {
-                ptClock.y -= szTrayNotify.cy;
+                ptPager.x = (pszClient->cx - szTrayNotify.cx)/2;
+                ptPager.y = ptClock.y - szTrayNotify.cy;
             }
 
             m_pager->SetWindowPos(
                 NULL,
-                ptClock.x,
-                ptClock.y,
+                ptPager.x,
+                ptPager.y,
                 szTrayNotify.cx,
                 szTrayNotify.cy,
                 SWP_NOZORDER);
@@ -1586,12 +1642,22 @@ public:
         return 0;
     }
 
+    LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (wParam == SPI_SETNONCLIENTMETRICS)
+        {
+            m_pager->ResizeImagelist();
+        }
+        return 0;
+    }
+
     DECLARE_WND_CLASS_EX(szTrayNotifyWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTrayNotifyWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_THEMECHANGED, OnThemeChanged)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)

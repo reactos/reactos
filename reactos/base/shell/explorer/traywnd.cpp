@@ -2241,6 +2241,7 @@ ChangePos:
     {
         if (wParam == SPI_SETNONCLIENTMETRICS)
         {
+            SendMessage(m_TrayNotify, uMsg, wParam, lParam);
             SendMessage(m_TaskSwitch, uMsg, wParam, lParam);
             UpdateFonts();
             AlignControls(NULL);
@@ -2457,6 +2458,8 @@ ChangePos:
         InSizeMove = FALSE;
         if (!Locked)
         {
+            FitToRebar(&m_TrayRects[m_Position]);
+
             /* Apply clipping */
             PostMessage(WM_SIZE, SIZE_RESTORED, 0);
         }
