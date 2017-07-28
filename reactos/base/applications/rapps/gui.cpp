@@ -1264,10 +1264,10 @@ private:
         case ID_INSTALL:
             if (nSelectedApps)
             {
-                СDownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
+                CDownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
                 UpdateApplicationsList(-1);
             } 
-            else if(СDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
+            else if(CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
             {
                 UpdateApplicationsList(-1);
             }

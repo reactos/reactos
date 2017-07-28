@@ -341,15 +341,15 @@ MessageBox_LoadString(HWND hMainWnd, INT StringID)
     }
 }
 
-// ÑDownloadManager
-PAPPLICATION_INFO                       ÑDownloadManager::AppInfo;
-ATL::CSimpleArray<PAPPLICATION_INFO>    ÑDownloadManager::AppsToInstallList;
-CDowloadingAppsListView                 ÑDownloadManager::DownloadsListView;
-INT                                     ÑDownloadManager::iCurrentApp;
+// CDownloadManager
+PAPPLICATION_INFO                       CDownloadManager::AppInfo;
+ATL::CSimpleArray<PAPPLICATION_INFO>    CDownloadManager::AppsToInstallList;
+CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
+INT                                     CDownloadManager::iCurrentApp;
 
 #define DL_START_NEW WM_APP + 1
 
-INT_PTR CALLBACK ÑDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HANDLE Thread;
     DWORD ThreadId;
@@ -458,7 +458,7 @@ INT_PTR CALLBACK ÑDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
     }
 }
 
-LRESULT CALLBACK ÑDownloadManager::DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+LRESULT CALLBACK CDownloadManager::DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
     static ATL::CStringW szProgressText;
 
@@ -533,7 +533,7 @@ LRESULT CALLBACK ÑDownloadManager::DownloadProgressProc(HWND hWnd, UINT uMsg, WP
     }
 }
 
-DWORD WINAPI ÑDownloadManager::ThreadFunc(LPVOID Context)
+DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID Context)
 {
     CComPtr<IBindStatusCallback> dl;
     ATL::CStringW Path;
@@ -788,7 +788,7 @@ end:
     return 0;
 }
 
-BOOL ÑDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList)
+BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList)
 {
     if (AppsList.GetSize() == 0)
     {
@@ -804,7 +804,7 @@ BOOL ÑDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLI
     return TRUE;
 }
 
-BOOL ÑDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo)
+BOOL CDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo)
 {
     if (!pAppInfo)
     {
@@ -818,7 +818,7 @@ BOOL ÑDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo)
     return TRUE;
 }
 
-VOID ÑDownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
+VOID CDownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
 {
     APPLICATION_INFO IntInfo;
     IntInfo.szUrlDownload = lpUrl;
@@ -827,7 +827,7 @@ VOID ÑDownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
 }
 
 //TODO: Reuse the dialog
-VOID ÑDownloadManager::LaunchDownloadDialog()
+VOID CDownloadManager::LaunchDownloadDialog()
 {
     CreateDialogW(hInst,
                   MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),

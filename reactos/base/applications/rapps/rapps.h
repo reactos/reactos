@@ -251,7 +251,7 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 /* loaddlg.cpp */
 class CDowloadingAppsListView;
 
-class ÑDownloadManager
+class CDownloadManager
 {
     static PAPPLICATION_INFO AppInfo;
     static ATL::CSimpleArray<PAPPLICATION_INFO> AppsToInstallList;
