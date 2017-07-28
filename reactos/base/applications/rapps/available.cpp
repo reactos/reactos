@@ -251,7 +251,7 @@ BOOL CAvailableApps::UpdateAppsDB()
     if (!DeleteCurrentAppsDB())
         return FALSE;
 
-    DownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
+    ÑDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
     if (m_szPath.IsEmpty())
         return FALSE;
@@ -280,7 +280,7 @@ BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnu
     if (hFind == INVALID_HANDLE_VALUE)
     {
         if (GetFileAttributesW(m_szCabPath) == INVALID_FILE_ATTRIBUTES)
-            DownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
+            ÑDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
         ExtractFilesFromCab(m_szCabPath, m_szAppsPath);
         hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);

@@ -90,7 +90,7 @@ BEGIN
     PUSHBUTTON "Cancel", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE 
 CAPTION "Downloading %ls..."
 FONT 8, "MS Shell Dlg"
@@ -202,6 +202,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
+    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
@@ -219,6 +220,8 @@ BEGIN
     IDS_STATUS_UPDATE_AVAILABLE "Update available"
     IDS_STATUS_DOWNLOADING "Downloading…"
     IDS_STATUS_INSTALLING "Installing…"
+    IDS_STATUS_WAITING "Waiting to install…"
+    IDS_STATUS_FINISHED "Finished"
 END
 
 STRINGTABLE

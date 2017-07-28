@@ -235,31 +235,31 @@ public:
         switch (idButton)
         {
         case ID_EXIT:
-            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_EXIT);
+            lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_EXIT);
             break;
 
         case ID_INSTALL:
-            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_INSTALL);
+            lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_INSTALL);
             break;
 
         case ID_UNINSTALL:
-            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_UNINSTALL);
+            lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UNINSTALL);
             break;
 
         case ID_MODIFY:
-            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_MODIFY);
+            lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_MODIFY);
             break;
 
         case ID_SETTINGS:
-            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_SETTINGS);
+            lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_SETTINGS);
             break;
 
         case ID_REFRESH:
-            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_REFRESH);
+            lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_REFRESH);
             break;
 
         case ID_RESETDB:
-            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_UPDATE_DB);
+            lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UPDATE_DB);
             break;
         }
     }
@@ -380,7 +380,7 @@ public:
 
     BOOL AddColumn(INT Index, LPWSTR lpText, INT Width, INT Format)
     {
-        LV_COLUMNW Column;
+        LVCOLUMNW Column;
 
         ZeroMemory(&Column, sizeof(Column));
 
@@ -395,7 +395,7 @@ public:
 
     INT AddItem(INT ItemIndex, INT IconIndex, LPWSTR lpText, LPARAM lParam)
     {
-        LV_ITEMW Item;
+        LVITEMW Item;
 
         ZeroMemory(&Item, sizeof(Item));
 
@@ -484,6 +484,12 @@ public:
             }
         }
         return list;
+    }
+    
+    PAPPLICATION_INFO GetSelectedData()
+    {
+        INT item = GetSelectionMark();
+        return (PAPPLICATION_INFO) GetItemData(item);
     }
 };
 
@@ -767,7 +773,7 @@ private:
             RECT rBottom;
 
             /* Size status bar */
-            m_StatusBar->SendMessage(WM_SIZE, 0, 0);
+            m_StatusBar->SendMessageW(WM_SIZE, 0, 0);
 
             /* Size tool bar */
             m_Toolbar->AutoSize();
@@ -1258,10 +1264,10 @@ private:
         case ID_INSTALL:
             if (nSelectedApps)
             {
-                DownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
+                СDownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
                 UpdateApplicationsList(-1);
             } 
-            else if(DownloadManager::DownloadApplication((PAPPLICATION_INFO) m_ListView->GetSelectionMark()))
+            else if(СDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
             {
                 UpdateApplicationsList(-1);
             }

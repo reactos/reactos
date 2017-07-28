@@ -249,12 +249,15 @@ VOID SaveSettings(HWND hwnd);
 VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 
 /* loaddlg.cpp */
+class CDowloadingAppsListView;
 
-class DownloadManager
+class ÑDownloadManager
 {
     static PAPPLICATION_INFO AppInfo;
+    static ATL::CSimpleArray<PAPPLICATION_INFO> AppsToInstallList;
+    static CDowloadingAppsListView DownloadsListView;
+    static INT iCurrentApp;
 public:
-
     static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK DownloadProgressProc(HWND hWnd, 
                                                  UINT uMsg, 

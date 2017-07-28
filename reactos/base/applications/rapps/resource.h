@@ -107,6 +107,7 @@
 #define IDS_UNABLE_TO_WRITE      125
 #define IDS_SELECT_ALL           126
 #define IDS_INSTALL_SELECTED     127
+#define IDS_UNABLE_TO_INSTALL    128
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200
@@ -176,6 +177,8 @@
 #define IDS_STATUS_UPDATE_AVAILABLE   803
 #define IDS_STATUS_DOWNLOADING        804
 #define IDS_STATUS_INSTALLING         805
+#define IDS_STATUS_WAITING            806
+#define IDS_STATUS_FINISHED           807
 
 /* App license names */
 #define IDS_LICENSE_OPENSOURCE      900

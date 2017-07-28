@@ -46,7 +46,6 @@ typedef struct
 typedef HRESULT(WINAPI *fnExtract)(SESSION *dest, LPCSTR szCabName);
 fnExtract pfnExtract;
 
-
 INT
 GetSystemColorDepth(VOID)
 {
@@ -56,7 +55,7 @@ GetSystemColorDepth(VOID)
     pDevMode.dmSize = sizeof(pDevMode);
     pDevMode.dmDriverExtra = 0;
 
-    if (!EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &pDevMode))
+    if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &pDevMode))
     {
         /* TODO: Error message */
         return ILC_COLOR;
@@ -170,7 +169,7 @@ ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STATE;
-    GetMenuItemInfo(hPopupMenu, DefaultItem, FALSE, &mii);
+    GetMenuItemInfoW(hPopupMenu, DefaultItem, FALSE, &mii);
 
     if (!(mii.fState & MFS_GRAYED))
         SetMenuDefaultItem(hPopupMenu, DefaultItem, FALSE);

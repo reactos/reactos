@@ -98,7 +98,7 @@ BEGIN
     PUSHBUTTON "Скасувати", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_SYSMENU | WS_VISIBLE
 CAPTION "Завантаження %ls..."
 FONT 8, "MS Shell Dlg"
@@ -208,6 +208,7 @@ BEGIN
     IDS_INFORMATION "Інформація"
     IDS_UNABLE_TO_DOWNLOAD "Неможливо завантажити додаток! Адресу не знайдено!"
     IDS_UNABLE_TO_DOWNLOAD2 "Неможливо завантажити додаток! Перевірте підключення до мережі Інтернет!"
+    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
     IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
     IDS_CERT_DOES_NOT_MATCH "Помилка перевіки сертифікату SSL."
     IDS_INTEG_CHECK_TITLE "Перевірка цілістності додатку..."
@@ -224,6 +225,8 @@ BEGIN
     IDS_STATUS_UPDATE_AVAILABLE "Є оновлення"
     IDS_STATUS_DOWNLOADING "Завантажується…"
     IDS_STATUS_INSTALLING "Встановлюється…"
+    IDS_STATUS_WAITING "Очікування завантаження…"
+    IDS_STATUS_FINISHED "Завершено"  
 END
 
 STRINGTABLE

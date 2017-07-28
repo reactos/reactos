@@ -197,7 +197,7 @@ RemoveAppFromRegistry(INT Index)
     PINSTALLED_INFO Info;
     WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
     ATL::CStringW szMsgText, szMsgTitle;
-    INT ItemIndex = SendMessage(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    INT ItemIndex = SendMessageW(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
 
     if (!IS_INSTALLED_ENUM(SelectedEnumType))
         return;
