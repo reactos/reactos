@@ -40,6 +40,7 @@ extern HINSTANCE g_hInstance;
 
 #define ID_ICON_VOLUME (WM_APP + 0x4CB)
 #define ID_ICON_POWER  (WM_APP + 0x4CC)
+#define ID_ICON_HOTPLUG (WM_APP + 0x4CD)
 
 #include "csystray.h"
 
@@ -70,3 +71,8 @@ extern HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Power_Shutdown(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Power_Update(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
+
+extern HRESULT STDMETHODCALLTYPE Hotplug_Init(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Hotplug_Shutdown(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Hotplug_Update(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);

@@ -12,7 +12,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
 SysTrayIconHandlers_t g_IconHandlers [] = {
         { Volume_Init, Volume_Shutdown, Volume_Update, Volume_Message },
-        { Power_Init, Power_Shutdown, Power_Update, Power_Message }
+        { Power_Init, Power_Shutdown, Power_Update, Power_Message },
+        { Hotplug_Init, Hotplug_Shutdown, Hotplug_Update, Hotplug_Message }
 };
 const int g_NumIcons = _countof(g_IconHandlers);
 

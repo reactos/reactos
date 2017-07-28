@@ -23,6 +23,7 @@ add_library(stobject SHARED
     stobject.rc
     power.cpp
     volume.cpp
+    hotplug.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/stobject.def)
 
 set_module_type(stobject win32dll UNICODE)
