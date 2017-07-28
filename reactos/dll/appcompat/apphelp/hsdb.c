@@ -1,7 +1,7 @@
 /*
  * Copyright 2011 André Hentschel
  * Copyright 2013 Mislav Blažević
- * Copyright 2015-2017 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,6 @@
 #include "strsafe.h"
 #include "apphelp.h"
 
-#include "wine/unicode.h"
 
 #define MAX_LAYER_LENGTH            256
 #define GPLK_USER                   1
@@ -385,8 +384,8 @@ HSDB WINAPI SdbInitDatabase(DWORD flags, LPCWSTR path)
                 SdbReleaseDatabase(hsdb);
                 return NULL;
         }
-        SdbGetAppPatchDir(NULL, buffer, 128);
-        memcpy(buffer + lstrlenW(buffer), name, SdbpStrsize(name));
+        SdbGetAppPatchDir(NULL, buffer, _countof(buffer));
+        StringCchCatW(buffer, _countof(buffer), name);
         flags = HID_DOS_PATHS;
     }
 
@@ -481,7 +480,7 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
 
 
     /* Extract file name */
-    file_name = strrchrW(DosApplicationName.String.Buffer, '\\');
+    file_name = wcsrchr(DosApplicationName.String.Buffer, '\\');
     if (!file_name)
     {
         SHIM_ERR("Failed to find Exe name in %wZ.", &DosApplicationName.String);
@@ -578,7 +577,7 @@ BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size)
     if (!default_dir)
     {
         WCHAR* tmp;
-        UINT len = GetSystemWindowsDirectoryW(NULL, 0) + lstrlenW(szAppPatch);
+        UINT len = GetSystemWindowsDirectoryW(NULL, 0) + SdbpStrlen(szAppPatch);
         tmp = SdbAlloc((len + 1)* sizeof(WCHAR));
         if (tmp)
         {

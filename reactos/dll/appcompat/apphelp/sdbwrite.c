@@ -20,7 +20,7 @@
 
 #if !defined(SDBWRITE_HOSTTOOL)
 #define WIN32_NO_STATUS
-#include "windows.h"
+#include "windef.h"
 #include "ntndk.h"
 #else
 #include <typedefs.h>

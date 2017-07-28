@@ -18,14 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#include "windows.h"
 #include "ntndk.h"
 #include "strsafe.h"
 #include "apphelp.h"
 #include "sdbstringtable.h"
-
-#include "wine/unicode.h"
 
 
 static const GUID GUID_DATABASE_MSI = {0xd8ff6d16,0x6a3a,0x468a, {0x8b,0x44,0x01,0x71,0x4d,0xdc,0x49,0xea}};
@@ -36,139 +32,30 @@ static HANDLE SdbpHeap(void);
 
 #if SDBAPI_DEBUG_ALLOC
 
-typedef struct SHIM_ALLOC_ENTRY
-{
-    PVOID Address;
-    SIZE_T Size;
-    int Line;
-    const char* File;
-    PVOID Next;
-    PVOID Prev;
-} SHIM_ALLOC_ENTRY, *PSHIM_ALLOC_ENTRY;
-
-/* FIXME: This is not threadsafe */
-static RTL_AVL_TABLE g_SdbpAllocationTable;
-
-
-static RTL_GENERIC_COMPARE_RESULTS
-NTAPI ShimAllocCompareRoutine(_In_ PRTL_AVL_TABLE Table, _In_ PVOID FirstStruct, _In_ PVOID SecondStruct)
-{
-    PVOID First = ((PSHIM_ALLOC_ENTRY)FirstStruct)->Address;
-    PVOID Second = ((PSHIM_ALLOC_ENTRY)SecondStruct)->Address;
-
-    if (First < Second)
-        return GenericLessThan;
-    else if (First == Second)
-        return GenericEqual;
-    return GenericGreaterThan;
-}
-
-static PVOID NTAPI ShimAllocAllocateRoutine(_In_ PRTL_AVL_TABLE Table, _In_ CLONG ByteSize)
-{
-    return HeapAlloc(SdbpHeap(), HEAP_ZERO_MEMORY, ByteSize);
-}
-
-static VOID NTAPI ShimAllocFreeRoutine(_In_ PRTL_AVL_TABLE Table, _In_ PVOID Buffer)
-{
-    HeapFree(SdbpHeap(), 0, Buffer);
-}
-
-static void SdbpInsertAllocation(PVOID address, SIZE_T size, int line, const char* file)
-{
-    SHIM_ALLOC_ENTRY Entry = {0};
-
-    Entry.Address = address;
-    Entry.Size = size;
-    Entry.Line = line;
-    Entry.File = file;
-    RtlInsertElementGenericTableAvl(&g_SdbpAllocationTable, &Entry, sizeof(Entry), NULL);
-}
-
-static void SdbpUpdateAllocation(PVOID address, PVOID newaddress, SIZE_T size, int line, const char* file)
-{
-    SHIM_ALLOC_ENTRY Lookup = {0};
-    PSHIM_ALLOC_ENTRY Entry;
-    Lookup.Address = address;
-    Entry = RtlLookupElementGenericTableAvl(&g_SdbpAllocationTable, &Lookup);
-
-    if (address == newaddress)
-    {
-        Entry->Size = size;
-    }
-    else
-    {
-        Lookup.Address = newaddress;
-        Lookup.Size = size;
-        Lookup.Line = line;
-        Lookup.File = file;
-        Lookup.Prev = address;
-        RtlInsertElementGenericTableAvl(&g_SdbpAllocationTable, &Lookup, sizeof(Lookup), NULL);
-        Entry->Next = newaddress;
-    }
-}
-
-static void SdbpRemoveAllocation(PVOID address, int line, const char* file)
-{
-    SHIM_ALLOC_ENTRY Lookup = {0};
-    PSHIM_ALLOC_ENTRY Entry;
-
-    DbgPrint("\r\n===============\r\n%s(%d): SdbpFree called, tracing alloc:\r\n", file, line);
-
-    Lookup.Address = address;
-    while (Lookup.Address)
-    {
-        Entry = RtlLookupElementGenericTableAvl(&g_SdbpAllocationTable, &Lookup);
-        if (Entry)
-        {
-            Lookup = *Entry;
-            RtlDeleteElementGenericTableAvl(&g_SdbpAllocationTable, Entry);
-
-            DbgPrint(" > %s(%d): %s%sAlloc( %d ) ==> %p\r\n", Lookup.File, Lookup.Line,
-                Lookup.Next ? "Invalidated " : "", Lookup.Prev ? "Re" : "", Lookup.Size, Lookup.Address);
-            Lookup.Address = Lookup.Prev;
-        }
-        else
-        {
-            Lookup.Address = NULL;
-        }
-    }
-    DbgPrint("===============\r\n");
-}
+/* dbgheap.c */
+void SdbpInsertAllocation(PVOID address, SIZE_T size, int line, const char* file);
+void SdbpUpdateAllocation(PVOID address, PVOID newaddress, SIZE_T size, int line, const char* file);
+void SdbpRemoveAllocation(PVOID address, int line, const char* file);
+void SdbpDebugHeapInit(HANDLE privateHeapPtr);
+void SdbpDebugHeapDeinit(void);
 
 #endif
 
 static HANDLE g_Heap;
 void SdbpHeapInit(void)
 {
+    g_Heap = RtlCreateHeap(HEAP_GROWABLE, NULL, 0, 0x10000, NULL, NULL);
 #if SDBAPI_DEBUG_ALLOC
-    RtlInitializeGenericTableAvl(&g_SdbpAllocationTable, ShimAllocCompareRoutine,
-        ShimAllocAllocateRoutine, ShimAllocFreeRoutine, NULL);
+    SdbpDebugHeapInit(g_Heap);
 #endif
-    g_Heap = HeapCreate(0, 0x10000, 0);
 }
 
 void SdbpHeapDeinit(void)
 {
 #if SDBAPI_DEBUG_ALLOC
-    if (g_SdbpAllocationTable.NumberGenericTableElements != 0)
-    {
-        PSHIM_ALLOC_ENTRY Entry;
-
-        DbgPrint("\r\n===============\r\n===============\r\nSdbpHeapDeinit: Dumping leaks\r\n");
-        Entry = RtlEnumerateGenericTableAvl(&g_SdbpAllocationTable, TRUE);
-
-        while (Entry)
-        {
-            DbgPrint(" > %s(%d): %s%sAlloc( %d ) ==> %p\r\n", Entry->File, Entry->Line,
-                     Entry->Next ? "Invalidated " : "", Entry->Prev ? "Re" : "", Entry->Size, Entry->Address);
-
-            Entry = RtlEnumerateGenericTableAvl(&g_SdbpAllocationTable, FALSE);
-        }
-        DbgPrint("===============\r\n===============\r\n");
-    }
-    /*__debugbreak();*/
+    SdbpDebugHeapDeinit();
 #endif
-    HeapDestroy(g_Heap);
+    RtlDestroyHeap(g_Heap);
 }
 
 static HANDLE SdbpHeap(void)
@@ -182,7 +69,7 @@ LPVOID SdbpAlloc(SIZE_T size
 #endif
     )
 {
-    LPVOID mem = HeapAlloc(SdbpHeap(), HEAP_ZERO_MEMORY, size);
+    LPVOID mem = RtlAllocateHeap(SdbpHeap(), HEAP_ZERO_MEMORY, size);
 #if SDBAPI_DEBUG_ALLOC
     SdbpInsertAllocation(mem, size, line, file);
 #endif
@@ -195,7 +82,7 @@ LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size, SIZE_T oldSize
 #endif
     )
 {
-    LPVOID newmem = HeapReAlloc(SdbpHeap(), HEAP_ZERO_MEMORY, mem, size);
+    LPVOID newmem = RtlReAllocateHeap(SdbpHeap(), HEAP_ZERO_MEMORY, mem, size);
 #if SDBAPI_DEBUG_ALLOC
     SdbpUpdateAllocation(mem, newmem, size, line, file);
 #endif
@@ -211,7 +98,7 @@ void SdbpFree(LPVOID mem
 #if SDBAPI_DEBUG_ALLOC
     SdbpRemoveAllocation(mem, line, file);
 #endif
-    HeapFree(SdbpHeap(), 0, mem);
+    RtlFreeHeap(SdbpHeap(), 0, mem);
 }
 
 PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
@@ -228,7 +115,9 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
             return NULL;
     }
     else
+    {
         RtlInitUnicodeString(&str, path);
+    }
 
     /* SdbAlloc zeroes the memory. */
     db = (PDB)SdbAlloc(sizeof(DB));
@@ -268,7 +157,7 @@ void WINAPI SdbpFlush(PDB db)
 
 DWORD SdbpStrlen(PCWSTR string)
 {
-    return lstrlenW(string);
+    return wcslen(string);
 }
 
 DWORD SdbpStrsize(PCWSTR string)
@@ -279,7 +168,7 @@ DWORD SdbpStrsize(PCWSTR string)
 PWSTR SdbpStrDup(LPCWSTR string)
 {
     PWSTR ret = SdbAlloc(SdbpStrsize(string));
-    lstrcpyW(ret, string);
+    wcscpy(ret, string);
     return ret;
 }
 
@@ -379,6 +268,7 @@ BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
 PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
 {
     IO_STATUS_BLOCK io;
+    FILE_STANDARD_INFORMATION fsi;
     PDB db;
     NTSTATUS Status;
     BYTE header[12];
@@ -387,7 +277,15 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
     if (!db)
         return NULL;
 
-    db->size = GetFileSize(db->file, NULL);
+    Status = NtQueryInformationFile(db->file, &io, &fsi, sizeof(FILE_STANDARD_INFORMATION), FileStandardInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        SdbCloseDatabase(db);
+        SHIM_ERR("Failed to get shim database size: 0x%lx\n", Status);
+        return NULL;
+    }
+
+    db->size = fsi.EndOfFile.u.LowPart;
     db->data = SdbAlloc(db->size);
     Status = NtReadFile(db->file, NULL, NULL, NULL, &io, db->data, db->size, NULL, NULL);
 
@@ -597,7 +495,7 @@ TAGID WINAPI SdbFindFirstNamedTag(PDB db, TAGID root, TAGID find, TAGID nametag,
         if (tmp != TAGID_NULL)
         {
             LPCWSTR name = SdbGetStringTagPtr(db, tmp);
-            if (name && !lstrcmpiW(name, find_name))
+            if (name && !wcsicmp(name, find_name))
                 return iter;
         }
         iter = SdbFindNextTag(db, root, iter);

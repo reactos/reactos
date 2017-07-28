@@ -1,7 +1,7 @@
 /*
  * Copyright 2011 André Hentschel
  * Copyright 2013 Mislav Blaževic
- * Copyright 2015,2016 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,10 +19,7 @@
  */
 
 #include "windef.h"
-#include "winbase.h"
 #include "apphelp.h"
-
-#include "wine/unicode.h"
 
 
 DWORD WINAPI SdbGetTagDataSize(PDB db, TAGID tagid);

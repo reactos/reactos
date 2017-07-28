@@ -20,13 +20,11 @@
 
 #define WIN32_NO_STATUS
 #include "windef.h"
-#include "winbase.h"
 #include "apphelp.h"
-#include "imagehlp.h"
+#include "strsafe.h"
 #include "winver.h"
 #include "rtlfuncs.h"
 
-#include "wine/unicode.h"
 
 #define NUM_ATTRIBUTES  28
 enum APPHELP_MODULETYPE
@@ -79,7 +77,7 @@ static WCHAR* WINAPI SdbpGetStringAttr(LPWSTR translation, LPCWSTR attr, PVOID f
     if (!file_info)
         return NULL;
 
-    snprintfW(value, 128, translation, attr);
+    StringCchPrintfW(value, ARRAYSIZE(value), translation, attr);
     if (VerQueryValueW(file_info, value, &buffer, &size) && size != 0)
         return (WCHAR*)buffer;
 
@@ -309,7 +307,7 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
             file_info = SdbAlloc(info_size);
             GetFileVersionInfoW(path, 0, info_size, file_info);
             VerQueryValueW(file_info, str_tinfo, (LPVOID)&lang_page, &page_size);
-            snprintfW(translation, 128, str_trans, lang_page->language, lang_page->code_page);
+            StringCchPrintfW(translation, ARRAYSIZE(translation), str_trans, lang_page->language, lang_page->code_page);
         }
 
         /* Handles 2, 3, 12, 13, 14, 15, 21, 22 */
