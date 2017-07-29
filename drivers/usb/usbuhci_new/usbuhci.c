@@ -303,12 +303,13 @@ NTAPI
 UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
                   IN PUSBPORT_RESOURCES Resources)
 {
-    LARGE_INTEGER FirstTime;
+    LARGE_INTEGER EndTime;
     LARGE_INTEGER CurrentTime;
     ULONG ResourcesTypes;
     PUHCI_HW_REGISTERS BaseRegister;
     PUSHORT StatusRegister;
     UHCI_PCI_LEGSUP LegacySupport;
+    UHCI_PCI_LEGSUP LegacyMask;
     UHCI_USB_COMMAND Command;
     UHCI_USB_STATUS HcStatus;
     MPSTATUS MpStatus = MP_STATUS_SUCCESS;
@@ -321,6 +322,7 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
     if ((ResourcesTypes & (USBPORT_RESOURCES_PORT | USBPORT_RESOURCES_INTERRUPT)) !=
                           (USBPORT_RESOURCES_PORT | USBPORT_RESOURCES_INTERRUPT))
     {
+        DPRINT1("UhciTakeControlHC: MP_STATUS_ERROR\n");
         MpStatus = MP_STATUS_ERROR;
     }
 
@@ -328,10 +330,10 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
     StatusRegister = &BaseRegister->HcStatus.AsUSHORT;
 
     RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
-                                           TRUE,
-                                           &LegacySupport.AsUSHORT,
-                                           PCI_LEGSUP,
-                                           sizeof(USHORT));
+                                          TRUE,
+                                          &LegacySupport.AsUSHORT,
+                                          PCI_LEGSUP,
+                                          sizeof(USHORT));
 
     UhciDisableInterrupts(UhciExtension);
 
@@ -343,55 +345,49 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
 
     WRITE_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT, Command.AsUSHORT);
 
-    KeQuerySystemTime(&FirstTime);
-    FirstTime.QuadPart += 100 * 10000; // 100 ms.
+    KeQuerySystemTime(&EndTime);
+    EndTime.QuadPart += 100 * 10000; // 100 ms
 
     HcStatus.AsUSHORT = READ_PORT_USHORT(StatusRegister);
 
-    while (HcStatus.HcHalted == 0)
+    if (HcStatus.HcHalted == 0)
     {
-        HcStatus.AsUSHORT = READ_PORT_USHORT(StatusRegister);
-
-        KeQuerySystemTime(&CurrentTime);
-
-        if (CurrentTime.QuadPart < FirstTime.QuadPart)
+        do
         {
-            break;
+            HcStatus.AsUSHORT = READ_PORT_USHORT(StatusRegister);
+            KeQuerySystemTime(&CurrentTime);
         }
+        while (CurrentTime.QuadPart < EndTime.QuadPart &&
+               HcStatus.HcHalted == 0);
     }
 
-    HcStatus.Interrupt = 1;
-    HcStatus.ErrorInterrupt = 1;
-    HcStatus.ResumeDetect = 1;
-    HcStatus.HostSystemError = 1;
-    HcStatus.HcProcessError = 1;
-    HcStatus.HcHalted = 1;
+    WRITE_PORT_USHORT(StatusRegister, UHCI_USB_STATUS_MASK);
 
-    WRITE_PORT_USHORT(StatusRegister, HcStatus.AsUSHORT);
+    LegacyMask.AsUSHORT = 0;
+    LegacyMask.Smi60Read == 1;
+    LegacyMask.Smi60Write == 1;
+    LegacyMask.Smi64Read == 1;
+    LegacyMask.Smi64Write == 1;
+    LegacyMask.SmiIrq == 1;
+    LegacyMask.A20Gate == 1;
+    LegacyMask.SmiEndPassThrough == 1;
 
-    if (LegacySupport.Smi60Read == 1 ||
-        LegacySupport.Smi60Write == 1 || 
-        LegacySupport.Smi64Read == 1 ||
-        LegacySupport.Smi64Write == 1 ||
-        LegacySupport.SmiIrq == 1 ||
-        LegacySupport.A20Gate == 1 ||
-        LegacySupport.SmiEndPassThrough == 1)
+    if ((LegacySupport.AsUSHORT & LegacyMask.AsUSHORT) != 0)
     {
         Resources->LegacySupport = 1;
 
         RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
-                                               TRUE,
-                                               &LegacySupport.AsUSHORT,
-                                               PCI_LEGSUP,
-                                               sizeof(USHORT));
-
+                                              TRUE,
+                                              &LegacySupport.AsUSHORT,
+                                              PCI_LEGSUP,
+                                              sizeof(USHORT));
         LegacySupport.AsUSHORT = 0;
 
         RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
-                                               FALSE,
-                                               &LegacySupport.AsUSHORT,
-                                               PCI_LEGSUP,
-                                               sizeof(USHORT));
+                                              FALSE,
+                                              &LegacySupport.AsUSHORT,
+                                              PCI_LEGSUP,
+                                              sizeof(USHORT));
     }
 
     return MpStatus;
