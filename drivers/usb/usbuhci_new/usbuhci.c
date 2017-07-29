@@ -57,7 +57,8 @@ UhciCleanupFrameList(IN PUHCI_EXTENSION UhciExtension,
     ULONG OldFrameNumber;
     ULONG ix;
 
-    DPRINT_UHCI("UhciCleanupFrameList: IsAllEntries - %x\n", IsAllEntries);
+    DPRINT_UHCI("UhciCleanupFrameList: [%p] All - %x\n",
+                UhciExtension, IsAllEntries);
 
     if (InterlockedIncrement(&UhciExtension->LockFrameList) != 1)
     {
@@ -610,11 +611,10 @@ UhciStartController(IN PVOID uhciExtension,
     UHCI_USB_COMMAND Command;
     USHORT Port;
 
-    DPRINT("UhciStartController: uhciExtension - %p\n", uhciExtension);
-
     UhciExtension->Flags &= ~UHCI_EXTENSION_FLAG_SUSPENDED;
     UhciExtension->BaseRegister = Resources->ResourceBase;
     BaseRegister = UhciExtension->BaseRegister;
+    DPRINT("UhciStartController: UhciExtension - %p, BaseRegister - %p\n", UhciExtension, BaseRegister);
 
     UhciExtension->HcFlavor = Resources->HcFlavor;
 
@@ -853,7 +853,8 @@ UhciInterruptDpc(IN PVOID uhciExtension,
     PUHCI_HW_REGISTERS BaseRegister;
     UHCI_USB_STATUS HcStatus;
 
-    DPRINT_UHCI("UhciInterruptDpc: ...\n");
+    DPRINT_UHCI("UhciInterruptDpc: [%p] EnableInt %x, HcStatus %X\n",
+                uhciExtension, IsDoEnableInterrupts, UhciExtension->HcStatus);
 
     BaseRegister = UhciExtension->BaseRegister;
 
@@ -1750,13 +1751,13 @@ UhciGetErrorFromTD(IN PUHCI_EXTENSION UhciExtension,
     }
 
     if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0 &&
-        (TdStatus & UHCI_TD_STS_STALLED) != 0 )
+        (TdStatus & UHCI_TD_STS_STALLED) != 0)
     {
         DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DEV_NOT_RESPONDING, TD - %p\n", TD);
         return USBD_STATUS_DEV_NOT_RESPONDING;
     }
 
-    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0 )
+    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0)
     {
         if (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL)
         {
@@ -1769,12 +1770,12 @@ UhciGetErrorFromTD(IN PUHCI_EXTENSION UhciExtension,
             return USBD_STATUS_CRC;
         }
     }
-    else if ((TdStatus & UHCI_TD_STS_DATA_BUFFER_ERROR) != 0 )
+    else if ((TdStatus & UHCI_TD_STS_DATA_BUFFER_ERROR) != 0)
     {
         DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DATA_OVERRUN, TD - %p\n", TD);
         USBDStatus = USBD_STATUS_DATA_OVERRUN;
     }
-    else if ((TdStatus & UHCI_TD_STS_STALLED) != 0 )
+    else if ((TdStatus & UHCI_TD_STS_STALLED) != 0)
     {
         DPRINT1("UhciGetErrorFromTD: USBD_STATUS_STALL_PID, TD - %p\n", TD);
         USBDStatus = USBD_STATUS_STALL_PID;
@@ -2326,7 +2327,7 @@ UhciEnableInterrupts(IN PVOID uhciExtension)
     PUHCI_HW_REGISTERS BaseRegister;
     UHCI_PCI_LEGSUP LegacySupport;
 
-    DPRINT("UhciEnableInterrupts: ...\n");
+    DPRINT("UhciEnableInterrupts: UhciExtension - %p\n", UhciExtension);
 
     BaseRegister = UhciExtension->BaseRegister;
 
@@ -2356,6 +2357,8 @@ UhciDisableInterrupts(IN PVOID uhciExtension)
     PUHCI_HW_REGISTERS BaseRegister;
     USB_CONTROLLER_FLAVOR HcFlavor;
     UHCI_PCI_LEGSUP LegacySupport;
+
+    DPRINT("UhciDisableInterrupts: UhciExtension - %p\n", UhciExtension);
 
     BaseRegister = UhciExtension->BaseRegister;
     WRITE_PORT_USHORT(&BaseRegister->HcInterruptEnable.AsUSHORT, 0);
@@ -2388,7 +2391,7 @@ UhciPollController(IN PVOID uhciExtension)
     UHCI_PORT_STATUS_CONTROL PortControl;
     USHORT Port;
 
-    DPRINT("UhciPollController: ...\n");
+    DPRINT("UhciPollController: UhciExtension - %p\n", UhciExtension);
 
     BaseRegister = UhciExtension->BaseRegister;
 
