@@ -305,6 +305,7 @@ void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme)
 
 static void 
 ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext, 
+                       RECT* prcCurrent,
                        CAPTIONBUTTON buttonId, 
                        INT iStateId)
 {
@@ -348,6 +349,9 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
         return;
     }
 
+    if (prcCurrent)
+        prcCurrent->right = pwndData->rcCaptionButtons[buttonId].left;
+
     DrawThemeBackground(pcontext->theme, pcontext->hDC, iPartId, iStateId, &pwndData->rcCaptionButtons[buttonId], NULL);
 }
 
@@ -369,13 +373,13 @@ static void
 ThemeDrawCaptionButtons(PDRAW_CONTEXT pcontext, DWORD htHot, DWORD htDown)
 {
     /* Draw the buttons */
-    ThemeDrawCaptionButton(pcontext, CLOSEBUTTON, 
+    ThemeDrawCaptionButton(pcontext, NULL, CLOSEBUTTON, 
                            ThemeGetButtonState(HTCLOSE, htHot, htDown, pcontext->Active));
-    ThemeDrawCaptionButton(pcontext, MAXBUTTON,  
+    ThemeDrawCaptionButton(pcontext, NULL, MAXBUTTON,  
                            ThemeGetButtonState(HTMAXBUTTON, htHot, htDown, pcontext->Active));
-    ThemeDrawCaptionButton(pcontext, MINBUTTON,
+    ThemeDrawCaptionButton(pcontext, NULL, MINBUTTON,
                            ThemeGetButtonState(HTMINBUTTON, htHot, htDown, pcontext->Active));
-    ThemeDrawCaptionButton(pcontext, HELPBUTTON,
+    ThemeDrawCaptionButton(pcontext, NULL, HELPBUTTON,
                            ThemeGetButtonState(HTHELP, htHot, htDown, pcontext->Active));
 }
 
@@ -421,10 +425,10 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     {
         iState = pcontext->Active ? BUTTON_NORMAL : BUTTON_INACTIVE;
 
-        ThemeDrawCaptionButton(pcontext, CLOSEBUTTON, iState);
-        ThemeDrawCaptionButton(pcontext, MAXBUTTON, iState);
-        ThemeDrawCaptionButton(pcontext, MINBUTTON, iState);
-        ThemeDrawCaptionButton(pcontext, HELPBUTTON, iState);
+        ThemeDrawCaptionButton(pcontext, &rcPart, CLOSEBUTTON, iState);
+        ThemeDrawCaptionButton(pcontext, &rcPart, MAXBUTTON, iState);
+        ThemeDrawCaptionButton(pcontext, &rcPart, MINBUTTON, iState);
+        ThemeDrawCaptionButton(pcontext, &rcPart, HELPBUTTON, iState);
     }
     
     rcPart.top += 3 ;
