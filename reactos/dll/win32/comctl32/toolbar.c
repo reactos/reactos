@@ -1019,6 +1019,9 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
         rcBitmap.left += ((rc.right - rc.left) - infoPtr->nBitmapWidth) / 2;
 
     rcBitmap.top += infoPtr->szPadding.cy / 2;
+#ifdef __REACTOS__
+    rcBitmap.top += infoPtr->themeMargins.cyTopHeight;
+#endif
 
     TRACE("iBitmap=%d, start=(%d,%d) w=%d, h=%d\n",
       btnPtr->iBitmap, rcBitmap.left, rcBitmap.top,
