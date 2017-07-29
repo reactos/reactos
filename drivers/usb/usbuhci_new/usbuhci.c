@@ -111,8 +111,7 @@ UhciUpdateCounter(IN PUHCI_EXTENSION UhciExtension)
 
 VOID
 NTAPI
-UhciSetNextQH(IN PUHCI_EXTENSION UhciExtension,
-              IN PUHCI_HCD_QH QH,
+UhciSetNextQH(IN PUHCI_HCD_QH QH,
               IN PUHCI_HCD_QH NextQH)
 {
     DPRINT("UhciSetNextQH: QH - %p, NextQH - %p\n", QH, NextQH);
