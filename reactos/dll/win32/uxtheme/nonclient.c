@@ -108,6 +108,8 @@ HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPa
     LOGFONTW logfont;
     COLORREF textColor;
     COLORREF oldTextColor;
+    int align = CA_LEFT;
+    int drawStyles = DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS;
 
     WCHAR buffer[50];
     WCHAR *pszText = buffer;
@@ -140,6 +142,12 @@ HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPa
     else
         textColor = GetSysColor(COLOR_CAPTIONTEXT);
 
+    GetThemeEnumValue(pcontext->theme, iPartId, iStateId, TMT_CONTENTALIGNMENT, &align);
+    if (align == CA_CENTER)
+        drawStyles |= DT_CENTER;
+    else if (align == CA_RIGHT)
+        drawStyles |= DT_RIGHT;
+
     oldTextColor = SetTextColor(pcontext->hDC, textColor);
     DrawThemeText(pcontext->theme, 
                   pcontext->hDC, 
@@ -147,7 +155,7 @@ HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPa
                   iStateId, 
                   pszText, 
                   len - 1, 
-                  DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS, 
+                  drawStyles, 
                   0, 
                   pRect);
     SetTextColor(pcontext->hDC, oldTextColor);
