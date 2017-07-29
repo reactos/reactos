@@ -401,6 +401,7 @@ UhciInitializeHardware(IN PUHCI_EXTENSION UhciExtension)
     UHCI_USB_COMMAND Command;
     UHCI_USB_STATUS StatusMask;
 
+    DPRINT("UhciInitializeHardware: UhciExtension - %p\n", UhciExtension);
     DPRINT("UhciInitializeHardware: VIA HW FIXME\n");
 
     BaseRegister = UhciExtension->BaseRegister;
@@ -428,8 +429,7 @@ UhciInitializeHardware(IN PUHCI_EXTENSION UhciExtension)
     WRITE_PORT_USHORT(&BaseRegister->HcCommand.AsUSHORT, Command.AsUSHORT);
 
     /* Restore SOF Timing Value */
-    WRITE_PORT_UCHAR((PUCHAR)(BaseRegister + UHCI_SOFMOD),
-                     UhciExtension->SOF_Modify);
+    WRITE_PORT_UCHAR(&BaseRegister->SOF_Modify, UhciExtension->SOF_Modify);
 
     StatusMask = UhciExtension->StatusMask;
 
