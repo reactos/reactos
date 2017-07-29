@@ -712,53 +712,80 @@ UhciInterruptService(IN PVOID uhciExtension)
 {
     PUHCI_EXTENSION UhciExtension = uhciExtension;
     PUHCI_HW_REGISTERS BaseRegister;
+    PUSHORT CommandReg;
+    UHCI_USB_COMMAND Command;
     PUSHORT StatusReg;
     UHCI_USB_STATUS HcStatus;
     PUSHORT InterruptEnableReg;
-    UHCI_INTERRUPT_ENABLE IntEnable;
-    PUHCI_HCD_QH BulkTailQH;
     PUHCI_HCD_QH QH;
+    PUHCI_HCD_QH BulkTailQH;
+    ULONG ScheduleError;
     BOOLEAN Result = FALSE;
-
-    DPRINT_UHCI("UhciInterruptService: ...\n");
 
     BaseRegister = UhciExtension->BaseRegister;
     StatusReg = &BaseRegister->HcStatus.AsUSHORT;
     InterruptEnableReg = &BaseRegister->HcInterruptEnable.AsUSHORT;
+    CommandReg = &BaseRegister->HcCommand.AsUSHORT;
 
-    Result = UhciHardwarePresent(UhciExtension);
-
-    if (Result == FALSE)
+    if (!UhciHardwarePresent(UhciExtension))
     {
-        return Result;
+        DPRINT1("UhciInterruptService: return FALSE\n");
+        return FALSE;
     }
 
-    HcStatus.AsUSHORT = READ_PORT_USHORT(StatusReg);
-    HcStatus.AsUSHORT &= UHCI_USB_STATUS_MASK;
+    HcStatus.AsUSHORT = READ_PORT_USHORT(StatusReg) & UHCI_USB_STATUS_MASK;
 
-    if (HcStatus.ResumeDetect == FALSE &&
-        HcStatus.HcProcessError == FALSE &&
-        (HcStatus.Interrupt |
-         HcStatus.ErrorInterrupt |
-         HcStatus.HostSystemError |
-         HcStatus.HcHalted) == TRUE)
+    if (HcStatus.HostSystemError || HcStatus.HcProcessError)
+    {
+        DPRINT1("UhciInterruptService: Error [%p] HcStatus %X\n",
+                UhciExtension,
+                HcStatus.AsUSHORT);
+    }
+    else if (HcStatus.AsUSHORT)
     {
         UhciExtension->HcScheduleError = 0;
     }
 
-    if (HcStatus.Interrupt == TRUE ||
-        HcStatus.ErrorInterrupt == TRUE ||
-        HcStatus.ResumeDetect == TRUE ||
-        HcStatus.HostSystemError == TRUE ||
-        HcStatus.HcProcessError == TRUE)
+    if (HcStatus.HcProcessError)
+    {
+        USHORT fn = READ_PORT_USHORT(&BaseRegister->FrameNumber);
+        USHORT intr = READ_PORT_USHORT(InterruptEnableReg);
+        USHORT cmd = READ_PORT_USHORT(CommandReg);
+
+        DPRINT1("UhciInterruptService: HC ProcessError!\n");
+        DPRINT1("UhciExtension %p, frame %X\n", UhciExtension, fn);
+        DPRINT1("HcCommand %X\n", cmd);
+        DPRINT1("HcStatus %X\n", HcStatus.AsUSHORT);
+        DPRINT1("HcInterruptEnable %X\n", intr);
+
+        DbgBreakPoint();
+    }
+
+    if (HcStatus.HcHalted)
+    {
+        DPRINT_UHCI("UhciInterruptService: Hc Halted [%p] HcStatus %X\n",
+                    UhciExtension,
+                    HcStatus.AsUSHORT);
+    }
+    else if (HcStatus.AsUSHORT)
     {
         UhciExtension->HcStatus.AsUSHORT = HcStatus.AsUSHORT;
+
         WRITE_PORT_USHORT(StatusReg, HcStatus.AsUSHORT);
         WRITE_PORT_USHORT(InterruptEnableReg, 0);
+
+        if (HcStatus.HostSystemError)
+        {
+            DPRINT1("UhciInterruptService: HostSystemError! HcStatus - %X\n",
+                    HcStatus.AsUSHORT);
+
+            DbgBreakPoint();
+        }
+
         Result = TRUE;
     }
 
-    if (HcStatus.Interrupt == FALSE)
+    if (!HcStatus.Interrupt)
     {
         goto NextProcess;
     }
@@ -767,47 +794,51 @@ UhciInterruptService(IN PVOID uhciExtension)
 
     BulkTailQH = UhciExtension->BulkTailQH;
 
-    if (BulkTailQH->HwQH.NextQH & UHCI_QH_HEAD_LINK_PTR_TERMINATE)
+    if ((BulkTailQH->HwQH.NextQH & UHCI_QH_HEAD_LINK_PTR_TERMINATE) != 0)
     {
         goto NextProcess;
     }
 
     QH = UhciExtension->BulkQH;
 
-    while (TRUE)
+    do
     {
         QH = QH->NextHcdQH;
 
         if (!QH)
         {
             BulkTailQH->HwQH.NextQH |= UHCI_QH_HEAD_LINK_PTR_TERMINATE;
-            break;
-        }
-
-        if ((QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_PTR_TERMINATE) ==
-                                    UHCI_QH_ELEMENT_LINK_PTR_VALID)
-        {
-            break;
+            goto NextProcess;
         }
     }
+    while ((QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_PTR_TERMINATE) != 0);
 
 NextProcess:
 
-    if (HcStatus.HcProcessError == TRUE)
+    if (HcStatus.HcProcessError)
     {
         UhciCleanupFrameList(UhciExtension, TRUE);
 
-        if (UhciExtension->HcScheduleError < UHCI_MAX_HC_SCHEDULE_ERRORS)
-        {
-            IntEnable.AsUSHORT = READ_PORT_USHORT(InterruptEnableReg);
-            IntEnable.TimeoutCRC = TRUE;
-            WRITE_PORT_USHORT(InterruptEnableReg, IntEnable.AsUSHORT);
-        }
+        ScheduleError = UhciExtension->HcScheduleError;
+        UhciExtension->HcScheduleError = ScheduleError + 1;
 
-        UhciExtension->HcScheduleError++;
+        DPRINT1("UhciInterruptService: [%p] ScheduleError %X\n",
+                UhciExtension,
+                ScheduleError);
+
+        if (ScheduleError < UHCI_MAX_HC_SCHEDULE_ERRORS)
+        {
+            Command.AsUSHORT = READ_PORT_USHORT(CommandReg);
+            Command.Run = 1;
+            WRITE_PORT_USHORT(CommandReg, Command.AsUSHORT);
+        }
     }
-    else if (HcStatus.Interrupt == TRUE && UhciExtension->ExtensionLock != 0)
+    else if (HcStatus.Interrupt && UhciExtension->ExtensionLock)
     {
+        DPRINT1("UhciInterruptService: [%p] HcStatus %X\n",
+                UhciExtension,
+                HcStatus.AsUSHORT);
+
         UhciCleanupFrameList(UhciExtension, FALSE);
     }
 
