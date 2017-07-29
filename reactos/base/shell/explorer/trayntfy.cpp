@@ -565,12 +565,12 @@ public:
         if (IsHorizontal)
         {
             rows = max(size->cy / cyButton, 1);
-            columns = max((VisibleButtonCount + rows) / rows, 1);
+            columns = (VisibleButtonCount + rows - 1) / rows;
         }
         else
         {
             columns = max(size->cx / cxButton, 1);
-            rows = max((VisibleButtonCount + columns) / columns, 1);
+            rows = (VisibleButtonCount + columns - 1) / columns;
         }
         size->cx = columns * cxButton;
         size->cy = rows * cyButton;
@@ -1361,10 +1361,10 @@ public:
         {
             SetWindowExStyle(m_hWnd, WS_EX_STATICEDGE, WS_EX_STATICEDGE);
 
-            ContentMargin.cxLeftWidth = 0;
-            ContentMargin.cxRightWidth = 0;
-            ContentMargin.cyTopHeight = 0;
-            ContentMargin.cyBottomHeight = 0;
+            ContentMargin.cxLeftWidth = 2;
+            ContentMargin.cxRightWidth = 2;
+            ContentMargin.cyTopHeight = 2;
+            ContentMargin.cyBottomHeight = 2;
         }
 
         return TRUE;
@@ -1461,16 +1461,16 @@ public:
 
             if (IsHorizontal)
             {
-                ptClock.x = pszClient->cx - TRAY_NOTIFY_WND_SPACING_X - szTrayClockMin.cx;
-                ptClock.y = TRAY_NOTIFY_WND_SPACING_Y;
+                ptClock.x = pszClient->cx - szTrayClockMin.cx - ContentMargin.cxRightWidth;
+                ptClock.y = ContentMargin.cyTopHeight;
                 szClock.cx = szTrayClockMin.cx;
-                szClock.cy = pszClient->cy - (2 * TRAY_NOTIFY_WND_SPACING_Y);
+                szClock.cy = pszClient->cy - ContentMargin.cyTopHeight - ContentMargin.cyBottomHeight;
             }
             else
             {
-                ptClock.x = TRAY_NOTIFY_WND_SPACING_X;
-                ptClock.y = pszClient->cy - TRAY_NOTIFY_WND_SPACING_Y - szTrayClockMin.cy;
-                szClock.cx = pszClient->cx - (2 * TRAY_NOTIFY_WND_SPACING_X);
+                ptClock.x = ContentMargin.cxLeftWidth;
+                ptClock.y = pszClient->cy - szTrayClockMin.cy;
+                szClock.cx = pszClient->cx - ContentMargin.cxLeftWidth - ContentMargin.cxRightWidth;
                 szClock.cy = szTrayClockMin.cy;
             }
 
@@ -1486,13 +1486,13 @@ public:
 
             if (IsHorizontal)
             {
-                ptPager.x = ptClock.x - szTrayNotify.cx;
+                ptPager.x = ContentMargin.cxLeftWidth;
                 ptPager.y = (pszClient->cy - szTrayNotify.cy)/2;
             }
             else
             {
                 ptPager.x = (pszClient->cx - szTrayNotify.cx)/2;
-                ptPager.y = ptClock.y - szTrayNotify.cy;
+                ptPager.y = ContentMargin.cyTopHeight;
             }
 
             m_pager->SetWindowPos(
