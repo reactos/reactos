@@ -199,8 +199,8 @@ enum wined3d_sm1_opcode
 struct wined3d_sm1_opcode_info
 {
     enum wined3d_sm1_opcode opcode;
-    unsigned int dst_count;
-    unsigned int param_count;
+    UINT dst_count;
+    UINT param_count;
     enum WINED3D_SHADER_INSTRUCTION_HANDLER handler_idx;
     DWORD min_version;
     DWORD max_version;
@@ -210,7 +210,6 @@ struct wined3d_sm1_data
 {
     struct wined3d_shader_version shader_version;
     const struct wined3d_sm1_opcode_info *opcode_table;
-    const DWORD *start;
 
     struct wined3d_shader_src_param src_rel_addr[4];
     struct wined3d_shader_src_param pred_rel_addr;
@@ -396,10 +395,9 @@ static const enum wined3d_shader_resource_type resource_type_table[] =
 /* Read a parameter opcode from the input stream,
  * and possibly a relative addressing token.
  * Return the number of tokens read */
-static unsigned int shader_get_param(const struct wined3d_sm1_data *priv, const DWORD *ptr,
-        DWORD *token, DWORD *addr_token)
+static int shader_get_param(const struct wined3d_sm1_data *priv, const DWORD *ptr, DWORD *token, DWORD *addr_token)
 {
-    unsigned int count = 1;
+    UINT count = 1;
 
     *token = *ptr;
 
@@ -426,15 +424,15 @@ static unsigned int shader_get_param(const struct wined3d_sm1_data *priv, const 
     return count;
 }
 
-static const struct wined3d_sm1_opcode_info *shader_get_opcode(const struct wined3d_sm1_data *priv, DWORD token)
+static const struct wined3d_sm1_opcode_info *shader_get_opcode(const struct wined3d_sm1_data *priv, DWORD code)
 {
     DWORD shader_version = WINED3D_SHADER_VERSION(priv->shader_version.major, priv->shader_version.minor);
     const struct wined3d_sm1_opcode_info *opcode_table = priv->opcode_table;
-    unsigned int i = 0;
+    DWORD i = 0;
 
     while (opcode_table[i].handler_idx != WINED3DSIH_TABLE_SIZE)
     {
-        if ((token & WINED3D_SM1_OPCODE_MASK) == opcode_table[i].opcode
+        if ((code & WINED3D_SM1_OPCODE_MASK) == opcode_table[i].opcode
                 && shader_version >= opcode_table[i].min_version
                 && (!opcode_table[i].max_version || shader_version <= opcode_table[i].max_version))
         {
@@ -443,20 +441,19 @@ static const struct wined3d_sm1_opcode_info *shader_get_opcode(const struct wine
         ++i;
     }
 
-    FIXME("Unsupported opcode %#x, token 0x%08x, shader version %#x.\n",
-            token & WINED3D_SM1_OPCODE_MASK, token, shader_version);
+    FIXME("Unsupported opcode %#x(%d) masked %#x, shader version %#x\n",
+            code, code, code & WINED3D_SM1_OPCODE_MASK, shader_version);
 
     return NULL;
 }
 
 /* Return the number of parameters to skip for an opcode */
-static unsigned int shader_skip_opcode(const struct wined3d_sm1_data *priv,
+static int shader_skip_opcode(const struct wined3d_sm1_data *priv,
         const struct wined3d_sm1_opcode_info *opcode_info, DWORD opcode_token)
 {
-    unsigned int length;
     /* Shaders >= 2.0 may contain address tokens, but fortunately they
      * have a useful length mask - use it here. Shaders 1.0 contain no such tokens */
-    length = (opcode_token & WINED3D_SM1_INSTRUCTION_LENGTH_MASK) >> WINED3D_SM1_INSTRUCTION_LENGTH_SHIFT;
+    DWORD length = (opcode_token & WINED3D_SM1_INSTRUCTION_LENGTH_MASK) >> WINED3D_SM1_INSTRUCTION_LENGTH_SHIFT;
     return (priv->shader_version.major >= 2) ? length : opcode_info->param_count;
 }
 
@@ -495,9 +492,10 @@ static void shader_parse_dst_param(DWORD param, const struct wined3d_shader_src_
  * Note: This function assumes source or destination token format.
  * It will not work with specially-formatted tokens like DEF or DCL,
  * but hopefully those would be recognized */
-static unsigned int shader_skip_unrecognized(const struct wined3d_sm1_data *priv, const DWORD *ptr)
+static int shader_skip_unrecognized(const struct wined3d_sm1_data *priv, const DWORD *ptr)
 {
-    unsigned int tokens_read = 0, i = 0;
+    int tokens_read = 0;
+    int i = 0;
 
     /* TODO: Think of a good name for 0x80000000 and replace it with a constant */
     while (*ptr & 0x80000000)
@@ -508,10 +506,9 @@ static unsigned int shader_skip_unrecognized(const struct wined3d_sm1_data *priv
         tokens_read += shader_get_param(priv, ptr, &token, &addr_token);
         ptr += tokens_read;
 
-        FIXME("Unrecognized opcode param: token=0x%08x addr_token=0x%08x.\n", token, addr_token);
+        FIXME("Unrecognized opcode param: token=0x%08x addr_token=0x%08x name=", token, addr_token);
 
-        if (token & WINED3D_SM1_ADDRESS_MODE_RELATIVE)
-            shader_parse_src_param(addr_token, NULL, &rel_addr);
+        if (token & WINED3D_SM1_ADDRESS_MODE_RELATIVE) shader_parse_src_param(addr_token, NULL, &rel_addr);
 
         if (!i)
         {
@@ -525,18 +522,16 @@ static unsigned int shader_skip_unrecognized(const struct wined3d_sm1_data *priv
 
             shader_parse_src_param(token, token & WINED3D_SM1_ADDRESS_MODE_RELATIVE ? &rel_addr : NULL, &src);
         }
+        FIXME("\n");
         ++i;
     }
     return tokens_read;
 }
 
-static void *shader_sm1_init(const DWORD *byte_code, size_t byte_code_size,
-        const struct wined3d_shader_signature *output_signature)
+static void *shader_sm1_init(const DWORD *byte_code, const struct wined3d_shader_signature *output_signature)
 {
     struct wined3d_sm1_data *priv;
     BYTE major, minor;
-
-    TRACE("Version: 0x%08x.\n", *byte_code);
 
     major = WINED3D_SM1_VERSION_MAJOR(*byte_code);
     minor = WINED3D_SM1_VERSION_MINOR(*byte_code);
@@ -546,11 +541,14 @@ static void *shader_sm1_init(const DWORD *byte_code, size_t byte_code_size,
         return NULL;
     }
 
-    if (!(priv = HeapAlloc(GetProcessHeap(), 0, sizeof(*priv))))
+    priv = HeapAlloc(GetProcessHeap(), 0, sizeof(*priv));
+    if (!priv)
         return NULL;
 
-    if (output_signature->element_count)
+    if (output_signature)
+    {
         FIXME("SM 1-3 shader shouldn't have output signatures.\n");
+    }
 
     switch (*byte_code >> 16)
     {
@@ -565,14 +563,10 @@ static void *shader_sm1_init(const DWORD *byte_code, size_t byte_code_size,
             break;
 
         default:
-            FIXME("Unrecognized shader type %#x.\n", *byte_code >> 16);
+            FIXME("Unrecognized shader type %#x\n", *byte_code >> 16);
             HeapFree(GetProcessHeap(), 0, priv);
             return NULL;
     }
-    priv->shader_version.major = WINED3D_SM1_VERSION_MAJOR(*byte_code);
-    priv->shader_version.minor = WINED3D_SM1_VERSION_MINOR(*byte_code);
-
-    priv->start = &byte_code[1];
 
     return priv;
 }
@@ -585,8 +579,13 @@ static void shader_sm1_free(void *data)
 static void shader_sm1_read_header(void *data, const DWORD **ptr, struct wined3d_shader_version *shader_version)
 {
     struct wined3d_sm1_data *priv = data;
+    DWORD version_token;
 
-    *ptr = priv->start;
+    version_token = *(*ptr)++;
+    TRACE("version: 0x%08x\n", version_token);
+
+    priv->shader_version.major = WINED3D_SM1_VERSION_MAJOR(version_token);
+    priv->shader_version.minor = WINED3D_SM1_VERSION_MINOR(version_token);
     *shader_version = priv->shader_version;
 }
 
@@ -649,7 +648,7 @@ static void shader_sm1_read_semantic(const DWORD **ptr, struct wined3d_shader_se
 static void shader_sm1_read_immconst(const DWORD **ptr, struct wined3d_shader_src_param *src_param,
         enum wined3d_immconst_type type, enum wined3d_data_type data_type)
 {
-    unsigned int count = type == WINED3D_IMMCONST_VEC4 ? 4 : 1;
+    UINT count = type == WINED3D_IMMCONST_VEC4 ? 4 : 1;
     src_param->reg.type = WINED3DSPR_IMMCONST;
     src_param->reg.data_type = data_type;
     src_param->reg.idx[0].offset = ~0U;
@@ -657,7 +656,7 @@ static void shader_sm1_read_immconst(const DWORD **ptr, struct wined3d_shader_sr
     src_param->reg.idx[1].offset = ~0U;
     src_param->reg.idx[1].rel_addr = NULL;
     src_param->reg.immconst_type = type;
-    memcpy(src_param->reg.u.immconst_data, *ptr, count * sizeof(DWORD));
+    memcpy(src_param->reg.immconst_data, *ptr, count * sizeof(DWORD));
     src_param->swizzle = WINED3DSP_NOSWIZZLE;
     src_param->modifiers = 0;
 
@@ -706,19 +705,6 @@ static void shader_sm1_read_comment(const DWORD **ptr)
     }
 }
 
-static void shader_sm1_validate_instruction(struct wined3d_shader_instruction *ins)
-{
-    if (ins->handler_idx == WINED3DSIH_BREAKP || ins->handler_idx == WINED3DSIH_IF)
-    {
-        if (ins->flags)
-        {
-            FIXME("Ignoring unexpected instruction flags %#x for %s.\n",
-                    ins->flags, debug_d3dshaderinstructionhandler(ins->handler_idx));
-            ins->flags = 0;
-        }
-    }
-}
-
 static void shader_sm1_read_instruction(void *data, const DWORD **ptr, struct wined3d_shader_instruction *ins)
 {
     const struct wined3d_sm1_opcode_info *opcode_info;
@@ -746,7 +732,6 @@ static void shader_sm1_read_instruction(void *data, const DWORD **ptr, struct wi
     ins->dst = &priv->dst_param;
     ins->src_count = opcode_info->param_count - opcode_info->dst_count;
     ins->src = priv->src_param;
-    memset(&ins->texel_offset, 0, sizeof(ins->texel_offset));
 
     p = *ptr;
     *ptr += shader_skip_opcode(priv, opcode_info, opcode_token);
@@ -760,15 +745,15 @@ static void shader_sm1_read_instruction(void *data, const DWORD **ptr, struct wi
         shader_sm1_read_dst_param(priv, &p, &priv->dst_param, &priv->dst_rel_addr);
         shader_sm1_read_immconst(&p, &priv->src_param[0], WINED3D_IMMCONST_VEC4, WINED3D_DATA_FLOAT);
     }
-    else if (ins->handler_idx == WINED3DSIH_DEFB)
-    {
-        shader_sm1_read_dst_param(priv, &p, &priv->dst_param, &priv->dst_rel_addr);
-        shader_sm1_read_immconst(&p, &priv->src_param[0], WINED3D_IMMCONST_SCALAR, WINED3D_DATA_UINT);
-    }
     else if (ins->handler_idx == WINED3DSIH_DEFI)
     {
         shader_sm1_read_dst_param(priv, &p, &priv->dst_param, &priv->dst_rel_addr);
         shader_sm1_read_immconst(&p, &priv->src_param[0], WINED3D_IMMCONST_VEC4, WINED3D_DATA_INT);
+    }
+    else if (ins->handler_idx == WINED3DSIH_DEFB)
+    {
+        shader_sm1_read_dst_param(priv, &p, &priv->dst_param, &priv->dst_rel_addr);
+        shader_sm1_read_immconst(&p, &priv->src_param[0], WINED3D_IMMCONST_SCALAR, WINED3D_DATA_UINT);
     }
     else
     {
@@ -782,10 +767,10 @@ static void shader_sm1_read_instruction(void *data, const DWORD **ptr, struct wi
 
         /* Other source tokens */
         for (i = 0; i < ins->src_count; ++i)
+        {
             shader_sm1_read_src_param(priv, &p, &priv->src_param[i], &priv->src_rel_addr[i]);
+        }
     }
-
-    shader_sm1_validate_instruction(ins);
 }
 
 static BOOL shader_sm1_is_end(void *data, const DWORD **ptr)

@@ -15,7 +15,7 @@
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
 @ stub GetNextMipMap
-@ stdcall GetSurfaceFromDC(ptr ptr ptr)
+@ stub GetSurfaceFromDC
 @ stub HeapVidMemAllocAligned
 @ stub InternalLock
 @ stub InternalUnlock

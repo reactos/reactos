@@ -87,15 +87,8 @@ static ULONG WINAPI d3d9_swapchain_AddRef(IDirect3DSwapChain9Ex *iface)
 static ULONG WINAPI d3d9_swapchain_Release(IDirect3DSwapChain9Ex *iface)
 {
     struct d3d9_swapchain *swapchain = impl_from_IDirect3DSwapChain9Ex(iface);
-    ULONG refcount;
+    ULONG refcount = InterlockedDecrement(&swapchain->refcount);
 
-    if (!swapchain->refcount)
-    {
-        WARN("Swapchain does not have any references.\n");
-        return 0;
-    }
-
-    refcount = InterlockedDecrement(&swapchain->refcount);
     TRACE("%p decreasing refcount to %u.\n", iface, refcount);
 
     if (!refcount)
@@ -129,12 +122,9 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_swapchain_Present(IDirect3DSwapChai
     if (device->device_state != D3D9_DEVICE_STATE_OK)
         return device->d3d_parent->extended ? S_PRESENT_OCCLUDED : D3DERR_DEVICELOST;
 
-    if (dirty_region)
-        FIXME("Ignoring dirty_region %p.\n", dirty_region);
-
     wined3d_mutex_lock();
-    hr = wined3d_swapchain_present(swapchain->wined3d_swapchain,
-            src_rect, dst_rect, dst_window_override, flags);
+    hr = wined3d_swapchain_present(swapchain->wined3d_swapchain, src_rect,
+            dst_rect, dst_window_override, dirty_region, flags);
     wined3d_mutex_unlock();
 
     return hr;
@@ -159,6 +149,7 @@ static HRESULT WINAPI d3d9_swapchain_GetBackBuffer(IDirect3DSwapChain9Ex *iface,
         UINT backbuffer_idx, D3DBACKBUFFER_TYPE backbuffer_type, IDirect3DSurface9 **backbuffer)
 {
     struct d3d9_swapchain *swapchain = impl_from_IDirect3DSwapChain9Ex(iface);
+    struct wined3d_resource *wined3d_resource;
     struct wined3d_texture *wined3d_texture;
     struct d3d9_surface *surface_impl;
     HRESULT hr = D3D_OK;
@@ -177,7 +168,8 @@ static HRESULT WINAPI d3d9_swapchain_GetBackBuffer(IDirect3DSwapChain9Ex *iface,
     wined3d_mutex_lock();
     if ((wined3d_texture = wined3d_swapchain_get_back_buffer(swapchain->wined3d_swapchain, backbuffer_idx)))
     {
-        surface_impl = wined3d_texture_get_sub_resource_parent(wined3d_texture, 0);
+        wined3d_resource = wined3d_texture_get_sub_resource(wined3d_texture, 0);
+        surface_impl = wined3d_resource_get_parent(wined3d_resource);
         *backbuffer = &surface_impl->IDirect3DSurface9_iface;
         IDirect3DSurface9_AddRef(*backbuffer);
     }

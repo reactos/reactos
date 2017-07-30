@@ -114,11 +114,8 @@ HRESULT d3d8_vertex_shader_init(struct d3d8_vertex_shader *shader, struct d3d8_d
             FIXME("Usage %#x not implemented.\n", usage);
 
         desc.byte_code = byte_code;
-        desc.byte_code_size = ~(size_t)0;
-        desc.format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM1;
-        desc.input_signature.element_count = 0;
-        desc.output_signature.element_count = 0;
-        desc.patch_constant_signature.element_count = 0;
+        desc.input_signature = NULL;
+        desc.output_signature = NULL;
         desc.max_version = 1;
 
         wined3d_mutex_lock();
@@ -166,11 +163,8 @@ HRESULT d3d8_pixel_shader_init(struct d3d8_pixel_shader *shader, struct d3d8_dev
     shader->handle = shader_handle;
 
     desc.byte_code = byte_code;
-    desc.byte_code_size = ~(size_t)0;
-    desc.format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM1;
-    desc.input_signature.element_count = 0;
-    desc.output_signature.element_count = 0;
-    desc.patch_constant_signature.element_count = 0;
+    desc.input_signature = NULL;
+    desc.output_signature = NULL;
     desc.max_version = 1;
 
     wined3d_mutex_lock();

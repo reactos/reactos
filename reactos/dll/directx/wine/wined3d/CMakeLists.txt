@@ -39,6 +39,7 @@ list(APPEND SOURCE
     utils.c
     vertexdeclaration.c
     view.c
+    volume.c
     wined3d_main.c
     wined3d_private.h)
 
