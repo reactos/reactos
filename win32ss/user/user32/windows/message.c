@@ -1462,20 +1462,15 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      if (!Dialog)
-      Result = CALL_EXTERN_WNDPROC(WndProc, AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
-      else
-      {
       _SEH2_TRY
       {
          Result = CALL_EXTERN_WNDPROC(WndProc, AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Exception Dialog Ansi %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
+         ERR("Exception when calling Ansi WndProc %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
-      }
 
       if (Hook && (MsgOverride || DlgOverride))
       {
@@ -1518,20 +1513,15 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      if (!Dialog)
-      Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
-      else
-      {
       _SEH2_TRY
       {
          Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Exception Dialog unicode %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
+         ERR("Exception when calling unicode WndProc %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
-      }
 
       if (Hook && (MsgOverride || DlgOverride))
       {
@@ -1612,20 +1602,15 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      if (!Dialog)
-      Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
-      else
-      {
       _SEH2_TRY
       {
          Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Exception Dialog Ansi %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
+         ERR("Exception when calling Ansi WndProc %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
-      }
 
       if (Hook && (MsgOverride || DlgOverride))
       {
@@ -1675,20 +1660,15 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      if (!Dialog)
-      Result = CALL_EXTERN_WNDPROC(WndProc, UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam);
-      else
-      {
       _SEH2_TRY
       {
          Result = CALL_EXTERN_WNDPROC(WndProc, UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Exception Dialog unicode %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
+         ERR("Exception when calling unicode WndProc %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
-      }
 
       if (Hook && (MsgOverride || DlgOverride))
       {
