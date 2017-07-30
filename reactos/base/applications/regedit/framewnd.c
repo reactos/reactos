@@ -1033,7 +1033,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     LPCWSTR valueName;
     BOOL result = TRUE;
     REGSAM regsam = KEY_READ;
-    LONG lRet;
     int item;
 
     UNREFERENCED_PARAMETER(lParam);
@@ -1125,13 +1124,11 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
     valueName = GetValueName(g_pChildWnd->hListWnd, -1);
-
-    if (!keyPath)
-        return TRUE;
-
-    lRet = RegOpenKeyExW(hKeyRoot, keyPath, 0, regsam, &hKey);
-    if (lRet != ERROR_SUCCESS)
-        hKey = 0;
+    if (keyPath)
+    {
+        if (RegOpenKeyExW(hKeyRoot, keyPath, 0, regsam, &hKey) != ERROR_SUCCESS)
+            hKey = 0;
+    }
 
     switch (LOWORD(wParam))
     {
@@ -1165,7 +1162,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case ID_EDIT_DELETE:
     {
-        if (GetFocus() == g_pChildWnd->hListWnd)
+        if (GetFocus() == g_pChildWnd->hListWnd && hKey)
         {
             UINT nSelected = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
             if(nSelected >= 1)
@@ -1201,7 +1198,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         else if (GetFocus() == g_pChildWnd->hTreeWnd)
         {
-            if (keyPath == 0 || *keyPath == 0)
+            if (keyPath == NULL || *keyPath == UNICODE_NULL)
             {
                 MessageBeep(MB_ICONHAND);
             }
