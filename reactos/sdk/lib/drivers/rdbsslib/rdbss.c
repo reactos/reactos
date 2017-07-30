@@ -7492,6 +7492,9 @@ Leave:
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 RxPrepareToReparseSymbolicLink(
@@ -7501,8 +7504,74 @@ RxPrepareToReparseSymbolicLink(
     BOOLEAN NewPathIsAbsolute,
     PBOOLEAN ReparseRequired)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PWSTR NewBuffer;
+    USHORT NewLength;
+    PFILE_OBJECT FileObject;
+
+    /* Assume no reparse is required first */
+    *ReparseRequired = FALSE;
+
+    /* Only supported for IRP_MJ_CREATE */
+    if (RxContext->MajorFunction != IRP_MJ_CREATE)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* If symbolic link is not embedded, and DELETE is specified, fail */
+    if (!SymbolicLinkEmbeddedInOldPath)
+    {
+        /* Excepted if DELETE is the only flag specified, then, open has to succeed
+         * See: https://msdn.microsoft.com/en-us/library/windows/hardware/ff554649(v=vs.85).aspx (remarks)
+         */
+        if (BooleanFlagOn(RxContext->Create.NtCreateParameters.DesiredAccess, DELETE) &&
+            BooleanFlagOn(RxContext->Create.NtCreateParameters.DesiredAccess, ~DELETE))
+        {
+            return STATUS_ACCESS_DENIED;
+        }
+    }
+
+    /* At that point, assume reparse will be required */
+    *ReparseRequired = TRUE;
+
+    /* If new path isn't absolute, it's up to us to make it absolute */
+    if (!NewPathIsAbsolute)
+    {
+        /* The prefix will be \Device\Mup */
+        NewLength = NewPath->Length + (sizeof(L"\\Device\\Mup") - sizeof(UNICODE_NULL));
+        NewBuffer = ExAllocatePoolWithTag(PagedPool | POOL_COLD_ALLOCATION, NewLength,
+                                          RX_MISC_POOLTAG);
+        if (NewBuffer == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Copy data for the new path */
+        RtlMoveMemory(NewBuffer, L"\\Device\\Mup", (sizeof(L"\\Device\\Mup") - sizeof(UNICODE_NULL)));
+        RtlMoveMemory(Add2Ptr(NewBuffer, (sizeof(L"\\Device\\Mup") - sizeof(UNICODE_NULL))),
+                      NewPath->Buffer, NewPath->Length);
+    }
+    /* Otherwise, use caller path as it */
+    else
+    {
+        NewLength = NewPath->Length;
+        NewBuffer = NewPath->Buffer;
+    }
+
+    /* Get the FILE_OBJECT we'll modify */
+    FileObject = RxContext->CurrentIrpSp->FileObject;
+
+    /* Free old path first */
+    ExFreePoolWithTag(FileObject->FileName.Buffer, 0);
+    /* And setup new one */
+    FileObject->FileName.Length = NewLength;
+    FileObject->FileName.MaximumLength = NewLength;
+    FileObject->FileName.Buffer = NewBuffer;
+
+    /* And set reparse flag */
+    SetFlag(RxContext->Create.Flags, RX_CONTEXT_CREATE_FLAG_REPARSE);
+
+    /* Done! */
+    return STATUS_SUCCESS;
 }
 
 /*
