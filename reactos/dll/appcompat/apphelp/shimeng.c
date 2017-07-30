@@ -17,7 +17,6 @@
  */
 
 #define WIN32_NO_STATUS
-#include "windows.h"
 #include "ntndk.h"
 #define IN_APPHELP
 #include "shimlib.h"
@@ -40,7 +39,7 @@ ULONG g_ShimEngDebugLevel = 0xffffffff;
 BOOL g_bComPlusImage = FALSE;
 BOOL g_bShimDuringInit = FALSE;
 BOOL g_bInternalHooksUsed = FALSE;
-static ARRAY g_pShimInfo;  /* SHIMMODULE */
+static ARRAY g_pShimInfo;  /* PSHIMMODULE */
 static ARRAY g_pHookArray; /* HOOKMODULEINFO */
 
 HOOKAPIEX g_IntHookEx[] =
@@ -50,23 +49,32 @@ HOOKAPIEX g_IntHookEx[] =
         "GetProcAddress",   /* FunctionName */
         StubGetProcAddress, /* ReplacementFunction*/
         NULL,               /* OriginalFunction */
-        { NULL },           /* ModuleLink */
-        { NULL }            /* ApiLink */
+        NULL,               /* pShimInfo */
+        NULL                /* Unused */
     },
 };
 
+static inline BOOL ARRAY_InitWorker(PARRAY Array, DWORD ItemSize)
+{
+    Array->Data__ = NULL;
+    Array->Size__ = Array->MaxSize__ = 0;
+    Array->ItemSize__ = ItemSize;
 
+    return TRUE;
+}
 
-
-static BOOL ARRAY_EnsureSize(PARRAY Array, DWORD ItemSize, DWORD GrowWith)
+static inline BOOL ARRAY_EnsureSize(PARRAY Array, DWORD ItemSize, DWORD GrowWith)
 {
     PVOID pNewData;
     DWORD Count;
 
-    if (Array->MaxSize > Array->Size)
+    ASSERT(Array);
+    ASSERT(ItemSize == Array->ItemSize__);
+
+    if (Array->MaxSize__ > Array->Size__)
         return TRUE;
 
-    Count = Array->Size + GrowWith;
+    Count = Array->Size__ + GrowWith;
     pNewData = SeiAlloc(Count * ItemSize);
 
     if (!pNewData)
@@ -74,18 +82,49 @@ static BOOL ARRAY_EnsureSize(PARRAY Array, DWORD ItemSize, DWORD GrowWith)
         SHIMENG_FAIL("Failed to allocate %d bytes\n", Count * ItemSize);
         return FALSE;
     }
-    Array->MaxSize = Count;
+    Array->MaxSize__ = Count;
 
-    if (Array->Data)
+    if (Array->Data__)
     {
-        memcpy(pNewData, Array->Data, Array->Size * ItemSize);
-        SeiFree(Array->Data);
+        memcpy(pNewData, Array->Data__, Array->Size__ * ItemSize);
+        SeiFree(Array->Data__);
     }
-    Array->Data = pNewData;
+    Array->Data__ = pNewData;
 
     return TRUE;
 }
 
+static inline PVOID ARRAY_AppendWorker(PARRAY Array, DWORD ItemSize, DWORD GrowWith)
+{
+    PBYTE pData;
+
+    if (!ARRAY_EnsureSize(Array, ItemSize, GrowWith))
+        return NULL;
+
+    pData = Array->Data__;
+    pData += (Array->Size__ * ItemSize);
+    Array->Size__++;
+
+    return pData;
+}
+
+static inline PVOID ARRAY_AtWorker(PARRAY Array, DWORD ItemSize, DWORD n)
+{
+    PBYTE pData;
+
+    ASSERT(Array);
+    ASSERT(ItemSize == Array->ItemSize__);
+    ASSERT(n < Array->Size__);
+
+    pData = Array->Data__;
+    return pData + (n * ItemSize);
+}
+
+
+#define ARRAY_Init(Array, TypeOfArray)      ARRAY_InitWorker((Array), sizeof(TypeOfArray))
+#define ARRAY_Append(Array, TypeOfArray)    (TypeOfArray*)ARRAY_AppendWorker((Array), sizeof(TypeOfArray), 5)
+#define ARRAY_At(Array, TypeOfArray, at)    (TypeOfArray*)ARRAY_AtWorker((Array), sizeof(TypeOfArray), at)
+#define ARRAY_Size(Array)                   (Array)->Size__
 
 
 VOID SeiInitDebugSupport(VOID)
@@ -185,16 +224,15 @@ PVOID SeiGetModuleFromAddress(PVOID addr)
 /* TODO: Guard against recursive calling / calling init multiple times! */
 VOID NotifyShims(DWORD dwReason, PVOID Info)
 {
-    PSHIMMODULE Data;
     DWORD n;
 
-    Data = g_pShimInfo.Data;
-    for (n = 0; n < g_pShimInfo.Size; ++n)
+    for (n = 0; n < ARRAY_Size(&g_pShimInfo); ++n)
     {
-        if (!Data[n].pNotifyShims)
+        PSHIMMODULE pShimModule = *ARRAY_At(&g_pShimInfo, PSHIMMODULE, n);
+        if (!pShimModule->pNotifyShims)
             continue;
 
-        Data[n].pNotifyShims(dwReason, Info);
+        pShimModule->pNotifyShims(dwReason, Info);
     }
 }
 
@@ -209,25 +247,25 @@ VOID SeiCheckComPlusImage(PVOID BaseAddress)
 }
 
 
-PSHIMMODULE SeiGetShimInfo(PVOID BaseAddress)
+PSHIMMODULE SeiGetShimModuleInfo(PVOID BaseAddress)
 {
-    PSHIMMODULE Data;
     DWORD n;
 
-    Data = g_pShimInfo.Data;
-    for (n = 0; n < g_pShimInfo.Size; ++n)
+    for (n = 0; n < ARRAY_Size(&g_pShimInfo); ++n)
     {
-        if (Data[n].BaseAddress == BaseAddress)
-            return &Data[n];
+        PSHIMMODULE pShimModule = *ARRAY_At(&g_pShimInfo, PSHIMMODULE, n);
+
+        if (pShimModule->BaseAddress == BaseAddress)
+            return pShimModule;
     }
     return NULL;
 }
 
-PSHIMMODULE SeiCreateShimInfo(PCWSTR DllName, PVOID BaseAddress)
+PSHIMMODULE SeiCreateShimModuleInfo(PCWSTR DllName, PVOID BaseAddress)
 {
     static const ANSI_STRING GetHookAPIs = RTL_CONSTANT_STRING("GetHookAPIs");
     static const ANSI_STRING NotifyShims = RTL_CONSTANT_STRING("NotifyShims");
-    PSHIMMODULE Data;
+    PSHIMMODULE* pData, Data;
     PVOID pGetHookAPIs, pNotifyShims;
 
     if (!NT_SUCCESS(LdrGetProcedureAddress(BaseAddress, (PANSI_STRING)&GetHookAPIs, 0, &pGetHookAPIs)) ||
@@ -237,12 +275,13 @@ PSHIMMODULE SeiCreateShimInfo(PCWSTR DllName, PVOID BaseAddress)
         return NULL;
     }
 
-    if (!ARRAY_EnsureSize(&g_pShimInfo, sizeof(SHIMMODULE), 5))
+    pData = ARRAY_Append(&g_pShimInfo, PSHIMMODULE);
+    if (!pData)
         return NULL;
 
-    Data = g_pShimInfo.Data;
-    Data += g_pShimInfo.Size;
-    g_pShimInfo.Size++;
+    *pData = SeiAlloc(sizeof(SHIMMODULE));
+
+    Data = *pData;
 
     RtlCreateUnicodeString(&Data->Name, DllName);
     Data->BaseAddress = BaseAddress;
@@ -250,39 +289,40 @@ PSHIMMODULE SeiCreateShimInfo(PCWSTR DllName, PVOID BaseAddress)
     Data->pGetHookAPIs = pGetHookAPIs;
     Data->pNotifyShims = pNotifyShims;
 
-    Data->HookApis.Data = NULL;
-    Data->HookApis.Size = 0;
-    Data->HookApis.MaxSize = 0;
+    ARRAY_Init(&Data->EnabledShims, PSHIMINFO);
 
     return Data;
 }
 
-VOID SeiAppendHookInfo(PSHIMMODULE pShimInfo, PHOOKAPIEX pHookApi, DWORD dwHookCount)
+VOID SeiAppendHookInfo(PSHIMMODULE pShimModuleInfo, PHOOKAPIEX pHookApi, DWORD dwHookCount)
 {
-    PHOOKAPIPOINTERS Data;
-    if (!ARRAY_EnsureSize(&pShimInfo->HookApis, sizeof(HOOKAPIPOINTERS), 5))
+    PSHIMINFO* pData, Data;
+
+    pData = ARRAY_Append(&pShimModuleInfo->EnabledShims, PSHIMINFO);
+    if (!pData)
         return;
 
-    Data = pShimInfo->HookApis.Data;
-    Data += pShimInfo->HookApis.Size;
+    *pData = SeiAlloc(sizeof(SHIMINFO));
+    Data = *pData;
 
     Data->pHookApi = pHookApi;
     Data->dwHookCount = dwHookCount;
-    pShimInfo->HookApis.Size++;
+    Data->pShimModule = pShimModuleInfo;
 }
 
 PHOOKMODULEINFO SeiFindHookModuleInfo(PUNICODE_STRING ModuleName, PVOID BaseAddress)
 {
     DWORD n;
-    PHOOKMODULEINFO Data = g_pHookArray.Data;
 
-    for (n = 0; n < g_pHookArray.Size; ++n)
+    for (n = 0; n < ARRAY_Size(&g_pHookArray); ++n)
     {
-        if (BaseAddress && BaseAddress == Data[n].BaseAddress)
-            return &Data[n];
+        PHOOKMODULEINFO pModuleInfo = ARRAY_At(&g_pHookArray, HOOKMODULEINFO, n);
 
-        if (!BaseAddress && RtlEqualUnicodeString(ModuleName, &Data[n].Name, TRUE))
-            return &Data[n];
+        if (BaseAddress && BaseAddress == pModuleInfo->BaseAddress)
+            return pModuleInfo;
+
+        if (!BaseAddress && RtlEqualUnicodeString(ModuleName, &pModuleInfo->Name, TRUE))
+            return pModuleInfo;
     }
 
     return NULL;
@@ -334,12 +374,12 @@ static DWORD SeiGetDWORD(PDB pdb, TAGID tag, TAG type)
 static VOID SeiAddShim(TAGREF trShimRef, PARRAY pShimRef)
 {
     TAGREF* Data;
-    if (!ARRAY_EnsureSize(pShimRef, sizeof(TAGREF), 10))
+
+    Data = ARRAY_Append(pShimRef, TAGREF);
+    if (!Data)
         return;
 
-    Data = pShimRef->Data;
-    Data[pShimRef->Size] = trShimRef;
-    pShimRef->Size++;
+    *Data = trShimRef;
 }
 
 static VOID SeiSetLayerEnvVar(LPCWSTR wszLayer)
@@ -404,8 +444,8 @@ static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShim
                 HRESULT hr;
                 SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(Layer(%S))\n", LayerName);
                 if (wszLayerEnvVar[0])
-                    StringCchCatW(wszLayerEnvVar, _countof(wszLayerEnvVar), L" ");
-                hr = StringCchCatW(wszLayerEnvVar, _countof(wszLayerEnvVar), LayerName);
+                    StringCchCatW(wszLayerEnvVar, ARRAYSIZE(wszLayerEnvVar), L" ");
+                hr = StringCchCatW(wszLayerEnvVar, ARRAYSIZE(wszLayerEnvVar), LayerName);
                 if (!SUCCEEDED(hr))
                 {
                     SHIMENG_FAIL("Unable to append %S\n", LayerName);
@@ -429,9 +469,9 @@ static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShim
 }
 
 
-VOID SeiAddHooks(PHOOKAPIEX hooks, DWORD dwHookCount)
+VOID SeiAddHooks(PHOOKAPIEX hooks, DWORD dwHookCount, PSHIMINFO pShim)
 {
-    DWORD n;
+    DWORD n, j;
     UNICODE_STRING UnicodeModName;
     WCHAR Buf[512];
 
@@ -442,8 +482,8 @@ VOID SeiAddHooks(PHOOKAPIEX hooks, DWORD dwHookCount)
         ANSI_STRING AnsiString;
         PVOID DllHandle;
         PHOOKAPIEX hook = hooks + n;
+        PHOOKAPIEX* pHookApi;
         PHOOKMODULEINFO HookModuleInfo;
-        PSINGLE_LIST_ENTRY Entry;
 
         RtlInitAnsiString(&AnsiString, hook->LibraryName);
         if (!NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicodeModName, &AnsiString, FALSE)))
@@ -475,23 +515,20 @@ VOID SeiAddHooks(PHOOKAPIEX hooks, DWORD dwHookCount)
 
         if (!HookModuleInfo)
         {
-            if (!ARRAY_EnsureSize(&g_pHookArray, sizeof(HOOKMODULEINFO), 5))
+            HookModuleInfo = ARRAY_Append(&g_pHookArray, HOOKMODULEINFO);
+            if (!HookModuleInfo)
                 continue;
 
-            HookModuleInfo = g_pHookArray.Data;
-            HookModuleInfo += g_pHookArray.Size;
-            g_pHookArray.Size++;
-
             HookModuleInfo->BaseAddress = DllHandle;
+            ARRAY_Init(&HookModuleInfo->HookApis, PHOOKAPIEX);
             RtlCreateUnicodeString(&HookModuleInfo->Name, UnicodeModName.Buffer);
         }
 
-        Entry = &HookModuleInfo->ModuleLink;
+        hook->pShimInfo = pShim;
 
-        while (Entry && Entry->Next)
+        for (j = 0; j < ARRAY_Size(&HookModuleInfo->HookApis); ++j)
         {
-            PHOOKAPIEX HookApi = CONTAINING_RECORD(Entry->Next, HOOKAPIEX, ModuleLink);
-
+            PHOOKAPIEX HookApi = *ARRAY_At(&HookModuleInfo->HookApis, PHOOKAPIEX, j);
             int CmpResult = strcmp(hook->FunctionName, HookApi->FunctionName);
             if (CmpResult == 0)
             {
@@ -499,20 +536,9 @@ VOID SeiAddHooks(PHOOKAPIEX hooks, DWORD dwHookCount)
                 SHIMENG_FAIL("Multiple hooks on one API is not yet supported!\n");
                 ASSERT(0);
             }
-            else if (CmpResult < 0)
-            {
-                /* Break out of the loop to have the entry inserted 'in place' */
-                break;
-            }
-
-            Entry = Entry->Next;
         }
-        /* If Entry is not NULL, the item is not inserted yet, so link it at the end. */
-        if (Entry)
-        {
-            hook->ModuleLink.Next = Entry->Next;
-            Entry->Next = &hook->ModuleLink;
-        }
+        pHookApi = ARRAY_Append(&HookModuleInfo->HookApis, PHOOKAPIEX);
+        *pHookApi = hook;
     }
 }
 
@@ -545,14 +571,10 @@ FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName)
     /* FIXME: Ordinal not yet supported */
     if (HookModuleInfo && HIWORD(lpProcName))
     {
-        PSINGLE_LIST_ENTRY Entry;
-
-        Entry = HookModuleInfo->ModuleLink.Next;
-
-        while (Entry)
+        DWORD n;
+        for (n = 0; n < ARRAY_Size(&HookModuleInfo->HookApis); ++n)
         {
-            PHOOKAPIEX HookApi = CONTAINING_RECORD(Entry, HOOKAPIEX, ModuleLink);
-
+            PHOOKAPIEX HookApi = *ARRAY_At(&HookModuleInfo->HookApis, PHOOKAPIEX, n);
             int CmpResult = strcmp(lpProcName, HookApi->FunctionName);
             if (CmpResult == 0)
             {
@@ -560,14 +582,6 @@ FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName)
                 proc = HookApi->ReplacementFunction;
                 break;
             }
-            else if (CmpResult < 0)
-            {
-                SHIMENG_MSG("Not found %s\n", lpProcName);
-                /* We are not going to find it anymore.. */
-                break;
-            }
-
-            Entry = Entry->Next;
         }
     }
 
@@ -576,24 +590,23 @@ FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName)
 
 VOID SeiResolveAPIs(VOID)
 {
-    PSHIMMODULE Data;
     DWORD mod, n;
 
-    Data = g_pShimInfo.Data;
-
     /* Enumerate all Shim modules */
-    for (mod = 0; mod < g_pShimInfo.Size; ++mod)
+    for (mod = 0; mod < ARRAY_Size(&g_pShimInfo); ++mod)
     {
-        PHOOKAPIPOINTERS pShims = Data[mod].HookApis.Data;
-        DWORD dwShimCount = Data[mod].HookApis.Size;
+        PSHIMMODULE pShimModule = *ARRAY_At(&g_pShimInfo, PSHIMMODULE, mod);
+        DWORD dwShimCount = ARRAY_Size(&pShimModule->EnabledShims);
 
         /* Enumerate all Shims */
         for (n = 0; n < dwShimCount; ++n)
         {
-            PHOOKAPIEX hooks = pShims[n].pHookApi;
-            DWORD dwHookCount = pShims[n].dwHookCount;
+            PSHIMINFO pShim = *ARRAY_At(&pShimModule->EnabledShims, PSHIMINFO, n);
 
-            SeiAddHooks(hooks, dwHookCount);
+            PHOOKAPIEX hooks = pShim->pHookApi;
+            DWORD dwHookCount = pShim->dwHookCount;
+
+            SeiAddHooks(hooks, dwHookCount, pShim);
         }
     }
 }
@@ -606,7 +619,7 @@ VOID SeiAddInternalHooks(DWORD dwNumHooks)
         return;
     }
 
-    SeiAddHooks(g_IntHookEx, _countof(g_IntHookEx));
+    SeiAddHooks(g_IntHookEx, ARRAYSIZE(g_IntHookEx), NULL);
     g_bInternalHooksUsed = TRUE;
 }
 
@@ -678,20 +691,18 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
         if (HookModuleInfo)
         {
             PIMAGE_THUNK_DATA OriginalThunk, FirstThunk;
-            PSINGLE_LIST_ENTRY Entry;
+            DWORD n;
 
-            Entry = HookModuleInfo->ModuleLink.Next;
-
-            while (Entry)
+            for (n = 0; n < ARRAY_Size(&HookModuleInfo->HookApis); ++n)
             {
                 DWORD dwFound = 0;
+                PHOOKAPIEX HookApi = *ARRAY_At(&HookModuleInfo->HookApis, PHOOKAPIEX, n);
+
                 OriginalThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->OriginalFirstThunk);
                 FirstThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->FirstThunk);
 
-                for (;OriginalThunk->u1.AddressOfData && FirstThunk->u1.Function && Entry; OriginalThunk++, FirstThunk++)
+                for (;OriginalThunk->u1.AddressOfData && FirstThunk->u1.Function; OriginalThunk++, FirstThunk++)
                 {
-                    PHOOKAPIEX HookApi = CONTAINING_RECORD(Entry, HOOKAPIEX, ModuleLink);
-
                     if (!IMAGE_SNAP_BY_ORDINAL32(OriginalThunk->u1.AddressOfData))
                     {
                         PIMAGE_IMPORT_BY_NAME ImportName;
@@ -712,19 +723,13 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
                     }
                 }
 
-                if (Entry)
+                if (dwFound != 1)
                 {
-                    if (dwFound != 1)
-                    {
-                        /* One entry not found. */
-                        PHOOKAPIEX HookApi = CONTAINING_RECORD(Entry, HOOKAPIEX, ModuleLink);
-                        if (!dwFound)
-                            SHIMENG_INFO("Entry \"%s!%s\" not found for \"%wZ\"\n", HookApi->LibraryName, HookApi->FunctionName, &LdrEntry->BaseDllName);
-                        else
-                            SHIMENG_INFO("Entry \"%s!%s\" found %d times for \"%wZ\"\n", HookApi->LibraryName, HookApi->FunctionName, dwFound, &LdrEntry->BaseDllName);
-                    }
-
-                    Entry = Entry->Next;
+                    /* One entry not found. */
+                    if (!dwFound)
+                        SHIMENG_INFO("Entry \"%s!%s\" not found for \"%wZ\"\n", HookApi->LibraryName, HookApi->FunctionName, &LdrEntry->BaseDllName);
+                    else
+                        SHIMENG_INFO("Entry \"%s!%s\" found %d times for \"%wZ\"\n", HookApi->LibraryName, HookApi->FunctionName, dwFound, &LdrEntry->BaseDllName);
                 }
             }
         }
@@ -757,14 +762,17 @@ Level(INFO) Using USER apphack flags 0x2080000
 VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
 {
     DWORD n;
-    ARRAY ShimRef;
-    TAGREF* Data;
+    ARRAY ShimRefArray;
     DWORD dwTotalHooks = 0;
 
     PPEB Peb = NtCurrentPeb();
 
-    ShimRef.Data = NULL;
-    ShimRef.Size = ShimRef.MaxSize = 0;
+    /* We should only be called once! */
+    ASSERT(g_pShimInfo.ItemSize__ == 0);
+
+    ARRAY_Init(&ShimRefArray, TAGREF);
+    ARRAY_Init(&g_pShimInfo, PSHIMMODULE);
+    ARRAY_Init(&g_pHookArray, HOOKMODULEINFO);
 
     SeiCheckComPlusImage(Peb->ImageBaseAddress);
 
@@ -774,28 +782,29 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
     */
 
     SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(ExePath(%wZ))\n", ProcessImage);
-    SeiBuildShimRefArray(hsdb, pQuery, &ShimRef);
+    SeiBuildShimRefArray(hsdb, pQuery, &ShimRefArray);
     SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(Complete)\n");
 
-    SHIMENG_INFO("Got %d shims\n", ShimRef.Size);
+    SHIMENG_INFO("Got %d shims\n", ARRAY_Size(&ShimRefArray));
     /* TODO:
     SeiBuildGlobalInclExclList()
     */
 
-    Data = ShimRef.Data;
-
-    for (n = 0; n < ShimRef.Size; ++n)
+    for (n = 0; n < ARRAY_Size(&ShimRefArray); ++n)
     {
         PDB pdb;
         TAGID ShimRef;
-        if (SdbTagRefToTagID(hsdb, Data[n], &pdb, &ShimRef))
+
+        TAGREF tr = *ARRAY_At(&ShimRefArray, TAGREF, n);
+
+        if (SdbTagRefToTagID(hsdb, tr, &pdb, &ShimRef))
         {
             LPCWSTR ShimName, DllName, CommandLine = NULL;
             TAGID ShimTag;
             WCHAR FullNameBuffer[MAX_PATH];
             UNICODE_STRING UnicodeDllName;
             PVOID BaseAddress;
-            PSHIMMODULE pShimInfo = NULL;
+            PSHIMMODULE pShimModuleInfo = NULL;
             ANSI_STRING AnsiCommandLine = RTL_CONSTANT_STRING("");
             PHOOKAPIEX pHookApi;
             DWORD dwHookCount;
@@ -803,7 +812,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
             ShimName = SeiGetStringPtr(pdb, ShimRef, TAG_NAME);
             if (!ShimName)
             {
-                SHIMENG_FAIL("Failed to retrieve the name for 0x%x\n", Data[n]);
+                SHIMENG_FAIL("Failed to retrieve the name for 0x%x\n", tr);
                 continue;
             }
 
@@ -829,7 +838,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
                 continue;
             }
 
-            if (!SdbGetAppPatchDir(NULL, FullNameBuffer, _countof(FullNameBuffer)))
+            if (!SdbGetAppPatchDir(NULL, FullNameBuffer, ARRAYSIZE(FullNameBuffer)))
             {
                 SHIMENG_WARN("Failed to get the AppPatch dir\n");
                 continue;
@@ -837,8 +846,8 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
 
             DllName = SeiGetStringPtr(pdb, ShimTag, TAG_DLLFILE);
             if (DllName == NULL ||
-                !SUCCEEDED(StringCchCatW(FullNameBuffer, _countof(FullNameBuffer), L"\\")) ||
-                !SUCCEEDED(StringCchCatW(FullNameBuffer, _countof(FullNameBuffer), DllName)))
+                !SUCCEEDED(StringCchCatW(FullNameBuffer, ARRAYSIZE(FullNameBuffer), L"\\")) ||
+                !SUCCEEDED(StringCchCatW(FullNameBuffer, ARRAYSIZE(FullNameBuffer), DllName)))
             {
                 SHIMENG_WARN("Failed to build a full path for %S\n", ShimName);
                 continue;
@@ -847,17 +856,17 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
             RtlInitUnicodeString(&UnicodeDllName, FullNameBuffer);
             if (NT_SUCCESS(LdrGetDllHandle(NULL, NULL, &UnicodeDllName, &BaseAddress)))
             {
-                pShimInfo = SeiGetShimInfo(BaseAddress);
+                pShimModuleInfo = SeiGetShimModuleInfo(BaseAddress);
             }
             else if (!NT_SUCCESS(LdrLoadDll(NULL, NULL, &UnicodeDllName, &BaseAddress)))
             {
                 SHIMENG_WARN("Failed to load %wZ for %S\n", &UnicodeDllName, ShimName);
                 continue;
             }
-            if (!pShimInfo)
+            if (!pShimModuleInfo)
             {
-                pShimInfo = SeiCreateShimInfo(DllName, BaseAddress);
-                if (!pShimInfo)
+                pShimModuleInfo = SeiCreateShimModuleInfo(DllName, BaseAddress);
+                if (!pShimModuleInfo)
                 {
                     SHIMENG_FAIL("Failed to allocate ShimInfo for %S\n", DllName);
                     continue;
@@ -867,10 +876,10 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
             SHIMENG_INFO("Shim DLL 0x%p \"%wZ\" loaded\n", BaseAddress, &UnicodeDllName);
             SHIMENG_INFO("Using SHIM \"%S!%S\"\n", DllName, ShimName);
 
-            pHookApi = pShimInfo->pGetHookAPIs(AnsiCommandLine.Buffer, ShimName, &dwHookCount);
+            pHookApi = pShimModuleInfo->pGetHookAPIs(AnsiCommandLine.Buffer, ShimName, &dwHookCount);
             SHIMENG_INFO("GetHookAPIs returns %d hooks for DLL \"%wZ\" SHIM \"%S\"\n", dwHookCount, &UnicodeDllName, ShimName);
             if (dwHookCount)
-                SeiAppendHookInfo(pShimInfo, pHookApi, dwHookCount);
+                SeiAppendHookInfo(pShimModuleInfo, pHookApi, dwHookCount);
 
             if (CommandLine && *CommandLine)
                 RtlFreeAnsiString(&AnsiCommandLine);
@@ -919,7 +928,7 @@ BOOL SeiGetShimData(PUNICODE_STRING ProcessImage, PVOID pShimData, HSDB* pHsdb, 
     ProcessName.Length = ProcessImage->Length - Back;
     ProcessName.MaximumLength = ProcessImage->MaximumLength - Back;
 
-    for (n = 0; n < _countof(ForbiddenShimmingApps); ++n)
+    for (n = 0; n < ARRAYSIZE(ForbiddenShimmingApps); ++n)
     {
         if (RtlEqualUnicodeString(&ProcessName, ForbiddenShimmingApps + n, TRUE))
         {
@@ -990,6 +999,6 @@ BOOL WINAPI SE_IsShimDll(PVOID BaseAddress)
 {
     SHIMENG_MSG("(%p)\n", BaseAddress);
 
-    return SeiGetShimInfo(BaseAddress) != NULL;
+    return SeiGetShimModuleInfo(BaseAddress) != NULL;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Mark Jansen
+ * Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,37 +19,42 @@
 #ifndef SHIMENG_H
 #define SHIMENG_H
 
-/* Structure that allows dynamic growing */
+/* ReactOS specific */
+
+/* Structure that allows dynamic growing.
+   Be aware, the data may move! */
 typedef struct _ARRAY
 {
-    PVOID Data;
-    DWORD Size;
-    DWORD MaxSize;
+    PVOID Data__;
+    DWORD Size__;
+    DWORD MaxSize__;
+    DWORD ItemSize__;
 } ARRAY, *PARRAY;
 
+typedef struct _SHIMINFO *PSHIMINFO;
+typedef struct _SHIMMODULE *PSHIMMODULE;
 
-/* Shims do not know it, but actually they use the type HOOKAPIEX.
-   We use the 'Reserved' entry for our own purposes. */
-
+/* Shims know this structure as HOOKAPI, with 2 reserved members (the last 2). */
 typedef struct tagHOOKAPIEX
 {
     PCSTR LibraryName;
     PCSTR FunctionName;
     PVOID ReplacementFunction;
     PVOID OriginalFunction;
-    SINGLE_LIST_ENTRY ModuleLink;
-    SINGLE_LIST_ENTRY ApiLink;
+    PSHIMINFO pShimInfo;
+    PVOID Unused;
 } HOOKAPIEX, *PHOOKAPIEX;
 
 C_ASSERT(sizeof(HOOKAPIEX) == sizeof(HOOKAPI));
-C_ASSERT(offsetof(HOOKAPIEX, ModuleLink) == offsetof(HOOKAPI, Reserved));
+C_ASSERT(offsetof(HOOKAPIEX, pShimInfo) == offsetof(HOOKAPI, Reserved));
 
 
-typedef struct _HOOKAPIPOINTERS
+typedef struct _SHIMINFO
 {
     PHOOKAPIEX pHookApi;
     DWORD dwHookCount;
-} HOOKAPIPOINTERS, *PHOOKAPIPOINTERS;
+    PSHIMMODULE pShimModule;
+} SHIMINFO, *PSHIMINFO;
 
 typedef struct _SHIMMODULE
 {
@@ -59,7 +64,7 @@ typedef struct _SHIMMODULE
     PHOOKAPIEX (WINAPI* pGetHookAPIs)(LPCSTR szCommandLine, LPCWSTR wszShimName, PDWORD pdwHookCount);
     BOOL (WINAPI* pNotifyShims)(DWORD fdwReason, PVOID ptr);
 
-    ARRAY HookApis;     /* HOOKAPIPOINTERS */
+    ARRAY EnabledShims;     /* PSHIMINFO */
 } SHIMMODULE, *PSHIMMODULE;
 
 typedef struct _HOOKMODULEINFO
@@ -67,8 +72,8 @@ typedef struct _HOOKMODULEINFO
     UNICODE_STRING Name;
     PVOID BaseAddress;
 
-    SINGLE_LIST_ENTRY ModuleLink;   /* Normal link, all entries from this module */
-    SINGLE_LIST_ENTRY ApiLink;      /* Multiple hooks on one api, unsupported for now */
+    ARRAY HookApis;         /* PHOOKAPIEX */
+
 } HOOKMODULEINFO, *PHOOKMODULEINFO;
 
 
