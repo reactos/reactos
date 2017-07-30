@@ -142,27 +142,45 @@ static int handle_read(nfs41_upcall *upcall)
     ULONG pnfs_bytes_read = 0;
     int status = NO_ERROR;
 
-    nfs41_open_stateid_arg(upcall->state_ref, &stateid);
+#ifdef __REACTOS__
+    do
+    {
+#endif
+        nfs41_open_stateid_arg(upcall->state_ref, &stateid);
 
 #ifdef PNFS_ENABLE_READ
-    status = read_from_pnfs(upcall, &stateid);
+        status = read_from_pnfs(upcall, &stateid);
 
-    if (status == NO_ERROR || status == ERROR_HANDLE_EOF)
-        goto out;
+        if (status == NO_ERROR || status == ERROR_HANDLE_EOF)
+            goto out;
 
-    if (args->out_len) {
-        pnfs_bytes_read = args->out_len;
-        args->out_len = 0;
+        if (args->out_len) {
+            pnfs_bytes_read = args->out_len;
+            args->out_len = 0;
 
-        args->offset += pnfs_bytes_read;
-        args->buffer += pnfs_bytes_read;
-        args->len -= pnfs_bytes_read;
-    }
+            args->offset += pnfs_bytes_read;
+            args->buffer += pnfs_bytes_read;
+            args->len -= pnfs_bytes_read;
+        }
 #endif
 
-    status = read_from_mds(upcall, &stateid);
+        status = read_from_mds(upcall, &stateid);
+#ifdef __REACTOS__
+        /* Status returned by NFS server when session is to be renewed */
+        if (status == 1006)
+        {
+            nfs41_session_renew(upcall->state_ref->session);
+            dprintf(1, "Session renewed (read)!\n");
+            continue;
+        }
+#endif
 
-    args->out_len += pnfs_bytes_read;
+        args->out_len += pnfs_bytes_read;
+#ifdef __REACTOS__
+        break;
+    }
+    while (TRUE);
+#endif
 out:
     return status;
 }
@@ -278,24 +296,41 @@ static int handle_write(nfs41_upcall *upcall)
     uint32_t pnfs_bytes_written = 0;
     int status;
 
-    nfs41_open_stateid_arg(upcall->state_ref, &stateid);
+#ifdef __REACTOS__
+    do
+    {
+#endif
+        nfs41_open_stateid_arg(upcall->state_ref, &stateid);
 
 #ifdef PNFS_ENABLE_WRITE
-    status = write_to_pnfs(upcall, &stateid);
-    if (args->out_len) {
-        pnfs_bytes_written = args->out_len;
-        args->out_len = 0;
+        status = write_to_pnfs(upcall, &stateid);
+        if (args->out_len) {
+            pnfs_bytes_written = args->out_len;
+            args->out_len = 0;
 
-        args->offset += pnfs_bytes_written;
-        args->buffer += pnfs_bytes_written;
-        args->len -= pnfs_bytes_written;
+            args->offset += pnfs_bytes_written;
+            args->buffer += pnfs_bytes_written;
+            args->len -= pnfs_bytes_written;
 
-        if (args->len == 0)
-            goto out;
-    }
+            if (args->len == 0)
+                goto out;
+        }
 #endif
 
-    status = write_to_mds(upcall, &stateid);
+        status = write_to_mds(upcall, &stateid);
+#ifdef __REACTOS__
+        /* Status returned by NFS server when session is to be renewed */
+        if (status == 1006)
+        {
+            nfs41_session_renew(upcall->state_ref->session);
+            dprintf(1, "Session renewed (write)!\n");
+            continue;
+        }
+
+        break;
+    }
+    while (TRUE);
+#endif
 out:
     args->out_len += pnfs_bytes_written;
     return status;
