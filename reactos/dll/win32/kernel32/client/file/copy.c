@@ -101,6 +101,13 @@ CopyLoop (
                                      RegionSize,
                                      NULL,
                                      NULL);
+                /* With sync read, 0 length + status success mean EOF:
+                 * https://msdn.microsoft.com/en-us/library/windows/desktop/aa365467(v=vs.85).aspx
+                 */
+                if (NT_SUCCESS(errCode) && IoStatusBlock.Information == 0)
+                {
+                    errCode = STATUS_END_OF_FILE;
+                }
                 if (NT_SUCCESS(errCode) && (NULL == pbCancel || ! *pbCancel))
                 {
                     errCode = NtWriteFile(FileHandleDest,
