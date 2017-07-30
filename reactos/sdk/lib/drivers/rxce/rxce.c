@@ -1752,8 +1752,12 @@ RxCreateRxContext(
         return NULL;
     }
 
-    /* And initialize it */
+    /* Zero it */
     RtlZeroMemory(Context, sizeof(RX_CONTEXT));
+
+    /* It was allocated on NP pool, keep track of it! */
+    SetFlag(Context->Flags, RX_CONTEXT_FLAG_FROM_POOL);
+    /* And initialize it */
     RxInitializeContext(Irp, RxDeviceObject, InitialContextFlags, Context);
     ASSERT((Context->MajorFunction != IRP_MJ_CREATE) || !BooleanFlagOn(Context->Flags, RX_CONTEXT_FLAG_MUST_SUCCEED_ALLOCATED));
 
