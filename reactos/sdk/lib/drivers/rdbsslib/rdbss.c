@@ -3188,6 +3188,7 @@ RxCommonRead(
 
             if (!NT_SUCCESS(Irp->IoStatus.Status))
             {
+                Status = Irp->IoStatus.Status;
                 _SEH2_LEAVE;
             }
 
