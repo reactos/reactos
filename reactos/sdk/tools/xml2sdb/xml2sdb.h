@@ -112,6 +112,7 @@ struct Exe
 
 struct Library
 {
+    std::list<InExclude> InExcludes;
     std::list<Shim> Shims;
 };
 

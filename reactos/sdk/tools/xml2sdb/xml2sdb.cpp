@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS xml to sdb converter
- * FILE:        sdk/tools/xml2sdb/xml2sdb.cpp
- * PURPOSE:     Conversion functions from xml -> db
- * PROGRAMMERS: Mark Jansen
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS xml to sdb converter
+ * FILE:            sdk/tools/xml2sdb/xml2sdb.cpp
+ * PURPOSE:         Conversion functions from xml -> db
+ * PROGRAMMERS:     Mark Jansen (mark.jansen@reactos.org)
  *
  */
 
@@ -16,7 +16,7 @@
 using tinyxml2::XMLText;
 
 static const GUID GUID_NULL = { 0 };
-static const char szCompilerVersion[] = "1.5.0.0";
+static const char szCompilerVersion[] = "1.6.0.0";
 
 #if !defined(C_ASSERT)
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
@@ -241,19 +241,10 @@ bool ReadBinaryNode(XMLHandle dbNode, const char* nodeName, std::vector<BYTE>& d
 bool InExclude::fromXml(XMLHandle dbNode)
 {
     Module = ReadStringNode(dbNode, "MODULE");
+    // Special module names: '$' and '*'
     if (!Module.empty())
     {
-        Include = dbNode.FirstChildElement("INCLUDE").ToNode() != NULL;
-        if (!Include)
-        {
-            tinyxml2::XMLElement* elem = dbNode.ToElement();
-            if (elem)
-            {
-                Include |= (elem->Attribute("INCLUDE") != NULL);
-            }
-        }
-        // $ = ??
-        // *
+        Include = ToNodeName(dbNode) == "INCLUDE";
         return true;
     }
     return false;
@@ -303,7 +294,8 @@ bool ShimRef::fromXml(XMLHandle dbNode)
 {
     Name = ReadStringNode(dbNode, "NAME");
     CommandLine = ReadStringNode(dbNode, "COMMAND_LINE");
-    ReadGeneric(dbNode, InExcludes, "INEXCLUDE");
+    ReadGeneric(dbNode, InExcludes, "INCLUDE");
+    ReadGeneric(dbNode, InExcludes, "EXCLUDE");
     return !Name.empty();
 }
 
@@ -331,7 +323,8 @@ bool Shim::fromXml(XMLHandle dbNode)
     ReadGuidNode(dbNode, "FIX_ID", FixID);
     // GENERAL ?
     // DESCRIPTION_RC_ID
-    ReadGeneric(dbNode, InExcludes, "INEXCLUDE");
+    ReadGeneric(dbNode, InExcludes, "INCLUDE");
+    ReadGeneric(dbNode, InExcludes, "EXCLUDE");
     return !Name.empty() && !DllFile.empty();
 }
 
@@ -527,6 +520,12 @@ bool Database::fromXml(XMLHandle dbNode)
         {
             SHIM_ERR("Unhanled FLAG type\n");
         }
+        else if (NodeName == "INCLUDE" || NodeName == "EXCLUDE")
+        {
+            InExclude inex;
+            if (inex.fromXml(libChild))
+                Library.InExcludes.push_back(inex);
+        }
         libChild = libChild.NextSibling();
     }
 
@@ -560,6 +559,8 @@ bool Database::toSdb(LPCWSTR path)
     }
     WriteBinary(pdb, TAG_DATABASE_ID, ID);
     TAGID tidLibrary = BeginWriteListTag(pdb, TAG_LIBRARY);
+    if (!WriteGeneric(pdb, Library.InExcludes, *this))
+        return false;
     if (!WriteGeneric(pdb, Library.Shims, *this))
         return false;
     EndWriteListTag(pdb, tidLibrary);

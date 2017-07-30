@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS xml to sdb converter
- * FILE:        sdk/tools/xml2sdb/main.cpp
- * PURPOSE:     Implement platform agnostic read / write / allocation functions, parse commandline
- * PROGRAMMERS: Mark Jansen
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS xml to sdb converter
+ * FILE:            sdk/tools/xml2sdb/main.cpp
+ * PURPOSE:         Implement platform agnostic read / write / allocation functions, parse commandline
+ * PROGRAMMERS:     Mark Jansen (mark.jansen@reactos.org)
  *
  */
 
@@ -201,7 +201,6 @@ static void update_loglevel(int argc, char* argv[], int& i)
     g_ShimDebugLevel = strtoul(value.c_str(), NULL, 10);
 }
 
-// -i R:\src\apphelp\reactos\media\sdb\sysmain.xml -oR:\build\apphelp\devenv_msvc\media\sdb\ros2.sdb
 int main(int argc, char * argv[])
 {
     std::string input, output;
