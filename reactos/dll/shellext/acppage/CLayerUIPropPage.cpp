@@ -455,7 +455,7 @@ static void OnAdd(HWND hWnd)
         Index = ListBox_AddString(List, Str);
     ListBox_SetCurSel(List, Index);
     ListboxChanged(hWnd);
-    ComboBox_SetText(Combo, TEXT(""));
+    ComboBox_SetCurSel(Combo, -1);
     SetFocus(Combo);
 }
 
@@ -523,6 +523,7 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
             ListBox_GetText(List, Cur, Str);
             ListBox_DeleteString(List, Cur);
             HWND Combo = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
+            ComboBox_SetCurSel(Combo, -1);
             ComboBox_SetText(Combo, Str);
             ListboxChanged(hWnd);
             ComboBox_SetEditSel(Combo, 30000, 30000);
