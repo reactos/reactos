@@ -453,9 +453,6 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
     sice.dwSourceIndex = dwSourceIndex;
     sice.dwFlags = dwFlags;
 
-    if (!sic_hdpa)
-        SIC_Initialize();
-
     EnterCriticalSection(&SHELL32_SicCS);
 
     if (NULL != DPA_GetPtr (sic_hdpa, 0))
@@ -690,9 +687,6 @@ static int SIC_LoadOverlayIcon(int icon_idx)
         RegCloseKey(hKeyShellIcons);
     }
 
-    if (!sic_hdpa)
-        SIC_Initialize();
-
     return SIC_LoadIcon(iconPath, iconIdx, 0);
 }
 
@@ -704,17 +698,13 @@ static int SIC_LoadOverlayIcon(int icon_idx)
  *
  */
 BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList)
-{
-    TRACE("(%p,%p)\n",lpBigList,lpSmallList);
-
-    if (!sic_hdpa)
-        SIC_Initialize();
-
+{    TRACE("(%p,%p)\n",lpBigList,lpSmallList);
     if (lpBigList)
-        *lpBigList = ShellBigIconList;
-
+    { *lpBigList = ShellBigIconList;
+    }
     if (lpSmallList)
-        *lpSmallList = ShellSmallIconList;
+    { *lpSmallList = ShellSmallIconList;
+    }
 
     return TRUE;
 }
@@ -744,9 +734,6 @@ BOOL PidlToSicIndex (
     int        iShortcutDefaultIndex = INVALID_INDEX;
 
     TRACE("sf=%p pidl=%p %s\n", sh, pidl, bBigIcon?"Big":"Small");
-
-    if (!sic_hdpa)
-        SIC_Initialize();
 
     if (SUCCEEDED (sh->GetUIObjectOf(0, 1, &pidl, IID_NULL_PPV_ARG(IExtractIconW, &ei))))
     {
