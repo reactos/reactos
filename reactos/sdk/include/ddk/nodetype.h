@@ -63,6 +63,8 @@ typedef enum _RX_FILE_TYPE
 #define RDBSS_NTC_NONPAGED_FCB ((NODE_TYPE_CODE)0xebfd)
 #define RDBSS_NTC_MINIRDR_DISPATCH ((NODE_TYPE_CODE)0xebff)
 
+#define RDBSS_NTC_FCB RDBSS_NTC_STORAGE_TYPE_FILE
+
 #define NodeTypeIsFcb(FCB) ((((NodeType(FCB) & 0xff00) == RDBSS_NTC_STORAGE_TYPE_UNKNOWN)) || ((NodeType(FCB) & 0xfff0) == 0xeb90))
 
 #define RX_SCAVENGER_MASK (0x1000)

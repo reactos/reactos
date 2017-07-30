@@ -174,6 +174,118 @@ BOOLEAN DumpDispatchRoutine = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
+NTSTATUS
+NTAPI
+RxAcquireExclusiveFcbResourceInMRx(
+    _Inout_ PMRX_FCB Fcb)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+RxAcquireFcbForLazyWrite(
+    PVOID Context,
+    BOOLEAN Wait)
+{
+    PFCB Fcb;
+    BOOLEAN Ret;
+
+    PAGED_CODE();
+
+    Fcb = Context;
+    /* The received context is a FCB */
+    ASSERT(NodeType(Fcb) == RDBSS_NTC_FCB);
+    ASSERT_CORRECT_FCB_STRUCTURE(Fcb);
+    ASSERT(Fcb->Specific.Fcb.LazyWriteThread == NULL);
+
+    /* Acquire the paging resource (shared) */
+    Ret = ExAcquireResourceSharedLite(Fcb->Header.PagingIoResource, Wait);
+    if (Ret)
+    {
+        /* Update tracker information */
+        Fcb->PagingIoResourceFile = __FILE__;
+        Fcb->PagingIoResourceLine = __LINE__;
+        /* Lazy writer thread is the current one */
+        Fcb->Specific.Fcb.LazyWriteThread = PsGetCurrentThread();
+
+        /* There is no top level IRP */
+        ASSERT(RxIsThisTheTopLevelIrp(NULL));
+        /* Now, there will be! */
+        Ret = RxTryToBecomeTheTopLevelIrp(NULL, (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP,
+                                          Fcb->RxDeviceObject, TRUE);
+        /* In case of failure, release the lock and reset everything */
+        if (!Ret)
+        {
+            Fcb->PagingIoResourceFile = NULL;
+            Fcb->PagingIoResourceLine = 0;
+            ExReleaseResourceLite(Fcb->Header.PagingIoResource);
+            Fcb->Specific.Fcb.LazyWriteThread = NULL;
+        }
+    }
+
+    return Ret;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+RxAcquireFcbForReadAhead(
+    PVOID Context,
+    BOOLEAN Wait)
+{
+    PFCB Fcb;
+    BOOLEAN Ret;
+
+    PAGED_CODE();
+
+    Fcb = Context;
+    /* The received context is a FCB */
+    ASSERT(NodeType(Fcb) == RDBSS_NTC_FCB);
+    ASSERT_CORRECT_FCB_STRUCTURE(Fcb);
+
+    Ret = ExAcquireResourceSharedLite(Fcb->Header.Resource, Wait);
+    if (Ret)
+    {
+        /* There is no top level IRP */
+        ASSERT(RxIsThisTheTopLevelIrp(NULL));
+        /* Now, there will be! */
+        Ret = RxTryToBecomeTheTopLevelIrp(NULL, (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP,
+                                          Fcb->RxDeviceObject, TRUE);
+        /* In case of failure, release the lock and reset everything */
+        if (!Ret)
+        {
+            ExReleaseResourceLite(Fcb->Header.Resource);
+        }
+    }
+
+    return Ret;
+}
+
+VOID
+NTAPI
+RxAcquireFileForNtCreateSection(
+    PFILE_OBJECT FileObject)
+{
+    UNIMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+RxAcquireForCcFlush(
+    PFILE_OBJECT FileObject,
+    PDEVICE_OBJECT DeviceObject)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*
  * @implemented
  */
@@ -7317,6 +7429,80 @@ RxReinitializeContext(
     RxContext->Flags = SavedFlags;
     /* And reinit the context */
     RxInitializeContext(Irp, RxDeviceObject, InitialContextFlags, RxContext);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RxReleaseFcbFromLazyWrite(
+    PVOID Context)
+{
+    PFCB Fcb;
+
+    PAGED_CODE();
+
+    Fcb = Context;
+    /* The received context is a FCB */
+    ASSERT(NodeType(Fcb) == RDBSS_NTC_FCB);
+    ASSERT_CORRECT_FCB_STRUCTURE(Fcb);
+
+    /* Lazy writer is releasing lock, so forget about it */
+    Fcb->Specific.Fcb.LazyWriteThread = NULL;
+
+    /* If we were top level IRP, unwind */
+    if (RxGetTopIrpIfRdbssIrp() == (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP)
+    {
+        RxUnwindTopLevelIrp(NULL);
+    }
+
+    /* And finally, release the lock */
+    Fcb->PagingIoResourceFile = NULL;
+    Fcb->PagingIoResourceLine = 0;
+    ExReleaseResourceLite(Fcb->Header.PagingIoResource);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RxReleaseFcbFromReadAhead(
+    PVOID Context)
+{
+    PFCB Fcb;
+
+    PAGED_CODE();
+
+    Fcb = Context;
+    /* The received context is a FCB */
+    ASSERT(NodeType(Fcb) == RDBSS_NTC_FCB);
+    ASSERT_CORRECT_FCB_STRUCTURE(Fcb);
+
+    /* Top Level IRP is CC */
+    ASSERT(RxGetTopIrpIfRdbssIrp() == (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
+    RxUnwindTopLevelIrp(NULL);
+
+    ExReleaseResourceLite(Fcb->Header.Resource);
+}
+
+VOID
+NTAPI
+RxReleaseFileForNtCreateSection(
+    PFILE_OBJECT FileObject)
+{
+    UNIMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+RxReleaseForCcFlush(
+    PFILE_OBJECT FileObject,
+    PDEVICE_OBJECT DeviceObject)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*

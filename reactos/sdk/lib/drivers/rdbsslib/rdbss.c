@@ -743,53 +743,6 @@ __RxWriteReleaseResources(
     }
 }
 
-NTSTATUS
-NTAPI
-RxAcquireExclusiveFcbResourceInMRx(
-    _Inout_ PMRX_FCB Fcb)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-BOOLEAN
-NTAPI
-RxAcquireFcbForLazyWrite(
-    PVOID Context,
-    BOOLEAN Wait)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOLEAN
-NTAPI
-RxAcquireFcbForReadAhead(
-    PVOID Context,
-    BOOLEAN Wait)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-VOID
-NTAPI
-RxAcquireFileForNtCreateSection(
-    PFILE_OBJECT FileObject)
-{
-    UNIMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-RxAcquireForCcFlush(
-    PFILE_OBJECT FileObject,
-    PDEVICE_OBJECT DeviceObject)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 /*
  * @implemented
  */
@@ -8160,40 +8113,6 @@ RxRegisterMinirdr(
     RDBSSDevice->pAsynchronousRequestsCompletionEvent = NULL;
 
     return STATUS_SUCCESS;
-}
-
-VOID
-NTAPI
-RxReleaseFcbFromLazyWrite(
-    PVOID Context)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-RxReleaseFcbFromReadAhead(
-    PVOID Context)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-RxReleaseFileForNtCreateSection(
-    PFILE_OBJECT FileObject)
-{
-    UNIMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-RxReleaseForCcFlush(
-    PFILE_OBJECT FileObject,
-    PDEVICE_OBJECT DeviceObject)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
