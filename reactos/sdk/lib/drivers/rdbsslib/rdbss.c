@@ -5291,6 +5291,7 @@ RxDriverEntry(
 #endif
 }
 
+#if DBG
 /*
  * @implemented
  */
@@ -5317,6 +5318,7 @@ RxDumpWantedAccess(
 {
     PAGED_CODE();
 }
+#endif
 
 /*
  * @implemented
