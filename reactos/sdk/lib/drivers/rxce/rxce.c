@@ -8447,6 +8447,7 @@ RxTimerDispatch(
     }
 }
 
+#ifdef RDBSS_TRACKER
 /*
  * @implemented
  */
@@ -8528,6 +8529,7 @@ RxTrackerUpdateHistory(
         ASSERT(RxContext->AcquireReleaseFcbTrackerX >= 0);
     }
 }
+#endif
 
 VOID
 RxTrackPagingIoResource(
