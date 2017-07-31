@@ -1867,14 +1867,14 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 	if( bWrap )
 	{
 	    if ( !(btnPtr->fsStyle & BTNS_SEP) )
-	        y += cy;
+	        y += cy + infoPtr->szSpacing.cy;
 	    else
 	    {
                if ( !(infoPtr->dwStyle & CCS_VERT))
                     y += cy + ( (btnPtr->cx > 0 ) ?
                                 btnPtr->cx : SEPARATOR_WIDTH) * 2 /3;
 		else
-		    y += cy;
+		    y += cy + infoPtr->szSpacing.cy;
 
 		/* nSepRows is used to calculate the extra height following  */
 		/* the last row.					     */
@@ -1888,7 +1888,7 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 		nRows++;
 	}
 	else
-	    x += cx;
+	    x += cx + infoPtr->szSpacing.cx;
     }
 
     /* infoPtr->nRows is the number of rows on the toolbar */
@@ -3660,10 +3660,8 @@ TOOLBAR_GetMaxSize (const TOOLBAR_INFO *infoPtr, LPSIZE lpSize)
 static LRESULT
 TOOLBAR_GetMetrics(const TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
 {
-    if (pMetrics == NULL)
-        return FALSE;
-
-    /* TODO: check if cbSize is a valid value */
+    if (pMetrics == NULL || pMetrics->cbSize != sizeof(TBMETRICS))
+        return 0;
 
     if (pMetrics->dwMask & TBMF_PAD)
     {
@@ -3683,7 +3681,7 @@ TOOLBAR_GetMetrics(const TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
         pMetrics->cyButtonSpacing = infoPtr->szSpacing.cy;
     }
 
-    return TRUE;
+    return 0;
 }
 #endif
 
@@ -6250,8 +6248,8 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs)
     infoPtr->szPadding.cx = DEFPAD_CX;
     infoPtr->szPadding.cy = DEFPAD_CY;
 #ifdef __REACTOS__
-    infoPtr->szSpacing.cx = DEFSPACE_CX;
-    infoPtr->szSpacing.cy = DEFSPACE_CY;
+    infoPtr->szSpacing.cx = 0;
+    infoPtr->szSpacing.cy = 0;
     memset(&infoPtr->themeMargins, 0 , sizeof(infoPtr->themeMargins));
 #endif
     infoPtr->iListGap = DEFLISTGAP;
