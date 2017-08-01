@@ -1742,7 +1742,41 @@ UhciSetEndpointStatus(IN PVOID uhciExtension,
                       IN PVOID uhciEndpoint,
                       IN ULONG EndpointStatus)
 {
-    DPRINT_IMPL("UhciSetEndpointStatus: UNIMPLEMENTED. FIXME\n");
+    PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
+    ULONG PhysicalAddress;
+
+    DPRINT("UhciSetEndpointStatus: uhciEndpoint - %p, EndpointStatus - %X\n",
+           uhciEndpoint,
+           EndpointStatus);
+
+    if (EndpointStatus != USBPORT_ENDPOINT_RUN)
+    {
+        return;
+    }
+
+    if (!(UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED))
+    {
+        return;
+    }
+
+    UhciEndpoint->Flags &= ~UHCI_ENDPOINT_FLAG_HALTED;
+
+    if (UhciEndpoint->HeadTD == NULL)
+    {
+        UhciEndpoint->TailTD = NULL;
+    }
+
+    if (UhciEndpoint->HeadTD)
+    {
+        PhysicalAddress = UhciEndpoint->HeadTD->PhysicalAddress;
+        PhysicalAddress &= ~UHCI_TD_LINK_PTR_TERMINATE;
+        UhciEndpoint->QH->HwQH.NextElement = PhysicalAddress;
+        UhciEndpoint->QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
+    }
+    else
+    {
+        UhciEndpoint->QH->HwQH.NextElement = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+    }
 }
 
 VOID
