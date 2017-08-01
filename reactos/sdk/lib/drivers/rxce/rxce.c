@@ -500,8 +500,10 @@ RxAllocateFcbObject(
 
         Fcb->NonPaged = NonPagedFcb;
         ZeroAndInitializeNodeType(Fcb->NonPaged, RDBSS_NTC_NONPAGED_FCB, sizeof(NON_PAGED_FCB));
+#if DBG
         Fcb->CopyOfNonPaged = NonPagedFcb;
         NonPagedFcb->FcbBackPointer = Fcb;
+#endif
 
         Fcb->InternalSrvOpen = SrvOpen;
         Fcb->InternalFobx = Fobx;
@@ -1742,7 +1744,9 @@ RxCreateRxContext(
 
     DPRINT("RxCreateRxContext(%p, %p, %u)\n", Irp, RxDeviceObject, InitialContextFlags);
 
+#if DBG
     InterlockedIncrement((volatile LONG *)&RxFsdEntryCount);
+#endif
     InterlockedIncrement((volatile LONG *)&RxDeviceObject->NumberOfActiveContexts);
 
     /* Allocate the context from our lookaside list */
@@ -2302,12 +2306,14 @@ RxDereferenceAndDeleteRxContext_Real(
             KeSetEvent(&StopContext->SyncEvent, IO_NO_INCREMENT, FALSE);
         }
 
+#if DBG
         /* Is ShadowCrit still owned? Shouldn't happen! */
         if (RxContext->ShadowCritOwner != 0)
         {
             DPRINT1("ShadowCritOwner not null! %p\n", (PVOID)RxContext->ShadowCritOwner);
             ASSERT(FALSE);
         }
+#endif
 
         /* If it was allocated, free it */
         if (Allocated)
@@ -8293,7 +8299,9 @@ RxTableLookupName_ExactLengthMatch(
         UNICODE_STRING InsensitiveName, InsensitivePrefix;
 
         Entry = CONTAINING_RECORD(ListEntry, RX_PREFIX_ENTRY, HashLinks);
+#if DBG
         ++ThisTable->Considers;
+#endif
         ASSERT(HashBucket == HASH_BUCKET(ThisTable, Entry->SavedHashValue));
 
         Container = Entry->ContainingRecord;
@@ -8305,7 +8313,9 @@ RxTableLookupName_ExactLengthMatch(
             continue;
         }
 
+#if DBG
         ++ThisTable->Compares;
+#endif
         /* If we have to perform a case insensitive compare on a portion... */
         if (Entry->CaseInsensitiveLength != 0)
         {
