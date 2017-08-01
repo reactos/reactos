@@ -392,6 +392,7 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
     EndTime.QuadPart += 100 * 10000; // 100 ms
 
     HcStatus.AsUSHORT = READ_PORT_USHORT(StatusRegister);
+    DPRINT("UhciTakeControlHC: HcStatus.AsUSHORT - %04X\n", HcStatus.AsUSHORT);
 
     if (HcStatus.HcHalted == 0)
     {
@@ -407,16 +408,19 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
     WRITE_PORT_USHORT(StatusRegister, UHCI_USB_STATUS_MASK);
 
     LegacyMask.AsUSHORT = 0;
-    LegacyMask.Smi60Read == 1;
-    LegacyMask.Smi60Write == 1;
-    LegacyMask.Smi64Read == 1;
-    LegacyMask.Smi64Write == 1;
-    LegacyMask.SmiIrq == 1;
-    LegacyMask.A20Gate == 1;
-    LegacyMask.SmiEndPassThrough == 1;
+    LegacyMask.Smi60Read = 1;
+    LegacyMask.Smi60Write = 1;
+    LegacyMask.Smi64Read = 1;
+    LegacyMask.Smi64Write = 1;
+    LegacyMask.SmiIrq = 1;
+    LegacyMask.A20Gate = 1;
+    LegacyMask.SmiEndPassThrough = 1;
 
     if ((LegacySupport.AsUSHORT & LegacyMask.AsUSHORT) != 0)
     {
+        DPRINT("UhciTakeControlHC: LegacySupport.AsUSHORT - %04X\n",
+               LegacySupport.AsUSHORT);
+
         Resources->LegacySupport = 1;
 
         RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
