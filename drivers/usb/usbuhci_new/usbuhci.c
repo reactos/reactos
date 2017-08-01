@@ -1234,7 +1234,7 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
     USHORT DeviceAddress;
     ULONG_PTR PhysicalAddress;
 
-    DPRINT_UHCI("UhciControlTransfer: ...\n");
+    DPRINT_UHCI("UhciControlTransfer: UhciTransfer - %p\n", UhciTransfer);
 
     if (UhciEndpoint->EndpointLock > 1)
     {
@@ -1258,6 +1258,7 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
     UhciTransfer->PendingTds++;
     FirstTD = UhciAllocateTD(UhciExtension, UhciEndpoint);
     FirstTD->Flags |= UHCI_HCD_TD_FLAG_PROCESSED;
+    DPRINT_UHCI("UhciControlTransfer: FirstTD - %p\n", FirstTD);
 
     FirstTD->HwTD.NextElement = 0;
 
@@ -1290,6 +1291,7 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
     UhciTransfer->PendingTds++;
     LastTD = UhciAllocateTD(UhciExtension, UhciEndpoint);
     LastTD->Flags |= UHCI_HCD_TD_FLAG_PROCESSED;
+    DPRINT_UHCI("UhciControlTransfer: LastTD - %p\n", LastTD);
 
     LastTD->HwTD.NextElement = 0;
 
@@ -1345,11 +1347,11 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
     if (UhciTransfer->TransferParameters->TransferFlags &
         USBD_TRANSFER_DIRECTION_IN)
     {
-        LastTD->HwTD.Token.PIDCode = UHCI_TD_PID_IN;
+        LastTD->HwTD.Token.PIDCode = UHCI_TD_PID_OUT;
     }
     else
     {
-        LastTD->HwTD.Token.PIDCode = UHCI_TD_PID_OUT;
+        LastTD->HwTD.Token.PIDCode = UHCI_TD_PID_IN;
     }
 
     LastTD->HwTD.NextElement = UHCI_TD_LINK_PTR_TERMINATE;
