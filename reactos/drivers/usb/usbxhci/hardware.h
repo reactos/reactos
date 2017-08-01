@@ -10,6 +10,7 @@
 // operational register offsets
 #define XHCI_USBCMD           0
 #define XHCI_USBSTS           1
+#define XHCI_PGSZ             2
 #define XHCI_DNCTRL           5
 #define XHCI_CRCR             6
 #define XHCI_DCBAAP           12
