@@ -7,12 +7,14 @@
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbdlib.h>
+//#include <xdk/mmfuncs.h>
 #include "..\usbmport.h"
 #include "hardware.h"
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
 #define XHCI_FLAGS_CONTROLLER_SUSPEND 0x01
+
 //Data structures
 typedef struct  _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY {
    PHYSICAL_ADDRESS ContextBaseAddr [256];
@@ -200,7 +202,7 @@ typedef struct _XHCI_RING {
     PXHCI_SEGMENT enqueue_segment;
     PXHCI_SEGMENT dequeue_segment;
     ULONGLONG Padding;
-} XHCI_RING , *PXHCI_RING;
+} XHCI_RING, *PXHCI_RING;
 
 typedef struct _XHCI_EXTENSION {
   ULONG Reserved;
@@ -215,14 +217,17 @@ typedef struct _XHCI_EXTENSION {
   ULONG PortRoutingControl;
   USHORT NumberOfPorts; // HCSPARAMS1 => N_PORTS 
   USHORT PortPowerControl; // HCSPARAMS => Port Power Control (PPC)
+  USHORT PageSize;
+  USHORT MaxScratchPadBuffers;
+  PMDL ScratchPadArray;
   
 } XHCI_EXTENSION, *PXHCI_EXTENSION;
 
 typedef struct _XHCI_HC_RESOURCES {
   XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY DCBAA;
   //XHCI_COMMAND_RING CommandRing;
-  XHCI_RING         EventRing ;
-  XHCI_RING         CommandRing ;
+  DECLSPEC_ALIGN(16) XHCI_RING         EventRing ;
+  DECLSPEC_ALIGN(64) XHCI_RING         CommandRing ;
   XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
 } XHCI_HC_RESOURCES, *PXHCI_HC_RESOURCES;
 
@@ -234,6 +239,13 @@ typedef struct _XHCI_TRANSFER {
   ULONG Reserved;
 } XHCI_TRANSFER, *PXHCI_TRANSFER;
 
+typedef union _XHCI_SCRATCHPAD_BUFFER_ARRAY{
+  struct {
+      ULONGLONG RsvdZ1              :  12;
+      ULONGLONG bufferBaseAddr      :  52;
+  };
+  ULONGLONG AsULONGLONG;
+} XHCI_SCRATCHPAD_BUFFER_ARRAY, *PXHCI_SCRATCHPAD_BUFFER_ARRAY;
 //roothub functions
 VOID
 NTAPI

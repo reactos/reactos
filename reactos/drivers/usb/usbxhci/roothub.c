@@ -138,7 +138,9 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     portstatus.UsbPortStatusChange.HsDeviceAttachedChange = PortStatusRegister.ConnectStatusChange;
     portstatus.UsbPortStatusChange.TestModeChange = 0;//PortStatusRegister.ConnectStatusChange;
     portstatus.UsbPortStatusChange.IndicatorControlChange =0;// PortStatusRegister.ConnectStatusChange;
-   
+    
+    DPRINT("XHCI_RH_GetPortStatus: PortStatus      - %p\n", portstatus.AsULONG);
+    DPRINT("XHCI_RH_GetPortStatus: Port      - %i\n", Port);
     *PortStatus = portstatus.AsULONG;
     
     return MP_STATUS_SUCCESS;

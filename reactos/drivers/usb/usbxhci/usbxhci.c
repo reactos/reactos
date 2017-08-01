@@ -163,7 +163,8 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     PHYSICAL_ADDRESS HcResourcesPA;
     PULONG BaseIoAdress;
     PULONG OperationalRegs;
-    
+    USHORT PageSize;
+    USHORT MaxScratchPadBuffers;
     
     PULONG  RunTimeRegisterBase;
     XHCI_INTERRUPTER_MANAGEMENT Iman;
@@ -238,7 +239,51 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
         HcResourcesVA->EventRing.firstSeg.XhciTrb[i].EventTRB.Word2=0;
         HcResourcesVA->EventRing.firstSeg.XhciTrb[i].EventTRB.Word3=0;
     }
+    /*PHYSICAL_ADDRESS Zero, Max; 
+    Zero.QuadPart = 0; 
+    Max.QuadPart = -1;   
+    PMDL Mdl = MmAllocatePagesForMdlEx(Zero, Max, Zero, NumScratchPages * PAGE_SIZE, MmNonCached, 0); 
+    if (Mdl == NULL) { fail }  
+    if (MmGetMdlByteCount(Mdl) < NumScratchPages * PAGE_SIZE) { MmFreePagesFromMdl(Mdl);  fail }
+    Allocate scratchpad  buffers.
+    */
+    // check if the controller supports 4k page size or quit.
+    PageSize = XhciExtension-> PageSize;
+    if (PageSize  & (1 << 0) == 0){
+        DPRINT1("XHCI_InitializeResources  : fail. does not support 4k page size   %p\n",PageSize);
+        return MP_STATUS_FAILURE;
+    }
+    // allocate scratchpad buffer array
+    PHYSICAL_ADDRESS Zero, Max; 
+    MaxScratchPadBuffers = XhciExtension->MaxScratchPadBuffers;
+    Zero.QuadPart = 0; 
+    Max.QuadPart = -1;   
     
+    PMDL ScratchPadArray;
+    //PXHCI_SCRATCHPAD_BUFFER_ARRAY BufferArrayPointer;
+    PHYSICAL_ADDRESS *temp;  
+    ScratchPadArray = MmAllocatePagesForMdlEx(Zero, Max, Zero, MaxScratchPadBuffers*8 , MmNonCached, 0); 
+    
+    temp = MmGetSystemAddressForMdlSafe(ScratchPadArray, 0); // PRiority??
+    //BufferArrayPointer = (PXHCI_SCRATCHPAD_BUFFER_ARRAY) MmGetSystemAddressForMdlSafe(ScratchPadArray, 0);
+    HcResourcesVA-> DCBAA.ContextBaseAddr[0] = *temp;
+    //allocate scratchpad buffers
+    PMDL ScrathcPadBuffer;
+    PHYSICAL_ADDRESS *ScratchArray;
+    ScratchArray = MmGetSystemAddressForMdlSafe(ScratchPadArray, 0);
+    for (int i = 0; i < MaxScratchPadBuffers ; i++){
+        ScrathcPadBuffer = MmAllocatePagesForMdlEx(Zero, Max, Zero, PAGE_SIZE, MmNonCached, 0);
+        temp = MmGetSystemAddressForMdlSafe(ScrathcPadBuffer, 0);
+        ScratchArray[i] = *temp;
+        if (ScrathcPadBuffer == NULL) { 
+        return MP_STATUS_FAILURE;
+        }
+        if (MmGetMdlByteCount(ScrathcPadBuffer) < PAGE_SIZE) { 
+            MmFreePagesFromMdl(ScrathcPadBuffer); 
+            return MP_STATUS_FAILURE;
+        }
+    }
+    XhciExtension-> ScratchPadArray = ScratchPadArray;
     //DbgBreakPoint();
     return MP_STATUS_SUCCESS;
 }
@@ -328,9 +373,10 @@ XHCI_StartController(IN PVOID xhciExtension,
     XHCI_RT_REGISTER_SPACE_OFFSET RTSOffsetRegister;
     UCHAR CapabilityRegLength;
     UCHAR Fladj;
-
+    XHCI_PAGE_SIZE PageSizeReg;
+    USHORT MaxScratchPadBuffers;
+    XHCI_HC_STRUCTURAL_PARAMS_2 HCSPARAMS2;
     
-
     if ((Resources->TypesResources & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
                                      (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT))
     {
@@ -360,10 +406,20 @@ XHCI_StartController(IN PVOID xhciExtension,
     RunTimeRegisterBase = (PULONG)((PBYTE)BaseIoAdress + RTSOffsetRegister.AsULONG );
     XhciExtension->RunTimeRegisterBase = RunTimeRegisterBase ;
     
+    PageSizeReg.AsULONG =  READ_REGISTER_ULONG(OperationalRegs + XHCI_PGSZ);
+    XhciExtension->PageSize = PageSizeReg.PageSize;
+    HCSPARAMS2.AsULONG = READ_REGISTER_ULONG(BaseIoAdress + XHCI_HCSP2);
+    MaxScratchPadBuffers = 0;
+    MaxScratchPadBuffers = HCSPARAMS2.MaxSPBuffersHi;
+    MaxScratchPadBuffers= MaxScratchPadBuffers<<5;
+    MaxScratchPadBuffers = MaxScratchPadBuffers + HCSPARAMS2.MaxSPBuffersLo;
+    XhciExtension->MaxScratchPadBuffers = MaxScratchPadBuffers;
+    
     DPRINT("XHCI_StartController: BaseIoAdress    - %p\n", BaseIoAdress);
     DPRINT("XHCI_StartController: OperationalRegs - %p\n", OperationalRegs);
     DPRINT("XHCI_StartController: DoorBellRegisterBase - %p\n", DoorBellRegisterBase);
     DPRINT("XHCI_StartController: RunTimeRegisterBase - %p\n", RunTimeRegisterBase);
+    DPRINT("XHCI_StartController: PageSize - %p\n", XhciExtension->PageSize);
     
     RegPacket.UsbPortReadWriteConfigSpace(XhciExtension,
                                           1,
@@ -408,6 +464,13 @@ XHCI_StopController(IN PVOID xhciExtension,
                     IN BOOLEAN IsDoDisableInterrupts)
 {
     DPRINT1("XHCI_StopController: UNIMPLEMENTED. FIXME\n");
+    PXHCI_EXTENSION XhciExtension;
+    XhciExtension = (PXHCI_EXTENSION) xhciExtension;
+    PMDL ScratchPadArray;
+    // free memory allocated to scratchpad buffers.
+    ScratchPadArray = XhciExtension-> ScratchPadArray; 
+    //ExFreePool(Mdl) after MmFreePagesFromMdl to free the scratchpad buffer ARRAY
+    MmFreePagesFromMdl(ScratchPadArray);
 }
 
 VOID
@@ -466,8 +529,11 @@ XHCI_InterruptService(IN PVOID xhciExtension)
     WRITE_REGISTER_ULONG(RunTimeRegisterBase + XHCI_IMAN, Iman.AsULONG);
     DPRINT1("XHCI_InterruptService: Succesful Interupt\n");
     // changing the enque pointer
-    erstdp.AsULONGLONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP + 1)|READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP);
-    erstdp.AsULONGLONG = erstdp.AsULONGLONG +2;
+    erstdp.AsULONGLONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP + 1);
+    erstdp.AsULONGLONG = erstdp.AsULONGLONG <<32;
+    erstdp.AsULONGLONG = erstdp.AsULONGLONG + READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP);
+    
+    erstdp.EventRingSegDequeuePointer = erstdp.EventRingSegDequeuePointer +1;
     erstdp.DequeueERSTIndex =0;
     XHCI_Write64bitReg (RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
     
