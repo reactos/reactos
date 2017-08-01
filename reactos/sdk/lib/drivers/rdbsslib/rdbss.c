@@ -1328,6 +1328,7 @@ RxCheckFcbStructuresForAlignment(
     UNIMPLEMENTED;
 }
 
+#if DBG
 NTSTATUS
 RxCheckShareAccess(
     _In_ ACCESS_MASK DesiredAccess,
@@ -1345,6 +1346,7 @@ RxCheckShareAccess(
 
     return IoCheckShareAccess(DesiredAccess, DesiredShareAccess, FileObject, ShareAccess, Update);
 }
+#endif
 
 /*
  * @implemented
@@ -8241,6 +8243,7 @@ RxRemoveOverflowEntry(
     return Context;
 }
 
+#if DBG
 /*
  * @implemented
  */
@@ -8257,6 +8260,7 @@ RxRemoveShareAccess(
     IoRemoveShareAccess(FileObject, ShareAccess);
     RxDumpCurrentAccess(where, "after", wherelogtag, ShareAccess);
 }
+#endif
 
 /*
  * @implemented
@@ -8641,6 +8645,7 @@ RxSetRenameInfo(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+#if DBG
 /*
  * @implemented
  */
@@ -8659,6 +8664,7 @@ RxSetShareAccess(
     IoSetShareAccess(DesiredAccess, DesiredShareAccess, FileObject, ShareAccess);
     RxDumpCurrentAccess(where, "after", wherelogtag, ShareAccess);
 }
+#endif
 
 NTSTATUS
 RxSetSimpleInfo(
@@ -8916,6 +8922,7 @@ RxTryToBecomeTheTopLevelIrp(
     return TRUE;
 }
 
+#if DBG
 /*
  * @implemented
  */
@@ -8932,6 +8939,7 @@ RxUpdateShareAccess(
     IoUpdateShareAccess(FileObject, ShareAccess);
     RxDumpCurrentAccess(where, "after", wherelogtag, ShareAccess);
 }
+#endif
 
 /*
  * @implemented
