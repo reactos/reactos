@@ -255,7 +255,7 @@ AcpiUtCreateUpdateStateAndPush (
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Walk through a package
+ * DESCRIPTION: Walk through a package, including subpackages
  *
  ******************************************************************************/
 
@@ -269,8 +269,8 @@ AcpiUtWalkPackageTree (
     ACPI_STATUS             Status = AE_OK;
     ACPI_GENERIC_STATE      *StateList = NULL;
     ACPI_GENERIC_STATE      *State;
-    UINT32                  ThisIndex;
     ACPI_OPERAND_OBJECT     *ThisSourceObj;
+    UINT32                  ThisIndex;
 
 
     ACPI_FUNCTION_TRACE (UtWalkPackageTree);
@@ -287,8 +287,10 @@ AcpiUtWalkPackageTree (
         /* Get one element of the package */
 
         ThisIndex = State->Pkg.Index;
-        ThisSourceObj = (ACPI_OPERAND_OBJECT *)
+        ThisSourceObj =
             State->Pkg.SourceObject->Package.Elements[ThisIndex];
+        State->Pkg.ThisTargetObj =
+            &State->Pkg.SourceObject->Package.Elements[ThisIndex];
 
         /*
          * Check for:
@@ -304,7 +306,7 @@ AcpiUtWalkPackageTree (
             (ThisSourceObj->Common.Type != ACPI_TYPE_PACKAGE))
         {
             Status = WalkCallback (ACPI_COPY_TYPE_SIMPLE, ThisSourceObj,
-                                    State, Context);
+                State, Context);
             if (ACPI_FAILURE (Status))
             {
                 return_ACPI_STATUS (Status);
@@ -376,6 +378,9 @@ AcpiUtWalkPackageTree (
     }
 
     /* We should never get here */
+
+    ACPI_ERROR ((AE_INFO,
+        "State list did not terminate correctly"));
 
     return_ACPI_STATUS (AE_AML_INTERNAL);
 }

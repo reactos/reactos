@@ -120,7 +120,7 @@ AcpiHwGetAccessBitWidth (
     }
     else if (Reg->AccessWidth)
     {
-        AccessBitWidth = (1 << (Reg->AccessWidth + 2));
+        AccessBitWidth = ACPI_ACCESS_BIT_WIDTH (Reg->AccessWidth);
     }
     else
     {

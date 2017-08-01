@@ -302,6 +302,7 @@ AcpiNsLookup (
 {
     ACPI_STATUS             Status;
     char                    *Path = Pathname;
+    char                    *ExternalPath;
     ACPI_NAMESPACE_NODE     *PrefixNode;
     ACPI_NAMESPACE_NODE     *CurrentNode = NULL;
     ACPI_NAMESPACE_NODE     *ThisNode = NULL;
@@ -448,11 +449,21 @@ AcpiNsLookup (
                 ThisNode = ThisNode->Parent;
                 if (!ThisNode)
                 {
-                    /* Current scope has no parent scope */
+                    /*
+                     * Current scope has no parent scope. Externalize
+                     * the internal path for error message.
+                     */
+                    Status = AcpiNsExternalizeName (ACPI_UINT32_MAX, Pathname,
+                        NULL, &ExternalPath);
+                    if (ACPI_SUCCESS (Status))
+                    {
+                        ACPI_ERROR ((AE_INFO,
+                            "%s: Path has too many parent prefixes (^)",
+                            ExternalPath));
 
-                    ACPI_ERROR ((AE_INFO,
-                        "%s: Path has too many parent prefixes (^) "
-                        "- reached beyond root node", Pathname));
+                        ACPI_FREE (ExternalPath);
+                    }
+
                     return_ACPI_STATUS (AE_NOT_FOUND);
                 }
             }

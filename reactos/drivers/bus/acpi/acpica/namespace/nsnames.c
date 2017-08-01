@@ -100,8 +100,15 @@ AcpiNsGetPathnameLength (
     ACPI_SIZE               Size;
 
 
-    ACPI_FUNCTION_ENTRY ();
+    /* Validate the Node */
 
+    if (ACPI_GET_DESCRIPTOR_TYPE (Node) != ACPI_DESC_TYPE_NAMED)
+    {
+        ACPI_ERROR ((AE_INFO,
+            "Invalid/cached reference target node: %p, descriptor type %d",
+            Node, ACPI_GET_DESCRIPTOR_TYPE (Node)));
+        return (0);
+    }
 
     Size = AcpiNsBuildNormalizedPath (Node, NULL, 0, FALSE);
     return (Size);

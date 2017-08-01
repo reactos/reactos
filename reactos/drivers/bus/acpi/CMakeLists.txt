@@ -17,6 +17,7 @@ list(APPEND ACPICA_SOURCE
     acpica/dispatcher/dsmthdat.c
     acpica/dispatcher/dsobject.c
     acpica/dispatcher/dsopcode.c
+    acpica/dispatcher/dspkginit.c
     acpica/dispatcher/dsutils.c
     acpica/dispatcher/dswexec.c
     acpica/dispatcher/dswload.c
@@ -175,7 +176,7 @@ add_library(acpica
     acpica/utilities/utglobal.c)
 
 add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
-set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE;ACPI_USE_SYSTEM_INTTYPES;ACPI_USE_NATIVE_DIVIDE")
+set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE;ACPI_USE_SYSTEM_INTTYPES")
 add_dependencies(acpica bugcodes xdk)
 
 list(APPEND ACPI_SOURCE

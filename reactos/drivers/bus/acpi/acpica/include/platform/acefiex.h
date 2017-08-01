@@ -489,6 +489,11 @@ ACPI_EFI_STATUS
 
 typedef
 ACPI_EFI_STATUS
+(ACPI_EFI_API *ACPI_EFI_STALL) (
+    UINTN                           Microseconds);
+
+typedef
+ACPI_EFI_STATUS
 (ACPI_EFI_API *ACPI_EFI_SET_WATCHDOG_TIMER) (
     UINTN                           Timeout,
     UINT64                          WatchdogCode,
@@ -554,6 +559,27 @@ typedef
 ACPI_EFI_STATUS
 (ACPI_EFI_API *ACPI_EFI_FREE_POOL) (
     VOID                            *Buffer);
+
+
+/*
+ * EFI Time
+ */
+typedef struct {
+    UINT32 Resolution;
+    UINT32 Accuracy;
+    BOOLEAN SetsToZero;
+} ACPI_EFI_TIME_CAPABILITIES;
+
+typedef
+ACPI_EFI_STATUS
+(ACPI_EFI_API *ACPI_EFI_GET_TIME) (
+    ACPI_EFI_TIME                   *Time,
+    ACPI_EFI_TIME_CAPABILITIES      *Capabilities);
+
+typedef
+ACPI_EFI_STATUS
+(ACPI_EFI_API *ACPI_EFI_SET_TIME) (
+    ACPI_EFI_TIME                   *Time);
 
 
 /*
@@ -782,12 +808,11 @@ typedef struct _ACPI_EFI_BOOT_SERVICES {
 #if 0
     ACPI_EFI_EXIT_BOOT_SERVICES         ExitBootServices;
     ACPI_EFI_GET_NEXT_MONOTONIC_COUNT   GetNextMonotonicCount;
-    ACPI_EFI_STALL                      Stall;
 #else
     ACPI_EFI_UNKNOWN_INTERFACE          ExitBootServices;
     ACPI_EFI_UNKNOWN_INTERFACE          GetNextMonotonicCount;
-    ACPI_EFI_UNKNOWN_INTERFACE          Stall;
 #endif
+    ACPI_EFI_STALL                      Stall;
     ACPI_EFI_SET_WATCHDOG_TIMER         SetWatchdogTimer;
 
 #if 0
@@ -818,6 +843,54 @@ typedef struct _ACPI_EFI_BOOT_SERVICES {
     ACPI_EFI_UNKNOWN_INTERFACE      CreateEventEx;
 #endif
 } ACPI_EFI_BOOT_SERVICES;
+
+
+/*
+ * EFI Runtime Services Table
+ */
+#define ACPI_EFI_RUNTIME_SERVICES_SIGNATURE 0x56524553544e5552
+#define ACPI_EFI_RUNTIME_SERVICES_REVISION  (EFI_SPECIFICATION_MAJOR_REVISION<<16) | (EFI_SPECIFICATION_MINOR_REVISION)
+
+typedef struct _ACPI_EFI_RUNTIME_SERVICES {
+    ACPI_EFI_TABLE_HEADER               Hdr;
+
+    ACPI_EFI_GET_TIME                   GetTime;
+    ACPI_EFI_SET_TIME                   SetTime;
+#if 0
+    ACPI_EFI_GET_WAKEUP_TIME            GetWakeupTime;
+    ACPI_EFI_SET_WAKEUP_TIME            SetWakeupTime;
+#else
+    ACPI_EFI_UNKNOWN_INTERFACE          GetWakeupTime;
+    ACPI_EFI_UNKNOWN_INTERFACE          SetWakeupTime;
+#endif
+
+#if 0
+    ACPI_EFI_SET_VIRTUAL_ADDRESS_MAP    SetVirtualAddressMap;
+    ACPI_EFI_CONVERT_POINTER            ConvertPointer;
+#else
+    ACPI_EFI_UNKNOWN_INTERFACE          SetVirtualAddressMap;
+    ACPI_EFI_UNKNOWN_INTERFACE          ConvertPointer;
+#endif
+
+#if 0
+    ACPI_EFI_GET_VARIABLE               GetVariable;
+    ACPI_EFI_GET_NEXT_VARIABLE_NAME     GetNextVariableName;
+    ACPI_EFI_SET_VARIABLE               SetVariable;
+#else
+    ACPI_EFI_UNKNOWN_INTERFACE          GetVariable;
+    ACPI_EFI_UNKNOWN_INTERFACE          GetNextVariableName;
+    ACPI_EFI_UNKNOWN_INTERFACE          SetVariable;
+#endif
+
+#if 0
+    ACPI_EFI_GET_NEXT_HIGH_MONO_COUNT   GetNextHighMonotonicCount;
+    ACPI_EFI_RESET_SYSTEM               ResetSystem;
+#else
+    ACPI_EFI_UNKNOWN_INTERFACE          GetNextHighMonotonicCount;
+    ACPI_EFI_UNKNOWN_INTERFACE          ResetSystem;
+#endif
+
+} ACPI_EFI_RUNTIME_SERVICES;
 
 
 /*
@@ -856,11 +929,7 @@ typedef struct _ACPI_EFI_SYSTEM_TABLE {
     ACPI_EFI_HANDLE                     StandardErrorHandle;
     ACPI_SIMPLE_TEXT_OUTPUT_INTERFACE   *StdErr;
 
-#if 0
     ACPI_EFI_RUNTIME_SERVICES           *RuntimeServices;
-#else
-    ACPI_EFI_HANDLE                     *RuntimeServices;
-#endif
     ACPI_EFI_BOOT_SERVICES              *BootServices;
 
     UINTN                               NumberOfTableEntries;
@@ -943,18 +1012,33 @@ union acpi_efi_file {
 };
 
 
-/* GNU EFI definitions */
+/* EFI definitions */
 
-#if defined(_GNU_EFI)
+#if defined(_GNU_EFI) || defined(_EDK2_EFI)
 
 /*
  * This is needed to hide platform specific code from ACPICA
  */
-UINT64
+UINT64 ACPI_EFI_API
 DivU64x32 (
     UINT64                  Dividend,
     UINTN                   Divisor,
     UINTN                   *Remainder);
+
+UINT64 ACPI_EFI_API
+MultU64x32 (
+    UINT64                  Multiplicand,
+    UINTN                   Multiplier);
+
+UINT64 ACPI_EFI_API
+LShiftU64 (
+    UINT64                  Operand,
+    UINTN                   Count);
+
+UINT64 ACPI_EFI_API
+RShiftU64 (
+    UINT64                  Operand,
+    UINTN                   Count);
 
 /*
  * EFI specific prototypes
@@ -968,7 +1052,6 @@ int
 acpi_main (
     int                     argc,
     char                    *argv[]);
-
 
 #endif
 

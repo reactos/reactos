@@ -121,7 +121,7 @@ static ACPI_EXDUMP_INFO     AcpiExDumpPackage[6] =
     {ACPI_EXD_INIT,     ACPI_EXD_TABLE_SIZE (AcpiExDumpPackage),        NULL},
     {ACPI_EXD_NODE,     ACPI_EXD_OFFSET (Package.Node),                 "Parent Node"},
     {ACPI_EXD_UINT8,    ACPI_EXD_OFFSET (Package.Flags),                "Flags"},
-    {ACPI_EXD_UINT32,   ACPI_EXD_OFFSET (Package.Count),                "Elements"},
+    {ACPI_EXD_UINT32,   ACPI_EXD_OFFSET (Package.Count),                "Element Count"},
     {ACPI_EXD_POINTER,  ACPI_EXD_OFFSET (Package.Elements),             "Element List"},
     {ACPI_EXD_PACKAGE,  0,                                              NULL}
 };
@@ -402,6 +402,11 @@ AcpiExDumpObject (
 
     while (Count)
     {
+        if (!ObjDesc)
+        {
+            return;
+        }
+
         Target = ACPI_ADD_PTR (UINT8, ObjDesc, Info->Offset);
         Name = Info->Name;
 
@@ -414,7 +419,8 @@ AcpiExDumpObject (
         case ACPI_EXD_TYPE:
 
             AcpiOsPrintf ("%20s : %2.2X [%s]\n", "Type",
-                ObjDesc->Common.Type, AcpiUtGetObjectTypeName (ObjDesc));
+                ObjDesc->Common.Type,
+                AcpiUtGetObjectTypeName (ObjDesc));
             break;
 
         case ACPI_EXD_UINT8:
@@ -480,10 +486,10 @@ AcpiExDumpObject (
             Start = *ACPI_CAST_PTR (void *, Target);
             Next = Start;
 
-            AcpiOsPrintf ("%20s : %p", Name, Next);
+            AcpiOsPrintf ("%20s : %p ", Name, Next);
             if (Next)
             {
-                AcpiOsPrintf ("(%s %2.2X)",
+                AcpiOsPrintf ("%s (Type %2.2X)",
                     AcpiUtGetObjectTypeName (Next), Next->Common.Type);
 
                 while (Next->Common.NextObject)
@@ -505,6 +511,10 @@ AcpiExDumpObject (
                         break;
                     }
                 }
+            }
+            else
+            {
+                AcpiOsPrintf ("- No attached objects");
             }
 
             AcpiOsPrintf ("\n");
@@ -1186,7 +1196,8 @@ AcpiExDumpPackageObj (
 
     default:
 
-        AcpiOsPrintf ("[Unknown Type] %X\n", ObjDesc->Common.Type);
+        AcpiOsPrintf ("[%s] Type: %2.2X\n",
+            AcpiUtGetTypeName (ObjDesc->Common.Type), ObjDesc->Common.Type);
         break;
     }
 }
@@ -1230,10 +1241,19 @@ AcpiExDumpObjectDescriptor (
     {
         AcpiExDumpNamespaceNode ((ACPI_NAMESPACE_NODE *) ObjDesc, Flags);
 
-        AcpiOsPrintf ("\nAttached Object (%p):\n",
-            ((ACPI_NAMESPACE_NODE *) ObjDesc)->Object);
-
         ObjDesc = ((ACPI_NAMESPACE_NODE *) ObjDesc)->Object;
+        if (!ObjDesc)
+        {
+            return_VOID;
+        }
+
+        AcpiOsPrintf ("\nAttached Object %p", ObjDesc);
+        if (ACPI_GET_DESCRIPTOR_TYPE (ObjDesc) == ACPI_DESC_TYPE_NAMED)
+        {
+            AcpiOsPrintf (" - Namespace Node");
+        }
+
+        AcpiOsPrintf (":\n");
         goto DumpObject;
     }
 
@@ -1256,6 +1276,11 @@ AcpiExDumpObjectDescriptor (
 
 
 DumpObject:
+
+    if (!ObjDesc)
+    {
+        return_VOID;
+    }
 
     /* Common Fields */
 

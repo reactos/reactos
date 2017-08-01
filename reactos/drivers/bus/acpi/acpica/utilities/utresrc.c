@@ -252,14 +252,11 @@ AcpiUtWalkAmlResources (
             }
 
             /*
-             * The EndTag opcode must be followed by a zero byte.
-             * Although this byte is technically defined to be a checksum,
-             * in practice, all ASL compilers set this byte to zero.
+             * Don't attempt to perform any validation on the 2nd byte.
+             * Although all known ASL compilers insert a zero for the 2nd
+             * byte, it can also be a checksum (as per the ACPI spec),
+             * and this is occasionally seen in the field. July 2017.
              */
-            if (*(Aml + 1) != 0)
-            {
-                return_ACPI_STATUS (AE_AML_NO_RESOURCE_END_TAG);
-            }
 
             /* Return the pointer to the EndTag if requested */
 

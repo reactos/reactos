@@ -168,6 +168,7 @@ typedef UINT64                          ACPI_PHYSICAL_ADDRESS;
 #define ACPI_MAX_PTR                    ACPI_UINT64_MAX
 #define ACPI_SIZE_MAX                   ACPI_UINT64_MAX
 #define ACPI_USE_NATIVE_DIVIDE          /* Has native 64-bit integer support */
+#define ACPI_USE_NATIVE_MATH64          /* Has native 64-bit integer support */
 
 /*
  * In the case of the Itanium Processor Family (IPF), the hardware does not
@@ -566,6 +567,13 @@ typedef UINT64                          ACPI_INTEGER;
 
 #define ACPI_VALIDATE_RSDP_SIG(a)       (!strncmp (ACPI_CAST_PTR (char, (a)), ACPI_SIG_RSDP, 8))
 #define ACPI_MAKE_RSDP_SIG(dest)        (memcpy (ACPI_CAST_PTR (char, (dest)), ACPI_SIG_RSDP, 8))
+
+/*
+ * Algorithm to obtain access bit width.
+ * Can be used with AccessWidth of ACPI_GENERIC_ADDRESS and AccessSize of
+ * ACPI_RESOURCE_GENERIC_REGISTER.
+ */
+#define ACPI_ACCESS_BIT_WIDTH(size)     (1 << ((size) + 2))
 
 
 /*******************************************************************************

@@ -62,14 +62,14 @@
  * Note: The order of these include files is important.
  */
 #include "platform/acenv.h"     /* Environment-specific items */
-#include "acnames.h"            /* Common ACPI names and strings */
 #include "actypes.h"            /* ACPICA data types and structures */
+#include "platform/acenvex.h"   /* Extra environment-specific items */
+#include "acnames.h"            /* Common ACPI names and strings */
 #include "acexcep.h"            /* ACPICA exceptions */
 #include "actbl.h"              /* ACPI table definitions */
 #include "acoutput.h"           /* Error output and Debug macros */
 #include "acrestyp.h"           /* Resource Descriptor structs */
 #include "acpiosxf.h"           /* OSL interfaces (ACPICA-to-OS) */
 #include "acpixf.h"             /* ACPI core subsystem external interfaces */
-#include "platform/acenvex.h"   /* Extra environment-specific items */
 
 #endif /* __ACPI_H__ */

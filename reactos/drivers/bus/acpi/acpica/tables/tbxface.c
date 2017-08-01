@@ -185,7 +185,7 @@ AcpiReallocateRootTable (
 {
     ACPI_STATUS             Status;
     ACPI_TABLE_DESC         *TableDesc;
-    UINT32                  i;
+    UINT32                  i, j;
 
 
     ACPI_FUNCTION_TRACE (AcpiReallocateRootTable);
@@ -231,7 +231,7 @@ AcpiReallocateRootTable (
             TableDesc = &AcpiGbl_RootTableList.Tables[i];
             if (!(TableDesc->Flags & ACPI_TABLE_IS_VERIFIED))
             {
-                Status = AcpiTbVerifyTempTable (TableDesc, NULL, NULL);
+                Status = AcpiTbVerifyTempTable (TableDesc, NULL, &j);
                 if (ACPI_FAILURE (Status))
                 {
                     AcpiTbUninstallTable (TableDesc);

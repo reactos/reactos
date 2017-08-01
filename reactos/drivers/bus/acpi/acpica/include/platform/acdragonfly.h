@@ -51,6 +51,7 @@
 #else
 #define ACPI_MACHINE_WIDTH              32
 #define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_NATIVE_MATH64
 #endif
 
 #define ACPI_UINTPTR_T                  uintptr_t

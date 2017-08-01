@@ -292,6 +292,8 @@ AcpiExDoLogicalNumericOp (
 
     default:
 
+        ACPI_ERROR ((AE_INFO,
+            "Invalid numeric logical opcode: %X", Opcode));
         Status = AE_AML_INTERNAL;
         break;
     }
@@ -377,6 +379,9 @@ AcpiExDoLogicalOp (
 
     default:
 
+        ACPI_ERROR ((AE_INFO,
+            "Invalid object type for logical operator: %X",
+            Operand0->Common.Type));
         Status = AE_AML_INTERNAL;
         break;
     }
@@ -426,6 +431,8 @@ AcpiExDoLogicalOp (
 
         default:
 
+            ACPI_ERROR ((AE_INFO,
+                "Invalid comparison opcode: %X", Opcode));
             Status = AE_AML_INTERNAL;
             break;
         }
@@ -504,6 +511,8 @@ AcpiExDoLogicalOp (
 
         default:
 
+            ACPI_ERROR ((AE_INFO,
+                "Invalid comparison opcode: %X", Opcode));
             Status = AE_AML_INTERNAL;
             break;
         }

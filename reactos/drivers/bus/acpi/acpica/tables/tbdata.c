@@ -540,6 +540,8 @@ AcpiTbCheckDuplication (
  *
  * DESCRIPTION: This function is called to validate and verify the table, the
  *              returned table descriptor is in "VALIDATED" state.
+ *              Note that 'TableIndex' is required to be set to !NULL to
+ *              enable duplication check.
  *
  *****************************************************************************/
 

@@ -84,6 +84,9 @@ typedef __builtin_va_list       va_list;
 
 #define COMPILER_VA_MACRO               1
 
+/* GCC supports native multiply/shift on 32-bit platforms */
+
+#define ACPI_USE_NATIVE_MATH64
 
 #ifdef __REACTOS__
 /* Flush CPU cache - used when going to sleep. Wbinvd or similar. */
@@ -134,20 +137,6 @@ do {                                                        \
         "2:"                                                \
         :"=a"(Acq):"a"(0),"c"(FacsPtr),"i"(~3L):"edx");\
 } while(0)
-
-
-#define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32)                \
-{                                                                   \
-    asm("divl %4;"                                                  \
-        :"=a"(q32),"=d"(r32):"a"(n_lo),"d"(n_hi),"rm"(d32):"cc");   \
-}
-
-#define ACPI_SHIFT_RIGHT_64(n_hi, n_lo)                     \
-{                                                           \
-    asm("shrl $1, %0;"                                      \
-        "rcrl $1, %1;"                                      \
-        :"=rm"(n_hi),"=rm"(n_lo):"0"(n_hi),"1"(n_lo):"cc"); \
-}
 
 #endif /* __REACTOS__ */
 #endif /* __ACGCC_H__ */

@@ -639,6 +639,16 @@ AcpiDsEvalDataObjectOperands (
      */
     WalkState->OperandIndex = WalkState->NumOperands;
 
+    /* Ignore if child is not valid */
+
+    if (!Op->Common.Value.Arg)
+    {
+        ACPI_ERROR ((AE_INFO,
+            "Dispatch: Missing child while executing TermArg for %X",
+            Op->Common.AmlOpcode));
+        return_ACPI_STATUS (AE_OK);
+    }
+
     Status = AcpiDsCreateOperand (WalkState, Op->Common.Value.Arg, 1);
     if (ACPI_FAILURE (Status))
     {

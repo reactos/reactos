@@ -448,6 +448,8 @@ AcpiExOpcode_2A_1T_1R (
 
         default:
 
+            ACPI_ERROR ((AE_INFO,
+                "Invalid object type: %X", (Operand[0])->Common.Type));
             Status = AE_AML_INTERNAL;
             goto Cleanup;
         }

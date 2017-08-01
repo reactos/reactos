@@ -705,7 +705,7 @@ typedef struct acpi_update_state
 typedef struct acpi_pkg_state
 {
     ACPI_STATE_COMMON
-    UINT16                          Index;
+    UINT32                          Index;
     union acpi_operand_object       *SourceObject;
     union acpi_operand_object       *DestObject;
     struct acpi_walk_state          *WalkState;
