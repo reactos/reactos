@@ -158,7 +158,7 @@ NTAPI
 UhciSetNextQH(IN PUHCI_HCD_QH QH,
               IN PUHCI_HCD_QH NextQH)
 {
-    DPRINT("UhciSetNextQH: QH - %p, NextQH - %p\n", QH, NextQH);
+    DPRINT_UHCI("UhciSetNextQH: QH - %p, NextQH - %p\n", QH, NextQH);
 
     QH->HwQH.NextQH = NextQH->PhysicalAddress | UHCI_QH_HEAD_LINK_PTR_QH;
     QH->NextHcdQH = NextQH;
@@ -629,7 +629,6 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
     for (Idx = 0; Idx < UHCI_MAX_STATIC_SOF_TDS; Idx++)
     {
         StaticSofTD = UhciExtension->SOF_HcdTDs + Idx;
-        DPRINT("UhciInitializeSchedule: StaticSofTD - %p\n", StaticSofTD);
 
         RtlZeroMemory(StaticSofTD, sizeof(UHCI_HCD_TD));
 
@@ -932,7 +931,7 @@ UhciQueueTransfer(IN PUHCI_EXTENSION UhciExtension,
     PUHCI_HCD_TD TailTD;
     ULONG_PTR PhysicalAddress;
 
-    DPRINT_UHCI("UhciQueueTransfer: ...\n");
+    DPRINT("UhciQueueTransfer: FirstTD - %p, LastTD - %p\n", FirstTD, LastTD);
 
     TailTD = UhciEndpoint->TailTD;
     QH = UhciEndpoint->QH;
@@ -1551,7 +1550,7 @@ UhciInsertQH(IN PUHCI_EXTENSION UhciExtension,
 {
     PUHCI_HCD_QH NextHcdQH;
 
-    DPRINT("UhciInsertQH: ...\n");
+    DPRINT("UhciInsertQH: UhciExtension - %p, StaticQH - %p, QH - %p\n", UhciExtension, StaticQH, QH);
 
     QH->HwQH.NextQH = StaticQH->HwQH.NextQH;
     NextHcdQH = StaticQH->NextHcdQH;
@@ -1883,7 +1882,7 @@ UhciProcessDoneNonIsoTD(IN PUHCI_EXTENSION UhciExtension,
     USBD_STATUS USBDStatus = USBD_STATUS_SUCCESS;
     SIZE_T TransferedLen;
 
-    DPRINT_UHCI("UhciProcessDoneNonIsoTD: ...\n");
+    DPRINT_UHCI("UhciProcessDoneNonIsoTD: TD - %p\n", TD);
 
     UhciTransfer = TD->UhciTransfer;
     UhciTransfer->PendingTds--;
@@ -2519,7 +2518,7 @@ UhciPollController(IN PVOID uhciExtension)
     UHCI_PORT_STATUS_CONTROL PortControl;
     USHORT Port;
 
-    DPRINT("UhciPollController: UhciExtension - %p\n", UhciExtension);
+    DPRINT_UHCI("UhciPollController: UhciExtension - %p\n", UhciExtension);
 
     BaseRegister = UhciExtension->BaseRegister;
 
