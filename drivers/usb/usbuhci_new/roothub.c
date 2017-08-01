@@ -293,11 +293,47 @@ UhciRHSetFeaturePortPower(IN PVOID uhciExtension,
 
 MPSTATUS
 NTAPI
+UhciRHPortEnable(IN PVOID uhciExtension,
+                 IN USHORT Port,
+                 IN BOOLEAN IsSet)
+{
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_HW_REGISTERS BaseRegister;
+    PUSHORT PortControlRegister;
+    UHCI_PORT_STATUS_CONTROL PortControl;
+
+    DPRINT("UhciRHPortEnable: ...\n");
+
+    BaseRegister = UhciExtension->BaseRegister;
+    PortControlRegister = &BaseRegister->PortControl[Port-1].AsUSHORT;
+
+    PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
+
+    PortControl.ConnectStatusChange = FALSE;
+    PortControl.PortEnableDisableChange = FALSE;
+
+    if (IsSet)
+    {
+        PortControl.PortEnabledDisabled = TRUE;
+    }
+    else
+    {
+        PortControl.PortEnabledDisabled = FALSE;
+    }
+
+    WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
+
+    return MP_STATUS_SUCCESS;
+}
+
+MPSTATUS
+NTAPI
 UhciRHSetFeaturePortEnable(IN PVOID uhciExtension,
                            IN USHORT Port)
 {
-    DPRINT("UhciRHSetFeaturePortEnable: UNIMPLEMENTED. FIXME\n");
-    return MP_STATUS_SUCCESS;
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    DPRINT("UhciRHSetFeaturePortEnable: ...\n");
+    return UhciRHPortEnable(UhciExtension, Port, TRUE);
 }
 
 MPSTATUS
@@ -314,8 +350,9 @@ NTAPI
 UhciRHClearFeaturePortEnable(IN PVOID uhciExtension,
                              IN USHORT Port)
 {
-    DPRINT("UhciRHClearFeaturePortEnable: UNIMPLEMENTED. FIXME\n");
-    return MP_STATUS_SUCCESS;
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    DPRINT("UhciRHClearFeaturePortEnable: ...\n");
+    return UhciRHPortEnable(UhciExtension, Port, FALSE);
 }
 
 MPSTATUS
