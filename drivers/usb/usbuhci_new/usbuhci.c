@@ -10,6 +10,49 @@
 USBPORT_REGISTRATION_PACKET RegPacket;
 
 VOID
+NTAPI 
+UhciDumpHcdQH(PUHCI_HCD_QH QH)
+{
+    DPRINT("QH              - %p\n", QH);
+    DPRINT("NextQH          - %p\n", QH->HwQH.NextQH);
+    DPRINT("NextElement     - %p\n", QH->HwQH.NextElement);
+
+    DPRINT("PhysicalAddress - %p\n", QH->PhysicalAddress);
+    DPRINT("QhFlags         - %X\n", QH->QhFlags);
+    DPRINT("NextHcdQH       - %X\n", QH->NextHcdQH);
+    DPRINT("PrevHcdQH       - %X\n", QH->PrevHcdQH);
+    DPRINT("UhciEndpoint    - %X\n", QH->UhciEndpoint);
+}
+
+VOID
+NTAPI 
+UhciDumpHcdTD(PUHCI_HCD_TD TD)
+{
+    DPRINT("TD              - %p\n", TD);
+    DPRINT("NextElement     - %p\n", TD->HwTD.NextElement);
+    DPRINT("ControlStatus   - %08X\n", TD->HwTD.ControlStatus.AsULONG);
+    DPRINT("Token           - %p\n", TD->HwTD.Token.AsULONG);
+if (TD->HwTD.Buffer)
+    DPRINT("Buffer          - %p\n", TD->HwTD.Buffer);
+
+if (TD->SetupPacket.bmRequestType.B)
+    DPRINT("bmRequestType   - %02X\n", TD->SetupPacket.bmRequestType.B);
+if (TD->SetupPacket.bRequest)
+    DPRINT("bRequest        - %02X\n", TD->SetupPacket.bRequest);
+if (TD->SetupPacket.wValue.W)
+    DPRINT("wValue          - %04X\n", TD->SetupPacket.wValue.W);
+if (TD->SetupPacket.wIndex.W)
+    DPRINT("wIndex          - %04X\n", TD->SetupPacket.wIndex.W);
+if (TD->SetupPacket.wLength)
+    DPRINT("wLength         - %04X\n", TD->SetupPacket.wLength);
+
+    DPRINT("PhysicalAddress - %p\n", TD->PhysicalAddress);
+    DPRINT("Flags           - %X\n", TD->Flags);
+    DPRINT("NextHcdTD       - %p\n", TD->NextHcdTD);
+    DPRINT("UhciTransfer    - %p\n", TD->UhciTransfer);
+}
+
+VOID
 NTAPI
 UhciFixDataToggle(IN PUHCI_EXTENSION UhciExtension,
                   IN PUHCI_ENDPOINT UhciEndpoint,
