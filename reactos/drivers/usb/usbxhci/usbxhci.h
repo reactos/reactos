@@ -7,7 +7,6 @@
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbdlib.h>
-//#include <xdk/mmfuncs.h>
 #include "..\usbmport.h"
 #include "hardware.h"
 
@@ -225,12 +224,11 @@ typedef struct _XHCI_EXTENSION {
 
 typedef struct _XHCI_HC_RESOURCES {
   XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY DCBAA;
-  //XHCI_COMMAND_RING CommandRing;
   DECLSPEC_ALIGN(16) XHCI_RING         EventRing ;
   DECLSPEC_ALIGN(64) XHCI_RING         CommandRing ;
   XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
 } XHCI_HC_RESOURCES, *PXHCI_HC_RESOURCES;
-
+//C_ASSERT (FIELD_OFFSET(XHCI_HC_RESOURCES,EventRing)); 
 typedef struct _XHCI_ENDPOINT {
   ULONG Reserved;
 } XHCI_ENDPOINT, *PXHCI_ENDPOINT;
@@ -246,6 +244,7 @@ typedef union _XHCI_SCRATCHPAD_BUFFER_ARRAY{
   };
   ULONGLONG AsULONGLONG;
 } XHCI_SCRATCHPAD_BUFFER_ARRAY, *PXHCI_SCRATCHPAD_BUFFER_ARRAY;
+C_ASSERT(sizeof(XHCI_SCRATCHPAD_BUFFER_ARRAY) == 8);
 //roothub functions
 VOID
 NTAPI

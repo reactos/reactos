@@ -249,41 +249,60 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     */
     // check if the controller supports 4k page size or quit.
     PageSize = XhciExtension-> PageSize;
-    if (PageSize  & (1 << 0) == 0){
+    MaxScratchPadBuffers = XhciExtension->MaxScratchPadBuffers;
+    
+    if (MaxScratchPadBuffers == 0){ // xHCI may declare 0 scratchpad arrays. if so there is no need for memory allocation.
+        return MP_STATUS_SUCCESS;
+    }
+    //if (PageSize  &  (1 << 0) == 0){ // this is how it is implemented in Haiko
+    if (1 << (PageSize + 12) == PAGE_SIZE) {
         DPRINT1("XHCI_InitializeResources  : fail. does not support 4k page size   %p\n",PageSize);
         return MP_STATUS_FAILURE;
     }
+    DbgBreakPoint();
     // allocate scratchpad buffer array
     PHYSICAL_ADDRESS Zero, Max; 
-    MaxScratchPadBuffers = XhciExtension->MaxScratchPadBuffers;
     Zero.QuadPart = 0; 
     Max.QuadPart = -1;   
+    PMDL ScratchPadArrayMDL;
+    PXHCI_SCRATCHPAD_BUFFER_ARRAY BufferArrayPointer;
+    //ScratchPadArrayMDL = MmAllocatePagesForMdlEx(Zero, Max, Zero, MaxScratchPadBuffers* sizeof(XHCI_SCRATCHPAD_BUFFER_ARRAY), MmNonCached, 0); 
+    BufferArrayPointer = (PXHCI_SCRATCHPAD_BUFFER_ARRAY)MmAllocateContiguousMemory (MaxScratchPadBuffers* sizeof(XHCI_SCRATCHPAD_BUFFER_ARRAY),Max);
+    ScratchPadArrayMDL = IoAllocateMdl((PVOID) BufferArrayPointer, MaxScratchPadBuffers* sizeof(XHCI_SCRATCHPAD_BUFFER_ARRAY), FALSE, FALSE, NULL);
+    MmBuildMdlForNonPagedPool(ScratchPadArrayMDL);
     
-    PMDL ScratchPadArray;
-    //PXHCI_SCRATCHPAD_BUFFER_ARRAY BufferArrayPointer;
-    PHYSICAL_ADDRESS *temp;  
-    ScratchPadArray = MmAllocatePagesForMdlEx(Zero, Max, Zero, MaxScratchPadBuffers*8 , MmNonCached, 0); 
+    if (ScratchPadArrayMDL == NULL) {
+        DPRINT1("XHCI_InitializeResources  : Scratch pad array could not be allocated. it is NULL\n");
+        return MP_STATUS_FAILURE;
+    }
     
-    temp = MmGetSystemAddressForMdlSafe(ScratchPadArray, 0); // PRiority??
-    //BufferArrayPointer = (PXHCI_SCRATCHPAD_BUFFER_ARRAY) MmGetSystemAddressForMdlSafe(ScratchPadArray, 0);
-    HcResourcesVA-> DCBAA.ContextBaseAddr[0] = *temp;
+    if (MmGetMdlByteCount(ScratchPadArrayMDL) < MaxScratchPadBuffers* sizeof(XHCI_SCRATCHPAD_BUFFER_ARRAY)) { 
+        DPRINT1("XHCI_InitializeResources  : Scratch pad array could not be allocated. it is smaller than required\n");
+        MmFreePagesFromMdl(ScratchPadArrayMDL);
+        ExFreePool(ScratchPadArrayMDL);
+        return MP_STATUS_FAILURE;
+    }
+    
+    //temp = MmGetSystemAddressForMdlSafe(ScratchPadArrayMDL, NormalPagePriority); // PRiority??
+    //BufferArrayPointer = (PXHCI_SCRATCHPAD_BUFFER_ARRAY) MmGetSystemAddressForMdlSafe(ScratchPadArrayMDL, 0);
+    HcResourcesVA-> DCBAA.ContextBaseAddr[0] = MmGetPhysicalAddress((PVOID)BufferArrayPointer);
     //allocate scratchpad buffers
+    PVOID BufferAddr;
     PMDL ScrathcPadBuffer;
-    PHYSICAL_ADDRESS *ScratchArray;
-    ScratchArray = MmGetSystemAddressForMdlSafe(ScratchPadArray, 0);
     for (int i = 0; i < MaxScratchPadBuffers ; i++){
         ScrathcPadBuffer = MmAllocatePagesForMdlEx(Zero, Max, Zero, PAGE_SIZE, MmNonCached, 0);
-        temp = MmGetSystemAddressForMdlSafe(ScrathcPadBuffer, 0);
-        ScratchArray[i] = *temp;
+        BufferAddr = MmGetSystemAddressForMdlSafe(ScrathcPadBuffer, NormalPagePriority);
         if (ScrathcPadBuffer == NULL) { 
         return MP_STATUS_FAILURE;
         }
         if (MmGetMdlByteCount(ScrathcPadBuffer) < PAGE_SIZE) { 
             MmFreePagesFromMdl(ScrathcPadBuffer); 
+            ExFreePool(ScrathcPadBuffer);
             return MP_STATUS_FAILURE;
         }
+        BufferArrayPointer[i].AsULONGLONG = MmGetPhysicalAddress(BufferAddr).QuadPart;
     }
-    XhciExtension-> ScratchPadArray = ScratchPadArray;
+    XhciExtension-> ScratchPadArray = ScratchPadArrayMDL;
     //DbgBreakPoint();
     return MP_STATUS_SUCCESS;
 }
@@ -420,6 +439,7 @@ XHCI_StartController(IN PVOID xhciExtension,
     DPRINT("XHCI_StartController: DoorBellRegisterBase - %p\n", DoorBellRegisterBase);
     DPRINT("XHCI_StartController: RunTimeRegisterBase - %p\n", RunTimeRegisterBase);
     DPRINT("XHCI_StartController: PageSize - %p\n", XhciExtension->PageSize);
+    DPRINT("XHCI_StartController: MaxScratchPadBuffers - %p\n", MaxScratchPadBuffers);
     
     RegPacket.UsbPortReadWriteConfigSpace(XhciExtension,
                                           1,
@@ -465,12 +485,18 @@ XHCI_StopController(IN PVOID xhciExtension,
 {
     DPRINT1("XHCI_StopController: UNIMPLEMENTED. FIXME\n");
     PXHCI_EXTENSION XhciExtension;
-    XhciExtension = (PXHCI_EXTENSION) xhciExtension;
+    USHORT MaxScratchPadBuffers;
     PMDL ScratchPadArray;
+    XhciExtension = (PXHCI_EXTENSION) xhciExtension;
+    MaxScratchPadBuffers = XhciExtension->MaxScratchPadBuffers;
     // free memory allocated to scratchpad buffers.
     ScratchPadArray = XhciExtension-> ScratchPadArray; 
-    //ExFreePool(Mdl) after MmFreePagesFromMdl to free the scratchpad buffer ARRAY
-    MmFreePagesFromMdl(ScratchPadArray);
+    if (MaxScratchPadBuffers != 0){
+        //ExFreePool(Mdl) after MmFreePagesFromMdl to free the scratchpad buffer ARRAY
+        MmFreePagesFromMdl(ScratchPadArray);
+        ExFreePool(ScratchPadArray);
+    }
+
 }
 
 VOID
