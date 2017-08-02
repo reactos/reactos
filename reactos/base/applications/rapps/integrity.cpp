@@ -6,8 +6,8 @@
  * PROGRAMMERS:     Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  *                  Mark Jansen
  */
+#include "defines.h"
 
-#include "rapps.h"
 #include <sha1.h>
 
 BOOL VerifyInteg(const ATL::CStringW &SHA1Hash, const ATL::CStringW &FileName)

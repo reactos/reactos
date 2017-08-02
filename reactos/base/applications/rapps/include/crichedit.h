@@ -1,4 +1,5 @@
 #pragma once
+#include <rosctrls.h>
 
 class CRichEdit :
     public CWindow

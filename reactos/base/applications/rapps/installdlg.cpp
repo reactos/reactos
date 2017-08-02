@@ -5,8 +5,10 @@
  * PURPOSE:         "Download and Install" Dialog
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
+#include "defines.h"
 
-#include "rapps.h"
+#include "dialogs.h"
+#include "available.h"
 
 static PAPPLICATION_INFO AppInfo;
 
@@ -18,7 +20,6 @@ InstallDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     {
         case WM_INITDIALOG:
         {
-
         }
         break;
 
@@ -47,8 +48,8 @@ InstallApplication(INT Index)
     AppInfo = (PAPPLICATION_INFO) ListViewGetlParam(Index);
     if (!AppInfo) return FALSE;
 
-    DialogBox(hInst,
-              MAKEINTRESOURCE(IDD_INSTALL_DIALOG),
+    DialogBoxW(hInst,
+              MAKEINTRESOURCEW(IDD_INSTALL_DIALOG),
               hMainWnd,
               InstallDlgProc);
 

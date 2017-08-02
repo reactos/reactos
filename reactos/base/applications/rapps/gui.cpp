@@ -3,8 +3,11 @@
  * AUTHORS:     David Quintana             <gigaherz@gmail.com>
  *              Alexander Shaposhnikov     <chaez.san@gmail.com>
  */
+#include "defines.h"
 
 #include "rapps.h"
+#include "rosui.h"
+#include "crichedit.h"
 
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
@@ -14,15 +17,41 @@
 #include <atlwin.h>
 #include <wininet.h>
 #include <shellutils.h>
-
 #include <rosctrls.h>
 
-#include "rosui.h"
-#include "crichedit.h"
-
 #define SEARCH_TIMER_ID 'SR'
+#define LISTVIEW_ICON_SIZE 24
+#define TREEVIEW_ICON_SIZE 24
 
 HWND hListView = NULL;
+
+INT
+GetSystemColorDepth(VOID)
+{
+    DEVMODEW pDevMode;
+    INT ColorDepth;
+
+    pDevMode.dmSize = sizeof(pDevMode);
+    pDevMode.dmDriverExtra = 0;
+
+    if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &pDevMode))
+    {
+        /* TODO: Error message */
+        return ILC_COLOR;
+    }
+
+    switch (pDevMode.dmBitsPerPel)
+    {
+    case 32: ColorDepth = ILC_COLOR32; break;
+    case 24: ColorDepth = ILC_COLOR24; break;
+    case 16: ColorDepth = ILC_COLOR16; break;
+    case  8: ColorDepth = ILC_COLOR8;  break;
+    case  4: ColorDepth = ILC_COLOR4;  break;
+    default: ColorDepth = ILC_COLOR;   break;
+    }
+
+    return ColorDepth;
+}
 
 class CAvailableAppView
 {

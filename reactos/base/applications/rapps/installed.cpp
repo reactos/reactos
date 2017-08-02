@@ -7,7 +7,12 @@
  *                  Alexander Shaposhnikov      (chaez.san@gmail.com)
  */
 
-#include "rapps.h"
+#include "defines.h"
+
+#include "installed.h"
+
+#include "gui.h"
+#include "misc.h"
 
 BOOL
 GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, ATL::CStringW& String)
@@ -34,62 +39,6 @@ GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
 
     StringCchCopyW(szString, MAX_PATH, L"---");
     return FALSE;
-}
-
-BOOL
-GetInstalledVersion_WowUser(_Out_opt_ ATL::CStringW* szVersionResult, 
-                            _In_z_ const ATL::CStringW& RegName, 
-                            _In_ BOOL IsUserKey, 
-                            _In_ REGSAM keyWow)
-{
-    HKEY hKey;
-    BOOL bHasSucceded = FALSE;
-    ATL::CStringW szVersion;
-    ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
-
-    if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-                      szPath.GetString(), 0, keyWow | KEY_READ,
-                      &hKey) == ERROR_SUCCESS)
-    {
-        if (szVersionResult != NULL)
-        {
-            DWORD dwSize = MAX_PATH * sizeof(WCHAR);
-            DWORD dwType = REG_SZ;
-            if (RegQueryValueExW(hKey,
-                                 L"DisplayVersion",
-                                 NULL,
-                                 &dwType,
-                                 (LPBYTE) szVersion.GetBuffer(MAX_PATH),
-                                 &dwSize) == ERROR_SUCCESS)
-            {
-                szVersion.ReleaseBuffer();
-                *szVersionResult = szVersion;
-                bHasSucceded = TRUE;
-            }
-            else
-            {
-                szVersion.ReleaseBuffer();
-            }
-        }
-        else
-        {
-            bHasSucceded = TRUE;
-            szVersion.ReleaseBuffer();
-        }
-        
-    }
-
-    RegCloseKey(hKey);
-    return bHasSucceded;
-}
-
-BOOL GetInstalledVersion(ATL::CStringW* pszVersion, const ATL::CStringW& szRegName)
-{
-    return (!szRegName.IsEmpty()
-            && (::GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_32KEY)
-                || ::GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_32KEY)
-                || ::GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_64KEY)
-                || ::GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_64KEY)));
 }
 
 BOOL
@@ -147,7 +96,6 @@ UninstallApplication(INT Index, BOOL bModify)
     return StartProcess(szPath, TRUE);
 }
 
-
 BOOL
 ShowInstalledAppInfo(INT Index)
 {
@@ -190,7 +138,6 @@ ShowInstalledAppInfo(INT Index)
     return TRUE;
 }
 
-
 VOID
 RemoveAppFromRegistry(INT Index)
 {
@@ -228,7 +175,6 @@ RemoveAppFromRegistry(INT Index)
         MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
     }
 }
-
 
 BOOL
 EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)

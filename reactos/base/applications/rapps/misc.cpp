@@ -7,8 +7,10 @@
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
  */
+#include "defines.h"
 
-#include "rapps.h"
+#include "gui.h"
+#include "misc.h"
 
  /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
@@ -26,53 +28,26 @@ typedef struct
 struct FILELIST
 {
     LPSTR FileName;
-    struct FILELIST *next;
+    FILELIST *next;
     BOOL DoExtract;
 };
 
-typedef struct
+struct SESSION
 {
     INT FileSize;
     ERF Error;
-    struct FILELIST *FileList;
+    FILELIST *FileList;
     INT FileCount;
     INT Operation;
     CHAR Destination[MAX_PATH];
     CHAR CurrentFile[MAX_PATH];
     CHAR Reserved[MAX_PATH];
-    struct FILELIST *FilterList;
-} SESSION;
+    FILELIST *FilterList;
+};
 
 typedef HRESULT(WINAPI *fnExtract)(SESSION *dest, LPCSTR szCabName);
 fnExtract pfnExtract;
 
-INT
-GetSystemColorDepth(VOID)
-{
-    DEVMODE pDevMode;
-    INT ColorDepth;
-
-    pDevMode.dmSize = sizeof(pDevMode);
-    pDevMode.dmDriverExtra = 0;
-
-    if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &pDevMode))
-    {
-        /* TODO: Error message */
-        return ILC_COLOR;
-    }
-
-    switch (pDevMode.dmBitsPerPel)
-    {
-    case 32: ColorDepth = ILC_COLOR32; break;
-    case 24: ColorDepth = ILC_COLOR24; break;
-    case 16: ColorDepth = ILC_COLOR16; break;
-    case  8: ColorDepth = ILC_COLOR8;  break;
-    case  4: ColorDepth = ILC_COLOR4;  break;
-    default: ColorDepth = ILC_COLOR;   break;
-    }
-
-    return ColorDepth;
-}
 
 int
 GetWindowWidth(HWND hwnd)
@@ -396,5 +371,58 @@ WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
     return TRUE;
 }
 
+BOOL
+GetInstalledVersion_WowUser(_Out_opt_ ATL::CStringW* szVersionResult,
+                            _In_z_ const ATL::CStringW& RegName,
+                            _In_ BOOL IsUserKey,
+                            _In_ REGSAM keyWow)
+{
+    HKEY hKey;
+    BOOL bHasSucceded = FALSE;
+    ATL::CStringW szVersion;
+    ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
 
+    if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
+                      szPath.GetString(), 0, keyWow | KEY_READ,
+                      &hKey) == ERROR_SUCCESS)
+    {
+        if (szVersionResult != NULL)
+        {
+            DWORD dwSize = MAX_PATH * sizeof(WCHAR);
+            DWORD dwType = REG_SZ;
+            if (RegQueryValueExW(hKey,
+                                 L"DisplayVersion",
+                                 NULL,
+                                 &dwType,
+                                 (LPBYTE) szVersion.GetBuffer(MAX_PATH),
+                                 &dwSize) == ERROR_SUCCESS)
+            {
+                szVersion.ReleaseBuffer();
+                *szVersionResult = szVersion;
+                bHasSucceded = TRUE;
+            }
+            else
+            {
+                szVersion.ReleaseBuffer();
+            }
+        }
+        else
+        {
+            bHasSucceded = TRUE;
+            szVersion.ReleaseBuffer();
+        }
 
+    }
+
+    RegCloseKey(hKey);
+    return bHasSucceded;
+}
+
+BOOL GetInstalledVersion(ATL::CStringW * pszVersion, const ATL::CStringW & szRegName)
+{
+    return (!szRegName.IsEmpty()
+            && (GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_32KEY)
+                || GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_32KEY)
+                || GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_64KEY)
+                || GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_64KEY)));
+}

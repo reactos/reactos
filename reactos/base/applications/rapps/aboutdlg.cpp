@@ -5,8 +5,7 @@
  * PURPOSE:         About Dialog
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
-
-#include "rapps.h"
+#include "defines.h"
 
 static
 INT_PTR CALLBACK
@@ -32,8 +31,8 @@ AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 VOID
 ShowAboutDialog(VOID)
 {
-    DialogBox(hInst,
-              MAKEINTRESOURCE(IDD_ABOUT_DIALOG),
+    DialogBoxW(hInst,
+              MAKEINTRESOURCEW(IDD_ABOUT_DIALOG),
               hMainWnd,
               AboutDlgProc);
 }

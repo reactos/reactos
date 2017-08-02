@@ -27,8 +27,7 @@
   * License along with this library; if not, write to the Free Software
   * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
   */
-
-#include "rapps.h"
+#include "defines.h"
 
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
@@ -43,6 +42,12 @@
 #include <windowsx.h>
 
 #include "rosui.h"
+#include "dialogs.h"
+
+#ifdef USE_CERT_PINNING
+    #define CERT_ISSUER_INFO "BE\r\nGlobalSign nv-sa\r\nGlobalSign Domain Validation CA - SHA256 - G2"
+    #define CERT_SUBJECT_INFO "Domain Control Validated\r\n*.reactos.org"
+#endif
 
 typedef enum
 {

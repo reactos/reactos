@@ -6,8 +6,9 @@
  * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
  *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
  */
+#include "defines.h"
 
-#include "rapps.h"
+#include "dialogs.h"
 
 SETTINGS_INFO NewSettingsInfo;
 

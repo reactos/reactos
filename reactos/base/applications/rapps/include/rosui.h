@@ -4,6 +4,8 @@
  */
 #pragma once
 
+#include <atlwin.h>
+
 template<class T, int GrowthRate = 10>
 class CPointerArray
 {

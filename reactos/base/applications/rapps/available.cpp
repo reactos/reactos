@@ -7,8 +7,15 @@
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
  */
+#include "defines.h"
 
-#include "rapps.h"
+#include "available.h"
+#include "misc.h"
+#include "dialogs.h"
+
+#include <atlcoll.h>
+#include <atlsimpcoll.h>
+#include <atlstr.h>
 
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
@@ -28,6 +35,7 @@ VOID CAvailableApplicationInfo::RefreshAppInfo()
     }
 }
 
+// Lazily load general info from the file
 VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
 {
     Category = m_Parser.GetInt(L"Category");

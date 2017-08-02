@@ -7,6 +7,7 @@
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
  */
+#include "defines.h"
 
 #include "rapps.h"
 
@@ -188,10 +189,10 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
         GetAvailableApps()->UpdateAppsDB();
 
     /* Load the menu hotkeys */
-    KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCE(HOTKEYS));
+    KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
 
     /* Message Loop */
-    while (GetMessage(&Msg, NULL, 0, 0))
+    while (GetMessageW(&Msg, NULL, 0, 0))
     {
         if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
         {
