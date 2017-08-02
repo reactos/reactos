@@ -1525,12 +1525,60 @@ UhciIsochTransfer(IN PVOID ehciExtension,
 
 VOID
 NTAPI
+UhciAbortIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
+                        IN PUHCI_ENDPOINT UhciEndpoint,
+                        IN PUHCI_TRANSFER UhciTransfer,
+                        IN PULONG CompletedLength)
+{
+    DPRINT_IMPL("UhciAbortNonIsoTransfer: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
+UhciAbortNonIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
+                        IN PUHCI_ENDPOINT UhciEndpoint,
+                        IN PUHCI_TRANSFER UhciTransfer,
+                        IN PULONG CompletedLength)
+{
+    DPRINT_IMPL("UhciAbortNonIsoTransfer: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
 UhciAbortTransfer(IN PVOID uhciExtension,
                   IN PVOID uhciEndpoint,
                   IN PVOID uhciTransfer,
                   IN PULONG CompletedLength)
 {
-    DPRINT_IMPL("UhciAbortTransfer: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
+    PUHCI_TRANSFER UhciTransfer = uhciTransfer;
+    ULONG TransferType;
+
+    DPRINT("UhciAbortTransfer: ...\n");
+
+    InterlockedDecrement(&UhciEndpoint->EndpointLock);
+
+    TransferType = UhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        InterlockedDecrement(&UhciExtension->ExtensionLock);
+
+        UhciAbortIsoTransfer(UhciExtension,
+                             UhciEndpoint,
+                             UhciTransfer);
+    }
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
+        TransferType == USBPORT_TRANSFER_TYPE_BULK ||
+        TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        UhciAbortNonIsoTransfer(UhciExtension,
+                                UhciEndpoint,
+                                UhciTransfer,
+                                CompletedLength);
+    }
 }
 
 ULONG
