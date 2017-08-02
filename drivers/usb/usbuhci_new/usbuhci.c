@@ -59,7 +59,20 @@ UhciFixDataToggle(IN PUHCI_EXTENSION UhciExtension,
                   IN PUHCI_HCD_TD TD,
                   IN BOOL DataToggle)
 {
-    DPRINT_IMPL("UhciFixDataToggle: UNIMPLEMENTED. FIXME\n");
+    DPRINT_UHCI("UhciFixDataToggle: UhciExtension - %p, UhciEndpoint - %p, DataToggle - %X\n",
+                UhciExtension,
+                UhciEndpoint,
+                DataToggle);
+
+    while (TD)
+    {
+        TD->HwTD.Token.DataToggle = (TD->HwTD.Token.DataToggle == FALSE);
+        DataToggle = (DataToggle == FALSE);
+
+        TD = TD->NextHcdTD;
+    }
+
+    UhciEndpoint->DataToggle = DataToggle;
 }
 
 VOID
