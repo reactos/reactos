@@ -56,7 +56,8 @@ VOID
 NTAPI
 UhciFixDataToggle(IN PUHCI_EXTENSION UhciExtension,
                   IN PUHCI_ENDPOINT UhciEndpoint,
-                  IN PUHCI_HCD_TD TD, ULONG DataToggle)
+                  IN PUHCI_HCD_TD TD,
+                  IN BOOL DataToggle)
 {
     DPRINT_IMPL("UhciFixDataToggle: UNIMPLEMENTED. FIXME\n");
 }
@@ -1511,6 +1512,171 @@ UhciSubmitTransfer(IN PVOID uhciExtension,
     return MP_STATUS_SUCCESS;
 }
 
+USBD_STATUS
+NTAPI
+UhciGetErrorFromTD(IN PUHCI_EXTENSION UhciExtension,
+                   IN PUHCI_HCD_TD TD)
+{
+    USBD_STATUS USBDStatus;
+    UCHAR TdStatus;
+
+    //DPRINT("UhciGetErrorFromTD: ...\n");
+
+    TdStatus = TD->HwTD.ControlStatus.Status;
+
+    if (TdStatus == UHCI_TD_STS_ACTIVE)
+    {
+        if (TD->HwTD.Token.MaximumLength == UHCI_TD_LENGTH_NULL)
+        {
+            return USBD_STATUS_SUCCESS;
+        }
+
+        if (TD->HwTD.ControlStatus.ActualLength + 1 >=
+            TD->HwTD.Token.MaximumLength + 1)
+        {
+            return USBD_STATUS_SUCCESS;
+        }
+
+        if (TD->HwTD.ControlStatus.InterruptOnComplete == TRUE)
+        {
+            return USBD_STATUS_SUCCESS;
+        }
+
+        return USBD_STATUS_ERROR_SHORT_TRANSFER;
+    }
+
+    if ((TdStatus & UHCI_TD_STS_BABBLE_DETECTED) != 0 &&
+        (TdStatus & UHCI_TD_STS_STALLED) != 0)
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_BUFFER_OVERRUN, TD - %p\n", TD);
+        return USBD_STATUS_BUFFER_OVERRUN;
+    }
+
+    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0 &&
+        (TdStatus & UHCI_TD_STS_STALLED) != 0)
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DEV_NOT_RESPONDING, TD - %p\n", TD);
+        return USBD_STATUS_DEV_NOT_RESPONDING;
+    }
+
+    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0)
+    {
+        if (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL)
+        {
+            DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DEV_NOT_RESPONDING, TD - %p\n", TD);
+            return USBD_STATUS_DEV_NOT_RESPONDING;
+        }
+        else
+        {
+            DPRINT1("UhciGetErrorFromTD: USBD_STATUS_CRC, TD - %p\n", TD);
+            return USBD_STATUS_CRC;
+        }
+    }
+    else if ((TdStatus & UHCI_TD_STS_DATA_BUFFER_ERROR) != 0)
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DATA_OVERRUN, TD - %p\n", TD);
+        USBDStatus = USBD_STATUS_DATA_OVERRUN;
+    }
+    else if ((TdStatus & UHCI_TD_STS_STALLED) != 0)
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_STALL_PID, TD - %p\n", TD);
+        USBDStatus = USBD_STATUS_STALL_PID;
+    }
+    else
+    {
+        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_INTERNAL_HC_ERROR, TD - %p\n", TD);
+        USBDStatus = USBD_STATUS_INTERNAL_HC_ERROR;
+    }
+
+    return USBDStatus;
+}
+
+VOID
+NTAPI
+UhciProcessDoneNonIsoTD(IN PUHCI_EXTENSION UhciExtension,
+                        IN PUHCI_HCD_TD TD)
+{
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
+    PUHCI_ENDPOINT UhciEndpoint;
+    PUHCI_TRANSFER UhciTransfer;
+    USBD_STATUS USBDStatus = USBD_STATUS_SUCCESS;
+    SIZE_T TransferedLen;
+
+    DPRINT_UHCI("UhciProcessDoneNonIsoTD: TD - %p\n", TD);
+
+    UhciTransfer = TD->UhciTransfer;
+    UhciTransfer->PendingTds--;
+
+    TransferParameters = UhciTransfer->TransferParameters;
+    UhciEndpoint = UhciTransfer->UhciEndpoint;
+
+    if (TD->Flags & UHCI_HCD_TD_FLAG_NOT_ACCESSED)
+    {
+        goto ProcessDoneTD;
+    }
+
+    if (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
+    {
+        USBDStatus = UhciGetErrorFromTD(UhciExtension, TD);
+    }
+
+    if (USBDStatus != USBD_STATUS_SUCCESS ||
+        (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL))
+    {
+        TransferedLen = 0;
+    }
+    else
+    {
+        TransferedLen = TD->HwTD.ControlStatus.ActualLength + 1;
+    }
+
+    if (TD->HwTD.Token.PIDCode != UHCI_TD_PID_SETUP)
+    {
+        UhciTransfer->TransferLen += TransferedLen;
+    }
+
+    if (TD->HwTD.Token.PIDCode == UHCI_TD_PID_IN &&
+        TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
+    {
+        DPRINT_IMPL("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
+    }
+
+    if (USBDStatus != USBD_STATUS_SUCCESS)
+    {
+        UhciTransfer->USBDStatus = USBDStatus;
+    }
+
+ProcessDoneTD:
+
+    if (TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
+    {
+        DPRINT_IMPL("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
+    }
+
+    UhciEndpoint->AllocatedTDs--;
+
+    TD->HwTD.NextElement = 0;
+    TD->UhciTransfer = NULL;
+    TD->Flags = 0;
+
+    if (UhciTransfer->PendingTds == 0)
+    {
+        InterlockedDecrement(&UhciEndpoint->EndpointLock);
+
+        if (UhciEndpoint->EndpointProperties.TransferType ==
+            USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+        {
+            InterlockedDecrement(&UhciExtension->ExtensionLock);
+        }
+
+        RegPacket.UsbPortCompleteTransfer(UhciExtension,
+                                          UhciEndpoint,
+                                          TransferParameters,
+                                          UhciTransfer->USBDStatus,
+                                          UhciTransfer->TransferLen);
+    }
+}
+
 MPSTATUS
 NTAPI
 UhciIsochTransfer(IN PVOID ehciExtension,
@@ -1527,8 +1693,7 @@ VOID
 NTAPI
 UhciAbortIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
                         IN PUHCI_ENDPOINT UhciEndpoint,
-                        IN PUHCI_TRANSFER UhciTransfer,
-                        IN PULONG CompletedLength)
+                     IN PUHCI_TRANSFER UhciTransfer)
 {
     DPRINT_IMPL("UhciAbortNonIsoTransfer: UNIMPLEMENTED. FIXME\n");
 }
@@ -1540,7 +1705,105 @@ UhciAbortNonIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
                         IN PUHCI_TRANSFER UhciTransfer,
                         IN PULONG CompletedLength)
 {
-    DPRINT_IMPL("UhciAbortNonIsoTransfer: UNIMPLEMENTED. FIXME\n");
+    PUHCI_HCD_TD TD;
+    PUHCI_HCD_TD PrevTD = NULL;
+    ULONG_PTR PhysicalAddress;
+    BOOL DataToggle;
+    BOOLEAN IsHeadTD = FALSE;
+
+    DPRINT("UhciAbortNonIsoTransfer: UhciExtension - %p, QH - %p, UhciTransfer - %p\n",
+           UhciExtension,
+           UhciEndpoint->QH,
+           UhciTransfer);
+
+    for (TD = UhciEndpoint->HeadTD;
+         TD && TD->UhciTransfer != UhciTransfer;
+         TD = TD->NextHcdTD)
+    {
+        PrevTD = TD;
+    }
+
+    DataToggle = TD->HwTD.Token.DataToggle;
+
+    if (TD == UhciEndpoint->HeadTD)
+    {
+        IsHeadTD = TRUE;
+    }
+
+    while (TD && TD->UhciTransfer == UhciTransfer);
+    {
+        DPRINT_UHCI("UhciAbortNonIsoTransfer: TD - %p\n", TD);
+
+        if ((TD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE) != 0)
+        {
+            if ((TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER) != 0)
+            {
+                DPRINT_IMPL("UhciAbortNonIsoTransfer: UNIMPLEMENTED. FIXME\n");
+            }
+
+            UhciEndpoint->AllocatedTDs--;
+
+            DPRINT_UHCI("UhciAbortNonIsoTransfer: Active TD - %p\n", TD);
+
+            TD->HwTD.NextElement = 0;
+            TD->Flags = 0;
+            TD->UhciTransfer = NULL;
+        }
+        else
+        {
+            UhciProcessDoneNonIsoTD(UhciExtension, TD);
+        }
+
+        TD = TD->NextHcdTD;
+    }
+
+    UhciFixDataToggle(UhciExtension,
+                      UhciEndpoint,
+                      TD,
+                      DataToggle);
+
+    if (IsHeadTD)
+    {
+        if (TD)
+        {
+            UhciEndpoint->HeadTD = TD;
+        }
+        else
+        {
+            UhciEndpoint->HeadTD = NULL;
+            UhciEndpoint->TailTD = NULL;
+        }
+
+        if (TD == NULL ||
+            (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED) != 0)
+        {
+            PhysicalAddress = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+        }
+        else
+        {
+            PhysicalAddress = TD->PhysicalAddress;
+            PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+        }
+
+        DPRINT_UHCI("UhciPollNonIsoEndpoint: TD - %p\n", TD);
+
+        UhciEndpoint->QH->HwQH.NextElement = PhysicalAddress;
+        UhciEndpoint->QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
+    }
+    else if (TD)
+    {
+        PrevTD->HwTD.NextElement = TD->PhysicalAddress & UHCI_TD_LINK_POINTER_MASK;
+        PrevTD->NextHcdTD = TD;
+    }
+    else
+    {
+        PrevTD->NextHcdTD = NULL;
+        PrevTD->HwTD.NextElement = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+
+        UhciEndpoint->TailTD = PrevTD;
+    }
+
+    *CompletedLength = UhciTransfer->TransferLen;
 }
 
 VOID
@@ -1838,171 +2101,6 @@ UhciPollIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
                     IN PUHCI_ENDPOINT UhciEndpoint)
 {
     DPRINT_IMPL("UhciPollIsoEndpoint: UNIMPLEMENTED. FIXME\n");
-}
-
-USBD_STATUS
-NTAPI
-UhciGetErrorFromTD(IN PUHCI_EXTENSION UhciExtension,
-                   IN PUHCI_HCD_TD TD)
-{
-    USBD_STATUS USBDStatus;
-    UCHAR TdStatus;
-
-    //DPRINT("UhciGetErrorFromTD: ...\n");
-
-    TdStatus = TD->HwTD.ControlStatus.Status;
-
-    if (TdStatus == UHCI_TD_STS_ACTIVE)
-    {
-        if (TD->HwTD.Token.MaximumLength == UHCI_TD_LENGTH_NULL)
-        {
-            return USBD_STATUS_SUCCESS;
-        }
-
-        if (TD->HwTD.ControlStatus.ActualLength + 1 >=
-            TD->HwTD.Token.MaximumLength + 1)
-        {
-            return USBD_STATUS_SUCCESS;
-        }
-
-        if (TD->HwTD.ControlStatus.InterruptOnComplete == TRUE)
-        {
-            return USBD_STATUS_SUCCESS;
-        }
-
-        return USBD_STATUS_ERROR_SHORT_TRANSFER;
-    }
-
-    if ((TdStatus & UHCI_TD_STS_BABBLE_DETECTED) != 0 &&
-        (TdStatus & UHCI_TD_STS_STALLED) != 0)
-    {
-        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_BUFFER_OVERRUN, TD - %p\n", TD);
-        return USBD_STATUS_BUFFER_OVERRUN;
-    }
-
-    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0 &&
-        (TdStatus & UHCI_TD_STS_STALLED) != 0)
-    {
-        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DEV_NOT_RESPONDING, TD - %p\n", TD);
-        return USBD_STATUS_DEV_NOT_RESPONDING;
-    }
-
-    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0)
-    {
-        if (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL)
-        {
-            DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DEV_NOT_RESPONDING, TD - %p\n", TD);
-            return USBD_STATUS_DEV_NOT_RESPONDING;
-        }
-        else
-        {
-            DPRINT1("UhciGetErrorFromTD: USBD_STATUS_CRC, TD - %p\n", TD);
-            return USBD_STATUS_CRC;
-        }
-    }
-    else if ((TdStatus & UHCI_TD_STS_DATA_BUFFER_ERROR) != 0)
-    {
-        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DATA_OVERRUN, TD - %p\n", TD);
-        USBDStatus = USBD_STATUS_DATA_OVERRUN;
-    }
-    else if ((TdStatus & UHCI_TD_STS_STALLED) != 0)
-    {
-        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_STALL_PID, TD - %p\n", TD);
-        USBDStatus = USBD_STATUS_STALL_PID;
-    }
-    else
-    {
-        DPRINT1("UhciGetErrorFromTD: USBD_STATUS_INTERNAL_HC_ERROR, TD - %p\n", TD);
-        USBDStatus = USBD_STATUS_INTERNAL_HC_ERROR;
-    }
-
-    return USBDStatus;
-}
-
-VOID
-NTAPI
-UhciProcessDoneNonIsoTD(IN PUHCI_EXTENSION UhciExtension,
-                        IN PUHCI_HCD_TD TD)
-{
-    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
-    PUHCI_ENDPOINT UhciEndpoint;
-    PUHCI_TRANSFER UhciTransfer;
-    USBD_STATUS USBDStatus = USBD_STATUS_SUCCESS;
-    SIZE_T TransferedLen;
-
-    DPRINT_UHCI("UhciProcessDoneNonIsoTD: TD - %p\n", TD);
-
-    UhciTransfer = TD->UhciTransfer;
-    UhciTransfer->PendingTds--;
-
-    TransferParameters = UhciTransfer->TransferParameters;
-    UhciEndpoint = UhciTransfer->UhciEndpoint;
-
-    if (TD->Flags & UHCI_HCD_TD_FLAG_NOT_ACCESSED)
-    {
-        goto ProcessDoneTD;
-    }
-
-    if (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
-    {
-        USBDStatus = UhciGetErrorFromTD(UhciExtension, TD);
-    }
-
-    if (USBDStatus != USBD_STATUS_SUCCESS ||
-        (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL))
-    {
-        TransferedLen = 0;
-    }
-    else
-    {
-        TransferedLen = TD->HwTD.ControlStatus.ActualLength + 1;
-    }
-
-    if (TD->HwTD.Token.PIDCode != UHCI_TD_PID_SETUP)
-    {
-        UhciTransfer->TransferLen += TransferedLen;
-    }
-
-    if (TD->HwTD.Token.PIDCode == UHCI_TD_PID_IN &&
-        TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
-    {
-        DPRINT_IMPL("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
-    }
-
-    if (USBDStatus != USBD_STATUS_SUCCESS)
-    {
-        UhciTransfer->USBDStatus = USBDStatus;
-    }
-
-ProcessDoneTD:
-
-    if (TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
-    {
-        DPRINT_IMPL("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
-    }
-
-    UhciEndpoint->AllocatedTDs--;
-
-    TD->HwTD.NextElement = 0;
-    TD->UhciTransfer = NULL;
-    TD->Flags = 0;
-
-    if (UhciTransfer->PendingTds == 0)
-    {
-        InterlockedDecrement(&UhciEndpoint->EndpointLock);
-
-        if (UhciEndpoint->EndpointProperties.TransferType ==
-            USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
-        {
-            InterlockedDecrement(&UhciExtension->ExtensionLock);
-        }
-
-        RegPacket.UsbPortCompleteTransfer(UhciExtension,
-                                          UhciEndpoint,
-                                          TransferParameters,
-                                          UhciTransfer->USBDStatus,
-                                          UhciTransfer->TransferLen);
-    }
 }
 
 VOID
