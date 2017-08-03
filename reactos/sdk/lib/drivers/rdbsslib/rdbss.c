@@ -5984,7 +5984,7 @@ RxFsdCommonDispatch(
                 Fobx = StackFileObject->FsContext2;
 
                 if (BooleanFlagOn(Fcb->FcbState, FCB_STATE_ORPHANED) ||
-                    BooleanFlagOn(Fobx->pSrvOpen->Flags, SRVOPEN_FLAG_ORPHANED))
+                    ((Fobx != NULL) && BooleanFlagOn(Fobx->pSrvOpen->Flags, SRVOPEN_FLAG_ORPHANED)))
                 {
                     if (Closing)
                     {
