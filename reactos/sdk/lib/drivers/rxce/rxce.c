@@ -7702,7 +7702,7 @@ RxScavengeFobxsForNetRoot(
     /* Wait for the scavenger, if asked to */
     if (SynchronizeWithScavenger)
     {
-        KeWaitForSingleObject(&Scavenger->SyncEvent, Executive, KernelMode, FALSE, NULL);
+        KeWaitForSingleObject(&Scavenger->ScavengeEvent, Executive, KernelMode, FALSE, NULL);
     }
 
     RxAcquireScavengerMutex();
@@ -7767,7 +7767,7 @@ RxScavengeFobxsForNetRoot(
 
     if (SynchronizeWithScavenger)
     {
-        KeSetEvent(&Scavenger->SyncEvent, IO_NO_INCREMENT, FALSE);
+        KeSetEvent(&Scavenger->ScavengeEvent, IO_NO_INCREMENT, FALSE);
     }
 }
 
