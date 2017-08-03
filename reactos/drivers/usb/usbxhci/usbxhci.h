@@ -43,6 +43,7 @@ typedef struct _XHCI_LINK_TRB{
     };
     //ULONG AsULONG;
 } XHCI_LINK_TRB;
+C_ASSERT(sizeof(XHCI_LINK_TRB) == 16);
 //----------------------------------------generic trb----------------------------------------------------------------
 typedef struct _XHCI_GENERIC_TRB {
     ULONG Word0;
@@ -50,6 +51,7 @@ typedef struct _XHCI_GENERIC_TRB {
     ULONG Word2;
     ULONG Word3;
 }XHCI_GENERIC_TRB, *PXHCI_GENERIC_TRB;
+C_ASSERT(sizeof(XHCI_GENERIC_TRB) == 16);
 //----------------------------------------Command TRBs----------------------------------------------------------------
 typedef struct _XHCI_COMMAND_NO_OP_TRB {
         ULONG RsvdZ1;
@@ -62,13 +64,13 @@ typedef struct _XHCI_COMMAND_NO_OP_TRB {
             ULONG RsvdZ5                    : 14;
         };
 } XHCI_COMMAND_NO_OP_TRB;
-
+C_ASSERT(sizeof(XHCI_COMMAND_NO_OP_TRB) == 16);
 typedef union _XHCI_COMMAND_TRB {
     XHCI_COMMAND_NO_OP_TRB NoOperation;
     XHCI_LINK_TRB Link;
     XHCI_GENERIC_TRB GenericTRB;
 }XHCI_COMMAND_TRB, *PXHCI_COMMAND_TRB;
-
+C_ASSERT(sizeof(XHCI_COMMAND_TRB) == 16);
 /*typedef struct _XHCI_COMMAND_RING {
     XHCI_COMMAND_TRB Segment[4];
     PXHCI_COMMAND_TRB CREnquePointer;
@@ -76,7 +78,7 @@ typedef union _XHCI_COMMAND_TRB {
 } XHCI_COMMAND_RING;*/
 //----------------------------------------CONTROL TRANSFER DATA STRUCTUERS--------------------------------------------
 
-typedef union _XHCI_CONTROL_SETUP_TRB {
+typedef struct _XHCI_CONTROL_SETUP_TRB {
     struct {
         ULONG bmRequestType             : 8;
         ULONG bRequest                  : 8;
@@ -101,10 +103,10 @@ typedef union _XHCI_CONTROL_SETUP_TRB {
         ULONG TransferType              : 2;
         ULONG RsvdZ3                    : 14;
     };
-    ULONG AsULONG;
+    //ULONG AsULONG;
 } XHCI_CONTROL_SETUP_TRB;
-
-typedef union _XHCI_CONTROL_DATA_TRB {
+C_ASSERT(sizeof(XHCI_CONTROL_SETUP_TRB) == 16);
+typedef struct _XHCI_CONTROL_DATA_TRB {
     struct {
         ULONG DataBufferPointerLo       : 32;
     };
@@ -129,10 +131,10 @@ typedef union _XHCI_CONTROL_DATA_TRB {
         ULONG Direction                 : 1;
         ULONG RsvdZ2                    : 15;
     };
-    ULONG AsULONG;
+    //ULONG AsULONG;
 } XHCI_CONTROL_DATA_TRB;
-
-typedef union _XHCI_CONTROL_STATUS_TRB {
+C_ASSERT(sizeof(XHCI_CONTROL_DATA_TRB) == 16);
+typedef struct _XHCI_CONTROL_STATUS_TRB {
     struct {
         ULONG RsvdZ1                    : 32;
     };
@@ -153,15 +155,16 @@ typedef union _XHCI_CONTROL_STATUS_TRB {
         ULONG Direction                 : 1;
         ULONG RsvdZ4                    : 15;
     };
-    ULONG AsULONG;
+   // ULONG AsULONG;
 } XHCI_CONTROL_STATUS_TRB;
-
+C_ASSERT(sizeof(XHCI_CONTROL_STATUS_TRB) == 16);
 typedef union _XHCI_CONTROL_TRB {
-    XHCI_CONTROL_SETUP_TRB  SetupTRB[4];
-    XHCI_CONTROL_DATA_TRB   DataTRB[4];
-    XHCI_CONTROL_STATUS_TRB StatusTRB[4];
+    XHCI_CONTROL_SETUP_TRB  SetupTRB;
+    XHCI_CONTROL_DATA_TRB   DataTRB;
+    XHCI_CONTROL_STATUS_TRB StatusTRB;
+    XHCI_GENERIC_TRB    GenericTRB;
 } XHCI_CONTROL_TRB, *PXHCI_CONTROL_TRB;  
-
+C_ASSERT(sizeof(XHCI_CONTROL_TRB) == 16);
 //----------------event strucs-------------------
 typedef struct _XHCI_EVENT_TRB {
     ULONG Word0;
@@ -169,15 +172,13 @@ typedef struct _XHCI_EVENT_TRB {
     ULONG Word2;
     ULONG Word3;
 }XHCI_EVENT_TRB, *PXHCI_EVENT_TRB;
-
+C_ASSERT(sizeof(XHCI_EVENT_TRB) == 16);
 typedef struct _XHCI_EVENT_RING_SEGMENT_TABLE{
     ULONGLONG RingSegmentBaseAddr;
     struct {
         ULONGLONG RingSegmentSize : 16;
         ULONGLONG RsvdZ           :  48;
     };
-    
-    
 } XHCI_EVENT_RING_SEGMENT_TABLE;
 //------------------------------------main structs-----------------------
 
@@ -218,8 +219,8 @@ typedef struct _XHCI_EXTENSION {
   USHORT PortPowerControl; // HCSPARAMS => Port Power Control (PPC)
   USHORT PageSize;
   USHORT MaxScratchPadBuffers;
-  PMDL ScratchPadArray;
-  
+  PMDL ScratchPadArrayMDL;
+  PMDL ScratchPadBufferMDL;
 } XHCI_EXTENSION, *PXHCI_EXTENSION;
 
 typedef struct _XHCI_HC_RESOURCES {
@@ -228,7 +229,8 @@ typedef struct _XHCI_HC_RESOURCES {
   DECLSPEC_ALIGN(64) XHCI_RING         CommandRing ;
   XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
 } XHCI_HC_RESOURCES, *PXHCI_HC_RESOURCES;
-//C_ASSERT (FIELD_OFFSET(XHCI_HC_RESOURCES,EventRing)); 
+C_ASSERT (FIELD_OFFSET(XHCI_HC_RESOURCES,EventRing)% 16 == 0); 
+C_ASSERT (FIELD_OFFSET(XHCI_HC_RESOURCES,CommandRing)% 64 == 0); 
 typedef struct _XHCI_ENDPOINT {
   ULONG Reserved;
 } XHCI_ENDPOINT, *PXHCI_ENDPOINT;
