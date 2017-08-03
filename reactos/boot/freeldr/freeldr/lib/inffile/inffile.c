@@ -1459,7 +1459,7 @@ InfGetStringField (
     PCHAR Ptr;
     SIZE_T Size;
 
-    if ((Context == NULL) || (Context->Line == NULL) || (FieldIndex == 0))
+    if ((Context == NULL) || (Context->Line == NULL))
     {
 //      DPRINT("Invalid parameter\n");
         return FALSE;
