@@ -7533,10 +7533,17 @@ RxRemoveNameNetFcb(
     ASSERT(RxIsFcbTableLockExclusive(&NetRoot->FcbTable));
     ASSERT(RxIsFcbAcquiredExclusive(ThisFcb));
 
-    RxFcbTableRemoveFcb(&NetRoot->FcbTable, ThisFcb);
-    DPRINT("FCB (%p) %wZ removed\n", ThisFcb, &ThisFcb->FcbTableEntry.Path);
-    /* Mark, so that we don't try to do it twice */
-    SetFlag(ThisFcb->FcbState, FCB_STATE_NAME_ALREADY_REMOVED);
+#ifdef __REACTOS__
+    if (!BooleanFlagOn(ThisFcb->FcbState, FCB_STATE_NAME_ALREADY_REMOVED))
+    {
+#endif
+        RxFcbTableRemoveFcb(&NetRoot->FcbTable, ThisFcb);
+        DPRINT("FCB (%p) %wZ removed\n", ThisFcb, &ThisFcb->FcbTableEntry.Path);
+        /* Mark, so that we don't try to do it twice */
+        SetFlag(ThisFcb->FcbState, FCB_STATE_NAME_ALREADY_REMOVED);
+#ifdef __REACTOS__
+    }
+#endif
 }
 
 /*
