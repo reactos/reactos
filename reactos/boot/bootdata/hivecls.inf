@@ -413,6 +413,7 @@ HKCR,".msstyles","",0x00000000,"msstylesfile"
 HKCR,"msstylesfile","",0x00000000,%MSSTYLESFILE%
 HKCR,"msstylesfile\DefaultIcon","","0x00020000","%SystemRoot%\system32\themeui.dll,-1"
 HKCR,"msstylesfile\shell\open\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:OpenMSTheme /file:""%1"""
+HKCR,"msstylesfile\shell\Enable\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:""%1"""
 
 ; Theme Files
 HKCR,".theme","",0x00000000,"themefile"
