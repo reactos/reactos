@@ -38,6 +38,6 @@ add_library(shlwapi SHARED
 set_module_type(shlwapi win32dll)
 target_link_libraries(shlwapi uuid wine)
 add_delay_importlibs(shlwapi userenv oleaut32 ole32 comdlg32 mpr mlang urlmon shell32 winmm version)
-add_importlibs(shlwapi user32 gdi32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(shlwapi user32 gdi32 advapi32 wininet msvcrt kernel32 ntdll)
 add_pch(shlwapi precomp.h SOURCE)
 add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)
