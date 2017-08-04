@@ -46,6 +46,7 @@ NTSTATUS NTAPI RtlUTF8ToUnicodeN(WCHAR *uni_dest, ULONG uni_bytes_max,
 #define USE_MOUNT_SEC_CONTEXT
 
 /* debugging printout defines */
+//#define DEBUG_FSDDISPATCH
 #define DEBUG_MARSHAL_HEADER
 #define DEBUG_MARSHAL_DETAIL
 //#define DEBUG_OPEN
@@ -2450,6 +2451,12 @@ NTSTATUS nfs41_DevFcbXXXControlFile(
                                     }
                                     break;
                                 }
+
+                                default:
+                                {
+                                    DbgP("Other node found: %x\n", NodeType(Container));
+                                    break;
+                                }
                             }
                         }
                     }
@@ -2459,6 +2466,10 @@ NTSTATUS nfs41_DevFcbXXXControlFile(
                         RxReleasePrefixTableLock(RxContext->RxDeviceObject->pRxNetNameTable);
                     }
 #undef DUMP_FCB_TABLE_FROM_NETROOT
+                }
+                else
+                {
+                    DbgP("RxNetNameTable is NULL for: %p\n", RxContext->RxDeviceObject);
                 }
 #endif
                 status = STATUS_REDIRECTOR_HAS_OPEN_HANDLES;
