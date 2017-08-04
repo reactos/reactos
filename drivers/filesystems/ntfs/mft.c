@@ -173,7 +173,7 @@ AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord)
     if (AttrRecord->IsNonResident)
         return AttrRecord->NonResident.AllocatedSize;
     else
-        return AttrRecord->Resident.ValueLength;
+        return ALIGN_UP_BY(AttrRecord->Resident.ValueLength, ATTR_RECORD_ALIGNMENT);
 }
 
 
@@ -399,7 +399,7 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT1("SetAttributeDataLenth(%p, %p, %p, %lu, %p, %I64u)\n",
+    DPRINT1("SetAttributeDataLength(%p, %p, %p, %lu, %p, %I64u)\n",
             FileObject,
             Fcb,
             AttrContext,
