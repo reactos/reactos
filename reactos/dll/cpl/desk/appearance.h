@@ -147,6 +147,7 @@ VOID ApplyScheme(PCOLOR_SCHEME scheme, PTHEME_SELECTION pSelectedTheme);
 BOOL ActivateTheme(PTHEME_SELECTION pSelectedTheme);
 void CleanupThemes(IN PTHEME pThemeList);
 BOOL DrawThemePreview(HDC hdcMem, PCOLOR_SCHEME scheme, PTHEME_SELECTION pSelectedTheme, PRECT prcWindow);
+BOOL ActivateThemeFile(LPCWSTR pwszFile);
 
 /* prototypes for appearance.c */
 INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

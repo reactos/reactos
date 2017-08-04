@@ -1010,3 +1010,51 @@ DrawThemePreview(IN HDC hdcMem, IN PCOLOR_SCHEME scheme, IN PTHEME_SELECTION pSe
 
     return SUCCEEDED(hres);
 }
+
+BOOL ActivateThemeFile(LPCWSTR pwszFile)
+{
+    PTHEME pThemes;
+    THEME_SELECTION selection;
+    COLOR_SCHEME scheme;
+    BOOL ret = FALSE;
+
+    pThemes = LoadThemes();
+    if (!pThemes)
+        return FALSE;
+
+    LoadCurrentScheme(&scheme);
+
+    if (pwszFile)
+    {
+        ret = FindOrAppendTheme(pThemes, pwszFile, NULL, NULL, &selection);
+        if (!ret)
+            goto cleanup;
+
+        ret = LoadSchemeFromTheme(&scheme, &selection);
+        if (!ret)
+            goto cleanup;
+    }
+    else
+    {
+        ret = GetActiveClassicTheme(pThemes, &selection);
+        if (!ret)
+            goto cleanup;
+
+        ret = LoadSchemeFromReg(&scheme, &selection);
+        if (!ret)
+            goto cleanup;
+    }
+
+    ret = ActivateTheme(&selection);
+    if (!ret)
+        goto cleanup;
+
+    ApplyScheme(&scheme, &selection);
+
+    ret = TRUE;
+
+cleanup:
+    CleanupThemes(pThemes);
+
+    return ret;
+}
