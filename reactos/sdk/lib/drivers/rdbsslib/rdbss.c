@@ -1847,8 +1847,8 @@ RxCommonCleanup(
 
     Fobx->AssociatedFileObject = NULL;
 
-    /* In case SRV_OPEN used is part of FCB */
-    if (BooleanFlagOn(Fcb->FcbState, FCB_STATE_SRVOPEN_USED))
+    /* In case it was already orphaned */
+    if (BooleanFlagOn(Fcb->FcbState, FCB_STATE_ORPHANED))
     {
         ASSERT(Fcb->UncleanCount != 0);
         InterlockedDecrement((volatile long *)&Fcb->UncleanCount);
