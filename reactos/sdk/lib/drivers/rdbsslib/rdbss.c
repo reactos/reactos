@@ -8605,12 +8605,47 @@ RxSetBasicInfo(
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 RxSetDispositionInfo(
     PRX_CONTEXT RxContext)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    /* First, make the mini-rdr work! */
+    Status = RxpSetInfoMiniRdr(RxContext, FileDispositionInformation);
+    /* If it succeed, we'll keep track of the change */
+    if (NT_SUCCESS(Status))
+    {
+        PFCB Fcb;
+        PFILE_OBJECT FileObject;
+        PFILE_DISPOSITION_INFORMATION FileDispo;
+
+        Fcb = (PFCB)RxContext->pFcb;
+        FileObject = RxContext->CurrentIrpSp->FileObject;
+        FileDispo = RxContext->CurrentIrp->AssociatedIrp.SystemBuffer;
+        /* Caller asks for deletion: mark as delete on close */
+        if (FileDispo->DeleteFile)
+        {
+            SetFlag(Fcb->FcbState, FCB_STATE_DELETE_ON_CLOSE);
+            FileObject->DeletePending = TRUE;
+        }
+        /* Otherwise, clear it */
+        else
+        {
+            ClearFlag(Fcb->FcbState, FCB_STATE_DELETE_ON_CLOSE);
+            FileObject->DeletePending = FALSE;
+        }
+
+        /* Sanitize output */
+        Status = STATUS_SUCCESS;
+    }
+
+    return Status;
 }
 
 NTSTATUS
