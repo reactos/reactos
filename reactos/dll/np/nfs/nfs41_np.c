@@ -329,7 +329,9 @@ NPGetCaps(
 {
    DWORD rc = 0;
 
+#ifndef __REACTOS__
     DbgP(( L"[aglo] GetNetCaps %d\n", nIndex ));
+#endif
     switch ( nIndex )
     {
         case WNNC_SPEC_VERSION:
