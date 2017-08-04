@@ -597,7 +597,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
 
     DPRINT("Found record for %wS\n", Fcb->ObjectName);
 
-    CurrentFileSize.QuadPart = NtfsGetFileSize(DeviceExt, FileRecord, L"", 0, (PULONGLONG)&CurrentFileSize);
+    CurrentFileSize.QuadPart = NtfsGetFileSize(DeviceExt, FileRecord, L"", 0, NULL);
 
     // Are we trying to decrease the file size?
     if (NewFileSize->QuadPart < CurrentFileSize.QuadPart)
@@ -673,7 +673,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
     FileName.Length = FileNameAttribute->NameLength * sizeof(WCHAR);
     FileName.MaximumLength = FileName.Length;
 
-    AllocationSize = ROUND_UP(NewFileSize->QuadPart, Fcb->Vcb->NtfsInfo.BytesPerCluster);
+    AllocationSize = AttributeAllocatedLength(&DataContext->Record);
 
     Status = UpdateFileNameRecord(Fcb->Vcb,
                                   ParentMFTId,

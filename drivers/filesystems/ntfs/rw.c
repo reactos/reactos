@@ -432,11 +432,8 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
 
             DataSize.QuadPart = WriteOffset + Length;
 
-            AllocationSize = ROUND_UP(DataSize.QuadPart, Fcb->Vcb->NtfsInfo.BytesPerCluster);
-
             // set the attribute data length
             Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, &DataSize);
-            
             if (!NT_SUCCESS(Status))
             {
                 ReleaseAttributeContext(DataContext);
@@ -444,6 +441,8 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
                 *LengthWritten = 0;
                 return Status;
             }
+
+            AllocationSize = AttributeAllocatedLength(&DataContext->Record);
 
             // now we need to update this file's size in every directory index entry that references it
             // TODO: put this code in its own function and adapt it to work with every filename / hardlink
