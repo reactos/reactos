@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Shim library
  * FILE:            dll/appcompat/shims/genral/themes.c
  * PURPOSE:         Theme related shims
- * PROGRAMMER:      Mark Jansen
+ * PROGRAMMER:      Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <windows.h>
@@ -22,6 +22,7 @@ BOOL WINAPI SHIM_OBJ_NAME(Notify)(DWORD fdwReason, PVOID ptr)
 {
     if (fdwReason == SHIM_REASON_INIT)
     {
+        /* Disable themes for non-client, comctl controls and webcontent */
         SetThemeAppProperties(0);
     }
     return TRUE;

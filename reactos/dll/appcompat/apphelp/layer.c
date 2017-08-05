@@ -50,7 +50,7 @@
 #define SIGN_MEDIA_FMT          L"SIGN.MEDIA=%X %s"
 #endif
 
-
+/* Fixme: use RTL_UNICODE_STRING_BUFFER */
 typedef struct SDB_TMP_STR
 {
     UNICODE_STRING Str;
@@ -131,6 +131,7 @@ BOOL SdbpIsPathOnRemovableMedia(PCWSTR Path)
     return type == DRIVE_REMOVABLE || type == DRIVE_CDROM;
 }
 
+/* Convert a path on removable media to 'SIGN.MEDIA=%X filename' */
 BOOL SdbpBuildSignMediaId(PSDB_TMP_STR LongPath)
 {
     SDB_TMP_STR Scratch;
@@ -169,6 +170,7 @@ BOOL SdbpBuildSignMediaId(PSDB_TMP_STR LongPath)
     return FALSE;
 }
 
+/* Convert a given path to a long or media path */
 BOOL SdbpResolvePath(PSDB_TMP_STR LongPath, PCWSTR wszPath)
 {
     SdbpInitTempStr(LongPath);

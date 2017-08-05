@@ -491,14 +491,14 @@ void Database::WriteDWord(PDB pdb, TAG tag, DWORD value, bool always)
         SdbWriteDWORDTag(pdb, tag, value);
 }
 
-TAGID Database::BeginWriteListTag(PDB db, TAG tag)
+TAGID Database::BeginWriteListTag(PDB pdb, TAG tag)
 {
-    return SdbBeginWriteListTag(db, tag);
+    return SdbBeginWriteListTag(pdb, tag);
 }
 
-BOOL Database::EndWriteListTag(PDB db, TAGID tagid)
+BOOL Database::EndWriteListTag(PDB pdb, TAGID tagid)
 {
-    return SdbEndWriteListTag(db, tagid);
+    return SdbEndWriteListTag(pdb, tagid);
 }
 
 bool Database::fromXml(XMLHandle dbNode)

@@ -128,8 +128,8 @@ struct Database
     void WriteBinary(PDB pdb, TAG tag, const GUID& guid, bool always = false);
     void WriteBinary(PDB pdb, TAG tag, const std::vector<BYTE>& data, bool always = false);
     void WriteDWord(PDB pdb, TAG tag, DWORD value, bool always = false);
-    TAGID BeginWriteListTag(PDB db, TAG tag);
-    BOOL EndWriteListTag(PDB db, TAGID tagid);
+    TAGID BeginWriteListTag(PDB pdb, TAG tag);
+    BOOL EndWriteListTag(PDB pdb, TAGID tagid);
 
     void InsertShimTagid(const sdbstring& name, TAGID tagid);
     inline void InsertShimTagid(const std::string& name, TAGID tagid)

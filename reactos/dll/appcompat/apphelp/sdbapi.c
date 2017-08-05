@@ -107,7 +107,7 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
     IO_STATUS_BLOCK io;
     OBJECT_ATTRIBUTES attr;
     UNICODE_STRING str;
-    PDB db;
+    PDB pdb;
 
     if (type == DOS_PATH)
     {
@@ -120,8 +120,8 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
     }
 
     /* SdbAlloc zeroes the memory. */
-    db = (PDB)SdbAlloc(sizeof(DB));
-    if (!db)
+    pdb = (PDB)SdbAlloc(sizeof(DB));
+    if (!pdb)
     {
         SHIM_ERR("Failed to allocate memory for shim database\n");
         return NULL;
@@ -129,28 +129,33 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
 
     InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-    Status = NtCreateFile(&db->file, (write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ )| SYNCHRONIZE,
+    Status = NtCreateFile(&pdb->file, (write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ )| SYNCHRONIZE,
                           &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
                           write ? FILE_SUPERSEDE : FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+
+    pdb->for_write = write;
 
     if (type == DOS_PATH)
         RtlFreeUnicodeString(&str);
 
     if (!NT_SUCCESS(Status))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to create shim database file: %lx\n", Status);
         return NULL;
     }
 
-    return db;
+    return pdb;
 }
 
-void WINAPI SdbpFlush(PDB db)
+void WINAPI SdbpFlush(PDB pdb)
 {
     IO_STATUS_BLOCK io;
-    NTSTATUS Status = NtWriteFile(db->file, NULL, NULL, NULL, &io,
-        db->data, db->write_iter, NULL, NULL);
+    NTSTATUS Status;
+
+    ASSERT(pdb->for_write);
+    Status = NtWriteFile(pdb->file, NULL, NULL, NULL, &io,
+        pdb->data, pdb->write_iter, NULL, NULL);
     if( !NT_SUCCESS(Status))
         SHIM_WARN("failed with 0x%lx\n", Status);
 }
@@ -257,9 +262,9 @@ BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type)
     return TRUE;
 }
 
-BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
+BOOL WINAPI SdbpCheckTagIDType(PDB pdb, TAGID tagid, WORD type)
 {
-    TAG tag = SdbGetTagFromTagID(db, tagid);
+    TAG tag = SdbGetTagFromTagID(pdb, tagid);
     if (tag == TAG_NULL)
         return FALSE;
     return SdbpCheckTagType(tag, type);
@@ -269,43 +274,43 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
 {
     IO_STATUS_BLOCK io;
     FILE_STANDARD_INFORMATION fsi;
-    PDB db;
+    PDB pdb;
     NTSTATUS Status;
     BYTE header[12];
 
-    db = SdbpCreate(path, type, FALSE);
-    if (!db)
+    pdb = SdbpCreate(path, type, FALSE);
+    if (!pdb)
         return NULL;
 
-    Status = NtQueryInformationFile(db->file, &io, &fsi, sizeof(FILE_STANDARD_INFORMATION), FileStandardInformation);
+    Status = NtQueryInformationFile(pdb->file, &io, &fsi, sizeof(FILE_STANDARD_INFORMATION), FileStandardInformation);
     if (!NT_SUCCESS(Status))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to get shim database size: 0x%lx\n", Status);
         return NULL;
     }
 
-    db->size = fsi.EndOfFile.u.LowPart;
-    db->data = SdbAlloc(db->size);
-    Status = NtReadFile(db->file, NULL, NULL, NULL, &io, db->data, db->size, NULL, NULL);
+    pdb->size = fsi.EndOfFile.u.LowPart;
+    pdb->data = SdbAlloc(pdb->size);
+    Status = NtReadFile(pdb->file, NULL, NULL, NULL, &io, pdb->data, pdb->size, NULL, NULL);
 
     if (!NT_SUCCESS(Status))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to open shim database file: 0x%lx\n", Status);
         return NULL;
     }
 
-    if (!SdbpReadData(db, &header, 0, 12))
+    if (!SdbpReadData(pdb, &header, 0, 12))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to read shim database header\n");
         return NULL;
     }
 
     if (memcmp(&header[8], "sdbf", 4) != 0)
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Shim database header is invalid\n");
         return NULL;
     }
@@ -313,7 +318,7 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
     *major = *(DWORD*)&header[0];
     *minor = *(DWORD*)&header[4];
 
-    return db;
+    return pdb;
 }
 
 
@@ -327,46 +332,46 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
  */
 PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
 {
-    PDB db;
+    PDB pdb;
     DWORD major, minor;
 
-    db = SdbpOpenDatabase(path, type, &major, &minor);
-    if (!db)
+    pdb = SdbpOpenDatabase(path, type, &major, &minor);
+    if (!pdb)
         return NULL;
 
     if (major != 2 && major != 3)
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Invalid shim database version\n");
         return NULL;
     }
 
-    db->stringtable = SdbFindFirstTag(db, TAGID_ROOT, TAG_STRINGTABLE);
-    if(!SdbGetDatabaseID(db, &db->database_id))
+    pdb->stringtable = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_STRINGTABLE);
+    if(!SdbGetDatabaseID(pdb, &pdb->database_id))
     {
         SHIM_INFO("Failed to get the database id\n");
     }
-    return db;
+    return pdb;
 }
 
 /**
  * Closes specified database and frees its memory.
  *
- * @param [in]  db  Handle to the shim database.
+ * @param [in]  pdb  Handle to the shim database.
  */
-void WINAPI SdbCloseDatabase(PDB db)
+void WINAPI SdbCloseDatabase(PDB pdb)
 {
-    if (!db)
+    if (!pdb)
         return;
 
-    if (db->file)
-        NtClose(db->file);
-    if (db->string_buffer)
-        SdbCloseDatabase(db->string_buffer);
-    if (db->string_lookup)
-        SdbpTableDestroy(&db->string_lookup);
-    SdbFree(db->data);
-    SdbFree(db);
+    if (pdb->file)
+        NtClose(pdb->file);
+    if (pdb->string_buffer)
+        SdbCloseDatabase(pdb->string_buffer);
+    if (pdb->string_lookup)
+        SdbpTableDestroy(&pdb->string_lookup);
+    SdbFree(pdb->data);
+    SdbFree(pdb);
 }
 
 /**
@@ -462,11 +467,11 @@ BOOL WINAPI SdbGetStandardDatabaseGUID(DWORD Flags, GUID* Guid)
  */
 BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD VersionLo)
 {
-    PDB db;
+    PDB pdb;
 
-    db = SdbpOpenDatabase(database, DOS_PATH, VersionHi, VersionLo);
-    if (db)
-        SdbCloseDatabase(db);
+    pdb = SdbpOpenDatabase(database, DOS_PATH, VersionHi, VersionLo);
+    if (pdb)
+        SdbCloseDatabase(pdb);
 
     return TRUE;
 }
@@ -483,22 +488,22 @@ BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD Ver
  *
  * @return  The found tag, or TAGID_NULL on failure
  */
-TAGID WINAPI SdbFindFirstNamedTag(PDB db, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name)
+TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name)
 {
     TAGID iter;
 
-    iter = SdbFindFirstTag(db, root, find);
+    iter = SdbFindFirstTag(pdb, root, find);
 
     while (iter != TAGID_NULL)
     {
-        TAGID tmp = SdbFindFirstTag(db, iter, nametag);
+        TAGID tmp = SdbFindFirstTag(pdb, iter, nametag);
         if (tmp != TAGID_NULL)
         {
-            LPCWSTR name = SdbGetStringTagPtr(db, tmp);
+            LPCWSTR name = SdbGetStringTagPtr(pdb, tmp);
             if (name && !wcsicmp(name, find_name))
                 return iter;
         }
-        iter = SdbFindNextTag(db, root, iter);
+        iter = SdbFindNextTag(pdb, root, iter);
     }
     return TAGID_NULL;
 }
@@ -514,16 +519,16 @@ TAGID WINAPI SdbFindFirstNamedTag(PDB db, TAGID root, TAGID find, TAGID nametag,
  */
 TAGREF WINAPI SdbGetLayerTagRef(HSDB hsdb, LPCWSTR layerName)
 {
-    PDB db = hsdb->db;
+    PDB pdb = hsdb->pdb;
 
-    TAGID database = SdbFindFirstTag(db, TAGID_ROOT, TAG_DATABASE);
+    TAGID database = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
     if (database != TAGID_NULL)
     {
-        TAGID layer = SdbFindFirstNamedTag(db, database, TAG_LAYER, TAG_NAME, layerName);
+        TAGID layer = SdbFindFirstNamedTag(pdb, database, TAG_LAYER, TAG_NAME, layerName);
         if (layer != TAGID_NULL)
         {
             TAGREF tr;
-            if (SdbTagIDToTagRef(hsdb, db, layer, &tr))
+            if (SdbTagIDToTagRef(hsdb, pdb, layer, &tr))
             {
                 return tr;
             }

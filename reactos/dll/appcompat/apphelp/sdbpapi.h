@@ -1,6 +1,6 @@
 /*
  * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -64,12 +64,12 @@ void WINAPI SdbpCloseMemMappedFile(PMEMMAPPED mapping);
 
 
 PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write);
-void WINAPI SdbpFlush(PDB db);
+void WINAPI SdbpFlush(PDB pdb);
 DWORD SdbpStrlen(PCWSTR string);
 DWORD SdbpStrsize(PCWSTR string);
 
 BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type);
-BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type);
+BOOL WINAPI SdbpCheckTagIDType(PDB pdb, TAGID tagid, WORD type);
 
 #ifndef WINAPIV
 #define WINAPIV
