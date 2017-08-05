@@ -471,12 +471,19 @@ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
 
     if(IsWindowEnabled(hwnd))
     {
-        if(state & BST_PUSHED) drawState = STATE_PRESSED;
-        else if(state & BST_HOT) drawState = STATE_HOT;
-        else if(state & BST_FOCUS) drawState = STATE_DEFAULTED;
-        else drawState = STATE_NORMAL;
+        if(state & BST_PUSHED) 
+            drawState = STATE_PRESSED;
+        else if ((dwStyle & BS_PUSHLIKE) && (state & (BST_CHECKED|BST_INDETERMINATE))) 
+            drawState = STATE_PRESSED;
+        else if(state & BST_HOT) 
+            drawState = STATE_HOT;
+        else if(state & BST_FOCUS) 
+            drawState = STATE_DEFAULTED;
+        else 
+            drawState = STATE_NORMAL;
     }
-    else drawState = STATE_DISABLED;
+    else 
+        drawState = STATE_DISABLED;
 
 #ifndef __REACTOS__ /* r73873 */
     hDC = hParamDC ? hParamDC : BeginPaint(hwnd, &ps);
