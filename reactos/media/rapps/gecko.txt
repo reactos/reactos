@@ -26,3 +26,4 @@ Size = 26,7 МиБ
 Name = Wine Gecko Motoru
 Description = Gecko Motoru düzgülü olarak birinci kurulum aşamasında yalnızca İnternet bağlantısı olduğunda kurulurdu. mshtml.dll'yi kullanan uygulamalar için gereklidir.
 Size = 26,7 MiB
+

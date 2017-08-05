@@ -6,7 +6,7 @@ Description = Needed for some MSI Installers. Contains: msxml3.dll, msxml3a.dll,
 Size = 1.0 MiB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=28494391-052B-42FF-9674-F752BDCA9582&displaylang=en
-URLDownload = https://web.archive.org/web/20070126162308/http://download.microsoft.com/download/8/8/8/888f34b7-4f54-4f06-8dac-fa29b19f33dd/msxml3.msi
+URLDownload = http://svn.reactos.org/packages/msxml3.msi
 SHA1 = d4c2178dfb807e1a0267fce0fd06b8d51106d913
 CDPath = none
 

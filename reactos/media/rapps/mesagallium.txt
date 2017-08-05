@@ -12,7 +12,6 @@ CDPath = none
 
 [Section.0405]
 Description = Grafická knihovna obsahujicí moduly Mesa, Gallium a llvmpipe. Poskytuje vyšší výkon na systémech bez hardwarové OpenGL akcelerace. Tato knihovna může nahradit výchozí OGL ovladač na Vašem systému - nastavení lze provést během instalace, nebo pomocí ovládacího panelu Nastavení OpenGL.
-Size = 5,7 MiB
 
 [Section.0407]
 Description = Beinhaltet Mesa, Gallium und llvmpipe. Signifikanter Geschwindigkeitsschub für Systeme ohne OpenGL Hardwarebeschleunigung.
@@ -30,3 +29,4 @@ Size = 5,7 МиБ
 Name = Mesa3D Çizge Kitaplığı
 Description = Mesa3D'nin bu yapısı Mesa, Gallium ve llvmpipe'tan oluşmaktadır. OpenGL donanım hızlandırması olmayan dizgeler için önemli bir başarım artışı sağlar. Dizgenizde OGL sürücüsünün yerini alabilir, bunu kurulum sırasında ya da OpenGL Yapılandırma denetim masası ögesi yoluyla ayarlanabilir.
 Size = 5,7 MiB
+

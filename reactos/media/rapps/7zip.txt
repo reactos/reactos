@@ -36,7 +36,7 @@ Size = 1,1 Mio
 
 [Section.0419]
 Description = Утилита для создания и открытия 7zip, zip, tar, rar и других архивных файлов.
-Size = 1,1 MiБ
+Size = 1,1 МиБ
 
 [Section.041f]
 Description = 7zip, zip, tar, rar ve başka birçok belgelik biçimi destekli bir kütük belgelikleme aracı.
