@@ -2450,53 +2450,84 @@ FontFamilyInclude(LPLOGFONTW LogFont, PUNICODE_STRING FaceName,
     return FindFaceNameInInfo(FaceName, Info, InfoEntries) < 0;
 }
 
+static BOOL FASTCALL
+FontFamilyFound(PFONTFAMILYINFO InfoEntry,
+                PFONTFAMILYINFO Info, DWORD InfoCount)
+{
+    LPLOGFONTW plf1 = &InfoEntry->EnumLogFontEx.elfLogFont;
+    LPWSTR pFullName1 = InfoEntry->EnumLogFontEx.elfFullName;
+    LPWSTR pFullName2;
+    DWORD i;
+
+    for (i = 0; i < InfoCount; ++i)
+    {
+        LPLOGFONTW plf2 = &Info[i].EnumLogFontEx.elfLogFont;
+        if (plf1->lfCharSet != plf2->lfCharSet)
+            continue;
+
+        pFullName2 = Info[i].EnumLogFontEx.elfFullName;
+        if (_wcsicmp(pFullName1, pFullName2) != 0)
+            continue;
+
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static BOOLEAN FASTCALL
 GetFontFamilyInfoForList(LPLOGFONTW LogFont,
                          PFONTFAMILYINFO Info,
-                         DWORD *Count,
-                         DWORD Size,
+                         DWORD *pCount,
+                         DWORD MaxCount,
                          PLIST_ENTRY Head)
 {
     PLIST_ENTRY Entry;
     PFONT_ENTRY CurrentEntry;
-    ANSI_STRING EntryFaceNameA;
-    UNICODE_STRING EntryFaceNameW;
     FONTGDI *FontGDI;
-    NTSTATUS status;
+    FONTFAMILYINFO InfoEntry;
+    DWORD Count = *pCount;
 
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
-        CurrentEntry = (PFONT_ENTRY) CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
-
+        CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
 
-        RtlInitAnsiString(&EntryFaceNameA, FontGDI->SharedFace->Face->family_name);
-        status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
-        if (!NT_SUCCESS(status))
+        if (LogFont->lfCharSet != DEFAULT_CHARSET &&
+            LogFont->lfCharSet != FontGDI->CharSet)
         {
-            return FALSE;
+            continue;
         }
 
-        if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
+        if (LogFont->lfFaceName[0] == UNICODE_NULL)
         {
-            EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
-            EntryFaceNameW.Buffer[LF_FACESIZE - 1] = L'\0';
-        }
-
-        if (FontFamilyInclude(LogFont, &EntryFaceNameW, Info, min(*Count, Size)))
-        {
-            if (*Count < Size)
+            if (Count < MaxCount)
             {
-                FontFamilyFillInfo(Info + *Count, EntryFaceNameW.Buffer,
-                                   NULL, FontGDI);
+                FontFamilyFillInfo(&Info[Count], NULL, NULL, FontGDI);
             }
-            (*Count)++;
+            Count++;
+            continue;
         }
-        RtlFreeUnicodeString(&EntryFaceNameW);
-        Entry = Entry->Flink;
+
+        FontFamilyFillInfo(&InfoEntry, NULL, NULL, FontGDI);
+
+        if (_wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName) != 0 &&
+            _wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfFullName) != 0)
+        {
+            continue;
+        }
+
+        if (!FontFamilyFound(&InfoEntry, Info, min(Count, MaxCount)))
+        {
+            if (Count < MaxCount)
+            {
+                RtlCopyMemory(&Info[Count], &InfoEntry, sizeof(InfoEntry));
+            }
+            Count++;
+        }
     }
+
+    *pCount = Count;
 
     return TRUE;
 }
