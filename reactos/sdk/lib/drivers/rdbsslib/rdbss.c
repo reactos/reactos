@@ -4909,11 +4909,63 @@ RxCreateFromNetRoot(
 
     DesiredAccess = Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_ALL_ACCESS;
 
-    /* We don't support renaming yet */
+    /* Get file object */
+    FileObject = Stack->FileObject;
+
+    /* Do we have to open target directory for renaming? */
     if (BooleanFlagOn(Stack->Flags, SL_OPEN_TARGET_DIRECTORY))
     {
-        UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
+        DPRINT("Opening target directory\n");
+
+        /* If we have been asked for delete, try to purge first */
+        if (BooleanFlagOn(Context->Create.NtCreateParameters.DesiredAccess, DELETE))
+        {
+            RxPurgeRelatedFobxs((PNET_ROOT)Context->Create.pVNetRoot->pNetRoot, Context,
+                                ATTEMPT_FINALIZE_ON_PURGE, NULL);
+        }
+
+        /* Create the FCB */
+        Fcb = RxCreateNetFcb(Context, (PV_NET_ROOT)Context->Create.pVNetRoot, NetRootName);
+        if (Fcb == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Fake it: it will be used only renaming */
+        NodeType(Fcb) = RDBSS_NTC_OPENTARGETDIR_FCB;
+        Context->Create.FcbAcquired = FALSE;
+        Context->Create.NetNamePrefixEntry = NULL;
+
+        /* Assign it to the FO */
+        FileObject->FsContext = Fcb;
+
+        /* If we have a FOBX already, check whether it's for DFS opening */
+        if (Context->pFobx != NULL)
+        {
+            /* If so, reflect this in the FOBX */
+            if (NodeType(FileObject->FsContext2) == DFS_OPEN_CONTEXT)
+            {
+                SetFlag(Context->pFobx->Flags, FOBX_FLAG_DFS_OPEN);
+            }
+            else
+            {
+                ClearFlag(Context->pFobx->Flags, FOBX_FLAG_DFS_OPEN);
+            }
+        }
+
+        /* Acquire the FCB */
+        Status = RxAcquireExclusiveFcb(Context, Fcb);
+        if (Status != STATUS_SUCCESS)
+        {
+            return Status;
+        }
+
+        /* Reference the FCB and release */
+        RxReferenceNetFcb(Fcb);
+        RxReleaseFcb(Context, Fcb);
+
+        /* We're done! */
+        return STATUS_SUCCESS;
     }
 
     /* Try to find (or create) the FCB for the file */
@@ -4948,7 +5000,6 @@ RxCreateFromNetRoot(
     }
 
     /* Not mailslot! */
-    FileObject = Stack->FileObject;
     /* Check SA for conflict */
     if (Fcb->OpenCount > 0)
     {
@@ -8672,12 +8723,77 @@ RxSetPositionInfo(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 RxSetRenameInfo(
     PRX_CONTEXT RxContext)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Length;
+    NTSTATUS Status;
+    PFCB RenameFcb, Fcb;
+    PIO_STACK_LOCATION Stack;
+    PFILE_RENAME_INFORMATION RenameInfo, UserInfo;
+
+    PAGED_CODE();
+
+    DPRINT("RxSetRenameInfo(%p)\n", RxContext);
+
+    Stack = RxContext->CurrentIrpSp;
+    DPRINT("FO: %p, Replace: %d\n", Stack->Parameters.SetFile.FileObject, Stack->Parameters.SetFile.ReplaceIfExists);
+
+    /* If there's no FO, we won't do extra operation, so directly pass to mini-rdr and quit */
+    RxContext->Info.ReplaceIfExists = Stack->Parameters.SetFile.ReplaceIfExists;
+    if (Stack->Parameters.SetFile.FileObject == NULL)
+    {
+        return RxpSetInfoMiniRdr(RxContext, Stack->Parameters.SetFile.FileInformationClass);
+    }
+
+    Fcb = (PFCB)RxContext->pFcb;
+    RenameFcb = Stack->Parameters.SetFile.FileObject->FsContext;
+    /* First, validate the received file object */
+    ASSERT(NodeType(RenameFcb) == RDBSS_NTC_OPENTARGETDIR_FCB);
+    if (Fcb->pNetRoot != RenameFcb->pNetRoot)
+    {
+        DPRINT1("Not the same device: %p:%p (%wZ) - %p:%p (%wZ)\n", Fcb, Fcb->pNetRoot, Fcb->pNetRoot->pNetRootName, RenameFcb, RenameFcb->pNetRoot, RenameFcb->pNetRoot->pNetRootName);
+        return STATUS_NOT_SAME_DEVICE;
+    }
+
+    /* We'll reallocate a safe buffer */
+    Length = Fcb->pNetRoot->DiskParameters.RenameInfoOverallocationSize + RenameFcb->FcbTableEntry.Path.Length + FIELD_OFFSET(FILE_RENAME_INFORMATION, FileName);
+    RenameInfo = RxAllocatePoolWithTag(PagedPool, Length, '??xR');
+    if (RenameInfo == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    _SEH2_TRY
+    {
+        /* Copy the data */
+        UserInfo = RxContext->CurrentIrp->AssociatedIrp.SystemBuffer;
+        RenameInfo->ReplaceIfExists = UserInfo->ReplaceIfExists;
+        RenameInfo->RootDirectory = UserInfo->RootDirectory;
+        RenameInfo->FileNameLength = RenameFcb->FcbTableEntry.Path.Length;
+        RtlMoveMemory(&RenameInfo->FileName[0], RenameFcb->FcbTableEntry.Path.Buffer, RenameFcb->FcbTableEntry.Path.Length);
+
+        /* Set them in the RX_CONTEXT */
+        RxContext->Info.FileInformationClass = Stack->Parameters.SetFile.FileInformationClass;
+        RxContext->Info.Buffer = RenameInfo;
+        RxContext->Info.Length = Length;
+
+        /* And call the mini-rdr */
+        MINIRDR_CALL(Status, RxContext, Fcb->MRxDispatch, MRxSetFileInfo, (RxContext));
+    }
+    _SEH2_FINALLY
+    {
+        /* Free */
+        RxFreePoolWithTag(RenameInfo, '??xR');
+    }
+    _SEH2_END;
+
+    /* Done! */
+    return Status;
 }
 
 #if DBG
