@@ -55,6 +55,8 @@ static inline LONG_PTR get_button_image(HWND hwnd)
 {
     return _GetButtonData(hwnd)->image;
 }
+
+BOOL BUTTON_DrawIml(HDC hdc, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCalc);
 #endif
 
 static UINT get_drawtext_flags(DWORD style, DWORD ex_style)
@@ -127,7 +129,6 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     WCHAR *text = get_button_text(hwnd);
 #ifdef __REACTOS__ /* r74012 & r74406 */
     PBUTTON_DATA pdata = _GetButtonData(hwnd);
-    SIZE ImageSize;
     HWND parent;
     HBRUSH hBrush;
 #endif
@@ -156,13 +157,7 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     DrawThemeBackground(theme, hDC, BP_PUSHBUTTON, state, &bgRect, NULL);
 
 #ifdef __REACTOS__ /* r74012 */
-    if (pdata->imlData.himl && ImageList_GetIconSize(pdata->imlData.himl, &ImageSize.cx, &ImageSize.cy))
-    {
-        int left = textRect.left + pdata->imlData.margin.left;
-        int top = textRect.top + (textRect.bottom - textRect.top - ImageSize.cy) / 2;
-        textRect.left += pdata->imlData.margin.left + pdata->imlData.margin.right + ImageSize.cy;
-        ImageList_Draw(pdata->imlData.himl, 0, hDC, left, top, 0);
-    }
+    BUTTON_DrawIml(hDC, &pdata->imlData, &textRect, FALSE);
 #endif
 
     if (text)
