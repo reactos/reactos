@@ -3,12 +3,12 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 IDD_PROPPAGEMAIN DIALOGEX 0, 0, 252, 205
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Spielcontroller"
+CAPTION "Gamecontroller"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
-    LTEXT "Über diese Einstellungen können an den PC angeschlossene Spielcontroller konfiguriert werden.", -1, 33, 7, 214, 20, NOT WS_GROUP
-    GROUPBOX "I&nstallierte Spielcontroller", -1, 7, 34, 238, 117
+    LTEXT "Über diese Einstellungen können an den PC angeschlossene Gamecontroller konfiguriert werden.", -1, 33, 7, 214, 20, NOT WS_GROUP
+    GROUPBOX "I&nstallierte Gamecontroller", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "&Hinzufügen...", IDC_ADD_BUTTON, 35, 129, 65, 14
     PUSHBUTTON "&Entfernen", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
@@ -21,12 +21,12 @@ END
 IDD_ADD DIALOGEX 0, 0, 265, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Spielcontroller hinzufügen"
+CAPTION "Gamecontroller hinzufügen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
-    LTEXT "Wählen Sie einen Spielcontroller aus der Liste und klicken Sie auf OK. Wenn Ihr Spielcontroller nicht in der Liste erscheint, klicken Sie auf Benutzerdefiniert.", -1, 35, 7, 210, 33
-    LTEXT "&Spielcontroller:", -1, 8, 45, 126, 8
+    LTEXT "Wählen Sie einen Gamecontroller aus der Liste und klicken Sie auf OK. Wenn Ihr Gamecontroller nicht in der Liste erscheint, klicken Sie auf Benutzerdefiniert.", -1, 35, 7, 210, 33
+    LTEXT "Game&controller:", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Ruder und Pedale aktivieren", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 105, 10, WS_GROUP
     LTEXT "&Gameport:", -1, 7, 134, 38, 8, NOT WS_VISIBLE
@@ -40,7 +40,7 @@ END
 IDD_CUSTOM DIALOGEX 0, 0, 265, 183, 0
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Benutzerdefinierter Spielcontroller"
+CAPTION "Benutzerdefinierter Gamecontroller"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Spezielle Eigenschaften", -1, 7, 7, 245, 52
@@ -77,8 +77,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Spielcontroller"
-    IDS_CPLSYSTEMDESCRIPTION "Hinzufügen, Entfernen und Konfigurieren von Spielcontrollerhardware wie Joysticks und Gamepads."
+    IDS_CPLSYSTEMNAME "Gamecontroller"
+    IDS_CPLSYSTEMDESCRIPTION "Hinzufügen, Entfernen und Konfigurieren von Gamecontrollerhardware wie Joysticks und Gamepads."
     IDS_CONTROLLER "Controller"
     IDS_STATUS "Status"
 END
