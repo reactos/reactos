@@ -126,7 +126,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    StreamSize = AttributeDataLength(&DataContext->Record);
+    StreamSize = AttributeDataLength(DataContext->pRecord);
     if (ReadOffset >= StreamSize)
     {
         DPRINT1("Reading beyond stream end!\n");
@@ -149,7 +149,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         /* do we need to extend RealLength by one sector? */
         if (RealLength + RealReadOffset < ReadOffset + Length)
         {
-            if (RealReadOffset + RealLength + DeviceExt->NtfsInfo.BytesPerSector <= AttributeAllocatedLength(&DataContext->Record))
+            if (RealReadOffset + RealLength + DeviceExt->NtfsInfo.BytesPerSector <= AttributeAllocatedLength(DataContext->pRecord))
                 RealLength += DeviceExt->NtfsInfo.BytesPerSector;
         }
 
@@ -413,7 +413,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     }
 
     // Get the size of the stream on disk
-    StreamSize = AttributeDataLength(&DataContext->Record);
+    StreamSize = AttributeDataLength(DataContext->pRecord);
 
     DPRINT("WriteOffset: %lu\tStreamSize: %I64u\n", WriteOffset, StreamSize);
 
@@ -442,7 +442,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
                 return Status;
             }
 
-            AllocationSize = AttributeAllocatedLength(&DataContext->Record);
+            AllocationSize = AttributeAllocatedLength(DataContext->pRecord);
 
             // now we need to update this file's size in every directory index entry that references it
             // TODO: put this code in its own function and adapt it to work with every filename / hardlink

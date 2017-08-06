@@ -49,8 +49,8 @@ NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
     Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Stream, StreamLength, &DataContext, NULL);
     if (NT_SUCCESS(Status))
     {
-        Size = AttributeDataLength(&DataContext->Record);
-        Allocated = AttributeAllocatedLength(&DataContext->Record);
+        Size = AttributeDataLength(DataContext->pRecord);
+        Allocated = AttributeAllocatedLength(DataContext->pRecord);
         ReleaseAttributeContext(DataContext);
     }
 

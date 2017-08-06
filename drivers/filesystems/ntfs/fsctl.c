@@ -341,9 +341,9 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     /* Get volume name */
     Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeName, L"", 0, &AttrCtxt, NULL);
 
-    if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
+    if (NT_SUCCESS(Status) && AttrCtxt->pRecord->Resident.ValueLength != 0)
     {
-        Attribute = &AttrCtxt->Record;
+        Attribute = AttrCtxt->pRecord;
         DPRINT("Data length %lu\n", AttributeDataLength(Attribute));
         NtfsInfo->VolumeLabelLength =
            min (Attribute->Resident.ValueLength, MAXIMUM_VOLUME_LABEL_LENGTH);
@@ -382,9 +382,9 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     /* Get volume information */
     Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeInformation, L"", 0, &AttrCtxt, NULL);
 
-    if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
+    if (NT_SUCCESS(Status) && AttrCtxt->pRecord->Resident.ValueLength != 0)
     {
-        Attribute = &AttrCtxt->Record;
+        Attribute = AttrCtxt->pRecord;
         DPRINT("Data length %lu\n", AttributeDataLength (Attribute));
         VolumeInfo = (PVOID)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
 
