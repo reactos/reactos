@@ -4,6 +4,7 @@
 * FILE:        dll/shellext/stobject/csystray.cpp
 * PURPOSE:     Systray shell service object implementation
 * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
+*              Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
 */
 
 #include "precomp.h"
@@ -97,7 +98,7 @@ HRESULT CSysTray::ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LR
     return S_FALSE;
 }
 
-HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip)
+HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip, DWORD dwstate)
 {
     NOTIFYICONDATA nim = { 0 };
 
@@ -108,8 +109,8 @@ HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip)
     nim.hIcon = hIcon;
     nim.uID = uId;
     nim.uCallbackMessage = uId;
-    nim.dwState = 0;
-    nim.dwStateMask = 0;
+    nim.dwState = dwstate;
+    nim.dwStateMask = NIS_HIDDEN;
     nim.hWnd = m_hWnd;
     nim.uVersion = NOTIFYICON_VERSION;
     if (szTip)

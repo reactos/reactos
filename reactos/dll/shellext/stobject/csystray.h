@@ -5,6 +5,7 @@
  * PURPOSE:     Systray shell service object
  * PROGRAMMERS: Robert Naumann
  *              David Quintana <gigaherz@gmail.com>
+ *              Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
 #pragma once
 
@@ -43,7 +44,7 @@ class CSysTray :
     HRESULT ShutdownNetShell();
 
 public:
-    HRESULT NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip);
+    HRESULT NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip, DWORD dwstate = 0);
 
     HWND GetHWnd() { return m_hWnd; }
 

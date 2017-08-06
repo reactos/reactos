@@ -39,17 +39,20 @@
 #define IDS_KEYS_MOUSE            331
 #define IDS_KEYS_FILTER           332
 
-#define IDI_BATTCAP0             400
-#define IDI_BATTCAP1             401
-#define IDI_BATTCAP2             402
-#define IDI_BATTCAP3             403
-#define IDI_BATTCAP4             404
-#define IDI_BATTCAP5             405
-#define IDI_BATTCHA0             406
-#define IDI_BATTCHA1             407
-#define IDI_BATTCHA2             408
-#define IDI_BATTCHA3             409
-#define IDI_BATTCHA4             410
-#define IDI_BATTCAP_ERR          412
+#define IDI_BATTCAP0              400
+#define IDI_BATTCAP1              401
+#define IDI_BATTCAP2              402
+#define IDI_BATTCAP3              403
+#define IDI_BATTCAP4              404
+#define IDI_BATTCAP5              405
+#define IDI_BATTCHA0              406
+#define IDI_BATTCHA1              407
+#define IDI_BATTCHA2              408
+#define IDI_BATTCHA3              409
+#define IDI_BATTCHA4              410
+#define IDI_BATTCAP_ERR           412
+
+#define IDI_HOTPLUG_ERR           420
+#define IDI_HOTPLUG_OK            421
 
 #define IDR_SYSTRAY               11001

@@ -26,6 +26,10 @@ IDI_BATTCHA4 ICON "resources/battery/charging4.ico"
 
 IDI_BATTCAP_ERR ICON "resources/battery/error.ico"
 
+IDI_HOTPLUG_ERR ICON "resources/hotplug/0.ico"
+IDI_HOTPLUG_OK ICON  "resources/hotplug/1.ico"
+
+
 IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
 
 #include <reactos/manifest_dll.rc>
