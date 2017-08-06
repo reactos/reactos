@@ -631,7 +631,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
     }
 
     // Get the size of the data attribute
-    CurrentFileSize.QuadPart = AttributeDataLength(&DataContext->Record);
+    CurrentFileSize.QuadPart = AttributeDataLength(DataContext->pRecord);
 
     // Are we enlarging the attribute?
     if (NewFileSize->QuadPart > CurrentFileSize.QuadPart)
@@ -673,7 +673,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
     FileName.Length = FileNameAttribute->NameLength * sizeof(WCHAR);
     FileName.MaximumLength = FileName.Length;
 
-    AllocationSize = AttributeAllocatedLength(&DataContext->Record);
+    AllocationSize = AttributeAllocatedLength(DataContext->pRecord);
 
     Status = UpdateFileNameRecord(Fcb->Vcb,
                                   ParentMFTId,

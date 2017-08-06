@@ -303,17 +303,17 @@ AddRun(PNTFS_VCB Vcb,
     NTSTATUS Status;
     int DataRunMaxLength;
     PNTFS_ATTR_RECORD DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
-    ULONG NextAttributeOffset = AttrOffset + AttrContext->Record.Length;
+    ULONG NextAttributeOffset = AttrOffset + AttrContext->pRecord->Length;
     ULONGLONG NextVBN = 0;
 
     PUCHAR RunBuffer;
     ULONG RunBufferSize;
 
-    if (!AttrContext->Record.IsNonResident)
+    if (!AttrContext->pRecord->IsNonResident)
         return STATUS_INVALID_PARAMETER;
 
-    if (AttrContext->Record.NonResident.AllocatedSize != 0)
-        NextVBN = AttrContext->Record.NonResident.HighestVCN + 1;
+    if (AttrContext->pRecord->NonResident.AllocatedSize != 0)
+        NextVBN = AttrContext->pRecord->NonResident.HighestVCN + 1;
 
     // Add newly-assigned clusters to mcb
     _SEH2_TRY
@@ -344,12 +344,14 @@ AddRun(PNTFS_VCB Vcb,
     ConvertLargeMCBToDataRuns(&AttrContext->DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerCluster, &RunBufferSize);
 
     // Get the amount of free space between the start of the of the first data run and the attribute end
-    DataRunMaxLength = AttrContext->Record.Length - AttrContext->Record.NonResident.MappingPairsOffset;
+    DataRunMaxLength = AttrContext->pRecord->Length - AttrContext->pRecord->NonResident.MappingPairsOffset;
 
     // Do we need to extend the attribute (or convert to attribute list)?
     if (DataRunMaxLength < RunBufferSize)
     {
         PNTFS_ATTR_RECORD NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + NextAttributeOffset);
+        PNTFS_ATTR_RECORD NewRecord;
+
         DataRunMaxLength += Vcb->NtfsInfo.BytesPerFileRecord - NextAttributeOffset - (sizeof(ULONG) * 2);
 
         // Can we move the end of the attribute?
@@ -363,12 +365,22 @@ AddRun(PNTFS_VCB Vcb,
         }
 
         // calculate position of end markers
-        NextAttributeOffset = AttrOffset + AttrContext->Record.NonResident.MappingPairsOffset + RunBufferSize;
+        NextAttributeOffset = AttrOffset + AttrContext->pRecord->NonResident.MappingPairsOffset + RunBufferSize;
         NextAttributeOffset = ALIGN_UP_BY(NextAttributeOffset, ATTR_RECORD_ALIGNMENT);
 
-        // Update the length
+        // Update the length of the destination attribute
         DestinationAttribute->Length = NextAttributeOffset - AttrOffset;
-        AttrContext->Record.Length = DestinationAttribute->Length;
+
+        // Create a new copy of the attribute
+        NewRecord = ExAllocatePoolWithTag(NonPagedPool, DestinationAttribute->Length, TAG_NTFS);
+        RtlCopyMemory(NewRecord, AttrContext->pRecord, AttrContext->pRecord->Length);
+        NewRecord->Length = DestinationAttribute->Length;
+
+        // Free the old copy of the attribute, which won't be large enough
+        ExFreePoolWithTag(AttrContext->pRecord, TAG_NTFS);
+
+        // Set the attribute context's record to the new copy
+        AttrContext->pRecord = NewRecord;
 
         // End the file record
         NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + NextAttributeOffset);
@@ -377,12 +389,17 @@ AddRun(PNTFS_VCB Vcb,
 
     // Update HighestVCN
     DestinationAttribute->NonResident.HighestVCN =
-    AttrContext->Record.NonResident.HighestVCN = max(NextVBN - 1 + RunLength,
-                                                     AttrContext->Record.NonResident.HighestVCN);
+    AttrContext->pRecord->NonResident.HighestVCN = max(NextVBN - 1 + RunLength,
+                                                     AttrContext->pRecord->NonResident.HighestVCN);
 
     // Write data runs to destination attribute
     RtlCopyMemory((PVOID)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset), 
                   RunBuffer, 
+                  RunBufferSize);
+
+    // Update the attribute copy in the attribute context
+    RtlCopyMemory((PVOID)((ULONG_PTR)AttrContext->pRecord + AttrContext->pRecord->NonResident.MappingPairsOffset),
+                  RunBuffer,
                   RunBufferSize);
 
     // Update the file record
@@ -723,7 +740,7 @@ FreeClusters(PNTFS_VCB Vcb,
     ULONG ClustersLeftToFree = ClustersToFree;
 
     PNTFS_ATTR_RECORD DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
-    ULONG NextAttributeOffset = AttrOffset + AttrContext->Record.Length;
+    ULONG NextAttributeOffset = AttrOffset + AttrContext->pRecord->Length;
     PNTFS_ATTR_RECORD NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + NextAttributeOffset);
 
     PUCHAR RunBuffer;
@@ -736,7 +753,7 @@ FreeClusters(PNTFS_VCB Vcb,
     RTL_BITMAP Bitmap;
     ULONG LengthWritten;
 
-    if (!AttrContext->Record.IsNonResident)
+    if (!AttrContext->pRecord->IsNonResident)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -767,7 +784,7 @@ FreeClusters(PNTFS_VCB Vcb,
         return 0;
     }
 
-    BitmapDataSize = AttributeDataLength(&DataContext->Record);
+    BitmapDataSize = AttributeDataLength(DataContext->pRecord);
     BitmapDataSize = min(BitmapDataSize, ULONG_MAX);
     ASSERT((BitmapDataSize * 8) >= Vcb->NtfsInfo.ClusterCount);
     BitmapData = ExAllocatePoolWithTag(NonPagedPool, ROUND_UP(BitmapDataSize, Vcb->NtfsInfo.BytesPerSector), TAG_NTFS);
@@ -802,10 +819,10 @@ FreeClusters(PNTFS_VCB Vcb,
             // deallocate this cluster
             RtlClearBits(&Bitmap, LargeLbn, 1);
         }
-        FsRtlTruncateLargeMcb(&AttrContext->DataRunsMCB, AttrContext->Record.NonResident.HighestVCN);
+        FsRtlTruncateLargeMcb(&AttrContext->DataRunsMCB, AttrContext->pRecord->NonResident.HighestVCN);
 
         // decrement HighestVCN, but don't let it go below 0
-        AttrContext->Record.NonResident.HighestVCN = min(AttrContext->Record.NonResident.HighestVCN, AttrContext->Record.NonResident.HighestVCN - 1);
+        AttrContext->pRecord->NonResident.HighestVCN = min(AttrContext->pRecord->NonResident.HighestVCN, AttrContext->pRecord->NonResident.HighestVCN - 1);
         ClustersLeftToFree--;
     }
 
@@ -837,7 +854,7 @@ FreeClusters(PNTFS_VCB Vcb,
     ConvertLargeMCBToDataRuns(&AttrContext->DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerCluster, &RunBufferSize);
 
     // Update HighestVCN
-    DestinationAttribute->NonResident.HighestVCN = AttrContext->Record.NonResident.HighestVCN;
+    DestinationAttribute->NonResident.HighestVCN = AttrContext->pRecord->NonResident.HighestVCN;
 
     // Write data runs to destination attribute
     RtlCopyMemory((PVOID)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset),
@@ -848,9 +865,12 @@ FreeClusters(PNTFS_VCB Vcb,
     if (NextAttribute->Type == AttributeEnd)
     {
         // update attribute length
-        AttrContext->Record.Length = ALIGN_UP_BY(AttrContext->Record.NonResident.MappingPairsOffset + RunBufferSize,
+        DestinationAttribute->Length = ALIGN_UP_BY(AttrContext->pRecord->NonResident.MappingPairsOffset + RunBufferSize,
                                                  ATTR_RECORD_ALIGNMENT);
-        DestinationAttribute->Length = AttrContext->Record.Length;
+
+        ASSERT(DestinationAttribute->Length <= AttrContext->pRecord->Length);
+
+        AttrContext->pRecord->Length = DestinationAttribute->Length;
 
         // write end markers
         NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)DestinationAttribute + DestinationAttribute->Length);
@@ -893,7 +913,7 @@ InternalReadNonResidentAttributes(PFIND_ATTR_CONTXT Context)
     }
 
     ListContext = PrepareAttributeContext(Attribute);
-    ListSize = AttributeDataLength(&ListContext->Record);
+    ListSize = AttributeDataLength(ListContext->pRecord);
     if (ListSize > 0xFFFFFFFF)
     {
         ReleaseAttributeContext(ListContext);

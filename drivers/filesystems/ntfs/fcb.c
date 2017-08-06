@@ -756,7 +756,7 @@ NtfsReadFCBAttribute(PNTFS_VCB Vcb,
         return Status;
     }
 
-    AttrLength = AttributeDataLength(&AttrCtxt->Record);
+    AttrLength = AttributeDataLength(AttrCtxt->pRecord);
     *Data = ExAllocatePoolWithTag(NonPagedPool, AttrLength, TAG_NTFS);
     if (*Data == NULL)
     {

@@ -69,7 +69,7 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
         return 0;
     }
 
-    BitmapDataSize = AttributeDataLength(&DataContext->Record);
+    BitmapDataSize = AttributeDataLength(DataContext->pRecord);
     ASSERT((BitmapDataSize * 8) >= DeviceExt->NtfsInfo.ClusterCount);
     BitmapData = ExAllocatePoolWithTag(NonPagedPool, ROUND_UP(BitmapDataSize, DeviceExt->NtfsInfo.BytesPerSector), TAG_NTFS);
     if (BitmapData == NULL)
@@ -144,7 +144,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    BitmapDataSize = AttributeDataLength(&DataContext->Record);
+    BitmapDataSize = AttributeDataLength(DataContext->pRecord);
     BitmapDataSize = min(BitmapDataSize, 0xffffffff);
     ASSERT((BitmapDataSize * 8) >= DeviceExt->NtfsInfo.ClusterCount);
     BitmapData = ExAllocatePoolWithTag(NonPagedPool, ROUND_UP(BitmapDataSize, DeviceExt->NtfsInfo.BytesPerSector), TAG_NTFS);

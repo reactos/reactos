@@ -480,7 +480,7 @@ typedef struct _NTFS_ATTR_CONTEXT
     ULONGLONG            CacheRunCurrentOffset;
     LARGE_MCB           DataRunsMCB;
     ULONGLONG           FileMFTIndex;
-    NTFS_ATTR_RECORD    Record;
+    PNTFS_ATTR_RECORD    pRecord;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
 
 #define FCB_CACHE_INITIALIZED   0x0001
@@ -959,7 +959,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
 ULONGLONG
 AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord);
 
-VOID
+NTSTATUS
 InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
                                    PFILE_RECORD_HEADER FileRecord,
                                    ULONG AttrOffset,

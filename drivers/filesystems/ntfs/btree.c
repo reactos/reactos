@@ -41,7 +41,7 @@ PrintAllVCNs(PDEVICE_EXTENSION Vcb,
 {
     ULONGLONG CurrentOffset = 0;
     PINDEX_BUFFER CurrentNode, Buffer;
-    ULONGLONG BufferSize = AttributeDataLength(&IndexAllocationContext->Record);
+    ULONGLONG BufferSize = AttributeDataLength(IndexAllocationContext->pRecord);
     ULONG BytesRead;
     ULONGLONG i;
     int Count = 0;
@@ -393,7 +393,7 @@ CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
     Tree->RootNode = RootNode;
 
     // Make sure we won't try reading past the attribute-end
-    if (FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header) + IndexRoot->Header.TotalSizeOfEntries > IndexRootContext->Record.Resident.ValueLength)
+    if (FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header) + IndexRoot->Header.TotalSizeOfEntries > IndexRootContext->pRecord->Resident.ValueLength)
     {
         DPRINT1("Filesystem corruption detected!\n");
         DestroyBTree(Tree);
