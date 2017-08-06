@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kompatibilität"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Falls dieses Programm Probleme verursacht, wählen Sie einen Kompatibilitätsmodus, unter dem das Programm möglicherweise korrekt funktioniert.\nPlease note that this is a work in progress.", -1, 7, 7, 210, 31
+    LTEXT "Falls dieses Programm Probleme verursacht, wählen Sie einen Kompatibilitätsmodus, unter dem das Programm möglicherweise korrekt funktioniert.\nBitte beachten Sie dass sich diese Funktion aktuell in Entwicklung befindet.", -1, 7, 7, 210, 31
     GROUPBOX "Kompatibilitätsmodus", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Programm im Kompatibilitätsmodus ausführen für:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -33,8 +33,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TABTITLE "Compatibility"
-    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
-    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
-    IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"
+    IDS_TABTITLE "Kompatibilität"
+    IDS_FAILED_NETWORK "Kompatibilitätsmodi können auf diesem Programm nicht angewendet werden, da es sich auf einem Netzlaufwerk befindet."
+    IDS_FAILED_PROTECTED "Kompatibilitätsmodi können auf diesem Programm nicht angewendet werden, da es Teil von ReactOS ist."
+    IDS_YOU_DID_NOT_ADD "Sie haben den Modus nicht hinzugefügt, möchten Sie ihn jetzt hinzufügen?"
 END
