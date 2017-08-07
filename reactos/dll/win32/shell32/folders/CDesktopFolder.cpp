@@ -85,6 +85,44 @@ class CDesktopFolderEnum :
 //    CComPtr                                fDesktopEnumerator;
 //    CComPtr                                fCommonDesktopEnumerator;
     public:
+
+        void AddItemsFromClassicStartMenuKey(HKEY hKeyRoot)
+        {
+            DWORD dwResult;
+            HKEY hkey;
+            DWORD j = 0, dwVal, Val, dwType, dwIID;
+            LONG r;
+            WCHAR iid[50];
+            LPITEMIDLIST pidl;
+
+            dwResult = RegOpenKeyExW(hKeyRoot, ClassicStartMenuW, 0, KEY_READ, &hkey);
+            if (dwResult != ERROR_SUCCESS)
+                return;
+
+            while(1)
+            {
+                dwVal = sizeof(Val);
+                dwIID = sizeof(iid) / sizeof(WCHAR);
+
+                r = RegEnumValueW(hkey, j++, iid, &dwIID, NULL, &dwType, (LPBYTE)&Val, &dwVal);
+                if (r != ERROR_SUCCESS)
+                    break;
+
+                if (Val == 0 && dwType == REG_DWORD)
+                {
+                    pidl = _ILCreateGuidFromStrW(iid);
+                    if (pidl != NULL)
+                    {
+                        if (!HasItemWithCLSID(pidl))
+                            AddToEnumList(pidl);
+                        else
+                            SHFree(pidl);
+                    }
+                }
+            }
+            RegCloseKey(hkey);
+        }
+
         HRESULT WINAPI Initialize(DWORD dwFlags,IEnumIDList * pRegEnumerator, IEnumIDList *pDesktopEnumerator, IEnumIDList *pCommonDesktopEnumerator)
         {
             BOOL ret = TRUE;
@@ -112,6 +150,8 @@ class CDesktopFolderEnum :
                             SHFree(pidl);
                     }
                 }
+                AddItemsFromClassicStartMenuKey(HKEY_LOCAL_MACHINE);
+                AddItemsFromClassicStartMenuKey(HKEY_CURRENT_USER);
             }
 
             /* Enumerate the items in the two fs folders */
