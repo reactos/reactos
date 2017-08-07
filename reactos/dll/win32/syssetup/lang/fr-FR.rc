@@ -145,7 +145,7 @@ BEGIN
     IDS_PROCESSTITLE "Enregistrement des composants"
     IDS_PROCESSSUBTITLE "Veuillez patienter..."
     IDS_THEMESELECTIONTITLE "Apparence"
-    IDS_THEMESELECTIONSUBTITLE "Sélectionnez le thème que vous préfèrez"
+    IDS_THEMESELECTIONSUBTITLE "Sélectionnez le thème que vous préférez"
 END
 
 STRINGTABLE
