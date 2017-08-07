@@ -410,7 +410,7 @@ BOOL BUTTON_DrawIml(HDC hDC, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCa
     {
         left = prc->left + pimlData->margin.left;
         top = prc->top + (prc->bottom - prc->top - ImageSize.cy) / 2;
-        prc->left += left + pimlData->margin.right + ImageSize.cx;
+        prc->left = left + pimlData->margin.right + ImageSize.cx;
     }
     else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
     {
