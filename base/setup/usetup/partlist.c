@@ -292,21 +292,21 @@ PrintPartitionData(
     {
         PartSize.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
 #if 0
-        if (PartSize.QuadPart >= 10737418240) /* 10 GB */
+        if (PartSize.QuadPart >= 10 * GB) /* 10 GB */
         {
-            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, 1073741824);
+            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, GB);
             Unit = MUIGetString(STRING_GB);
         }
         else
 #endif
-        if (PartSize.QuadPart >= 10485760) /* 10 MB */
+        if (PartSize.QuadPart >= 10 * MB) /* 10 MB */
         {
-            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, 1048576);
+            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, MB);
             Unit = MUIGetString(STRING_MB);
         }
         else
         {
-            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, 1024);
+            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, KB);
             Unit = MUIGetString(STRING_KB);
         }
 
@@ -335,21 +335,21 @@ PrintPartitionData(
 
         PartSize.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
 #if 0
-        if (PartSize.QuadPart >= 10737418240) /* 10 GB */
+        if (PartSize.QuadPart >= 10 * GB) /* 10 GB */
         {
-            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, 1073741824);
+            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, GB);
             Unit = MUIGetString(STRING_GB);
         }
         else
 #endif
-        if (PartSize.QuadPart >= 10485760) /* 10 MB */
+        if (PartSize.QuadPart >= 10 * MB) /* 10 MB */
         {
-            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, 1048576);
+            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, MB);
             Unit = MUIGetString(STRING_MB);
         }
         else
         {
-            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, 1024);
+            PartSize.QuadPart = RoundingDivide(PartSize.QuadPart, KB);
             Unit = MUIGetString(STRING_KB);
         }
 
@@ -442,14 +442,14 @@ PrintDiskData(
     coPos.Y = ListUi->Top + 1 + ListUi->Line;
 
     DiskSize.QuadPart = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    if (DiskSize.QuadPart >= 10737418240) /* 10 GB */
+    if (DiskSize.QuadPart >= 10 * GB) /* 10 GB */
     {
-        DiskSize.QuadPart = RoundingDivide(DiskSize.QuadPart, 1073741824);
+        DiskSize.QuadPart = RoundingDivide(DiskSize.QuadPart, GB);
         Unit = MUIGetString(STRING_GB);
     }
     else
     {
-        DiskSize.QuadPart = RoundingDivide(DiskSize.QuadPart, 1048576);
+        DiskSize.QuadPart = RoundingDivide(DiskSize.QuadPart, MB);
         if (DiskSize.QuadPart == 0)
             DiskSize.QuadPart = 1;
         Unit = MUIGetString(STRING_MB);

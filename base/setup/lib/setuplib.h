@@ -7,6 +7,8 @@
 
 #pragma once
 
+/* INCLUDES *****************************************************************/
+
 /* Needed PSDK headers when using this library */
 #if 0
 
@@ -36,5 +38,15 @@ extern HANDLE ProcessHeap;
 #include "osdetect.h"
 #include "regutil.h"
 #include "registry.h"
+
+
+/* DEFINES ******************************************************************/
+
+#define KB ((ULONGLONG)1024)
+#define MB (KB*KB)
+#define GB (KB*KB*KB)
+// #define TB (KB*KB*KB*KB)
+// #define PB (KB*KB*KB*KB*KB)
+
 
 /* EOF */
