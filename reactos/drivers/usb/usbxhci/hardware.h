@@ -199,7 +199,7 @@ typedef volatile union _XHCI_CONFIGURE {
 } XHCI_CONFIGURE;
 C_ASSERT(sizeof(XHCI_CONFIGURE) == sizeof(ULONG));
 
-#define PORT_STATUS_MASK    0x4F01FFE5  // 0100 1111 0000 0001 1111 1111 1110 0101 // RW 1, RW1C/RW1S 0, RO 1
+#define PORT_STATUS_MASK    0x4F01FFE9  // 0100 1111 0000 0001 1111 1111 1110 1001 // RW 1, RW1C/RW1S 0, RO 1
 typedef volatile union _XHCI_PORT_STATUS_CONTROL {
   struct {
     ULONG CurrentConnectStatus                  : 1;

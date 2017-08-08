@@ -559,14 +559,14 @@ XHCI_InterruptService(IN PVOID xhciExtension)
     erstdp.DequeueERSTIndex =0;
     XHCI_Write64bitReg (RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
     
-    PXHCI_HC_RESOURCES HcResourcesVA;
+    /*PXHCI_HC_RESOURCES HcResourcesVA;
     XHCI_TRB eventtrb;
     HcResourcesVA = XhciExtension->HcResourcesVA;
     eventtrb =  HcResourcesVA -> EventRing.firstSeg.XhciTrb[0];
     DPRINT("XHCI_ControllerWorkTest: eventtrb word0    - %p\n", eventtrb.EventTRB.Word0);
     DPRINT("XHCI_ControllerWorkTest: eventtrb word1    - %p\n", eventtrb.EventTRB.Word1);
     DPRINT("XHCI_ControllerWorkTest: eventtrb word2    - %p\n", eventtrb.EventTRB.Word2);
-    DPRINT("XHCI_ControllerWorkTest: eventtrb word3    - %p\n", eventtrb.EventTRB.Word3);
+    DPRINT("XHCI_ControllerWorkTest: eventtrb word3    - %p\n", eventtrb.EventTRB.Word3);*/
     return TRUE;
 }
 
@@ -735,7 +735,7 @@ VOID
 NTAPI
 XHCI_PollController(IN PVOID xhciExtension)
 {
-    DPRINT1("XHCI_PollController: function initiated\n");
+    //DPRINT1("XHCI_PollController: function initiated\n");
     PXHCI_EXTENSION XhciExtension;
     PULONG OperationalRegs;
     //ULONG Port;
