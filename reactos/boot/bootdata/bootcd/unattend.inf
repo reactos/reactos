@@ -54,6 +54,8 @@ LocaleID = 409
 ;
 ; [GuiRunOnce]
 ; %SystemRoot%\system32\cmd.exe
+; Enable the next line (+ the GuiRunOnce section) to enable the lautus theme
+; "rundll32.exe shell32.dll,Control_RunDLL desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:%SYSTEMROOT%\Resources\themes\lautus\lautus.msstyles"
 
 
 ; enable this section to change resolution / bpp
