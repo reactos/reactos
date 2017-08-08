@@ -1391,9 +1391,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Posix",0x000
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Required",0x00010000,"Debug","Windows"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe ObjectDirectory=\Windows SharedSection=1024,12288,512 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=winsrv:UserServerDllInitialization,3 ServerDll=winsrv:ConServerDllInitialization,2 ProfileControl=Off MaxRequestThreads=16"
 
-; App Compat -- Disable on ReactOS
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatibility","DisableAppCompat",0x00010003, 0x00000001
-
 ; This is an empty App Compat cache
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache","AppCompatCache", 0x00000001, \
   fe,0f,dc,ba,00,00,00,00
@@ -1519,7 +1516,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Type",0x00010001,0x00000001
 ; Multiple UNC provider driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"Network"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ImagePath",0x00020000,"system32\drivers\mup.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Type",0x00010001,0x00000002
@@ -2203,5 +2200,59 @@ US_DVORAK_RIGHT = "US Dvorak for right hand"
 US_INTERNATIONAL = "US International"
 UZBEK_CYRILLIC = "Uzbek (Cyrillic)"
 VIETNAMESE = "Vietnamese"
+
+
+; LANG_RUSSIAN SUBLANG_NEUTRAL
+[Strings.0019]
+
+; Services names and descriptions
+AUDIO_SERVICE="Звук и аудио"
+AUDIO_SERVICE_DESCRIPTION="Обеспечивает звуковыми устройствами программы."
+
+BITS_SERVICE="Фоновая интеллектуальная служба передачи (BITS)"
+BITS_SERVICE_DESCRIPTION="Обеспечивает передачу данных между клиентами и серверами в фоновом режиме с использованием пропускной способности простаивающей сети."
+
+EVENTLOG_SERVICE="Журнал событий"
+EVENTLOG_SERVICE_DESCRIPTION="Регистрирует события или сообщения, отправленные операционной системой в базе данных, доступной через средство просмотра журнала событий."
+
+MSISERVER_SERVICE="Установщик ReactOS"
+MSISERVER_SERVICE_DESCRIPTION="Управляет установкой, изменением и удалением программ, упакованных в MSI (установщик Windows)."
+
+NETLOGON_SERVICE="Сетевой вход в систему"
+NETLOGON_SERVICE_DESCRIPTION="Устанавливает безопасный канал связи с контроллером домена для проверки его подлинности."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Обнаруживает изменения оборудования и по возможности устанавливает необходимое программное обеспечение."
+
+RPCSS_SERVICE="Удаленный вызов процедур (RPC)"
+RPCSS_SERVICE_DESCRIPTION="Подсистема для вызова удаленных процедур на локальной машине."
+
+SCHEDULE_SERVICE="Планировщик заданий"
+SCHEDULE_SERVICE_DESCRIPTION="Позволяет запускать программы в определенное время."
+
+SERVER_SERVICE="Сервер"
+SERVER_SERVICE_DESCRIPTION="Поддержка совместного использования файлов, принтеров и ресурсов в сети."
+
+SPOOLER_SERVICE="Диспетчер очереди печати"
+SPOOLER_SERVICE_DESCRIPTION="Загружает файлы в память для последующей печати."
+
+TCPSVCS_SERVICE="Простые службы TCP/IP"
+TCPSVCS_SERVICE_DECRIPTION="Поддержка следующих служб TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="ReactOS Telnet Service"
+TELNETD_SERVICE_DESCRIPTION="ReactOS Telnet Service"
+
+THEMES_SERVICE="Темы"
+THEMES_SERVICE_DESCRIPTION="Поддержка тем оформления."
+
+WINMGMT_SERVICE="Инструментарий управления ReactOS"
+WINMGMT_SERVICE_DESCRIPTION="Предоставляет общий интерфейс для доступа к информации об управлении операционной системой."
+
+WLANSVC_SERVICE="Беспроводная локальная сеть (WLAN)"
+WLANSVC_SERVICE_DESCRIPTION="Обеспечивает поддержку беспроводной сети."
+
+WORKSTATION_SERVICE="Рабочая станция"
+WORKSTATION_SERVICE_DESCRIPTION="Обеспечивает поддержку сетевых подключений и связь."
+
 
 ; EOF
