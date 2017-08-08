@@ -18,12 +18,12 @@
 
 static HANDLE hLog = NULL;
 
-typedef struct
+struct ERF
 {
     int erfOper;
     int erfType;
     BOOL fError;
-} ERF, *PERF;
+};
 
 struct FILELIST
 {
@@ -48,9 +48,7 @@ struct SESSION
 typedef HRESULT(WINAPI *fnExtract)(SESSION *dest, LPCSTR szCabName);
 fnExtract pfnExtract;
 
-
-int
-GetWindowWidth(HWND hwnd)
+INT GetWindowWidth(HWND hwnd)
 {
     RECT Rect;
 
@@ -58,8 +56,7 @@ GetWindowWidth(HWND hwnd)
     return (Rect.right - Rect.left);
 }
 
-int
-GetWindowHeight(HWND hwnd)
+INT GetWindowHeight(HWND hwnd)
 {
     RECT Rect;
 
@@ -67,8 +64,7 @@ GetWindowHeight(HWND hwnd)
     return (Rect.bottom - Rect.top);
 }
 
-int
-GetClientWindowWidth(HWND hwnd)
+INT GetClientWindowWidth(HWND hwnd)
 {
     RECT Rect;
 
@@ -76,8 +72,7 @@ GetClientWindowWidth(HWND hwnd)
     return (Rect.right - Rect.left);
 }
 
-int
-GetClientWindowHeight(HWND hwnd)
+INT GetClientWindowHeight(HWND hwnd)
 {
     RECT Rect;
 
@@ -85,33 +80,33 @@ GetClientWindowHeight(HWND hwnd)
     return (Rect.bottom - Rect.top);
 }
 
-VOID
-CopyTextToClipboard(LPCWSTR lpszText)
+VOID CopyTextToClipboard(LPCWSTR lpszText)
 {
-    HRESULT hr;
-
-    if (OpenClipboard(NULL))
+    if (!OpenClipboard(NULL))
     {
-        HGLOBAL ClipBuffer;
-        WCHAR *Buffer;
-        DWORD cchBuffer;
-
-        EmptyClipboard();
-        cchBuffer = wcslen(lpszText) + 1;
-        ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
-        Buffer = (PWCHAR) GlobalLock(ClipBuffer);
-        hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
-        GlobalUnlock(ClipBuffer);
-
-        if (SUCCEEDED(hr))
-            SetClipboardData(CF_UNICODETEXT, ClipBuffer);
-
-        CloseClipboard();
+        return;
     }
+
+    HRESULT hr;
+    HGLOBAL ClipBuffer;
+    LPWSTR Buffer;
+    DWORD cchBuffer;
+
+    EmptyClipboard();
+    cchBuffer = wcslen(lpszText) + 1;
+    ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
+
+    Buffer = (PWCHAR) GlobalLock(ClipBuffer);
+    hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
+    GlobalUnlock(ClipBuffer);
+
+    if (SUCCEEDED(hr))
+        SetClipboardData(CF_UNICODETEXT, ClipBuffer);
+
+    CloseClipboard();
 }
 
-VOID
-SetWelcomeText(VOID)
+VOID SetWelcomeText()
 {
     ATL::CStringW szText;
 
@@ -125,12 +120,11 @@ SetWelcomeText(VOID)
     InsertRichEditText(szText, CFM_LINK);
 }
 
-VOID
-ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
+VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
 {
     HMENU hMenu = NULL;
     HMENU hPopupMenu;
-    MENUITEMINFO mii;
+    MENUITEMINFO ItemInfo;
     POINT pt;
 
     if (MenuID)
@@ -139,15 +133,20 @@ ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
         hPopupMenu = GetSubMenu(hMenu, 0);
     }
     else
+    {
         hPopupMenu = GetMenu(hwnd);
+    }
 
-    ZeroMemory(&mii, sizeof(mii));
-    mii.cbSize = sizeof(mii);
-    mii.fMask = MIIM_STATE;
-    GetMenuItemInfoW(hPopupMenu, DefaultItem, FALSE, &mii);
+    ZeroMemory(&ItemInfo, sizeof(ItemInfo));
+    ItemInfo.cbSize = sizeof(ItemInfo);
+    ItemInfo.fMask = MIIM_STATE;
 
-    if (!(mii.fState & MFS_GRAYED))
+    GetMenuItemInfoW(hPopupMenu, DefaultItem, FALSE, &ItemInfo);
+
+    if (!(ItemInfo.fState & MFS_GRAYED))
+    {
         SetMenuDefaultItem(hPopupMenu, DefaultItem, FALSE);
+    }
 
     GetCursorPos(&pt);
 
@@ -155,18 +154,17 @@ ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
     TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hMainWnd, NULL);
 
     if (hMenu)
+    {
         DestroyMenu(hMenu);
+    }
 }
 
-BOOL
-StartProcess(ATL::CStringW &Path, BOOL Wait)
-{
-    BOOL result = StartProcess(const_cast<LPWSTR>(Path.GetString()), Wait);
-    return result;
+BOOL StartProcess(ATL::CStringW &Path, BOOL Wait)
+{ 
+    return StartProcess(const_cast<LPWSTR>(Path.GetString()), Wait);;
 }
 
-BOOL
-StartProcess(LPWSTR lpPath, BOOL Wait)
+BOOL StartProcess(LPWSTR lpPath, BOOL Wait)
 {
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
@@ -184,7 +182,11 @@ StartProcess(LPWSTR lpPath, BOOL Wait)
     }
 
     CloseHandle(pi.hThread);
-    if (Wait) EnableWindow(hMainWnd, FALSE);
+
+    if (Wait)
+    {
+        EnableWindow(hMainWnd, FALSE);
+    }
 
     while (Wait)
     {
@@ -194,7 +196,7 @@ StartProcess(LPWSTR lpPath, BOOL Wait)
             while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
             {
                 TranslateMessage(&msg);
-                DispatchMessage(&msg);
+                DispatchMessageW(&msg);
             }
         }
         else
@@ -216,8 +218,7 @@ StartProcess(LPWSTR lpPath, BOOL Wait)
     return TRUE;
 }
 
-BOOL
-GetStorageDirectory(ATL::CStringW& Directory)
+BOOL GetStorageDirectory(ATL::CStringW& Directory)
 {
     if (!SHGetSpecialFolderPathW(NULL, Directory.GetBuffer(MAX_PATH), CSIDL_LOCAL_APPDATA, TRUE))
     {
@@ -231,14 +232,12 @@ GetStorageDirectory(ATL::CStringW& Directory)
     return (CreateDirectoryW(Directory.GetString(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS);
 }
 
-BOOL
-ExtractFilesFromCab(const ATL::CStringW &CabName, const ATL::CStringW &OutputPath)
+BOOL ExtractFilesFromCab(const ATL::CStringW &CabName, const ATL::CStringW &OutputPath)
 {
     return ExtractFilesFromCab(CabName.GetString(), OutputPath.GetString());
 }
 
-BOOL
-ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
+BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
 {
     HINSTANCE hCabinetDll;
     CHAR szCabName[MAX_PATH];
@@ -275,92 +274,67 @@ ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
     return FALSE;
 }
 
-VOID
-InitLogs(VOID)
+VOID InitLogs()
 {
-    WCHAR szBuf[MAX_PATH] = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager";
+    if (!SettingsInfo.bLogEnabled)
+    {
+        return;
+    }
+
     WCHAR szPath[MAX_PATH];
     DWORD dwCategoryNum = 1;
     DWORD dwDisp, dwData;
-    HKEY hKey;
+    ATL::CRegKey key;
 
-    if (!SettingsInfo.bLogEnabled) return;
-
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                        szBuf, 0, NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_WRITE, NULL, &hKey, &dwDisp) != ERROR_SUCCESS)
+    if (key.Create(HKEY_LOCAL_MACHINE,
+                   L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager",
+                   REG_NONE, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &dwDisp) != ERROR_SUCCESS)
     {
         return;
     }
 
     if (!GetModuleFileNameW(NULL, szPath, _countof(szPath)))
-        return;
-
-    if (RegSetValueExW(hKey,
-                       L"EventMessageFile",
-                       0,
-                       REG_EXPAND_SZ,
-                       (LPBYTE) szPath,
-                       (DWORD) (wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey);
         return;
     }
 
     dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE |
         EVENTLOG_INFORMATION_TYPE;
 
-    if (RegSetValueExW(hKey,
-                       L"TypesSupported",
-                       0,
-                       REG_DWORD,
-                       (LPBYTE) &dwData,
-                       sizeof(DWORD)) != ERROR_SUCCESS)
+    if ((key.SetStringValue(L"EventMessageFile",
+                            szPath,
+                            REG_EXPAND_SZ) == ERROR_SUCCESS)
+        && (key.SetStringValue(L"CategoryMessageFile",
+                               szPath,
+                               REG_EXPAND_SZ) == ERROR_SUCCESS)
+        && (key.SetDWORDValue(L"TypesSupported",
+                              dwData) == ERROR_SUCCESS)
+        && (key.SetDWORDValue(L"CategoryCount",
+                              dwCategoryNum) == ERROR_SUCCESS))
+
     {
-        RegCloseKey(hKey);
-        return;
+        hLog = RegisterEventSourceW(NULL, L"ReactOS Application Manager");
     }
 
-    if (RegSetValueExW(hKey,
-                       L"CategoryMessageFile",
-                       0,
-                       REG_EXPAND_SZ,
-                       (LPBYTE) szPath,
-                       (DWORD) (wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKey);
-        return;
-    }
-
-    if (RegSetValueExW(hKey,
-                       L"CategoryCount",
-                       0,
-                       REG_DWORD,
-                       (LPBYTE) &dwCategoryNum,
-                       sizeof(DWORD)) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKey);
-        return;
-    }
-
-    RegCloseKey(hKey);
-
-    hLog = RegisterEventSourceW(NULL, L"ReactOS Application Manager");
+    key.Close();
 }
 
 
-VOID
-FreeLogs(VOID)
+VOID FreeLogs()
 {
-    if (hLog) DeregisterEventSource(hLog);
+    if (hLog)
+    {
+        DeregisterEventSource(hLog);
+    }
 }
 
 
-BOOL
-WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
+BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
 {
-    if (!SettingsInfo.bLogEnabled) return TRUE;
+    if (!SettingsInfo.bLogEnabled)
+    {
+        return TRUE;
+    }
 
     if (!ReportEventW(hLog, wType, 0, dwEventID,
                       NULL, 1, 0, &lpMsg, NULL))
@@ -371,54 +345,51 @@ WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
     return TRUE;
 }
 
-BOOL
-GetInstalledVersion_WowUser(_Out_opt_ ATL::CStringW* szVersionResult,
-                            _In_z_ const ATL::CStringW& RegName,
-                            _In_ BOOL IsUserKey,
-                            _In_ REGSAM keyWow)
+BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
+                                 const ATL::CStringW& RegName,
+                                 BOOL IsUserKey,
+                                 REGSAM keyWow)
 {
-    HKEY hKey;
     BOOL bHasSucceded = FALSE;
+    ATL::CRegKey key;
     ATL::CStringW szVersion;
     ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
 
-    if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-                      szPath.GetString(), 0, keyWow | KEY_READ,
-                      &hKey) == ERROR_SUCCESS)
+    if (key.Open(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
+                 szPath.GetString(),
+                 keyWow | KEY_READ) != ERROR_SUCCESS)
     {
-        if (szVersionResult != NULL)
-        {
-            DWORD dwSize = MAX_PATH * sizeof(WCHAR);
-            DWORD dwType = REG_SZ;
-            if (RegQueryValueExW(hKey,
-                                 L"DisplayVersion",
-                                 NULL,
-                                 &dwType,
-                                 (LPBYTE) szVersion.GetBuffer(MAX_PATH),
+        return FALSE;
+    }
+
+    if (szVersionResult != NULL)
+    {
+        ULONG dwSize = MAX_PATH * sizeof(WCHAR);
+
+        if (key.QueryStringValue(L"DisplayVersion",
+                                 szVersion.GetBuffer(MAX_PATH),
                                  &dwSize) == ERROR_SUCCESS)
-            {
-                szVersion.ReleaseBuffer();
-                *szVersionResult = szVersion;
-                bHasSucceded = TRUE;
-            }
-            else
-            {
-                szVersion.ReleaseBuffer();
-            }
+        {
+            szVersion.ReleaseBuffer();
+            *szVersionResult = szVersion;
+            bHasSucceded = TRUE;
         }
         else
         {
-            bHasSucceded = TRUE;
             szVersion.ReleaseBuffer();
         }
-
     }
+    else
+    {
+        bHasSucceded = TRUE;
+        szVersion.ReleaseBuffer();
+    }
+    key.Close();
 
-    RegCloseKey(hKey);
     return bHasSucceded;
 }
 
-BOOL GetInstalledVersion(ATL::CStringW * pszVersion, const ATL::CStringW & szRegName)
+BOOL GetInstalledVersion(ATL::CStringW *pszVersion, const ATL::CStringW &szRegName)
 {
     return (!szRegName.IsEmpty()
             && (GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_32KEY)

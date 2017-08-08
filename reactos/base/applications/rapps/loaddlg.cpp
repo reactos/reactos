@@ -43,6 +43,7 @@
 
 #include "rosui.h"
 #include "dialogs.h"
+#include "misc.h"
 
 #ifdef USE_CERT_PINNING
     #define CERT_ISSUER_INFO "BE\r\nGlobalSign nv-sa\r\nGlobalSign Domain Validation CA - SHA256 - G2"
@@ -336,8 +337,7 @@ static BOOL CertIsValid(HINTERNET hInternet, LPWSTR lpszHostName)
 }
 #endif
 
-inline VOID
-MessageBox_LoadString(HWND hMainWnd, INT StringID)
+inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
 {
     ATL::CString szMsgText;
     if (szMsgText.LoadStringW(hInst, StringID))

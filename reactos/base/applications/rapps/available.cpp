@@ -288,7 +288,10 @@ BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnu
     if (hFind == INVALID_HANDLE_VALUE)
     {
         if (GetFileAttributesW(m_szCabPath) == INVALID_FILE_ATTRIBUTES)
+        {
             CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
+        }
+
 
         ExtractFilesFromCab(m_szCabPath, m_szAppsPath);
         hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);

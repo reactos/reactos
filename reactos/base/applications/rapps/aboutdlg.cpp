@@ -4,32 +4,21 @@
  * FILE:            base/applications/rapps/aboutdlg.cpp
  * PURPOSE:         About Dialog
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
+ *                  Alexander Shaposhikov (chaez.san@gmail.com)
  */
 #include "defines.h"
 
-static
-INT_PTR CALLBACK
-AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    switch (Msg)
+    if (Msg == WM_COMMAND && LOWORD(wParam) == IDOK)
     {
-        case WM_COMMAND:
-        {
-            switch (LOWORD(wParam))
-            {
-                case IDOK:
-                    EndDialog(hDlg, LOWORD(wParam));
-                    break;
-            }
-        }
-        break;
+        return EndDialog(hDlg, LOWORD(wParam));
     }
 
     return FALSE;
 }
 
-VOID
-ShowAboutDialog(VOID)
+VOID ShowAboutDialog()
 {
     DialogBoxW(hInst,
               MAKEINTRESOURCEW(IDD_ABOUT_DIALOG),

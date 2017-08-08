@@ -50,10 +50,10 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
     }
 }
 
-VOID
-FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
+VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 {
     ATL::CStringW szDownloadDir;
+
     pSettingsInfo->bSaveWndPos = TRUE;
     pSettingsInfo->bUpdateAtStart = FALSE;
     pSettingsInfo->bLogEnabled = TRUE;
@@ -67,7 +67,9 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
         }
     }
     else
+    {
         szDownloadDir.ReleaseBuffer();
+    }
 
     szDownloadDir += L"\\RAPPS Downloads";
     ATL::CStringW::CopyChars(pSettingsInfo->szDownloadDir, 
@@ -87,32 +89,26 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->szNoProxyFor[0] = UNICODE_NULL;
 }
 
-static BOOL
-LoadSettings(VOID)
+static BOOL LoadSettings()
 {
-    HKEY hKey;
+    ATL::CRegKey RegKey;
     DWORD dwSize;
-
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    BOOL bResult = FALSE;
+    if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", KEY_READ) == ERROR_SUCCESS)
     {
         dwSize = sizeof(SettingsInfo);
-        if (RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE) &SettingsInfo, &dwSize) == ERROR_SUCCESS)
-        {
-            RegCloseKey(hKey);
-            return TRUE;
-        }
+        bResult = (RegKey.QueryBinaryValue(L"Settings", (PVOID) &SettingsInfo, &dwSize) == ERROR_SUCCESS);
 
-        RegCloseKey(hKey);
+        RegKey.Close();
     }
 
-    return FALSE;
+    return bResult;
 }
 
-VOID
-SaveSettings(HWND hwnd)
+VOID SaveSettings(HWND hwnd)
 {
     WINDOWPLACEMENT wp;
-    HKEY hKey;
+    ATL::CRegKey RegKey;
 
     if (SettingsInfo.bSaveWndPos)
     {
@@ -123,35 +119,49 @@ SaveSettings(HWND hwnd)
         SettingsInfo.Top = wp.rcNormalPosition.top;
         SettingsInfo.Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
         SettingsInfo.Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
-        SettingsInfo.Maximized = (wp.showCmd == SW_MAXIMIZE || (wp.showCmd == SW_SHOWMINIMIZED && (wp.flags & WPF_RESTORETOMAXIMIZED)));
+        SettingsInfo.Maximized = (wp.showCmd == SW_MAXIMIZE 
+                                  || (wp.showCmd == SW_SHOWMINIMIZED 
+                                      && (wp.flags & WPF_RESTORETOMAXIMIZED)));
     }
 
-    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, NULL,
-                        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+    if (RegKey.Create(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", NULL,
+                        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) == ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey, L"Settings", 0, REG_BINARY, (LPBYTE) &SettingsInfo, sizeof(SettingsInfo));
-        RegCloseKey(hKey);
+        RegKey.SetBinaryValue(L"Settings", (const PVOID) &SettingsInfo, sizeof(SettingsInfo));
+        RegKey.Close();
     }
 }
 
-int WINAPI
-wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
+
+#define CMD_KEY_SETUP L"//SETUP"
+
+VOID CmdParser(LPWSTR lpCmdLine)
 {
-    WCHAR szWindowClass[] = L"ROSAPPMGR";
+    INT argc;
+    LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);
+    if (!argv || argc < 2)
+    {
+        return;
+    }
+    
+    if (!StrCmpW(argv[0], CMD_KEY_SETUP))
+    {
+        //TODO: call cmd app installation
+    }
+}
+
+INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
+{
+    LPCWSTR szWindowClass = L"ROSAPPMGR";
     HANDLE hMutex = NULL;
     HACCEL KeyBrd;
     MSG Msg;
 
     InitializeAtlModule(hInstance, TRUE);
 
-    switch (GetUserDefaultUILanguage())
+    if (GetUserDefaultUILanguage() == MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT))
     {
-    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
         SetProcessDefaultLayout(LAYOUT_RTL);
-        break;
-
-    default:
-        break;
     }
 
     hInst = hInstance;
@@ -178,30 +188,30 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     InitCommonControls();
 
     hMainWnd = CreateMainWindow();
-    if (!hMainWnd) goto Exit;
-
-    /* Maximize it if we must */
-    ShowWindow(hMainWnd, (SettingsInfo.bSaveWndPos && SettingsInfo.Maximized ? SW_MAXIMIZE : nShowCmd));
-    UpdateWindow(hMainWnd);
-
-    //TODO: get around the ugliness
-    if (SettingsInfo.bUpdateAtStart)
-        GetAvailableApps()->UpdateAppsDB();
-
-    /* Load the menu hotkeys */
-    KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
-
-    /* Message Loop */
-    while (GetMessageW(&Msg, NULL, 0, 0))
+    if (hMainWnd)
     {
-        if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
+        /* Maximize it if we must */
+        ShowWindow(hMainWnd, (SettingsInfo.bSaveWndPos && SettingsInfo.Maximized ? SW_MAXIMIZE : nShowCmd));
+        UpdateWindow(hMainWnd);
+
+        //TODO: get around the ugliness
+        if (SettingsInfo.bUpdateAtStart)
+            GetAvailableApps()->UpdateAppsDB();
+
+        /* Load the menu hotkeys */
+        KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
+
+        /* Message Loop */
+        while (GetMessageW(&Msg, NULL, 0, 0))
         {
-            TranslateMessage(&Msg);
-            DispatchMessageW(&Msg);
+            if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
+            {
+                TranslateMessage(&Msg);
+                DispatchMessageW(&Msg);
+            }
         }
     }
 
-Exit:
     if (hMutex)
         CloseHandle(hMutex);
 

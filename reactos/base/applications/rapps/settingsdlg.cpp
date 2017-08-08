@@ -19,7 +19,7 @@ BOOL
 ChooseFolder(HWND hwnd)
 {
     BOOL bRet = FALSE;
-    BROWSEINFO bi;
+    BROWSEINFOW bi;
     ATL::CStringW szBuf;
 
     szBuf.LoadStringW(hInst, IDS_CHOOSE_FOLDER_TEXT);
@@ -53,8 +53,7 @@ ChooseFolder(HWND hwnd)
     return bRet;
 }
 
-static VOID
-InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
+static VOID InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
 {
     SendDlgItemMessageW(hDlg, IDC_SAVE_WINDOW_POS, BM_SETCHECK, Info->bSaveWndPos, 0);
     SendDlgItemMessageW(hDlg, IDC_UPDATE_AVLIST, BM_SETCHECK, Info->bUpdateAtStart, 0);
@@ -76,9 +75,7 @@ InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
     SetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), Info->szNoProxyFor);
 }
 
-static
-INT_PTR CALLBACK
-SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch (Msg)
     {
@@ -208,8 +205,7 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-VOID
-CreateSettingsDlg(HWND hwnd)
+VOID CreateSettingsDlg(HWND hwnd)
 {
     DialogBoxW(hInst,
                MAKEINTRESOURCEW(IDD_SETTINGS_DIALOG),
