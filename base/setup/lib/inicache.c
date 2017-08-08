@@ -1055,7 +1055,7 @@ IniCacheSave(
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
-                               0,
+                               OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
