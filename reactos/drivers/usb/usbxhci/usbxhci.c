@@ -184,6 +184,7 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
                 
     HcResourcesVA = (PXHCI_HC_RESOURCES)resourcesStartVA;
     ASSERT((ULONG_PTR)HcResourcesVA % PAGE_SIZE == 0);
+    XhciExtension->HcResourcesVA = HcResourcesVA;
     HcResourcesPA.QuadPart = (ULONG_PTR)resourcesStartPA;
     BaseIoAdress = XhciExtension->BaseIoAdress;
     OperationalRegs = XhciExtension->OperationalRegs;
@@ -341,13 +342,8 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
 
         if (LastTime.QuadPart >= CurrentTime.QuadPart)
         {
-            if (Command.HCReset == 1)
-            {
-                DPRINT1("XHCI_InitializeHardware: Software Reset failed!\n");
-                return 7;
-            }
-
-            break;
+            DPRINT1("XHCI_InitializeHardware: Software Reset failed!\n");
+            return 7;
         }
     }
     DPRINT("XHCI_InitializeHardware: Reset - OK\n");
@@ -360,6 +356,8 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
     Config.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_CONFIG);
     ASSERT(Command.RunStop==0); //required before setting max device slots enabled.
     Config.MaxDeviceSlotsEnabled = 1; // max possible value is number of slots HCSPARAMS1
+    Config.U3EntryEnable = 0;
+    Config.ConfigurationInfoEnable = 0;
     WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CONFIG, Config.AsULONG);
     
     return MP_STATUS_SUCCESS;
@@ -463,8 +461,8 @@ XHCI_StartController(IN PVOID xhciExtension,
     Command.RunStop =1;
     WRITE_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD, Command.AsULONG );
     
-    MPStatus = XHCI_ControllerWorkTest(XhciExtension,Resources->StartVA, Resources->StartPA );
-    //DPRINT1("XHCI_StartController: UNIMPLEMENTED. FIXME\n");
+    //MPStatus = XHCI_ControllerWorkTest(XhciExtension,Resources->StartVA, Resources->StartPA );
+
     return MP_STATUS_SUCCESS;
 }
 
@@ -561,6 +559,14 @@ XHCI_InterruptService(IN PVOID xhciExtension)
     erstdp.DequeueERSTIndex =0;
     XHCI_Write64bitReg (RunTimeRegisterBase + XHCI_ERSTDP, erstdp.AsULONGLONG);
     
+    PXHCI_HC_RESOURCES HcResourcesVA;
+    XHCI_TRB eventtrb;
+    HcResourcesVA = XhciExtension->HcResourcesVA;
+    eventtrb =  HcResourcesVA -> EventRing.firstSeg.XhciTrb[0];
+    DPRINT("XHCI_ControllerWorkTest: eventtrb word0    - %p\n", eventtrb.EventTRB.Word0);
+    DPRINT("XHCI_ControllerWorkTest: eventtrb word1    - %p\n", eventtrb.EventTRB.Word1);
+    DPRINT("XHCI_ControllerWorkTest: eventtrb word2    - %p\n", eventtrb.EventTRB.Word2);
+    DPRINT("XHCI_ControllerWorkTest: eventtrb word3    - %p\n", eventtrb.EventTRB.Word3);
     return TRUE;
 }
 
@@ -655,14 +661,14 @@ NTAPI
 XHCI_CheckController(IN PVOID xhciExtension)
 {
     //RegPacket.UsbPortInvalidateController(xhciExtension, 2);
-    DPRINT1("XHCI_CheckController: function initiated\n");
+    //DPRINT1("XHCI_CheckController: function initiated\n");
 }
 
 ULONG
 NTAPI
 XHCI_Get32BitFrameNumber(IN PVOID xhciExtension)
 {
-    DPRINT1("XHCI_Get32BitFrameNumber: function initiated\n");
+    //DPRINT1("XHCI_Get32BitFrameNumber: function initiated\n");
     return 0;
 }
 

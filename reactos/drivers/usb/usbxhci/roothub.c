@@ -61,7 +61,8 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
     PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
-    
+    //DPRINT("XHCI_RH_GetPortStatus: Port      - %i\n", Port);
+    DPRINT("XHCI_RH_GetPortStatus: PortStatus Register,  port    - %p , %i\n", PortStatusRegister.AsULONG, Port);
     /*
     ULONG ConnectStatus          : 1; // Current Connect Status
     ULONG EnableStatus           : 1; // Port Enabled/Disabled
@@ -88,7 +89,7 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     ULONG IndicatorControlChange : 1;
     ULONG Reserved4              : 3;
     */
-    /*
+    /* register interface
     ULONG CurrentConnectStatus                  : 1;
     ULONG PortEnableDisable                     : 1;
     ULONG RsvdZ1                                : 1;
@@ -139,8 +140,9 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     portstatus.UsbPortStatusChange.TestModeChange = 0;//PortStatusRegister.ConnectStatusChange;
     portstatus.UsbPortStatusChange.IndicatorControlChange =0;// PortStatusRegister.ConnectStatusChange;
     
-    DPRINT("XHCI_RH_GetPortStatus: PortStatus      - %p\n", portstatus.AsULONG);
-    DPRINT("XHCI_RH_GetPortStatus: Port      - %i\n", Port);
+
+    //DPRINT("XHCI_RH_GetPortStatus: PortStatus      - %p\n", portstatus.AsULONG);
+    
     *PortStatus = portstatus.AsULONG;
     
     return MP_STATUS_SUCCESS;
@@ -179,7 +181,43 @@ XHCI_RH_SetFeaturePortReset(IN PVOID xhciExtension,
                             IN USHORT Port)
 {
     DPRINT1("XHCI_RH_SetFeaturePortReset: function initiated\n");
-    return 0;
+    PXHCI_EXTENSION XhciExtension;
+    PULONG PortStatusRegPointer;
+    XHCI_PORT_STATUS_CONTROL PortStatusRegister;
+    LARGE_INTEGER CurrentTime = {{0, 0}};
+    LARGE_INTEGER LastTime = {{0, 0}};
+    
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    
+    PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
+    PortStatusRegister.PortReset = 1;
+    
+    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
+     
+    KeQuerySystemTime(&CurrentTime);
+    CurrentTime.QuadPart += 100 * 10000; // 100 msec
+    while(TRUE)
+    {
+        KeQuerySystemTime(&LastTime);
+        
+        PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+       
+        if (PortStatusRegister.PortReset!= 1)
+        {
+            break;
+        }
+
+        if (LastTime.QuadPart >= CurrentTime.QuadPart)
+        {
+            DPRINT1("XHCI_RH_SetFeaturePortReset: Software Reset failed!\n");
+            return MP_STATUS_FAILURE;
+        }
+    }
+    
+
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -187,8 +225,21 @@ NTAPI
 XHCI_RH_SetFeaturePortPower(IN PVOID xhciExtension,
                             IN USHORT Port)
 {
-   DPRINT1("XHCI_RH_SetFeaturePortPower: function initiated\n");
-    return 0;
+    DPRINT1("XHCI_RH_SetFeaturePortPower: function initiated\n");
+    PXHCI_EXTENSION XhciExtension;
+    PULONG PortStatusRegPointer;
+    XHCI_PORT_STATUS_CONTROL PortStatusRegister;
+    
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    
+    PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
+    PortStatusRegister.PortPower = 1;
+    
+    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
+    
+    return MP_STATUS_SUCCESS;
 }
 MPSTATUS
 NTAPI
@@ -213,7 +264,7 @@ NTAPI
 XHCI_RH_ClearFeaturePortEnable(IN PVOID xhciExtension,
                                IN USHORT Port)
 {
-   DPRINT1("XHCI_RH_ClearFeaturePortEnable: function initiated\n");
+    DPRINT1("XHCI_RH_ClearFeaturePortEnable: function initiated\n");
     return 0;
 }
 
@@ -259,7 +310,24 @@ XHCI_RH_ClearFeaturePortConnectChange(IN PVOID xhciExtension,
                                       IN USHORT Port)
 {
     DPRINT1("XHCI_RH_ClearFeaturePortConnectChange: function initiated\n");
-    return 0;
+    PXHCI_EXTENSION XhciExtension;
+    PULONG PortStatusRegPointer;
+    XHCI_PORT_STATUS_CONTROL PortStatusRegister;
+    
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    
+    PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
+    PortStatusRegister.ConnectStatusChange = 1;
+    
+    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
+    
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    if (PortStatusRegister.ConnectStatusChange == 1){
+        return MP_STATUS_FAILURE;
+    }
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -268,7 +336,25 @@ XHCI_RH_ClearFeaturePortResetChange(IN PVOID xhciExtension,
                                     IN USHORT Port)
 {
     DPRINT1("XHCI_RH_ClearFeaturePortResetChange: function initiated\n");
-    return 0;
+    PXHCI_EXTENSION XhciExtension;
+    PULONG PortStatusRegPointer;
+    XHCI_PORT_STATUS_CONTROL PortStatusRegister;
+    
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
+    
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+
+    PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
+    PortStatusRegister.PortResetChange = 1;
+        
+    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
+    
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    if (PortStatusRegister.PortResetChange == 1){
+        return MP_STATUS_FAILURE;
+    }
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
