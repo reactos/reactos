@@ -15,7 +15,7 @@
 #define XHCI_CRCR             6
 #define XHCI_DCBAAP           12
 #define XHCI_CONFIG           14
-#define XHCI_PORTSC           100
+#define XHCI_PORTSC           256
 // runtime register offsets
 #define XHCI_IMAN             8
 #define XHCI_IMOD             9
@@ -131,7 +131,7 @@ typedef volatile union _XHCI_USB_COMMAND {
   };
   ULONG AsULONG;
 } XHCI_USB_COMMAND;
-
+C_ASSERT(sizeof(XHCI_USB_COMMAND)==sizeof(ULONG));
 typedef volatile union _XHCI_USB_STATUS {
   struct {
     ULONG HCHalted               : 1;
@@ -149,7 +149,7 @@ typedef volatile union _XHCI_USB_STATUS {
   };
   ULONG AsULONG;
 } XHCI_USB_STATUS;
-
+C_ASSERT(sizeof(XHCI_USB_STATUS)==sizeof(ULONG));
 typedef volatile union _XHCI_PAGE_SIZE { 
   struct {
     ULONG PageSize           : 16;
@@ -197,7 +197,9 @@ typedef volatile union _XHCI_CONFIGURE {
   };
   ULONG AsULONG;
 } XHCI_CONFIGURE;
+C_ASSERT(sizeof(XHCI_CONFIGURE) == sizeof(ULONG));
 
+#define PORT_STATUS_MASK    0x4F01FFE5  // 0100 1111 0000 0001 1111 1111 1110 0101 // RW 1, RW1C/RW1S 0, RO 1
 typedef volatile union _XHCI_PORT_STATUS_CONTROL {
   struct {
     ULONG CurrentConnectStatus                  : 1;
