@@ -4078,9 +4078,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
             return QUIT_PAGE;
         }
 
-        InfHandle = INF_OpenBufferedFileA((CHAR*) InfFileData,
+        InfHandle = INF_OpenBufferedFileA((PSTR)InfFileData,
                                           InfFileSize,
-                                          (const CHAR*) NULL,
+                                          NULL,
                                           INF_STYLE_WIN4,
                                           LanguageId,
                                           &ErrorLine);
