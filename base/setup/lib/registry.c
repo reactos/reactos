@@ -39,7 +39,7 @@
 
 
 // #ifdef __REACTOS__
-#if 0
+#if 1 // FIXME: Disable if setupapi.h is included in the code...
 #define FLG_ADDREG_BINVALUETYPE           0x00000001
 #define FLG_ADDREG_NOCLOBBER              0x00000002
 #define FLG_ADDREG_DELVAL                 0x00000004

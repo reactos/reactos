@@ -52,6 +52,7 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 
+
 /* Setup library headers */
 #include <reactos/rosioctl.h>
 #include <../lib/setuplib.h>
@@ -62,7 +63,6 @@
 #include "inffile.h"
 #include "progress.h"
 #ifdef __REACTOS__
-#include "infros.h"
 #include "filequeue.h"
 #endif
 #include "fslist.h"
@@ -72,6 +72,7 @@
 #include "genlist.h"
 #include "host.h"
 #include "mui.h"
+
 
 extern HANDLE ProcessHeap;
 extern BOOLEAN IsUnattendedSetup;

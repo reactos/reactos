@@ -87,17 +87,24 @@ SetupGetFieldCount(PINFCONTEXT Context)
     return InfGetFieldCount(Context);
 }
 
-extern BOOLEAN InfGetIntField(PINFCONTEXT Context,
-                              ULONG FieldIndex,
-                              INT *IntegerValue);
-// #define SetupGetIntField InfGetIntField
-BOOLEAN
+/*
+ * This function corresponds to an undocumented but exported setupapi API
+ * that exists since WinNT4 and is still present in Win10.
+ * The returned string pointer is a read-only pointer to a string in the
+ * maintained INF cache, and is always in UNICODE (on NT systems).
+ */
+extern BOOLEAN InfGetDataField(PINFCONTEXT Context,
+                               ULONG FieldIndex,
+                               PWCHAR *Data);
+PCWSTR
 WINAPI
-SetupGetIntField(PINFCONTEXT Context,
-                 ULONG FieldIndex,
-                 INT *IntegerValue)
+pSetupGetField(PINFCONTEXT Context,
+               ULONG FieldIndex)
 {
-    return InfGetIntField(Context, FieldIndex, IntegerValue);
+    PWCHAR Data = NULL;
+    if (!InfGetDataField(Context, FieldIndex, &Data))
+        return NULL;
+    return Data;
 }
 
 extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
@@ -119,6 +126,19 @@ SetupGetBinaryField(PINFCONTEXT Context,
                                ReturnBuffer,
                                ReturnBufferSize,
                                RequiredSize);
+}
+
+extern BOOLEAN InfGetIntField(PINFCONTEXT Context,
+                              ULONG FieldIndex,
+                              INT *IntegerValue);
+// #define SetupGetIntField InfGetIntField
+BOOLEAN
+WINAPI
+SetupGetIntField(PINFCONTEXT Context,
+                 ULONG FieldIndex,
+                 INT *IntegerValue)
+{
+    return InfGetIntField(Context, FieldIndex, IntegerValue);
 }
 
 extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
@@ -196,102 +216,6 @@ SetupOpenInfFileExW(
 
 
 /* HELPER FUNCTIONS **********************************************************/
-
-BOOLEAN
-INF_GetData(
-    IN PINFCONTEXT Context,
-    OUT PWCHAR *Key,
-    OUT PWCHAR *Data)
-{
-#ifdef __REACTOS__
-    return InfGetData(Context, Key, Data);
-#else
-    static PWCHAR pLastCallData[4] = { NULL, NULL, NULL, NULL };
-    static DWORD currentIndex = 0;
-    DWORD dwSize, i;
-    BOOL ret;
-
-    currentIndex ^= 2;
-
-    if (Key)
-        *Key = NULL;
-
-    if (Data)
-        *Data = NULL;
-
-    if (SetupGetFieldCount(Context) != 1)
-        return FALSE;
-
-    for (i = 0; i <= 1; i++)
-    {
-        ret = SetupGetStringFieldW(Context,
-                                   i,
-                                   NULL,
-                                   0,
-                                   &dwSize);
-        if (!ret)
-            return FALSE;
-
-        HeapFree(GetProcessHeap(), 0, pLastCallData[i + currentIndex]);
-        pLastCallData[i + currentIndex] = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
-        ret = SetupGetStringFieldW(Context,
-                                   i,
-                                   pLastCallData[i + currentIndex],
-                                   dwSize,
-                                   NULL);
-        if (!ret)
-            return FALSE;
-    }
-
-    if (Key)
-        *Key = pLastCallData[0 + currentIndex];
-
-    if (Data)
-        *Data = pLastCallData[1 + currentIndex];
-
-    return TRUE;
-#endif /* !__REACTOS__ */
-}
-
-BOOLEAN
-INF_GetDataField(
-    IN PINFCONTEXT Context,
-    IN ULONG FieldIndex,
-    OUT PWCHAR *Data)
-{
-#ifdef __REACTOS__
-    return InfGetDataField(Context, FieldIndex, Data);
-#else
-    static PWCHAR pLastCallsData[] = { NULL, NULL, NULL };
-    static DWORD NextIndex = 0;
-    DWORD dwSize;
-    BOOL ret;
-
-    *Data = NULL;
-
-    ret = SetupGetStringFieldW(Context,
-                               FieldIndex,
-                               NULL,
-                               0,
-                               &dwSize);
-    if (!ret)
-        return FALSE;
-
-    HeapFree(GetProcessHeap(), 0, pLastCallsData[NextIndex]);
-    pLastCallsData[NextIndex] = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
-    ret = SetupGetStringFieldW(Context,
-                               FieldIndex,
-                               pLastCallsData[NextIndex],
-                               dwSize,
-                               NULL);
-    if (!ret)
-        return FALSE;
-
-    *Data = pLastCallsData[NextIndex];
-    NextIndex = (NextIndex + 1) % (sizeof(pLastCallsData) / sizeof(pLastCallsData[0]));
-    return TRUE;
-#endif /* !__REACTOS__ */
-}
 
 HINF WINAPI
 INF_OpenBufferedFileA(
