@@ -3,6 +3,7 @@ list(APPEND SOURCE
     CloseThemeData.c
     DrawThemeParentBackground.c
     SetWindowTheme.c
+    SetThemeAppProperties.c
     ../include/msgtrace.c
     testlist.c)
 
