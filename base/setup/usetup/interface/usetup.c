@@ -106,9 +106,9 @@ static PNTOS_INSTALLATION CurrentInstallation = NULL;
 static PGENERIC_LIST NtOsInstallsList = NULL;
 
 static PGENERIC_LIST ComputerList = NULL;
-static PGENERIC_LIST DisplayList = NULL;
+static PGENERIC_LIST DisplayList  = NULL;
 static PGENERIC_LIST KeyboardList = NULL;
-static PGENERIC_LIST LayoutList = NULL;
+static PGENERIC_LIST LayoutList   = NULL;
 static PGENERIC_LIST LanguageList = NULL;
 
 static LANGID LanguageId = 0;
@@ -145,7 +145,7 @@ DrawBox(IN SHORT xLeft,
     COORD coPos;
     DWORD Written;
 
-    /* draw upper left corner */
+    /* Draw upper left corner */
     coPos.X = xLeft;
     coPos.Y = yTop;
     FillConsoleOutputCharacterA(StdOutput,
@@ -154,7 +154,7 @@ DrawBox(IN SHORT xLeft,
                                 coPos,
                                 &Written);
 
-    /* draw upper edge */
+    /* Draw upper edge */
     coPos.X = xLeft + 1;
     coPos.Y = yTop;
     FillConsoleOutputCharacterA(StdOutput,
@@ -163,7 +163,7 @@ DrawBox(IN SHORT xLeft,
                                 coPos,
                                 &Written);
 
-    /* draw upper right corner */
+    /* Draw upper right corner */
     coPos.X = xLeft + Width - 1;
     coPos.Y = yTop;
     FillConsoleOutputCharacterA(StdOutput,
@@ -197,7 +197,7 @@ DrawBox(IN SHORT xLeft,
                                     &Written);
     }
 
-    /* draw lower left corner */
+    /* Draw lower left corner */
     coPos.X = xLeft;
     coPos.Y = yTop + Height - 1;
     FillConsoleOutputCharacterA(StdOutput,
@@ -206,7 +206,7 @@ DrawBox(IN SHORT xLeft,
                                 coPos,
                                 &Written);
 
-    /* draw lower edge */
+    /* Draw lower edge */
     coPos.X = xLeft + 1;
     coPos.Y = yTop + Height - 1;
     FillConsoleOutputCharacterA(StdOutput,
@@ -215,7 +215,7 @@ DrawBox(IN SHORT xLeft,
                                 coPos,
                                 &Written);
 
-    /* draw lower right corner */
+    /* Draw lower right corner */
     coPos.X = xLeft + Width - 1;
     coPos.Y = yTop + Height - 1;
     FillConsoleOutputCharacterA(StdOutput,
@@ -4442,9 +4442,9 @@ BootLoaderPage(PINPUT_RECORD Ir)
     }
     else if ((PartitionType == PARTITION_FAT_12) ||
              (PartitionType == PARTITION_FAT_16) ||
-             (PartitionType == PARTITION_HUGE) ||
+             (PartitionType == PARTITION_HUGE)   ||
              (PartitionType == PARTITION_XINT13) ||
-             (PartitionType == PARTITION_FAT32) ||
+             (PartitionType == PARTITION_FAT32)  ||
              (PartitionType == PARTITION_FAT32_XINT13))
     {
         DPRINT("Found FAT partition\n");
@@ -4481,11 +4481,11 @@ BootLoaderPage(PINPUT_RECORD Ir)
             CONSOLE_NormalTextXY(8, Line, 60, 1);
 
             Line++;
-            if (Line<12)
-                Line=15;
+            if (Line < 12)
+                Line = 15;
 
-            if (Line>15)
-                Line=12;
+            if (Line > 15)
+                Line = 12;
 
             CONSOLE_InvertTextXY(8, Line, 60, 1);
         }
@@ -4495,11 +4495,11 @@ BootLoaderPage(PINPUT_RECORD Ir)
             CONSOLE_NormalTextXY(8, Line, 60, 1);
 
             Line--;
-            if (Line<12)
-                Line=15;
+            if (Line < 12)
+                Line = 15;
 
-            if (Line>15)
-                Line=12;
+            if (Line > 15)
+                Line = 12;
 
             CONSOLE_InvertTextXY(8, Line, 60, 1);
         }
