@@ -3545,13 +3545,20 @@ AddSectionToCopyQueueCab(HINF InfFile,
         {
             /* FIXME: Handle error! */
             DPRINT1("SetupFindFirstLine() failed\n");
+            INF_FreeData(FileKeyName);
+            INF_FreeData(FileKeyValue);
+            INF_FreeData(TargetFileName);
             break;
         }
+
+        INF_FreeData(FileKeyValue);
 
         if (!INF_GetData(&DirContext, NULL, &DirKeyValue))
         {
             /* FIXME: Handle error! */
             DPRINT1("INF_GetData() failed\n");
+            INF_FreeData(FileKeyName);
+            INF_FreeData(TargetFileName);
             break;
         }
 
@@ -3566,6 +3573,10 @@ AddSectionToCopyQueueCab(HINF InfFile,
             /* FIXME: Handle error! */
             DPRINT1("SetupQueueCopy() failed\n");
         }
+
+        INF_FreeData(FileKeyName);
+        INF_FreeData(TargetFileName);
+        INF_FreeData(DirKeyValue);
     } while (SetupFindNextLine(&FilesContext, &FilesContext));
 
     return TRUE;
@@ -3609,8 +3620,8 @@ AddSectionToCopyQueue(HINF InfFile,
      */
     do
     {
-        /* Get source file name and target directory id */
-        if (!INF_GetData(&FilesContext, &FileKeyName, &FileKeyValue))
+        /* Get source file name */
+        if (!INF_GetDataField(&FilesContext, 0, &FileKeyName))
         {
             /* FIXME: Handle error! */
             DPRINT1("INF_GetData() failed\n");
@@ -3622,6 +3633,7 @@ AddSectionToCopyQueue(HINF InfFile,
         {
             /* FIXME: Handle error! */
             DPRINT1("INF_GetData() failed\n");
+            INF_FreeData(FileKeyName);
             break;
         }
 
@@ -3638,13 +3650,20 @@ AddSectionToCopyQueue(HINF InfFile,
         {
             /* FIXME: Handle error! */
             DPRINT1("SetupFindFirstLine() failed\n");
+            INF_FreeData(FileKeyName);
+            INF_FreeData(FileKeyValue);
+            INF_FreeData(TargetFileName);
             break;
         }
+
+        INF_FreeData(FileKeyValue);
 
         if (!INF_GetData(&DirContext, NULL, &DirKeyValue))
         {
             /* FIXME: Handle error! */
             DPRINT1("INF_GetData() failed\n");
+            INF_FreeData(FileKeyName);
+            INF_FreeData(TargetFileName);
             break;
         }
 
@@ -3690,6 +3709,10 @@ AddSectionToCopyQueue(HINF InfFile,
             /* FIXME: Handle error! */
             DPRINT1("SetupQueueCopy() failed\n");
         }
+
+        INF_FreeData(FileKeyName);
+        INF_FreeData(TargetFileName);
+        INF_FreeData(DirKeyValue);
     } while (SetupFindNextLine(&FilesContext, &FilesContext));
 
     return TRUE;
@@ -3795,6 +3818,7 @@ PrepareCopyPageInfFile(HINF InfFile,
             Status = SetupCreateDirectory(PathBuffer);
             if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
             {
+                INF_FreeData(DirKeyValue);
                 DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
                 MUIDisplayError(ERROR_CREATE_DIR, Ir, POPUP_WAIT_ENTER);
                 return FALSE;
@@ -3813,11 +3837,14 @@ PrepareCopyPageInfFile(HINF InfFile,
             Status = SetupCreateDirectory(PathBuffer);
             if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
             {
+                INF_FreeData(DirKeyValue);
                 DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
                 MUIDisplayError(ERROR_CREATE_DIR, Ir, POPUP_WAIT_ENTER);
                 return FALSE;
             }
         }
+
+        INF_FreeData(DirKeyValue);
     } while (SetupFindNextLine(&DirContext, &DirContext));
 
     return TRUE;
@@ -4209,7 +4236,12 @@ DoUpdate:
         DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
 
         if (Action == NULL)
+        {
+            INF_FreeData(Action);
+            INF_FreeData(File);
+            INF_FreeData(Section);
             break; // Hackfix
+        }
 
         if (!_wcsicmp(Action, L"AddReg"))
             Delete = FALSE;
@@ -4218,14 +4250,21 @@ DoUpdate:
         else
         {
             DPRINT1("Unrecognized registry INF action '%S'\n", Action);
+            INF_FreeData(Action);
+            INF_FreeData(File);
+            INF_FreeData(Section);
             continue;
         }
+
+        INF_FreeData(Action);
 
         CONSOLE_SetStatusText(MUIGetString(STRING_IMPORTFILE), File);
 
         if (!ImportRegistryFile(SourcePath.Buffer, File, Section, LanguageId, Delete))
         {
             DPRINT1("Importing %S failed\n", File);
+            INF_FreeData(File);
+            INF_FreeData(Section);
             MUIDisplayError(ERROR_IMPORT_HIVE, Ir, POPUP_WAIT_ENTER);
             goto Cleanup;
         }
