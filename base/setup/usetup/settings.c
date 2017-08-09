@@ -324,6 +324,7 @@ CreateComputerTypeList(
         DPRINT("KeyValue: %S\n", KeyValue);
         if (wcsstr(ComputerIdentifier, KeyValue))
         {
+            INF_FreeData(KeyValue);
             if (!INF_GetDataField(&Context, 0, &KeyName))
             {
                 /* FIXME: Handle error! */
@@ -333,7 +334,9 @@ CreateComputerTypeList(
 
             DPRINT("Computer key: %S\n", KeyName);
             wcscpy(ComputerKey, KeyName);
+            INF_FreeData(KeyName);
         }
+        INF_FreeData(KeyValue);
     } while (SetupFindNextLine(&Context, &Context));
 
     List = CreateGenericList();
@@ -348,7 +351,7 @@ CreateComputerTypeList(
 
     do
     {
-        if (!INF_GetData (&Context, &KeyName, &KeyValue))
+        if (!INF_GetData(&Context, &KeyName, &KeyValue))
         {
             /* FIXME: Handle error! */
             DPRINT("INF_GetData() failed\n");
@@ -364,10 +367,13 @@ CreateComputerTypeList(
         }
 
         wcscpy(UserData, KeyName);
+        INF_FreeData(KeyName);
 
         sprintf(Buffer, "%S", KeyValue);
+        INF_FreeData(KeyValue);
+
         AppendGenericListEntry(List, Buffer, UserData,
-                               _wcsicmp(KeyName, ComputerKey) ? FALSE : TRUE);
+                               _wcsicmp(UserData, ComputerKey) ? FALSE : TRUE);
     } while (SetupFindNextLine(&Context, &Context));
 
     return List;
@@ -579,6 +585,7 @@ CreateDisplayDriverList(
         DPRINT("KeyValue: %S\n", KeyValue);
         if (wcsstr(DisplayIdentifier, KeyValue))
         {
+            INF_FreeData(KeyValue);
             if (!INF_GetDataField(&Context, 0, &KeyName))
             {
                 /* FIXME: Handle error! */
@@ -588,7 +595,9 @@ CreateDisplayDriverList(
 
             DPRINT("Display key: %S\n", KeyName);
             wcscpy(DisplayKey, KeyName);
+            INF_FreeData(KeyName);
         }
+        INF_FreeData(KeyValue);
     } while (SetupFindNextLine(&Context, &Context));
 
     List = CreateGenericList();
@@ -612,6 +621,7 @@ CreateDisplayDriverList(
         if (!INF_GetDataField(&Context, 1, &KeyValue))
         {
             DPRINT1("INF_GetDataField() failed\n");
+            INF_FreeData(KeyName);
             break;
         }
 
@@ -622,16 +632,19 @@ CreateDisplayDriverList(
         {
             DPRINT1("RtlAllocateHeap() failed\n");
             DestroyGenericList(List, TRUE);
+            INF_FreeData(KeyValue);
+            INF_FreeData(KeyName);
             return NULL;
         }
 
         wcscpy(UserData, KeyName);
+        INF_FreeData(KeyName);
 
         sprintf(Buffer, "%S", KeyValue);
-        AppendGenericListEntry(List,
-                               Buffer,
-                               UserData,
-                               _wcsicmp(KeyName, DisplayKey) ? FALSE : TRUE);
+        INF_FreeData(KeyValue);
+
+        AppendGenericListEntry(List, Buffer, UserData,
+                               _wcsicmp(UserData, DisplayKey) ? FALSE : TRUE);
     } while (SetupFindNextLine(&Context, &Context));
 
 #if 0
@@ -1061,7 +1074,7 @@ CreateLanguageList(
     } while (SetupFindNextLine(&Context, &Context));
 
     /* Only one language available, make it the default one */
-    if(uIndex == 1 && UserData != NULL)
+    if (uIndex == 1 && UserData != NULL)
     {
         DefaultLanguageIndex = 0;
         wcscpy(DefaultLanguage, UserData);
@@ -1234,7 +1247,7 @@ SetGeoID(
     Status =  NtOpenKey(&KeyHandle,
                         KEY_SET_VALUE,
                         &ObjectAttributes);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
         return FALSE;
