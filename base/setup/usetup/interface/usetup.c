@@ -38,36 +38,12 @@
 #include <debug.h>
 
 
-/* GLOBALS ******************************************************************/
+/* GLOBALS & LOCALS *********************************************************/
 
 HANDLE ProcessHeap;
 
-static UNICODE_STRING SourceRootPath;
-static UNICODE_STRING SourceRootDir;
-static UNICODE_STRING SourcePath;
-
 BOOLEAN IsUnattendedSetup = FALSE;
-LONG UnattendDestinationDiskNumber;
-LONG UnattendDestinationPartitionNumber;
-LONG UnattendMBRInstallType = -1;
-LONG UnattendFormatPartition = 0;
-LONG AutoPartition = 0;
-WCHAR UnattendInstallationDirectory[MAX_PATH];
-PWCHAR SelectedLanguageId;
-WCHAR LocaleID[9];
-WCHAR DefaultLanguage[20];
-WCHAR DefaultKBLayout[20];
-static BOOLEAN RepairUpdateFlag = FALSE;
-static HANDLE hPnpThread = INVALID_HANDLE_VALUE;
-
-static PPARTLIST PartitionList = NULL;
-static PPARTENTRY TempPartition = NULL;
-static FORMATMACHINESTATE FormatState = Start;
-
-
-/* LOCALS *******************************************************************/
-
-static PFILE_SYSTEM_LIST FileSystemList = NULL;
+static USETUP_DATA USetupData;
 
 /*
  * NOTE: Technically only used for the COPYCONTEXT InstallPath member
@@ -75,28 +51,26 @@ static PFILE_SYSTEM_LIST FileSystemList = NULL;
  */
 static UNICODE_STRING InstallPath;
 
-/*
- * Path to the system partition, where the boot manager resides.
- * On x86 PCs, this is usually the active partition.
- * On ARC, (u)EFI, ... platforms, this is a dedicated partition.
- *
- * For more information, see:
- * https://en.wikipedia.org/wiki/System_partition_and_boot_partition
- * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/boot-and-system-volumes.html
- * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/arc-boot-process.html
- * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/efi-boot-process.html
- * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/determining-system-volume.html
- * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/determining-boot-volume.html
- */
-static UNICODE_STRING SystemRootPath;
-
-/* Path to the installation directory inside the ReactOS boot partition */
-static UNICODE_STRING DestinationPath;
-static UNICODE_STRING DestinationArcPath;
-static UNICODE_STRING DestinationRootPath;
-
 // FIXME: Is it really useful?? Just used for SetDefaultPagefile...
 static WCHAR DestinationDriveLetter;
+
+
+/* OTHER Stuff *****/
+
+PWCHAR SelectedLanguageId;
+static WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
+static WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
+
+static BOOLEAN RepairUpdateFlag = FALSE;
+
+static HANDLE hPnpThread = NULL;
+
+static PPARTLIST PartitionList = NULL;
+static PPARTENTRY TempPartition = NULL;
+static PFILE_SYSTEM_LIST FileSystemList = NULL;
+static FORMATMACHINESTATE FormatState = Start;
+
+/*****************************************************/
 
 static HINF SetupInf;
 
@@ -111,9 +85,6 @@ static PGENERIC_LIST KeyboardList = NULL;
 static PGENERIC_LIST LayoutList   = NULL;
 static PGENERIC_LIST LanguageList = NULL;
 
-static LANGID LanguageId = 0;
-
-static ULONG RequiredPartitionDiskSpace = ~0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -270,7 +241,7 @@ PopupError(PCCH Text,
         if (Length > MaxLength)
             MaxLength = Length;
 
-        if (LastLine != FALSE)
+        if (LastLine == TRUE)
             break;
 
         pnext = p + 1;
@@ -336,7 +307,7 @@ PopupError(PCCH Text,
                                          &Written);
         }
 
-        if (LastLine != FALSE)
+        if (LastLine == TRUE)
             break;
 
         coPos.Y++;
@@ -427,178 +398,6 @@ ConfirmQuit(PINPUT_RECORD Ir)
 
 
 static VOID
-CheckUnattendedSetup(VOID)
-{
-    WCHAR UnattendInfPath[MAX_PATH];
-    INFCONTEXT Context;
-    HINF UnattendInf;
-    UINT ErrorLine;
-    INT IntValue;
-    PWCHAR Value;
-
-    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2, SourcePath.Buffer, L"unattend.inf");
-
-    if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
-    {
-        DPRINT("Does not exist: %S\n", UnattendInfPath);
-        return;
-    }
-
-    /* Load 'unattend.inf' from install media. */
-    UnattendInf = SetupOpenInfFileExW(UnattendInfPath,
-                                      NULL,
-                                      INF_STYLE_WIN4,
-                                      LanguageId,
-                                      &ErrorLine);
-
-    if (UnattendInf == INVALID_HANDLE_VALUE)
-    {
-        DPRINT("SetupOpenInfFileExW() failed\n");
-        return;
-    }
-
-    /* Open 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"Signature", &Context))
-    {
-        DPRINT("SetupFindFirstLineW() failed for section 'Unattend'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    /* Get pointer 'Signature' key */
-    if (!INF_GetData(&Context, NULL, &Value))
-    {
-        DPRINT("INF_GetData() failed for key 'Signature'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    /* Check 'Signature' string */
-    if (_wcsicmp(Value, L"$ReactOS$") != 0)
-    {
-        DPRINT("Signature not $ReactOS$\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    /* Check if Unattend setup is enabled */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"UnattendSetupEnabled", &Context))
-    {
-        DPRINT("Can't find key 'UnattendSetupEnabled'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    if (!INF_GetData(&Context, NULL, &Value))
-    {
-        DPRINT("Can't read key 'UnattendSetupEnabled'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    if (_wcsicmp(Value, L"yes") != 0)
-    {
-        DPRINT("Unattend setup is disabled by 'UnattendSetupEnabled' key!\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    /* Search for 'DestinationDiskNumber' in the 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
-    {
-        DPRINT("SetupFindFirstLine() failed for key 'DestinationDiskNumber'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    if (!SetupGetIntField(&Context, 1, &IntValue))
-    {
-        DPRINT("SetupGetIntField() failed for key 'DestinationDiskNumber'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    UnattendDestinationDiskNumber = (LONG)IntValue;
-
-    /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
-    {
-        DPRINT("SetupFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    if (!SetupGetIntField(&Context, 1, &IntValue))
-    {
-        DPRINT("SetupGetIntField() failed for key 'DestinationPartitionNumber'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    UnattendDestinationPartitionNumber = (LONG)IntValue;
-
-    /* Search for 'InstallationDirectory' in the 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
-    {
-        DPRINT("SetupFindFirstLine() failed for key 'InstallationDirectory'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    /* Get pointer 'InstallationDirectory' key */
-    if (!INF_GetData(&Context, NULL, &Value))
-    {
-        DPRINT("INF_GetData() failed for key 'InstallationDirectory'\n");
-        SetupCloseInfFile(UnattendInf);
-        return;
-    }
-
-    wcscpy(UnattendInstallationDirectory, Value);
-
-    IsUnattendedSetup = TRUE;
-    DPRINT("Running unattended setup\n");
-
-    /* Search for 'MBRInstallType' in the 'Unattend' section */
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
-    {
-        if (SetupGetIntField(&Context, 1, &IntValue))
-        {
-            UnattendMBRInstallType = IntValue;
-        }
-    }
-
-    /* Search for 'FormatPartition' in the 'Unattend' section */
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"FormatPartition", &Context))
-    {
-        if (SetupGetIntField(&Context, 1, &IntValue))
-        {
-            UnattendFormatPartition = IntValue;
-        }
-    }
-
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"AutoPartition", &Context))
-    {
-        if (SetupGetIntField(&Context, 1, &IntValue))
-        {
-            AutoPartition = IntValue;
-        }
-    }
-
-    /* search for LocaleID in the 'Unattend' section*/
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"LocaleID", &Context))
-    {
-        if (INF_GetData(&Context, NULL, &Value))
-        {
-            LONG Id = wcstol(Value, NULL, 16);
-            swprintf(LocaleID, L"%08lx", Id);
-       }
-    }
-
-    SetupCloseInfFile(UnattendInf);
-}
-
-
-static VOID
 UpdateKBLayout(VOID)
 {
     PGENERIC_LIST_ENTRY ListEntry;
@@ -642,7 +441,7 @@ UpdateKBLayout(VOID)
  *
  * SIDEEFFECTS
  *  Init SelectedLanguageId
- *  Init LanguageId
+ *  Init USetupData.LanguageId
  *
  * RETURNS
  *   Number of the next page.
@@ -666,6 +465,7 @@ LanguagePage(PINPUT_RECORD Ir)
     }
 
     /* Load the font */
+    USetupData.LanguageId = 0;
     SelectedLanguageId = DefaultLanguage;
     SetConsoleCodePage();
     UpdateKBLayout();
@@ -674,7 +474,7 @@ LanguagePage(PINPUT_RECORD Ir)
      * the language selection process altogether! */
     if (GenericListHasSingleEntry(LanguageList))
     {
-        LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
+        USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
         return WELCOME_PAGE;
     }
 
@@ -720,7 +520,7 @@ LanguagePage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
             else
                 RedrawGenericList(&ListUi);
@@ -729,7 +529,7 @@ LanguagePage(PINPUT_RECORD Ir)
         {
             SelectedLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
 
-            LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
+            USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
             if (wcscmp(SelectedLanguageId, DefaultLanguage))
             {
@@ -774,65 +574,6 @@ LanguagePage(PINPUT_RECORD Ir)
 }
 
 
-static NTSTATUS
-GetSourcePaths(
-    OUT PUNICODE_STRING SourcePath,
-    OUT PUNICODE_STRING SourceRootPath,
-    OUT PUNICODE_STRING SourceRootDir)
-{
-    NTSTATUS Status;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
-    UNICODE_STRING SourceName;
-    WCHAR SourceBuffer[MAX_PATH] = L"";
-    HANDLE Handle;
-    ULONG Length;
-    PWCHAR Ptr;
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &LinkName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenSymbolicLinkObject(&Handle,
-                                      SYMBOLIC_LINK_ALL_ACCESS,
-                                      &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    RtlInitEmptyUnicodeString(&SourceName, SourceBuffer, sizeof(SourceBuffer));
-
-    Status = NtQuerySymbolicLinkObject(Handle,
-                                       &SourceName,
-                                       &Length);
-    NtClose(Handle);
-
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    RtlCreateUnicodeString(SourcePath,
-                           SourceName.Buffer);
-
-    /* Strip trailing directory */
-    Ptr = wcsrchr(SourceName.Buffer, OBJ_NAME_PATH_SEPARATOR);
-    if (Ptr)
-    {
-        RtlCreateUnicodeString(SourceRootDir, Ptr);
-        *Ptr = UNICODE_NULL;
-    }
-    else
-    {
-        RtlCreateUnicodeString(SourceRootDir, L"");
-    }
-
-    RtlCreateUnicodeString(SourceRootPath,
-                           SourceName.Buffer);
-
-    return STATUS_SUCCESS;
-}
-
-
 /*
  * Start page
  *
@@ -843,15 +584,15 @@ GetSourcePaths(
  *
  * SIDEEFFECTS
  *  Init Sdi
- *  Init SourcePath
- *  Init SourceRootPath
- *  Init SourceRootDir
+ *  Init USetupData.SourcePath
+ *  Init USetupData.SourceRootPath
+ *  Init USetupData.SourceRootDir
  *  Init SetupInf
- *  Init RequiredPartitionDiskSpace
+ *  Init USetupData.RequiredPartitionDiskSpace
  *  Init IsUnattendedSetup
  *  If unattended, init *List and sets the Codepage
  *  If unattended, init SelectedLanguageId
- *  If unattended, init LanguageId
+ *  If unattended, init USetupData.LanguageId
  *
  * RETURNS
  *   Number of the next page.
@@ -860,79 +601,32 @@ static PAGE_NUMBER
 SetupStartPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
-    WCHAR FileNameBuffer[MAX_PATH];
-    INFCONTEXT Context;
-    PWCHAR Value;
-    UINT ErrorLine;
+    ULONG Error;
     PGENERIC_LIST_ENTRY ListEntry;
-    INT IntValue;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
     /* Get the source path and source root path */
-    Status = GetSourcePaths(&SourcePath,
-                            &SourceRootPath,
-                            &SourceRootDir);
+    Status = GetSourcePaths(&USetupData.SourcePath,
+                            &USetupData.SourceRootPath,
+                            &USetupData.SourceRootDir);
     if (!NT_SUCCESS(Status))
     {
         CONSOLE_PrintTextXY(6, 15, "GetSourcePaths() failed (Status 0x%08lx)", Status);
         MUIDisplayError(ERROR_NO_SOURCE_DRIVE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
-    DPRINT1("SourcePath: '%wZ'\n", &SourcePath);
-    DPRINT1("SourceRootPath: '%wZ'\n", &SourceRootPath);
-    DPRINT1("SourceRootDir: '%wZ'\n", &SourceRootDir);
+    DPRINT1("SourcePath: '%wZ'\n", &USetupData.SourcePath);
+    DPRINT1("SourceRootPath: '%wZ'\n", &USetupData.SourceRootPath);
+    DPRINT1("SourceRootDir: '%wZ'\n", &USetupData.SourceRootDir);
 
-    /* Load txtsetup.sif from install media. */
-    CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2, SourcePath.Buffer, L"txtsetup.sif");
-    SetupInf = SetupOpenInfFileExW(FileNameBuffer,
-                                   NULL,
-                                   INF_STYLE_WIN4,
-                                   LanguageId,
-                                   &ErrorLine);
-
-    if (SetupInf == INVALID_HANDLE_VALUE)
+    /* Load 'txtsetup.sif' from the installation media */
+    Error = LoadSetupInf(&SetupInf, &USetupData);
+    if (Error != ERROR_SUCCESS)
     {
-        MUIDisplayError(ERROR_LOAD_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
+        MUIDisplayError(Error, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
-
-    /* Open 'Version' section */
-    if (!SetupFindFirstLineW(SetupInf, L"Version", L"Signature", &Context))
-    {
-        MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-
-    /* Get pointer 'Signature' key */
-    if (!INF_GetData(&Context, NULL, &Value))
-    {
-        MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-
-    /* Check 'Signature' string */
-    if (_wcsicmp(Value, L"$ReactOS$") != 0)
-    {
-        MUIDisplayError(ERROR_SIGNATURE_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-
-    /* Open 'DiskSpaceRequirements' section */
-    if (!SetupFindFirstLineW(SetupInf, L"DiskSpaceRequirements", L"FreeSysPartDiskSpace", &Context))
-    {
-        MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-
-    /* Get the 'FreeSysPartDiskSpace' value */
-    if (!SetupGetIntField(&Context, 1, &IntValue))
-    {
-        MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-
-    RequiredPartitionDiskSpace = (ULONG)IntValue;
 
     /* Start the PnP thread */
     if (hPnpThread != INVALID_HANDLE_VALUE)
@@ -941,7 +635,7 @@ SetupStartPage(PINPUT_RECORD Ir)
         hPnpThread = INVALID_HANDLE_VALUE;
     }
 
-    CheckUnattendedSetup();
+    CheckUnattendedSetup(&USetupData);
 
     if (IsUnattendedSetup)
     {
@@ -953,14 +647,14 @@ SetupStartPage(PINPUT_RECORD Ir)
         LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
 
         /* new part */
-        wcscpy(SelectedLanguageId, LocaleID);
-        LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
+        wcscpy(SelectedLanguageId, USetupData.LocaleID);
+        USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
         /* first we hack LanguageList */
         ListEntry = GetFirstListEntry(LanguageList);
         while (ListEntry != NULL)
         {
-            if (!wcsicmp(LocaleID, GetListEntryUserData(ListEntry)))
+            if (!wcsicmp(USetupData.LocaleID, GetListEntryUserData(ListEntry)))
             {
                 DPRINT("found %S in LanguageList\n",GetListEntryUserData(ListEntry));
                 SetCurrentListEntry(LanguageList, ListEntry);
@@ -974,7 +668,7 @@ SetupStartPage(PINPUT_RECORD Ir)
         ListEntry = GetFirstListEntry(LayoutList);
         while (ListEntry != NULL)
         {
-            if (!wcsicmp(LocaleID, GetListEntryUserData(ListEntry)))
+            if (!wcsicmp(USetupData.LocaleID, GetListEntryUserData(ListEntry)))
             {
                 DPRINT("found %S in LayoutList\n",GetListEntryUserData(ListEntry));
                 SetCurrentListEntry(LayoutList, ListEntry);
@@ -1017,7 +711,7 @@ WelcomePage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -1233,7 +927,7 @@ InstallIntroPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -1270,7 +964,7 @@ ScsiControllerPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -1439,7 +1133,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -1503,7 +1197,7 @@ HandleGenericList(PGENERIC_LIST_UI ListUi,
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
             else
                 RedrawGenericList(ListUi);
@@ -1651,10 +1345,10 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
     size = PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector;
     size = (size + (512 * KB)) / MB;  /* in MBytes */
 
-    if (size < RequiredPartitionDiskSpace)
+    if (size < USetupData.RequiredPartitionDiskSpace)
     {
         /* Partition is too small so ask for another one */
-        DPRINT1("Partition is too small (size: %I64u MB), required disk space is %lu MB\n", size, RequiredPartitionDiskSpace);
+        DPRINT1("Partition is too small (size: %I64u MB), required disk space is %lu MB\n", size, USetupData.RequiredPartitionDiskSpace);
         return FALSE;
     }
     else
@@ -1733,9 +1427,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
     if (IsUnattendedSetup)
     {
-        if (!SelectPartition(PartitionList, UnattendDestinationDiskNumber, UnattendDestinationPartitionNumber))
+        if (!SelectPartition(PartitionList,
+                             USetupData.DestinationDiskNumber,
+                             USetupData.DestinationPartitionNumber))
         {
-            if (AutoPartition)
+            if (USetupData.AutoPartition)
             {
                 if (PartitionList->CurrentPartition->LogicalPartition)
                 {
@@ -1754,7 +1450,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 if (!IsDiskSizeValid(PartitionList->CurrentPartition))
                 {
                     MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                    RequiredPartitionDiskSpace);
+                                    USetupData.RequiredPartitionDiskSpace);
                     return SELECT_PARTITION_PAGE; /* let the user select another partition */
                 }
 
@@ -1769,7 +1465,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             if (!IsDiskSizeValid(PartitionList->CurrentPartition))
             {
                 MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                RequiredPartitionDiskSpace);
+                                USetupData.RequiredPartitionDiskSpace);
                 return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
 
@@ -1819,7 +1515,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
             {
                 DestroyPartitionList(PartitionList);
                 PartitionList = NULL;
@@ -1863,7 +1559,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             if (!IsDiskSizeValid(PartitionList->CurrentPartition))
             {
                 MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                RequiredPartitionDiskSpace);
+                                USetupData.RequiredPartitionDiskSpace);
                 return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
 
@@ -1899,7 +1595,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'L')  /* L */
         {
-            if (PartitionList->CurrentPartition->LogicalPartition != FALSE)
+            if (PartitionList->CurrentPartition->LogicalPartition == TRUE)
             {
                 Error = LogicalPartitionCreationChecks(PartitionList);
                 if (Error != NOT_AN_ERROR)
@@ -2157,14 +1853,14 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
                                   MaxSize, InputBuffer, &Quit, &Cancel);
 
-        if (Quit != FALSE)
+        if (Quit == TRUE)
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
         }
-        else if (Cancel != FALSE)
+        else if (Cancel == TRUE)
         {
             return SELECT_PARTITION_PAGE;
         }
@@ -2316,14 +2012,14 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
         ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
                                   MaxSize, InputBuffer, &Quit, &Cancel);
 
-        if (Quit != FALSE)
+        if (Quit == TRUE)
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
         }
-        else if (Cancel != FALSE)
+        else if (Cancel == TRUE)
         {
             return SELECT_PARTITION_PAGE;
         }
@@ -2474,14 +2170,14 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
         ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
                                   MaxSize, InputBuffer, &Quit, &Cancel);
 
-        if (Quit != FALSE)
+        if (Quit == TRUE)
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
         }
-        else if (Cancel != FALSE)
+        else if (Cancel == TRUE)
         {
             return SELECT_PARTITION_PAGE;
         }
@@ -2700,7 +2396,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -2726,8 +2422,8 @@ DeletePartitionPage(PINPUT_RECORD Ir)
  *
  * Next pages:
  *  CheckFileSystemPage (At once if RepairUpdate is selected)
- *  CheckFileSystemPage (At once if Unattended and not UnattendFormatPartition)
- *  FormatPartitionPage (At once if Unattended and UnattendFormatPartition)
+ *  CheckFileSystemPage (At once if Unattended and not USetupData.FormatPartition)
+ *  FormatPartitionPage (At once if Unattended and USetupData.FormatPartition)
  *  SelectPartitionPage (If the user aborts)
  *  FormatPartitionPage (Default)
  *  QuitPage
@@ -2890,7 +2586,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                                        PartTypeString,
                                        ARRAYSIZE(PartTypeString));
 
-    if (PartEntry->AutoCreate != FALSE)
+    if (PartEntry->AutoCreate == TRUE)
     {
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NEWPARTITION));
 
@@ -2916,7 +2612,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
         PartEntry->AutoCreate = FALSE;
     }
-    else if (PartEntry->New != FALSE)
+    else if (PartEntry->New == TRUE)
     {
         switch (FormatState)
         {
@@ -2995,7 +2691,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
     if (IsUnattendedSetup)
     {
-        if (UnattendFormatPartition)
+        if (USetupData.FormatPartition)
         {
             /*
              * We use whatever currently selected file system we have
@@ -3019,7 +2715,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -3065,7 +2761,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
  *
  * SIDEEFFECTS
  *  Sets PartitionList->CurrentPartition->FormatState
- *  Sets DestinationRootPath
+ *  Sets USetupData.DestinationRootPath
  *
  * RETURNS
  *   Number of the next page.
@@ -3111,7 +2807,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -3319,9 +3015,9 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
  *  PrepareCopyPage (At once)
  *
  * SIDEEFFECTS
- *  Inits DestinationRootPath
- *  Inits DestinationPath
- *  Inits DestinationArcPath
+ *  Inits USetupData.DestinationRootPath
+ *  Inits USetupData.DestinationPath
+ *  Inits USetupData.DestinationArcPath
  *  Inits DestinationDriveLetter
  *
  * RETURNS
@@ -3339,31 +3035,31 @@ InstallDirectoryPage1(PWSTR InstallDir,
     RtlFreeUnicodeString(&InstallPath);
     RtlCreateUnicodeString(&InstallPath, InstallDir);
 
-    /* Create 'DestinationRootPath' string */
-    RtlFreeUnicodeString(&DestinationRootPath);
+    /* Create 'USetupData.DestinationRootPath' string */
+    RtlFreeUnicodeString(&USetupData.DestinationRootPath);
     StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
             L"\\Device\\Harddisk%lu\\Partition%lu\\",
             DiskEntry->DiskNumber,
             PartEntry->PartitionNumber);
-    RtlCreateUnicodeString(&DestinationRootPath, PathBuffer);
-    DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
+    RtlCreateUnicodeString(&USetupData.DestinationRootPath, PathBuffer);
+    DPRINT("DestinationRootPath: %wZ\n", &USetupData.DestinationRootPath);
 
 /** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
-    /* Create 'DestinationPath' string */
-    RtlFreeUnicodeString(&DestinationPath);
+    /* Create 'USetupData.DestinationPath' string */
+    RtlFreeUnicodeString(&USetupData.DestinationPath);
     CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
-                 DestinationRootPath.Buffer, InstallDir);
-    RtlCreateUnicodeString(&DestinationPath, PathBuffer);
+                 USetupData.DestinationRootPath.Buffer, InstallDir);
+    RtlCreateUnicodeString(&USetupData.DestinationPath, PathBuffer);
 
 /** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
-    /* Create 'DestinationArcPath' */
-    RtlFreeUnicodeString(&DestinationArcPath);
+    /* Create 'USetupData.DestinationArcPath' */
+    RtlFreeUnicodeString(&USetupData.DestinationArcPath);
     StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
             L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
             DiskEntry->BiosDiskNumber,
             PartEntry->PartitionNumber);
     ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallDir);
-    RtlCreateUnicodeString(&DestinationArcPath, PathBuffer);
+    RtlCreateUnicodeString(&USetupData.DestinationArcPath, PathBuffer);
 
     /* Initialize DestinationDriveLetter */
     DestinationDriveLetter = (WCHAR)PartEntry->DriveLetter;
@@ -3387,7 +3083,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    WCHAR InstallDir[51];
+    WCHAR InstallDir[MAX_PATH];
     WCHAR c;
     ULONG Length;
 
@@ -3409,10 +3105,11 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     DiskEntry = PartitionList->CurrentDisk;
     PartEntry = PartitionList->CurrentPartition;
 
-    if (IsUnattendedSetup)
-        wcscpy(InstallDir, UnattendInstallationDirectory);
-    else if (RepairUpdateFlag)
+    // if (IsUnattendedSetup)
+    if (RepairUpdateFlag)
         wcscpy(InstallDir, CurrentInstallation->PathComponent); // SystemNtPath
+    else if (USetupData.InstallationDirectory[0])
+        wcscpy(InstallDir, USetupData.InstallationDirectory);
     else
         wcscpy(InstallDir, L"\\ReactOS");
 
@@ -3443,7 +3140,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -3564,8 +3261,8 @@ AddSectionToCopyQueueCab(HINF InfFile,
 
         if (!SetupQueueCopy(SetupFileQueue,
                             SourceCabinet,
-                            SourceRootPath.Buffer,
-                            SourceRootDir.Buffer,
+                            USetupData.SourceRootPath.Buffer,
+                            USetupData.SourceRootDir.Buffer,
                             FileKeyName,
                             DirKeyValue,
                             TargetFileName))
@@ -3673,7 +3370,7 @@ AddSectionToCopyQueue(HINF InfFile,
             DPRINT("InstallationPath: '%S'\n", DirKeyValue);
 
             StringCchCopyW(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName),
-                           SourceRootDir.Buffer);
+                           USetupData.SourceRootDir.Buffer);
 
             DPRINT("InstallationPath(2): '%S'\n", CompleteOrigDirName);
         }
@@ -3693,14 +3390,14 @@ AddSectionToCopyQueue(HINF InfFile,
             DPRINT("RelativePath: '%S'\n", DirKeyValue);
 
             CombinePaths(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName), 2,
-                         SourceRootDir.Buffer, DirKeyValue);
+                         USetupData.SourceRootDir.Buffer, DirKeyValue);
 
             DPRINT("RelativePath(2): '%S'\n", CompleteOrigDirName);
         }
 
         if (!SetupQueueCopy(SetupFileQueue,
                             SourceCabinet,
-                            SourceRootPath.Buffer,
+                            USetupData.SourceRootPath.Buffer,
                             CompleteOrigDirName,
                             FileKeyName,
                             DirKeyValue,
@@ -3731,7 +3428,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     WCHAR PathBuffer[MAX_PATH];
 
     /* Add common files */
-    if (!AddSectionToCopyQueue(InfFile, L"SourceDisksFiles", SourceCabinet, &DestinationPath, Ir))
+    if (!AddSectionToCopyQueue(InfFile, L"SourceDisksFiles", SourceCabinet, &USetupData.DestinationPath, Ir))
         return FALSE;
 
     /* Add specific files depending of computer type */
@@ -3742,7 +3439,7 @@ PrepareCopyPageInfFile(HINF InfFile,
 
         if (AdditionalSectionName)
         {
-            if (!AddSectionToCopyQueue(InfFile, AdditionalSectionName, SourceCabinet, &DestinationPath, Ir))
+            if (!AddSectionToCopyQueue(InfFile, AdditionalSectionName, SourceCabinet, &USetupData.DestinationPath, Ir))
                 return FALSE;
         }
     }
@@ -3751,14 +3448,14 @@ PrepareCopyPageInfFile(HINF InfFile,
 
     /*
      * FIXME:
-     * Copying files to DestinationRootPath should be done from within
+     * Copying files to USetupData.DestinationRootPath should be done from within
      * the SystemPartitionFiles section.
      * At the moment we check whether we specify paths like '\foo' or '\\' for that.
-     * For installing to DestinationPath specify just '\' .
+     * For installing to USetupData.DestinationPath specify just '\' .
      */
 
     /* Get destination path */
-    StringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer), DestinationPath.Buffer);
+    StringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer), USetupData.DestinationPath.Buffer);
 
     DPRINT("FullPath(1): '%S'\n", PathBuffer);
 
@@ -3801,7 +3498,7 @@ PrepareCopyPageInfFile(HINF InfFile,
             DPRINT("InstallationPath: '%S'\n", DirKeyValue);
 
             StringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer),
-                           DestinationPath.Buffer);
+                           USetupData.DestinationPath.Buffer);
 
             DPRINT("InstallationPath(2): '%S'\n", PathBuffer);
         }
@@ -3811,7 +3508,7 @@ PrepareCopyPageInfFile(HINF InfFile,
             DPRINT("AbsolutePath: '%S'\n", DirKeyValue);
 
             CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
-                         DestinationRootPath.Buffer, DirKeyValue);
+                         USetupData.DestinationRootPath.Buffer, DirKeyValue);
 
             DPRINT("AbsolutePath(2): '%S'\n", PathBuffer);
 
@@ -3830,7 +3527,7 @@ PrepareCopyPageInfFile(HINF InfFile,
             DPRINT("RelativePath: '%S'\n", DirKeyValue);
 
             CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
-                         DestinationPath.Buffer, DirKeyValue);
+                         USetupData.DestinationPath.Buffer, DirKeyValue);
 
             DPRINT("RelativePath(2): '%S'\n", PathBuffer);
 
@@ -3908,7 +3605,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
             break;
 
         CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
-                     SourcePath.Buffer, KeyValue);
+                     USetupData.SourcePath.Buffer, KeyValue);
 
 #ifdef __REACTOS__
         CabinetInitialize();
@@ -3937,7 +3634,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
                                           InfFileSize,
                                           NULL,
                                           INF_STYLE_WIN4,
-                                          LanguageId,
+                                          USetupData.LanguageId,
                                           &ErrorLine);
 
         if (InfHandle == INVALID_HANDLE_VALUE)
@@ -4053,7 +3750,7 @@ FileCopyPage(PINPUT_RECORD Ir)
     MUIDisplayPage(FILE_COPY_PAGE);
 
     /* Create context for the copy process */
-    CopyContext.DestinationRootPath = DestinationRootPath.Buffer;
+    CopyContext.DestinationRootPath = USetupData.DestinationRootPath.Buffer;
     CopyContext.InstallPath = InstallPath.Buffer;
     CopyContext.TotalOperations = 0;
     CopyContext.CompletedOperations = 0;
@@ -4115,6 +3812,9 @@ FileCopyPage(PINPUT_RECORD Ir)
     DestroyProgressBar(CopyContext.MemoryBars[1]);
     DestroyProgressBar(CopyContext.MemoryBars[2]);
 
+    /* Create the $winnt$.inf file */
+    InstallSetupInfFile(&USetupData);
+
     /* Go display the next page */
     return REGISTRY_PAGE;
 }
@@ -4156,7 +3856,7 @@ RegistryPage(PINPUT_RECORD Ir)
         DPRINT1("TODO: Updating / repairing the registry is not completely implemented yet!\n");
 
         /* Verify the registry hives and check whether we need to update or repair any of them */
-        Status = VerifyRegistryHives(&DestinationPath, &ShouldRepairRegistry);
+        Status = VerifyRegistryHives(&USetupData.DestinationPath, &ShouldRepairRegistry);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("VerifyRegistryHives failed, Status 0x%08lx\n", Status);
@@ -4171,7 +3871,7 @@ DoUpdate:
     CONSOLE_SetStatusText(MUIGetString(STRING_REGHIVEUPDATE));
 
     /* Initialize the registry and setup the registry hives */
-    Status = RegInitializeRegistry(&DestinationPath);
+    Status = RegInitializeRegistry(&USetupData.DestinationPath);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RegInitializeRegistry() failed\n");
@@ -4260,7 +3960,7 @@ DoUpdate:
 
         CONSOLE_SetStatusText(MUIGetString(STRING_IMPORTFILE), File);
 
-        if (!ImportRegistryFile(SourcePath.Buffer, File, Section, LanguageId, Delete))
+        if (!ImportRegistryFile(USetupData.SourcePath.Buffer, File, Section, USetupData.LanguageId, Delete))
         {
             DPRINT1("Importing %S failed\n", File);
             INF_FreeData(File);
@@ -4337,7 +4037,7 @@ Cleanup:
     // TODO: Unload all the registry stuff, perform cleanup,
     // and copy the created hive files into .sav files.
     //
-    RegCleanupRegistry(&DestinationPath);
+    RegCleanupRegistry(&USetupData.DestinationPath);
 
     /*
      * Check whether we were in update/repair mode but we were actually
@@ -4393,28 +4093,30 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-    RtlFreeUnicodeString(&SystemRootPath);
+    RtlFreeUnicodeString(&USetupData.SystemRootPath);
     StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
             L"\\Device\\Harddisk%lu\\Partition%lu\\",
             PartitionList->SystemPartition->DiskEntry->DiskNumber,
             PartitionList->SystemPartition->PartitionNumber);
-    RtlCreateUnicodeString(&SystemRootPath, PathBuffer);
-    DPRINT1("SystemRootPath: %wZ\n", &SystemRootPath);
+    RtlCreateUnicodeString(&USetupData.SystemRootPath, PathBuffer);
+    DPRINT1("SystemRootPath: %wZ\n", &USetupData.SystemRootPath);
 
     PartitionType = PartitionList->SystemPartition->PartitionType;
 
+    /* For unattended setup, skip MBR installation or install on floppy if needed */
     if (IsUnattendedSetup)
     {
-        if (UnattendMBRInstallType == 0) /* skip MBR installation */
+        if ((USetupData.MBRInstallType == 0) ||
+            (USetupData.MBRInstallType == 1))
         {
-            return SUCCESS_PAGE;
-        }
-        else if (UnattendMBRInstallType == 1) /* install on floppy */
-        {
-            return BOOT_LOADER_FLOPPY_PAGE;
+            goto Quit;
         }
     }
 
+    /*
+     * We may install an MBR or VBR, but before that, check whether
+     * we need to actually install the VBR on floppy.
+     */
     if (PartitionType == PARTITION_ENTRY_UNUSED)
     {
         DPRINT("Error: system partition invalid (unused)\n");
@@ -4457,15 +4159,21 @@ BootLoaderPage(PINPUT_RECORD Ir)
         InstallOnFloppy = TRUE;
     }
 
-    if (InstallOnFloppy != FALSE)
+    /* We should install on floppy */
+    if (InstallOnFloppy)
     {
-        return BOOT_LOADER_FLOPPY_PAGE;
+        USetupData.MBRInstallType = 1;
+        goto Quit;
     }
 
-    /* Unattended install on hdd? */
-    if (IsUnattendedSetup && UnattendMBRInstallType == 2)
+    /* Is it an unattended install on hdd? */
+    if (IsUnattendedSetup)
     {
-        return BOOT_LOADER_HARDDISK_MBR_PAGE;
+        if ((USetupData.MBRInstallType == 2) ||
+            (USetupData.MBRInstallType == 3))
+        {
+            goto Quit;
+        }
     }
 
     MUIDisplayPage(BOOT_LOADER_PAGE);
@@ -4506,7 +4214,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -4515,23 +4223,51 @@ BootLoaderPage(PINPUT_RECORD Ir)
         {
             if (Line == 12)
             {
-                return BOOT_LOADER_HARDDISK_MBR_PAGE;
+                /* Install on both MBR and VBR */
+                USetupData.MBRInstallType = 2;
+                break;
             }
             else if (Line == 13)
             {
-                return BOOT_LOADER_HARDDISK_VBR_PAGE;
+                /* Install on VBR only */
+                USetupData.MBRInstallType = 3;
+                break;
             }
             else if (Line == 14)
             {
-                return BOOT_LOADER_FLOPPY_PAGE;
+                /* Install on floppy */
+                USetupData.MBRInstallType = 1;
+                break;
             }
             else if (Line == 15)
             {
-                return SUCCESS_PAGE;
+                /* Skip MBR installation */
+                USetupData.MBRInstallType = 0;
+                break;
             }
 
             return BOOT_LOADER_PAGE;
         }
+    }
+
+Quit:
+    switch (USetupData.MBRInstallType)
+    {
+        /* Skip MBR installation */
+        case 0:
+            return SUCCESS_PAGE;
+
+        /* Install on floppy */
+        case 1:
+            return BOOT_LOADER_FLOPPY_PAGE;
+
+        /* Install on both MBR and VBR */
+        case 2:
+            return BOOT_LOADER_HARDDISK_MBR_PAGE;
+
+        /* Install on VBR only */
+        case 3:
+            return BOOT_LOADER_HARDDISK_VBR_PAGE;
     }
 
     return BOOT_LOADER_PAGE;
@@ -4567,7 +4303,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) != FALSE)
+            if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
 
             break;
@@ -4580,7 +4316,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
                 return BOOT_LOADER_FLOPPY_PAGE;
             }
 
-            Status = InstallFatBootcodeToFloppy(&SourceRootPath, &DestinationArcPath);
+            Status = InstallFatBootcodeToFloppy(&USetupData.SourceRootPath, &USetupData.DestinationArcPath);
             if (!NT_SUCCESS(Status))
             {
                 /* Print error message */
@@ -4613,9 +4349,9 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
 
-    Status = InstallVBRToPartition(&SystemRootPath,
-                                   &SourceRootPath,
-                                   &DestinationArcPath,
+    Status = InstallVBRToPartition(&USetupData.SystemRootPath,
+                                   &USetupData.SourceRootPath,
+                                   &USetupData.DestinationArcPath,
                                    PartitionList->SystemPartition->PartitionType);
     if (!NT_SUCCESS(Status))
     {
@@ -4650,9 +4386,9 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     WCHAR DstPath[MAX_PATH];
 
     /* Step 1: Write the VBR */
-    Status = InstallVBRToPartition(&SystemRootPath,
-                                   &SourceRootPath,
-                                   &DestinationArcPath,
+    Status = InstallVBRToPartition(&USetupData.SystemRootPath,
+                                   &USetupData.SourceRootPath,
+                                   &USetupData.DestinationArcPath,
                                    PartitionList->SystemPartition->PartitionType);
     if (!NT_SUCCESS(Status))
     {
@@ -4665,12 +4401,12 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
             L"\\Device\\Harddisk%d\\Partition0",
             PartitionList->SystemPartition->DiskEntry->DiskNumber);
 
-    CombinePaths(SourceMbrPathBuffer, ARRAYSIZE(SourceMbrPathBuffer), 2, SourceRootPath.Buffer, L"\\loader\\dosmbr.bin");
+    CombinePaths(SourceMbrPathBuffer, ARRAYSIZE(SourceMbrPathBuffer), 2, USetupData.SourceRootPath.Buffer, L"\\loader\\dosmbr.bin");
 
     if (IsThereAValidBootSector(DestinationDevicePathBuffer))
     {
         /* Save current MBR */
-        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath.Buffer, L"mbr.old");
+        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, USetupData.SystemRootPath.Buffer, L"mbr.old");
 
         DPRINT1("Save MBR: %S ==> %S\n", DestinationDevicePathBuffer, DstPath);
         Status = SaveBootSector(DestinationDevicePathBuffer, DstPath, sizeof(PARTITION_SECTOR));
@@ -4882,14 +4618,14 @@ RunUSetup(VOID)
     }
 
     /* Initialize global unicode strings */
-    RtlInitUnicodeString(&SourcePath, NULL);
-    RtlInitUnicodeString(&SourceRootPath, NULL);
-    RtlInitUnicodeString(&SourceRootDir, NULL);
+    RtlInitUnicodeString(&USetupData.SourcePath, NULL);
+    RtlInitUnicodeString(&USetupData.SourceRootPath, NULL);
+    RtlInitUnicodeString(&USetupData.SourceRootDir, NULL);
     RtlInitUnicodeString(&InstallPath, NULL);
-    RtlInitUnicodeString(&DestinationPath, NULL);
-    RtlInitUnicodeString(&DestinationArcPath, NULL);
-    RtlInitUnicodeString(&DestinationRootPath, NULL);
-    RtlInitUnicodeString(&SystemRootPath, NULL);
+    RtlInitUnicodeString(&USetupData.DestinationPath, NULL);
+    RtlInitUnicodeString(&USetupData.DestinationArcPath, NULL);
+    RtlInitUnicodeString(&USetupData.DestinationRootPath, NULL);
+    RtlInitUnicodeString(&USetupData.SystemRootPath, NULL);
 
     /* Hide the cursor */
     CONSOLE_SetCursorType(TRUE, FALSE);
