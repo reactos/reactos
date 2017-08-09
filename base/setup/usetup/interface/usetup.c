@@ -629,10 +629,10 @@ SetupStartPage(PINPUT_RECORD Ir)
     }
 
     /* Start the PnP thread */
-    if (hPnpThread != INVALID_HANDLE_VALUE)
+    if (hPnpThread != NULL)
     {
         NtResumeThread(hPnpThread, NULL);
-        hPnpThread = INVALID_HANDLE_VALUE;
+        hPnpThread = NULL;
     }
 
     CheckUnattendedSetup(&USetupData);
@@ -4605,7 +4605,7 @@ RunUSetup(VOID)
                                  &hPnpThread,
                                  NULL);
     if (!NT_SUCCESS(Status))
-        hPnpThread = INVALID_HANDLE_VALUE;
+        hPnpThread = NULL;
 
     if (!CONSOLE_Init())
     {
