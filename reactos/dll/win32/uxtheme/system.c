@@ -747,6 +747,18 @@ OpenThemeDataInternal(PTHEME_FILE ThemeFile, HWND hwnd, LPCWSTR pszClassList, DW
         return NULL;
     }
 
+    if ((flags & OTD_NONCLIENT) && !(dwThemeAppProperties & STAP_ALLOW_NONCLIENT))
+    {
+        SetLastError(E_PROP_ID_UNSUPPORTED);
+        return NULL;
+    }
+
+    if (!(flags & OTD_NONCLIENT) && !(dwThemeAppProperties & STAP_ALLOW_CONTROLS))
+    {
+        SetLastError(E_PROP_ID_UNSUPPORTED);
+        return NULL;
+    }
+
     if (ThemeFile)
     {
         pszAppName = UXTHEME_GetWindowProperty(hwnd, atSubAppName, szAppBuff, sizeof(szAppBuff)/sizeof(szAppBuff[0]));
