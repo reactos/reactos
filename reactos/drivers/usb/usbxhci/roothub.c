@@ -247,7 +247,24 @@ XHCI_RH_ClearFeaturePortEnable(IN PVOID xhciExtension,
                                IN USHORT Port)
 {
     DPRINT1("XHCI_RH_ClearFeaturePortEnable: function initiated\n");
-    return 0;
+    PXHCI_EXTENSION XhciExtension;
+    PULONG PortStatusRegPointer;
+    XHCI_PORT_STATUS_CONTROL PortStatusRegister;
+    
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+    ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
+    PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    
+    PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
+    PortStatusRegister.PortEnableDisable = 1;
+    
+    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
+    
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    
+    ASSERT(PortStatusRegister.PortEnableDisable == 0);
+    return MP_STATUS_SUCCESS;    
 }
 
 MPSTATUS
