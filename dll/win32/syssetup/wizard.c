@@ -296,7 +296,7 @@ AckPageDlgProc(HWND hwndDlg,
 
             Projects = NULL;
             ProjectsSize = 256;
-            do
+            while (TRUE)
             {
                 Projects = HeapAlloc(GetProcessHeap(), 0, ProjectsSize * sizeof(WCHAR));
                 if (NULL == Projects)
@@ -316,9 +316,9 @@ AckPageDlgProc(HWND hwndDlg,
                 HeapFree(GetProcessHeap(), 0, Projects);
                 ProjectsSize *= 2;
             }
-            while (1);
+
             CurrentProject = Projects;
-            while (L'\0' != *CurrentProject)
+            while (*CurrentProject != L'\0')
             {
                 End = wcschr(CurrentProject, L'\n');
                 if (NULL != End)
@@ -387,8 +387,6 @@ WriteOwnerSettings(WCHAR * OwnerName,
 {
     HKEY hKey;
     LONG res;
-
-
 
     res = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                         L"Software\\Microsoft\\Windows NT\\CurrentVersion",
@@ -867,50 +865,48 @@ static BOOL
 RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
 {
     MSG msg;
-    if (pwszCPLParameters)
-    {
-        STARTUPINFOW StartupInfo;
-        PROCESS_INFORMATION ProcessInformation;
-        WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
+    STARTUPINFOW StartupInfo;
+    PROCESS_INFORMATION ProcessInformation;
+    WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
 
-        ZeroMemory(&StartupInfo, sizeof(StartupInfo));
-        StartupInfo.cb = sizeof(StartupInfo);
-
-        ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));
-        wcscat(CmdLine, pwszCPLParameters);
-
-        if (!CreateProcessW(NULL,
-                            CmdLine,
-                            NULL,
-                            NULL,
-                            FALSE,
-                            0,
-                            NULL,
-                            NULL,
-                            &StartupInfo,
-                            &ProcessInformation))
-        {
-            MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
-            return FALSE;
-        }
-
-        while((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
-        { 
-           while(PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
-           {
-               TranslateMessage(&msg);
-               DispatchMessageW(&msg);
-           }
-        }
-        CloseHandle(ProcessInformation.hThread);
-        CloseHandle(ProcessInformation.hProcess);
-        return TRUE;
-    }
-    else
+    if (!pwszCPLParameters)
     {
         MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
         return FALSE;
     }
+
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+
+    ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));
+    wcscat(CmdLine, pwszCPLParameters);
+
+    if (!CreateProcessW(NULL,
+                        CmdLine,
+                        NULL,
+                        NULL,
+                        FALSE,
+                        0,
+                        NULL,
+                        NULL,
+                        &StartupInfo,
+                        &ProcessInformation))
+    {
+        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
+    { 
+       while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+       {
+           TranslateMessage(&msg);
+           DispatchMessageW(&msg);
+       }
+    }
+    CloseHandle(ProcessInformation.hThread);
+    CloseHandle(ProcessInformation.hProcess);
+    return TRUE;
 }
 
 static VOID
@@ -1501,7 +1497,7 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
                      SetupData);
 
     SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
-    if(!SetSystemLocalTime(hwndDlg, SetupData))
+    if (!SetSystemLocalTime(hwndDlg, SetupData))
     {
         if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
         {
@@ -1894,15 +1890,15 @@ StartComponentRegistration(HWND hwndDlg, PULONG MaxProgress)
     PREGISTRATIONDATA RegistrationData;
 
     DllCount = -1;
-    if (! SetupFindFirstLineW(hSysSetupInf, L"RegistrationPhase2",
-                              L"RegisterDlls", &Context))
+    if (!SetupFindFirstLineW(hSysSetupInf, L"RegistrationPhase2",
+                             L"RegisterDlls", &Context))
     {
         DPRINT1("No RegistrationPhase2 section found\n");
         return FALSE;
     }
-    if (! SetupGetStringFieldW(&Context, 1, SectionName,
-                               sizeof(SectionName) / sizeof(SectionName[0]),
-                               NULL))
+    if (!SetupGetStringFieldW(&Context, 1, SectionName,
+                              sizeof(SectionName) / sizeof(SectionName[0]),
+                              NULL))
     {
         DPRINT1("Unable to retrieve section name\n");
         return FALSE;
@@ -2196,7 +2192,7 @@ ProcessUnattendInf(
                              L"UnattendSetupEnabled",
                              &InfContext))
     {
-        DPRINT1("Error: Cant find UnattendSetupEnabled Key! %d\n", GetLastError());
+        DPRINT1("Error: Cannot find UnattendSetupEnabled Key! %d\n", GetLastError());
         return;
     }
 
@@ -2288,13 +2284,12 @@ ProcessUnattendInf(
         else if (!wcscmp(szName, L"DisableGeckoInst"))
         {
             if(!wcscmp(szValue, L"yes"))
-                pSetupData->DisableGeckoInst = 1;
+                pSetupData->DisableGeckoInst = TRUE;
             else
-                pSetupData->DisableGeckoInst = 0;
+                pSetupData->DisableGeckoInst = FALSE;
         }
 
-    }
-    while (SetupFindNextLine(&InfContext, &InfContext));
+    } while (SetupFindNextLine(&InfContext, &InfContext));
 
     if (SetupFindFirstLineW(pSetupData->hUnattendedInf,
                             L"Display",
@@ -2353,8 +2348,7 @@ ProcessUnattendInf(
                     dm.dmFields |= DM_DISPLAYFREQUENCY;
                     dm.dmDisplayFrequency = iValue;
                 }
-            }
-            while (SetupFindNextLine(&InfContext, &InfContext));
+            } while (SetupFindNextLine(&InfContext, &InfContext));
 
             ChangeDisplaySettingsW(&dm, CDS_UPDATEREGISTRY);
         }
@@ -2375,15 +2369,14 @@ ProcessUnattendInf(
                             NULL,
                             &InfContext))
     {
-
         int i = 0;
         do
         {
-            if(SetupGetStringFieldW(&InfContext,
-                                    0,
-                                    szValue,
-                                    sizeof(szValue) / sizeof(WCHAR),
-                                    NULL))
+            if (SetupGetStringFieldW(&InfContext,
+                                     0,
+                                     szValue,
+                                     sizeof(szValue) / sizeof(WCHAR),
+                                     NULL))
             {
                 WCHAR szPath[MAX_PATH];
                 swprintf(szName, L"%d", i);
@@ -2403,7 +2396,7 @@ ProcessUnattendInf(
                     }
                 }
             }
-        } while(SetupFindNextLine(&InfContext, &InfContext));
+        } while (SetupFindNextLine(&InfContext, &InfContext));
     }
 
     RegCloseKey(hKey);
@@ -2605,7 +2598,6 @@ InstallWizard(VOID)
     psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
-
     /* Create the Owner page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_OWNERTITLE);
@@ -2621,7 +2613,6 @@ InstallWizard(VOID)
     psp.pfnDlgProc = ComputerPageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_COMPUTERPAGE);
     phpage[nPages++] = CreatePropertySheetPage(&psp);
-
 
     /* Create the DateTime page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -2656,7 +2647,6 @@ InstallWizard(VOID)
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
-
     /* Create the Finish page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.pfnDlgProc = FinishDlgProc;
@@ -2676,7 +2666,7 @@ InstallWizard(VOID)
 
     /* Create title font */
     pSetupData->hTitleFont = CreateTitleFont();
-    pSetupData->hBoldFont = CreateBoldFont();
+    pSetupData->hBoldFont  = CreateBoldFont();
 
     /* Display the wizard */
     hWnd = (HWND)PropertySheet(&psh);
