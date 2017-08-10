@@ -488,11 +488,11 @@ OwnerPageDlgProc(HWND hwndDlg,
                     OwnerName[0] = 0;
                     if (GetDlgItemTextW(hwndDlg, IDC_OWNERNAME, OwnerName, 50) == 0)
                     {
-                        if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+                        if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
                         {
                             wcscpy(Title, L"ReactOS Setup");
                         }
-                        if (0 == LoadStringW(hDllInstance, IDS_WZD_NAME, ErrorName, sizeof(ErrorName) / sizeof(ErrorName[0])))
+                        if (0 == LoadStringW(hDllInstance, IDS_WZD_NAME, ErrorName, ARRAYSIZE(ErrorName)))
                         {
                             wcscpy(ErrorName, L"Setup cannot continue until you enter your name.");
                         }
@@ -542,12 +542,12 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     {
         if (hwndDlg != NULL)
         {
-            if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+            if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
             {
                 wcscpy(Title, L"ReactOS Setup");
             }
             if (0 == LoadStringW(hDllInstance, IDS_WZD_SETCOMPUTERNAME, ErrorComputerName,
-                                 sizeof(ErrorComputerName) / sizeof(ErrorComputerName[0])))
+                                 ARRAYSIZE(ErrorComputerName)))
             {
                 wcscpy(ErrorComputerName, L"Setup failed to set the computer name.");
             }
@@ -578,7 +578,7 @@ WriteDefaultLogonData(LPWSTR Domain)
     if (LoadStringW(hDllInstance,
                     IDS_ADMINISTRATOR_NAME,
                     szAdministratorName,
-                    sizeof(szAdministratorName) / sizeof(WCHAR)) == 0)
+                    ARRAYSIZE(szAdministratorName)) == 0)
     {
         wcscpy(szAdministratorName, L"Administrator");
     }
@@ -655,7 +655,7 @@ ComputerPageDlgProc(HWND hwndDlg,
 
     pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
-    if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+    if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
     {
         wcscpy(Title, L"ReactOS Setup");
     }
@@ -713,7 +713,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     if (0 == GetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName, MAX_COMPUTERNAME_LENGTH + 1))
                     {
                         if (0 == LoadStringW(hDllInstance, IDS_WZD_COMPUTERNAME, EmptyComputerName,
-                                             sizeof(EmptyComputerName) / sizeof(EmptyComputerName[0])))
+                                             ARRAYSIZE(EmptyComputerName)))
                         {
                             wcscpy(EmptyComputerName, L"Setup cannot continue until you enter the name of your computer.");
                         }
@@ -739,7 +739,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                         (GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 128) == 0))
                     {
                         if (0 == LoadStringW(hDllInstance, IDS_WZD_PASSWORDEMPTY, EmptyPassword,
-                                             sizeof(EmptyPassword) / sizeof(EmptyPassword[0])))
+                                             ARRAYSIZE(EmptyPassword)))
                         {
                             wcscpy(EmptyPassword, L"You must enter a password !");
                         }
@@ -755,7 +755,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     if (wcscmp(Password1, Password2))
                     {
                         if (0 == LoadStringW(hDllInstance, IDS_WZD_PASSWORDMATCH, NotMatchPassword,
-                                             sizeof(NotMatchPassword) / sizeof(NotMatchPassword[0])))
+                                             ARRAYSIZE(NotMatchPassword)))
                         {
                             wcscpy(NotMatchPassword, L"The passwords you entered do not match. Please enter the desired password again.");
                         }
@@ -771,7 +771,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                         if (!isprint(*Password))
                         {
                             if (0 == LoadStringW(hDllInstance, IDS_WZD_PASSWORDCHAR, WrongPassword,
-                                                 sizeof(WrongPassword) / sizeof(WrongPassword[0])))
+                                                 ARRAYSIZE(WrongPassword)))
                             {
                                 wcscpy(WrongPassword, L"The password you entered contains invalid characters. Please enter a cleaned password.");
                             }
@@ -918,7 +918,7 @@ WriteUserLocale(VOID)
 
     lcid = GetSystemDefaultLCID();
 
-    if (GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Locale, sizeof(Locale) / sizeof(Locale[0])) != 0)
+    if (GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Locale, ARRAYSIZE(Locale)) != 0)
     {
         if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Control Panel\\International",
                             0, NULL, REG_OPTION_NON_VOLATILE,
@@ -1499,12 +1499,12 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
     SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
     if (!SetSystemLocalTime(hwndDlg, SetupData))
     {
-        if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+        if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
         {
             wcscpy(Title, L"ReactOS Setup");
         }
         if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
-                             sizeof(ErrorLocalTime) / sizeof(ErrorLocalTime[0])))
+                             ARRAYSIZE(ErrorLocalTime)))
         {
             wcscpy(ErrorLocalTime, L"Setup was unable to set the local time.");
         }
@@ -1752,8 +1752,7 @@ RegistrationNotificationProc(PVOID Context,
                 }
                 if (0 == LoadStringW(hDllInstance, MessageID,
                                      ErrorMessage,
-                                     sizeof(ErrorMessage) /
-                                     sizeof(ErrorMessage[0])))
+                                     ARRAYSIZE(ErrorMessage)))
                 {
                     ErrorMessage[0] = L'\0';
                 }
@@ -1762,8 +1761,8 @@ RegistrationNotificationProc(PVOID Context,
                     FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL,
                                    StatusInfo->Win32Error, 0,
                                    ErrorMessage + wcslen(ErrorMessage),
-                                   sizeof(ErrorMessage) / sizeof(ErrorMessage[0]) -
-                                   wcslen(ErrorMessage), NULL);
+                                   ARRAYSIZE(ErrorMessage) - wcslen(ErrorMessage),
+                                   NULL);
                 }
                 RegistrationNotify.ErrorMessage = ErrorMessage;
             }
@@ -1846,8 +1845,7 @@ RegistrationProc(LPVOID Parameter)
         {
             if (0 == LoadStringW(hDllInstance, IDS_UNKNOWN_ERROR,
                                  UnknownError,
-                                 sizeof(UnknownError) / sizeof(UnknownError[0]) -
-                                 20))
+                                 ARRAYSIZE(UnknownError) - 20))
             {
                 wcscpy(UnknownError, L"Unknown error");
             }
@@ -1897,7 +1895,7 @@ StartComponentRegistration(HWND hwndDlg, PULONG MaxProgress)
         return FALSE;
     }
     if (!SetupGetStringFieldW(&Context, 1, SectionName,
-                              sizeof(SectionName) / sizeof(SectionName[0]),
+                              ARRAYSIZE(SectionName),
                               NULL))
     {
         DPRINT1("Unable to retrieve section name\n");
@@ -2012,7 +2010,7 @@ ProcessPageDlgProc(HWND hwndDlg,
             {
                 if (0 != LoadStringW(hDllInstance, RegistrationNotify->ActivityID,
                                      Activity,
-                                     sizeof(Activity) / sizeof(Activity[0])))
+                                     ARRAYSIZE(Activity)))
                 {
                     SendDlgItemMessageW(hwndDlg, IDC_ACTIVITY, WM_SETTEXT,
                                         0, (LPARAM) Activity);
@@ -2027,7 +2025,7 @@ ProcessPageDlgProc(HWND hwndDlg,
             if (NULL != RegistrationNotify->ErrorMessage)
             {
                 if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP,
-                                     Title, sizeof(Title) / sizeof(Title[0])))
+                                     Title, ARRAYSIZE(Title)))
                 {
                     wcscpy(Title, L"ReactOS Setup");
                 }
@@ -2199,14 +2197,14 @@ ProcessUnattendInf(
     if (!SetupGetStringFieldW(&InfContext,
                               1,
                               szValue,
-                              sizeof(szValue) / sizeof(WCHAR),
+                              ARRAYSIZE(szValue),
                               &LineLength))
     {
         DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
         return;
     }
 
-    if (wcscmp(szValue, L"yes") != 0)
+    if (_wcsicmp(szValue, L"yes") != 0)
     {
         DPRINT("Unattend setup was disabled by UnattendSetupEnabled key.\n");
         return;
@@ -2228,7 +2226,7 @@ ProcessUnattendInf(
         if (!SetupGetStringFieldW(&InfContext,
                                   0,
                                   szName,
-                                  sizeof(szName) / sizeof(WCHAR),
+                                  ARRAYSIZE(szName),
                                   &LineLength))
         {
             DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
@@ -2238,52 +2236,52 @@ ProcessUnattendInf(
         if (!SetupGetStringFieldW(&InfContext,
                                   1,
                                   szValue,
-                                  sizeof(szValue) / sizeof(WCHAR),
+                                  ARRAYSIZE(szValue),
                                   &LineLength))
         {
             DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
             return;
         }
         DPRINT1("Name %S Value %S\n", szName, szValue);
-        if (!wcscmp(szName, L"FullName"))
+        if (!_wcsicmp(szName, L"FullName"))
         {
-            if ((sizeof(pSetupData->OwnerName) / sizeof(TCHAR)) > LineLength)
+            if (ARRAYSIZE(pSetupData->OwnerName) > LineLength)
             {
                 wcscpy(pSetupData->OwnerName, szValue);
             }
         }
-        else if (!wcscmp(szName, L"OrgName"))
+        else if (!_wcsicmp(szName, L"OrgName"))
         {
-            if ((sizeof(pSetupData->OwnerOrganization) / sizeof(WCHAR)) > LineLength)
+            if (ARRAYSIZE(pSetupData->OwnerOrganization) > LineLength)
             {
                 wcscpy(pSetupData->OwnerOrganization, szValue);
             }
         }
-        else if (!wcscmp(szName, L"ComputerName"))
+        else if (!_wcsicmp(szName, L"ComputerName"))
         {
-            if ((sizeof(pSetupData->ComputerName) / sizeof(WCHAR)) > LineLength)
+            if (ARRAYSIZE(pSetupData->ComputerName) > LineLength)
             {
                 wcscpy(pSetupData->ComputerName, szValue);
             }
         }
-        else if (!wcscmp(szName, L"AdminPassword"))
+        else if (!_wcsicmp(szName, L"AdminPassword"))
         {
-            if ((sizeof(pSetupData->AdminPassword) / sizeof(WCHAR)) > LineLength)
+            if (ARRAYSIZE(pSetupData->AdminPassword) > LineLength)
             {
                 wcscpy(pSetupData->AdminPassword, szValue);
             }
         }
-        else if (!wcscmp(szName, L"TimeZoneIndex"))
+        else if (!_wcsicmp(szName, L"TimeZoneIndex"))
         {
             pSetupData->TimeZoneIndex = _wtoi(szValue);
         }
-        else if (!wcscmp(szName, L"DisableAutoDaylightTimeSet"))
+        else if (!_wcsicmp(szName, L"DisableAutoDaylightTimeSet"))
         {
             pSetupData->DisableAutoDaylightTimeSet = _wtoi(szValue);
         }
-        else if (!wcscmp(szName, L"DisableGeckoInst"))
+        else if (!_wcsicmp(szName, L"DisableGeckoInst"))
         {
-            if(!wcscmp(szValue, L"yes"))
+            if (!_wcsicmp(szValue, L"yes"))
                 pSetupData->DisableGeckoInst = TRUE;
             else
                 pSetupData->DisableGeckoInst = FALSE;
@@ -2306,7 +2304,7 @@ ProcessUnattendInf(
                 if (!SetupGetStringFieldW(&InfContext,
                                           0,
                                           szName,
-                                          sizeof(szName) / sizeof(WCHAR),
+                                          ARRAYSIZE(szName),
                                           &LineLength))
                 {
                     DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
@@ -2316,7 +2314,7 @@ ProcessUnattendInf(
                 if (!SetupGetStringFieldW(&InfContext,
                                           1,
                                           szValue,
-                                          sizeof(szValue) / sizeof(WCHAR),
+                                          ARRAYSIZE(szValue),
                                           &LineLength))
                 {
                     DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
@@ -2328,22 +2326,22 @@ ProcessUnattendInf(
                 if (!iValue)
                     continue;
 
-                if (!wcscmp(szName, L"BitsPerPel"))
+                if (!_wcsicmp(szName, L"BitsPerPel"))
                 {
                     dm.dmFields |= DM_BITSPERPEL;
                     dm.dmBitsPerPel = iValue;
                 }
-                else if (!wcscmp(szName, L"XResolution"))
+                else if (!_wcsicmp(szName, L"XResolution"))
                 {
                     dm.dmFields |= DM_PELSWIDTH;
                     dm.dmPelsWidth = iValue;
                 }
-                else if (!wcscmp(szName, L"YResolution"))
+                else if (!_wcsicmp(szName, L"YResolution"))
                 {
                     dm.dmFields |= DM_PELSHEIGHT;
                     dm.dmPelsHeight = iValue;
                 }
-                else if (!wcscmp(szName, L"VRefresh"))
+                else if (!_wcsicmp(szName, L"VRefresh"))
                 {
                     dm.dmFields |= DM_DISPLAYFREQUENCY;
                     dm.dmDisplayFrequency = iValue;
@@ -2375,7 +2373,7 @@ ProcessUnattendInf(
             if (SetupGetStringFieldW(&InfContext,
                                      0,
                                      szValue,
-                                     sizeof(szValue) / sizeof(WCHAR),
+                                     ARRAYSIZE(szValue),
                                      NULL))
             {
                 WCHAR szPath[MAX_PATH];
@@ -2491,7 +2489,7 @@ BOOL ActivateComctl32v6ActCtx(ULONG_PTR *cookie, HANDLE* hActCtx)
 
     *hActCtx = INVALID_HANDLE_VALUE;
 
-    if (!GetModuleFileName(hDllInstance, fileBuffer, MAX_PATH))
+    if (!GetModuleFileNameW(hDllInstance, fileBuffer, ARRAYSIZE(fileBuffer)))
         return FALSE;
 
     ActCtx.lpSource = fileBuffer;
