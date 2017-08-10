@@ -50,9 +50,6 @@ typedef struct _REGISTRATIONDATA
 
 extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
 
-BOOL
-GetRosInstallCD(WCHAR *pwszPath, DWORD cchPathMax);
-
 
 static VOID
 CenterWindow(HWND hWnd)
@@ -982,16 +979,9 @@ LocalePageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData->UnattendSetup)
                     {
-                        WCHAR wszPath[MAX_PATH];
-                        if (GetRosInstallCD(wszPath, _countof(wszPath)))
+                        // if (!*SetupData->SourcePath)
                         {
-                            WCHAR wszParams[1024];
-                            swprintf(wszParams, L"intl.cpl,,/f:\"%sreactos\\unattend.inf\"", wszPath);
-                            RunControlPanelApplet(hwndDlg, wszParams);
-                        }
-                        else
-                        {
-                            RunControlPanelApplet(hwndDlg, L"intl.cpl,,/f:\"unattend.inf\"");
+                            RunControlPanelApplet(hwndDlg, L"intl.cpl,,/f:\"$winnt$.inf\""); // Should be in System32
                         }
 
                         SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_OWNERPAGE);
@@ -2175,9 +2165,70 @@ FinishDlgProc(HWND hwndDlg,
 }
 
 
+/*
+ * GetInstallSourceWin32 retrieves the path to the ReactOS installation medium
+ * in Win32 format, for later use by syssetup and storage in the registry.
+ */
+static BOOL
+GetInstallSourceWin32(
+    OUT PWSTR pwszPath,
+    IN DWORD cchPathMax,
+    IN PCWSTR pwszNTPath)
+{
+    WCHAR wszDrives[512];
+    WCHAR wszNTPath[512]; // MAX_PATH ?
+    DWORD cchDrives;
+    PWCHAR pwszDrive;
+
+    *pwszPath = UNICODE_NULL;
+
+    cchDrives = GetLogicalDriveStringsW(_countof(wszDrives) - 1, wszDrives);
+    if (cchDrives == 0 || cchDrives >= _countof(wszDrives))
+    {
+        /* Buffer too small or failure */
+        LogItem(NULL, L"GetLogicalDriveStringsW failed");
+        return FALSE;
+    }
+
+    for (pwszDrive = wszDrives; *pwszDrive; pwszDrive += wcslen(pwszDrive) + 1)
+    {
+        WCHAR wszBuf[MAX_PATH];
+
+        /* Retrieve the NT path corresponding to the current Win32 DOS path */
+        pwszDrive[2] = UNICODE_NULL; // Temporarily remove the backslash
+        QueryDosDeviceW(pwszDrive, wszNTPath, _countof(wszNTPath));
+        pwszDrive[2] = L'\\';        // Restore the backslash
+
+        wcscat(wszNTPath, L"\\");    // Concat a backslash
+
+        /* Logging */
+        wsprintf(wszBuf, L"Testing '%s' --> '%s' %s a CD",
+                 pwszDrive, wszNTPath,
+                 (GetDriveTypeW(pwszDrive) == DRIVE_CDROM) ? L"is" : L"is not");
+        LogItem(NULL, wszBuf);
+
+        /* Check whether the NT path corresponds to the NT installation source path */
+        if (!_wcsicmp(wszNTPath, pwszNTPath))
+        {
+            /* Found it! */
+            wcscpy(pwszPath, pwszDrive); // cchPathMax
+
+            /* Logging */
+            wsprintf(wszBuf, L"GetInstallSourceWin32: %s", pwszPath);
+            LogItem(NULL, wszBuf);
+            wcscat(wszBuf, L"\n");
+            OutputDebugStringW(wszBuf);
+
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 VOID
-ProcessUnattendInf(
-    PSETUPDATA pSetupData)
+ProcessUnattendSection(
+    IN OUT PSETUPDATA pSetupData)
 {
     INFCONTEXT InfContext;
     WCHAR szName[256];
@@ -2185,7 +2236,7 @@ ProcessUnattendInf(
     DWORD LineLength;
     HKEY hKey;
 
-    if (!SetupFindFirstLineW(pSetupData->hUnattendedInf,
+    if (!SetupFindFirstLineW(pSetupData->hSetupInf,
                              L"Unattend",
                              L"UnattendSetupEnabled",
                              &InfContext))
@@ -2212,7 +2263,7 @@ ProcessUnattendInf(
 
     pSetupData->UnattendSetup = TRUE;
 
-    if (!SetupFindFirstLineW(pSetupData->hUnattendedInf,
+    if (!SetupFindFirstLineW(pSetupData->hSetupInf,
                              L"Unattend",
                              NULL,
                              &InfContext))
@@ -2289,7 +2340,7 @@ ProcessUnattendInf(
 
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
-    if (SetupFindFirstLineW(pSetupData->hUnattendedInf,
+    if (SetupFindFirstLineW(pSetupData->hSetupInf,
                             L"Display",
                             NULL,
                             &InfContext))
@@ -2362,7 +2413,7 @@ ProcessUnattendInf(
         return;
     }
 
-    if (SetupFindFirstLineW(pSetupData->hUnattendedInf,
+    if (SetupFindFirstLineW(pSetupData->hSetupInf,
                             L"GuiRunOnce",
                             NULL,
                             &InfContext))
@@ -2400,87 +2451,137 @@ ProcessUnattendInf(
     RegCloseKey(hKey);
 }
 
-/*
- * GetRosInstallCD should find the path to ros installation medium
- * BUG 1
- * If there are more than one CDDrive in it containing a ReactOS
- * installation cd, then it will pick the first one regardless if
- * it is really the installation cd
- *
- * The best way to implement this is to set the key
- * HKLM\Software\Microsoft\Windows NT\CurrentVersion\SourcePath (REG_SZ)
- */
-
-BOOL
-GetRosInstallCD(WCHAR *pwszPath, DWORD cchPathMax)
-{
-    WCHAR wszDrives[512];
-    DWORD cchDrives;
-    WCHAR *pwszDrive;
-
-    cchDrives = GetLogicalDriveStringsW(_countof(wszDrives) - 1, wszDrives);
-    if (cchDrives == 0 || cchDrives >= _countof(wszDrives))
-    {
-        /* buffer too small or failure */
-        LogItem(NULL, L"GetLogicalDriveStringsW failed");
-        return FALSE;
-    }
-
-    for (pwszDrive = wszDrives; pwszDrive[0]; pwszDrive += wcslen(pwszDrive) + 1)
-    {
-        if (GetDriveTypeW(pwszDrive) == DRIVE_CDROM)
-        {
-            WCHAR wszBuf[MAX_PATH];
-            wsprintf(wszBuf, L"%sreactos\\system32\\ntoskrnl.exe", pwszDrive);
-            LogItem(NULL, wszBuf);
-            if (GetFileAttributesW(wszBuf) != INVALID_FILE_ATTRIBUTES)
-            {
-                /* the file exists, so this is the right drive */
-                wcsncpy(pwszPath, pwszDrive, cchPathMax);
-                OutputDebugStringW(L"GetRosInstallCD: ");OutputDebugStringW(pwszPath);OutputDebugStringW(L"\n");
-                return TRUE;
-            }
-        }
-    }
-    return FALSE;
-}
-
-
 VOID
-ProcessUnattendSetup(
-    PSETUPDATA pSetupData)
+ProcessSetupInf(
+    IN OUT PSETUPDATA pSetupData)
 {
     WCHAR szPath[MAX_PATH];
-    DWORD dwLength;
+    WCHAR szValue[MAX_PATH];
+    INFCONTEXT InfContext;
+    DWORD LineLength;
+    HKEY hKey;
+    LONG res;
 
-    if (!GetRosInstallCD(szPath, MAX_PATH))
+    pSetupData->hSetupInf = INVALID_HANDLE_VALUE;
+
+    /* Retrieve the path of the setup INF */
+    GetSystemDirectoryW(szPath, _countof(szPath));
+    wcscat(szPath, L"\\$winnt$.inf");
+
+    /* Open the setup INF */
+    pSetupData->hSetupInf = SetupOpenInfFileW(szPath,
+                                              NULL,
+                                              INF_STYLE_OLDNT,
+                                              NULL);
+    if (pSetupData->hSetupInf == INVALID_HANDLE_VALUE)
     {
-        /* no cd drive found */
+        DPRINT1("Error: Cannot open the setup information file %S with error %d\n", szPath, GetLastError());
         return;
     }
 
-    dwLength = wcslen(szPath);
-    if (dwLength + 21 > MAX_PATH)
+
+    /* Retrieve the NT source path from which the 1st-stage installer was run */
+    if (!SetupFindFirstLineW(pSetupData->hSetupInf,
+                             L"data",
+                             L"sourcepath",
+                             &InfContext))
     {
-        /* FIXME
-         * allocate bigger buffer
-         */
+        DPRINT1("Error: Cannot find UnattendSetupEnabled Key! %d\n", GetLastError());
         return;
     }
 
-    wcscat(szPath, L"reactos\\unattend.inf");
-
-    pSetupData->hUnattendedInf = SetupOpenInfFileW(szPath,
-                                                   NULL,
-                                                   INF_STYLE_OLDNT,
-                                                   NULL);
-    if (pSetupData->hUnattendedInf != INVALID_HANDLE_VALUE)
+    if (!SetupGetStringFieldW(&InfContext,
+                              1,
+                              szValue,
+                              ARRAYSIZE(szValue),
+                              &LineLength))
     {
-        ProcessUnattendInf(pSetupData);
+        DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+        return;
     }
+
+    *pSetupData->SourcePath = UNICODE_NULL;
+
+    /* Close the setup INF as we are going to modify it manually */
+    if (pSetupData->hSetupInf != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(pSetupData->hSetupInf);
+
+
+    /* Find the installation source path in Win32 format */
+    if (!GetInstallSourceWin32(pSetupData->SourcePath,
+                               _countof(pSetupData->SourcePath),
+                               szValue))
+    {
+        *pSetupData->SourcePath = UNICODE_NULL;
+    }
+
+    /* Save the path in Win32 format in the setup INF */
+    swprintf(szValue, L"\"%s\"", pSetupData->SourcePath);
+    WritePrivateProfileStringW(L"data", L"dospath", szValue, szPath);
+
+    /*
+     * Save it also in the registry, in the following keys:
+     * - HKLM\Software\Microsoft\Windows\CurrentVersion\Setup ,
+     *   values "SourcePath" and "ServicePackSourcePath" (REG_SZ);
+     * - HKLM\Software\Microsoft\Windows NT\CurrentVersion ,
+     *   value "SourcePath" (REG_SZ); set to the full path (e.g. D:\I386).
+     */
+#if 0
+    res = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                        L"Software\\Microsoft\\Windows NT\\CurrentVersion",
+                        0,
+                        KEY_ALL_ACCESS,
+                        &hKey);
+
+    if (res != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+#endif
+
+    res = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                          L"Software\\Microsoft\\Windows\\CurrentVersion\\Setup",
+                          0, NULL,
+                          REG_OPTION_NON_VOLATILE,
+                          KEY_ALL_ACCESS, // KEY_WRITE
+                          NULL,
+                          &hKey,
+                          NULL);
+    if (res == ERROR_SUCCESS)
+    {
+        res = RegSetValueExW(hKey,
+                             L"SourcePath",
+                             0,
+                             REG_SZ,
+                             (LPBYTE)pSetupData->SourcePath,
+                             (wcslen(pSetupData->SourcePath) + 1) * sizeof(WCHAR));
+
+        res = RegSetValueExW(hKey,
+                             L"ServicePackSourcePath",
+                             0,
+                             REG_SZ,
+                             (LPBYTE)pSetupData->SourcePath,
+                             (wcslen(pSetupData->SourcePath) + 1) * sizeof(WCHAR));
+
+        RegCloseKey(hKey);
+    }
+
+
+    /* Now, re-open the setup INF (this must succeed) */
+    pSetupData->hSetupInf = SetupOpenInfFileW(szPath,
+                                              NULL,
+                                              INF_STYLE_OLDNT,
+                                              NULL);
+    if (pSetupData->hSetupInf == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("Error: Cannot open the setup information file %S with error %d\n", szPath, GetLastError());
+        return;
+    }
+
+    /* Process the unattended section of the setup file */
+    ProcessUnattendSection(pSetupData);
 }
 
-typedef DWORD(WINAPI *PFNREQUESTWIZARDPAGES)(PDWORD, HPROPSHEETPAGE *, PSETUPDATA);
 
 BOOL ActivateComctl32v6ActCtx(ULONG_PTR *cookie, HANDLE* hActCtx)
 {
@@ -2501,6 +2602,9 @@ BOOL ActivateComctl32v6ActCtx(ULONG_PTR *cookie, HANDLE* hActCtx)
     return ActivateActCtx(*hActCtx, cookie);
 }
 
+
+typedef DWORD(WINAPI *PFNREQUESTWIZARDPAGES)(PDWORD, HPROPSHEETPAGE *, PSETUPDATA);
+
 VOID
 InstallWizard(VOID)
 {
@@ -2514,6 +2618,7 @@ InstallWizard(VOID)
     HMODULE hNetShell = NULL;
     PFNREQUESTWIZARDPAGES pfn = NULL;
     DWORD dwPageCount = 8, dwNetworkPageCount = 0;
+
     BOOL bActCtxActivated;
     ULONG_PTR cookie;
     HANDLE hActCtx;
@@ -2568,8 +2673,8 @@ InstallWizard(VOID)
         goto done;
     }
 
-    pSetupData->hUnattendedInf = INVALID_HANDLE_VALUE;
-    ProcessUnattendSetup(pSetupData);
+    /* Process the $winnt$.inf setup file */
+    ProcessSetupInf(pSetupData);
 
     /* Create the Welcome page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
@@ -2679,8 +2784,11 @@ InstallWizard(VOID)
         }
     }
 
-    if (pSetupData->hUnattendedInf != INVALID_HANDLE_VALUE)
-        SetupCloseInfFile(pSetupData->hUnattendedInf);
+    DeleteObject(pSetupData->hBoldFont);
+    DeleteObject(pSetupData->hTitleFont);
+
+    if (pSetupData->hSetupInf != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(pSetupData->hSetupInf);
 
 done:
     if (phpage != NULL)
@@ -2696,11 +2804,7 @@ done:
     }
 
     if (pSetupData != NULL)
-    {
-        DeleteObject(pSetupData->hBoldFont);
-        DeleteObject(pSetupData->hTitleFont);
         HeapFree(GetProcessHeap(), 0, pSetupData);
-    }
 
     LogItem(L"END_SECTION", L"InstallWizard");
 }
