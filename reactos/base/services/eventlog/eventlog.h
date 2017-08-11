@@ -142,7 +142,7 @@ LogfAllocAndBuildNewRecord(PSIZE_T pRecSize,
 
 static __inline void LogfFreeRecord(PEVENTLOGRECORD Record)
 {
-    HeapFree(GetProcessHeap(), 0, Record);
+    RtlFreeHeap(GetProcessHeap(), 0, Record);
 }
 
 VOID
