@@ -827,57 +827,62 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
     {
         CONSOLE_ConInKey(Ir);
 
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
+        if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x00)
         {
-            ScrollDownGenericList(&ListUi);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
-        {
-            ScrollUpGenericList(&ListUi);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
-        {
-            ScrollPageDownGenericList(&ListUi);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_PRIOR))  /* PAGE UP */
-        {
-            ScrollPageUpGenericList(&ListUi);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir) == TRUE)
-                return QUIT_PAGE;
-            else
-                RedrawGenericList(&ListUi);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
-        {
-            RestoreGenericListState(NtOsInstallsList);
-            // return nextPage;    // prevPage;
-        }
-        // else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'U')  /* U */
-        {
-            /* Retrieve the current installation */
-            CurrentInstallation = (PNTOS_INSTALLATION)GetListEntryUserData(GetCurrentListEntry(NtOsInstallsList));
-            DPRINT1("Selected installation for repair: \"%S\" ; DiskNumber = %d , PartitionNumber = %d\n",
-                    CurrentInstallation->InstallationName, CurrentInstallation->DiskNumber, CurrentInstallation->PartitionNumber);
+            switch (Ir->Event.KeyEvent.wVirtualKeyCode)
+            {
+            case VK_DOWN:   /* DOWN */
+                ScrollDownGenericList(&ListUi);
+                break;
+            case VK_UP:     /* UP */
+                ScrollUpGenericList(&ListUi);
+                break;
+            case VK_NEXT:   /* PAGE DOWN */
+                ScrollPageDownGenericList(&ListUi);
+                break;
+            case VK_PRIOR:  /* PAGE UP */
+                ScrollPageUpGenericList(&ListUi);
+                break;
+            case VK_F3:     /* F3 */
+            {
+                if (ConfirmQuit(Ir) == TRUE)
+                    return QUIT_PAGE;
+                else
+                    RedrawGenericList(&ListUi);
+                break;
+            }
+            case VK_ESCAPE: /* ESC */
+            {
+                RestoreGenericListState(NtOsInstallsList);
+                // return nextPage;    // prevPage;
 
-            RepairUpdateFlag = TRUE;
-
-            // return nextPage;
-            /***/return INSTALL_INTRO_PAGE;/***/
+                // return INSTALL_INTRO_PAGE;
+                return DEVICE_SETTINGS_PAGE;
+                // return SCSI_CONTROLLER_PAGE;
+            }
+            }
         }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
+        else
         {
-            /* a-z */
-            GenericListKeyPress(&ListUi, Ir->Event.KeyEvent.uChar.AsciiChar);
+            // switch (toupper(Ir->Event.KeyEvent.uChar.AsciiChar))
+            // if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+            if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'U')  /* U */
+            {
+                /* Retrieve the current installation */
+                CurrentInstallation = (PNTOS_INSTALLATION)GetListEntryUserData(GetCurrentListEntry(NtOsInstallsList));
+                DPRINT1("Selected installation for repair: \"%S\" ; DiskNumber = %d , PartitionNumber = %d\n",
+                        CurrentInstallation->InstallationName, CurrentInstallation->DiskNumber, CurrentInstallation->PartitionNumber);
+
+                RepairUpdateFlag = TRUE;
+
+                // return nextPage;
+                /***/return INSTALL_INTRO_PAGE;/***/
+            }
+            else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) &&
+                     (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))   /* a-z */
+            {
+                GenericListKeyPress(&ListUi, Ir->Event.KeyEvent.uChar.AsciiChar);
+            }
         }
     }
 
