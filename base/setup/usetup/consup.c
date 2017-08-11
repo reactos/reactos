@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/interface/consup.c
+ * FILE:            base/setup/usetup/consup.c
  * PURPOSE:         Console support functions
  * PROGRAMMER:      Eric Kohl
  */

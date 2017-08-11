@@ -59,7 +59,7 @@
 // #include "errorcode.h"
 
 /* Internal Headers */
-#include "interface/consup.h"
+#include "consup.h"
 #include "inffile.h"
 #include "progress.h"
 #ifdef __REACTOS__

@@ -10,9 +10,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
-    interface/usetup.c
-    interface/devinst.c
-    interface/consup.c
     native/console.c
     native/keytrans.c
     native/host_native.c
@@ -20,6 +17,8 @@ list(APPEND SOURCE
     cabinet.c
     chkdsk.c
     cmdcons.c
+    consup.c
+    devinst.c
     filesup.c
     filequeue.c
     format.c
@@ -30,6 +29,7 @@ list(APPEND SOURCE
     partlist.c
     progress.c
     settings.c
+    usetup.c
     usetup.h)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
