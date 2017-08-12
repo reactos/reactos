@@ -1,0 +1,5 @@
+list(APPEND SOURCE pendmoves.c pendmoves.rc)
+add_executable(pendmoves ${SOURCE})
+set_module_type(pendmoves win32cui UNICODE)
+add_importlibs(pendmoves msvcrt advapi32 kernel32 ntdll)
+add_cd_file(TARGET pendmoves DESTINATION reactos/system32 FOR all)
