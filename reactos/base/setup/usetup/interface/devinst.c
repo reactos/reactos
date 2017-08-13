@@ -50,14 +50,13 @@ InstallDriver(
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hService;
     INFCONTEXT Context;
-    LPWSTR Driver, ImagePath, FullImagePath;
+    LPWSTR Driver, ClassGuid, ImagePath, FullImagePath;
     ULONG dwValue;
     ULONG Disposition;
     NTSTATUS Status;
     BOOLEAN deviceInstalled = FALSE;
     UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
     LPWSTR keyboardClass = L"kbdclass\0";
-    BOOLEAN keyboardDevice = FALSE;
 
     /* Check if we know the hardware */
     if (!SetupFindFirstLineW(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
@@ -65,17 +64,19 @@ InstallDriver(
     if (!INF_GetDataField(&Context, 1, &Driver))
         return FALSE;
 
+    /* Get associated class GUID (if any) */
+    if (!INF_GetDataField(&Context, 2, &ClassGuid))
+        ClassGuid = NULL;
+
     /* Find associated driver name */
     /* FIXME: check in other sections too! */
     if (!SetupFindFirstLineW(hInf, L"BootBusExtenders.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"BusExtenders.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"SCSI.Load", Driver, &Context)
-	 && !SetupFindFirstLineW(hInf, L"InputDevicesSupport.Load", Driver, &Context))
+     && !SetupFindFirstLineW(hInf, L"InputDevicesSupport.Load", Driver, &Context)
+     && !SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
     {
-        if (!SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
-            return FALSE;
-
-        keyboardDevice = TRUE;
+        return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 1, &ImagePath))
@@ -142,7 +143,7 @@ InstallDriver(
         ImagePath,
         (wcslen(ImagePath) + 1) * sizeof(WCHAR));
 
-    if (keyboardDevice)
+    if (ClassGuid &&_wcsicmp(ClassGuid, L"{4D36E96B-E325-11CE-BFC1-08002BE10318}") == 0)
     {
         DPRINT1("Installing keyboard class driver for '%S'\n", DeviceId);
         NtSetValueKey(hDeviceKey,
