@@ -24,8 +24,9 @@ CSimpleArray<DEVINST> g_devList;
 static HDEVNOTIFY g_hDevNotify = NULL;
 static HICON g_hIconHotplug = NULL;
 static LPWSTR g_strTooltip = L"Safely Remove Hardware and Eject Media";
+static WCHAR g_strMenuSel[DISPLAY_NAME_LEN];
 static BOOL g_IsRunning = FALSE;
-static BOOL g_IsRemoved = FALSE;
+static BOOL g_IsRemoving = FALSE;
 
 // Enumerate the connected removable devices
 // TODO: Require proper enumeration and filters.
@@ -40,12 +41,12 @@ HRESULT EnumHotpluggedDevices(CSimpleArray<DEVINST> &devList)
 
     for (int idev = 0; SetupDiEnumDeviceInfo(hdev, idev, &did); idev++)
     {
-        DWORD dwCapabilities = 0, dwSize = sizeof(dwCapabilities);        
+        DWORD dwCapabilities = 0, dwSize = sizeof(dwCapabilities);
         WCHAR dispName[DISPLAY_NAME_LEN];
         ULONG ulStatus = 0, ulPnum = 0, ulLength = DISPLAY_NAME_LEN * sizeof(WCHAR);
         CONFIGRET cr = CM_Get_DevNode_Status(&ulStatus, &ulPnum, did.DevInst, 0);
         if (cr != CR_SUCCESS)
-            continue;        
+            continue;
         cr = CM_Get_DevNode_Registry_Property(did.DevInst, CM_DRP_DEVICEDESC, NULL, dispName, &ulLength, 0);
         if (cr != CR_SUCCESS)
             continue;
@@ -53,9 +54,9 @@ HRESULT EnumHotpluggedDevices(CSimpleArray<DEVINST> &devList)
         if (cr != CR_SUCCESS)
             continue;
         
-        if ((dwCapabilities & CM_DEVCAP_REMOVABLE) && (dwCapabilities & CM_DEVCAP_UNIQUEID))
-        {                
-            devList.Add(did.DevInst);           
+        if ((dwCapabilities & CM_DEVCAP_REMOVABLE) && (dwCapabilities & CM_DEVCAP_UNIQUEID) && !ulPnum)
+        {
+            devList.Add(did.DevInst);
         }
     }
     SetupDiDestroyDeviceInfoList(hdev);
@@ -68,21 +69,46 @@ HRESULT EnumHotpluggedDevices(CSimpleArray<DEVINST> &devList)
     return S_OK;
 }
 
+// Pops a balloon notification
+HRESULT NotifyBalloon(CSysTray* pSysTray, LPCWSTR szTitle = NULL, LPCWSTR szInfo = NULL, UINT uId = ID_ICON_HOTPLUG)
+{
+    NOTIFYICONDATA nim = { 0 };
+    nim.cbSize = sizeof(NOTIFYICONDATA);
+    nim.uID = uId;
+    nim.hWnd = pSysTray->GetHWnd();
+
+    nim.uFlags = NIF_INFO;
+    nim.uTimeout = 10;
+    nim.dwInfoFlags = NIIF_INFO;
+
+    StringCchCopy(nim.szInfoTitle, _countof(nim.szInfoTitle), szTitle);
+    StringCchCopy(nim.szInfo, _countof(nim.szInfo), szInfo);
+    BOOL ret = Shell_NotifyIcon(NIM_MODIFY, &nim);
+
+    Sleep(8000);
+    StringCchCopy(nim.szInfoTitle, _countof(nim.szInfoTitle), L"");
+    StringCchCopy(nim.szInfo, _countof(nim.szInfo), L"");
+    ret = Shell_NotifyIcon(NIM_MODIFY, &nim);
+    g_IsRemoving = FALSE;
+
+    return ret ? S_OK : E_FAIL;
+}
+
 HRESULT STDMETHODCALLTYPE Hotplug_Init(_In_ CSysTray * pSysTray)
 { 
     TRACE("Hotplug_Init\n");
     g_hIconHotplug = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_HOTPLUG_OK));
     g_IsRunning = TRUE;
-    EnumHotpluggedDevices(g_devList);    
+    EnumHotpluggedDevices(g_devList);
     
     return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip, NIS_HIDDEN);
 }
 
 HRESULT STDMETHODCALLTYPE Hotplug_Update(_In_ CSysTray * pSysTray)
 {
-    TRACE("Hotplug_Update\n");    
+    TRACE("Hotplug_Update\n");
     
-    if(g_devList.GetSize())
+    if(g_devList.GetSize() || g_IsRemoving)
         return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip);
     else
         return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip, NIS_HIDDEN);
@@ -104,18 +130,18 @@ static void _RunHotplug(CSysTray * pSysTray)
 static void _ShowContextMenu(CSysTray * pSysTray)
 {   
     HMENU hPopup = CreatePopupMenu();
-    
+    ULONG ulLength = DISPLAY_NAME_LEN * sizeof(WCHAR);
+
     for (UINT index = 0; index < g_devList.GetSize(); index++)
     {
         WCHAR dispName[DISPLAY_NAME_LEN], menuName[DISPLAY_NAME_LEN + 10];
-        ULONG ulLength = DISPLAY_NAME_LEN * sizeof(WCHAR);
         CONFIGRET cr = CM_Get_DevNode_Registry_Property(g_devList[index], CM_DRP_DEVICEDESC, NULL, dispName, &ulLength, 0);
         if (cr != CR_SUCCESS)
             StrCpyW(dispName, L"Unknown Device");
 
         swprintf(menuName, L"Eject %wS", dispName);
         AppendMenuW(hPopup, MF_STRING, index+1, menuName);
-    }        
+    }
     
     SetForegroundWindow(pSysTray->GetHWnd());
     DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
@@ -128,14 +154,24 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     
     if (id > 0)
     {
-        id--; // since array indices starts from zero.        
-        CONFIGRET cr = CM_Request_Device_Eject_Ex(g_devList[id], 0, 0, 0, 0, 0);
+        id--; // since array indices starts from zero.
+        CONFIGRET cr = CM_Get_DevNode_Registry_Property(g_devList[id], CM_DRP_DEVICEDESC, NULL, g_strMenuSel, &ulLength, 0);
         if (cr != CR_SUCCESS)
-            MessageBox(0, L"Device ejection failed!! Please try again after closing any open programs on device!", L"Safely Remove Hardware", MB_OKCANCEL | MB_ICONEXCLAMATION);
-        else
+            StrCpyW(g_strMenuSel, L"Unknown Device");
+
+        cr = CM_Request_Device_Eject_Ex(g_devList[id], 0, 0, 0, 0, 0);
+        if (cr != CR_SUCCESS)
         {
-            MessageBox(0, L"Device ejected successfully!! You can safely remove the device now!", L"Safely Remove Hardware", MB_OKCANCEL | MB_ICONINFORMATION);
-            g_devList.RemoveAt(id);
+            WCHAR strInfo[128];
+            swprintf(strInfo, L"Problem Ejecting %wS", g_strMenuSel);
+            MessageBox(0, L"The device cannot be stopped right now! Try stopping it again later!", strInfo, MB_OKCANCEL | MB_ICONEXCLAMATION);
+        }
+        else //TODO
+        {
+            //MessageBox(0, L"Device ejected successfully!! You can safely remove the device now!", L"Safely Remove Hardware", MB_OKCANCEL | MB_ICONINFORMATION);
+            g_IsRemoving = TRUE;
+            g_devList.RemoveAt(id); // thing is.. even after removing id at this point, the devnode_change occurs after some seconds of sucessful removal
+                                    // and since pendrive is still plugged in it gets enumerated, if problem number is not filtered.
         }
     }
     
@@ -145,8 +181,8 @@ static void _ShowContextMenu(CSysTray * pSysTray)
 static void _ShowContextMenuR(CSysTray * pSysTray)
 {
     CString strMenu((LPWSTR)IDS_HOTPLUG_REMOVE_2);
-    HMENU hPopup = CreatePopupMenu();    
-    AppendMenuW(hPopup, MF_STRING, IDS_HOTPLUG_REMOVE_2, strMenu);   
+    HMENU hPopup = CreatePopupMenu();
+    AppendMenuW(hPopup, MF_STRING, IDS_HOTPLUG_REMOVE_2, strMenu);
 
     SetForegroundWindow(pSysTray->GetHWnd());
     DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
@@ -167,7 +203,8 @@ static void _ShowContextMenuR(CSysTray * pSysTray)
 
 HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
 {
-    TRACE("Hotplug_Message uMsg=%d, wParam=%x, lParam=%x\n", uMsg, wParam, lParam);     
+    HRESULT hr = E_FAIL;
+    TRACE("Hotplug_Message uMsg=%d, wParam=%x, lParam=%x\n", uMsg, wParam, lParam);
 
     switch (uMsg)
     {
@@ -177,7 +214,7 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
 
             ZeroMemory(&NotificationFilter, sizeof(NotificationFilter));
             NotificationFilter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
-            NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;           
+            NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
 
             g_hDevNotify = RegisterDeviceNotification(pSysTray->GetHWnd(), &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE | DEVICE_NOTIFY_ALL_INTERFACE_CLASSES);
             if (g_hDevNotify != NULL)
@@ -227,7 +264,7 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
                     break;
 
                 case WM_RBUTTONUP:
-                    _ShowContextMenuR(pSysTray);                    
+                    _ShowContextMenuR(pSysTray);
                     break;
 
                 case WM_RBUTTONDBLCLK:
@@ -238,16 +275,32 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
             }
             return S_OK;
 
-        case WM_DEVICECHANGE:                   
+        case WM_DEVICECHANGE:
             switch (wParam)
             {
                 case DBT_DEVNODES_CHANGED:
-                    HRESULT hr = EnumHotpluggedDevices(g_devList);
+                    hr = EnumHotpluggedDevices(g_devList);
                     if (FAILED(hr))
                         return hr;
-            }
 
-            lResult = true;
+                    lResult = true;
+                    break;
+                case DBT_DEVICEARRIVAL:
+                    break;
+                case DBT_DEVICEQUERYREMOVE:
+                    break;
+                case DBT_DEVICEQUERYREMOVEFAILED:
+                    break;
+                case DBT_DEVICEREMOVECOMPLETE:
+                    WCHAR strInfo[128];
+                    swprintf(strInfo, L"The %wS can now be safely removed from the system.", g_strMenuSel);
+                    NotifyBalloon(pSysTray, L"Safe to Remove Hardware", strInfo);
+
+                    lResult = true;
+                    break;
+                case DBT_DEVICEREMOVEPENDING:
+                    break;
+            }            
             return S_OK;
         
         /*case WM_CLOSE:
@@ -255,7 +308,7 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
             {
                 return S_FALSE;
             }
-            return S_OK;*/           
+            return S_OK;*/
 
         default:
             TRACE("Hotplug_Message received for unknown ID %d, ignoring.\n");
