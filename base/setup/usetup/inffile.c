@@ -132,13 +132,13 @@ extern BOOLEAN InfGetIntField(PINFCONTEXT Context,
                               ULONG FieldIndex,
                               INT *IntegerValue);
 // #define SetupGetIntField InfGetIntField
-BOOLEAN
+BOOL
 WINAPI
 SetupGetIntField(PINFCONTEXT Context,
                  ULONG FieldIndex,
-                 INT *IntegerValue)
+                 INT *IntegerValue) // PINT
 {
-    return InfGetIntField(Context, FieldIndex, IntegerValue);
+    return !!InfGetIntField(Context, FieldIndex, IntegerValue);
 }
 
 extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,

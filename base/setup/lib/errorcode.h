@@ -8,7 +8,12 @@
 
 #pragma once
 
-typedef enum
+/* setupapi.h defines ERROR_NOT_INSTALLED with another meaning */
+#ifdef ERROR_NOT_INSTALLED
+#undef ERROR_NOT_INSTALLED
+#endif
+
+typedef enum _ERROR_NUMBER
 {
     NOT_AN_ERROR = 0,   // ERROR_SUCCESS,
     ERROR_NOT_INSTALLED,

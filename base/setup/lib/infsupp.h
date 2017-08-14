@@ -8,13 +8,14 @@
 
 #pragma once
 
+/* Make setupapi.h to not define the API as exports to the DLL */
 #ifdef __REACTOS__
 #define _SETUPAPI_
 #endif
 
 // FIXME: Temporary measure until all the users of this header
 // (usetup...) use or define SetupAPI-conforming APIs.
-#if 0
+#if defined(_SETUPAPI_H_) || defined(_INC_SETUPAPI)
 
 #include <setupapi.h>
 
@@ -64,11 +65,11 @@ SetupGetBinaryField(PINFCONTEXT Context,
                     PULONG RequiredSize);
 
 // #define SetupGetIntField InfGetIntField
-BOOLEAN
+BOOL
 WINAPI
 SetupGetIntField(PINFCONTEXT Context,
                  ULONG FieldIndex,
-                 INT *IntegerValue);
+                 INT *IntegerValue); // PINT
 
 // #define SetupGetMultiSzFieldW InfGetMultiSzField
 BOOL
