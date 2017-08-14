@@ -28,12 +28,22 @@
 #include "reactos.h"
 #include "resource.h"
 
+#define NDEBUG
+#include <debug.h>
+
 /* GLOBALS ******************************************************************/
 
+HANDLE ProcessHeap;
 
-LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context);
+BOOLEAN IsUnattendedSetup = FALSE;
+PWCHAR SelectedLanguageId;
+
+SETUPDATA SetupData;
+
 
 /* FUNCTIONS ****************************************************************/
+
+LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context);
 
 static VOID
 CenterWindow(HWND hWnd)
@@ -81,6 +91,19 @@ CreateTitleFont(VOID)
     ReleaseDC(NULL, hdc);
 
     return hFont;
+}
+
+INT DisplayError(
+    IN HWND hParentWnd OPTIONAL,
+    IN UINT uIDTitle,
+    IN UINT uIDMessage)
+{
+    WCHAR message[512], caption[64];
+
+    LoadStringW(SetupData.hInstance, uIDMessage, message, ARRAYSIZE(message));
+    LoadStringW(SetupData.hInstance, uIDTitle, caption, ARRAYSIZE(caption));
+
+    return MessageBoxW(hParentWnd, message, caption, MB_OK | MB_ICONERROR);
 }
 
 static INT_PTR CALLBACK
@@ -277,9 +300,9 @@ DeviceDlgProc(HWND hwndDlg,
                     if (tindex != CB_ERR)
                     {
                         pSetupData->SelectedComputer = SendMessage(hList,
-                                                                 CB_GETITEMDATA,
-                                                                 (WPARAM) tindex,
-                                                                 (LPARAM) 0);
+                                                                   CB_GETITEMDATA,
+                                                                   (WPARAM) tindex,
+                                                                   (LPARAM) 0);
                     }
 
                     hList = GetDlgItem(hwndDlg, IDC_DISPLAY);
@@ -288,9 +311,9 @@ DeviceDlgProc(HWND hwndDlg,
                     if (tindex != CB_ERR)
                     {
                         pSetupData->SelectedDisplay = SendMessage(hList,
-                                                                CB_GETITEMDATA,
-                                                                (WPARAM) tindex,
-                                                                (LPARAM) 0);
+                                                                  CB_GETITEMDATA,
+                                                                  (WPARAM) tindex,
+                                                                  (LPARAM) 0);
                     }
 
                     hList =GetDlgItem(hwndDlg, IDC_KEYBOARD);
@@ -299,9 +322,9 @@ DeviceDlgProc(HWND hwndDlg,
                     if (tindex != CB_ERR)
                     {
                         pSetupData->SelectedKeyboard = SendMessage(hList,
-                                                                 CB_GETITEMDATA,
-                                                                 (WPARAM) tindex,
-                                                                 (LPARAM) 0);
+                                                                   CB_GETITEMDATA,
+                                                                   (WPARAM) tindex,
+                                                                   (LPARAM) 0);
                     }
                     return TRUE;
                 }
@@ -499,37 +522,15 @@ RestartDlgProc(HWND hwndDlg,
 BOOL LoadSetupData(
     PSETUPDATA pSetupData)
 {
-    WCHAR szPath[MAX_PATH];
-    TCHAR tmp[10];
-    WCHAR *ch;
-    HINF hTxtsetupSif = INVALID_HANDLE_VALUE;
+    BOOL ret = TRUE;
     INFCONTEXT InfContext;
+    TCHAR tmp[10];
     //TCHAR szValue[MAX_PATH];
     DWORD LineLength;
     LONG Count;
-    BOOL ret = TRUE;
-
-    GetModuleFileNameW(NULL,szPath,MAX_PATH);
-    ch = strrchrW(szPath,L'\\');
-    if (ch != NULL)
-        *ch = L'\0';
-
-    wcscat(szPath, L"\\txtsetup.sif");
-    hTxtsetupSif = SetupOpenInfFileW(szPath, NULL, INF_STYLE_OLDNT, NULL);
-    if (hTxtsetupSif == INVALID_HANDLE_VALUE)
-    {
-        TCHAR message[512], caption[64];
-
-        // txtsetup.sif cannot be found
-        LoadString(pSetupData->hInstance, IDS_NO_TXTSETUP_SIF, message, sizeof(message)/sizeof(TCHAR));
-        LoadString(pSetupData->hInstance, IDS_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
-
-        MessageBox(NULL, message, caption, MB_OK | MB_ICONERROR);
-        return FALSE;
-    }
 
     // get language list
-    pSetupData->LangCount = SetupGetLineCount(hTxtsetupSif, _T("Language"));
+    pSetupData->LangCount = SetupGetLineCount(pSetupData->SetupInf, _T("Language"));
     if (pSetupData->LangCount > 0)
     {
         pSetupData->pLanguages = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LANG) * pSetupData->LangCount);
@@ -540,7 +541,7 @@ BOOL LoadSetupData(
         }
 
         Count = 0;
-        if (SetupFindFirstLine(hTxtsetupSif, _T("Language"), NULL, &InfContext))
+        if (SetupFindFirstLine(pSetupData->SetupInf, _T("Language"), NULL, &InfContext))
         {
             do
             {
@@ -562,7 +563,7 @@ BOOL LoadSetupData(
     }
 
     // get keyboard layout list
-    pSetupData->KbLayoutCount = SetupGetLineCount(hTxtsetupSif, _T("KeyboardLayout"));
+    pSetupData->KbLayoutCount = SetupGetLineCount(pSetupData->SetupInf, _T("KeyboardLayout"));
     if (pSetupData->KbLayoutCount > 0)
     {
         pSetupData->pKbLayouts = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KBLAYOUT) * pSetupData->KbLayoutCount);
@@ -573,7 +574,7 @@ BOOL LoadSetupData(
         }
 
         Count = 0;
-        if (SetupFindFirstLine(hTxtsetupSif, _T("KeyboardLayout"), NULL, &InfContext))
+        if (SetupFindFirstLine(pSetupData->SetupInf, _T("KeyboardLayout"), NULL, &InfContext))
         {
             do
             {
@@ -599,7 +600,7 @@ BOOL LoadSetupData(
     pSetupData->DefaultLang = -1;
 
     // TODO: get defaults from underlaying running system
-    if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLayout"), &InfContext))
+    if (SetupFindFirstLine(pSetupData->SetupInf, _T("NLS"), _T("DefaultLayout"), &InfContext))
     {
         SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
         for (Count = 0; Count < pSetupData->KbLayoutCount; Count++)
@@ -612,7 +613,7 @@ BOOL LoadSetupData(
         }
     }
 
-    if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLanguage"), &InfContext))
+    if (SetupFindFirstLine(pSetupData->SetupInf, _T("NLS"), _T("DefaultLanguage"), &InfContext))
     {
         SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
         for (Count = 0; Count < pSetupData->LangCount; Count++)
@@ -626,21 +627,21 @@ BOOL LoadSetupData(
     }
 
     // get computers list
-    pSetupData->CompCount = LoadGenentry(hTxtsetupSif,_T("Computer"),&pSetupData->pComputers,&InfContext);
+    pSetupData->CompCount = LoadGenentry(pSetupData->SetupInf,_T("Computer"),&pSetupData->pComputers,&InfContext);
 
     // get display list
-    pSetupData->DispCount = LoadGenentry(hTxtsetupSif,_T("Display"),&pSetupData->pDisplays,&InfContext);
+    pSetupData->DispCount = LoadGenentry(pSetupData->SetupInf,_T("Display"),&pSetupData->pDisplays,&InfContext);
 
     // get keyboard list
-    pSetupData->KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),&pSetupData->pKeyboards,&InfContext);
+    pSetupData->KeybCount = LoadGenentry(pSetupData->SetupInf, _T("Keyboard"),&pSetupData->pKeyboards,&InfContext);
 
     // get install directory
-    if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"), _T("DefaultPath"), &InfContext))
+    if (SetupFindFirstLine(pSetupData->SetupInf, _T("SetupData"), _T("DefaultPath"), &InfContext))
     {
         SetupGetStringField(&InfContext,
                             1,
-                            pSetupData->InstallDir,
-                            sizeof(pSetupData->InstallDir) / sizeof(TCHAR),
+                            pSetupData->USetupData.InstallationDirectory,
+                            sizeof(pSetupData->USetupData.InstallationDirectory) / sizeof(TCHAR),
                             &LineLength);
     }
 
@@ -659,9 +660,6 @@ done:
             pSetupData->pLanguages = NULL;
         }
     }
-
-    if (hTxtsetupSif != INVALID_HANDLE_VALUE)
-        SetupCloseInfFile(hTxtsetupSif);
 
     return ret;
 }
@@ -703,7 +701,7 @@ LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context)
     return TotalCount;
 }
 
-BOOL isUnattendSetup(VOID)
+BOOL IsUnattendSetup(VOID)
 {
     WCHAR szPath[MAX_PATH];
     WCHAR *ch;
@@ -715,7 +713,7 @@ BOOL isUnattendSetup(VOID)
     BOOL result = 0;
 
     GetModuleFileNameW(NULL, szPath, MAX_PATH);
-    ch = strrchrW(szPath, L'\\');
+    ch = wcsrchr(szPath, L'\\');
     if (ch != NULL)
         *ch = L'\0';
 
@@ -742,50 +740,35 @@ BOOL isUnattendSetup(VOID)
     return result;
 }
 
-#if 0
-static
-VOID
-EnableShutdownPrivilege(VOID)
+
+/* Used to enable and disable the shutdown privilege */
+/* static */ BOOL
+EnablePrivilege(LPCWSTR lpszPrivilegeName, BOOL bEnablePrivilege)
 {
-    HANDLE hToken = NULL;
-    TOKEN_PRIVILEGES Privileges;
+    BOOL   Success;
+    HANDLE hToken;
+    TOKEN_PRIVILEGES tp;
 
-    /* Get shutdown privilege */
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
-    {
-//        FatalError("OpenProcessToken() failed!");
-        return;
-    }
+    Success = OpenProcessToken(GetCurrentProcess(),
+                               TOKEN_ADJUST_PRIVILEGES,
+                               &hToken);
+    if (!Success) return Success;
 
-    if (!LookupPrivilegeValue(NULL,
-                              SE_SHUTDOWN_NAME,
-                              &Privileges.Privileges[0].Luid))
-    {
-//        FatalError("LookupPrivilegeValue() failed!");
-       goto done;
-    }
+    Success = LookupPrivilegeValueW(NULL,
+                                    lpszPrivilegeName,
+                                    &tp.Privileges[0].Luid);
+    if (!Success) goto Quit;
 
-    Privileges.PrivilegeCount = 1;
-    Privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Attributes = (bEnablePrivilege ? SE_PRIVILEGE_ENABLED : 0);
 
-    if (AdjustTokenPrivileges(hToken,
-                              FALSE,
-                              &Privileges,
-                              0,
-                              (PTOKEN_PRIVILEGES)NULL,
-                              NULL) == 0)
-    {
-//        FatalError("AdjustTokenPrivileges() failed!");
-       goto done;
-    }
+    Success = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL);
 
-done:
-    if (hToken != NULL)
-        CloseHandle(hToken);
-
-    return;
+Quit:
+    CloseHandle(hToken);
+    return Success;
 }
-#endif
+
 
 int WINAPI
 _tWinMain(HINSTANCE hInst,
@@ -793,40 +776,81 @@ _tWinMain(HINSTANCE hInst,
           LPTSTR lpszCmdLine,
           int nCmdShow)
 {
-    PSETUPDATA pSetupData = NULL;
+    NTSTATUS Status;
+    ULONG Error;
+    // PSETUPDATA pSetupData = NULL;
     PROPSHEETHEADER psh;
     HPROPSHEETPAGE ahpsp[8];
     PROPSHEETPAGE psp = {0};
     UINT nPages = 0;
 
-    pSetupData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SETUPDATA));
-    if (pSetupData == NULL)
+    ProcessHeap = GetProcessHeap();
+
+    // pSetupData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SETUPDATA));
+    // if (pSetupData == NULL)
+        // return 1;
+
+    /* Initialize global unicode strings */
+    RtlInitUnicodeString(&SetupData.USetupData.SourcePath, NULL);
+    RtlInitUnicodeString(&SetupData.USetupData.SourceRootPath, NULL);
+    RtlInitUnicodeString(&SetupData.USetupData.SourceRootDir, NULL);
+    // RtlInitUnicodeString(&InstallPath, NULL);
+    RtlInitUnicodeString(&SetupData.USetupData.DestinationPath, NULL);
+    RtlInitUnicodeString(&SetupData.USetupData.DestinationArcPath, NULL);
+    RtlInitUnicodeString(&SetupData.USetupData.DestinationRootPath, NULL);
+    RtlInitUnicodeString(&SetupData.USetupData.SystemRootPath, NULL);
+
+    /* Get the source path and source root path */
+    //
+    // NOTE: Sometimes the source path may not be in SystemRoot !!
+    // (and this is the case when using the 1st-stage GUI setup!)
+    //
+    Status = GetSourcePaths(&SetupData.USetupData.SourcePath,
+                            &SetupData.USetupData.SourceRootPath,
+                            &SetupData.USetupData.SourceRootDir);
+    if (!NT_SUCCESS(Status))
     {
-        return 1;
+        DPRINT1("GetSourcePaths() failed (Status 0x%08lx)", Status);
+        // MUIDisplayError(ERROR_NO_SOURCE_DRIVE, Ir, POPUP_WAIT_ENTER);
+        MessageBoxW(NULL, L"GetSourcePaths failed!", L"Error", MB_ICONERROR);
+        goto Quit;
     }
+    DPRINT1("SourcePath: '%wZ'\n", &SetupData.USetupData.SourcePath);
+    DPRINT1("SourceRootPath: '%wZ'\n", &SetupData.USetupData.SourceRootPath);
+    DPRINT1("SourceRootDir: '%wZ'\n", &SetupData.USetupData.SourceRootDir);
 
-    pSetupData->hInstance = hInst;
-    pSetupData->bUnattend = isUnattendSetup();
+    /* Load 'txtsetup.sif' from the installation media */
+    Error = LoadSetupInf(&SetupData.SetupInf, &SetupData.USetupData);
+    if (Error != ERROR_SUCCESS)
+    {
+        // MUIDisplayError(Error, Ir, POPUP_WAIT_ENTER);
+        DisplayError(NULL, IDS_CAPTION, IDS_NO_TXTSETUP_SIF);
+        goto Quit;
+    }
+    /* Load extra setup data (HW lists etc...) */
+    if (!LoadSetupData(&SetupData))
+        goto Quit;
 
-    LoadString(hInst,IDS_ABORTSETUP, pSetupData->szAbortMessage, sizeof(pSetupData->szAbortMessage)/sizeof(TCHAR));
-    LoadString(hInst,IDS_ABORTSETUP2, pSetupData->szAbortTitle, sizeof(pSetupData->szAbortTitle)/sizeof(TCHAR));
+    SetupData.hInstance = hInst;
+
+    // SetupData.bUnattend = IsUnattendSetup();
+    CheckUnattendedSetup(&SetupData.USetupData);
+    SetupData.bUnattend = IsUnattendedSetup;
+
+    LoadStringW(hInst, IDS_ABORTSETUP, SetupData.szAbortMessage, ARRAYSIZE(SetupData.szAbortMessage));
+    LoadStringW(hInst, IDS_ABORTSETUP2, SetupData.szAbortTitle, ARRAYSIZE(SetupData.szAbortTitle));
 
     /* Create title font */
-    pSetupData->hTitleFont = CreateTitleFont();
+    SetupData.hTitleFont = CreateTitleFont();
 
-    if (!pSetupData->bUnattend)
+    if (!SetupData.bUnattend)
     {
-        if (!LoadSetupData(pSetupData))
-        {
-            HeapFree(GetProcessHeap(), 0, pSetupData);
-            return 0;
-        }
-
         /* Create the Start page, until setup is working */
+        // NOTE: What does "until setup is working" mean??
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
         psp.hInstance = hInst;
-        psp.lParam = (LPARAM)pSetupData;
+        psp.lParam = (LPARAM)&SetupData;
         psp.pfnDlgProc = StartDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_STARTPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -837,7 +861,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_TYPETITLE);
         psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_TYPESUBTITLE);
         psp.hInstance = hInst;
-        psp.lParam = (LPARAM)pSetupData;
+        psp.lParam = (LPARAM)&SetupData;
         psp.pfnDlgProc = TypeDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_TYPEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -848,7 +872,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_DEVICETITLE);
         psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_DEVICESUBTITLE);
         psp.hInstance = hInst;
-        psp.lParam = (LPARAM)pSetupData;
+        psp.lParam = (LPARAM)&SetupData;
         psp.pfnDlgProc = DeviceDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_DEVICEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -859,7 +883,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_DRIVETITLE);
         psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_DRIVESUBTITLE);
         psp.hInstance = hInst;
-        psp.lParam = (LPARAM)pSetupData;
+        psp.lParam = (LPARAM)&SetupData;
         psp.pfnDlgProc = DriveDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_DRIVEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -870,7 +894,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_SUMMARYTITLE);
         psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_SUMMARYSUBTITLE);
         psp.hInstance = hInst;
-        psp.lParam = (LPARAM)pSetupData;
+        psp.lParam = (LPARAM)&SetupData;
         psp.pfnDlgProc = SummaryDlgProc;
         psp.pszTemplate = MAKEINTRESOURCE(IDD_SUMMARYPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -882,7 +906,7 @@ _tWinMain(HINSTANCE hInst,
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PROCESSTITLE);
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PROCESSSUBTITLE);
     psp.hInstance = hInst;
-    psp.lParam = (LPARAM)pSetupData;
+    psp.lParam = (LPARAM)&SetupData;
     psp.pfnDlgProc = ProcessDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -891,7 +915,7 @@ _tWinMain(HINSTANCE hInst,
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.hInstance = hInst;
-    psp.lParam = (LPARAM)pSetupData;
+    psp.lParam = (LPARAM)&SetupData;
     psp.pfnDlgProc = RestartDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_RESTARTPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
@@ -910,14 +934,18 @@ _tWinMain(HINSTANCE hInst,
     /* Display the wizard */
     PropertySheet(&psh);
 
-    if (pSetupData->hTitleFont)
-        DeleteObject(pSetupData->hTitleFont);
+    if (SetupData.hTitleFont)
+        DeleteObject(SetupData.hTitleFont);
 
-    HeapFree(GetProcessHeap(), 0, pSetupData);
+    SetupCloseInfFile(SetupData.SetupInf);
 
-#if 0
-    EnableShutdownPrivilege();
+Quit:
+    // HeapFree(GetProcessHeap(), 0, pSetupData);
+
+#if 0 // NOTE: Disabled for testing purposes only!
+    EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
     ExitWindowsEx(EWX_REBOOT, 0);
+    EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
 #endif
 
     return 0;

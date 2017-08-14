@@ -28,16 +28,33 @@
 #ifndef _REACTOS_PCH_
 #define _REACTOS_PCH_
 
+/* C Headers */
 #include <stdarg.h>
+#include <tchar.h>
+
+/* PSDK/NDK */
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
-#include <tchar.h>
-#include <setupapi.h>
+
+#include <commctrl.h>
+/**/#include <setupapi.h>/**/
 #include <devguid.h>
-#include <wine/unicode.h>
+// #include <wine/unicode.h>
+
+#define NTOS_MODE_USER
+#include <ndk/cmtypes.h> // For CM_DISK stuff
+#include <ndk/iofuncs.h> // For NtCreate/OpenFile
+#include <ndk/rtlfuncs.h>
+
+
+/* Setup library headers */
+// #include <reactos/rosioctl.h>
+#include <../lib/setuplib.h>
+// #include "errorcode.h"
 
 
 typedef struct _LANG
@@ -72,20 +89,22 @@ typedef struct _SETUPDATA
     TCHAR szAbortMessage[512];
     TCHAR szAbortTitle[64];
 
+    USETUP_DATA USetupData;
+    HINF SetupInf;
+
     // Settings
-    LONG DestDiskNumber; // physical disk
-    LONG DestPartNumber; // partition on disk
     LONG DestPartSize; // if partition doesn't exist, size of partition
     LONG FSType; // file system type on partition 
-    LONG MBRInstallType; // install bootloader
     LONG FormatPart; // type of format the partition
+
     LONG SelectedLangId; // selected language (table index)
     LONG SelectedKBLayout; // selected keyboard layout (table index)
-    TCHAR InstallDir[MAX_PATH]; // installation directory on hdd
     LONG SelectedComputer; // selected computer type (table index)
     LONG SelectedDisplay; // selected display type (table index)
     LONG SelectedKeyboard; // selected keyboard type (table index)
     BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
+
+
     // txtsetup.sif data
     LONG DefaultLang; // default language (table index)
     PLANG pLanguages;
@@ -100,6 +119,10 @@ typedef struct _SETUPDATA
     PGENENTRY pKeyboards;
     LONG KeybCount;
 } SETUPDATA, *PSETUPDATA;
+
+extern HANDLE ProcessHeap;
+extern BOOLEAN IsUnattendedSetup;
+extern PWCHAR SelectedLanguageId;
 
 typedef struct _IMGINFO
 {
