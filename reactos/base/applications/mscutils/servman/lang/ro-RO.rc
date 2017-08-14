@@ -121,10 +121,10 @@ BEGIN
     EDITTEXT IDC_LOGON_PASSWORD1, 72, 68, 104, 14, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Confi&rmarea parolei:", IDC_LOGON_PW2TEXT, 18, 84, 47, 18, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
     EDITTEXT IDC_LOGON_PASSWORD2, 72, 86, 104, 14, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Acest serviciu poate fi activat sau dezactivat pentru următoarele profile ale dispozitivelor:", IDC_STATIC, 7, 114, 210, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Serviciul poate fi activat sau dezactivat în următoarele profile:", IDC_STATIC, 7, 114, 210, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_LOGON_HWPROFILE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 7, 124, 238, 65
-    PUSHBUTTON "&Activează", IDC_LOGON_HWENABLE, 116, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "&Dezactivoază", IDC_LOGON_HWDISABLE, 185, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "Acti&vează", IDC_LOGON_HWENABLE, 116, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "Dezacti&vează", IDC_LOGON_HWDISABLE, 185, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
 END
 
 IDD_RECOVERY DIALOGEX 6, 6, 253, 232
@@ -137,7 +137,7 @@ BEGIN
     COMBOBOX IDC_FIRST_FAILURE, 104, 22, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "A &doua cădere:", IDC_STATIC, 7, 41, 92, 8
     COMBOBOX IDC_SECOND_FAILURE, 104, 39, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Alte căderi:", IDC_STATIC, 7, 58, 92, 8
+    LTEXT "Alt&e căderi:", IDC_STATIC, 7, 58, 92, 8
     COMBOBOX IDC_SUBSEQUENT_FAILURES, 104, 56, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "&Ropornire contor după:", IDC_STATIC, 7, 75, 72, 8
     EDITTEXT IDC_RESET_TIME, 104, 73, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
@@ -152,7 +152,7 @@ BEGIN
     LTEXT "Para&metrii liniei de comandă:", IDC_RUN_TEXT2, 14, 155, 108, 8
     EDITTEXT IDC_PARAMETERS, 128, 152, 110, 14
     AUTOCHECKBOX "&Adaugă contorul căderilor la sfârșitul liniei de comandă (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
-    PUSHBUTTON "Opți&unile de repornire a calculatorului…", IDC_RESTART_OPTIONS, 116, 197, 129, 14
+    PUSHBUTTON "Opți&uni de repornire calculator…", IDC_RESTART_OPTIONS, 116, 197, 129, 14
 END
 
 IDD_DLG_DEPEND DIALOGEX 6, 6, 253, 225
@@ -281,10 +281,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "Este încearcată pornirea următorului serviciu"
-    IDS_PROGRESS_INFO_STOP "Este încearcată oprirea următorului serviciu"
-    IDS_PROGRESS_INFO_PAUSE "Este încearcată întreruperea următorului serviciu"
-    IDS_PROGRESS_INFO_RESUME "Este încearcată reluarea următorului serviciu"
+    IDS_PROGRESS_INFO_START "ReactOS încearcă pornirea serviciului"
+    IDS_PROGRESS_INFO_STOP "ReactOS încearcă oprirea serviciului"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS încearcă întreruperea serviciului"
+    IDS_PROGRESS_INFO_RESUME "ReactOS încearcă reluarea serviciului"
     IDS_CREATE_SUCCESS "Serviciu creat cu succes"
     IDS_DELETE_SUCCESS "Serviciu eliminat cu succes"
     IDS_CREATE_REQ "Câmpurile cu\nasterisc sunt obligatorii"

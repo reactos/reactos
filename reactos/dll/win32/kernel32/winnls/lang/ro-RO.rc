@@ -1,4 +1,4 @@
-/* Translated by Fulea Ștefan */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
@@ -105,10 +105,10 @@ BEGIN
     28598 "28598 (ISO 8859-8 ebraic: ordonare vizuală)"
     28599 "28599 (ISO 8859-9 latin 5 turcesc)"
     28600 "28600 (ISO 8859-10 latin 6 nordic)"
-    28603 "28603 (ISO 8859-13 latin 7 Estonian)"
-    28604 "28604 (ISO 8859-14 latin 8 Celtic)"
+    28603 "28603 (ISO 8859-13 latin 7 eston)"
+    28604 "28604 (ISO 8859-14 latin 8 celtic)"
     28605 "28605 (ISO 8859-15 latin 9)"
-    28606 "28606 (ISO 8859-16 latin 10 Balkan)"
+    28606 "28606 (ISO 8859-16 latin 10 balcanic)"
     38598 "38598 (ISO 8859-8 ebraic: ordonare logică)"
 
     20105 "20105 (IA5 alfabetul internațional IRV Nr.5)"

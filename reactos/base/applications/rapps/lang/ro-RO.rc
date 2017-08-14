@@ -1,8 +1,4 @@
-/*
- * FILE:        base/applications/rapps/lang/ro-RO.rc
- *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
- */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -98,7 +94,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "În descărcare…"
+CAPTION "În curs de descărcare…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -160,9 +156,9 @@ BEGIN
     IDS_AINFO_VERSION "\nVersiune: "
     IDS_AINFO_DESCRIPTION "\nDescriere: "
     IDS_AINFO_SIZE "\nDimensiune: "
-    IDS_AINFO_URLSITE "\nPagină web: "
+    IDS_AINFO_URLSITE "\nAdresă web: "
     IDS_AINFO_LICENSE "\nLicență: "
-    IDS_AINFO_URLDOWNLOAD "\nDescarca: "
+    IDS_AINFO_URLDOWNLOAD "\nURL fișier: "
 END
 
 STRINGTABLE

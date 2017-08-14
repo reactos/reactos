@@ -1,9 +1,4 @@
-/* 
- * FILE:       base/setup/welcome/lang/ro-RO.rc
- *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-10-30  initial translation
- */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -16,16 +11,16 @@ BEGIN
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Bun venit în Sistemul de Operare ReactOS.\n\nAlegeți o opțiune din stânga."
 
-    IDS_CHECKTEXT "&Afișează acest dialog și altă dată"
-    IDS_CLOSETEXT "&Ieșire"
+    IDS_CHECKTEXT "Afișea&ză acest dialog și altă dată"
+    IDS_CLOSETEXT "I&eșire"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
     IDS_TOPIC_BUTTON0 "Instalare &ReactOS"
-    IDS_TOPIC_BUTTON1 "&Explorare CD"
-    IDS_TOPIC_BUTTON2 "&Ieșire"
+    IDS_TOPIC_BUTTON1 "E&xplorare CD"
+    IDS_TOPIC_BUTTON2 "I&eșire"
 END
 
 /* Topic titles */
@@ -41,5 +36,5 @@ STRINGTABLE
 BEGIN
     IDS_TOPIC_DESC0 "Creați o instalare nouă sau actualizați o instalare existentă."
     IDS_TOPIC_DESC1 "Explorați conținutul acestui CD."
-    IDS_TOPIC_DESC2 "Apăsați pentru a ieși din aplicație."
+    IDS_TOPIC_DESC2 "Alegeți pentru a părăsi aplicația de instalare."
 END

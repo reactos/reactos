@@ -38,9 +38,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Scrieți-vă numele complet și compania sau organizația din care faceți parte.", IDC_STATIC, 54, 7, 242, 21
-    LTEXT "N&umele complet:", IDC_STATIC, 54, 37, 70, 8
+    LTEXT "N&ume complet:", IDC_STATIC, 54, 37, 70, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "O&rganizația:", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "O&rganizație:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -51,14 +51,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Scrieți un nume pentru calculator de maxim 15 de caractere. Dacă sunteți într-o rețea, numele calculatorului trebuie să fie unic în acea rețea.", IDC_STATIC, 54, 7, 250, 24
-    LTEXT "N&umele calculatorului:", IDC_STATIC, 54, 38, 75, 8
+    LTEXT "N&ume calculator:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Asistentul va crea un cont de utilizator cu numele Administrator. Îl puteți folosi când veți avea nevoie de control complet asupra calculatorului.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Introduceți o parolă pentru Administrator de maxim 127 caractere.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Parola pentru Administrator:", IDC_STATIC, 54, 104, 105, 8
+    LTEXT "Introduceți o parolă pentru contul Administrator de maxim 127 caractere.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "&Parolă Administrator:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Confirmarea parolei:", IDC_STATIC, 54, 123, 105, 8
+    LTEXT "&Confirmare parolă:", IDC_STATIC, 54, 123, 105, 8
     EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -84,21 +84,21 @@ CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Data și ora:", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "Dată și oră:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "Fusul orar:", IDC_STATIC, 53, 42, 253, 8
+    LTEXT "Fus orar:", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     AUTOCHECKBOX "Aj&ustează ora automat la schimbarea fusului orar", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Tema Lautus", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Tema clasică", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -145,16 +145,16 @@ BEGIN
     IDS_ACKSUBTITLE "Contribuții aduse și informații despre licență"
     IDS_OWNERTITLE "Personalizare sistem"
     IDS_OWNERSUBTITLE "Prelevare informații pentru a personaliza sistemul de operare"
-    IDS_COMPUTERTITLE "Nume calculator și parolă de administrator"
-    IDS_COMPUTERSUBTITLE "Furnizare nume pentru calculator și parolă pentru utilizatorul Administrator"
+    IDS_COMPUTERTITLE "Nume calculator și parolă pentru contul Administrator"
+    IDS_COMPUTERSUBTITLE "Furnizare nume pentru calculator și parolă pentru contul Administrator"
     IDS_LOCALETITLE "Particularizări regionale"
     IDS_LOCALESUBTITLE "Particularizare sistem pentru anumite regiuni sau limbi"
     IDS_DATETIMETITLE "Dată și oră"
     IDS_DATETIMESUBTITLE "Stabilire dată și oră corectă pentru calculator"
     IDS_PROCESSTITLE "Înregistrare componente"
     IDS_PROCESSSUBTITLE "Așteptați…"
-    IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONTITLE "Aspect"
+    IDS_THEMESELECTIONSUBTITLE "Selectați tema preferată"
 END
 
 STRINGTABLE

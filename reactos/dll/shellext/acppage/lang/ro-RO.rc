@@ -1,3 +1,5 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 IDD_ACPPAGESHEET DIALOGEX 0, 0, 224, 226
@@ -5,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Compatibilitate"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Dacă aveți probleme cu acest program în ReactOS, selectați un sistem de operare care să fie raportat aplicației.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "Dacă aveți probleme cu acest program în ReactOS, selectați un sistem de operare care să fie raportat aplicației.\nConștientizați că aceasta este o funcționalitate în dezvoltare.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Modul de compatibilitate", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Lansați acest program în modul de compatibilitate pentru:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -36,6 +38,6 @@ BEGIN
     IDS_TABTITLE "Compatibilitate"
     IDS_FAILED_NETWORK "Modurile de compatibilitate nu pot fi instituite pentru acest program deoarece rezidă pe o unitate de stocare în rețea."
     IDS_FAILED_PROTECTED "Modurile de compatibilitate nu pot fi instituite pentru acest program deoarece este parte din ReactOS."
-    IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"
+    IDS_YOU_DID_NOT_ADD "Nu ați specificat un mod. Doriți să specificați unul?"
 END
 

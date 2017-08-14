@@ -1,8 +1,4 @@
-/*
- * FILE:       base/shell/cmd/lang/ro-RO.rc
- *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
- */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
@@ -412,18 +408,18 @@ SET [variablă[=][șir]]\n\n\
   șir       Seria de caractere asociate variabilei.\n\n\
 Tastați SET fără argumente pentru afișarea variabilelor curente.\n"
     STRING_START_HELP1 "Lansează o comandă.\n\n\
-START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
-      [command/program] [parameters]\n\n\
-  ""title""     Title of the window.\n\
-  path        Specifies the startup directory.\n\
-  I           Uses the original environment given to cmd.exe,\n\
-              instead of the current environment.\n\
-  B           Starts the command or program without creating any window.\n\
-  MIN         Starts with a minimized window.\n\
-  MAX         Starts with a maximized window.\n\
-  WAIT        Starts the command or program and waits for its termination.\n\
+START [""titlu""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [comaandă/program] [parametri]\n\n\
+  ""titlu""     Titlul ferestrei.\n\
+  path        Specifică un director curent.\n\
+  I           Utilizează mediul original dat de cmd.exe,\n\
+              în locul mediului curent.\n\
+  B           Lansează comanda sau programul fără a crea o fereastră.\n\
+  MIN         Lansează cu fereastă minimizată.\n\
+  MAX         Lansează cu fereastră maximizată.\n\
+  WAIT        Lansează comanda sau programul și-i așteaptă încheierea.\n\
   comandă     Comanda specificată pentru lansare.\n\
-  parameters  Specifies the parameters to be given to the command or program.\n"
+  parametri   Specifică parametrii pentru comanda sau programul lansat.\n"
     STRING_TITLE_HELP "Stabilește titlul pentru fereastra consolei.\n\n\
 TITLE [șir]\n\n\
   șir       Titlul specificat pentru fereastra consolei.\n"
