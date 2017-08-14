@@ -20,6 +20,38 @@ OHCI_DumpHcdED(POHCI_HCD_ED ED)
 }
 
 VOID
+NTAPI 
+OHCI_DumpHcdTD(POHCI_HCD_TD TD)
+{
+    DPRINT("TD                - %p\n", TD);
+    DPRINT("gTD.Control       - %08X\n", TD->HwTD.gTD.Control.AsULONG);
+if (TD->HwTD.gTD.CurrentBuffer)
+    DPRINT("gTD.CurrentBuffer - %p\n", TD->HwTD.gTD.CurrentBuffer);
+if (TD->HwTD.gTD.NextTD)
+    DPRINT("gTD.NextTD        - %p\n", TD->HwTD.gTD.NextTD);
+if (TD->HwTD.gTD.BufferEnd)
+    DPRINT("gTD.BufferEnd     - %p\n", TD->HwTD.gTD.BufferEnd);
+
+if (TD->HwTD.SetupPacket.bmRequestType.B)
+    DPRINT("bmRequestType     - %02X\n", TD->HwTD.SetupPacket.bmRequestType.B);
+if (TD->HwTD.SetupPacket.bRequest)
+    DPRINT("bRequest          - %02X\n", TD->HwTD.SetupPacket.bRequest);
+if (TD->HwTD.SetupPacket.wValue.W)
+    DPRINT("wValue            - %04X\n", TD->HwTD.SetupPacket.wValue.W);
+if (TD->HwTD.SetupPacket.wIndex.W)
+    DPRINT("wIndex            - %04X\n", TD->HwTD.SetupPacket.wIndex.W);
+if (TD->HwTD.SetupPacket.wLength)
+    DPRINT("wLength           - %04X\n", TD->HwTD.SetupPacket.wLength);
+
+    DPRINT("PhysicalAddress   - %p\n", TD->PhysicalAddress);
+    DPRINT("Flags             - %X\n", TD->Flags);
+    DPRINT("OhciTransfer      - %p\n", TD->OhciTransfer);
+    DPRINT("NextHcdTD         - %p\n", TD->NextHcdTD);
+if (TD->TransferLen)
+    DPRINT("TransferLen       - %X\n", TD->TransferLen);
+}
+
+VOID
 NTAPI
 OHCI_EnableList(IN POHCI_EXTENSION OhciExtension,
                 IN POHCI_ENDPOINT OhciEndpoint)
