@@ -69,17 +69,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "P&rozkoumat", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "O&tevřít", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Vyj&mout", FCIDM_SHVIEW_CUT
-        MENUITEM "&Kopírovat", FCIDM_SHVIEW_COPY
+        MENUITEM "Vyj&mout", IDM_CUT
+        MENUITEM "&Kopírovat", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Vytvořit zástupc&e", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "O&dstranit", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Přejmenovat", FCIDM_SHVIEW_RENAME
+        MENUITEM "Vytvořit zástupc&e", IDM_CREATELINK
+        MENUITEM "O&dstranit", IDM_DELETE
+        MENUITEM "&Přejmenovat", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Vlastnosti", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Vlastnosti", IDM_PROPERTIES
     END
 END
 

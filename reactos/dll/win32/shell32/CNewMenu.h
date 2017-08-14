@@ -60,7 +60,6 @@ private:
     CComPtr<IUnknown> m_pSite;
     HMENU m_hSubMenu;
     HICON m_hiconFolder, m_hiconLink;
-    UINT m_idCmdFirst;
 
     SHELLNEW_ITEM *LoadItem(LPCWSTR pwszExt);
     void UnloadItem(SHELLNEW_ITEM *pItem);

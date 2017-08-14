@@ -53,6 +53,10 @@ typedef struct
 
 #define SHV_CHANGE_NOTIFY WM_USER + 0x1111
 
+/* For the context menu of the def view, the id of the items are based on 1 because we need
+   to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled */
+#define CONTEXT_MENU_BASE_ID 1
+
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -1272,7 +1276,7 @@ HRESULT CDefView::OpenSelectedItems()
 
     IUnknown_SetSite(m_pCM, (IShellView *)this);
 
-    hResult = m_pCM->QueryContextMenu(hMenu, 0, 0x20, 0x7fff, CMF_DEFAULTONLY);
+    hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_DEFAULTONLY);
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
 
@@ -1325,7 +1329,8 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     IUnknown_SetSite(m_pCM, (IShellView *)this);
 
-    hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
+    /* Use 1 as the first id as we want 0 the mean that the user canceled the menu */
+    hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, CONTEXT_MENU_BASE_ID, FCIDM_SHVIEWLAST, CMF_NORMAL);
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
 
@@ -1338,7 +1343,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (uCommand == FCIDM_SHVIEW_OPEN && OnDefaultCommand() == S_OK)
         goto cleanup;
 
-    InvokeContextMenuCommand(uCommand);
+    InvokeContextMenuCommand(uCommand - CONTEXT_MENU_BASE_ID);
 
 cleanup:
     if (m_pCM)
@@ -1600,7 +1605,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             return OnExplorerCommand(dwCmdID, FALSE);
         default:
             /* WM_COMMAND messages from the file menu are routed to the CDefView so as to let m_pCM handle the command */
-            if (m_pCM)
+            if (m_pCM && dwCmd == 0)
             {
                 InvokeContextMenuCommand(dwCmdID);
             }
@@ -1955,6 +1960,9 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     return TRUE;
 }
 
+HRESULT SHGetMenuIdFromMenuMsg(UINT uMsg, LPARAM lParam, UINT *CmdId);
+HRESULT SHSetMenuIdInMenuMsg(UINT uMsg, LPARAM lParam, UINT CmdId);
+
 /**********************************************************
 *  CDefView::OnCustomItem
 */
@@ -1967,12 +1975,18 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return FALSE;
     }
 
-    LRESULT result;
-    HRESULT hres = SHForwardContextMenuMsg(m_pCM, uMsg, wParam, lParam, &result, TRUE);
+    /* The lParam of WM_DRAWITEM WM_MEASUREITEM contain a menu id and this also needs to 
+       be changed to a menu identifier offset */
+    UINT CmdID;
+    HRESULT hres = SHGetMenuIdFromMenuMsg(uMsg, lParam, &CmdID);
     if (SUCCEEDED(hres))
-        return TRUE;
-    else
-        return FALSE;
+        SHSetMenuIdInMenuMsg(uMsg, lParam, CmdID - CONTEXT_MENU_BASE_ID);
+
+    /* Forward the message to the IContextMenu2 */
+    LRESULT result;
+    hres = SHForwardContextMenuMsg(m_pCM, uMsg, wParam, lParam, &result, TRUE);
+
+    return (SUCCEEDED(hres));
 }
 
 LRESULT CDefView::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

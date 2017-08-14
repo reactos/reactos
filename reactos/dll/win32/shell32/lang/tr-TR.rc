@@ -65,17 +65,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "A&raştır", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Aç", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Kes", FCIDM_SHVIEW_CUT
-        MENUITEM "&Çoğalt", FCIDM_SHVIEW_COPY
+        MENUITEM "&Kes", IDM_CUT
+        MENUITEM "&Çoğalt", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "K&ısayol Oluştur", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Sil", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Yeniden Adlandır", FCIDM_SHVIEW_RENAME
+        MENUITEM "K&ısayol Oluştur", IDM_CREATELINK
+        MENUITEM "&Sil", IDM_DELETE
+        MENUITEM "&Yeniden Adlandır", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsîyetler", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Husûsîyetler", IDM_PROPERTIES
     END
 END
 

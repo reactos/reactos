@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "エクスプローラ(&X)", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "開く(&O)", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "切り取り(&U)", FCIDM_SHVIEW_CUT
-        MENUITEM "コピー(&C)", FCIDM_SHVIEW_COPY
+        MENUITEM "切り取り(&U)", IDM_CUT
+        MENUITEM "コピー(&C)", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "ショートカットの作成(&L)", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "削除(&D)", FCIDM_SHVIEW_DELETE
-        MENUITEM "名前の変更(&R)", FCIDM_SHVIEW_RENAME
+        MENUITEM "ショートカットの作成(&L)", IDM_CREATELINK
+        MENUITEM "削除(&D)", IDM_DELETE
+        MENUITEM "名前の変更(&R)", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "プロパティ(&P)", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "プロパティ(&P)", IDM_PROPERTIES
     END
 END
 

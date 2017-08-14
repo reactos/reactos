@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Utforsk", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Åpne", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Klipp &ut", FCIDM_SHVIEW_CUT
-        MENUITEM "&Kopier", FCIDM_SHVIEW_COPY
+        MENUITEM "Klipp &ut", IDM_CUT
+        MENUITEM "&Kopier", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "&Opprett snarvei", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Slett", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Gi nytt navn", FCIDM_SHVIEW_RENAME
+        MENUITEM "&Opprett snarvei", IDM_CREATELINK
+        MENUITEM "&Slett", IDM_DELETE
+        MENUITEM "&Gi nytt navn", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "Egenska&per", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Egenska&per", IDM_PROPERTIES
     END
 END
 

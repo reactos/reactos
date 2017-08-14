@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Selaa", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Avaa", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Leikkaa", FCIDM_SHVIEW_CUT
-        MENUITEM "&Kopioi", FCIDM_SHVIEW_COPY
+        MENUITEM "&Leikkaa", IDM_CUT
+        MENUITEM "&Kopioi", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Lu&o Linkki", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Poista", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Nimeä Uudelleen", FCIDM_SHVIEW_RENAME
+        MENUITEM "Lu&o Linkki", IDM_CREATELINK
+        MENUITEM "&Poista", IDM_DELETE
+        MENUITEM "&Nimeä Uudelleen", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Ominaisuudet", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Ominaisuudet", IDM_PROPERTIES
     END
 END
 

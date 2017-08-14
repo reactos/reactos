@@ -65,17 +65,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "E&xplorează", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "Desc&hide", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează", FCIDM_SHVIEW_CUT
-        MENUITEM "&Copiază", FCIDM_SHVIEW_COPY
+        MENUITEM "&Decupează", IDM_CUT
+        MENUITEM "&Copiază", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Crează sc&urtătură", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "Șt&erge", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Redenumește", FCIDM_SHVIEW_RENAME
+        MENUITEM "Crează sc&urtătură", IDM_CREATELINK
+        MENUITEM "Șt&erge", IDM_DELETE
+        MENUITEM "&Redenumește", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Proprietăți", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Proprietăți", IDM_PROPERTIES
     END
 END
 

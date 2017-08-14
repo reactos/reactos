@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "B&öngész", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "Megnyit", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Kivágás", FCIDM_SHVIEW_CUT
-        MENUITEM "Másolás", FCIDM_SHVIEW_COPY
+        MENUITEM "Kivágás", IDM_CUT
+        MENUITEM "Másolás", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Parancsikon létrehozása", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "Törlés", FCIDM_SHVIEW_DELETE
-        MENUITEM "Átnevezés", FCIDM_SHVIEW_RENAME
+        MENUITEM "Parancsikon létrehozása", IDM_CREATELINK
+        MENUITEM "Törlés", IDM_DELETE
+        MENUITEM "Átnevezés", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "Tulajdonságok", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Tulajdonságok", IDM_PROPERTIES
     END
 END
 

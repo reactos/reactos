@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "E&xplorer", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Öffnen", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Ausschneiden", FCIDM_SHVIEW_CUT
-        MENUITEM "&Kopieren", FCIDM_SHVIEW_COPY
+        MENUITEM "&Ausschneiden", IDM_CUT
+        MENUITEM "&Kopieren", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "&Verknüpfung erstellen", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Löschen", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Umbenennen", FCIDM_SHVIEW_RENAME
+        MENUITEM "&Verknüpfung erstellen", IDM_CREATELINK
+        MENUITEM "&Löschen", IDM_DELETE
+        MENUITEM "&Umbenennen", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Eigenschaften", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Eigenschaften", IDM_PROPERTIES
     END
 END
 

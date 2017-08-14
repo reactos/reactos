@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Провідник", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "В&ідкрити", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Вирізати", FCIDM_SHVIEW_CUT
-        MENUITEM "&Копіювати", FCIDM_SHVIEW_COPY
+        MENUITEM "&Вирізати", IDM_CUT
+        MENUITEM "&Копіювати", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Створити &ярлик", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "В&идалити", FCIDM_SHVIEW_DELETE
-        MENUITEM "Перей&менувати", FCIDM_SHVIEW_RENAME
+        MENUITEM "Створити &ярлик", IDM_CREATELINK
+        MENUITEM "В&идалити", IDM_DELETE
+        MENUITEM "Перей&менувати", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "В&ластивості", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "В&ластивості", IDM_PROPERTIES
     END
 END
 

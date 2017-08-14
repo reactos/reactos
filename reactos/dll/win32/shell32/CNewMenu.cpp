@@ -31,8 +31,7 @@ CNewMenu::CNewMenu() :
     m_pLinkItem(NULL),
     m_pSite(NULL),
     m_hiconFolder(NULL),
-    m_hiconLink(NULL),
-    m_idCmdFirst(0)
+    m_hiconLink(NULL)
 {
 }
 
@@ -614,8 +613,6 @@ CNewMenu::QueryContextMenu(HMENU hMenu,
     MENUITEMINFOW mii;
     UINT cItems = 0;
 
-    m_idCmdFirst = idCmdFirst;
-
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
@@ -711,7 +708,7 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
             if (!lpdis || lpdis->CtlType != ODT_MENU)
                 break;
 
-            DWORD id = LOWORD(lpdis->itemID) - m_idCmdFirst;
+            DWORD id = LOWORD(lpdis->itemID);
             HICON hIcon = 0;
             if (id == 0)
                 hIcon = m_hiconFolder;  
