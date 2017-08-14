@@ -401,7 +401,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
 
         ShowWindow(Dlg, SW_SHOW);
 
-        //Start new download
+        // Start new download
         SendMessageW(Dlg, DL_START_NEW, 0, 0);
 
         return TRUE;
@@ -804,12 +804,12 @@ BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLI
     AppsToInstallList = AppsList;
 
     // Create a dialog and issue a download process
-    LaunchDownloadDialog();
+    LaunchDownloadDialog(FALSE);
 
     return TRUE;
 }
 
-BOOL CDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo)
+BOOL CDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo, BOOL modal)
 {
     if (!pAppInfo)
     {
@@ -818,7 +818,7 @@ BOOL CDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo)
 
     AppsToInstallList.RemoveAll();
     AppsToInstallList.Add(pAppInfo);
-    LaunchDownloadDialog();
+    LaunchDownloadDialog(modal);
 
     return TRUE;
 }
@@ -832,11 +832,22 @@ VOID CDownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
 }
 
 //TODO: Reuse the dialog
-VOID CDownloadManager::LaunchDownloadDialog()
+VOID CDownloadManager::LaunchDownloadDialog(BOOL modal)
 {
-    CreateDialogW(hInst,
-                  MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
-                  hMainWnd,
-                  DownloadDlgProc);
+    if (modal)
+    {
+        DialogBoxW(hInst,
+                   MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
+                   hMainWnd,
+                   DownloadDlgProc);
+    }
+    else
+    {
+        CreateDialogW(hInst,
+                      MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
+                      hMainWnd,
+                      DownloadDlgProc);
+    }
+
 }
 // CDownloadManager

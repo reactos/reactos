@@ -42,7 +42,7 @@ InstallDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 BOOL
 InstallApplication(INT Index)
 {
-    if (!IS_AVAILABLE_ENUM(SelectedEnumType))
+    if (!isAvailableEnum(SelectedEnumType))
         return FALSE;
 
     AppInfo = (PAPPLICATION_INFO) ListViewGetlParam(Index);

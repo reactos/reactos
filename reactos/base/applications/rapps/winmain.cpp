@@ -72,7 +72,7 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     }
 
     szDownloadDir += L"\\RAPPS Downloads";
-    ATL::CStringW::CopyChars(pSettingsInfo->szDownloadDir, 
+    ATL::CStringW::CopyChars(pSettingsInfo->szDownloadDir,
                              _countof(pSettingsInfo->szDownloadDir),
                              szDownloadDir.GetString(),
                              szDownloadDir.GetLength() + 1);
@@ -119,13 +119,13 @@ VOID SaveSettings(HWND hwnd)
         SettingsInfo.Top = wp.rcNormalPosition.top;
         SettingsInfo.Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
         SettingsInfo.Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
-        SettingsInfo.Maximized = (wp.showCmd == SW_MAXIMIZE 
-                                  || (wp.showCmd == SW_SHOWMINIMIZED 
+        SettingsInfo.Maximized = (wp.showCmd == SW_MAXIMIZE
+                                  || (wp.showCmd == SW_SHOWMINIMIZED
                                       && (wp.flags & WPF_RESTORETOMAXIMIZED)));
     }
 
     if (RegKey.Create(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", NULL,
-                        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) == ERROR_SUCCESS)
+                      REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) == ERROR_SUCCESS)
     {
         RegKey.SetBinaryValue(L"Settings", (const PVOID) &SettingsInfo, sizeof(SettingsInfo));
         RegKey.Close();
@@ -133,28 +133,38 @@ VOID SaveSettings(HWND hwnd)
 }
 
 
-#define CMD_KEY_SETUP L"//SETUP"
+#define CMD_KEY_SETUP L"/SETUP"
 
-VOID CmdParser(LPWSTR lpCmdLine)
+// return TRUE if the SETUP key was valid
+BOOL CmdParser(LPWSTR lpCmdLine)
 {
     INT argc;
     LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);
-    if (!argv || argc < 2)
+    CAvailableApps apps;
+    PAPPLICATION_INFO appInfo;
+    ATL::CString szName;
+
+    if (!argv || argc < 2 || StrCmpW(argv[0], CMD_KEY_SETUP))
     {
-        return;
+        return FALSE;
     }
-    
-    if (!StrCmpW(argv[0], CMD_KEY_SETUP))
+
+    apps.EnumAvailableApplications(ENUM_ALL_AVAILABLE, NULL);
+    appInfo = apps.FindInfo(argv[1]);
+    if (appInfo)
     {
-        //TODO: call cmd app installation
+        CDownloadManager::DownloadApplication(appInfo, TRUE);
+        return TRUE;
     }
+
+    return FALSE;
 }
 
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
 {
     LPCWSTR szWindowClass = L"ROSAPPMGR";
     HANDLE hMutex = NULL;
-    HACCEL KeyBrd;
+    HACCEL KeyBrd = NULL;
     MSG Msg;
 
     InitializeAtlModule(hInstance, TRUE);
@@ -187,27 +197,31 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
     InitCommonControls();
 
-    hMainWnd = CreateMainWindow();
-    if (hMainWnd)
+    //skip window creation if there were some keys
+    if (!CmdParser(lpCmdLine))
     {
-        /* Maximize it if we must */
-        ShowWindow(hMainWnd, (SettingsInfo.bSaveWndPos && SettingsInfo.Maximized ? SW_MAXIMIZE : nShowCmd));
-        UpdateWindow(hMainWnd);
-
-        //TODO: get around the ugliness
-        if (SettingsInfo.bUpdateAtStart)
-            GetAvailableApps()->UpdateAppsDB();
-
-        /* Load the menu hotkeys */
-        KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
-
-        /* Message Loop */
-        while (GetMessageW(&Msg, NULL, 0, 0))
+        hMainWnd = CreateMainWindow();
+        if (hMainWnd)
         {
-            if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
+            /* Maximize it if we must */
+            ShowWindow(hMainWnd, (SettingsInfo.bSaveWndPos && SettingsInfo.Maximized ? SW_MAXIMIZE : nShowCmd));
+            UpdateWindow(hMainWnd);
+
+            //TODO: get around the ugliness
+            if (SettingsInfo.bUpdateAtStart)
+                GetAvailableApps()->UpdateAppsDB();
+
+            /* Load the menu hotkeys */
+            KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
+
+            /* Message Loop */
+            while (GetMessageW(&Msg, NULL, 0, 0))
             {
-                TranslateMessage(&Msg);
-                DispatchMessageW(&Msg);
+                if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
+                {
+                    TranslateMessage(&Msg);
+                    DispatchMessageW(&Msg);
+                }
             }
         }
     }

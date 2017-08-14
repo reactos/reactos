@@ -5,29 +5,34 @@
 #include <atlcoll.h>
 
 /* EnumType flags for EnumAvailableApplications */
-#define ENUM_ALL_AVAILABLE     0
-#define ENUM_CAT_AUDIO         1
-#define ENUM_CAT_VIDEO         2
-#define ENUM_CAT_GRAPHICS      3
-#define ENUM_CAT_GAMES         4
-#define ENUM_CAT_INTERNET      5
-#define ENUM_CAT_OFFICE        6
-#define ENUM_CAT_DEVEL         7
-#define ENUM_CAT_EDU           8
-#define ENUM_CAT_ENGINEER      9
-#define ENUM_CAT_FINANCE       10
-#define ENUM_CAT_SCIENCE       11
-#define ENUM_CAT_TOOLS         12
-#define ENUM_CAT_DRIVERS       13
-#define ENUM_CAT_LIBS          14
-#define ENUM_CAT_OTHER         15
+enum AvailableCategories
+{
+    ENUM_ALL_AVAILABLE,
+    ENUM_CAT_AUDIO,
+    ENUM_CAT_VIDEO,
+    ENUM_CAT_GRAPHICS,
+    ENUM_CAT_GAMES,
+    ENUM_CAT_INTERNET,
+    ENUM_CAT_OFFICE,
+    ENUM_CAT_DEVEL,
+    ENUM_CAT_EDU,
+    ENUM_CAT_ENGINEER,
+    ENUM_CAT_FINANCE,
+    ENUM_CAT_SCIENCE,
+    ENUM_CAT_TOOLS,
+    ENUM_CAT_DRIVERS,
+    ENUM_CAT_LIBS,
+    ENUM_CAT_OTHER,
+    ENUM_AVAILABLE_MIN = ENUM_ALL_AVAILABLE,
+    ENUM_AVAILABLE_MAX = ENUM_CAT_OTHER
+};
 
-#define ENUM_AVAILABLE_MIN ENUM_ALL_AVAILABLE
-#define ENUM_AVAILABLE_MAX ENUM_CAT_OTHER
+inline BOOL isAvailableEnum(INT x)
+{
+    return (x >= ENUM_AVAILABLE_MIN && x <= ENUM_AVAILABLE_MAX);
+}
 
-#define IS_AVAILABLE_ENUM(a) (a >= ENUM_AVAILABLE_MIN && a <= ENUM_AVAILABLE_MAX)
-
-typedef enum
+typedef enum LICENSE_TYPE
 {
     None,
     OpenSource,
@@ -35,7 +40,7 @@ typedef enum
     Trial,
     Max = Trial,
     Min = None
-} LICENSE_TYPE, *PLICENSE_TYPE;
+} *PLICENSE_TYPE;
 
 class CConfigParser
 {
@@ -62,7 +67,7 @@ public:
     UINT GetInt(const ATL::CStringW& KeyName);
 };
 
-typedef struct
+typedef struct APPLICATION_INFO
 {
     INT Category;
     LICENSE_TYPE LicenseType;
@@ -84,9 +89,7 @@ typedef struct
     // Optional integrity checks (SHA-1 digests are 160 bit = 40 characters in hex string form)
     ATL::CStringW szSHA1;
 
-} APPLICATION_INFO, *PAPPLICATION_INFO;
-
-extern ATL::CAtlList<PAPPLICATION_INFO> InfoList;
+} *PAPPLICATION_INFO;
 
 typedef BOOL(CALLBACK *AVAILENUMPROC)(PAPPLICATION_INFO Info, LPCWSTR szFolderPath);
 
@@ -113,8 +116,7 @@ private:
     BOOL m_HasInstalledVersion = FALSE;
     CConfigParser m_Parser;
 
-    inline BOOL GetString(LPCWSTR lpKeyName,
-                          ATL::CStringW& ReturnedString);
+    inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString);
 
     // Lazily load general info from the file
     VOID RetrieveGeneralInfo();
@@ -139,6 +141,7 @@ public:
     BOOL DeleteCurrentAppsDB();
     BOOL UpdateAppsDB();
     BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
+    const PAPPLICATION_INFO FindInfo(const ATL::CStringW& szAppName);
     const ATL::CStringW& GetFolderPath();
     const ATL::CStringW& GetAppPath();
     const ATL::CStringW& GetCabPath();

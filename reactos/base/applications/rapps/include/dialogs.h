@@ -26,9 +26,9 @@ public:
 
     static DWORD WINAPI ThreadFunc(LPVOID Context);
     static BOOL DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList);
-    static BOOL DownloadApplication(PAPPLICATION_INFO pAppInfo);
+    static BOOL DownloadApplication(PAPPLICATION_INFO pAppInfo, BOOL modal = FALSE);
     static VOID DownloadApplicationsDB(LPCWSTR lpUrl);
-    static VOID LaunchDownloadDialog();
+    static VOID LaunchDownloadDialog(BOOL);
 };
 
 // Settings dialog (settingsdlg.cpp)

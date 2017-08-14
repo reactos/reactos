@@ -1053,7 +1053,7 @@ private:
                     {
                         if (IS_INSTALLED_ENUM(SelectedEnumType))
                             ShowInstalledAppInfo(ItemIndex);
-                        if (IS_AVAILABLE_ENUM(SelectedEnumType))
+                        if (isAvailableEnum(SelectedEnumType))
                             CAvailableAppView::ShowAvailableAppInfo(ItemIndex);
                     }
                     /* Check if the item is checked */
@@ -1081,7 +1081,7 @@ private:
                 {
                     if (IS_INSTALLED_ENUM(SelectedEnumType))
                         ShowInstalledAppInfo(-1);
-                    if (IS_AVAILABLE_ENUM(SelectedEnumType))
+                    if (isAvailableEnum(SelectedEnumType))
                         CAvailableAppView::ShowAvailableAppInfo(-1);
                 }
             }
@@ -1463,7 +1463,9 @@ private:
         if (EnumType < 0) EnumType = SelectedEnumType;
 
         if (IS_INSTALLED_ENUM(SelectedEnumType))
+        {
             FreeInstalledAppList();
+        }
 
         m_ListView->DeleteAllItems();
 
@@ -1478,21 +1480,21 @@ private:
             ImageList_Destroy(hImageListBuf);
         }
 
-        if (IS_AVAILABLE_ENUM(EnumType))
+        if (isAvailableEnum(EnumType))
         {
             /* Enum available applications */
             m_AvailableApps.EnumAvailableApplications(EnumType, s_EnumAvailableAppProc);
         }
 
         SelectedEnumType = EnumType;
-
         UpdateStatusBarText();
-
         SetWelcomeText();
 
-        /* set automatic column width for program names if the list is not empty */
+        /* Set automatic column width for program names if the list is not empty */
         if (m_ListView->GetItemCount() > 0)
+        {
             ListView_SetColumnWidth(m_ListView->GetWindow(), 0, LVSCW_AUTOSIZE);
+        }
 
         bUpdating = FALSE;
         m_ListView->SetRedraw(TRUE);

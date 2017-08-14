@@ -292,12 +292,13 @@ BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnu
             CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
         }
 
-
         ExtractFilesFromCab(m_szCabPath, m_szAppsPath);
         hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
 
         if (hFind == INVALID_HANDLE_VALUE)
+        {
             return FALSE;
+        }
     }
 
     do
@@ -348,13 +349,34 @@ skip_if_cached:
 
         Info->RefreshAppInfo();
 
-        if (!lpEnumProc(static_cast<PAPPLICATION_INFO>(Info), m_szAppsPath.GetString()))
-            break;
+        if (lpEnumProc)
+            lpEnumProc(static_cast<PAPPLICATION_INFO>(Info), m_szAppsPath.GetString());
 
     } while (FindNextFileW(hFind, &FindFileData) != 0);
 
     FindClose(hFind);
     return TRUE;
+}
+
+const PAPPLICATION_INFO CAvailableApps::FindInfo(const ATL::CStringW& szAppName)
+{
+    if (m_InfoList.IsEmpty())
+    {
+        return NULL;
+    }
+
+    // linear search
+    POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
+    PAPPLICATION_INFO info;
+    while (CurrentListPosition != NULL)
+    {
+        info = m_InfoList.GetNext(CurrentListPosition);
+        if (info->szName == szAppName)
+        {
+            return info;
+        }
+    }
+    return NULL;
 }
 
 const ATL::CStringW & CAvailableApps::GetFolderPath()
