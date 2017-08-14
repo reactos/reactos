@@ -1028,23 +1028,14 @@ OHCI_InterruptService(IN PVOID ohciExtension)
 {
     POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
-    PULONG InterruptDisableReg;
-    PULONG InterruptEnableReg;
-    PULONG InterruptStatusReg;
+    OHCI_REG_INTERRUPT_STATUS IntStatus;
     OHCI_REG_INTERRUPT_ENABLE_DISABLE IntEnable;
     OHCI_REG_INTERRUPT_ENABLE_DISABLE IntDisable;
-    OHCI_REG_INTERRUPT_STATUS IntStatus; 
-    POHCI_HCCA HcHCCA;
     BOOLEAN Result = FALSE;
 
-    DPRINT_OHCI("OHCI_InterruptService: OhciExtension - %p\n",
-                OhciExtension);
+    DPRINT_OHCI("OHCI_Interrupt: Ext %p\n", OhciExtension);
 
     OperationalRegs = OhciExtension->OperationalRegs;
-
-    InterruptEnableReg = (PULONG)&OperationalRegs->HcInterruptEnable;
-    InterruptDisableReg = (PULONG)&OperationalRegs->HcInterruptDisable;
-    InterruptStatusReg = (PULONG)&OperationalRegs->HcInterruptStatus;
 
     Result = OHCI_HardwarePresent(OhciExtension, FALSE);
 
@@ -1053,31 +1044,29 @@ OHCI_InterruptService(IN PVOID ohciExtension)
         return FALSE;
     }
 
-    IntEnable.AsULONG = READ_REGISTER_ULONG(InterruptEnableReg);
+    IntEnable.AsULONG = READ_REGISTER_ULONG((PULONG)&OperationalRegs->HcInterruptEnable);
+    IntStatus.AsULONG = READ_REGISTER_ULONG((PULONG)&OperationalRegs->HcInterruptStatus) & IntEnable.AsULONG;
 
-    IntStatus.AsULONG = READ_REGISTER_ULONG(InterruptStatusReg) &
-                        IntEnable.AsULONG;
-
-    if (IntStatus.AsULONG == 0 || IntEnable.MasterInterruptEnable == 0)
+    if ((IntStatus.AsULONG == 0) || (IntEnable.MasterInterruptEnable == 0))
     {
-        return Result;
+        return FALSE;
     }
 
     if (IntStatus.UnrecoverableError)
     {
         DPRINT1("OHCI_InterruptService: IntStatus.UnrecoverableError\n");
-        DbgBreakPoint();
+        //DbgBreakPoint();
     }
 
     if (IntStatus.FrameNumberOverflow)
     {
+        POHCI_HCCA HcHCCA;
         ULONG fm;
         ULONG hp;
 
         HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
 
-        DPRINT("OHCI_InterruptService: FrameNumberOverflow. HcHCCA->FrameNumber - %lX\n",
-                    HcHCCA->FrameNumber);
+        DPRINT("FrameNumberOverflow %lX\n", HcHCCA->FrameNumber);
 
         hp = OhciExtension->FrameHighPart;
         fm = HcHCCA->FrameNumber;
@@ -1089,8 +1078,8 @@ OHCI_InterruptService(IN PVOID ohciExtension)
     /* Disable interrupt generation */
     IntDisable.AsULONG = 0;
     IntDisable.MasterInterruptEnable = 1;
-
-    WRITE_REGISTER_ULONG(InterruptDisableReg, IntDisable.AsULONG);
+    WRITE_REGISTER_ULONG((PULONG)&OperationalRegs->HcInterruptDisable,
+                         IntDisable.AsULONG);
 
     return TRUE;
 }
