@@ -1313,15 +1313,18 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     POHCI_HCD_TD FirstTD;
     POHCI_HCD_TD FirstTdPA;
     POHCI_HCD_TD TD;
+    POHCI_HCD_TD TD2;
+    POHCI_HCD_TD PrevTD;
     POHCI_HCD_TD NextTD;
-    POHCI_HCD_TD LastTd;
-    ULONG_PTR SetupPacket;
     ULONG MaxTDs;
     ULONG TransferedLen;
-    UCHAR DataToggle;
     ULONG MaxPacketSize;
+    ULONG BufferEnd;
+    UCHAR DataToggle;
 
-    DPRINT_OHCI("OHCI_ControlTransfer: ... \n");
+    DPRINT_OHCI("OHCI_ControlTransfer: Ext %p, Endpoint %p\n",
+                OhciExtension,
+                OhciEndpoint);
 
     MaxTDs = OHCI_RemainTDs(OhciExtension, OhciEndpoint);
 
@@ -1331,66 +1334,74 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     }
 
     FirstTD = OhciEndpoint->HcdTailP;
-
     FirstTD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
+
+    FirstTD->HwTD.gTD.NextTD = NULL;
     FirstTD->HwTD.gTD.CurrentBuffer = NULL;
     FirstTD->HwTD.gTD.BufferEnd = NULL;
-    FirstTD->HwTD.gTD.NextTD = 0;
+
+    FirstTD->Flags |= OHCI_HCD_TD_FLAG_PROCESSED;
+    FirstTD->NextHcdTD = NULL;
+    FirstTD->OhciTransfer = OhciTransfer;
+
+    FirstTD->HwTD.Padded[0] = 0;
+    FirstTD->HwTD.Padded[1] = 0;
+
+    OhciTransfer->PendingTDs++;
 
     RtlCopyMemory(&FirstTD->HwTD.SetupPacket,
                   &TransferParameters->SetupPacket,
                   sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
 
-    FirstTD->HwTD.Padded[0] = 0;
-    FirstTD->HwTD.Padded[1] = 0;
+    FirstTdPA = (POHCI_HCD_TD)FirstTD->PhysicalAddress;
 
-    FirstTD->Flags |= OHCI_HCD_TD_FLAG_PROCESSED;
-    FirstTD->OhciTransfer = OhciTransfer;
-    FirstTD->NextHcdTD = NULL;
+    FirstTD->HwTD.gTD.CurrentBuffer = &FirstTdPA->HwTD.SetupPacket;
+
+    BufferEnd = (ULONG_PTR)&FirstTdPA->HwTD.SetupPacket +
+                           sizeof(USB_DEFAULT_PIPE_SETUP_PACKET) -
+                           1;
+
+    FirstTD->HwTD.gTD.BufferEnd = (PVOID)(BufferEnd);
 
     FirstTD->HwTD.gTD.Control.AsULONG = 0;
     FirstTD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
     FirstTD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NOT_ACCESSED;
     FirstTD->HwTD.gTD.Control.DataToggle = OHCI_TD_DATA_TOGGLE_DATA0;
 
-    FirstTdPA = (POHCI_HCD_TD)FirstTD->PhysicalAddress;
-    SetupPacket = (ULONG_PTR)&FirstTdPA->HwTD.SetupPacket;
+    TD2 = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
 
-    FirstTD->HwTD.gTD.CurrentBuffer = (PVOID)SetupPacket;
-    FirstTD->HwTD.gTD.BufferEnd = (PVOID)(SetupPacket +
-                                          sizeof(USB_DEFAULT_PIPE_SETUP_PACKET) -
-                                          1);
+    TD2->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
+    TD2->HwTD.gTD.CurrentBuffer = NULL;
+    TD2->HwTD.gTD.BufferEnd = NULL;
+    TD2->HwTD.gTD.NextTD = NULL;
 
-    TD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
-    OhciTransfer->PendingTDs++;
+    TD2->Flags |= OHCI_HCD_TD_FLAG_PROCESSED;
+    TD2->NextHcdTD = NULL;
+    TD2->OhciTransfer = OhciTransfer;
 
-    TD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
-    TD->HwTD.gTD.CurrentBuffer = NULL;
-    TD->HwTD.gTD.BufferEnd = NULL;
-    TD->HwTD.gTD.NextTD = NULL;
-
-    RtlZeroMemory(&TD->HwTD.SetupPacket,
+    RtlZeroMemory(&TD2->HwTD.SetupPacket,
                   sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
 
-    TD->HwTD.Padded[0] = 0;
-    TD->HwTD.Padded[1] = 0;
+    TD2->HwTD.Padded[0] = 0;
+    TD2->HwTD.Padded[1] = 0;
 
-    TD->Flags |= OHCI_HCD_TD_FLAG_PROCESSED;
-    TD->OhciTransfer = OhciTransfer;
-    TD->NextHcdTD = NULL;
+    PrevTD = FirstTD;
+    TD = TD2;
 
-    FirstTD->HwTD.gTD.NextTD = (PULONG)(TD->PhysicalAddress);
-    FirstTD->NextHcdTD = TD;
+    PrevTD->HwTD.gTD.NextTD = (PULONG)TD2->PhysicalAddress;
+    PrevTD->NextHcdTD = TD2;
 
-    LastTd = FirstTD;
+    MaxPacketSize = OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
 
-    if (TransferParameters->TransferBufferLength > 0)
+    TransferedLen = 0;
+    DataToggle = OHCI_TD_DATA_TOGGLE_DATA1;
+
+    if (TransferParameters->TransferBufferLength)
     {
-        DataToggle = OHCI_TD_DATA_TOGGLE_DATA1;
-        TransferedLen = 0;
-
         do
         {
+            OhciTransfer->PendingTDs++;
+
             if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
             {
                 TD->HwTD.gTD.Control.DirectionPID = OHCI_TD_DIRECTION_PID_IN;
@@ -1406,8 +1417,6 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
             DataToggle = OHCI_TD_DATA_TOGGLE_FROM_ED;
 
-            MaxPacketSize = OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
-
             TransferedLen = OHCI_MapTransferToTD(OhciExtension,
                                                  MaxPacketSize,
                                                  TransferedLen,
@@ -1415,15 +1424,20 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
                                                  TD,
                                                  SGList);
 
-            LastTd = TD;
+            PrevTD = TD;
 
             TD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
-            OhciTransfer->PendingTDs++;
 
+            TD->Flags |= OHCI_HCD_TD_FLAG_PROCESSED;
+
+            TD->HwTD.gTD.NextTD = NULL;
             TD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
+
+            TD->NextHcdTD = NULL;
+            TD->OhciTransfer = OhciTransfer;
+
             TD->HwTD.gTD.CurrentBuffer = NULL;
             TD->HwTD.gTD.BufferEnd = NULL;
-            TD->HwTD.gTD.NextTD = NULL;
 
             RtlZeroMemory(&TD->HwTD.SetupPacket,
                           sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
@@ -1431,34 +1445,28 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
             TD->HwTD.Padded[0] = 0;
             TD->HwTD.Padded[1] = 0;
 
-            TD->Flags |= OHCI_HCD_TD_FLAG_PROCESSED;
-            TD->OhciTransfer = OhciTransfer;
-            TD->NextHcdTD = NULL;
-
-            LastTd->HwTD.gTD.NextTD = (PVOID)TD->PhysicalAddress;
-            LastTd->NextHcdTD = TD;
+            PrevTD->HwTD.gTD.NextTD = (PULONG)TD->PhysicalAddress;
+            PrevTD->NextHcdTD = TD;
         }
         while (TransferedLen < TransferParameters->TransferBufferLength);
     }
 
     if (TransferParameters->TransferFlags & USBD_SHORT_TRANSFER_OK)
     {
-        LastTd->HwTD.gTD.Control.DelayInterrupt |= 4;
+        PrevTD->HwTD.gTD.Control.BufferRounding = TRUE;
         OhciTransfer->Flags |= OHCI_TRANSFER_FLAGS_SHORT_TRANSFER_OK;
     }
 
-    TD->HwTD.gTD.Control.AsULONG = 0;
-    TD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NOT_ACCESSED;
-    TD->HwTD.gTD.Control.DataToggle = OHCI_TD_DATA_TOGGLE_DATA1;
     TD->HwTD.gTD.CurrentBuffer = NULL;
     TD->HwTD.gTD.BufferEnd = NULL;
 
-    TD->Flags |= OHCI_HCD_TD_FLAG_CONTROLL;
+    TD->Flags |= OHCI_HCD_TD_FLAG_CONTROLL_STATUS;
     TD->TransferLen = 0;
 
-    if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
+    TD->HwTD.gTD.Control.AsULONG = 0;
+
+    if ((TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN) != 0)
     {
-        TD->HwTD.gTD.Control.BufferRounding = FALSE;
         TD->HwTD.gTD.Control.DirectionPID = OHCI_TD_DIRECTION_PID_OUT;
     }
     else
@@ -1467,18 +1475,24 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
         TD->HwTD.gTD.Control.DirectionPID = OHCI_TD_DIRECTION_PID_IN;
     }
 
-    NextTD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
-    OhciTransfer->PendingTDs++;
+    TD->HwTD.gTD.Control.DataToggle = OHCI_TD_DATA_TOGGLE_DATA1;
+    TD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NOT_ACCESSED;
 
-    TD->HwTD.gTD.NextTD = (PULONG)(NextTD->PhysicalAddress);
+    OhciTransfer->PendingTDs++;
+    OhciTransfer->ControlStatusTD = TD;
+
+    NextTD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
+
+    TD->HwTD.gTD.NextTD = (PULONG)NextTD->PhysicalAddress;
     TD->NextHcdTD = NextTD;
 
-    NextTD->HwTD.gTD.NextTD = NULL;
     NextTD->NextHcdTD = NULL;
+    NextTD->HwTD.gTD.NextTD = NULL;
 
     OhciTransfer->NextTD = NextTD;
     OhciEndpoint->HcdTailP = NextTD;
-    OhciEndpoint->HcdED->HwED.TailPointer = (ULONG_PTR)NextTD->PhysicalAddress;
+
+    OhciEndpoint->HcdED->HwED.TailPointer = NextTD->PhysicalAddress;
 
     OHCI_EnableList(OhciExtension, OhciEndpoint);
 
