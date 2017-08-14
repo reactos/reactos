@@ -729,7 +729,52 @@ NTAPI
 UhciStopController(IN PVOID uhciExtension,
                    IN BOOLEAN IsDoDisableInterrupts)
 {
-    DPRINT_IMPL("UhciStopController: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUHCI_HW_REGISTERS BaseRegister;
+    PUSHORT CommandReg;
+    UHCI_USB_COMMAND Command;
+    LARGE_INTEGER EndTime;
+    LARGE_INTEGER CurrentTime;
+
+    DPRINT("UhciStopController: UhciExtension - %p\n", UhciExtension);
+
+    BaseRegister = UhciExtension->BaseRegister;
+    CommandReg = &BaseRegister->HcCommand.AsUSHORT;
+
+    Command.AsUSHORT = READ_PORT_USHORT(CommandReg);
+
+    if (Command.AsUSHORT == 0xFFFF)
+    {
+        DPRINT("UhciStopController: Command == -1\n");
+        return;
+    }
+
+    DPRINT("UhciStopController: Command.AsUSHORT - %p\n", Command.AsUSHORT);
+
+    if (Command.GlobalReset)
+    {
+        Command.GlobalReset = 0;
+        WRITE_PORT_USHORT(CommandReg, Command.AsUSHORT);
+    }
+
+    Command.HcReset = 1;
+
+    WRITE_PORT_USHORT(CommandReg, Command.AsUSHORT);
+
+    KeQuerySystemTime(&EndTime);
+    EndTime.QuadPart += 100 * 1000;
+
+    while (((UHCI_USB_COMMAND)READ_PORT_USHORT(CommandReg)).HcReset == 1)
+    {
+        KeQuerySystemTime(&CurrentTime);
+
+        if (CurrentTime.QuadPart >= CurrentTime.QuadPart)
+        {
+            DPRINT1("UhciStopController: Failed to reset\n");
+            DbgBreakPoint();
+            break;
+        }
+    }
 }
 
 VOID
