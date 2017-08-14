@@ -69,6 +69,19 @@ static PNTOS_INSTALLATION CurrentInstallation = NULL;
 static PGENERIC_LIST NtOsInstallsList = NULL;
 
 
+// HACK: Temporary compatibility code.
+#if 1
+    static CABINET_CONTEXT CabinetContext;
+    #define CabinetInitialize() (CabinetInitialize(&CabinetContext))
+    #define CabinetSetEventHandlers(a,b,c) (CabinetSetEventHandlers(&CabinetContext,(a),(b),(c)))
+    #define CabinetSetCabinetName(a) (CabinetSetCabinetName(&CabinetContext,(a)))
+    #define CabinetOpen() (CabinetOpen(&CabinetContext))
+    #define CabinetGetCabinetName() (CabinetGetCabinetName(&CabinetContext))
+    #define CabinetGetCabinetReservedArea(a) (CabinetGetCabinetReservedArea(&CabinetContext,(a)))
+    #define CabinetCleanup() (CabinetCleanup(&CabinetContext))
+#endif
+
+
 /* FUNCTIONS ****************************************************************/
 
 static VOID

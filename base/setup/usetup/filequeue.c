@@ -60,6 +60,22 @@ static BOOLEAN HasCurrentCabinet = FALSE;
 static WCHAR CurrentCabinetName[MAX_PATH];
 static CAB_SEARCH Search;
 
+// HACK: Temporary compatibility code.
+#if 1
+    static CABINET_CONTEXT CabinetContext;
+    #define CabinetInitialize() (CabinetInitialize(&CabinetContext))
+    #define CabinetSetEventHandlers(a,b,c) (CabinetSetEventHandlers(&CabinetContext,(a),(b),(c)))
+    #define CabinetSetCabinetName(a) (CabinetSetCabinetName(&CabinetContext,(a)))
+    #define CabinetOpen() (CabinetOpen(&CabinetContext))
+    #define CabinetGetCabinetName() (CabinetGetCabinetName(&CabinetContext))
+    #define CabinetGetCabinetReservedArea(a) (CabinetGetCabinetReservedArea(&CabinetContext,(a)))
+    #define CabinetFindNextFileSequential(a,b) (CabinetFindNextFileSequential(&CabinetContext,(a),(b)))
+    #define CabinetFindFirst(a,b) (CabinetFindFirst(&CabinetContext,(a),(b)))
+    #define CabinetSetDestinationPath(a) (CabinetSetDestinationPath(&CabinetContext,(a)))
+    #define CabinetExtractFile(a) (CabinetExtractFile(&CabinetContext,(a)))
+    #define CabinetCleanup() (CabinetCleanup(&CabinetContext))
+#endif
+
 NTSTATUS
 SetupExtractFile(
     PWCHAR CabinetFileName,
