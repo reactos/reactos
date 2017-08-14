@@ -50,14 +50,13 @@ InstallDriver(
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hService;
     INFCONTEXT Context;
-    PWSTR Driver, ImagePath, FullImagePath;
+    PWSTR Driver, ClassGuid, ImagePath, FullImagePath;
     ULONG dwValue;
     ULONG Disposition;
     NTSTATUS Status;
     BOOLEAN deviceInstalled = FALSE;
     UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
     PWSTR keyboardClass = L"kbdclass\0";
-    BOOLEAN keyboardDevice = FALSE;
 
     /* Check if we know the hardware */
     if (!SetupFindFirstLineW(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
@@ -65,24 +64,29 @@ InstallDriver(
     if (!INF_GetDataField(&Context, 1, &Driver))
         return FALSE;
 
+    /* Get associated class GUID (if any) */
+    if (!INF_GetDataField(&Context, 2, &ClassGuid))
+        ClassGuid = NULL;
+
     /* Find associated driver name */
     /* FIXME: check in other sections too! */
     if (!SetupFindFirstLineW(hInf, L"BootBusExtenders.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"BusExtenders.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"SCSI.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"InputDevicesSupport.Load", Driver, &Context))
+     && !SetupFindFirstLineW(hInf, L"InputDevicesSupport.Load", Driver, &Context)
+     && !SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
     {
-        if (!SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
-        {
-            INF_FreeData(Driver);
-            return FALSE;
-        }
-
-        keyboardDevice = TRUE;
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
+        return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 1, &ImagePath))
+    {
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
         return FALSE;
+    }
 
     /* Prepare full driver path */
     dwValue = PathPrefix.MaximumLength + wcslen(ImagePath) * sizeof(WCHAR);
@@ -91,6 +95,7 @@ InstallDriver(
     {
         DPRINT1("RtlAllocateHeap() failed\n");
         INF_FreeData(ImagePath);
+        INF_FreeData(ClassGuid);
         INF_FreeData(Driver);
         return FALSE;
     }
@@ -108,6 +113,7 @@ InstallDriver(
         DPRINT1("NtCreateKey('%wZ') failed with status 0x%08x\n", &StringU, Status);
         RtlFreeHeap(ProcessHeap, 0, FullImagePath);
         INF_FreeData(ImagePath);
+        INF_FreeData(ClassGuid);
         INF_FreeData(Driver);
         return FALSE;
     }
@@ -149,7 +155,7 @@ InstallDriver(
 
     INF_FreeData(ImagePath);
 
-    if (keyboardDevice)
+    if (ClassGuid &&_wcsicmp(ClassGuid, L"{4D36E96B-E325-11CE-BFC1-08002BE10318}") == 0)
     {
         DPRINT1("Installing keyboard class driver for '%S'\n", DeviceId);
         NtSetValueKey(hDeviceKey,
@@ -159,6 +165,8 @@ InstallDriver(
                       keyboardClass,
                       (wcslen(keyboardClass) + 2) * sizeof(WCHAR));
     }
+
+    INF_FreeData(ClassGuid);
 
     /* Associate device with the service we just filled */
     Status = NtSetValueKey(hDeviceKey,
