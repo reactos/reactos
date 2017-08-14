@@ -2036,16 +2036,21 @@ NTAPI
 OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
                        IN POHCI_ENDPOINT OhciEndpoint)
 {
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
     POHCI_HCD_ED ED;
     ULONG_PTR NextTdPA;
     POHCI_HCD_TD NextTD;
     POHCI_HCD_TD TD;
     PLIST_ENTRY DoneList;
     POHCI_TRANSFER OhciTransfer;
+    POHCI_HCD_TD ControlStatusTD;
+    ULONG_PTR PhysicalAddress;
+    ULONG TransferNumer;
+    POHCI_TRANSFER transfer;
     UCHAR ConditionCode;
     BOOLEAN IsResetOnHalt = FALSE;
 
-    DPRINT_OHCI("OHCI_PollAsyncEndpoint: OhciEndpoint - %p\n", OhciEndpoint);
+    //DPRINT_OHCI("OHCI_PollAsyncEndpoint: Endpoint - %p\n", OhciEndpoint);
 
     ED = OhciEndpoint->HcdED;
     NextTdPA = ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_MASK;
@@ -2059,95 +2064,136 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
     NextTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)NextTdPA,
                                                       OhciExtension,
                                                       OhciEndpoint);
+    DPRINT_OHCI("NextTD - %p\n", NextTD);
 
-    if (ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_HALT)
+    if ((ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_HALT) == 0)
     {
-        OHCI_DumpHcdED(ED);
+        goto ProcessListTDs;
+    }
 
-        IsResetOnHalt = (ED->Flags & OHCI_HCD_ED_FLAG_RESET_ON_HALT) != 0;
-        DPRINT1("OHCI_PollAsyncEndpoint: IsResetOnHalt - %x\n", IsResetOnHalt);
+    OHCI_DumpHcdED(ED);
 
-        TD = OhciEndpoint->HcdHeadP;
+    IsResetOnHalt = (ED->Flags & OHCI_HCD_ED_FLAG_RESET_ON_HALT) != 0;
+    DPRINT1("PollAsyncEndpoint: IsResetOnHalt %x\n", IsResetOnHalt);
 
-        while (TRUE)
+    for (TD = OhciEndpoint->HcdHeadP; ; TD = TD->NextHcdTD)
+    {
+        if (!TD)
         {
-            DPRINT("OHCI_PollAsyncEndpoint: TD - %p, NextTD - %p\n", TD, NextTD);
+            OHCI_DumpHcdED(ED);
+            DbgBreakPoint();
+        }
 
-            if (!TD)
-            {
-                OHCI_DumpHcdED(ED);
-                DbgBreakPoint();
-            }
+        if (TD == NextTD)
+        {
+            DPRINT("TD == NextTD - %p\n", TD);
+            goto HandleDoneList;
+        }
 
-            if (TD == NextTD)
-            {
-                goto HandleDoneList;
-            }
+        OhciTransfer = TD->OhciTransfer;
+        ConditionCode = TD->HwTD.gTD.Control.ConditionCode;
 
-            OhciTransfer = TD->OhciTransfer;
-            ConditionCode = TD->HwTD.gTD.Control.ConditionCode;
+        DPRINT("TD - %p, ConditionCode - %X\n", TD, ConditionCode);
+        OHCI_DumpHcdTD(TD);
 
-            DPRINT("OHCI_PollAsyncEndpoint: TD - %p, ConditionCode - %X\n",
-                   TD,
-                   ConditionCode);
+        switch (ConditionCode)
+        {
+            case OHCI_TD_CONDITION_NO_ERROR:
+                TD->Flags |= OHCI_HCD_TD_FLAG_DONE;
+                InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
+                continue;
 
-            switch (ConditionCode)
-            {
-                case OHCI_TD_CONDITION_NO_ERROR:
-                    TD->Flags |= OHCI_HCD_TD_FLAG_DONE;
-                    InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
-                    break;
+            case OHCI_TD_CONDITION_NOT_ACCESSED:
+                TD->Flags |= (OHCI_HCD_TD_FLAG_DONE | OHCI_HCD_TD_FLAG_NOT_ACCESSED);
+                InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
+                continue;
 
-                case OHCI_TD_CONDITION_NOT_ACCESSED:
-                    TD->Flags |= (OHCI_HCD_TD_FLAG_DONE | OHCI_HCD_TD_FLAG_NOT_ACCESSED);
-                    InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
-                    break;
+            case OHCI_TD_CONDITION_DATA_UNDERRUN:
+                DPRINT1("DATA_UNDERRUN. Transfer->Flags - %X\n", OhciTransfer->Flags);
 
-                case OHCI_TD_CONDITION_DATA_UNDERRUN:
-                    DPRINT1("OHCI_TD_CONDITION_DATA_UNDERRUN. Transfer->Flags - %X\n",
-                            OhciTransfer->Flags);
+                if (OhciTransfer->Flags & OHCI_TRANSFER_FLAGS_SHORT_TRANSFER_OK)
+                {
+                    IsResetOnHalt = TRUE;
+                    TD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NO_ERROR;
 
-                    if (OhciTransfer->Flags & OHCI_TRANSFER_FLAGS_SHORT_TRANSFER_OK)
+                    ControlStatusTD = OhciTransfer->ControlStatusTD;
+
+                    if ((TD->Flags & OHCI_HCD_TD_FLAG_CONTROLL_STATUS) == 0 &&
+                        ControlStatusTD)
                     {
-                        IsResetOnHalt = 1;
-                        TD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NO_ERROR;
+                        PhysicalAddress = ControlStatusTD->PhysicalAddress;
+                        PhysicalAddress |= (ED->HwED.HeadPointer &
+                                            OHCI_ED_HEAD_POINTER_FLAGS_MASK);
 
-                        if (TD->Flags & OHCI_HCD_TD_FLAG_CONTROLL)
+                        ED->HwED.HeadPointer = PhysicalAddress;
+
+                        NextTD = OhciTransfer->ControlStatusTD;
+                        DPRINT("PhysicalAddress - %p, NextTD - %p\n", PhysicalAddress, NextTD);
+                    }
+                    else
+                    {
+                        TransferParameters = OhciTransfer->TransferParameters;
+
+                        if (TransferParameters->IsTransferSplited)
                         {
-                            ASSERT(FALSE);
+                            TransferNumer = TransferParameters->TransferCounter;
+                            transfer = OhciTransfer;
+
+                            do
+                            {
+                                transfer = transfer->NextTD->OhciTransfer;
+                                NextTD = transfer->NextTD;
+                            }
+                            while (transfer && TransferNumer ==
+                                   transfer->TransferParameters->TransferCounter);
+
+                            PhysicalAddress = NextTD->PhysicalAddress;
+                            PhysicalAddress |= (ED->HwED.HeadPointer &
+                                                OHCI_ED_HEAD_POINTER_FLAGS_MASK);
+
+                            ED->HwED.HeadPointer = PhysicalAddress;
+                            DPRINT("PhysicalAddress - %p, NextTD - %p\n", PhysicalAddress, NextTD);
                         }
                         else
                         {
-                            ASSERT(FALSE);
-                        }
+                            PhysicalAddress = OhciTransfer->NextTD->PhysicalAddress;
+                            PhysicalAddress |= (ED->HwED.HeadPointer &
+                                                OHCI_ED_HEAD_POINTER_FLAGS_MASK);
 
-                        TD->Flags |= OHCI_HCD_TD_FLAG_DONE;
-                        InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
-                        break;
+                            ED->HwED.HeadPointer = PhysicalAddress;
+
+                            NextTD = OhciTransfer->NextTD;
+                            DPRINT("PhysicalAddress - %p, NextTD - %p\n", PhysicalAddress, NextTD);
+                        }
                     }
 
-                    /* fall through */
-
-                default:
                     TD->Flags |= OHCI_HCD_TD_FLAG_DONE;
                     InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
+                    continue;
+                }
 
-                    ED->HwED.HeadPointer = OhciTransfer->NextTD->PhysicalAddress |
-                                           (ED->HwED.HeadPointer &
-                                            OHCI_ED_HEAD_POINTER_FLAGS_MASK);
+                /* fall through */
 
-                    NextTD = OhciTransfer->NextTD;
-                    break;
-            }
+            default:
+                TD->Flags |= OHCI_HCD_TD_FLAG_DONE;
+                InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
 
-            TD = TD->NextHcdTD;
+                ED->HwED.HeadPointer = OhciTransfer->NextTD->PhysicalAddress |
+                                       (ED->HwED.HeadPointer &
+                                        OHCI_ED_HEAD_POINTER_FLAGS_MASK);
+
+                NextTD = OhciTransfer->NextTD;
+                break;
         }
     }
+
+ProcessListTDs:
 
     TD = OhciEndpoint->HcdHeadP;
 
     while (TD != NextTD)
     {
+        OHCI_DumpHcdTD(TD);
         TD->Flags |= OHCI_HCD_TD_FLAG_DONE;
         InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
         TD = TD->NextHcdTD;
@@ -2178,8 +2224,7 @@ HandleDoneList:
     if (IsResetOnHalt)
     {
         ED->HwED.HeadPointer &= ~OHCI_ED_HEAD_POINTER_HALT;
-        DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.HeadPointer - %p\n",
-               ED->HwED.HeadPointer);
+        DPRINT("ED->HwED.HeadPointer - %p\n", ED->HwED.HeadPointer);
     }
 }
 
