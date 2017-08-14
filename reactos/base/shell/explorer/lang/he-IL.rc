@@ -68,14 +68,14 @@ CAPTION "שורת המשימות"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "מראה שורת המשימות", IDC_STATIC, 6, 6, 240, 104
-    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 18, 224, 21
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "נעל את שורת המשימות", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "הסתר אוטמטית את שורת המשימות", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "השאר את שורת המשימות תמיד מעל", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "קבץ לחצנים דומים", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "הראה את סרגל הפעלה מהירה", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     GROUPBOX "Notification area", IDC_STATIC, 6, 114, 240, 98
-    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 6, 238, 21
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
     AUTOCHECKBOX "שעון", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
     AUTOCHECKBOX "Show seconds", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
     LTEXT "You can keep the notification area uncluttered by hiding icons that you have not clicked recently.", IDC_STATIC, 13, 169, 223, 16

@@ -111,6 +111,10 @@ UpdateBitmaps(PPROPSHEET_INFO pPropInfo)
                                         IDC_TASKBARPROP_TASKBARBITMAP);
                 if (hwndTaskbarBitmap)
                 {
+                    BITMAP bm;
+                    GetObject(pPropInfo->hTaskbarBitmap, sizeof(bm), &bm);
+                    SetWindowPos(hwndTaskbarBitmap, NULL, 0, 0, bm.bmWidth + 2, bm.bmHeight + 2,
+                                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
                     SendMessage(hwndTaskbarBitmap,
                                 STM_SETIMAGE,
                                 IMAGE_BITMAP,
@@ -175,6 +179,10 @@ UpdateBitmaps(PPROPSHEET_INFO pPropInfo)
                                         IDC_TASKBARPROP_NOTIFICATIONBITMAP);
                 if (hwndTrayBitmap)
                 {
+                    BITMAP bm;
+                    GetObject(pPropInfo->hTrayBitmap, sizeof(bm), &bm);
+                    SetWindowPos(hwndTrayBitmap, NULL, 0, 0, bm.bmWidth + 2, bm.bmHeight + 2,
+                                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
                     SendMessage(hwndTrayBitmap,
                                 STM_SETIMAGE,
                                 IMAGE_BITMAP,
@@ -218,6 +226,10 @@ UpdateBitmaps(PPROPSHEET_INFO pPropInfo)
                                         IDC_TASKBARPROP_STARTMENU_BITMAP);
                 if (hwndStartBitmap)
                 {
+                    BITMAP bm;
+                    GetObject(pPropInfo->hStartBitmap, sizeof(bm), &bm);
+                    SetWindowPos(hwndStartBitmap, NULL, 0, 0, bm.bmWidth + 2, bm.bmHeight + 2,
+                                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
                     SendMessage(hwndStartBitmap,
                                 STM_SETIMAGE,
                                 IMAGE_BITMAP,
