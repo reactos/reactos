@@ -89,6 +89,7 @@ typedef struct tagSDBQUERYRESULT {
 
 /* sdbapi.c */
 PWSTR SdbpStrDup(LPCWSTR string);
+DWORD SdbpStrsize(PCWSTR string);
 HSDB WINAPI SdbInitDatabase(DWORD, LPCWSTR);
 void WINAPI SdbReleaseDatabase(HSDB);
 BOOL WINAPI SdbGUIDToString(CONST GUID *Guid, PWSTR GuidString, SIZE_T Length);

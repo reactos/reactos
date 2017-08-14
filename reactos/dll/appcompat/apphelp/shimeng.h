@@ -19,7 +19,7 @@
 #ifndef SHIMENG_H
 #define SHIMENG_H
 
-/* ReactOS specific */
+/* This header is ReactOS specific */
 
 /* Structure that allows dynamic growing.
    Be aware, the data may move! */
@@ -48,12 +48,19 @@ typedef struct tagHOOKAPIEX
 C_ASSERT(sizeof(HOOKAPIEX) == sizeof(HOOKAPI));
 C_ASSERT(offsetof(HOOKAPIEX, pShimInfo) == offsetof(HOOKAPI, Reserved));
 
+typedef struct _INEXCLUDE
+{
+    UNICODE_STRING Module;
+    BOOL Include;
+} INEXCLUDE, *PINEXCLUDE;
 
 typedef struct _SHIMINFO
 {
+    PCWSTR ShimName;
     PHOOKAPIEX pHookApi;
     DWORD dwHookCount;
     PSHIMMODULE pShimModule;
+    ARRAY InExclude;        /* INEXCLUDE */
 } SHIMINFO, *PSHIMINFO;
 
 typedef struct _SHIMMODULE

@@ -27,21 +27,24 @@
 #include "shimeng.h"
 
 
-typedef FARPROC(WINAPI* GETPROCADDRESSPROC)(HINSTANCE, LPCSTR);
-
 
 FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName);
 BOOL WINAPI SE_IsShimDll(PVOID BaseAddress);
 
 
 extern HMODULE g_hInstance;
+static UNICODE_STRING g_WindowsDirectory;
+static UNICODE_STRING g_System32Directory;
+static UNICODE_STRING g_SxsDirectory;
 ULONG g_ShimEngDebugLevel = 0xffffffff;
 BOOL g_bComPlusImage = FALSE;
 BOOL g_bShimDuringInit = FALSE;
 BOOL g_bInternalHooksUsed = FALSE;
-static ARRAY g_pShimInfo;  /* PSHIMMODULE */
-static ARRAY g_pHookArray; /* HOOKMODULEINFO */
+static ARRAY g_pShimInfo;   /* PSHIMMODULE */
+static ARRAY g_pHookArray;  /* HOOKMODULEINFO */
+static ARRAY g_InExclude;   /* INEXCLUDE */
 
+/* If we have setup a hook for a function, we should also redirect GetProcAddress for this function */
 HOOKAPIEX g_IntHookEx[] =
 {
     {
@@ -132,7 +135,7 @@ VOID SeiInitDebugSupport(VOID)
     static const UNICODE_STRING DebugKey = RTL_CONSTANT_STRING(L"SHIMENG_DEBUG_LEVEL");
     UNICODE_STRING DebugValue;
     NTSTATUS Status;
-    ULONG NewLevel = 0;
+    ULONG NewLevel = SEI_MSG;   /* Show some basic info in the logs, unless configured different */
     WCHAR Buffer[40];
 
     RtlInitEmptyUnicodeString(&DebugValue, Buffer, sizeof(Buffer));
@@ -294,20 +297,29 @@ PSHIMMODULE SeiCreateShimModuleInfo(PCWSTR DllName, PVOID BaseAddress)
     return Data;
 }
 
-VOID SeiAppendHookInfo(PSHIMMODULE pShimModuleInfo, PHOOKAPIEX pHookApi, DWORD dwHookCount)
+PSHIMINFO SeiAppendHookInfo(PSHIMMODULE pShimModuleInfo, PHOOKAPIEX pHookApi, DWORD dwHookCount, PCWSTR ShimName)
 {
     PSHIMINFO* pData, Data;
 
     pData = ARRAY_Append(&pShimModuleInfo->EnabledShims, PSHIMINFO);
     if (!pData)
-        return;
+        return NULL;
 
     *pData = SeiAlloc(sizeof(SHIMINFO));
     Data = *pData;
 
+    if (!Data)
+        return NULL;
+
+    Data->ShimName = SdbpStrDup(ShimName);
+    if (!Data->ShimName)
+        return NULL;
+
     Data->pHookApi = pHookApi;
     Data->dwHookCount = dwHookCount;
     Data->pShimModule = pShimModuleInfo;
+    ARRAY_Init(&Data->InExclude, INEXCLUDE);
+    return Data;
 }
 
 PHOOKMODULEINFO SeiFindHookModuleInfo(PUNICODE_STRING ModuleName, PVOID BaseAddress)
@@ -382,6 +394,7 @@ static VOID SeiAddShim(TAGREF trShimRef, PARRAY pShimRef)
     *Data = trShimRef;
 }
 
+/* Propagate layers to child processes */
 static VOID SeiSetLayerEnvVar(LPCWSTR wszLayer)
 {
     NTSTATUS Status;
@@ -399,6 +412,7 @@ static VOID SeiSetLayerEnvVar(LPCWSTR wszLayer)
 
 #define MAX_LAYER_LENGTH            256
 
+/* Translate all Exe and Layer entries to Shims, and propagate all layers */
 static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShimRef)
 {
     WCHAR wszLayerEnvVar[MAX_LAYER_LENGTH] = { 0 };
@@ -468,7 +482,7 @@ static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShim
         SeiSetLayerEnvVar(wszLayerEnvVar);
 }
 
-
+/* Given the hooks from one shim, find the relevant modules and store the combination of module + hook */
 VOID SeiAddHooks(PHOOKAPIEX hooks, DWORD dwHookCount, PSHIMINFO pShim)
 {
     DWORD n, j;
@@ -542,7 +556,9 @@ VOID SeiAddHooks(PHOOKAPIEX hooks, DWORD dwHookCount, PSHIMINFO pShim)
     }
 }
 
+typedef FARPROC(WINAPI* GETPROCADDRESSPROC)(HINSTANCE, LPCSTR);
 
+/* Check if we should fake the return from GetProcAddress (because we also redirected the iat for this module) */
 FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName)
 {
     char szOrdProcName[10] = "";
@@ -588,6 +604,7 @@ FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName)
     return proc;
 }
 
+/* Walk all shim modules / enabled shims, and add their hooks */
 VOID SeiResolveAPIs(VOID)
 {
     DWORD mod, n;
@@ -611,6 +628,7 @@ VOID SeiResolveAPIs(VOID)
     }
 }
 
+/* If we hooked something, we should also redirect GetProcAddress */
 VOID SeiAddInternalHooks(DWORD dwNumHooks)
 {
     if (dwNumHooks == 0)
@@ -623,6 +641,7 @@ VOID SeiAddInternalHooks(DWORD dwNumHooks)
     g_bInternalHooksUsed = TRUE;
 }
 
+/* Patch one function in the iat */
 VOID SeiPatchNewImport(PIMAGE_THUNK_DATA FirstThunk, PHOOKAPIEX HookApi, PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     ULONG OldProtection = 0;
@@ -658,8 +677,161 @@ VOID SeiPatchNewImport(PIMAGE_THUNK_DATA FirstThunk, PHOOKAPIEX HookApi, PLDR_DA
     }
 }
 
-/* Level(INFO) [SeiPrintExcludeInfo] Module "kernel32.dll" excluded for shim VistaRTMVersionLie, API "NTDLL.DLL!RtlGetVersion", because it is in System32/WinSXS. */
 
+PINEXCLUDE SeiFindInExclude(PARRAY InExclude, PCUNICODE_STRING DllName)
+{
+    DWORD n;
+
+    for (n = 0; n < ARRAY_Size(InExclude); ++n)
+    {
+        PINEXCLUDE InEx = ARRAY_At(InExclude, INEXCLUDE, n);
+
+        if (RtlEqualUnicodeString(&InEx->Module, DllName, TRUE))
+            return InEx;
+    }
+
+    return NULL;
+}
+
+BOOL SeiIsExcluded(PLDR_DATA_TABLE_ENTRY LdrEntry, PHOOKAPIEX HookApi)
+{
+    PSHIMINFO pShimInfo = HookApi->pShimInfo;
+    PINEXCLUDE InExclude;
+    BOOL IsExcluded = FALSE;
+
+    if (!pShimInfo)
+    {
+        /* Internal hook, do not exclude it */
+        return FALSE;
+    }
+
+    /* By default, everything from System32 or WinSxs is excluded */
+    if (RtlPrefixUnicodeString(&g_System32Directory, &LdrEntry->FullDllName, TRUE) ||
+        RtlPrefixUnicodeString(&g_SxsDirectory, &LdrEntry->FullDllName, TRUE))
+        IsExcluded = TRUE;
+
+    InExclude = SeiFindInExclude(&pShimInfo->InExclude, &LdrEntry->BaseDllName);
+    if (InExclude)
+    {
+        /* If it is on the 'exclude' list, bail out */
+        if (!InExclude->Include)
+        {
+            SHIMENG_INFO("Module '%wZ' excluded for shim %S, API '%s!%s', because it on in the exclude list.\n",
+                         &LdrEntry->BaseDllName, pShimInfo->ShimName, HookApi->LibraryName, HookApi->FunctionName);
+
+            return TRUE;
+        }
+        /* If it is on the 'include' list, override System32 / Winsxs check. */
+        if (IsExcluded)
+        {
+            SHIMENG_INFO("Module '%wZ' included for shim %S, API '%s!%s', because it is on the include list.\n",
+                         &LdrEntry->BaseDllName, pShimInfo->ShimName, HookApi->LibraryName, HookApi->FunctionName);
+
+        }
+        IsExcluded = FALSE;
+    }
+
+    if (IsExcluded)
+    {
+        SHIMENG_INFO("Module '%wZ' excluded for shim %S, API '%s!%s', because it is in System32/WinSXS.\n",
+                     &LdrEntry->BaseDllName, pShimInfo->ShimName, HookApi->LibraryName, HookApi->FunctionName);
+    }
+
+    return IsExcluded;
+}
+
+VOID SeiAppendInExclude(PARRAY dest, PCWSTR ModuleName, BOOL IsInclude)
+{
+    PINEXCLUDE InExclude;
+    UNICODE_STRING ModuleNameU;
+    RtlInitUnicodeString(&ModuleNameU, ModuleName);
+
+    InExclude = SeiFindInExclude(dest, &ModuleNameU);
+    if (InExclude)
+    {
+        InExclude->Include = IsInclude;
+        return;
+    }
+
+    InExclude = ARRAY_Append(dest, INEXCLUDE);
+    if (InExclude)
+    {
+        PCWSTR ModuleNameCopy = SdbpStrDup(ModuleName);
+        RtlInitUnicodeString(&InExclude->Module, ModuleNameCopy);
+        InExclude->Include = IsInclude;
+    }
+}
+
+/* Read the INEXCLUD tags from a given parent tag */
+VOID SeiReadInExclude(PDB pdb, TAGID parent, PARRAY dest)
+{
+    TAGID InExcludeTag;
+
+    InExcludeTag = SdbFindFirstTag(pdb, parent, TAG_INEXCLUD);
+
+    while (InExcludeTag != TAGID_NULL)
+    {
+        PCWSTR ModuleName;
+        TAGID ModuleTag = SdbFindFirstTag(pdb, InExcludeTag, TAG_MODULE);
+        TAGID IncludeTag = SdbFindFirstTag(pdb, InExcludeTag, TAG_INCLUDE);
+
+        ModuleName = SdbGetStringTagPtr(pdb, ModuleTag);
+        if (ModuleName)
+        {
+            SeiAppendInExclude(dest, ModuleName, IncludeTag != TAGID_NULL);
+        }
+        else
+        {
+            SHIMENG_WARN("INEXCLUDE without Module: 0x%x\n", InExcludeTag);
+        }
+
+        InExcludeTag = SdbFindNextTag(pdb, parent, InExcludeTag);
+    }
+}
+
+VOID SeiBuildGlobalInclExclList(HSDB hsdb)
+{
+    PDB pdb;
+    TAGREF tr = TAGREF_ROOT;
+    TAGID root, db, library;
+
+    if (!SdbTagRefToTagID(hsdb, tr, &pdb, &root))
+    {
+        SHIMENG_WARN("Unable to resolve database root\n");
+        return;
+    }
+    db = SdbFindFirstTag(pdb, root, TAG_DATABASE);
+    if (db == TAGID_NULL)
+    {
+        SHIMENG_WARN("Unable to resolve database\n");
+        return;
+    }
+    library = SdbFindFirstTag(pdb, db, TAG_LIBRARY);
+    if (library == TAGID_NULL)
+    {
+        SHIMENG_WARN("Unable to resolve library\n");
+        return;
+    }
+
+    SeiReadInExclude(pdb, library, &g_InExclude);
+}
+
+VOID SeiBuildInclExclList(PDB pdb, TAGID ShimTag, PSHIMINFO pShimInfo)
+{
+    DWORD n;
+
+    /* First duplicate the global in/excludes */
+    for (n = 0; n < ARRAY_Size(&g_InExclude); ++n)
+    {
+        PINEXCLUDE InEx = ARRAY_At(&g_InExclude, INEXCLUDE, n);
+        SeiAppendInExclude(&pShimInfo->InExclude, InEx->Module.Buffer, InEx->Include);
+    }
+
+    /* Now read this shim's in/excludes (possibly overriding the global ones) */
+    SeiReadInExclude(pdb, ShimTag, &pShimInfo->InExclude);
+}
+
+/* Given one loaded module, redirect (hook) all functions from the iat that are registered by shims */
 VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     ULONG Size;
@@ -698,9 +870,16 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
                 DWORD dwFound = 0;
                 PHOOKAPIEX HookApi = *ARRAY_At(&HookModuleInfo->HookApis, PHOOKAPIEX, n);
 
+                /* Check if this module should be excluded from being hooked (system32/winsxs, global or shim exclude) */
+                if (SeiIsExcluded(LdrEntry, HookApi))
+                {
+                    continue;
+                }
+
                 OriginalThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->OriginalFirstThunk);
                 FirstThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->FirstThunk);
 
+                /* Walk all imports */
                 for (;OriginalThunk->u1.AddressOfData && FirstThunk->u1.Function; OriginalThunk++, FirstThunk++)
                 {
                     if (!IMAGE_SNAP_BY_ORDINAL32(OriginalThunk->u1.AddressOfData))
@@ -755,6 +934,28 @@ VOID PatchNewModules(PPEB Peb)
 }
 
 
+VOID SeiInitPaths(VOID)
+{
+#define SYSTEM32  L"\\system32"
+#define WINSXS  L"\\winsxs"
+
+    PWSTR WindowsDirectory = SdbpStrDup(SharedUserData->NtSystemRoot);
+    RtlInitUnicodeString(&g_WindowsDirectory, WindowsDirectory);
+
+    g_System32Directory.MaximumLength = g_WindowsDirectory.Length + SdbpStrsize(SYSTEM32);
+    g_System32Directory.Buffer = SdbpAlloc(g_System32Directory.MaximumLength);
+    RtlCopyUnicodeString(&g_System32Directory, &g_WindowsDirectory);
+    RtlAppendUnicodeToString(&g_System32Directory, SYSTEM32);
+
+    g_SxsDirectory.MaximumLength = g_WindowsDirectory.Length + SdbpStrsize(WINSXS);
+    g_SxsDirectory.Buffer = SdbpAlloc(g_SxsDirectory.MaximumLength);
+    RtlCopyUnicodeString(&g_SxsDirectory, &g_WindowsDirectory);
+    RtlAppendUnicodeToString(&g_SxsDirectory, WINSXS);
+
+#undef SYSTEM32
+#undef WINSXS
+}
+
 /*
 Level(INFO) Using USER apphack flags 0x2080000
 */
@@ -773,6 +974,9 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
     ARRAY_Init(&ShimRefArray, TAGREF);
     ARRAY_Init(&g_pShimInfo, PSHIMMODULE);
     ARRAY_Init(&g_pHookArray, HOOKMODULEINFO);
+    ARRAY_Init(&g_InExclude, INEXCLUDE);
+
+    SeiInitPaths();
 
     SeiCheckComPlusImage(Peb->ImageBaseAddress);
 
@@ -786,10 +990,9 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
     SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(Complete)\n");
 
     SHIMENG_INFO("Got %d shims\n", ARRAY_Size(&ShimRefArray));
-    /* TODO:
-    SeiBuildGlobalInclExclList()
-    */
+    SeiBuildGlobalInclExclList(hsdb);
 
+    /* Walk all shims referenced (in layers + exes), and load their modules */
     for (n = 0; n < ARRAY_Size(&ShimRefArray); ++n)
     {
         PDB pdb;
@@ -806,6 +1009,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
             PVOID BaseAddress;
             PSHIMMODULE pShimModuleInfo = NULL;
             ANSI_STRING AnsiCommandLine = RTL_CONSTANT_STRING("");
+            PSHIMINFO pShimInfo = NULL;
             PHOOKAPIEX pHookApi;
             DWORD dwHookCount;
 
@@ -856,6 +1060,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
             RtlInitUnicodeString(&UnicodeDllName, FullNameBuffer);
             if (NT_SUCCESS(LdrGetDllHandle(NULL, NULL, &UnicodeDllName, &BaseAddress)))
             {
+                /* This shim dll was already loaded, let's find it */
                 pShimModuleInfo = SeiGetShimModuleInfo(BaseAddress);
             }
             else if (!NT_SUCCESS(LdrLoadDll(NULL, NULL, &UnicodeDllName, &BaseAddress)))
@@ -863,6 +1068,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
                 SHIMENG_WARN("Failed to load %wZ for %S\n", &UnicodeDllName, ShimName);
                 continue;
             }
+            /* No shim module found (or we just loaded it) */
             if (!pShimModuleInfo)
             {
                 pShimModuleInfo = SeiCreateShimModuleInfo(DllName, BaseAddress);
@@ -876,16 +1082,20 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
             SHIMENG_INFO("Shim DLL 0x%p \"%wZ\" loaded\n", BaseAddress, &UnicodeDllName);
             SHIMENG_INFO("Using SHIM \"%S!%S\"\n", DllName, ShimName);
 
+            /* Ask this shim what hooks it needs (and pass along the commandline) */
             pHookApi = pShimModuleInfo->pGetHookAPIs(AnsiCommandLine.Buffer, ShimName, &dwHookCount);
             SHIMENG_INFO("GetHookAPIs returns %d hooks for DLL \"%wZ\" SHIM \"%S\"\n", dwHookCount, &UnicodeDllName, ShimName);
             if (dwHookCount)
-                SeiAppendHookInfo(pShimModuleInfo, pHookApi, dwHookCount);
+                pShimInfo = SeiAppendHookInfo(pShimModuleInfo, pHookApi, dwHookCount, ShimName);
+
+            /* If this shim has hooks, create the include / exclude lists */
+            if (pShimInfo)
+                SeiBuildInclExclList(pdb, ShimTag, pShimInfo);
 
             if (CommandLine && *CommandLine)
                 RtlFreeAnsiString(&AnsiCommandLine);
 
             dwTotalHooks += dwHookCount;
-            /*SeiBuildInclExclList*/
         }
     }
 
@@ -895,7 +1105,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
 }
 
 
-
+/* Load the database + unpack the shim data (if this process is allowed) */
 BOOL SeiGetShimData(PUNICODE_STRING ProcessImage, PVOID pShimData, HSDB* pHsdb, SDBQUERYRESULT* pQuery)
 {
     static const UNICODE_STRING ForbiddenShimmingApps[] = {
