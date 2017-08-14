@@ -18,6 +18,16 @@ list(APPEND SOURCE
     settingsdlg.cpp
     winmain.cpp
     include/rapps.h
+    include/available.h
+    include/gui.h
+    include/dialogs.h
+    include/installed.h
+    include/crichedit.h
+    include/defines.h
+    include/misc.h
+    include/resource.h
+    include/rosui.h
+    include/winmain.h
 )
 
 add_definitions(-DUSE_CERT_PINNING)
