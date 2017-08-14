@@ -4791,6 +4791,8 @@ RunUSetup(VOID)
         }
     }
 
+    SetupCloseInfFile(SetupInf);
+
     if (Page == RECOVERY_PAGE)
         RecoveryConsole();
 
