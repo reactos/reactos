@@ -129,8 +129,12 @@ Abstract:
 #define SUBVER(Version)                     (((Version) & SUBVERSION_MASK))
 
 /* Macros to get the NTDDI for a given WIN32 */
+#if (_WIN32_WINNT == _WIN32_WINNT_WS03)
+#define NTDDI_VERSION_FROM_WIN32_WINNT(Version) NTDDI_WS03SP1
+#else
 #define NTDDI_VERSION_FROM_WIN32_WINNT2(Version) Version##0000
 #define NTDDI_VERSION_FROM_WIN32_WINNT(Version)  NTDDI_VERSION_FROM_WIN32_WINNT2(Version)
+#endif
 
 /* Select Default _WIN32_WINNT Value */
 #if !defined(_WIN32_WINNT) && !defined(_CHICAGO_)

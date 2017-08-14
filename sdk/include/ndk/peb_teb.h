@@ -1,3 +1,23 @@
+/*++ NDK Version: 0098
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    peb_teb.h
+
+Abstract:
+
+    Definition of PEB/PEB32/PEB64 and TEB/TEB32/TEB64
+
+Author:
+
+    Timo Kreuzer (timo.kreuzer@reactos.org)
+
+--*/
+
+#include <rtltypes.h>
+
 #define PASTE2(x,y)       x##y
 #define PASTE(x,y)         PASTE2(x,y)
 
@@ -13,8 +33,12 @@
 #endif
 
 #if (defined(_WIN64) && !defined(EXPLICIT_32BIT)) || defined(EXPLICIT_64BIT)
+  #define _STRUCT64
+  #define _SELECT3264(x32, x64) (x64)
   #define GDI_HANDLE_BUFFER_SIZE 60
 #else
+  #undef _STRUCT64
+  #define _SELECT3264(x32, x64) (x32)
   #define GDI_HANDLE_BUFFER_SIZE 34
 #endif
 
@@ -157,7 +181,7 @@ typedef struct STRUCT(_PEB)
 
 #undef PPEB
 
-#if defined(_WIN64) && !defined(EXPLICIT_32BIT)
+#ifdef _STRUCT64
 C_ASSERT(FIELD_OFFSET(STRUCT(PEB), Mutant) == 0x08);
 C_ASSERT(FIELD_OFFSET(STRUCT(PEB), Ldr) == 0x18);
 C_ASSERT(FIELD_OFFSET(STRUCT(PEB), FastPebLock) == 0x038);
@@ -220,19 +244,49 @@ typedef struct STRUCT(_TEB)
     PTR(PVOID)             WOW32Reserved;
     LCID                   CurrentLocale;
     ULONG                  FpSoftwareStatusRegister;
-    PTR(PVOID)             SystemReserved1[54];
-    LONG                   ExceptionCode;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PTR(struct _ACTIVATION_CONTEXT_STACK*) ActivationContextStackPointer;
-    UCHAR                  SpareBytes1[0x30 - 3 * sizeof(PTR(PVOID))];
-    ULONG                  TxFsContext;
-#elif (NTDDI_VERSION >= NTDDI_WS03)
-    PTR(struct _ACTIVATION_CONTEXT_STACK*) ActivationContextStackPointer;
-    UCHAR                  SpareBytes1[0x34 - 3 * sizeof(PTR(PVOID))];
+
+#if (NTDDI_VERSION >= NTDDI_WIN10) // since 10.0.10240.16384
+    PTR(PVOID)             ReservedForDebuggerInstrumentation[16];
+    PTR(PVOID)             SystemReserved1[38];
 #else
-    ACTIVATION_CONTEXT_STACK ActivationContextStack;
-    UCHAR                  SpareBytes1[24];
+    PTR(PVOID)             SystemReserved1[54];
 #endif
+    LONG                   ExceptionCode;
+#ifdef _STRUCT64
+    UCHAR                  Padding0[4];
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+    PTR(PACTIVATION_CONTEXT_STACK) ActivationContextStackPointer;
+#else
+    STRUCT(ACTIVATION_CONTEXT_STACK) ActivationContextStack;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN10) // since 10.0.9926.0
+    PTR(ULONG_PTR)         InstrumentationCallbackSp;
+    PTR(ULONG_PTR)         InstrumentationCallbackPreviousPc;
+    PTR(ULONG_PTR)         InstrumentationCallbackPreviousSp;
+  #ifdef _STRUCT64
+    ULONG                  TxFsContext;
+    UCHAR                  InstrumentationCallbackDisabled;
+    UCHAR                  Padding1[3];
+  #else
+    UCHAR                  InstrumentationCallbackDisabled;
+    UCHAR                  SpareBytes[23];
+    ULONG                  TxFsContext;
+  #endif
+#elif (NTDDI_VERSION >= NTDDI_WIN7)
+    UCHAR                  SpareBytes[_SELECT3264(36, 24)];
+    ULONG                  TxFsContext;
+#elif (NTDDI_VERSION >= NTDDI_VISTA)
+    UCHAR                  SpareBytes1[_SELECT3264(36, 24)];
+    ULONG                  TxFsContext;
+#elif (NTDDI_VERSION >= NTDDI_WS03SP1)
+    UCHAR                  SpareBytes1[_SELECT3264(40, 28)];
+#else // only 32 bit version of 2k3 pre-SP1 exist
+    UCHAR                  SpareBytes1[_SELECT3264(24, -1)];
+#endif
+
     STRUCT(GDI_TEB_BATCH)  GdiTebBatch;
     STRUCT(CLIENT_ID)      RealClientId;
     PTR(PVOID)             GdiCachedProcessHandle;
@@ -248,9 +302,15 @@ typedef struct STRUCT(_TEB)
     PTR(PVOID)             glTable;
     PTR(PVOID)             glCurrentRC;
     PTR(PVOID)             glContext;
-    NTSTATUS               LastStatusValue;
+    ULONG                  LastStatusValue;
+#ifdef _STRUCT64
+    UCHAR                  Padding2[4];
+#endif
     STRUCT(UNICODE_STRING) StaticUnicodeString;
     WCHAR                  StaticUnicodeBuffer[261];
+#ifdef _STRUCT64
+    UCHAR                  Padding3[6];
+#endif
     PTR(PVOID)             DeallocationStack;
     PTR(PVOID)             TlsSlots[64];
     STRUCT(LIST_ENTRY)     TlsLinks;
@@ -262,42 +322,73 @@ typedef struct STRUCT(_TEB)
 #else
     ULONG                  HardErrorsAreDisabled;
 #endif
+#ifdef _STRUCT64
+    UCHAR                  Padding4[4];
+#endif
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PTR(PVOID)             Instrumentation[13 - sizeof(GUID)/sizeof(PTR(PVOID))];
     GUID                   ActivityId;
     PTR(PVOID)             SubProcessTag;
+#if (NTDDI_VERSION >= NTDDI_WIN8) // since ???
+    PTR(PVOID)             PerflibData;
+#else
     PTR(PVOID)             EtwLocalData;
+#endif
     PTR(PVOID)             EtwTraceData;
 #elif (NTDDI_VERSION >= NTDDI_WS03)
     PTR(PVOID)             Instrumentation[14];
     PTR(PVOID)             SubProcessTag;
-    PTR(PVOID)             EtwLocalData;
+    PTR(PVOID)             EtwTraceData;
 #else
     PTR(PVOID)             Instrumentation[16];
 #endif
     PTR(PVOID)             WinSockData;
     ULONG                  GdiBatchCount;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    union
+    {
+        PROCESSOR_NUMBER   CurrentIdealProcessor;
+        ULONG32            IdealProcessorValue;
+        struct
+        {
+            UCHAR          ReservedPad0;
+            UCHAR          ReservedPad1;
+            UCHAR          ReservedPad2;
+            UCHAR          IdealProcessor;
+        };
+    };
+#elif (NTDDI_VERSION >= NTDDI_LONGHORN)
     BOOLEAN                SpareBool0;
     BOOLEAN                SpareBool1;
     BOOLEAN                SpareBool2;
+    UCHAR                  IdealProcessor;
 #else
     BOOLEAN                InDbgPrint;
     BOOLEAN                FreeStackOnTermination;
     BOOLEAN                HasFiberData;
-#endif
     UCHAR                  IdealProcessor;
+#endif
 #if (NTDDI_VERSION >= NTDDI_WS03)
     ULONG                  GuaranteedStackBytes;
 #else
     ULONG                  Spare3;
 #endif
+#ifdef _STRUCT64
+    UCHAR                  Padding5[4];
+#endif
     PTR(PVOID)             ReservedForPerf;
     PTR(PVOID)             ReservedForOle;
     ULONG                  WaitingOnLoaderLock;
+#ifdef _STRUCT64
+    UCHAR                  Padding6[4];
+#endif
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PTR(PVOID)             SavedPriorityState;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    PTR(ULONG_PTR)         ReservedForCodeCoverage;
+#else
     PTR(ULONG_PTR)         SoftPatchPtr1;
+#endif
     PTR(ULONG_PTR)         ThreadPoolData;
 #elif (NTDDI_VERSION >= NTDDI_WS03)
     PTR(ULONG_PTR)         SparePointer1;
@@ -307,35 +398,49 @@ typedef struct STRUCT(_TEB)
     Wx86ThreadState        Wx86Thread;
 #endif
     PTR(PVOID*)            TlsExpansionSlots;
-#if defined(_WIN64) && !defined(EXPLICIT_32BIT)
-    PTR(PVOID)             DeallocationBStore;                                                  
-    PTR(PVOID)             BStoreLimit;                                                         
+#ifdef _STRUCT64
+    PTR(PVOID)             DeallocationBStore;
+    PTR(PVOID)             BStoreLimit;
 #endif
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    ULONG                  MuiGeneration;
+#else
     ULONG                  ImpersonationLocale;
+#endif
     ULONG                  IsImpersonating;
     PTR(PVOID)             NlsCache;
     PTR(PVOID)             pShimData;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    USHORT                 HeapVirtualAffinity;
+    USHORT                 LowFragHeapDataSlot;
+#else
     ULONG                  HeapVirtualAffinity;
+#endif
+#ifdef _STRUCT64
+    UCHAR                  Padding7[4];
+#endif
     PTR(HANDLE)            CurrentTransactionHandle;
     PTR(PTEB_ACTIVE_FRAME) ActiveFrame;
 #if (NTDDI_VERSION >= NTDDI_WS03)
-    PVOID FlsData;
+    PTR(PVOID) FlsData;
 #endif
+
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PVOID PreferredLangauges;
-    PVOID UserPrefLanguages;
-    PVOID MergedPrefLanguages;
+    PTR(PVOID) PreferredLanguages;
+    PTR(PVOID) UserPrefLanguages;
+    PTR(PVOID) MergedPrefLanguages;
     ULONG MuiImpersonation;
     union
     {
+        USHORT CrossTebFlags;
         struct
         {
-            USHORT SpareCrossTebFlags:16;
+            USHORT SpareCrossTebBits:16;
         };
-        USHORT CrossTebFlags;
     };
     union
     {
+        USHORT SameTebFlags;
         struct
         {
             USHORT DbgSafeThunkCall:1;
@@ -347,23 +452,45 @@ typedef struct STRUCT(_TEB)
             USHORT DbgClonedThread:1;
             USHORT SpareSameTebBits:9;
         };
-        USHORT SameTebFlags;
     };
-    PTR(PVOID) TxnScopeEntercallback;
-    PTR(PVOID) TxnScopeExitCAllback;
+    PTR(PVOID) TxnScopeEnterCallback;
+    PTR(PVOID) TxnScopeExitCallback;
     PTR(PVOID) TxnScopeContext;
     ULONG LockCount;
-    ULONG ProcessRundown;
-    ULONG64 LastSwitchTime;
-    ULONG64 TotalSwitchOutTime;
-    LARGE_INTEGER WaitReasonBitMap;
 #else
     BOOLEAN SafeThunkCall;
     BOOLEAN BooleanSpare[3];
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN10) // since 10.0.10041.0
+    LONG WowTebOffset;
+#elif (NTDDI_VERSION >= NTDDI_WIN7)
+    ULONG SpareUlong0;
+#elif (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG ProcessRundown;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    PTR(PVOID) ResourceRetValue;
+#elif (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG64 LastSwitchTime;
+    ULONG64 TotalSwitchOutTime;
+    LARGE_INTEGER WaitReasonBitMap;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    PTR(PVOID) ReservedForWdf;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    ULONG64 ReservedForCrt;
+    GUID EffectiveContainerId;
+#endif
+
 } STRUCT(TEB), *STRUCT(PTEB);
 
-#if defined(_WIN64) && !defined(EXPLICIT_32BIT)
+#ifdef _STRUCT64
+C_ASSERT(FIELD_OFFSET(STRUCT(TEB), NtTib) == 0x000);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), EnvironmentPointer) == 0x038);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), ExceptionCode) == 0x2C0);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), GdiTebBatch) == 0x2F0);
@@ -377,9 +504,11 @@ C_ASSERT(FIELD_OFFSET(STRUCT(TEB), TlsExpansionSlots) == 0x1780);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), WaitingOnLoaderLock) == 0x1760);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), ActiveFrame) == 0x17C0);
 #else
+C_ASSERT(FIELD_OFFSET(STRUCT(TEB), NtTib) == 0x000);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), EnvironmentPointer) == 0x01C);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), ExceptionCode) == 0x1A4);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), GdiTebBatch) == 0x1D4);
+C_ASSERT(FIELD_OFFSET(STRUCT(TEB), RealClientId) == 0x6B4);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), LastStatusValue) == 0xBF4);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), Vdm) == 0xF18);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), GdiBatchCount) == 0xF70);
@@ -387,6 +516,8 @@ C_ASSERT(FIELD_OFFSET(STRUCT(TEB), TlsExpansionSlots) == 0xF94);
 C_ASSERT(FIELD_OFFSET(STRUCT(TEB), ActiveFrame) == 0xFB0);
 #endif
 
+#undef _STRUCT64
+#undef _SELECT3264
 #undef PTR
 #undef STRUCT
 #undef PASTE
