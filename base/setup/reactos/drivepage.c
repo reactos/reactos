@@ -57,7 +57,7 @@ MoreOptDlgProc(HWND hwndDlg,
             SendMessage(GetDlgItem(hwndDlg, IDC_PATH),
                         WM_SETTEXT,
                         (WPARAM)0,
-                        (LPARAM)pSetupData->InstallDir);
+                        (LPARAM)pSetupData->USetupData.InstallationDirectory);
             break;
 
         case WM_COMMAND:
@@ -66,8 +66,8 @@ MoreOptDlgProc(HWND hwndDlg,
                 case IDOK:
                     SendMessage(GetDlgItem(hwndDlg, IDC_PATH),
                                 WM_GETTEXT,
-                                (WPARAM)sizeof(pSetupData->InstallDir) / sizeof(TCHAR),
-                                (LPARAM)pSetupData->InstallDir);
+                                (WPARAM)sizeof(pSetupData->USetupData.InstallationDirectory) / sizeof(TCHAR),
+                                (LPARAM)pSetupData->USetupData.InstallationDirectory);
 
                     EndDialog(hwndDlg, IDOK);
                     return TRUE;
