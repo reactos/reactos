@@ -1137,12 +1137,14 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
 
     if (IntStatus.ResumeDetected)
     {
-        ASSERT(FALSE);
+        DPRINT1("OHCI_IntDpc: ResumeDetected\n");
+        //ASSERT(FALSE);
     }
 
     if (IntStatus.UnrecoverableError)
     {
-        ASSERT(FALSE);
+        DPRINT1("OHCI_IntDpc: UnrecoverableError\n");
+        //ASSERT(FALSE);
     }
 
     WRITE_REGISTER_ULONG(InterruptStatusReg, IntStatus.AsULONG);
