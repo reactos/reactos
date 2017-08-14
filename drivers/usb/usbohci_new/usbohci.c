@@ -12,11 +12,11 @@ VOID
 NTAPI 
 OHCI_DumpHcdED(POHCI_HCD_ED ED)
 {
-    DPRINT("OHCI_DumpHcdED: ED                       - %p\n", ED);
-    DPRINT("OHCI_DumpHcdED: ED->HwED.EndpointControl - %lX\n", ED->HwED.EndpointControl.AsULONG);
-    DPRINT("OHCI_DumpHcdED: ED->HwED.TailPointer     - %p\n", ED->HwED.TailPointer);
-    DPRINT("OHCI_DumpHcdED: ED->HwED.HeadPointer     - %p\n", ED->HwED.HeadPointer);
-    DPRINT("OHCI_DumpHcdED: ED->HwED.NextED          - %p\n", ED->HwED.NextED);
+    DPRINT("ED                - %p\n", ED);
+    DPRINT("EndpointControl   - %X\n", ED->HwED.EndpointControl.AsULONG);
+    DPRINT("TailPointer       - %p\n", ED->HwED.TailPointer);
+    DPRINT("HeadPointer       - %p\n", ED->HwED.HeadPointer);
+    DPRINT("NextED            - %p\n", ED->HwED.NextED);
 }
 
 VOID
