@@ -351,7 +351,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     }
 
     // Write out the new bitmap
-    Status = WriteAttribute(Vcb, BitmapContext, BitmapOffset, BitmapBuffer, BitmapSize.LowPart, &LengthWritten);
+    Status = WriteAttribute(Vcb, BitmapContext, BitmapOffset, BitmapBuffer, BitmapSize.LowPart, &LengthWritten, Vcb->MasterFileTable);
     if (!NT_SUCCESS(Status))
     {
         ExReleaseResourceLite(&(Vcb->DirResource));
@@ -369,17 +369,72 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     return STATUS_SUCCESS;
 }
 
+/**
+* @name MoveAttributes
+* @implemented
+*
+* Moves a block of attributes to a new location in the file Record. The attribute at FirstAttributeToMove
+* and every attribute after that will be moved to MoveTo.
+*
+* @param DeviceExt
+* Pointer to the DEVICE_EXTENSION (VCB) of the target volume.
+*
+* @param FirstAttributeToMove
+* Pointer to the first NTFS_ATTR_RECORD that needs to be moved. This pointer must reside within a file record.
+*
+* @param FirstAttributeOffset
+* Offset of FirstAttributeToMove relative to the beginning of the file record.
+*
+* @param MoveTo
+* ULONG_PTR with the memory location that will be the new location of the first attribute being moved.
+*
+* @return
+* The new location of the final attribute (i.e. AttributeEnd marker).
+*/
+PNTFS_ATTR_RECORD
+MoveAttributes(PDEVICE_EXTENSION DeviceExt,
+               PNTFS_ATTR_RECORD FirstAttributeToMove,
+               ULONG FirstAttributeOffset,
+               ULONG_PTR MoveTo)
+{
+    // Get the size of all attributes after this one
+    ULONG MemBlockSize = 0;
+    PNTFS_ATTR_RECORD CurrentAttribute = FirstAttributeToMove;
+    ULONG CurrentOffset = FirstAttributeOffset;
+    PNTFS_ATTR_RECORD FinalAttribute;
+
+    while (CurrentAttribute->Type != AttributeEnd && CurrentOffset < DeviceExt->NtfsInfo.BytesPerFileRecord)
+    {
+        CurrentOffset += CurrentAttribute->Length;
+        MemBlockSize += CurrentAttribute->Length;
+        CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
+    }
+
+    FinalAttribute = (PNTFS_ATTR_RECORD)(MoveTo + MemBlockSize);
+    MemBlockSize += sizeof(ULONG) * 2;  // Add the AttributeEnd and file record end
+
+    ASSERT(MemBlockSize % ATTR_RECORD_ALIGNMENT == 0);
+
+    // Move the attributes after this one
+    RtlMoveMemory((PCHAR)MoveTo, FirstAttributeToMove, MemBlockSize);
+
+    return FinalAttribute;
+}
+
 NTSTATUS
-InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
+InternalSetResidentAttributeLength(PDEVICE_EXTENSION DeviceExt,
+                                   PNTFS_ATTR_CONTEXT AttrContext,
                                    PFILE_RECORD_HEADER FileRecord,
                                    ULONG AttrOffset,
                                    ULONG DataSize)
 {
     PNTFS_ATTR_RECORD Destination = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
+    PNTFS_ATTR_RECORD NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Destination + Destination->Length);
+    PNTFS_ATTR_RECORD FinalAttribute;
+    ULONG OldAttributeLength = Destination->Length;
     ULONG NextAttributeOffset;
-    USHORT ValueOffset;
 
-    DPRINT("InternalSetResidentAttributeLength( %p, %p, %lu, %lu )\n", AttrContext, FileRecord, AttrOffset, DataSize);
+    DPRINT1("InternalSetResidentAttributeLength( %p, %p, %p, %lu, %lu )\n", DeviceExt, AttrContext, FileRecord, AttrOffset, DataSize);
 
     ASSERT(!AttrContext->pRecord->IsNonResident);
 
@@ -390,30 +445,46 @@ InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
     Destination->Length = ALIGN_UP_BY(DataSize + AttrContext->pRecord->Resident.ValueOffset, ATTR_RECORD_ALIGNMENT);
     NextAttributeOffset = AttrOffset + Destination->Length;
 
-    // Ensure FileRecord has an up-to-date copy of the attribute
-    ValueOffset = AttrContext->pRecord->Resident.ValueOffset;
-    RtlCopyMemory((PCHAR)((ULONG_PTR)FileRecord + AttrOffset + ValueOffset),
-                  (PCHAR)((ULONG_PTR)AttrContext->pRecord + ValueOffset),
-                  min(DataSize, AttrContext->pRecord->Resident.ValueLength));
-
-    // Free the old copy of the attribute in the context, as it will be the wrong length
-    ExFreePoolWithTag(AttrContext->pRecord, TAG_NTFS);
-
-    // Create a new copy of the attribute for the context
-    AttrContext->pRecord = ExAllocatePoolWithTag(NonPagedPool, Destination->Length, TAG_NTFS);
-    if (!AttrContext->pRecord)
-    {
-        DPRINT1("Unable to allocate memory for attribute!\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    RtlCopyMemory(AttrContext->pRecord, Destination, Destination->Length);
-
     // Ensure NextAttributeOffset is aligned to an 8-byte boundary
     ASSERT(NextAttributeOffset % ATTR_RECORD_ALIGNMENT == 0);
-    
-    // advance Destination to the final "attribute" and set the file record end
-    Destination = (PNTFS_ATTR_RECORD)((ULONG_PTR)Destination + Destination->Length);
-    SetFileRecordEnd(FileRecord, Destination, FILE_RECORD_END);
+
+    // Will the new attribute be larger than the old one?
+    if (Destination->Length > OldAttributeLength)
+    {
+        // Free the old copy of the attribute in the context, as it will be the wrong length
+        ExFreePoolWithTag(AttrContext->pRecord, TAG_NTFS);
+
+        // Create a new copy of the attribute record for the context
+        AttrContext->pRecord = ExAllocatePoolWithTag(NonPagedPool, Destination->Length, TAG_NTFS);
+        if (!AttrContext->pRecord)
+        {
+            DPRINT1("Unable to allocate memory for attribute!\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        RtlZeroMemory((PVOID)((ULONG_PTR)AttrContext->pRecord + OldAttributeLength), Destination->Length - OldAttributeLength);
+        RtlCopyMemory(AttrContext->pRecord, Destination, OldAttributeLength);
+    }
+
+    // Are there attributes after this one that need to be moved?
+    if (NextAttribute->Type != AttributeEnd)
+    {
+        // Move the attributes after this one
+        FinalAttribute = MoveAttributes(DeviceExt, NextAttribute, NextAttributeOffset, (ULONG_PTR)Destination + Destination->Length);
+    }
+    else
+    {
+        // advance to the final "attribute," adjust for the changed length of the attribute we're resizing
+        FinalAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute - OldAttributeLength + Destination->Length);
+    }
+
+    // Update pRecord's length
+    AttrContext->pRecord->Length = Destination->Length;
+    AttrContext->pRecord->Resident.ValueLength = DataSize;
+
+    // set the file record end
+    SetFileRecordEnd(FileRecord, FinalAttribute, FILE_RECORD_END);
+
+    //NtfsDumpFileRecord(DeviceExt, FileRecord);
 
     return STATUS_SUCCESS;
 }
@@ -519,6 +590,9 @@ SetFileRecordEnd(PFILE_RECORD_HEADER FileRecord,
                  PNTFS_ATTR_RECORD AttrEnd,
                  ULONG EndMarker)
 {
+    // Ensure AttrEnd is aligned on an 8-byte boundary, relative to FileRecord
+    ASSERT(((ULONG_PTR)AttrEnd - (ULONG_PTR)FileRecord) % ATTR_RECORD_ALIGNMENT == 0);
+
     // mark the end of attributes
     AttrEnd->Type = AttributeEnd;
 
@@ -841,7 +915,7 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                 // restore the back-up attribute, if we made one
                 if (AttribDataSize.QuadPart > 0)
                 {
-                    Status = WriteAttribute(Vcb, AttrContext, 0, AttribData, AttribDataSize.QuadPart, &LengthWritten);
+                    Status = WriteAttribute(Vcb, AttrContext, 0, AttribData, AttribDataSize.QuadPart, &LengthWritten, FileRecord);
                     if (!NT_SUCCESS(Status))
                     {
                         DPRINT1("ERROR: Unable to write attribute data to non-resident clusters during migration!\n");
@@ -855,19 +929,10 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
             }
         }
     }
-    else if (DataSize->LowPart < AttrContext->pRecord->Resident.ValueLength)
-    {
-        // we need to decrease the length
-        if (NextAttribute->Type != AttributeEnd)
-        {
-            DPRINT1("FIXME: Don't know how to decrease length of resident attribute unless it's the final attribute!\n");
-            return STATUS_NOT_IMPLEMENTED;
-        }
-    }
 
     // set the new length of the resident attribute (if we didn't migrate it)
     if (!AttrContext->pRecord->IsNonResident)
-        return InternalSetResidentAttributeLength(AttrContext, FileRecord, AttrOffset, DataSize->LowPart);
+        return InternalSetResidentAttributeLength(Vcb, AttrContext, FileRecord, AttrOffset, DataSize->LowPart);
 
     return STATUS_SUCCESS;
 }
@@ -1102,6 +1167,12 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
 * @param RealLengthWritten
 * Pointer to a ULONG which will receive how much data was written, in bytes
 *
+* @param FileRecord
+* Optional pointer to a FILE_RECORD_HEADER that contains a copy of the file record
+* being written to. Can be NULL, in which case the file record will be read from disk.
+* If not-null, WriteAttribute() will skip reading from disk, and FileRecord
+* will be updated with the newly-written attribute before the function returns.
+*
 * @return
 * STATUS_SUCCESS if successful, an error code otherwise. STATUS_NOT_IMPLEMENTED if
 * writing to a sparse file.
@@ -1117,7 +1188,8 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
                ULONGLONG Offset,
                const PUCHAR Buffer,
                ULONG Length,
-               PULONG RealLengthWritten)
+               PULONG RealLengthWritten,
+               PFILE_RECORD_HEADER FileRecord)
 {
     ULONGLONG LastLCN;
     PUCHAR DataRun;
@@ -1129,12 +1201,13 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     PUCHAR SourceBuffer = Buffer;
     LONGLONG StartingOffset;
+    BOOLEAN FileRecordAllocated = FALSE;
     
     //TEMPTEMP
     PUCHAR TempBuffer;
         
 
-    DPRINT("WriteAttribute(%p, %p, %I64u, %p, %lu, %p)\n", Vcb, Context, Offset, Buffer, Length, RealLengthWritten);
+    DPRINT("WriteAttribute(%p, %p, %I64u, %p, %lu, %p, %p)\n", Vcb, Context, Offset, Buffer, Length, RealLengthWritten, FileRecord);
 
     *RealLengthWritten = 0;
 
@@ -1143,7 +1216,10 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
     {
         ULONG AttributeOffset;
         PNTFS_ATTR_CONTEXT FoundContext;
-        PFILE_RECORD_HEADER FileRecord;
+        PNTFS_ATTR_RECORD Destination;
+
+        // Ensure requested data is within the bounds of the attribute
+        ASSERT(Offset + Length <= Context->pRecord->Resident.ValueLength);
 
         if (Offset + Length > Context->pRecord->Resident.ValueLength)
         {
@@ -1151,16 +1227,21 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
             return STATUS_INVALID_PARAMETER;
         }
 
-        FileRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
-
-        if (!FileRecord)
+        // Do we need to read the file record?
+        if (FileRecord == NULL)
         {
-            DPRINT1("Error: Couldn't allocate file record!\n");
-            return STATUS_NO_MEMORY;
-        }
+            FileRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+            if (!FileRecord)
+            {
+                DPRINT1("Error: Couldn't allocate file record!\n");
+                return STATUS_NO_MEMORY;
+            }
 
-        // read the file record
-        ReadFileRecord(Vcb, Context->FileMFTIndex, FileRecord);
+            FileRecordAllocated = TRUE;
+
+            // read the file record
+            ReadFileRecord(Vcb, Context->FileMFTIndex, FileRecord);
+        }
 
         // find where to write the attribute data to
         Status = FindAttribute(Vcb, FileRecord,
@@ -1173,28 +1254,37 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERROR: Couldn't find matching attribute!\n");
-            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            if(FileRecordAllocated)
+                ExFreePoolWithTag(FileRecord, TAG_NTFS);
             return Status;
         }
 
+        Destination = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttributeOffset);
+
         DPRINT("Offset: %I64u, AttributeOffset: %u, ValueOffset: %u\n", Offset, AttributeOffset, Context->pRecord->Resident.ValueLength);
-        Offset += AttributeOffset + Context->pRecord->Resident.ValueOffset;
-        
-        if (Offset + Length > Vcb->NtfsInfo.BytesPerFileRecord)
+
+        // Will we be writing past the end of the allocated file record?
+        if (Offset + Length + AttributeOffset + Context->pRecord->Resident.ValueOffset > Vcb->NtfsInfo.BytesPerFileRecord)
         {
             DPRINT1("DRIVER ERROR: Data being written extends past end of file record!\n");
             ReleaseAttributeContext(FoundContext);
-            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            if (FileRecordAllocated)
+                ExFreePoolWithTag(FileRecord, TAG_NTFS);
             return STATUS_INVALID_PARAMETER;
         }
 
-        // copy the data being written into the file record
-        RtlCopyMemory((PCHAR)FileRecord + Offset, Buffer, Length);
+        // copy the data being written into the file record. We cast Offset to ULONG, which is safe because it's range has been verified.
+        RtlCopyMemory((PCHAR)((ULONG_PTR)Destination + Context->pRecord->Resident.ValueOffset + (ULONG)Offset), Buffer, Length);
 
         Status = UpdateFileRecord(Vcb, Context->FileMFTIndex, FileRecord);
 
+        // Update the context's copy of the resident attribute
+        ASSERT(Context->pRecord->Length == Destination->Length);
+        RtlCopyMemory((PVOID)Context->pRecord, Destination, Context->pRecord->Length);
+
         ReleaseAttributeContext(FoundContext);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        if (FileRecordAllocated)
+            ExFreePoolWithTag(FileRecord, TAG_NTFS);
 
         if (NT_SUCCESS(Status))
             *RealLengthWritten = Length;
@@ -1519,7 +1609,7 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
     {
         // we need to write the index root attribute back to disk
         ULONG LengthWritten;
-        Status = WriteAttribute(Vcb, IndexRootCtx, 0, (PUCHAR)IndexRecord, AttributeDataLength(IndexRootCtx->pRecord), &LengthWritten);
+        Status = WriteAttribute(Vcb, IndexRootCtx, 0, (PUCHAR)IndexRecord, AttributeDataLength(IndexRootCtx->pRecord), &LengthWritten, MftRecord);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERROR: Couldn't update Index Root!\n");
@@ -1661,7 +1751,7 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
                 break;
             }
 
-            Status = WriteAttribute(Vcb, IndexAllocationCtx, RecordOffset, (const PUCHAR)IndexRecord, IndexBlockSize, &Written);
+            Status = WriteAttribute(Vcb, IndexAllocationCtx, RecordOffset, (const PUCHAR)IndexRecord, IndexBlockSize, &Written, MftRecord);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ERROR Performing write!\n");
@@ -1714,7 +1804,13 @@ UpdateFileRecord(PDEVICE_EXTENSION Vcb,
     AddFixupArray(Vcb, &FileRecord->Ntfs);
 
     // write the file record to the master file table
-    Status = WriteAttribute(Vcb, Vcb->MFTContext, MftIndex * Vcb->NtfsInfo.BytesPerFileRecord, (const PUCHAR)FileRecord, Vcb->NtfsInfo.BytesPerFileRecord, &BytesWritten);
+    Status = WriteAttribute(Vcb, 
+                            Vcb->MFTContext,
+                            MftIndex * Vcb->NtfsInfo.BytesPerFileRecord,
+                            (const PUCHAR)FileRecord,
+                            Vcb->NtfsInfo.BytesPerFileRecord,
+                            &BytesWritten,
+                            FileRecord);
 
     if (!NT_SUCCESS(Status))
     {
@@ -1882,7 +1978,7 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     BitmapData[2] = SystemReservedBits;
 
     // write the bitmap back to the MFT's $Bitmap attribute
-    Status = WriteAttribute(DeviceExt, BitmapContext, 0, BitmapData, BitmapDataSize, &LengthWritten);
+    Status = WriteAttribute(DeviceExt, BitmapContext, 0, BitmapData, BitmapDataSize, &LengthWritten, FileRecord);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR encountered when writing $Bitmap attribute!\n");
@@ -1958,10 +2054,8 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     ULONG IndexRootOffset;
     ULONGLONG I30IndexRootLength;
     ULONG LengthWritten;
-    PNTFS_ATTR_RECORD DestinationAttribute;
     PINDEX_ROOT_ATTRIBUTE NewIndexRoot;
     ULONG AttributeLength;
-    PNTFS_ATTR_RECORD NextAttribute;
     PB_TREE NewTree;
     ULONG BtreeIndexLength;
     ULONG MaxIndexSize;
@@ -2065,7 +2159,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 
     DumpBTree(NewTree);
 
-    // Convert B*Tree back to Index
+    // Convert B*Tree back to Index, starting with the index allocation
     Status = UpdateIndexAllocation(DeviceExt, NewTree, I30IndexRoot->SizeOfEntry, ParentFileRecord);
     if (!NT_SUCCESS(Status))
     {
@@ -2103,22 +2197,9 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     
     if (AttributeLength != IndexRootContext->pRecord->Resident.ValueLength)
     {
-        DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset);
-
-        // Find the attribute (or attribute-end marker) after the index root
-        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)DestinationAttribute + DestinationAttribute->Length);
-        if (NextAttribute->Type != AttributeEnd)
-        {
-            DPRINT1("FIXME: For now, only resizing index root at the end of a file record is supported!\n");
-            ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
-            ReleaseAttributeContext(IndexRootContext);
-            ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-            ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
-            return STATUS_NOT_IMPLEMENTED;
-        }
-
         // Update the length of the attribute in the file record of the parent directory
-        Status = InternalSetResidentAttributeLength(IndexRootContext,
+        Status = InternalSetResidentAttributeLength(DeviceExt,
+                                                    IndexRootContext,
                                                     ParentFileRecord,
                                                     IndexRootOffset,
                                                     AttributeLength);
@@ -2153,7 +2234,8 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
                             0,
                             (PUCHAR)NewIndexRoot,
                             AttributeLength,
-                            &LengthWritten);
+                            &LengthWritten,
+                            ParentFileRecord);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Unable to write new index root attribute to parent directory!\n");

@@ -46,6 +46,12 @@ PrintAllVCNs(PDEVICE_EXTENSION Vcb,
     ULONGLONG i;
     int Count = 0;
 
+    if (BufferSize == 0)
+    {
+        DPRINT1("Index Allocation is empty.\n");
+        return;
+    }
+
     Buffer = ExAllocatePoolWithTag(NonPagedPool, BufferSize, TAG_NTFS);
 
     BytesRead = ReadAttribute(Vcb, IndexAllocationContext, 0, (PCHAR)Buffer, BufferSize);
@@ -281,10 +287,10 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
             {
                 DPRINT1("TODO: Only a node with a single-level is supported right now!\n");
                 // Needs debugging:
-                /*CurrentKey->LesserChild = CreateBTreeNodeFromIndexNode(Vcb,
+                CurrentKey->LesserChild = CreateBTreeNodeFromIndexNode(Vcb,
                                                                        IndexRoot,
                                                                        IndexAllocationAttributeCtx,
-                                                                       CurrentNodeEntry);*/
+                                                                       CurrentKey->IndexEntry);
             }
 
             CurrentKey = NextKey;
@@ -300,10 +306,10 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
             {
                 DPRINT1("TODO: Only a node with a single-level is supported right now!\n");
                 // Needs debugging:
-                /*CurrentKey->LesserChild = CreateBTreeNodeFromIndexNode(Vcb,
-                                                                         IndexRoot,
-                                                                         IndexAllocationAttributeCtx,
-                                                                         CurrentNodeEntry);*/
+                CurrentKey->LesserChild = CreateBTreeNodeFromIndexNode(Vcb,
+                                                                       IndexRoot,
+                                                                       IndexAllocationAttributeCtx,
+                                                                       CurrentKey->IndexEntry);
             }
 
             break;
@@ -575,7 +581,6 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
     {
         // Would adding the current entry to the index increase the index size beyond the limit we've set?
         ULONG IndexSize = FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)
-                          + NewIndexRoot->Header.FirstEntryOffset
                           + NewIndexRoot->Header.TotalSizeOfEntries
                           + CurrentNodeEntry->Length;
         if (IndexSize > MaxIndexSize)
@@ -649,7 +654,6 @@ CreateIndexBufferFromBTreeNode(PDEVICE_EXTENSION DeviceExt,
     {
         // Would adding the current entry to the index increase the node size beyond the allocation size?
         ULONG IndexSize = FIELD_OFFSET(INDEX_BUFFER, Header)
-            + IndexBuffer->Header.FirstEntryOffset
             + IndexBuffer->Header.TotalSizeOfEntries
             + CurrentNodeEntry->Length;
         if (IndexSize > BufferSize)
@@ -776,7 +780,7 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
         NodeOffset = GetAllocationOffsetFromVCN(DeviceExt, IndexBufferSize, Node->NodeNumber);
 
         // Write the buffer to the index allocation
-        Status = WriteAttribute(DeviceExt, IndexAllocationContext, NodeOffset, (const PUCHAR)IndexBuffer, IndexBufferSize, &LengthWritten);
+        Status = WriteAttribute(DeviceExt, IndexAllocationContext, NodeOffset, (const PUCHAR)IndexBuffer, IndexBufferSize, &LengthWritten, NULL);
         if (!NT_SUCCESS(Status) || LengthWritten != IndexBufferSize)
         {
             DPRINT1("ERROR: Failed to update index allocation!\n");
@@ -945,10 +949,10 @@ DumpBTreeNode(PB_TREE_FILENAME_NODE Node, ULONG Number, ULONG Depth)
     ULONG i;
     for (i = 0; i < Depth; i++)
         DbgPrint(" ");
-    DbgPrint("Node #%d, Depth %d, has %d keys\n", Number, Depth, Node->KeyCount);
+    DbgPrint("Node #%d, Depth %d, has %d key%s\n", Number, Depth, Node->KeyCount, Node->KeyCount == 1 ? "" : "s");
 
     CurrentKey = Node->FirstKey;
-    for (i = 0; i < Node->KeyCount; i++)
+    for (i = 1; i <= Node->KeyCount; i++)
     {
         DumpBTreeKey(CurrentKey, i, Depth);
         CurrentKey = CurrentKey->NextKey;

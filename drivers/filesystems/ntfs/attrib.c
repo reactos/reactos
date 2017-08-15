@@ -352,16 +352,33 @@ AddRun(PNTFS_VCB Vcb,
         PNTFS_ATTR_RECORD NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + NextAttributeOffset);
         PNTFS_ATTR_RECORD NewRecord;
 
-        DataRunMaxLength += Vcb->NtfsInfo.BytesPerFileRecord - NextAttributeOffset - (sizeof(ULONG) * 2);
+        // Add free space at the end of the file record to DataRunMaxLength
+        DataRunMaxLength += Vcb->NtfsInfo.BytesPerFileRecord - FileRecord->BytesInUse;
 
-        // Can we move the end of the attribute?
-        if (NextAttribute->Type != AttributeEnd || DataRunMaxLength < RunBufferSize - 1)
+        // Can we resize the attribute?
+        if (DataRunMaxLength < RunBufferSize)
         {
-            DPRINT1("FIXME: Need to create attribute list! Max Data Run Length available: %d\n", DataRunMaxLength);
-            if (NextAttribute->Type != AttributeEnd)
-                DPRINT1("There's another attribute after this one with type %0xlx\n", NextAttribute->Type);
+            DPRINT1("FIXME: Need to create attribute list! Max Data Run Length available: %d, RunBufferSize: %d\n", DataRunMaxLength, RunBufferSize);
             ExFreePoolWithTag(RunBuffer, TAG_NTFS);
             return STATUS_NOT_IMPLEMENTED;
+        }
+
+        // Are there more attributes after the one we're resizing?
+        if (NextAttribute->Type != AttributeEnd)
+        {
+            PNTFS_ATTR_RECORD FinalAttribute;
+
+            // Calculate where to move the trailing attributes
+            ULONG_PTR MoveTo = (ULONG_PTR)DestinationAttribute + AttrContext->pRecord->NonResident.MappingPairsOffset + RunBufferSize;
+            MoveTo = ALIGN_UP_BY(MoveTo, ATTR_RECORD_ALIGNMENT);
+
+            DPRINT1("Moving attribute(s) after this one starting with type 0x%lx\n", NextAttribute->Type);
+
+            // Move the trailing attributes; FinalAttribute will point to the end marker
+            FinalAttribute = MoveAttributes(Vcb, NextAttribute, NextAttributeOffset, MoveTo);
+
+            // set the file record end
+            SetFileRecordEnd(FileRecord, FinalAttribute, FILE_RECORD_END);
         }
 
         // calculate position of end markers
@@ -371,20 +388,24 @@ AddRun(PNTFS_VCB Vcb,
         // Update the length of the destination attribute
         DestinationAttribute->Length = NextAttributeOffset - AttrOffset;
 
-        // Create a new copy of the attribute
+        // Create a new copy of the attribute record
         NewRecord = ExAllocatePoolWithTag(NonPagedPool, DestinationAttribute->Length, TAG_NTFS);
         RtlCopyMemory(NewRecord, AttrContext->pRecord, AttrContext->pRecord->Length);
         NewRecord->Length = DestinationAttribute->Length;
 
-        // Free the old copy of the attribute, which won't be large enough
+        // Free the old copy of the attribute record, which won't be large enough
         ExFreePoolWithTag(AttrContext->pRecord, TAG_NTFS);
 
         // Set the attribute context's record to the new copy
         AttrContext->pRecord = NewRecord;
 
-        // End the file record
-        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + NextAttributeOffset);
-        SetFileRecordEnd(FileRecord, NextAttribute, FILE_RECORD_END);
+        // if NextAttribute is the AttributeEnd marker
+        if (NextAttribute->Type == AttributeEnd)
+        {
+            // End the file record
+            NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + NextAttributeOffset);
+            SetFileRecordEnd(FileRecord, NextAttribute, FILE_RECORD_END);
+        }
     }
 
     // Update HighestVCN
@@ -397,7 +418,7 @@ AddRun(PNTFS_VCB Vcb,
                   RunBuffer, 
                   RunBufferSize);
 
-    // Update the attribute copy in the attribute context
+    // Update the attribute record in the attribute context
     RtlCopyMemory((PVOID)((ULONG_PTR)AttrContext->pRecord + AttrContext->pRecord->NonResident.MappingPairsOffset),
                   RunBuffer,
                   RunBufferSize);
@@ -827,7 +848,7 @@ FreeClusters(PNTFS_VCB Vcb,
     }
 
     // update $BITMAP file on disk
-    Status = WriteAttribute(Vcb, DataContext, 0, BitmapData, (ULONG)BitmapDataSize, &LengthWritten);
+    Status = WriteAttribute(Vcb, DataContext, 0, BitmapData, (ULONG)BitmapDataSize, &LengthWritten, FileRecord);
     if (!NT_SUCCESS(Status))
     {
         ReleaseAttributeContext(DataContext);

@@ -196,7 +196,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
             
     }
                 
-    Status = WriteAttribute(DeviceExt, DataContext, 0, BitmapData, (ULONG)BitmapDataSize, &LengthWritten);
+    Status = WriteAttribute(DeviceExt, DataContext, 0, BitmapData, (ULONG)BitmapDataSize, &LengthWritten, BitmapRecord);
     
     ReleaseAttributeContext(DataContext);
 
