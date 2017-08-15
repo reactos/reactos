@@ -2293,7 +2293,7 @@ typedef struct _NDIS_MINIPORT_WORK_ITEM {
 } NDIS_MINIPORT_WORK_ITEM, *PNDIS_MINIPORT_WORK_ITEM;
 
 struct _NDIS_WORK_ITEM;
-typedef VOID (*NDIS_PROC)(struct _NDIS_WORK_ITEM *, PVOID);
+typedef VOID (NTAPI *NDIS_PROC)(struct _NDIS_WORK_ITEM *, PVOID);
 
 typedef struct _NDIS_WORK_ITEM {
   PVOID Context;
