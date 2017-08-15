@@ -158,6 +158,27 @@ HRESULT CLayerUIPropPage::InitFile(PCWSTR Filename)
         }
         return InitFile(Buffer);
     }
+
+    CString tmp;
+    if (tmp.GetEnvironmentVariable(L"SystemRoot"))
+    {
+        tmp += L"\\System32";
+        if (ExpandedFilename.GetLength() >= tmp.GetLength() &&
+            ExpandedFilename.Left(tmp.GetLength()).MakeLower() == tmp.MakeLower())
+        {
+            ACDBG(L"Ignoring System32: %s\r\n", (PCWSTR)ExpandedFilename);
+            return E_FAIL;
+        }
+        tmp.GetEnvironmentVariable(L"SystemRoot");
+        tmp += L"\\WinSxs";
+        if (ExpandedFilename.GetLength() >= tmp.GetLength() &&
+            ExpandedFilename.Left(tmp.GetLength()).MakeLower() == tmp.MakeLower())
+        {
+            ACDBG(L"Ignoring WinSxs: %s\r\n", (PCWSTR)ExpandedFilename);
+            return E_FAIL;
+        }
+    }
+
     for (size_t n = 0; g_AllowedExtensions[n]; ++n)
     {
         if (!wcsicmp(g_AllowedExtensions[n], pwszExt))
