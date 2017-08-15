@@ -56,6 +56,8 @@ BOOL CmdParser(LPWSTR lpCmdLine)
         while (SetupFindNextLine(&Context, &Context));
         SetupCloseInfFile(InfHandle);
     }
+    else
+        return FALSE;
 
     CAvailableApps apps;
     apps.EnumAvailableApplications(ENUM_ALL_AVAILABLE, NULL);
