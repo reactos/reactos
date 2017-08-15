@@ -954,16 +954,24 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
                ULONGLONG Offset,
                const PUCHAR Buffer,
                ULONG Length,
-               PULONG LengthWritten);
+               PULONG LengthWritten,
+               PFILE_RECORD_HEADER FileRecord);
 
 ULONGLONG
 AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord);
 
 NTSTATUS
-InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
+InternalSetResidentAttributeLength(PDEVICE_EXTENSION DeviceExt,
+                                   PNTFS_ATTR_CONTEXT AttrContext,
                                    PFILE_RECORD_HEADER FileRecord,
                                    ULONG AttrOffset,
                                    ULONG DataSize);
+
+PNTFS_ATTR_RECORD
+MoveAttributes(PDEVICE_EXTENSION DeviceExt,
+               PNTFS_ATTR_RECORD FirstAttributeToMove,
+               ULONG FirstAttributeOffset,
+               ULONG_PTR MoveTo);
 
 NTSTATUS
 SetAttributeDataLength(PFILE_OBJECT FileObject,
