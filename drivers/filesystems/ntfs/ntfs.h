@@ -728,10 +728,12 @@ GetAllocationOffsetFromVCN(PDEVICE_EXTENSION DeviceExt,
                            ULONGLONG Vcn);
 
 NTSTATUS
-NtfsInsertKey(ULONGLONG FileReference,
+NtfsInsertKey(PB_TREE Tree,
+              ULONGLONG FileReference,
               PFILENAME_ATTRIBUTE FileNameAttribute,
               PB_TREE_FILENAME_NODE Node,
-              BOOLEAN CaseSensitive);
+              BOOLEAN CaseSensitive,
+              ULONG MaxIndexRootSize);
 
 NTSTATUS
 UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
@@ -741,9 +743,11 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS
 UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
+                PFILE_RECORD_HEADER FileRecord,
                 PB_TREE_FILENAME_NODE Node,
                 ULONG IndexBufferSize,
                 PNTFS_ATTR_CONTEXT IndexAllocationContext,
+                ULONG IndexAllocationOffset,
                 PNTFS_ATTR_CONTEXT BitmapContext);
 
 /* close.c */

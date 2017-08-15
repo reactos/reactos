@@ -2056,9 +2056,10 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     ULONG LengthWritten;
     PINDEX_ROOT_ATTRIBUTE NewIndexRoot;
     ULONG AttributeLength;
+    PNTFS_ATTR_RECORD NextAttribute;
     PB_TREE NewTree;
     ULONG BtreeIndexLength;
-    ULONG MaxIndexSize;
+    ULONG MaxIndexRootSize;
 
     // Allocate memory for the parent directory
     ParentFileRecord = ExAllocatePoolWithTag(NonPagedPool,
@@ -2100,11 +2101,29 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     // Find the maximum index size given what the file record can hold
-    MaxIndexSize = DeviceExt->NtfsInfo.BytesPerFileRecord
-        - IndexRootOffset
-        - IndexRootContext->pRecord->Resident.ValueOffset
-        - FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)
-        - (sizeof(ULONG) * 2);
+    // First, find the max index size assuming index root is the last attribute
+    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord               // Start with the size of a file record
+                       - IndexRootOffset                                    // Subtract the length of everything that comes before index root
+                       - IndexRootContext->pRecord->Resident.ValueOffset    // Subtract the length of the attribute header for index root
+                       - FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)         // Subtract the length of the index header for index root
+                       - (sizeof(ULONG) * 2);                               // Subtract the length of the file record end marker and padding
+
+    // Are there attributes after this one?
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset + IndexRootContext->pRecord->Length);
+    if (NextAttribute->Type != AttributeEnd)
+    {
+        // Find the length of all attributes after this one, not counting the end marker
+        ULONG LengthOfAttributes = 0;
+        PNTFS_ATTR_RECORD CurrentAttribute = NextAttribute;
+        while (CurrentAttribute->Type != AttributeEnd)
+        {
+            LengthOfAttributes += CurrentAttribute->Length;
+            CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
+        }
+
+        // Leave room for the existing attributes
+        MaxIndexRootSize -= LengthOfAttributes;
+    }
 
     // Allocate memory for the index root data
     I30IndexRootLength = AttributeDataLength(IndexRootContext->pRecord);
@@ -2146,7 +2165,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     DumpBTree(NewTree);
 
     // Insert the key for the file we're adding
-    Status = NtfsInsertKey(FileReferenceNumber, FilenameAttribute, NewTree->RootNode, CaseSensitive);
+    Status = NtfsInsertKey(NewTree, FileReferenceNumber, FilenameAttribute, NewTree->RootNode, CaseSensitive, MaxIndexRootSize);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to insert key into B-Tree!\n");
@@ -2172,7 +2191,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     // Create the Index Root from the B*Tree
-    Status = CreateIndexRootFromBTree(DeviceExt, NewTree, MaxIndexSize, &NewIndexRoot, &BtreeIndexLength);
+    Status = CreateIndexRootFromBTree(DeviceExt, NewTree, MaxIndexRootSize, &NewIndexRoot, &BtreeIndexLength);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to create Index root from B-Tree!\n");
