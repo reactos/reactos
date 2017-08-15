@@ -3501,7 +3501,7 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
           cmIci.cbSize = sizeof(cmIci);
           cmIci.fMask = CMIC_MASK_ASYNCOK;
           cmIci.hwnd = hWnd;
-          cmIci.lpVerb = MAKEINTRESOURCEA(dwCommandId);
+          cmIci.lpVerb = MAKEINTRESOURCEA(dwCommandId - 1);
           cmIci.nShow = SW_SHOWNORMAL;
 
           hRet = IContextMenu_InvokeCommand(iContext, &cmIci);
