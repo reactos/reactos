@@ -470,8 +470,7 @@ NtGdiSetDIBitsToDeviceInternal(
     IN BOOL bTransformCoordinates,
     IN OPTIONAL HANDLE hcmXform)
 {
-    INT ret = 0;
-    NTSTATUS Status = STATUS_SUCCESS;
+    INT ret;
     PDC pDC = NULL;
     HBITMAP hSourceBitmap = NULL, hMaskBitmap = NULL;
     SURFOBJ *pDestSurf, *pSourceSurf = NULL, *pMaskSurf = NULL;
@@ -483,6 +482,7 @@ NtGdiSetDIBitsToDeviceInternal(
     EXLATEOBJ exlo;
     PPALETTE ppalDIB = NULL;
     LPBITMAPINFO pbmiSafe;
+    BOOL bResult;
 
     if (!Bits) return 0;
 
@@ -498,19 +498,16 @@ NtGdiSetDIBitsToDeviceInternal(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END
-
-    if (!NT_SUCCESS(Status))
-    {
+        ret = 0;
         goto Exit;
     }
+    _SEH2_END
 
     ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
     if (ScanLines == 0)
     {
         DPRINT1("ScanLines == 0\n");
+        ret = 0;
         goto Exit;
     }
 
@@ -518,11 +515,13 @@ NtGdiSetDIBitsToDeviceInternal(
     if (!pDC)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
+        ret = 0;
         goto Exit;
     }
 
     if (pDC->dctype == DC_TYPE_INFO)
     {
+        ret = 0;
         goto Exit;
     }
 
@@ -564,14 +563,14 @@ NtGdiSetDIBitsToDeviceInternal(
     if (!hSourceBitmap)
     {
         EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
-        Status = STATUS_NO_MEMORY;
+        ret = 0;
         goto Exit;
     }
 
     pSourceSurf = EngLockSurface((HSURF)hSourceBitmap);
     if (!pSourceSurf)
     {
-        Status = STATUS_UNSUCCESSFUL;
+        ret = 0;
         goto Exit;
     }
 
@@ -586,13 +585,13 @@ NtGdiSetDIBitsToDeviceInternal(
         if (!hMaskBitmap)
         {
             EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
-            Status = STATUS_NO_MEMORY;
+            ret = 0;
             goto Exit;
         }
         pMaskSurf = EngLockSurface((HSURF)hMaskBitmap);
         if (!pMaskSurf)
         {
-            Status = STATUS_UNSUCCESSFUL;
+            ret = 0;
             goto Exit;
         }
     }
@@ -602,7 +601,7 @@ NtGdiSetDIBitsToDeviceInternal(
     if (!ppalDIB)
     {
         EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
-        Status = STATUS_NO_MEMORY;
+        ret = 0;
         goto Exit;
     }
 
@@ -632,7 +631,7 @@ NtGdiSetDIBitsToDeviceInternal(
     DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n",
            rcDest.left, rcDest.top, rcDest.right, rcDest.bottom,
            ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
-    Status = IntEngBitBlt(pDestSurf,
+    bResult = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
                           pMaskSurf,
                           (CLIPOBJ *)&pDC->co,
@@ -650,11 +649,9 @@ NtGdiSetDIBitsToDeviceInternal(
     /* We're done */
     DC_vFinishBlit(pDC, NULL);
 
+    ret = bResult ? ScanLines : 0;
+
 Exit:
-    if (NT_SUCCESS(Status))
-    {
-        ret = ScanLines;
-    }
 
     if (ppalDIB) PALETTE_ShareUnlockPalette(ppalDIB);
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
