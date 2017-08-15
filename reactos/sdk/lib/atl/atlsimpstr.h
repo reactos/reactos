@@ -162,9 +162,8 @@ public:
         int nLength = StringLength(pszSrc);
         CStringData* pData = pStringMgr->Allocate(nLength, sizeof(XCHAR));
         if (pData == NULL)
-        {
-            throw; // ThrowMemoryException();
-        }
+            ThrowMemoryException();
+
         Attach(pData);
         SetLength(nLength);
         CopyChars(m_pszData, nLength, pszSrc, nLength);
@@ -176,12 +175,12 @@ public:
         _Inout_ IAtlStringMgr* pStringMgr)
     {
         if (pchSrc == NULL && nLength != 0)
-            throw;
+            ThrowInvalidArgException();
 
         CStringData* pData = pStringMgr->Allocate(nLength, sizeof(XCHAR));
         if (pData == NULL)
         {
-            throw; // ThrowMemoryException();
+            ThrowMemoryException();
         }
         Attach(pData);
         SetLength(nLength);
@@ -613,6 +612,11 @@ private:
     static void ThrowMemoryException()
     {
         AtlThrow(E_OUTOFMEMORY);
+    }
+
+    static void ThrowInvalidArgException()
+    {
+        AtlThrow(E_INVALIDARG);
     }
 
 };
