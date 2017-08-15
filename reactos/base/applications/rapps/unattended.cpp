@@ -54,6 +54,7 @@ BOOL CmdParser(LPWSTR lpCmdLine)
             }
         } 
         while (SetupFindNextLine(&Context, &Context));
+        SetupCloseInfFile(InfHandle);
     }
 
     CAvailableApps apps;
