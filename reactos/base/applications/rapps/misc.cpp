@@ -20,8 +20,8 @@ static HANDLE hLog = NULL;
 
 struct ERF
 {
-    int erfOper;
-    int erfType;
+    INT erfOper;
+    INT erfType;
     BOOL fError;
 };
 
@@ -160,7 +160,7 @@ VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
 }
 
 BOOL StartProcess(ATL::CStringW &Path, BOOL Wait)
-{ 
+{
     return StartProcess(const_cast<LPWSTR>(Path.GetString()), Wait);;
 }
 
@@ -498,7 +498,7 @@ UINT CConfigParser::GetInt(const ATL::CStringW& KeyName)
         return FALSE;
 
     // convert it to an actual integer
-    int result = StrToIntW(Buffer.GetString());
+    INT result = StrToIntW(Buffer.GetString());
 
     return (UINT) (result <= 0) ? 0 : result;
 }

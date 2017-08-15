@@ -41,7 +41,7 @@ public:
         SendMessageW(EM_SETSEL, End, End + 1);
     }
 
-    LONG GetTextLen(VOID)
+    LONG GetTextLen()
     {
         GETTEXTLENGTHEX TxtLenStruct;
 
@@ -87,15 +87,15 @@ public:
         LoadedLibrary = LoadLibraryW(L"riched20.dll");
 
         m_hWnd = CreateWindowExW(0,
-            L"RichEdit20W",
-            NULL,
-            WS_CHILD | WS_VISIBLE | ES_MULTILINE |
-            ES_LEFT | ES_READONLY,
-            205, 28, 465, 100,
-            hwndParent,
-            NULL,
-            _AtlBaseModule.GetModuleInstance(),
-            NULL);
+                                 L"RichEdit20W",
+                                 NULL,
+                                 WS_CHILD | WS_VISIBLE | ES_MULTILINE |
+                                 ES_LEFT | ES_READONLY,
+                                 205, 28, 465, 100,
+                                 hwndParent,
+                                 NULL,
+                                 _AtlBaseModule.GetModuleInstance(),
+                                 NULL);
 
         if (m_hWnd)
         {

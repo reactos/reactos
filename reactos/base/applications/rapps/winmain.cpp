@@ -31,11 +31,6 @@ END_OBJECT_MAP()
 CRAppsModule gModule;
 CAtlWinModule gWinModule;
 
-//void *operator new (size_t, void *buf)
-//{
-//    return buf;
-//}
-
 static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 {
     if (bInitialize)
@@ -51,6 +46,7 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 {
     ATL::CStringW szDownloadDir;
+    ZeroMemory(pSettingsInfo, sizeof(SETTINGS_INFO));
 
     pSettingsInfo->bSaveWndPos = TRUE;
     pSettingsInfo->bUpdateAtStart = FALSE;
@@ -81,10 +77,6 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->Top = CW_USEDEFAULT;
     pSettingsInfo->Width = 680;
     pSettingsInfo->Height = 450;
-    pSettingsInfo->Proxy = 0;
-
-    pSettingsInfo->szProxyServer[0] = UNICODE_NULL;
-    pSettingsInfo->szNoProxyFor[0] = UNICODE_NULL;
 }
 
 static BOOL LoadSettings()
@@ -130,7 +122,7 @@ VOID SaveSettings(HWND hwnd)
     }
 }
 
-INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
+INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nShowCmd)
 {
     LPCWSTR szWindowClass = L"ROSAPPMGR";
     HANDLE hMutex;

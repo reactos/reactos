@@ -17,14 +17,12 @@ BOOL CmdParser(LPWSTR lpCmdLine)
     }
 
     // Setup key - single app expected
-    // TODO: add multiple apps
     // TODO: use DB filenames as names because they're shorter
 
-    // app setup
     ATL::CSimpleArray<ATL::CStringW> arrNames;
     if (!StrCmpW(argv[0], CMD_KEY_INSTALL))
     {
-        for (int i = 1; i < argc; ++i)
+        for (INT i = 1; i < argc; ++i)
         {
             arrNames.Add(argv[i]);
         }       
@@ -32,7 +30,6 @@ BOOL CmdParser(LPWSTR lpCmdLine)
     else 
     if (!StrCmpW(argv[0], CMD_KEY_SETUP))
     {
-        //TODO: inf file loading
         HINF InfHandle = SetupOpenInfFileW(argv[1], NULL, INF_STYLE_WIN4, NULL);
         if (InfHandle == INVALID_HANDLE_VALUE)
         {
@@ -40,24 +37,23 @@ BOOL CmdParser(LPWSTR lpCmdLine)
         }
 
         INFCONTEXT Context;
-        if (!SetupFindFirstLineW(InfHandle, L"RAPPS", L"Install", &Context))
+        if (SetupFindFirstLineW(InfHandle, L"RAPPS", L"Install", &Context))
         {
-            return FALSE;
-        }
-
-        WCHAR szName[MAX_PATH];
-        do
-        {
-            if (SetupGetStringFieldW(&Context, 1, szName, MAX_PATH, NULL))
+            WCHAR szName[MAX_PATH];
+            do
             {
-                arrNames.Add(szName);
-            }
-        } 
-        while (SetupFindNextLine(&Context, &Context));
+                if (SetupGetStringFieldW(&Context, 1, szName, MAX_PATH, NULL))
+                {
+                    arrNames.Add(szName);
+                }
+            } while (SetupFindNextLine(&Context, &Context));
+        }
         SetupCloseInfFile(InfHandle);
     }
     else
+    {
         return FALSE;
+    }
 
     CAvailableApps apps;
     apps.EnumAvailableApplications(ENUM_ALL_AVAILABLE, NULL);
@@ -70,4 +66,3 @@ BOOL CmdParser(LPWSTR lpCmdLine)
     
     return FALSE;
 }
-

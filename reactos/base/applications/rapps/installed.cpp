@@ -158,9 +158,9 @@ RemoveAppFromRegistry(INT Index)
 
     if (MessageBoxW(hMainWnd, szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
-        ATL::CStringW::CopyChars(szFullName, 
-                                 MAX_PATH, 
-                                 Info->szKeyName.GetString(), 
+        ATL::CStringW::CopyChars(szFullName,
+                                 MAX_PATH,
+                                 Info->szKeyName.GetString(),
                                  MAX_PATH - wcslen(szFullName));
 
         if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)

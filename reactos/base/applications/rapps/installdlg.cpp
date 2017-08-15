@@ -18,22 +18,22 @@ InstallDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch (Msg)
     {
-        case WM_INITDIALOG:
-        {
-        }
-        break;
+    case WM_INITDIALOG:
+    {
+    }
+    break;
 
-        case WM_COMMAND:
+    case WM_COMMAND:
+    {
+        switch (LOWORD(wParam))
         {
-            switch (LOWORD(wParam))
-            {
-                case IDOK:
-                case IDCANCEL:
-                    EndDialog(hDlg, LOWORD(wParam));
-                break;
-            }
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hDlg, LOWORD(wParam));
+            break;
         }
-        break;
+    }
+    break;
     }
 
     return FALSE;
@@ -49,9 +49,9 @@ InstallApplication(INT Index)
     if (!AppInfo) return FALSE;
 
     DialogBoxW(hInst,
-              MAKEINTRESOURCEW(IDD_INSTALL_DIALOG),
-              hMainWnd,
-              InstallDlgProc);
+               MAKEINTRESOURCEW(IDD_INSTALL_DIALOG),
+               hMainWnd,
+               InstallDlgProc);
 
     return TRUE;
 }

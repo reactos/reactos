@@ -91,7 +91,7 @@ VOID CAvailableApplicationInfo::RetrieveLanguages()
 
     // Parse parameter string
     ATL::CStringW m_szLocale;
-    int iLCID;
+    INT iLCID;
     for (INT i = 0; szBuffer[i] != UNICODE_NULL; ++i)
     {
         if (szBuffer[i] != cDelimiter && szBuffer[i] != L'\n')
@@ -382,7 +382,7 @@ const PAPPLICATION_INFO CAvailableApps::FindInfo(const ATL::CStringW& szAppName)
 ATL::CSimpleArray<PAPPLICATION_INFO> CAvailableApps::FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames)
 {
     ATL::CSimpleArray<PAPPLICATION_INFO> result;
-    for (int i = 0; i < arrAppsNames.GetSize(); ++i)
+    for (INT i = 0; i < arrAppsNames.GetSize(); ++i)
     {
         PAPPLICATION_INFO Info = FindInfo(arrAppsNames[i]);
         if (Info)
@@ -393,17 +393,17 @@ ATL::CSimpleArray<PAPPLICATION_INFO> CAvailableApps::FindInfoList(const ATL::CSi
     return result;
 }
 
-const ATL::CStringW & CAvailableApps::GetFolderPath()
+const ATL::CStringW& CAvailableApps::GetFolderPath()
 {
     return m_szPath;
 }
 
-const ATL::CStringW & CAvailableApps::GetAppPath()
+const ATL::CStringW& CAvailableApps::GetAppPath()
 {
     return m_szAppsPath;
 }
 
-const ATL::CStringW & CAvailableApps::GetCabPath()
+const ATL::CStringW& CAvailableApps::GetCabPath()
 {
     return m_szCabPath;
 }

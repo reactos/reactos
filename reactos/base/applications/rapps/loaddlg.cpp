@@ -46,8 +46,8 @@
 #include "misc.h"
 
 #ifdef USE_CERT_PINNING
-    #define CERT_ISSUER_INFO "BE\r\nGlobalSign nv-sa\r\nGlobalSign Domain Validation CA - SHA256 - G2"
-    #define CERT_SUBJECT_INFO "Domain Control Validated\r\n*.reactos.org"
+#define CERT_ISSUER_INFO "BE\r\nGlobalSign nv-sa\r\nGlobalSign Domain Validation CA - SHA256 - G2"
+#define CERT_SUBJECT_INFO "Domain Control Validated\r\n*.reactos.org"
 #endif
 
 typedef enum
@@ -768,7 +768,7 @@ run:
             DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLInstalling);
             //TODO: issue an install operation separately so that the apps could be downloaded in the background
             WaitForSingleObject(shExInfo.hProcess, INFINITE);
-            CloseHandle(shExInfo.hProcess); 
+            CloseHandle(shExInfo.hProcess);
         }
         else
         {

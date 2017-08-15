@@ -26,7 +26,7 @@
 HWND hListView = NULL;
 
 INT
-GetSystemColorDepth(VOID)
+GetSystemColorDepth()
 {
     DEVMODEW pDevMode;
     INT ColorDepth;
@@ -236,8 +236,7 @@ class CMainToolbar :
         hImageList = ImageList_Create(TOOLBAR_HEIGHT,//GetSystemMetrics(SM_CXSMICON),
                                       TOOLBAR_HEIGHT,//GetSystemMetrics(SM_CYSMICON),
                                       ILC_MASK | GetSystemColorDepth(),
-                                      1,
-                                      1);
+                                      1, 1);
         if (!hImageList)
         {
             /* TODO: Error message */
@@ -354,7 +353,7 @@ class CAppsListView :
     struct SortContext
     {
         CAppsListView * lvw;
-        int iSubItem;
+        INT iSubItem;
     };
 
     BOOL bHasAllChecked;
@@ -845,7 +844,7 @@ private:
 
         RECT r = {0, 0, LOWORD(lParam), HIWORD(lParam)};
         HDWP hdwp = NULL;
-        int count = m_ClientPanel->CountSizableChildren();
+        INT count = m_ClientPanel->CountSizableChildren();
 
         hdwp = BeginDeferWindowPos(count);
         if (hdwp)
