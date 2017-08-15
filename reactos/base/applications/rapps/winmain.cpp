@@ -8,12 +8,10 @@
  *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
  */
 #include "defines.h"
-
 #include "rapps.h"
+#include "unattended.h"
 
-#include <atlbase.h>
 #include <atlcom.h>
-#include <shellapi.h>
 
 HWND hMainWnd;
 HINSTANCE hInst;
@@ -132,39 +130,11 @@ VOID SaveSettings(HWND hwnd)
     }
 }
 
-
-#define CMD_KEY_SETUP L"/SETUP"
-
-// return TRUE if the SETUP key was valid
-BOOL CmdParser(LPWSTR lpCmdLine)
-{
-    INT argc;
-    LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);
-    CAvailableApps apps;
-    PAPPLICATION_INFO appInfo;
-    ATL::CString szName;
-
-    if (!argv || argc < 2 || StrCmpW(argv[0], CMD_KEY_SETUP))
-    {
-        return FALSE;
-    }
-
-    apps.EnumAvailableApplications(ENUM_ALL_AVAILABLE, NULL);
-    appInfo = apps.FindInfo(argv[1]);
-    if (appInfo)
-    {
-        CDownloadManager::DownloadApplication(appInfo, TRUE);
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
 {
     LPCWSTR szWindowClass = L"ROSAPPMGR";
-    HANDLE hMutex = NULL;
-    HACCEL KeyBrd = NULL;
+    HANDLE hMutex;
+    HACCEL KeyBrd;
     MSG Msg;
 
     InitializeAtlModule(hInstance, TRUE);

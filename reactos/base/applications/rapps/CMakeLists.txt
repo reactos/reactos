@@ -17,6 +17,7 @@ list(APPEND SOURCE
     misc.cpp
     settingsdlg.cpp
     winmain.cpp
+    unattended.cpp
     include/rapps.h
     include/available.h
     include/gui.h
@@ -28,6 +29,7 @@ list(APPEND SOURCE
     include/resource.h
     include/rosui.h
     include/winmain.h
+    include/unattended.h
 )
 
 add_definitions(-DUSE_CERT_PINNING)
@@ -36,7 +38,7 @@ add_rc_deps(rapps.rc ${rapps_rc_deps})
 add_executable(rapps ${SOURCE} rapps.rc)
 set_module_type(rapps win32gui UNICODE)
 target_link_libraries(rapps atlnew uuid wine)
-add_importlibs(rapps advapi32 comctl32 gdi32 wininet user32 shell32 shlwapi ole32 msvcrt kernel32 ntdll)
+add_importlibs(rapps advapi32 comctl32 gdi32 wininet user32 shell32 shlwapi ole32 msvcrt kernel32 ntdll setupapi)
 add_pch(rapps include/rapps.h SOURCE)
 add_dependencies(rapps rappsmsg)
 add_message_headers(ANSI rappsmsg.mc)

@@ -379,6 +379,20 @@ const PAPPLICATION_INFO CAvailableApps::FindInfo(const ATL::CStringW& szAppName)
     return NULL;
 }
 
+ATL::CSimpleArray<PAPPLICATION_INFO> CAvailableApps::FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames)
+{
+    ATL::CSimpleArray<PAPPLICATION_INFO> result;
+    for (int i = 0; i < arrAppsNames.GetSize(); ++i)
+    {
+        PAPPLICATION_INFO Info = FindInfo(arrAppsNames[i]);
+        if (Info)
+        {
+            result.Add(Info);
+        }
+    }
+    return result;
+}
+
 const ATL::CStringW & CAvailableApps::GetFolderPath()
 {
     return m_szPath;
@@ -409,109 +423,3 @@ const LPCWSTR CAvailableApps::GetCabPathString()
     return m_szPath.GetString();
 }
 // CAvailableApps
-
-// CConfigParser
-ATL::CStringW CConfigParser::m_szLocaleID;
-ATL::CStringW CConfigParser::m_szCachedINISectionLocale;
-ATL::CStringW CConfigParser::m_szCachedINISectionLocaleNeutral;
-
-CConfigParser::CConfigParser(const ATL::CStringW& FileName) : szConfigPath(GetINIFullPath(FileName))
-{
-    // we don't have cached section strings for the current system language, create them, lazy
-    CacheINILocaleLazy();
-}
-
-ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
-{
-    ATL::CStringW szDir;
-    ATL::CStringW szBuffer;
-
-    GetStorageDirectory(szDir);
-    szBuffer.Format(L"%ls\\rapps\\%ls", szDir, FileName);
-
-    return szBuffer;
-}
-
-VOID CConfigParser::CacheINILocaleLazy()
-{
-    if (m_szLocaleID.IsEmpty())
-    {
-        // TODO: Set default locale if call fails
-        // find out what is the current system lang code (e.g. "0a") and append it to SectionLocale
-        GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
-                       m_szLocaleID.GetBuffer(m_cchLocaleSize), m_cchLocaleSize);
-
-        m_szLocaleID.ReleaseBuffer();
-        m_szCachedINISectionLocale = L"Section." + m_szLocaleID;
-
-        // turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part
-        m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale + m_szLocaleID.Right(2);
-    }
-}
-
-const ATL::CStringW& CConfigParser::GetLocale()
-{
-    CacheINILocaleLazy();
-    return m_szLocaleID;
-}
-
-INT CConfigParser::GetLocaleSize()
-{
-    return m_cchLocaleSize;
-}
-
-UINT CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
-{
-    DWORD dwResult;
-
-    LPWSTR ResultStringBuffer = ResultString.GetBuffer(MAX_PATH);
-    // 1st - find localized strings (e.g. "Section.0c0a")
-    dwResult = GetPrivateProfileStringW(m_szCachedINISectionLocale.GetString(),
-                                        KeyName.GetString(),
-                                        NULL,
-                                        ResultStringBuffer,
-                                        MAX_PATH,
-                                        szConfigPath.GetString());
-
-    if (!dwResult)
-    {
-        // 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a")
-        dwResult = GetPrivateProfileStringW(m_szCachedINISectionLocaleNeutral.GetString(),
-                                            KeyName.GetString(),
-                                            NULL,
-                                            ResultStringBuffer,
-                                            MAX_PATH,
-                                            szConfigPath.GetString());
-        if (!dwResult)
-        {
-            // 3rd - if they weren't present fallback to standard english strings (just "Section")
-            dwResult = GetPrivateProfileStringW(L"Section",
-                                                KeyName.GetString(),
-                                                NULL,
-                                                ResultStringBuffer,
-                                                MAX_PATH,
-                                                szConfigPath.GetString());
-        }
-    }
-
-    ResultString.ReleaseBuffer();
-    return (dwResult != 0 ? TRUE : FALSE);
-}
-
-UINT CConfigParser::GetInt(const ATL::CStringW& KeyName)
-{
-    ATL::CStringW Buffer;
-
-    // grab the text version of our entry
-    if (!GetString(KeyName, Buffer))
-        return FALSE;
-
-    if (Buffer.IsEmpty())
-        return FALSE;
-
-    // convert it to an actual integer
-    int result = StrToIntW(Buffer.GetString());
-
-    return (UINT) (result <= 0) ? 0 : result;
-}
-// CConfigParser

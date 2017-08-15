@@ -793,7 +793,7 @@ end:
     return 0;
 }
 
-BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList)
+BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList, BOOL modal)
 {
     if (AppsList.GetSize() == 0)
     {
@@ -804,7 +804,7 @@ BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLI
     AppsToInstallList = AppsList;
 
     // Create a dialog and issue a download process
-    LaunchDownloadDialog(FALSE);
+    LaunchDownloadDialog(modal);
 
     return TRUE;
 }

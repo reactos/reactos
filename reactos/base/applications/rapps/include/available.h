@@ -1,8 +1,10 @@
 #pragma once
+
 #include <windef.h>
 #include <atlstr.h> 
 #include <atlsimpcoll.h>
 #include <atlcoll.h>
+#include "misc.h"
 
 /* EnumType flags for EnumAvailableApplications */
 enum AvailableCategories
@@ -41,31 +43,6 @@ typedef enum LICENSE_TYPE
     Max = Trial,
     Min = None
 } *PLICENSE_TYPE;
-
-class CConfigParser
-{
-    // Locale names cache
-    const static INT m_cchLocaleSize = 5;
-
-    static ATL::CStringW m_szLocaleID;
-    static ATL::CStringW m_szCachedINISectionLocale;
-    static ATL::CStringW m_szCachedINISectionLocaleNeutral;
-
-    const LPCWSTR STR_VERSION_CURRENT = L"CURRENT";
-    const ATL::CStringW szConfigPath;
-
-    static ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName);
-    static VOID CacheINILocaleLazy();
-
-public:
-    static const ATL::CStringW& GetLocale();
-    static INT CConfigParser::GetLocaleSize();
-
-    CConfigParser(const ATL::CStringW& FileName);
-
-    UINT GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString);
-    UINT GetInt(const ATL::CStringW& KeyName);
-};
 
 typedef struct APPLICATION_INFO
 {
@@ -142,6 +119,7 @@ public:
     BOOL UpdateAppsDB();
     BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
     const PAPPLICATION_INFO FindInfo(const ATL::CStringW& szAppName);
+    ATL::CSimpleArray<PAPPLICATION_INFO> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames);
     const ATL::CStringW& GetFolderPath();
     const ATL::CStringW& GetAppPath();
     const ATL::CStringW& GetCabPath();
