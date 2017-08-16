@@ -1,5 +1,5 @@
 # Functions exported by Win2003 SP1
-@ stub CMP_GetBlockedDriverInfo
+@ stdcall CMP_GetBlockedDriverInfo(wstr ptr long ptr)
 @ stdcall CMP_GetServerSideDeviceInstallFlags(ptr long ptr)
 @ stdcall CMP_Init_Detection(long)
 @ stdcall CMP_RegisterNotification(ptr ptr long ptr)

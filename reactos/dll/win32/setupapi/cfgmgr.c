@@ -165,6 +165,56 @@ GetRegistryPropertyType(
 
 
 /***********************************************************************
+ * CMP_GetBlockedDriverInfo [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CMP_GetBlockedDriverInfo(
+    _Out_opt_ LPWSTR pszNames,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    ULONG ulTransferLength;
+    CONFIGRET ret;
+
+    TRACE("CMP_GetBlockedDriverInfo(%p %p %lx %p)\n",
+          pszNames, pulLength, ulFlags, hMachine);
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    ulTransferLength = *pulLength;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetBlockedDriverInfo(BindingHandle,
+                                       (PBYTE)pszNames,
+                                       &ulTransferLength,
+                                       pulLength,
+                                       ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CMP_GetServerSideDeviceInstallFlags [SETUPAPI.@]
  */
 CONFIGRET
@@ -172,7 +222,7 @@ WINAPI
 CMP_GetServerSideDeviceInstallFlags(
     _Out_ PULONG pulSSDIFlags,
     _In_ ULONG ulFlags,
-    _In_ HMACHINE hMachine)
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
@@ -444,7 +494,7 @@ CMP_WaitNoPendingInstallEvents(
 CONFIGRET
 WINAPI
 CMP_WaitServicesAvailable(
-    _In_ HMACHINE hMachine)
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret = CR_SUCCESS;
@@ -452,8 +502,17 @@ CMP_WaitServicesAvailable(
 
     TRACE("CMP_WaitServicesAvailable(%p)\n", hMachine);
 
-    if (!PnpGetLocalHandles(&BindingHandle, NULL))
-        return CR_FAILURE;
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
 
     RpcTryExcept
     {
