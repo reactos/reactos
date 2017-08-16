@@ -2253,6 +2253,18 @@ DWORD WINAPI SymSetOptions(_In_ DWORD);
 
 BOOL WINAPI SymSetParentWindow(_In_ HWND);
 
+BOOL
+IMAGEAPI
+SymSrvIsStore(
+  _In_opt_ HANDLE hProcess,
+  _In_ PCSTR path);
+
+BOOL
+IMAGEAPI
+SymSrvIsStoreW(
+    _In_opt_ HANDLE hProcess,
+    _In_ PCWSTR path);
+
 /*************************
  * Version, global stuff *
  *************************/
@@ -2543,12 +2555,6 @@ SymUnDName(
   _In_ DWORD UnDecNameLength);
 
 BOOL WINAPI SymUnloadModule(_In_ HANDLE, _In_ DWORD);
-
-BOOL
-IMAGEAPI
-SymSrvIsStore(
-  _In_opt_ HANDLE hProcess,
-  _In_ PCSTR path);
 
 #endif
 
