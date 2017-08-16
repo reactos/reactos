@@ -519,8 +519,6 @@ ReadCluster:
 PrintFileNotFound:
     mov  si, offset msgFreeLdr  // FreeLdr not found message
     call PutChars               // Display it
-    mov  si, offset msgAnyKey   // Press any key message
-    call PutChars               // Display it
 
     jmp  Reboot
 
