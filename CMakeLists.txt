@@ -250,6 +250,7 @@ else()
 
     add_dependency_header()
 
+    add_subdirectory(sdk/include/ndk/tests)
     add_subdirectory(sdk/include/xdk)
     add_subdirectory(sdk/include/psdk)
     add_subdirectory(sdk/include/dxsdk)
