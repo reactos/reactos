@@ -735,6 +735,23 @@ CONFIGRET WINAPI CM_Add_ID_ExW(
 
 
 /***********************************************************************
+ * CM_Add_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Add_Range(
+    _In_ DWORDLONG ullStartValue,
+    _In_ DWORDLONG ullEndValue,
+    _In_ RANGE_LIST rlh,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Add_Range(%I64u %I64u %p %lx)\n",
+          ullStartValue, ullEndValue, rlh, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Add_Res_Des [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Add_Res_Des(
@@ -1105,6 +1122,23 @@ CONFIGRET WINAPI CM_Delete_DevNode_Key_Ex(
 
 
 /***********************************************************************
+ * CM_Delete_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Delete_Range(
+    _In_ DWORDLONG ullStartValue,
+    _In_ DWORDLONG ullEndValue,
+    _In_ RANGE_LIST rlh,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Delete_Range(%I64u %I64u %p %lx)\n",
+          ullStartValue, ullEndValue, rlh, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Disable_DevNode [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Disable_DevNode(
@@ -1200,6 +1234,22 @@ CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
     HeapFree(GetProcessHeap(), 0, pMachine);
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Dup_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Dup_Range_List(
+    _In_ RANGE_LIST rlhOld,
+    _In_ RANGE_LIST rlhNew,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Dup_Range_List(%p %p %lx)\n",
+          rlhOld, rlhNew, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -1466,6 +1516,44 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Find_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Find_Range(
+    _Out_ PDWORDLONG pullStart,
+    _In_ DWORDLONG ullStart,
+    _In_ ULONG ulLength,
+    _In_ DWORDLONG ullAlignment,
+    _In_ DWORDLONG ullEnd,
+    _In_ RANGE_LIST rlh,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Find_Range(%p %I64u %lu %I64u %I64u %p %lx)\n",
+          pullStart, ullStart, ulLength, ullAlignment, ullEnd, rlh, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_First_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_First_Range(
+    _In_ RANGE_LIST rlh,
+    _Out_ PDWORDLONG pullStart,
+    _Out_ PDWORDLONG pullEnd,
+    _Out_ PRANGE_ELEMENT preElement,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_First_Range(%p %p %p %p %lx)\n",
+          rlh, pullStart, pullEnd, preElement, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -4193,6 +4281,40 @@ WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
 
 
 /***********************************************************************
+ * CM_Intersect_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Intersect_Range_List(
+    _In_ RANGE_LIST rlhOld1,
+    _In_ RANGE_LIST rlhOld2,
+    _In_ RANGE_LIST rlhNew,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Intersect_Range_List(%p %p %p %lx)\n",
+          rlhOld1, rlhOld2, rlhNew, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Invert_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Invert_Range_List(
+    _In_ RANGE_LIST rlhOld,
+    _In_ RANGE_LIST rlhNew,
+    _In_ DWORDLONG ullMaxValue,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Invert_Range_List(%p %p %I64u %lx)\n",
+          rlhOld, rlhNew, ullMaxValue, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Is_Dock_Station_Present [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Is_Dock_Station_Present(
@@ -4433,6 +4555,23 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
 
 
 /***********************************************************************
+ * CM_Merge_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Merge_Range_List(
+    _In_ RANGE_LIST rlhOld1,
+    _In_ RANGE_LIST rlhOld2,
+    _In_ RANGE_LIST rlhNew,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Merge_Range_List(%p %p %p %lx)\n",
+          rlhOld1, rlhOld2, rlhNew, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Modify_Res_Des [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Modify_Res_Des(
@@ -4534,6 +4673,23 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Next_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Next_Range(
+    _Inout_ PRANGE_ELEMENT preElement,
+    _Out_ PDWORDLONG pullStart,
+    _Out_ PDWORDLONG pullEnd,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Next_Range(%p %p %p %lx)\n",
+          preElement, pullStart, pullEnd, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -6106,6 +6262,23 @@ CONFIGRET WINAPI CM_Setup_DevNode_Ex(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Test_Range_Available [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Test_Range_Available(
+    _In_ DWORDLONG ullStartValue,
+    _In_ DWORDLONG ullEndValue,
+    _In_ RANGE_LIST rlh,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Test_Range_Available(%I64u %I64u %p %lx)\n",
+          ullStartValue, ullEndValue, rlh, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 

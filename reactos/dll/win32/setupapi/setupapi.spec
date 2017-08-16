@@ -13,7 +13,7 @@
 @ stdcall CM_Add_IDW(ptr wstr long)
 @ stdcall CM_Add_ID_ExA(ptr str long ptr)
 @ stdcall CM_Add_ID_ExW(ptr wstr long ptr)
-@ stub CM_Add_Range
+@ stdcall CM_Add_Range(int64 int64 ptr long)
 @ stdcall CM_Add_Res_Des(ptr ptr long ptr long long)
 @ stdcall CM_Add_Res_Des_Ex(ptr ptr long ptr long long long)
 @ stdcall CM_Connect_MachineA(str ptr)
@@ -27,13 +27,13 @@
 @ stdcall CM_Delete_Class_Key_Ex(ptr long long)
 @ stdcall CM_Delete_DevNode_Key(long long long)
 @ stdcall CM_Delete_DevNode_Key_Ex(long long long ptr)
-@ stub CM_Delete_Range
+@ stdcall CM_Delete_Range(int64 int64 ptr long)
 @ stub CM_Detect_Resource_Conflict
 @ stub CM_Detect_Resource_Conflict_Ex
 @ stdcall CM_Disable_DevNode(long long)
 @ stdcall CM_Disable_DevNode_Ex(long long ptr)
 @ stdcall CM_Disconnect_Machine(long)
-@ stub CM_Dup_Range_List
+@ stdcall CM_Dup_Range_List(ptr ptr long)
 @ stdcall CM_Enable_DevNode(long long)
 @ stdcall CM_Enable_DevNode_Ex(long long ptr)
 @ stdcall CM_Enumerate_Classes(long ptr long)
@@ -42,8 +42,8 @@
 @ stdcall CM_Enumerate_EnumeratorsW(long wstr ptr long)
 @ stdcall CM_Enumerate_Enumerators_ExA(long str ptr long long)
 @ stdcall CM_Enumerate_Enumerators_ExW(long wstr ptr long long)
-@ stub CM_Find_Range
-@ stub CM_First_Range
+@ stdcall CM_Find_Range(ptr int64 long int64 int64 ptr long)
+@ stdcall CM_First_Range(ptr ptr ptr ptr long)
 @ stdcall CM_Free_Log_Conf(ptr long)
 @ stdcall CM_Free_Log_Conf_Ex(ptr long ptr)
 @ stdcall CM_Free_Log_Conf_Handle(ptr)
@@ -133,8 +133,8 @@
 @ stdcall CM_Get_Sibling_Ex(ptr long long long)
 @ stdcall CM_Get_Version()
 @ stdcall CM_Get_Version_Ex(long)
-@ stub CM_Intersect_Range_List
-@ stub CM_Invert_Range_List
+@ stdcall CM_Intersect_Range_List(ptr ptr ptr long)
+@ stdcall CM_Invert_Range_List(ptr ptr int64 long)
 @ stdcall CM_Is_Dock_Station_Present(ptr)
 @ stdcall CM_Is_Dock_Station_Present_Ex(ptr long)
 @ stdcall CM_Is_Version_Available(long)
@@ -143,12 +143,12 @@
 @ stdcall CM_Locate_DevNodeW(ptr wstr long)
 @ stdcall CM_Locate_DevNode_ExA(ptr str long long)
 @ stdcall CM_Locate_DevNode_ExW(ptr wstr long long)
-@ stub CM_Merge_Range_List
+@ stdcall CM_Merge_Range_List(ptr ptr ptr long)
 @ stdcall CM_Modify_Res_Des(ptr ptr long ptr long long)
 @ stdcall CM_Modify_Res_Des_Ex(ptr ptr long ptr long long long)
 @ stdcall CM_Move_DevNode(long long long)
 @ stdcall CM_Move_DevNode_Ex(long long long long)
-@ stub CM_Next_Range
+@ stdcall CM_Next_Range(ptr ptr ptr long)
 @ stdcall CM_Open_Class_KeyA(ptr str long long ptr long)
 @ stdcall CM_Open_Class_KeyW(ptr wstr long long ptr long)
 @ stdcall CM_Open_Class_Key_ExA(ptr str long long ptr long long)
@@ -200,7 +200,7 @@
 @ stdcall CM_Set_HW_Prof_Flags_ExW(wstr long long long long)
 @ stdcall CM_Setup_DevNode(long long)
 @ stdcall CM_Setup_DevNode_Ex(long long long)
-@ stub CM_Test_Range_Available
+@ stdcall CM_Test_Range_Available(int64 int64 ptr long)
 @ stdcall CM_Uninstall_DevNode(long long)
 @ stdcall CM_Uninstall_DevNode_Ex(long long long)
 @ stdcall CM_Unregister_Device_InterfaceA(str long)
