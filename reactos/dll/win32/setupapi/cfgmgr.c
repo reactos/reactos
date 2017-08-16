@@ -69,6 +69,22 @@ typedef struct _NOTIFY_DATA
 #define NOTIFY_MAGIC 0x44556677
 
 
+typedef struct _INTERNAL_RANGE_ELEMENT
+{
+    struct _INTERNAL_RANGE_ELEMENT *Next;
+    ULONG ulDummy;
+} INTERNAL_RANGE_ELEMENT, *PINTERNAL_RANGE_ELEMENT;
+
+typedef struct _INTERNAL_RANGE_LIST
+{
+    ULONG ulMagic;
+    PINTERNAL_RANGE_ELEMENT Current;
+    PINTERNAL_RANGE_ELEMENT First;
+} INTERNAL_RANGE_LIST, *PINTERNAL_RANGE_LIST;
+
+#define RANGE_LIST_MAGIC 0x33445566
+
+
 static BOOL GuidToString(LPGUID Guid, LPWSTR String)
 {
     LPWSTR lpString;
@@ -911,6 +927,39 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
 
 
 /***********************************************************************
+ * CM_Create_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Create_Range_List(
+    _Out_ PRANGE_LIST prlh,
+    _In_ ULONG ulFlags)
+{
+    PINTERNAL_RANGE_LIST pRangeList = NULL;
+
+    FIXME("CM_Create_Range_List(%p %lx)\n", prlh, ulFlags);
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (prlh == NULL)
+        return CR_INVALID_POINTER;
+
+    pRangeList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(INTERNAL_RANGE_LIST));
+    if (pRangeList == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    pRangeList->ulMagic = RANGE_LIST_MAGIC;
+
+    // TODO: More initialization
+
+    *prlh = (RANGE_LIST)pRangeList;
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
  * CM_Delete_Class_Key [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Delete_Class_Key(
@@ -1446,6 +1495,35 @@ CONFIGRET WINAPI CM_Free_Log_Conf_Handle(
         return CR_INVALID_LOG_CONF;
 
     HeapFree(GetProcessHeap(), 0, pLogConfInfo);
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Free_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Free_Range_List(
+    _In_ RANGE_LIST RangeList,
+    _In_ ULONG ulFlags)
+{
+    PINTERNAL_RANGE_LIST pRangeList;
+
+    FIXME("CM_Free_Range_List(%p %lx)\n", RangeList, ulFlags);
+
+    pRangeList = (PINTERNAL_RANGE_LIST)RangeList;
+
+    if (pRangeList == NULL || pRangeList->ulMagic != RANGE_LIST_MAGIC)
+        return CR_INVALID_RANGE_LIST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    // TODO: Free the list of ranges
+
+    HeapFree(GetProcessHeap(), 0, pRangeList);
 
     return CR_SUCCESS;
 }

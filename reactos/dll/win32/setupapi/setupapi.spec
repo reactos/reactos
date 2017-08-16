@@ -22,7 +22,7 @@
 @ stdcall CM_Create_DevNodeW(ptr wstr long long)
 @ stdcall CM_Create_DevNode_ExA(ptr str long long long)
 @ stdcall CM_Create_DevNode_ExW(ptr wstr long long long)
-@ stub CM_Create_Range_List
+@ stdcall CM_Create_Range_List(ptr long)
 @ stdcall CM_Delete_Class_Key(ptr long)
 @ stdcall CM_Delete_Class_Key_Ex(ptr long long)
 @ stdcall CM_Delete_DevNode_Key(long long long)
@@ -47,7 +47,7 @@
 @ stdcall CM_Free_Log_Conf(ptr long)
 @ stdcall CM_Free_Log_Conf_Ex(ptr long ptr)
 @ stdcall CM_Free_Log_Conf_Handle(ptr)
-@ stub CM_Free_Range_List
+@ stdcall CM_Free_Range_List(ptr long)
 @ stdcall CM_Free_Res_Des(ptr ptr long)
 @ stdcall CM_Free_Res_Des_Ex(ptr ptr long long)
 @ stdcall CM_Free_Res_Des_Handle(ptr)
