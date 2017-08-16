@@ -5424,7 +5424,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType;
-                goto Cleanup; // FIXME
+                goto Cleanup;
             }
 
             glyph = face->glyph;
@@ -5437,7 +5437,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType;
-                goto Cleanup; // FIXME
+                goto Cleanup;
             }
 
             /* retrieve kerning distance and move pen position */
@@ -5598,6 +5598,7 @@ GreExtTextOutW(
 
             if (dc->dctype == DCTYPE_DIRECT)
                 MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+
             if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
             {
                IntUpdateBoundsRect(dc, &DestRect);
@@ -5790,6 +5791,7 @@ GreExtTextOutW(
     EXLATEOBJ_vCleanup(&exloDst2RGB);
 
 Cleanup:
+
     DC_vFinishBlit(dc, NULL);
 
     if (TextObj != NULL)
