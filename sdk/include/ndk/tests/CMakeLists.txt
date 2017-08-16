@@ -16,3 +16,5 @@ add_library(ndk_tests
     win81_x86.c
     win10_x86.c)
 endif()
+
+add_dependencies(ndk_tests xdk psdk bugcodes)
