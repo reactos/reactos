@@ -47,7 +47,9 @@ public:
 
   PenAlignment GetAlignment(VOID)
   {
-    return PenAlignmentCenter;
+    PenAlignment penAlignment;
+    SetStatus(DllExports::GdipGetPenMode(pen, &penAlignment));
+    return penAlignment;
   }
 
   Brush *GetBrush(VOID)
@@ -88,7 +90,9 @@ public:
 
   DashCap GetDashCap(VOID)
   {
-    return DashCapFlat;
+    DashCap dashCap;
+    SetStatus(DllExports::GdipGetPenDashCap197819(pen, &dashCap));
+    return dashCap;
   }
 
   REAL GetDashOffset(VOID)
@@ -112,22 +116,28 @@ public:
 
   DashStyle GetDashStyle(VOID)
   {
-    return DashStyleSolid;
+    DashStyle dashStyle;
+    SetStatus(DllExports::GdipGetPenDashStyle(pen, &dashStyle));
+    return dashStyle;
   }
 
   LineCap GetEndCap(VOID)
   {
-    return LineCapFlat;
+    LineCap endCap;
+    SetStatus(DllExports::GdipGetPenEndCap(pen, &endCap));
+    return endCap;
   }
 
   Status GetLastStatus(VOID)
   {
-    return NotImplemented;
+    return status;
   }
 
   LineJoin GetLineJoin(VOID)
   {
-    return LineJoinMiter;
+    LineJoin lineJoin;
+    SetStatus(DllExports::GdipGetPenLineJoin(pen, &lineJoin));
+    return lineJoin;
   }
 
   REAL GetMiterLimit(VOID)
@@ -139,12 +149,16 @@ public:
 
   PenType GetPenType(VOID)
   {
-    return PenTypeSolidColor;
+    PenType type;
+    SetStatus(DllExports::GdipGetPenFillType(pen, &type));
+    return type;
   }
 
   LineCap GetStartCap(VOID)
   {
-    return LineCapFlat;
+    LineCap startCap;
+    SetStatus(DllExports::GdipGetPenStartCap(pen, &startCap));
+    return startCap;
   }
 
   Status GetTransform(Matrix *matrix)
@@ -231,17 +245,17 @@ public:
 
   Status SetEndCap(LineCap endCap)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenEndCap(pen, endCap));
   }
 
   Status SetLineCap(LineCap startCap, LineCap endCap, DashCap dashCap)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenLineCap197819(pen, startCap, endCap, dashCap));
   }
 
   Status SetLineJoin(LineJoin lineJoin)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenLineJoin(pen, lineJoin));
   }
 
   Status SetMiterLimit(REAL miterLimit)
@@ -251,7 +265,7 @@ public:
 
   Status SetStartCap(LineCap startCap)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenStartCap(pen, startCap));
   }
 
   Status SetTransform(const Matrix *matrix)
