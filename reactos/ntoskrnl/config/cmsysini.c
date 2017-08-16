@@ -2081,14 +2081,14 @@ CmpReleaseTwoKcbLockByKey(IN ULONG ConvKey1,
     /* Get hash indexes */
     Index1 = GET_HASH_INDEX(ConvKey1);
     Index2 = GET_HASH_INDEX(ConvKey2);
-    ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey2).Owner == KeGetCurrentThread()) ||
+    ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey2)->Owner == KeGetCurrentThread()) ||
            (CmpTestRegistryLockExclusive()));
 
     /* See which one is highest */
     if (Index1 < Index2)
     {
         /* Grab them in the proper order */
-        ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey1).Owner == KeGetCurrentThread()) ||
+        ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey1)->Owner == KeGetCurrentThread()) ||
                (CmpTestRegistryLockExclusive()));
         CmpReleaseKcbLockByKey(ConvKey2);
         CmpReleaseKcbLockByKey(ConvKey1);
@@ -2098,7 +2098,7 @@ CmpReleaseTwoKcbLockByKey(IN ULONG ConvKey1,
         /* Release the first one first, then the second */
         if (Index1 != Index2)
         {
-            ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey1).Owner == KeGetCurrentThread()) ||
+            ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey1)->Owner == KeGetCurrentThread()) ||
                    (CmpTestRegistryLockExclusive()));
             CmpReleaseKcbLockByKey(ConvKey1);
         }

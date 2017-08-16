@@ -82,7 +82,7 @@ CmpRemoveKeyHash(IN PCM_KEY_HASH KeyHash)
     ASSERT_VALID_HASH(KeyHash);
 
     /* Lookup all the keys in this index entry */
-    Prev = &GET_HASH_ENTRY(CmpCacheTable, KeyHash->ConvKey).Entry;
+    Prev = &GET_HASH_ENTRY(CmpCacheTable, KeyHash->ConvKey)->Entry;
     while (TRUE)
     {
         /* Save the current one and make sure it's valid */
@@ -189,7 +189,7 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
     CmpAcquireNcbLockExclusiveByKey(ConvKey);
 
     /* Get the hash entry */
-    HashEntry = GET_HASH_ENTRY(CmpNameCacheTable, ConvKey).Entry;
+    HashEntry = GET_HASH_ENTRY(CmpNameCacheTable, ConvKey)->Entry;
     while (HashEntry)
     {
         /* Get the current NCB */
@@ -290,8 +290,8 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
 
         /* Insert the name in the hash table */
         HashEntry = &Ncb->NameHash;
-        HashEntry->NextHash = GET_HASH_ENTRY(CmpNameCacheTable, ConvKey).Entry;
-        GET_HASH_ENTRY(CmpNameCacheTable, ConvKey).Entry = HashEntry;
+        HashEntry->NextHash = GET_HASH_ENTRY(CmpNameCacheTable, ConvKey)->Entry;
+        GET_HASH_ENTRY(CmpNameCacheTable, ConvKey)->Entry = HashEntry;
     }
 
     /* Release NCB lock */
@@ -327,7 +327,7 @@ CmpDereferenceNameControlBlockWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
     if (!(--Ncb->RefCount))
     {
         /* Find the NCB in the table */
-        Next = &GET_HASH_ENTRY(CmpNameCacheTable, Ncb->ConvKey).Entry;
+        Next = &GET_HASH_ENTRY(CmpNameCacheTable, Ncb->ConvKey)->Entry;
         while (TRUE)
         {
             /* Check the current entry */

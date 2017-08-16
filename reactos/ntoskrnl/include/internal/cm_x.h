@@ -18,7 +18,7 @@
 #define GET_HASH_INDEX(ConvKey)                                     \
     GET_HASH_KEY(ConvKey) % CmpHashTableSize
 #define GET_HASH_ENTRY(Table, ConvKey)                              \
-    (Table[GET_HASH_INDEX(ConvKey)])
+    (&Table[GET_HASH_INDEX(ConvKey)])
 #define ASSERT_VALID_HASH(h)                                        \
     ASSERT_KCB_VALID(CONTAINING_RECORD((h), CM_KEY_CONTROL_BLOCK, KeyHash))
 
@@ -81,37 +81,37 @@
 //
 #define CmpIsKcbLockedExclusive(k)                                  \
     (GET_HASH_ENTRY(CmpCacheTable,                                  \
-                    (k)->ConvKey).Owner == KeGetCurrentThread())
-
-//
-// Exclusively acquires a KCB
-//
-#define CmpAcquireKcbLockExclusive(k)                               \
-{                                                                   \
-    ExAcquirePushLockExclusive(&GET_HASH_ENTRY(CmpCacheTable,       \
-                                              (k)->ConvKey).Lock);  \
-    GET_HASH_ENTRY(CmpCacheTable,                                   \
-                   (k)->ConvKey).Owner = KeGetCurrentThread();      \
-}
+                    (k)->ConvKey)->Owner == KeGetCurrentThread())
 
 //
 // Exclusively acquires a KCB by index
 //
-#define CmpAcquireKcbLockExclusiveByIndex(i)                        \
-{                                                                   \
-    ExAcquirePushLockExclusive(&CmpCacheTable[(i)].Lock);           \
-    CmpCacheTable[(i)].Owner = KeGetCurrentThread();                \
+FORCEINLINE
+VOID
+CmpAcquireKcbLockExclusiveByIndex(ULONG Index)
+{
+    ExAcquirePushLockExclusive(&CmpCacheTable[Index].Lock);
+    CmpCacheTable[Index].Owner = KeGetCurrentThread();
+}
+
+//
+// Exclusively acquires a KCB
+//
+FORCEINLINE
+VOID
+CmpAcquireKcbLockExclusive(PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    CmpAcquireKcbLockExclusiveByIndex(GET_HASH_INDEX(Kcb->ConvKey));
 }
 
 //
 // Exclusively acquires a KCB by key
 //
-#define CmpAcquireKcbLockExclusiveByKey(k)                          \
-{                                                                   \
-    ExAcquirePushLockExclusive(&GET_HASH_ENTRY(CmpCacheTable,       \
-                                              (k)).Lock);           \
-    GET_HASH_ENTRY(CmpCacheTable,                                   \
-                   (k)).Owner = KeGetCurrentThread();               \
+FORCEINLINE
+VOID
+CmpAcquireKcbLockExclusiveByKey(IN ULONG ConvKey)
+{
+    CmpAcquireKcbLockExclusiveByIndex(GET_HASH_INDEX(ConvKey));
 }
 
 
@@ -121,7 +121,7 @@
 #define CmpAcquireKcbLockShared(k)                                  \
 {                                                                   \
     ExAcquirePushLockShared(&GET_HASH_ENTRY(CmpCacheTable,          \
-                                            (k)->ConvKey).Lock);    \
+                                            (k)->ConvKey)->Lock);    \
 }
 
 //
@@ -141,42 +141,44 @@ CmpTryToConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
 {
     ASSERT(CmpIsKcbLockedExclusive(k) == FALSE);
     if (ExConvertPushLockSharedToExclusive(
-            &GET_HASH_ENTRY(CmpCacheTable, k->ConvKey).Lock))
+            &GET_HASH_ENTRY(CmpCacheTable, k->ConvKey)->Lock))
     {
         GET_HASH_ENTRY(CmpCacheTable,
-                       k->ConvKey).Owner = KeGetCurrentThread();
+                       k->ConvKey)->Owner = KeGetCurrentThread();
         return TRUE;
     }
     return FALSE;
 }
 
 //
-// Releases an exlusively or shared acquired KCB
+// Releases an exlusively or shared acquired KCB by index
 //
-#define CmpReleaseKcbLock(k)                                        \
-{                                                                   \
-    GET_HASH_ENTRY(CmpCacheTable, (k)->ConvKey).Owner = NULL;       \
-    ExReleasePushLock(&GET_HASH_ENTRY(CmpCacheTable,                \
-                                      (k)->ConvKey).Lock);          \
+FORCEINLINE
+VOID
+CmpReleaseKcbLockByIndex(ULONG Index)
+{
+    CmpCacheTable[Index].Owner = NULL;
+    ExReleasePushLock(&CmpCacheTable[Index].Lock);
 }
 
 //
-// Releases an exlusively or shared acquired KCB by index
+// Releases an exlusively or shared acquired KCB
 //
-#define CmpReleaseKcbLockByIndex(i)                                 \
-{                                                                   \
-    CmpCacheTable[(i)].Owner = NULL;                                \
-    ExReleasePushLock(&CmpCacheTable[(i)].Lock);                    \
+FORCEINLINE
+VOID
+CmpReleaseKcbLock(PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    CmpReleaseKcbLockByIndex(GET_HASH_INDEX(Kcb->ConvKey));
 }
 
 //
 // Releases an exlusively or shared acquired KCB by key
 //
-#define CmpReleaseKcbLockByKey(k)                                   \
-{                                                                   \
-    GET_HASH_ENTRY(CmpCacheTable, (k)).Owner = NULL;                \
-    ExReleasePushLock(&GET_HASH_ENTRY(CmpCacheTable,                \
-                                      (k)).Lock);                   \
+FORCEINLINE
+VOID
+CmpReleaseKcbLockByKey(ULONG ConvKey)
+{
+    CmpReleaseKcbLockByIndex(GET_HASH_INDEX(ConvKey));
 }
 
 //
@@ -186,7 +188,7 @@ FORCEINLINE
 VOID
 CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
 {
-    ASSERT(CmpIsKcbLockedExclusive(k) == FALSE);  
+    ASSERT(CmpIsKcbLockedExclusive(k) == FALSE);
     CmpReleaseKcbLock(k);
     CmpAcquireKcbLockExclusive(k);
 }
@@ -197,7 +199,7 @@ CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
 #define CmpAcquireNcbLockExclusive(n)                               \
 {                                                                   \
     ExAcquirePushLockExclusive(&GET_HASH_ENTRY(CmpNameCacheTable,   \
-                                              (n)->ConvKey).Lock);  \
+                                              (n)->ConvKey)->Lock);  \
 }
 
 //
@@ -206,7 +208,7 @@ CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
 #define CmpAcquireNcbLockExclusiveByKey(k)                          \
 {                                                                   \
     ExAcquirePushLockExclusive(&GET_HASH_ENTRY(CmpNameCacheTable,   \
-                                               (k)).Lock);          \
+                                               (k))->Lock);          \
 }
 
 //
@@ -215,7 +217,7 @@ CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
 #define CmpReleaseNcbLock(k)                                        \
 {                                                                   \
     ExReleasePushLock(&GET_HASH_ENTRY(CmpNameCacheTable,            \
-                                     (k)->ConvKey).Lock);           \
+                                     (k)->ConvKey)->Lock);           \
 }
 
 //
@@ -224,15 +226,15 @@ CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
 #define CmpReleaseNcbLockByKey(k)                                   \
 {                                                                   \
     ExReleasePushLock(&GET_HASH_ENTRY(CmpNameCacheTable,            \
-                                      (k)).Lock);                   \
+                                      (k))->Lock);                   \
 }
 
 //
-// Asserts that either the registry or the hash entry is locked
+// Asserts that either the registry or the KCB is locked
 //
 #define CMP_ASSERT_HASH_ENTRY_LOCK(k)                               \
 {                                                                   \
-    ASSERT(((GET_HASH_ENTRY(CmpCacheTable, k).Owner ==              \
+    ASSERT(((GET_HASH_ENTRY(CmpCacheTable, k)->Owner ==              \
             KeGetCurrentThread())) ||                               \
            (CmpTestRegistryLockExclusive() == TRUE));               \
 }
