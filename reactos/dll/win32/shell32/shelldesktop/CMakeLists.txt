@@ -9,4 +9,4 @@ list(APPEND SOURCE
     dde.cpp)
 
 add_library(shelldesktop ${SOURCE})
-add_dependencies(shelldesktop xdk)
+add_dependencies(shelldesktop xdk psdk)
