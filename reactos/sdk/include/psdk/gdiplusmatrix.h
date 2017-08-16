@@ -47,7 +47,7 @@ public:
   Matrix *Clone(VOID)
   {
     Matrix *cloneMatrix = new Matrix();  // FIXME: Matrix::matrix already initialized --> potential memory leak
-    cloneMatrix->status = DllExports::GdipCloneMatrix(matrix, &cloneMatrix->matrix);
+    cloneMatrix->status = DllExports::GdipCloneMatrix(matrix, cloneMatrix ? &cloneMatrix->matrix : NULL);
     return cloneMatrix;
   }
 
@@ -59,7 +59,7 @@ public:
   BOOL Equals(const Matrix* matrix)
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsMatrixEqual(this->matrix, matrix->matrix, &result));
+    SetStatus(DllExports::GdipIsMatrixEqual(this->matrix, matrix ? matrix->matrix : NULL, &result));
     return result;
   }
 
@@ -94,7 +94,7 @@ public:
 
   Status Multiply(const Matrix *matrix, MatrixOrder order)
   {
-    return SetStatus(DllExports::GdipMultiplyMatrix(this->matrix, matrix->matrix, order));
+    return SetStatus(DllExports::GdipMultiplyMatrix(this->matrix, matrix ? matrix->matrix : NULL, order));
   }
 
   REAL OffsetX(VOID)
