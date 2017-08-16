@@ -757,6 +757,8 @@ void __incgsword(unsigned long);
 unsigned __int64 __lzcnt64(unsigned __int64);
 void __movsq(unsigned long long *, unsigned long long const *, size_t);
 __int64 __mulh(__int64, __int64);
+__int64 _mul128(__int64 _Multiplier, __int64 _Multiplicand, __int64 * _HighProduct);
+unsigned __int64 _umul128(unsigned __int64 _Multiplier, unsigned __int64 _Multiplicand, unsigned __int64 * _HighProduct);
 unsigned __int64 __popcnt64(unsigned __int64);
 unsigned __int64 __readcr0(void);
 unsigned __int64 __readcr2(void);
@@ -820,8 +822,6 @@ __int64 _mm_popcnt_u64(unsigned __int64);
 __m128i _mm_set1_epi64x(__int64);
 __m128i _mm_set_epi64x(__int64, __int64);
 void _mm_stream_si64x(__int64 *, __int64);
-__int64 _mul128(__int64 _Multiplier, __int64 _Multiplicand, __int64 * _HighProduct);
-unsigned __int64 _umul128(unsigned __int64 _Multiplier, unsigned __int64 _Multiplicand, unsigned __int64 * _HighProduct);
 #endif
 #endif /* _M_X64 */
 
