@@ -237,14 +237,14 @@ CdfsGetVolumeData(
             /* FIXME: should be done only for real cdroms? */
             Offset -= 150;
         }
-        CdInfo->VolumeOffset = Offset;
     }
     else
     {
         DPRINT1("Allowing mount of CDFS volume on non-CD device\n");
-        CdInfo->VolumeOffset = 0;
+        Offset = 0;
     }
     
+    CdInfo->VolumeOffset = Offset;
     DPRINT("Offset of first track in last session %u\n", Offset);
 
     CdInfo->JolietLevel = 0;
