@@ -57,17 +57,23 @@ public:
 
   Status GetColor(Color *color)
   {
-    return NotImplemented;
+    ARGB argb;
+    Status status = SetStatus(DllExports::GdipGetPenColor(pen, &argb));
+    if (color)
+      color->SetValue(argb);
+    return status;
   }
 
   Status GetCompoundArray(REAL *compoundArray, INT count)
   {
-    return NotImplemented;
+    return NotImplemented;  // FIXME: not available: SetStatus(DllExports::GdipGetPenCompoundArray(pen, count));
   }
 
   INT GetCompoundArrayCount(VOID)
   {
-    return 0;
+    INT count;
+    SetStatus(DllExports::GdipGetPenCompoundCount(pen, &count));
+    return count;
   }
 
   Status GetCustomEndCap(CustomLineCap *customCap)
@@ -87,17 +93,21 @@ public:
 
   REAL GetDashOffset(VOID)
   {
-    return 0;
+    REAL offset;
+    SetStatus(DllExports::GdipGetPenDashOffset(pen, &offset));
+    return offset;
   }
 
   Status GetDashPattern(REAL *dashArray, INT count)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipGetPenDashArray(pen, dashArray, count));
   }
 
   INT GetDashPatternCount(VOID)
   {
-    return 0;
+    INT count;
+    SetStatus(DllExports::GdipGetPenDashCount(pen, &count));
+    return count;
   }
 
   DashStyle GetDashStyle(VOID)
@@ -122,7 +132,9 @@ public:
 
   REAL GetMiterLimit(VOID)
   {
-    return 0;
+    REAL miterLimit;
+    SetStatus(DllExports::GdipGetPenMiterLimit(pen, &miterLimit));
+    return miterLimit;
   }
 
   PenType GetPenType(VOID)
@@ -142,47 +154,49 @@ public:
 
   REAL GetWidth(VOID)
   {
-    return 0;
+    REAL width;
+    SetStatus(DllExports::GdipGetPenWidth(pen, &width));
+    return width;
   }
 
   Status MultiplyTransform(Matrix *matrix, MatrixOrder order)
   {
-    return NotImplemented;
+    return NotImplemented;  // FIXME: not available: SetStatus(DllExports::GdipMultiplyPenTransform(pen, matrix ? matrix->matrix : NULL, order));
   }
 
   Status ResetTransform(VOID)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipResetPenTransform(pen));
   }
 
   Status RotateTransform(REAL angle, MatrixOrder order)
   {
-    return NotImplemented;
+    return NotImplemented;  // FIXME: not available: SetStatus(DllExports::GdipRotatePenTransform(pen, angle, order));
   }
 
   Status ScaleTransform(REAL sx, REAL sy, MatrixOrder order)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipScalePenTransform(pen, sx, sy, order));
   }
 
   Status SetAlignment(PenAlignment penAlignment)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenMode(pen, penAlignment));
   }
 
   Status SetBrush(const Brush *brush)
   {
-    return NotImplemented;
+    return NotImplemented;  // FIXME: Brush unimplemented SetStatus(DllExports::GdipSetPenBrushFill(pen, brush ? brush->brush : NULL));
   }
 
   Status SetColor(const Color &color)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenColor(pen, color.GetValue()));
   }
 
   Status SetCompoundArray(const REAL *compoundArray, INT count)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenCompoundArray(pen, compoundArray, count));
   }
 
   Status SetCustomEndCap(const CustomLineCap *customCap)
@@ -197,22 +211,22 @@ public:
 
   Status SetDashCap(DashCap dashCap)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenDashCap197819(pen, dashCap));
   }
 
   Status SetDashOffset(REAL dashOffset)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenDashOffset(pen, dashOffset));
   }
 
   Status SetDashPattern(const REAL *dashArray, INT count)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenDashArray(pen, dashArray, count));
   }
 
   Status SetDashStyle(DashStyle dashStyle)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenDashStyle(pen, dashStyle));
   }
 
   Status SetEndCap(LineCap endCap)
@@ -232,7 +246,7 @@ public:
 
   Status SetMiterLimit(REAL miterLimit)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenMiterLimit(pen, miterLimit));
   }
 
   Status SetStartCap(LineCap startCap)
@@ -242,17 +256,27 @@ public:
 
   Status SetTransform(const Matrix *matrix)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenTransform(pen, matrix ? matrix->matrix : NULL));
   }
 
   Status SetWidth(REAL width)
   {
-    return NotImplemented;
+    return SetStatus(DllExports::GdipSetPenWidth(pen, width));
   }
 
 private:
-  Status status;
   GpPen *pen;
+
+private:
+  mutable Status status;
+
+  Status SetStatus(Status status) const
+  {
+    if (status == Ok)
+      return status;
+    this->status = status;
+    return status;
+  }
 };
 
 #endif /* _GDIPLUSPEN_H */

@@ -21,6 +21,7 @@
 
 class Matrix : public GdiplusBase
 {
+  friend class Pen;
   friend class Region;
 
 public:
