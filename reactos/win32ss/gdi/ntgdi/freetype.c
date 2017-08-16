@@ -5102,6 +5102,14 @@ GreExtTextOutW(
     LOGFONTW *plf;
     BOOL EmuBold, EmuItalic;
     int thickness;
+    BOOL bResult;
+
+    /* Check if String is valid */
+    if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     // TODO: Write test-cases to exactly match real Windows in different
     // bad parameters (e.g. does Windows check the DC or the RECT first?).
@@ -5112,42 +5120,30 @@ GreExtTextOutW(
         return FALSE;
     }
 
-    pdcattr = dc->pdcattr;
-
-    if ((fuOptions & ETO_OPAQUE) || pdcattr->jBkMode == OPAQUE)
-    {
-        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
-            DC_vUpdateBackgroundBrush(dc);
-    }
-
-    /* Check if String is valid */
-    if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
-    {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        goto fail;
-    }
-
-    DxShift = fuOptions & ETO_PDY ? 1 : 0;
-
     if (PATH_IsPathOpen(dc->dclevel))
     {
-        if (!PATH_ExtTextOut( dc,
+        bResult = PATH_ExtTextOut(dc,
                               XStart,
                               YStart,
                               fuOptions,
                               (const RECTL *)lprc,
                               String,
                               Count,
-                              (const INT *)Dx)) goto fail;
-        goto good;
+                              (const INT *)Dx);
+        DC_UnlockDc(dc);
+        return bResult;
     }
+
+    DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
     if (!dc->dclevel.pSurface)
     {
         /* Memory DC with no surface selected */
-        DC_UnlockDc(dc);
-        return TRUE;
+        bResult = FALSE; // TRUE?
+        goto Cleanup;
     }
+
+    pdcattr = dc->pdcattr;
 
     if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
     {
@@ -5191,10 +5187,10 @@ GreExtTextOutW(
            IntUpdateBoundsRect(dc, &DestRect);
         }
 
-        DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
-
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
             DC_vUpdateBackgroundBrush(dc);
+        if (dc->dctype == DCTYPE_DIRECT)
+            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
         psurf = dc->dclevel.pSurface;
         IntEngBitBlt(
@@ -5209,8 +5205,11 @@ GreExtTextOutW(
             &dc->eboBackground.BrushObject,
             &BrushOrigin,
             ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+
+        if (dc->dctype == DCTYPE_DIRECT)
+            MouseSafetyOnDrawEnd(dc->ppdev);
+
         fuOptions &= ~ETO_OPAQUE;
-        DC_vFinishBlit(dc, NULL);
     }
     else
     {
@@ -5223,7 +5222,8 @@ GreExtTextOutW(
     TextObj = RealizeFontInit(pdcattr->hlfntNew);
     if (TextObj == NULL)
     {
-        goto fail;
+        bResult = FALSE;
+        goto Cleanup;
     }
 
     FontObj = TextObj->Font;
@@ -5247,7 +5247,8 @@ GreExtTextOutW(
     if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
     {
         IntUnLockFreeType;
-        goto fail;
+        bResult = FALSE;
+        goto Cleanup;
     }
 
     if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
@@ -5284,7 +5285,7 @@ GreExtTextOutW(
     /*
      * Process the horizontal alignment and modify XStart accordingly.
      */
-
+    DxShift = fuOptions & ETO_PDY ? 1 : 0;
     if (pdcattr->lTextAlign & (TA_RIGHT | TA_CENTER))
     {
         ULONGLONG TextWidth = 0;
@@ -5348,7 +5349,7 @@ GreExtTextOutW(
                 {
                     DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                     IntUnLockFreeType;
-                    goto fail;
+                    goto Cleanup;
                 }
 
             }
@@ -5384,14 +5385,8 @@ GreExtTextOutW(
         }
     }
 
-    /* Lock blit with a dummy rect */
-    DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
-
     psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj ;
-
-    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
-    EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
 
     if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
         DC_vUpdateBackgroundBrush(dc) ;
@@ -5429,8 +5424,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType;
-                DC_vFinishBlit(dc, NULL);
-                goto fail2;
+                goto Cleanup; // FIXME
             }
 
             glyph = face->glyph;
@@ -5443,8 +5437,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType;
-                DC_vFinishBlit(dc, NULL);
-                goto fail2;
+                goto Cleanup; // FIXME
             }
 
             /* retrieve kerning distance and move pen position */
@@ -5525,6 +5518,12 @@ GreExtTextOutW(
         }
     }
 
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
+
+    /* Assume success */
+    bResult = TRUE;
+
     /*
      * The main rendering loop.
      */
@@ -5549,9 +5548,8 @@ GreExtTextOutW(
             if (error)
             {
                 DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType;
-                DC_vFinishBlit(dc, NULL);
-                goto fail2;
+                bResult = FALSE;
+                break;
             }
 
             glyph = face->glyph;
@@ -5575,9 +5573,8 @@ GreExtTextOutW(
             if (!realglyph)
             {
                 DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType;
-                DC_vFinishBlit(dc, NULL);
-                goto fail2;
+                bResult = FALSE;
+                break;
             }
         }
 
@@ -5598,7 +5595,9 @@ GreExtTextOutW(
             DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
             DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - fixDescender) >> 6);
-            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+
+            if (dc->dctype == DCTYPE_DIRECT)
+                MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
             if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
             {
                IntUpdateBoundsRect(dc, &DestRect);
@@ -5615,7 +5614,10 @@ GreExtTextOutW(
                 &dc->eboBackground.BrushObject,
                 &BrushOrigin,
                 ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-            MouseSafetyOnDrawEnd(dc->ppdev);
+
+            if (dc->dctype == DCTYPE_DIRECT)
+                MouseSafetyOnDrawEnd(dc->ppdev);
+
             BackgroundLeft = DestRect.right;
         }
 
@@ -5644,18 +5646,16 @@ GreExtTextOutW(
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
                 // FT_Done_Glyph(realglyph);
-                IntUnLockFreeType;
-                DC_vFinishBlit(dc, NULL);
-                goto fail2;
+                bResult = FALSE;
+                break;
             }
             SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
             if ( !SourceGlyphSurf )
             {
                 EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
-                IntUnLockFreeType;
-                DC_vFinishBlit(dc, NULL);
-                goto fail2;
+                bResult = FALSE;
+                break;
             }
 
             /*
@@ -5676,7 +5676,10 @@ GreExtTextOutW(
             {
                 DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
             }
-            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+
+            if (dc->dctype == DCTYPE_DIRECT)
+                MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+
             if (!IntEngMaskBlt(
                 SurfObj,
                 SourceGlyphSurf,
@@ -5691,7 +5694,8 @@ GreExtTextOutW(
                 DPRINT1("Failed to MaskBlt a glyph!\n");
             }
 
-            MouseSafetyOnDrawEnd(dc->ppdev) ;
+            if (dc->dctype == DCTYPE_DIRECT)
+                MouseSafetyOnDrawEnd(dc->ppdev) ;
 
             EngUnlockSurface(SourceGlyphSurf);
             EngDeleteSurface((HSURF)HSourceGlyph);
@@ -5782,27 +5786,18 @@ GreExtTextOutW(
 
     IntUnLockFreeType;
 
-    DC_vFinishBlit(dc, NULL) ;
-
     EXLATEOBJ_vCleanup(&exloRGB2Dst);
     EXLATEOBJ_vCleanup(&exloDst2RGB);
-    if (TextObj != NULL)
-        TEXTOBJ_UnlockText(TextObj);
-good:
-    DC_UnlockDc( dc );
 
-    return TRUE;
+Cleanup:
+    DC_vFinishBlit(dc, NULL);
 
-fail2:
-    EXLATEOBJ_vCleanup(&exloRGB2Dst);
-    EXLATEOBJ_vCleanup(&exloDst2RGB);
-fail:
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
 
     DC_UnlockDc(dc);
 
-    return FALSE;
+    return bResult;
 }
 
 #define STACK_TEXT_BUFFER_SIZE 100
