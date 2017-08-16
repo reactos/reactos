@@ -6,9 +6,6 @@
 * PROGRAMMERS: Copyright 2016 Ged Murphy (gedmurphy@gmail.com)
 */
 
-//FIXME
-#define NTDDI_VERSION NTDDI_WIN7
-
 // Please leave this temporary hack in place
 // it's used to keep VS2015 happy for development.
 #ifdef __REACTOS__
