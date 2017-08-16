@@ -12,6 +12,7 @@ Abstract:
 
 --*/
 
+#pragma once
 #ifndef _INC_SDKDDKVER
 #define _INC_SDKDDKVER
 
@@ -113,6 +114,9 @@ Abstract:
 #define NTDDI_WINBLUE                       0x06030000
 #define NTDDI_WINTHRESHOLD                  0x0A000000
 #define NTDDI_WIN10                         0x0A000000
+#define NTDDI_WIN10_TH2                     0x0A000001
+#define NTDDI_WIN10_RS1                     0x0A000002
+#define NTDDI_WIN10_RS2                     0x0A000003
 
 /* Version Fields in NTDDI_VERSION */
 #define OSVERSION_MASK                      0xFFFF0000UL
@@ -130,7 +134,7 @@ Abstract:
 
 /* Select Default _WIN32_WINNT Value */
 #if !defined(_WIN32_WINNT) && !defined(_CHICAGO_)
-#define _WIN32_WINNT    0x0600
+#define _WIN32_WINNT    0x0600 /* 0x0502 */
 #endif
 
 /* Choose NTDDI Version */
@@ -138,7 +142,7 @@ Abstract:
 #ifdef _WIN32_WINNT
 #define NTDDI_VERSION   NTDDI_VERSION_FROM_WIN32_WINNT(_WIN32_WINNT)
 #else
-#define NTDDI_VERSION   0x06000000
+#define NTDDI_VERSION   0x06000000 /* NTDDI_WS03SP4 */
 #endif
 #endif
 
@@ -177,10 +181,7 @@ Abstract:
 #endif
 
 /* Make Sure NTDDI_VERSION and _WIN32_WINNT Match */
-#if ((OSVER(NTDDI_VERSION) == NTDDI_WIN2K) && (_WIN32_WINNT != _WIN32_WINNT_WIN2K)) || \
-    ((OSVER(NTDDI_VERSION) == NTDDI_WINXP) && (_WIN32_WINNT != _WIN32_WINNT_WINXP)) || \
-    ((OSVER(NTDDI_VERSION) == NTDDI_WS03) && (_WIN32_WINNT != _WIN32_WINNT_WS03))   || \
-    ((OSVER(NTDDI_VERSION) == NTDDI_WINXP) && (_WIN32_WINNT != _WIN32_WINNT_WINXP))
+#if ((NTDDI_VERSION >> 16) != _WIN32_WINNT)
 #error NTDDI_VERSION and _WIN32_WINNT mismatch!
 #endif
 
