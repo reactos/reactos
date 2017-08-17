@@ -18,7 +18,7 @@ USBH_Wait(IN ULONG Milliseconds)
     LARGE_INTEGER Interval;
 
     DPRINT("USBH_Wait: Milliseconds - %x\n", Milliseconds);
-    Interval.QuadPart = -10000 * Milliseconds + (KeQueryTimeIncrement() - 1);
+    Interval.QuadPart = -10000LL * Milliseconds - ((ULONGLONG)KeQueryTimeIncrement() - 1); 
     return KeDelayExecutionThread(KernelMode, FALSE, &Interval);
 }
 
