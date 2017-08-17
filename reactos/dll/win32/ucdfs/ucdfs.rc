@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "CDFS File System Management"
+#define REACTOS_STR_INTERNAL_NAME     "ucdfs"
+#define REACTOS_STR_ORIGINAL_FILENAME "ucdfs.dll"
+#include <reactos/version.rc>

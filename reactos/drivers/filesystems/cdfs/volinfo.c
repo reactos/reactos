@@ -159,7 +159,11 @@ CdfsGetFsDeviceInformation(
     if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
-    FsDeviceInfo->DeviceType = FILE_DEVICE_CD_ROM;
+    if (DeviceObject->DeviceType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+        FsDeviceInfo->DeviceType = FILE_DEVICE_CD_ROM;
+    else
+        FsDeviceInfo->DeviceType = FILE_DEVICE_DISK;
+
     FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
 
     DPRINT("FsdGetFsDeviceInformation() finished.\n");
