@@ -1201,13 +1201,13 @@ VOID WINAPI SE_DllLoaded(PLDR_DATA_TABLE_ENTRY LdrEntry)
 
 VOID WINAPI SE_DllUnloaded(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
-    SHIMENG_MSG("(%p)\n", LdrEntry);
+    SHIMENG_INFO("(%p)\n", LdrEntry);
     NotifyShims(SHIM_REASON_DLL_UNLOAD, LdrEntry);
 }
 
 BOOL WINAPI SE_IsShimDll(PVOID BaseAddress)
 {
-    SHIMENG_MSG("(%p)\n", BaseAddress);
+    SHIMENG_INFO("(%p)\n", BaseAddress);
 
     return SeiGetShimModuleInfo(BaseAddress) != NULL;
 }

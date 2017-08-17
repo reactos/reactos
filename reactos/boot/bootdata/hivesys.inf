@@ -1417,6 +1417,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROMPT",0x0
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020002,"%SystemRoot%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020002,"%SystemRoot%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020002,"%SystemRoot%"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","SHIMENG_DEBUG_LEVEL",0x00000000,"4"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","SHIM_DEBUG_LEVEL",0x00000000,"4"
 
 
 ; Known DLLs
