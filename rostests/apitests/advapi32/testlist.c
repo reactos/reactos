@@ -12,6 +12,7 @@ extern void func_LockServiceDatabase(void);
 extern void func_QueryServiceConfig2(void);
 extern void func_RegEnumKey(void);
 extern void func_RegEnumValueW(void);
+extern void func_RegOpenKeyExW(void);
 extern void func_RegQueryInfoKey(void);
 extern void func_RegQueryValueExW(void);
 extern void func_RtlEncryptMemory(void);
@@ -31,6 +32,7 @@ const struct test winetest_testlist[] =
     { "RegEnumKey", func_RegEnumKey },
     { "RegEnumValueW", func_RegEnumValueW },
     { "RegQueryInfoKey", func_RegQueryInfoKey },
+    { "RegOpenKeyExW", func_RegOpenKeyExW },
     { "RegQueryValueExW", func_RegQueryValueExW },
     { "RtlEncryptMemory", func_RtlEncryptMemory },
     { "SaferIdentifyLevel", func_SaferIdentifyLevel },
