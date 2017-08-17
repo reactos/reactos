@@ -5111,6 +5111,10 @@ GreExtTextOutW(
         return FALSE;
     }
 
+    /* NOTE: This function locks the screen DC, so it must never be called
+       with a DC already locked */
+    Render = IntIsFontRenderingEnabled();
+
     // TODO: Write test-cases to exactly match real Windows in different
     // bad parameters (e.g. does Windows check the DC or the RECT first?).
     dc = DC_LockDc(hDC);
@@ -5238,7 +5242,6 @@ GreExtTextOutW(
     EmuBold = (plf->lfWeight >= FW_BOLD && FontGDI->OriginalWeight <= FW_NORMAL);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
-    Render = IntIsFontRenderingEnabled();
     if (Render)
         RenderMode = IntGetFontRenderMode(plf);
     else
