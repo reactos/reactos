@@ -312,7 +312,7 @@ DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         SourceSurf->sizlBitmap.cx > SourceX && SourceSurf->sizlBitmap.cy > SourceY)
       {
         Source = DIB_GetSourceIndex(SourceSurf, SourceX, SourceY);
-        if (Source != iTransColor)
+        if ((0x00FFFFFF & Source) != (0x00FFFFFF & iTransColor))
         {
           *DestBits = XLATEOBJ_iXlate(ColorTranslation, Source);
         }
