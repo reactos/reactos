@@ -454,7 +454,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IDriveFolderExtOld),          TRUE },
     { ID_NAME(IID_IDriveFolderExt),             TRUE },
     { ID_NAME(IID_IPinnedListOld),              TRUE },
-    { ID_NAME(IID_IPinnedList),                 TRUE }
+    { ID_NAME(IID_IPinnedList),                 TRUE },
+    { ID_NAME(IID_IAttachmentExecute),          TRUE }
 };
 static const INT KnownInterfaceCount = RTL_NUMBER_OF(KnownInterfaces);
 
