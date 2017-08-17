@@ -5143,7 +5143,7 @@ GreExtTextOutW(
     if (!dc->dclevel.pSurface)
     {
         /* Memory DC with no surface selected */
-        bResult = FALSE; // TRUE?
+        bResult = TRUE;
         goto Cleanup;
     }
 
