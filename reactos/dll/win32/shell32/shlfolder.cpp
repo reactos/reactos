@@ -288,7 +288,7 @@ void AddFSClassKeysToArray(PCUITEMID_CHILD pidl, HKEY* array, UINT* cKeys)
         {
             AddClassKeyToArray(extension, array, cKeys);
 
-            WCHAR wszClass[40], wszClass2[40];
+            WCHAR wszClass[MAX_PATH], wszClass2[MAX_PATH];
             DWORD dwSize = sizeof(wszClass);
             if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
             {
