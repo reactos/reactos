@@ -8,26 +8,6 @@
  
 #include "uxthemep.h"
 
-HFONT hMenuFont = NULL;
-HFONT hMenuFontBold = NULL;
-
-void InitMenuFont(VOID)
-{
-    NONCLIENTMETRICS ncm;
-
-    ncm.cbSize = sizeof(NONCLIENTMETRICS); 
-
-    if (!SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
-    {
-        return;
-    }
-
-    hMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
-
-    ncm.lfMenuFont.lfWeight = max(ncm.lfMenuFont.lfWeight + 300, 1000);
-    hMenuFontBold = CreateFontIndirect(&ncm.lfMenuFont);
-}
-
 static BOOL 
 IsWindowActive(HWND hWnd, DWORD ExStyle)
 {
