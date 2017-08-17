@@ -200,7 +200,7 @@ public:
 
   Status SetBrush(const Brush *brush)
   {
-    return NotImplemented;  // FIXME: Brush unimplemented SetStatus(DllExports::GdipSetPenBrushFill(pen, brush ? brush->brush : NULL));
+    return SetStatus(DllExports::GdipSetPenBrushFill(pen, brush ? brush->brush : NULL));
   }
 
   Status SetColor(const Color &color)
