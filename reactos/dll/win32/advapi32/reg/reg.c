@@ -3729,6 +3729,9 @@ RegQueryInfoKeyW(HKEY hKey,
         FullInfo = &FullInfoBuffer;
     }
 
+    if (lpcbSecurityDescriptor != NULL)
+        *lpcbSecurityDescriptor = 0;
+
     Status = NtQueryKey(KeyHandle,
                         KeyFullInformation,
                         FullInfo,
@@ -3786,10 +3789,7 @@ RegQueryInfoKeyW(HKEY hKey,
                                        NULL,
                                        0,
                                        lpcbSecurityDescriptor);
-        if (Status != STATUS_BUFFER_TOO_SMALL)
-        {
-            *lpcbSecurityDescriptor = 0;
-        }
+        TRACE("NtQuerySecurityObject() returned status 0x%X\n", Status);
     }
 
     if (lpftLastWriteTime != NULL)
