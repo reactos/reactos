@@ -200,8 +200,8 @@ typedef struct _ROS_SECTION_OBJECT
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
-#define MA_GetStartingAddress(_MemoryArea) (MemoryArea->VadNode.StartingVpn << PAGE_SHIFT)
-#define MA_GetEndingAddress(_MemoryArea) ((MemoryArea->VadNode.EndingVpn + 1) << PAGE_SHIFT)
+#define MA_GetStartingAddress(_MemoryArea) (_MemoryArea->VadNode.StartingVpn << PAGE_SHIFT)
+#define MA_GetEndingAddress(_MemoryArea) ((_MemoryArea->VadNode.EndingVpn + 1) << PAGE_SHIFT)
 
 typedef struct _MEMORY_AREA
 {
