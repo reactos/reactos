@@ -680,7 +680,7 @@ UserEmptyClipboard(VOID)
     {
         TRACE("Clipboard: WM_DESTROYCLIPBOARD to %p\n", pWinStaObj->spwndClipOwner->head.h);
         // For 32-bit applications this message is sent as a notification
-        co_IntSendMessageNoWait(pWinStaObj->spwndClipOwner->head.h, WM_DESTROYCLIPBOARD, 0, 0);
+        co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_DESTROYCLIPBOARD, 0, 0);
     }
 
     pWinStaObj->spwndClipOwner = pWinStaObj->spwndClipOpen;
