@@ -17,6 +17,7 @@ BEGIN
     //Power related strings
     IDS_PWR_PROPERTIES        "&Modifica proprietà alimentazione"
     IDS_PWR_METER             "&Apri misuratore alimentazione"
+    IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "%1!u!%% rimanenti"
     IDS_PWR_CHARGING          " (in carica)"
     IDS_PWR_UNKNOWN_REMAINING "Autonomia sconosciuta"
@@ -28,6 +29,7 @@ BEGIN
     IDS_HOTPLUG_REMOVE_1  "Rimozione sicura dell'Hardware"
     IDS_HOTPLUG_REMOVE_2  "&Rimozione sicura dell'Hardware"
     IDS_HOTPLUG_REMOVE_3  "Rimozione sicura di %s"
+    IDS_HOTPLUG_RUN "shell32.dll,Control_RunDLL hotplug.dll"
     IDS_HOTPLUG_COMMA     ", "
     IDS_HOTPLUG_DRIVE     " - Unità disco(%s)"
     IDS_HOTPLUG_DRIVES    " - Unità dischi(%s)"
@@ -39,6 +41,7 @@ BEGIN
     IDS_VOL_VOLUME  "Volume"
     IDS_VOL_ADJUST  "&Modifica proprietà audio"
     IDS_VOL_OPEN    "&Apri controllo del Volume"
+    IDS_VOL_RUN "SNDVOL32.EXE"
     IDS_VOL_MUTED   "Volume (spento)"
 
     //Keyboard-Mouse related strings

@@ -19,6 +19,7 @@ BEGIN
     //Power related strings
     IDS_PWR_PROPERTIES        "&Настройка параметров электропитания"
     IDS_PWR_METER             "&Открыть показатели питания"
+    IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "%1!u!%% осталось"
     IDS_PWR_CHARGING          " (зарядка)"
     IDS_PWR_UNKNOWN_REMAINING "Неизвестно"
@@ -30,6 +31,7 @@ BEGIN
     IDS_HOTPLUG_REMOVE_1 "Безопасное извлечение устройства"
     IDS_HOTPLUG_REMOVE_2 "&Безопасное извлечение устройства"
     IDS_HOTPLUG_REMOVE_3 "Безопасное извлечение %s"
+    IDS_HOTPLUG_RUN "shell32.dll,Control_RunDLL hotplug.dll"
     IDS_HOTPLUG_COMMA ", "
     IDS_HOTPLUG_DRIVE " - Диск(%s)"
     IDS_HOTPLUG_DRIVES " - Диски(%s)"
@@ -41,6 +43,7 @@ BEGIN
     IDS_VOL_VOLUME "Громкость"
     IDS_VOL_ADJUST "&Настройка параметров аудио"
     IDS_VOL_OPEN "&Открыть управление громкостью"
+    IDS_VOL_RUN "SNDVOL32.EXE"
     IDS_VOL_MUTED "Громкость (выключено)"
 
     //Keyboard-Mouse related strings

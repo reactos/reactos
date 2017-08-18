@@ -17,6 +17,7 @@ BEGIN
     //Power related strings
     IDS_PWR_PROPERTIES        "&Upravit možnosti napájení"
     IDS_PWR_METER             "&Otevřít ukazatel spotřeby"
+    IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "zbývá %1!u!%%"
     IDS_PWR_CHARGING          " (nabíjení)"
     IDS_PWR_UNKNOWN_REMAINING "Zbývá neznámo"
@@ -28,6 +29,7 @@ BEGIN
     IDS_HOTPLUG_REMOVE_1 "Bezpečně odebrat hardware"
     IDS_HOTPLUG_REMOVE_2 "&Bezpečně odebrat hardwar"
     IDS_HOTPLUG_REMOVE_3 "Bezpečně odebrat%s"
+    IDS_HOTPLUG_RUN "shell32.dll,Control_RunDLL hotplug.dll"
     IDS_HOTPLUG_COMMA ", "
     IDS_HOTPLUG_DRIVE " - Jednotka(%s)"
     IDS_HOTPLUG_DRIVES " - Jednotky(%s)"
@@ -39,6 +41,7 @@ BEGIN
     IDS_VOL_VOLUME "Hlasitost"
     IDS_VOL_ADJUST "&Upravit vlastnosti zvuku"
     IDS_VOL_OPEN "&Otevřít ovládání hlasitosti"
+    IDS_VOL_RUN "SNDVOL32.EXE"
     IDS_VOL_MUTED "Hlasitost (ztlumeno)"
 
     //Keyboard-Mouse related strings
