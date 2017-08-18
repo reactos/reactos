@@ -24,6 +24,7 @@ class Image;
 class Brush : public GdiplusBase
 {
 public:
+  friend class Graphics;
   friend class Pen;
 
   Brush *Clone(VOID) const
