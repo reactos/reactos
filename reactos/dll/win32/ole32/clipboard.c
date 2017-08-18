@@ -2018,6 +2018,10 @@ static LRESULT CALLBACK clipbrd_wndproc(HWND hwnd, UINT message, WPARAM wparam, 
     {
     case WM_RENDERFORMAT:
     {
+#ifdef __REACTOS__
+    if (clipbrd->cached_enum)
+    {
+#endif
         UINT cf = wparam;
         ole_priv_data_entry *entry;
 
@@ -2026,7 +2030,9 @@ static LRESULT CALLBACK clipbrd_wndproc(HWND hwnd, UINT message, WPARAM wparam, 
 
         if(entry)
             render_format(clipbrd->src_data, &entry->fmtetc);
-
+#ifdef __REACTOS__
+    }
+#endif
         break;
     }
 
