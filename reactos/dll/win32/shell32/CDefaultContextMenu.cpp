@@ -1212,7 +1212,7 @@ CDefaultContextMenu::InvokeCommand(
         break;
     case FCIDM_SHVIEW_COPY:
     case FCIDM_SHVIEW_CUT:
-        Result = DoCopyOrCut(&LocalInvokeInfo, LOWORD(LocalInvokeInfo.lpVerb) == FCIDM_SHVIEW_COPY);
+        Result = DoCopyOrCut(&LocalInvokeInfo, CmdId == FCIDM_SHVIEW_COPY);
         break;
     case FCIDM_SHVIEW_CREATELINK:
         Result = DoCreateLink(&LocalInvokeInfo);
