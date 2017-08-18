@@ -1922,7 +1922,7 @@ QSI_DEF(SystemProcessorIdleInformation)
     {
         return STATUS_INFO_LENGTH_MISMATCH;
     }
-    
+
     /* FIXME */
     DPRINT1("NtQuerySystemInformation - SystemPowerInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -2599,11 +2599,14 @@ C_ASSERT(SystemBasicInformation == 0);
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-                         OUT PVOID SystemInformation,
-                         IN ULONG Length,
-                         OUT PULONG UnsafeResultLength)
+__kernel_entry
+NTSTATUS
+NTAPI
+NtQuerySystemInformation(
+    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    _Out_writes_bytes_to_opt_(SystemInformationLength, *ReturnLength) PVOID SystemInformation,
+    _In_ ULONG Length,
+    _Out_opt_ PULONG UnsafeResultLength)
 {
     KPROCESSOR_MODE PreviousMode;
     ULONG ResultLength = 0;
