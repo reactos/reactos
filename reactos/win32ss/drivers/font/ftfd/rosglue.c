@@ -79,7 +79,10 @@ realloc(void *Object, size_t Size)
 void
 free(void *Object)
 {
-    EngFreeMem((size_t *)Object - 1);
+    if (Object != NULL)
+    {
+        EngFreeMem((size_t *)Object - 1);
+    }
 }
 
 /*
