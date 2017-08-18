@@ -219,6 +219,10 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     /* The commands that are handled by the def view are forwarded to it */
     switch (idCmd)
     {
+    case FCIDM_SHVIEW_INSERT:
+    case FCIDM_SHVIEW_INSERTLINK:
+        lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd);
+        return m_folderCM->InvokeCommand(lpcmi);
     case FCIDM_SHVIEW_BIGICON:
     case FCIDM_SHVIEW_SMALLICON:
     case FCIDM_SHVIEW_LISTVIEW:
