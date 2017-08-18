@@ -5383,10 +5383,10 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
                     // For ReactOS: shrink the corresponding memory area
                     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)StartingAddress);
-                    ASSERT(Vad->StartingVpn == MemoryArea->StartingVpn);
-                    ASSERT(Vad->EndingVpn == MemoryArea->EndingVpn);
+                    ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
+                    ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->EndingVpn = (StartingAddress - 1) >> PAGE_SHIFT;
-                    MemoryArea->EndingVpn = Vad->EndingVpn;
+                    MemoryArea->VadNode.EndingVpn = Vad->EndingVpn;
                 }
                 else
                 {
