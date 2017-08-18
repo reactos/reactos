@@ -383,56 +383,56 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     PVOID pTemp;
     LPPOINT SafePoints;
     PULONG SafeCounts;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     BOOL Ret = TRUE;
-    ULONG nPoints = 0, nMaxPoints = 0, nInvalid = 0, i;
+    ULONG nPoints = 0, nMaxPoints = 0, i;
 
-    if (!UnsafePoints || !UnsafeCounts ||
-        Count == 0 || iFunc == 0 || iFunc > GdiPolyPolyRgn)
+    /* Validate parameters */
+    if ((UnsafePoints == NULL) ||
+        (UnsafeCounts == NULL) ||
+        (Count == 0) ||
+        (Count > ULONG_MAX / sizeof(ULONG)) ||
+        (iFunc == 0) ||
+        (iFunc > GdiPolyPolyRgn))
     {
+        DPRINT1("NtGdiPolyPolyDraw - Invalid parameter!\n");
         /* Windows doesn't set last error */
         return FALSE;
     }
 
     _SEH2_TRY
     {
-        ProbeForRead(UnsafePoints, Count * sizeof(POINT), 1);
+        /* Probe the buffer of counts for each polygon */
         ProbeForRead(UnsafeCounts, Count * sizeof(ULONG), 1);
 
-        /* Count points and validate poligons */
+        /* Count points. Note: We are not copying the buffer, so it can be
+           changed by usermode. This is ok, since the content is validated
+           again later. */
         for (i = 0; i < Count; i++)
         {
-            if (UnsafeCounts[i] < 2)
+            Status = RtlULongAdd(nMaxPoints, UnsafeCounts[i], &nMaxPoints);
+            if (!NT_SUCCESS(Status))
             {
-                nInvalid++;
+                DPRINT1("Overflow when counting points!\n");
+                return FALSE;
             }
-            nPoints += UnsafeCounts[i];
-            nMaxPoints = max(nMaxPoints, UnsafeCounts[i]);
         }
+
+        ProbeForRead(UnsafePoints, nMaxPoints * sizeof(POINT), 1);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
+        DPRINT1("Got exception!\n");
         /* Windows doesn't set last error */
         return FALSE;
     }
+    _SEH2_END;
 
-    if (nPoints == 0 || nPoints < nMaxPoints)
+    if (nMaxPoints == 0)
     {
-        /* If all polygon counts are zero, or we have overflow,
-           return without setting a last error code. */
-        return FALSE;
-    }
-
-    if (nInvalid != 0)
-    {
-        /* If at least one poly count is 0 or 1, fail */
-        EngSetLastError(ERROR_INVALID_PARAMETER);
+        /* If all polygon counts are zero, return FALSE
+           without setting a last error code. */
+        DPRINT1("nMaxPoints == 0!\n");
         return FALSE;
     }
 
@@ -442,12 +442,16 @@ NtGdiPolyPolyDraw( IN HDC hDC,
                                   TAG_SHAPE);
     if (!pTemp)
     {
+        DPRINT1("Failed to allocate %lu bytes (Count = %lu, nPoints = %u).\n",
+                Count * sizeof(ULONG) + nPoints * sizeof(POINT),
+                Count,
+                nPoints);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
     SafeCounts = pTemp;
-    SafePoints = (PVOID)(SafeCounts + Count);
+    SafePoints = (PPOINT)&SafeCounts[Count];
 
     _SEH2_TRY
     {
@@ -457,12 +461,37 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        DPRINT1("Got exception!\n");
+        ExFreePoolWithTag(pTemp, TAG_SHAPE);
+        return FALSE;
     }
     _SEH2_END;
 
-    if (!NT_SUCCESS(Status))
+    /* Now that the buffers are copied, validate them again */
+    for (i = 0; i < Count; i++)
     {
+        /* If any poly count is 0 or 1, fail */
+        if (SafeCounts[i] < 2)
+        {
+            DPRINT1("Invalid: UnsafeCounts[%lu] == %lu\n", i, SafeCounts[i]);
+            ExFreePoolWithTag(pTemp, TAG_SHAPE);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+
+        Status = RtlULongAdd(nPoints, SafeCounts[i], &nPoints);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Overflow when counting points!\n");
+            return FALSE;
+        }
+    }
+
+    /* If the 2nd count does not match the 1st, someone changed the buffer
+       behind our back! */
+    if (nPoints != nMaxPoints)
+    {
+        DPRINT1("Polygon count mismatch: %lu != %lu\n", nPoints, nMaxPoints);
         ExFreePoolWithTag(pTemp, TAG_SHAPE);
         return FALSE;
     }
