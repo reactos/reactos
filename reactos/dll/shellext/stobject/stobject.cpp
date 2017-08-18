@@ -4,7 +4,7 @@
  * FILE:        dll/shellext/stobject/stobject.cpp
  * PURPOSE:     COM registration services for STobject.dll
  * PROGRAMMERS: Robert Naumann
- David Quintana <gigaherz@gmail.com>
+ *              David Quintana <gigaherz@gmail.com>
  */
 
 #include "precomp.h"
