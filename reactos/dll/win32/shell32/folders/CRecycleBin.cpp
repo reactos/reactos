@@ -1079,98 +1079,18 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
 
 HRESULT WINAPI DoDeleteDataObject(IDataObject *pda, DWORD fMask)
 {
-    TRACE("performing delete");
     HRESULT hr;
-
     STGMEDIUM medium;
     FORMATETC formatetc;
-    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    InitFormatEtc (formatetc, CF_HDROP, TYMED_HGLOBAL);
     hr = pda->GetData(&formatetc, &medium);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    /* lock the handle */
-    LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
-    if (!lpcida)
+    LPDROPFILES lpdf = (LPDROPFILES) GlobalLock(medium.hGlobal);
+    if (!lpdf)
     {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    /* convert the data into pidl */
-    LPITEMIDLIST pidl;
-    LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
-    if (!apidl)
-    {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    CComPtr<IShellFolder> psfDesktop;
-    CComPtr<IShellFolder> psfFrom = NULL;
-
-    /* Grab the desktop shell folder */
-    hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED(hr))
-    {
-        ERR("SHGetDesktopFolder failed\n");
-        SHFree(pidl);
-        _ILFreeaPidl(apidl, lpcida->cidl);
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    /* Find source folder, this is where the clipboard data was copied from */
-    if (_ILIsDesktop(pidl))
-    {
-        psfFrom = psfDesktop;
-    }
-    else
-    {
-        hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfFrom));
-        if (FAILED(hr))
-        {
-            ERR("no IShellFolder\n");
-            SHFree(pidl);
-            _ILFreeaPidl(apidl, lpcida->cidl);
-            ReleaseStgMedium(&medium);
-            return E_FAIL;
-        }
-    }
-
-    STRRET strTemp;
-    hr = psfFrom->GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strTemp);
-    if (FAILED(hr))
-    {
-        ERR("IShellFolder_GetDisplayNameOf failed with %x\n", hr);
-        SHFree(pidl);
-        _ILFreeaPidl(apidl, lpcida->cidl);
-        ReleaseStgMedium(&medium);
-        return hr;
-    }
-
-    WCHAR wszPath[MAX_PATH];
-    hr = StrRetToBufW(&strTemp, apidl[0], wszPath, _countof(wszPath));
-    if (FAILED(hr))
-    {
-        ERR("StrRetToBufW failed with %x\n", hr);
-        SHFree(pidl);
-        _ILFreeaPidl(apidl, lpcida->cidl);
-        ReleaseStgMedium(&medium);
-        return hr;
-    }
-
-    /* Only keep the base path */
-    LPWSTR pwszFilename = PathFindFileNameW(wszPath);
-    *pwszFilename = L'\0';
-
-    /* Build paths list */
-    LPWSTR pwszPaths = BuildPathsList(wszPath, lpcida->cidl, (LPCITEMIDLIST*) apidl, FALSE);
-    if (!pwszPaths)
-    {
-        SHFree(pidl);
-        _ILFreeaPidl(apidl, lpcida->cidl);
-        ReleaseStgMedium(&medium);
+        ERR("Error locking global\n");
         return E_FAIL;
     }
 
@@ -1178,19 +1098,16 @@ HRESULT WINAPI DoDeleteDataObject(IDataObject *pda, DWORD fMask)
     SHFILEOPSTRUCTW FileOp;
     ZeroMemory(&FileOp, sizeof(FileOp));
     FileOp.wFunc = FO_DELETE;
-    FileOp.pFrom = pwszPaths;
+    FileOp.pFrom = (LPWSTR) (((byte*) lpdf) + lpdf->pFiles);;
     if ((fMask & CMIC_MASK_SHIFT_DOWN) == 0)
         FileOp.fFlags = FOF_ALLOWUNDO;
 
     if (SHFileOperationW(&FileOp) != 0)
     {
-        ERR("SHFileOperation failed with 0x%x for %s\n", GetLastError(), debugstr_w(pwszPaths));
+        ERR("SHFileOperation failed with 0x%x\n", GetLastError());
         hr = E_FAIL;
     }
 
-    HeapFree(GetProcessHeap(), 0, pwszPaths);
-    SHFree(pidl);
-    _ILFreeaPidl(apidl, lpcida->cidl);
     ReleaseStgMedium(&medium);
 
     return hr;
