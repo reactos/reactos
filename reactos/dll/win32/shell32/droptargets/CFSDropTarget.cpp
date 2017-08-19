@@ -75,7 +75,7 @@ HRESULT WINAPI CFSDropTarget::CopyItems(IShellFolder * pSFFrom, UINT cidl,
         return hr;
 
     pszSrcList = BuildPathsList(strretFrom.pOleStr, cidl, apidl);
-    ERR("Source file (just the first) = %s, target path = %s\n", debugstr_w(strretFrom.pOleStr), debugstr_w(sPathTarget));
+    ERR("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(sPathTarget), bCopy);
     CoTaskMemFree(strretFrom.pOleStr);
     if (!pszSrcList)
         return E_OUTOFMEMORY;
@@ -468,7 +468,7 @@ HRESULT WINAPI CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 return E_FAIL;
             }
             pszSrcList = (LPWSTR) (((byte*) lpdf) + lpdf->pFiles);
-            ERR("Source file (just the first) = %s, target path = %s\n", debugstr_w(pszSrcList), debugstr_w(wszTargetPath));
+            ERR("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(wszTargetPath), bCopy);
 
             SHFILEOPSTRUCTW op;
             ZeroMemory(&op, sizeof(op));
