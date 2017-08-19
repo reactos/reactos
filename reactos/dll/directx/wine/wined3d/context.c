@@ -2714,11 +2714,13 @@ void context_bind_texture(struct wined3d_context *context, GLenum target, GLuint
 void *context_map_bo_address(struct wined3d_context *context,
         const struct wined3d_bo_address *data, size_t size, GLenum binding, DWORD flags)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info;
     BYTE *memory;
 
     if (!data->buffer_object)
         return data->addr;
+
+    gl_info = context->gl_info;
 
     context_bind_bo(context, binding, data->buffer_object);
 
@@ -2742,10 +2744,12 @@ void *context_map_bo_address(struct wined3d_context *context,
 void context_unmap_bo_address(struct wined3d_context *context,
         const struct wined3d_bo_address *data, GLenum binding)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_gl_info *gl_info;
 
     if (!data->buffer_object)
         return;
+
+    gl_info = context->gl_info;
 
     context_bind_bo(context, binding, data->buffer_object);
     GL_EXTCALL(glUnmapBuffer(binding));
