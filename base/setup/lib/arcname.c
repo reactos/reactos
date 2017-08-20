@@ -32,6 +32,8 @@
 #include <debug.h>
 
 
+/* TYPEDEFS *****************************************************************/
+
 /* Supported adapter types */
 typedef enum _ADAPTER_TYPE
 {
@@ -110,7 +112,7 @@ const PCWSTR PeripheralTypes_U[] =
 
 /* FUNCTIONS ****************************************************************/
 
-PCSTR
+/* static */ PCSTR
 ArcGetNextTokenA(
     IN  PCSTR ArcPath,
     OUT PANSI_STRING TokenSpecifier,
@@ -170,7 +172,7 @@ ArcGetNextTokenA(
     return ++p;
 }
 
-PCWSTR
+static PCWSTR
 ArcGetNextTokenU(
     IN  PCWSTR ArcPath,
     OUT PUNICODE_STRING TokenSpecifier,
@@ -233,7 +235,7 @@ ArcGetNextTokenU(
 }
 
 
-ULONG
+/* static */ ULONG
 ArcMatchTokenA(
     IN PCSTR CandidateToken,
     IN const PCSTR* TokenTable)
@@ -248,7 +250,7 @@ ArcMatchTokenA(
     return Index;
 }
 
-ULONG
+static ULONG
 ArcMatchTokenU(
     IN PCWSTR CandidateToken,
     IN const PCWSTR* TokenTable)
@@ -263,7 +265,7 @@ ArcMatchTokenU(
     return Index;
 }
 
-ULONG
+static ULONG
 ArcMatchToken_UStr(
     IN PCUNICODE_STRING CandidateToken,
     IN const PCWSTR* TokenTable)
@@ -527,7 +529,8 @@ ResolveArcNameManually(
                 return STATUS_NOT_SUPPORTED;
             }
 
-            hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\Ramdisk%lu", AdapterKey);
+            hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                                 L"\\Device\\Ramdisk%lu", AdapterKey);
             goto Quit;
         }
     }
@@ -646,14 +649,23 @@ ResolveArcNameManually(
 
 
     if (ControllerType == CdRomController) // and so, AdapterType == ScsiAdapter and PeripheralType == FDiskPeripheral
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\Scsi\\CdRom%lu", ControllerKey);
+    {
+        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                             L"\\Device\\Scsi\\CdRom%lu", ControllerKey);
+    }
     else
     /* Now, ControllerType == DiskController */
     if (PeripheralType == CdRomPeripheral)
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\CdRom%lu", PeripheralKey);
+    {
+        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                             L"\\Device\\CdRom%lu", PeripheralKey);
+    }
     else
     if (PeripheralType == FDiskPeripheral)
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\Floppy%lu", PeripheralKey);
+    {
+        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                             L"\\Device\\Floppy%lu", PeripheralKey);
+    }
     else
     if (PeripheralType == RDiskPeripheral)
     {
@@ -678,7 +690,8 @@ ResolveArcNameManually(
             ASSERT(PartEntry->DiskEntry == DiskEntry);
         }
 
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\Harddisk%lu\\Partition%lu",
+        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                             L"\\Device\\Harddisk%lu\\Partition%lu",
                              DiskEntry->DiskNumber, PartitionNumber);
     }
 #if 0
@@ -686,7 +699,8 @@ ResolveArcNameManually(
     if (PeripheralType == VDiskPeripheral)
     {
         // TODO: Check how Win 7+ deals with virtual disks.
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\VirtualHarddisk%lu\\Partition%lu",
+        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                             L"\\Device\\VirtualHarddisk%lu\\Partition%lu",
                              PeripheralKey, PartitionNumber);
     }
 #endif
