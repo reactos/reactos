@@ -345,116 +345,24 @@ ArcPathNormalize(
 
 
 /*
- * ArcName:
- *      ARC name (counted string) to be resolved into a NT device name.
- *      The caller should have already delimited it from within an ARC path
- *      (usually by finding where the first path separator appears in the path).
- *
- * NtName:
- *      Receives the resolved NT name. The buffer is NULL-terminated.
- */
-static NTSTATUS
-ResolveArcNameNtSymLink(
-    OUT PUNICODE_STRING NtName,
-    IN  PUNICODE_STRING ArcName)
-{
-    NTSTATUS Status;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE DirectoryHandle, LinkHandle;
-    UNICODE_STRING ArcNameDir;
-
-    if (NtName->MaximumLength < sizeof(UNICODE_NULL))
-        return STATUS_BUFFER_TOO_SMALL;
-
-#if 0
-    *NtName->Buffer = UNICODE_NULL;
-    NtName->Length = 0;
-#endif
-
-    /* Open the \ArcName object directory */
-    RtlInitUnicodeString(&ArcNameDir, L"\\ArcName");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &ArcNameDir,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenDirectoryObject(&DirectoryHandle,
-                                   DIRECTORY_ALL_ACCESS,
-                                   &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenDirectoryObject(%wZ) failed, Status 0x%08lx\n", &ArcNameDir, Status);
-        return Status;
-    }
-
-    /* Open the ARC name link */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               ArcName,
-                               OBJ_CASE_INSENSITIVE,
-                               DirectoryHandle,
-                               NULL);
-    Status = NtOpenSymbolicLinkObject(&LinkHandle,
-                                      SYMBOLIC_LINK_ALL_ACCESS,
-                                      &ObjectAttributes);
-
-    /* Close the \ArcName object directory handle */
-    NtClose(DirectoryHandle);
-
-    /* Check for success */
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenSymbolicLinkObject(%wZ) failed, Status 0x%08lx\n", ArcName, Status);
-        return Status;
-    }
-
-    /* Reserve one WCHAR for the NULL-termination */
-    NtName->MaximumLength -= sizeof(UNICODE_NULL);
-
-    /* Resolve the link */
-    Status = NtQuerySymbolicLinkObject(LinkHandle, NtName, NULL);
-
-    /* Restore the NULL-termination */
-    NtName->MaximumLength += sizeof(UNICODE_NULL);
-
-    /* Check for success */
-    if (!NT_SUCCESS(Status))
-    {
-        /* We failed, don't touch NtName */
-        DPRINT1("NtQuerySymbolicLinkObject(%wZ) failed, Status 0x%08lx\n", ArcName, Status);
-    }
-    else
-    {
-        /* We succeeded, NULL-terminate NtName */
-        NtName->Buffer[NtName->Length / sizeof(WCHAR)] = UNICODE_NULL;
-    }
-
-    NtClose(LinkHandle);
-    return Status;
-}
-
-/*
  * ArcNamePath:
- *      In input, pointer to an ARC path (NULL-terminated) starting by an ARC name
- *      to be resolved into a NT device name.
- *      In opposition to ResolveArcNameNtSymLink(), the caller does not have to
- *      delimit the ARC name from within an ARC path. The real ARC name is deduced
- *      after parsing the ARC path, and, in output, ArcNamePath points to the
- *      beginning of the path after the ARC name part.
- *
- * NtName:
- *      Receives the resolved NT name. The buffer is NULL-terminated.
- *
- * PartList:
- *      (Optional) partition list that helps in resolving the paths pointing
- *      to hard disks.
+ *      In input, pointer to an ARC path (NULL-terminated) starting by an
+ *      ARC name to be parsed into its different components.
+ *      In output, ArcNamePath points to the beginning of the path after
+ *      the ARC name part.
  */
 static NTSTATUS
-ResolveArcNameManually(
-    OUT PUNICODE_STRING NtName,
+ParseArcName(
     IN OUT PCWSTR* ArcNamePath,
-    IN  PPARTLIST PartList OPTIONAL)
+    OUT PULONG pAdapterKey,
+    OUT PULONG pControllerKey,
+    OUT PULONG pPeripheralKey,
+    OUT PULONG pPartitionNumber,
+    OUT PADAPTER_TYPE pAdapterType,
+    OUT PCONTROLLER_TYPE pControllerType,
+    OUT PPERIPHERAL_TYPE pPeripheralType,
+    OUT PBOOLEAN pUseSignature)
 {
-    HRESULT hr;
     WCHAR TokenBuffer[50];
     UNICODE_STRING Token;
     PCWSTR p, q;
@@ -466,17 +374,6 @@ ResolveArcNameManually(
     CONTROLLER_TYPE ControllerType;
     PERIPHERAL_TYPE PeripheralType;
     BOOLEAN UseSignature = FALSE;
-
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry = NULL;
-
-    if (NtName->MaximumLength < sizeof(UNICODE_NULL))
-        return STATUS_BUFFER_TOO_SMALL;
-
-#if 0
-    *NtName->Buffer = UNICODE_NULL;
-    NtName->Length = 0;
-#endif
 
     /*
      * The format of ArcName is:
@@ -529,8 +426,6 @@ ResolveArcNameManually(
                 return STATUS_NOT_SUPPORTED;
             }
 
-            hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
-                                 L"\\Device\\Ramdisk%lu", AdapterKey);
             goto Quit;
         }
     }
@@ -644,10 +539,183 @@ ResolveArcNameManually(
         PartitionNumber = 0;
     }
 
+    // TODO: Check the partition number in case of fdisks and cdroms??
+
+Quit:
+    /* Return the results */
+    *ArcNamePath      = p;
+    *pAdapterKey      = AdapterKey;
+    *pControllerKey   = ControllerKey;
+    *pPeripheralKey   = PeripheralKey;
+    *pPartitionNumber = PartitionNumber;
+    *pAdapterType     = AdapterType;
+    *pControllerType  = ControllerType;
+    *pPeripheralType  = PeripheralType;
+    *pUseSignature    = UseSignature;
+
+    return STATUS_SUCCESS;
+}
+
+/*
+ * ArcName:
+ *      ARC name (counted string) to be resolved into a NT device name.
+ *      The caller should have already delimited it from within an ARC path
+ *      (usually by finding where the first path separator appears in the path).
+ *
+ * NtName:
+ *      Receives the resolved NT name. The buffer is NULL-terminated.
+ */
+static NTSTATUS
+ResolveArcNameNtSymLink(
+    OUT PUNICODE_STRING NtName,
+    IN  PUNICODE_STRING ArcName)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE DirectoryHandle, LinkHandle;
+    UNICODE_STRING ArcNameDir;
+
+    if (NtName->MaximumLength < sizeof(UNICODE_NULL))
+        return STATUS_BUFFER_TOO_SMALL;
+
+#if 0
+    *NtName->Buffer = UNICODE_NULL;
+    NtName->Length = 0;
+#endif
+
+    /* Open the \ArcName object directory */
+    RtlInitUnicodeString(&ArcNameDir, L"\\ArcName");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &ArcNameDir,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenDirectoryObject(&DirectoryHandle,
+                                   DIRECTORY_ALL_ACCESS,
+                                   &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenDirectoryObject(%wZ) failed, Status 0x%08lx\n", &ArcNameDir, Status);
+        return Status;
+    }
+
+    /* Open the ARC name link */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               ArcName,
+                               OBJ_CASE_INSENSITIVE,
+                               DirectoryHandle,
+                               NULL);
+    Status = NtOpenSymbolicLinkObject(&LinkHandle,
+                                      SYMBOLIC_LINK_ALL_ACCESS,
+                                      &ObjectAttributes);
+
+    /* Close the \ArcName object directory handle */
+    NtClose(DirectoryHandle);
+
+    /* Check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenSymbolicLinkObject(%wZ) failed, Status 0x%08lx\n", ArcName, Status);
+        return Status;
+    }
+
+    /* Reserve one WCHAR for the NULL-termination */
+    NtName->MaximumLength -= sizeof(UNICODE_NULL);
+
+    /* Resolve the link */
+    Status = NtQuerySymbolicLinkObject(LinkHandle, NtName, NULL);
+
+    /* Restore the NULL-termination */
+    NtName->MaximumLength += sizeof(UNICODE_NULL);
+
+    /* Check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, don't touch NtName */
+        DPRINT1("NtQuerySymbolicLinkObject(%wZ) failed, Status 0x%08lx\n", ArcName, Status);
+    }
+    else
+    {
+        /* We succeeded, NULL-terminate NtName */
+        NtName->Buffer[NtName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    NtClose(LinkHandle);
+    return Status;
+}
+
+/*
+ * ArcNamePath:
+ *      In input, pointer to an ARC path (NULL-terminated) starting by an
+ *      ARC name to be resolved into a NT device name.
+ *      In opposition to ResolveArcNameNtSymLink(), the caller does not have
+ *      to delimit the ARC name from within an ARC path. The real ARC name is
+ *      deduced after parsing the ARC path, and, in output, ArcNamePath points
+ *      to the beginning of the path after the ARC name part.
+ *
+ * NtName:
+ *      Receives the resolved NT name. The buffer is NULL-terminated.
+ *
+ * PartList:
+ *      (Optional) partition list that helps in resolving the paths pointing
+ *      to hard disks.
+ */
+static NTSTATUS
+ResolveArcNameManually(
+    OUT PUNICODE_STRING NtName,
+    IN OUT PCWSTR* ArcNamePath,
+    IN  PPARTLIST PartList)
+{
+    NTSTATUS Status;
+    HRESULT hr;
+    ULONG AdapterKey;
+    ULONG ControllerKey;
+    ULONG PeripheralKey;
+    ULONG PartitionNumber;
+    ADAPTER_TYPE AdapterType;
+    CONTROLLER_TYPE ControllerType;
+    PERIPHERAL_TYPE PeripheralType;
+    BOOLEAN UseSignature;
+
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry = NULL;
+
+    if (NtName->MaximumLength < sizeof(UNICODE_NULL))
+        return STATUS_BUFFER_TOO_SMALL;
+
+#if 0
+    *NtName->Buffer = UNICODE_NULL;
+    NtName->Length = 0;
+#endif
+
+    /* Parse the ARC path */
+    Status = ParseArcName(ArcNamePath,
+                          &AdapterKey,
+                          &ControllerKey,
+                          &PeripheralKey,
+                          &PartitionNumber,
+                          &AdapterType,
+                          &ControllerType,
+                          &PeripheralType,
+                          &UseSignature);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     // TODO: Check the partition number in case of fdisks and cdroms??
 
+    /* Check for adapters that don't take any extra controller or peripheral nodes */
+    if (AdapterType == NetAdapter || AdapterType == RamdiskAdapter)
+    {
+        if (AdapterType == NetAdapter)
+        {
+            DPRINT1("%S(%lu) path is not supported!\n", AdapterTypes_U[AdapterType], AdapterKey);
+            return STATUS_NOT_SUPPORTED;
+        }
 
+        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                             L"\\Device\\Ramdisk%lu", AdapterKey);
+    }
+    else
     if (ControllerType == CdRomController) // and so, AdapterType == ScsiAdapter and PeripheralType == FDiskPeripheral
     {
         hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
@@ -718,7 +786,6 @@ Quit:
         return (NTSTATUS)hr;
     }
 
-    *ArcNamePath = p;
     return STATUS_SUCCESS;
 }
 
