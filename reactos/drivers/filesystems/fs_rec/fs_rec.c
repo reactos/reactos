@@ -316,6 +316,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
     ULONG DeviceCount = 0;
     NTSTATUS Status;
+    PDEVICE_OBJECT CdfsObject;
     PDEVICE_OBJECT UdfsObject;
     PAGED_CODE();
 
@@ -340,14 +341,24 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = FsRecFsControl;
     DriverObject->DriverUnload = FsRecUnload;
 
-    /* Register CDFS */
+    /* Register CDFS for CDs */
     Status = FsRecRegisterFs(DriverObject,
                              NULL,
-                             NULL,
+                             &CdfsObject,
                              L"\\Cdfs",
                              L"\\FileSystem\\CdfsRecognizer",
                              FS_TYPE_CDFS,
                              FILE_DEVICE_CD_ROM_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
+
+    /* Register CDFS for HDDs */
+    Status = FsRecRegisterFs(DriverObject,
+                             CdfsObject,
+                             NULL,
+                             L"\\CdfsHdd",
+                             L"\\FileSystem\\CdfsHddRecognizer",
+                             FS_TYPE_CDFS,
+                             FILE_DEVICE_DISK_FILE_SYSTEM);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register UDFS for CDs */
