@@ -31,6 +31,8 @@
 #include <debug.h>
 
 
+/* TYPEDEFS *****************************************************************/
+
 /* Supported adapter types */
 typedef enum _ADAPTER_TYPE
 {
@@ -109,7 +111,7 @@ const PCWSTR PeripheralTypes_U[] =
 
 /* FUNCTIONS ****************************************************************/
 
-PCSTR
+/* static */ PCSTR
 ArcGetNextTokenA(
     IN  PCSTR ArcPath,
     OUT PANSI_STRING TokenSpecifier,
@@ -170,7 +172,7 @@ ArcGetNextTokenA(
     return ++p;
 }
 
-PCWSTR
+static PCWSTR
 ArcGetNextTokenU(
     IN  PCWSTR ArcPath,
     OUT PUNICODE_STRING TokenSpecifier,
@@ -234,7 +236,7 @@ ArcGetNextTokenU(
 }
 
 
-ULONG
+/* static */ ULONG
 ArcMatchTokenA(
     IN PCSTR CandidateToken,
     IN const PCSTR* TokenTable)
@@ -249,7 +251,7 @@ ArcMatchTokenA(
     return Index;
 }
 
-ULONG
+/* static */ ULONG
 ArcMatchTokenU(
     IN PCWSTR CandidateToken,
     IN const PCWSTR* TokenTable)
@@ -264,7 +266,7 @@ ArcMatchTokenU(
     return Index;
 }
 
-ULONG
+static ULONG
 ArcMatchToken_UStr(
     IN PCUNICODE_STRING CandidateToken,
     IN const PCWSTR* TokenTable)
