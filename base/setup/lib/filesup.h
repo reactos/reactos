@@ -63,16 +63,16 @@ CombinePaths(
     IN /* PCWSTR */ ...);
 
 BOOLEAN
-DoesPathExistEx(
+DoesPathExist(
     IN HANDLE RootDirectory OPTIONAL,
     IN PCWSTR PathName,
     IN BOOLEAN IsDirectory);
 
-#define DoesPathExist(RootDirectory, PathName)  \
-    DoesPathExistEx((RootDirectory), (PathName), TRUE)
+#define DoesDirExist(RootDirectory, DirName)    \
+    DoesPathExist((RootDirectory), (DirName), TRUE)
 
 #define DoesFileExist(RootDirectory, FileName)  \
-    DoesPathExistEx((RootDirectory), (FileName), FALSE)
+    DoesPathExist((RootDirectory), (FileName), FALSE)
 
 // FIXME: DEPRECATED! HACKish function that needs to be deprecated!
 BOOLEAN

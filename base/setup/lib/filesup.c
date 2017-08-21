@@ -517,7 +517,7 @@ CombinePaths(
 }
 
 BOOLEAN
-DoesPathExistEx(
+DoesPathExist(
     IN HANDLE RootDirectory OPTIONAL,
     IN PCWSTR PathName,
     IN BOOLEAN IsDirectory)

@@ -113,7 +113,7 @@ SetupCreateDirectory(
             *Ptr = 0;
 
             DPRINT("PathBuffer: %S\n", PathBuffer);
-            if (!DoesPathExist(NULL, PathBuffer))
+            if (!DoesDirExist(NULL, PathBuffer))
             {
                 DPRINT("Create: %S\n", PathBuffer);
                 Status = SetupCreateSingleDirectory(PathBuffer);
@@ -127,7 +127,7 @@ SetupCreateDirectory(
         Ptr++;
     }
 
-    if (!DoesPathExist(NULL, PathBuffer))
+    if (!DoesDirExist(NULL, PathBuffer))
     {
         DPRINT("Create: %S\n", PathBuffer);
         Status = SetupCreateSingleDirectory(PathBuffer);

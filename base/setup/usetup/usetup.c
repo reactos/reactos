@@ -4315,7 +4315,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
         {
-            if (DoesPathExist(NULL, L"\\Device\\Floppy0\\") == FALSE)
+            if (DoesDirExist(NULL, L"\\Device\\Floppy0\\") == FALSE)
             {
                 MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
                 return BOOT_LOADER_FLOPPY_PAGE;
