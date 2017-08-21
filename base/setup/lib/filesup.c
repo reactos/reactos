@@ -8,6 +8,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "precomp.h"
+#include "filesup.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -580,19 +581,17 @@ CombinePaths(
     return Status;
 }
 
-//
-// NOTE: It may be possible to merge both DoesPathExist and DoesFileExist...
-//
 BOOLEAN
-DoesPathExist(
+DoesPathExistEx(
     IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathName)
+    IN PCWSTR PathName,
+    IN BOOLEAN IsDirectory)
 {
     NTSTATUS Status;
+    UNICODE_STRING Name;
     HANDLE FileHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING Name;
 
     RtlInitUnicodeString(&Name, PathName);
 
@@ -603,48 +602,24 @@ DoesPathExist(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        FILE_LIST_DIRECTORY | SYNCHRONIZE,
+                        IsDirectory ? (FILE_LIST_DIRECTORY | SYNCHRONIZE)
+                                    :  FILE_GENERIC_READ, // Contains SYNCHRONIZE
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+                        FILE_SYNCHRONOUS_IO_NONALERT |
+                            (IsDirectory ? FILE_DIRECTORY_FILE
+                                         : FILE_NON_DIRECTORY_FILE));
     if (NT_SUCCESS(Status))
+    {
         NtClose(FileHandle);
+    }
     else
-        DPRINT("Failed to open directory '%wZ', Status 0x%08lx\n", &Name, Status);
-
-    return NT_SUCCESS(Status);
-}
-
-BOOLEAN
-DoesFileExist(
-    IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathNameToFile)
-{
-    NTSTATUS Status;
-    UNICODE_STRING FileName;
-    HANDLE FileHandle;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-
-    RtlInitUnicodeString(&FileName, PathNameToFile);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &FileName,
-                               OBJ_CASE_INSENSITIVE,
-                               RootDirectory,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        FILE_GENERIC_READ, // Contains SYNCHRONIZE
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
-    if (NT_SUCCESS(Status))
-        NtClose(FileHandle);
-    else
-        DPRINT("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
+    {
+        DPRINT("Failed to open %s '%wZ', Status 0x%08lx\n",
+               IsDirectory ? "directory" : "file",
+               &Name, Status);
+    }
 
     return NT_SUCCESS(Status);
 }
