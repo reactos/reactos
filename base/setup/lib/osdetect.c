@@ -359,7 +359,7 @@ IsValidNTOSInstallationByHandle(
 
     /* Check for the existence of \SystemRoot\System32 */
     PathName = L"System32\\";
-    if (!DoesPathExist(SystemRootDirectory, PathName))
+    if (!DoesDirExist(SystemRootDirectory, PathName))
     {
         // DPRINT1("Failed to open directory '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
@@ -367,7 +367,7 @@ IsValidNTOSInstallationByHandle(
 
     /* Check for the existence of \SystemRoot\System32\drivers */
     PathName = L"System32\\drivers\\";
-    if (!DoesPathExist(SystemRootDirectory, PathName))
+    if (!DoesDirExist(SystemRootDirectory, PathName))
     {
         // DPRINT1("Failed to open directory '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
@@ -375,7 +375,7 @@ IsValidNTOSInstallationByHandle(
 
     /* Check for the existence of \SystemRoot\System32\config */
     PathName = L"System32\\config\\";
-    if (!DoesPathExist(SystemRootDirectory, PathName))
+    if (!DoesDirExist(SystemRootDirectory, PathName))
     {
         // DPRINT1("Failed to open directory '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
