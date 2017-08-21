@@ -85,7 +85,9 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
 
     WCHAR wszCLSIDValue[CHARS_IN_GUID];
     DWORD dwSize = sizeof(wszCLSIDValue);
-    if (RegGetValueW(hkeyProgId, NULL, NULL, RRF_RT_REG_SZ, NULL, wszCLSIDValue, &dwSize))
+    LONG res = RegGetValueW(hkeyProgId, NULL, NULL, RRF_RT_REG_SZ, NULL, wszCLSIDValue, &dwSize);
+    RegCloseKey(hkeyProgId);
+    if (res)
     {
         ERR("OpenKeyFromFileType succeeded but RegGetValueW failed\n");
         return S_FALSE;
@@ -254,6 +256,9 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
         {
             initIcon->SetNormalIcon(swShell32Name, 0);
         }
+
+        if (hkey)
+            RegCloseKey(hkey);
     }
 
     return initIcon->QueryInterface(iid, ppvOut);
