@@ -110,6 +110,18 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
     }
 #endif
 
+    if (RegGetValueW(HKEY_LOCAL_MACHINE,
+                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Blocked",
+                     wszCLSIDValue,
+                     RRF_RT_REG_SZ,
+                     NULL,
+                     NULL,
+                     NULL) == ERROR_SUCCESS)
+    {
+        ERR("Extension %S  not approved\n", wszCLSIDValue);
+        return E_ACCESSDENIED;
+    }
+
     HRESULT hres = CLSIDFromString (wszCLSIDValue, pclsid);
     if (FAILED_UNEXPECTEDLY(hres))
         return hres;
@@ -683,12 +695,6 @@ HRESULT WINAPI CFSFolder::BindToObject(
         return E_INVALIDARG;
     }
 
-    if (!_ILIsFolder(pidl) && !_ILIsValue(pidl))
-    {
-        ERR("CFSFolder::BindToObject: Invalid pidl!\n");
-        return E_INVALIDARG;
-    }
-
     /* Get the pidl data */
     FileStruct* pData = &_ILGetDataPointer(pidl)->u.file;
     FileStructW* pDataW = _ILGetFileStructW(pidl);
@@ -963,7 +969,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
     {
         *ppvOut = NULL;
 
-        if (cidl == 1)
+        if (cidl == 1 && _ILIsValue(apidl[0]))
         {
             hr = _CreateExtensionUIObject(apidl[0], riid, ppvOut);
             if(hr != S_FALSE)
@@ -1001,7 +1007,8 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         }
         else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
         {
-            hr = _GetIconHandler(apidl[0], riid, (LPVOID*)&pObj);
+            if (_ILIsValue(apidl[0]))
+                hr = _GetIconHandler(apidl[0], riid, (LPVOID*)&pObj);
             if (hr != S_OK)
                 hr = CFSExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
         }
@@ -1162,25 +1169,25 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     PITEMID_CHILD *pPidlOut)
 {
     WCHAR szSrc[MAX_PATH + 1], szDest[MAX_PATH + 1];
-    LPWSTR ptr;
     BOOL bIsFolder = _ILIsFolder (ILFindLastID (pidl));
 
     TRACE ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this, hwndOwner, pidl,
            debugstr_w (lpName), dwFlags, pPidlOut);
 
+    FileStructW* pDataW = _ILGetFileStructW(pidl);
+    if (!pDataW)
+    {
+        ERR("Got garbage pidl\n");
+        return E_INVALIDARG;
+    }
+
     /* build source path */
-    lstrcpynW(szSrc, sPathTarget, MAX_PATH);
-    ptr = PathAddBackslashW (szSrc);
-    if (ptr)
-        _ILSimpleGetTextW (pidl, ptr, MAX_PATH + 1 - (ptr - szSrc));
+    PathCombineW(szSrc, sPathTarget, pDataW->wszName);
 
     /* build destination path */
-    if (dwFlags == SHGDN_NORMAL || dwFlags & SHGDN_INFOLDER) {
-        lstrcpynW(szDest, sPathTarget, MAX_PATH);
-        ptr = PathAddBackslashW (szDest);
-        if (ptr)
-            lstrcpynW(ptr, lpName, MAX_PATH + 1 - (ptr - szDest));
-    } else
+    if (dwFlags == SHGDN_NORMAL || dwFlags & SHGDN_INFOLDER)
+        PathCombineW(szDest, sPathTarget, lpName);
+    else
         lstrcpynW(szDest, lpName, MAX_PATH);
 
     if(!(dwFlags & SHGDN_FORPARSING) && SHELL_FS_HideExtension(szSrc)) {
@@ -1192,7 +1199,7 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     }
 
     TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
-    if (!memcmp(szSrc, szDest, (wcslen(szDest) + 1) * sizeof(WCHAR)))
+    if (!wcscmp(szSrc, szDest))
     {
         /* src and destination is the same */
         HRESULT hr = S_OK;
@@ -1201,7 +1208,6 @@ HRESULT WINAPI CFSFolder::SetNameOf(
 
         return hr;
     }
-
 
     if (MoveFileW (szSrc, szDest))
     {
