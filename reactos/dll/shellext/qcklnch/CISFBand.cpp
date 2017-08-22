@@ -241,7 +241,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
                 wcscpy(pdbi->wszTitle, L"Quick Launch");                
             if (pdbi->dwMask & DBIM_MODEFLAGS)
             {
-                pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT | DBIMF_USECHEVRON | DBIMF_NOMARGINS | DBIMF_BKCOLOR;
+                pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT | DBIMF_USECHEVRON | DBIMF_NOMARGINS | DBIMF_BKCOLOR | DBIMF_ADDTOFRONT;
             }
             if (pdbi->dwMask & DBIM_BKCOLOR)
                 pdbi->dwMask &= ~DBIM_BKCOLOR;
