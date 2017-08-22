@@ -112,31 +112,58 @@ XHCI_ProcessEvent (IN PXHCI_EXTENSION XhciExtension)
     
     RunTimeRegisterBase = XhciExtension-> RunTimeRegisterBase;
     dequeue_pointer = HcResourcesVA-> EventRing.dequeue_pointer;
+    /*DPRINT("XHCI_ProcessEvent: eventtrb 0 word0    - %p\n", HcResourcesVA->EventRing.firstSeg.XhciTrb[0].GenericTRB.Word0);
+    DPRINT("XHCI_ProcessEvent: eventtrb 0 word1    - %p\n", HcResourcesVA->EventRing.firstSeg.XhciTrb[0].GenericTRB.Word1);
+    DPRINT("XHCI_ProcessEvent: eventtrb 0 word2    - %p\n", HcResourcesVA->EventRing.firstSeg.XhciTrb[0].GenericTRB.Word2);
+    DPRINT("XHCI_ProcessEvent: eventtrb 0 word3    - %p\n", HcResourcesVA->EventRing.firstSeg.XhciTrb[0].GenericTRB.Word3);
+    DPRINT("XHCI_ProcessEvent: deque_ptr    - %p\n", dequeue_pointer);
+    DPRINT("XHCI_ProcessEvent: base addr    - %p\n", &(HcResourcesVA->EventRing.firstSeg.XhciTrb[0]));*/
+    
     while (TRUE) {
         eventTRB = (*dequeue_pointer).EventTRB;
         if (eventTRB.EventGenericTRB.CycleBit != HcResourcesVA-> EventRing.ConsumerCycleState){
             DPRINT1("XHCI_ProcessEvent: cycle bit mismatch. end of processing\n");
-            DPRINT("XHCI_ProcessEvent: eventtrb word0    - %p\n", eventTRB.EventGenericTRB.Word0);
-            DPRINT("XHCI_ProcessEvent: eventtrb word1    - %p\n", eventTRB.EventGenericTRB.Word1);
-            DPRINT("XHCI_ProcessEvent: eventtrb word2    - %p\n", eventTRB.EventGenericTRB.Word2);
-            DPRINT("XHCI_ProcessEvent: eventtrb cycle bit    - %x\n", eventTRB.EventGenericTRB.CycleBit);
+            //DPRINT("XHCI_ProcessEvent: eventtrb word0    - %p\n", eventTRB.EventGenericTRB.Word0);
+            //DPRINT("XHCI_ProcessEvent: eventtrb word1    - %p\n", eventTRB.EventGenericTRB.Word1);
+            //DPRINT("XHCI_ProcessEvent: eventtrb word2    - %p\n", eventTRB.EventGenericTRB.Word2);
+            //DPRINT("XHCI_ProcessEvent: eventtrb cycle bit    - %x\n", eventTRB.EventGenericTRB.CycleBit);
             break;
         }
         TRBType = eventTRB.EventGenericTRB.TRBType;
         switch (TRBType){
             case TRANSFER_EVENT:
-            case COMMAND_COMPLETION_EVENT:      
+                DPRINT1("XHCI_ProcessEvent: TRANSFER_EVENT \n");
+                break;
+            case COMMAND_COMPLETION_EVENT: 
+                DPRINT1("XHCI_ProcessEvent: COMMAND_COMPLETION_EVENT\n");
+                if(eventTRB.CommandCompletionTRB.CompletionCode == SUCCESS){
+                    DPRINT1("XHCI_ProcessEvent: COMMAND_COMPLETION_EVENT,  successful command completion\n");
+                }
+                else DPRINT1("XHCI_ProcessEvent: COMMAND_COMPLETION_EVENT,  unsuccessful command completion %i \n",eventTRB.CommandCompletionTRB.CompletionCode);
+                break;
             case PORT_STATUS_CHANGE_EVENT: 
                 DPRINT1("XHCI_ProcessEvent: Port Status change event\n");
-            case BANDWIDTH_RESET_REQUEST_EVENT:   
-            case DOORBELL_EVENT:                  
-            case HOST_CONTROLLER_EVENT:           
-            case DEVICE_NOTIFICATION_EVENT:       
+                break;
+            case BANDWIDTH_RESET_REQUEST_EVENT:
+                DPRINT1("XHCI_ProcessEvent: BANDWIDTH_RESET_REQUEST_EVENT\n");
+                break;
+            case DOORBELL_EVENT:
+                DPRINT1("XHCI_ProcessEvent: DOORBELL_EVENT\n");
+                break;
+            case HOST_CONTROLLER_EVENT:
+                DPRINT1("XHCI_ProcessEvent: HOST_CONTROLLER_EVENT\n");
+                break;
+            case DEVICE_NOTIFICATION_EVENT:
+                DPRINT1("XHCI_ProcessEvent: DEVICE_NOTIFICATION_EVENT\n");
+                break;
             case MF_INDEX_WARP_EVENT:
+                DPRINT1("XHCI_ProcessEvent: MF_INDEX_WARP_EVENT\n");
+                break;
             default:
             DPRINT1("XHCI_ProcessEvent: Unknown TRBType - %x\n",
                     TRBType);
-            DbgBreakPoint();            
+            DbgBreakPoint(); 
+                break;
         }
         if (dequeue_pointer == &(HcResourcesVA->EventRing.firstSeg.XhciTrb[255])){
             HcResourcesVA-> EventRing.ConsumerCycleState = ~(HcResourcesVA-> EventRing.ConsumerCycleState);
@@ -145,6 +172,7 @@ XHCI_ProcessEvent (IN PXHCI_EXTENSION XhciExtension)
         }
         dequeue_pointer = dequeue_pointer + 1;
     }
+    
     //erstdp.AsULONGLONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP + 1);
     //erstdp.AsULONGLONG = erstdp.AsULONGLONG <<32;
     //erstdp.AsULONGLONG = erstdp.AsULONGLONG + READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_ERSTDP);
@@ -179,7 +207,7 @@ XHCI_SendCommand (IN XHCI_TRB CommandTRB,
     dequeue_pointer = HcResourcesVA -> CommandRing.dequeue_pointer;
     // check if ring is full
     if ((enqueue_pointer + 1) == dequeue_pointer) {
-        DPRINT1 ("XHCI_SendCommand : Command ring is full");
+        DPRINT1 ("XHCI_SendCommand : Command ring is full \n");
         return MP_STATUS_FAILURE;
     }
     // check if the trb is link trb.
@@ -191,9 +219,9 @@ XHCI_SendCommand (IN XHCI_TRB CommandTRB,
         ASSERT(LinkPointer.QuadPart >= HcResourcesPA.QuadPart && LinkPointer.QuadPart < HcResourcesPA.QuadPart + sizeof(XHCI_HC_RESOURCES)) ;
         enqueue_pointer_prev = enqueue_pointer;
         enqueue_pointer = (PXHCI_TRB)(HcResourcesVA + LinkPointer.QuadPart - HcResourcesPA.QuadPart);
-        
+        //enqueue_pointer = &(HcResourcesVA->CommandRing.firstSeg.XhciTrb[0]);
         if ((enqueue_pointer == dequeue_pointer) || (enqueue_pointer == dequeue_pointer + 1)){ // it can't move ahead break out of function
-                DPRINT1 ("XHCI_SendCommand : Command ring is full");
+                DPRINT1 ("XHCI_SendCommand : Command ring is full \n");
                 return MP_STATUS_FAILURE;
             }
             // now the link trb is valid. set its cycle state to Producer cycle state for the command ring to read
@@ -226,8 +254,8 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
                         IN PVOID resourcesStartPA)
 {
     DPRINT1("XHCI_ControllerWorkTest: Initiated.\n");
-    PULONG DoorBellRegisterBase;
-    XHCI_DOORBELL Doorbell_0;
+    /*PULONG DoorBellRegisterBase;
+    //XHCI_DOORBELL Doorbell_0;
     LARGE_INTEGER CurrentTime = {{0, 0}};
     LARGE_INTEGER LastTime = {{0, 0}};
     XHCI_USB_STATUS Status;
@@ -241,19 +269,26 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
     XHCI_EVENT_RING_TABLE_SIZE erstz;
     XHCI_EVENT_RING_TABLE_BASE_ADDR erstba;
     XHCI_EVENT_RING_DEQUEUE_POINTER erstdp;
-    XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
+    XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable; */
     // place a no op command trb on the command ring
     XHCI_TRB trb;
-    XHCI_TRB eventtrb;
+    //XHCI_TRB eventtrb;
     trb.CommandTRB.NoOperation.RsvdZ1 = 0;
     trb.CommandTRB.NoOperation.RsvdZ2 = 0;
     trb.CommandTRB.NoOperation.RsvdZ3 = 0;
-    trb.CommandTRB.NoOperation.CycleBit = 0;
+    trb.CommandTRB.NoOperation.CycleBit = 1;
     trb.CommandTRB.NoOperation.RsvdZ4 = 0;
-    trb.CommandTRB.NoOperation.TRBType = 8;
+    trb.CommandTRB.NoOperation.TRBType = NO_OP_COMMAND;
     trb.CommandTRB.NoOperation.RsvdZ5 = 0;
+    for(int i=0; i<256; i++){
+        XHCI_SendCommand(trb,XhciExtension);
     
-    HcResourcesVA -> CommandRing.firstSeg.XhciTrb[0] = trb;
+        //XHCI_ProcessEvent(XhciExtension);
+    }
+    //XHCI_SendCommand(trb,XhciExtension);
+    
+    XHCI_ProcessEvent(XhciExtension);
+    /*HcResourcesVA -> CommandRing.firstSeg.XhciTrb[0] = trb;
     // ring the commmand ring door bell register
     DoorBellRegisterBase = XhciExtension->DoorBellRegisterBase;
     Doorbell_0.DoorBellTarget = 0;
@@ -271,6 +306,7 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
             break;
         }
     }
+    
     // check for event completion trb
     eventtrb =  HcResourcesVA -> EventRing.firstSeg.XhciTrb[0];
     DPRINT("XHCI_ControllerWorkTest: eventtrb word0    - %p\n", eventtrb.GenericTRB.Word0);
@@ -312,7 +348,7 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
     DPRINT("XHCI_ControllerWorkTest: pointer erstz     - %p\n", XhciExtension->RunTimeRegisterBase + XHCI_ERSTSZ);
     DPRINT("XHCI_ControllerWorkTest: pointer erstba     - %p %p\n", XhciExtension->RunTimeRegisterBase + XHCI_ERSTBA+1 , XhciExtension->RunTimeRegisterBase + XHCI_ERSTBA);
     
-    
+    */
     //DbgBreakPoint();
     return MP_STATUS_SUCCESS;
 }
@@ -386,11 +422,12 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     CommandLinkTRB.GenericTRB.Word1 = 0;
     CommandLinkTRB.GenericTRB.Word2 = 0;
     CommandLinkTRB.GenericTRB.Word3 = 0;
-    ULONGLONG RingStartAddr;
+    XHCI_LINK_ADDR RingStartAddr;
     
-    RingStartAddr = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.firstSeg);
-    CommandLinkTRB.GenericTRB.Word0 = RingStartAddr & 0x00000000FFFFFFF0; // physical addr is needed. but recheck assignment
-    CommandLinkTRB.LinkTRB.RingSegmentPointerHi = (RingStartAddr & 0xFFFFFFFF00000000) >>32;
+    RingStartAddr.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.firstSeg);
+    CommandLinkTRB.GenericTRB.RsvdZ1 = 0; //RingStartAddr & 0x00000000FFFFFFF0; // physical addr is needed. but recheck assignment
+    CommandLinkTRB.LinkTRB.RingSegmentPointerLo = RingStartAddr.RingSegmentPointerLo;
+    CommandLinkTRB.LinkTRB.RingSegmentPointerHi = RingStartAddr.RingSegmentPointerHi; //(RingStartAddr & 0xFFFFFFFF00000000) >>32;
     CommandLinkTRB.LinkTRB.InterrupterTarget = 0;
     CommandLinkTRB.LinkTRB.CycleBit = ~(HcResourcesVA->CommandRing.ProducerCycleState);
     CommandLinkTRB.LinkTRB.ToggleCycle = 1; //impt
@@ -410,7 +447,7 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     DPRINT1("XHCI_InitializeResources  : erstz.AsULONG   %p\n",erstz.AsULONG );
     WRITE_REGISTER_ULONG (RunTimeRegisterBase + XHCI_ERSTSZ , erstz.AsULONG);
     // event ring dequeue pointer.
-    erstdp.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing.firstSeg);
+    erstdp.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, EventRing.firstSeg.XhciTrb[0]);
     
     HcResourcesVA->EventRing.enqueue_pointer = &(HcResourcesVA->EventRing.firstSeg.XhciTrb[0]);
     HcResourcesVA->EventRing.dequeue_pointer = &(HcResourcesVA->EventRing.firstSeg.XhciTrb[0]);
@@ -659,7 +696,7 @@ XHCI_StartController(IN PVOID xhciExtension,
     Command.RunStop =1;
     WRITE_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD, Command.AsULONG );
     
-    //MPStatus = XHCI_ControllerWorkTest(XhciExtension,Resources->StartVA, Resources->StartPA );
+    MPStatus = XHCI_ControllerWorkTest(XhciExtension,Resources->StartVA, Resources->StartPA );
 
     return MP_STATUS_SUCCESS;
 }
@@ -748,7 +785,7 @@ XHCI_InterruptService(IN PVOID xhciExtension)
     DPRINT1("XHCI_InterruptService: Succesful Interupt\n");
     // changing the enque pointer
     
-    XHCI_ProcessEvent(XhciExtension);
+     XHCI_ProcessEvent(xhciExtension);
     
     
    
@@ -761,6 +798,7 @@ XHCI_InterruptDpc(IN PVOID xhciExtension,
                   IN BOOLEAN IsDoEnableInterrupts)
 {
     DPRINT1("XHCI_InterruptDpc: function initiated\n");
+   
 }
 
 MPSTATUS

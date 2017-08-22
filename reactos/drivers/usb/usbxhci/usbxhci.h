@@ -43,7 +43,7 @@ extern USBPORT_REGISTRATION_PACKET RegPacket;
 #define NO_OP_COMMAND                  23
 
 // EVENT TRB IDs
-#define TRANSFER_EVENT                 32
+#define TRANSFER_EVENT                  32
 #define COMMAND_COMPLETION_EVENT        33
 #define PORT_STATUS_CHANGE_EVENT        34
 #define BANDWIDTH_RESET_REQUEST_EVENT   35
@@ -96,6 +96,15 @@ typedef struct  _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY {
    PHYSICAL_ADDRESS ContextBaseAddr [256];
 } XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY, *PXHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY;
 //----------------------------------------LINK TRB--------------------------------------------------------------------
+typedef union _XHCI_LINK_ADDR{
+    struct {
+        ULONGLONG RsvdZ1                     : 4;
+        ULONGLONG RingSegmentPointerLo       : 28;
+        ULONGLONG RingSegmentPointerHi       : 32;
+    };
+    ULONGLONG AsULONGLONG;
+} XHCI_LINK_ADDR;
+
 typedef struct _XHCI_LINK_TRB{
     struct {
         ULONG RsvdZ1                     : 4;
@@ -136,9 +145,9 @@ typedef struct _XHCI_COMMAND_NO_OP_TRB {
         ULONG RsvdZ3;
         struct{
             ULONG CycleBit                  : 1;
-            ULONG RsvdZ4                    : 4;
+            ULONG RsvdZ4                    : 9;
             ULONG TRBType                   : 6;
-            ULONG RsvdZ5                    : 14;
+            ULONG RsvdZ5                    : 16;
         };
 } XHCI_COMMAND_NO_OP_TRB;
 C_ASSERT(sizeof(XHCI_COMMAND_NO_OP_TRB) == 16);
@@ -341,10 +350,11 @@ typedef struct _XHCI_HC_RESOURCES {
   XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY DCBAA;
   DECLSPEC_ALIGN(16) XHCI_RING         EventRing ;
   DECLSPEC_ALIGN(64) XHCI_RING         CommandRing ;
-  XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
+  DECLSPEC_ALIGN(64) XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
 } XHCI_HC_RESOURCES, *PXHCI_HC_RESOURCES;
 C_ASSERT (FIELD_OFFSET(XHCI_HC_RESOURCES,EventRing)% 16 == 0); 
 C_ASSERT (FIELD_OFFSET(XHCI_HC_RESOURCES,CommandRing)% 64 == 0); 
+C_ASSERT (FIELD_OFFSET(XHCI_HC_RESOURCES,EventRingSegTable)% 64 == 0);
 
 typedef struct _XHCI_EXTENSION {
   ULONG Reserved;
