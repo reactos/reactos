@@ -54,7 +54,11 @@ HRESULT EnumHotpluggedDevices(CSimpleArray<DEVINST> &devList)
         if (cr != CR_SUCCESS)
             continue;
         
-        if ((dwCapabilities & CM_DEVCAP_REMOVABLE) && (dwCapabilities & CM_DEVCAP_UNIQUEID) && !ulPnum)
+        if ( (dwCapabilities & CM_DEVCAP_REMOVABLE) &&
+            !(dwCapabilities & CM_DEVCAP_DOCKDEVICE) &&
+            !(dwCapabilities & CM_DEVCAP_SURPRISEREMOVALOK) &&
+            ((dwCapabilities & CM_DEVCAP_EJECTSUPPORTED) || (ulStatus & DN_DISABLEABLE)) &&
+            !ulPnum)
         {
             devList.Add(did.DevInst);
         }
@@ -85,12 +89,17 @@ HRESULT NotifyBalloon(CSysTray* pSysTray, LPCWSTR szTitle = NULL, LPCWSTR szInfo
     StringCchCopy(nim.szInfo, _countof(nim.szInfo), szInfo);
     BOOL ret = Shell_NotifyIcon(NIM_MODIFY, &nim);
 
-    Sleep(8000);
+    Sleep(10000); /* As per windows, the balloon notification remains visible for atleast 10 sec.
+                     This timer maintains the same condition.
+                     Also it is required so that the icon doesn't hide instantly after last device is removed,
+                     as that will prevent popping of notification.
+                  */
     StringCchCopy(nim.szInfoTitle, _countof(nim.szInfoTitle), L"");
     StringCchCopy(nim.szInfo, _countof(nim.szInfo), L"");
     ret = Shell_NotifyIcon(NIM_MODIFY, &nim);
-    g_IsRemoving = FALSE;
-
+    g_IsRemoving = FALSE; /* This flag is used to prevent instant icon hiding after last device is removed.
+                             The above timer maintains the required state for the same.
+                          */
     return ret ? S_OK : E_FAIL;
 }
 
