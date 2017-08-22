@@ -1869,6 +1869,12 @@ static HWND create_clipbrd_window(void);
  */
 static inline HRESULT get_clipbrd_window(ole_clipbrd *clipbrd, HWND *wnd)
 {
+#ifdef __REACTOS__
+    /* The clipboard window can get destroyed if the  thread that created it dies so we may need to create it again */
+    if (!IsWindow(clipbrd->window))
+        clipbrd->window = create_clipbrd_window();
+#endif
+
     if ( !clipbrd->window )
         clipbrd->window = create_clipbrd_window();
 
