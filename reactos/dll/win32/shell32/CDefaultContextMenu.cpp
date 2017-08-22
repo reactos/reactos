@@ -810,7 +810,13 @@ HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi)
     if (!m_cidl || !m_pDataObj)
         return E_FAIL;
 
-    DoDeleteAsync(m_pDataObj, lpcmi->fMask);
+    CComPtr<IDropTarget> pDT;
+    HRESULT hr = CRecyclerDropTarget_CreateInstance(IID_PPV_ARG(IDropTarget, &pDT));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    SHSimulateDrop(pDT, m_pDataObj, 0, NULL, NULL);
+
     return S_OK;
 }
 
