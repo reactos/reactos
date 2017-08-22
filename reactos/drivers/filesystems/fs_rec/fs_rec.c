@@ -220,7 +220,8 @@ FsRecRegisterFs(IN PDRIVER_OBJECT DriverObject,
                 IN PCWSTR FsName,
                 IN PCWSTR RecognizerName,
                 IN ULONG FsType,
-                IN DEVICE_TYPE DeviceType)
+                IN DEVICE_TYPE DeviceType,
+                IN ULONG AdditionalFlags)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatus;
@@ -278,6 +279,9 @@ FsRecRegisterFs(IN PDRIVER_OBJECT DriverObject,
                             &DeviceObject);
     if (NT_SUCCESS(Status))
     {
+        /* Set additional flags in the device object */
+        DeviceObject->Flags |= AdditionalFlags;
+
         /* Get the device extension and set it up */
         DeviceExtension = DeviceObject->DeviceExtension;
         DeviceExtension->FsType = FsType;
@@ -348,7 +352,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\Cdfs",
                              L"\\FileSystem\\CdfsRecognizer",
                              FS_TYPE_CDFS,
-                             FILE_DEVICE_CD_ROM_FILE_SYSTEM);
+                             FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+                             DO_LOW_PRIORITY_FILESYSTEM);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register CDFS for HDDs */
@@ -358,7 +363,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\CdfsHdd",
                              L"\\FileSystem\\CdfsHddRecognizer",
                              FS_TYPE_CDFS,
-                             FILE_DEVICE_DISK_FILE_SYSTEM);
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             DO_LOW_PRIORITY_FILESYSTEM);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register UDFS for CDs */
@@ -368,7 +374,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\UdfsCdRom",
                              L"\\FileSystem\\UdfsCdRomRecognizer",
                              FS_TYPE_UDFS,
-                             FILE_DEVICE_CD_ROM_FILE_SYSTEM);
+                             FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+                             0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register UDFS for HDDs */
@@ -378,7 +385,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\UdfsDisk",
                              L"\\FileSystem\\UdfsDiskRecognizer",
                              FS_TYPE_UDFS,
-                             FILE_DEVICE_DISK_FILE_SYSTEM);
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register FAT */
@@ -388,7 +396,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\Fat",
                              L"\\FileSystem\\FatRecognizer",
                              FS_TYPE_VFAT,
-                             FILE_DEVICE_DISK_FILE_SYSTEM);
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register NTFS */
@@ -398,7 +407,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\Ntfs",
                              L"\\FileSystem\\NtfsRecognizer",
                              FS_TYPE_NTFS,
-                             FILE_DEVICE_DISK_FILE_SYSTEM);
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register EXT2 */
@@ -408,7 +418,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\Ext2fs",
                              L"\\FileSystem\\Ext2Recognizer",
                              FS_TYPE_EXT2,
-                             FILE_DEVICE_DISK_FILE_SYSTEM);
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register BTRFS */
@@ -418,7 +429,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\Btrfs",
                              L"\\FileSystem\\BtrfsRecognizer",
                              FS_TYPE_BTRFS,
-                             FILE_DEVICE_DISK_FILE_SYSTEM);
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register REISERFS */
@@ -428,7 +440,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\Reiserfs",
                              L"\\FileSystem\\ReiserfsRecognizer",
                              FS_TYPE_REISERFS,
-                             FILE_DEVICE_DISK_FILE_SYSTEM);
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Register FFS */
@@ -438,7 +451,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\ffs",
                              L"\\FileSystem\\FfsRecognizer",
                              FS_TYPE_FFS,
-                             FILE_DEVICE_DISK_FILE_SYSTEM);
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
     /* Return appropriate Status */
