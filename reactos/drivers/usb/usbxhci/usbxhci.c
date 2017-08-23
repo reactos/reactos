@@ -40,40 +40,28 @@ XHCI_QueryEndpointRequirements(IN PVOID xhciExtension,
                                IN PVOID endpointParameters,
                                IN PULONG EndpointRequirements)
 {
-    DPRINT1("XHCI_QueryEndpointRequirements: function initiated\n");
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     ULONG TransferType;
-
+    
+    DPRINT1("XHCI_QueryEndpointRequirements: function initiated\n");
     TransferType = EndpointProperties->TransferType;
 
     switch (TransferType)
     {
         case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
             DPRINT1("XHCI_QueryEndpointRequirements: IsoTransfer\n");
-            //EndpointRequirements[1] = OHCI_MAX_ISO_TRANSFER_SIZE;
-            //EndpointRequirements[0] = sizeof(OHCI_HCD_ED) +
-            //                          OHCI_MAX_ISO_TD_COUNT * sizeof(OHCI_HCD_TD);
             break;
 
         case USBPORT_TRANSFER_TYPE_CONTROL:
             DPRINT1("XHCI_QueryEndpointRequirements: ControlTransfer\n");
-            //EndpointRequirements[1] = 0; //OHCI_MAX_CONTROL_TRANSFER_SIZE;
-            //EndpointRequirements[0] = 0; //sizeof(OHCI_HCD_ED) +
-            //                          OHCI_MAX_CONTROL_TD_COUNT * sizeof(OHCI_HCD_TD);
             break;
 
         case USBPORT_TRANSFER_TYPE_BULK:
             DPRINT1("XHCI_QueryEndpointRequirements: BulkTransfer\n");
-            //EndpointRequirements[1] = OHCI_MAX_BULK_TRANSFER_SIZE;
-            //EndpointRequirements[0] = sizeof(OHCI_HCD_ED) +
-            //                          OHCI_MAX_BULK_TD_COUNT * sizeof(OHCI_HCD_TD);
             break;
 
         case USBPORT_TRANSFER_TYPE_INTERRUPT:
             DPRINT1("XHCI_QueryEndpointRequirements: InterruptTransfer\n");
-            //EndpointRequirements[1] = OHCI_MAX_INTERRUPT_TRANSFER_SIZE;
-            //EndpointRequirements[0] = sizeof(OHCI_HCD_ED) +
-            //                          OHCI_MAX_INTERRUPT_TD_COUNT * sizeof(OHCI_HCD_TD);
             break;
 
         default:
@@ -246,7 +234,7 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
                         IN PXHCI_HC_RESOURCES HcResourcesVA,
                         IN PVOID resourcesStartPA)
 {
-    DPRINT1("XHCI_ControllerWorkTest: Initiated.\n");
+    
     /*PULONG DoorBellRegisterBase;
     //XHCI_DOORBELL Doorbell_0;
     LARGE_INTEGER CurrentTime = {{0, 0}};
@@ -265,7 +253,9 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
     XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable; */
     // place a no op command trb on the command ring
     XHCI_TRB trb;
+    int i = 0;
     //XHCI_TRB eventtrb;
+    DPRINT1("XHCI_ControllerWorkTest: Initiated.\n");
     trb.CommandTRB.NoOperation.RsvdZ1 = 0;
     trb.CommandTRB.NoOperation.RsvdZ2 = 0;
     trb.CommandTRB.NoOperation.RsvdZ3 = 0;
@@ -273,7 +263,7 @@ XHCI_ControllerWorkTest(IN PXHCI_EXTENSION XhciExtension,
     trb.CommandTRB.NoOperation.RsvdZ4 = 0;
     trb.CommandTRB.NoOperation.TRBType = NO_OP_COMMAND;
     trb.CommandTRB.NoOperation.RsvdZ5 = 0;
-    for(int i=0; i<256; i++){
+    for(i=0; i<256; i++){
         XHCI_SendCommand(trb,XhciExtension);
     
         //XHCI_ProcessEvent(XhciExtension);
@@ -352,11 +342,10 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
                          IN PVOID resourcesStartVA,
                          IN PVOID resourcesStartPA)
 {
-    DPRINT1("XHCI_InitializeResources: function initiated\n");
+    
     
     PXHCI_HC_RESOURCES HcResourcesVA;
     PHYSICAL_ADDRESS HcResourcesPA;
-    PULONG BaseIoAdress;
     PULONG OperationalRegs;
     USHORT PageSize;
     USHORT MaxScratchPadBuffers;
@@ -376,7 +365,9 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     PMDL ScratchPadArrayMDL;
     PXHCI_SCRATCHPAD_BUFFER_ARRAY BufferArrayPointer;
     PMDL ScratchPadBufferMDL;
+    int i = 0;
     
+    DPRINT1("XHCI_InitializeResources: function initiated\n");
     DPRINT_XHCI("XHCI_InitializeResources: BaseVA - %p, BasePA - %p\n",
                 resourcesStartVA,
                 resourcesStartPA);
@@ -387,7 +378,6 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     
     HcResourcesPA.QuadPart = (ULONG_PTR)resourcesStartPA;
     XhciExtension->HcResourcesPA = HcResourcesPA;
-    BaseIoAdress = XhciExtension->BaseIoAdress;
     OperationalRegs = XhciExtension->OperationalRegs;
     
     //DCBAA init
@@ -399,7 +389,7 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     // command ring intialisation.
     HcResourcesVA->CommandRing.enqueue_pointer = &(HcResourcesVA->CommandRing.firstSeg.XhciTrb[0]);
     HcResourcesVA->CommandRing.dequeue_pointer = &(HcResourcesVA->CommandRing.firstSeg.XhciTrb[0]);
-    for (int i=0; i<256; i++)
+    for (i=0; i<256; i++)
     {
         HcResourcesVA->CommandRing.firstSeg.XhciTrb[i].GenericTRB.Word0 = 0;
         HcResourcesVA->CommandRing.firstSeg.XhciTrb[i].GenericTRB.Word1 = 0;
@@ -468,7 +458,7 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     // intially enque and deque are equal. 
     
     
-    for (int i=0; i<256; i++)
+    for (i=0; i<256; i++)
     {
         HcResourcesVA->EventRing.firstSeg.XhciTrb[i].GenericTRB.Word0 = 0;
         HcResourcesVA->EventRing.firstSeg.XhciTrb[i].GenericTRB.Word1 = 0;
@@ -484,7 +474,6 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     { // xHCI may declare 0 scratchpad arrays. if so there is no need for memory allocation.
         return MP_STATUS_SUCCESS;
     }
-    //if ((PageSize  &  (1 << 0)) == 0){ // this is how it is implemented in Haiko
     if ((PageSize & (1 << 0)) == 0) 
     {
         DPRINT1("XHCI_InitializeResources  : fail. does not support 4k page size   %p\n",PageSize);
@@ -528,7 +517,7 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
         MmFreeContiguousMemory(BufferArrayPointer);
         return MP_STATUS_FAILURE;
     }
-    for (int i = 0; i < MaxScratchPadBuffers ; i++)
+    for (i = 0; i < MaxScratchPadBuffers ; i++)
     {
         BufferArrayPointer[i].AsULONGLONG = MmGetMdlPfnArray(ScratchPadBufferMDL)[i] << PAGE_SHIFT;
     }
@@ -541,7 +530,6 @@ MPSTATUS
 NTAPI
 XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
 {
-    DPRINT1("XHCI_InitializeHardware: function initiated\n");
     PULONG BaseIoAdress;
     PULONG OperationalRegs;
     XHCI_USB_COMMAND Command;
@@ -551,6 +539,7 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
     XHCI_HC_STRUCTURAL_PARAMS_1 StructuralParams_1;
     XHCI_CONFIGURE Config;
     
+    DPRINT1("XHCI_InitializeHardware: function initiated\n");
     DPRINT1("XHCI_InitializeHardware: ... \n");
 
     OperationalRegs = XhciExtension->OperationalRegs;
@@ -604,7 +593,7 @@ NTAPI
 XHCI_StartController(IN PVOID xhciExtension,
                      IN PUSBPORT_RESOURCES Resources)
 {
-    DPRINT1("XHCI_StartController: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
     PULONG BaseIoAdress;
     PULONG OperationalRegs;
@@ -621,6 +610,7 @@ XHCI_StartController(IN PVOID xhciExtension,
     USHORT MaxScratchPadBuffers;
     XHCI_HC_STRUCTURAL_PARAMS_2 HCSPARAMS2;
     
+    DPRINT1("XHCI_StartController: function initiated\n");
     if ((Resources->ResourcesTypes & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
                                      (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT))
     {
@@ -709,13 +699,14 @@ NTAPI
 XHCI_StopController(IN PVOID xhciExtension,
                     IN BOOLEAN IsDoDisableInterrupts)
 {
-    DPRINT1("XHCI_StopController: Function initiated. FIXME\n");
+    
     PXHCI_EXTENSION XhciExtension;
     USHORT MaxScratchPadBuffers;
     PMDL ScratchPadArrayMDL;
     PMDL ScratchPadBufferMDL;
     PXHCI_SCRATCHPAD_BUFFER_ARRAY BufferArrayPointer;
     
+    DPRINT1("XHCI_StopController: Function initiated. FIXME\n");
     XhciExtension = (PXHCI_EXTENSION) xhciExtension;
     MaxScratchPadBuffers = XhciExtension->MaxScratchPadBuffers;
     // free memory allocated to scratchpad buffers.
@@ -738,8 +729,9 @@ VOID
 NTAPI
 XHCI_SuspendController(IN PVOID xhciExtension)
 {
-    DPRINT1("XHCI_SuspendController: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
+    DPRINT1("XHCI_SuspendController: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     
     XhciExtension->Flags |= XHCI_FLAGS_CONTROLLER_SUSPEND;
@@ -750,8 +742,9 @@ MPSTATUS
 NTAPI
 XHCI_ResumeController(IN PVOID xhciExtension)
 {
-    DPRINT1("XHCI_ResumeController: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
+    DPRINT1("XHCI_ResumeController: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     
     XhciExtension->Flags &= ~XHCI_FLAGS_CONTROLLER_SUSPEND;
@@ -771,11 +764,12 @@ BOOLEAN
 NTAPI
 XHCI_InterruptService(IN PVOID xhciExtension)
 {
-    DPRINT1("XHCI_InterruptService: function initiated\n");
+    
     PULONG  RunTimeRegisterBase;
     XHCI_INTERRUPTER_MANAGEMENT Iman;
     PXHCI_EXTENSION XhciExtension;
     
+    DPRINT1("XHCI_InterruptService: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     
     RunTimeRegisterBase = XhciExtension->RunTimeRegisterBase; 
@@ -883,7 +877,6 @@ VOID
 NTAPI
 XHCI_CheckController(IN PVOID xhciExtension)
 {
-    //RegPacket.UsbPortInvalidateController(xhciExtension, 2);
     //DPRINT1("XHCI_CheckController: function initiated\n");
 }
 
@@ -906,14 +899,13 @@ VOID
 NTAPI
 XHCI_EnableInterrupts(IN PVOID xhciExtension)
 {
-    DPRINT1("XHCI_EnableInterrupts: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
-    PULONG OperationalRegs;
     PULONG  RunTimeRegisterBase;
     XHCI_INTERRUPTER_MANAGEMENT Iman;
 
+    DPRINT1("XHCI_EnableInterrupts: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
-    OperationalRegs = XhciExtension->OperationalRegs;
     
     RunTimeRegisterBase =  XhciExtension->RunTimeRegisterBase;
     Iman.AsULONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_IMAN);
@@ -926,14 +918,12 @@ VOID
 NTAPI
 XHCI_DisableInterrupts(IN PVOID xhciExtension)
 {
-    DPRINT1("XHCI_DisableInterrupts: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
-    PULONG OperationalRegs;
     PULONG  RunTimeRegisterBase;
     XHCI_INTERRUPTER_MANAGEMENT Iman;
-
+    DPRINT1("XHCI_DisableInterrupts: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
-    OperationalRegs = XhciExtension->OperationalRegs;
     
     RunTimeRegisterBase =  XhciExtension -> RunTimeRegisterBase;
     Iman.AsULONG = READ_REGISTER_ULONG(RunTimeRegisterBase + XHCI_IMAN);
@@ -949,10 +939,8 @@ XHCI_PollController(IN PVOID xhciExtension)
 {
     //DPRINT1("XHCI_PollController: function initiated\n"); commented out to reduce windbg output
     PXHCI_EXTENSION XhciExtension;
-    PULONG OperationalRegs;
 
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
-    OperationalRegs = XhciExtension->OperationalRegs;
 
     if (!(XhciExtension->Flags & XHCI_FLAGS_CONTROLLER_SUSPEND))
     {

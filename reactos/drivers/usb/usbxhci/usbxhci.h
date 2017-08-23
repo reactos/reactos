@@ -136,7 +136,6 @@ typedef struct _XHCI_LINK_TRB
         ULONG TRBType                   : 6;
         ULONG RsvdZ5                    : 16;
     };
-    //ULONG AsULONG;
 } XHCI_LINK_TRB;
 C_ASSERT(sizeof(XHCI_LINK_TRB) == 16);
 
@@ -460,13 +459,13 @@ NTAPI
 XHCI_RH_GetPortStatus(
   IN PVOID xhciExtension,
   IN USHORT Port,
-  IN PULONG PortStatus);
+  IN PUSB_PORT_STATUS_AND_CHANGE PortStatus);
 
 MPSTATUS
 NTAPI
 XHCI_RH_GetHubStatus(
   IN PVOID xhciExtension,
-  IN PULONG HubStatus);
+  IN PUSB_HUB_STATUS_AND_CHANGE HubStatus);
 
 MPSTATUS
 NTAPI

@@ -9,10 +9,10 @@ NTAPI
 XHCI_RH_GetRootHubData(IN PVOID xhciExtension,
                        IN PVOID rootHubData)
 {
-    DPRINT1("XHCI_RH_GetRootHubData: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
     PUSBPORT_ROOT_HUB_DATA RootHubData;
-
+    DPRINT1("XHCI_RH_GetRootHubData: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
 
     DPRINT_RH("XHCI_RH_GetRootHubData: XhciExtension - %p, rootHubData - %p\n",
@@ -28,7 +28,6 @@ XHCI_RH_GetRootHubData(IN PVOID xhciExtension,
         Identifies a Compound Device: Hub is not part of a compound device.
         Over-current Protection Mode: Global Over-current Protection.
     */
-    //RootHubData->HubCharacteristics &= 3;
     RootHubData->HubCharacteristics.AsUSHORT &= 3;
     RootHubData->PowerOnToPowerGood = 2;
     RootHubData->HubControlCurrent = 0;
@@ -48,13 +47,11 @@ MPSTATUS
 NTAPI
 XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
                       IN USHORT Port,
-                      IN PULONG PortStatus)
+                      IN PUSB_PORT_STATUS_AND_CHANGE PortStatus)
 {
-    //DPRINT1("XHCI_RH_GetPortStatus: function initiated\n"); commented to remove too many windbg outputs
     PXHCI_EXTENSION XhciExtension;
     PULONG PortStatusRegPointer;
     XHCI_PORT_STATUS_CONTROL PortStatusRegister;
-    //USBHUB_PORT_STATUS portstatus;
     USB_PORT_STATUS_AND_CHANGE  portstatus;
     
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
@@ -62,58 +59,6 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
     PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer);
     
-    /*
-    ULONG ConnectStatus          : 1; // Current Connect Status
-    ULONG EnableStatus           : 1; // Port Enabled/Disabled
-    ULONG SuspendStatus          : 1;
-    ULONG OverCurrent            : 1;
-    ULONG ResetStatus            : 1;
-    ULONG Reserved1              : 3;
-    ULONG PowerStatus            : 1;
-    ULONG LsDeviceAttached       : 1; // Low-Speed Device Attached
-    ULONG HsDeviceAttached       : 1; // High-speed Device Attached
-    ULONG TestMode               : 1; // Port Test Mode
-    ULONG IndicatorControl       : 1; // Port Indicator Control
-    ULONG Reserved2              : 3;
-    ULONG ConnectStatusChange    : 1;
-    ULONG EnableStatusChange     : 1;
-    ULONG SuspendStatusChange    : 1;
-    ULONG OverCurrentChange      : 1;
-    ULONG ResetStatusChange      : 1;
-    ULONG Reserved3              : 3;
-    ULONG PowerStatusChange      : 1;
-    ULONG LsDeviceAttachedChange : 1;
-    ULONG HsDeviceAttachedChange : 1;
-    ULONG TestModeChange         : 1;
-    ULONG IndicatorControlChange : 1;
-    ULONG Reserved4              : 3;
-    */
-    /* register interface
-    ULONG CurrentConnectStatus                  : 1;
-    ULONG PortEnableDisable                     : 1;
-    ULONG RsvdZ1                                : 1;
-    ULONG OverCurrentActive                     : 1;
-    ULONG PortReset                             : 1;
-    ULONG PortLinkState                         : 4;
-    ULONG PortPower                             : 1;
-    ULONG PortSpeed                             : 4;
-    ULONG PortIndicatorControl                  : 2;
-    ULONG LinkWriteStrobe                       : 1;
-    ULONG ConnectStatusChange                   : 1;
-    ULONG PortEnableDisableChange               : 1;
-    ULONG WarmResetChange                       : 1;
-    ULONG OverCurrentChange                     : 1;
-    ULONG PortResetChange                       : 1;
-    ULONG PortLinkStateChange                   : 1;
-    ULONG ConfigErrorChange                     : 1;
-    ULONG ColdAttachStatus                      : 1;
-    ULONG WakeONConnectEnable                   : 1;
-    ULONG WakeONDisconnectEnable                : 1;
-    ULONG WakeONOverCurrentEnable               : 1;
-    ULONG RsvdZ2                                : 2;
-    ULONG DeviceRemovable                       : 1;
-    ULONG WarmPortReset                         : 1;
-    */
    
     portstatus.AsUlong32 = 0;
     portstatus.PortStatus.Usb20PortStatus.CurrentConnectStatus = PortStatusRegister.CurrentConnectStatus;
@@ -123,12 +68,7 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     portstatus.PortStatus.Usb20PortStatus.Reset = PortStatusRegister.PortReset;
     portstatus.PortStatus.Usb20PortStatus.PortPower = PortStatusRegister.PortPower;
     portstatus.PortStatus.Usb20PortStatus.LowSpeedDeviceAttached = 0;//PortStatusRegister.PortEnableDisabl
-    //portstatus.PortStatus.Usb20PortStatus.LsDeviceAttached = 0;//PortStatusRegister.PortEnableDisable;
-   // if (PortStatusRegister.PortSpeed) 
-   //{  // this check is not needed in vmware. removed for testing.
-        //portstatus.PortStatus.Usb20PortStatus.HsDeviceAttached =  PortStatusRegister.CurrentConnectStatus;
-        portstatus.PortStatus.Usb20PortStatus.HighSpeedDeviceAttached =  PortStatusRegister.CurrentConnectStatus;
-   //}
+    portstatus.PortStatus.Usb20PortStatus.HighSpeedDeviceAttached =  PortStatusRegister.CurrentConnectStatus;
    
     portstatus.PortStatus.Usb20PortStatus.PortTestMode = 0;//PortStatusRegister.PortPower;
     portstatus.PortStatus.Usb20PortStatus.PortIndicatorControl = 0;//PortStatusRegister.PortIndicatorControl;
@@ -139,7 +79,7 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     portstatus.PortChange.Usb20PortChange.OverCurrentIndicatorChange = PortStatusRegister.OverCurrentChange;
     portstatus.PortChange.Usb20PortChange.ResetChange = PortStatusRegister.PortResetChange;
 
-    *PortStatus = portstatus.AsUlong32;
+    *PortStatus = portstatus;
     
     return MP_STATUS_SUCCESS;
 }
@@ -147,10 +87,10 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
 MPSTATUS
 NTAPI
 XHCI_RH_GetHubStatus(IN PVOID xhciExtension,
-                     IN PULONG HubStatus)
+                     IN PUSB_HUB_STATUS_AND_CHANGE HubStatus)
 {
     //DPRINT1("XHCI_RH_GetHubStatus: function initiated\n"); //removed to reduce windbg output
-    *HubStatus = 0;
+    HubStatus->AsUlong32 = 0;
     return 0;
 }
 
@@ -176,12 +116,12 @@ NTAPI
 XHCI_RH_SetFeaturePortReset(IN PVOID xhciExtension,
                             IN USHORT Port)
 {
-    DPRINT1("XHCI_RH_SetFeaturePortReset: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
     PULONG PortStatusRegPointer;
     XHCI_PORT_STATUS_CONTROL PortStatusRegister;
     
-    
+    DPRINT1("XHCI_RH_SetFeaturePortReset: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
@@ -200,11 +140,11 @@ NTAPI
 XHCI_RH_SetFeaturePortPower(IN PVOID xhciExtension,
                             IN USHORT Port)
 {
-    DPRINT1("XHCI_RH_SetFeaturePortPower: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
     PULONG PortStatusRegPointer;
     XHCI_PORT_STATUS_CONTROL PortStatusRegister;
-    
+    DPRINT1("XHCI_RH_SetFeaturePortPower: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
@@ -240,11 +180,11 @@ NTAPI
 XHCI_RH_ClearFeaturePortEnable(IN PVOID xhciExtension,
                                IN USHORT Port)
 {
-    DPRINT1("XHCI_RH_ClearFeaturePortEnable: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
     PULONG PortStatusRegPointer;
     XHCI_PORT_STATUS_CONTROL PortStatusRegister;
-    
+    DPRINT1("XHCI_RH_ClearFeaturePortEnable: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
@@ -301,11 +241,11 @@ NTAPI
 XHCI_RH_ClearFeaturePortConnectChange(IN PVOID xhciExtension,
                                       IN USHORT Port)
 {
-    DPRINT1("XHCI_RH_ClearFeaturePortConnectChange: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
     PULONG PortStatusRegPointer;
     XHCI_PORT_STATUS_CONTROL PortStatusRegister;
-    
+    DPRINT1("XHCI_RH_ClearFeaturePortConnectChange: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
@@ -327,11 +267,11 @@ NTAPI
 XHCI_RH_ClearFeaturePortResetChange(IN PVOID xhciExtension,
                                     IN USHORT Port)
 {
-    DPRINT1("XHCI_RH_ClearFeaturePortResetChange: function initiated\n");
+    
     PXHCI_EXTENSION XhciExtension;
     PULONG PortStatusRegPointer;
     XHCI_PORT_STATUS_CONTROL PortStatusRegister;
-    
+    DPRINT1("XHCI_RH_ClearFeaturePortResetChange: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
