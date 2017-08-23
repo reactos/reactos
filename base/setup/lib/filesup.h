@@ -102,4 +102,10 @@ UnMapFile(
     IN HANDLE SectionHandle,
     IN PVOID BaseAddress);
 
+#define UnMapAndCloseFile(FileHandle, SectionHandle, BaseAddress)   \
+do {    \
+    UnMapFile((SectionHandle), (BaseAddress));  \
+    NtClose(FileHandle);                        \
+} while (1)
+
 /* EOF */

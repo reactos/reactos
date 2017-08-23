@@ -838,7 +838,7 @@ SetDiskSignature(
             continue;
         }
 
-        /* check if the signature already exist */
+        /* Check if the signature already exist */
         /* FIXME:
          *   Check also signatures from disks, which are
          *   not visible (bootable) by the bios.
