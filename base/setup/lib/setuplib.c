@@ -373,8 +373,7 @@ Quit:
     }
 
     /* Finally, unmap and close the file */
-    UnMapFile(SectionHandle, ViewBase);
-    NtClose(UnattendFileHandle);
+    UnMapAndCloseFile(UnattendFileHandle, SectionHandle, ViewBase);
 
     NtClose(FileHandle);
 #endif
