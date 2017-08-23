@@ -334,7 +334,7 @@ IniCacheGetKeyName(
     *NamePtr = NULL;
     *NameSize = 0;
 
-    while(Ptr && *Ptr)
+    while (Ptr && *Ptr)
     {
         *NamePtr = NULL;
         *NameSize = 0;
