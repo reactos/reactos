@@ -1662,6 +1662,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     FirstTD->HwTD.AlternateNextTD = TERMINATE_POINTER;
     FirstTD->HwTD.Buffer[0] = (ULONG_PTR)&FirstTD->PhysicalAddress->SetupPacket;
 
+    FirstTD->HwTD.Token.AsULONG = 0;
     FirstTD->HwTD.Token.ErrorCounter = 3;
     FirstTD->HwTD.Token.PIDCode = 2;
     FirstTD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
@@ -1693,6 +1694,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     LastTD->NextHcdTD = NULL;
     LastTD->HwTD.NextTD = TERMINATE_POINTER;
     LastTD->HwTD.AlternateNextTD = TERMINATE_POINTER;
+
+    LastTD->HwTD.Token.AsULONG = 0;
     LastTD->HwTD.Token.ErrorCounter = 3;
 
     FirstTD->HwTD.AlternateNextTD = (ULONG_PTR)LastTD->PhysicalAddress;
@@ -1729,6 +1732,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
             TD->HwTD.NextTD = TERMINATE_POINTER;
             TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
+
+            TD->HwTD.Token.AsULONG = 0;
             TD->HwTD.Token.ErrorCounter = 3;
 
             PrevTD->HwTD.NextTD = (ULONG_PTR)TD->PhysicalAddress;
@@ -1786,7 +1791,7 @@ End:
     LastTD->HwTD.Buffer[0] = 0;
     LastTD->LengthThisTD = 0;
 
-    Token = LastTD->HwTD.Token;
+    Token.AsULONG = 0;
     Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
     Token.InterruptOnComplete = 1;
     Token.DataToggle = 1;
@@ -1875,6 +1880,8 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
             TD->NextHcdTD = NULL;
             TD->HwTD.NextTD = TERMINATE_POINTER;
             TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
+
+            TD->HwTD.Token.AsULONG = 0;
             TD->HwTD.Token.ErrorCounter = 3;
 
             if (EhciTransfer->PendingTDs == 1)
@@ -1939,7 +1946,10 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         TD->HwTD.NextTD = TERMINATE_POINTER;
         TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
+
+        TD->HwTD.Token.AsULONG = 0;
         TD->HwTD.Token.ErrorCounter = 3;
+
         TD->NextHcdTD = NULL;
 
         ASSERT(EhciTransfer->PendingTDs == 1);
