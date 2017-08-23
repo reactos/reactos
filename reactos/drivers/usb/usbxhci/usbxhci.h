@@ -7,7 +7,7 @@
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbdlib.h>
-#include "..\usbmport.h"
+#include <usbport/usbmport.h>
 #include "hardware.h"
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;

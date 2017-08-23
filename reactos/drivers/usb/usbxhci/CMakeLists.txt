@@ -1,4 +1,6 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
+
 list(APPEND SOURCE
     #debug.c
     roothub.c
