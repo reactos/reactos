@@ -423,7 +423,7 @@ XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
     CommandLinkTRB.GenericTRB.Word3 = 0;
     
     RingStartAddr.AsULONGLONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.firstSeg);
-    CommandLinkTRB.GenericTRB.RsvdZ1 = 0; 
+    CommandLinkTRB.LinkTRB.RsvdZ1 = 0; 
     CommandLinkTRB.LinkTRB.RingSegmentPointerLo = RingStartAddr.RingSegmentPointerLo;
     CommandLinkTRB.LinkTRB.RingSegmentPointerHi = RingStartAddr.RingSegmentPointerHi;
     CommandLinkTRB.LinkTRB.InterrupterTarget = 0;
@@ -621,11 +621,11 @@ XHCI_StartController(IN PVOID xhciExtension,
     USHORT MaxScratchPadBuffers;
     XHCI_HC_STRUCTURAL_PARAMS_2 HCSPARAMS2;
     
-    if ((Resources->TypesResources & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
+    if ((Resources->ResourcesTypes & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
                                      (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT))
     {
-        DPRINT1("XHCI_StartController: Resources->TypesResources - %x\n",
-                Resources->TypesResources);
+        DPRINT1("XHCI_StartController: Resources->ResourcesTypes - %x\n",
+                Resources->ResourcesTypes);
 
         return MP_STATUS_ERROR;
     }

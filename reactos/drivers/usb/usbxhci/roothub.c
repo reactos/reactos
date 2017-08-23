@@ -28,7 +28,8 @@ XHCI_RH_GetRootHubData(IN PVOID xhciExtension,
         Identifies a Compound Device: Hub is not part of a compound device.
         Over-current Protection Mode: Global Over-current Protection.
     */
-    RootHubData->HubCharacteristics &= 3;
+    //RootHubData->HubCharacteristics &= 3;
+    RootHubData->HubCharacteristics.AsUSHORT &= 3;
     RootHubData->PowerOnToPowerGood = 2;
     RootHubData->HubControlCurrent = 0;
 }
@@ -53,7 +54,8 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     PXHCI_EXTENSION XhciExtension;
     PULONG PortStatusRegPointer;
     XHCI_PORT_STATUS_CONTROL PortStatusRegister;
-    USBHUB_PORT_STATUS portstatus;
+    //USBHUB_PORT_STATUS portstatus;
+    USB_PORT_STATUS_AND_CHANGE  portstatus;
     
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
@@ -112,33 +114,32 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     ULONG DeviceRemovable                       : 1;
     ULONG WarmPortReset                         : 1;
     */
-    portstatus.AsULONG = 0;
-    portstatus.UsbPortStatus.ConnectStatus = PortStatusRegister.CurrentConnectStatus;
-    portstatus.UsbPortStatus.EnableStatus = PortStatusRegister.PortEnableDisable;
-    portstatus.UsbPortStatus.SuspendStatus = 0;//PortStatusRegister.PortEnableDisable;
-    portstatus.UsbPortStatus.OverCurrent = PortStatusRegister.OverCurrentActive;
-    portstatus.UsbPortStatus.ResetStatus = PortStatusRegister.PortReset;
-    portstatus.UsbPortStatus.PowerStatus = PortStatusRegister.PortPower;
-    portstatus.UsbPortStatus.LsDeviceAttached = 0;//PortStatusRegister.PortEnableDisable;
+   
+    portstatus.AsUlong32 = 0;
+    portstatus.PortStatus.Usb20PortStatus.CurrentConnectStatus = PortStatusRegister.CurrentConnectStatus;
+    portstatus.PortStatus.Usb20PortStatus.PortEnabledDisabled = PortStatusRegister.PortEnableDisable;
+    portstatus.PortStatus.Usb20PortStatus.Suspend = 0;//PortStatusRegister.PortEnableDisable;
+    portstatus.PortStatus.Usb20PortStatus.OverCurrent = PortStatusRegister.OverCurrentActive;
+    portstatus.PortStatus.Usb20PortStatus.Reset = PortStatusRegister.PortReset;
+    portstatus.PortStatus.Usb20PortStatus.PortPower = PortStatusRegister.PortPower;
+    portstatus.PortStatus.Usb20PortStatus.LowSpeedDeviceAttached = 0;//PortStatusRegister.PortEnableDisabl
+    //portstatus.PortStatus.Usb20PortStatus.LsDeviceAttached = 0;//PortStatusRegister.PortEnableDisable;
    // if (PortStatusRegister.PortSpeed) 
    //{  // this check is not needed in vmware. removed for testing.
-        portstatus.UsbPortStatus.HsDeviceAttached =  PortStatusRegister.CurrentConnectStatus;
+        //portstatus.PortStatus.Usb20PortStatus.HsDeviceAttached =  PortStatusRegister.CurrentConnectStatus;
+        portstatus.PortStatus.Usb20PortStatus.HighSpeedDeviceAttached =  PortStatusRegister.CurrentConnectStatus;
    //}
-    portstatus.UsbPortStatus.TestMode = 0;//PortStatusRegister.PortPower;
-    portstatus.UsbPortStatus.IndicatorControl = 0;//PortStatusRegister.PortIndicatorControl;
-    
-    portstatus.UsbPortStatusChange.ConnectStatusChange = PortStatusRegister.ConnectStatusChange;
-    portstatus.UsbPortStatusChange.EnableStatusChange = PortStatusRegister.PortEnableDisableChange;
-    portstatus.UsbPortStatusChange.SuspendStatusChange = 0;//PortStatusRegister.ConnectStatusChange;
-    portstatus.UsbPortStatusChange.OverCurrentChange = PortStatusRegister.OverCurrentChange;
-    portstatus.UsbPortStatusChange.ResetStatusChange = PortStatusRegister.PortResetChange;
-    portstatus.UsbPortStatusChange.PowerStatusChange = 0;//PortStatusRegister.ConnectStatusChange;
-    portstatus.UsbPortStatusChange.LsDeviceAttachedChange = 0;//PortStatusRegister.ConnectStatusChange;
-    portstatus.UsbPortStatusChange.HsDeviceAttachedChange = PortStatusRegister.ConnectStatusChange;
-    portstatus.UsbPortStatusChange.TestModeChange = 0;//PortStatusRegister.ConnectStatusChange;
-    portstatus.UsbPortStatusChange.IndicatorControlChange = 0;// PortStatusRegister.ConnectStatusChange;
    
-    *PortStatus = portstatus.AsULONG;
+    portstatus.PortStatus.Usb20PortStatus.PortTestMode = 0;//PortStatusRegister.PortPower;
+    portstatus.PortStatus.Usb20PortStatus.PortIndicatorControl = 0;//PortStatusRegister.PortIndicatorControl;
+    
+    portstatus.PortChange.Usb20PortChange.ConnectStatusChange = PortStatusRegister.ConnectStatusChange;
+    portstatus.PortChange.Usb20PortChange.PortEnableDisableChange = PortStatusRegister.PortEnableDisableChange;
+    portstatus.PortChange.Usb20PortChange.SuspendChange = 0;//PortStatusRegister.ConnectStatusChange;
+    portstatus.PortChange.Usb20PortChange.OverCurrentIndicatorChange = PortStatusRegister.OverCurrentChange;
+    portstatus.PortChange.Usb20PortChange.ResetChange = PortStatusRegister.PortResetChange;
+
+    *PortStatus = portstatus.AsUlong32;
     
     return MP_STATUS_SUCCESS;
 }
