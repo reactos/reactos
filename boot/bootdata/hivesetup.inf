@@ -1354,6 +1354,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROMPT",0x0
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020002,"%SystemRoot%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020002,"%SystemRoot%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020002,"%SystemRoot%"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","SHIMENG_DEBUG_LEVEL",0x00000000,"4"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","SHIM_DEBUG_LEVEL",0x00000000,"4"
 
 
 ; Known DLLs
@@ -2200,6 +2202,142 @@ US_DVORAK_RIGHT = "US Dvorak for right hand"
 US_INTERNATIONAL = "US International"
 UZBEK_CYRILLIC = "Uzbek (Cyrillic)"
 VIETNAMESE = "Vietnamese"
+
+
+; LANG_ROMANIAN SUBLANG_NEUTRAL
+[Strings.0018]
+
+; Services names and descriptions
+AUDIO_SERVICE="Serviciu audio"
+AUDIO_SERVICE_DESCRIPTION="Oferă aplicațiilor funcționalități audio."
+
+BITS_SERVICE="Serviciu de transfer inteligent în fundal"
+BITS_SERVICE_DESCRIPTION="Transferă fișiere în fundal utilizând lățimea de bandă nefolosită a rețelei."
+
+EVENTLOG_SERVICE="Jurnal de evenimente"
+EVENTLOG_SERVICE_DESCRIPTION="Jurnalizează mesajele sau evenimentele transmise de sistemul de operare într-o bază de date accesibilă cu instrumentul „observator de evenimente”."
+
+MSISERVER_SERVICE="Instalare ReactOS"
+MSISERVER_SERVICE_DESCRIPTION="Controlează instalarea, mentenanța, și eliminarea de programe de instalare MSI (Windows Installer)."
+
+NETLOGON_SERVICE="Autentificare în rețea"
+NETLOGON_SERVICE_DESCRIPTION="Stabilește un canal securizat către un controlor de domentiu pentru autentificarea domeniului."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Detectează schimbările în configurația fizică și instalează programele necesare dacă este posibil."
+
+RPCSS_SERVICE="Apel procedural la distanță"
+RPCSS_SERVICE_DESCRIPTION="Subsistemul responsabil pentru apel procedural la distanță în calculatorul local."
+
+SCHEDULE_SERVICE="Serviciu de planificare"
+SCHEDULE_SERVICE_DESCRIPTION="Permite pornirea de programe la o anumită oră."
+
+SERVER_SERVICE="Server"
+SERVER_SERVICE_DESCRIPTION="Permite partajarea în rețea a fișierelor, imprimantelor și a altor resurse."
+
+SPOOLER_SERVICE="Coadă de imprimare"
+SPOOLER_SERVICE_DESCRIPTION="Încarcă fișierele în memorie pentru imprimare ulterioară."
+
+TCPSVCS_SERVICE="Servicii TCP/IP simple"
+TCPSVCS_SERVICE_DECRIPTION="Permite următoarele servicii (protocoale) TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="Serviciu Telnet"
+TELNETD_SERVICE_DESCRIPTION="Serviciul Telnet al ReactOS."
+
+THEMES_SERVICE="Teme"
+THEMES_SERVICE_DESCRIPTION="Permite teme pentru interfața grafică de utilizare."
+
+WINMGMT_SERVICE="Infrastructură de gestiune"
+WINMGMT_SERVICE_DESCRIPTION="Furnizează interfața pentru informațiile de gestiune ale sistemului."
+
+WLANSVC_SERVICE="Serviciu WLAN"
+WLANSVC_SERVICE_DESCRIPTION="Serviciu pentru rețele locale fără fir."
+
+WORKSTATION_SERVICE="Stație de lucru"
+WORKSTATION_SERVICE_DESCRIPTION="Serviciu responsabil pentru crearea și menținerea conexiunilor la servere în rețea."
+
+; Keyboard layouts
+ALBANIAN = "Albaneză"
+ARABIC_101 = "Arabă (101)"
+ARABIC_102 = "Arabă (102)"
+ARABIC_102_AZERTY = "Arabă (102) AZERTY"
+ARMENIAN_EASTERN = "Armeană Estică"
+ARMENIAN_WESTERN = "Armeană Vestică"
+ASSAMESE = "Assameză - INSCRIPT"
+AZERI_CYRILLIC = "Azeră alfabet chirilic"
+AZERI_LATIN = "Azeră alfabet latin"
+BELARUSIAN = "Belarusă"
+BELGIAN_DUTCH = "Belgiană (Olandeză)"
+BELGIAN_FRENCH = "Belgiană (Franceză)"
+BENGALI = "Bengaleză"
+BULGARIAN_BDS = "Bulgară BDS 5237-1978"
+BULGARIAN_PHONETIC = "Bulgară, fonetică clasică"
+BULGARIAN_PHONETIC_BDS = "Bulgară, fonetică BDS 5237-2006"
+BURMESE = "Birmană"
+CANADIAN_FRENCH = "Canadiană Franceză (moștenire)"
+CANADIAN_MULTILINGUAL = "Canadiană Multilingvă Standard"
+CROATIAN = "Croată"
+CZECH = "Cehă"
+CZECH_QWERTY = "Cehă (QWERTY)"
+DANISH = "Daneză"
+DEVANAGARI = "Devanagari - INSCRIPT"
+DUTCH = "Olandeză"
+ESTONIAN = "Estonă"
+GERMAN_ERGO = "Germană (de_ergo)"
+GERMAN_NEO = "Germană (NEO-1.1)"
+GERMAN_RISTOME = "Germană (RISTOME)"
+GERMAN = "Germană"
+GREEK = "Greacă"
+GUJARATI = "Gujarati"
+IRISH = "Irlandeză"
+FINNISH = "Finlandeză"
+FRENCH = "Franceză"
+GEORGIAN = "Georgiană"
+HEBREW = "Abraică"
+HUNGARIAN = "Maghiară"
+ICELANDIC = "Islandeză"
+ITALIAN = "Italiană"
+JAPANESE = "Japoneză"
+KAZAKH = "Kazahă"
+KOREAN = "Coreeană"
+LATIN_AMERICAN = "Iberoamericană"
+LATVIAN = "Letonă"
+LITHUANIAN = "Lituaniană"
+MACEDONIAN = "Macedonă (FYRO)"
+MALAYALAM = "Malayalam"
+NORWEGIAN = "Norvegiană"
+POLISH_214 = "Poloneză (214)"
+POLISH_PROGRAMMERS = "Poloneză (programatori)"
+PORTUGESE = "Portugheză (Portugalia)"
+PORTUGESE_BRAZILIAN% = "Portugheză (Braziliană ABNT2)"
+ROMANIAN = "Română"
+RUSSIAN = "Rusă"
+RUSSIAN_TYPEWRITER = "Rusă (dactilografiere)"
+SERBIAN_CYRILLIC = "Sârbă (alfabet chirilic)"
+SERBIAN_LATIN = "Sârbă (alfabet latin)"
+SLOVAK = "Slovacă"
+SLOVAK_QWERTY = "Slovacă (QWERTY)"
+SPANISH = "Spaniolă"
+SWEDISH = "Suedeză"
+SWISS_GERMAN = "Elvețiană (Germană)"
+TATAR = "Tatară"
+THAI_KEDMANEE = "Thai Kedmanee"
+THAI_KEDMANEE_NON_SHIFTLOCK = "Thai Kedmanee (non-ShiftLock)"
+THAI_PATTACHOTE = "Thai Pattachote"
+THAI_PATTACHOTE_NON_SHIFTLOCK = "Thai Pattachote (non-ShiftLock)"
+TURKISH_Q = "Turcă Q"
+TURKISH_F = "Turcă F"
+UK = "Britanică"
+UKRAINIAN = "Ukraineană"
+UKRAINIAN_STUDENT = "Ukraineană (studențească)"
+US = "Statele Unite"
+US_ARABIC = "Engleză SUA (IBM Arabic 238_L)"
+US_DVORAK = "Dvorak SUA"
+US_DVORAK_LEFT = "Dvorak SUA pentru mâna stângă"
+US_DVORAK_RIGHT = "Dvorak SUA pentru mâna dreaptă"
+US_INTERNATIONAL = "SUA internațională"
+UZBEK_CYRILLIC = "Uzbecă (alfabet chirilic)"
+VIETNAMESE = "Vietnameză"
 
 
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
