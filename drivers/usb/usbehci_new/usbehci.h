@@ -104,7 +104,7 @@ typedef struct _EHCI_EXTENSION {
   ULONG Reserved;
   ULONG Flags;
   PULONG BaseIoAdress;
-  PULONG OperationalRegs;
+  PEHCI_HW_REGISTERS OperationalRegs;
   UCHAR FrameLengthAdjustment;
   BOOLEAN IsStarted;
   USHORT HcSystemErrors;

@@ -114,6 +114,19 @@ typedef union _EHCI_PORT_STATUS_CONTROL {
   ULONG AsULONG;
 } EHCI_PORT_STATUS_CONTROL;
 
+typedef struct _EHCI_HW_REGISTERS {
+  EHCI_USB_COMMAND HcCommand; // RO, R/W (field dependent), WO
+  EHCI_USB_STATUS HcStatus; // RO, R/W, R/WC, (field dependent)
+  EHCI_INTERRUPT_ENABLE HcInterruptEnable; // R/W
+  ULONG FrameIndex; // R/W (Writes must be DWord Writes)
+  ULONG SegmentSelector; // R/W (Writes must be DWord Writes)
+  ULONG PeriodicListBase; // R/W (Writes must be DWord Writes)
+  ULONG AsyncListBase; // Read/Write (Writes must be DWord Writes) 
+  ULONG Reserved[9];
+  ULONG ConfiFlag; // R/W
+  EHCI_PORT_STATUS_CONTROL PortControl[15]; // (1-15) RO, R/W, R/WC (field dependent) 
+} EHCI_HW_REGISTERS, *PEHCI_HW_REGISTERS;
+
 /* Link Pointer */
 
 #define EHCI_LINK_TYPE_iTD  0 // isochronous transfer descriptor

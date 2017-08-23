@@ -68,8 +68,8 @@ EHCI_InitializeQH(PEHCI_EXTENSION EhciExtension,
     QH->sqh.PhysicalAddress = QhPA;
     //QH->EhciEndpoint = EhciEndpoint;
 
-    QH->sqh.HwQH.EndpointParams.DeviceAddress = EndpointProperties->DeviceAddress & 0x7F;
-    QH->sqh.HwQH.EndpointParams.EndpointNumber = EndpointProperties->EndpointAddress & 0x0F;
+    QH->sqh.HwQH.EndpointParams.DeviceAddress = EndpointProperties->DeviceAddress & USBPORT_MAX_DEVICE_ADDRESS;
+    QH->sqh.HwQH.EndpointParams.EndpointNumber = EndpointProperties->EndpointAddress & 0xF;//USB_ENDPOINT_ADDRESS_MASK
 
     DeviceSpeed = EndpointProperties->DeviceSpeed;
 
@@ -264,17 +264,13 @@ EHCI_OpenEndpoint(IN PVOID ehciExtension,
                   IN PVOID endpointParameters,
                   IN PVOID ehciEndpoint)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PEHCI_ENDPOINT EhciEndpoint;
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_ENDPOINT EhciEndpoint = ehciEndpoint;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     ULONG TransferType;
     MPSTATUS MPStatus;
 
     DPRINT_EHCI("EHCI_OpenEndpoint: ... \n");
-
-    EhciExtension = ehciExtension;
-    EhciEndpoint = ehciEndpoint;
-    EndpointProperties = endpointParameters;
 
     RtlCopyMemory(&EhciEndpoint->EndpointProperties,
                   endpointParameters,
@@ -374,10 +370,10 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
 
             QH = EhciEndpoint->QH;
 
-            QH->sqh.HwQH.EndpointParams.DeviceAddress = EndpointProperties->DeviceAddress & 0x7F;
+            QH->sqh.HwQH.EndpointParams.DeviceAddress = EndpointProperties->DeviceAddress & USBPORT_MAX_DEVICE_ADDRESS;
             QH->sqh.HwQH.EndpointParams.MaximumPacketLength = EndpointProperties->MaxPacketSize  & 0x7FF;
 
-            QH->sqh.HwQH.EndpointCaps.HubAddr = EndpointProperties->HubAddr & 0x7F;
+            QH->sqh.HwQH.EndpointCaps.HubAddr = EndpointProperties->HubAddr & USBPORT_MAX_DEVICE_ADDRESS;
 
             break;
 
@@ -632,7 +628,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
                         IN PVOID resourcesStartVA,
                         IN PVOID resourcesStartPA)
 {
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     PEHCI_HC_RESOURCES HcResourcesVA;
     PEHCI_HC_RESOURCES HcResourcesPA;
     PEHCI_STATIC_QH AsyncHead;
@@ -720,10 +716,10 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
 
     EHCI_AddDummyQHs(EhciExtension);
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_PERIODICLISTBASE,
+    WRITE_REGISTER_ULONG(&OperationalRegs->PeriodicListBase,
                          (ULONG_PTR)EhciExtension->HcResourcesPA);
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_ASYNCLISTBASE,
+    WRITE_REGISTER_ULONG(&OperationalRegs->AsyncListBase,
                          NextLink.AsULONG);
 
     return MP_STATUS_SUCCESS;
@@ -734,7 +730,7 @@ NTAPI
 EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
 {
     PULONG BaseIoAdress;
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
     LARGE_INTEGER CurrentTime = {{0, 0}};
     LARGE_INTEGER LastTime = {{0, 0}};
@@ -745,9 +741,9 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     OperationalRegs = EhciExtension->OperationalRegs;
     BaseIoAdress = EhciExtension->BaseIoAdress;
 
-    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.Reset = 1;
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
 
     KeQuerySystemTime(&CurrentTime);
     CurrentTime.QuadPart += 100 * 10000; // 100 msec
@@ -757,7 +753,7 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     while (TRUE)
     {
         KeQuerySystemTime(&LastTime);
-        Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+        Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
 
         if (Command.Reset != 1)
         {
@@ -787,8 +783,8 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     DPRINT("EHCI_InitializeHardware: PortPowerControl - %x\n", EhciExtension->PortPowerControl);
     DPRINT("EHCI_InitializeHardware: N_PORTS          - %x\n", EhciExtension->NumberOfPorts);
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_PERIODICLISTBASE, 0);
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_ASYNCLISTBASE, 0);
+    WRITE_REGISTER_ULONG(&OperationalRegs->PeriodicListBase, 0);
+    WRITE_REGISTER_ULONG(&OperationalRegs->AsyncListBase, 0);
 
     EhciExtension->InterruptMask.AsULONG = 0;
     EhciExtension->InterruptMask.Interrupt = 1;
@@ -821,9 +817,9 @@ NTAPI
 EHCI_StartController(IN PVOID ehciExtension,
                      IN PUSBPORT_RESOURCES Resources)
 {
-    PEHCI_EXTENSION EhciExtension;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
     PULONG BaseIoAdress;
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     MPSTATUS MPStatus;
     EHCI_USB_COMMAND Command;
     UCHAR CapabilityRegLength;
@@ -840,13 +836,11 @@ EHCI_StartController(IN PVOID ehciExtension,
         return MP_STATUS_ERROR;
     }
 
-    EhciExtension = ehciExtension;
-
     BaseIoAdress = (PULONG)Resources->ResourceBase;
     EhciExtension->BaseIoAdress = BaseIoAdress;
 
     CapabilityRegLength = (UCHAR)READ_REGISTER_ULONG(BaseIoAdress);
-    OperationalRegs = (PULONG)((ULONG)BaseIoAdress + CapabilityRegLength);
+    OperationalRegs = (PEHCI_HW_REGISTERS)((ULONG)BaseIoAdress + CapabilityRegLength);
     EhciExtension->OperationalRegs = OperationalRegs;
 
     DPRINT("EHCI_StartController: BaseIoAdress    - %p\n", BaseIoAdress);
@@ -906,16 +900,16 @@ EHCI_StartController(IN PVOID ehciExtension,
     }
 
     /* Port routing control logic default-routes all ports to this HC */
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_CONFIGFLAG, 1);
+    WRITE_REGISTER_ULONG(&OperationalRegs->ConfiFlag, 1);
     EhciExtension->PortRoutingControl = 1;
 
-    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.InterruptThreshold = 1; // one micro-frame
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
 
-    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.Run = 1; // execution of the schedule
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
 
     EhciExtension->IsStarted = TRUE;
 
@@ -940,8 +934,8 @@ VOID
 NTAPI
 EHCI_SuspendController(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PULONG OperationalRegs;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
     EHCI_USB_STATUS Status;
     EHCI_INTERRUPT_ENABLE IntrEn;
@@ -949,32 +943,24 @@ EHCI_SuspendController(IN PVOID ehciExtension)
 
     DPRINT("EHCI_SuspendController: ... \n");
 
-    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    EhciExtension->BakupPeriodiclistbase = READ_REGISTER_ULONG(OperationalRegs +
-                                                               EHCI_PERIODICLISTBASE);
+    EhciExtension->BakupPeriodiclistbase = READ_REGISTER_ULONG(&OperationalRegs->PeriodicListBase);
+    EhciExtension->BakupAsynclistaddr = READ_REGISTER_ULONG(&OperationalRegs->AsyncListBase);
+    EhciExtension->BakupCtrlDSSegment = READ_REGISTER_ULONG(&OperationalRegs->SegmentSelector);
+    EhciExtension->BakupUSBCmd = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
 
-    EhciExtension->BakupAsynclistaddr = READ_REGISTER_ULONG(OperationalRegs +
-                                                            EHCI_ASYNCLISTBASE);
-
-    EhciExtension->BakupCtrlDSSegment = READ_REGISTER_ULONG(OperationalRegs +
-                                                            EHCI_CTRLDSSEGMENT);
-
-    EhciExtension->BakupUSBCmd = READ_REGISTER_ULONG(OperationalRegs +
-                                                     EHCI_USBCMD);
-
-    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.InterruptAdvanceDoorbell = 0;
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
 
-    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.Run = 0;
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
 
     KeStallExecutionProcessor(125);
 
-    Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+    Status.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG);
 
     Status.HCHalted = 0;
     Status.Reclamation = 0;
@@ -983,14 +969,14 @@ EHCI_SuspendController(IN PVOID ehciExtension)
 
     if (Status.AsULONG)
     {
-        WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS, Status.AsULONG);
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG, Status.AsULONG);
     }
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR, 0);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG, 0);
 
     for (ix = 0; ix < 10; ix++)
     {
-        Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+        Status.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG);
 
         if (Status.HCHalted)
         {
@@ -1005,9 +991,9 @@ EHCI_SuspendController(IN PVOID ehciExtension)
         DbgBreakPoint();
     }
 
-    IntrEn.AsULONG = READ_REGISTER_ULONG((PULONG)(OperationalRegs + EHCI_USBINTR));
+    IntrEn.AsULONG = READ_REGISTER_ULONG((PULONG)(&OperationalRegs->HcInterruptEnable.AsULONG));
     IntrEn.PortChangeInterrupt = 1;
-    WRITE_REGISTER_ULONG((PULONG)(OperationalRegs + EHCI_USBINTR), IntrEn.AsULONG);
+    WRITE_REGISTER_ULONG((PULONG)(&OperationalRegs->HcInterruptEnable.AsULONG), IntrEn.AsULONG);
 
     EhciExtension->Flags |= EHCI_FLAGS_CONTROLLER_SUSPEND;
 }
@@ -1016,14 +1002,13 @@ MPSTATUS
 NTAPI
 EHCI_ResumeController(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PULONG OperationalRegs;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_HW_REGISTERS OperationalRegs;
     ULONG RoutingControl;
     EHCI_USB_COMMAND Command;
 
     DPRINT("EHCI_ResumeController: ... \n");
 
-    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     RoutingControl = EhciExtension->PortRoutingControl;
@@ -1031,23 +1016,21 @@ EHCI_ResumeController(IN PVOID ehciExtension)
     if (!(RoutingControl & 1))
     {
         EhciExtension->PortRoutingControl = RoutingControl | 1;
-
-        WRITE_REGISTER_ULONG(OperationalRegs + EHCI_CONFIGFLAG,
-                             RoutingControl | 1);
+        WRITE_REGISTER_ULONG(&OperationalRegs->ConfiFlag, RoutingControl | 1);
 
         return MP_STATUS_HW_ERROR;
     }
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_CTRLDSSEGMENT,
+    WRITE_REGISTER_ULONG(&OperationalRegs->SegmentSelector,
                          EhciExtension->BakupCtrlDSSegment);
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_PERIODICLISTBASE,
+    WRITE_REGISTER_ULONG(&OperationalRegs->PeriodicListBase,
                          EhciExtension->BakupPeriodiclistbase);
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_ASYNCLISTBASE,
+    WRITE_REGISTER_ULONG(&OperationalRegs->AsyncListBase,
                          EhciExtension->BakupAsynclistaddr);
 
-    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
 
     Command.AsULONG = Command.AsULONG ^ EhciExtension->BakupUSBCmd;
 
@@ -1060,10 +1043,10 @@ EHCI_ResumeController(IN PVOID ehciExtension)
 
     Command.Run = 1;
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD,
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG,
                          Command.AsULONG);
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR,
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
                          EhciExtension->InterruptMask.AsULONG);
 
     EhciExtension->Flags &= ~EHCI_FLAGS_CONTROLLER_SUSPEND;
@@ -1076,7 +1059,7 @@ NTAPI
 EHCI_HardwarePresent(IN PEHCI_EXTENSION EhciExtension,
                      IN BOOLEAN IsInvalidateController)
 {
-    if (READ_REGISTER_ULONG(EhciExtension->OperationalRegs) != -1)
+    if (READ_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs) != -1)
     {
         return TRUE;
     }
@@ -1098,8 +1081,8 @@ BOOLEAN
 NTAPI
 EHCI_InterruptService(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PULONG OperationalRegs;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_HW_REGISTERS OperationalRegs;
     BOOLEAN Result = FALSE;
     ULONG IntrSts;
     ULONG IntrEn;
@@ -1107,7 +1090,6 @@ EHCI_InterruptService(IN PVOID ehciExtension)
     ULONG FrameIndex;
     ULONG Command;
 
-    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     DPRINT_EHCI("EHCI_InterruptService: ... \n");
@@ -1119,8 +1101,8 @@ EHCI_InterruptService(IN PVOID ehciExtension)
         return FALSE;
     }
 
-    IntrEn = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR);
-    IntrSts = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+    IntrEn = READ_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG);
+    IntrSts = READ_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG);
 
     iStatus.AsULONG = (IntrEn & IntrSts) & 0x3F;
 
@@ -1131,7 +1113,7 @@ EHCI_InterruptService(IN PVOID ehciExtension)
 
     EhciExtension->InterruptStatus = iStatus;
 
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS,
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG,
                          (IntrEn & IntrSts) & 0x3F);
 
     if (iStatus.HostSystemError)
@@ -1141,12 +1123,12 @@ EHCI_InterruptService(IN PVOID ehciExtension)
         if (EhciExtension->HcSystemErrors < 0x100)
         {
             //attempting reset
-            Command = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+            Command = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
             WRITE_REGISTER_ULONG((PULONG)OperationalRegs, Command | 1);
         }
     }
 
-    FrameIndex = (READ_REGISTER_ULONG(OperationalRegs + EHCI_FRINDEX) >> 3) & 0x7FF;
+    FrameIndex = (READ_REGISTER_ULONG(&OperationalRegs->FrameIndex) >> 3) & 0x7FF;
 
     if ((FrameIndex ^ EhciExtension->FrameIndex) & 0x400)
     {
@@ -1164,11 +1146,10 @@ NTAPI
 EHCI_InterruptDpc(IN PVOID ehciExtension,
                   IN BOOLEAN IsDoEnableInterrupts)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PULONG OperationalRegs;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_INTERRUPT_ENABLE iStatus;
 
-    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     DPRINT_EHCI("EHCI_InterruptDpc: ... \n");
@@ -1177,22 +1158,20 @@ EHCI_InterruptDpc(IN PVOID ehciExtension,
     EhciExtension->InterruptStatus.AsULONG = 0;
 
     if ((UCHAR)iStatus.AsULONG &
-        (UCHAR)EhciExtension->InterruptMask.AsULONG &
-        0x23)
+        (UCHAR)EhciExtension->InterruptMask.AsULONG & 0x23)
     {
         RegPacket.UsbPortInvalidateEndpoint(EhciExtension, NULL);
     }
 
     if ((UCHAR)iStatus.AsULONG &
-        (UCHAR)EhciExtension->InterruptMask.AsULONG &
-        0x04)
+        (UCHAR)EhciExtension->InterruptMask.AsULONG & 0x04)
     {
         RegPacket.UsbPortInvalidateRootHub(EhciExtension);
     }
 
     if (IsDoEnableInterrupts)
     {
-        WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR,
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
                              EhciExtension->InterruptMask.AsULONG);
     }
 }
@@ -1295,66 +1274,66 @@ VOID
 NTAPI
 EHCI_EnableAsyncList(IN PEHCI_EXTENSION EhciExtension)
 {
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND UsbCmd;
 
     DPRINT_EHCI("EHCI_EnableAsyncList: ... \n");
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    UsbCmd.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    UsbCmd.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     UsbCmd.AsynchronousEnable = 1;
-    WRITE_REGISTER_ULONG((OperationalRegs + EHCI_USBCMD), UsbCmd.AsULONG);
+    WRITE_REGISTER_ULONG((&OperationalRegs->HcCommand.AsULONG), UsbCmd.AsULONG);
 }
 
 VOID
 NTAPI
 EHCI_DisableAsyncList(IN PEHCI_EXTENSION EhciExtension)
 {
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND UsbCmd;
 
     DPRINT_EHCI("EHCI_DisableAsyncList: ... \n");
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    UsbCmd.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    UsbCmd.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     UsbCmd.AsynchronousEnable = 0;
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, UsbCmd.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, UsbCmd.AsULONG);
 }
 
 VOID
 NTAPI
 EHCI_EnablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
 {
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
 
     DPRINT_EHCI("EHCI_EnablePeriodicList: ... \n");
 
-    OperationalRegs = (PULONG)EhciExtension->OperationalRegs;
+    OperationalRegs = EhciExtension->OperationalRegs;
 
-    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.PeriodicEnable = 1;
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
 }
 
 VOID
 NTAPI
 EHCI_DisablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
 {
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
 
     DPRINT_EHCI("EHCI_DisablePeriodicList: ... \n");
 
     if (EhciExtension->Flags & EHCI_FLAGS_IDLE_SUPPORT)
     {
-        OperationalRegs = (PULONG)EhciExtension->OperationalRegs;
+        OperationalRegs = EhciExtension->OperationalRegs;
 
-        Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+        Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
         Command.PeriodicEnable = 0;
-        WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
     }
 }
 
@@ -1362,7 +1341,7 @@ VOID
 NTAPI
 EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
 {
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
     EHCI_USB_STATUS Status;
     LARGE_INTEGER CurrentTime = {{0, 0}};
@@ -1372,8 +1351,8 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
     DPRINT_EHCI("EHCI_FlushAsyncCache: EhciExtension - %p\n", EhciExtension);
 
     OperationalRegs = EhciExtension->OperationalRegs;
-    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
-    Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+    Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
+    Status.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG);
 
     if (!Status.AsynchronousStatus && !Command.AsynchronousEnable)
     {
@@ -1387,8 +1366,8 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
 
         do
         {
-            Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
-            Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+            Status.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG);
+            Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
             KeQuerySystemTime(&CurrentTime);
 
             if (CurrentTime.QuadPart > FirstTime.QuadPart)
@@ -1408,20 +1387,20 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
 
         do
         {
-            Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
-            Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+            Status.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG);
+            Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
             KeQuerySystemTime(&CurrentTime);
         }
         while (!Status.AsynchronousStatus && Command.AsULONG != -1 && Command.Run);
     }
 
     Command.InterruptAdvanceDoorbell = 1;
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
 
     KeQuerySystemTime(&FirstTime);
     FirstTime.QuadPart += 100 * 10000;  //100 ms
 
-    Cmd.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Cmd.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
 
     if (Cmd.InterruptAdvanceDoorbell)
     {
@@ -1433,7 +1412,7 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
             }
 
             KeStallExecutionProcessor(1);
-            Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+            Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
             KeQuerySystemTime(&CurrentTime);
 
             if (!Command.InterruptAdvanceDoorbell)
@@ -1446,7 +1425,7 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
     }
 
     /* InterruptOnAsyncAdvance */
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS, 0x20);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG, 0x20);
 }
 
 VOID
@@ -1458,7 +1437,7 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_HCD_QH PrevQH;
     ULONG QhPA;
     ULONG FrameIndexReg;
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     ULONG Command;
 
     DPRINT_EHCI("EHCI_LockQH: QueueHead - %p, TransferType - %x\n",
@@ -1490,15 +1469,15 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
 
     PrevQH->sqh.HwQH.HorizontalLink.AsULONG = QhPA;
 
-    FrameIndexReg = READ_REGISTER_ULONG(OperationalRegs + EHCI_FRINDEX);
+    FrameIndexReg = READ_REGISTER_ULONG(&OperationalRegs->FrameIndex);
 
     if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
     {
         do
         {
-            Command = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+            Command = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
         }
-        while (READ_REGISTER_ULONG(OperationalRegs + EHCI_FRINDEX) == 
+        while (READ_REGISTER_ULONG(&OperationalRegs->FrameIndex) == 
                FrameIndexReg && (Command != -1) && (Command & 1));
     }
     else
@@ -2115,18 +2094,12 @@ EHCI_SubmitTransfer(IN PVOID ehciExtension,
                     IN PVOID ehciTransfer,
                     IN PVOID sgList)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PEHCI_ENDPOINT EhciEndpoint;
-    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
-    PEHCI_TRANSFER EhciTransfer;
-    PUSBPORT_SCATTER_GATHER_LIST SgList;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_ENDPOINT EhciEndpoint = ehciEndpoint;
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters = transferParameters;
+    PEHCI_TRANSFER EhciTransfer = ehciTransfer;
+    PUSBPORT_SCATTER_GATHER_LIST SgList = sgList;
     MPSTATUS MPStatus;
-
-    EhciExtension = ehciExtension;
-    EhciEndpoint = ehciEndpoint;
-    TransferParameters = transferParameters;
-    EhciTransfer = ehciTransfer;
-    SgList = sgList;
 
     DPRINT_EHCI("EHCI_SubmitTransfer: EhciEndpoint - %p, EhciTransfer - %p\n",
                 EhciEndpoint,
@@ -2342,14 +2315,10 @@ EHCI_AbortTransfer(IN PVOID ehciExtension,
                    IN PVOID ehciTransfer,
                    IN PULONG CompletedLength)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PEHCI_ENDPOINT EhciEndpoint;
-    PEHCI_TRANSFER EhciTransfer;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_ENDPOINT EhciEndpoint = ehciEndpoint;
+    PEHCI_TRANSFER EhciTransfer = ehciTransfer;
     ULONG TransferType;
-
-    EhciExtension = ehciExtension;
-    EhciEndpoint = ehciEndpoint;
-    EhciTransfer = ehciTransfer;
 
     DPRINT_EHCI("EHCI_AbortTransfer: EhciTransfer - %p, CompletedLength - %x\n",
                 EhciTransfer,
@@ -2412,10 +2381,10 @@ EHCI_RemoveQhFromAsyncList(IN PEHCI_EXTENSION EhciExtension,
 
         EHCI_FlushAsyncCache(EhciExtension);
 
-        if (READ_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_ASYNCLISTBASE) ==
+        if (READ_REGISTER_ULONG(&EhciExtension->OperationalRegs->AsyncListBase) ==
             (ULONG_PTR)QH->sqh.PhysicalAddress)
         {
-            WRITE_REGISTER_ULONG((EhciExtension->OperationalRegs + EHCI_ASYNCLISTBASE),
+            WRITE_REGISTER_ULONG(&EhciExtension->OperationalRegs->AsyncListBase,
                                  AsyncHeadPA);
         }
 
@@ -2570,11 +2539,10 @@ VOID
 NTAPI
 EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
 
     DPRINT_EHCI("EHCI_InterruptNextSOF: ... \n");
 
-    EhciExtension = ehciExtension;
     RegPacket.UsbPortInvalidateController(EhciExtension,
                                           USBPORT_INVALIDATE_CONTROLLER_SOFT_INTERRUPT);
 }
@@ -2630,7 +2598,7 @@ EHCI_ProcessDoneAsyncTd(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_ENDPOINT EhciEndpoint;
     ULONG LengthTransfered;
     USBD_STATUS USBDStatus;
-    PULONG OperationalRegs;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
 
     DPRINT_EHCI("EHCI_ProcessDoneAsyncTd: TD - %p\n", TD);
@@ -2693,10 +2661,10 @@ Next:
             if (EhciExtension->PendingTransfers == 0)
             {
                 OperationalRegs = EhciExtension->OperationalRegs;
-                Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+                Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
 
                 if (!Command.InterruptAdvanceDoorbell &&
-                   (EhciExtension->Flags & EHCI_FLAGS_IDLE_SUPPORT))
+                    (EhciExtension->Flags & EHCI_FLAGS_IDLE_SUPPORT))
                 {
                     EHCI_DisableAsyncList(EhciExtension);
                 }
@@ -3027,12 +2995,9 @@ NTAPI
 EHCI_PollEndpoint(IN PVOID ehciExtension,
                   IN PVOID ehciEndpoint)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PEHCI_ENDPOINT EhciEndpoint;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_ENDPOINT EhciEndpoint = ehciEndpoint;
     ULONG TransferType;
-
-    EhciExtension = ehciExtension;
-    EhciEndpoint = ehciEndpoint;
 
     //DPRINT_EHCI("EHCI_PollEndpoint: EhciEndpoint - %p\n", EhciEndpoint);
 
@@ -3066,17 +3031,15 @@ ULONG
 NTAPI
 EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
     ULONG FrameIdx; 
     ULONG FrameIndex;
     ULONG FrameNumber;
 
     //DPRINT_EHCI("EHCI_Get32BitFrameNumber: EhciExtension - %p\n", EhciExtension);
 
-    EhciExtension = ehciExtension;
-
     FrameIdx = EhciExtension->FrameIndex;
-    FrameIndex = READ_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_FRINDEX);
+    FrameIndex = READ_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs + EHCI_FRINDEX);
 
     FrameNumber = (((USHORT)FrameIdx ^ ((FrameIndex >> 3) & 0x7FF)) & 0x400) +
                            (FrameIndex | ((FrameIndex >> 3) & 0x3FF));
@@ -3093,7 +3056,7 @@ EHCI_EnableInterrupts(IN PVOID ehciExtension)
     DPRINT("EHCI_EnableInterrupts: EhciExtension->InterruptMask - %x\n",
            EhciExtension->InterruptMask.AsULONG);
 
-    WRITE_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_USBINTR,
+    WRITE_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs + EHCI_USBINTR,
                          EhciExtension->InterruptMask.AsULONG);
 }
 
@@ -3105,7 +3068,7 @@ EHCI_DisableInterrupts(IN PVOID ehciExtension)
 
     DPRINT("EHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
 
-    WRITE_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_USBINTR,
+    WRITE_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs + EHCI_USBINTR,
                          0);
 }
 
@@ -3113,14 +3076,13 @@ VOID
 NTAPI
 EHCI_PollController(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PULONG OperationalRegs;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_HW_REGISTERS OperationalRegs;
     ULONG Port;
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT_EHCI("EHCI_PollController: ... \n");
 
-    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     if (!(EhciExtension->Flags & EHCI_FLAGS_CONTROLLER_SUSPEND))
@@ -3133,7 +3095,7 @@ EHCI_PollController(IN PVOID ehciExtension)
     {
         for (Port = 0; Port < EhciExtension->NumberOfPorts; ++Port)
         {
-            PortSC.AsULONG = READ_REGISTER_ULONG((OperationalRegs + EHCI_PORTSC) + Port);
+            PortSC.AsULONG = READ_REGISTER_ULONG(((PULONG)OperationalRegs + EHCI_PORTSC) + Port);
 
             if (PortSC.ConnectStatusChange)
             {
@@ -3294,17 +3256,16 @@ VOID
 NTAPI
 EHCI_FlushInterrupts(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension;
-    PULONG OperationalRegs;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_STATUS Status;
 
     DPRINT("EHCI_FlushInterrupts: ... \n");
 
-    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
-    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS, Status.AsULONG);
+    Status.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG, Status.AsULONG);
 }
 
 MPSTATUS
