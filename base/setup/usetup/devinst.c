@@ -46,6 +46,9 @@ InstallDriver(
     UNICODE_STRING ImagePathU = RTL_CONSTANT_STRING(L"ImagePath");
     UNICODE_STRING StartU = RTL_CONSTANT_STRING(L"Start");
     UNICODE_STRING TypeU = RTL_CONSTANT_STRING(L"Type");
+    UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
+    PWSTR keyboardClass = L"kbdclass\0";
+
     UNICODE_STRING StringU;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hService;
@@ -55,8 +58,6 @@ InstallDriver(
     ULONG Disposition;
     NTSTATUS Status;
     BOOLEAN deviceInstalled = FALSE;
-    UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
-    PWSTR keyboardClass = L"kbdclass\0";
 
     /* Check if we know the hardware */
     if (!SetupFindFirstLineW(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
@@ -206,6 +207,7 @@ InstallDevice(
 {
     UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
     UNICODE_STRING CompatibleIDsU = RTL_CONSTANT_STRING(L"CompatibleIDs");
+
     UNICODE_STRING DeviceIdU;
     OBJECT_ATTRIBUTES ObjectAttributes;
     LPCWSTR HardwareID;
@@ -339,14 +341,15 @@ EventThread(IN LPVOID lpParameter)
 {
     UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");
     UNICODE_STRING ServicesU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
-    PPLUGPLAY_EVENT_BLOCK PnpEvent;
+
+    PPLUGPLAY_EVENT_BLOCK PnpEvent, NewPnpEvent;
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG PnpEventSize;
     HINF hInf;
     HANDLE hEnum, hServices;
     NTSTATUS Status;
 
-    hInf = *(HINF *)lpParameter;
+    hInf = *(HINF*)lpParameter;
 
     InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtOpenKey(&hEnum, KEY_QUERY_VALUE, &ObjectAttributes);
@@ -366,33 +369,31 @@ EventThread(IN LPVOID lpParameter)
     }
 
     PnpEventSize = 0x1000;
-    PnpEvent = (PPLUGPLAY_EVENT_BLOCK)RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
+    PnpEvent = RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
     if (PnpEvent == NULL)
     {
-        NtClose(hEnum);
-        NtClose(hServices);
-        return STATUS_NO_MEMORY;
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
     }
 
     for (;;)
     {
         DPRINT("Calling NtGetPlugPlayEvent()\n");
 
-        /* Wait for the next pnp event */
+        /* Wait for the next PnP event */
         Status = NtGetPlugPlayEvent(0, 0, PnpEvent, PnpEventSize);
 
-        /* Resize the buffer for the PnP event if it's too small. */
+        /* Resize the buffer for the PnP event if it's too small */
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             PnpEventSize += 0x400;
-            RtlFreeHeap(ProcessHeap, 0, PnpEvent);
-            PnpEvent = (PPLUGPLAY_EVENT_BLOCK)RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
-            if (PnpEvent == NULL)
+            NewPnpEvent = RtlReAllocateHeap(ProcessHeap, 0, PnpEvent, PnpEventSize);
+            if (NewPnpEvent == NULL)
             {
-                NtClose(hEnum);
-                NtClose(hServices);
-                return STATUS_NO_MEMORY;
+                Status = STATUS_NO_MEMORY;
+                goto Quit;
             }
+            PnpEvent = NewPnpEvent;
             continue;
         }
 
@@ -402,7 +403,7 @@ EventThread(IN LPVOID lpParameter)
             break;
         }
 
-        /* Process the pnp event */
+        /* Process the PnP event */
         DPRINT("Received PnP Event\n");
         if (IsEqualIID(&PnpEvent->EventGuid, (REFGUID)&GUID_DEVICE_ENUMERATED))
         {
@@ -414,15 +415,20 @@ EventThread(IN LPVOID lpParameter)
             DPRINT("Unknown event\n");
         }
 
-        /* Dequeue the current pnp event and signal the next one */
+        /* Dequeue the current PnP event and signal the next one */
         NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
     }
 
-    RtlFreeHeap(ProcessHeap, 0, PnpEvent);
-    NtClose(hEnum);
-    NtClose(hServices);
+    Status = STATUS_SUCCESS;
 
-    return STATUS_SUCCESS;
+Quit:
+    if (PnpEvent)
+        RtlFreeHeap(ProcessHeap, 0, PnpEvent);
+
+    NtClose(hServices);
+    NtClose(hEnum);
+
+    return Status;
 }
 
 DWORD WINAPI
