@@ -1,8 +1,6 @@
 #include "usbxhci.h"
-
 //#define NDEBUG
 #include <debug.h>
-
 #define NDEBUG_XHCI_ROOT_HUB
 #include "dbg_xhci.h"
 
@@ -31,7 +29,6 @@ XHCI_RH_GetRootHubData(IN PVOID xhciExtension,
         Over-current Protection Mode: Global Over-current Protection.
     */
     RootHubData->HubCharacteristics &= 3;
-
     RootHubData->PowerOnToPowerGood = 2;
     RootHubData->HubControlCurrent = 0;
 }
@@ -52,7 +49,7 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
                       IN USHORT Port,
                       IN PULONG PortStatus)
 {
-    //DPRINT1("XHCI_RH_GetPortStatus: function initiated\n");
+    //DPRINT1("XHCI_RH_GetPortStatus: function initiated\n"); commented to remove too many windbg outputs
     PXHCI_EXTENSION XhciExtension;
     PULONG PortStatusRegPointer;
     XHCI_PORT_STATUS_CONTROL PortStatusRegister;
@@ -61,9 +58,8 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
-    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
-    //DPRINT("XHCI_RH_GetPortStatus: Port      - %i\n", Port);
-    //DPRINT("XHCI_RH_GetPortStatus: PortStatus Register,  port    - %p , %i\n", PortStatusRegister.AsULONG, Port);
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer);
+    
     /*
     ULONG ConnectStatus          : 1; // Current Connect Status
     ULONG EnableStatus           : 1; // Port Enabled/Disabled
@@ -124,9 +120,10 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     portstatus.UsbPortStatus.ResetStatus = PortStatusRegister.PortReset;
     portstatus.UsbPortStatus.PowerStatus = PortStatusRegister.PortPower;
     portstatus.UsbPortStatus.LsDeviceAttached = 0;//PortStatusRegister.PortEnableDisable;
-   // if (PortStatusRegister.PortSpeed) {
+   // if (PortStatusRegister.PortSpeed) 
+   //{  // this check is not needed in vmware. removed for testing.
         portstatus.UsbPortStatus.HsDeviceAttached =  PortStatusRegister.CurrentConnectStatus;
-   // }
+   //}
     portstatus.UsbPortStatus.TestMode = 0;//PortStatusRegister.PortPower;
     portstatus.UsbPortStatus.IndicatorControl = 0;//PortStatusRegister.PortIndicatorControl;
     
@@ -139,11 +136,8 @@ XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
     portstatus.UsbPortStatusChange.LsDeviceAttachedChange = 0;//PortStatusRegister.ConnectStatusChange;
     portstatus.UsbPortStatusChange.HsDeviceAttachedChange = PortStatusRegister.ConnectStatusChange;
     portstatus.UsbPortStatusChange.TestModeChange = 0;//PortStatusRegister.ConnectStatusChange;
-    portstatus.UsbPortStatusChange.IndicatorControlChange =0;// PortStatusRegister.ConnectStatusChange;
-    
-
-    //DPRINT("XHCI_RH_GetPortStatus: PortStatus      - %p\n", portstatus.AsULONG);
-    
+    portstatus.UsbPortStatusChange.IndicatorControlChange = 0;// PortStatusRegister.ConnectStatusChange;
+   
     *PortStatus = portstatus.AsULONG;
     
     return MP_STATUS_SUCCESS;
@@ -154,7 +148,7 @@ NTAPI
 XHCI_RH_GetHubStatus(IN PVOID xhciExtension,
                      IN PULONG HubStatus)
 {
-    //DPRINT1("XHCI_RH_GetHubStatus: function initiated\n");
+    //DPRINT1("XHCI_RH_GetHubStatus: function initiated\n"); //removed to reduce windbg output
     *HubStatus = 0;
     return 0;
 }
@@ -190,14 +184,13 @@ XHCI_RH_SetFeaturePortReset(IN PVOID xhciExtension,
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
-    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer);
     
     PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
     PortStatusRegister.PortReset = 1;
     
-    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
-     
-   
+    WRITE_REGISTER_ULONG(PortStatusRegPointer, PortStatusRegister.AsULONG );
+
     return MP_STATUS_SUCCESS;
 }
 
@@ -214,12 +207,12 @@ XHCI_RH_SetFeaturePortPower(IN PVOID xhciExtension,
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
-    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer);
     
     PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
     PortStatusRegister.PortPower = 1;
     
-    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
+    WRITE_REGISTER_ULONG(PortStatusRegPointer, PortStatusRegister.AsULONG );
     
     return MP_STATUS_SUCCESS;
 }
@@ -259,7 +252,7 @@ XHCI_RH_ClearFeaturePortEnable(IN PVOID xhciExtension,
     PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
     PortStatusRegister.PortEnableDisable = 1;
     
-    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
+    WRITE_REGISTER_ULONG(PortStatusRegPointer, PortStatusRegister.AsULONG );
     
     PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
     
@@ -273,7 +266,6 @@ XHCI_RH_ClearFeaturePortPower(IN PVOID xhciExtension,
                               IN USHORT Port)
 {
     DPRINT1("XHCI_RH_ClearFeaturePortPower: function initiated\n");
-  
     return 0;
 }
 
@@ -316,12 +308,12 @@ XHCI_RH_ClearFeaturePortConnectChange(IN PVOID xhciExtension,
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
-    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer);
     
     PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
     PortStatusRegister.ConnectStatusChange = 1;
     
-    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
+    WRITE_REGISTER_ULONG(PortStatusRegPointer, PortStatusRegister.AsULONG );
     
     PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
     
@@ -343,12 +335,12 @@ XHCI_RH_ClearFeaturePortResetChange(IN PVOID xhciExtension,
     ASSERT(Port != 0 && Port <= XhciExtension->NumberOfPorts);
     PortStatusRegPointer = (XhciExtension->OperationalRegs) + (XHCI_PORTSC + (Port - 1)*4);  
     
-    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
+    PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer);
 
     PortStatusRegister.AsULONG = PortStatusRegister.AsULONG & PORT_STATUS_MASK;
     PortStatusRegister.PortResetChange = 1;
         
-    WRITE_REGISTER_ULONG(PortStatusRegPointer , PortStatusRegister.AsULONG );
+    WRITE_REGISTER_ULONG(PortStatusRegPointer, PortStatusRegister.AsULONG );
     
     PortStatusRegister.AsULONG = READ_REGISTER_ULONG(PortStatusRegPointer) ;
     
@@ -378,37 +370,34 @@ VOID
 NTAPI
 XHCI_RH_DisableIrq(IN PVOID xhciExtension)
 {
-   //DPRINT1("XHCI_RH_DisableIrq: function initiated\n");
+   //DPRINT1("XHCI_RH_DisableIrq: function initiated\n"); removed to reduce windbg output
    PXHCI_EXTENSION XhciExtension;
    PULONG OperationalRegs;
    XHCI_USB_COMMAND usbCommand;
    
    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
    OperationalRegs = XhciExtension->OperationalRegs;
-   usbCommand.AsULONG =READ_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD);
+   usbCommand.AsULONG =READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
    
    usbCommand.InterrupterEnable = 0;
    
-   WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD,usbCommand.AsULONG );
-  //DPRINT1("XHCI_RH_DisableIrq: Disable Interupts succesfull\n");
+   WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD,usbCommand.AsULONG);
 }
 
 VOID
 NTAPI
 XHCI_RH_EnableIrq(IN PVOID xhciExtension)
 {
-   //DPRINT1("XHCI_RH_EnableIrq: function initiated\n");
+   //DPRINT1("XHCI_RH_EnableIrq: function initiated\n"); removed to reduce windbg output
    PXHCI_EXTENSION XhciExtension;
    PULONG OperationalRegs;
    XHCI_USB_COMMAND usbCommand;
    
    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
    OperationalRegs = XhciExtension->OperationalRegs;
-   usbCommand.AsULONG =READ_REGISTER_ULONG (OperationalRegs + XHCI_USBCMD);
+   usbCommand.AsULONG =READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
    
    usbCommand.InterrupterEnable = 1;
    
-   WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD,usbCommand.AsULONG );
-   //DPRINT1("XHCI_RH_EnableIrq: Enable Interupts\n");
-   
+   WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD,usbCommand.AsULONG);
 }
