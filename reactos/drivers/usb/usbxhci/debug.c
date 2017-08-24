@@ -1,3 +1,9 @@
+/*
+ * PROJECT:         ReactOS system libraries
+ * LICENSE:         GPLv2+ - See COPYING in the top level directory
+ * PURPOSE:         debug functions
+ * PROGRAMMER:      Rama Teja Gampa <ramateja.g@gmail.com>
+*/
 #include "usbxhci.h"
 
 #define NDEBUG

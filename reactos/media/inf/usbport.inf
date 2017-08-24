@@ -1,0 +1,324 @@
+; USBPORT.INF
+
+; Installation of USB controllers
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = USB
+ClassGUID  = {36FC9E60-C465-11CF-8056-444553540000}
+Provider   = %ReactOS%
+DriverVer  = 10/19/1999,5.00.2157.1
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[ClassInstall32.NT]
+AddReg = USBClass.NT.AddReg
+
+[USBClass.NT.AddReg]
+HKR, , ,               0, %USBClassName%
+HKR, , Icon,           0, "-20"
+HKR, , NoInstallClass, 0, 1
+
+[Manufacturer]
+%GenericMfg% = GenericMfg
+%IntelMfg% = IntelMfg
+
+[GenericMfg]
+%PCI\CC_0C0300.DeviceDesc%=UHCI_Inst,PCI\CC_0C0300
+%PCI\CC_0C0310.DeviceDesc%=OHCI_Inst,PCI\CC_0C0310
+%PCI\CC_0C0320.DeviceDesc%=EHCI_Inst,PCI\CC_0C0320
+%PCI\CC_0C0330.DeviceDesc%=XHCI_Inst,PCI\CC_0C0330
+%USB\ROOT_HUB.DeviceDesc%=RootHub_Inst,USB\ROOT_HUB
+%USB\ROOT_HUB.DeviceDesc%=RootHub_Inst,USB\ROOT_HUB20
+
+[IntelMfg]
+%PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc%=UHCI_Inst,PCI\VEN_8086&DEV_7020&CC_0C0300
+%PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc%=UHCI_Inst,PCI\VEN_8086&DEV_7112&CC_0C0300
+
+;------------------------------ UHCI DRIVER -----------------------------
+
+[UHCI_Inst.NT]
+CopyFiles = UHCI_CopyFiles.NT
+
+[UHCI_CopyFiles.NT]
+usbport.sys
+usbuhci.sys
+
+[UHCI_Inst.NT.Services]
+AddService = usbuhci, 0x00000002, usbuhci_Service_Inst
+
+[usbuhci_Service_Inst]
+ServiceType   = 1
+StartType     = 0
+ErrorControl  = 1
+ServiceBinary = %12%\usbuhci.sys
+LoadOrderGroup = Base
+
+;------------------------------ OHCI DRIVER -----------------------------
+
+[OHCI_Inst.NT]
+CopyFiles = OHCI_CopyFiles.NT
+
+[OHCI_CopyFiles.NT]
+usbport.sys
+usbohci.sys
+
+[OHCI_Inst.NT.Services]
+AddService = usbohci, 0x00000002, usbohci_Service_Inst
+
+[usbohci_Service_Inst]
+ServiceType   = 1
+StartType     = 0
+ErrorControl  = 1
+ServiceBinary = %12%\usbohci.sys
+LoadOrderGroup = Base
+
+;------------------------------ EHCI DRIVER -----------------------------
+
+[EHCI_Inst.NT]
+CopyFiles = EHCI_CopyFiles.NT
+
+[EHCI_CopyFiles.NT]
+usbport.sys
+usbehci.sys
+
+[EHCI_Inst.NT.Services]
+AddService = usbehci, 0x00000002, usbehci_Service_Inst
+
+[usbehci_Service_Inst]
+ServiceType   = 1
+StartType     = 0
+ErrorControl  = 1
+ServiceBinary = %12%\usbehci.sys
+LoadOrderGroup = Base
+
+;------------------------------ XHCI DRIVER -----------------------------
+
+[XHCI_Inst.NT]
+CopyFiles = XHCI_CopyFiles.NT
+
+[XHCI_CopyFiles.NT]
+usbport.sys
+usbxhci.sys
+
+[XHCI_Inst.NT.Services]
+AddService = usbxhci, 0x00000002, usbxhci_Service_Inst
+
+[usbxhci_Service_Inst]
+ServiceType   = 1
+StartType     = 0
+ErrorControl  = 1
+ServiceBinary = %12%\usbxhci.sys
+LoadOrderGroup = Base
+;---------------------------- ROOT HUB DRIVER ---------------------------
+
+[RootHub_Inst.NT]
+CopyFiles = RootHub_CopyFiles.NT
+
+[RootHub_CopyFiles.NT]
+usbport.sys
+usbhub.sys
+
+[RootHub_Inst.NT.Services]
+AddService = usbhub, 0x00000002, usbhub_Service_Inst
+
+[usbhub_Service_Inst]
+ServiceType   = 1
+StartType     = 0
+ErrorControl  = 1
+ServiceBinary = %12%\usbhub.sys
+LoadOrderGroup = Base
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+USBClassName = "USB Controllers"
+
+GenericMfg = "(Generic USB devices)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB controller"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB controller"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB controller"
+PCI\CC_0C0330.DeviceDesc = "XHCI USB controller"
+USB\ROOT_HUB.DeviceDesc = "Root hub"
+
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB controller"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB controller"
+
+[Strings.0405]
+USBClassName = "USB řadiče"
+
+GenericMfg = "(Generická USB zařízení)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB řadič"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB řadič"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB řadič"
+PCI\CC_0C0330.DeviceDesc = "XHCI USB řadič"
+USB\ROOT_HUB.DeviceDesc = "Kořenový rozbočovač"
+
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB řadič"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB řadič"
+
+[Strings.0407]
+USBClassName = "USB Controller"
+
+GenericMfg = "(Generische USB-Geräte)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB-Controller"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB-Controller"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB-Controller"
+PCI\CC_0C0330.DeviceDesc = "XHCI USB-Controller"
+USB\ROOT_HUB.DeviceDesc = "Root Hub"
+
+[Strings.0a]
+ReactOS = "Equipo de ReactOS"
+USBClassName = "Controladores USB"
+
+GenericMfg = "(Dispositivo USB estándar)"
+PCI\CC_0C0300.DeviceDesc = "Controlador USB UHCI"
+PCI\CC_0C0310.DeviceDesc = "Controlador USB OHCI"
+PCI\CC_0C0320.DeviceDesc = "Controlador USB EHCI USB"
+PCI\CC_0C0330.DeviceDesc = "Controlador USB XHCI"
+USB\ROOT_HUB.DeviceDesc = "Concentrador raíz USB"
+
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371SB PIIX3"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/MB PIIX4"
+
+
+[Strings.040C]
+USBClassName = "Contrôleur USB"
+
+GenericMfg = "(Périphériques USB génériques)"
+PCI\CC_0C0300.DeviceDesc = "Contrôleur USB UHCI"
+PCI\CC_0C0310.DeviceDesc = "Contrôleur USB OHCI"
+PCI\CC_0C0320.DeviceDesc = "Contrôleur USB EHCI"
+PCI\CC_0C0330.DeviceDesc = "Contrôleur USB XHCI"
+USB\ROOT_HUB.DeviceDesc = "Concentrateur racine"
+
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Contrôleur USB  Intel 82371SB PIIX3"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Contrôleur USB  Intel 82371AB/EB/MB PIIX4"
+
+[Strings.0411]
+USBClassName = "USB コントローラ"
+
+GenericMfg = "(標準 USB デバイス)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB コントローラ"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB コントローラ"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB コントローラ"
+PCI\CC_0C0330.DeviceDesc = "XHCI USB コントローラ"
+USB\ROOT_HUB.DeviceDesc = "ルート ハブ"
+
+[Strings.0415]
+ReactOS = "Ekipa ReactOS"
+USBClassName = "Kontrolery USB"
+
+GenericMfg = "(Standardowe urządzenia USB)"
+PCI\CC_0C0300.DeviceDesc = "Kontroler UHCI USB"
+PCI\CC_0C0310.DeviceDesc = "Kontroler OHCI USB"
+PCI\CC_0C0320.DeviceDesc = "Kontroler EHCI USB"
+PCI\CC_0C0330.DeviceDesc = "Kontroler XHCI USB"
+USB\ROOT_HUB.DeviceDesc = "Główny koncentrator USB"
+
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Kontroler Intel 82371SB PIIX3 USB"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Kontroler Intel 82371AB/EB/MB PIIX4 USB"
+
+[Strings.0416]
+USBClassName = "Controladores de barramento serial universal (USB)"
+
+GenericMfg = "(Dispositivo USB padrão)"
+PCI\CC_0C0300.DeviceDesc = "Controlador USB UHCI"
+PCI\CC_0C0310.DeviceDesc = "Controlador USB OHCI"
+PCI\CC_0C0320.DeviceDesc = "Controlador USB EHCI USB"
+PCI\CC_0C0330.DeviceDesc = "Controlador USB XHCI"
+USB\ROOT_HUB.DeviceDesc = "Concentrador raíz USB"
+
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371SB PIIX3"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/MB PIIX4"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"
+USBClassName = "Dispozitive de control USB"
+GenericMfg = "(dispozitive generice de control USB)"
+PCI\CC_0C0300.DeviceDesc = "Dispozitive de control USB UHCI"
+PCI\CC_0C0310.DeviceDesc = "Dispozitive de control USB OHCI"
+PCI\CC_0C0320.DeviceDesc = "Dispozitive de control USB EHCI"
+PCI\CC_0C0330.DeviceDesc = "Dispozitive de control USB XHCI"
+USB\ROOT_HUB.DeviceDesc = "Cuplator rădăcină"
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Dispozitiv de control USB Intel 82371SB PIIX3"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Dispozitiv de contorl USB Intel 82371AB/EB/MB PIIX4"
+
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+USBClassName = "Контроллеры USB"
+
+GenericMfg = "(Стандартные устройства USB)"
+PCI\CC_0C0300.DeviceDesc = "Контроллер UHCI USB"
+PCI\CC_0C0310.DeviceDesc = "Контроллер OHCI USB"
+PCI\CC_0C0320.DeviceDesc = "Контроллер EHCI USB"
+PCI\CC_0C0330.DeviceDesc = "Контроллер XHCI USB"
+USB\ROOT_HUB.DeviceDesc = "Корневой хаб"
+
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Контроллер Intel 82371SB PIIX3 USB"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Контроллер Intel 82371AB/EB/MB PIIX4 USB"
+
+[Strings.041B]
+USBClassName = "USB radiče"
+
+GenericMfg = "(Generické USB zariadenia)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB radič"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB radič"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB radič"
+PCI\CC_0C0330.DeviceDesc = "XHCI USB radič"
+USB\ROOT_HUB.DeviceDesc = "Koreňový rozbočovač"
+
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB radič"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB radič"
+
+[Strings.041B]
+USBClassName = "USB valdikliai"
+
+GenericMfg = "(Standartiniai USB įrenginiai)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB valdiklis"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB valdiklis"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB valdiklis"
+PCI\CC_0C0330.DeviceDesc = "XHCI USB valdiklis"
+USB\ROOT_HUB.DeviceDesc = "Pagrindinis šakotuvas"
+
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB valdiklis"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB valdiklis"
+
+[Strings.041f]
+ReactOS = "ReactOS Takımı"
+USBClassName = "USB Denetleyicileri"
+
+GenericMfg = "(Umûmî USB Aygıtları)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB Denetleyicisi"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB Denetleyicisi"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB Denetleyicisi"
+PCI\CC_0C0330.DeviceDesc = "XHCI USB Denetleyicisi"
+USB\ROOT_HUB.DeviceDesc = "Kök Göbek"
+
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB Denetleyicisi"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB Denetleyicisi"
+
+[Strings.0422]
+ReactOS = "Команда ReactOS"
+USBClassName = "Контроллери USB"
+
+GenericMfg = "(Стандартні пристрої USB)"
+PCI\CC_0C0300.DeviceDesc = "Контроллер UHCI USB"
+PCI\CC_0C0310.DeviceDesc = "Контроллер OHCI USB"
+PCI\CC_0C0320.DeviceDesc = "Контроллер EHCI USB"
+PCI\CC_0C0330.DeviceDesc = "Контроллер XHCI USB"
+USB\ROOT_HUB.DeviceDesc = "Кореневий хаб"
+
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Контроллер Intel 82371SB PIIX3 USB"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Контроллер Intel 82371AB/EB/MB PIIX4 USB"

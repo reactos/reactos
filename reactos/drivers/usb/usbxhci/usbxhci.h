@@ -1,3 +1,9 @@
+/*
+ * PROJECT:         ReactOS system libraries
+ * LICENSE:         GPLv2+ - See COPYING in the top level directory
+ * PURPOSE:         resources definitions
+ * PROGRAMMER:      Rama Teja Gampa <ramateja.g@gmail.com>
+*/
 #ifndef USBXHCI_H__
 #define USBXHCI_H__
 

@@ -1,6 +1,14 @@
+/*
+ * PROJECT:         ReactOS system libraries
+ * LICENSE:         GPLv2+ - See COPYING in the top level directory
+ * PURPOSE:         main functions of xHCI
+ * PROGRAMMER:      Rama Teja Gampa <ramateja.g@gmail.com>
+*/
 #include "usbxhci.h"
+#define NDEBUG
 #include <debug.h>
 #define NDEBUG_XHCI_TRACE
+
 #include "dbg_xhci.h"
 
 USBPORT_REGISTRATION_PACKET RegPacket;
@@ -571,7 +579,7 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
             return MP_STATUS_FAILURE;
         }
     }
-    DPRINT("XHCI_InitializeHardware: Reset - OK\n");
+    DPRINT1("XHCI_InitializeHardware: Reset - OK\n");
     
     StructuralParams_1.AsULONG = READ_REGISTER_ULONG(BaseIoAdress + XHCI_HCSP1); // HCSPARAMS1 register
 
@@ -649,12 +657,12 @@ XHCI_StartController(IN PVOID xhciExtension,
     MaxScratchPadBuffers = MaxScratchPadBuffers + HCSPARAMS2.MaxSPBuffersLo;
     XhciExtension->MaxScratchPadBuffers = MaxScratchPadBuffers;
     
-    DPRINT("XHCI_StartController: BaseIoAdress    - %p\n", BaseIoAdress);
-    DPRINT("XHCI_StartController: OperationalRegs - %p\n", OperationalRegs);
-    DPRINT("XHCI_StartController: DoorBellRegisterBase - %p\n", DoorBellRegisterBase);
-    DPRINT("XHCI_StartController: RunTimeRegisterBase - %p\n", RunTimeRegisterBase);
-    DPRINT("XHCI_StartController: PageSize - %p\n", XhciExtension->PageSize);
-    DPRINT("XHCI_StartController: MaxScratchPadBuffers - %p\n", MaxScratchPadBuffers);
+    DPRINT1("XHCI_StartController: BaseIoAdress    - %p\n", BaseIoAdress);
+    DPRINT1("XHCI_StartController: OperationalRegs - %p\n", OperationalRegs);
+    DPRINT1("XHCI_StartController: DoorBellRegisterBase - %p\n", DoorBellRegisterBase);
+    DPRINT1("XHCI_StartController: RunTimeRegisterBase - %p\n", RunTimeRegisterBase);
+    DPRINT1("XHCI_StartController: PageSize - %p\n", XhciExtension->PageSize);
+    DPRINT1("XHCI_StartController: MaxScratchPadBuffers - %p\n", MaxScratchPadBuffers);
     
     RegPacket.UsbPortReadWriteConfigSpace(XhciExtension,
                                           1,
@@ -705,8 +713,13 @@ XHCI_StopController(IN PVOID xhciExtension,
     PMDL ScratchPadArrayMDL;
     PMDL ScratchPadBufferMDL;
     PXHCI_SCRATCHPAD_BUFFER_ARRAY BufferArrayPointer;
+    XHCI_USB_COMMAND Command, Command_temp;
+    PULONG OperationalRegs;
+    XHCI_USB_STATUS Status;
+    LARGE_INTEGER CurrentTime = {{0, 0}};
+    LARGE_INTEGER LastTime = {{0, 0}};
     
-    DPRINT1("XHCI_StopController: Function initiated. FIXME\n");
+    DPRINT1("XHCI_StopController: Function initiated. \n");
     XhciExtension = (PXHCI_EXTENSION) xhciExtension;
     MaxScratchPadBuffers = XhciExtension->MaxScratchPadBuffers;
     // free memory allocated to scratchpad buffers.
@@ -721,6 +734,33 @@ XHCI_StopController(IN PVOID xhciExtension,
         BufferArrayPointer = MmGetMdlVirtualAddress(ScratchPadArrayMDL);
         IoFreeMdl(ScratchPadArrayMDL);
         MmFreeContiguousMemory(BufferArrayPointer);
+    }
+    
+    OperationalRegs = XhciExtension->OperationalRegs;
+    Command_temp.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
+    Command.AsULONG = 0;
+    Command.RsvdP1 = Command_temp.RsvdP1;
+    Command.RsvdP2 = Command_temp.RsvdP2;
+    Command.RsvdP3 = Command_temp.RsvdP3;
+    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD, Command.AsULONG);
+    
+    KeQuerySystemTime(&CurrentTime);
+    CurrentTime.QuadPart += 100 * 10000;
+    while (TRUE)
+    {
+        KeQuerySystemTime(&LastTime);
+        
+        Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_USBSTS);
+       
+        if (Status.HCHalted == 1)
+        {
+            break;
+        }
+
+        if (LastTime.QuadPart >= CurrentTime.QuadPart)
+        {
+            DPRINT1("XHCI_StopController: controller stop  failed!\n");
+        }
     }
 
 }
@@ -877,14 +917,14 @@ VOID
 NTAPI
 XHCI_CheckController(IN PVOID xhciExtension)
 {
-    //DPRINT1("XHCI_CheckController: function initiated\n");
+    DPRINT("XHCI_CheckController: function initiated\n");
 }
 
 ULONG
 NTAPI
 XHCI_Get32BitFrameNumber(IN PVOID xhciExtension)
 {
-    //DPRINT1("XHCI_Get32BitFrameNumber: function initiated\n"); this function is called multiple times. commented out to reduce output in windbg
+    DPRINT("XHCI_Get32BitFrameNumber: function initiated\n"); 
     return 0;
 }
 
@@ -937,9 +977,9 @@ VOID
 NTAPI
 XHCI_PollController(IN PVOID xhciExtension)
 {
-    //DPRINT1("XHCI_PollController: function initiated\n"); commented out to reduce windbg output
+    
     PXHCI_EXTENSION XhciExtension;
-
+    DPRINT("XHCI_PollController: function initiated\n");
     XhciExtension = (PXHCI_EXTENSION)xhciExtension;
 
     if (!(XhciExtension->Flags & XHCI_FLAGS_CONTROLLER_SUSPEND))
@@ -1062,7 +1102,7 @@ NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
-    DPRINT("DriverEntry: DriverObject - %p, RegistryPath - %wZ\n",
+    DPRINT1("DriverEntry: DriverObject - %p, RegistryPath - %wZ\n",
            DriverObject,
            RegistryPath);
     if (USBPORT_GetHciMn() != USBPORT_HCI_MN) 

@@ -1,5 +1,11 @@
+/*
+ * PROJECT:         ReactOS system libraries
+ * LICENSE:         GPLv2+ - See COPYING in the top level directory
+ * PURPOSE:         roothub functions of xHCI
+ * PROGRAMMER:      Rama Teja Gampa <ramateja.g@gmail.com>
+*/
 #include "usbxhci.h"
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 #define NDEBUG_XHCI_ROOT_HUB
 #include "dbg_xhci.h"
@@ -89,7 +95,7 @@ NTAPI
 XHCI_RH_GetHubStatus(IN PVOID xhciExtension,
                      IN PUSB_HUB_STATUS_AND_CHANGE HubStatus)
 {
-    //DPRINT1("XHCI_RH_GetHubStatus: function initiated\n"); //removed to reduce windbg output
+    DPRINT("XHCI_RH_GetHubStatus: function initiated\n"); //removed to reduce windbg output
     HubStatus->AsUlong32 = 0;
     return 0;
 }
@@ -311,11 +317,12 @@ VOID
 NTAPI
 XHCI_RH_DisableIrq(IN PVOID xhciExtension)
 {
-   //DPRINT1("XHCI_RH_DisableIrq: function initiated\n"); removed to reduce windbg output
+   
    PXHCI_EXTENSION XhciExtension;
    PULONG OperationalRegs;
    XHCI_USB_COMMAND usbCommand;
    
+   DPRINT("XHCI_RH_DisableIrq: function initiated\n"); 
    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
    OperationalRegs = XhciExtension->OperationalRegs;
    usbCommand.AsULONG =READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
@@ -329,11 +336,12 @@ VOID
 NTAPI
 XHCI_RH_EnableIrq(IN PVOID xhciExtension)
 {
-   //DPRINT1("XHCI_RH_EnableIrq: function initiated\n"); removed to reduce windbg output
+   
    PXHCI_EXTENSION XhciExtension;
    PULONG OperationalRegs;
    XHCI_USB_COMMAND usbCommand;
    
+   DPRINT("XHCI_RH_EnableIrq: function initiated\n"); 
    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
    OperationalRegs = XhciExtension->OperationalRegs;
    usbCommand.AsULONG =READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
