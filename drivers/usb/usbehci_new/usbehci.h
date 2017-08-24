@@ -103,7 +103,7 @@ typedef struct _EHCI_HC_RESOURCES {
 typedef struct _EHCI_EXTENSION {
   ULONG Reserved;
   ULONG Flags;
-  PULONG BaseIoAdress;
+  PEHCI_HC_CAPABILITY_REGISTERS CapabilityRegisters;
   PEHCI_HW_REGISTERS OperationalRegs;
   UCHAR FrameLengthAdjustment;
   BOOLEAN IsStarted;

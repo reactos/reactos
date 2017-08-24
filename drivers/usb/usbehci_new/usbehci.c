@@ -729,7 +729,7 @@ MPSTATUS
 NTAPI
 EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
 {
-    PULONG BaseIoAdress;
+    PEHCI_HC_CAPABILITY_REGISTERS CapabilityRegisters;
     PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
     LARGE_INTEGER CurrentTime = {{0, 0}};
@@ -739,7 +739,7 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     DPRINT_EHCI("EHCI_InitializeHardware: ... \n");
 
     OperationalRegs = EhciExtension->OperationalRegs;
-    BaseIoAdress = EhciExtension->BaseIoAdress;
+    CapabilityRegisters = EhciExtension->CapabilityRegisters;
 
     Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.Reset = 1;
@@ -774,7 +774,7 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
 
     DPRINT("EHCI_InitializeHardware: Reset - OK\n");
 
-    StructuralParams.AsULONG = READ_REGISTER_ULONG(BaseIoAdress + 1); // HCSPARAMS register
+    StructuralParams.AsULONG = READ_REGISTER_ULONG(&CapabilityRegisters->StructParameters.AsULONG);
 
     EhciExtension->NumberOfPorts = StructuralParams.PortCount;
     EhciExtension->PortPowerControl = StructuralParams.PortPowerControl;
@@ -818,7 +818,7 @@ EHCI_StartController(IN PVOID ehciExtension,
                      IN PUSBPORT_RESOURCES Resources)
 {
     PEHCI_EXTENSION EhciExtension = ehciExtension;
-    PULONG BaseIoAdress;
+    PEHCI_HC_CAPABILITY_REGISTERS CapabilityRegisters;
     PEHCI_HW_REGISTERS OperationalRegs;
     MPSTATUS MPStatus;
     EHCI_USB_COMMAND Command;
@@ -836,15 +836,18 @@ EHCI_StartController(IN PVOID ehciExtension,
         return MP_STATUS_ERROR;
     }
 
-    BaseIoAdress = (PULONG)Resources->ResourceBase;
-    EhciExtension->BaseIoAdress = BaseIoAdress;
+    CapabilityRegisters = (PEHCI_HC_CAPABILITY_REGISTERS)Resources->ResourceBase;
+    EhciExtension->CapabilityRegisters = CapabilityRegisters;
 
-    CapabilityRegLength = (UCHAR)READ_REGISTER_ULONG(BaseIoAdress);
-    OperationalRegs = (PEHCI_HW_REGISTERS)((ULONG)BaseIoAdress + CapabilityRegLength);
+    CapabilityRegLength = READ_REGISTER_UCHAR(&CapabilityRegisters->RegistersLength);
+
+    OperationalRegs = (PEHCI_HW_REGISTERS)((ULONG)CapabilityRegisters +
+                                                  CapabilityRegLength);
+
     EhciExtension->OperationalRegs = OperationalRegs;
 
-    DPRINT("EHCI_StartController: BaseIoAdress    - %p\n", BaseIoAdress);
-    DPRINT("EHCI_StartController: OperationalRegs - %p\n", OperationalRegs);
+    DPRINT("EHCI_StartController: CapabilityRegisters - %p\n", CapabilityRegisters);
+    DPRINT("EHCI_StartController: OperationalRegs     - %p\n", OperationalRegs);
 
     RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
                                           1,
@@ -1632,8 +1635,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
         return MP_STATUS_FAILURE;
     }
 
-    ++EhciExtension->PendingTransfers;
-    ++EhciEndpoint->PendingTDs;
+    EhciExtension->PendingTransfers++;
+    EhciEndpoint->PendingTDs++;
 
     EhciTransfer->TransferOnAsyncList = 1;
 
@@ -1645,7 +1648,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
         return MP_STATUS_FAILURE;
     }
 
-    ++EhciTransfer->PendingTDs;
+    EhciTransfer->PendingTDs++;
 
     FirstTD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
     FirstTD->EhciTransfer = EhciTransfer;
@@ -1680,7 +1683,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
         return MP_STATUS_FAILURE;
     }
 
-    ++EhciTransfer->PendingTDs;
+    EhciTransfer->PendingTDs++;
 
     LastTD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
     LastTD->EhciTransfer = EhciTransfer;
@@ -1717,7 +1720,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
             LinkTD = TD;
 
-            ++EhciTransfer->PendingTDs;
+            EhciTransfer->PendingTDs++;
 
             TD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
             TD->EhciTransfer = EhciTransfer;
@@ -1846,8 +1849,8 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
         return MP_STATUS_FAILURE;
     }
 
-    ++EhciExtension->PendingTransfers;
-    ++EhciEndpoint->PendingTDs;
+    EhciExtension->PendingTransfers++;
+    EhciEndpoint->PendingTDs++;
 
     EhciTransfer->TransferOnAsyncList = 1;
 
@@ -1866,7 +1869,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
                 return MP_STATUS_FAILURE;
             }
 
-            ++EhciTransfer->PendingTDs;
+            EhciTransfer->PendingTDs++;
 
             TD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
             TD->EhciTransfer = EhciTransfer;
@@ -1933,7 +1936,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
             return MP_STATUS_FAILURE;
         }
 
-        ++EhciTransfer->PendingTDs;
+        EhciTransfer->PendingTDs++;
 
         TD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
         TD->EhciTransfer = EhciTransfer;
@@ -2013,7 +2016,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
         return MP_STATUS_FAILURE;
     }
 
-    ++EhciEndpoint->PendingTDs;
+    EhciEndpoint->PendingTDs++;
 
     TransferedLen = 0;
     PrevTD = NULL;
@@ -2032,7 +2035,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
             return MP_STATUS_FAILURE;
         }
 
-        ++EhciTransfer->PendingTDs;
+        EhciTransfer->PendingTDs++;
 
         TD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
         TD->EhciTransfer = EhciTransfer;
@@ -2197,14 +2200,14 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
     QH = EhciEndpoint->QH;
     TD = EhciEndpoint->HcdHeadP;
 
-    --EhciEndpoint->PendingTDs;
+    EhciEndpoint->PendingTDs--;
 
     if (TD->EhciTransfer == EhciTransfer)
     {
         TransferLength = 0;
 
         while (TD != EhciEndpoint->HcdTailP &&
-               TD->EhciTransfer == EhciTransfer )
+               TD->EhciTransfer == EhciTransfer)
         {
             TransferLength += TD->LengthThisTD - TD->HwTD.Token.TransferBytes;
 
@@ -2616,7 +2619,7 @@ EHCI_ProcessDoneAsyncTd(IN PEHCI_EXTENSION EhciExtension,
     EhciTransfer = TD->EhciTransfer;
 
     TransferParameters = EhciTransfer->TransferParameters;
-    --EhciTransfer->PendingTDs;
+    EhciTransfer->PendingTDs--;
 
     EhciEndpoint = EhciTransfer->EhciEndpoint;
 
@@ -2659,14 +2662,14 @@ Next:
 
     if (EhciTransfer->PendingTDs == 0)
     {
-        --EhciEndpoint->PendingTDs;
+        EhciEndpoint->PendingTDs--;
 
         TransferType = EhciEndpoint->EndpointProperties.TransferType;
 
         if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
             TransferType == USBPORT_TRANSFER_TYPE_BULK)
         {
-            --EhciExtension->PendingTransfers;
+            EhciExtension->PendingTransfers--;
 
             if (EhciExtension->PendingTransfers == 0)
             {

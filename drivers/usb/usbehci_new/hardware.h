@@ -1,5 +1,4 @@
 /* EHCI hardware registers */
-
 #define EHCI_USBCMD            0
 #define EHCI_USBSTS            1
 #define EHCI_USBINTR           2
@@ -38,6 +37,15 @@ typedef union _EHCI_HC_CAPABILITY_PARAMS {
   };
   ULONG AsULONG;
 } EHCI_HC_CAPABILITY_PARAMS;
+
+typedef struct _EHCI_HC_CAPABILITY_REGISTERS {
+  UCHAR RegistersLength; // RO
+  UCHAR Reserved; // RO
+  USHORT InterfaceVersion; // RO
+  EHCI_HC_STRUCTURAL_PARAMS StructParameters; // RO
+  EHCI_HC_CAPABILITY_PARAMS CapParameters; // RO
+  UCHAR CompanionPortRouteDesc[8]; // RO
+} EHCI_HC_CAPABILITY_REGISTERS, *PEHCI_HC_CAPABILITY_REGISTERS;
 
 typedef union _EHCI_USB_COMMAND {
   struct {
@@ -128,7 +136,6 @@ typedef struct _EHCI_HW_REGISTERS {
 } EHCI_HW_REGISTERS, *PEHCI_HW_REGISTERS;
 
 /* Link Pointer */
-
 #define EHCI_LINK_TYPE_iTD  0 // isochronous transfer descriptor
 #define EHCI_LINK_TYPE_QH   1 // queue head
 #define EHCI_LINK_TYPE_siTD 2 // split transaction isochronous transfer
@@ -148,7 +155,6 @@ typedef union _EHCI_LINK_POINTER {
 } EHCI_LINK_POINTER;
 
 /* Isochronous (High-Speed) Transfer Descriptor (iTD) */
-
 typedef union _EHCI_TRANSACTION_CONTROL {
   struct {
     ULONG xOffset             : 12;
@@ -194,7 +200,6 @@ typedef struct _EHCI_ISOCHRONOUS_TD { // must be aligned on a 32-byte boundary
 C_ASSERT(sizeof(EHCI_ISOCHRONOUS_TD) == 92);
 
 /* Split Transaction Isochronous Transfer Descriptor (siTD) */
-
 typedef union _EHCI_FS_ENDPOINT_PARAMS {
   struct {
     ULONG DeviceAddress  : 7;
@@ -256,7 +261,6 @@ typedef struct _EHCI_SPLIT_ISOCHRONOUS_TD { // must be aligned on a 32-byte boun
 C_ASSERT(sizeof(EHCI_SPLIT_ISOCHRONOUS_TD) == 28);
 
 /* Queue Element Transfer Descriptor (qTD) */
-
 #define	EHCI_TOKEN_STATUS_ACTIVE            (1 << 7)
 #define	EHCI_TOKEN_STATUS_HALTED            (1 << 6)
 #define	EHCI_TOKEN_STATUS_DATA_BUFFER_ERROR (1 << 5)
@@ -290,7 +294,6 @@ typedef struct _EHCI_QUEUE_TD { // must be aligned on 32-byte boundaries
 C_ASSERT(sizeof(EHCI_QUEUE_TD) == 52);
 
 /* Queue Head */
-
 #define EHCI_QH_FLAG_IN_SCHEDULE  0x01
 #define EHCI_QH_FLAG_CLOSED       0x02
 #define EHCI_QH_FLAG_STATIC       0x04
