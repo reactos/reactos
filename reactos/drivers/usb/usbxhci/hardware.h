@@ -1,4 +1,10 @@
-/* XHCI hardware registers */
+/*
+ * PROJECT:         ReactOS system libraries
+ * LICENSE:         GPLv2+ - See COPYING in the top level directory
+ * PURPOSE:         hardware register definitions
+ * PROGRAMMER:      Rama Teja Gampa <ramateja.g@gmail.com>
+*/
+    
 // base io addr register offsets
 #define XHCI_HCSP1            1
 #define XHCI_HCSP2            2

@@ -1,3 +1,9 @@
+/*
+ * PROJECT:         ReactOS system libraries
+ * LICENSE:         GPLv2+ - See COPYING in the top level directory
+ * PURPOSE:         debug header files
+ * PROGRAMMER:      Rama Teja Gampa <ramateja.g@gmail.com>
+*/
 #ifndef DBG_XHCI_H__
 #define DBG_XHCI_H__
 
