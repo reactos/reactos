@@ -268,6 +268,10 @@ BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
                     FreeLibrary(hCabinetDll);
                     return TRUE;
                 }
+                else
+                {
+                    RemoveDirectoryW(lpOutputPath);
+                }
             }
         }
         FreeLibrary(hCabinetDll);
