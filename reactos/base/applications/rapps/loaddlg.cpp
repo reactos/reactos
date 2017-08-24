@@ -163,9 +163,9 @@ public:
             m_UrlHasBeenCopied = TRUE;
         }
 
-        SetLastError(0);
+        SetLastError(ERROR_SUCCESS);
         r = GetWindowLongPtrW(m_hDialog, GWLP_USERDATA);
-        if (0 != r || 0 != GetLastError())
+        if (r || GetLastError() != ERROR_SUCCESS)
         {
             *m_pbCancelled = TRUE;
             return E_ABORT;
@@ -432,7 +432,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
 
     case WM_CLOSE:
         EndDialog(Dlg, 0);
-        DestroyWindow(Dlg);
+        //DestroyWindow(Dlg);
         return TRUE;
 
     default:
@@ -719,6 +719,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (hOut == INVALID_HANDLE_VALUE)
             goto end;
 
+        dwCurrentBytesRead = 0;
         do
         {
             if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead))
@@ -734,7 +735,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             dwCurrentBytesRead += dwBytesRead;
-            dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, pCurrentInfo->szUrlDownload);
+            dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, pCurrentInfo->szUrlDownload.GetString());
         } while (dwBytesRead && !bCancelled);
 
         CloseHandle(hOut);
@@ -870,6 +871,5 @@ VOID CDownloadManager::LaunchDownloadDialog(BOOL modal)
                       hMainWnd,
                       DownloadDlgProc);
     }
-
 }
 // CDownloadManager

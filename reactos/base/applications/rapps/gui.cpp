@@ -1059,7 +1059,17 @@ private:
                     if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
                     {
                         BOOL checked = ListView_GetCheckState(pnic->hdr.hwndFrom, pnic->iItem);
-                        nSelectedApps += (checked) ? 1 : -1;
+                        /* FIXME: HAX!
+                        - preventing decremention below zero as a safeguard for ReactOS
+                          In ReactOS this action is triggered whenever user changes *selection*, but should be only when *checkbox* state toggled
+                          Maybe LVIS_STATEIMAGEMASK is set incorrectly
+                        */
+                        nSelectedApps += 
+                            (checked) 
+                            ? 1 
+                            :((nSelectedApps > 0) 
+                              ? -1 
+                              : 0);
                         UpdateStatusBarText();
                     }
                 }
@@ -1290,7 +1300,7 @@ private:
             break;
 
         case ID_INSTALL:
-            if (nSelectedApps)
+            if (nSelectedApps > 0)
             {
                 CDownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
                 UpdateApplicationsList(-1);
