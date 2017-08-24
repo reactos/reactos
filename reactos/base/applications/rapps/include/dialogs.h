@@ -10,7 +10,6 @@ class CDowloadingAppsListView;
 
 class CDownloadManager
 {
-    static PAPPLICATION_INFO AppInfo;
     static ATL::CSimpleArray<PAPPLICATION_INFO> AppsToInstallList;
     static CDowloadingAppsListView DownloadsListView;
     static INT iCurrentApp;

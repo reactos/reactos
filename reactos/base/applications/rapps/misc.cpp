@@ -260,6 +260,8 @@ BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
             if (Result == S_OK)
             {
                 Dest.Operation = EXTRACT_EXTRACTFILES;
+                CreateDirectoryW(lpOutputPath, NULL);
+
                 Result = pfnExtract(&Dest, szCabName);
                 if (Result == S_OK)
                 {

@@ -1461,7 +1461,7 @@ private:
         nSelectedApps = 0;
         if (EnumType < 0) EnumType = SelectedEnumType;
 
-        if (IS_INSTALLED_ENUM(SelectedEnumType))
+        if (IS_INSTALLED_ENUM(EnumType))
         {
             FreeInstalledAppList();
         }
@@ -1482,7 +1482,10 @@ private:
         if (isAvailableEnum(EnumType))
         {
             /* Enum available applications */
-            m_AvailableApps.EnumAvailableApplications(EnumType, s_EnumAvailableAppProc);
+            if (!m_AvailableApps.EnumAvailableApplications(EnumType, s_EnumAvailableAppProc))
+            {
+                return;
+            }
         }
 
         SelectedEnumType = EnumType;

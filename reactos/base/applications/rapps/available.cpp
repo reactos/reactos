@@ -227,37 +227,32 @@ VOID CAvailableApps::FreeCachedEntries()
     }
 }
 
-BOOL CAvailableApps::DeleteCurrentAppsDB()
+VOID CAvailableApps::DeleteCurrentAppsDB()
 {
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
-    BOOL result = TRUE;
 
     if (m_szPath.IsEmpty())
-        return FALSE;
+        return;
 
-    result = result && DeleteFileW(m_szCabPath.GetString());
+    DeleteFileW(m_szCabPath.GetString());
     hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
 
-    if (hFind == INVALID_HANDLE_VALUE)
-        return result;
-
-    ATL::CStringW szTmp;
-    do
+    if (hFind != INVALID_HANDLE_VALUE)
     {
-        szTmp = m_szPath + FindFileData.cFileName;
-        result = result && DeleteFileW(szTmp.GetString());
-    } while (FindNextFileW(hFind, &FindFileData) != 0);
-
-    FindClose(hFind);
-
-    return result;
+        ATL::CStringW szTmp;
+        do
+        {
+            szTmp = m_szPath + FindFileData.cFileName;
+            DeleteFileW(szTmp.GetString());
+        } while (FindNextFileW(hFind, &FindFileData) != 0);
+        FindClose(hFind);
+    }
 }
 
 BOOL CAvailableApps::UpdateAppsDB()
 {
-    if (!DeleteCurrentAppsDB())
-        return FALSE;
+    DeleteCurrentAppsDB();
 
     CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
@@ -287,12 +282,10 @@ BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnu
 
     if (hFind == INVALID_HANDLE_VALUE)
     {
-        if (GetFileAttributesW(m_szCabPath) == INVALID_FILE_ATTRIBUTES)
-        {
-            CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
+        if(!UpdateAppsDB()) {
+            return FALSE;
         }
 
-        ExtractFilesFromCab(m_szCabPath, m_szAppsPath);
         hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
 
         if (hFind == INVALID_HANDLE_VALUE)

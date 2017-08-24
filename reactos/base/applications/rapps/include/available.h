@@ -115,7 +115,7 @@ class CAvailableApps
 public:
     CAvailableApps();
     VOID FreeCachedEntries();
-    BOOL DeleteCurrentAppsDB();
+    VOID DeleteCurrentAppsDB();
     BOOL UpdateAppsDB();
     BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
     const PAPPLICATION_INFO FindInfo(const ATL::CStringW& szAppName);

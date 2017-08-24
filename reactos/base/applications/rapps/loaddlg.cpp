@@ -346,19 +346,26 @@ inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
     }
 }
 
+struct DownloadParam
+{
+    DownloadParam() : Dialog(NULL), AppInfo(), szCaption(NULL) {}
+    DownloadParam(HWND dlg, const ATL::CSimpleArray<PAPPLICATION_INFO> &info, LPCWSTR caption)
+        : Dialog(dlg), AppInfo(info), szCaption(caption)
+    {
+    }
+
+    HWND Dialog;
+    ATL::CSimpleArray<PAPPLICATION_INFO> AppInfo;
+    LPCWSTR szCaption;
+};
+
 // CDownloadManager
-PAPPLICATION_INFO                       CDownloadManager::AppInfo;
 ATL::CSimpleArray<PAPPLICATION_INFO>    CDownloadManager::AppsToInstallList;
 CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
 INT                                     CDownloadManager::iCurrentApp;
 
-#define DL_START_NEW WM_APP + 1
-
 INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HANDLE Thread;
-    DWORD ThreadId;
-    HWND Item;
     static WCHAR szCaption[MAX_PATH];
 
     switch (uMsg)
@@ -377,7 +384,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         }
 
         SetWindowLongW(Dlg, GWLP_USERDATA, 0);
-        Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
+        HWND Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {
             // initialize the default values for our nifty progress bar
@@ -387,8 +394,6 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
 
             SetWindowSubclass(Item, DownloadProgressProc, 0, 0);
         }
-        // Get a dlg string for later use
-        GetWindowTextW(Dlg, szCaption, MAX_PATH);
 
         // Add a ListView
         HWND hListView = DownloadsListView.Create(Dlg);
@@ -397,15 +402,26 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
             return FALSE;
         }
         DownloadsListView.LoadList(AppsToInstallList);
-        iCurrentApp = -1;
 
         ShowWindow(Dlg, SW_SHOW);
 
-        // Start new download
-        SendMessageW(Dlg, DL_START_NEW, 0, 0);
+        // Get a dlg string for later use
+        GetWindowTextW(Dlg, szCaption, MAX_PATH);
 
+        // Start download process
+        DownloadParam *param = new DownloadParam(Dlg, AppsToInstallList, szCaption);
+        DWORD ThreadId;
+        HANDLE Thread = CreateThread(NULL, 0, ThreadFunc, (LPVOID) param, 0, &ThreadId);
+
+        if (!Thread)
+        {
+            return FALSE;
+        }
+
+        CloseHandle(Thread);
         return TRUE;
     }
+
     case WM_COMMAND:
         if (wParam == IDCANCEL)
         {
@@ -413,45 +429,6 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
             PostMessageW(Dlg, WM_CLOSE, 0, 0);
         }
         return FALSE;
-
-    case DL_START_NEW:
-
-        ++iCurrentApp;
-        // If some downloads left we issue it
-        if (iCurrentApp < AppsToInstallList.GetSize())
-        {
-            AppInfo = AppsToInstallList[iCurrentApp];
-            if (!AppInfo)
-            {
-                return FALSE;
-            }
-
-            ATL::CStringW szNewCaption;
-
-            // Reset progress bar
-            Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
-            if (Item)
-            {
-                SendMessageW(Item, PBM_SETPOS, 0, 0);
-            }
-
-            // Change caption to show the currently downloaded app
-            szNewCaption.Format(szCaption, AppInfo->szName.GetString());
-            SetWindowTextW(Dlg, szNewCaption.GetString());
-
-            // Add a neat placeholder until the download URL is retrieved
-            SetDlgItemTextW(Dlg, IDC_DOWNLOAD_STATUS, L"\x2022 \x2022 \x2022");
-            Thread = CreateThread(NULL, 0, ThreadFunc, Dlg, 0, &ThreadId);
-
-            if (!Thread)
-            {
-                return FALSE;
-            }
-
-            CloseHandle(Thread);
-            return TRUE;
-        }
-        // No downloads left, closing (fallthrough)
 
     case WM_CLOSE:
         EndDialog(Dlg, 0);
@@ -463,7 +440,12 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
     }
 }
 
-LRESULT CALLBACK CDownloadManager::DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+LRESULT CALLBACK CDownloadManager::DownloadProgressProc(HWND hWnd,
+                                                        UINT uMsg,
+                                                        WPARAM wParam,
+                                                        LPARAM lParam,
+                                                        UINT_PTR uIdSubclass,
+                                                        DWORD_PTR dwRefData)
 {
     static ATL::CStringW szProgressText;
 
@@ -538,12 +520,13 @@ LRESULT CALLBACK CDownloadManager::DownloadProgressProc(HWND hWnd, UINT uMsg, WP
     }
 }
 
-DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID Context)
+DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 {
     CComPtr<IBindStatusCallback> dl;
     ATL::CStringW Path;
     PWSTR p, q;
-    HWND Dlg = (HWND) Context;
+
+    HWND hDlg = static_cast<DownloadParam*>(param)->Dialog;
 
     ULONG dwContentLen, dwBytesWritten, dwBytesRead, dwStatus;
     ULONG dwCurrentBytesRead = 0;
@@ -563,233 +546,272 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID Context)
     size_t urlLength, filenameLength;
 
     const INT iAppId = iCurrentApp;
-    const PAPPLICATION_INFO pCurrentInfo = AppInfo;
-    if (!AppInfo)
+    const ATL::CSimpleArray<PAPPLICATION_INFO> InfoArray = static_cast<DownloadParam*>(param)->AppInfo;
+    LPCWSTR szCaption = static_cast<DownloadParam*>(param)->szCaption;
+
+    delete param;
+    if (InfoArray.GetSize() <= 0)
     {
         MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
         goto end;
     }
 
-    DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLDownloading);
-
-    // build the path for the download
-    p = wcsrchr(pCurrentInfo->szUrlDownload.GetString(), L'/');
-    q = wcsrchr(pCurrentInfo->szUrlDownload.GetString(), L'?');
-
-    // do we have a final slash separator?
-    if (!p)
-        goto end;
-
-    // prepare the tentative length of the filename, maybe we've to remove part of it later on
-    filenameLength = wcslen(p) * sizeof(WCHAR);
-
-    /* do we have query arguments in the target URL after the filename? account for them
-    (e.g. https://example.org/myfile.exe?no_adware_plz) */
-    if (q && q > p && (q - p) > 0)
-        filenameLength -= wcslen(q - 1) * sizeof(WCHAR);
-
-    // is this URL an update package for RAPPS? if so store it in a different place
-    if (pCurrentInfo->szUrlDownload == APPLICATION_DATABASE_URL)
+    for (INT iAppId = 0; iAppId < InfoArray.GetSize(); ++iAppId)
     {
-        bCab = TRUE;
-        if (!GetStorageDirectory(Path))
-            goto end;
-    }
-    else
-    {
-        Path = SettingsInfo.szDownloadDir;
-    }
-
-    // is the path valid? can we access it?
-    if (GetFileAttributesW(Path.GetString()) == INVALID_FILE_ATTRIBUTES)
-    {
-        if (!CreateDirectoryW(Path.GetString(), NULL))
-            goto end;
-    }
-
-    // append a \ to the provided file system path, and the filename portion from the URL after that
-    Path += L"\\";
-    Path += (LPWSTR) (p + 1);
-
-    if (!bCab && pCurrentInfo->szSHA1[0] && GetFileAttributesW(Path.GetString()) != INVALID_FILE_ATTRIBUTES)
-    {
-        // only open it in case of total correctness
-        if (VerifyInteg(pCurrentInfo->szSHA1, Path))
-            goto run;
-    }
-
-    // download it
-    bTempfile = TRUE;
-    CDownloadDialog_Constructor(Dlg, &bCancelled, IID_PPV_ARG(IBindStatusCallback, &dl));
-
-    if (dl == NULL)
-        goto end;
-
-    /* FIXME: this should just be using the system-wide proxy settings */
-    switch (SettingsInfo.Proxy)
-    {
-    case 0: // preconfig
-        hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-        break;
-    case 1: // direct (no proxy) 
-        hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-        break;
-    case 2: // use proxy
-        hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PROXY, SettingsInfo.szProxyServer, SettingsInfo.szNoProxyFor, 0);
-        break;
-    default: // preconfig
-        hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-        break;
-    }
-
-    if (!hOpen)
-        goto end;
-
-    hFile = InternetOpenUrlW(hOpen, pCurrentInfo->szUrlDownload, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION, 0);
-    if (!hFile)
-    {
-        MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
-        goto end;
-    }
-
-    if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
-        goto end;
-
-    if (dwStatus != HTTP_STATUS_OK)
-    {
-        MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
-        goto end;
-    }
-
-    dwStatusLen = sizeof(dwStatus);
-
-    memset(&urlComponents, 0, sizeof(urlComponents));
-    urlComponents.dwStructSize = sizeof(urlComponents);
-
-    urlLength = pCurrentInfo->szUrlDownload.GetLength();
-    urlComponents.dwSchemeLength = urlLength + 1;
-    urlComponents.lpszScheme = (LPWSTR) malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
-    urlComponents.dwHostNameLength = urlLength + 1;
-    urlComponents.lpszHostName = (LPWSTR) malloc(urlComponents.dwHostNameLength * sizeof(WCHAR));
-
-    if (!InternetCrackUrlW(pCurrentInfo->szUrlDownload, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
-        goto end;
-
-    if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
-        HttpQueryInfoW(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwStatus, 0);
-
-    if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
-        dwContentLen = FtpGetFileSize(hFile, &dwStatus);
-
-#ifdef USE_CERT_PINNING
-    // are we using HTTPS to download the RAPPS update package? check if the certificate is original
-    if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
-        (wcscmp(pCurrentInfo->szUrlDownload, APPLICATION_DATABASE_URL) == 0) &&
-        (!CertIsValid(hOpen, urlComponents.lpszHostName)))
-    {
-        MessageBox_LoadString(hMainWnd, IDS_CERT_DOES_NOT_MATCH);
-        goto end;
-    }
-#endif
-
-    free(urlComponents.lpszScheme);
-    free(urlComponents.lpszHostName);
-
-    hOut = CreateFileW(Path.GetString(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
-
-    if (hOut == INVALID_HANDLE_VALUE)
-        goto end;
-
-    do
-    {
-        if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead))
+        PAPPLICATION_INFO pCurrentInfo = AppsToInstallList[iAppId];
+        if (!pCurrentInfo)
         {
-            MessageBox_LoadString(hMainWnd, IDS_INTERRUPTED_DOWNLOAD);
-            goto end;
+            MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
+            continue;
         }
 
-        if (!WriteFile(hOut, &lpBuffer[0], dwBytesRead, &dwBytesWritten, NULL))
-        {
-            MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_WRITE);
-            goto end;
-        }
 
-        dwCurrentBytesRead += dwBytesRead;
-        dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, pCurrentInfo->szUrlDownload);
-    } while (dwBytesRead && !bCancelled);
+        // build the path for the download
+        p = wcsrchr(pCurrentInfo->szUrlDownload.GetString(), L'/');
+        q = wcsrchr(pCurrentInfo->szUrlDownload.GetString(), L'?');
 
-    CloseHandle(hOut);
-    hOut = INVALID_HANDLE_VALUE;
-
-    if (bCancelled)
-        goto end;
-
-    /* if this thing isn't a RAPPS update and it has a SHA-1 checksum
-    verify its integrity by using the native advapi32.A_SHA1 functions */
-    if (!bCab && pCurrentInfo->szSHA1[0] != 0)
-    {
-        ATL::CStringW szMsgText;
-
-        // change a few strings in the download dialog to reflect the verification process
-        if (!szMsgText.LoadStringW(hInst, IDS_INTEG_CHECK_TITLE))
+        // do we have a final slash separator?
+        if (!p)
             goto end;
 
-        SetWindowTextW(Dlg, szMsgText.GetString());
-        SendMessageW(GetDlgItem(Dlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetString());
+        // prepare the tentative length of the filename, maybe we've to remove part of it later on
+        filenameLength = wcslen(p) * sizeof(WCHAR);
 
-        // this may take a while, depending on the file size
-        if (!VerifyInteg(pCurrentInfo->szSHA1, Path.GetString()))
+        /* do we have query arguments in the target URL after the filename? account for them
+        (e.g. https://example.org/myfile.exe?no_adware_plz) */
+        if (q && q > p && (q - p) > 0)
+            filenameLength -= wcslen(q - 1) * sizeof(WCHAR);
+
+        // is this URL an update package for RAPPS? if so store it in a different place
+        if (pCurrentInfo->szUrlDownload == APPLICATION_DATABASE_URL)
         {
-            if (!szMsgText.LoadStringW(hInst, IDS_INTEG_CHECK_FAIL))
+            bCab = TRUE;
+            if (!GetStorageDirectory(Path))
                 goto end;
-
-            MessageBoxW(Dlg, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
-            goto end;
-        }
-    }
-
-
-run:
-    DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLWaitingToInstall);
-
-    // run it
-    if (!bCab)
-    {
-        SHELLEXECUTEINFOW shExInfo = {0};
-        shExInfo.cbSize = sizeof(shExInfo);
-        shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-        shExInfo.lpVerb = L"open";
-        shExInfo.lpFile = Path.GetString();
-        shExInfo.lpParameters = L"";
-        shExInfo.nShow = SW_SHOW;
-
-        if (ShellExecuteExW(&shExInfo))
-        {
-            DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLInstalling);
-            //TODO: issue an install operation separately so that the apps could be downloaded in the background
-            WaitForSingleObject(shExInfo.hProcess, INFINITE);
-            CloseHandle(shExInfo.hProcess);
         }
         else
         {
-            MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_INSTALL);
+            Path = SettingsInfo.szDownloadDir;
         }
-    }
+
+        // is the path valid? can we access it?
+        if (GetFileAttributesW(Path.GetString()) == INVALID_FILE_ATTRIBUTES)
+        {
+            if (!CreateDirectoryW(Path.GetString(), NULL))
+                goto end;
+        }
+
+        // append a \ to the provided file system path, and the filename portion from the URL after that
+        Path += L"\\";
+        Path += (LPWSTR) (p + 1);
+
+        if (!bCab && pCurrentInfo->szSHA1[0] && GetFileAttributesW(Path.GetString()) != INVALID_FILE_ATTRIBUTES)
+        {
+            // only open it in case of total correctness
+            if (VerifyInteg(pCurrentInfo->szSHA1, Path))
+                goto run;
+        }
+
+        // Reset progress bar
+        HWND Item = GetDlgItem(hDlg, IDC_DOWNLOAD_PROGRESS);
+        if (Item)
+        {
+            SendMessageW(Item, PBM_SETPOS, 0, 0);
+        }
+
+        // Change caption to show the currently downloaded app
+        if (!bCab)
+        {
+            ATL::CStringW szNewCaption = "";
+            szNewCaption.Format(szCaption, pCurrentInfo->szName.GetString());
+            SetWindowTextW(hDlg, szNewCaption.GetString());
+        }
+        else
+        {
+            //TODO: add this string to .rc
+            SetWindowTextW(hDlg, L"Downloading Database...");
+        }
+
+        // Add the download URL
+        SetDlgItemTextW(hDlg, IDC_DOWNLOAD_STATUS, pCurrentInfo->szUrlDownload.GetString());
+
+        DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLDownloading);
+
+        // download it
+        bTempfile = TRUE;
+        CDownloadDialog_Constructor(hDlg, &bCancelled, IID_PPV_ARG(IBindStatusCallback, &dl));
+
+        if (dl == NULL)
+            goto end;
+
+        /* FIXME: this should just be using the system-wide proxy settings */
+        switch (SettingsInfo.Proxy)
+        {
+        case 0: // preconfig
+            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+            break;
+        case 1: // direct (no proxy) 
+            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+            break;
+        case 2: // use proxy
+            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PROXY, SettingsInfo.szProxyServer, SettingsInfo.szNoProxyFor, 0);
+            break;
+        default: // preconfig
+            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+            break;
+        }
+
+        if (!hOpen)
+            goto end;
+
+        hFile = InternetOpenUrlW(hOpen, pCurrentInfo->szUrlDownload.GetString(), NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION, 0);
+
+        if (!hFile)
+        {
+            MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
+            goto end;
+        }
+
+        if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
+            goto end;
+
+        if (dwStatus != HTTP_STATUS_OK)
+        {
+            MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
+            goto end;
+        }
+
+        dwStatusLen = sizeof(dwStatus);
+
+        memset(&urlComponents, 0, sizeof(urlComponents));
+        urlComponents.dwStructSize = sizeof(urlComponents);
+
+        urlLength = pCurrentInfo->szUrlDownload.GetLength();
+        urlComponents.dwSchemeLength = urlLength + 1;
+        urlComponents.lpszScheme = (LPWSTR) malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
+        urlComponents.dwHostNameLength = urlLength + 1;
+        urlComponents.lpszHostName = (LPWSTR) malloc(urlComponents.dwHostNameLength * sizeof(WCHAR));
+
+        if (!InternetCrackUrlW(pCurrentInfo->szUrlDownload, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
+            goto end;
+
+        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
+            HttpQueryInfoW(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwStatus, 0);
+
+        if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
+            dwContentLen = FtpGetFileSize(hFile, &dwStatus);
+
+#ifdef USE_CERT_PINNING
+        // are we using HTTPS to download the RAPPS update package? check if the certificate is original
+        if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
+            (wcscmp(pCurrentInfo->szUrlDownload, APPLICATION_DATABASE_URL) == 0) &&
+            (!CertIsValid(hOpen, urlComponents.lpszHostName)))
+        {
+            MessageBox_LoadString(hMainWnd, IDS_CERT_DOES_NOT_MATCH);
+            goto end;
+        }
+#endif
+
+        free(urlComponents.lpszScheme);
+        free(urlComponents.lpszHostName);
+
+        hOut = CreateFileW(Path.GetString(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
+
+        if (hOut == INVALID_HANDLE_VALUE)
+            goto end;
+
+        do
+        {
+            if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead))
+            {
+                MessageBox_LoadString(hMainWnd, IDS_INTERRUPTED_DOWNLOAD);
+                goto end;
+            }
+
+            if (!WriteFile(hOut, &lpBuffer[0], dwBytesRead, &dwBytesWritten, NULL))
+            {
+                MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_WRITE);
+                goto end;
+            }
+
+            dwCurrentBytesRead += dwBytesRead;
+            dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, pCurrentInfo->szUrlDownload);
+        } while (dwBytesRead && !bCancelled);
+
+        CloseHandle(hOut);
+        hOut = INVALID_HANDLE_VALUE;
+
+        if (bCancelled)
+            goto end;
+
+        /* if this thing isn't a RAPPS update and it has a SHA-1 checksum
+        verify its integrity by using the native advapi32.A_SHA1 functions */
+        if (!bCab && pCurrentInfo->szSHA1[0] != 0)
+        {
+            ATL::CStringW szMsgText;
+
+            // change a few strings in the download dialog to reflect the verification process
+            if (!szMsgText.LoadStringW(hInst, IDS_INTEG_CHECK_TITLE))
+                goto end;
+
+            SetWindowTextW(hDlg, szMsgText.GetString());
+            SendMessageW(GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetString());
+
+            // this may take a while, depending on the file size
+            if (!VerifyInteg(pCurrentInfo->szSHA1, Path.GetString()))
+            {
+                if (!szMsgText.LoadStringW(hInst, IDS_INTEG_CHECK_FAIL))
+                    goto end;
+
+                MessageBoxW(hDlg, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
+                goto end;
+            }
+        }
+
+run:
+        DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLWaitingToInstall);
+
+        // run it
+        if (!bCab)
+        {
+            SHELLEXECUTEINFOW shExInfo = {0};
+            shExInfo.cbSize = sizeof(shExInfo);
+            shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+            shExInfo.lpVerb = L"open";
+            shExInfo.lpFile = Path.GetString();
+            shExInfo.lpParameters = L"";
+            shExInfo.nShow = SW_SHOW;
+
+            if (ShellExecuteExW(&shExInfo))
+            {
+                DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLInstalling);
+                //TODO: issue an install operation separately so that the apps could be downloaded in the background
+                WaitForSingleObject(shExInfo.hProcess, INFINITE);
+                CloseHandle(shExInfo.hProcess);
+            }
+            else
+            {
+                MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_INSTALL);
+            }
+        }
 
 end:
-    if (hOut != INVALID_HANDLE_VALUE)
-        CloseHandle(hOut);
+        if (hOut != INVALID_HANDLE_VALUE)
+            CloseHandle(hOut);
 
-    InternetCloseHandle(hFile);
-    InternetCloseHandle(hOpen);
+        InternetCloseHandle(hFile);
+        InternetCloseHandle(hOpen);
 
-    if (bTempfile)
-    {
-        if (bCancelled || (SettingsInfo.bDelInstaller && !bCab))
-            DeleteFileW(Path.GetString());
+        if (bTempfile)
+        {
+            if (bCancelled || (SettingsInfo.bDelInstaller && !bCab))
+                DeleteFileW(Path.GetString());
+        }
+
+        DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLFinished);
     }
-    DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLFinished);
-    SendMessageW(Dlg, DL_START_NEW, 0, 0);
+
+    SendMessageW(hDlg, WM_CLOSE, 0, 0);
     return 0;
 }
 
@@ -825,10 +847,11 @@ BOOL CDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo, BOOL moda
 
 VOID CDownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
 {
-    APPLICATION_INFO IntInfo;
+    static APPLICATION_INFO IntInfo;
     IntInfo.szUrlDownload = lpUrl;
-
-    DownloadApplication(&IntInfo);
+    //TODO: add this string to .rc
+    IntInfo.szName = L"RAPPS DB";
+    DownloadApplication(&IntInfo, TRUE);
 }
 
 //TODO: Reuse the dialog

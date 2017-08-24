@@ -156,7 +156,6 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     }
 
     InitLogs();
-
     InitCommonControls();
 
     //skip window creation if there were some keys
