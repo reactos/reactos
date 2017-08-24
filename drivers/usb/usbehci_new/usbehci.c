@@ -797,6 +797,52 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     return MP_STATUS_SUCCESS;
 }
 
+UCHAR
+NTAPI
+EHCI_GetOffsetEECP(IN PEHCI_EXTENSION EhciExtension,
+                   IN UCHAR CapabilityID)
+{
+    EHCI_LEGACY_EXTENDED_CAPABILITY LegacyCapability;
+    EHCI_HC_CAPABILITY_PARAMS CapParameters;
+    UCHAR OffsetEECP;
+
+    DPRINT("EHCI_GetOffsetEECP: CapabilityID - %x\n", CapabilityID);
+
+    CapParameters = EhciExtension->CapabilityRegisters->CapParameters;
+
+    OffsetEECP = CapParameters.ExtCapabilitiesPointer;
+
+    if (!OffsetEECP)
+    {
+        return 0;
+    }
+
+    while (TRUE)
+    {
+        RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
+                                              TRUE,
+                                              &LegacyCapability.AsULONG,
+                                              OffsetEECP,
+                                              sizeof(LegacyCapability));
+
+        DPRINT("EHCI_GetOffsetEECP: OffsetEECP - %x\n", OffsetEECP);
+
+        if (LegacyCapability.CapabilityID == CapabilityID)
+        {
+            break;
+        }
+
+        OffsetEECP = LegacyCapability.NextCapabilityPointer;
+
+        if (!OffsetEECP)
+        {
+            return 0;
+        }
+    }
+
+    return OffsetEECP;
+}
+
 MPSTATUS
 NTAPI
 EHCI_TakeControlHC(IN PEHCI_EXTENSION EhciExtension)
