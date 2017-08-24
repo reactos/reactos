@@ -9,6 +9,18 @@
 #define EHCI_CONFIGFLAG        16
 #define EHCI_PORTSC            17
 
+typedef union _EHCI_LEGACY_EXTENDED_CAPABILITY {
+  struct {
+    ULONG CapabilityID            : 8;
+    ULONG NextCapabilityPointer   : 8;
+    ULONG BiosOwnedSemaphore      : 1;
+    ULONG Reserved1               : 7;
+    ULONG OsOwnedSemaphore        : 1;
+    ULONG Reserved2               : 7;
+  };
+  ULONG AsULONG;
+} EHCI_LEGACY_EXTENDED_CAPABILITY;
+
 typedef union _EHCI_HC_STRUCTURAL_PARAMS {
   struct {
     ULONG PortCount            : 4;

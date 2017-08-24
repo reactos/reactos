@@ -801,7 +801,61 @@ MPSTATUS
 NTAPI
 EHCI_TakeControlHC(IN PEHCI_EXTENSION EhciExtension)
 {
-    DPRINT1("EHCI_TakeControlHC: UNIMPLEMENTED. FIXME\n");
+    LARGE_INTEGER EndTime;
+    LARGE_INTEGER CurrentTime;
+    EHCI_LEGACY_EXTENDED_CAPABILITY LegacyCapability;
+    UCHAR OffsetEECP;
+
+    DPRINT("EHCI_TakeControlHC: EhciExtension - %p\n", EhciExtension);
+
+    OffsetEECP = EHCI_GetOffsetEECP(EhciExtension, 1);
+
+    if (OffsetEECP == 0)
+    {
+        return MP_STATUS_SUCCESS;
+    }
+
+    DPRINT("EHCI_TakeControlHC: OffsetEECP - %X\n", OffsetEECP);
+
+    RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
+                                          TRUE,
+                                          &LegacyCapability.AsULONG,
+                                          OffsetEECP,
+                                          sizeof(LegacyCapability));
+
+    if (LegacyCapability.BiosOwnedSemaphore == FALSE)
+    {
+        return MP_STATUS_SUCCESS;
+    }
+
+    LegacyCapability.OsOwnedSemaphore = TRUE;
+
+    RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
+                                          FALSE,
+                                          &LegacyCapability.AsULONG,
+                                          OffsetEECP,
+                                          sizeof(LegacyCapability));
+
+    KeQuerySystemTime(&EndTime);
+    EndTime.QuadPart += 100 * 10000;
+
+    do
+    {
+        RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
+                                              TRUE,
+                                              &LegacyCapability.AsULONG,
+                                              OffsetEECP,
+                                              sizeof(LegacyCapability));
+        KeQuerySystemTime(&CurrentTime);
+
+        if (LegacyCapability.BiosOwnedSemaphore)
+        {
+            DPRINT("EHCI_TakeControlHC: Ownership is ok\n");
+            break;
+        }
+    }
+    while (CurrentTime.QuadPart <= EndTime.QuadPart);
+
     return MP_STATUS_SUCCESS;
 }
 
