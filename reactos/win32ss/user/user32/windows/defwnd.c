@@ -50,7 +50,6 @@ GetSysColorBrush(int nIndex)
     return gpsi->ahbrSystem[nIndex];
   }
 
-  SetLastError(ERROR_INVALID_PARAMETER);
   return NULL;
 }
 
