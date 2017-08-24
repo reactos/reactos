@@ -107,16 +107,21 @@ private:
 class CAvailableApps
 {
     ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
-    ATL::CStringW m_szPath;
-    ATL::CStringW m_szCabPath;
-    ATL::CStringW m_szAppsPath;
-    ATL::CStringW m_szSearchPath;
+    static ATL::CStringW m_szPath;
+    static ATL::CStringW m_szCabPath;
+    static ATL::CStringW m_szAppsPath;
+    static ATL::CStringW m_szSearchPath;
+
+    static BOOL InitializeStaticStrings();
 
 public:
     CAvailableApps();
+
+    static BOOL UpdateAppsDB();
+    static BOOL ForceUpdateAppsDB();
+
     VOID FreeCachedEntries();
-    VOID DeleteCurrentAppsDB();
-    BOOL UpdateAppsDB();
+    static VOID DeleteCurrentAppsDB();
     BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
     const PAPPLICATION_INFO FindInfo(const ATL::CStringW& szAppName);
     ATL::CSimpleArray<PAPPLICATION_INFO> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames);

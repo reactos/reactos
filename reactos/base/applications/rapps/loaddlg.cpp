@@ -565,7 +565,6 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             continue;
         }
 
-
         // build the path for the download
         p = wcsrchr(pCurrentInfo->szUrlDownload.GetString(), L'/');
         q = wcsrchr(pCurrentInfo->szUrlDownload.GetString(), L'?');

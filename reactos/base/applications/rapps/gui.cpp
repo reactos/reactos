@@ -1321,7 +1321,7 @@ private:
             break;
 
         case ID_RESETDB:
-            m_AvailableApps.UpdateAppsDB();
+            CAvailableApps::ForceUpdateAppsDB();
             UpdateApplicationsList(-1);
             break;
 

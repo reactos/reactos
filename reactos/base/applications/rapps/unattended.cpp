@@ -56,6 +56,7 @@ BOOL CmdParser(LPWSTR lpCmdLine)
     }
 
     CAvailableApps apps;
+    CAvailableApps::UpdateAppsDB();
     apps.EnumAvailableApplications(ENUM_ALL_AVAILABLE, NULL);
     ATL::CSimpleArray<PAPPLICATION_INFO> arrAppInfo = apps.FindInfoList(arrNames);
     if (arrAppInfo.GetSize() > 0)

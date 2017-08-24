@@ -128,6 +128,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     HANDLE hMutex;
     HACCEL KeyBrd;
     MSG Msg;
+    BOOL bFirstLaunch;
 
     InitializeAtlModule(hInstance, TRUE);
 
@@ -149,8 +150,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         SetForegroundWindow(hWindow);
         return 1;
     }
-
-    if (!LoadSettings())
+    bFirstLaunch = LoadSettings();
+    if (bFirstLaunch)
     {
         FillDefaultSettings(&SettingsInfo);
     }
@@ -158,19 +159,19 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     InitLogs();
     InitCommonControls();
 
-    //skip window creation if there were some keys
+    // skip window creation if there were some keys
     if (!CmdParser(lpCmdLine))
     {
+        if (SettingsInfo.bUpdateAtStart || bFirstLaunch)
+            CAvailableApps::ForceUpdateAppsDB();
+
         hMainWnd = CreateMainWindow();
+
         if (hMainWnd)
         {
             /* Maximize it if we must */
-            ShowWindow(hMainWnd, (SettingsInfo.bSaveWndPos && SettingsInfo.Maximized ? SW_MAXIMIZE : nShowCmd));
+            ShowWindow(hMainWnd, ((SettingsInfo.bSaveWndPos && SettingsInfo.Maximized) ? SW_MAXIMIZE : nShowCmd));
             UpdateWindow(hMainWnd);
-
-            //TODO: get around the ugliness
-            if (SettingsInfo.bUpdateAtStart)
-                GetAvailableApps()->UpdateAppsDB();
 
             /* Load the menu hotkeys */
             KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));

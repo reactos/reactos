@@ -201,15 +201,28 @@ inline BOOL CAvailableApplicationInfo::GetString(LPCWSTR lpKeyName, ATL::CString
 // CAvailableApplicationInfo 
 
 // CAvailableApps
-CAvailableApps::CAvailableApps()
+ATL::CStringW CAvailableApps::m_szPath;
+ATL::CStringW CAvailableApps::m_szCabPath;
+ATL::CStringW CAvailableApps::m_szAppsPath;
+ATL::CStringW CAvailableApps::m_szSearchPath;
+
+BOOL CAvailableApps::InitializeStaticStrings()
 {
-    //set all paths
-    if (GetStorageDirectory(m_szPath))
+    //FIXME: maybe provide a fallback?
+    if (m_szPath.IsEmpty() && GetStorageDirectory(m_szPath))
     {
         m_szAppsPath = m_szPath + L"\\rapps\\";
         m_szCabPath = m_szPath + L"\\rappmgr.cab";
         m_szSearchPath = m_szAppsPath + L"*.txt";
+        return TRUE;
     }
+    return FALSE;
+}
+
+CAvailableApps::CAvailableApps()
+{
+    //set all paths
+    InitializeStaticStrings();
 }
 
 VOID CAvailableApps::FreeCachedEntries()
@@ -235,7 +248,6 @@ VOID CAvailableApps::DeleteCurrentAppsDB()
     if (m_szPath.IsEmpty())
         return;
 
-    DeleteFileW(m_szCabPath.GetString());
     hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
 
     if (hFind != INVALID_HANDLE_VALUE)
@@ -248,23 +260,49 @@ VOID CAvailableApps::DeleteCurrentAppsDB()
         } while (FindNextFileW(hFind, &FindFileData) != 0);
         FindClose(hFind);
     }
+
+    RemoveDirectoryW(m_szAppsPath);
+    RemoveDirectoryW(m_szPath);
 }
 
 BOOL CAvailableApps::UpdateAppsDB()
 {
-    DeleteCurrentAppsDB();
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+    WIN32_FIND_DATAW FindFileData;
+
+    if (m_szPath.IsEmpty() && !InitializeStaticStrings())
+    {
+        return FALSE;
+    }
+
+    if (!CreateDirectoryW(m_szPath.GetString(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+    {
+        return FALSE;
+    }
+
+    //if there are some files in the db folder - we're good
+    hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        return TRUE;
+    }
 
     CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
-
-    if (m_szPath.IsEmpty())
-        return FALSE;
 
     if (!ExtractFilesFromCab(m_szCabPath, m_szAppsPath))
     {
         return FALSE;
     }
 
+    DeleteFileW(m_szCabPath.GetString());
+
     return TRUE;
+}
+
+BOOL CAvailableApps::ForceUpdateAppsDB()
+{
+    DeleteCurrentAppsDB();
+    return UpdateAppsDB();
 }
 
 BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
@@ -272,26 +310,12 @@ BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnu
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 
-    if (!CreateDirectoryW(m_szPath.GetString(), NULL) &&
-        GetLastError() != ERROR_ALREADY_EXISTS)
-    {
-        return FALSE;
-    }
-
     hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
 
     if (hFind == INVALID_HANDLE_VALUE)
     {
-        if(!UpdateAppsDB()) {
-            return FALSE;
-        }
-
-        hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
-
-        if (hFind == INVALID_HANDLE_VALUE)
-        {
-            return FALSE;
-        }
+        //no db yet
+        return FALSE;
     }
 
     do
