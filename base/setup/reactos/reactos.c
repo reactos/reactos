@@ -701,45 +701,55 @@ LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context)
     return TotalCount;
 }
 
-BOOL IsUnattendSetup(VOID)
+/*
+ * Attempts to convert a pure NT file path into a corresponding Win32 path.
+ * Adapted from GetInstallSourceWin32() in dll/win32/syssetup/wizard.c
+ */
+BOOL
+ConvertNtPathToWin32Path(
+    OUT PWSTR pwszPath,
+    IN DWORD cchPathMax,
+    IN PCWSTR pwszNTPath)
 {
-    WCHAR szPath[MAX_PATH];
-    WCHAR *ch;
-    HINF hUnattendedInf;
-    INFCONTEXT InfContext;
-    TCHAR szValue[MAX_PATH];
-    DWORD LineLength;
-    //HKEY hKey;
-    BOOL result = 0;
+    WCHAR wszDrives[512];
+    WCHAR wszNTPath[512]; // MAX_PATH ?
+    DWORD cchDrives;
+    PWCHAR pwszDrive;
 
-    GetModuleFileNameW(NULL, szPath, MAX_PATH);
-    ch = wcsrchr(szPath, L'\\');
-    if (ch != NULL)
-        *ch = L'\0';
+    *pwszPath = UNICODE_NULL;
 
-    wcscat(szPath, L"\\unattend.inf");
-    hUnattendedInf = SetupOpenInfFileW(szPath, NULL, INF_STYLE_OLDNT, NULL);
-
-    if (hUnattendedInf != INVALID_HANDLE_VALUE)
+    cchDrives = GetLogicalDriveStringsW(_countof(wszDrives) - 1, wszDrives);
+    if (cchDrives == 0 || cchDrives >= _countof(wszDrives))
     {
-        if (SetupFindFirstLine(hUnattendedInf, _T("Unattend"), _T("UnattendSetupEnabled"),&InfContext))
-        {
-            if (SetupGetStringField(&InfContext,
-                                    1,
-                                    szValue,
-                                    sizeof(szValue) / sizeof(TCHAR),
-                                    &LineLength) && (_tcsicmp(szValue, _T("yes")) == 0))
-            {
-                result = 1; // unattendSetup enabled
-                // read values and store in SetupData
-            }
-        }
-            SetupCloseInfFile(hUnattendedInf);
+        /* Buffer too small or failure */
+        DPRINT1("GetLogicalDriveStringsW failed\n");
+        return FALSE;
     }
 
-    return result;
-}
+    for (pwszDrive = wszDrives; *pwszDrive; pwszDrive += wcslen(pwszDrive) + 1)
+    {
+        /* Retrieve the NT path corresponding to the current Win32 DOS path */
+        pwszDrive[2] = UNICODE_NULL; // Temporarily remove the backslash
+        QueryDosDeviceW(pwszDrive, wszNTPath, _countof(wszNTPath));
+        pwszDrive[2] = L'\\';        // Restore the backslash
 
+        wcscat(wszNTPath, L"\\");    // Concat a backslash
+
+        DPRINT1("Testing '%S' --> '%S'\n", pwszDrive, wszNTPath);
+
+        /* Check whether the NT path corresponds to the NT installation source path */
+        if (!_wcsnicmp(wszNTPath, pwszNTPath, wcslen(wszNTPath)))
+        {
+            /* Found it! */
+            wsprintf(pwszPath, L"%s%s", // cchPathMax
+                     pwszDrive, pwszNTPath + wcslen(wszNTPath));
+            DPRINT1("ConvertNtPathToWin32Path: %S\n", pwszPath);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
 
 /* Used to enable and disable the shutdown privilege */
 /* static */ BOOL
@@ -769,7 +779,6 @@ Quit:
     return Success;
 }
 
-
 int WINAPI
 _tWinMain(HINSTANCE hInst,
           HINSTANCE hPrevInstance,
@@ -778,17 +787,12 @@ _tWinMain(HINSTANCE hInst,
 {
     NTSTATUS Status;
     ULONG Error;
-    // PSETUPDATA pSetupData = NULL;
     PROPSHEETHEADER psh;
     HPROPSHEETPAGE ahpsp[8];
     PROPSHEETPAGE psp = {0};
     UINT nPages = 0;
 
     ProcessHeap = GetProcessHeap();
-
-    // pSetupData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SETUPDATA));
-    // if (pSetupData == NULL)
-        // return 1;
 
     /* Initialize global unicode strings */
     RtlInitUnicodeString(&SetupData.USetupData.SourcePath, NULL);
@@ -833,7 +837,6 @@ _tWinMain(HINSTANCE hInst,
 
     SetupData.hInstance = hInst;
 
-    // SetupData.bUnattend = IsUnattendSetup();
     CheckUnattendedSetup(&SetupData.USetupData);
     SetupData.bUnattend = IsUnattendedSetup;
 
@@ -940,7 +943,6 @@ _tWinMain(HINSTANCE hInst,
     SetupCloseInfFile(SetupData.SetupInf);
 
 Quit:
-    // HeapFree(GetProcessHeap(), 0, pSetupData);
 
 #if 0 // NOTE: Disabled for testing purposes only!
     EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);

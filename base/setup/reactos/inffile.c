@@ -28,8 +28,26 @@ SetupOpenInfFileExW(
     IN LCID LocaleId,
     OUT PUINT ErrorLine)
 {
+    WCHAR Win32FileName[MAX_PATH];
+
     UNREFERENCED_PARAMETER(LocaleId);
-    return SetupOpenInfFileW(FileName, InfClass, InfStyle, ErrorLine);
+
+    /*
+     * SetupOpenInfFileExW is called within setuplib with NT paths, however
+     * the Win32 SetupOpenInfFileW API only takes Win32 paths. We therefore
+     * map the NT path to Win32 path and then call the Win32 API.
+     */
+    if (!ConvertNtPathToWin32Path(Win32FileName,
+                                  _countof(Win32FileName),
+                                  FileName))
+    {
+        return INVALID_HANDLE_VALUE;
+    }
+
+    return SetupOpenInfFileW(Win32FileName,
+                             InfClass,
+                             InfStyle,
+                             ErrorLine);
 }
 
 
