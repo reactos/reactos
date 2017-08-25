@@ -1614,9 +1614,31 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D')  /* D */
         {
+            WCHAR PathBuffer[MAX_PATH];
+            UNICODE_STRING CurrentPartition;
+
             if (PartitionList->CurrentPartition->IsPartitioned == FALSE)
             {
                 MUIDisplayError(ERROR_DELETE_SPACE, Ir, POPUP_WAIT_ANY_KEY);
+                return SELECT_PARTITION_PAGE;
+            }
+
+            StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                    L"\\Device\\Harddisk%lu\\Partition%lu\\",
+                    PartitionList->CurrentDisk->DiskNumber,
+                    PartitionList->CurrentPartition->PartitionNumber);
+            RtlInitUnicodeString(&CurrentPartition, PathBuffer);
+
+            /*
+             * Check whether the user attempts to delete the partition on which
+             * the installation source is present. If so, fail with an error.
+             */
+            // &USetupData.SourceRootPath
+            if (RtlPrefixUnicodeString(&CurrentPartition, &USetupData.SourcePath, TRUE))
+            {
+                PopupError("You cannot delete the partition containing the installation source!",
+                           MUIGetString(STRING_CONTINUE),
+                           Ir, POPUP_WAIT_ENTER);
                 return SELECT_PARTITION_PAGE;
             }
 
@@ -2591,6 +2613,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                                        PartTypeString,
                                        ARRAYSIZE(PartTypeString));
 
+    MUIDisplayPage(SELECT_FILE_SYSTEM_PAGE);
+
     if (PartEntry->AutoCreate == TRUE)
     {
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NEWPARTITION));
@@ -2674,8 +2698,6 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                             &DiskEntry->DriverName,
                             DiskEntry->NoMbr ? "GPT" : "MBR");
     }
-
-    MUIDisplayPage(SELECT_FILE_SYSTEM_PAGE);
 
     if (FileSystemList == NULL)
     {
@@ -3068,6 +3090,20 @@ InstallDirectoryPage1(PWSTR InstallDir,
 
     /* Initialize DestinationDriveLetter */
     DestinationDriveLetter = (WCHAR)PartEntry->DriveLetter;
+
+    /*
+     * Check whether the user attempts to install ReactOS within the
+     * installation source directory, or in a subdirectory thereof.
+     * If so, fail with an error.
+     */
+    if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
+    {
+        INPUT_RECORD Ir;
+        PopupError("You cannot install ReactOS within the installation source directory!",
+                   MUIGetString(STRING_CONTINUE),
+                   &Ir, POPUP_WAIT_ENTER);
+        return INSTALL_DIRECTORY_PAGE;
+    }
 
     return PREPARE_COPY_PAGE;
 }
