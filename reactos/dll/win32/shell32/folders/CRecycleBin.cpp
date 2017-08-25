@@ -885,13 +885,19 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
         return FALSE;
     }
 
-    if (GetDriveTypeW(wszPath) != DRIVE_FIXED)
+    // Only keep the base path.
+    WCHAR wszRootPathName[MAX_PATH];
+    strcpyW(wszRootPathName, wszPath);
+    PathRemoveFileSpecW(wszRootPathName);
+    PathAddBackslashW(wszRootPathName);
+
+    if (GetDriveTypeW(wszRootPathName) != DRIVE_FIXED)
     {
         /* no bitbucket on removable media */
         return FALSE;
     }
 
-    if (!GetVolumeInformationW(wszPath, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0))
+    if (!GetVolumeInformationW(wszRootPathName, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0))
     {
         ERR("GetVolumeInformationW failed with %u\n", GetLastError());
         return FALSE;
