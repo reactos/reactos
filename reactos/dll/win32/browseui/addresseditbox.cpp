@@ -26,21 +26,22 @@ This class handles the combo box of the address band.
 
 /*
 TODO:
-    Handle listbox dropdown message and fill contents
     Add drag and drop of icon in edit box
     Handle change notifies to update appropriately
-    Fix so selection in combo listbox navigates
 */
 
 CAddressEditBox::CAddressEditBox() :
     fCombobox(NULL, this, 1),
     fEditWindow(NULL, this, 1),
-    fSite(NULL)
+    fSite(NULL),
+    pidlLastParsed(NULL)
 {
 }
 
 CAddressEditBox::~CAddressEditBox()
 {
+    if (pidlLastParsed)
+        ILFree(pidlLastParsed);
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::SetOwner(IUnknown *pOwner)
@@ -74,6 +75,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editContro
     fCombobox.SubclassWindow(comboboxEx);
     fEditWindow.SubclassWindow(editControl);
     fSite = param18;
+    hComboBoxEx = comboboxEx;
 
     SHAutoComplete(fEditWindow.m_hWnd, SHACF_FILESYSTEM | SHACF_URLALL | SHACF_USETAB);
 
@@ -258,21 +260,42 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
 
     switch (uMsg)
     {
-    case WM_NOTIFY:
-        hdr = (LPNMHDR) lParam;
-        if (hdr->code == CBEN_ENDEDIT)
+        case WM_COMMAND:
         {
-            NMCBEENDEDITW *endEdit = (NMCBEENDEDITW*) lParam;
-            if (endEdit->iWhy == CBENF_RETURN)
+            if (HIWORD(wParam) == CBN_SELCHANGE)
             {
+                UINT selectedIndex = SendMessageW((HWND)lParam, CB_GETCURSEL, 0, 0);
+                pidlLastParsed = ILClone((LPITEMIDLIST)SendMessageW((HWND)lParam, CB_GETITEMDATA, selectedIndex, 0));
                 Execute(0);
             }
-            else if (endEdit->iWhy == CBENF_ESCAPE)
-            {
-                /* Reset the contents of the combo box */
-            }
+            break;
         }
-        break;
+        case WM_NOTIFY:
+        {
+            hdr = (LPNMHDR) lParam;
+            if (hdr->code == CBEN_ENDEDIT)
+            {
+                NMCBEENDEDITW *endEdit = (NMCBEENDEDITW*) lParam;
+                if (endEdit->iWhy == CBENF_RETURN)
+                {
+                    Execute(0);
+                }
+                else if (endEdit->iWhy == CBENF_ESCAPE)
+                {
+                    /* Reset the contents of the combo box */
+                }
+            }
+            else if (hdr->code == CBEN_DELETEITEM)
+            {
+                PNMCOMBOBOXEX pCBEx = (PNMCOMBOBOXEX) lParam;
+                LPITEMIDLIST itemPidl = (LPITEMIDLIST)pCBEx->ceItem.lParam;
+                if (itemPidl)
+                {
+                    ILFree(itemPidl);
+                }
+            }
+            break;
+        }
     }
     return S_OK;
 }
@@ -320,12 +343,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
     CComPtr<IBrowserService> isb;
     CComPtr<IShellFolder> sf;
     HRESULT hr;
-    INT indexClosed, indexOpen, itemExists, oldIndex;
-    DWORD result;
-    COMBOBOXEXITEMW item;
     PIDLIST_ABSOLUTE absolutePIDL;
     LPCITEMIDLIST pidlChild;
-    LPITEMIDLIST pidlPrevious;
     STRRET ret;
     WCHAR buf[4096];
 
@@ -336,23 +355,12 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
     {
     case DISPID_NAVIGATECOMPLETE2:
     case DISPID_DOCUMENTCOMPLETE:
+
+        if (pidlLastParsed)
+            ILFree(pidlLastParsed);
         pidlLastParsed = NULL;
 
-        oldIndex = fCombobox.SendMessage(CB_GETCURSEL, 0, 0);
-
-        itemExists = FALSE;
-        pidlPrevious = NULL;
-
-        ZeroMemory(&item, sizeof(item));
-        item.mask = CBEIF_LPARAM;
-        item.iItem = 0;
-        if (fCombobox.SendMessage(CBEM_GETITEM, 0, reinterpret_cast<LPARAM>(&item)))
-        {
-            pidlPrevious = reinterpret_cast<LPITEMIDLIST>(item.lParam);
-            if (pidlPrevious)
-                itemExists = TRUE;
-        }
-
+        /* Get the current pidl of the browser */
         hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
@@ -361,6 +369,28 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
+        /* Fill the combobox */
+        PopulateComboBox(absolutePIDL);
+
+        /* Find the current item in the combobox and select it */
+        CComPtr<IShellFolder> psfDesktop;
+        hr = SHGetDesktopFolder(&psfDesktop);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return S_OK;
+
+        hr = psfDesktop->GetDisplayNameOf(absolutePIDL, SHGDN_FORADDRESSBAR, &ret);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return S_OK;
+
+        hr = StrRetToBufW(&ret, absolutePIDL, buf, 4095);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return S_OK;
+
+        int index = SendMessageW(hComboBoxEx, CB_FINDSTRINGEXACT, 0, (LPARAM)buf);
+        if (index != -1)
+            SendMessageW(hComboBoxEx, CB_SETCURSEL, index, 0);
+
+        /* Add the item that will be visible when the combobox is not expanded */
         hr = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
@@ -373,37 +403,17 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
+        INT indexClosed, indexOpen;
         indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 
+        COMBOBOXEXITEMW item = {0};
         item.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
-        item.iItem = 0;
+        item.iItem = -1;
         item.iImage = indexClosed;
         item.iSelectedImage = indexOpen;
         item.pszText = buf;
         item.lParam = reinterpret_cast<LPARAM>(absolutePIDL);
-
-        if (itemExists)
-        {
-            result = fCombobox.SendMessage(CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
-            oldIndex = 0;
-
-            if (result)
-            {
-                ILFree(pidlPrevious);
-            }
-        }
-        else
-        {
-            oldIndex = fCombobox.SendMessage(CBEM_INSERTITEM, 0, reinterpret_cast<LPARAM>(&item));
-
-            if (oldIndex < 0)
-                DbgPrint("ERROR %d\n", GetLastError());
-        }
-
-        fCombobox.SendMessage(CB_SETCURSEL, -1, 0);
-        fCombobox.SendMessage(CB_SETCURSEL, oldIndex, 0);
-
-        //fAddressEditBox->SetCurrentDir(index);
+        fCombobox.SendMessage(CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
     }
     return S_OK;
 }
@@ -434,4 +444,151 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Save(IStream *pStm, BOOL fClearDirty)
 HRESULT STDMETHODCALLTYPE CAddressEditBox::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
     return E_NOTIMPL;
+}
+
+void CAddressEditBox::PopulateComboBox(LPITEMIDLIST pidlCurrent)
+{
+    HRESULT hr;
+    LPITEMIDLIST pidl;
+    int indent = 0;
+    int index;
+
+    index = SendMessageW(hComboBoxEx, CB_GETCOUNT, 0, 0);
+    for (int i = 0; i < index; i++)
+        SendMessageW(hComboBoxEx, CBEM_DELETEITEM, i, 0);
+    SendMessageW(hComboBoxEx, CB_RESETCONTENT, 0, 0);
+
+    /* Calculate the indent level. No need to clone the pidl */
+    pidl = pidlCurrent;
+    do
+    {
+        if(!pidl->mkid.cb)
+            break;
+        pidl = ILGetNext(pidl);
+        indent++;
+    } while (pidl);
+    index = indent;
+
+    /* Add every id from the pidl in the combo box */
+    pidl = ILClone(pidlCurrent);
+    do
+    {
+        AddComboBoxItem(pidl, 0, index);
+        ILRemoveLastID(pidl);
+        index--;
+    } while (index >= 0);
+    ILFree(pidl);
+
+    /* Add the items of the desktop */
+    FillOneLevel(0, 1, indent);
+
+    /* Add the items of My Computer */
+    hr = SHGetSpecialFolderLocation(0, CSIDL_DRIVES, &pidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    for(LPITEMIDLIST i = GetItemData(0); i; i = GetItemData(index))
+    {
+        if (ILIsEqual(i, pidl))
+        {
+            FillOneLevel(index, 2, indent);
+            break;
+        }
+        index++;
+    }
+    ILFree(pidl);
+}
+
+void CAddressEditBox::AddComboBoxItem(LPITEMIDLIST pidl, int index, int indent)
+{
+    HRESULT hr;
+    WCHAR buf[4096];
+
+    LPCITEMIDLIST pidlChild;
+    CComPtr<IShellFolder> sf;
+    hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    STRRET strret;
+    hr = sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR, &strret);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    hr = StrRetToBufW(&strret, pidlChild, buf, 4095);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    COMBOBOXEXITEMW item = {0};
+    item.mask = CBEIF_LPARAM | CBEIF_INDENT | CBEIF_SELECTEDIMAGE | CBEIF_IMAGE | CBEIF_TEXT;
+    item.iImage = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &item.iSelectedImage);
+    item.pszText = buf;
+    item.lParam = (LPARAM)(ILClone(pidl));
+    item.iIndent = indent;
+    item.iItem = index;
+    SendMessageW(hComboBoxEx, CBEM_INSERTITEMW, 0, (LPARAM)&item);
+}
+
+void CAddressEditBox::FillOneLevel(int index, int levelIndent, int indent)
+{
+    HRESULT hr;
+    ULONG numObj;
+    int count;
+    LPITEMIDLIST pidl, pidl2, pidl3, pidl4;
+
+    count = index + 1;
+    pidl = GetItemData(index);
+    pidl2 = GetItemData(count);
+    if(pidl)
+    {
+        CComPtr<IShellFolder> psfDesktop;
+        CComPtr<IShellFolder> psfItem;
+
+        hr = SHGetDesktopFolder(&psfDesktop);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return;
+
+        if (!pidl->mkid.cb)
+        {
+            psfItem = psfDesktop;
+        }
+        else
+        {
+            hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfItem));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return;
+        }
+
+        CComPtr<IEnumIDList> pEnumIDList;
+        hr = psfItem->EnumObjects(0, SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, &pEnumIDList);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return;
+
+        do
+        {
+            hr = pEnumIDList->Next(1, &pidl3, &numObj);
+            if(hr != S_OK || !numObj)
+                break;
+
+            pidl4 = ILCombine(pidl, pidl3);
+            if (pidl2 && ILIsEqual(pidl4, pidl2))
+                count += (indent - levelIndent);
+            else
+                AddComboBoxItem(pidl4, count, levelIndent);
+            count++;
+            ILFree(pidl3);
+            ILFree(pidl4);
+        } while (true);
+    }
+}
+
+LPITEMIDLIST CAddressEditBox::GetItemData(int index)
+{
+    COMBOBOXEXITEMW item;
+
+    memset(&item, 0, sizeof(COMBOBOXEXITEMW));
+    item.mask = CBEIF_LPARAM;
+    item.iItem = index;
+    SendMessageW(hComboBoxEx, CBEM_GETITEMW, 0, (LPARAM)&item);
+    return (LPITEMIDLIST)item.lParam;
 }
