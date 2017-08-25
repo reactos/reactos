@@ -172,10 +172,10 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     // we need to extract the filename from the path
     DPRINT1("Pathname: %wZ\n", &FileObject->FileName);
 
-    FilenameNoPath.Buffer = FileObject->FileName.Buffer;
-    FilenameNoPath.MaximumLength = FilenameNoPath.Length = FileObject->FileName.Length;
-
     FsRtlDissectName(FileObject->FileName, &Current, &Remaining);
+
+    FilenameNoPath.Buffer = Current.Buffer;
+    FilenameNoPath.MaximumLength = FilenameNoPath.Length = Current.Length;
 
     while (Current.Length != 0)
     {
@@ -232,7 +232,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
 
     // For now, we're emulating the way Windows behaves when 8.3 name generation is disabled
     // TODO: add DOS Filename as needed
-    if (RtlIsNameLegalDOS8Dot3(&FilenameNoPath, NULL, NULL))
+    if (!CaseSensitive && RtlIsNameLegalDOS8Dot3(&FilenameNoPath, NULL, NULL))
         FileNameAttribute->NameType = NTFS_FILE_NAME_WIN32_AND_DOS;
     else
         FileNameAttribute->NameType = NTFS_FILE_NAME_POSIX;

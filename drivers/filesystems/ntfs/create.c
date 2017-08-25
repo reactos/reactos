@@ -569,6 +569,13 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
                 return STATUS_ACCESS_DENIED;
             }
 
+            // We can't create directories yet
+            if (RequestedOptions & FILE_DIRECTORY_FILE)
+            {
+                DPRINT1("FIXME: Folder creation is still TODO!\n");
+                return STATUS_NOT_IMPLEMENTED;
+            }
+
             // Create the file record on disk
             Status = NtfsCreateFileRecord(DeviceExt,
                                           FileObject,
