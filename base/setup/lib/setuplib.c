@@ -41,6 +41,8 @@ CheckUnattendedSetup(
     CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2,
                  pSetupData->SourcePath.Buffer, L"unattend.inf");
 
+    DPRINT("UnattendInf path: '%S'\n", UnattendInfPath);
+
     if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
@@ -50,7 +52,7 @@ CheckUnattendedSetup(
     /* Load 'unattend.inf' from installation media */
     UnattendInf = SetupOpenInfFileExW(UnattendInfPath,
                                       NULL,
-                                      INF_STYLE_WIN4,
+                                      INF_STYLE_OLDNT,
                                       pSetupData->LanguageId,
                                       &ErrorLine);
 
@@ -263,7 +265,8 @@ InstallSetupInfFile(
 #if 0
 
     /* TODO: Append the standard unattend.inf file */
-    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2, pSetupData->SourcePath.Buffer, L"unattend.inf");
+    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2,
+                 pSetupData->SourcePath.Buffer, L"unattend.inf");
     if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
@@ -379,8 +382,6 @@ Quit:
 #endif
 }
 
-
-
 NTSTATUS
 GetSourcePaths(
     OUT PUNICODE_STRING SourcePath,
@@ -388,41 +389,97 @@ GetSourcePaths(
     OUT PUNICODE_STRING SourceRootDir)
 {
     NTSTATUS Status;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
-    UNICODE_STRING SourceName;
-    WCHAR SourceBuffer[MAX_PATH] = L"";
     HANDLE Handle;
-    ULONG Length;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UCHAR ImageFileBuffer[sizeof(UNICODE_STRING) + MAX_PATH * sizeof(WCHAR)];
+    PUNICODE_STRING InstallSourcePath = (PUNICODE_STRING)&ImageFileBuffer;
+    WCHAR SystemRootBuffer[MAX_PATH] = L"";
+    UNICODE_STRING SystemRootPath = RTL_CONSTANT_STRING(L"\\SystemRoot");
+    ULONG BufferSize;
     PWCHAR Ptr;
 
+    /* Determine the installation source path via the full path of the installer */
+    RtlInitEmptyUnicodeString(InstallSourcePath,
+                              (PWSTR)((ULONG_PTR)ImageFileBuffer + sizeof(UNICODE_STRING)),
+                              sizeof(ImageFileBuffer) - sizeof(UNICODE_STRING)
+            /* Reserve space for a NULL terminator */ - sizeof(UNICODE_NULL));
+    BufferSize = sizeof(ImageFileBuffer);
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessImageFileName,
+                                       InstallSourcePath,
+                                       BufferSize,
+                                       NULL);
+    // STATUS_INFO_LENGTH_MISMATCH or STATUS_BUFFER_TOO_SMALL ?
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Manually NULL-terminate */
+    InstallSourcePath->Buffer[InstallSourcePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    /* Strip the trailing file name */
+    Ptr = wcsrchr(InstallSourcePath->Buffer, OBJ_NAME_PATH_SEPARATOR);
+    if (Ptr)
+        *Ptr = UNICODE_NULL;
+    InstallSourcePath->Length = wcslen(InstallSourcePath->Buffer) * sizeof(WCHAR);
+
+
+    /*
+     * Now resolve the full path to \SystemRoot. In case it prefixes
+     * the installation source path determined from the full path of
+     * the installer, we use instead the resolved \SystemRoot as the
+     * installation source path.
+     * Otherwise, we use instead the path from the full installer path.
+     */
+
     InitializeObjectAttributes(&ObjectAttributes,
-                               &LinkName,
+                               &SystemRootPath,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
     Status = NtOpenSymbolicLinkObject(&Handle,
-                                      SYMBOLIC_LINK_ALL_ACCESS,
+                                      SYMBOLIC_LINK_QUERY,
                                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
-        return Status;
+    {
+        /*
+         * We failed at opening the \SystemRoot link (usually due to wrong
+         * access rights). Do not consider this as a fatal error, but use
+         * instead the image file path as the installation source path.
+         */
+        DPRINT1("NtOpenSymbolicLinkObject(%wZ) failed with Status 0x%08lx\n",
+                &SystemRootPath, Status);
+        goto InitPaths;
+    }
 
-    RtlInitEmptyUnicodeString(&SourceName, SourceBuffer, sizeof(SourceBuffer));
+    RtlInitEmptyUnicodeString(&SystemRootPath,
+                              SystemRootBuffer,
+                              sizeof(SystemRootBuffer));
 
     Status = NtQuerySymbolicLinkObject(Handle,
-                                       &SourceName,
-                                       &Length);
+                                       &SystemRootPath,
+                                       &BufferSize);
     NtClose(Handle);
 
     if (!NT_SUCCESS(Status))
-        return Status;
+        return Status; // Unexpected error
 
-    RtlCreateUnicodeString(SourcePath,
-                           SourceName.Buffer);
+    /* Check whether the resolved \SystemRoot is a prefix of the image file path */
+    if (RtlPrefixUnicodeString(&SystemRootPath, InstallSourcePath, TRUE))
+    {
+        /* Yes it is, so we use instead SystemRoot as the installation source path */
+        InstallSourcePath = &SystemRootPath;
+    }
+
+
+InitPaths:
+    /*
+     * Retrieve the different source path components
+     */
+    RtlCreateUnicodeString(SourcePath, InstallSourcePath->Buffer);
 
     /* Strip trailing directory */
-    Ptr = wcsrchr(SourceName.Buffer, OBJ_NAME_PATH_SEPARATOR);
+    Ptr = wcsrchr(InstallSourcePath->Buffer, OBJ_NAME_PATH_SEPARATOR);
     if (Ptr)
     {
         RtlCreateUnicodeString(SourceRootDir, Ptr);
@@ -433,12 +490,10 @@ GetSourcePaths(
         RtlCreateUnicodeString(SourceRootDir, L"");
     }
 
-    RtlCreateUnicodeString(SourceRootPath,
-                           SourceName.Buffer);
+    RtlCreateUnicodeString(SourceRootPath, InstallSourcePath->Buffer);
 
     return STATUS_SUCCESS;
 }
-
 
 ERROR_NUMBER
 LoadSetupInf(
@@ -454,9 +509,11 @@ LoadSetupInf(
     CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2,
                  pSetupData->SourcePath.Buffer, L"txtsetup.sif");
 
+    DPRINT("SetupInf path: '%S'\n", FileNameBuffer);
+
     *SetupInf = SetupOpenInfFileExW(FileNameBuffer,
                                    NULL,
-                                   INF_STYLE_WIN4,
+                                   INF_STYLE_WIN4 | INF_STYLE_OLDNT,
                                    pSetupData->LanguageId,
                                    &ErrorLine);
 
