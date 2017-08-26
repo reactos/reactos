@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     arcname.c
     bldrsup.c
+    bootsup.c
     filesup.c
     fsutil.c
     genlist.c

@@ -18,38 +18,30 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/bootsup.h
+ * PROJECT:         ReactOS Setup Library
+ * FILE:            base/setup/lib/bootsup.h
  * PURPOSE:         Bootloader support functions
  * PROGRAMMER:      Eric Kohl
  */
 
 #pragma once
 
-BOOLEAN
-IsThereAValidBootSector(PWSTR RootPath);
-
-NTSTATUS
-SaveBootSector(
-    PWSTR RootPath,
-    PWSTR DstPath,
-    ULONG Length);
-
 NTSTATUS
 InstallMbrBootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath);
+    IN PUNICODE_STRING SystemRootPath,
+    IN PUNICODE_STRING SourceRootPath,
+    IN PCWSTR DestinationDevicePathBuffer);
 
 NTSTATUS
 InstallVBRToPartition(
-    PUNICODE_STRING SystemRootPath,
-    PUNICODE_STRING SourceRootPath,
-    PUNICODE_STRING DestinationArcPath,
-    UCHAR PartitionType);
+    IN PUNICODE_STRING SystemRootPath,
+    IN PUNICODE_STRING SourceRootPath,
+    IN PUNICODE_STRING DestinationArcPath,
+    IN UCHAR PartitionType);
 
 NTSTATUS
 InstallFatBootcodeToFloppy(
-    PUNICODE_STRING SourceRootPath,
-    PUNICODE_STRING DestinationArcPath);
+    IN PUNICODE_STRING SourceRootPath,
+    IN PUNICODE_STRING DestinationArcPath);
 
 /* EOF */

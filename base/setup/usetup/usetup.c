@@ -4423,8 +4423,6 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
     WCHAR DestinationDevicePathBuffer[MAX_PATH];
-    WCHAR SourceMbrPathBuffer[MAX_PATH];
-    WCHAR DstPath[MAX_PATH];
 
     /* Step 1: Write the VBR */
     Status = InstallVBRToPartition(&USetupData.SystemRootPath,
@@ -4441,26 +4439,8 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     StringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
             L"\\Device\\Harddisk%d\\Partition0",
             PartitionList->SystemPartition->DiskEntry->DiskNumber);
-
-    CombinePaths(SourceMbrPathBuffer, ARRAYSIZE(SourceMbrPathBuffer), 2, USetupData.SourceRootPath.Buffer, L"\\loader\\dosmbr.bin");
-
-    if (IsThereAValidBootSector(DestinationDevicePathBuffer))
-    {
-        /* Save current MBR */
-        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, USetupData.SystemRootPath.Buffer, L"mbr.old");
-
-        DPRINT1("Save MBR: %S ==> %S\n", DestinationDevicePathBuffer, DstPath);
-        Status = SaveBootSector(DestinationDevicePathBuffer, DstPath, sizeof(PARTITION_SECTOR));
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("SaveBootSector() failed (Status %lx)\n", Status);
-            // Don't care if we succeeded or not saving the old MBR, just go ahead.
-        }
-    }
-
-    DPRINT1("Install MBR bootcode: %S ==> %S\n",
-            SourceMbrPathBuffer, DestinationDevicePathBuffer);
-    Status = InstallMbrBootCodeToDisk(SourceMbrPathBuffer,
+    Status = InstallMbrBootCodeToDisk(&USetupData.SystemRootPath,
+                                      &USetupData.SourceRootPath,
                                       DestinationDevicePathBuffer);
     if (!NT_SUCCESS(Status))
     {

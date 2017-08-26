@@ -13,7 +13,6 @@ list(APPEND SOURCE
     native/console.c
     native/keytrans.c
     native/host_native.c
-    bootsup.c
     cabinet.c
     chkdsk.c
     cmdcons.c

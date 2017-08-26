@@ -1,16 +1,30 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/bootsup.c
+ * PROJECT:         ReactOS Setup Library
+ * FILE:            base/setup/lib/bootsup.c
  * PURPOSE:         Bootloader support functions
  * PROGRAMMERS:     Eric Kohl
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#include "usetup.h"
+/* INCLUDES *****************************************************************/
+
+#include "precomp.h"
+
+#include "bldrsup.h"
+#include "filesup.h"
+#include "fsutil.h"
+#include "partlist.h"
+
+#include "setuplib.h" // HAXX for IsUnattendedSetup!!
+
+#include "bootsup.h"
 
 #define NDEBUG
 #include <debug.h>
+
+
+/* TYPEDEFS *****************************************************************/
 
 /*
  * BIG FIXME!!
@@ -31,66 +45,66 @@
 #include <pshpack1.h>
 typedef struct _FAT_BOOTSECTOR
 {
-    UCHAR		JumpBoot[3];				// Jump instruction to boot code
-    CHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
-    USHORT		BytesPerSector;				// Bytes per sector
-    UCHAR		SectorsPerCluster;			// Number of sectors in a cluster
-    USHORT		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
-    UCHAR		NumberOfFats;				// Number of FAT tables
-    USHORT		RootDirEntries;				// Number of root directory entries (fat12/16)
-    USHORT		TotalSectors;				// Number of total sectors on the drive, 16-bit
-    UCHAR		MediaDescriptor;			// Media descriptor byte
-    USHORT		SectorsPerFat;				// Sectors per FAT table (fat12/16)
-    USHORT		SectorsPerTrack;			// Number of sectors in a track
-    USHORT		NumberOfHeads;				// Number of heads on the disk
-    ULONG		HiddenSectors;				// Hidden sectors (sectors before the partition start like the partition table)
-    ULONG		TotalSectorsBig;			// This field is the new 32-bit total count of sectors on the volume
-    UCHAR		DriveNumber;				// Int 0x13 drive number (e.g. 0x80)
-    UCHAR		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
-    UCHAR		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
-    ULONG		VolumeSerialNumber;			// Volume serial number
-    CHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
-    CHAR		FileSystemType[8];			// One of the strings "FAT12   ", "FAT16   ", or "FAT     "
+    UCHAR       JumpBoot[3];                // Jump instruction to boot code
+    CHAR        OemName[8];                 // "MSWIN4.1" for MS formatted volumes
+    USHORT      BytesPerSector;             // Bytes per sector
+    UCHAR       SectorsPerCluster;          // Number of sectors in a cluster
+    USHORT      ReservedSectors;            // Reserved sectors, usually 1 (the bootsector)
+    UCHAR       NumberOfFats;               // Number of FAT tables
+    USHORT      RootDirEntries;             // Number of root directory entries (fat12/16)
+    USHORT      TotalSectors;               // Number of total sectors on the drive, 16-bit
+    UCHAR       MediaDescriptor;            // Media descriptor byte
+    USHORT      SectorsPerFat;              // Sectors per FAT table (fat12/16)
+    USHORT      SectorsPerTrack;            // Number of sectors in a track
+    USHORT      NumberOfHeads;              // Number of heads on the disk
+    ULONG       HiddenSectors;              // Hidden sectors (sectors before the partition start like the partition table)
+    ULONG       TotalSectorsBig;            // This field is the new 32-bit total count of sectors on the volume
+    UCHAR       DriveNumber;                // Int 0x13 drive number (e.g. 0x80)
+    UCHAR       Reserved1;                  // Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
+    UCHAR       BootSignature;              // Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
+    ULONG       VolumeSerialNumber;         // Volume serial number
+    CHAR        VolumeLabel[11];            // Volume label. This field matches the 11-byte volume label recorded in the root directory
+    CHAR        FileSystemType[8];          // One of the strings "FAT12   ", "FAT16   ", or "FAT     "
 
-    UCHAR		BootCodeAndData[448];		// The remainder of the boot sector
+    UCHAR       BootCodeAndData[448];       // The remainder of the boot sector
 
-    USHORT		BootSectorMagic;			// 0xAA55
+    USHORT      BootSectorMagic;            // 0xAA55
 
 } FAT_BOOTSECTOR, *PFAT_BOOTSECTOR;
 
 typedef struct _FAT32_BOOTSECTOR
 {
-    UCHAR		JumpBoot[3];				// Jump instruction to boot code
-    CHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
-    USHORT		BytesPerSector;				// Bytes per sector
-    UCHAR		SectorsPerCluster;			// Number of sectors in a cluster
-    USHORT		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
-    UCHAR		NumberOfFats;				// Number of FAT tables
-    USHORT		RootDirEntries;				// Number of root directory entries (fat12/16)
-    USHORT		TotalSectors;				// Number of total sectors on the drive, 16-bit
-    UCHAR		MediaDescriptor;			// Media descriptor byte
-    USHORT		SectorsPerFat;				// Sectors per FAT table (fat12/16)
-    USHORT		SectorsPerTrack;			// Number of sectors in a track
-    USHORT		NumberOfHeads;				// Number of heads on the disk
-    ULONG		HiddenSectors;				// Hidden sectors (sectors before the partition start like the partition table)
-    ULONG		TotalSectorsBig;			// This field is the new 32-bit total count of sectors on the volume
-    ULONG		SectorsPerFatBig;			// This field is the FAT32 32-bit count of sectors occupied by ONE FAT. BPB_FATSz16 must be 0
-    USHORT		ExtendedFlags;				// Extended flags (fat32)
-    USHORT		FileSystemVersion;			// File system version (fat32)
-    ULONG		RootDirStartCluster;		// Starting cluster of the root directory (fat32)
-    USHORT		FsInfo;						// Sector number of FSINFO structure in the reserved area of the FAT32 volume. Usually 1.
-    USHORT		BackupBootSector;			// If non-zero, indicates the sector number in the reserved area of the volume of a copy of the boot record. Usually 6.
-    UCHAR		Reserved[12];				// Reserved for future expansion
-    UCHAR		DriveNumber;				// Int 0x13 drive number (e.g. 0x80)
-    UCHAR		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
-    UCHAR		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
-    ULONG		VolumeSerialNumber;			// Volume serial number
-    CHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
-    CHAR		FileSystemType[8];			// Always set to the string "FAT32   "
+    UCHAR       JumpBoot[3];                // Jump instruction to boot code
+    CHAR        OemName[8];                 // "MSWIN4.1" for MS formatted volumes
+    USHORT      BytesPerSector;             // Bytes per sector
+    UCHAR       SectorsPerCluster;          // Number of sectors in a cluster
+    USHORT      ReservedSectors;            // Reserved sectors, usually 1 (the bootsector)
+    UCHAR       NumberOfFats;               // Number of FAT tables
+    USHORT      RootDirEntries;             // Number of root directory entries (fat12/16)
+    USHORT      TotalSectors;               // Number of total sectors on the drive, 16-bit
+    UCHAR       MediaDescriptor;            // Media descriptor byte
+    USHORT      SectorsPerFat;              // Sectors per FAT table (fat12/16)
+    USHORT      SectorsPerTrack;            // Number of sectors in a track
+    USHORT      NumberOfHeads;              // Number of heads on the disk
+    ULONG       HiddenSectors;              // Hidden sectors (sectors before the partition start like the partition table)
+    ULONG       TotalSectorsBig;            // This field is the new 32-bit total count of sectors on the volume
+    ULONG       SectorsPerFatBig;           // This field is the FAT32 32-bit count of sectors occupied by ONE FAT. BPB_FATSz16 must be 0
+    USHORT      ExtendedFlags;              // Extended flags (fat32)
+    USHORT      FileSystemVersion;          // File system version (fat32)
+    ULONG       RootDirStartCluster;        // Starting cluster of the root directory (fat32)
+    USHORT      FsInfo;                     // Sector number of FSINFO structure in the reserved area of the FAT32 volume. Usually 1.
+    USHORT      BackupBootSector;           // If non-zero, indicates the sector number in the reserved area of the volume of a copy of the boot record. Usually 6.
+    UCHAR       Reserved[12];               // Reserved for future expansion
+    UCHAR       DriveNumber;                // Int 0x13 drive number (e.g. 0x80)
+    UCHAR       Reserved1;                  // Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
+    UCHAR       BootSignature;              // Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
+    ULONG       VolumeSerialNumber;         // Volume serial number
+    CHAR        VolumeLabel[11];            // Volume label. This field matches the 11-byte volume label recorded in the root directory
+    CHAR        FileSystemType[8];          // Always set to the string "FAT32   "
 
-    UCHAR		BootCodeAndData[420];		// The remainder of the boot sector
+    UCHAR       BootCodeAndData[420];       // The remainder of the boot sector
 
-    USHORT		BootSectorMagic;			// 0xAA55
+    USHORT      BootSectorMagic;            // 0xAA55
 
 } FAT32_BOOTSECTOR, *PFAT32_BOOTSECTOR;
 
@@ -509,6 +523,7 @@ UpdateBootIni(
 }
 
 
+static
 BOOLEAN
 IsThereAValidBootSector(
     IN PCWSTR RootPath)
@@ -585,6 +600,7 @@ Quit:
     return IsValid; // Status;
 }
 
+static
 NTSTATUS
 SaveBootSector(
     IN PCWSTR RootPath,
@@ -687,8 +703,10 @@ SaveBootSector(
     return Status;
 }
 
+
+static
 NTSTATUS
-InstallMbrBootCodeToDisk(
+InstallMbrBootCodeToDiskHelper(
     IN PCWSTR SrcPath,
     IN PCWSTR RootPath)
 {
@@ -843,6 +861,48 @@ InstallMbrBootCodeToDisk(
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
 
     return Status;
+}
+
+NTSTATUS
+InstallMbrBootCodeToDisk(
+    IN PUNICODE_STRING SystemRootPath,
+    IN PUNICODE_STRING SourceRootPath,
+    IN PCWSTR DestinationDevicePathBuffer)
+{
+    NTSTATUS Status;
+    WCHAR SourceMbrPathBuffer[MAX_PATH];
+    WCHAR DstPath[MAX_PATH];
+
+#if 0
+    WCHAR DestinationDevicePathBuffer[MAX_PATH];
+    StringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
+            L"\\Device\\Harddisk%d\\Partition0",
+            DiskNumber);
+#endif
+
+    CombinePaths(SourceMbrPathBuffer, ARRAYSIZE(SourceMbrPathBuffer), 2,
+                 SourceRootPath->Buffer, L"\\loader\\dosmbr.bin");
+
+    if (IsThereAValidBootSector(DestinationDevicePathBuffer))
+    {
+        /* Save current MBR */
+        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2,
+                     SystemRootPath->Buffer, L"mbr.old");
+
+        DPRINT1("Save MBR: %S ==> %S\n", DestinationDevicePathBuffer, DstPath);
+        Status = SaveBootSector(DestinationDevicePathBuffer, DstPath, sizeof(PARTITION_SECTOR));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("SaveBootSector() failed (Status %lx)\n", Status);
+            // Don't care if we succeeded or not saving the old MBR, just go ahead.
+        }
+    }
+
+    DPRINT1("Install MBR bootcode: %S ==> %S\n",
+            SourceMbrPathBuffer, DestinationDevicePathBuffer);
+
+    return InstallMbrBootCodeToDiskHelper(SourceMbrPathBuffer,
+                                          DestinationDevicePathBuffer);
 }
 
 
@@ -1525,8 +1585,8 @@ InstallFat32BootCodeToDisk(
 static
 NTSTATUS
 InstallExt2BootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1734,13 +1794,14 @@ InstallExt2BootCodeToDisk(
     return Status;
 }
 
+
 static
 NTSTATUS
 InstallFatBootcodeToPartition(
-    PUNICODE_STRING SystemRootPath,
-    PUNICODE_STRING SourceRootPath,
-    PUNICODE_STRING DestinationArcPath,
-    UCHAR PartitionType)
+    IN PUNICODE_STRING SystemRootPath,
+    IN PUNICODE_STRING SourceRootPath,
+    IN PUNICODE_STRING DestinationArcPath,
+    IN UCHAR PartitionType)
 {
     NTSTATUS Status;
     BOOLEAN DoesFreeLdrExist;
@@ -2048,10 +2109,10 @@ InstallFatBootcodeToPartition(
 static
 NTSTATUS
 InstallExt2BootcodeToPartition(
-    PUNICODE_STRING SystemRootPath,
-    PUNICODE_STRING SourceRootPath,
-    PUNICODE_STRING DestinationArcPath,
-    UCHAR PartitionType)
+    IN PUNICODE_STRING SystemRootPath,
+    IN PUNICODE_STRING SourceRootPath,
+    IN PUNICODE_STRING DestinationArcPath,
+    IN UCHAR PartitionType)
 {
     NTSTATUS Status;
     BOOLEAN DoesFreeLdrExist;
@@ -2155,10 +2216,10 @@ InstallExt2BootcodeToPartition(
 
 NTSTATUS
 InstallVBRToPartition(
-    PUNICODE_STRING SystemRootPath,
-    PUNICODE_STRING SourceRootPath,
-    PUNICODE_STRING DestinationArcPath,
-    UCHAR PartitionType)
+    IN PUNICODE_STRING SystemRootPath,
+    IN PUNICODE_STRING SourceRootPath,
+    IN PUNICODE_STRING DestinationArcPath,
+    IN UCHAR PartitionType)
 {
     switch (PartitionType)
     {
@@ -2198,8 +2259,8 @@ InstallVBRToPartition(
 
 NTSTATUS
 InstallFatBootcodeToFloppy(
-    PUNICODE_STRING SourceRootPath,
-    PUNICODE_STRING DestinationArcPath)
+    IN PUNICODE_STRING SourceRootPath,
+    IN PUNICODE_STRING DestinationArcPath)
 {
     NTSTATUS Status;
     PFILE_SYSTEM FatFS;

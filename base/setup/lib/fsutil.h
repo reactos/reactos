@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <fmifs/fmifs.h>
 
 typedef struct _FILE_SYSTEM
