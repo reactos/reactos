@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
     IDS_APPDATA "Application Data"
-    IDS_DESKTOP "Desktop"
+    IDS_DESKTOP "Робочий стіл"
     IDS_FAVORITES "Обране"
     IDS_MYDOCUMENTS "Мої документи"
     IDS_NETHOOD "NetHood"
