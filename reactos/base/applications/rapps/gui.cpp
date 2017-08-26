@@ -1384,27 +1384,35 @@ private:
         return StrStrIW(szHaystack, szNeedle) != NULL;
     }
 
-    static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &szName, PINSTALLED_INFO ItemInfo)
+    static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &szName, PINSTALLED_INFO Info)
     {
+        PINSTALLED_INFO ItemInfo;
         ATL::CStringW szText;
         INT Index;
-        INSTALLED_INFO Info;
 
         if (!SearchPatternMatch(szName.GetString(), szSearchPattern))
         {
-            RegCloseKey(ItemInfo->hSubKey);
+            RegCloseKey(Info->hSubKey);
             return TRUE;
         }
 
-        RtlCopyMemory(ItemInfo, &Info, sizeof(INSTALLED_INFO));
-        Index = ListViewAddItem(ItemIndex, 0, szName, (LPARAM) &Info);
+        ItemInfo = (PINSTALLED_INFO) HeapAlloc(GetProcessHeap(), 0, sizeof(INSTALLED_INFO));
+        if (!ItemInfo)
+        {
+            RegCloseKey(Info->hSubKey);
+            return FALSE;
+        }
+
+        RtlCopyMemory(ItemInfo, Info, sizeof(INSTALLED_INFO));
+
+        Index = ListViewAddItem(ItemIndex, 0, szName, (LPARAM) ItemInfo);
 
         /* Get version info */
-        GetApplicationString(Info.hSubKey, L"DisplayVersion", szText);
+        GetApplicationString(ItemInfo->hSubKey, L"DisplayVersion", szText);
         ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(szText.GetString()));
 
         /* Get comments */
-        GetApplicationString(Info.hSubKey, L"Comments", szText);
+        GetApplicationString(ItemInfo->hSubKey, L"Comments", szText);
         ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(szText.GetString()));
 
         return TRUE;
