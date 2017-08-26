@@ -166,6 +166,7 @@ BEGIN
     IDS_AINFO_URLSITE "\nДомашня сторінка: "
     IDS_AINFO_LICENSE "\nЛіцензія: "
     IDS_AINFO_URLDOWNLOAD "\nЗавантажити: "
+    IDS_AINFO_LANGUAGES "\nМови: "
 END
 
 STRINGTABLE
@@ -208,13 +209,15 @@ BEGIN
     IDS_INFORMATION "Інформація"
     IDS_UNABLE_TO_DOWNLOAD "Неможливо завантажити додаток! Адресу не знайдено!"
     IDS_UNABLE_TO_DOWNLOAD2 "Неможливо завантажити додаток! Перевірте підключення до мережі Інтернет!"
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
     IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
+    IDS_UNABLE_TO_INSTALL "Не вдалося завершити інсталювання!"
     IDS_CERT_DOES_NOT_MATCH "Помилка перевіки сертифікату SSL."
     IDS_INTEG_CHECK_TITLE "Перевірка цілістності додатку..."
     IDS_INTEG_CHECK_FAIL "Додаток не пройшов перевірку цілістності, його молги пошкодити чи замінити. Запуск додатку не рекомендується."
     IDS_INTERRUPTED_DOWNLOAD "Завантаження перервано. Перевірте підключення до мережі Інтернет."
     IDS_UNABLE_TO_WRITE "Записк на диск неможливий. Можливо, на диску недостатньо містця."
+    IDS_SELECT_ALL "Вибрати все"
+    IDS_INSTALL_SELECTED "Встановити обране"
 END
 
 STRINGTABLE
@@ -225,8 +228,8 @@ BEGIN
     IDS_STATUS_UPDATE_AVAILABLE "Є оновлення"
     IDS_STATUS_DOWNLOADING "Завантажується…"
     IDS_STATUS_INSTALLING "Встановлюється…"
-    IDS_STATUS_WAITING "Очікування завантаження…"
-    IDS_STATUS_FINISHED "Завершено"  
+    IDS_STATUS_WAITING "Очікування завантаження..."
+    IDS_STATUS_FINISHED "Завершено"
 END
 
 STRINGTABLE
@@ -242,4 +245,12 @@ BEGIN
     IDS_LANGUAGE_NO_TRANSLATION "Доступно іншими мовами"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "Є переклад Англійською"
     IDS_LANGUAGE_SINGLE "Одна мова"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+ще %d)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d доступно)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "Список програм"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Оновлення списку програм..."
 END

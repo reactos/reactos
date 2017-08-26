@@ -21,7 +21,7 @@ static INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM 
 VOID ShowAboutDialog()
 {
     DialogBoxW(hInst,
-              MAKEINTRESOURCEW(IDD_ABOUT_DIALOG),
-              hMainWnd,
-              AboutDlgProc);
+               MAKEINTRESOURCEW(IDD_ABOUT_DIALOG),
+               hMainWnd,
+               AboutDlgProc);
 }

@@ -110,13 +110,13 @@ VOID SetWelcomeText()
 {
     ATL::CStringW szText;
 
-    szText.LoadStringW(hInst, IDS_WELCOME_TITLE);
+    szText.LoadStringW(IDS_WELCOME_TITLE);
     NewRichEditText(szText, CFE_BOLD);
 
-    szText.LoadStringW(hInst, IDS_WELCOME_TEXT);
+    szText.LoadStringW(IDS_WELCOME_TEXT);
     InsertRichEditText(szText, 0);
 
-    szText.LoadStringW(hInst, IDS_WELCOME_URL);
+    szText.LoadStringW(IDS_WELCOME_URL);
     InsertRichEditText(szText, CFM_LINK);
 }
 

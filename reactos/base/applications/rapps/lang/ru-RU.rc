@@ -158,6 +158,7 @@ BEGIN
     IDS_AINFO_URLSITE "\nДомашняя страница: "
     IDS_AINFO_LICENSE "\nЛицензия: "
     IDS_AINFO_URLDOWNLOAD "\nЗагрузить: "
+    IDS_AINFO_LANGUAGES "\nЯзыки: "
 END
 
 STRINGTABLE
@@ -200,13 +201,15 @@ BEGIN
     IDS_INFORMATION "Информация"
     IDS_UNABLE_TO_DOWNLOAD "Не удалось скачать приложение! Не найден адрес!"
     IDS_UNABLE_TO_DOWNLOAD2 "Не удалось скачать приложение! Проверьте подключение к сети Интернет!"
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
     IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
+    IDS_UNABLE_TO_INSTALL "Не удалось завершить установку!"
     IDS_CERT_DOES_NOT_MATCH "Ошибка проверки SSL сертификата."
     IDS_INTEG_CHECK_TITLE "Проверка целостности приложения..."
     IDS_INTEG_CHECK_FAIL "Приложение не прошло проверку целостности, возможно оно было повреждено или подменено. Запуск приложения не рекомендуется."
     IDS_INTERRUPTED_DOWNLOAD "Загрузка была прервана. Проверьте подключение к сети Интернет."
     IDS_UNABLE_TO_WRITE "Не удалось записать данные на диск. Возможно, недостаточно свободного места на диске."
+    IDS_SELECT_ALL "Выбрать все"
+    IDS_INSTALL_SELECTED "Установить выбранное"
 END
 
 STRINGTABLE
@@ -216,7 +219,7 @@ BEGIN
     IDS_STATUS_DOWNLOADED "Загружено"
     IDS_STATUS_UPDATE_AVAILABLE "Есть обновления"
     IDS_STATUS_DOWNLOADING "Загружается…"
-    IDS_STATUS_INSTALLING "Установка…"
+    IDS_STATUS_INSTALLING "Установка..."
     IDS_STATUS_WAITING "Ожидание установки…"
     IDS_STATUS_FINISHED "Завершено"
 END
@@ -234,4 +237,12 @@ BEGIN
     IDS_LANGUAGE_NO_TRANSLATION "Доступно на других языках"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "Доступно на Английском"
     IDS_LANGUAGE_SINGLE "Один язык"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+еще %d )
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d доступно)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "База данных приложений"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Обновление базы данных..."
 END

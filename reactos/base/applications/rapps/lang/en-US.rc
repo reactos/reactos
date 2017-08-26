@@ -237,4 +237,12 @@ BEGIN
     IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
     IDS_LANGUAGE_SINGLE "Single language"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "Applications Database"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database..."
 END

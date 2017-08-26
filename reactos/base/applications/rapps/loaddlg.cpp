@@ -340,7 +340,7 @@ static BOOL CertIsValid(HINTERNET hInternet, LPWSTR lpszHostName)
 inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
 {
     ATL::CString szMsgText;
-    if (szMsgText.LoadStringW(hInst, StringID))
+    if (szMsgText.LoadStringW(StringID))
     {
         MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
     }
@@ -548,6 +548,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     const INT iAppId = iCurrentApp;
     const ATL::CSimpleArray<PAPPLICATION_INFO> InfoArray = static_cast<DownloadParam*>(param)->AppInfo;
     LPCWSTR szCaption = static_cast<DownloadParam*>(param)->szCaption;
+    ATL::CStringW szNewCaption;
 
     delete param;
     if (InfoArray.GetSize() <= 0)
@@ -621,15 +622,14 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         // Change caption to show the currently downloaded app
         if (!bCab)
         {
-            ATL::CStringW szNewCaption = "";
             szNewCaption.Format(szCaption, pCurrentInfo->szName.GetString());
-            SetWindowTextW(hDlg, szNewCaption.GetString());
         }
         else
         {
-            //TODO: add this string to .rc
-            SetWindowTextW(hDlg, L"Downloading Database...");
+            szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_DOWNLOAD_DISP);
         }
+
+        SetWindowTextW(hDlg, szNewCaption.GetString());
 
         // Add the download URL
         SetDlgItemTextW(hDlg, IDC_DOWNLOAD_STATUS, pCurrentInfo->szUrlDownload.GetString());
@@ -751,7 +751,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             ATL::CStringW szMsgText;
 
             // change a few strings in the download dialog to reflect the verification process
-            if (!szMsgText.LoadStringW(hInst, IDS_INTEG_CHECK_TITLE))
+            if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_TITLE))
                 goto end;
 
             SetWindowTextW(hDlg, szMsgText.GetString());
@@ -760,7 +760,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             // this may take a while, depending on the file size
             if (!VerifyInteg(pCurrentInfo->szSHA1, Path.GetString()))
             {
-                if (!szMsgText.LoadStringW(hInst, IDS_INTEG_CHECK_FAIL))
+                if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_FAIL))
                     goto end;
 
                 MessageBoxW(hDlg, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
@@ -815,7 +815,7 @@ end:
     return 0;
 }
 
-BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList, BOOL modal)
+BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList, BOOL bIsModal)
 {
     if (AppsList.GetSize() == 0)
     {
@@ -826,12 +826,12 @@ BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLI
     AppsToInstallList = AppsList;
 
     // Create a dialog and issue a download process
-    LaunchDownloadDialog(modal);
+    LaunchDownloadDialog(bIsModal);
 
     return TRUE;
 }
 
-BOOL CDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo, BOOL modal)
+BOOL CDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo, BOOL bIsModal)
 {
     if (!pAppInfo)
     {
@@ -840,7 +840,7 @@ BOOL CDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo, BOOL moda
 
     AppsToInstallList.RemoveAll();
     AppsToInstallList.Add(pAppInfo);
-    LaunchDownloadDialog(modal);
+    LaunchDownloadDialog(bIsModal);
 
     return TRUE;
 }
@@ -849,15 +849,14 @@ VOID CDownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
 {
     static APPLICATION_INFO IntInfo;
     IntInfo.szUrlDownload = lpUrl;
-    //TODO: add this string to .rc
-    IntInfo.szName = L"RAPPS DB";
+    IntInfo.szName.LoadStringW(IDS_DL_DIALOG_DB_DISP);
     DownloadApplication(&IntInfo, TRUE);
 }
 
 //TODO: Reuse the dialog
-VOID CDownloadManager::LaunchDownloadDialog(BOOL modal)
+VOID CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
 {
-    if (modal)
+    if (bIsModal)
     {
         DialogBoxW(hInst,
                    MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),

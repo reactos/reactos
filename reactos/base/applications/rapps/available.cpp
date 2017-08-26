@@ -208,14 +208,22 @@ ATL::CStringW CAvailableApps::m_szSearchPath;
 
 BOOL CAvailableApps::InitializeStaticStrings()
 {
+
+    if (!m_szPath.IsEmpty())
+    {
+        // strings are filled
+        return TRUE;
+    }
+
     //FIXME: maybe provide a fallback?
-    if (m_szPath.IsEmpty() && GetStorageDirectory(m_szPath))
+    if (GetStorageDirectory(m_szPath))
     {
         m_szAppsPath = m_szPath + L"\\rapps\\";
         m_szCabPath = m_szPath + L"\\rappmgr.cab";
         m_szSearchPath = m_szAppsPath + L"*.txt";
         return TRUE;
     }
+
     return FALSE;
 }
 
@@ -245,8 +253,10 @@ VOID CAvailableApps::DeleteCurrentAppsDB()
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 
-    if (m_szPath.IsEmpty())
+    if (!InitializeStaticStrings())
+    {
         return;
+    }
 
     hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
 
@@ -255,7 +265,7 @@ VOID CAvailableApps::DeleteCurrentAppsDB()
         ATL::CStringW szTmp;
         do
         {
-            szTmp = m_szPath + FindFileData.cFileName;
+            szTmp = m_szAppsPath + FindFileData.cFileName;
             DeleteFileW(szTmp.GetString());
         } while (FindNextFileW(hFind, &FindFileData) != 0);
         FindClose(hFind);
@@ -270,7 +280,7 @@ BOOL CAvailableApps::UpdateAppsDB()
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 
-    if (m_szPath.IsEmpty() && !InitializeStaticStrings())
+    if (!InitializeStaticStrings())
     {
         return FALSE;
     }

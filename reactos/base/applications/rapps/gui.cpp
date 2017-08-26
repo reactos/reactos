@@ -61,7 +61,7 @@ class CAvailableAppView
                                                       DWORD TextFlags)
     {
         ATL::CStringW szLoadedText;
-        if (!szText.IsEmpty() && szLoadedText.LoadStringW(hInst, uStringID))
+        if (!szText.IsEmpty() && szLoadedText.LoadStringW(uStringID))
         {
             InsertRichEditText(szLoadedText, StringFlags);
             InsertRichEditText(szText, TextFlags);
@@ -72,7 +72,7 @@ class CAvailableAppView
                                                      DWORD StringFlags)
     {
         ATL::CStringW szLoadedText;
-        if (szLoadedText.LoadStringW(hInst, uStringID))
+        if (szLoadedText.LoadStringW(uStringID))
         {
             InsertRichEditText(L"\n", 0);
             InsertRichEditText(szLoadedText, StringFlags);
@@ -112,13 +112,13 @@ class CAvailableAppView
         switch (Info->LicenseType)
         {
         case LICENSE_TYPE::OpenSource:
-            szLicense.LoadStringW(hInst, IDS_LICENSE_OPENSOURCE);
+            szLicense.LoadStringW(IDS_LICENSE_OPENSOURCE);
             break;
         case LICENSE_TYPE::Freeware:
-            szLicense.LoadStringW(hInst, IDS_LICENSE_FREEWARE);
+            szLicense.LoadStringW(IDS_LICENSE_FREEWARE);
             break;
         case LICENSE_TYPE::Trial:
-            szLicense.LoadStringW(hInst, IDS_LICENSE_TRIAL);
+            szLicense.LoadStringW(IDS_LICENSE_TRIAL);
             break;
         default:
             InsertTextAfterLoaded_RichEdit(IDS_AINFO_LICENSE, Info->szLicense, CFE_BOLD, 0);
@@ -149,7 +149,9 @@ class CAvailableAppView
             szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_AVAILABLE_TRANSLATION);
             if (nTranslations > 1)
             {
-                szLangInfo.Format(L" (+%d more)", nTranslations - 1);
+                ATL::CStringW buf;
+                buf.LoadStringW(IDS_LANGUAGE_MORE_PLACEHOLDER);
+                szLangInfo.Format(buf, nTranslations - 1);
             }
             else
             {
@@ -162,6 +164,8 @@ class CAvailableAppView
             szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_ENGLISH_TRANSLATION);
             if (nTranslations > 1)
             {
+                ATL::CStringW buf;
+                buf.LoadStringW(IDS_LANGUAGE_AVAILABLE_PLACEHOLDER);
                 szLangInfo.Format(L" (+%d available)", nTranslations - 1);
             }
             else
@@ -513,7 +517,7 @@ public:
         }
         return list;
     }
-    
+
     PAPPLICATION_INFO GetSelectedData()
     {
         INT item = GetSelectionMark();
@@ -540,19 +544,19 @@ public:
         INT Index;
         HICON hIcon;
 
-        hIcon = (HICON) LoadImage(hInst,
-                                  MAKEINTRESOURCE(IconIndex),
-                                  IMAGE_ICON,
-                                  TREEVIEW_ICON_SIZE,
-                                  TREEVIEW_ICON_SIZE,
-                                  LR_CREATEDIBSECTION);
+        hIcon = (HICON) LoadImageW(hInst,
+                                   MAKEINTRESOURCE(IconIndex),
+                                   IMAGE_ICON,
+                                   TREEVIEW_ICON_SIZE,
+                                   TREEVIEW_ICON_SIZE,
+                                   LR_CREATEDIBSECTION);
         if (hIcon)
         {
             Index = ImageList_AddIcon(hImageTreeView, hIcon);
             DestroyIcon(hIcon);
         }
 
-        szText.LoadStringW(hInst, TextIndex);
+        szText.LoadStringW(TextIndex);
         return AddItem(hRootItem, szText, Index, Index, TextIndex);
     }
 
@@ -593,7 +597,7 @@ public:
                                  hInst, 0);
 
         SendMessageW(WM_SETFONT, (WPARAM) GetStockObject(DEFAULT_GUI_FONT), 0);
-        szBuf.LoadStringW(hInst, IDS_SEARCH_TEXT);
+        szBuf.LoadStringW(IDS_SEARCH_TEXT);
         SetWindowTextW(szBuf);
         return m_hWnd;
     }
@@ -637,13 +641,13 @@ private:
         ATL::CStringW szText;
 
         /* Add columns to ListView */
-        szText.LoadStringW(hInst, IDS_APP_NAME);
+        szText.LoadStringW(IDS_APP_NAME);
         m_ListView->AddColumn(0, szText, 200, LVCFMT_LEFT);
 
-        szText.LoadStringW(hInst, IDS_APP_INST_VERSION);
+        szText.LoadStringW(IDS_APP_INST_VERSION);
         m_ListView->AddColumn(1, szText, 90, LVCFMT_RIGHT);
 
-        szText.LoadStringW(hInst, IDS_APP_DESCRIPTION);
+        szText.LoadStringW(IDS_APP_DESCRIPTION);
         m_ListView->AddColumn(3, szText, 250, LVCFMT_LEFT);
 
         // Unnesesary since the list updates on every TreeView selection
@@ -1064,12 +1068,12 @@ private:
                           In ReactOS this action is triggered whenever user changes *selection*, but should be only when *checkbox* state toggled
                           Maybe LVIS_STATEIMAGEMASK is set incorrectly
                         */
-                        nSelectedApps += 
-                            (checked) 
-                            ? 1 
-                            :((nSelectedApps > 0) 
-                              ? -1 
-                              : 0);
+                        nSelectedApps +=
+                            (checked)
+                            ? 1
+                            : ((nSelectedApps > 0)
+                               ? -1
+                               : 0);
                         UpdateStatusBarText();
                     }
                 }
@@ -1160,7 +1164,7 @@ private:
                 if (bSearchEnabled)
                     UpdateApplicationsList(-1);
             }
-        break;
+            break;
         }
 
         return FALSE;
@@ -1226,7 +1230,7 @@ private:
             {
                 ATL::CStringW szWndText;
 
-                szBuf.LoadStringW(hInst, IDS_SEARCH_TEXT);
+                szBuf.LoadStringW(IDS_SEARCH_TEXT);
                 m_SearchBar->GetWindowTextW(szWndText);
                 if (szBuf == szWndText)
                 {
@@ -1241,7 +1245,7 @@ private:
                 m_SearchBar->GetWindowTextW(szBuf);
                 if (szBuf.IsEmpty())
                 {
-                    szBuf.LoadStringW(hInst, IDS_SEARCH_TEXT);
+                    szBuf.LoadStringW(IDS_SEARCH_TEXT);
                     bSearchEnabled = FALSE;
                     m_SearchBar->SetWindowTextW(szBuf.GetString());
                 }
@@ -1258,7 +1262,7 @@ private:
                     break;
                 }
 
-                szBuf.LoadStringW(hInst, IDS_SEARCH_TEXT);
+                szBuf.LoadStringW(IDS_SEARCH_TEXT);
                 m_SearchBar->GetWindowTextW(szWndText);
                 if (szBuf == szWndText)
                 {
@@ -1304,12 +1308,12 @@ private:
             {
                 CDownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
                 UpdateApplicationsList(-1);
-            } 
-            else if(CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
+            }
+            else if (CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
             {
                 UpdateApplicationsList(-1);
             }
-            
+
             break;
 
         case ID_UNINSTALL:
@@ -1540,7 +1544,7 @@ public:
     HWND Create()
     {
         ATL::CStringW szWindowName;
-        szWindowName.LoadStringW(hInst, IDS_APPTITLE);
+        szWindowName.LoadStringW(IDS_APPTITLE);
 
         RECT r = {
             (SettingsInfo.bSaveWndPos ? SettingsInfo.Left : CW_USEDEFAULT),

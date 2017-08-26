@@ -128,7 +128,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     HANDLE hMutex;
     HACCEL KeyBrd;
     MSG Msg;
-    BOOL bFirstLaunch;
+    BOOL bIsFirstLaunch;
 
     InitializeAtlModule(hInstance, TRUE);
 
@@ -150,8 +150,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         SetForegroundWindow(hWindow);
         return 1;
     }
-    bFirstLaunch = LoadSettings();
-    if (bFirstLaunch)
+    bIsFirstLaunch = !LoadSettings();
+    if (bIsFirstLaunch)
     {
         FillDefaultSettings(&SettingsInfo);
     }
@@ -162,7 +162,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     // skip window creation if there were some keys
     if (!CmdParser(lpCmdLine))
     {
-        if (SettingsInfo.bUpdateAtStart || bFirstLaunch)
+        if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
             CAvailableApps::ForceUpdateAppsDB();
 
         hMainWnd = CreateMainWindow();

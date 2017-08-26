@@ -190,6 +190,12 @@
 #define IDS_LANGUAGE_NO_TRANSLATION             911
 #define IDS_LANGUAGE_ENGLISH_TRANSLATION        912
 #define IDS_LANGUAGE_SINGLE                     913
+#define IDS_LANGUAGE_MORE_PLACEHOLDER           914
+#define IDS_LANGUAGE_AVAILABLE_PLACEHOLDER      915
+
+/* Dialog related entries */
+#define IDS_DL_DIALOG_DB_DISP                   950
+#define IDS_DL_DIALOG_DB_DOWNLOAD_DISP          951
 
 /* Accelerators */
 #define HOTKEYS                  715

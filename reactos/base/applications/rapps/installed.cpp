@@ -112,7 +112,7 @@ ShowInstalledAppInfo(INT Index)
 #define GET_INFO(a, b, c, d) \
     if (GetApplicationString(Info->hSubKey, a, szInfo)) \
     { \
-        szText.LoadStringW(hInst, b); \
+        szText.LoadStringW(b); \
         InsertRichEditText(szText, c); \
         InsertRichEditText(szInfo, d); \
     } \
@@ -152,8 +152,8 @@ RemoveAppFromRegistry(INT Index)
     Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
     if (!Info || !Info->hSubKey || (ItemIndex == -1)) return;
 
-    if (!szMsgText.LoadStringW(hInst, IDS_APP_REG_REMOVE) ||
-        !szMsgTitle.LoadStringW(hInst, IDS_INFORMATION))
+    if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) ||
+        !szMsgTitle.LoadStringW(IDS_INFORMATION))
         return;
 
     if (MessageBoxW(hMainWnd, szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
@@ -169,7 +169,7 @@ RemoveAppFromRegistry(INT Index)
             return;
         }
 
-        if (!szMsgText.LoadStringW(hInst, IDS_UNABLE_TO_REMOVE))
+        if (!szMsgText.LoadStringW(IDS_UNABLE_TO_REMOVE))
             return;
 
         MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);

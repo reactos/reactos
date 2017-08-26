@@ -22,7 +22,7 @@ ChooseFolder(HWND hwnd)
     BROWSEINFOW bi;
     ATL::CStringW szBuf;
 
-    szBuf.LoadStringW(hInst, IDS_CHOOSE_FOLDER_TEXT);
+    szBuf.LoadStringW(IDS_CHOOSE_FOLDER_TEXT);
 
     ZeroMemory(&bi, sizeof(bi));
     bi.hwndOwner = hwnd;
@@ -172,7 +172,7 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPAR
             else
             {
                 ATL::CStringW szMsgText;
-                szMsgText.LoadStringW(hInst, IDS_CHOOSE_FOLDER_ERROR);
+                szMsgText.LoadStringW(IDS_CHOOSE_FOLDER_ERROR);
 
                 if (MessageBoxW(hDlg, szMsgText.GetString(), NULL, MB_YESNO) == IDYES)
                 {
