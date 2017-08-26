@@ -240,12 +240,11 @@ VOID CAvailableApps::FreeCachedEntries()
     /* loop and deallocate all the cached app infos in the list */
     while (InfoListPosition)
     {
-        CAvailableApplicationInfo* Info = m_InfoList.GetAt(InfoListPosition);
-        m_InfoList.RemoveHead();
+        CAvailableApplicationInfo* Info = m_InfoList.GetNext(InfoListPosition);
         delete Info;
-
-        InfoListPosition = m_InfoList.GetHeadPosition();
     }
+
+    m_InfoList.RemoveAll();
 }
 
 VOID CAvailableApps::DeleteCurrentAppsDB()
@@ -317,6 +316,7 @@ BOOL CAvailableApps::ForceUpdateAppsDB()
 
 BOOL CAvailableApps::EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
 {
+
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 

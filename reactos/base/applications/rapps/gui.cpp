@@ -1396,14 +1396,12 @@ private:
             return TRUE;
         }
 
-        ItemInfo = (PINSTALLED_INFO) HeapAlloc(GetProcessHeap(), 0, sizeof(INSTALLED_INFO));
+        ItemInfo = new INSTALLED_INFO(*Info);
         if (!ItemInfo)
         {
             RegCloseKey(Info->hSubKey);
             return FALSE;
         }
-
-        RtlCopyMemory(ItemInfo, Info, sizeof(INSTALLED_INFO));
 
         Index = ListViewAddItem(ItemIndex, 0, szName, (LPARAM) ItemInfo);
 
@@ -1481,7 +1479,7 @@ private:
         nSelectedApps = 0;
         if (EnumType < 0) EnumType = SelectedEnumType;
 
-        if (IS_INSTALLED_ENUM(EnumType))
+        if (IS_INSTALLED_ENUM(SelectedEnumType))
         {
             FreeInstalledAppList();
         }
@@ -1501,6 +1499,9 @@ private:
 
         if (IS_INSTALLED_ENUM(EnumType))
         {
+            HICON hIcon = (HICON) LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+            ImageList_AddIcon(hImageListView, hIcon);
+            DestroyIcon(hIcon);
             /* Enum installed applications and updates */
             EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc);
             EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc);
