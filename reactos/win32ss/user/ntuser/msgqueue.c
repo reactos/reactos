@@ -2216,9 +2216,7 @@ IsThreadSuspended(PTHREADINFO pti)
    if (pti->pEThread)
    {
       BOOL Ret = TRUE;
-      ObReferenceObject(pti->pEThread);
       if (!(pti->pEThread->Tcb.SuspendCount) && !PsGetThreadFreezeCount(pti->pEThread)) Ret = FALSE;
-      ObDereferenceObject(pti->pEThread);
       return Ret;
    }
    return FALSE;
@@ -2347,7 +2345,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
             {
                CurrentSentMessage->flags |= SMF_RECEIVERFREE;
             }
-            
+
             if (!(CurrentSentMessage->flags & SMF_RECEIVERFREE))
             {
 
@@ -2385,7 +2383,7 @@ MsqCleanupMessageQueue(PTHREADINFO pti)
       /* cleanup posted messages */
       while (!IsListEmpty(&MessageQueue->HardwareMessagesListHead))
       {
-         CurrentEntry = MessageQueue->HardwareMessagesListHead.Flink;       
+         CurrentEntry = MessageQueue->HardwareMessagesListHead.Flink;
          CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
          ERR("MQ Cleanup Post Messages %p\n",CurrentMessage);
          MsqDestroyMessage(CurrentMessage);
