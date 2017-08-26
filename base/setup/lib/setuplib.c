@@ -49,7 +49,7 @@ CheckUnattendedSetup(
     /* Load 'unattend.inf' from installation media */
     UnattendInf = SetupOpenInfFileExW(UnattendInfPath,
                                       NULL,
-                                      INF_STYLE_WIN4,
+                                      INF_STYLE_OLDNT,
                                       pSetupData->LanguageId,
                                       &ErrorLine);
 
@@ -262,7 +262,8 @@ InstallSetupInfFile(
 #if 0
 
     /* TODO: Append the standard unattend.inf file */
-    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2, pSetupData->SourcePath.Buffer, L"unattend.inf");
+    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2,
+                 pSetupData->SourcePath.Buffer, L"unattend.inf");
     if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
@@ -437,7 +438,16 @@ GetSourcePaths(
                                       SYMBOLIC_LINK_QUERY,
                                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
-        return Status;
+    {
+        /*
+         * We failed at opening the \SystemRoot link (usually due to wrong
+         * access rights). Do not consider this as a fatal error, but use
+         * instead the image file path as the installation source path.
+         */
+        DPRINT1("NtOpenSymbolicLinkObject(%wZ) failed with Status 0x%08lx\n",
+                &SystemRootPath, Status);
+        goto InitPaths;
+    }
 
     RtlInitEmptyUnicodeString(&SystemRootPath,
                               SystemRootBuffer,
@@ -449,7 +459,7 @@ GetSourcePaths(
     NtClose(Handle);
 
     if (!NT_SUCCESS(Status))
-        return Status;
+        return Status; // Unexpected error
 
     /* Check whether the resolved \SystemRoot is a prefix of the image file path */
     if (RtlPrefixUnicodeString(&SystemRootPath, InstallSourcePath, TRUE))
@@ -459,6 +469,7 @@ GetSourcePaths(
     }
 
 
+InitPaths:
     /*
      * Retrieve the different source path components
      */
@@ -499,7 +510,7 @@ LoadSetupInf(
 
     *SetupInf = SetupOpenInfFileExW(FileNameBuffer,
                                    NULL,
-                                   INF_STYLE_WIN4,
+                                   INF_STYLE_WIN4 | INF_STYLE_OLDNT,
                                    pSetupData->LanguageId,
                                    &ErrorLine);
 
