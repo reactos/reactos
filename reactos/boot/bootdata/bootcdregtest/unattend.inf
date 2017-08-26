@@ -1,8 +1,7 @@
-; Set UnattendSetupEnabled to yes in order to get unattended setup working
-
 [Unattend]
 Signature = "$ReactOS$"
 
+; Set UnattendSetupEnabled to yes in order to get unattended setup working
 ; yes - unattend setup enabled
 ; no - unattend setup disabled
 UnattendSetupEnabled = yes
