@@ -237,7 +237,7 @@ BEGIN
     IDS_LANGUAGE_NO_TRANSLATION "Доступно на других языках"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "Доступно на Английском"
     IDS_LANGUAGE_SINGLE "Один язык"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+еще %d )
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+еще %d )"
     IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d доступно)"
 END
 
