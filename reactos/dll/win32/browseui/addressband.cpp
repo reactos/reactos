@@ -529,7 +529,7 @@ void CAddressBand::CreateGoButton()
     const TBBUTTON buttonInfo [] = { { 0, 1, TBSTATE_ENABLED, 0 } };
     HINSTANCE             shellInstance;
 
-    shellInstance = GetModuleHandle(_T("shell32.dll"));
+    shellInstance = _AtlBaseModule.GetResourceInstance();
     m_himlNormal = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_NORMAL),
                                            20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
     m_himlHot = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_HOT),

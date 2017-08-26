@@ -85,7 +85,6 @@ void CBrandBand::SelectImage()
     int                                     clientWidth;
     int                                     clientHeight;
     int                                     clientSize;
-    HINSTANCE                               shell32Instance;
     BITMAP                                  bitmapInfo;
     int                                     resourceID;
 
@@ -102,8 +101,7 @@ void CBrandBand::SelectImage()
         resourceID += 2;
     else if (clientSize >= gMediumImageSize)
         resourceID += 1;
-    shell32Instance = GetModuleHandle(L"shell32.dll");
-    fImageBitmap = LoadBitmap(shell32Instance, MAKEINTRESOURCE(resourceID));
+    fImageBitmap = LoadBitmap(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(resourceID));
     GetObjectW(fImageBitmap, sizeof(bitmapInfo), &bitmapInfo);
     fBitmapSize = bitmapInfo.bmWidth;
     fMaxFrameCount = bitmapInfo.bmHeight / fBitmapSize;
