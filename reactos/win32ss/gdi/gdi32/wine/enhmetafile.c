@@ -786,6 +786,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             break;
         info->state.mode = pSetMapMode->iMode;
         EMF_SetMapMode(hdc, info);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
 	break;
       }
     case EMR_SETBKMODE:
@@ -887,12 +891,16 @@ BOOL WINAPI PlayEnhMetaFileRecord(
         info->state.wndOrgY = pSetWindowOrgEx->ptlOrigin.y;
 
         TRACE("SetWindowOrgEx: %d,%d\n", info->state.wndOrgX, info->state.wndOrgY);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
         break;
       }
     case EMR_SETWINDOWEXTEX:
       {
 	const EMRSETWINDOWEXTEX *pSetWindowExtEx = (const EMRSETWINDOWEXTEX *)mr;
-
+	
         if (info->state.mode != MM_ISOTROPIC && info->state.mode != MM_ANISOTROPIC)
 	    break;
         info->state.wndExtX = pSetWindowExtEx->szlExtent.cx;
@@ -901,6 +909,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             EMF_FixIsotropic(hdc, info);
 
         TRACE("SetWindowExtEx: %d,%d\n",info->state.wndExtX, info->state.wndExtY);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
 	break;
       }
     case EMR_SETVIEWPORTORGEX:
@@ -910,6 +922,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
         info->state.vportOrgX = pSetViewportOrgEx->ptlOrigin.x;
         info->state.vportOrgY = pSetViewportOrgEx->ptlOrigin.y;
         TRACE("SetViewportOrgEx: %d,%d\n", info->state.vportOrgX, info->state.vportOrgY);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
 	break;
       }
     case EMR_SETVIEWPORTEXTEX:
@@ -923,6 +939,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
         if (info->state.mode == MM_ISOTROPIC)
             EMF_FixIsotropic(hdc, info);
         TRACE("SetViewportExtEx: %d,%d\n", info->state.vportExtX, info->state.vportExtY);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
 	break;
       }
     case EMR_CREATEPEN:
@@ -1259,6 +1279,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
       {
         const EMRSETWORLDTRANSFORM *lpXfrm = (const EMRSETWORLDTRANSFORM *)mr;
         info->state.world_transform = lpXfrm->xform;
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
         break;
       }
 
@@ -1414,6 +1438,9 @@ BOOL WINAPI PlayEnhMetaFileRecord(
              lpScaleViewportExtEx->xNum,lpScaleViewportExtEx->xDenom,
              lpScaleViewportExtEx->yNum,lpScaleViewportExtEx->yDenom);
 
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
         break;
       }
 
@@ -1439,6 +1466,9 @@ BOOL WINAPI PlayEnhMetaFileRecord(
              lpScaleWindowExtEx->xNum,lpScaleWindowExtEx->xDenom,
              lpScaleWindowExtEx->yNum,lpScaleWindowExtEx->yDenom);
 
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
         break;
       }
 
@@ -1451,14 +1481,20 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             info->state.world_transform.eM11 = info->state.world_transform.eM22 = 1;
             info->state.world_transform.eM12 = info->state.world_transform.eM21 = 0;
             info->state.world_transform.eDx  = info->state.world_transform.eDy  = 0;
+            if (!IS_WIN9X())
+                EMF_Update_MF_Xform(hdc, info);
             break;
         case MWT_LEFTMULTIPLY:
             CombineTransform(&info->state.world_transform, &lpModifyWorldTrans->xform,
                              &info->state.world_transform);
+            if (!IS_WIN9X())
+                ModifyWorldTransform(hdc, &lpModifyWorldTrans->xform, MWT_LEFTMULTIPLY);
             break;
         case MWT_RIGHTMULTIPLY:
             CombineTransform(&info->state.world_transform, &info->state.world_transform,
                              &lpModifyWorldTrans->xform);
+            if (!IS_WIN9X())
+                EMF_Update_MF_Xform(hdc, info);
             break;
         default:
             FIXME("Unknown imode %d\n", lpModifyWorldTrans->iMode);
@@ -2435,11 +2471,6 @@ BOOL WINAPI EnumEnhMetaFile(
 	TRACE("Calling EnumFunc with record %s, size %d\n", get_emr_name(emr->iType), emr->nSize);
 	ret = (*callback)(hdc, ht, emr, emh->nHandles, (LPARAM)data);
 	offset += emr->nSize;
-
-        /* WinNT - update the transform (win9x updates when the next graphics
-           output record is played). */
-        if (hdc && !IS_WIN9X())
-            EMF_Update_MF_Xform(hdc, info);
     }
 
     if (hdc)
