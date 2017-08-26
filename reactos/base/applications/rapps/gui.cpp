@@ -166,7 +166,7 @@ class CAvailableAppView
             {
                 ATL::CStringW buf;
                 buf.LoadStringW(IDS_LANGUAGE_AVAILABLE_PLACEHOLDER);
-                szLangInfo.Format(L" (+%d available)", nTranslations - 1);
+                szLangInfo.Format(buf, nTranslations - 1);
             }
             else
             {
@@ -661,28 +661,33 @@ private:
 
     VOID InitCategoriesList()
     {
-        HTREEITEM hRootItem;
+        HTREEITEM hRootItem1, hRootItem2;
 
-        hRootItem = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
-        AddCategory(hRootItem, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
-        AddCategory(hRootItem, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
-        AddCategory(hRootItem, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
-        AddCategory(hRootItem, IDS_CAT_GAMES, IDI_CAT_GAMES);
-        AddCategory(hRootItem, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
-        AddCategory(hRootItem, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
-        AddCategory(hRootItem, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
-        AddCategory(hRootItem, IDS_CAT_EDU, IDI_CAT_EDU);
-        AddCategory(hRootItem, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
-        AddCategory(hRootItem, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
-        AddCategory(hRootItem, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
-        AddCategory(hRootItem, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
-        AddCategory(hRootItem, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
-        AddCategory(hRootItem, IDS_CAT_LIBS, IDI_CAT_LIBS);
-        AddCategory(hRootItem, IDS_CAT_OTHER, IDI_CAT_OTHER);
+        hRootItem1 = AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
+        AddCategory(hRootItem1, IDS_APPLICATIONS, IDI_APPS);
+        AddCategory(hRootItem1, IDS_UPDATES, IDI_APPUPD);
+
+        hRootItem2 = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
+        AddCategory(hRootItem2, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
+        AddCategory(hRootItem2, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
+        AddCategory(hRootItem2, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
+        AddCategory(hRootItem2, IDS_CAT_GAMES, IDI_CAT_GAMES);
+        AddCategory(hRootItem2, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
+        AddCategory(hRootItem2, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
+        AddCategory(hRootItem2, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
+        AddCategory(hRootItem2, IDS_CAT_EDU, IDI_CAT_EDU);
+        AddCategory(hRootItem2, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
+        AddCategory(hRootItem2, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
+        AddCategory(hRootItem2, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
+        AddCategory(hRootItem2, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
+        AddCategory(hRootItem2, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
+        AddCategory(hRootItem2, IDS_CAT_LIBS, IDI_CAT_LIBS);
+        AddCategory(hRootItem2, IDS_CAT_OTHER, IDI_CAT_OTHER);
 
         m_TreeView->SetImageList();
-        m_TreeView->Expand(hRootItem, TVE_EXPAND);
-        m_TreeView->SelectItem(hRootItem);
+        m_TreeView->Expand(hRootItem1, TVE_EXPAND);
+        m_TreeView->Expand(hRootItem2, TVE_EXPAND);
+        m_TreeView->SelectItem(hRootItem1);
     }
 
     BOOL CreateStatusBar()
@@ -889,6 +894,7 @@ private:
             SaveSettings(hwnd);
 
             FreeLogs();
+            m_AvailableApps.FreeCachedEntries();
 
             if (IS_INSTALLED_ENUM(SelectedEnumType))
                 FreeInstalledAppList();
@@ -1378,35 +1384,27 @@ private:
         return StrStrIW(szHaystack, szNeedle) != NULL;
     }
 
-    static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, PINSTALLED_INFO Info)
+    static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &szName, PINSTALLED_INFO ItemInfo)
     {
-        PINSTALLED_INFO ItemInfo;
         ATL::CStringW szText;
         INT Index;
+        INSTALLED_INFO Info;
 
-        if (!SearchPatternMatch(lpName, szSearchPattern))
+        if (!SearchPatternMatch(szName.GetString(), szSearchPattern))
         {
-            RegCloseKey(Info->hSubKey);
+            RegCloseKey(ItemInfo->hSubKey);
             return TRUE;
         }
 
-        ItemInfo = (PINSTALLED_INFO) HeapAlloc(GetProcessHeap(), 0, sizeof(INSTALLED_INFO));
-        if (!ItemInfo)
-        {
-            RegCloseKey(Info->hSubKey);
-            return FALSE;
-        }
-
-        RtlCopyMemory(ItemInfo, Info, sizeof(INSTALLED_INFO));
-
-        Index = ListViewAddItem(ItemIndex, 0, lpName, (LPARAM) ItemInfo);
+        RtlCopyMemory(ItemInfo, &Info, sizeof(INSTALLED_INFO));
+        Index = ListViewAddItem(ItemIndex, 0, szName, (LPARAM) &Info);
 
         /* Get version info */
-        GetApplicationString(ItemInfo->hSubKey, L"DisplayVersion", szText);
+        GetApplicationString(Info.hSubKey, L"DisplayVersion", szText);
         ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(szText.GetString()));
 
         /* Get comments */
-        GetApplicationString(ItemInfo->hSubKey, L"Comments", szText);
+        GetApplicationString(Info.hSubKey, L"Comments", szText);
         ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(szText.GetString()));
 
         return TRUE;
@@ -1493,13 +1491,16 @@ private:
             ImageList_Destroy(hImageListBuf);
         }
 
-        if (isAvailableEnum(EnumType))
+        if (IS_INSTALLED_ENUM(EnumType))
+        {
+            /* Enum installed applications and updates */
+            EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc);
+            EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc);
+        }
+        else if (isAvailableEnum(EnumType))
         {
             /* Enum available applications */
-            if (!m_AvailableApps.EnumAvailableApplications(EnumType, s_EnumAvailableAppProc))
-            {
-                return;
-            }
+            m_AvailableApps.EnumAvailableApplications(EnumType, s_EnumAvailableAppProc);
         }
 
         SelectedEnumType = EnumType;
@@ -1624,7 +1625,7 @@ VOID SetStatusBarText(const ATL::CStringW& szText)
     SetStatusBarText(szText.GetString());
 }
 
-INT ListViewAddItem(INT ItemIndex, INT IconIndex, ATL::CStringW & Name, LPARAM lParam)
+INT ListViewAddItem(INT ItemIndex, INT IconIndex, const ATL::CStringW& Name, LPARAM lParam)
 {
     return ListViewAddItem(ItemIndex, IconIndex, const_cast<LPWSTR>(Name.GetString()), lParam);
 }
