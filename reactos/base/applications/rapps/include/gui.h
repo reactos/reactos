@@ -12,7 +12,7 @@ VOID NewRichEditText(LPCWSTR szText, DWORD flags);
 VOID InsertRichEditText(LPCWSTR szText, DWORD flags);
 
 VOID SetStatusBarText(const ATL::CStringW& szText);
-INT ListViewAddItem(INT ItemIndex, INT IconIndex, ATL::CStringW & Name, LPARAM lParam);
+INT ListViewAddItem(INT ItemIndex, INT IconIndex, const ATL::CStringW& Name, LPARAM lParam);
 VOID NewRichEditText(const ATL::CStringW& szText, DWORD flags);
 VOID InsertRichEditText(const ATL::CStringW& szText, DWORD flags);
 CAvailableApps * GetAvailableApps();
