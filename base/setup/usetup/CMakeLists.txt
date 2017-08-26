@@ -10,7 +10,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
-    bootsup.c
     cabinet.c
     chkdsk.c
     cmdcons.c

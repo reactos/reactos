@@ -29,6 +29,7 @@ extern HANDLE ProcessHeap;
 #include "ntverrsrc.h"
 // #include "arcname.h"
 #include "bldrsup.h"
+#include "bootsup.h"
 #include "filesup.h"
 #include "fsutil.h"
 #include "genlist.h"
