@@ -38,7 +38,7 @@ public:
     static const ATL::CStringW& GetLocale();
     static INT CConfigParser::GetLocaleSize();
 
-    CConfigParser(const ATL::CStringW& FileName);
+    CConfigParser(const ATL::CStringW& FileName = "");
 
     UINT GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString);
     UINT GetInt(const ATL::CStringW& KeyName);

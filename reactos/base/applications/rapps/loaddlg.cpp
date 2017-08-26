@@ -67,6 +67,34 @@ ATL::CStringW LoadStatusString(DOWNLOAD_STATUS StatusParam)
     return szString;
 }
 
+
+struct DownloadInfo
+{
+    DownloadInfo() {}
+    DownloadInfo(const CAvailableApplicationInfo& AppInfo)
+        :szUrl(AppInfo.szUrlDownload), szName(AppInfo.szName), szSHA1(AppInfo.szSHA1)
+    {
+    }
+
+    ATL::CStringW szUrl;
+    ATL::CStringW szName;
+    ATL::CStringW szSHA1;
+};
+
+struct DownloadParam
+{
+    DownloadParam() : Dialog(NULL), AppInfo(), szCaption(NULL) {}
+    DownloadParam(HWND dlg, const ATL::CSimpleArray<DownloadInfo> &info, LPCWSTR caption)
+        : Dialog(dlg), AppInfo(info), szCaption(caption)
+    {
+    }
+
+    HWND Dialog;
+    ATL::CSimpleArray<DownloadInfo> AppInfo;
+    LPCWSTR szCaption;
+};
+
+
 class CDownloadDialog :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IBindStatusCallback
@@ -227,12 +255,11 @@ public:
         return hwnd;
     }
 
-    VOID LoadList(ATL::CSimpleArray<PAPPLICATION_INFO> arrInfo)
+    VOID LoadList(ATL::CSimpleArray<DownloadInfo> arrInfo)
     {
         for (INT i = 0; i < arrInfo.GetSize(); ++i)
         {
-            PAPPLICATION_INFO AppInfo = arrInfo[i];
-            AddRow(i, AppInfo->szName.GetString(), DOWNLOAD_STATUS::DLWaiting);
+            AddRow(i, arrInfo[i].szName.GetString(), DOWNLOAD_STATUS::DLWaiting);
         }
     }
 
@@ -346,23 +373,17 @@ inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
     }
 }
 
-struct DownloadParam
-{
-    DownloadParam() : Dialog(NULL), AppInfo(), szCaption(NULL) {}
-    DownloadParam(HWND dlg, const ATL::CSimpleArray<PAPPLICATION_INFO> &info, LPCWSTR caption)
-        : Dialog(dlg), AppInfo(info), szCaption(caption)
-    {
-    }
-
-    HWND Dialog;
-    ATL::CSimpleArray<PAPPLICATION_INFO> AppInfo;
-    LPCWSTR szCaption;
-};
-
 // CDownloadManager
-ATL::CSimpleArray<PAPPLICATION_INFO>    CDownloadManager::AppsToInstallList;
+ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsToInstallList;
 CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
 INT                                     CDownloadManager::iCurrentApp;
+
+VOID CDownloadManager::Download(const DownloadInfo &DLInfo, BOOL bIsModal)
+{
+    AppsToInstallList.RemoveAll();
+    AppsToInstallList.Add(DLInfo);
+    LaunchDownloadDialog(bIsModal);
+}
 
 INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -419,6 +440,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         }
 
         CloseHandle(Thread);
+        AppsToInstallList.RemoveAll();
         return TRUE;
     }
 
@@ -546,11 +568,11 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     size_t urlLength, filenameLength;
 
     const INT iAppId = iCurrentApp;
-    const ATL::CSimpleArray<PAPPLICATION_INFO> InfoArray = static_cast<DownloadParam*>(param)->AppInfo;
+    const ATL::CSimpleArray<DownloadInfo> &InfoArray = static_cast<DownloadParam*>(param)->AppInfo;
     LPCWSTR szCaption = static_cast<DownloadParam*>(param)->szCaption;
     ATL::CStringW szNewCaption;
 
-    delete param;
+
     if (InfoArray.GetSize() <= 0)
     {
         MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
@@ -559,16 +581,11 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
     for (INT iAppId = 0; iAppId < InfoArray.GetSize(); ++iAppId)
     {
-        PAPPLICATION_INFO pCurrentInfo = AppsToInstallList[iAppId];
-        if (!pCurrentInfo)
-        {
-            MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
-            continue;
-        }
+        const DownloadInfo &CurrentInfo = InfoArray[iAppId];
 
         // build the path for the download
-        p = wcsrchr(pCurrentInfo->szUrlDownload.GetString(), L'/');
-        q = wcsrchr(pCurrentInfo->szUrlDownload.GetString(), L'?');
+        p = wcsrchr(CurrentInfo.szUrl.GetString(), L'/');
+        q = wcsrchr(CurrentInfo.szUrl.GetString(), L'?');
 
         // do we have a final slash separator?
         if (!p)
@@ -583,7 +600,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             filenameLength -= wcslen(q - 1) * sizeof(WCHAR);
 
         // is this URL an update package for RAPPS? if so store it in a different place
-        if (pCurrentInfo->szUrlDownload == APPLICATION_DATABASE_URL)
+        if (CurrentInfo.szUrl == APPLICATION_DATABASE_URL)
         {
             bCab = TRUE;
             if (!GetStorageDirectory(Path))
@@ -605,10 +622,10 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         Path += L"\\";
         Path += (LPWSTR) (p + 1);
 
-        if (!bCab && pCurrentInfo->szSHA1[0] && GetFileAttributesW(Path.GetString()) != INVALID_FILE_ATTRIBUTES)
+        if (!bCab && CurrentInfo.szSHA1[0] && GetFileAttributesW(Path.GetString()) != INVALID_FILE_ATTRIBUTES)
         {
             // only open it in case of total correctness
-            if (VerifyInteg(pCurrentInfo->szSHA1, Path))
+            if (VerifyInteg(CurrentInfo.szSHA1.GetString(), Path))
                 goto run;
         }
 
@@ -622,7 +639,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         // Change caption to show the currently downloaded app
         if (!bCab)
         {
-            szNewCaption.Format(szCaption, pCurrentInfo->szName.GetString());
+            szNewCaption.Format(szCaption, CurrentInfo.szName.GetString());
         }
         else
         {
@@ -632,7 +649,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         SetWindowTextW(hDlg, szNewCaption.GetString());
 
         // Add the download URL
-        SetDlgItemTextW(hDlg, IDC_DOWNLOAD_STATUS, pCurrentInfo->szUrlDownload.GetString());
+        SetDlgItemTextW(hDlg, IDC_DOWNLOAD_STATUS, CurrentInfo.szUrl.GetString());
 
         DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLDownloading);
 
@@ -663,7 +680,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (!hOpen)
             goto end;
 
-        hFile = InternetOpenUrlW(hOpen, pCurrentInfo->szUrlDownload.GetString(), NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION, 0);
+        hFile = InternetOpenUrlW(hOpen, CurrentInfo.szUrl.GetString(), NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION, 0);
 
         if (!hFile)
         {
@@ -685,13 +702,13 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         memset(&urlComponents, 0, sizeof(urlComponents));
         urlComponents.dwStructSize = sizeof(urlComponents);
 
-        urlLength = pCurrentInfo->szUrlDownload.GetLength();
+        urlLength = CurrentInfo.szUrl.GetLength();
         urlComponents.dwSchemeLength = urlLength + 1;
         urlComponents.lpszScheme = (LPWSTR) malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
         urlComponents.dwHostNameLength = urlLength + 1;
         urlComponents.lpszHostName = (LPWSTR) malloc(urlComponents.dwHostNameLength * sizeof(WCHAR));
 
-        if (!InternetCrackUrlW(pCurrentInfo->szUrlDownload, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
+        if (!InternetCrackUrlW(CurrentInfo.szUrl, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
             goto end;
 
         if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
@@ -703,7 +720,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 #ifdef USE_CERT_PINNING
         // are we using HTTPS to download the RAPPS update package? check if the certificate is original
         if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
-            (wcscmp(pCurrentInfo->szUrlDownload, APPLICATION_DATABASE_URL) == 0) &&
+            (wcscmp(CurrentInfo.szUrl, APPLICATION_DATABASE_URL) == 0) &&
             (!CertIsValid(hOpen, urlComponents.lpszHostName)))
         {
             MessageBox_LoadString(hMainWnd, IDS_CERT_DOES_NOT_MATCH);
@@ -735,7 +752,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             dwCurrentBytesRead += dwBytesRead;
-            dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, pCurrentInfo->szUrlDownload.GetString());
+            dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, CurrentInfo.szUrl.GetString());
         } while (dwBytesRead && !bCancelled);
 
         CloseHandle(hOut);
@@ -746,7 +763,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         /* if this thing isn't a RAPPS update and it has a SHA-1 checksum
         verify its integrity by using the native advapi32.A_SHA1 functions */
-        if (!bCab && pCurrentInfo->szSHA1[0] != 0)
+        if (!bCab && CurrentInfo.szSHA1[0] != 0)
         {
             ATL::CStringW szMsgText;
 
@@ -758,7 +775,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             SendMessageW(GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetString());
 
             // this may take a while, depending on the file size
-            if (!VerifyInteg(pCurrentInfo->szSHA1, Path.GetString()))
+            if (!VerifyInteg(CurrentInfo.szSHA1.GetString(), Path.GetString()))
             {
                 if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_FAIL))
                     goto end;
@@ -811,11 +828,12 @@ end:
         DownloadsListView.SetDownloadStatus(iAppId, DOWNLOAD_STATUS::DLFinished);
     }
 
+    delete param;
     SendMessageW(hDlg, WM_CLOSE, 0, 0);
     return 0;
 }
 
-BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLICATION_INFO>& AppsList, BOOL bIsModal)
+BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo*>& AppsList, BOOL bIsModal)
 {
     if (AppsList.GetSize() == 0)
     {
@@ -823,7 +841,13 @@ BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLI
     }
 
     // Initialize shared variables
-    AppsToInstallList = AppsList;
+    for (INT i = 0; i < AppsList.GetSize(); ++i)
+    {
+        if (AppsList[i])
+        {
+            AppsToInstallList.Add(*(AppsList[i]));
+        }
+    }
 
     // Create a dialog and issue a download process
     LaunchDownloadDialog(bIsModal);
@@ -831,26 +855,21 @@ BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<PAPPLI
     return TRUE;
 }
 
-BOOL CDownloadManager::DownloadApplication(PAPPLICATION_INFO pAppInfo, BOOL bIsModal)
+BOOL CDownloadManager::DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal)
 {
     if (!pAppInfo)
-    {
         return FALSE;
-    }
 
-    AppsToInstallList.RemoveAll();
-    AppsToInstallList.Add(pAppInfo);
-    LaunchDownloadDialog(bIsModal);
-
+    Download(*pAppInfo, bIsModal);
     return TRUE;
 }
 
 VOID CDownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
 {
-    static APPLICATION_INFO IntInfo;
-    IntInfo.szUrlDownload = lpUrl;
-    IntInfo.szName.LoadStringW(IDS_DL_DIALOG_DB_DISP);
-    DownloadApplication(&IntInfo, TRUE);
+    static DownloadInfo DatabaseDLInfo;
+    DatabaseDLInfo.szUrl = lpUrl;
+    DatabaseDLInfo.szName.LoadStringW(IDS_DL_DIALOG_DB_DISP);
+    Download(DatabaseDLInfo, TRUE);
 }
 
 //TODO: Reuse the dialog

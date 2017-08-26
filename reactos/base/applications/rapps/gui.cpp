@@ -504,24 +504,24 @@ public:
         SetCheckState(-1, bHasAllChecked);
     }
 
-    ATL::CSimpleArray<PAPPLICATION_INFO> GetCheckedItems()
+    ATL::CSimpleArray<CAvailableApplicationInfo*> GetCheckedItems()
     {
-        ATL::CSimpleArray<PAPPLICATION_INFO> list;
+        ATL::CSimpleArray<CAvailableApplicationInfo*> list;
         for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
         {
             if (GetCheckState(i) != FALSE)
             {
-                PAPPLICATION_INFO pAppInfo = (PAPPLICATION_INFO) GetItemData(i);
+                CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(i);
                 list.Add(pAppInfo);
             }
         }
         return list;
     }
 
-    PAPPLICATION_INFO GetSelectedData()
+    CAvailableApplicationInfo* GetSelectedData()
     {
         INT item = GetSelectionMark();
-        return (PAPPLICATION_INFO) GetItemData(item);
+        return (CAvailableApplicationInfo*) GetItemData(item);
     }
 };
 
@@ -1062,7 +1062,7 @@ private:
                     {
                         if (IS_INSTALLED_ENUM(SelectedEnumType))
                             ShowInstalledAppInfo(ItemIndex);
-                        if (isAvailableEnum(SelectedEnumType))
+                        if (IsAvailableEnum(SelectedEnumType))
                             CAvailableAppView::ShowAvailableAppInfo(ItemIndex);
                     }
                     /* Check if the item is checked */
@@ -1100,7 +1100,7 @@ private:
                 {
                     if (IS_INSTALLED_ENUM(SelectedEnumType))
                         ShowInstalledAppInfo(-1);
-                    if (isAvailableEnum(SelectedEnumType))
+                    if (IsAvailableEnum(SelectedEnumType))
                         CAvailableAppView::ShowAvailableAppInfo(-1);
                 }
             }
@@ -1310,16 +1310,19 @@ private:
             break;
 
         case ID_INSTALL:
-            if (nSelectedApps > 0)
+            if (IsAvailableEnum(SelectedEnumType))
             {
-                CDownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
-                UpdateApplicationsList(-1);
-            }
-            else if (CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
-            {
-                UpdateApplicationsList(-1);
-            }
+                if (nSelectedApps > 0)
+                {
+                    CDownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
+                    UpdateApplicationsList(-1);
+                }
+                else if (CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
+                {
+                    UpdateApplicationsList(-1);
+                }
 
+            }          
             break;
 
         case ID_UNINSTALL:
@@ -1416,7 +1419,7 @@ private:
         return TRUE;
     }
 
-    static BOOL CALLBACK s_EnumAvailableAppProc(PAPPLICATION_INFO Info, LPCWSTR szFolderPath)
+    static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath)
     {
         INT Index;
         HICON hIcon = NULL;
@@ -1506,7 +1509,7 @@ private:
             EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc);
             EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc);
         }
-        else if (isAvailableEnum(EnumType))
+        else if (IsAvailableEnum(EnumType))
         {
             /* Enum available applications */
             m_AvailableApps.EnumAvailableApplications(EnumType, s_EnumAvailableAppProc);

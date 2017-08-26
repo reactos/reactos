@@ -29,7 +29,7 @@ enum AvailableCategories
     ENUM_AVAILABLE_MAX = ENUM_CAT_OTHER
 };
 
-inline BOOL isAvailableEnum(INT x)
+inline BOOL IsAvailableEnum(INT x)
 {
     return (x >= ENUM_AVAILABLE_MIN && x <= ENUM_AVAILABLE_MAX);
 }
@@ -44,7 +44,7 @@ typedef enum LICENSE_TYPE
     Min = None
 } *PLICENSE_TYPE;
 
-typedef struct APPLICATION_INFO
+struct CAvailableApplicationInfo
 {
     INT Category;
     LICENSE_TYPE LicenseType;
@@ -65,14 +65,8 @@ typedef struct APPLICATION_INFO
 
     // Optional integrity checks (SHA-1 digests are 160 bit = 40 characters in hex string form)
     ATL::CStringW szSHA1;
-
-} *PAPPLICATION_INFO;
-
-typedef BOOL(CALLBACK *AVAILENUMPROC)(PAPPLICATION_INFO Info, LPCWSTR szFolderPath);
-
-struct CAvailableApplicationInfo : public APPLICATION_INFO
-{
     ATL::CStringW szInstalledVersion;
+
     CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam);
 
     // Load all info from the file
@@ -104,6 +98,8 @@ private:
     inline BOOL FindInLanguages(LCID what) const;
 };
 
+typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, LPCWSTR szFolderPath);
+
 class CAvailableApps
 {
     ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
@@ -123,8 +119,8 @@ public:
     VOID FreeCachedEntries();
     static VOID DeleteCurrentAppsDB();
     BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
-    const PAPPLICATION_INFO FindInfo(const ATL::CStringW& szAppName);
-    ATL::CSimpleArray<PAPPLICATION_INFO> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames);
+    CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName);
+    ATL::CSimpleArray<CAvailableApplicationInfo*> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames);
     const ATL::CStringW& GetFolderPath();
     const ATL::CStringW& GetAppPath();
     const ATL::CStringW& GetCabPath();

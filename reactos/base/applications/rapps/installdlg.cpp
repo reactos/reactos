@@ -10,7 +10,7 @@
 #include "dialogs.h"
 #include "available.h"
 
-static PAPPLICATION_INFO AppInfo;
+static CAvailableApplicationInfo* AppInfo;
 
 static
 INT_PTR CALLBACK
@@ -42,10 +42,10 @@ InstallDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 BOOL
 InstallApplication(INT Index)
 {
-    if (!isAvailableEnum(SelectedEnumType))
+    if (!IsAvailableEnum(SelectedEnumType))
         return FALSE;
 
-    AppInfo = (PAPPLICATION_INFO) ListViewGetlParam(Index);
+    AppInfo = (CAvailableApplicationInfo*) ListViewGetlParam(Index);
     if (!AppInfo) return FALSE;
 
     DialogBoxW(hInst,

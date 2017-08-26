@@ -22,6 +22,7 @@ CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileN
     : m_Parser(sFileNameParam)
 {
     LicenseType = LICENSE_TYPE::None;
+
     sFileName = sFileNameParam;
 
     RetrieveGeneralInfo();
@@ -73,8 +74,10 @@ VOID CAvailableApplicationInfo::RetrieveInstalledStatus()
 
 VOID CAvailableApplicationInfo::RetrieveInstalledVersion()
 {
+    ATL::CStringW szNameVersion = szName + L" " + szVersion;
     m_HasInstalledVersion = ::GetInstalledVersion(&szInstalledVersion, szRegName)
-        || ::GetInstalledVersion(&szInstalledVersion, szName);
+        || ::GetInstalledVersion(&szInstalledVersion, szName)
+        || ::GetInstalledVersion(&szInstalledVersion, szNameVersion);
 }
 
 VOID CAvailableApplicationInfo::RetrieveLanguages()
@@ -377,7 +380,7 @@ skip_if_cached:
         Info->RefreshAppInfo();
 
         if (lpEnumProc)
-            lpEnumProc(static_cast<PAPPLICATION_INFO>(Info), m_szAppsPath.GetString());
+            lpEnumProc(static_cast<CAvailableApplicationInfo*>(Info), m_szAppsPath.GetString());
 
     } while (FindNextFileW(hFind, &FindFileData) != 0);
 
@@ -385,7 +388,7 @@ skip_if_cached:
     return TRUE;
 }
 
-const PAPPLICATION_INFO CAvailableApps::FindInfo(const ATL::CStringW& szAppName)
+CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppName)
 {
     if (m_InfoList.IsEmpty())
     {
@@ -394,7 +397,7 @@ const PAPPLICATION_INFO CAvailableApps::FindInfo(const ATL::CStringW& szAppName)
 
     // linear search
     POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
-    PAPPLICATION_INFO info;
+    CAvailableApplicationInfo* info;
     while (CurrentListPosition != NULL)
     {
         info = m_InfoList.GetNext(CurrentListPosition);
@@ -406,12 +409,12 @@ const PAPPLICATION_INFO CAvailableApps::FindInfo(const ATL::CStringW& szAppName)
     return NULL;
 }
 
-ATL::CSimpleArray<PAPPLICATION_INFO> CAvailableApps::FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames)
+ATL::CSimpleArray<CAvailableApplicationInfo*> CAvailableApps::FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames)
 {
-    ATL::CSimpleArray<PAPPLICATION_INFO> result;
+    ATL::CSimpleArray<CAvailableApplicationInfo*> result;
     for (INT i = 0; i < arrAppsNames.GetSize(); ++i)
     {
-        PAPPLICATION_INFO Info = FindInfo(arrAppsNames[i]);
+        CAvailableApplicationInfo* Info = FindInfo(arrAppsNames[i]);
         if (Info)
         {
             result.Add(Info);
