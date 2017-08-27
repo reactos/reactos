@@ -1893,6 +1893,7 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     ULONGLONG BitmapDataSize;
     ULONGLONG AttrBytesRead;
     PUCHAR BitmapData;
+    PUCHAR BitmapBuffer;
     ULONG LengthWritten;
     PNTFS_ATTR_CONTEXT BitmapContext;
     LARGE_INTEGER BitmapBits;
@@ -1901,6 +1902,8 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     DPRINT1("AddNewMftEntry(%p, %p, %p, %s)\n", FileRecord, DeviceExt, DestinationIndex, CanWait ? "TRUE" : "FALSE");
 
     // First, we have to read the mft's $Bitmap attribute
+
+    // Find the attribute
     Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -1908,22 +1911,28 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
         return Status;
     }
 
-    // allocate a buffer for the $Bitmap attribute
+    // Get size of bitmap
     BitmapDataSize = AttributeDataLength(BitmapContext->pRecord);
-    BitmapData = ExAllocatePoolWithTag(NonPagedPool, BitmapDataSize, TAG_NTFS);
-    if (!BitmapData)
+
+    // RtlInitializeBitmap wants a ULONG-aligned pointer, and wants the memory passed to it to be a ULONG-multiple
+    // Allocate a buffer for the $Bitmap attribute plus enough to ensure we can get a ULONG-aligned pointer
+    BitmapBuffer = ExAllocatePoolWithTag(NonPagedPool, BitmapDataSize + sizeof(ULONG), TAG_NTFS);
+    if (!BitmapBuffer)
     {
         ReleaseAttributeContext(BitmapContext);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    // Get a ULONG-aligned pointer for the bitmap itself
+    BitmapData = (PUCHAR)ALIGN_UP_BY((ULONG_PTR)BitmapBuffer, sizeof(ULONG));
+
     // read $Bitmap attribute
     AttrBytesRead = ReadAttribute(DeviceExt, BitmapContext, 0, (PCHAR)BitmapData, BitmapDataSize);
 
-    if (AttrBytesRead == 0)
+    if (AttrBytesRead != BitmapDataSize)
     {
         DPRINT1("ERROR: Unable to read $Bitmap attribute of master file table!\n");
-        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
@@ -1939,7 +1948,8 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     if (BitmapBits.HighPart != 0)
     {
         DPRINT1("\tFIXME: bitmap sizes beyond 32bits are not yet supported! (Your NTFS volume is too large)\n");
-        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        NtfsGlobalData->EnableWriteSupport = FALSE;
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
         return STATUS_NOT_IMPLEMENTED;
     }
@@ -1953,7 +1963,7 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     {
         DPRINT1("Couldn't find free space in MFT for file record, increasing MFT size.\n");
 
-        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
 
         // Couldn't find a free record in the MFT, add some blank records and try again
@@ -1982,7 +1992,7 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR encountered when writing $Bitmap attribute!\n");
-        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
         return Status;
     }
@@ -1993,14 +2003,14 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Unable to write file record!\n");
-        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
         return Status;
     }
 
     *DestinationIndex = MftIndex;
 
-    ExFreePoolWithTag(BitmapData, TAG_NTFS);
+    ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
     ReleaseAttributeContext(BitmapContext);
 
     return Status;
@@ -2255,7 +2265,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
                             AttributeLength,
                             &LengthWritten,
                             ParentFileRecord);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) || LengthWritten != AttributeLength)
     {
         DPRINT1("ERROR: Unable to write new index root attribute to parent directory!\n");
         ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);

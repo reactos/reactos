@@ -167,7 +167,11 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     FileNameAttribute->LastWriteTime = SystemTime.QuadPart;
     FileNameAttribute->LastAccessTime = SystemTime.QuadPart;
 
-    FileNameAttribute->FileAttributes = NTFS_FILE_TYPE_ARCHIVE;
+    // Is this a directory?
+    if(FileRecord->Flags & FRH_DIRECTORY)
+        FileNameAttribute->FileAttributes = NTFS_FILE_TYPE_DIRECTORY;
+    else
+        FileNameAttribute->FileAttributes = NTFS_FILE_TYPE_ARCHIVE;
 
     // we need to extract the filename from the path
     DPRINT1("Pathname: %wZ\n", &FileObject->FileName);
@@ -252,6 +256,112 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     SetFileRecordEnd(FileRecord, AttributeAddress, FileRecordEnd);
 
     return Status;
+}
+
+/**
+* @name AddIndexRoot
+* @implemented
+*
+* Adds an $INDEX_ROOT attribute to a given FileRecord.
+*
+* @param Vcb
+* Pointer to an NTFS_VCB for the destination volume.
+*
+* @param FileRecord
+* Pointer to a complete file record to add the attribute to. Caller is responsible for
+* ensuring FileRecord is large enough to contain $INDEX_ROOT.
+*
+* @param AttributeAddress
+* Pointer to the region of memory that will receive the $INDEX_ROOT attribute.
+* This address must reside within FileRecord. Must be aligned to an 8-byte boundary (relative to FileRecord).
+*
+* @param NewIndexRoot
+* Pointer to an INDEX_ROOT_ATTRIBUTE containing the index root that will be copied to the new attribute.
+*
+* @param RootLength
+* The length of NewIndexRoot, in bytes.
+*
+* @param Name
+* Pointer to a string of 16-bit Unicode characters naming the attribute. Most often, this will be L"$I30".
+*
+* @param NameLength
+* The number of wide-characters in the name. L"$I30" Would use 4 here.
+*
+* @return
+* STATUS_SUCCESS on success. STATUS_NOT_IMPLEMENTED if target address isn't at the end
+* of the given file record.
+*
+* @remarks
+* This function is intended to assist in creating new folders.
+* Only adding the attribute to the end of the file record is supported; AttributeAddress must
+* be of type AttributeEnd.
+* It's the caller's responsibility to ensure the given file record has enough memory allocated
+* for the attribute, and this memory must have been zeroed.
+*/
+NTSTATUS
+AddIndexRoot(PNTFS_VCB Vcb,
+             PFILE_RECORD_HEADER FileRecord,
+             PNTFS_ATTR_RECORD AttributeAddress,
+             PINDEX_ROOT_ATTRIBUTE NewIndexRoot,
+             ULONG RootLength,
+             PCWSTR Name,
+             USHORT NameLength)
+{
+    ULONG AttributeLength;
+    // Calculate the header length
+    ULONG ResidentHeaderLength = FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.Reserved) + sizeof(UCHAR);
+    // Back up the file record's final ULONG (even though it doesn't matter)
+    ULONG FileRecordEnd = AttributeAddress->Length;
+    ULONG NameOffset;
+    ULONG ValueOffset;
+    ULONG BytesAvailable;
+
+    if (AttributeAddress->Type != AttributeEnd)
+    {
+        DPRINT1("FIXME: Can only add $DATA attribute to the end of a file record.\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    NameOffset = ResidentHeaderLength;
+
+    // Calculate ValueOffset, which will be aligned to a 4-byte boundary
+    ValueOffset = ALIGN_UP_BY(NameOffset + (sizeof(WCHAR) * NameLength), VALUE_OFFSET_ALIGNMENT);
+
+    // Calculate length of attribute
+    AttributeLength = ValueOffset + RootLength;
+    AttributeLength = ALIGN_UP_BY(AttributeLength, ATTR_RECORD_ALIGNMENT);
+
+    // Make sure the file record is large enough for the new attribute
+    BytesAvailable = Vcb->NtfsInfo.BytesPerFileRecord - FileRecord->BytesInUse;
+    if (BytesAvailable < AttributeLength)
+    {
+        DPRINT1("FIXME: Not enough room in file record for index allocation attribute!\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    // Set Attribute fields
+    RtlZeroMemory(AttributeAddress, AttributeLength);
+
+    AttributeAddress->Type = AttributeIndexRoot;
+    AttributeAddress->Length = AttributeLength;
+    AttributeAddress->NameLength = NameLength;
+    AttributeAddress->NameOffset = NameOffset;
+    AttributeAddress->Instance = FileRecord->NextAttributeNumber++;
+
+    AttributeAddress->Resident.ValueLength = RootLength;
+    AttributeAddress->Resident.ValueOffset = ValueOffset;
+
+    // Set the name
+    RtlCopyMemory((PCHAR)((ULONG_PTR)AttributeAddress + NameOffset), Name, NameLength * sizeof(WCHAR));
+
+    // Copy the index root attribute
+    RtlCopyMemory((PCHAR)((ULONG_PTR)AttributeAddress + ValueOffset), NewIndexRoot, RootLength);
+
+    // move the attribute-end and file-record-end markers to the end of the file record
+    AttributeAddress = (PNTFS_ATTR_RECORD)((ULONG_PTR)AttributeAddress + AttributeAddress->Length);
+    SetFileRecordEnd(FileRecord, AttributeAddress, FileRecordEnd);
+
+    return STATUS_SUCCESS;
 }
 
 /**
