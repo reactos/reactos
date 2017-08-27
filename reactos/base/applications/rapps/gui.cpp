@@ -25,8 +25,7 @@
 
 HWND hListView = NULL;
 
-INT
-GetSystemColorDepth()
+INT GetSystemColorDepth()
 {
     DEVMODEW pDevMode;
     INT ColorDepth;
@@ -362,12 +361,28 @@ class CAppsListView :
 
     BOOL bHasAllChecked;
     BOOL bAscending;
+    BOOL bHasCheckboxes;
 
 public:
     CAppsListView() :
         bAscending(TRUE),
-        bHasAllChecked(FALSE)
+        bHasAllChecked(FALSE),
+        bHasCheckboxes(FALSE)
     {
+    }
+
+    VOID SetCheckboxesVisible(BOOL bIsVisible)
+    {
+        if (bIsVisible)
+        {
+            SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
+        }
+        else
+        {
+            SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+        }
+
+        bHasCheckboxes = bIsVisible;
     }
 
     VOID ColumnClick(LPNMLISTVIEW pnmv)
@@ -482,7 +497,7 @@ public:
 
         if (hwnd)
         {
-            SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
+            SetCheckboxesVisible(FALSE);
         }
 
         return hwnd;
@@ -495,17 +510,28 @@ public:
 
     VOID SetCheckState(INT item, BOOL fCheck)
     {
-        SetItemState(item, INDEXTOSTATEIMAGEMASK((fCheck) ? 2 : 1), LVIS_STATEIMAGEMASK);
+        if (bHasCheckboxes)
+        {
+            SetItemState(item, INDEXTOSTATEIMAGEMASK((fCheck) ? 2 : 1), LVIS_STATEIMAGEMASK);
+        }
     }
 
     VOID CheckAll()
     {
-        bHasAllChecked = !bHasAllChecked;
-        SetCheckState(-1, bHasAllChecked);
+        if (bHasCheckboxes)
+        {
+            bHasAllChecked = !bHasAllChecked;
+            SetCheckState(-1, bHasAllChecked);
+        }
     }
 
     ATL::CSimpleArray<CAvailableApplicationInfo*> GetCheckedItems()
     {
+        if (!bHasCheckboxes)
+        {
+            return ATL::CSimpleArray<CAvailableApplicationInfo*>();
+        }
+
         ATL::CSimpleArray<CAvailableApplicationInfo*> list;
         for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
         {
@@ -1475,21 +1501,27 @@ private:
     {
         ATL::CStringW szBuffer1, szBuffer2;
         HIMAGELIST hImageListView;
-        bUpdating = TRUE;
+        BOOL bWasInInstalled = IS_INSTALLED_ENUM(SelectedEnumType);
 
+        bUpdating = TRUE;
         m_ListView->SetRedraw(FALSE);
 
         nSelectedApps = 0;
-        if (EnumType < 0) EnumType = SelectedEnumType;
-
-        if (IS_INSTALLED_ENUM(SelectedEnumType))
+        if (EnumType < 0)
+        {
+            EnumType = SelectedEnumType;
+        }
+        
+        //if previous one was INSTALLED purge the list
+        //TODO: make the Installed category a separate class to avoid doing this
+        if (bWasInInstalled)
         {
             FreeInstalledAppList();
         }
 
         m_ListView->DeleteAllItems();
 
-        /* Create new ImageList */
+        // Create new ImageList 
         hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
                                           LISTVIEW_ICON_SIZE,
                                           GetSystemColorDepth() | ILC_MASK,
@@ -1500,18 +1532,30 @@ private:
             ImageList_Destroy(hImageListBuf);
         }
 
+        //if previous one was INSTALLED purge the list
         if (IS_INSTALLED_ENUM(EnumType))
         {
+            if (!bWasInInstalled)
+            {
+                m_ListView->SetCheckboxesVisible(FALSE);
+            }
+
             HICON hIcon = (HICON) LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
             ImageList_AddIcon(hImageListView, hIcon);
             DestroyIcon(hIcon);
-            /* Enum installed applications and updates */
+
+            // Enum installed applications and updates
             EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc);
             EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc);
         }
         else if (IsAvailableEnum(EnumType))
         {
-            /* Enum available applications */
+            if (bWasInInstalled)
+            {
+                m_ListView->SetCheckboxesVisible(TRUE);
+            }
+
+            // Enum available applications
             m_AvailableApps.EnumAvailableApplications(EnumType, s_EnumAvailableAppProc);
         }
 
@@ -1519,7 +1563,7 @@ private:
         UpdateStatusBarText();
         SetWelcomeText();
 
-        /* Set automatic column width for program names if the list is not empty */
+        // Set automatic column width for program names if the list is not empty
         if (m_ListView->GetItemCount() > 0)
         {
             ListView_SetColumnWidth(m_ListView->GetWindow(), 0, LVSCW_AUTOSIZE);
