@@ -698,6 +698,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG FileMftIndex;
     PB_TREE Tree;
     PINDEX_ROOT_ATTRIBUTE NewIndexRoot;
+    ULONG MaxIndexRootSize;
     ULONG RootLength;
 
     DPRINT1("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
@@ -745,9 +746,9 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     // Calculate maximum size of index root
-    ULONG MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord 
-                             - ((ULONG_PTR)NextAttribute - (ULONG_PTR)FileRecord)
-                             - sizeof(ULONG) * 2;
+    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord 
+                       - ((ULONG_PTR)NextAttribute - (ULONG_PTR)FileRecord)
+                       - sizeof(ULONG) * 2;
 
     // Create a new index record from the tree
     Status = CreateIndexRootFromBTree(DeviceExt,
