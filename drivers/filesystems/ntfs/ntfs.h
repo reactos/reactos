@@ -304,6 +304,12 @@ typedef struct
 // relative to the beginning of the file record.
 #define ATTR_RECORD_ALIGNMENT 8
 
+// Data runs are aligned to a 4-byte boundary, relative to the start of the attribute record
+#define DATA_RUN_ALIGNMENT  4
+
+// Value offset is aligned to a 4-byte boundary, relative to the start of the attribute record
+#define VALUE_OFFSET_ALIGNMENT  4
+
 typedef struct
 {
     ULONGLONG CreationTime;
@@ -423,9 +429,9 @@ typedef struct _B_TREE_KEY
 typedef struct _B_TREE_FILENAME_NODE
 {
     ULONG KeyCount;
-    BOOLEAN ExistsOnDisk;
+    BOOLEAN HasValidVCN;
     BOOLEAN DiskNeedsUpdating;
-    ULONGLONG NodeNumber;
+    ULONGLONG VCN;
     PB_TREE_KEY FirstKey;
 } B_TREE_FILENAME_NODE, *PB_TREE_FILENAME_NODE;
 
@@ -569,6 +575,15 @@ AddRun(PNTFS_VCB Vcb,
        PFILE_RECORD_HEADER FileRecord,
        ULONGLONG NextAssignedCluster,
        ULONG RunLength);
+
+NTSTATUS
+AddIndexRoot(PNTFS_VCB Vcb,
+             PFILE_RECORD_HEADER FileRecord,
+             PNTFS_ATTR_RECORD AttributeAddress,
+             PINDEX_ROOT_ATTRIBUTE NewIndexRoot,
+             ULONG RootLength,
+             PCWSTR Name,
+             USHORT NameLength);
 
 NTSTATUS
 AddFileName(PFILE_RECORD_HEADER FileRecord,
@@ -718,9 +733,19 @@ VOID
 DumpBTree(PB_TREE Tree);
 
 VOID
-DumpBTreeNode(PB_TREE_FILENAME_NODE Node,
+DumpBTreeKey(PB_TREE Tree,
+             PB_TREE_KEY Key,
+             ULONG Number,
+             ULONG Depth);
+
+VOID
+DumpBTreeNode(PB_TREE Tree,
+              PB_TREE_FILENAME_NODE Node,
               ULONG Number,
               ULONG Depth);
+
+NTSTATUS
+CreateEmptyBTree(PB_TREE *NewTree);
 
 ULONGLONG
 GetAllocationOffsetFromVCN(PDEVICE_EXTENSION DeviceExt,
@@ -770,6 +795,15 @@ NtfsClose(PNTFS_IRP_CONTEXT IrpContext);
 
 NTSTATUS
 NtfsCreate(PNTFS_IRP_CONTEXT IrpContext);
+
+NTSTATUS
+NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
+                    PFILE_OBJECT FileObject,
+                    BOOLEAN CaseSensitive,
+                    BOOLEAN CanWait);
+
+PFILE_RECORD_HEADER
+NtfsCreateEmptyFileRecord(PDEVICE_EXTENSION DeviceExt);
 
 NTSTATUS
 NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,

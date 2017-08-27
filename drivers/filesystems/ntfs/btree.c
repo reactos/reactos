@@ -111,6 +111,7 @@ PrintAllVCNs(PDEVICE_EXTENSION Vcb,
 * @remarks
 * AllocateIndexNode() doesn't write any data to the index record it creates. Called by UpdateIndexNode().
 * Don't call PrintAllVCNs() or NtfsDumpFileRecord() after calling AllocateIndexNode() before UpdateIndexNode() finishes.
+* Possible TODO: Create an empty node and write it to the allocated index node, so the index allocation is always valid.
 */
 NTSTATUS
 AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
@@ -167,11 +168,30 @@ AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
 
     // See how many bytes we need to store the amount of bits we'll have
     BytesNeeded = NextNodeNumber / 8;
-    if (NextNodeNumber % 8 != 0)
-        BytesNeeded++;
+    BytesNeeded++;
 
     // Windows seems to allocate the bitmap in 8-byte chunks to keep any bytes from being wasted on padding
-    ALIGN_UP(BytesNeeded, ATTR_RECORD_ALIGNMENT);
+    BytesNeeded = ALIGN_UP(BytesNeeded, ATTR_RECORD_ALIGNMENT);
+
+    // Allocate memory for the bitmap, including some padding; RtlInitializeBitmap() wants a pointer 
+    // that's ULONG-aligned, and it wants the size of the memory allocated for it to be a ULONG-multiple.
+    BitmapMem = ExAllocatePoolWithTag(NonPagedPool, BytesNeeded + sizeof(ULONG), TAG_NTFS);
+    if (!BitmapMem)
+    {
+        DPRINT1("Error: failed to allocate bitmap!");
+        ReleaseAttributeContext(BitmapCtx);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    // RtlInitializeBitmap() wants a pointer that's ULONG-aligned.
+    BitmapPtr = (PULONG)ALIGN_UP_BY((ULONG_PTR)BitmapMem, sizeof(ULONG));
+
+    RtlZeroMemory(BitmapPtr, BytesNeeded);
+
+    // Read the existing bitmap data
+    Status = ReadAttribute(DeviceExt, BitmapCtx, 0, (PCHAR)BitmapPtr, BitmapLength);
+
+    // Initialize bitmap
+    RtlInitializeBitMap(&Bitmap, BitmapPtr, NextNodeNumber);
 
     // Do we need to enlarge the bitmap?
     if (BytesNeeded > BitmapLength)
@@ -179,11 +199,22 @@ AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
         // TODO: handle synchronization issues that could occur from changing the directory's file record
         // Change bitmap size
         DataSize.QuadPart = BytesNeeded;
-        Status = SetResidentAttributeDataLength(DeviceExt,
-                                                BitmapCtx,
-                                                BitmapOffset,
-                                                FileRecord,
-                                                &DataSize);
+        if (BitmapCtx->pRecord->IsNonResident)
+        {
+            Status = SetNonResidentAttributeDataLength(DeviceExt,
+                                                       BitmapCtx,
+                                                       BitmapOffset,
+                                                       FileRecord,
+                                                       &DataSize);
+        }
+        else
+        {
+            Status = SetResidentAttributeDataLength(DeviceExt,
+                                                    BitmapCtx,
+                                                    BitmapOffset,
+                                                    FileRecord,
+                                                    &DataSize);
+        }
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERROR: Failed to set length of bitmap attribute!\n");
@@ -215,18 +246,6 @@ AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    // Allocate memory for the bitmap. RtlInitializeBitmap() wants a pointer that's ULONG-aligned
-    BitmapMem = ExAllocatePoolWithTag(NonPagedPool, BytesNeeded + sizeof(ULONG) - 1, TAG_NTFS);
-    BitmapPtr = (PULONG)ALIGN_UP_BY((ULONG_PTR)BitmapMem, sizeof(ULONG));
-
-    RtlZeroMemory(BitmapPtr, BytesNeeded);
-
-    // Read the existing bitmap data
-    Status = ReadAttribute(DeviceExt, BitmapCtx, 0, (PCHAR)BitmapPtr, BitmapLength);
-
-    // Initialize bitmap
-    RtlInitializeBitMap(&Bitmap, BitmapPtr, BytesNeeded);
-
     // Set the bit for the new index record
     RtlSetBits(&Bitmap, NextNodeNumber, 1);
   
@@ -245,6 +264,8 @@ AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
 
     // Calculate VCN of new node number
     *NewVCN = NextNodeNumber * (IndexBufferSize / DeviceExt->NtfsInfo.BytesPerCluster);
+
+    DPRINT("New VCN: %I64u\n", *NewVCN);
 
     ExFreePoolWithTag(BitmapMem, TAG_NTFS);
     ReleaseAttributeContext(BitmapCtx);
@@ -309,6 +330,63 @@ CreateDummyKey(BOOLEAN HasChildNode)
     NewDummyKey->IndexEntry = NewIndexEntry;
 
     return NewDummyKey;
+}
+
+/**
+* @name CreateEmptyBTree
+* @implemented
+*
+* Creates an empty B-Tree, which will contain a single root node which will contain a single dummy key.
+*
+* @param NewTree
+* Pointer to a PB_TREE that will receive the pointer of the newly-created B-Tree.
+*
+* @return
+* STATUS_SUCCESS on success. STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
+*/
+NTSTATUS
+CreateEmptyBTree(PB_TREE *NewTree)
+{
+    PB_TREE Tree = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE), TAG_NTFS);
+    PB_TREE_FILENAME_NODE RootNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
+    PB_TREE_KEY DummyKey;
+
+    DPRINT1("CreateEmptyBTree(%p) called\n", NewTree);
+
+    if (!Tree || !RootNode)
+    {
+        DPRINT1("Couldn't allocate enough memory for B-Tree!\n");
+        if (Tree)
+            ExFreePoolWithTag(Tree, TAG_NTFS);
+        if (RootNode)
+            ExFreePoolWithTag(RootNode, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // Create the dummy key
+    DummyKey = CreateDummyKey(FALSE);
+    if (!DummyKey)
+    {
+        DPRINT1("ERROR: Failed to create dummy key!\n");
+        ExFreePoolWithTag(Tree, TAG_NTFS);
+        ExFreePoolWithTag(RootNode, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(Tree, sizeof(B_TREE));
+    RtlZeroMemory(RootNode, sizeof(B_TREE_FILENAME_NODE));
+
+    // Setup the Tree
+    RootNode->FirstKey = DummyKey;
+    RootNode->KeyCount = 1;
+    RootNode->DiskNeedsUpdating = TRUE;
+    Tree->RootNode = RootNode;
+
+    *NewTree = Tree;
+
+    // Memory will be freed when DestroyBTree() is called
+
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -402,7 +480,7 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
     ULONG CurrentEntryOffset = 0;
     PINDEX_BUFFER NodeBuffer;
     ULONG IndexBufferSize = Vcb->NtfsInfo.BytesPerIndexRecord;
-    PULONGLONG NodeNumber;
+    PULONGLONG VCN;
     PB_TREE_KEY CurrentKey;
     NTSTATUS Status;
     ULONGLONG IndexNodeOffset;
@@ -415,10 +493,9 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
     }
 
     // Get the node number from the end of the node entry
-    NodeNumber = (PULONGLONG)((ULONG_PTR)NodeEntry + NodeEntry->Length - sizeof(ULONGLONG));
+    VCN = (PULONGLONG)((ULONG_PTR)NodeEntry + NodeEntry->Length - sizeof(ULONGLONG));
 
     // Create the new tree node
-    DPRINT1("About to allocate %ld for NewNode\n", sizeof(B_TREE_FILENAME_NODE));
     NewNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
     if (!NewNode)
     {
@@ -449,7 +526,7 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
     }
 
     // Calculate offset into index allocation
-    IndexNodeOffset = GetAllocationOffsetFromVCN(Vcb, IndexBufferSize, *NodeNumber);
+    IndexNodeOffset = GetAllocationOffsetFromVCN(Vcb, IndexBufferSize, *VCN);
 
     // TODO: Confirm index bitmap has this node marked as in-use
 
@@ -462,7 +539,7 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
 
     ASSERT(BytesRead == IndexBufferSize);
     NT_ASSERT(NodeBuffer->Ntfs.Type == NRH_INDX_TYPE);
-    NT_ASSERT(NodeBuffer->VCN == *NodeNumber);
+    NT_ASSERT(NodeBuffer->VCN == *VCN);
 
     // Apply the fixup array to the node buffer
     Status = FixupUpdateSequenceArray(Vcb, &NodeBuffer->Ntfs);
@@ -516,8 +593,6 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
             // See if the current key has a sub-node
             if (CurrentKey->IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
             {
-                DPRINT1("TODO: Only a node with a single-level is supported right now!\n");
-                // Needs debugging:
                 CurrentKey->LesserChild = CreateBTreeNodeFromIndexNode(Vcb,
                                                                        IndexRoot,
                                                                        IndexAllocationAttributeCtx,
@@ -535,8 +610,6 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
             // See if the current key has a sub-node
             if (CurrentKey->IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
             {
-                DPRINT1("TODO: Only a node with a single-level is supported right now!\n");
-                // Needs debugging:
                 CurrentKey->LesserChild = CreateBTreeNodeFromIndexNode(Vcb,
                                                                        IndexRoot,
                                                                        IndexAllocationAttributeCtx,
@@ -551,8 +624,8 @@ CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
         CurrentNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)CurrentNodeEntry + CurrentNodeEntry->Length);
     }
 
-    NewNode->NodeNumber = *NodeNumber;
-    NewNode->ExistsOnDisk = TRUE;
+    NewNode->VCN = *VCN;
+    NewNode->HasValidVCN = TRUE;
 
     ExFreePoolWithTag(NodeBuffer, TAG_NTFS);
 
@@ -622,8 +695,6 @@ CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
                            NULL);
     if (!NT_SUCCESS(Status))
         IndexAllocationContext = NULL;
-    else
-        PrintAllVCNs(Vcb, IndexAllocationContext, IndexRoot->SizeOfEntry);
 
     // Setup the Tree
     RootNode->FirstKey = CurrentKey;
@@ -871,7 +942,7 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
             NewIndexRoot->Header.Flags = INDEX_ROOT_LARGE;
 
         // Add Length of Current Entry to Total Size of Entries
-        NewIndexRoot->Header.TotalSizeOfEntries += CurrentNodeEntry->Length;
+        NewIndexRoot->Header.TotalSizeOfEntries += CurrentKey->IndexEntry->Length;
 
         // Go to the next node entry
         CurrentNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)CurrentNodeEntry + CurrentNodeEntry->Length);
@@ -905,10 +976,12 @@ CreateIndexBufferFromBTreeNode(PDEVICE_EXTENSION DeviceExt,
     IndexBuffer->Ntfs.UsaCount = 9;
 
     // TODO: Check bitmap for VCN
-    ASSERT(Node->ExistsOnDisk);
-    IndexBuffer->VCN = Node->NodeNumber;
+    ASSERT(Node->HasValidVCN);
+    IndexBuffer->VCN = Node->VCN;
 
-    IndexBuffer->Header.FirstEntryOffset = 0x28;
+    // Windows seems to alternate between using 0x28 and 0x40 for the first entry offset of each index buffer.
+    // Interestingly, neither Windows nor chkdsk seem to mind if we just use 0x28 for every index record.
+    IndexBuffer->Header.FirstEntryOffset = 0x28; 
     IndexBuffer->Header.AllocatedSize = BufferSize - FIELD_OFFSET(INDEX_BUFFER, Header);
 
     // Start summing the total size of this node's entries
@@ -934,9 +1007,9 @@ CreateIndexBufferFromBTreeNode(PDEVICE_EXTENSION DeviceExt,
         // Copy the index entry
         RtlCopyMemory(CurrentNodeEntry, CurrentKey->IndexEntry, CurrentKey->IndexEntry->Length);
 
-        DPRINT1("Index Node Entry Stream Length: %u\nIndex Node Entry Length: %u\n",
-                CurrentNodeEntry->KeyLength,
-                CurrentNodeEntry->Length);
+        DPRINT("Index Node Entry Stream Length: %u\nIndex Node Entry Length: %u\n",
+               CurrentNodeEntry->KeyLength,
+               CurrentNodeEntry->Length);
 
         // Add Length of Current Entry to Total Size of Entries
         IndexBuffer->Header.TotalSizeOfEntries += CurrentNodeEntry->Length;
@@ -1020,14 +1093,6 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
                 DPRINT1("FIXME: Need to add index allocation\n");
                 return STATUS_NOT_IMPLEMENTED;
             }
-           
-            Status = UpdateIndexNode(DeviceExt, FileRecord, CurrentKey->LesserChild, IndexBufferSize, IndexAllocationContext, IndexAllocationOffset, BitmapContext);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("ERROR: Failed to update index node!\n");
-                ReleaseAttributeContext(IndexAllocationContext);
-                return Status;
-            }
 
             // Is the Index Entry large enough to store the VCN?
             if (!CurrentKey->IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
@@ -1056,9 +1121,17 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
                 CurrentKey->IndexEntry->Flags |= NTFS_INDEX_ENTRY_NODE;
             }
 
-            // Update the VCN stored in the index entry of CurrentKey
-            SetIndexEntryVCN(CurrentKey->IndexEntry, CurrentKey->LesserChild->NodeNumber);
+            // Update the sub-node
+            Status = UpdateIndexNode(DeviceExt, FileRecord, CurrentKey->LesserChild, IndexBufferSize, IndexAllocationContext, IndexAllocationOffset, BitmapContext);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ERROR: Failed to update index node!\n");
+                ReleaseAttributeContext(IndexAllocationContext);
+                return Status;
+            }
 
+            // Update the VCN stored in the index entry of CurrentKey
+            SetIndexEntryVCN(CurrentKey->IndexEntry, CurrentKey->LesserChild->VCN);
         }
         CurrentKey = CurrentKey->NextKey;
     }
@@ -1096,7 +1169,7 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
             IndexAllocationContext,
             IndexAllocationOffset,
             BitmapContext,
-            Node->NodeNumber);
+            Node->VCN);
 
     // Do we need to write this node to disk?
     if (Node->DiskNeedsUpdating)
@@ -1106,7 +1179,7 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
         PINDEX_BUFFER IndexBuffer;
 
         // Does the node need to be assigned a VCN?
-        if (!Node->ExistsOnDisk)
+        if (!Node->HasValidVCN)
         {
             // Allocate the node
             Status = AllocateIndexNode(DeviceExt,
@@ -1114,14 +1187,14 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
                                        IndexBufferSize,
                                        IndexAllocationContext,
                                        IndexAllocationOffset,
-                                       &Node->NodeNumber);
+                                       &Node->VCN);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ERROR: Failed to allocate index record in index allocation!\n");
                 return Status;
             }
 
-            Node->ExistsOnDisk = TRUE;
+            Node->HasValidVCN = TRUE;
         }
 
         // Allocate memory for an index buffer
@@ -1142,7 +1215,7 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
         }
 
         // Get Offset of index buffer in index allocation
-        NodeOffset = GetAllocationOffsetFromVCN(DeviceExt, IndexBufferSize, Node->NodeNumber);
+        NodeOffset = GetAllocationOffsetFromVCN(DeviceExt, IndexBufferSize, Node->VCN);
 
         // Write the buffer to the index allocation
         Status = WriteAttribute(DeviceExt, IndexAllocationContext, NodeOffset, (const PUCHAR)IndexBuffer, IndexBufferSize, &LengthWritten, FileRecord);
@@ -1274,7 +1347,7 @@ DestroyBTree(PB_TREE Tree)
 }
 
 VOID
-DumpBTreeKey(PB_TREE_KEY Key, ULONG Number, ULONG Depth)
+DumpBTreeKey(PB_TREE Tree, PB_TREE_KEY Key, ULONG Number, ULONG Depth)
 {
     ULONG i;
     for (i = 0; i < Depth; i++)
@@ -1298,7 +1371,7 @@ DumpBTreeKey(PB_TREE_KEY Key, ULONG Number, ULONG Depth)
     if (Key->IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
     {
         if (Key->LesserChild)
-            DumpBTreeNode(Key->LesserChild, Number, Depth + 1);
+            DumpBTreeNode(Tree, Key->LesserChild, Number, Depth + 1);
         else
         {
             // This will be an assert once nodes with arbitrary depth are debugged
@@ -1308,18 +1381,28 @@ DumpBTreeKey(PB_TREE_KEY Key, ULONG Number, ULONG Depth)
 }
 
 VOID
-DumpBTreeNode(PB_TREE_FILENAME_NODE Node, ULONG Number, ULONG Depth)
+DumpBTreeNode(PB_TREE Tree,
+              PB_TREE_FILENAME_NODE Node,
+              ULONG Number,
+              ULONG Depth)
 {
     PB_TREE_KEY CurrentKey;
     ULONG i;
     for (i = 0; i < Depth; i++)
         DbgPrint(" ");
-    DbgPrint("Node #%d, Depth %d, has %d key%s\n", Number, Depth, Node->KeyCount, Node->KeyCount == 1 ? "" : "s");
+    DbgPrint("Node #%d, Depth %d, has %d key%s", Number, Depth, Node->KeyCount, Node->KeyCount == 1 ? "" : "s");
+
+    if (Node->HasValidVCN)
+        DbgPrint(" VCN: %I64u\n", Node->VCN);
+    else if (Tree->RootNode == Node)
+        DbgPrint(" Index Root");
+    else
+        DbgPrint(" NOT ASSIGNED VCN YET\n");
 
     CurrentKey = Node->FirstKey;
-    for (i = 1; i <= Node->KeyCount; i++)
+    for (i = 0; i < Node->KeyCount; i++)
     {
-        DumpBTreeKey(CurrentKey, i, Depth);
+        DumpBTreeKey(Tree, CurrentKey, i, Depth);
         CurrentKey = CurrentKey->NextKey;
     }
 }
@@ -1340,7 +1423,7 @@ VOID
 DumpBTree(PB_TREE Tree)
 {
     DbgPrint("B_TREE @ %p\n", Tree);
-    DumpBTreeNode(Tree->RootNode, 0, 0);
+    DumpBTreeNode(Tree, Tree->RootNode, 0, 0);
 }
 
 // Calculates start of Index Buffer relative to the index allocation, given the node's VCN
@@ -1525,7 +1608,6 @@ NtfsInsertKey(PB_TREE Tree,
             NewIndexRoot->FirstKey = DummyKey;
             NewIndexRoot->KeyCount = 1;
             NewIndexRoot->DiskNeedsUpdating = TRUE;
-            NewIndexRoot->ExistsOnDisk = TRUE;
 
             // Make the new node the Tree's root node
             Tree->RootNode = NewIndexRoot;
