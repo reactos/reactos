@@ -15,7 +15,17 @@
 WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 
 // ***Extras***
-
+/*++
+* @name _ILIsDesktop
+*
+* Checks whether the given PIDL is of Desktop folder or not.
+*
+* @param pidl
+*        PIDL to be checked.
+*
+* @return True if PIDL is of Desktop, otherwise false.
+*
+*--*/
 BOOL WINAPI _ILIsDesktop(LPCITEMIDLIST pidl)
 {
     return (pidl == NULL || pidl->mkid.cb == 0);
@@ -38,6 +48,17 @@ CISFBand::~CISFBand()
 }
 
 // Toolbar
+/*++
+* @name CreateSimpleToolbar
+*
+* Creates a toolbar and fills it up with buttons for enumerated objects.
+*
+* @param hWndParent
+*        Handle to the parent window, which receives the appropriate messages from child toolbar.
+*
+* @return The error code.
+*
+*--*/
 HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 {
     // Declare and initialize local constants.     

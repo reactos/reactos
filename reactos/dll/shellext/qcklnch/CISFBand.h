@@ -20,7 +20,7 @@ class CISFBand :
     public IShellFolderBand,
     public IContextMenu
 {
-    // band
+    // Band
     DWORD m_BandID;
     CComPtr<IUnknown> m_Site;
 

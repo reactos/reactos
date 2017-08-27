@@ -39,6 +39,20 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
     }
 
 // Pidl Browser
+/*++
+* @name PidlBrowse
+*
+* Opens a folder browser dialog,
+* allowing the user to select a folder for enumeration.
+*
+* @param hwnd
+*        A handle to browser dialog window.
+* @param nCSIDL
+*        A CSIDL representing the root from which the browse folder dialog shows the files and folders.
+*
+* @return The PIDL to selected folder.
+*
+*--*/
     LPITEMIDLIST PidlBrowse(HWND hwnd, int nCSIDL)
     {
         CComHeapPtr<ITEMIDLIST> pidlRoot;
@@ -65,7 +79,14 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
 
 /*****************************************************************************/
 // ATL Construct
-
+/*++
+* @name FinalConstruct
+*
+* Creates an instance of CISFBand, and initializes its Shell Folder Band for enumeration.
+*
+* @return The error code.
+*
+*--*/
     HRESULT CQuickLaunchBand::FinalConstruct()
     {
         HRESULT hr = CISFBand_CreateInstance(IID_PPV_ARG(IUnknown, &m_punkISFB));
