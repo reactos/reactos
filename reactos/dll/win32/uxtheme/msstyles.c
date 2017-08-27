@@ -875,7 +875,6 @@ static BOOL prepare_alpha (HBITMAP bmp, BOOL* hasAlpha)
         /* nothing to do */
         return TRUE;
 
-    *hasAlpha = TRUE;
     p = dib.dsBm.bmBits;
     n = dib.dsBmih.biHeight * dib.dsBmih.biWidth;
     /* AlphaBlend() wants premultiplied alpha, so do that now */
@@ -886,6 +885,9 @@ static BOOL prepare_alpha (HBITMAP bmp, BOOL* hasAlpha)
         p[1] = (p[1] * a) >> 8;
         p[2] = (p[2] * a) >> 8;
         p += 4;
+
+        if (a != 256)
+            *hasAlpha = TRUE;
     }
 
     return TRUE;
