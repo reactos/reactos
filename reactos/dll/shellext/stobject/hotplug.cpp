@@ -28,8 +28,17 @@ static WCHAR g_strMenuSel[DISPLAY_NAME_LEN];
 static BOOL g_IsRunning = FALSE;
 static BOOL g_IsRemoving = FALSE;
 
-// Enumerate the connected removable devices
-// TODO: Require proper enumeration and filters.
+/*++
+* @name EnumHotpluggedDevices
+*
+* Enumerates the connected safely removable devices.
+*
+* @param devList
+*        List of device instances, representing the currently attached devices.
+*
+* @return The error code.
+*
+*--*/
 HRESULT EnumHotpluggedDevices(CSimpleArray<DEVINST> &devList)
 {    
     devList.RemoveAll(); // Clear current devList
@@ -39,6 +48,7 @@ HRESULT EnumHotpluggedDevices(CSimpleArray<DEVINST> &devList)
     SP_DEVINFO_DATA did = { 0 };
     did.cbSize = sizeof(did);
 
+    // Enumerate all the attached devices.
     for (int idev = 0; SetupDiEnumDeviceInfo(hdev, idev, &did); idev++)
     {
         DWORD dwCapabilities = 0, dwSize = sizeof(dwCapabilities);
@@ -54,6 +64,7 @@ HRESULT EnumHotpluggedDevices(CSimpleArray<DEVINST> &devList)
         if (cr != CR_SUCCESS)
             continue;
         
+        // Filter and make list of only the appropriate safely removable devices.
         if ( (dwCapabilities & CM_DEVCAP_REMOVABLE) &&
             !(dwCapabilities & CM_DEVCAP_DOCKDEVICE) &&
             !(dwCapabilities & CM_DEVCAP_SURPRISEREMOVALOK) &&
@@ -73,7 +84,23 @@ HRESULT EnumHotpluggedDevices(CSimpleArray<DEVINST> &devList)
     return S_OK;
 }
 
-// Pops a balloon notification
+/*++
+* @name NotifyBalloon
+*
+* Pops the balloon notification of the given notification icon.
+*
+* @param pSysTray
+*        Provides interface for acquiring CSysTray information as required.
+* @param szTitle
+*        Title for the balloon notification.
+* @param szInfo
+*        Main content for the balloon notification.
+* @param uId
+*        Represents the particular notification icon.
+*
+* @return The error code.
+*
+*--*/
 HRESULT NotifyBalloon(CSysTray* pSysTray, LPCWSTR szTitle = NULL, LPCWSTR szInfo = NULL, UINT uId = ID_ICON_HOTPLUG)
 {
     NOTIFYICONDATA nim = { 0 };
@@ -175,12 +202,13 @@ static void _ShowContextMenu(CSysTray * pSysTray)
             swprintf(strInfo, L"Problem Ejecting %wS", g_strMenuSel);
             MessageBox(0, L"The device cannot be stopped right now! Try stopping it again later!", strInfo, MB_OKCANCEL | MB_ICONEXCLAMATION);
         }
-        else //TODO
+        else
         {
             //MessageBox(0, L"Device ejected successfully!! You can safely remove the device now!", L"Safely Remove Hardware", MB_OKCANCEL | MB_ICONINFORMATION);
             g_IsRemoving = TRUE;
-            g_devList.RemoveAt(id); // thing is.. even after removing id at this point, the devnode_change occurs after some seconds of sucessful removal
-                                    // and since pendrive is still plugged in it gets enumerated, if problem number is not filtered.
+            g_devList.RemoveAt(id); /* thing is.. even after removing id at this point, the devnode_change occurs after some seconds of sucessful removal
+                                       and since pendrive is still plugged in it gets enumerated, if problem number is not filtered.
+                                    */
         }
     }
     

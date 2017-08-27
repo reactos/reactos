@@ -98,6 +98,26 @@ HRESULT CSysTray::ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LR
     return S_FALSE;
 }
 
+/*++
+* @name NotifyIcon
+*
+* Basically a Shell_NotifyIcon wrapper.
+* Based on the parameters provided, it changes the current state of the notification icon.
+*
+* @param code
+*        Determines whether to add, delete or modify the notification icon (represented by uId).
+* @param uId
+*        Represents the particular notification icon.
+* @param hIcon
+*        A handle to an icon for the notification object.
+* @param szTip
+*        A string for the tooltip of the notification.
+* @param dwstate
+*        Determines whether to show or hide the notification icon.
+*
+* @return The error code.
+*
+*--*/
 HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip, DWORD dwstate)
 {
     NOTIFYICONDATA nim = { 0 };

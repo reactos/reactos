@@ -25,8 +25,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
-int br_icons[5] = { IDI_BATTCAP0, IDI_BATTCAP1, IDI_BATTCAP2, IDI_BATTCAP3, IDI_BATTCAP4 };
-int bc_icons[5] = { IDI_BATTCHA0, IDI_BATTCHA1, IDI_BATTCHA2, IDI_BATTCHA3, IDI_BATTCHA4 };
+int br_icons[5] = { IDI_BATTCAP0, IDI_BATTCAP1, IDI_BATTCAP2, IDI_BATTCAP3, IDI_BATTCAP4 }; // battery mode icons.
+int bc_icons[5] = { IDI_BATTCHA0, IDI_BATTCHA1, IDI_BATTCHA2, IDI_BATTCHA3, IDI_BATTCHA4 }; // charging mode icons.
 
 typedef struct _PWRSCHEMECONTEXT
 {
@@ -40,16 +40,25 @@ static float g_batCap = 0;
 static HICON g_hIconBattery = NULL;
 static BOOL g_IsRunning = FALSE;
 
-/*** This function enumerates the available battery devices and provides the remaining capacity
-@param      cap: if no error occurs, then this will contatin average remaining capacity
-@param dwResult: helps in making battery type checks
-{
-Returned value includes GBS_HASBATTERY if the system has a non-UPS battery, and GBS_ONBATTERY if the system is running on a battery.
-dwResult & GBS_ONBATTERY means we have not yet found AC power.
-dwResult & GBS_HASBATTERY means we have found a non-UPS battery.
-}
-@return        : error checking
-*/
+/*++
+* @name GetBatteryState
+*
+* Enumerates the available battery devices and provides the remaining capacity.
+*
+* @param cap
+*        If no error occurs, then this will contain average remaining capacity.
+* @param dwResult
+*        Helps in making battery type checks.
+*       {
+*           Returned value includes GBS_HASBATTERY if the system has a non-UPS battery,
+*           and GBS_ONBATTERY if the system is running on a battery.
+*           dwResult & GBS_ONBATTERY means we have not yet found AC power.
+*           dwResult & GBS_HASBATTERY means we have found a non-UPS battery.
+*       }
+*
+* @return The error code.
+*
+*--*/
 static HRESULT GetBatteryState(float& cap, DWORD& dwResult)
 {
     cap = 0;
@@ -148,11 +157,19 @@ static HRESULT GetBatteryState(float& cap, DWORD& dwResult)
     return S_OK;
 }
 
-/*** This function quantizes the mentioned quantity to nearest level
-@param   p: should be a quantity in percentage
-@param lvl: quantization level, default is 10
-@return   : nearest quantized level
-*/
+/*++
+* @name Quantize
+* 
+* This function quantizes the mentioned quantity to nearest level.
+* 
+* @param p
+*        Should be a quantity in percentage.
+* @param lvl
+*        Quantization level (this excludes base level 0, which will always be present), default is 10.
+*
+* @return Nearest quantized level, can be directly used as array index based on context.
+*
+*--*/
 static UINT Quantize(float p, UINT lvl = 10)
 {
     int i = 0;
@@ -163,13 +180,29 @@ static UINT Quantize(float p, UINT lvl = 10)
         return i;
     else
         return i - 1;
+/* 
+ @remarks This function uses centred/symmetric logic for quantization.
+ For the case of lvl = 4, You will get following integer levels if given (p) value falls in between the range partitions:
+     0    <= p <  12.5 : returns 0; (corresponding to 0% centre)
+     12.5 <= p <  37.5 : returns 1; (corresponding to 25% centre)
+     37.5 <= p <  62.5 : returns 2; (corresponding to 50% centre)
+     62.5 <= p <  87.5 : returns 3; (corresponding to 75% centre)
+     87.5 <= p <= 100  : returns 4; (corresponding to 100% centre)
+*/
 }
 
-/*** This function returns the respective icon as per the current battery capacity.
-     It also does the work of setting global parameters of battery capacity and tooltips.
-@param hinst: instance handle
-@return     : icon handle
-*/
+/*++
+* @name DynamicLoadIcon
+*
+* Returns the respective icon as per the current battery capacity.
+* It also does the work of setting global parameters of battery capacity and tooltips.
+*
+* @param hinst
+*        A handle to a instance of the module.
+*
+* @return The handle to respective battery icon.
+*
+*--*/
 static HICON DynamicLoadIcon(HINSTANCE hinst)
 {    
     HICON hBatIcon;
