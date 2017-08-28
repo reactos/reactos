@@ -30,6 +30,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "ntfs.h"
+#include <ntintsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -228,7 +229,7 @@ AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord)
 * STATUS_CANT_WAIT if CanWait was FALSE and the function could not get immediate, exclusive access to the MFT.
 *
 * @remarks
-* Increases the size of the Master File Table by 8 records. Bitmap entries for the new records are cleared,
+* Increases the size of the Master File Table by 64 records. Bitmap entries for the new records are cleared,
 * and the bitmap is also enlarged if needed. Mimicking Windows' behavior when enlarging the mft is still TODO.
 * This function will wait for exlusive access to the volume fcb.
 */
@@ -239,13 +240,17 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     LARGE_INTEGER BitmapSize;
     LARGE_INTEGER DataSize;
     LONGLONG BitmapSizeDifference;
-    ULONG DataSizeDifference = Vcb->NtfsInfo.BytesPerFileRecord * 8;
+    ULONG NewRecords = ATTR_RECORD_ALIGNMENT * 8;  // Allocate one new record for every bit of every byte we'll be adding to the bitmap
+    ULONG DataSizeDifference = Vcb->NtfsInfo.BytesPerFileRecord * NewRecords;
     ULONG BitmapOffset;
     PUCHAR BitmapBuffer;
     ULONGLONG BitmapBytes;
     ULONGLONG NewBitmapSize;
+    ULONGLONG FirstNewMftIndex;
     ULONG BytesRead;
     ULONG LengthWritten;
+    PFILE_RECORD_HEADER BlankFileRecord;
+    ULONG i;
     NTSTATUS Status;
 
     DPRINT1("IncreaseMftSize(%p, %s)\n", Vcb, CanWait ? "TRUE" : "FALSE");
@@ -256,11 +261,23 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
         return STATUS_CANT_WAIT;
     }
 
+    // Create a blank file record that will be used later
+    BlankFileRecord = NtfsCreateEmptyFileRecord(Vcb);
+    if (!BlankFileRecord)
+    {
+        DPRINT1("Error: Unable to create empty file record!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // Clear the flags (file record is not in use)
+    BlankFileRecord->Flags = 0;
+
     // Find the bitmap attribute of master file table
-    Status = FindAttribute(Vcb, Vcb->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, &BitmapOffset);
+    Status = FindAttribute(Vcb, Vcb->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Couldn't find $BITMAP attribute of Mft!\n");
+        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
         ExReleaseResourceLite(&(Vcb->DirResource));
         return Status;
     }
@@ -271,9 +288,17 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     // Calculate the new mft size
     DataSize.QuadPart = AttributeDataLength(Vcb->MFTContext->pRecord) + DataSizeDifference;
 
+    // Find the index of the first Mft entry that will be created
+    FirstNewMftIndex = AttributeDataLength(Vcb->MFTContext->pRecord) / Vcb->NtfsInfo.BytesPerFileRecord;
+
     // Determine how many bytes will make up the bitmap
     BitmapBytes = DataSize.QuadPart / Vcb->NtfsInfo.BytesPerFileRecord / 8;
-    
+    if ((DataSize.QuadPart / Vcb->NtfsInfo.BytesPerFileRecord) % 8 != 0)
+        BitmapBytes++;
+
+    // Windows will always keep the number of bytes in a bitmap as a multiple of 8, so no bytes are wasted on slack
+    BitmapBytes = ALIGN_UP_BY(BitmapBytes, ATTR_RECORD_ALIGNMENT);
+
     // Determine how much we need to adjust the bitmap size (it's possible we don't)
     BitmapSizeDifference = BitmapBytes - BitmapSize.QuadPart;
     NewBitmapSize = max(BitmapSize.QuadPart + BitmapSizeDifference, BitmapSize.QuadPart);
@@ -283,6 +308,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (!BitmapBuffer)
     {
         DPRINT1("ERROR: Unable to allocate memory for bitmap attribute!\n");
+        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ReleaseAttributeContext(BitmapContext);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -300,6 +326,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (BytesRead != BitmapSize.LowPart)
     {
         DPRINT1("ERROR: Bytes read != Bitmap size!\n");
+        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
@@ -311,9 +338,21 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to set size of $MFT data attribute!\n");
+        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
+        return Status;
+    }
+    
+    // We'll need to find the bitmap again, because its offset will have changed after resizing the data attribute
+    ReleaseAttributeContext(BitmapContext);
+    Status = FindAttribute(Vcb, Vcb->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, &BitmapOffset);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't find $BITMAP attribute of Mft!\n");
+        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+        ExReleaseResourceLite(&(Vcb->DirResource));
         return Status;
     }
 
@@ -321,7 +360,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (BitmapSizeDifference > 0)
     {
         // Set the new bitmap size
-        BitmapSize.QuadPart += BitmapSizeDifference;
+        BitmapSize.QuadPart = NewBitmapSize;
         if (BitmapContext->pRecord->IsNonResident)
             Status = SetNonResidentAttributeDataLength(Vcb, BitmapContext, BitmapOffset, Vcb->MasterFileTable, &BitmapSize);
         else
@@ -330,6 +369,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERROR: Failed to set size of bitmap attribute!\n");
+            ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
             ExReleaseResourceLite(&(Vcb->DirResource));
             ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
             ReleaseAttributeContext(BitmapContext);
@@ -337,13 +377,14 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
         }
     }
 
-    //NtfsDumpFileAttributes(Vcb, FileRecord);
+    NtfsDumpFileAttributes(Vcb, Vcb->MasterFileTable);
 
     // Update the file record with the new attribute sizes
     Status = UpdateFileRecord(Vcb, Vcb->VolumeFcb->MFTIndex, Vcb->MasterFileTable);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to update $MFT file record!\n");
+        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
@@ -351,9 +392,10 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     }
 
     // Write out the new bitmap
-    Status = WriteAttribute(Vcb, BitmapContext, BitmapOffset, BitmapBuffer, BitmapSize.LowPart, &LengthWritten, Vcb->MasterFileTable);
+    Status = WriteAttribute(Vcb, BitmapContext, 0, BitmapBuffer, NewBitmapSize, &LengthWritten, Vcb->MasterFileTable);
     if (!NT_SUCCESS(Status))
     {
+        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
@@ -361,12 +403,31 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
         return Status;
     }
 
+    // Create blank records for the new file record entries.
+    for (i = 0; i < NewRecords; i++)
+    {
+        Status = UpdateFileRecord(Vcb, FirstNewMftIndex + i, BlankFileRecord);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERROR: Failed to write blank file record!\n");
+            ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+            ExReleaseResourceLite(&(Vcb->DirResource));
+            ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+            ReleaseAttributeContext(BitmapContext);
+            return Status;
+        }
+    }
+
+    // Update the mft mirror
+    Status = UpdateMftMirror(Vcb);
+
     // Cleanup
+    ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
     ExReleaseResourceLite(&(Vcb->DirResource));
     ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
     ReleaseAttributeContext(BitmapContext);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /**
@@ -2382,6 +2443,129 @@ CompareFileName(PUNICODE_STRING FileName,
     {
         return (RtlCompareUnicodeString(FileName, &EntryName, !CaseSensitive) == 0);
     }
+}
+
+/**
+* @name UpdateMftMirror
+* @implemented
+*
+* Backs-up the first ~4 master file table entries to the $MFTMirr file.
+*
+* @param Vcb
+* Pointer to an NTFS_VCB for the volume whose Mft mirror is being updated.
+*
+* @returninja livecd
+
+* STATUS_SUCCESS on success.
+* STATUS_INSUFFICIENT_RESOURCES if an allocation failed.
+* STATUS_UNSUCCESSFUL if we couldn't read the master file table.
+*
+* @remarks
+* NTFS maintains up-to-date copies of the first several mft entries in the $MFTMirr file. Usually, the first 4 file
+* records from the mft are stored. The exact number of entries is determined by the size of $MFTMirr's $DATA. 
+* If $MFTMirr is not up-to-date, chkdsk will reject every change it can find prior to when $MFTMirr was last updated.
+* Therefore, it's recommended to call this function if the volume changes considerably. For instance, IncreaseMftSize()
+* relies on this function to keep chkdsk from deleting the mft entries it creates. Note that under most instances, creating
+* or deleting a file will not affect the first ~four mft entries, and so will not require updating the mft mirror.
+*/
+NTSTATUS
+UpdateMftMirror(PNTFS_VCB Vcb)
+{
+    PFILE_RECORD_HEADER MirrorFileRecord;
+    PNTFS_ATTR_CONTEXT MirrDataContext;
+    PNTFS_ATTR_CONTEXT MftDataContext;
+    PCHAR DataBuffer;
+    ULONGLONG DataLength;
+    NTSTATUS Status;
+    ULONG BytesRead;
+    ULONG LengthWritten;
+
+    // Allocate memory for the Mft mirror file record
+    MirrorFileRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    if (!MirrorFileRecord)
+    {
+        DPRINT1("Error: Failed to allocate memory for $MFTMirr!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // Read the Mft Mirror file record
+    Status = ReadFileRecord(Vcb, NTFS_FILE_MFTMIRR, MirrorFileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to read $MFTMirr!\n");
+        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // Find the $DATA attribute of $MFTMirr
+    Status = FindAttribute(Vcb, MirrorFileRecord, AttributeData, L"", 0, &MirrDataContext, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't find $DATA attribute!\n");
+        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // Find the $DATA attribute of $MFT
+    Status = FindAttribute(Vcb, Vcb->MasterFileTable, AttributeData, L"", 0, &MftDataContext, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't find $DATA attribute!\n");
+        ReleaseAttributeContext(MirrDataContext);
+        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // Get the size of the mirror's $DATA attribute
+    DataLength = AttributeDataLength(MirrDataContext->pRecord);
+
+    ASSERT(DataLength % Vcb->NtfsInfo.BytesPerFileRecord == 0);
+
+    // Create buffer for the mirror's $DATA attribute
+    DataBuffer = ExAllocatePoolWithTag(NonPagedPool, DataLength, TAG_NTFS);
+    if (!DataBuffer)
+    {
+        DPRINT1("Error: Couldn't allocate memory for $DATA buffer!\n");
+        ReleaseAttributeContext(MftDataContext);
+        ReleaseAttributeContext(MirrDataContext);
+        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    ASSERT(DataLength < ULONG_MAX);
+
+    // Back up the first several entries of the Mft's $DATA Attribute
+    BytesRead = ReadAttribute(Vcb, MftDataContext, 0, DataBuffer, (ULONG)DataLength);
+    if (BytesRead != (ULONG)DataLength)
+    {
+        DPRINT1("Error: Failed to read $DATA for $MFTMirr!\n");
+        ReleaseAttributeContext(MftDataContext);
+        ReleaseAttributeContext(MirrDataContext);
+        ExFreePoolWithTag(DataBuffer, TAG_NTFS);
+        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    // Write the mirror's $DATA attribute
+    Status = WriteAttribute(Vcb,
+                             MirrDataContext,
+                             0,
+                             (PUCHAR)DataBuffer,
+                             DataLength,
+                             &LengthWritten,
+                             MirrorFileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to write $DATA attribute of $MFTMirr!\n");
+    }
+
+    // Cleanup
+    ReleaseAttributeContext(MftDataContext);
+    ReleaseAttributeContext(MirrDataContext);
+    ExFreePoolWithTag(DataBuffer, TAG_NTFS);
+    ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+
+    return Status;
 }
 
 #if 0
