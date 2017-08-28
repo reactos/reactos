@@ -1048,6 +1048,9 @@ CompareFileName(PUNICODE_STRING FileName,
                 BOOLEAN CaseSensitive);
 
 NTSTATUS
+UpdateMftMirror(PNTFS_VCB Vcb);
+
+NTSTATUS
 ReadFileRecord(PDEVICE_EXTENSION Vcb,
                ULONGLONG index,
                PFILE_RECORD_HEADER file);
