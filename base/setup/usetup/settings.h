@@ -27,29 +27,6 @@
 #pragma once
 
 PGENERIC_LIST
-CreateComputerTypeList(
-    HINF InfFile);
-
-PGENERIC_LIST
-CreateDisplayDriverList(
-    HINF InfFile);
-
-BOOLEAN
-ProcessComputerFiles(
-    HINF InfFile,
-    PGENERIC_LIST List,
-    PWCHAR *AdditionalSectionName);
-
-BOOLEAN
-ProcessDisplayRegistry(
-    HINF InfFile,
-    PGENERIC_LIST List);
-
-PGENERIC_LIST
-CreateKeyboardDriverList(
-    HINF InfFile);
-
-PGENERIC_LIST
 CreateKeyboardLayoutList(
     HINF InfFile,
     WCHAR *DefaultKBLayout);
@@ -63,23 +40,11 @@ ULONG
 GetDefaultLanguageIndex(VOID);
 
 BOOLEAN
-ProcessLocaleRegistry(
-    PGENERIC_LIST List);
-
-BOOLEAN
 ProcessKeyboardLayoutRegistry(
     PGENERIC_LIST List);
 
 BOOLEAN
 ProcessKeyboardLayoutFiles(
     PGENERIC_LIST List);
-
-BOOLEAN
-SetGeoID(
-    PWCHAR Id);
-
-BOOLEAN
-SetDefaultPagefile(
-    WCHAR Drive);
 
 /* EOF */
