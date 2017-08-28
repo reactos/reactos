@@ -43,7 +43,7 @@ extern VOID InfSetHeap(PVOID Heap);
 
 #endif /* __REACTOS__ */
 
-#include <../lib/infsupp.h>
+// #include "../lib/utils/infsupp.h"
 
 
 /* HELPER FUNCTIONS **********************************************************/
