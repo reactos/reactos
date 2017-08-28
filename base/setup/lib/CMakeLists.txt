@@ -1,18 +1,20 @@
 
+include_directories(utils)
+
 list(APPEND SOURCE
-    arcname.c
-    bldrsup.c
+    utils/arcname.c
+    utils/bldrsup.c
+    utils/filesup.c
+    utils/genlist.c
+    utils/infsupp.c
+    utils/inicache.c
+    utils/ntverrsrc.c
+    utils/osdetect.c
+    utils/partlist.c
+    utils/regutil.c
     bootsup.c
-    filesup.c
     fsutil.c
-    genlist.c
-    infsupp.c
-    inicache.c
-    ntverrsrc.c
-    osdetect.c
-    partlist.c
     registry.c
-    regutil.c
     setuplib.c
     precomp.h)
 
