@@ -58,7 +58,7 @@ FindLanguageIndex(VOID)
         }
 
         lngIndex++;
-    }while (LanguageList[lngIndex].MuiPages != NULL);
+    } while (LanguageList[lngIndex].MuiPages != NULL);
 
     return 0;
 }
@@ -76,7 +76,7 @@ IsLanguageAvailable(
             return TRUE;
 
         lngIndex++;
-    }while (LanguageList[lngIndex].MuiPages != NULL);
+    } while (LanguageList[lngIndex].MuiPages != NULL);
 
     return FALSE;
 }
@@ -100,7 +100,7 @@ FindMUIEntriesOfPage(
              return Pages[muiIndex].MuiEntry;
 
          muiIndex++;
-    }while (Pages[muiIndex].MuiEntry != NULL);
+    } while (Pages[muiIndex].MuiEntry != NULL);
 
     return NULL;
 }
