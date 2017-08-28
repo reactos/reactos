@@ -338,6 +338,8 @@ CreateComputerTypeList(
 
     do
     {
+        BOOLEAN FoundId;
+
         if (!INF_GetDataField(&Context, 1, &KeyValue))
         {
             /* FIXME: Handle error! */
@@ -346,21 +348,22 @@ CreateComputerTypeList(
         }
 
         DPRINT("KeyValue: %S\n", KeyValue);
-        if (wcsstr(ComputerIdentifier, KeyValue))
-        {
-            INF_FreeData(KeyValue);
-            if (!INF_GetDataField(&Context, 0, &KeyName))
-            {
-                /* FIXME: Handle error! */
-                DPRINT("INF_GetDataField() failed\n");
-                return NULL;
-            }
-
-            DPRINT("Computer key: %S\n", KeyName);
-            wcscpy(ComputerKey, KeyName);
-            INF_FreeData(KeyName);
-        }
+        FoundId = !!wcsstr(ComputerIdentifier, KeyValue);
         INF_FreeData(KeyValue);
+
+        if (!FoundId)
+            continue;
+
+        if (!INF_GetDataField(&Context, 0, &KeyName))
+        {
+            /* FIXME: Handle error! */
+            DPRINT("INF_GetDataField() failed\n");
+            return NULL;
+        }
+
+        DPRINT("Computer key: %S\n", KeyName);
+        wcscpy(ComputerKey, KeyName);
+        INF_FreeData(KeyName);
     } while (SetupFindNextLine(&Context, &Context));
 
     List = CreateGenericList();
@@ -595,6 +598,8 @@ CreateDisplayDriverList(
 
     do
     {
+        BOOLEAN FoundId;
+
         if (!INF_GetDataField(&Context, 1, &KeyValue))
         {
             /* FIXME: Handle error! */
@@ -603,21 +608,22 @@ CreateDisplayDriverList(
         }
 
         DPRINT("KeyValue: %S\n", KeyValue);
-        if (wcsstr(DisplayIdentifier, KeyValue))
-        {
-            INF_FreeData(KeyValue);
-            if (!INF_GetDataField(&Context, 0, &KeyName))
-            {
-                /* FIXME: Handle error! */
-                DPRINT("INF_GetDataField() failed\n");
-                return NULL;
-            }
-
-            DPRINT("Display key: %S\n", KeyName);
-            wcscpy(DisplayKey, KeyName);
-            INF_FreeData(KeyName);
-        }
+        FoundId = !!wcsstr(DisplayIdentifier, KeyValue);
         INF_FreeData(KeyValue);
+
+        if (!FoundId)
+            continue;
+
+        if (!INF_GetDataField(&Context, 0, &KeyName))
+        {
+            /* FIXME: Handle error! */
+            DPRINT("INF_GetDataField() failed\n");
+            return NULL;
+        }
+
+        DPRINT("Display key: %S\n", KeyName);
+        wcscpy(DisplayKey, KeyName);
+        INF_FreeData(KeyName);
     } while (SetupFindNextLine(&Context, &Context));
 
     List = CreateGenericList();
