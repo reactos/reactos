@@ -70,113 +70,136 @@ IsAcpiComputer(VOID)
         goto cleanup;
     }
 
-   pDeviceInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, DeviceInfoLength);
-   if (!pDeviceInformation)
-   {
-      DPRINT("RtlAllocateHeap() failed\n");
-      Status = STATUS_NO_MEMORY;
-      goto cleanup;
-   }
+    pDeviceInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, DeviceInfoLength);
+    if (!pDeviceInformation)
+    {
+        DPRINT("RtlAllocateHeap() failed\n");
+        Status = STATUS_NO_MEMORY;
+        goto cleanup;
+    }
 
-   pValueInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueInfoLength);
-   if (!pValueInformation)
-   {
-      DPRINT("RtlAllocateHeap() failed\n");
-      Status = STATUS_NO_MEMORY;
-      goto cleanup;
-   }
+    pValueInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueInfoLength);
+    if (!pValueInformation)
+    {
+        DPRINT("RtlAllocateHeap() failed\n");
+        Status = STATUS_NO_MEMORY;
+        goto cleanup;
+    }
 
-   while (TRUE)
-   {
-      Status = NtEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
-      if (Status == STATUS_NO_MORE_ENTRIES)
-         break;
-      else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
-      {
-         RtlFreeHeap(RtlGetProcessHeap(), 0, pDeviceInformation);
-         DeviceInfoLength = RequiredSize;
-         pDeviceInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, DeviceInfoLength);
-         if (!pDeviceInformation)
-         {
-            DPRINT("RtlAllocateHeap() failed\n");
-            Status = STATUS_NO_MEMORY;
+    while (TRUE)
+    {
+        Status = NtEnumerateKey(hDevicesKey,
+                                IndexDevice,
+                                KeyBasicInformation,
+                                pDeviceInformation,
+                                DeviceInfoLength,
+                                &RequiredSize);
+        if (Status == STATUS_NO_MORE_ENTRIES)
+            break;
+        else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pDeviceInformation);
+            DeviceInfoLength = RequiredSize;
+            pDeviceInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, DeviceInfoLength);
+            if (!pDeviceInformation)
+            {
+                DPRINT("RtlAllocateHeap() failed\n");
+                Status = STATUS_NO_MEMORY;
+                goto cleanup;
+            }
+            Status = NtEnumerateKey(hDevicesKey,
+                                    IndexDevice,
+                                    KeyBasicInformation,
+                                    pDeviceInformation,
+                                    DeviceInfoLength,
+                                    &RequiredSize);
+        }
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtEnumerateKey() failed with status 0x%08lx\n", Status);
             goto cleanup;
-         }
-         Status = NtEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
-      }
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("NtEnumerateKey() failed with status 0x%08lx\n", Status);
-         goto cleanup;
-      }
-      IndexDevice++;
+        }
+        IndexDevice++;
 
-      /* Open device key */
-      DeviceName.Length = DeviceName.MaximumLength = pDeviceInformation->NameLength;
-      DeviceName.Buffer = pDeviceInformation->Name;
-      InitializeObjectAttributes(&ObjectAttributes, &DeviceName, OBJ_CASE_INSENSITIVE, hDevicesKey, NULL);
-      Status = NtOpenKey(
-         &hDeviceKey,
-         KEY_QUERY_VALUE,
-         &ObjectAttributes);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("NtOpenKey() failed with status 0x%08lx\n", Status);
-         goto cleanup;
-      }
-
-      /* Read identifier */
-      Status = NtQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
-      if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
-      {
-         RtlFreeHeap(RtlGetProcessHeap(), 0, pValueInformation);
-         ValueInfoLength = RequiredSize;
-         pValueInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueInfoLength);
-         if (!pValueInformation)
-         {
-            DPRINT("RtlAllocateHeap() failed\n");
-            Status = STATUS_NO_MEMORY;
+        /* Open device key */
+        DeviceName.Length = DeviceName.MaximumLength = pDeviceInformation->NameLength;
+        DeviceName.Buffer = pDeviceInformation->Name;
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &DeviceName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   hDevicesKey,
+                                   NULL);
+        Status = NtOpenKey(&hDeviceKey,
+                           KEY_QUERY_VALUE,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtOpenKey() failed with status 0x%08lx\n", Status);
             goto cleanup;
-         }
-         Status = NtQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
-      }
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("NtQueryValueKey() failed with status 0x%08lx\n", Status);
-         goto nextdevice;
-      }
-      else if (pValueInformation->Type != REG_SZ)
-      {
-         DPRINT("Wrong registry type: got 0x%lx, expected 0x%lx\n", pValueInformation->Type, REG_SZ);
-         goto nextdevice;
-      }
+        }
 
-      ValueName.Length = ValueName.MaximumLength = pValueInformation->DataLength;
-      ValueName.Buffer = (PWCHAR)pValueInformation->Data;
-      if (ValueName.Length >= sizeof(WCHAR) && ValueName.Buffer[ValueName.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
-         ValueName.Length -= sizeof(WCHAR);
-      if (RtlCompareUnicodeString(&ValueName, &AcpiBiosIdentifier, FALSE) == 0)
-      {
-         DPRINT("Found ACPI BIOS\n");
-         ret = TRUE;
-         goto cleanup;
-      }
+        /* Read identifier */
+        Status = NtQueryValueKey(hDeviceKey,
+                                 &IdentifierU,
+                                 KeyValuePartialInformation,
+                                 pValueInformation,
+                                 ValueInfoLength,
+                                 &RequiredSize);
+        if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pValueInformation);
+            ValueInfoLength = RequiredSize;
+            pValueInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, ValueInfoLength);
+            if (!pValueInformation)
+            {
+                DPRINT("RtlAllocateHeap() failed\n");
+                Status = STATUS_NO_MEMORY;
+                goto cleanup;
+            }
+            Status = NtQueryValueKey(hDeviceKey,
+                                     &IdentifierU,
+                                     KeyValuePartialInformation,
+                                     pValueInformation,
+                                     ValueInfoLength,
+                                     &RequiredSize);
+        }
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtQueryValueKey() failed with status 0x%08lx\n", Status);
+            goto nextdevice;
+        }
+        else if (pValueInformation->Type != REG_SZ)
+        {
+            DPRINT("Wrong registry type: got 0x%lx, expected 0x%lx\n", pValueInformation->Type, REG_SZ);
+            goto nextdevice;
+        }
+
+        ValueName.Length = ValueName.MaximumLength = pValueInformation->DataLength;
+        ValueName.Buffer = (PWCHAR)pValueInformation->Data;
+        if (ValueName.Length >= sizeof(WCHAR) && ValueName.Buffer[ValueName.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
+            ValueName.Length -= sizeof(WCHAR);
+        if (RtlEqualUnicodeString(&ValueName, &AcpiBiosIdentifier, FALSE))
+        {
+            DPRINT("Found ACPI BIOS\n");
+            ret = TRUE;
+            goto cleanup;
+        }
 
 nextdevice:
-      NtClose(hDeviceKey);
-      hDeviceKey = NULL;
-   }
+        NtClose(hDeviceKey);
+        hDeviceKey = NULL;
+    }
 
 cleanup:
-   if (pDeviceInformation)
-      RtlFreeHeap(RtlGetProcessHeap(), 0, pDeviceInformation);
-   if (pValueInformation)
-      RtlFreeHeap(RtlGetProcessHeap(), 0, pValueInformation);
-   if (hDevicesKey)
-      NtClose(hDevicesKey);
-   if (hDeviceKey)
-      NtClose(hDeviceKey);
-   return ret;
+    if (pDeviceInformation)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pDeviceInformation);
+    if (pValueInformation)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pValueInformation);
+    if (hDevicesKey)
+        NtClose(hDevicesKey);
+    if (hDeviceKey)
+        NtClose(hDeviceKey);
+    return ret;
 }
 
 static
@@ -343,7 +366,7 @@ CreateComputerTypeList(
     if (List == NULL)
         return NULL;
 
-    if (!SetupFindFirstLineW (InfFile, L"Computer", NULL, &Context))
+    if (!SetupFindFirstLineW(InfFile, L"Computer", NULL, &Context))
     {
         DestroyGenericList(List, FALSE);
         return NULL;
@@ -423,8 +446,7 @@ GetDisplayIdentifier(
     while (TRUE)
     {
         swprintf(Buffer, L"%lu", BusInstance);
-        RtlInitUnicodeString(&KeyName,
-                             Buffer);
+        RtlInitUnicodeString(&KeyName, Buffer);
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
                                    OBJ_CASE_INSENSITIVE,
@@ -442,8 +464,7 @@ GetDisplayIdentifier(
         }
 
         /* Open the controller type key */
-        RtlInitUnicodeString(&KeyName,
-                             L"DisplayController");
+        RtlInitUnicodeString(&KeyName, L"DisplayController");
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
                                    OBJ_CASE_INSENSITIVE,
@@ -461,8 +482,7 @@ GetDisplayIdentifier(
             {
                 /* Open the pointer controller instance key */
                 swprintf(Buffer, L"%lu", ControllerInstance);
-                RtlInitUnicodeString(&KeyName,
-                                     Buffer);
+                RtlInitUnicodeString(&KeyName, Buffer);
                 InitializeObjectAttributes(&ObjectAttributes,
                                            &KeyName,
                                            OBJ_CASE_INSENSITIVE,
@@ -482,8 +502,7 @@ GetDisplayIdentifier(
                 }
 
                 /* Get controller identifier */
-                RtlInitUnicodeString(&KeyName,
-                                     L"Identifier");
+                RtlInitUnicodeString(&KeyName, L"Identifier");
 
                 BufferLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) +
                                256 * sizeof(WCHAR);
@@ -604,7 +623,7 @@ CreateDisplayDriverList(
     if (List == NULL)
         return NULL;
 
-    if (!SetupFindFirstLineW (InfFile, L"Display", NULL, &Context))
+    if (!SetupFindFirstLineW(InfFile, L"Display", NULL, &Context))
     {
         DestroyGenericList(List, FALSE);
         return NULL;
@@ -967,7 +986,7 @@ CreateKeyboardDriverList(
     if (List == NULL)
         return NULL;
 
-    if (!SetupFindFirstLineW (InfFile, L"Keyboard", NULL, &Context))
+    if (!SetupFindFirstLineW(InfFile, L"Keyboard", NULL, &Context))
     {
         DestroyGenericList(List, FALSE);
         return NULL;
@@ -975,7 +994,7 @@ CreateKeyboardDriverList(
 
     do
     {
-        if (!INF_GetData (&Context, &KeyName, &KeyValue))
+        if (!INF_GetData(&Context, &KeyName, &KeyValue))
         {
             /* FIXME: Handle error! */
             DPRINT("INF_GetData() failed\n");
@@ -1019,10 +1038,10 @@ CreateLanguageList(
     ULONG uIndex = 0;
 
     /* Get default language id */
-    if (!SetupFindFirstLineW (InfFile, L"NLS", L"DefaultLanguage", &Context))
+    if (!SetupFindFirstLineW(InfFile, L"NLS", L"DefaultLanguage", &Context))
         return NULL;
 
-    if (!INF_GetData (&Context, NULL, &KeyValue))
+    if (!INF_GetData(&Context, NULL, &KeyValue))
         return NULL;
 
     wcscpy(DefaultLanguage, KeyValue);
@@ -1033,7 +1052,7 @@ CreateLanguageList(
     if (List == NULL)
         return NULL;
 
-    if (!SetupFindFirstLineW (InfFile, L"Language", NULL, &Context))
+    if (!SetupFindFirstLineW(InfFile, L"Language", NULL, &Context))
     {
         DestroyGenericList(List, FALSE);
         return NULL;
@@ -1041,7 +1060,7 @@ CreateLanguageList(
 
     do
     {
-        if (!INF_GetData (&Context, &KeyName, &KeyValue))
+        if (!INF_GetData(&Context, &KeyName, &KeyValue))
         {
             /* FIXME: Handle error! */
             DPRINT("INF_GetData() failed\n");
@@ -1099,10 +1118,10 @@ CreateKeyboardLayoutList(
     BOOL KeyboardLayoutsFound = FALSE;
 
     /* Get default layout id */
-    if (!SetupFindFirstLineW (InfFile, L"NLS", L"DefaultLayout", &Context))
+    if (!SetupFindFirstLineW(InfFile, L"NLS", L"DefaultLayout", &Context))
         return NULL;
 
-    if (!INF_GetData (&Context, NULL, &KeyValue))
+    if (!INF_GetData(&Context, NULL, &KeyValue))
         return NULL;
 
     wcscpy(DefaultKBLayout, KeyValue);
@@ -1123,7 +1142,7 @@ CreateKeyboardLayoutList(
 
         do
         {
-            if (!INF_GetData (&Context, &KeyName, &KeyValue))
+            if (!INF_GetData(&Context, &KeyName, &KeyValue))
             {
                 /* FIXME: Handle error! */
                 DPRINT("INF_GetData() failed\n");

@@ -100,7 +100,7 @@ FindMUIEntriesOfPage(
              return Pages[muiIndex].MuiEntry;
 
          muiIndex++;
-    }while (Pages[muiIndex].MuiEntry != NULL);
+    } while (Pages[muiIndex].MuiEntry != NULL);
 
     return NULL;
 }
