@@ -41,6 +41,7 @@ extern HANDLE ProcessHeap;
 #include "utils/osdetect.h"
 #include "utils/regutil.h"
 #include "registry.h"
+#include "settings.h"
 
 
 /* DEFINES ******************************************************************/

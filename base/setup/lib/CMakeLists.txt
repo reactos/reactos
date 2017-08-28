@@ -15,6 +15,7 @@ list(APPEND SOURCE
     bootsup.c
     fsutil.c
     registry.c
+    settings.c
     setuplib.c
     precomp.h)
 
