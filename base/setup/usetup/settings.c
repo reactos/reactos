@@ -308,16 +308,132 @@ GetComputerIdentifier(
 }
 
 
+/*
+ * Return values:
+ * 0x00: Failure, stop the enumeration;
+ * 0x01: Add the entry and continue the enumeration;
+ * 0x02: Skip the entry but continue the enumeration.
+ */
+typedef UCHAR
+(NTAPI *PPROCESS_ENTRY_ROUTINE)(
+    IN PWCHAR KeyName,
+    IN PWCHAR KeyValue,
+    IN PCHAR DisplayText,
+    IN SIZE_T DisplayTextSize,
+    OUT PVOID* UserData,
+    OUT PBOOLEAN Current,
+    IN PVOID Parameter OPTIONAL);
+
+LONG
+AddEntriesFromInfSection(
+    IN OUT PGENERIC_LIST List,
+    IN HINF InfFile,
+    IN PCWSTR SectionName,
+    IN PINFCONTEXT pContext,
+    IN PPROCESS_ENTRY_ROUTINE ProcessEntry,
+    IN PVOID Parameter OPTIONAL)
+{
+    LONG TotalCount = 0;
+    PWCHAR KeyName;
+    PWCHAR KeyValue;
+    PVOID UserData;
+    BOOLEAN Current;
+    UCHAR RetVal;
+    CHAR DisplayText[128];
+
+    if (!SetupFindFirstLineW(InfFile, SectionName, NULL, pContext))
+        return -1;
+
+    do
+    {
+        /*
+         * NOTE: Do not use INF_GetData() as it expects INF entries of exactly
+         * two fields ("key = value"); however we expect to be able to deal with
+         * entries having more than two fields, the only requirement being that
+         * the second field (field number 1) contains the field description.
+         */
+        if (!INF_GetDataField(pContext, 0, &KeyName))
+        {
+            DPRINT("INF_GetDataField() failed\n");
+            return -1;
+        }
+
+        if (!INF_GetDataField(pContext, 1, &KeyValue))
+        {
+            DPRINT("INF_GetDataField() failed\n");
+            INF_FreeData(KeyName);
+            return -1;
+        }
+
+        UserData = NULL;
+        Current  = FALSE;
+        RetVal = ProcessEntry(KeyName,
+                              KeyValue,
+                              DisplayText,
+                              sizeof(DisplayText),
+                              &UserData,
+                              &Current,
+                              Parameter);
+        INF_FreeData(KeyName);
+        INF_FreeData(KeyValue);
+
+        if (RetVal == 0)
+        {
+            DPRINT("ProcessEntry() failed\n");
+            return -1;
+        }
+        else if (RetVal == 1)
+        {
+            AppendGenericListEntry(List, DisplayText, UserData, Current);
+            ++TotalCount;
+        }
+        // else if (RetVal == 2), skip the entry.
+
+    } while (SetupFindNextLine(pContext, pContext));
+
+    return TotalCount;
+}
+
+static UCHAR
+NTAPI
+DefaultProcessEntry(
+    IN PWCHAR KeyName,
+    IN PWCHAR KeyValue,
+    IN PCHAR DisplayText,
+    IN SIZE_T DisplayTextSize,
+    OUT PVOID* UserData,
+    OUT PBOOLEAN Current,
+    IN PVOID Parameter OPTIONAL)
+{
+    PWSTR CompareKey = (PWSTR)Parameter;
+
+    *UserData = RtlAllocateHeap(ProcessHeap, 0,
+                                (wcslen(KeyName) + 1) * sizeof(WCHAR));
+    if (*UserData == NULL)
+    {
+        /* Failure, stop enumeration */
+        DPRINT1("RtlAllocateHeap() failed\n");
+        return 0;
+    }
+
+    wcscpy((PWCHAR)*UserData, KeyName);
+    sprintf(DisplayText, "%S", KeyValue);
+
+    *Current = (CompareKey ? !_wcsicmp(KeyName, CompareKey) : FALSE);
+
+    /* Add the entry */
+    return 1;
+}
+
+
 PGENERIC_LIST
 CreateComputerTypeList(
     HINF InfFile)
 {
-    CHAR Buffer[128];
     PGENERIC_LIST List;
     INFCONTEXT Context;
     PWCHAR KeyName;
     PWCHAR KeyValue;
-    PWCHAR UserData;
     WCHAR ComputerIdentifier[128];
     WCHAR ComputerKey[32];
 
@@ -370,38 +486,16 @@ CreateComputerTypeList(
     if (List == NULL)
         return NULL;
 
-    if (!SetupFindFirstLineW(InfFile, L"Computer", NULL, &Context))
+    if (AddEntriesFromInfSection(List,
+                                 InfFile,
+                                 L"Computer",
+                                 &Context,
+                                 DefaultProcessEntry,
+                                 ComputerKey) == -1)
     {
-        DestroyGenericList(List, FALSE);
+        DestroyGenericList(List, TRUE);
         return NULL;
     }
-
-    do
-    {
-        if (!INF_GetData(&Context, &KeyName, &KeyValue))
-        {
-            /* FIXME: Handle error! */
-            DPRINT("INF_GetData() failed\n");
-            break;
-        }
-
-        UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
-                                            0,
-                                            (wcslen(KeyName) + 1) * sizeof(WCHAR));
-        if (UserData == NULL)
-        {
-            /* FIXME: Handle error! */
-        }
-
-        wcscpy(UserData, KeyName);
-        INF_FreeData(KeyName);
-
-        sprintf(Buffer, "%S", KeyValue);
-        INF_FreeData(KeyValue);
-
-        AppendGenericListEntry(List, Buffer, UserData,
-                               _wcsicmp(UserData, ComputerKey) ? FALSE : TRUE);
-    } while (SetupFindNextLine(&Context, &Context));
 
     return List;
 }
@@ -534,9 +628,9 @@ GetDisplayIdentifier(
                     DPRINT("Identifier: %S\n", (PWSTR)ValueInfo->Data);
 
                     BufferLength = min(ValueInfo->DataLength / sizeof(WCHAR), IdentifierLength);
-                    RtlCopyMemory (Identifier,
-                                   ValueInfo->Data,
-                                   BufferLength * sizeof(WCHAR));
+                    RtlCopyMemory(Identifier,
+                                  ValueInfo->Data,
+                                  BufferLength * sizeof(WCHAR));
                     Identifier[BufferLength] = 0;
 
                     RtlFreeHeap(RtlGetProcessHeap(),
@@ -572,12 +666,10 @@ PGENERIC_LIST
 CreateDisplayDriverList(
     HINF InfFile)
 {
-    CHAR Buffer[128];
     PGENERIC_LIST List;
     INFCONTEXT Context;
     PWCHAR KeyName;
     PWCHAR KeyValue;
-    PWCHAR UserData;
     WCHAR DisplayIdentifier[128];
     WCHAR DisplayKey[32];
 
@@ -630,48 +722,16 @@ CreateDisplayDriverList(
     if (List == NULL)
         return NULL;
 
-    if (!SetupFindFirstLineW(InfFile, L"Display", NULL, &Context))
+    if (AddEntriesFromInfSection(List,
+                                 InfFile,
+                                 L"Display",
+                                 &Context,
+                                 DefaultProcessEntry,
+                                 DisplayKey) == -1)
     {
-        DestroyGenericList(List, FALSE);
+        DestroyGenericList(List, TRUE);
         return NULL;
     }
-
-    do
-    {
-        if (!INF_GetDataField(&Context, 0, &KeyName))
-        {
-            DPRINT1("INF_GetDataField() failed\n");
-            break;
-        }
-
-        if (!INF_GetDataField(&Context, 1, &KeyValue))
-        {
-            DPRINT1("INF_GetDataField() failed\n");
-            INF_FreeData(KeyName);
-            break;
-        }
-
-        UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
-                                            0,
-                                            (wcslen(KeyName) + 1) * sizeof(WCHAR));
-        if (UserData == NULL)
-        {
-            DPRINT1("RtlAllocateHeap() failed\n");
-            DestroyGenericList(List, TRUE);
-            INF_FreeData(KeyValue);
-            INF_FreeData(KeyName);
-            return NULL;
-        }
-
-        wcscpy(UserData, KeyName);
-        INF_FreeData(KeyName);
-
-        sprintf(Buffer, "%S", KeyValue);
-        INF_FreeData(KeyValue);
-
-        AppendGenericListEntry(List, Buffer, UserData,
-                               _wcsicmp(UserData, DisplayKey) ? FALSE : TRUE);
-    } while (SetupFindNextLine(&Context, &Context));
 
 #if 0
     AppendGenericListEntry(List, "Other display driver", NULL, TRUE);
@@ -982,45 +1042,23 @@ PGENERIC_LIST
 CreateKeyboardDriverList(
     HINF InfFile)
 {
-    CHAR Buffer[128];
     PGENERIC_LIST List;
     INFCONTEXT Context;
-    PWCHAR KeyName;
-    PWCHAR KeyValue;
-    PWCHAR UserData;
 
     List = CreateGenericList();
     if (List == NULL)
         return NULL;
 
-    if (!SetupFindFirstLineW(InfFile, L"Keyboard", NULL, &Context))
+    if (AddEntriesFromInfSection(List,
+                                 InfFile,
+                                 L"Keyboard",
+                                 &Context,
+                                 DefaultProcessEntry,
+                                 NULL) == -1)
     {
-        DestroyGenericList(List, FALSE);
+        DestroyGenericList(List, TRUE);
         return NULL;
     }
-
-    do
-    {
-        if (!INF_GetData(&Context, &KeyName, &KeyValue))
-        {
-            /* FIXME: Handle error! */
-            DPRINT("INF_GetData() failed\n");
-            break;
-        }
-
-        UserData = (WCHAR*)RtlAllocateHeap(ProcessHeap,
-                                           0,
-                                           (wcslen(KeyName) + 1) * sizeof(WCHAR));
-        if (UserData == NULL)
-        {
-            /* FIXME: Handle error! */
-        }
-
-        wcscpy(UserData, KeyName);
-
-        sprintf(Buffer, "%S", KeyValue);
-        AppendGenericListEntry(List, Buffer, UserData, FALSE);
-    } while (SetupFindNextLine(&Context, &Context));
 
     return List;
 }
@@ -1031,18 +1069,67 @@ GetDefaultLanguageIndex(VOID)
     return DefaultLanguageIndex;
 }
 
+typedef struct _LANG_ENTRY_PARAM
+{
+    ULONG uIndex;
+    PWCHAR DefaultLanguage;
+} LANG_ENTRY_PARAM, *PLANG_ENTRY_PARAM;
+
+static UCHAR
+NTAPI
+ProcessLangEntry(
+    IN PWCHAR KeyName,
+    IN PWCHAR KeyValue,
+    IN PCHAR DisplayText,
+    IN SIZE_T DisplayTextSize,
+    OUT PVOID* UserData,
+    OUT PBOOLEAN Current,
+    IN PVOID Parameter OPTIONAL)
+{
+    PLANG_ENTRY_PARAM LangEntryParam = (PLANG_ENTRY_PARAM)Parameter;
+
+    if (!IsLanguageAvailable(KeyName))
+    {
+        /* The specified language is unavailable, skip the entry */
+        return 2;
+    }
+
+    *UserData = RtlAllocateHeap(ProcessHeap, 0,
+                                (wcslen(KeyName) + 1) * sizeof(WCHAR));
+    if (*UserData == NULL)
+    {
+        /* Failure, stop enumeration */
+        DPRINT1("RtlAllocateHeap() failed\n");
+        return 0;
+    }
+
+    wcscpy((PWCHAR)*UserData, KeyName);
+    sprintf(DisplayText, "%S", KeyValue);
+
+    *Current = FALSE;
+
+    if (!_wcsicmp(KeyName, LangEntryParam->DefaultLanguage))
+        DefaultLanguageIndex = LangEntryParam->uIndex;
+
+    LangEntryParam->uIndex++;
+
+    /* Add the entry */
+    return 1;
+}
+
 PGENERIC_LIST
 CreateLanguageList(
     HINF InfFile,
     WCHAR *DefaultLanguage)
 {
-    CHAR Buffer[128];
     PGENERIC_LIST List;
     INFCONTEXT Context;
-    PWCHAR KeyName;
     PWCHAR KeyValue;
-    PWCHAR UserData = NULL;
-    ULONG uIndex = 0;
+
+    LANG_ENTRY_PARAM LangEntryParam;
+
+    LangEntryParam.uIndex = 0;
+    LangEntryParam.DefaultLanguage = DefaultLanguage;
 
     /* Get default language id */
     if (!SetupFindFirstLineW(InfFile, L"NLS", L"DefaultLanguage", &Context))
@@ -1052,58 +1139,29 @@ CreateLanguageList(
         return NULL;
 
     wcscpy(DefaultLanguage, KeyValue);
-
     SelectedLanguageId = KeyValue;
 
     List = CreateGenericList();
     if (List == NULL)
         return NULL;
 
-    if (!SetupFindFirstLineW(InfFile, L"Language", NULL, &Context))
+    if (AddEntriesFromInfSection(List,
+                                 InfFile,
+                                 L"Language",
+                                 &Context,
+                                 ProcessLangEntry,
+                                 &LangEntryParam) == -1)
     {
-        DestroyGenericList(List, FALSE);
+        DestroyGenericList(List, TRUE);
         return NULL;
     }
 
-    do
-    {
-        if (!INF_GetData(&Context, &KeyName, &KeyValue))
-        {
-            /* FIXME: Handle error! */
-            DPRINT("INF_GetData() failed\n");
-            break;
-        }
-
-        if (IsLanguageAvailable(KeyName))
-        {
-
-            UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap,
-                                                0,
-                                                (wcslen(KeyName) + 1) * sizeof(WCHAR));
-            if (UserData == NULL)
-            {
-                /* FIXME: Handle error! */
-            }
-
-            wcscpy(UserData, KeyName);
-
-            if (!_wcsicmp(KeyName, DefaultLanguage))
-                DefaultLanguageIndex = uIndex;
-
-            sprintf(Buffer, "%S", KeyValue);
-            AppendGenericListEntry(List,
-                                   Buffer,
-                                   UserData,
-                                   FALSE);
-            uIndex++;
-        }
-    } while (SetupFindNextLine(&Context, &Context));
-
     /* Only one language available, make it the default one */
-    if (uIndex == 1 && UserData != NULL)
+    if (LangEntryParam.uIndex == 1)
     {
         DefaultLanguageIndex = 0;
-        wcscpy(DefaultLanguage, UserData);
+        wcscpy(DefaultLanguage,
+               (PWSTR)GetListEntryUserData(GetFirstListEntry(List)));
     }
 
     return List;
@@ -1114,15 +1172,11 @@ CreateKeyboardLayoutList(
     HINF InfFile,
     WCHAR *DefaultKBLayout)
 {
-    CHAR Buffer[128];
     PGENERIC_LIST List;
     INFCONTEXT Context;
-    PWCHAR KeyName;
     PWCHAR KeyValue;
-    PWCHAR UserData;
     const MUI_LAYOUTS * LayoutsList;
     ULONG uIndex = 0;
-    BOOL KeyboardLayoutsFound = FALSE;
 
     /* Get default layout id */
     if (!SetupFindFirstLineW(InfFile, L"NLS", L"DefaultLayout", &Context))
@@ -1141,55 +1195,28 @@ CreateKeyboardLayoutList(
 
     do
     {
-        if (!SetupFindFirstLineW(InfFile, L"KeyboardLayout", NULL, &Context))
+        // NOTE: See https://svn.reactos.org/svn/reactos?view=revision&revision=68354
+        if (AddEntriesFromInfSection(List,
+                                     InfFile,
+                                     L"KeyboardLayout",
+                                     &Context,
+                                     DefaultProcessEntry,
+                                     DefaultKBLayout) == -1)
         {
-            DestroyGenericList(List, FALSE);
+            DestroyGenericList(List, TRUE);
             return NULL;
         }
-
-        do
-        {
-            if (!INF_GetData(&Context, &KeyName, &KeyValue))
-            {
-                /* FIXME: Handle error! */
-                DPRINT("INF_GetData() failed\n");
-                DestroyGenericList(List, FALSE);
-                return NULL;
-            }
-
-            {
-                UserData = (WCHAR*)RtlAllocateHeap(ProcessHeap,
-                                                   0,
-                                                   (wcslen(KeyName) + 1) * sizeof(WCHAR));
-                if (UserData == NULL)
-                {
-                    /* FIXME: Handle error! */
-                    DPRINT("RtlAllocateHeap() failed\n");
-                    DestroyGenericList(List, FALSE);
-                    return NULL;
-                }
-
-                wcscpy(UserData, KeyName);
-
-                sprintf(Buffer, "%S", KeyValue);
-                AppendGenericListEntry(List,
-                                       Buffer,
-                                       UserData,
-                                       _wcsicmp(KeyName, DefaultKBLayout) ? FALSE : TRUE);
-                KeyboardLayoutsFound = TRUE;
-            }
-
-        } while (SetupFindNextLine(&Context, &Context));
 
         uIndex++;
 
     } while (LayoutsList[uIndex].LangID != NULL);
 
+    /* Check whether some keyboard layouts have been found */
     /* FIXME: Handle this case */
-    if (!KeyboardLayoutsFound)
+    if (GetNumberOfListEntries(List) == 0)
     {
         DPRINT1("No keyboard layouts have been found\n");
-        DestroyGenericList(List, FALSE);
+        DestroyGenericList(List, TRUE);
         return NULL;
     }
 
