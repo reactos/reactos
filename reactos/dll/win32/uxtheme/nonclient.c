@@ -217,6 +217,7 @@ void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme)
     INT ButtonWidth, ButtonHeight, iPartId, i;
     WINDOWINFO wi = {sizeof(wi)};
     RECT rcCurrent;
+    SIZE ButtonSize;
 
     /* First of all check if we have something to do here */
     style = GetWindowLongW(hWnd, GWL_STYLE);
@@ -243,36 +244,18 @@ void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme)
     InflateRect(&rcCurrent, -(int)wi.cyWindowBorders-BUTTON_GAP_SIZE, 
                             -(int)wi.cyWindowBorders-BUTTON_GAP_SIZE);
 
+    iPartId = wi.dwExStyle & WS_EX_TOOLWINDOW ? WP_SMALLCLOSEBUTTON : WP_CLOSEBUTTON;
+
+    GetThemePartSize(htheme, NULL, iPartId, 0, NULL, TS_MIN, &ButtonSize);
+
+    ButtonHeight = GetSystemMetrics( wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMSIZE : SM_CYSIZE);
+    ButtonWidth = MulDiv(ButtonSize.cx, ButtonHeight, ButtonSize.cy);
+
+    ButtonHeight -= 4;
+    ButtonWidth -= 4;
+
     for (i = CLOSEBUTTON; i <= HELPBUTTON; i++)
     {
-        SIZE ButtonSize;
-
-        switch(i)
-        {
-            case CLOSEBUTTON:
-                iPartId = wi.dwExStyle & WS_EX_TOOLWINDOW ? WP_SMALLCLOSEBUTTON : WP_CLOSEBUTTON;
-                break;
-
-            case MAXBUTTON:
-                iPartId = wi.dwStyle & WS_MAXIMIZE ? WP_RESTOREBUTTON : WP_MAXBUTTON;
-                break;
-
-            case MINBUTTON:
-                iPartId = wi.dwStyle & WS_MINIMIZE ? WP_RESTOREBUTTON : WP_MINBUTTON;
-                break;
-
-            default:
-                iPartId = WP_HELPBUTTON ;
-        }
-
-        GetThemePartSize(htheme, NULL, iPartId, 0, NULL, TS_MIN, &ButtonSize);
-
-        ButtonHeight = GetSystemMetrics( wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMSIZE : SM_CYSIZE);
-        ButtonWidth = MulDiv(ButtonSize.cx, ButtonHeight, ButtonSize.cy);
-
-        ButtonHeight -= 4;
-        ButtonWidth -= 4;
-
         SetRect(&pwndData->rcCaptionButtons[i],
                 rcCurrent.right - ButtonWidth,
                 rcCurrent.top,
