@@ -833,6 +833,12 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
         return;
     }
 
+    if (LdrEntry->Flags & LDRP_COMPAT_DATABASE_PROCESSED)
+    {
+        SHIMENG_INFO("Skipping module 0x%p \"%wZ\" because it was already processed\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
+        return;
+    }
+
     ImportDescriptor = RtlImageDirectoryEntryToData(DllBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &Size);
     if (!ImportDescriptor)
     {
@@ -902,6 +908,9 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
             }
         }
     }
+
+    /* Mark this module as processed. */
+    LdrEntry->Flags |= LDRP_COMPAT_DATABASE_PROCESSED;
 }
 
 
@@ -1185,12 +1194,18 @@ VOID NTAPI SE_ProcessDying(VOID)
 VOID WINAPI SE_DllLoaded(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     SHIMENG_INFO("%sINIT. loading DLL \"%wZ\"\n", g_bShimDuringInit ? "" : "AFTER ", &LdrEntry->BaseDllName);
+
+    SeiHookImports(LdrEntry);
+
     NotifyShims(SHIM_REASON_DLL_LOAD, LdrEntry);
 }
 
 VOID WINAPI SE_DllUnloaded(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     SHIMENG_INFO("(%p)\n", LdrEntry);
+
+    /* Should we unhook here? */
+
     NotifyShims(SHIM_REASON_DLL_UNLOAD, LdrEntry);
 }
 
