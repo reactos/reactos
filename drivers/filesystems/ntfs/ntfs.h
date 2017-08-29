@@ -565,6 +565,13 @@ NtfsMarkIrpContextForQueue(PNTFS_IRP_CONTEXT IrpContext)
 //NtfsDumpAttribute(PATTRIBUTE Attribute);
 
 NTSTATUS
+AddBitmap(PNTFS_VCB Vcb,
+          PFILE_RECORD_HEADER FileRecord,
+          PNTFS_ATTR_RECORD AttributeAddress,
+          PCWSTR Name,
+          USHORT NameLength);
+
+NTSTATUS
 AddData(PFILE_RECORD_HEADER FileRecord,
         PNTFS_ATTR_RECORD AttributeAddress);
 
@@ -575,6 +582,13 @@ AddRun(PNTFS_VCB Vcb,
        PFILE_RECORD_HEADER FileRecord,
        ULONGLONG NextAssignedCluster,
        ULONG RunLength);
+
+NTSTATUS
+AddIndexAllocation(PNTFS_VCB Vcb,
+                   PFILE_RECORD_HEADER FileRecord,
+                   PNTFS_ATTR_RECORD AttributeAddress,
+                   PCWSTR Name,
+                   USHORT NameLength);
 
 NTSTATUS
 AddIndexRoot(PNTFS_VCB Vcb,
@@ -723,6 +737,9 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
                          PINDEX_ROOT_ATTRIBUTE *IndexRoot,
                          ULONG *Length);
 
+NTSTATUS
+DemoteBTreeRoot(PB_TREE Tree);
+
 VOID
 DestroyBTree(PB_TREE Tree);
 
@@ -752,13 +769,26 @@ GetAllocationOffsetFromVCN(PDEVICE_EXTENSION DeviceExt,
                            ULONG IndexBufferSize,
                            ULONGLONG Vcn);
 
+ULONG
+GetSizeOfIndexEntries(PB_TREE_FILENAME_NODE Node);
+
 NTSTATUS
 NtfsInsertKey(PB_TREE Tree,
               ULONGLONG FileReference,
               PFILENAME_ATTRIBUTE FileNameAttribute,
               PB_TREE_FILENAME_NODE Node,
               BOOLEAN CaseSensitive,
-              ULONG MaxIndexRootSize);
+              ULONG MaxIndexRootSize,
+              ULONG IndexRecordSize,
+              PB_TREE_KEY *MedianKey,
+              PB_TREE_FILENAME_NODE *NewRightHandSibling);
+
+NTSTATUS
+SplitBTreeNode(PB_TREE Tree,
+               PB_TREE_FILENAME_NODE Node,
+               PB_TREE_KEY *MedianKey,
+               PB_TREE_FILENAME_NODE *NewRightHandSibling,
+               BOOLEAN CaseSensitive);
 
 NTSTATUS
 UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
@@ -772,8 +802,7 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
                 PB_TREE_FILENAME_NODE Node,
                 ULONG IndexBufferSize,
                 PNTFS_ATTR_CONTEXT IndexAllocationContext,
-                ULONG IndexAllocationOffset,
-                PNTFS_ATTR_CONTEXT BitmapContext);
+                ULONG IndexAllocationOffset);
 
 /* close.c */
 

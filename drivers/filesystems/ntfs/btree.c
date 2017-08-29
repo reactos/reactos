@@ -468,6 +468,33 @@ CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
     return Comparison;
 }
 
+/**
+* @name CountBTreeKeys
+* @implemented
+* 
+* Counts the number of linked B-Tree keys, starting with FirstKey.
+*
+* @param FirstKey
+* Pointer to a B_TREE_KEY that will be the first key to be counted.
+* 
+* @return
+* The number of keys in a linked-list, including FirstKey and the final dummy key.
+*/
+ULONG
+CountBTreeKeys(PB_TREE_KEY FirstKey)
+{
+    ULONG Count = 0;
+    PB_TREE_KEY Current = FirstKey;
+    
+    while (Current != NULL)
+    {
+        Count++;
+        Current = Current->NextKey;
+    }
+
+    return Count;
+}
+
 PB_TREE_FILENAME_NODE
 CreateBTreeNodeFromIndexNode(PDEVICE_EXTENSION Vcb,
                              PINDEX_ROOT_ATTRIBUTE IndexRoot,
@@ -852,6 +879,9 @@ GetSizeOfIndexEntries(PB_TREE_FILENAME_NODE Node)
 *
 * @param MaxIndexSize
 * Describes how large the index can be before it will take too much space in the file record.
+* This is strictly the sum of the sizes of all index entries; it does not include the space
+* required by the index root header (INDEX_ROOT_ATTRIBUTE), since that size will be constant.
+*
 * After reaching MaxIndexSize, an index can no longer be represented with just an index root
 * attribute, and will require an index allocation and $I30 bitmap (TODO).
 *
@@ -884,6 +914,10 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
                                                                TAG_NTFS);
 
     DPRINT1("CreateIndexRootFromBTree(%p, %p, 0x%lx, %p, %p)\n", DeviceExt, Tree, MaxIndexSize, IndexRoot, Length);
+
+#ifndef NDEBUG
+    DumpBTree(Tree);
+#endif
 
     if (!NewIndexRoot)
     {
@@ -918,12 +952,10 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
     for (i = 0; i < Tree->RootNode->KeyCount; i++)
     {
         // Would adding the current entry to the index increase the index size beyond the limit we've set?
-        ULONG IndexSize = FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)
-                          + NewIndexRoot->Header.TotalSizeOfEntries
-                          + CurrentNodeEntry->Length;
+        ULONG IndexSize = NewIndexRoot->Header.TotalSizeOfEntries - NewIndexRoot->Header.FirstEntryOffset + CurrentKey->IndexEntry->Length;
         if (IndexSize > MaxIndexSize)
         {
-            DPRINT1("TODO: Adding file would require creating an index allocation!\n");
+            DPRINT1("TODO: Adding file would require creating an attribute list!\n");
             ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
             return STATUS_NOT_IMPLEMENTED;
         }
@@ -962,6 +994,7 @@ NTSTATUS
 CreateIndexBufferFromBTreeNode(PDEVICE_EXTENSION DeviceExt,
                                PB_TREE_FILENAME_NODE Node,
                                ULONG BufferSize,
+                               BOOLEAN HasChildren,
                                PINDEX_BUFFER IndexBuffer)
 {
     ULONG i;
@@ -1014,7 +1047,9 @@ CreateIndexBufferFromBTreeNode(PDEVICE_EXTENSION DeviceExt,
         // Add Length of Current Entry to Total Size of Entries
         IndexBuffer->Header.TotalSizeOfEntries += CurrentNodeEntry->Length;
 
-        // TODO: Check for child nodes
+        // Check for child nodes
+        if (HasChildren)
+            IndexBuffer->Header.Flags = INDEX_NODE_LARGE;
 
         // Go to the next node entry
         CurrentNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)CurrentNodeEntry + CurrentNodeEntry->Length);
@@ -1024,6 +1059,89 @@ CreateIndexBufferFromBTreeNode(PDEVICE_EXTENSION DeviceExt,
     Status = AddFixupArray(DeviceExt, &IndexBuffer->Ntfs);
 
     return Status;
+}
+
+/**
+* @name DemoteBTreeRoot
+* @implemented
+*
+* Demoting the root means first putting all the keys in the root node into a new node, and making
+* the new node a child of a dummy key. The dummy key then becomes the sole contents of the root node.
+* The B-Tree gets one level deeper. This operation is needed when an index root grows too large for its file record.
+* Demotion is my own term; I might change the name later if I think of something more descriptive or can find
+* an appropriate name for this operation in existing B-Tree literature.
+*
+* @param Tree
+* Pointer to the B_TREE whose root is being demoted
+*
+* @returns
+* STATUS_SUCCESS on success.
+* STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
+*/
+NTSTATUS
+DemoteBTreeRoot(PB_TREE Tree)
+{
+    PB_TREE_FILENAME_NODE NewSubNode, NewIndexRoot;
+    PB_TREE_KEY DummyKey;
+
+    DPRINT1("Collapsing Index Root into sub-node.\n");
+
+#ifndef NDEBUG
+    DumpBTree(Tree);
+#endif
+
+    // Create a new node that will hold the keys currently in index root
+    NewSubNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
+    if (!NewSubNode)
+    {
+        DPRINT1("ERROR: Couldn't allocate memory for new sub-node.\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlZeroMemory(NewSubNode, sizeof(B_TREE_FILENAME_NODE));
+
+    // Copy the applicable data from the old index root node
+    NewSubNode->KeyCount = Tree->RootNode->KeyCount;
+    NewSubNode->FirstKey = Tree->RootNode->FirstKey;
+    NewSubNode->DiskNeedsUpdating = TRUE;
+
+    // Create a new dummy key, and make the new node it's child
+    DummyKey = CreateDummyKey(TRUE);
+    if (!DummyKey)
+    {
+        DPRINT1("ERROR: Couldn't allocate memory for new root node.\n");
+        ExFreePoolWithTag(NewSubNode, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // Make the new node a child of the dummy key
+    DummyKey->LesserChild = NewSubNode;
+
+    // Create a new index root node
+    NewIndexRoot = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
+    if (!NewIndexRoot)
+    {
+        DPRINT1("ERROR: Couldn't allocate memory for new index root.\n");
+        ExFreePoolWithTag(NewSubNode, TAG_NTFS);
+        ExFreePoolWithTag(DummyKey, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlZeroMemory(NewIndexRoot, sizeof(B_TREE_FILENAME_NODE));
+
+    NewIndexRoot->DiskNeedsUpdating = TRUE;
+
+    // Insert the dummy key into the new node
+    NewIndexRoot->FirstKey = DummyKey;
+    NewIndexRoot->KeyCount = 1;
+    NewIndexRoot->DiskNeedsUpdating = TRUE;
+
+    // Make the new node the Tree's root node
+    Tree->RootNode = NewIndexRoot;
+
+#ifndef NDEBUG
+    DumpBTree(Tree);
+#endif;
+
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -1060,7 +1178,7 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
                       PFILE_RECORD_HEADER FileRecord)
 {
     // Find the index allocation and bitmap
-    PNTFS_ATTR_CONTEXT IndexAllocationContext, BitmapContext;
+    PNTFS_ATTR_CONTEXT IndexAllocationContext;
     PB_TREE_KEY CurrentKey;
     NTSTATUS Status;
     BOOLEAN HasIndexAllocation = FALSE;
@@ -1074,14 +1192,12 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
     {
         HasIndexAllocation = TRUE;
 
+#ifndef NDEBUG
         PrintAllVCNs(DeviceExt,
                      IndexAllocationContext,
                      IndexBufferSize);
+#endif
     }
-
-    // TODO: Handle bitmap
-    BitmapContext = NULL;
-
     // Walk through the root node and update all the sub-nodes
     CurrentKey = Tree->RootNode->FirstKey;
     for (i = 0; i < Tree->RootNode->KeyCount; i++)
@@ -1090,8 +1206,46 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
         {
             if (!HasIndexAllocation)
             {
-                DPRINT1("FIXME: Need to add index allocation\n");
-                return STATUS_NOT_IMPLEMENTED;
+                // We need to add an index allocation to the file record
+                PNTFS_ATTR_RECORD EndMarker = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse - (sizeof(ULONG) * 2));
+                DPRINT1("Adding index allocation...\n");
+
+                // Add index allocation to the very end of the file record
+                Status = AddIndexAllocation(DeviceExt,
+                                            FileRecord,
+                                            EndMarker,
+                                            L"$I30",
+                                            4);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("ERROR: Failed to add index allocation!\n");
+                    return Status;
+                }
+
+                // Find the new attribute
+                Status = FindAttribute(DeviceExt, FileRecord, AttributeIndexAllocation, L"$I30", 4, &IndexAllocationContext, &IndexAllocationOffset);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("ERROR: Couldn't find newly-created index allocation!\n");
+                    return Status;
+                }
+
+                // Advance end marker 
+                EndMarker = (PNTFS_ATTR_RECORD)((ULONG_PTR)EndMarker + EndMarker->Length);
+
+                // Add index bitmap to the very end of the file record
+                Status = AddBitmap(DeviceExt,
+                                   FileRecord,
+                                   EndMarker,
+                                   L"$I30",
+                                   4);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("ERROR: Failed to add index bitmap!\n");
+                    return Status;
+                }
+
+                HasIndexAllocation = TRUE;
             }
 
             // Is the Index Entry large enough to store the VCN?
@@ -1122,7 +1276,7 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
             }
 
             // Update the sub-node
-            Status = UpdateIndexNode(DeviceExt, FileRecord, CurrentKey->LesserChild, IndexBufferSize, IndexAllocationContext, IndexAllocationOffset, BitmapContext);
+            Status = UpdateIndexNode(DeviceExt, FileRecord, CurrentKey->LesserChild, IndexBufferSize, IndexAllocationContext, IndexAllocationOffset);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ERROR: Failed to update index node!\n");
@@ -1136,12 +1290,17 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
         CurrentKey = CurrentKey->NextKey;
     }
 
+#ifndef NDEBUG
+    DumpBTree(Tree);
+#endif
+
     if (HasIndexAllocation)
     {
+#ifndef NDEBUG
         PrintAllVCNs(DeviceExt,
                      IndexAllocationContext,
                      IndexBufferSize);
-
+#endif
         ReleaseAttributeContext(IndexAllocationContext);
     }
 
@@ -1154,22 +1313,74 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
                 PB_TREE_FILENAME_NODE Node,
                 ULONG IndexBufferSize,
                 PNTFS_ATTR_CONTEXT IndexAllocationContext,
-                ULONG IndexAllocationOffset,
-                PNTFS_ATTR_CONTEXT BitmapContext)
+                ULONG IndexAllocationOffset)
 {
     ULONG i;
     PB_TREE_KEY CurrentKey = Node->FirstKey;
+    BOOLEAN HasChildren = FALSE;
     NTSTATUS Status;
 
-    DPRINT1("UpdateIndexNode(%p, %p, %p, %lu, %p, %lu, %p) called for index node with VCN %I64u\n",
-            DeviceExt,
-            FileRecord,
-            Node,
-            IndexBufferSize,
-            IndexAllocationContext,
-            IndexAllocationOffset,
-            BitmapContext,
-            Node->VCN);
+
+    DPRINT("UpdateIndexNode(%p, %p, %p, %lu, %p, %lu) called for index node with VCN %I64u\n",
+           DeviceExt,
+           FileRecord,
+           Node,
+           IndexBufferSize,
+           IndexAllocationContext,
+           IndexAllocationOffset,
+           Node->VCN);
+
+    // Walk through the node and look for children to update
+    for (i = 0; i < Node->KeyCount; i++)
+    {
+        ASSERT(CurrentKey);
+
+        // If there's a child node
+        if (CurrentKey->LesserChild)
+        {
+            HasChildren = TRUE;
+
+            // Update the child node on disk
+            Status = UpdateIndexNode(DeviceExt, FileRecord, CurrentKey->LesserChild, IndexBufferSize, IndexAllocationContext, IndexAllocationOffset);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ERROR: Failed to update child node!\n");
+                return Status;
+            }
+            
+            // Is the Index Entry large enough to store the VCN?
+            if (!CurrentKey->IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+            {
+                // Allocate memory for the larger index entry
+                PINDEX_ENTRY_ATTRIBUTE NewEntry = ExAllocatePoolWithTag(NonPagedPool,
+                                                                        CurrentKey->IndexEntry->Length + sizeof(ULONGLONG),
+                                                                        TAG_NTFS);
+                if (!NewEntry)
+                {
+                    DPRINT1("ERROR: Unable to allocate memory for new index entry!\n");
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+
+                // Copy the old entry to the new one
+                RtlCopyMemory(NewEntry, CurrentKey->IndexEntry, CurrentKey->IndexEntry->Length);
+
+                NewEntry->Length += sizeof(ULONGLONG);
+
+                // Free the old memory
+                ExFreePoolWithTag(CurrentKey->IndexEntry, TAG_NTFS);
+
+                CurrentKey->IndexEntry = NewEntry;
+            }
+
+            // Update the VCN stored in the index entry of CurrentKey
+            SetIndexEntryVCN(CurrentKey->IndexEntry, CurrentKey->LesserChild->VCN);
+
+            CurrentKey->IndexEntry->Flags |= NTFS_INDEX_ENTRY_NODE;
+        }
+
+        CurrentKey = CurrentKey->NextKey;
+    }
+
 
     // Do we need to write this node to disk?
     if (Node->DiskNeedsUpdating)
@@ -1206,7 +1417,7 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
         }
 
         // Create the index buffer we'll be writing to disk to represent this node
-        Status = CreateIndexBufferFromBTreeNode(DeviceExt, Node, IndexBufferSize, IndexBuffer);
+        Status = CreateIndexBufferFromBTreeNode(DeviceExt, Node, IndexBufferSize, HasChildren, IndexBuffer);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERROR: Failed to create index buffer from node!\n");
@@ -1233,26 +1444,6 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
 
         // Free the index buffer
         ExFreePoolWithTag(IndexBuffer, TAG_NTFS);
-    }
-
-    // Walk through the node and look for children to update
-    for (i = 0; i < Node->KeyCount; i++)
-    {
-        ASSERT(CurrentKey);
-
-        // If there's a child node
-        if (CurrentKey->LesserChild)
-        {
-            // Update the child node on disk
-            Status = UpdateIndexNode(DeviceExt, FileRecord, CurrentKey->LesserChild, IndexBufferSize, IndexAllocationContext, IndexAllocationOffset, BitmapContext);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("ERROR: Failed to update child node!\n");
-                return Status;
-            }
-        }
-
-        CurrentKey = CurrentKey->NextKey;
     }
 
     return STATUS_SUCCESS;
@@ -1438,6 +1629,16 @@ GetAllocationOffsetFromVCN(PDEVICE_EXTENSION DeviceExt,
     return Vcn * DeviceExt->NtfsInfo.BytesPerCluster;
 }
 
+ULONGLONG
+GetIndexEntryVCN(PINDEX_ENTRY_ATTRIBUTE IndexEntry)
+{
+    PULONGLONG Destination = (PULONGLONG)((ULONG_PTR)IndexEntry + IndexEntry->Length - sizeof(ULONGLONG));
+
+    ASSERT(IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE);
+
+    return *Destination;
+}
+
 /**
 * @name NtfsInsertKey
 * @implemented
@@ -1464,6 +1665,17 @@ GetAllocationOffsetFromVCN(PDEVICE_EXTENSION DeviceExt,
 * The maximum size, in bytes, of node entries that can be stored in the index root before it will grow too large for
 * the file record. This number is just the size of the entries, without any headers for the attribute or index root.
 *
+* @param IndexRecordSize
+* The size, in bytes, of an index record for this index. AKA an index buffer. Usually set to 4096.
+*
+* @param MedianKey
+* Pointer to a PB_TREE_KEY that will receive a pointer to the median key, should the node grow too large and need to be split.
+* Will be set to NULL if the node isn't split.
+*
+* @param NewRightHandSibling
+* Pointer to a PB_TREE_FILENAME_NODE that will receive a pointer to a newly-created right-hand sibling node,
+* should the node grow too large and need to be split. Will be set to NULL if the node isn't split.
+*
 * @remarks
 * A node is always sorted, with the least comparable filename stored first and a dummy key to mark the end.
 */
@@ -1473,7 +1685,10 @@ NtfsInsertKey(PB_TREE Tree,
               PFILENAME_ATTRIBUTE FileNameAttribute,
               PB_TREE_FILENAME_NODE Node,
               BOOLEAN CaseSensitive,
-              ULONG MaxIndexRootSize)
+              ULONG MaxIndexRootSize,
+              ULONG IndexRecordSize,
+              PB_TREE_KEY *MedianKey,
+              PB_TREE_FILENAME_NODE *NewRightHandSibling)
 {
     PB_TREE_KEY NewKey, CurrentKey, PreviousKey;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1482,13 +1697,19 @@ NtfsInsertKey(PB_TREE Tree,
     ULONG MaxNodeSizeWithoutHeader;
     ULONG i;
 
-    DPRINT1("NtfsInsertKey(%p, 0x%I64x, %p, %p, %s, %lu)\n",
+    *MedianKey = NULL;
+    *NewRightHandSibling = NULL;
+
+    DPRINT1("NtfsInsertKey(%p, 0x%I64x, %p, %p, %s, %lu, %lu, %p, %p)\n",
             Tree,
             FileReference,
             FileNameAttribute,
             Node,
             CaseSensitive ? "TRUE" : "FALSE",
-            MaxIndexRootSize);
+            MaxIndexRootSize,
+            IndexRecordSize,
+            MedianKey,
+            NewRightHandSibling);
 
     // Create the key for the filename attribute
     NewKey = CreateBTreeKeyFromFilename(FileReference, FileNameAttribute);
@@ -1513,12 +1734,22 @@ NtfsInsertKey(PB_TREE Tree,
         // Is NewKey < CurrentKey?
         if (Comparison < 0)
         {
-
             // Does CurrentKey have a sub-node?
             if (CurrentKey->LesserChild)
             {
+                PB_TREE_KEY NewLeftKey;
+                PB_TREE_FILENAME_NODE NewChild;
+
                 // Insert the key into the child node
-                Status = NtfsInsertKey(Tree, FileReference, FileNameAttribute, CurrentKey->LesserChild, CaseSensitive, 0);
+                Status = NtfsInsertKey(Tree,
+                                       FileReference,
+                                       FileNameAttribute,
+                                       CurrentKey->LesserChild,
+                                       CaseSensitive,
+                                       MaxIndexRootSize,
+                                       IndexRecordSize,
+                                       &NewLeftKey, 
+                                       &NewChild);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("ERROR: Failed to insert key.\n");
@@ -1526,6 +1757,30 @@ NtfsInsertKey(PB_TREE Tree,
                     return Status;
                 }
 
+                // Did the child node get split?
+                if (NewLeftKey)
+                {
+                    ASSERT(NewChild != NULL);
+
+                    // Insert the new left key to the left of the current key
+                    NewLeftKey->NextKey = CurrentKey;
+
+                    // Is CurrentKey the first key?
+                    if (!PreviousKey)
+                        Node->FirstKey = NewLeftKey;
+                    else
+                        PreviousKey->NextKey = NewLeftKey;
+
+                    // CurrentKey->LesserChild will be the right-hand sibling
+                    CurrentKey->LesserChild = NewChild;
+
+                    Node->KeyCount++;
+                    Node->DiskNeedsUpdating = TRUE;
+
+#ifndef NDEBUG
+                    DumpBTree(Tree);
+#endif NDEBUG
+                }
             }
             else
             {
@@ -1541,8 +1796,8 @@ NtfsInsertKey(PB_TREE Tree,
                     Node->FirstKey = NewKey;
                 else
                     PreviousKey->NextKey = NewKey;
-                break;
             }
+            break;
         }
 
         PreviousKey = CurrentKey;
@@ -1552,88 +1807,202 @@ NtfsInsertKey(PB_TREE Tree,
     // Determine how much space the index entries will need
     NodeSize = GetSizeOfIndexEntries(Node);
 
-    // Is Node the root node?
-    if (Node == Tree->RootNode)
+    // Is Node not the root node?
+    if (Node != Tree->RootNode)
     {
-        // Is the index root too large for the file record?
-        if (NodeSize > MaxIndexRootSize)
-        {
-            PB_TREE_FILENAME_NODE NewSubNode, NewIndexRoot;
-            PB_TREE_KEY DummyKey;
+        // Calculate maximum size of index entries without any headers
+        AllocatedNodeSize = IndexRecordSize - FIELD_OFFSET(INDEX_BUFFER, Header);
 
-            DPRINT1("Collapsing Index Root into sub-node.\n") ;
-
-            DumpBTree(Tree);
-            
-            // Create a new node that will hold the keys currently in index root
-            NewSubNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
-            if (!NewSubNode)
-            {
-                DPRINT1("ERROR: Couldn't allocate memory for new sub-node.\n");
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-            RtlZeroMemory(NewSubNode, sizeof(B_TREE_FILENAME_NODE));
-
-            // Copy the applicable data from the old index root node
-            NewSubNode->KeyCount = Node->KeyCount;
-            NewSubNode->FirstKey = Node->FirstKey;
-            NewSubNode->DiskNeedsUpdating = TRUE;
-
-            // Create a new dummy key, and make the new node it's child
-            DummyKey = CreateDummyKey(TRUE);
-            if (!DummyKey)
-            {
-                DPRINT1("ERROR: Couldn't allocate memory for new root node.\n");
-                ExFreePoolWithTag(NewSubNode, TAG_NTFS);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            // Make the new node a child of the dummy key
-            DummyKey->LesserChild = NewSubNode;
-
-            // Create a new index root node
-            NewIndexRoot = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
-            if (!NewIndexRoot)
-            {
-                DPRINT1("ERROR: Couldn't allocate memory for new index root.\n");
-                ExFreePoolWithTag(NewSubNode, TAG_NTFS);
-                ExFreePoolWithTag(DummyKey, TAG_NTFS);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-            RtlZeroMemory(NewIndexRoot, sizeof(B_TREE_FILENAME_NODE));
-
-            NewIndexRoot->DiskNeedsUpdating = TRUE;
-
-            // Insert the dummy key into the new node
-            NewIndexRoot->FirstKey = DummyKey;
-            NewIndexRoot->KeyCount = 1;
-            NewIndexRoot->DiskNeedsUpdating = TRUE;
-
-            // Make the new node the Tree's root node
-            Tree->RootNode = NewIndexRoot;
-
-            DumpBTree(Tree);
-
-            return STATUS_SUCCESS;
-        }
-    }
-    else
-    {
-        // TEMPTEMP: TODO: MATH
-        AllocatedNodeSize = 0xfe8;
+        // TODO: Replace magic with math 
         MaxNodeSizeWithoutHeader = AllocatedNodeSize - 0x28;
         
         // Has the node grown larger than its allocated size?
         if (NodeSize > MaxNodeSizeWithoutHeader)
         {
-            DPRINT1("FIXME: Splitting a node is still a WIP!\n");
-            //SplitBTreeNode(NULL, Node);
-            //DumpBTree(Tree);
-            return STATUS_NOT_IMPLEMENTED;
+            NTSTATUS Status;
+
+            Status = SplitBTreeNode(Tree, Node, MedianKey, NewRightHandSibling, CaseSensitive);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ERROR: Failed to split B-Tree node!\n");
+                return Status;
+            }
+
+            return Status;
         }
     }
 
     // NewEntry and NewKey will be destroyed later by DestroyBTree()
 
     return Status;
+}
+
+
+
+/**
+* @name SplitBTreeNode
+* @implemented
+*
+* Splits a B-Tree node that has grown too large. Finds the median key and sets up a right-hand-sibling
+* node to contain the keys to the right of the median key.
+*
+* @param Tree
+* Pointer to the B_TREE which contains the node being split
+*
+* @param Node
+* Pointer to the B_TREE_FILENAME_NODE that needs to be split
+*
+* @param MedianKey
+* Pointer a PB_TREE_KEY that will receive the pointer to the key in the middle of the node being split
+*
+* @param NewRightHandSibling
+* Pointer to a PB_TREE_FILENAME_NODE that will receive a pointer to a newly-created B_TREE_FILENAME_NODE
+* containing the keys to the right of MedianKey.
+*
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application created the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+* 
+* @return
+* STATUS_SUCCESS on success.
+* STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
+*
+* @remarks
+* It's the responsibility of the caller to insert the new median key into the parent node, as well as making the
+* NewRightHandSibling the lesser child of the node that is currently Node's parent.
+*/
+NTSTATUS
+SplitBTreeNode(PB_TREE Tree,
+               PB_TREE_FILENAME_NODE Node,
+               PB_TREE_KEY *MedianKey,
+               PB_TREE_FILENAME_NODE *NewRightHandSibling,
+               BOOLEAN CaseSensitive)
+{
+    ULONG MedianKeyIndex;
+    PB_TREE_KEY LastKeyBeforeMedian, FirstKeyAfterMedian;
+    ULONG i;
+
+    DPRINT1("SplitBTreeNode(%p, %p, %p, %p, %s) called\n",
+            Tree,
+            Node,
+            MedianKey,
+            NewRightHandSibling,
+            CaseSensitive ? "TRUE" : "FALSE");
+
+    //DumpBTreeNode(Node, 0, 0);
+
+    // Create the right hand sibling
+    *NewRightHandSibling = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
+    if (*NewRightHandSibling == NULL)
+    {
+        DPRINT1("Error: Failed to allocate memory for right hand sibling!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlZeroMemory(*NewRightHandSibling, sizeof(B_TREE_FILENAME_NODE));
+    (*NewRightHandSibling)->DiskNeedsUpdating = TRUE;
+
+    // find the median key index
+    MedianKeyIndex = (Node->KeyCount + 1) / 2;
+    MedianKeyIndex--;
+
+    // Find the last key before the median
+    LastKeyBeforeMedian = Node->FirstKey;
+    for (i = 0; i < MedianKeyIndex - 1; i++)
+        LastKeyBeforeMedian = LastKeyBeforeMedian->NextKey;
+
+    // Use size to locate the median key / index
+    ULONG HalfSize = 2016; // half the allocated size after subtracting the first index entry offset (TODO: MATH)
+    ULONG SizeSum = 0;
+    LastKeyBeforeMedian = Node->FirstKey;
+    MedianKeyIndex = 0;
+    for (i = 0; i < Node->KeyCount; i++)
+    {
+        SizeSum += LastKeyBeforeMedian->IndexEntry->Length;
+
+        if (SizeSum > HalfSize)
+            break;
+
+        MedianKeyIndex++;
+        LastKeyBeforeMedian = LastKeyBeforeMedian->NextKey;
+    }
+
+    // Now we can get the median key and the key that follows it
+    *MedianKey = LastKeyBeforeMedian->NextKey;
+    FirstKeyAfterMedian = (*MedianKey)->NextKey;
+
+    DPRINT1("%lu keys, %lu median\n", Node->KeyCount, MedianKeyIndex);
+    DPRINT1("\t\tMedian: %.*S\n", (*MedianKey)->IndexEntry->FileName.NameLength, (*MedianKey)->IndexEntry->FileName.Name);
+
+    // "Node" will be the left hand sibling after the split, containing all keys prior to the median key
+
+    // We need to create a dummy pointer at the end of the LHS. The dummy's child will be the median's child.
+    LastKeyBeforeMedian->NextKey = CreateDummyKey(BooleanFlagOn((*MedianKey)->IndexEntry->Flags, NTFS_INDEX_ENTRY_NODE));
+    if (LastKeyBeforeMedian->NextKey == NULL)
+    {
+        DPRINT1("Error: Couldn't allocate dummy key!\n");
+        LastKeyBeforeMedian->NextKey = *MedianKey;
+        ExFreePoolWithTag(*NewRightHandSibling, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // Did the median key have a child node?
+    if ((*MedianKey)->IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+    {
+        // Set the child of the new dummy key
+        LastKeyBeforeMedian->NextKey->LesserChild = (*MedianKey)->LesserChild;
+
+        // Give the dummy key's index entry the same sub-node VCN the median
+        SetIndexEntryVCN(LastKeyBeforeMedian->NextKey->IndexEntry, GetIndexEntryVCN((*MedianKey)->IndexEntry));
+    }
+    else
+    {
+        // Median key didn't have a child node, but it will. Create a new index entry large enough to store a VCN.
+        PINDEX_ENTRY_ATTRIBUTE NewIndexEntry = ExAllocatePoolWithTag(NonPagedPool,
+                                                                     (*MedianKey)->IndexEntry->Length + sizeof(ULONGLONG),
+                                                                     TAG_NTFS);
+        if (!NewIndexEntry)
+        {
+            DPRINT1("Unable to allocate memory for new index entry!\n");
+            LastKeyBeforeMedian->NextKey = *MedianKey;
+            ExFreePoolWithTag(*NewRightHandSibling, TAG_NTFS);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        // Copy the old index entry to the new one
+        RtlCopyMemory(NewIndexEntry, (*MedianKey)->IndexEntry, (*MedianKey)->IndexEntry->Length);
+
+        // Use the new index entry after freeing the old one
+        ExFreePoolWithTag((*MedianKey)->IndexEntry, TAG_NTFS);
+        (*MedianKey)->IndexEntry = NewIndexEntry;
+
+        // Update the length for the VCN
+        (*MedianKey)->IndexEntry->Length += sizeof(ULONGLONG);
+
+        // Set the node flag
+        (*MedianKey)->IndexEntry->Flags |= NTFS_INDEX_ENTRY_NODE;
+    }
+
+    // "Node" will become the child of the median key
+    (*MedianKey)->LesserChild = Node;
+    SetIndexEntryVCN((*MedianKey)->IndexEntry, Node->VCN);
+
+    // Update Node's KeyCount (remember to add 1 for the new dummy key)
+    Node->KeyCount = MedianKeyIndex + 2;
+
+    ULONG KeyCount = CountBTreeKeys(Node->FirstKey);
+    ASSERT(Node->KeyCount == KeyCount);
+
+    // everything to the right of MedianKey becomes the right hand sibling of Node
+    (*NewRightHandSibling)->FirstKey = FirstKeyAfterMedian;
+    (*NewRightHandSibling)->KeyCount = CountBTreeKeys(FirstKeyAfterMedian);
+
+#ifndef NDEBUG
+    DPRINT1("Left-hand node after split:\n");
+    DumpBTreeNode(Node, 0, 0);
+
+    DPRINT1("Right-hand sibling node after split:\n");
+    DumpBTreeNode(*NewRightHandSibling, 0, 0);
+#endif
+
+    return STATUS_SUCCESS;
 }
