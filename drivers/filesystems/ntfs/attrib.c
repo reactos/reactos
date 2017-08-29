@@ -37,6 +37,100 @@
 /* FUNCTIONS ****************************************************************/
 
 /**
+* @name AddBitmap
+* @implemented
+*
+* Adds a $BITMAP attribute to a given FileRecord.
+*
+* @param Vcb
+* Pointer to an NTFS_VCB for the destination volume.
+*
+* @param FileRecord
+* Pointer to a complete file record to add the attribute to.
+*
+* @param AttributeAddress
+* Pointer to the region of memory that will receive the $INDEX_ALLOCATION attribute.
+* This address must reside within FileRecord. Must be aligned to an 8-byte boundary (relative to FileRecord).
+*
+* @param Name
+* Pointer to a string of 16-bit Unicode characters naming the attribute. Most often L"$I30".
+*
+* @param NameLength
+* The number of wide-characters in the name. L"$I30" Would use 4 here.
+*
+* @return
+* STATUS_SUCCESS on success. STATUS_NOT_IMPLEMENTED if target address isn't at the end
+* of the given file record, or if the file record isn't large enough for the attribute.
+*
+* @remarks
+* Only adding the attribute to the end of the file record is supported; AttributeAddress must
+* be of type AttributeEnd.
+* This could be improved by adding an $ATTRIBUTE_LIST to the file record if there's not enough space.
+*
+*/
+NTSTATUS
+AddBitmap(PNTFS_VCB Vcb,
+          PFILE_RECORD_HEADER FileRecord,
+          PNTFS_ATTR_RECORD AttributeAddress,
+          PCWSTR Name,
+          USHORT NameLength)
+{
+    ULONG AttributeLength;
+    // Calculate the header length
+    ULONG ResidentHeaderLength = FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.Reserved) + sizeof(UCHAR);
+    ULONG FileRecordEnd = AttributeAddress->Length;
+    ULONG NameOffset;
+    ULONG ValueOffset;
+    // We'll start out with 8 bytes of bitmap data
+    ULONG ValueLength = 8;
+    ULONG BytesAvailable;
+
+    if (AttributeAddress->Type != AttributeEnd)
+    {
+        DPRINT1("FIXME: Can only add $BITMAP attribute to the end of a file record.\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    NameOffset = ResidentHeaderLength;
+
+    // Calculate ValueOffset, which will be aligned to a 4-byte boundary
+    ValueOffset = ALIGN_UP_BY(NameOffset + (sizeof(WCHAR) * NameLength), VALUE_OFFSET_ALIGNMENT);
+
+    // Calculate length of attribute
+    AttributeLength = ValueOffset + ValueLength;
+    AttributeLength = ALIGN_UP_BY(AttributeLength, ATTR_RECORD_ALIGNMENT);
+
+    // Make sure the file record is large enough for the new attribute
+    BytesAvailable = Vcb->NtfsInfo.BytesPerFileRecord - FileRecord->BytesInUse;
+    if (BytesAvailable < AttributeLength)
+    {
+        DPRINT1("FIXME: Not enough room in file record for index allocation attribute!\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    // Set Attribute fields
+    RtlZeroMemory(AttributeAddress, AttributeLength);
+
+    AttributeAddress->Type = AttributeBitmap;
+    AttributeAddress->Length = AttributeLength;
+    AttributeAddress->NameLength = NameLength;
+    AttributeAddress->NameOffset = NameOffset;
+    AttributeAddress->Instance = FileRecord->NextAttributeNumber++;
+
+    AttributeAddress->Resident.ValueLength = ValueLength;
+    AttributeAddress->Resident.ValueOffset = ValueOffset;
+
+    // Set the name
+    RtlCopyMemory((PCHAR)((ULONG_PTR)AttributeAddress + NameOffset), Name, NameLength * sizeof(WCHAR));
+
+    // move the attribute-end and file-record-end markers to the end of the file record
+    AttributeAddress = (PNTFS_ATTR_RECORD)((ULONG_PTR)AttributeAddress + AttributeAddress->Length);
+    SetFileRecordEnd(FileRecord, AttributeAddress, FileRecordEnd);
+
+    return STATUS_SUCCESS;
+}
+
+/**
 * @name AddData
 * @implemented
 *
@@ -256,6 +350,105 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     SetFileRecordEnd(FileRecord, AttributeAddress, FileRecordEnd);
 
     return Status;
+}
+
+/**
+* @name AddIndexAllocation
+* @implemented
+*
+* Adds an $INDEX_ALLOCATION attribute to a given FileRecord.
+*
+* @param Vcb
+* Pointer to an NTFS_VCB for the destination volume.
+*
+* @param FileRecord
+* Pointer to a complete file record to add the attribute to.
+*
+* @param AttributeAddress
+* Pointer to the region of memory that will receive the $INDEX_ALLOCATION attribute.
+* This address must reside within FileRecord. Must be aligned to an 8-byte boundary (relative to FileRecord).
+*
+* @param Name
+* Pointer to a string of 16-bit Unicode characters naming the attribute. Most often, this will be L"$I30".
+*
+* @param NameLength
+* The number of wide-characters in the name. L"$I30" Would use 4 here.
+*
+* @return
+* STATUS_SUCCESS on success. STATUS_NOT_IMPLEMENTED if target address isn't at the end
+* of the given file record, or if the file record isn't large enough for the attribute.
+*
+* @remarks
+* Only adding the attribute to the end of the file record is supported; AttributeAddress must
+* be of type AttributeEnd.
+* This could be improved by adding an $ATTRIBUTE_LIST to the file record if there's not enough space.
+* 
+*/
+NTSTATUS
+AddIndexAllocation(PNTFS_VCB Vcb,
+                   PFILE_RECORD_HEADER FileRecord,
+                   PNTFS_ATTR_RECORD AttributeAddress,
+                   PCWSTR Name,
+                   USHORT NameLength)
+{
+    ULONG RecordLength;
+    ULONG FileRecordEnd;
+    ULONG NameOffset;
+    ULONG DataRunOffset;
+    ULONG BytesAvailable;
+
+    if (AttributeAddress->Type != AttributeEnd)
+    {
+        DPRINT1("FIXME: Can only add $INDEX_ALLOCATION attribute to the end of a file record.\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    // Calculate the name offset
+    NameOffset = FIELD_OFFSET(NTFS_ATTR_RECORD, NonResident.CompressedSize);
+
+    // Calculate the offset to the first data run
+    DataRunOffset = (sizeof(WCHAR) * NameLength) + NameOffset;
+    // The data run offset must be aligned to a 4-byte boundary
+    DataRunOffset = ALIGN_UP_BY(DataRunOffset, DATA_RUN_ALIGNMENT);
+
+    // Calculate the length of the new attribute; the empty data run will consist of a single byte
+    RecordLength = DataRunOffset + 1;
+
+    // The size of the attribute itself must be aligned to an 8 - byte boundary
+    RecordLength = ALIGN_UP_BY(RecordLength, ATTR_RECORD_ALIGNMENT);
+
+    // Back up the last 4-bytes of the file record (even though this value doesn't matter)
+    FileRecordEnd = AttributeAddress->Length;
+
+    // Make sure the file record can contain the new attribute
+    BytesAvailable = Vcb->NtfsInfo.BytesPerFileRecord - FileRecord->BytesInUse;
+    if (BytesAvailable < RecordLength)
+    {
+        DPRINT1("FIXME: Not enough room in file record for index allocation attribute!\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    // Set fields of attribute header
+    RtlZeroMemory(AttributeAddress, RecordLength);
+    
+    AttributeAddress->Type = AttributeIndexAllocation;
+    AttributeAddress->Length = RecordLength;
+    AttributeAddress->IsNonResident = TRUE;
+    AttributeAddress->NameLength = NameLength;
+    AttributeAddress->NameOffset = NameOffset;
+    AttributeAddress->Instance = FileRecord->NextAttributeNumber++;
+
+    AttributeAddress->NonResident.MappingPairsOffset = DataRunOffset;
+    AttributeAddress->NonResident.HighestVCN = (LONGLONG)-1;
+
+    // Set the name
+    RtlCopyMemory((PCHAR)((ULONG_PTR)AttributeAddress + NameOffset), Name, NameLength * sizeof(WCHAR));
+
+    // move the attribute-end and file-record-end markers to the end of the file record
+    AttributeAddress = (PNTFS_ATTR_RECORD)((ULONG_PTR)AttributeAddress + AttributeAddress->Length);
+    SetFileRecordEnd(FileRecord, AttributeAddress, FileRecordEnd);
+
+    return STATUS_SUCCESS;
 }
 
 /**

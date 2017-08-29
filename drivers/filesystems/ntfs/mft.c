@@ -786,6 +786,11 @@ SetNonResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
     DestinationAttribute->NonResident.AllocatedSize = AllocationSize;
     DestinationAttribute->NonResident.DataSize = DataSize->QuadPart;
     DestinationAttribute->NonResident.InitializedSize = DataSize->QuadPart;
+    
+    // HighestVCN seems to be set incorrectly somewhere. Apply a hack-fix to reset it. 
+    // HACKHACK FIXME: Fix for sparse files; this math won't work in that case.
+    AttrContext->pRecord->NonResident.HighestVCN = ((ULONGLONG)AllocationSize / Vcb->NtfsInfo.BytesPerCluster) - 1;
+    DestinationAttribute->NonResident.HighestVCN = AttrContext->pRecord->NonResident.HighestVCN;
 
     DPRINT("Allocated Size: %I64u\n", DestinationAttribute->NonResident.AllocatedSize);
 
@@ -2131,6 +2136,8 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     PB_TREE NewTree;
     ULONG BtreeIndexLength;
     ULONG MaxIndexRootSize;
+    PB_TREE_KEY NewLeftKey;
+    PB_TREE_FILENAME_NODE NewRightHandNode;
 
     // Allocate memory for the parent directory
     ParentFileRecord = ExAllocatePoolWithTag(NonPagedPool,
@@ -2152,8 +2159,10 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
+#ifndef NDEBUG
     DPRINT1("Dumping old parent file record:\n");
     NtfsDumpFileRecord(DeviceExt, ParentFileRecord);
+#endif
 
     // Find the index root attribute for the directory
     Status = FindAttribute(DeviceExt,
@@ -2176,7 +2185,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord               // Start with the size of a file record
                        - IndexRootOffset                                    // Subtract the length of everything that comes before index root
                        - IndexRootContext->pRecord->Resident.ValueOffset    // Subtract the length of the attribute header for index root
-                       - FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)         // Subtract the length of the index header for index root
+                       - sizeof(INDEX_ROOT_ATTRIBUTE)                       // Subtract the length of the index root header
                        - (sizeof(ULONG) * 2);                               // Subtract the length of the file record end marker and padding
 
     // Are there attributes after this one?
@@ -2233,10 +2242,20 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
+#ifndef NDEBUG
     DumpBTree(NewTree);
+#endif
 
     // Insert the key for the file we're adding
-    Status = NtfsInsertKey(NewTree, FileReferenceNumber, FilenameAttribute, NewTree->RootNode, CaseSensitive, MaxIndexRootSize);
+    Status = NtfsInsertKey(NewTree,
+                           FileReferenceNumber,
+                           FilenameAttribute,
+                           NewTree->RootNode,
+                           CaseSensitive,
+                           MaxIndexRootSize,
+                           I30IndexRoot->SizeOfEntry,
+                           &NewLeftKey,
+                           &NewRightHandNode);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to insert key into B-Tree!\n");
@@ -2247,9 +2266,57 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
+#ifndef NDEBUG
     DumpBTree(NewTree);
+#endif
 
-    // Convert B*Tree back to Index, starting with the index allocation
+    // The root node can't be split
+    ASSERT(NewLeftKey == NULL);
+    ASSERT(NewRightHandNode == NULL);
+
+    // Convert B*Tree back to Index
+
+    // Updating the index allocation can change the size available for the index root,
+    // And if the index root is demoted, the index allocation will need to be updated again,
+    // which may change the size available for index root... etc.
+    // My solution is to decrease index root to the size it would be if it was demoted,
+    // then UpdateIndexAllocation will have an accurate representation of the maximum space
+    // it can use in the file record. There's still a chance that the act of allocating an
+    // index node after demoting the index root will increase the size of the file record beyond
+    // it's limit, but if that happens, an attribute-list will most definitely be needed.
+    // This a bit hacky, but it seems to be functional.
+
+    // Calculate the minimum size of the index root attribute, considering one dummy key and one VCN
+    LARGE_INTEGER MinIndexRootSize;
+    MinIndexRootSize.QuadPart = sizeof(INDEX_ROOT_ATTRIBUTE) // size of the index root headers
+                                + 0x18; // Size of dummy key with a VCN for a subnode
+    ASSERT(MinIndexRootSize.QuadPart % ATTR_RECORD_ALIGNMENT == 0);
+
+    // Temporarily shrink the index root to it's minimal size
+    AttributeLength = MinIndexRootSize.LowPart;
+    AttributeLength += sizeof(INDEX_ROOT_ATTRIBUTE);
+
+    
+    // FIXME: IndexRoot will probably be invalid until we're finished. If we fail before we finish, the directory will probably be toast.
+    // The potential for catastrophic data-loss exists!!! :)
+
+    // Update the length of the attribute in the file record of the parent directory
+    Status = InternalSetResidentAttributeLength(DeviceExt,
+                                                IndexRootContext,
+                                                ParentFileRecord,
+                                                IndexRootOffset,
+                                                AttributeLength);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Unable to set length of index root!\n");
+        DestroyBTree(NewTree);
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // Update the index allocation
     Status = UpdateIndexAllocation(DeviceExt, NewTree, I30IndexRoot->SizeOfEntry, ParentFileRecord);
     if (!NT_SUCCESS(Status))
     {
@@ -2261,8 +2328,99 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
+#ifndef NDEBUG
+    DPRINT1("Index Allocation updated\n");
+    DumpBTree(NewTree);
+#endif
+
+    // Find the maximum index root size given what the file record can hold
+    // First, find the max index size assuming index root is the last attribute
+    ULONG NewMaxIndexRootSize =
+       DeviceExt->NtfsInfo.BytesPerFileRecord                // Start with the size of a file record
+        - IndexRootOffset                                    // Subtract the length of everything that comes before index root
+        - IndexRootContext->pRecord->Resident.ValueOffset    // Subtract the length of the attribute header for index root
+        - sizeof(INDEX_ROOT_ATTRIBUTE)                       // Subtract the length of the index root header
+        - (sizeof(ULONG) * 2);                               // Subtract the length of the file record end marker and padding
+
+    // Are there attributes after this one?
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset + IndexRootContext->pRecord->Length);
+    if (NextAttribute->Type != AttributeEnd)
+    {
+        // Find the length of all attributes after this one, not counting the end marker
+        ULONG LengthOfAttributes = 0;
+        PNTFS_ATTR_RECORD CurrentAttribute = NextAttribute;
+        while (CurrentAttribute->Type != AttributeEnd)
+        {
+            LengthOfAttributes += CurrentAttribute->Length;
+            CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
+        }
+
+        // Leave room for the existing attributes
+        NewMaxIndexRootSize -= LengthOfAttributes;
+    }
+
+    // The index allocation and index bitmap may have grown, leaving less room for the index root,
+    // so now we need to double-check that index root isn't too large 
+    ULONG NodeSize = GetSizeOfIndexEntries(NewTree->RootNode);
+    if (NodeSize > NewMaxIndexRootSize)
+    {
+        DPRINT1("Demoting index root.\nNodeSize: 0x%lx\nNewMaxIndexRootSize: 0x%lx\n", NodeSize, NewMaxIndexRootSize);
+
+        Status = DemoteBTreeRoot(NewTree);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERROR: Failed to demote index root!\n");
+            DestroyBTree(NewTree);
+            ReleaseAttributeContext(IndexRootContext);
+            ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+            ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+            return Status;
+        }
+
+        // We need to update the index allocation once more
+        Status = UpdateIndexAllocation(DeviceExt, NewTree, I30IndexRoot->SizeOfEntry, ParentFileRecord);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERROR: Failed to update index allocation from B-Tree!\n");
+            DestroyBTree(NewTree);
+            ReleaseAttributeContext(IndexRootContext);
+            ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+            ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+            return Status;
+        }
+
+        // re-recalculate max size of index root
+        NewMaxIndexRootSize =
+            // Find the maximum index size given what the file record can hold
+            // First, find the max index size assuming index root is the last attribute
+            DeviceExt->NtfsInfo.BytesPerFileRecord               // Start with the size of a file record
+            - IndexRootOffset                                    // Subtract the length of everything that comes before index root
+            - IndexRootContext->pRecord->Resident.ValueOffset    // Subtract the length of the attribute header for index root
+            - sizeof(INDEX_ROOT_ATTRIBUTE)                       // Subtract the length of the index root header
+            - (sizeof(ULONG) * 2);                               // Subtract the length of the file record end marker and padding
+
+                                                                 // Are there attributes after this one?
+        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset + IndexRootContext->pRecord->Length);
+        if (NextAttribute->Type != AttributeEnd)
+        {
+            // Find the length of all attributes after this one, not counting the end marker
+            ULONG LengthOfAttributes = 0;
+            PNTFS_ATTR_RECORD CurrentAttribute = NextAttribute;
+            while (CurrentAttribute->Type != AttributeEnd)
+            {
+                LengthOfAttributes += CurrentAttribute->Length;
+                CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
+            }
+
+            // Leave room for the existing attributes
+            NewMaxIndexRootSize -= LengthOfAttributes;
+        }
+
+        
+    }
+
     // Create the Index Root from the B*Tree
-    Status = CreateIndexRootFromBTree(DeviceExt, NewTree, MaxIndexRootSize, &NewIndexRoot, &BtreeIndexLength);
+    Status = CreateIndexRootFromBTree(DeviceExt, NewTree, NewMaxIndexRootSize, &NewIndexRoot, &BtreeIndexLength);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to create Index root from B-Tree!\n");
@@ -2280,9 +2438,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 
     // First, we need to resize the attribute.
     // CreateIndexRootFromBTree() should have verified that the index root fits within MaxIndexSize.
-    // We can't set the size as we normally would, because if we extend past the file record, 
-    // we must create an index allocation and index bitmap (TODO). Also TODO: support file records with
-    // $ATTRIBUTE_LIST's.
+    // We can't set the size as we normally would, because $INDEX_ROOT must always be resident.
     AttributeLength = NewIndexRoot->Header.AllocatedSize + FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header);
     
     if (AttributeLength != IndexRootContext->pRecord->Resident.ValueLength)
@@ -2344,8 +2500,22 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     }
     else
     {
-        DPRINT1("Dumping new parent file record:\n");
+#ifndef NDEBUG
+        DPRINT1("Dumping new B-Tree:\n");
+
+        Status = CreateBTreeFromIndex(DeviceExt, ParentFileRecord, IndexRootContext, NewIndexRoot, &NewTree);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERROR: Couldn't re-create b-tree\n");
+            return Status;
+        }
+
+        DumpBTree(NewTree);
+
+        DestroyBTree(NewTree);
+
         NtfsDumpFileRecord(DeviceExt, ParentFileRecord);
+#endif
     }
 
     // Cleanup
