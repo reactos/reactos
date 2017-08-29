@@ -746,7 +746,7 @@ public:
 
     void UpdateFonts()
     {
-        /* There is nothing to do if themes are not enabled */
+        /* There is nothing to do if themes are enabled */
         if (m_Theme)
             return;
 
