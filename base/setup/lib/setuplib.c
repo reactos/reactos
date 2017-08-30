@@ -38,11 +38,11 @@ CheckUnattendedSetup(
     CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2,
                  pSetupData->SourcePath.Buffer, L"unattend.inf");
 
-    DPRINT("UnattendInf path: '%S'\n", UnattendInfPath);
+    DPRINT1("UnattendInf path: '%S'\n", UnattendInfPath);
 
     if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
-        DPRINT("Does not exist: %S\n", UnattendInfPath);
+        DPRINT1("Does not exist: %S\n", UnattendInfPath);
         return;
     }
 
@@ -55,7 +55,7 @@ CheckUnattendedSetup(
 
     if (UnattendInf == INVALID_HANDLE_VALUE)
     {
-        DPRINT("SetupOpenInfFileExW() failed\n");
+        DPRINT1("SetupOpenInfFileExW() failed\n");
         return;
     }
 
@@ -266,7 +266,7 @@ InstallSetupInfFile(
                  pSetupData->SourcePath.Buffer, L"unattend.inf");
     if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
-        DPRINT("Does not exist: %S\n", UnattendInfPath);
+        DPRINT1("Does not exist: %S\n", UnattendInfPath);
         goto Quit;
     }
 
@@ -297,7 +297,7 @@ Quit:
                  pSetupData->SourcePath.Buffer, L"unattend.inf");
     if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
-        DPRINT("Does not exist: %S\n", UnattendInfPath);
+        DPRINT1("Does not exist: %S\n", UnattendInfPath);
         return;
     }
 
@@ -506,7 +506,7 @@ LoadSetupInf(
     CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2,
                  pSetupData->SourcePath.Buffer, L"txtsetup.sif");
 
-    DPRINT("SetupInf path: '%S'\n", FileNameBuffer);
+    DPRINT1("SetupInf path: '%S'\n", FileNameBuffer);
 
     *SetupInf = SetupOpenInfFileExW(FileNameBuffer,
                                    NULL,

@@ -1,11 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS bnBDLayouts[] =
-{
-    { L"0845", L"00000845" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY bnBDLanguagePageEntries[] =
 {
     {

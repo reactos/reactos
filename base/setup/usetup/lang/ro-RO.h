@@ -1,13 +1,6 @@
 /* ªtefan Fulea (stefan dot fulea at mail dot md) */
 #pragma once
 
-MUI_LAYOUTS roROLayouts[] =
-{
-    { L"0418", L"00000418" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY roROLanguagePageEntries[] =
 {
     {

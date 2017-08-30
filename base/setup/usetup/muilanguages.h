@@ -411,434 +411,434 @@
     #include "lang/zh-TW.h"
 #endif
 
-const MUI_LANGUAGE LanguageList[] =
+const MUI_LANGUAGE_RESOURCE LanguageList[] =
 {
-  /* Lang ID,   ANSI CP, OEM CP, MAC CP,   Language Name,                   GeoID   page strgs,error strings,    other strings, fonts,       kb layouts */
+  /* Lang ID,     Language Name, Page strings, Error strings, Other strings */
 #ifdef LANGUAGE_AF_ZA
-    {L"00000436", L"1252", L"850", L"10000", L"Afrikaans", L"209", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, afZALayouts },
+    {L"00000436", L"Afrikaans", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_SQ_AL
-    {L"0000041C", L"1250", L"852", L"10029", L"Albanian (Albania)", L"6", sqALPages, sqALErrorEntries, sqALStrings, LatinFonts, sqALLayouts },
+    {L"0000041C", L"Albanian (Albania)", sqALPages, sqALErrorEntries, sqALStrings},
 #endif
 #ifdef LANGUAGE_AR_SA
-    {L"00000401", L"1256", L"720", L"10004", L"Arabic (Saudi Arabia)", L"205", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arSALayouts },
+    {L"00000401", L"Arabic (Saudi Arabia)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_IQ
-    {L"00000801", L"1256", L"720", L"10004", L"Arabic (Iraq)", L"121", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arIQLayouts },
+    {L"00000801", L"Arabic (Iraq)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_EG
-    {L"00000C01", L"1256", L"720", L"10004", L"Arabic (Egypt)", L"67", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arEGLayouts },
+    {L"00000C01", L"Arabic (Egypt)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_LY
-    {L"00001001", L"1256", L"720", L"10004", L"Arabic (Libya)", L"148", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arLYLayouts },
+    {L"00001001", L"Arabic (Libya)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_DZ
-    {L"00001401", L"1256", L"720", L"10004", L"Arabic (Algeria)", L"4", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arDZLayouts },
+    {L"00001401", L"Arabic (Algeria)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_MA
-    {L"00001801", L"1256", L"720", L"10004", L"Arabic (Morocco)", L"149", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arMALayouts },
+    {L"00001801", L"Arabic (Morocco)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_TN
-    {L"00001C01", L"1256", L"720", L"10004", L"Arabic (Tunisia)", L"234", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arTNLayouts },
+    {L"00001C01", L"Arabic (Tunisia)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_OM
-    {L"00002001", L"1256", L"720", L"10004", L"Arabic (Oman)", L"164", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arOMLayouts },
+    {L"00002001", L"Arabic (Oman)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_YE
-    {L"00002401", L"1256", L"720", L"10004", L"Arabic (Yemen)", L"261", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arYELayouts },
+    {L"00002401", L"Arabic (Yemen)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_SY
-    {L"00002801", L"1256", L"720", L"10004", L"Arabic (Syria)", L"222", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arSYLayouts },
+    {L"00002801", L"Arabic (Syria)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_JO
-    {L"00002C01", L"1256", L"720", L"10004", L"Arabic (Jordan)", L"126", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arJOLayouts },
+    {L"00002C01", L"Arabic (Jordan)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_LB
-    {L"00003001", L"1256", L"720", L"10004", L"Arabic (Lebanon)", L"139", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arLBLayouts },
+    {L"00003001", L"Arabic (Lebanon)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_KW
-    {L"00003401", L"1256", L"720", L"10004", L"Arabic (Kuwait)", L"136", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arKWLayouts },
+    {L"00003401", L"Arabic (Kuwait)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_AE
-    {L"00003801", L"1256", L"720", L"10004", L"Arabic (U.A.E.)", L"224", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arAELayouts },
+    {L"00003801", L"Arabic (U.A.E.)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_BH
-    {L"00003C01", L"1256", L"720", L"10004", L"Arabic (Bahrain)", L"17", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arBHLayouts },
+    {L"00003C01", L"Arabic (Bahrain)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AR_QA
-    {L"00004001", L"1256", L"720", L"10004", L"Arabic (Qatar)", L"197", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, arQALayouts },
+    {L"00004001", L"Arabic (Qatar)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_HY_AM
-    {L"0000042B", L"0", L"1", L"2", L"Armenian", L"7", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, hyAMLayouts },
+    {L"0000042B", L"Armenian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AZ_AZ
-    {L"0000082C", L"1251", L"866", L"10007", L"Azeri (Cyrillic)", L"5", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, azAZLayouts },
+    {L"0000082C", L"Azeri (Cyrillic)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_AZ_AZ
-    {L"0000042C", L"1254", L"857", L"10081", L"Azeri (Latin)", L"5", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, azAZLayouts },
+    {L"0000042C", L"Azeri (Latin)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EU_ES
-    {L"0000042D", L"1252", L"850", L"10000", L"Basque", L"217", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, euESLayouts },
+    {L"0000042D", L"Basque", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_BE_BY
-    {L"00000423", L"1251", L"866", L"10007", L"Belarusian", L"29", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, beBYLayouts },
+    {L"00000423", L"Belarusian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_BN_BD
-    {L"00000845", L"0", L"1", L"2", L"Bengali (Bangladesh)", L"23", bnBDPages, bnBDErrorEntries, bnBDStrings, UnicodeFonts, bnBDLayouts },
+    {L"00000845", L"Bengali (Bangladesh)", bnBDPages, bnBDErrorEntries, bnBDStrings},
 #endif
 #ifdef LANGUAGE_BN_IN
-    {L"00000445", L"0", L"1", L"2", L"Bengali (India)", L"113", bnBDPages, bnBDErrorEntries, bnBDStrings, UnicodeFonts, bnINLayouts },
+    {L"00000445", L"Bengali (India)", bnBDPages, bnBDErrorEntries, bnBDStrings},
 #endif
 #ifdef LANGUAGE_BG_BG
-    {L"00000402", L"1251", L"866", L"10007", L"Bulgarian", L"35", bgBGPages, bgBGErrorEntries, bgBGStrings, CyrillicFonts, bgBGLayouts },
+    {L"00000402", L"Bulgarian", bgBGPages, bgBGErrorEntries, bgBGStrings},
 #endif
 #ifdef LANGUAGE_MY_MM
-    {L"00000455", L"0", L"1", L"2", L"Burmese", L"1", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, myMMLayouts },
+    {L"00000455", L"Burmese", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_CA_ES
-    {L"00000403", L"1252", L"850", L"10000", L"Catalan", L"217", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, caESLayouts },
+    {L"00000403", L"Catalan", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ZH_TW
-    {L"00000404", L"950", L"950", L"10008", L"Chinese (Taiwan)", L"237", enUSPages, enUSErrorEntries, enUSStrings, ChineseTraditionalFonts, zhTWLayouts },
+    {L"00000404", L"Chinese (Taiwan)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ZH_CN
-    {L"00000804", L"936", L"936", L"10008", L"Chinese (PRC)", L"45", enUSPages, enUSErrorEntries, enUSStrings, ChineseSimplifiedFonts, zhCNLayouts },
+    {L"00000804", L"Chinese (PRC)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ZH_HK
-    {L"00000C04", L"950", L"950", L"10008", L"Chinese (Hong Kong S.A.R.)", L"104", enUSPages, enUSErrorEntries, enUSStrings, ChineseTraditionalFonts, zhHKLayouts },
+    {L"00000C04", L"Chinese (Hong Kong S.A.R.)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ZH_SG
-    {L"00001004", L"936", L"936", L"10008", L"Chinese (Singapore)", L"215", enUSPages, enUSErrorEntries, enUSStrings, ChineseSimplifiedFonts, zhSGLayouts },
+    {L"00001004", L"Chinese (Singapore)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ZH_MO
-    {L"00001404", L"950", L"950", L"10002", L"Chinese (Macau S.A.R.)", L"151", enUSPages, enUSErrorEntries, enUSStrings, ChineseSimplifiedFonts, zhMOLayouts },
+    {L"00001404", L"Chinese (Macau S.A.R.)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_HR_HR
-    {L"0000041A", L"1250", L"852", L"10029", L"Croatian", L"108", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, hrHRLayouts },
+    {L"0000041A", L"Croatian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_CS_CZ
-    {L"00000405", L"1250", L"852", L"10029", L"Czech", L"75", csCZPages, csCZErrorEntries, csCZStrings, LatinFonts, csCZLayouts },
+    {L"00000405", L"Czech", csCZPages, csCZErrorEntries, csCZStrings},
 #endif
 #ifdef LANGUAGE_DA_DK
-    {L"00000406", L"1252", L"850", L"10000", L"Danish", L"61", daDKPages, daDKErrorEntries, daDKStrings, LatinFonts, daDKLayouts },
+    {L"00000406", L"Danish", daDKPages, daDKErrorEntries, daDKStrings},
 #endif
 #ifdef LANGUAGE_DV_MV
-    {L"00000465", L"0", L"1", L"2", L"Dhivehi (Maldives)", L"165", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, dvMVLayouts },
+    {L"00000465", L"Dhivehi (Maldives)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_NL_NL
-    {L"00000413", L"1252", L"850", L"10000", L"Dutch (Netherlands)", L"176", nlNLPages, nlNLErrorEntries, nlNLStrings, LatinFonts, nlNLLayouts },
+    {L"00000413", L"Dutch (Netherlands)", nlNLPages, nlNLErrorEntries, nlNLStrings},
 #endif
 #ifdef LANGUAGE_NL_BE
-    {L"00000813", L"1252", L"850", L"10000", L"Dutch (Belgium)", L"21", nlNLPages, nlNLErrorEntries, nlNLStrings, LatinFonts, nlBELayouts },
+    {L"00000813", L"Dutch (Belgium)", nlNLPages, nlNLErrorEntries, nlNLStrings},
 #endif
 #ifdef LANGUAGE_EN_US
-    {L"00000409", L"1252", L"437", L"10000", L"English (United States)", L"244", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enUSLayouts },
+    {L"00000409", L"English (United States)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_GB
-    {L"00000809", L"1252", L"850", L"10000", L"English (United Kingdom)", L"242", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enGBLayouts },
+    {L"00000809", L"English (United Kingdom)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_AU
-    {L"00000C09", L"1252", L"850", L"10000", L"English (Australia)", L"12", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enAULayouts },
+    {L"00000C09", L"English (Australia)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_CA
-    {L"00001009", L"1252", L"850", L"10000", L"English (Canada)", L"39", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enCALayouts },
+    {L"00001009", L"English (Canada)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_NZ
-    {L"00001409", L"1252", L"850", L"10000", L"English (New Zealand)", L"183", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enNZLayouts },
+    {L"00001409", L"English (New Zealand)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_IE
-    {L"00001809", L"1252", L"850", L"10000", L"English (Ireland)", L"68", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enIELayouts },
+    {L"00001809", L"English (Ireland)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_ZA
-    {L"00001C09", L"1252", L"437", L"10000", L"English (South Africa)", L"209", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enZALayouts },
+    {L"00001C09", L"English (South Africa)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_JM
-    {L"00002009", L"1252", L"850", L"10000", L"English (Jamaica)", L"124", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enJMLayouts },
+    {L"00002009", L"English (Jamaica)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_CB
-    {L"00002409", L"1252", L"850", L"10000", L"English (Caribbean)", L"1", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enCBLayouts },
+    {L"00002409", L"English (Caribbean)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_BZ
-    {L"00002809", L"1252", L"850", L"10000", L"English (Belize)", L"24", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enBZLayouts },
+    {L"00002809", L"English (Belize)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_TT
-    {L"00002C09", L"1252", L"850", L"10000", L"English (Trinidad)", L"225", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enTTLayouts },
+    {L"00002C09", L"English (Trinidad)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_ZW
-    {L"00003009", L"1252", L"437", L"10000", L"English (Zimbabwe)", L"264", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enZWLayouts },
+    {L"00003009", L"English (Zimbabwe)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EN_PH
-    {L"00003409", L"1252", L"437", L"10000", L"English (Philippines)", L"201", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, enPHLayouts },
+    {L"00003409", L"English (Philippines)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_EO_AA
-    {L"0000048F", L"1252", L"437", L"10000", L"Esperanto", L"1", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, eoAALayouts },
+    {L"0000048F", L"Esperanto", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ET_EE
-    {L"00000425", L"1252", L"775", L"10029", L"Estonian", L"70", etEEPages, etEEErrorEntries, etEEStrings, LatinFonts, etEELayouts },
+    {L"00000425", L"Estonian", etEEPages, etEEErrorEntries, etEEStrings},
 #endif
 #ifdef LANGUAGE_FO_FO
-    {L"00000438", L"1252", L"850", L"10079", L"Faeroese", L"81", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, foFOLayouts },
+    {L"00000438", L"Faeroese", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_FA_IR
-    {L"00000429", L"1256", L"720", L"10004", L"Farsi", L"116", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, faIRLayouts },
+    {L"00000429", L"Farsi", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_FI_FI
-    {L"0000040B", L"1252", L"850", L"10000", L"Finnish", L"77", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, fiFILayouts },
+    {L"0000040B", L"Finnish", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_FR_CA
-    {L"00000C0C", L"1252", L"850", L"10000", L"French (Canada)", L"39", frFRPages, frFRErrorEntries, frFRStrings, LatinFonts, frCALayouts },
+    {L"00000C0C", L"French (Canada)", frFRPages, frFRErrorEntries, frFRStrings},
 #endif
 #ifdef LANGUAGE_FR_FR
-    {L"0000040C", L"1252", L"850", L"10000", L"French (France)", L"84", frFRPages, frFRErrorEntries, frFRStrings, LatinFonts, frFRLayouts },
+    {L"0000040C", L"French (France)", frFRPages, frFRErrorEntries, frFRStrings},
 #endif
 #ifdef LANGUAGE_FR_BE
-    {L"0000080C", L"1252", L"850", L"10000", L"French (Belgium)", L"21", frFRPages, frFRErrorEntries, frFRStrings, LatinFonts, frBELayouts },
+    {L"0000080C", L"French (Belgium)", frFRPages, frFRErrorEntries, frFRStrings},
 #endif
 #ifdef LANGUAGE_FR_CH
-    {L"0000100C", L"1252", L"850", L"10000", L"French (Switzerland)", L"223", frFRPages, frFRErrorEntries, frFRStrings, LatinFonts, frCHLayouts },
+    {L"0000100C", L"French (Switzerland)", frFRPages, frFRErrorEntries, frFRStrings},
 #endif
 #ifdef LANGUAGE_FR_LU
-    {L"0000140C", L"1252", L"850", L"10000", L"French (Luxembourg)", L"147", frFRPages, frFRErrorEntries, frFRStrings, LatinFonts, frLULayouts },
+    {L"0000140C", L"French (Luxembourg)", frFRPages, frFRErrorEntries, frFRStrings},
 #endif
 #ifdef LANGUAGE_FR_MC
-    {L"0000180C", L"1252", L"850", L"10000", L"French (Monaco)", L"158", frFRPages, frFRErrorEntries, frFRStrings, LatinFonts, frMCLayouts },
+    {L"0000180C", L"French (Monaco)", frFRPages, frFRErrorEntries, frFRStrings},
 #endif
 #ifdef LANGUAGE_GL_ES
-    {L"00000456", L"1252", L"850", L"10000", L"Galician (Spain)", L"217", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, glESLayouts },
+    {L"00000456", L"Galician (Spain)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_KA_GE
-    {L"00000437", L"0", L"1", L"2", L"Georgian", L"88", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, kaGELayouts },
+    {L"00000437", L"Georgian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_DE_DE
-    {L"00000407", L"1252", L"850", L"10000", L"German (Germany)", L"94", deDEPages, deDEErrorEntries, deDEStrings, LatinFonts, deDELayouts },
+    {L"00000407", L"German (Germany)", deDEPages, deDEErrorEntries, deDEStrings},
 #endif
 #ifdef LANGUAGE_DE_CH
-    {L"00000807", L"1252", L"850", L"10000", L"German (Switzerland)", L"223", deDEPages, deDEErrorEntries, deDEStrings, LatinFonts, deCHLayouts },
+    {L"00000807", L"German (Switzerland)", deDEPages, deDEErrorEntries, deDEStrings},
 #endif
 #ifdef LANGUAGE_DE_AT
-    {L"00000C07", L"1252", L"850", L"10000", L"German (Austria)", L"14", deDEPages, deDEErrorEntries, deDEStrings, LatinFonts, deATLayouts },
+    {L"00000C07", L"German (Austria)", deDEPages, deDEErrorEntries, deDEStrings},
 #endif
 #ifdef LANGUAGE_DE_LU
-    {L"00001007", L"1252", L"850", L"10000", L"German (Luxembourg)", L"147", deDEPages, deDEErrorEntries, deDEStrings, LatinFonts, deLULayouts },
+    {L"00001007", L"German (Luxembourg)", deDEPages, deDEErrorEntries, deDEStrings},
 #endif
 #ifdef LANGUAGE_DE_LI
-    {L"00001407", L"1252", L"850", L"10000", L"German (Liechtenstein)", L"145", deDEPages, deDEErrorEntries, deDEStrings, LatinFonts, deLILayouts },
+    {L"00001407", L"German (Liechtenstein)", deDEPages, deDEErrorEntries, deDEStrings},
 #endif
 #ifdef LANGUAGE_EL_GR
-    {L"00000408", L"1253", L"737", L"10006", L"Greek", L"98", elGRPages, elGRErrorEntries, elGRStrings, GreekFonts, elGRLayouts },
+    {L"00000408", L"Greek", elGRPages, elGRErrorEntries, elGRStrings},
 #endif
 #ifdef LANGUAGE_GU_IN
-    {L"00000447", L"0", L"1", L"2", L"Gujarati (India)", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, guINLayouts },
+    {L"00000447", L"Gujarati (India)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_HE_IL
-    {L"0000040D", L"1255", L"862", L"10005", L"Hebrew", L"117", heILPages, heILErrorEntries, heILStrings, HebrewFonts, heILLayouts },
+    {L"0000040D", L"Hebrew", heILPages, heILErrorEntries, heILStrings},
 #endif
 #ifdef LANGUAGE_HI_IN
-    {L"00000439", L"1252", L"437", L"10000", L"Hindi", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, hiINLayouts },
+    {L"00000439", L"Hindi", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_HU_HU
-    {L"0000040E", L"1250", L"852", L"10029", L"Hungarian", L"109", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, huHULayouts },
+    {L"0000040E", L"Hungarian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_IS_IS
-    {L"0000040F", L"1252", L"850", L"10079", L"Icelandic", L"110", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, isISLayouts },
+    {L"0000040F", L"Icelandic", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ID_ID
-    {L"00000421", L"1252", L"850", L"10079", L"Indonesian", L"111", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, idIDLayouts },
+    {L"00000421", L"Indonesian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_IT_IT
-    {L"00000410", L"1252", L"850", L"10000", L"Italian (Italy)", L"118", itITPages, itITErrorEntries, itITStrings, LatinFonts, itITLayouts },
+    {L"00000410", L"Italian (Italy)", itITPages, itITErrorEntries, itITStrings},
 #endif
 #ifdef LANGUAGE_IT_CH
-    {L"00000810", L"1252", L"850", L"10000", L"Italian (Switzerland)", L"223", itITPages, itITErrorEntries, itITStrings, LatinFonts, itCHLayouts },
+    {L"00000810", L"Italian (Switzerland)", itITPages, itITErrorEntries, itITStrings},
 #endif
 #ifdef LANGUAGE_JA_JP
-    {L"00000411", L"932", L"932", L"10001", L"Japanese", L"122", jaJPPages, jaJPErrorEntries, jaJPStrings, JapaneseFonts, jaJPLayouts },
+    {L"00000411", L"Japanese", jaJPPages, jaJPErrorEntries, jaJPStrings},
 #endif
 #ifdef LANGUAGE_KN_IN
-    {L"0000044B", L"1252", L"437", L"10079", L"Kannada (India)", L"113", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, knINLayouts },
+    {L"0000044B", L"Kannada (India)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_KK_KZ
-    {L"0000043F", L"1251", L"866", L"10007", L"Kazakh", L"137", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, kkKZLayouts },
+    {L"0000043F", L"Kazakh", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_KOK_IN
-    {L"00000457", L"0", L"437", L"2", L"Konkani", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, kokINLayouts},
+    {L"00000457", L"Konkani", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_KO_KR
-    {L"00000412", L"949", L"949", L"10003", L"Korean", L"134", enUSPages, enUSErrorEntries, enUSStrings, KoreanFonts, koKRLayouts },
+    {L"00000412", L"Korean", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_KY_KG
-    {L"00000440", L"1251", L"866", L"10007", L"Kyrgyz (Kyrgyzstan)", L"130", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, kyKGLayouts },
+    {L"00000440", L"Kyrgyz (Kyrgyzstan)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_LV_LV
-    {L"00000426", L"1257", L"775", L"10029", L"Latvian", L"140", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, lvLVLayouts },
+    {L"00000426", L"Latvian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_LT_LT
-    {L"00000427", L"1257", L"775", L"10029", L"Lithuanian", L"141", ltLTPages, ltLTErrorEntries, ltLTStrings, LatinFonts, ltLTLayouts },
+    {L"00000427", L"Lithuanian", ltLTPages, ltLTErrorEntries, ltLTStrings},
 #endif
 #ifdef LANGUAGE_MK_MK
-    {L"0000042F", L"1251", L"866", L"10007", L"FYRO Macedonian", L"19618", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, mkMKLayouts },
+    {L"0000042F", L"FYRO Macedonian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_MS_BN
-    {L"0000083E", L"1252", L"850", L"10000", L"Malay (Brunei Darussalam)", L"37", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, msBNLayouts },
+    {L"0000083E", L"Malay (Brunei Darussalam)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_MS_MY
-    {L"0000043E", L"1252", L"850", L"10000", L"Malay (Malaysia)", L"167", msMYPages, msMYErrorEntries, msMYStrings, LatinFonts, msMYLayouts },
+    {L"0000043E", L"Malay (Malaysia)", msMYPages, msMYErrorEntries, msMYStrings},
 #endif
 #ifdef LANGUAGE_MR_IN
-    {L"0000044E", L"0", L"1", L"2", L"Marathi", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, mrINLayouts },
+    {L"0000044E", L"Marathi", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_MN_MN
-    {L"00000450", L"1251", L"866", L"10007", L"Mongolian (Mongolia)", L"154", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, mnMNLayouts },
+    {L"00000450", L"Mongolian (Mongolia)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_NB_NO
-    {L"00000414", L"1252", L"850", L"10000", L"Norwegian (Bokmal)", L"177", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, nbNOLayouts },
+    {L"00000414", L"Norwegian (Bokmal)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_NN_NO
-    {L"00000814", L"1252", L"850", L"10000", L"Norwegian (Nynorsk)", L"177", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, nnNOLayouts },
+    {L"00000814", L"Norwegian (Nynorsk)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_PL_PL
-    {L"00000415", L"1250", L"852", L"10029", L"Polish", L"191", plPLPages, plPLErrorEntries, plPLStrings, LatinFonts, plPLLayouts },
+    {L"00000415", L"Polish", plPLPages, plPLErrorEntries, plPLStrings},
 #endif
 #ifdef LANGUAGE_PT_PT
-    {L"00000816", L"1252", L"850", L"10000", L"Portuguese (Portugal)", L"193", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, ptPTLayouts },
+    {L"00000816", L"Portuguese (Portugal)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_PT_BR
-    {L"00000416", L"1252", L"850", L"10000", L"Portuguese (Brazil)", L"32", ptBRPages, ptBRErrorEntries, ptBRStrings, LatinFonts, ptBRLayouts },
+    {L"00000416", L"Portuguese (Brazil)", ptBRPages, ptBRErrorEntries, ptBRStrings},
 #endif
 #ifdef LANGUAGE_PA_IN
-    {L"00000446", L"0", L"1", L"2", L"Punjabi (India)", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, paINLayouts },
+    {L"00000446", L"Punjabi (India)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_RO_RO
-    {L"00000418", L"28606", L"28606", L"10029", L"Romanian", L"200", roROPages, roROErrorEntries, roROStrings, LatinFonts, roROLayouts },
+    {L"00000418", L"Romanian", roROPages, roROErrorEntries, roROStrings},
 #endif
 #ifdef LANGUAGE_RM_CH
-    {L"00000417", L"1252", L"850", L"10000", L"Romansh", L"223", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, rmCHLayouts },
+    {L"00000417", L"Romansh", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_RU_RU
-    {L"00000419", L"1251", L"866", L"10007", L"Russian", L"203", ruRUPages, ruRUErrorEntries, ruRUStrings, CyrillicFonts, ruRULayouts },
+    {L"00000419", L"Russian", ruRUPages, ruRUErrorEntries, ruRUStrings},
 #endif
 #ifdef LANGUAGE_SA_IN
-    {L"0000044F", L"0", L"1", L"2", L"Sanskrit", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, saINLayouts },
+    {L"0000044F", L"Sanskrit", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_SR_SP
-    {L"00000C1A", L"1251", L"855", L"10007", L"Serbian (Cyrillic)", L"271", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, srSPLayouts },
+    {L"00000C1A", L"Serbian (Cyrillic)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_SR_SP
-    {L"0000081A", L"1250", L"852", L"10029", L"Serbian (Latin)", L"271", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, srSPLayouts },
+    {L"0000081A", L"Serbian (Latin)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_SK_SK
-    {L"0000041B", L"1250", L"852", L"10029", L"Slovak", L"143", skSKPages, skSKErrorEntries, skSKStrings, LatinFonts, skSKLayouts },
+    {L"0000041B", L"Slovak", skSKPages, skSKErrorEntries, skSKStrings},
 #endif
 #ifdef LANGUAGE_SL_SI
-    {L"00000424", L"1250", L"852", L"10029", L"Slovenian", L"212", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, slSILayouts },
+    {L"00000424", L"Slovenian", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ES_ES
-    {L"0000040A", L"1252", L"850", L"10000", L"Spanish (Traditional Sort)", L"217", esESPages, esESErrorEntries, esESStrings, LatinFonts, esESLayouts },
+    {L"0000040A", L"Spanish (Traditional Sort)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_MX
-    {L"0000080A", L"1252", L"850", L"10000", L"Spanish (Mexico)", L"166", esESPages, esESErrorEntries, esESStrings, LatinFonts, esMXLayouts },
+    {L"0000080A", L"Spanish (Mexico)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_ES
-    {L"00000C0A", L"1252", L"850", L"10000", L"Spanish (International Sort)", L"217", esESPages, esESErrorEntries, esESStrings, LatinFonts, esESLayouts },
+    {L"00000C0A", L"Spanish (International Sort)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_GT
-    {L"0000100A", L"1252", L"850", L"10000", L"Spanish (Guatemala)", L"99", esESPages, esESErrorEntries, esESStrings, LatinFonts, esGTLayouts },
+    {L"0000100A", L"Spanish (Guatemala)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_CR
-    {L"0000140A", L"1252", L"850", L"10000", L"Spanish (Costa Rica)", L"54", esESPages, esESErrorEntries, esESStrings, LatinFonts, esCRLayouts },
+    {L"0000140A", L"Spanish (Costa Rica)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_PA
-    {L"0000180A", L"1252", L"850", L"10000", L"Spanish (Panama)", L"192", esESPages, esESErrorEntries, esESStrings, LatinFonts, esPALayouts },
+    {L"0000180A", L"Spanish (Panama)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_DO
-    {L"00001C0A", L"1252", L"850", L"10000", L"Spanish (Dominican Republic)", L"65", esESPages, esESErrorEntries, esESStrings, LatinFonts, esDOLayouts },
+    {L"00001C0A", L"Spanish (Dominican Republic)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_VE
-    {L"0000200A", L"1252", L"850", L"10000", L"Spanish (Venezuela)", L"249", esESPages, esESErrorEntries, esESStrings, LatinFonts, esVELayouts },
+    {L"0000200A", L"Spanish (Venezuela)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_CO
-    {L"0000240A", L"1252", L"850", L"10000", L"Spanish (Colombia)", L"51", esESPages, esESErrorEntries, esESStrings, LatinFonts, esCOLayouts },
+    {L"0000240A", L"Spanish (Colombia)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_PE
-    {L"0000280A", L"1252", L"850", L"10000", L"Spanish (Peru)", L"187", esESPages, esESErrorEntries, esESStrings, LatinFonts, esPELayouts },
+    {L"0000280A", L"Spanish (Peru)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_AR
-    {L"00002C0A", L"1252", L"850", L"10000", L"Spanish (Argentina)", L"11", esESPages, esESErrorEntries, esESStrings, LatinFonts, esARLayouts },
+    {L"00002C0A", L"Spanish (Argentina)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_EC
-    {L"0000300A", L"1252", L"850", L"10000", L"Spanish (Ecuador)", L"66", esESPages, esESErrorEntries, esESStrings, LatinFonts, esECLayouts },
+    {L"0000300A", L"Spanish (Ecuador)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_CL
-    {L"0000340A", L"1252", L"850", L"10000", L"Spanish (Chile)", L"46", esESPages, esESErrorEntries, esESStrings, LatinFonts, esCLLayouts },
+    {L"0000340A", L"Spanish (Chile)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_UY
-    {L"0000380A", L"1252", L"850", L"10000", L"Spanish (Uruguay)", L"246", esESPages, esESErrorEntries, esESStrings, LatinFonts, esUYLayouts },
+    {L"0000380A", L"Spanish (Uruguay)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_PY
-    {L"00003C0A", L"1252", L"850", L"10000", L"Spanish (Paraguay)", L"185", esESPages, esESErrorEntries, esESStrings, LatinFonts, esPYLayouts },
+    {L"00003C0A", L"Spanish (Paraguay)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_BO
-    {L"0000400A", L"1252", L"850", L"10000", L"Spanish (Bolivia)", L"26", esESPages, esESErrorEntries, esESStrings, LatinFonts, esBOLayouts },
+    {L"0000400A", L"Spanish (Bolivia)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_SV
-    {L"0000440A", L"1252", L"850", L"10000", L"Spanish (El Salvador)", L"72", esESPages, esESErrorEntries, esESStrings, LatinFonts, esSVLayouts },
+    {L"0000440A", L"Spanish (El Salvador)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_HN
-    {L"0000480A", L"1252", L"850", L"10000", L"Spanish (Honduras)", L"106", esESPages, esESErrorEntries, esESStrings, LatinFonts, esHNLayouts },
+    {L"0000480A", L"Spanish (Honduras)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_NI
-    {L"00004C0A", L"1252", L"850", L"10000", L"Spanish (Nicaragua)", L"182", esESPages, esESErrorEntries, esESStrings, LatinFonts, esNILayouts },
+    {L"00004C0A", L"Spanish (Nicaragua)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_ES_PR
-    {L"0000500A", L"1252", L"850", L"10000", L"Spanish (Puerto Rico)", L"202", esESPages, esESErrorEntries, esESStrings, LatinFonts, esPRLayouts },
+    {L"0000500A", L"Spanish (Puerto Rico)", esESPages, esESErrorEntries, esESStrings},
 #endif
 #ifdef LANGUAGE_SW_KE
-    {L"00000441", L"1252", L"437", L"10000", L"Swahili", L"129", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, swKELayouts },
+    {L"00000441", L"Swahili", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_SV_SE
-    {L"0000041D", L"1252", L"850", L"10000", L"Swedish", L"221", svSEPages, svSEErrorEntries, svSEStrings, LatinFonts, svSELayouts },
+    {L"0000041D", L"Swedish", svSEPages, svSEErrorEntries, svSEStrings},
 #endif
 #ifdef LANGUAGE_SV_FI
-    {L"0000081D", L"1252", L"850", L"10000", L"Swedish (Finland)", L"77", svSEPages, svSEErrorEntries, svSEStrings, LatinFonts, svFILayouts },
+    {L"0000081D", L"Swedish (Finland)", svSEPages, svSEErrorEntries, svSEStrings},
 #endif
 #ifdef LANGUAGE_SYR_SY
-    {L"0000045A", L"0", L"1", L"2", L"Syriac (Syria)", L"222", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, syrSYLayouts},
+    {L"0000045A", L"Syriac (Syria)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_TA_IN
-    {L"00000449", L"0", L"1", L"2", L"Tamil", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, taINLayouts },
+    {L"00000449", L"Tamil", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_TT_TA
-    {L"00000444", L"1251", L"866", L"10007", L"Tatar", L"1", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, ttTALayouts },
+    {L"00000444", L"Tatar", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_TE_IN
-    {L"0000044A", L"0", L"1", L"2", L"Telugu (India)", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, teINLayouts },
+    {L"0000044A", L"Telugu (India)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_TH_TH
-    {L"0000041E", L"874", L"874", L"10021", L"Thai", L"227", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, thTHLayouts },
+    {L"0000041E", L"Thai", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_TR_TR
-    {L"0000041F", L"1254", L"857", L"10081", L"Turkish", L"235", trTRPages, trTRErrorEntries, trTRStrings, LatinFonts, trTRLayouts },
+    {L"0000041F", L"Turkish", trTRPages, trTRErrorEntries, trTRStrings},
 #endif
 #ifdef LANGUAGE_UK_UA
-    {L"00000422", L"1251", L"866", L"10017", L"Ukrainian", L"241", ukUAPages, ukUAErrorEntries, ukUAStrings, CyrillicFonts, ukUALayouts },
+    {L"00000422", L"Ukrainian", ukUAPages, ukUAErrorEntries, ukUAStrings},
 #endif
 #ifdef LANGUAGE_UR_PK
-    {L"00000420", L"1256", L"720", L"10004", L"Urdu", L"190", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, urPKLayouts },
+    {L"00000420", L"Urdu", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_UZ_UZ
-    {L"00000443", L"1254", L"857", L"10029", L"Uzbek (Latin)", L"247", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, uzUZLayouts },
+    {L"00000443", L"Uzbek (Latin)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_UZ_UZ
-    {L"00000843", L"1251", L"866", L"10007", L"Uzbek (Cyrillic)", L"247", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, uzUZLayouts },
+    {L"00000843", L"Uzbek (Cyrillic)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_VI_VN
-    {L"0000042A", L"1258", L"1258",L"10000", L"Vietnamese", L"251", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, viVNLayouts },
+    {L"0000042A", L"Vietnamese", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_WA_BE
-    {L"00000490", L"1252", L"850", L"10000", L"Walon", L"21", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, waBELayouts },
+    {L"00000490", L"Walon", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_ZU_ZU
-    {L"00000435", L"1252", L"850", L"10000", L"Zulu", L"1", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, zuZULayouts },
+    {L"00000435", L"Zulu", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
-    {NULL, NULL, NULL, NULL, NULL, NULL}
+    {NULL, NULL, NULL, NULL, NULL},
 };

@@ -25,7 +25,6 @@
  */
 
 #include "usetup.h"
-#include "muifonts.h"
 #include "muilanguages.h"
 
 #define NDEBUG

@@ -2,17 +2,17 @@
 
 typedef struct
 {
-   BYTE X;
-   BYTE Y;
-   LPCSTR Buffer;
-   DWORD Flags;
-}MUI_ENTRY, *PMUI_ENTRY;
+    BYTE X;
+    BYTE Y;
+    LPCSTR Buffer;
+    DWORD Flags;
+} MUI_ENTRY, *PMUI_ENTRY;
 
 typedef struct
 {
     LPCSTR ErrorText;
     LPCSTR ErrorStatus;
-}MUI_ERROR;
+} MUI_ERROR;
 
 typedef struct
 {
@@ -28,34 +28,18 @@ typedef struct
 
 typedef struct
 {
-    PWCHAR FontName;
-    PWCHAR SubFontName;
-} MUI_SUBFONT;
-
-typedef struct
-{
-    PWCHAR LangID; // Language ID (like "0409")
-    PWCHAR LayoutID; // Layout ID (like "00000409")
-} MUI_LAYOUTS;
-
-typedef struct
-{
     PWCHAR LanguageID;
-    PWCHAR ACPage;
-    PWCHAR OEMCPage;
-    PWCHAR MACCPage;
     PWCHAR LanguageDescriptor;
-    PWCHAR GeoID;
     const MUI_PAGE * MuiPages;
     const MUI_ERROR * MuiErrors;
     const MUI_STRING * MuiStrings;
-    const MUI_SUBFONT * MuiSubFonts;
-    const MUI_LAYOUTS * MuiLayouts;
-} MUI_LANGUAGE;
+} MUI_LANGUAGE_RESOURCE;
 
+#if 0
 BOOLEAN
 IsLanguageAvailable(
     PWCHAR LanguageId);
+#endif
 
 VOID
 MUIDisplayPage(
@@ -71,25 +55,6 @@ MUIDisplayError(
     PINPUT_RECORD Ir,
     ULONG WaitEvent,
     ...);
-
-LPCWSTR
-MUIDefaultKeyboardLayout(VOID);
-
-PWCHAR
-MUIGetGeoID(VOID);
-
-const MUI_LAYOUTS *
-MUIGetLayoutsList(VOID);
-
-BOOLEAN
-AddKbLayoutsToRegistry(
-    IN const MUI_LAYOUTS *MuiLayouts);
-
-BOOLEAN
-AddCodePage(VOID);
-
-BOOLEAN
-AddKeyboardLayouts(VOID);
 
 VOID
 SetConsoleCodePage(VOID);
