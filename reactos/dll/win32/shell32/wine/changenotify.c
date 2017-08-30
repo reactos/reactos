@@ -34,6 +34,7 @@
 #include <wine/debug.h>
 #include <wine/list.h>
 #include <process.h>
+#include <shellutils.h>
 
 #include "pidl.h"
 
@@ -170,7 +171,7 @@ static void DeleteNode(LPNOTIFICATIONLIST item)
     queued = InterlockedCompareExchange(&item->wQueuedCount, 0, 0);
     if (queued != 0)
     {
-        TRACE("Not freeing, still %d queued events\n", queued);
+        ERR("Not freeing, still %d queued events\n", queued);
         return;
     }
     TRACE("Freeing for real! %p (%d) \n", item, item->cidl);
@@ -275,13 +276,6 @@ SHChangeNotifyRegister(
             {
                 InterlockedIncrement(&item->wQueuedCount);
                 QueueUserAPC( _AddDirectoryProc, m_hThread, (ULONG_PTR) &item->apidl[i] );
-            }
-            else
-            {
-                CHAR buffer[MAX_PATH];
-                if (!SHGetPathFromIDListA( item->apidl[i].pidl, buffer ))
-                    strcpy( buffer, "<unknown>" );
-                ERR("_OpenDirectory failed for %s\n", buffer);
             }
         }
 #endif
@@ -661,16 +655,16 @@ BOOL _OpenDirectory(LPNOTIFYREGISTER item)
         return TRUE;
 
     hr = SHGetDesktopFolder(&psfDesktop);
-    if (!SUCCEEDED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
     hr = IShellFolder_GetDisplayNameOf(psfDesktop, item->pidl, SHGDN_FORPARSING, &strFile);
     IShellFolder_Release(psfDesktop);
-    if (!SUCCEEDED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
     hr = StrRetToBufW(&strFile, NULL, item->wstrDirectory, _countof(item->wstrDirectory));
-    if (!SUCCEEDED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
     TRACE("_OpenDirectory %s\n", debugstr_w(item->wstrDirectory));
@@ -685,6 +679,7 @@ BOOL _OpenDirectory(LPNOTIFYREGISTER item)
 
     if (item->hDirectory == INVALID_HANDLE_VALUE)
     {
+        ERR("_OpenDirectory failed for %s\n", debugstr_w(item->wstrDirectory));
         return FALSE;
     }
     return TRUE;

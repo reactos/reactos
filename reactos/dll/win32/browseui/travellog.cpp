@@ -400,7 +400,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetTravelEntry(IUnknown *punk, int iOffset
     HRESULT                                 hResult;
     
     hResult = FindRelativeEntry(iOffset, &destinationEntry);
-    if (FAILED_UNEXPECTEDLY(hResult))
+    if (FAILED(hResult))
         return hResult;
     hResult = destinationEntry->QueryInterface(IID_PPV_ARG(ITravelEntry, ppte));
     if (FAILED_UNEXPECTEDLY(hResult))

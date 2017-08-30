@@ -1245,7 +1245,7 @@ BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 	if ( (r != ERROR_SUCCESS) || (cs->cLength < sizeof(*cs)) ||
 		(cs->cLength != length) )
 	{
-		ERR("Initializing shell cabinet settings\n");
+		TRACE("Initializing shell cabinet settings\n");
 		memset(cs, 0, sizeof(*cs));
 		cs->cLength          = sizeof(*cs);
 		cs->nVersion         = 2;

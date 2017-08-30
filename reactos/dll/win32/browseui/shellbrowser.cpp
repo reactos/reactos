@@ -1379,18 +1379,22 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     previousMessage = pThis->m_pCurrentMsg;
     pThis->m_pCurrentMsg = &msg;
 
-    CComPtr<IMenuBand> menuBand;
-    hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
-    if (SUCCEEDED(hResult) && menuBand.p != NULL)
+    /* If the shell browser is initialized, let the menu band preprocess the messages */
+    if (pThis->fCurrentDirectoryPIDL)
     {
-        hResult = menuBand->TranslateMenuMessage(&msg, &lResult);
-        if (hResult == S_OK)
-            return lResult;
-        uMsg = msg.message;
-        wParam = msg.wParam;
-        lParam = msg.lParam;
+        CComPtr<IMenuBand> menuBand;
+        hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
+        if (SUCCEEDED(hResult) && menuBand.p != NULL)
+        {
+            hResult = menuBand->TranslateMenuMessage(&msg, &lResult);
+            if (hResult == S_OK)
+                return lResult;
+            uMsg = msg.message;
+            wParam = msg.wParam;
+            lParam = msg.lParam;
+        }
+        menuBand.Release();
     }
-    menuBand.Release();
 
     handled = pThis->ProcessWindowMessage(hWnd, uMsg, wParam, lParam, lResult, 0);
     ATLASSERT(pThis->m_pCurrentMsg == &msg);
