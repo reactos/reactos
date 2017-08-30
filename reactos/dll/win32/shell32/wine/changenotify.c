@@ -647,25 +647,38 @@ _AddDirectoryProc(ULONG_PTR arg)
 BOOL _OpenDirectory(LPNOTIFYREGISTER item)
 {
     STRRET strFile;
-    IShellFolder *psfDesktop;
+    IShellFolder *psf;
     HRESULT hr;
+    LPCITEMIDLIST child;
+    ULONG ulAttrs;
 
     // Makes function idempotent
     if (item->hDirectory && !(item->hDirectory == INVALID_HANDLE_VALUE))
         return TRUE;
 
-    hr = SHGetDesktopFolder(&psfDesktop);
+    hr = SHBindToParent(item->pidl, &IID_IShellFolder, (LPVOID*)&psf, &child);
     if (FAILED_UNEXPECTEDLY(hr))
-        return FALSE;
+        return hr;
 
-    hr = IShellFolder_GetDisplayNameOf(psfDesktop, item->pidl, SHGDN_FORPARSING, &strFile);
-    IShellFolder_Release(psfDesktop);
+    ulAttrs = SFGAO_FILESYSTEM | SFGAO_FOLDER;
+    hr = IShellFolder_GetAttributesOf(psf, 1, (LPCITEMIDLIST*)&child, &ulAttrs);
+    if (SUCCEEDED(hr))
+        hr = IShellFolder_GetDisplayNameOf(psf, child, SHGDN_FORPARSING, &strFile);
+
+    IShellFolder_Release(psf);
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
     hr = StrRetToBufW(&strFile, NULL, item->wstrDirectory, _countof(item->wstrDirectory));
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
+
+    if ((ulAttrs & (SFGAO_FILESYSTEM | SFGAO_FOLDER)) != (SFGAO_FILESYSTEM | SFGAO_FOLDER))
+    {
+        TRACE("_OpenDirectory ignoring %s\n", debugstr_w(item->wstrDirectory));
+        item->hDirectory = INVALID_HANDLE_VALUE;
+        return FALSE;
+    }
 
     TRACE("_OpenDirectory %s\n", debugstr_w(item->wstrDirectory));
 
