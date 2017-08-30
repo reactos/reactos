@@ -531,7 +531,7 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
     DummyQhVA = (PEHCI_HCD_QH)EhciExtension->IsoDummyQHListVA;
     DummyQhPA = (PEHCI_HCD_QH)EhciExtension->IsoDummyQHListPA;
 
-    for (ix = 0; ix < 1024; ix++)
+    for (ix = 0; ix < EHCI_FRAME_LIST_MAX_ENTRIES; ix++)
     {
         ASSERT(EHCI_GetDummyQhForFrame(EhciExtension, ix) == DummyQhVA);
 
@@ -589,16 +589,16 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
 
     DPRINT_EHCI("EHCI_InitializeInterruptSchedule: ... \n");
 
-    for (ix = 0; ix < 63; ix++)
+    for (ix = 0; ix < INTERRUPT_ENDPOINTs; ix++)
     {
         StaticQH = EhciExtension->PeriodicHead[ix];
 
         StaticQH->HwQH.EndpointParams.HeadReclamationListFlag = 0;
-        StaticQH->HwQH.NextTD |= 1;
+        StaticQH->HwQH.NextTD |= TERMINATE_POINTER;
         StaticQH->HwQH.Token.Status |= (UCHAR)EHCI_TOKEN_STATUS_HALTED;
     }
 
-    for (ix = 1; ix < 63; ix++)
+    for (ix = 1; ix < INTERRUPT_ENDPOINTs; ix++)
     {
         StaticQH = EhciExtension->PeriodicHead[ix];
  
@@ -612,11 +612,13 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
         StaticQH->HwQH.EndpointCaps.InterruptMask = 0xFF;
 
         StaticQH->QhFlags |= EHCI_QH_FLAG_STATIC;
-        StaticQH->QhFlags |= ix > 6 ? 0 : 8;
+        StaticQH->QhFlags |= ix > 6 ? 0 : EHCI_QH_FLAG_STATIC_FAST;
     }
 
     EhciExtension->PeriodicHead[0]->HwQH.HorizontalLink.Terminate = 1;
-    EhciExtension->PeriodicHead[0]->QhFlags |= (EHCI_QH_FLAG_STATIC | 8);
+
+    EhciExtension->PeriodicHead[0]->QhFlags |= (EHCI_QH_FLAG_STATIC |
+                                                EHCI_QH_FLAG_STATIC_FAST);
 }
 
 MPSTATUS
@@ -676,9 +678,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     PeriodicHead = &HcResourcesVA->PeriodicHead[0];
     PeriodicHeadPA = &HcResourcesPA->PeriodicHead[0];
 
-    ix = 0;
-
-    for (ix = 0; ix < 64; ix++)
+    for (ix = 0; ix < (INTERRUPT_ENDPOINTs + 1); ix++)
     {
         EHCI_AlignHwStructure(EhciExtension,
                               (PULONG)&PeriodicHeadPA,
@@ -694,7 +694,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
 
     EHCI_InitializeInterruptSchedule(EhciExtension);
 
-    for (Frame = 0; Frame < 1024; Frame++)
+    for (Frame = 0; Frame < EHCI_FRAME_LIST_MAX_ENTRIES; Frame++)
     {
         StaticQH = EHCI_GetQhForFrame(EhciExtension, Frame);
 
@@ -1328,7 +1328,7 @@ EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
                              SgList->SgElement[SgIdx].SgOffset +
                              TransferedLen;
 
-        LengthThisTD = 5 * 0x1000 - (TD->HwTD.Buffer[0] & 0xFFF);
+        LengthThisTD = 5 * PAGE_SIZE - (TD->HwTD.Buffer[0] & (PAGE_SIZE - 1));
 
         for (ix = 1; ix <= 4; ix++)
         {
@@ -2821,7 +2821,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_HCD_QH QH;
     PEHCI_HCD_TD TD;
     PEHCI_HCD_TD CurrentTD;
-    ULONG CurrentTDPhys; 
+    ULONG_PTR CurrentTDPhys; 
     BOOLEAN IsSheduled;
 
     DPRINT_EHCI("EHCI_PollActiveAsyncEndpoint: ... \n");
