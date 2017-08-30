@@ -17,7 +17,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="start_menu_banner.svg"
-   inkscape:export-filename="F:\reactos\sources\base\shell\explorer\res\src\banner-0.4.6-rc1.png"
+   inkscape:export-filename="F:\reactos\sources - Copy\base\shell\explorer\res\src\banner-0.4.6-rc1.png"
    inkscape:export-xdpi="72"
    inkscape:export-ydpi="72">
   <defs
@@ -117,7 +117,7 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.4967109"
-     inkscape:cx="-54.841222"
+     inkscape:cx="-128.13765"
      inkscape:cy="126.11109"
      inkscape:document-units="px"
      inkscape:current-layer="svg2"
@@ -136,7 +136,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -163,7 +163,10 @@
      y="34.69656"
      x="-1058.8489"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.14050674px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter4197)"
-     xml:space="preserve"><tspan
+     xml:space="preserve"
+     inkscape:export-filename="F:\reactos\sources\base\shell\explorer\res\bmp\banner.png"
+     inkscape:export-xdpi="72"
+     inkscape:export-ydpi="72"><tspan
        y="34.69656"
        x="-1058.8489"
        id="tspan4709"
@@ -171,7 +174,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20.00007629px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start"
          id="tspan4213">ReactOS</tspan><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.50006676px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start"
-         id="tspan4209">  0.4.6 RC1</tspan></tspan></text>
+         id="tspan4209">  0.4.6</tspan></tspan></text>
   <g
      style="fill:#ffffff;fill-opacity:1"
      id="layer1-2"
