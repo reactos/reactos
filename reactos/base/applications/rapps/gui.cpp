@@ -774,8 +774,9 @@ private:
         m_VSplitter->m_HorizontalAlignment = UiAlign_Stretch;
         m_VSplitter->m_DynamicFirst = FALSE;
         m_VSplitter->m_Horizontal = FALSE;
-        m_VSplitter->m_MinFirst = 240;
-        m_VSplitter->m_MinSecond = 300;
+        m_VSplitter->m_MinFirst = 0;
+        m_VSplitter->m_MinSecond = 320;
+        m_VSplitter->m_Pos = 240;
         m_ClientPanel->Children().Append(m_VSplitter);
 
         return m_VSplitter->Create(m_hWnd) != NULL;
@@ -788,9 +789,9 @@ private:
         m_HSplitter->m_HorizontalAlignment = UiAlign_Stretch;
         m_HSplitter->m_DynamicFirst = TRUE;
         m_HSplitter->m_Horizontal = TRUE;
-        m_HSplitter->m_Pos = 32768;
-        m_HSplitter->m_MinFirst = 300;
-        m_HSplitter->m_MinSecond = 150;
+        m_HSplitter->m_Pos = 150;
+        m_HSplitter->m_MinFirst = 10;
+        m_HSplitter->m_MinSecond = 10;
         m_VSplitter->Second().Append(m_HSplitter);
 
         return m_HSplitter->Create(m_hWnd) != NULL;
