@@ -13,6 +13,7 @@
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
+/* Transfer Descriptor */
 #define EHCI_HCD_TD_FLAG_ALLOCATED 0x01
 #define EHCI_HCD_TD_FLAG_PROCESSED 0x02
 #define EHCI_HCD_TD_FLAG_DONE      0x08
@@ -41,6 +42,14 @@ typedef struct _EHCI_HCD_TD {
 
 C_ASSERT(sizeof(EHCI_HCD_TD) == 0x100);
 
+/* Queue Head */
+#define EHCI_QH_FLAG_IN_SCHEDULE  0x01
+#define EHCI_QH_FLAG_CLOSED       0x02
+#define EHCI_QH_FLAG_STATIC       0x04
+#define EHCI_QH_FLAG_STATIC_FAST  0x08
+#define EHCI_QH_FLAG_UPDATING     0x10
+#define EHCI_QH_FLAG_NUKED        0x20
+
 typedef struct _EHCI_STATIC_QH {
   //Hardware
   EHCI_QUEUE_HEAD HwQH;
@@ -62,6 +71,7 @@ typedef struct _EHCI_HCD_QH {
 
 C_ASSERT(sizeof(EHCI_HCD_QH) == 0x100);
 
+/* EHCI Endpoint follows USBPORT Endpoint */
 typedef struct _EHCI_ENDPOINT {
   ULONG Reserved;
   ULONG EndpointStatus;
@@ -79,6 +89,7 @@ typedef struct _EHCI_ENDPOINT {
   LIST_ENTRY ListTDs;
 } EHCI_ENDPOINT, *PEHCI_ENDPOINT;
 
+/* EHCI Transfer follows USBPORT Transfer */
 typedef struct _EHCI_TRANSFER {
   ULONG Reserved;
   PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
@@ -94,12 +105,13 @@ typedef struct _EHCI_HC_RESOURCES {
   EHCI_STATIC_QH AsyncHead;
   EHCI_STATIC_QH PeriodicHead[64];
   UCHAR Padded[0x160];
-  EHCI_HCD_QH DummyQH[1024];
+  EHCI_HCD_QH IsoDummyQH[1024];
 } EHCI_HC_RESOURCES, *PEHCI_HC_RESOURCES;
 
 #define EHCI_FLAGS_CONTROLLER_SUSPEND 0x01
 #define EHCI_FLAGS_IDLE_SUPPORT       0x20
 
+/* EHCI Extension follows USBPORT Extension */
 typedef struct _EHCI_EXTENSION {
   ULONG Reserved;
   ULONG Flags;
@@ -118,8 +130,8 @@ typedef struct _EHCI_EXTENSION {
   PEHCI_HC_RESOURCES HcResourcesPA;
   PEHCI_STATIC_QH AsyncHead;
   PEHCI_STATIC_QH PeriodicHead[64];
-  ULONG_PTR DummyQHListVA;
-  ULONG_PTR DummyQHListPA;
+  ULONG_PTR IsoDummyQHListVA;
+  ULONG_PTR IsoDummyQHListPA;
   ULONG FrameIndex;
   ULONG FrameHighPart;
   /* Root Hub Bits */

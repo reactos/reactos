@@ -473,7 +473,7 @@ NTAPI
 EHCI_GetDummyQhForFrame(IN PEHCI_EXTENSION EhciExtension,
                         IN ULONG Idx)
 {
-    return (PEHCI_HCD_QH)(EhciExtension->DummyQHListVA + Idx * sizeof(EHCI_HCD_QH));
+    return (PEHCI_HCD_QH)(EhciExtension->IsoDummyQHListVA + Idx * sizeof(EHCI_HCD_QH));
 }
 
 VOID
@@ -527,8 +527,8 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
 
     FrameHeader = &EhciExtension->HcResourcesVA->PeriodicFrameList[0];
 
-    DummyQhVA = (PEHCI_HCD_QH)EhciExtension->DummyQHListVA;
-    DummyQhPA = (PEHCI_HCD_QH)EhciExtension->DummyQHListPA;
+    DummyQhVA = (PEHCI_HCD_QH)EhciExtension->IsoDummyQHListVA;
+    DummyQhPA = (PEHCI_HCD_QH)EhciExtension->IsoDummyQHListPA;
 
     for (ix = 0; ix < 1024; ix++)
     {
@@ -608,14 +608,10 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
             (ULONG)EhciExtension->PeriodicHead[LinkTable[ix]]->PhysicalAddress;
 
         StaticQH->HwQH.HorizontalLink.Type = EHCI_LINK_TYPE_QH;
-        StaticQH->HwQH.EndpointCaps.AsULONG = -1;
+        StaticQH->HwQH.EndpointCaps.InterruptMask = 0xFF;
 
         StaticQH->QhFlags |= EHCI_QH_FLAG_STATIC;
-
-        if ((ix + 1) <= 6)
-        {
-            StaticQH->QhFlags |= 8;
-        }
+        StaticQH->QhFlags |= ix > 6 ? 0 : 8;
     }
 
     EhciExtension->PeriodicHead[0]->HwQH.HorizontalLink.Terminate = 1;
@@ -660,7 +656,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
 
     RtlZeroMemory(AsyncHead, sizeof(EHCI_STATIC_QH));
 
-    NextLink.AsULONG = (ULONG)AsyncHeadPA;
+    NextLink.AsULONG = (ULONG_PTR)AsyncHeadPA;
     NextLink.Type = EHCI_LINK_TYPE_QH;
 
     AsyncHead->HwQH.HorizontalLink = NextLink;
@@ -711,8 +707,8 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
         HcResourcesVA->PeriodicFrameList[Frame] = (PEHCI_STATIC_QH)StaticHeadPA.AsULONG;
     }
 
-    EhciExtension->DummyQHListVA = (ULONG_PTR)&HcResourcesVA->DummyQH;
-    EhciExtension->DummyQHListPA = (ULONG_PTR)&HcResourcesPA->DummyQH;
+    EhciExtension->IsoDummyQHListVA = (ULONG_PTR)&HcResourcesVA->IsoDummyQH[0];
+    EhciExtension->IsoDummyQHListPA = (ULONG_PTR)&HcResourcesPA->IsoDummyQH[0];
 
     EHCI_AddDummyQHs(EhciExtension);
 
@@ -1660,7 +1656,7 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
     {
         DbgBreakPoint();
 
-        DPRINT("EHCI_LinkTransferToQueue: TD - %p, DummyTd - %p\n",
+        DPRINT("EHCI_LinkTransferToQueue: TD - %p, HcdTailP - %p\n",
                EhciEndpoint->HcdHeadP,
                EhciEndpoint->HcdTailP);
 
@@ -1690,9 +1686,8 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
         {
             if (TD->EhciTransfer == Transfer)
             {
-                TD->HwTD.AlternateNextTD = (ULONG_PTR)NextTD->PhysicalAddress;
                 TD->AltNextHcdTD = NextTD;
-
+                TD->HwTD.AlternateNextTD = (ULONG_PTR)NextTD->PhysicalAddress;
             }
 
             TD += 1;
@@ -1753,7 +1748,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     FirstTD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
     FirstTD->EhciTransfer = EhciTransfer;
 
-    FirstTD->HwTD.Buffer[0] = 0;
+    FirstTD->HwTD.Buffer[0] = (ULONG_PTR)&FirstTD->PhysicalAddress->SetupPacket;
     FirstTD->HwTD.Buffer[1] = 0;
     FirstTD->HwTD.Buffer[2] = 0;
     FirstTD->HwTD.Buffer[3] = 0;
@@ -1763,7 +1758,6 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     FirstTD->HwTD.NextTD = TERMINATE_POINTER;
     FirstTD->HwTD.AlternateNextTD = TERMINATE_POINTER;
-    FirstTD->HwTD.Buffer[0] = (ULONG_PTR)&FirstTD->PhysicalAddress->SetupPacket;
 
     FirstTD->HwTD.Token.AsULONG = 0;
     FirstTD->HwTD.Token.ErrorCounter = 3;
@@ -1801,8 +1795,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     LastTD->HwTD.Token.AsULONG = 0;
     LastTD->HwTD.Token.ErrorCounter = 3;
 
-    FirstTD->HwTD.AlternateNextTD = (ULONG_PTR)LastTD->PhysicalAddress;
     FirstTD->AltNextHcdTD = LastTD;
+    FirstTD->HwTD.AlternateNextTD = (ULONG_PTR)LastTD->PhysicalAddress;
 
     PrevTD = FirstTD;
     LinkTD = FirstTD;
@@ -1839,8 +1833,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
             TD->HwTD.Token.AsULONG = 0;
             TD->HwTD.Token.ErrorCounter = 3;
 
-            PrevTD->HwTD.NextTD = (ULONG_PTR)TD->PhysicalAddress;
             PrevTD->NextHcdTD = TD;
+            PrevTD->HwTD.NextTD = (ULONG_PTR)TD->PhysicalAddress;
 
             if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
             {
@@ -1863,8 +1857,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
                 TD->HwTD.Token.DataToggle = 0;
             }
 
-            TD->HwTD.AlternateNextTD = (ULONG_PTR)LastTD->PhysicalAddress;
             TD->AltNextHcdTD = LastTD;
+            TD->HwTD.AlternateNextTD = (ULONG_PTR)LastTD->PhysicalAddress;
 
             TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
                                                       EhciEndpoint->EndpointProperties.MaxPacketSize,
@@ -1888,8 +1882,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
 End:
 
-    LinkTD->HwTD.NextTD = (ULONG_PTR)LastTD->PhysicalAddress;
     LinkTD->NextHcdTD = LastTD;
+    LinkTD->HwTD.NextTD = (ULONG_PTR)LastTD->PhysicalAddress;
 
     LastTD->HwTD.Buffer[0] = 0;
     LastTD->LengthThisTD = 0;
@@ -1910,14 +1904,14 @@ End:
 
     LastTD->HwTD.Token = Token;
 
-    LastTD->HwTD.NextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
     LastTD->NextHcdTD = EhciEndpoint->HcdTailP;
+    LastTD->HwTD.NextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
 
     EHCI_EnableAsyncList(EhciExtension);
     EHCI_LinkTransferToQueue(EhciExtension, EhciEndpoint, FirstTD);
 
-    ASSERT(EhciEndpoint->HcdTailP->NextHcdTD == NULL); // dummyTD - > NextHcdTD
-    ASSERT(EhciEndpoint->HcdTailP->AltNextHcdTD == NULL); // dummyTD - > AltNextHcdTD
+    ASSERT(EhciEndpoint->HcdTailP->NextHcdTD == NULL);
+    ASSERT(EhciEndpoint->HcdTailP->AltNextHcdTD == NULL);
 
     //EHCI_DPrintHwTD(FirstTD);
     //EHCI_DPrintHwTD(FirstTD->NextHcdTD);

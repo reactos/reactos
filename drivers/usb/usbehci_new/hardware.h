@@ -1,3 +1,5 @@
+#define EHCI_FRAME_LIST_MAX_ENTRIES  1024 // Number of frames in Frame List
+
 /* EHCI hardware registers */
 #define EHCI_USBCMD            0
 #define EHCI_USBSTS            1
@@ -306,12 +308,6 @@ typedef struct _EHCI_QUEUE_TD { // must be aligned on 32-byte boundaries
 C_ASSERT(sizeof(EHCI_QUEUE_TD) == 52);
 
 /* Queue Head */
-#define EHCI_QH_FLAG_IN_SCHEDULE  0x01
-#define EHCI_QH_FLAG_CLOSED       0x02
-#define EHCI_QH_FLAG_STATIC       0x04
-#define EHCI_QH_FLAG_UPDATING     0x10
-#define EHCI_QH_FLAG_NUKED        0x20
-
 typedef union _EHCI_QH_EP_PARAMS {
   struct {
     ULONG DeviceAddress               : 7;
