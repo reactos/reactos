@@ -789,9 +789,9 @@ private:
         m_HSplitter->m_HorizontalAlignment = UiAlign_Stretch;
         m_HSplitter->m_DynamicFirst = TRUE;
         m_HSplitter->m_Horizontal = TRUE;
-        m_HSplitter->m_Pos = 150;
+        m_HSplitter->m_Pos = INT_MAX;        //set INT_MAX to use lowest possible position (m_MinSecond)
         m_HSplitter->m_MinFirst = 10;
-        m_HSplitter->m_MinSecond = 10;
+        m_HSplitter->m_MinSecond = 140;
         m_VSplitter->Second().Append(m_HSplitter);
 
         return m_HSplitter->Create(m_hWnd) != NULL;
@@ -1533,7 +1533,6 @@ private:
             ImageList_Destroy(hImageListBuf);
         }
 
-        //if previous one was INSTALLED purge the list
         if (IS_INSTALLED_ENUM(EnumType))
         {
             if (!bWasInInstalled)
