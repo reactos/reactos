@@ -24,12 +24,19 @@
  * PROGRAMMER:
  */
 
-#include "usetup.h"
+/* INCLUDES *****************************************************************/
+
+#include "precomp.h"
+#include "mui.h"
 #include "muifonts.h"
 #include "muilanguages.h"
+#include "registry.h"
 
 #define NDEBUG
 #include <debug.h>
+
+
+/* FUNCTIONS ****************************************************************/
 
 extern
 VOID
