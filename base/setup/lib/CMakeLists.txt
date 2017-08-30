@@ -14,6 +14,7 @@ list(APPEND SOURCE
     utils/regutil.c
     bootsup.c
     fsutil.c
+    mui.c
     registry.c
     settings.c
     setuplib.c
