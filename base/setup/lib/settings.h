@@ -87,8 +87,6 @@ PGENERIC_LIST
 CreateKeyboardDriverList(
     HINF InfFile);
 
-#if 0 // FIXME: Disabled for now because it uses MUI* functions from usetup
-
 PGENERIC_LIST
 CreateKeyboardLayoutList(
     HINF InfFile,
@@ -109,8 +107,6 @@ ProcessKeyboardLayoutRegistry(
 BOOLEAN
 ProcessKeyboardLayoutFiles(
     PGENERIC_LIST List);
-
-#endif
 
 BOOLEAN
 ProcessLocaleRegistry(

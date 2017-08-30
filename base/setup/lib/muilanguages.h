@@ -838,5 +838,5 @@ const MUI_LANGUAGE LanguageList[] =
 #ifdef LANGUAGE_ZU_ZU
     {L"00000435", L"1252", L"850", L"10000", L"Zulu", L"1", LatinFonts, zuZULayouts},
 #endif
-    {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+    {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL}
 };

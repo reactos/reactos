@@ -24,12 +24,20 @@ typedef struct
     const MUI_LAYOUTS * MuiLayouts;
 } MUI_LANGUAGE;
 
+
+// HACK HACK HACK!!
+extern PWCHAR SelectedLanguageId;
+
+
 BOOLEAN
 IsLanguageAvailable(
     PWCHAR LanguageId);
 
 PCWSTR
 MUIDefaultKeyboardLayout(VOID);
+
+PWCHAR
+MUIGetOEMCodePage(VOID);
 
 PWCHAR
 MUIGetGeoID(VOID);

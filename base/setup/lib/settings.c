@@ -29,6 +29,7 @@
 #include "precomp.h"
 #include "genlist.h"
 #include "infsupp.h"
+#include "mui.h"
 #include "registry.h"
 
 #include "settings.h"
@@ -38,9 +39,7 @@
 
 /* GLOBALS ******************************************************************/
 
-#if 0 // FIXME: Disabled for now because it uses MUI* functions from usetup
-ULONG DefaultLanguageIndex = 0;
-#endif
+static ULONG DefaultLanguageIndex = 0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -1055,8 +1054,6 @@ CreateKeyboardDriverList(
 }
 
 
-#if 0 // FIXME: Disabled for now because it uses MUI* functions from usetup
-
 ULONG
 GetDefaultLanguageIndex(VOID)
 {
@@ -1266,8 +1263,6 @@ ProcessKeyboardLayoutRegistry(
 
     return TRUE;
 }
-
-#endif
 
 #if 0
 BOOLEAN

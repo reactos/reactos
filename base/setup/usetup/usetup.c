@@ -32,7 +32,6 @@
 #include "chkdsk.h"
 #include "cmdcons.h"
 #include "format.h"
-#include "settings.h"
 
 #define NDEBUG
 #include <debug.h>

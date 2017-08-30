@@ -411,7 +411,7 @@
     // #include "lang/zh-TW.h"
 // #endif
 
-const MUI_LANGUAGE_RESOURCE LanguageList[] =
+const MUI_LANGUAGE_RESOURCE ResourceList[] =
 {
   /* Lang ID,     Language Name, Page strings, Error strings, Other strings */
 #ifdef LANGUAGE_AF_ZA
@@ -840,5 +840,5 @@ const MUI_LANGUAGE_RESOURCE LanguageList[] =
 #ifdef LANGUAGE_ZU_ZU
     {L"00000435", L"Zulu", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
-    {NULL, NULL, NULL, NULL, NULL},
+    {NULL, NULL, NULL, NULL, NULL}
 };

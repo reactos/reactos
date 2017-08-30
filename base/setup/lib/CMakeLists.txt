@@ -1,4 +1,6 @@
 
+add_definitions(${I18N_DEFS})
+
 include_directories(utils)
 
 list(APPEND SOURCE

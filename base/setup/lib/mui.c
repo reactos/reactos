@@ -38,13 +38,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-extern
-VOID
-PopupError(IN PCCH Text,
-           IN PCCH Status,
-           IN PINPUT_RECORD Ir,
-           IN ULONG WaitEvent);
-
 static
 ULONG
 FindLanguageIndex(VOID)
@@ -59,17 +52,16 @@ FindLanguageIndex(VOID)
 
     do
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID, SelectedLanguageId) == 0)
         {
             return lngIndex;
         }
 
         lngIndex++;
-    } while (LanguageList[lngIndex].MuiPages != NULL);
+    } while (LanguageList[lngIndex].LanguageID != NULL);
 
     return 0;
 }
-
 
 BOOLEAN
 IsLanguageAvailable(
@@ -79,65 +71,29 @@ IsLanguageAvailable(
 
     do
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , LanguageId) == 0)
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID, LanguageId) == 0)
             return TRUE;
 
         lngIndex++;
-    } while (LanguageList[lngIndex].MuiPages != NULL);
+    } while (LanguageList[lngIndex].LanguageID != NULL);
 
     return FALSE;
 }
 
 
-static
-const MUI_ENTRY *
-FindMUIEntriesOfPage(
-    IN ULONG PageNumber)
-{
-    ULONG muiIndex = 0;
-    ULONG lngIndex;
-    const MUI_PAGE * Pages = NULL;
-
-    lngIndex = max(FindLanguageIndex(), 0);
-    Pages = LanguageList[lngIndex].MuiPages;
-
-    do
-    {
-         if (Pages[muiIndex].Number == PageNumber)
-             return Pages[muiIndex].MuiEntry;
-
-         muiIndex++;
-    } while (Pages[muiIndex].MuiEntry != NULL);
-
-    return NULL;
-}
-
-
-static
-const MUI_ERROR *
-FindMUIErrorEntries(VOID)
-{
-    ULONG lngIndex = max(FindLanguageIndex(), 0);
-    return LanguageList[lngIndex].MuiErrors;
-}
-
-
-static
-const MUI_STRING *
-FindMUIStringEntries(VOID)
-{
-    ULONG lngIndex = max(FindLanguageIndex(), 0);
-    return LanguageList[lngIndex].MuiStrings;
-}
-
-
-LPCWSTR
+PCWSTR
 MUIDefaultKeyboardLayout(VOID)
 {
     ULONG lngIndex = max(FindLanguageIndex(), 0);
     return LanguageList[lngIndex].MuiLayouts[0].LayoutID;
 }
 
+PWCHAR
+MUIGetOEMCodePage(VOID)
+{
+    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    return LanguageList[lngIndex].OEMCPage;
+}
 
 PWCHAR
 MUIGetGeoID(VOID)
@@ -145,7 +101,6 @@ MUIGetGeoID(VOID)
     ULONG lngIndex = max(FindLanguageIndex(), 0);
     return LanguageList[lngIndex].GeoID;
 }
-
 
 const MUI_LAYOUTS *
 MUIGetLayoutsList(VOID)
@@ -155,146 +110,12 @@ MUIGetLayoutsList(VOID)
 }
 
 
-VOID
-MUIClearPage(
-    IN ULONG page)
-{
-    const MUI_ENTRY * entry;
-    int index;
-
-    entry = FindMUIEntriesOfPage(page);
-    if (!entry)
-    {
-        PopupError("Error: Failed to find translated page",
-                   NULL,
-                   NULL,
-                   POPUP_WAIT_NONE);
-        return;
-    }
-
-    index = 0;
-    do
-    {
-        CONSOLE_ClearStyledText(entry[index].X,
-                                entry[index].Y,
-                                entry[index].Flags,
-                                strlen(entry[index].Buffer));
-        index++;
-    }
-    while (entry[index].Buffer != NULL);
-}
-
-
-VOID
-MUIDisplayPage(
-    IN ULONG page)
-{
-    const MUI_ENTRY * entry;
-    int index;
-
-    entry = FindMUIEntriesOfPage(page);
-    if (!entry)
-    {
-        PopupError("Error: Failed to find translated page",
-                   NULL,
-                   NULL,
-                   POPUP_WAIT_NONE);
-        return;
-    }
-
-    index = 0;
-    do
-    {
-        CONSOLE_SetStyledText(entry[index].X,
-                              entry[index].Y,
-                              entry[index].Flags,
-                              entry[index].Buffer);
-
-        index++;
-    }
-    while (entry[index].Buffer != NULL);
-}
-
-
-VOID
-MUIDisplayError(
-    IN ULONG ErrorNum,
-    OUT PINPUT_RECORD Ir,
-    IN ULONG WaitEvent,
-    ...)
-{
-    const MUI_ERROR * entry;
-    CHAR Buffer[2048];
-    va_list ap;
-
-    if (ErrorNum >= ERROR_LAST_ERROR_CODE)
-    {
-        PopupError("Invalid error number provided",
-                   "Press ENTER to continue",
-                   Ir,
-                   POPUP_WAIT_ENTER);
-
-        return;
-    }
-
-    entry = FindMUIErrorEntries();
-    if (!entry)
-    {
-        PopupError("Error: Failed to find translated error message",
-                   NULL,
-                   NULL,
-                   POPUP_WAIT_NONE);
-        return;
-    }
-
-    va_start(ap, WaitEvent);
-    vsprintf(Buffer, entry[ErrorNum].ErrorText, ap);
-    va_end(ap);
-
-    PopupError(Buffer,
-               entry[ErrorNum].ErrorStatus,
-               Ir,
-               WaitEvent);
-}
-
-
-LPSTR
-MUIGetString(
-    ULONG Number)
-{
-    ULONG i;
-    const MUI_STRING * entry;
-    CHAR szErr[128];
-
-    entry = FindMUIStringEntries();
-    if (entry)
-    {
-        for (i = 0; entry[i].Number != 0; i++)
-        {
-            if (entry[i].Number == Number)
-            {
-                return entry[i].String;
-            }
-        }
-    }
-
-    sprintf(szErr, "Error: failed find string id %lu for language index %lu\n", Number, FindLanguageIndex());
-
-    PopupError(szErr,
-               NULL,
-               NULL,
-               POPUP_WAIT_NONE);
-
-    return "<nostring>";
-}
-
-
 static
 BOOLEAN
 AddHotkeySettings(
-    IN LPCWSTR Hotkey,
-    IN LPCWSTR LangHotkey,
-    IN LPCWSTR LayoutHotkey)
+    IN PCWSTR Hotkey,
+    IN PCWSTR LangHotkey,
+    IN PCWSTR LayoutHotkey)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -376,7 +197,6 @@ AddHotkeySettings(
     NtClose(KeyHandle);
     return TRUE;
 }
-
 
 BOOLEAN
 AddKbLayoutsToRegistry(
@@ -547,7 +367,6 @@ AddKbLayoutsToRegistry(
     return TRUE;
 }
 
-
 BOOLEAN
 AddKeyboardLayouts(VOID)
 {
@@ -555,25 +374,24 @@ AddKeyboardLayouts(VOID)
 
     do
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID, SelectedLanguageId) == 0)
         {
             return AddKbLayoutsToRegistry(LanguageList[lngIndex].MuiLayouts);
         }
 
         lngIndex++;
     }
-    while (LanguageList[lngIndex].MuiPages != NULL);
+    while (LanguageList[lngIndex].LanguageID != NULL);
 
     return FALSE;
 }
 
-
 static
 BOOLEAN
 AddCodepageToRegistry(
-    IN LPCWSTR ACPage,
-    IN LPCWSTR OEMCPage,
-    IN LPCWSTR MACCPage)
+    IN PCWSTR ACPage,
+    IN PCWSTR OEMCPage,
+    IN PCWSTR MACCPage)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -648,7 +466,6 @@ AddCodepageToRegistry(
     return TRUE;
 }
 
-
 static
 BOOLEAN
 AddFontsSettingsToRegistry(
@@ -702,14 +519,13 @@ AddFontsSettingsToRegistry(
     return TRUE;
 }
 
-
 BOOLEAN
 AddCodePage(VOID)
 {
     ULONG lngIndex = 0;
     do
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID, SelectedLanguageId) == 0)
         {
             if (AddCodepageToRegistry(LanguageList[lngIndex].ACPage,
                                       LanguageList[lngIndex].OEMCPage,
@@ -726,30 +542,9 @@ AddCodePage(VOID)
 
         lngIndex++;
     }
-    while (LanguageList[lngIndex].MuiPages != NULL);
+    while (LanguageList[lngIndex].LanguageID != NULL);
 
     return FALSE;
-}
-
-
-VOID
-SetConsoleCodePage(VOID)
-{
-    ULONG lngIndex = 0;
-    UINT wCodePage;
-
-    do
-    {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
-        {
-            wCodePage = (UINT) wcstoul(LanguageList[lngIndex].OEMCPage, NULL, 10);
-            SetConsoleOutputCP(wCodePage);
-            return;
-        }
-
-        lngIndex++;
-    }
-    while (LanguageList[lngIndex].MuiPages != NULL);
 }
 
 /* EOF */
