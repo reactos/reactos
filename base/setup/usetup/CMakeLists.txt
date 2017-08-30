@@ -26,7 +26,6 @@ list(APPEND SOURCE
     mui.c
     partlist.c
     progress.c
-    settings.c
     usetup.c
     usetup.h)
 

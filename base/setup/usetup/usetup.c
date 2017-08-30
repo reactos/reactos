@@ -32,7 +32,6 @@
 #include "chkdsk.h"
 #include "cmdcons.h"
 #include "format.h"
-#include "settings.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -404,13 +403,13 @@ static VOID
 UpdateKBLayout(VOID)
 {
     PGENERIC_LIST_ENTRY ListEntry;
-    LPCWSTR pszNewLayout;
+    PCWSTR pszNewLayout;
 
-    pszNewLayout = MUIDefaultKeyboardLayout();
+    pszNewLayout = MUIDefaultKeyboardLayout(SelectedLanguageId);
 
     if (LayoutList == NULL)
     {
-        LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
+        LayoutList = CreateKeyboardLayoutList(SetupInf, SelectedLanguageId, DefaultKBLayout);
         if (LayoutList == NULL)
         {
             /* FIXME: Handle error! */
@@ -467,9 +466,10 @@ LanguagePage(PINPUT_RECORD Ir)
         }
     }
 
-    /* Load the font */
-    USetupData.LanguageId = 0;
     SelectedLanguageId = DefaultLanguage;
+    USetupData.LanguageId = 0;
+
+    /* Load the font */
     SetConsoleCodePage();
     UpdateKBLayout();
 
@@ -555,7 +555,7 @@ LanguagePage(PINPUT_RECORD Ir)
         {
             NewLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
 
-            if (SelectedLanguageId != NewLanguageId)
+            if (wcscmp(SelectedLanguageId, NewLanguageId))
             {
                 /* Clear the language page */
                 MUIClearPage(LANGUAGE_PAGE);
@@ -646,12 +646,15 @@ SetupStartPage(PINPUT_RECORD Ir)
         ComputerList = CreateComputerTypeList(SetupInf);
         DisplayList = CreateDisplayDriverList(SetupInf);
         KeyboardList = CreateKeyboardDriverList(SetupInf);
-        LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
+
         LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
 
         /* new part */
+        SelectedLanguageId = DefaultLanguage;
         wcscpy(SelectedLanguageId, USetupData.LocaleID);
         USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
+
+        LayoutList = CreateKeyboardLayoutList(SetupInf, SelectedLanguageId, DefaultKBLayout);
 
         /* first we hack LanguageList */
         ListEntry = GetFirstListEntry(LanguageList);
@@ -1127,7 +1130,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
     /* Initialize the keyboard layout list */
     if (LayoutList == NULL)
     {
-        LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
+        LayoutList = CreateKeyboardLayoutList(SetupInf, SelectedLanguageId, DefaultKBLayout);
         if (LayoutList == NULL)
         {
             /* FIXME: report error */
@@ -4211,14 +4214,14 @@ DoUpdate:
 
         /* Add keyboard layouts */
         CONSOLE_SetStatusText(MUIGetString(STRING_ADDKBLAYOUTS));
-        if (!AddKeyboardLayouts())
+        if (!AddKeyboardLayouts(SelectedLanguageId))
         {
             MUIDisplayError(ERROR_ADDING_KBLAYOUTS, Ir, POPUP_WAIT_ENTER);
             goto Cleanup;
         }
 
         /* Set GeoID */
-        if (!SetGeoID(MUIGetGeoID()))
+        if (!SetGeoID(MUIGetGeoID(SelectedLanguageId)))
         {
             MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
             goto Cleanup;
@@ -4228,7 +4231,7 @@ DoUpdate:
         {
             /* Update keyboard layout settings */
             CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
-            if (!ProcessKeyboardLayoutRegistry(LayoutList))
+            if (!ProcessKeyboardLayoutRegistry(LayoutList, SelectedLanguageId))
             {
                 MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
                 goto Cleanup;
@@ -4237,7 +4240,7 @@ DoUpdate:
 
         /* Add codepage information to registry */
         CONSOLE_SetStatusText(MUIGetString(STRING_CODEPAGEINFOUPDATE));
-        if (!AddCodePage())
+        if (!AddCodePage(SelectedLanguageId))
         {
             MUIDisplayError(ERROR_ADDING_CODEPAGE, Ir, POPUP_WAIT_ENTER);
             goto Cleanup;

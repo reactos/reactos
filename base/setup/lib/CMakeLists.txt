@@ -1,4 +1,6 @@
 
+add_definitions(${I18N_DEFS})
+
 include_directories(utils)
 
 list(APPEND SOURCE
@@ -14,6 +16,7 @@ list(APPEND SOURCE
     utils/regutil.c
     bootsup.c
     fsutil.c
+    mui.c
     registry.c
     settings.c
     setuplib.c

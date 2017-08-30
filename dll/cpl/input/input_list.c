@@ -14,7 +14,7 @@ typedef struct
     PWCHAR SubFontName;
 } MUI_SUBFONT;
 
-#include "../../../base/setup/usetup/muifonts.h"
+#include "../../../base/setup/lib/muifonts.h"
 
 BOOL UpdateRegistryForFontSubstitutes(MUI_SUBFONT *pSubstitutes)
 {

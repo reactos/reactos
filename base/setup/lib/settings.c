@@ -28,6 +28,7 @@
 #include "precomp.h"
 #include "genlist.h"
 #include "infsupp.h"
+#include "mui.h"
 #include "registry.h"
 
 #include "settings.h"
@@ -37,9 +38,7 @@
 
 /* GLOBALS ******************************************************************/
 
-#if 0 // FIXME: Disabled for now because it uses MUI* functions from usetup
-ULONG DefaultLanguageIndex = 0;
-#endif
+static ULONG DefaultLanguageIndex = 0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -212,8 +211,8 @@ cleanup:
 static
 BOOLEAN
 GetComputerIdentifier(
-    PWSTR Identifier,
-    ULONG IdentifierLength)
+    OUT PWSTR Identifier,
+    IN ULONG IdentifierLength)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -314,7 +313,23 @@ GetComputerIdentifier(
 }
 
 
-LONG
+/*
+ * Return values:
+ * 0x00: Failure, stop the enumeration;
+ * 0x01: Add the entry and continue the enumeration;
+ * 0x02: Skip the entry but continue the enumeration.
+ */
+typedef UCHAR
+(NTAPI *PPROCESS_ENTRY_ROUTINE)(
+    IN PWCHAR KeyName,
+    IN PWCHAR KeyValue,
+    IN PCHAR DisplayText,
+    IN SIZE_T DisplayTextSize,
+    OUT PVOID* UserData,
+    OUT PBOOLEAN Current,
+    IN PVOID Parameter OPTIONAL);
+
+static LONG
 AddEntriesFromInfSection(
     IN OUT PGENERIC_LIST List,
     IN HINF InfFile,
@@ -384,7 +399,7 @@ AddEntriesFromInfSection(
     return TotalCount;
 }
 
-UCHAR
+static UCHAR
 NTAPI
 DefaultProcessEntry(
     IN PWCHAR KeyName,
@@ -418,7 +433,7 @@ DefaultProcessEntry(
 
 PGENERIC_LIST
 CreateComputerTypeList(
-    HINF InfFile)
+    IN HINF InfFile)
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
@@ -493,8 +508,8 @@ CreateComputerTypeList(
 static
 BOOLEAN
 GetDisplayIdentifier(
-    PWSTR Identifier,
-    ULONG IdentifierLength)
+    OUT PWSTR Identifier,
+    IN ULONG IdentifierLength)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -654,7 +669,7 @@ GetDisplayIdentifier(
 
 PGENERIC_LIST
 CreateDisplayDriverList(
-    HINF InfFile)
+    IN HINF InfFile)
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
@@ -733,9 +748,9 @@ CreateDisplayDriverList(
 
 BOOLEAN
 ProcessComputerFiles(
-    HINF InfFile,
-    PGENERIC_LIST List,
-    PWCHAR *AdditionalSectionName)
+    IN HINF InfFile,
+    IN PGENERIC_LIST List,
+    OUT PWSTR* AdditionalSectionName)
 {
     PGENERIC_LIST_ENTRY Entry;
     static WCHAR SectionName[128];
@@ -758,8 +773,8 @@ ProcessComputerFiles(
 
 BOOLEAN
 ProcessDisplayRegistry(
-    HINF InfFile,
-    PGENERIC_LIST List)
+    IN HINF InfFile,
+    IN PGENERIC_LIST List)
 {
     NTSTATUS Status;
     PGENERIC_LIST_ENTRY Entry;
@@ -916,7 +931,7 @@ ProcessDisplayRegistry(
 
 BOOLEAN
 ProcessLocaleRegistry(
-    PGENERIC_LIST List)
+    IN PGENERIC_LIST List)
 {
     PGENERIC_LIST_ENTRY Entry;
     PWCHAR LanguageId;
@@ -1030,7 +1045,7 @@ ProcessLocaleRegistry(
 
 PGENERIC_LIST
 CreateKeyboardDriverList(
-    HINF InfFile)
+    IN HINF InfFile)
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
@@ -1053,8 +1068,6 @@ CreateKeyboardDriverList(
     return List;
 }
 
-
-#if 0 // FIXME: Disabled for now because it uses MUI* functions from usetup
 
 ULONG
 GetDefaultLanguageIndex(VOID)
@@ -1112,8 +1125,8 @@ ProcessLangEntry(
 
 PGENERIC_LIST
 CreateLanguageList(
-    HINF InfFile,
-    WCHAR *DefaultLanguage)
+    IN HINF InfFile,
+    OUT PWSTR DefaultLanguage)
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
@@ -1132,7 +1145,6 @@ CreateLanguageList(
         return NULL;
 
     wcscpy(DefaultLanguage, KeyValue);
-    SelectedLanguageId = KeyValue;
 
     List = CreateGenericList();
     if (List == NULL)
@@ -1163,13 +1175,14 @@ CreateLanguageList(
 
 PGENERIC_LIST
 CreateKeyboardLayoutList(
-    HINF InfFile,
-    WCHAR *DefaultKBLayout)
+    IN HINF InfFile,
+    IN PCWSTR LanguageId,
+    OUT PWSTR DefaultKBLayout)
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
     PWCHAR KeyValue;
-    const MUI_LAYOUTS * LayoutsList;
+    const MUI_LAYOUTS* LayoutsList;
     ULONG uIndex = 0;
 
     /* Get default layout id */
@@ -1185,7 +1198,7 @@ CreateKeyboardLayoutList(
     if (List == NULL)
         return NULL;
 
-    LayoutsList = MUIGetLayoutsList();
+    LayoutsList = MUIGetLayoutsList(LanguageId);
 
     do
     {
@@ -1220,11 +1233,12 @@ CreateKeyboardLayoutList(
 
 BOOLEAN
 ProcessKeyboardLayoutRegistry(
-    PGENERIC_LIST List)
+    IN PGENERIC_LIST List,
+    IN PCWSTR LanguageId)
 {
     PGENERIC_LIST_ENTRY Entry;
     PWCHAR LayoutId;
-    const MUI_LAYOUTS * LayoutsList;
+    const MUI_LAYOUTS* LayoutsList;
     MUI_LAYOUTS NewLayoutsList[20];
     ULONG uIndex;
     ULONG uOldPos = 0;
@@ -1237,41 +1251,37 @@ ProcessKeyboardLayoutRegistry(
     if (LayoutId == NULL)
         return FALSE;
 
-    LayoutsList = MUIGetLayoutsList();
+    LayoutsList = MUIGetLayoutsList(LanguageId);
 
-    if (_wcsicmp(LayoutsList[0].LayoutID, LayoutId) != 0)
+    if (_wcsicmp(LayoutsList[0].LayoutID, LayoutId) == 0)
+        return TRUE;
+
+    for (uIndex = 1; LayoutsList[uIndex].LangID != NULL; uIndex++)
     {
-        for (uIndex = 1; LayoutsList[uIndex].LangID != NULL; uIndex++)
+        if (_wcsicmp(LayoutsList[uIndex].LayoutID, LayoutId) == 0)
         {
-            if (_wcsicmp(LayoutsList[uIndex].LayoutID, LayoutId) == 0)
-            {
-                uOldPos = uIndex;
-                continue;
-            }
-
-            NewLayoutsList[uIndex].LangID   = LayoutsList[uIndex].LangID;
-            NewLayoutsList[uIndex].LayoutID = LayoutsList[uIndex].LayoutID;
+            uOldPos = uIndex;
+            continue;
         }
 
-        NewLayoutsList[uIndex].LangID    = NULL;
-        NewLayoutsList[uIndex].LayoutID  = NULL;
-        NewLayoutsList[uOldPos].LangID   = LayoutsList[0].LangID;
-        NewLayoutsList[uOldPos].LayoutID = LayoutsList[0].LayoutID;
-        NewLayoutsList[0].LangID         = LayoutsList[uOldPos].LangID;
-        NewLayoutsList[0].LayoutID       = LayoutsList[uOldPos].LayoutID;
-
-        return AddKbLayoutsToRegistry(NewLayoutsList);
+        NewLayoutsList[uIndex].LangID   = LayoutsList[uIndex].LangID;
+        NewLayoutsList[uIndex].LayoutID = LayoutsList[uIndex].LayoutID;
     }
 
-    return TRUE;
-}
+    NewLayoutsList[uIndex].LangID    = NULL;
+    NewLayoutsList[uIndex].LayoutID  = NULL;
+    NewLayoutsList[uOldPos].LangID   = LayoutsList[0].LangID;
+    NewLayoutsList[uOldPos].LayoutID = LayoutsList[0].LayoutID;
+    NewLayoutsList[0].LangID         = LayoutsList[uOldPos].LangID;
+    NewLayoutsList[0].LayoutID       = LayoutsList[uOldPos].LayoutID;
 
-#endif
+    return AddKbLayoutsToRegistry(NewLayoutsList);
+}
 
 #if 0
 BOOLEAN
 ProcessKeyboardLayoutFiles(
-    PGENERIC_LIST List)
+    IN PGENERIC_LIST List)
 {
     return TRUE;
 }
@@ -1279,7 +1289,7 @@ ProcessKeyboardLayoutFiles(
 
 BOOLEAN
 SetGeoID(
-    PWCHAR Id)
+    IN PCWSTR Id)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1322,7 +1332,7 @@ SetGeoID(
 
 BOOLEAN
 SetDefaultPagefile(
-    WCHAR Drive)
+    IN WCHAR Drive)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
