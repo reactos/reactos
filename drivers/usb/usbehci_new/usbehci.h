@@ -101,11 +101,11 @@ typedef struct _EHCI_TRANSFER {
 } EHCI_TRANSFER, *PEHCI_TRANSFER;
 
 typedef struct _EHCI_HC_RESOURCES {
-  PEHCI_STATIC_QH PeriodicFrameList[1024]; // 4K-page aligned array
+  PEHCI_STATIC_QH PeriodicFrameList[EHCI_FRAME_LIST_MAX_ENTRIES]; // 4K-page aligned array
   EHCI_STATIC_QH AsyncHead;
   EHCI_STATIC_QH PeriodicHead[64];
   UCHAR Padded[0x160];
-  EHCI_HCD_QH IsoDummyQH[1024];
+  EHCI_HCD_QH IsoDummyQH[EHCI_FRAME_LIST_MAX_ENTRIES];
 } EHCI_HC_RESOURCES, *PEHCI_HC_RESOURCES;
 
 #define EHCI_FLAGS_CONTROLLER_SUSPEND 0x01

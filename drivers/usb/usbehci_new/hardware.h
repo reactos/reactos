@@ -158,6 +158,8 @@ typedef struct _EHCI_HW_REGISTERS {
 /* Used for QHs and qTDs to mark Pointers as the end */
 #define TERMINATE_POINTER   1
 
+#define LINK_POINTER_MASK   0xFFFFFFE0
+
 typedef union _EHCI_LINK_POINTER {
   struct {
     ULONG Terminate : 1;
