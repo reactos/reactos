@@ -729,8 +729,8 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     PEHCI_HC_CAPABILITY_REGISTERS CapabilityRegisters;
     PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
-    LARGE_INTEGER CurrentTime = {{0, 0}};
-    LARGE_INTEGER LastTime = {{0, 0}};
+    LARGE_INTEGER EndTime;
+    LARGE_INTEGER CurrentTime;
     EHCI_HC_STRUCTURAL_PARAMS StructuralParams;
 
     DPRINT_EHCI("EHCI_InitializeHardware: ... \n");
@@ -742,14 +742,14 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     Command.Reset = 1;
     WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
 
-    KeQuerySystemTime(&CurrentTime);
-    CurrentTime.QuadPart += 100 * 10000; // 100 msec
+    KeQuerySystemTime(&EndTime);
+    EndTime.QuadPart += 100 * 10000; // 100 msec
 
     DPRINT_EHCI("EHCI_InitializeHardware: Start reset ... \n");
 
     while (TRUE)
     {
-        KeQuerySystemTime(&LastTime);
+        KeQuerySystemTime(&CurrentTime);
         Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
 
         if (Command.Reset != 1)
@@ -757,7 +757,7 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
             break;
         }
 
-        if (LastTime.QuadPart >= CurrentTime.QuadPart)
+        if (CurrentTime.QuadPart >= EndTime.QuadPart)
         {
             if (Command.Reset == 1)
             {
@@ -1447,8 +1447,8 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
     PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
     EHCI_USB_STATUS Status;
-    LARGE_INTEGER CurrentTime = {{0, 0}};
-    LARGE_INTEGER FirstTime = {{0, 0}};
+    LARGE_INTEGER CurrentTime;
+    LARGE_INTEGER EndTime;
     EHCI_USB_COMMAND Cmd;
 
     DPRINT_EHCI("EHCI_FlushAsyncCache: EhciExtension - %p\n", EhciExtension);
@@ -1464,8 +1464,8 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
 
     if (Status.AsynchronousStatus && !Command.AsynchronousEnable)
     {
-        KeQuerySystemTime(&FirstTime);
-        FirstTime.QuadPart += 100 * 10000;  //100 ms
+        KeQuerySystemTime(&EndTime);
+        EndTime.QuadPart += 100 * 10000;  //100 ms
 
         do
         {
@@ -1473,7 +1473,7 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
             Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
             KeQuerySystemTime(&CurrentTime);
 
-            if (CurrentTime.QuadPart > FirstTime.QuadPart)
+            if (CurrentTime.QuadPart > EndTime.QuadPart)
             {
                 RegPacket.UsbPortBugCheck(EhciExtension);
             }
@@ -1485,8 +1485,8 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
 
     if (!Status.AsynchronousStatus && Command.AsynchronousEnable)
     {
-        KeQuerySystemTime(&FirstTime);
-        FirstTime.QuadPart += 100 * 10000;  //100 ms
+        KeQuerySystemTime(&EndTime);
+        EndTime.QuadPart += 100 * 10000;  //100 ms
 
         do
         {
@@ -1500,8 +1500,8 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
     Command.InterruptAdvanceDoorbell = 1;
     WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
 
-    KeQuerySystemTime(&FirstTime);
-    FirstTime.QuadPart += 100 * 10000;  //100 ms
+    KeQuerySystemTime(&EndTime);
+    EndTime.QuadPart += 100 * 10000;  //100 ms
 
     Cmd.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
 
