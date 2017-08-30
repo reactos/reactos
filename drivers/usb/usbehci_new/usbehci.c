@@ -484,9 +484,9 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
                       IN PULONG VirtualAddress,
                       IN ULONG Alignment)
 {
-    ULONG PAddress;
+    ULONG_PTR PAddress;
     PVOID NewPAddress;
-    ULONG VAddress;
+    ULONG_PTR VAddress;
 
     //DPRINT_EHCI("EHCI_AlignHwStructure: *PhysicalAddress - %p, *VirtualAddress - %p, Alignment - %x\n",
     //             *PhysicalAddress,
@@ -500,8 +500,8 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
 
     if (NewPAddress != PAGE_ALIGN(*PhysicalAddress))
     {
-        VAddress += (ULONG)NewPAddress - PAddress;
-        PAddress = (ULONG)PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
+        VAddress += (ULONG_PTR)NewPAddress - PAddress;
+        PAddress = (ULONG_PTR)PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
 
         DPRINT("EHCI_AlignHwStructure: VAddress - %p, PAddress - %p\n",
                VAddress,
@@ -548,7 +548,7 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
         DummyQhVA += 1;
         DummyQhPA += 1;
 
-        DummyQhVA->sqh.HwQH.HorizontalLink.AsULONG = (ULONG)(*FrameHeader);
+        DummyQhVA->sqh.HwQH.HorizontalLink.AsULONG = (ULONG_PTR)(*FrameHeader);
 
         EndpointParams = DummyQhVA->sqh.HwQH.EndpointParams;
         EndpointParams.DeviceAddress = 0;
@@ -2962,7 +2962,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 {
     PEHCI_HCD_QH QH;
     PEHCI_HCD_TD CurrentTD;
-    ULONG CurrentTdPA;
+    ULONG_PTR CurrentTdPA;
     PEHCI_HCD_TD TD;
     PEHCI_TRANSFER Transfer;
     BOOLEAN IsSheduled;
