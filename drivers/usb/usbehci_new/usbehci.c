@@ -1228,12 +1228,15 @@ EHCI_InterruptService(IN PVOID ehciExtension)
         }
     }
 
-    FrameIndex = (READ_REGISTER_ULONG(&OperationalRegs->FrameIndex) >> 3) & 0x7FF;
+    FrameIndex = READ_REGISTER_ULONG(&OperationalRegs->FrameIndex) / 8;
+    FrameIndex &= EHCI_FRINDEX_FRAME_MASK;
 
-    if ((FrameIndex ^ EhciExtension->FrameIndex) & 0x400)
+    if ((FrameIndex ^ EhciExtension->FrameIndex) & EHCI_FRAME_LIST_MAX_ENTRIES)
     {
-        EhciExtension->FrameHighPart = EhciExtension->FrameHighPart + 0x800 - 
-                                       ((FrameIndex ^ EhciExtension->FrameHighPart) & 0x400);
+        EhciExtension->FrameHighPart += 2 * EHCI_FRAME_LIST_MAX_ENTRIES;
+
+        EhciExtension->FrameHighPart -= (FrameIndex ^ EhciExtension->FrameHighPart) &
+                                        EHCI_FRAME_LIST_MAX_ENTRIES;
     }
 
     EhciExtension->FrameIndex = FrameIndex;
@@ -3172,8 +3175,9 @@ EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
     FrameIdx = EhciExtension->FrameIndex;
     FrameIndex = READ_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs + EHCI_FRINDEX);
 
-    FrameNumber = (((USHORT)FrameIdx ^ ((FrameIndex >> 3) & 0x7FF)) & 0x400) +
-                           (FrameIndex | ((FrameIndex >> 3) & 0x3FF));
+    FrameNumber = (USHORT)FrameIdx ^ ((FrameIndex / 8) & EHCI_FRINDEX_FRAME_MASK);
+    FrameNumber &= EHCI_FRAME_LIST_MAX_ENTRIES;
+    FrameNumber += FrameIndex | ((FrameIndex / 8) & EHCI_FRINDEX_INDEX_MASK);
 
     return FrameNumber;
 }

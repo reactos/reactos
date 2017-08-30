@@ -136,6 +136,10 @@ typedef union _EHCI_PORT_STATUS_CONTROL {
   ULONG AsULONG;
 } EHCI_PORT_STATUS_CONTROL;
 
+/* FRINDEX Frame Index Register */
+#define EHCI_FRINDEX_FRAME_MASK     0x7FF 
+#define EHCI_FRINDEX_INDEX_MASK     0x3FF 
+
 typedef struct _EHCI_HW_REGISTERS {
   EHCI_USB_COMMAND HcCommand; // RO, R/W (field dependent), WO
   EHCI_USB_STATUS HcStatus; // RO, R/W, R/WC, (field dependent)
