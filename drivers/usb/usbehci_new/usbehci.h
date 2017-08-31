@@ -75,7 +75,9 @@ typedef struct _EHCI_STATIC_QH {
   struct _EHCI_HCD_QH * PrevHead;
   struct _EHCI_HCD_QH * NextHead;
   struct _EHCI_STATIC_QH * StaticQH;
-  ULONG Pad[18];
+  ULONG Period;
+  ULONG Ordinal;
+  ULONG Pad[16];
 } EHCI_STATIC_QH, *PEHCI_STATIC_QH;
 
 C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);

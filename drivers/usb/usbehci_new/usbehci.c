@@ -2758,7 +2758,66 @@ NTAPI
 EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
                             IN PEHCI_ENDPOINT EhciEndpoint)
 {
-    DPRINT1("EHCI_InsertQhInPeriodicList: UNIMPLEMENTED. FIXME\n");
+    PEHCI_STATIC_QH StaticQH;
+    PEHCI_HCD_QH QH;
+    ULONG_PTR QhPA;
+    PEHCI_HCD_QH NextHead;
+    PEHCI_HCD_QH PrevHead;
+
+    QH = EhciEndpoint->QH;
+    StaticQH = EhciEndpoint->StaticQH;
+
+    ASSERT((QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE) == 0);
+    ASSERT(((StaticQH->QhFlags & EHCI_QH_FLAG_STATIC)) != 0);
+
+    NextHead = StaticQH->NextHead;
+
+    QH->sqh.Period = EhciEndpoint->EndpointProperties.Period;
+    QH->sqh.Ordinal = EhciEndpoint->EndpointProperties.Reserved6;
+
+    DPRINT_EHCI("EHCI_InsertQueueHeadInPeriodicList: EhciEndpoint - %p, QH - %X, EhciEndpoint->StaticQH - %X\n",
+                EhciEndpoint,
+                QH,
+                EhciEndpoint->StaticQH);
+
+    PrevHead = (PEHCI_HCD_QH)StaticQH;
+
+    if ((StaticQH->QhFlags & EHCI_QH_FLAG_STATIC) != 0 &&
+        (!NextHead || (NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC) != 0))
+    {
+        DPRINT_EHCI("EHCI_InsertQueueHeadInPeriodicList: StaticQH - %p, StaticQH->NextHead - %X\n",
+                    StaticQH,
+                    StaticQH->NextHead);
+    }
+    else
+    {
+        while (NextHead &&
+               !(NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC) &&
+               QH->sqh.Ordinal > NextHead->sqh.Ordinal);
+        {
+            PrevHead = NextHead;
+            NextHead = NextHead->sqh.NextHead;
+        }
+    }
+
+    QH->sqh.NextHead = NextHead;
+    QH->sqh.PrevHead = PrevHead;
+
+    if (NextHead && !(NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC))
+    {
+        NextHead->sqh.PrevHead = QH;
+    }
+
+    QH->sqh.QhFlags |= EHCI_QH_FLAG_IN_SCHEDULE;
+    QH->sqh.HwQH.HorizontalLink = PrevHead->sqh.HwQH.HorizontalLink;
+
+    PrevHead->sqh.NextHead = QH;
+
+    QhPA = (ULONG_PTR)QH->sqh.PhysicalAddress & LINK_POINTER_MASK;
+
+    PrevHead->sqh.HwQH.HorizontalLink.AsULONG = QhPA;
+    PrevHead->sqh.HwQH.HorizontalLink.Type = EHCI_LINK_TYPE_QH;
+    PrevHead->sqh.HwQH.HorizontalLink.Terminate = TRUE;
 }
 
 VOID
