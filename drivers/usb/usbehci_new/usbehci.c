@@ -26,7 +26,7 @@ EHCI_AllocTd(IN PEHCI_EXTENSION EhciExtension,
 
     TD = EhciEndpoint->FirstTD;
 
-    for (ix = 1; TD->TdFlags & EHCI_HCD_TD_FLAG_ALLOCATED; ++ix)
+    for (ix = 1; TD->TdFlags & EHCI_HCD_TD_FLAG_ALLOCATED; ix++)
     {
         TD += 1;
 
@@ -39,7 +39,7 @@ EHCI_AllocTd(IN PEHCI_EXTENSION EhciExtension,
 
     TD->TdFlags |= EHCI_HCD_TD_FLAG_ALLOCATED;
 
-    --EhciEndpoint->RemainTDs;
+    EhciEndpoint->RemainTDs--;
 
     return TD;
 }
@@ -1218,7 +1218,7 @@ EHCI_InterruptService(IN PVOID ehciExtension)
 
     if (iStatus.HostSystemError)
     {
-        ++EhciExtension->HcSystemErrors;
+        EhciExtension->HcSystemErrors++;
 
         if (EhciExtension->HcSystemErrors < 0x100)
         {
@@ -2325,7 +2325,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
             TD->HwTD.NextTD = 0;
             TD->HwTD.AlternateNextTD = 0;
 
-            ++EhciEndpoint->RemainTDs;
+            EhciEndpoint->RemainTDs++;
 
             TD->EhciTransfer = NULL;
         }
@@ -2373,7 +2373,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
             TD->HwTD.NextTD = 0;
             TD->HwTD.AlternateNextTD = 0;
 
-            ++EhciEndpoint->RemainTDs;
+            EhciEndpoint->RemainTDs++;
 
             TD->EhciTransfer = NULL;
 
@@ -2779,7 +2779,7 @@ Next:
     TD->TdFlags = 0;
     TD->EhciTransfer = NULL;
 
-    ++EhciEndpoint->RemainTDs;
+    EhciEndpoint->RemainTDs++;
 
     if (EhciTransfer->PendingTDs == 0)
     {
@@ -3228,7 +3228,7 @@ EHCI_PollController(IN PVOID ehciExtension)
 
     if (EhciExtension->NumberOfPorts)
     {
-        for (Port = 0; Port < EhciExtension->NumberOfPorts; ++Port)
+        for (Port = 0; Port < EhciExtension->NumberOfPorts; Port++)
         {
             PortSC.AsULONG = READ_REGISTER_ULONG(((PULONG)OperationalRegs + EHCI_PORTSC) + Port);
 
