@@ -33,7 +33,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COMPAT_TITLE "Kompatibilität"
+    IDS_TABTITLE "Kompatibilität"
     IDS_FAILED_NETWORK "Kompatibilitätsmodi können auf diesem Programm nicht angewendet werden, da es sich auf einem Netzlaufwerk befindet."
     IDS_FAILED_PROTECTED "Kompatibilitätsmodi können auf diesem Programm nicht angewendet werden, da es Teil von ReactOS ist."
     IDS_YOU_DID_NOT_ADD "Sie haben den Modus nicht hinzugefügt, möchten Sie ihn jetzt hinzufügen?"

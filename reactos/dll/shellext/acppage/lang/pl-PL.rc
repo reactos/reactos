@@ -35,7 +35,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COMPAT_TITLE "Zgodność"
+    IDS_TABTITLE "Compatibility"
     IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
     IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
     IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"

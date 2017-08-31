@@ -35,7 +35,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COMPAT_TITLE "Compatibilitate"
+    IDS_TABTITLE "Compatibilitate"
     IDS_FAILED_NETWORK "Modurile de compatibilitate nu pot fi instituite pentru acest program deoarece rezidă pe o unitate de stocare în rețea."
     IDS_FAILED_PROTECTED "Modurile de compatibilitate nu pot fi instituite pentru acest program deoarece este parte din ReactOS."
     IDS_YOU_DID_NOT_ADD "Nu ați specificat un mod. Doriți să specificați unul?"
