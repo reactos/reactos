@@ -1178,7 +1178,7 @@ PGENERIC_LIST
 CreateKeyboardLayoutList(
     IN HINF InfFile,
     IN PCWSTR LanguageId,
-    OUT PWCHAR DefaultKBLayout)
+    OUT PWSTR DefaultKBLayout)
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
