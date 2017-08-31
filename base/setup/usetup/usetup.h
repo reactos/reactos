@@ -128,4 +128,10 @@ typedef enum _PAGE_NUMBER
 #define POPUP_WAIT_ANY_KEY 1
 #define POPUP_WAIT_ENTER   2
 
+VOID
+PopupError(IN PCCH Text,
+           IN PCCH Status,
+           IN PINPUT_RECORD Ir,
+           IN ULONG WaitEvent);
+
 #endif /* _USETUP_PCH_ */
