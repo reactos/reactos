@@ -27,97 +27,62 @@
 
 #pragma once
 
-/*
- * Return values:
- * 0x00: Failure, stop the enumeration;
- * 0x01: Add the entry and continue the enumeration;
- * 0x02: Skip the entry but continue the enumeration.
- */
-typedef UCHAR
-(NTAPI *PPROCESS_ENTRY_ROUTINE)(
-    IN PWCHAR KeyName,
-    IN PWCHAR KeyValue,
-    IN PCHAR DisplayText,
-    IN SIZE_T DisplayTextSize,
-    OUT PVOID* UserData,
-    OUT PBOOLEAN Current,
-    IN PVOID Parameter OPTIONAL);
-
-LONG
-AddEntriesFromInfSection(
-    IN OUT PGENERIC_LIST List,
-    IN HINF InfFile,
-    IN PCWSTR SectionName,
-    IN PINFCONTEXT pContext,
-    IN PPROCESS_ENTRY_ROUTINE ProcessEntry,
-    IN PVOID Parameter OPTIONAL);
-
-UCHAR
-NTAPI
-DefaultProcessEntry(
-    IN PWCHAR KeyName,
-    IN PWCHAR KeyValue,
-    IN PCHAR DisplayText,
-    IN SIZE_T DisplayTextSize,
-    OUT PVOID* UserData,
-    OUT PBOOLEAN Current,
-    IN PVOID Parameter OPTIONAL);
-
-
 PGENERIC_LIST
 CreateComputerTypeList(
-    HINF InfFile);
+    IN HINF InfFile);
 
 PGENERIC_LIST
 CreateDisplayDriverList(
-    HINF InfFile);
+    IN HINF InfFile);
 
 BOOLEAN
 ProcessComputerFiles(
-    HINF InfFile,
-    PGENERIC_LIST List,
-    PWCHAR *AdditionalSectionName);
+    IN HINF InfFile,
+    IN PGENERIC_LIST List,
+    OUT PWSTR* AdditionalSectionName);
 
 BOOLEAN
 ProcessDisplayRegistry(
-    HINF InfFile,
-    PGENERIC_LIST List);
+    IN HINF InfFile,
+    IN PGENERIC_LIST List);
 
 PGENERIC_LIST
 CreateKeyboardDriverList(
-    HINF InfFile);
+    IN HINF InfFile);
 
 PGENERIC_LIST
 CreateKeyboardLayoutList(
-    HINF InfFile,
-    WCHAR *DefaultKBLayout);
+    IN HINF InfFile,
+    IN PCWSTR LanguageId,
+    OUT PWCHAR DefaultKBLayout);
 
 PGENERIC_LIST
 CreateLanguageList(
-    HINF InfFile,
-    WCHAR *DefaultLanguage);
+    IN HINF InfFile,
+    OUT PWSTR DefaultLanguage);
 
 ULONG
 GetDefaultLanguageIndex(VOID);
 
 BOOLEAN
 ProcessKeyboardLayoutRegistry(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST List,
+    IN PCWSTR LanguageId);
 
 BOOLEAN
 ProcessKeyboardLayoutFiles(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST List);
 
 BOOLEAN
 ProcessLocaleRegistry(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST List);
 
 BOOLEAN
 SetGeoID(
-    PWCHAR Id);
+    IN PCWSTR Id);
 
 BOOLEAN
 SetDefaultPagefile(
-    WCHAR Drive);
+    IN WCHAR Drive);
 
 /* EOF */
