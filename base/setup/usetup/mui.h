@@ -28,8 +28,8 @@ typedef struct
 
 typedef struct
 {
-    PWCHAR LanguageID;
-    PWCHAR LanguageDescriptor;
+    PCWSTR LanguageID;
+    PCWSTR LanguageDescriptor;
     const MUI_PAGE * MuiPages;
     const MUI_ERROR * MuiErrors;
     const MUI_STRING * MuiStrings;

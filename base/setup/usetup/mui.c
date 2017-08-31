@@ -30,13 +30,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern
-VOID
-PopupError(IN PCCH Text,
-           IN PCCH Status,
-           IN PINPUT_RECORD Ir,
-           IN ULONG WaitEvent);
-
 static
 ULONG
 FindLanguageIndex(VOID)
@@ -45,11 +38,12 @@ FindLanguageIndex(VOID)
 
     if (SelectedLanguageId == NULL)
     {
-        /* default to english */
-        return 0;
+        /* Default to en-US */
+        return 0;   // FIXME!!
+        // SelectedLanguageId = L"00000409";
     }
 
-    do
+    while (ResourceList[lngIndex].MuiPages != NULL)
     {
         if (_wcsicmp(ResourceList[lngIndex].LanguageID, SelectedLanguageId) == 0)
         {
@@ -57,7 +51,7 @@ FindLanguageIndex(VOID)
         }
 
         lngIndex++;
-    } while (ResourceList[lngIndex].MuiPages != NULL);
+    }
 
     return 0;
 }
@@ -70,13 +64,13 @@ IsLanguageAvailable(
 {
     ULONG lngIndex = 0;
 
-    do
+    while (ResourceList[lngIndex].MuiPages != NULL)
     {
         if (_wcsicmp(ResourceList[lngIndex].LanguageID, LanguageId) == 0)
             return TRUE;
 
         lngIndex++;
-    } while (ResourceList[lngIndex].MuiPages != NULL);
+    }
 
     return FALSE;
 }
@@ -95,13 +89,13 @@ FindMUIEntriesOfPage(
     lngIndex = max(FindLanguageIndex(), 0);
     Pages = ResourceList[lngIndex].MuiPages;
 
-    do
+    while (Pages[muiIndex].MuiEntry != NULL)
     {
         if (Pages[muiIndex].Number == PageNumber)
             return Pages[muiIndex].MuiEntry;
 
         muiIndex++;
-    } while (Pages[muiIndex].MuiEntry != NULL);
+    }
 
     return NULL;
 }
@@ -128,7 +122,7 @@ MUIClearPage(
     IN ULONG page)
 {
     const MUI_ENTRY * entry;
-    int index;
+    ULONG index;
 
     entry = FindMUIEntriesOfPage(page);
     if (!entry)
@@ -141,7 +135,7 @@ MUIClearPage(
     }
 
     index = 0;
-    do
+    while (entry[index].Buffer != NULL)
     {
         CONSOLE_ClearStyledText(entry[index].X,
                                 entry[index].Y,
@@ -149,7 +143,6 @@ MUIClearPage(
                                 strlen(entry[index].Buffer));
         index++;
     }
-    while (entry[index].Buffer != NULL);
 }
 
 VOID
@@ -157,7 +150,7 @@ MUIDisplayPage(
     IN ULONG page)
 {
     const MUI_ENTRY * entry;
-    int index;
+    ULONG index;
 
     entry = FindMUIEntriesOfPage(page);
     if (!entry)
@@ -170,7 +163,7 @@ MUIDisplayPage(
     }
 
     index = 0;
-    do
+    while (entry[index].Buffer != NULL)
     {
         CONSOLE_SetStyledText(entry[index].X,
                               entry[index].Y,
@@ -179,7 +172,6 @@ MUIDisplayPage(
 
         index++;
     }
-    while (entry[index].Buffer != NULL);
 }
 
 VOID
@@ -261,7 +253,7 @@ SetConsoleCodePage(VOID)
 #if 0
     ULONG lngIndex = 0;
 
-    do
+    while (ResourceList[lngIndex].MuiPages != NULL)
     {
         if (_wcsicmp(ResourceList[lngIndex].LanguageID, SelectedLanguageId) == 0)
         {
@@ -272,9 +264,8 @@ SetConsoleCodePage(VOID)
 
         lngIndex++;
     }
-    while (ResourceList[lngIndex].MuiPages != NULL);
 #else
-    wCodePage = (UINT)wcstoul(MUIGetOEMCodePage(), NULL, 10);
+    wCodePage = (UINT)wcstoul(MUIGetOEMCodePage(SelectedLanguageId), NULL, 10);
     SetConsoleOutputCP(wCodePage);
 #endif
 }
