@@ -2333,8 +2333,8 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 {
     PEHCI_HCD_TD TD;
     PEHCI_HCD_TD FirstTD;
-    PEHCI_HCD_TD PrevTD;
-    ULONG TransferedLen;
+    PEHCI_HCD_TD PrevTD = NULL;
+    ULONG TransferedLen = 0;
 
     DPRINT_EHCI("EHCI_InterruptTransfer: EhciEndpoint - %p, EhciTransfer - %p\n",
                 EhciEndpoint,
@@ -2342,25 +2342,27 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     if (!EhciEndpoint->RemainTDs)
     {
+        DPRINT1("EHCI_InterruptTransfer: EhciEndpoint - %p\n", EhciEndpoint);
         DbgBreakPoint();
         return MP_STATUS_FAILURE;
     }
 
     EhciEndpoint->PendingTDs++;
 
-    TransferedLen = 0;
-    PrevTD = NULL;
-
-    if (TransferParameters->TransferBufferLength)
+    if ( !TransferParameters->TransferBufferLength )
     {
+        DPRINT1("EHCI_InterruptTransfer: EhciEndpoint - %p\n", EhciEndpoint);
         DbgBreakPoint();
+        return MP_STATUS_FAILURE;
     }
 
-    while (TransferedLen < TransferParameters->TransferBufferLength)
+    do
     {
         TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
+
         if (!TD)
         {
+            DPRINT1("EHCI_InterruptTransfer: EhciEndpoint - %p\n", EhciEndpoint);
             RegPacket.UsbPortBugCheck(EhciExtension);
             return MP_STATUS_FAILURE;
         }
@@ -2378,7 +2380,10 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         TD->HwTD.NextTD = TERMINATE_POINTER;
         TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
+
+        TD->HwTD.Token.AsULONG = 0;
         TD->HwTD.Token.ErrorCounter = 3;
+
         TD->NextHcdTD = NULL;
 
         if (EhciTransfer->PendingTDs == 1)
@@ -2413,8 +2418,14 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         PrevTD = TD;
     }
+    while (TransferedLen < TransferParameters->TransferBufferLength)
 
     TD->HwTD.Token.InterruptOnComplete = 1;
+
+    DPRINT_EHCI("EHCI_InterruptTransfer: PendingTDs - %p, TD->PhysicalAddress - %p, FirstTD - %p\n",
+                EhciTransfer->PendingTDs,
+                TD->PhysicalAddress,
+                FirstTD);
 
     TD->HwTD.NextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
     TD->NextHcdTD = EhciEndpoint->HcdTailP;
