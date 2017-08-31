@@ -2704,7 +2704,50 @@ NTAPI
 EHCI_RemoveQhFromPeriodicList(IN PEHCI_EXTENSION EhciExtension,
                               IN PEHCI_ENDPOINT EhciEndpoint)
 {
-    DPRINT1("EHCI_RemoveQhFromPeriodicList: UNIMPLEMENTED. FIXME\n");
+    PEHCI_HCD_QH QH;
+    PEHCI_HCD_QH NextHead;
+    ULONG_PTR NextQhPA;
+    PEHCI_HCD_QH PrevHead;
+
+    QH = EhciEndpoint->QH;
+
+    if ( !(QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE) )
+    {
+        return;
+    }
+
+    DPRINT("EHCI_RemoveQhFromPeriodicList: EhciEndpoint - %p, QH - %X, EhciEndpoint->StaticQH - %X\n",
+           EhciEndpoint,
+           QH,
+           EhciEndpoint->StaticQH);
+
+    NextHead = QH->sqh.NextHead;
+    PrevHead = QH->sqh.PrevHead;
+
+    PrevHead->sqh.NextHead = NextHead;
+
+    if ( NextHead )
+    {
+        if ( !(NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC) )
+        {
+            NextHead->sqh.PrevHead = PrevHead;
+        }
+
+        NextQhPA = (ULONG_PTR)NextHead->sqh.PhysicalAddress;
+        NextQhPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
+        NextQhPA |= (EHCI_LINK_TYPE_QH << 1);
+
+        PrevHead->sqh.HwQH.HorizontalLink.AsULONG = NextQhPA;
+    }
+    else
+    {
+        PrevHead->sqh.HwQH.HorizontalLink.Terminate = TRUE;
+    }
+
+    QH->sqh.QhFlags &= ~EHCI_QH_FLAG_IN_SCHEDULE;
+
+    QH->sqh.NextHead = NULL;
+    QH->sqh.PrevHead = NULL;
 }
 
 VOID
@@ -2718,7 +2761,7 @@ EHCI_RemoveQhFromAsyncList(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_STATIC_QH AsyncHead;
     ULONG_PTR AsyncHeadPA;
 
-    DPRINT_EHCI("EHCI_RemoveQhFromAsyncList: QH - %p\n", QH);
+    DPRINT("EHCI_RemoveQhFromAsyncList: QH - %p\n", QH);
 
     if (QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE)
     {
@@ -2775,19 +2818,19 @@ EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
     QH->sqh.Period = EhciEndpoint->EndpointProperties.Period;
     QH->sqh.Ordinal = EhciEndpoint->EndpointProperties.Reserved6;
 
-    DPRINT_EHCI("EHCI_InsertQueueHeadInPeriodicList: EhciEndpoint - %p, QH - %X, EhciEndpoint->StaticQH - %X\n",
-                EhciEndpoint,
-                QH,
-                EhciEndpoint->StaticQH);
+    DPRINT("EHCI_InsertQhInPeriodicList: EhciEndpoint - %p, QH - %X, EhciEndpoint->StaticQH - %X\n",
+           EhciEndpoint,
+           QH,
+           EhciEndpoint->StaticQH);
 
     PrevHead = (PEHCI_HCD_QH)StaticQH;
 
     if ((StaticQH->QhFlags & EHCI_QH_FLAG_STATIC) != 0 &&
         (!NextHead || (NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC) != 0))
     {
-        DPRINT_EHCI("EHCI_InsertQueueHeadInPeriodicList: StaticQH - %p, StaticQH->NextHead - %X\n",
-                    StaticQH,
-                    StaticQH->NextHead);
+        DPRINT("EHCI_InsertQhInPeriodicList: StaticQH - %p, StaticQH->NextHead - %X\n",
+               StaticQH,
+               StaticQH->NextHead);
     }
     else
     {
@@ -2813,11 +2856,11 @@ EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
 
     PrevHead->sqh.NextHead = QH;
 
-    QhPA = (ULONG_PTR)QH->sqh.PhysicalAddress & LINK_POINTER_MASK;
+    QhPA = (ULONG_PTR)QH->sqh.PhysicalAddress;
+    QhPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
+    QhPA |= (EHCI_LINK_TYPE_QH << 1);
 
     PrevHead->sqh.HwQH.HorizontalLink.AsULONG = QhPA;
-    PrevHead->sqh.HwQH.HorizontalLink.Type = EHCI_LINK_TYPE_QH;
-    PrevHead->sqh.HwQH.HorizontalLink.Terminate = TRUE;
 }
 
 VOID
@@ -2829,7 +2872,7 @@ EHCI_InsertQhInAsyncList(IN PEHCI_EXTENSION EhciExtension,
     ULONG_PTR QhPA;
     PEHCI_HCD_QH NextHead;
 
-    DPRINT_EHCI("EHCI_InsertQhInAsyncList: QH - %p\n", QH);
+    DPRINT("EHCI_InsertQhInAsyncList: QH - %p\n", QH);
 
     ASSERT((QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE) == 0);
     ASSERT((QH->sqh.QhFlags & EHCI_QH_FLAG_NUKED) == 0);
@@ -2871,9 +2914,9 @@ EHCI_SetAsyncEndpointState(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_HCD_QH QH;
     ULONG TransferType;
 
-    DPRINT_EHCI("EHCI_SetAsyncEndpointState: EhciEndpoint - %p, EndpointState - %p\n",
-                EhciEndpoint,
-                EndpointState);
+    DPRINT("EHCI_SetAsyncEndpointState: EhciEndpoint - %p, EndpointState - %p\n",
+            EhciEndpoint,
+            EndpointState);
 
     QH = EhciEndpoint->QH;
 
