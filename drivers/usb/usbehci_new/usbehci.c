@@ -956,10 +956,10 @@ EHCI_StartController(IN PVOID ehciExtension,
     DPRINT("EHCI_StartController: OperationalRegs     - %p\n", OperationalRegs);
 
     RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
-                                          1,
+                                          TRUE,
                                           &Fladj,
-                                          0x61,
-                                          1);
+                                          EHCI_FLADJ_PCI_CONFIG_OFFSET,
+                                          sizeof(Fladj));
 
     EhciExtension->FrameLengthAdjustment = Fladj;
 
@@ -992,20 +992,20 @@ EHCI_StartController(IN PVOID ehciExtension,
     }
 
     RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
-                                          1,
+                                          TRUE,
                                           &Fladj,
-                                          0x61,
-                                          1);
+                                          EHCI_FLADJ_PCI_CONFIG_OFFSET,
+                                          sizeof(Fladj));
 
     if (Fladj != EhciExtension->FrameLengthAdjustment)
     {
         Fladj = EhciExtension->FrameLengthAdjustment;
 
         RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
-                                              0, // write
+                                              FALSE, // write
                                               &Fladj,
-                                              0x61,
-                                              1);
+                                              EHCI_FLADJ_PCI_CONFIG_OFFSET,
+                                              sizeof(Fladj));
     }
 
     /* Port routing control logic default-routes all ports to this HC */

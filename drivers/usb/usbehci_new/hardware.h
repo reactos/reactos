@@ -11,6 +11,8 @@
 #define EHCI_CONFIGFLAG        16
 #define EHCI_PORTSC            17
 
+#define EHCI_FLADJ_PCI_CONFIG_OFFSET 0x61
+
 typedef union _EHCI_LEGACY_EXTENDED_CAPABILITY {
   struct {
     ULONG CapabilityID            : 8;
