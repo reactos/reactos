@@ -142,13 +142,13 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     InitializeListHead(&EhciEndpoint->ListTDs);
 
-    EhciEndpoint->DummyTdVA = (PEHCI_HCD_TD)EndpointProperties->BufferVA;
-    EhciEndpoint->DummyTdPA = (PEHCI_HCD_TD)EndpointProperties->BufferPA;
+    EhciEndpoint->DmaBufferVA = (PVOID)EndpointProperties->BufferVA;
+    EhciEndpoint->DmaBufferPA = (PVOID)EndpointProperties->BufferPA;
 
-    RtlZeroMemory(EhciEndpoint->DummyTdVA, sizeof(EHCI_HCD_TD));
+    RtlZeroMemory(EhciEndpoint->DmaBufferVA, sizeof(EHCI_HCD_TD));
 
-    QH = (PEHCI_HCD_QH)(EhciEndpoint->DummyTdVA + 1);
-    QhPA = (PEHCI_HCD_QH)(EhciEndpoint->DummyTdPA + 1);
+    QH = (PEHCI_HCD_QH)EhciEndpoint->DmaBufferVA + 1;
+    QhPA = (PEHCI_HCD_QH)EhciEndpoint->DmaBufferPA + 1;
 
     EhciEndpoint->FirstTD = (PEHCI_HCD_TD)(QH + 1);
 
@@ -235,8 +235,221 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
                            IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                            IN PEHCI_ENDPOINT EhciEndpoint)
 {
-    DPRINT1("EHCI_OpenInterruptEndpoint: UNIMPLEMENTED. FIXME\n");
-    return MP_STATUS_NOT_SUPPORTED;
+    PEHCI_HCD_QH QH;
+    ULONG_PTR QhPA;
+    PEHCI_HCD_TD FirstTD;
+    ULONG_PTR FirstTdPA;
+    PEHCI_HCD_TD TD;
+    PEHCI_HCD_TD DummyTD;
+    ULONG TdCount;
+    ULONG ix;
+    PEHCI_PERIOD PeriodTable = NULL;
+    ULONG ScheduleOffset;
+    ULONG Idx = 0;
+    UCHAR Period;
+    static UCHAR ClassicPeriod[8] = {
+        ENDPOINT_INTERRUPT_1ms - 1,
+        ENDPOINT_INTERRUPT_2ms - 1,
+        ENDPOINT_INTERRUPT_4ms - 1,
+        ENDPOINT_INTERRUPT_8ms - 1,
+        ENDPOINT_INTERRUPT_16ms - 1,
+        ENDPOINT_INTERRUPT_32ms - 1,
+        ENDPOINT_INTERRUPT_32ms - 1,
+        ENDPOINT_INTERRUPT_32ms - 1
+    };
+    static EHCI_PERIOD pTable[INTERRUPT_ENDPOINTs + 1] = {
+        { ENDPOINT_INTERRUPT_1ms, 0x00, 0xFF },
+        { ENDPOINT_INTERRUPT_2ms, 0x00, 0x55 },
+        { ENDPOINT_INTERRUPT_2ms, 0x00, 0xAA },
+        { ENDPOINT_INTERRUPT_4ms, 0x00, 0x11 },
+        { ENDPOINT_INTERRUPT_4ms, 0x00, 0x44 },
+        { ENDPOINT_INTERRUPT_4ms, 0x00, 0x22 },
+        { ENDPOINT_INTERRUPT_4ms, 0x00, 0x88 },
+        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x01 },
+        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x10 },
+        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x04 },
+        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x40 },
+        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x02 },
+        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x20 },
+        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x08 },
+        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x80 },
+        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x01 },
+        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x01 },
+        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x10 },
+        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x10 },
+        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x04 },
+        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x04 },
+        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x40 },
+        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x40 },
+        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x02 },
+        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x02 },
+        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x20 },
+        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x20 },
+        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x08 },
+        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x08 },
+        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x80 },
+        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x80 },
+        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x01 },
+        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x01 },
+        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x01 },
+        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x01 },
+        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x10 },
+        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x10 },
+        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x10 },
+        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x10 },
+        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x04 },
+        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x04 },
+        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x04 },
+        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x04 },
+        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x40 },
+        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x40 },
+        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x40 },
+        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x40 },
+        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x02 },
+        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x02 },
+        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x02 },
+        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x02 },
+        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x20 },
+        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x20 },
+        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x20 },
+        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x20 },
+        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x08 },
+        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x08 },
+        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x08 },
+        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x08 },
+        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x80 },
+        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x80 },
+        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x80 },
+        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x80 },
+        { 0x00, 0x00, 0x00 }
+    };
+
+    DPRINT("EHCI_OpenInterruptEndpoint: EhciExtension - %p, EndpointProperties - %p, EhciEndpoint - %p\n",
+           EhciExtension,
+           EndpointProperties,
+           EhciEndpoint);
+
+    Period = EndpointProperties->Period;
+    ScheduleOffset = EndpointProperties->ScheduleOffset;
+
+    ASSERT(Period < (INTERRUPT_ENDPOINTs + 1));
+
+    while (!(Period & 1))
+    {
+        Idx++;
+        Period >>= 1;
+    }
+
+    ASSERT(Idx < 8);
+
+    InitializeListHead(&EhciEndpoint->ListTDs);
+
+    if ( EhciEndpoint->EndpointProperties.DeviceSpeed == UsbHighSpeed )
+    {
+        PeriodTable = &pTable[ClassicPeriod[Idx] + ScheduleOffset];
+        EhciEndpoint->PeriodTable = PeriodTable;
+
+        DPRINT("EHCI_OpenInterruptEndpoint: EhciEndpoint - %p, ScheduleMask - %X, Index - %X\n",
+               EhciEndpoint,
+               PeriodTable->ScheduleMask,
+               ClassicPeriod[Idx]);
+
+        EhciEndpoint->StaticQH = EhciExtension->PeriodicHead[PeriodTable->PeriodIdx];
+    }
+    else
+    {
+        EhciEndpoint->PeriodTable = NULL;
+
+        DPRINT("EHCI_OpenInterruptEndpoint: EhciEndpoint - %p, Index - %X\n",
+               EhciEndpoint,
+               ClassicPeriod[Idx]);
+
+        EhciEndpoint->StaticQH = EhciExtension->PeriodicHead[ClassicPeriod[Idx] +
+                                                             ScheduleOffset];
+    }
+
+    EhciEndpoint->DmaBufferVA = (PVOID)EndpointProperties->BufferVA;
+    EhciEndpoint->DmaBufferPA = (PVOID)EndpointProperties->BufferPA;
+
+    RtlZeroMemory((PVOID)EndpointProperties->BufferVA, sizeof(EHCI_HCD_TD));
+
+    QH = (PEHCI_HCD_QH)(EndpointProperties->BufferVA + sizeof(EHCI_HCD_TD));
+    QhPA = EndpointProperties->BufferPA + sizeof(EHCI_HCD_TD);
+
+    FirstTD = (PEHCI_HCD_TD)(EndpointProperties->BufferVA +
+                             sizeof(EHCI_HCD_TD) +
+                             sizeof(EHCI_HCD_QH));
+
+    FirstTdPA = EndpointProperties->BufferPA +
+                sizeof(EHCI_HCD_TD) +
+                sizeof(EHCI_HCD_QH);
+
+    TdCount = (EndpointProperties->BufferLength -
+               (sizeof(EHCI_HCD_TD) + sizeof(EHCI_HCD_QH))) /
+               sizeof(EHCI_HCD_TD);
+
+    ASSERT(TdCount >= EHCI_MAX_INTERRUPT_TD_COUNT + 1);
+
+    EhciEndpoint->FirstTD = FirstTD;
+    EhciEndpoint->MaxTDs = TdCount;
+
+    for (ix = 0; ix < TdCount; ix++)
+    {
+        TD = EhciEndpoint->FirstTD + ix;
+
+        RtlZeroMemory(TD, sizeof(EHCI_HCD_TD));
+
+        ASSERT((FirstTdPA & ~LINK_POINTER_MASK) == 0);
+
+        TD->PhysicalAddress = (PEHCI_HCD_TD)FirstTdPA;
+        TD->EhciEndpoint = EhciEndpoint;
+        TD->EhciTransfer = NULL;
+
+        FirstTdPA += sizeof(EHCI_HCD_TD);
+    }
+
+    EhciEndpoint->RemainTDs = TdCount;
+
+    EhciEndpoint->QH = EHCI_InitializeQH(EhciExtension,
+                                         EhciEndpoint,
+                                         QH,
+                                         (PEHCI_HCD_QH)QhPA);
+
+    if ( EhciEndpoint->EndpointProperties.DeviceSpeed == UsbHighSpeed )
+    {
+        QH->sqh.HwQH.EndpointCaps.InterruptMask = PeriodTable->ScheduleMask;
+    }
+    else
+    {
+        QH->sqh.HwQH.EndpointCaps.InterruptMask =
+        EndpointProperties->InterruptScheduleMask;
+
+        QH->sqh.HwQH.EndpointCaps.SplitCompletionMask =
+        EndpointProperties->SplitCompletionMask;
+    }
+
+    DummyTD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
+
+    DummyTD->TdFlags |= EHCI_HCD_TD_FLAG_DUMMY;
+    DummyTD->NextHcdTD = NULL;
+    DummyTD->AltNextHcdTD = NULL;
+
+    DummyTD->HwTD.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+
+    DummyTD->HwTD.NextTD = TERMINATE_POINTER;
+    DummyTD->HwTD.AlternateNextTD = TERMINATE_POINTER;
+
+    EhciEndpoint->HcdTailP = DummyTD;
+    EhciEndpoint->HcdHeadP = DummyTD;
+
+    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)DummyTD->PhysicalAddress;
+    QH->sqh.HwQH.NextTD = TERMINATE_POINTER;
+    QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
+
+    QH->sqh.HwQH.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+    QH->sqh.HwQH.Token.TransferBytes = 0;
+
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -590,7 +803,7 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
 {
     PEHCI_STATIC_QH StaticQH;
     ULONG ix;
-    static UCHAR LinkTable[64] = {
+    static UCHAR LinkTable[INTERRUPT_ENDPOINTs + 1] = {
       255, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8,  9, 9,
       10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19,
       20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29,
@@ -1659,7 +1872,7 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
                         EhciEndpoint->EndpointProperties.TransferType);
         }
 
-        QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DummyTdPA;
+        QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DmaBufferPA;
         QH->sqh.HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
         QH->sqh.HwQH.AlternateNextTD = NextTD->HwTD.AlternateNextTD;
 
@@ -2344,7 +2557,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
             EhciTransfer->TransferLen += TransferLength;
         }
 
-        QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
+        QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DmaBufferPA;
         QH->sqh.HwQH.NextTD = (ULONG)TD->PhysicalAddress;
         QH->sqh.HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
 
@@ -2401,7 +2614,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         if (CurrentTransfer == EhciTransfer)
         {
-            QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
+            QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DmaBufferPA;
 
             QH->sqh.HwQH.Token.Status = (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
             QH->sqh.HwQH.Token.TransferBytes = 0;
@@ -2844,7 +3057,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
                                                          EhciExtension,
                                                          EhciEndpoint);
 
-    if (CurrentTD == EhciEndpoint->DummyTdVA)
+    if (CurrentTD == EhciEndpoint->DmaBufferVA)
     {
         return;
     }
@@ -2933,7 +3146,7 @@ Next:
                     EhciEndpoint->EndpointProperties.TransferType);
     }
 
-    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DummyTdPA;
+    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DmaBufferPA;
 
     CurrentTD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
     InsertTailList(&EhciEndpoint->ListTDs, &CurrentTD->DoneLink);
@@ -2997,7 +3210,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     DPRINT("EHCI_PollHaltedAsyncEndpoint: CurrentTD - %p\n", CurrentTD);
 
-    if (CurrentTD == EhciEndpoint->DummyTdVA)
+    if (CurrentTD == EhciEndpoint->DmaBufferVA)
     {
         return;
     }
@@ -3054,7 +3267,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     EhciEndpoint->HcdHeadP = TD;
 
-    QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdVA;
+    QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DmaBufferVA;
     QH->sqh.HwQH.NextTD = (ULONG)TD->PhysicalAddress;
     QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.Token.TransferBytes = 0;

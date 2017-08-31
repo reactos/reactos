@@ -23,6 +23,12 @@ extern USBPORT_REGISTRATION_PACKET RegPacket;
 #define EHCI_MAX_INTERRUPT_TD_COUNT  4
 #define EHCI_MAX_BULK_TD_COUNT       209
 
+typedef struct _EHCI_PERIOD {
+  UCHAR Period;
+  UCHAR PeriodIdx;
+  UCHAR ScheduleMask;
+} EHCI_PERIOD, *PEHCI_PERIOD;
+
 /* Transfer Descriptor */
 #define EHCI_HCD_TD_FLAG_ALLOCATED 0x01
 #define EHCI_HCD_TD_FLAG_PROCESSED 0x02
@@ -87,8 +93,8 @@ typedef struct _EHCI_ENDPOINT {
   ULONG EndpointStatus;
   ULONG EndpointState;
   USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
-  PEHCI_HCD_TD DummyTdVA; // DmaBufferVA
-  PEHCI_HCD_TD DummyTdPA; // DmaBufferPA
+  PVOID DmaBufferVA; //PEHCI_HCD_TD DummyTdVA
+  PVOID DmaBufferPA; // PEHCI_HCD_TD DummyTdPA
   PEHCI_HCD_TD FirstTD;
   ULONG MaxTDs;
   ULONG PendingTDs;
@@ -97,6 +103,8 @@ typedef struct _EHCI_ENDPOINT {
   PEHCI_HCD_TD HcdHeadP;
   PEHCI_HCD_TD HcdTailP;
   LIST_ENTRY ListTDs;
+  PEHCI_PERIOD PeriodTable;
+  PEHCI_STATIC_QH StaticQH;
 } EHCI_ENDPOINT, *PEHCI_ENDPOINT;
 
 /* EHCI Transfer follows USBPORT Transfer */
