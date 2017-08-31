@@ -393,7 +393,7 @@ INT_PTR CLayerUIPropPage::OnCommand(HWND hWnd, WORD id)
         UpdateControls(hWnd);
         break;
     case IDC_EDITCOMPATIBILITYMODES:
-        if (DialogBoxParam(g_hModule, MAKEINTRESOURCE(IDD_EDITCOMPATIBILITYMODES), hWnd, EditModesProc, (LPARAM)this) == IDOK)
+        if (DialogBoxParamW(g_hModule, MAKEINTRESOURCEW(IDD_EDITCOMPATIBILITYMODES), hWnd, EditModesProc, (LPARAM)this) == IDOK)
         {
             UpdateControls(hWnd);
         }
@@ -572,7 +572,7 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
             if (ComboHasData(hWnd))
             {
                 CComBSTR question, title;
-                title.LoadString(g_hModule, IDS_TABTITLE);
+                title.LoadString(g_hModule, IDS_COMPAT_TITLE);
                 question.LoadString(g_hModule, IDS_YOU_DID_NOT_ADD);
                 int result = MessageBoxW(hWnd, question, title, MB_YESNOCANCEL | MB_ICONQUESTION);
                 switch (result)
@@ -694,10 +694,9 @@ STDMETHODIMP CLayerUIPropPage::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM 
 {
     PROPSHEETPAGEW psp = { 0 };
     psp.dwSize = sizeof(psp);
-    psp.dwFlags = PSP_USEREFPARENT | PSP_USETITLE;
+    psp.dwFlags = PSP_USEREFPARENT;
     psp.hInstance = g_hModule;
-    psp.pszTemplate = MAKEINTRESOURCE(IDD_ACPPAGESHEET);
-    psp.pszTitle = MAKEINTRESOURCE(IDS_TABTITLE);
+    psp.pszTemplate = MAKEINTRESOURCEW(IDD_ACPPAGESHEET);
     psp.pfnDlgProc = PropDlgProc;
     psp.lParam = (LPARAM)this;
     psp.pcRefParent = (PUINT)&g_ModuleRefCnt;

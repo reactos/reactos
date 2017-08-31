@@ -35,7 +35,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TABTITLE "Uyumluluk"
+    IDS_COMPAT_TITLE "Uyumluluk"
     IDS_FAILED_NETWORK "Bir ağ sürücüsü üzerinde olduğundan bu izlencede uyumluluk kipleri ayarlanamaz."
     IDS_FAILED_PROTECTED "ReactOS'un bir parçası olduğundan bu izlencede uyumluluk kipleri ayarlanamaz."
     IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"
