@@ -292,6 +292,11 @@ C_ASSERT(sizeof(EHCI_SPLIT_ISOCHRONOUS_TD) == 28);
 #define	EHCI_TOKEN_STATUS_SPLIT_STATE       (1 << 1)
 #define	EHCI_TOKEN_STATUS_PING_STATE        (1 << 0)
 
+#define EHCI_TD_TOKEN_PID_OUT      0
+#define EHCI_TD_TOKEN_PID_IN       1
+#define EHCI_TD_TOKEN_PID_SETUP    2
+#define EHCI_TD_TOKEN_PID_RESERVED 3
+
 typedef union _EHCI_TD_TOKEN {
   struct {
     ULONG Status              : 8;

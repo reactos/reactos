@@ -1997,7 +1997,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     FirstTD->HwTD.Token.AsULONG = 0;
     FirstTD->HwTD.Token.ErrorCounter = 3;
-    FirstTD->HwTD.Token.PIDCode = 2;
+    FirstTD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_SETUP;
     FirstTD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
     FirstTD->HwTD.Token.TransferBytes = 0x8;
 
@@ -2074,11 +2074,11 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
             if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
             {
-                TD->HwTD.Token.PIDCode = 1;
+                TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_IN;
             }
             else
             {
-                TD->HwTD.Token.PIDCode = 0;
+                TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
             }
 
             TD->HwTD.Token.DataToggle = DataToggle;
@@ -2131,11 +2131,11 @@ End:
 
     if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
     {
-        Token.PIDCode = 0;
+        Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
     }
     else
     {
-        Token.PIDCode = 1;
+        Token.PIDCode = EHCI_TD_TOKEN_PID_IN;
     }
 
     LastTD->HwTD.Token = Token;
@@ -2234,11 +2234,11 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
 
             if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
             {
-                TD->HwTD.Token.PIDCode = 1;
+                TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_IN;
             }
             else
             {
-                TD->HwTD.Token.PIDCode = 0;
+                TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
             }
 
             TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
@@ -2296,11 +2296,11 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
         {
-            TD->HwTD.Token.PIDCode = 1;
+            TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_IN;
         }
         else
         {
-            TD->HwTD.Token.PIDCode = 0;
+            TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
         }
 
         TD->HwTD.Buffer[0] = (ULONG_PTR)TD->PhysicalAddress;
@@ -2398,11 +2398,11 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
         {
-            TD->HwTD.Token.PIDCode = 1;
+            TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_IN;
         }
         else
         {
-            TD->HwTD.Token.PIDCode = 0;
+            TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
         }
 
         TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
@@ -2993,7 +2993,7 @@ EHCI_ProcessDoneAsyncTd(IN PEHCI_EXTENSION EhciExtension,
 
     LengthTransfered = TD->LengthThisTD - TD->HwTD.Token.TransferBytes;
 
-    if (TD->HwTD.Token.PIDCode != 2)
+    if (TD->HwTD.Token.PIDCode != EHCI_TD_TOKEN_PID_SETUP)
     {
         EhciTransfer->TransferLen += LengthTransfered;
     }
