@@ -123,7 +123,6 @@ typedef struct _SETUPDATA
 
 extern HANDLE ProcessHeap;
 extern BOOLEAN IsUnattendedSetup;
-extern PWCHAR SelectedLanguageId;
 
 typedef struct _IMGINFO
 {

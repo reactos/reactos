@@ -34,10 +34,7 @@
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
-
 BOOLEAN IsUnattendedSetup = FALSE;
-PWCHAR SelectedLanguageId;
-
 SETUPDATA SetupData;
 
 
