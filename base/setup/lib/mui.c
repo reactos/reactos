@@ -40,72 +40,78 @@
 
 static
 ULONG
-FindLanguageIndex(VOID)
+FindLanguageIndex(
+    IN PCWSTR LanguageId)
 {
     ULONG lngIndex = 0;
 
-    if (SelectedLanguageId == NULL)
+    if (LanguageId == NULL)
     {
-        /* default to english */
-        return 0;
+        /* Default to en-US */
+        // return 0;   // FIXME!!
+        LanguageId = L"00000409";
     }
 
-    do
+    while (LanguageList[lngIndex].LanguageID != NULL)
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID, SelectedLanguageId) == 0)
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID, LanguageId) == 0)
         {
             return lngIndex;
         }
 
         lngIndex++;
-    } while (LanguageList[lngIndex].LanguageID != NULL);
+    }
 
     return 0;
 }
 
 BOOLEAN
 IsLanguageAvailable(
-    PWCHAR LanguageId)
+    IN PCWSTR LanguageId)
 {
     ULONG lngIndex = 0;
 
-    do
+    while (LanguageList[lngIndex].LanguageID != NULL)
     {
         if (_wcsicmp(LanguageList[lngIndex].LanguageID, LanguageId) == 0)
             return TRUE;
 
         lngIndex++;
-    } while (LanguageList[lngIndex].LanguageID != NULL);
+    }
 
     return FALSE;
 }
 
 
 PCWSTR
-MUIDefaultKeyboardLayout(VOID)
+MUIDefaultKeyboardLayout(
+    IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
     return LanguageList[lngIndex].MuiLayouts[0].LayoutID;
 }
 
-PWCHAR
-MUIGetOEMCodePage(VOID)
+PCWSTR
+MUIGetOEMCodePage(
+    IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
     return LanguageList[lngIndex].OEMCPage;
 }
 
-PWCHAR
-MUIGetGeoID(VOID)
+PCWSTR
+MUIGetGeoID(
+    IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
     return LanguageList[lngIndex].GeoID;
 }
 
-const MUI_LAYOUTS *
-MUIGetLayoutsList(VOID)
+const MUI_LAYOUTS*
+MUIGetLayoutsList(
+    IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(), 0);
+    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
     return LanguageList[lngIndex].MuiLayouts;
 }
 
@@ -139,8 +145,7 @@ AddHotkeySettings(
                           NULL,
                           REG_OPTION_NON_VOLATILE,
                           &Disposition);
-
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
         return FALSE;
@@ -230,14 +235,13 @@ AddKbLayoutsToRegistry(
                           NULL,
                           REG_OPTION_NON_VOLATILE,
                           &Disposition);
-
-    if(NT_SUCCESS(Status))
-        NtClose(KeyHandle);
-    else
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
         return FALSE;
     }
+
+    NtClose(KeyHandle);
 
     KeyName.MaximumLength = sizeof(szKeyName);
     Status = RtlAppendUnicodeToString(&KeyName, L"\\Preload");
@@ -262,7 +266,6 @@ AddKbLayoutsToRegistry(
                          NULL,
                          REG_OPTION_NON_VOLATILE,
                          &Disposition);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
@@ -283,8 +286,7 @@ AddKbLayoutsToRegistry(
                           NULL,
                           REG_OPTION_NON_VOLATILE,
                           &Disposition);
-
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
         NtClose(SubKeyHandle);
@@ -292,7 +294,7 @@ AddKbLayoutsToRegistry(
         return FALSE;
     }
 
-    do
+    while (MuiLayouts[uIndex].LangID != NULL)
     {
         if (uIndex > 19) break;
 
@@ -355,7 +357,6 @@ AddKbLayoutsToRegistry(
 
         uIndex++;
     }
-    while (MuiLayouts[uIndex].LangID != NULL);
 
     if (uIndex > 1)
         AddHotkeySettings(L"2", L"2", L"1");
@@ -368,20 +369,20 @@ AddKbLayoutsToRegistry(
 }
 
 BOOLEAN
-AddKeyboardLayouts(VOID)
+AddKeyboardLayouts(
+    IN PCWSTR LanguageId)
 {
     ULONG lngIndex = 0;
 
-    do
+    while (LanguageList[lngIndex].LanguageID != NULL)
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID, SelectedLanguageId) == 0)
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID, LanguageId) == 0)
         {
             return AddKbLayoutsToRegistry(LanguageList[lngIndex].MuiLayouts);
         }
 
         lngIndex++;
     }
-    while (LanguageList[lngIndex].LanguageID != NULL);
 
     return FALSE;
 }
@@ -494,7 +495,7 @@ AddFontsSettingsToRegistry(
         return FALSE;
     }
 
-    do
+    while (MuiSubFonts[uIndex].FontName != NULL)
     {
         RtlInitUnicodeString(&ValueName, MuiSubFonts[uIndex].FontName);
         Status = NtSetValueKey(KeyHandle,
@@ -512,7 +513,6 @@ AddFontsSettingsToRegistry(
 
         uIndex++;
     }
-    while (MuiSubFonts[uIndex].FontName != NULL);
 
     NtClose(KeyHandle);
 
@@ -520,12 +520,14 @@ AddFontsSettingsToRegistry(
 }
 
 BOOLEAN
-AddCodePage(VOID)
+AddCodePage(
+    IN PCWSTR LanguageId)
 {
     ULONG lngIndex = 0;
-    do
+
+    while (LanguageList[lngIndex].LanguageID != NULL)
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID, SelectedLanguageId) == 0)
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID, LanguageId) == 0)
         {
             if (AddCodepageToRegistry(LanguageList[lngIndex].ACPage,
                                       LanguageList[lngIndex].OEMCPage,
@@ -542,7 +544,6 @@ AddCodePage(VOID)
 
         lngIndex++;
     }
-    while (LanguageList[lngIndex].LanguageID != NULL);
 
     return FALSE;
 }

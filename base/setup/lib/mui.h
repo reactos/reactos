@@ -2,55 +2,57 @@
 
 typedef struct
 {
-    PWCHAR FontName;
-    PWCHAR SubFontName;
+    PCWSTR FontName;
+    PCWSTR SubFontName;
 } MUI_SUBFONT;
 
 typedef struct
 {
-    PWCHAR LangID; // Language ID (like "0409")
-    PWCHAR LayoutID; // Layout ID (like "00000409")
+    PCWSTR LangID; // Language ID (like "0409")
+    PCWSTR LayoutID; // Layout ID (like "00000409")
 } MUI_LAYOUTS;
 
 typedef struct
 {
-    PWCHAR LanguageID;
-    PWCHAR ACPage;
-    PWCHAR OEMCPage;
-    PWCHAR MACCPage;
-    PWCHAR LanguageDescriptor;
-    PWCHAR GeoID;
+    PCWSTR LanguageID;
+    PCWSTR ACPage;
+    PCWSTR OEMCPage;
+    PCWSTR MACCPage;
+    PCWSTR LanguageDescriptor;
+    PCWSTR GeoID;
     const MUI_SUBFONT * MuiSubFonts;
     const MUI_LAYOUTS * MuiLayouts;
 } MUI_LANGUAGE;
 
 
-// HACK HACK HACK!!
-extern PWCHAR SelectedLanguageId;
-
-
 BOOLEAN
 IsLanguageAvailable(
-    PWCHAR LanguageId);
+    IN PCWSTR LanguageId);
 
 PCWSTR
-MUIDefaultKeyboardLayout(VOID);
+MUIDefaultKeyboardLayout(
+    IN PCWSTR LanguageId);
 
-PWCHAR
-MUIGetOEMCodePage(VOID);
+PCWSTR
+MUIGetOEMCodePage(
+    IN PCWSTR LanguageId);
 
-PWCHAR
-MUIGetGeoID(VOID);
+PCWSTR
+MUIGetGeoID(
+    IN PCWSTR LanguageId);
 
-const MUI_LAYOUTS *
-MUIGetLayoutsList(VOID);
+const MUI_LAYOUTS*
+MUIGetLayoutsList(
+    IN PCWSTR LanguageId);
 
 BOOLEAN
 AddKbLayoutsToRegistry(
     IN const MUI_LAYOUTS *MuiLayouts);
 
 BOOLEAN
-AddCodePage(VOID);
+AddKeyboardLayouts(
+    IN PCWSTR LanguageId);
 
 BOOLEAN
-AddKeyboardLayouts(VOID);
+AddCodePage(
+    IN PCWSTR LanguageId);
