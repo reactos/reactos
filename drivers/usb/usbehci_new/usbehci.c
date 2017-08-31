@@ -192,12 +192,12 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     if (IsControl)
     {
-        QH->sqh.HwQH.EndpointParams.DataToggleControl = 1;
+        QH->sqh.HwQH.EndpointParams.DataToggleControl = TRUE;
         EhciEndpoint->HcdHeadP = NULL;
     }
     else
     {
-        QH->sqh.HwQH.EndpointParams.DataToggleControl = 0;
+        QH->sqh.HwQH.EndpointParams.DataToggleControl = FALSE;
     }
 
     TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
@@ -344,7 +344,7 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     InitializeListHead(&EhciEndpoint->ListTDs);
 
-    if ( EhciEndpoint->EndpointProperties.DeviceSpeed == UsbHighSpeed )
+    if (EhciEndpoint->EndpointProperties.DeviceSpeed == UsbHighSpeed)
     {
         PeriodTable = &pTable[ClassicPeriod[Idx] + ScheduleOffset];
         EhciEndpoint->PeriodTable = PeriodTable;
@@ -415,7 +415,7 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
                                          QH,
                                          (PEHCI_HCD_QH)QhPA);
 
-    if ( EhciEndpoint->EndpointProperties.DeviceSpeed == UsbHighSpeed )
+    if (EhciEndpoint->EndpointProperties.DeviceSpeed == UsbHighSpeed)
     {
         QH->sqh.HwQH.EndpointCaps.InterruptMask = PeriodTable->ScheduleMask;
     }
@@ -2086,11 +2086,11 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
             if (DataToggle)
             {
-                TD->HwTD.Token.DataToggle = 1;
+                TD->HwTD.Token.DataToggle = TRUE;
             }
             else
             {
-                TD->HwTD.Token.DataToggle = 0;
+                TD->HwTD.Token.DataToggle = FALSE;
             }
 
             TD->AltNextHcdTD = LastTD;
@@ -2126,8 +2126,8 @@ End:
 
     Token.AsULONG = 0;
     Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-    Token.InterruptOnComplete = 1;
-    Token.DataToggle = 1;
+    Token.InterruptOnComplete = TRUE;
+    Token.DataToggle = TRUE;
 
     if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
     {
@@ -2242,7 +2242,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
             }
 
             TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-            TD->HwTD.Token.DataToggle = 1;
+            TD->HwTD.Token.DataToggle = TRUE;
 
             TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
                                                       EhciEndpoint->EndpointProperties.MaxPacketSize,
@@ -2292,7 +2292,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
         TD->HwTD.AlternateNextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
         TD->AltNextHcdTD = EhciEndpoint->HcdTailP;
 
-        TD->HwTD.Token.InterruptOnComplete = 1;
+        TD->HwTD.Token.InterruptOnComplete = TRUE;
 
         if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
         {
@@ -2306,7 +2306,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
         TD->HwTD.Buffer[0] = (ULONG_PTR)TD->PhysicalAddress;
 
         TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-        TD->HwTD.Token.DataToggle = 1;
+        TD->HwTD.Token.DataToggle = TRUE;
 
         TD->LengthThisTD = 0;
     }
@@ -2349,7 +2349,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     EhciEndpoint->PendingTDs++;
 
-    if ( !TransferParameters->TransferBufferLength )
+    if (!TransferParameters->TransferBufferLength)
     {
         DPRINT1("EHCI_InterruptTransfer: EhciEndpoint - %p\n", EhciEndpoint);
         DbgBreakPoint();
@@ -2406,7 +2406,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
         }
 
         TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-        TD->HwTD.Token.DataToggle = 1;
+        TD->HwTD.Token.DataToggle = TRUE;
 
         TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
                                                   EhciEndpoint->EndpointProperties.MaxPacketSize,
@@ -2418,7 +2418,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         PrevTD = TD;
     }
-    while (TransferedLen < TransferParameters->TransferBufferLength)
+    while (TransferedLen < TransferParameters->TransferBufferLength);
 
     TD->HwTD.Token.InterruptOnComplete = 1;
 
