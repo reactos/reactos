@@ -1139,7 +1139,7 @@ DemoteBTreeRoot(PB_TREE Tree)
 
 #ifndef NDEBUG
     DumpBTree(Tree);
-#endif;
+#endif
 
     return STATUS_SUCCESS;
 }
@@ -1779,7 +1779,7 @@ NtfsInsertKey(PB_TREE Tree,
 
 #ifndef NDEBUG
                     DumpBTree(Tree);
-#endif NDEBUG
+#endif
                 }
             }
             else
@@ -1880,6 +1880,9 @@ SplitBTreeNode(PB_TREE Tree,
 {
     ULONG MedianKeyIndex;
     PB_TREE_KEY LastKeyBeforeMedian, FirstKeyAfterMedian;
+    ULONG KeyCount;
+    ULONG HalfSize;
+    ULONG SizeSum;
     ULONG i;
 
     DPRINT1("SplitBTreeNode(%p, %p, %p, %p, %s) called\n",
@@ -1889,7 +1892,9 @@ SplitBTreeNode(PB_TREE Tree,
             NewRightHandSibling,
             CaseSensitive ? "TRUE" : "FALSE");
 
-    //DumpBTreeNode(Node, 0, 0);
+#ifndef NDEBUG
+    DumpBTreeNode(Node, 0, 0);
+#endif
 
     // Create the right hand sibling
     *NewRightHandSibling = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
@@ -1901,20 +1906,29 @@ SplitBTreeNode(PB_TREE Tree,
     RtlZeroMemory(*NewRightHandSibling, sizeof(B_TREE_FILENAME_NODE));
     (*NewRightHandSibling)->DiskNeedsUpdating = TRUE;
 
+
+    // Find the last key before the median
+
+    // This is roughly how NTFS-3G calculates median, and it's not congruent with what Windows does:
+    /*
     // find the median key index
     MedianKeyIndex = (Node->KeyCount + 1) / 2;
     MedianKeyIndex--;
 
-    // Find the last key before the median
     LastKeyBeforeMedian = Node->FirstKey;
     for (i = 0; i < MedianKeyIndex - 1; i++)
-        LastKeyBeforeMedian = LastKeyBeforeMedian->NextKey;
+        LastKeyBeforeMedian = LastKeyBeforeMedian->NextKey;*/
+
+    // The method we'll use is a little bit closer to how Windows determines the median but it's not identical.
+    // What Windows does is actually more complicated than this, I think because Windows allocates more slack space to Odd-numbered
+    // Index Records, leaving less room for index entries in these records (I haven't discovered why this is done).
+    // (Neither Windows nor chkdsk complain if we choose a different median than Windows would have chosen, as our median will be in the ballpark)
 
     // Use size to locate the median key / index
-    ULONG HalfSize = 2016; // half the allocated size after subtracting the first index entry offset (TODO: MATH)
-    ULONG SizeSum = 0;
     LastKeyBeforeMedian = Node->FirstKey;
     MedianKeyIndex = 0;
+    HalfSize = 2016; // half the allocated size after subtracting the first index entry offset (TODO: MATH)
+    SizeSum = 0;
     for (i = 0; i < Node->KeyCount; i++)
     {
         SizeSum += LastKeyBeforeMedian->IndexEntry->Length;
@@ -1989,7 +2003,7 @@ SplitBTreeNode(PB_TREE Tree,
     // Update Node's KeyCount (remember to add 1 for the new dummy key)
     Node->KeyCount = MedianKeyIndex + 2;
 
-    ULONG KeyCount = CountBTreeKeys(Node->FirstKey);
+    KeyCount = CountBTreeKeys(Node->FirstKey);
     ASSERT(Node->KeyCount == KeyCount);
 
     // everything to the right of MedianKey becomes the right hand sibling of Node
