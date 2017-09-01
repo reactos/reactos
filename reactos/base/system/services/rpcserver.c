@@ -2192,7 +2192,11 @@ DWORD RCreateServiceW(
     if ((dwServiceType == (SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS)) &&
         (lpServiceStartName))
     {
-        return ERROR_INVALID_PARAMETER;
+        /* We allow LocalSystem to run interactive. */
+        if (wcsicmp(lpServiceStartName, L"LocalSystem"))
+        {
+            return ERROR_INVALID_PARAMETER;
+        }
     }
 
     if (lpdwTagId && (!lpLoadOrderGroup || !*lpLoadOrderGroup))
