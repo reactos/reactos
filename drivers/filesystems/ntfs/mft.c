@@ -2138,6 +2138,9 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     ULONG MaxIndexRootSize;
     PB_TREE_KEY NewLeftKey;
     PB_TREE_FILENAME_NODE NewRightHandNode;
+    LARGE_INTEGER MinIndexRootSize;
+    ULONG NewMaxIndexRootSize;
+    ULONG NodeSize;
 
     // Allocate memory for the parent directory
     ParentFileRecord = ExAllocatePoolWithTag(NonPagedPool,
@@ -2287,7 +2290,6 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     // This a bit hacky, but it seems to be functional.
 
     // Calculate the minimum size of the index root attribute, considering one dummy key and one VCN
-    LARGE_INTEGER MinIndexRootSize;
     MinIndexRootSize.QuadPart = sizeof(INDEX_ROOT_ATTRIBUTE) // size of the index root headers
                                 + 0x18; // Size of dummy key with a VCN for a subnode
     ASSERT(MinIndexRootSize.QuadPart % ATTR_RECORD_ALIGNMENT == 0);
@@ -2335,7 +2337,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 
     // Find the maximum index root size given what the file record can hold
     // First, find the max index size assuming index root is the last attribute
-    ULONG NewMaxIndexRootSize =
+    NewMaxIndexRootSize =
        DeviceExt->NtfsInfo.BytesPerFileRecord                // Start with the size of a file record
         - IndexRootOffset                                    // Subtract the length of everything that comes before index root
         - IndexRootContext->pRecord->Resident.ValueOffset    // Subtract the length of the attribute header for index root
@@ -2361,7 +2363,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 
     // The index allocation and index bitmap may have grown, leaving less room for the index root,
     // so now we need to double-check that index root isn't too large 
-    ULONG NodeSize = GetSizeOfIndexEntries(NewTree->RootNode);
+    NodeSize = GetSizeOfIndexEntries(NewTree->RootNode);
     if (NodeSize > NewMaxIndexRootSize)
     {
         DPRINT1("Demoting index root.\nNodeSize: 0x%lx\nNewMaxIndexRootSize: 0x%lx\n", NodeSize, NewMaxIndexRootSize);
@@ -2624,7 +2626,7 @@ CompareFileName(PUNICODE_STRING FileName,
 * @param Vcb
 * Pointer to an NTFS_VCB for the volume whose Mft mirror is being updated.
 *
-* @returninja livecd
+* @return
 
 * STATUS_SUCCESS on success.
 * STATUS_INSUFFICIENT_RESOURCES if an allocation failed.
