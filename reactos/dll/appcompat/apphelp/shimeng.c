@@ -580,7 +580,7 @@ FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName)
         return proc;
     }
 
-    SHIMENG_MSG("(GetProcAddress(%p!%s) => %p\n", hModule, lpProcName, lpPrintName);
+    SHIMENG_MSG("(GetProcAddress(%p!%s) => %p\n", hModule, lpPrintName, proc);
 
     HookModuleInfo = SeiFindHookModuleInfo(NULL, hModule);
 
