@@ -1,9 +1,9 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.29 - March 16, 2017
+ libpng version 1.6.32 - August 24, 2017
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2016 Glenn Randers-Pehrson
+ Copyright (c) 1998-2017 Glenn Randers-Pehrson
 
  This document is released under the libpng license.
  For conditions of distribution and use, see the disclaimer
@@ -11,9 +11,9 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.29 - March 16, 2017
+ libpng versions 0.97, January 1998, through 1.6.32 - August 24, 2017
  Updated and distributed by Glenn Randers-Pehrson
- Copyright (c) 1998-2016 Glenn Randers-Pehrson
+ Copyright (c) 1998-2017 Glenn Randers-Pehrson
 
  libpng 1.0 beta 6 - version 0.96 - May 28, 1997
  Updated and distributed by Andreas Dilger
@@ -66,17 +66,17 @@ file format in application programs.
 
 The PNG specification (second edition), November 2003, is available as
 a W3C Recommendation and as an ISO Standard (ISO/IEC 15948:2004 (E)) at
-<http://www.w3.org/TR/2003/REC-PNG-20031110/
+<https://www.w3.org/TR/2003/REC-PNG-20031110/
 The W3C and ISO documents have identical technical content.
 
 The PNG-1.2 specification is available at
-<http://png-mng.sourceforge.net/pub/png/spec/1.2/>.
+<https://png-mng.sourceforge.io/pub/png/spec/1.2/>.
 It is technically equivalent
 to the PNG specification (second edition) but has some additional material.
 
-The PNG-1.0 specification is available as RFC 2083 
-<http://png-mng.sourceforge.net/pub/png/spec/1.0/> and as a
-W3C Recommendation <http://www.w3.org/TR/REC-png-961001>.
+The PNG-1.0 specification is available as RFC 2083
+<https://png-mng.sourceforge.io/pub/png/spec/1.0/> and as a
+W3C Recommendation <https://www.w3.org/TR/REC-png-961001>.
 
 Some additional chunks are described in the special-purpose public chunks
 documents at <http://www.libpng.org/pub/png/spec/register/>
@@ -101,7 +101,7 @@ majority of the needs of its users.
 
 Libpng uses zlib for its compression and decompression of PNG files.
 Further information about zlib, and the latest version of zlib, can
-be found at the zlib home page, <http://zlib.net/>.
+be found at the zlib home page, <https://zlib.net/>.
 The zlib compression utility is a general purpose utility that is
 useful for more than PNG files, and can be used without libpng.
 See the documentation delivered with zlib for more details.
@@ -688,8 +688,9 @@ where 0x7fffffffL means unlimited.  You can retrieve this limit with
    chunk_cache_max = png_get_chunk_cache_max(png_ptr);
 
 Libpng imposes a limit of 8 Megabytes (8,000,000 bytes) on the amount of
-memory that a compressed chunk other than IDAT can occupy, when decompressed.
-You can change this limit with
+memory that any chunk other than IDAT can occupy, originally or when
+decompressed (prior to libpng-1.6.32 the limit was only applied to compressed
+chunks after decompression). You can change this limit with
 
    png_set_chunk_malloc_max(png_ptr, user_chunk_malloc_max);
 
@@ -1190,7 +1191,20 @@ row_pointers prior to calling png_read_png() with
    png_set_rows(png_ptr, info_ptr, &row_pointers);
 
 Alternatively you could allocate your image in one big block and define
-row_pointers[i] to point into the proper places in your block.
+row_pointers[i] to point into the proper places in your block, but first
+be sure that your platform is able to allocate such a large buffer:
+
+   /* Guard against integer overflow */
+   if (height > PNG_SIZE_MAX/(width*pixel_size)) {
+        png_error(png_ptr,"image_data buffer would be too large");
+   }
+
+   png_bytep buffer=png_malloc(png_ptr,height*width*pixel_size);
+
+   for (int i=0; i<height, i++)
+      row_pointers[i]=buffer+i*width*pixel_size;
+
+   png_set_rows(png_ptr, info_ptr, &row_pointers);
 
 If you use png_set_rows(), the application is responsible for freeing
 row_pointers (and row_pointers[i], if they were separately allocated).
@@ -1317,6 +1331,11 @@ in until png_read_end() has read the chunk data following the image.
     rowbytes = png_get_rowbytes(png_ptr, info_ptr);
 
     rowbytes       - number of bytes needed to hold a row
+                     This value, the bit_depth, color_type,
+                     and the number of channels can change
+                     if you use transforms such as
+                     png_set_expand(). See
+                     png_read_update_info(), below.
 
     signature = png_get_signature(png_ptr, info_ptr);
 
@@ -1434,6 +1453,11 @@ png_set_rgb_to_gray()).
     trans_color    - graylevel or color sample values of
                      the single transparent color for
                      non-paletted images (PNG_INFO_tRNS)
+
+    png_get_eXIf_1(png_ptr, info_ptr, &num_exif, &exif);
+                     (PNG_INFO_eXIf)
+
+    exif           - Exif profile (array of png_byte)
 
     png_get_hIST(png_ptr, info_ptr, &hist);
                      (PNG_INFO_hIST)
@@ -2146,6 +2170,16 @@ are allocating one large chunk, you will need to build an
 array of pointers to each row, as it will be needed for some
 of the functions below.
 
+Be sure that your platform can allocate the buffer that you'll need.
+libpng internally checks for oversize width, but you'll need to
+do your own check for number_of_rows*width*pixel_size if you are using
+a multiple-row buffer:
+
+   /* Guard against integer overflow */
+   if (number_of_rows > PNG_SIZE_MAX/(width*pixel_size)) {
+        png_error(png_ptr,"image_data buffer would be too large");
+   }
+
 Remember: Before you call png_read_update_info(), the png_get_*()
 functions return the values corresponding to the original PNG image.
 After you call png_read_update_info the values refer to the image
@@ -2470,6 +2504,7 @@ your application instead of by libpng, you can use
              PNG_INFO_gAMA, PNG_INFO_sBIT,
              PNG_INFO_cHRM, PNG_INFO_PLTE,
              PNG_INFO_tRNS, PNG_INFO_bKGD,
+             PNG_INFO_eXIf,
              PNG_INFO_hIST, PNG_INFO_pHYs,
              PNG_INFO_oFFs, PNG_INFO_tIME,
              PNG_INFO_pCAL, PNG_INFO_sRGB,
@@ -3068,6 +3103,11 @@ width, height, bit_depth, and color_type must be the same in each call.
                      (in order red, green, blue) of the
                      single transparent color for
                      non-paletted images (PNG_INFO_tRNS)
+
+    png_set_eXIf_1(png_ptr, info_ptr, num_exif, exif);
+
+    exif           - Exif profile (array of
+                     png_byte) (PNG_INFO_eXIf)
 
     png_set_hIST(png_ptr, info_ptr, hist);
 
@@ -3824,7 +3864,7 @@ PNG_FORMAT_FLAG_LINEAR flag below.
 
 When the simplified API needs to convert between sRGB and linear colorspaces,
 the actual sRGB transfer curve defined in the sRGB specification (see the
-article at http://en.wikipedia.org/wiki/SRGB) is used, not the gamma=1/2.2
+article at https://en.wikipedia.org/wiki/SRGB) is used, not the gamma=1/2.2
 approximation used elsewhere in libpng.
 
 When an alpha channel is present it is expected to denote pixel coverage
@@ -4088,7 +4128,7 @@ READ APIs
 
 When the simplified API needs to convert between sRGB and linear colorspaces,
 the actual sRGB transfer curve defined in the sRGB specification (see the
-article at http://en.wikipedia.org/wiki/SRGB) is used, not the gamma=1/2.2
+article at https://en.wikipedia.org/wiki/SRGB) is used, not the gamma=1/2.2
 approximation used elsewhere in libpng.
 
 WRITE APIS
@@ -4246,8 +4286,6 @@ functions after png_create_*_struct() has been called by calling:
         png_voidp error_ptr, png_error_ptr error_fn,
         png_error_ptr warning_fn);
 
-    png_voidp error_ptr = png_get_error_ptr(png_ptr);
-
 If NULL is supplied for either error_fn or warning_fn, then the libpng
 default function will be used, calling fprintf() and/or longjmp() if a
 problem is encountered.  The replacement error functions should have
@@ -4259,6 +4297,11 @@ parameters as follows:
     void user_warning_fn(png_structp png_ptr,
         png_const_charp warning_msg);
 
+Then, within your user_error_fn or user_warning_fn, you can retrieve
+the error_ptr if you need it, by calling
+
+    png_voidp error_ptr = png_get_error_ptr(png_ptr);
+
 The motivation behind using setjmp() and longjmp() is the C++ throw and
 catch exception handling methods.  This makes the code much easier to write,
 as there is no need to check every return code of every function call.
@@ -4266,7 +4309,7 @@ However, there are some uncertainties about the status of local variables
 after a longjmp, so the user may want to be careful about doing anything
 after setjmp returns non-zero besides returning itself.  Consult your
 compiler documentation for more details.  For an alternative approach, you
-may wish to use the "cexcept" facility (see http://cexcept.sourceforge.net),
+may wish to use the "cexcept" facility (see https://cexcept.sourceforge.io/),
 which is illustrated in pngvalid.c and in contrib/visupng.
 
 Beginning in libpng-1.4.0, the png_set_benign_errors() API became available.
@@ -4494,7 +4537,7 @@ in a MNG datastream.  As a minimum, it must have the MNG 8-byte signature
 and the MHDR and MEND chunks.  Libpng does not provide support for these
 or any other MNG chunks; your application must provide its own support for
 them.  You may wish to consider using libmng (available at
-http://www.libmng.com) instead.
+https://www.libmng.com/) instead.
 
 VIII.  Changes to Libpng from version 0.88
 
@@ -4917,18 +4960,14 @@ PNG_USER_WIDTH_MAX and PNG_USER_HEIGHT_MAX, although this document said
 that it could be used to override them.  Now this function will reduce or
 increase the limits.
 
-Starting in libpng-1.5.10, the user limits can be set en masse with the
-configuration option PNG_SAFE_LIMITS_SUPPORTED.  If this option is enabled,
-a set of "safe" limits is applied in pngpriv.h.  These can be overridden by
-application calls to png_set_user_limits(), png_set_user_chunk_cache_max(),
-and/or png_set_user_malloc_max() that increase or decrease the limits.  Also,
-in libpng-1.5.10 the default width and height limits were increased
-from 1,000,000 to 0x7fffffff (i.e., made unlimited).  Therefore, the
-limits are now
-                               default      safe
+Starting in libpng-1.5.22, default user limits were established. These
+can be overridden by application calls to png_set_user_limits(),
+png_set_user_chunk_cache_max(), and/or png_set_user_malloc_max().
+The limits are now
+                             max possible  default
    png_user_width_max        0x7fffffff    1,000,000
    png_user_height_max       0x7fffffff    1,000,000
-   png_user_chunk_cache_max  0 (unlimited)   128
+   png_user_chunk_cache_max  0 (unlimited) 1000
    png_user_chunk_malloc_max 0 (unlimited) 8,000,000
 
 The png_set_option() function (and the "options" member of the png struct) was
@@ -5178,6 +5217,11 @@ is an error. Previously this requirement of the PNG specification was not
 enforced, and the palette was always limited to 256 entries. An over-length
 PLTE chunk found in an input PNG is silently truncated.
 
+Starting with libpng-1.6.31, the eXIf chunk is supported. Libpng does not
+attempt to decode the Exif profile; it simply returns a byte array
+containing the profile to the calling application which must do its own
+decoding.
+
 XIII.  Detecting libpng
 
 The png_get_io_ptr() function has been present since libpng-0.88, has never
@@ -5194,27 +5238,33 @@ control.  The git repository was built from old libpng-x.y.z.tar.gz files
 going back to version 0.70.  You can access the git repository (read only)
 at
 
-    git://git.code.sf.net/p/libpng/code
+    https://github.com/glennrp/libpng or
+    https://git.code.sf.net/p/libpng/code.git
 
-or you can browse it with a web browser by selecting the "code" button at
+or you can browse it with a web browser at
 
-    https://sourceforge.net/projects/libpng
+    https://github.com/glennrp/libpng or
+    https://sourceforge.net/p/libpng/code/ci/libpng16/tree/
 
 Patches can be sent to glennrp at users.sourceforge.net or to
 png-mng-implement at lists.sourceforge.net or you can upload them to
 the libpng bug tracker at
 
-    http://libpng.sourceforge.net
+    https://libpng.sourceforge.io/
+
+or as a "pull request" to
+
+    https://github.com/glennrp/libpng/pulls
 
 We also accept patches built from the tar or zip distributions, and
 simple verbal discriptions of bug fixes, reported either to the
 SourceForge bug tracker, to the png-mng-implement at lists.sf.net
-mailing list, or directly to glennrp.
+mailing list, as github issues, or directly to glennrp.
 
 XV. Coding style
 
 Our coding style is similar to the "Allman" style
-(See http://en.wikipedia.org/wiki/Indent_style#Allman_style), with curly
+(See https://en.wikipedia.org/wiki/Indent_style#Allman_style), with curly
 braces on separate lines:
 
     if (condition)
@@ -5315,7 +5365,7 @@ Prior to libpng-1.6.0 we used a "png_sizeof()" macro, formatted as
 though it were a function.
 
 Control keywords if, for, while, and switch are always followed by a space
-to distinguish them from function calls, which have no trailing space. 
+to distinguish them from function calls, which have no trailing space.
 
 We put a space after each comma and after each semicolon
 in "for" statements, and we put spaces before and after each
@@ -5341,7 +5391,7 @@ for a few type names that we inherit from zlib.h.
 
 We prefer "if (something != 0)" and "if (something == 0)" over
 "if (something)" and if "(!something)", respectively, and for pointers
-we prefer "if (some_pointer != NULL)" or "if (some_pointer == NULL)". 
+we prefer "if (some_pointer != NULL)" or "if (some_pointer == NULL)".
 
 We do not use the TAB character for indentation in the C sources.
 
@@ -5355,7 +5405,7 @@ Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.29 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.32 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer

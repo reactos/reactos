@@ -1,7 +1,7 @@
 
 /* pngpriv.h - private declarations for use inside libpng
  *
- * Last changed in libpng 1.6.29 [March 16, 2017]
+ * Last changed in libpng 1.6.32 [August 24, 2017]
  * Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -35,7 +35,9 @@
  * Windows/Visual Studio) there is no effect; the OS specific tests below are
  * still required (as of 2011-05-02.)
  */
-#define _POSIX_SOURCE 1 /* Just the POSIX 1003.1 and C89 APIs */
+#ifndef _POSIX_SOURCE
+# define _POSIX_SOURCE 1 /* Just the POSIX 1003.1 and C89 APIs */
+#endif
 
 #ifndef PNG_VERSION_INFO_ONLY
 /* Standard library headers not required by png.h: */
@@ -452,25 +454,6 @@
 #  define png_fixed_error(s1,s2) png_err(s1)
 #endif
 
-/* C allows up-casts from (void*) to any pointer and (const void*) to any
- * pointer to a const object.  C++ regards this as a type error and requires an
- * explicit, static, cast and provides the static_cast<> rune to ensure that
- * const is not cast away.
- */
-#ifdef __cplusplus
-#  define png_voidcast(type, value) static_cast<type>(value)
-#  define png_constcast(type, value) const_cast<type>(value)
-#  define png_aligncast(type, value) \
-   static_cast<type>(static_cast<void*>(value))
-#  define png_aligncastconst(type, value) \
-   static_cast<type>(static_cast<const void*>(value))
-#else
-#  define png_voidcast(type, value) (value)
-#  define png_constcast(type, value) ((type)(value))
-#  define png_aligncast(type, value) ((void*)(value))
-#  define png_aligncastconst(type, value) ((const void*)(value))
-#endif /* __cplusplus */
-
 /* Some fixed point APIs are still required even if not exported because
  * they get used by the corresponding floating point APIs.  This magic
  * deals with this:
@@ -485,6 +468,35 @@
 /* Other defines specific to compilers can go here.  Try to keep
  * them inside an appropriate ifdef/endif pair for portability.
  */
+
+/* C allows up-casts from (void*) to any pointer and (const void*) to any
+ * pointer to a const object.  C++ regards this as a type error and requires an
+ * explicit, static, cast and provides the static_cast<> rune to ensure that
+ * const is not cast away.
+ */
+#ifdef __cplusplus
+#  define png_voidcast(type, value) static_cast<type>(value)
+#  define png_constcast(type, value) const_cast<type>(value)
+#  define png_aligncast(type, value) \
+   static_cast<type>(static_cast<void*>(value))
+#  define png_aligncastconst(type, value) \
+   static_cast<type>(static_cast<const void*>(value))
+#else
+#  define png_voidcast(type, value) (value)
+#  ifdef _WIN64
+#     ifdef __GNUC__
+         typedef unsigned long long png_ptruint;
+#     else
+         typedef unsigned __int64 png_ptruint;
+#     endif
+#  else
+      typedef unsigned long png_ptruint;
+#  endif
+#  define png_constcast(type, value) ((type)(png_ptruint)(const void*)(value))
+#  define png_aligncast(type, value) ((void*)(value))
+#  define png_aligncastconst(type, value) ((const void*)(value))
+#endif /* __cplusplus */
+
 #if defined(PNG_FLOATING_POINT_SUPPORTED) ||\
     defined(PNG_FLOATING_ARITHMETIC_SUPPORTED)
    /* png.c requires the following ANSI-C constants if the conversion of
@@ -830,6 +842,7 @@
 #define png_PLTE PNG_U32( 80,  76,  84,  69)
 #define png_bKGD PNG_U32( 98,  75,  71,  68)
 #define png_cHRM PNG_U32( 99,  72,  82,  77)
+#define png_eXIf PNG_U32(101,  88,  73, 102) /* registered July 2017 */
 #define png_fRAc PNG_U32(102,  82,  65,  99) /* registered, not defined */
 #define png_gAMA PNG_U32(103,  65,  77,  65)
 #define png_gIFg PNG_U32(103,  73,  70, 103)
@@ -1128,6 +1141,11 @@ PNG_INTERNAL_FUNCTION(void,png_write_cHRM_fixed,(png_structrp png_ptr,
 #ifdef PNG_WRITE_sRGB_SUPPORTED
 PNG_INTERNAL_FUNCTION(void,png_write_sRGB,(png_structrp png_ptr,
     int intent),PNG_EMPTY);
+#endif
+
+#ifdef PNG_WRITE_eXIf_SUPPORTED
+PNG_INTERNAL_FUNCTION(void,png_write_eXIf,(png_structrp png_ptr,
+    png_bytep exif, int num_exif),PNG_EMPTY);
 #endif
 
 #ifdef PNG_WRITE_iCCP_SUPPORTED
@@ -1429,6 +1447,11 @@ PNG_INTERNAL_FUNCTION(void,png_handle_cHRM,(png_structrp png_ptr,
     png_inforp info_ptr, png_uint_32 length),PNG_EMPTY);
 #endif
 
+#ifdef PNG_READ_eXIf_SUPPORTED
+PNG_INTERNAL_FUNCTION(void,png_handle_eXIf,(png_structrp png_ptr,
+    png_inforp info_ptr, png_uint_32 length),PNG_EMPTY);
+#endif
+
 #ifdef PNG_READ_gAMA_SUPPORTED
 PNG_INTERNAL_FUNCTION(void,png_handle_gAMA,(png_structrp png_ptr,
     png_inforp info_ptr, png_uint_32 length),PNG_EMPTY);
@@ -1504,8 +1527,11 @@ PNG_INTERNAL_FUNCTION(void,png_handle_zTXt,(png_structrp png_ptr,
     png_inforp info_ptr, png_uint_32 length),PNG_EMPTY);
 #endif
 
-PNG_INTERNAL_FUNCTION(void,png_check_chunk_name,(png_structrp png_ptr,
-    png_uint_32 chunk_name),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_check_chunk_name,(png_const_structrp png_ptr,
+    const png_uint_32 chunk_name),PNG_EMPTY);
+
+PNG_INTERNAL_FUNCTION(void,png_check_chunk_length,(png_const_structrp png_ptr,
+    const png_uint_32 chunk_length),PNG_EMPTY);
 
 PNG_INTERNAL_FUNCTION(void,png_handle_unknown,(png_structrp png_ptr,
     png_inforp info_ptr, png_uint_32 length, int keep),PNG_EMPTY);

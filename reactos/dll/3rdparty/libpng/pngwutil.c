@@ -1,8 +1,8 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.6.26 [October 20, 2016]
- * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.32 [August 24, 2017]
+ * Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -1003,7 +1003,8 @@ png_compress_IDAT(png_structrp png_ptr, png_const_bytep input,
                optimize_cmf(data, png_image_size(png_ptr));
 #endif
 
-         png_write_complete_chunk(png_ptr, png_IDAT, data, size);
+         if (size > 0)
+            png_write_complete_chunk(png_ptr, png_IDAT, data, size);
          png_ptr->mode |= PNG_HAVE_IDAT;
 
          png_ptr->zstream.next_out = data;
@@ -1049,7 +1050,8 @@ png_compress_IDAT(png_structrp png_ptr, png_const_bytep input,
             optimize_cmf(data, png_image_size(png_ptr));
 #endif
 
-         png_write_complete_chunk(png_ptr, png_IDAT, data, size);
+         if (size > 0)
+            png_write_complete_chunk(png_ptr, png_IDAT, data, size);
          png_ptr->zstream.avail_out = 0;
          png_ptr->zstream.next_out = NULL;
          png_ptr->mode |= PNG_HAVE_IDAT | PNG_AFTER_IDAT;
@@ -1468,6 +1470,28 @@ png_write_bKGD(png_structrp png_ptr, png_const_color_16p back, int color_type)
       png_save_uint_16(buf, back->gray);
       png_write_complete_chunk(png_ptr, png_bKGD, buf, (png_size_t)2);
    }
+}
+#endif
+
+#ifdef PNG_WRITE_eXIf_SUPPORTED
+/* Write the Exif data */
+void /* PRIVATE */
+png_write_eXIf(png_structrp png_ptr, png_bytep exif, int num_exif)
+{
+   int i;
+   png_byte buf[1];
+
+   png_debug(1, "in png_write_eXIf");
+
+   png_write_chunk_header(png_ptr, png_eXIf, (png_uint_32)(num_exif));
+
+   for (i = 0; i < num_exif; i++)
+   {
+      buf[0] = exif[i];
+      png_write_chunk_data(png_ptr, buf, (png_size_t)1);
+   }
+
+   png_write_chunk_end(png_ptr);
 }
 #endif
 

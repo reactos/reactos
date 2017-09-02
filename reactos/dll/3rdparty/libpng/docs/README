@@ -1,4 +1,4 @@
-README for libpng version 1.6.29 - March 16, 2017 (shared library 16.0)
+README for libpng version 1.6.32 - August 24, 2017 (shared library 16.0)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
@@ -23,7 +23,7 @@ earlier versions if you are using a shared library.  The type of the
 png_uint_32, which will affect shared-library applications that use
 this function.
 
-To avoid problems with changes to the internals of png info_struct,
+To avoid problems with changes to the internals of the png info_struct,
 new APIs have been made available in 0.95 to avoid direct application
 access to info_ptr.  These functions are the png_set_<chunk> and
 png_get_<chunk> functions.  These functions should be used when
@@ -88,11 +88,11 @@ zlib should be available at the same place that libpng is, or at zlib.net.
 
 You may also want a copy of the PNG specification.  It is available
 as an RFC, a W3C Recommendation, and an ISO/IEC Standard.  You can find
-these at http://www.libpng.org/pub/png/documents/
+these at http://www.libpng.org/pub/png/pngdocs.html .
 
-This code is currently being archived at libpng.sf.net in the
-[DOWNLOAD] area, and at ftp://ftp.simplesystems.org.  If you can't find it
-in any of those places, e-mail me, and I'll help you find it.
+This code is currently being archived at libpng.sourceforge.io in the
+[DOWNLOAD] area, and at http://libpng.download/src .  If you
+can't find it in any of those places, e-mail me, and I'll help you find it.
 
 I am not a lawyer, but I believe that the Export Control Classification
 Number (ECCN) for libpng is EAR99, which means not subject to export

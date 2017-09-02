@@ -114,13 +114,13 @@ int main(int argc, const char **argv)
 
          else
          {
-            /* Calling png_free_image is optional unless the simplified API was
+            /* Calling png_image_free is optional unless the simplified API was
              * not run to completion.  In this case if there wasn't enough
              * memory for 'buffer' we didn't complete the read, so we must free
              * the image:
              */
             if (buffer == NULL)
-               png_free_image(&image);
+               png_image_free(&image);
 
             else
                free(buffer);
@@ -983,6 +983,11 @@ void write_png(char *file_name /* , ... other image information ... */)
    png_uint_32 k, height, width;
 
    /* In this example, "image" is a one-dimensional array of bytes */
+
+   /* Guard against integer overflow */
+   if (height > PNG_SIZE_MAX/(width*bytes_per_pixel)) {
+      png_error(png_ptr, "Image_data buffer would be too large");
+   }
    png_byte image[height*width*bytes_per_pixel];
 
    png_bytep row_pointers[height];

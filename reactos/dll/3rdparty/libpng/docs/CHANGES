@@ -5761,7 +5761,9 @@ Version 1.6.27beta01 [November 2, 2016]
     if built with zlib-1.2.8.1.
 
 Version 1.6.27rc01 [December 27, 2016]
-  Control ADLER32 checking with new PNG_IGNORE_ADLER32 option.
+  Control ADLER32 checking with new PNG_IGNORE_ADLER32 option. Fixes
+    an endless loop when handling erroneous ADLER32 checksums; bug
+    introduced in libpng-1.6.26.
   Removed the use of a macro containing the pre-processor 'defined'
     operator.  It is unclear whether this is valid; a macro that
     "generates" 'defined' is not permitted, but the use of the word
@@ -5811,10 +5813,185 @@ Version 1.6.29beta02 [February 22, 2017]
 Version 1.6.29beta03 [March 1, 2017]
   Avoid potential overflow of shift operations in png_do_expand() (Aaron Boxer).
   Change test ZLIB_VERNUM >= 0x1281 to ZLIB_VERNUM >= 0x1290 in pngrutil.c
-    because Solaris 11 distributes zlib-1.2.8.f that is older than 1.2.8.1.
+    because Solaris 11 distributes zlib-1.2.8.f that is older than 1.2.8.1,
+    as suggested in zlib FAQ, item 24.
   Suppress clang warnings about implicit sign changes in png.c
 
 Version 1.6.29 [March 16, 2017]
+  No changes.
+
+Version 1.6.30beta01 [April 1, 2017]
+  Added missing "$(CPPFLAGS)" to the compile line for c.pic.o in
+    makefile.linux and makefile.solaris-x86 (Cosmin).
+  Revised documentation of png_get_error_ptr() in the libpng manual.
+  Silence clang -Wcomma and const drop warnings (Viktor Szakats).
+  Update Sourceforge URLs in documentation (https instead of http).
+
+Version 1.6.30beta02 [April 22, 2017]
+  Document need to check for integer overflow when allocating a pixel
+    buffer for multiple rows in contrib/gregbook, contrib/pngminus,
+    example.c, and in the manual (suggested by Jaeseung Choi). This
+    is similar to the bug reported against pngquant in CVE-2016-5735.
+  Removed reference to the obsolete PNG_SAFE_LIMITS macro in the documentation.
+
+Version 1.6.30beta03 [May 22, 2017]
+  Check for integer overflow in contrib/visupng and contrib/tools/genpng.
+  Do not double evaluate CMAKE_SYSTEM_PROCESSOR in CMakeLists.txt.
+  Test CMAKE_HOST_WIN32 instead of WIN32 in CMakeLists.txt.
+  Fix some URL in documentation.
+
+Version 1.6.30beta04 [June 7, 2017]
+  Avoid writing an empty IDAT when the last IDAT exactly fills the
+    compression buffer (bug report by Brian Baird). This bug was
+    introduced in libpng-1.6.0.
+
+Version 1.6.30rc01 [June 14, 2017]
+  No changes.
+
+Version 1.6.30rc02 [June 25, 2017]
+  Update copyright year in pnglibconf.h, make ltmain.sh executable.
+  Add a reference to the libpng.download site in README.
+
+Version 1.6.30 [June 28, 2017]
+  No changes.
+
+Version 1.6.31beta01 [July 5, 2017]
+  Guard the definition of _POSIX_SOURCE in pngpriv.h (AIX already defines it;
+    bug report by Michael Felt).
+  Revised pngpriv.h to work around failure to compile arm/filter_neon.S
+    ("typedef" directive is unrecognized by the assembler). The problem
+    was introduced in libpng-1.6.30beta01.
+  Added "Requires: zlib" to libpng.pc.in (Pieter Neerincx).
+  Added special case for FreeBSD in arm/filter_neon.S (Maya Rashish).
+
+Version 1.6.31beta02 [July 8, 2017]
+  Added instructions for disabling hardware optimizations in INSTALL.
+  Added "--enable-hardware-optimizations" configuration flag to enable
+    or disable all hardware optimizations with one flag.
+
+Version 1.6.31beta03 [July 9, 2017]
+  Updated CMakeLists.txt to add INTEL_SSE and MIPS_MSA platforms.
+  Changed "int" to "png_size_t" in intel/filter_sse2.c to prevent
+    possible integer overflow (Bug report by John Bowler).
+  Quieted "declaration after statement" warnings in intel/filter_sse2.c.
+  Added scripts/makefile-linux-opt, which has hardware optimizations enabled.
+
+Version 1.6.31beta04 [July 11, 2017]
+  Removed one of the GCC-7.1.0 'strict-overflow' warnings that result when
+    integers appear on both sides of a compare.  Worked around the others by
+    forcing the strict-overflow setting in the relevant functions to a level
+    where they are not reported (John Bowler).
+  Changed "FALL THROUGH" comments to "FALLTHROUGH" because GCC doesn't like
+    the space.
+  Worked around some C-style casts from (void*) because g++ 5.4.0 objects
+    to them.
+  Increased the buffer size for 'sprint' to pass the gcc 7.1.0 'sprint
+    overflow' check that is on by default with -Wall -Wextra.
+
+Version 1.6.31beta05 [July 13, 2017]
+  Added eXIf chunk support.
+
+Version 1.6.31beta06 [July 17, 2017]
+  Added a minimal eXIf chunk (with Orientation and FocalLengthIn35mmFilm
+    tags) to pngtest.png.
+
+Version 1.6.31beta07 [July 18, 2017]
+  Revised the eXIf chunk in pngtest.png to fix "Bad IFD1 Directory" warning.
+
+Version 1.6.31rc01 [July 19, 2017]
+  No changes.
+
+Version 1.6.31rc02 [July 25, 2017]
+  Fixed typo in example.c (png_free_image should be png_image_free) (Bug
+    report by John Smith)
+
+Version 1.6.31 [July 27, 2017]
+  No changes.
+
+Version 1.6.32beta01 [July 31, 2017]
+  Avoid possible NULL dereference in png_handle_eXIf when benign_errors
+    are allowed. Avoid leaking the input buffer "eXIf_buf".
+  Eliminated png_ptr->num_exif member from pngstruct.h and added num_exif
+    to arguments for png_get_eXIf() and png_set_eXIf().
+  Added calls to png_handle_eXIf(() in pngread.c and png_write_eXIf() in
+    pngwrite.c, and made various other fixes to png_write_eXIf().
+  Changed name of png_get_eXIF and png_set_eXIf() to png_get_eXIf_1() and
+    png_set_eXIf_1(), respectively, to avoid breaking API compatibility
+    with libpng-1.6.31.
+
+Version 1.6.32beta02 [August 1, 2017]
+  Updated contrib/libtests/pngunknown.c with eXIf chunk.
+
+Version 1.6.32beta03 [August 2, 2017]
+  Initialized btoa[] in pngstest.c
+  Stop memory leak when returning from png_handle_eXIf() with an error
+    (Bug report from the OSS-fuzz project).
+
+Version 1.6.32beta04 [August 2, 2017]
+  Replaced local eXIf_buf with info_ptr-eXIf_buf in png_handle_eXIf().
+  Update libpng.3 and libpng-manual.txt about eXIf functions.
+
+Version 1.6.32beta05 [August 2, 2017]
+  Restored png_get_eXIf() and png_set_eXIf() to maintain API compatability.
+
+Version 1.6.32beta06 [August 2, 2017]
+  Removed png_get_eXIf_1() and png_set_eXIf_1().
+
+Version 1.6.32beta07 [August 3, 2017]
+  Check length of all chunks except IDAT against user limit to fix an
+    OSS-fuzz issue.
+
+Version 1.6.32beta08 [August 3, 2017]
+  Check length of IDAT against maximum possible IDAT size, accounting
+    for height, rowbytes, interlacing and zlib/deflate overhead.
+  Restored png_get_eXIf_1() and png_set_eXIf_1(), because strlen(eXIf_buf)
+    does not work (the eXIf chunk data can contain zeroes).
+
+Version 1.6.32beta09 [August 3, 2017]
+  Require cmake-2.8.8 in CMakeLists.txt. Revised symlink creation,
+    no longer using deprecated cmake LOCATION feature (Clifford Yapp).
+  Fixed five-byte error in the calculation of IDAT maximum possible size.
+  
+Version 1.6.32beta10 [August 5, 2017]
+  Moved chunk-length check into a png_check_chunk_length() private
+    function (Suggested by Max Stepin).
+  Moved bad pngs from tests to contrib/libtests/crashers
+  Moved testing of bad pngs into a separate tests/pngtest-badpngs script
+  Added the --xfail (expected FAIL) option to pngtest.c. It writes XFAIL
+    in the output but PASS for the libpng test.
+  Require cmake-3.0.2 in CMakeLists.txt (Clifford Yapp).
+  Fix "const" declaration info_ptr argument to png_get_eXIf_1() and the
+    num_exif argument to png_get_eXIf_1() (Github Issue 171).
+
+Version 1.6.32beta11 [August 7, 2017]
+  Added "eXIf" to "chunks_to_ignore[]" in png_set_keep_unknown_chunks().
+  Added huge_IDAT.png and empty_ancillary_chunks.png to testpngs/crashers.
+  Make pngtest --strict, --relax, --xfail options imply -m (multiple).
+  Removed unused chunk_name parameter from png_check_chunk_length().
+  Relocated setting free_me for eXIf data, to stop an OSS-fuzz leak.
+  Initialize profile_header[] in png_handle_iCCP() to fix OSS-fuzz issue.
+  Initialize png_ptr->row_buf[0] to 255 in png_read_row() to fix OSS-fuzz UMR.
+  Attempt to fix a UMR in png_set_text_2() to fix OSS-fuzz issue.
+  Increase minimum zlib stream from 9 to 14 in png_handle_iCCP(), to account
+    for the minimum 'deflate' stream, and relocate the test to a point
+    after the keyword has been read.
+  Check that the eXIf chunk has at least 2 bytes and begins with "II" or "MM".
+
+Version 1.6.32rc01 [August 18, 2017]
+  Added a set of "huge_xxxx_chunk.png" files to contrib/testpngs/crashers,
+    one for each known chunk type, with length = 2GB-1.
+  Check for 0 return from png_get_rowbytes() and added some (size_t) typecasts
+    in contrib/pngminus/*.c to stop some Coverity issues (162705, 162706,
+    and 162707).
+  Renamed chunks in contrib/testpngs/crashers to avoid having files whose
+    names differ only in case; this causes problems with some platforms
+    (github issue #172).
+
+Version 1.6.32rc02 [August 22, 2017]
+  Added contrib/oss-fuzz directory which contains files used by the oss-fuzz
+    project (https://github.com/google/oss-fuzz/tree/master/projects/libpng).
+
+Version 1.6.32 [August 24, 2017]
   No changes.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
