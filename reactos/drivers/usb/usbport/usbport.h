@@ -862,6 +862,22 @@ USBPORT_GetSymbolicName(
   IN PDEVICE_OBJECT RootHubPdo,
   IN PUNICODE_STRING DestinationString);
 
+/* iso.c */
+USBD_STATUS
+NTAPI
+USBPORT_InitializeIsoTransfer(
+  IN PDEVICE_OBJECT FdoDevice,
+  IN struct _URB_ISOCH_TRANSFER * Urb,
+  IN PUSBPORT_TRANSFER Transfer);
+
+ULONG
+NTAPI
+USBPORT_CompleteIsoTransfer(
+  IN PVOID MiniPortExtension,
+  IN PVOID MiniPortEndpoint,
+  IN PVOID TransferParameters,
+  IN ULONG TransferLength);
+
 /* pnp.c */
 NTSTATUS
 NTAPI

@@ -588,7 +588,7 @@ USBPORT_SoftInterruptDpc(IN PRKDPC Dpc,
     PDEVICE_OBJECT FdoDevice;
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
 
-    DPRINT("USBPORT_SoftInterruptDpc: ... \n");
+    DPRINT_INT("USBPORT_SoftInterruptDpc: ... \n");
 
     FdoDevice = DeferredContext;
     FdoExtension = FdoDevice->DeviceExtension;
@@ -606,7 +606,7 @@ USBPORT_SoftInterrupt(IN PDEVICE_OBJECT FdoDevice)
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     LARGE_INTEGER DueTime = {{0, 0}};
 
-    DPRINT("USBPORT_SoftInterrupt: ... \n");
+    DPRINT_INT("USBPORT_SoftInterrupt: ... \n");
 
     FdoExtension = FdoDevice->DeviceExtension;
 
@@ -1079,7 +1079,8 @@ USBPORT_InterruptService(IN PKINTERRUPT Interrupt,
     FdoExtension = FdoDevice->DeviceExtension;
     Packet = &FdoExtension->MiniPortInterface->Packet;
 
-    DPRINT_INT("USBPORT_InterruptService: FdoExtension->Flags - %lx\n",
+    DPRINT_INT("USBPORT_InterruptService: FdoExtension[%p]->Flags - %08X\n",
+           FdoExtension,
            FdoExtension->Flags);
 
     if (FdoExtension->Flags & USBPORT_FLAG_INTERRUPT_ENABLED &&
@@ -1936,7 +1937,7 @@ USBPORT_Unload(IN PDRIVER_OBJECT DriverObject)
     //MiniPortInterface->DriverUnload(DriverObject); // Call MiniPort _HCI_Unload
 }
 
-ULONG
+VOID
 NTAPI
 USBPORT_MiniportCompleteTransfer(IN PVOID MiniPortExtension,
                                  IN PVOID MiniPortEndpoint,
@@ -1969,18 +1970,7 @@ USBPORT_MiniportCompleteTransfer(IN PVOID MiniPortExtension,
                                 &Transfer->TransferLink,
                                 &FdoExtension->DoneTransferSpinLock);
 
-    return KeInsertQueueDpc(&FdoExtension->TransferFlushDpc, NULL, NULL);
-}
-
-ULONG
-NTAPI
-USBPORT_CompleteIsoTransfer(IN PVOID MiniPortExtension,
-                            IN PVOID MiniPortEndpoint,
-                            IN PVOID TransferParameters,
-                            IN ULONG TransferLength)
-{
-    DPRINT1("USBPORT_CompleteIsoTransfer: UNIMPLEMENTED. FIXME.\n");
-    return 0;
+    KeInsertQueueDpc(&FdoExtension->TransferFlushDpc, NULL, NULL);
 }
 
 VOID
@@ -2309,7 +2299,7 @@ USBPORT_MapTransfer(IN PDEVICE_OBJECT FdoDevice,
 
         do
         {
-            ElementLength = 0x1000 - (PhAddress.LowPart & 0xFFF);
+            ElementLength = PAGE_SIZE - (PhAddress.LowPart & (PAGE_SIZE - 1));
 
             if (ElementLength > SgCurrentLength)
                 ElementLength = SgCurrentLength;
@@ -2331,9 +2321,9 @@ USBPORT_MapTransfer(IN PDEVICE_OBJECT FdoDevice,
         }
         while (SgCurrentLength);
 
-        if ((PhAddr.LowPart == PhAddress.LowPart) &&
-            (PhAddr.HighPart == PhAddress.HighPart))
+        if (PhAddr.QuadPart == PhAddress.QuadPart)
         {
+            DPRINT1("USBPORT_MapTransfer: PhAddr == PhAddress\n");
             ASSERT(FALSE);
         }
 

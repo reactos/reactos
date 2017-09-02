@@ -531,7 +531,7 @@ USBPORT_CancelActiveTransferIrp(IN PDEVICE_OBJECT DeviceObject,
     PIRP irp;
     KIRQL OldIrql;
 
-    DPRINT_CORE("USBPORT_CancelTransferIrp: Irp - %p\n", Irp);
+    DPRINT_CORE("USBPORT_CancelActiveTransferIrp: Irp - %p\n", Irp);
 
     PdoExtension = DeviceObject->DeviceExtension;
     FdoDevice = PdoExtension->FdoDevice;
@@ -549,7 +549,7 @@ USBPORT_CancelActiveTransferIrp(IN PDEVICE_OBJECT DeviceObject,
         Transfer = Urb->UrbControlTransfer.hca.Reserved8[0];
         Endpoint = Transfer->Endpoint;
 
-        DPRINT_CORE("USBPORT_CancelTransferIrp: irp - %p, Urb - %p, Transfer - %p\n",
+        DPRINT_CORE("USBPORT_CancelActiveTransferIrp: irp - %p, Urb - %p, Transfer - %p\n",
                     irp,
                     Urb,
                     Transfer);
