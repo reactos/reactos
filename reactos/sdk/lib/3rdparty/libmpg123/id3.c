@@ -250,6 +250,7 @@ void id3_link(mpg123_handle *fr)
 */
 static void store_id3_text(mpg123_string *sb, unsigned char *source, size_t source_size, const int noquiet, const int notranslate)
 {
+	unsigned char encoding;
 	if(!source_size)
 	{
 		debug("Empty id3 data!");
@@ -271,26 +272,29 @@ static void store_id3_text(mpg123_string *sb, unsigned char *source, size_t sour
 		return;
 	}
 
-	id3_to_utf8(sb, source[0], source+1, source_size-1, noquiet);
+	encoding = source[0];
+	if(encoding > mpg123_id3_enc_max)
+	{
+		if(noquiet)
+			error1("Unknown text encoding %u, I take no chances, sorry!", encoding);
+
+		mpg123_free_string(sb);
+		return;
+	}
+	id3_to_utf8(sb, encoding, source+1, source_size-1, noquiet);
 
 	if(sb->fill) debug1("UTF-8 string (the first one): %s", sb->p);
 	else if(noquiet) error("unable to convert string to UTF-8 (out of memory, junk input?)!");
 }
 
 /* On error, sb->size is 0. */
+/* Also, encoding has been checked already! */
 void id3_to_utf8(mpg123_string *sb, unsigned char encoding, const unsigned char *source, size_t source_size, int noquiet)
 {
 	unsigned int bwidth;
 	debug1("encoding: %u", encoding);
 	/* A note: ID3v2.3 uses UCS-2 non-variable 16bit encoding, v2.4 uses UTF16.
 	   UTF-16 uses a reserved/private range in UCS-2 to add the magic, so we just always treat it as UTF. */
-	if(encoding > mpg123_id3_enc_max)
-	{
-		if(noquiet) error1("Unknown text encoding %u, I take no chances, sorry!", encoding);
-
-		mpg123_free_string(sb);
-		return;
-	}
 	bwidth = encoding_widths[encoding];
 	/* Hack! I've seen a stray zero byte before BOM. Is that supposed to happen? */
 	if(encoding != mpg123_id3_utf16be) /* UTF16be _can_ beging with a null byte! */
@@ -309,6 +313,7 @@ void id3_to_utf8(mpg123_string *sb, unsigned char encoding, const unsigned char 
 	text_converters[encoding](sb, source, source_size, noquiet);
 }
 
+/* You have checked encoding to be in the range already. */
 static unsigned char *next_text(unsigned char* prev, unsigned char encoding, size_t limit)
 {
 	unsigned char *text = prev;
@@ -379,6 +384,12 @@ static void process_picture(mpg123_handle *fr, unsigned char *realdata, size_t r
 		debug("Empty id3 data!");
 		return;
 	}
+	if(encoding > mpg123_id3_enc_max)
+	{
+		if(NOQUIET)
+			error1("Unknown text encoding %u, I take no chances, sorry!", encoding);
+		return;
+	}
 	if(VERBOSE4) fprintf(stderr, "Note: Storing picture from APIC frame.\n");
 	/* decompose realdata accordingly */
 	i = add_picture(fr);
@@ -445,6 +456,12 @@ static void process_comment(mpg123_handle *fr, enum frame_types tt, unsigned cha
 	if(realsize < (size_t)(descr-realdata))
 	{
 		if(NOQUIET) error1("Invalid frame size of %"SIZE_P" (too small for anything).", (size_p)realsize);
+		return;
+	}
+	if(encoding > mpg123_id3_enc_max)
+	{
+		if(NOQUIET)
+			error1("Unknown text encoding %u, I take no chances, sorry!", encoding);
 		return;
 	}
 	xcom = (tt == uslt ? add_text(fr) : add_comment(fr));
@@ -527,6 +544,12 @@ static void process_extra(mpg123_handle *fr, unsigned char* realdata, size_t rea
 	if((int)realsize < descr-realdata)
 	{
 		if(NOQUIET) error1("Invalid frame size of %lu (too small for anything).", (unsigned long)realsize);
+		return;
+	}
+	if(encoding > mpg123_id3_enc_max)
+	{
+		if(NOQUIET)
+			error1("Unknown text encoding %u, I take no chances, sorry!", encoding);
 		return;
 	}
 	text = next_text(descr, encoding, realsize-(descr-realdata));
@@ -681,6 +704,7 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 		,1) \
 	)
 	/* id3v2.3 does not store synchsafe frame sizes, but synchsafe tag size - doh! */
+	/* Remember: bytes_to_long() can yield ULONG_MAX on 32 bit platforms! */
 	#define bytes_to_long(buf,res) \
 	( \
 		major == 3 ? \
@@ -700,6 +724,8 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 
 	/* length-10 or length-20 (footer present); 4 synchsafe integers == 28 bit number  */
 	/* we have already read 10 bytes, so left are length or length+10 bytes belonging to tag */
+	/* Note: This is an 28 bit value in 32 bit storage, plenty of space for */
+	/* length+x for reasonable x. */
 	if(!synchsafe_to_long(buf+2,length))
 	{
 		if(NOQUIET) error4("Bad tag length (not synchsafe): 0x%02x%02x%02x%02x; You got a bad ID3 tag here.", buf[2],buf[3],buf[4],buf[5]);
@@ -747,16 +773,25 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 			if((ret2 = fr->rd->read_frame_body(fr,tagdata,length)) > 0)
 			{
 				unsigned long tagpos = 0;
+				/* bytes of frame title and of framesize value */
+				unsigned int head_part = fr->id3v2.version > 2 ? 4 : 3;
+				unsigned int flag_part = fr->id3v2.version > 2 ? 2 : 0;
+				/* The amount of bytes that are unconditionally read for each frame: */
+				/* ID, size, flags. */
+				unsigned int framebegin = head_part+head_part+flag_part;
 				debug1("ID3v2: have read at all %lu bytes for the tag now", (unsigned long)length+6);
 				/* going to apply strlen for strings inside frames, make sure that it doesn't overflow! */
 				tagdata[length] = 0;
 				if(flags & EXTHEAD_FLAG)
 				{
 					debug("ID3v2: skipping extended header");
-					if(!bytes_to_long(tagdata, tagpos))
+					if(!bytes_to_long(tagdata, tagpos) || tagpos >= length)
 					{
 						ret = 0;
-						if(NOQUIET) error4("Bad (non-synchsafe) tag offset: 0x%02x%02x%02x%02x", tagdata[0], tagdata[1], tagdata[2], tagdata[3]);
+						if(NOQUIET)
+							error4( "Bad (non-synchsafe/too large) tag offset:"
+								"0x%02x%02x%02x%02x"
+							,	tagdata[0], tagdata[1], tagdata[2], tagdata[3] );
 					}
 				}
 				if(ret > 0)
@@ -765,12 +800,14 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 					unsigned long framesize;
 					unsigned long fflags; /* need 16 bits, actually */
 					id[4] = 0;
-					/* pos now advanced after ext head, now a frame has to follow */
-					while(tagpos < length-10) /* I want to read at least a full header */
+					/* Pos now advanced after ext head, now a frame has to follow. */
+					/* Note: tagpos <= length, which is 28 bit integer, so both */
+					/* far away from overflow for adding known small values. */
+					/* I want to read at least one full header now. */
+					while(length >= tagpos+framebegin)
 					{
 						int i = 0;
 						unsigned long pos = tagpos;
-						int head_part = fr->id3v2.version == 2 ? 3 : 4; /* bytes of frame title and of framesize value */
 						/* level 1,2,3 - 0 is info from lame/info tag! */
 						/* rva tags with ascending significance, then general frames */
 						enum frame_types tt = unknown;
@@ -800,12 +837,7 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 								break;
 							}
 							if(VERBOSE3) fprintf(stderr, "Note: ID3v2 %s frame of size %lu\n", id, framesize);
-							tagpos += head_part + framesize; /* the important advancement in whole tag */
-							if(tagpos > length)
-							{
-								if(NOQUIET) error("Whoa! ID3v2 frame claims to be larger than the whole rest of the tag.");
-								break;
-							}
+							tagpos += head_part;
 							pos += head_part;
 							if(fr->id3v2.version > 2)
 							{
@@ -814,6 +846,13 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 								tagpos += 2;
 							}
 							else fflags = 0;
+
+							if(length - tagpos < framesize)
+							{
+								if(NOQUIET) error("Whoa! ID3v2 frame claims to be larger than the whole rest of the tag.");
+								break;
+							}
+							tagpos += framesize; /* the important advancement in whole tag */
 							/* for sanity, after full parsing tagpos should be == pos */
 							/* debug4("ID3v2: found %s frame, size %lu (as bytes: 0x%08lx), flags 0x%016lx", id, framesize, framesize, fflags); */
 							/* %0abc0000 %0h00kmnp */
@@ -873,7 +912,9 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 									debug2("ID3v2: de-unsync made %lu out of %lu bytes", realsize, framesize);
 								}
 								pos = 0; /* now at the beginning again... */
-								switch(tt)
+								/* Avoid reading over boundary, even if there is a */
+								/* zero byte of padding for safety. */
+								if(realsize) switch(tt)
 								{
 									case comment:
 									case uslt:

@@ -1,7 +1,8 @@
 /*
 	stringbuf: mimicking a bit of C++ to more safely handle strings
 
-	copyright 2006-10 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2006-17 by the mpg123 project
+	    - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis
 */
@@ -86,7 +87,8 @@ int attribute_align_arg mpg123_copy_string(mpg123_string* from, mpg123_string* t
 
 	if(mpg123_resize_string(to, fill))
 	{
-		memcpy(to->p, text, fill);
+		if(fill) /* Avoid memcpy(NULL, NULL, 0) */
+			memcpy(to->p, text, fill);
 		to->fill = fill;
 		return 1;
 	}
