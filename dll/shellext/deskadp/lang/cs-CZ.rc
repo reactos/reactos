@@ -14,18 +14,18 @@ BEGIN
     ICON IDC_DESK_ADAPTER, IDC_DESK_ADAPTER, 13, 11, 21, 20, SS_ICON
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&Vlastnosti", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
-    GROUPBOX "Adapter Information", -1, 7, 56, 237, 75
+    GROUPBOX "Informace o adaptéru", -1, 7, 56, 237, 75
     LTEXT "Typ čipu:", -1, 13, 68, 58, 8
     LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
     LTEXT "Typ DAC:", -1, 13, 80, 58, 8
     LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
     LTEXT "Velikost paměti:", -1, 13, 92, 58, 8
     LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "Řetězec adaptéru:", -1, 13, 104, 58, 8
+    LTEXT "Řetězec:", -1, 13, 104, 58, 8
     LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
     LTEXT "BIOS informace:", -1, 13, 116, 58, 8
     LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
-    PUSHBUTTON "&Zobrazit všechny režimy...", IDC_LISTALLMODES, 7, 139, 75, 14
+    PUSHBUTTON "&Zobrazit režimy", IDC_LISTALLMODES, 7, 139, 75, 14
 END
 
 IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135

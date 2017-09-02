@@ -63,7 +63,7 @@ ITSSCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj)
         IsEqualGUID(riid, &IID_IClassFactory))
     {
 	IClassFactory_AddRef(iface);
-	*ppobj = This;
+	*ppobj = &This->IClassFactory_iface;
 	return S_OK;
     }
 

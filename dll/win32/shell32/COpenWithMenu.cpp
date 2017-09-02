@@ -600,8 +600,6 @@ VOID COpenWithList::LoadRecommendedFromHKCR(LPCWSTR pwszExt)
     dwSize = sizeof(wszBuf);
     if (RegGetValueW(hKey, NULL, L"PerceivedType", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize) == ERROR_SUCCESS)
     {
-        RegCloseKey(hKey);
-
         StringCbPrintfW(wszBuf2, sizeof(wszBuf2), L"SystemFileAssociations\\%s", wszBuf);
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf2, 0, KEY_READ | KEY_WRITE, &hSubkey) == ERROR_SUCCESS)
         {
@@ -686,10 +684,9 @@ BOOL COpenWithList::AddAppToMRUList(SApp *pApp, LPCWSTR pwszFilename)
 BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
 {
     HKEY hKey, hSrcKey, hDestKey;
-    DWORD dwDisposition;
     WCHAR wszBuf[256];
 
-    TRACE("SetDefaultHandler %ls %ls", pApp->wszFilename, pwszFilename);
+    TRACE("SetDefaultHandler %ls %ls\n", pApp->wszFilename, pwszFilename);
 
     /* Extract file extension */
     LPCWSTR pwszExt = PathFindExtensionW(pwszFilename);
@@ -697,15 +694,18 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
         return FALSE;
 
     /* Create file extension key */
-    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, pwszExt, 0, NULL, 0, KEY_READ|KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, pwszExt, 0, NULL, 0, KEY_READ|KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
     {
         ERR("Cannot open ext key");
         return FALSE;
     }
 
-    if (dwDisposition == REG_CREATED_NEW_KEY)
+    DWORD dwSize = sizeof(wszBuf);
+    LONG lResult = RegGetValueW(hKey, NULL, L"", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize);
+
+    if (lResult == ERROR_FILE_NOT_FOUND)
     {
-        /* A new entry was created create the prog key id */
+        /* A new entry was created or the default key is not set: set the prog key id */
         StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s_auto_file", pwszExt + 1);
         if (RegSetValueExW(hKey, L"", 0, REG_SZ, (const BYTE*)wszBuf, (wcslen(wszBuf) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
         {
@@ -714,16 +714,11 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
             return FALSE;
         }
     }
-    else
+    else if (lResult != ERROR_SUCCESS)
     {
-        /* Entry already exists fetch prog key id */
-        DWORD dwSize = sizeof(wszBuf);
-        if (RegGetValueW(hKey, NULL, L"", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize) != ERROR_SUCCESS)
-        {
-            ERR("RegGetValueW failed: %lu\n", GetLastError());
-            RegCloseKey(hKey);
-            return FALSE;
-        }
+        RegCloseKey(hKey);
+        ERR("RegGetValueExW failed: 0x%08x\n", lResult);
+        return FALSE;
     }
 
     /* Close file extension key */
@@ -909,6 +904,7 @@ VOID COpenWithDialog::Browse()
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
     ofn.nMaxFile = (sizeof(wszPath) / sizeof(WCHAR));
     ofn.lpstrFile = wszPath;
+    ofn.lpstrInitialDir = L"%programfiles%";
 
     /* Init title */
     if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH, wszTitle, sizeof(wszTitle) / sizeof(WCHAR)))

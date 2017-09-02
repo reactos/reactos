@@ -1,4 +1,4 @@
-[Version]
+﻿[Version]
 Signature="$ReactOS$"
 
 [AddReg]
@@ -18,17 +18,12 @@ HKCR,"Folder\shell\explore","BrowserFlags",0x00010001,"0x00000022"
 HKCR,"Folder\shell\explore","ExplorerFlags",0x00010001,"0x00000021"
 HKCR,"Folder\shell\explore\command","",0x00000000,"explorer.exe /e,""%1"""
 
-; Drive property page
-HKCR,"CLSID\{5F5295E0-429F-1069-A2E2-08002B30309D}","",0x00000000,"Drive Property Page Extension"
-HKCR,"CLSID\{5F5295E0-429F-1069-A2E2-08002B30309D}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{5F5295E0-429F-1069-A2E2-08002B30309D}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
-
 ; Clipboard Element
 HKCR,".clp","",0x00000000,"clpfile"
 HKCR,"clpfile","",0x00000000,"Clipboard Element"
 HKCR,"clpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\clipbrd.exe,-121"
 HKCR,"clpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\clipbrd.exe,1"
-HKCR,"clpfile\shell\open\command","",0x00000000,"clipbrd.exe %1"
+HKCR,"clpfile\shell\open\command","",0x00000000,"%SystemRoot%\system32\clipbrd.exe %1"
 
 ; Rich Text Files
 HKCR,".rtf","",0x00000000,"rtffile"
@@ -39,6 +34,7 @@ HKCR,"rtffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\wordpad.exe
 HKCR,"rtffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\wordpad.exe,-103"
 HKCR,"rtffile\shell\open","",0x00000000,"Open"
 HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe %1"
+HKCR,"rtffile\shell\print\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe /p ""%1"""
 
 ; Virtual Device Drivers
 HKCR,".386","",0x00000000,"vxdfile"
@@ -123,22 +119,40 @@ HKCR,"exefile\shellex\DropHandler","",0x00020000,"{86C86720-42A0-1069-A2E8-08002
 
 ; Fonts
 HKCR,".fon","",0x00000000,"fonfile"
-HKCR,"fonfile","",0x00000000,"Font file"
+HKCR,"fonfile","",0x00000000,"Font File"
 HKCR,"fonfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-209"
 HKCR,"fonfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-155"
-HKCR,"fonfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
+HKCR,"fonfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe ""%1"""
+
+HKCR,".fnt","",0x00000000,"fntfile"
+HKCR,"fntfile","",0x00000000,"Font File"
+HKCR,"fntfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-209"
+HKCR,"fntfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-155"
+HKCR,"fntfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe ""%1"""
 
 HKCR,".ttf","",0x00000000,"ttffile"
-HKCR,"ttffile","",0x00000000,"TrueType Font file"
+HKCR,"ttffile","",0x00000000,"TrueType Font File"
 HKCR,"ttffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-210"
 HKCR,"ttffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
-HKCR,"ttffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
+HKCR,"ttffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe ""%1"""
+
+HKCR,".ttc","",0x00000000,"ttcfile"
+HKCR,"ttcfile","",0x00000000,"TrueType Font Collection File"
+HKCR,"ttcfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-210"
+HKCR,"ttcfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
+HKCR,"ttcfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe ""%1"""
 
 HKCR,".otf","",0x00000000,"otffile"
-HKCR,"otffile","",0x00000000,"OpenType Font file"
+HKCR,"otffile","",0x00000000,"OpenType Font File"
 HKCR,"otffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-211"
 HKCR,"otffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
-HKCR,"otffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
+HKCR,"otffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe ""%1"""
+
+HKCR,".otc","",0x00000000,"otcfile"
+HKCR,"otcfile","",0x00000000,"OpenType Font Collection File"
+HKCR,"otcfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-211"
+HKCR,"otcfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
+HKCR,"otcfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe ""%1"""
 
 ; Help Files
 HKCR,".hlp","",0x00000000,"hlpfile"
@@ -163,7 +177,7 @@ HKCR,".html","PerceivedType",0x00000000,"text"
 HKCR,"htmlfile","",0x00000000,"HTML Document"
 HKCR,"htmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\mshtml.dll,-7501"
 HKCR,"htmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\ieframe.dll,0"
-HKCR,"htmlfile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
+HKCR,"htmlfile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; Icons
 HKCR,".ico","",0x00000000,"icofile"
@@ -189,7 +203,7 @@ HKCR,".gif","PerceivedType",0x00000000,"image"
 HKCR,"giffile","",0x00000000,"GIF Image"
 HKCR,"giffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-302"
 HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
-HKCR,"giffile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
+HKCR,"giffile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; JPEG Images
 HKCR,".jpg","",0x00000000,"jpegfile"
@@ -198,10 +212,17 @@ HKCR,".jpg","PerceivedType",0x00000000,"image"
 HKCR,".jpeg","",0x00000000,"jpegfile"
 HKCR,".jpeg","Content Type",0x00000000,"image/jpeg"
 HKCR,".jpeg","PerceivedType",0x00000000,"image"
+HKCR,".jpe","",0x00000000,"jpegfile"
+HKCR,".jpe","Content Type",0x00000000,"image/jpeg"
+HKCR,".jpe","PerceivedType",0x00000000,"image"
+HKCR,".jfif","",0x00000000,"jpegfile"
+HKCR,".jfif","Content Type",0x00000000,"image/jpeg"
+HKCR,".jfif","PerceivedType",0x00000000,"image"
 HKCR,"jpegfile","",0x00000000,"JPEG Image"
 HKCR,"jpegfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-303"
 HKCR,"jpegfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"jpegfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
 
 ; Bitmap Images
 HKCR,".bmp","",0x00000000,"bmpfile"
@@ -209,10 +230,14 @@ HKCR,".bmp","Content Type",0x00000000,"image/bmp"
 HKCR,".bmp","PerceivedType",0x00000000,"image"
 HKCR,".bmp\shellnew","",0x00000000,""
 HKCR,".bmp\shellnew","NullFile",0x00020000,""
+HKCR,".dib","",0x00000000,"bmpfile"
+HKCR,".dib","Content Type",0x00000000,"image/bmp"
+HKCR,".dib","PerceivedType",0x00000000,"image"
 HKCR,"bmpfile","",0x00000000,"Bitmap Image"
 HKCR,"bmpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-304"
 HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,1"
 HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"bmpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
 
 ; PNG Images
 HKCR,".png","",0x00000000,"pngfile"
@@ -222,6 +247,7 @@ HKCR,"pngfile","",0x00000000,"PNG Image"
 HKCR,"pngfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-305"
 HKCR,"pngfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
 HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"pngfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
 
 ; TIF Images
 HKCR,".tif","",0x00000000,"TIFImage.Document"
@@ -234,6 +260,7 @@ HKCR,"TIFImage.Document","",0x00000000,"TIF Image"
 HKCR,"TIFImage.Document","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-306"
 HKCR,"TIFImage.Document\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"TIFImage.Document\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"TIFImage.Document\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
 
 ; WMF Images
 HKCR,".wmf","",0x00000000,"wmffile"
@@ -385,7 +412,8 @@ HKCR,"sysfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154
 HKCR,".msstyles","",0x00000000,"msstylesfile"
 HKCR,"msstylesfile","",0x00000000,%MSSTYLESFILE%
 HKCR,"msstylesfile\DefaultIcon","","0x00020000","%SystemRoot%\system32\themeui.dll,-1"
-HKCR,"msstylesfile\shell\open\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:OpenMSTheme file:""%1"""
+HKCR,"msstylesfile\shell\open\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:OpenMSTheme /file:""%1"""
+HKCR,"msstylesfile\shell\Enable\command","",0x00000000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %SystemRoot%\system32\desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:""%1"""
 
 ; Theme Files
 HKCR,".theme","",0x00000000,"themefile"
@@ -725,6 +753,28 @@ CDAFILE="Piste de CD Audio"
 AVIFILE="Clip Vidéo"
 
 
+; LANG_ITALIAN SUBLANG_NEUTRAL
+[Strings.0010]
+CPLFILE_OPENWITH="Aprire con il Pannello di Controllo"
+
+CHMFILE="File della guida HTML compilato"
+XMLFILE="Documento XML"
+XSLFILE="Foglio di stile XSL"
+MSIPACK="Pacchetto di installazione di ReactOS"
+MSSTYLESFILE="File di stili visivi"
+THEMEFILE="File di tema visivo"
+WAVFILE="Audio wave"
+MIDFILE="Sequenza MIDI"
+CDAFILE="Traccia Audio CD"
+AVIFILE="Filmato video"
+MERGE="Unione"
+CONFIGURE="Configura"
+INSTALL="Installa"
+UNINSTALL="Rimuovi"
+REPAIR="Ripara"
+TEST="Prova"
+
+
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
 CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
@@ -759,6 +809,25 @@ TEST="Testează"
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 CPLFILE_OPENWITH="Открыть с помощью Панели управления"
+CHMFILE="Скомпилированный HTML-файл справки"
+XMLFILE="Документ XML"
+XSLFILE="XSL таблица стилей"
+MSIPACK="Пакет установщика ReactOS"
+MSSTYLESFILE="Файл стиля оформления"
+THEMEFILE="Файл темы оформления"
+WAVFILE="Файл аудио Wave"
+MIDFILE="Файл MIDI"
+CDAFILE="CD аудиодорожка"
+AVIFILE="Видеозапись"
+CSSFILE="Каскадная таблица стилей"
+SCFFILE="Команда проводника ReactOS"
+WMZFILE="Сжатый расширенный метафайл"
+MERGE="Слияние"
+CONFIGURE="Настроить"
+INSTALL="Установить"
+UNINSTALL="Удалить"
+REPAIR="Исправить"
+TEST="Тест"
 
 
 ; LANG_TURKISH SUBLANG_DEFAULT

@@ -1,0 +1,37 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+{
+1000, "Black Shade"
+}
+
+STRINGTABLE
+{
+2000, "Black Shade"
+}
+
+STRINGTABLE
+{
+3000, "Normal"
+3001, "Large Fonts"
+3002, "Extra Large Fonts"
+}
+
+STRINGTABLE
+{
+4000, "Normal"
+4001, "Large Fonts"
+4002, "Extra Large Fonts"
+}
+
+STRINGTABLE
+{
+5000, "Black Shade"
+5001, "Visual Style"
+5002, "ReactOS Foundation"
+5003, "Images by David Quintana <gigaherz@gmail.com>"
+5004, "Images released under CC-BY-SA 4.0"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Visual Style for ReactOS"
+}

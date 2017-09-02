@@ -1,45 +1,45 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "D&ale", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Pictograme", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Listă", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detalii", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "&Ordonare după", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Criteriu &automat", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Afișare"
+        POPUP "&Afișare", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "D&ale", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Pictograme", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Listă", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detailii", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "&Ordonare"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Ordonare după", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "După &nume", 0x30  /* column 0 */
-            MENUITEM "După tip&uri", 0x32  /* column 2 */
-            MENUITEM "După &mărimi", 0x31  /* ... */
-            MENUITEM "După &date", 0x33
-            MENUITEM SEPARATOR
-            MENUITEM "&Automată", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "Criteriu &automat", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Aranjea&ză în grilă", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Împ&rospătează", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Lipește", FCIDM_SHVIEW_INSERT
         MENUITEM "Lipește ca sc&urtătură", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
-        MENUITEM "&Proprietăți", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -65,17 +65,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "E&xplorează", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "Desc&hide", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează", FCIDM_SHVIEW_CUT
-        MENUITEM "&Copiază", FCIDM_SHVIEW_COPY
+        MENUITEM "&Decupează", IDM_CUT
+        MENUITEM "&Copiază", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Crează sc&urtătură", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "Șt&erge", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Redenumește", FCIDM_SHVIEW_RENAME
+        MENUITEM "Crează sc&urtătură", IDM_CREATELINK
+        MENUITEM "Șt&erge", IDM_DELETE
+        MENUITEM "&Redenumește", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Proprietăți", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Proprietăți", IDM_PROPERTIES
     END
 END
 
@@ -248,7 +246,7 @@ BEGIN
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Tip fișier:", 14004, 8, 35, 50, 10
     CONTROL "Fișier", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
-    LTEXT "Se deschide cu:", 14006, 8, 53, 50, 10
+    LTEXT "Va fi deschis cu:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "Spe&cificare…", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
@@ -353,7 +351,7 @@ END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Execută ca"
+CAPTION "Executare ca"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Ce cont de utilizator este folosit pentru a executa?", -1, 10, 20, 220, 20
@@ -387,7 +385,7 @@ END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Deschide cu"
+CAPTION "Deschidere cu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
@@ -434,7 +432,7 @@ BEGIN
     PUSHBUTTON "Apli&că pentru toate", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "Restabilește t&oate", 14002, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Opțiuni avansate:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
     PUSHBUTTON "&Restabilește opțiunile implicite",  14004, 130, 215, 126, 14, WS_TABSTOP
 END
 
@@ -448,7 +446,7 @@ BEGIN
     PUSHBUTTON "N&ou…", 14001, 140, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Elimină", 14002, 200, 110, 50, 14, WS_TABSTOP
     GROUPBOX "Detalii pentru extensia „%s”", 14003, 7, 130, 249, 70
-    LTEXT "Se deschide cu:", -1, 22, 140, 50, 10
+    LTEXT "Va fi deschis cu:", -1, 22, 140, 50, 10
     //ICON
     LTEXT "Nume aplicație", 14005, 100, 140, 75, 10
     PUSHBUTTON "Spe&cificare…", 14006, 190, 140, 50, 14, WS_TABSTOP
@@ -488,15 +486,15 @@ BEGIN
     PUSHBUTTON "A&nulează", IDCANCEL, 95, 39, 50, 14
 END
 
-IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
+IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Deconectare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Sigur doriți să vă deconectați?", -1, 49, 12, 137, 23
-    DEFPUSHBUTTON "&Deconectează", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 123, 40, 60, 14
+    ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "Sigur doriți să vă deconectați?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "&Deconectează", IDOK, 47, 38, 47, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -605,18 +603,18 @@ BEGIN
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
-IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
+IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Schimbare pictogramă"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Nume fișier:", -1, 7, 14, 208, 10
-    PUSHBUTTON "Spe&cificare…", IDC_BUTTON_PATH, 148, 24, 67, 14
-    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Pictograme:", -1, 7, 47, 208, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-    DEFPUSHBUTTON "Con&firmă", IDOK, 107, 181, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 167, 181, 50, 14
+    LTEXT "Caută pictograme în fișierul:", -1, 7, 7, 179, 10
+    PUSHBUTTON "Spe&cificare…", IDC_BUTTON_PATH, 135, 17, 50, 14
+    EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    LTEXT "Selectați o pictogramă din lista de mai jos:", -1, 7, 36, 179, 10
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "Con&firmă", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -636,24 +634,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Fișier"
-    IDS_SHV_COLUMN2 "Mărime"
-    IDS_SHV_COLUMN3 "Tip"
-    IDS_SHV_COLUMN4 "Modificat"
-    IDS_SHV_COLUMN5 "Atribute"
-    IDS_SHV_COLUMN6 "Capacitate"
-    IDS_SHV_COLUMN7 "Disponibil"
-    IDS_SHV_COLUMN8 "Nume"
-    IDS_SHV_COLUMN9 "Comentarii"
-    IDS_SHV_COLUMN10 "Posesor"
-    IDS_SHV_COLUMN11 "Grup"
-    IDS_SHV_COLUMN12 "Nume fișier"
-    IDS_SHV_COLUMN13 "Categorie"
+    IDS_SHV_COLUMN_NAME "Nume"
+    IDS_SHV_COLUMN_SIZE "Dimensiune"
+    IDS_SHV_COLUMN_TYPE "Tip obiect"
+    IDS_SHV_COLUMN_MODIFIED "Dată modificare"
+    IDS_SHV_COLUMN_ATTRIBUTES "Atribute"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Capacitate"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Disponibil"
+    IDS_SHV_COLUMN_OWNER "Posesor"
+    IDS_SHV_COLUMN_GROUP "Grup"
+    IDS_SHV_COLUMN_FILENAME "Nume fișier"
+    IDS_SHV_COLUMN_CATEGORY "Categorie"
     IDS_SHV_COLUMN_DELFROM "Locație originală"
     IDS_SHV_COLUMN_DELDATE "Data ștergerii"
     IDS_SHV_COLUMN_FONTTYPE "Tip font"
     IDS_SHV_COLUMN_WORKGROUP "Grup de lucru"
-    IDS_SHV_NETWORKLOCATION "Locație rețea"
+    IDS_SHV_COLUMN_NETLOCATION "Locație rețea"
     IDS_SHV_COLUMN_DOCUMENTS "Documente"
     IDS_SHV_COLUMN_STATUS "Stare"
     IDS_SHV_COLUMN_COMMENTS "Comentarii"
@@ -666,6 +662,12 @@ BEGIN
     IDS_RECYCLEBIN_FOLDER_NAME "Coșul de gunoi"
     IDS_CONTROLPANEL "Panoul de control"
     IDS_ADMINISTRATIVETOOLS "Instrumente administrative"
+
+    /* special folders descriptions */
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configurarea administrativă a calculatorului."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Particularizarea afișării de fișiere și dosare și definirea asocierilor tipurilor de fișiere."
+    IDS_FONTS_DESCRIPTION "Adăugarea, modificarea, și gestiunea fonturilor din calculator."
+    IDS_PRINTERS_DESCRIPTION "Prezentarea imprimantelor și faxurilor, precum și asistență la instalarea unora noi."
 
     /* context menus */
     IDS_VIEW_LARGE "D&ale"
@@ -684,8 +686,8 @@ BEGIN
     IDS_RENAME "Rede&numește"
     IDS_PASTE "&Lipește"
 
-    IDS_CREATEFOLDER_DENIED "Nu s-a putut crea dosar nou: Acces respins."
-    IDS_CREATEFOLDER_CAPTION "Eroare la crearea unui nou dosar"
+    IDS_CREATEFOLDER_DENIED "Nu poate fi creat un dosar cu numele „%1”"
+    IDS_CREATEFOLDER_CAPTION "Nu poate fi creat dosar"
     IDS_DELETEITEM_CAPTION "Confirmarea ștergerii fișierului"
     IDS_DELETEFOLDER_CAPTION "Confirmarea ștergerii dosarului"
     IDS_DELETEITEM_TEXT "Sigur doriți să ștergeți „%1”?"
@@ -699,12 +701,12 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Confirmarea înlocuirii fișierului"
     IDS_OVERWRITEFOLDER_TEXT "Acest dosar deja conține un sub-dosar cu numele „%1”.\n\nDacă fișierele din dosarul de destinație au același nume ca cele din\ndosarul selectat, ele vor fi înlocuite. Sigur doriți să copiați sau\nsă mutați dosarul?"
 
-    IDS_FILEOOP_COPYING "Se copie…"
-    IDS_FILEOOP_MOVING "Se mută…"
-    IDS_FILEOOP_DELETING "Se șterge…"
+    IDS_FILEOOP_COPYING "În curs de copiere…"
+    IDS_FILEOOP_MOVING "În curs de mutare…"
+    IDS_FILEOOP_DELETING "În curs de eliminare…"
     IDS_FILEOOP_FROM_TO "Din %1 în %2"
     IDS_FILEOOP_FROM "Din %1"
-    IDS_FILEOOP_PREFLIGHT "Se verifică…"
+    IDS_FILEOOP_PREFLIGHT "În curs de verificare…"
 
     /* message box strings */
     IDS_RESTART_TITLE "Repornire"
@@ -713,9 +715,9 @@ BEGIN
     IDS_SHUTDOWN_PROMPT "Doriți să închideți calculatorul?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Nu se poate deschide Executare fișier (eroare internă)"
-    IDS_RUNDLG_BROWSE_ERROR "Nu se poate deschide fereastra (de) Răsfoire (eroare internă)"
-    IDS_RUNDLG_BROWSE_CAPTION "Răsfoire fișiere"
+    IDS_RUNDLG_ERROR "„Executare fișier” nu a putut fi deschis (eroare internă)"
+    IDS_RUNDLG_BROWSE_ERROR "„Specificare fișiere” nu a putut fi deschisă (eroare internă)"
+    IDS_RUNDLG_BROWSE_CAPTION "Specificare fișiere"
     IDS_RUNDLG_BROWSE_FILTER "Fișiere executabile (*.exe)\0*.exe\0Orice fișier (*.*)\0*.*\0"
 
     /* shell folder path default values */
@@ -758,7 +760,7 @@ BEGIN
     IDS_FS_UNKNOWN "Nespecificat"
 
     /* Open With */
-    IDS_OPEN_WITH "Deschide cu"
+    IDS_OPEN_WITH "Deschidere cu…"
     IDS_OPEN_WITH_CHOOSE "Alegere program…"
     IDS_OPEN_WITH_RECOMMENDED "Programe recomandate:"
     IDS_OPEN_WITH_OTHER "Alte programe:"
@@ -768,7 +770,7 @@ BEGIN
     FCIDM_SHVIEW_NEW "&Crează"
     FCIDM_SHVIEW_NEWFOLDER "&Dosar"
     FCIDM_SHVIEW_NEWLINK "Sc&urtătură"
-    IDS_FOLDER_OPTIONS "Opțiuni dosar"
+    IDS_FOLDER_OPTIONS "Opțiuni dosare"
     IDS_RECYCLEBIN_LOCATION "Locația pentru Coșul de gunoi"
     IDS_RECYCLEBIN_DISKSPACE "Spațiul disponibil"
     IDS_EMPTY_BITBUCKET "Golește Coșul de gunoi"
@@ -796,6 +798,7 @@ BEGIN
     IDS_SCR_FILE "Animație regim de inactivitate"
     IDS_SYS_FILE "Fișier de sistem"
     IDS_VXD_FILE "Pilot dispozitiv virtual"
+    IDS_ANY_FILE "Fișier-%s"
 
     IDS_OPEN_VERB "Deschide"
     IDS_EXPLORE_VERB "Explorează"
@@ -830,4 +833,24 @@ BEGIN
     IDS_MENU_EMPTY "(Gol)"
     IDS_OBJECTS "%d Obiecte"
     IDS_OBJECTS_SELECTED "%d Obiecte selectate"
+
+    IDS_ADVANCED_FOLDER "Fișiere și Dosare"
+    IDS_ADVANCED_NET_CRAWLER "Caută automat în rețea dosare și imprimante"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Afișează dimensiunea fișierulor la indicii de dosar"
+    IDS_ADVANCED_FRIENDLY_TREE "Permite afișare simplă de dosare pentru lista dosarelor în Explorator"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Afișează conținutul dosarelor de sistem"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Afișează cale completă în bara de adrese"
+    IDS_ADVANCED_SHOW_FULL_PATH "Afișează cale completă în bara de titlu"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Nu prememora miniaturi"
+    IDS_ADVANCED_HIDDEN "Fișiere și dosare ascunse"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Nu afișa fișierele și dosarele ascunse"
+    IDS_ADVANCED_SHOW_HIDDEN "Afișează fișierele și dosarele ascunse"
+    IDS_ADVANCED_HIDE_FILE_EXT "Ascunde extensiile pentru tipurile cunoscute de fișiere"
+    IDS_ADVANCED_SUPER_HIDDEN "Ascunde fișierele protejate ale sistemului de operare (este recomandat)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Lansează ferestrele de dosar în procese separate"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Păstrează particularitățile fiecărei afișări de dosar"
+    IDS_ADVANCED_PERSIST_BROWSERS "Redeschide la autentificare dosarele precedente"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Afișează Panoul de control în Calculatorul meu"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Afișează în culori fișierele NTFS criptate sau comprimate"
+    IDS_ADVANCED_SHOW_INFO_TIP "Permite descriere prin indicii pentru dosare și elemente de birou"
 END

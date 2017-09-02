@@ -1,0 +1,57 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Mit dem AT Befehl können Befehle und Programme zu einem vorbestimmten\n\
+Termin gestartet werden. Der Zeitplandienst muss gestartet sein, um den\n\
+Befehl AT zu verwenden.\n\n\
+AT [\\\\Computername] [ [Kennung] [/DELETE] | /DELETE [/YES]]\n\
+AT [\\\\Computername] Zeit [/INTERACTIVE]\n\
+    [ /EVERY:Datum[,...] | /NEXT:Datum[,...]] ""Befehl""\n\n\
+\\\\Computername     Gibt einen Remotecomputer an. Ohne diesen Parameter werden\n\
+                   die Befehle auf dem lokalen Computer ausgeführt.\n\
+Kennung            Eine Identifikationsnummer, die dem geplanten Befehl\n\
+                   zugeteilt wird.\n\
+/DELETE            Löscht geplante Befehle. Ohne Kennung werden alle geplanten\n\
+                   Befehle auf dem Computer gelöscht.\n\
+/YES               In Verbindung mit /DELETE werden die geplanten Befehle ohne\n\
+                   weitere Bestätiging gelöscht.\n\
+Zeit               Gibt die Zeit an, zu der ein Befehl ausgeführt werden soll.\n\
+/INTERACTIVE       Ermöglicht dem Aufrag, Eingaben von dem Benutzer\n\
+                   anzunehmen, der angemeldet ist, wenn der Auftrag ausgeführt\n\
+                   wird.\n\
+/EVERY:Datum[,...] Führt den Befehl zu jedem der angegebenen Tage der Woche\n\
+                   oder des Monats aus. Ohne Angabe eines Datums wird der\n\
+                   aktuelle Tag des Monats angenommen.\n\
+/NEXT:Datum[,...]  Führt den Befehl am nächsten angegebenen Tage der Woche\n\
+                   oder des Monats (z.B. nächsten Montag) aus. Ohne Angabe\n\
+                   eines Datums wird der aktuelle Tag des Monats angenommen.\n\
+""Befehl""           Ist der auszuführende Befehl oder das Stapelprogramm.\n"
+
+    IDS_DELETE_ALL "Dieser Vorgang wird alle geplanten Aufträge löschen.\n"
+    IDS_NEW_JOB "Neuer Auftrag hinzugefügt. Kennung = %lu\n"
+    IDS_JOBS_LIST "Statuskenn. Tag                     Zeit          Befehlszeile\n"
+    IDS_NO_ENTRIES "Es sind keine Einträge in der Liste.\n"
+
+    IDS_CONFIRM_QUESTION "Möchten Sie diesen Vorgang fortsetzen? (J/N) [N]: "
+    IDS_CONFIRM_INVALID  "\nDies ist eine ungültige Antwort.\n"
+    IDS_CONFIRM_YES "J"
+    IDS_CONFIRM_NO "N"
+
+    IDS_TODAY "Heute"
+    IDS_TOMORROW "Morgen"
+    IDS_EVERY "Jeden"
+    IDS_NEXT "Kommenden"
+
+    IDS_YES "Ja"
+    IDS_NO "Nein"
+    IDS_ERROR "ERROR"
+    IDS_OK "OK"
+
+    IDS_TASKID      "Taskkennung:   %lu\n"
+    IDS_STATUS      "Status:        %s\n"
+    IDS_SCHEDULE    "Zeitplan:      %s\n"
+    IDS_TIME        "Zeit:          %s\n"
+    IDS_INTERACTIVE "Interaktiv:    %s\n"
+    IDS_COMMAND     "Befehl:        %s\n"
+END

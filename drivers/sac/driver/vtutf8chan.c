@@ -887,7 +887,7 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
         Overflow = TRUE;
     }
 
-    /* Everything is done, set the positition one last time */
+    /* Everything is done, set the position one last time */
     Position[1] = Channel->CursorRow;
     Position[0] = Channel->CursorCol;
     Status = VTUTF8ChannelAnsiDispatch(Channel,

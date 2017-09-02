@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -381,7 +381,7 @@ AcpiNsDumpOneObject (
         case ACPI_TYPE_STRING:
 
             AcpiOsPrintf ("Len %.2X ", ObjDesc->String.Length);
-            AcpiUtPrintString (ObjDesc->String.Pointer, 32);
+            AcpiUtPrintString (ObjDesc->String.Pointer, 80);
             AcpiOsPrintf ("\n");
             break;
 

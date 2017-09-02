@@ -22,21 +22,21 @@ WSAttemptAutodialAddr(IN CONST SOCKADDR FAR *Name,
 {
     PSOCKADDR_IN Ip = (PSOCKADDR_IN)Name;
     PSOCKADDR_NB NetBios = (PSOCKADDR_NB)Name;
-    AUTODIAL_ADDR AutodialAdddress;
+    AUTODIAL_ADDR AutodialAddress;
 
     /* Check the family type */
     switch (Name->sa_family)
     {
         case AF_INET:
             /* Normal IPv4, set the Autodial Address Data */
-            AutodialAdddress.Family = AutoDialIp;
-            AutodialAdddress.Ip4Address = Ip->sin_addr;
+            AutodialAddress.Family = AutoDialIp;
+            AutodialAddress.Ip4Address = Ip->sin_addr;
             break;
 
         case AF_NETBIOS:
             /* NetBIOS, set the Autodial Address Data*/
-            AutodialAdddress.Family = AutoDialNetBios;
-            RtlCopyMemory(&AutodialAdddress.NetBiosAddress,
+            AutodialAddress.Family = AutoDialNetBios;
+            RtlCopyMemory(&AutodialAddress.NetBiosAddress,
                           NetBios->snb_name,
                           NETBIOS_NAME_LENGTH);
             break;
@@ -47,7 +47,7 @@ WSAttemptAutodialAddr(IN CONST SOCKADDR FAR *Name,
     }
 
     /* Call the public routine */
-    return AcsHlpAttemptConnection(&AutodialAdddress);
+    return AcsHlpAttemptConnection(&AutodialAddress);
 }
 
 /*
@@ -57,7 +57,7 @@ BOOL
 WINAPI
 WSAttemptAutodialName(IN CONST LPWSAQUERYSETW Restrictions)
 {
-    AUTODIAL_ADDR AutodialAdddress;
+    AUTODIAL_ADDR AutodialAddress;
     CHAR AnsiIp[17];
     LPGUID Guid = Restrictions->lpServiceClassId;
 
@@ -68,23 +68,23 @@ WSAttemptAutodialName(IN CONST LPWSAQUERYSETW Restrictions)
     if (!memcmp(Guid, &HostnameGuid, sizeof(GUID)))
     {
         /* It is. Set up the Autodial Address Data */
-        AutodialAdddress.Family = AutoDialIpHost;
+        AutodialAddress.Family = AutoDialIpHost;
         WideCharToMultiByte(CP_ACP,
                             0,
                             Restrictions->lpszServiceInstanceName,
                             -1,
-                            AutodialAdddress.HostName,
+                            AutodialAddress.HostName,
                             INTERNET_MAX_PATH_LENGTH - 1,
                             0,
                             0);
 
         /* Call the public routine */
-        return AcsHlpAttemptConnection(&AutodialAdddress);
+        return AcsHlpAttemptConnection(&AutodialAddress);
     }
     else if (!memcmp(Guid, &AddressGuid, sizeof(GUID)))
     {
         /* It's actually the IP String GUID */
-        AutodialAdddress.Family = AutoDialIp;
+        AutodialAddress.Family = AutoDialIp;
 
         /* Convert the IP String to ANSI and then convert it to IP */
         WideCharToMultiByte(CP_ACP,
@@ -96,13 +96,13 @@ WSAttemptAutodialName(IN CONST LPWSAQUERYSETW Restrictions)
                             0,
                             0);
         _strlwr(AnsiIp);
-        AutodialAdddress.Ip4Address.S_un.S_addr = inet_addr(AnsiIp);
+        AutodialAddress.Ip4Address.S_un.S_addr = inet_addr(AnsiIp);
 
         /* Make sure the IP is valid */
-        if (AutodialAdddress.Ip4Address.S_un.S_addr == -1) return FALSE;
+        if (AutodialAddress.Ip4Address.S_un.S_addr == -1) return FALSE;
 
         /* Call the public routine */
-        return AcsHlpAttemptConnection(&AutodialAdddress);
+        return AcsHlpAttemptConnection(&AutodialAddress);
     }
     else
     {
@@ -119,18 +119,18 @@ WINAPI
 WSNoteSuccessfulHostentLookup(IN CONST CHAR FAR *Name,
                               IN CONST ULONG Address)
 {
-    AUTODIAL_ADDR AutodialAdddress;
+    AUTODIAL_ADDR AutodialAddress;
     AUTODIAL_CONN AutodialConnection;
 
     /* Make sure there actually is a name */
     if (!(Name) || !strlen(Name)) return;
 
     /* Setup the Address */
-    AutodialAdddress.Family = AutoDialIpHost;
-    strcpy(AutodialAdddress.HostName, Name);
+    AutodialAddress.Family = AutoDialIpHost;
+    strcpy(AutodialAddress.HostName, Name);
 
     /* Setup the new connection */
     AutodialConnection.Family = ConnectionIp;
     AutodialConnection.Ip4Address = Address;
-    AcsHlpNoteNewConnection(&AutodialAdddress, &AutodialConnection);
+    AcsHlpNoteNewConnection(&AutodialAddress, &AutodialConnection);
 }

@@ -291,7 +291,7 @@ USBSTOR_ScanConfigurationDescriptor(
                  //
                  // interrupt endpoint type
                  //
-                 UNIMPLEMENTED
+                 UNIMPLEMENTED;
             }
         }
 
@@ -414,7 +414,7 @@ USBSTOR_SelectConfigurationAndInterface(
         //
         DPRINT1("USBSTOR_SelectConfiguration failed to set interface %x\n", Status);
         FreeItem(InterfaceList);
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, 0);
         return Status;
     }
 
@@ -422,14 +422,14 @@ USBSTOR_SelectConfigurationAndInterface(
     // backup interface information
     //
     DeviceExtension->InterfaceInformation = (PUSBD_INTERFACE_INFORMATION)AllocateItem(NonPagedPool, Urb->UrbSelectConfiguration.Interface.Length);
-    if (!NT_SUCCESS(Status))
+    if (!DeviceExtension->InterfaceInformation)
     {
         //
         // failed to allocate interface information structure
         //
         FreeItem(InterfaceList);
-        ExFreePool(Urb);
-        return Status;
+        ExFreePoolWithTag(Urb, 0);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     //
@@ -458,7 +458,7 @@ USBSTOR_SelectConfigurationAndInterface(
     Status = USBSTOR_SyncUrbRequest(DeviceExtension->LowerDeviceObject, Urb);
 
     //
-    // did it succeeed
+    // did it succeed
     //
     if (NT_SUCCESS(Status))
     {
@@ -473,7 +473,7 @@ USBSTOR_SelectConfigurationAndInterface(
     // free interface list & urb
     //
     FreeItem(InterfaceList);
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, 0);
 
     //
     // done

@@ -775,7 +775,7 @@ NdisOpenAdapter(
  *     MediumArray            = Pointer to an array of NDIS_MEDIUMs called can support
  *     MediumArraySize        = Number of elements in MediumArray
  *     NdisProtocolHandle     = Handle returned by NdisRegisterProtocol
- *     ProtocolBindingContext = Pointer to caller suplied context area
+ *     ProtocolBindingContext = Pointer to caller supplied context area
  *     AdapterName            = Pointer to buffer with name of adapter
  *     OpenOptions            = Bitmask with flags passed to next-lower driver
  *     AddressingInformation  = Optional pointer to buffer with NIC specific information

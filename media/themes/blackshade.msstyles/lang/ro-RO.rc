@@ -1,0 +1,38 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+1000, "Black Shade"
+}
+
+STRINGTABLE
+{
+2000, "Black Shade"
+}
+
+STRINGTABLE
+{
+3000, "Normal"
+3001, "Mare"
+3002, "Foarte mare"
+}
+
+STRINGTABLE
+{
+4000, "Normal"
+4001, "Mare"
+4002, "Foarte mare"
+}
+
+STRINGTABLE
+{
+5000, "Black Shade"
+5001, "Stil vizual"
+5002, "Fundația ReactOS"
+5003, "Imagini de David Quintana <gigaherz@gmail.com>"
+5004, "Imagini publicate sub CC-BY-SA 4.0"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Stil vizual pentru ReactOS"
+}

@@ -129,7 +129,7 @@ HandleDataIntersection(
 
     for(Index = 0; Index < MultipleItem->Count; Index++)
     {
-        // Call miniport's properitary handler
+        // Call miniport's proprietary handler
         PC_ASSERT(Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRangesCount);
         PC_ASSERT(Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[0]);
         Status = SubDevice->DataRangeIntersection(Pin->PinId, DataRange, (PKSDATARANGE)Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[0],
@@ -295,11 +295,11 @@ PinPropertyHandler(
             Status = HandlePhysicalConnection(&Irp->IoStatus, Request, IoStack->Parameters.DeviceIoControl.InputBufferLength, Data, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Descriptor);
             break;
         case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             Status = STATUS_NOT_IMPLEMENTED;
             break;
         default:
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             Status = STATUS_UNSUCCESSFUL;
     }
 

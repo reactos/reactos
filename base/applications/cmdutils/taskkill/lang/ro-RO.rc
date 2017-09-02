@@ -14,8 +14,8 @@ STRINGTABLE
     STRING_CLOSE_PROC_SRCH, "Către fereastra procesului «%1» cu PID %2!u! a fost emis un mesaj de închidere.\n"
     STRING_TERM_PID_SEARCH, "Procesul cu PID %1!u! a fost oprit în mod forțat.\n"
     STRING_TERM_PROC_SEARCH, "Procesul «%1» cu PID %2!u! a fost oprit în mod forțat.\n"
-    STRING_SEARCH_FAILED, "Eroare: Nu se poate găsi procesul «%1».\n"
-    STRING_ENUM_FAILED, "Eroare: Nu se poate enumera lista de procese.\n"
+    STRING_SEARCH_FAILED, "Eroare: Procesul «%1» nu poate fi găsit.\n"
+    STRING_ENUM_FAILED, "Eroare: Procesele nu au putut fi enumerate.\n"
     STRING_TERMINATE_FAILED, "Eroare: Procesul «%1» nu poate fi oprit.\n"
     STRING_SELF_TERMINATION, "Eroare: Auto-terminarea nu este permisă.\n"
 }

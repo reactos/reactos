@@ -6,10 +6,10 @@ CAPTION "Impostazioni"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Scegliere i servizi desiderati per ognuna delle lingue nella lista.\nUsare Aggiungi e Rimuovi per modificare la lista.", -1, 9, 6, 238, 17
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 28, 237, 109
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 28, 237, 109
     PUSHBUTTON "&Predefinito", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Aggiungi...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Rimuovi...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Rimuovi", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Proprietà...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Preferenze", -1, 7, 185, 240, 36
     PUSHBUTTON "&Impostazioni tasti...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -160,6 +160,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi fonetica"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Typewriter"
     IDS_DUTCH_LAYOUT "Olandese"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estone"
     IDS_FAEROESE_LAYOUT "Faeroese"
     IDS_FARSI_LAYOUT "Farsi"

@@ -9,9 +9,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserPainting);
 
-#define RDW_CLIPCHILDREN  4096
-#define RDW_NOUPDATEDIRTY 32768
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /**
@@ -178,7 +175,7 @@ IntSendSyncPaint(PWND Wnd, ULONG Flags)
    }
 
    // Send to all the children if this is the desktop window.
-   if ( Wnd == UserGetDesktopWindow() )
+   if (UserIsDesktopWindow(Wnd))
    {
       if ( Flags & RDW_ALLCHILDREN ||
           ( !(Flags & RDW_NOCHILDREN) && Wnd->style & WS_CLIPCHILDREN))
@@ -369,6 +366,26 @@ IntSendNCPaint(PWND pWnd, HRGN hRgn)
 VOID FASTCALL
 IntSendChildNCPaint(PWND pWnd)
 {
+   PWND Child;
+   HWND *List, *phWnd;
+
+   List = IntWinListChildren(UserGetDesktopWindow());
+   if ( List )
+   {
+      for (phWnd = List; *phWnd; ++phWnd)
+      {
+          Child = ValidateHwndNoErr(*phWnd);
+          if ( Child && Child->hrgnUpdate == NULL && Child->state & WNDS_SENDNCPAINT)
+          {
+             USER_REFERENCE_ENTRY Ref;
+             UserRefObjectCo(Child, &Ref);
+             IntSendNCPaint(Child, HRGN_WINDOW);
+             UserDerefObjectCo(Child);
+          }
+      }
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+   }
+/* FIXME : Use snap shot mode until window death is fixed while surfing menus! Fix CORE-12085 and CORE-12071.
    pWnd = pWnd->spwndChild;
    while(pWnd)
    {
@@ -380,7 +397,7 @@ IntSendChildNCPaint(PWND pWnd)
          UserDerefObjectCo(pWnd);
       }
       pWnd = pWnd->spwndNext;
-   }
+   }*/
 }
 
 /*
@@ -550,9 +567,9 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    * Update child windows.
    */
 
-   if (!(Flags & RDW_NOCHILDREN) && 
-         Flags & RDW_ALLCHILDREN &&
-         Wnd != UserGetDesktopWindow() )
+   if (!(Flags & RDW_NOCHILDREN)  && 
+        (Flags & RDW_ALLCHILDREN) &&
+        !UserIsDesktopWindow(Wnd))
    {
       PWND Child;
 
@@ -1094,7 +1111,7 @@ UpdateThreadWindows(PWND pWnd, PTHREADINFO pti, HRGN hRgn)
       }
       else
       {
-          if (IsThreadSuspended(pwndTemp->head.pti))
+          if (IsThreadSuspended(pwndTemp->head.pti) || MsqIsHung(pwndTemp->head.pti))
           {
              UpdateTheadChildren(pwndTemp, hRgn);
           }
@@ -1160,6 +1177,16 @@ IntFindWindowToRepaint(PWND Window, PTHREADINFO Thread)
    return Window;
 }
 
+//
+// Internal painting of windows.
+//
+VOID FASTCALL
+IntPaintWindow( PWND Window )
+{
+   // Handle normal painting.
+   co_IntPaintWindows( Window, RDW_NOCHILDREN, FALSE );
+}
+
 BOOL FASTCALL
 IntGetPaintMessage(
    PWND Window,
@@ -1212,7 +1239,7 @@ IntGetPaintMessage(
    PaintWnd->state &= ~WNDS_UPDATEDIRTY;
 
    Window = PaintWnd;
-   while( Window && Window != UserGetDesktopWindow())
+   while (Window && !UserIsDesktopWindow(Window))
    {
       // Role back and check for clip children, do not set if any.
       if (Window->spwndParent && !(Window->spwndParent->style & WS_CLIPCHILDREN))
@@ -1528,6 +1555,50 @@ IntEndPaint(PWND Wnd, PPAINTSTRUCT Ps)
    return TRUE;
 }
 
+BOOL FASTCALL
+IntFillWindow(PWND pWndParent,
+              PWND pWnd,
+              HDC  hDC,
+              HBRUSH hBrush)
+{
+   RECT Rect, Rect1;
+   INT type;
+
+   if (!pWndParent)
+      pWndParent = pWnd;
+
+   type = GdiGetClipBox(hDC, &Rect);
+
+   IntGetClientRect(pWnd, &Rect1);
+
+   if ( type != NULLREGION && // Clip box is not empty,
+       (!(pWnd->pcls->style & CS_PARENTDC) || // not parent dc or
+         RECTL_bIntersectRect( &Rect, &Rect, &Rect1) ) ) // intersecting.
+   {
+      POINT ppt;
+      INT x = 0, y = 0;
+
+      if (!UserIsDesktopWindow(pWndParent))
+      {
+          x = pWndParent->rcClient.left - pWnd->rcClient.left;
+          y = pWndParent->rcClient.top  - pWnd->rcClient.top;
+      }
+
+      GreSetBrushOrg(hDC, x, y, &ppt);
+
+      if ( hBrush < (HBRUSH)CTLCOLOR_MAX )
+          hBrush = GetControlColor( pWndParent, pWnd, hDC, HandleToUlong(hBrush) + WM_CTLCOLORMSGBOX);
+
+      FillRect(hDC, &Rect, hBrush);
+
+      GreSetBrushOrg(hDC, ppt.x, ppt.y, NULL);
+
+      return TRUE;
+   }
+   else
+      return FALSE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -1629,6 +1700,50 @@ CLEANUP:
 }
 
 /*
+ * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
+ */
+/*
+ * @implemented
+ */
+BOOL APIENTRY
+NtUserFillWindow(HWND hWndParent,
+                 HWND hWnd,
+                 HDC  hDC,
+                 HBRUSH hBrush)
+{
+   BOOL ret = FALSE;
+   PWND pWnd, pWndParent = NULL;
+   USER_REFERENCE_ENTRY Ref;
+
+   TRACE("Enter NtUserFillWindow\n");
+   UserEnterExclusive();
+
+   if (!hDC)
+   {
+      goto Exit;
+   }
+
+   if (!(pWnd = UserGetWindowObject(hWnd)))
+   {
+      goto Exit;
+   }
+
+   if (hWndParent && !(pWndParent = UserGetWindowObject(hWndParent)))
+   {
+      goto Exit;
+   }
+
+   UserRefObjectCo(pWnd, &Ref);
+   ret = IntFillWindow( pWndParent, pWnd, hDC, hBrush );
+   UserDerefObjectCo(pWnd);
+
+Exit:
+   TRACE("Leave NtUserFillWindow, ret=%i\n",ret);
+   UserLeave();
+   return ret;
+}
+
+/*
  * @implemented
  */
 BOOL APIENTRY
@@ -1710,7 +1825,7 @@ co_UserGetUpdateRgn(PWND Window, HRGN hRgn, BOOL bErase)
 
       RegionType = SIMPLEREGION;
 
-      if (Window != UserGetDesktopWindow()) // Window->fnid == FNID_DESKTOP
+      if (!UserIsDesktopWindow(Window))
       {
          RECTL_vOffsetRect(&Rect,
                           -Window->rcClient.left,
@@ -1731,7 +1846,7 @@ co_UserGetUpdateRgn(PWND Window, HRGN hRgn, BOOL bErase)
          return RegionType;
       }
 
-      if (Window != UserGetDesktopWindow()) // Window->fnid == FNID_DESKTOP
+      if (!UserIsDesktopWindow(Window))
       {
          NtGdiOffsetRgn(hRgn,
                        -Window->rcClient.left,
@@ -1781,7 +1896,7 @@ co_UserGetUpdateRect(PWND Window, PRECT pRect, BOOL bErase)
 
       if (IntIntersectWithParents(Window, pRect))
       {
-         if (Window != UserGetDesktopWindow()) // Window->fnid == FNID_DESKTOP
+         if (!UserIsDesktopWindow(Window))
          {
             RECTL_vOffsetRect(pRect,
                               -Window->rcClient.left,
@@ -1998,7 +2113,7 @@ UserDrawCaptionText(
    TRACE("UserDrawCaptionText: %wZ\n", Text);
 
    nclm.cbSize = sizeof(nclm);
-   if(!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &nclm, 0))
+   if (!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, nclm.cbSize, &nclm, 0))
    {
       ERR("UserSystemParametersInfo() failed!\n");
       return FALSE;
@@ -2358,6 +2473,81 @@ NtUserDrawCaption(HWND hWnd,
    return NtUserDrawCaptionTemp(hWnd, hDC, lpRc, 0, 0, NULL, uFlags);
 }
 
+INT FASTCALL
+co_UserExcludeUpdateRgn(HDC hDC, PWND Window)
+{
+    POINT pt;
+    RECT rc;
+
+    if (Window->hrgnUpdate)
+    {
+        if (Window->hrgnUpdate == HRGN_WINDOW)
+        {
+            return NtGdiIntersectClipRect(hDC, 0, 0, 0, 0);
+        }
+        else
+        {
+            INT ret = ERROR;
+            HRGN hrgn = NtGdiCreateRectRgn(0,0,0,0);
+
+            if ( hrgn && GreGetDCPoint( hDC, GdiGetDCOrg, &pt) )
+            {
+                if ( NtGdiGetRandomRgn( hDC, hrgn, CLIPRGN) == NULLREGION )
+                {
+                    NtGdiOffsetRgn(hrgn, pt.x, pt.y);
+                }
+                else
+                {
+                    HRGN hrgnScreen;
+                    PMONITOR pm = UserGetPrimaryMonitor();
+                    hrgnScreen = NtGdiCreateRectRgn(0,0,0,0);
+                    NtGdiCombineRgn(hrgnScreen, hrgnScreen, pm->hrgnMonitor, RGN_OR);
+
+                    NtGdiCombineRgn(hrgn, hrgnScreen, NULL, RGN_COPY);
+
+                    GreDeleteObject(hrgnScreen);
+                }
+
+                NtGdiCombineRgn(hrgn, hrgn, Window->hrgnUpdate, RGN_DIFF);
+
+                NtGdiOffsetRgn(hrgn, -pt.x, -pt.y);
+
+                ret = NtGdiExtSelectClipRgn(hDC, hrgn, RGN_COPY);
+
+                GreDeleteObject(hrgn);
+            }
+            return ret;
+        }
+    }
+    else
+    {
+        return GdiGetClipBox( hDC, &rc);
+    }
+}
+
+INT
+APIENTRY
+NtUserExcludeUpdateRgn(
+    HDC hDC,
+    HWND hWnd)
+{
+    INT ret = ERROR;
+    PWND pWnd;
+
+    TRACE("Enter NtUserExcludeUpdateRgn\n");
+    UserEnterExclusive();
+
+    pWnd = UserGetWindowObject(hWnd);
+
+    if (hDC && pWnd)
+        ret = co_UserExcludeUpdateRgn(hDC, pWnd);
+
+    TRACE("Leave NtUserExcludeUpdateRgn, ret=%i\n", ret);
+
+    UserLeave();
+    return ret;
+}
+
 BOOL
 APIENTRY
 NtUserInvalidateRect(
@@ -2403,9 +2593,8 @@ NtUserPrintWindow(
 
     if (hwnd)
     {
-       if (!(Window = UserGetWindowObject(hwnd)) || // FIXME:
-             Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-             Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+       if (!(Window = UserGetWindowObject(hwnd)) ||
+            UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
        {
           goto Exit;
        }

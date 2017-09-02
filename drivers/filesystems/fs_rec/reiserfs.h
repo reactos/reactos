@@ -12,7 +12,7 @@ struct journal_params {
     // Block number of the block containing the first journal node.
     UINT32 jp_journal_1st_block;	      /* where does journal start from on its device */
 
-    // Journal device number (?? for if the journal is on a seperate drive ??)
+    // Journal device number (?? for if the journal is on a separate drive ??)
     UINT32 jp_journal_dev;	      /* journal device st_rdev */
 
     // Original journal size.  (Needed when using partition on systems w/ different default journal sizes).

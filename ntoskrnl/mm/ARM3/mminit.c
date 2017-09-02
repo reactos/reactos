@@ -94,7 +94,6 @@ ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
 // http://www.ditii.com/2007/09/28/windows-memory-management-x86-virtual-address-space/
 //
 PVOID MmNonPagedSystemStart;
-SIZE_T MiNonPagedSystemSize;
 PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
 PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END;
@@ -1564,6 +1563,7 @@ MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
 
     DbgPrint("Active:               %5d pages\t[%6d KB]\n", ActivePages,  (ActivePages    << PAGE_SHIFT) / 1024);
     DbgPrint("Free:                 %5d pages\t[%6d KB]\n", FreePages,    (FreePages      << PAGE_SHIFT) / 1024);
+    DbgPrint("Other:                %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
     DbgPrint("-----------------------------------------\n");
 #if MI_TRACE_PFNS
     OtherPages = UsageBucket[MI_USAGE_BOOT_DRIVER];
@@ -1572,12 +1572,26 @@ MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
     DbgPrint("System Drivers:       %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
     OtherPages = UsageBucket[MI_USAGE_PFN_DATABASE];
     DbgPrint("PFN Database:         %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_PAGE_TABLE] + UsageBucket[MI_USAGE_LEGACY_PAGE_DIRECTORY];
+    OtherPages = UsageBucket[MI_USAGE_PAGE_TABLE] + UsageBucket[MI_USAGE_PAGE_DIRECTORY] + UsageBucket[MI_USAGE_LEGACY_PAGE_DIRECTORY];
     DbgPrint("Page Tables:          %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    OtherPages = UsageBucket[MI_USAGE_SYSTEM_PTE];
+    DbgPrint("System PTEs:          %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    OtherPages = UsageBucket[MI_USAGE_VAD];
+    DbgPrint("VADs:                 %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    OtherPages = UsageBucket[MI_USAGE_CONTINOUS_ALLOCATION];
+    DbgPrint("Continuous Allocs:    %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    OtherPages = UsageBucket[MI_USAGE_MDL];
+    DbgPrint("MDLs:                 %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
     OtherPages = UsageBucket[MI_USAGE_NONPAGED_POOL] + UsageBucket[MI_USAGE_NONPAGED_POOL_EXPANSION];
     DbgPrint("NonPaged Pool:        %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
     OtherPages = UsageBucket[MI_USAGE_PAGED_POOL];
     DbgPrint("Paged Pool:           %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    OtherPages = UsageBucket[MI_USAGE_DEMAND_ZERO];
+    DbgPrint("Demand Zero:          %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    OtherPages = UsageBucket[MI_USAGE_ZERO_LOOP];
+    DbgPrint("Zero Loop:            %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    OtherPages = UsageBucket[MI_USAGE_PEB_TEB];
+    DbgPrint("PEB/TEB:              %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
     OtherPages = UsageBucket[MI_USAGE_KERNEL_STACK] + UsageBucket[MI_USAGE_KERNEL_STACK_EXPANSION];
     DbgPrint("Kernel Stack:         %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
     OtherPages = UsageBucket[MI_USAGE_INIT_MEMORY];
@@ -1586,6 +1600,8 @@ MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
     DbgPrint("Sections:             %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
     OtherPages = UsageBucket[MI_USAGE_CACHE];
     DbgPrint("Cache:                %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    OtherPages = UsageBucket[MI_USAGE_FREE_PAGE];
+    DbgPrint("Free:                 %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
 #endif
     KeLowerIrql(OldIrql);
 }

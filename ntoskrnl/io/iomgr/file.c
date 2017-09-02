@@ -1283,8 +1283,7 @@ IopDeleteFile(IN PVOID ObjectBody)
         KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
         /* Allocate an IRP */
-        Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-        if (!Irp) return;
+        Irp = IopAllocateIrpMustSucceed(DeviceObject->StackSize);
 
         /* Set it up */
         Irp->UserEvent = &Event;
@@ -1977,8 +1976,7 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
     /* Allocate an IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return;
+    Irp = IopAllocateIrpMustSucceed(DeviceObject->StackSize);
 
     /* Set it up */
     Irp->UserEvent = &Event;
@@ -2089,7 +2087,7 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                 FILE_READ_ATTRIBUTES,
                                 &OpenPacket,
                                 &Handle);
-    if (OpenPacket.ParseCheck != TRUE)
+    if (OpenPacket.ParseCheck == FALSE)
     {
         /* Parse failed */
         DPRINT("IopQueryAttributesFile failed for '%wZ' with 0x%lx\n",
@@ -2181,6 +2179,7 @@ IopCreateFile(OUT PHANDLE FileHandle,
     PNAMED_PIPE_CREATE_PARAMETERS NamedPipeCreateParameters;
     POPEN_PACKET OpenPacket;
     ULONG EaErrorOffset;
+    PAGED_CODE();
 
     IOTRACE(IO_FILE_DEBUG, "FileName: %wZ\n", ObjectAttributes->ObjectName);
 
@@ -2487,7 +2486,7 @@ IopCreateFile(OUT PHANDLE FileHandle,
     if (OpenPacket->EaBuffer) ExFreePool(OpenPacket->EaBuffer);
 
     /* Now check for Ob or Io failure */
-    if (!(NT_SUCCESS(Status)) || (OpenPacket->ParseCheck != TRUE))
+    if (!(NT_SUCCESS(Status)) || (OpenPacket->ParseCheck == FALSE))
     {
         /* Check if Ob thinks well went well */
         if (NT_SUCCESS(Status))
@@ -2524,7 +2523,7 @@ IopCreateFile(OUT PHANDLE FileHandle,
                 _SEH2_END;
             }
         }
-        else if ((OpenPacket->FileObject) && (OpenPacket->ParseCheck != 1))
+        else if ((OpenPacket->FileObject) && (OpenPacket->ParseCheck == FALSE))
         {
             /*
              * This can happen in the very bizarre case where the parse routine

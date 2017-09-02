@@ -186,7 +186,7 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
                 break;
 
             default:
-                DPRINT1("Other ressource: \n");
+                DPRINT1("Other resource: \n");
                 break;
         }
     }
@@ -607,7 +607,7 @@ FdoPower(IN PDEVICE_OBJECT DeviceObject,
     LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
     PoStartNextPowerIrp(Irp);
     IoSkipCurrentIrpStackLocation(Irp);
-    return PoCallDriver(LowerDevice, Irp);;
+    return PoCallDriver(LowerDevice, Irp);
 }
 
 /* EOF */

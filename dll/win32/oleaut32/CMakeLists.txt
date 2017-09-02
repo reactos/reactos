@@ -47,12 +47,6 @@ add_library(oleaut32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_ocidl_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_link_libraries(oleaut32 mingwex)
-    #FIXME: http://llvm.org/bugs/show_bug.cgi?id=19027
-    set_property(SOURCE vartype.c APPEND_STRING PROPERTY COMPILE_FLAGS " -no-integrated-as")
-endif()
-
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)
 set_module_type(oleaut32 win32dll)

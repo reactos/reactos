@@ -406,7 +406,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                                         &StackBegin,
                                         &StackEnd);
         if (!Result) return 0;
-        }
+    }
 
     /* Use a SEH block for maximum protection */
     _SEH2_TRY

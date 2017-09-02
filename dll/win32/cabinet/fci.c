@@ -1024,6 +1024,7 @@ HFCI __cdecl FCICreate(
     return NULL;
   }
 
+  memset(p_fci_internal, 0, sizeof(FCI_Int));
   p_fci_internal->magic = FCI_INT_MAGIC;
   p_fci_internal->perf = perf;
   p_fci_internal->fileplaced = pfnfiledest;
@@ -1038,26 +1039,8 @@ HFCI __cdecl FCICreate(
   p_fci_internal->gettemp = pfnfcigtf;
   p_fci_internal->ccab = *pccab;
   p_fci_internal->pccab = pccab;
-  p_fci_internal->fPrevCab = FALSE;
-  p_fci_internal->fNextCab = FALSE;
-  p_fci_internal->fSplitFolder = FALSE;
-  p_fci_internal->fGetNextCabInVain = FALSE;
   p_fci_internal->pv = pv;
-  p_fci_internal->cdata_in = 0;
-  p_fci_internal->cCompressedBytesInFolder = 0;
-  p_fci_internal->cFolders = 0;
-  p_fci_internal->cFiles = 0;
-  p_fci_internal->cDataBlocks = 0;
   p_fci_internal->data.handle = -1;
-  p_fci_internal->fNewPrevious = FALSE;
-  p_fci_internal->estimatedCabinetSize = 0;
-  p_fci_internal->statusFolderTotal = 0;
-  p_fci_internal->folders_size = 0;
-  p_fci_internal->files_size = 0;
-  p_fci_internal->placed_files_size = 0;
-  p_fci_internal->pending_data_size = 0;
-  p_fci_internal->folders_data_size = 0;
-  p_fci_internal->compression = tcompTYPE_NONE;
   p_fci_internal->compress = compress_NONE;
 
   list_init( &p_fci_internal->folders_list );

@@ -1,43 +1,43 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "Ícones &grandes", FCIDM_SHVIEW_BIGICON
     MENUITEM "Ícones &pequenos", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detalhes", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "O&rganizar ícones", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Mostrar"
+        POPUP "&Mostrar", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "Ícones &grandes", FCIDM_SHVIEW_BIGICON
             MENUITEM "Ícones &pequenos", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detalhes", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "O&rganizar ícones"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "O&rganizar ícones", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "Por &nome", 0x30  /* column 0 */
-            MENUITEM "Por &tipo", 0x32  /* column 2 */
-            MENUITEM "Por ta&manho", 0x31  /* ... */
-            MENUITEM "Por &data", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Alin&har ícones", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Actualizar", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Co&lar", FCIDM_SHVIEW_INSERT
         MENUITEM "Colar a&talho", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
-        MENUITEM "Propriedades", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "E&xplorador", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Abrir", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "C&ortar", FCIDM_SHVIEW_CUT
-        MENUITEM "&Copiar", FCIDM_SHVIEW_COPY
+        MENUITEM "C&ortar", IDM_CUT
+        MENUITEM "&Copiar", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Criar &Link", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Apagar", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Renomear", FCIDM_SHVIEW_RENAME
+        MENUITEM "Criar &Link", IDM_CREATELINK
+        MENUITEM "&Apagar", IDM_DELETE
+        MENUITEM "&Renomear", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Propriadades", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Propriadades", IDM_PROPERTIES
     END
 END
 
@@ -432,8 +430,8 @@ BEGIN
     PUSHBUTTON "Applicar a T&odas as Pastas", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Reiniciar todas as Pastas", 14002, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Definições avançadas:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-    PUSHBUTTON "Restaurar valores por &Defeito", 14004, 180, 210, 80, 14, WS_TABSTOP
+    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "Restaurar valores por &Defeito", 14004, 177, 215, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -486,15 +484,15 @@ BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 99, 38, 43, 14
 END
 
-IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
+IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Encerrar ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Tem a certeza que quer encerrar?", -1, 49, 12, 137, 23
-    DEFPUSHBUTTON "&Encerrar", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 123, 40, 60, 14
+    ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "Tem a certeza que quer encerrar?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "&Encerrar", IDOK, 47, 38, 47, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -603,18 +601,18 @@ BEGIN
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
-IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
+IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Trocar Icone"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Nome do ficheiro:", -1, 7, 14, 208, 10
-    PUSHBUTTON "procurar...", IDC_BUTTON_PATH, 148, 24, 67, 14
-    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Icons:", -1, 7, 47, 208, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 167, 181, 50, 14
+    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    PUSHBUTTON "procurar...", IDC_BUTTON_PATH, 135, 17, 50, 14
+    EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -634,24 +632,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Ficheiro"
-    IDS_SHV_COLUMN2 "Tamanho"
-    IDS_SHV_COLUMN3 "Tipo"
-    IDS_SHV_COLUMN4 "Modificado"
-    IDS_SHV_COLUMN5 "propriedades"
-    IDS_SHV_COLUMN6 "Tamanho"
-    IDS_SHV_COLUMN7 "Disponível"
-    IDS_SHV_COLUMN8 "Nome"
-    IDS_SHV_COLUMN9 "Comentários"
-    IDS_SHV_COLUMN10 "Dono"
-    IDS_SHV_COLUMN11 "Grupo"
-    IDS_SHV_COLUMN12 "Nome do ficheiro"
-    IDS_SHV_COLUMN13 "Categoria"
+    IDS_SHV_COLUMN_NAME "Nome"
+    IDS_SHV_COLUMN_SIZE "Tamanho"
+    IDS_SHV_COLUMN_TYPE "Tipo"
+    IDS_SHV_COLUMN_MODIFIED "Modificado"
+    IDS_SHV_COLUMN_ATTRIBUTES "propriedades"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Tamanho"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Disponível"
+    IDS_SHV_COLUMN_OWNER "Dono"
+    IDS_SHV_COLUMN_GROUP "Grupo"
+    IDS_SHV_COLUMN_FILENAME "Nome do ficheiro"
+    IDS_SHV_COLUMN_CATEGORY "Categoria"
     IDS_SHV_COLUMN_DELFROM "Localização original"
     IDS_SHV_COLUMN_DELDATE "Data da eliminação"
     IDS_SHV_COLUMN_FONTTYPE "Tipo de letra"
     IDS_SHV_COLUMN_WORKGROUP "Grupo de trabalho"
-    IDS_SHV_NETWORKLOCATION "localizações na rede"
+    IDS_SHV_COLUMN_NETLOCATION "localizações na rede"
     IDS_SHV_COLUMN_DOCUMENTS "Documentos"
     IDS_SHV_COLUMN_STATUS "Estado"
     IDS_SHV_COLUMN_COMMENTS "Commentários"
@@ -664,6 +660,12 @@ BEGIN
     IDS_RECYCLEBIN_FOLDER_NAME "Reciclagem"
     IDS_CONTROLPANEL "Painel de Controlo"
     IDS_ADMINISTRATIVETOOLS "Ferramentas Administrativas"
+
+    /* special folders descriptions */
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
+    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
+    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
 
     /* context menus */
     IDS_VIEW_LARGE "Ícones &grandes"
@@ -682,8 +684,8 @@ BEGIN
     IDS_RENAME "Renaomear"
     IDS_PASTE "Inserir"
 
-    IDS_CREATEFOLDER_DENIED "Não é possível criar nova pasta: Permissão negada."
-    IDS_CREATEFOLDER_CAPTION "Erro durante a criação da nova pasta"
+    IDS_CREATEFOLDER_DENIED "Impossivel de Criar Pasta '%1'"
+    IDS_CREATEFOLDER_CAPTION "Impossivel de Criar Pasta"
     IDS_DELETEITEM_CAPTION "Confirmar exclusão do ficheiro"
     IDS_DELETEFOLDER_CAPTION "Confirmar exclusão da pasta"
     IDS_DELETEITEM_TEXT "Tem certeza que deseja excluir '%1'?"
@@ -706,7 +708,7 @@ BEGIN
 
     /* message box strings */
     IDS_RESTART_TITLE "Reiniciar"
-    IDS_RESTART_PROMPT "Deseja simular a reinicialização do Windows?"
+    IDS_RESTART_PROMPT "Deseja simular a reinicialização do ReactOS?"
     IDS_SHUTDOWN_TITLE "Desligar"
     IDS_SHUTDOWN_PROMPT "Deseja finalizar esta sessão do ReactOS?"
 
@@ -794,6 +796,7 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Ficheiro de Sistema"
     IDS_VXD_FILE "Driver de Dispositivo Virtual"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Abrir"
     IDS_EXPLORE_VERB "Explore"
@@ -810,7 +813,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Tamanho da unidade de atribuição"
     IDS_COPY_OF "Cópia de"
 
-    IDS_SHLEXEC_NOASSOC "Não existe um programa Windows configurado para abrir este tipo de ficheiro."
+    IDS_SHLEXEC_NOASSOC "Não existe um programa ReactOS configurado para abrir este tipo de ficheiro."
 
     IDS_FILE_DETAILS "Detalhes para '%s' extensão"
     IDS_FILE_DETAILSADV "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado."
@@ -828,4 +831,24 @@ BEGIN
     IDS_MENU_EMPTY "(Empty)"
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
+
+    IDS_ADVANCED_FOLDER "Files and Folders"
+    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
+    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
+    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
+    IDS_ADVANCED_HIDDEN "Hidden files and folders"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
+    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
+    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
+    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
+    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
+    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
 END

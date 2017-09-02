@@ -21,9 +21,6 @@
 #include "precomp.h"
 #include <commoncontrols.h>
 
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
-
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
 #define DUMP_TASKS  0
@@ -160,8 +157,29 @@ public:
         return SetButtonInfo(iButtonIndex, &tbbi) != 0;
     }
 
+    LRESULT OnNcHitTestToolbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        POINT pt;
+
+        /* See if the mouse is on a button */
+        pt.x = GET_X_LPARAM(lParam);
+        pt.y = GET_Y_LPARAM(lParam);
+        ScreenToClient(&pt);
+
+        INT index = HitTest(&pt);
+        if (index < 0)
+        {
+            /* Make the control appear to be transparent outside of any buttons */
+            return HTTRANSPARENT;
+        }
+
+        bHandled = FALSE;
+        return 0;
+    }
+
 public:
     BEGIN_MSG_MAP(CNotifyToolbar)
+        MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTestToolbar)
     END_MSG_MAP()
 
     BOOL Initialize(HWND hWndParent)
@@ -219,8 +237,6 @@ public:
         ZeroMemory(&m_ButtonSize, sizeof(m_ButtonSize));
     }
     virtual ~CTaskSwitchWnd() { }
-
-    VOID TaskSwitchWnd_UpdateButtonsSize(IN BOOL bRedrawDisabled);
 
     INT GetWndTextFromTaskItem(IN PTASK_ITEM TaskItem, LPWSTR szBuf, DWORD cchBuf)
     {
@@ -1126,6 +1142,26 @@ public:
         LONG NewBtnSize;
         BOOL Horizontal;
 
+        /* Update the size of the image list if needed */
+        int cx, cy;
+        ImageList_GetIconSize(m_ImageList, &cx, &cy);
+        if (cx != GetSystemMetrics(SM_CXSMICON) || cy != GetSystemMetrics(SM_CYSMICON))
+        {
+            ImageList_SetIconSize(m_ImageList, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
+
+            /* SetIconSize removes all icons so we have to reinsert them */
+            PTASK_ITEM TaskItem = m_TaskItems;
+            PTASK_ITEM LastTaskItem = m_TaskItems + m_TaskItemCount;
+            while (TaskItem != LastTaskItem)
+            {
+                TaskItem->IconIndex = -1;
+                UpdateTaskItemButton(TaskItem);
+
+                TaskItem++;
+            }
+            m_TaskBar.SetImageList(m_ImageList);
+        }
+
         if (GetClientRect(&rcClient) && !IsRectEmpty(&rcClient))
         {
             if (m_ButtonCount > 0)
@@ -1139,7 +1175,11 @@ public:
                     tbm.dwMask = TBMF_BUTTONSPACING;
                     m_TaskBar.GetMetrics(&tbm);
 
-                    uiRows = (rcClient.bottom + tbm.cyButtonSpacing) / (m_ButtonSize.cy + tbm.cyButtonSpacing);
+                    if (m_ButtonSize.cy + tbm.cyButtonSpacing != 0)
+                        uiRows = (rcClient.bottom + tbm.cyButtonSpacing) / (m_ButtonSize.cy + tbm.cyButtonSpacing);
+                    else
+                        uiRows = 1;
+
                     if (uiRows == 0)
                         uiRows = 1;
 
@@ -1262,7 +1302,7 @@ public:
         return EnumWindows(s_EnumWindowsProc, (LPARAM)this);
     }
 
-    LRESULT OnThemeChanged()
+    LRESULT OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         TRACE("OmThemeChanged\n");
 
@@ -1277,27 +1317,15 @@ public:
         return TRUE;
     }
 
-    LRESULT OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        return OnThemeChanged();
-    }
-
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         if (!m_TaskBar.Initialize(m_hWnd))
             return FALSE;
 
         SetWindowTheme(m_TaskBar.m_hWnd, L"TaskBand", NULL);
-        OnThemeChanged();
 
-        m_ImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
+        m_ImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);
         m_TaskBar.SetImageList(m_ImageList);
-
-        /* Calculate the default button size. Don't save this in m_ButtonSize.cx so that
-        the actual button width gets updated correctly on the first recalculation */
-        int cx = GetSystemMetrics(SM_CXMINIMIZED);
-        int cy = m_ButtonSize.cy = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
-        m_TaskBar.SetButtonSize(cx, cy);
 
         /* Set proper spacing between buttons */
         m_TaskBar.UpdateTbButtonSpacing(m_Tray->IsHorizontal(), m_Theme != NULL);
@@ -1353,7 +1381,7 @@ public:
         return Ret;
     }
 
-    LRESULT HandleShellHookMsg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    LRESULT OnShellHook(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         BOOL Ret = FALSE;
 
@@ -1369,37 +1397,29 @@ public:
         switch ((INT) wParam)
         {
         case HSHELL_APPCOMMAND:
-            HandleAppCommand(wParam, lParam);
-            Ret = TRUE;
+            Ret = HandleAppCommand(wParam, lParam);
             break;
 
         case HSHELL_WINDOWCREATED:
-            Ret = AddTask((HWND) lParam);
+            AddTask((HWND) lParam);
             break;
 
         case HSHELL_WINDOWDESTROYED:
             /* The window still exists! Delay destroying it a bit */
             DeleteTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_RUDEAPPACTIVATED:
         case HSHELL_WINDOWACTIVATED:
-            if (lParam)
-            {
-                ActivateTask((HWND) lParam);
-                Ret = TRUE;
-            }
+            ActivateTask((HWND) lParam);
             break;
 
         case HSHELL_FLASH:
             FlashTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_REDRAW:
             RedrawTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_TASKMAN:
@@ -1437,14 +1457,6 @@ public:
         }
 
         return Ret;
-    }
-
-    VOID EnableGrouping(IN BOOL bEnable)
-    {
-        m_IsGroupingEnabled = bEnable;
-
-        /* Collapse or expand groups if neccessary */
-        UpdateButtonsSize(FALSE);
     }
 
     VOID HandleTaskItemClick(IN OUT PTASK_ITEM TaskItem)
@@ -1522,21 +1534,14 @@ public:
 
     VOID HandleTaskItemRightClick(IN OUT PTASK_ITEM TaskItem)
     {
+        POINT pt;
+        GetCursorPos(&pt);
 
-        HMENU hmenu = ::GetSystemMenu(TaskItem->hWnd, FALSE);
+        SetForegroundWindow(TaskItem->hWnd);
 
-        if (hmenu)
-        {
-            POINT pt;
-            int cmd;
-            GetCursorPos(&pt);
-            cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, m_TaskBar.m_hWnd, NULL);
-            if (cmd)
-            {
-                SetForegroundWindow(TaskItem->hWnd);    // reactivate window after the context menu has closed
-                ::PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
-            }
-        }
+        ActivateTask(TaskItem->hWnd);
+
+        ::SendMessageW(TaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(pt.x, pt.y));
     }
 
     VOID HandleTaskGroupRightClick(IN OUT PTASK_GROUP TaskGroup)
@@ -1584,7 +1589,7 @@ public:
 
             if (TaskItem != NULL && ::IsWindow(TaskItem->hWnd))
             {
-                /* Make the entire button flashing if neccessary */
+                /* Make the entire button flashing if necessary */
                 if (nmtbcd->nmcd.uItemState & CDIS_MARKED)
                 {
                     Ret = TBCDRF_NOBACKGROUND;
@@ -1645,16 +1650,6 @@ public:
         return Ret;
     }
 
-    LRESULT DrawBackground(HDC hdc)
-    {
-        RECT rect;
-
-        GetClientRect(&rect);
-        DrawThemeParentBackground(m_hWnd, hdc, &rect);
-
-        return TRUE;
-    }
-
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         HDC hdc = (HDC) wParam;
@@ -1665,7 +1660,11 @@ public:
             return 0;
         }
 
-        return DrawBackground(hdc);
+        RECT rect;
+        GetClientRect(&rect);
+        DrawThemeParentBackground(m_hWnd, hdc, &rect);
+
+        return TRUE;
     }
 
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1681,26 +1680,6 @@ public:
             UpdateButtonsSize(FALSE);
         }
         return TRUE;
-    }
-
-    LRESULT OnNcHitTestToolbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        POINT pt;
-
-        /* See if the mouse is on a button */
-        pt.x = GET_X_LPARAM(lParam);
-        pt.y = GET_Y_LPARAM(lParam);
-        ScreenToClient(&pt);
-
-        INT index = m_TaskBar.HitTest(&pt);
-        if (index < 0)
-        {
-            /* Make the control appear to be transparent outside of any buttons */
-            return HTTRANSPARENT;
-        }
-
-        bHandled = FALSE;
-        return 0;
     }
 
     LRESULT OnNcHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1741,7 +1720,10 @@ public:
         LRESULT Ret = m_IsGroupingEnabled;
         if ((BOOL)wParam != m_IsGroupingEnabled)
         {
-            EnableGrouping((BOOL) wParam);
+            m_IsGroupingEnabled = (BOOL)wParam;
+
+            /* Collapse or expand groups if necessary */
+            UpdateButtonsSize(FALSE);
         }
         return Ret;
     }
@@ -1799,6 +1781,11 @@ public:
         return FALSE;
     }
 
+    LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        return MA_NOACTIVATE;
+    }
+
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
 #if DUMP_TASKS != 0
@@ -1810,6 +1797,22 @@ public:
         }
 #endif
         return TRUE;
+    }
+
+    LRESULT OnSetFont(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        return m_TaskBar.SendMessageW(uMsg, wParam, lParam);
+    }
+
+    LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (wParam == SPI_SETNONCLIENTMETRICS)
+        {
+            /*  Don't update the font, this will be done when we get a WM_SETFONT from our parent */
+            UpdateButtonsSize(FALSE);
+        }
+
+        return 0;
     }
 
     DECLARE_WND_CLASS_EX(szTaskSwitchWndClass, CS_DBLCLKS, COLOR_3DFACE)
@@ -1827,9 +1830,11 @@ public:
         MESSAGE_HANDLER(TSWM_UPDATETASKBARPOS, OnUpdateTaskbarPos)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
-        MESSAGE_HANDLER(m_ShellHookMsg, HandleShellHookMsg)
-    ALT_MSG_MAP(1)
-        MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTestToolbar)
+        MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
+        MESSAGE_HANDLER(m_ShellHookMsg, OnShellHook)
+        MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
+        MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
     END_MSG_MAP()
 
     HWND _Init(IN HWND hWndParent, IN OUT ITrayWindow *tray)

@@ -1070,7 +1070,7 @@ LRESULT MSACM_CloseLocalDriver(PWINE_ACMLOCALDRIVERINST paldrv)
             MSACM_DRIVER_SendMessage(lpDrv0, DRV_CLOSE, 0L, 0L);
             lpDrv0->dwDriverID = 0;
             MSACM_RemoveFromList(lpDrv0);
-            HeapFree(GetProcessHeap(), 0, lpDrv0);
+            HeapFree(MSACM_hHeap, 0, lpDrv0);
         }
 
         HeapFree(MSACM_hHeap, 0, paldrv);

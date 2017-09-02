@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -113,7 +113,7 @@ AcpiExResolveObject (
 
         /* For CopyObject, no further validation necessary */
 
-        if (WalkState->Opcode == AML_COPY_OP)
+        if (WalkState->Opcode == AML_COPY_OBJECT_OP)
         {
             break;
         }

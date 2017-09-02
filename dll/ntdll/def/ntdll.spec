@@ -59,8 +59,8 @@
 59 stdcall EtwQueryAllTracesW(ptr long ptr)
 60 stdcall -stub EtwQueryTraceA(double str ptr)
 61 stdcall -stub EtwQueryTraceW(double wstr ptr)
-62 stdcall -stub EtwReceiveNotificationsA() # FIXME prototype
-63 stdcall -stub EtwReceiveNotificationsW() # FIXME prototype
+62 stdcall -stub EtwReceiveNotificationsA(long long long long)
+63 stdcall -stub EtwReceiveNotificationsW(long long long long)
 64 stdcall EtwRegisterTraceGuidsA(ptr ptr ptr long ptr str str ptr)
 65 stdcall EtwRegisterTraceGuidsW(ptr ptr ptr long ptr wstr wstr ptr)
 66 stdcall EtwStartTraceA(ptr str ptr)
@@ -74,8 +74,8 @@
 74 stdcall EtwUnregisterTraceGuids(double)
 75 stdcall -stub EtwUpdateTraceA(double str ptr)
 76 stdcall -stub EtwUpdateTraceW(double wstr ptr)
-# EtwpGetTraceBuffer
-# EtwpSetHWConfigFunction
+77 stdcall -stub EtwpGetTraceBuffer(long long long long)
+78 stdcall -stub EtwpSetHWConfigFunction(ptr long)
 79 stdcall -arch=i386 KiFastSystemCall()
 80 stdcall -arch=i386 KiFastSystemCallRet()
 81 stdcall -arch=i386 KiIntSystemCall()
@@ -502,7 +502,7 @@
 501 stdcall RtlConvertSharedToExclusive(ptr)
 502 stdcall RtlConvertSidToUnicodeString(ptr ptr long)
 503 stdcall RtlConvertToAutoInheritSecurityObject(ptr ptr ptr ptr long ptr)
-# stdcall RtlConvertUiListToApiList
+504 stdcall RtlConvertUiListToApiList(ptr ptr long)
 505 stdcall -arch=win32 -ret64 RtlConvertUlongToLargeInteger(long)
 506 stdcall RtlCopyLuid(ptr ptr)
 507 stdcall RtlCopyLuidAndAttributesArray(long ptr ptr)
@@ -540,7 +540,7 @@
 539 stdcall RtlDeactivateActivationContext(long long)
 # RtlDebugPrintTimes
 541 stdcall RtlDecodePointer(ptr)
-542 stdcall RtlDecodeSystemPointer(ptr) RtlEncodeSystemPointer
+542 stdcall RtlDecodeSystemPointer(ptr)
 543 stdcall RtlDecompressBuffer(long ptr long ptr long ptr)
 544 stdcall RtlDecompressFragment(long ptr long ptr long long ptr ptr)
 545 stdcall RtlDefaultNpAcl(ptr)
@@ -736,8 +736,8 @@
 732 stdcall RtlIpv6StringToAddressExW(wstr ptr ptr ptr)
 733 stdcall RtlIpv6StringToAddressW(wstr ptr ptr)
 734 stdcall RtlIsActivationContextActive(ptr)
-# stdcall RtlIsCriticalSectionLocked
-# stdcall RtlIsCriticalSectionLockedByThread
+735 stdcall RtlIsCriticalSectionLocked(ptr)
+736 stdcall RtlIsCriticalSectionLockedByThread(ptr)
 737 stdcall RtlIsDosDeviceName_U(wstr)
 738 stdcall RtlIsGenericTableEmpty(ptr)
 739 stdcall RtlIsGenericTableEmptyAvl(ptr)
@@ -784,7 +784,7 @@
 779 stdcall RtlNewSecurityObjectEx(ptr ptr ptr ptr long long ptr ptr)
 780 stdcall RtlNewSecurityObjectWithMultipleInheritance(ptr ptr ptr ptr long long long ptr ptr)
 781 stdcall RtlNormalizeProcessParams(ptr)
-782 stdcall RtlNtPathNameToDosPathName(ptr ptr ptr ptr) ; CHECKME
+782 stdcall RtlNtPathNameToDosPathName(long ptr ptr ptr) ; CHECKME (last arg)
 783 stdcall RtlNtStatusToDosError(long)
 784 stdcall RtlNtStatusToDosErrorNoTeb(long)
 785 stdcall RtlNumberGenericTableElements(ptr)
@@ -956,7 +956,7 @@
 948 stdcall RtlZeroMemory(ptr long)
 949 stdcall RtlZombifyActivationContext(ptr)
 950 stdcall RtlpApplyLengthFunction(long long ptr ptr)
-951 stdcall RtlpEnsureBufferSize(ptr ptr ptr) ; CHECKME
+951 stdcall RtlpEnsureBufferSize(long ptr long)
 # stdcall RtlpNotOwnerCriticalSection
 953 stdcall RtlpNtCreateKey(ptr long ptr long ptr ptr)
 954 stdcall RtlpNtEnumerateSubKey(ptr ptr long long)
@@ -1325,7 +1325,7 @@
 1312 cdecl _wcsicmp(wstr wstr)
 1313 cdecl _wcslwr(wstr)
 1314 cdecl _wcsnicmp(wstr wstr long)
-# _wcstoui64
+1315 cdecl _wcstoui64(wstr ptr long)
 1316 cdecl _wcsupr(wstr)
 1317 cdecl _wtoi(wstr)
 1318 cdecl _wtoi64(wstr)

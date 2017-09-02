@@ -235,7 +235,7 @@ static void CC_DrawFocusRect(CCPRIV *lpp, HWND hwnd, int x, int y, int rows, int
   /* draw it */
   hdc = GetDC(hwnd);
   DrawFocusRect(hdc, &rect);
-  CopyRect(&lpp->focusRect, &rect);
+  lpp->focusRect = rect;
   lpp->hwndFocus = hwnd;
   ReleaseDC(hwnd, hdc);
 }
@@ -661,15 +661,11 @@ static void CC_EditSetRGB( CCPRIV *infoPtr )
    int r = GetRValue(cr);
    int g = GetGValue(cr);
    int b = GetBValue(cr);
-   char buffer[10];
 
    infoPtr->updating = TRUE;
-   sprintf(buffer, "%d", r);
-   SetWindowTextA( GetDlgItem(infoPtr->hwndSelf, IDC_COLOR_EDIT_R), buffer);
-   sprintf(buffer, "%d", g);
-   SetWindowTextA( GetDlgItem(infoPtr->hwndSelf, IDC_COLOR_EDIT_G), buffer);
-   sprintf( buffer, "%d", b );
-   SetWindowTextA( GetDlgItem(infoPtr->hwndSelf, IDC_COLOR_EDIT_B), buffer);
+   SetDlgItemInt(infoPtr->hwndSelf, IDC_COLOR_EDIT_R, r, TRUE);
+   SetDlgItemInt(infoPtr->hwndSelf, IDC_COLOR_EDIT_G, g, TRUE);
+   SetDlgItemInt(infoPtr->hwndSelf, IDC_COLOR_EDIT_B, b, TRUE);
    infoPtr->updating = FALSE;
  }
 }
@@ -681,15 +677,10 @@ static void CC_EditSetHSL( CCPRIV *infoPtr )
 {
  if (IsWindowVisible( GetDlgItem(infoPtr->hwndSelf, IDC_COLOR_GRAPH) ))   /* if full size */
  {
-   char buffer[10];
-
    infoPtr->updating = TRUE;
-   sprintf(buffer, "%d", infoPtr->h);
-   SetWindowTextA( GetDlgItem(infoPtr->hwndSelf, IDC_COLOR_EDIT_H), buffer);
-   sprintf(buffer, "%d", infoPtr->s);
-   SetWindowTextA( GetDlgItem(infoPtr->hwndSelf, IDC_COLOR_EDIT_S), buffer);
-   sprintf(buffer, "%d", infoPtr->l);
-   SetWindowTextA( GetDlgItem(infoPtr->hwndSelf, IDC_COLOR_EDIT_L), buffer);
+   SetDlgItemInt(infoPtr->hwndSelf, IDC_COLOR_EDIT_H, infoPtr->h, TRUE);
+   SetDlgItemInt(infoPtr->hwndSelf, IDC_COLOR_EDIT_S, infoPtr->s, TRUE);
+   SetDlgItemInt(infoPtr->hwndSelf, IDC_COLOR_EDIT_L, infoPtr->l, TRUE);
    infoPtr->updating = FALSE;
  }
  CC_PaintLumBar(infoPtr);
@@ -862,7 +853,7 @@ static LRESULT CC_WMInitDialog( HWND hDlg, WPARAM wParam, LPARAM lParam )
    SetPropW( hDlg, szColourDialogProp, lpp );
 
    if (!(lpp->lpcc->Flags & CC_SHOWHELP))
-      ShowWindow( GetDlgItem(hDlg,0x40e), SW_HIDE);
+      ShowWindow(GetDlgItem(hDlg, pshHelp), SW_HIDE);
    lpp->msetrgb = RegisterWindowMessageA(SETRGBSTRINGA);
 
 #if 0
@@ -1038,7 +1029,7 @@ static LRESULT CC_WMCommand(CCPRIV *lpp, WPARAM wParam, LPARAM lParam, WORD noti
 	       CC_PaintTriangle(lpp);
 	       break;
 
-	  case 0x40e:           /* Help! */ /* The Beatles, 1965  ;-) */
+	  case pshHelp:           /* Help! */ /* The Beatles, 1965  ;-) */
 	       i = RegisterWindowMessageA(HELPMSGSTRINGA);
                    if (lpp->lpcc->hwndOwner)
 		       SendMessageA(lpp->lpcc->hwndOwner, i, 0, (LPARAM)lpp->lpcc);

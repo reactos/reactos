@@ -91,11 +91,38 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG              0x02
 #define BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG        0x10
 #define BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG        0x20
+#define BL_MM_ADD_DESCRIPTOR_ALLOCATE_FLAG              0x1000
 #define BL_MM_ADD_DESCRIPTOR_UPDATE_LIST_POINTER_FLAG   0x2000
+
+#define BL_MM_INCLUDE_MAPPED_ALLOCATED                  0x01
+#define BL_MM_INCLUDE_MAPPED_UNALLOCATED                0x02
+#define BL_MM_INCLUDE_UNMAPPED_ALLOCATED                0x04
+#define BL_MM_INCLUDE_UNMAPPED_UNALLOCATED              0x08
+#define BL_MM_INCLUDE_RESERVED_ALLOCATED                0x10
+#define BL_MM_INCLUDE_BAD_MEMORY                        0x20
+#define BL_MM_INCLUDE_FIRMWARE_MEMORY                   0x40
+#define BL_MM_INCLUDE_TRUNCATED_MEMORY                  0x80
+#define BL_MM_INCLUDE_PERSISTENT_MEMORY                 0x100
+#define BL_MM_INCLUDE_FIRMWARE_MEMORY_2                 0x200
+
+#define BL_MM_INCLUDE_NO_FIRMWARE_MEMORY                (BL_MM_INCLUDE_PERSISTENT_MEMORY | \
+                                                         BL_MM_INCLUDE_TRUNCATED_MEMORY | \
+                                                         BL_MM_INCLUDE_BAD_MEMORY | \
+                                                         BL_MM_INCLUDE_RESERVED_ALLOCATED | \
+                                                         BL_MM_INCLUDE_UNMAPPED_UNALLOCATED | \
+                                                         BL_MM_INCLUDE_UNMAPPED_ALLOCATED | \
+                                                         BL_MM_INCLUDE_MAPPED_UNALLOCATED | \
+                                                         BL_MM_INCLUDE_MAPPED_ALLOCATED)
+C_ASSERT(BL_MM_INCLUDE_NO_FIRMWARE_MEMORY == 0x1BF);
+
+#define BL_MM_INCLUDE_ONLY_FIRMWARE_MEMORY              (BL_MM_INCLUDE_FIRMWARE_MEMORY_2 | \
+                                                         BL_MM_INCLUDE_FIRMWARE_MEMORY)
+C_ASSERT(BL_MM_INCLUDE_ONLY_FIRMWARE_MEMORY == 0x240);
 
 #define BL_MM_REQUEST_DEFAULT_TYPE                      1
 #define BL_MM_REQUEST_TOP_DOWN_TYPE                     2
 
+#define BL_MM_REMOVE_PHYSICAL_REGION_FLAG               0x40000000
 #define BL_MM_REMOVE_VIRTUAL_REGION_FLAG                0x80000000
 
 #define BL_LIBRARY_FLAG_NO_DISPLAY                      0x01
@@ -158,7 +185,6 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_LOAD_PE_IMG_IGNORE_CHECKSUM_MISMATCH         0x10000
 #define BL_LOAD_PE_IMG_VALIDATE_ORIGINAL_FILENAME       0x400000
 
-
 #define BL_UTL_CHECKSUM_COMPLEMENT                      0x10000
 #define BL_UTL_CHECKSUM_ROTATE                          0x20000
 #define BL_UTL_CHECKSUM_NEGATE                          0x40000
@@ -197,6 +223,7 @@ typedef enum _BL_MEMORY_DESCRIPTOR_TYPE
 {
     BlMdPhysical,
     BlMdVirtual,
+    BlMdTracker
 } BL_MEMORY_DESCRIPTOR_TYPE;
 
 typedef enum _BL_TRANSLATION_TYPE
@@ -283,6 +310,7 @@ typedef enum _BL_MEMORY_TYPE
     BlLoaderPageDirectory = 0xD0000006,
     BlLoaderReferencePage = 0xD0000007,
     BlLoaderRamDisk = 0xD0000008,
+    BlLoaderArchData = 0xD0000009,
     BlLoaderData = 0xD000000A,
     BlLoaderRegistry = 0xD000000B,
     BlLoaderBlockMemory = 0xD000000C,
@@ -301,12 +329,14 @@ typedef enum _BL_MEMORY_TYPE
     BlUnusableMemory = 0xF0000002,
     BlReservedMemory = 0xF0000003,
     BlEfiBootMemory = 0xF0000004,
-    BlEfiRuntimeMemory = 0xF0000006,
+    BlConventionalZeroedMemory = 0xF000005,
+    BlEfiRuntimeCodeMemory = 0xF0000006,
     BlAcpiReclaimMemory = 0xF0000008,
     BlAcpiNvsMemory = 0xF0000009,
     BlDeviceIoMemory = 0xF000000A,
     BlDevicePortMemory = 0xF000000B,
     BlPalMemory = 0xF000000C,
+    BlEfiRuntimeDataMemory = 0xF000000E,
 } BL_MEMORY_TYPE;
 
 typedef enum _BL_MEMORY_ATTR
@@ -334,11 +364,11 @@ typedef enum _BL_MEMORY_ATTR
     //
     // Memory Allocation Attributes
     //
-    BlMemoryUnknown =           0x00010000,
-    BlMemoryNonFixed =          0x00020000,
+    BlMemoryLargePages =        0x00010000,
+    BlMemoryKernelRange =       0x00020000,
     BlMemoryFixed =             0x00040000,
-    BlMemoryReserved =          0x00080000,
-    BlMemoryValidAllocationAttributes       = BlMemoryNonFixed | BlMemoryFixed | BlMemoryReserved | BlMemoryUnknown,
+    BlMemoryBelow1MB =          0x00080000,
+    BlMemoryValidAllocationAttributes       = BlMemoryKernelRange | BlMemoryFixed | BlMemoryBelow1MB | BlMemoryLargePages,
     BlMemoryValidAllocationAttributeMask    = 0x00FF0000,
 
     //
@@ -348,9 +378,10 @@ typedef enum _BL_MEMORY_ATTR
     BlMemoryCoalesced =         0x02000000,
     BlMemoryUpdate =            0x04000000,
     BlMemoryNonFirmware =       0x08000000,
+    BlMemoryPersistent =        0x10000000,
     BlMemorySpecial =           0x20000000,
     BlMemoryFirmware =          0x80000000,
-    BlMemoryValidTypeAttributes             = BlMemoryRuntime | BlMemoryCoalesced | BlMemoryUpdate | BlMemoryNonFirmware | BlMemorySpecial | BlMemoryFirmware,
+    BlMemoryValidTypeAttributes             = BlMemoryRuntime | BlMemoryCoalesced | BlMemoryUpdate | BlMemoryNonFirmware | BlMemoryPersistent | BlMemorySpecial | BlMemoryFirmware,
     BlMemoryValidTypeAttributeMask          = 0xFF000000,
 } BL_MEMORY_ATTR;
 
@@ -643,7 +674,6 @@ NTSTATUS
 (*PBL_DEVICE_CREATE) (
     VOID
     );
-
 
 /* DATA STRUCTURES ***********************************************************/
 
@@ -1180,6 +1210,13 @@ typedef struct _BL_IMAGE_APPLICATION_ENTRY
     ULONG ImageSize;
 } BL_IMAGE_APPLICATION_ENTRY, *PBL_IMAGE_APPLICATION_ENTRY;
 
+typedef struct _BL_IMAGE_PARAMETERS
+{
+    PVOID Buffer;
+    ULONG ActualSize;
+    ULONG BufferSize;
+} BL_IMAGE_PARAMETERS, *PBL_IMAGE_PARAMETERS;
+
 typedef struct _BL_DEFERRED_FONT_FILE
 {
     LIST_ENTRY ListEntry;
@@ -1267,6 +1304,7 @@ MmMdInitializeListHead (
     InitializeListHead(&List->ListHead);
     List->First = &List->ListHead;
     List->This = NULL;
+    List->Type = 0;
 }
 
 /* INITIALIZATION ROUTINES ***************************************************/
@@ -1367,6 +1405,11 @@ VOID
 EfiPrintf (
     _In_ PWCHAR Format,
     ...
+    );
+
+NTSTATUS
+BlFwGetParameters(
+    _In_ PBL_FIRMWARE_DESCRIPTOR Parameters
     );
 
 NTSTATUS
@@ -1503,6 +1546,12 @@ EfipGetRsdt (
     _Out_ PPHYSICAL_ADDRESS FoundRsdt
     );
 
+NTSTATUS
+EfiFreePages (
+    _In_ ULONG Pages,
+    _In_ EFI_PHYSICAL_ADDRESS PhysicalAddress
+    );
+
 /* PLATFORM TIMER ROUTINES ***************************************************/
 
 NTSTATUS
@@ -1513,6 +1562,11 @@ BlpTimeCalibratePerformanceCounter (
 ULONGLONG
 BlTimeQueryPerformanceCounter (
     _Out_opt_ PLARGE_INTEGER Frequency
+    );
+
+ULONGLONG
+BlArchGetPerformanceCounter (
+    VOID
     );
 
 /* RESOURCE LOCALE INTERNATIONALIZATION ROUTINES *****************************/
@@ -1609,6 +1663,18 @@ BlStatusError (
 /* UTILITY ROUTINES **********************************************************/
 
 VOID
+BlArchCpuId (
+    _In_ ULONG Function,
+    _In_ ULONG SubFunction,
+    _Out_ INT* Result
+    );
+
+BOOLEAN
+BlArchIsCpuIdFunctionSupported (
+    _In_ ULONG Function
+    );
+
+VOID
 BlUtlUpdateProgress (
     _In_ ULONG Percentage,
     _Out_opt_ PBOOLEAN Completed
@@ -1671,6 +1737,12 @@ EfiGetNtStatusCode (
 VOID
 BlFwReboot (
     VOID
+    );
+
+NTSTATUS
+MmFwFreePages (
+    _In_ ULONG BasePage,
+    _In_ ULONG PageCount
     );
 
 PGUID
@@ -1753,6 +1825,12 @@ BlHtStore (
     _In_ PBL_HASH_ENTRY Entry,
     _In_ PVOID Data,
     _In_ ULONG DataSize
+    );
+
+NTSTATUS
+BlHtDelete (
+    _In_ ULONG TableId,
+    _In_ PBL_HASH_ENTRY Entry
     );
 
 NTSTATUS
@@ -1937,7 +2015,59 @@ BlpArchSwitchContext (
     _In_ BL_ARCH_MODE NewMode
     );
 
+VOID
+BlpArchEnableTranslation (
+    VOID
+    );
+
+VOID
+Archx86TransferTo32BitApplicationAsm (
+    VOID
+    );
+
 /* MEMORY DESCRIPTOR ROUTINES ************************************************/
+
+VOID
+MmMdDbgDumpList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList,
+    _In_opt_ ULONG MaxCount
+);
+
+VOID
+MmMdInitializeList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList,
+    _In_ ULONG Type,
+    _In_ PLIST_ENTRY ListHead
+    );
+
+PBL_MEMORY_DESCRIPTOR
+MmMdFindDescriptor (
+    _In_ ULONG WhichList,
+    _In_ ULONG Flags,
+    _In_ ULONGLONG Page
+    );
+
+PBL_MEMORY_DESCRIPTOR
+MmMdFindDescriptorFromMdl (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ ULONG Flags,
+    _In_ ULONGLONG Page
+    );
+
+NTSTATUS
+MmMdCopyList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DestinationList,
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST SourceList,
+    _In_opt_ PBL_MEMORY_DESCRIPTOR ListDescriptor,
+    _Out_ PULONG ActualCount,
+    _In_ ULONG Count,
+    _In_ ULONG Flags
+    );
+
+ULONG
+MmMdCountList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList
+    );
 
 VOID
 MmMdFreeList(
@@ -1963,6 +2093,13 @@ MmMdAddDescriptorToList (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
     _In_ PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
     _In_ ULONG Flags
+    );
+
+NTSTATUS
+MmMdTruncateDescriptors (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST NewList,
+    _In_ ULONGLONG BasePage
     );
 
 VOID
@@ -2001,6 +2138,11 @@ MmMdFreeDescriptor (
 /* PAGE ALLOCATOR ROUTINES ***************************************************/
 
 NTSTATUS
+MmPaTruncateMemory (
+    _In_ ULONGLONG BasePage
+    );
+
+NTSTATUS
 BlMmAllocatePhysicalPages(
     _Inout_ PPHYSICAL_ADDRESS Address,
     _In_ BL_MEMORY_TYPE MemoryType,
@@ -2022,8 +2164,25 @@ MmPapAllocatePhysicalPagesInRange (
     );
 
 NTSTATUS
+MmPaReleaseSelfMapPages (
+    _In_ PHYSICAL_ADDRESS Address
+    );
+
+NTSTATUS
+MmPaReserveSelfMapPages (
+    _Inout_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _In_ ULONG Alignment,
+    _In_ ULONG PageCount
+    );
+NTSTATUS
 BlMmFreePhysicalPages (
     _In_ PHYSICAL_ADDRESS Address
+    );
+
+NTSTATUS
+MmPapFreePages (
+    _In_ PVOID Address,
+    _In_ ULONG WhichList
     );
 
 NTSTATUS
@@ -2053,7 +2212,39 @@ BlMmRemoveBadMemory (
     VOID
     );
 
+NTSTATUS
+BlMmGetMemoryMap (
+    _In_ PLIST_ENTRY MemoryMap,
+    _In_ PBL_IMAGE_PARAMETERS MemoryParameters,
+    _In_ ULONG WhichTypes,
+    _In_ ULONG Flags
+    );
+
 /* VIRTUAL MEMORY ROUTINES ***************************************************/
+
+NTSTATUS
+MmSelectMappingAddress (
+    _Out_ PVOID* MappingAddress,
+    _In_ PVOID PreferredAddress,
+    _In_ ULONGLONG Size,
+    _In_ ULONG AllocationAttributes,
+    _In_ ULONG Flags,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress
+    );
+
+NTSTATUS
+MmMapPhysicalAddress (
+    _Inout_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _Out_ PVOID* VirtualAddress,
+    _Inout_ PULONGLONG Size,
+    _In_ ULONG CacheAttributes
+    );
+
+NTSTATUS
+MmUnmapVirtualAddress (
+    _Inout_ PVOID* VirtualAddress,
+    _Inout_ PULONGLONG Size
+    );
 
 NTSTATUS
 BlMmMapPhysicalAddressEx (
@@ -2067,6 +2258,19 @@ NTSTATUS
 BlMmUnmapVirtualAddressEx (
     _In_ PVOID VirtualAddress,
     _In_ ULONGLONG Size
+    );
+
+BOOLEAN
+BlMmTranslateVirtualAddress (
+    _In_ PVOID VirtualAddress,
+    _Out_ PPHYSICAL_ADDRESS PhysicalAddress
+    );
+
+BOOLEAN
+MmArchTranslateVirtualAddress (
+    _In_ PVOID VirtualAddress,
+    _Out_opt_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _Out_opt_ PULONG CachingFlags
     );
 
 /* BLOCK ALLOCATOR ROUTINES **************************************************/
@@ -2535,8 +2739,21 @@ extern ULONG ConsoleGraphicalResolutionListSize;
 extern PVOID DspRemoteInputConsole;
 extern PVOID DspLocalInputConsole;
 extern WCHAR BlScratchBuffer[8192];
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlMappedAllocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlMappedUnallocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlFwAllocationTracker;
 extern BL_MEMORY_DESCRIPTOR_LIST MmMdlUnmappedAllocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlUnmappedUnallocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlReservedAllocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlBadMemory;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlTruncatedMemory;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlPersistentMemory;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlCompleteBadMemory;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlFreeVirtual;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlMappingTrackers;
 extern ULONGLONG BlpTimePerformanceFrequency;
 extern LIST_ENTRY RegisteredFileSystems;
+extern BL_ADDRESS_RANGE MmArchKsegAddressRange;
+extern ULONG_PTR MmArchTopOfApplicationAddressSpace;
 
 #endif

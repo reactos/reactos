@@ -34,6 +34,7 @@
 #include <wine/debug.h>
 #include <wine/list.h>
 #include <process.h>
+#include <shellutils.h>
 
 #include "pidl.h"
 
@@ -170,10 +171,10 @@ static void DeleteNode(LPNOTIFICATIONLIST item)
     queued = InterlockedCompareExchange(&item->wQueuedCount, 0, 0);
     if (queued != 0)
     {
-        TRACE("Not freeing, still %d queued events\n", queued);
+        ERR("Not freeing, still %d queued events\n", queued);
         return;
     }
-    TRACE("Freeing for real!\n");
+    TRACE("Freeing for real! %p (%d) \n", item, item->cidl);
 #endif
 
     /* remove item from list */
@@ -275,13 +276,6 @@ SHChangeNotifyRegister(
             {
                 InterlockedIncrement(&item->wQueuedCount);
                 QueueUserAPC( _AddDirectoryProc, m_hThread, (ULONG_PTR) &item->apidl[i] );
-            }
-            else
-            {
-                CHAR buffer[MAX_PATH];
-                if (!SHGetPathFromIDListA( item->apidl[i].pidl, buffer ))
-                    strcpy( buffer, "<unknown>" );
-                ERR("_OpenDirectory failed for %s\n", buffer);
             }
         }
 #endif
@@ -653,25 +647,38 @@ _AddDirectoryProc(ULONG_PTR arg)
 BOOL _OpenDirectory(LPNOTIFYREGISTER item)
 {
     STRRET strFile;
-    IShellFolder *psfDesktop;
+    IShellFolder *psf;
     HRESULT hr;
+    LPCITEMIDLIST child;
+    ULONG ulAttrs;
 
     // Makes function idempotent
     if (item->hDirectory && !(item->hDirectory == INVALID_HANDLE_VALUE))
         return TRUE;
 
-    hr = SHGetDesktopFolder(&psfDesktop);
-    if (!SUCCEEDED(hr))
-        return FALSE;
+    hr = SHBindToParent(item->pidl, &IID_IShellFolder, (LPVOID*)&psf, &child);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    hr = IShellFolder_GetDisplayNameOf(psfDesktop, item->pidl, SHGDN_FORPARSING, &strFile);
-    IShellFolder_Release(psfDesktop);
-    if (!SUCCEEDED(hr))
+    ulAttrs = SFGAO_FILESYSTEM | SFGAO_FOLDER;
+    hr = IShellFolder_GetAttributesOf(psf, 1, (LPCITEMIDLIST*)&child, &ulAttrs);
+    if (SUCCEEDED(hr))
+        hr = IShellFolder_GetDisplayNameOf(psf, child, SHGDN_FORPARSING, &strFile);
+
+    IShellFolder_Release(psf);
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
     hr = StrRetToBufW(&strFile, NULL, item->wstrDirectory, _countof(item->wstrDirectory));
-    if (!SUCCEEDED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
+
+    if ((ulAttrs & (SFGAO_FILESYSTEM | SFGAO_FOLDER)) != (SFGAO_FILESYSTEM | SFGAO_FOLDER))
+    {
+        TRACE("_OpenDirectory ignoring %s\n", debugstr_w(item->wstrDirectory));
+        item->hDirectory = INVALID_HANDLE_VALUE;
+        return FALSE;
+    }
 
     TRACE("_OpenDirectory %s\n", debugstr_w(item->wstrDirectory));
 
@@ -685,6 +692,7 @@ BOOL _OpenDirectory(LPNOTIFYREGISTER item)
 
     if (item->hDirectory == INVALID_HANDLE_VALUE)
     {
+        ERR("_OpenDirectory failed for %s\n", debugstr_w(item->wstrDirectory));
         return FALSE;
     }
     return TRUE;
@@ -693,7 +701,7 @@ BOOL _OpenDirectory(LPNOTIFYREGISTER item)
 static void CALLBACK _RequestTermination(ULONG_PTR arg)
 {
     LPNOTIFYREGISTER item = (LPNOTIFYREGISTER) arg;
-    TRACE("_RequestTermination %p \n", item->hDirectory);
+    TRACE("_RequestTermination %p %p \n", item, item->hDirectory);
     if (!item->hDirectory || item->hDirectory == INVALID_HANDLE_VALUE) return;
 
     CancelIo(item->hDirectory);
@@ -720,6 +728,17 @@ _NotificationCompletion(DWORD dwErrorCode, // completion code
         /* Command was induced by CancelIo in the shutdown procedure. */
         TRACE("_NotificationCompletion ended.\n");
         return;
+    }
+#endif
+
+#ifdef __REACTOS__
+    /* If the FSD doesn't support directory change notifications, there's no
+     * no need to retry and requeue notification
+     */
+    if (dwErrorCode == ERROR_INVALID_FUNCTION)
+    {
+        WARN("Directory watching not supported\n");
+        goto quit;
     }
 #endif
 
@@ -784,7 +803,9 @@ static VOID _BeginRead(LPNOTIFYREGISTER item )
 #ifdef __REACTOS__
     {
 #endif
-        ERR("ReadDirectoryChangesW failed. (%p, %p, %p, %p) Code: %u \n",
+        ERR("ReadDirectoryChangesW failed. (%p, %p, %p, %p, %p, %p) Code: %u \n",
+            item,
+            item->pParent,
             item->hDirectory,
             item->buffer,
             &item->overlapped,

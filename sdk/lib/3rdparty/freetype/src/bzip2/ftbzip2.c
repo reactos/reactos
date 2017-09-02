@@ -8,7 +8,7 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2010-2016 by                                                 */
+/*  Copyright 2010-2017 by                                                 */
 /*  Joel Klinghed.                                                         */
 /*                                                                         */
 /*  based on `src/gzip/ftgzip.c'                                           */
@@ -180,7 +180,7 @@
     bzstream->next_in  = (char*)zip->buffer;
 
     if ( BZ2_bzDecompressInit( bzstream, 0, 0 ) != BZ_OK ||
-         bzstream->next_in == NULL                       )
+         !bzstream->next_in                              )
       error = FT_THROW( Invalid_File_Format );
 
   Exit:

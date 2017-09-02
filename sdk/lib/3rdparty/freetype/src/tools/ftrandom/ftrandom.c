@@ -29,6 +29,9 @@
 /* This file is now part of the FreeType library */
 
 
+#define _XOPEN_SOURCE 500 /* for `kill', `strdup', `random', and `srandom' */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +41,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <math.h>
 #include <signal.h>
 #include <time.h>
 
@@ -56,7 +58,7 @@
   static int    rasterize      = false;
   static char*  results_dir    = "results";
 
-#define GOOD_FONTS_DIR  "/home/wl/freetype-testfonts"
+#define GOOD_FONTS_DIR  "/usr/local/share/fonts"
 
   static char*  default_dir_list[] =
   {
@@ -81,28 +83,31 @@
     NULL
   };
 
-  static int  error_count    = 1;
-  static int  error_fraction = 0;
+  static unsigned int  error_count    = 1;
+  static double        error_fraction = 0.0;
 
   static FT_F26Dot6  font_size = 12 * 64;
 
   static struct fontlist
   {
     char*         name;
-    int           len;
+    long          len;
     unsigned int  isbinary: 1;
     unsigned int  isascii: 1;
     unsigned int  ishex: 1;
 
   } *fontlist;
 
-  static int  fcnt;
+  static unsigned int  fcnt;
 
 
   static int
   FT_MoveTo( const FT_Vector  *to,
              void             *user )
   {
+    FT_UNUSED( to );
+    FT_UNUSED( user );
+
     return 0;
   }
 
@@ -111,6 +116,9 @@
   FT_LineTo( const FT_Vector  *to,
              void             *user )
   {
+    FT_UNUSED( to );
+    FT_UNUSED( user );
+
     return 0;
   }
 
@@ -120,6 +128,10 @@
               const FT_Vector  *to,
               void             *user )
   {
+    FT_UNUSED( _cp );
+    FT_UNUSED( to );
+    FT_UNUSED( user );
+
     return 0;
   }
 
@@ -130,6 +142,11 @@
               const FT_Vector  *to,
               void             *user )
   {
+    FT_UNUSED( cp1 );
+    FT_UNUSED( cp2 );
+    FT_UNUSED( to );
+    FT_UNUSED( user );
+
     return 0;
   }
 
@@ -147,8 +164,8 @@
   static void
   TestFace( FT_Face  face )
   {
-    int  gid;
-    int  load_flags = FT_LOAD_DEFAULT;
+    unsigned int  gid;
+    int           load_flags = FT_LOAD_DEFAULT;
 
 
     if ( check_outlines         &&
@@ -160,7 +177,7 @@
 
     FT_Set_Char_Size( face, 0, font_size, 72, 72 );
 
-    for ( gid = 0; gid < face->num_glyphs; ++gid )
+    for ( gid = 0; gid < face->num_glyphs; gid++ )
     {
       if ( check_outlines         &&
            FT_IS_SCALABLE( face ) )
@@ -202,18 +219,20 @@
       TestFace( face );
     else
     {
-      int  i, num;
+      long  i, num;
 
 
       num = face->num_faces;
       FT_Done_Face( face );
 
-      for ( i = 0; i < num; ++i )
+      for ( i = 0; i < num; i++ )
       {
         if ( !FT_New_Face( context, testfont, i, &face ) )
           TestFace( face );
       }
     }
+
+    FT_Done_FreeType( context );
 
     exit( 0 );
   }
@@ -227,16 +246,16 @@
     char*  pt;
 
 
-    if ( extensions == NULL )
+    if ( !extensions )
       return true;
 
     pt = strrchr( filename, '.' );
-    if ( pt == NULL )
+    if ( !pt )
       return false;
     if ( pt < strrchr( filename, '/' ) )
       return false;
 
-    for ( i = 0; extensions[i] != NULL; ++i )
+    for ( i = 0; extensions[i] != NULL; i++ )
       if ( strcasecmp( pt + 1, extensions[i] ) == 0 ||
            strcasecmp( pt,     extensions[i] ) == 0 )
         return true;
@@ -254,7 +273,7 @@
     item->isbinary = item->isascii = item->ishex = false;
 
     foo = fopen( item->name, "rb" );
-    if ( foo != NULL )
+    if ( foo )
     {
       /* Try to guess the file type from the first few characters... */
       int  ch1 = getc( foo );
@@ -281,8 +300,8 @@
       else if ( ch1 == '%' && ch2 == '!' )
       {
         /* Random PostScript */
-        if ( strstr( item->name, ".pfa" ) != NULL ||
-             strstr( item->name, ".PFA" ) != NULL )
+        if ( strstr( item->name, ".pfa" ) ||
+             strstr( item->name, ".PFA" ) )
           item->ishex = true;
         else
           item->isascii = true;
@@ -329,22 +348,23 @@
   FindFonts( char**  fontdirs,
              char**  extensions )
   {
-    int          i, max;
-    char         buffer[1025];
-    struct stat  statb;
+    int           i;
+    unsigned int  max;
+    char          buffer[1025];
+    struct stat   statb;
 
 
     max  = 0;
     fcnt = 0;
 
-    for ( i = 0; fontdirs[i] != NULL; ++i )
+    for ( i = 0; fontdirs[i] != NULL; i++ )
     {
       DIR*            examples;
       struct dirent*  ent;
 
 
       examples = opendir( fontdirs[i] );
-      if ( examples == NULL )
+      if ( !examples )
       {
         fprintf( stderr,
                  "Can't open example font directory `%s'\n",
@@ -358,13 +378,13 @@
                   "%s/%s", fontdirs[i], ent->d_name );
         if ( stat( buffer, &statb ) == -1 || S_ISDIR( statb.st_mode ) )
           continue;
-        if ( extensions == NULL || extmatch( buffer, extensions ) )
+        if ( !extensions || extmatch( buffer, extensions ) )
         {
           if ( fcnt >= max )
           {
             max += 100;
             fontlist = realloc( fontlist, max * sizeof ( struct fontlist ) );
-            if ( fontlist == NULL )
+            if ( !fontlist )
             {
               fprintf( stderr, "Can't allocate memory\n" );
               exit( 1 );
@@ -375,7 +395,7 @@
           fontlist[fcnt].len  = statb.st_size;
 
           figurefiletype( &fontlist[fcnt] );
-          ++fcnt;
+          fcnt++;
         }
       }
 
@@ -392,13 +412,13 @@
   }
 
 
-  static int
+  static unsigned int
   getErrorCnt( struct fontlist*  item )
   {
-    if ( error_count == 0 && error_fraction == 0 )
+    if ( error_count == 0 && error_fraction == 0.0 )
       return 0;
 
-    return error_count + ceil( error_fraction * item->len );
+    return error_count + (unsigned int)( error_fraction * item->len );
   }
 
 
@@ -417,21 +437,21 @@
   copyfont( struct fontlist*  item,
             char*             newfont )
   {
-    static char  buffer[8096];
-    FILE         *good, *new;
-    int          len;
-    int          i, err_cnt;
+    static char   buffer[8096];
+    FILE          *good, *newf;
+    size_t        len;
+    unsigned int  i, err_cnt;
 
 
     good = fopen( item->name, "r" );
-    if ( good == NULL )
+    if ( !good )
     {
       fprintf( stderr, "Can't open `%s'\n", item->name );
       return false;
     }
 
-    new = fopen( newfont, "w+" );
-    if ( new == NULL )
+    newf = fopen( newfont, "w+" );
+    if ( !newf )
     {
       fprintf( stderr, "Can't create temporary output file `%s'\n",
                newfont );
@@ -439,19 +459,19 @@
     }
 
     while ( ( len = fread( buffer, 1, sizeof ( buffer ), good ) ) > 0 )
-      fwrite( buffer, 1, len, new );
+      fwrite( buffer, 1, len, newf );
 
     fclose( good );
 
     err_cnt = getErrorCnt( item );
-    for ( i = 0; i < err_cnt; ++i )
+    for ( i = 0; i < err_cnt; i++ )
     {
-      fseek( new, getRandom( 0, item->len - 1 ), SEEK_SET );
+      fseek( newf, getRandom( 0, (int)( item->len - 1 ) ), SEEK_SET );
 
       if ( item->isbinary )
-        putc( getRandom( 0, 0xFF ), new );
+        putc( getRandom( 0, 0xFF ), newf );
       else if ( item->isascii )
-        putc( getRandom( 0x20, 0x7E ), new );
+        putc( getRandom( 0x20, 0x7E ), newf );
       else
       {
         int  hex = getRandom( 0, 15 );
@@ -462,18 +482,18 @@
         else
           hex += 'A' - 10;
 
-        putc( hex, new );
+        putc( hex, newf );
       }
     }
 
-    if ( ferror( new ) )
+    if ( ferror( newf ) )
     {
-      fclose( new );
+      fclose( newf );
       unlink( newfont );
       return false;
     }
 
-    fclose( new );
+    fclose( newf );
 
     return true;
   }
@@ -484,6 +504,8 @@
   static void
   abort_test( int  sig )
   {
+    FT_UNUSED( sig );
+
     /* If a time-out happens, then kill the child */
     kill( child_pid, SIGFPE );
     write( 2, "Timeout... ", 11 );
@@ -493,7 +515,7 @@
   static void
   do_test( void )
   {
-    int         i        = getRandom( 0, fcnt - 1 );
+    int         i        = getRandom( 0, (int)( fcnt - 1 ) );
     static int  test_num = 0;
     char        buffer[1024];
 
@@ -534,22 +556,42 @@
   usage( FILE*  out,
          char*  name )
   {
+    char**  d = default_dir_list;
+    char**  e = default_ext_list;
+
+
     fprintf( out, "%s [options] -- Generate random erroneous fonts\n"
                   "  and attempt to parse them with FreeType.\n\n", name );
 
     fprintf( out, "  --all                    All non-directory files are assumed to be fonts.\n" );
     fprintf( out, "  --check-outlines         Make sure we can parse the outlines of each glyph.\n" );
-    fprintf( out, "  --dir <path>             Append <path> to list of font search directories.\n" );
-    fprintf( out, "  --error-count <cnt>      Introduce <cnt> single byte errors into each font.\n" );
+    fprintf( out, "  --dir <path>             Append <path> to list of font search directories\n"
+                  "                           (no recursive search).\n" );
+    fprintf( out, "  --error-count <cnt>      Introduce <cnt> single byte errors into each font\n"
+                  "                           (default: 1)\n" );
     fprintf( out, "  --error-fraction <frac>  Introduce <frac>*filesize single byte errors\n"
-                  "                           into each font.\n" );
+                  "                           into each font (default: 0.0).\n" );
     fprintf( out, "  --ext <ext>              Add <ext> to list of extensions indicating fonts.\n" );
     fprintf( out, "  --help                   Print this.\n" );
     fprintf( out, "  --nohints                Turn off hinting.\n" );
     fprintf( out, "  --rasterize              Attempt to rasterize each glyph.\n" );
-    fprintf( out, "  --results <dir>          Directory in which to place the test fonts.\n" );
+    fprintf( out, "  --results <path>         Place the created test fonts into <path>\n"
+                  "                           (default: `results')\n" );
     fprintf( out, "  --size <float>           Use the given font size for the tests.\n" );
     fprintf( out, "  --test <file>            Run a single test on an already existing file.\n" );
+    fprintf( out, "\n" );
+
+    fprintf( out, "Default font extensions:\n" );
+    fprintf( out, " " );
+    while ( *e )
+      fprintf( out, " .%s", *e++ );
+    fprintf( out, "\n" );
+
+    fprintf( out, "Default font directories:\n" );
+    fprintf( out, " " );
+    while ( *d )
+      fprintf( out, " %s", *d++ );
+    fprintf( out, "\n" );
   }
 
 
@@ -564,17 +606,17 @@
     char*   testfile = NULL;
 
 
-    dirs = calloc( argc + 1, sizeof ( char ** ) );
-    exts = calloc( argc + 1, sizeof ( char ** ) );
+    dirs = calloc( (size_t)( argc + 1 ), sizeof ( char ** ) );
+    exts = calloc( (size_t)( argc + 1 ), sizeof ( char ** ) );
 
-    for ( i = 1; i < argc; ++i )
+    for ( i = 1; i < argc; i++ )
     {
       char*  pt = argv[i];
       char*  end;
 
 
       if ( pt[0] == '-' && pt[1] == '-' )
-        ++pt;
+        pt++;
 
       if ( strcmp( pt, "-all" ) == 0 )
         allexts = true;
@@ -585,9 +627,9 @@
       else if ( strcmp( pt, "-error-count" ) == 0 )
       {
         if ( !rset )
-          error_fraction = 0;
+          error_fraction = 0.0;
         rset = true;
-        error_count = strtol( argv[++i], &end, 10 );
+        error_count = (unsigned int)strtoul( argv[++i], &end, 10 );
         if ( *end != '\0' )
         {
           fprintf( stderr, "Bad value for error-count: %s\n", argv[i] );
@@ -603,6 +645,11 @@
         if ( *end != '\0' )
         {
           fprintf( stderr, "Bad value for error-fraction: %s\n", argv[i] );
+          exit( 1 );
+        }
+        if ( error_fraction < 0.0 || error_fraction > 1.0 )
+        {
+          fprintf( stderr, "error-fraction must be in the range [0;1]\n" );
           exit( 1 );
         }
       }
@@ -654,11 +701,11 @@
       dirs = default_dir_list;
     }
 
-    if ( testfile != NULL )
+    if ( testfile )
       ExecuteTest( testfile );         /* This should never return */
 
     time( &now );
-    srandom( now );
+    srandom( (unsigned int)now );
 
     FindFonts( dirs, exts );
     mkdir( results_dir, 0755 );

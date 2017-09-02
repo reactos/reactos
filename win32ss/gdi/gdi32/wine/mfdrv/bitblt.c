@@ -161,7 +161,7 @@ INT MFDRV_StretchDIBits( PHYSDEV dev, INT xDst, INT yDst, INT widthDst,
 
 
 /***********************************************************************
- *           MFDRV_SetDIBitsToDeivce
+ *           MFDRV_SetDIBitsToDevice
  */
 INT MFDRV_SetDIBitsToDevice( PHYSDEV dev, INT xDst, INT yDst, DWORD cx,
                              DWORD cy, INT xSrc, INT ySrc, UINT startscan,

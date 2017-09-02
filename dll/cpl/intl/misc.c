@@ -9,7 +9,9 @@ InsSpacePos(PCWSTR szInsStr, const int nPos)
     INT nStrCnt;
     INT nStrSize;
 
-    pszDestStr = (PWSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    pszDestStr = (PWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    if (pszDestStr == NULL)
+        return NULL;
 
     wcscpy(pszDestStr, szInsStr);
 
@@ -45,7 +47,9 @@ InsSpacesFmt(PCWSTR szSourceStr, PCWSTR szFmtStr)
     INT nSpaceOffset = 0;
     BOOL wasNul=FALSE;
 
-    pszDestStr = (PWSTR)malloc(255 * sizeof(WCHAR));
+    pszDestStr = (PWSTR)HeapAlloc(GetProcessHeap(), 0, 255 * sizeof(WCHAR));
+    if (pszDestStr == NULL)
+        return NULL;
 
     wcscpy(pszDestStr, szSourceStr);
 
@@ -80,7 +84,7 @@ InsSpacesFmt(PCWSTR szSourceStr, PCWSTR szFmtStr)
             /* Insert space to finded position plus all pos before */
             pszTempStr = InsSpacePos(pszDestStr, nSpaceOffset);
             wcscpy(pszDestStr,pszTempStr);
-            free(pszTempStr);
+            HeapFree(GetProcessHeap(), 0, pszTempStr);
 
             /* Num of spaces total increment */
             if (!wasNul)
@@ -102,7 +106,7 @@ InsSpacesFmt(PCWSTR szSourceStr, PCWSTR szFmtStr)
         {
             pszTempStr = InsSpacePos(pszDestStr, nFmtCount);
             wcscpy(pszDestStr, pszTempStr);
-            free(pszTempStr);
+            HeapFree(GetProcessHeap(), 0, pszTempStr);
         }
     }
 
@@ -121,7 +125,9 @@ ReplaceSubStr(PCWSTR szSourceStr,
     UINT nDestStrCnt;
     UINT nFirstCharCnt;
 
-    szDestStr = (PWSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    szDestStr = (PWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    if (szDestStr == NULL)
+        return NULL;
 
     nDestStrCnt = 0;
     nFirstCharCnt = 0;
@@ -163,6 +169,63 @@ ReplaceSubStr(PCWSTR szSourceStr,
     }
 
     return szDestStr;
+}
+
+
+VOID
+GetSelectedComboBoxText(
+    HWND hwndDlg,
+    INT nIdDlgItem,
+    PWSTR Buffer,
+    UINT uSize)
+{
+    HWND hChildWnd;
+    PWSTR tmp;
+    INT nIndex;
+    UINT uReqSize;
+
+    /* Get handle to time format control */
+    hChildWnd = GetDlgItem(hwndDlg, nIdDlgItem);
+    if (hChildWnd == NULL)
+        return;
+
+    /* Get index to selected time format */
+    nIndex = SendMessageW(hChildWnd, CB_GETCURSEL, 0, 0);
+    if (nIndex == CB_ERR)
+    {
+        /* No selection? Get content of the edit control */
+        SendMessageW(hChildWnd, WM_GETTEXT, uSize, (LPARAM)Buffer);
+    }
+    else
+    {
+        /* Get requested size, including the null terminator;
+         * it shouldn't be required because the previous CB_LIMITTEXT,
+         * but it would be better to check it anyways */
+        uReqSize = SendMessageW(hChildWnd, CB_GETLBTEXTLEN, (WPARAM)nIndex, 0) + 1;
+
+        /* Allocate enough space to be more safe */
+        tmp = (PWSTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, uReqSize * sizeof(WCHAR));
+        if (tmp != NULL)
+        {
+            /* Get selected time format text */
+            SendMessageW(hChildWnd, CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)tmp);
+
+            /* Finally, copy the result into the output */
+            wcsncpy(Buffer, tmp, uSize);
+
+            HeapFree(GetProcessHeap(), 0, tmp);
+        }
+    }
+}
+
+
+VOID
+GetSelectedComboBoxIndex(
+    HWND hwndDlg,
+    INT nIdDlgItem,
+    PINT pValue)
+{
+    *pValue = SendDlgItemMessageW(hwndDlg, nIdDlgItem, CB_GETCURSEL, 0, 0);
 }
 
 /* EOF */

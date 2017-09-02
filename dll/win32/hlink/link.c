@@ -124,7 +124,7 @@ static HRESULT WINAPI IHlink_fnQueryInterface(IHlink* iface, REFIID riid,
     *ppvObj = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown) || (IsEqualIID(riid, &IID_IHlink)))
-        *ppvObj = This;
+        *ppvObj = &This->IHlink_iface;
     else if (IsEqualIID(riid, &IID_IPersistStream))
         *ppvObj = &This->IPersistStream_iface;
     else if (IsEqualIID(riid, &IID_IDataObject))

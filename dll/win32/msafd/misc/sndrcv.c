@@ -45,11 +45,11 @@ WSPAsyncSelect(IN  SOCKET Handle,
 
     /* Change the Socket to Non Blocking */
     BlockMode = TRUE;
-    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
-    Socket->SharedData.NonBlocking = TRUE;
+    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL, NULL, NULL);
+    Socket->SharedData->NonBlocking = TRUE;
 
-    /* Deactive WSPEventSelect */
-    if (Socket->SharedData.AsyncEvents)
+    /* Deactivate WSPEventSelect */
+    if (Socket->SharedData->AsyncEvents)
     {
         if (WSPEventSelect(Handle, NULL, 0, lpErrno) == SOCKET_ERROR)
         {
@@ -65,14 +65,14 @@ WSPAsyncSelect(IN  SOCKET Handle,
     SockGetAsyncSelectHelperAfdHandle();
 
     /* Store Socket Data */
-    Socket->SharedData.hWnd = hWnd;
-    Socket->SharedData.wMsg = wMsg;
-    Socket->SharedData.AsyncEvents = lEvent;
-    Socket->SharedData.AsyncDisabledEvents = 0;
-    Socket->SharedData.SequenceNumber++;
+    Socket->SharedData->hWnd = hWnd;
+    Socket->SharedData->wMsg = wMsg;
+    Socket->SharedData->AsyncEvents = lEvent;
+    Socket->SharedData->AsyncDisabledEvents = 0;
+    Socket->SharedData->SequenceNumber++;
 
     /* Return if there are no more Events */
-    if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents)) == 0)
+    if ((Socket->SharedData->AsyncEvents & (~Socket->SharedData->AsyncDisabledEvents)) == 0)
     {
         HeapFree(GetProcessHeap(), 0, AsyncData);
         return 0;
@@ -80,7 +80,7 @@ WSPAsyncSelect(IN  SOCKET Handle,
 
     /* Set up the Async Data */
     AsyncData->ParentSocket = Socket;
-    AsyncData->SequenceNumber = Socket->SharedData.SequenceNumber;
+    AsyncData->SequenceNumber = Socket->SharedData->SequenceNumber;
 
     /* Begin Async Select by using I/O Completion */
     NtSetIoCompletion(SockAsyncCompletionPort,
@@ -93,6 +93,67 @@ WSPAsyncSelect(IN  SOCKET Handle,
     return ERROR_SUCCESS;
 }
 
+
+BOOL
+WSPAPI
+WSPGetOverlappedResult(
+    IN  SOCKET Handle,
+    IN  LPWSAOVERLAPPED lpOverlapped,
+    OUT LPDWORD lpdwBytes,
+    IN  BOOL fWait,
+    OUT LPDWORD lpdwFlags,
+    OUT LPINT lpErrno)
+{
+    PSOCKET_INFORMATION     Socket;
+    BOOL                    Ret;
+
+    TRACE("Called (%x)\n", Handle);
+
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+        if(lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return FALSE;
+    }
+    if (!lpOverlapped || !lpdwBytes || !lpdwFlags)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+        return FALSE;
+    }
+    Ret = GetOverlappedResult((HANDLE)Handle, lpOverlapped, lpdwBytes, fWait);
+
+    if (Ret)
+    {
+        *lpdwFlags = 0;
+
+        /* Re-enable Async Event */
+        SockReenableAsyncSelectEvent(Socket, FD_OOB);
+        SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+        SockReenableAsyncSelectEvent(Socket, FD_READ);
+    }
+
+    return Ret;
+}
+
+VOID
+NTAPI
+AfdAPC(PVOID ApcContext,
+       PIO_STATUS_BLOCK IoStatusBlock,
+       ULONG Reserved)
+{
+    PAFDAPCCONTEXT Context = ApcContext;
+
+    /* Re-enable Async Event */
+    SockReenableAsyncSelectEvent(Context->lpSocket, FD_OOB);
+    SockReenableAsyncSelectEvent(Context->lpSocket, FD_READ);
+    SockReenableAsyncSelectEvent(Context->lpSocket, FD_WRITE);
+
+    Context->lpCompletionRoutine(IoStatusBlock->Status, IoStatusBlock->Information, Context->lpOverlapped, 0);
+    HeapFree(GlobalHeap, 0, ApcContext);
+}
 
 int
 WSPAPI
@@ -111,7 +172,7 @@ WSPRecv(SOCKET Handle,
     AFD_RECV_INFO           RecvInfo;
     NTSTATUS                Status;
     PVOID                   APCContext;
-    PVOID                   APCFunction;
+    PIO_APC_ROUTINE         APCFunction;
     HANDLE                  Event = NULL;
     HANDLE                  SockEvent;
     PSOCKET_INFORMATION     Socket;
@@ -122,8 +183,21 @@ WSPRecv(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        if (lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if (!lpNumberOfBytesRead && !lpOverlapped)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
+    }
+    if (Socket->SharedData->OobInline && ReceiveFlags && (*ReceiveFlags & MSG_OOB) != 0)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEINVAL;
+        return SOCKET_ERROR;
     }
 
     Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
@@ -136,7 +210,7 @@ WSPRecv(SOCKET Handle,
     RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     RecvInfo.BufferCount = dwBufferCount;
     RecvInfo.TdiFlags = 0;
-    RecvInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
+    RecvInfo.AfdFlags = Socket->SharedData->NonBlocking ? AFD_IMMEDIATE : 0;
 
     /* Set the TDI Flags */
     if (*ReceiveFlags == 0)
@@ -161,7 +235,7 @@ WSPRecv(SOCKET Handle,
         }
     }
 
-    /* Verifiy if we should use APC */
+    /* Verify if we should use APC */
 
     if (lpOverlapped == NULL)
     {
@@ -173,18 +247,32 @@ WSPRecv(SOCKET Handle,
     }
     else
     {
+        /* Overlapped request for non overlapped opened socket */
+        if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
+        {
+            TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            return MsafdReturnWithErrno(0, lpErrno, 0, lpNumberOfBytesRead);
+        }
         if (lpCompletionRoutine == NULL)
         {
-            /* Using Overlapped Structure, but no Completition Routine, so no need for APC */
+            /* Using Overlapped Structure, but no Completion Routine, so no need for APC */
             APCContext = lpOverlapped;
             APCFunction = NULL;
             Event = lpOverlapped->hEvent;
         }
         else
         {
-            /* Using Overlapped Structure and a Completition Routine, so use an APC */
-            APCFunction = NULL; // should be a private io completition function inside us
-            APCContext = lpCompletionRoutine;
+            /* Using Overlapped Structure and a Completion Routine, so use an APC */
+            APCFunction = &AfdAPC; // should be a private io completion function inside us
+            APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDAPCCONTEXT));
+            if (!APCContext)
+            {
+                ERR("Not enough memory for APC Context\n");
+                return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, lpNumberOfBytesRead);
+            }
+            ((PAFDAPCCONTEXT)APCContext)->lpCompletionRoutine = lpCompletionRoutine;
+            ((PAFDAPCCONTEXT)APCContext)->lpOverlapped = lpOverlapped;
+            ((PAFDAPCCONTEXT)APCContext)->lpSocket = Socket;
             RecvInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
@@ -196,17 +284,17 @@ WSPRecv(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-        Event,
-        APCFunction,
-        APCContext,
-        IOSB,
-        IOCTL_AFD_RECV,
-        &RecvInfo,
-        sizeof(RecvInfo),
-        NULL,
-        0);
+                                   Event,
+                                   APCFunction,
+                                   APCContext,
+                                   IOSB,
+                                   IOCTL_AFD_RECV,
+                                   &RecvInfo,
+                                   sizeof(RecvInfo),
+                                   NULL,
+                                   0);
 
-    /* Wait for completition of not overlapped */
+    /* Wait for completion of not overlapped */
     if (Status == STATUS_PENDING && lpOverlapped == NULL)
     {
         /* It's up to the protocol to time out recv.  We must wait
@@ -219,6 +307,12 @@ WSPRecv(SOCKET Handle,
     NtClose( SockEvent );
 
     TRACE("Status %x Information %d\n", Status, IOSB->Information);
+
+    if (Status == STATUS_PENDING)
+    {
+        TRACE("Leaving (Pending)\n");
+        return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesRead);
+    }
 
     /* Return the Flags */
     *ReceiveFlags = 0;
@@ -244,6 +338,12 @@ WSPRecv(SOCKET Handle,
     else
     {
         SockReenableAsyncSelectEvent(Socket, FD_READ);
+    }
+
+    if (Status == STATUS_SUCCESS && lpOverlapped && lpCompletionRoutine)
+    {
+        lpCompletionRoutine(Status, IOSB->Information, lpOverlapped, *ReceiveFlags);
+        HeapFree(GlobalHeap, 0, (PVOID)APCContext);
     }
 
     return MsafdReturnWithErrno ( Status, lpErrno, IOSB->Information, lpNumberOfBytesRead );
@@ -277,11 +377,24 @@ WSPRecvFrom(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        if (lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if (!lpNumberOfBytesRead && !lpOverlapped)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
+    }
+    if (Socket->SharedData->OobInline && ReceiveFlags && (*ReceiveFlags & MSG_OOB) != 0)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEINVAL;
+        return SOCKET_ERROR;
     }
 
-    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    if (!(Socket->SharedData->ServiceFlags1 & XP1_CONNECTIONLESS))
     {
         /* Call WSPRecv for a non-datagram socket */
         return WSPRecv(Handle,
@@ -295,6 +408,17 @@ WSPRecvFrom(SOCKET Handle,
                        lpErrno);
     }
 
+    /* Bind us First */
+    if (Socket->SharedData->State == SocketOpen)
+    {
+        Socket->HelperData->WSHGetWildcardSockaddr(Socket->HelperContext,
+            SocketAddress,
+            SocketAddressLength);
+        /* Bind it */
+        if (WSPBind(Handle, SocketAddress, *SocketAddressLength, lpErrno) == SOCKET_ERROR)
+            return SOCKET_ERROR;
+    }
+
     Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
                             NULL, 1, FALSE );
 
@@ -305,7 +429,7 @@ WSPRecvFrom(SOCKET Handle,
     RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     RecvInfo.BufferCount = dwBufferCount;
     RecvInfo.TdiFlags = 0;
-    RecvInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
+    RecvInfo.AfdFlags = Socket->SharedData->NonBlocking ? AFD_IMMEDIATE : 0;
     RecvInfo.AddressLength = SocketAddressLength;
     RecvInfo.Address = SocketAddress;
 
@@ -332,7 +456,7 @@ WSPRecvFrom(SOCKET Handle,
         }
     }
 
-    /* Verifiy if we should use APC */
+    /* Verify if we should use APC */
 
     if (lpOverlapped == NULL)
     {
@@ -344,18 +468,32 @@ WSPRecvFrom(SOCKET Handle,
     }
     else
     {
+        /* Overlapped request for non overlapped opened socket */
+        if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
+        {
+            TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            return MsafdReturnWithErrno(0, lpErrno, 0, lpNumberOfBytesRead);
+        }
         if (lpCompletionRoutine == NULL)
         {
-            /* Using Overlapped Structure, but no Completition Routine, so no need for APC */
+            /* Using Overlapped Structure, but no Completion Routine, so no need for APC */
             APCContext = lpOverlapped;
             APCFunction = NULL;
             Event = lpOverlapped->hEvent;
         }
         else
         {
-            /* Using Overlapped Structure and a Completition Routine, so use an APC */
-            APCFunction = NULL; // should be a private io completition function inside us
-            APCContext = lpCompletionRoutine;
+            /* Using Overlapped Structure and a Completion Routine, so use an APC */
+            APCFunction = &AfdAPC; // should be a private io completion function inside us
+            APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDAPCCONTEXT));
+            if (!APCContext)
+            {
+                ERR("Not enough memory for APC Context\n");
+                return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, lpNumberOfBytesRead);
+            }
+            ((PAFDAPCCONTEXT)APCContext)->lpCompletionRoutine = lpCompletionRoutine;
+            ((PAFDAPCCONTEXT)APCContext)->lpOverlapped = lpOverlapped;
+            ((PAFDAPCCONTEXT)APCContext)->lpSocket = Socket;
             RecvInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
@@ -377,21 +515,28 @@ WSPRecvFrom(SOCKET Handle,
                                     NULL,
                                     0);
 
-    /* Wait for completition of not overlapped */
+    /* Wait for completion of not overlapped */
     if (Status == STATUS_PENDING && lpOverlapped == NULL)
     {
-        WaitForSingleObject(SockEvent, INFINITE); // BUGBUG, shouldn wait infintely for receive...
+        WaitForSingleObject(SockEvent, INFINITE); // BUGBUG, shouldn wait infinitely for receive...
         Status = IOSB->Status;
     }
 
     NtClose( SockEvent );
+
+    if (Status == STATUS_PENDING)
+    {
+        TRACE("Leaving (Pending)\n");
+        return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesRead);
+    }
 
     /* Return the Flags */
     *ReceiveFlags = 0;
 
     switch (Status)
     {
-        case STATUS_RECEIVE_EXPEDITED: *ReceiveFlags = MSG_OOB;
+        case STATUS_RECEIVE_EXPEDITED:
+            *ReceiveFlags = MSG_OOB;
             break;
         case STATUS_RECEIVE_PARTIAL_EXPEDITED:
             *ReceiveFlags = MSG_PARTIAL | MSG_OOB;
@@ -409,6 +554,12 @@ WSPRecvFrom(SOCKET Handle,
     else
     {
         SockReenableAsyncSelectEvent(Socket, FD_READ);
+    }
+
+    if (Status == STATUS_SUCCESS && lpOverlapped && lpCompletionRoutine)
+    {
+        lpCompletionRoutine(Status, IOSB->Information, lpOverlapped, *ReceiveFlags);
+        HeapFree(GlobalHeap, 0, (PVOID)APCContext);
     }
 
     return MsafdReturnWithErrno ( Status, lpErrno, IOSB->Information, lpNumberOfBytesRead );
@@ -441,8 +592,15 @@ WSPSend(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        if (lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if (!lpNumberOfBytesSent && !lpOverlapped)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
     }
 
     Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
@@ -457,7 +615,7 @@ WSPSend(SOCKET Handle,
     SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     SendInfo.BufferCount = dwBufferCount;
     SendInfo.TdiFlags = 0;
-    SendInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
+    SendInfo.AfdFlags = Socket->SharedData->NonBlocking ? AFD_IMMEDIATE : 0;
 
     /* Set the TDI Flags */
     if (iFlags)
@@ -472,7 +630,7 @@ WSPSend(SOCKET Handle,
         }
     }
 
-    /* Verifiy if we should use APC */
+    /* Verify if we should use APC */
     if (lpOverlapped == NULL)
     {
         /* Not using Overlapped structure, so use normal blocking on event */
@@ -483,18 +641,32 @@ WSPSend(SOCKET Handle,
     }
     else
     {
+        /* Overlapped request for non overlapped opened socket */
+        if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
+        {
+            TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            return MsafdReturnWithErrno(0, lpErrno, 0, lpNumberOfBytesSent);
+        }
         if (lpCompletionRoutine == NULL)
         {
-            /* Using Overlapped Structure, but no Completition Routine, so no need for APC */
+            /* Using Overlapped Structure, but no Completion Routine, so no need for APC */
             APCContext = lpOverlapped;
             APCFunction = NULL;
             Event = lpOverlapped->hEvent;
         }
         else
         {
-            /* Using Overlapped Structure and a Completition Routine, so use an APC */
-            APCFunction = NULL; // should be a private io completition function inside us
-            APCContext = lpCompletionRoutine;
+            /* Using Overlapped Structure and a Completion Routine, so use an APC */
+            APCFunction = &AfdAPC; // should be a private io completion function inside us
+            APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDAPCCONTEXT));
+            if (!APCContext)
+            {
+                ERR("Not enough memory for APC Context\n");
+                return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, lpNumberOfBytesSent);
+            }
+            ((PAFDAPCCONTEXT)APCContext)->lpCompletionRoutine = lpCompletionRoutine;
+            ((PAFDAPCCONTEXT)APCContext)->lpOverlapped = lpOverlapped;
+            ((PAFDAPCCONTEXT)APCContext)->lpSocket = Socket;
             SendInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
@@ -516,10 +688,10 @@ WSPSend(SOCKET Handle,
                                     NULL,
                                     0);
 
-    /* Wait for completition of not overlapped */
+    /* Wait for completion of not overlapped */
     if (Status == STATUS_PENDING && lpOverlapped == NULL)
     {
-        WaitForSingleObject(SockEvent, INFINITE); // BUGBUG, shouldn wait infintely for send...
+        WaitForSingleObject(SockEvent, INFINITE); // BUGBUG, shouldn wait infinitely for send...
         Status = IOSB->Status;
     }
 
@@ -535,6 +707,12 @@ WSPSend(SOCKET Handle,
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
     TRACE("Leaving (Success, %d)\n", IOSB->Information);
+
+    if (Status == STATUS_SUCCESS && lpOverlapped && lpCompletionRoutine)
+    {
+        lpCompletionRoutine(Status, IOSB->Information, lpOverlapped, 0);
+        HeapFree(GlobalHeap, 0, (PVOID)APCContext);
+    }
 
     return MsafdReturnWithErrno( Status, lpErrno, IOSB->Information, lpNumberOfBytesSent );
 }
@@ -570,11 +748,18 @@ WSPSendTo(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        if (lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if (!lpNumberOfBytesSent && !lpOverlapped)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
     }
 
-    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    if (!(Socket->SharedData->ServiceFlags1 & XP1_CONNECTIONLESS))
     {
         /* Use WSPSend for connection-oriented sockets */
         return WSPSend(Handle,
@@ -589,7 +774,7 @@ WSPSendTo(SOCKET Handle,
     }
 
     /* Bind us First */
-    if (Socket->SharedData.State == SocketOpen)
+    if (Socket->SharedData->State == SocketOpen)
     {
         /* Get the Wildcard Address */
         BindAddressLength = Socket->HelperData->MaxWSAddressLength;
@@ -639,12 +824,12 @@ WSPSendTo(SOCKET Handle,
 
     /* Set up Structure */
     SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
-    SendInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
+    SendInfo.AfdFlags = Socket->SharedData->NonBlocking ? AFD_IMMEDIATE : 0;
     SendInfo.BufferCount = dwBufferCount;
     SendInfo.TdiConnection.RemoteAddress = RemoteAddress;
     SendInfo.TdiConnection.RemoteAddressLength = Socket->HelperData->MaxTDIAddressLength;
 
-    /* Verifiy if we should use APC */
+    /* Verify if we should use APC */
     if (lpOverlapped == NULL)
     {
         /* Not using Overlapped structure, so use normal blocking on event */
@@ -655,19 +840,32 @@ WSPSendTo(SOCKET Handle,
     }
     else
     {
+        /* Overlapped request for non overlapped opened socket */
+        if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
+        {
+            TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            return MsafdReturnWithErrno(0, lpErrno, 0, lpNumberOfBytesSent);
+        }
         if (lpCompletionRoutine == NULL)
         {
-            /* Using Overlapped Structure, but no Completition Routine, so no need for APC */
+            /* Using Overlapped Structure, but no Completion Routine, so no need for APC */
             APCContext = lpOverlapped;
             APCFunction = NULL;
             Event = lpOverlapped->hEvent;
         }
         else
         {
-            /* Using Overlapped Structure and a Completition Routine, so use an APC */
-            /* Should be a private io completition function inside us */
-            APCFunction = NULL;
-            APCContext = lpCompletionRoutine;
+            /* Using Overlapped Structure and a Completion Routine, so use an APC */
+            APCFunction = &AfdAPC; // should be a private io completion function inside us
+            APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDAPCCONTEXT));
+            if (!APCContext)
+            {
+                ERR("Not enough memory for APC Context\n");
+                return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, lpNumberOfBytesSent);
+            }
+            ((PAFDAPCCONTEXT)APCContext)->lpCompletionRoutine = lpCompletionRoutine;
+            ((PAFDAPCCONTEXT)APCContext)->lpOverlapped = lpOverlapped;
+            ((PAFDAPCCONTEXT)APCContext)->lpSocket = Socket;
             SendInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
@@ -687,10 +885,10 @@ WSPSendTo(SOCKET Handle,
                                    NULL,
                                    0);
 
-    /* Wait for completition of not overlapped */
+    /* Wait for completion of not overlapped */
     if (Status == STATUS_PENDING && lpOverlapped == NULL)
     {
-        /* BUGBUG, shouldn't wait infintely for send... */
+        /* BUGBUG, shouldn't wait infinitely for send... */
         WaitForSingleObject(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
@@ -702,7 +900,19 @@ WSPSendTo(SOCKET Handle,
         HeapFree(GlobalHeap, 0, BindAddress);
     }
 
+    if (Status == STATUS_PENDING)
+    {
+        TRACE("Leaving (Pending)\n");
+        return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
+    }
+
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+
+    if (Status == STATUS_SUCCESS && lpOverlapped && lpCompletionRoutine)
+    {
+        lpCompletionRoutine(Status, IOSB->Information, lpOverlapped, 0);
+        HeapFree(GlobalHeap, 0, (PVOID)APCContext);
+    }
 
     return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
 }

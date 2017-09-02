@@ -430,6 +430,7 @@ static void dwarf2_swallow_attribute(dwarf2_traverse_context_t* ctx,
 
     switch (abbrev_attr->form)
     {
+    case DW_FORM_flag_present: step = 0; break;
     case DW_FORM_ref_addr:
     case DW_FORM_addr:   step = ctx->word_size; break;
     case DW_FORM_flag:
@@ -475,6 +476,11 @@ static void dwarf2_fill_attr(const dwarf2_parse_context_t* ctx,
     case DW_FORM_flag:
         attr->u.uvalue = dwarf2_get_byte(data);
         TRACE("flag<0x%lx>\n", attr->u.uvalue);
+        break;
+
+    case DW_FORM_flag_present:
+        attr->u.uvalue = 1;
+        TRACE("flag_present\n");
         break;
 
     case DW_FORM_data1:
@@ -1882,7 +1888,7 @@ static struct symt* dwarf2_parse_subprogram(dwarf2_parse_context_t* ctx,
         inline_flags.u.uvalue != DW_INL_not_inlined)
     {
         TRACE("Function %s declared as inlined (%ld)... skipping\n",
-              name.u.string ? name.u.string : "(null)", inline_flags.u.uvalue);
+              debugstr_a(name.u.string), inline_flags.u.uvalue);
         return NULL;
     }
 
@@ -2615,7 +2621,7 @@ static BOOL parse_cie_details(dwarf2_traverse_context_t* ctx, struct frame_info*
 
     /* parse the CIE first */
     version = dwarf2_parse_byte(ctx);
-    if (version != 1 && version != 3)
+    if (version != 1 && version != 3 && version != 4)
     {
         FIXME("unknown CIE version %u at %p\n", version, ctx->data - 1);
         return FALSE;
@@ -2623,12 +2629,21 @@ static BOOL parse_cie_details(dwarf2_traverse_context_t* ctx, struct frame_info*
     augmentation = (const char*)ctx->data;
     ctx->data += strlen(augmentation) + 1;
 
-    info->code_align = dwarf2_leb128_as_unsigned(ctx);
-    info->data_align = dwarf2_leb128_as_signed(ctx);
-    if (version == 1)
-        info->retaddr_reg = dwarf2_parse_byte(ctx);
-    else
-        info->retaddr_reg = dwarf2_leb128_as_unsigned(ctx);
+    switch (version)
+    {
+    case 4:
+        /* skip 'address_size' and 'segment_size' */
+        ctx->data += 2;
+        /* fallthrough */
+    case 1:
+    case 3:
+        info->code_align = dwarf2_leb128_as_unsigned(ctx);
+        info->data_align = dwarf2_leb128_as_signed(ctx);
+        info->retaddr_reg = version == 1 ? dwarf2_parse_byte(ctx) :dwarf2_leb128_as_unsigned(ctx);
+        break;
+    default:
+        ;
+    }
     info->state.cfa_rule = RULE_CFA_OFFSET;
 
     end = NULL;

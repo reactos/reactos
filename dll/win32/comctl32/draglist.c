@@ -255,7 +255,7 @@ VOID WINAPI DrawInsert (HWND hwndParent, HWND hwndLB, INT nItem)
         RedrawWindow(hwndParent, &data->last_drag_icon_rect, NULL,
             RDW_INTERNALPAINT | RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
 
-        CopyRect(&data->last_drag_icon_rect, &rcDragIcon);
+        data->last_drag_icon_rect = rcDragIcon;
 
         if (nItem >= 0)
         {

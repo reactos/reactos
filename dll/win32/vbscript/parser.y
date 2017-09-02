@@ -180,15 +180,15 @@ SimpleStatement
                                             { $1->args = $2; $$ = new_assign_statement(ctx, $1, $4); CHECK_ERROR; }
     | tDIM DimDeclList                      { $$ = new_dim_statement(ctx, $2); CHECK_ERROR; }
     | IfStatement                           { $$ = $1; }
-    | tWHILE Expression tNL StatementsNl_opt tWEND
+    | tWHILE Expression StSep StatementsNl_opt tWEND
                                             { $$ = new_while_statement(ctx, STAT_WHILE, $2, $4); CHECK_ERROR; }
-    | tDO DoType Expression tNL StatementsNl_opt tLOOP
+    | tDO DoType Expression StSep StatementsNl_opt tLOOP
                                             { $$ = new_while_statement(ctx, $2 ? STAT_WHILELOOP : STAT_UNTIL, $3, $5);
                                               CHECK_ERROR; }
-    | tDO tNL StatementsNl_opt tLOOP DoType Expression
+    | tDO StSep StatementsNl_opt tLOOP DoType Expression
                                             { $$ = new_while_statement(ctx, $5 ? STAT_DOWHILE : STAT_DOUNTIL, $6, $3);
                                               CHECK_ERROR; }
-    | tDO tNL StatementsNl_opt tLOOP        { $$ = new_while_statement(ctx, STAT_DOWHILE, NULL, $3); CHECK_ERROR; }
+    | tDO StSep StatementsNl_opt tLOOP      { $$ = new_while_statement(ctx, STAT_DOWHILE, NULL, $3); CHECK_ERROR; }
     | FunctionDecl                          { $$ = new_function_statement(ctx, $1); CHECK_ERROR; }
     | tEXIT tDO                             { $$ = new_statement(ctx, STAT_EXITDO, 0); CHECK_ERROR; }
     | tEXIT tFOR                            { $$ = new_statement(ctx, STAT_EXITFOR, 0); CHECK_ERROR; }
@@ -201,9 +201,9 @@ SimpleStatement
     | tON tERROR tRESUME tNEXT              { $$ = new_onerror_statement(ctx, TRUE); CHECK_ERROR; }
     | tON tERROR tGOTO '0'                  { $$ = new_onerror_statement(ctx, FALSE); CHECK_ERROR; }
     | tCONST ConstDeclList                  { $$ = new_const_statement(ctx, $2); CHECK_ERROR; }
-    | tFOR Identifier '=' Expression tTO Expression Step_opt tNL StatementsNl_opt tNEXT
+    | tFOR Identifier '=' Expression tTO Expression Step_opt StSep StatementsNl_opt tNEXT
                                             { $$ = new_forto_statement(ctx, $2, $4, $6, $7, $9); CHECK_ERROR; }
-    | tFOR tEACH Identifier tIN Expression tNL StatementsNl_opt tNEXT
+    | tFOR tEACH Identifier tIN Expression StSep StatementsNl_opt tNEXT
                                             { $$ = new_foreach_statement(ctx, $3, $5, $7); }
     | tSELECT tCASE Expression StSep CaseClausules tEND tSELECT
                                             { $$ = new_select_statement(ctx, $3, $5); }

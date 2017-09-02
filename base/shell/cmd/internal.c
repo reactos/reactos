@@ -146,7 +146,7 @@
    INT GetRootPath("C:",outbuffer,chater size of outbuffer);
    the first param can have any size, if the the two frist
    letter are not a drive with : it will get Currentpath on
-   current drive exacly as GetCurrentDirectory does.
+   current drive exactly as GetCurrentDirectory does.
    */
 
 INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
@@ -281,7 +281,7 @@ INT cmd_chdir (LPTSTR param)
 
 #ifdef INCLUDE_CMD_MKDIR
 
-/* Helper funtion for mkdir to make directories in a path.
+/* Helper function for mkdir to make directories in a path.
 Dont use the api to decrease depence on libs */
 BOOL
 MakeFullPath(TCHAR * DirPath)
@@ -466,7 +466,7 @@ INT cmd_rmdir (LPTSTR param)
 
         if (RD_SUB)
         {
-            /* ask if they want to delete evrything in the folder */
+            /* ask if they want to delete everything in the folder */
             if (!RD_QUIET)
             {
                 res = FilePromptYNA (STRING_DEL_HELP2);

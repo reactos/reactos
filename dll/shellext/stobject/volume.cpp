@@ -11,9 +11,6 @@
 #include <mmsystem.h>
 #include <mmddk.h>
 
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
-
 WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
 HICON g_hIconVolume;
@@ -26,7 +23,8 @@ DWORD  g_muteControlID;
 
 UINT g_mmDeviceChange;
 
-BOOL g_IsMute = FALSE;
+static BOOL g_IsMute = FALSE;
+static BOOL g_IsRunning = FALSE;
 
 static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 {
@@ -115,7 +113,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     return S_OK;
 }
 
-HRESULT Volume_IsMute()
+HRESULT Volume_IsMute(VOID)
 {
 #if 0
     MIXERCONTROLDETAILS mixerControlDetails;
@@ -143,6 +141,7 @@ HRESULT Volume_IsMute()
 HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
 {
     HRESULT hr;
+    WCHAR strTooltip[128];
 
     TRACE("Volume_Init\n");
 
@@ -160,13 +159,16 @@ HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
 
     Volume_IsMute();
 
+    g_IsRunning = TRUE;
+
     HICON icon;
     if (g_IsMute)
         icon = g_hIconMute;
     else
         icon = g_hIconVolume;
 
-    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_VOLUME, icon, L"Volume Control");
+    LoadStringW(g_hInstance, IDS_VOL_VOLUME, strTooltip, _countof(strTooltip));
+    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_VOLUME, icon, strTooltip);
 }
 
 HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
@@ -182,11 +184,13 @@ HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
     {
         WCHAR strTooltip[128];
         HICON icon;
-        if (g_IsMute) {
+        if (g_IsMute)
+        {
             icon = g_hIconMute;
             LoadStringW(g_hInstance, IDS_VOL_MUTED, strTooltip, _countof(strTooltip));
         }
-        else {
+        else
+        {
             icon = g_hIconVolume;
             LoadStringW(g_hInstance, IDS_VOL_VOLUME, strTooltip, _countof(strTooltip));
         }
@@ -203,6 +207,8 @@ HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray)
 {
     TRACE("Volume_Shutdown\n");
 
+    g_IsRunning = FALSE;
+
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_VOLUME, NULL, NULL);
 }
 
@@ -211,10 +217,10 @@ HRESULT Volume_OnDeviceChange(_In_ CSysTray * pSysTray, WPARAM wParam, LPARAM lP
     return Volume_FindMixerControl(pSysTray);
 }
 
-static void _RunVolume()
+static void _RunVolume(BOOL bSmall)
 {
     // FIXME: ensure we are loading the right one
-    ShellExecuteW(NULL, NULL, L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL);
+    ShellExecuteW(NULL, NULL, L"sndvol32.exe", bSmall ? L"/t" : NULL, NULL, SW_SHOWNORMAL);
 }
 
 static void _RunMMCpl()
@@ -232,6 +238,7 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     HMENU hPopup = CreatePopupMenu();
     AppendMenuW(hPopup, MF_STRING, IDS_VOL_OPEN, strOpen);
     AppendMenuW(hPopup, MF_STRING, IDS_VOL_ADJUST, strAdjust);
+    SetMenuDefaultItem(hPopup, IDS_VOL_OPEN, FALSE);
 
     DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
     DWORD msgPos = GetMessagePos();
@@ -246,7 +253,7 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     switch (id)
     {
     case IDS_VOL_OPEN:
-        _RunVolume();
+        _RunVolume(FALSE);
         break;
     case IDS_VOL_ADJUST:
         _RunMMCpl();
@@ -254,40 +261,79 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     }
 }
 
-HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
 {
     if (uMsg == g_mmDeviceChange)
         return Volume_OnDeviceChange(pSysTray, wParam, lParam);
 
-    if (uMsg != ID_ICON_VOLUME)
+    switch (uMsg)
     {
-        TRACE("Volume_Message received for unknown ID %d, ignoring.\n");
-        return S_FALSE;
+        case WM_USER + 220:
+            TRACE("Volume_Message: WM_USER+220\n");
+            if (wParam == 4)
+            {
+                if (lParam == FALSE)
+                    return Volume_Init(pSysTray);
+                else
+                    return Volume_Shutdown(pSysTray);
+            }
+            return S_FALSE;
+
+        case WM_USER + 221:
+            TRACE("Volume_Message: WM_USER+221\n");
+            if (wParam == 4)
+            {
+                lResult = (LRESULT)g_IsRunning;
+                return S_OK;
+            }
+            return S_FALSE;
+
+        case ID_ICON_VOLUME:
+            TRACE("Volume_Message uMsg=%d, w=%x, l=%x\n", uMsg, wParam, lParam);
+
+            Volume_Update(pSysTray);
+
+            switch (lParam)
+            {
+                case WM_LBUTTONDOWN:
+                    SetTimer(pSysTray->GetHWnd(), VOLUME_TIMER_ID, 500, NULL);
+                    break;
+
+                case WM_LBUTTONUP:
+                    break;
+
+                case WM_LBUTTONDBLCLK:
+                    KillTimer(pSysTray->GetHWnd(), VOLUME_TIMER_ID);
+                    _RunVolume(FALSE);
+                    break;
+
+                case WM_RBUTTONDOWN:
+                    break;
+
+                case WM_RBUTTONUP:
+                    _ShowContextMenu(pSysTray);
+                    break;
+
+                case WM_RBUTTONDBLCLK:
+                    break;
+
+                case WM_MOUSEMOVE:
+                    break;
+            }
+            return S_OK;
+
+        default:
+            TRACE("Volume_Message received for unknown ID %d, ignoring.\n");
+            return S_FALSE;
     }
 
-    TRACE("Volume_Message uMsg=%d, w=%x, l=%x\n", uMsg, wParam, lParam);
+    return S_FALSE;
+}
 
-    Volume_Update(pSysTray);
-
-    switch (lParam)
-    {
-    case WM_LBUTTONDOWN:
-        break;
-    case WM_LBUTTONUP:
-        TRACE("TODO: display volume slider\n");
-        break;
-    case WM_LBUTTONDBLCLK:
-        _RunVolume();
-        break;
-    case WM_RBUTTONDOWN:
-        break;
-    case WM_RBUTTONUP:
-        _ShowContextMenu(pSysTray);
-    case WM_RBUTTONDBLCLK:
-        break;
-    case WM_MOUSEMOVE:
-        break;
-    }
-
-    return S_OK;
+VOID
+Volume_OnTimer(HWND hWnd)
+{
+    TRACE("Volume_OnTimer\n!");
+    KillTimer(hWnd, VOLUME_TIMER_ID);
+    _RunVolume(TRUE);
 }

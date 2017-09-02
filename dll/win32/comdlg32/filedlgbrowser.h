@@ -81,6 +81,7 @@ typedef struct
 	UINT sharevistring;
     } HookMsg;
 
+    BOOL ole_initialized;
 } FileOpenDlgInfos;
 
 /***********************************************************************
@@ -135,7 +136,7 @@ void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd) DECLSPEC_HIDDEN;
 /**************************************************************************
 *   External Prototypes
 */
-extern const char FileOpenDlgInfosStr[] DECLSPEC_HIDDEN;
+extern FileOpenDlgInfos *get_filedlg_infoptr(HWND hwnd) DECLSPEC_HIDDEN;
 
 extern IShellFolder*    GetShellFolderFromPidl(LPITEMIDLIST pidlAbs) DECLSPEC_HIDDEN;
 extern LPITEMIDLIST     GetParentPidl(LPITEMIDLIST pidl) DECLSPEC_HIDDEN;

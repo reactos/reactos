@@ -218,7 +218,7 @@ USBSTOR_GetFieldLength(
     ULONG LastCharacterPosition = 0;
 
     //
-    // scan the field and return last positon which contains a valid character
+    // scan the field and return last position which contains a valid character
     //
     for(Index = 0; Index < MaxLength; Index++)
     {
@@ -581,7 +581,9 @@ USBSTOR_HandleDeviceControl(
         /* Legacy port capability query */
         if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(PVOID))
         {
-            Capabilities = *((PVOID *)Irp->AssociatedIrp.SystemBuffer) = ExAllocatePool(NonPagedPool, sizeof(IO_SCSI_CAPABILITIES));
+            Capabilities = *((PVOID *)Irp->AssociatedIrp.SystemBuffer) = ExAllocatePoolWithTag(NonPagedPool,
+                                                                                               sizeof(IO_SCSI_CAPABILITIES),
+                                                                                               USB_STOR_TAG);
             Irp->IoStatus.Information = sizeof(PVOID);
         }
         else

@@ -286,6 +286,16 @@ EnumWindowStationsW(WINSTAENUMPROCW EnumFunc,
 
 
 /*
+ * @unimplemented on Win32k side
+ */
+BOOL WINAPI
+GetWinStationInfo(PVOID pUnknown)
+{
+    return (BOOL)NtUserCallOneParam((DWORD_PTR)pUnknown, ONEPARAM_ROUTINE_GETWINSTAINFO);
+}
+
+
+/*
  * @implemented
  */
 HWINSTA WINAPI

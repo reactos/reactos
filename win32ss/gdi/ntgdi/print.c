@@ -141,11 +141,6 @@ NtGdiExtEscape(
       EngSetLastError(ERROR_INVALID_HANDLE);
       return -1;
    }
-   if ( pDC->dctype == DC_TYPE_INFO)
-   {
-      DC_UnlockDc(pDC);
-      return 0;
-   }
 
    if ( InSize && UnsafeInData )
    {

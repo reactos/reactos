@@ -262,7 +262,7 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     /* Now check if connection info is given */
     if (ConnectionInfo)
     {
-        /* Well, we're defintely in a client now */
+        /* Well, we're definitely in a client now */
         InsideCsrProcess = FALSE;
 
         /* Do we have a connection to CSR yet? */

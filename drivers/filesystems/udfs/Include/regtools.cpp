@@ -19,7 +19,7 @@ RegTGetKeyHandle(
     UNICODE_STRING NameString;
     NTSTATUS status;
 
-    //KdPrint(("RegTGetKeyHandle: h=%x, %S\n", hRootKey, KeyName));
+    //UDFPrint(("RegTGetKeyHandle: h=%x, %S\n", hRootKey, KeyName));
 
     RtlInitUnicodeString(&NameString, KeyName);
 
@@ -38,7 +38,7 @@ RegTGetKeyHandle(
                 );
 
     if(!NT_SUCCESS(status)) {
-        //KdPrint(("    status %x\n", status));
+        //UDFPrint(("    status %x\n", status));
         *hKey = NULL;
     }
 
@@ -135,7 +135,7 @@ RegTGetDwordValue(
 
 #ifndef WIN_32_MODE
 /*
-    KdPrint(("h=%x|%S, %S (%x)\n",
+    UDFPrint(("h=%x|%S, %S (%x)\n",
         hRootKey, RegistryPath, Name, *pUlong));
 */
     len = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG) + 0x20;
@@ -160,9 +160,9 @@ RegTGetDwordValue(
        ValInfo->DataLength == sizeof(ULONG)) {
         RtlCopyMemory(pUlong, ValInfo->Data, sizeof(ULONG));
         retval = TRUE;
-        //KdPrint(("  -> %x\n",*pUlong));
+        //UDFPrint(("  -> %x\n",*pUlong));
     } else {
-        //KdPrint(("  err %x\n",status));
+        //UDFPrint(("  err %x\n",status));
     }
 
     MyFreePool__(ValInfo);

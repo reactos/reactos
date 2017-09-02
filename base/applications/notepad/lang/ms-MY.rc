@@ -30,7 +30,7 @@ BEGIN
         MENUITEM "Simp&an sebagai...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Persediaan laman...(&T)", CMD_PAGE_SETUP
-        MENUITEM "Cetak(&P)\tCtrl+P", CMD_PRINT
+        MENUITEM "Cetak(&P)...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Keluar(&X)", CMD_EXIT
     END
@@ -45,7 +45,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Cari...(&F)\tCtrl+F", CMD_SEARCH
         MENUITEM "Cari seterus&nya\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Ganti\tCtrl+H", CMD_REPLACE
+        MENUITEM "Ganti...\tCtrl+H", CMD_REPLACE
         MENUITEM "Pergi Ke...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Pilih semu&a\tCtrl+A", CMD_SELECT_ALL

@@ -48,7 +48,7 @@ extern IDirect3D7Vtbl IDirect3D7_Vtbl;
 
 /* Start up direct hal or hel
  * iface = a pointer to the com object
- * pGUID = guid hardware acclations or software acclation this can  be NULL
+ * pGUID = guid hardware accelerations or software acceleration this can  be NULL
  * reenable = FALSE if we whant create a new directdraw com
  *          = TRUE if we really whant rebuild the whole com interface (not in use)
  */
@@ -103,7 +103,7 @@ void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src
 /* DirectDraw Cleanup code only internal use */
 VOID Cleanup(LPDDRAWI_DIRECTDRAW_INT iface);
 
-/* own macro to alloc memmory */
+/* own macro to alloc memory */
 
 /*
 #define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m)
@@ -184,9 +184,9 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 
 /*
    use this macro to close
-   down the debuger text complete
+   down the debugger text complete
    no debuging at all, it will
-   crash ms debuger in VS
+   crash ms debugger in VS
 */
 
 //#define DX_WINDBG_trace()
@@ -197,12 +197,12 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 
 
 /*
-   Use this macro if you want deboug in visual studio or
+   Use this macro if you want debug in visual studio or
    if you have a program to look at the _INT struct from
    ReactOS ddraw.dll or ms ddraw.dll, so you can see what
    value ms are being setup.
 
-   This macro will create allot warings and can not be help when you compile
+   This macro will create allot warnings and can not be help when you compile
 */
 
 
@@ -218,7 +218,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
    so you can figout what going wrong and what
    api are being call or if it hel or is it hal
 
-   This marco does not create warings when you compile
+   This marco does not create warnings when you compile
 */
 
 #define DX_STUB \

@@ -30,7 +30,7 @@ BEGIN
         MENUITEM "Guardar &como...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Configurar &página...", CMD_PAGE_SETUP
-        MENUITEM "&Imprimir\tCtrl+P", CMD_PRINT
+        MENUITEM "&Imprimir...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Salir", CMD_EXIT
     END

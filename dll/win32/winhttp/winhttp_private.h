@@ -222,8 +222,6 @@ typedef struct
     char  read_buf[8192]; /* buffer for already read but not returned data */
     header_t *headers;
     DWORD num_headers;
-    WCHAR **accept_types;
-    DWORD num_accept_types;
     struct authinfo *authinfo;
     struct authinfo *proxy_authinfo;
     HANDLE task_wait;
@@ -318,25 +316,27 @@ void delete_domain( domain_t * ) DECLSPEC_HIDDEN;
 BOOL set_server_for_hostname( connect_t *, LPCWSTR, INTERNET_PORT ) DECLSPEC_HIDDEN;
 void destroy_authinfo( struct authinfo * ) DECLSPEC_HIDDEN;
 
+BOOL process_header( request_t *request, LPCWSTR field, LPCWSTR value, DWORD flags, BOOL request_only ) DECLSPEC_HIDDEN;
+
 extern HRESULT WinHttpRequest_create( void ** ) DECLSPEC_HIDDEN;
 void release_typelib( void ) DECLSPEC_HIDDEN;
 
-static inline void *heap_alloc( SIZE_T size )
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc( SIZE_T size )
 {
     return HeapAlloc( GetProcessHeap(), 0, size );
 }
 
-static inline void *heap_alloc_zero( SIZE_T size )
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero( SIZE_T size )
 {
     return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, size );
 }
 
-static inline void *heap_realloc( LPVOID mem, SIZE_T size )
+static inline void* __WINE_ALLOC_SIZE(2) heap_realloc( LPVOID mem, SIZE_T size )
 {
     return HeapReAlloc( GetProcessHeap(), 0, mem, size );
 }
 
-static inline void *heap_realloc_zero( LPVOID mem, SIZE_T size )
+static inline void* __WINE_ALLOC_SIZE(2) heap_realloc_zero( LPVOID mem, SIZE_T size )
 {
     return HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, mem, size );
 }
@@ -376,6 +376,21 @@ static inline char *strdupWA( const WCHAR *src )
         int len = WideCharToMultiByte( CP_ACP, 0, src, -1, NULL, 0, NULL, NULL );
         if ((dst = heap_alloc( len )))
             WideCharToMultiByte( CP_ACP, 0, src, -1, dst, len, NULL, NULL );
+    }
+    return dst;
+}
+
+static inline char *strdupWA_sized( const WCHAR *src, DWORD size )
+{
+    char *dst = NULL;
+    if (src)
+    {
+        int len = WideCharToMultiByte( CP_ACP, 0, src, size, NULL, 0, NULL, NULL ) + 1;
+        if ((dst = heap_alloc( len )))
+        {
+            WideCharToMultiByte( CP_ACP, 0, src, len, dst, size, NULL, NULL );
+            dst[len - 1] = 0;
+        }
     }
     return dst;
 }

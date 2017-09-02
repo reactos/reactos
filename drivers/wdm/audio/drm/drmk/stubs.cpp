@@ -123,7 +123,7 @@ DrmForwardContentToInterface(
 }
 
 /*
-    Retrieves DRM Content rights that have been assigend to a DRM Content ID.
+    Retrieves DRM Content rights that have been assigned to a DRM Content ID.
 */
 /*
  * @unimplemented

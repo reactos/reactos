@@ -58,6 +58,9 @@ extern HINSTANCE hExplorerInstance;
 extern HANDLE hProcessHeap;
 extern HKEY hkExplorer;
 
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+
 /*
  * explorer.c
  */
@@ -108,11 +111,14 @@ GetExplorerRegValueSet(IN HKEY hKey,
  *  rshell.c
  */
 
-HRESULT WINAPI _CStartMenu_Constructor(REFIID riid, void **ppv);
+VOID InitRSHELL(VOID);
+HRESULT WINAPI _CStartMenu_CreateInstance(REFIID riid, void **ppv);
 HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk);
 BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop);
 DWORD WINAPI _WinList_Init(void);
 void WINAPI _ShellDDEInit(BOOL bInit);
+HRESULT WINAPI _CBandSiteMenu_CreateInstance(REFIID riid, void **ppv);
+HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv);
 
 /*
  * traywnd.c
@@ -135,7 +141,6 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
     STDMETHOD_(HWND, GetHWND) (THIS) PURE;
     STDMETHOD_(BOOL, IsSpecialHWND) (THIS_ HWND hWnd) PURE;
     STDMETHOD_(BOOL, IsHorizontal) (THIS) PURE;
-    STDMETHOD_(HFONT, GetCaptionFonts) (THIS_ HFONT *phBoldCaption) PURE;
     STDMETHOD_(HWND, DisplayProperties) (THIS) PURE;
     STDMETHOD_(BOOL, ExecContextMenuCmd) (THIS_ UINT uiCmd) PURE;
     STDMETHOD_(BOOL, Lock) (THIS_ BOOL bLock) PURE;
@@ -153,7 +158,6 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
 #define ITrayWindow_GetHWND(p)              (p)->lpVtbl->GetHWND(p)
 #define ITrayWindow_IsSpecialHWND(p,a)      (p)->lpVtbl->IsSpecialHWND(p,a)
 #define ITrayWindow_IsHorizontal(p)         (p)->lpVtbl->IsHorizontal(p)
-#define ITrayWindow_GetCaptionFonts(p,a)    (p)->lpVtbl->GetCaptionFonts(p,a)
 #define ITrayWindow_DisplayProperties(p)    (p)->lpVtbl->DisplayProperties(p)
 #define ITrayWindow_ExecContextMenuCmd(p,a) (p)->lpVtbl->ExecContextMenuCmd(p,a)
 #define ITrayWindow_Lock(p,a)               (p)->lpVtbl->Lock(p,a)
@@ -178,17 +182,30 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray);
  */
 
 /* Structure to hold non-default options*/
-typedef struct _ADVANCED_SETTINGS
+typedef struct _TASKBAR_SETTINGS
 {
+    BOOL bLock;
+    BOOL bAutoHide;
+    BOOL bAlwaysOnTop;
+    BOOL bGroupButtons;
+    BOOL bShowQuickLaunch;
+    BOOL bShowClock;
     BOOL bShowSeconds;
-} ADVANCED_SETTINGS, *PADVANCED_SETTINGS;
+    BOOL bHideInactiveIcons;
+} TASKBAR_SETTINGS, *PTASKBAR_SETTINGS;
 
-extern ADVANCED_SETTINGS AdvancedSettings;
-extern const TCHAR szAdvancedSettingsKey [];
+extern TASKBAR_SETTINGS TaskBarSettings;
 
 VOID
-LoadAdvancedSettings(VOID);
+LoadTaskBarSettings(VOID);
 
+VOID
+SaveTaskBarSettings(VOID);
+
+BOOL
+LoadSettingDword(IN LPCWSTR pszKeyName,
+                 IN LPCWSTR pszValueName,
+                 OUT DWORD &dwValue);
 BOOL
 SaveSettingDword(IN LPCWSTR pszKeyName,
                  IN LPCWSTR pszValueName,
@@ -234,32 +251,8 @@ ShowCustomizeNotifyIcons(HINSTANCE, HWND);
  * taskband.cpp
  */
 
-/* Internal Task Band CLSID */
-extern const GUID CLSID_ITaskBand;
-
-#define INTERFACE ITaskBand
-DECLARE_INTERFACE_(ITaskBand, IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT, QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG, AddRef) (THIS) PURE;
-    STDMETHOD_(ULONG, Release) (THIS) PURE;
-    /*** ITaskBand methods ***/
-    STDMETHOD_(HRESULT, GetRebarBandID)(THIS_ DWORD *pdwBandID) PURE;
-};
-#undef INTERFACE
-
-#if defined(COBJMACROS)
-/*** IUnknown methods ***/
-#define ITaskBand_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
-#define ITaskBand_AddRef(p)             (p)->lpVtbl->AddRef(p)
-#define ITaskBand_Release(p)            (p)->lpVtbl->Release(p)
-/*** ITaskBand methods ***/
-#define ITaskBand_GetRebarBandID(p,a)   (p)->lpVtbl->GetRebarBandID(p,a)
-#endif
-
-ITaskBand *
-CreateTaskBand(IN OUT ITrayWindow *Tray);
+extern const GUID CLSID_ITaskBand;  /* Internal Task Band CLSID */
+HRESULT CTaskBand_CreateInstance(IN ITrayWindow *Tray, HWND hWndStartButton, REFIID riid, void **ppv);
 
 /*
  * tbsite.cpp
@@ -298,10 +291,7 @@ DECLARE_INTERFACE_(ITrayBandSite, IUnknown)
 #define ITrayBandSite_Lock(p,a)                         (p)->lpVtbl->Lock(p,a)
 #endif
 
-ITrayBandSite *
-CreateTrayBandSite(IN OUT ITrayWindow *Tray,
-OUT HWND *phWndRebar,
-OUT HWND *phWndTaskSwitch);
+HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBand, OUT ITrayBandSite** pBandSite);
 
 /*
  * startmnu.cpp

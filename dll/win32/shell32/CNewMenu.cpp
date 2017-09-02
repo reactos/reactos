@@ -31,8 +31,7 @@ CNewMenu::CNewMenu() :
     m_pLinkItem(NULL),
     m_pSite(NULL),
     m_hiconFolder(NULL),
-    m_hiconLink(NULL),
-    m_idCmdFirst(0)
+    m_hiconLink(NULL)
 {
 }
 
@@ -138,7 +137,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
     if (!Types[i].pszName)
         return NULL;
 
-    SHFILEINFO fi;
+    SHFILEINFOW fi;
     if (!SHGetFileInfoW(pwszExt, FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_USEFILEATTRIBUTES|SHGFI_TYPENAME|SHGFI_ICON|SHGFI_SMALLICON))
         return NULL;
 
@@ -463,7 +462,7 @@ HRESULT CNewMenu::CreateNewFolder(LPCMINVOKECOMMANDINFO lpici)
         return E_FAIL;
 
     /* Create the new directory and show the appropriate dialog in case of error */
-    if (SHCreateDirectory (lpici->hwnd, wszName) != ERROR_SUCCESS)
+    if (SHCreateDirectory(lpici->hwnd, wszName) != ERROR_SUCCESS)
         return E_FAIL;
 
     /* Show and select the new item in the def view */
@@ -492,7 +491,7 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             STARTUPINFOW si;
             PROCESS_INFORMATION pi;
 
-            if (!ExpandEnvironmentStringsW((LPWSTR)pItem->pData, wszBuf, MAX_PATH))
+            if (!ExpandEnvironmentStringsW((LPWSTR)pItem->pData, wszBuf, _countof(wszBuf)))
             {
                 TRACE("ExpandEnvironmentStrings failed\n");
                 break;
@@ -502,12 +501,14 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             Ptr = wcsstr(wszBuf, L"%1");
             if (Ptr)
             {
-                Ptr[1] = 's';
+                Ptr[1] = L's';
                 StringCbPrintfW(wszTemp, sizeof(wszTemp), wszBuf, wszPath);
                 pwszCmd = wszTemp;
             }
             else
+            {
                 pwszCmd = wszBuf;
+            }
 
             /* Create process */
             ZeroMemory(&si, sizeof(si));
@@ -516,32 +517,33 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             {
                 CloseHandle(pi.hProcess);
                 CloseHandle(pi.hThread);
-            } else
+            }
+            else
+            {
                 ERR("Failed to create process\n");
+            }
             break;
         }
+
         case SHELLNEW_TYPE_DATA:
         case SHELLNEW_TYPE_FILENAME:
         case SHELLNEW_TYPE_NULLFILE:
         {
             BOOL bSuccess = TRUE;
-            LPWSTR pwszFilename = NULL;
-            size_t cchFilenameMax = 0;
+            WCHAR wszName[MAX_PATH];
+            WCHAR wszNewFile[MAX_PATH];
 
-            /* Build new file name */
-            LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, wszBuf, _countof(wszBuf));
-            StringCchCatExW(wszPath, _countof(wszPath), L"\\", &pwszFilename, &cchFilenameMax, 0);
-            StringCchPrintfW(pwszFilename, cchFilenameMax, L"%s %s%s", wszBuf, pItem->pwszDesc, pItem->pwszExt);
+            if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, wszBuf, _countof(wszBuf)))
+                return E_FAIL;
 
-            /* Find unique name */
-            for (UINT i = 2; PathFileExistsW(wszPath); ++i)
-            {
-                StringCchPrintfW(pwszFilename, cchFilenameMax, L"%s %s (%u)%s", wszBuf, pItem->pwszDesc, i, pItem->pwszExt);
-                TRACE("New Filename %ls\n", pwszFilename);
-            }
+            StringCchPrintfW(wszNewFile, _countof(wszNewFile), L"%s %s%s", wszBuf, pItem->pwszDesc, pItem->pwszExt);
+
+            /* Create the name of the new file */
+            if (!PathYetAnotherMakeUniqueName(wszName, wszPath, NULL, wszNewFile))
+                return E_FAIL;
 
             /* Create new file */
-            HANDLE hFile = CreateFileW(wszPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+            HANDLE hFile = CreateFileW(wszName, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
             if (hFile != INVALID_HANDLE_VALUE)
             {
                 if (pItem->Type == SHELLNEW_TYPE_DATA)
@@ -553,29 +555,33 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
 
                 /* Close file now */
                 CloseHandle(hFile);
-            } else
+            }
+            else
+            {
                 bSuccess = FALSE;
+            }
 
             if (pItem->Type == SHELLNEW_TYPE_FILENAME)
             {
                 /* Copy file */
-                if (!CopyFileW((LPWSTR)pItem->pData, wszPath, FALSE))
+                if (!CopyFileW((LPWSTR)pItem->pData, wszName, FALSE))
                     ERR("Copy file failed: %ls\n", (LPWSTR)pItem->pData);
             }
 
             /* Show message if we failed */
             if (bSuccess)
             {
-                TRACE("Notifying fs %s\n", debugstr_w(wszPath));
-                SelectNewItem(lpcmi, SHCNE_CREATE, SHCNF_PATHW, wszPath);
+                TRACE("Notifying fs %s\n", debugstr_w(wszName));
+                SelectNewItem(lpcmi, SHCNE_CREATE, SHCNF_PATHW, wszName);
             }
             else
             {
-                StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create file: %s", pwszFilename);
-                MessageBoxW(NULL, wszBuf, L"Cannot create file", MB_OK|MB_ICONERROR); // FIXME
+                StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create file: %s", wszName);
+                MessageBoxW(NULL, wszBuf, L"Cannot create file", MB_OK|MB_ICONERROR); // FIXME load localized error msg
             }
             break;
         }
+
         case SHELLNEW_TYPE_INVALID:
             ERR("Invalid type\n");
             break;
@@ -606,8 +612,6 @@ CNewMenu::QueryContextMenu(HMENU hMenu,
     WCHAR wszNew[200];
     MENUITEMINFOW mii;
     UINT cItems = 0;
-
-    m_idCmdFirst = idCmdFirst;
 
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
@@ -704,7 +708,7 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
             if (!lpdis || lpdis->CtlType != ODT_MENU)
                 break;
 
-            DWORD id = LOWORD(lpdis->itemID) - m_idCmdFirst;
+            DWORD id = LOWORD(lpdis->itemID);
             HICON hIcon = 0;
             if (id == 0)
                 hIcon = m_hiconFolder;  

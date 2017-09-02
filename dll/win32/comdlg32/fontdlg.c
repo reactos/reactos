@@ -517,7 +517,6 @@ static INT AddFontStyle( const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *
 
 static void CFn_FitFontSize( HWND hDlg, int points)
 {
-    WCHAR buffW[16];
     int i,n;
 
     /* look for fitting font size in combobox3 */
@@ -536,8 +535,7 @@ static void CFn_FitFontSize( HWND hDlg, int points)
     }
 
     /* no default matching size, set text manually */
-    sprintfW(buffW, fontsizefmtW, points);
-    SetDlgItemTextW(hDlg, cmb3, buffW);
+    SetDlgItemInt(hDlg, cmb3, points, TRUE);
 }
 
 static BOOL CFn_FitFontStyle( HWND hDlg, LONG packedstyle )

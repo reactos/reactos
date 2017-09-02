@@ -1,22 +1,4 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS GUI/console setup
  * FILE:            base/setup/setup/setup.c
@@ -27,124 +9,70 @@
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <tchar.h>
 
 #define NDEBUG
 #include <debug.h>
 
-typedef DWORD (WINAPI *PINSTALL_REACTOS)(HINSTANCE hInstance);
+typedef INT (WINAPI *PINSTALL_REACTOS)(INT argc, WCHAR** argv);
 
 /* FUNCTIONS ****************************************************************/
 
-LPTSTR
-lstrchr(
-    LPCTSTR s,
-    TCHAR c)
-{
-    while (*s)
-    {
-        if (*s == c)
-            return (LPTSTR)s;
-        s++;
-    }
-
-    if (c == (TCHAR)0)
-        return (LPTSTR)s;
-
-    return (LPTSTR)NULL;
-}
-
-
 static
-VOID
-RunNewSetup(
-    HINSTANCE hInstance)
+INT
+RunInstallReactOS(INT argc, WCHAR* argv[])
 {
+    INT RetVal;
     HMODULE hDll;
     PINSTALL_REACTOS InstallReactOS;
 
-    hDll = LoadLibrary(TEXT("syssetup"));
+    hDll = LoadLibraryW(L"syssetup.dll");
     if (hDll == NULL)
     {
-        DPRINT("Failed to load 'syssetup'!\n");
-        return;
+        DPRINT("Failed to load 'syssetup.dll'!\n");
+        return GetLastError();
     }
+    DPRINT("Loaded 'syssetup.dll'!\n");
 
-    DPRINT("Loaded 'syssetup'!\n");
-    InstallReactOS = (PINSTALL_REACTOS)GetProcAddress(hDll, "InstallReactOS");
+    /* Call the standard Windows-compatible export */
+    InstallReactOS = (PINSTALL_REACTOS)GetProcAddress(hDll, "InstallWindowsNt");
     if (InstallReactOS == NULL)
     {
-        DPRINT("Failed to get address for 'InstallReactOS()'!\n");
-        FreeLibrary(hDll);
-        return;
+        RetVal = GetLastError();
+        DPRINT("Failed to get address for 'InstallWindowsNt()'!\n");
+    }
+    else
+    {
+        RetVal = InstallReactOS(argc, argv);
     }
 
-    InstallReactOS(hInstance);
-
     FreeLibrary(hDll);
+    return RetVal;
 }
 
 
-static
-VOID
-RunLiveCD(
-    HINSTANCE hInstance)
+/* Called from wmainCRTStartup */
+INT wmain(INT argc, WCHAR* argv[])
 {
-    HMODULE hDll;
-    PINSTALL_REACTOS InstallLiveCD;
+    LPWSTR CmdLine, p;
 
-    hDll = LoadLibrary(TEXT("syssetup"));
-    if (hDll == NULL)
-    {
-        DPRINT("Failed to load 'syssetup'!\n");
-        return;
-    }
+    // NOTE: Temporary, until we correctly use argc/argv.
+    CmdLine = GetCommandLineW();
+    DPRINT("CmdLine: <%S>\n", CmdLine);
 
-    DPRINT("Loaded 'syssetup'!\n");
-    InstallLiveCD = (PINSTALL_REACTOS)GetProcAddress(hDll, "InstallLiveCD");
-    if (InstallLiveCD == NULL)
-    {
-        DPRINT("Failed to get address for 'InstallReactOS()'!\n");
-        FreeLibrary(hDll);
-        return;
-    }
-
-    InstallLiveCD(hInstance);
-
-    FreeLibrary(hDll);
-}
-
-
-int
-WINAPI
-_tWinMain(
-    HINSTANCE hInstance,
-    HINSTANCE hPrevInstance,
-    LPTSTR lpCmdLine,
-    int nShowCmd)
-{
-    LPTSTR CmdLine;
-    LPTSTR p;
-
-    CmdLine = GetCommandLine();
-
-    DPRINT("CmdLine: <%s>\n",CmdLine);
-
-    p = lstrchr(CmdLine, TEXT('-'));
+    p = wcschr(CmdLine, L'-');
     if (p == NULL)
-        return 0;
+        return ERROR_INVALID_PARAMETER;
+    p++;
 
-    if (!lstrcmpi(p, TEXT("-newsetup")))
+    // NOTE: On Windows, "mini" means "minimal UI", and can be used
+    // in addition to "newsetup"; these options are not exclusive.
+    if (_wcsicmp(p, L"newsetup") == 0 || _wcsicmp(p, L"mini") == 0)
     {
-        RunNewSetup(hInstance);
-    }
-    else if (!lstrcmpi(p, TEXT("-mini")))
-    {
-        RunLiveCD(hInstance);
+        RunInstallReactOS(argc, argv);
     }
 
 #if 0
-  /* Add new setup types here */
+    /* Add new setup types here */
     else if (...)
     {
 

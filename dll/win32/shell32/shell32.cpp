@@ -25,6 +25,44 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+/*
+ * Implemented
+ */
+EXTERN_C LPWSTR
+WINAPI
+AddCommasW(DWORD lValue, LPWSTR lpNumber)
+{
+    WCHAR szValue[MAX_PATH], szSeparator[8 + 1];
+    NUMBERFMTW numFormat;
+
+    GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                   LOCALE_STHOUSAND,
+                   szSeparator,
+                   _countof(szSeparator));
+
+    numFormat.NumDigits     = 0;
+    numFormat.LeadingZero   = 0;
+    numFormat.Grouping      = 3; // FIXME! Use GetLocaleInfoW with LOCALE_SGROUPING and interpret the result.
+    numFormat.lpDecimalSep  = szSeparator;
+    numFormat.lpThousandSep = szSeparator;
+    numFormat.NegativeOrder = 0;
+
+    swprintf(szValue, L"%lu", lValue);
+
+    if (GetNumberFormatW(LOCALE_USER_DEFAULT,
+                         0,
+                         szValue,
+                         &numFormat,
+                         lpNumber,
+                         MAX_PATH) != 0)
+    {
+        return lpNumber;
+    }
+
+    wcscpy(lpNumber, szValue);
+    return lpNumber;
+}
+
 /**************************************************************************
  * Default ClassFactory types
  */
@@ -119,7 +157,7 @@ HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
 
 HRESULT IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInst, IClassFactory **theFactory)
 {
-    return ShellObjectCreatorInit<IDefClFImpl>(lpfnCI, pcRefDll, riidInst, IID_IClassFactory, theFactory);
+    return ShellObjectCreatorInit<IDefClFImpl>(lpfnCI, pcRefDll, riidInst, IID_PPV_ARG(IClassFactory, theFactory));
 }
 
 /******************************************************************************
@@ -170,7 +208,7 @@ public:
             *ppv = NULL;
             if (pv != NULL)
                 return CLASS_E_NOAGGREGATION;
-            return CStartMenu_Constructor(riid, ppv);
+            return RSHELL_CStartMenu_CreateInstance(riid, ppv);
         }
     };
 };
@@ -213,7 +251,6 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_MenuBand, CMenuBand)
     OBJECT_ENTRY(CLSID_MenuDeskBar, CMenuDeskBar)
     OBJECT_ENTRY(CLSID_MergedFolder, CMergedFolder)
-    OBJECT_ENTRY(CLSID_RebarBandSite, CBandSite)
     OBJECT_ENTRY(CLSID_ExeDropHandler, CExeDropHandler)
     OBJECT_ENTRY(CLSID_QueryAssociations, CQueryAssociations)
 END_OBJECT_MAP()
@@ -276,11 +313,6 @@ STDAPI DllGetVersion(DLLVERSIONINFO *pdvi)
  */
 HINSTANCE    shell32_hInstance;
 
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
-
 /*************************************************************************
  * SHELL32 DllMain
  *
@@ -307,9 +339,8 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
         InitCtrls.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES;
         InitCommonControlsEx(&InitCtrls);
 
-        SIC_Initialize();
+        /* Bad idea, initialization in DllMain! */
         InitChangeNotifications();
-        InitIconOverlays();
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {

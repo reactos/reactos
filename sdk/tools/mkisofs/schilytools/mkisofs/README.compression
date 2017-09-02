@@ -1,0 +1,17 @@
+Transparent decompression (-z option) is available on Linux kernels
+using kernel version 2.4.14 or 2.4.9-ac14 or later.
+
+You also need the zisofs-tools package, containing the mkzftree
+utility, to create the compressed files; this package is available at:
+
+ftp://ftp.kernel.org/pub/linux/utils/fs/zisofs/
+
+The mkzftree utility can also be used to read compressed CD-ROMs on
+systems which do not support transparent decompression.
+
+The use of a separate utility allows compression to be controlled on a
+per-file basis.  A file which is not compressed can be read on any
+system.
+
+Transparent decompression is implemented as an extension to Rock
+Ridge, so Rock Ridge needs to be enabled (-R or -r options.)

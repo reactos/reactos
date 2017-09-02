@@ -20,6 +20,8 @@
 
 #define IDB_WATERMARK 100
 #define IDB_HEADER    101
+#define IDB_CLASSIC   102
+#define IDB_LAUTUS    103
 
 #define IDI_ICON1 10
 #define IDI_ICON2 11
@@ -66,6 +68,10 @@
 #define IDC_FINISHTITLE      1071
 #define IDC_RESTART_PROGRESS 1072
 
+#define IDD_THEMEPAGE        1080
+#define IDC_THEMEDSTYLE      1081
+#define IDC_CLASSICSTYLE     1082
+
 #define IDD_GPL      2100
 #define IDC_GPL_TEXT 2101
 
@@ -90,6 +96,9 @@
 #define IDS_PROCESSTITLE    3060
 #define IDS_PROCESSSUBTITLE 3061
 
+#define IDS_THEMESELECTIONTITLE    3070
+#define IDS_THEMESELECTIONSUBTITLE 3071
+
 #define IDS_ACKPROJECTS 3100
 
 #define IDS_REACTOS_SETUP          3300
@@ -113,5 +122,9 @@
 #define IDS_WZD_LOCALTIME       3456
 
 #define IDS_STATUS_INSTALL_DEV 3500
+
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+#define IDS_PROGRAMFILES    3600
+#define IDS_COMMONFILES     3601
 
 #define IDR_GPL 4000

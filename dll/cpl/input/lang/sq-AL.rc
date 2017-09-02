@@ -10,10 +10,10 @@ CAPTION "Cilësimet"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Zgjidhni shërbimet që ju dëshironi për çdo gjuhë të dhënash treguar në listë.\nPërdor Shto dhe Hiq butonat për të modifikuar këtë listë.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "&Vendos Parazgjedhur", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "Sh&to...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Hiq...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Hiq", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Karakteristikat...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Preferenca", -1, 7, 185, 240, 36
     PUSHBUTTON "&Çeles cilësimesh...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -164,6 +164,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi Phonetic"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Typewriter"
     IDS_DUTCH_LAYOUT "Hollandeze"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estoni"
     IDS_FAEROESE_LAYOUT "Faeroese"
     IDS_FARSI_LAYOUT "Farsi"

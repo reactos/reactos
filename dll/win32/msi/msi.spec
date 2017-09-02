@@ -7,7 +7,7 @@
 11 stdcall MsiConfigureFeatureA(str str long)
 12 stub MsiConfigureFeatureFromDescriptorA
 13 stub MsiConfigureFeatureFromDescriptorW
-14 stdcall MsiConfigureFeatureW(wstr wstr ptr)
+14 stdcall MsiConfigureFeatureW(wstr wstr long)
 15 stdcall MsiConfigureProductA(str long long)
 16 stdcall MsiConfigureProductW(wstr long long)
 17 stdcall MsiCreateRecord(long)
@@ -20,8 +20,8 @@
 24 stdcall MsiDatabaseGenerateTransformW(long long wstr long long)
 25 stdcall MsiDatabaseGetPrimaryKeysA(long str ptr)
 26 stdcall MsiDatabaseGetPrimaryKeysW(long wstr ptr)
-27 stdcall MsiDatabaseImportA(str str long)
-28 stdcall MsiDatabaseImportW(wstr wstr long)
+27 stdcall MsiDatabaseImportA(str str str)
+28 stdcall MsiDatabaseImportW(wstr wstr wstr)
 29 stdcall MsiDatabaseMergeA(long long str)
 30 stdcall MsiDatabaseMergeW(long long wstr)
 31 stdcall MsiDatabaseOpenViewA(long str ptr)
@@ -60,10 +60,10 @@
 64 stdcall MsiGetMode(long long)
 65 stdcall MsiGetProductCodeA(str str)
 66 stdcall MsiGetProductCodeW(wstr wstr)
-67 stdcall MsiGetProductInfoA(str str ptr long)
+67 stdcall MsiGetProductInfoA(str str ptr ptr)
 68 stub MsiGetProductInfoFromScriptA
 69 stub MsiGetProductInfoFromScriptW
-70 stdcall MsiGetProductInfoW(wstr wstr ptr long)
+70 stdcall MsiGetProductInfoW(wstr wstr ptr ptr)
 71 stdcall MsiGetProductPropertyA(long str ptr ptr)
 72 stdcall MsiGetProductPropertyW(long wstr ptr ptr)
 73 stdcall MsiGetPropertyA(ptr str ptr ptr)
@@ -82,8 +82,8 @@
 86 stub MsiInstallMissingFileW
 87 stdcall MsiInstallProductA(str str)
 88 stdcall MsiInstallProductW(wstr wstr)
-89 stdcall MsiLocateComponentA(str ptr long)
-90 stdcall MsiLocateComponentW(wstr ptr long)
+89 stdcall MsiLocateComponentA(str ptr ptr)
+90 stdcall MsiLocateComponentW(wstr ptr ptr)
 91 stdcall MsiOpenDatabaseA(str str ptr)
 92 stdcall MsiOpenDatabaseW(wstr wstr ptr)
 93 stdcall MsiOpenPackageA(str ptr)
@@ -189,10 +189,10 @@
 193 stdcall MsiUseFeatureExW(wstr wstr long long)
 194 stdcall MsiGetFileVersionA(str ptr ptr ptr ptr)
 195 stdcall MsiGetFileVersionW(wstr ptr ptr ptr ptr)
-196 stdcall MsiLoadStringA(long long long long long)
-197 stdcall MsiLoadStringW(long long long long long)
-198 stdcall MsiMessageBoxA(long long long long long long)
-199 stdcall MsiMessageBoxW(long long long long long long)
+196 stdcall MsiLoadStringA(long long ptr long long)
+197 stdcall MsiLoadStringW(long long ptr long long)
+198 stdcall MsiMessageBoxA(long str str long long long)
+199 stdcall MsiMessageBoxW(long wstr wstr long long long)
 200 stdcall MsiDecomposeDescriptorA(str ptr ptr ptr ptr)
 201 stdcall MsiDecomposeDescriptorW(wstr ptr ptr ptr ptr)
 202 stdcall MsiProvideQualifiedComponentExA(str str long str long long ptr ptr)
@@ -275,8 +275,8 @@
 279 stdcall MsiMessageBoxExA(long str str long long long long)
 280 stdcall MsiMessageBoxExW(long wstr wstr long long long long)
 281 stdcall MsiSetExternalUIRecord(ptr long ptr ptr)
-282 stub MsiGetPatchFileListA
-283 stub MsiGetPatchFileListW
+282 stdcall MsiGetPatchFileListA(str str ptr ptr)
+283 stdcall MsiGetPatchFileListW(wstr wstr ptr ptr)
 284 stdcall MsiBeginTransactionA(str long ptr ptr)
 285 stdcall MsiBeginTransactionW(wstr long ptr ptr)
 286 stdcall MsiEndTransaction(long)
@@ -286,8 +286,8 @@
 290 stdcall MsiEnumComponentsExW(wstr long long ptr ptr ptr ptr)
 291 stdcall MsiEnumClientsExA(str str long long ptr ptr ptr ptr)
 292 stdcall MsiEnumClientsExW(wstr wstr long long ptr ptr ptr ptr)
-293 stub MsiGetComponentPathExA
-294 stub MsiGetComponentPathExW
+293 stdcall MsiGetComponentPathExA(str str str long ptr ptr)
+294 stdcall MsiGetComponentPathExW(wstr wstr wstr long ptr ptr)
 295 stub QueryInstanceCount
 
 @ stdcall -private DllCanUnloadNow()

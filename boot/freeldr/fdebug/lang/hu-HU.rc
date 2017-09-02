@@ -21,7 +21,7 @@ BEGIN
     END
     POPUP "&Súgó"
     BEGIN
-        MENUITEM "&Névjegy ...", IDM_ABOUT
+        MENUITEM "&Névjegy...", IDM_ABOUT
     END
 END
 

@@ -13,11 +13,15 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
+#include <winreg.h>
 #include <tchar.h>
 #include <lm.h>
 #include <prsht.h>
 
 #include "resource.h"
+
+
+#define MAX_COMPUTERDESCRIPTION_LENGTH 256
 
 static INT_PTR CALLBACK
 NetIDPageProc(IN HWND hwndDlg,
@@ -266,54 +270,153 @@ NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
+static
+VOID
+NetIDPage_OnInitDialog(
+    HWND hwndDlg)
+{
+    WCHAR ComputerDescription[MAX_COMPUTERDESCRIPTION_LENGTH + 1];
+    WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD RegSize = sizeof(ComputerDescription);
+    DWORD Size = MAX_COMPUTERNAME_LENGTH + 1;
+    HKEY KeyHandle;
+    LPWKSTA_INFO_101 wki;
+    LONG lError;
+
+    /* Display computer name and description */
+    SendDlgItemMessage(hwndDlg, IDC_COMPDESC, EM_SETLIMITTEXT, MAX_COMPUTERDESCRIPTION_LENGTH, 0);
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters",
+                           0,
+                           KEY_QUERY_VALUE,
+                           &KeyHandle);
+    if (lError == ERROR_SUCCESS)
+    {
+        lError = RegQueryValueExW(KeyHandle,
+                                  L"srvcomment",
+                                  0,
+                                  NULL,
+                                  (LPBYTE)ComputerDescription,
+                                  &RegSize);
+        if (lError == ERROR_SUCCESS)
+        {
+            ComputerDescription[RegSize / sizeof(WCHAR)] = UNICODE_NULL;
+            SetDlgItemText(hwndDlg, IDC_COMPDESC, ComputerDescription);
+        }
+
+        RegCloseKey(KeyHandle);
+    }
+
+    if (GetComputerName(ComputerName,&Size))
+    {
+        SetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName);
+    }
+
+    if (NetWkstaGetInfo(NULL, 101, (LPBYTE*)&wki) == NERR_Success)
+    {
+        SetDlgItemText(hwndDlg, IDC_WORKGROUPDOMAIN_NAME, wki->wki101_langroup);
+        NetApiBufferFree(wki);
+    }
+}
+
+static
+LONG
+NetIDPage_OnApply(
+    HWND hwndDlg)
+{
+    WCHAR ComputerDescription[MAX_COMPUTERDESCRIPTION_LENGTH + 1];
+    WCHAR NewComputerDescription[MAX_COMPUTERDESCRIPTION_LENGTH + 1];
+    HKEY KeyHandle = NULL;
+    DWORD dwSize;
+    LONG lError;
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters",
+                           0,
+                           KEY_QUERY_VALUE | KEY_SET_VALUE,
+                           &KeyHandle);
+    if (lError != ERROR_SUCCESS)
+        return lError;
+
+    GetDlgItemTextW(hwndDlg,
+                    IDC_COMPDESC,
+                    NewComputerDescription,
+                    ARRAYSIZE(NewComputerDescription));
+    if (GetLastError() != ERROR_SUCCESS)
+    {
+        lError = GetLastError();
+        goto done;
+    }
+
+    dwSize = sizeof(ComputerDescription);
+    lError = RegQueryValueExW(KeyHandle,
+                              L"srvcomment",
+                              0,
+                              NULL,
+                              (PBYTE)ComputerDescription,
+                              &dwSize);
+    if (lError != ERROR_SUCCESS && lError != ERROR_FILE_NOT_FOUND)
+        goto done;
+
+    lError = ERROR_SUCCESS;
+    if (wcscmp(ComputerDescription, NewComputerDescription) != 0)
+    {
+        lError = RegSetValueExW(KeyHandle,
+                                L"srvcomment",
+                                0,
+                                REG_SZ,
+                                (PBYTE)NewComputerDescription,
+                                (wcslen(NewComputerDescription) + 1) * sizeof(WCHAR));
+    }
+
+done:
+    if (KeyHandle != NULL)
+        RegCloseKey(KeyHandle);
+
+    return lError;
+}
+
 static INT_PTR CALLBACK
 NetIDPageProc(IN HWND hwndDlg,
               IN UINT uMsg,
               IN WPARAM wParam,
               IN LPARAM lParam)
 {
+    static BOOL bEnable = FALSE;
     INT_PTR Ret = 0;
-
-    UNREFERENCED_PARAMETER(lParam);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            /* Display computer name */
-            LPWKSTA_INFO_101 wki = NULL;
-            DWORD Size = MAX_COMPUTERNAME_LENGTH + 1;
-            TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-            if (GetComputerName(ComputerName,&Size))
-            {
-                SetDlgItemText(hwndDlg,
-                               IDC_COMPUTERNAME,
-                               ComputerName);
-            }
-            if (NetWkstaGetInfo(NULL,
-                                101,
-                                (LPBYTE*)&wki) == NERR_Success)
-            {
-                SetDlgItemText(hwndDlg,
-                               IDC_WORKGROUPDOMAIN_NAME,
-                               wki->wki101_langroup);
-            }
-
-            if (wki) NetApiBufferFree(wki);
-
+            NetIDPage_OnInitDialog(hwndDlg);
+            bEnable = TRUE;
             Ret = TRUE;
             break;
-        }
+
+        case WM_NOTIFY:
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case PSN_APPLY:
+                    NetIDPage_OnApply(hwndDlg);
+                    break;
+            }
+            break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDC_COMPDESC:
+                    if (HIWORD(wParam) == EN_CHANGE && bEnable == TRUE)
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+
                 case IDC_NETWORK_PROPERTY:
                     DialogBox(hDllInstance,
                               MAKEINTRESOURCE(IDD_PROPPAGECOMPNAMECHENGE),
                               hwndDlg,
                               NetworkPropDlgProc);
-                break;
+                    break;
             }
             break;
     }

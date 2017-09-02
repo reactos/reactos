@@ -152,6 +152,17 @@ VfatxFormat(IN PUNICODE_STRING DriveRoot,
     return Status;
 }
 
+NTSTATUS NTAPI
+VfatxChkdsk(IN PUNICODE_STRING DriveRoot,
+            IN BOOLEAN FixErrors,
+            IN BOOLEAN Verbose,
+            IN BOOLEAN CheckOnlyIfDirty,
+            IN BOOLEAN ScanDrive,
+            IN PFMIFSCALLBACK Callback)
+{
+    UNIMPLEMENTED;
+    return STATUS_SUCCESS;
+}
 
 VOID
 VfatxUpdateProgress(IN PFORMAT_CONTEXT Context,

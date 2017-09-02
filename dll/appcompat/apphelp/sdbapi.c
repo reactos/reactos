@@ -1,7 +1,7 @@
 /*
  * Copyright 2011 André Hentschel
  * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,14 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#include "windows.h"
 #include "ntndk.h"
 #include "strsafe.h"
 #include "apphelp.h"
 #include "sdbstringtable.h"
-
-#include "wine/unicode.h"
 
 
 static const GUID GUID_DATABASE_MSI = {0xd8ff6d16,0x6a3a,0x468a, {0x8b,0x44,0x01,0x71,0x4d,0xdc,0x49,0xea}};
@@ -36,128 +32,30 @@ static HANDLE SdbpHeap(void);
 
 #if SDBAPI_DEBUG_ALLOC
 
-typedef struct SHIM_ALLOC_ENTRY
-{
-    PVOID Address;
-    SIZE_T Size;
-    int Line;
-    const char* File;
-    PVOID Next;
-    PVOID Prev;
-} SHIM_ALLOC_ENTRY, *PSHIM_ALLOC_ENTRY;
-
-
-static RTL_AVL_TABLE g_SdbpAllocationTable;
-
-
-static RTL_GENERIC_COMPARE_RESULTS
-NTAPI ShimAllocCompareRoutine(_In_ PRTL_AVL_TABLE Table, _In_ PVOID FirstStruct, _In_ PVOID SecondStruct)
-{
-    PVOID First = ((PSHIM_ALLOC_ENTRY)FirstStruct)->Address;
-    PVOID Second = ((PSHIM_ALLOC_ENTRY)SecondStruct)->Address;
-
-    if (First < Second)
-        return GenericLessThan;
-    else if (First == Second)
-        return GenericEqual;
-    return GenericGreaterThan;
-}
-
-static PVOID NTAPI ShimAllocAllocateRoutine(_In_ PRTL_AVL_TABLE Table, _In_ CLONG ByteSize)
-{
-    return HeapAlloc(SdbpHeap(), HEAP_ZERO_MEMORY, ByteSize);
-}
-
-static VOID NTAPI ShimAllocFreeRoutine(_In_ PRTL_AVL_TABLE Table, _In_ PVOID Buffer)
-{
-    HeapFree(SdbpHeap(), 0, Buffer);
-}
-
-static void SdbpInsertAllocation(PVOID address, SIZE_T size, int line, const char* file)
-{
-    SHIM_ALLOC_ENTRY Entry = {0};
-
-    Entry.Address = address;
-    Entry.Size = size;
-    Entry.Line = line;
-    Entry.File = file;
-    RtlInsertElementGenericTableAvl(&g_SdbpAllocationTable, &Entry, sizeof(Entry), NULL);
-}
-
-static void SdbpUpdateAllocation(PVOID address, PVOID newaddress, SIZE_T size, int line, const char* file)
-{
-    SHIM_ALLOC_ENTRY Lookup = {0};
-    PSHIM_ALLOC_ENTRY Entry;
-    Lookup.Address = address;
-    Entry = RtlLookupElementGenericTableAvl(&g_SdbpAllocationTable, &Lookup);
-
-    if (address == newaddress)
-    {
-        Entry->Size = size;
-    }
-    else
-    {
-        Lookup.Address = newaddress;
-        Lookup.Size = size;
-        Lookup.Line = line;
-        Lookup.File = file;
-        Lookup.Prev = address;
-        RtlInsertElementGenericTableAvl(&g_SdbpAllocationTable, &Lookup, sizeof(Lookup), NULL);
-        Entry->Next = newaddress;
-    }
-}
-
-static void SdbpRemoveAllocation(PVOID address, int line, const char* file)
-{
-    char buf[512];
-    SHIM_ALLOC_ENTRY Lookup = {0};
-    PSHIM_ALLOC_ENTRY Entry;
-
-    sprintf(buf, "\r\n===============\r\n%s(%d): SdbpFree called, tracing alloc:\r\n", file, line);
-    OutputDebugStringA(buf);
-
-    Lookup.Address = address;
-    while (Lookup.Address)
-    {
-        Entry = RtlLookupElementGenericTableAvl(&g_SdbpAllocationTable, &Lookup);
-        if (Entry)
-        {
-            Lookup = *Entry;
-            RtlDeleteElementGenericTableAvl(&g_SdbpAllocationTable, Entry);
-
-            sprintf(buf, " > %s(%d): %s%sAlloc( %d ) ==> %p\r\n", Lookup.File, Lookup.Line,
-                Lookup.Next ? "Invalidated " : "", Lookup.Prev ? "Re" : "", Lookup.Size, Lookup.Address);
-            OutputDebugStringA(buf);
-            Lookup.Address = Lookup.Prev;
-        }
-        else
-        {
-            Lookup.Address = NULL;
-        }
-    }
-    sprintf(buf, "\r\n===============\r\n");
-    OutputDebugStringA(buf);
-}
+/* dbgheap.c */
+void SdbpInsertAllocation(PVOID address, SIZE_T size, int line, const char* file);
+void SdbpUpdateAllocation(PVOID address, PVOID newaddress, SIZE_T size, int line, const char* file);
+void SdbpRemoveAllocation(PVOID address, int line, const char* file);
+void SdbpDebugHeapInit(HANDLE privateHeapPtr);
+void SdbpDebugHeapDeinit(void);
 
 #endif
 
 static HANDLE g_Heap;
 void SdbpHeapInit(void)
 {
+    g_Heap = RtlCreateHeap(HEAP_GROWABLE, NULL, 0, 0x10000, NULL, NULL);
 #if SDBAPI_DEBUG_ALLOC
-    RtlInitializeGenericTableAvl(&g_SdbpAllocationTable, ShimAllocCompareRoutine,
-        ShimAllocAllocateRoutine, ShimAllocFreeRoutine, NULL);
+    SdbpDebugHeapInit(g_Heap);
 #endif
-    g_Heap = HeapCreate(0, 0x10000, 0);
 }
 
 void SdbpHeapDeinit(void)
 {
 #if SDBAPI_DEBUG_ALLOC
-    if (g_SdbpAllocationTable.NumberGenericTableElements != 0)
-        __debugbreak();
+    SdbpDebugHeapDeinit();
 #endif
-    HeapDestroy(g_Heap);
+    RtlDestroyHeap(g_Heap);
 }
 
 static HANDLE SdbpHeap(void)
@@ -171,7 +69,7 @@ LPVOID SdbpAlloc(SIZE_T size
 #endif
     )
 {
-    LPVOID mem = HeapAlloc(SdbpHeap(), HEAP_ZERO_MEMORY, size);
+    LPVOID mem = RtlAllocateHeap(SdbpHeap(), HEAP_ZERO_MEMORY, size);
 #if SDBAPI_DEBUG_ALLOC
     SdbpInsertAllocation(mem, size, line, file);
 #endif
@@ -184,7 +82,7 @@ LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size, SIZE_T oldSize
 #endif
     )
 {
-    LPVOID newmem = HeapReAlloc(SdbpHeap(), HEAP_ZERO_MEMORY, mem, size);
+    LPVOID newmem = RtlReAllocateHeap(SdbpHeap(), HEAP_ZERO_MEMORY, mem, size);
 #if SDBAPI_DEBUG_ALLOC
     SdbpUpdateAllocation(mem, newmem, size, line, file);
 #endif
@@ -200,7 +98,7 @@ void SdbpFree(LPVOID mem
 #if SDBAPI_DEBUG_ALLOC
     SdbpRemoveAllocation(mem, line, file);
 #endif
-    HeapFree(SdbpHeap(), 0, mem);
+    RtlFreeHeap(SdbpHeap(), 0, mem);
 }
 
 PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
@@ -209,7 +107,7 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
     IO_STATUS_BLOCK io;
     OBJECT_ATTRIBUTES attr;
     UNICODE_STRING str;
-    PDB db;
+    PDB pdb;
 
     if (type == DOS_PATH)
     {
@@ -217,11 +115,13 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
             return NULL;
     }
     else
+    {
         RtlInitUnicodeString(&str, path);
+    }
 
     /* SdbAlloc zeroes the memory. */
-    db = (PDB)SdbAlloc(sizeof(DB));
-    if (!db)
+    pdb = (PDB)SdbAlloc(sizeof(DB));
+    if (!pdb)
     {
         SHIM_ERR("Failed to allocate memory for shim database\n");
         return NULL;
@@ -229,35 +129,40 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
 
     InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-    Status = NtCreateFile(&db->file, (write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ )| SYNCHRONIZE,
+    Status = NtCreateFile(&pdb->file, (write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ )| SYNCHRONIZE,
                           &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
                           write ? FILE_SUPERSEDE : FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+
+    pdb->for_write = write;
 
     if (type == DOS_PATH)
         RtlFreeUnicodeString(&str);
 
     if (!NT_SUCCESS(Status))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to create shim database file: %lx\n", Status);
         return NULL;
     }
 
-    return db;
+    return pdb;
 }
 
-void WINAPI SdbpFlush(PDB db)
+void WINAPI SdbpFlush(PDB pdb)
 {
     IO_STATUS_BLOCK io;
-    NTSTATUS Status = NtWriteFile(db->file, NULL, NULL, NULL, &io,
-        db->data, db->write_iter, NULL, NULL);
+    NTSTATUS Status;
+
+    ASSERT(pdb->for_write);
+    Status = NtWriteFile(pdb->file, NULL, NULL, NULL, &io,
+        pdb->data, pdb->write_iter, NULL, NULL);
     if( !NT_SUCCESS(Status))
         SHIM_WARN("failed with 0x%lx\n", Status);
 }
 
 DWORD SdbpStrlen(PCWSTR string)
 {
-    return lstrlenW(string);
+    return wcslen(string);
 }
 
 DWORD SdbpStrsize(PCWSTR string)
@@ -267,8 +172,8 @@ DWORD SdbpStrsize(PCWSTR string)
 
 PWSTR SdbpStrDup(LPCWSTR string)
 {
-    PWSTR ret = SdbpAlloc(SdbpStrsize(string));
-    lstrcpyW(ret, string);
+    PWSTR ret = SdbAlloc(SdbpStrsize(string));
+    wcscpy(ret, string);
     return ret;
 }
 
@@ -357,9 +262,9 @@ BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type)
     return TRUE;
 }
 
-BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
+BOOL WINAPI SdbpCheckTagIDType(PDB pdb, TAGID tagid, WORD type)
 {
-    TAG tag = SdbGetTagFromTagID(db, tagid);
+    TAG tag = SdbGetTagFromTagID(pdb, tagid);
     if (tag == TAG_NULL)
         return FALSE;
     return SdbpCheckTagType(tag, type);
@@ -368,35 +273,44 @@ BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
 PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
 {
     IO_STATUS_BLOCK io;
-    PDB db;
+    FILE_STANDARD_INFORMATION fsi;
+    PDB pdb;
     NTSTATUS Status;
     BYTE header[12];
 
-    db = SdbpCreate(path, type, FALSE);
-    if (!db)
+    pdb = SdbpCreate(path, type, FALSE);
+    if (!pdb)
         return NULL;
 
-    db->size = GetFileSize(db->file, NULL);
-    db->data = SdbAlloc(db->size);
-    Status = NtReadFile(db->file, NULL, NULL, NULL, &io, db->data, db->size, NULL, NULL);
+    Status = NtQueryInformationFile(pdb->file, &io, &fsi, sizeof(FILE_STANDARD_INFORMATION), FileStandardInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        SdbCloseDatabase(pdb);
+        SHIM_ERR("Failed to get shim database size: 0x%lx\n", Status);
+        return NULL;
+    }
+
+    pdb->size = fsi.EndOfFile.u.LowPart;
+    pdb->data = SdbAlloc(pdb->size);
+    Status = NtReadFile(pdb->file, NULL, NULL, NULL, &io, pdb->data, pdb->size, NULL, NULL);
 
     if (!NT_SUCCESS(Status))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to open shim database file: 0x%lx\n", Status);
         return NULL;
     }
 
-    if (!SdbpReadData(db, &header, 0, 12))
+    if (!SdbpReadData(pdb, &header, 0, 12))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to read shim database header\n");
         return NULL;
     }
 
     if (memcmp(&header[8], "sdbf", 4) != 0)
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Shim database header is invalid\n");
         return NULL;
     }
@@ -404,7 +318,7 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
     *major = *(DWORD*)&header[0];
     *minor = *(DWORD*)&header[4];
 
-    return db;
+    return pdb;
 }
 
 
@@ -418,99 +332,46 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
  */
 PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
 {
-    PDB db;
+    PDB pdb;
     DWORD major, minor;
 
-    db = SdbpOpenDatabase(path, type, &major, &minor);
-    if (!db)
+    pdb = SdbpOpenDatabase(path, type, &major, &minor);
+    if (!pdb)
         return NULL;
 
-    if (major != 2)
+    if (major != 2 && major != 3)
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Invalid shim database version\n");
         return NULL;
     }
 
-    db->stringtable = SdbFindFirstTag(db, TAGID_ROOT, TAG_STRINGTABLE);
-    if(!SdbGetDatabaseID(db, &db->database_id))
+    pdb->stringtable = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_STRINGTABLE);
+    if(!SdbGetDatabaseID(pdb, &pdb->database_id))
     {
         SHIM_INFO("Failed to get the database id\n");
     }
-    return db;
+    return pdb;
 }
 
 /**
  * Closes specified database and frees its memory.
  *
- * @param [in]  db  Handle to the shim database.
+ * @param [in]  pdb  Handle to the shim database.
  */
-void WINAPI SdbCloseDatabase(PDB db)
+void WINAPI SdbCloseDatabase(PDB pdb)
 {
-    if (!db)
+    if (!pdb)
         return;
 
-    if (db->file)
-        NtClose(db->file);
-    if (db->string_buffer)
-        SdbCloseDatabase(db->string_buffer);
-    if (db->string_lookup)
-        SdbpTableDestroy(&db->string_lookup);
-    SdbFree(db->data);
-    SdbFree(db);
-}
-
-/**
- * Retrieves AppPatch directory.
- *
- * @param [in]  db      Handle to the shim database.
- * @param [out] path    Pointer to memory in which path shall be written.
- * @param [in]  size    Size of the buffer in characters.
- */
-BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size)
-{
-    static WCHAR* default_dir = NULL;
-    static CONST WCHAR szAppPatch[] = {'\\','A','p','p','P','a','t','c','h',0};
-
-    /* In case function fails, path holds empty string */
-    if (size > 0)
-        *path = 0;
-
-    if (!default_dir)
-    {
-        WCHAR* tmp = NULL;
-        UINT len = GetSystemWindowsDirectoryW(NULL, 0) + lstrlenW(szAppPatch);
-        tmp = SdbAlloc((len + 1)* sizeof(WCHAR));
-        if (tmp)
-        {
-            UINT r = GetSystemWindowsDirectoryW(tmp, len+1);
-            if (r && r < len)
-            {
-                if (SUCCEEDED(StringCchCatW(tmp, len+1, szAppPatch)))
-                {
-                    if (InterlockedCompareExchangePointer((void**)&default_dir, tmp, NULL) == NULL)
-                        tmp = NULL;
-                }
-            }
-            if (tmp)
-                SdbFree(tmp);
-        }
-        if (!default_dir)
-        {
-            SHIM_ERR("Unable to obtain default AppPatch directory\n");
-            return FALSE;
-        }
-    }
-
-    if (!db)
-    {
-        return SUCCEEDED(StringCchCopyW(path, size, default_dir));
-    }
-    else
-    {
-        /* fixme */
-        return FALSE;
-    }
+    if (pdb->file)
+        NtClose(pdb->file);
+    if (pdb->string_buffer)
+        SdbCloseDatabase(pdb->string_buffer);
+    if (pdb->string_lookup)
+        SdbpTableDestroy(&pdb->string_lookup);
+    SdbFree(pdb->data);
+    SdbFree(pdb);
 }
 
 /**
@@ -606,14 +467,116 @@ BOOL WINAPI SdbGetStandardDatabaseGUID(DWORD Flags, GUID* Guid)
  */
 BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD VersionLo)
 {
-    PDB db;
+    PDB pdb;
 
-    db = SdbpOpenDatabase(database, DOS_PATH, VersionHi, VersionLo);
-    if (db)
-        SdbCloseDatabase(db);
+    pdb = SdbpOpenDatabase(database, DOS_PATH, VersionHi, VersionLo);
+    if (pdb)
+        SdbCloseDatabase(pdb);
 
     return TRUE;
 }
+
+
+/**
+ * Find the first named child tag.
+ *
+ * @param [in]  database    The database.
+ * @param [in]  root        The tag to start at
+ * @param [in]  find        The tag type to find
+ * @param [in]  nametag     The child of 'find' that contains the name
+ * @param [in]  find_name   The name to find
+ *
+ * @return  The found tag, or TAGID_NULL on failure
+ */
+TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name)
+{
+    TAGID iter;
+
+    iter = SdbFindFirstTag(pdb, root, find);
+
+    while (iter != TAGID_NULL)
+    {
+        TAGID tmp = SdbFindFirstTag(pdb, iter, nametag);
+        if (tmp != TAGID_NULL)
+        {
+            LPCWSTR name = SdbGetStringTagPtr(pdb, tmp);
+            if (name && !wcsicmp(name, find_name))
+                return iter;
+        }
+        iter = SdbFindNextTag(pdb, root, iter);
+    }
+    return TAGID_NULL;
+}
+
+
+/**
+ * Find a named layer in a multi-db.
+ *
+ * @param [in]  hsdb        The multi-database.
+ * @param [in]  layerName   The named tag to find.
+ *
+ * @return  The layer, or TAGREF_NULL on failure
+ */
+TAGREF WINAPI SdbGetLayerTagRef(HSDB hsdb, LPCWSTR layerName)
+{
+    PDB pdb = hsdb->pdb;
+
+    TAGID database = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
+    if (database != TAGID_NULL)
+    {
+        TAGID layer = SdbFindFirstNamedTag(pdb, database, TAG_LAYER, TAG_NAME, layerName);
+        if (layer != TAGID_NULL)
+        {
+            TAGREF tr;
+            if (SdbTagIDToTagRef(hsdb, pdb, layer, &tr))
+            {
+                return tr;
+            }
+        }
+    }
+    return TAGREF_NULL;
+}
+
+
+/**
+ * Converts the specified string to an index key.
+ *
+ * @param [in]  str The string which will be converted.
+ *
+ * @return  The resulting index key
+ *
+ * @todo: Fix this for unicode strings.
+ */
+LONGLONG WINAPI SdbMakeIndexKeyFromString(LPCWSTR str)
+{
+    LONGLONG result = 0;
+    int shift = 56;
+
+    while (*str && shift >= 0)
+    {
+        WCHAR c = toupper(*(str++));
+
+        if (c & 0xff)
+        {
+            result |= (((LONGLONG)(c & 0xff)) << shift);
+            shift -= 8;
+        }
+
+        if (shift < 0)
+            break;
+
+        c >>= 8;
+
+        if (c & 0xff)
+        {
+            result |= (((LONGLONG)(c & 0xff)) << shift);
+            shift -= 8;
+        }
+    }
+
+    return result;
+}
+
 
 /**
  * Converts specified tag into a string.
@@ -622,270 +585,181 @@ BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD Ver
  *
  * @return  Success: Pointer to the string matching specified tag, or L"InvalidTag" on failure.
  *
- * @todo: Convert this into a lookup table, this is wasting alot of space.
  */
 LPCWSTR WINAPI SdbTagToString(TAG tag)
 {
-    /* lookup tables for tags in range 0x1 -> 0xFF | TYPE */
-    static const WCHAR table[9][0x32][25] = {
-    {   /* TAG_TYPE_NULL */
-        {'I','N','C','L','U','D','E',0},
-        {'G','E','N','E','R','A','L',0},
-        {'M','A','T','C','H','_','L','O','G','I','C','_','N','O','T',0},
-        {'A','P','P','L','Y','_','A','L','L','_','S','H','I','M','S',0},
-        {'U','S','E','_','S','E','R','V','I','C','E','_','P','A','C','K','_','F','I','L','E','S',0},
-        {'M','I','T','I','G','A','T','I','O','N','_','O','S',0},
-        {'B','L','O','C','K','_','U','P','G','R','A','D','E',0},
-        {'I','N','C','L','U','D','E','E','X','C','L','U','D','E','D','L','L',0},
-        {'R','A','C','_','E','V','E','N','T','_','O','F','F',0},
-        {'T','E','L','E','M','E','T','R','Y','_','O','F','F',0},
-        {'S','H','I','M','_','E','N','G','I','N','E','_','O','F','F',0},
-        {'L','A','Y','E','R','_','P','R','O','P','A','G','A','T','I','O','N','_','O','F','F',0},
-        {'R','E','I','N','S','T','A','L','L','_','U','P','G','R','A','D','E',0}
-    },
-    {   /* TAG_TYPE_BYTE */
-        {'I','n','v','a','l','i','d','T','a','g',0}
-    },
-    {   /* TAG_TYPE_WORD */
-        {'M','A','T','C','H','_','M','O','D','E',0}
-    },
-    {   /* TAG_TYPE_DWORD */
-        {'S','I','Z','E',0},
-        {'O','F','F','S','E','T',0},
-        {'C','H','E','C','K','S','U','M',0},
-        {'S','H','I','M','_','T','A','G','I','D',0},
-        {'P','A','T','C','H','_','T','A','G','I','D',0},
-        {'M','O','D','U','L','E','_','T','Y','P','E',0},
-        {'V','E','R','D','A','T','E','H','I',0},
-        {'V','E','R','D','A','T','E','L','O',0},
-        {'V','E','R','F','I','L','E','O','S',0},
-        {'V','E','R','F','I','L','E','T','Y','P','E',0},
-        {'P','E','_','C','H','E','C','K','S','U','M',0},
-        {'P','R','E','V','O','S','M','A','J','O','R','V','E','R',0},
-        {'P','R','E','V','O','S','M','I','N','O','R','V','E','R',0},
-        {'P','R','E','V','O','S','P','L','A','T','F','O','R','M','I','D',0},
-        {'P','R','E','V','O','S','B','U','I','L','D','N','O',0},
-        {'P','R','O','B','L','E','M','S','E','V','E','R','I','T','Y',0},
-        {'L','A','N','G','I','D',0},
-        {'V','E','R','_','L','A','N','G','U','A','G','E',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'E','N','G','I','N','E',0},
-        {'H','T','M','L','H','E','L','P','I','D',0},
-        {'I','N','D','E','X','_','F','L','A','G','S',0},
-        {'F','L','A','G','S',0},
-        {'D','A','T','A','_','V','A','L','U','E','T','Y','P','E',0},
-        {'D','A','T','A','_','D','W','O','R','D',0},
-        {'L','A','Y','E','R','_','T','A','G','I','D',0},
-        {'M','S','I','_','T','R','A','N','S','F','O','R','M','_','T','A','G','I','D',0},
-        {'L','I','N','K','E','R','_','V','E','R','S','I','O','N',0},
-        {'L','I','N','K','_','D','A','T','E',0},
-        {'U','P','T','O','_','L','I','N','K','_','D','A','T','E',0},
-        {'O','S','_','S','E','R','V','I','C','E','_','P','A','C','K',0},
-        {'F','L','A','G','_','T','A','G','I','D',0},
-        {'R','U','N','T','I','M','E','_','P','L','A','T','F','O','R','M',0},
-        {'O','S','_','S','K','U',0},
-        {'O','S','_','P','L','A','T','F','O','R','M',0},
-        {'A','P','P','_','N','A','M','E','_','R','C','_','I','D',0},
-        {'V','E','N','D','O','R','_','N','A','M','E','_','R','C','_','I','D',0},
-        {'S','U','M','M','A','R','Y','_','M','S','G','_','R','C','_','I','D',0},
-        {'V','I','S','T','A','_','S','K','U',0},
-        {'D','E','S','C','R','I','P','T','I','O','N','_','R','C','_','I','D',0},
-        {'P','A','R','A','M','E','T','E','R','1','_','R','C','_','I','D',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'C','O','N','T','E','X','T','_','T','A','G','I','D',0},
-        {'E','X','E','_','W','R','A','P','P','E','R',0},
-        {'U','R','L','_','I','D',0}
-    },
-    {   /* TAG_TYPE_QWORD */
-        {'T','I','M','E',0},
-        {'B','I','N','_','F','I','L','E','_','V','E','R','S','I','O','N',0},
-        {'B','I','N','_','P','R','O','D','U','C','T','_','V','E','R','S','I','O','N',0},
-        {'M','O','D','T','I','M','E',0},
-        {'F','L','A','G','_','M','A','S','K','_','K','E','R','N','E','L',0},
-        {'U','P','T','O','_','B','I','N','_','P','R','O','D','U','C','T','_','V','E','R','S','I','O','N',0},
-        {'D','A','T','A','_','Q','W','O','R','D',0},
-        {'F','L','A','G','_','M','A','S','K','_','U','S','E','R',0},
-        {'F','L','A','G','S','_','N','T','V','D','M','1',0},
-        {'F','L','A','G','S','_','N','T','V','D','M','2',0},
-        {'F','L','A','G','S','_','N','T','V','D','M','3',0},
-        {'F','L','A','G','_','M','A','S','K','_','S','H','E','L','L',0},
-        {'U','P','T','O','_','B','I','N','_','F','I','L','E','_','V','E','R','S','I','O','N',0},
-        {'F','L','A','G','_','M','A','S','K','_','F','U','S','I','O','N',0},
-        {'F','L','A','G','_','P','R','O','C','E','S','S','P','A','R','A','M',0},
-        {'F','L','A','G','_','L','U','A',0},
-        {'F','L','A','G','_','I','N','S','T','A','L','L',0}
-    },
-    {   /* TAG_TYPE_STRINGREF */
-        {'N','A','M','E',0},
-        {'D','E','S','C','R','I','P','T','I','O','N',0},
-        {'M','O','D','U','L','E',0},
-        {'A','P','I',0},
-        {'V','E','N','D','O','R',0},
-        {'A','P','P','_','N','A','M','E',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'C','O','M','M','A','N','D','_','L','I','N','E',0},
-        {'C','O','M','P','A','N','Y','_','N','A','M','E',0},
-        {'D','L','L','F','I','L','E',0},
-        {'W','I','L','D','C','A','R','D','_','N','A','M','E',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'P','R','O','D','U','C','T','_','N','A','M','E',0},
-        {'P','R','O','D','U','C','T','_','V','E','R','S','I','O','N',0},
-        {'F','I','L','E','_','D','E','S','C','R','I','P','T','I','O','N',0},
-        {'F','I','L','E','_','V','E','R','S','I','O','N',0},
-        {'O','R','I','G','I','N','A','L','_','F','I','L','E','N','A','M','E',0},
-        {'I','N','T','E','R','N','A','L','_','N','A','M','E',0},
-        {'L','E','G','A','L','_','C','O','P','Y','R','I','G','H','T',0},
-        {'1','6','B','I','T','_','D','E','S','C','R','I','P','T','I','O','N',0},
-        {'A','P','P','H','E','L','P','_','D','E','T','A','I','L','S',0},
-        {'L','I','N','K','_','U','R','L',0},
-        {'L','I','N','K','_','T','E','X','T',0},
-        {'A','P','P','H','E','L','P','_','T','I','T','L','E',0},
-        {'A','P','P','H','E','L','P','_','C','O','N','T','A','C','T',0},
-        {'S','X','S','_','M','A','N','I','F','E','S','T',0},
-        {'D','A','T','A','_','S','T','R','I','N','G',0},
-        {'M','S','I','_','T','R','A','N','S','F','O','R','M','_','F','I','L','E',0},
-        {'1','6','B','I','T','_','M','O','D','U','L','E','_','N','A','M','E',0},
-        {'L','A','Y','E','R','_','D','I','S','P','L','A','Y','N','A','M','E',0},
-        {'C','O','M','P','I','L','E','R','_','V','E','R','S','I','O','N',0},
-        {'A','C','T','I','O','N','_','T','Y','P','E',0},
-        {'E','X','P','O','R','T','_','N','A','M','E',0},
-        {'U','R','L',0}
-    },
-    {   /* TAG_TYPE_LIST */
-        {'D','A','T','A','B','A','S','E',0},
-        {'L','I','B','R','A','R','Y',0},
-        {'I','N','E','X','C','L','U','D','E',0},
-        {'S','H','I','M',0},
-        {'P','A','T','C','H',0},
-        {'A','P','P',0},
-        {'E','X','E',0},
-        {'M','A','T','C','H','I','N','G','_','F','I','L','E',0},
-        {'S','H','I','M','_','R','E','F',0},
-        {'P','A','T','C','H','_','R','E','F',0},
-        {'L','A','Y','E','R',0},
-        {'F','I','L','E',0},
-        {'A','P','P','H','E','L','P',0},
-        {'L','I','N','K',0},
-        {'D','A','T','A',0},
-        {'M','S','I','_','T','R','A','N','S','F','O','R','M',0},
-        {'M','S','I','_','T','R','A','N','S','F','O','R','M','_','R','E','F',0},
-        {'M','S','I','_','P','A','C','K','A','G','E',0},
-        {'F','L','A','G',0},
-        {'M','S','I','_','C','U','S','T','O','M','_','A','C','T','I','O','N',0},
-        {'F','L','A','G','_','R','E','F',0},
-        {'A','C','T','I','O','N',0},
-        {'L','O','O','K','U','P',0},
-        {'C','O','N','T','E','X','T',0},
-        {'C','O','N','T','E','X','T','_','R','E','F',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'S','P','C',0}
-    },
-    {   /* TAG_TYPE_STRING */
-        {'I','n','v','a','l','i','d','T','a','g',0}
-    },
-    {   /* TAG_TYPE_BINARY */
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'P','A','T','C','H','_','B','I','T','S',0},
-        {'F','I','L','E','_','B','I','T','S',0},
-        {'E','X','E','_','I','D',0},
-        {'D','A','T','A','_','B','I','T','S',0},
-        {'M','S','I','_','P','A','C','K','A','G','E','_','I','D',0},
-        {'D','A','T','A','B','A','S','E','_','I','D',0},
-        {'C','O','N','T','E','X','T','_','P','L','A','T','F','O','R','M','_','I','D',0},
-        {'C','O','N','T','E','X','T','_','B','R','A','N','C','H','_','I','D',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'I','n','v','a','l','i','d','T','a','g',0},
-        {'F','I','X','_','I','D',0},
-        {'A','P','P','_','I','D',0}
+    switch (tag)
+    {
+    case TAG_NULL: return L"NULL";
+
+    /* TAG_TYPE_NULL */
+    case TAG_INCLUDE: return L"INCLUDE";
+    case TAG_GENERAL: return L"GENERAL";
+    case TAG_MATCH_LOGIC_NOT: return L"MATCH_LOGIC_NOT";
+    case TAG_APPLY_ALL_SHIMS: return L"APPLY_ALL_SHIMS";
+    case TAG_USE_SERVICE_PACK_FILES: return L"USE_SERVICE_PACK_FILES";
+    case TAG_MITIGATION_OS: return L"MITIGATION_OS";
+    case TAG_BLOCK_UPGRADE: return L"BLOCK_UPGRADE";
+    case TAG_INCLUDEEXCLUDEDLL: return L"INCLUDEEXCLUDEDLL";
+    case TAG_RAC_EVENT_OFF: return L"RAC_EVENT_OFF";
+    case TAG_TELEMETRY_OFF: return L"TELEMETRY_OFF";
+    case TAG_SHIM_ENGINE_OFF: return L"SHIM_ENGINE_OFF";
+    case TAG_LAYER_PROPAGATION_OFF: return L"LAYER_PROPAGATION_OFF";
+    case TAG_REINSTALL_UPGRADE: return L"REINSTALL_UPGRADE";
+
+    /* TAG_TYPE_WORD */
+    case TAG_MATCH_MODE: return L"MATCH_MODE";
+    case TAG_TAG: return L"TAG";
+    case TAG_INDEX_TAG: return L"INDEX_TAG";
+    case TAG_INDEX_KEY: return L"INDEX_KEY";
+
+    /* TAG_TYPE_DWORD */
+    case TAG_SIZE: return L"SIZE";
+    case TAG_OFFSET: return L"OFFSET";
+    case TAG_CHECKSUM: return L"CHECKSUM";
+    case TAG_SHIM_TAGID: return L"SHIM_TAGID";
+    case TAG_PATCH_TAGID: return L"PATCH_TAGID";
+    case TAG_MODULE_TYPE: return L"MODULE_TYPE";
+    case TAG_VERDATEHI: return L"VERDATEHI";
+    case TAG_VERDATELO: return L"VERDATELO";
+    case TAG_VERFILEOS: return L"VERFILEOS";
+    case TAG_VERFILETYPE: return L"VERFILETYPE";
+    case TAG_PE_CHECKSUM: return L"PE_CHECKSUM";
+    case TAG_PREVOSMAJORVER: return L"PREVOSMAJORVER";
+    case TAG_PREVOSMINORVER: return L"PREVOSMINORVER";
+    case TAG_PREVOSPLATFORMID: return L"PREVOSPLATFORMID";
+    case TAG_PREVOSBUILDNO: return L"PREVOSBUILDNO";
+    case TAG_PROBLEMSEVERITY: return L"PROBLEMSEVERITY";
+    case TAG_LANGID: return L"LANGID";
+    case TAG_VER_LANGUAGE: return L"VER_LANGUAGE";
+    case TAG_ENGINE: return L"ENGINE";
+    case TAG_HTMLHELPID: return L"HTMLHELPID";
+    case TAG_INDEX_FLAGS: return L"INDEX_FLAGS";
+    case TAG_FLAGS: return L"FLAGS";
+    case TAG_DATA_VALUETYPE: return L"DATA_VALUETYPE";
+    case TAG_DATA_DWORD: return L"DATA_DWORD";
+    case TAG_LAYER_TAGID: return L"LAYER_TAGID";
+    case TAG_MSI_TRANSFORM_TAGID: return L"MSI_TRANSFORM_TAGID";
+    case TAG_LINKER_VERSION: return L"LINKER_VERSION";
+    case TAG_LINK_DATE: return L"LINK_DATE";
+    case TAG_UPTO_LINK_DATE: return L"UPTO_LINK_DATE";
+    case TAG_OS_SERVICE_PACK: return L"OS_SERVICE_PACK";
+    case TAG_FLAG_TAGID: return L"FLAG_TAGID";
+    case TAG_RUNTIME_PLATFORM: return L"RUNTIME_PLATFORM";
+    case TAG_OS_SKU: return L"OS_SKU";
+    case TAG_OS_PLATFORM: return L"OS_PLATFORM";
+    case TAG_APP_NAME_RC_ID: return L"APP_NAME_RC_ID";
+    case TAG_VENDOR_NAME_RC_ID: return L"VENDOR_NAME_RC_ID";
+    case TAG_SUMMARY_MSG_RC_ID: return L"SUMMARY_MSG_RC_ID";
+    case TAG_VISTA_SKU: return L"VISTA_SKU";
+    case TAG_DESCRIPTION_RC_ID: return L"DESCRIPTION_RC_ID";
+    case TAG_PARAMETER1_RC_ID: return L"PARAMETER1_RC_ID";
+    case TAG_CONTEXT_TAGID: return L"CONTEXT_TAGID";
+    case TAG_EXE_WRAPPER: return L"EXE_WRAPPER";
+    case TAG_URL_ID: return L"URL_ID";
+    case TAG_TAGID: return L"TAGID";
+
+    /* TAG_TYPE_QWORD */
+    case TAG_TIME: return L"TIME";
+    case TAG_BIN_FILE_VERSION: return L"BIN_FILE_VERSION";
+    case TAG_BIN_PRODUCT_VERSION: return L"BIN_PRODUCT_VERSION";
+    case TAG_MODTIME: return L"MODTIME";
+    case TAG_FLAG_MASK_KERNEL: return L"FLAG_MASK_KERNEL";
+    case TAG_UPTO_BIN_PRODUCT_VERSION: return L"UPTO_BIN_PRODUCT_VERSION";
+    case TAG_DATA_QWORD: return L"DATA_QWORD";
+    case TAG_FLAG_MASK_USER: return L"FLAG_MASK_USER";
+    case TAG_FLAGS_NTVDM1: return L"FLAGS_NTVDM1";
+    case TAG_FLAGS_NTVDM2: return L"FLAGS_NTVDM2";
+    case TAG_FLAGS_NTVDM3: return L"FLAGS_NTVDM3";
+    case TAG_FLAG_MASK_SHELL: return L"FLAG_MASK_SHELL";
+    case TAG_UPTO_BIN_FILE_VERSION: return L"UPTO_BIN_FILE_VERSION";
+    case TAG_FLAG_MASK_FUSION: return L"FLAG_MASK_FUSION";
+    case TAG_FLAG_PROCESSPARAM: return L"FLAG_PROCESSPARAM";
+    case TAG_FLAG_LUA: return L"FLAG_LUA";
+    case TAG_FLAG_INSTALL: return L"FLAG_INSTALL";
+
+    /* TAG_TYPE_STRINGREF */
+    case TAG_NAME: return L"NAME";
+    case TAG_DESCRIPTION: return L"DESCRIPTION";
+    case TAG_MODULE: return L"MODULE";
+    case TAG_API: return L"API";
+    case TAG_VENDOR: return L"VENDOR";
+    case TAG_APP_NAME: return L"APP_NAME";
+    case TAG_COMMAND_LINE: return L"COMMAND_LINE";
+    case TAG_COMPANY_NAME: return L"COMPANY_NAME";
+    case TAG_DLLFILE: return L"DLLFILE";
+    case TAG_WILDCARD_NAME: return L"WILDCARD_NAME";
+    case TAG_PRODUCT_NAME: return L"PRODUCT_NAME";
+    case TAG_PRODUCT_VERSION: return L"PRODUCT_VERSION";
+    case TAG_FILE_DESCRIPTION: return L"FILE_DESCRIPTION";
+    case TAG_FILE_VERSION: return L"FILE_VERSION";
+    case TAG_ORIGINAL_FILENAME: return L"ORIGINAL_FILENAME";
+    case TAG_INTERNAL_NAME: return L"INTERNAL_NAME";
+    case TAG_LEGAL_COPYRIGHT: return L"LEGAL_COPYRIGHT";
+    case TAG_16BIT_DESCRIPTION: return L"16BIT_DESCRIPTION";
+    case TAG_APPHELP_DETAILS: return L"APPHELP_DETAILS";
+    case TAG_LINK_URL: return L"LINK_URL";
+    case TAG_LINK_TEXT: return L"LINK_TEXT";
+    case TAG_APPHELP_TITLE: return L"APPHELP_TITLE";
+    case TAG_APPHELP_CONTACT: return L"APPHELP_CONTACT";
+    case TAG_SXS_MANIFEST: return L"SXS_MANIFEST";
+    case TAG_DATA_STRING: return L"DATA_STRING";
+    case TAG_MSI_TRANSFORM_FILE: return L"MSI_TRANSFORM_FILE";
+    case TAG_16BIT_MODULE_NAME: return L"16BIT_MODULE_NAME";
+    case TAG_LAYER_DISPLAYNAME: return L"LAYER_DISPLAYNAME";
+    case TAG_COMPILER_VERSION: return L"COMPILER_VERSION";
+    case TAG_ACTION_TYPE: return L"ACTION_TYPE";
+    case TAG_EXPORT_NAME: return L"EXPORT_NAME";
+    case TAG_URL: return L"URL";
+
+    /* TAG_TYPE_LIST */
+    case TAG_DATABASE: return L"DATABASE";
+    case TAG_LIBRARY: return L"LIBRARY";
+    case TAG_INEXCLUD: return L"INEXCLUDE";
+    case TAG_SHIM: return L"SHIM";
+    case TAG_PATCH: return L"PATCH";
+    case TAG_APP: return L"APP";
+    case TAG_EXE: return L"EXE";
+    case TAG_MATCHING_FILE: return L"MATCHING_FILE";
+    case TAG_SHIM_REF: return L"SHIM_REF";
+    case TAG_PATCH_REF: return L"PATCH_REF";
+    case TAG_LAYER: return L"LAYER";
+    case TAG_FILE: return L"FILE";
+    case TAG_APPHELP: return L"APPHELP";
+    case TAG_LINK: return L"LINK";
+    case TAG_DATA: return L"DATA";
+    case TAG_MSI_TRANSFORM: return L"MSI_TRANSFORM";
+    case TAG_MSI_TRANSFORM_REF: return L"MSI_TRANSFORM_REF";
+    case TAG_MSI_PACKAGE: return L"MSI_PACKAGE";
+    case TAG_FLAG: return L"FLAG";
+    case TAG_MSI_CUSTOM_ACTION: return L"MSI_CUSTOM_ACTION";
+    case TAG_FLAG_REF: return L"FLAG_REF";
+    case TAG_ACTION: return L"ACTION";
+    case TAG_LOOKUP: return L"LOOKUP";
+    case TAG_CONTEXT: return L"CONTEXT";
+    case TAG_CONTEXT_REF: return L"CONTEXT_REF";
+    case TAG_SPC: return L"SPC";
+    case TAG_STRINGTABLE: return L"STRINGTABLE";
+    case TAG_INDEXES: return L"INDEXES";
+    case TAG_INDEX: return L"INDEX";
+
+    /* TAG_TYPE_STRING */
+    case TAG_STRINGTABLE_ITEM: return L"STRINGTABLE_ITEM";
+
+    /* TAG_TYPE_BINARY */
+    case TAG_PATCH_BITS: return L"PATCH_BITS";
+    case TAG_FILE_BITS: return L"FILE_BITS";
+    case TAG_EXE_ID: return L"EXE_ID";
+    case TAG_DATA_BITS: return L"DATA_BITS";
+    case TAG_MSI_PACKAGE_ID: return L"MSI_PACKAGE_ID";
+    case TAG_DATABASE_ID: return L"DATABASE_ID";
+    case TAG_CONTEXT_PLATFORM_ID: return L"CONTEXT_PLATFORM_ID";
+    case TAG_CONTEXT_BRANCH_ID: return L"CONTEXT_BRANCH_ID";
+    case TAG_FIX_ID: return L"FIX_ID";
+    case TAG_APP_ID: return L"APP_ID";
+    case TAG_INDEX_BITS: return L"INDEX_BITS";
+
+        break;
     }
-    };
-
-    /* sizes of tables in above array (# strings per type) */
-    static const WORD limits[9] = {
-        /* switch off TYPE_* nibble of last tag for each type */
-        TAG_REINSTALL_UPGRADE & 0xFF,
-        1,
-        TAG_MATCH_MODE & 0xFF,
-        TAG_URL_ID & 0xFF,
-        TAG_FLAG_INSTALL & 0xFF,
-        TAG_URL & 0xFF,
-        TAG_SPC & 0xFF,
-        1,
-        TAG_APP_ID & 0xFF
-    };
-
-    /* lookup tables for tags in range 0x800 + (0x1 -> 0xFF) | TYPE */
-    static const WCHAR table2[9][3][17] = {
-    { {'I','n','v','a','l','i','d','T','a','g',0} }, /* TAG_TYPE_NULL */
-    { {'I','n','v','a','l','i','d','T','a','g',0} }, /* TAG_TYPE_BYTE */
-    {
-        {'T','A','G',0}, /* TAG_TYPE_WORD */
-        {'I','N','D','E','X','_','T','A','G',0},
-        {'I','N','D','E','X','_','K','E','Y',0}
-    },
-    { {'T','A','G','I','D',0} }, /* TAG_TYPE_DWORD */
-    { {'I','n','v','a','l','i','d','T','a','g',0} }, /* TAG_TYPE_QWORD */
-    { {'I','n','v','a','l','i','d','T','a','g',0} }, /* TAG_TYPE_STRINGREF */
-    {
-        {'S','T','R','I','N','G','T','A','B','L','E',0}, /* TAG_TYPE_LIST */
-        {'I','N','D','E','X','E','S',0},
-        {'I','N','D','E','X',0}
-    },
-    { {'S','T','R','I','N','G','T','A','B','L','E','_','I','T','E','M',0}, }, /* TAG_TYPE_STRING */
-    { {'I','N','D','E','X','_','B','I','T','S',0} } /* TAG_TYPE_BINARY */
-    };
-
-    /* sizes of tables in above array, hardcoded for simplicity */
-    static const WORD limits2[9] = { 0, 0, 3, 1, 0, 0, 3, 1, 1 };
-
-    static const WCHAR null[] = {'N','U','L','L',0};
-    static const WCHAR invalid[] = {'I','n','v','a','l','i','d','T','a','g',0};
-
-    BOOL switch_table; /* should we use table2 and limits2? */
-    WORD index, type_index;
-
-    /* special case: null tag */
-    if (tag == TAG_NULL)
-        return null;
-
-    /* tags with only type mask or no type mask are invalid */
-    if ((tag & ~TAG_TYPE_MASK) == 0 || (tag & TAG_TYPE_MASK) == 0)
-        return invalid;
-
-    /* some valid tags are in range 0x800 + (0x1 -> 0xF) | TYPE */
-    if ((tag & 0xF00) == 0x800)
-        switch_table = TRUE;
-    else if ((tag & 0xF00) == 0)
-        switch_table = FALSE;
-    else return invalid;
-
-    /* index of table in array is type nibble */
-    type_index = (tag >> 12) - 1;
-
-    /* index of string in table is low byte */
-    index = (tag & 0xFF) - 1;
-
-    /* bound check */
-    if (type_index >= 9 || index >= (switch_table ? limits2[type_index] : limits[type_index]))
-        return invalid;
-
-    /* tag is valid */
-    return switch_table ? table2[type_index][index] : table[type_index][index];
+    return L"InvalidTag";
 }

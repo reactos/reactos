@@ -353,11 +353,11 @@ OnNewVariable(HWND hwndDlg,
 
     VarData = GlobalAlloc(GPTR, sizeof(VARIABLE_DATA));
 
-    if (!DialogBoxParam(hApplet,
-                        MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
-                        hwndDlg,
-                        (DLGPROC)EditVariableDlgProc,
-                        (LPARAM)VarData) > 0)
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
+                       hwndDlg,
+                       EditVariableDlgProc,
+                       (LPARAM)VarData) <= 0)
     {
         if (VarData->lpName != NULL)
             GlobalFree(VarData->lpName);
@@ -412,7 +412,7 @@ OnEditVariable(HWND hwndDlg,
             if (DialogBoxParam(hApplet,
                                MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
                                hwndDlg,
-                               (DLGPROC)EditVariableDlgProc,
+                               EditVariableDlgProc,
                                (LPARAM)VarData) > 0)
             {
                 ListView_SetItemText(hwndListView, iItem, 0, VarData->lpName);
@@ -538,7 +538,7 @@ SetAllVars(HWND hwndDlg,
     hwndListView = GetDlgItem(hwndDlg, iDlgItem);
     /* First item is 0 */
     iItem = 0;
-    /* Set up struct to retreive item */
+    /* Set up struct to retrieve item */
     lvi.mask = LVIF_PARAM;
     lvi.iItem = iItem;
 

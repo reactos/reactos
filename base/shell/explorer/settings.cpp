@@ -20,28 +20,67 @@
 
 #include "precomp.h"
 
-ADVANCED_SETTINGS AdvancedSettings;
-const WCHAR szAdvancedSettingsKey[] = L"Software\\ReactOS\\Features\\Explorer";
+TASKBAR_SETTINGS TaskBarSettings;
+const WCHAR szSettingsKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
+const WCHAR szAdvancedSettingsKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced";
 
 VOID
-LoadAdvancedSettings(VOID)
+LoadTaskBarSettings(VOID)
 {
+    DWORD dwValue = NULL;
+    
+    LoadSettingDword(szAdvancedSettingsKey, L"TaskbarSizeMove", dwValue);
+    TaskBarSettings.bLock = (dwValue == 0);
+    
+    LoadSettingDword(szAdvancedSettingsKey, L"ShowSeconds", dwValue);
+    TaskBarSettings.bShowSeconds = (dwValue != 0);
+    
+    LoadSettingDword(szSettingsKey, L"EnableAutotray", dwValue);
+    TaskBarSettings.bHideInactiveIcons = (dwValue != 0); 
+    
+    LoadSettingDword(szAdvancedSettingsKey, L"TaskbarGlomming", dwValue);
+    TaskBarSettings.bGroupButtons = (dwValue != 0);
+    
+    TaskBarSettings.bShowQuickLaunch = TRUE;    //FIXME: Where is this stored, and how?
+    
+    /* FIXME: The following settings are stored in stuckrects2, do they have to be load here too? */
+    TaskBarSettings.bShowClock = TRUE;
+    TaskBarSettings.bAutoHide = FALSE;
+    TaskBarSettings.bAlwaysOnTop = FALSE;
+
+}
+
+VOID
+SaveTaskBarSettings(VOID)
+{
+    SaveSettingDword(szAdvancedSettingsKey, L"TaskbarSizeMove", TaskBarSettings.bLock);
+    SaveSettingDword(szAdvancedSettingsKey, L"ShowSeconds", TaskBarSettings.bShowSeconds);
+    SaveSettingDword(szSettingsKey, L"EnableAutotray", TaskBarSettings.bHideInactiveIcons);
+    SaveSettingDword(szAdvancedSettingsKey, L"TaskbarGlomming", TaskBarSettings.bGroupButtons);
+    
+    /* FIXME: Show Clock, AutoHide and Always on top are stored in the stuckrects2 key but are not written to it with a click on apply. How is this done instead?
+       AutoHide writes something to HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Desktop\Components\0 figure out what and why */
+}
+
+BOOL
+LoadSettingDword(IN LPCWSTR pszKeyName,
+                 IN LPCWSTR pszValueName,
+                 OUT DWORD &dwValue)
+{
+    BOOL ret = FALSE;
     HKEY hKey;
-
-    /* Set defaults */
-    AdvancedSettings.bShowSeconds = FALSE;
-
-    /* Check registry */
-    if (RegOpenKeyW(HKEY_CURRENT_USER, szAdvancedSettingsKey, &hKey) == ERROR_SUCCESS)
+    
+    if (RegOpenKeyW(HKEY_CURRENT_USER, pszKeyName, &hKey) == ERROR_SUCCESS)
     {
-        DWORD dwValue, dwValueLength, dwType;
+        DWORD dwValueLength, dwType;
 
         dwValueLength = sizeof(dwValue);
-        if (RegQueryValueExW(hKey, L"ShowSeconds", NULL, &dwType, (PBYTE)&dwValue, &dwValueLength) == ERROR_SUCCESS && dwType == REG_DWORD)
-            AdvancedSettings.bShowSeconds = dwValue != 0;
-
+        ret = RegQueryValueExW(hKey, pszValueName, NULL, &dwType, (PBYTE)&dwValue, &dwValueLength) == ERROR_SUCCESS && dwType == REG_DWORD;
+        
         RegCloseKey(hKey);
     }
+    
+    return ret;
 }
 
 BOOL

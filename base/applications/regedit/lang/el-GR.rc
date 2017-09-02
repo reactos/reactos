@@ -20,7 +20,7 @@ BEGIN
     END
     POPUP "&Βοήθεια"
     BEGIN
-        MENUITEM "&Σχετικά ...", ID_HELP_ABOUT
+        MENUITEM "&Σχετικά", ID_HELP_ABOUT
     END
 END
 
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "&Connect Network Registry...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Disconnect Network Registry...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Εκτύπωση\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "&Εκτύπωση...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Έ&ξοδος", ID_REGISTRY_EXIT
     END
@@ -63,7 +63,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Αντιγραφή Ονόματος Κλειδιού", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Εύρεση\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "&Εύρεση...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Εύρεση Ε&πόμενου\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&View"
@@ -123,7 +123,7 @@ BEGIN
             MENUITEM "&Multi-String Τιμή", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Expandable String Τιμή", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Εύρεση", ID_EDIT_FIND
+        MENUITEM "&Εύρεση...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Διαγραφή", ID_TREE_DELETE
         MENUITEM "&Μετονομασία", ID_TREE_RENAME

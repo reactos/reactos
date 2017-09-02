@@ -484,23 +484,17 @@ GpStatus WINGDIPAPI GdipIsMatrixEqual(GDIPCONST GpMatrix *matrix, GDIPCONST GpMa
 
 GpStatus WINGDIPAPI GdipIsMatrixIdentity(GDIPCONST GpMatrix *matrix, BOOL *result)
 {
-    GpMatrix *e;
-    GpStatus ret;
-    BOOL isIdentity;
+    static const GpMatrix identity =
+    {
+      { 1.0, 0.0,
+        0.0, 1.0,
+        0.0, 0.0 }
+    };
 
     TRACE("(%p, %p)\n", matrix, result);
 
     if(!matrix || !result)
         return InvalidParameter;
 
-    ret = GdipCreateMatrix(&e);
-    if(ret != Ok) return ret;
-
-    ret = GdipIsMatrixEqual(matrix, e, &isIdentity);
-    if(ret == Ok)
-        *result = isIdentity;
-
-    heap_free(e);
-
-    return ret;
+    return GdipIsMatrixEqual(matrix, &identity, result);
 }

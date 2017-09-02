@@ -50,7 +50,7 @@ CHAR    UiTitleBoxTitleText[260]    = "Boot Menu";            // Title box's tit
 BOOLEAN    UiUseSpecialEffects            = FALSE;                // Tells us if we should use fade effects
 BOOLEAN    UiDrawTime                    = TRUE;                    // Tells us if we should draw the time
 BOOLEAN    UiCenterMenu                = TRUE;                    // Tells us if we should use a centered or left-aligned menu
-BOOLEAN    UiMenuBox                    = TRUE;                    // Tells us if we shuld draw a box around the menu
+BOOLEAN    UiMenuBox                    = TRUE;                    // Tells us if we should draw a box around the menu
 CHAR    UiTimeText[260] = "[Time Remaining: ] ";
 
 const CHAR    UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };

@@ -52,7 +52,7 @@ MempAllocatePageTables(VOID)
 {
     ULONG NumPageTables, TotalSize;
     PUCHAR Buffer;
-    // It's better to allocate PDE + PTEs contigiuos
+    // It's better to allocate PDE + PTEs contiguous
 
     // Max number of entries = MaxPageNum >> 10
     // FIXME: This is a number to describe ALL physical memory

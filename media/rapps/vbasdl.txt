@@ -22,7 +22,7 @@ Size = 438,9 Kio
 [Section.0419]
 Name = VisualBoyAdvance (SDL версия)
 Description = Эмулятор Gameboy и систем GameboyAdvance. Вам потребуется программа распаковки zip, чтобы запустить его.
-Size = 438,9 КБ
+Size = 438,9 КиБ
 
 [Section.041f]
 Name = VisualBoyAdvance (SDL sürümü)

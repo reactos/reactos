@@ -56,7 +56,7 @@ Size = 185,5 Kio
 Name = Драйвер AC97 для VirtualBox
 License = Не указано
 Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
-Size = 185,5 КБ
+Size = 185,5 КиБ
 
 [Section.041f]
 Name = VirtualBox için AC'97 Sürücüsü

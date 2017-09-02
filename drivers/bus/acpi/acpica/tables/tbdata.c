@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,9 +45,70 @@
 #include "accommon.h"
 #include "acnamesp.h"
 #include "actables.h"
+#include "acevents.h"
 
 #define _COMPONENT          ACPI_TABLES
         ACPI_MODULE_NAME    ("tbdata")
+
+/* Local prototypes */
+
+static ACPI_STATUS
+AcpiTbCheckDuplication (
+    ACPI_TABLE_DESC         *TableDesc,
+    UINT32                  *TableIndex);
+
+static BOOLEAN
+AcpiTbCompareTables (
+    ACPI_TABLE_DESC         *TableDesc,
+    UINT32                  TableIndex);
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbCompareTables
+ *
+ * PARAMETERS:  TableDesc           - Table 1 descriptor to be compared
+ *              TableIndex          - Index of table 2 to be compared
+ *
+ * RETURN:      TRUE if both tables are identical.
+ *
+ * DESCRIPTION: This function compares a table with another table that has
+ *              already been installed in the root table list.
+ *
+ ******************************************************************************/
+
+static BOOLEAN
+AcpiTbCompareTables (
+    ACPI_TABLE_DESC         *TableDesc,
+    UINT32                  TableIndex)
+{
+    ACPI_STATUS             Status = AE_OK;
+    BOOLEAN                 IsIdentical;
+    ACPI_TABLE_HEADER       *Table;
+    UINT32                  TableLength;
+    UINT8                   TableFlags;
+
+
+    Status = AcpiTbAcquireTable (&AcpiGbl_RootTableList.Tables[TableIndex],
+        &Table, &TableLength, &TableFlags);
+    if (ACPI_FAILURE (Status))
+    {
+        return (FALSE);
+    }
+
+    /*
+     * Check for a table match on the entire table length,
+     * not just the header.
+     */
+    IsIdentical = (BOOLEAN)((TableDesc->Length != TableLength ||
+        memcmp (TableDesc->Pointer, Table, TableLength)) ?
+        FALSE : TRUE);
+
+    /* Release the acquired table */
+
+    AcpiTbReleaseTable (Table, TableLength, TableFlags);
+    return (IsIdentical);
+}
 
 
 /*******************************************************************************
@@ -368,7 +429,7 @@ AcpiTbValidateTempTable (
     ACPI_TABLE_DESC         *TableDesc)
 {
 
-    if (!TableDesc->Pointer && !AcpiGbl_VerifyTableChecksum)
+    if (!TableDesc->Pointer && !AcpiGbl_EnableTableValidation)
     {
         /*
          * Only validates the header of the table.
@@ -386,24 +447,109 @@ AcpiTbValidateTempTable (
 }
 
 
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbCheckDuplication
+ *
+ * PARAMETERS:  TableDesc           - Table descriptor
+ *              TableIndex          - Where the table index is returned
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Avoid installing duplicated tables. However table override and
+ *              user aided dynamic table load is allowed, thus comparing the
+ *              address of the table is not sufficient, and checking the entire
+ *              table content is required.
+ *
+ ******************************************************************************/
+
+static ACPI_STATUS
+AcpiTbCheckDuplication (
+    ACPI_TABLE_DESC         *TableDesc,
+    UINT32                  *TableIndex)
+{
+    UINT32                  i;
+
+
+    ACPI_FUNCTION_TRACE (TbCheckDuplication);
+
+
+    /* Check if table is already registered */
+
+    for (i = 0; i < AcpiGbl_RootTableList.CurrentTableCount; ++i)
+    {
+        /* Do not compare with unverified tables */
+
+        if (!(AcpiGbl_RootTableList.Tables[i].Flags & ACPI_TABLE_IS_VERIFIED))
+        {
+            continue;
+        }
+
+        /*
+         * Check for a table match on the entire table length,
+         * not just the header.
+         */
+        if (!AcpiTbCompareTables (TableDesc, i))
+        {
+            continue;
+        }
+
+        /*
+         * Note: the current mechanism does not unregister a table if it is
+         * dynamically unloaded. The related namespace entries are deleted,
+         * but the table remains in the root table list.
+         *
+         * The assumption here is that the number of different tables that
+         * will be loaded is actually small, and there is minimal overhead
+         * in just keeping the table in case it is needed again.
+         *
+         * If this assumption changes in the future (perhaps on large
+         * machines with many table load/unload operations), tables will
+         * need to be unregistered when they are unloaded, and slots in the
+         * root table list should be reused when empty.
+         */
+        if (AcpiGbl_RootTableList.Tables[i].Flags &
+            ACPI_TABLE_IS_LOADED)
+        {
+            /* Table is still loaded, this is an error */
+
+            return_ACPI_STATUS (AE_ALREADY_EXISTS);
+        }
+        else
+        {
+            *TableIndex = i;
+            return_ACPI_STATUS (AE_CTRL_TERMINATE);
+        }
+    }
+
+    /* Indicate no duplication to the caller */
+
+    return_ACPI_STATUS (AE_OK);
+}
+
+
 /******************************************************************************
  *
  * FUNCTION:    AcpiTbVerifyTempTable
  *
  * PARAMETERS:  TableDesc           - Table descriptor
  *              Signature           - Table signature to verify
+ *              TableIndex          - Where the table index is returned
  *
  * RETURN:      Status
  *
  * DESCRIPTION: This function is called to validate and verify the table, the
  *              returned table descriptor is in "VALIDATED" state.
+ *              Note that 'TableIndex' is required to be set to !NULL to
+ *              enable duplication check.
  *
  *****************************************************************************/
 
 ACPI_STATUS
 AcpiTbVerifyTempTable (
     ACPI_TABLE_DESC         *TableDesc,
-    char                    *Signature)
+    char                    *Signature,
+    UINT32                  *TableIndex)
 {
     ACPI_STATUS             Status = AE_OK;
 
@@ -431,25 +577,48 @@ AcpiTbVerifyTempTable (
         goto InvalidateAndExit;
     }
 
-    /* Verify the checksum */
-
-    if (AcpiGbl_VerifyTableChecksum)
+    if (AcpiGbl_EnableTableValidation)
     {
+        /* Verify the checksum */
+
         Status = AcpiTbVerifyChecksum (TableDesc->Pointer, TableDesc->Length);
         if (ACPI_FAILURE (Status))
         {
             ACPI_EXCEPTION ((AE_INFO, AE_NO_MEMORY,
                 "%4.4s 0x%8.8X%8.8X"
                 " Attempted table install failed",
-                AcpiUtValidAcpiName (TableDesc->Signature.Ascii) ?
+                AcpiUtValidNameseg (TableDesc->Signature.Ascii) ?
                     TableDesc->Signature.Ascii : "????",
                 ACPI_FORMAT_UINT64 (TableDesc->Address)));
 
             goto InvalidateAndExit;
         }
+
+        /* Avoid duplications */
+
+        if (TableIndex)
+        {
+            Status = AcpiTbCheckDuplication (TableDesc, TableIndex);
+            if (ACPI_FAILURE (Status))
+            {
+                if (Status != AE_CTRL_TERMINATE)
+                {
+                    ACPI_EXCEPTION ((AE_INFO, AE_NO_MEMORY,
+                        "%4.4s 0x%8.8X%8.8X"
+                        " Table is duplicated",
+                        AcpiUtValidNameseg (TableDesc->Signature.Ascii) ?
+                            TableDesc->Signature.Ascii : "????",
+                        ACPI_FORMAT_UINT64 (TableDesc->Address)));
+                }
+
+                goto InvalidateAndExit;
+            }
+        }
+
+        TableDesc->Flags |= ACPI_TABLE_IS_VERIFIED;
     }
 
-    return_ACPI_STATUS (AE_OK);
+    return_ACPI_STATUS (Status);
 
 InvalidateAndExit:
     AcpiTbInvalidateTable (TableDesc);
@@ -475,6 +644,8 @@ AcpiTbResizeRootTableList (
 {
     ACPI_TABLE_DESC         *Tables;
     UINT32                  TableCount;
+    UINT32                  CurrentTableCount, MaxTableCount;
+    UINT32                  i;
 
 
     ACPI_FUNCTION_TRACE (TbResizeRootTableList);
@@ -499,9 +670,9 @@ AcpiTbResizeRootTableList (
         TableCount = AcpiGbl_RootTableList.CurrentTableCount;
     }
 
+    MaxTableCount = TableCount + ACPI_ROOT_TABLE_SIZE_INCREMENT;
     Tables = ACPI_ALLOCATE_ZEROED (
-        ((ACPI_SIZE) TableCount + ACPI_ROOT_TABLE_SIZE_INCREMENT) *
-        sizeof (ACPI_TABLE_DESC));
+        ((ACPI_SIZE) MaxTableCount) * sizeof (ACPI_TABLE_DESC));
     if (!Tables)
     {
         ACPI_ERROR ((AE_INFO, "Could not allocate new root table array"));
@@ -510,10 +681,19 @@ AcpiTbResizeRootTableList (
 
     /* Copy and free the previous table array */
 
+    CurrentTableCount = 0;
     if (AcpiGbl_RootTableList.Tables)
     {
-        memcpy (Tables, AcpiGbl_RootTableList.Tables,
-            (ACPI_SIZE) TableCount * sizeof (ACPI_TABLE_DESC));
+        for (i = 0; i < TableCount; i++)
+        {
+            if (AcpiGbl_RootTableList.Tables[i].Address)
+            {
+                memcpy (Tables + CurrentTableCount,
+                    AcpiGbl_RootTableList.Tables + i,
+                    sizeof (ACPI_TABLE_DESC));
+                CurrentTableCount++;
+            }
+        }
 
         if (AcpiGbl_RootTableList.Flags & ACPI_ROOT_ORIGIN_ALLOCATED)
         {
@@ -522,8 +702,8 @@ AcpiTbResizeRootTableList (
     }
 
     AcpiGbl_RootTableList.Tables = Tables;
-    AcpiGbl_RootTableList.MaxTableCount =
-        TableCount + ACPI_ROOT_TABLE_SIZE_INCREMENT;
+    AcpiGbl_RootTableList.MaxTableCount = MaxTableCount;
+    AcpiGbl_RootTableList.CurrentTableCount = CurrentTableCount;
     AcpiGbl_RootTableList.Flags |= ACPI_ROOT_ORIGIN_ALLOCATED;
 
     return_ACPI_STATUS (AE_OK);
@@ -680,18 +860,13 @@ AcpiTbDeleteNamespaceByOwner (
      * lock may block, and also since the execution of a namespace walk
      * must be allowed to use the interpreter.
      */
-    (void) AcpiUtReleaseMutex (ACPI_MTX_INTERPRETER);
     Status = AcpiUtAcquireWriteLock (&AcpiGbl_NamespaceRwLock);
-
-    AcpiNsDeleteNamespaceByOwner (OwnerId);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
     }
-
+    AcpiNsDeleteNamespaceByOwner (OwnerId);
     AcpiUtReleaseWriteLock (&AcpiGbl_NamespaceRwLock);
-
-    Status = AcpiUtAcquireMutex (ACPI_MTX_INTERPRETER);
     return_ACPI_STATUS (Status);
 }
 
@@ -866,4 +1041,193 @@ AcpiTbSetTableLoadedFlag (
     }
 
     (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbLoadTable
+ *
+ * PARAMETERS:  TableIndex              - Table index
+ *              ParentNode              - Where table index is returned
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Load an ACPI table
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiTbLoadTable (
+    UINT32                  TableIndex,
+    ACPI_NAMESPACE_NODE     *ParentNode)
+{
+    ACPI_TABLE_HEADER       *Table;
+    ACPI_STATUS             Status;
+    ACPI_OWNER_ID           OwnerId;
+
+
+    ACPI_FUNCTION_TRACE (TbLoadTable);
+
+
+    /*
+     * Note: Now table is "INSTALLED", it must be validated before
+     * using.
+     */
+    Status = AcpiGetTableByIndex (TableIndex, &Table);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    Status = AcpiNsLoadTable (TableIndex, ParentNode);
+
+    /* Execute any module-level code that was found in the table */
+
+    if (!AcpiGbl_ParseTableAsTermList && AcpiGbl_GroupModuleLevelCode)
+    {
+        AcpiNsExecModuleCodeList ();
+    }
+
+    /*
+     * Update GPEs for any new _Lxx/_Exx methods. Ignore errors. The host is
+     * responsible for discovering any new wake GPEs by running _PRW methods
+     * that may have been loaded by this table.
+     */
+    Status = AcpiTbGetOwnerId (TableIndex, &OwnerId);
+    if (ACPI_SUCCESS (Status))
+    {
+        AcpiEvUpdateGpes (OwnerId);
+    }
+
+    /* Invoke table handler */
+
+    AcpiTbNotifyTable (ACPI_TABLE_EVENT_LOAD, Table);
+    return_ACPI_STATUS (Status);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbInstallAndLoadTable
+ *
+ * PARAMETERS:  Address                 - Physical address of the table
+ *              Flags                   - Allocation flags of the table
+ *              Override                - Whether override should be performed
+ *              TableIndex              - Where table index is returned
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Install and load an ACPI table
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiTbInstallAndLoadTable (
+    ACPI_PHYSICAL_ADDRESS   Address,
+    UINT8                   Flags,
+    BOOLEAN                 Override,
+    UINT32                  *TableIndex)
+{
+    ACPI_STATUS             Status;
+    UINT32                  i;
+
+
+    ACPI_FUNCTION_TRACE (TbInstallAndLoadTable);
+
+
+    /* Install the table and load it into the namespace */
+
+    Status = AcpiTbInstallStandardTable (Address, Flags, TRUE,
+        Override, &i);
+    if (ACPI_FAILURE (Status))
+    {
+        goto Exit;
+    }
+
+    Status = AcpiTbLoadTable (i, AcpiGbl_RootNode);
+
+Exit:
+    *TableIndex = i;
+    return_ACPI_STATUS (Status);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbUnloadTable
+ *
+ * PARAMETERS:  TableIndex              - Table index
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Unload an ACPI table
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiTbUnloadTable (
+    UINT32                  TableIndex)
+{
+    ACPI_STATUS             Status = AE_OK;
+    ACPI_TABLE_HEADER       *Table;
+
+
+    ACPI_FUNCTION_TRACE (TbUnloadTable);
+
+
+    /* Ensure the table is still loaded */
+
+    if (!AcpiTbIsTableLoaded (TableIndex))
+    {
+        return_ACPI_STATUS (AE_NOT_EXIST);
+    }
+
+    /* Invoke table handler */
+
+    Status = AcpiGetTableByIndex (TableIndex, &Table);
+    if (ACPI_SUCCESS (Status))
+    {
+        AcpiTbNotifyTable (ACPI_TABLE_EVENT_UNLOAD, Table);
+    }
+
+    /* Delete the portion of the namespace owned by this table */
+
+    Status = AcpiTbDeleteNamespaceByOwner (TableIndex);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    (void) AcpiTbReleaseOwnerId (TableIndex);
+    AcpiTbSetTableLoadedFlag (TableIndex, FALSE);
+    return_ACPI_STATUS (Status);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbNotifyTable
+ *
+ * PARAMETERS:  Event               - Table event
+ *              Table               - Validated table pointer
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Notify a table event to the users.
+ *
+ ******************************************************************************/
+
+void
+AcpiTbNotifyTable (
+    UINT32                          Event,
+    void                            *Table)
+{
+    /* Invoke table handler if present */
+
+    if (AcpiGbl_TableHandler)
+    {
+        (void) AcpiGbl_TableHandler (Event, Table,
+            AcpiGbl_TableHandlerContext);
+    }
 }

@@ -162,29 +162,9 @@ DWORD ParseReasonCode(LPCWSTR code)
 /* Writes the last error as both text and error code to the console */
 VOID DisplayError(DWORD dwError)
 {
-    LPWSTR lpMsgBuf = NULL;
-    DWORD  errLength; /* Error message length */
-    LPSTR resMsg;     /* For error message in OEM symbols */
-
-    /* Grabs the length of the error message */
-    errLength = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                               NULL,
-                               dwError,
-                               LANG_USER_DEFAULT,
-                               (LPWSTR)&lpMsgBuf,
-                               0,
-                               NULL) + 1;
-
-    /* Gets the error message ready for output */
-    resMsg = (LPSTR)LocalAlloc(LPTR, errLength * sizeof(WCHAR));
-    CharToOemBuffW(lpMsgBuf, resMsg, errLength);
-
-    /* Prints out the error message to the user */
-    fprintf(stderr, resMsg);
-    fwprintf(stderr, L"Error code: %lu\n", dwError);
-
-    LocalFree(lpMsgBuf);
-    LocalFree(resMsg);
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, dwError, LANG_USER_DEFAULT);
+    ConPrintf(StdErr, L"Error code: %lu\n", dwError);
 }
 
 /* EOF */

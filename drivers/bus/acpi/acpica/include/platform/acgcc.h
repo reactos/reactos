@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,22 @@
 #ifndef __ACGCC_H__
 #define __ACGCC_H__
 
+/*
+ * Use compiler specific <stdarg.h> is a good practice for even when
+ * -nostdinc is specified (i.e., ACPI_USE_STANDARD_HEADERS undefined.
+ */
+#ifndef va_arg
+#ifdef ACPI_USE_BUILTIN_STDARG
+typedef __builtin_va_list       va_list;
+#define va_start(v, l)          __builtin_va_start(v, l)
+#define va_end(v)               __builtin_va_end(v)
+#define va_arg(v, l)            __builtin_va_arg(v, l)
+#define va_copy(d, s)           __builtin_va_copy(d, s)
+#else
+#include <stdarg.h>
+#endif
+#endif
+
 #define ACPI_INLINE             __inline__
 
 /* Function name is used for debug output. Non-ANSI, compiler-dependent */
@@ -64,21 +80,13 @@
  */
 #define ACPI_UNUSED_VAR __attribute__ ((unused))
 
-/*
- * Some versions of gcc implement strchr() with a buggy macro. So,
- * undef it here. Prevents error messages of this form (usually from the
- * file getopt.c):
- *
- * error: logical '&&' with non-zero constant will always evaluate as true
- */
-#ifdef strchr
-#undef strchr
-#endif
-
 /* GCC supports __VA_ARGS__ in macros */
 
 #define COMPILER_VA_MACRO               1
 
+/* GCC supports native multiply/shift on 32-bit platforms */
+
+#define ACPI_USE_NATIVE_MATH64
 
 #ifdef __REACTOS__
 /* Flush CPU cache - used when going to sleep. Wbinvd or similar. */
@@ -129,23 +137,6 @@ do {                                                        \
         "2:"                                                \
         :"=a"(Acq):"a"(0),"c"(FacsPtr),"i"(~3L):"edx");\
 } while(0)
-
-
-/*
- * Note: This is also taken from our old adaptation.
- *       See acmsvc.h for where it came originally.
- */
-#define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32) \
-{                           \
-    q32 = n_hi / d32;       \
-    r32 = n_lo / d32;       \
-}
-
-#define ACPI_SHIFT_RIGHT_64(n_hi, n_lo) \
-{                           \
-    n_hi >>= 1;    \
-    n_lo >>= 1;    \
-}
 
 #endif /* __REACTOS__ */
 #endif /* __ACGCC_H__ */

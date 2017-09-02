@@ -522,7 +522,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            if(g == NULL)
+            if (g == NULL)
                 return TRUE;
 
             switch(LOWORD(wParam))
@@ -558,7 +558,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == EN_CHANGE)
                     {
                         iProperty = g_Assignment[g->CurrentElement].Size;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         iSelection = LOWORD(SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_SIZE_UD, UDM_GETPOS,0,0L));
@@ -566,7 +566,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETSIZE, iProperty, iSelection);
 
                         iProperty = g_Assignment[g->CurrentElement].Size2;
-                        if(iProperty != -1)
+                        if (iProperty != -1)
                             SchemeSetMetric(&g->SchemeAdv, iProperty, iSelection);
                     }
                     break;
@@ -575,7 +575,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         iProperty = g_Assignment[g->CurrentElement].Font;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);
@@ -590,7 +590,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         HDC hdcDlg;
 
                         iProperty =  g_Assignment[g->CurrentElement].Font;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         hdcDlg = GetDC(hwndDlg);
@@ -608,7 +608,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         iProperty = g_Assignment[g->CurrentElement].Font;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);
@@ -622,7 +622,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         iProperty = g_Assignment[g->CurrentElement].Font;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);

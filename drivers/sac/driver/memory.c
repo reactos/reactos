@@ -71,7 +71,7 @@ FreeMemoryManagement(VOID)
     {
         ASSERT(GlobalMemoryList->Signature == GLOBAL_MEMORY_SIGNATURE);
 
-        /* While outisde of the lock, save the next list and free this one */
+        /* While outside of the lock, save the next list and free this one */
         KeReleaseSpinLock(&MemoryLock, OldIrql);
         Next = GlobalMemoryList->Next;
         ExFreePoolWithTag(GlobalMemoryList, 0);
@@ -250,7 +250,7 @@ MyFreePool(IN PVOID *Block)
     InterlockedIncrement(&TotalFrees);
     InterlockedExchangeAdd(&TotalBytesFreed, LocalDescriptor->Size);
 
-    /* Acquire the memory alliocation lock */
+    /* Acquire the memory allocation lock */
     GlobalDescriptor = GlobalMemoryList;
     KeAcquireSpinLock(&MemoryLock, &OldIrql);
 

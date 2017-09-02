@@ -322,7 +322,7 @@ ProgressSetStep(
     /* Calculate new percentage */
     NewPercent = (ULONG)(((100.0 * (float)Bar->CurrentStep) / (float)Bar->StepCount) + 0.5);
 
-    /* Redraw precentage if changed */
+    /* Redraw percentage if changed */
     if (Bar->Percent != NewPercent)
     {
         Bar->Percent = NewPercent;

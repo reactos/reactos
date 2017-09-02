@@ -347,7 +347,7 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
 
                     if (ListView_GetItemCount(hDriversListView) == 0)
                     {
-                        if(LoadStringW(hDllInstance, IDS_NODRIVERS, szBuffer, _countof(szBuffer)))
+                        if (LoadStringW(hDllInstance, IDS_NODRIVERS, szBuffer, _countof(szBuffer)))
                             MessageBoxW(hwndDlg, szBuffer, dap->szDevName, MB_OK);
                         EndDialog(hwndDlg, IDCANCEL);
                     }
@@ -1339,7 +1339,6 @@ DisplayDeviceRelations(
     ULONG ulLength = 0;
     LPWSTR pszBuffer = NULL, pszStr;
     INT index = 0, len;
-
     CONFIGRET ret;
 
     ret = CM_Get_Device_ID_List_Size_ExW(&ulLength,
@@ -1351,7 +1350,7 @@ DisplayDeviceRelations(
 
     pszBuffer = (LPWSTR)HeapAlloc(GetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
-                                  ulLength);
+                                  ulLength * sizeof(WCHAR));
     if (pszBuffer == NULL)
         return;
 

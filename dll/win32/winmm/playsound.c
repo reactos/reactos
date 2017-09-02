@@ -130,7 +130,7 @@ static HMMIO	get_mmioFromProfile(UINT uFlags, LPCWSTR lpszName)
         if (err != 0)
             goto none;
     }
-    count = sizeof(str)/sizeof(str[0]);
+    count = sizeof(str);
     err = RegQueryValueExW(hSnd, NULL, 0, &type, (LPBYTE)str, &count);
     RegCloseKey(hSnd);
     if (err != 0 || !*str) goto none;

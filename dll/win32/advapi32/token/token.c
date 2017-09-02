@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/token/token.c
  * PURPOSE:         Token functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */

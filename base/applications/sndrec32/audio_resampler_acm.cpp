@@ -42,7 +42,7 @@ audio_resampler_acm::init_(void)
     wformat_dst.nAvgBytesPerSec = audfmt_out.byte_rate();
     wformat_dst.nBlockAlign = audfmt_out.block_align();
 
-    /* Init acm structures completed successfull */
+    /* Init acm structures completed successful */
 }
 
 /* Public Functions */
@@ -126,10 +126,16 @@ audio_resampler_acm::close(void)
             {
                 /* Free buffer memory */
                 if (acm_header.pbSrc != 0)
+                {
                     delete[] acm_header.pbSrc;
+                    acm_header.pbSrc = 0;
+                }
 
                 if (acm_header.pbDst != 0)
+                {
                     delete[] acm_header.pbDst;
+                    acm_header.pbDst = 0;
+                }
 
                 /* Re-init structures */
                 init_();
@@ -147,10 +153,16 @@ audio_resampler_acm::close(void)
         {
             /* Free buffer memory */
             if (acm_header.pbSrc != 0)
+            {
                 delete[] acm_header.pbSrc;
+                acm_header.pbSrc = 0;
+            }
 
             if (acm_header.pbDst != 0)
+            {
                 delete[] acm_header.pbDst;
+                acm_header.pbDst = 0;
+            }
 
             /* Re-init structures */
             init_();

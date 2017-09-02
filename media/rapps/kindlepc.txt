@@ -37,13 +37,13 @@ Description = Et gratis program som lar deg lese tenne bøker.
 Description = Darmowa aplikacja, która pozwala czytać książki Kindle.
 
 [Section.0418]
-Description = O aplicaţie gratuită care vă permite să citiţi cărţi aprinde.
+Description = Aplicație gratuită care permite lectura de cărți Kindle.
 Size = 43,5 Mio
 
 [Section.0419]
 License = Бесплатно
 Description = Свободная программа, которая позволит читать книги Kindle.
-Size = 43,5 МБ
+Size = 43,5 МиБ
 
 [Section.041b]
 Description = Bezplatná aplikácia, ktorá umožňuje čítanie Kindle kníh.

@@ -27,6 +27,21 @@
 //
 VOID
 NTAPI
+FldrSetIdentifier(
+    IN PCONFIGURATION_COMPONENT_DATA ComponentData,
+    IN PCHAR IdentifierString
+);
+
+VOID
+NTAPI
+FldrSetConfigurationData(
+    IN PCONFIGURATION_COMPONENT_DATA ComponentData,
+    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
+    IN ULONG Size
+);
+
+VOID
+NTAPI
 FldrCreateSystemKey(
     OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
 );

@@ -25,7 +25,7 @@
 unsigned int CDECL _statusfp(void)
 {
   unsigned int retVal = 0;
-  unsigned int fpword;
+  unsigned short fpword;
 
 #ifdef _M_AMD64
     fpword = _mm_getcsr();

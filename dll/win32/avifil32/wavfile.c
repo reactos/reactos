@@ -294,7 +294,7 @@ static HRESULT WINAPI IAVIFile_fnCreateStream(IAVIFile *iface, IAVIStream **avis
   This->sInfo.dwStart             = 0;
   This->sInfo.dwInitialFrames     = 0;
   This->sInfo.dwFormatChangeCount = 0;
-  memset(&This->sInfo.rcFrame, 0, sizeof(This->sInfo.rcFrame));
+  SetRectEmpty(&This->sInfo.rcFrame);
 
   This->fInfo.dwStreams = 1;
   This->fInfo.dwScale   = This->sInfo.dwScale;

@@ -201,11 +201,26 @@ static COLORREF get_text_color( ME_Context *c, ME_Style *style, BOOL highlight )
     return color;
 }
 
+static COLORREF get_back_color( ME_Context *c, ME_Style *style, BOOL highlight )
+{
+    COLORREF color;
+
+    if (highlight)
+        color = ITextHost_TxGetSysColor( c->editor->texthost, COLOR_HIGHLIGHT );
+    else if ( (style->fmt.dwMask & CFM_BACKCOLOR)
+            && !(style->fmt.dwEffects & CFE_AUTOBACKCOLOR) )
+        color = style->fmt.crBackColor;
+    else
+        color = ITextHost_TxGetSysColor( c->editor->texthost, COLOR_WINDOW );
+
+    return color;
+}
+
 static void get_underline_pen( ME_Style *style, COLORREF color, HPEN *pen )
 {
     *pen = NULL;
     /* Choose the pen type for underlining the text. */
-    if (style->fmt.dwMask & CFM_UNDERLINETYPE)
+    if (style->fmt.dwEffects & CFE_UNDERLINE)
     {
         switch (style->fmt.bUnderlineType)
         {
@@ -261,7 +276,8 @@ static void draw_space( ME_Context *c, ME_Run *run, int x, int y,
 
     SetRect( &rect, x, ymin, x + run->nWidth, ymin + cy );
 
-    if (c->editor->bHideSelection) selected = FALSE;
+    if (c->editor->bHideSelection || (!c->editor->bHaveFocus &&
+                !(c->editor->styleFlags & ES_NOHIDESEL))) selected = FALSE;
     if (c->editor->bEmulateVersion10)
     {
         old_style_selected = selected;
@@ -313,14 +329,17 @@ static void get_selection_rect( ME_Context *c, ME_Run *run, int from, int to, in
     return;
 }
 
-
 static void draw_text( ME_Context *c, ME_Run *run, int x, int y, BOOL selected, RECT *sel_rect )
 {
     COLORREF text_color = get_text_color( c, run->style, selected );
-    COLORREF back_color = selected ? ITextHost_TxGetSysColor( c->editor->texthost, COLOR_HIGHLIGHT ) : 0;
+    COLORREF back_color = get_back_color( c, run->style, selected );
     COLORREF old_text, old_back = 0;
     const WCHAR *text = get_text( run, 0 );
     ME_String *masked = NULL;
+    const BOOL paint_bg = ( selected
+        || ( ( run->style->fmt.dwMask & CFM_BACKCOLOR )
+            && !(CFE_AUTOBACKCOLOR & run->style->fmt.dwEffects) )
+        );
 
     if (c->editor->cPasswordMask)
     {
@@ -329,16 +348,16 @@ static void draw_text( ME_Context *c, ME_Run *run, int x, int y, BOOL selected, 
     }
 
     old_text = SetTextColor( c->hDC, text_color );
-    if (selected) old_back = SetBkColor( c->hDC, back_color );
+    if (paint_bg) old_back = SetBkColor( c->hDC, back_color );
 
     if (run->para->nFlags & MEPF_COMPLEX)
-        ScriptTextOut( c->hDC, &run->style->script_cache, x, y, selected ? ETO_OPAQUE : 0, sel_rect,
+        ScriptTextOut( c->hDC, &run->style->script_cache, x, y, paint_bg ? ETO_OPAQUE : 0, sel_rect,
                        &run->script_analysis, NULL, 0, run->glyphs, run->num_glyphs, run->advances,
                        NULL, run->offsets );
     else
-        ExtTextOutW( c->hDC, x, y, selected ? ETO_OPAQUE : 0, sel_rect, text, run->len, NULL );
+        ExtTextOutW( c->hDC, x, y, paint_bg ? ETO_OPAQUE : 0, sel_rect, text, run->len, NULL );
 
-    if (selected) SetBkColor( c->hDC, old_back );
+    if (paint_bg) SetBkColor( c->hDC, old_back );
     SetTextColor( c->hDC, old_text );
 
     draw_underline( c, run, x, y, text_color );
@@ -355,7 +374,8 @@ static void ME_DrawTextWithStyle(ME_Context *c, ME_Run *run, int x, int y,
   HGDIOBJ hOldFont;
   int yOffset = 0;
   BOOL selected = (nSelFrom < run->len && nSelTo >= 0
-                   && nSelFrom < nSelTo && !c->editor->bHideSelection);
+                   && nSelFrom < nSelTo && !c->editor->bHideSelection &&
+                   (c->editor->bHaveFocus || (c->editor->styleFlags & ES_NOHIDESEL)));
   BOOL old_style_selected = FALSE;
   RECT sel_rect;
   HRGN clip = NULL, sel_rgn = NULL;
@@ -387,7 +407,18 @@ static void ME_DrawTextWithStyle(ME_Context *c, ME_Run *run, int x, int y,
   hOldFont = ME_SelectStyleFont( c, run->style );
 
   if (sel_rgn) ExtSelectClipRgn( hDC, sel_rgn, RGN_DIFF );
-  draw_text( c, run, x, y - yOffset, FALSE, NULL );
+
+  if (!(run->style->fmt.dwEffects & CFE_AUTOBACKCOLOR)
+      && (run->style->fmt.dwMask & CFM_BACKCOLOR) )
+  {
+    RECT tmp_rect;
+    get_selection_rect( c, run, 0, run->len, cy, &tmp_rect );
+    OffsetRect( &tmp_rect, x, ymin );
+    draw_text( c, run, x, y - yOffset, FALSE, &tmp_rect );
+  }
+  else
+    draw_text( c, run, x, y - yOffset, FALSE, NULL );
+
   if (sel_rgn)
   {
     ExtSelectClipRgn( hDC, clip, RGN_COPY );
@@ -522,16 +553,16 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
   BOOL          hasParaBorder;
 
   SetRectEmpty(bounds);
-  if (!(para->pFmt->dwMask & (PFM_BORDER | PFM_SPACEBEFORE | PFM_SPACEAFTER))) return;
+  if (!(para->fmt.dwMask & (PFM_BORDER | PFM_SPACEBEFORE | PFM_SPACEAFTER))) return;
 
   border_width = top_border = bottom_border = 0;
-  idx = (para->pFmt->wBorders >> 8) & 0xF;
+  idx = (para->fmt.wBorders >> 8) & 0xF;
   hasParaBorder = (!(c->editor->bEmulateVersion10 &&
-                     para->pFmt->dwMask & PFM_TABLE &&
-                     para->pFmt->wEffects & PFE_TABLE) &&
-                   (para->pFmt->dwMask & PFM_BORDER) &&
+                     para->fmt.dwMask & PFM_TABLE &&
+                     para->fmt.wEffects & PFE_TABLE) &&
+                   (para->fmt.dwMask & PFM_BORDER) &&
                     idx != 0 &&
-                    (para->pFmt->wBorders & 0xF));
+                    (para->fmt.wBorders & 0xF));
   if (hasParaBorder)
   {
     /* FIXME: wBorders is not stored as MSDN says in v1.0 - 4.1 of richedit
@@ -558,29 +589,29 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
      *     0x0F00     bottom      right
      *     0xF000     right       bottom
      */
-    if (para->pFmt->wBorders & 0x00B0)
-      FIXME("Unsupported border flags %x\n", para->pFmt->wBorders);
-    border_width = ME_GetParaBorderWidth(c, para->pFmt->wBorders);
-    if (para->pFmt->wBorders & 4)       top_border = border_width;
-    if (para->pFmt->wBorders & 8)       bottom_border = border_width;
+    if (para->fmt.wBorders & 0x00B0)
+      FIXME("Unsupported border flags %x\n", para->fmt.wBorders);
+    border_width = ME_GetParaBorderWidth(c, para->fmt.wBorders);
+    if (para->fmt.wBorders & 4)       top_border = border_width;
+    if (para->fmt.wBorders & 8)       bottom_border = border_width;
   }
 
-  if (para->pFmt->dwMask & PFM_SPACEBEFORE)
+  if (para->fmt.dwMask & PFM_SPACEBEFORE)
   {
     rc.left = c->rcView.left;
     rc.right = c->rcView.right;
     rc.top = y;
-    bounds->top = ME_twips2pointsY(c, para->pFmt->dySpaceBefore);
+    bounds->top = ME_twips2pointsY(c, para->fmt.dySpaceBefore);
     rc.bottom = y + bounds->top + top_border;
     FillRect(c->hDC, &rc, c->editor->hbrBackground);
   }
 
-  if (para->pFmt->dwMask & PFM_SPACEAFTER)
+  if (para->fmt.dwMask & PFM_SPACEAFTER)
   {
     rc.left = c->rcView.left;
     rc.right = c->rcView.right;
     rc.bottom = y + para->nHeight;
-    bounds->bottom = ME_twips2pointsY(c, para->pFmt->dySpaceAfter);
+    bounds->bottom = ME_twips2pointsY(c, para->fmt.dySpaceAfter);
     rc.top = rc.bottom - bounds->bottom - bottom_border;
     FillRect(c->hDC, &rc, c->editor->hbrBackground);
   }
@@ -593,11 +624,11 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
     HPEN        pen = NULL, oldpen = NULL;
     POINT       pt;
 
-    if (para->pFmt->wBorders & 64) /* autocolor */
+    if (para->fmt.wBorders & 64) /* autocolor */
       pencr = ITextHost_TxGetSysColor(c->editor->texthost,
                                       COLOR_WINDOWTEXT);
     else
-      pencr = pen_colors[(para->pFmt->wBorders >> 12) & 0xF];
+      pencr = pen_colors[(para->fmt.wBorders >> 12) & 0xF];
 
     rightEdge = c->pt.x + max(c->editor->sizeWindow.cx,
                               c->editor->nTotalWidth);
@@ -610,9 +641,9 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
     /* before & after spaces are not included in border */
 
     /* helper to draw the double lines in case of corner */
-#define DD(x)   ((para->pFmt->wBorders & (x)) ? (pen_width + 1) : 0)
+#define DD(x)   ((para->fmt.wBorders & (x)) ? (pen_width + 1) : 0)
 
-    if (para->pFmt->wBorders & 1)
+    if (para->fmt.wBorders & 1)
     {
       MoveToEx(c->hDC, c->pt.x, y + bounds->top, NULL);
       LineTo(c->hDC, c->pt.x, y + para->nHeight - bounds->bottom);
@@ -627,7 +658,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
       }
       bounds->left += border_width;
     }
-    if (para->pFmt->wBorders & 2)
+    if (para->fmt.wBorders & 2)
     {
       MoveToEx(c->hDC, rightEdge - 1, y + bounds->top, NULL);
       LineTo(c->hDC, rightEdge - 1, y + para->nHeight - bounds->bottom);
@@ -642,7 +673,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
       }
       bounds->right += border_width;
     }
-    if (para->pFmt->wBorders & 4)
+    if (para->fmt.wBorders & 4)
     {
       MoveToEx(c->hDC, c->pt.x, y + bounds->top, NULL);
       LineTo(c->hDC, rightEdge, y + bounds->top);
@@ -652,7 +683,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
       }
       bounds->top += border_width;
     }
-    if (para->pFmt->wBorders & 8)
+    if (para->fmt.wBorders & 8)
     {
       MoveToEx(c->hDC, c->pt.x, y + para->nHeight - bounds->bottom - 1, NULL);
       LineTo(c->hDC, rightEdge, y + para->nHeight - bounds->bottom - 1);
@@ -810,7 +841,7 @@ static void ME_DrawTableBorders(ME_Context *c, ME_DisplayItem *paragraph)
     }
   } else { /* v1.0 - 3.0 */
     /* Draw simple table border */
-    if (para->pFmt->dwMask & PFM_TABLE && para->pFmt->wEffects & PFE_TABLE) {
+    if (para->fmt.dwMask & PFM_TABLE && para->fmt.wEffects & PFE_TABLE) {
       HPEN pen = NULL, oldpen = NULL;
       int i, firstX, startX, endX, rowY, rowBottom, nHeight;
       POINT oldPt;
@@ -822,21 +853,21 @@ static void ME_DrawTableBorders(ME_Context *c, ME_DisplayItem *paragraph)
       /* Find the start relative to the text */
       firstX = c->pt.x + ME_FindItemFwd(paragraph, diRun)->member.run.pt.x;
       /* Go back by the horizontal gap, which is stored in dxOffset */
-      firstX -= ME_twips2pointsX(c, para->pFmt->dxOffset);
+      firstX -= ME_twips2pointsX(c, para->fmt.dxOffset);
       /* The left edge, stored in dxStartIndent affected just the first edge */
-      startX = firstX - ME_twips2pointsX(c, para->pFmt->dxStartIndent);
+      startX = firstX - ME_twips2pointsX(c, para->fmt.dxStartIndent);
       rowY = c->pt.y + para->pt.y;
-      if (para->pFmt->dwMask & PFM_SPACEBEFORE)
-        rowY += ME_twips2pointsY(c, para->pFmt->dySpaceBefore);
+      if (para->fmt.dwMask & PFM_SPACEBEFORE)
+        rowY += ME_twips2pointsY(c, para->fmt.dySpaceBefore);
       nHeight = ME_FindItemFwd(paragraph, diStartRow)->member.row.nHeight;
       rowBottom = rowY + nHeight;
 
       /* Draw horizontal lines */
       MoveToEx(c->hDC, firstX, rowY, &oldPt);
-      i = para->pFmt->cTabCount - 1;
-      endX = startX + ME_twips2pointsX(c, para->pFmt->rgxTabs[i] & 0x00ffffff) + 1;
+      i = para->fmt.cTabCount - 1;
+      endX = startX + ME_twips2pointsX(c, para->fmt.rgxTabs[i] & 0x00ffffff) + 1;
       LineTo(c->hDC, endX, rowY);
-      pNextFmt = para->next_para->member.para.pFmt;
+      pNextFmt = &para->next_para->member.para.fmt;
       /* The bottom of the row only needs to be drawn if the next row is
        * not a table. */
       if (!(pNextFmt && pNextFmt->dwMask & PFM_TABLE && pNextFmt->wEffects &&
@@ -852,9 +883,9 @@ static void ME_DrawTableBorders(ME_Context *c, ME_DisplayItem *paragraph)
       /* Draw vertical lines */
       MoveToEx(c->hDC, firstX, rowY, NULL);
       LineTo(c->hDC, firstX, rowBottom);
-      for (i = 0; i < para->pFmt->cTabCount; i++)
+      for (i = 0; i < para->fmt.cTabCount; i++)
       {
-        int rightBoundary = para->pFmt->rgxTabs[i] & 0x00ffffff;
+        int rightBoundary = para->fmt.rgxTabs[i] & 0x00ffffff;
         endX = startX + ME_twips2pointsX(c, rightBoundary);
         MoveToEx(c->hDC, endX, rowY, NULL);
         LineTo(c->hDC, endX, rowBottom);
@@ -865,6 +896,28 @@ static void ME_DrawTableBorders(ME_Context *c, ME_DisplayItem *paragraph)
       DeleteObject(pen);
     }
   }
+}
+
+static void draw_para_number( ME_Context *c, ME_DisplayItem *p )
+{
+    ME_Paragraph *para = &p->member.para;
+    HFONT old_font;
+    int x, y;
+    COLORREF old_text;
+
+    if (para->fmt.wNumbering)
+    {
+        old_font = ME_SelectStyleFont( c, para->para_num.style );
+        old_text = SetTextColor( c->hDC, get_text_color( c, para->para_num.style, FALSE ) );
+
+        x = c->pt.x + para->para_num.pt.x;
+        y = c->pt.y + para->pt.y + para->para_num.pt.y;
+
+        ExtTextOutW( c->hDC, x, y, 0, NULL, para->para_num.text->szData, para->para_num.text->nLen, NULL );
+
+        SetTextColor( c->hDC, old_text );
+        ME_UnselectStyleFont( c, para->para_num.style, old_font );
+    }
 }
 
 static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
@@ -992,6 +1045,7 @@ static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
   }
 
   ME_DrawTableBorders(c, paragraph);
+  draw_para_number(c, paragraph);
 
   SetTextAlign(c->hDC, align);
 }

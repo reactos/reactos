@@ -336,8 +336,7 @@ typedef struct {
     void (*CloseConnection)(object_header_t*);
     DWORD (*QueryOption)(object_header_t*,DWORD,void*,DWORD*,BOOL);
     DWORD (*SetOption)(object_header_t*,DWORD,void*,DWORD);
-    DWORD (*ReadFile)(object_header_t*,void*,DWORD,DWORD*);
-    DWORD (*ReadFileEx)(object_header_t*,void*,DWORD,DWORD*,DWORD,DWORD_PTR);
+    DWORD (*ReadFile)(object_header_t*,void*,DWORD,DWORD*,DWORD,DWORD_PTR);
     DWORD (*WriteFile)(object_header_t*,const void*,DWORD,DWORD*);
     DWORD (*QueryDataAvailable)(object_header_t*,DWORD*,DWORD,DWORD_PTR);
     DWORD (*FindNextFileW)(object_header_t*,void*);
@@ -358,6 +357,7 @@ struct _object_header_t
     ULONG  ErrorMask;
     DWORD  dwInternalFlags;
     LONG   refs;
+    BOOL   decoding;
     INTERNET_STATUS_CALLBACK lpfnStatusCB;
     struct list entry;
     struct list children;
@@ -454,7 +454,6 @@ typedef struct
     DWORD read_size;      /* valid data size in read_buf */
     BYTE  read_buf[READ_BUFFER_SIZE]; /* buffer for already read but not returned data */
 
-    BOOL decoding;
     data_stream_t *data_stream;
     netconn_stream_t netconn_stream;
 } http_request_t;
@@ -500,10 +499,6 @@ DWORD INTERNET_GetLastError(void) DECLSPEC_HIDDEN;
 DWORD INTERNET_AsyncCall(task_header_t*) DECLSPEC_HIDDEN;
 LPSTR INTERNET_GetResponseBuffer(void) DECLSPEC_HIDDEN;
 
-VOID SendAsyncCallback(object_header_t *hdr, DWORD_PTR dwContext,
-                       DWORD dwInternetStatus, LPVOID lpvStatusInfo,
-                       DWORD dwStatusInfoLength) DECLSPEC_HIDDEN;
-
 VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
                            DWORD dwInternetStatus, LPVOID lpvStatusInfo,
                            DWORD dwStatusInfoLength) DECLSPEC_HIDDEN;
@@ -516,7 +511,6 @@ DWORD NETCON_secure_connect(netconn_t*,server_t*) DECLSPEC_HIDDEN;
 DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
 		int *sent /* out */) DECLSPEC_HIDDEN;
 DWORD NETCON_recv(netconn_t*,void*,size_t,BOOL,int*) DECLSPEC_HIDDEN;
-BOOL NETCON_query_data_available(netconn_t *connection, DWORD *available) DECLSPEC_HIDDEN;
 BOOL NETCON_is_alive(netconn_t*) DECLSPEC_HIDDEN;
 LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
 int NETCON_GetCipherStrength(netconn_t*) DECLSPEC_HIDDEN;

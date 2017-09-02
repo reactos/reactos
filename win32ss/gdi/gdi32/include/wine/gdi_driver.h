@@ -97,7 +97,6 @@ struct gdi_dc_funcs
     BOOL     (*pFontIsLinked)(PHYSDEV);
     BOOL     (*pFrameRgn)(PHYSDEV,HRGN,HBRUSH,INT,INT);
     BOOL     (*pGdiComment)(PHYSDEV,UINT,const BYTE*);
-    BOOL     (*pGdiRealizationInfo)(PHYSDEV,void*);
     UINT     (*pGetBoundsRect)(PHYSDEV,RECT*,UINT);
     BOOL     (*pGetCharABCWidths)(PHYSDEV,UINT,UINT,LPABC);
     BOOL     (*pGetCharABCWidthsI)(PHYSDEV,UINT,UINT,WORD*,LPABC);
@@ -105,6 +104,7 @@ struct gdi_dc_funcs
     INT      (*pGetDeviceCaps)(PHYSDEV,INT);
     BOOL     (*pGetDeviceGammaRamp)(PHYSDEV,LPVOID);
     DWORD    (*pGetFontData)(PHYSDEV,DWORD,DWORD,LPVOID,DWORD);
+    BOOL     (*pGdiFontRealizationInfo)(PHYSDEV,void*);
     DWORD    (*pGetFontUnicodeRanges)(PHYSDEV,LPGLYPHSET);
     DWORD    (*pGetGlyphIndices)(PHYSDEV,LPCWSTR,INT,LPWORD,DWORD);
     DWORD    (*pGetGlyphOutline)(PHYSDEV,UINT,UINT,LPGLYPHMETRICS,DWORD,LPVOID,const MAT2*);
@@ -213,7 +213,7 @@ static inline PHYSDEV get_physdev_entry_point( PHYSDEV dev, size_t offset )
 
 #define GET_NEXT_PHYSDEV(dev,func) \
     get_physdev_entry_point( (dev)->next, FIELD_OFFSET(struct gdi_dc_funcs,func))
-
+/*
 static inline void push_dc_driver( PHYSDEV *dev, PHYSDEV physdev, const struct gdi_dc_funcs *funcs )
 {
     while ((*dev)->funcs->priority > funcs->priority) dev = &(*dev)->next;
@@ -222,7 +222,7 @@ static inline void push_dc_driver( PHYSDEV *dev, PHYSDEV physdev, const struct g
     physdev->hdc = (*dev)->hdc;
     *dev = physdev;
 }
-
+*/
 /* support for window surfaces */
 
 struct window_surface;

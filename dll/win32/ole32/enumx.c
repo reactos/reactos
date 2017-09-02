@@ -30,6 +30,8 @@ struct tagEnumSTATPROPSETSTG_impl
     struct list *current;
     ULONG elem_size;
     GUID riid;
+    IUnknown *parent;
+    enumx_copy_cb copy_cb;
 };
 
 /************************************************************************
@@ -80,6 +82,7 @@ ULONG WINAPI enumx_Release(enumx_impl *This)
              list_remove(x);
              HeapFree(GetProcessHeap(), 0, x);
         }
+        IUnknown_Release(This->parent);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -101,7 +104,10 @@ HRESULT WINAPI enumx_Next(enumx_impl *This, ULONG celt,
     p = rgelt;
     while (count < celt && This->current && This->current != &This->elements)
     {
-        memcpy(p, &This->current[1], This->elem_size);
+        if (This->copy_cb)
+            This->copy_cb(This->parent, &This->current[1], p);
+        else
+            memcpy(p, &This->current[1], This->elem_size);
         p += This->elem_size;
         This->current = This->current->next;
         count++;
@@ -158,7 +164,8 @@ HRESULT WINAPI enumx_Clone(
  *
  * Allocate a generic enumerator
  */
-enumx_impl *enumx_allocate(REFIID riid, const void *vtbl, ULONG elem_size)
+enumx_impl *enumx_allocate(REFIID riid, const void *vtbl, ULONG elem_size,
+                           IUnknown *parent, enumx_copy_cb copy_cb)
 {
     enumx_impl *enumx;
 
@@ -170,6 +177,11 @@ enumx_impl *enumx_allocate(REFIID riid, const void *vtbl, ULONG elem_size)
         enumx->current = NULL;
         enumx->elem_size = elem_size;
         enumx->riid = *riid;
+        enumx->parent = parent;
+        enumx->copy_cb = copy_cb;
+
+        IUnknown_AddRef(parent);
+
         list_init(&enumx->elements);
     }
 

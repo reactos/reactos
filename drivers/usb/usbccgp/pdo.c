@@ -57,7 +57,7 @@ USBCCGP_PdoHandleQueryDeviceText(
     //
     // FIXME use GenericCompositeUSBDeviceString
     //
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     Buffer = AllocateItem(PagedPool, (wcslen(GenericString) + 1) * sizeof(WCHAR));
     if (!Buffer)
     {

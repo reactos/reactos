@@ -88,7 +88,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(mdi);
 
 #define MDI_MAXTITLELENGTH      0xa1
 
-#define WM_MDICALCCHILDSCROLL   0x10ac /* this is exactly what Windows uses */
+#define WM_MDICALCCHILDSCROLL   0x003F  /* this is exactly what Windows uses */
 
 /* "More Windows..." definitions */
 #define MDI_MOREWINDOWSLIMIT    9       /* after this number of windows, a "More Windows..."
@@ -403,17 +403,6 @@ static LRESULT MDISetMenu( HWND hwnd, HMENU hmenuFrame,
             return (LRESULT)oldFrameMenu;
         }
     }
-    else
-    {
-        /* SetMenu() may already have been called, meaning that this window
-         * already has its menu. But they may have done a SetMenu() on
-         * an MDI window, and called MDISetMenu() after the fact, meaning
-         * that the "if" to this "else" wouldn't catch the need to
-         * augment the frame menu.
-         */
-        if( ci->hwndChildMaximized )
-            MDI_AugmentFrameMenu( hwndFrame, ci->hwndChildMaximized );
-    }
 
     return 0;
 }
@@ -433,7 +422,7 @@ static LRESULT MDI_RefreshMenu(MDICLIENTINFO *ci)
 
     if (!IsMenu(ci->hWindowMenu))
     {
-        WARN("Window menu handle %p is no more valid\n", ci->hWindowMenu);
+        WARN("Window menu handle %p is no longer valid\n", ci->hWindowMenu);
         return 0;
     }
 
@@ -534,8 +523,7 @@ static void MDI_ChildGetMinMaxInfo( HWND client, HWND hwnd, MINMAXINFO* lpMinMax
     lpMinMax->ptMaxPosition.x = rect.left;
     lpMinMax->ptMaxPosition.y = rect.top;
 
-    TRACE("max rect (%ld,%ld - %ld, %ld)\n",
-                        rect.left,rect.top,rect.right,rect.bottom);
+    TRACE("max rect %s\n", wine_dbgstr_rect(&rect));
 }
 
 /**********************************************************************
@@ -1128,9 +1116,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
            ci->hBmpClose = 0;
            NtUserSetWindowFNID( hwnd, FNID_MDICLIENT); // wine uses WIN_ISMDICLIENT
 #else
-            WND *wndPtr = WIN_GetPtr( hwnd );
-            wndPtr->flags |= WIN_ISMDICLIENT;
-            WIN_ReleasePtr( wndPtr );
+           if (message == WM_NCCREATE) win_set_flags( hwnd, WIN_ISMDICLIENT, 0 );
 #endif
         }
         return unicode ? DefWindowProcW( hwnd, message, wParam, lParam ) :
@@ -1236,7 +1222,11 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 	ci->mdiFlags |= MDIF_NEEDUPDATE;
         ArrangeIconicWindows( hwnd );
 	ci->sbRecalc = SB_BOTH+1;
+#ifdef __REACTOS__
+	PostMessageA( hwnd, WM_MDICALCCHILDSCROLL, 0, 0 ); //// ReactOS: Post not send!
+#else
         SendMessageW( hwnd, WM_MDICALCCHILDSCROLL, 0, 0 );
+#endif
         return 0;
 
       case WM_MDIMAXIMIZE:
@@ -1336,10 +1326,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 	{
 	    RECT	rect;
 
-	    rect.left = 0;
-	    rect.top = 0;
-	    rect.right = LOWORD(lParam);
-	    rect.bottom = HIWORD(lParam);
+	    SetRect(&rect, 0, 0, LOWORD(lParam), HIWORD(lParam));
 	    AdjustWindowRectEx(&rect, GetWindowLongPtrA(ci->hwndActiveChild, GWL_STYLE),
                                0, GetWindowLongPtrA(ci->hwndActiveChild, GWL_EXSTYLE) );
 	    MoveWindow(ci->hwndActiveChild, rect.left, rect.top,
@@ -1872,6 +1859,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
     /* set common info values */
     info.cbSize = sizeof(info);
     info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
+    info.nPos = 0;
 
     /* set the specific values and apply but only if window style allows */
     /* Note how we set nPos to 0 because we scroll the clients instead of
@@ -1888,7 +1876,6 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
                         {
                             info.nMin = childRect.left;
                             info.nMax = childRect.right;
-                            info.nPos = 0;
                             info.nPage = 1 + clientRect.right - clientRect.left;
                             //info.nMax = childRect.right - clientRect.right;
                             //info.nPos = clientRect.left - childRect.left;
@@ -1901,7 +1888,6 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
                         {
                             info.nMin = childRect.top;
                             info.nMax = childRect.bottom;
-                            info.nPos = 0;
                             info.nPage = 1 + clientRect.bottom - clientRect.top;
                             //info.nMax = childRect.bottom - clientRect.bottom;
                             //info.nPos = clientRect.top - childRect.top;

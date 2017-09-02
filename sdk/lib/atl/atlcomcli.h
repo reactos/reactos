@@ -149,6 +149,66 @@ public:
 };
 
 
+//CComQIIDPtr<I_ID(Itype)> is the gcc compatible version of CComQIPtr<Itype>
+#define I_ID(Itype) Itype,IID_##Itype
+
+template <class T, const IID* piid>
+class CComQIIDPtr : 
+    public CComPtr<T>
+{
+public:
+    CComQIIDPtr()
+    {
+    }
+    CComQIIDPtr(_Inout_opt_ T* lp) :
+        CComPtr<T>(lp)
+    {
+    }
+    CComQIIDPtr(_Inout_ const CComQIIDPtr<T,piid>& lp):
+        CComPtr<T>(lp.p)
+    {
+    }
+    CComQIIDPtr(_Inout_opt_ IUnknown* lp)
+    {
+        if (lp != NULL)
+        {
+            if (FAILED(lp->QueryInterface(*piid, (void **)&this.p)))
+                this.p = NULL;
+        }
+    }
+    T *operator = (T *lp)
+    {
+        if (this.p != NULL)
+            this.p->Release();
+        this.p = lp;
+        if (this.p != NULL)
+            this.p->AddRef();
+        return *this;
+    }
+
+    T *operator = (const CComQIIDPtr<T,piid> &lp)
+    {
+        if (this.p != NULL)
+            this.p->Release();
+        this.p = lp.p;
+        if (this.p != NULL)
+            this.p->AddRef();
+        return *this;
+    }
+
+    T * operator=(IUnknown* lp)
+    {
+        if (this.p != NULL)
+            this.p->Release();
+
+        if (FAILED(lp->QueryInterface(*piid, (void **)&this.p)))
+            this.p = NULL;
+
+        return *this;
+    }
+};
+
+
 class CComBSTR
 {
 public:
@@ -241,6 +301,13 @@ public:
         return *this;
     }
 
+    BSTR Detach()
+    {
+        BSTR str = m_str;
+        m_str = NULL;
+        return str;
+    }
+
     BSTR Copy() const
     {
         if (!m_str)
@@ -287,14 +354,161 @@ public:
         ::VariantInit(this);
     }
 
+    CComVariant(const CComVariant& other)
+    {
+        V_VT(this) = VT_EMPTY;
+        Copy(&other);
+    }
+
     ~CComVariant()
     {
         Clear();
     }
 
+    CComVariant(LPCOLESTR lpStr)
+    {
+        V_VT(this) = VT_BSTR;
+        V_BSTR(this) = ::SysAllocString(lpStr);
+    }
+
+    CComVariant(LPCSTR lpStr)
+    {
+        V_VT(this) = VT_BSTR;
+        CComBSTR str(lpStr);
+        V_BSTR(this) = str.Detach();
+    }
+
+    CComVariant(bool value)
+    {
+        V_VT(this) = VT_BOOL;
+        V_BOOL(this) = value ? VARIANT_TRUE : VARIANT_FALSE;
+    }
+
+    CComVariant(char value)
+    {
+        V_VT(this) = VT_I1;
+        V_I1(this) = value;
+    }
+
+    CComVariant(BYTE value)
+    {
+        V_VT(this) = VT_UI1;
+        V_UI1(this) = value;
+    }
+
+    CComVariant(short value)
+    {
+        V_VT(this) = VT_I2;
+        V_I2(this) = value;
+    }
+
+    CComVariant(unsigned short value)
+    {
+        V_VT(this) = VT_UI2;
+        V_UI2(this) = value;
+    }
+
+    CComVariant(int value, VARENUM type = VT_I4)
+    {
+        if (type == VT_I4 || type == VT_INT)
+        {
+            V_VT(this) = type;
+            V_I4(this) = value;
+        }
+        else
+        {
+            V_VT(this) = VT_ERROR;
+            V_ERROR(this) = E_INVALIDARG;
+        }
+    }
+
+    CComVariant(unsigned int value, VARENUM type = VT_UI4)
+    {
+        if (type == VT_UI4 || type == VT_UINT)
+        {
+            V_VT(this) = type;
+            V_UI4(this) = value;
+        }
+        else
+        {
+            V_VT(this) = VT_ERROR;
+            V_ERROR(this) = E_INVALIDARG;
+        }
+    }
+
+    CComVariant(long value, VARENUM type = VT_I4)
+    {
+        if (type == VT_I4 || type == VT_ERROR)
+        {
+            V_VT(this) = type;
+            V_I4(this) = value;
+        }
+        else
+        {
+            V_VT(this) = VT_ERROR;
+            V_ERROR(this) = E_INVALIDARG;
+        }
+    }
+
+    CComVariant(unsigned long value)
+    {
+        V_VT(this) = VT_UI4;
+        V_UI4(this) = value;
+    }
+
+    CComVariant(float value)
+    {
+        V_VT(this) = VT_R4;
+        V_R4(this) = value;
+    }
+
+    CComVariant(double value, VARENUM type = VT_R8)
+    {
+        if (type == VT_R8 || type == VT_DATE)
+        {
+            V_VT(this) = type;
+            V_R8(this) = value;
+        }
+        else
+        {
+            V_VT(this) = VT_ERROR;
+            V_ERROR(this) = E_INVALIDARG;
+        }
+    }
+
+    CComVariant(const LONGLONG& value)
+    {
+        V_VT(this) = VT_I8;
+        V_I8(this) = value;
+    }
+
+    CComVariant(const ULONGLONG& value)
+    {
+        V_VT(this) = VT_UI8;
+        V_UI8(this) = value;
+    }
+
+    CComVariant(const CY& value)
+    {
+        V_VT(this) = VT_CY;
+        V_I8(this) = value.int64;
+    }
+
+
     HRESULT Clear()
     {
         return ::VariantClear(this);
+    }
+
+    HRESULT Copy(_In_ const VARIANT* src)
+    {
+        return ::VariantCopy(this, const_cast<VARIANT*>(src));
+    }
+
+    HRESULT ChangeType(_In_ VARTYPE newType, _In_opt_ const LPVARIANT src = NULL)
+    {
+        const LPVARIANT lpSrc = src ? src : this;
+        return ::VariantChangeType(this, lpSrc, 0, newType);
     }
 };
 

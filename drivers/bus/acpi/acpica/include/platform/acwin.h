@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,24 +44,12 @@
 #ifndef __ACWIN_H__
 #define __ACWIN_H__
 
-/*! [Begin] no source code translation (Keep the include) */
-
-/* Windows uses VC */
-#ifdef _MSC_VER
-#include "acmsvc.h"
-#endif
-#ifdef __REACTOS__
-#if !defined(_MSC_VER) && defined(__GNUC__)
-#include "acgcc.h"
-#endif
-
-#define ACPI_USE_SYSTEM_INTTYPES
-#endif /* __REACTOS __ */
-/*! [End] no source code translation !*/
+#define ACPI_USE_STANDARD_HEADERS
+#define ACPI_USE_SYSTEM_CLIBRARY
 
 #define ACPI_MACHINE_WIDTH      32
-
-#define ACPI_USE_STANDARD_HEADERS
+#define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_NATIVE_MATH64
 
 #ifdef ACPI_DEFINE_ALTERNATE_TYPES
 /*
@@ -75,6 +63,30 @@ typedef unsigned short                  u16;
 typedef unsigned int                    u32;
 typedef COMPILER_DEPENDENT_UINT64       u64;
 #endif
+
+/*
+ * Map low I/O functions for MS. This allows us to disable MS language
+ * extensions for maximum portability.
+ */
+#define open            _open
+#define read            _read
+#define write           _write
+#define close           _close
+#define stat            _stat
+#define fstat           _fstat
+#define mkdir           _mkdir
+#define snprintf        _snprintf
+#if _MSC_VER <= 1200 /* Versions below VC++ 6 */
+#define vsnprintf       _vsnprintf
+#endif
+#define O_RDONLY        _O_RDONLY
+#define O_BINARY        _O_BINARY
+#define O_CREAT         _O_CREAT
+#define O_WRONLY        _O_WRONLY
+#define O_TRUNC         _O_TRUNC
+#define S_IREAD         _S_IREAD
+#define S_IWRITE        _S_IWRITE
+#define S_IFDIR         _S_IFDIR
 
 
 /*

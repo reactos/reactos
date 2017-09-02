@@ -236,7 +236,7 @@ void GetModuleTitle(void)
 
 // The macro ConvertToWideChar takes a tstring parameter and returns
 // a pointer to a unicode string.  A conversion is performed if
-// neccessary.  FreeConvertedWideChar string should be used on the
+// necessary.  FreeConvertedWideChar string should be used on the
 // return value of ConvertToWideChar when the string is no longer
 // needed.  The original string or the string that is returned
 // should not be modified until FreeConvertedWideChar has been called.
@@ -263,7 +263,7 @@ LPWSTR ConvertToWideChar(LPCSTR lpString)
 
 // The macro ConvertToMultiByte takes a tstring parameter and returns
 // a pointer to an ansi string.  A conversion is performed if
-// neccessary.  FreeConvertedMultiByte string should be used on the
+// necessary.  FreeConvertedMultiByte string should be used on the
 // return value of ConvertToMultiByte when the string is no longer
 // needed.  The original string or the string that is returned
 // should not be modified until FreeConvertedMultiByte has been called.
@@ -346,6 +346,11 @@ int WINAPI _tWinMain(
     int i;
     size_t nStrLen;
 
+    ACTCTXW ActCtx = {sizeof(ACTCTX), ACTCTX_FLAG_RESOURCE_NAME_VALID};
+    HANDLE hActCtx;
+    ULONG_PTR cookie;
+    BOOL bActivated;
+
     // Get command-line in argc-argv format
     argv = CommandLineToArgv(GetCommandLine(),&argc);
 
@@ -380,6 +385,11 @@ int WINAPI _tWinMain(
         lptCmdLine = argv[i];
     else
         lptCmdLine = _T("");
+
+    ActCtx.lpSource = lptDllName;
+    ActCtx.lpResourceName = (LPCWSTR)123;
+    hActCtx = CreateActCtx(&ActCtx);
+    bActivated = (hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(hActCtx, &cookie) : FALSE);
 
     // Everything is all setup, so load the dll now
     hDll = LoadLibrary(lptDllName);
@@ -429,6 +439,8 @@ int WINAPI _tWinMain(
         if (!RegisterBlankClass(hInstance, hPrevInstance))
         {
             FreeLibrary(hDll);
+            if (bActivated)
+                DeactivateActCtx(0, cookie);
             return 0;
         }
         // Create a window so we can pass a window handle to
@@ -475,6 +487,9 @@ int WINAPI _tWinMain(
         MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONERROR);
         free(lptMsgBuffer);
     }
+
+    if (bActivated)
+        DeactivateActCtx(0, cookie);
 
     if (argv) free(argv);
     return 0; /* rundll32 always returns 0! */

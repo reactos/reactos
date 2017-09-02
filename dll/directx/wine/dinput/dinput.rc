@@ -32,6 +32,8 @@
 
 #include <wine/wine_common_ver.rc>
 
+#pragma makedep po
+
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE

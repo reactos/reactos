@@ -45,12 +45,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
-extern "C"
-HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreator<CMenuDeskBar>(riid, ppv);
-}
-
 CMenuDeskBar::CMenuDeskBar() :
     m_Client(NULL),
     m_ClientWindow(NULL),
@@ -817,10 +811,44 @@ LRESULT CMenuDeskBar::_OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, B
     return 0;
 }
 
+LRESULT CMenuDeskBar::_OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    /* If it is a flat style menu we need to handle WM_NCPAINT 
+     * and paint the border with the right colour */
+    if ((GetStyle() & WS_BORDER) == 0)
+    {
+        /* This isn't a flat style menu. */
+        bHandled = FALSE;
+        return 0;
+    }
+
+    HDC hdc;
+    RECT rcWindow;
+
+    hdc = GetWindowDC();
+    GetWindowRect(&rcWindow);
+    OffsetRect(&rcWindow, -rcWindow.left, -rcWindow.top);
+    FrameRect(hdc, &rcWindow, GetSysColorBrush(COLOR_BTNSHADOW));
+    ReleaseDC(hdc);
+    return 0;
+}
+
+LRESULT CMenuDeskBar::_OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    /* Prevent the CMenuDeskBar from destroying on being sent a WM_CLOSE */
+    return 0;
+}
+
 HRESULT CMenuDeskBar::_AdjustForTheme(BOOL bFlatStyle)
 {
     DWORD style = bFlatStyle ? WS_BORDER : WS_CLIPCHILDREN|WS_DLGFRAME;
     DWORD mask = WS_BORDER|WS_CLIPCHILDREN|WS_DLGFRAME;
     SHSetWindowBits(m_hWnd, GWL_STYLE, mask, style);
     return S_OK;
+}
+
+extern "C"
+HRESULT WINAPI RSHELL_CMenuDeskBar_CreateInstance(REFIID riid, LPVOID *ppv)
+{
+    return ShellObjectCreator<CMenuDeskBar>(riid, ppv);
 }

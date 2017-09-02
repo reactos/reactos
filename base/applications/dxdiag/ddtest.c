@@ -31,7 +31,7 @@ BOOL StartDDTest(HWND hWnd, HINSTANCE hInstance, INT resTestDescription, INT res
     WCHAR szError[256];
     BOOL Result;
 
-    LoadStringW(hInstance, IDS_DDTEST_TITLE, szCaption, sizeof(szCaption) / sizeof(WCHAR));
+    LoadStringW(hInstance, IDS_MAIN_DIALOG, szCaption, sizeof(szCaption) / sizeof(WCHAR));
     LoadStringW(hInstance, IDS_DDTEST_ERROR, szError, sizeof(szError) / sizeof(WCHAR));
     LoadStringW(hInstance, resTestDescription, szTestDescription, sizeof(szTestDescription) / sizeof(WCHAR));
     LoadStringW(hInstance, resResult, szResult, sizeof(szResult) / sizeof(WCHAR));
@@ -103,7 +103,7 @@ VOID DDTests()
     }
 
     LoadStringW(hInstance, IDS_DDTEST_DESCRIPTION, szDescription, sizeof(szDescription) / sizeof(WCHAR));
-    LoadStringW(hInstance, IDS_DDTEST_DESCRIPTION, szCaption, sizeof(szCaption) / sizeof(WCHAR));
+    LoadStringW(hInstance, IDS_MAIN_DIALOG, szCaption, sizeof(szCaption) / sizeof(WCHAR));
     if(MessageBox(NULL, szDescription, szCaption, MB_YESNO | MB_ICONQUESTION) == IDNO)
         return;
 

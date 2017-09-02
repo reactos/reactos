@@ -39,6 +39,15 @@ CopyFiles = CmBatt_CopyFiles
 [AcAdapter_Addreg]
 HKR,,PowerSourceType,%REG_BINARY%,01,00,00,00
 
+[AcAdapter.Services]
+AddService = cmbatt, 0x00000002, AcAdapter_Service_Install
+
+[AcAdapter_Service_Install]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %12%\cmbatt.sys
+
 [CmBatt]
 AddReg=CmBatt_Addreg
 CopyFiles = CmBatt_CopyFiles
@@ -62,6 +71,7 @@ ServiceBinary = %12%\cmbatt.sys
 [Strings]
 ReactOS = "ReactOS Team"
 BatteryClassName = "Batteries"
+REG_BINARY = 1
 
 GenericMfg = "(Generic batteries)"
 ACPI\PNP0C0A.DeviceDesc = "ACPI-compliant control method battery"

@@ -52,6 +52,18 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
     ActiveBuffer->CursorInfo.bVisible = (ConsoleInfo->CursorSize != 0);
     ActiveBuffer->CursorInfo.dwSize   = min(max(ConsoleInfo->CursorSize, 0), 100);
 
+    /* Update the code page */
+    if ((Console->OutputCodePage != ConsoleInfo->CodePage) &&
+        IsValidCodePage(ConsoleInfo->CodePage))
+    {
+        Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
+        // ConDrvSetConsoleCP(Console, ConsoleInfo->CodePage, TRUE);    // Output
+        // ConDrvSetConsoleCP(Console, ConsoleInfo->CodePage, FALSE);   // Input
+    }
+
+    // FIXME: Check ConsoleInfo->WindowSize with respect to
+    // TermGetLargestConsoleWindowSize(...).
+
     if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
     {
         PTEXTMODE_SCREEN_BUFFER Buffer = (PTEXTMODE_SCREEN_BUFFER)ActiveBuffer;

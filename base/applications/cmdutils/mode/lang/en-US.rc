@@ -1,0 +1,68 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Configure System Devices.\n\n\
+Device Status:     MODE [device] [/STATUS]\n\
+Serial port:       MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n\
+                                [to=on|off] [xon=on|off] [odsr=on|off]\n\
+                                [octs=on|off] [dtr=on|off|hs]\n\
+                                [rts=on|off|hs|tg] [idsr=on|off]\n\
+Redirect printing: MODE LPTn[:]=COMm[:]\n\
+Select code page:  MODE CON[:] CP SELECT=yyy\n\
+Code page status:  MODE CON[:] CP [/STATUS]\n\
+Display mode:      MODE CON[:] [COLS=c] [LINES=n]\n\
+Typematic rate:    MODE CON[:] [RATE=r DELAY=d]\n"
+
+    IDS_QUERY_SERIAL_FOUND "    Found serial device - %s\n"
+    IDS_QUERY_PRINTER_FOUND "    Found printer device - %s\n"
+    IDS_QUERY_PARALLEL_FOUND "    Found parallel device - %s\n"
+    IDS_QUERY_DOSDEV_FOUND "    Found DOS device - %s\n"
+    // IDS_QUERY_MISC_FOUND "    Found other device - %s\n"
+
+    // IDS_QUERY_DEVICE_FOUND "    Found %s device - %s\n"
+    // IDS_SERIAL  "serial"
+    // IDS_PRINTER "parallel"
+    // IDS_OTHER   "other"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DEVICE_STATUS_HEADER "Status for device %s:"
+
+    IDS_COM_STATUS_BAUD             "    Baud:            %ld\n"
+    IDS_COM_STATUS_PARITY           "    Parity:          %s\n"
+    IDS_COM_STATUS_DATA_BITS        "    Data Bits:       %d\n"
+    IDS_COM_STATUS_STOP_BITS        "    Stop Bits:       %s\n"
+    IDS_COM_STATUS_TIMEOUT          "    Timeout:         %s\n"
+    IDS_COM_STATUS_XON_XOFF         "    XON/XOFF:        %s\n"
+    IDS_COM_STATUS_CTS_HANDSHAKING  "    CTS handshaking: %s\n"
+    IDS_COM_STATUS_DSR_HANDSHAKING  "    DSR handshaking: %s\n"
+    IDS_COM_STATUS_DSR_SENSITIVITY  "    DSR sensitivity: %s\n"
+    IDS_COM_STATUS_DTR_CIRCUIT      "    DTR circuit:     %s\n"
+    IDS_COM_STATUS_RTS_CIRCUIT      "    RTS circuit:     %s\n"
+
+    IDS_CONSOLE_STATUS_LINES    "    Lines:          %d\n"
+    IDS_CONSOLE_STATUS_COLS     "    Columns:        %d\n"
+    IDS_CONSOLE_KBD_RATE        "    Keyboard rate:  %ld\n"
+    IDS_CONSOLE_KBD_DELAY       "    Keyboard delay: %ld\n"
+    IDS_CONSOLE_CODEPAGE        "    Code page:      %d\n"
+
+    IDS_PRINTER_OUTPUT_NOT_REROUTED     "    Printer output is not being rerouted.\n"
+    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    Printer output is being rerouted to serial port %s.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_QUERY_DEVICES "ERROR: Unable to query DOS devices (0x%lx).\n"
+    IDS_ERROR_QUERY_DEVICES_FORM "    QueryDosDeviceW(%s) returned unrecognised form %s.\n"
+    IDS_ERROR_SET_PARALLEL_STATE "SetParallelState(%d) - DefineDosDevice(%s) (0x%lx)\n"
+    IDS_ERROR_INVALID_PARAMETER "ERROR: Invalid parameter - %s\n"
+    IDS_ERROR_ILLEGAL_DEVICE_NAME "ERROR: Illegal device name - %s (0x%lx)\n"
+    IDS_ERROR_STATUS_GET_DEVICE "ERROR: Failed to get the status for device COM%d:\n"
+    IDS_ERROR_STATUS_SET_DEVICE "ERROR: Failed to set the status for device COM%d:\n"
+    IDS_ERROR_INVALID_PARITY_BITS "ERROR: Invalid value for Parity Bits %d:\n"
+    IDS_ERROR_INVALID_STOP_BITS "ERROR: Invalid value for Stop Bits %d:\n"
+    IDS_ERROR_NO_MEMORY "ERROR: Not enough memory.\n"
+    IDS_ERROR_SCREEN_LINES_COL "ERROR: The screen cannot be set to the number of lines and columns specified.\n"
+END

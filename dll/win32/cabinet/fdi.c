@@ -2039,11 +2039,24 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
             fullpath[0] = '\0';
             if (pathlen) {
               strcpy(fullpath, userpath);
+#ifndef __REACTOS__
               if (fullpath[pathlen - 1] != '\\')
                 strcat(fullpath, "\\");
+#else
+              if (fullpath[pathlen - 1] == '\\')
+                fullpath[pathlen - 1] = '\0';
+#endif
             }
+#ifndef __REACTOS__
             if (filenamelen)
+#else
+            if (filenamelen) {
+              strcat(fullpath, "\\");
+#endif
               strcat(fullpath, cab->mii.nextname);
+#ifdef __REACTOS__
+            }
+#endif
 
             TRACE("full cab path/file name: %s\n", debugstr_a(fullpath));
 
@@ -2571,7 +2584,7 @@ BOOL __cdecl FDICopy(
      * where all the cabinet files needed for decryption are simultaneously
      * available.  But presumably, the API is supposed to support cabinets which
      * are split across multiple CDROMS; we may need to change our implementation
-     * to strictly serialize it's file usage so that it opens only one cabinet
+     * to strictly serialize its file usage so that it opens only one cabinet
      * at a time.  Some experimentation with Windows is needed to figure out the
      * precise semantics required.  The relevant code is here and in fdi_decomp().
      */
@@ -2602,8 +2615,8 @@ BOOL __cdecl FDICopy(
        * if we imagine parallelized access to the FDICopy API.
        *
        * The current implementation punts -- it just returns the previous cabinet and
-       * it's info from the header of this cabinet.  This provides the right answer in
-       * 95% of the cases; its worth checking if Microsoft cuts the same corner before
+       * its info from the header of this cabinet.  This provides the right answer in
+       * 95% of the cases; it's worth checking if Microsoft cuts the same corner before
        * we "fix" it.
        */
       ZeroMemory(&fdin, sizeof(FDINOTIFICATION));
@@ -2629,6 +2642,7 @@ BOOL __cdecl FDICopy(
       fdin.date = file->date;
       fdin.time = file->time;
       fdin.attribs = file->attribs;
+      fdin.iFolder = file->index;
       if ((filehf = ((*pfnfdin)(fdintCOPY_FILE, &fdin))) == -1) {
         set_error( fdi, FDIERROR_USER_ABORT, 0 );
         filehf = 0;
@@ -2754,6 +2768,7 @@ BOOL __cdecl FDICopy(
       fdin.date = file->date;
       fdin.time = file->time;
       fdin.attribs = file->attribs; /* FIXME: filter _A_EXEC? */
+      fdin.iFolder = file->index;
       ((*pfnfdin)(fdintCLOSE_FILE_INFO, &fdin));
       filehf = 0;
 

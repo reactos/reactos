@@ -166,7 +166,7 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
     RtlEnterCriticalSection(&SmpKnownSubSysLock);
     while (TRUE)
     {
-        /* Check if we found a subsystem not yet fully iniitalized */
+        /* Check if we found a subsystem not yet fully initialized */
         Subsystem = SmpLocateKnownSubSysByType(MuSessionId, -1);
         if (!Subsystem) break;
         RtlLeaveCriticalSection(&SmpKnownSubSysLock);
@@ -220,7 +220,7 @@ SmpLoadSubSystem(IN PUNICODE_STRING FileName,
     NewSubsystem->PortHandle = NULL;
     NewSubsystem->SbApiPort = NULL;
 
-    /* Create the event we'll be wating on for initialization */
+    /* Create the event we'll be waiting on for initialization */
     Status = NtCreateEvent(&NewSubsystem->Event,
                            EVENT_ALL_ACCESS,
                            NULL,
@@ -500,7 +500,7 @@ Quickie2:
     {
         RemoveEntryList(&NewSubsystem->Entry);
         NtSetEvent(NewSubsystem->Event, 0);
-        if (NewSubsystem) SmpDereferenceSubsystem(NewSubsystem);
+        SmpDereferenceSubsystem(NewSubsystem);
     }
 
     /* Finally, we're all done! */

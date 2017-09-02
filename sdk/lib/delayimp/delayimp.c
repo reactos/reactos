@@ -28,8 +28,13 @@ extern PfnDliHook __pfnDliNotifyHook2Default = NULL;
 extern PfnDliHook __pfnDliFailureHook2Default = NULL;
 
 /* Tell the linker to use the fallback symbols */
+#if defined (_M_IX86)
 #pragma comment(linker, "/alternatename:___pfnDliNotifyHook2=___pfnDliNotifyHook2Default")
 #pragma comment(linker, "/alternatename:___pfnDliFailureHook2=___pfnDliFailureHook2Default")
+#else
+#pragma comment(linker, "/alternatename:__pfnDliNotifyHook2=__pfnDliNotifyHook2Default")
+#pragma comment(linker, "/alternatename:__pfnDliFailureHook2=__pfnDliFailureHook2Default")
+#endif
 #endif
 
 

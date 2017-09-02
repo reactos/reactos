@@ -21,6 +21,9 @@
 
 #include "inetcomm_private.h"
 
+#include <winreg.h>
+#include <propvarutil.h>
+
 typedef struct
 {
     LPCSTR     name;
@@ -37,26 +40,81 @@ typedef struct
 
 static const property_t default_props[] =
 {
-    {"References",                   PID_HDR_REFS,       0,                               VT_LPSTR},
-    {"Subject",                      PID_HDR_SUBJECT,    0,                               VT_LPSTR},
-    {"From",                         PID_HDR_FROM,       MPF_ADDRESS,                     VT_LPSTR},
-    {"Message-ID",                   PID_HDR_MESSAGEID,  0,                               VT_LPSTR},
-    {"Return-Path",                  PID_HDR_RETURNPATH, MPF_ADDRESS,                     VT_LPSTR},
-    {"Date",                         PID_HDR_DATE,       0,                               VT_LPSTR},
-    {"Received",                     PID_HDR_RECEIVED,   0,                               VT_LPSTR},
-    {"Reply-To",                     PID_HDR_REPLYTO,    MPF_ADDRESS,                     VT_LPSTR},
-    {"X-Mailer",                     PID_HDR_XMAILER,    0,                               VT_LPSTR},
-    {"Bcc",                          PID_HDR_BCC,        MPF_ADDRESS,                     VT_LPSTR},
-    {"MIME-Version",                 PID_HDR_MIMEVER,    MPF_MIME,                        VT_LPSTR},
-    {"Content-Type",                 PID_HDR_CNTTYPE,    MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
-    {"Content-Transfer-Encoding",    PID_HDR_CNTXFER,    MPF_MIME,                        VT_LPSTR},
-    {"Content-ID",                   PID_HDR_CNTID,      MPF_MIME,                        VT_LPSTR},
-    {"Content-Disposition",          PID_HDR_CNTDISP,    MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
-    {"To",                           PID_HDR_TO,         MPF_ADDRESS,                     VT_LPSTR},
-    {"Cc",                           PID_HDR_CC,         MPF_ADDRESS,                     VT_LPSTR},
-    {"Sender",                       PID_HDR_SENDER,     MPF_ADDRESS,                     VT_LPSTR},
-    {"In-Reply-To",                  PID_HDR_INREPLYTO,  0,                               VT_LPSTR},
-    {NULL,                           0,                  0,                               0}
+    {"X-Newsgroup",                  PID_HDR_NEWSGROUP,    0,                               VT_LPSTR},
+    {"Newsgroups",                   PID_HDR_NEWSGROUPS,   0,                               VT_LPSTR},
+    {"References",                   PID_HDR_REFS,         0,                               VT_LPSTR},
+    {"Subject",                      PID_HDR_SUBJECT,      0,                               VT_LPSTR},
+    {"From",                         PID_HDR_FROM,         MPF_ADDRESS,                     VT_LPSTR},
+    {"Message-ID",                   PID_HDR_MESSAGEID,    0,                               VT_LPSTR},
+    {"Return-Path",                  PID_HDR_RETURNPATH,   MPF_ADDRESS,                     VT_LPSTR},
+    {"Rr",                           PID_HDR_RR,           0,                               VT_LPSTR},
+    {"Return-Receipt-To",            PID_HDR_RETRCPTO,     MPF_ADDRESS,                     VT_LPSTR},
+    {"Apparently-To",                PID_HDR_APPARTO,      MPF_ADDRESS,                     VT_LPSTR},
+    {"Date",                         PID_HDR_DATE,         0,                               VT_LPSTR},
+    {"Received",                     PID_HDR_RECEIVED,     0,                               VT_LPSTR},
+    {"Reply-To",                     PID_HDR_REPLYTO,      MPF_ADDRESS,                     VT_LPSTR},
+    {"X-Mailer",                     PID_HDR_XMAILER,      0,                               VT_LPSTR},
+    {"Bcc",                          PID_HDR_BCC,          MPF_ADDRESS,                     VT_LPSTR},
+    {"MIME-Version",                 PID_HDR_MIMEVER,      MPF_MIME,                        VT_LPSTR},
+    {"Content-Type",                 PID_HDR_CNTTYPE,      MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
+    {"Content-Transfer-Encoding",    PID_HDR_CNTXFER,      MPF_MIME,                        VT_LPSTR},
+    {"Content-ID",                   PID_HDR_CNTID,        MPF_MIME,                        VT_LPSTR},
+    {"Content-Description",          PID_HDR_CNTDESC,      MPF_MIME,                        VT_LPSTR},
+    {"Content-Disposition",          PID_HDR_CNTDISP,      MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
+    {"Content-Base",                 PID_HDR_CNTBASE,      MPF_MIME,                        VT_LPSTR},
+    {"Content-Location",             PID_HDR_CNTLOC,       MPF_MIME,                        VT_LPSTR},
+    {"To",                           PID_HDR_TO,           MPF_ADDRESS,                     VT_LPSTR},
+    {"Path",                         PID_HDR_PATH,         0,                               VT_LPSTR},
+    {"Followup-To",                  PID_HDR_FOLLOWUPTO,   0,                               VT_LPSTR},
+    {"Expires",                      PID_HDR_EXPIRES,      0,                               VT_LPSTR},
+    {"Cc",                           PID_HDR_CC,           MPF_ADDRESS,                     VT_LPSTR},
+    {"Control",                      PID_HDR_CONTROL,      0,                               VT_LPSTR},
+    {"Distribution",                 PID_HDR_DISTRIB,      0,                               VT_LPSTR},
+    {"Keywords",                     PID_HDR_KEYWORDS,     0,                               VT_LPSTR},
+    {"Summary",                      PID_HDR_SUMMARY,      0,                               VT_LPSTR},
+    {"Approved",                     PID_HDR_APPROVED,     0,                               VT_LPSTR},
+    {"Lines",                        PID_HDR_LINES,        0,                               VT_LPSTR},
+    {"Xref",                         PID_HDR_XREF,         0,                               VT_LPSTR},
+    {"Organization",                 PID_HDR_ORG,          0,                               VT_LPSTR},
+    {"X-Newsreader",                 PID_HDR_XNEWSRDR,     0,                               VT_LPSTR},
+    {"X-Priority",                   PID_HDR_XPRI,         0,                               VT_LPSTR},
+    {"X-MSMail-Priority",            PID_HDR_XMSPRI,       0,                               VT_LPSTR},
+    {"par:content-disposition:filename", PID_PAR_FILENAME, 0,                               VT_LPSTR},
+    {"par:content-type:boundary",    PID_PAR_BOUNDARY,     0,                               VT_LPSTR},
+    {"par:content-type:charset",     PID_PAR_CHARSET,      0,                               VT_LPSTR},
+    {"par:content-type:name",        PID_PAR_NAME,         0,                               VT_LPSTR},
+    {"att:filename",                 PID_ATT_FILENAME,     0,                               VT_LPSTR},
+    {"att:pri-content-type",         PID_ATT_PRITYPE,      0,                               VT_LPSTR},
+    {"att:sub-content-type",         PID_ATT_SUBTYPE,      0,                               VT_LPSTR},
+    {"att:illegal-lines",            PID_ATT_ILLEGAL,      0,                               VT_LPSTR},
+    {"att:rendered",                 PID_ATT_RENDERED,     0,                               VT_LPSTR},
+    {"att:sent-time",                PID_ATT_SENTTIME,     0,                               VT_LPSTR},
+    {"att:priority",                 PID_ATT_PRIORITY,     0,                               VT_LPSTR},
+    {"Comment",                      PID_HDR_COMMENT,      0,                               VT_LPSTR},
+    {"Encoding",                     PID_HDR_ENCODING,     0,                               VT_LPSTR},
+    {"Encrypted",                    PID_HDR_ENCRYPTED,    0,                               VT_LPSTR},
+    {"X-Offsets",                    PID_HDR_OFFSETS,      0,                               VT_LPSTR},
+    {"X-Unsent",                     PID_HDR_XUNSENT,      0,                               VT_LPSTR},
+    {"X-ArticleId",                  PID_HDR_ARTICLEID,    0,                               VT_LPSTR},
+    {"Sender",                       PID_HDR_SENDER,       MPF_ADDRESS,                     VT_LPSTR},
+    {"att:athena-server",            PID_ATT_SERVER,       0,                               VT_LPSTR},
+    {"att:athena-account-id",        PID_ATT_ACCOUNT,      0,                               VT_LPSTR},
+    {"att:athena-pop3-uidl",         PID_ATT_UIDL,         0,                               VT_LPSTR},
+    {"att:athena-store-msgid",       PID_ATT_STOREMSGID,   0,                               VT_LPSTR},
+    {"att:athena-user-name",         PID_ATT_USERNAME,     0,                               VT_LPSTR},
+    {"att:athena-forward-to",        PID_ATT_FORWARDTO,    0,                               VT_LPSTR},
+    {"att:athena-store-fdrid",       PID_ATT_STOREFOLDERID,0,                               VT_LPSTR},
+    {"att:athena-ghosted",           PID_ATT_GHOSTED,      0,                               VT_LPSTR},
+    {"att:athena-uncachedsize",      PID_ATT_UNCACHEDSIZE, 0,                               VT_LPSTR},
+    {"att:athena-combined",          PID_ATT_COMBINED,     0,                               VT_LPSTR},
+    {"att:auto-inlined",             PID_ATT_AUTOINLINED,  0,                               VT_LPSTR},
+    {"Disposition-Notification-To",  PID_HDR_DISP_NOTIFICATION_TO,  0,                      VT_LPSTR},
+    {"par:Content-Type:reply-type",  PID_PAR_REPLYTYPE,    0,                               VT_LPSTR},
+    {"par:Content-Type:format",      PID_PAR_FORMAT ,      0,                               VT_LPSTR},
+    {"att:format",                   PID_ATT_FORMAT ,      0,                               VT_LPSTR},
+    {"In-Reply-To",                  PID_HDR_INREPLYTO,    0,                               VT_LPSTR},
+    {"att:athena-account-name",      PID_ATT_ACCOUNTNAME,  0,                               VT_LPSTR},
+    {NULL,                           0,                    0,                               0}
 };
 
 typedef struct
@@ -91,6 +149,298 @@ typedef struct MimeBody
     IID data_iid;
     BODYOFFSETS body_offsets;
 } MimeBody;
+
+typedef struct
+{
+    IStream IStream_iface;
+    LONG ref;
+    IStream *base;
+    ULARGE_INTEGER pos, start, length;
+} sub_stream_t;
+
+static inline sub_stream_t *impl_from_IStream(IStream *iface)
+{
+    return CONTAINING_RECORD(iface, sub_stream_t, IStream_iface);
+}
+
+static HRESULT WINAPI sub_stream_QueryInterface(IStream *iface, REFIID riid, void **ppv)
+{
+    sub_stream_t *This = impl_from_IStream(iface);
+
+    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppv);
+    *ppv = NULL;
+
+    if(IsEqualIID(riid, &IID_IUnknown) ||
+       IsEqualIID(riid, &IID_ISequentialStream) ||
+       IsEqualIID(riid, &IID_IStream))
+    {
+        IStream_AddRef(iface);
+        *ppv = iface;
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI sub_stream_AddRef(IStream *iface)
+{
+    sub_stream_t *This = impl_from_IStream(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI sub_stream_Release(IStream *iface)
+{
+    sub_stream_t *This = impl_from_IStream(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref)
+    {
+        IStream_Release(This->base);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+    return ref;
+}
+
+static HRESULT WINAPI sub_stream_Read(
+        IStream* iface,
+        void *pv,
+        ULONG cb,
+        ULONG *pcbRead)
+{
+    sub_stream_t *This = impl_from_IStream(iface);
+    HRESULT hr;
+    LARGE_INTEGER tmp_pos;
+
+    TRACE("(%p, %d, %p)\n", pv, cb, pcbRead);
+
+    tmp_pos.QuadPart = This->pos.QuadPart + This->start.QuadPart;
+    IStream_Seek(This->base, tmp_pos, STREAM_SEEK_SET, NULL);
+
+    if(This->pos.QuadPart + cb > This->length.QuadPart)
+        cb = This->length.QuadPart - This->pos.QuadPart;
+
+    hr = IStream_Read(This->base, pv, cb, pcbRead);
+
+    This->pos.QuadPart += *pcbRead;
+
+    return hr;
+}
+
+static HRESULT WINAPI sub_stream_Write(
+        IStream* iface,
+        const void *pv,
+        ULONG cb,
+        ULONG *pcbWritten)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI sub_stream_Seek(
+        IStream* iface,
+        LARGE_INTEGER dlibMove,
+        DWORD dwOrigin,
+        ULARGE_INTEGER *plibNewPosition)
+{
+    sub_stream_t *This = impl_from_IStream(iface);
+    LARGE_INTEGER new_pos;
+
+    TRACE("(%08x.%08x, %x, %p)\n", dlibMove.u.HighPart, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+
+    switch(dwOrigin)
+    {
+    case STREAM_SEEK_SET:
+        new_pos = dlibMove;
+        break;
+    case STREAM_SEEK_CUR:
+        new_pos.QuadPart = This->pos.QuadPart + dlibMove.QuadPart;
+        break;
+    case STREAM_SEEK_END:
+        new_pos.QuadPart = This->length.QuadPart + dlibMove.QuadPart;
+        break;
+    default:
+        return STG_E_INVALIDFUNCTION;
+    }
+
+    if(new_pos.QuadPart < 0) new_pos.QuadPart = 0;
+    else if(new_pos.QuadPart > This->length.QuadPart) new_pos.QuadPart = This->length.QuadPart;
+
+    This->pos.QuadPart = new_pos.QuadPart;
+
+    if(plibNewPosition) *plibNewPosition = This->pos;
+    return S_OK;
+}
+
+static HRESULT WINAPI sub_stream_SetSize(
+        IStream* iface,
+        ULARGE_INTEGER libNewSize)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI sub_stream_CopyTo(
+        IStream* iface,
+        IStream *pstm,
+        ULARGE_INTEGER cb,
+        ULARGE_INTEGER *pcbRead,
+        ULARGE_INTEGER *pcbWritten)
+{
+    HRESULT        hr = S_OK;
+    BYTE           tmpBuffer[128];
+    ULONG          bytesRead, bytesWritten, copySize;
+    ULARGE_INTEGER totalBytesRead;
+    ULARGE_INTEGER totalBytesWritten;
+
+    TRACE("(%p)->(%p, %d, %p, %p)\n", iface, pstm, cb.u.LowPart, pcbRead, pcbWritten);
+
+    totalBytesRead.QuadPart = 0;
+    totalBytesWritten.QuadPart = 0;
+
+    while ( cb.QuadPart > 0 )
+    {
+        if ( cb.QuadPart >= sizeof(tmpBuffer) )
+            copySize = sizeof(tmpBuffer);
+        else
+            copySize = cb.u.LowPart;
+
+        hr = IStream_Read(iface, tmpBuffer, copySize, &bytesRead);
+        if (FAILED(hr)) break;
+
+        totalBytesRead.QuadPart += bytesRead;
+
+        if (bytesRead)
+        {
+            hr = IStream_Write(pstm, tmpBuffer, bytesRead, &bytesWritten);
+            if (FAILED(hr)) break;
+            totalBytesWritten.QuadPart += bytesWritten;
+        }
+
+        if (bytesRead != copySize)
+            cb.QuadPart = 0;
+        else
+            cb.QuadPart -= bytesRead;
+    }
+
+    if (pcbRead) pcbRead->QuadPart = totalBytesRead.QuadPart;
+    if (pcbWritten) pcbWritten->QuadPart = totalBytesWritten.QuadPart;
+
+    return hr;
+}
+
+static HRESULT WINAPI sub_stream_Commit(
+        IStream* iface,
+        DWORD grfCommitFlags)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI sub_stream_Revert(
+        IStream* iface)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI sub_stream_LockRegion(
+        IStream* iface,
+        ULARGE_INTEGER libOffset,
+        ULARGE_INTEGER cb,
+        DWORD dwLockType)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI sub_stream_UnlockRegion(
+        IStream* iface,
+        ULARGE_INTEGER libOffset,
+        ULARGE_INTEGER cb,
+        DWORD dwLockType)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI sub_stream_Stat(
+        IStream* iface,
+        STATSTG *pstatstg,
+        DWORD grfStatFlag)
+{
+    sub_stream_t *This = impl_from_IStream(iface);
+    FIXME("(%p)->(%p, %08x)\n", This, pstatstg, grfStatFlag);
+    memset(pstatstg, 0, sizeof(*pstatstg));
+    pstatstg->cbSize = This->length;
+    return S_OK;
+}
+
+static HRESULT WINAPI sub_stream_Clone(
+        IStream* iface,
+        IStream **ppstm)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+static struct IStreamVtbl sub_stream_vtbl =
+{
+    sub_stream_QueryInterface,
+    sub_stream_AddRef,
+    sub_stream_Release,
+    sub_stream_Read,
+    sub_stream_Write,
+    sub_stream_Seek,
+    sub_stream_SetSize,
+    sub_stream_CopyTo,
+    sub_stream_Commit,
+    sub_stream_Revert,
+    sub_stream_LockRegion,
+    sub_stream_UnlockRegion,
+    sub_stream_Stat,
+    sub_stream_Clone
+};
+
+static HRESULT create_sub_stream(IStream *stream, ULARGE_INTEGER start, ULARGE_INTEGER length, IStream **out)
+{
+    sub_stream_t *This;
+
+    *out = NULL;
+    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    if(!This) return E_OUTOFMEMORY;
+
+    This->IStream_iface.lpVtbl = &sub_stream_vtbl;
+    This->ref = 1;
+    This->start = start;
+    This->length = length;
+    This->pos.QuadPart = 0;
+    IStream_AddRef(stream);
+    This->base = stream;
+
+    *out = &This->IStream_iface;
+    return S_OK;
+}
+
+static HRESULT get_stream_size(IStream *stream, ULARGE_INTEGER *size)
+{
+    STATSTG statstg = {NULL};
+    LARGE_INTEGER zero;
+    HRESULT hres;
+
+    hres = IStream_Stat(stream, &statstg, STATFLAG_NONAME);
+    if(SUCCEEDED(hres)) {
+        *size = statstg.cbSize;
+        return S_OK;
+    }
+
+    zero.QuadPart = 0;
+    return IStream_Seek(stream, zero, STREAM_SEEK_END, size);
+}
 
 static inline MimeBody *impl_from_IMimeBody(IMimeBody *iface)
 {
@@ -166,8 +516,8 @@ static HRESULT copy_headers_to_buf(IStream *stm, char **ptr)
             if(new_end - last_end == 2)
             {
                 LARGE_INTEGER off;
-                off.QuadPart = new_end;
-                IStream_Seek(stm, off, STREAM_SEEK_SET, NULL);
+                off.QuadPart = (LONGLONG)new_end - offset;
+                IStream_Seek(stm, off, STREAM_SEEK_CUR, NULL);
                 buf[new_end] = '\0';
                 done = TRUE;
             }
@@ -380,12 +730,6 @@ static void init_content_type(MimeBody *body, header_t *header)
     char *slash;
     DWORD len;
 
-    if(header->prop->id != PID_HDR_CNTTYPE)
-    {
-        ERR("called with header %s\n", header->prop->name);
-        return;
-    }
-
     slash = strchr(header->value.u.pszVal, '/');
     if(!slash)
     {
@@ -397,6 +741,22 @@ static void init_content_type(MimeBody *body, header_t *header)
     memcpy(body->content_pri_type, header->value.u.pszVal, len);
     body->content_pri_type[len] = '\0';
     body->content_sub_type = strdupA(slash + 1);
+}
+
+static void init_content_encoding(MimeBody *body, header_t *header)
+{
+    const char *encoding = header->value.u.pszVal;
+
+    if(!strcasecmp(encoding, "base64"))
+        body->encoding = IET_BASE64;
+    else if(!strcasecmp(encoding, "quoted-printable"))
+        body->encoding = IET_QP;
+    else if(!strcasecmp(encoding, "7bit"))
+        body->encoding = IET_7BIT;
+    else if(!strcasecmp(encoding, "8bit"))
+        body->encoding = IET_8BIT;
+    else
+        FIXME("unknown encoding %s\n", debugstr_a(encoding));
 }
 
 static HRESULT parse_headers(MimeBody *body, IStream *stm)
@@ -414,8 +774,14 @@ static HRESULT parse_headers(MimeBody *body, IStream *stm)
         read_value(header, &cur_header_ptr);
         list_add_tail(&body->headers, &header->entry);
 
-        if(header->prop->id == PID_HDR_CNTTYPE)
+        switch(header->prop->id) {
+        case PID_HDR_CNTTYPE:
             init_content_type(body, header);
+            break;
+        case PID_HDR_CNTXFER:
+            init_content_encoding(body, header);
+            break;
+        }
     }
 
     HeapFree(GetProcessHeap(), 0, header_buf);
@@ -478,7 +844,15 @@ static HRESULT find_prop(MimeBody *body, const char *name, header_t **prop)
 
     LIST_FOR_EACH_ENTRY(header, &body->headers, header_t, entry)
     {
-        if(!lstrcmpiA(name, header->prop->name))
+        if(ISPIDSTR(name))
+        {
+            if(STRTOPID(name) == header->prop->id)
+            {
+                *prop = header;
+                return S_OK;
+            }
+        }
+        else if(!lstrcmpiA(name, header->prop->name))
         {
             *prop = header;
             return S_OK;
@@ -486,6 +860,33 @@ static HRESULT find_prop(MimeBody *body, const char *name, header_t **prop)
     }
 
     return MIME_E_NOT_FOUND;
+}
+
+static const property_t *find_default_prop(const char *name)
+{
+    const property_t *prop_def = NULL;
+
+    for(prop_def = default_props; prop_def->name; prop_def++)
+    {
+        if(ISPIDSTR(name))
+        {
+            if(STRTOPID(name) == prop_def->id)
+            {
+                break;
+            }
+        }
+        else if(!lstrcmpiA(name, prop_def->name))
+        {
+            break;
+        }
+    }
+
+    if(prop_def->id)
+       TRACE("%s: found match with default property id %d\n", prop_def->name, prop_def->id);
+    else
+       prop_def = NULL;
+
+    return prop_def;
 }
 
 static HRESULT WINAPI MimeBody_QueryInterface(IMimeBody* iface,
@@ -603,8 +1004,42 @@ static HRESULT WINAPI MimeBody_GetPropInfo(
                                   LPMIMEPROPINFO pInfo)
 {
     MimeBody *This = impl_from_IMimeBody(iface);
-    FIXME("(%p)->(%s, %p) stub\n", This, debugstr_a(pszName), pInfo);
-    return E_NOTIMPL;
+    header_t *header;
+    HRESULT hr;
+    DWORD supported = PIM_PROPID | PIM_VTDEFAULT;
+
+    TRACE("(%p)->(%s, %p) semi-stub\n", This, debugstr_a(pszName), pInfo);
+
+    if(!pszName || !pInfo)
+        return E_INVALIDARG;
+
+    TRACE("mask 0x%04x\n", pInfo->dwMask);
+
+    if(pInfo->dwMask & ~supported)
+         FIXME("Unsupported mask flags 0x%04x\n", pInfo->dwMask & ~supported);
+
+    hr = find_prop(This, pszName, &header);
+    if(hr == S_OK)
+    {
+        if(pInfo->dwMask & PIM_CHARSET)
+            pInfo->hCharset = 0;
+        if(pInfo->dwMask & PIM_FLAGS)
+            pInfo->dwFlags = 0x00000000;
+        if(pInfo->dwMask & PIM_ROWNUMBER)
+            pInfo->dwRowNumber = 0;
+        if(pInfo->dwMask & PIM_ENCODINGTYPE)
+            pInfo->ietEncoding = 0;
+        if(pInfo->dwMask & PIM_VALUES)
+            pInfo->cValues = 0;
+        if(pInfo->dwMask & PIM_PROPID)
+            pInfo->dwPropId = header->prop->id;
+        if(pInfo->dwMask & PIM_VTDEFAULT)
+            pInfo->vtDefault = header->prop->default_vt;
+        if(pInfo->dwMask & PIM_VTCURRENT)
+            pInfo->vtCurrent = 0;
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI MimeBody_SetPropInfo(
@@ -632,7 +1067,7 @@ static HRESULT WINAPI MimeBody_GetProp(
     if(!pszName || !pValue)
         return E_INVALIDARG;
 
-    if(!lstrcmpiA(pszName, "att:pri-content-type"))
+    if(!ISPIDSTR(pszName) && !lstrcmpiA(pszName, "att:pri-content-type"))
     {
         PropVariantClear(pValue);
         pValue->vt = VT_LPSTR;
@@ -643,7 +1078,11 @@ static HRESULT WINAPI MimeBody_GetProp(
     hr = find_prop(This, pszName, &header);
     if(hr == S_OK)
     {
-        PropVariantCopy(pValue, &header->value);
+        TRACE("type %d->%d\n", header->value.vt, pValue->vt);
+
+        hr = PropVariantChangeType(pValue, &header->value, 0,  pValue->vt);
+        if(FAILED(hr))
+            FIXME("Conversion not currently supported (%d->%d)\n", header->value.vt, pValue->vt);
     }
 
     return hr;
@@ -672,7 +1111,16 @@ static HRESULT WINAPI MimeBody_SetProp(
 
         LIST_FOR_EACH_ENTRY(prop_entry, &This->new_props, property_list_entry_t, entry)
         {
-            if(!lstrcmpiA(pszName, prop_entry->prop.name))
+            if(ISPIDSTR(pszName))
+            {
+                if(STRTOPID(pszName) == prop_entry->prop.id)
+                {
+                    TRACE("Found match with already added new property id %d\n", prop_entry->prop.id);
+                    prop = &prop_entry->prop;
+                    break;
+                }
+            }
+            else if(!lstrcmpiA(pszName, prop_entry->prop.name))
             {
                 TRACE("Found match with already added new property id %d\n", prop_entry->prop.id);
                 prop = &prop_entry->prop;
@@ -686,14 +1134,33 @@ static HRESULT WINAPI MimeBody_SetProp(
 
         if(!prop)
         {
+            const property_t *prop_def = NULL;
             prop_entry = HeapAlloc(GetProcessHeap(), 0, sizeof(*prop_entry));
             if(!prop_entry)
             {
                 HeapFree(GetProcessHeap(), 0, header);
                 return E_OUTOFMEMORY;
             }
-            prop_entry->prop.name = strdupA(pszName);
-            prop_entry->prop.id = This->next_prop_id++;
+
+            prop_def = find_default_prop(pszName);
+            if(prop_def)
+            {
+                prop_entry->prop.name = strdupA(prop_def->name);
+                prop_entry->prop.id =  prop_def->id;
+            }
+            else
+            {
+                if(ISPIDSTR(pszName))
+                {
+                    HeapFree(GetProcessHeap(), 0, prop_entry);
+                    HeapFree(GetProcessHeap(), 0, header);
+                    return MIME_E_NOT_FOUND;
+                }
+
+                prop_entry->prop.name = strdupA(pszName);
+                prop_entry->prop.id = This->next_prop_id++;
+            }
+
             prop_entry->prop.flags = 0;
             prop_entry->prop.default_vt = pValue->vt;
             list_add_tail(&This->new_props, &prop_entry->entry);
@@ -728,8 +1195,27 @@ static HRESULT WINAPI MimeBody_DeleteProp(
                                  LPCSTR pszName)
 {
     MimeBody *This = impl_from_IMimeBody(iface);
-    FIXME("(%p)->(%s) stub\n", This, debugstr_a(pszName));
-    return E_NOTIMPL;
+    header_t *cursor;
+    BOOL found;
+
+    TRACE("(%p)->(%s) stub\n", This, debugstr_a(pszName));
+
+    LIST_FOR_EACH_ENTRY(cursor, &This->headers, header_t, entry)
+    {
+        if(ISPIDSTR(pszName))
+            found = STRTOPID(pszName) == cursor->prop->id;
+        else
+            found = !lstrcmpiA(pszName, cursor->prop->name);
+
+        if(found)
+        {
+             list_remove(&cursor->entry);
+             HeapFree(GetProcessHeap(), 0, cursor);
+             return S_OK;
+        }
+    }
+
+    return MIME_E_NOT_FOUND;
 }
 
 static HRESULT WINAPI MimeBody_CopyProps(
@@ -1029,17 +1515,206 @@ static HRESULT WINAPI MimeBody_GetDataHere(
     return E_NOTIMPL;
 }
 
+static const signed char base64_decode_table[] =
+{
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x00 */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, /* 0x10 */
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, /* 0x20 */
+    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, /* 0x30 */
+    -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, /* 0x40 */
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, /* 0x50 */
+    -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, /* 0x60 */
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1  /* 0x70 */
+};
+
+static HRESULT decode_base64(IStream *input, IStream **ret_stream)
+{
+    const unsigned char *ptr, *end;
+    unsigned char buf[1024];
+    LARGE_INTEGER pos;
+    unsigned char *ret;
+    unsigned char in[4];
+    IStream *output;
+    DWORD size;
+    int n = 0;
+    HRESULT hres;
+
+    pos.QuadPart = 0;
+    hres = IStream_Seek(input, pos, STREAM_SEEK_SET, NULL);
+    if(FAILED(hres))
+        return hres;
+
+    hres = CreateStreamOnHGlobal(NULL, TRUE, &output);
+    if(FAILED(hres))
+        return hres;
+
+    while(1) {
+        hres = IStream_Read(input, buf, sizeof(buf), &size);
+        if(FAILED(hres) || !size)
+            break;
+
+        ptr = ret = buf;
+        end = buf + size;
+
+        while(1) {
+            /* skip invalid chars */
+            while(ptr < end &&
+                  (*ptr >= sizeof(base64_decode_table)/sizeof(*base64_decode_table)
+                   || base64_decode_table[*ptr] == -1))
+                ptr++;
+            if(ptr == end)
+                break;
+
+            in[n++] = base64_decode_table[*ptr++];
+            switch(n) {
+            case 2:
+                *ret++ = in[0] << 2 | in[1] >> 4;
+                continue;
+            case 3:
+                *ret++ = in[1] << 4 | in[2] >> 2;
+                continue;
+            case 4:
+                *ret++ = ((in[2] << 6) & 0xc0) | in[3];
+                n = 0;
+            }
+        }
+
+        if(ret > buf) {
+            hres = IStream_Write(output, buf, ret - buf, NULL);
+            if(FAILED(hres))
+                break;
+        }
+    }
+
+    if(SUCCEEDED(hres))
+        hres = IStream_Seek(output, pos, STREAM_SEEK_SET, NULL);
+    if(FAILED(hres)) {
+        IStream_Release(output);
+        return hres;
+    }
+
+    *ret_stream = output;
+    return S_OK;
+}
+
+static int hex_digit(char c)
+{
+    if('0' <= c && c <= '9')
+        return c - '0';
+    if('A' <= c && c <= 'F')
+        return c - 'A' + 10;
+    if('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    return -1;
+}
+
+static HRESULT decode_qp(IStream *input, IStream **ret_stream)
+{
+    const unsigned char *ptr, *end;
+    unsigned char *ret, prev = 0;
+    unsigned char buf[1024];
+    LARGE_INTEGER pos;
+    IStream *output;
+    DWORD size;
+    int n = -1;
+    HRESULT hres;
+
+    pos.QuadPart = 0;
+    hres = IStream_Seek(input, pos, STREAM_SEEK_SET, NULL);
+    if(FAILED(hres))
+        return hres;
+
+    hres = CreateStreamOnHGlobal(NULL, TRUE, &output);
+    if(FAILED(hres))
+        return hres;
+
+    while(1) {
+        hres = IStream_Read(input, buf, sizeof(buf), &size);
+        if(FAILED(hres) || !size)
+            break;
+
+        ptr = ret = buf;
+        end = buf + size;
+
+        while(ptr < end) {
+            unsigned char byte = *ptr++;
+
+            switch(n) {
+            case -1:
+                if(byte == '=')
+                    n = 0;
+                else
+                    *ret++ = byte;
+                continue;
+            case 0:
+                prev = byte;
+                n = 1;
+                continue;
+            case 1:
+                if(prev != '\r' || byte != '\n') {
+                    int h1 = hex_digit(prev), h2 = hex_digit(byte);
+                    if(h1 != -1 && h2 != -1)
+                        *ret++ = (h1 << 4) | h2;
+                    else
+                        *ret++ = '=';
+                }
+                n = -1;
+                continue;
+            }
+        }
+
+        if(ret > buf) {
+            hres = IStream_Write(output, buf, ret - buf, NULL);
+            if(FAILED(hres))
+                break;
+        }
+    }
+
+    if(SUCCEEDED(hres))
+        hres = IStream_Seek(output, pos, STREAM_SEEK_SET, NULL);
+    if(FAILED(hres)) {
+        IStream_Release(output);
+        return hres;
+    }
+
+    *ret_stream = output;
+    return S_OK;
+}
+
 static HRESULT WINAPI MimeBody_GetData(
                               IMimeBody* iface,
                               ENCODINGTYPE ietEncoding,
                               IStream** ppStream)
 {
     MimeBody *This = impl_from_IMimeBody(iface);
-    FIXME("(%p)->(%d, %p). Ignoring encoding type.\n", This, ietEncoding, ppStream);
+    ULARGE_INTEGER start, size;
+    HRESULT hres;
 
-    *ppStream = This->data;
-    IStream_AddRef(*ppStream);
-    return S_OK;
+    TRACE("(%p)->(%d %p)\n", This, ietEncoding, ppStream);
+
+    if(This->encoding != ietEncoding) {
+        switch(This->encoding) {
+        case IET_BASE64:
+            hres = decode_base64(This->data, ppStream);
+            break;
+        case IET_QP:
+            hres = decode_qp(This->data, ppStream);
+            break;
+        default:
+            FIXME("Decoding %d is not supported.\n", This->encoding);
+            hres = S_FALSE;
+        }
+        if(ietEncoding != IET_BINARY)
+            FIXME("Encoding %d is not supported.\n", ietEncoding);
+        if(hres != S_FALSE)
+            return hres;
+    }
+
+    start.QuadPart = 0;
+    hres = get_stream_size(This->data, &size);
+    if(SUCCEEDED(hres))
+        hres = create_sub_stream(This->data, start, size, ppStream);
+    return hres;
 }
 
 static HRESULT WINAPI MimeBody_SetData(
@@ -1119,6 +1794,9 @@ static HRESULT WINAPI MimeBody_GetHandle(
 {
     MimeBody *This = impl_from_IMimeBody(iface);
     TRACE("(%p)->(%p)\n", iface, phBody);
+
+    if(!phBody)
+        return E_INVALIDARG;
 
     *phBody = This->handle;
     return This->handle ? S_OK : MIME_E_NO_DATA;
@@ -1228,291 +1906,6 @@ HRESULT MimeBody_create(IUnknown *outer, void **ppv)
         return E_OUTOFMEMORY;
     }
 }
-
-
-
-typedef struct
-{
-    IStream IStream_iface;
-    LONG ref;
-    IStream *base;
-    ULARGE_INTEGER pos, start, length;
-} sub_stream_t;
-
-static inline sub_stream_t *impl_from_IStream(IStream *iface)
-{
-    return CONTAINING_RECORD(iface, sub_stream_t, IStream_iface);
-}
-
-static HRESULT WINAPI sub_stream_QueryInterface(IStream *iface, REFIID riid, void **ppv)
-{
-    sub_stream_t *This = impl_from_IStream(iface);
-
-    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppv);
-    *ppv = NULL;
-
-    if(IsEqualIID(riid, &IID_IUnknown) ||
-       IsEqualIID(riid, &IID_ISequentialStream) ||
-       IsEqualIID(riid, &IID_IStream))
-    {
-        IStream_AddRef(iface);
-        *ppv = iface;
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI sub_stream_AddRef(IStream *iface)
-{
-    sub_stream_t *This = impl_from_IStream(iface);
-    LONG ref = InterlockedIncrement(&This->ref);
-
-    TRACE("(%p) ref=%d\n", This, ref);
-
-    return ref;
-}
-
-static ULONG WINAPI sub_stream_Release(IStream *iface)
-{
-    sub_stream_t *This = impl_from_IStream(iface);
-    LONG ref = InterlockedDecrement(&This->ref);
-
-    TRACE("(%p) ref=%d\n", This, ref);
-
-    if(!ref)
-    {
-        IStream_Release(This->base);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
-    return ref;
-}
-
-static HRESULT WINAPI sub_stream_Read(
-        IStream* iface,
-        void *pv,
-        ULONG cb,
-        ULONG *pcbRead)
-{
-    sub_stream_t *This = impl_from_IStream(iface);
-    HRESULT hr;
-    ULARGE_INTEGER base_pos;
-    LARGE_INTEGER tmp_pos;
-
-    TRACE("(%p, %d, %p)\n", pv, cb, pcbRead);
-
-    tmp_pos.QuadPart = 0;
-    IStream_Seek(This->base, tmp_pos, STREAM_SEEK_CUR, &base_pos);
-    tmp_pos.QuadPart = This->pos.QuadPart + This->start.QuadPart;
-    IStream_Seek(This->base, tmp_pos, STREAM_SEEK_SET, NULL);
-
-    if(This->pos.QuadPart + cb > This->length.QuadPart)
-        cb = This->length.QuadPart - This->pos.QuadPart;
-
-    hr = IStream_Read(This->base, pv, cb, pcbRead);
-
-    This->pos.QuadPart += *pcbRead;
-
-    tmp_pos.QuadPart = base_pos.QuadPart;
-    IStream_Seek(This->base, tmp_pos, STREAM_SEEK_SET, NULL);
-
-    return hr;
-}
-
-static HRESULT WINAPI sub_stream_Write(
-        IStream* iface,
-        const void *pv,
-        ULONG cb,
-        ULONG *pcbWritten)
-{
-    FIXME("stub\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI sub_stream_Seek(
-        IStream* iface,
-        LARGE_INTEGER dlibMove,
-        DWORD dwOrigin,
-        ULARGE_INTEGER *plibNewPosition)
-{
-    sub_stream_t *This = impl_from_IStream(iface);
-    LARGE_INTEGER new_pos;
-
-    TRACE("(%08x.%08x, %x, %p)\n", dlibMove.u.HighPart, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
-
-    switch(dwOrigin)
-    {
-    case STREAM_SEEK_SET:
-        new_pos = dlibMove;
-        break;
-    case STREAM_SEEK_CUR:
-        new_pos.QuadPart = This->pos.QuadPart + dlibMove.QuadPart;
-        break;
-    case STREAM_SEEK_END:
-        new_pos.QuadPart = This->length.QuadPart + dlibMove.QuadPart;
-        break;
-    default:
-        return STG_E_INVALIDFUNCTION;
-    }
-
-    if(new_pos.QuadPart < 0) new_pos.QuadPart = 0;
-    else if(new_pos.QuadPart > This->length.QuadPart) new_pos.QuadPart = This->length.QuadPart;
-
-    This->pos.QuadPart = new_pos.QuadPart;
-
-    if(plibNewPosition) *plibNewPosition = This->pos;
-    return S_OK;
-}
-
-static HRESULT WINAPI sub_stream_SetSize(
-        IStream* iface,
-        ULARGE_INTEGER libNewSize)
-{
-    FIXME("stub\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI sub_stream_CopyTo(
-        IStream* iface,
-        IStream *pstm,
-        ULARGE_INTEGER cb,
-        ULARGE_INTEGER *pcbRead,
-        ULARGE_INTEGER *pcbWritten)
-{
-    HRESULT        hr = S_OK;
-    BYTE           tmpBuffer[128];
-    ULONG          bytesRead, bytesWritten, copySize;
-    ULARGE_INTEGER totalBytesRead;
-    ULARGE_INTEGER totalBytesWritten;
-
-    TRACE("(%p)->(%p, %d, %p, %p)\n", iface, pstm, cb.u.LowPart, pcbRead, pcbWritten);
-
-    totalBytesRead.QuadPart = 0;
-    totalBytesWritten.QuadPart = 0;
-
-    while ( cb.QuadPart > 0 )
-    {
-        if ( cb.QuadPart >= sizeof(tmpBuffer) )
-            copySize = sizeof(tmpBuffer);
-        else
-            copySize = cb.u.LowPart;
-
-        hr = IStream_Read(iface, tmpBuffer, copySize, &bytesRead);
-        if (FAILED(hr)) break;
-
-        totalBytesRead.QuadPart += bytesRead;
-
-        if (bytesRead)
-        {
-            hr = IStream_Write(pstm, tmpBuffer, bytesRead, &bytesWritten);
-            if (FAILED(hr)) break;
-            totalBytesWritten.QuadPart += bytesWritten;
-        }
-
-        if (bytesRead != copySize)
-            cb.QuadPart = 0;
-        else
-            cb.QuadPart -= bytesRead;
-    }
-
-    if (pcbRead) pcbRead->QuadPart = totalBytesRead.QuadPart;
-    if (pcbWritten) pcbWritten->QuadPart = totalBytesWritten.QuadPart;
-
-    return hr;
-}
-
-static HRESULT WINAPI sub_stream_Commit(
-        IStream* iface,
-        DWORD grfCommitFlags)
-{
-    FIXME("stub\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI sub_stream_Revert(
-        IStream* iface)
-{
-    FIXME("stub\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI sub_stream_LockRegion(
-        IStream* iface,
-        ULARGE_INTEGER libOffset,
-        ULARGE_INTEGER cb,
-        DWORD dwLockType)
-{
-    FIXME("stub\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI sub_stream_UnlockRegion(
-        IStream* iface,
-        ULARGE_INTEGER libOffset,
-        ULARGE_INTEGER cb,
-        DWORD dwLockType)
-{
-    FIXME("stub\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI sub_stream_Stat(
-        IStream* iface,
-        STATSTG *pstatstg,
-        DWORD grfStatFlag)
-{
-    sub_stream_t *This = impl_from_IStream(iface);
-    FIXME("(%p)->(%p, %08x)\n", This, pstatstg, grfStatFlag);
-    memset(pstatstg, 0, sizeof(*pstatstg));
-    pstatstg->cbSize = This->length;
-    return S_OK;
-}
-
-static HRESULT WINAPI sub_stream_Clone(
-        IStream* iface,
-        IStream **ppstm)
-{
-    FIXME("stub\n");
-    return E_NOTIMPL;
-}
-
-static struct IStreamVtbl sub_stream_vtbl =
-{
-    sub_stream_QueryInterface,
-    sub_stream_AddRef,
-    sub_stream_Release,
-    sub_stream_Read,
-    sub_stream_Write,
-    sub_stream_Seek,
-    sub_stream_SetSize,
-    sub_stream_CopyTo,
-    sub_stream_Commit,
-    sub_stream_Revert,
-    sub_stream_LockRegion,
-    sub_stream_UnlockRegion,
-    sub_stream_Stat,
-    sub_stream_Clone
-};
-
-static HRESULT create_sub_stream(IStream *stream, ULARGE_INTEGER start, ULARGE_INTEGER length, IStream **out)
-{
-    sub_stream_t *This;
-
-    *out = NULL;
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
-    if(!This) return E_OUTOFMEMORY;
-
-    This->IStream_iface.lpVtbl = &sub_stream_vtbl;
-    This->ref = 1;
-    This->start = start;
-    This->length = length;
-    This->pos.QuadPart = 0;
-    IStream_AddRef(stream);
-    This->base = stream;
-
-    *out = &This->IStream_iface;
-    return S_OK;
-}
-
 
 typedef struct body_t
 {
@@ -1625,6 +2018,8 @@ static body_t *new_body_entry(MimeBody *mime_body, DWORD index, body_t *parent)
         body->index = index;
         list_init(&body->children);
         body->parent = parent;
+
+        mime_body->handle = UlongToHandle(body->index);
     }
     return body;
 }
@@ -1638,18 +2033,16 @@ typedef struct
 static HRESULT create_body_offset_list(IStream *stm, const char *boundary, struct list *body_offsets)
 {
     HRESULT hr;
-    DWORD read;
+    DWORD read, boundary_start;
     int boundary_len = strlen(boundary);
-    char *buf, *nl_boundary, *ptr, *overlap;
+    char *buf, *ptr, *overlap;
     DWORD start = 0, overlap_no;
     offset_entry_t *cur_body = NULL;
+    BOOL is_first_line = TRUE;
     ULARGE_INTEGER cur;
     LARGE_INTEGER zero;
 
     list_init(body_offsets);
-    nl_boundary = HeapAlloc(GetProcessHeap(), 0, 4 + boundary_len + 1);
-    memcpy(nl_boundary, "\r\n--", 4);
-    memcpy(nl_boundary + 4, boundary, boundary_len + 1);
 
     overlap_no = boundary_len + 5;
 
@@ -1666,39 +2059,44 @@ static HRESULT create_body_offset_list(IStream *stm, const char *boundary, struc
         overlap[read] = '\0';
 
         ptr = buf;
-        do {
-            ptr = strstr(ptr, nl_boundary);
-            if(ptr)
-            {
-                DWORD boundary_start = start + ptr - buf;
-                char *end = ptr + boundary_len + 4;
-
-                if(*end == '\0' || *(end + 1) == '\0')
+        while(1) {
+            if(is_first_line) {
+                is_first_line = FALSE;
+            }else {
+                ptr = strstr(ptr, "\r\n");
+                if(!ptr)
                     break;
+                ptr += 2;
+            }
 
-                if(*end == '\r' && *(end + 1) == '\n')
+            boundary_start = start + ptr - buf;
+
+            if(*ptr == '-' && *(ptr + 1) == '-' && !memcmp(ptr + 2, boundary, boundary_len)) {
+                ptr += boundary_len + 2;
+
+                if(*ptr == '\r' && *(ptr + 1) == '\n')
                 {
+                    ptr += 2;
                     if(cur_body)
                     {
-                        cur_body->offsets.cbBodyEnd = boundary_start;
+                        cur_body->offsets.cbBodyEnd = boundary_start - 2;
                         list_add_tail(body_offsets, &cur_body->entry);
                     }
                     cur_body = HeapAlloc(GetProcessHeap(), 0, sizeof(*cur_body));
-                    cur_body->offsets.cbBoundaryStart = boundary_start + 2; /* doesn't including the leading \r\n */
-                    cur_body->offsets.cbHeaderStart = boundary_start + boundary_len + 6;
+                    cur_body->offsets.cbBoundaryStart = boundary_start;
+                    cur_body->offsets.cbHeaderStart = start + ptr - buf;
                 }
-                else if(*end == '-' && *(end + 1) == '-')
+                else if(*ptr == '-' && *(ptr + 1) == '-')
                 {
                     if(cur_body)
                     {
-                        cur_body->offsets.cbBodyEnd = boundary_start;
+                        cur_body->offsets.cbBodyEnd = boundary_start - 2;
                         list_add_tail(body_offsets, &cur_body->entry);
                         goto end;
                     }
                 }
-                ptr = end + 2;
             }
-        } while(ptr);
+        }
 
         if(overlap == buf) /* 1st iteration */
         {
@@ -1714,26 +2112,33 @@ static HRESULT create_body_offset_list(IStream *stm, const char *boundary, struc
     } while(1);
 
 end:
-    HeapFree(GetProcessHeap(), 0, nl_boundary);
     HeapFree(GetProcessHeap(), 0, buf);
     return hr;
 }
 
 static body_t *create_sub_body(MimeMessage *msg, IStream *pStm, BODYOFFSETS *offset, body_t *parent)
 {
+    ULARGE_INTEGER start, length;
     MimeBody *mime_body;
     HRESULT hr;
     body_t *body;
-    ULARGE_INTEGER cur;
-    LARGE_INTEGER zero;
+    LARGE_INTEGER pos;
+
+    pos.QuadPart = offset->cbHeaderStart;
+    IStream_Seek(pStm, pos, STREAM_SEEK_SET, NULL);
 
     mime_body = mimebody_create();
     IMimeBody_Load(&mime_body->IMimeBody_iface, pStm);
-    zero.QuadPart = 0;
-    hr = IStream_Seek(pStm, zero, STREAM_SEEK_CUR, &cur);
-    offset->cbBodyStart = cur.u.LowPart + offset->cbHeaderStart;
+
+    pos.QuadPart = 0;
+    hr = IStream_Seek(pStm, pos, STREAM_SEEK_CUR, &start);
+    offset->cbBodyStart = start.QuadPart;
     if (parent) MimeBody_set_offsets(mime_body, offset);
-    IMimeBody_SetData(&mime_body->IMimeBody_iface, IET_BINARY, NULL, NULL, &IID_IStream, pStm);
+
+    length.QuadPart = offset->cbBodyEnd - offset->cbBodyStart;
+    create_sub_stream(pStm, start, length, (IStream**)&mime_body->data);
+    mime_body->data_iid = IID_IStream;
+
     body = new_body_entry(mime_body, msg->next_index++, parent);
 
     if(IMimeBody_IsContentType(&mime_body->IMimeBody_iface, "multipart", NULL) == S_OK)
@@ -1758,14 +2163,8 @@ static body_t *create_sub_body(MimeMessage *msg, IStream *pStm, BODYOFFSETS *off
                 LIST_FOR_EACH_ENTRY_SAFE(cur, cursor2, &offset_list, offset_entry_t, entry)
                 {
                     body_t *sub_body;
-                    IStream *sub_stream;
-                    ULARGE_INTEGER start, length;
 
-                    start.QuadPart = cur->offsets.cbHeaderStart;
-                    length.QuadPart = cur->offsets.cbBodyEnd - cur->offsets.cbHeaderStart;
-                    create_sub_stream(pStm, start, length, &sub_stream);
-                    sub_body = create_sub_body(msg, sub_stream, &cur->offsets, body);
-                    IStream_Release(sub_stream);
+                    sub_body = create_sub_body(msg, pStm, &cur->offsets, body);
                     list_add_tail(&body->children, &sub_body->entry);
                     list_remove(&cur->entry);
                     HeapFree(GetProcessHeap(), 0, cur);
@@ -1888,7 +2287,7 @@ static HRESULT WINAPI MimeMessage_Commit(
     DWORD dwFlags)
 {
     FIXME("(%p)->(0x%x)\n", iface, dwFlags);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 
@@ -1976,7 +2375,10 @@ static HRESULT get_body(MimeMessage *msg, BODYLOCATION location, HBODY pivot, bo
         switch(location)
         {
         case IBL_PARENT:
-            *out = body->parent;
+            if(body->parent)
+                *out = body->parent;
+            else
+                hr = MIME_E_NOT_FOUND;
             break;
 
         case IBL_FIRST:
@@ -2039,6 +2441,11 @@ static HRESULT WINAPI MimeMessage_GetBody(IMimeMessage *iface, BODYLOCATION loca
     HRESULT hr;
 
     TRACE("(%p)->(%d, %p, %p)\n", iface, location, hPivot, phBody);
+
+    if(!phBody)
+        return E_INVALIDARG;
+
+    *phBody = NULL;
 
     hr = get_body(This, location, hPivot, &body);
 
@@ -2319,6 +2726,9 @@ static HRESULT WINAPI MimeMessage_SetOption(
         break;
     case OID_SAVEBODY_KEEPBOUNDARY:
         FIXME("OID_SAVEBODY_KEEPBOUNDARY (value %d): ignoring\n", pValue->u.boolVal);
+        break;
+    case OID_CLEANUP_TREE_ON_SAVE:
+        FIXME("OID_CLEANUP_TREE_ON_SAVE (value %d): ignoring\n", pValue->u.boolVal);
         break;
     default:
         FIXME("Unhandled oid %08x\n", oid);
@@ -3225,4 +3635,72 @@ HRESULT WINAPI MimeGetAddressFormatW(REFIID riid, void *object, DWORD addr_type,
     FIXME("(%s, %p, %d, %d, %p) stub\n", debugstr_guid(riid), object, addr_type, addr_format, address);
 
     return E_NOTIMPL;
+}
+
+static HRESULT WINAPI mime_obj_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    FIXME("(%s %p)\n", debugstr_guid(riid), ppv);
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI mime_obj_AddRef(IUnknown *iface)
+{
+    TRACE("\n");
+    return 2;
+}
+
+static ULONG WINAPI mime_obj_Release(IUnknown *iface)
+{
+    TRACE("\n");
+    return 1;
+}
+
+static const IUnknownVtbl mime_obj_vtbl = {
+    mime_obj_QueryInterface,
+    mime_obj_AddRef,
+    mime_obj_Release
+};
+
+static IUnknown mime_obj = { &mime_obj_vtbl };
+
+HRESULT WINAPI MimeOleObjectFromMoniker(BINDF bindf, IMoniker *moniker, IBindCtx *binding,
+       REFIID riid, void **out, IMoniker **moniker_new)
+{
+    WCHAR *display_name, *mhtml_url;
+    size_t len;
+    HRESULT hres;
+
+    static const WCHAR mhtml_prefixW[] = {'m','h','t','m','l',':'};
+
+    WARN("(0x%08x, %p, %p, %s, %p, %p) semi-stub\n", bindf, moniker, binding, debugstr_guid(riid), out, moniker_new);
+
+    if(!IsEqualGUID(&IID_IUnknown, riid)) {
+        FIXME("Unsupported riid %s\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+
+    hres = IMoniker_GetDisplayName(moniker, NULL, NULL, &display_name);
+    if(FAILED(hres))
+        return hres;
+
+    TRACE("display name %s\n", debugstr_w(display_name));
+
+    len = strlenW(display_name);
+    mhtml_url = heap_alloc((len+1)*sizeof(WCHAR) + sizeof(mhtml_prefixW));
+    if(!mhtml_url)
+        return E_OUTOFMEMORY;
+
+    memcpy(mhtml_url, mhtml_prefixW, sizeof(mhtml_prefixW));
+    strcpyW(mhtml_url + sizeof(mhtml_prefixW)/sizeof(WCHAR), display_name);
+    HeapFree(GetProcessHeap(), 0, display_name);
+
+    hres = CreateURLMoniker(NULL, mhtml_url, moniker_new);
+    heap_free(mhtml_url);
+    if(FAILED(hres))
+        return hres;
+
+    /* FIXME: We most likely should start binding here and return something more meaningful as mime object. */
+    *out = &mime_obj;
+    return S_OK;
 }

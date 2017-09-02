@@ -1,0 +1,8 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_LOCAL_PORT "Port local"
+    IDS_LOCAL_MONITOR "Monitor local"
+END

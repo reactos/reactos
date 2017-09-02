@@ -38,7 +38,7 @@ Size = 131,9 Mio
 [Section.0419]
 License = Условно-бесплатно
 Description = Демо-версия игры. Для запуска необходимо наличие Zeckensacks Glide Wrapper.
-Size = 131,9 МБ
+Size = 131,9 МиБ
 
 [Section.041f]
 Name = Diablo II (Paylaşımlı)

@@ -800,7 +800,11 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     switch (uFlags)
     {
     case SHARD_PIDL:
-        SHGetPathFromIDListA(pv, doc_name);
+        if (!SHGetPathFromIDListA(pv, doc_name))
+        {
+            WARN("can't get path from PIDL\n");
+            return;
+        }
         break;
 
     case SHARD_PATHA:
@@ -896,7 +900,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 		/* buffer size looks good */
 		ptr += 12; /* get to string */
 		len = bufused - (ptr-buffer);  /* get length of buf remaining */
-		if ((lstrlenA(ptr) > 0) && (lstrlenA(ptr) <= len-1)) {
+                if (ptr[0] && (lstrlenA(ptr) <= len-1)) {
 		    /* appears to be good string */
 		    lstrcpyA(old_lnk_name, link_dir);
 		    PathAppendA(old_lnk_name, ptr);
@@ -1042,6 +1046,8 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
  * NOTES
  *  see IShellFolder::CreateViewObject
  */
+ #ifndef __REACTOS__
+
 HRESULT WINAPI SHCreateShellFolderViewEx(
 	LPCSFV psvcbi,    /* [in] shelltemplate struct */
 	IShellView **ppv) /* [out] IShellView pointer */
@@ -1064,6 +1070,8 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
 
 	return hRes;
 }
+#endif
+
 /*************************************************************************
  *  SHWinHelp					[SHELL32.127]
  *
@@ -1237,7 +1245,7 @@ BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 	if ( (r != ERROR_SUCCESS) || (cs->cLength < sizeof(*cs)) ||
 		(cs->cLength != length) )
 	{
-		ERR("Initializing shell cabinet settings\n");
+		TRACE("Initializing shell cabinet settings\n");
 		memset(cs, 0, sizeof(*cs));
 		cs->cLength          = sizeof(*cs);
 		cs->nVersion         = 2;
@@ -1288,8 +1296,8 @@ BOOL WINAPI WriteCabinetState(CABINETSTATE *cs)
  *
  */
 BOOL WINAPI FileIconInit(BOOL bFullInit)
-{	FIXME("(%s)\n", bFullInit ? "true" : "false");
-	return FALSE;
+{
+    return SIC_Initialize();
 }
 
 /*************************************************************************
@@ -2104,6 +2112,8 @@ HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
     return ret;
 }
 
+#ifndef __REACTOS__
+
 /*************************************************************************
  * SHCreateShellFolderView			[SHELL32.256]
  *
@@ -2138,3 +2148,4 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
 
 	return hRes;
 }
+#endif

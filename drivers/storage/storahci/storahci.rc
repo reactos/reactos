@@ -1,0 +1,22 @@
+//
+// PROJECT:        ReactOS Kernel
+// LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
+// PURPOSE:        To Implement AHCI Miniport driver targeting storport NT 5.2
+// PROGRAMMERS:    Aman Priyadarshi (aman.eureka@gmail.com)
+//
+
+#define VERSION 	1
+#define VERSION_STR "1.0"
+
+#define REACTOS_FILETYPE              VFT_DRV
+#define REACTOS_FILESUBTYPE           VFT2_DRV_SYSTEM
+#define REACTOS_FILEVERSION           VERSION
+#define REACTOS_PRODUCTVERSION        VERSION
+#define REACTOS_STR_COMPANY_NAME      "ReactOS Development Team"
+#define REACTOS_STR_FILE_DESCRIPTION  "AHCI Storport Miniport Driver"
+#define REACTOS_STR_FILE_VERSION      VERSION_STR
+#define REACTOS_STR_INTERNAL_NAME     "storahci.sys"
+#define REACTOS_STR_ORIGINAL_FILENAME "storahci.sys"
+#define REACTOS_STR_LEGAL_COPYRIGHT   "Copyright 2016 ReactOS Team"
+#define REACTOS_STR_PRODUCT_NAME      "AHCI Driver for ReactOS"
+#define REACTOS_STR_PRODUCT_VERSION   VERSION_STR

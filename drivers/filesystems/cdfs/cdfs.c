@@ -55,9 +55,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
             * RETURNS: Success or failure
             */
 {
-    PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status;
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Cdfs");
+    PDEVICE_OBJECT CdFsDeviceObject;
+    PDEVICE_OBJECT HddFsDeviceObject;
+    UNICODE_STRING CdFsDeviceName = RTL_CONSTANT_STRING(L"\\Cdfs");
+    UNICODE_STRING HddFsDeviceName = RTL_CONSTANT_STRING(L"\\CdfsHdd");
 
     UNREFERENCED_PARAMETER(RegistryPath);
 
@@ -65,25 +67,38 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
     Status = IoCreateDevice(DriverObject,
         sizeof(CDFS_GLOBAL_DATA),
-        &DeviceName,
+        &CdFsDeviceName,
         FILE_DEVICE_CD_ROM_FILE_SYSTEM,
         0,
         FALSE,
-        &DeviceObject);
+        &CdFsDeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        return(Status);
+    }
+
+    Status = IoCreateDevice(DriverObject,
+        0,
+        &HddFsDeviceName,
+        FILE_DEVICE_DISK_FILE_SYSTEM,
+        0,
+        FALSE,
+        &HddFsDeviceObject);
     if (!NT_SUCCESS(Status))
     {
         return(Status);
     }
 
     /* Initialize global data */
-    CdfsGlobalData = DeviceObject->DeviceExtension;
+    CdfsGlobalData = CdFsDeviceObject->DeviceExtension;
     RtlZeroMemory(CdfsGlobalData,
         sizeof(CDFS_GLOBAL_DATA));
     CdfsGlobalData->DriverObject = DriverObject;
-    CdfsGlobalData->DeviceObject = DeviceObject;
+    CdfsGlobalData->CdFsDeviceObject = CdFsDeviceObject;
+    CdfsGlobalData->HddFsDeviceObject = HddFsDeviceObject;
+    HddFsDeviceObject->DeviceExtension = CdfsGlobalData;
 
     /* Initialize driver data */
-    DeviceObject->Flags = DO_DIRECT_IO;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = CdfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = CdfsFsdDispatch;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = CdfsFsdDispatch;
@@ -116,12 +131,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     CdfsGlobalData->CacheMgrCallbacks.AcquireForReadAhead = CdfsAcquireForLazyWrite;
     CdfsGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = CdfsReleaseFromLazyWrite;
 
-    DeviceObject->Flags |= DO_LOW_PRIORITY_FILESYSTEM;
+    CdFsDeviceObject->Flags |= DO_DIRECT_IO | DO_LOW_PRIORITY_FILESYSTEM;
+    HddFsDeviceObject->Flags |= DO_DIRECT_IO | DO_LOW_PRIORITY_FILESYSTEM;
 
-    IoRegisterFileSystem(DeviceObject);
-    DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+    IoRegisterFileSystem(CdFsDeviceObject);
+    IoRegisterFileSystem(HddFsDeviceObject);
 
     return(STATUS_SUCCESS);
 }
-
-

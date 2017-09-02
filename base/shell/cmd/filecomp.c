@@ -290,7 +290,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
         hFile = FindFirstFile (path, &file);
 
         /* Count the highest number of columns */
-        GetScreenSize(&screenwidth, 0);
+        GetScreenSize(&screenwidth, NULL);
 
         /* For counting columns of output */
         count = 0;
@@ -658,7 +658,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
         return;
     }
 
-    /* aseemble a list of all files names */
+    /* assemble a list of all files names */
     do
     {
         FileName * oldFileList = FileList;

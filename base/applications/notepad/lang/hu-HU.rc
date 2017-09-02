@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Mentés má&sként...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Oldalbeállítás...", CMD_PAGE_SETUP
-        MENUITEM "Nyom&tatás\tCtrl+P", CMD_PRINT
+        MENUITEM "Nyom&tatás...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Kilépés", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Keresés...", CMD_SEARCH
         MENUITEM "Köve&tkezõ keresése\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace\tCtrl+H", CMD_REPLACE
+        MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "&Az összes kijelölése", CMD_SELECT_ALL

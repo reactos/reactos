@@ -1,4 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -10,7 +10,7 @@ STRINGTABLE
     STRING_COPY,     "%1!d! fișier(e) copiat(e)\n"
     STRING_QISDIR,   "«%1» este un nume de fișier sau un director\ndin destinație?\n(F - Fișier, D - Director)\n"
     STRING_SRCPROMPT,"%1? (Da|Nu)\n"
-    STRING_OVERWRITE,"Se suprascrie %1? (Da|Nu|Toate)\n"
+    STRING_OVERWRITE,"Suprascrieți %1? (Da|Nu|Toate)\n"
     STRING_COPYFAIL, "Copierea «%1» în «%2» a eșuat cu cod de retur %3!d!\n"
     STRING_OPENFAIL, "Deschiderea «%1» a eșuat\n"
     STRING_READFAIL, "Citirea «%1» a eșuat\n"
@@ -28,7 +28,7 @@ XCOPY sursă [destinație] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \nCu:\n\
 \n\
-[/I]  Creează director dacă destinația nu există și se copiază două sau\n\
+[/I]  Creează director dacă destinația nu există și copiază două sau\n\
 \tmai multe fișiere.\n\
 [/S]  Copiază directoarele și subdirectoarele.\n\
 [/E]  Copiază directoarele și subdirectoarele, inclusiv pe cele goale.\n\

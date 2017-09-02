@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Enregistrer &sous...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Mise en page...", CMD_PAGE_SETUP
-        MENUITEM "Im&primer\tCtrl+P", CMD_PRINT
+        MENUITEM "Im&primer...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Quitter", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Rechercher\tCtrl+F", CMD_SEARCH
         MENUITEM "&Suivant\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Remplacer\tCtrl+H", CMD_REPLACE
+        MENUITEM "Remplacer...\tCtrl+H", CMD_REPLACE
         MENUITEM "Atteindre...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Tout &sélectionner\tCtrl+A", CMD_SELECT_ALL
@@ -158,7 +158,7 @@ BEGIN
     STRING_WARNING "ATTENTION"
     STRING_INFO "Information"
     STRING_UNTITLED "Sans-titre"
-    STRING_ALL_FILES "Tous fichiers (*.*)"
+    STRING_ALL_FILES "Tous les fichiers (*.*)"
     STRING_TEXT_FILES_TXT "Fichiers texte (*.txt)"
     STRING_TOOLARGE "Le fichier '%s' est trop grand pour le bloc-notes.\n \
 Veuillez utiliser un autre éditeur."

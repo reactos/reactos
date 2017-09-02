@@ -1,0 +1,1505 @@
+/*
+ * Netlogon Service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+cpp_quote("#ifndef _NTSECAPI_H")
+typedef ULONG NTSTATUS;
+
+typedef struct _STRING
+{
+    USHORT Length;
+    USHORT MaximumLength;
+    [size_is(MaximumLength), length_is(Length)] CHAR *Buffer;
+} STRING, *PSTRING;
+cpp_quote("#endif")
+
+typedef struct _OLD_LARGE_INTEGER
+{
+    ULONG LowPart;
+    LONG HighPart;
+} OLD_LARGE_INTEGER, *POLD_LARGE_INTEGER;
+
+typedef struct _CYPHER_BLOCK
+{
+    CHAR data[8];
+} CYPHER_BLOCK, *PCYPHER_BLOCK;
+
+typedef struct _NT_OWF_PASSWORD
+{
+    CYPHER_BLOCK data[2];
+} NT_OWF_PASSWORD, *PNT_OWF_PASSWORD, ENCRYPTED_NT_OWF_PASSWORD, *PENCRYPTED_NT_OWF_PASSWORD;
+
+typedef struct _LM_OWF_PASSWORD
+{
+    CYPHER_BLOCK data[2];
+} LM_OWF_PASSWORD, *PLM_OWF_PASSWORD, ENCRYPTED_LM_OWF_PASSWORD, *PENCRYPTED_LM_OWF_PASSWORD;
+
+typedef [handle] wchar_t *LOGONSRV_HANDLE;
+
+typedef struct _NLPR_SID_INFORMATION
+{
+    PRPC_SID SidPointer;
+} NLPR_SID_INFORMATION, *PNLPR_SID_INFORMATION;
+
+typedef struct _NLPR_SID_ARRAY
+{
+    ULONG Count;
+    [size_is(Count)] PNLPR_SID_INFORMATION Sids;
+} NLPR_SID_ARRAY, *PNLPR_SID_ARRAY;
+
+typedef struct _NLPR_CR_CIPHER_VALUE
+{
+    ULONG Length;
+    ULONG MaximumLength;
+    [size_is(MaximumLength), length_is(Length)] UCHAR *Buffer;
+} NLPR_CR_CIPHER_VALUE, *PNLPR_CR_CIPHER_VALUE;
+
+typedef struct _NLPR_LOGON_HOURS
+{
+    USHORT UnitsPerWeek;
+    [size_is(1260), length_is((UnitsPerWeek + 7) / 8)] UCHAR *LogonHours;
+} NLPR_LOGON_HOURS, *PNLPR_LOGON_HOURS;
+
+typedef struct _NLPR_USER_PRIVATE_INFO
+{
+    UCHAR SensitiveData;
+    ULONG DataLength;
+    [size_is(DataLength)] UCHAR *Data;
+} NLPR_USER_PRIVATE_INFO, *PNLPR_USER_PRIVATE_INFO;
+
+typedef struct _NLPR_MODIFIED_COUNT
+{
+    OLD_LARGE_INTEGER ModifiedCount;
+} NLPR_MODIFIED_COUNT, *PNLPR_MODIFIED_COUNT;
+
+typedef struct _NLPR_QUOTA_LIMITS
+{
+    ULONG PagedPoolLimit;
+    ULONG NonPagedPoolLimit;
+    ULONG MinimumWorkingSetSize;
+    ULONG MaximumWorkingSetSize;
+    ULONG PagefileLimit;
+    OLD_LARGE_INTEGER Reserved;
+} NLPR_QUOTA_LIMITS, *PNLPR_QUOTA_LIMITS;
+
+typedef struct _NETLOGON_DELTA_USER
+{
+    RPC_UNICODE_STRING UserName;
+    RPC_UNICODE_STRING FullName;
+    ULONG UserId;
+    ULONG PrimaryGroupId;
+    RPC_UNICODE_STRING HomeDirectory;
+    RPC_UNICODE_STRING HomeDirectoryDrive;
+    RPC_UNICODE_STRING ScriptPath;
+    RPC_UNICODE_STRING AdminComment;
+    RPC_UNICODE_STRING WorkStations;
+    OLD_LARGE_INTEGER LastLogon;
+    OLD_LARGE_INTEGER LastLogoff;
+    NLPR_LOGON_HOURS LogonHours;
+    USHORT BadPasswordCount;
+    USHORT LogonCount;
+    OLD_LARGE_INTEGER PasswordLastSet;
+    OLD_LARGE_INTEGER AccountExpires;
+    ULONG UserAccountControl;
+    ENCRYPTED_NT_OWF_PASSWORD EncryptedNtOwfPassword;
+    ENCRYPTED_LM_OWF_PASSWORD EncryptedLmOwfPassword;
+    UCHAR NtPasswordPresent;
+    UCHAR LmPasswordPresent;
+    UCHAR PasswordExpired;
+    RPC_UNICODE_STRING UserComment;
+    RPC_UNICODE_STRING Parameters;
+    USHORT CountryCode;
+    USHORT CodePage;
+    NLPR_USER_PRIVATE_INFO PrivateData;
+    SECURITY_INFORMATION SecurityInformation;
+    ULONG SecuritySize;
+    [size_is(SecuritySize)] UCHAR *SecurityDescriptor;
+    RPC_UNICODE_STRING ProfilePath;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_USER, *PNETLOGON_DELTA_USER;
+
+typedef struct _NETLOGON_DELTA_GROUP
+{
+    RPC_UNICODE_STRING Name;
+    ULONG RelativeId;
+    ULONG Attributes;
+    RPC_UNICODE_STRING AdminComment;
+    SECURITY_INFORMATION SecurityInformation;
+    ULONG SecuritySize;
+    [size_is(SecuritySize)] UCHAR *SecurityDescriptor;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_GROUP, *PNETLOGON_DELTA_GROUP;
+
+typedef struct _NETLOGON_DELTA_GROUP_MEMBER
+{
+    [size_is(MemberCount)] ULONG *Members;
+    [size_is(MemberCount)] ULONG *Attributes;
+    ULONG MemberCount;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_GROUP_MEMBER, *PNETLOGON_DELTA_GROUP_MEMBER;
+
+typedef struct _NETLOGON_DELTA_ALIAS
+{
+    RPC_UNICODE_STRING Name;
+    ULONG RelativeId;
+    SECURITY_INFORMATION SecurityInformation;
+    ULONG SecuritySize;
+    [size_is(SecuritySize)] UCHAR *SecurityDescriptor;
+    RPC_UNICODE_STRING Comment;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_ALIAS, *PNETLOGON_DELTA_ALIAS;
+
+typedef struct _NETLOGON_DELTA_ALIAS_MEMBER
+{
+    NLPR_SID_ARRAY Members;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_ALIAS_MEMBER, *PNETLOGON_DELTA_ALIAS_MEMBER;
+
+typedef struct _NETLOGON_DELTA_DOMAIN
+{
+    RPC_UNICODE_STRING DomainName;
+    RPC_UNICODE_STRING OemInformation;
+    OLD_LARGE_INTEGER ForceLogoff;
+    USHORT MinPasswordLength;
+    USHORT PasswordHistoryLength;
+    OLD_LARGE_INTEGER MaxPasswordAge;
+    OLD_LARGE_INTEGER MinPasswordAge;
+    OLD_LARGE_INTEGER DomainModifiedCount;
+    OLD_LARGE_INTEGER DomainCreationTime;
+    SECURITY_INFORMATION SecurityInformation;
+    ULONG SecuritySize;
+    [size_is(SecuritySize)] UCHAR *SecurityDescriptor;
+    RPC_UNICODE_STRING DomainLockoutInformation;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG PasswordProperties;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_DOMAIN, *PNETLOGON_DELTA_DOMAIN;
+
+typedef struct _NETLOGON_DELTA_RENAME_GROUP
+{
+    RPC_UNICODE_STRING OldName;
+    RPC_UNICODE_STRING NewName;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_RENAME_GROUP, *PNETLOGON_DELTA_RENAME_GROUP;
+
+typedef struct _NETLOGON_DELTA_RENAME_USER
+{
+    RPC_UNICODE_STRING OldName;
+    RPC_UNICODE_STRING NewName;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_RENAME_USER, *PNETLOGON_DELTA_RENAME_USER;
+
+typedef struct _NETLOGON_DELTA_RENAME_ALIAS
+{
+    RPC_UNICODE_STRING OldName;
+    RPC_UNICODE_STRING NewName;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_RENAME_ALIAS, *PNETLOGON_DELTA_RENAME_ALIAS;
+
+typedef struct _NETLOGON_DELTA_POLICY
+{
+    ULONG MaximumLogSize;
+    OLD_LARGE_INTEGER AuditRetentionPeriod;
+    UCHAR AuditingMode;
+    ULONG MaximumAuditEventCount;
+    [size_is(MaximumAuditEventCount + 1)] ULONG *EventAuditingOptions;
+    RPC_UNICODE_STRING PrimaryDomainName;
+    PRPC_SID PrimaryDomainSid;
+    NLPR_QUOTA_LIMITS QuotaLimits;
+    OLD_LARGE_INTEGER ModifiedId;
+    OLD_LARGE_INTEGER DatabaseCreationTime;
+    SECURITY_INFORMATION SecurityInformation;
+    ULONG SecuritySize;
+    [size_is(SecuritySize)] UCHAR *SecurityDescriptor;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_POLICY, *PNETLOGON_DELTA_POLICY;
+
+typedef struct _NETLOGON_DELTA_TRUSTED_DOMAINS
+{
+    RPC_UNICODE_STRING DomainName;
+    ULONG NumControllerEntries;
+    [size_is(NumControllerEntries)] PRPC_UNICODE_STRING ControllerNames;
+    SECURITY_INFORMATION SecurityInformation;
+    ULONG SecuritySize;
+    [size_is(SecuritySize)] UCHAR *SecurityDescriptor;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG TrustedPosixOffset;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_TRUSTED_DOMAINS, *PNETLOGON_DELTA_TRUSTED_DOMAINS;
+
+typedef struct _NETLOGON_DELTA_ACCOUNTS
+{
+    ULONG PrivilegeEntries;
+    ULONG PrivilegeControl;
+    [size_is(PrivilegeEntries)] ULONG *PrivilegeAttributes;
+    [size_is(PrivilegeEntries)] PRPC_UNICODE_STRING PrivilegeNames;
+    NLPR_QUOTA_LIMITS QuotaLimits;
+    ULONG SystemAccessFlags;
+    SECURITY_INFORMATION SecurityInformation;
+    ULONG SecuritySize;
+    [size_is(SecuritySize)] UCHAR *SecurityDescriptor;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_ACCOUNTS, *PNETLOGON_DELTA_ACCOUNTS;
+
+typedef struct _NETLOGON_DELTA_SECRET
+{
+    NLPR_CR_CIPHER_VALUE CurrentValue;
+    OLD_LARGE_INTEGER CurrentValueSetTime;
+    NLPR_CR_CIPHER_VALUE OldValue;
+    OLD_LARGE_INTEGER OldValueSetTime;
+    SECURITY_INFORMATION SecurityInformation;
+    ULONG SecuritySize;
+    [size_is(SecuritySize)] UCHAR *SecurityDescriptor;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_SECRET, *PNETLOGON_DELTA_SECRET;
+
+typedef struct _NETLOGON_DELTA_DELETE_GROUP
+{
+    [string] wchar_t *AccountName;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_DELETE_GROUP, *PNETLOGON_DELTA_DELETE_GROUP;
+
+typedef struct _NETLOGON_DELTA_DELETE_USER
+{
+    [string] wchar_t *AccountName;
+    RPC_UNICODE_STRING DummyString1;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DELTA_DELETE_USER, *PNETLOGON_DELTA_DELETE_USER;
+
+typedef enum _NETLOGON_DELTA_TYPE
+{
+    AddOrChangeDomain = 1,
+    AddOrChangeGroup = 2,
+    DeleteGroup = 3,
+    RenameGroup = 4,
+    AddOrChangeUser = 5,
+    DeleteUser = 6,
+    RenameUser = 7,
+    ChangeGroupMembership = 8,
+    AddOrChangeAlias = 9,
+    DeleteAlias = 10,
+    RenameAlias = 11,
+    ChangeAliasMembership = 12,
+    AddOrChangeLsaPolicy = 13,
+    AddOrChangeLsaTDomain = 14,
+    DeleteLsaTDomain = 15,
+    AddOrChangeLsaAccount = 16,
+    DeleteLsaAccount = 17,
+    AddOrChangeLsaSecret = 18,
+    DeleteLsaSecret = 19,
+    DeleteGroupByName = 20,
+    DeleteUserByName = 21,
+    SerialNumberSkip = 22
+} NETLOGON_DELTA_TYPE;
+
+typedef [switch_type(NETLOGON_DELTA_TYPE)] union _NETLOGON_DELTA_UNION
+{
+    [case(AddOrChangeDomain)] PNETLOGON_DELTA_DOMAIN DeltaDomain;
+    [case(AddOrChangeGroup)] PNETLOGON_DELTA_GROUP DeltaGroup;
+    [case(RenameGroup)] PNETLOGON_DELTA_RENAME_GROUP DeltaRenameGroup;
+    [case(AddOrChangeUser)] PNETLOGON_DELTA_USER DeltaUser;
+    [case(RenameUser)] PNETLOGON_DELTA_RENAME_USER DeltaRenameUser;
+    [case(ChangeGroupMembership)] PNETLOGON_DELTA_GROUP_MEMBER DeltaGroupMember;
+    [case(AddOrChangeAlias)] PNETLOGON_DELTA_ALIAS DeltaAlias;
+    [case(RenameAlias)] PNETLOGON_DELTA_RENAME_ALIAS DeltaRenameAlias;
+    [case(ChangeAliasMembership)] PNETLOGON_DELTA_ALIAS_MEMBER DeltaAliasMember;
+    [case(AddOrChangeLsaPolicy)] PNETLOGON_DELTA_POLICY DeltaPolicy;
+    [case(AddOrChangeLsaTDomain)] PNETLOGON_DELTA_TRUSTED_DOMAINS DeltaTDomains;
+    [case(AddOrChangeLsaAccount)] PNETLOGON_DELTA_ACCOUNTS DeltaAccounts;
+    [case(AddOrChangeLsaSecret)] PNETLOGON_DELTA_SECRET DeltaSecret;
+    [case(DeleteGroupByName)] PNETLOGON_DELTA_DELETE_GROUP DeltaDeleteGroup;
+    [case(DeleteUserByName)] PNETLOGON_DELTA_DELETE_USER DeltaDeleteUser;
+    [case(SerialNumberSkip)] PNLPR_MODIFIED_COUNT DeltaSerialNumberSkip;
+    [default] ;
+} NETLOGON_DELTA_UNION, *PNETLOGON_DELTA_UNION;
+
+typedef [switch_type(NETLOGON_DELTA_TYPE)] union _NETLOGON_DELTA_ID_UNION
+{
+    [case(AddOrChangeDomain,
+          AddOrChangeGroup,
+          DeleteGroup,
+          RenameGroup,
+          AddOrChangeUser,
+          DeleteUser,
+          RenameUser,
+          ChangeGroupMembership,
+          AddOrChangeAlias,
+          DeleteAlias,
+          RenameAlias,
+          ChangeAliasMembership,
+          DeleteGroupByName,
+          DeleteUserByName)] ULONG Rid;
+    [case(AddOrChangeLsaPolicy,
+          AddOrChangeLsaTDomain,
+          DeleteLsaTDomain,
+          AddOrChangeLsaAccount,
+          DeleteLsaAccount)] PRPC_SID Sid;
+    [case(AddOrChangeLsaSecret,
+          DeleteLsaSecret)] [string] wchar_t *Name;
+    [default] ;
+} NETLOGON_DELTA_ID_UNION, *PNETLOGON_DELTA_ID_UNION;
+
+typedef struct _NETLOGON_DELTA_ENUM
+{
+    NETLOGON_DELTA_TYPE DeltaType;
+    [switch_is(DeltaType)] NETLOGON_DELTA_ID_UNION DeltaID;
+    [switch_is(DeltaType)] NETLOGON_DELTA_UNION DeltaUnion;
+} NETLOGON_DELTA_ENUM, *PNETLOGON_DELTA_ENUM;
+
+typedef struct _NETLOGON_DELTA_ENUM_ARRAY
+{
+    DWORD CountReturned;
+    [size_is(CountReturned)] PNETLOGON_DELTA_ENUM Deltas;
+} NETLOGON_DELTA_ENUM_ARRAY, *PNETLOGON_DELTA_ENUM_ARRAY;
+
+typedef struct _NETLOGON_LOGON_IDENTITY_INFO
+{
+    RPC_UNICODE_STRING LogonDomainName;
+    ULONG ParameterControl;
+    OLD_LARGE_INTEGER Reserved;
+    RPC_UNICODE_STRING UserName;
+    RPC_UNICODE_STRING Workstation;
+} NETLOGON_LOGON_IDENTITY_INFO, *PNETLOGON_LOGON_IDENTITY_INFO;
+
+typedef struct _NETLOGON_INTERACTIVE_INFO
+{
+    NETLOGON_LOGON_IDENTITY_INFO Identity;
+    LM_OWF_PASSWORD LmOwfPassword;
+    NT_OWF_PASSWORD NtOwfPassword;
+} NETLOGON_INTERACTIVE_INFO, *PNETLOGON_INTERACTIVE_INFO;
+
+typedef enum _NETLOGON_LOGON_INFO_CLASS
+{
+    NetlogonInteractiveInformation = 1,
+    NetlogonNetworkInformation = 2,
+    NetlogonServiceInformation = 3,
+    NetlogonGenericInformation = 4,
+    NetlogonInteractiveTransitiveInformation = 5,
+    NetlogonNetworkTransitiveInformation = 6,
+    NetlogonServiceTransitiveInformation = 7
+} NETLOGON_LOGON_INFO_CLASS;
+
+typedef struct _NETLOGON_SERVICE_INFO
+{
+    NETLOGON_LOGON_IDENTITY_INFO Identity;
+    LM_OWF_PASSWORD LmOwfPassword;
+    NT_OWF_PASSWORD NtOwfPassword;
+} NETLOGON_SERVICE_INFO, *PNETLOGON_SERVICE_INFO;
+
+typedef struct
+{
+    CHAR data[8];
+} LM_CHALLENGE;
+
+typedef struct _NETLOGON_NETWORK_INFO
+{
+    NETLOGON_LOGON_IDENTITY_INFO Identity;
+    LM_CHALLENGE LmChallenge;
+    STRING NtChallengeResponse;
+    STRING LmChallengeResponse;
+} NETLOGON_NETWORK_INFO, *PNETLOGON_NETWORK_INFO;
+
+typedef struct _NETLOGON_GENERIC_INFO
+{
+    NETLOGON_LOGON_IDENTITY_INFO Identity;
+    RPC_UNICODE_STRING PackageName;
+    ULONG DataLength;
+    [size_is(DataLength)] UCHAR *LogonData;
+} NETLOGON_GENERIC_INFO, *PNETLOGON_GENERIC_INFO;
+
+typedef [switch_type(NETLOGON_LOGON_INFO_CLASS)] union _NETLOGON_LEVEL
+{
+    [case(NetlogonInteractiveInformation)] PNETLOGON_INTERACTIVE_INFO LogonInteractive;
+    [case(NetlogonInteractiveTransitiveInformation)] PNETLOGON_INTERACTIVE_INFO LogonInteractiveTransitive;
+    [case(NetlogonServiceInformation)] PNETLOGON_SERVICE_INFO LogonService;
+    [case(NetlogonServiceTransitiveInformation)] PNETLOGON_SERVICE_INFO LogonServiceTransitive;
+    [case(NetlogonNetworkInformation)] PNETLOGON_NETWORK_INFO LogonNetwork;
+    [case(NetlogonNetworkTransitiveInformation)] PNETLOGON_NETWORK_INFO LogonNetworkTransitive;
+    [case(NetlogonGenericInformation)] PNETLOGON_GENERIC_INFO LogonGeneric;
+    [default] ;
+} NETLOGON_LEVEL, *PNETLOGON_LEVEL;
+
+typedef enum _NETLOGON_VALIDATION_INFO_CLASS
+{
+    NetlogonValidationUasInfo = 1,
+    NetlogonValidationSamInfo = 2,
+    NetlogonValidationSamInfo2 = 3,
+    NetlogonValidationGenericInfo = 4,
+    NetlogonValidationGenericInfo2 = 5,
+    NetlogonValidationSamInfo4 = 6
+} NETLOGON_VALIDATION_INFO_CLASS;
+
+cpp_quote("#ifndef _NTSAM_")
+typedef struct _GROUP_MEMBERSHIP
+{
+    ULONG RelativeId;
+    ULONG Attributes;
+} GROUP_MEMBERSHIP, *PGROUP_MEMBERSHIP;
+cpp_quote("#endif")
+
+typedef struct _USER_SESSION_KEY
+{
+    CYPHER_BLOCK data[2];
+} USER_SESSION_KEY, *PUSER_SESSION_KEY;
+
+typedef struct _NETLOGON_SID_AND_ATTRIBUTES
+{
+    PRPC_SID Sid;
+    ULONG Attributes;
+} NETLOGON_SID_AND_ATTRIBUTES, *PNETLOGON_SID_AND_ATTRIBUTES;
+
+typedef struct _NETLOGON_VALIDATION_SAM_INFO
+{
+    OLD_LARGE_INTEGER LogonTime;
+    OLD_LARGE_INTEGER LogoffTime;
+    OLD_LARGE_INTEGER KickOffTime;
+    OLD_LARGE_INTEGER PasswordLastSet;
+    OLD_LARGE_INTEGER PasswordCanChange;
+    OLD_LARGE_INTEGER PasswordMustChange;
+    RPC_UNICODE_STRING EffectiveName;
+    RPC_UNICODE_STRING FullName;
+    RPC_UNICODE_STRING LogonScript;
+    RPC_UNICODE_STRING ProfilePath;
+    RPC_UNICODE_STRING HomeDirectory;
+    RPC_UNICODE_STRING HomeDirectoryDrive;
+    USHORT LogonCount;
+    USHORT BadPasswordCount;
+    ULONG UserId;
+    ULONG PrimaryGroupId;
+    ULONG GroupCount;
+    [size_is(GroupCount)] PGROUP_MEMBERSHIP GroupIds;
+    ULONG UserFlags;
+    USER_SESSION_KEY UserSessionKey;
+    RPC_UNICODE_STRING LogonServer;
+    RPC_UNICODE_STRING LogonDomainName;
+    PRPC_SID LogonDomainId;
+    ULONG ExpansionRoom[10];
+} NETLOGON_VALIDATION_SAM_INFO, *PNETLOGON_VALIDATION_SAM_INFO;
+
+typedef struct _NETLOGON_VALIDATION_SAM_INFO2
+{
+    OLD_LARGE_INTEGER LogonTime;
+    OLD_LARGE_INTEGER LogoffTime;
+    OLD_LARGE_INTEGER KickOffTime;
+    OLD_LARGE_INTEGER PasswordLastSet;
+    OLD_LARGE_INTEGER PasswordCanChange;
+    OLD_LARGE_INTEGER PasswordMustChange;
+    RPC_UNICODE_STRING EffectiveName;
+    RPC_UNICODE_STRING FullName;
+    RPC_UNICODE_STRING LogonScript;
+    RPC_UNICODE_STRING ProfilePath;
+    RPC_UNICODE_STRING HomeDirectory;
+    RPC_UNICODE_STRING HomeDirectoryDrive;
+    USHORT LogonCount;
+    USHORT BadPasswordCount;
+    ULONG UserId;
+    ULONG PrimaryGroupId;
+    ULONG GroupCount;
+    [size_is(GroupCount)] PGROUP_MEMBERSHIP GroupIds;
+    ULONG UserFlags;
+    USER_SESSION_KEY UserSessionKey;
+    RPC_UNICODE_STRING LogonServer;
+    RPC_UNICODE_STRING LogonDomainName;
+    PRPC_SID LogonDomainId;
+    ULONG ExpansionRoom[10];
+    ULONG SidCount;
+    [size_is(SidCount)] PNETLOGON_SID_AND_ATTRIBUTES ExtraSids;
+} NETLOGON_VALIDATION_SAM_INFO2, *PNETLOGON_VALIDATION_SAM_INFO2 ;
+
+typedef struct _NETLOGON_VALIDATION_GENERIC_INFO2
+{
+    ULONG DataLength;
+    [size_is(DataLength)] UCHAR *ValidationData;
+} NETLOGON_VALIDATION_GENERIC_INFO2, *PNETLOGON_VALIDATION_GENERIC_INFO2;
+
+typedef struct _NETLOGON_VALIDATION_SAM_INFO4
+{
+    OLD_LARGE_INTEGER LogonTime;
+    OLD_LARGE_INTEGER LogoffTime;
+    OLD_LARGE_INTEGER KickOffTime;
+    OLD_LARGE_INTEGER PasswordLastSet;
+    OLD_LARGE_INTEGER PasswordCanChange;
+    OLD_LARGE_INTEGER PasswordMustChange;
+    RPC_UNICODE_STRING EffectiveName;
+    RPC_UNICODE_STRING FullName;
+    RPC_UNICODE_STRING LogonScript;
+    RPC_UNICODE_STRING ProfilePath;
+    RPC_UNICODE_STRING HomeDirectory;
+    RPC_UNICODE_STRING HomeDirectoryDrive;
+    unsigned short LogonCount;
+    unsigned short BadPasswordCount;
+    unsigned long UserId;
+    unsigned long PrimaryGroupId;
+    unsigned long GroupCount;
+    [size_is(GroupCount)] PGROUP_MEMBERSHIP GroupIds;
+    unsigned long UserFlags;
+    USER_SESSION_KEY UserSessionKey;
+    RPC_UNICODE_STRING LogonServer;
+    RPC_UNICODE_STRING LogonDomainName;
+    PRPC_SID LogonDomainId;
+    unsigned char LMKey[8];
+    ULONG UserAccountControl;
+    ULONG SubAuthStatus;
+    OLD_LARGE_INTEGER LastSuccessfulILogon;
+    OLD_LARGE_INTEGER LastFailedILogon;
+    ULONG FailedILogonCount;
+    ULONG Reserved4[1];
+    unsigned long SidCount;
+    [size_is(SidCount)] PNETLOGON_SID_AND_ATTRIBUTES ExtraSids;
+    RPC_UNICODE_STRING DnsLogonDomainName;
+    RPC_UNICODE_STRING Upn;
+    RPC_UNICODE_STRING ExpansionString1;
+    RPC_UNICODE_STRING ExpansionString2;
+    RPC_UNICODE_STRING ExpansionString3;
+    RPC_UNICODE_STRING ExpansionString4;
+    RPC_UNICODE_STRING ExpansionString5;
+    RPC_UNICODE_STRING ExpansionString6;
+    RPC_UNICODE_STRING ExpansionString7;
+    RPC_UNICODE_STRING ExpansionString8;
+    RPC_UNICODE_STRING ExpansionString9;
+    RPC_UNICODE_STRING ExpansionString10;
+} NETLOGON_VALIDATION_SAM_INFO4, *PNETLOGON_VALIDATION_SAM_INFO4;
+
+typedef [switch_type(enum _NETLOGON_VALIDATION_INFO_CLASS)] union _NETLOGON_VALIDATION
+{
+    [case(NetlogonValidationSamInfo)] PNETLOGON_VALIDATION_SAM_INFO ValidationSam;
+    [case(NetlogonValidationSamInfo2)] PNETLOGON_VALIDATION_SAM_INFO2 ValidationSam2;
+    [case(NetlogonValidationGenericInfo2)] PNETLOGON_VALIDATION_GENERIC_INFO2 ValidationGeneric2;
+    [case(NetlogonValidationSamInfo4)] PNETLOGON_VALIDATION_SAM_INFO4 ValidationSam4;
+    [default] ;
+} NETLOGON_VALIDATION, *PNETLOGON_VALIDATION;
+
+typedef [switch_type(DWORD)] union _NETLOGON_CONTROL_DATA_INFORMATION
+{
+    [case(5, 6, 9, 10)] [string] wchar_t *TrustedDomainName;
+    [case(65534)] DWORD DebugFlag;
+    [case(8)] [string] wchar_t *UserName;
+    [default] ;
+} NETLOGON_CONTROL_DATA_INFORMATION, *PNETLOGON_CONTROL_DATA_INFORMATION;
+
+cpp_quote("#ifndef _LMACCESS_H")
+typedef struct _NETLOGON_INFO_1
+{
+    DWORD netlog1_flags;
+    NET_API_STATUS netlog1_pdc_connection_status;
+} NETLOGON_INFO_1, *PNETLOGON_INFO_1;
+
+typedef struct _NETLOGON_INFO_2
+{
+    DWORD netlog2_flags;
+    NET_API_STATUS netlog2_pdc_connection_status;
+    [string] wchar_t *netlog2_trusted_dc_name;
+    NET_API_STATUS netlog2_tc_connection_status;
+} NETLOGON_INFO_2, *PNETLOGON_INFO_2;
+
+typedef struct _NETLOGON_INFO_3
+{
+    DWORD netlog3_flags;
+    DWORD netlog3_logon_attempts;
+    DWORD netlog3_reserved1;
+    DWORD netlog3_reserved2;
+    DWORD netlog3_reserved3;
+    DWORD netlog3_reserved4;
+    DWORD netlog3_reserved5;
+} NETLOGON_INFO_3, *PNETLOGON_INFO_3;
+cpp_quote("#endif")
+
+typedef struct _NETLOGON_INFO_4
+{
+    [string] wchar_t *netlog4_trusted_dc_name;
+    [string] wchar_t *netlog4_trusted_domain_name;
+} NETLOGON_INFO_4, *PNETLOGON_INFO_4;
+
+typedef [switch_type(DWORD)] union _NETLOGON_CONTROL_QUERY_INFORMATION
+{
+    [case(1)] PNETLOGON_INFO_1 NetlogonInfo1;
+    [case(2)] PNETLOGON_INFO_2 NetlogonInfo2;
+    [case(3)] PNETLOGON_INFO_3 NetlogonInfo3;
+    [case(4)] PNETLOGON_INFO_4 NetlogonInfo4;
+    [default] ;
+} NETLOGON_CONTROL_QUERY_INFORMATION, *PNETLOGON_CONTROL_QUERY_INFORMATION;
+
+typedef enum _SYNC_STATE
+{
+    NormalState = 0,
+    DomainState = 1,
+    GroupState = 2,
+    UasBuiltInGroupState = 3,
+    UserState = 4,
+    GroupMemberState = 5,
+    AliasState = 6,
+    AliasMemberState = 7,
+    SamDoneState = 8
+} SYNC_STATE, *PSYNC_STATE;
+
+typedef struct _DOMAIN_NAME_BUFFER
+{
+    ULONG DomainNameByteCount;
+    [unique, size_is(DomainNameByteCount)] UCHAR *DomainNames;
+} DOMAIN_NAME_BUFFER, *PDOMAIN_NAME_BUFFER;
+
+typedef struct _NETLOGON_LSA_POLICY_INFO
+{
+    ULONG LsaPolicySize;
+    [size_is(LsaPolicySize)] UCHAR *LsaPolicy;
+} NETLOGON_LSA_POLICY_INFO, *PNETLOGON_LSA_POLICY_INFO;
+
+typedef struct _NETLOGON_ONE_DOMAIN_INFO
+{
+    RPC_UNICODE_STRING DomainName;
+    RPC_UNICODE_STRING DnsDomainName;
+    RPC_UNICODE_STRING DnsForestName;
+    GUID DomainGuid;
+    PRPC_SID DomainSid;
+    RPC_UNICODE_STRING TrustExtension;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG DummyLong1;
+    ULONG DummyLong2;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_ONE_DOMAIN_INFO, *PNETLOGON_ONE_DOMAIN_INFO;
+
+typedef struct _NETLOGON_DOMAIN_INFO
+{
+    NETLOGON_ONE_DOMAIN_INFO PrimaryDomain;
+    ULONG TrustedDomainCount;
+    [size_is(TrustedDomainCount)] PNETLOGON_ONE_DOMAIN_INFO TrustedDomains;
+    NETLOGON_LSA_POLICY_INFO LsaPolicy;
+    RPC_UNICODE_STRING DnsHostNameInDs;
+    RPC_UNICODE_STRING DummyString2;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG WorkstationFlags;
+    ULONG SupportedEncTypes;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_DOMAIN_INFO, *PNETLOGON_DOMAIN_INFO;
+
+typedef [switch_type(DWORD)] union _NETLOGON_DOMAIN_INFORMATION
+{
+    [case(1)] PNETLOGON_DOMAIN_INFO DomainInfo;
+    [case(2)] PNETLOGON_LSA_POLICY_INFO LsaPolicyInfo;
+} NETLOGON_DOMAIN_INFORMATION, *PNETLOGON_DOMAIN_INFORMATION;
+
+typedef struct _NETLOGON_WORKSTATION_INFO
+{
+    NETLOGON_LSA_POLICY_INFO LsaPolicy;
+    [string] wchar_t *DnsHostName;
+    [string] wchar_t *SiteName;
+    [string] wchar_t *Dummy1;
+    [string] wchar_t *Dummy2;
+    [string] wchar_t *Dummy3;
+    [string] wchar_t *Dummy4;
+    RPC_UNICODE_STRING OsVersion;
+    RPC_UNICODE_STRING OsName;
+    RPC_UNICODE_STRING DummyString3;
+    RPC_UNICODE_STRING DummyString4;
+    ULONG WorkstationFlags;
+    ULONG KerberosSupportedEncryptionTypes;
+    ULONG DummyLong3;
+    ULONG DummyLong4;
+} NETLOGON_WORKSTATION_INFO, *PNETLOGON_WORKSTATION_INFO;
+
+typedef [switch_type(DWORD)] union _NETLOGON_WORKSTATION_INFORMATION
+{
+    [case(1)] PNETLOGON_WORKSTATION_INFO WorkstationInfo;
+    [case(2)] PNETLOGON_WORKSTATION_INFO LsaPolicyInfo;
+} NETLOGON_WORKSTATION_INFORMATION, *PNETLOGON_WORKSTATION_INFORMATION;
+
+typedef struct _NL_SOCKET_ADDRESS
+{
+    [size_is(iSockaddrLength)] UCHAR *lpSockaddr;
+    ULONG iSockaddrLength;
+} NL_SOCKET_ADDRESS, *PNL_SOCKET_ADDRESS;
+
+typedef struct _NL_SITE_NAME_ARRAY
+{
+    ULONG EntryCount;
+    [size_is(EntryCount)] PRPC_UNICODE_STRING SiteNames;
+} NL_SITE_NAME_ARRAY, *PNL_SITE_NAME_ARRAY;
+
+cpp_quote("#ifndef _DSGETDC_H")
+typedef struct _DS_DOMAIN_TRUSTSW
+{
+    [string] wchar_t *NetbiosDomainName;
+    [string] wchar_t *DnsDomainName;
+    ULONG Flags;
+    ULONG ParentIndex;
+    ULONG TrustType;
+    ULONG TrustAttributes;
+    PRPC_SID DomainSid;
+    GUID DomainGuid;
+} DS_DOMAIN_TRUSTSW, *PDS_DOMAIN_TRUSTSW;
+cpp_quote("#endif")
+
+typedef struct _NETLOGON_TRUSTED_DOMAIN_ARRAY
+{
+    DWORD DomainCount;
+    [size_is(DomainCount)] PDS_DOMAIN_TRUSTSW Domains;
+} NETLOGON_TRUSTED_DOMAIN_ARRAY, *PNETLOGON_TRUSTED_DOMAIN_ARRAY;
+
+typedef struct _NL_SITE_NAME_EX_ARRAY
+{
+    ULONG EntryCount;
+    [size_is(EntryCount)] PRPC_UNICODE_STRING SiteNames;
+    [size_is(EntryCount)] PRPC_UNICODE_STRING SubnetNames;
+} NL_SITE_NAME_EX_ARRAY, *PNL_SITE_NAME_EX_ARRAY;
+
+typedef struct _NL_GENERIC_RPC_DATA
+{
+    ULONG UlongEntryCount;
+    [size_is(UlongEntryCount)] ULONG *UlongData;
+    ULONG UnicodeStringEntryCount;
+    [size_is(UnicodeStringEntryCount)] PRPC_UNICODE_STRING UnicodeStringData;
+} NL_GENERIC_RPC_DATA, *PNL_GENERIC_RPC_DATA;
+
+typedef struct _NETLOGON_VALIDATION_UAS_INFO
+{
+    [string] wchar_t *usrlog1_eff_name;
+    DWORD usrlog1_priv;
+    DWORD usrlog1_auth_flags;
+    DWORD usrlog1_num_logons;
+    DWORD usrlog1_bad_pw_count;
+    DWORD usrlog1_last_logon;
+    DWORD usrlog1_last_logoff;
+    DWORD usrlog1_logoff_time;
+    DWORD usrlog1_kickoff_time;
+    DWORD usrlog1_password_age;
+    DWORD usrlog1_pw_can_change;
+    DWORD usrlog1_pw_must_change;
+    [string] wchar_t *usrlog1_computer;
+    [string] wchar_t *usrlog1_domain;
+    [string] wchar_t *usrlog1_script_path;
+    DWORD usrlog1_reserved1;
+} NETLOGON_VALIDATION_UAS_INFO, *PNETLOGON_VALIDATION_UAS_INFO;
+
+typedef struct _NETLOGON_LOGOFF_UAS_INFO
+{
+    DWORD Duration;
+    USHORT LogonCount;
+} NETLOGON_LOGOFF_UAS_INFORMATION, *PNETLOGON_LOGOFF_UAS_INFO;
+
+typedef [switch_type(DWORD)] union _NETLOGON_CAPABILITIES
+{
+    [case(1)] ULONG ServerCapabilities;
+} NETLOGON_CAPABILITIES, *PNETLOGON_CAPABILITIES;
+
+typedef struct _NETLOGON_CREDENTIAL
+{
+    CHAR data[8];
+} NETLOGON_CREDENTIAL, *PNETLOGON_CREDENTIAL;
+
+typedef struct _NETLOGON_AUTHENTICATOR
+{
+    NETLOGON_CREDENTIAL Credential;
+    DWORD Timestamp;
+} NETLOGON_AUTHENTICATOR, *PNETLOGON_AUTHENTICATOR;
+
+typedef  enum _NETLOGON_SECURE_CHANNEL_TYPE
+{
+    NullSecureChannel = 0,
+    MsvApSecureChannel = 1,
+    WorkstationSecureChannel = 2,
+    TrustedDnsDomainSecureChannel = 3,
+    TrustedDomainSecureChannel = 4,
+    UasServerSecureChannel = 5,
+    ServerSecureChannel = 6,
+    CdcServerSecureChannel = 7
+} NETLOGON_SECURE_CHANNEL_TYPE;
+
+typedef struct _UAS_INFO_0
+{
+    CHAR ComputerName[16];
+    ULONG TimeCreated;
+    ULONG SerialNumber;
+} UAS_INFO_0, *PUAS_INFO_0;
+
+cpp_quote("#ifndef _DSGETDC_H")
+typedef struct _DOMAIN_CONTROLLER_INFOW
+{
+    [string, unique] wchar_t *DomainControllerName;
+    [string, unique] wchar_t *DomainControllerAddress;
+    ULONG DomainControllerAddressType;
+    GUID DomainGuid;
+    [string, unique] wchar_t *DomainName;
+    [string, unique] wchar_t *DnsForestName;
+    ULONG Flags;
+    [string, unique] wchar_t *DcSiteName;
+    [string, unique] wchar_t *ClientSiteName;
+} DOMAIN_CONTROLLER_INFOW, *PDOMAIN_CONTROLLER_INFOW;
+cpp_quote("#endif")
+
+typedef struct _NL_TRUST_PASSWORD
+{
+    WCHAR Buffer[256];
+    ULONG Length;
+} NL_TRUST_PASSWORD, *PNL_TRUST_PASSWORD;
+
+typedef struct _NL_PASSWORD_VERSION
+{
+    ULONG ReservedField;
+    ULONG PasswordVersionNumber;
+    ULONG PasswordVersionPresent;
+} NL_PASSWORD_VERSION, *PNL_PASSWORD_VERSION;
+
+cpp_quote("#ifndef _NTSECAPI_H")
+typedef enum _LSA_FOREST_TRUST_RECORD_TYPE
+{
+    ForestTrustTopLevelName = 0,
+    ForestTrustTopLevelNameEx = 1,
+    ForestTrustDomainInfo = 2,
+} LSA_FOREST_TRUST_RECORD_TYPE;
+
+typedef RPC_UNICODE_STRING LSA_RPC_UNICODE_STRING, *PLSA_RPC_UNICODE_STRING;
+
+typedef struct _LSA_FOREST_TRUST_DOMAIN_INFO
+{
+    PRPC_SID Sid;
+    LSA_RPC_UNICODE_STRING DnsName;
+    LSA_RPC_UNICODE_STRING NetbiosName;
+} LSA_FOREST_TRUST_DOMAIN_INFO, *PLSA_FOREST_TRUST_DOMAIN_INFO;
+
+typedef struct _LSA_FOREST_TRUST_BINARY_DATA
+{
+    [range(0, 131072)] ULONG Length;
+    [size_is(Length)] UCHAR * Buffer;
+} LSA_FOREST_TRUST_BINARY_DATA, *PLSA_FOREST_TRUST_BINARY_DATA;
+
+typedef struct _LSA_FOREST_TRUST_RECORD
+{
+    ULONG Flags;
+    LSA_FOREST_TRUST_RECORD_TYPE ForestTrustType;
+    LARGE_INTEGER Time;
+    [switch_type( LSA_FOREST_TRUST_RECORD_TYPE ), switch_is(ForestTrustType)] union
+    {
+        [case(ForestTrustTopLevelName, ForestTrustTopLevelNameEx)] LSA_RPC_UNICODE_STRING TopLevelName;
+        [case(ForestTrustDomainInfo)] LSA_FOREST_TRUST_DOMAIN_INFO DomainInfo;
+        [default] LSA_FOREST_TRUST_BINARY_DATA Data;
+    } ForestTrustData;
+} LSA_FOREST_TRUST_RECORD, *PLSA_FOREST_TRUST_RECORD;
+
+typedef struct _LSA_FOREST_TRUST_INFORMATION
+{
+    [range(0, 4000)] ULONG RecordCount;
+    [size_is(RecordCount)] PLSA_FOREST_TRUST_RECORD *Entries;
+} LSA_FOREST_TRUST_INFORMATION, *PLSA_FOREST_TRUST_INFORMATION;
+cpp_quote("#endif")
+
+
+[
+    uuid(12345678-1234-ABCD-EF00-01234567CFFB),
+    version(1.0),
+    pointer_default(unique),
+#ifdef __midl
+    ms_union,
+#endif
+    endpoint("ncacn_np:[\\pipe\\netlogon]")
+#ifndef __midl
+    ,implicit_handle(handle_t hBinding)
+#endif
+]
+interface logon
+{
+    /* Function 0 */
+    NET_API_STATUS
+    __stdcall
+    NetrLogonUasLogon(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in, string] wchar_t *UserName,
+        [in, string] wchar_t *Workstation,
+        [out] PNETLOGON_VALIDATION_UAS_INFO *ValidationInformation);
+
+    /* Function 1 */
+    NET_API_STATUS
+    __stdcall
+    NetrLogonUasLogoff(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in, string] wchar_t *UserName,
+        [in, string] wchar_t *Workstation,
+        [out] PNETLOGON_LOGOFF_UAS_INFO LogoffInformation);
+
+    /* Function 2 */
+    NTSTATUS
+    __stdcall
+    NetrLogonSamLogon(
+        [in, unique, string] LOGONSRV_HANDLE LogonServer,
+        [in, string, unique] wchar_t *ComputerName,
+        [in, unique] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out, unique] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] NETLOGON_LOGON_INFO_CLASS LogonLevel,
+        [in, switch_is(LogonLevel)] PNETLOGON_LEVEL LogonInformation,
+        [in] NETLOGON_VALIDATION_INFO_CLASS ValidationLevel,
+        [out, switch_is(ValidationLevel)] PNETLOGON_VALIDATION ValidationInformation,
+        [out] UCHAR *Authoritative);
+
+    /* Function 3 */
+    NTSTATUS
+    __stdcall
+    NetrLogonSamLogoff(
+        [in, unique, string] LOGONSRV_HANDLE LogonServer,
+        [in, string, unique] wchar_t *ComputerName,
+        [in, unique] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out, unique] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] NETLOGON_LOGON_INFO_CLASS LogonLevel,
+        [in, switch_is(LogonLevel)] PNETLOGON_LEVEL LogonInformation);
+
+    /* Function 4 */
+    NTSTATUS
+    __stdcall
+    NetrServerReqChallenge(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_CREDENTIAL ClientChallenge,
+        [out] PNETLOGON_CREDENTIAL ServerChallenge);
+
+    /* Function 5 */
+    NTSTATUS
+    __stdcall
+    NetrServerAuthenticate(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *AccountName,
+        [in] NETLOGON_SECURE_CHANNEL_TYPE SecureChannelType,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_CREDENTIAL ClientCredential,
+        [out] PNETLOGON_CREDENTIAL ServerCredential);
+
+    /* Function 6 */
+    NTSTATUS
+    __stdcall
+    NetrServerPasswordSet(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *AccountName,
+        [in] NETLOGON_SECURE_CHANNEL_TYPE SecureChannelType,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] PENCRYPTED_NT_OWF_PASSWORD UasNewPassword);
+
+    /* Function 7 */
+    NTSTATUS
+    __stdcall
+    NetrDatabaseDeltas(
+        [in, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] DWORD DatabaseID,
+        [in, out] PNLPR_MODIFIED_COUNT DomainModifiedCount,
+        [out] PNETLOGON_DELTA_ENUM_ARRAY *DeltaArray,
+        [in] DWORD PreferredMaximumLength);
+
+    /* Function 8 */
+    NTSTATUS
+    __stdcall
+    NetrDatabaseSync(
+        [in, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] DWORD DatabaseID,
+        [in, out] ULONG *SyncContext,
+        [out] PNETLOGON_DELTA_ENUM_ARRAY *DeltaArray,
+        [in] DWORD PreferredMaximumLength);
+
+    /* Function 9 */
+    NTSTATUS
+    __stdcall
+    NetrAccountDeltas(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t * ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] PUAS_INFO_0 RecordId,
+        [in] DWORD Count,
+        [in] DWORD Level,
+        [out, size_is(BufferSize)] UCHAR *Buffer,
+        [in] DWORD BufferSize,
+        [out] ULONG *CountReturned,
+        [out] ULONG *TotalEntries,
+        [out] PUAS_INFO_0 NextRecordId);
+
+    /* Function 10 */
+    NTSTATUS
+    __stdcall
+    NetrAccountSync(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] DWORD Reference,
+        [in] DWORD Level,
+        [out, size_is(BufferSize)] UCHAR *Buffer,
+        [in] DWORD BufferSize,
+        [out] ULONG *CountReturned,
+        [out] ULONG *TotalEntries,
+        [out] ULONG *NextReference,
+        [out] PUAS_INFO_0 LastRecordId);
+
+    /* Function 11 */
+    NET_API_STATUS
+    __stdcall
+    NetrGetDCName(
+        [in, string] LOGONSRV_HANDLE ServerName,
+        [in, unique, string] wchar_t *DomainName,
+        [out, string] wchar_t **Buffer);
+
+    /* Function 12 */
+    NET_API_STATUS
+    __stdcall
+    NetrLogonControl(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in] DWORD FunctionCode,
+        [in] DWORD QueryLevel,
+        [out, switch_is(QueryLevel)] PNETLOGON_CONTROL_QUERY_INFORMATION Buffer);
+
+    /* Function 13 */
+    NET_API_STATUS
+    __stdcall
+    NetrGetAnyDCName(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in, unique, string] wchar_t *DomainName,
+        [out, string] wchar_t **Buffer);
+
+    /* Function 14 */
+    NET_API_STATUS
+    __stdcall
+    NetrLogonControl2(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in] DWORD FunctionCode,
+        [in] DWORD QueryLevel,
+        [in, switch_is(FunctionCode)] PNETLOGON_CONTROL_DATA_INFORMATION Data,
+        [out, switch_is(QueryLevel)] PNETLOGON_CONTROL_QUERY_INFORMATION Buffer);
+
+    /* Function 15 */
+    NTSTATUS
+    __stdcall
+    NetrServerAuthenticate2(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *AccountName,
+        [in] NETLOGON_SECURE_CHANNEL_TYPE SecureChannelType,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_CREDENTIAL ClientCredential,
+        [out] PNETLOGON_CREDENTIAL ServerCredential,
+        [in, out] ULONG *NegotiateFlags);
+
+    /* Function 16 */
+    NTSTATUS
+    __stdcall
+    NetrDatabaseSync2(
+        [in, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] DWORD DatabaseID,
+        [in] SYNC_STATE RestartState,
+        [in, out] ULONG *SyncContext,
+        [out] PNETLOGON_DELTA_ENUM_ARRAY *DeltaArray,
+        [in] DWORD PreferredMaximumLength);
+
+    /* Function 17 */
+    NTSTATUS
+    __stdcall
+    NetrDatabaseRedo(
+        [in, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in, size_is(ChangeLogEntrySize)] UCHAR *ChangeLogEntry,
+        [in] DWORD ChangeLogEntrySize,
+        [out] PNETLOGON_DELTA_ENUM_ARRAY *DeltaArray);
+
+    /* Function 18 */
+    NET_API_STATUS
+    __stdcall
+    NetrLogonControl2Ex(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in] DWORD FunctionCode,
+        [in] DWORD QueryLevel,
+        [in, switch_is(FunctionCode)] PNETLOGON_CONTROL_DATA_INFORMATION Data,
+        [out, switch_is(QueryLevel)] PNETLOGON_CONTROL_QUERY_INFORMATION Buffer);
+
+    /* Function 19 */
+    NTSTATUS
+    __stdcall
+    NetrEnumerateTrustedDomains(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [out] PDOMAIN_NAME_BUFFER DomainNameBuffer);
+
+    /* Function 20 */
+    NET_API_STATUS
+    __stdcall
+    DsrGetDcName(
+        [in, unique, string] LOGONSRV_HANDLE ComputerName,
+        [in, unique, string] wchar_t *DomainName,
+        [in, unique] GUID *DomainGuid,
+        [in, unique] GUID *SiteGuid,
+        [in] ULONG Flags,
+        [out] PDOMAIN_CONTROLLER_INFOW *DomainControllerInfo);
+
+    /* Function 21 */
+    NTSTATUS
+    __stdcall
+    NetrLogonGetCapabilities(
+        [in, string] LOGONSRV_HANDLE ServerName,
+        [in, string, unique] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] DWORD QueryLevel,
+        [out, switch_is(QueryLevel)] PNETLOGON_CAPABILITIES ServerCapabilities);
+
+    /* Function 22 */
+    NTSTATUS
+    __stdcall
+    NetrLogonSetServiceBits(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in] DWORD ServiceBitsOfInterest,
+        [in] DWORD ServiceBits);
+
+    /* Function 23 */
+    NET_API_STATUS
+    __stdcall
+    NetrLogonGetTrustRid(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in, string, unique] wchar_t *DomainName,
+        [out] ULONG *Rid);
+
+    /* Function 24 */
+    NET_API_STATUS
+    __stdcall
+    NetrLogonComputeServerDigest(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in] ULONG Rid,
+        [in, size_is(MessageSize)] UCHAR *Message,
+        [in] ULONG MessageSize,
+        [out] CHAR NewMessageDigest[16],
+        [out] CHAR OldMessageDigest[16]);
+
+    /* Function 25 */
+    NET_API_STATUS
+    __stdcall
+    NetrLogonComputeClientDigest(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in, string, unique] wchar_t *DomainName,
+        [in, size_is(MessageSize)] UCHAR *Message,
+        [in] ULONG MessageSize,
+        [out] CHAR NewMessageDigest[16],
+        [out] CHAR OldMessageDigest[16]);
+
+    /* Function 26 */
+    NTSTATUS
+    __stdcall
+    NetrServerAuthenticate3(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *AccountName,
+        [in] NETLOGON_SECURE_CHANNEL_TYPE SecureChannelType,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_CREDENTIAL ClientCredential,
+        [out] PNETLOGON_CREDENTIAL ServerCredential,
+        [in,out] ULONG *NegotiateFlags,
+        [out] ULONG *AccountRid);
+
+    /* Function 27 */
+    NET_API_STATUS
+    __stdcall
+    DsrGetDcNameEx(
+        [in, unique, string] LOGONSRV_HANDLE ComputerName,
+        [in, unique, string] wchar_t *DomainName,
+        [in, unique] GUID *DomainGuid,
+        [in, unique, string] wchar_t *SiteName,
+        [in] ULONG Flags,
+        [out] PDOMAIN_CONTROLLER_INFOW *DomainControllerInfo);
+
+    /* Function 28 */
+    NET_API_STATUS
+    __stdcall
+    DsrGetSiteName(
+        [in, unique, string] LOGONSRV_HANDLE ComputerName,
+        [out, string] wchar_t **SiteName);
+
+    /* Function 29 */
+    NTSTATUS
+    __stdcall
+    NetrLogonGetDomainInfo(
+        [in, string] LOGONSRV_HANDLE ServerName,
+        [in, string, unique] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] DWORD Level,
+        [in, switch_is(Level)] PNETLOGON_WORKSTATION_INFORMATION WkstaBuffer,
+        [out, switch_is(Level)] PNETLOGON_DOMAIN_INFORMATION DomBuffer);
+
+    /* Function 30 */
+    NTSTATUS
+    __stdcall
+    NetrServerPasswordSet2(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *AccountName,
+        [in] NETLOGON_SECURE_CHANNEL_TYPE SecureChannelType,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] PNL_TRUST_PASSWORD ClearNewPassword);
+
+    /* Function 31 */
+    NTSTATUS
+    __stdcall
+    NetrServerPasswordGet(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *AccountName,
+        [in] NETLOGON_SECURE_CHANNEL_TYPE AccountType,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [out] PENCRYPTED_NT_OWF_PASSWORD EncryptedNtOwfPassword);
+
+    /* Function 32 */
+    NTSTATUS
+    __stdcall
+    NetrLogonSendToSam(
+        [in, unique, string] LOGONSRV_HANDLE PrimaryName,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in, size_is(OpaqueBufferSize)] UCHAR *OpaqueBuffer,
+        [in] ULONG OpaqueBufferSize);
+
+    /* Function 33 */
+    NET_API_STATUS
+    __stdcall
+    DsrAddressToSiteNamesW(
+        [in, unique, string] LOGONSRV_HANDLE ComputerName,
+        [in, range(0, 32000)] DWORD EntryCount,
+        [in, size_is(EntryCount)] PNL_SOCKET_ADDRESS SocketAddresses,
+        [out] PNL_SITE_NAME_ARRAY *SiteNames);
+
+    /* Function 34 */
+    NET_API_STATUS
+    __stdcall
+    DsrGetDcNameEx2(
+        [in, unique, string] LOGONSRV_HANDLE ComputerName,
+        [in, unique, string] wchar_t *AccountName,
+        [in] ULONG AllowableAccountControlBits,
+        [in, unique, string] wchar_t *DomainName,
+        [in, unique] GUID *DomainGuid,
+        [in, unique, string] wchar_t *SiteName,
+        [in] ULONG Flags,
+        [out] PDOMAIN_CONTROLLER_INFOW *DomainControllerInfo);
+
+    /* Function 35 */
+    NET_API_STATUS
+    __stdcall
+    NetrLogonGetTimeServiceParentDomain(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [out, string] wchar_t **DomainName,
+        [out] int *PdcSameSite);
+
+    /* Function 36 */
+    NET_API_STATUS
+    __stdcall
+    NetrEnumerateTrustedDomainsEx(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [out] PNETLOGON_TRUSTED_DOMAIN_ARRAY Domains);
+
+    /* Function 37 */
+    NET_API_STATUS
+    __stdcall
+    DsrAddressToSiteNamesExW(
+        [in, unique, string] LOGONSRV_HANDLE ComputerName,
+        [in, range(0, 32000)] DWORD EntryCount,
+        [in, size_is(EntryCount)] PNL_SOCKET_ADDRESS SocketAddresses,
+        [out] PNL_SITE_NAME_EX_ARRAY *SiteNames);
+
+    /* Function 38 */
+    NET_API_STATUS
+    __stdcall
+    DsrGetDcSiteCoverageW(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [out] PNL_SITE_NAME_ARRAY *SiteNames);
+
+    /* Function 39 */
+    NTSTATUS
+    __stdcall
+    NetrLogonSamLogonEx(
+        [in] handle_t ContextHandle,
+        [in, unique, string] wchar_t *LogonServer,
+        [in, unique, string] wchar_t *ComputerName,
+        [in] NETLOGON_LOGON_INFO_CLASS LogonLevel,
+        [in, switch_is(LogonLevel)] PNETLOGON_LEVEL LogonInformation,
+        [in] NETLOGON_VALIDATION_INFO_CLASS ValidationLevel,
+        [out, switch_is(ValidationLevel)] PNETLOGON_VALIDATION ValidationInformation,
+        [out] UCHAR *Authoritative,
+        [in,out] ULONG *ExtraFlags);
+
+    /* Function 40 */
+    NET_API_STATUS
+    __stdcall
+    DsrEnumerateDomainTrusts(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in] ULONG Flags,
+        [out] PNETLOGON_TRUSTED_DOMAIN_ARRAY Domains);
+
+    /* Function 41 */
+    NET_API_STATUS
+    __stdcall
+    DsrDeregisterDnsHostRecords(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in, unique, string] wchar_t *DnsDomainName,
+        [in, unique] GUID *DomainGuid,
+        [in, unique] GUID *DsaGuid,
+        [in, string] wchar_t *DnsHostName);
+
+    /* Function 42 */
+    NTSTATUS
+    __stdcall
+    NetrServerTrustPasswordsGet(
+        [in, unique, string] LOGONSRV_HANDLE TrustedDcName,
+        [in, string] wchar_t *AccountName,
+        [in] NETLOGON_SECURE_CHANNEL_TYPE SecureChannelType,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [out] PENCRYPTED_NT_OWF_PASSWORD EncryptedNewOwfPassword,
+        [out] PENCRYPTED_NT_OWF_PASSWORD EncryptedOldOwfPassword);
+
+    /* Function 43 */
+    NET_API_STATUS
+    __stdcall
+    DsrGetForestTrustInformation(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in, unique, string] wchar_t *TrustedDomainName,
+        [in] DWORD Flags,
+        [out] PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo);
+
+    /* Function 44 */
+    NTSTATUS
+    __stdcall
+    NetrGetForestTrustInformation(
+        [in, unique, string] LOGONSRV_HANDLE ServerName,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] DWORD Flags,
+        [out] PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo);
+
+    /* Function 45 */
+    NTSTATUS
+    __stdcall
+    NetrLogonSamLogonWithFlags(
+        [in, unique, string] LOGONSRV_HANDLE LogonServer,
+        [in, string, unique] wchar_t *ComputerName,
+        [in, unique] PNETLOGON_AUTHENTICATOR Authenticator,
+        [in, out, unique] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [in] NETLOGON_LOGON_INFO_CLASS LogonLevel,
+        [in, switch_is(LogonLevel)] PNETLOGON_LEVEL LogonInformation,
+        [in] NETLOGON_VALIDATION_INFO_CLASS ValidationLevel,
+        [out, switch_is(ValidationLevel)] PNETLOGON_VALIDATION ValidationInformation,
+        [out] UCHAR *Authoritative,
+        [in,out] ULONG *ExtraFlags);
+
+    /* Function 46 */
+    NTSTATUS
+    __stdcall
+    NetrServerGetTrustInfo(
+        [in, unique, string] LOGONSRV_HANDLE TrustedDcName,
+        [in, string] wchar_t *AccountName,
+        [in] NETLOGON_SECURE_CHANNEL_TYPE SecureChannelType,
+        [in, string] wchar_t *ComputerName,
+        [in] PNETLOGON_AUTHENTICATOR Authenticator,
+        [out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+        [out] PENCRYPTED_NT_OWF_PASSWORD EncryptedNewOwfPassword,
+        [out] PENCRYPTED_NT_OWF_PASSWORD EncryptedOldOwfPassword,
+        [out] PNL_GENERIC_RPC_DATA *TrustInfo);
+}

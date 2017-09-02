@@ -687,3 +687,44 @@ SepRmCommandServerThread(
     ObCloseHandle(SepRmCommandMessagePort, KernelMode);
     ObCloseHandle(SeRmCommandPort, KernelMode);
 }
+
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+SeMarkLogonSessionForTerminationNotification(
+    IN PLUID LogonId)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+SeRegisterLogonSessionTerminatedRoutine(
+    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+SeUnregisterLogonSessionTerminatedRoutine(
+    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}

@@ -1,0 +1,56 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "The AT command schedules commands and programs to run on a computer at\n\
+a specified time and date. The Schedule service must be running to use\n\
+the AT command.\n\n\
+AT [\\\\computername] [ [id] [/DELETE] | /DELETE [/YES]]\n\
+AT [\\\\computername] time [/INTERACTIVE]\n\
+    [ /EVERY:date[,...] | /NEXT:date[,...]] ""command""\n\n\
+\\\\computername     Specifies a remote computer. Commands are scheduled on the \n\
+                   local computer if this parameter is omitted.\n\
+id                 Is an identification number assigned to a scheduled\n\
+                   command.\n\
+/DELETE            Cancels a scheduled command. If id is omitted, all the\n\
+                   scheduled commands on the computer are canceled.\n\
+/YES               Used with cancel all jobs command when no further\n\
+                   confirmation is desired.\n\
+time               Specifies the time when command is to run.\n\
+/INTERACTIVE       Allows the job to interact with the desktop of the user\n\
+                   who is logged on at the time the job runs.\n\
+/EVERY:date[,...]  Runs the command on each specified day(s) of the week or\n\
+                   month. If date is omitted, the current day of the month\n\
+                   is assumed.\n\
+/NEXT:date[,...]   Runs the specified command on the next occurrence of the\n\
+                   day (for example, next Thursday). If date is omitted, the \n\
+                   current day of the month is assumed.\n\
+""command""          Is the command or batch program to be run.\n"
+
+    IDS_DELETE_ALL "This operation will delete all scheduled jobs.\n"
+    IDS_NEW_JOB "Added a new job with job ID = %lu\n"
+    IDS_JOBS_LIST "Status ID   Day                     Time          Command Line\n"
+    IDS_NO_ENTRIES "There are no entries in the list.\n"
+
+    IDS_CONFIRM_QUESTION "Do you want to continue this operation? (Y/N) [N]: "
+    IDS_CONFIRM_INVALID  "\nThis is an invalid response.\n"
+    IDS_CONFIRM_YES "Y"
+    IDS_CONFIRM_NO "N"
+
+    IDS_TODAY "Today"
+    IDS_TOMORROW "Tomorrow"
+    IDS_EVERY "Every"
+    IDS_NEXT "Next"
+
+    IDS_YES "Yes"
+    IDS_NO "No"
+    IDS_ERROR "ERROR"
+    IDS_OK "OK"
+
+    IDS_TASKID      "Task ID:       %lu\n"
+    IDS_STATUS      "Status:        %s\n"
+    IDS_SCHEDULE    "Schedule:      %s\n"
+    IDS_TIME        "Time of day:   %s\n"
+    IDS_INTERACTIVE "Interactive:   %s\n"
+    IDS_COMMAND     "Command:       %s\n"
+END

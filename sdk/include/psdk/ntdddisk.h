@@ -223,6 +223,7 @@ extern "C" {
 #ifdef __REACTOS__
 #define PARTITION_OLD_LINUX               0x43
 #define PARTITION_LINUX                   0x83
+#define PARTITION_ISO9660                 0x96
 #define PARTITION_FREEBSD                 0xA5
 #define PARTITION_OPENBSD                 0xA6
 #define PARTITION_NETBSD                  0xA9
@@ -238,39 +239,40 @@ extern "C" {
 
 #ifdef __REACTOS__
 #define IsRecognizedPartition(PartitionType) ( \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT_12)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_HUGE)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_IFS)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32_XINT13)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_XINT13)) || \
-	((PartitionType) == PARTITION_FAT_12) || \
-	((PartitionType) == PARTITION_FAT_16) || \
-	((PartitionType) == PARTITION_HUGE) || \
-	((PartitionType) == PARTITION_IFS) || \
-	((PartitionType) == PARTITION_FAT32) || \
-	((PartitionType) == PARTITION_FAT32_XINT13) || \
-	((PartitionType) == PARTITION_XINT13) || \
-	((PartitionType) == PARTITION_LINUX) || \
-	((PartitionType) == PARTITION_OLD_LINUX) || \
-	((PartitionType) == PARTITION_FREEBSD) || \
-	((PartitionType) == PARTITION_OPENBSD) || \
-	((PartitionType) == PARTITION_NETBSD))
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT_12)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_HUGE)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_IFS)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32_XINT13)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_XINT13)) || \
+    ((PartitionType) == PARTITION_FAT_12) || \
+    ((PartitionType) == PARTITION_FAT_16) || \
+    ((PartitionType) == PARTITION_HUGE) || \
+    ((PartitionType) == PARTITION_IFS) || \
+    ((PartitionType) == PARTITION_FAT32) || \
+    ((PartitionType) == PARTITION_FAT32_XINT13) || \
+    ((PartitionType) == PARTITION_XINT13) || \
+    ((PartitionType) == PARTITION_LINUX) || \
+    ((PartitionType) == PARTITION_OLD_LINUX) || \
+    ((PartitionType) == PARTITION_ISO9660) || \
+    ((PartitionType) == PARTITION_FREEBSD) || \
+    ((PartitionType) == PARTITION_OPENBSD) || \
+    ((PartitionType) == PARTITION_NETBSD))
 #else
 #define IsRecognizedPartition(PartitionType) ( \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT_12)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_HUGE)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_IFS)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32_XINT13)) || \
-	(((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_XINT13)) || \
-	((PartitionType) == PARTITION_FAT_12) || \
-	((PartitionType) == PARTITION_FAT_16) || \
-	((PartitionType) == PARTITION_HUGE) || \
-	((PartitionType) == PARTITION_IFS) || \
-	((PartitionType) == PARTITION_FAT32) || \
-	((PartitionType) == PARTITION_FAT32_XINT13) || \
-	((PartitionType) == PARTITION_XINT13))
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT_12)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_HUGE)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_IFS)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_FAT32_XINT13)) || \
+    (((PartitionType) & PARTITION_NTFT) && (((PartitionType) & ~0xC0) == PARTITION_XINT13)) || \
+    ((PartitionType) == PARTITION_FAT_12) || \
+    ((PartitionType) == PARTITION_FAT_16) || \
+    ((PartitionType) == PARTITION_HUGE) || \
+    ((PartitionType) == PARTITION_IFS) || \
+    ((PartitionType) == PARTITION_FAT32) || \
+    ((PartitionType) == PARTITION_FAT32_XINT13) || \
+    ((PartitionType) == PARTITION_XINT13))
 #endif
 
 #if(_WIN32_WINNT >= 0x0500)
@@ -529,12 +531,12 @@ typedef struct _VERIFY_INFORMATION {
 #define CAP_SMART_CMD                     4
 
 typedef struct _GETVERSIONINPARAMS {
-	UCHAR  bVersion;
-	UCHAR  bRevision;
-	UCHAR  bReserved;
-	UCHAR  bIDEDeviceMap;
-	ULONG  fCapabilities;
-	ULONG  dwReserved[4];
+    UCHAR  bVersion;
+    UCHAR  bRevision;
+    UCHAR  bReserved;
+    UCHAR  bIDEDeviceMap;
+    ULONG  fCapabilities;
+    ULONG  dwReserved[4];
 } GETVERSIONINPARAMS, *PGETVERSIONINPARAMS, *LPGETVERSIONINPARAMS;
 
 /* IDEREGS.bCommandReg constants */
@@ -546,24 +548,24 @@ typedef struct _GETVERSIONINPARAMS {
 #define SMART_CYL_HI                      0xC2
 
 typedef struct _IDEREGS {
-	UCHAR  bFeaturesReg;
-	UCHAR  bSectorCountReg;
-	UCHAR  bSectorNumberReg;
-	UCHAR  bCylLowReg;
-	UCHAR  bCylHighReg;
-	UCHAR  bDriveHeadReg;
-	UCHAR  bCommandReg;
-	UCHAR  bReserved;
+    UCHAR  bFeaturesReg;
+    UCHAR  bSectorCountReg;
+    UCHAR  bSectorNumberReg;
+    UCHAR  bCylLowReg;
+    UCHAR  bCylHighReg;
+    UCHAR  bDriveHeadReg;
+    UCHAR  bCommandReg;
+    UCHAR  bReserved;
 } IDEREGS, *PIDEREGS, *LPIDEREGS;
 
 #include <pshpack1.h>
 typedef struct _SENDCMDINPARAMS {
-	ULONG  cBufferSize;
-	IDEREGS  irDriveRegs;
-	UCHAR  bDriveNumber;
-	UCHAR  bReserved[3];
-	ULONG  dwReserved[4];
-	UCHAR  bBuffer[1];
+    ULONG  cBufferSize;
+    IDEREGS  irDriveRegs;
+    UCHAR  bDriveNumber;
+    UCHAR  bReserved[3];
+    ULONG  dwReserved[4];
+    UCHAR  bBuffer[1];
 } SENDCMDINPARAMS, *PSENDCMDINPARAMS, *LPSENDCMDINPARAMS;
 #include <poppack.h>
 
@@ -588,10 +590,10 @@ typedef struct _SENDCMDINPARAMS {
 #define SMART_EXTENDED_SELFTEST_CAPTIVE   130
 
 typedef struct _DRIVERSTATUS {
-	UCHAR  bDriverError;
-	UCHAR  bIDEError;
-	UCHAR  bReserved[2];
-	ULONG  dwReserved[2];
+    UCHAR  bDriverError;
+    UCHAR  bIDEError;
+    UCHAR  bReserved[2];
+    ULONG  dwReserved[2];
 } DRIVERSTATUS, *PDRIVERSTATUS, *LPDRIVERSTATUS;
 
 #define READ_ATTRIBUTE_BUFFER_SIZE        512
@@ -601,9 +603,9 @@ typedef struct _DRIVERSTATUS {
 
 #include <pshpack1.h>
 typedef struct _SENDCMDOUTPARAMS {
-	ULONG  cBufferSize;
-	DRIVERSTATUS  DriverStatus;
-	UCHAR  bBuffer[1];
+    ULONG  cBufferSize;
+    DRIVERSTATUS  DriverStatus;
+    UCHAR  bBuffer[1];
 } SENDCMDOUTPARAMS, *PSENDCMDOUTPARAMS, *LPSENDCMDOUTPARAMS;
 #include <poppack.h>
 

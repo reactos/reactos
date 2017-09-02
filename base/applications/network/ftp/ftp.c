@@ -201,7 +201,7 @@ int login(const char *host)
 		acct = pacct;
 	}
 	while (user == NULL) {
-		const char *myname = "none"; // This needs to become the usename env
+		const char *myname = "none"; // This needs to become the username env
 
 		if (myname)
 			printf("Name (%s:%s): ", host, myname);
@@ -614,7 +614,7 @@ null();//	oldintp = signal(SIGPIPE, SIG_IGN);
 					(void) fflush(stdout);
 					hashbytes += HASHBYTES;
 				}
-// Szurgot: The following code is unncessary on Win32.
+// Szurgot: The following code is unnecessary on Win32.
 //				(void) fputcSocket(dout, '\r');
 //				bytes++;
 			}

@@ -59,15 +59,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
     if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
 
-#if 0
-    hr = CoCreateInstance(&CLSID_StartMenu,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          &IID_IMenuPopup,
-                          (PVOID *)&pMp);
-#else
-    hr = _CStartMenu_Constructor(IID_PPV_ARG(IMenuPopup, &pMp));
-#endif
+    hr = _CStartMenu_CreateInstance(IID_PPV_ARG(IMenuPopup, &pMp));
     if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
 

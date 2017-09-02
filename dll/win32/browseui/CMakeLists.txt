@@ -1,5 +1,7 @@
 PROJECT(SHELL)
 
+add_subdirectory(shellbars)
+
 set_cpp(WITH_RUNTIME)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
@@ -11,9 +13,6 @@ list(APPEND SOURCE
     addressband.cpp
     addresseditbox.cpp
     bandproxy.cpp
-    bandsite.cpp
-    bandsitemenu.cpp
-    basebar.cpp
     basebarsite.cpp
     brandband.cpp
     browseui.cpp
@@ -31,7 +30,6 @@ list(APPEND SOURCE
     travellog.cpp
     utility.cpp
     CProgressDialog.cpp
-    comcat.cpp
     precomp.h)
 
 add_library(browseui SHARED
@@ -41,7 +39,7 @@ add_library(browseui SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
 
 set_module_type(browseui win32dll UNICODE)
-target_link_libraries(browseui atlnew uuid wine)
+target_link_libraries(browseui shellbars atlnew uuid wine)
 add_importlibs(browseui shlwapi shell32 comctl32 gdi32 ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(browseui precomp.h SOURCE)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)

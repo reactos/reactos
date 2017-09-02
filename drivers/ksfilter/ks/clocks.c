@@ -63,7 +63,7 @@ FASTCALL
 ClockGetPhysicalTime(
     IN PFILE_OBJECT FileObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -73,7 +73,7 @@ ClockGetCorrelatedTime(
     IN PFILE_OBJECT FileObject,
     OUT PLONGLONG SystemTime)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -82,7 +82,7 @@ FASTCALL
 ClockGetTime(
     IN PFILE_OBJECT FileObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -92,7 +92,7 @@ ClockGetCorrelatedPhysicalTime(
     IN PFILE_OBJECT FileObject,
     OUT PLONGLONG SystemTime)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -191,7 +191,7 @@ ClockPropertyResolution(
     /* sanity check */
     ASSERT(ObjectHeader);
 
-    /* locate ks pin implemention from KSPIN offset */
+    /* locate ks pin implementation from KSPIN offset */
     Clock = (PKSICLOCK)ObjectHeader->ObjectType;
 
     Resolution->Error = Clock->DefaultClock->Error;
@@ -224,7 +224,7 @@ ClockPropertyState(
     /* sanity check */
     ASSERT(ObjectHeader);
 
-    /* locate ks pin implemention from KSPIN offset */
+    /* locate ks pin implementation from KSPIN offset */
     Clock = (PKSICLOCK)ObjectHeader->ObjectType;
 
     *State = Clock->DefaultClock->State;
@@ -352,7 +352,7 @@ IKsClock_DispatchClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     CompleteRequest(Irp, IO_NO_INCREMENT);
@@ -395,7 +395,10 @@ KsCreateDefaultClock(
     /* let's allocate the clock struct */
     Clock = AllocateItem(NonPagedPool, sizeof(KSICLOCK));
     if (!Clock)
+    {
+        FreeItem(ClockCreate);
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* now allocate the object header */
     Status = KsAllocateObjectHeader((PVOID*)&Clock->ObjectHeader, 0, NULL, Irp, &DispatchTable);
@@ -404,6 +407,7 @@ KsCreateDefaultClock(
     if (!NT_SUCCESS(Status))
     {
         /* failed */
+        FreeItem(ClockCreate);
         FreeItem(Clock);
         return Status;
     }

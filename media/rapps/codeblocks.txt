@@ -29,7 +29,7 @@ Size = 32,9 Mio
 [Section.0419]
 Name = Code::Blocks (без компилятора)
 Description = Свободная кроссплатформенная среда разработки.
-Size = 32,9 МБ
+Size = 32,9 МиБ
 
 [Section.041f]
 Name = Code::Blocks (Derleyicisiz)

@@ -104,6 +104,8 @@ typedef struct _DISPLAY_DEVICE_ENTRY
 typedef struct _GLOBAL_DATA
 {
     COLORREF desktop_color;
+    LPCWSTR pwszFile;
+    LPCWSTR pwszAction;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 extern GLOBAL_DATA g_GlobalData;
@@ -120,7 +122,7 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
 INT_PTR CALLBACK
 AdvGeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-LONG 
+LONG
 RegLoadMUIStringW(IN HKEY hKey,
                   IN LPCWSTR pszValue  OPTIONAL,
                   OUT LPWSTR pszOutBuf,

@@ -1025,7 +1025,11 @@ static BOOL WINAPI File_RetrieveEncodedObjectW(LPCWSTR pszURL,
              components.dwUrlPathLength + 1);
             hFile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ,
              NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+#ifdef __REACTOS__
+            if ((hFile == INVALID_HANDLE_VALUE) && (lstrlenW(components.lpszUrlPath) > 1) && (components.lpszUrlPath[1] != ':'))
+#else
             if (hFile == INVALID_HANDLE_VALUE)
+#endif
             {
                 /* Try again on the current drive */
                 GetCurrentDirectoryW(components.dwUrlPathLength, path);

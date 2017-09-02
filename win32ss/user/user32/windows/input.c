@@ -281,7 +281,7 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
     HKEY hKey;
 
     /* LOWORD of dwhkl is Locale Identifier */
-    dwhkl = wcstol(pwszKLID, NULL, 16);
+    dwhkl = LOWORD(wcstoul(pwszKLID, NULL, 16));
 
     if (Flags & KLF_SUBSTITUTE_OK)
     {
@@ -305,7 +305,7 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
     StringCbCatW(wszRegKey, sizeof(wszRegKey), pwszKLID);
 
     /* Open layout registry key for read */
-	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0,
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0,
                       KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         dwSize = sizeof(wszLayoutId);
@@ -324,10 +324,13 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
         RegCloseKey(hKey);
     }
     else
-	    ERR("RegOpenKeyExW failed!\n");
+    {
+        ERR("Could not find keyboard layout %S.\n", pwszKLID);
+        return NULL;
+    }
 
     /* If Layout Id is not given HIWORD == LOWORD (for dwhkl) */
-	if (!HIWORD(dwhkl))
+    if (!HIWORD(dwhkl))
         dwhkl |= dwhkl << 16;
 
     ZeroMemory(&ustrKbdName, sizeof(ustrKbdName));

@@ -214,6 +214,7 @@ DefWndStartSizeMove(PWND Wnd, WPARAM wParam, POINT *capturePoint)
 		case VK_ESCAPE:
 		  return 0;
 		}
+              break;
             default:
               IntTranslateKbdMessage( &msg, 0 );
               pti->TIF_flags |= TIF_MOVESIZETRACKING;
@@ -612,11 +613,6 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
     PCURICON_OBJECT pIcon = NULL;
     HICON hIcon;
 
-   //FIXME: Some callers use this function as if it returns a boolean saying "this window has an icon".
-   //FIXME: Hence we must return a pointer with no reference count.
-   //FIXME: This is bad and we should feel bad.
-   //FIXME: Stop whining over wine code.
-
    hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
    if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
 
@@ -635,11 +631,9 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
    }
    if (hIcon)
    {
-       pIcon = UserGetCurIconObject(hIcon);
-       if (pIcon)
-       {
-           UserDereferenceObject(pIcon);
-       }
+       pIcon = (PCURICON_OBJECT)UserGetObjectNoErr(gHandleTable,
+                                                   hIcon,
+                                                   TYPE_CURSOR);
    }
    return pIcon;
 }
@@ -944,9 +938,15 @@ VOID UserDrawCaptionBar(
    if (!(Style & WS_MINIMIZE))
    {
       /* Draw menu bar */
-      if (HAS_MENU(pWnd, Style))
+      if (pWnd->state & WNDS_HASMENU && pWnd->IDMenu) // Should be pWnd->spmenu
       {
-          CurrentRect.top += MENU_DrawMenuBar(hDC, &CurrentRect, pWnd, FALSE);
+          PMENU menu;
+          if ((menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)))) // FIXME! Use pWnd->spmenu,
+          {
+             TempRect = CurrentRect;
+             TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
+             CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+          }
       }
 
       if (ExStyle & WS_EX_CLIENTEDGE)
@@ -1110,11 +1110,18 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
    if (!(Style & WS_MINIMIZE))
    {
      /* Draw menu bar */
-     if (HAS_MENU(pWnd, Style))
+     if (pWnd->state & WNDS_HASMENU && pWnd->IDMenu) // Should be pWnd->spmenu
      {
          if (!(Flags & DC_NOSENDMSG))
          {
-             CurrentRect.top += MENU_DrawMenuBar(hDC, &CurrentRect, pWnd, FALSE);
+             PMENU menu;
+             // Fix crash in test_menu_locked_by_window, should use pWnd->spmenu....
+             if ((menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)))) // FIXME! Use pWnd->spmenu,
+             {
+                TempRect = CurrentRect;
+                TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
+                CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+             }
          }
      }
 
@@ -1171,7 +1178,8 @@ LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspende
    LRESULT Result = 0;
    SIZE WindowBorders;
    RECT OrigRect;
-   DWORD Style = Wnd->style;
+   LONG Style = Wnd->style;
+   LONG  exStyle = Wnd->ExStyle; 
 
    if (Rect == NULL)
    {
@@ -1239,83 +1247,30 @@ LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspende
          RECTL_vInflateRect(Rect, -2 * UserGetSystemMetrics(SM_CXBORDER), -2 * UserGetSystemMetrics(SM_CYBORDER));
       }
 
-      if (Wnd->style & (WS_VSCROLL | WS_HSCROLL))
+      if (Style & WS_VSCROLL)
       {
-        SCROLLBARINFO sbi;
-        SETSCROLLBARINFO ssbi;
-
-        sbi.cbSize = sizeof(SCROLLBARINFO);
-        if ((Style & WS_VSCROLL) && co_IntGetScrollBarInfo(Wnd, OBJID_VSCROLL, &sbi))
-        {
-          int i;
-          LONG sx = Rect->right;
-
-          Wnd->state |= WNDS_HASVERTICALSCROOLLBAR;
-
-          sx -= UserGetSystemMetrics(SM_CXVSCROLL);
-
-          for (i = 0; i <= CCHILDREN_SCROLLBAR; i++)
-              ssbi.rgstate[i] = sbi.rgstate[i];
-
-          if (sx <= Rect->left)
-             ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
-          else
-             ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
-
-          co_IntSetScrollBarInfo(Wnd, OBJID_VSCROLL, &ssbi);
-
-          if (ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
-             Style &= ~WS_VSCROLL;
-        }
-        else
-          Style &= ~WS_VSCROLL;
-
-        if ((Style & WS_HSCROLL) && co_IntGetScrollBarInfo(Wnd, OBJID_HSCROLL, &sbi))
-        {
-          int i;
-          LONG sy = Rect->bottom;
-
-          Wnd->state |= WNDS_HASHORIZONTALSCROLLBAR;
-
-          sy -= UserGetSystemMetrics(SM_CYHSCROLL);
-
-          for (i = 0; i <= CCHILDREN_SCROLLBAR; i++)
-              ssbi.rgstate[i] = sbi.rgstate[i];
-
-          if (sy <= Rect->top)
-             ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
-          else
-             ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
-
-          co_IntSetScrollBarInfo(Wnd, OBJID_HSCROLL, &ssbi);
-
-          if (ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
-             Style &= ~WS_HSCROLL;
-        }
-        else
-          Style &= ~WS_HSCROLL;
-      }
-
-      if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL))
-      {
-         if ((Wnd->ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-            Rect->left += UserGetSystemMetrics(SM_CXVSCROLL);
-         else
-            Rect->right -= UserGetSystemMetrics(SM_CXVSCROLL);
-
-         Rect->bottom -= UserGetSystemMetrics(SM_CYHSCROLL);
-      }
-      else
-      {
-         if (Style & WS_VSCROLL)
+         if (Rect->right - Rect->left >= UserGetSystemMetrics(SM_CXVSCROLL))
          {
-            if ((Wnd->ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-               Rect->left += UserGetSystemMetrics(SM_CXVSCROLL);
-            else
-               Rect->right -= UserGetSystemMetrics(SM_CXVSCROLL);
+             Wnd->state |= WNDS_HASVERTICALSCROOLLBAR;
+
+             /* rectangle is in screen coords when wparam is false */
+             if (!wparam && (exStyle & WS_EX_LAYOUTRTL)) exStyle ^= WS_EX_LEFTSCROLLBAR;
+
+             if((exStyle & WS_EX_LEFTSCROLLBAR) != 0)
+                 Rect->left  += UserGetSystemMetrics(SM_CXVSCROLL);
+             else
+                 Rect->right -= UserGetSystemMetrics(SM_CXVSCROLL);
+          }
+      }
+
+      if (Style & WS_HSCROLL)
+      {
+         if( Rect->bottom - Rect->top > UserGetSystemMetrics(SM_CYHSCROLL))
+         {
+              Wnd->state |= WNDS_HASHORIZONTALSCROLLBAR;
+
+              Rect->bottom -= UserGetSystemMetrics(SM_CYHSCROLL);
          }
-         else if (Style & WS_HSCROLL)
-            Rect->bottom -= UserGetSystemMetrics(SM_CYHSCROLL);
       }
 
       if (Rect->top > Rect->bottom)
@@ -1372,7 +1327,7 @@ LRESULT NC_HandleNCActivate( PWND Wnd, WPARAM wParam, LPARAM lParam )
    }
 
    if ((Wnd->state & WNDS_NONCPAINT) || !(Wnd->style & WS_VISIBLE))
-      return 0;
+      return TRUE;
 
    /* This isn't documented but is reproducible in at least XP SP2 and
     * Outlook 2007 depends on it
@@ -1501,7 +1456,7 @@ NC_HandleNCLButtonDown(PWND pWnd, WPARAM wParam, LPARAM lParam)
                 if ((TopWnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD)
                     break;
                 parent = UserGetAncestor( TopWnd, GA_PARENT );
-                if (!parent || parent == UserGetDesktopWindow()) break;
+                if (!parent || UserIsDesktopWindow(parent)) break;
                 TopWnd = parent;
             }
 
@@ -1885,7 +1840,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
 
    if (!pWnd) return HTNOWHERE;
 
-   if (pWnd == UserGetDesktopWindow()) // pWnd->fnid == FNID_DESKTOP)
+   if (UserIsDesktopWindow(pWnd))
    {
       rcClient.left = rcClient.top = rcWindow.left = rcWindow.top = 0;
       rcWindow.right  = UserGetSystemMetrics(SM_CXSCREEN);
@@ -1950,6 +1905,8 @@ GetNCHitEx(PWND pWnd, POINT pt)
             RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
         else if (HAS_THINFRAME( Style, ExStyle ))
             RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
+        else if (HAS_CLIENTFRAME( Style, ExStyle ))
+            RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXEDGE), -UserGetSystemMetrics(SM_CYEDGE));
         if (!RECTL_bPointInRect( &rcWindow, pt.x, pt.y  )) return HTBORDER;
     }
 

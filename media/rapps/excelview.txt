@@ -58,9 +58,9 @@ SHA1 = c5b2e5bc0d4247ae2809c4dff23e9737d257f615
 
 [Section.0419]
 License = Неизвестно
-Description = Бесплатная программа для просмотра электронных таблиц офисных форматов (*.xls). 
-URLDownload = https://download.microsoft.com/download/6/0/3/603937BE-B208-4C21-85BD-8E6876B993DB/ExcelViewer.exe   
-Size = 51,2 МБ
+Description = Бесплатная программа для просмотра электронных таблиц офисных форматов (*.xls).
+URLDownload = http://download.microsoft.com/download/6/0/3/603937BE-B208-4C21-85BD-8E6876B993DB/ExcelViewer.exe
+Size = 51,2 МиБ
 SHA1 = 6cc3903d1eadb959ad5a0821d720a60fc3aa6701
 
 [Section.041f]

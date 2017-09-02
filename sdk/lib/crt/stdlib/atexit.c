@@ -69,7 +69,7 @@ _onexit_t CDECL _onexit(_onexit_t func)
   {
     _onexit_t *newtable;
     TRACE("expanding table\n");
-    newtable = calloc(sizeof(void *),atexit_table_size + 32);
+    newtable = calloc(atexit_table_size + 32, sizeof(void *));
     if (!newtable)
     {
       TRACE("failed!\n");

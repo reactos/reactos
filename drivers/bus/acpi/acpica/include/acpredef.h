@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -131,7 +131,8 @@ enum AcpiReturnPackageTypes
     ACPI_PTYPE2_REV_FIXED   = 9,
     ACPI_PTYPE2_FIX_VAR     = 10,
     ACPI_PTYPE2_VAR_VAR     = 11,
-    ACPI_PTYPE2_UUID_PAIR   = 12
+    ACPI_PTYPE2_UUID_PAIR   = 12,
+    ACPI_PTYPE_CUSTOM       = 13
 };
 
 
@@ -344,7 +345,7 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
 
     {{"_BIX",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (16 Int),(4 Str) */
-                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 16, ACPI_RTYPE_STRING, 4,0),
+                    PACKAGE_INFO (ACPI_PTYPE_CUSTOM, ACPI_RTYPE_INTEGER, 16, ACPI_RTYPE_STRING, 4,0),
 
     {{"_BLT",   METHOD_3ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER),
                 METHOD_NO_RETURN_VALUE}},
@@ -573,6 +574,9 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
     {{"_HID",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER | ACPI_RTYPE_STRING)}},
 
+    {{"_HMA",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},
+
     {{"_HOT",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
@@ -616,6 +620,17 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Variable-length (3 Int, n Pkg (10 Int/Buf) */
                     PACKAGE_INFO (ACPI_PTYPE2_VAR_VAR, ACPI_RTYPE_INTEGER, 3,
                     ACPI_RTYPE_INTEGER | ACPI_RTYPE_BUFFER | ACPI_RTYPE_STRING, 10,0),
+
+    {{"_LSI",   METHOD_0ARGS,
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}},
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 3,0,0,0),
+
+    {{"_LSR",   METHOD_2ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER),
+                METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}},
+                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 1, ACPI_RTYPE_BUFFER, 1,0),
+
+    {{"_LSW",   METHOD_3ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_BUFFER),
+                METHOD_RETURNS (ACPI_RTYPE_INTEGER)}},
 
     {{"_MAT",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_BUFFER)}},

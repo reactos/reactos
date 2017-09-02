@@ -31,7 +31,8 @@ CRootNode::SetupNode()
     HBITMAP hRootImage;
     hRootImage = LoadBitmapW(g_hThisInstance,
                              MAKEINTRESOURCEW(IDB_ROOT_IMAGE));
-    if (hRootImage == NULL) return FALSE;
+    if (hRootImage == NULL)
+        return false;
 
     // Add this bitmap to the device image list. This is a bit hacky, but it's safe
     m_ClassImage = ImageList_Add(m_ImageListData->ImageList,

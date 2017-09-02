@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -449,8 +449,9 @@ AcpiUtUpdateRefCount (
         }
 
         ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS,
-            "Obj %p Type %.2X Refs %.2X [Incremented]\n",
-            Object, Object->Common.Type, NewCount));
+            "Obj %p Type %.2X [%s] Refs %.2X [Incremented]\n",
+            Object, Object->Common.Type,
+            AcpiUtGetObjectTypeName (Object), NewCount));
         break;
 
     case REF_DECREMENT:

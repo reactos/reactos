@@ -39,7 +39,7 @@ VfatCloseFile(
         return STATUS_SUCCESS;
     }
 
-    if (pFcb->Flags & FCB_IS_VOLUME)
+    if (BooleanFlagOn(pFcb->Flags, FCB_IS_VOLUME))
     {
         DPRINT("Volume\n");
         FileObject->FsContext2 = NULL;
@@ -86,13 +86,7 @@ VfatClose(
         IrpContext->Irp->IoStatus.Information = 0;
         return STATUS_SUCCESS;
     }
-#if 0
-    /* There occurs a dead look at the call to CcRosDeleteFileCache/ObDereferenceObject/VfatClose
-       in CmLazyCloseThreadMain if VfatClose is execute asynchronous in a worker thread. */
     if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
-#else
-    if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, TRUE))
-#endif
     {
         return VfatMarkIrpContextForQueue(IrpContext);
     }

@@ -254,7 +254,7 @@ typedef struct _FILE_RECORD_HEADER
     ULONG BytesAllocated;         /* Allocated size of the FILE record */
     ULONGLONG BaseFileRecord;     /* File reference to the base FILE record */
     USHORT NextAttributeNumber;   /* Next Attribute Id */
-    USHORT Pading;                /* Align to 4 UCHAR boundary (XP) */
+    USHORT Padding;               /* Align to 4 UCHAR boundary (XP) */
     ULONG MFTRecordNumber;        /* Number of this MFT Record (XP) */
 } FILE_RECORD_HEADER, *PFILE_RECORD_HEADER;
 

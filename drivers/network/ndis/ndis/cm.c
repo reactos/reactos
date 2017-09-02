@@ -25,7 +25,7 @@ NdisCmActivateVc(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -48,7 +48,7 @@ NdisCmAddPartyComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -67,7 +67,7 @@ NdisCmCloseAddressFamilyComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -87,7 +87,7 @@ NdisCmCloseCallComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -105,7 +105,7 @@ NdisCmDeactivateVc(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -126,7 +126,7 @@ NdisCmDeregisterSapComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -144,7 +144,7 @@ NdisCmDispatchCallConnected(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -164,7 +164,7 @@ NdisCmDispatchIncomingCall(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -185,7 +185,7 @@ NdisCmDispatchIncomingCallQoSChange(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -206,7 +206,7 @@ NdisCmDispatchIncomingCloseCall(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -227,7 +227,7 @@ NdisCmDispatchIncomingDropParty(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -246,7 +246,7 @@ NdisCmDropPartyComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -268,7 +268,7 @@ NdisCmMakeCallComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -288,7 +288,7 @@ NdisCmModifyCallQoSComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -308,7 +308,7 @@ NdisCmOpenAddressFamilyComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -329,7 +329,7 @@ NdisCmRegisterAddressFamily(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -351,7 +351,7 @@ NdisCmRegisterSapComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -370,7 +370,7 @@ NdisMCmActivateVc(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -393,7 +393,7 @@ NdisMCmCreateVc(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -413,7 +413,7 @@ NdisMCmDeactivateVc(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -433,7 +433,7 @@ NdisMCmDeleteVc(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -456,7 +456,7 @@ NdisMCmRegisterAddressFamily(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -479,7 +479,7 @@ NdisMCmRequest(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }

@@ -20,7 +20,7 @@ Size = 405,5 Mio
 
 [Section.0419]
 Description = Свободный трёхмерный шутер от первого лица, созданный на базе движка Quake III Arena. Вам потребуется программа распаковки zip, чтобы запустить его.
-Size = 405,5 МБ
+Size = 405,5 МиБ
 
 [Section.041f]
 Description = GPL idTech3 uygulayım bilimi tabanlı, topluluk üretimi, ölüm karşılaşmalı bir FPS oyunudur. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.

@@ -6,9 +6,12 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl
  */
+
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <subsys/iolog/iolog.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -22,6 +25,7 @@ typedef struct _IOP_ERROR_LOG_WORKER_DPC
 
 /* GLOBALS *******************************************************************/
 
+#define IOP_MAXIMUM_LOG_SIZE    (100 * PAGE_SIZE)
 LONG IopTotalLogSize;
 LIST_ENTRY IopErrorLogListHead;
 KSPIN_LOCK IopLogListLock;
@@ -105,16 +109,23 @@ BOOLEAN
 NTAPI
 IopConnectLogPort(VOID)
 {
-    UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\ErrorLogPort");
     NTSTATUS Status;
+    UNICODE_STRING PortName = RTL_CONSTANT_STRING(ELF_PORT_NAME);
+    SECURITY_QUALITY_OF_SERVICE SecurityQos;
 
     /* Make sure we're not already connected */
     if (IopLogPortConnected) return TRUE;
 
+    /* Setup the QoS structure */
+    SecurityQos.Length = sizeof(SecurityQos);
+    SecurityQos.ImpersonationLevel = SecurityIdentification;
+    SecurityQos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+    SecurityQos.EffectiveOnly = TRUE;
+
     /* Connect the port */
     Status = ZwConnectPort(&IopLogPort,
                            &PortName,
-                           NULL,
+                           &SecurityQos,
                            NULL,
                            NULL,
                            NULL,
@@ -136,6 +147,9 @@ VOID
 NTAPI
 IopLogWorker(IN PVOID Parameter)
 {
+#define IO_ERROR_OBJECT_NAMES_LENGTH    100
+
+    NTSTATUS Status;
     PELF_API_MSG Message;
     PIO_ERROR_LOG_MESSAGE ErrorMessage;
     PLIST_ENTRY ListEntry;
@@ -144,22 +158,24 @@ IopLogWorker(IN PVOID Parameter)
     PCHAR StringBuffer;
     ULONG RemainingLength;
     PDRIVER_OBJECT DriverObject;
-    ULONG DriverNameLength = 0, DeviceNameLength;
-    UNICODE_STRING DriverNameString;
-    NTSTATUS Status;
-    UCHAR Buffer[256];
+    PWCHAR NameString;
+    ULONG DriverNameLength, DeviceNameLength;
+    UCHAR Buffer[sizeof(OBJECT_NAME_INFORMATION) + IO_ERROR_OBJECT_NAMES_LENGTH];
     POBJECT_NAME_INFORMATION ObjectNameInfo = (POBJECT_NAME_INFORMATION)&Buffer;
-    POBJECT_NAME_INFORMATION PoolObjectNameInfo = NULL;
+    POBJECT_NAME_INFORMATION PoolObjectNameInfo;
     ULONG ReturnedLength, MessageLength;
-    PWCHAR p;
     ULONG ExtraStringLength;
+    PWCHAR p;
+
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(Parameter);
 
     /* Connect to the port */
     if (!IopConnectLogPort()) return;
 
     /* Allocate the message */
-    Message = ExAllocatePool(PagedPool, IO_ERROR_LOG_MESSAGE_LENGTH);
+    Message = ExAllocatePoolWithTag(PagedPool, IO_ERROR_LOG_MESSAGE_LENGTH, TAG_IO);
     if (!Message)
     {
         /* Couldn't allocate, try again */
@@ -167,10 +183,8 @@ IopLogWorker(IN PVOID Parameter)
         return;
     }
 
-    /* Copy the message */
-    RtlZeroMemory(Message, sizeof(ELF_API_MSG));
-
-    /* Get the actual I/O Structure */
+    /* Zero out the message and get the actual I/O structure */
+    RtlZeroMemory(Message, sizeof(*Message));
     ErrorMessage = &Message->IoErrorMessage;
 
     /* Start loop */
@@ -225,21 +239,28 @@ IopLogWorker(IN PVOID Parameter)
                                   IO_ERROR_LOG_MESSAGE_LENGTH -
                                   (ULONG_PTR)StringBuffer);
 
+        NameString = NULL;
+        DriverNameLength = 0; DeviceNameLength = 0;
+        PoolObjectNameInfo = NULL;
+        ObjectNameInfo = (POBJECT_NAME_INFORMATION)&Buffer;
+
         /* Now check if there is a driver object */
         DriverObject = LogEntry->DriverObject;
         if (DriverObject)
         {
-            /* Check if the driver has a name */
+            /* Check if the driver has a name, and use it if so */
             if (DriverObject->DriverName.Buffer)
             {
-                /* Use its name */
-                DriverNameString.Buffer = DriverObject->DriverName.Buffer;
+                NameString = DriverObject->DriverName.Buffer;
                 DriverNameLength = DriverObject->DriverName.Length;
             }
             else
-                DriverNameString.Buffer = NULL;
+            {
+                NameString = NULL;
+                DriverNameLength = 0;
+            }
 
-            /* Check if there isn't a valid name*/
+            /* Check if there isn't a valid name */
             if (!DriverNameLength)
             {
                 /* Query the name directly */
@@ -247,30 +268,35 @@ IopLogWorker(IN PVOID Parameter)
                                            ObjectNameInfo,
                                            sizeof(Buffer),
                                            &ReturnedLength);
-                if (!(NT_SUCCESS(Status)) || !(ObjectNameInfo->Name.Length))
+                if (!NT_SUCCESS(Status) || (ObjectNameInfo->Name.Length == 0))
                 {
                     /* We don't have a name */
                     DriverNameLength = 0;
+                }
+                else
+                {
+                    NameString = ObjectNameInfo->Name.Buffer;
+                    DriverNameLength = ObjectNameInfo->Name.Length;
                 }
             }
         }
         else
         {
             /* Use default name */
-            DriverNameString.Buffer = L"Application Popup";
-            DriverNameLength = (ULONG)wcslen(DriverNameString.Buffer) * sizeof(WCHAR);
+            NameString = L"Application Popup";
+            DriverNameLength = (ULONG)wcslen(NameString) * sizeof(WCHAR);
         }
 
-        /* Check if we have a driver name by here */
+        /* Check if we have a driver name */
         if (DriverNameLength)
         {
             /* Skip to the end of the driver's name */
-            p = &DriverNameString.Buffer[DriverNameLength / sizeof(WCHAR)];
+            p = &NameString[DriverNameLength / sizeof(WCHAR)];
 
             /* Now we'll walk backwards and assume the minimum size */
             DriverNameLength = sizeof(WCHAR);
             p--;
-            while ((*p != L'\\') && (p != DriverNameString.Buffer))
+            while ((*p != L'\\') && (p != NameString))
             {
                 /* No backslash found, keep going */
                 p--;
@@ -285,8 +311,9 @@ IopLogWorker(IN PVOID Parameter)
             }
 
             /*
-             * Now make sure that the driver name fits in our buffer, minus 3
-             * NULL chars, and copy the name in our string buffer
+             * Now make sure that the driver name fits in the buffer, minus
+             * 3 NULL chars (driver name, device name, and remaining strings),
+             * and copy the driver name in the string buffer.
              */
             DriverNameLength = min(DriverNameLength,
                                    RemainingLength - 3 * sizeof(UNICODE_NULL));
@@ -294,29 +321,29 @@ IopLogWorker(IN PVOID Parameter)
         }
 
         /* Null-terminate the driver name */
-        *((PWSTR)(StringBuffer + DriverNameLength)) = L'\0';
+        *((PWSTR)(StringBuffer + DriverNameLength)) = UNICODE_NULL;
         DriverNameLength += sizeof(WCHAR);
 
         /* Go to the next string buffer position */
         StringBuffer += DriverNameLength;
         RemainingLength -= DriverNameLength;
 
-        /* Update the string offset and check if we have a device object */
-        ErrorMessage->EntryData.StringOffset = (USHORT)
-                                               ((ULONG_PTR)StringBuffer -
-                                               (ULONG_PTR)ErrorMessage);
+        /* Update the string offset */
+        ErrorMessage->EntryData.StringOffset =
+            (USHORT)((ULONG_PTR)StringBuffer - (ULONG_PTR)ErrorMessage);
+
+        /* Check if we have a device object */
         if (LogEntry->DeviceObject)
         {
             /* We do, query its name */
             Status = ObQueryNameString(LogEntry->DeviceObject,
                                        ObjectNameInfo,
-                                       sizeof(Buffer),
+                                       sizeof(Buffer) - DriverNameLength,
                                        &ReturnedLength);
             if (!NT_SUCCESS(Status) || (ObjectNameInfo->Name.Length == 0))
             {
                 /* Setup an empty name */
-                ObjectNameInfo->Name.Length = 0;
-                ObjectNameInfo->Name.Buffer = L"";
+                RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, L"", 0);
 
                 /* Check if we failed because our buffer wasn't large enough */
                 if (Status == STATUS_INFO_LENGTH_MISMATCH)
@@ -337,39 +364,40 @@ IopLogWorker(IN PVOID Parameter)
                         {
                             /* Success, update the information */
                             ObjectNameInfo->Name.Length =
-                                100 - (USHORT)DriverNameLength;
+                                IO_ERROR_OBJECT_NAMES_LENGTH - (USHORT)DriverNameLength;
                         }
                     }
                 }
             }
+
+            NameString = ObjectNameInfo->Name.Buffer;
+            DeviceNameLength = ObjectNameInfo->Name.Length;
         }
         else
         {
             /* No device object, setup an empty name */
-            ObjectNameInfo->Name.Length = 0;
-            ObjectNameInfo->Name.Buffer = L"";
+            NameString = L"";
+            DeviceNameLength = 0;
         }
 
         /*
-         * Now make sure that the device name fits in our buffer, minus 2
-         * NULL chars, and copy the name in our string buffer
+         * Now make sure that the device name fits in the buffer, minus
+         * 2 NULL chars (device name, and remaining strings), and copy
+         * the device name in the string buffer.
          */
-        DeviceNameLength = min(ObjectNameInfo->Name.Length,
+        DeviceNameLength = min(DeviceNameLength,
                                RemainingLength - 2 * sizeof(UNICODE_NULL));
-        RtlCopyMemory(StringBuffer,
-                      ObjectNameInfo->Name.Buffer,
-                      DeviceNameLength);
+        RtlCopyMemory(StringBuffer, NameString, DeviceNameLength);
 
         /* Null-terminate the device name */
-        *((PWSTR)(StringBuffer + DeviceNameLength)) = L'\0';
+        *((PWSTR)(StringBuffer + DeviceNameLength)) = UNICODE_NULL;
         DeviceNameLength += sizeof(WCHAR);
 
         /* Free the buffer if we had one */
         if (PoolObjectNameInfo)
         {
-            ExFreePool(PoolObjectNameInfo);
+            ExFreePoolWithTag(PoolObjectNameInfo, TAG_IO);
             PoolObjectNameInfo = NULL;
-            ObjectNameInfo = (POBJECT_NAME_INFORMATION)&Buffer;
         }
 
         /* Go to the next string buffer position */
@@ -385,6 +413,9 @@ IopLogWorker(IN PVOID Parameter)
                                 sizeof(ERROR_LOG_ENTRY) -
                                 Packet->StringOffset;
 
+            /* Round up the length */
+            ExtraStringLength = ROUND_UP(ExtraStringLength, sizeof(WCHAR));
+
             /* Make sure that the extra strings fit in our buffer */
             if (ExtraStringLength > (RemainingLength - sizeof(UNICODE_NULL)))
             {
@@ -399,59 +430,63 @@ IopLogWorker(IN PVOID Parameter)
                           ExtraStringLength);
 
             /* Null-terminate them */
-            *((PWSTR)(StringBuffer + ExtraStringLength)) = L'\0';
+            *((PWSTR)(StringBuffer + ExtraStringLength)) = UNICODE_NULL;
         }
 
         /* Set the driver name length */
         ErrorMessage->DriverNameLength = (USHORT)DriverNameLength;
 
-        /* Update the message length to include the device and driver names */
-        MessageLength += DeviceNameLength + DriverNameLength;
+        /* Update the message length to include the driver and device names */
+        MessageLength += DriverNameLength + DeviceNameLength;
         ErrorMessage->Size = (USHORT)MessageLength;
 
-        /* Now update it again, internally, for the size of the actual LPC */
+        /* Now update it again for the size of the actual LPC */
         MessageLength += (FIELD_OFFSET(ELF_API_MSG, IoErrorMessage) -
                           FIELD_OFFSET(ELF_API_MSG, Unknown[0]));
 
         /* Set the total and data lengths */
-        Message->h.u1.s1.TotalLength = (USHORT)(sizeof(PORT_MESSAGE) +
-                                                MessageLength);
-        Message->h.u1.s1.DataLength = (USHORT)(MessageLength);
+        Message->Header.u1.s1.TotalLength =
+            (USHORT)(sizeof(PORT_MESSAGE) + MessageLength);
+        Message->Header.u1.s1.DataLength = (USHORT)MessageLength;
 
         /* Send the message */
-        Status = NtRequestPort(IopLogPort, (PPORT_MESSAGE)Message);
+        Status = ZwRequestPort(IopLogPort, &Message->Header);
         if (!NT_SUCCESS(Status))
         {
-            /* Requeue log message and restart the worker */
-            ExInterlockedInsertTailList(&IopErrorLogListHead,
+            /*
+             * An error happened while sending the message on the port.
+             * Close the port, requeue the log message on top of the list
+             * and restart the worker.
+             */
+            ZwClose(IopLogPort);
+            IopLogPortConnected = FALSE;
+
+            ExInterlockedInsertHeadList(&IopErrorLogListHead,
                                         &LogEntry->ListEntry,
                                         &IopLogListLock);
-            IopLogWorkerRunning = FALSE;
+
             IopRestartLogWorker();
             break;
         }
 
-        /* Dereference the device object */
-        if (LogEntry->DeviceObject) ObDereferenceObject(LogEntry->DeviceObject);
-        if (DriverObject) ObDereferenceObject(LogEntry->DriverObject);
+        /* NOTE: The following is basically 'IoFreeErrorLogEntry(Packet)' */
 
-        /* Update size */
-        InterlockedExchangeAdd(&IopTotalLogSize,
-                               -(LONG)(LogEntry->Size -
-                                       sizeof(ERROR_LOG_ENTRY)));
+        /* Dereference both objects */
+        if (LogEntry->DeviceObject) ObDereferenceObject(LogEntry->DeviceObject);
+        if (LogEntry->DriverObject) ObDereferenceObject(LogEntry->DriverObject);
+
+        /* Decrease the total allocation size and free the entry */
+        InterlockedExchangeAdd(&IopTotalLogSize, -(LONG)LogEntry->Size);
+        ExFreePoolWithTag(LogEntry, TAG_ERROR_LOG);
     }
 
     /* Free the LPC Message */
-    ExFreePool(Message);
+    ExFreePoolWithTag(Message, TAG_IO);
 }
 
 VOID
 NTAPI
-IopFreeApc(IN PKAPC Apc,
-           IN PKNORMAL_ROUTINE *NormalRoutine,
-           IN PVOID *NormalContext,
-           IN PVOID *SystemArgument1,
-           IN PVOID *SystemArgument2)
+IopFreeApc(IN PKAPC Apc)
 {
     /* Free the APC */
     ExFreePool(Apc);
@@ -459,15 +494,13 @@ IopFreeApc(IN PKAPC Apc,
 
 VOID
 NTAPI
-IopRaiseHardError(IN PKAPC Apc,
-                  IN PKNORMAL_ROUTINE *NormalRoutine,
-                  IN PVOID *NormalContext,
-                  IN PVOID *SystemArgument1,
-                  IN PVOID *SystemArgument2)
+IopRaiseHardError(IN PVOID NormalContext,
+                  IN PVOID SystemArgument1,
+                  IN PVOID SystemArgument2)
 {
-    PIRP Irp = (PIRP)NormalContext;
-    //PVPB Vpb = (PVPB)SystemArgument1;
-    //PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)SystemArgument2;
+    PIRP Irp = NormalContext;
+    //PVPB Vpb = SystemArgument1;
+    //PDEVICE_OBJECT DeviceObject = SystemArgument2;
 
     UNIMPLEMENTED;
 
@@ -495,17 +528,15 @@ IoAllocateErrorLogEntry(IN PVOID IoObject,
     /* Make sure we have an object */
     if (!IoObject) return NULL;
 
-    /* Check if we're past our buffer */
-    if (IopTotalLogSize > PAGE_SIZE) return NULL;
-
     /* Check if this is a device object or driver object */
-    if (((PDEVICE_OBJECT)IoObject)->Type == IO_TYPE_DEVICE)
+    DeviceObject = (PDEVICE_OBJECT)IoObject;
+    if (DeviceObject->Type == IO_TYPE_DEVICE)
     {
         /* It's a device, get the driver */
-        DeviceObject = (PDEVICE_OBJECT)IoObject;
+        // DeviceObject = (PDEVICE_OBJECT)IoObject;
         DriverObject = DeviceObject->DriverObject;
     }
-    else if (((PDEVICE_OBJECT)IoObject)->Type == IO_TYPE_DRIVER)
+    else if (DeviceObject->Type == IO_TYPE_DRIVER)
     {
         /* It's a driver, so we don't have a device */
         DeviceObject = NULL;
@@ -517,8 +548,23 @@ IoAllocateErrorLogEntry(IN PVOID IoObject,
         return NULL;
     }
 
-    /* Calculate the total size and allocate it */
+    /* Check whether the size is too small or too large */
+    if ((EntrySize < sizeof(IO_ERROR_LOG_PACKET)) ||
+        (EntrySize > ERROR_LOG_MAXIMUM_SIZE))
+    {
+        /* Fail */
+        return NULL;
+    }
+
+    /* Round up the size and calculate the total size */
+    EntrySize = ROUND_UP(EntrySize, sizeof(PVOID));
     LogEntrySize = sizeof(ERROR_LOG_ENTRY) + EntrySize;
+
+    /* Check if we're past our buffer */
+    // TODO: Improve (what happens in case of concurrent calls?)
+    if (IopTotalLogSize + LogEntrySize > IOP_MAXIMUM_LOG_SIZE) return NULL;
+
+    /* Allocate the entry */
     LogEntry = ExAllocatePoolWithTag(NonPagedPool,
                                      LogEntrySize,
                                      TAG_ERROR_LOG);
@@ -529,12 +575,12 @@ IoAllocateErrorLogEntry(IN PVOID IoObject,
     if (DriverObject) ObReferenceObject(DriverObject);
 
     /* Update log size */
-    InterlockedExchangeAdd(&IopTotalLogSize, EntrySize);
+    InterlockedExchangeAdd(&IopTotalLogSize, LogEntrySize);
 
     /* Clear the entry and set it up */
-    RtlZeroMemory(LogEntry, EntrySize);
+    RtlZeroMemory(LogEntry, LogEntrySize);
     LogEntry->Type = IO_TYPE_ERROR_LOG;
-    LogEntry->Size = EntrySize;
+    LogEntry->Size = LogEntrySize;
     LogEntry->DeviceObject = DeviceObject;
     LogEntry->DriverObject = DriverObject;
 
@@ -551,7 +597,7 @@ IoFreeErrorLogEntry(IN PVOID ElEntry)
 {
     PERROR_LOG_ENTRY LogEntry;
 
-    /* Make sure there's an entry */
+    /* Make sure there is an entry */
     if (!ElEntry) return;
 
     /* Get the actual header */
@@ -561,10 +607,9 @@ IoFreeErrorLogEntry(IN PVOID ElEntry)
     if (LogEntry->DeviceObject) ObDereferenceObject(LogEntry->DeviceObject);
     if (LogEntry->DriverObject) ObDereferenceObject(LogEntry->DriverObject);
 
-    /* Decrease total allocation size and free the entry */
-    InterlockedExchangeAdd(&IopTotalLogSize,
-                           -(LONG)(LogEntry->Size - sizeof(ERROR_LOG_ENTRY)));
-    ExFreePool(LogEntry);
+    /* Decrease the total allocation size and free the entry */
+    InterlockedExchangeAdd(&IopTotalLogSize, -(LONG)LogEntry->Size);
+    ExFreePoolWithTag(LogEntry, TAG_ERROR_LOG);
 }
 
 /*
@@ -577,9 +622,11 @@ IoWriteErrorLogEntry(IN PVOID ElEntry)
     PERROR_LOG_ENTRY LogEntry;
     KIRQL Irql;
 
-    /* Get the main header */
-    LogEntry = (PERROR_LOG_ENTRY)((ULONG_PTR)ElEntry -
-                                  sizeof(ERROR_LOG_ENTRY));
+    /* Make sure there is an entry */
+    if (!ElEntry) return;
+
+    /* Get the actual header */
+    LogEntry = (PERROR_LOG_ENTRY)((ULONG_PTR)ElEntry - sizeof(ERROR_LOG_ENTRY));
 
     /* Get time stamp */
     KeQuerySystemTime(&LogEntry->TimeStamp);
@@ -591,14 +638,10 @@ IoWriteErrorLogEntry(IN PVOID ElEntry)
     /* Check if the worker is running */
     if (!IopLogWorkerRunning)
     {
-#if 0
         /* It's not, initialize it and queue it */
-        ExInitializeWorkItem(&IopErrorLogWorkItem,
-                             IopLogWorker,
-                             &IopErrorLogWorkItem);
-        ExQueueWorkItem(&IopErrorLogWorkItem, DelayedWorkQueue);
         IopLogWorkerRunning = TRUE;
-#endif
+        ExInitializeWorkItem(&IopErrorLogWorkItem, IopLogWorker, NULL);
+        ExQueueWorkItem(&IopErrorLogWorkItem, DelayedWorkQueue);
     }
 
     /* Release the lock and return */
@@ -634,8 +677,8 @@ IoRaiseHardError(IN PIRP Irp,
                     &Thread->Tcb,
                     Irp->ApcEnvironment,
                     NULL,
-                    (PKRUNDOWN_ROUTINE)IopFreeApc,
-                    (PKNORMAL_ROUTINE)IopRaiseHardError,
+                    IopFreeApc,
+                    IopRaiseHardError,
                     KernelMode,
                     Irp);
 
@@ -652,7 +695,7 @@ IoRaiseInformationalHardError(IN NTSTATUS ErrorStatus,
                               IN PUNICODE_STRING String,
                               IN PKTHREAD Thread)
 {
-    UNIMPLEMENTED;
+    DPRINT1("IoRaiseInformationalHardError: %lx, %wZ\n", ErrorStatus, String);
     return FALSE;
 }
 

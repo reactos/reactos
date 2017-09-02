@@ -256,7 +256,7 @@ static HRESULT WINAPI BmpFrameDecode_CopyPalette(IWICBitmapFrameDecode *iface,
             if (This->bih.bV5ClrUsed == 0)
                 count = 1 << This->bih.bV5BitCount;
             else
-                count = This->bih.bV5ClrUsed;
+                count = min(This->bih.bV5ClrUsed, 1 << This->bih.bV5BitCount);
 
             tablesize = sizeof(WICColor) * count;
             wiccolors = HeapAlloc(GetProcessHeap(), 0, tablesize);

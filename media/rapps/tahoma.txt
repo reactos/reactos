@@ -6,7 +6,7 @@ Description = Tahoma Font pack needed by some apps (Steam). Contains: Tahoma.ttf
 Size = 305.1 KiB
 Category = 14
 URLSite = http://support.microsoft.com/
-URLDownload = http://download.microsoft.com/download/office97pro/fonts/1/w95/en-us/tahoma32.exe
+URLDownload = http://linux4u.jinr.ru/pub/win9x/fonts/tahoma32.exe
 SHA1 = 888ce7b7ab5fd41f9802f3a65fd0622eb651a068
 CDPath = none
 
@@ -42,8 +42,7 @@ Size = 305,1 Kio
 [Section.0419]
 License = Неизвестно
 Description = Пакет Tahoma шрифтов. Необходим для некоторых приложений. Содержит: Tahoma.ttf, Tahomabd.ttf.
-Size = 305,1 КБ
-
+Size = 305,1 КиБ
 
 [Section.041f]
 Name = Microsoft Tahoma Yazı Tipi

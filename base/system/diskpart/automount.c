@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS DiskPart
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/diskpart/automount.c
- * PURPOSE:         Manages all the partitions of the OS in an interactive way
+ * PURPOSE:         Manages all the partitions of the OS in an interactive way.
  * PROGRAMMERS:     Lee Schroeder
  */
 
@@ -10,6 +10,6 @@
 
 BOOL automount_main(INT argc, LPWSTR *argv)
 {
-    printf("Automount\n");
+    ConPuts(StdOut, L"Automount\n");
     return TRUE;
 }

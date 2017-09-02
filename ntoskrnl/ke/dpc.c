@@ -92,9 +92,7 @@ KiTimerExpiration(IN PKDPC Dpc,
     ULONG Period;
     DPC_QUEUE_ENTRY DpcEntry[MAX_TIMER_DPCS];
     PKSPIN_LOCK_QUEUE LockQueue;
-#ifdef CONFIG_SMP
     PKPRCB Prcb = KeGetCurrentPrcb();
-#endif
 
     /* Disable interrupts */
     _disable();
@@ -227,6 +225,11 @@ KiTimerExpiration(IN PKDPC Dpc,
                     /* Start looping all DPC Entries */
                     for (i = 0; DpcCalls; DpcCalls--, i++)
                     {
+#if DBG
+                        /* Clear DPC Time */
+                        Prcb->DebugDpcTime = 0;
+#endif
+
                         /* Call the DPC */
                         DpcEntry[i].Routine(DpcEntry[i].Dpc,
                                             DpcEntry[i].Context,
@@ -270,6 +273,11 @@ KiTimerExpiration(IN PKDPC Dpc,
                     /* Start looping all DPC Entries */
                     for (i = 0; DpcCalls; DpcCalls--, i++)
                     {
+#if DBG
+                        /* Clear DPC Time */
+                        Prcb->DebugDpcTime = 0;
+#endif
+
                         /* Call the DPC */
                         DpcEntry[i].Routine(DpcEntry[i].Dpc,
                                             DpcEntry[i].Context,
@@ -303,6 +311,11 @@ KiTimerExpiration(IN PKDPC Dpc,
         /* Start looping all DPC Entries */
         for (i = 0; DpcCalls; DpcCalls--, i++)
         {
+#if DBG
+            /* Clear DPC Time */
+            Prcb->DebugDpcTime = 0;
+#endif
+
             /* Call the DPC */
             DpcEntry[i].Routine(DpcEntry[i].Dpc,
                                 DpcEntry[i].Context,
@@ -333,9 +346,7 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
     PKDPC TimerDpc;
     ULONG Period;
     DPC_QUEUE_ENTRY DpcEntry[MAX_TIMER_DPCS];
-#ifdef CONFIG_SMP
     PKPRCB Prcb = KeGetCurrentPrcb();
-#endif
 
     /* Query system */
     KeQuerySystemTime((PLARGE_INTEGER)&SystemTime);
@@ -427,6 +438,11 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
         /* Start looping all DPC Entries */
         for (i = 0; DpcCalls; DpcCalls--, i++)
         {
+#if DBG
+            /* Clear DPC Time */
+            Prcb->DebugDpcTime = 0;
+#endif
+
             /* Call the DPC */
             DpcEntry[i].Routine(DpcEntry[i].Dpc,
                                 DpcEntry[i].Context,

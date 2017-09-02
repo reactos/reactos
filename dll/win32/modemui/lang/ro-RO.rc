@@ -366,7 +366,7 @@ BEGIN
     3053 "Proprietățile modemului nu pot fi afișate deoarce modemul e indisponibil.\n\nReporniți sistemul apoi reîncercați."
     3054 "Properietăți pentru Modemuri"
     3060 "Sigur vreți să eliminați acest(e) modem(uri) din sistem?"
-    3061 "Nu s-a putut elimina modemul „%1” din %2."
+    3061 "Nu a pututu fi eliminat modemul „%1” din %2."
     3062 "Modem"
     3069 "Nu există suficientă memorie pentru a afișa Panoul de control.\n\nMai închideți din programe apoi reîncercați."
     3073 "Trebuie să fiți administrator de sistem pentru a instala un modem."

@@ -24,6 +24,87 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+static const VBE_MODE_INFO VbeMode_640x480x256_Info =
+{
+    /* Attributes */
+    VBE_MODE_SUPPORTED
+    | VBE_MODE_OPTIONAL_INFO
+    // | VBE_MODE_BIOS_SUPPORT
+    | VBE_MODE_COLOR
+    | VBE_MODE_GRAPHICS,
+
+    /* Window A attributes */
+    VBE_WINDOW_EXISTS | VBE_WINDOW_READABLE | VBE_WINDOW_WRITABLE,
+    /* Window B attributes */
+    0,
+
+    16,                   /* Window granularity, in KB */
+    64,                   /* Window size, in KB */
+    0xA000,               /* Window A segment, or zero if not supported */
+    0x0000,               /* Window B segment, or zero if not supported */
+    0x00000000,           /* Window position function pointer */
+    640,                  /* Bytes per scanline */
+    640,                  /* Width */
+    480,                  /* Height */
+    8,                    /* Character cell width */
+    16,                   /* Character cell height */
+    1,                    /* Number of memory planes */
+    8,                    /* Bits per pixel */
+    1,                    /* Number of banks */
+    VBE_MODEL_PACKED,     /* Memory model */
+    0,                    /* Bank size */
+    11,                   /* Number of image pages */
+    0,                    /* Reserved field */
+    0,                    /* Red mask size */
+    0,                    /* Red field position */
+    0,                    /* Green mask size */
+    0,                    /* Green field position */
+    0,                    /* Blue mask size */
+    0,                    /* Blue field position */
+    0,                    /* Reserved mask size */
+    0,                    /* Reserved field position */
+    0,                    /* Direct color info */
+};
+
+static SVGA_REGISTERS VbeMode_640x480x256_Registers =
+{
+    /* Miscellaneous Register */
+    0x63,
+
+    /* Hidden Register */
+    0x00,
+
+    /* Sequencer Registers */
+    {
+        0x03, 0x21, 0x0F, 0x00, 0x0E, 0x00, 0x12, 0x11, 0x00, 0x00, 0x18, 0x58,
+        0x58, 0x58, 0x58, 0x98, 0x00, 0x00, 0x04, 0x00, 0x00, 0x04, 0x00, 0x20,
+        0x00, 0x00, 0x00, 0x33, 0x33, 0x33, 0x33, 0x2D
+    },
+
+    /* CRTC Registers */
+    {
+        0x5F, 0x4F, 0x4F, 0x80, 0x52, 0x1E, 0x0B, 0x3E, 0x00, 0x40, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0xEA, 0x2C, 0xDF, 0x50, 0x40, 0xDF, 0x0B, 0xC3,
+        0xFF, 0x00, 0x00, 0x22, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF,
+        0x80, 0x00, 0x20, 0xB8
+    },
+
+    /* GC Registers */
+    {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF, 0x00, 0x00, 0x20, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00
+    },
+
+    /* AC Registers */
+    {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F, 0x41, 0x00, 0x0F, 0x00, 0x00
+    }
+};
+
 static const VBE_MODE_INFO VbeMode_800x600x256_Info =
 {
     /* Attributes */
@@ -114,7 +195,7 @@ static const VBE_MODE Modes[VBE_MODE_COUNT] =
     { 0x5C, 0x103 , &VbeMode_800x600x256_Info, &VbeMode_800x600x256_Registers },
     { 0x5D, 0x104 , NULL /* TODO */          , NULL /* TODO */                },
     { 0x5E, 0x100 , NULL /* TODO */          , NULL /* TODO */                },
-    { 0x5F, 0x101 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x5F, 0x101 , &VbeMode_640x480x256_Info, &VbeMode_640x480x256_Registers },
     { 0x60, 0x105 , NULL /* TODO */          , NULL /* TODO */                },
     { 0x64, 0x111 , NULL /* TODO */          , NULL /* TODO */                },
     { 0x65, 0x114 , NULL /* TODO */          , NULL /* TODO */                },
@@ -210,11 +291,11 @@ static VOID VbeSetExtendedRegisters(PSVGA_REGISTERS Registers)
     /* Unlock CRTC registers 0-7 */
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_END_HORZ_BLANKING_REG);
     IOWriteB(VGA_CRTC_DATA , IOReadB(VGA_CRTC_DATA) | 0x80);
-    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_VERT_RETRACE_END_REG);
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_END_VERT_RETRACE_REG);
     IOWriteB(VGA_CRTC_DATA , IOReadB(VGA_CRTC_DATA) & ~0x80);
     // Make sure they remain unlocked
     Registers->CRT[VGA_CRTC_END_HORZ_BLANKING_REG] |= 0x80;
-    Registers->CRT[VGA_CRTC_VERT_RETRACE_END_REG] &= ~0x80;
+    Registers->CRT[VGA_CRTC_END_VERT_RETRACE_REG] &= ~0x80;
 
     /* Write the CRTC registers */
     for (i = 0; i < SVGA_CRTC_MAX_REG; i++)
@@ -275,6 +356,7 @@ static VOID VbeSetExtendedRegisters(PSVGA_REGISTERS Registers)
 BOOLEAN WINAPI VbeSetExtendedVideoMode(BYTE ModeNumber)
 {
     PCVBE_MODE Mode = VbeGetModeByNumber(ModeNumber);
+    if (Mode == NULL) return FALSE;
 
     /* At this point, Mode->Registers shouldn't be NULL unless the mode is unimplemented */
     if (Mode->Registers == NULL)
@@ -522,6 +604,151 @@ VOID WINAPI VbeService(LPWORD Stack)
                 setAH(1);
             }
 
+            break;
+        }
+
+        /* CPU Video Memory Control */
+        case 0x05:
+        {
+            BYTE Window = getBL();
+            BYTE OldGcIndex = IOReadB(VGA_GC_INDEX);
+
+            switch (getBH())
+            {
+                /* Select Memory Window */
+                case 0:
+                {
+                    setAL(0x4F);
+
+                    if (getDH() != 0)
+                    {
+                        /* Offset too high */
+                        setAH(1);
+                        break;
+                    }
+
+                    IOWriteB(VGA_GC_INDEX, (Window == 0) ? SVGA_GC_OFFSET_0_REG : SVGA_GC_OFFSET_1_REG);
+                    IOWriteB(VGA_GC_DATA, getDL());
+
+                    setAH(0);
+                    break;
+                }
+
+                /* Return Memory Window */
+                case 1:
+                {
+                    IOWriteB(VGA_GC_INDEX, (Window == 0) ? SVGA_GC_OFFSET_0_REG : SVGA_GC_OFFSET_1_REG);
+                    setDX(IOReadB(VGA_GC_DATA));
+
+                    setAX(0x004F);
+                    break;
+                }
+
+                default:
+                {
+                    DPRINT("VESA INT 0x10, AL = 0x05, Unknown subfunction: %02X", getBH());
+                }
+            }
+
+            IOWriteB(VGA_GC_INDEX, OldGcIndex);
+            break;
+        }
+
+        /* Get/Set Display Start */
+        case 0x07:
+        {
+            DWORD StartAddress;
+            BYTE Value;
+            PCVBE_MODE Mode = VbeGetModeByNumber(Bda->VideoMode);
+            BYTE OldCrtcIndex = IOReadB(VGA_CRTC_INDEX_COLOR);
+
+            if (getBL() & 0x80)
+            {
+                /* Wait for a vertical retrace */
+                if (!(IOReadB(VGA_INSTAT1_READ_COLOR) & VGA_STAT_VRETRACE))
+                {
+                    setCF(1);
+                    break;
+                }
+
+                setCF(0);
+            }
+
+            switch (getBL() & 0x7F)
+            {
+                /* Set Display Start */
+                case 0x00:
+                {
+                    setAL(0x4F);
+
+                    if (Mode == NULL || Mode->Info == NULL)
+                    {
+                        /* This is not a VBE mode */
+                        // TODO: Support anyway, perhaps? It can be done.
+                        setAH(0x01);
+                        break;
+                    }
+
+                    StartAddress = getCX() + getDX() * Mode->Info->BytesPerScanline;
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, SVGA_CRTC_OVERLAY_REG);
+                    Value = IOReadB(VGA_CRTC_DATA_COLOR);
+                    Value &= ~SVGA_CRTC_EXT_ADDR_BIT19;
+                    Value |= (StartAddress >> 12) & SVGA_CRTC_EXT_ADDR_BIT19;
+                    IOWriteB(VGA_CRTC_DATA_COLOR, Value);
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, SVGA_CRTC_EXT_DISPLAY_REG);
+                    Value = IOReadB(VGA_CRTC_DATA_COLOR);
+                    Value &= ~(SVGA_CRTC_EXT_ADDR_BIT16 | SVGA_CRTC_EXT_ADDR_BITS1718);
+                    Value |= (StartAddress >> 16) & SVGA_CRTC_EXT_ADDR_BIT16;
+                    Value |= (StartAddress >> 15) & SVGA_CRTC_EXT_ADDR_BITS1718;
+                    IOWriteB(VGA_CRTC_DATA_COLOR, Value);
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, VGA_CRTC_START_ADDR_HIGH_REG);
+                    IOWriteB(VGA_CRTC_DATA_COLOR, (StartAddress >> 8) & 0xFF);
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, VGA_CRTC_START_ADDR_LOW_REG);
+                    IOWriteB(VGA_CRTC_DATA_COLOR, StartAddress & 0xFF);
+
+                    setAH(0);
+                    break;
+                }
+
+                /* Get Display Start */
+                case 0x01:
+                {
+                    setAL(0x4F);
+                    StartAddress = 0;
+
+                    if (Mode == NULL || Mode->Info == NULL)
+                    {
+                        /* This is not a VBE mode */
+                        // TODO: Support anyway, perhaps? It can be done.
+                        setAH(0x01);
+                        break;
+                    }
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, SVGA_CRTC_OVERLAY_REG);
+                    StartAddress = (IOReadB(VGA_CRTC_DATA_COLOR) & SVGA_CRTC_EXT_ADDR_BIT19) << 12;
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, SVGA_CRTC_EXT_DISPLAY_REG);
+                    Value = IOReadB(VGA_CRTC_DATA_COLOR);
+                    StartAddress |= (Value & SVGA_CRTC_EXT_ADDR_BIT16) << 16;
+                    StartAddress |= (Value & SVGA_CRTC_EXT_ADDR_BITS1718) << 15;
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, VGA_CRTC_START_ADDR_HIGH_REG);
+                    StartAddress |= IOReadB(VGA_CRTC_DATA_COLOR) << 8;
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, VGA_CRTC_START_ADDR_LOW_REG);
+                    StartAddress |= IOReadB(VGA_CRTC_DATA_COLOR);
+
+                    setCX(StartAddress % Mode->Info->BytesPerScanline);
+                    setDX(StartAddress / Mode->Info->BytesPerScanline);
+
+                    setAH(0);
+                    break;
+                }
+            }
+
+            IOWriteB(VGA_CRTC_INDEX_COLOR, OldCrtcIndex);
             break;
         }
 

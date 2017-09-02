@@ -117,7 +117,7 @@ MMixerFreeMixerInfo(
     IN PMIXER_CONTEXT MixerContext,
     IN LPMIXER_INFO MixerInfo)
 {
-    /* UNIMPLEMENTED
+    /* UNIMPLEMENTED;
      * FIXME
      * free all lines
      */
@@ -799,6 +799,53 @@ MMixerCreateMixerData(
     InsertTailList(&MixerList->MixerData, &MixerData->Entry);
     MixerList->MixerDataCount++;
     return MM_STATUS_SUCCESS;
+}
+
+MIXER_STATUS
+MMixerGetDeviceNameWithComponentId(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hMixer,
+    OUT LPWSTR OutDeviceName)
+{
+    MIXER_STATUS Status;
+    KSPROPERTY Property;
+    KSCOMPONENTID ComponentId;
+    ULONG Length;
+    UNICODE_STRING GuidString;
+    ULONG ResultLength, KeyType;
+    HANDLE hMediaKey, hGuidKey;
+    LPWSTR DeviceName;
+
+    /* prepare property */
+    Property.Flags = KSPROPERTY_TYPE_GET;
+    Property.Set = KSPROPSETID_General;
+    Property.Id = KSPROPERTY_GENERAL_COMPONENTID;
+
+    /* try get component id */
+    Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), &ComponentId, sizeof(KSCOMPONENTID), &Length);
+
+    if (Status == MM_STATUS_SUCCESS)
+    {
+        Status = MixerContext->OpenKey(NULL, L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\MediaCategories", KEY_READ, &hMediaKey);
+        if (Status == MM_STATUS_SUCCESS)
+        {
+            RtlStringFromGUID(&ComponentId.Name, &GuidString);
+            Status = MixerContext->OpenKey(hMediaKey, GuidString.Buffer, KEY_READ, &hGuidKey);
+            RtlFreeUnicodeString(&GuidString);
+            if (Status == MM_STATUS_SUCCESS)
+            {
+                Status = MixerContext->QueryKeyValue(hGuidKey, L"Name", (PVOID*)&DeviceName, &ResultLength, &KeyType);
+                if (Status == MM_STATUS_SUCCESS)
+                {
+                    MixerContext->Copy(OutDeviceName, DeviceName, min(ResultLength, (MAXPNAMELEN-1)*2));
+                }
+
+                MixerContext->CloseKey(hGuidKey);
+            }
+            MixerContext->CloseKey(hMediaKey);
+        }
+    }
+    return Status;
 }
 
 MIXER_STATUS

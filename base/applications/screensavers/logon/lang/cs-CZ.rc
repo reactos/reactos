@@ -1,0 +1,7 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "Spořič obrazovky Přihlášení"
+    IDS_TEXT "Žádná nastavení nejsou potřeba."
+END

@@ -14,10 +14,15 @@
 #include <winnls.h>
 #include <windowsx.h>
 #include <undocuser.h>
+#include <undocgdi.h>
 #include <uxtheme.h>
 #include <uxundoc.h>
 #include <vfwmsgs.h>
 #include <tmschema.h>
+
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+#include <ndk/rtltypes.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
@@ -85,6 +90,17 @@ typedef struct _THEME_FILE {
 
 typedef struct _UXINI_FILE *PUXINI_FILE;
 
+typedef struct _UXTHEME_HANDLE 
+{
+    RTL_HANDLE_TABLE_ENTRY Handle;
+    PTHEME_CLASS pClass;
+} UXTHEME_HANDLE, *PUXTHEME_HANDLE;
+
+PTHEME_CLASS ValidateHandle(HTHEME hTheme);
+
+HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, BOOL glyph,
+                          HBITMAP *hBmp, RECT *bmpRect, BOOL* hasImageAlpha);
+
 BOOL MSSTYLES_LookupProperty(LPCWSTR pszPropertyName, int *dwPrimitive, int *dwId);
 BOOL MSSTYLES_LookupEnum(LPCWSTR pszValueName, int dwEnum, int *dwValue);
 BOOL MSSTYLES_LookupPartState(LPCWSTR pszClass, LPCWSTR pszPart, LPCWSTR pszState, int *iPartId, int *iStateId);
@@ -118,16 +134,40 @@ BOOL UXINI_FindSection(PUXINI_FILE uf, LPCWSTR lpName);
 LPCWSTR UXINI_GetNextValue(PUXINI_FILE uf, DWORD *dwNameLen, LPCWSTR *lpValue, DWORD *dwValueLen);
 BOOL UXINI_FindValue(PUXINI_FILE uf, LPCWSTR lpName, LPCWSTR *lpValue, DWORD *dwValueLen);
 
+  /* Scroll-bar hit testing */
+enum SCROLL_HITTEST
+{
+    SCROLL_NOWHERE,      /* Outside the scroll bar */
+    SCROLL_TOP_ARROW,    /* Top or left arrow */
+    SCROLL_TOP_RECT,     /* Rectangle between the top arrow and the thumb */
+    SCROLL_THUMB,        /* Thumb rectangle */
+    SCROLL_BOTTOM_RECT,  /* Rectangle between the thumb and the bottom arrow */
+    SCROLL_BOTTOM_ARROW  /* Bottom or right arrow */
+};
 
 /* The window context stores data for the window needed through the life of the window */
-typedef struct _WND_CONTEXT
+typedef struct _WND_DATA
 {
+    HTHEME hthemeWindow;
+    HTHEME hthemeScrollbar;
+
+    RECT rcCaptionButtons[4];
     UINT lastHitTest;
     BOOL HasAppDefinedRgn;
     BOOL HasThemeRgn;
     BOOL UpdatingRgn;
     BOOL DirtyThemeRegion;
-} WND_CONTEXT, *PWND_CONTEXT;
+    HBRUSH hTabBackgroundBrush;
+    HBITMAP hTabBackgroundBmp;
+
+    BOOL SCROLL_trackVertical;
+    enum SCROLL_HITTEST SCROLL_trackHitTest;
+    BOOL SCROLL_MovingThumb;  /* Is the moving thumb being displayed? */
+    HWND SCROLL_TrackingWin;
+    INT  SCROLL_TrackingBar;
+    INT  SCROLL_TrackingPos;
+    INT  SCROLL_TrackingVal;
+} WND_DATA, *PWND_DATA;
 
 /* The draw context stores data that are needed by the drawing operations in the non client area of the window */
 typedef struct _DRAW_CONTEXT
@@ -168,17 +208,6 @@ typedef enum {
     BUTTON_INACTIVE
 } THEME_BUTTON_STATES;
 
-  /* Scroll-bar hit testing */
-enum SCROLL_HITTEST
-{
-    SCROLL_NOWHERE,      /* Outside the scroll bar */
-    SCROLL_TOP_ARROW,    /* Top or left arrow */
-    SCROLL_TOP_RECT,     /* Rectangle between the top arrow and the thumb */
-    SCROLL_THUMB,        /* Thumb rectangle */
-    SCROLL_BOTTOM_RECT,  /* Rectangle between the thumb and the bottom arrow */
-    SCROLL_BOTTOM_ARROW  /* Bottom or right arrow */
-};
-
 #define HT_ISBUTTON(ht) ((ht) == HTMINBUTTON || (ht) == HTMAXBUTTON || (ht) == HTCLOSE || (ht) == HTHELP)
 
 #define HASSIZEGRIP(Style, ExStyle, ParentStyle, WindowRect, ParentClientRect) \
@@ -211,17 +240,19 @@ enum SCROLL_HITTEST
 #define SCROLL_MIN_RECT  4
 
 LRESULT CALLBACK ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc);
+void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme);
 void  ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT Bar, POINT* pt);
 VOID NC_TrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt);
 void ThemeInitDrawContext(PDRAW_CONTEXT pcontext, HWND hWnd, HRGN hRgn);
 void ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext);
-PWND_CONTEXT ThemeGetWndContext(HWND hWnd);
+PWND_DATA ThemeGetWndData(HWND hWnd);
+HTHEME GetNCCaptionTheme(HWND hWnd, DWORD style);
+HTHEME GetNCScrollbarTheme(HWND hWnd, DWORD style);
 
 extern HINSTANCE hDllInst;
 extern ATOM atWindowTheme;
 extern ATOM atWndContext;
-extern BOOL gbThemeHooksActive;
-extern PTHEME_FILE ActiveThemeFile;
+extern BOOL g_bThemeHooksActive;
 
 void UXTHEME_InitSystem(HINSTANCE hInst);
 void UXTHEME_LoadTheme(BOOL bLoad);

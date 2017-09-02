@@ -21,6 +21,9 @@
 
 class Matrix : public GdiplusBase
 {
+  friend class Pen;
+  friend class Region;
+
 public:
   Matrix(const RectF &rect, const PointF *dstplg)
   {
@@ -45,7 +48,7 @@ public:
   Matrix *Clone(VOID)
   {
     Matrix *cloneMatrix = new Matrix();  // FIXME: Matrix::matrix already initialized --> potential memory leak
-    cloneMatrix->status = DllExports::GdipCloneMatrix(matrix, &cloneMatrix);
+    cloneMatrix->status = DllExports::GdipCloneMatrix(matrix, cloneMatrix ? &cloneMatrix->matrix : NULL);
     return cloneMatrix;
   }
 
@@ -57,7 +60,7 @@ public:
   BOOL Equals(const Matrix* matrix)
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsMatrixEqual(this->matrix, matrix->matrix, &result));
+    SetStatus(DllExports::GdipIsMatrixEqual(this->matrix, matrix ? matrix->matrix : NULL, &result));
     return result;
   }
 
@@ -92,7 +95,7 @@ public:
 
   Status Multiply(const Matrix *matrix, MatrixOrder order)
   {
-    return SetStatus(DllExports::GdipMultiplyMatrix(this->matrix, matrix->matrix, order));
+    return SetStatus(DllExports::GdipMultiplyMatrix(this->matrix, matrix ? matrix->matrix : NULL, order));
   }
 
   REAL OffsetX(VOID)
@@ -130,7 +133,7 @@ public:
     return SetStatus(DllExports::GdipSetMatrixElements(matrix, m11, m12, m21, m22, dx, dy));
   }
 
-  Status Shear(REAL shearX, REAL shearY, REAL order)
+  Status Shear(REAL shearX, REAL shearY, MatrixOrder order)
   {
     return SetStatus(DllExports::GdipShearMatrix(matrix, shearX, shearY, order));
   }
@@ -155,7 +158,7 @@ public:
     return SetStatus(DllExports::GdipVectorTransformMatrixPoints(matrix, pts, count));
   }
 
-  Status Translate(REAL offsetX, REAL offsetY, REAL order)
+  Status Translate(REAL offsetX, REAL offsetY, MatrixOrder order)
   {
     return SetStatus(DllExports::GdipTranslateMatrix(matrix, offsetX, offsetY, order));
   }

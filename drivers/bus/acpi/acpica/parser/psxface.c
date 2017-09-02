@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -269,6 +269,100 @@ Cleanup:
         Status = AE_CTRL_RETURN_VALUE;
     }
 
+    return_ACPI_STATUS (Status);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiPsExecuteTable
+ *
+ * PARAMETERS:  Info            - Method info block, contains:
+ *              Node            - Node to where the is entered into the
+ *                                namespace
+ *              ObjDesc         - Pseudo method object describing the AML
+ *                                code of the entire table
+ *              PassNumber      - Parse or execute pass
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Execute a table
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiPsExecuteTable (
+    ACPI_EVALUATE_INFO      *Info)
+{
+    ACPI_STATUS             Status;
+    ACPI_PARSE_OBJECT       *Op = NULL;
+    ACPI_WALK_STATE         *WalkState = NULL;
+
+
+    ACPI_FUNCTION_TRACE (PsExecuteTable);
+
+
+    /* Create and init a Root Node */
+
+    Op = AcpiPsCreateScopeOp (Info->ObjDesc->Method.AmlStart);
+    if (!Op)
+    {
+        Status = AE_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    /* Create and initialize a new walk state */
+
+    WalkState = AcpiDsCreateWalkState (
+        Info->ObjDesc->Method.OwnerId, NULL, NULL, NULL);
+    if (!WalkState)
+    {
+        Status = AE_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    Status = AcpiDsInitAmlWalk (WalkState, Op, Info->Node,
+        Info->ObjDesc->Method.AmlStart,
+        Info->ObjDesc->Method.AmlLength, Info, Info->PassNumber);
+    if (ACPI_FAILURE (Status))
+    {
+        goto Cleanup;
+    }
+
+    if (Info->ObjDesc->Method.InfoFlags & ACPI_METHOD_MODULE_LEVEL)
+    {
+        WalkState->ParseFlags |= ACPI_PARSE_MODULE_LEVEL;
+    }
+
+    /* Info->Node is the default location to load the table  */
+
+    if (Info->Node && Info->Node != AcpiGbl_RootNode)
+    {
+        Status = AcpiDsScopeStackPush (
+            Info->Node, ACPI_TYPE_METHOD, WalkState);
+        if (ACPI_FAILURE (Status))
+        {
+            goto Cleanup;
+        }
+    }
+
+    /*
+     * Parse the AML, WalkState will be deleted by ParseAml
+     */
+    AcpiExEnterInterpreter ();
+    Status = AcpiPsParseAml (WalkState);
+    AcpiExExitInterpreter ();
+    WalkState = NULL;
+
+Cleanup:
+    if (WalkState)
+    {
+        AcpiDsDeleteWalkState (WalkState);
+    }
+    if (Op)
+    {
+        AcpiPsDeleteParseTree (Op);
+    }
     return_ACPI_STATUS (Status);
 }
 

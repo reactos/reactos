@@ -344,7 +344,7 @@ static LRESULT PROGRESS_Draw (PROGRESS_INFO *infoPtr, HDC hdc)
             DrawThemeParentBackground (infoPtr->Self, hdc, NULL);
         DrawThemeBackground (pdi.theme, hdc, part, 0, &pdi.rect, NULL);
         SelectClipRgn (hdc, NULL);
-        CopyRect (&pdi.rect, &cntRect);
+        pdi.rect = cntRect;
     }
 
     /* compute some drawing parameters */

@@ -1,101 +1,175 @@
 /*
- * Copyright 2009 Detlef Riekenberg
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
+* PROJECT:         Filesystem Filter Manager library
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            dll/win32/fltlib/fltlib.c
+* PURPOSE:         
+* PROGRAMMERS:     Ged Murphy (ged.murphy@reactos.org)
+*/
 
 #include <stdarg.h>
 
+#define WIN32_NO_STATUS
+
 #include "windef.h"
 #include "winbase.h"
+
+#define NTOS_MODE_USER
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <fltmgr_shared.h>
+
 #include "wine/debug.h"
+
+
+/* DATA ****************************************************************************/
 
 WINE_DEFAULT_DEBUG_CHANNEL(fltlib);
 
-/*****************************************************
- *      DllMain
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
+static
+HRESULT
+FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
+                 _In_ BOOL Load);
 
-    switch (fdwReason)
+static
+DWORD
+SendIoctl(_In_ HANDLE Handle,
+          _In_ ULONG IoControlCode,
+          _In_reads_bytes_opt_(BufferSize) LPVOID lpInBuffer,
+          _In_ DWORD BufferSize);
+
+
+/* PUBLIC FUNCTIONS ****************************************************************/
+
+_Must_inspect_result_
+HRESULT
+WINAPI
+FilterLoad(_In_ LPCWSTR lpFilterName)
+{
+    return FilterLoadUnload(lpFilterName, TRUE);
+}
+
+_Must_inspect_result_
+HRESULT
+WINAPI
+FilterUnload(_In_ LPCWSTR lpFilterName)
+{
+    return FilterLoadUnload(lpFilterName, FALSE);
+}
+
+
+/* PRIVATE FUNCTIONS ****************************************************************/
+
+HRESULT
+NtStatusToHResult(_In_ NTSTATUS Status)
+{
+    HRESULT hr;
+    hr = RtlNtStatusToDosError(Status);
+    if (hr != ERROR_SUCCESS)
     {
-        case DLL_WINE_PREATTACH:
-            return FALSE;    /* use native version */
-
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            break;
+        hr = (ULONG)hr | 0x80070000;
     }
+    return hr;
+}
+
+static
+HRESULT
+FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
+                 _In_ BOOL Load)
+{
+    PFILTER_NAME FilterName;
+    HANDLE hFltMgr;
+    DWORD StringLength;
+    DWORD BufferLength;
+    DWORD dwError;
+
+    /* Get a handle to the filter manager */
+    hFltMgr = CreateFileW(L"\\\\.\\fltmgr",
+                          GENERIC_WRITE,
+                          FILE_SHARE_WRITE,
+                          NULL,
+                          OPEN_EXISTING,
+                          FILE_ATTRIBUTE_NORMAL,
+                          &hFltMgr);
+    if (hFltMgr == INVALID_HANDLE_VALUE)
+    {
+        dwError = GetLastError();
+        return HRESULT_FROM_WIN32(dwError);
+    }
+
+    /* Calc and allocate a buffer to hold our filter name */
+    StringLength = wcslen(lpFilterName) * sizeof(WCHAR);
+    BufferLength = StringLength + sizeof(FILTER_NAME);
+    FilterName = RtlAllocateHeap(GetProcessHeap(),
+                                 0,
+                                 BufferLength);
+    if (FilterName == NULL)
+    {
+        CloseHandle(hFltMgr);
+        return HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY);
+    }
+
+    /* Build up the filter name */
+    FilterName->Length = StringLength;
+    CopyMemory(FilterName->FilterName, lpFilterName, StringLength);
+
+    /* Tell the filter manager to load the filter for us */
+    dwError = SendIoctl(hFltMgr,
+                        Load ? IOCTL_FILTER_LOAD : IOCTL_FILTER_UNLOAD,
+                        FilterName,
+                        BufferLength);
+
+    /* Cleanup and bail*/
+    RtlFreeHeap(GetProcessHeap(), 0, FilterName);
+    CloseHandle(hFltMgr);
+
+    return HRESULT_FROM_WIN32(dwError);
+}
+
+static
+DWORD
+SendIoctl(_In_ HANDLE Handle,
+          _In_ ULONG IoControlCode,
+          _In_reads_bytes_opt_(BufferSize) LPVOID lpInBuffer,
+          _In_ DWORD BufferSize)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+
+    Status = NtDeviceIoControlFile(Handle,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &IoStatusBlock,
+                                   IoControlCode,
+                                   lpInBuffer,
+                                   BufferSize,
+                                   NULL,
+                                   0);
+    if (Status == STATUS_PENDING)
+    {
+        Status = NtWaitForSingleObject(Handle, FALSE, NULL);
+        if (NT_SUCCESS(Status))
+        {
+            Status = IoStatusBlock.Status;
+        }
+    }
+
+    return RtlNtStatusToDosError(Status);
+}
+
+BOOL
+WINAPI
+DllMain(_In_ HINSTANCE hinstDLL,
+        _In_ DWORD dwReason,
+        _In_ LPVOID lpvReserved)
+{
+    switch (dwReason)
+    {
+    case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls(hinstDLL);
+        break;
+    }
+
     return TRUE;
-}
-
-/**********************************************************************
- *      FilterConnectCommunicationPort         (FLTLIB.@)
- */
-HRESULT WINAPI FilterConnectCommunicationPort(LPCWSTR lpPortName, DWORD dwOptions,
-                                              LPVOID lpContext, DWORD dwSizeOfContext,
-                                              LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-                                              HANDLE *hPort)
-{
-    FIXME("(%s, %d, %p, %d, %p, %p) stub\n", debugstr_w(lpPortName), dwOptions,
-        lpContext, dwSizeOfContext, lpSecurityAttributes, hPort);
-
-    *hPort = INVALID_HANDLE_VALUE;
-    return E_NOTIMPL;
-}
-
-/**********************************************************************
- *      FilterFindFirst         (FLTLIB.@)
- */
-HRESULT WINAPI FilterFindFirst(DWORD class, LPVOID buffer, DWORD size, LPDWORD bytes_returned,
-                               LPHANDLE handle)
-{
-    FIXME("(%u, %p, %u, %p, %p) stub\n", class, buffer, size, bytes_returned, handle);
-    return HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS);
-}
-
-/**********************************************************************
- *      FilterFindClose         (FLTLIB.@)
- */
-HRESULT WINAPI FilterFindClose(HANDLE handle)
-{
-    FIXME("(%p) stub\n", handle);
-    return S_OK;
-}
-
-/**********************************************************************
- *      FilterLoad              (FLTLIB.@)
- */
-HRESULT WINAPI FilterLoad(LPCWSTR filtername)
-{
-    FIXME("(%s) stub\n", debugstr_w(filtername));
-    return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
-}
-
-/**********************************************************************
- *      FilterUnload            (FLTLIB.@)
- */
-HRESULT WINAPI FilterUnload(LPCWSTR filtername)
-{
-    FIXME("(%s) stub\n", debugstr_w(filtername));
-
-    if (!filtername)
-        return HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER);
-
-    return S_OK;
 }

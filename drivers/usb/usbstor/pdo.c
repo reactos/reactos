@@ -39,8 +39,8 @@ USBSTOR_GetDeviceType(
     }
 
     //
-    // FIXME: use constant - derrived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
-    // 
+    // FIXME: use constant - derived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
+    //
     switch (InquiryData->DeviceType)
     {
         case 1:
@@ -113,8 +113,8 @@ USBSTOR_GetGenericType(
     }
 
     //
-    // FIXME: use constant - derrived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
-    // 
+    // FIXME: use constant - derived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
+    //
     switch (InquiryData->DeviceType)
     {
         case 1:
@@ -628,7 +628,7 @@ USBSTOR_PdoHandleQueryCompatibleId(
         Irp->IoStatus.Information = 0;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
- 
+
     USBSTOR_ConvertToUnicodeString(Buffer, Length, 0, InstanceId, &Offset);
     USBSTOR_ConvertToUnicodeString(&Buffer[Offset], Length, Offset, InstanceId, &Offset);
 
@@ -701,7 +701,7 @@ USBSTOR_PdoHandleQueryInstanceId(
         Irp->IoStatus.Information = 0;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
- 
+
     //
     // copy instance id
     //
@@ -1018,7 +1018,9 @@ USBSTOR_AllocateIrp(
     //
     // create scsi block
     //
-    Request = (PSCSI_REQUEST_BLOCK)ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK));
+    Request = ExAllocatePoolWithTag(NonPagedPool,
+                                    sizeof(SCSI_REQUEST_BLOCK),
+                                    USB_STOR_TAG);
     if (!Request)
     {
         //
@@ -1036,14 +1038,16 @@ USBSTOR_AllocateIrp(
     //
     // allocate data transfer block
     //
-    Request->DataBuffer = ExAllocatePool(NonPagedPool, DataTransferLength);
-    if (!Request)
+    Request->DataBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                DataTransferLength,
+                                                USB_STOR_TAG);
+    if (!Request->DataBuffer)
     {
         //
         // no memory
         //
         IoFreeIrp(Irp);
-        ExFreePool(Request);
+        ExFreePoolWithTag(Request, USB_STOR_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1057,7 +1061,8 @@ USBSTOR_AllocateIrp(
         // no memory
         //
         IoFreeIrp(Irp);
-        ExFreePool(Request);
+        ExFreePoolWithTag(Request->DataBuffer, USB_STOR_TAG);
+        ExFreePoolWithTag(Request, USB_STOR_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1165,11 +1170,20 @@ USBSTOR_SendIrp(
         //
         *OutData = Request->DataBuffer;
     }
+    else
+    {
+        //
+        // free the data
+        //
+        ExFreePoolWithTag(Request->DataBuffer, USB_STOR_TAG);
+        *OutData = NULL;
+    }
 
     //
     // free resources
     //
-    ExFreePool(Request);
+    ExFreePoolWithTag(Request, USB_STOR_TAG);
+    IoFreeMdl(Irp->MdlAddress);
     IoFreeIrp(Irp);
     return Status;
 }
@@ -1209,7 +1223,7 @@ USBSTOR_SendInquiryIrp(
     DPRINT1("Reserved %p\n", Response->Reserved);
     DPRINT1("Vendor %c%c%c%c%c%c%c%c\n", Response->Vendor[0], Response->Vendor[1], Response->Vendor[2], Response->Vendor[3], Response->Vendor[4], Response->Vendor[5], Response->Vendor[6], Response->Vendor[7]);
     DPRINT1("Product %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", Response->Product[0], Response->Product[1], Response->Product[2], Response->Product[3],
-                                                          Response->Product[4], Response->Product[5], Response->Product[6], Response->Product[7], 
+                                                          Response->Product[4], Response->Product[5], Response->Product[6], Response->Product[7],
                                                           Response->Product[8], Response->Product[9], Response->Product[10], Response->Product[11],
                                                           Response->Product[12], Response->Product[13], Response->Product[14], Response->Product[15]);
 
@@ -1255,7 +1269,7 @@ USBSTOR_SendFormatCapacityIrp(
     //
     // free response
     //
-    ExFreePool(Response);
+    ExFreePoolWithTag(Response, USB_STOR_TAG);
     return Status;
 }
 

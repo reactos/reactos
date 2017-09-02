@@ -115,6 +115,7 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, stringValueData);
+        SendMessage(GetDlgItem(hwndDlg, IDC_VALUE_DATA), EM_SETSEL, 0, -1);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
         return FALSE;
     case WM_COMMAND:
@@ -305,6 +306,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         CheckRadioButton (hwndDlg, IDC_FORMAT_HEX, IDC_FORMAT_DEC, IDC_FORMAT_HEX);
         swprintf(ValueString, L"%lx", dwordValueData);
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, ValueString);
+        SendMessage(GetDlgItem(hwndDlg, IDC_VALUE_DATA), EM_SETSEL, 0, -1);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
         return FALSE;
 
@@ -1079,7 +1081,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
     editValueName = valueName;
 
     lRet = RegQueryValueExW(hKey, valueName, 0, &type, 0, &valueDataLen);
-    if (lRet != ERROR_SUCCESS && (!wcscmp(valueName, L"") || valueName == NULL))
+    if (lRet != ERROR_SUCCESS && (valueName == NULL || !valueName[0]))
     {
         lRet = ERROR_SUCCESS; /* Allow editing of (Default) values which don't exist */
         type = REG_SZ;

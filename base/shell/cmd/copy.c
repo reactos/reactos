@@ -39,8 +39,8 @@ enum
 {
     COPY_ASCII       = 0x001,   /* /A  */
     COPY_DECRYPT     = 0x004,   /* /D  */
-    COPY_VERIFY      = 0x008,   /* /V  : Dummy, Never will be Impleneted */
-    COPY_SHORTNAME   = 0x010,   /* /N  : Dummy, Never will be Impleneted */
+    COPY_VERIFY      = 0x008,   /* /V  : Dummy, Never will be Implemented */
+    COPY_SHORTNAME   = 0x010,   /* /N  : Dummy, Never will be Implemented */
     COPY_NO_PROMPT   = 0x020,   /* /Y  */
     COPY_PROMPT      = 0x040,   /* /-Y */
     COPY_RESTART     = 0x080,   /* /Z  */
@@ -481,13 +481,15 @@ INT cmd_copy(LPTSTR param)
 
                     case _T('-'):
                         if (_tcslen(arg[i]) >= 3)
+                        {
                             if (_totupper(arg[i][2]) == _T('Y'))
                             {
                                 dwFlags &= ~COPY_NO_PROMPT;
                                 dwFlags |= COPY_PROMPT;
                             }
+                        }
 
-                            break;
+                        break;
 
                     case _T('Z'):
                         dwFlags |= COPY_RESTART;

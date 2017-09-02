@@ -1,4 +1,4 @@
-/* $Id: tif_tile.c,v 1.23 2012-06-06 05:33:55 fwarmerdam Exp $ */
+/* $Id: tif_tile.c,v 1.24 2015-06-07 22:35:40 bfriesen Exp $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler
@@ -144,17 +144,40 @@ TIFFNumberOfTiles(TIFF* tif)
 uint64
 TIFFTileRowSize64(TIFF* tif)
 {
+        static const char module[] = "TIFFTileRowSize64";
 	TIFFDirectory *td = &tif->tif_dir;
 	uint64 rowsize;
+	uint64 tilerowsize;
 
-	if (td->td_tilelength == 0 || td->td_tilewidth == 0)
+	if (td->td_tilelength == 0)
+        {
+                TIFFErrorExt(tif->tif_clientdata,module,"Tile length is zero");
+                return 0;
+        }
+        if (td->td_tilewidth == 0)
+        {
+                TIFFErrorExt(tif->tif_clientdata,module,"Tile width is zero");
 		return (0);
+        }
 	rowsize = _TIFFMultiply64(tif, td->td_bitspersample, td->td_tilewidth,
 	    "TIFFTileRowSize");
 	if (td->td_planarconfig == PLANARCONFIG_CONTIG)
+        {
+                if (td->td_samplesperpixel == 0)
+                {
+                        TIFFErrorExt(tif->tif_clientdata,module,"Samples per pixel is zero");
+                        return 0;
+                }
 		rowsize = _TIFFMultiply64(tif, rowsize, td->td_samplesperpixel,
 		    "TIFFTileRowSize");
-	return (TIFFhowmany8_64(rowsize));
+        }
+        tilerowsize=TIFFhowmany8_64(rowsize);
+        if (tilerowsize == 0)
+        {
+                TIFFErrorExt(tif->tif_clientdata,module,"Computed tile row size is zero");
+                return 0;
+        }
+	return (tilerowsize);
 }
 tmsize_t
 TIFFTileRowSize(TIFF* tif)

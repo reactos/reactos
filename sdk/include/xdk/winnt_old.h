@@ -211,6 +211,7 @@
 #define FILE_ATTRIBUTE_OFFLINE            0x00001000
 #define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED    0x00002000
 #define FILE_ATTRIBUTE_ENCRYPTED        0x00004000
+#define FILE_ATTRIBUTE_INTEGRITY_STREAM   0x00008000
 #define FILE_ATTRIBUTE_VALID_FLAGS        0x00007fb7
 #define FILE_ATTRIBUTE_VALID_SET_FLAGS        0x000031a7
 
@@ -915,6 +916,7 @@
 #define IS_TEXT_UNICODE_REVERSE_SIGNATURE 128
 #define IS_TEXT_UNICODE_ILLEGAL_CHARS 256
 #define IS_TEXT_UNICODE_ODD_LENGTH 512
+#define IS_TEXT_UNICODE_DBCS_LEADBYTE 1024
 #define IS_TEXT_UNICODE_NULL_BYTES 4096
 #define IS_TEXT_UNICODE_UNICODE_MASK 15
 #define IS_TEXT_UNICODE_REVERSE_MASK 240
@@ -2543,24 +2545,49 @@ typedef LONG
     struct _EXCEPTION_POINTERS *ExceptionInfo
 );
 
+
+#define EVENTLOG_SEQUENTIAL_READ    1
+#define EVENTLOG_SEEK_READ          2
+#define EVENTLOG_FORWARDS_READ      4
+#define EVENTLOG_BACKWARDS_READ     8
+
+#define EVENTLOG_SUCCESS            0
+#define EVENTLOG_ERROR_TYPE         1
+#define EVENTLOG_WARNING_TYPE       2
+#define EVENTLOG_INFORMATION_TYPE   4
+#define EVENTLOG_AUDIT_SUCCESS      8
+#define EVENTLOG_AUDIT_FAILURE      16
+
 typedef struct _EVENTLOGRECORD {
-  DWORD Length;
+  DWORD Length;             /* Length of full record, including the data portion */
   DWORD Reserved;
   DWORD RecordNumber;
   DWORD TimeGenerated;
   DWORD TimeWritten;
   DWORD EventID;
   WORD EventType;
-  WORD NumStrings;
+  WORD NumStrings;          /* Number of strings in the 'Strings' array */
   WORD EventCategory;
   WORD ReservedFlags;
   DWORD ClosingRecordNumber;
   DWORD StringOffset;
   DWORD UserSidLength;
   DWORD UserSidOffset;
-  DWORD DataLength;
-  DWORD DataOffset;
+  DWORD DataLength;         /* Length of the data portion */
+  DWORD DataOffset;         /* Offset from beginning of record */
+/*
+ * Length-varying data:
+ *
+ * WCHAR SourceName[];
+ * WCHAR ComputerName[];
+ * SID   UserSid;           // Must be aligned on a DWORD boundary
+ * WCHAR Strings[];
+ * BYTE  Data[];
+ * CHAR  Pad[];             // Padding for DWORD boundary
+ * DWORD Length;            // Same as the first 'Length' member at the beginning
+ */
 } EVENTLOGRECORD, *PEVENTLOGRECORD;
+
 
 typedef struct _OSVERSIONINFOA {
   DWORD dwOSVersionInfoSize;
@@ -3779,7 +3806,7 @@ typedef enum _POWER_INFORMATION_LEVEL {
   PowerInformationLevelMaximum
 } POWER_INFORMATION_LEVEL;
 
-#if 1 /* (WIN32_WINNT >= 0x0500) */
+#if 1 /* (_WIN32_WINNT >= 0x0500) */
 typedef struct _SYSTEM_POWER_INFORMATION {
     ULONG  MaxIdlenessAllowed;
     ULONG  Idleness;
@@ -3858,6 +3885,20 @@ typedef struct _ASSEMBLY_FILE_DETAILED_INFORMATION {
 } ASSEMBLY_FILE_DETAILED_INFORMATION,*PASSEMBLY_FILE_DETAILED_INFORMATION;
 typedef const ASSEMBLY_FILE_DETAILED_INFORMATION *PCASSEMBLY_FILE_DETAILED_INFORMATION;
 
+typedef enum {
+  ACTCTX_RUN_LEVEL_UNSPECIFIED = 0,
+  ACTCTX_RUN_LEVEL_AS_INVOKER,
+  ACTCTX_RUN_LEVEL_HIGHEST_AVAILABLE,
+  ACTCTX_RUN_LEVEL_REQUIRE_ADMIN,
+  ACTCTX_RUN_LEVEL_NUMBERS
+} ACTCTX_REQUESTED_RUN_LEVEL;
+
+typedef struct _ACTIVATION_CONTEXT_RUN_LEVEL_INFORMATION {
+  DWORD ulFlags;
+  ACTCTX_REQUESTED_RUN_LEVEL RunLevel;
+  DWORD UiAccess;
+} ACTIVATION_CONTEXT_RUN_LEVEL_INFORMATION, *PACTIVATION_CONTEXT_RUN_LEVEL_INFORMATION;
+
 #define ACTIVATION_CONTEXT_PATH_TYPE_NONE         1
 #define ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE   2
 #define ACTIVATION_CONTEXT_PATH_TYPE_URL          3
@@ -3873,7 +3914,7 @@ typedef const ASSEMBLY_FILE_DETAILED_INFORMATION *PCASSEMBLY_FILE_DETAILED_INFOR
 #define ACTIVATION_CONTEXT_SECTION_GLOBAL_OBJECT_RENAME_TABLE    8
 #define ACTIVATION_CONTEXT_SECTION_CLR_SURROGATES                9
 
-#endif /* (WIN32_WINNT >= 0x0501) */
+#endif /* (_WIN32_WINNT >= 0x0501) */
 
 typedef struct _PROCESSOR_POWER_POLICY_INFO {
   DWORD TimeCheck;

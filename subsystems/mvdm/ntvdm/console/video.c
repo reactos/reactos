@@ -395,10 +395,10 @@ static BOOL AttachToConsoleInternal(PCOORD Resolution)
             CurrentAddr = LOWORD((Address + j) * AddressSize);
 
             /* Store the character in plane 0 */
-            VgaMemory[CurrentAddr] = CharBuff[i * TextResolution.X + j].Char.AsciiChar;
+            VgaMemory[CurrentAddr * VGA_NUM_BANKS] = CharBuff[i * TextResolution.X + j].Char.AsciiChar;
 
             /* Store the attribute in plane 1 */
-            VgaMemory[CurrentAddr + VGA_BANK_SIZE] = (BYTE)CharBuff[i * TextResolution.X + j].Attributes;
+            VgaMemory[CurrentAddr * VGA_NUM_BANKS + 1] = (BYTE)CharBuff[i * TextResolution.X + j].Attributes;
         }
 
         /* Move to the next scanline */

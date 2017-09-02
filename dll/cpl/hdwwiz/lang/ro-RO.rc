@@ -135,7 +135,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Nu se mai poate continua Adăugarea componentelor fizice", IDC_FINISHTITLE, 114, 8, 203, 28
+    LTEXT "Adăugarea componentelor fizice nu poate continua", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Pentru a continua, conectați dispozitivul la calculator.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "În&chide calculatorul când apăs „Sfârșit” pentru a putea deschide calculatorul și conecta componenta fizică.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
     LTEXT "De obicei ReactOS poate instala dispozitive în mod automat, imediat după conectarea lor. Dacă ReactOS nu va detecta în mod automat noul dispozitiv, redeschideți acest asistent de adăugare a componentelor fizice.", -1, 114, 98, 193, 32

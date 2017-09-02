@@ -208,7 +208,7 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
 
 NTSTATUS
 NTAPI
-SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
                                    IN KPROCESSOR_MODE AccessMode,
                                    IN POOL_TYPE PoolType,
                                    IN BOOLEAN CaptureIfKernel,
@@ -528,7 +528,7 @@ SeCaptureSecurityDescriptor(
     {
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
-    _SEH2_END
+    _SEH2_END;
 
     /*
      * Allocate enough memory to store a complete copy of a self-relative

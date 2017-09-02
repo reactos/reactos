@@ -780,8 +780,7 @@ TcpipAdvGwDlg(
                     SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
 
-                if (pGwSettings->szIP)
-                    SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETADDRESS, 0, (LPARAM)GetIpAddressFromStringW(pGwSettings->szIP));
+                SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETADDRESS, 0, (LPARAM)GetIpAddressFromStringW(pGwSettings->szIP));
 
                 if (pGwSettings->Metric)
                 {
@@ -941,11 +940,8 @@ TcpipAddIpDlg(
                     SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
 
-                if (pIpSettings->szIP)
-                    SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETADDRESS, 0, (LPARAM)GetIpAddressFromStringW(pIpSettings->szIP));
-
-                if (pIpSettings->szMask)
-                    SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)GetIpAddressFromStringW(pIpSettings->szMask));
+                SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_SETADDRESS, 0, (LPARAM)GetIpAddressFromStringW(pIpSettings->szIP));
+                SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)GetIpAddressFromStringW(pIpSettings->szMask));
             }
             return TRUE;
         case WM_NOTIFY:
@@ -2710,8 +2706,8 @@ LoadDNSSettings(
         RegQueryValueExW(hKey, L"RegisterAdapterName", NULL, NULL, (LPBYTE)&This->pCurrentConfig->pDNS->RegisterAdapterName, &dwSize);
         RegQueryValueExW(hKey, L"RegistrationEnabled", NULL, NULL, (LPBYTE)&This->pCurrentConfig->pDNS->RegistrationEnabled, &dwSize);
 
-        dwSize = sizeof(This->pCurrentConfig->pDNS->szDomain) / sizeof(WCHAR);
-        RegQueryValueExW(hKey, L"Domain", NULL, NULL, (LPBYTE)szBuffer, &dwSize);
+        dwSize = sizeof(This->pCurrentConfig->pDNS->szDomain);
+        RegQueryValueExW(hKey, L"Domain", NULL, NULL, (LPBYTE)This->pCurrentConfig->pDNS->szDomain, &dwSize);
 
         RegCloseKey(hKey);
     }

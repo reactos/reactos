@@ -238,8 +238,8 @@ IntScrollWindowEx(
    LPRECT prcUpdate,
    UINT flags)
 {
-   RECTL rcScroll, rcClip, rcCaret;
    INT Result;
+   RECTL rcScroll, rcClip, rcCaret;
    PWND CaretWnd;
    HDC hDC;
    PREGION RgnUpdate = NULL, RgnTemp, RgnWinupd = NULL;
@@ -248,19 +248,20 @@ IntScrollWindowEx(
    int rdw_flags;
    USER_REFERENCE_ENTRY CaretRef;
 
+   if (!Window || !IntIsWindowDrawable(Window))
+   {
+      return ERROR;
+   }
+
    IntGetClientRect(Window, &rcClip);
 
    if (prcScroll)
-   {
       RECTL_bIntersectRect(&rcScroll, &rcClip, prcScroll);
-   }
    else
       rcScroll = rcClip;
 
    if (prcClip)
-   {
       RECTL_bIntersectRect(&rcClip, &rcClip, prcClip);
-   }
 
    if (rcClip.right <= rcClip.left || rcClip.bottom <= rcClip.top ||
          (dx == 0 && dy == 0))
@@ -283,7 +284,8 @@ IntScrollWindowEx(
        if (!RgnTemp)
        {
            EngSetLastError(ERROR_INVALID_HANDLE);
-           return ERROR;
+           Result = ERROR;
+           goto Cleanup;
        }
        IntGdiCombineRgn(RgnUpdate, RgnTemp, NULL, RGN_COPY);
        REGION_UnlockRgn(RgnTemp);
@@ -311,7 +313,8 @@ IntScrollWindowEx(
    if (!hDC)
    {
       /* FIXME: SetLastError? */
-      return ERROR;
+      Result = ERROR;
+      goto Cleanup;
    }
 
    rdw_flags = (flags & SW_ERASE) && (flags & SW_INVALIDATE) ? RDW_INVALIDATE | RDW_ERASE : RDW_INVALIDATE ;
@@ -339,7 +342,8 @@ IntScrollWindowEx(
    if (!RgnTemp)
    {
        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-       return ERROR;
+       Result = ERROR;
+       goto Cleanup;
    }
 
    if (co_IntGetUpdateRgn(Window, RgnTemp, FALSE) != NULLREGION)
@@ -349,7 +353,8 @@ IntScrollWindowEx(
       {
           if (hrgnUpdate)
           {
-             RgnWinupd = IntSysCreateRectpRgn( 0, 0, 0, 0);
+             RgnWinupd = IntSysCreateRectpRgn(0, 0, 0, 0);
+             // FIXME: What to do if RgnWinupd == NULL??
              IntGdiCombineRgn( RgnWinupd, RgnTemp, 0, RGN_COPY);
           }
 
@@ -381,24 +386,21 @@ IntScrollWindowEx(
       for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
       {
          rcChild = Child->rcWindow;
-         rcChild.left -= ClientOrigin.x;
-         rcChild.top -= ClientOrigin.y;
-         rcChild.right -= ClientOrigin.x;
-         rcChild.bottom -= ClientOrigin.y;
+         RECTL_vOffsetRect(&rcChild, -ClientOrigin.x, -ClientOrigin.y);
 
          if (!prcScroll || RECTL_bIntersectRect(&rcDummy, &rcChild, &rcScroll))
          {
             UserRefObjectCo(Child, &WndRef);
 
-            if (Window->spwndParent == UserGetDesktopWindow()) // Window->spwndParent->fnid == FNID_DESKTOP )
+            if (UserIsDesktopWindow(Window->spwndParent))
                lParam = MAKELONG(Child->rcClient.left, Child->rcClient.top);
             else
                lParam = MAKELONG(rcChild.left + dx, rcChild.top + dy);
 
             /* wine sends WM_POSCHANGING, WM_POSCHANGED messages */
-            /* windows sometimes a WM_MOVE */                  
+            /* windows sometimes a WM_MOVE */
             co_IntSendMessage(UserHMGetHandle(Child), WM_MOVE, 0, lParam);
-            
+
             UserDerefObjectCo(Child);
          }
       }
@@ -436,6 +438,7 @@ IntScrollWindowEx(
        REGION_UnlockRgn(RgnTemp);
    }
 
+Cleanup:
    if (RgnWinupd)
    {
        REGION_Delete(RgnWinupd);
@@ -478,9 +481,9 @@ NtUserScrollDC(
    LPRECT prcUnsafeUpdate)
 {
    DECLARE_RETURN(DWORD);
-   RECTL rcScroll, rcClip, rcUpdate;
-   NTSTATUS Status = STATUS_SUCCESS;
    DWORD Result;
+   NTSTATUS Status = STATUS_SUCCESS;
+   RECTL rcScroll, rcClip, rcUpdate;
 
    TRACE("Enter NtUserScrollDC\n");
    UserEnterExclusive();
@@ -506,7 +509,8 @@ NtUserScrollDC(
    {
       Status = _SEH2_GetExceptionCode();
    }
-   _SEH2_END
+   _SEH2_END;
+
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
@@ -516,14 +520,14 @@ NtUserScrollDC(
    Result = UserScrollDC( hDC,
                           dx,
                           dy,
-                          prcUnsafeScroll? &rcScroll : 0,
-                          prcUnsafeClip? &rcClip : 0,
+                          prcUnsafeScroll ? &rcScroll : NULL,
+                          prcUnsafeClip   ? &rcClip   : NULL,
                           hrgnUpdate,
                           NULL,
-                          prcUnsafeUpdate? &rcUpdate : NULL);
+                          prcUnsafeUpdate ? &rcUpdate : NULL);
    if(Result == ERROR)
    {
-   	  /* FIXME: Only if hRgnUpdate is invalid we should SetLastError(ERROR_INVALID_HANDLE) */
+      /* FIXME: Only if hRgnUpdate is invalid we should SetLastError(ERROR_INVALID_HANDLE) */
       RETURN(FALSE);
    }
 
@@ -537,7 +541,8 @@ NtUserScrollDC(
       {
          Status = _SEH2_GetExceptionCode();
       }
-      _SEH2_END
+      _SEH2_END;
+
       if (!NT_SUCCESS(Status))
       {
          /* FIXME: SetLastError? */
@@ -572,17 +577,12 @@ NtUserScrollWindowEx(
    LPRECT prcUnsafeUpdate,
    UINT flags)
 {
-   RECTL rcScroll, rcClip, rcCaret, rcUpdate;
-   INT Result;
-   PWND Window = NULL, CaretWnd;
-   HDC hDC;
-   PREGION RgnUpdate = NULL, RgnTemp, RgnWinupd = NULL;
-   HWND hwndCaret;
-   DWORD dcxflags = 0;
-   int rdw_flags;
-   NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(DWORD);
-   USER_REFERENCE_ENTRY Ref, CaretRef;
+   INT Result;
+   NTSTATUS Status = STATUS_SUCCESS;
+   PWND Window = NULL;
+   RECTL rcScroll, rcClip, rcUpdate;
+   USER_REFERENCE_ENTRY Ref;
 
    TRACE("Enter NtUserScrollWindowEx\n");
    UserEnterExclusive();
@@ -591,33 +591,29 @@ NtUserScrollWindowEx(
    if (!Window || !IntIsWindowDrawable(Window))
    {
       Window = NULL; /* prevent deref at cleanup */
-      RETURN( ERROR);
+      RETURN(ERROR);
    }
    UserRefObjectCo(Window, &Ref);
-
-   IntGetClientRect(Window, &rcClip);
 
    _SEH2_TRY
    {
       if (prcUnsafeScroll)
       {
          ProbeForRead(prcUnsafeScroll, sizeof(*prcUnsafeScroll), 1);
-         RECTL_bIntersectRect(&rcScroll, &rcClip, prcUnsafeScroll);
+         rcScroll = *prcUnsafeScroll;
       }
-      else
-         rcScroll = rcClip;
 
       if (prcUnsafeClip)
       {
          ProbeForRead(prcUnsafeClip, sizeof(*prcUnsafeClip), 1);
-         RECTL_bIntersectRect(&rcClip, &rcClip, prcUnsafeClip);
+         rcClip = *prcUnsafeClip;
       }
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       Status = _SEH2_GetExceptionCode();
    }
-   _SEH2_END
+   _SEH2_END;
 
    if (!NT_SUCCESS(Status))
    {
@@ -625,166 +621,13 @@ NtUserScrollWindowEx(
       RETURN(ERROR);
    }
 
-   if (rcClip.right <= rcClip.left || rcClip.bottom <= rcClip.top ||
-         (dx == 0 && dy == 0))
-   {
-      RETURN(NULLREGION);
-   }
-
-   /* We must use a copy of the region, as we can't hold an exclusive lock
-    * on it while doing callouts to user-mode */
-   RgnUpdate = IntSysCreateRectpRgn(0, 0, 0, 0);
-   if(!RgnUpdate)
-   {
-       EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-       RETURN(ERROR);
-   }
-
-   if (hrgnUpdate)
-   {
-       RgnTemp = REGION_LockRgn(hrgnUpdate);
-       if (!RgnTemp)
-       {
-           EngSetLastError(ERROR_INVALID_HANDLE);
-           RETURN(ERROR);
-       }
-       IntGdiCombineRgn(RgnUpdate, RgnTemp, NULL, RGN_COPY);
-       REGION_UnlockRgn(RgnTemp);
-   }
-
-   /* ScrollWindow uses the window DC, ScrollWindowEx doesn't */
-   if (flags & SW_SCROLLWNDDCE)
-   {
-      dcxflags = DCX_USESTYLE;
-
-      if (!(Window->pcls->style & (CS_OWNDC|CS_CLASSDC)))
-         dcxflags |= DCX_CACHE; // AH??? wine~ If not Powned or with Class go Cheap!
-
-      if (flags & SW_SCROLLCHILDREN && Window->style & WS_CLIPCHILDREN)
-         dcxflags |= DCX_CACHE|DCX_NOCLIPCHILDREN;
-   }
-   else
-   {
-       /* So in this case ScrollWindowEx uses Cache DC. */
-       dcxflags = DCX_CACHE|DCX_USESTYLE;
-       if (flags & SW_SCROLLCHILDREN) dcxflags |= DCX_NOCLIPCHILDREN;
-   }
-
-   hDC = UserGetDCEx(Window, 0, dcxflags);
-   if (!hDC)
-   {
-      /* FIXME: SetLastError? */
-      RETURN(ERROR);
-   }
-
-   rdw_flags = (flags & SW_ERASE) && (flags & SW_INVALIDATE) ? RDW_INVALIDATE | RDW_ERASE : RDW_INVALIDATE ;
-
-   rcCaret = rcScroll;
-   hwndCaret = co_IntFixCaret(Window, &rcCaret, flags);
-
-   Result = UserScrollDC( hDC,
-                          dx,
-                          dy,
-                          &rcScroll,
-                          &rcClip,
-                          NULL,
-                          RgnUpdate,
-                          prcUnsafeUpdate? &rcUpdate : NULL);
-
-   UserReleaseDC(Window, hDC, FALSE);
-
-   /*
-    * Take into account the fact that some damage may have occurred during
-    * the scroll. Keep a copy in hrgnWinupd to be added to hrngUpdate at the end.
-    */
-
-   RgnTemp = IntSysCreateRectpRgn(0, 0, 0, 0);
-   if (!RgnTemp)
-   {
-       EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-       RETURN(ERROR);
-   }
-
-   if (co_IntGetUpdateRgn(Window, RgnTemp, FALSE) != NULLREGION)
-   {
-      PREGION RgnClip = IntSysCreateRectpRgnIndirect(&rcClip);
-      if (RgnClip)
-      {
-          if (hrgnUpdate)
-          {
-             RgnWinupd = IntSysCreateRectpRgn( 0, 0, 0, 0);
-             IntGdiCombineRgn( RgnWinupd, RgnTemp, 0, RGN_COPY);
-          }
-
-          REGION_bOffsetRgn(RgnTemp, dx, dy);
-
-          IntGdiCombineRgn(RgnTemp, RgnTemp, RgnClip, RGN_AND);
-
-          if (hrgnUpdate)
-              IntGdiCombineRgn( RgnWinupd, RgnWinupd, RgnTemp, RGN_OR );
-
-          co_UserRedrawWindow(Window, NULL, RgnTemp, rdw_flags );
-
-          REGION_Delete(RgnClip);
-      }
-   }
-   REGION_Delete(RgnTemp);
-
-   if (flags & SW_SCROLLCHILDREN)
-   {
-      PWND Child;
-      RECTL rcChild;
-      POINT ClientOrigin;
-      USER_REFERENCE_ENTRY WndRef;
-      RECTL rcDummy;
-      LPARAM lParam;
-
-      IntGetClientOrigin(Window, &ClientOrigin);
-
-      for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
-      {
-         rcChild = Child->rcWindow;
-         rcChild.left -= ClientOrigin.x;
-         rcChild.top -= ClientOrigin.y;
-         rcChild.right -= ClientOrigin.x;
-         rcChild.bottom -= ClientOrigin.y;
-
-         if (!prcUnsafeScroll || RECTL_bIntersectRect(&rcDummy, &rcChild, &rcScroll))
-         {
-            UserRefObjectCo(Child, &WndRef);
-
-            if (Window->spwndParent == UserGetDesktopWindow()) // Window->spwndParent->fnid == FNID_DESKTOP )
-               lParam = MAKELONG(Child->rcClient.left, Child->rcClient.top);
-            else
-               lParam = MAKELONG(rcChild.left + dx, rcChild.top + dy);
-
-            /* wine sends WM_POSCHANGING, WM_POSCHANGED messages */
-            /* windows sometimes a WM_MOVE */                  
-            co_IntSendMessage(UserHMGetHandle(Child), WM_MOVE, 0, lParam);
-            
-            UserDerefObjectCo(Child);
-         }
-      }
-   }
-
-   if (flags & (SW_INVALIDATE | SW_ERASE))
-   {
-      co_UserRedrawWindow( Window,
-                           NULL,
-                           RgnUpdate,
-                           rdw_flags |                                    /*    HACK    */
-                          ((flags & SW_SCROLLCHILDREN) ? RDW_ALLCHILDREN : RDW_NOCHILDREN) );
-   }
-
-   if (hwndCaret && (CaretWnd = UserGetWindowObject(hwndCaret)))
-   {
-      UserRefObjectCo(CaretWnd, &CaretRef);
-
-      co_IntSetCaretPos(rcCaret.left + dx, rcCaret.top + dy);
-      co_UserShowCaret(CaretWnd);
-
-      UserDerefObjectCo(CaretWnd);
-   }
+   Result = IntScrollWindowEx(Window,
+                              dx, dy,
+                              prcUnsafeScroll ? &rcScroll : NULL,
+                              prcUnsafeClip   ? &rcClip   : NULL,
+                              hrgnUpdate,
+                              prcUnsafeUpdate ? &rcUpdate : NULL,
+                              flags);
 
    if (prcUnsafeUpdate)
    {
@@ -798,7 +641,7 @@ NtUserScrollWindowEx(
       {
          Status = _SEH2_GetExceptionCode();
       }
-      _SEH2_END
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {
@@ -810,29 +653,6 @@ NtUserScrollWindowEx(
    RETURN(Result);
 
 CLEANUP:
-   if (hrgnUpdate && (_ret_ != ERROR))
-   {
-       /* Give everything back to the caller */
-       RgnTemp = REGION_LockRgn(hrgnUpdate);
-       /* The handle should still be valid */
-       ASSERT(RgnTemp);
-       if (RgnWinupd)
-           IntGdiCombineRgn(RgnTemp, RgnUpdate, RgnWinupd, RGN_OR);
-       else
-           IntGdiCombineRgn(RgnTemp, RgnUpdate, NULL, RGN_COPY);
-       REGION_UnlockRgn(RgnTemp);
-   }
-
-   if (RgnWinupd)
-   {
-       REGION_Delete(RgnWinupd);
-   }
-
-   if (RgnUpdate)
-   {
-      REGION_Delete(RgnUpdate);
-   }
-
    if (Window)
       UserDerefObjectCo(Window);
 
@@ -840,6 +660,5 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
-
 
 /* EOF */

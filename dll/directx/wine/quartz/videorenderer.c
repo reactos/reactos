@@ -42,6 +42,7 @@ typedef struct VideoRendererImpl
     RECT WindowPos;
     LONG VideoWidth;
     LONG VideoHeight;
+    LONG FullScreenMode;
 } VideoRendererImpl;
 
 static inline VideoRendererImpl *impl_from_BaseWindow(BaseWindow *iface)
@@ -770,7 +771,7 @@ static HRESULT WINAPI BasicVideo_QueryInterface(IBasicVideo *iface, REFIID riid,
 {
     VideoRendererImpl *This = impl_from_IBasicVideo(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -842,7 +843,7 @@ static HRESULT WINAPI VideoWindow_QueryInterface(IVideoWindow *iface, REFIID rii
 {
     VideoRendererImpl *This = impl_from_IVideoWindow(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -870,7 +871,12 @@ static HRESULT WINAPI VideoWindow_get_FullScreenMode(IVideoWindow *iface,
 {
     VideoRendererImpl *This = impl_from_IVideoWindow(iface);
 
-    FIXME("(%p/%p)->(%p): stub !!!\n", This, iface, FullScreenMode);
+    TRACE("(%p/%p)->(%p): %d\n", This, iface, FullScreenMode, This->FullScreenMode);
+
+    if (!FullScreenMode)
+        return E_POINTER;
+
+    *FullScreenMode = This->FullScreenMode;
 
     return S_OK;
 }
@@ -898,6 +904,7 @@ static HRESULT WINAPI VideoWindow_put_FullScreenMode(IVideoWindow *iface,
         SetWindowPos(This->baseControlWindow.baseWindow.hWnd,0,This->DestRect.left,This->DestRect.top,This->DestRect.right,This->DestRect.bottom,SWP_NOZORDER|SWP_SHOWWINDOW);
         This->WindowPos = This->DestRect;
     }
+    This->FullScreenMode = FullScreenMode;
 
     return S_OK;
 }
@@ -1005,6 +1012,7 @@ HRESULT VideoRenderer_create(IUnknown *pUnkOuter, void **ppv)
     ZeroMemory(&pVideoRenderer->SourceRect, sizeof(RECT));
     ZeroMemory(&pVideoRenderer->DestRect, sizeof(RECT));
     ZeroMemory(&pVideoRenderer->WindowPos, sizeof(RECT));
+    pVideoRenderer->FullScreenMode = OAFALSE;
 
     if (pUnkOuter)
         pVideoRenderer->outer_unk = pUnkOuter;

@@ -933,7 +933,7 @@ PsExitSpecialApc(IN PKAPC Apc,
     if (Apc->SystemArgument2)
     {
         /* Free the APC */
-        Status = (NTSTATUS)Apc->NormalContext;
+        Status = PtrToUlong(Apc->NormalContext);
         PspExitApcRundown(Apc);
 
         /* Terminate the Thread */
@@ -1039,7 +1039,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
                         PspExitApcRundown,
                         PspExitNormalApc,
                         KernelMode,
-                        (PVOID)ExitStatus);
+                        UlongToPtr(ExitStatus));
 
         /* Insert it into the APC Queue */
         if (!KeInsertQueueApc(Apc, Apc, NULL, 2))

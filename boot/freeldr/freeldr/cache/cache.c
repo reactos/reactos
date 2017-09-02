@@ -133,7 +133,7 @@ BOOLEAN CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG Sect
     }
 
     //
-    // Caculate which blocks we must cache
+    // Calculate which blocks we must cache
     //
     StartBlock = (ULONG)(StartSector / CacheManagerDrive.BlockSize);
     SectorOffsetInStartBlock = (ULONG)(StartSector % CacheManagerDrive.BlockSize);
@@ -263,7 +263,7 @@ BOOLEAN CacheForceDiskSectorsIntoCache(UCHAR DiskNumber, ULONGLONG StartSector, 
     }
 
     //
-    // Caculate which blocks we must cache
+    // Calculate which blocks we must cache
     //
     StartBlock = StartSector / CacheManagerDrive.BlockSize;
     EndBlock = (StartSector + SectorCount) / CacheManagerDrive.BlockSize;

@@ -39,7 +39,6 @@ class CPrinterFolder :
     public:
         CPrinterFolder();
         ~CPrinterFolder();
-        HRESULT WINAPI FinalConstruct();
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);

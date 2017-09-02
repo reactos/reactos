@@ -12,14 +12,14 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "&Новий\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Відкрити...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "В&ихід\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Довідка"
     BEGIN
-        MENUITEM "&Про консоль керування ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "&Про консоль керування ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -27,10 +27,10 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
-        MENUITEM "Save", IDM_FILE_SAVE
-        MENUITEM "Save as...", IDM_FILE_SAVEAS
+        MENUITEM "&Новий\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Відкрити...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "З&берегти", IDM_FILE_SAVE
+        MENUITEM "Зберегти &як...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "В&ихід\tAlt+F4", IDM_FILE_EXIT
     END
@@ -40,7 +40,7 @@ BEGIN
     END
     POPUP "&Довідка"
     BEGIN
-        MENUITEM "&Про консоль керування ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "&Про консоль керування ReactOS", IDM_HELP_ABOUT
     END
 END
 

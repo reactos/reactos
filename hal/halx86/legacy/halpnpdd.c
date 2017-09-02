@@ -787,6 +787,34 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                                         (PVOID)&Irp->IoStatus.Information);
                 break;
 
+            case IRP_MN_QUERY_DEVICE_TEXT:
+
+                /* Inherit whatever status we had */
+                DPRINT("Query text for the PDO\n");
+                Status = Irp->IoStatus.Status;
+                break;
+
+            case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
+
+                /* Inherit whatever status we had */
+                DPRINT("Filter resource requirements for the PDO\n");
+                Status = Irp->IoStatus.Status;
+                break;
+
+            case IRP_MN_QUERY_PNP_DEVICE_STATE:
+
+                /* Inherit whatever status we had */
+                DPRINT("Query device state for the PDO\n");
+                Status = Irp->IoStatus.Status;
+                break;
+
+            case IRP_MN_QUERY_BUS_INFORMATION:
+
+                /* Inherit whatever status we had */
+                DPRINT("Query bus information for the PDO\n");
+                Status = Irp->IoStatus.Status;
+                break;
+
             default:
 
                 /* We don't handle anything else, so inherit the old state */
@@ -821,7 +849,7 @@ HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
     PFDO_EXTENSION FdoExtension;
-    
+
     DPRINT1("HAL: PnP Driver Power!\n");
     FdoExtension = DeviceObject->DeviceExtension;
     if (FdoExtension->ExtensionType == FdoExtensionType)

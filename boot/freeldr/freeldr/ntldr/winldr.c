@@ -27,9 +27,9 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-//FIXME: Find a better way to retrieve ARC disk information
+// FIXME: Find a better way to retrieve ARC disk information
 extern ULONG reactos_disk_count;
-extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
+extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
 
 extern ULONG LoaderPagesSpanned;
 extern BOOLEAN AcpiPresent;
@@ -96,7 +96,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Construct SystemRoot and ArcBoot from SystemPath */
     PathSeparator = strstr(BootPath, "\\") - BootPath;
     strncpy(ArcBoot, BootPath, PathSeparator);
-    ArcBoot[PathSeparator] = 0;
+    ArcBoot[PathSeparator] = ANSI_NULL;
 
     TRACE("ArcBoot: %s\n", ArcBoot);
     TRACE("SystemRoot: %s\n", SystemRoot);
@@ -148,14 +148,10 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         ArcDiskSig = FrLdrHeapAlloc(sizeof(ARC_DISK_SIGNATURE_EX), 'giSD');
 
         /* Copy the data over */
-        ArcDiskSig->DiskSignature.Signature = reactos_arc_disk_info[i].Signature;
-        ArcDiskSig->DiskSignature.CheckSum = reactos_arc_disk_info[i].CheckSum;
+        RtlCopyMemory(ArcDiskSig, &reactos_arc_disk_info[i], sizeof(ARC_DISK_SIGNATURE_EX));
 
-        /* Copy the ARC Name */
-        strncpy(ArcDiskSig->ArcName, reactos_arc_disk_info[i].ArcName, MAX_PATH);
+        /* Set the ARC Name pointer and mark the partition table as valid */
         ArcDiskSig->DiskSignature.ArcName = PaToVa(ArcDiskSig->ArcName);
-
-        /* Mark partition table as valid */
         ArcDiskSig->DiskSignature.ValidPartitionTable = TRUE;
 
         /* Insert into the list */
@@ -176,8 +172,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Convert all DTE into virtual addresses */
     List_PaToVa(&LoaderBlock->LoadOrderListHead);
 
-    /* this one will be converted right before switching to
-       virtual paging mode */
+    /* This one will be converted right before switching to virtual paging mode */
     //List_PaToVa(&LoaderBlock->MemoryDescriptorListHead);
 
     /* Convert list of boot drivers */
@@ -190,11 +185,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     Extension->MinorVersion = VersionToBoot & 0xFF;
     Extension->Profile.Status = 2;
 
-    /* Check if ACPI is present */
+    /* Check if FreeLdr detected a ACPI table */
     if (AcpiPresent)
     {
-        /* See KiRosFrldrLpbToNtLpb for details */
+        /* Set the pointer to something for compatibility */
         Extension->AcpiTable = (PVOID)1;
+        // FIXME: Extension->AcpiTableSize;
     }
 
 #ifdef _M_IX86
@@ -253,7 +249,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     {
         // There is no directory in the path
         strcpy(DllName, DriverPath);
-        DriverPath[0] = 0;
+        DriverPath[0] = ANSI_NULL;
     }
 
     TRACE("DriverPath: %s, DllName: %s, LPB\n", DriverPath, DllName);
@@ -430,46 +426,43 @@ WinLdrDetectVersion(VOID)
 static
 BOOLEAN
 LoadModule(
-    PLOADER_PARAMETER_BLOCK LoaderBlock,
-    PCCH Path,
-    PCCH File,
-    TYPE_OF_MEMORY MemoryType,
-    PLDR_DATA_TABLE_ENTRY *Dte,
-    BOOLEAN IsKdTransportDll,
-    ULONG Percentage)
+    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PCCH Path,
+    IN PCCH File,
+    IN PCCH ImportName, // BaseDllName
+    IN TYPE_OF_MEMORY MemoryType,
+    OUT PLDR_DATA_TABLE_ENTRY *Dte,
+    IN ULONG Percentage)
 {
     BOOLEAN Success;
     CHAR FullFileName[MAX_PATH];
     CHAR ProgressString[256];
-    PVOID BaseAdress = NULL;
+    PVOID BaseAddress = NULL;
 
     UiDrawBackdrop();
     sprintf(ProgressString, "Loading %s...", File);
     UiDrawProgressBarCenter(Percentage, 100, ProgressString);
 
     strcpy(FullFileName, Path);
-    strcat(FullFileName, "SYSTEM32\\");
     strcat(FullFileName, File);
 
-    Success = WinLdrLoadImage(FullFileName, MemoryType, &BaseAdress);
+    Success = WinLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
     {
         TRACE("Loading %s failed\n", File);
         return FALSE;
     }
-    TRACE("%s loaded successfully at %p\n", File, BaseAdress);
+    TRACE("%s loaded successfully at %p\n", File, BaseAddress);
 
-    strcpy(FullFileName, "WINDOWS\\SYSTEM32\\");
-    strcat(FullFileName, File);
     /*
      * Cheat about the base DLL name if we are loading
      * the Kernel Debugger Transport DLL, to make the
      * PE loader happy.
      */
     Success = WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
-                                           (IsKdTransportDll ? "KDCOM.DLL" : File),
+                                           ImportName,
                                            FullFileName,
-                                           BaseAdress,
+                                           BaseAddress,
                                            Dte);
 
     return Success;
@@ -479,22 +472,82 @@ static
 BOOLEAN
 LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                IN LPCSTR BootOptions,
-                IN LPCSTR BootPath,
+                IN PCSTR BootOptions,
+                IN PCSTR BootPath,
                 IN OUT PLDR_DATA_TABLE_ENTRY* KernelDTE)
 {
     BOOLEAN Success;
+    PCSTR Options;
     CHAR DirPath[MAX_PATH];
+    CHAR KernelFileName[MAX_PATH];
+    CHAR HalFileName[MAX_PATH];
     CHAR KdTransportDllName[MAX_PATH];
     PLDR_DATA_TABLE_ENTRY HalDTE, KdComDTE = NULL;
 
     if (!KernelDTE) return FALSE;
 
+    /* Initialize SystemRoot\System32 path */
+    strcpy(DirPath, BootPath);
+    strcat(DirPath, "SYSTEM32\\");
+
+    //
+    // TODO: Parse also the separate INI values "Kernel=" and "Hal="
+    //
+
+    /* Default KERNEL and HAL file names */
+    strcpy(KernelFileName, "NTOSKRNL.EXE");
+    strcpy(HalFileName   , "HAL.DLL");
+
+    /* Find any /KERNEL= or /HAL= switch in the boot options */
+    Options = BootOptions;
+    while (Options)
+    {
+        /* Skip possible initial whitespace */
+        Options += strspn(Options, " \t");
+
+        /* Check whether a new commutator starts and it is either KERNEL or HAL */
+        if (*Options != '/' || (++Options,
+            !(_strnicmp(Options, "KERNEL=", 7) == 0 ||
+              _strnicmp(Options, "HAL=",    4) == 0)) )
+        {
+            /* Search for another whitespace */
+            Options = strpbrk(Options, " \t");
+            continue;
+        }
+        else
+        {
+            size_t i = strcspn(Options, " \t"); /* Skip whitespace */
+            if (i == 0)
+            {
+                /* Use the default values */
+                break;
+            }
+
+            /* We have found either KERNEL or HAL commutator */
+            if (_strnicmp(Options, "KERNEL=", 7) == 0)
+            {
+                Options += 7; i -= 7;
+                strncpy(KernelFileName, Options, i);
+                KernelFileName[i] = ANSI_NULL;
+                _strupr(KernelFileName);
+            }
+            else if (_strnicmp(Options, "HAL=", 4) == 0)
+            {
+                Options += 4; i -= 4;
+                strncpy(HalFileName, Options, i);
+                HalFileName[i] = ANSI_NULL;
+                _strupr(HalFileName);
+            }
+        }
+    }
+
+    TRACE("Kernel file = '%s' ; HAL file = '%s'\n", KernelFileName, HalFileName);
+
     /* Load the Kernel */
-    LoadModule(LoaderBlock, BootPath, "NTOSKRNL.EXE", LoaderSystemCode, KernelDTE, FALSE, 30);
+    LoadModule(LoaderBlock, DirPath, KernelFileName, "NTOSKRNL.EXE", LoaderSystemCode, KernelDTE, 30);
 
     /* Load the HAL */
-    LoadModule(LoaderBlock, BootPath, "HAL.DLL", LoaderHalCode, &HalDTE, FALSE, 45);
+    LoadModule(LoaderBlock, DirPath, HalFileName, "HAL.DLL", LoaderHalCode, &HalDTE, 45);
 
     /* Load the Kernel Debugger Transport DLL */
     if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
@@ -529,27 +582,28 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
          * "...foo /DEBUGPORT= bar..."
          * (in that case, we default the port to COM).
          */
-        while (BootOptions)
+        Options = BootOptions;
+        while (Options)
         {
             /* Skip possible initial whitespace */
-            BootOptions += strspn(BootOptions, " \t");
+            Options += strspn(Options, " \t");
 
             /* Check whether a new commutator starts and it is the DEBUGPORT one */
-            if (*BootOptions != '/' || _strnicmp(++BootOptions, "DEBUGPORT=", 10) != 0)
+            if (*Options != '/' || _strnicmp(++Options, "DEBUGPORT=", 10) != 0)
             {
                 /* Search for another whitespace */
-                BootOptions = strpbrk(BootOptions, " \t");
+                Options = strpbrk(Options, " \t");
                 continue;
             }
             else
             {
                 /* We found the DEBUGPORT commutator. Move to the port name. */
-                BootOptions += 10;
+                Options += 10;
                 break;
             }
         }
 
-        if (BootOptions)
+        if (Options)
         {
             /*
              * We have found the DEBUGPORT commutator. Parse the port name.
@@ -557,33 +611,30 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
              * If we only have /DEBUGPORT= (i.e. without any port name), defaults it to "COM".
              */
             strcpy(KdTransportDllName, "KD");
-            if (_strnicmp(BootOptions, "COM", 3) == 0 && '0' <= BootOptions[3] && BootOptions[3] <= '9')
+            if (_strnicmp(Options, "COM", 3) == 0 && '0' <= Options[3] && Options[3] <= '9')
             {
-                strncat(KdTransportDllName, BootOptions, 3);
+                strncat(KdTransportDllName, Options, 3);
             }
             else
             {
-                size_t i = strcspn(BootOptions, " \t:"); /* Skip valid separators: whitespace or colon */
+                size_t i = strcspn(Options, " \t:"); /* Skip valid separators: whitespace or colon */
                 if (i == 0)
                     strcat(KdTransportDllName, "COM");
                 else
-                    strncat(KdTransportDllName, BootOptions, i);
+                    strncat(KdTransportDllName, Options, i);
             }
             strcat(KdTransportDllName, ".DLL");
             _strupr(KdTransportDllName);
 
             /*
-             * Load the transport DLL. Specify it to LoadModule so that it can
-             * change the base DLL name of the loaded transport DLL to the default
-             * "KDCOM.DLL" name, to make the PE loader happy.
+             * Load the transport DLL. Override the base DLL name of the
+             * loaded transport DLL to the default "KDCOM.DLL" name.
              */
-            LoadModule(LoaderBlock, BootPath, KdTransportDllName, LoaderSystemCode, &KdComDTE, TRUE, 60);
+            LoadModule(LoaderBlock, DirPath, KdTransportDllName, "KDCOM.DLL", LoaderSystemCode, &KdComDTE, 60);
         }
     }
 
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
-    strcpy(DirPath, BootPath);
-    strcat(DirPath, "system32\\");
     Success  = WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
     Success &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
     if (KdComDTE)
@@ -692,18 +743,24 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
 
     TRACE("BootPath: '%s'\n", BootPath);
 
-    /* Allocate and minimalistic-initialize LPB */
+    /* Allocate and minimalist-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
 
-    /* Load Hive */
+    /* Load the system hive */
     UiDrawBackdrop();
     UiDrawProgressBarCenter(15, 100, "Loading system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath);
     TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
+    /* Bail out if failure */
+    if (!Success)
+        return;
 
     /* Load NLS data, OEM font, and prepare boot drivers list */
     Success = WinLdrScanSystemHive(LoaderBlock, BootPath);
     TRACE("SYSTEM hive %s\n", (Success ? "scanned" : "not scanned"));
+    /* Bail out if failure */
+    if (!Success)
+        return;
 
     /* Finish loading */
     LoadAndBootWindowsCommon(OperatingSystemVersion,

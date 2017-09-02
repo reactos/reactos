@@ -148,7 +148,7 @@ use_default:
 /******************************************************************************
  * closelog
  *
- * Close desriptor used to write to system logger.
+ * Close descriptor used to write to system logger.
  */
 void closelog()
 {

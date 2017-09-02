@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@
 /*
  * ACPICA configuration
  */
+#define ACPI_USE_STANDARD_HEADERS
 #define ACPI_USE_SYSTEM_CLIBRARY
 #define ACPI_USE_DO_WHILE_0
 #define ACPI_FLUSH_CPU_CACHE()
@@ -58,11 +59,9 @@
 #define ACPI_USE_ALTERNATE_TIMEOUT
 
 
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
+#ifdef ACPI_USE_STANDARD_HEADERS
 #include <unistd.h>
+#endif
 
 #if defined(__ia64__) || defined(__x86_64__)
 #define ACPI_MACHINE_WIDTH          64
@@ -73,6 +72,7 @@
 #define COMPILER_DEPENDENT_INT64    long long
 #define COMPILER_DEPENDENT_UINT64   unsigned long long
 #define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_NATIVE_MATH64
 #endif
 
 #ifndef __cdecl
@@ -85,10 +85,6 @@
 /* On Cygwin, pthread_t is a pointer */
 
 #define ACPI_CAST_PTHREAD_T(pthread) ((ACPI_THREAD_ID) ACPI_TO_INTEGER (pthread))
-
-/* Cygwin uses GCC */
-
-#include "acgcc.h"
 
 
 /*

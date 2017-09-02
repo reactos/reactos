@@ -324,7 +324,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Görev Yöneticisi"
     IDC_TASKMGR "Görev Yöneticisi"
-    IDS_IDLE_PROCESS "Dizge Boşta İşlemi"
+    IDS_IDLE_PROCESS "Boş Dizge İşlemi"
 END
 
 STRINGTABLE

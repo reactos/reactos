@@ -237,7 +237,17 @@ static DWORD VMR9_SendSampleData(struct quartz_vmr *This, VMR9PresentationInfo *
         return hr;
     }
 
-    if (lock.Pitch != width * bmiHeader->biBitCount / 8)
+    if (height > 0) {
+        /* Bottom up image needs inverting */
+        lock.pBits = (char *)lock.pBits + (height * lock.Pitch);
+        while (height--)
+        {
+            lock.pBits = (char *)lock.pBits - lock.Pitch;
+            memcpy(lock.pBits, data, width * bmiHeader->biBitCount / 8);
+            data = data + width * bmiHeader->biBitCount / 8;
+        }
+    }
+    else if (lock.Pitch != width * bmiHeader->biBitCount / 8)
     {
         WARN("Slow path! %u/%u\n", lock.Pitch, width * bmiHeader->biBitCount/8);
 
@@ -918,7 +928,7 @@ static HRESULT WINAPI Videowindow_QueryInterface(IVideoWindow *iface, REFIID rii
 {
     struct quartz_vmr *This = impl_from_IVideoWindow(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return VMR9_QueryInterface(&This->renderer.filter.IBaseFilter_iface, riid, ppvObj);
 }
@@ -996,7 +1006,7 @@ static HRESULT WINAPI Basicvideo_QueryInterface(IBasicVideo *iface, REFIID riid,
 {
     struct quartz_vmr *This = impl_from_IBasicVideo(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return VMR9_QueryInterface(&This->renderer.filter.IBaseFilter_iface, riid, ppvObj);
 }
@@ -1228,7 +1238,7 @@ static HRESULT WINAPI VMR7FilterConfig_GetRenderingMode(IVMRFilterConfig *iface,
 {
     struct quartz_vmr *This = impl_from_IVMRFilterConfig(iface);
 
-    TRACE("(%p/%p)->(%p) stub\n", iface, This, mode);
+    TRACE("(%p/%p)->(%p)\n", iface, This, mode);
     if (!mode) return E_POINTER;
 
     if (This->mode)
@@ -1290,7 +1300,7 @@ static BOOL CALLBACK get_available_monitors_proc(HMONITOR hmon, HDC hdc, LPRECT 
             else
                 info->guid.pGUID = NULL;
 
-            CopyRect(&info->rcMonitor, &mi.rcMonitor);
+            info->rcMonitor     = mi.rcMonitor;
             info->hMon          = hmon;
             info->dwFlags       = mi.dwFlags;
 
@@ -1307,7 +1317,7 @@ static BOOL CALLBACK get_available_monitors_proc(HMONITOR hmon, HDC hdc, LPRECT 
             memset(info, 0, sizeof(*info));
 
             info->uDevID        = 0; /* FIXME */
-            CopyRect(&info->rcMonitor, &mi.rcMonitor);
+            info->rcMonitor     = mi.rcMonitor;
             info->hMon          = hmon;
             info->dwFlags       = mi.dwFlags;
 
@@ -1651,7 +1661,7 @@ static HRESULT WINAPI VMR9FilterConfig_GetRenderingMode(IVMRFilterConfig9 *iface
 {
     struct quartz_vmr *This = impl_from_IVMRFilterConfig9(iface);
 
-    TRACE("(%p/%p)->(%p) stub\n", iface, This, mode);
+    TRACE("(%p/%p)->(%p)\n", iface, This, mode);
     if (!mode)
         return E_POINTER;
 
@@ -3000,7 +3010,7 @@ static HRESULT WINAPI VMR9_SurfaceAllocator_AdviseNotify(IVMRSurfaceAllocatorEx9
 
     TRACE("(%p/%p)->(...)\n", iface, This);
 
-    /* No AddRef taken here or the base VMR9 filter would never be destroied */
+    /* No AddRef taken here or the base VMR9 filter would never be destroyed */
     This->SurfaceAllocatorNotify = allocnotify;
     return S_OK;
 }

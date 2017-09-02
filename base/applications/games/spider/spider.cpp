@@ -57,21 +57,21 @@ INT_PTR CALLBACK DifficultyDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
     case WM_COMMAND:
         switch(LOWORD(wParam))
         {
-        case IDOK:
-            if (IsDlgButtonChecked(hDlg, IDC_DIF_ONECOLOR) == BST_CHECKED)
-                dwDifficulty = IDC_DIF_ONECOLOR;
-            else if (IsDlgButtonChecked(hDlg, IDC_DIF_TWOCOLORS) == BST_CHECKED)
-                dwDifficulty = IDC_DIF_TWOCOLORS;
-            else if (IsDlgButtonChecked(hDlg, IDC_DIF_FOURCOLORS) == BST_CHECKED)
-                dwDifficulty = IDC_DIF_FOURCOLORS;
+            case IDOK:
+                if (IsDlgButtonChecked(hDlg, IDC_DIF_ONECOLOR) == BST_CHECKED)
+                    dwDifficulty = IDC_DIF_ONECOLOR;
+                else if (IsDlgButtonChecked(hDlg, IDC_DIF_TWOCOLORS) == BST_CHECKED)
+                    dwDifficulty = IDC_DIF_TWOCOLORS;
+                else if (IsDlgButtonChecked(hDlg, IDC_DIF_FOURCOLORS) == BST_CHECKED)
+                    dwDifficulty = IDC_DIF_FOURCOLORS;
 
-            NewGame();
-            EndDialog(hDlg, TRUE);
-            return TRUE;
+                NewGame();
+                EndDialog(hDlg, TRUE);
+                return TRUE;
 
-        case IDCANCEL:
-            EndDialog(hDlg, FALSE);
-            return TRUE;
+            case IDCANCEL:
+                EndDialog(hDlg, FALSE);
+                return TRUE;
         }
         break;
     }
@@ -122,16 +122,16 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
     MakePath(szHelpPath, MAX_PATH, _T(".hlp"));
 
     hwnd = CreateWindow(szAppName,
-                szAppName,
-                WS_OVERLAPPEDWINDOW,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                0,  /*The real size will be computed in WndProc through WM_GETMINMAXINFO */
-                0,  /* The real size will be computed in WndProc through WM_GETMINMAXINFO */
-                NULL,
-                NULL,
-                hInst,
-                NULL);
+                        szAppName,
+                        WS_OVERLAPPEDWINDOW,
+                        CW_USEDEFAULT,
+                        CW_USEDEFAULT,
+                        0,  /*The real size will be computed in WndProc through WM_GETMINMAXINFO */
+                        0,  /* The real size will be computed in WndProc through WM_GETMINMAXINFO */
+                        NULL,
+                        NULL,
+                        hInst,
+                        NULL);
 
     hwndMain = hwnd;
 
@@ -142,9 +142,9 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
 
     DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIFFICULTY), hwnd, DifficultyDlgProc);
 
-    while(GetMessage(&msg, NULL,0,0))
+    while (GetMessage(&msg, NULL,0,0))
     {
-        if(!TranslateAccelerator(hwnd, hAccelTable, &msg))
+        if (!TranslateAccelerator(hwnd, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -153,70 +153,64 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
     return msg.wParam;
 }
 
-LRESULT CALLBACK
-CardImageWndProc(HWND hwnd,
-                 UINT msg,
-                 WPARAM wParam,
-                 LPARAM lParam)
+LRESULT CALLBACK CardImageWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    PCARDBACK pCardBack = (PCARDBACK)GetWindowLongPtr(hwnd,
-                                                      GWL_USERDATA);
+    PCARDBACK pCardBack = (PCARDBACK)GetWindowLongPtr(hwnd, GWL_USERDATA);
     static WNDPROC hOldProc = NULL;
 
-    if (!hOldProc && pCardBack)
+    if (!pCardBack)
+        return FALSE;
+
+    if (!hOldProc)
         hOldProc = pCardBack->hOldProc;
 
     switch (msg)
     {
-    case WM_PAINT:
-    {
-        HDC hdc;
-        PAINTSTRUCT ps;
-        HPEN hPen, hOldPen;
-        HBRUSH hBrush, hOldBrush;
-        RECT rc;
-
-        hdc = BeginPaint(hwnd, &ps);
-
-        if (pCardBack->bSelected)
+        case WM_PAINT:
         {
-            hPen = CreatePen(PS_SOLID, 2, RGB(0,0,0));
-        }
-        else
-        {
-            DWORD Face = GetSysColor(COLOR_3DFACE);
-            hPen = CreatePen(PS_SOLID, 2, Face);
-        }
+            HDC hdc;
+            PAINTSTRUCT ps;
+            HPEN hPen, hOldPen;
+            HBRUSH hBrush, hOldBrush;
+            RECT rc;
 
-        GetClientRect(hwnd, &rc);
-        hBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
-        hOldPen = (HPEN)SelectObject(hdc, hPen);
-        hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+            hdc = BeginPaint(hwnd, &ps);
 
-        Rectangle(hdc,
-                  rc.left+1,
-                  rc.top+1,
-                  rc.right,
-                  rc.bottom);
+            if (pCardBack->bSelected)
+            {
+                hPen = CreatePen(PS_SOLID, 2, RGB(0,0,0));
+            }
+            else
+            {
+                DWORD Face = GetSysColor(COLOR_3DFACE);
+                hPen = CreatePen(PS_SOLID, 2, Face);
+            }
 
-        StretchBlt(hdc,
-                   2,
-                   2,
-                   CARDBACK_OPTIONS_WIDTH,
-                   CARDBACK_OPTIONS_HEIGHT,
-                   __hdcCardBitmaps,
-                   pCardBack->hdcNum * __cardwidth,
-                   0,
-                   __cardwidth,
-                   __cardheight,
-                   SRCCOPY);
+            GetClientRect(hwnd, &rc);
+            hBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+            hOldPen = (HPEN)SelectObject(hdc, hPen);
+            hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
 
-        SelectObject(hdc, hOldPen);
-        SelectObject(hdc, hOldBrush);
+            Rectangle(hdc, rc.left+1, rc.top+1, rc.right, rc.bottom);
 
-        EndPaint(hwnd, &ps);
+            StretchBlt(hdc,
+                       2,
+                       2,
+                       CARDBACK_OPTIONS_WIDTH,
+                       CARDBACK_OPTIONS_HEIGHT,
+                       __hdcCardBitmaps,
+                       pCardBack->hdcNum * __cardwidth,
+                       0,
+                       __cardwidth,
+                       __cardheight,
+                       SRCCOPY);
 
-        break;
+            SelectObject(hdc, hOldPen);
+            SelectObject(hdc, hOldBrush);
+
+            EndPaint(hwnd, &ps);
+
+            break;
     }
 
     case WM_LBUTTONDOWN:
@@ -224,86 +218,73 @@ CardImageWndProc(HWND hwnd,
         break;
     }
 
-    return CallWindowProc(hOldProc,
-                          hwnd,
-                          msg,
-                          wParam,
-                          lParam);
+    return CallWindowProc(hOldProc, hwnd, msg, wParam, lParam);
 }
 
 
-INT_PTR CALLBACK CardBackDlgProc(HWND hDlg,
-                              UINT uMsg,
-                              WPARAM wParam,
-                              LPARAM lParam)
+INT_PTR CALLBACK CardBackDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static PCARDBACK pCardBacks = NULL;
 
     switch (uMsg)
     {
-    case WM_INITDIALOG:
-    {
-        INT i, c;
-        SIZE_T size = sizeof(CARDBACK) * NUM_CARDBACKS;
-
-        pCardBacks = (PCARDBACK)HeapAlloc(GetProcessHeap(),
-                                          0,
-                                          size);
-
-        for (i = 0, c = CARDBACK_START; c <= CARDBACK_END; i++, c++)
+        case WM_INITDIALOG:
         {
-            pCardBacks[i].hSelf = GetDlgItem(hDlg, c);
-            pCardBacks[i].bSelected = FALSE;
-            pCardBacks[i].hdcNum = CARDBACK_RES_START + i;
-            pCardBacks[i].imgNum = i + 1;
-            pCardBacks[i].hOldProc = (WNDPROC)SetWindowLongPtr(pCardBacks[i].hSelf,
-                                                               GWLP_WNDPROC,
-                                                               (LONG_PTR)CardImageWndProc);
+            INT i, c;
+            SIZE_T size = sizeof(CARDBACK) * NUM_CARDBACKS;
 
-            SetWindowLongPtr(pCardBacks[i].hSelf,
-                             GWL_USERDATA,
-                             (LONG_PTR)&pCardBacks[i]);
-        }
+            pCardBacks = (PCARDBACK)HeapAlloc(GetProcessHeap(), 0, size);
 
-        return TRUE;
-    }
+            if (!pCardBacks)
+                return FALSE;
 
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            INT i, num = 0;
-            for (i = 0; i < NUM_CARDBACKS; i++)
+            for (i = 0, c = CARDBACK_START; c <= CARDBACK_END; i++, c++)
             {
-                if (pCardBacks[i].bSelected)
-                {
-                    num = pCardBacks[i].imgNum;
-                }
+                pCardBacks[i].hSelf = GetDlgItem(hDlg, c);
+                pCardBacks[i].bSelected = FALSE;
+                pCardBacks[i].hdcNum = CARDBACK_RES_START + i;
+                pCardBacks[i].imgNum = i + 1;
+                pCardBacks[i].hOldProc = (WNDPROC)SetWindowLongPtr(pCardBacks[i].hSelf,
+                                                                   GWLP_WNDPROC,
+                                                                   (LONG_PTR)CardImageWndProc);
+
+                SetWindowLongPtr(pCardBacks[i].hSelf, GWL_USERDATA, (LONG_PTR)&pCardBacks[i]);
             }
 
-            EndDialog(hDlg, LOWORD(wParam) == IDOK ? num : FALSE);
-            HeapFree(GetProcessHeap(), 0, pCardBacks);
             return TRUE;
         }
 
-        if (HIWORD(wParam) == STN_CLICKED)
-        {
-            INT i;
-            RECT rc;
-            for (i = 0; i < NUM_CARDBACKS; i++)
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
             {
-                if (pCardBacks[i].hSelf == (HWND)lParam)
+                INT i, num = 0;
+                for (i = 0; i < NUM_CARDBACKS; i++)
                 {
-                    pCardBacks[i].bSelected = TRUE;
+                    if (pCardBacks[i].bSelected)
+                    {
+                        num = pCardBacks[i].imgNum;
+                    }
                 }
-                else
-                    pCardBacks[i].bSelected = FALSE;
 
-                GetClientRect(pCardBacks[i].hSelf, &rc);
-                InvalidateRect(pCardBacks[i].hSelf, &rc, TRUE);
+                EndDialog(hDlg, LOWORD(wParam) == IDOK ? num : FALSE);
+                HeapFree(GetProcessHeap(), 0, pCardBacks);
+                return TRUE;
             }
 
-            break;
-        }
+            if (HIWORD(wParam) == STN_CLICKED)
+            {
+                INT i;
+                RECT rc;
+                for (i = 0; i < NUM_CARDBACKS; i++)
+                {
+                    pCardBacks[i].bSelected = pCardBacks[i].hSelf == (HWND)lParam;
+
+                    GetClientRect(pCardBacks[i].hSelf, &rc);
+                    InvalidateRect(pCardBacks[i].hSelf, &rc, TRUE);
+                }
+
+                break;
+            }
     }
 
     return FALSE;
@@ -314,10 +295,7 @@ VOID ShowDeckOptionsDlg(HWND hwnd)
 {
     INT cardBack;
 
-    if ((cardBack = DialogBox(hInstance,
-                              MAKEINTRESOURCE(IDD_CARDBACK),
-                              hwnd,
-                              CardBackDlgProc)))
+    if ((cardBack = DialogBox(hInstance, MAKEINTRESOURCE(IDD_CARDBACK), hwnd, CardBackDlgProc)))
     {
         SpiderWnd.SetBackCardIdx(CARDBACK_RES_START + (cardBack - 1));
         SpiderWnd.Redraw();
@@ -328,7 +306,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
     static int nWidth, nHeight;
 
-    switch(iMsg)
+    switch (iMsg)
     {
         case WM_CREATE:
         {
@@ -369,27 +347,27 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_COMMAND:
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
-            case IDM_GAME_NEW:
-                NewGame();
-                return 0;
+                case IDM_GAME_NEW:
+                    NewGame();
+                    return 0;
 
-            case IDM_GAME_DECK:
-                ShowDeckOptionsDlg(hwnd);
-                return 0;
+                case IDM_GAME_DECK:
+                    ShowDeckOptionsDlg(hwnd);
+                    return 0;
 
-            case IDM_HELP_CONTENTS:
-                WinHelp(hwnd, szHelpPath, HELP_CONTENTS, 0);//HELP_KEY, (DWORD)"How to play");
-                return 0;
+                case IDM_HELP_CONTENTS:
+                    WinHelp(hwnd, szHelpPath, HELP_CONTENTS, 0);//HELP_KEY, (DWORD)"How to play");
+                    return 0;
 
-            case IDM_HELP_ABOUT:
-                MessageBox(hwnd, MsgAbout, szAppName, MB_OK|MB_ICONINFORMATION);
-                return 0;
+                case IDM_HELP_ABOUT:
+                    MessageBox(hwnd, MsgAbout, szAppName, MB_OK|MB_ICONINFORMATION);
+                    return 0;
 
-            case IDM_GAME_EXIT:
-                PostMessage(hwnd, WM_CLOSE, 0, 0);
-                return 0;
+                case IDM_GAME_EXIT:
+                    PostMessage(hwnd, WM_CLOSE, 0, 0);
+                    return 0;
             }
 
             return 0;

@@ -6,13 +6,18 @@
 #define HEADER_SIZE 37
 #define BUTTON_POS_X 6
 #define BUTTON_POS_Y 8
-#define BUTTON_WIDTH 72
+#define BUTTON_WIDTH 80
 #define BUTTON_HEIGHT 21
+#define BUTTON_PADDING 8
 
 #define IDC_INSTALL 1001
 #define IDC_PRINT 1002
 #define IDC_DISPLAY 1003
+#define IDC_PREV 1004
+#define IDC_NEXT 1005
 
 LRESULT CALLBACK MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
 BOOL LoadFont(LPWSTR lpCmdLine);
+
+extern INT g_FontIndex;

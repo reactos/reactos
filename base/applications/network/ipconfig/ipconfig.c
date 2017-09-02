@@ -540,7 +540,7 @@ VOID ShowInfo(BOOL bAll)
             if (pAdapter->HaveWins)
             {
                 _tprintf(_T("\tPrimary WINS Server . . . . . . . : %s\n"), pAdapter->PrimaryWinsServer.IpAddress.String);
-                _tprintf(_T("\tSecondard WINS Server . . . . . . : %s\n"), pAdapter->SecondaryWinsServer.IpAddress.String);
+                _tprintf(_T("\tSecondary WINS Server . . . . . . : %s\n"), pAdapter->SecondaryWinsServer.IpAddress.String);
             }
 
             if (pAdapter->DhcpEnabled)

@@ -243,7 +243,7 @@ UDFFileDirInfoToNT(
     NTSTATUS status;
     PtrUDFNTRequiredFCB NtReqFcb;
 
-    KdPrint(("@=%#x, FileDirNdx %x\n", &Vcb, FileDirNdx));
+    UDFPrint(("@=%#x, FileDirNdx %x\n", &Vcb, FileDirNdx));
 
     ASSERT((ULONG)NTFileInfo > 0x1000);
     RtlZeroMemory(NTFileInfo, sizeof(FILE_BOTH_DIR_INFORMATION));
@@ -252,13 +252,13 @@ UDFFileDirInfoToNT(
     DosName.MaximumLength = sizeof(NTFileInfo->ShortName); // 12*sizeof(WCHAR)
 
     _SEH2_TRY {
-        KdPrint(("  DirInfoToNT: %*.*S\n", FileDirNdx->FName.Length/sizeof(WCHAR), FileDirNdx->FName.Length/sizeof(WCHAR), FileDirNdx->FName));
+        UDFPrint(("  DirInfoToNT: %*.*S\n", FileDirNdx->FName.Length/sizeof(WCHAR), FileDirNdx->FName.Length/sizeof(WCHAR), FileDirNdx->FName));
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-        KdPrint(("  DirInfoToNT: exception when printing file name\n"));
+        UDFPrint(("  DirInfoToNT: exception when printing file name\n"));
     } _SEH2_END;
 
     if(FileDirNdx->FileInfo) {
-        KdPrint(("    FileInfo\n"));
+        UDFPrint(("    FileInfo\n"));
         // validate FileInfo
         ValidateFileInfo(FileDirNdx->FileInfo);
         if(UDFGetFileLinkCount(FileDirNdx->FileInfo) > 1)
@@ -267,7 +267,7 @@ UDFFileDirInfoToNT(
         // read required sizes from Fcb (if any) if file is not linked
         // otherwise we should read them from FileEntry
         if(FileDirNdx->FileInfo->Fcb) {
-            KdPrint(("    Fcb\n"));
+            UDFPrint(("    Fcb\n"));
             NtReqFcb = FileDirNdx->FileInfo->Fcb->NTRequiredFCB;
             NTFileInfo->CreationTime.QuadPart   = NtReqFcb->CreationTime.QuadPart;
             NTFileInfo->LastWriteTime.QuadPart  = NtReqFcb->LastWriteTime.QuadPart;
@@ -279,7 +279,7 @@ UDFFileDirInfoToNT(
             NTFileInfo->EndOfFile.QuadPart = NtReqFcb->CommonFCBHeader.FileSize.QuadPart;*/
             NTFileInfo->EndOfFile.QuadPart = FileDirNdx->FileSize;
             if(FileDirNdx->FI_Flags & UDF_FI_FLAG_SYS_ATTR) {
-                KdPrint(("    SYS_ATTR\n"));
+                UDFPrint(("    SYS_ATTR\n"));
                 NTFileInfo->FileAttributes = FileDirNdx->SysAttr;
                 goto get_name_only;
             }
@@ -294,7 +294,7 @@ UDFFileDirInfoToNT(
                (FileDirNdx->FI_Flags & UDF_FI_FLAG_LINKED)) {
         LONG_AD feloc;
 
-        KdPrint(("  !SYS_ATTR\n"));
+        UDFPrint(("  !SYS_ATTR\n"));
         FileEntry = (PFILE_ENTRY)MyAllocatePool__(NonPagedPool, Vcb->LBlockSize);
         if(!FileEntry) return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -302,14 +302,14 @@ UDFFileDirInfoToNT(
         feloc.extLocation = FileDirNdx->FileEntryLoc;
 
         if(!NT_SUCCESS(status = UDFReadFileEntry(Vcb, &feloc, FileEntry, &Ident))) {
-            KdPrint(("    !UDFReadFileEntry\n"));
+            UDFPrint(("    !UDFReadFileEntry\n"));
             MyFreePool__(FileEntry);
             FileEntry = NULL;
             goto get_name_only;
         }
         ReadSizes = TRUE;
     } else {
-        KdPrint(("  FileDirNdx\n"));
+        UDFPrint(("  FileDirNdx\n"));
         NTFileInfo->CreationTime.QuadPart   = FileDirNdx->CreationTime;
         NTFileInfo->LastWriteTime.QuadPart  = FileDirNdx->LastWriteTime;
         NTFileInfo->LastAccessTime.QuadPart = FileDirNdx->LastAccessTime;
@@ -325,11 +325,11 @@ UDFFileDirInfoToNT(
     if(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK)
         goto get_name_only;
 
-    KdPrint(("  direct\n"));
+    UDFPrint(("  direct\n"));
     if(FileEntry->descTag.tagIdent == TID_FILE_ENTRY) {
-        KdPrint(("  TID_FILE_ENTRY\n"));
+        UDFPrint(("  TID_FILE_ENTRY\n"));
         if(ReadSizes) {
-            KdPrint(("    ReadSizes\n"));
+            UDFPrint(("    ReadSizes\n"));
             // Times
             FileDirNdx->CreationTime   = NTFileInfo->CreationTime.QuadPart   =
             FileDirNdx->LastWriteTime  = NTFileInfo->LastWriteTime.QuadPart  = UDFTimeToNT(&(FileEntry->modificationTime));
@@ -339,7 +339,7 @@ UDFFileDirInfoToNT(
             FileDirNdx->FileSize =
             NTFileInfo->EndOfFile.QuadPart =
                 FileEntry->informationLength;
-            KdPrint(("    informationLength=%I64x, lengthAllocDescs=%I64x\n",
+            UDFPrint(("    informationLength=%I64x, lengthAllocDescs=%I64x\n",
                 FileEntry->informationLength,
                 FileEntry->lengthAllocDescs
                 ));
@@ -351,9 +351,9 @@ UDFFileDirInfoToNT(
 //        NTFileInfo->EaSize = 0;//FileEntry->lengthExtendedAttr;
     } else if(FileEntry->descTag.tagIdent == TID_EXTENDED_FILE_ENTRY) {
         ExFileEntry = (PEXTENDED_FILE_ENTRY)FileEntry;
-        KdPrint(("  PEXTENDED_FILE_ENTRY\n"));
+        UDFPrint(("  PEXTENDED_FILE_ENTRY\n"));
         if(ReadSizes) {
-            KdPrint(("    ReadSizes\n"));
+            UDFPrint(("    ReadSizes\n"));
             // Times
             FileDirNdx->CreationTime   = NTFileInfo->CreationTime.QuadPart   = UDFTimeToNT(&(ExFileEntry->createTime));
             FileDirNdx->LastWriteTime  = NTFileInfo->LastWriteTime.QuadPart  = UDFTimeToNT(&(ExFileEntry->modificationTime));
@@ -363,7 +363,7 @@ UDFFileDirInfoToNT(
             FileDirNdx->FileSize =
             NTFileInfo->EndOfFile.QuadPart =
                 ExFileEntry->informationLength;
-            KdPrint(("    informationLength=%I64x, lengthAllocDescs=%I64x\n",
+            UDFPrint(("    informationLength=%I64x, lengthAllocDescs=%I64x\n",
                 FileEntry->informationLength,
                 FileEntry->lengthAllocDescs
                 ));
@@ -374,13 +374,13 @@ UDFFileDirInfoToNT(
         }
 //        NTFileInfo->EaSize = 0;//ExFileEntry->lengthExtendedAttr;
     } else {
-        KdPrint(("  ???\n"));
+        UDFPrint(("  ???\n"));
         goto get_name_only;
     }
 
 get_attr_only:
 
-    KdPrint(("  get_attr"));
+    UDFPrint(("  get_attr"));
     // do some substitutions
     if(!FileDirNdx->CreationTime) {
         FileDirNdx->CreationTime = NTFileInfo->CreationTime.QuadPart = Vcb->VolCreationTime;
@@ -405,20 +405,20 @@ get_name_only:
     NTFileInfo->FileNameLength = UdfName.Length;
     RtlCopyMemory((PCHAR)&(NTFileInfo->FileName), (PCHAR)(UdfName.Buffer), UdfName.MaximumLength);
     if(!(FileDirNdx->FI_Flags & UDF_FI_FLAG_DOS)) {
-        KdPrint(("  !UDF_FI_FLAG_DOS"));
+        UDFPrint(("  !UDF_FI_FLAG_DOS"));
         UDFDOSName(Vcb, &DosName, &UdfName,
             (FileDirNdx->FI_Flags & UDF_FI_FLAG_KEEP_NAME) ? TRUE : FALSE);
         NTFileInfo->ShortNameLength = (UCHAR)DosName.Length;
     }
     // report zero EOF & AllocSize for Dirs
     if(FileDirNdx->FileCharacteristics & FILE_DIRECTORY) {
-        KdPrint(("  FILE_DIRECTORY"));
+        UDFPrint(("  FILE_DIRECTORY"));
         NTFileInfo->AllocationSize.QuadPart =
         NTFileInfo->EndOfFile.QuadPart = 0;
     }
-    KdPrint(("  AllocationSize=%I64x, NTFileInfo->EndOfFile=%I64x", NTFileInfo->AllocationSize.QuadPart, NTFileInfo->EndOfFile.QuadPart));
+    UDFPrint(("  AllocationSize=%I64x, NTFileInfo->EndOfFile=%I64x", NTFileInfo->AllocationSize.QuadPart, NTFileInfo->EndOfFile.QuadPart));
     // free tmp buffer (if any)
-    KdPrint(("\n"));
+    UDFPrint(("\n"));
     if(FileEntry && !FileDirNdx->FileInfo)
         MyFreePool__(FileEntry);
     return STATUS_SUCCESS;

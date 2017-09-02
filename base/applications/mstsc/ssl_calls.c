@@ -22,732 +22,612 @@
 
 #include "precomp.h"
 
-#define APP_CC
-
 /*****************************************************************************/
 static void * g_malloc(int size, int zero)
 {
-  void * p;
+    void * p;
 
-  p = xmalloc(size);
-  if (zero)
-  {
-    memset(p, 0, size);
-  }
-  return p;
+    p = CryptMemAlloc(size);
+    if (zero)
+    {
+        memset(p, 0, size);
+    }
+    return p;
 }
 
 /*****************************************************************************/
 static void g_free(void * in)
 {
-  xfree(in);
+    CryptMemFree(in);
 }
 
-/*****************************************************************************/
-/*****************************************************************************/
-/* rc4 stuff */
-/* An implementation of the ARC4 algorithm
- *
- * Copyright (C) 2001-2003  Christophe Devine
- */
 struct rc4_state
 {
-  int x;
-  int y;
-  int m[256];
+    HCRYPTPROV hCryptProv;
+    HCRYPTKEY hKey;
 };
-
 /*****************************************************************************/
-void* APP_CC
-ssl_rc4_info_create(void)
+void*
+rdssl_rc4_info_create(void)
 {
-  return g_malloc(sizeof(struct rc4_state), 1);
-}
-
-/*****************************************************************************/
-void APP_CC
-ssl_rc4_info_delete(void* rc4_info)
-{
-  g_free(rc4_info);
-}
-
-/*****************************************************************************/
-void APP_CC
-ssl_rc4_set_key(void* rc4_info, char* key, int len)
-{
-  int i;
-  int j;
-  int k;
-  int a;
-  int* m;
-  struct rc4_state* s;
-
-  s = (struct rc4_state*)rc4_info;
-  s->x = 0;
-  s->y = 0;
-  m = s->m;
-  for (i = 0; i < 256; i++)
-  {
-    m[i] = i;
-  }
-  j = 0;
-  k = 0;
-  for (i = 0; i < 256; i++)
-  {
-    a = m[i];
-    j = (unsigned char)(j + a + key[k]);
-    m[i] = m[j];
-    m[j] = a;
-    k++;
-    if (k >= len)
+    struct rc4_state *info = g_malloc(sizeof(struct rc4_state), 1);
+    BOOL ret;
+    DWORD dwErr;
+    if (!info)
     {
-      k = 0;
+        error("rdssl_rc4_info_create no memory\n");
+        return NULL;
     }
-  }
-}
-
-/*****************************************************************************/
-void APP_CC
-ssl_rc4_crypt(void* rc4_info, char* in_data, char* out_data, int len)
-{
-  int i;
-  int x;
-  int y;
-  int a;
-  int b;
-  int* m;
-  struct rc4_state* s;
-
-  s = (struct rc4_state*)rc4_info;
-  x = s->x;
-  y = s->y;
-  m = s->m;
-  for (i = 0; i < len; i++)
-  {
-    x = (unsigned char)(x + 1);
-    a = m[x];
-    y = (unsigned char)(y + a);
-    b = m[y];
-    m[x] = b;
-    m[y] = a;
-    out_data[i] = in_data[i] ^ (m[(unsigned char)(a + b)]);
-  }
-  s->x = x;
-  s->y = y;
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/* sha1 stuff */
-/* FIPS-180-1 compliant SHA-1 implementation
- *
- * Copyright (C) 2001-2003  Christophe Devine
- */
-struct sha1_context
-{
-  int total[2];
-  int state[5];
-  char buffer[64];
-};
-
-/*****************************************************************************/
-void* APP_CC
-ssl_sha1_info_create(void)
-{
-  return g_malloc(sizeof(struct sha1_context), 1);
-}
-
-/*****************************************************************************/
-void APP_CC
-ssl_sha1_info_delete(void* sha1_info)
-{
-  g_free(sha1_info);
-}
-
-/*****************************************************************************/
-void APP_CC
-ssl_sha1_clear(void* sha1_info)
-{
-  struct sha1_context* ctx;
-
-  ctx = (struct sha1_context*)sha1_info;
-  memset(ctx, 0, sizeof(struct sha1_context));
-  ctx->state[0] = 0x67452301;
-  ctx->state[1] = 0xEFCDAB89;
-  ctx->state[2] = 0x98BADCFE;
-  ctx->state[3] = 0x10325476;
-  ctx->state[4] = 0xC3D2E1F0;
-}
-
-#undef GET_UINT32
-#define GET_UINT32(n, b, i)          \
-{                                    \
-  (n) = ((b)[(i) + 0] << 24) |       \
-        ((b)[(i) + 1] << 16) |       \
-        ((b)[(i) + 2] << 8) |        \
-        ((b)[(i) + 3] << 0);         \
-}
-
-#undef PUT_UINT32
-#define PUT_UINT32(n, b, i)         \
-{                                   \
-  (b)[(i) + 0] = ((n) >> 24);       \
-  (b)[(i) + 1] = ((n) >> 16);       \
-  (b)[(i) + 2] = ((n) >> 8);        \
-  (b)[(i) + 3] = ((n) >> 0);        \
-}
-
-/*****************************************************************************/
-static void APP_CC
-sha1_process(struct sha1_context* ctx, char* in_data)
-{
-  int temp;
-  int W[16];
-  int A;
-  int B;
-  int C;
-  int D;
-  int E;
-  unsigned char* data;
-
-  data = (unsigned char*)in_data;
-
-  GET_UINT32(W[0], data, 0);
-  GET_UINT32(W[1], data, 4);
-  GET_UINT32(W[2], data, 8);
-  GET_UINT32(W[3], data, 12);
-  GET_UINT32(W[4], data, 16);
-  GET_UINT32(W[5], data, 20);
-  GET_UINT32(W[6], data, 24);
-  GET_UINT32(W[7], data, 28);
-  GET_UINT32(W[8], data, 32);
-  GET_UINT32(W[9], data, 36);
-  GET_UINT32(W[10], data, 40);
-  GET_UINT32(W[11], data, 44);
-  GET_UINT32(W[12], data, 48);
-  GET_UINT32(W[13], data, 52);
-  GET_UINT32(W[14], data, 56);
-  GET_UINT32(W[15], data, 60);
-
-#define S(x, n) ((x << n) | ((x & 0xFFFFFFFF) >> (32 - n)))
-
-#define R(t)                        \
-(                                   \
-  temp = W[(t - 3) & 0x0F] ^        \
-         W[(t - 8) & 0x0F] ^        \
-         W[(t - 14) & 0x0F] ^       \
-         W[(t - 0) & 0x0F],         \
-         (W[t & 0x0F] = S(temp, 1)) \
-)
-
-#undef P
-#define P(a, b, c, d, e, x)          \
-{                                    \
-  e += S(a, 5) + F(b, c, d) + K + x; \
-  b = S(b, 30);                      \
-}
-
-  A = ctx->state[0];
-  B = ctx->state[1];
-  C = ctx->state[2];
-  D = ctx->state[3];
-  E = ctx->state[4];
-
-#define F(x, y, z) (z ^ (x & (y ^ z)))
-#define K 0x5A827999
-
-  P(A, B, C, D, E, W[0]);
-  P(E, A, B, C, D, W[1]);
-  P(D, E, A, B, C, W[2]);
-  P(C, D, E, A, B, W[3]);
-  P(B, C, D, E, A, W[4]);
-  P(A, B, C, D, E, W[5]);
-  P(E, A, B, C, D, W[6]);
-  P(D, E, A, B, C, W[7]);
-  P(C, D, E, A, B, W[8]);
-  P(B, C, D, E, A, W[9]);
-  P(A, B, C, D, E, W[10]);
-  P(E, A, B, C, D, W[11]);
-  P(D, E, A, B, C, W[12]);
-  P(C, D, E, A, B, W[13]);
-  P(B, C, D, E, A, W[14]);
-  P(A, B, C, D, E, W[15]);
-  P(E, A, B, C, D, R(16));
-  P(D, E, A, B, C, R(17));
-  P(C, D, E, A, B, R(18));
-  P(B, C, D, E, A, R(19));
-
-#undef K
-#undef F
-
-#define F(x, y, z) (x ^ y ^ z)
-#define K 0x6ED9EBA1
-
-  P(A, B, C, D, E, R(20));
-  P(E, A, B, C, D, R(21));
-  P(D, E, A, B, C, R(22));
-  P(C, D, E, A, B, R(23));
-  P(B, C, D, E, A, R(24));
-  P(A, B, C, D, E, R(25));
-  P(E, A, B, C, D, R(26));
-  P(D, E, A, B, C, R(27));
-  P(C, D, E, A, B, R(28));
-  P(B, C, D, E, A, R(29));
-  P(A, B, C, D, E, R(30));
-  P(E, A, B, C, D, R(31));
-  P(D, E, A, B, C, R(32));
-  P(C, D, E, A, B, R(33));
-  P(B, C, D, E, A, R(34));
-  P(A, B, C, D, E, R(35));
-  P(E, A, B, C, D, R(36));
-  P(D, E, A, B, C, R(37));
-  P(C, D, E, A, B, R(38));
-  P(B, C, D, E, A, R(39));
-
-#undef K
-#undef F
-
-#define F(x, y, z) ((x & y) | (z & (x | y)))
-#define K 0x8F1BBCDC
-
-  P(A, B, C, D, E, R(40));
-  P(E, A, B, C, D, R(41));
-  P(D, E, A, B, C, R(42));
-  P(C, D, E, A, B, R(43));
-  P(B, C, D, E, A, R(44));
-  P(A, B, C, D, E, R(45));
-  P(E, A, B, C, D, R(46));
-  P(D, E, A, B, C, R(47));
-  P(C, D, E, A, B, R(48));
-  P(B, C, D, E, A, R(49));
-  P(A, B, C, D, E, R(50));
-  P(E, A, B, C, D, R(51));
-  P(D, E, A, B, C, R(52));
-  P(C, D, E, A, B, R(53));
-  P(B, C, D, E, A, R(54));
-  P(A, B, C, D, E, R(55));
-  P(E, A, B, C, D, R(56));
-  P(D, E, A, B, C, R(57));
-  P(C, D, E, A, B, R(58));
-  P(B, C, D, E, A, R(59));
-
-#undef K
-#undef F
-
-#define F(x, y, z) (x ^ y ^ z)
-#define K 0xCA62C1D6
-
-  P(A, B, C, D, E, R(60));
-  P(E, A, B, C, D, R(61));
-  P(D, E, A, B, C, R(62));
-  P(C, D, E, A, B, R(63));
-  P(B, C, D, E, A, R(64));
-  P(A, B, C, D, E, R(65));
-  P(E, A, B, C, D, R(66));
-  P(D, E, A, B, C, R(67));
-  P(C, D, E, A, B, R(68));
-  P(B, C, D, E, A, R(69));
-  P(A, B, C, D, E, R(70));
-  P(E, A, B, C, D, R(71));
-  P(D, E, A, B, C, R(72));
-  P(C, D, E, A, B, R(73));
-  P(B, C, D, E, A, R(74));
-  P(A, B, C, D, E, R(75));
-  P(E, A, B, C, D, R(76));
-  P(D, E, A, B, C, R(77));
-  P(C, D, E, A, B, R(78));
-  P(B, C, D, E, A, R(79));
-
-#undef K
-#undef F
-
-  ctx->state[0] += A;
-  ctx->state[1] += B;
-  ctx->state[2] += C;
-  ctx->state[3] += D;
-  ctx->state[4] += E;
-}
-
-/*****************************************************************************/
-void APP_CC
-ssl_sha1_transform(void* sha1_info, char* data, int len)
-{
-  int left;
-  int fill;
-  struct sha1_context* ctx;
-
-  ctx = (struct sha1_context*)sha1_info;
-  if (len == 0)
-  {
-    return;
-  }
-  left = ctx->total[0] & 0x3F;
-  fill = 64 - left;
-  ctx->total[0] += len;
-  ctx->total[0] &= 0xFFFFFFFF;
-  if (ctx->total[0] < len)
-  {
-    ctx->total[1]++;
-  }
-  if (left && (len >= fill))
-  {
-    memcpy(ctx->buffer + left, data, fill);
-    sha1_process(ctx, ctx->buffer);
-    len -= fill;
-    data += fill;
-    left = 0;
-  }
-  while (len >= 64)
-  {
-    sha1_process(ctx, data);
-    len -= 64;
-    data += 64;
-  }
-  if (len != 0)
-  {
-    memcpy(ctx->buffer + left, data, len);
-  }
-}
-
-static unsigned char sha1_padding[64] =
-{
-  0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
-/*****************************************************************************/
-void APP_CC
-ssl_sha1_complete(void* sha1_info, char* data)
-{
-  int last;
-  int padn;
-  int high;
-  int low;
-  char msglen[8];
-  struct sha1_context* ctx;
-
-  ctx = (struct sha1_context*)sha1_info;
-  high = (ctx->total[0] >> 29) | (ctx->total[1] << 3);
-  low = (ctx->total[0] << 3);
-  PUT_UINT32(high, msglen, 0);
-  PUT_UINT32(low, msglen, 4);
-  last = ctx->total[0] & 0x3F;
-  padn = (last < 56) ? (56 - last) : (120 - last);
-  ssl_sha1_transform(ctx, (char *)sha1_padding, padn);
-  ssl_sha1_transform(ctx, msglen, 8);
-  PUT_UINT32(ctx->state[0], data, 0);
-  PUT_UINT32(ctx->state[1], data, 4);
-  PUT_UINT32(ctx->state[2], data, 8);
-  PUT_UINT32(ctx->state[3], data, 12);
-  PUT_UINT32(ctx->state[4], data, 16);
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/* md5 stuff */
-/* RFC 1321 compliant MD5 implementation
- *
- * Copyright (C) 2001-2003  Christophe Devine
- */
-
-struct md5_context
-{
-  int total[2];
-  int state[4];
-  char buffer[64];
-};
-
-/*****************************************************************************/
-void* APP_CC
-ssl_md5_info_create(void)
-{
-  return g_malloc(sizeof(struct md5_context), 1);
-}
-
-/*****************************************************************************/
-void APP_CC
-ssl_md5_info_delete(void* md5_info)
-{
-  g_free(md5_info);
-}
-
-/*****************************************************************************/
-void APP_CC
-ssl_md5_clear(void* md5_info)
-{
-  struct md5_context* ctx;
-
-  ctx = (struct md5_context*)md5_info;
-  memset(ctx, 0, sizeof(struct md5_context));
-  ctx->state[0] = 0x67452301;
-  ctx->state[1] = 0xEFCDAB89;
-  ctx->state[2] = 0x98BADCFE;
-  ctx->state[3] = 0x10325476;
-}
-
-#undef GET_UINT32
-#define GET_UINT32(n, b, i)          \
-{                                    \
-  (n) = ((b)[(i) + 0] << 0) |        \
-        ((b)[(i) + 1] << 8) |        \
-        ((b)[(i) + 2] << 16) |       \
-        ((b)[(i) + 3] << 24);        \
-}
-
-#undef PUT_UINT32
-#define PUT_UINT32(n, b, i)          \
-{                                    \
-  (b)[(i) + 0] = ((n) >> 0);         \
-  (b)[(i) + 1] = ((n) >> 8);         \
-  (b)[(i) + 2] = ((n) >> 16);        \
-  (b)[(i) + 3] = ((n) >> 24);        \
-}
-
-/*****************************************************************************/
-static void
-md5_process(struct md5_context* ctx, char* in_data)
-{
-  int X[16];
-  int A;
-  int B;
-  int C;
-  int D;
-  unsigned char* data;
-
-  data = (unsigned char*)in_data;
-  GET_UINT32(X[0], data, 0);
-  GET_UINT32(X[1], data, 4);
-  GET_UINT32(X[2], data, 8);
-  GET_UINT32(X[3], data, 12);
-  GET_UINT32(X[4], data, 16);
-  GET_UINT32(X[5], data, 20);
-  GET_UINT32(X[6], data, 24);
-  GET_UINT32(X[7], data, 28);
-  GET_UINT32(X[8], data, 32);
-  GET_UINT32(X[9], data, 36);
-  GET_UINT32(X[10], data, 40);
-  GET_UINT32(X[11], data, 44);
-  GET_UINT32(X[12], data, 48);
-  GET_UINT32(X[13], data, 52);
-  GET_UINT32(X[14], data, 56);
-  GET_UINT32(X[15], data, 60);
-
-#define S(x, n) ((x << n) | ((x & 0xFFFFFFFF) >> (32 - n)))
-
-#undef P
-#define P(a, b, c, d, k, s, t) \
-{                              \
-  a += F(b, c, d) + X[k] + t;  \
-  a = S(a, s) + b;             \
-}
-
-  A = ctx->state[0];
-  B = ctx->state[1];
-  C = ctx->state[2];
-  D = ctx->state[3];
-
-#define F(x, y, z) (z ^ (x & (y ^ z)))
-
-  P(A, B, C, D,  0,  7, 0xD76AA478);
-  P(D, A, B, C,  1, 12, 0xE8C7B756);
-  P(C, D, A, B,  2, 17, 0x242070DB);
-  P(B, C, D, A,  3, 22, 0xC1BDCEEE);
-  P(A, B, C, D,  4,  7, 0xF57C0FAF);
-  P(D, A, B, C,  5, 12, 0x4787C62A);
-  P(C, D, A, B,  6, 17, 0xA8304613);
-  P(B, C, D, A,  7, 22, 0xFD469501);
-  P(A, B, C, D,  8,  7, 0x698098D8);
-  P(D, A, B, C,  9, 12, 0x8B44F7AF);
-  P(C, D, A, B, 10, 17, 0xFFFF5BB1);
-  P(B, C, D, A, 11, 22, 0x895CD7BE);
-  P(A, B, C, D, 12,  7, 0x6B901122);
-  P(D, A, B, C, 13, 12, 0xFD987193);
-  P(C, D, A, B, 14, 17, 0xA679438E);
-  P(B, C, D, A, 15, 22, 0x49B40821);
-
-#undef F
-
-#define F(x, y, z) (y ^ (z & (x ^ y)))
-
-  P(A, B, C, D,  1,  5, 0xF61E2562);
-  P(D, A, B, C,  6,  9, 0xC040B340);
-  P(C, D, A, B, 11, 14, 0x265E5A51);
-  P(B, C, D, A,  0, 20, 0xE9B6C7AA);
-  P(A, B, C, D,  5,  5, 0xD62F105D);
-  P(D, A, B, C, 10,  9, 0x02441453);
-  P(C, D, A, B, 15, 14, 0xD8A1E681);
-  P(B, C, D, A,  4, 20, 0xE7D3FBC8);
-  P(A, B, C, D,  9,  5, 0x21E1CDE6);
-  P(D, A, B, C, 14,  9, 0xC33707D6);
-  P(C, D, A, B,  3, 14, 0xF4D50D87);
-  P(B, C, D, A,  8, 20, 0x455A14ED);
-  P(A, B, C, D, 13,  5, 0xA9E3E905);
-  P(D, A, B, C,  2,  9, 0xFCEFA3F8);
-  P(C, D, A, B,  7, 14, 0x676F02D9);
-  P(B, C, D, A, 12, 20, 0x8D2A4C8A);
-
-#undef F
-
-#define F(x, y, z) (x ^ y ^ z)
-
-  P(A, B, C, D,  5,  4, 0xFFFA3942);
-  P(D, A, B, C,  8, 11, 0x8771F681);
-  P(C, D, A, B, 11, 16, 0x6D9D6122);
-  P(B, C, D, A, 14, 23, 0xFDE5380C);
-  P(A, B, C, D,  1,  4, 0xA4BEEA44);
-  P(D, A, B, C,  4, 11, 0x4BDECFA9);
-  P(C, D, A, B,  7, 16, 0xF6BB4B60);
-  P(B, C, D, A, 10, 23, 0xBEBFBC70);
-  P(A, B, C, D, 13,  4, 0x289B7EC6);
-  P(D, A, B, C,  0, 11, 0xEAA127FA);
-  P(C, D, A, B,  3, 16, 0xD4EF3085);
-  P(B, C, D, A,  6, 23, 0x04881D05);
-  P(A, B, C, D,  9,  4, 0xD9D4D039);
-  P(D, A, B, C, 12, 11, 0xE6DB99E5);
-  P(C, D, A, B, 15, 16, 0x1FA27CF8);
-  P(B, C, D, A,  2, 23, 0xC4AC5665);
-
-#undef F
-
-#define F(x, y, z) (y ^ (x | ~z))
-
-  P(A, B, C, D,  0,  6, 0xF4292244);
-  P(D, A, B, C,  7, 10, 0x432AFF97);
-  P(C, D, A, B, 14, 15, 0xAB9423A7);
-  P(B, C, D, A,  5, 21, 0xFC93A039);
-  P(A, B, C, D, 12,  6, 0x655B59C3);
-  P(D, A, B, C,  3, 10, 0x8F0CCC92);
-  P(C, D, A, B, 10, 15, 0xFFEFF47D);
-  P(B, C, D, A,  1, 21, 0x85845DD1);
-  P(A, B, C, D,  8,  6, 0x6FA87E4F);
-  P(D, A, B, C, 15, 10, 0xFE2CE6E0);
-  P(C, D, A, B,  6, 15, 0xA3014314);
-  P(B, C, D, A, 13, 21, 0x4E0811A1);
-  P(A, B, C, D,  4,  6, 0xF7537E82);
-  P(D, A, B, C, 11, 10, 0xBD3AF235);
-  P(C, D, A, B,  2, 15, 0x2AD7D2BB);
-  P(B, C, D, A,  9, 21, 0xEB86D391);
-
-#undef F
-
-  ctx->state[0] += A;
-  ctx->state[1] += B;
-  ctx->state[2] += C;
-  ctx->state[3] += D;
-}
-
-/*****************************************************************************/
-void APP_CC
-ssl_md5_transform(void* md5_info, char* data, int len)
-{
-  int left;
-  int fill;
-  struct md5_context* ctx;
-
-  ctx = (struct md5_context*)md5_info;
-  if (len == 0)
-  {
-    return;
-  }
-  left = ctx->total[0] & 0x3F;
-  fill = 64 - left;
-  ctx->total[0] += len;
-  ctx->total[0] &= 0xFFFFFFFF;
-  if (ctx->total[0] < len)
-  {
-    ctx->total[1]++;
-  }
-  if (left && (len >= fill))
-  {
-    memcpy(ctx->buffer + left, data, fill);
-    md5_process(ctx, ctx->buffer);
-    len -= fill;
-    data += fill;
-    left = 0;
-  }
-  while (len >= 64)
-  {
-    md5_process(ctx, data);
-    len -= 64;
-    data += 64;
-  }
-  if (len != 0)
-  {
-    memcpy(ctx->buffer + left, data, len);
-  }
-}
-
-static unsigned char md5_padding[64] =
-{
-  0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
-/*****************************************************************************/
-void APP_CC
-ssl_md5_complete(void* md5_info, char* data)
-{
-  int last;
-  int padn;
-  int high;
-  int low;
-  char msglen[8];
-  struct md5_context* ctx;
-
-  ctx = (struct md5_context*)md5_info;
-  high = (ctx->total[0] >> 29) | (ctx->total[1] << 3);
-  low = (ctx->total[0] << 3);
-  PUT_UINT32(low, msglen, 0);
-  PUT_UINT32(high, msglen, 4);
-  last = ctx->total[0] & 0x3F;
-  padn = (last < 56) ? (56 - last) : (120 - last);
-  ssl_md5_transform(ctx, (char *)md5_padding, padn);
-  ssl_md5_transform(ctx, msglen, 8);
-  PUT_UINT32(ctx->state[0], data, 0);
-  PUT_UINT32(ctx->state[1], data, 4);
-  PUT_UINT32(ctx->state[2], data, 8);
-  PUT_UINT32(ctx->state[3], data, 12);
-}
-
-void APP_CC ssl_hmac_md5(char* key, int keylen, char* data, int len, char* output)
-{
-    int i;
-    char ipad[64];
-    char opad[64];
-    char sum[16];
-    void* ctx;
-
-    if( keylen > 64 )
+    ret = CryptAcquireContext(&info->hCryptProv,
+                              L"MSTSC",
+                              MS_ENHANCED_PROV,
+                              PROV_RSA_FULL,
+                              0);
+    if (!ret)
     {
-        ctx = ssl_md5_info_create();
-        ssl_md5_transform(ctx, key, keylen);
-        ssl_md5_complete(ctx, sum);
-        ssl_md5_info_delete(ctx);
-        keylen = 16;
-        key = sum;
+        dwErr = GetLastError();
+        if (dwErr == NTE_BAD_KEYSET)
+        {
+            ret = CryptAcquireContext(&info->hCryptProv,
+                                      L"MSTSC",
+                                      MS_ENHANCED_PROV,
+                                      PROV_RSA_FULL,
+                                      CRYPT_NEWKEYSET);
+        }
     }
-
-    memset( ipad, 0x36, sizeof(ipad) );
-    memset( opad, 0x5C, sizeof(opad) );
-
-    for( i = 0; i < keylen; i++ )
+    if (!ret)
     {
-        ipad[i] = ipad[i] ^ key[i];
-        opad[i] = opad[i] ^ key[i];
+        dwErr = GetLastError();
+        error("CryptAcquireContext failed with %lx\n", dwErr);
+        g_free(info);
+        return NULL;
     }
-    ctx = ssl_md5_info_create();
-    ssl_md5_transform(ctx, ipad, sizeof(ipad));
-    ssl_md5_transform(ctx, data, len);
-    ssl_md5_complete(ctx, sum);
-    ssl_md5_info_delete(ctx);
-    ctx = ssl_md5_info_create();
-    ssl_md5_transform(ctx, opad, sizeof(opad));
-    ssl_md5_complete(ctx, output);
-    ssl_md5_info_delete(ctx);
+    return info;
+}
+
+/*****************************************************************************/
+void
+rdssl_rc4_info_delete(void* rc4_info)
+{
+    struct rc4_state *info = rc4_info;
+    BOOL ret = TRUE;
+    DWORD dwErr;
+    if (!info)
+    {
+        //error("rdssl_rc4_info_delete rc4_info is null\n");
+        return;
+    }
+    if (info->hKey)
+    {
+        ret = CryptDestroyKey(info->hKey);
+        if (!ret)
+        {
+            dwErr = GetLastError();
+            error("CryptDestroyKey failed with %lx\n", dwErr);
+        }
+    }
+    if (info->hCryptProv)
+    {
+        ret = CryptReleaseContext(info->hCryptProv, 0);
+        if (!ret)
+        {
+            dwErr = GetLastError();
+            error("CryptReleaseContext failed with %lx\n", dwErr);
+        }
+    }
+    g_free(rc4_info);
+}
+
+/*****************************************************************************/
+void
+rdssl_rc4_set_key(void* rc4_info, char* key, int len)
+{
+    struct rc4_state *info = rc4_info;
+    BOOL ret;
+    DWORD dwErr;
+    BYTE * blob;
+    PUBLICKEYSTRUC *desc;
+    DWORD * keySize;
+    BYTE * keyBuf;
+    if (!rc4_info || !key || !len || !info->hCryptProv)
+    {
+        error("rdssl_rc4_set_key %p %p %d\n", rc4_info, key, len);
+        return;
+    }
+    blob = g_malloc(sizeof(PUBLICKEYSTRUC) + sizeof(DWORD) + len, 0);
+    if (!blob)
+    {
+        error("rdssl_rc4_set_key no memory\n");
+        return;
+    }
+    desc = (PUBLICKEYSTRUC *)blob;
+    keySize = (DWORD *)(blob + sizeof(PUBLICKEYSTRUC));
+    keyBuf = blob + sizeof(PUBLICKEYSTRUC) + sizeof(DWORD);
+    desc->aiKeyAlg = CALG_RC4;
+    desc->bType = PLAINTEXTKEYBLOB;
+    desc->bVersion = CUR_BLOB_VERSION;
+    desc->reserved = 0;
+    *keySize = len;
+    memcpy(keyBuf, key, len);
+    if (info->hKey)
+    {
+        CryptDestroyKey(info->hKey);
+        info->hKey = 0;
+    }
+    ret = CryptImportKey(info->hCryptProv,
+                         blob,
+                         sizeof(PUBLICKEYSTRUC) + sizeof(DWORD) + len,
+                         0,
+                         CRYPT_EXPORTABLE,
+                         &info->hKey);
+    g_free(blob);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptImportKey failed with %lx\n", dwErr);
+    }
+}
+
+/*****************************************************************************/
+void
+rdssl_rc4_crypt(void* rc4_info, char* in_data, char* out_data, int len)
+{
+    struct rc4_state *info = rc4_info;
+    BOOL ret;
+    DWORD dwErr;
+    BYTE * intermediate_data;
+    DWORD dwLen = len;
+    if (!rc4_info || !in_data || !out_data || !len || !info->hKey)
+    {
+        error("rdssl_rc4_crypt %p %p %p %d\n", rc4_info, in_data, out_data, len);
+        return;
+    }
+    intermediate_data = g_malloc(len, 0);
+    if (!intermediate_data)
+    {
+        error("rdssl_rc4_set_key no memory\n");
+        return;
+    }
+    memcpy(intermediate_data, in_data, len);
+    ret = CryptEncrypt(info->hKey,
+                       0,
+                       FALSE,
+                       0,
+                       intermediate_data,
+                       &dwLen,
+                       dwLen);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        g_free(intermediate_data);
+        error("CryptEncrypt failed with %lx\n", dwErr);
+        return;
+    }
+    memcpy(out_data, intermediate_data, len);
+    g_free(intermediate_data);
+}
+
+struct hash_context
+{
+    HCRYPTPROV hCryptProv;
+    HCRYPTKEY hHash;
+};
+
+/*****************************************************************************/
+void*
+rdssl_hash_info_create(ALG_ID id)
+{
+    struct hash_context *info = g_malloc(sizeof(struct hash_context), 1);
+    BOOL ret;
+    DWORD dwErr;
+    if (!info)
+    {
+        error("rdssl_hash_info_create %d no memory\n", id);
+        return NULL;
+    }
+    ret = CryptAcquireContext(&info->hCryptProv,
+                              L"MSTSC",
+                              MS_ENHANCED_PROV,
+                              PROV_RSA_FULL,
+                              0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        if (dwErr == NTE_BAD_KEYSET)
+        {
+            ret = CryptAcquireContext(&info->hCryptProv,
+                                      L"MSTSC",
+                                      MS_ENHANCED_PROV,
+                                      PROV_RSA_FULL,
+                                      CRYPT_NEWKEYSET);
+        }
+    }
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        g_free(info);
+        error("CryptAcquireContext failed with %lx\n", dwErr);
+        return NULL;
+    }
+    ret = CryptCreateHash(info->hCryptProv,
+                          id,
+                          0,
+                          0,
+                          &info->hHash);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        CryptReleaseContext(info->hCryptProv, 0);
+        g_free(info);
+        error("CryptCreateHash failed with %lx\n", dwErr);
+        return NULL;
+    }
+    return info;
+}
+
+/*****************************************************************************/
+void
+rdssl_hash_info_delete(void* hash_info)
+{
+    struct hash_context *info = hash_info;
+    if (!info)
+    {
+        //error("ssl_hash_info_delete hash_info is null\n");
+        return;
+    }
+    if (info->hHash)
+    {
+        CryptDestroyHash(info->hHash);
+    }
+    if (info->hCryptProv)
+    {
+        CryptReleaseContext(info->hCryptProv, 0);
+    }
+    g_free(hash_info);
+}
+
+/*****************************************************************************/
+void
+rdssl_hash_clear(void* hash_info, ALG_ID id)
+{
+    struct hash_context *info = hash_info;
+    BOOL ret;
+    DWORD dwErr;
+    if (!info || !info->hHash || !info->hCryptProv)
+    {
+        error("rdssl_hash_clear %p\n", info);
+        return;
+    }
+    ret = CryptDestroyHash(info->hHash);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptDestroyHash failed with %lx\n", dwErr);
+        return;
+    }
+    ret = CryptCreateHash(info->hCryptProv,
+                          id,
+                          0,
+                          0,
+                          &info->hHash);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptCreateHash failed with %lx\n", dwErr);
+    }
+}
+
+void
+rdssl_hash_transform(void* hash_info, char* data, int len)
+{
+    struct hash_context *info = hash_info;
+    BOOL ret;
+    DWORD dwErr;
+    if (!info || !info->hHash || !info->hCryptProv || !data || !len)
+    {
+        error("rdssl_hash_transform %p %p %d\n", hash_info, data, len);
+        return;
+    }
+    ret = CryptHashData(info->hHash,
+                        (BYTE *)data,
+                        len,
+                        0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptHashData failed with %lx\n", dwErr);
+    }
+}
+
+/*****************************************************************************/
+void
+rdssl_hash_complete(void* hash_info, char* data)
+{
+    struct hash_context *info = hash_info;
+    BOOL ret;
+    DWORD dwErr, dwDataLen;
+    if (!info || !info->hHash || !info->hCryptProv || !data)
+    {
+        error("rdssl_hash_complete %p %p\n", hash_info, data);
+        return;
+    }
+    ret = CryptGetHashParam(info->hHash,
+                            HP_HASHVAL,
+                            NULL,
+                            &dwDataLen,
+                            0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptGetHashParam failed with %lx\n", dwErr);
+        return;
+    }
+    ret = CryptGetHashParam(info->hHash,
+                            HP_HASHVAL,
+                            (BYTE *)data,
+                            &dwDataLen,
+                            0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptGetHashParam failed with %lx\n", dwErr);
+    }
+}
+
+/*****************************************************************************/
+void*
+rdssl_sha1_info_create(void)
+{
+    return rdssl_hash_info_create(CALG_SHA1);
+}
+
+/*****************************************************************************/
+void
+rdssl_sha1_info_delete(void* sha1_info)
+{
+    rdssl_hash_info_delete(sha1_info);
+}
+
+/*****************************************************************************/
+void
+rdssl_sha1_clear(void* sha1_info)
+{
+    rdssl_hash_clear(sha1_info, CALG_SHA1);
+}
+
+/*****************************************************************************/
+void
+rdssl_sha1_transform(void* sha1_info, char* data, int len)
+{
+    rdssl_hash_transform(sha1_info, data, len);
+}
+
+/*****************************************************************************/
+void
+rdssl_sha1_complete(void* sha1_info, char* data)
+{
+    rdssl_hash_complete(sha1_info, data);
+}
+
+/*****************************************************************************/
+void*
+rdssl_md5_info_create(void)
+{
+    return rdssl_hash_info_create(CALG_MD5);
+}
+
+/*****************************************************************************/
+void
+rdssl_md5_info_delete(void* md5_info)
+{
+    rdssl_hash_info_delete(md5_info);
+}
+
+/*****************************************************************************/
+void
+rdssl_md5_clear(void* md5_info)
+{
+    rdssl_hash_clear(md5_info, CALG_MD5);
+}
+
+/*****************************************************************************/
+void
+rdssl_md5_transform(void* md5_info, char* data, int len)
+{
+    rdssl_hash_transform(md5_info, data, len);
+}
+
+/*****************************************************************************/
+void
+rdssl_md5_complete(void* md5_info, char* data)
+{
+    rdssl_hash_complete(md5_info, data);
+}
+
+/*****************************************************************************/
+void
+rdssl_hmac_md5(char* key, int keylen, char* data, int len, char* output)
+{
+    HCRYPTPROV hCryptProv;
+    HCRYPTKEY hKey;
+    HCRYPTKEY hHash;
+    BOOL ret;
+    DWORD dwErr, dwDataLen;
+    HMAC_INFO info;
+    BYTE * blob;
+    PUBLICKEYSTRUC *desc;
+    DWORD * keySize;
+    BYTE * keyBuf;
+    BYTE sum[16];
+
+    if (!key || !keylen || !data || !len ||!output)
+    {
+        error("rdssl_hmac_md5 %p %d %p %d %p\n", key, keylen, data, len, output);
+        return;
+    }
+    blob = g_malloc(sizeof(PUBLICKEYSTRUC) + sizeof(DWORD) + keylen, 0);
+    desc = (PUBLICKEYSTRUC *)blob;
+    keySize = (DWORD *)(blob + sizeof(PUBLICKEYSTRUC));
+    keyBuf = blob + sizeof(PUBLICKEYSTRUC) + sizeof(DWORD);
+    if (!blob)
+    {
+        error("rdssl_hmac_md5 %d no memory\n");
+        return;
+    }
+    ret = CryptAcquireContext(&hCryptProv,
+                              L"MSTSC",
+                              MS_ENHANCED_PROV,
+                              PROV_RSA_FULL,
+                              0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        if (dwErr == NTE_BAD_KEYSET)
+        {
+            ret = CryptAcquireContext(&hCryptProv,
+                                      L"MSTSC",
+                                      MS_ENHANCED_PROV,
+                                      PROV_RSA_FULL,
+                                      CRYPT_NEWKEYSET);
+        }
+    }
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        g_free(blob);
+        error("CryptAcquireContext failed with %lx\n", dwErr);
+        return;
+    }
+    desc->aiKeyAlg = CALG_RC4;
+    desc->bType = PLAINTEXTKEYBLOB;
+    desc->bVersion = CUR_BLOB_VERSION;
+    desc->reserved = 0;
+    if (keylen > 64)
+    {
+        HCRYPTKEY hHash;
+        ret = CryptCreateHash(hCryptProv,
+                              CALG_MD5,
+                              0,
+                              0,
+                              &hHash);
+        if (!ret)
+        {
+            dwErr = GetLastError();
+            g_free(blob);
+            error("CryptCreateHash failed with %lx\n", dwErr);
+            return;
+        }
+        ret = CryptHashData(hHash,
+                            (BYTE *)key,
+                            keylen,
+                            0);
+        if (!ret)
+        {
+            dwErr = GetLastError();
+            g_free(blob);
+            error("CryptHashData failed with %lx\n", dwErr);
+            return;
+        }
+        ret = CryptGetHashParam(hHash,
+                                HP_HASHVAL,
+                                NULL,
+                                &dwDataLen,
+                                0);
+        if (!ret)
+        {
+            dwErr = GetLastError();
+            g_free(blob);
+            error("CryptGetHashParam failed with %lx\n", dwErr);
+            return;
+        }
+        ret = CryptGetHashParam(hHash,
+                                HP_HASHVAL,
+                                sum,
+                                &dwDataLen,
+                                0);
+        if (!ret)
+        {
+            dwErr = GetLastError();
+            g_free(blob);
+            error("CryptGetHashParam failed with %lx\n", dwErr);
+            return;
+        }
+        keylen = dwDataLen;
+        key = (char *)sum;
+    }
+    *keySize = keylen;
+    memcpy(keyBuf, key, keylen);
+    ret = CryptImportKey(hCryptProv,
+                         blob,
+                         sizeof(PUBLICKEYSTRUC) + sizeof(DWORD) + keylen,
+                         0,
+                         CRYPT_EXPORTABLE,
+                         &hKey);
+    g_free(blob);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptImportKey failed with %lx\n", dwErr);
+        return;
+    }
+    ret = CryptCreateHash(hCryptProv,
+                          CALG_HMAC,
+                          hKey,
+                          0,
+                          &hHash);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptCreateHash failed with %lx\n", dwErr);
+        return;
+    }
+    info.HashAlgid = CALG_MD5;
+    info.cbInnerString = 0;
+    info.cbOuterString = 0;
+    ret = CryptSetHashParam(hHash,
+                            HP_HMAC_INFO,
+                            (BYTE *)&info,
+                            0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptSetHashParam failed with %lx\n", dwErr);
+        return;
+    }
+    ret = CryptHashData(hHash,
+                        (BYTE *)data,
+                        len,
+                        0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptHashData failed with %lx\n", dwErr);
+        return;
+    }
+    ret = CryptGetHashParam(hHash,
+                            HP_HASHVAL,
+                            NULL,
+                            &dwDataLen,
+                            0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptGetHashParam failed with %lx\n", dwErr);
+        return;
+    }
+    ret = CryptGetHashParam(hHash,
+                            HP_HASHVAL,
+                            (BYTE *)output,
+                            &dwDataLen,
+                            0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptGetHashParam failed with %lx\n", dwErr);
+        return;
+    }
+    CryptDestroyHash(hHash);
+    ret = CryptReleaseContext(hCryptProv, 0);
 }
 
 /*****************************************************************************/
@@ -815,7 +695,7 @@ typedef unsigned int DIGIT_T;
 }
 
 /*****************************************************************************/
-static DIGIT_T APP_CC
+static DIGIT_T
 mpAdd(DIGIT_T* w, DIGIT_T* u, DIGIT_T* v, unsigned int ndigits)
 {
   /* Calculates w = u + v
@@ -851,7 +731,7 @@ mpAdd(DIGIT_T* w, DIGIT_T* u, DIGIT_T* v, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static void APP_CC
+static void
 mpSetDigit(DIGIT_T* a, DIGIT_T d, unsigned int ndigits)
 { /* Sets a = d where d is a single digit */
   unsigned int i;
@@ -864,7 +744,7 @@ mpSetDigit(DIGIT_T* a, DIGIT_T d, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static int APP_CC
+static int
 mpCompare(DIGIT_T* a, DIGIT_T* b, unsigned int ndigits)
 {
   /* Returns sign of (a - b) */
@@ -887,7 +767,7 @@ mpCompare(DIGIT_T* a, DIGIT_T* b, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static void APP_CC
+static void
 mpSetZero(DIGIT_T* a, unsigned int ndigits)
 { /* Sets a = 0 */
   unsigned int i;
@@ -899,7 +779,7 @@ mpSetZero(DIGIT_T* a, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static void APP_CC
+static void
 mpSetEqual(DIGIT_T* a, DIGIT_T* b, unsigned int ndigits)
 {  /* Sets a = b */
   unsigned int i;
@@ -911,7 +791,7 @@ mpSetEqual(DIGIT_T* a, DIGIT_T* b, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static unsigned int APP_CC
+static unsigned int
 mpSizeof(DIGIT_T* a, unsigned int ndigits)
 {  /* Returns size of significant digits in a */
   while (ndigits--)
@@ -925,7 +805,7 @@ mpSizeof(DIGIT_T* a, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static DIGIT_T APP_CC
+static DIGIT_T
 mpShiftLeft(DIGIT_T* a, DIGIT_T* b, unsigned int x, unsigned int ndigits)
 { /* Computes a = b << x */
   unsigned int i;
@@ -961,7 +841,7 @@ mpShiftLeft(DIGIT_T* a, DIGIT_T* b, unsigned int x, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static DIGIT_T APP_CC
+static DIGIT_T
 mpShiftRight(DIGIT_T* a, DIGIT_T* b, unsigned int x, unsigned int ndigits)
 { /* Computes a = b >> x */
   unsigned int i;
@@ -998,7 +878,7 @@ mpShiftRight(DIGIT_T* a, DIGIT_T* b, unsigned int x, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static void APP_CC
+static void
 spMultSub(DIGIT_T* uu, DIGIT_T qhat, DIGIT_T v1, DIGIT_T v0)
 {
   /* Compute uu = uu - q(v1v0)
@@ -1021,7 +901,7 @@ spMultSub(DIGIT_T* uu, DIGIT_T qhat, DIGIT_T v1, DIGIT_T v0)
 }
 
 /*****************************************************************************/
-static int APP_CC
+static int
 spMultiply(DIGIT_T* p, DIGIT_T x, DIGIT_T y)
 { /* Computes p = x * y */
   /* Ref: Arbitrary Precision Computation
@@ -1092,7 +972,7 @@ spMultiply(DIGIT_T* p, DIGIT_T x, DIGIT_T y)
 }
 
 /*****************************************************************************/
-static DIGIT_T APP_CC
+static DIGIT_T
 spDivide(DIGIT_T* q, DIGIT_T* r, DIGIT_T* u, DIGIT_T v)
 { /* Computes quotient q = u / v, remainder r = u mod v
      where u is a double digit
@@ -1233,7 +1113,7 @@ spDivide(DIGIT_T* q, DIGIT_T* r, DIGIT_T* u, DIGIT_T v)
 }
 
 /*****************************************************************************/
-static int APP_CC
+static int
 QhatTooBig(DIGIT_T qhat, DIGIT_T rhat, DIGIT_T vn2, DIGIT_T ujn2)
 { /* Returns true if Qhat is too big
      i.e. if (Qhat * Vn-2) > (b.Rhat + Uj+n-2) */
@@ -1256,7 +1136,7 @@ QhatTooBig(DIGIT_T qhat, DIGIT_T rhat, DIGIT_T vn2, DIGIT_T ujn2)
 }
 
 /*****************************************************************************/
-static DIGIT_T APP_CC
+static DIGIT_T
 mpShortDiv(DIGIT_T* q, DIGIT_T* u, DIGIT_T v, unsigned int ndigits)
 {
   /* Calculates quotient q = u div v
@@ -1315,7 +1195,7 @@ mpShortDiv(DIGIT_T* q, DIGIT_T* u, DIGIT_T v, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static DIGIT_T APP_CC
+static DIGIT_T
 mpMultSub(DIGIT_T wn, DIGIT_T* w, DIGIT_T* v, DIGIT_T q, unsigned int n)
 { /* Compute w = w - qv
      where w = (WnW[n-1]...W[0])
@@ -1354,7 +1234,7 @@ mpMultSub(DIGIT_T wn, DIGIT_T* w, DIGIT_T* v, DIGIT_T q, unsigned int n)
 }
 
 /*****************************************************************************/
-static int APP_CC
+static int
 mpDivide(DIGIT_T* q, DIGIT_T* r, DIGIT_T* u, unsigned int udigits,
          DIGIT_T* v, unsigned int vdigits)
 { /* Computes quotient q = u / v and remainder r = u mod v
@@ -1500,7 +1380,7 @@ mpDivide(DIGIT_T* q, DIGIT_T* r, DIGIT_T* u, unsigned int udigits,
 }
 
 /*****************************************************************************/
-static int APP_CC
+static int
 mpModulo(DIGIT_T* r, DIGIT_T* u, unsigned int udigits,
          DIGIT_T* v, unsigned int vdigits)
 {
@@ -1527,7 +1407,7 @@ mpModulo(DIGIT_T* r, DIGIT_T* u, unsigned int udigits,
 }
 
 /*****************************************************************************/
-static int APP_CC
+static int
 mpMultiply(DIGIT_T* w, DIGIT_T* u, DIGIT_T* v, unsigned int ndigits)
 {
   /* Computes product w = u * v
@@ -1585,7 +1465,7 @@ mpMultiply(DIGIT_T* w, DIGIT_T* u, DIGIT_T* v, unsigned int ndigits)
 }
 
 /*****************************************************************************/
-static int APP_CC
+static int
 mpModMult(DIGIT_T* a, DIGIT_T* x, DIGIT_T* y,
           DIGIT_T* m, unsigned int ndigits)
 { /* Computes a = (x * y) mod m */
@@ -1601,9 +1481,9 @@ mpModMult(DIGIT_T* a, DIGIT_T* x, DIGIT_T* y,
 }
 
 /*****************************************************************************/
-int APP_CC
-ssl_mod_exp(char* out, int out_len, char* in, int in_len,
-            char* mod, int mod_len, char* exp, int exp_len)
+int
+rdssl_mod_exp(char* out, int out_len, char* in, int in_len,
+              char* mod, int mod_len, char* exp, int exp_len)
 {
   /* Computes y = x ^ e mod m */
   /* Binary left-to-right method */
@@ -1679,3 +1559,227 @@ ssl_mod_exp(char* out, int out_len, char* in, int in_len,
   return out_len;
 }
 
+static uint8 g_ppk_n[72] =
+{
+    0x3D, 0x3A, 0x5E, 0xBD, 0x72, 0x43, 0x3E, 0xC9,
+    0x4D, 0xBB, 0xC1, 0x1E, 0x4A, 0xBA, 0x5F, 0xCB,
+    0x3E, 0x88, 0x20, 0x87, 0xEF, 0xF5, 0xC1, 0xE2,
+    0xD7, 0xB7, 0x6B, 0x9A, 0xF2, 0x52, 0x45, 0x95,
+    0xCE, 0x63, 0x65, 0x6B, 0x58, 0x3A, 0xFE, 0xEF,
+    0x7C, 0xE7, 0xBF, 0xFE, 0x3D, 0xF6, 0x5C, 0x7D,
+    0x6C, 0x5E, 0x06, 0x09, 0x1A, 0xF5, 0x61, 0xBB,
+    0x20, 0x93, 0x09, 0x5F, 0x05, 0x6D, 0xEA, 0x87,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static uint8 g_ppk_d[108] =
+{
+    0x87, 0xA7, 0x19, 0x32, 0xDA, 0x11, 0x87, 0x55,
+    0x58, 0x00, 0x16, 0x16, 0x25, 0x65, 0x68, 0xF8,
+    0x24, 0x3E, 0xE6, 0xFA, 0xE9, 0x67, 0x49, 0x94,
+    0xCF, 0x92, 0xCC, 0x33, 0x99, 0xE8, 0x08, 0x60,
+    0x17, 0x9A, 0x12, 0x9F, 0x24, 0xDD, 0xB1, 0x24,
+    0x99, 0xC7, 0x3A, 0xB8, 0x0A, 0x7B, 0x0D, 0xDD,
+    0x35, 0x07, 0x79, 0x17, 0x0B, 0x51, 0x9B, 0xB3,
+    0xC7, 0x10, 0x01, 0x13, 0xE7, 0x3F, 0xF3, 0x5F,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
+int
+rdssl_sign_ok(char* e_data, int e_len, char* n_data, int n_len,
+    char* sign_data, int sign_len, char* sign_data2, int sign_len2, char* testkey)
+{
+    char* key;
+    char* md5_final;
+    void* md5;
+
+    if ((e_len != 4) || (n_len != 64) || (sign_len != 64) || (sign_len2 != 64))
+    {
+        return 1;
+    }
+    md5 = rdssl_md5_info_create();
+    if (!md5)
+    {
+        return 1;
+    }
+    key = (char*)xmalloc(176);
+    md5_final = (char*)xmalloc(64);
+    // copy the test key
+    memcpy(key, testkey, 176);
+    // replace e and n
+    memcpy(key + 32, e_data, 4);
+    memcpy(key + 36, n_data, 64);
+    rdssl_md5_clear(md5);
+    // the first 108 bytes
+    rdssl_md5_transform(md5, key, 108);
+    // set the whole thing with 0xff
+    memset(md5_final, 0xff, 64);
+    // digest 16 bytes
+    rdssl_md5_complete(md5, md5_final);
+    // set non 0xff array items
+    md5_final[16] = 0;
+    md5_final[62] = 1;
+    md5_final[63] = 0;
+    // encrypt
+    rdssl_mod_exp(sign_data, 64, md5_final, 64, (char*)g_ppk_n, 64,
+        (char*)g_ppk_d, 64);
+    // cleanup
+    rdssl_md5_info_delete(md5);
+    xfree(key);
+    xfree(md5_final);
+    return memcmp(sign_data, sign_data2, sign_len2);
+}
+
+/*****************************************************************************/
+PCCERT_CONTEXT rdssl_cert_read(uint8 * data, uint32 len)
+{
+    PCCERT_CONTEXT res;
+    if (!data || !len)
+    {
+        error("rdssl_cert_read %p %ld\n", data, len);
+        return NULL;
+    }
+    res = CertCreateCertificateContext(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, data, len);
+    if (!res)
+    {
+        error("CertCreateCertificateContext call failed with %lx\n", GetLastError());
+    }
+    return res;
+}
+
+/*****************************************************************************/
+void rdssl_cert_free(PCCERT_CONTEXT context)
+{
+    if (context)
+        CertFreeCertificateContext(context);
+}
+
+/*****************************************************************************/
+uint8 *rdssl_cert_to_rkey(PCCERT_CONTEXT cert, uint32 * key_len)
+{
+    HCRYPTPROV hCryptProv;
+    HCRYPTKEY hKey;
+    BOOL ret;
+    BYTE * rkey;
+    DWORD dwSize, dwErr;
+    ret = CryptAcquireContext(&hCryptProv,
+                              NULL,
+                              MS_ENHANCED_PROV,
+                              PROV_RSA_FULL,
+                              0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        if (dwErr == NTE_BAD_KEYSET)
+        {
+            ret = CryptAcquireContext(&hCryptProv,
+                                      L"MSTSC",
+                                      MS_ENHANCED_PROV,
+                                      PROV_RSA_FULL,
+                                      CRYPT_NEWKEYSET);
+        }
+    }
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        error("CryptAcquireContext call failed with %lx\n", dwErr);
+        return NULL;
+    }
+    ret = CryptImportPublicKeyInfoEx(hCryptProv,
+                                     X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+                                     &(cert->pCertInfo->SubjectPublicKeyInfo),
+                                     0,
+                                     0,
+                                     NULL,
+                                     &hKey);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        CryptReleaseContext(hCryptProv, 0);
+        error("CryptImportPublicKeyInfoEx call failed with %lx\n", dwErr);
+        return NULL;
+    }
+    ret = CryptExportKey(hKey,
+                         0,
+                         PUBLICKEYBLOB,
+                         0,
+                         NULL,
+                         &dwSize);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        CryptDestroyKey(hKey);
+        CryptReleaseContext(hCryptProv, 0);
+        error("CryptExportKey call failed with %lx\n", dwErr);
+        return NULL;
+    }
+    rkey = g_malloc(dwSize, 0);
+    ret = CryptExportKey(hKey,
+                         0,
+                         PUBLICKEYBLOB,
+                         0,
+                         rkey,
+                         &dwSize);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        g_free(rkey);
+        CryptDestroyKey(hKey);
+        CryptReleaseContext(hCryptProv, 0);
+        error("CryptExportKey call failed with %lx\n", dwErr);
+        return NULL;
+    }
+    CryptDestroyKey(hKey);
+    CryptReleaseContext(hCryptProv, 0);
+    return rkey;
+}
+
+/*****************************************************************************/
+RD_BOOL rdssl_certs_ok(PCCERT_CONTEXT server_cert, PCCERT_CONTEXT cacert)
+{
+    /* FIXME should we check for expired certificates??? */
+    DWORD dwFlags = CERT_STORE_SIGNATURE_FLAG; /* CERT_STORE_TIME_VALIDITY_FLAG */
+    BOOL ret = CertVerifySubjectCertificateContext(server_cert,
+                                                   cacert,
+                                                   &dwFlags);
+    if (!ret)
+    {
+        error("CertVerifySubjectCertificateContext call failed with %lx\n", GetLastError());
+    }
+    if (dwFlags)
+    {
+        error("CertVerifySubjectCertificateContext check failed %lx\n", dwFlags);
+    }
+    return (dwFlags == 0);
+}
+
+/*****************************************************************************/
+int rdssl_rkey_get_exp_mod(uint8 * rkey, uint8 * exponent, uint32 max_exp_len, uint8 * modulus,
+    uint32 max_mod_len)
+{
+    RSAPUBKEY *desc = (RSAPUBKEY *)(rkey + sizeof(PUBLICKEYSTRUC));
+    if (!rkey || !exponent || !max_exp_len || !modulus || !max_mod_len)
+    {
+        error("rdssl_rkey_get_exp_mod %p %p %ld %p %ld\n", rkey, exponent, max_exp_len, modulus, max_mod_len);
+        return -1;
+    }
+    memcpy (exponent, &desc->pubexp, max_exp_len);
+    memcpy (modulus, rkey + sizeof(PUBLICKEYSTRUC) + sizeof(RSAPUBKEY), max_mod_len);
+    return 0;
+}
+
+/*****************************************************************************/
+void rdssl_rkey_free(uint8 * rkey)
+{
+    if (!rkey)
+    {
+        error("rdssl_rkey_free rkey is null\n");
+        return;
+    }
+    g_free(rkey);
+}

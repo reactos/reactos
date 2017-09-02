@@ -1186,7 +1186,7 @@ UDFIsBlockAllocated(
     if(bm = (uint32*)(((PVCB)_Vcb)->BSBM_Bitmap)) {
         ret_val |= (UDFGetBadBit(bm, Lba) ? WCACHE_BLOCK_BAD : 0);
         if(ret_val & WCACHE_BLOCK_BAD) {
-            KdPrint(("Marked BB @ %#x\n", Lba));
+            UDFPrint(("Marked BB @ %#x\n", Lba));
         }
     }
 */

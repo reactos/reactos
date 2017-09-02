@@ -268,7 +268,7 @@ ErrorHandlerWorkItemRoutine(
     //
     // Free Work Item Data
     //
-    ExFreePool(WorkItemData);
+    ExFreePoolWithTag(WorkItemData, USB_STOR_TAG);
 }
 
 VOID
@@ -326,7 +326,7 @@ USBSTOR_TimerWorkerRoutine(
     //
     // Free Work Item Data
     //
-    ExFreePool(WorkItemData);
+    ExFreePoolWithTag(WorkItemData, USB_STOR_TAG);
 }
 
 
@@ -389,7 +389,9 @@ USBSTOR_TimerRoutine(
 
     if (ResetDevice && FDODeviceExtension->TimerWorkQueueEnabled && FDODeviceExtension->SrbErrorHandlingActive == FALSE)
     {
-        WorkItemData = (PERRORHANDLER_WORKITEM_DATA)ExAllocatePool(NonPagedPool, sizeof(ERRORHANDLER_WORKITEM_DATA));
+        WorkItemData = ExAllocatePoolWithTag(NonPagedPool,
+                                             sizeof(ERRORHANDLER_WORKITEM_DATA),
+                                             USB_STOR_TAG);
         if (WorkItemData)
         {
            //

@@ -1542,7 +1542,7 @@ ExitProcess(IN UINT uExitCode)
         RtlAcquirePebLock();
 
         /* Kill all the threads */
-        NtTerminateProcess(NULL, 0);
+        NtTerminateProcess(NULL, uExitCode);
 
         /* Unload all DLLs */
         LdrShutdownProcess();
@@ -2001,7 +2001,7 @@ GetProcessHandleCount(IN HANDLE hProcess,
                                        NULL);
     if (NT_SUCCESS(Status))
     {
-        /* Copy the count and return sucecss */
+        /* Copy the count and return success */
         *pdwHandleCount = phc;
         return TRUE;
     }
@@ -2251,7 +2251,7 @@ ProcessIdToSessionId(IN DWORD dwProcessId,
                                            sizeof(SessionInformation),
                                            NULL);
 
-        /* Close the handle and check if we suceeded */
+        /* Close the handle and check if we succeeded */
         NtClose(ProcessHandle);
         if (NT_SUCCESS(Status))
         {
@@ -2313,7 +2313,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     HANDLE FileHandle, SectionHandle, ProcessHandle;
     ULONG ResumeCount;
     PROCESS_PRIORITY_CLASS PriorityClass;
-    NTSTATUS Status, Status1, ImageDbgStatus;
+    NTSTATUS Status, AppCompatStatus, SaferStatus, IFEOStatus, ImageDbgStatus;
     PPEB Peb, RemotePeb;
     PTEB Teb;
     INITIAL_TEB InitialTeb;
@@ -2351,7 +2351,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     BASE_MSG_SXS_HANDLES MappedHandles, Handles, FileHandles;
     PVOID CapturedStrings[3];
     SXS_WIN32_NT_PATH_PAIR ExePathPair, ManifestPathPair, PolicyPathPair;
-    SXS_OVERRIDE_MANIFEST OverrideMannifest;
+    SXS_OVERRIDE_MANIFEST OverrideManifest;
     UNICODE_STRING FreeString, SxsNtExePath;
     PWCHAR SxsConglomeratedBuffer, StaticBuffer;
     ULONG ConglomeratedBufferSizeBytes, StaticBufferSize, i;
@@ -2386,7 +2386,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     /* Zero out the initial core variables and handles */
     QuerySection = FALSE;
     InJob = FALSE;
-    SkipSaferAndAppCompat = TRUE; // HACK for making .bat/.cmd launch working again.
+    SkipSaferAndAppCompat = FALSE;
     ParameterFlags = 0;
     Flags = 0;
     DebugHandle = NULL;
@@ -2834,7 +2834,7 @@ StartScan:
                                                              &SxsWin32RelativePath);
     if (!TranslationStatus)
     {
-        /* Path must be invaild somehow, bail out */
+        /* Path must be invalid somehow, bail out */
         DPRINT1("Path translation for SxS failed\n");
         SetLastError(ERROR_PATH_NOT_FOUND);
         Result = FALSE;
@@ -2923,12 +2923,16 @@ StartScan:
                             FILE_NON_DIRECTORY_FILE);
     }
 
+    /* Failure path, display which file failed to open */
+    if (!NT_SUCCESS(Status))
+        DPRINT1("Open file failed: %lx (%wZ)\n", Status, &PathName);
+
     /* Cleanup in preparation for failure or success */
     RtlReleaseRelativeName(&SxsWin32RelativePath);
+
     if (!NT_SUCCESS(Status))
     {
         /* Failure path, try to understand why */
-        DPRINT1("Open file failed: %lx\n", Status);
         if (RtlIsDosDeviceName_U(lpApplicationName))
         {
             /* If a device is being executed, return this special error code */
@@ -3051,12 +3055,12 @@ StartScan:
                 if (QuerySection)
                 {
                     /* Nothing to do */
-                    Status = STATUS_SUCCESS;
+                    AppCompatStatus = STATUS_SUCCESS;
                 }
                 else
                 {
                     /* Get some information about the executable */
-                    Status = NtQuerySection(SectionHandle,
+                    AppCompatStatus = NtQuerySection(SectionHandle,
                                             SectionImageInformation,
                                             &ImageInformation,
                                             sizeof(ImageInformation),
@@ -3064,7 +3068,7 @@ StartScan:
                 }
 
                 /* Do we have section information now? */
-                if (NT_SUCCESS(Status))
+                if (NT_SUCCESS(AppCompatStatus))
                 {
                     /* Don't ask for it again, save the machine type */
                     QuerySection = TRUE;
@@ -3073,7 +3077,7 @@ StartScan:
             }
 
             /* Is there a reason/Shim we shouldn't run this application? */
-            Status = BasepCheckBadapp(FileHandle,
+            AppCompatStatus = BasepCheckBadapp(FileHandle,
                                       FreeBuffer,
                                       lpEnvironment,
                                       ImageMachine,
@@ -3082,11 +3086,11 @@ StartScan:
                                       &AppCompatSxsData,
                                       &AppCompatSxsDataSize,
                                       &FusionFlags);
-            if (!NT_SUCCESS(Status))
+            if (!NT_SUCCESS(AppCompatStatus))
             {
                 /* This is usually the status we get back */
-                DPRINT1("App compat launch failure: %lx\n", Status);
-                if (Status == STATUS_ACCESS_DENIED)
+                DPRINT1("App compat launch failure: %lx\n", AppCompatStatus);
+                if (AppCompatStatus == STATUS_ACCESS_DENIED)
                 {
                     /* Convert it to something more Win32-specific */
                     SetLastError(ERROR_CANCELLED);
@@ -3094,7 +3098,7 @@ StartScan:
                 else
                 {
                     /* Some other error */
-                    BaseSetLastNTError(Status);
+                    BaseSetLastNTError(AppCompatStatus);
                 }
 
                 /* Did we have a section? */
@@ -3148,13 +3152,13 @@ StartScan:
         if (SaferNeeded)
         {
             /* We have to call into the WinSafer library and actually check */
-            Status = BasepCheckWinSaferRestrictions(hUserToken,
+            SaferStatus = BasepCheckWinSaferRestrictions(hUserToken,
                                                     (LPWSTR)lpApplicationName,
                                                     FileHandle,
                                                     &InJob,
                                                     &TokenHandle,
                                                     &JobHandle);
-            if (Status == 0xFFFFFFFF)
+            if (SaferStatus == 0xFFFFFFFF)
             {
                 /* Back in 2003, they didn't have an NTSTATUS for this... */
                 DPRINT1("WinSafer blocking process launch\n");
@@ -3164,10 +3168,10 @@ StartScan:
             }
 
             /* Other status codes are not-Safer related, just convert them */
-            if (!NT_SUCCESS(Status))
+            if (!NT_SUCCESS(SaferStatus))
             {
-                DPRINT1("Error checking WinSafer: %lx\n", Status);
-                BaseSetLastNTError(Status);
+                DPRINT1("Error checking WinSafer: %lx\n", SaferStatus);
+                BaseSetLastNTError(SaferStatus);
                 Result = FALSE;
                 goto Quickie;
             }
@@ -3576,7 +3580,7 @@ StartScan:
         goto Quickie;
     }
 
-    /* Don't let callers pass in this flag -- we'll only get it from IFRO */
+    /* Don't let callers pass in this flag -- we'll only get it from IFEO */
     Flags &= ~PROCESS_CREATE_FLAGS_LARGE_PAGES;
 
     /* Clear the IFEO-missing flag, before we know for sure... */
@@ -3587,11 +3591,11 @@ StartScan:
         (NtCurrentPeb()->ReadImageFileExecOptions))
     {
         /* Let's do this! Attempt to open IFEO */
-        Status1 = LdrOpenImageFileOptionsKey(&PathName, 0, &KeyHandle);
-        if (!NT_SUCCESS(Status1))
+        IFEOStatus = LdrOpenImageFileOptionsKey(&PathName, 0, &KeyHandle);
+        if (!NT_SUCCESS(IFEOStatus))
         {
             /* We failed, set the flag so we store this in the parameters */
-            if (Status1 == STATUS_OBJECT_NAME_NOT_FOUND) ParameterFlags |= 2;
+            if (IFEOStatus == STATUS_OBJECT_NAME_NOT_FOUND) ParameterFlags |= 2;
         }
         else
         {
@@ -3605,8 +3609,8 @@ StartScan:
                 if (!DebuggerCmdLine)
                 {
                     /* Close IFEO on failure */
-                    Status1 = NtClose(KeyHandle);
-                    ASSERT(NT_SUCCESS(Status1));
+                    IFEOStatus = NtClose(KeyHandle);
+                    ASSERT(NT_SUCCESS(IFEOStatus));
 
                     /* Fail the call */
                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3616,13 +3620,13 @@ StartScan:
             }
 
             /* Now query for the debugger */
-            Status1 = LdrQueryImageFileKeyOption(KeyHandle,
+            IFEOStatus = LdrQueryImageFileKeyOption(KeyHandle,
                                                  L"Debugger",
                                                  REG_SZ,
                                                  DebuggerCmdLine,
                                                  MAX_PATH * sizeof(WCHAR),
                                                  &ResultSize);
-            if (!(NT_SUCCESS(Status1)) ||
+            if (!(NT_SUCCESS(IFEOStatus)) ||
                 (ResultSize < sizeof(WCHAR)) ||
                 (DebuggerCmdLine[0] == UNICODE_NULL))
             {
@@ -3632,21 +3636,21 @@ StartScan:
             }
 
             /* Also query if we should map with large pages */
-            Status1 = LdrQueryImageFileKeyOption(KeyHandle,
+            IFEOStatus = LdrQueryImageFileKeyOption(KeyHandle,
                                                  L"UseLargePages",
                                                  REG_DWORD,
                                                  &UseLargePages,
                                                  sizeof(UseLargePages),
                                                  NULL);
-            if ((NT_SUCCESS(Status1)) && (UseLargePages))
+            if ((NT_SUCCESS(IFEOStatus)) && (UseLargePages))
             {
                 /* Do it! This is the only way this flag can be set */
                 Flags |= PROCESS_CREATE_FLAGS_LARGE_PAGES;
             }
 
             /* We're done with IFEO, can close it now */
-            Status1 = NtClose(KeyHandle);
-            ASSERT(NT_SUCCESS(Status1));
+            IFEOStatus = NtClose(KeyHandle);
+            ASSERT(NT_SUCCESS(IFEOStatus));
         }
     }
 
@@ -3828,7 +3832,7 @@ StartScan:
                                                   NULL);
     if ((hUserToken) && (lpProcessAttributes))
     {
-        /* Auggment them with information from the user */
+        /* Augment them with information from the user */
 
         LocalProcessAttributes = *lpProcessAttributes;
         LocalProcessAttributes.lpSecurityDescriptor = NULL;
@@ -4656,9 +4660,7 @@ CreateProcessInternalA(HANDLE hToken,
                        LPPROCESS_INFORMATION lpProcessInformation,
                        PHANDLE hNewToken)
 {
-    PUNICODE_STRING CommandLine = NULL;
-    UNICODE_STRING DummyString;
-    UNICODE_STRING LiveCommandLine;
+    UNICODE_STRING CommandLine;
     UNICODE_STRING ApplicationName;
     UNICODE_STRING CurrentDirectory;
     BOOL bRetVal;
@@ -4673,8 +4675,7 @@ CreateProcessInternalA(HANDLE hToken,
     RtlMoveMemory(&StartupInfo, lpStartupInfo, sizeof(*lpStartupInfo));
 
     /* Initialize all strings to nothing */
-    LiveCommandLine.Buffer = NULL;
-    DummyString.Buffer = NULL;
+    CommandLine.Buffer = NULL;
     ApplicationName.Buffer = NULL;
     CurrentDirectory.Buffer = NULL;
     StartupInfo.lpDesktop = NULL;
@@ -4684,24 +4685,8 @@ CreateProcessInternalA(HANDLE hToken,
     /* Convert the Command line */
     if (lpCommandLine)
     {
-        /* If it's too long, then we'll have a problem */
-        if ((strlen(lpCommandLine) + 1) * sizeof(WCHAR) <
-            NtCurrentTeb()->StaticUnicodeString.MaximumLength)
-        {
-            /* Cache it in the TEB */
-            CommandLine = Basep8BitStringToStaticUnicodeString(lpCommandLine);
-        }
-        else
-        {
-            /* Use a dynamic version */
-            Basep8BitStringToDynamicUnicodeString(&LiveCommandLine,
-                                                  lpCommandLine);
-        }
-    }
-    else
-    {
-        /* The logic below will use CommandLine, so we must make it valid */
-        CommandLine = &DummyString;
+        Basep8BitStringToDynamicUnicodeString(&CommandLine,
+                                              lpCommandLine);
     }
 
     /* Convert the Name and Directory */
@@ -4736,8 +4721,7 @@ CreateProcessInternalA(HANDLE hToken,
     /* Call the Unicode function */
     bRetVal = CreateProcessInternalW(hToken,
                                      ApplicationName.Buffer,
-                                     LiveCommandLine.Buffer ?
-                                     LiveCommandLine.Buffer : CommandLine->Buffer,
+                                     CommandLine.Buffer,
                                      lpProcessAttributes,
                                      lpThreadAttributes,
                                      bInheritHandles,
@@ -4750,7 +4734,7 @@ CreateProcessInternalA(HANDLE hToken,
 
     /* Clean up */
     RtlFreeUnicodeString(&ApplicationName);
-    RtlFreeUnicodeString(&LiveCommandLine);
+    RtlFreeUnicodeString(&CommandLine);
     RtlFreeUnicodeString(&CurrentDirectory);
     RtlFreeHeap(RtlGetProcessHeap(), 0, StartupInfo.lpDesktop);
     RtlFreeHeap(RtlGetProcessHeap(), 0, StartupInfo.lpReserved);
@@ -4812,6 +4796,7 @@ CreateProcessA(LPCSTR lpApplicationName,
  */
 UINT
 WINAPI
+DECLSPEC_HOTPATCH
 WinExec(LPCSTR lpCmdLine,
         UINT uCmdShow)
 {

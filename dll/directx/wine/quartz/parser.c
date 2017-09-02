@@ -445,7 +445,7 @@ HRESULT Parser_AddPin(ParserImpl * This, const PIN_INFO * piOutput, ALLOCATOR_PR
         CopyMediaType(pin->pmt, amt);
         pin->dwSamplesProcessed = 0;
 
-        pin->pin.pin.pinInfo.pFilter = (LPVOID)This;
+        pin->pin.pin.pinInfo.pFilter = &This->filter.IBaseFilter_iface;
         pin->allocProps = *props;
         This->cStreams++;
         BaseFilterImpl_IncrementPinVersion(&This->filter);

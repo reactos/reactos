@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -448,16 +448,12 @@ AcpiNsRepair_CID (
             return (Status);
         }
 
-        /* Take care with reference counts */
-
         if (OriginalElement != *ElementPtr)
         {
-            /* Element was replaced */
+            /* Update reference count of new object */
 
             (*ElementPtr)->Common.ReferenceCount =
                 OriginalRefCount;
-
-            AcpiUtRemoveReference (OriginalElement);
         }
 
         ElementPtr++;

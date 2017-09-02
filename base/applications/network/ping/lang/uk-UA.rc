@@ -1,44 +1,66 @@
 /*
- * PROJECT:    Ping for ReactOS
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/network/ping/lang/uk-UA.rc
- * PURPOSE:    Ukraianian Language File for Ping
- * TRANSLATOR: Sakara Eugene (vzov@yandex.ua)
+ * FILE:        base/applications/network/ping/lang/uk-UA.rc
+ * PURPOSE:     Ukranian translations for ReactOS Ping Command
+ * TRANSLATORS:
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\nВикористання: ping [-t] [-n count] [-l size] [-w timeout] хост\n\n\
-Опції:\n\
-    -t             Пінг вказаного вузла поки не буде здійснена ручна зупинка.\n\
-                   Для зупинки натисніть Control-C.\n\
-    -n count       Кількість запитів, які будуть підправлені.\n\
-    -l size        Розмір буфера відправки.\n\
-    -w timeout     Час очікування кожної відповіді в мілісекундах.\n\n\0"
+    IDS_USAGE "\n\
+Usage: ping [-t] [-a] [-n count] [-l size] [-f] [-i TTL] [-v TOS]\n\
+            [-w timeout] [-4] [-6] target\n\
+\n\
+Options:\n\
+    -t          Ping the specified host until stopped.\n\
+                To see statistics and continue - type Control-Break;\n\
+                To stop - type Control-C.\n\
+    -a          Resolve addresses to hostnames.\n\
+    -n count    Number of echo requests to send.\n\
+    -l size     Send buffer size.\n\
+    -f          Set Don't Fragment flag in packet (IPv4-only).\n\
+    -i TTL      Time To Live.\n\
+    -v TOS      Type Of Service (IPv4-only. This setting has been deprecated\n\
+                and has no effect on the type of service field in the IP\n\
+                Header).\n\
+    -w timeout  Timeout in milliseconds to wait for each reply.\n\
+    -4          Force using IPv4.\n\
+    -6          Force using IPv6.\n\
+\n"
 
-    IDS_PING_WITH_BYTES "\nОбмін пакетами з %1 [%2] по %3!d! байта:\n\n\0"
-    IDS_PING_STATISTICS "\nСтатистика Ping для %1:\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST "    Пакетів: відправлено = %1!d!, отримано = %2!d!, втрачено = %3!d! (%4!d!%% втрат),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP "Приблизний час прийому-передачі:\n\0"
-    IDS_MIN_MAX_AVERAGE "    Мінімальний = %1, Максимальний = %2, Середній = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES "Недостатньо вільних ресурсів.\n\0"
-    IDS_UNKNOWN_HOST "Невідомий хост %1.\n\0"
-    IDS_SETSOCKOPT_FAILED "setsockopt невдалий (%1!d!).\n\0"
-    IDS_COULD_NOT_CREATE_SOCKET "Не вдалося створити сокет (#%1!d!).\n\0"
-    IDS_COULD_NOT_INIT_WINSOCK "Не вдалося ініціалізувати winsock dll.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED "Ім'я або IP-адреса хосту повинні бути вказані.\n\0"
-    IDS_BAD_PARAMETER "Поганий параметр %1.\n\0"
-    IDS_BAD_OPTION_FORMAT "Невірний формат опції %1.\n\0"
-    IDS_BAD_OPTION "Погана опція %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L "Неправильне значення для опції -l, допустимий діапазон від 0 до %1!d!.\n\0"
-    IDS_BAD_VALUE_OPTION_N "Неправильне значення для опції -n, допустимий діапазон від 1 до %1!u!.\n\0"
-    IDS_REPLY_FROM "Відповідь від %1: байтів=%2!d! час%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE "Хост недоступний.\n\0"
-    IDS_COULD_NOT_TRANSMIT "Не вдалося передати дані (%1!d!).\n\0"
-    IDS_COULD_NOT_RECV "Не вдалося отримати дані (%1!d!).\n\0"
-    IDS_REQUEST_TIMEOUT "Очікування запиту.\n\0"
-    IDS_MS "мс\0"
-    IDS_1MS "1мс\0"
+    IDS_CTRL_BREAK "Control-Break\n"
+    IDS_CTRL_C "Control-C\n"
+    IDS_NO_RESOURCES "Not enough resources available.\n"
+    IDS_MISSING_ADDRESS "IP address must be specified.\n"
+    IDS_MISSING_VALUE "Value must be supplied for option %s.\n"
+    IDS_BAD_OPTION "Bad option %s.\n"
+    IDS_BAD_PARAMETER "Bad parameter %s.\n"
+    IDS_BAD_VALUE "Bad value for option %s, valid range is from %u to %u.\n"
+    IDS_WRONG_FAMILY "The option %s is only supported for %s.\n"
+    IDS_UNKNOWN_HOST "Ping could not find host %s. Please check the name and try again.\n"
+    IDS_PINGING_ADDRESS "\nPinging %s "
+    IDS_PINGING_HOSTNAME "\nPinging %s [%s] "
+    IDS_SOURCE_ADDRESS "from %s %s"
+    IDS_PING_SIZE "with %lu bytes of data:\n\n"
+    IDS_REPLY_FROM "Reply from %s: "
+    IDS_REPLY_BYTES "bytes=%d "
+    IDS_REPLY_TIME_MS "time=%lums "
+    IDS_REPLY_TIME_0MS "time<1ms "
+    IDS_REPLY_TTL "TTL=%d\n"
+    IDS_REPLY_STATUS "Echo reply returned %lu.\n"
+    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
+    IDS_DEST_NET_UNREACHABLE "Destination net unreachable.\n"
+    IDS_REQUEST_TIMED_OUT "Request timed out.\n"
+    IDS_TTL_EXPIRED "TTL expired in transit.\n"
+    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %u)\n"
+
+    IDS_STATISTICS "\n\
+Ping statistics for %s:\n\
+    Packets: Sent = %d, Received = %d, Lost %d (%d%% loss),\n"
+
+    IDS_APPROXIMATE_RTT "Approximate round-trip time in milliseconds:\n\
+    Minimum = %lums, Maximum = %lums, Average = %lums\n"
+
+    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %i\n"
 END

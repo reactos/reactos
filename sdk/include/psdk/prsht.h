@@ -168,6 +168,8 @@ extern "C" {
 #define PSM_SETTITLEA	(WM_USER+111)
 #define PSM_SETTITLEW	(WM_USER+120)
 
+#define PSPCB_ADDREF 0
+
 #ifndef RC_INVOKED
 
 #pragma pack(push,8)

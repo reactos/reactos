@@ -39,7 +39,7 @@ Size = 548,0 Kio
 
 [Section.0419]
 Description = Нужен для запуска некоторых игр с открытым исходным кодом. Вам понадобится такой инструмент, как 7-zip, чтобы распаковать его.
-Size = 548,0 КБ
+Size = 548,0 КиБ
 
 [Section.041f]
 Name = SDL (Bayağı Doğrudan Ortam Katmanı) Karıştırıcısı

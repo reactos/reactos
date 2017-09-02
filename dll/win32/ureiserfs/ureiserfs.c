@@ -1,9 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         BTRFS File System Management
- * FILE:            dll/win32/ubtrfs/ubtrfs.c
- * PURPOSE:         ubtrfs DLL initialisation
- *
+ * PROJECT:         ReiserFS File System Management
+ * FILE:            dll/win32/ureiserfs/ureiserfs.c
+ * PURPOSE:         ureiserfs DLL initialisation
  * PROGRAMMERS:     Pierre Schweitzer
  */
 
@@ -11,13 +10,13 @@
 
 INT WINAPI
 DllMain(
-	IN HINSTANCE hinstDLL,
-	IN DWORD     dwReason,
-	IN LPVOID    lpvReserved)
+    IN HINSTANCE hinstDLL,
+    IN DWORD     dwReason,
+    IN LPVOID    lpvReserved)
 {
-	UNREFERENCED_PARAMETER(hinstDLL);
-	UNREFERENCED_PARAMETER(dwReason);
-	UNREFERENCED_PARAMETER(lpvReserved);
+    UNREFERENCED_PARAMETER(hinstDLL);
+    UNREFERENCED_PARAMETER(dwReason);
+    UNREFERENCED_PARAMETER(lpvReserved);
 
-	return TRUE;
+    return TRUE;
 }

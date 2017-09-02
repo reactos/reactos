@@ -247,6 +247,7 @@ IntVideoPortMapPhysicalMemory(
 extern ULONG CsrssInitialized;
 extern PKPROCESS Csrss;
 extern ULONG VideoPortDeviceNumber;
+extern KMUTEX VideoPortInt10Mutex;
 
 VOID FASTCALL
 IntAttachToCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState);

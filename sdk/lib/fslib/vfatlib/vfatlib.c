@@ -371,7 +371,7 @@ VfatPrint(PCHAR Format, ...)
 
 
 NTSTATUS
-WINAPI
+NTAPI
 VfatChkdsk(IN PUNICODE_STRING DriveRoot,
            IN BOOLEAN FixErrors,
            IN BOOLEAN Verbose,

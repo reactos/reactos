@@ -8,7 +8,7 @@
  */
 
 /* TODO
- * We need adding digtial signarture detections for the drivers
+ * We need adding digital signature detections for the drivers
  * and count out which level the signtature driver got, the value
  * shall be save to pDDDI->dwWHQLLevel, But I do not known how todo
  * this part yet, That is only missing feature in this functions

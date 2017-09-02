@@ -52,6 +52,6 @@ add_library(rpcrt4 SHARED
 set_module_type(rpcrt4 win32dll)
 target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})
 add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32)
-add_importlibs(rpcrt4 advapi32 advapi32_vista ws2_32 msvcrt kernel32 ntdll)
+add_importlibs(rpcrt4 advapi32 advapi32_vista kernel32_vista ws2_32 msvcrt kernel32 ntdll)
 add_pch(rpcrt4 precomp.h SOURCE)
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)

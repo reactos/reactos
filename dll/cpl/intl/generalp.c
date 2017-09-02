@@ -1429,7 +1429,7 @@ GeneralPageProc(HWND hwndDlg,
 
                         SetNewLocale(pGlobalData, NewLcid);
                         UpdateLocaleSample(hwndDlg, pGlobalData);
-                        pGlobalData->fUserLocaleChanged = TRUE;
+                        pGlobalData->bUserLocaleChanged = TRUE;
 
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
@@ -1456,7 +1456,7 @@ GeneralPageProc(HWND hwndDlg,
                             break;
 
                         pGlobalData->geoid = NewGeoID;
-                        pGlobalData->fGeoIdChanged = TRUE;
+                        pGlobalData->bGeoIdChanged = TRUE;
 
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
@@ -1466,7 +1466,7 @@ GeneralPageProc(HWND hwndDlg,
                     if (CustomizeLocalePropertySheet(GetParent(hwndDlg), pGlobalData) > 0)
                     {
                         UpdateLocaleSample(hwndDlg, pGlobalData);
-                        pGlobalData->fUserLocaleChanged = TRUE;
+                        pGlobalData->bUserLocaleChanged = TRUE;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -1474,30 +1474,29 @@ GeneralPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                LPNMHDR lpnm = (LPNMHDR)lParam;
+                /* Apply changes */
+                PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
 
-                if (lpnm->code == (UINT)PSN_APPLY)
+                /* Set new locale */
+                if (pGlobalData->bUserLocaleChanged == TRUE)
                 {
-                    /* Apply changes */
-                    PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
-
-                    /* Set new locale */
-                    if (pGlobalData->fUserLocaleChanged == TRUE)
-                    {
-                        SaveCurrentLocale(pGlobalData);
-                        pGlobalData->fUserLocaleChanged = FALSE;
-                    }
-
-                    /* Set new GEO ID */
-                    if (pGlobalData->fGeoIdChanged == TRUE)
-                    {
-                        SaveGeoID(pGlobalData);
-                        pGlobalData->fGeoIdChanged = FALSE;
-                    }
-
-                    AddNewKbLayoutsByLcid(pGlobalData->UserLCID);
+                    SaveCurrentLocale(pGlobalData);
+                    pGlobalData->bUserLocaleChanged = FALSE;
                 }
+
+                /* Set new GEO ID */
+                if (pGlobalData->bGeoIdChanged == TRUE)
+                {
+                    SaveGeoID(pGlobalData);
+                    pGlobalData->bGeoIdChanged = FALSE;
+                }
+
+                AddNewKbLayoutsByLcid(pGlobalData->UserLCID);
+
+                /* Post WM_WININICHANGE messages to system */
+                PostMessageW(HWND_BROADCAST, WM_WININICHANGE, 0, (LPARAM)L"intl");
             }
             break;
     }

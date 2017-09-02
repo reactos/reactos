@@ -62,11 +62,14 @@ struct FvfToDecl
 #define DDRAW_NO3D              0x00000008
 #define DDRAW_SCL_DDRAW1        0x00000010
 #define DDRAW_SCL_RECURSIVE     0x00000020
+#define DDRAW_GDI_FLIP          0x00000040
 
 #define DDRAW_STRIDE_ALIGNMENT  8
 
 #define DDRAW_WINED3D_FLAGS     (WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING \
-        | WINED3D_RESTORE_MODE_ON_ACTIVATE | WINED3D_FOCUS_MESSAGES | WINED3D_PIXEL_CENTER_INTEGER)
+        | WINED3D_RESTORE_MODE_ON_ACTIVATE | WINED3D_FOCUS_MESSAGES | WINED3D_PIXEL_CENTER_INTEGER \
+        | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR | WINED3D_NO_PRIMITIVE_RESTART \
+        | WINED3D_LEGACY_CUBEMAP_FILTERING)
 
 enum ddraw_device_state
 {
@@ -131,7 +134,6 @@ struct ddraw
 
 HRESULT ddraw_init(struct ddraw *ddraw, DWORD flags, enum wined3d_device_type device_type) DECLSPEC_HIDDEN;
 void ddraw_d3dcaps1_from_7(D3DDEVICEDESC *caps1, D3DDEVICEDESC7 *caps7) DECLSPEC_HIDDEN;
-void ddraw_destroy_swapchain(struct ddraw *ddraw) DECLSPEC_HIDDEN;
 HRESULT ddraw_get_d3dcaps(const struct ddraw *ddraw, D3DDEVICEDESC7 *caps) DECLSPEC_HIDDEN;
 void ddraw_update_lost_surfaces(struct ddraw *ddraw) DECLSPEC_HIDDEN;
 
@@ -185,7 +187,7 @@ struct ddraw_surface
      */
 #define MAX_COMPLEX_ATTACHED 6
     struct ddraw_surface *complex_array[MAX_COMPLEX_ATTACHED];
-    /* You can't traverse the tree upwards. Only a flag for Surface::Release because its needed there,
+    /* You can't traverse the tree upwards. Only a flag for Surface::Release because it's needed there,
      * but no pointer to prevent temptations to traverse it in the wrong direction.
      */
     BOOL                    is_complex_root;
@@ -211,6 +213,7 @@ struct ddraw_texture
     DDSURFACEDESC2 surface_desc;
 
     struct ddraw_surface *root;
+    struct wined3d_device *wined3d_device;
 };
 
 HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_desc,
@@ -219,7 +222,6 @@ struct wined3d_rendertarget_view *ddraw_surface_get_rendertarget_view(struct ddr
 void ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw,
         struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
         const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
-ULONG ddraw_surface_release_iface(struct ddraw_surface *This) DECLSPEC_HIDDEN;
 HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface,
         const RECT *rect, BOOL read) DECLSPEC_HIDDEN;
 
@@ -402,7 +404,7 @@ struct ddraw_palette
     IDirectDrawPalette IDirectDrawPalette_iface;
     LONG ref;
 
-    struct wined3d_palette *wineD3DPalette;
+    struct wined3d_palette *wined3d_palette;
     struct ddraw *ddraw;
     IUnknown *ifaceToRelease;
     DWORD flags;
@@ -529,10 +531,9 @@ struct d3d_execute_buffer
     D3DEXECUTEDATA       data;
 
     /* This buffer will store the transformed vertices */
-    void                 *vertex_data;
-    WORD                 *indices;
-    unsigned int         nb_indices;
-    unsigned int         nb_vertices;
+    unsigned int         index_size, index_pos;
+    unsigned int         vertex_size, src_vertex_pos;
+    struct wined3d_buffer *src_vertex_buffer, *dst_vertex_buffer, *index_buffer;
 
     /* This flags is set to TRUE if we allocated ourselves the
      * data buffer
@@ -554,12 +555,12 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *execute_buffer,
 struct d3d_vertex_buffer
 {
     IDirect3DVertexBuffer7 IDirect3DVertexBuffer7_iface;
-    IDirect3DVertexBuffer IDirect3DVertexBuffer_iface;
     LONG ref;
+    unsigned int version;
 
     /*** WineD3D and ddraw links ***/
-    struct wined3d_buffer *wineD3DVertexBuffer;
-    struct wined3d_vertex_declaration *wineD3DVertexDeclaration;
+    struct wined3d_buffer *wined3d_buffer;
+    struct wined3d_vertex_declaration *wined3d_declaration;
     struct ddraw *ddraw;
 
     /*** Storage for D3D7 specific things ***/
@@ -586,6 +587,8 @@ struct d3d_vertex_buffer *unsafe_impl_from_IDirect3DVertexBuffer7(IDirect3DVerte
 
 void ddrawformat_from_wined3dformat(DDPIXELFORMAT *ddraw_format,
         enum wined3d_format_id wined3d_format) DECLSPEC_HIDDEN;
+BOOL wined3d_colour_from_ddraw_colour(const DDPIXELFORMAT *pf, const struct ddraw_palette *palette,
+        DWORD colour, struct wined3d_color *wined3d_colour) DECLSPEC_HIDDEN;
 enum wined3d_format_id wined3dformat_from_ddrawformat(const DDPIXELFORMAT *format) DECLSPEC_HIDDEN;
 void DDRAW_dump_surface_desc(const DDSURFACEDESC2 *lpddsd) DECLSPEC_HIDDEN;
 void dump_D3DMATRIX(const D3DMATRIX *mat) DECLSPEC_HIDDEN;
@@ -632,10 +635,10 @@ struct member_info
 /* Structure copy */
 #define ME(x,f,e) { x, #x, (void (*)(const void *))(f), offsetof(STRUCT, e) }
 
-#define DD_STRUCT_COPY_BYSIZE_(to,from,from_size)                 \
+#define DD_STRUCT_COPY_BYSIZE_(to,from,to_size,from_size)         \
     do {                                                          \
         DWORD __size = (to)->dwSize;                              \
-        DWORD __resetsize = min(__size, sizeof(*to));             \
+        DWORD __resetsize = min(to_size, sizeof(*to));            \
         DWORD __copysize = min(__resetsize, from_size);           \
         assert(to != from);                                       \
         memcpy(to, from, __copysize);                             \
@@ -643,7 +646,7 @@ struct member_info
         (to)->dwSize = __size; /* restore size */                 \
     } while (0)
 
-#define DD_STRUCT_COPY_BYSIZE(to,from) DD_STRUCT_COPY_BYSIZE_(to,from,(from)->dwSize)
+#define DD_STRUCT_COPY_BYSIZE(to,from) DD_STRUCT_COPY_BYSIZE_(to,from,(to)->dwSize,(from)->dwSize)
 
 HRESULT hr_ddraw_from_wined3d(HRESULT hr) DECLSPEC_HIDDEN;
 

@@ -237,11 +237,9 @@ static INT_PTR CDECL fdi_notify_extract(FDINOTIFICATIONTYPE fdint, PFDINOTIFICAT
                 }
 
                 hFile = CreateFileA(szFullPath, GENERIC_READ | GENERIC_WRITE, 0, NULL,
-                                    CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+                                    CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-                if (hFile == INVALID_HANDLE_VALUE)
-                    hFile = 0;
-                else if (node)
+                if (hFile != INVALID_HANDLE_VALUE && node)
                     node->DoExtract = FALSE;
             }
 
@@ -319,7 +317,7 @@ HRESULT WINAPI Extract(SESSION *dest, LPCSTR szCabName)
     HFDI hfdi;
     char *str, *end, *path = NULL, *name = NULL;
 
-    TRACE("(%p, %s)\n", dest, szCabName);
+    TRACE("(%p, %s)\n", dest, debugstr_a(szCabName));
 
     hfdi = FDICreate(mem_alloc,
                      mem_free,

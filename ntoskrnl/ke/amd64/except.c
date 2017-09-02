@@ -229,7 +229,7 @@ KiPrepareUserDebugData(void)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH2_END
+    _SEH2_END;
 }
 
 VOID

@@ -66,7 +66,7 @@ STRINGTABLE
 BEGIN
     1 "* Necunoscut *"
     2 "GRUPDELUCRU"
-    3 "La citirea domeniului de apartenență s-a produs următoarea eroare:"
+    3 "La citirea domeniului de apartenență a survenit următoarea eroare:"
     4 "Schimbarea identității calculatorului"
     5 "Grup de lucru:"
     6 "Domeniu:"

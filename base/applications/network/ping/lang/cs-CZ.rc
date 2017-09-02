@@ -1,41 +1,66 @@
-/* FILE:       base/applications/network/ping/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2011-03-31
+/*
+ * FILE:        base/applications/network/ping/lang/cs-CZ.rc
+ * PURPOSE:     Czech translations for ReactOS Ping Command
+ * TRANSLATORS: Radek Liska (Black_Fox) <radekliska at gmail dot com>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\nPoužití: ping [-t] [-n počet] [-l velikost] [-w timeout] cíl\n\n\
+    IDS_USAGE "\n\
+Použití: ping [-t] [-a] [-n počet] [-l velikost] [-f] [-i TTL] [-v TOS]\n\
+              [-w timeout] [-4] [-6] target\n\
+\n\
 Options:\n\
-    -t             Opakovaně zasílá požadavky o ozvěnu zadanému cíli až do zastavení.\n\
-                   Ukončení stisknutím Ctrl+C.\n\
-    -n počet       Počet požadavků o ozvěnu, které budou zaslány.\n\
-    -l velikost    Velikost vyrovnávací paměti.\n\
-    -w timeout     Doba v milisekundách, po kterou se bude čekat na odpověď.\n\n\0"
+    -t           Ping the specified host until stopped.\n\
+                 To see statistics and continue - type Control-Break;\n\
+                 To stop - type Control-C.\n\
+    -a           Resolve addresses to hostnames.\n\
+    -n počet     Počet požadavků o ozvěnu, které budou zaslány.\n\
+    -l velikost  Velikost vyrovnávací paměti.\n\
+    -f           Set Don't Fragment flag in packet (IPv4-only).\n\
+    -i TTL       Time To Live.\n\
+    -v TOS       Type Of Service (IPv4-only. This setting has been deprecated\n\
+                 and has no effect on the type of service field in the IP\n\
+                 Header).\n\
+    -w timeout   Doba v milisekundách, po kterou se bude čekat na odpověď.\n\
+    -4           Force using IPv4.\n\
+    -6           Force using IPv6.\n\
+\n"
 
-    IDS_PING_WITH_BYTES "\nPing na %1 [%2] s %3!d! bajty dat:\n\n\0"
-    IDS_PING_STATISTICS "\nStatistika pro %1:\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST "    Pakety: Odesláno = %1!d!, Přijato = %2!d!, Ztraceno = %3!d! (%4!d!%% ztráta),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP "Přibližná doba do přijetí odezvy v milisekundách:\n\0"
-    IDS_MIN_MAX_AVERAGE "    Minimum = %1, Maximum = %2, Průměr = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES "Není k dispozici dostatek volných zdrojů.\n\0"
-    IDS_UNKNOWN_HOST "Neznámý hostitel %1.\n\0"
-    IDS_SETSOCKOPT_FAILED "setsockopt selhalo (%1!d!).\n\0"
-    IDS_COULD_NOT_CREATE_SOCKET "Nebylo možné vytvořit socket (#%1!d!).\n\0"
-    IDS_COULD_NOT_INIT_WINSOCK "Nebylo možné inicializovat knihovnu winsock.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED "Je nutno zadat název nebo IP adresu cíle.\n\0"
-    IDS_BAD_PARAMETER "Nesprávný parametr %1.\n\0"
-    IDS_BAD_OPTION_FORMAT "Nesprávný formát volby %1.\n\0"
-    IDS_BAD_OPTION "Nesprávná volba %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L "Nesprávná hodnota volby -l, platný rozsah je od 0 do %1!d!.\n\0"
-    IDS_BAD_VALUE_OPTION_N "Nesprávná hodnota volby -n, platný rozsah je od 1 do %1!u!.\n\0"
-    IDS_REPLY_FROM "Odpověď od %1: bajtů=%2!d! čas%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE "Cíl je nedostupný.\n\0"
-    IDS_COULD_NOT_TRANSMIT "Nebylo možné přenést data (%1!d!).\n\0"
-    IDS_COULD_NOT_RECV "Nebylo možné přijmout data (%1!d!).\n\0"
-    IDS_REQUEST_TIMEOUT "Časový limit žádosti vypršel.\n\0"
-    IDS_MS "ms\0"
-    IDS_1MS "1ms\0"
+    IDS_CTRL_BREAK "Control-Break\n"
+    IDS_CTRL_C "Control-C\n"
+    IDS_NO_RESOURCES "Není k dispozici dostatek volných zdrojů.\n"
+    IDS_MISSING_ADDRESS "IP address must be specified.\n"
+    IDS_MISSING_VALUE "Value must be supplied for option %s.\n"
+    IDS_BAD_OPTION "Nesprávná volba %s.\n"
+    IDS_BAD_PARAMETER "Nesprávný parametr %s.\n"
+    IDS_BAD_VALUE "Nesprávná hodnota volby %s, platný rozsah je od %u do %u.\n"
+    IDS_WRONG_FAMILY "The option %s is only supported for %s.\n"
+    IDS_UNKNOWN_HOST "Ping could not find host %s. Please check the name and try again.\n"
+    IDS_PINGING_ADDRESS "\nPinging %s "
+    IDS_PINGING_HOSTNAME "\nPinging %s [%s] "
+    IDS_SOURCE_ADDRESS "from %s %s"
+    IDS_PING_SIZE "with %lu bytes of data:\n\n"
+    IDS_REPLY_FROM "Odpověď od %s: "
+    IDS_REPLY_BYTES "bajtů=%d "
+    IDS_REPLY_TIME_MS "čas=%lums "
+    IDS_REPLY_TIME_0MS "čas<1ms "
+    IDS_REPLY_TTL "TTL=%d\n"
+    IDS_REPLY_STATUS "Echo reply returned %lu.\n"
+    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
+    IDS_DEST_NET_UNREACHABLE "Destination net unreachable.\n"
+    IDS_REQUEST_TIMED_OUT "Časový limit žádosti vypršel.\n"
+    IDS_TTL_EXPIRED "TTL expired in transit.\n"
+    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %u)\n"
+
+    IDS_STATISTICS "\n\
+Statistika pro %s:\n\
+    Pakety: Odesláno = %d, Přijato = %d, Ztraceno %d (%d%% ztráta),\n"
+
+    IDS_APPROXIMATE_RTT "Přibližná doba do přijetí odezvy v milisekundách:\n\
+    Minimum = %lums, Maximum = %lums, Průměr = %lums\n"
+
+    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %i\n"
 END

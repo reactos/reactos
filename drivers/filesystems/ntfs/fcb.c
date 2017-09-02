@@ -636,7 +636,7 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
 
     parentFCB = NULL;
 
-    /* Parse filename and check each path element for existance and access */
+    /* Parse filename and check each path element for existence and access */
     while (NtfsGetNextPathElement(currentElement) != 0)
     {
         /* Skip blank directory levels */

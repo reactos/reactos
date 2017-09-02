@@ -1,8 +1,7 @@
-; Set UnattendSetupEnabled to yes in order to get unattended setup working
-
 [Unattend]
 Signature = "$ReactOS$"
 
+; Set UnattendSetupEnabled to yes in order to get unattended setup working
 ; yes - unattend setup enabled
 ; no - unattend setup disabled
 UnattendSetupEnabled = yes
@@ -19,8 +18,8 @@ MBRInstallType=2
 
 FullName="MyName"
 ;OrgName="MyOrg"
-ComputerName="MYCOMPUTERNAME";
-AdminPassword="MyPassword"
+ComputerName="MYCOMPUTERNAME"
+;AdminPassword="MyPassword"
 
 ; TimeZone is set GMT as default
 TimeZoneIndex=85
@@ -39,10 +38,9 @@ FormatPartition=1
 ; 0 - disabled
 AutoPartition = 1
 
-; enable this setting to disable vmware driver install
-; yes - disabled
-; no  - enabled
-DisableVmwInst = yes
+; set this option to automatically
+; specify language in 2nd mode setup
+; see hivesys.inf for available languages
 LocaleID = 409
 
 ; enable this section to automatically launch programs

@@ -95,7 +95,7 @@ CmpGetBiosDate(IN PCHAR BiosStart,
                 }
             }
 
-            /* Add slashes were we previously had NULLs */
+            /* Add slashes where we previously had NULLs */
             CurrentDate[4] = CurrentDate[7] = '/';
 
             /* Check which date is newer */
@@ -244,7 +244,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     PCHAR PartialString = NULL, BiosVersion;
     CHAR CpuString[48];
     PVOID BaseAddress = NULL;
-    LARGE_INTEGER ViewBase = {{0}};
+    LARGE_INTEGER ViewBase = {{0, 0}};
     ULONG_PTR VideoRomBase;
     PCHAR CurrentVersion;
     extern UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
@@ -287,7 +287,8 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                NULL,
                                NULL);
     Status = NtOpenKey(&SystemHandle, KEY_READ | KEY_WRITE, &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Create the BIOS Information key */
     RtlInitUnicodeString(&KeyName,
@@ -311,7 +312,10 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             BiosHandle = NULL;
     }
     else if (!NT_SUCCESS(Status))
+    {
+        NtClose(SystemHandle);
         return Status;
+    }
 
     /* Create the CPU Key, and check if it already existed */
     RtlInitUnicodeString(&KeyName, L"CentralProcessor");
@@ -336,7 +340,11 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         CmpConfigurationData = ExAllocatePoolWithTag(PagedPool,
                                                      CmpConfigurationAreaSize,
                                                      TAG_CM);
-        if (!CmpConfigurationData) return STATUS_INSUFFICIENT_RESOURCES;
+        if (!CmpConfigurationData)
+        {
+            // FIXME: Cleanup stuff!!
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
         /* Loop all CPUs */
         for (i = 0; i < KeNumberProcessors; i++)
@@ -345,7 +353,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             Prcb = KiProcessorBlock[i];
 
             /* Setup the Configuration Entry for the Processor */
-            RtlZeroMemory(&ConfigData, sizeof (ConfigData));
+            RtlZeroMemory(&ConfigData, sizeof(ConfigData));
             ConfigData.ComponentEntry.Class = ProcessorClass;
             ConfigData.ComponentEntry.Type = CentralProcessor;
             ConfigData.ComponentEntry.Key = i;
@@ -382,7 +390,12 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                                InterfaceTypeUndefined,
                                                0xFFFFFFFF,
                                                IndexTable);
-            if (!NT_SUCCESS(Status)) return(Status);
+            if (!NT_SUCCESS(Status))
+            {
+                NtClose(BiosHandle);
+                NtClose(SystemHandle);
+                return Status;
+            }
 
             {
                 /* Setup the Configuration Entry for the FPU */
@@ -408,8 +421,10 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                                    IndexTable);
                 if (!NT_SUCCESS(Status))
                 {
-                    /* Failed, close the CPU handle and return */
+                    /* We failed, close all the opened handles and return */
                     NtClose(KeyHandle);
+                    NtClose(BiosHandle);
+                    NtClose(SystemHandle);
                     return Status;
                 }
 
@@ -428,7 +443,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                     //Ki386Cpuid(0x80000000, &ExtendedId, &Dummy, &Dummy, &Dummy);
                     if (ExtendedId >= 0x80000004)
                     {
-                        /* Do all the CPUIDs requred to get the full name */
+                        /* Do all the CPUIDs required to get the full name */
                         PartialString = CpuString;
                         for (ExtendedId = 2; ExtendedId <= 4; ExtendedId++)
                         {
@@ -559,7 +574,15 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     Status = ZwOpenSection(&SectionHandle,
                            SECTION_ALL_ACCESS,
                            &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) goto Quickie;
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, close all the opened handles and return */
+        // NtClose(KeyHandle);
+        NtClose(BiosHandle);
+        NtClose(SystemHandle);
+        /* 'Quickie' closes KeyHandle */
+        goto Quickie;
+    }
 
     /* Map the first 1KB of memory to get the IVT */
     ViewSize = PAGE_SIZE;

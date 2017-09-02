@@ -24,7 +24,8 @@ CACLS nazwa pliku [/T] [/E] [/C] [/G użytkownik:dostęp [...]] [/R użytkownik 
                               W  Zapis\n\
                               C  Zmiana (zapis)\n\
                               F  Pełny dostęp\n\
-   /R użytkownik         Odwołuje prawa dostępu określonemu użytkownikowi  (działa tylko z opcją /E).\n\
+   /R użytkownik         Odwołuje prawa dostępu określonemu użytkownikowi\n\
+                         (działa tylko z opcją /E).\n\
    /P użytkownik:dostęp  Edytuje prawa dostępu określonego użytkownika.\n\
                          Poziom dostępu:\n\
                               N  Brak\n\
@@ -33,7 +34,8 @@ CACLS nazwa pliku [/T] [/E] [/C] [/G użytkownik:dostęp [...]] [/R użytkownik 
                               C  Zmiana (zapis)\n\
                               F  Pełny dostęp\n\
    /D użytkownik        Odbiera prawa dostępu określonemu użytkownikowi.\n\
-W jednym poleceniu można edytować prawa dostępu do wielu plików, używając symboli wieloznacznych.\n\
+W jednym poleceniu można edytować prawa dostępu do wielu plików, używając\n\
+symboli wieloznacznych.\n\
 W jednym poleceniu można edytować prawa dostępu wielu użytkowników.\n\n\
 Skróty:\n\
    CI - Dziedziczenie kontenera.\n\

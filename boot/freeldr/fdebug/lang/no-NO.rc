@@ -19,7 +19,7 @@ BEGIN
     END
     POPUP "&Hjelp"
     BEGIN
-        MENUITEM "&Om ...", IDM_ABOUT
+        MENUITEM "&Om...", IDM_ABOUT
     END
 END
 

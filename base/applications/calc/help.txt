@@ -331,7 +331,7 @@ It deletes the current calculation and all sub expressions.
 Shortcut from keyboard: ESC
 
 F-E
-It enables or it disables the fixed scietific notation.
+It enables or it disables the fixed scientific notation.
 Shortcut from keyboard: V
 
 0 1 2 3 4 5 6 7 8 9

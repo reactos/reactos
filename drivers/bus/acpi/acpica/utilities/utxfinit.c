@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,7 @@ AeDoObjectOverrides (
  *
  ******************************************************************************/
 
-ACPI_STATUS
+ACPI_STATUS ACPI_INIT_FUNCTION
 AcpiInitializeSubsystem (
     void)
 {
@@ -151,7 +151,7 @@ ACPI_EXPORT_SYMBOL_INIT (AcpiInitializeSubsystem)
  *
  ******************************************************************************/
 
-ACPI_STATUS
+ACPI_STATUS ACPI_INIT_FUNCTION
 AcpiEnableSubsystem (
     UINT32                  Flags)
 {
@@ -263,7 +263,7 @@ ACPI_EXPORT_SYMBOL_INIT (AcpiEnableSubsystem)
  *
  ******************************************************************************/
 
-ACPI_STATUS
+ACPI_STATUS ACPI_INIT_FUNCTION
 AcpiInitializeObjects (
     UINT32                  Flags)
 {
@@ -293,7 +293,7 @@ AcpiInitializeObjects (
      * all of the tables have been loaded. It is a legacy option and is
      * not compatible with other ACPI implementations. See AcpiNsLoadTable.
      */
-    if (AcpiGbl_GroupModuleLevelCode)
+    if (!AcpiGbl_ParseTableAsTermList && AcpiGbl_GroupModuleLevelCode)
     {
         AcpiNsExecModuleCodeList ();
 

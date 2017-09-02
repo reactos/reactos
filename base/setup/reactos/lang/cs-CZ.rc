@@ -22,9 +22,9 @@ CAPTION "Instalace systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Nainstalovat systém ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    LTEXT "Instalovat novou kopii systému ReactOS. Tato možnost odstraní Vaše soubory, nastavení a programy. Můžete provést úpravu disků a oddílů.", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "Opravit nebo aktualizovat již nainstalovaný systém ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "Aktualizovat nebo opravit kopii systémy ReactOS. Tato možnost zachová Vaše soubory, nastavení a programy. Tato možnost je dostupná pouze pokud je již na Vašem počítači systém ReactOS nainstalován.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Po klepnutí na Další bude možné nastavit zařízení.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -131,7 +131,7 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Výpis voleb instalace k ověření před tím, než začne instalace"
     IDS_ABORTSETUP "Systém ReactOS není na tomto počítači kompletně nainstalovaný. Pokud nyní ukončíte instalaci, bude ji pro nainstalování systému ReactOS nutné provést znova. Opravdu ukončit?"
     IDS_ABORTSETUP2 "Přerušit instalaci?"
-    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'\nSetup is unable to continue."
+    IDS_NO_TXTSETUP_SIF "Soubor 'txtsetup.sif' nenalezen.\nInstalace nemůže pokračovat.."
     IDS_CAPTION "Instalace systému ReactOS"
 END
 

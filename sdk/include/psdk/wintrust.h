@@ -116,6 +116,7 @@ typedef struct _WINTRUST_DATA
     WCHAR* pwszURLReference;
     DWORD  dwProvFlags;
     DWORD  dwUIContext;
+    struct WINTRUST_SIGNATURE_SETTINGS_ *pSignatureSettings;
 } WINTRUST_DATA, *PWINTRUST_DATA;
 
 #define WTD_STATEACTION_IGNORE           0
@@ -140,6 +141,26 @@ typedef struct _WINTRUST_DATA
 
 #define WTD_UICONTEXT_EXECUTE 0
 #define WTD_UICONTEXT_INSTALL 1
+
+typedef struct WINTRUST_SIGNATURE_SETTINGS_
+{
+    DWORD cbStruct;
+    DWORD dwIndex;
+    DWORD dwFlags;
+    DWORD cSecondarySigs;
+    DWORD dwVerifiedSigIndex;
+    CERT_STRONG_SIGN_PARA *pCryptoPolicy;
+} WINTRUST_SIGNATURE_SETTINGS, *PWINTRUST_SIGNATURE_SETTINGS;
+
+#define WSS_VERIFY_SPECIFIC               0x00000001
+#define WSS_GET_SECONDARY_SIG_COUNT       0x00000002
+#define WSS_VERIFY_SEALING                0x00000004
+#define WSS_INPUT_FLAG_MASK               0x00000007
+
+#define WSS_OUT_SEALING_STATUS_VERIFIED   0x80000000
+#define WSS_OUT_HAS_SEALING_INTENT        0x40000000
+#define WSS_OUT_FILE_SUPPORTS_SEAL        0x20000000
+#define WSS_OUTPUT_FLAG_MASK              0xe0000000
 
 typedef struct _CRYPT_TRUST_REG_ENTRY
 {
@@ -356,6 +377,8 @@ typedef struct _CRYPT_PROVIDER_DATA {
     PCERT_USAGE_MATCH         pRequestUsage;
     DWORD                     dwTrustPubSettings;
     DWORD                     dwUIStateFlags;
+    struct _CRYPT_PROVIDER_SIGSTATE     *pSigState;
+    struct WINTRUST_SIGNATURE_SETTINGS_ *pSigSettings;
 } CRYPT_PROVIDER_DATA, *PCRYPT_PROVIDER_DATA;
 
 #define CPD_CHOICE_SIP 1
@@ -370,6 +393,27 @@ typedef struct _CRYPT_PROVIDER_DATA {
 #define CPD_UISTATE_MODE_BLOCK  0x00000001
 #define CPD_UISTATE_MODE_ALLOW  0x00000002
 #define CPD_UISTATE_MODE_MASK   0x00000003
+
+typedef struct _CRYPT_PROVIDER_SIGSTATE
+{
+    DWORD cbStruct;
+    HCRYPTMSG *rhSecondarySigs;
+    HCRYPTMSG hPrimarySig;
+    BOOL fFirstAttemptMade;
+    BOOL fNoMoreSigs;
+    DWORD cSecondarySigs;
+    DWORD dwCurrentIndex;
+    BOOL fSupportMultiSig;
+    DWORD dwCryptoPolicySupport;
+    DWORD iAttemptCount;
+    BOOL fCheckedSealing;
+    struct _SEALING_SIGNATURE_ATTRIBUTE *pSealingSignature;
+} CRYPT_PROVIDER_SIGSTATE, *PCRYPT_PROVIDER_SIGSTATE;
+
+/* Flags for dwCryptoPolicySupport */
+#define WSS_OBJTRUST_SUPPORT       0x00000001
+#define WSS_SIGTRUST_SUPPORT       0x00000002
+#define WSS_CERTTRUST_SUPPORT      0x00000004
 
 typedef BOOL (*PFN_PROVUI_CALL)(HWND hWndSecurityDialog,
  struct _CRYPT_PROVIDER_DATA *pProvData);

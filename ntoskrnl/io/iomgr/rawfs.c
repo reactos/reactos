@@ -1053,9 +1053,10 @@ RawCleanup(IN PVCB Vcb,
 
 NTSTATUS
 NTAPI
-RawDispatch(IN PVOLUME_DEVICE_OBJECT DeviceObject,
+RawDispatch(IN PDEVICE_OBJECT DeviceObject,
             IN PIRP Irp)
 {
+    PVOLUME_DEVICE_OBJECT VolumeDeviceObject = (PVOLUME_DEVICE_OBJECT)DeviceObject;
     NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
     PIO_STACK_LOCATION IoStackLocation;
     PVCB Vcb;
@@ -1067,7 +1068,7 @@ RawDispatch(IN PVOLUME_DEVICE_OBJECT DeviceObject,
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
     /* Differentiate between Volume DO and FS DO */
-    if ((((PDEVICE_OBJECT)DeviceObject)->Size == sizeof(DEVICE_OBJECT)) &&
+    if ((DeviceObject->Size == sizeof(DEVICE_OBJECT)) &&
         !((IoStackLocation->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL) &&
           (IoStackLocation->MinorFunction == IRP_MN_MOUNT_VOLUME)))
     {
@@ -1093,7 +1094,7 @@ RawDispatch(IN PVOLUME_DEVICE_OBJECT DeviceObject,
 
     /* Otherwise, get our VCB and start handling the IRP */
     FsRtlEnterFileSystem();
-    Vcb = &DeviceObject->Vcb;
+    Vcb = &VolumeDeviceObject->Vcb;
 
     /* Check what kind of IRP this is */
     switch (IoStackLocation->MajorFunction)
@@ -1252,7 +1253,7 @@ RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
     DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
     DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)RawDispatch;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = RawDispatch;
 
     /* Shutdown and unload */
     DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = RawShutdown;

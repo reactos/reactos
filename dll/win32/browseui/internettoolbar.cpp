@@ -646,9 +646,9 @@ HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    if (availableBorderSpace.top > maxHeight)
+    if (maxHeight && availableBorderSpace.bottom - availableBorderSpace.top > maxHeight)
     {
-        availableBorderSpace.top = maxHeight;
+        availableBorderSpace.bottom = availableBorderSpace.top + maxHeight;
     }
 
     return ResizeBorderDW(&availableBorderSpace, fSite, FALSE);
@@ -742,7 +742,7 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
                 SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
             }
         }
-        hResult = ReserveBorderSpace();
+        hResult = ReserveBorderSpace(0);
 
         // TODO: refresh view menu?
     }
@@ -934,6 +934,8 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::CloseDW(DWORD dwReserved)
             return hResult;
         ReleaseCComPtrExpectZero(fLogoBar);
     }
+
+    SetSite(NULL);
     return S_OK;
 }
 
@@ -1848,3 +1850,24 @@ LRESULT CInternetToolbar::OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     return 0;
 }
 
+LRESULT CInternetToolbar::OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    HRESULT hr;
+    HWND hwndMenu;
+
+    hr = IUnknown_GetWindow(fMenuBar, &hwndMenu);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    CComPtr<IWinEventHandler> menuWinEventHandler;
+    hr = fMenuBar->QueryInterface(IID_PPV_ARG(IWinEventHandler, &menuWinEventHandler));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    LRESULT lres;
+    hr = menuWinEventHandler->OnWinEvent(hwndMenu, uMsg, wParam, lParam, &lres);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    return lres;
+}

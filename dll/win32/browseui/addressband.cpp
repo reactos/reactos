@@ -66,7 +66,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
 {
     if (pdbi->dwMask & DBIM_MINSIZE)
     {
-        pdbi->ptMinSize.x = 400;
+        pdbi->ptMinSize.x = 100;
         pdbi->ptMinSize.y = 22;
     }
     if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -81,7 +81,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
     }
     if (pdbi->dwMask & DBIM_ACTUAL)
     {
-        pdbi->ptActual.x = 400;
+        pdbi->ptActual.x = 100;
         pdbi->ptActual.y = 22;
     }
     if (pdbi->dwMask & DBIM_TITLE)
@@ -197,10 +197,19 @@ HRESULT STDMETHODCALLTYPE CAddressBand::CloseDW(DWORD dwReserved)
 
     m_hWnd = NULL;
 
-    IUnknown_SetSite(fAddressEditBox, NULL);
+    CComPtr<IShellService> pservice;
+    HRESULT hres = fAddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &pservice));
+    if (SUCCEEDED(hres ))
+        pservice->SetOwner(NULL);
 
     if (fAddressEditBox) fAddressEditBox.Release();
     if (fSite) fSite.Release();
+
+    if (m_himlNormal)
+        ImageList_Destroy(m_himlNormal);
+
+    if (m_himlHot)
+        ImageList_Destroy(m_himlHot);
 
     return S_OK;
 }
@@ -518,15 +527,12 @@ LRESULT CAddressBand::OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lPara
 void CAddressBand::CreateGoButton()
 {
     const TBBUTTON buttonInfo [] = { { 0, 1, TBSTATE_ENABLED, 0 } };
-    HIMAGELIST            normalImagelist;
-    HIMAGELIST            hotImageList;
     HINSTANCE             shellInstance;
 
-
-    shellInstance = GetModuleHandle(_T("shell32.dll"));
-    normalImagelist = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_NORMAL),
+    shellInstance = _AtlBaseModule.GetResourceInstance();
+    m_himlNormal = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_NORMAL),
                                            20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
-    hotImageList = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_HOT),
+    m_himlHot = ImageList_LoadImageW(shellInstance, MAKEINTRESOURCE(IDB_GOBUTTON_HOT),
                                         20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
 
     fGoButton = CreateWindowEx(WS_EX_TOOLWINDOW, TOOLBARCLASSNAMEW, 0, WS_CHILD | WS_CLIPSIBLINGS |
@@ -535,10 +541,10 @@ void CAddressBand::CreateGoButton()
                                0, 0, 0, 0, m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
     SendMessage(fGoButton, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
     SendMessage(fGoButton, TB_SETMAXTEXTROWS, 1, 0);
-    if (normalImagelist)
-        SendMessage(fGoButton, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(normalImagelist));
-    if (hotImageList)
-        SendMessage(fGoButton, TB_SETHOTIMAGELIST, 0, reinterpret_cast<LPARAM>(hotImageList));
+    if (m_himlNormal)
+        SendMessage(fGoButton, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(m_himlNormal));
+    if (m_himlHot)
+        SendMessage(fGoButton, TB_SETHOTIMAGELIST, 0, reinterpret_cast<LPARAM>(m_himlHot));
     SendMessage(fGoButton, TB_ADDSTRINGW,
                 reinterpret_cast<WPARAM>(_AtlBaseModule.GetResourceInstance()), IDS_GOBUTTONLABEL);
     SendMessage(fGoButton, TB_ADDBUTTONSW, 1, (LPARAM) &buttonInfo);

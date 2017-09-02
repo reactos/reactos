@@ -27,7 +27,7 @@
 /* The above definition of TAGID_ROOT is used in winapi and can be found
  * on msdn it but doesn't make sense, especially internally, because
  * TAGID represents offset into database data and there is a header at
- * offset 0, NOT a tag. Therfore, this definition should be used internally
+ * offset 0, NOT a tag. Therefore, this definition should be used internally
  * to represent first valid TAGID. Header size is 12 bytes. */
 #define _TAGID_ROOT 12
 

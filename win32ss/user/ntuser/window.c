@@ -602,6 +602,7 @@ LRESULT co_UserFreeWindow(PWND Window,
       MsqDecPaintCountQueue(Window->head.pti);
       if (Window->hrgnUpdate > HRGN_WINDOW && GreIsHandleValid(Window->hrgnUpdate))
       {
+         IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
          GreDeleteObject(Window->hrgnUpdate);
       }
       Window->hrgnUpdate = NULL;
@@ -641,7 +642,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    }
 
    UserReferenceObject(Window);
-   UserDeleteObject(UserHMGetHandle(Window), TYPE_WINDOW);
+   UserMarkObjectDestroy(Window);
 
    IntDestroyScrollBars(Window);
 
@@ -670,6 +671,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    UserFreeWindowInfo(Window->head.pti, Window);
 
    UserDereferenceObject(Window);
+   UserDeleteObject(UserHMGetHandle(Window), TYPE_WINDOW);
 
    return 0;
 }
@@ -1123,8 +1125,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
       /* Link the window with its new siblings */
       IntLinkHwnd( Wnd,
                   ((0 == (Wnd->ExStyle & WS_EX_TOPMOST) &&
-                    WndNewParent == UserGetDesktopWindow() ) ? HWND_TOP : HWND_TOPMOST ) );
-
+                    UserIsDesktopWindow(WndNewParent) ) ? HWND_TOP : HWND_TOPMOST ) );
    }
 
    if ( WndNewParent == co_GetDesktopWindow(Wnd) &&
@@ -1156,7 +1157,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
       }
    }
 
-   if (WndOldParent == UserGetMessageWindow() || WndNewParent == UserGetMessageWindow())
+   if (UserIsMessageWindow(WndOldParent) || UserIsMessageWindow(WndNewParent))
       swFlags |= SWP_NOACTIVATE;
 
    IntNotifyWinEvent(EVENT_OBJECT_PARENTCHANGE, Wnd ,OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
@@ -1435,7 +1436,7 @@ static void IntSendParentNotify( PWND pWindow, UINT msg )
     if ( (pWindow->style & (WS_CHILD | WS_POPUP)) == WS_CHILD &&
          !(pWindow->ExStyle & WS_EX_NOPARENTNOTIFY))
     {
-        if (VerifyWnd(pWindow->spwndParent) && pWindow->spwndParent != UserGetDesktopWindow())
+        if (VerifyWnd(pWindow->spwndParent) && !UserIsDesktopWindow(pWindow->spwndParent))
         {
             USER_REFERENCE_ENTRY Ref;
             UserRefObjectCo(pWindow->spwndParent, &Ref);
@@ -2250,7 +2251,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    IntSendParentNotify(Window, WM_CREATE);
 
    /* Notify the shell that a new window was created */
-   if (Window->spwndParent == UserGetDesktopWindow() &&
+   if (UserIsDesktopWindow(Window->spwndParent) &&
        Window->spwndOwner == NULL &&
        (Window->style & WS_VISIBLE) &&
        (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
@@ -2403,13 +2404,16 @@ NtUserCreateWindowEx(
     NTSTATUS Status;
     LARGE_STRING lstrWindowName;
     LARGE_STRING lstrClassName;
+    LARGE_STRING lstrClsVersion;
     UNICODE_STRING ustrClassName;
+    UNICODE_STRING ustrClsVersion;
     CREATESTRUCTW Cs;
     HWND hwnd = NULL;
     PWND pwnd;
 
     lstrWindowName.Buffer = NULL;
     lstrClassName.Buffer = NULL;
+    lstrClsVersion.Buffer = NULL;
 
     ASSERT(plstrWindowName);
 
@@ -2461,6 +2465,32 @@ NtUserCreateWindowEx(
         ustrClassName.MaximumLength = (USHORT)min(lstrClassName.MaximumLength, MAXUSHORT);
     }
 
+    /* Check if the class version is an atom */
+    if (IS_ATOM(plstrClsVersion))
+    {
+        /* It is, pass the atom in the UNICODE_STRING */
+        ustrClsVersion.Buffer = (PVOID)plstrClsVersion;
+        ustrClsVersion.Length = 0;
+        ustrClsVersion.MaximumLength = 0;
+    }
+    else
+    {
+        /* It's not, capture the class name */
+        Status = ProbeAndCaptureLargeString(&lstrClsVersion, plstrClsVersion);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("NtUserCreateWindowEx: failed to capture plstrClsVersion\n");
+            /* Set last error, cleanup and return */
+            SetLastNtError(Status);
+            goto cleanup;
+        }
+
+        /* We pass it on as a UNICODE_STRING */
+        ustrClsVersion.Buffer = lstrClsVersion.Buffer;
+        ustrClsVersion.Length = (USHORT)min(lstrClsVersion.Length, MAXUSHORT); // FIXME: LARGE_STRING truncated
+        ustrClsVersion.MaximumLength = (USHORT)min(lstrClsVersion.MaximumLength, MAXUSHORT);
+    }
+
     /* Fill the CREATESTRUCTW */
     /* we will keep here the original parameters */
     Cs.style = dwStyle;
@@ -2479,7 +2509,7 @@ NtUserCreateWindowEx(
     UserEnterExclusive();
 
     /* Call the internal function */
-    pwnd = co_UserCreateWindowEx(&Cs, &ustrClassName, plstrWindowName, acbiBuffer);
+    pwnd = co_UserCreateWindowEx(&Cs, &ustrClsVersion, plstrWindowName, acbiBuffer);
 
     if(!pwnd)
     {
@@ -2497,6 +2527,10 @@ cleanup:
     if (lstrClassName.Buffer)
     {
         ExFreePoolWithTag(lstrClassName.Buffer, TAG_STRING);
+    }
+    if (lstrClsVersion.Buffer)
+    {
+        ExFreePoolWithTag(lstrClsVersion.Buffer, TAG_STRING);
     }
 
    return hwnd;
@@ -2773,7 +2807,7 @@ IntFindWindow(PWND Parent,
          /* Do not send WM_GETTEXT messages in the kernel mode version!
             The user mode version however calls GetWindowText() which will
             send WM_GETTEXT messages to windows belonging to its processes */
-         if (!ClassAtom || Child->pcls->atomClassName == ClassAtom)
+         if (!ClassAtom || Child->pcls->atomNVClassName == ClassAtom)
          {
              // FIXME: LARGE_STRING truncated
              CurrentWindowName.Buffer = Child->strName.Buffer;
@@ -2965,7 +2999,7 @@ NtUserFindWindowEx(HWND hwndParent,
                                 (TopLevelWindow->strName.Length < 0xFFFF &&
                                  !RtlCompareUnicodeString(&WindowName, &ustr, TRUE));
                 ClassMatches = (ClassAtom == (RTL_ATOM)0) ||
-                               ClassAtom == TopLevelWindow->pcls->atomClassName;
+                               ClassAtom == TopLevelWindow->pcls->atomNVClassName;
 
                 if (WindowMatches && ClassMatches)
                 {
@@ -2987,7 +3021,7 @@ NtUserFindWindowEx(HWND hwndParent,
        }
        else
        {
-          ERR("FindWindowEx: Not Desktop Parent!\n");
+          TRACE("FindWindowEx: Not Desktop Parent!\n");
           Ret = IntFindWindow(Parent, ChildAfter, ClassAtom, &WindowName);
        }
 
@@ -3417,7 +3451,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
       RETURN(FALSE);
    }
 
-   if(!(WndListView = UserGetWindowObject(hwndListView)))
+   if (!(WndListView = UserGetWindowObject(hwndListView)))
    {
       RETURN(FALSE);
    }
@@ -3587,13 +3621,39 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
             if (!bAlter)
                 co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM) &Style);
 
-           /* WS_CLIPSIBLINGS can't be reset on top-level windows */
-            if (Window->spwndParent == UserGetDesktopWindow()) Style.styleNew |= WS_CLIPSIBLINGS;
+            /* WS_CLIPSIBLINGS can't be reset on top-level windows */
+            if (UserIsDesktopWindow(Window->spwndParent)) Style.styleNew |= WS_CLIPSIBLINGS;
+            /* WS_MINIMIZE can't be reset */
+            if (OldValue & WS_MINIMIZE) Style.styleNew |= WS_MINIMIZE;
             /* Fixes wine FIXME: changing WS_DLGFRAME | WS_THICKFRAME is supposed to change WS_EX_WINDOWEDGE too */
             if (IntCheckFrameEdge(NewValue, Window->ExStyle))
                Window->ExStyle |= WS_EX_WINDOWEDGE;
             else
                Window->ExStyle &= ~WS_EX_WINDOWEDGE;
+
+            if ((OldValue & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+            {
+               if ((NewValue & (WS_CHILD | WS_POPUP)) != WS_CHILD)
+               {
+                  //// From child to non-child it should be null already.
+                  ERR("IDMenu going null! %d\n",Window->IDMenu);
+                  Window->IDMenu = 0; // Window->spmenu = 0;
+               }
+            }
+            else
+            {
+               if ((NewValue & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+               {
+                  PMENU pMenu = UserGetMenuObject(UlongToHandle(Window->IDMenu));
+                  Window->state &= ~WNDS_HASMENU;
+                  if (pMenu)
+                  {
+                     ERR("IDMenu released 0x%p\n",pMenu);
+                     // ROS may not hold a lock after setting menu to window. But it should!
+                     //IntReleaseMenuObject(pMenu);
+                  }
+               }
+            }
 
             if ((Style.styleOld ^ Style.styleNew) & WS_VISIBLE)
             {

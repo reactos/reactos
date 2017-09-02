@@ -414,7 +414,7 @@ void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
         SetPlayTimer();
 
         //stackobj.MoveCards(pDest, 1, true);
-        //use the SimulateDrag funcion, because we get the
+        //use the SimulateDrag function, because we get the
         //AddProc callbacks called for us on the destination stacks...
         bAutoroute = true;
         stackobj.SimulateDrag(pDest, 1, true);

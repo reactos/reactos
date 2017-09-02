@@ -44,8 +44,8 @@ CdfsCleanupFile(PCDFS_IRP_CONTEXT IrpContext,
     PDEVICE_EXTENSION DeviceExt;
     PFCB Fcb;
 
-    DPRINT("CdfsCleanupFile(DeviceExt %p, FileObject %p)\n",
-        DeviceExt,
+    DPRINT("CdfsCleanupFile(IrpContext %p, FileObject %p)\n",
+        IrpContext,
         FileObject);
 
     DeviceExt = IrpContext->DeviceObject->DeviceExtension;
@@ -97,7 +97,7 @@ CdfsCleanup(
     DeviceObject = IrpContext->DeviceObject;
     Stack = IrpContext->Stack;
 
-    if (DeviceObject == CdfsGlobalData->DeviceObject)
+    if (DeviceObject == CdfsGlobalData->CdFsDeviceObject || DeviceObject == CdfsGlobalData->HddFsDeviceObject)
     {
         DPRINT("Closing file system\n");
         Status = STATUS_SUCCESS;

@@ -772,6 +772,11 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
                 NtClose(SourceHandle);
                 SourceHandle = INVALID_HANDLE_VALUE;
             }
+            else
+            {
+                /* Mount point, let's rename it */
+                AttemptReopenWithoutReparse = FALSE;
+            }
         }
 
         /* Simply reopen if required */

@@ -87,7 +87,7 @@ UDFPnp (
     PtrUDFIrpContext PtrIrpContext = NULL;
     BOOLEAN AreWeTopLevel;
 
-    KdPrint(("UDFPnp\n"));
+    UDFPrint(("UDFPnp\n"));
     ASSERT(FALSE);
 
     FsRtlEnterFileSystem();
@@ -150,7 +150,7 @@ UDFCommonPnp (
     NTSTATUS RC;
     PIO_STACK_LOCATION IrpSp;
     PVCB Vcb;
-    KdPrint(("UDFCommonPnp\n"));
+    UDFPrint(("UDFCommonPnp\n"));
 
     _SEH2_TRY {
         // Get the current Irp stack location.
@@ -195,7 +195,7 @@ UDFCommonPnp (
                 break;*/
 
             default:
-                KdPrint(("UDFCommonPnp: pass through\n"));
+                UDFPrint(("UDFCommonPnp: pass through\n"));
                 //  Just pass the IRP on.  As we do not need to be in the
                 //  way on return, ellide ourselves out of the stack.
                 IoSkipCurrentIrpStackLocation( Irp );

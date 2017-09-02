@@ -39,48 +39,24 @@ COMMAND cmds[] =
     {L"statistics", unimplemented},
     {L"stop",       cmdStop},
     {L"time",       unimplemented},
-    {L"use",        unimplemented},
+    {L"use",        cmdUse},
     {L"user",       cmdUser},
     {L"view",       unimplemented},
     {NULL,          NULL}
 };
 
 
-VOID
-PrintResourceString(
-    INT resID,
-    ...)
-{
-    WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
-    WCHAR szOutBuffer[MAX_BUFFER_SIZE];
-    va_list arg_ptr;
-
-    va_start(arg_ptr, resID);
-    LoadStringW(GetModuleHandle(NULL), resID, szMsgBuffer, MAX_BUFFER_SIZE);
-    _vsnwprintf(szOutBuffer, MAX_BUFFER_SIZE, szMsgBuffer, arg_ptr);
-    va_end(arg_ptr);
-
-    WriteToConsole(szOutBuffer);
-}
-
 
 VOID
 PrintPaddedResourceString(
-    INT resID,
+    UINT uID,
     INT nPaddedLength)
 {
-    WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
-    INT nLength, i;
+    INT nLength;
 
-    nLength = LoadStringW(GetModuleHandle(NULL), resID, szMsgBuffer, MAX_BUFFER_SIZE);
+    nLength = ConResPuts(StdOut, uID);
     if (nLength < nPaddedLength)
-    {
-        for (i = nLength; i < nPaddedLength; i++)
-            szMsgBuffer[i] = L' ';
-        szMsgBuffer[nPaddedLength] = UNICODE_NULL;
-    }
-
-    WriteToConsole(szMsgBuffer);
+        PrintPadding(L' ', nPaddedLength - nLength);
 }
 
 
@@ -89,68 +65,14 @@ PrintPadding(
     WCHAR chr,
     INT nPaddedLength)
 {
-    WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
     INT i;
+    WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
 
     for (i = 0; i < nPaddedLength; i++)
          szMsgBuffer[i] = chr;
     szMsgBuffer[nPaddedLength] = UNICODE_NULL;
 
-    WriteToConsole(szMsgBuffer);
-}
-
-
-VOID
-PrintToConsole(
-    LPWSTR lpFormat,
-    ...)
-{
-    WCHAR szBuffer[MAX_BUFFER_SIZE];
-    va_list arg_ptr;
-
-    va_start(arg_ptr, lpFormat);
-    _vsnwprintf(szBuffer, MAX_BUFFER_SIZE, lpFormat, arg_ptr);
-    va_end(arg_ptr);
-
-    WriteToConsole(szBuffer);
-}
-
-
-VOID
-WriteToConsole(
-    LPWSTR lpString)
-{
-    CHAR szOemBuffer[MAX_BUFFER_SIZE * 2];
-    HANDLE hOutput;
-    DWORD dwLength;
-
-    dwLength = wcslen(lpString);
-
-    hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    if ((GetFileType(hOutput) & ~FILE_TYPE_REMOTE) == FILE_TYPE_CHAR)
-    {
-        WriteConsoleW(hOutput,
-                      lpString,
-                      dwLength,
-                      &dwLength,
-                      NULL);
-    }
-    else
-    {
-        dwLength = WideCharToMultiByte(CP_OEMCP,
-                                       0,
-                                       lpString,
-                                       dwLength,
-                                       szOemBuffer,
-                                       MAX_BUFFER_SIZE * 2,
-                                       NULL,
-                                       NULL);
-        WriteFile(hOutput,
-                  szOemBuffer,
-                  dwLength,
-                  &dwLength,
-                  NULL);
-    }
+    ConPuts(StdOut, szMsgBuffer);
 }
 
 
@@ -195,9 +117,12 @@ int wmain(int argc, WCHAR **argv)
 {
     PCOMMAND cmdptr;
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     if (argc < 2)
     {
-        PrintResourceString(IDS_NET_SYNTAX);
+        ConResPuts(StdOut, IDS_NET_SYNTAX);
         return 1;
     }
 
@@ -210,13 +135,13 @@ int wmain(int argc, WCHAR **argv)
         }
     }
 
-    PrintResourceString(IDS_NET_SYNTAX);
+    ConResPuts(StdOut, IDS_NET_SYNTAX);
 
     return 1;
 }
 
 INT unimplemented(INT argc, WCHAR **argv)
 {
-    puts("This command is not implemented yet");
+    ConPuts(StdOut, L"This command is not implemented yet\n");
     return 1;
 }

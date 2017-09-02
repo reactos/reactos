@@ -29,7 +29,7 @@ Size = 62,3 Mio
 
 [Section.0419]
 Description = Футуристическая стратегия, отдалённо напоминающая игры типа Command & Conquer. Для работы необходимо наличие Microsoft Visual C++ 2008.
-Size = 62,3 МБ
+Size = 62,3 МиБ
 
 [Section.041f]
 Description = Gelecekçi ve gerçek zamanlı bir izlem oyunu. Çalıştırmak için Microsoft Visual C++ 2008 Yürütücü gerekir.

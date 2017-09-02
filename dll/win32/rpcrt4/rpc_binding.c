@@ -1603,11 +1603,15 @@ RpcBindingInqAuthClientExW( RPC_BINDING_HANDLE ClientBinding, RPC_AUTHZ_HANDLE *
                             RPC_WSTR *ServerPrincName, ULONG *AuthnLevel, ULONG *AuthnSvc,
                             ULONG *AuthzSvc, ULONG Flags )
 {
-    RpcBinding *bind = ClientBinding;
+    RpcBinding *bind;
 
     TRACE("%p %p %p %p %p %p 0x%x\n", ClientBinding, Privs, ServerPrincName, AuthnLevel,
           AuthnSvc, AuthzSvc, Flags);
 
+    if (!ClientBinding) ClientBinding = I_RpcGetCurrentCallHandle();
+    if (!ClientBinding) return RPC_S_INVALID_BINDING;
+
+    bind = ClientBinding;
     if (!bind->FromConn) return RPC_S_INVALID_BINDING;
 
     return rpcrt4_conn_inquire_auth_client(bind->FromConn, Privs,
@@ -1619,10 +1623,24 @@ RpcBindingInqAuthClientExW( RPC_BINDING_HANDLE ClientBinding, RPC_AUTHZ_HANDLE *
  *             RpcBindingServerFromClient (RPCRT4.@)
  */
 RPCRTAPI RPC_STATUS RPC_ENTRY
-RpcBindingServerFromClient( RPC_BINDING_HANDLE ClientBinding, RPC_BINDING_HANDLE *ServerBinding )
+RpcBindingServerFromClient(RPC_BINDING_HANDLE ClientBinding, RPC_BINDING_HANDLE* ServerBinding)
 {
-    FIXME("%p %p: stub\n", ClientBinding, ServerBinding);
-    return RPC_S_INVALID_BINDING;
+    RpcBinding* bind = ClientBinding;
+    RpcBinding* NewBinding;
+
+    if (!bind)
+        bind = I_RpcGetCurrentCallHandle();
+
+    if (!bind->server)
+        return RPC_S_INVALID_BINDING;
+
+    RPCRT4_AllocBinding(&NewBinding, TRUE);
+    NewBinding->Protseq = RPCRT4_strdupA(bind->Protseq);
+    NewBinding->NetworkAddr = RPCRT4_strdupA(bind->NetworkAddr);
+
+    *ServerBinding = NewBinding;
+
+    return RPC_S_OK;
 }
 
 /***********************************************************************

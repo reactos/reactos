@@ -274,7 +274,7 @@ GetUserMembershipData(HWND hwndDlg, PMEMBERSHIP_USER_DATA pUserData)
     hwndLV = GetDlgItem(hwndDlg, IDC_USER_MEMBERSHIP_LIST);
 
     /* Create the image list */
-    hImgList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 5, 5);
+    hImgList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 5, 5);
     hIcon = LoadImage(hApplet, MAKEINTRESOURCE(IDI_GROUP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
     ImageList_AddIcon(hImgList, hIcon);
     DestroyIcon(hIcon);
@@ -382,9 +382,9 @@ InitUserGroupsList(HWND hwndDlg)
     hwndLV = GetDlgItem(hwndDlg, IDC_USER_ADD_MEMBERSHIP_LIST);
     GetClientRect(hwndLV, &rect);
 
-    hImgList = ImageList_Create(16,16,ILC_COLOR8 | ILC_MASK,5,5);
-    hIcon = LoadImage(hApplet,MAKEINTRESOURCE(IDI_GROUP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
-    ImageList_AddIcon(hImgList,hIcon);
+    hImgList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 5, 5);
+    hIcon = LoadImage(hApplet, MAKEINTRESOURCE(IDI_GROUP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    ImageList_AddIcon(hImgList, hIcon);
     DestroyIcon(hIcon);
 
     (void)ListView_SetImageList(hwndLV, hImgList, LVSIL_SMALL);

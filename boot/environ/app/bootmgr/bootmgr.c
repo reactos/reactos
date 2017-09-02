@@ -274,7 +274,7 @@ BmpFwGetApplicationDirectoryPath (
                                   AppPathLength - sizeof(UNICODE_NULL));
                     PathCopy[AppPathLength] = UNICODE_NULL;
 
-                    /* Finally, initialize the outoing string */
+                    /* Finally, initialize the outgoing string */
                     RtlInitUnicodeString(ApplicationDirectoryPath, PathCopy);
                 }
                 else
@@ -1035,11 +1035,11 @@ BmFwMemoryInitialize (
     AddressRange.Maximum = 0xFFFFF;
     AddressRange.Minimum = 0;
 
-    /* Allocate one reserved page with the "reserved" attribute */
+    /* Allocate one reserved page with the "below 1MB" attribute */
     Status = MmPapAllocatePhysicalPagesInRange(&PhysicalAddress,
                                                BlApplicationReserved,
                                                1,
-                                               BlMemoryReserved,
+                                               BlMemoryBelow1MB,
                                                0,
                                                &MmMdlUnmappedAllocated,
                                                &AddressRange,
@@ -1088,7 +1088,7 @@ BmFwVerifySelfIntegrity (
     VOID
     )
 {
-    /* Check if we're booted by UEFI off the DVD directlry */
+    /* Check if we're booted by UEFI off the DVD directly */
     if ((BlpBootDevice->DeviceType == LocalDevice) &&
         (BlpBootDevice->Local.Type == CdRomDevice) &&
         (BlpApplicationFlags & BL_APPLICATION_FLAG_CONVERTED_FROM_EFI))
@@ -1729,7 +1729,7 @@ BmGetBootMenuPolicy (
             return MenuPolicyLegacy;
         }
 
-        /* Use the correct opetion ID */
+        /* Use the correct option ID */
         OptionId = BcdResumeInteger_BootMenuPolicy;
     }
 
@@ -1783,7 +1783,7 @@ BmpProcessBootEntry (
     /* If the legacy menu must be shown, or if we have a boot entry */
     if ((BmGetBootMenuPolicy(BootEntry) != MenuPolicyStandard) || (BootEntry))
     {
-        /* Check if any key has been presseed */
+        /* Check if any key has been pressed */
         BmDisplayGetBootMenuStatus(&MenuStatus);
         if (MenuStatus.AnyKey)
         {
@@ -2276,7 +2276,7 @@ BmpTransferExecution (
                                            BcdLibraryDevice_ApplicationDevice,
                                            &AppDevice,
                                            NULL);
-            if (NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status))
             {
                 /* Force re-enumeration */
                 Status = BlFwEnumerateDevice(AppDevice);
@@ -2383,22 +2383,22 @@ BmpTransferExecution (
     }
     else if (ReturnArgs.Flags & 4)
     {
-        /* Flag 4 -- unkown */
+        /* Flag 4 -- unknown */
         *LaunchCode = 1;
     }
     else if (ReturnArgs.Flags & 8)
     {
-        /* Flag 5 -- unkown */
+        /* Flag 5 -- unknown */
         *LaunchCode = 5;
     }
     else if (ReturnArgs.Flags & 0x10)
     {
-        /* Flag 6 -- unkown */
+        /* Flag 6 -- unknown */
         *LaunchCode = 6;
     }
     else if (ReturnArgs.Flags & 0x20)
     {
-        /* Flag 7 -- unkown */
+        /* Flag 7 -- unknown */
         *LaunchCode = 7;
     }
     else if (ReturnArgs.Flags & BL_RETURN_ARGUMENTS_NO_PAE_FLAG)
@@ -2558,7 +2558,7 @@ TryAgain:
         return Status;
     }
 
-    /* Check if boot was successfull, or  cancelled and we're not doing WinRE */
+    /* Check if boot was successful, or  cancelled and we're not doing WinRE */
     if (((NT_SUCCESS(Status)) || (Status == STATUS_CANCELLED)) && !(DoRecovery))
     {
         return Status;
@@ -2755,7 +2755,12 @@ BmMain (
     RebootOnError = FALSE;
 
     /* Save the start/end-of-POST time */
+#if defined(_M_IX86) || defined(_M_X64)
     ApplicationStartTime = __rdtsc();
+#else
+    EfiPrintf(L"No time source defined for this platform\r\n");
+    ApplicationStartTime = 0;
+#endif
     PostTime = ApplicationStartTime;
 
     /* Setup the boot library parameters for this application */
@@ -2895,10 +2900,69 @@ BmMain (
         }
     }
 
+
+    /* TEST MODE */
+    EfiPrintf(L"Performing memory allocator tests...\r\n");
+    {
+        NTSTATUS Status;
+        PHYSICAL_ADDRESS PhysicalAddress, PhysicalAddress2;
+
+        /* Allocate 1 physical page */
+        PhysicalAddress.QuadPart = 0;
+        Status = BlMmAllocatePhysicalPages(&PhysicalAddress, BlLoaderData, 1, 0, 1);
+        if (Status != STATUS_SUCCESS)
+        {
+            EfiPrintf(L"FAIL: Allocation status: %lx at address: %llx\r\n", Status, PhysicalAddress.QuadPart);
+            EfiStall(100000000);
+        }
+
+        /* Write some data */
+        *(PULONG)((ULONG_PTR)PhysicalAddress.QuadPart) = 0x55555151;
+
+        /* Free it */
+        Status = BlMmFreePhysicalPages(PhysicalAddress);
+        if (Status != STATUS_SUCCESS)
+        {
+            EfiPrintf(L"FAIL: Memory free status: %lx\r\n", Status);
+            EfiStall(100000000);
+        }
+
+        /* Allocate a page again */
+        PhysicalAddress2.QuadPart = 0;
+        Status = BlMmAllocatePhysicalPages(&PhysicalAddress2, BlLoaderData, 1, 0, 1);
+        if (Status != STATUS_SUCCESS)
+        {
+            EfiPrintf(L"FAIL: Allocation status: %lx at address: %llx\r\n", Status, PhysicalAddress2.QuadPart);
+            EfiStall(100000000);
+        }
+
+        /* It should've given us the same page, since we freed it */
+        if (PhysicalAddress.QuadPart != PhysicalAddress2.QuadPart)
+        {
+            EfiPrintf(L"FAIL: Non-matching addresses: %llx %llx\r\n", PhysicalAddress.QuadPart, PhysicalAddress2.QuadPart);
+            EfiStall(100000000);
+        }
+
+        /* The data should still be there, since zero-ing is not on for bootmgr */
+        if (*(PULONG)((ULONG_PTR)PhysicalAddress2.QuadPart) != 0x55555151)
+        {
+            EfiPrintf(L"FAIL: Non-matching data: %lx %lx\r\n", 0x55555151, *(PULONG)((ULONG_PTR)PhysicalAddress2.QuadPart));
+            EfiStall(100000000);
+        }
+
+        /* And free the second page again */
+        Status = BlMmFreePhysicalPages(PhysicalAddress);
+        if (Status != STATUS_SUCCESS)
+        {
+            EfiPrintf(L"FAIL: Memory free status: %lx\r\n", Status);
+            EfiStall(100000000);
+        }
+    }
+
     /* Write out the first XML tag */
     BlXmiWrite(L"<bootmgr/>");
 
-    /* Check for factory resset */
+    /* Check for factory reset */
     BlSecureBootCheckForFactoryReset();
 
     /* Load the revocation list */
@@ -2947,7 +3011,7 @@ BmMain (
                                     &CustomActions);
     if ((NT_SUCCESS(Status)) && (CustomActions))
     {
-        /* We don't suppport this yet */
+        /* We don't support this yet */
         EfiPrintf(L"Not implemented\r\n");
         Status = STATUS_NOT_IMPLEMENTED;
         goto Failure;

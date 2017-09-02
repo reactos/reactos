@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -304,7 +304,7 @@ AcpiExOpcode_1A_1T_1R (
     case AML_FIND_SET_RIGHT_BIT_OP:
     case AML_FROM_BCD_OP:
     case AML_TO_BCD_OP:
-    case AML_COND_REF_OF_OP:
+    case AML_CONDITIONAL_REF_OF_OP:
 
         /* Create a return object of type Integer for these opcodes */
 
@@ -435,7 +435,7 @@ AcpiExOpcode_1A_1T_1R (
             }
             break;
 
-        case AML_COND_REF_OF_OP:        /* CondRefOf (SourceObject, Result)  */
+        case AML_CONDITIONAL_REF_OF_OP:     /* CondRefOf (SourceObject, Result)  */
             /*
              * This op is a little strange because the internal return value is
              * different than the return value stored in the result descriptor
@@ -507,13 +507,13 @@ AcpiExOpcode_1A_1T_1R (
     /*
      * ACPI 2.0 Opcodes
      */
-    case AML_COPY_OP:               /* Copy (Source, Target) */
+    case AML_COPY_OBJECT_OP:        /* CopyObject (Source, Target) */
 
         Status = AcpiUtCopyIobjectToIobject (
             Operand[0], &ReturnDesc, WalkState);
         break;
 
-    case AML_TO_DECSTRING_OP:       /* ToDecimalString (Data, Result) */
+    case AML_TO_DECIMAL_STRING_OP:  /* ToDecimalString (Data, Result) */
 
         Status = AcpiExConvertToString (
             Operand[0], &ReturnDesc, ACPI_EXPLICIT_CONVERT_DECIMAL);
@@ -525,7 +525,7 @@ AcpiExOpcode_1A_1T_1R (
         }
         break;
 
-    case AML_TO_HEXSTRING_OP:       /* ToHexString (Data, Result) */
+    case AML_TO_HEX_STRING_OP:      /* ToHexString (Data, Result) */
 
         Status = AcpiExConvertToString (
             Operand[0], &ReturnDesc, ACPI_EXPLICIT_CONVERT_HEX);
@@ -550,8 +550,9 @@ AcpiExOpcode_1A_1T_1R (
 
     case AML_TO_INTEGER_OP:         /* ToInteger (Data, Result) */
 
-        Status = AcpiExConvertToInteger (
-            Operand[0], &ReturnDesc, ACPI_ANY_BASE);
+        /* Perform "explicit" conversion */
+
+        Status = AcpiExConvertToInteger (Operand[0], &ReturnDesc, 0);
         if (ReturnDesc == Operand[0])
         {
             /* No conversion performed, add ref to handle return value */
@@ -639,7 +640,7 @@ AcpiExOpcode_1A_0T_1R (
 
     switch (WalkState->Opcode)
     {
-    case AML_LNOT_OP:               /* LNot (Operand) */
+    case AML_LOGICAL_NOT_OP:        /* LNot (Operand) */
 
         ReturnDesc = AcpiUtCreateIntegerObject ((UINT64) 0);
         if (!ReturnDesc)
@@ -690,7 +691,8 @@ AcpiExOpcode_1A_0T_1R (
          * NOTE:  We use LNOT_OP here in order to force resolution of the
          * reference operand to an actual integer.
          */
-        Status = AcpiExResolveOperands (AML_LNOT_OP, &TempDesc, WalkState);
+        Status = AcpiExResolveOperands (AML_LOGICAL_NOT_OP,
+            &TempDesc, WalkState);
         if (ACPI_FAILURE (Status))
         {
             ACPI_EXCEPTION ((AE_INFO, Status,
@@ -849,7 +851,7 @@ AcpiExOpcode_1A_0T_1R (
         if (ACPI_GET_DESCRIPTOR_TYPE (Operand[0]) == ACPI_DESC_TYPE_NAMED)
         {
             TempDesc = AcpiNsGetAttachedObject (
-                           (ACPI_NAMESPACE_NODE *) Operand[0]);
+                (ACPI_NAMESPACE_NODE *) Operand[0]);
             if (TempDesc &&
                  ((TempDesc->Common.Type == ACPI_TYPE_STRING) ||
                   (TempDesc->Common.Type == ACPI_TYPE_LOCAL_REFERENCE)))
@@ -936,7 +938,7 @@ AcpiExOpcode_1A_0T_1R (
                  * 2) Dereference the node to an actual object. Could be a
                  *    Field, so we need to resolve the node to a value.
                  */
-                Status = AcpiNsGetNode (WalkState->ScopeInfo->Scope.Node,
+                Status = AcpiNsGetNodeUnlocked (WalkState->ScopeInfo->Scope.Node,
                     Operand[0]->String.Pointer,
                     ACPI_NS_SEARCH_PARENT,
                     ACPI_CAST_INDIRECT_PTR (
@@ -962,11 +964,27 @@ AcpiExOpcode_1A_0T_1R (
              * This is a DerefOf (ObjectReference)
              * Get the actual object from the Node (This is the dereference).
              * This case may only happen when a LocalX or ArgX is
-             * dereferenced above.
+             * dereferenced above, or for references to device and
+             * thermal objects.
              */
-            ReturnDesc = AcpiNsGetAttachedObject (
-                (ACPI_NAMESPACE_NODE *) Operand[0]);
-            AcpiUtAddReference (ReturnDesc);
+            switch (((ACPI_NAMESPACE_NODE *) Operand[0])->Type)
+            {
+            case ACPI_TYPE_DEVICE:
+            case ACPI_TYPE_THERMAL:
+
+                /* These types have no node subobject, return the NS node */
+
+                ReturnDesc = Operand[0];
+                break;
+
+            default:
+                /* For most types, get the object attached to the node */
+
+                ReturnDesc = AcpiNsGetAttachedObject (
+                    (ACPI_NAMESPACE_NODE *) Operand[0]);
+                AcpiUtAddReference (ReturnDesc);
+                break;
+            }
         }
         else
         {

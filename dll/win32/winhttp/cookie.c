@@ -155,17 +155,79 @@ static cookie_t *parse_cookie( const WCHAR *string )
     return cookie;
 }
 
+struct attr
+{
+    WCHAR *name;
+    WCHAR *value;
+};
+
+static void free_attr( struct attr *attr )
+{
+    if (!attr) return;
+    heap_free( attr->name );
+    heap_free( attr->value );
+    heap_free( attr );
+}
+
+static struct attr *parse_attr( const WCHAR *str, int *used )
+{
+    const WCHAR *p = str, *q;
+    struct attr *attr;
+    int len;
+
+    while (*p == ' ') p++;
+    q = p;
+    while (*q && *q != ' ' && *q != '=' && *q != ';') q++;
+    len = q - p;
+    if (!len) return NULL;
+
+    if (!(attr = heap_alloc( sizeof(struct attr) ))) return NULL;
+    if (!(attr->name = heap_alloc( (len + 1) * sizeof(WCHAR) )))
+    {
+        heap_free( attr );
+        return NULL;
+    }
+    memcpy( attr->name, p, len * sizeof(WCHAR) );
+    attr->name[len] = 0;
+    attr->value = NULL;
+
+    p = q;
+    while (*p == ' ') p++;
+    if (*p++ == '=')
+    {
+        while (*p == ' ') p++;
+        q = p;
+        while (*q && *q != ';') q++;
+        len = q - p;
+        while (len && p[len - 1] == ' ') len--;
+
+        if (!(attr->value = heap_alloc( (len + 1) * sizeof(WCHAR) )))
+        {
+            free_attr( attr );
+            return NULL;
+        }
+        memcpy( attr->value, p, len * sizeof(WCHAR) );
+        attr->value[len] = 0;
+    }
+
+    while (*q == ' ') q++;
+    if (*q == ';') q++;
+    *used = q - str;
+
+    return attr;
+}
+
 BOOL set_cookies( request_t *request, const WCHAR *cookies )
 {
     static const WCHAR pathW[] = {'p','a','t','h',0};
     static const WCHAR domainW[] = {'d','o','m','a','i','n',0};
-
     BOOL ret = FALSE;
-    WCHAR *buffer, *p, *q, *r;
+    WCHAR *buffer, *p;
     WCHAR *cookie_domain = NULL, *cookie_path = NULL;
+    struct attr *attr, *domain = NULL, *path = NULL;
     session_t *session = request->connect->session;
     cookie_t *cookie;
-    int len;
+    int len, used;
 
     len = strlenW( cookies );
     if (!(buffer = heap_alloc( (len + 1) * sizeof(WCHAR) ))) return FALSE;
@@ -179,32 +241,26 @@ BOOL set_cookies( request_t *request, const WCHAR *cookies )
         heap_free( buffer );
         return FALSE;
     }
-    if ((q = strstrW( p, domainW ))) /* FIXME: do real attribute parsing */
+    len = strlenW( p );
+    while (len && (attr = parse_attr( p, &used )))
     {
-        while (*q && *q != '=') q++;
-        if (!*q) goto end;
-
-        r = ++q;
-        while (*r && *r != ';') r++;
-        len = r - q;
-
-        if (!(cookie_domain = heap_alloc( (len + 1) * sizeof(WCHAR) ))) goto end;
-        memcpy( cookie_domain, q, len * sizeof(WCHAR) );
-        cookie_domain[len] = 0;
-
-    }
-    if ((q = strstrW( p, pathW )))
-    {
-        while (*q && *q != '=') q++;
-        if (!*q) goto end;
-
-        r = ++q;
-        while (*r && *r != ';') r++;
-        len = r - q;
-
-        if (!(cookie_path = heap_alloc( (len + 1) * sizeof(WCHAR) ))) goto end;
-        memcpy( cookie_path, q, len * sizeof(WCHAR) );
-        cookie_path[len] = 0;
+        if (!strcmpiW( attr->name, domainW ))
+        {
+            domain = attr;
+            cookie_domain = attr->value;
+        }
+        else if (!strcmpiW( attr->name, pathW ))
+        {
+            path = attr;
+            cookie_path = attr->value;
+        }
+        else
+        {
+            FIXME( "unhandled attribute %s\n", debugstr_w(attr->name) );
+            free_attr( attr );
+        }
+        len -= used;
+        p += used;
     }
     if (!cookie_domain && !(cookie_domain = strdupW( request->connect->servername ))) goto end;
     if (!cookie_path && !(cookie_path = strdupW( request->path ))) goto end;
@@ -214,8 +270,10 @@ BOOL set_cookies( request_t *request, const WCHAR *cookies )
 
 end:
     if (!ret) free_cookie( cookie );
-    heap_free( cookie_domain );
-    heap_free( cookie_path );
+    if (domain) free_attr( domain );
+    else heap_free( cookie_domain );
+    if (path) free_attr( path );
+    else heap_free( cookie_path );
     heap_free( buffer );
     return ret;
 }

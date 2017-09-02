@@ -69,7 +69,7 @@ static void paint_text (HWND hwnd, HDC hdc, DWORD dwStyle, const COMBOBOXINFO *c
     /*
      * Give ourselves some space.
      */
-    CopyRect (&rectEdit, &cbi->rcItem);
+    rectEdit = cbi->rcItem;
     InflateRect( &rectEdit, -1, -1 );
      
     if(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE))
@@ -176,8 +176,7 @@ static LRESULT paint (HTHEME theme, HWND hwnd, HDC hParamDC, ULONG state)
           GetClientRect (hwnd, &frameRect);
       else
       {
-          CopyRect (&frameRect, &cbi.rcItem);
-
+          frameRect = cbi.rcItem;
           InflateRect(&frameRect, 
               EDIT_CONTROL_PADDING + COMBO_XBORDERSIZE, 
               EDIT_CONTROL_PADDING + COMBO_YBORDERSIZE);

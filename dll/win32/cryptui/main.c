@@ -1796,16 +1796,16 @@ static void add_cert_string_to_control(HWND hwnd, PCCERT_CONTEXT pCertContext,
 static void add_icon_to_control(HWND hwnd, int id)
 {
     HRESULT hr;
-    LPRICHEDITOLE richEditOle = NULL;
-    LPOLEOBJECT object = NULL;
+    IRichEditOle *richEditOle = NULL;
+    IOleObject *object = NULL;
     CLSID clsid;
     LPOLECACHE oleCache = NULL;
     FORMATETC formatEtc;
     DWORD conn;
-    LPDATAOBJECT dataObject = NULL;
+    IDataObject *dataObject = NULL;
     HBITMAP bitmap = NULL;
     STGMEDIUM stgm;
-    LPOLECLIENTSITE clientSite = NULL;
+    IOleClientSite *clientSite = NULL;
     REOBJECT reObject;
 
     TRACE("(%p, %d)\n", hwnd, id);

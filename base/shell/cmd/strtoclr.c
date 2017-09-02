@@ -240,16 +240,16 @@ WORD str_to_color(LPTSTR* arg_str)
  * The only parameter is arg_str, a pointer to a string.
  * The string is modified so it will begin to first word after
  * color specification
- * (only the char* is moved, no chars in the string are modfied).
+ * (only the char* is moved, no chars in the string are modified).
  *
  * **** NOTE: The following functionality is deactivated ****
  * it returns the color in the l.o. byte, plus two flags in the
  * h.o. byte, they are:
- * SC_HEX win nt's cmd syntax (for exampl a0)
+ * SC_HEX win nt's cmd syntax (for example a0)
  * SC_TXT 4nt's syntax ( "bri gre on bla" or "10 on 0")
  * **********************************************************
  *
- * If succedes also move the LPTSTR to end of
+ * If success also move the LPTSTR to end of
  * string that specify color.
  */
 BOOL StringToColor(LPWORD lpColor, LPTSTR*str)

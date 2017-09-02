@@ -9,8 +9,8 @@
  *  use, modify or distribute it freely.
  *
  *  This code is distributed in the hope that it will be useful but
- *  WITHOUT ANY WARRANTY. ALL WARRENTIES, EXPRESS OR IMPLIED ARE HEREBY
- *  DISCLAMED. This includes but is not limited to warrenties of
+ *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
@@ -161,6 +161,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         /* Deinit of the WINE code */
         msvcrt_free_io();
         if (reserved) break;
+        msvcrt_free_popen_data();
         msvcrt_free_mt_locks();
         //msvcrt_free_console();
         //msvcrt_free_args();

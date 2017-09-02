@@ -252,16 +252,11 @@ int wmain(int argc, WCHAR *argv[])
     static const WCHAR pathW[] = {'p','a','t','h',0};
     static const WCHAR classW[] = {'c','l','a','s','s',0};
     static const WCHAR contextW[] = {'c','o','n','t','e','x','t',0};
-
-    const WCHAR *class;
-    const WCHAR *value;
+    const WCHAR *class, *value;
     int i;
 
-    if (argc == 1)
-        goto not_supported;
-
     for (i = 1; i < argc && argv[i][0] == '/'; i++)
-        WINE_FIXME("command line switch %s not supported\n", debugstr_w(argv[i]));
+        WINE_FIXME( "command line switch %s not supported\n", debugstr_w(argv[i]) );
 
     if (i >= argc)
         goto not_supported;
@@ -271,13 +266,15 @@ int wmain(int argc, WCHAR *argv[])
     {
         return 0;
     }
-    else if (!strcmpiW( argv[i], classW) ||
-             !strcmpiW( argv[i], contextW))
+
+    if (!strcmpiW( argv[i], classW) ||
+        !strcmpiW( argv[i], contextW ))
     {
-        WINE_FIXME("command %s not supported\n", debugstr_w(argv[i]));
+        WINE_FIXME( "command %s not supported\n", debugstr_w(argv[i]) );
         goto not_supported;
     }
-    else if (!strcmpiW( argv[i], pathW))
+
+    if (!strcmpiW( argv[i], pathW ))
     {
         if (++i >= argc)
         {
@@ -299,7 +296,7 @@ int wmain(int argc, WCHAR *argv[])
     if (++i >= argc)
         goto not_supported;
 
-    if (!strcmpiW( argv[i], getW))
+    if (!strcmpiW( argv[i], getW ))
     {
         if (++i >= argc)
             goto not_supported;

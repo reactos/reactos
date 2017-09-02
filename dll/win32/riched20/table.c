@@ -105,9 +105,9 @@ ME_DisplayItem* ME_InsertTableRowStartAtParagraph(ME_TextEditor *editor,
     para->member.para.pCell = prev_para->member.para.pCell;
     para->member.para.nFlags |= MEPF_CELL;
     para->member.para.nFlags &= ~(MEPF_ROWSTART|MEPF_ROWEND);
-    para->member.para.pFmt->dwMask |= PFM_TABLE|PFM_TABLEROWDELIMITER;
-    para->member.para.pFmt->wEffects |= PFE_TABLE;
-    para->member.para.pFmt->wEffects &= ~PFE_TABLEROWDELIMITER;
+    para->member.para.fmt.dwMask |= PFM_TABLE|PFM_TABLEROWDELIMITER;
+    para->member.para.fmt.wEffects |= PFE_TABLE;
+    para->member.para.fmt.wEffects &= ~PFE_TABLEROWDELIMITER;
     prev_para = para;
     para = para->member.para.next_para;
   }
@@ -205,12 +205,12 @@ void ME_CheckTablesForCorruption(ME_TextEditor *editor)
     {
       while (p->type == diParagraph)
       {
-        assert(p->member.para.pFmt->dwMask & PFM_TABLE);
-        assert(p->member.para.pFmt->dwMask & PFM_TABLEROWDELIMITER);
+        assert(p->member.para.fmt.dwMask & PFM_TABLE);
+        assert(p->member.para.fmt.dwMask & PFM_TABLEROWDELIMITER);
         if (p->member.para.pCell)
         {
           assert(p->member.para.nFlags & MEPF_CELL);
-          assert(p->member.para.pFmt->wEffects & PFE_TABLE);
+          assert(p->member.para.fmt.wEffects & PFE_TABLE);
         }
         if (p->member.para.pCell != pPrev->member.para.pCell)
         {
@@ -225,11 +225,11 @@ void ME_CheckTablesForCorruption(ME_TextEditor *editor)
           assert(pPrev->member.para.pCell);
           assert(p->member.para.pCell
                  == pPrev->member.para.pCell->member.cell.parent_cell);
-          assert(p->member.para.pFmt->wEffects & PFE_TABLEROWDELIMITER);
+          assert(p->member.para.fmt.wEffects & PFE_TABLEROWDELIMITER);
         }
         else if (p->member.para.pCell)
         {
-          assert(!(p->member.para.pFmt->wEffects & PFE_TABLEROWDELIMITER));
+          assert(!(p->member.para.fmt.wEffects & PFE_TABLEROWDELIMITER));
           assert(pPrev->member.para.pCell ||
                  pPrev->member.para.nFlags & MEPF_ROWSTART);
           if (pPrev->member.para.pCell &&
@@ -244,7 +244,7 @@ void ME_CheckTablesForCorruption(ME_TextEditor *editor)
         }
         else if (!(p->member.para.nFlags & MEPF_ROWSTART))
         {
-          assert(!(p->member.para.pFmt->wEffects & PFE_TABLEROWDELIMITER));
+          assert(!(p->member.para.fmt.wEffects & PFE_TABLEROWDELIMITER));
           /* ROWSTART must be followed by a cell. */
           assert(!(p->member.para.nFlags & MEPF_CELL));
           /* ROWSTART must be followed by a cell. */
@@ -257,8 +257,8 @@ void ME_CheckTablesForCorruption(ME_TextEditor *editor)
       while (p->type == diParagraph)
       {
         assert(!(p->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND|MEPF_CELL)));
-        assert(p->member.para.pFmt->dwMask & PFM_TABLE);
-        assert(!(p->member.para.pFmt->wEffects & PFE_TABLEROWDELIMITER));
+        assert(p->member.para.fmt.dwMask & PFM_TABLE);
+        assert(!(p->member.para.fmt.wEffects & PFE_TABLEROWDELIMITER));
         assert(!p->member.para.pCell);
         p = p->member.para.next_para;
       }
@@ -279,7 +279,7 @@ BOOL ME_IsInTable(ME_DisplayItem *pItem)
     pItem = ME_GetParagraph(pItem);
   if (pItem->type != diParagraph)
     return FALSE;
-  pFmt = pItem->member.para.pFmt;
+  pFmt = &pItem->member.para.fmt;
   return pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE;
 }
 
@@ -291,7 +291,7 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, ME_Cursor *c, int *nC
   ME_DisplayItem *this_para = c->pPara;
   ME_DisplayItem *end_para;
 
-  ME_MoveCursorChars(editor, &c2, *nChars);
+  ME_MoveCursorChars(editor, &c2, *nChars, FALSE);
   end_para = c2.pPara;
   if (c2.pRun->member.run.nFlags & MERF_ENDPARA) {
     /* End offset might be in the middle of the end paragraph run.
@@ -364,8 +364,8 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, ME_Cursor *c, int *nC
     int nCharsToBoundary;
 
     if ((this_para->member.para.nCharOfs != nOfs || this_para == end_para) &&
-        this_para->member.para.pFmt->dwMask & PFM_TABLE &&
-        this_para->member.para.pFmt->wEffects & PFE_TABLE)
+        this_para->member.para.fmt.dwMask & PFM_TABLE &&
+        this_para->member.para.fmt.wEffects & PFE_TABLE)
     {
       pRun = c->pRun;
       /* Find the next tab or end paragraph to use as a delete boundary */
@@ -375,8 +375,8 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, ME_Cursor *c, int *nC
                          - c->pRun->member.run.nCharOfs
                          - c->nOffset;
       *nChars = min(*nChars, nCharsToBoundary);
-    } else if (end_para->member.para.pFmt->dwMask & PFM_TABLE &&
-               end_para->member.para.pFmt->wEffects & PFE_TABLE)
+    } else if (end_para->member.para.fmt.dwMask & PFM_TABLE &&
+               end_para->member.para.fmt.wEffects & PFE_TABLE)
     {
       /* The deletion starts from before the row, so don't join it with
        * previous non-empty paragraphs. */
@@ -438,12 +438,12 @@ ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor,
       insertedCell->member.cell.border = cell->member.cell.border;
     };
     para = ME_InsertTableRowEndFromCursor(editor);
-    *para->member.para.pFmt = *prevTableEnd->member.para.pFmt;
+    para->member.para.fmt = prevTableEnd->member.para.fmt;
     /* return the table row start for the inserted paragraph */
     return ME_FindItemFwd(cell, diParagraph)->member.para.next_para;
   } else { /* v1.0 - 3.0 */
     run = ME_FindItemBack(table_row->member.para.next_para, diRun);
-    pFmt = table_row->member.para.pFmt;
+    pFmt = &table_row->member.para.fmt;
     assert(pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE);
     editor->pCursors[0].pPara = table_row;
     editor->pCursors[0].pRun = run;

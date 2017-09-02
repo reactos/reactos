@@ -28,7 +28,7 @@ BEGIN
     POPUP "Nápověda"
     BEGIN
         MENUITEM "Nápověda\tF1", ID_HELP, GRAYED
-        MENUITEM "O programu...", ID_ABOUT
+        MENUITEM "O programu", ID_ABOUT
     END
 END
 
@@ -161,6 +161,7 @@ BEGIN
     IDS_AINFO_SIZE "\nVelikost: "
     IDS_AINFO_URLSITE "\nDomovská stránka: "
     IDS_AINFO_LICENSE "\nLicense: "
+    IDS_AINFO_URLDOWNLOAD "\nStažení: "
 END
 
 STRINGTABLE
@@ -202,6 +203,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Určitě odstranit data instalovaného programu z registru?"
     IDS_INFORMATION "Informace"
     IDS_UNABLE_TO_DOWNLOAD "Soubor se nepodařilo stáhnout! Adresa nenalezena!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Nepodařilo se odstranit data programu z registru!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."

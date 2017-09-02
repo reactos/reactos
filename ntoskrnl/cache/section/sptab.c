@@ -71,7 +71,7 @@ NTAPI
 MiSectionPageTableAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
     PVOID Result;
-    Result = ExAllocatePoolWithTag(NonPagedPool, Bytes, 'MmPt');
+    Result = ExAllocatePoolWithTag(NonPagedPool, Bytes, 'tPmM');
     //DPRINT("MiSectionPageTableAllocate(%d) => %p\n", Bytes, Result);
     return Result;
 }
@@ -83,7 +83,7 @@ NTAPI
 MiSectionPageTableFree(PRTL_GENERIC_TABLE Table, PVOID Data)
 {
     //DPRINT("MiSectionPageTableFree(%p)\n", Data);
-    ExFreePoolWithTag(Data, 'MmPt');
+    ExFreePoolWithTag(Data, 'tPmM');
 }
 
 _Function_class_(RTL_GENERIC_COMPARE_ROUTINE)

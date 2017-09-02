@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -435,7 +435,7 @@ AcpiExStoreObjectToNode (
 
     /* Only limited target types possible for everything except CopyObject */
 
-    if (WalkState->Opcode != AML_COPY_OP)
+    if (WalkState->Opcode != AML_COPY_OBJECT_OP)
     {
         /*
          * Only CopyObject allows all object types to be overwritten. For
@@ -521,7 +521,7 @@ AcpiExStoreObjectToNode (
     case ACPI_TYPE_STRING:
     case ACPI_TYPE_BUFFER:
 
-        if ((WalkState->Opcode == AML_COPY_OP) ||
+        if ((WalkState->Opcode == AML_COPY_OBJECT_OP) ||
             !ImplicitConversion)
         {
             /*

@@ -34,12 +34,111 @@ UNICODE_STRING ObpDosDevicesShortName =
 NTSTATUS
 NTAPI
 INIT_FUNCTION
+ObpCreateGlobalDosDevicesSD(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
+{
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    PACL Dacl;
+    ULONG AclSize, SdSize;
+    NTSTATUS Status;
+
+    AclSize = sizeof(ACL) +
+              sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+              sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
+              sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+              sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid) +
+              sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
+              sizeof(ACE) + RtlLengthSid(SeCreatorOwnerSid);
+
+    SdSize = sizeof(SECURITY_DESCRIPTOR) + AclSize;
+
+    /* Allocate the SD and ACL */
+    Sd = ExAllocatePoolWithTag(PagedPool, SdSize, TAG_SD);
+    if (Sd == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Initialize the SD */
+    Status = RtlCreateSecurityDescriptor(Sd,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Dacl = (PACL)((INT_PTR)Sd + sizeof(SECURITY_DESCRIPTOR));
+
+    /* Initialize the DACL */
+    RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
+
+    /* Add the ACEs */
+    RtlAddAccessAllowedAce(Dacl,
+                           ACL_REVISION,
+                           GENERIC_READ | GENERIC_EXECUTE,
+                           SeWorldSid);
+
+    RtlAddAccessAllowedAce(Dacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           SeLocalSystemSid);
+
+    RtlAddAccessAllowedAceEx(Dacl,
+                             ACL_REVISION,
+                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                             GENERIC_EXECUTE,
+                             SeWorldSid);
+
+    RtlAddAccessAllowedAceEx(Dacl,
+                             ACL_REVISION,
+                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                             GENERIC_ALL,
+                             SeAliasAdminsSid);
+
+    RtlAddAccessAllowedAceEx(Dacl,
+                             ACL_REVISION,
+                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                             GENERIC_ALL,
+                             SeLocalSystemSid);
+
+    RtlAddAccessAllowedAceEx(Dacl,
+                             ACL_REVISION,
+                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                             GENERIC_ALL,
+                             SeCreatorOwnerSid);
+
+    /* Attach the DACL to the SD */
+    Status = RtlSetDaclSecurityDescriptor(Sd,
+                                          TRUE,
+                                          Dacl,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *SecurityDescriptor = Sd;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (Sd != NULL)
+            ExFreePoolWithTag(Sd, TAG_SD);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+INIT_FUNCTION
 ObpCreateDosDevicesDirectory(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING RootName, TargetName, LinkName;
     HANDLE Handle, SymHandle;
+    PSECURITY_DESCRIPTOR DosDevicesSD = NULL;
     NTSTATUS Status;
+
+    /* Create a custom security descriptor for the global DosDevices directory */
+    Status = ObpCreateGlobalDosDevicesSD(&DosDevicesSD);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Create the global DosDevices directory \?? */
     RtlInitUnicodeString(&RootName, L"\\GLOBAL??");
@@ -47,11 +146,17 @@ ObpCreateDosDevicesDirectory(VOID)
                                &RootName,
                                OBJ_PERMANENT,
                                NULL,
-                               NULL);
+                               DosDevicesSD);
     Status = NtCreateDirectoryObject(&Handle,
                                      DIRECTORY_ALL_ACCESS,
                                      &ObjectAttributes);
+    ExFreePoolWithTag(DosDevicesSD, TAG_SD);
     if (!NT_SUCCESS(Status)) return Status;
+
+    /* Create the system device map */
+    Status = ObpCreateDeviceMap(Handle);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /*********************************************\
     |*** HACK until we support device mappings ***|
@@ -130,62 +235,8 @@ ObpCreateDosDevicesDirectory(VOID)
                                         &RootName);
     if (NT_SUCCESS(Status)) NtClose(SymHandle);
 
-    /* FIXME: Hack Hack! */
-    ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool,
-                                              sizeof(*ObSystemDeviceMap),
-                                              'mDbO');
-    if (!ObSystemDeviceMap) return STATUS_INSUFFICIENT_RESOURCES;
-    RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
-
     /* Return status */
     return Status;
-}
-
-VOID
-NTAPI
-ObDereferenceDeviceMap(IN PEPROCESS Process)
-{
-    PDEVICE_MAP DeviceMap;
-
-    /* Get the pointer to this process devicemap and reset it
-       holding devicemap lock */
-    KeAcquireGuardedMutex(&ObpDeviceMapLock);
-    DeviceMap = Process->DeviceMap;
-    Process->DeviceMap = NULL;
-    KeReleaseGuardedMutex(&ObpDeviceMapLock);
-
-    /* Continue only if there is a devicemap to dereference */
-    if (DeviceMap)
-    {
-        KeAcquireGuardedMutex(&ObpDeviceMapLock);
-
-        /* Delete the device map link and dereference it */
-        if (--DeviceMap->ReferenceCount)
-        {
-            /* Nobody is referencing it anymore, unlink the DOS directory */
-            DeviceMap->DosDevicesDirectory->DeviceMap = NULL;
-
-            /* Release the devicemap lock */
-            KeReleaseGuardedMutex(&ObpDeviceMapLock);
-
-            /* Dereference the DOS Devices Directory and free the Device Map */
-            ObDereferenceObject(DeviceMap->DosDevicesDirectory);
-            ExFreePool(DeviceMap);
-        }
-        else
-        {
-            /* Release the devicemap lock */
-            KeReleaseGuardedMutex(&ObpDeviceMapLock);
-        }
-    }
-}
-
-VOID
-NTAPI
-ObInheritDeviceMap(IN PEPROCESS Parent,
-                   IN PEPROCESS Process)
-{
-    /* FIXME: Devicemap Support */
 }
 
 /*++
@@ -305,7 +356,7 @@ ObpDeleteNameCheck(IN PVOID Object)
 NTSTATUS
 NTAPI
 ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
-                    IN PUNICODE_STRING ObjectName,
+                    IN OUT PUNICODE_STRING ObjectName,
                     IN ULONG Attributes,
                     IN POBJECT_TYPE ObjectType,
                     IN KPROCESSOR_MODE AccessMode,
@@ -1220,53 +1271,6 @@ ObQueryNameString(IN PVOID Object,
 
     /* Return success */
     return Status;
-}
-
-VOID
-NTAPI
-ObQueryDeviceMapInformation(IN PEPROCESS Process,
-                            IN PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo)
-{
-    /*
-    * FIXME: This is an ugly hack for now, to always return the System Device Map
-    * instead of returning the Process Device Map. Not important yet since we don't use it
-    */
-
-    KeAcquireGuardedMutex(&ObpDeviceMapLock);
-
-    /* Make a copy */
-    DeviceMapInfo->Query.DriveMap = ObSystemDeviceMap->DriveMap;
-    RtlCopyMemory(DeviceMapInfo->Query.DriveType,
-                  ObSystemDeviceMap->DriveType,
-                  sizeof(ObSystemDeviceMap->DriveType));
-
-    KeReleaseGuardedMutex(&ObpDeviceMapLock);
-}
-
-NTSTATUS
-NTAPI
-ObIsDosDeviceLocallyMapped(
-    IN ULONG Index,
-    OUT PUCHAR DosDeviceState)
-{
-    /* check parameters */
-    if (Index < 1 || Index > 26)
-    {
-        /* invalid index */
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* acquire lock */
-    KeAcquireGuardedMutex(&ObpDeviceMapLock);
-
-    /* get drive mapping status */
-    *DosDeviceState = (ObSystemDeviceMap->DriveMap & (1 << Index)) != 0;
-
-    /* release lock */
-    KeReleaseGuardedMutex(&ObpDeviceMapLock);
-
-    /* done */
-    return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -87,8 +87,8 @@
 144 stub HrDecomposeEID@28
 145 stub HrComposeMsgID@24
 146 stub HrDecomposeMsgID@24
-147 stdcall OpenStreamOnFile@24(ptr ptr ptr ptr ptr ptr) OpenStreamOnFile
-148 stdcall OpenStreamOnFile(ptr ptr ptr ptr ptr ptr)
+147 stdcall OpenStreamOnFile@24(ptr ptr long ptr ptr ptr) OpenStreamOnFile
+148 stdcall OpenStreamOnFile(ptr ptr long ptr ptr ptr)
 149 stdcall OpenTnefStream@28(ptr ptr ptr long ptr long ptr) OpenTnefStream
 150 stdcall OpenTnefStream(ptr ptr ptr long ptr long ptr)
 151 stdcall OpenTnefStreamEx@32(ptr ptr ptr long ptr long ptr ptr) OpenTnefStreamEx
@@ -145,17 +145,17 @@
 205 stub FDecodeID@12
 206 stub CchOfEncoding@4
 207 stdcall CbOfEncoded@4(ptr) CbOfEncoded
-208 stdcall MAPISendDocuments(ptr str str str long)
-209 stdcall MAPILogon(ptr str str long long ptr)
-210 stdcall MAPILogoff(ptr ptr long long)
-211 stdcall MAPISendMail(ptr ptr ptr long long)
-212 stdcall MAPISaveMail(ptr ptr ptr long long str)
-213 stdcall MAPIReadMail(ptr ptr str long long ptr)
-214 stdcall MAPIFindNext(ptr ptr str str long long ptr)
-215 stdcall MAPIDeleteMail(ptr ptr str long long)
-217 stdcall MAPIAddress(ptr ptr str long str long ptr long long ptr ptr)
-218 stdcall MAPIDetails(ptr ptr ptr long long)
-219 stdcall MAPIResolveName(ptr ptr str long long ptr)
+208 stdcall MAPISendDocuments(long str str str long)
+209 stdcall MAPILogon(long str str long long ptr)
+210 stdcall MAPILogoff(ptr long long long)
+211 stdcall MAPISendMail(ptr long ptr long long)
+212 stdcall MAPISaveMail(ptr long ptr long long str)
+213 stdcall MAPIReadMail(ptr long str long long ptr)
+214 stdcall MAPIFindNext(ptr long str str long long ptr)
+215 stdcall MAPIDeleteMail(ptr long str long long)
+217 stdcall MAPIAddress(ptr long str long str long ptr long long ptr ptr)
+218 stdcall MAPIDetails(ptr long ptr long long)
+219 stdcall MAPIResolveName(ptr long str long long ptr)
 220 stub BMAPISendMail
 221 stub BMAPISaveMail
 222 stub BMAPIReadMail
@@ -175,7 +175,7 @@
 236 stub cmc_read
 237 stub cmc_send
 238 stub cmc_send_documents
-239 stub HrDispatchNotifications@4
+239 stdcall HrDispatchNotifications@4(long) HrDispatchNotifications
 241 stub HrValidateParameters@8
 244 stub ScCreateConversationIndex@16
 246 stdcall HrGetOmiProvidersFlags(long long)
@@ -188,4 +188,4 @@
 253 stdcall FixMAPI@0() FixMAPI
 254 stdcall FGetComponentPath(str str ptr long long)
 255 stdcall FGetComponentPath@20(str str ptr long long) FGetComponentPath
-256 stdcall MAPISendMailW(ptr ptr ptr long long)
+256 stdcall MAPISendMailW(ptr long ptr long long)

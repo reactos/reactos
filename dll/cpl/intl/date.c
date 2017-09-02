@@ -20,7 +20,8 @@
  * PROJECT:         ReactOS International Control Panel
  * FILE:            dll/cpl/intl/date.c
  * PURPOSE:         Date property page
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "intl.h"
@@ -55,9 +56,8 @@ FindDateSep(const WCHAR *szSourceStr)
     UINT nDateCompCount=0;
     UINT nDateSepCount=0;
 
-    pszFoundSep = (LPWSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
-
-    if(!pszFoundSep)
+    pszFoundSep = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    if (pszFoundSep == NULL)
         return NULL;
 
     wcscpy(pszFoundSep,STD_DATE_SEP);
@@ -87,9 +87,8 @@ FindDateSep(const WCHAR *szSourceStr)
 
 /* Setted up short date separator to registry */
 static BOOL
-SetShortDateSep(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetShortDateSep(HWND hwndDlg, PWSTR pszShortDateSep)
 {
-    WCHAR szShortDateSep[MAX_SAMPLES_STR_SIZE];
     INT nSepStrSize;
     INT nSepCount;
 
@@ -97,32 +96,34 @@ SetShortDateSep(HWND hwndDlg, PGLOBALDATA pGlobalData)
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESEP_COMBO,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
-                        (LPARAM)szShortDateSep);
+                        (LPARAM)pszShortDateSep);
 
     /* Get separator string size */
-    nSepStrSize = wcslen(szShortDateSep);
+    nSepStrSize = wcslen(pszShortDateSep);
 
     /* Check date components */
     for (nSepCount = 0; nSepCount < nSepStrSize; nSepCount++)
     {
-        if (iswalnum(szShortDateSep[nSepCount]) || (szShortDateSep[nSepCount] == L'\''))
+        if (iswalnum(pszShortDateSep[nSepCount]) || (pszShortDateSep[nSepCount] == L'\''))
         {
             PrintErrorMsgBox(IDS_ERROR_SYMBOL_SEPARATE);
             return FALSE;
         }
     }
 
-    /* Save date separator */
-    wcscpy(pGlobalData->szDateSep, szShortDateSep);
+    if (nSepStrSize == 0)
+    {
+        PrintErrorMsgBox(IDS_ERROR_SYMBOL_SEPARATE);
+        return FALSE;
+    }
 
     return TRUE;
 }
 
 /* Setted up short date format to registry */
 static BOOL
-SetShortDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetShortDateFormat(HWND hwndDlg, PWSTR pszShortDateFmt)
 {
-    WCHAR szShortDateFmt[MAX_SAMPLES_STR_SIZE];
     WCHAR szShortDateSep[MAX_SAMPLES_STR_SIZE];
     WCHAR szFoundDateSep[MAX_SAMPLES_STR_SIZE];
     PWSTR pszResultStr;
@@ -135,7 +136,7 @@ SetShortDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATEFMT_COMBO,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
-                        (LPARAM)szShortDateFmt);
+                        (LPARAM)pszShortDateFmt);
 
     /* Get separator */
     SendDlgItemMessageW(hwndDlg, IDC_SHRTDATESEP_COMBO,
@@ -144,54 +145,53 @@ SetShortDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
                         (LPARAM)szShortDateSep);
 
     /* Get format-string size */
-    nFmtStrSize = wcslen(szShortDateFmt);
+    nFmtStrSize = wcslen(pszShortDateFmt);
 
     /* Check date components */
     for (nDateCompCount = 0; nDateCompCount < nFmtStrSize; nDateCompCount++)
     {
-        if (szShortDateFmt[nDateCompCount] == L'\'')
+        if (pszShortDateFmt[nDateCompCount] == L'\'')
         {
             OpenApostFlg = !OpenApostFlg;
         }
 
-        if (iswalnum(szShortDateFmt[nDateCompCount]) &&
-            !isDateCompAl(szShortDateFmt[nDateCompCount]) &&
+        if (iswalnum(pszShortDateFmt[nDateCompCount]) &&
+            !isDateCompAl(pszShortDateFmt[nDateCompCount]) &&
             !OpenApostFlg)
         {
             PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_SHORT);
             return FALSE;
         }
-
     }
 
-    if (OpenApostFlg)
+    if (OpenApostFlg || nFmtStrSize == 0)
     {
         PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_SHORT);
         return FALSE;
     }
 
-    pszFoundSep = FindDateSep(szShortDateFmt);
+    pszFoundSep = FindDateSep(pszShortDateFmt);
+    if (pszFoundSep != NULL)
+    {
+        /* Substring replacement of separator */
+        wcscpy(szFoundDateSep, pszFoundSep);
+        pszResultStr = ReplaceSubStr(pszShortDateFmt, szShortDateSep, szFoundDateSep);
+        if (pszResultStr != NULL)
+        {
+            wcscpy(pszShortDateFmt, pszResultStr);
+            HeapFree(GetProcessHeap(), 0, pszResultStr);
+        }
 
-    /* Substring replacement of separator */
-    wcscpy(szFoundDateSep, pszFoundSep);
-    pszResultStr = ReplaceSubStr(szShortDateFmt, szShortDateSep, szFoundDateSep);
-    wcscpy(szShortDateFmt, pszResultStr);
-    free(pszResultStr);
-
-    if (pszFoundSep)
-        free(pszFoundSep);
-
-    /* Save short date format */
-    wcscpy(pGlobalData->szShortDateFormat, szShortDateFmt);
+        HeapFree(GetProcessHeap(), 0, pszFoundSep);
+    }
 
     return TRUE;
 }
 
 /* Setted up long date format to registry */
 static BOOL
-SetLongDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetLongDateFormat(HWND hwndDlg, PWSTR pszLongDateFmt)
 {
-    WCHAR szLongDateFmt[MAX_SAMPLES_STR_SIZE];
     BOOL OpenApostFlg = FALSE;
     INT nFmtStrSize;
     INT nDateCompCount;
@@ -200,37 +200,33 @@ SetLongDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
     SendDlgItemMessageW(hwndDlg, IDC_LONGDATEFMT_COMBO,
                         WM_GETTEXT,
                         (WPARAM)MAX_SAMPLES_STR_SIZE,
-                        (LPARAM)szLongDateFmt);
+                        (LPARAM)pszLongDateFmt);
 
     /* Get format string size */
-    nFmtStrSize = wcslen(szLongDateFmt);
+    nFmtStrSize = wcslen(pszLongDateFmt);
 
     /* Check date components */
     for (nDateCompCount = 0; nDateCompCount < nFmtStrSize; nDateCompCount++)
     {
-        if (szLongDateFmt[nDateCompCount] == L'\'')
+        if (pszLongDateFmt[nDateCompCount] == L'\'')
         {
             OpenApostFlg = !OpenApostFlg;
         }
 
-        if (iswalnum(szLongDateFmt[nDateCompCount]) &&
-            !isDateCompAl(szLongDateFmt[nDateCompCount]) &&
+        if (iswalnum(pszLongDateFmt[nDateCompCount]) &&
+            !isDateCompAl(pszLongDateFmt[nDateCompCount]) &&
             !OpenApostFlg)
         {
             PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_LONG);
             return FALSE;
         }
-
     }
 
-    if (OpenApostFlg)
+    if (OpenApostFlg || nFmtStrSize == 0)
     {
         PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_LONG);
         return FALSE;
     }
-
-    /* Save long date format */
-    wcscpy(pGlobalData->szLongDateFormat, szLongDateFmt);
 
     return TRUE;
 }
@@ -393,19 +389,19 @@ SetMaxDate(HWND hwndDlg, LCID lcid)
     hWndYearSpin = GetDlgItem(hwndDlg, IDC_SCR_MAX_YEAR);
 
     /* Get spin value */
-    nSpinVal=LOWORD(SendMessageW(hWndYearSpin,
-                    UDM_GETPOS,
-                    0,
-                    0));
+    nSpinVal = LOWORD(SendMessageW(hWndYearSpin,
+                                   UDM_GETPOS,
+                                   0,
+                                   0));
 
     /* convert to wide char */
     _itow(nSpinVal, szMaxDateVal, DECIMAL_RADIX);
 
     /* Save max date value */
     SetCalendarInfoW(lcid,
-                    CAL_GREGORIAN,
-                    48 , /* CAL_ITWODIGITYEARMAX */
-                    (PCWSTR)szMaxDateVal);
+                     CAL_GREGORIAN,
+                     48 , /* CAL_ITWODIGITYEARMAX */
+                     (PCWSTR)szMaxDateVal);
 }
 
 /* Get max date value from registry set */
@@ -457,13 +453,13 @@ InitMinMaxDateSpin(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     /* Limit text lengths */
     SendDlgItemMessageW(hwndDlg, IDC_FIRSTYEAR_EDIT,
-                EM_LIMITTEXT,
-                MAX_YEAR_EDIT,
-                0);
+                        EM_LIMITTEXT,
+                        MAX_YEAR_EDIT,
+                        0);
     SendDlgItemMessageW(hwndDlg, IDC_SECONDYEAR_EDIT,
-                EM_LIMITTEXT,
-                MAX_YEAR_EDIT,
-                0);
+                        EM_LIMITTEXT,
+                        MAX_YEAR_EDIT,
+                        0);
 
     hWndYearSpin = GetDlgItem(hwndDlg, IDC_SCR_MAX_YEAR);
 
@@ -517,6 +513,32 @@ UpdateDateLocaleSamples(HWND hwndDlg,
                         WM_SETTEXT, 0, (LPARAM)OutBuffer);
 }
 
+
+static
+BOOL
+GetDateSetting(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
+{
+    WCHAR szLongDateFormat[MAX_LONGDATEFORMAT];
+    WCHAR szShortDateFormat[MAX_SHORTDATEFORMAT];
+    WCHAR szDateSeparator[MAX_DATESEPARATOR];
+
+    if (!SetLongDateFormat(hwndDlg, szLongDateFormat) ||
+        !SetShortDateFormat(hwndDlg, szShortDateFormat) ||
+        !SetShortDateSep(hwndDlg, szDateSeparator))
+    {
+        return FALSE;
+    }
+
+    /* Store settings in global data */
+    wcscpy(pGlobalData->szLongDateFormat, szLongDateFormat);
+    wcscpy(pGlobalData->szShortDateFormat, szShortDateFormat);
+    wcscpy(pGlobalData->szDateSep, szDateSeparator);
+
+    return TRUE;
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 DatePageProc(HWND hwndDlg,
@@ -540,22 +562,22 @@ DatePageProc(HWND hwndDlg,
             InitLongDateCB(hwndDlg, pGlobalData);
             InitShortDateSepSamples(hwndDlg, pGlobalData);
             /* TODO: Add other calendar types */
+            pGlobalData->bEnableYearNotification = TRUE;
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDC_SECONDYEAR_EDIT:
-                    if (HIWORD(wParam) == EN_CHANGE)
+                    if (HIWORD(wParam) == EN_CHANGE &&
+                        pGlobalData != NULL &&
+                        pGlobalData->bEnableYearNotification == TRUE)
                     {
                         SetMinDate(hwndDlg);
-                    }
-                    break;
 
-                case IDC_SCR_MAX_YEAR:
-                    /* Set "Apply" button enabled */
-                    /* FIXME */
-                    //PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        /* Enable the Apply button */
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
                     break;
 
                 case IDC_CALTYPE_COMBO:
@@ -563,9 +585,10 @@ DatePageProc(HWND hwndDlg,
                 case IDC_SHRTDATEFMT_COMBO:
                 case IDC_LONGDATEFMT_COMBO:
                 case IDC_SHRTDATESEP_COMBO:
-                    if (HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_EDITCHANGE)
+                    if (HIWORD(wParam) == CBN_SELCHANGE ||
+                        HIWORD(wParam) == CBN_EDITCHANGE)
                     {
-                        /* Set "Apply" button enabled */
+                        /* Enable the Apply button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -575,20 +598,12 @@ DatePageProc(HWND hwndDlg,
         case WM_NOTIFY:
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                if (!SetLongDateFormat(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetShortDateFormat(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetShortDateSep(hwndDlg, pGlobalData))
-                    break;
-
-                pGlobalData->fUserLocaleChanged = TRUE;
-
-                SetMaxDate(hwndDlg, pGlobalData->UserLCID);
-                InitShortDateCB(hwndDlg, pGlobalData);
-                UpdateDateLocaleSamples(hwndDlg, pGlobalData);
+                if (GetDateSetting(hwndDlg, pGlobalData))
+                {
+                    pGlobalData->bUserLocaleChanged = TRUE;
+                    SetMaxDate(hwndDlg, pGlobalData->UserLCID);
+                    UpdateDateLocaleSamples(hwndDlg, pGlobalData);
+                }
             }
             break;
     }

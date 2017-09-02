@@ -90,14 +90,14 @@ names_add( const char*  name,
     max_names += (max_names >> 1) + 4;
     the_names  = (NameRec*)realloc( the_names,
                                     sizeof ( the_names[0] ) * max_names );
-    if ( the_names == NULL )
+    if ( !the_names )
       panic( "not enough memory" );
   }
   nm = &the_names[num_names++];
 
   nm->hash = h;
   nm->name = (char*)malloc( len+1 );
-  if ( nm->name == NULL )
+  if ( !nm->name )
     panic( "not enough memory" );
 
   memcpy( nm->name, name, len );
@@ -159,7 +159,7 @@ names_dump( FILE*         out,
         char         temp[512];
 
 
-        if ( dll_name == NULL )
+        if ( !dll_name )
         {
           fprintf( stderr,
                    "you must provide a DLL name with the -d option!\n" );
@@ -168,7 +168,7 @@ names_dump( FILE*         out,
 
         /* we must omit the .dll suffix from the library name */
         dot = strchr( dll_name, '.' );
-        if ( dot != NULL )
+        if ( dot )
         {
           int  len = dot - dll_name;
 
@@ -190,7 +190,7 @@ names_dump( FILE*         out,
 
     case OUTPUT_NETWARE_IMP:
       {
-        if ( dll_name != NULL )
+        if ( dll_name )
           fprintf( out, "  (%s)\n", dll_name );
         for ( nn = 0; nn < num_names - 1; nn++ )
           fprintf( out, "  %s,\n", the_names[nn].name );
@@ -371,7 +371,7 @@ int  main( int argc, const char* const*  argv )
           arg += 2;
 
         out = fopen( arg, "wt" );
-        if ( out == NULL )
+        if ( !out )
         {
           fprintf( stderr, "could not open '%s' for writing\n", argv[2] );
           exit(3);
@@ -440,7 +440,7 @@ int  main( int argc, const char* const*  argv )
     {
       FILE*  file = fopen( argv[0], "rb" );
 
-      if ( file == NULL )
+      if ( !file )
         fprintf( stderr, "unable to open '%s'\n", argv[0] );
       else
       {

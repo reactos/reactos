@@ -1,5 +1,6 @@
 /*
  * Copyright 2000 Juergen Schmied
+ * Copyright 2017 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,39 +31,35 @@
 #define IDB_SHELL_IEXPLORE_LG_HOT   205
 #define IDB_SHELL_IEXPLORE_SM       206
 #define IDB_SHELL_IEXPLORE_SM_HOT   207
-#define IDB_SHELL_EXPLORER_LG       214
-#define IDB_SHELL_EXPLORER_LG_HOT   215
-#define IDB_SHELL_EXPLORER_SM       216
-#define IDB_SHELL_EXPLORER_SM_HOT   217
 #define IDB_SHELL_EDIT_LG           225
 #define IDB_SHELL_EDIT_LG_HOT       226
 #define IDB_SHELL_EDIT_SM           227
 #define IDB_SHELL_EDIT_SM_HOT       228
-#define IDB_SHELL_GO                230
-#define IDB_SHELL_GO_HOT            231
-#define IDB_SHELL_BRANDBAND_SM_HI   240
-/*#define IDB_SHELL_BRANDBAND_MD_HI   241
-#define IDB_SHELL_BRANDBAND_LG_HI   242
-#define IDB_SHELL_BRANDBAND_SM_LO   245
-#define IDB_SHELL_BRANDBAND_MD_LO   246
-#define IDB_SHELL_BRANDBAND_LG_LO   247*/
 
 /* Strings */
 
 /* Column titles for the shellview */
-#define IDS_SHV_COLUMN1        7
-#define IDS_SHV_COLUMN2        8
-#define IDS_SHV_COLUMN3        9
-#define IDS_SHV_COLUMN4        10
-#define IDS_SHV_COLUMN5        11
-#define IDS_SHV_COLUMN6        12
-#define IDS_SHV_COLUMN7        13
-#define IDS_SHV_COLUMN8        14
-#define IDS_SHV_COLUMN9        15
-#define IDS_SHV_COLUMN10       16
-#define IDS_SHV_COLUMN11       17
+#define IDS_SHV_COLUMN_NAME        7
+#define IDS_SHV_COLUMN_SIZE        8
+#define IDS_SHV_COLUMN_TYPE        9
+#define IDS_SHV_COLUMN_MODIFIED        10
+#define IDS_SHV_COLUMN_ATTRIBUTES        11
+#define IDS_SHV_COLUMN_DISK_CAPACITY        12
+#define IDS_SHV_COLUMN_DISK_AVAILABLE        13
+#define IDS_SHV_COLUMN_OWNER       16
+#define IDS_SHV_COLUMN_GROUP       17
 #define IDS_SHV_COLUMN_DELFROM 18
 #define IDS_SHV_COLUMN_DELDATE 19
+#define IDS_SHV_COLUMN_FONTTYPE  311
+#define IDS_SHV_COLUMN_FILENAME         312
+#define IDS_SHV_COLUMN_CATEGORY         313
+#define IDS_SHV_COLUMN_WORKGROUP 314
+#define IDS_SHV_COLUMN_NETLOCATION  315
+#define IDS_SHV_COLUMN_DOCUMENTS 319
+#define IDS_SHV_COLUMN_STATUS    320
+#define IDS_SHV_COLUMN_COMMENTS  321
+#define IDS_SHV_COLUMN_LOCATION  322
+#define IDS_SHV_COLUMN_MODEL     323
 
 #define IDS_DESKTOP 20
 
@@ -130,7 +127,6 @@
 #define IDS_SHELL_ABOUT_AUTHORS   144
 #define IDS_SHELL_ABOUT_BACK      145
 #define FCIDM_SHVIEW_NEW          146
-#define FCIDM_SHVIEW_VIEW         147
 #define IDS_CONTROLPANEL          148
 #define IDS_NEWFOLDER             149
 #define IDS_COLUMN_EXTENSION      151
@@ -160,6 +156,7 @@
 #define IDS_SCR_FILE              217
 #define IDS_SYS_FILE              218
 #define IDS_VXD_FILE              219
+#define IDS_ANY_FILE              220
 
 #define IDS_EMPTY_BITBUCKET       172
 #define IDS_SHLEXEC_NOASSOC       173
@@ -189,19 +186,9 @@
 #define IDS_FILE_FOLDER          308
 #define IDS_CREATELINK           309
 #define IDS_INSTALLNEWFONT       310
-#define IDS_SHV_COLUMN_FONTTYPE  311
-#define IDS_SHV_COLUMN12         312
-#define IDS_SHV_COLUMN13         313
-#define IDS_SHV_COLUMN_WORKGROUP 314
-#define IDS_SHV_NETWORKLOCATION  315
 #define IDS_COPY                 316
 #define IDS_DELETE               317
 #define IDS_PROPERTIES           318
-#define IDS_SHV_COLUMN_DOCUMENTS 319
-#define IDS_SHV_COLUMN_STATUS    320
-#define IDS_SHV_COLUMN_COMMENTS  321
-#define IDS_SHV_COLUMN_LOCATION  322
-#define IDS_SHV_COLUMN_MODEL     323
 #define IDS_CUT                  324
 #define IDS_RESTORE              325
 #define IDS_DEFAULT_CLUSTER_SIZE 326
@@ -223,6 +210,10 @@
 
 /* Note: those strings are referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME 8964
+#define IDS_PRINTERS_DESCRIPTION   12696
+#define IDS_FONTS_DESCRIPTION      22920
+#define IDS_ADMINISTRATIVETOOLS_DESCRIPTION 22921
+#define IDS_FOLDER_OPTIONS_DESCRIPTION 22924
 #define IDS_ADMINISTRATIVETOOLS    22982
 #define IDS_FOLDER_OPTIONS         22985
 #define IDS_FONTS                  22981
@@ -232,6 +223,27 @@
 #define IDS_NETWORKPLACE           9217
 #define IDS_OBJECTS                6466
 #define IDS_OBJECTS_SELECTED       6477
+
+/* Advanced settings */
+#define IDS_ADVANCED_FOLDER                         30498
+#define IDS_ADVANCED_NET_CRAWLER                    30509
+#define IDS_ADVANCED_FOLDER_SIZE_TIP                30514
+#define IDS_ADVANCED_FRIENDLY_TREE                  30511
+#define IDS_ADVANCED_WEB_VIEW_BARRICADE             30510
+#define IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS         30505
+#define IDS_ADVANCED_SHOW_FULL_PATH                 30504
+#define IDS_ADVANCED_DISABLE_THUMB_CACHE            30517
+#define IDS_ADVANCED_HIDDEN                         30499
+#define IDS_ADVANCED_DONT_SHOW_HIDDEN               30501
+#define IDS_ADVANCED_SHOW_HIDDEN                    30500
+#define IDS_ADVANCED_HIDE_FILE_EXT                  30503
+#define IDS_ADVANCED_SUPER_HIDDEN                   30508
+#define IDS_ADVANCED_DESKTOP_PROCESS                30507
+#define IDS_ADVANCED_CLASSIC_VIEW_STATE             30506
+#define IDS_ADVANCED_PERSIST_BROWSERS               30513
+#define IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER   30497
+#define IDS_ADVANCED_SHOW_COMP_COLOR                30512
+#define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
 /* Dialogs */
 
@@ -573,17 +585,19 @@
  * AVI resources
  *
  * windows shell32 has 14 of them: 150-152 and 160-170
- * FIXME: Add 150, 152
+ * FIXME: Add 165, 166
  */
 
+#define IDA_SHELL_AUTOPLAY        150
 #define IDA_SHELL_SEARCHING_INDEX 151
+#define IDA_SHELL_COMPUTER_SEARCH 152
 #define IDA_SHELL_COPY            160
 #define IDA_SHELL_COPY1           161
-#define IDA_SHELL_COPY2           167
-#define IDA_SHELL_COPY3           168
 #define IDA_SHELL_RECYCLE         162
 #define IDA_SHELL_EMPTY_RECYCLE   163
 #define IDA_SHELL_DELETE          164
+#define IDA_SHELL_COPY2           167
+#define IDA_SHELL_COPY3           168
 #define IDA_SHELL_DELETE1         169
 #define IDA_SHELL_DOWNLOAD        170
 
@@ -595,6 +609,7 @@
 
 /* Shell view commands */
 #define FCIDM_SHVIEW_ARRANGE         0x7001
+#define FCIDM_SHVIEW_VIEW            0x7002
 #define FCIDM_SHVIEW_DELETE          0x7011
 #define FCIDM_SHVIEW_PROPERTIES      0x7013
 #define FCIDM_SHVIEW_CUT             0x7018
@@ -630,6 +645,14 @@
 #define FCIDM_TB_SMALLICON  0xA003
 #define FCIDM_TB_REPORTVIEW 0xA004
 #define FCIDM_TB_DESKTOP    0xA005  /* FIXME */
+
+#define IDM_CUT (FCIDM_SHVIEW_CUT - 0x7000)
+#define IDM_COPY (FCIDM_SHVIEW_COPY - 0x7000)
+#define IDM_INSERT (FCIDM_SHVIEW_INSERT - 0x7000)
+#define IDM_CREATELINK (FCIDM_SHVIEW_CREATELINK - 0x7000)
+#define IDM_DELETE (FCIDM_SHVIEW_DELETE - 0x7000)
+#define IDM_RENAME (FCIDM_SHVIEW_RENAME - 0x7000)
+#define IDM_PROPERTIES (FCIDM_SHVIEW_PROPERTIES - 0x7000)
 
 /* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128

@@ -312,6 +312,48 @@ HEADER_DrawItemFrame(HEADER_INFO *infoPtr, HDC hdc, RECT *r, const HEADER_ITEM *
     }
 }
 
+/* Create a region for the sort arrow with its bounding rect's top-left
+   co-ord x,y and its height h. */
+static HRGN create_sort_arrow( INT x, INT y, INT h, BOOL is_up )
+{
+    char buffer[256];
+    RGNDATA *data = (RGNDATA *)buffer;
+    DWORD size = FIELD_OFFSET(RGNDATA, Buffer[h * sizeof(RECT)]);
+    INT i, yinc = 1;
+    HRGN rgn;
+
+    if (size > sizeof(buffer))
+    {
+        data = HeapAlloc( GetProcessHeap(), 0, size );
+        if (!data) return NULL;
+    }
+    data->rdh.dwSize = sizeof(data->rdh);
+    data->rdh.iType = RDH_RECTANGLES;
+    data->rdh.nCount = 0;
+    data->rdh.nRgnSize = h * sizeof(RECT);
+
+    if (!is_up)
+    {
+        y += h - 1;
+        yinc = -1;
+    }
+
+    x += h - 1; /* set x to the centre */
+
+    for (i = 0; i < h; i++, y += yinc)
+    {
+        RECT *rect = (RECT *)data->Buffer + data->rdh.nCount;
+        rect->left   = x - i;
+        rect->top    = y;
+        rect->right  = x + i + 1;
+        rect->bottom = y + 1;
+        data->rdh.nCount++;
+    }
+    rgn = ExtCreateRegion( NULL, size, data );
+    if (data != (RGNDATA *)buffer) HeapFree( GetProcessHeap(), 0, data );
+    return rgn;
+}
+
 static INT
 HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags)
 {
@@ -392,16 +434,18 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 
     /* Now text and image */
     {
-	UINT rw, rh, /* width and height of r */
-	     *x = NULL, *w = NULL; /* x and width of the pic (bmp or img) which is part of cnt */
+	INT rw, rh; /* width and height of r */
+        INT *x = NULL; /* x and ... */
+        UINT *w = NULL; /* ...  width of the pic (bmp or img) which is part of cnt */
 	  /* cnt,txt,img,bmp */
-	UINT cx, tx, ix, bx,
-	     cw, tw, iw, bw;
+        INT  cx, tx, ix, bx;
+	UINT cw, tw, iw, bw;
         INT img_cx, img_cy;
+        INT sort_w, sort_x, sort_h;
 	BITMAP bmp;
 
         HEADER_PrepareCallbackItems(infoPtr, iItem, HDI_TEXT|HDI_IMAGE);
-        cw = iw = bw = 0;
+        cw = iw = bw = sort_w = sort_h = 0;
 	rw = r.right - r.left;
 	rh = r.bottom - r.top;
 
@@ -420,23 +464,28 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	    cw = textRect.right - textRect.left + 2 * infoPtr->iMargin;
 	}
 
-	if ((phdi->fmt & HDF_IMAGE) && ImageList_GetIconSize( infoPtr->himl, &img_cx, &img_cy )) {
-	    iw = img_cx + 2 * infoPtr->iMargin;
-	    x = &ix;
-	    w = &iw;
-	}
+        if (phdi->fmt & (HDF_SORTUP | HDF_SORTDOWN)) {
+            sort_h = MulDiv( infoPtr->nHeight - VERT_BORDER, 4, 13 );
+            sort_w = 2 * sort_h - 1 + infoPtr->iMargin * 2;
+            cw += sort_w;
+        } else { /* sort arrows take precedent over images/bitmaps */
+            if ((phdi->fmt & HDF_IMAGE) && ImageList_GetIconSize( infoPtr->himl, &img_cx, &img_cy )) {
+                iw = img_cx + 2 * infoPtr->iMargin;
+                x = &ix;
+                w = &iw;
+            }
 
-	if ((phdi->fmt & HDF_BITMAP) && (phdi->hbm)) {
-            GetObjectW (phdi->hbm, sizeof(BITMAP), &bmp);
-	    bw = bmp.bmWidth + 2 * infoPtr->iMargin;
-	    if (!iw) {
-		x = &bx;
-		w = &bw;
-	    }
-	}
-
-	if (bw || iw)
-	    cw += *w; 
+            if ((phdi->fmt & HDF_BITMAP) && (phdi->hbm)) {
+                GetObjectW (phdi->hbm, sizeof(BITMAP), &bmp);
+                bw = bmp.bmWidth + 2 * infoPtr->iMargin;
+                if (!iw) {
+                    x = &bx;
+                    w = &bw;
+                }
+            }
+            if (bw || iw)
+                cw += *w;
+        }
 
 	/* align cx using the unclipped cw */
 	if ((phdi->fmt & HDF_JUSTIFYMASK) == HDF_LEFT)
@@ -455,7 +504,10 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	tx = cx + infoPtr->iMargin;
 	/* since cw might have changed we have to recalculate tw */
 	tw = cw - infoPtr->iMargin * 2;
-			
+
+        tw -= sort_w;
+        sort_x = cx + tw + infoPtr->iMargin * 3;
+
 	if (iw || bw) {
 	    tw -= *w;
 	    if (phdi->fmt & HDF_BITMAP_ON_RIGHT) {
@@ -479,22 +531,31 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	        bx = cx + cw + infoPtr->iMargin;
 	}
 
-	if (iw || bw) {
+	if (sort_w || iw || bw) {
 	    HDC hClipDC = GetDC(infoPtr->hwndSelf);
 	    HRGN hClipRgn = CreateRectRgn(r.left, r.top, r.right, r.bottom);
 	    SelectClipRgn(hClipDC, hClipRgn);
 	    
+            if (sort_w) {
+                HRGN arrow = create_sort_arrow( sort_x, r.top + (rh - sort_h) / 2,
+                                                sort_h, phdi->fmt & HDF_SORTUP );
+                if (arrow) {
+                    FillRgn( hClipDC, arrow, GetSysColorBrush( COLOR_GRAYTEXT ) );
+                    DeleteObject( arrow );
+                }
+            }
+
 	    if (bw) {
 	        HDC hdcBitmap = CreateCompatibleDC (hClipDC);
 	        SelectObject (hdcBitmap, phdi->hbm);
-	        BitBlt (hClipDC, bx, r.top + ((INT)rh - bmp.bmHeight) / 2, 
+	        BitBlt (hClipDC, bx, r.top + (rh - bmp.bmHeight) / 2,
 		        bmp.bmWidth, bmp.bmHeight, hdcBitmap, 0, 0, SRCCOPY);
 	        DeleteDC (hdcBitmap);
 	    }
 
 	    if (iw) {
 	        ImageList_DrawEx (infoPtr->himl, phdi->iImage, hClipDC, 
-	                          ix, r.top + ((INT)rh - img_cy) / 2,
+	                          ix, r.top + (rh - img_cy) / 2,
 	                          img_cx, img_cy, CLR_DEFAULT, CLR_DEFAULT, 0);
 	    }
 

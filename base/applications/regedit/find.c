@@ -150,6 +150,9 @@ BOOL RegFindRecurse(
     if (DoEvents())
         return FALSE;
 
+    if(wcslen(pszSubKey) >= _countof(szSubKey))
+        return FALSE;
+
     wcscpy(szSubKey, pszSubKey);
     hSubKey = NULL;
 

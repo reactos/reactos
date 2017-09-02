@@ -932,6 +932,8 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
     PWND DesktopObject = 0;
     HDC DesktopHDC = 0;
 
+    UserEnterExclusive();
+
     if (DcType == DC_TYPE_DIRECT)
     {
         DesktopObject = UserGetDesktopWindow();
@@ -942,6 +944,8 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
         PMONITOR pMonitor = UserGetPrimaryMonitor();
         DesktopHDC = IntGdiCreateDisplayDC(pMonitor->hDev, DcType, EmptyDC);
     }
+
+    UserLeave();
 
     return DesktopHDC;
 }
@@ -1342,8 +1346,13 @@ IntPaintDesktop(HDC hDC)
 
         if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &Rect, 0))
         {
+            Rect.left = Rect.top = 0;
             Rect.right  = UserGetSystemMetrics(SM_CXSCREEN);
             Rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+        }
+        else
+        {
+            RECTL_vOffsetRect(&Rect, -Rect.left, -Rect.top);
         }
 
         /*
@@ -1806,7 +1815,7 @@ NtUserOpenDesktop(
     {
         ERR("Failed to open desktop\n");
         SetLastNtError(Status);
-        return 0;
+        return NULL;
     }
 
     TRACE("Opened desktop %S with handle 0x%p\n", ObjectAttributes->ObjectName->Buffer, Desktop);
@@ -2374,7 +2383,6 @@ IntSetThreadDesktop(IN HDESK hDesktop,
                     IN BOOL FreeOnFailure)
 {
     PDESKTOP pdesk = NULL, pdeskOld;
-    HDESK hdeskOld;
     PTHREADINFO pti;
     NTSTATUS Status;
     PCLIENTTHREADINFO pctiOld, pctiNew = NULL;
@@ -2463,7 +2471,6 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     }
 
     pdeskOld = pti->rpdesk;
-    hdeskOld = pti->hdesk;
     if (pti->pcti != &pti->cti)
         pctiOld = pti->pcti;
     else
@@ -2511,7 +2518,6 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         if (pctiOld) DesktopHeapFree(pdeskOld, pctiOld);
         IntUnmapDesktopView(pdeskOld);
         ObDereferenceObject(pdeskOld);
-        ZwClose(hdeskOld);
     }
 
     if (pdesk)

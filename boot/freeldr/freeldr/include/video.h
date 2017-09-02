@@ -30,9 +30,11 @@ typedef struct
 
 extern    PVOID    VideoOffScreenBuffer;
 
-USHORT        BiosIsVesaSupported(VOID);                        // Implemented in i386vid.c, returns the VESA version
+USHORT  BiosIsVesaSupported(VOID);						// Implemented in i386vid.c, returns the VESA version
+BOOLEAN BiosIsVesaDdcSupported(VOID);
+BOOLEAN BiosVesaReadEdid(VOID);
 
-PVOID    VideoAllocateOffScreenBuffer(VOID);                // Returns a pointer to an off-screen buffer sufficient for the current video mode
+PVOID   VideoAllocateOffScreenBuffer(VOID);                // Returns a pointer to an off-screen buffer sufficient for the current video mode
 
 VOID    VideoCopyOffScreenBufferToVRAM(VOID);
 

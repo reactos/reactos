@@ -673,7 +673,7 @@ static HRESULT AVISplitter_ProcessStreamList(AVISplitterImpl * This, const BYTE 
 
     ZeroMemory(&amt, sizeof(amt));
     piOutput.dir = PINDIR_OUTPUT;
-    piOutput.pFilter = (IBaseFilter *)This;
+    piOutput.pFilter = &This->Parser.filter.IBaseFilter_iface;
     wsprintfW(piOutput.achName, wszStreamTemplate, This->Parser.cStreams);
     This->streams = CoTaskMemRealloc(This->streams, sizeof(StreamData) * (This->Parser.cStreams+1));
     stream = This->streams + This->Parser.cStreams;

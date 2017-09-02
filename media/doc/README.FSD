@@ -3,11 +3,13 @@
 
 The following FSD are shared with: https://github.com/maharmstone/btrfs.
 
-reactos/drivers/filesystems/btrfs           # Synced to 0.5
+reactos/drivers/filesystems/btrfs           # Synced to 0.8
+reactos/dll/shellext/shellbtrfs             # Synced to 0.7
+reactos/sdk/lib/fslib/btrfslib              # Synced to 0.8
 
 The following FSD are shared with: http://www.ext2fsd.com/
 
-reactos/drivers/filesystems/ext2            # Synced to 0.68
+reactos/drivers/filesystems/ext2            # Synced to 0.68, with b7657e5, e7c1142, 785943f
 
 The following FSD are shared with: http://www.acc.umu.se/~bosse/
 

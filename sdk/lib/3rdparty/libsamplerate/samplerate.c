@@ -1,36 +1,15 @@
 /*
-** Copyright (C) 2002-2011 Erik de Castro Lopo <erikd@mega-nerd.com>
+** Copyright (c) 2002-2016, Erik de Castro Lopo <erikd@mega-nerd.com>
+** All rights reserved.
 **
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-*/
-
-/*
-** This code is part of Secret Rabbit Code aka libsamplerate. A commercial
-** use license for this code is available, please see:
-**		http://www.mega-nerd.com/SRC/procedure.html
+** This code is released under 2-clause BSD license. Please see the
+** file at : https://github.com/erikd/libsamplerate/blob/master/COPYING
 */
 
 #include "precomp.h"
 
 static int psrc_set_converter (SRC_PRIVATE	*psrc, int converter_type) ;
 
-
-static inline int
-is_bad_src_ratio (double ratio)
-{	return (ratio < (1.0 / SRC_MAX_RATIO) || ratio > (1.0 * SRC_MAX_RATIO)) ;
-} /* is_bad_src_ratio */
 
 SRC_STATE *
 src_new (int converter_type, int channels, int *error)
@@ -287,6 +266,20 @@ src_set_ratio (SRC_STATE *state, double new_ratio)
 } /* src_set_ratio */
 
 int
+src_get_channels (SRC_STATE *state)
+{	SRC_PRIVATE *psrc ;
+
+	psrc = (SRC_PRIVATE*) state ;
+
+	if (psrc == NULL)
+		return SRC_ERR_BAD_STATE ;
+	if (psrc->vari_process == NULL || psrc->const_process == NULL)
+		return SRC_ERR_BAD_PROC_PTR ;
+
+	return psrc->channels ;
+} /* src_get_channels */
+
+int
 src_reset (SRC_STATE *state)
 {	SRC_PRIVATE *psrc ;
 
@@ -381,7 +374,7 @@ src_strerror (int error)
 		case SRC_ERR_BAD_DATA :
 				return "SRC_DATA pointer is NULL." ;
 		case SRC_ERR_BAD_DATA_PTR :
-				return "SRC_DATA->data_out is NULL." ;
+				return "SRC_DATA->data_out or SRC_DATA->data_in is NULL." ;
 		case SRC_ERR_NO_PRIVATE :
 				return "Internal error. No private data." ;
 
@@ -418,6 +411,8 @@ src_strerror (int error)
 				return "This converter only allows constant conversion ratios." ;
 		case SRC_ERR_SINC_PREPARE_DATA_BAD_LEN :
 				return "Internal error : Bad length in prepare_data ()." ;
+		case SRC_ERR_BAD_INTERNAL_STATE :
+				return "Error : Someone is trampling on my internal state." ;
 
 		case SRC_ERR_MAX_ERROR :
 				return "Placeholder. No error defined for this error number." ;
@@ -445,7 +440,7 @@ src_simple (SRC_DATA *src_data, int converter, int channels)
 
 	error = src_process (src_state, src_data) ;
 
-	src_state = src_delete (src_state) ;
+	src_delete (src_state) ;
 
 	return error ;
 } /* src_simple */

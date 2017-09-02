@@ -5,6 +5,7 @@
 * PURPOSE:         Internal header for the I/O Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
+
 #include "ntdddisk.h"
 
 //
@@ -331,16 +332,6 @@ typedef struct _ERROR_LOG_ENTRY
     PDRIVER_OBJECT DriverObject;
     LARGE_INTEGER TimeStamp;
 } ERROR_LOG_ENTRY, *PERROR_LOG_ENTRY;
-
-//
-// Event Log LPC Message
-//
-typedef struct _ELF_API_MSG
-{
-    PORT_MESSAGE h;
-    ULONG Unknown[2];
-    IO_ERROR_LOG_MESSAGE IoErrorMessage;
-} ELF_API_MSG, *PELF_API_MSG;
 
 //
 // To simplify matters, the kernel is made to support both the checked and free
@@ -1123,6 +1114,8 @@ NTSTATUS
 FASTCALL
 IopAttachFilterDrivers(
     IN PDEVICE_NODE DeviceNode,
+    IN HANDLE EnumSubKey,
+    IN HANDLE ClassKey,
     IN BOOLEAN Lower
 );
 

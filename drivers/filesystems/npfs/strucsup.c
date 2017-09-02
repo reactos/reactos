@@ -15,7 +15,7 @@
 
 /* GLOBALS ********************************************************************/
 
-PWCHAR NpRootDCBName = L"\\";
+WCHAR NpRootDCBName[] = L"\\";
 PNP_VCB NpVcb;
 
 /* FUNCTIONS ******************************************************************/
@@ -188,8 +188,8 @@ NpCreateRootDcb(VOID)
     InitializeListHead(&Dcb->FcbList);
 
     Dcb->FullName.Buffer = NpRootDCBName;
-    Dcb->FullName.Length = 2;
-    Dcb->FullName.MaximumLength = 4;
+    Dcb->FullName.Length = sizeof(NpRootDCBName) - sizeof(UNICODE_NULL);
+    Dcb->FullName.MaximumLength = sizeof(NpRootDCBName);
 
     Dcb->ShortName.Length = Dcb->FullName.Length;
     Dcb->ShortName.MaximumLength = Dcb->FullName.MaximumLength;

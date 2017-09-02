@@ -499,7 +499,7 @@ HRESULT WINAPI IDirect3DDevice9Base_Reset(LPDIRECT3DDEVICE9 iface, D3DPRESENT_PA
 * @param CONST RGNDATA* pDirtyRegion
 * A pointer to a RGNDATA structure representing an area of the back buffer to display where
 * NULL means the whole back buffer. This parameter MUST be NULL unless the back buffer
-* was created with the D3DSWAPEFFECT_COPY flag. This is an opimization region only.
+* was created with the D3DSWAPEFFECT_COPY flag. This is an optimization region only.
 *
 * @return HRESULT
 * If the method successfully displays the back buffer content, the return value is D3D_OK.

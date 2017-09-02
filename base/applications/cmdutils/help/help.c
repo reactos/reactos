@@ -7,38 +7,21 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <wchar.h>
 
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
-#include <wincon.h>
+
 #include <strsafe.h>
+
+#include <conutils.h>
 
 #include "help.h"
 #include "resource.h"
 
-VOID PrintResourceString(INT resID, ...)
-{
-    WCHAR bufSrc[RC_STRING_MAX_SIZE];
-    WCHAR bufFormatted[RC_STRING_MAX_SIZE];
-    CHAR bufFormattedOem[RC_STRING_MAX_SIZE];
-
-    va_list args;
-    va_start(args, resID);
-
-    LoadStringW(GetModuleHandleW(NULL), resID, bufSrc, ARRAYSIZE(bufSrc));
-    vswprintf(bufFormatted, bufSrc, args);
-    CharToOemW(bufFormatted, bufFormattedOem);
-    fputs(bufFormattedOem, stdout);
-
-    va_end(args);
-}
-
-BOOL IsInternalCommand(LPCWSTR Cmd)
+static BOOL
+IsInternalCommand(PCWSTR Cmd)
 {
     size_t i;
     int res;
@@ -73,24 +56,27 @@ int wmain(int argc, WCHAR* argv[])
 {
     WCHAR CmdLine[CMDLINE_LENGTH];
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     /*
      * If the user hasn't asked for specific help,
      * then print out the list of available commands.
      */
     if (argc <= 1)
     {
-        PrintResourceString(IDS_HELP1);
-        PrintResourceString(IDS_HELP2);
+        ConResPuts(StdOut, IDS_HELP1);
+        ConResPuts(StdOut, IDS_HELP2);
         return 0;
     }
 
     /*
      * Bad usage (too much options) or we use the /? switch.
-     * Display help for the help command.
+     * Display help for the HELP command.
      */
     if ((argc > 2) || (wcscmp(argv[1], L"/?") == 0))
     {
-        PrintResourceString(IDS_USAGE);
+        ConResPuts(StdOut, IDS_USAGE);
         return 0;
     }
 
@@ -100,7 +86,7 @@ int wmain(int argc, WCHAR* argv[])
      */
     if (!IsInternalCommand(argv[1]))
     {
-        PrintResourceString(IDS_NO_ENTRY, argv[1]);
+        ConResPrintf(StdOut, IDS_NO_ENTRY, argv[1]);
         return 0;
     }
 
@@ -108,7 +94,7 @@ int wmain(int argc, WCHAR* argv[])
      * Run "<command> /?" in the current command processor.
      */
     StringCbPrintfW(CmdLine, sizeof(CmdLine), L"%ls /?", argv[1]);
-    
+
     _flushall();
     return _wsystem(CmdLine);
 }

@@ -95,16 +95,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Из&ползване на следните преходни ефекти за изборниците и подсказките",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "&Използване на следния похват за изглаждане ръбовете на екранните шрифтове", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "Използван&е на големи значета", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "Изобразяване на &сенки под изборницте", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "Показване на съдържанието на &прозорците по време на влачене", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "С&криване на подчертаването за клавиатурното насочване, до натискане на Alt",
@@ -150,6 +150,17 @@ BEGIN
     AUTORADIOBUTTON "Питане преди прилагане на новите настройки", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
+IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Display Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
+    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
+END
+
 IDR_PREVIEW_MENU MENU
 BEGIN
     MENUITEM "Обикновено", ID_MENU_NORMAL
@@ -178,7 +189,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Обичаен"
-    IDS_CLEARTYPEEFFECT "Изчистен"
+    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
 END
 
 STRINGTABLE
@@ -252,4 +263,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "Настройки на екрана"
     IDS_APPLY_FAILED "Неуспешно прилагане на новите настройки..."
     IDS_APPLY_NEEDS_RESTART "За прилагане на настройките, трябва да презапуснете компютъра"
+    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
 END

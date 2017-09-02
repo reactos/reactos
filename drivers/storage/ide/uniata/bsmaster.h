@@ -1881,6 +1881,7 @@ extern BOOLEAN g_opt_AtapiDmaRawRead;
 extern BOOLEAN hasPCI;
 
 extern BOOLEAN InDriverEntry;
+extern BOOLEAN g_Dump;
 
 extern BOOLEAN g_opt_Verbose;
 extern ULONG   g_opt_VirtualMachine;
@@ -1895,8 +1896,9 @@ extern ULONG CPU_num;
 #define VM_VMWARE    0x03
 #define VM_QEMU      0x04
 #define VM_BOCHS     0x05
+#define VM_PCEM      0x06
 
-#define VM_MAX_KNOWN VM_BOCHS
+#define VM_MAX_KNOWN VM_PCEM
 
 extern BOOLEAN WinVer_WDM_Model;
 

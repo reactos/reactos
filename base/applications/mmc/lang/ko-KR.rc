@@ -6,8 +6,8 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "파일(&F)"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "새 파일(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "열기(&O)...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "종료(&E)\tAlt+F4", IDM_FILE_EXIT
     END
@@ -21,8 +21,8 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "파일(&F)"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "새 파일(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "열기(&O)...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM "Save", IDM_FILE_SAVE
         MENUITEM "Save as...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR

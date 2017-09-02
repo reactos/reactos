@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -215,7 +215,7 @@ AcpiNsInitializeDevices (
 
         /*
          * Execute \_SB._INI.
-	 * There appears to be a strict order requirement for \_SB._INI,
+         * There appears to be a strict order requirement for \_SB._INI,
          * which should be evaluated before any _REG evaluations.
          */
         Status = AcpiGetHandle (NULL, "\\_SB", &Handle);
@@ -427,6 +427,20 @@ AcpiNsInitOneObject (
 
         Info->PackageInit++;
         Status = AcpiDsGetPackageArguments (ObjDesc);
+        if (ACPI_FAILURE (Status))
+        {
+            break;
+        }
+
+        /*
+         * Resolve all named references in package objects (and all
+         * sub-packages). This action has been deferred until the entire
+         * namespace has been loaded, in order to support external and
+         * forward references from individual package elements (05/2017).
+         */
+        Status = AcpiUtWalkPackageTree (ObjDesc, NULL,
+            AcpiDsInitPackageElement, NULL);
+        ObjDesc->Package.Flags |= AOPOBJ_DATA_VALID;
         break;
 
     default:

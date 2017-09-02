@@ -1,0 +1,28 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
+    GROUPBOX "Renderer settings", -1, 5, 25, 230, 90
+    LTEXT "&Renderer:", -1, 15, 42, 37, 10
+    COMBOBOX IDC_RENDERER, 55, 40, 160, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "This will override the default settings for your graphics driver! Choose ""Default"" to go back to the original settings.", -1, 15, 60, 210, 40
+    GROUPBOX "Debugging", -1, 5, 125, 230, 90
+    LTEXT "DEBUGCHANNEL:", -1, 15, 142, 65, 10
+    COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Enables/disables debug output from opengl32.\n\nWARNING: Choosing ""Set"" or ""Clear"" will overwrite the content of the DEBUGCHANNEL environment variable!", -1, 15, 165, 210, 40
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RENDERER_DEFAULT "System default"
+    IDS_RENDERER_RSWR "ReactOS Software Implementation"
+    IDS_CPLNAME "OpenGL configuration"
+    IDS_CPLDESCRIPTION "Configures OpenGL renderer."
+    IDS_DEBUG_SET "Set"
+    IDS_DEBUG_CLEAR "Clear"
+    IDS_DEBUG_DNM "Do not modify"
+END

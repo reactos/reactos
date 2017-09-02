@@ -29,7 +29,7 @@ STRINGTABLE
 {
     IDS_CERTIFICATE "Certificat"
     IDS_CERTIFICATEINFORMATION "Informații certificat"
-    IDS_CERT_INFO_BAD_SIG "Acest certificat are o semnătură nevalidă.  Se poate ca certificatul să fi fost alterat sau corupt."
+    IDS_CERT_INFO_BAD_SIG "Acest certificat are o semnătură nevalidă.  Este posibil ca certificatul să fi fost alterat sau corupt."
     IDS_CERT_INFO_UNTRUSTED_CA "Acest certificat rădăcină nu este acreditat.  Pentru a-l acredita, adăugați-l în depozitul de certificate rădăcină acreditate al sistemului."
     IDS_CERT_INFO_UNTRUSTED_ROOT "Acest certificat nu a putut fi validat față de un certificat rădăcină acreditat."
     IDS_CERT_INFO_PARTIAL_CHAIN "Emitentul acestui certificat nu a putut fi aflat."
@@ -83,7 +83,7 @@ STRINGTABLE
     IDS_IMPORT_FILTER_ALL "Toate fișierele (*.*)"
     IDS_IMPORT_EMPTY_FILE "Selectați un fișier."
     IDS_IMPORT_BAD_FORMAT "Formatul fișierului nu este recunoscut.  Selectați alt fișier."
-    IDS_IMPORT_OPEN_FAILED "Nu s-a putut deschide "
+    IDS_IMPORT_OPEN_FAILED "Nu a putut fi deschis"
     IDS_IMPORT_DEST_DETERMINED "Determinat de program"
     IDS_IMPORT_SELECT_STORE "Selectați un depozit"
     IDS_IMPORT_STORE_SELECTION "Depozitul de certificate selectat"
@@ -96,7 +96,7 @@ STRINGTABLE
     IDS_IMPORT_CONTENT_CMS "Mesaj CMS/PKCS #7"
     IDS_IMPORT_CONTENT_PFX "Schimb de informații personale"
     IDS_IMPORT_CONTENT_STORE "Depozit de certificate"
-    IDS_IMPORT_SUCCEEDED "Importarea s-a realizat cu succes."
+    IDS_IMPORT_SUCCEEDED "Importarea a fost realizată cu succes."
     IDS_IMPORT_FAILED "Importarea a eșuat."
     IDS_WIZARD_TITLE_FONT "Arial"
     IDS_PURPOSE_ALL "<Toate>"
@@ -165,7 +165,7 @@ STRINGTABLE
     IDS_EXPORT_KEYS "Exportă cheile"
     IDS_YES "Da"
     IDS_NO "Nu"
-    IDS_EXPORT_SUCCEEDED "Exportarea s-a realizat cu succes."
+    IDS_EXPORT_SUCCEEDED "Exportarea a fost realizată cu succes."
     IDS_EXPORT_FAILED "Exportarea a eșuat."
     IDS_EXPORT_PRIVATE_KEY_TITLE "Exportare cheie privată"
     IDS_EXPORT_PRIVATE_KEY_SUBTITLE "Certificatul conține o cheie privată care poate fi exportată odată cu certificatul."
@@ -328,7 +328,7 @@ CAPTION "Importare certificate"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Se finalizează importarea certificatelor", IDC_IMPORT_TITLE,
+  LTEXT "Finalizare import de certificate", IDC_IMPORT_TITLE,
     115,1,195,40
   LTEXT "Ați finalizat cu succes procedura de importare a certificatelor.",
     -1, 115,33,195,24
@@ -364,7 +364,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Rolul certificatului", -1, 7,7,234,141, BS_GROUPBOX
-  LTEXT "Alegeți unul sau mai multe roluri pentru a fi afișate când se va selecta Roluri avansate.",
+  LTEXT "Alegeți unul sau mai multe roluri pentru a fi afișate când va fi selectat „Roluri avansate”.",
     -1, 14,18,220,16
   LTEXT "&Rolurile certificatului:", -1, 14,41,90,12, WS_TABSTOP
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
@@ -391,7 +391,7 @@ CAPTION "Exportare certificate"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Dacă alegeți să exportați cheia privată, vi se va solicita pe o pagină următoare o parolă pentru a proteja această cheie privată.", -1, 21,1,195,25
+  LTEXT "Dacă alegeți să exportați cheia privată, vă va fi solicitată pe o pagină următoare o parolă pentru a proteja această cheie privată.", -1, 21,1,195,25
   LTEXT "Doriți să exportați cheia privată?", -1, 21,27,195,10
   AUTORADIOBUTTON "D&a, exportă cheia privată",
     IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
@@ -450,7 +450,7 @@ CAPTION "Exportare certificate"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Se finalizează exportarea certificatelor", IDC_EXPORT_TITLE,
+  LTEXT "Finalizare export de certificate", IDC_EXPORT_TITLE,
     115,1,195,40
   LTEXT "Ați finalizat cu succes procedura de exportare a certificatelor",
     -1, 115,33,195,24

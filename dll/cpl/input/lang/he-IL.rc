@@ -8,10 +8,10 @@ CAPTION "הגדרות"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Select the services that you want for each input language shown in the list.\nUse the Add and Remove buttons to modify this list.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "קבע כברירת מחדל...", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "הוסף...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "הסר...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "הסר", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "מאפיניים...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "העדפות", -1, 7, 185, 240, 36
     PUSHBUTTON "הגדרות מקשים...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -162,6 +162,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi Phonetic"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Typewriter"
     IDS_DUTCH_LAYOUT "הולנדית"
+    IDS_ESPERANTO_LAYOUT "אספרנטו"
     IDS_ESTONIAN_LAYOUT "אסטונית"
     IDS_FAEROESE_LAYOUT "Faeroese"
     IDS_FARSI_LAYOUT "פרסית"

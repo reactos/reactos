@@ -59,10 +59,9 @@ public:
     NTSTATUS BuildTransferDescriptorChain(IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, OUT POHCI_GENERAL_TD * OutFirstDescriptor, OUT POHCI_GENERAL_TD * OutLastDescriptor, OUT PULONG OutTransferBufferOffset);
     VOID InitDescriptor(IN POHCI_GENERAL_TD CurrentDescriptor, IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode);
 
-
     // constructor / destructor
-    CUSBRequest(IUnknown *OuterUnknown){}
-    virtual ~CUSBRequest(){}
+    CUSBRequest(IUnknown *OuterUnknown);
+    virtual ~CUSBRequest();
 
 protected:
     LONG m_Ref;
@@ -144,6 +143,22 @@ protected:
     //
     PVOID m_Base;
 };
+
+//----------------------------------------------------------------------------------------
+CUSBRequest::CUSBRequest(IUnknown *OuterUnknown) :
+    m_CompletionEvent(NULL)
+{
+    UNREFERENCED_PARAMETER(OuterUnknown);
+}
+
+//----------------------------------------------------------------------------------------
+CUSBRequest::~CUSBRequest()
+{
+    if (m_CompletionEvent != NULL)
+    {
+        ExFreePoolWithTag(m_CompletionEvent, TAG_USBOHCI);
+    }
+}
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
@@ -740,7 +755,7 @@ CUSBRequest::BuildIsochronousEndpoint(
     ASSERT(Buffer);
 
     //
-    // FIXME: support requests which spans serveral pages
+    // FIXME: support requests which spans several pages
     //
     ASSERT(ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(m_TransferBufferMDL), MmGetMdlByteCount(m_TransferBufferMDL)) <= 2);
 
@@ -769,8 +784,9 @@ CUSBRequest::BuildIsochronousEndpoint(
         }
 
         //
-        // get physical page
+        // get physical page (HACK)
         //
+        *(volatile char *)Buffer;
         Page = MmGetPhysicalAddress(Buffer).LowPart;
 
         //
@@ -969,7 +985,7 @@ CUSBRequest::AllocateEndpointDescriptor(
     }
 
     //
-    // intialize descriptor
+    // initialize descriptor
     //
     Descriptor->Flags = OHCI_ENDPOINT_SKIP;
 

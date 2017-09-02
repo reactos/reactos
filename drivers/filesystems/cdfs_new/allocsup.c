@@ -591,7 +591,7 @@ Return Value:
     ASSERT_LOCKED_FCB( Fcb );
 
     //
-    //  Find the entry containg this starting offset.
+    //  Find the entry containing this starting offset.
     //
 
     McbEntryOffset = CdFindMcbEntry( IrpContext, Fcb, StartingFileOffset );
@@ -698,7 +698,7 @@ Return Value:
 
 
 //
-//  Local suupport routine
+//  Local support routine
 //
 
 ULONG

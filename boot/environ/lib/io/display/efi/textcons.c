@@ -358,7 +358,7 @@ ConsoleEfiTextFindModeFromAllowed (
                                           &HRes,
                                           &VRes)))
         {
-            /* This mode was succesfully queried. Save the data */
+            /* This mode was successfully queried. Save the data */
             EfiPrintf(L"EFI Firmware Supported Mode %d is H: %d V: %d\r\n", Mode, HRes, VRes);
             ModeEntry->HRes = HRes;
             ModeEntry->VRes = VRes;
@@ -600,7 +600,7 @@ ConsoleFirmwareTextClear (
             return STATUS_NOT_IMPLEMENTED;
         }
 
-        /* Clear the scren */
+        /* Clear the screen */
         EfiStatus = Console->Protocol->ClearScreen(Console->Protocol);
 
         /* Switch back to protected mode if we came from there */

@@ -21,6 +21,8 @@ add_library(stobject SHARED
     csystray.cpp
     stobject.cpp
     stobject.rc
+    hotplug.cpp
+    power.cpp
     volume.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/stobject.def)
 
@@ -32,6 +34,7 @@ add_importlibs(stobject
     winmm
     ole32
     oleaut32
+    powrprof
     shlwapi
     shell32
     comctl32

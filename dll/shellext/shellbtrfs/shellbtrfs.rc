@@ -1,0 +1,251 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON1               ICON                    "subvol.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080904b0"
+        BEGIN
+            VALUE "FileDescription", "WinBtrfs shell extension"
+            VALUE "FileVersion", "0.7"
+            VALUE "InternalName", "btrfs"
+            VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016"
+            VALUE "OriginalFilename", "shellbtrfs.dll"
+            VALUE "ProductName", "WinBtrfs"
+            VALUE "ProductVersion", "0.7"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x809, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PROP_SHEET DIALOGEX 0, 0, 235, 245
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "s"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Subvolume:",IDC_STATIC,14,21,38,8
+    LTEXT           "Inode:",IDC_STATIC,14,35,21,8
+    GROUPBOX        "Information",IDC_GROUP_INFORMATION,7,7,221,71
+    LTEXT           "Type:",IDC_STATIC,14,49,18,8
+    GROUPBOX        "POSIX permissions",IDC_STATIC,7,82,221,102
+    LTEXT           "User:",IDC_STATIC,14,97,17,8
+    LTEXT           "Group:",IDC_STATIC,14,113,22,8
+    EDITTEXT        IDC_UID,94,95,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_GID,94,111,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "User",IDC_STATIC,14,144,15,8
+    LTEXT           "Group",IDC_STATIC,14,156,20,8
+    LTEXT           "Others",IDC_STATIC,14,168,22,8
+    LTEXT           "Read",IDC_STATIC,50,134,17,8
+    LTEXT           "Write",IDC_STATIC,89,134,18,8
+    LTEXT           "Execute",IDC_STATIC,129,134,30,8
+    CONTROL         "",IDC_USERR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,146,16,10
+    CONTROL         "",IDC_GROUPR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,157,16,10
+    CONTROL         "",IDC_OTHERR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,167,16,10
+    CONTROL         "",IDC_USERW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,147,16,10
+    CONTROL         "",IDC_GROUPW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,158,16,10
+    CONTROL         "",IDC_OTHERW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,93,168,16,10
+    CONTROL         "",IDC_USERX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,135,147,16,10
+    CONTROL         "",IDC_GROUPX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,135,158,16,10
+    CONTROL         "",IDC_OTHERX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,135,168,16,10
+    GROUPBOX        "Flags",IDC_STATIC,7,190,221,48
+    CONTROL         "Disable Copy-on-Write",IDC_NODATACOW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,204,86,10
+    LTEXT           "(blank)",IDC_SUBVOL,78,21,99,8
+    LTEXT           "(blank)",IDC_INODE,78,35,100,8
+    LTEXT           "(blank)",IDC_TYPE,78,49,116,8
+    CONTROL         "Compress",IDC_COMPRESS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,218,46,10
+    LTEXT           "Size on disk:",IDC_STATIC,14,63,61,8
+    CONTROL         "%s (<a>Details</a>)",IDC_SIZE_ON_DISK,"SysLink",WS_TABSTOP,78,63,142,8
+END
+
+IDD_SIZE_DETAILS DIALOGEX 0, 0, 212, 85
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Size details"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,81,64,50,14
+    LTEXT           "Inline:",IDC_STATIC,7,7,21,8
+    LTEXT           "Uncompressed:",IDC_STATIC,7,20,49,8
+    LTEXT           "ZLIB:",IDC_STATIC,7,33,18,8
+    LTEXT           "LZO:",IDC_STATIC,7,46,16,8
+    LTEXT           "(blank)",IDC_SIZE_INLINE,63,7,142,8
+    LTEXT           "(blank)",IDC_SIZE_UNCOMPRESSED,63,20,142,8
+    LTEXT           "(blank)",IDC_SIZE_ZLIB,63,33,142,8
+    LTEXT           "(blank)",IDC_SIZE_LZO,63,46,142,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_PROP_SHEET, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 238
+    END
+
+    IDD_SIZE_DETAILS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 78
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+2                       RT_MANIFEST             "shellbtrfs.manifest"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_NEW_SUBVOL_HELP_TEXT "Creates a new Btrfs subvolume."
+    IDS_NEW_SUBVOL          "New subvolume"
+    IDS_NEW_SUBVOL_FILENAME "New subvolume"
+    IDS_CREATE_SNAPSHOT     "Create snapshot"
+    IDS_CREATE_SNAPSHOT_HELP_TEXT "Creates a snapshot of a Btrfs subvolume."
+    IDS_SNAPSHOT_FILENAME   "Snapshot of %s (%04u-%02u-%02u)"
+    IDS_PROP_SHEET_TITLE    "Btrfs properties"
+    IDS_INODE_FILE          "File"
+    IDS_INODE_DIR           "Directory"
+    IDS_INODE_CHAR          "Character device (major %llu, minor %u)"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_INODE_BLOCK         "Block device (major %llu, minor %u)"
+    IDS_INODE_FIFO          "FIFO"
+    IDS_INODE_SOCKET        "Socket"
+    IDS_INODE_SYMLINK       "Symbolic link"
+    IDS_INODE_UNKNOWN       "Unknown inode type %x"
+    IDS_SET_INODE_INFO_ERROR "FSCTL_BTRFS_SET_INODE_INFO returned %08x"
+    IDS_SIZE_BYTE           "%s byte"
+    IDS_SIZE_BYTES          "%s bytes"
+    IDS_SIZE_KB             "%1.1f KB"
+    IDS_SIZE_MB             "%1.1f MB"
+    IDS_SIZE_GB             "%1.1f GB"
+    IDS_SIZE_TB             "%1.1f TB"
+    IDS_SIZE_PB             "%1.1f PB"
+    IDS_SIZE_EB             "%1.1f EB"
+    IDS_VARIOUS             "(various)"
+    IDS_INODE_CHAR_SIMPLE   "Character device"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_INODE_BLOCK_SIMPLE  "Block device"
+    IDS_SIZE_LARGE          "%s (%s)"
+END
+
+#endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

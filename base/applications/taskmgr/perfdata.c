@@ -572,7 +572,7 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
         {
             /* Found it. Use it, and add some ellipsis at the very end to make it cute */
             wcsncpy(lpCommandLine, cache->str, CMD_LINE_MIN(nMaxCount, cache->len));
-            wcscpy(lpCommandLine + CMD_LINE_MIN(nMaxCount, cache->len) - sizeof(ellipsis)/sizeof(WCHAR), ellipsis);
+            wcscpy(lpCommandLine + CMD_LINE_MIN(nMaxCount, cache->len) - wcslen(ellipsis), ellipsis);
             return TRUE;
         }
 
@@ -632,7 +632,7 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
                                NULL);
     if (!result)
     {
-        /* Weird, after sucessfully reading the mem of that process
+        /* Weird, after successfully reading the mem of that process
            various times it fails now, forget it and bail out */
         HeapFree(GetProcessHeap(), 0, new_entry);
         goto cleanup;

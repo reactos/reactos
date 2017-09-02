@@ -6,7 +6,7 @@ Size = 1.4 MiB
 Category = 4
 URLSite = http://store.steampowered.com/
 URLDownload = http://media.steampowered.com/client/installer/SteamSetup.exe
-SHA1 = cfe43068dd38910cfc3a82e17012a71daaddb0b3
+SHA1 = e930dbdb3bc638f772a8fcd92dbcd0919c924318
 CDPath = none
 
 [Section.0407]
@@ -45,7 +45,7 @@ Size = 1,4 Mio
 License = Бесплатно
 Description = Сервис цифрового распространения компьютерных игр и программ.
 URLSite = http://store.steampowered.com/?l=russian
-Size = 1,3 МБ
+Size = 1,4 МиБ
 
 [Section.041f]
 License = Ücretsiz

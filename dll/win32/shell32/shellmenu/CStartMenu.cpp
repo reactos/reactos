@@ -155,18 +155,13 @@ private:
         int csidl = 0;
         IShellMenu *pShellMenu;
 
-#if USE_SYSTEM_MENUBAND
-        hr = CoCreateInstance(CLSID_MenuBand,
-                              NULL,
-                              CLSCTX_INPROC_SERVER,
-                              IID_PPV_ARG(IShellMenu, &pShellMenu));
-#else
-        hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
-#endif
+        hr = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &pShellMenu));
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         hr = pShellMenu->Initialize(this, 0, ANCESTORDEFAULT, SMINIT_VERTICAL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
         switch (psmd->uId)
         {
@@ -188,11 +183,22 @@ private:
                 LPITEMIDLIST pidlStartMenu;
                 IShellFolder *psfDestop;
                 hr = SHGetFolderLocation(NULL, csidl, 0, 0, &pidlStartMenu);
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
+
                 hr = SHGetDesktopFolder(&psfDestop);
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
+
                 hr = psfDestop->BindToObject(pidlStartMenu, NULL, IID_PPV_ARG(IShellFolder, &psfStartMenu));
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
             }
 
             hr = pShellMenu->SetShellFolder(psfStartMenu, NULL, NULL, 0);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
         }
         else
         {
@@ -202,6 +208,8 @@ private:
             if (GetMenuItemInfoW(psmd->hmenu, psmd->uId, FALSE, &mii))
             {
                 hr = pShellMenu->SetMenu(mii.hSubMenu, NULL, SMSET_BOTTOM);
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
             }
         }
         return pShellMenu->QueryInterface(iid, pv);
@@ -369,11 +377,7 @@ static HRESULT GetMergedFolder(int folder1, int folder2, IShellFolder ** ppsfSta
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if !USE_SYSTEM_MERGED_FOLDERS
-    hr = CMergedFolder_Constructor(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
-#else
-    hr = CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IAugmentedShellFolder, &pasf));
-#endif
+    hr = CMergedFolder_CreateInstance(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
     if (FAILED_UNEXPECTEDLY(hr))
     {
         *ppsfStartMenu = psfUserStartMenu.Detach();
@@ -411,7 +415,7 @@ static HRESULT GetProgramsFolder(IShellFolder ** ppsfStartMenu)
 
 extern "C"
 HRESULT WINAPI
-CStartMenu_Constructor(REFIID riid, void **ppv)
+RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv)
 {
     CComPtr<IShellMenu> pShellMenu;
     CComPtr<IBandSite> pBandSite;
@@ -424,36 +428,15 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     LPITEMIDLIST pidlPrograms;
     CComPtr<IShellFolder> psfPrograms;
 
-#if USE_SYSTEM_MENUBAND
-    hr = CoCreateInstance(CLSID_MenuBand,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IShellMenu, &pShellMenu));
-#else
-    hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
-#endif
+    hr = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &pShellMenu));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if USE_SYSTEM_MENUSITE
-    hr = CoCreateInstance(CLSID_MenuBandSite,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IBandSite, &pBandSite));
-#else
-    hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
-#endif
+    hr = CMenuSite_CreateInstance(IID_PPV_ARG(IBandSite, &pBandSite));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if USE_SYSTEM_MENUDESKBAR
-    hr = CoCreateInstance(CLSID_MenuDeskBar,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IDeskBar, &pDeskBar));
-#else
-    hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
-#endif
+    hr = CMenuDeskBar_CreateInstance(IID_PPV_ARG(IDeskBar, &pDeskBar));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -461,6 +444,7 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     hr = CComObject<CShellMenuCallback>::CreateInstance(&pCallback);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
     pCallback->AddRef(); // CreateInstance returns object with 0 ref count */
     pCallback->Initialize(pShellMenu, pBandSite, pDeskBar);
 
@@ -472,9 +456,10 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    /* psf is a merged folder, so now we want to get the pidl of the programs item from the merged folder */
     {
         hr = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidlProgramsAbsolute);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
         {
             WARN("USER Programs folder not found.");
             hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_PROGRAMS, &pidlProgramsAbsolute);
@@ -488,18 +473,19 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
         TCHAR szDisplayName[MAX_PATH];
 
         hr = SHBindToParent(pidlProgramsAbsolute, IID_PPV_ARG(IShellFolder, &psfParent), &pcidlPrograms);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        hr = psfParent->GetDisplayNameOf(pcidlPrograms, SHGDN_NORMAL, &str);
-        if (FAILED(hr))
+        hr = psfParent->GetDisplayNameOf(pcidlPrograms, SHGDN_FORPARSING | SHGDN_INFOLDER, &str);
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         StrRetToBuf(&str, pcidlPrograms, szDisplayName, _countof(szDisplayName));
         ILFree(pidlProgramsAbsolute);
 
+        /* We got the display name from the fs folder and we parse it with the merged folder here */
         hr = psf->ParseDisplayName(NULL, NULL, szDisplayName, NULL, &pidlPrograms, NULL);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
 

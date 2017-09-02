@@ -2,9 +2,10 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/theme.c
- * PURPOSE:         Handling themes
+ * PURPOSE:         Handling themes and visual effects
  *
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *                  Ismael Ferreras Morezuelas (swyterzone+reactos@gmail.com)
  */
 
 #include "desk.h"
@@ -58,10 +59,10 @@ static const WCHAR *g_RegColorNames[NUM_COLORS] = {
 
 /******************************************************************************/
 
-VOID 
+VOID
 SchemeSetMetric(IN COLOR_SCHEME *scheme, int id, int value)
 {
-    switch(id)
+    switch (id)
     {
         case SIZE_BORDER_WIDTH: scheme->ncMetrics.iBorderWidth = value; break;
         case SIZE_SCROLL_WIDTH: scheme->ncMetrics.iScrollWidth = value; break;
@@ -78,7 +79,7 @@ SchemeSetMetric(IN COLOR_SCHEME *scheme, int id, int value)
     }
 }
 
-int 
+int
 SchemeGetMetric(IN COLOR_SCHEME *scheme, int id)
 {
     switch (id)
@@ -86,12 +87,12 @@ SchemeGetMetric(IN COLOR_SCHEME *scheme, int id)
         case SIZE_BORDER_WIDTH: return scheme->ncMetrics.iBorderWidth;
         case SIZE_SCROLL_WIDTH: return scheme->ncMetrics.iScrollWidth;
         case SIZE_SCROLL_HEIGHT: return scheme->ncMetrics.iScrollHeight;
-        case SIZE_CAPTION_WIDTH: return scheme->ncMetrics.iCaptionWidth; 
-        case SIZE_CAPTION_HEIGHT: return scheme->ncMetrics.iCaptionHeight; 
-        case SIZE_SM_CAPTION_WIDTH: return scheme->ncMetrics.iSmCaptionWidth; 
-        case SIZE_SM_CAPTION_HEIGHT: return scheme->ncMetrics.iSmCaptionHeight; 
-        case SIZE_MENU_WIDTH: return scheme->ncMetrics.iMenuWidth; 
-        case SIZE_MENU_HEIGHT: return scheme->ncMetrics.iMenuHeight; 
+        case SIZE_CAPTION_WIDTH: return scheme->ncMetrics.iCaptionWidth;
+        case SIZE_CAPTION_HEIGHT: return scheme->ncMetrics.iCaptionHeight;
+        case SIZE_SM_CAPTION_WIDTH: return scheme->ncMetrics.iSmCaptionWidth;
+        case SIZE_SM_CAPTION_HEIGHT: return scheme->ncMetrics.iSmCaptionHeight;
+        case SIZE_MENU_WIDTH: return scheme->ncMetrics.iMenuWidth;
+        case SIZE_MENU_HEIGHT: return scheme->ncMetrics.iMenuHeight;
         case SIZE_ICON: return scheme->iIconSize;
         case SIZE_ICON_SPACE_X: return scheme->icMetrics.iHorzSpacing;
         case SIZE_ICON_SPACE_Y: return scheme->icMetrics.iVertSpacing;
@@ -123,6 +124,9 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
     INT i, Result;
     HKEY hKey;
     BOOL ret;
+#if (WINVER >= 0x0600)
+    OSVERSIONINFO osvi;
+#endif
 
     /* Load colors */
     for (i = 0; i < NUM_COLORS; i++)
@@ -132,38 +136,52 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
 
     /* Load non client metrics */
     scheme->ncMetrics.cbSize = sizeof(NONCLIENTMETRICSW);
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 
-                                sizeof(NONCLIENTMETRICSW), 
-                                &scheme->ncMetrics, 
+
+#if (WINVER >= 0x0600)
+    /* Size of NONCLIENTMETRICSA/W depends on current version of the OS.
+     * see:
+     *  https://msdn.microsoft.com/en-us/library/windows/desktop/ff729175%28v=vs.85%29.aspx
+     */
+    if (GetVersionEx(&osvi))
+    {
+        /* Windows XP and earlier */
+        if (osvi.dwMajorVersion <= 5)
+            scheme->ncMetrics.cbSize -= sizeof(scheme->ncMetrics.iPaddedBorderWidth);
+    }
+#endif
+
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
+                                sizeof(NONCLIENTMETRICSW),
+                                &scheme->ncMetrics,
                                 0);
     if (!ret) return FALSE;
 
     /* Load icon metrics */
     scheme->icMetrics.cbSize = sizeof(ICONMETRICSW);
-    ret = SystemParametersInfoW(SPI_GETICONMETRICS, 
-                                sizeof(ICONMETRICSW), 
-                                &scheme->icMetrics, 
+    ret = SystemParametersInfoW(SPI_GETICONMETRICS,
+                                sizeof(ICONMETRICSW),
+                                &scheme->icMetrics,
                                 0);
     if (!ret) return FALSE;
 
     /* Load flat menu style */
-    ret = SystemParametersInfoW(SPI_GETFLATMENU, 
-                                0, 
-                                &scheme->bFlatMenus, 
+    ret = SystemParametersInfoW(SPI_GETFLATMENU,
+                                0,
+                                &scheme->bFlatMenus,
                                 0);
     if (!ret) return FALSE;
 
     /* Effects */
-    /* "Use the following transition effect for menus and tooltips" */
-    ret = SystemParametersInfoW(SPI_GETMENUANIMATION, 
-                                0, 
-                                &scheme->Effects.bMenuAnimation, 
+    /* Use the following transition effect for menus and tooltips */
+    ret = SystemParametersInfoW(SPI_GETMENUANIMATION,
+                                0,
+                                &scheme->Effects.bMenuAnimation,
                                 0);
     if (!ret) return FALSE;
 
-    ret = SystemParametersInfoW(SPI_GETMENUFADE, 
-                                0, 
-                                &scheme->Effects.bMenuFade, 
+    ret = SystemParametersInfoW(SPI_GETMENUFADE,
+                                0,
+                                &scheme->Effects.bMenuFade,
                                 0);
     if (!ret) return FALSE;
 
@@ -173,17 +191,37 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
     scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
     scheme->Effects.bTooltipFade       = scheme->Effects.bMenuFade;
 
-    /* Show content of windows during dragging */
-    ret = SystemParametersInfoW(SPI_GETDRAGFULLWINDOWS, 
-                                0, 
-                                &scheme->Effects.bDragFullWindows, 
+    /* Use the following transition effect for menus and tooltips */
+    ret = SystemParametersInfoW(SPI_GETFONTSMOOTHING,
+                                0,
+                                &scheme->Effects.bFontSmoothing,
                                 0);
     if (!ret) return FALSE;
 
-    /* "Hide underlined letters for keyboard navigation until I press the Alt key" */
-    ret = SystemParametersInfoW(SPI_GETKEYBOARDCUES, 
-                                0, 
-                                &scheme->Effects.bKeyboardCues, 
+    ret = SystemParametersInfoW(SPI_GETFONTSMOOTHINGTYPE,
+                                0,
+                                &scheme->Effects.uiFontSmoothingType,
+                                0);
+    if (!ret) return FALSE;
+
+    /* Show shadows under menus */
+    ret = SystemParametersInfoW(SPI_GETDROPSHADOW,
+                                0,
+                                &scheme->Effects.bDropShadow,
+                                0);
+    if (!ret) return FALSE;
+
+    /* Show content of windows during dragging */
+    ret = SystemParametersInfoW(SPI_GETDRAGFULLWINDOWS,
+                                0,
+                                &scheme->Effects.bDragFullWindows,
+                                0);
+    if (!ret) return FALSE;
+
+    /* Hide underlined letters for keyboard navigation until the Alt key is pressed */
+    ret = SystemParametersInfoW(SPI_GETKEYBOARDCUES,
+                                0,
+                                &scheme->Effects.bKeyboardCues,
                                 0);
     if (!ret) return FALSE;
 
@@ -199,7 +237,7 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
 }
 
 /*
- * LoadSchemeFromReg: Populates the passed scheme with values retireved from registry 
+ * LoadSchemeFromReg: Populates the passed scheme with values retrieved from registry
  */
 BOOL
 LoadSchemeFromReg(OUT COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
@@ -212,9 +250,9 @@ LoadSchemeFromReg(OUT COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
     BOOL Ret = TRUE;
     LONG result;
 
-    wsprintf(strSchemeKey, L"%s\\%s\\Sizes\\%s", 
-             g_CPANewSchemes, 
-             pSelectedTheme->Color->StyleName, 
+    wsprintf(strSchemeKey, L"%s\\%s\\Sizes\\%s",
+             g_CPANewSchemes,
+             pSelectedTheme->Color->StyleName,
              pSelectedTheme->Size->StyleName);
 
     result = RegOpenKeyW(HKEY_CURRENT_USER, strSchemeKey, &hkScheme);
@@ -226,11 +264,11 @@ LoadSchemeFromReg(OUT COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
     {
         wsprintf(strValueName, L"Color #%d", i);
         dwLength = sizeof(COLORREF);
-        result = RegQueryValueExW(hkScheme, 
-                                  strValueName, 
-                                  NULL, 
-                                  &dwType, 
-                                  (LPBYTE)&scheme->crColor[i], 
+        result = RegQueryValueExW(hkScheme,
+                                  strValueName,
+                                  NULL,
+                                  &dwType,
+                                  (LPBYTE)&scheme->crColor[i],
                                   &dwLength);
         if (result != ERROR_SUCCESS || dwType != REG_DWORD)
         {
@@ -245,13 +283,13 @@ LoadSchemeFromReg(OUT COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
 
         wsprintf(strValueName, L"Font #%d", i);
         dwLength = sizeof(LOGFONT);
-        result = RegQueryValueExW(hkScheme, 
-                                  strValueName, 
-                                  NULL, 
-                                  &dwType, 
-                                  (LPBYTE)lpfFont, 
+        result = RegQueryValueExW(hkScheme,
+                                  strValueName,
+                                  NULL,
+                                  &dwType,
+                                  (LPBYTE)lpfFont,
                                   &dwLength);
-        if (result != ERROR_SUCCESS || dwType != REG_BINARY || 
+        if (result != ERROR_SUCCESS || dwType != REG_BINARY ||
             dwLength != sizeof(LOGFONT))
         {
             /* Failed to read registry value */
@@ -263,13 +301,13 @@ LoadSchemeFromReg(OUT COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
     {
         wsprintf(strValueName, L"Size #%d", i);
         dwLength = sizeof(UINT64);
-        result = RegQueryValueExW(hkScheme, 
-                                  strValueName, 
-                                  NULL, 
-                                  &dwType, 
-                                  (LPBYTE)&iSize, 
+        result = RegQueryValueExW(hkScheme,
+                                  strValueName,
+                                  NULL,
+                                  &dwType,
+                                  (LPBYTE)&iSize,
                                   &dwLength);
-        if (result != ERROR_SUCCESS || dwType != REG_QWORD || 
+        if (result != ERROR_SUCCESS || dwType != REG_QWORD ||
             dwLength != sizeof(UINT64))
         {
             /* Failed to read registry value, initialize with current setting for now */
@@ -281,12 +319,12 @@ LoadSchemeFromReg(OUT COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
     }
 
     RegCloseKey(hkScheme);
-    
+
     return Ret;
 }
 
 /*
-    ApplyScheme: Applies the selected scheme and stores its id in the registry if needed
+ * ApplyScheme: Applies the selected scheme and stores its id in the registry if needed
  */
 VOID
 ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
@@ -307,65 +345,97 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
     {
         for (i = 0; i < NUM_COLORS; i++)
         {
-            wsprintf(clText, 
-                     L"%d %d %d", 
-                     GetRValue(scheme->crColor[i]), 
-                     GetGValue(scheme->crColor[i]), 
+            wsprintf(clText,
+                     L"%d %d %d",
+                     GetRValue(scheme->crColor[i]),
+                     GetGValue(scheme->crColor[i]),
                      GetBValue(scheme->crColor[i]));
-            
-            RegSetValueExW(hKey, 
-                           g_RegColorNames[i], 
-                           0, 
-                           REG_SZ, 
-                           (BYTE *)clText, 
+
+            RegSetValueExW(hKey,
+                           g_RegColorNames[i],
+                           0,
+                           REG_SZ,
+                           (BYTE *)clText,
                            (lstrlen(clText) + 1) * sizeof(WCHAR));
         }
         RegCloseKey(hKey);
     }
 
     /* Apply non client metrics */
-    SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, 
-                          sizeof(NONCLIENTMETRICS), 
-                          &scheme->ncMetrics, 
+    SystemParametersInfoW(SPI_SETNONCLIENTMETRICS,
+                          sizeof(NONCLIENTMETRICS),
+                          &scheme->ncMetrics,
                           SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 
     /* Apply icon metrics */
-    SystemParametersInfoW(SPI_SETICONMETRICS, 
-                          sizeof(ICONMETRICS), 
-                          &scheme->icMetrics, 
+    SystemParametersInfoW(SPI_SETICONMETRICS,
+                          sizeof(ICONMETRICS),
+                          &scheme->icMetrics,
                           SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 
     /* Effects, save only when needed: */
     /* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
      * Just keep them in sync for now.
      */
+
+#define SYS_CONFIG(__uiAction, __uiParam, __pvParam) \
+    SystemParametersInfoW(__uiAction, __uiParam, __pvParam, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE)
+
     scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
-    scheme->Effects.bTooltipFade = scheme->Effects.bMenuFade;
-    SystemParametersInfoW(SPI_SETDRAGFULLWINDOWS, scheme->Effects.bDragFullWindows, (PVOID)&scheme->Effects.bDragFullWindows, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-    SystemParametersInfoW(SPI_SETKEYBOARDCUES, 0, IntToPtr(scheme->Effects.bKeyboardCues), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-    //SystemParametersInfoW(SPI_SETACTIVEWINDOWTRACKING, 0, (PVOID)&scheme->Effects.bActiveWindowTracking, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETMENUANIMATION, 0, (PVOID)&scheme->Effects.bMenuAnimation, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETCOMBOBOXANIMATION, 0, (PVOID)&scheme->Effects.bComboBoxAnimation, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETLISTBOXSMOOTHSCROLLING, 0, (PVOID)&scheme->Effects.bListBoxSmoothScrolling, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETGRADIENTCAPTIONS, 0, (PVOID)&scheme->Effects.bGradientCaptions, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETACTIVEWNDTRKZORDER, 0, (PVOID)&scheme->Effects.bActiveWndTrkZorder, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETHOTTRACKING, 0, (PVOID)&scheme->Effects.bHotTracking, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    SystemParametersInfoW(SPI_SETMENUFADE, 0, (PVOID)&scheme->Effects.bMenuFade, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETSELECTIONFADE, 0, (PVOID)&scheme->Effects.bSelectionFade, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    SystemParametersInfoW(SPI_SETTOOLTIPANIMATION, 0, (PVOID)&scheme->Effects.bTooltipAnimation, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    SystemParametersInfoW(SPI_SETTOOLTIPFADE, 0, (PVOID)&scheme->Effects.bTooltipFade, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETCURSORSHADOW, 0, (PVOID)&scheme->Effects.bCursorShadow, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETUIEFFECTS, 0, (PVOID)&scheme->Effects.bUiEffects, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+    scheme->Effects.bTooltipFade       = scheme->Effects.bMenuFade;
+
+    /* Use the following transition effect for menus and tooltips */
+    SYS_CONFIG(SPI_SETMENUANIMATION,             0, IntToPtr(scheme->Effects.bMenuAnimation));
+    SYS_CONFIG(SPI_SETMENUFADE,                  0, IntToPtr(scheme->Effects.bMenuFade));
+
+    /* Use the following method to smooth edges of screen fonts */
+    SYS_CONFIG(SPI_SETFONTSMOOTHING,             scheme->Effects.bFontSmoothing, 0);
+    SYS_CONFIG(SPI_SETFONTSMOOTHINGTYPE,         0, IntToPtr(scheme->Effects.uiFontSmoothingType));
+
+    /*
+     * Refresh and redraw all the windows, otherwise the font smoothing changes
+     * only appear after any future partial region invalidation.
+     * Not everyone listens for this WM_SETTINGCHANGE, including the shell and most third party programs.
+     */
+    InvalidateRect(NULL, NULL, TRUE);
+
+    /* Use large icons */
+    //SYS_CONFIG(SPI_GETDRAGFULLWINDOWS,   (PVOID) g->SchemeAdv.Effects.bMenuFade);
+
+    /* Show shadows under menus */
+    SYS_CONFIG(SPI_SETDROPSHADOW,                0, IntToPtr(scheme->Effects.bDropShadow));
+
+    /* Show window contents while dragging */
+    SYS_CONFIG(SPI_SETDRAGFULLWINDOWS,           scheme->Effects.bDragFullWindows, 0);
+
+    /* Hide underlined letters for keyboard navigation until I press the Alt key */
+    SYS_CONFIG(SPI_SETKEYBOARDCUES,              0, IntToPtr(scheme->Effects.bKeyboardCues));
+
+    SYS_CONFIG(SPI_SETFLATMENU,                  0, IntToPtr(scheme->bFlatMenus));
+
+    // SYS_CONFIG(SPI_SETACTIVEWINDOWTRACKING,   0, IntToPtr(scheme->Effects.bActiveWindowTracking));
+    // SYS_CONFIG(SPI_SETCOMBOBOXANIMATION,      0, IntToPtr(scheme->Effects.bComboBoxAnimation));
+    // SYS_CONFIG(SPI_SETLISTBOXSMOOTHSCROLLING, 0, IntToPtr(scheme->Effects.bListBoxSmoothScrolling));
+    // SYS_CONFIG(SPI_SETGRADIENTCAPTIONS,       0, IntToPtr(scheme->Effects.bGradientCaptions));
+    // SYS_CONFIG(SPI_SETACTIVEWNDTRKZORDER,     0, IntToPtr(scheme->Effects.bActiveWndTrkZorder));
+    // SYS_CONFIG(SPI_SETHOTTRACKING,            0, IntToPtr(scheme->Effects.bHotTracking));
+    // SYS_CONFIG(SPI_SETSELECTIONFADE,          0, IntToPtr(scheme->Effects.bSelectionFade));
+    SYS_CONFIG(SPI_SETTOOLTIPANIMATION,          0, IntToPtr(scheme->Effects.bTooltipAnimation));
+    SYS_CONFIG(SPI_SETTOOLTIPFADE,               0, IntToPtr(scheme->Effects.bTooltipFade));
+    // SYS_CONFIG(SPI_SETCURSORSHADOW,           0, IntToPtr(scheme->Effects.bCursorShadow));
+    // SYS_CONFIG(SPI_SETUIEFFECTS,              0, IntToPtr(scheme->Effects.bUiEffects));
+
+#undef SYS_CONFIG
 
     /* Save SchemeId in the registry */
     if (pSelectedTheme->Theme != NULL && pSelectedTheme->ThemeActive == FALSE)
     {
         StyleName = pSelectedTheme->Color->StyleName;
-        SHSetValueW(HKEY_CURRENT_USER, 
+        SHSetValueW(HKEY_CURRENT_USER,
                     g_CPANewSchemes,
-                    g_SelectedStyle, 
-                    REG_SZ, 
-                    StyleName, 
+                    g_SelectedStyle,
+                    REG_SZ,
+                    StyleName,
                     (lstrlenW(StyleName) + 1) * sizeof(WCHAR));
     }
 }
@@ -377,7 +447,7 @@ CreateTheme(LPCWSTR pszName, LPCWSTR pszDisplayName)
 
     pTheme = (PTHEME) malloc(sizeof(THEME));
     if (pTheme == NULL) return NULL;
-        
+
     pTheme->DisplayName = _wcsdup(pszDisplayName);
     if (pTheme->DisplayName == NULL)
     {
@@ -402,7 +472,7 @@ CreateTheme(LPCWSTR pszName, LPCWSTR pszDisplayName)
         free(pTheme);
         return NULL;
     }
-    
+
     return pTheme;
 }
 
@@ -446,7 +516,7 @@ CleanupStyles(IN PTHEME_STYLE pStylesList)
         if (pStyle->ChildStyle) CleanupStyles(pStyle->ChildStyle);
         if (pStyle->DisplayName) free(pStyle->DisplayName);
         if (pStyle->StyleName) free(pStyle->StyleName);
-        
+
         pStyleOld = pStyle;
         pStyle = pStyle->NextStyle;
         free(pStyleOld);
@@ -472,7 +542,7 @@ CleanupThemes(IN PTHEME pThemeList)
     }
 }
 
-static PTHEME_STYLE 
+static PTHEME_STYLE
 FindStyle(IN PTHEME_STYLE pStylesList, IN PCWSTR StyleName)
 {
     PTHEME_STYLE pStyle;
@@ -492,7 +562,7 @@ FindStyle(IN PTHEME_STYLE pStylesList, IN PCWSTR StyleName)
 /*
  * LoadSchemeSizes: Returns a list of sizes from the registry key of a scheme
  */
-static PTHEME_STYLE 
+static PTHEME_STYLE
 LoadSchemeSizes(IN HKEY hkScheme)
 {
     HKEY hkSizes, hkSize;
@@ -511,25 +581,25 @@ LoadSchemeSizes(IN HKEY hkScheme)
 
         Result = RegOpenKeyW(hkSizes, wstrSizeName, &hkSize);
         if (Result != ERROR_SUCCESS) continue;
-        
-        Result = RegLoadMUIStringW(hkSize, 
-                                   L"DisplayName", 
-                                   wstrDisplayName, 
-                                   sizeof(wstrDisplayName), 
-                                   NULL, 
-                                   0, 
+
+        Result = RegLoadMUIStringW(hkSize,
+                                   L"DisplayName",
+                                   wstrDisplayName,
+                                   sizeof(wstrDisplayName),
+                                   NULL,
+                                   0,
                                    NULL);
         if (Result != ERROR_SUCCESS)
         {
-            Result = RegLoadMUIStringW(hkSize, 
-                                       L"LegacyName", 
-                                       wstrDisplayName, 
-                                       sizeof(wstrDisplayName), 
-                                       NULL, 
-                                       0, 
+            Result = RegLoadMUIStringW(hkSize,
+                                       L"LegacyName",
+                                       wstrDisplayName,
+                                       sizeof(wstrDisplayName),
+                                       NULL,
+                                       0,
                                        NULL);
         }
-        
+
         if (Result == ERROR_SUCCESS)
             pCurrentStyle = CreateStyle(wstrSizeName, wstrDisplayName);
         else
@@ -549,9 +619,9 @@ LoadSchemeSizes(IN HKEY hkScheme)
 }
 
 /*
-    LoadClassicColorSchemes: Returns a list of classic theme colours from the registry key of a scheme
-*/
-static THEME_STYLE* 
+ * LoadClassicColorSchemes: Returns a list of classic theme colours from the registry key of a scheme
+ */
+static THEME_STYLE*
 LoadClassicColorSchemes(VOID)
 {
     INT Result;
@@ -570,22 +640,22 @@ LoadClassicColorSchemes(VOID)
 
         Result = RegOpenKeyW(hkNewSchemes, wstrStyleName,  &hkScheme);
         if (Result != ERROR_SUCCESS) continue;
-        
-        Result = RegLoadMUIStringW(hkScheme, 
+
+        Result = RegLoadMUIStringW(hkScheme,
                                    L"DisplayName",
-                                   wstrDisplayName, 
-                                   sizeof(wstrDisplayName), 
-                                   NULL, 
-                                   0, 
+                                   wstrDisplayName,
+                                   sizeof(wstrDisplayName),
+                                   NULL,
+                                   0,
                                    NULL);
         if (Result != ERROR_SUCCESS)
         {
-            Result = RegLoadMUIStringW(hkScheme, 
-                                       L"LegacyName", 
-                                       wstrDisplayName, 
-                                       sizeof(wstrDisplayName), 
-                                       NULL, 
-                                       0, 
+            Result = RegLoadMUIStringW(hkScheme,
+                                       L"LegacyName",
+                                       wstrDisplayName,
+                                       sizeof(wstrDisplayName),
+                                       NULL,
+                                       0,
                                        NULL);
         }
 
@@ -613,7 +683,7 @@ LoadClassicColorSchemes(VOID)
 
 typedef HRESULT (WINAPI *ENUMTHEMESTYLE) (LPCWSTR, LPWSTR, DWORD, PTHEMENAMES);
 
-static THEME_STYLE* 
+static THEME_STYLE*
 EnumThemeStyles(IN LPCWSTR pszThemeFileName, IN ENUMTHEMESTYLE pfnEnumTheme)
 {
     DWORD index = 0;
@@ -634,28 +704,36 @@ EnumThemeStyles(IN LPCWSTR pszThemeFileName, IN ENUMTHEMESTYLE pfnEnumTheme)
     return List;
 }
 
-BOOL CALLBACK 
-EnumThemeProc(IN LPVOID lpReserved, 
-              IN LPCWSTR pszThemeFileName,
-              IN LPCWSTR pszThemeName, 
-              IN LPCWSTR pszToolTip, 
-              IN LPVOID lpReserved2,
-              IN OUT LPVOID lpData)
+PTHEME LoadTheme(IN LPCWSTR pszThemeFileName,IN LPCWSTR pszThemeName)
 {
-    PTHEME *List, pTheme;
-
-    List = (PTHEME*)lpData;
-
-    pTheme = CreateTheme(pszThemeFileName, pszThemeName);
-    if (pTheme == NULL) return FALSE;
+    PTHEME pTheme = CreateTheme(pszThemeFileName, pszThemeName);
+    if (pTheme == NULL) 
+        return NULL;
 
     pTheme->SizesList = EnumThemeStyles( pszThemeFileName, (ENUMTHEMESTYLE)EnumThemeSizes);
     pTheme->ColoursList = EnumThemeStyles( pszThemeFileName, (ENUMTHEMESTYLE)EnumThemeColors);
     if(pTheme->SizesList == NULL || pTheme->ColoursList == NULL)
     {
         CleanupThemes(pTheme);
-        return FALSE;
+        return NULL;
     }
+
+    return pTheme;
+}
+
+BOOL CALLBACK
+EnumThemeProc(IN LPVOID lpReserved,
+              IN LPCWSTR pszThemeFileName,
+              IN LPCWSTR pszThemeName,
+              IN LPCWSTR pszToolTip,
+              IN LPVOID lpReserved2,
+              IN OUT LPVOID lpData)
+{
+    PTHEME *List, pTheme;
+
+    List = (PTHEME*)lpData;
+    pTheme = LoadTheme(pszThemeFileName, pszThemeName);
+    if (pTheme == NULL) return FALSE;
 
     pTheme->NextTheme = *List;
     *List = pTheme;
@@ -663,12 +741,12 @@ EnumThemeProc(IN LPVOID lpReserved,
     return TRUE;
 }
 
-/* 
-    LoadThemes: Returns a list that contains tha classic theme and 
-                 the visual styles of the system
-*/
+/*
+ * LoadThemes: Returns a list that contains tha classic theme and
+ *             the visual styles of the system
+ */
 PTHEME
-LoadThemes()
+LoadThemes(VOID)
 {
     HRESULT hret;
     PTHEME pClassicTheme;
@@ -705,9 +783,62 @@ LoadThemes()
     return pClassicTheme;
 }
 
-/* 
- *  GetActiveTheme: Gets the active theme and populates pSelectedTheme 
- *                   with entries from the list of loaded themes 
+/*
+ * FindSelectedTheme: Finds the specified theme in the list of themes 
+ *                    or loads it if it was not loaded already.
+ */
+BOOL
+FindOrAppendTheme(IN PTHEME pThemeList, 
+                  IN LPCWSTR pwszThemeFileName,
+                  IN LPCWSTR pwszColorBuff,
+                  IN LPCWSTR pwszSizeBuff,
+                  OUT PTHEME_SELECTION pSelectedTheme)
+{
+    PTHEME pTheme;
+    PTHEME pFoundTheme = NULL;
+
+    ZeroMemory(pSelectedTheme, sizeof(THEME_SELECTION));
+
+    for (pTheme = pThemeList; pTheme; pTheme = pTheme->NextTheme)
+    {
+        if (pTheme->ThemeFileName &&
+           _wcsicmp(pTheme->ThemeFileName, pwszThemeFileName) == 0)
+        {
+            pFoundTheme = pTheme;
+            break;
+        }
+
+        if (pTheme->NextTheme == NULL)
+            break;
+    }
+
+    if (!pFoundTheme)
+    {
+        pFoundTheme = LoadTheme(pwszThemeFileName, pwszThemeFileName);
+        if (!pFoundTheme)
+            return FALSE;
+
+        pTheme->NextTheme = pFoundTheme;
+    }
+
+    pSelectedTheme->ThemeActive = TRUE;
+    pSelectedTheme->Theme = pFoundTheme;
+    if (pwszColorBuff)
+        pSelectedTheme->Color = FindStyle(pFoundTheme->ColoursList, pwszColorBuff);
+    else
+        pSelectedTheme->Color = pFoundTheme->ColoursList;
+
+    if (pwszSizeBuff)
+        pSelectedTheme->Size = FindStyle(pFoundTheme->SizesList, pwszSizeBuff);
+    else
+        pSelectedTheme->Size = pFoundTheme->SizesList;
+
+    return TRUE;
+}
+
+/*
+ * GetActiveTheme: Gets the active theme and populates pSelectedTheme
+ *                 with entries from the list of loaded themes.
  */
 BOOL
 GetActiveTheme(IN PTHEME pThemeList, OUT PTHEME_SELECTION pSelectedTheme)
@@ -715,43 +846,25 @@ GetActiveTheme(IN PTHEME pThemeList, OUT PTHEME_SELECTION pSelectedTheme)
     WCHAR szThemeFileName[MAX_PATH];
     WCHAR szColorBuff[MAX_PATH];
     WCHAR szSizeBuff[MAX_PATH];
-    PTHEME pTheme;
     HRESULT hret;
-    
-    ZeroMemory(pSelectedTheme, sizeof(THEME_SELECTION));
 
     /* Retrieve the name of the current theme */
-    hret = GetCurrentThemeName(szThemeFileName, 
-                               MAX_PATH, 
-                               szColorBuff, 
-                               MAX_PATH, 
-                               szSizeBuff, 
+    hret = GetCurrentThemeName(szThemeFileName,
+                               MAX_PATH,
+                               szColorBuff,
+                               MAX_PATH,
+                               szSizeBuff,
                                MAX_PATH);
-    if (FAILED(hret))  return FALSE;
+    if (FAILED(hret))  
+        return FALSE;
 
-    for (pTheme = pThemeList; pTheme; pTheme = pTheme->NextTheme)
-    {
-        if(pTheme->ThemeFileName && 
-           _wcsicmp(pTheme->ThemeFileName, szThemeFileName) == 0)
-        {
-            break;
-        }
-    }
-
-    if (pTheme == NULL) return FALSE;
-
-    pSelectedTheme->ThemeActive = TRUE;
-    pSelectedTheme->Theme = pTheme;
-    pSelectedTheme->Color = FindStyle(pTheme->ColoursList, szColorBuff);
-    pSelectedTheme->Size = FindStyle(pTheme->SizesList, szSizeBuff);
-
-    return TRUE;
+    return FindOrAppendTheme(pThemeList, szThemeFileName, szColorBuff, szSizeBuff, pSelectedTheme);
 }
 
-/* 
-    GetActiveTheme: Gets the active classic theme and populates pSelectedTheme 
-                    with entries from the list of loaded themes 
-*/
+/*
+ * GetActiveTheme: Gets the active classic theme and populates pSelectedTheme
+ *                 with entries from the list of loaded themes
+ */
 BOOL
 GetActiveClassicTheme(IN PTHEME pThemeList, OUT PTHEME_SELECTION pSelectedTheme)
 {
@@ -762,7 +875,7 @@ GetActiveClassicTheme(IN PTHEME pThemeList, OUT PTHEME_SELECTION pSelectedTheme)
     PTHEME_STYLE pCurrentStyle, pCurrentSize;
 
     ZeroMemory(pSelectedTheme, sizeof(THEME_SELECTION));
-    
+
     /* Assume failure */
     szSelectedClassicScheme[0] = 0;
     szSelectedClassicSize[0] = 0;
@@ -772,7 +885,7 @@ GetActiveClassicTheme(IN PTHEME pThemeList, OUT PTHEME_SELECTION pSelectedTheme)
 
     dwType = REG_SZ;
     dwDisplayNameLength = sizeof(szSelectedClassicScheme);
-    Result = RegQueryValueEx(hkNewSchemes, L"SelectedStyle", NULL, &dwType, 
+    Result = RegQueryValueEx(hkNewSchemes, L"SelectedStyle", NULL, &dwType,
                              (LPBYTE)&szSelectedClassicScheme, &dwDisplayNameLength);
     if (Result == ERROR_SUCCESS)
     {
@@ -802,16 +915,16 @@ ActivateTheme(IN PTHEME_SELECTION pSelectedTheme)
 
     if (pSelectedTheme->ThemeActive)
     {
-        hret = OpenThemeFile(pSelectedTheme->Theme->ThemeFileName, 
-                             pSelectedTheme->Color->StyleName, 
-                             pSelectedTheme->Size->StyleName, 
-                             &hThemeFile, 
+        hret = OpenThemeFile(pSelectedTheme->Theme->ThemeFileName,
+                             pSelectedTheme->Color->StyleName,
+                             pSelectedTheme->Size->StyleName,
+                             &hThemeFile,
                              0);
 
         if (!SUCCEEDED(hret)) return FALSE;
     }
 
-    hret = ApplyTheme(hThemeFile, "", 0);
+    hret = ApplyTheme(hThemeFile, 0, 0);
 
     if (pSelectedTheme->ThemeActive)
     {
@@ -829,14 +942,14 @@ LoadSchemeFromTheme(OUT PCOLOR_SCHEME scheme, IN PTHEME_SELECTION pSelectedTheme
     HTHEME hTheme;
     int i;
 
-    hret = OpenThemeFile(pSelectedTheme->Theme->ThemeFileName, 
-                         pSelectedTheme->Color->StyleName, 
-                         pSelectedTheme->Size->StyleName, 
-                         &hThemeFile, 
+    hret = OpenThemeFile(pSelectedTheme->Theme->ThemeFileName,
+                         pSelectedTheme->Color->StyleName,
+                         pSelectedTheme->Size->StyleName,
+                         &hThemeFile,
                          0);
 
     if (!SUCCEEDED(hret)) return FALSE;
-  
+
     hTheme = OpenThemeDataFromFile(hThemeFile, hCPLWindow, L"WINDOW", 0);
     if (hTheme == NULL) return FALSE;
 
@@ -865,7 +978,9 @@ LoadSchemeFromTheme(OUT PCOLOR_SCHEME scheme, IN PTHEME_SELECTION pSelectedTheme
     GetThemeSysFont(hTheme, TMT_STATUSFONT, &scheme->ncMetrics.lfStatusFont);
     GetThemeSysFont(hTheme, TMT_MSGBOXFONT, &scheme->ncMetrics.lfMessageFont);
     GetThemeSysFont(hTheme, TMT_ICONTITLEFONT, &scheme->icMetrics.lfFont);
-    
+
+    scheme->bFlatMenus = GetThemeSysBool(hTheme, TMT_FLATMENUS);
+
     CloseThemeData(hTheme);
 
     return TRUE;
@@ -884,14 +999,62 @@ DrawThemePreview(IN HDC hdcMem, IN PCOLOR_SCHEME scheme, IN PTHEME_SELECTION pSe
 
     InflateRect(prcWindow, -10, -10);
 
-    hres = DrawNCPreview(hdcMem, 
+    hres = DrawNCPreview(hdcMem,
                          DNCP_DRAW_ALL,
                          prcWindow,
-                         pSelectedTheme->Theme->ThemeFileName, 
-                         pSelectedTheme->Color->StyleName, 
-                         pSelectedTheme->Size->StyleName, 
-                         &scheme->ncMetrics, 
+                         pSelectedTheme->Theme->ThemeFileName,
+                         pSelectedTheme->Color->StyleName,
+                         pSelectedTheme->Size->StyleName,
+                         &scheme->ncMetrics,
                          scheme->crColor);
 
     return SUCCEEDED(hres);
+}
+
+BOOL ActivateThemeFile(LPCWSTR pwszFile)
+{
+    PTHEME pThemes;
+    THEME_SELECTION selection;
+    COLOR_SCHEME scheme;
+    BOOL ret = FALSE;
+
+    pThemes = LoadThemes();
+    if (!pThemes)
+        return FALSE;
+
+    LoadCurrentScheme(&scheme);
+
+    if (pwszFile)
+    {
+        ret = FindOrAppendTheme(pThemes, pwszFile, NULL, NULL, &selection);
+        if (!ret)
+            goto cleanup;
+
+        ret = LoadSchemeFromTheme(&scheme, &selection);
+        if (!ret)
+            goto cleanup;
+    }
+    else
+    {
+        ret = GetActiveClassicTheme(pThemes, &selection);
+        if (!ret)
+            goto cleanup;
+
+        ret = LoadSchemeFromReg(&scheme, &selection);
+        if (!ret)
+            goto cleanup;
+    }
+
+    ret = ActivateTheme(&selection);
+    if (!ret)
+        goto cleanup;
+
+    ApplyScheme(&scheme, &selection);
+
+    ret = TRUE;
+
+cleanup:
+    CleanupThemes(pThemes);
+
+    return ret;
 }

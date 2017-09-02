@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -245,10 +245,6 @@ ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_NestingLevel, 0);
 
 ACPI_GLOBAL (ACPI_THREAD_STATE *,       AcpiGbl_CurrentWalkList);
 
-/* Maximum number of While() loop iterations before forced abort */
-
-ACPI_GLOBAL (UINT16,                    AcpiGbl_MaxLoopIterations);
-
 /* Control method single step flag */
 
 ACPI_GLOBAL (UINT8,                     AcpiGbl_CmSingleStep);
@@ -321,6 +317,9 @@ ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_IgnoreNoopOperator, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_CstyleDisassembly, TRUE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_ForceAmlDisassembly, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DmOpt_Verbose, TRUE);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DmEmitExternalOpcodes, FALSE);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DoDisassemblerOptimizations, TRUE);
+ACPI_INIT_GLOBAL (ACPI_PARSE_OBJECT_LIST,   *AcpiGbl_TempListHead, NULL);
 
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DmOpt_Disasm);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DmOpt_Listing);
@@ -333,7 +332,6 @@ ACPI_GLOBAL (ACPI_EXTERNAL_FILE *,      AcpiGbl_ExternalFileList);
 #ifdef ACPI_DEBUGGER
 
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_AbortMethod, FALSE);
-ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_MethodExecuting, FALSE);
 ACPI_INIT_GLOBAL (ACPI_THREAD_ID,       AcpiGbl_DbThreadId, ACPI_INVALID_THREAD_ID);
 
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_NoIniMethods);
@@ -352,7 +350,6 @@ ACPI_GLOBAL (ACPI_OBJECT_TYPE,          AcpiGbl_DbArgTypes[ACPI_DEBUGGER_MAX_ARG
 
 /* These buffers should all be the same size */
 
-ACPI_GLOBAL (char,                      AcpiGbl_DbLineBuf[ACPI_DB_LINE_BUFFER_SIZE]);
 ACPI_GLOBAL (char,                      AcpiGbl_DbParsedBuf[ACPI_DB_LINE_BUFFER_SIZE]);
 ACPI_GLOBAL (char,                      AcpiGbl_DbScopeBuf[ACPI_DB_LINE_BUFFER_SIZE]);
 ACPI_GLOBAL (char,                      AcpiGbl_DbDebugFilename[ACPI_DB_LINE_BUFFER_SIZE]);
@@ -367,9 +364,6 @@ ACPI_GLOBAL (UINT16,                    AcpiGbl_NodeTypeCountMisc);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_NumNodes);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_NumObjects);
 
-ACPI_GLOBAL (ACPI_MUTEX,                AcpiGbl_DbCommandReady);
-ACPI_GLOBAL (ACPI_MUTEX,                AcpiGbl_DbCommandComplete);
-
 #endif /* ACPI_DEBUGGER */
 
 #if defined (ACPI_DISASSEMBLER) || defined (ACPI_ASL_COMPILER)
@@ -379,7 +373,53 @@ ACPI_GLOBAL (const char,                *AcpiGbl_PldVerticalPositionList[]);
 ACPI_GLOBAL (const char,                *AcpiGbl_PldHorizontalPositionList[]);
 ACPI_GLOBAL (const char,                *AcpiGbl_PldShapeList[]);
 
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DisasmFlag, FALSE);
+
 #endif
+
+/*
+ * Meant for the -ca option.
+ */
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentInlineComment,     NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentEndNodeComment,    NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentOpenBraceComment,  NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentCloseBraceComment, NULL);
+
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_RootFilename, NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentFilename, NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentParentFilename, NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentIncludeFilename, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_LastListHead, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_DefBlkCommentListHead, NULL);
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_DefBlkCommentListTail, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_RegCommentListHead, NULL);
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_RegCommentListTail, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_IncCommentListHead, NULL);
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_IncCommentListTail, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_EndBlkCommentListHead, NULL);
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_EndBlkCommentListTail, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_ADDR_NODE,   *AcpiGbl_CommentAddrListHead, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_PARSE_OBJECT,   *AcpiGbl_CurrentScope,     NULL);
+
+ACPI_INIT_GLOBAL (ACPI_FILE_NODE,      *AcpiGbl_FileTreeRoot, NULL);
+
+ACPI_GLOBAL (ACPI_CACHE_T *,            AcpiGbl_RegCommentCache);
+ACPI_GLOBAL (ACPI_CACHE_T *,            AcpiGbl_CommentAddrCache);
+ACPI_GLOBAL (ACPI_CACHE_T *,            AcpiGbl_FileCache);
+
+ACPI_INIT_GLOBAL (BOOLEAN, Gbl_CaptureComments, FALSE);
+
+ACPI_INIT_GLOBAL (BOOLEAN, AcpiGbl_DebugAslConversion, FALSE);
+ACPI_INIT_GLOBAL (ACPI_FILE, AcpiGbl_ConvDebugFile, NULL);
+
+ACPI_GLOBAL (char, AcpiGbl_TableSig[4]);
 
 /*****************************************************************************
  *
@@ -391,6 +431,7 @@ ACPI_GLOBAL (const char,                *AcpiGbl_PldShapeList[]);
 
 ACPI_INIT_GLOBAL (ACPI_FILE,            AcpiGbl_DebugFile, NULL);
 ACPI_INIT_GLOBAL (ACPI_FILE,            AcpiGbl_OutputFile, NULL);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DebugTimeout, FALSE);
 
 /* Print buffer */
 

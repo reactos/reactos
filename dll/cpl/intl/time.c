@@ -20,7 +20,8 @@
  * PROJECT:         ReactOS International Control Panel
  * FILE:            dll/cpl/intl/time.c
  * PURPOSE:         Time property page
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "intl.h"
@@ -47,37 +48,6 @@ UpdateTimeSample(HWND hWnd, PGLOBALDATA pGlobalData)
                    pGlobalData->szTimeFormat, szBuffer,
                    MAX_SAMPLES_STR_SIZE);
     SendDlgItemMessageW(hWnd, IDC_TIMESAMPLE, WM_SETTEXT, 0, (LPARAM)szBuffer);
-}
-
-
-static VOID
-GetSelectedComboEntry(HWND hwndDlg, DWORD dwIdc, WCHAR *Buffer, UINT uSize)
-{
-    int nIndex;
-    HWND hChildWnd;
-
-    /* Get handle to time format control */
-    hChildWnd = GetDlgItem(hwndDlg, dwIdc);
-    /* Get index to selected time format */
-    nIndex = SendMessageW(hChildWnd, CB_GETCURSEL, 0, 0);
-    if (nIndex == CB_ERR)
-        /* No selection? Get content of the edit control */
-        SendMessageW(hChildWnd, WM_GETTEXT, uSize, (LPARAM)Buffer);
-    else {
-        PWSTR tmp;
-        UINT   uReqSize;
-
-        /* Get requested size, including the null terminator;
-         * it shouldn't be required because the previous CB_LIMITTEXT,
-         * but it would be better to check it anyways */
-        uReqSize = SendMessageW(hChildWnd, CB_GETLBTEXTLEN, (WPARAM)nIndex, 0) + 1;
-        /* Allocate enough space to be more safe */
-        tmp = (PWSTR)_alloca(uReqSize*sizeof(WCHAR));
-        /* Get selected time format text */
-        SendMessageW(hChildWnd, CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)tmp);
-        /* Finally, copy the result into the output */
-        wcsncpy(Buffer, tmp, uSize);
-    }
 }
 
 
@@ -185,6 +155,66 @@ InitPmSymbol(
 }
 
 
+static
+BOOL
+GetTimeSetting(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
+{
+    WCHAR szTimeFormat[MAX_TIMEFORMAT];
+    WCHAR szTimeSep[MAX_TIMESEPARATOR];
+    WCHAR szTimeAM[MAX_TIMEAMSYMBOL];
+    WCHAR szTimePM[MAX_TIMEPMSYMBOL];
+
+    /* Time format */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_TIMEFORMAT,
+                            szTimeFormat,
+                            MAX_TIMEFORMAT);
+
+    /* Check the time format */
+    if (szTimeFormat[0] == L'\0')
+    {
+        /* TODO: Show error message */
+
+        return FALSE;
+    }
+
+    /* Time separator */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_TIMESEPARATOR,
+                            szTimeSep,
+                            MAX_TIMESEPARATOR);
+
+    /* Check the time separator */
+    if (szTimeSep[0] == L'\0')
+    {
+        /* TODO: Show error message */
+
+        return FALSE;
+    }
+
+    /* AM symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_TIMEAMSYMBOL,
+                            szTimeAM,
+                            MAX_TIMEAMSYMBOL);
+
+    /* PM symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_TIMEPMSYMBOL,
+                            szTimePM,
+                            MAX_TIMEPMSYMBOL);
+
+    /* Store settings in global data */
+    wcscpy(pGlobalData->szTimeFormat, szTimeFormat);
+    wcscpy(pGlobalData->szTimeSep, szTimeSep);
+    wcscpy(pGlobalData->szTimeAM, szTimeAM);
+    wcscpy(pGlobalData->szTimePM, szTimePM);
+
+    return TRUE;
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 TimePageProc(HWND hwndDlg,
@@ -228,6 +258,7 @@ TimePageProc(HWND hwndDlg,
                     if (HIWORD(wParam) == CBN_SELCHANGE ||
                         HIWORD(wParam) == CBN_EDITCHANGE)
                     {
+                        /* Enable the Apply button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -237,30 +268,11 @@ TimePageProc(HWND hwndDlg,
         case WM_NOTIFY:
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                /* Get selected/typed time format text */
-                GetSelectedComboEntry(hwndDlg, IDC_TIMEFORMAT,
-                                      pGlobalData->szTimeFormat, 
-                                      MAX_TIMEFORMAT);
-
-                /* Get selected/typed time separator text */
-                GetSelectedComboEntry(hwndDlg, IDC_TIMESEPARATOR,
-                                      pGlobalData->szTimeSep,
-                                      MAX_TIMESEPARATOR);
-
-                /* Get selected/typed AM symbol text */
-                GetSelectedComboEntry(hwndDlg, IDC_TIMEAMSYMBOL,
-                                      pGlobalData->szTimeAM,
-                                      MAX_TIMEAMSYMBOL);
-
-                /* Get selected/typed PM symbol text */
-                GetSelectedComboEntry(hwndDlg, IDC_TIMEPMSYMBOL,
-                                      pGlobalData->szTimePM,
-                                      MAX_TIMEPMSYMBOL);
-
-                pGlobalData->fUserLocaleChanged = TRUE;
-
-                /* Update the time format sample */
-                UpdateTimeSample(hwndDlg, pGlobalData);
+                if (GetTimeSetting(hwndDlg, pGlobalData))
+                {
+                    pGlobalData->bUserLocaleChanged = TRUE;
+                    UpdateTimeSample(hwndDlg, pGlobalData);
+                }
             }
             break;
     }

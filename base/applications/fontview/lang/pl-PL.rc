@@ -10,17 +10,21 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALL "Instaluj"
-    IDS_PRINT "Drukuj"
+    IDS_INSTALL "&Instaluj"
+    IDS_PRINT "&Drukuj"
     IDS_STRING "Zażółć gęślą Jaźń żółwiątkiem. 1234567890. !@#$%^&*()_+=-/?"
     IDS_OPEN "Otwórz czcionkę..."
     IDS_ERROR "Błąd"
     IDS_ERROR_NOMEM "Brakuje pamięci do ukończenia tej operacji."
     IDS_ERROR_NOFONT "Plik %1 nie jest poprawnym plikiem czcionki."
     IDS_ERROR_NOCLASS "Nie udało się zainicjować klasy window."
-    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+    IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\
+TrueType Font Collection (*.ttc)\0*.ttc\0\
 OpenType Font (*.otf)\0*.otf\0\
-Font File (*.fon)\0*.fon\0\
+OpenType Font Collection (*.otc)\0*.otc\0\
 All Files (*.*)\0*.*\0"
+    IDS_PREVIOUS "< P&revious"
+    IDS_NEXT "&Next >"
 END

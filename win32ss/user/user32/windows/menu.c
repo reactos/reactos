@@ -1062,6 +1062,7 @@ GetMenuState(
   {
      PMENU pSubMenu = DesktopPtrToUser(pItem->spSubMenu);
      HMENU hsubmenu = UserHMGetHandle(pSubMenu);
+     Type |= MF_POPUP; // Fix CORE-9269
      if (!IsMenu(hsubmenu)) return (UINT)-1;
      else return (pSubMenu->cItems << 8) | ((pItem->fState|pItem->fType|Type) & 0xff);
   }

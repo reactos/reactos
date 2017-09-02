@@ -13,19 +13,25 @@ BEGIN
     POPUP "文件(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILENEW
-        MENUITEM "打开... (&O)\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "打开...(&O)\tCtrl+O", IDM_FILEOPEN
         MENUITEM "保存(&S)\tCtrl+S", IDM_FILESAVE
-        MENUITEM "另存为... (&A)", IDM_FILESAVEAS
+        MENUITEM "另存为...(&A)", IDM_FILESAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "页面视图", IDM_FILEPAGEVIEW
         MENUITEM "页面设置...", IDM_FILEPAGESETUP
-        MENUITEM "打印...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "打印(&P)...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "保存为壁纸 (普通)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "保存为壁纸 (居中)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "保存为壁纸 (拉伸)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "退出(&Q)\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "编辑(&E)"
     BEGIN
@@ -210,8 +216,8 @@ BEGIN
     IDS_TOOLTIP14 "多边形"
     IDS_TOOLTIP15 "椭圆"
     IDS_TOOLTIP16 "圆角矩形"
-    IDS_OPENFILTER "位图文件 (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24 位位图文件 (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "All Files"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d 字节"
     IDS_PRINTRES "%d x %d 像素每米"
     IDS_INTNUMBERS "只输入数字积分！"

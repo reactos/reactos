@@ -46,7 +46,7 @@ DsRolepGetBasicInfo(
     ULONG Size;
     NTSTATUS Status;
 
-    ZeroMemory(&ObjectAttributes, sizeof(ObjectAttributes));
+    RtlZeroMemory(&ObjectAttributes, sizeof(ObjectAttributes));
     Status = LsarOpenPolicy(NULL,
                             &ObjectAttributes,
                             POLICY_VIEW_LOCAL_INFORMATION,
@@ -142,7 +142,7 @@ DsRolerGetPrimaryDomainInformation(
 {
     NET_API_STATUS ret;
 
-    TRACE("DsRolerGetPrimaryDomainInformation(%p, %d, %p)\n", 
+    TRACE("DsRolerGetPrimaryDomainInformation(%p, %d, %p)\n",
           hBinding, InfoLevel, DomainInfo);
 
     switch (InfoLevel)

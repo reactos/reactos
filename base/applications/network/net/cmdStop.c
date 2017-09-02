@@ -20,7 +20,7 @@ INT cmdStop(INT argc, WCHAR **argv)
 
     if (argc != 3)
     {
-        PrintResourceString(IDS_STOP_SYNTAX);
+        ConResPuts(StdOut, IDS_STOP_SYNTAX);
         return 1;
     }
 
@@ -28,7 +28,7 @@ INT cmdStop(INT argc, WCHAR **argv)
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            PrintResourceString(IDS_STOP_HELP);
+            ConResPuts(StdOut, IDS_STOP_HELP);
             return 1;
         }
     }
@@ -70,7 +70,7 @@ done:
     if (dwError != ERROR_SUCCESS)
     {
         /* FIXME: Print proper error message */
-        printf("Error: %lu\n", dwError);
+        ConPrintf(StdErr, L"Error: %lu\n", dwError);
     }
 
     return nError;

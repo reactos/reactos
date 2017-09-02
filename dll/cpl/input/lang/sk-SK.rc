@@ -11,10 +11,10 @@ CAPTION "Nastavenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Vyberte služby, ktoré chcete priradiť ku každému vstupnému jazyku uvedenému v zozname.\nPoužite tlačidlá Pridať a Odstrániť k úprave zoznamu.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "Pred&voliť", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Pridať...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "O&dstrániť...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "O&dstrániť", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "Vl&astnosti...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Preferencie", -1, 7, 185, 240, 36
     PUSHBUTTON "Nastavenie &klávesov...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -165,6 +165,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi Phonetic"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Typewriter"
     IDS_DUTCH_LAYOUT "Holandské"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estónske"
     IDS_FAEROESE_LAYOUT "Faeroese"
     IDS_FARSI_LAYOUT "Farsi"

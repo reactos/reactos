@@ -36,7 +36,7 @@ Size = 17,5 Mio
 
 [Section.0419]
 Description = Удивительно мощный динамический язык программирования.
-Size = 17,5 МБ
+Size = 17,5 МиБ
 
 [Section.041f]
 Description = Dikkat çekici, güçlü ve devingen bir izlenceleme dili.

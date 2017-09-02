@@ -36,7 +36,7 @@ BEGIN
         MENUITEM "Uložiť &ako...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Nasta&venie strany...", CMD_PAGE_SETUP
-        MENUITEM "&Tlačiť\tCtrl+P", CMD_PRINT
+        MENUITEM "&Tlačiť...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Skončiť", CMD_EXIT
     END
@@ -51,7 +51,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Hľadať", CMD_SEARCH
         MENUITEM "Hľa&dať ďalej\tF3", CMD_SEARCH_NEXT
-        MENUITEM "&Nahradiť\tCtrl+H", CMD_REPLACE
+        MENUITEM "&Nahradiť...\tCtrl+H", CMD_REPLACE
         MENUITEM "Pr&ejsť na...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Vy&brať všetko", CMD_SELECT_ALL

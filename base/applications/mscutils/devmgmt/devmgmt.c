@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Device Managment
+ * PROJECT:     ReactOS Device Management
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/devmgmt/devmgmt.c
  * PURPOSE:     Bootstrap for the device manager

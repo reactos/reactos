@@ -56,7 +56,8 @@ CDeviceView::Initialize()
     // Get the device image list
     m_ImageListData.cbSize = sizeof(SP_CLASSIMAGELIST_DATA);
     BOOL bSuccess = SetupDiGetClassImageList(&m_ImageListData);
-    if (bSuccess == FALSE) return false;
+    if (bSuccess == FALSE)
+        return false;
 
     // Create the main treeview
     m_hTreeView = CreateWindowExW(WS_EX_CLIENTEDGE,
@@ -128,10 +129,16 @@ CDeviceView::OnRightClick(
     _In_ LPNMHDR NmHdr
     )
 {
-    HTREEITEM hItem = TreeView_GetNextItem(NmHdr->hwndFrom, 0, TVGN_DROPHILITE);
-    if (hItem)
+    TVHITTESTINFO hitInfo;
+    HTREEITEM hItem;
+
+    GetCursorPos(&hitInfo.pt);
+    ScreenToClient(m_hTreeView, &hitInfo.pt);
+
+    hItem = TreeView_HitTest(m_hTreeView, &hitInfo);
+    if (hItem != NULL && (hitInfo.flags & (TVHT_ONITEM | TVHT_ONITEMICON)))
     {
-        TreeView_SelectItem(NmHdr->hwndFrom, hItem);
+        TreeView_SelectItem(m_hTreeView, hItem);
     }
 
     return 0;
@@ -191,7 +198,7 @@ CDeviceView::Refresh(
     _In_ bool UpdateView
     )
 {
-    // Enum devices on a seperate thread to keep the gui responsive
+    // Enum devices on a separate thread to keep the gui responsive
 
     m_ViewType = Type;
 
@@ -200,7 +207,6 @@ CDeviceView::Refresh(
     ThreadData->This = this;
     ThreadData->ScanForChanges = ScanForChanges;
     ThreadData->UpdateView = UpdateView;
-
 
     HANDLE hThread;
     hThread = (HANDLE)_beginthreadex(NULL,
@@ -342,7 +348,8 @@ CDeviceView::GetNextClass(
     cr = CM_Enumerate_Classes(ClassIndex,
                               ClassGuid,
                               0);
-    if (cr != CR_SUCCESS) return false;
+    if (cr != CR_SUCCESS)
+        return false;
 
     // Check if this is the unknown class
     if (IsEqualGUID(*ClassGuid, GUID_DEVCLASS_UNKNOWN))
@@ -415,7 +422,6 @@ unsigned int __stdcall CDeviceView::RefreshThread(void *Param)
         case ResourcesByConnection:
             break;
     }
-
 
     This->SelectNode(LastSelectedNode);
 
@@ -639,7 +645,8 @@ CDeviceView::RecurseChildDevices(
     {
         // Check if the parent device has anything at the same level 
         bSuccess = GetSiblingDevice(Device, &Device);
-        if (bSuccess == FALSE) break;
+        if (bSuccess == FALSE)
+            break;
 
         DeviceNode = dynamic_cast<CDeviceNode *>(GetDeviceNode(Device));
         if (DeviceNode == nullptr)
@@ -680,7 +687,8 @@ CDeviceView::RecurseChildDevices(
     }
 
     // If there was a problem, expand the ancestors
-    if (HasProblem) return false;
+    if (HasProblem)
+        return false;
 
     return true;
 }
@@ -692,7 +700,8 @@ CDeviceView::EnableSelectedDevice(
     )
 {
     CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
-    if (Node == nullptr) return false;
+    if (Node == nullptr)
+        return false;
 
     if (Enable == false)
     {
@@ -700,9 +709,9 @@ CDeviceView::EnableSelectedDevice(
         if (str.LoadStringW(g_hThisInstance, IDS_CONFIRM_DISABLE))
         {
             if (MessageBoxW(m_hMainWnd,
-                str,
-                Node->GetDisplayName(),
-                MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
+                            str,
+                            Node->GetDisplayName(),
+                            MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
             {
                 return false;
             }
@@ -718,7 +727,8 @@ CDeviceView::UpdateSelectedDevice(
     )
 {
     CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
-    if (Node == nullptr) return false;
+    if (Node == nullptr)
+        return false;
 
     DWORD dwReboot;
     if (InstallDevInst(m_hMainWnd, Node->GetDeviceId(), TRUE, &dwReboot))
@@ -735,15 +745,16 @@ CDeviceView::UninstallSelectedDevice(
     )
 {
     CDeviceNode *Node = dynamic_cast<CDeviceNode *>(GetSelectedNode());
-    if (Node == nullptr) return false;
+    if (Node == nullptr)
+        return false;
 
     CAtlStringW str;
     if (str.LoadStringW(g_hThisInstance, IDS_CONFIRM_UNINSTALL))
     {
         if (MessageBoxW(m_hMainWnd,
-            str,
-            Node->GetDisplayName(),
-            MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
+                        str,
+                        Node->GetDisplayName(),
+                        MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
         {
             return false;
         }
@@ -759,7 +770,8 @@ CDeviceView::RunAddHardwareWizard()
     HMODULE hModule;
 
     hModule = LoadLibraryW(L"hdwwiz.cpl");
-    if (hModule == NULL) return false;
+    if (hModule == NULL)
+        return false;
 
     pAddHardwareWizard = (PADDHARDWAREWIZARD)GetProcAddress(hModule,
                                                             "AddHardwareWizard");
@@ -822,7 +834,7 @@ CDeviceView::InsertIntoTreeView(
     tvi.iImage = Node->GetClassImage();
     tvi.iSelectedImage = Node->GetClassImage();
 
-    // try to cast it to a device node. This will only suceed if it's the correct type
+    // try to cast it to a device node. This will only succeed if it's the correct type
     CDeviceNode *DeviceNode = dynamic_cast<CDeviceNode *>(Node);
     if (DeviceNode && DeviceNode->GetOverlayImage())
     {
@@ -844,10 +856,10 @@ CDeviceView::BuildActionMenuForNode(
     _In_ bool MainMenu
     )
 {
-    // Create a seperator structure 
-    MENUITEMINFOW MenuSeperator = { 0 };
-    MenuSeperator.cbSize = sizeof(MENUITEMINFOW);
-    MenuSeperator.fType = MFT_SEPARATOR;
+    // Create a separator structure 
+    MENUITEMINFOW MenuSeparator = { 0 };
+    MenuSeparator.cbSize = sizeof(MENUITEMINFOW);
+    MenuSeparator.fType = MFT_SEPARATOR;
 
     // Setup the 
     MENUITEMINFOW MenuItemInfo = { 0 };
@@ -899,7 +911,7 @@ CDeviceView::BuildActionMenuForNode(
             i++;
         }
 
-        InsertMenuItemW(OwnerMenu, i, TRUE, &MenuSeperator);
+        InsertMenuItemW(OwnerMenu, i, TRUE, &MenuSeparator);
         i++;
     }
 
@@ -921,7 +933,7 @@ CDeviceView::BuildActionMenuForNode(
 
     if (Node->HasProperties())
     {
-        InsertMenuItemW(OwnerMenu, i, TRUE, &MenuSeperator);
+        InsertMenuItemW(OwnerMenu, i, TRUE, &MenuSeparator);
         i++;
 
         String.LoadStringW(g_hThisInstance, IDS_MENU_PROPERTIES);
@@ -947,7 +959,8 @@ CDeviceView::RecurseFindDevice(
 
     // Check if this node has any children
     hItem = TreeView_GetChild(m_hTreeView, hParentItem);
-    if (hItem == NULL) return NULL;
+    if (hItem == NULL)
+        return NULL;
 
     // The lParam contains the node pointer data
     tvItem.hItem = hItem;
@@ -971,14 +984,16 @@ CDeviceView::RecurseFindDevice(
 
     // This node may have its own children
     FoundItem = RecurseFindDevice(hItem, Node);
-    if (FoundItem) return FoundItem;
+    if (FoundItem)
+        return FoundItem;
 
     // Loop all the siblings
     for (;;)
     {
         // Get the next item at this level
         hItem = TreeView_GetNextSibling(m_hTreeView, hItem);
-        if (hItem == NULL) break;
+        if (hItem == NULL)
+            break;
 
         // The lParam contains the node pointer data
         tvItem.hItem = hItem;
@@ -1001,7 +1016,8 @@ CDeviceView::RecurseFindDevice(
 
         // This node may have its own children 
         FoundItem = RecurseFindDevice(hItem, Node);
-        if (FoundItem) return FoundItem;
+        if (FoundItem)
+            return FoundItem;
     }
 
     return hItem;
@@ -1016,7 +1032,8 @@ CDeviceView::SelectNode(
 
     // Check if there are any items in the tree
     hRoot = TreeView_GetRoot(m_hTreeView);
-    if (hRoot == NULL) return;
+    if (hRoot == NULL)
+        return;
 
     // If we don't want to set select a node, just select root
     if (Node == nullptr || Node->GetNodeType() == RootNode)
@@ -1054,7 +1071,8 @@ CDeviceView::GetClassNode(
     CClassNode *Node = nullptr;
 
     Pos = m_ClassNodeList.GetHeadPosition();
-    if (Pos == NULL) return nullptr;
+    if (Pos == NULL)
+        return nullptr;
 
     do
     {
@@ -1081,7 +1099,8 @@ CDeviceView::GetDeviceNode(
     CDeviceNode *Node = nullptr;
 
     Pos = m_DeviceNodeList.GetHeadPosition();
-    if (Pos == NULL) return nullptr;
+    if (Pos == NULL)
+        return nullptr;
 
     do
     {
@@ -1166,7 +1185,6 @@ CDeviceView::RefreshDeviceList()
         ClassIndex++;
     } while (Success);
 
-
     // Get all the devices on the local machine
     hDevInfo = SetupDiGetClassDevsW(NULL,
                                     0,
@@ -1183,7 +1201,8 @@ CDeviceView::RefreshDeviceList()
     {
         // Get the devinst for this device
         Success = SetupDiEnumDeviceInfo(hDevInfo, i, &DeviceInfoData);
-        if (Success == FALSE) break;
+        if (Success == FALSE)
+            break;
 
         // create a new device node and add it to the list
         DeviceNode = new CDeviceNode(DeviceInfoData.DevInst, &m_ImageListData);
@@ -1195,7 +1214,6 @@ CDeviceView::RefreshDeviceList()
         {
             ATLASSERT(FALSE);
         }
-
     }
 
     SetupDiDestroyDeviceInfoList(hDevInfo);

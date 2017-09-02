@@ -163,7 +163,6 @@ IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance)
     }
 
     return IopTraverseDeviceNode(IopRootDeviceNode, DeviceInstance);
-
 }
 
 static NTSTATUS
@@ -357,7 +356,7 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     {
         _SEH2_TRY
         {
-            memcpy(PropertyData->Buffer, Buffer, BufferSize);
+            RtlCopyMemory(PropertyData->Buffer, Buffer, BufferSize);
             PropertyData->BufferSize = BufferSize;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -645,11 +644,158 @@ static
 NTSTATUS
 IopGetDeviceRelations(PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA RelationsData)
 {
+    UNICODE_STRING DeviceInstance;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    IO_STACK_LOCATION Stack;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PDEVICE_RELATIONS DeviceRelations = NULL;
+    PDEVICE_OBJECT ChildDeviceObject;
+    PDEVICE_NODE ChildDeviceNode;
+    ULONG i;
+    ULONG Relations;
+    ULONG BufferSize, RequiredSize;
+    ULONG BufferLeft;
+    PWCHAR Buffer, Ptr;
+    NTSTATUS Status = STATUS_SUCCESS;
+
     DPRINT("IopGetDeviceRelations() called\n");
     DPRINT("Device name: %wZ\n", &RelationsData->DeviceInstance);
-    DPRINT("Relations: %lu\n", &RelationsData->Relations);
+    DPRINT("Relations: %lu\n", RelationsData->Relations);
+    DPRINT("BufferSize: %lu\n", RelationsData->BufferSize);
+    DPRINT("Buffer: %p\n", RelationsData->Buffer);
 
-    return STATUS_NOT_IMPLEMENTED;
+    _SEH2_TRY
+    {
+        Relations = RelationsData->Relations;
+        BufferSize = RelationsData->BufferSize;
+        Buffer = RelationsData->Buffer;
+
+        ProbeForWrite(Buffer, BufferSize, sizeof(CHAR));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    Status = IopCaptureUnicodeString(&DeviceInstance, &RelationsData->DeviceInstance);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopCaptureUnicodeString() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Get the device object */
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
+    if (DeviceObject == NULL)
+    {
+        DPRINT1("IopGetDeviceObjectFromDeviceInstance() returned NULL\n");
+        Status = STATUS_NO_SUCH_DEVICE;
+        goto done;
+    }
+
+    switch (Relations)
+    {
+        case 0: /* EjectRelations */
+            Stack.Parameters.QueryDeviceRelations.Type = EjectionRelations;
+            break;
+
+        case 1: /* RemovalRelations */
+            Stack.Parameters.QueryDeviceRelations.Type = RemovalRelations;
+            break;
+
+        case 2: /* PowerRelations */
+            Stack.Parameters.QueryDeviceRelations.Type = PowerRelations;
+            break;
+
+        case 3: /* BusRelations */
+            Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
+            break;
+
+        default:
+            Status = STATUS_INVALID_PARAMETER;
+            goto done;
+    }
+
+    Status = IopInitiatePnpIrp(DeviceObject,
+                               &IoStatusBlock,
+                               IRP_MN_QUERY_DEVICE_RELATIONS,
+                               &Stack);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+
+    DPRINT("Found %d device relations\n", DeviceRelations->Count);
+
+    _SEH2_TRY
+    {
+        RequiredSize = 0;
+        BufferLeft = BufferSize;
+        Ptr = Buffer;
+
+        for (i = 0; i < DeviceRelations->Count; i++)
+        {
+            ChildDeviceObject = DeviceRelations->Objects[i];
+
+            ChildDeviceNode = IopGetDeviceNode(ChildDeviceObject);
+            if (ChildDeviceNode)
+            {
+                DPRINT("Device instance: %wZ\n", &ChildDeviceNode->InstancePath);
+                DPRINT("RequiredSize: %hu\n", ChildDeviceNode->InstancePath.Length + sizeof(WCHAR));
+
+                if (Ptr != NULL)
+                {
+                    if (BufferLeft < ChildDeviceNode->InstancePath.Length + 2 * sizeof(WCHAR))
+                    {
+                        Status = STATUS_BUFFER_TOO_SMALL;
+                        break;
+                    }
+
+                    RtlCopyMemory(Ptr,
+                                  ChildDeviceNode->InstancePath.Buffer,
+                                  ChildDeviceNode->InstancePath.Length);
+                    Ptr = (PWCHAR)((ULONG_PTR)Ptr + ChildDeviceNode->InstancePath.Length);
+                    *Ptr = UNICODE_NULL;
+                    Ptr = (PWCHAR)((ULONG_PTR)Ptr + sizeof(WCHAR));
+
+                    BufferLeft -= (ChildDeviceNode->InstancePath.Length + sizeof(WCHAR));
+                }
+
+                RequiredSize += (ChildDeviceNode->InstancePath.Length + sizeof(WCHAR));
+            }
+        }
+
+        if (Ptr != NULL && BufferLeft >= sizeof(WCHAR))
+            *Ptr = UNICODE_NULL;
+
+        if (RequiredSize > 0)
+            RequiredSize += sizeof(WCHAR);
+
+        DPRINT("BufferSize: %lu  RequiredSize: %lu\n", RelationsData->BufferSize, RequiredSize);
+
+        RelationsData->BufferSize = RequiredSize;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+done:
+    if (DeviceRelations != NULL)
+        ExFreePool(DeviceRelations);
+
+    if (DeviceObject != NULL)
+        ObDereferenceObject(DeviceObject);
+
+    if (DeviceInstance.Buffer != NULL)
+        ExFreePool(DeviceInstance.Buffer);
+
+    return Status;
 }
 
 static NTSTATUS

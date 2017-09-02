@@ -130,6 +130,9 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
     wanted_flags &= 0xffff; /* mask off error condition flags */
     TRACE("validation flags 0x%04x\n", wanted_flags);
 
+    /* native is not validating platform */
+    wanted_flags &= ~MSITRANSFORM_VALIDATE_PLATFORM;
+
     if (wanted_flags & ~supported_flags)
     {
         FIXME("unsupported validation flags 0x%04x\n", wanted_flags);
@@ -182,15 +185,6 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
             valid_flags |= MSITRANSFORM_VALIDATE_PRODUCT;
         }
         msi_free( product_code_installed );
-    }
-    if (wanted_flags & MSITRANSFORM_VALIDATE_PLATFORM)
-    {
-        if ((p = strchrW( template, ';' )))
-        {
-            *p = 0;
-            if (package->platform == parse_platform( template ))
-                valid_flags |= MSITRANSFORM_VALIDATE_PLATFORM;
-        }
     }
     msi_free( template );
     if (wanted_flags & MSITRANSFORM_VALIDATE_MAJORVERSION)
@@ -833,6 +827,38 @@ done:
     return r;
 }
 
+static DWORD is_uninstallable( MSIDATABASE *db )
+{
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','`','V','a','l','u','e','`',' ','F','R','O','M',' ',
+        '`','M','s','i','P','a','t','c','h','M','e','t','a','d','a','t','a','`',' ',
+        'W','H','E','R','E',' ','`','C','o','m','p','a','n','y','`',' ','I','S',' ',
+        'N','U','L','L',' ','A','N','D',' ','`','P','r','o','p','e','r','t','y','`','=',
+        '\'','A','l','l','o','w','R','e','m','o','v','a','l','\'',0};
+    MSIQUERY *view;
+    MSIRECORD *rec;
+    DWORD ret = 0;
+
+    if (MSI_DatabaseOpenViewW( db, query, &view ) != ERROR_SUCCESS) return 0;
+    if (MSI_ViewExecute( view, 0 ) != ERROR_SUCCESS)
+    {
+        msiobj_release( &view->hdr );
+        return 0;
+    }
+
+    if (MSI_ViewFetch( view, &rec ) == ERROR_SUCCESS)
+    {
+        const WCHAR *value = MSI_RecordGetString( rec, 1 );
+        ret = atoiW( value );
+        msiobj_release( &rec->hdr );
+    }
+
+    FIXME( "check other criteria\n" );
+
+    msiobj_release( &view->hdr );
+    return ret;
+}
+
 static UINT msi_apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIPATCHINFO *patch )
 {
     UINT i, r = ERROR_SUCCESS;
@@ -858,7 +884,8 @@ static UINT msi_apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIP
     if (r != ERROR_SUCCESS)
         return r;
 
-    patch->state = MSIPATCHSTATE_APPLIED;
+    patch->uninstallable = is_uninstallable( patch_db );
+    patch->state         = MSIPATCHSTATE_APPLIED;
     list_add_tail( &package->patches, &patch->entry );
     return ERROR_SUCCESS;
 }

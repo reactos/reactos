@@ -10,6 +10,10 @@
 
 #include "bl.h"
 
+BL_ADDRESS_RANGE MmArchKsegAddressRange;
+ULONG_PTR MmArchTopOfApplicationAddressSpace;
+ULONG MmArchLargePageSize;
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -22,4 +26,27 @@ MmArchInitialize (
 {
     EfiPrintf(L" MmArchInitialize NOT IMPLEMENTED for this platform\r\n");
     return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+MmMapPhysicalAddress (
+    _Inout_ PPHYSICAL_ADDRESS PhysicalAddressPtr,
+    _Inout_ PVOID* VirtualAddressPtr,
+    _Inout_ PULONGLONG SizePtr,
+    _In_ ULONG CacheAttributes
+    )
+{
+    EfiPrintf(L" MmMapPhysicalAddress NOT IMPLEMENTED for this platform\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+BOOLEAN
+MmArchTranslateVirtualAddress (
+    _In_ PVOID VirtualAddress, 
+    _Out_opt_ PPHYSICAL_ADDRESS PhysicalAddress, 
+    _Out_opt_ PULONG CachingFlags
+    )
+{
+    EfiPrintf(L" MmMapPhysicalAddress NOT IMPLEMENTED for this platform\r\n");
+    return FALSE;
 }

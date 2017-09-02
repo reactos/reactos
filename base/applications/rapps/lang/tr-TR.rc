@@ -18,14 +18,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Girişi Değer Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Yenile\tİ5", ID_REFRESH
+        MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zılım Veri Tabanını Yenile\tDenetim+İ5", ID_RESETDB
+        MENUITEM "Ya&zılım Veri Tabanını Yenile\tDenetim+F5", ID_RESETDB
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım\tİ1", ID_HELP, GRAYED
-        MENUITEM "&Üzerine...", ID_ABOUT
+        MENUITEM "&Yardım\tF1", ID_HELP, GRAYED
+        MENUITEM "&Üzerine", ID_ABOUT
     END
 END
 
@@ -48,9 +48,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Girişi Değer Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Yenile\tİ5", ID_REFRESH
+        MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zılım Veri Tabanını Yenile\tDenetim+İ5", ID_RESETDB
+        MENUITEM "Ya&zılım Veri Tabanını Yenile\tDenetim+F5", ID_RESETDB
     END
 END
 
@@ -158,6 +158,7 @@ BEGIN
     IDS_AINFO_SIZE "\nBüyüklüğü: "
     IDS_AINFO_URLSITE "\nAna Sayfası: "
     IDS_AINFO_LICENSE "\nRuhsatı: "
+    IDS_AINFO_URLDOWNLOAD "\nİndir: "
 END
 
 STRINGTABLE
@@ -199,6 +200,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Kurulan izlencenin girişini değer defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! Umûmî Ağ bağlantınızı yoklayınız!"
     IDS_UNABLE_TO_REMOVE "İzlencenin girişi değer defterinden silinemiyor."
     IDS_CERT_DOES_NOT_MATCH "SSL onay belgesi doğrulaması başarısız."
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor..."

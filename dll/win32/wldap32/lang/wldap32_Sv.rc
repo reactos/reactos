@@ -36,7 +36,7 @@ STRINGTABLE
     11 "Administration Limit Exceeded"
     12 "Unavailable Critical Extension"
     13 "Confidentiality Required"
-    14 ""
+    14 "SASL Bind in Progress"
     15 ""
     16 "Inget sådant attribut"
     17 "Odefinierad typ"

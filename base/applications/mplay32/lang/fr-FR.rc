@@ -29,7 +29,7 @@ BEGIN
     END
     POPUP "&Aide"
     BEGIN
-        MENUITEM "&À propos...", IDM_ABOUT
+        MENUITEM "&À propos", IDM_ABOUT
     END
 END
 

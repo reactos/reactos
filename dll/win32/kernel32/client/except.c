@@ -23,17 +23,30 @@
  */
 static const char*
 _module_name_from_addr(const void* addr, void **module_start_addr,
-                       char* psz, size_t nChars)
+                       char* psz, size_t nChars, char** module_name)
 {
     MEMORY_BASIC_INFORMATION mbi;
     if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
         !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
     {
         psz[0] = '\0';
+        *module_name = psz;
         *module_start_addr = 0;
     }
     else
     {
+        char* s1 = strrchr(psz, '\\'), *s2 = strrchr(psz, '/');
+        if (s2 && !s1)
+            s1 = s2;
+        else if (s1 && s2 && s1 < s2)
+            s1 = s2;
+
+        if (!s1)
+            s1 = psz;
+        else
+            s1++;
+
+        *module_name = s1;
         *module_start_addr = (void *)mbi.AllocationBase;
     }
     return psz;
@@ -78,7 +91,7 @@ static VOID
 PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
 {
     PVOID StartAddr;
-    CHAR szMod[128] = "";
+    CHAR szMod[128] = "", *szModFile;
     PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
     PCONTEXT ContextRecord = ExceptionInfo->ContextRecord;
 
@@ -93,11 +106,12 @@ PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
     }
 
     _dump_context(ContextRecord);
-    _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
-    DbgPrint("Address:\n   %8x+%-8x   %s\n",
-             (PVOID)StartAddr,
+    _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod), &szModFile);
+    DbgPrint("Address:\n<%s:%x> (%s@%x)\n",
+             szModFile,
              (ULONG_PTR)ExceptionRecord->ExceptionAddress - (ULONG_PTR)StartAddr,
-             szMod);
+             szMod,
+             StartAddr);
 #ifdef _M_IX86
     DbgPrint("Frames:\n");
 
@@ -110,16 +124,17 @@ PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
         {
             if (IsBadReadPtr((PVOID)Frame[1], 4))
             {
-                DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
+                DbgPrint("<%s:%x>\n", "[invalid address]", Frame[1]);
             }
             else
             {
                 _module_name_from_addr((const void*)Frame[1], &StartAddr,
-                                       szMod, sizeof(szMod));
-                DbgPrint("   %8x+%-8x   %s\n",
-                         (PVOID)StartAddr,
+                                       szMod, sizeof(szMod), &szModFile);
+                DbgPrint("<%s:%x> (%s@%x)\n",
+                         szModFile,
                          (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr,
-                         szMod);
+                         szMod,
+                         StartAddr);
             }
 
             if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2))

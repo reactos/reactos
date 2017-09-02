@@ -18,13 +18,6 @@
 
 #include "jscript.h"
 
-/*
- * This IID is used to get jsdisp_t objecto from interface.
- * We might consider using private interface instead.
- */
-static const IID IID_IDispatchJS =
-        {0x719c3050,0xf9d3,0x11cf,{0xa4,0x93,0x00,0x40,0x05,0x23,0xa8,0xa6}};
-
 #define FDEX_VERSION_MASK 0xf0000000
 #define GOLDEN_RATIO 0x9E3779B9U
 
@@ -491,10 +484,8 @@ static HRESULT prop_put(jsdisp_t *This, dispex_prop_t *prop, jsval_t val, IServi
     TRACE("%s = %s\n", debugstr_w(prop->name), debugstr_jsval(val));
 
     hres = jsval_copy(val, &prop->u.val);
-    if(FAILED(hres)) {
-        prop->u.val = jsval_undefined();
+    if(FAILED(hres))
         return hres;
-    }
 
     if(This->builtin_info->on_put)
         This->builtin_info->on_put(This, prop->name);
@@ -558,11 +549,6 @@ static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid,
     }else if(IsEqualGUID(&IID_IDispatchEx, riid)) {
         TRACE("(%p)->(IID_IDispatchEx %p)\n", This, ppv);
         *ppv = &This->IDispatchEx_iface;
-    }else if(IsEqualGUID(&IID_IDispatchJS, riid)) {
-        TRACE("(%p)->(IID_IDispatchJS %p)\n", This, ppv);
-        jsdisp_addref(This);
-        *ppv = This;
-        return S_OK;
     }else {
         WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
         *ppv = NULL;
@@ -584,6 +570,7 @@ static ULONG WINAPI DispatchEx_Release(IDispatchEx *iface)
 {
     jsdisp_t *This = impl_from_IDispatchEx(iface);
     ULONG ref = --This->ref;
+    TRACE("(%p) ref=%d\n", This, ref);
     if(!ref)
         jsdisp_free(This);
     return ref;
@@ -1007,7 +994,7 @@ HRESULT init_dispex_from_constr(jsdisp_t *dispex, script_ctx_t *ctx, const built
         }
 
         if(is_object_instance(val))
-            prot = iface_to_jsdisp((IUnknown*)get_object(val));
+            prot = iface_to_jsdisp(get_object(val));
         jsval_release(val);
     }
 
@@ -1018,16 +1005,11 @@ HRESULT init_dispex_from_constr(jsdisp_t *dispex, script_ctx_t *ctx, const built
     return hres;
 }
 
-jsdisp_t *iface_to_jsdisp(IUnknown *iface)
+jsdisp_t *iface_to_jsdisp(IDispatch *iface)
 {
-    jsdisp_t *ret;
-    HRESULT hres;
-
-    hres = IUnknown_QueryInterface(iface, &IID_IDispatchJS, (void**)&ret);
-    if(FAILED(hres))
-        return NULL;
-
-    return ret;
+    return iface->lpVtbl == (const IDispatchVtbl*)&DispatchExVtbl
+        ? jsdisp_addref( impl_from_IDispatchEx((IDispatchEx*)iface))
+        : NULL;
 }
 
 HRESULT jsdisp_get_id(jsdisp_t *jsdisp, const WCHAR *name, DWORD flags, DISPID *id)
@@ -1107,7 +1089,7 @@ HRESULT disp_call(script_ctx_t *ctx, IDispatch *disp, DISPID id, WORD flags, uns
     unsigned i;
     HRESULT hres;
 
-    jsdisp = iface_to_jsdisp((IUnknown*)disp);
+    jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
         if(flags & DISPATCH_PROPERTYPUT) {
             FIXME("disp_call(propput) on builtin object\n");
@@ -1200,7 +1182,7 @@ HRESULT disp_call_value(script_ctx_t *ctx, IDispatch *disp, IDispatch *jsthis, W
 
     assert(!(flags & ~(DISPATCH_METHOD|DISPATCH_CONSTRUCT|DISPATCH_JSCRIPT_INTERNAL_MASK)));
 
-    jsdisp = iface_to_jsdisp((IUnknown*)disp);
+    jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
         hres = jsdisp_call_value(jsdisp, jsthis, flags, argc, argv, r);
         jsdisp_release(jsdisp);
@@ -1339,7 +1321,7 @@ HRESULT disp_propput(script_ctx_t *ctx, IDispatch *disp, DISPID id, jsval_t val)
     jsdisp_t *jsdisp;
     HRESULT hres;
 
-    jsdisp = iface_to_jsdisp((IUnknown*)disp);
+    jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
         dispex_prop_t *prop;
 
@@ -1444,7 +1426,7 @@ HRESULT disp_propget(script_ctx_t *ctx, IDispatch *disp, DISPID id, jsval_t *val
     VARIANT var;
     HRESULT hres;
 
-    jsdisp = iface_to_jsdisp((IUnknown*)disp);
+    jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
         hres = jsdisp_propget(jsdisp, id, val);
         jsdisp_release(jsdisp);
@@ -1495,7 +1477,7 @@ HRESULT disp_delete(IDispatch *disp, DISPID id, BOOL *ret)
     jsdisp_t *jsdisp;
     HRESULT hres;
 
-    jsdisp = iface_to_jsdisp((IUnknown*)disp);
+    jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
         dispex_prop_t *prop;
 
@@ -1531,7 +1513,7 @@ HRESULT disp_delete_name(script_ctx_t *ctx, IDispatch *disp, jsstr_t *name, BOOL
     BSTR bstr;
     HRESULT hres;
 
-    jsdisp = iface_to_jsdisp((IUnknown*)disp);
+    jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
         dispex_prop_t *prop;
         const WCHAR *ptr;

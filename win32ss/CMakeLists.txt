@@ -16,6 +16,7 @@ if(USE_DIBLIB)
 endif()
 
 add_subdirectory(gdi/gdi32)
+add_subdirectory(printing)
 add_subdirectory(reactx)
 add_subdirectory(user/user32)
 add_subdirectory(user/winsrv)
@@ -75,6 +76,7 @@ list(APPEND SOURCE
     gdi/eng/engmisc.c
     gdi/eng/mouse.c
     gdi/eng/paint.c
+    gdi/eng/pathobj.c
     gdi/eng/pdevobj.c
     gdi/eng/perfcnt.c
     gdi/eng/rlecomp.c
@@ -95,6 +97,7 @@ list(APPEND SOURCE
     reactx/ntddraw/dd.c
     reactx/ntddraw/ddsurf.c
     reactx/ntddraw/d3d.c
+    reactx/ntddraw/d3dkmt.c
     reactx/ntddraw/dvp.c
     reactx/ntddraw/mocomp.c
     reactx/ntddraw/eng.c
@@ -243,3 +246,4 @@ set_source_files_properties(sys-stubs.S PROPERTIES OBJECT_DEPENDS ${CMAKE_CURREN
 add_asm_files(win32ksys_asm sys-stubs.S)
 add_library(win32ksys ${win32ksys_asm})
 set_target_properties(win32ksys PROPERTIES LINKER_LANGUAGE "C")
+add_dependencies(win32ksys asm)

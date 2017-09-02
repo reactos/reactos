@@ -2,7 +2,9 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "ACL's (Access Control Lists, toegangslijsten) van bestanden weergeven\nof bewerken\n\nCACLS bestandsnaam [/T] [/E] [/C] [/G gebr:toeg] [/R gebruiker [...]]\n\
+    IDS_HELP "ACL's (Access Control Lists, toegangslijsten) van bestanden weergeven\n\
+of bewerken\n\n\
+CACLS bestandsnaam [/T] [/E] [/C] [/G gebr:toeg] [/R gebruiker [...]]\n\
                    [/P gebr:toeg [...]] [/D gebruiker [...]]\n\
    bestandsnaam    ACL's weergeven.\n\
    /T              ACL's wijzigen van opgegeven bestanden in\n\

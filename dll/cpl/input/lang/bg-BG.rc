@@ -6,10 +6,10 @@ CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Посочете избраните от вас услуги за всеки посочен в списъка език.\nПромяната на списъка става с „Премахване“ и „Добавяне“.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "&Прилагане на подразбираните", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Добавяне...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "Пре&махване...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "Пре&махване", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Предпочитания", -1, 7, 185, 240, 36
     PUSHBUTTON "Настройка на &клавишите...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -160,6 +160,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi Phonetic"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Typewriter"
     IDS_DUTCH_LAYOUT "Dutch"
+    IDS_ESPERANTO_LAYOUT "Есперанто"
     IDS_ESTONIAN_LAYOUT "Estonian"
     IDS_FAEROESE_LAYOUT "Faeroese"
     IDS_FARSI_LAYOUT "Farsi"

@@ -1,0 +1,67 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Настройка системных устройств.\n\n\
+Состояние устройства:   MODE [device] [/STATUS]\n\
+Последовательный порт:  MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n\
+                                     [to=on|off] [xon=on|off] [odsr=on|off]\n\
+                                     [octs=on|off] [dtr=on|off|hs]\n\
+                                     [rts=on|off|hs|tg] [idsr=on|off]\n\
+Переадресация печати:   MODE LPTn[:]=COMm[:]\n\
+Выбор кодовой страницы: MODE CON[:] CP SELECT=yyy\n\
+Вывод кодовой страницы: MODE CON[:] CP [/STATUS]\n\
+Режим работы экрана:    MODE CON[:] [COLS=c] [LINES=n]\n\
+Ввод с клавиатуры:      MODE CON[:] [RATE=r DELAY=d]\n"
+
+    IDS_QUERY_SERIAL_FOUND "    Найдено последовательное устройство - %s\n"
+    IDS_QUERY_PRINTER_FOUND "    Найдено устройство печати - %s\n"
+    IDS_QUERY_PARALLEL_FOUND "    Найдено параллельное устройство - %s\n"
+    IDS_QUERY_DOSDEV_FOUND "    Найдено устройство DOS - %s\n"
+    // IDS_QUERY_MISC_FOUND "    Найдено другое устройство - %s\n"
+
+    // IDS_QUERY_DEVICE_FOUND "    Найдено %s устройство - %s\n"
+    // IDS_SERIAL  "последовательное"
+    // IDS_PRINTER "параллельное"
+    // IDS_OTHER   "другое"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DEVICE_STATUS_HEADER "Состояние устройства %s:"
+
+    IDS_COM_STATUS_BAUD             "    Скорость:              %ld\n"
+    IDS_COM_STATUS_PARITY           "    Четность:              %s\n"
+    IDS_COM_STATUS_DATA_BITS        "    Биты данных:           %d\n"
+    IDS_COM_STATUS_STOP_BITS        "    Стоповые биты:         %s\n"
+    IDS_COM_STATUS_TIMEOUT          "    Таймаут:               %s\n"
+    IDS_COM_STATUS_XON_XOFF         "    XON/XOFF:              %s\n"
+    IDS_COM_STATUS_CTS_HANDSHAKING  "    Синхронизация CTS:     %s\n"
+    IDS_COM_STATUS_DSR_HANDSHAKING  "    Синхронизация DSR:     %s\n"
+    IDS_COM_STATUS_DSR_SENSITIVITY  "    Чувствительность DSR:  %s\n"
+    IDS_COM_STATUS_DTR_CIRCUIT      "    Цепь DTR:              %s\n"
+    IDS_COM_STATUS_RTS_CIRCUIT      "    Цепь RTS:              %s\n"
+
+    IDS_CONSOLE_STATUS_LINES    "    Строки:                %d\n"
+    IDS_CONSOLE_STATUS_COLS     "    Столбцы:               %d\n"
+    IDS_CONSOLE_KBD_DELAY       "    Скорость клавиатуры:   %ld\n"
+    IDS_CONSOLE_KBD_RATE        "    Задержка клавиатуры:   %ld\n"
+    IDS_CONSOLE_CODEPAGE        "    Кодовая страница:      %d\n"
+
+    IDS_PRINTER_OUTPUT_NOT_REROUTED     "    Вывод принтера не переадресован.\n"
+    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    Вывод принтера переадресован на последовательный порт %s.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_QUERY_DEVICES "ОШИБКА: Не удалось опросить DOS устройства (0x%lx).\n"
+    IDS_ERROR_QUERY_DEVICES_FORM "    QueryDosDeviceW(%s) возвратила не опознанное состояние %s.\n"
+    IDS_ERROR_SET_PARALLEL_STATE "SetParallelState(%d) - DefineDosDevice(%s) (0x%lx)\n"
+    IDS_ERROR_INVALID_PARAMETER "ОШИБКА: Неверный параметр - %s\n"
+    IDS_ERROR_ILLEGAL_DEVICE_NAME "ОШИБКА: Недопустимое имя устройства - %s (0x%lx)\n"
+    IDS_ERROR_STATUS_GET_DEVICE "ОШИБКА: Не удалось получить состояние устройства COM%d:\n"
+    IDS_ERROR_STATUS_SET_DEVICE "ОШИБКА: Не удалось установить состояние устройства COM%d:\n"
+    IDS_ERROR_INVALID_PARITY_BITS "ОШИБКА: Неверное значение битов четности %d:\n"
+    IDS_ERROR_INVALID_STOP_BITS "ОШИБКА: Неверное значение стоповых битов %d:\n"
+    IDS_ERROR_NO_MEMORY "ОШИБКА: Недостаточно памяти.\n"
+END

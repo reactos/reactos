@@ -61,7 +61,7 @@ SHA1 = 0ef2a1e47f24ff31dc53042e9aa1104a7906e032
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
-Size = 32.8 МБ
+Size = 32,8 МиБ
 URLSite = https://www.mozilla.org/ru/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/38.7.1/win32/ru/Thunderbird%20Setup%2038.7.1.exe
 SHA1 = 42e1f78059da2074e9ccde3083c48d1017958c51

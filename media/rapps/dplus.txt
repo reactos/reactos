@@ -26,8 +26,8 @@ Description = Navigator web cu accent pe securitate, performanță, și portabil
 Size = 1,4 Mio
 
 [Section.0419]
-Description = Графический веб-браузер с акцентом на безопасность, производительность и мобильность. Основан на Dillo.    
-Size = 1,4 МБ
+Description = Графический веб-браузер с акцентом на безопасность, производительность и мобильность. Основан на Dillo.
+Size = 1,4 МиБ
 
 [Section.041f]
 Name = D+ Tarayıcı

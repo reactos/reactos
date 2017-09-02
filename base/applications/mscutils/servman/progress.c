@@ -9,6 +9,8 @@
 
 #include "precomp.h"
 
+#include <process.h>
+
 #define PROGRESS_RANGE      20
 #define PROGRESS_STEP_MAX   15
 

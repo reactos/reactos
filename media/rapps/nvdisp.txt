@@ -29,10 +29,10 @@ Description = Modúl-pilot video pentru plăcile grafice RIVA TNT2, GeForce/Quad
 Size = 18,5 Mio
 
 [Section.0419]
-Name = Драйверы видеокарт NVidia 
+Name = Драйверы видеокарт NVidia
 License = Неизвестно
 Description = Драйвера для видеокарт RIVA TNT2, GeForce/Quadro 1/2/3/4 от NVidia.
-Size = 18,5 МБ
+Size = 18,5 МиБ
 
 [Section.0804]
 Name = NVidia 显示驱动程序

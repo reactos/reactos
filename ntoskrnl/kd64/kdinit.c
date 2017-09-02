@@ -10,8 +10,60 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <reactos/buildno.h>
 #define NDEBUG
 #include <debug.h>
+
+/* UTILITY FUNCTIONS *********************************************************/
+
+/*
+ * Get the total size of the memory before
+ * Mm is initialized, by counting the number
+ * of physical pages. Useful for debug logging.
+ *
+ * Strongly inspired by:
+ * mm\ARM3\mminit.c : MiScanMemoryDescriptors(...)
+ *
+ * See also: kd\kdio.c
+ */
+static SIZE_T
+INIT_FUNCTION
+KdpGetMemorySizeInMBs(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLIST_ENTRY ListEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
+    SIZE_T NumberOfPhysicalPages = 0;
+
+    /* Loop the memory descriptors */
+    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        /* Get the descriptor */
+        Descriptor = CONTAINING_RECORD(ListEntry,
+                                       MEMORY_ALLOCATION_DESCRIPTOR,
+                                       ListEntry);
+
+        /* Check if this is invisible memory */
+        if ((Descriptor->MemoryType == LoaderFirmwarePermanent) ||
+            (Descriptor->MemoryType == LoaderSpecialMemory) ||
+            (Descriptor->MemoryType == LoaderHALCachedMemory) ||
+            (Descriptor->MemoryType == LoaderBBTMemory))
+        {
+            /* Skip this descriptor */
+            continue;
+        }
+
+        /* Check if this is bad memory */
+        if (Descriptor->MemoryType != LoaderBad)
+        {
+            /* Count this in the total of pages */
+            NumberOfPhysicalPages += Descriptor->PageCount;
+        }
+    }
+
+    return NumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+}
 
 /* FUNCTIONS *****************************************************************/
 
@@ -80,6 +132,7 @@ KdInitSystem(IN ULONG BootPhase,
     PLIST_ENTRY NextEntry;
     ULONG i, j, Length;
     SIZE_T DebugOptionLength;
+    SIZE_T MemSizeMBs;
     CHAR NameBuffer[256];
     PWCHAR Name;
 
@@ -320,6 +373,20 @@ KdInitSystem(IN ULONG BootPhase,
 
         /* Let user-mode know that it's enabled as well */
         SharedUserData->KdDebuggerEnabled = TRUE;
+
+        /* Display separator + ReactOS version at start of the debug log */
+        DPRINT1("-----------------------------------------------------\n");
+        DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+        MemSizeMBs = KdpGetMemorySizeInMBs(KeLoaderBlock);
+        DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
+        if (KeLoaderBlock)
+        {
+            DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
+            DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName,
+                                                KeLoaderBlock->NtHalPathName,
+                                                KeLoaderBlock->ArcHalDeviceName,
+                                                KeLoaderBlock->NtBootPathName);
+        }
 
         /* Check if the debugger should be disabled initially */
         if (DisableKdAfterInit)

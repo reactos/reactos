@@ -114,8 +114,8 @@ STATUSBAR_ComputeHeight(STATUS_INFO *infoPtr)
          * textHeight pixels large */
         HDC hdc = GetDC(infoPtr->Self);
         RECT r;
-        memset (&r, 0, sizeof (r));
-        r.bottom = max(infoPtr->minHeight, tm.tmHeight);
+
+        SetRect(&r, 0, 0, 0, max(infoPtr->minHeight, tm.tmHeight));
         if (SUCCEEDED(GetThemeBackgroundExtent(theme, hdc, SP_PANE, 0, &r, &r)))
         {
             height = r.bottom - r.top;

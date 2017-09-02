@@ -20,6 +20,106 @@
 
 #include "precomp.h"
 
+
+HRESULT CAddressBand_CreateInstance(REFIID riid, void **ppv)
+{
+#if USE_CUSTOM_ADDRESSBAND
+    return ShellObjectCreator<CAddressBand>(riid, ppv);
+#else
+    return CoCreateInstance(CLSID_SH_AddressBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, toolsBar));
+#endif
+}
+
+HRESULT CAddressEditBox_CreateInstance(REFIID riid, void **ppv)
+{
+#if USE_CUSTOM_ADDRESSEDITBOX
+    return ShellObjectCreator<CAddressEditBox>(riid, ppv);
+#else
+    return CoCreateInstance(CLSID_AddressEditBox, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(riid, &ppv));
+#endif
+}
+
+HRESULT CBandProxy_CreateInstance(REFIID riid, void **ppv)
+{
+#if USE_CUSTOM_BANDPROXY
+    return ShellObjectCreator<CBandProxy>(riid, ppv);
+#else
+    return CoCreateInstance(CLSID_BandProxy, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(riid, &ppv));
+#endif
+}
+
+HRESULT CBrandBand_CreateInstance(REFIID riid, void **ppv)
+{
+#if USE_CUSTOM_BRANDBAND
+    return ShellObjectCreator<CBrandBand>(riid, ppv);
+#else
+    return CoCreateInstance(CLSID_BrandBand, NULL, CLSCTX_INPROC_SERVER, riid, ppv);
+#endif
+}
+
+HRESULT CExplorerBand_CreateInstance(REFIID riid, LPVOID *ppv)
+{
+#if USE_CUSTOM_EXPLORERBAND
+    return ShellObjectCreator<CExplorerBand>(riid, ppv);
+#else
+    return CoCreateInstance(CLSID_ExplorerBand, NULL, CLSCTX_INPROC_SERVER, riid, ppv);
+#endif
+}
+
+HRESULT CInternetToolbar_CreateInstance(REFIID riid, void **ppv)
+{
+#if USE_CUSTOM_INTERNETTOOLBAR
+    return ShellObjectCreator<CInternetToolbar>(riid, ppv);
+#else
+    return CoCreateInstance(CLSID_InternetToolbar, NULL, CLSCTX_INPROC_SERVER, riid, ppv);
+#endif
+}
+
+typedef HRESULT(WINAPI * PMENUBAND_CREATEINSTANCE)(REFIID riid, void **ppv);
+typedef HRESULT(WINAPI * PMERGEDFOLDER_CREATEINSTANCE)(REFIID riid, void **ppv);
+
+HRESULT CMergedFolder_CreateInstance(REFIID riid, void **ppv)
+{
+#if USE_CUSTOM_MERGEDFOLDER
+    HMODULE hRShell = GetModuleHandle(L"rshell.dll");
+    if (!hRShell)
+        hRShell = LoadLibrary(L"rshell.dll");
+
+    if (hRShell)
+    {
+        PMERGEDFOLDER_CREATEINSTANCE pCMergedFolder_CreateInstance = (PMERGEDFOLDER_CREATEINSTANCE)
+             GetProcAddress(hRShell, "CMergedFolder_CreateInstance");
+
+        if (pCMergedFolder_CreateInstance)
+        {
+            return pCMergedFolder_CreateInstance(riid, ppv);
+        }
+    }
+#endif
+    return CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, riid, ppv);
+}
+
+HRESULT CMenuBand_CreateInstance(REFIID iid, LPVOID *ppv)
+{
+#if USE_CUSTOM_MENUBAND
+    HMODULE hRShell = GetModuleHandleW(L"rshell.dll");
+
+    if (!hRShell) 
+        hRShell = LoadLibraryW(L"rshell.dll");
+
+    if (hRShell)
+    {
+        PMENUBAND_CREATEINSTANCE func = (PMENUBAND_CREATEINSTANCE) GetProcAddress(hRShell, "CMenuBand_CreateInstance");
+        if (func)
+        {
+            return func(iid , ppv);
+        }
+    }
+#endif
+    return CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER, iid, ppv);
+}
+
+
 class CBrowseUIModule : public CComModule
 {
 public:
@@ -46,11 +146,6 @@ END_OBJECT_MAP()
 
 CBrowseUIModule                             gModule;
 CAtlWinModule                               gWinModule;
-
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
 
 /*************************************************************************
  * BROWSEUI DllMain

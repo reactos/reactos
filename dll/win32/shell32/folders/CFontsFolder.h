@@ -30,10 +30,10 @@ class CFontsFolder :
 {
     private:
         CComPtr<IShellFolder2> m_pisfInner;
+        LPITEMIDLIST m_pidlInner;
     public:
         CFontsFolder();
         ~CFontsFolder();
-        HRESULT WINAPI FinalConstruct();
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);

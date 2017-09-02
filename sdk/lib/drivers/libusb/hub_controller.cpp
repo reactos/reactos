@@ -568,7 +568,8 @@ CHubController::HandlePnp(
                     break;
                 }
             }
-            Status = STATUS_SUCCESS;
+            // Here we should leave Status as is.
+            Status = Irp->IoStatus.Status;
             break;
         }
         case IRP_MN_QUERY_CAPABILITIES:
@@ -611,6 +612,14 @@ CHubController::HandlePnp(
             // handle device interface requests
             //
             Status = HandleQueryInterface(IoStack);
+
+            //
+            // If a bus driver does not export the requested interface, it
+            // should leave Status as is.
+            //
+            if (Status == STATUS_NOT_SUPPORTED)
+                Status = Irp->IoStatus.Status;
+
             break;
         }
         case IRP_MN_REMOVE_DEVICE:
@@ -1382,7 +1391,7 @@ CHubController::HandleClassDevice(
                         //
                         // FIXME: implement support for real hubs
                         //
-                        UNIMPLEMENTED
+                        UNIMPLEMENTED;
                         Status = STATUS_NOT_IMPLEMENTED;
                     }
                     break;
@@ -1417,8 +1426,8 @@ CHubController::HandleClassDevice(
             // generate setup packet
             //
             CtrlSetup.bmRequestType.B = 0;
-            CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
-            CtrlSetup.bmRequestType._BM.Type = BMREQUEST_CLASS;
+            CtrlSetup.bmRequestType.Recipient = BMREQUEST_TO_DEVICE;
+            CtrlSetup.bmRequestType.Type = BMREQUEST_CLASS;
             CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
             CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
             CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
@@ -1429,7 +1438,7 @@ CHubController::HandleClassDevice(
                 //
                 // data direction is device to host
                 //
-                CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
+                CtrlSetup.bmRequestType.Dir = BMREQUEST_DEVICE_TO_HOST;
             }
 
             //
@@ -1880,8 +1889,8 @@ CHubController::HandleVendorDevice(
     // initialize setup packet
     //
     CtrlSetup.bmRequestType.B = 0;
-    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
-    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_VENDOR;
+    CtrlSetup.bmRequestType.Recipient = BMREQUEST_TO_DEVICE;
+    CtrlSetup.bmRequestType.Type = BMREQUEST_VENDOR;
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
@@ -1892,7 +1901,7 @@ CHubController::HandleVendorDevice(
         //
         // data direction is device to host
         //
-        CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
+        CtrlSetup.bmRequestType.Dir = BMREQUEST_DEVICE_TO_HOST;
     }
 
     //
@@ -2663,7 +2672,7 @@ USBI_InterfaceReference(
 {
     CHubController * Controller = (CHubController*)BusContext;
 
-    DPRINT1("USBH_InterfaceReference\n");
+    DPRINT("USBI_InterfaceReference\n");
 
     //
     // add reference
@@ -2678,7 +2687,7 @@ USBI_InterfaceDereference(
 {
     CHubController * Controller = (CHubController*)BusContext;
 
-    DPRINT1("USBH_InterfaceDereference\n");
+    DPRINT("USBI_InterfaceDereference\n");
 
     //
     // release
@@ -3239,7 +3248,7 @@ USBHI_ControllerSelectiveSuspend(
     PVOID BusContext,
     BOOLEAN Enable)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3343,7 +3352,7 @@ USBHI_GetRootHubSymbolicName(
     ULONG HubSymNameBufferLength,
     PULONG HubSymNameActualLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3353,7 +3362,7 @@ USBHI_GetDeviceBusContext(
     PVOID HubBusContext,
     PVOID DeviceHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -3450,7 +3459,7 @@ USBHI_FlushTransfers(
     PVOID BusContext,
     PVOID DeviceHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 VOID
@@ -3573,7 +3582,7 @@ USBDI_QueryBusTime(
     PVOID BusContext,
     PULONG CurrentFrame)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3583,7 +3592,7 @@ USBDI_SubmitIsoOutUrb(
     PVOID BusContext,
     PURB Urb)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3596,7 +3605,7 @@ USBDI_QueryBusInformation(
     PULONG BusInformationBufferLength,
     PULONG BusInformationActualLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3643,7 +3652,7 @@ USBDI_EnumLogEntry(
     ULONG P1,
     ULONG P2)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3736,6 +3745,7 @@ CHubController::HandleQueryInterface(
             InterfaceHub->SetDeviceHandleData = USBHI_SetDeviceHandleData;
         }
 
+        InterfaceHub->InterfaceReference(InterfaceHub->BusContext);
         //
         // request completed
         //
@@ -3790,6 +3800,7 @@ CHubController::HandleQueryInterface(
             InterfaceDI->EnumLogEntry = USBDI_EnumLogEntry;
         }
 
+        InterfaceDI->InterfaceReference(InterfaceDI->BusContext);
         //
         // request completed
         //

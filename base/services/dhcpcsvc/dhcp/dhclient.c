@@ -447,6 +447,56 @@ void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
 
 }
 
+void
+set_domain(PDHCP_ADAPTER Adapter,
+           struct client_lease *new_lease)
+{
+    CHAR Buffer1[MAX_PATH] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
+    CHAR Buffer2[MAX_PATH] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters";
+    HKEY RegKey1, RegKey2;
+
+    strcat(Buffer1, Adapter->DhclientInfo.name);
+
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer1, 0, KEY_WRITE, &RegKey1 ) != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer2, 0, KEY_WRITE, &RegKey2 ) != ERROR_SUCCESS)
+    {
+        RegCloseKey(RegKey1);
+        return;
+    }
+
+    if (new_lease->options[DHO_DOMAIN_NAME].len)
+    {
+        DH_DbgPrint(MID_TRACE, ("Setting DhcpDomain: %s\n", new_lease->options[DHO_DOMAIN_NAME].data));
+
+        RegSetValueExA(RegKey1,
+                       "DhcpDomain",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)new_lease->options[DHO_DOMAIN_NAME].data,
+                       new_lease->options[DHO_DOMAIN_NAME].len);
+
+        RegSetValueExA(RegKey2,
+                       "DhcpDomain",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)new_lease->options[DHO_DOMAIN_NAME].data,
+                       new_lease->options[DHO_DOMAIN_NAME].len);
+    }
+    else
+    {
+        RegDeleteValueW(RegKey1, L"DhcpDomain");
+        RegDeleteValueW(RegKey2, L"DhcpDomain");
+    }
+
+    RegCloseKey(RegKey1);
+    RegCloseKey(RegKey2);
+
+}
+
 void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
     struct iaddr netmask;
@@ -569,6 +619,7 @@ bind_lease(struct interface_info *ip)
         return;
     }
     set_name_servers( Adapter, new_lease );
+    set_domain( Adapter, new_lease );
 }
 
 /*

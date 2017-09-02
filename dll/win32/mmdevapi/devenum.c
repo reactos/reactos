@@ -338,6 +338,7 @@ static MMDevice *MMDevice_Create(WCHAR *name, GUID *id, EDataFlow flow, DWORD st
             pv.vt = VT_LPWSTR;
             pv.u.pwszVal = name;
             MMDevice_SetPropValue(id, flow, (const PROPERTYKEY*)&DEVPKEY_Device_FriendlyName, &pv);
+            MMDevice_SetPropValue(id, flow, (const PROPERTYKEY*)&DEVPKEY_DeviceInterface_FriendlyName, &pv);
             MMDevice_SetPropValue(id, flow, (const PROPERTYKEY*)&DEVPKEY_Device_DeviceDesc, &pv);
 
             pv.u.pwszVal = guidstr;
@@ -570,7 +571,7 @@ static HRESULT WINAPI MMDevice_Activate(IMMDevice *iface, REFIID riid, DWORD cls
     HRESULT hr = E_NOINTERFACE;
     MMDevice *This = impl_from_IMMDevice(iface);
 
-    TRACE("(%p)->(%p,%x,%p,%p)\n", iface, riid, clsctx, params, ppv);
+    TRACE("(%p)->(%s, %x, %p, %p)\n", iface, debugstr_guid(riid), clsctx, params, ppv);
 
     if (!ppv)
         return E_POINTER;
@@ -1263,7 +1264,7 @@ static HRESULT WINAPI MMDevEnum_RegisterEndpointNotificationCallback(IMMDeviceEn
 static HRESULT WINAPI MMDevEnum_UnregisterEndpointNotificationCallback(IMMDeviceEnumerator *iface, IMMNotificationClient *client)
 {
     MMDevEnumImpl *This = impl_from_IMMDeviceEnumerator(iface);
-    struct NotificationClientWrapper *wrapper, *wrapper2;
+    struct NotificationClientWrapper *wrapper;
 
     TRACE("(%p)->(%p)\n", This, client);
 
@@ -1272,8 +1273,7 @@ static HRESULT WINAPI MMDevEnum_UnregisterEndpointNotificationCallback(IMMDevice
 
     EnterCriticalSection(&g_notif_lock);
 
-    LIST_FOR_EACH_ENTRY_SAFE(wrapper, wrapper2, &g_notif_clients,
-            struct NotificationClientWrapper, entry){
+    LIST_FOR_EACH_ENTRY(wrapper, &g_notif_clients, struct NotificationClientWrapper, entry){
         if(wrapper->client == client){
             list_remove(&wrapper->entry);
             HeapFree(GetProcessHeap(), 0, wrapper);

@@ -155,6 +155,8 @@ MmHapHeapAllocatorExtend (
                                        0);
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"HEAP ALLOCATION FAILED\r\n");
+        EfiStall(1000000);
         return Status;
     }
 

@@ -19,11 +19,12 @@ NTAPI
 LpcpInitializePortQueue(IN PLPCP_PORT_OBJECT Port)
 {
     PLPCP_NONPAGED_PORT_QUEUE MessageQueue;
+
     PAGED_CODE();
 
     /* Allocate the queue */
     MessageQueue = ExAllocatePoolWithTag(NonPagedPool,
-                                         sizeof(LPCP_NONPAGED_PORT_QUEUE),
+                                         sizeof(*MessageQueue),
                                          'troP');
     if (!MessageQueue) return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -46,14 +47,16 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
                IN ULONG MaxPoolUsage,
                IN BOOLEAN Waitable)
 {
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    UNICODE_STRING CapturedObjectName, *ObjectName;
     PLPCP_PORT_OBJECT Port;
     HANDLE Handle;
-    PUNICODE_STRING ObjectName;
-    BOOLEAN NoName;
+
     PAGED_CODE();
     LPCTRACE(LPC_CREATE_DEBUG, "Name: %wZ\n", ObjectAttributes->ObjectName);
+
+    RtlInitEmptyUnicodeString(&CapturedObjectName, NULL, 0);
 
     /* Check if the call comes from user mode */
     if (PreviousMode != KernelMode)
@@ -63,15 +66,14 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
             /* Probe the PortHandle */
             ProbeForWriteHandle(PortHandle);
 
-            /* Probe the ObjectAttributes */
-            ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), sizeof(ULONG));
-
-            /* Get the object name and probe the unicode string */
-            ObjectName = ObjectAttributes->ObjectName;
-            ProbeForRead(ObjectName, sizeof(UNICODE_STRING), 1);
-
-            /* Check if we have no name */
-            NoName = (ObjectName->Buffer == NULL) || (ObjectName->Length == 0);
+            /* Probe the ObjectAttributes and its object name (not the buffer) */
+            ProbeForRead(ObjectAttributes, sizeof(*ObjectAttributes), sizeof(ULONG));
+            ObjectName = ((volatile OBJECT_ATTRIBUTES*)ObjectAttributes)->ObjectName;
+            if (ObjectName)
+            {
+                ProbeForRead(ObjectName, sizeof(*ObjectName), 1);
+                CapturedObjectName = *(volatile UNICODE_STRING*)ObjectName;
+            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -82,10 +84,13 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
     }
     else
     {
-        /* Check if we have no name */
-        NoName = (ObjectAttributes->ObjectName->Buffer == NULL) ||
-                 (ObjectAttributes->ObjectName->Length == 0);
+        if (ObjectAttributes->ObjectName)
+            CapturedObjectName = *(ObjectAttributes->ObjectName);
     }
+
+    /* Normalize the buffer pointer in case we don't have a name */
+    if (CapturedObjectName.Length == 0)
+        CapturedObjectName.Buffer = NULL;
 
     /* Create the Object */
     Status = ObCreateObject(PreviousMode,
@@ -107,7 +112,7 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
     InitializeListHead(&Port->LpcReplyChainHead);
 
     /* Check if we don't have a name */
-    if (NoName)
+    if (CapturedObjectName.Buffer == NULL)
     {
         /* Set up for an unconnected port */
         Port->Flags = LPCP_UNCONNECTED_PORT;
@@ -170,7 +175,7 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
     Port->MaxMessageLength = MaxMessageLength;
 
     /* Insert it now */
-    Status = ObInsertObject((PVOID)Port,
+    Status = ObInsertObject(Port,
                             NULL,
                             PORT_ALL_ACCESS,
                             0,
@@ -185,7 +190,8 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ObCloseHandle(Handle, UserMode);
+            /* An exception happened, close the opened handle */
+            ObCloseHandle(Handle, PreviousMode);
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;

@@ -70,7 +70,8 @@ list(APPEND SOURCE
     ntvdm.h
     ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)
 
-add_rc_deps(ntvdm.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/ntvdm.ico)
+file(GLOB ntvdm_rc_deps res/*.*)
+add_rc_deps(ntvdm.rc ${ntvdm_rc_deps})
 add_executable(ntvdm ${SOURCE} ntvdm.rc)
 add_pch(ntvdm ntvdm.h SOURCE)
 set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)

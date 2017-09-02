@@ -352,7 +352,7 @@ PcVideoSetVerticalResolution(UCHAR VerticalResolutionMode)
    * Return:
    * AL = 12h if function supported
    *
-   * Specifiy the number of scan lines used to display text modes.
+   * Specify the number of scan lines used to display text modes.
    *
    * The specified resolution will take effect on the next mode set.
    */
@@ -1089,7 +1089,7 @@ PcVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue)
 VOID
 PcVideoSync(VOID)
 {
-  while (1 == (READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
+  while ((READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
     {
       /*
        * Keep reading the port until bit 3 is clear
@@ -1099,7 +1099,7 @@ PcVideoSync(VOID)
        */
     }
 
-  while (0 == (READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
+  while (!(READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
     {
       /*
        * Keep reading the port until bit 3 is set

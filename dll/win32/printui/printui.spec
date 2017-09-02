@@ -16,7 +16,7 @@
 @ stub bFolderEnumPrinters
 @ stub bFolderGetPrinter
 @ stub bFolderRefresh
-@ stub bPrinterSetup
+@ stdcall -stub bPrinterSetup(ptr long long ptr ptr ptr)
 @ stub vDocumentDefaults
 @ stub vPrinterPropPages
 @ stub vQueueCreate

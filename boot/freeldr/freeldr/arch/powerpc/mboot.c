@@ -359,7 +359,7 @@ FrLdrGetKernelBase(VOID)
  * FrLdrGetPaeMode
  * INTERNAL
  *
- *     Determines whether PAE mode shoudl be enabled or not.
+ *     Determines whether PAE mode should be enabled or not.
  *
  * Params:
  *     None.
@@ -390,7 +390,7 @@ FrLdrGetPaeMode(VOID)
  *     None.
  *
  * Remarks:
- *     We are setting PDEs, but using the equvivalent (for our purpose) PTE structure.
+ *     We are setting PDEs, but using the equivalent (for our purpose) PTE structure.
  *     As such, please note that PageFrameNumber == PageEntryNumber.
  *
  *--*/

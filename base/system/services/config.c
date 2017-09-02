@@ -15,10 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-ULONG
-NTAPI
-RtlLengthSecurityDescriptor(
-  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -615,6 +611,68 @@ done:
 
     if (hSecurityKey != NULL)
         RegCloseKey(hSecurityKey);
+
+    return dwError;
+}
+
+
+DWORD
+ScmDeleteRegKey(
+    _In_ HKEY hKey,
+    _In_ PCWSTR pszSubKey)
+{
+    DWORD dwMaxSubkeyLen, dwMaxValueLen;
+    DWORD dwMaxLen, dwSize;
+    PWSTR pszName = NULL;
+    HKEY hSubKey;
+    DWORD dwError;
+
+    dwError = RegOpenKeyExW(hKey, pszSubKey, 0, KEY_READ, &hSubKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Get maximum length of key and value names */
+    dwError = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
+                               &dwMaxSubkeyLen, NULL, NULL, &dwMaxValueLen, NULL, NULL, NULL);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    dwMaxSubkeyLen++;
+    dwMaxValueLen++;
+    dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
+
+    /* Allocate the name buffer */
+    pszName = HeapAlloc(GetProcessHeap(), 0, dwMaxLen * sizeof(WCHAR));
+    if (pszName == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    /* Recursively delete all the subkeys */
+    while (TRUE)
+    {
+        dwSize = dwMaxLen;
+        if (RegEnumKeyExW(hSubKey, 0, pszName, &dwSize,
+                          NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+        {
+            break;
+        }
+
+        dwError = ScmDeleteRegKey(hSubKey, pszName);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+done:
+    if (pszName != NULL)
+        HeapFree(GetProcessHeap(), 0, pszName);
+
+    RegCloseKey(hSubKey);
+
+    /* Finally delete the key */
+    if (dwError == ERROR_SUCCESS)
+        dwError = RegDeleteKeyW(hKey, pszSubKey);
 
     return dwError;
 }

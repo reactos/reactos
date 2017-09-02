@@ -41,7 +41,6 @@ CDeviceNode::CDeviceNode(
     size_t size = wcslen(Node.m_DeviceId) + 1;
     m_DeviceId = new WCHAR[size];
     StringCbCopyW(m_DeviceId, size * sizeof(WCHAR), Node.m_DeviceId);
-
 }
 
 CDeviceNode::~CDeviceNode()
@@ -65,15 +64,14 @@ CDeviceNode::SetupNode()
 
         // Now get the actual device id
         cr = CM_Get_Device_IDW(m_DevInst,
-                                m_DeviceId,
-                                ulLength + 1,
-                                0);
-        if (cr != CR_SUCCESS)
+                               m_DeviceId,
+                               ulLength + 1,
+                               0);
+        if (cr != CR_SUCCESS || wcscmp(m_DeviceId, L"HTREE\\ROOT\\0") == 0)
         {
             delete[] m_DeviceId;
             m_DeviceId = NULL;
         }
-
     }
 
     // Make sure we got the string
@@ -95,7 +93,6 @@ CDeviceNode::SetupNode()
                                &m_DevinfoData);
     }
 
-
     // Check if the device has a problem
     if (HasProblem())
     {
@@ -108,9 +105,6 @@ CDeviceNode::SetupNode()
             m_OverlayImage = OverlayProblem;
         }
     }
-
-
-
 
     // Get the class guid for this device
     ulLength = MAX_GUID_STRING_LEN * sizeof(WCHAR);
@@ -131,12 +125,10 @@ CDeviceNode::SetupNode()
         m_ClassGuid = GUID_DEVCLASS_UNKNOWN;
     }
 
-
     // Get the image for the class this device is in
     SetupDiGetClassImageIndex(m_ImageListData,
                               &m_ClassGuid,
                               &m_ClassImage);
-
 
     // Get the description for the device
     ulLength = DISPLAY_NAME_LEN * sizeof(WCHAR);
@@ -155,7 +147,6 @@ CDeviceNode::SetupNode()
                                                m_DisplayName,
                                                &ulLength,
                                                0);
-
     }
 
     if (cr != CR_SUCCESS)
@@ -311,7 +302,6 @@ CDeviceNode::EnableDevice(
     pcp.StateChange = (Enable ? DICS_ENABLE : DICS_DISABLE);
     pcp.HwProfile = 0;
 
-
     // check both scopes to make sure we can make the change
     for (int i = 0; i < 2; i++)
     {
@@ -374,7 +364,6 @@ CDeviceNode::EnableDevice(
 bool
 CDeviceNode::UninstallDevice()
 {
-
     if (CanUninstall() == false)
         return false;
 
@@ -388,7 +377,6 @@ CDeviceNode::UninstallDevice()
     // We probably need to walk all the siblings of this 
     // device and ask if they're happy with the uninstall
     //
-
 
     // Remove it
     SetupDiSetClassInstallParamsW(m_hDevInfo,
@@ -404,7 +392,6 @@ CDeviceNode::UninstallDevice()
                                   0);
 
     return true;
-
 }
 
 /* PRIVATE METHODS ******************************************************/
@@ -425,8 +412,7 @@ CDeviceNode::Cleanup()
 }
 
 DWORD
-CDeviceNode::GetFlags(
-    )
+CDeviceNode::GetFlags()
 {
     SP_DEVINSTALL_PARAMS DevInstallParams;
     DevInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
@@ -480,5 +466,3 @@ CDeviceNode::RemoveFlags(
     }
     return false;
 }
-
-

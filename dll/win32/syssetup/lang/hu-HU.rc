@@ -83,6 +83,15 @@ BEGIN
     AUTOCHECKBOX "Automatikus átállás a nyári idõszámításra", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
+IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+END
+
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Telepítõ"
@@ -135,6 +144,8 @@ BEGIN
     IDS_DATETIMESUBTITLE "Beállíthatod a számítógép dátumát és óráját."
     IDS_PROCESSTITLE "Process page title"
     IDS_PROCESSSUBTITLE "Process page subtitle"
+    IDS_THEMESELECTIONTITLE "Appearance"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
 END
 
 STRINGTABLE
@@ -149,8 +160,8 @@ BEGIN
     IDS_TIMEOUT "A regisztráció túllépte az idõkorlátot"
     IDS_REASON_UNKNOWN ""
     /*
-     * ATTENTION: 
-     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     * ATTENTION:
+     *   If you translate the administrator account name, keep IDS_ADMINISTRATOR_NAME and
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
@@ -172,4 +183,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "Installing devices..."
+END
+
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
+    IDS_COMMONFILES "Common Files"
 END

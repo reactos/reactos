@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -158,6 +158,16 @@ AcpiHwLegacySleep (
     /* Flush caches, as per ACPI specification */
 
     ACPI_FLUSH_CPU_CACHE ();
+
+    Status = AcpiOsEnterSleep (SleepState, Pm1aControl, Pm1bControl);
+    if (Status == AE_CTRL_TERMINATE)
+    {
+        return_ACPI_STATUS (AE_OK);
+    }
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
 
     /* Write #2: Write both SLP_TYP + SLP_EN */
 

@@ -735,6 +735,86 @@ typedef struct _Wx86ThreadState
 } Wx86ThreadState, *PWx86ThreadState;
 #endif
 
+//
+// PEB.AppCompatFlags
+// Tag FLAG_MASK_KERNEL
+//
+typedef enum _APPCOMPAT_FLAGS
+{
+    GetShortPathNameNT4 = 0x1,
+    GetDiskFreeSpace2GB = 0x8,
+    FTMFromCurrentAPI = 0x20,
+    DisallowCOMBindingNotifications = 0x40,
+    Ole32ValidatePointers = 0x80,
+    DisableCicero = 0x100,
+    Ole32EnableAsyncDocFile = 0x200,
+    EnableLegacyExceptionHandlinginOLE = 0x400,
+    DisableAdvanceRPCClientHardening = 0x800,
+    DisableMaybeNULLSizeisConsistencycheck = 0x1000,
+    DisableAdvancedRPCrangeCheck = 0x4000,
+    EnableLegacyExceptionHandlingInRPC = 0x8000,
+    EnableLegacyNTFSFlagsForDocfileOpens = 0x10000,
+    DisableNDRIIDConsistencyCheck = 0x20000,
+    UserDisableForwarderPatch = 0x40000,
+    DisableNewWMPAINTDispatchInOLE = 0x100000,
+    DoNotAddToCache = 0x80000000,
+} APPCOMPAT_FLAGS;
+
+
+//
+// PEB.AppCompatFlagsUser.LowPart
+// Tag FLAG_MASK_USER
+//
+typedef enum _APPCOMPAT_USERFLAGS
+{
+    DisableAnimation = 0x1,
+    DisableKeyboardCues = 0x2,
+    No50StylebitsInSetWindowLong = 0x4,
+    DisableDrawPatternRect = 0x8,
+    MSShellDialog = 0x10,
+    NoDDETerminateDuringDestroy = 0x20,
+    GiveupForeground = 0x40,
+    AlwaysActiveMenus = 0x80,
+    NoMouseHideInEdit = 0x100,
+    NoGdiBatching = 0x200,
+    FontSubstitution = 0x400,
+    No50StylebitsInCreateWindow = 0x800,
+    NoCustomPaperSizes = 0x1000,
+    AllTheDdeHacks = 0x2000,
+    UseDefaultCharset = 0x4000,
+    NoCharDeadKey = 0x8000,
+    NoTryExceptForWindowProc = 0x10000,
+    NoInitInsertReplaceFlags = 0x20000,
+    NoDdeSync = 0x40000,
+    NoGhost = 0x80000,
+    NoDdeAsyncReg = 0x100000,
+    StrictLLHook = 0x200000,
+    NoShadow = 0x400000,
+    NoTimerCallbackProtection = 0x1000000,
+    HighDpiAware = 0x2000000,
+    OpenGLEmfAware = 0x4000000,
+    EnableTransparantBltMirror = 0x8000000,
+    NoPaddedBorder = 0x10000000,
+    ForceLegacyResizeCM = 0x20000000,
+    HardwareAudioMixer = 0x40000000,
+    DisableSWCursorOnMoveSize = 0x80000000,
+#if 0
+    DisableWindowArrangement = 0x100000000,
+    ReorderWaveForCommunications = 0x200000000,
+    NoGdiHwAcceleration = 0x400000000,
+#endif
+} APPCOMPAT_USERFLAGS;
+
+//
+// PEB.AppCompatFlagsUser.HighPart
+// Tag FLAG_MASK_USER
+//
+typedef enum _APPCOMPAT_USERFLAGS_HIGHPART
+{
+    DisableWindowArrangement = 0x1,
+    ReorderWaveForCommunications = 0x2,
+    NoGdiHwAcceleration = 0x4,
+} APPCOMPAT_USERFLAGS_HIGHPART;
 
 //
 // Process Environment Block (PEB)
@@ -1077,7 +1157,7 @@ typedef struct _ETHREAD
            ULONG OwnsSessionWorkingSetExclusive:1;
            ULONG OwnsSessionWorkingSetShared:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG SupressSymbolLoad:1;
+           ULONG SuppressSymbolLoad:1;
            ULONG Spare1:3;
            ULONG PriorityRegionActive:4;
 #else

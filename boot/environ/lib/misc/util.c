@@ -28,8 +28,6 @@ ULONG UtlNextUpdatePercentage;
 BOOLEAN UtlProgressNeedsInfoUpdate;
 PVOID UtlProgressInfo;
 
-
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -221,7 +219,7 @@ BlUtlInitialize (
 
 VOID
 BmUpdateProgressInfo (
-    _In_ PVOID Uknown,
+    _In_ PVOID Unknown,
     _In_ PWCHAR ProgressInfo
     )
 {
@@ -307,7 +305,7 @@ BlTblFindEntry (
                               Argument4);
             if (Result)
             {
-                /* Entry fouund return it */
+                /* Entry found return it */
                 *EntryIndex = Index;
                 Entry = Table[Index];
                 break;
@@ -679,7 +677,7 @@ BlHtStore (
     PLIST_ENTRY HashLinkHead;
     PBL_HASH_TABLE HashTable;
 
-    /* Check for invalid tablle ID, missing arguments, or malformed entry */
+    /* Check for invalid table ID, missing arguments, or malformed entry */
     if ((HtTableSize <= TableId) ||
         !(Entry) ||
         !(Data) ||
@@ -717,6 +715,61 @@ BlHtStore (
     Status = STATUS_SUCCESS;
 
 Quickie:
+    return Status;
+}
+
+NTSTATUS
+BlHtDelete (
+    _In_ ULONG TableId,
+    _In_ PBL_HASH_ENTRY Entry
+    )
+{
+    PBL_HASH_TABLE HashTable;
+    ULONG HashValue;
+    NTSTATUS Status;
+    PLIST_ENTRY HashLinkHead, HashLink;
+    PBL_HASH_NODE HashNode;
+
+    /* Check if the table ID is invalid, or we have no entry, or it's malformed */
+    if ((HtTableSize <= TableId) ||
+        !(Entry) ||
+        !(Entry->Size) ||
+        !(Entry->Value) ||
+        ((Entry->Flags & BL_HT_VALUE_IS_INLINE) && (Entry->Size != sizeof(ULONG))))
+    {
+        /* Fail */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Otherwise, get the hash table for this index */
+        HashTable = HtTableArray[TableId];
+
+        /* Get the hash bucket */
+        HashValue = HashTable->HashFunction(Entry, HashTable->Size);
+
+        /* Start iterating each entry in the bucket, assuming failure */
+        Status = STATUS_NOT_FOUND;
+        HashLinkHead = &HashTable->HashLinks[HashValue];
+        HashLink = HashLinkHead->Flink;
+        while (HashLink != HashLinkHead)
+        {
+            /* Get a node in this bucket, and compare the value */
+            HashNode = CONTAINING_RECORD(HashLink, BL_HASH_NODE, ListEntry);
+            if (HashTable->CompareFunction(&HashNode->Entry, Entry))
+            {
+                /* Remove it from the list and free it */
+                RemoveEntryList(&HashNode->ListEntry);
+                BlMmFreeHeap(HashNode);
+                return STATUS_SUCCESS;
+            }
+
+            /* Try the next node */
+            HashLink = HashLink->Flink;
+        }
+    }
+
+    /* Return back to the caller */
     return Status;
 }
 
@@ -777,4 +830,105 @@ BlUtlCheckSum (
     }
 
     return PartialSum;
+}
+
+#if defined(_M_IX86) || defined(_M_X64)
+BOOLEAN
+Archx86IsCpuidSupported (
+    VOID
+    )
+{
+    ULONG CallerFlags, Flags;
+
+    /* Read the original flags, and add the CPUID bit */
+    CallerFlags = __readeflags() ^ 0x200000;
+    __writeeflags(CallerFlags);
+
+    /* Read our flags now */
+    Flags = __readeflags();
+
+    /* Check if the bit stuck */
+    return (((CallerFlags ^ Flags) >> 21) & 1) ^ 1;
+}
+#endif
+
+BOOLEAN
+BlArchIsCpuIdFunctionSupported (
+    _In_ ULONG Function
+    )
+{
+#if defined(_M_IX86) || defined(_M_X64)
+    BOOLEAN Supported;
+    INT CpuInfo[4];
+
+    /* Check if the CPU supports this instruction */
+    Supported = Archx86IsCpuidSupported();
+    if (!Supported)
+    {
+        return FALSE;
+    }
+
+    /* Check if it's the extended function */
+    if (Function >= 0x80000000)
+    {
+        /* Check if extended functions are supported */
+        __cpuid(CpuInfo, 0x80000000);
+        if ((CpuInfo[0] & 0xFFFFFF00) != 0x80000000)
+        {
+            /* Nope */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* It's a regular function, get the maximum one supported */
+        __cpuid(CpuInfo, 0);
+    }
+
+    /* Check if our function is within bounds */
+    if (Function <= CpuInfo[0])
+    {
+        return TRUE;
+    }
+#else
+    EfiPrintf(L"BlArchIsCpuIdFunctionSupported not implemented for this platform.\r\n");
+#endif
+
+    /* Nope */
+    return FALSE;
+}
+
+ULONGLONG
+BlArchGetPerformanceCounter (
+    VOID
+    )
+{
+#if defined(_M_IX86) || defined(_M_X64)
+    INT CpuInfo[4];
+
+    /* Serialize with CPUID, if it exists */
+    if (Archx86IsCpuidSupported())
+    {
+        BlArchCpuId(0, 0, CpuInfo);
+    }
+
+    /* Read the TSC */
+    return __rdtsc();
+#else
+    EfiPrintf(L"BlArchGetPerformanceCounter not implemented for this platform.\r\n");
+    return 0;
+#endif
+}
+
+VOID
+BlArchCpuId (
+    _In_ ULONG Function,
+    _In_ ULONG SubFunction,
+    _Out_ INT* Result
+    )
+{
+#if defined(_M_IX86) || defined(_M_X64)
+    /* Use the intrinsic */
+    __cpuidex(Result, Function, SubFunction);
+#endif
 }

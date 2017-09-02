@@ -337,7 +337,7 @@ IopLoadServiceModule(
         Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with Status %08X\n",
+            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
                     &CCSName, Status);
             return Status;
         }
@@ -346,7 +346,7 @@ IopLoadServiceModule(
         Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with Status %08X\n",
+            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
                     ServiceName, Status);
             ZwClose(CCSKey);
             return Status;
@@ -527,12 +527,13 @@ IopInitializeDriverModule(
     RtlFreeUnicodeString(&RegistryKey);
     RtlFreeUnicodeString(&DriverName);
 
-    *DriverObject = Driver;
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IopCreateDriver() failed (Status 0x%08lx)\n", Status);
         return Status;
     }
+
+    *DriverObject = Driver;
 
     MmFreeDriverInitialization((PLDR_DATA_TABLE_ENTRY)Driver->DriverSection);
 
@@ -639,37 +640,12 @@ NTSTATUS
 FASTCALL
 IopAttachFilterDrivers(
     PDEVICE_NODE DeviceNode,
+    HANDLE EnumSubKey,
+    HANDLE ClassKey,
     BOOLEAN Lower)
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { { NULL, 0, NULL, NULL, 0, NULL, 0 }, };
-    UNICODE_STRING Class;
-    WCHAR ClassBuffer[40];
-    UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
-    HANDLE EnumRootKey, SubKey;
     NTSTATUS Status;
-
-    /* Open enumeration root key */
-    Status = IopOpenRegistryKeyEx(&EnumRootKey,
-                                  NULL,
-                                  &EnumRoot,
-                                  KEY_READ);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
-        return Status;
-    }
-
-    /* Open subkey */
-    Status = IopOpenRegistryKeyEx(&SubKey,
-                                  EnumRootKey,
-                                  &DeviceNode->InstancePath,
-                                  KEY_READ);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
-        ZwClose(EnumRootKey);
-        return Status;
-    }
 
     /*
      * First load the device filters
@@ -683,7 +659,7 @@ IopAttachFilterDrivers(
     QueryTable[0].DefaultType = REG_NONE;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                    (PWSTR)SubKey,
+                                    (PWSTR)EnumSubKey,
                                     QueryTable,
                                     DeviceNode,
                                     NULL);
@@ -691,89 +667,34 @@ IopAttachFilterDrivers(
     {
         DPRINT1("Failed to load device %s filters: %08X\n",
                 Lower ? "lower" : "upper", Status);
-        ZwClose(SubKey);
-        ZwClose(EnumRootKey);
         return Status;
     }
 
-    /*
-     * Now get the class GUID
-     */
-    Class.Length = 0;
-    Class.MaximumLength = 40 * sizeof(WCHAR);
-    Class.Buffer = ClassBuffer;
-    QueryTable[0].QueryRoutine = NULL;
-    QueryTable[0].Name = L"ClassGUID";
-    QueryTable[0].EntryContext = &Class;
-    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
+    if (Lower)
+        QueryTable[0].Name = L"LowerFilters";
+    else
+        QueryTable[0].Name = L"UpperFilters";
+    QueryTable[0].EntryContext = NULL;
+    QueryTable[0].Flags = 0;
+    QueryTable[0].DefaultType = REG_NONE;
+
+    if (ClassKey == NULL)
+    {
+        return STATUS_SUCCESS;
+    }
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                    (PWSTR)SubKey,
+                                    (PWSTR)ClassKey,
                                     QueryTable,
                                     DeviceNode,
                                     NULL);
 
-    /* Close handles */
-    ZwClose(SubKey);
-    ZwClose(EnumRootKey);
-
-    /*
-     * Load the class filter driver
-     */
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        UNICODE_STRING ControlClass = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
-
-        Status = IopOpenRegistryKeyEx(&EnumRootKey,
-                                      NULL,
-                                      &ControlClass,
-                                      KEY_READ);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
-            return Status;
-        }
-
-        /* Open subkey */
-        Status = IopOpenRegistryKeyEx(&SubKey,
-                                      EnumRootKey,
-                                      &Class,
-                                      KEY_READ);
-        if (!NT_SUCCESS(Status))
-        {
-            /* It's okay if there's no class key */
-            DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
-            ZwClose(EnumRootKey);
-            return STATUS_SUCCESS;
-        }
-
-        QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
-        if (Lower)
-            QueryTable[0].Name = L"LowerFilters";
-        else
-            QueryTable[0].Name = L"UpperFilters";
-        QueryTable[0].EntryContext = NULL;
-        QueryTable[0].Flags = 0;
-        QueryTable[0].DefaultType = REG_NONE;
-
-        Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                        (PWSTR)SubKey,
-                                        QueryTable,
-                                        DeviceNode,
-                                        NULL);
-
-        /* Clean up */
-        ZwClose(SubKey);
-        ZwClose(EnumRootKey);
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to load class %s filters: %08X\n",
-                    Lower ? "lower" : "upper", Status);
-            ZwClose(SubKey);
-            ZwClose(EnumRootKey);
-            return Status;
-        }
+        DPRINT1("Failed to load class %s filters: %08X\n",
+                Lower ? "lower" : "upper", Status);
+        return Status;
     }
 
     return STATUS_SUCCESS;
@@ -879,8 +800,8 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     PDEVICE_NODE DeviceNode;
     PDRIVER_OBJECT DriverObject;
     NTSTATUS Status;
-    PWCHAR FileNameWithoutPath;
-    LPWSTR FileExtension;
+    PWCHAR Buffer, FileNameWithoutPath;
+    PWSTR FileExtension;
     PUNICODE_STRING ModuleName = &BootLdrEntry->BaseDllName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
@@ -893,13 +814,24 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     IopDisplayLoadingMessage(ModuleName);
     InbvIndicateProgress();
 
+    Buffer = ExAllocatePoolWithTag(PagedPool,
+                                   ModuleName->Length + sizeof(UNICODE_NULL),
+                                   TAG_IO);
+    if (Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlCopyMemory(Buffer, ModuleName->Buffer, ModuleName->Length);
+    Buffer[ModuleName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
     /*
      * Generate filename without path (not needed by freeldr)
      */
-    FileNameWithoutPath = wcsrchr(ModuleName->Buffer, L'\\');
+    FileNameWithoutPath = wcsrchr(Buffer, L'\\');
     if (FileNameWithoutPath == NULL)
     {
-        FileNameWithoutPath = ModuleName->Buffer;
+        FileNameWithoutPath = Buffer;
     }
     else
     {
@@ -910,16 +842,17 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
      * Strip the file extension from ServiceName
      */
     Success = RtlCreateUnicodeString(&ServiceName, FileNameWithoutPath);
+    ExFreePoolWithTag(Buffer, TAG_IO);
     if (!Success)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    FileExtension = wcsrchr(ServiceName.Buffer, '.');
+    FileExtension = wcsrchr(ServiceName.Buffer, L'.');
     if (FileExtension != NULL)
     {
         ServiceName.Length -= (USHORT)wcslen(FileExtension) * sizeof(WCHAR);
-        FileExtension[0] = 0;
+        FileExtension[0] = UNICODE_NULL;
     }
 
     /*
@@ -934,7 +867,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
-        return(Status);
+        return Status;
     }
 
     /* Lookup the new Ldr entry in PsLoadedModuleList */
@@ -946,7 +879,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
                                      InLoadOrderLinks);
         if (RtlEqualUnicodeString(ModuleName, &LdrEntry->BaseDllName, TRUE))
         {
-                break;
+            break;
         }
 
         NextEntry = NextEntry->Flink;
@@ -1246,7 +1179,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     PDEVICE_OBJECT DeviceObject;
     PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
     NTSTATUS Status;
-    LPWSTR Start;
+    PWSTR Start;
     BOOLEAN SafeToUnload = TRUE;
 
     DPRINT("IopUnloadDriver('%wZ', %u)\n", DriverServiceName, UnloadPnpDrivers);
@@ -1256,7 +1189,6 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     /*
      * Get the service name from the registry key name
      */
-
     Start = wcsrchr(DriverServiceName->Buffer, L'\\');
     if (Start == NULL)
         Start = DriverServiceName->Buffer;
@@ -1268,14 +1200,15 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     /*
      * Construct the driver object name
      */
-
     ObjectName.Length = ((USHORT)wcslen(Start) + 8) * sizeof(WCHAR);
     ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
-    ObjectName.Buffer = ExAllocatePool(PagedPool, ObjectName.MaximumLength);
+    ObjectName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                              ObjectName.MaximumLength,
+                                              TAG_IO);
     if (!ObjectName.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
     wcscpy(ObjectName.Buffer, DRIVER_ROOT_NAME);
     memcpy(ObjectName.Buffer + 8, Start, ObjectName.Length - 8 * sizeof(WCHAR));
-    ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = 0;
+    ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = UNICODE_NULL;
 
     /*
      * Find the driver object
@@ -1292,14 +1225,12 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
-        ExFreePool(ObjectName.Buffer);
+        ExFreePoolWithTag(ObjectName.Buffer, TAG_IO);
         return Status;
     }
 
-    /*
-     * Free the buffer for driver object name
-     */
-    ExFreePool(ObjectName.Buffer);
+    /* Free the buffer for driver object name */
+    ExFreePoolWithTag(ObjectName.Buffer, TAG_IO);
 
     /* Check that driver is not already unloading */
     if (DriverObject->Flags & DRVO_UNLOAD_INVOKED)
@@ -1345,9 +1276,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
         return Status;
     }
 
-    /*
-     * Free the service path
-     */
+    /* Free the service path */
     ExFreePool(ImagePath.Buffer);
 
     /*
@@ -1426,7 +1355,7 @@ IopReinitializeDrivers(VOID)
                                         &DriverReinitListLock);
     while (Entry)
     {
-        /* Get the item*/
+        /* Get the item */
         ReinitItem = CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
 
         /* Increment reinitialization counter */
@@ -1462,7 +1391,7 @@ IopReinitializeBootDrivers(VOID)
                                         &DriverBootReinitListLock);
     while (Entry)
     {
-        /* Get the item*/
+        /* Get the item */
         ReinitItem = CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
 
         /* Increment reinitialization counter */
@@ -1510,7 +1439,7 @@ try_again:
     /* First, create a unique name for the driver if we don't have one */
     if (!DriverName)
     {
-        /* Create a random name and set up the string*/
+        /* Create a random name and set up the string */
         NameLength = (USHORT)swprintf(NameBuffer,
                                       DRIVER_ROOT_NAME L"%08u",
                                       KeTickCount.LowPart);

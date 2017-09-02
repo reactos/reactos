@@ -37,7 +37,7 @@ BEGIN
     AUTOCHECKBOX "Automatisch mit einem Internetzeitserver synchronisieren",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "Jetzt aktualisieren", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    PUSHBUTTON "Aktualisieren", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
     LTEXT "Zum Synchronisieren muss der Computer mit dem Internet verbunden sein.", -1, 12, 114, 225, 25

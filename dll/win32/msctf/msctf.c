@@ -162,7 +162,7 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
     This->IClassFactory_iface.lpVtbl = &ClassFactoryVtbl;
     This->ref = 1;
     This->ctor = ctor;
-    *ppvOut = This;
+    *ppvOut = &This->IClassFactory_iface;
     TRACE("Created class factory %p\n", This);
     return S_OK;
 }
@@ -370,7 +370,7 @@ static void deactivate_remove_conflicting_ts(REFCLSID catid)
             list_remove(&ats->entry);
             HeapFree(GetProcessHeap(),0,ats->ats);
             HeapFree(GetProcessHeap(),0,ats);
-            /* we are guarenteeing there is only 1 */
+            /* we are guaranteeing there is only 1 */
             break;
         }
     }

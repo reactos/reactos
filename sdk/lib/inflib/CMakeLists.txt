@@ -23,8 +23,10 @@ else()
 
     add_definitions(-D__NO_CTYPE_INLINES -DINFLIB_HOST)
     add_library(inflibhost ${SOURCE})
+
     if(NOT MSVC)
-        add_target_compile_flags(inflibhost "-Wpointer-arith -Wwrite-strings")
+        add_target_compile_flags(inflibhost "-fshort-wchar -Wpointer-arith -Wwrite-strings")
     endif()
+
     target_link_libraries(inflibhost unicode)
 endif()

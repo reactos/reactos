@@ -564,7 +564,7 @@ CDevSettings_GetData(IDataObject* iface,
                                   pformatetcIn);
     if (SUCCEEDED(hr))
     {
-        /* Return the reqested data back to the shell extension */
+        /* Return the requested data back to the shell extension */
 
         if (pformatetcIn->cfFormat == This->cfDisplayDevice)
         {

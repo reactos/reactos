@@ -708,6 +708,8 @@ ExitThreadCallback(PETHREAD Thread)
     ptiCurrent->TIF_flags |= TIF_DONTATTACHQUEUE;
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
 
+    UserCloseClipboard();
+
     /* Decrement thread count and check if its 0 */
     ppiCurrent->cThreads--;
 
@@ -997,14 +999,14 @@ DriverEntry(
     NT_ROF(InitTimerImpl());
     NT_ROF(InitDCEImpl());
 
+    gusLanguageID = UserGetLanguageID();
+
     /* Initialize FreeType library */
     if (!InitFontSupport())
     {
         DPRINT1("Unable to initialize font support\n");
         return Status;
     }
-
-    gusLanguageID = UserGetLanguageID();
 
     return STATUS_SUCCESS;
 }

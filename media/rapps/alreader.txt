@@ -27,7 +27,7 @@ Size = 4,6 Mio
 
 [Section.0419]
 Description = Читалка электронных книг. Поддержка форматов:  fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Поддержка ZIP и GZ архивов.
-Size = 4,6 МБ
+Size = 4,6 МиБ
 
 [Section.041f]
 Description = Bir FB2 elektronik kitap okuyucusu. Desteklenen okuma biçimleri: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. ZIP ve GZ belgeliklerini destekler.

@@ -4,19 +4,21 @@
  * \brief The RSA public-key cryptosystem
  *
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
+ *  SPDX-License-Identifier: GPL-2.0
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
@@ -99,7 +101,7 @@ typedef struct
     mbedtls_mpi Vf;                     /*!<  cached un-blinding value  */
 
     int padding;                /*!<  MBEDTLS_RSA_PKCS_V15 for 1.5 padding and
-                                      RSA_PKCS_v21 for OAEP/PSS         */
+                                      MBEDTLS_RSA_PKCS_v21 for OAEP/PSS         */
     int hash_id;                /*!<  Hash identifier of mbedtls_md_type_t as
                                       specified in the mbedtls_md.h header file
                                       for the EME-OAEP and EMSA-PSS
@@ -206,7 +208,7 @@ int mbedtls_rsa_check_pub_priv( const mbedtls_rsa_context *pub, const mbedtls_rs
  * \return         0 if successful, or an MBEDTLS_ERR_RSA_XXX error code
  *
  * \note           This function does NOT take care of message
- *                 padding. Also, be sure to set input[0] = 0 or assure that
+ *                 padding. Also, be sure to set input[0] = 0 or ensure that
  *                 input is smaller than N.
  *
  * \note           The input and output buffers must be large
@@ -329,9 +331,15 @@ int mbedtls_rsa_rsaes_oaep_encrypt( mbedtls_rsa_context *ctx,
  *
  * \return         0 if successful, or an MBEDTLS_ERR_RSA_XXX error code
  *
- * \note           The output buffer must be as large as the size
- *                 of ctx->N (eg. 128 bytes if RSA-1024 is used) otherwise
- *                 an error is thrown.
+ * \note           The output buffer length \c output_max_len should be
+ *                 as large as the size ctx->len of ctx->N (eg. 128 bytes
+ *                 if RSA-1024 is used) to be able to hold an arbitrary
+ *                 decrypted message. If it is not large enough to hold
+ *                 the decryption of the particular ciphertext provided, 
+ *                 the function will return MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE.
+ *
+ * \note           The input buffer must be as large as the size
+ *                 of ctx->N (eg. 128 bytes if RSA-1024 is used).
  */
 int mbedtls_rsa_pkcs1_decrypt( mbedtls_rsa_context *ctx,
                        int (*f_rng)(void *, unsigned char *, size_t),
@@ -355,9 +363,15 @@ int mbedtls_rsa_pkcs1_decrypt( mbedtls_rsa_context *ctx,
  *
  * \return         0 if successful, or an MBEDTLS_ERR_RSA_XXX error code
  *
- * \note           The output buffer must be as large as the size
- *                 of ctx->N (eg. 128 bytes if RSA-1024 is used) otherwise
- *                 an error is thrown.
+ * \note           The output buffer length \c output_max_len should be
+ *                 as large as the size ctx->len of ctx->N (eg. 128 bytes
+ *                 if RSA-1024 is used) to be able to hold an arbitrary
+ *                 decrypted message. If it is not large enough to hold
+ *                 the decryption of the particular ciphertext provided, 
+ *                 the function will return MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE.
+ *
+ * \note           The input buffer must be as large as the size
+ *                 of ctx->N (eg. 128 bytes if RSA-1024 is used).
  */
 int mbedtls_rsa_rsaes_pkcs1_v15_decrypt( mbedtls_rsa_context *ctx,
                                  int (*f_rng)(void *, unsigned char *, size_t),
@@ -383,9 +397,15 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt( mbedtls_rsa_context *ctx,
  *
  * \return         0 if successful, or an MBEDTLS_ERR_RSA_XXX error code
  *
- * \note           The output buffer must be as large as the size
- *                 of ctx->N (eg. 128 bytes if RSA-1024 is used) otherwise
- *                 an error is thrown.
+ * \note           The output buffer length \c output_max_len should be
+ *                 as large as the size ctx->len of ctx->N (eg. 128 bytes
+ *                 if RSA-1024 is used) to be able to hold an arbitrary
+ *                 decrypted message. If it is not large enough to hold
+ *                 the decryption of the particular ciphertext provided, 
+ *                 the function will return MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE.
+ *
+ * \note           The input buffer must be as large as the size 
+ *                 of ctx->N (eg. 128 bytes if RSA-1024 is used).
  */
 int mbedtls_rsa_rsaes_oaep_decrypt( mbedtls_rsa_context *ctx,
                             int (*f_rng)(void *, unsigned char *, size_t),

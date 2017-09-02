@@ -443,7 +443,7 @@ UserEnumCurrentDisplaySettings(
     {
         /* No device found */
         ERR("No PDEV found!\n");
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_INVALID_PARAMETER_1;
     }
 
     *ppdm = ppdev->pdmwDev;
@@ -463,22 +463,27 @@ UserEnumDisplaySettings(
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVMODEENTRY pdmentry;
     ULONG i, iFoundMode;
+    PPDEVOBJ ppdev;
 
     TRACE("Enter UserEnumDisplaySettings('%wZ', %lu)\n",
           pustrDevice, iModeNum);
 
     /* Ask GDI for the GRAPHICS_DEVICE */
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
+    ppdev = EngpGetPDEV(pustrDevice);
 
-    if (!pGraphicsDevice)
+    if (!pGraphicsDevice || !ppdev)
     {
         /* No device found */
         ERR("No device found!\n");
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_INVALID_PARAMETER_1;
     }
 
-    if (iModeNum >= pGraphicsDevice->cDevModes)
-        return STATUS_NO_MORE_ENTRIES;
+    /* let's politely ask the driver for an updated mode list,
+       just in case there's something new in there (vbox) */
+
+    PDEVOBJ_vRefreshModeList(ppdev);
+    PDEVOBJ_vRelease(ppdev);
 
     iFoundMode = 0;
     for (i = 0; i < pGraphicsDevice->cDevModes; i++)
@@ -504,7 +509,7 @@ UserEnumDisplaySettings(
     }
 
     /* Nothing was found */
-    return STATUS_INVALID_PARAMETER;
+    return STATUS_INVALID_PARAMETER_2;
 }
 
 NTSTATUS
@@ -572,6 +577,26 @@ NtUserEnumDisplaySettings(
     TRACE("Enter NtUserEnumDisplaySettings(%wZ, %lu, %p, 0x%lx)\n",
           pustrDevice, iModeNum, lpDevMode, dwFlags);
 
+    _SEH2_TRY
+    {
+        ProbeForRead(lpDevMode, sizeof(DEVMODEW), sizeof(UCHAR));
+
+        cbSize = lpDevMode->dmSize;
+        cbExtra = lpDevMode->dmDriverExtra;
+
+        ProbeForWrite(lpDevMode, cbSize + cbExtra, sizeof(UCHAR));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    if (lpDevMode->dmSize != sizeof(DEVMODEW))
+    {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
     if (pustrDevice)
     {
         /* Initialize destination string */
@@ -580,20 +605,24 @@ NtUserEnumDisplaySettings(
         _SEH2_TRY
         {
             /* Probe the UNICODE_STRING and the buffer */
-            ProbeForRead(pustrDevice, sizeof(UNICODE_STRING), 1);
-            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, 1);
+            ProbeForReadUnicodeString(pustrDevice);
+
+            if (!pustrDevice->Length || !pustrDevice->Buffer)
+                ExRaiseStatus(STATUS_NO_MEMORY);
+
+            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, sizeof(UCHAR));
 
             /* Copy the string */
             RtlCopyUnicodeString(&ustrDevice, pustrDevice);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            _SEH2_YIELD(return STATUS_INVALID_PARAMETER_1);
         }
-        _SEH2_END
+        _SEH2_END;
 
         pustrDevice = &ustrDevice;
-   }
+    }
 
     /* Acquire global USER lock */
     UserEnterShared();
@@ -625,11 +654,6 @@ NtUserEnumDisplaySettings(
         /* Copy some information back */
         _SEH2_TRY
         {
-            ProbeForRead(lpDevMode, sizeof(DEVMODEW), 1);
-            cbSize = lpDevMode->dmSize;
-            cbExtra = lpDevMode->dmDriverExtra;
-
-            ProbeForWrite(lpDevMode, cbSize + cbExtra, 1);
             /* Output what we got */
             RtlCopyMemory(lpDevMode, pdm, min(cbSize, pdm->dmSize));
 
@@ -650,7 +674,6 @@ NtUserEnumDisplaySettings(
 
     return Status;
 }
-
 VOID
 UserUpdateFullscreen(
     DWORD flags)
@@ -674,6 +697,7 @@ UserChangeDisplaySettings(
     HKEY hkey;
     NTSTATUS Status;
     PPDEVOBJ ppdev;
+    WORD OrigBC;
     //PDESKTOP pdesk;
 
     /* If no DEVMODE is given, use registry settings */
@@ -691,6 +715,9 @@ UserChangeDisplaySettings(
         return DISP_CHANGE_BADMODE; /* This is what winXP SP3 returns */
     else
         dm = *pdm;
+
+    /* Save original bit count */
+    OrigBC = gpsi->BitCount;
 
     /* Check params */
     if ((dm.dmFields & (DM_PELSWIDTH | DM_PELSHEIGHT)) != (DM_PELSWIDTH | DM_PELSHEIGHT))
@@ -752,18 +779,12 @@ UserChangeDisplaySettings(
         }
     }
 
-    /* Check if DEVMODE matches the current mode */
-    if (pdm == ppdev->pdmwDev && !(flags & CDS_RESET))
-    {
-        ERR("DEVMODE matches, nothing to do\n");
-        goto leave;
-    }
-
     /* Shall we apply the settings? */
     if (!(flags & CDS_NORESET))
     {
         ULONG ulResult;
         PVOID pvOldCursor;
+        TEXTMETRICW tmw;
 
         /* Remove mouse pointer */
         pvOldCursor = UserSetCursor(NULL, TRUE);
@@ -790,10 +811,23 @@ UserChangeDisplaySettings(
         /* Update the system metrics */
         InitMetrics();
 
-        //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
-
         /* Set new size of the monitor */
         UserUpdateMonitorSize((HDEV)ppdev);
+
+        /* Update the SERVERINFO */
+        gpsi->dmLogPixels = ppdev->gdiinfo.ulLogPixelsY;
+        gpsi->Planes      = ppdev->gdiinfo.cPlanes;
+        gpsi->BitsPixel   = ppdev->gdiinfo.cBitsPixel;
+        gpsi->BitCount    = gpsi->Planes * gpsi->BitsPixel;
+        if (ppdev->gdiinfo.flRaster & RC_PALETTE)
+        {
+            gpsi->PUSIFlags |= PUSIF_PALETTEDISPLAY;
+        }
+        else
+            gpsi->PUSIFlags &= ~PUSIF_PALETTEDISPLAY;
+        // Font is realized and this dc was previously set to internal DC_ATTR.
+        gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
+        gpsi->tmSysFont     = tmw;
 
         /* Remove all cursor clipping */
         UserClipCursor(NULL);
@@ -802,13 +836,21 @@ UserChangeDisplaySettings(
         //IntHideDesktop(pdesk);
 
         /* Send WM_DISPLAYCHANGE to all toplevel windows */
-        co_IntSendMessageTimeout(HWND_BROADCAST,
-                                 WM_DISPLAYCHANGE,
-                                 (WPARAM)ppdev->gdiinfo.cBitsPixel,
-                                 (LPARAM)(ppdev->gdiinfo.ulHorzRes + (ppdev->gdiinfo.ulVertRes << 16)),
-                                 SMTO_NORMAL,
-                                 100,
-                                 &ulResult);
+        UserSendNotifyMessage( HWND_BROADCAST,
+                               WM_DISPLAYCHANGE,
+                               gpsi->BitCount,
+                               MAKELONG(gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN]) );
+
+        ERR("BitCount New %d Orig %d ChkNew %d\n",gpsi->BitCount,OrigBC,ppdev->gdiinfo.cBitsPixel);
+
+        /* Not full screen and different bit count, send messages */
+        if (!(flags & CDS_FULLSCREEN) &&
+              gpsi->BitCount != OrigBC )
+        {
+           ERR("Detect settings changed.\n");
+           UserSendNotifyMessage( HWND_BROADCAST, WM_SETTINGCHANGE, 0, 0 );
+           UserSendNotifyMessage( HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0 );
+        }
 
         //co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
 

@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -597,10 +597,7 @@ AcpiRsConvertResourceToAml (
 
             /* Set vendor offset only if there is vendor data */
 
-            if (Resource->Data.Gpio.VendorLength)
-            {
-                ACPI_SET16 (Target, AmlLength);
-            }
+            ACPI_SET16 (Target, AmlLength);
 
             AcpiRsSetResourceLength (AmlLength, Aml);
             break;

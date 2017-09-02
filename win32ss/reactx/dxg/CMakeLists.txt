@@ -4,9 +4,16 @@ spec2def(dxg.sys dxg.spec)
 list(APPEND SOURCE
     main.c
     ddhmg.c
+    d3d.c
+    dd.c
+    ddraw.c
+    ddsurf.c
     eng.c
     historic.c
     dxg_int.h)
+
+include_directories(
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 add_library(dxg SHARED
     ${SOURCE}

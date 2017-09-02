@@ -4,7 +4,7 @@
 #pragma once
 
 #include <atlcore.h>
-
+#include <atlexcept.h>
 
 namespace ATL
 {
@@ -162,9 +162,8 @@ public:
         int nLength = StringLength(pszSrc);
         CStringData* pData = pStringMgr->Allocate(nLength, sizeof(XCHAR));
         if (pData == NULL)
-        {
-            throw; // ThrowMemoryException();
-        }
+            ThrowMemoryException();
+
         Attach(pData);
         SetLength(nLength);
         CopyChars(m_pszData, nLength, pszSrc, nLength);
@@ -176,12 +175,12 @@ public:
         _Inout_ IAtlStringMgr* pStringMgr)
     {
         if (pchSrc == NULL && nLength != 0)
-            throw;
+            ThrowInvalidArgException();
 
         CStringData* pData = pStringMgr->Allocate(nLength, sizeof(XCHAR));
         if (pData == NULL)
         {
-            throw; // ThrowMemoryException();
+            ThrowMemoryException();
         }
         Attach(pData);
         SetLength(nLength);
@@ -231,6 +230,12 @@ public:
     CSimpleStringT& operator+=(_In_z_ PCXSTR pszSrc)
     {
         Append(pszSrc);
+        return *this;
+    }
+
+    CSimpleStringT& operator+=(XCHAR ch)
+    {
+        Append(&ch, 1);
         return *this;
     }
 
@@ -364,6 +369,13 @@ public:
         SetLength(nNewLength);
     }
 
+    void ReleaseBuffer(_In_ int nNewLength = -1)
+    {
+        if (nNewLength < 0)
+            nNewLength = StringLength(m_pszData);
+        ReleaseBufferSetLength(nNewLength);
+    }
+
     bool IsEmpty() const throw()
     {
         return (GetLength() == 0);
@@ -485,7 +497,7 @@ private:
         CStringData* pNewData = pOldData->pStringMgr->Clone()->Allocate(nLength, sizeof(XCHAR));
         if (pNewData == NULL)
         {
-            throw; // ThrowMemoryException();
+            ThrowMemoryException();
         }
         int nCharsToCopy = ((nOldLength < nLength) ? nOldLength : nLength) + 1;
         CopyChars(PXSTR(pNewData->data()), nCharsToCopy,
@@ -550,7 +562,7 @@ private:
         CStringData* pNewData = pStringMgr->Reallocate(pOldData, nLength, sizeof(XCHAR));
         if (pNewData == NULL)
         {
-            throw; // ThrowMemoryException();
+            ThrowMemoryException();
         }
 
         Attach(pNewData);
@@ -562,7 +574,9 @@ private:
         ATLASSERT(nLength <= GetData()->nAllocLength);
 
         if (nLength < 0 || nLength > GetData()->nAllocLength)
-            throw;
+        {
+            AtlThrow(E_INVALIDARG);
+        }
 
         GetData()->nDataLength = nLength;
         m_pszData[nLength] = 0;
@@ -583,7 +597,7 @@ private:
             pNewData = pNewStringMgr->Allocate(pData->nDataLength, sizeof(XCHAR));
             if (pNewData == NULL)
             {
-                throw; // ThrowMemoryException();
+                ThrowMemoryException();
             }
 
             pNewData->nDataLength = pData->nDataLength;
@@ -594,7 +608,24 @@ private:
         return pNewData;
     }
 
+
+    static void ThrowMemoryException()
+    {
+        AtlThrow(E_OUTOFMEMORY);
+    }
+
+    static void ThrowInvalidArgException()
+    {
+        AtlThrow(E_INVALIDARG);
+    }
+
 };
+
+#ifdef UNICODE
+typedef CSimpleStringT<WCHAR>   CSimpleString;
+#else
+typedef CSimpleStringT<CHAR>    CSimpleString;
+#endif
 }
 
 #endif

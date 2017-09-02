@@ -146,30 +146,22 @@ DceSetDrawable( PWND Window OPTIONAL,
                 ULONG Flags,
                 BOOL SetClipOrigin)
 {
-  DC *dc = DC_LockDc(hDC);
-  if(!dc)
-      return;
+  RECTL rect = {0,0,0,0};
 
-  if (Window == NULL)
-  {
-      dc->ptlDCOrig.x = 0;
-      dc->ptlDCOrig.y = 0;
-  }
-  else
+  if (Window)
   {
       if (Flags & DCX_WINDOW)
       {
-         dc->ptlDCOrig.x = Window->rcWindow.left;
-         dc->ptlDCOrig.y = Window->rcWindow.top;
+         rect = Window->rcWindow;
       }
       else
       {
-         dc->ptlDCOrig.x = Window->rcClient.left;
-         dc->ptlDCOrig.y = Window->rcClient.top;
+         rect = Window->rcClient;
       }
   }
-  dc->fs |= DC_FLAG_DIRTY_RAO;
-  DC_UnlockDc(dc);
+
+  /* Set DC Origin and Window Rectangle */
+  GreSetDCOrg( hDC, rect.left, rect.top, &rect);
 }
 
 
@@ -766,7 +758,7 @@ DceFreeWindowDCE(PWND Window)
 }
 
 void FASTCALL
-DceFreeClassDCE(HDC hDC)
+DceFreeClassDCE(PDCE pdceClass)
 {
    PDCE pDCE;
    PLIST_ENTRY ListEntry;
@@ -776,7 +768,7 @@ DceFreeClassDCE(HDC hDC)
    {
        pDCE = CONTAINING_RECORD(ListEntry, DCE, List);
        ListEntry = ListEntry->Flink;
-       if (pDCE->hDC == hDC)
+       if (pDCE == pdceClass)
        {
           DceFreeDCE(pDCE, TRUE); // Might have gone cheap!
        }
@@ -959,7 +951,7 @@ UserGetWindowDC(PWND Wnd)
 HWND FASTCALL
 UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
 {
-  XCLIPOBJ* Clip;
+  EWNDOBJ* Clip;
   PWND Wnd;
   HWND hWnd;
 
@@ -967,11 +959,11 @@ UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
 
   if (hWnd && (Wnd = UserGetWindowObject(hWnd)))
   {
-     Clip = (XCLIPOBJ*)UserGetProp(Wnd, AtomWndObj, TRUE);
+     Clip = (EWNDOBJ*)UserGetProp(Wnd, AtomWndObj, TRUE);
 
      if ( Clip && Clip->Hwnd == hWnd )
      {
-        if (pwndo) *pwndo = &Clip->WndObj;
+        if (pwndo) *pwndo = (PWNDOBJ)Clip;
      }
   }
   return hWnd;

@@ -48,7 +48,7 @@ WSHAddressToString(
     OUT     LPWSTR AddressString,
     IN OUT  LPDWORD AddressStringLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NO_ERROR;
 }
@@ -62,7 +62,7 @@ WSHEnumProtocols(
     IN OUT  LPVOID lpProtocolBuffer,
     IN OUT  LPDWORD lpdwBufferLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NO_ERROR;
 }
@@ -100,7 +100,7 @@ WSHGetProviderGuid(
     IN  LPWSTR ProviderName,
     OUT LPGUID ProviderGuid)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NO_ERROR;
 }
@@ -238,7 +238,7 @@ WSHGetSocketInformation(
     OUT PCHAR OptionValue,
     OUT LPINT OptionLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     DPRINT1("Get: Unknown level/option name: %d %d\n", Level, OptionName);
 
@@ -328,7 +328,7 @@ WSHGetWSAProtocolInfo(
     OUT LPWSAPROTOCOL_INFOW *ProtocolInfo,
     OUT LPDWORD ProtocolInfoEntries)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NO_ERROR;
 }
@@ -351,11 +351,23 @@ WSHIoctl(
     IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine,
     OUT LPBOOL NeedsCompletion)
 {
-    UNIMPLEMENTED
+    INT res;
+
+    if (IoControlCode == SIO_GET_INTERFACE_LIST)
+    {
+        res = WSHIoctl_GetInterfaceList(
+            OutputBuffer,
+            OutputBufferLength,
+            NumberOfBytesReturned,
+            NeedsCompletion);
+        return res;
+    }
+
+    UNIMPLEMENTED;
 
     DPRINT1("Ioctl: Unknown IOCTL code: %d\n", IoControlCode);
 
-    return NO_ERROR;
+    return WSAEINVAL;
 }
 
 
@@ -376,7 +388,7 @@ WSHJoinLeaf(
     IN  LPQOS GroupQOS,
     IN  DWORD Flags)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NO_ERROR;
 }
@@ -405,7 +417,7 @@ SendRequest(
 
     closeTcpFile(TcpCC);
 
-    DPRINT("DeviceIoControl: %d\n", ((Status == TRUE) ? 0 : GetLastError()));
+    DPRINT("DeviceIoControl: %ld\n", ((Status == TRUE) ? 0 : GetLastError()));
 
     if (!Status)
         return WSAEINVAL;
@@ -473,7 +485,7 @@ WSHNotify(
                 }
             }
 
-            DPRINT("Instance: %x Type: %x\n", Context->AddrFileInstance, Context->AddrFileEntityType);
+            DPRINT("Instance: %lx Type: %lx\n", Context->AddrFileInstance, Context->AddrFileEntityType);
 
             tdiFreeThingSet(EntityIDs);
 
@@ -500,7 +512,7 @@ WSHNotify(
             break;
 
         default:
-            DPRINT1("Unwanted notification received! (%d)\n", NotifyEvent);
+            DPRINT1("Unwanted notification received! (%ld)\n", NotifyEvent);
             break;
     }
 
@@ -797,7 +809,7 @@ WSHStringToAddress(
     OUT     LPSOCKADDR Address,
     IN OUT  LPDWORD AddressStringLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NO_ERROR;
 }

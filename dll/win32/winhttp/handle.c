@@ -77,9 +77,10 @@ void release_object( object_header_t *hdr )
 HINTERNET alloc_handle( object_header_t *hdr )
 {
     object_header_t **p;
-    ULONG_PTR handle = 0, num;
+    ULONG_PTR handle, num;
 
     list_init( &hdr->children );
+    hdr->handle = NULL;
 
     EnterCriticalSection( &handle_cs );
     if (!max_handles)
@@ -100,11 +101,12 @@ HINTERNET alloc_handle( object_header_t *hdr )
     if (handles[handle]) ERR("handle isn't free but should be\n");
 
     handles[handle] = addref_object( hdr );
-    while (handles[next_handle] && (next_handle < max_handles)) next_handle++;
+    hdr->handle = (HINTERNET)(handle + 1);
+    while ((next_handle < max_handles) && handles[next_handle]) next_handle++;
 
 end:
     LeaveCriticalSection( &handle_cs );
-    return hdr->handle = (HINTERNET)(handle + 1);
+    return hdr->handle;
 }
 
 BOOL free_handle( HINTERNET hinternet )

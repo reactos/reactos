@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,6 @@
 #ifndef __ACDRAGONFLY_H_
 #define __ACDRAGONFLY_H_
 
-#include <platform/acgcc.h>     /* DragonFly uses GCC */
 #include <sys/types.h>
 
 #ifdef __LP64__
@@ -52,6 +51,7 @@
 #else
 #define ACPI_MACHINE_WIDTH              32
 #define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_NATIVE_MATH64
 #endif
 
 #define ACPI_UINTPTR_T                  uintptr_t

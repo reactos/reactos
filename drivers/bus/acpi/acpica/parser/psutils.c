@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@
 #include "accommon.h"
 #include "acparser.h"
 #include "amlcode.h"
+#include "acconvert.h"
 
 #define _COMPONENT          ACPI_PARSER
         ACPI_MODULE_NAME    ("psutils")
@@ -148,7 +149,7 @@ AcpiPsAllocOp (
     }
     else if (OpInfo->Flags & AML_NAMED)
     {
-        Flags = ACPI_PARSEOP_NAMED;
+        Flags = ACPI_PARSEOP_NAMED_OBJECT;
     }
     else if (Opcode == AML_INT_BYTELIST_OP)
     {
@@ -177,6 +178,17 @@ AcpiPsAllocOp (
         AcpiPsInitOp (Op, Opcode);
         Op->Common.Aml = Aml;
         Op->Common.Flags = Flags;
+        ASL_CV_CLEAR_OP_COMMENTS(Op);
+
+        if (Opcode == AML_SCOPE_OP)
+        {
+            AcpiGbl_CurrentScope = Op;
+        }
+    }
+
+    if (Gbl_CaptureComments)
+    {
+        ASL_CV_TRANSFER_COMMENTS (Op);
     }
 
     return (Op);
@@ -203,6 +215,7 @@ AcpiPsFreeOp (
     ACPI_FUNCTION_NAME (PsFreeOp);
 
 
+    ASL_CV_CLEAR_OP_COMMENTS(Op);
     if (Op->Common.AmlOpcode == AML_INT_RETURN_VALUE_OP)
     {
         ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS,

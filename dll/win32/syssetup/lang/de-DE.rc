@@ -83,6 +83,15 @@ BEGIN
     AUTOCHECKBOX "&Uhr automatisch auf Sommer-/Winterzeit umstellen", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
+IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON "Lautus Theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Klassisches Theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+END
+
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS-Installation"
@@ -135,6 +144,8 @@ BEGIN
     IDS_DATETIMESUBTITLE "Stellen Sie das korrekte Datum und die Uhrzeit für Ihren Computer ein."
     IDS_PROCESSTITLE "Komponenten werden registriert"
     IDS_PROCESSSUBTITLE "Bitte warten..."
+    IDS_THEMESELECTIONTITLE "Erscheinungsbild"
+    IDS_THEMESELECTIONSUBTITLE "Wählen Sie Ihr bevorzugtes Theme"
 END
 
 STRINGTABLE
@@ -149,8 +160,8 @@ BEGIN
     IDS_TIMEOUT "Zeitüberschreitung während der Registrierung"
     IDS_REASON_UNKNOWN ""
     /*
-     * ATTENTION: 
-     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     * ATTENTION:
+     *   If you translate the administrator account name, keep IDS_ADMINISTRATOR_NAME and
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
@@ -172,4 +183,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "Geräte werden installiert..."
+END
+
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMFILES "%SystemDrive%\\Programme"
+    IDS_COMMONFILES "Gemeinsame Dateien"
 END

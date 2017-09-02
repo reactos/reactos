@@ -118,8 +118,9 @@ KdpGetDebugMode(PCHAR Currentp2)
         KdpDebugMode.Gdb = TRUE;
 
         /* Enable Debugging */
-        KdDebuggerEnabled = TRUE;
         KdDebuggerNotPresent = FALSE;
+        KdDebuggerEnabled = TRUE;
+        SharedUserData->KdDebuggerEnabled = TRUE;
         WrapperInitRoutine = KdpGdbStubInit;
     }
 
@@ -131,8 +132,9 @@ KdpGetDebugMode(PCHAR Currentp2)
         KdpDebugMode.Pice = TRUE;
 
         /* Enable Debugging */
-        KdDebuggerEnabled = TRUE;
         KdDebuggerNotPresent = FALSE;
+        KdDebuggerEnabled = TRUE;
+        SharedUserData->KdDebuggerEnabled = TRUE;
     }
 
     return p2;
@@ -192,13 +194,16 @@ KdInitSystem(ULONG BootPhase,
         else if (strstr(CommandLine, "DEBUG"))
         {
             /* Enable the kernel debugger */
-            KdDebuggerEnabled = TRUE;
             KdDebuggerNotPresent = FALSE;
+            KdDebuggerEnabled = TRUE;
 #ifdef KDBG
             /* Get the KDBG Settings */
             KdbpGetCommandLineSettings(LoaderBlock->LoadOptions);
 #endif
         }
+
+        /* Let user-mode know our state */
+        SharedUserData->KdDebuggerEnabled = KdDebuggerEnabled;
 
         /* Get the port and baud rate */
         Port = strstr(CommandLine, "DEBUGPORT");

@@ -11,7 +11,7 @@ BEGIN
     END
     POPUP "&Воспроизведение"
     BEGIN
-        MENUITEM "Воспроизведение/&Пауза\tCtrl+P", IDC_PLAY
+        MENUITEM "Воспроизвести/&Приостановить\tCtrl+P", IDC_PLAY
         MENUITEM "&Остановить\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
         MENUITEM "&Повтор\tCtrl+T", IDM_REPEAT
@@ -29,7 +29,7 @@ BEGIN
     END
     POPUP "&Помощь"
     BEGIN
-        MENUITEM "&О программе...", IDM_ABOUT
+        MENUITEM "&О программе", IDM_ABOUT
     END
 END
 
@@ -44,14 +44,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
-    IDS_MODE_OPEN "Opened"
-    IDS_MODE_STOP "Stopped"
-    IDS_MODE_PLAY "Playing"
-    IDS_MODE_PAUSE "Paused"
-    IDS_MODE_RECORD "Recording"
-    IDS_MODE_SEEK "Seeking"
-    IDS_MODE_NOT_READY "Not ready"
+    IDS_MODE_UNKNOWN "Неизвестно"
+    IDS_MODE_OPEN "Открыт"
+    IDS_MODE_STOP "Остановлен"
+    IDS_MODE_PLAY "Воспроизводится"
+    IDS_MODE_PAUSE "Приостановлен"
+    IDS_MODE_RECORD "Записывает"
+    IDS_MODE_SEEK "Перематывает"
+    IDS_MODE_NOT_READY "Не готов"
     IDS_ALL_TYPES_FILTER "Все поддерживаемые"
     IDS_TOOLTIP_PLAY "Воспроизведение"
     IDS_TOOLTIP_STOP "Остановить"
@@ -60,7 +60,7 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Перемотка назад"
     IDS_TOOLTIP_SEEKFORW "Перемотка вперед"
     IDS_TOOLTIP_FORWARD "Вперед"
-    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_TOOLTIP_PAUSE "Приостановить"
     IDS_APPTITLE "Проигрыватель ReactOS"
     IDS_PLAY "Воспроизвести"
     IDS_DEFAULTMCIERRMSG "Неизвестная ошибка."

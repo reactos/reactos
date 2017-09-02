@@ -839,7 +839,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     NextEntry = NextEntry->Flink;
     while (NextEntry != ListHead)
     {
-        /* Get the Data Entrry */
+        /* Get the Data Entry */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
 
         /* FIXME: Verify NX Compat */
@@ -901,10 +901,12 @@ LdrShutdownProcess(VOID)
     if (LdrpShutdownInProgress) return STATUS_SUCCESS;
 
     /* Tell the Shim Engine */
-    //if (ShimsEnabled)
-    //{
-        /* FIXME */
-    //}
+    if (g_ShimsEnabled)
+    {
+        VOID(NTAPI *SE_ProcessDying)();
+        SE_ProcessDying = RtlDecodeSystemPointer(g_pfnSE_ProcessDying);
+        SE_ProcessDying();
+    }
 
     /* Tell the world */
     if (ShowSnaps)
@@ -1338,7 +1340,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
     /* Return error if we were not provided a pointer where to save the options key handle */
     if (!OptionsKey) return STATUS_INVALID_HANDLE;
 
-    /* Zero initialize the optinos key pointer */
+    /* Zero initialize the options key pointer */
     *OptionsKey = NULL;
 
     /* Open the options key */
@@ -1523,7 +1525,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                                      IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR,
                                      &ComSectionSize))
     {
-        /* Remeber this for later */
+        /* Remember this for later */
         IsDotNetImage = TRUE;
     }
 
@@ -2110,8 +2112,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     {
         /* Load the Shim Engine */
         Peb->AppCompatInfo = NULL;
-        //LdrpLoadShimEngine(OldShimData, ImagePathName, OldShimData);
-        DPRINT1("We do not support shims yet\n");
+        LdrpLoadShimEngine(OldShimData, &ImagePathName, OldShimData);
     }
     else
     {
@@ -2134,7 +2135,13 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         return Status;
     }
 
-    /* FIXME: Unload the Shim Engine if it was loaded */
+    /* Notify Shim Engine */
+    if (g_ShimsEnabled)
+    {
+        VOID(NTAPI *SE_InstallAfterInit)(PUNICODE_STRING, PVOID);
+        SE_InstallAfterInit = RtlDecodeSystemPointer(g_pfnSE_InstallAfterInit);
+        SE_InstallAfterInit(&ImagePathName, OldShimData);
+    }
 
     /* Check if we have a user-defined Post Process Routine */
     if (NT_SUCCESS(Status) && Peb->PostProcessInitRoutine)
@@ -2216,11 +2223,11 @@ LdrpInit(PCONTEXT Context,
                                       1,
                                       0) == 1)
     {
-        /* Set the timeout to 30 seconds */
+        /* Set the timeout to 30 milliseconds */
         Timeout.QuadPart = Int32x32To64(30, -10000);
 
         /* Make sure the status hasn't changed */
-        while (!LdrpProcessInitialized)
+        while (LdrpProcessInitialized == 1)
         {
             /* Do the wait */
             ZwDelayExecution(FALSE, &Timeout);

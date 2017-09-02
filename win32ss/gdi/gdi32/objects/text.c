@@ -584,13 +584,15 @@ WINAPI
 GetFontResourceInfoW(
     _In_z_ LPCWSTR lpFileName,
     _Inout_ DWORD *pdwBufSize,
-    _Out_writes_to_(*pdwBufSize, *pdwBufSize) PVOID lpBuffer,
+    _Out_writes_to_opt_(*pdwBufSize, 1) PVOID lpBuffer,
     _In_ DWORD dwType)
 {
     BOOL bRet;
     UNICODE_STRING NtFileName;
 
-    if (!lpFileName || !pdwBufSize || !lpBuffer)
+    DPRINT("GetFontResourceInfoW: dwType = %lu\n", dwType);
+
+    if (!lpFileName || !pdwBufSize)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;

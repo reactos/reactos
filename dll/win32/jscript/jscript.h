@@ -68,19 +68,19 @@ void heap_pool_clear(heap_pool_t*) DECLSPEC_HIDDEN;
 void heap_pool_free(heap_pool_t*) DECLSPEC_HIDDEN;
 heap_pool_t *heap_pool_mark(heap_pool_t*) DECLSPEC_HIDDEN;
 
-static inline void *heap_alloc(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, len);
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static inline void *heap_alloc_zero(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 
-static inline void *heap_realloc(void *mem, size_t len)
+static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
 {
-    return HeapReAlloc(GetProcessHeap(), 0, mem, len);
+    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
 }
 
 static inline BOOL heap_free(void *mem)
@@ -142,7 +142,7 @@ typedef enum {
     JSCLASS_JSON
 } jsclass_t;
 
-jsdisp_t *iface_to_jsdisp(IUnknown*) DECLSPEC_HIDDEN;
+jsdisp_t *iface_to_jsdisp(IDispatch*) DECLSPEC_HIDDEN;
 
 typedef struct {
     union {
@@ -184,7 +184,7 @@ static inline void set_disp(vdisp_t *vdisp, IDispatch *disp)
     jsdisp_t *jsdisp;
     HRESULT hres;
 
-    jsdisp = iface_to_jsdisp((IUnknown*)disp);
+    jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
         vdisp->u.jsdisp = jsdisp;
         vdisp->flags = VDISP_JSDISP | VDISP_DISPEX;

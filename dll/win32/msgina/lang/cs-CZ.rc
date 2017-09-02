@@ -66,7 +66,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
-    LTEXT "Tento počítač je momentálně používán a byl uzamčen.", IDC_STATIC, 37, 61, 231, 8
+    LTEXT "Tento počítač je momentálně používán a je uzamčen.", IDC_STATIC, 37, 61, 231, 8
     LTEXT "Zpráva", IDC_LOCKMSG, 37, 75, 231, 26
     LTEXT "Stisknutím kláves Ctrl-Alt-Del odemknete počítač.", IDC_STATIC, 37, 106, 231, 8
 END
@@ -78,7 +78,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
-    LTEXT "Tento počítač je momentálně používán a byl uzamčen.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "Tento počítač je momentálně používán a je uzamčen.", IDC_STATIC, 36, 61, 232, 8
     LTEXT "Zpráva", IDC_LOCKMSG, 36, 75, 232, 26
     LTEXT "Uživatelské jméno:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
@@ -114,7 +114,7 @@ CAPTION "Odhlásit se ze systému"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, -1, 7, 7, 20, 20
-    LTEXT "Určitě se chcete odhlásit?", IDC_STATIC, 35, 16, 146, 8
+    LTEXT "Opravdu se chcete odhlásit?", IDC_STATIC, 35, 16, 146, 8
     PUSHBUTTON "Ano", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Ne", IDNO, 95, 39, 50, 14
 END
@@ -131,6 +131,10 @@ BEGIN
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
     DEFPUSHBUTTON "OK", IDOK, 143, 122, 55, 14, WS_GROUP
     PUSHBUTTON "Storno", IDCANCEL, 204, 122, 55, 14
+
+    // DEFPUSHBUTTON "OK", IDOK, 80, 122, 55, 14, WS_GROUP
+    // PUSHBUTTON "Storno", IDCANCEL, 143, 122, 55, 14
+    // PUSHBUTTON "&Nápověda", IDHELP, 204, 122, 55, 14
 END
 
 IDD_LEGALNOTICE_DLG DIALOGEX 0, 0, 280, 200
@@ -142,19 +146,12 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 115, 179, 50, 14
 END
 
-IDD_SHUTDOWN_SHELL DIALOGEX 0, 0, 275, 146
+IDD_SHUTDOWN_FANCY DIALOGEX 0, 0, 275, 146
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Vypnout ReactOS"
+CAPTION "Luna-XP-style Shut Down dialog"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    ICON IDI_SHUTDOWN, IDI_SHUTDOWN, 9, 57, 21, 20, WS_GROUP
-    LTEXT "&Co má počítač provést?", IDC_STATIC, 39, 57, 167, 10
-    COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
     DEFPUSHBUTTON "OK", IDOK, 80, 122, 55, 14, WS_GROUP
-    PUSHBUTTON "Storno", IDCANCEL, 143, 122, 55, 14
-    PUSHBUTTON "&Nápověda", IDHELP, 204, 122, 55, 14
 END
 
 STRINGTABLE

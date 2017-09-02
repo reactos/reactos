@@ -8,7 +8,7 @@
  *        started.
  *
  *    16 Jul 1998 (John P Price)
- *        Seperated commands into individual files.
+ *        Separated commands into individual files.
  *
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
@@ -114,23 +114,36 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
     }
     else if (Cmd->If.Operator == IF_EXIST)
     {
+        BOOL IsDir;
+        INT Size;
+        WIN32_FIND_DATA f;
+        HANDLE hFind;
+
         /* IF EXIST filename: check if file exists (wildcards allowed) */
         StripQuotes(Right);
 
-        if (_tcschr(Right, _T('*')) || _tcschr(Right, _T('?')))
+        Size = _tcslen(Right);
+        IsDir = (Right[Size - 1] == '\\');
+        if (IsDir)
+            Right[Size - 1] = 0;
+
+
+        hFind = FindFirstFile(Right, &f);
+        if (hFind != INVALID_HANDLE_VALUE)
         {
-            WIN32_FIND_DATA f;
-            HANDLE hFind = FindFirstFile(Right, &f);
-            if (hFind != INVALID_HANDLE_VALUE)
+            if (IsDir)
+            {
+                result = ((f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
+            }
+            else
             {
                 result = TRUE;
-                FindClose(hFind);
             }
+            FindClose(hFind);
         }
-        else
-        {
-            result = (GetFileAttributes(Right) != INVALID_FILE_ATTRIBUTES);
-        }
+
+        if (IsDir)
+            Right[Size - 1] = '\\';
     }
     else
     {

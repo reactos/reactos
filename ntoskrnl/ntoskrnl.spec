@@ -742,11 +742,11 @@
 @ extern LpcPortObjectType
 @ stdcall LpcRequestPort(ptr ptr)
 @ stdcall LpcRequestWaitReplyPort(ptr ptr ptr)
-@ stdcall LsaCallAuthenticationPackage(long long long long long long long)
-@ stdcall LsaDeregisterLogonProcess(long long)
+@ stdcall LsaCallAuthenticationPackage(long long ptr long ptr ptr ptr)
+@ stdcall LsaDeregisterLogonProcess(long)
 @ stdcall LsaFreeReturnBuffer(ptr)
-@ stdcall LsaLogonUser(ptr ptr long long ptr long ptr ptr ptr ptr ptr ptr ptr ptr)
-@ stdcall LsaLookupAuthenticationPackage(long long long)
+@ stdcall LsaLogonUser(long ptr long long ptr long ptr ptr ptr ptr ptr ptr ptr ptr)
+@ stdcall LsaLookupAuthenticationPackage(long ptr ptr)
 @ stdcall LsaRegisterLogonProcess(ptr ptr ptr)
 @ extern Mm64BitPhysicalAddress
 @ stdcall MmAddPhysicalMemory(ptr ptr)

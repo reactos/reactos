@@ -245,7 +245,6 @@ CTravelLog::~CTravelLog()
 
 HRESULT CTravelLog::Initialize()
 {
-    FIXME("CTravelLog::Initialize using hardcoded fMaximumSize.\n");
     fMaximumSize = 1024 * 1024;         // TODO: change to read this from registry
     // Software\Microsoft\Windows\CurrentVersion\Explorer\TravelLog
     // MaxSize
@@ -401,7 +400,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetTravelEntry(IUnknown *punk, int iOffset
     HRESULT                                 hResult;
     
     hResult = FindRelativeEntry(iOffset, &destinationEntry);
-    if (FAILED_UNEXPECTEDLY(hResult))
+    if (FAILED(hResult))
         return hResult;
     hResult = destinationEntry->QueryInterface(IID_PPV_ARG(ITravelEntry, ppte));
     if (FAILED_UNEXPECTEDLY(hResult))

@@ -353,6 +353,7 @@ static HRESULT MPEGSplitter_init_audio(MPEGSplitterImpl *This, const BYTE *heade
     int freq_index;
     int mode_ext;
     int emphasis;
+    int padding;
     int lsf = 1;
     int mpeg1;
     int layer;
@@ -360,7 +361,7 @@ static HRESULT MPEGSplitter_init_audio(MPEGSplitterImpl *This, const BYTE *heade
 
     ZeroMemory(pamt, sizeof(*pamt));
     ppiOutput->dir = PINDIR_OUTPUT;
-    ppiOutput->pFilter = (IBaseFilter*)This;
+    ppiOutput->pFilter = &This->Parser.filter.IBaseFilter_iface;
     wsprintfW(ppiOutput->achName, wszAudioStream);
 
     pamt->formattype = FORMAT_WaveFormatEx;
@@ -377,6 +378,7 @@ static HRESULT MPEGSplitter_init_audio(MPEGSplitterImpl *This, const BYTE *heade
 
     layer         = 4-((header[1]>>1)&0x3);
     bitrate_index =   ((header[2]>>4)&0xf);
+    padding       =   ((header[2]>>1)&0x1);
     freq_index    =   ((header[2]>>2)&0x3) + (mpeg1?(lsf*3):6);
     mode          =   ((header[3]>>6)&0x3);
     mode_ext      =   ((header[3]>>4)&0x3);
@@ -405,12 +407,12 @@ static HRESULT MPEGSplitter_init_audio(MPEGSplitterImpl *This, const BYTE *heade
 
     if (layer == 3)
         format->nBlockAlign = format->nAvgBytesPerSec * 8 * 144 /
-                              (format->nSamplesPerSec<<lsf) + 1;
+                              (format->nSamplesPerSec<<lsf) + padding;
     else if (layer == 2)
         format->nBlockAlign = format->nAvgBytesPerSec * 8 * 144 /
-                              format->nSamplesPerSec + 1;
+                              format->nSamplesPerSec + padding;
     else
-        format->nBlockAlign = 4 * (format->nAvgBytesPerSec * 8 * 12 / format->nSamplesPerSec + 1);
+        format->nBlockAlign = 4 * (format->nAvgBytesPerSec * 8 * 12 / format->nSamplesPerSec + padding);
 
     format->wBitsPerSample = 0;
 
@@ -575,8 +577,7 @@ static HRESULT MPEGSplitter_pre_connect(IPin *iface, IPin *pConnectPin, ALLOCATO
 
             if (FAILED(hr))
             {
-                if (amt.pbFormat)
-                    CoTaskMemFree(amt.pbFormat);
+                CoTaskMemFree(amt.pbFormat);
                 ERR("Could not create pin for MPEG audio stream (%x)\n", hr);
                 break;
             }

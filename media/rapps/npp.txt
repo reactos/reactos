@@ -37,7 +37,7 @@ Size = 4,0 Mio
 
 [Section.0419]
 Description = Текстовый редактор.
-Size = 4,0 МБ
+Size = 4,0 МиБ
 
 [Section.041b]
 Description = Textový editor.

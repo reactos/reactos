@@ -10,6 +10,7 @@ list(APPEND SOURCE
     font.c
     layout.c
     colors.c
+    utils.c
     console.h)
 
 add_rc_deps(console.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/terminal.ico)

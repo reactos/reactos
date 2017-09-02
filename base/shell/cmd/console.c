@@ -303,13 +303,13 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
     DWORD dwWritten;
     HANDLE hOutput = GetStdHandle(nStdHandle);
 
-    /* used to count number of lines since last pause */
+    /* Used to count number of lines since last pause */
     static int LineCount = 0;
 
-    /* used to see how big the screen is */
+    /* Used to see how big the screen is */
     int ScreenLines = 0;
 
-    /* chars since start of line */
+    /* Chars since start of line */
     int CharSL;
 
     int from = 0, i = 0;
@@ -317,22 +317,26 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
     if (NewPage == TRUE)
         LineCount = 0;
 
-    /* rest LineCount and return if no string have been given */
+    /* Reset LineCount and return if no string has been given */
     if (szFormat == NULL)
         return 0;
 
-    /* Get the size of the visual screen that can be printed too */
+    /* Get the size of the visual screen that can be printed to */
     if (!IsConsoleHandle(hOutput) || !GetConsoleScreenBufferInfo(hOutput, &csbi))
     {
         /* We assume it's a file handle */
         ConPrintf(szFormat, arg_ptr, nStdHandle);
         return 0;
     }
-    /* Subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt() */
-    ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
+
+    /*
+     * Get the number of lines currently displayed on screen, minus 1
+     * to account for the "press any key..." prompt from PagePrompt().
+     */
+    ScreenLines = (csbi.srWindow.Bottom - csbi.srWindow.Top);
     CharSL = csbi.dwCursorPosition.X;
 
-    /* Make sure they didn't make the screen to small */
+    /* Make sure the user doesn't have the screen too small */
     if (ScreenLines < 4)
     {
         ConPrintf(szFormat, arg_ptr, nStdHandle);
@@ -355,10 +359,15 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
             WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
             from = i;
 
+            /* Prompt the user */
             if (PagePrompt() != PROMPT_YES)
             {
                 return 1;
             }
+
+            // TODO: Recalculate 'ScreenLines' in case the user redimensions
+            // the window during the prompt.
+
             /* Reset the number of lines being printed */
             LineCount = 0;
         }

@@ -23,7 +23,7 @@ ReiserfsFormat(IN PUNICODE_STRING DriveRoot,
 }
 
 
-NTSTATUS WINAPI
+NTSTATUS NTAPI
 ReiserfsChkdsk(IN PUNICODE_STRING DriveRoot,
                IN BOOLEAN FixErrors,
                IN BOOLEAN Verbose,

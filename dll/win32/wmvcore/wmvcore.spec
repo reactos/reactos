@@ -10,7 +10,7 @@
 @ stub WMCreateIndexer
 @ stdcall WMCreateProfileManager(ptr)
 @ stdcall WMCreateReader(ptr long ptr)
-@ stub WMCreateReaderPriv
+@ stdcall WMCreateReaderPriv(ptr)
 @ stdcall WMCreateSyncReader(ptr long ptr)
 @ stdcall WMCreateWriter(ptr ptr)
 @ stub WMCreateWriterFileSink

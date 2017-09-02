@@ -57,10 +57,10 @@ struct __thread_data {
 
 typedef struct __thread_data thread_data_t;
 
-extern inline BOOL msvcrt_init_tls(void);
-extern inline BOOL msvcrt_free_tls(void);
+extern BOOL msvcrt_init_tls(void);
+extern BOOL msvcrt_free_tls(void);
 extern thread_data_t *msvcrt_get_thread_data(void);
-extern inline void msvcrt_free_tls_mem(void);
+extern void msvcrt_free_tls_mem(void);
 
 #define MSVCRT_ENABLE_PER_THREAD_LOCALE 1
 #define MSVCRT_DISABLE_PER_THREAD_LOCALE 2

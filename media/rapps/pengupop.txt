@@ -28,7 +28,7 @@ Size = 1,7 Mio
 
 [Section.0419]
 Description = Цель данной игры - стрелять цветными шариками в игровое поле, чтобы они образовывали группы из трех или более шариков.
-Size = 1,7 МБ
+Size = 1,7 МиБ
 
 [Section.041f]
 Description = Bu oyunun amacı, oyun alanınızda üç ya da daha çok takımdan oluşan renkli küreleri vurmaktır.

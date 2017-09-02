@@ -1,0 +1,27 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFORMAT "%1 RunEx または RunOnceEx の形式は不正でした。関数名の後に縦線 ('|') が必要であり、関数は WinMain引数をサポートする必要があります。"
+    IDS_LOADERROR "%1 の読み込みにエラーが発生しました。このファイルは、インストールされていないか、壊れています。"
+    IDS_CALLERROR "%2 の関数 %1 の呼び出しのエラーまたは例外が発生しました。"
+    IDS_INCORRECTFORMAT "次の RunEx またはRunOnceEx コマンドの形式が不正です: %1。シェルの実行コマンドは、||で始まらなければなりません。"
+    IDS_NOEXPORT "ファイル %2 の関数 %1 を呼び出すことができませんでした。関数は存在しないか、エクスポートされていません。"
+    IDS_EXECUTEERROR "%1 の実行中にエラーまたは例外が発生しました。"
+    IDS_NOFUNCTION "ファイル %2 の関数 %1 が見つかりません。"
+    IDS_NODEPENDENCY "依存ファイル %1 を読み込みできません。"
+    IDS_SETUPERROR "%1 のセットアップ中にエラーが発生しました。このエラーは記録され、インストールは続行されます。"
+    IDS_INCOMPLETE "アプリケーションの以前のインストールは、完了されていません。\n\nインストールを完了するため、管理者権限でログオンして下さい。"
+    IDS_SETUP "ReactOSセットアップ"
+    IDS_SERVICEERROR "いくつかのサービスが開始できませんでした。セットアップは、サービスを開始するためにシステムを再起動する必要があります。"
+END
+
+IDD_DIALOG DIALOGEX 0, 0, 206, 166
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "ReactOSセットアップ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT "ReactOSは、次の項目をセットアップしています:", -1, 36, 13, 163, 11
+    LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ICON, -1, 7, 7, 20, 20
+END

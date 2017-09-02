@@ -17,6 +17,16 @@ ULONG IapAllocatedTableEntries;
 ULONG IapTableEntries;
 PVOID* IapImageTable;
 
+#ifndef _M_ARM
+KDESCRIPTOR GdtRegister;
+KDESCRIPTOR IdtRegister;
+KDESCRIPTOR BootAppGdtRegister;
+KDESCRIPTOR BootAppIdtRegister;
+PVOID BootApp32EntryRoutine;
+PBOOT_APPLICATION_PARAMETER_BLOCK BootApp32Parameters;
+PVOID BootApp32Stack;
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -186,8 +196,7 @@ ImgpCloseFile (
         if (File->Flags & BL_IMG_REMOTE_FILE)
         {
             /* Then only free the memory in that scenario */
-            EfiPrintf(L"TODO\r\n");
-            //return MmPapFreePages(File->BaseAddress, TRUE);
+            return MmPapFreePages(File->BaseAddress, BL_MM_INCLUDE_MAPPED_ALLOCATED);
         }
     }
 
@@ -202,8 +211,37 @@ BlImgUnallocateImageBuffer (
     _In_ ULONG ImageFlags
     )
 {
-    EfiPrintf(L"leaking the shit out of %p\r\n", ImageBase);
-    return STATUS_NOT_IMPLEMENTED;
+    PHYSICAL_ADDRESS PhysicalAddress;
+    NTSTATUS Status;
+
+    /* Make sure required parameters are present */
+    if (!(ImageBase) || !(ImageSize))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if this was a physical allocation */
+    if (!(ImageFlags & BL_LOAD_IMG_VIRTUAL_BUFFER))
+    {
+        return MmPapFreePages(ImageBase, BL_MM_INCLUDE_MAPPED_ALLOCATED);
+    }
+
+    /* It's virtual, so translate it first */
+    if (!BlMmTranslateVirtualAddress(ImageBase, &PhysicalAddress))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Unmap the virtual mapping */
+    Status = BlMmUnmapVirtualAddressEx(ImageBase, ROUND_TO_PAGES(ImageSize));
+    if (NT_SUCCESS(Status))
+    {
+        /* Now free the physical pages */
+        Status = BlMmFreePhysicalPages(PhysicalAddress);
+    }
+
+    /* All done */
+    return Status;
 }
 
 NTSTATUS
@@ -471,6 +509,7 @@ BlImgLoadImageWithProgress2 (
 
     /* Check if we should compute hash and/or signatures */
     ComputeSignature = ImageFlags & BL_LOAD_IMG_COMPUTE_SIGNATURE;
+    ComputeHash = FALSE;
     if ((ComputeSignature) || (ImageFlags & BL_LOAD_IMG_COMPUTE_HASH))
     {
         ComputeHash = TRUE;
@@ -525,7 +564,7 @@ BlImgLoadImageWithProgress2 (
     }
 
     /* Is the read fully complete? We need to finalize the hash if requested */
-    if (ComputeHash != RemainingLength)
+    if (ComputeHash)
     {
         // todo: CRYPTO IS HARD
     }
@@ -554,8 +593,7 @@ Quickie:
         else
         {
             /* Free the physical buffer */
-            //MmPapFreePages(VirtualAddress, 1);
-            EfiPrintf(L"Leaking memory\r\n");
+            MmPapFreePages(BaseAddress, BL_MM_INCLUDE_MAPPED_ALLOCATED);
         }
     }
 
@@ -883,7 +921,6 @@ ImgpLoadPEImage (
 
     /* Record our current position (right after the headers) */
     EndOfHeaders = (ULONG_PTR)VirtualAddress + HeaderSize;
-    EfiPrintf(L"here\r\n");
 
     /* Get the first section and iterate through each one */
     Section = IMAGE_FIRST_SECTION(NtHeaders);
@@ -981,17 +1018,20 @@ ImgpLoadPEImage (
             if (!First)
             {
                 /* FUCK YOU BINUTILS */
-                if ((*(PULONG)&Section->Name == 'ler.') && (RawSize < AlignSize))
+                if (NtHeaders->OptionalHeader.MajorLinkerVersion < 7)
                 {
-                    /* Piece of shit won't build relocations when you tell it to,
-                     * either by using --emit-relocs or --dynamicbase. People online
-                     * have found out that by using -pie-executable you can get this
-                     * to happen, but then it turns out that the .reloc section is
-                     * incorrectly sized, and results in a corrupt PE. However, they
-                     * still compute the checksum using the correct value. What idiots.
-                     */
-                    WorkaroundForBinutils = AlignSize - RawSize;
-                    AlignSize -= WorkaroundForBinutils;
+                    if ((*(PULONG)&Section->Name == 'ler.') && (RawSize < AlignSize))
+                    {
+                        /* Piece of shit won't build relocations when you tell it to,
+                         * either by using --emit-relocs or --dynamicbase. People online
+                         * have found out that by using -pie-executable you can get this
+                         * to happen, but then it turns out that the .reloc section is
+                         * incorrectly sized, and results in a corrupt PE. However, they
+                         * still compute the checksum using the correct value. What idiots.
+                         */
+                        WorkaroundForBinutils = AlignSize - RawSize;
+                        AlignSize -= WorkaroundForBinutils;
+                    }
                 }
 
                 /* Yes, read the section data */
@@ -1182,11 +1222,10 @@ Quickie:
     if (HashBuffer)
     {
         /* Free it */
-        EfiPrintf(L"Leadking hash: %p\r\n", HashBuffer);
-        //MmPapFreePages(HashBuffer, TRUE);
+        MmPapFreePages(HashBuffer, BL_MM_INCLUDE_MAPPED_ALLOCATED);
     }
 
-    /* Check if we have a certificate diretory */
+    /* Check if we have a certificate directory */
     if ((CertBuffer) && (CertDirectory))
     {
         /* Free it */
@@ -1224,8 +1263,7 @@ Quickie:
             else
             {
                 /* Into a physical buffer -- free it */
-                EfiPrintf(L"Leaking physical pages\r\n");
-               // MmPapFreePages(VirtualAddress, TRUE);
+                MmPapFreePages(VirtualAddress, BL_MM_INCLUDE_MAPPED_ALLOCATED);
             }
         }
     }
@@ -1595,6 +1633,200 @@ BlpPdParseReturnArguments (
 }
 
 NTSTATUS
+ImgpCopyApplicationBootDevice (
+    __in PBL_DEVICE_DESCRIPTOR DestinationDevice,
+    __in PBL_DEVICE_DESCRIPTOR SourceDevice
+    )
+{
+    /* Is this a partition device? */
+    if (SourceDevice->DeviceType != PartitionDevice)
+    {
+        /* It's not -- a simple copy will do */
+        RtlCopyMemory(DestinationDevice, SourceDevice, SourceDevice->Size);
+        return STATUS_SUCCESS;
+    }
+
+    /* TODO */
+    EfiPrintf(L"Partition copy not supported\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+
+}
+
+NTSTATUS
+ImgpInitializeBootApplicationParameters (
+    _In_ PBL_IMAGE_PARAMETERS ImageParameters,
+    _In_ PBL_APPLICATION_ENTRY AppEntry,
+    _In_ PVOID ImageBase, 
+    _In_ ULONG ImageSize
+    )
+{
+    NTSTATUS Status;
+    PIMAGE_NT_HEADERS NtHeaders;
+    BL_IMAGE_PARAMETERS MemoryParameters;
+    LIST_ENTRY MemoryList;
+    PBL_FIRMWARE_DESCRIPTOR FirmwareParameters;
+    PBL_DEVICE_DESCRIPTOR BootDevice;
+    PBL_MEMORY_DATA MemoryData;
+    PBL_APPLICATION_ENTRY BootAppEntry;
+    PBL_RETURN_ARGUMENTS ReturnArguments;
+    PBOOT_APPLICATION_PARAMETER_BLOCK ParameterBlock;
+    ULONG EntrySize, BufferSize;
+
+    /* Get the image headers and validate it */
+    Status = RtlImageNtHeaderEx(0, ImageBase, ImageSize, &NtHeaders);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Get the size of the entire non-firmware, allocated, memory map */
+    MemoryParameters.BufferSize = 0;
+    Status = BlMmGetMemoryMap(&MemoryList,
+                              &MemoryParameters,
+                              BL_MM_INCLUDE_PERSISTENT_MEMORY |
+                              BL_MM_INCLUDE_MAPPED_ALLOCATED |
+                              BL_MM_INCLUDE_MAPPED_UNALLOCATED |
+                              BL_MM_INCLUDE_UNMAPPED_ALLOCATED |
+                              BL_MM_INCLUDE_RESERVED_ALLOCATED,
+                              0);
+    if ((Status != STATUS_BUFFER_TOO_SMALL) && (Status != STATUS_SUCCESS))
+    {
+        /* We failed due to an unknown reason -- bail out */
+        return Status;
+    }
+
+    /* Compute the list of the BCD plus the application entry */
+    EntrySize = BlGetBootOptionListSize(&AppEntry->BcdData) +
+                FIELD_OFFSET(BL_APPLICATION_ENTRY, BcdData);
+
+    /* Compute the total size required for the entire structure */
+    BufferSize = EntrySize +
+                 BlpBootDevice->Size +
+                 MemoryParameters.BufferSize +
+                 sizeof(*ReturnArguments) +
+                 sizeof(*MemoryData) + 
+                 sizeof(*FirmwareParameters) + 
+                 sizeof(*ParameterBlock);
+
+    /* Check if this gives us enough space */
+    if (ImageParameters->BufferSize < BufferSize)
+    {
+        /* It does not -- free the existing buffer */
+        if (ImageParameters->BufferSize)
+        {
+            BlMmFreeHeap(ImageParameters->Buffer);
+        }
+
+        /* Allocate a new buffer of sufficient size */
+        ImageParameters->BufferSize = BufferSize;
+        ImageParameters->Buffer = BlMmAllocateHeap(BufferSize);
+        if (!ImageParameters->Buffer)
+        {
+            /* Bail out if we couldn't allocate it */
+            return STATUS_NO_MEMORY;
+        }
+    }
+
+    /* Zero out the parameter block */
+    ParameterBlock = (PBOOT_APPLICATION_PARAMETER_BLOCK)ImageParameters->Buffer;
+    RtlZeroMemory(ParameterBlock, BufferSize);
+
+    /* Initialize it */
+    ParameterBlock->Version = BOOT_APPLICATION_VERSION;
+    ParameterBlock->Size = BufferSize;
+    ParameterBlock->Signature[0] = BOOT_APPLICATION_SIGNATURE_1;
+    ParameterBlock->Signature[1] = BOOT_APPLICATION_SIGNATURE_2;
+    ParameterBlock->MemoryTranslationType = MmTranslationType;
+    ParameterBlock->ImageType = IMAGE_FILE_MACHINE_I386;
+    ParameterBlock->ImageBase = (ULONG_PTR)ImageBase;
+    ParameterBlock->ImageSize = NtHeaders->OptionalHeader.SizeOfImage;
+
+    /* Get the offset to the memory data */
+    ParameterBlock->MemoryDataOffset = sizeof(*ParameterBlock);
+
+    /* Fill it out */
+    MemoryData = (PBL_MEMORY_DATA)((ULONG_PTR)ParameterBlock +
+                                   ParameterBlock->MemoryDataOffset);
+    MemoryData->Version = BL_MEMORY_DATA_VERSION;
+    MemoryData->MdListOffset = sizeof(*MemoryData);
+    MemoryData->DescriptorSize = sizeof(BL_MEMORY_DESCRIPTOR);
+    MemoryData->DescriptorOffset = FIELD_OFFSET(BL_MEMORY_DESCRIPTOR, BasePage);
+
+    /* And populate the memory map */
+    MemoryParameters.Buffer = MemoryData + 1;
+    Status = BlMmGetMemoryMap(&MemoryList,
+                              &MemoryParameters,
+                              BL_MM_INCLUDE_PERSISTENT_MEMORY |
+                              BL_MM_INCLUDE_MAPPED_ALLOCATED |
+                              BL_MM_INCLUDE_MAPPED_UNALLOCATED |
+                              BL_MM_INCLUDE_UNMAPPED_ALLOCATED |
+                              BL_MM_INCLUDE_RESERVED_ALLOCATED,
+                              0);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Now that we have the map, indicate the number of descriptors */
+    MemoryData->DescriptorCount = MemoryParameters.ActualSize /
+                                  MemoryData->DescriptorSize;
+
+    /* Get the offset to the application entry */
+    ParameterBlock->AppEntryOffset = ParameterBlock->MemoryDataOffset +
+                                     MemoryData->MdListOffset +
+                                     MemoryParameters.BufferSize;
+
+    /* Fill it out */
+    BootAppEntry = (PBL_APPLICATION_ENTRY)((ULONG_PTR)ParameterBlock +
+                                           ParameterBlock->AppEntryOffset);
+    RtlCopyMemory(BootAppEntry, AppEntry, EntrySize);
+
+    /* Get the offset to the boot device */
+    ParameterBlock->BootDeviceOffset = ParameterBlock->AppEntryOffset +
+                                       EntrySize;
+
+    /* Fill it out */
+    BootDevice = (PBL_DEVICE_DESCRIPTOR)((ULONG_PTR)ParameterBlock +
+                                         ParameterBlock->BootDeviceOffset);
+    Status = ImgpCopyApplicationBootDevice(BootDevice, BlpBootDevice);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Get the offset to the firmware data */
+    ParameterBlock->FirmwareParametersOffset = ParameterBlock->BootDeviceOffset +
+                                               BootDevice->Size;
+
+    /* Fill it out */
+    FirmwareParameters = (PBL_FIRMWARE_DESCRIPTOR)((ULONG_PTR)ParameterBlock +
+                                                   ParameterBlock->
+                                                   FirmwareParametersOffset);
+    Status = BlFwGetParameters(FirmwareParameters);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Get the offset to the return arguments */
+    ParameterBlock->ReturnArgumentsOffset = ParameterBlock->FirmwareParametersOffset +
+                                            sizeof(BL_FIRMWARE_DESCRIPTOR);
+
+    /* Fill them out */
+    ReturnArguments = (PBL_RETURN_ARGUMENTS)((ULONG_PTR)ParameterBlock +
+                                             ParameterBlock->
+                                             ReturnArgumentsOffset);
+    ReturnArguments->Version = BL_RETURN_ARGUMENTS_VERSION;
+    ReturnArguments->DataPage = 0;
+    ReturnArguments->DataSize = 0;
+
+    /* Structure complete */
+    ImageParameters->ActualSize = ParameterBlock->ReturnArgumentsOffset +
+                                  sizeof(*ReturnArguments);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 ImgArchEfiStartBootApplication (
     _In_ PBL_APPLICATION_ENTRY AppEntry,
     _In_ PVOID ImageBase,
@@ -1602,9 +1834,96 @@ ImgArchEfiStartBootApplication (
     _In_ PBL_RETURN_ARGUMENTS ReturnArguments
     )
 {
-    /* Not yet implemented. This is the last step! */
-    EfiPrintf(L"EFI APPLICATION START!!!\r\n");
-    EfiStall(100000000);
+#ifndef _M_ARM
+    KDESCRIPTOR Gdt, Idt;
+    ULONG BootSizeNeeded;
+    NTSTATUS Status;
+    PVOID BootData;
+    PIMAGE_NT_HEADERS NtHeaders;
+    PVOID NewStack, NewGdt, NewIdt;
+    BL_IMAGE_PARAMETERS Parameters;
+
+    /* Read the current IDT and GDT */
+    _sgdt(&Gdt.Limit);
+    __sidt(&Idt.Limit);
+
+    /* Allocate space for the IDT, GDT, and 24 pages of stack */
+    BootSizeNeeded = (ULONG)PAGE_ALIGN(Idt.Limit + Gdt.Limit + 1 + 25 * PAGE_SIZE);
+    Status = MmPapAllocatePagesInRange(&BootData,
+                                       BlLoaderArchData,
+                                       BootSizeNeeded >> PAGE_SHIFT,
+                                       0,
+                                       0,
+                                       NULL,
+                                       0);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Zero the boot data */
+    RtlZeroMemory(BootData, BootSizeNeeded);
+
+    /* Set the new stack, GDT and IDT */
+    NewStack = (PVOID)((ULONG_PTR)BootData + (24 * PAGE_SIZE) - 8);
+    NewGdt = (PVOID)((ULONG_PTR)BootData + (24 * PAGE_SIZE));
+    NewIdt = (PVOID)((ULONG_PTR)BootData + (24 * PAGE_SIZE) + Gdt.Limit + 1);
+
+    /* Copy the current (firmware) GDT and IDT */
+    RtlCopyMemory(NewGdt, (PVOID)Gdt.Base, Gdt.Limit + 1);
+    RtlCopyMemory(NewIdt, (PVOID)Idt.Base, Idt.Limit + 1);
+
+    /* Read the NT headers so that we can get the entrypoint later on */
+    RtlImageNtHeaderEx(0, ImageBase, ImageSize, &NtHeaders);
+
+    /* Prepare the application parameters */
+    RtlZeroMemory(&Parameters, sizeof(Parameters));
+    Status = ImgpInitializeBootApplicationParameters(&Parameters,
+                                                     AppEntry,
+                                                     ImageBase,
+                                                     ImageSize);
+    if (NT_SUCCESS(Status))
+    {
+        /* Set the firmware GDT/IDT as the one the application will use */
+        BootAppGdtRegister = Gdt;
+        BootAppIdtRegister = Idt;
+
+        /* Set the entrypoint, parameters, and stack */
+        BootApp32EntryRoutine = (PVOID)((ULONG_PTR)ImageBase +
+                                        NtHeaders->OptionalHeader.
+                                        AddressOfEntryPoint);
+        BootApp32Parameters = Parameters.Buffer;
+        BootApp32Stack = NewStack;
+
+#if BL_KD_SUPPORT
+        /* Disable the kernel debugger */
+        BlBdStop();
+#endif
+        /* Make it so */
+        Archx86TransferTo32BitApplicationAsm();
+
+        /* Not yet implemented. This is the last step! */
+        EfiPrintf(L"EFI APPLICATION RETURNED!!!\r\n");
+        EfiStall(100000000);
+
+#if BL_KD_SUPPORT
+        /* Re-enable the kernel debugger */
+        BlBdStart();
+#endif
+    }
+
+Quickie:
+    /* Check if we had boot data allocated */
+    if (BootData)
+    {
+        /* Free it */
+        MmPapFreePages(BootData, BL_MM_INCLUDE_MAPPED_ALLOCATED);
+    }
+#else
+    EfiPrintf(L"ImgArchEfiStartBootApplication not implemented for this platform.\r\n");
+#endif
+
+    /* All done */
     return STATUS_NOT_IMPLEMENTED;
 }
 

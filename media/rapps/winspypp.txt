@@ -22,7 +22,7 @@ Size = 58,3 Kio
 [Section.0419]
 License = Бесплатно
 Description = Утилита для просмотра свойств любого окна в системе. Для распаковки нужен 7-zip.
-Size = 58,3 КБ
+Size = 58,3 КиБ
 
 [Section.041f]
 License = Ücretsiz

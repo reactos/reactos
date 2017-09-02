@@ -1,4 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -11,9 +11,9 @@ COMP [/L] [/A] [data1] [data2]\n\n\
   /L         Afișează numărul liniei pentru diferențe.\n"
     IDS_INVALIDSWITCH "Parametru nevalid - /%c\n"
     IDS_BADSYNTAX "Sintaxă eronată\n"
-    IDS_FILEERROR "Nu se poate găsi/deschide fișierul: %s\n"
-    IDS_COMPARING "Se compară %s și %s...\n"
-    IDS_FILESIZEERROR "Nu se poate determina dimensiunea fișierului: %s\n"
+    IDS_FILEERROR "Nu poate fi găsit/deschis fișierul: %s\n"
+    IDS_COMPARING "%s este comparat cu %s...\n"
+    IDS_FILESIZEERROR "Eroare la determinarea dimensiunii fișierului: %s\n"
     IDS_SIZEDIFFERS "Fișierele au dimensiuni diferite.\n"
     IDS_READERROR "Eroare la citirea fișierelor.\n"
     IDS_MISMATCHLINE "Diferență identificată la linia %d\n"

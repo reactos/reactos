@@ -2,6 +2,7 @@
  * wrtarga.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
+ * Modified 2015 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -73,7 +74,7 @@ write_header (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo, int num_colors)
   targaheader[17] = 0x20;	/* Top-down, non-interlaced */
 
   if (cinfo->out_color_space == JCS_GRAYSCALE) {
-    targaheader[2] = 3;		/* image type = uncompressed gray-scale */
+    targaheader[2] = 3;		/* image type = uncompressed grayscale */
     targaheader[16] = 8;	/* bits per pixel */
   } else {			/* must be RGB */
     if (num_colors > 0) {
@@ -247,7 +248,7 @@ jinit_write_targa (j_decompress_ptr cinfo)
     ((j_common_ptr) cinfo, JPOOL_IMAGE, dest->buffer_width, (JDIMENSION) 1);
   dest->pub.buffer_height = 1;
 
-  return (djpeg_dest_ptr) dest;
+  return &dest->pub;
 }
 
 #endif /* TARGA_SUPPORTED */

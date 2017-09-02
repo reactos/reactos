@@ -16,6 +16,7 @@ BEGIN
   [Enhet:][Mapp]Filnamn    En fil, Välj innehåll som skall visas.\n\
   Kommando\t\t     Ett kommando, Välj vad som skall visas.\n\n\
   vid prompten ""-- Fortsätt --"" du kan trycka valfri knapp för att visa nästa sida.\n"
-    IDS_CONTINUE " -- Fortsätt (100%) -- "
-    IDS_FILE_ACCESS "Får inte tillgång till filen %s."
+    IDS_CONTINUE "-- Fortsätt --"
+    IDS_CONTINUE_PROGRESS "-- Fortsätt (%d%%) --"
+    IDS_FILE_ACCESS "Får inte tillgång till filen %s.\n"
 END

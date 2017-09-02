@@ -97,7 +97,7 @@ VfatGetStandardInformation(
         StandardInfo->Directory = FALSE;
     }
     StandardInfo->NumberOfLinks = 1;
-    StandardInfo->DeletePending = FCB->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
+    StandardInfo->DeletePending = BooleanFlagOn(FCB->Flags, FCB_DELETE_PENDING);
 
     *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
     return STATUS_SUCCESS;
@@ -125,13 +125,13 @@ NTSTATUS
 VfatGetPositionInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_POSITION_INFORMATION PositionInfo,
     PULONG BufferLength)
 {
     UNREFERENCED_PARAMETER(FileObject);
     UNREFERENCED_PARAMETER(FCB);
-    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     DPRINT("VfatGetPositionInformation()\n");
 
@@ -165,7 +165,7 @@ VfatSetBasicInformation(
     /* Check volume label bit */
     ASSERT(0 == (*FCB->Attributes & _A_VOLID));
 
-    if (FCB->Flags & FCB_IS_FATX_ENTRY)
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         if (BasicInfo->CreationTime.QuadPart != 0 && BasicInfo->CreationTime.QuadPart != -1)
         {
@@ -230,7 +230,7 @@ VfatSetBasicInformation(
         DPRINT("Setting attributes 0x%02x\n", *FCB->Attributes);
     }
 
-    VfatUpdateEntry(FCB);
+    VfatUpdateEntry(FCB, vfatVolumeIsFatX(DeviceExt));
 
     return STATUS_SUCCESS;
 }
@@ -239,22 +239,18 @@ NTSTATUS
 VfatGetBasicInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_BASIC_INFORMATION BasicInfo,
     PULONG BufferLength)
 {
-    PDEVICE_EXTENSION DeviceExt;
-
     UNREFERENCED_PARAMETER(FileObject);
 
     DPRINT("VfatGetBasicInformation()\n");
 
-    DeviceExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
-    if (FCB->Flags & FCB_IS_FATX_ENTRY)
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    FCB->entry.FatX.CreationDate,
@@ -310,13 +306,9 @@ NTSTATUS
 VfatSetDispositionInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
-#if DBG
-    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-#endif
-
     DPRINT("FsdSetDispositionInformation(<%wZ>, Delete %u)\n", &FCB->PathNameU, DispositionInfo->DeleteFile);
 
     ASSERT(DeviceExt != NULL);
@@ -331,14 +323,14 @@ VfatSetDispositionInformation(
         return STATUS_SUCCESS;
     }
 
-    if (FCB->Flags & FCB_DELETE_PENDING)
+    if (BooleanFlagOn(FCB->Flags, FCB_DELETE_PENDING))
     {
         /* stream already marked for deletion. just update the file object */
         FileObject->DeletePending = TRUE;
         return STATUS_SUCCESS;
     }
 
-    if (*FCB->Attributes & FILE_ATTRIBUTE_READONLY)
+    if (vfatFCBIsReadOnly(FCB))
     {
         return STATUS_CANNOT_DELETE;
     }
@@ -359,7 +351,7 @@ VfatSetDispositionInformation(
         return STATUS_CANNOT_DELETE;
     }
 
-    if (vfatFCBIsDirectory(FCB) && !VfatIsDirectoryEmpty(FCB))
+    if (vfatFCBIsDirectory(FCB) && !VfatIsDirectoryEmpty(DeviceExt, FCB))
     {
         /* can't delete a non-empty directory */
 
@@ -398,7 +390,7 @@ vfatPrepareTargetForRename(
         if (ReplaceIfExists)
         {
             /* If that's a directory or a read-only file, we're not allowed */
-            if (vfatFCBIsDirectory(TargetFcb) || ((*TargetFcb->Attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY))
+            if (vfatFCBIsDirectory(TargetFcb) || vfatFCBIsReadOnly(TargetFcb))
             {
                 DPRINT("And this is a readonly file!\n");
                 vfatReleaseFCB(DeviceExt, *ParentFCB);
@@ -456,6 +448,65 @@ vfatPrepareTargetForRename(
 
     /* Failure */
     return Status;
+}
+
+static
+BOOLEAN
+IsThereAChildOpened(PVFATFCB FCB)
+{
+    PLIST_ENTRY Entry;
+    PVFATFCB VolFCB;
+
+    for (Entry = FCB->ParentListHead.Flink; Entry != &FCB->ParentListHead; Entry = Entry->Flink)
+    {
+        VolFCB = CONTAINING_RECORD(Entry, VFATFCB, ParentListEntry);
+        if (VolFCB->OpenHandleCount != 0)
+        {
+            ASSERT(VolFCB->parentFcb == FCB);
+            DPRINT1("At least one children file opened! %wZ (%u, %u)\n", &VolFCB->PathNameU, VolFCB->RefCount, VolFCB->OpenHandleCount);
+            return TRUE;
+        }
+
+        if (vfatFCBIsDirectory(VolFCB) && !IsListEmpty(&VolFCB->ParentListHead))
+        {
+            if (IsThereAChildOpened(VolFCB))
+            {
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
+static
+VOID
+VfatRenameChildFCB(
+    PDEVICE_EXTENSION DeviceExt,
+    PVFATFCB FCB)
+{
+    PLIST_ENTRY Entry;
+    PVFATFCB Child;
+
+    if (IsListEmpty(&FCB->ParentListHead))
+        return;
+
+    for (Entry = FCB->ParentListHead.Flink; Entry != &FCB->ParentListHead; Entry = Entry->Flink)
+    {
+        NTSTATUS Status;
+
+        Child = CONTAINING_RECORD(Entry, VFATFCB, ParentListEntry);
+        DPRINT("Found %wZ with still %lu references (parent: %lu)!\n", &Child->PathNameU, Child->RefCount, FCB->RefCount);
+
+        Status = vfatSetFCBNewDirName(DeviceExt, Child, FCB);
+        if (!NT_SUCCESS(Status))
+            continue;
+
+        if (vfatFCBIsDirectory(Child))
+        {
+            VfatRenameChildFCB(DeviceExt, Child);
+        }
+    }
 }
 
 /*
@@ -704,24 +755,13 @@ VfatSetRenameInformation(
     vfatSplitPathName(&NewName, &NewPath, &NewFile);
     DPRINT("New dir: %wZ, New file: %wZ\n", &NewPath, &NewFile);
 
-    /* FIXME: Do it in a more efficient way, like linking FCBs to their parent FCB so that we browse less FCBs
-     * Note: The FIXME is the way MS FastFAT seems to do it
-     */
-    if (vfatFCBIsDirectory(FCB))
+    if (vfatFCBIsDirectory(FCB) && !IsListEmpty(&FCB->ParentListHead))
     {
-        PLIST_ENTRY Entry;
-        PVFATFCB VolFCB;
-
-        for (Entry = DeviceExt->FcbListHead.Flink; Entry != &DeviceExt->FcbListHead; Entry = Entry->Flink)
+        if (IsThereAChildOpened(FCB))
         {
-            VolFCB = CONTAINING_RECORD(Entry, VFATFCB, FcbListEntry);
-            if (VolFCB->parentFcb == FCB && VolFCB->OpenHandleCount != 0)
-            {
-                DPRINT1("At least one children file opened! %wZ (%u, %u)\n", &VolFCB->PathNameU, VolFCB->RefCount, VolFCB->OpenHandleCount);
-                Status = STATUS_ACCESS_DENIED;
-                ASSERT(OldReferences == FCB->parentFcb->RefCount);
-                goto Cleanup;
-            }
+            Status = STATUS_ACCESS_DENIED;
+            ASSERT(OldReferences == FCB->parentFcb->RefCount);
+            goto Cleanup;
         }
     }
 
@@ -743,7 +783,7 @@ VfatSetRenameInformation(
                                         FCB->PathNameU.Length - FCB->LongNameU.Length,
                                         NULL,
                                         NULL,
-                                        ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                        (vfatFCBIsDirectory(FCB) ?
                                         FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                         FILE_ACTION_RENAMED_OLD_NAME,
                                         NULL);
@@ -756,7 +796,7 @@ VfatSetRenameInformation(
                                             FCB->PathNameU.Length - FCB->LongNameU.Length,
                                             NULL,
                                             NULL,
-                                            ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                            (vfatFCBIsDirectory(FCB) ?
                                             FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                             FILE_ACTION_RENAMED_NEW_NAME,
                                             NULL);
@@ -786,7 +826,7 @@ VfatSetRenameInformation(
                                         FCB->PathNameU.Length - FCB->LongNameU.Length,
                                         NULL,
                                         NULL,
-                                        ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                        (vfatFCBIsDirectory(FCB) ?
                                         FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                         (DeletedTarget ? FILE_ACTION_REMOVED : FILE_ACTION_RENAMED_OLD_NAME),
                                         NULL);
@@ -814,7 +854,7 @@ VfatSetRenameInformation(
                                                 FCB->PathNameU.Length - FCB->LongNameU.Length,
                                                 NULL,
                                                 NULL,
-                                                ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                                (vfatFCBIsDirectory(FCB) ?
                                                 FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                                 FILE_ACTION_RENAMED_NEW_NAME,
                                                 NULL);
@@ -857,7 +897,7 @@ VfatSetRenameInformation(
                                     FCB->PathNameU.Length - FCB->LongNameU.Length,
                                     NULL,
                                     NULL,
-                                    ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                    (vfatFCBIsDirectory(FCB) ?
                                     FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                     FILE_ACTION_REMOVED,
                                     NULL);
@@ -885,12 +925,17 @@ VfatSetRenameInformation(
                                             FCB->PathNameU.Length - FCB->LongNameU.Length,
                                             NULL,
                                             NULL,
-                                            ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                            (vfatFCBIsDirectory(FCB) ?
                                             FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                             FILE_ACTION_ADDED,
                                             NULL);
             }
         }
+    }
+
+    if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
+    {
+        VfatRenameChildFCB(DeviceExt, FCB);
     }
 
     ASSERT(OldReferences == OldParent->RefCount + 1); // removed file
@@ -914,14 +959,14 @@ NTSTATUS
 VfatGetNameInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_NAME_INFORMATION NameInfo,
     PULONG BufferLength)
 {
     ULONG BytesToCopy;
 
     UNREFERENCED_PARAMETER(FileObject);
-    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     ASSERT(NameInfo != NULL);
     ASSERT(FCB != NULL);
@@ -958,6 +1003,7 @@ static
 NTSTATUS
 VfatGetInternalInformation(
     PVFATFCB Fcb,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_INTERNAL_INFORMATION InternalInfo,
     PULONG BufferLength)
 {
@@ -966,8 +1012,9 @@ VfatGetInternalInformation(
 
     if (*BufferLength < sizeof(FILE_INTERNAL_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
-    // FIXME: get a real index, that can be used in a create operation
-    InternalInfo->IndexNumber.QuadPart = 0;
+
+    InternalInfo->IndexNumber.QuadPart = (LONGLONG)vfatDirEntryGetFirstCluster(DeviceExt, &Fcb->entry) * DeviceExt->FatInfo.BytesPerCluster;
+
     *BufferLength -= sizeof(FILE_INTERNAL_INFORMATION);
     return STATUS_SUCCESS;
 }
@@ -990,7 +1037,7 @@ VfatGetNetworkOpenInformation(
     if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
         return(STATUS_BUFFER_OVERFLOW);
 
-    if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    Fcb->entry.FatX.CreationDate,
@@ -1056,12 +1103,10 @@ NTSTATUS
 VfatGetEaInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB Fcb,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_EA_INFORMATION Info,
     PULONG BufferLength)
 {
-    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-
     UNREFERENCED_PARAMETER(FileObject);
     UNREFERENCED_PARAMETER(Fcb);
 
@@ -1086,7 +1131,7 @@ NTSTATUS
 VfatGetAllInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB Fcb,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_ALL_INFORMATION Info,
     PULONG BufferLength)
 {
@@ -1099,28 +1144,28 @@ VfatGetAllInformation(
         return STATUS_BUFFER_OVERFLOW;
 
     /* Basic Information */
-    Status = VfatGetBasicInformation(FileObject, Fcb, DeviceObject, &Info->BasicInformation, BufferLength);
+    Status = VfatGetBasicInformation(FileObject, Fcb, DeviceExt, &Info->BasicInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* Standard Information */
     Status = VfatGetStandardInformation(Fcb, &Info->StandardInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* Internal Information */
-    Status = VfatGetInternalInformation(Fcb, &Info->InternalInformation, BufferLength);
+    Status = VfatGetInternalInformation(Fcb, DeviceExt, &Info->InternalInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* EA Information */
-    Status = VfatGetEaInformation(FileObject, Fcb, DeviceObject, &Info->EaInformation, BufferLength);
+    Status = VfatGetEaInformation(FileObject, Fcb, DeviceExt, &Info->EaInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* Access Information: The IO-Manager adds this information */
     *BufferLength -= sizeof(FILE_ACCESS_INFORMATION);
     /* Position Information */
-    Status = VfatGetPositionInformation(FileObject, Fcb, DeviceObject, &Info->PositionInformation, BufferLength);
+    Status = VfatGetPositionInformation(FileObject, Fcb, DeviceExt, &Info->PositionInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* Mode Information: The IO-Manager adds this information */
     *BufferLength -= sizeof(FILE_MODE_INFORMATION);
     /* Alignment Information: The IO-Manager adds this information */
     *BufferLength -= sizeof(FILE_ALIGNMENT_INFORMATION);
     /* Name Information */
-    Status = VfatGetNameInformation(FileObject, Fcb, DeviceObject, &Info->NameInformation, BufferLength);
+    Status = VfatGetNameInformation(FileObject, Fcb, DeviceExt, &Info->NameInformation, BufferLength);
 
     return Status;
 }
@@ -1131,7 +1176,8 @@ UpdateFileSize(
     PFILE_OBJECT FileObject,
     PVFATFCB Fcb,
     ULONG Size,
-    ULONG ClusterSize)
+    ULONG ClusterSize,
+    BOOLEAN IsFatX)
 {
     if (Size > 0)
     {
@@ -1143,7 +1189,7 @@ UpdateFileSize(
     }
     if (!vfatFCBIsDirectory(Fcb))
     {
-        if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+        if (IsFatX)
             Fcb->entry.FatX.FileSize = Size;
         else
             Fcb->entry.Fat.FileSize = Size;
@@ -1168,12 +1214,12 @@ VfatSetAllocationSizeInformation(
     ULONG ClusterSize = DeviceExt->FatInfo.BytesPerCluster;
     ULONG NewSize = AllocationSize->u.LowPart;
     ULONG NCluster;
-    BOOLEAN AllocSizeChanged = FALSE;
+    BOOLEAN AllocSizeChanged = FALSE, IsFatX = vfatVolumeIsFatX(DeviceExt);
 
     DPRINT("VfatSetAllocationSizeInformation(File <%wZ>, AllocationSize %d %u)\n",
            &Fcb->PathNameU, AllocationSize->HighPart, AllocationSize->LowPart);
 
-    if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+    if (IsFatX)
         OldSize = Fcb->entry.FatX.FileSize;
     else
         OldSize = Fcb->entry.Fat.FileSize;
@@ -1225,7 +1271,7 @@ VfatSetAllocationSizeInformation(
                 return STATUS_DISK_FULL;
             }
 
-            if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+            if (IsFatX)
             {
                 Fcb->entry.FatX.FirstCluster = FirstCluster;
             }
@@ -1295,7 +1341,7 @@ VfatSetAllocationSizeInformation(
                 return STATUS_DISK_FULL;
             }
         }
-        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
+        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize, vfatVolumeIsFatX(DeviceExt));
     }
     else if (NewSize + ClusterSize <= Fcb->RFCB.AllocationSize.u.LowPart)
     {
@@ -1311,7 +1357,7 @@ VfatSetAllocationSizeInformation(
         AllocSizeChanged = TRUE;
         /* FIXME: Use the cached cluster/offset better way. */
         Fcb->LastCluster = Fcb->LastOffset = 0;
-        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
+        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize, vfatVolumeIsFatX(DeviceExt));
         if (NewSize > 0)
         {
             Status = OffsetToCluster(DeviceExt, FirstCluster,
@@ -1325,7 +1371,7 @@ VfatSetAllocationSizeInformation(
         }
         else
         {
-            if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+            if (IsFatX)
             {
                 Fcb->entry.FatX.FirstCluster = 0;
             }
@@ -1355,14 +1401,14 @@ VfatSetAllocationSizeInformation(
     }
     else
     {
-        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
+        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize, vfatVolumeIsFatX(DeviceExt));
     }
 
     /* Update the on-disk directory entry */
     Fcb->Flags |= FCB_IS_DIRTY;
     if (AllocSizeChanged)
     {
-        VfatUpdateEntry(Fcb);
+        VfatUpdateEntry(Fcb, vfatVolumeIsFatX(DeviceExt));
     }
     return STATUS_SUCCESS;
 }
@@ -1375,7 +1421,7 @@ VfatQueryInformation(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     FILE_INFORMATION_CLASS FileInformationClass;
-    PVFATFCB FCB = NULL;
+    PVFATFCB FCB;
 
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID SystemBuffer;
@@ -1391,11 +1437,17 @@ VfatQueryInformation(
     DPRINT("VfatQueryInformation is called for '%s'\n",
            FileInformationClass >= FileMaximumInformation - 1 ? "????" : FileInformationClassNames[FileInformationClass]);
 
+    if (FCB == NULL)
+    {
+        DPRINT1("IRP_MJ_QUERY_INFORMATION without FCB!\n");
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
 
     SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
     BufferLength = IrpContext->Stack->Parameters.QueryFile.Length;
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceSharedLite(&FCB->MainResource,
                                          BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
@@ -1415,7 +1467,7 @@ VfatQueryInformation(
         case FilePositionInformation:
             Status = VfatGetPositionInformation(IrpContext->FileObject,
                                                 FCB,
-                                                IrpContext->DeviceObject,
+                                                IrpContext->DeviceExt,
                                                 SystemBuffer,
                                                 &BufferLength);
             break;
@@ -1423,7 +1475,7 @@ VfatQueryInformation(
         case FileBasicInformation:
             Status = VfatGetBasicInformation(IrpContext->FileObject,
                                              FCB,
-                                             IrpContext->DeviceObject,
+                                             IrpContext->DeviceExt,
                                              SystemBuffer,
                                              &BufferLength);
             break;
@@ -1431,13 +1483,14 @@ VfatQueryInformation(
         case FileNameInformation:
             Status = VfatGetNameInformation(IrpContext->FileObject,
                                             FCB,
-                                            IrpContext->DeviceObject,
+                                            IrpContext->DeviceExt,
                                             SystemBuffer,
                                             &BufferLength);
             break;
 
         case FileInternalInformation:
             Status = VfatGetInternalInformation(FCB,
+                                                IrpContext->DeviceExt,
                                                 SystemBuffer,
                                                 &BufferLength);
             break;
@@ -1452,7 +1505,7 @@ VfatQueryInformation(
         case FileAllInformation:
             Status = VfatGetAllInformation(IrpContext->FileObject,
                                            FCB,
-                                           IrpContext->DeviceObject,
+                                           IrpContext->DeviceExt,
                                            SystemBuffer,
                                            &BufferLength);
             break;
@@ -1460,7 +1513,7 @@ VfatQueryInformation(
         case FileEaInformation:
             Status = VfatGetEaInformation(IrpContext->FileObject,
                                           FCB,
-                                          IrpContext->DeviceObject,
+                                          IrpContext->DeviceExt,
                                           SystemBuffer,
                                           &BufferLength);
             break;
@@ -1473,7 +1526,7 @@ VfatQueryInformation(
             Status = STATUS_INVALID_PARAMETER;
     }
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         ExReleaseResourceLite(&FCB->MainResource);
     }
@@ -1495,7 +1548,7 @@ VfatSetInformation(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     FILE_INFORMATION_CLASS FileInformationClass;
-    PVFATFCB FCB = NULL;
+    PVFATFCB FCB;
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID SystemBuffer;
 
@@ -1515,6 +1568,13 @@ VfatSetInformation(
 
     DPRINT("FileInformationClass %d\n", FileInformationClass);
     DPRINT("SystemBuffer %p\n", SystemBuffer);
+
+    if (FCB == NULL)
+    {
+        DPRINT1("IRP_MJ_SET_INFORMATION without FCB!\n");
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* Special: We should call MmCanFileBeTruncated here to determine if changing
        the file size would be allowed.  If not, we bail with the right error.
@@ -1541,7 +1601,7 @@ VfatSetInformation(
         }
     }
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceExclusiveLite(&FCB->MainResource,
                                             BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
@@ -1565,7 +1625,7 @@ VfatSetInformation(
         case FileDispositionInformation:
             Status = VfatSetDispositionInformation(IrpContext->FileObject,
                                                    FCB,
-                                                   IrpContext->DeviceObject,
+                                                   IrpContext->DeviceExt,
                                                    SystemBuffer);
             break;
 
@@ -1596,7 +1656,7 @@ VfatSetInformation(
             Status = STATUS_NOT_SUPPORTED;
     }
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         ExReleaseResourceLite(&FCB->MainResource);
     }

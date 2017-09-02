@@ -2,44 +2,44 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "&Большие значки", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Мелкие значки", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Список", FCIDM_SHVIEW_LISTVIEW
-    MENUITEM "&Подробно", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "&Таблица", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "Упорядочить &значки", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Автоматически", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Просмотр"
+        POPUP "&Вид", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "&Большие значки", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Мелкие значки", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Список", FCIDM_SHVIEW_LISTVIEW
-            MENUITEM "&Подробно", FCIDM_SHVIEW_REPORTVIEW
+            MENUITEM "&Таблица", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "Упорядочить &значки"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Упорядочить &значки", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "По &имени", 0x30  /* column 0 */
-            MENUITEM "По &типу", 0x32  /* column 2 */
-            MENUITEM "По &размеру", 0x31  /* ... */
-            MENUITEM "По &дате", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Автоматически", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "В&ыровнять значки", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "О&бновить", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Вставить", FCIDM_SHVIEW_INSERT
         MENUITEM "Вставить &ярлык", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
-        MENUITEM "Сво&йства", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -65,17 +65,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Проводник", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Открыть", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Вырезать", FCIDM_SHVIEW_CUT
-        MENUITEM "&Копировать", FCIDM_SHVIEW_COPY
+        MENUITEM "&Вырезать", IDM_CUT
+        MENUITEM "&Копировать", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Создать &ярлык", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Удалить", FCIDM_SHVIEW_DELETE
-        MENUITEM "Переи&меновать", FCIDM_SHVIEW_RENAME
+        MENUITEM "Создать &ярлык", IDM_CREATELINK
+        MENUITEM "&Удалить", IDM_DELETE
+        MENUITEM "Переи&меновать", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "Сво&йства", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Сво&йства", IDM_PROPERTIES
     END
 END
 
@@ -121,7 +119,7 @@ END
 
 IDD_ABOUT DIALOGEX 0, 0, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе %s"
+CAPTION "%s: сведения"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
@@ -133,7 +131,7 @@ BEGIN
     LTEXT ")", IDC_STATIC, 153, 65, 5, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " Команда ReactOS\0", IDC_STATIC, 105, 75, 60, 10
+    LTEXT " Команда ReactOS\0", IDC_STATIC, 105, 75, 65, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
     LTEXT "Данная версия ReactOS зарегистрирована на:", IDC_STATIC, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
@@ -434,7 +432,7 @@ BEGIN
     PUSHBUTTON "&Применить к папкам", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Сброс вида папок", 14002, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Дополнительные параметры:", -1, 7, 80, 105, 10
-    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
     PUSHBUTTON "&Восстановить умолчания", 14004, 160, 210, 100, 14, WS_TABSTOP
 END
 
@@ -488,15 +486,15 @@ BEGIN
     PUSHBUTTON "Отмена", IDCANCEL, 95, 39, 50, 14
 END
 
-IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
+IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Отключить ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Вы действительно хотите выполнить отключение?", -1, 49, 12, 137, 23
-    DEFPUSHBUTTON "Отклю&чение", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 123, 40, 60, 14
+    ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "Вы действительно хотите выполнить отключение?", -1, 49, 15, 131, 17
+    DEFPUSHBUTTON "Отклю&чение", IDOK, 47, 38, 47, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -605,18 +603,18 @@ BEGIN
     LTEXT "", 14003, 9, 69, 204, 22
 END
 
-IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
+IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Изменение значка"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Имя файла:", -1, 7, 14, 208, 10
-    PUSHBUTTON "Обзор...",IDC_BUTTON_PATH, 148, 24, 67, 14
-    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Значки:", -1, 7, 47, 208, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
-    PUSHBUTTON "Отмена",IDCANCEL, 167, 181, 50, 14
+    LTEXT "Искать значки в этом файле:", -1, 7, 7, 179, 10
+    PUSHBUTTON "Обзор...", IDC_BUTTON_PATH, 135, 17, 50, 14
+    EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    LTEXT "Выберите значок из списка ниже:", -1, 7, 36, 179, 10
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -636,24 +634,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Имя"
-    IDS_SHV_COLUMN2 "Размер"
-    IDS_SHV_COLUMN3 "Тип"
-    IDS_SHV_COLUMN4 "Изменен"
-    IDS_SHV_COLUMN5 "Атрибуты"
-    IDS_SHV_COLUMN6 "Полный объем"
-    IDS_SHV_COLUMN7 "Свободно"
-    IDS_SHV_COLUMN8 "Имя"
-    IDS_SHV_COLUMN9 "Комментарий"
-    IDS_SHV_COLUMN10 "Владелец"
-    IDS_SHV_COLUMN11 "Группа"
-    IDS_SHV_COLUMN12 "Имя файла"
-    IDS_SHV_COLUMN13 "Категория"
+    IDS_SHV_COLUMN_NAME "Название"
+    IDS_SHV_COLUMN_SIZE "Размер"
+    IDS_SHV_COLUMN_TYPE "Тип"
+    IDS_SHV_COLUMN_MODIFIED "Изменен"
+    IDS_SHV_COLUMN_ATTRIBUTES "Атрибуты"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Полный объем"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Свободно"
+    IDS_SHV_COLUMN_OWNER "Владелец"
+    IDS_SHV_COLUMN_GROUP "Группа"
+    IDS_SHV_COLUMN_FILENAME "Имя файла"
+    IDS_SHV_COLUMN_CATEGORY "Категория"
     IDS_SHV_COLUMN_DELFROM "Изначальное расположение"
     IDS_SHV_COLUMN_DELDATE "Дата удаления"
     IDS_SHV_COLUMN_FONTTYPE "Тип шрифта"
     IDS_SHV_COLUMN_WORKGROUP "Рабочая группа"
-    IDS_SHV_NETWORKLOCATION "Сетевое расположение"
+    IDS_SHV_COLUMN_NETLOCATION "Сетевое расположение"
     IDS_SHV_COLUMN_DOCUMENTS "Документы"
     IDS_SHV_COLUMN_STATUS "Состояние"
     IDS_SHV_COLUMN_COMMENTS "Комментарии"
@@ -667,11 +663,17 @@ BEGIN
     IDS_CONTROLPANEL "Панель управления"
     IDS_ADMINISTRATIVETOOLS "Администрирование"
 
+    /* special folders descriptions */
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Настройка параметров управления для вашего компьютера."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Настройка отображения файлов и папок и изменение сопоставлений файлов."
+    IDS_FONTS_DESCRIPTION "Добавление, изменение и управление шрифтами на компьютере."
+    IDS_PRINTERS_DESCRIPTION "Показывает установленные принтеры и факсы и поможет вам добавить новые."
+
     /* context menus */
     IDS_VIEW_LARGE "&Большие значки"
     IDS_VIEW_SMALL "&Мелкие значки"
     IDS_VIEW_LIST "&Список"
-    IDS_VIEW_DETAILS "&Подробно"
+    IDS_VIEW_DETAILS "&Таблица"
     IDS_SELECT "&Выбрать"
     IDS_OPEN "&Открыть"
     IDS_CREATELINK "Создать &ярлык"
@@ -684,8 +686,8 @@ BEGIN
     IDS_RENAME "Переименовать"
     IDS_PASTE "Вставить"
 
-    IDS_CREATEFOLDER_DENIED "Недостаточно прав для создания папки"
-    IDS_CREATEFOLDER_CAPTION "Ошибка во время создания папки"
+    IDS_CREATEFOLDER_DENIED "Невозможно создать папку '%1'"
+    IDS_CREATEFOLDER_CAPTION "Невозможно создать папку"
     IDS_DELETEITEM_CAPTION "Подтверждение удаления файла"
     IDS_DELETEFOLDER_CAPTION "Подтверждение удаления папки"
     IDS_DELETEITEM_TEXT "Удалить '%1'?"
@@ -722,8 +724,8 @@ BEGIN
     IDS_PROGRAMS "Главное меню\\Программы"
     IDS_PERSONAL "Мои документы"
     IDS_FAVORITES "Избранное"
-    IDS_STARTUP "Главное меню\\Программы\\Автозапуск"
-    IDS_RECENT "Недавнее"
+    IDS_STARTUP "Главное меню\\Программы\\Автозагрузка"
+    IDS_RECENT "Недавние документы"
     IDS_SENDTO "Отправить"
     IDS_STARTMENU "Главное меню"
     IDS_MYMUSIC "Мои документы\\Моя музыка"
@@ -753,7 +755,7 @@ BEGIN
     IDS_DRIVE_FIXED "Локальный диск"
     IDS_DRIVE_CDROM "CD-дисковод"
     IDS_DRIVE_NETWORK "Сетевой диск"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_FLOPPY "Дисковод 3.5"
     IDS_DRIVE_REMOVABLE "Съемный диск"
     IDS_FS_UNKNOWN "Неизвестно"
 
@@ -776,7 +778,7 @@ BEGIN
     IDS_PICK_ICON_FILTER "Файлы значков (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Все файлы (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Исполняемые файлы (*.exe)\0*.exe\0Все файлы (*.*)\0*.*\0"
 
-    IDS_DIRECTORY "Папка"
+    IDS_DIRECTORY "Папка с файлами"
     IDS_BAT_FILE "Пакетный файл ReactOS"
     IDS_CMD_FILE "Командный скрипт ReactOS"
     IDS_COM_FILE "Приложение DOS"
@@ -796,6 +798,7 @@ BEGIN
     IDS_SCR_FILE "Заставка"
     IDS_SYS_FILE "Системный файл"
     IDS_VXD_FILE "Драйвер виртуального устройства"
+    IDS_ANY_FILE "%s-файл"
 
     IDS_OPEN_VERB "Открыть"
     IDS_EXPLORE_VERB "Открыть в дереве"
@@ -821,13 +824,33 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "Файл %s"
 
     IDS_BYTES_FORMAT "байт"
     IDS_UNKNOWN_APP "Неизвестное приложение"
     IDS_EXE_DESCRIPTION "Описание:"
 
     IDS_MENU_EMPTY "(пусто)"
-    IDS_OBJECTS "Элементов: %d"
-    IDS_OBJECTS_SELECTED "Выбрано элементов: %d"
+    IDS_OBJECTS "Объектов: %d"
+    IDS_OBJECTS_SELECTED "Выделено объектов: %d"
+
+    IDS_ADVANCED_FOLDER "Файлы и папки"
+    IDS_ADVANCED_NET_CRAWLER "Автоматический поиск сетевых папок и принтеров"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Отображать сведения о размере файлов в подсказках папок"
+    IDS_ADVANCED_FRIENDLY_TREE "Отображать простой вид папок в списке папок проводника"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Отображать содержимое системных папок"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Отображать полный путь в адресной строке"
+    IDS_ADVANCED_SHOW_FULL_PATH "Отображать полный путь в строке заголовка"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Не кэшировать эскизы"
+    IDS_ADVANCED_HIDDEN "Скрытые файлы и папки"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Не показывать скрытые файлы и папки"
+    IDS_ADVANCED_SHOW_HIDDEN "Показывать скрытые файлы и папки"
+    IDS_ADVANCED_HIDE_FILE_EXT "Скрывать расширения для зарегистрированных типов файлов"
+    IDS_ADVANCED_SUPER_HIDDEN "Скрывать защищенные системные файлы (рекомендуется)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Открывать каждую папку в отдельном процессе"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Помнить параметры отображения каждой папки"
+    IDS_ADVANCED_PERSIST_BROWSERS "Восстанавливать прежние окна папок при входе в систему"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Показать ""Панель управления"" в ""Мой компьютер"""
+    IDS_ADVANCED_SHOW_COMP_COLOR "Отображать сжатые или зашифрованные файлы NTFS другим цветом"
+    IDS_ADVANCED_SHOW_INFO_TIP "Отображать описание для папок и элементов рабочего стола"
 END

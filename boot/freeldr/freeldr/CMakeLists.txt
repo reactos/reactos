@@ -1,7 +1,7 @@
 
 if(SEPARATE_DBG)
     # FIXME: http://sourceware.org/bugzilla/show_bug.cgi?id=11822
-    set(CMAKE_LDR_PE_HELPER_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    set(CMAKE_LDR_PE_HELPER_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
     set(CMAKE_LDR_PE_HELPER_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 endif()
 
@@ -123,7 +123,6 @@ if(ARCH STREQUAL "i386")
         arch/i386/hwdisk.c
         arch/i386/hwpci.c
         arch/i386/i386bug.c
-        arch/i386/i386disk.c
         arch/i386/i386idt.c
         arch/i386/i386rtl.c
         arch/i386/i386vid.c
@@ -137,7 +136,6 @@ if(ARCH STREQUAL "i386")
         arch/i386/xboxcons.c
         arch/i386/xboxdisk.c
         arch/i386/xboxfont.c
-        arch/i386/xboxhw.c
         arch/i386/xboxi2c.c
         arch/i386/xboxmem.c
         arch/i386/xboxrtc.c
@@ -170,7 +168,6 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/hwpci.c
         arch/i386/i386bug.c
         arch/i386/i386rtl.c
-        arch/i386/i386disk.c
         arch/i386/i386vid.c
         arch/i386/machpc.c
         arch/i386/pccons.c

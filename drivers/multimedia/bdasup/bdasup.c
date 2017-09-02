@@ -606,7 +606,7 @@ BdaDeletePin(
     IN PKSFILTER pKSFilter,
     IN ULONG *pulPinId)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     DPRINT("BdaDeletePin\n");
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -706,7 +706,7 @@ BdaPropertyGetControllingPinId(
     IN KSP_BDA_NODE_PIN *pProperty,
     OUT ULONG *pulControllingPinId)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     DPRINT("BdaPropertyGetControllingPinId\n");
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -764,7 +764,7 @@ BdaPropertyNodeDescriptors(
     IN KSPROPERTY *pKSProperty,
     OUT BDANODE_DESCRIPTOR *pNodeDescriptorProperty)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     DPRINT("BdaPropertyNodeDescriptors\n");
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -779,7 +779,7 @@ BdaPropertyNodeEvents(
     IN KSP_NODE *pKSProperty,
     OUT GUID *pguidProperty)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     DPRINT("BdaPropertyNodeEvents\n");
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -794,7 +794,7 @@ BdaPropertyNodeMethods(
     IN KSP_NODE *pKSProperty,
     OUT GUID *pguidProperty)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     DPRINT("BdaPropertyNodeMethods\n");
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -809,7 +809,7 @@ BdaPropertyNodeProperties(
     IN KSP_NODE *pKSProperty,
     OUT GUID *pguidProperty)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     DPRINT("BdaPropertyNodeProperties\n");
     return STATUS_NOT_IMPLEMENTED;
 }

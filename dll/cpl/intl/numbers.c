@@ -20,7 +20,8 @@
  * PROJECT:         ReactOS International Control Panel
  * FILE:            dll/cpl/intl/numbers.c
  * PURPOSE:         Numbers property page
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "intl.h"
@@ -198,11 +199,14 @@ InitFieldDigNumCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
     for (nCBIndex = 0; nCBIndex < MAX_FIELD_DIG_SAMPLES; nCBIndex++)
     {
         pszFieldDigNumSmpl = InsSpacesFmt(SAMPLE_NUMBER, lpFieldDigNumSamples[nCBIndex]);
-        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
-                            CB_ADDSTRING,
-                            0,
-                            (LPARAM)pszFieldDigNumSmpl);
-        free(pszFieldDigNumSmpl);
+        if (pszFieldDigNumSmpl != NULL)
+        {
+            SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
+                                CB_ADDSTRING,
+                                0,
+                                (LPARAM)pszFieldDigNumSmpl);
+            HeapFree(GetProcessHeap(), 0, pszFieldDigNumSmpl);
+        }
     }
 
     SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
@@ -263,8 +267,7 @@ InitNegSignCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static VOID
 InitNegNumFmtCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szNewSample[MAX_SAMPLES_STR_SIZE];
-    PWSTR pszResultStr;
+    PWSTR pszString1, pszString2;
     INT nCBIndex;
 
     /* Clear all box content */
@@ -277,21 +280,27 @@ InitNegNumFmtCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
     for (nCBIndex = 0; nCBIndex < MAX_NEG_NUMBERS_SAMPLES; nCBIndex++)
     {
         /* Replace standard separator to setted */
-        pszResultStr = ReplaceSubStr(lpNegNumFmtSamples[nCBIndex],
-                                     pGlobalData->szNumDecimalSep,
-                                     L",");
-        wcscpy(szNewSample, pszResultStr);
-        free(pszResultStr);
+        pszString1 = ReplaceSubStr(lpNegNumFmtSamples[nCBIndex],
+                                   pGlobalData->szNumDecimalSep,
+                                   L",");
+        if (pszString1 != NULL)
+        {
+            /* Replace standard negative sign to setted */
+            pszString2 = ReplaceSubStr(pszString1,
+                                       pGlobalData->szNumNegativeSign,
+                                       L"-");
+            if (pszString2 != NULL)
+            {
+                SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
+                                    CB_ADDSTRING,
+                                    0,
+                                    (LPARAM)pszString2);
 
-        /* Replace standard negative sign to setted */
-        pszResultStr = ReplaceSubStr(szNewSample,
-                                     pGlobalData->szNumNegativeSign,
-                                     L"-");
-        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
-                            CB_ADDSTRING,
-                            0,
-                            (LPARAM)pszResultStr);
-        free(pszResultStr);
+                HeapFree(GetProcessHeap(), 0, pszString2);
+            }
+
+            HeapFree(GetProcessHeap(), 0, pszString1);
+        }
     }
 
     /* Set current item to value from registry */
@@ -320,11 +329,14 @@ InitLeadingZeroesCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
         pszResultStr = ReplaceSubStr(lpLeadNumFmtSamples[nCBIndex],
                                      pGlobalData->szNumDecimalSep,
                                      L",");
-        SendDlgItemMessage(hwndDlg, IDC_NUMBERSDISPLEADZER,
-                           CB_ADDSTRING,
-                           0,
-                           (LPARAM)pszResultStr);
-        free(pszResultStr);
+        if (pszResultStr != NULL)
+        {
+            SendDlgItemMessage(hwndDlg, IDC_NUMBERSDISPLEADZER,
+                               CB_ADDSTRING,
+                               0,
+                               (LPARAM)pszResultStr);
+            HeapFree(GetProcessHeap(), 0, pszResultStr);
+        }
     }
 
     /* Set current item to value from registry */
@@ -456,158 +468,110 @@ UpdateNumSamples(HWND hwndDlg,
                         (LPARAM)OutBuffer);
 }
 
-/* Set num decimal separator */
-static BOOL
-SetNumDecimalSep(HWND hwndDlg,
-                 PGLOBALDATA pGlobalData)
+
+static
+BOOL
+GetNumberSetting(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
 {
-    /* Get setted decimal separator */
-    SendDlgItemMessageW(hwndDlg, IDC_NUMBERDSYMBOL,
-                        WM_GETTEXT,
-                        (WPARAM)MAX_NUMDECIMALSEP,
-                        (LPARAM)pGlobalData->szNumDecimalSep);
+    WCHAR szNumDecimalSep[MAX_NUMDECIMALSEP];
+    WCHAR szNumThousandSep[MAX_NUMTHOUSANDSEP];
+    WCHAR szNumNegativeSign[MAX_NUMNEGATIVESIGN];
+    WCHAR szNumListSep[MAX_NUMLISTSEP];
+    INT nNumDigits;
+    INT nNumGrouping;
+    INT nNumNegFormat;
+    INT nNumLeadingZero;
+    INT nNumMeasure;
 
-    return TRUE;
-}
+    /* Decimal symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_NUMBERDSYMBOL,
+                            szNumDecimalSep,
+                            MAX_NUMDECIMALSEP);
 
-/* Set number of fractional symbols */
-static BOOL
-SetFracSymNum(HWND hwndDlg,
-              PGLOBALDATA pGlobalData)
-{
-    INT nCurrSel;
+    if (szNumDecimalSep[0] == L'\0')
+    {
+        /* TODO: Show error message */
 
-    /* Get setted number of fractional symbols */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNDIGDEC,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
         return FALSE;
+    }
 
-    pGlobalData->nNumDigits = nCurrSel;
+    /* Number of digits after decimal */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSNDIGDEC,
+                             &nNumDigits);
 
-    return TRUE;
-}
+    /* Digit grouping symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_NUMBERSDIGITGRSYM,
+                            szNumThousandSep,
+                            MAX_NUMTHOUSANDSEP);
 
-/* Set field separator */
-static BOOL
-SetNumFieldSep(HWND hwndDlg,
-               PGLOBALDATA pGlobalData)
-{
-    /* Get thousand separator */
-    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDIGITGRSYM,
-                        WM_GETTEXT,
-                        (WPARAM)MAX_NUMTHOUSANDSEP,
-                        (LPARAM)pGlobalData->szNumThousandSep);
+    if (szNumThousandSep[0] == L'\0')
+    {
+        /* TODO: Show error message */
 
-    return TRUE;
-}
-
-/* Set number of digits in field */
-static BOOL
-SetFieldDigNum(HWND hwndDlg,
-               PGLOBALDATA pGlobalData)
-{
-    INT nCurrSel;
-
-    /* Get setted negative sum format */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
         return FALSE;
+    }
 
-    pGlobalData->nNumGrouping = nCurrSel;
+    /* Digit grouping */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSDGROUPING,
+                             &nNumGrouping);
 
-    return TRUE;
-}
+    /* Negative sign symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_NUMBERSNSIGNSYM,
+                            szNumNegativeSign,
+                            MAX_NUMNEGATIVESIGN);
 
-/* Set negative sign */
-static BOOL
-SetNumNegSign(HWND hwndDlg,
-              PGLOBALDATA pGlobalData)
-{
-    /* Get setted negative sign */
-    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNSIGNSYM,
-                        WM_GETTEXT,
-                        (WPARAM)MAX_NUMNEGATIVESIGN,
-                        (LPARAM)pGlobalData->szNumNegativeSign);
+    if (szNumNegativeSign[0] == L'\0')
+    {
+        /* TODO: Show error message */
 
-    return TRUE;
-}
-
-/* Set negative sum format */
-static BOOL
-SetNegSumFmt(HWND hwndDlg,
-             PGLOBALDATA pGlobalData)
-{
-    INT nCurrSel;
-
-    /* Get setted negative sum format */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
         return FALSE;
+    }
 
-    pGlobalData->nNumNegFormat = nCurrSel;
+    /* Negative number format */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSNNUMFORMAT,
+                             &nNumNegFormat);
 
-    return TRUE;
-}
+    /* Display leading zeros */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSDISPLEADZER,
+                             &nNumLeadingZero);
 
-/* Set leading zero */
-static BOOL
-SetNumLeadZero(HWND hwndDlg,
-               PGLOBALDATA pGlobalData)
-{
-    INT nCurrSel;
+    /* List separator */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_NUMBERSLSEP,
+                            szNumListSep,
+                            MAX_NUMLISTSEP);
 
-    /* Get setted leading zero format */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDISPLEADZER,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
+    if (szNumListSep[0] == L'\0')
+    {
+        /* TODO: Show error message */
+
         return FALSE;
+    }
 
-    pGlobalData->nNumLeadingZero = nCurrSel;
+    /* Measurement system */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSMEASSYS,
+                             &nNumMeasure);
 
-    return TRUE;
-}
-
-/* Set elements list separator */
-static BOOL
-SetNumListSep(HWND hwndDlg,
-              PGLOBALDATA pGlobalData)
-{
-    /* Get setted list separator */
-    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSLSEP,
-                        WM_GETTEXT,
-                        (WPARAM)MAX_NUMLISTSEP,
-                        (LPARAM)pGlobalData->szNumListSep);
-
-    return TRUE;
-}
-
-/* Set units system */
-static BOOL
-SetNumUnitsSys(HWND hwndDlg,
-               PGLOBALDATA pGlobalData)
-{
-    INT nCurrSel;
-
-    /* Get setted units system */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSMEASSYS,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
-        return FALSE;
-
-    pGlobalData->nNumMeasure = nCurrSel;
+    /* Store settings in global data */
+    wcscpy(pGlobalData->szNumDecimalSep, szNumDecimalSep);
+    wcscpy(pGlobalData->szNumThousandSep, szNumThousandSep);
+    wcscpy(pGlobalData->szNumNegativeSign, szNumNegativeSign);
+    wcscpy(pGlobalData->szNumListSep, szNumListSep);
+    pGlobalData->nNumGrouping = nNumGrouping;
+    pGlobalData->nNumDigits = nNumDigits;
+    pGlobalData->nNumNegFormat = nNumNegFormat;
+    pGlobalData->nNumLeadingZero = nNumLeadingZero;
+    pGlobalData->nNumMeasure = nNumMeasure;
 
     return TRUE;
 }
@@ -655,46 +619,20 @@ NumbersPageProc(HWND hwndDlg,
                 case IDC_NUMBERSMEASSYS:
                     if (HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_EDITCHANGE)
                     {
-                        /* Set "Apply" button enabled */
+                        /* Enable the Apply button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
             }
             break;
 
         case WM_NOTIFY:
-            /* If push apply button */
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                if (!SetNumDecimalSep(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetFracSymNum(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetNumFieldSep(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetFieldDigNum(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetNumNegSign(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetNegSumFmt(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetNumLeadZero(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetNumListSep(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetNumUnitsSys(hwndDlg, pGlobalData))
-                    break;
-
-                pGlobalData->fUserLocaleChanged = TRUE;
-
-                UpdateNumSamples(hwndDlg, pGlobalData);
+                if (GetNumberSetting(hwndDlg, pGlobalData))
+                {
+                    pGlobalData->bUserLocaleChanged = TRUE;
+                    UpdateNumSamples(hwndDlg, pGlobalData);
+                }
             }
             break;
     }

@@ -21,7 +21,7 @@
 20 stub HrRunWizard
 21 stub InvokeDunFile
 22 stdcall NcFreeNetconProperties(ptr)
-23 stub NcIsValidConnectionName
+23 stdcall NcIsValidConnectionName(wstr)
 24 stub NetSetupAddRasConnection
 25 stub NetSetupFinishInstall
 26 stub NetSetupInstallSoftware

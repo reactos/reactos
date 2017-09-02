@@ -67,7 +67,7 @@ static BOOLEAN STDCALL fast_query_basic_info(PFILE_OBJECT FileObject, BOOLEAN wa
     fbi->CreationTime.QuadPart = unix_time_to_win(&fcb->inode_item.otime);
     fbi->LastAccessTime.QuadPart = unix_time_to_win(&fcb->inode_item.st_atime);
     fbi->LastWriteTime.QuadPart = unix_time_to_win(&fcb->inode_item.st_mtime);
-    fbi->ChangeTime.QuadPart = 0;
+    fbi->ChangeTime.QuadPart = unix_time_to_win(&fcb->inode_item.st_ctime);
     fbi->FileAttributes = fcb->atts;
 
     IoStatus->Status = STATUS_SUCCESS;
@@ -212,9 +212,22 @@ static BOOLEAN STDCALL fast_io_query_network_open_info(PFILE_OBJECT FileObject, 
     return FALSE;
 }
 
-static NTSTATUS STDCALL fast_io_acquire_for_mod_write(PFILE_OBJECT FileObject, PLARGE_INTEGER EndingOffset, struct _ERESOURCE **ResourceToRelease, PDEVICE_OBJECT DeviceObject){
-    TRACE("STUB: fast_io_acquire_for_mod_write\n");
-    return STATUS_NOT_IMPLEMENTED;
+static NTSTATUS STDCALL fast_io_acquire_for_mod_write(PFILE_OBJECT FileObject, PLARGE_INTEGER EndingOffset, struct _ERESOURCE **ResourceToRelease, PDEVICE_OBJECT DeviceObject) {
+    fcb* fcb;
+    
+    TRACE("(%p, %llx, %p, %p)\n", FileObject, EndingOffset->QuadPart, ResourceToRelease, DeviceObject);
+    
+    fcb = FileObject->FsContext;
+    
+    if (!fcb)
+        return STATUS_INVALID_PARAMETER;
+    
+    *ResourceToRelease = fcb->Header.PagingIoResource;
+    
+    if (!ExAcquireResourceSharedLite(*ResourceToRelease, FALSE))
+        return STATUS_CANT_WAIT;
+    
+    return STATUS_SUCCESS;
 }
 
 static BOOLEAN STDCALL fast_io_read_compressed(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, ULONG LockKey, PVOID Buffer, PMDL *MdlChain, PIO_STATUS_BLOCK IoStatus, struct _COMPRESSED_DATA_INFO *CompressedDataInfo, ULONG CompressedDataInfoLength, PDEVICE_OBJECT DeviceObject){
@@ -252,17 +265,26 @@ static NTSTATUS STDCALL fast_io_release_for_ccflush(PFILE_OBJECT FileObject, PDE
     return STATUS_SUCCESS;
 }
 
-#ifdef DEBUG
+static BOOLEAN STDCALL fast_io_write(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait, ULONG LockKey, PVOID Buffer, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
+    TRACE("(%p (%.*S), %llx, %x, %x, %x, %p, %p, %p)\n", FileObject, FileObject->FileName.Length / sizeof(WCHAR), FileObject->FileName.Buffer,
+                                                        *FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
+
+    if (FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject)) {
+        fcb* fcb = FileObject->FsContext;
+        
+        fcb->inode_item.st_size = fcb->Header.FileSize.QuadPart;
+        
+        return TRUE;
+    }
+    
+    return FALSE;
+}
+
+#ifdef _DEBUG
 static BOOLEAN STDCALL fast_io_read(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait, ULONG LockKey, PVOID Buffer, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
     TRACE("(%p, %p, %x, %x, %x, %p, %p, %p)\n", FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 
     return FsRtlCopyRead(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
-}
-
-static BOOLEAN STDCALL fast_io_write(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait, ULONG LockKey, PVOID Buffer, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
-    TRACE("(%p, %p, %x, %x, %x, %p, %p, %p)\n", FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
-
-    return FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
 static BOOLEAN STDCALL fast_io_mdl_read(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, ULONG LockKey, PMDL* MdlChain, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
@@ -271,7 +293,7 @@ static BOOLEAN STDCALL fast_io_mdl_read(PFILE_OBJECT FileObject, PLARGE_INTEGER 
     return FsRtlMdlReadDev(FileObject, FileOffset, Length, LockKey, MdlChain, IoStatus, DeviceObject);
 }
 
-static BOOLEAN STDCALL fast_io_mdl_read_complete(PFILE_OBJECT FileObject, PMDL* MdlChain, PDEVICE_OBJECT DeviceObject) {
+static BOOLEAN STDCALL fast_io_mdl_read_complete(PFILE_OBJECT FileObject, PMDL MdlChain, PDEVICE_OBJECT DeviceObject) {
     TRACE("(%p, %p, %p)\n", FileObject, MdlChain, DeviceObject);
 
     return FsRtlMdlReadCompleteDev(FileObject, MdlChain, DeviceObject);
@@ -283,7 +305,7 @@ static BOOLEAN STDCALL fast_io_prepare_mdl_write(PFILE_OBJECT FileObject, PLARGE
     return FsRtlPrepareMdlWriteDev(FileObject, FileOffset, Length, LockKey, MdlChain, IoStatus, DeviceObject);
 }
 
-static BOOLEAN STDCALL fast_io_mdl_write_complete(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, PMDL* MdlChain, PDEVICE_OBJECT DeviceObject) {
+static BOOLEAN STDCALL fast_io_mdl_write_complete(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, PMDL MdlChain, PDEVICE_OBJECT DeviceObject) {
     TRACE("(%p, %p, %p, %p)\n", FileObject, FileOffset, MdlChain, DeviceObject);
 
     return FsRtlMdlWriteCompleteDev(FileObject, FileOffset, MdlChain, DeviceObject);
@@ -316,17 +338,16 @@ void __stdcall init_fast_io_dispatch(FAST_IO_DISPATCH** fiod) {
     FastIoDispatch.ReleaseForModWrite = fast_io_release_for_mod_write;
     FastIoDispatch.AcquireForCcFlush = fast_io_acquire_for_ccflush;
     FastIoDispatch.ReleaseForCcFlush = fast_io_release_for_ccflush;
-    
-#ifdef DEBUG
-    FastIoDispatch.FastIoRead = fast_io_read;
     FastIoDispatch.FastIoWrite = fast_io_write;
+    
+#ifdef _DEBUG
+    FastIoDispatch.FastIoRead = fast_io_read;
     FastIoDispatch.MdlRead = fast_io_mdl_read;
     FastIoDispatch.MdlReadComplete = fast_io_mdl_read_complete;
     FastIoDispatch.PrepareMdlWrite = fast_io_prepare_mdl_write;
     FastIoDispatch.MdlWriteComplete = fast_io_mdl_write_complete;
 #else
     FastIoDispatch.FastIoRead = FsRtlCopyRead;
-    FastIoDispatch.FastIoWrite = FsRtlCopyWrite;
     FastIoDispatch.MdlRead = FsRtlMdlReadDev;
     FastIoDispatch.MdlReadComplete = FsRtlMdlReadCompleteDev;
     FastIoDispatch.PrepareMdlWrite = FsRtlPrepareMdlWriteDev;

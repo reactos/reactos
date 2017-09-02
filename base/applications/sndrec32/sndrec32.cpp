@@ -130,7 +130,7 @@ _tWinMain(HINSTANCE hInstance,
     text2_rect.right = REFRESHB_CX;
     text2_rect.bottom = REFRESHB_CY;
 
-    /* Retrieving defaul system font, and others system informations */
+    /* Retrieving default system font, and others system informations */
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
                          sizeof(NONCLIENTMETRICS),
                          &s_info,

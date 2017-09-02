@@ -18,7 +18,7 @@ HELP [komut]\n\n\
 ?        Tüm kullanılabilir komutları dizelgele (tanımlar olmadan).\n\
 ALIAS    Başka adları ayarlar, siler ya da gösterir.\n\
 ATTRIB   Kütük öz niteliklerini görüntüler ya da değiştirir.\n\
-BEEP     Hoparlörden ""biip"" sesi çıkart.\n\
+BEEP     Hoparlörden ""bip"" sesi çıkart.\n\
 CALL     Bir toplu iş izlencesini bir başkasından çağırır.\n\
 CD       Şimdiki dizinin adını görüntüler ya da şimdiki dizini değiştirir.\n\
 CHCP     Etkin kod sayfası numarasını görüntüler ya da ayarlar.\n\

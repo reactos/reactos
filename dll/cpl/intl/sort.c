@@ -81,7 +81,7 @@ CreateSortList(HWND hwnd, LCID lcid)
 
     hWndSortList = hwnd;
 
-    /* Handle special case for Spainish (Spain) */
+    /* Handle special case for Spanish (Spain) */
     if (lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT) ||
         lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT))
     {
@@ -198,7 +198,7 @@ SortPageProc(HWND hwndDlg,
 
                 /* Save the new LCID */
                 pGlobalData->UserLCID = NewLcid;
-                pGlobalData->fUserLocaleChanged = TRUE;
+                pGlobalData->bUserLocaleChanged = TRUE;
             }
             break;
     }

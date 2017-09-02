@@ -1,4 +1,4 @@
-/* 
+/*
  * FILE:        dll/win32/userenv/lang/ro-RO.rc
  *              ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
@@ -12,25 +12,19 @@ BEGIN
     IDS_APPDATA "Date de aplicație"
     IDS_DESKTOP "Birou"
     IDS_FAVORITES "Favorite"
-    IDS_STARTMENU "Meniul Pornire"
-    IDS_PROGRAMS "Meniul Pornire\\Programe"
-    IDS_ADMINTOOLS "Meniul Pornire\\Programe\\Administrative"
-    IDS_STARTUP "Meniul Pornire\\Programe\\Autolansate"
     IDS_MYDOCUMENTS "Documentele mele"
-    IDS_MYPICTURES "Documentele mele\\Imagini"
-    IDS_MYMUSIC "Documentele mele\\Audio"
-    IDS_MYVIDEOS "Documentele mele\\Video"
-    IDS_TEMPLATES "Șabloane"
+    IDS_NETHOOD "Rețele"
+    IDS_PRINTHOOD "Imprimante"
     IDS_RECENT "Recente"
     IDS_SENDTO "Trimitere"
-    IDS_PRINTHOOD "Imprimante"
-    IDS_NETHOOD "Rețele"
+    IDS_TEMPLATES "Șabloane"
+    IDS_STARTMENU "Meniul Pornire"
+    IDS_PROGRAMS "Meniul Pornire\\Programe"
+    IDS_STARTUP "Meniul Pornire\\Programe\\Autolansate"
     IDS_LOCALSETTINGS "Preferințe locale"
     IDS_LOCALAPPDATA "Preferințe locale\\Date de aplicație"
     IDS_TEMP "Preferințe locale\\Temp"
     IDS_CACHE "Preferințe locale\\Fișiere de Internet temporare"
     IDS_HISTORY "Preferințe locale\\Istoric"
     IDS_COOKIES "Cookies"
-    IDS_PROGRAMFILES "%SystemDrive%\\Fișiere de program"
-    IDS_COMMONFILES "Fișiere comune"
 END

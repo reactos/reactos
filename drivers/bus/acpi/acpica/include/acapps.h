@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,35 +44,33 @@
 #ifndef _ACAPPS
 #define _ACAPPS
 
-#include <stdio.h>
-
-#ifdef _MSC_VER                 /* disable some level-4 warnings */
-#pragma warning(disable:4100)   /* warning C4100: unreferenced formal parameter */
-#endif
+#ifdef ACPI_USE_STANDARD_HEADERS
+#include <sys/stat.h>
+#endif /* ACPI_USE_STANDARD_HEADERS */
 
 /* Common info for tool signons */
 
 #define ACPICA_NAME                 "Intel ACPI Component Architecture"
-#define ACPICA_COPYRIGHT            "Copyright (c) 2000 - 2016 Intel Corporation"
+#define ACPICA_COPYRIGHT            "Copyright (c) 2000 - 2017 Intel Corporation"
 
 #if ACPI_MACHINE_WIDTH == 64
-#define ACPI_WIDTH          "-64"
+#define ACPI_WIDTH          " (64-bit version)"
 
 #elif ACPI_MACHINE_WIDTH == 32
-#define ACPI_WIDTH          "-32"
+#define ACPI_WIDTH          " (32-bit version)"
 
 #else
 #error unknown ACPI_MACHINE_WIDTH
-#define ACPI_WIDTH          "-??"
+#define ACPI_WIDTH          " (unknown bit width, not 32 or 64)"
 
 #endif
 
 /* Macros for signons and file headers */
 
 #define ACPI_COMMON_SIGNON(UtilityName) \
-    "\n%s\n%s version %8.8X%s\n%s\n\n", \
+    "\n%s\n%s version %8.8X\n%s\n\n", \
     ACPICA_NAME, \
-    UtilityName, ((UINT32) ACPI_CA_VERSION), ACPI_WIDTH, \
+    UtilityName, ((UINT32) ACPI_CA_VERSION), \
     ACPICA_COPYRIGHT
 
 #define ACPI_COMMON_HEADER(UtilityName, Prefix) \
@@ -85,13 +83,13 @@
 /* Macros for usage messages */
 
 #define ACPI_USAGE_HEADER(Usage) \
-    AcpiOsPrintf ("Usage: %s\nOptions:\n", Usage);
+    printf ("Usage: %s\nOptions:\n", Usage);
 
 #define ACPI_USAGE_TEXT(Description) \
-    AcpiOsPrintf (Description);
+    printf (Description);
 
 #define ACPI_OPTION(Name, Description) \
-    AcpiOsPrintf ("  %-20s%s\n", Name, Description);
+    printf ("  %-20s%s\n", Name, Description);
 
 
 /* Check for unexpected exceptions */
@@ -119,6 +117,10 @@ AcGetAllTablesFromFile (
     char                    *Filename,
     UINT8                   GetOnlyAmlTables,
     ACPI_NEW_TABLE_DESC     **ReturnListHead);
+
+void
+AcDeleteTableList (
+    ACPI_NEW_TABLE_DESC     *ListHead);
 
 BOOLEAN
 AcIsFileBinary (
@@ -188,7 +190,7 @@ AcpiDmFinishNamespaceLoad (
     ACPI_OWNER_ID           OwnerId);
 
 void
-AcpiDmConvertResourceIndexes (
+AcpiDmConvertParseObjects (
     ACPI_PARSE_OBJECT       *ParseTreeRoot,
     ACPI_NAMESPACE_NODE     *NamespaceRoot);
 

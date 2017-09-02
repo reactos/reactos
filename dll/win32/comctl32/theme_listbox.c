@@ -42,8 +42,15 @@ static void nc_paint (HTHEME theme, HWND hwnd, HRGN region)
             CombineRgn (cliprgn, cliprgn, region, RGN_AND);
         OffsetRect(&r, -r.left, -r.top);
     
+#ifdef __REACTOS__ /* r73789 */
+        dc = GetWindowDC(hwnd);
+        /* Exclude client part */
+        ExcludeClipRect(dc, r.left + cxEdge, r.top + cyEdge,
+            r.right - cxEdge, r.bottom -cyEdge);
+#else
         dc = GetDCEx(hwnd, region, DCX_WINDOW|DCX_INTERSECTRGN);
         OffsetRect(&r, -r.left, -r.top);
+#endif
     
         if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
             DrawThemeParentBackground(hwnd, dc, &r);

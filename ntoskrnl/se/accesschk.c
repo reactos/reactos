@@ -18,8 +18,11 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/*
+ * FIXME: Incomplete!
+ */
 BOOLEAN NTAPI
-SepAccessCheckEx(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
                IN ACCESS_MASK DesiredAccess,
                IN POBJECT_TYPE_LIST ObjectTypeList,
@@ -46,7 +49,7 @@ SepAccessCheckEx(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     NTSTATUS Status;
     PAGED_CODE();
 
-    DPRINT("SepAccessCheckEx()\n");
+    DPRINT("SepAccessCheck()\n");
 
     /* Check for no access desired */
     if (!DesiredAccess)
@@ -283,31 +286,6 @@ ReturnCommonStatus:
     return NT_SUCCESS(Status);
 }
 
-BOOLEAN NTAPI
-SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-               IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-               IN ACCESS_MASK DesiredAccess,
-               IN ACCESS_MASK PreviouslyGrantedAccess,
-               OUT PPRIVILEGE_SET* Privileges,
-               IN PGENERIC_MAPPING GenericMapping,
-               IN KPROCESSOR_MODE AccessMode,
-               OUT PACCESS_MASK GrantedAccess,
-               OUT PNTSTATUS AccessStatus)
-{
-    return SepAccessCheckEx(SecurityDescriptor,
-                            SubjectSecurityContext,
-                            DesiredAccess,
-                            NULL,
-                            0,
-                            PreviouslyGrantedAccess,
-                            Privileges,
-                            GenericMapping,
-                            AccessMode,
-                            GrantedAccess,
-                            AccessStatus,
-                            FALSE);
-}
-
 static PSID
 SepGetSDOwner(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
 {
@@ -338,6 +316,19 @@ SepGetSDGroup(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
     return Group;
 }
 
+static
+ULONG
+SepGetPrivilegeSetLength(IN PPRIVILEGE_SET PrivilegeSet)
+{
+    if (PrivilegeSet == NULL)
+        return 0;
+
+    if (PrivilegeSet->PrivilegeCount == 0)
+        return (ULONG)(sizeof(PRIVILEGE_SET) - sizeof(LUID_AND_ATTRIBUTES));
+
+    return (ULONG)(sizeof(PRIVILEGE_SET) +
+                   (PrivilegeSet->PrivilegeCount - 1) * sizeof(LUID_AND_ATTRIBUTES));
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -443,12 +434,15 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         ret = SepAccessCheck(SecurityDescriptor,
                              SubjectSecurityContext,
                              DesiredAccess,
+                             NULL,
+                             0,
                              PreviouslyGrantedAccess,
                              Privileges,
                              GenericMapping,
                              AccessMode,
                              GrantedAccess,
-                             AccessStatus);
+                             AccessStatus,
+                             FALSE);
     }
 
     /* Release the lock if needed */
@@ -545,6 +539,8 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ACCESS_MASK PreviouslyGrantedAccess = 0;
+    PPRIVILEGE_SET Privileges = NULL;
+    ULONG CapturedPrivilegeSetLength, RequiredPrivilegeSetLength;
     PTOKEN Token;
     NTSTATUS Status;
     PAGED_CODE();
@@ -580,8 +576,8 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         ProbeForWrite(GrantedAccess, sizeof(ACCESS_MASK), sizeof(ULONG));
         ProbeForWrite(AccessStatus, sizeof(NTSTATUS), sizeof(ULONG));
 
-        /* Initialize the privilege set */
-        PrivilegeSet->PrivilegeCount = 0;
+        /* Capture the privilege set length and the mapping */
+        CapturedPrivilegeSetLength = *PrivilegeSetLength;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -621,6 +617,64 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         DPRINT("Impersonation level < SecurityIdentification\n");
         ObDereferenceObject(Token);
         return STATUS_BAD_IMPERSONATION_LEVEL;
+    }
+
+    /* Check for ACCESS_SYSTEM_SECURITY and WRITE_OWNER access */
+    Status = SePrivilegePolicyCheck(&DesiredAccess,
+                                    &PreviouslyGrantedAccess,
+                                    NULL,
+                                    Token,
+                                    &Privileges,
+                                    PreviousMode);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("SePrivilegePolicyCheck failed (Status 0x%08lx)\n", Status);
+        ObDereferenceObject(Token);
+        *AccessStatus = Status;
+        *GrantedAccess = 0;
+        return STATUS_SUCCESS;
+    }
+
+    /* Check the size of the privilege set and return the privileges */
+    if (Privileges != NULL)
+    {
+        DPRINT("Privileges != NULL\n");
+
+        /* Calculate the required privilege set buffer size */
+        RequiredPrivilegeSetLength = SepGetPrivilegeSetLength(Privileges);
+
+        /* Fail if the privilege set buffer is too small */
+        if (CapturedPrivilegeSetLength < RequiredPrivilegeSetLength)
+        {
+            ObDereferenceObject(Token);
+            SeFreePrivileges(Privileges);
+            *PrivilegeSetLength = RequiredPrivilegeSetLength;
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        /* Copy the privilege set to the caller */
+        RtlCopyMemory(PrivilegeSet,
+                      Privileges,
+                      RequiredPrivilegeSetLength);
+
+        /* Free the local privilege set */
+        SeFreePrivileges(Privileges);
+    }
+    else
+    {
+        DPRINT("Privileges == NULL\n");
+
+        /* Fail if the privilege set buffer is too small */
+        if (CapturedPrivilegeSetLength < sizeof(PRIVILEGE_SET))
+        {
+            ObDereferenceObject(Token);
+            *PrivilegeSetLength = sizeof(PRIVILEGE_SET);
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        /* Initialize the privilege set */
+        PrivilegeSet->PrivilegeCount = 0;
+        PrivilegeSet->Control = 0;
     }
 
     /* Capture the security descriptor */
@@ -687,12 +741,15 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         SepAccessCheck(SecurityDescriptor, // FIXME: use CapturedSecurityDescriptor
                        &SubjectSecurityContext,
                        DesiredAccess,
+                       NULL,
+                       0,
                        PreviouslyGrantedAccess,
                        &PrivilegeSet, //FIXME
                        GenericMapping,
                        PreviousMode,
                        GrantedAccess,
-                       AccessStatus);
+                       AccessStatus,
+                       FALSE);
     }
 
     /* Release subject context and unlock the token */

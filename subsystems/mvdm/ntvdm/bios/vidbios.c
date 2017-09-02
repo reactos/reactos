@@ -2195,11 +2195,11 @@ static BOOLEAN VgaSetRegisters(PVGA_REGISTERS Registers)
     /* Unlock CRTC registers 0-7 */
     IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_END_HORZ_BLANKING_REG);
     IOWriteB(VGA_CRTC_DATA , IOReadB(VGA_CRTC_DATA) | 0x80);
-    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_VERT_RETRACE_END_REG);
+    IOWriteB(VGA_CRTC_INDEX, VGA_CRTC_END_VERT_RETRACE_REG);
     IOWriteB(VGA_CRTC_DATA , IOReadB(VGA_CRTC_DATA) & ~0x80);
     // Make sure they remain unlocked
     Registers->CRT[VGA_CRTC_END_HORZ_BLANKING_REG] |= 0x80;
-    Registers->CRT[VGA_CRTC_VERT_RETRACE_END_REG] &= ~0x80;
+    Registers->CRT[VGA_CRTC_END_VERT_RETRACE_REG] &= ~0x80;
 
     /* Write the CRTC registers */
     for (i = 0; i < VGA_CRTC_MAX_REG; i++)

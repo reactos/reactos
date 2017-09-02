@@ -46,6 +46,9 @@ IDI_BOTTOM    ICON "res/bottom.ico"
 #ifdef LANGUAGE_AR_DZ
     #include "lang/ar-DZ.rc"
 #endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif

@@ -35,17 +35,13 @@ typedef struct _NAME_SERVER_LIST_CONTEXT {
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-  WSADATA wsaData;
-
   switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls( hinstDLL );
       interfaceMapInit();
-      WSAStartup(MAKEWORD(2, 2), &wsaData);
       break;
 
     case DLL_PROCESS_DETACH:
-      WSACleanup();
       interfaceMapFree();
       break;
   }
@@ -1408,7 +1404,7 @@ DWORD WINAPI GetIpStatisticsEx(PMIB_IPSTATS pStats, DWORD dwFamily)
  */
 DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
 {
-  DWORD ret, size;
+  DWORD ret, size, type;
   LONG regReturn;
   HKEY hKey;
   PIPHLP_RES_INFO resInfo;
@@ -1430,10 +1426,59 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
   }
 
   memset(pFixedInfo, 0, size);
-  size = sizeof(pFixedInfo->HostName);
-  GetComputerNameExA(ComputerNameDnsHostname, pFixedInfo->HostName, &size);
-  size = sizeof(pFixedInfo->DomainName);
-  GetComputerNameExA(ComputerNameDnsDomain, pFixedInfo->DomainName, &size);
+  /* Check for DhcpHostname and DhcpDomain first */
+  regReturn = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                            "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                            0,
+                            KEY_READ,
+                            &hKey);
+  if (regReturn == ERROR_SUCCESS) {
+      /* Windows doesn't honor DHCP option 12 even if RFC requires it if it is returned by DHCP server! */
+#if 0
+      type = REG_SZ;
+      size = sizeof(pFixedInfo->HostName);
+      regReturn = RegQueryValueExA(hKey,
+                                      "DhcpHostname",
+                                      NULL,
+                                      &type,
+                                      (LPBYTE)pFixedInfo->HostName,
+                                      &size);
+      if (regReturn == ERROR_FILE_NOT_FOUND || (regReturn == ERROR_SUCCESS && size < 1))
+      {
+#endif
+          type = REG_SZ;
+          size = sizeof(pFixedInfo->HostName);
+          regReturn = RegQueryValueExA(hKey,
+                                          "Hostname",
+                                          NULL,
+                                          &type,
+                                          (LPBYTE)pFixedInfo->HostName,
+                                          &size);
+#if 0
+      }
+#endif
+
+      type = REG_SZ;
+      size = sizeof(pFixedInfo->DomainName);
+      regReturn = RegQueryValueExA(hKey,
+                                      "DhcpDomain",
+                                      NULL,
+                                      &type,
+                                      (LPBYTE)pFixedInfo->DomainName,
+                                      &size);
+      if (regReturn == ERROR_FILE_NOT_FOUND || (regReturn == ERROR_SUCCESS && size < 1))
+      {
+          type = REG_SZ;
+          size = sizeof(pFixedInfo->DomainName);
+          regReturn = RegQueryValueExA(hKey,
+                                          "Domain",
+                                          NULL,
+                                          &type,
+                                          (LPBYTE)pFixedInfo->DomainName,
+                                          &size);
+      }
+      RegCloseKey(hKey);
+  }
 
   TRACE("GetComputerNameExA: %s\n", pFixedInfo->DomainName);
 
@@ -1982,7 +2027,7 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
   DWORD Status, Version = 0;
 
-  if (!AdapterInfo || !AdapterInfo->Name)
+  if (!AdapterInfo)
       return ERROR_INVALID_PARAMETER;
 
   /* Maybe we should do this in DllMain */
@@ -2016,7 +2061,7 @@ DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
   DWORD Status, Version = 0;
 
-  if (!AdapterInfo || !AdapterInfo->Name)
+  if (!AdapterInfo)
       return ERROR_INVALID_PARAMETER;
 
   /* Maybe we should do this in DllMain */

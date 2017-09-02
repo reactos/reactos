@@ -668,6 +668,33 @@ DWORD get_cookie_header(const WCHAR *host, const WCHAR *path, WCHAR **ret)
     return res;
 }
 
+static void free_cookie_domain_list(struct list *list)
+{
+    cookie_container_t *container;
+    cookie_domain_t *domain;
+
+    while(!list_empty(list)) {
+        domain = LIST_ENTRY(list_head(list), cookie_domain_t, entry);
+
+        free_cookie_domain_list(&domain->subdomain_list);
+
+        while(!list_empty(&domain->path_list)) {
+            container = LIST_ENTRY(list_head(&domain->path_list), cookie_container_t, entry);
+
+            while(!list_empty(&container->cookie_list))
+                delete_cookie(LIST_ENTRY(list_head(&container->cookie_list), cookie_t, entry));
+
+            heap_free(container->cookie_url);
+            list_remove(&container->entry);
+            heap_free(container);
+        }
+
+        heap_free(domain->domain);
+        list_remove(&domain->entry);
+        heap_free(domain);
+    }
+}
+
 /***********************************************************************
  *           InternetGetCookieExW (WININET.@)
  *
@@ -765,7 +792,7 @@ BOOL WINAPI InternetGetCookieExA(LPCSTR lpszUrl, LPCSTR lpszCookieName,
         LPSTR lpCookieData, LPDWORD lpdwSize, DWORD flags, void *reserved)
 {
     WCHAR *url, *name;
-    DWORD len, size;
+    DWORD len, size = 0;
     BOOL r;
 
     TRACE("(%s %s %p %p(%u) %x %p)\n", debugstr_a(lpszUrl), debugstr_a(lpszCookieName),
@@ -798,12 +825,12 @@ BOOL WINAPI InternetGetCookieExA(LPCSTR lpszUrl, LPCSTR lpszCookieName,
                         r = FALSE;
                     }
                 }
-                *lpdwSize = size;
             }
 
             heap_free( szCookieData );
         }
     }
+    *lpdwSize = size;
     heap_free( name );
     heap_free( url );
     return r;
@@ -895,6 +922,7 @@ DWORD set_cookie(substr_t domain, substr_t path, substr_t name, substr_t data, D
         static const WCHAR szSecure[] = {'s','e','c','u','r','e'};
         static const WCHAR szHttpOnly[] = {'h','t','t','p','o','n','l','y'};
         static const WCHAR szVersion[] = {'v','e','r','s','i','o','n','='};
+        static const WCHAR max_ageW[] = {'m','a','x','-','a','g','e','='};
 
         /* Skip ';' */
         if(data.len)
@@ -960,9 +988,11 @@ DWORD set_cookie(substr_t domain, substr_t path, substr_t name, substr_t data, D
             substr_skip(&data, len);
 
             FIXME("version not handled (%s)\n",debugstr_wn(data.str, data.len));
+        }else if(data.len >= (len = sizeof(max_ageW)/sizeof(WCHAR)) && !strncmpiW(data.str, max_ageW, len)) {
+            /* Native doesn't support Max-Age attribute. */
+            WARN("Max-Age ignored\n");
         }else if(data.len) {
             FIXME("Unknown additional option %s\n", debugstr_wn(data.str, data.len));
-            break;
         }
 
         substr_skip(&data, end_ptr - data.str);
@@ -987,6 +1017,7 @@ DWORD set_cookie(substr_t domain, substr_t path, substr_t name, substr_t data, D
         if ((thisCookie->flags & INTERNET_COOKIE_HTTPONLY) && !(flags & INTERNET_COOKIE_HTTPONLY)) {
             WARN("An attempt to override httponly cookie\n");
             SetLastError(ERROR_INVALID_OPERATION);
+            LeaveCriticalSection(&cookie_cs);
             return COOKIE_STATE_REJECT;
         }
 
@@ -1219,5 +1250,9 @@ BOOL WINAPI InternetSetPerSiteCookieDecisionW( LPCWSTR pchHostName, DWORD dwDeci
 
 void free_cookie(void)
 {
-    DeleteCriticalSection(&cookie_cs);
+    EnterCriticalSection(&cookie_cs);
+
+    free_cookie_domain_list(&domain_list);
+
+    LeaveCriticalSection(&cookie_cs);
 }

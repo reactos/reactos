@@ -29,7 +29,7 @@ Size = 2,4 Mio
 
 [Section.0419]
 Description = Игра в стиле аркады для Unix, Мас OS X, Windows и DOS в традициях: "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC). Вам нужна потребуется программа распаковки zip для установки.
-Size = 2,4 МБ
+Size = 2,4 МиБ
 
 [Section.041f]
 License = GPL sürüm 2

@@ -17,33 +17,21 @@
 PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
 // ARC Disk Information
-ARC_DISK_SIGNATURE reactos_arc_disk_info[32];
 ULONG reactos_disk_count = 0;
-CHAR reactos_arc_strings[32][256];
+ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[32];
 
 /* FUNCTIONS ******************************************************************/
 
-#define TAG_HW_COMPONENT_DATA 'DCwH'
-#define TAG_HW_NAME 'mNwH'
+#define TAG_HW_COMPONENT_DATA   'DCwH'
+#define TAG_HW_NAME             'mNwH'
 
-PVOID
-NTAPI
-FldrpHwHeapAlloc(IN SIZE_T Size)
-{
-    PVOID Buffer;
-
-    /* Allocate memory from generic bootloader heap */
-    Buffer = FrLdrHeapAlloc(Size, 'pHwH');
-    return Buffer;
-}
-
-static VOID
+VOID
 NTAPI
 FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
                   IN PCHAR IdentifierString)
 {
-    SIZE_T IdentifierLength;
     PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
+    SIZE_T IdentifierLength;
     PCHAR Identifier;
 
     /* Allocate memory for the identifier */
@@ -57,6 +45,17 @@ FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
     /* Set component information */
     Component->IdentifierLength = (ULONG)IdentifierLength;
     Component->Identifier = Identifier;
+}
+
+VOID
+NTAPI
+FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
+                         IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
+                         IN ULONG Size)
+{
+    /* Set component information */
+    ComponentData->ConfigurationData = ResourceList;
+    ComponentData->ComponentEntry.ConfigurationDataLength = Size;
 }
 
 VOID
@@ -159,10 +158,7 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
 
     /* Set configuration data */
     if (ResourceList)
-    {
-        ComponentData->ConfigurationData = ResourceList;
-        ComponentData->ComponentEntry.ConfigurationDataLength = Size;
-    }
+        FldrSetConfigurationData(ComponentData, ResourceList, Size);
 
     /* Return the child */
     *ComponentKey = ComponentData;

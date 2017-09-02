@@ -82,7 +82,7 @@
 @ stub PSGetNamedPropertyFromPropertyStorage
 @ stdcall PSGetPropertyDescription(ptr ptr ptr)
 @ stub PSGetPropertyDescriptionByName
-@ stdcall PSGetPropertyDescriptionListFromString(ptr ptr ptr)
+@ stdcall PSGetPropertyDescriptionListFromString(wstr ptr ptr)
 @ stub PSGetPropertyFromPropertyStorage
 @ stub PSGetPropertyKeyFromName
 @ stdcall PSGetPropertySystem(ptr ptr)
@@ -135,7 +135,7 @@
 @ stub PropVariantToInt64WithDefault
 @ stub PropVariantToStrRet
 @ stub PropVariantToString
-@ stub PropVariantToStringAlloc
+@ stdcall PropVariantToStringAlloc(ptr ptr)
 @ stub PropVariantToStringVector
 @ stub PropVariantToStringVectorAlloc
 @ stub PropVariantToStringWithDefault

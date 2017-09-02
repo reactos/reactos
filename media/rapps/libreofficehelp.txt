@@ -1,52 +1,52 @@
 [Section]
 Name = LibreOffice Help Pack
-Version = 5.1.3
+Version = 5.4.0
 License = GPLv3
 Description = Offline help content of LibreOffice.
-Size = 5.0 MiB
+Size = 5.1 MiB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.3/win/x86/LibreOffice_5.1.3_Win_x86_helppack_en-US.msi
-SHA1 = 64159f2ca666ea66c5af83be4978c39143151c0c
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.4.0/win/x86/LibreOffice_5.4.0_Win_x86_helppack_en-US.msi
+SHA1 = a9152434e49248bdecbf3bdc2604deaf60ab4da0
 CDPath = none
 
 [Section.0407]
 Name = LibreOffice Help Pack
 Description = Offline Hilfe für LibreOffice.
-Size = 7,1 MiB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.3/win/x86/LibreOffice_5.1.3_Win_x86_helppack_de.msi
-SHA1 = beaf592b811c0f67b19ddf5f1d3148cb83f0ccb7
+Size = 7,2 MiB
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.4.0/win/x86/LibreOffice_5.4.0_Win_x86_helppack_de.msi
+SHA1 = 3be98a1cf7ff8dbd07328fad6d55bda554da88b2
 
 [Section.0418]
 Description = Conținut de asistență și ajutor (în limba engleză) pentru LibreOffice.
-Size = 5,0 Mio
+Size = 5,1 Mio
 
 [Section.0419]
 Name = LibreOffice Справочный пакет
 Description = Оффлайн справка для LibreOffice.
-Size = 7,2 МБ
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.3/win/x86/LibreOffice_5.1.3_Win_x86_helppack_ru.msi
-SHA1 = 5d5474b9f4a35e0017ea1c8e4d577ae03693e5bc
+Size = 7,3 МиБ
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.4.0/win/x86/LibreOffice_5.4.0_Win_x86_helppack_ru.msi
+SHA1 = 6fe8a878a22dea1eb896eac97547169c305209ce
 
 [Section.0a]
 Name = LibreOffice — Paquete de ayuda
 Description = Páginas de ayuda para LibreOffice.
-Size = 7.0 MiB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.3/win/x86/LibreOffice_5.1.3_Win_x86_helppack_es.msi
-SHA1 = a30459130f536a0440cfe0253c135373726aede4
+Size = 7.1 MiB
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.4.0/win/x86/LibreOffice_5.4.0_Win_x86_helppack_es.msi
+SHA1 = f963e1f478e3e3feeced6d5ad46e7316ae5eb8f5
 
 [Section.041f]
 Name = LibreOffice Yardım Paketi
 License = GPL sürüm 3
 Description = LibreOffice'in çevrim dışı yardım içeriği.
 Size = 7,0 MiB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.3/win/x86/LibreOffice_5.1.3_Win_x86_helppack_tr.msi
-SHA1 = 3b3d0ea5fa2d2daf63e9a28973931bef24787cf1
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.4.0/win/x86/LibreOffice_5.4.0_Win_x86_helppack_tr.msi
+SHA1 = 40583526ec946f073b53164afed2c68adef1165e
 
 [Section.0804]
 Name = LibreOffice 帮助包
 Description = LibreOffice 的脱机帮助内容。
 Size = 9.6 MiB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.3/win/x86/LibreOffice_5.1.3_Win_x86_helppack_zh-CN.msi
-SHA1 = 2c83f0d3a97171e579e47a548a49642775865971
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.4.0/win/x86/LibreOffice_5.4.0_Win_x86_helppack_zh-CN.msi
+SHA1 = 6608a2fb8d10540db74e6461003077c0b32566ce
 

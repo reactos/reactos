@@ -4,8 +4,8 @@
  * FILE:            dll/cpl/desk/effappdlg.c
  * PURPOSE:         Effects appearance dialog
  *
- * PROGRAMMER:      Jan Roeloffzen (jroeloffzen[at]hotmail[dot]com)
- *
+ * PROGRAMMERS:     Jan Roeloffzen (jroeloffzen[at]hotmail[dot]com)
+ *                  Ismael Ferreras Morezuelas (swyterzone+reactos@gmail.com)
  */
 
 #include "desk.h"
@@ -15,41 +15,60 @@ static VOID
 UpdateControls(HWND hwndDlg, GLOBALS *g)
 {
     WPARAM state;
-    state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATION, BM_GETCHECK, 0, 0);
-    g->SchemeAdv.Effects.bMenuAnimation = (state == BST_CHECKED) ? TRUE : FALSE;
-    EnableWindow(GetDlgItem(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE), g->SchemeAdv.Effects.bMenuAnimation);
 
-    // A boolean as an index for a 2-value list:
-    SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_SETCURSEL, (WPARAM)g->SchemeAdv.Effects.bMenuFade, 0);
+#define SAVE_CHECKBOX(__CONTROL_ID, __MEMBER)                               \
+do { \
+    state = SendDlgItemMessageW(hwndDlg, __CONTROL_ID, BM_GETCHECK, 0, 0);  \
+    g->SchemeAdv.Effects.__MEMBER = /* Do a XOR of both the conditions */   \
+        ((state == BST_CHECKED) != (__CONTROL_ID == IDC_EFFAPPEARANCE_KEYBOARDCUES)); \
+} while(0)
 
-    state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_KEYBOARDCUES, BM_GETCHECK, 0, 0);
-    g->SchemeAdv.Effects.bKeyboardCues = (state == BST_CHECKED) ? TRUE : FALSE;
-    state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, BM_GETCHECK, 0, 0);
-    g->SchemeAdv.Effects.bDragFullWindows = (state == BST_CHECKED) ? TRUE : FALSE;
+#define RSET_COMBOBOX(__CONTROL_ID, __PARENT_MEMBER, __MEMBER)                                          \
+do { \
+    SendDlgItemMessageW(hwndDlg, __CONTROL_ID, CB_SETCURSEL, (WPARAM)g->SchemeAdv.Effects.__MEMBER, 0); \
+    EnableWindow(GetDlgItem(hwndDlg, __CONTROL_ID), g->SchemeAdv.Effects.__PARENT_MEMBER);              \
+} while(0)
+
+    /* Animated menu transitions section (checkbox + combo) */
+    SAVE_CHECKBOX(IDC_EFFAPPEARANCE_ANIMATION,       bMenuAnimation);
+    RSET_COMBOBOX(IDC_EFFAPPEARANCE_ANIMATIONTYPE,   bMenuAnimation, bMenuFade);
+
+    /* Font antialiasing section (checkbox + combo) */
+    SAVE_CHECKBOX(IDC_EFFAPPEARANCE_SMOOTHING,       bFontSmoothing);
+    RSET_COMBOBOX(IDC_EFFAPPEARANCE_SMOOTHINGTYPE,   bFontSmoothing, uiFontSmoothingType - 1);
+
+    /* Other checkboxes */
+    SAVE_CHECKBOX(IDC_EFFAPPEARANCE_SETDROPSHADOW,   bDropShadow);
+    SAVE_CHECKBOX(IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, bDragFullWindows);
+    SAVE_CHECKBOX(IDC_EFFAPPEARANCE_KEYBOARDCUES,    bKeyboardCues);
+
+#undef SAVE_CHECKBOX
+#undef RSET_COMBOBOX
+
     g->bSchemeChanged = TRUE;
 }
-
 
 static VOID
 SaveCurrentValues(HWND hwndDlg, GLOBALS *g)
 {
+    /* The settings get saved at the end of ApplyScheme() in theme.c,
+     * when clicking Apply in the main dialog. */
 }
 
 static VOID
-AddToCombo(HWND hwndDlg, INT From, INT To, INT Combo)
+AddToCombobox(INT Combo, HWND hwndDlg, INT From, INT To)
 {
-    INT iElement, iListIndex, i=0;
+    INT iElement;
     TCHAR tstrText[80];
 
-    for (iElement = From; iElement<=To; iElement++)
+    for (iElement = From; iElement <= To; iElement++)
     {
-        LoadString(hApplet, iElement, (LPTSTR)tstrText, 80);
-        iListIndex = SendDlgItemMessage(hwndDlg, Combo, CB_ADDSTRING, 0, (LPARAM)tstrText);
-        SendDlgItemMessage(hwndDlg, Combo, CB_SETITEMDATA, (WPARAM)iListIndex, (LPARAM)i++ );
+        LoadString(hApplet, iElement, (LPTSTR)tstrText, ARRAYSIZE(tstrText));
+        SendDlgItemMessage(hwndDlg, Combo, CB_ADDSTRING, 0, (LPARAM)tstrText);
     }
 }
 
-/* Initialize the effects appearance dialog */
+/* Initialize the effects appearance dialog from the scheme populated in LoadCurrentScheme(), in theme.c */
 static VOID
 EffAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
 {
@@ -58,25 +77,37 @@ EffAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
     /* Copy the current theme values */
     g->SchemeAdv = g->Scheme;
 
-    AddToCombo(hwndDlg, IDS_SLIDEEFFECT, IDS_FADEEFFECT, IDC_EFFAPPEARANCE_ANIMATIONTYPE);
+#define INIT_CHECKBOX(__CONTROL_ID, __MEMBER)                           \
+do { \
+    state = /* Do a XOR of both the conditions */                       \
+        ((g->SchemeAdv.Effects.__MEMBER) != (__CONTROL_ID == IDC_EFFAPPEARANCE_KEYBOARDCUES)) \
+            ? BST_CHECKED : BST_UNCHECKED;                              \
+    SendDlgItemMessageW(hwndDlg, __CONTROL_ID, BM_SETCHECK, state, 0);  \
+} while(0)
 
-    state = g->SchemeAdv.Effects.bMenuAnimation ? BST_CHECKED : BST_UNCHECKED;
-    SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATION, BM_SETCHECK, state, 0);
+#define FILL_COMBOBOX(__CONTROL_ID, __FIRST_STR, __LAST_STR) \
+    AddToCombobox(__CONTROL_ID, hwndDlg, __FIRST_STR, __LAST_STR)
 
-    state = g->SchemeAdv.Effects.bKeyboardCues ? BST_CHECKED : BST_UNCHECKED;
-    SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_KEYBOARDCUES, BM_SETCHECK, state, 0);
+    /* Animated menu transitions section (checkbox + combo) */
+    INIT_CHECKBOX(IDC_EFFAPPEARANCE_ANIMATION,       bMenuAnimation);
+    FILL_COMBOBOX(IDC_EFFAPPEARANCE_ANIMATIONTYPE,   IDS_SLIDEEFFECT,
+                                                     IDS_FADEEFFECT);
 
-    state = g->SchemeAdv.Effects.bDragFullWindows ? BST_CHECKED : BST_UNCHECKED;
-    SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, BM_SETCHECK, state, 0);
+    /* Font antialiasing section (checkbox + combo) */
+    INIT_CHECKBOX(IDC_EFFAPPEARANCE_SMOOTHING,       bFontSmoothing);
+    FILL_COMBOBOX(IDC_EFFAPPEARANCE_SMOOTHINGTYPE,   IDS_STANDARDEFFECT,
+                                                     IDS_CLEARTYPEEFFECT);
+
+    /* Other checkboxes */
+    INIT_CHECKBOX(IDC_EFFAPPEARANCE_SETDROPSHADOW,   bDropShadow);
+    INIT_CHECKBOX(IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, bDragFullWindows);
+    INIT_CHECKBOX(IDC_EFFAPPEARANCE_KEYBOARDCUES,    bKeyboardCues);
+
+#undef INIT_CHECKBOX
+#undef FILL_COMBOBOX
 
     /* Update the controls */
     UpdateControls(hwndDlg, g);
-}
-
-
-static VOID
-EffAppearanceDlg_CleanUp(HWND hwndDlg, GLOBALS* g)
-{
 }
 
 INT_PTR CALLBACK
@@ -95,7 +126,6 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_DESTROY:
-            EffAppearanceDlg_CleanUp(hwndDlg, g);
             break;
 
         case WM_COMMAND:
@@ -112,8 +142,10 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_EFFAPPEARANCE_ANIMATION:
-                case IDC_EFFAPPEARANCE_KEYBOARDCUES:
+                case IDC_EFFAPPEARANCE_SMOOTHING:
+                case IDC_EFFAPPEARANCE_SETDROPSHADOW:
                 case IDC_EFFAPPEARANCE_DRAGFULLWINDOWS:
+                case IDC_EFFAPPEARANCE_KEYBOARDCUES:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         UpdateControls(hwndDlg, g);
@@ -121,10 +153,18 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_EFFAPPEARANCE_ANIMATIONTYPE:
+                case IDC_EFFAPPEARANCE_SMOOTHINGTYPE:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        SaveCurrentValues(hwndDlg, g);
-                        g->SchemeAdv.Effects.bMenuFade = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_GETCURSEL, 0, 0);
+                        INT Index =
+                            SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_SMOOTHINGTYPE,
+                                                CB_GETCURSEL, 0, 0);
+
+                        g->SchemeAdv.Effects.bMenuFade =
+                            SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE,
+                                                CB_GETCURSEL, 0, 0);
+                        g->SchemeAdv.Effects.uiFontSmoothingType = (Index == CB_ERR) ? 0 : (Index + 1);
+
                         UpdateControls(hwndDlg, g);
                     }
                     break;

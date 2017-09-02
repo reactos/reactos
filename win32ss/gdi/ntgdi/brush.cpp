@@ -62,8 +62,8 @@ BRUSH::~BRUSH(
         GdiPoolFree(GetBrushAttrPool(), this->pBrushAttr);
     }
 
-    /* Delete the pattern bitmap */
-    if (this->hbmPattern != NULL)
+    /* Delete the pattern bitmap (may have already been deleted during gdi cleanup) */
+    if (this->hbmPattern != NULL && GreIsHandleValid(this->hbmPattern))
     {
         GreSetBitmapOwner(this->hbmPattern, BASEOBJECT::OWNER::POWNED);
         GreDeleteObject(this->hbmPattern);

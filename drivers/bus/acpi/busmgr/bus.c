@@ -303,7 +303,7 @@ acpi_bus_set_power (
 	 * Transition Power
 	 * ----------------
 	 * On transitions to a high-powered state we first apply power (via
-	 * power resources) then evalute _PSx.  Conversly for transitions to
+	 * power resources) then evalute _PSx.  Conversely for transitions to
 	 * a lower-powered state.
 	 */
 	if (state < device->power.state) {
@@ -1120,7 +1120,7 @@ acpi_bus_get_flags (
 	if (ACPI_SUCCESS(status))
 		device->flags.power_manageable = 1;
 
-	/* TBD: Peformance management */
+	/* TBD: Performance management */
 
 	return_VALUE(0);
 }
@@ -1470,8 +1470,8 @@ acpi_bus_remove (
 	if (device->pnp.cid_list)
 		ExFreePoolWithTag(device->pnp.cid_list, 'DpcA');
 
-    if (device->pnp.hardware_id)
-        ExFreePoolWithTag(device->pnp.hardware_id, 'DpcA');
+	if (device->pnp.hardware_id)
+		ExFreePoolWithTag(device->pnp.hardware_id, 'DpcA');
 
 	if (device)
 		ExFreePoolWithTag(device, 'DpcA');

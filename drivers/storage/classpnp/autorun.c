@@ -257,7 +257,7 @@ Notes:
     
     The call to StartNextPacket may occur before this routine is completed.
     the operational change notifications are informational in nature, and
-    while useful, are not neccessary to ensure proper operation.  For example,
+    while useful, are not necessary to ensure proper operation.  For example,
     if the device morphs to no longer supporting WRITE commands, all further
     write commands will fail.  There exists a small timing window wherein
     IOCTL_IS_DISK_WRITABLE may be called and get an incorrect response.  If
@@ -2039,7 +2039,7 @@ Routine Description:
     key "Autorun" in the service key (for legacy reasons), and then look in
     the device-specific key to potentially override that setting.
     
-    If MCN is to be enabled, all neccessary structures and memory are
+    If MCN is to be enabled, all necessary structures and memory are
     allocated and initialized.
     
     This routine MUST be called only from the ClassInit() callback.

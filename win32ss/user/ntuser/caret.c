@@ -43,10 +43,10 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
 
     if (CaretInfo->Bitmap)
     {
-        if (!NtGdiGetBitmapDimension(CaretInfo->Bitmap, &CaretInfo->Size))
+        if (!GreGetBitmapDimension(CaretInfo->Bitmap, &CaretInfo->Size))
         {
             ERR("Failed to get bitmap dimensions\n");
-            return;
+            goto cleanup;
         }
 
         hdcMem = NtGdiCreateCompatibleDC(hdc);
@@ -79,6 +79,7 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
                     DSTINVERT);
     }
 
+cleanup:
     if (pWnd->hrgnUpdate)
     {
        NtGdiRestoreDC(hdc, -1);

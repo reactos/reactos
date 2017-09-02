@@ -105,7 +105,7 @@ KdpSysReadMsr(IN ULONG Msr,
     {
         _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
     }
-    _SEH2_END
+    _SEH2_END;
 
     return STATUS_SUCCESS;
 }
@@ -124,7 +124,7 @@ KdpSysWriteMsr(IN ULONG Msr,
     {
         _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
     }
-    _SEH2_END
+    _SEH2_END;
 
     return STATUS_SUCCESS;
 }

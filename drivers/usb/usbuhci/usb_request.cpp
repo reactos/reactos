@@ -54,11 +54,9 @@ public:
     VOID FreeDescriptor(IN PUHCI_TRANSFER_DESCRIPTOR Descriptor);
     NTSTATUS BuildTransferDescriptorChain(IN PVOID TransferBuffer, IN ULONG TransferBufferLength, IN UCHAR PidCode, IN UCHAR InitialDataToggle, OUT PUHCI_TRANSFER_DESCRIPTOR * OutFirstDescriptor, OUT PUHCI_TRANSFER_DESCRIPTOR * OutLastDescriptor, OUT PULONG OutTransferBufferOffset, OUT PUCHAR OutDataToggle);
 
-
-
     // constructor / destructor
-    CUSBRequest(IUnknown *OuterUnknown){}
-    virtual ~CUSBRequest(){}
+    CUSBRequest(IUnknown *OuterUnknown);
+    virtual ~CUSBRequest();
 
 protected:
     LONG m_Ref;
@@ -134,6 +132,22 @@ protected:
     PVOID m_Base;
 
 };
+
+//----------------------------------------------------------------------------------------
+CUSBRequest::CUSBRequest(IUnknown *OuterUnknown) :
+    m_CompletionEvent(NULL)
+{
+    UNREFERENCED_PARAMETER(OuterUnknown);
+}
+
+//----------------------------------------------------------------------------------------
+CUSBRequest::~CUSBRequest()
+{
+    if (m_CompletionEvent != NULL)
+    {
+        ExFreePoolWithTag(m_CompletionEvent, TAG_USBUHCI);
+    }
+}
 
 //----------------------------------------------------------------------------------------
 NTSTATUS

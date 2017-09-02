@@ -273,6 +273,9 @@ typedef struct _PROCESSINFO
     /* ReactOS */
     FAST_MUTEX PrivateFontListLock;
     LIST_ENTRY PrivateFontListHead;
+    LIST_ENTRY PrivateMemFontListHead;
+    UINT PrivateMemFontHandleCount;
+
     FAST_MUTEX DriverObjListLock;
     LIST_ENTRY DriverObjListHead;
     W32HEAP_USER_MAPPING HeapMappings;

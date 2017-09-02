@@ -90,7 +90,7 @@ HRESULT WINAPI D3D9MipMap_GetDevice(LPDIRECT3DTEXTURE9 iface, IDirect3DDevice9**
 
     if (FAILED(D3D9BaseObject_GetDevice(&This->BaseTexture.BaseResource.BaseObject, ppDevice)))
     {
-        DPRINT1("Invalid This parameter speficied");
+        DPRINT1("Invalid This parameter specified");
         UNLOCK_D3DDEVICE9();
         return D3DERR_INVALIDDEVICE;
     }

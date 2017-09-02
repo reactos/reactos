@@ -72,6 +72,8 @@ DWORD WINAPI acmGetVersion(void)
     switch (version.dwPlatformId) {
     case VER_PLATFORM_WIN32_NT:
 	return 0x04000565; /* 4.0.1381 */
+    case VER_PLATFORM_WIN32s:
+	return 0x02010000; /* 2.1 */
     default:
         FIXME("%x not supported\n", version.dwPlatformId);
         /* fall through */

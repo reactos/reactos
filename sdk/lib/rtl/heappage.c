@@ -358,7 +358,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
 
     /* Free the memory */
     Status = RtlpSecMemFreeVirtualMemory(NtCurrentProcess(), &Base, &Size, Type);
-    DPRINT1("Page heap: FreeVm (%p, %Ix, %x) status %x \n", Base, Size, Type, Status);
+    DPRINT("Page heap: FreeVm (%p, %Ix, %x) status %x \n", Base, Size, Type, Status);
     /* Log/report failures */
     if (!NT_SUCCESS(Status))
     {
@@ -2347,6 +2347,34 @@ RtlpDphNormalHeapValidate(PDPH_HEAP_ROOT DphRoot,
     }*/
 
     return RtlValidateHeap(DphRoot->NormalHeap, Flags, BlockInfo);
+}
+
+BOOLEAN
+NTAPI
+RtlpPageHeapLock(HANDLE HeapPtr)
+{
+    PDPH_HEAP_ROOT DphRoot;
+
+    /* Get pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapPtr);
+    if (!DphRoot) return FALSE;
+
+    RtlpDphEnterCriticalSection(DphRoot, DphRoot->HeapFlags);
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+RtlpPageHeapUnlock(HANDLE HeapPtr)
+{
+    PDPH_HEAP_ROOT DphRoot;
+
+    /* Get pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapPtr);
+    if (!DphRoot) return FALSE;
+
+    RtlpDphLeaveCriticalSection(DphRoot);
+    return TRUE;
 }
 
 /* EOF */

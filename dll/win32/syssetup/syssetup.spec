@@ -22,8 +22,7 @@
 @ stub GenerateName
 @ stdcall HdcClassInstaller(long ptr ptr)
 @ stdcall InitializeSetupActionLog(long)
-@ stdcall InstallLiveCD(ptr)
-@ stdcall InstallReactOS(ptr)
+@ stdcall InstallWindowsNt(long ptr)
 @ stub InvokeExternalApplicationEx
 @ stdcall KeyboardClassInstaller(long ptr ptr)
 @ stub LegacyDriverPropPageProvider

@@ -34,6 +34,8 @@ cpp_quote("DEFINE_GUID(CLSID_IMimeAllocator, 0xfd853cdd, 0x7f86, 0x11d0, 0x82, 0
 cpp_quote("DEFINE_GUID(CLSID_IMimeMessage,   0xfd853ce3, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
 cpp_quote("DEFINE_GUID(CLSID_IMimeSecurity,  0xfd853cde, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
 cpp_quote("DEFINE_GUID(CLSID_IVirtualStream, 0xfd853cdf, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("DEFINE_GUID(CLSID_IMimeHtmlProtocol,0x5300401,0xbcbc, 0x11d0, 0x85, 0xe3, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("DEFINE_GUID(CLSID_MimeEdit,       0x1c82ead9, 0x508e, 0x11d1, 0x8d, 0xcf, 0x0, 0xc0, 0x4f, 0xb9, 0x51, 0xf9);")
 
 cpp_quote("#define MIME_E_REG_CREATE_KEY         0x800cce01")
 cpp_quote("#define MIME_E_REG_QUERY_INFO         0x800cce02")
@@ -152,6 +154,10 @@ cpp_quote("    PID_HDR_INREPLYTO     = 77,")
 cpp_quote("    PID_ATT_ACCOUNTNAME   = 78,")
 cpp_quote("    PID_LAST              = 79,")
 cpp_quote("} MIMEPROPID;")
+
+cpp_quote("#define ISPIDSTR(_name)               (((DWORD_PTR)(_name) >> 16) == 0)")
+cpp_quote("#define STRTOPID(_name)               ((DWORD)((DWORD_PTR)((LPCSTR)(_name))))")
+cpp_quote("#define PIDTOSTR(_id)                 ((LPCSTR)((DWORD_PTR)(_id)))")
 
 cpp_quote("#define TYPEDID_ID(_typedid)          (((ULONG)(_typedid))>>16)")
 cpp_quote("#define TYPEDID_MASK                  ((ULONG)0xffff)")
@@ -701,6 +707,22 @@ cpp_quote("#endif")
             AFT_RFC822_TRANSMIT,
         } ADDRESSFORMAT;
 
+        cpp_quote("#define IAT_UNKNOWN              0x00000000")
+        cpp_quote("#define IAT_FROM                 0x00000001")
+        cpp_quote("#define IAT_SENDER               0x00000002")
+        cpp_quote("#define IAT_TO                   0x00000004")
+        cpp_quote("#define IAT_CC                   0x00000008")
+        cpp_quote("#define IAT_BCC                  0x00000010")
+        cpp_quote("#define IAT_REPLYTO              0x00000020")
+        cpp_quote("#define IAT_RETURNPATH           0x00000040")
+        cpp_quote("#define IAT_RETRCPTTO            0x00000080")
+        cpp_quote("#define IAT_RR                   0x00000100")
+        cpp_quote("#define IAT_APPARTO              0x00000200")
+        cpp_quote("#define IAT_DISP_NOTIFICATION_TO 0x00000400")
+        cpp_quote("#define IAT_ALL                  0xffffffff")
+        cpp_quote("#define IAT_KNOWN                (IAT_FROM | IAT_TO | IAT_CC | IAT_BCC | IAT_REPLYTO | IAT_SENDER)")
+        cpp_quote("#define IAT_RECIPS               (IAT_TO | IAT_CC | IAT_BCC)")
+
         typedef struct tagADDRESSPROPS
         {
             DWORD           dwProps;
@@ -719,13 +741,89 @@ cpp_quote("#endif")
             DWORD           dwReserved2;
         } ADDRESSPROPS, *LPADDRESSPROPS;
 
+        cpp_quote("#define IAP_CHARSET              0x00000001")
+        cpp_quote("#define IAP_HANDLE               0x00000002")
+        cpp_quote("#define IAP_ADRTYPE              0x00000004")
+        cpp_quote("#define IAP_FRIENDLY             0x00000008")
+        cpp_quote("#define IAP_EMAIL                0x00000020")
+        cpp_quote("#define IAP_CERTSTATE            0x00000100")
+        cpp_quote("#define IAP_SIGNING_PRINT        0x00000200")
+        cpp_quote("#define IAP_ENCRYPTION_PRINT     0x00000400")
+        cpp_quote("#define IAP_ENCODING             0x00000800")
+        cpp_quote("#define IAP_COOKIE               0x00001000")
+        cpp_quote("#define IAP_FRIENDLYW            0x00002000")
+        cpp_quote("#define IAP_ALL                  0xffffffff")
+
         typedef struct tagADDRESSLIST
         {
             ULONG           cAdrs;
             LPADDRESSPROPS  prgAdr;
         } ADDRESSLIST, *LPADDRESSLIST;
 
-        /* FIXME: fill this in */
+        HRESULT Append(
+                [in]        DWORD                   addrtype,
+                [in]        ENCODINGTYPE            encoding,
+                [in]        const char              *friendly,
+                [in,unique] const char              *email,
+                [in,out,unique] HADDRESS            *address);
+
+        HRESULT Insert(
+                [in]        ADDRESSPROPS            *addressprop,
+                [in,out,unique] HADDRESS            *address);
+
+        HRESULT SetProps(
+                [in]        HADDRESS                address,
+                [in]        ADDRESSPROPS            *addressprop);
+
+        HRESULT GetProps(
+                [in]        HADDRESS                address,
+                [in]        ADDRESSPROPS            *addressprop);
+
+        HRESULT GetSender(
+                [in,out]    ADDRESSPROPS            *addressprop);
+
+        HRESULT CountTypes(
+                [in]        DWORD                   addrtype,
+                [out]       ULONG                   *count);
+
+        HRESULT GetTypes(
+                [in]        DWORD                   addrtype,
+                [in]        DWORD                   dwProps,
+                [in,out]    ADDRESSLIST             *list);
+
+        HRESULT EnumTypes(
+                [in]        DWORD                   addrtype,
+                [in]        DWORD                   props,
+                [out]       IMimeEnumAddressTypes   **types);
+
+        HRESULT Delete(
+                [in]        HADDRESS                hAddress);
+
+        HRESULT DeleteTypes(
+                [in]        DWORD                   addrtype);
+
+        HRESULT GetFormat(
+                [in]        DWORD                   addrtype,
+                [in]        ADDRESSFORMAT           addrformat,
+                [out]       char                    **format);
+
+        HRESULT AppendRfc822(
+                [in]        DWORD                   addrtype,
+                [in]        ENCODINGTYPE            encoding,
+                [in]        const char              *rfcaddr);
+
+        HRESULT ParseRfc822(
+                [in]        DWORD                   addrtype,
+                [in]        ENCODINGTYPE            encoding,
+                [in]        const char              *rfcaddr,
+                [in,out]    ADDRESSLIST             *list);
+
+        HRESULT Clone(
+                [out]       IMimeAddressTable       **table);
+
+        HRESULT BindToObject(
+                [in]        REFIID                  riid,
+                [out, iid_is(riid)] void            **obj);
     }
 
     [

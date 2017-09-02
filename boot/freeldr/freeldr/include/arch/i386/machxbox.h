@@ -57,7 +57,6 @@ ULONG XboxDiskGetCacheableBlockCount(UCHAR DriveNumber);
 
 TIMEINFO* XboxGetTime(VOID);
 
-BOOLEAN XboxInitializeBootDevices(VOID);
 PCONFIGURATION_COMPONENT_DATA XboxHwDetect(VOID);
 VOID XboxHwIdle(VOID);
 

@@ -24,6 +24,7 @@ BEGIN
     850  "850   (OEM - Westeuropäisch)"
     852  "852   (OEM - Mitteleuropäisch)"
     855  "855   (OEM - Kyrillisch)"
+    856  "856   (OEM - Hebräisch PC)"
     857  "857   (OEM - Türkisch)"
     858  "858   (OEM - Multilingual Lateinisch 1)"
     860  "860   (OEM - Portugiesisch)"
@@ -56,6 +57,7 @@ BEGIN
     65001 "65001 (Unicode (UTF-8))"
 
     3700  "37    (IBM EBCDIC - USA-Kanada)" /* FIXME */
+//  424   "424   (IBM EBCDIC - Hebräisch)" // On Windows, this is CP 20424
     1026  "1026  (IBM EBCDIC - Türkisch, Lateinisch-5)"
     1047  "1047  (IBM EBCDIC - Lateinisch-1)"
     1140  "1140  (IBM EBCDIC - USA-Kanada-Europäisch)"
@@ -90,7 +92,7 @@ BEGIN
     870   "870   (IBM EBCDIC - Multilingual Lateinisch-2)"
     875   "875   (IBM EBCDIC - Griechisch, modern)"
 
-    20269 "20269 (ISO 6937)"
+    20269 "20269 (ISO 6937 Non-Spacing Accent)"
     28591 "28591 (ISO 8859-1 Westeuropäisch)"
     28592 "28592 (ISO 8859-2 Mitteleuropäisch)"
     28593 "28593 (ISO 8859-3 Lateinisch 3)"
@@ -99,8 +101,12 @@ BEGIN
     28596 "28596 (ISO 8859-6 Arabisch)"
     28597 "28597 (ISO 8859-7 Griechisch)"
     28598 "28598 (ISO 8859-8 Hebräisch (Visual))"
-    28599 "28599 (ISO 8859-9 Türkisch)"
+    28599 "28599 (ISO 8859-9 Lateinisch 5 Türkisch)"
+    28600 "28600 (ISO 8859-10 Lateinisch 6 Nordisch)"
+    28603 "28603 (ISO 8859-13 Lateinisch 7 Estonian)"
+    28604 "28604 (ISO 8859-14 Lateinisch 8 Celtic)"
     28605 "28605 (ISO 8859-15 Lateinisch 9)"
+    28606 "28606 (ISO 8859-16 Lateinisch 10 Balkan)"
     38598 "38598 (ISO 8859-8 Hebräisch (Logisch))"
 
     20105 "20105 (IA5 Westeuropäisch)"
@@ -117,6 +123,7 @@ BEGIN
     20005 "20005 (Wang - Taiwan)"
     20127 "20127 (US-ASCII)"
     20261 "20261 (T.61)"
+//  878   "878   (Kyrillisch (KOI8-R))" // On Windows, this is CP 20866
     20866 "20866 (Kyrillisch (KOI8-R))"
     21027 "21027 (Ext Alpha Lowercase)"
     21866 "21866 (Kyrillisch (KOI8-U))"
@@ -189,6 +196,7 @@ BEGIN
     32+NLSRC_OFFSET "Brazil"
     34+NLSRC_OFFSET "Bhutan"
     35+NLSRC_OFFSET "Bulgaria"
+    37+NLSRC_OFFSET "Brunei"
     38+NLSRC_OFFSET "Burundi"
     39+NLSRC_OFFSET "Canada"
     40+NLSRC_OFFSET "Cambodia"

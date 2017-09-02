@@ -121,54 +121,9 @@ DxDdBlt(
 
 DWORD
 NTAPI
-DxDdCanCreateSurface(
-    PVOID p1,
-    PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdCanCreateD3DBuffer(
-    PVOID p1,
-    PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdColorControl(
     PVOID p1,
     PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdCreateDirectDrawObject(
-    PVOID p1)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdCreateD3DBuffer(
-    PVOID p1,
-    PVOID p2,
-    PVOID p3,
-    PVOID p4,
-    PVOID p5,
-    PVOID p6,
-    PVOID p7,
-    PVOID p8)
 {
     TRACE();
     return 0;
@@ -180,20 +135,6 @@ DxDdCreateMoComp(
     PVOID p1,
     PVOID p2)
 {
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdCreateSurfaceObject(
-    PVOID p1,
-    PVOID p2,
-    PVOID p3,
-    PVOID p4,
-    PVOID p5,
-    PVOID p6)
-{
-    TRACE();
     return 0;
 }
 
@@ -305,16 +246,6 @@ DxDdGetDC(
 
 DWORD
 NTAPI
-DxDdGetDriverInfo(
-    PVOID p1,
-    PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdGetDxHandle(
     PVOID p1,
     PVOID p2,
@@ -384,15 +315,6 @@ DxDdGetScanLine(
 
 DWORD
 NTAPI
-DxDdLock(
-    PVOID p1)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdLockD3D(
     PVOID p1,
     PVOID p2)
@@ -403,36 +325,7 @@ DxDdLockD3D(
 
 DWORD
 NTAPI
-DxDdQueryDirectDrawObject(
-    PVOID p1,
-    PVOID p2,
-    PVOID p3,
-    PVOID p4,
-    PVOID p5,
-    PVOID p6,
-    PVOID p7,
-    PVOID p8,
-    PVOID p9,
-    PVOID p10,
-    PVOID p11)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdQueryMoCompStatus(
-    PVOID p1,
-    PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdReenableDirectDrawObject(
     PVOID p1,
     PVOID p2)
 {
@@ -527,15 +420,6 @@ NTAPI
 DxDdUnattachSurface(
     PVOID p1,
     PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdUnlock(
-    PVOID p1)
 {
     TRACE();
     return 0;

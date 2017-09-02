@@ -45,8 +45,9 @@
 #include <uxtheme.h>
 #include <vssym32.h>
 
-#include <wine/unicode.h>
 #include <wine/debug.h>
+#include <wine/list.h>
+#include <wine/unicode.h>
 
 #include "resource.h"
 
@@ -75,6 +76,21 @@ typedef struct
 } COMCTL32_SysColor;
 
 extern COMCTL32_SysColor  comctl32_color DECLSPEC_HIDDEN;
+
+typedef struct _BUTTON_DATA {
+    LONG state;
+    HFONT font;
+    LONG_PTR image;
+    DWORD ui_state;
+
+    RECT rcTextMargin;
+    BUTTON_IMAGELIST imlData;
+} BUTTON_DATA, *PBUTTON_DATA;
+
+static inline PBUTTON_DATA _GetButtonData(HWND hwnd)
+{
+    return (PBUTTON_DATA)GetWindowLongPtrW( hwnd, 0 );
+}
 
 /* Internal function */
 HWND COMCTL32_CreateToolTip (HWND) DECLSPEC_HIDDEN;
@@ -159,13 +175,18 @@ extern void TREEVIEW_Register(void) DECLSPEC_HIDDEN;
 extern void TREEVIEW_Unregister(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Register(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
-
+extern void BUTTON_Register();
+extern void BUTTON_Unregister();
+#ifdef __REACTOS__
+extern void TOOLBARv6_Register(void) DECLSPEC_HIDDEN;
+extern void TOOLBARv6_Unregister(void) DECLSPEC_HIDDEN;
+#endif
 
 int MONTHCAL_MonthLength(int month, int year) DECLSPEC_HIDDEN;
 int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace) DECLSPEC_HIDDEN;
 LONG MONTHCAL_CompareSystemTime(const SYSTEMTIME *first, const SYSTEMTIME *second) DECLSPEC_HIDDEN;
 
-extern void THEMING_Initialize(void) DECLSPEC_HIDDEN;
+extern void THEMING_Initialize(HANDLE hActCtx5, HANDLE hActCtx6) DECLSPEC_HIDDEN;
 extern void THEMING_Uninitialize(void) DECLSPEC_HIDDEN;
 extern LRESULT THEMING_CallOriginalClass(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
 extern void THEMING_SetSubclassData(HWND, ULONG_PTR) DECLSPEC_HIDDEN;

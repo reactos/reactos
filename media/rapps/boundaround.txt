@@ -28,7 +28,7 @@ Size = 2,0 Mio
 [Section.0419]
 License = Условно-бесплатно
 Description = Игра похожа на Frozen Fruits.
-Size = 2,0 МБ
+Size = 2,0 МиБ
 
 [Section.041f]
 Name = Bound Around (Göstermelik)

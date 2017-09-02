@@ -340,6 +340,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Failed: %x\n", Status);
+        ObDereferenceObject(FileObject);
         return Status;
     }
 
@@ -382,6 +383,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
         {
             DPRINT("Status %x\n", Status);
             ObDereferenceObject(Section);
+            ObDereferenceObject(FileObject);
             return Status;
         }
         ASSERT(Status != STATUS_PENDING);
@@ -413,6 +415,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     {
         DPRINT("Zero size file\n");
         ObDereferenceObject(Section);
+        ObDereferenceObject(FileObject);
         return STATUS_FILE_INVALID;
     }
 
@@ -423,6 +426,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     {
         DPRINT("Failed: STATUS_NO_MEMORY\n");
         ObDereferenceObject(Section);
+        ObDereferenceObject(FileObject);
         return STATUS_NO_MEMORY;
     }
 

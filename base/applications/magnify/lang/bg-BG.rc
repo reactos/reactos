@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "Из&ход", IDM_EXIT
         MENUITEM "На&стройки", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&За...", IDM_ABOUT
+        MENUITEM "&За", IDM_ABOUT
     END
 END
 

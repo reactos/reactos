@@ -15,9 +15,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Les développeurs de ReactOS voudraient présenter les projets Open Source suivants, (ou seulement des composants) qui ont été utilisés pour créer ReactOS :", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "Les développeurs de ReactOS voudraient présenter les projets Open Source suivants, qui ont été utilisés (en tout ou partie) pour créer ReactOS :", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS est sous license GPL, ainsi si vous voulez le réutiliser ou le redistribuer (ou seulement des composants) vous devez respecter la GPL", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "ReactOS est sous license GPL, ainsi si vous voulez le réutiliser ou le redistribuer (en tout ou partie) vous devez respecter la GPL.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "&Voir la GPL...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "Cliquez sur Suivant pour continuer l'installation.", IDC_STATIC, 15, 136, 195, 17
 END
@@ -83,6 +83,15 @@ BEGIN
     AUTOCHECKBOX "Ajuster automatiquement l'horloge pour l'heure &d'été", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
+IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON "Thème Lautus", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Thème Classique", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+END
+
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de ReactOS"
@@ -135,6 +144,8 @@ BEGIN
     IDS_DATETIMESUBTITLE "Configurez la date et l'heure correcte pour votre ordinateur."
     IDS_PROCESSTITLE "Enregistrement des composants"
     IDS_PROCESSSUBTITLE "Veuillez patienter..."
+    IDS_THEMESELECTIONTITLE "Apparence"
+    IDS_THEMESELECTIONSUBTITLE "Sélectionnez le thème que vous préférez"
 END
 
 STRINGTABLE
@@ -149,8 +160,8 @@ BEGIN
     IDS_TIMEOUT "Délai dépassé lors de l'enregistrement"
     IDS_REASON_UNKNOWN ""
     /*
-     * ATTENTION: 
-     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     * ATTENTION:
+     *   If you translate the administrator account name, keep IDS_ADMINISTRATOR_NAME and
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
@@ -172,4 +183,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "Installation des périphériques en cours..."
+END
+
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
+    IDS_COMMONFILES "Fichiers communs"
 END

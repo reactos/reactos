@@ -279,7 +279,7 @@ StreamClassDeviceNotification(
         return;
     }
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*

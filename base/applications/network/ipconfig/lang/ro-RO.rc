@@ -1,9 +1,7 @@
 /* 
  * FILE:       base/applications/network/ipconfig/lang/ro-RO.rc
  *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG: 2011-08-21  initial translation
- *             2011-10-26  diacritics correction, other minor changes
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -62,8 +60,8 @@ BEGIN
     atunci vor fi detașate sau reînnoite toate alocările de adrese IP pentru\n \
     toate adaptoarele care suportă TCP/IP.\n \
     \n \
-    Dacă pentru Setclassid nu se specifică și identitatea de clasă, atunci\n \
-    identitatea de clasă se elimină.\n \
+    Dacă pentru setclassid nu este specificată și identitatea de clasă, atunci\n \
+    identitatea de clasă este eliminată.\n \
     \n \
     Exemple:\n \
         > ipconfig                   ... Afișează informații.\n \

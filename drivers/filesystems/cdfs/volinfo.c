@@ -49,7 +49,7 @@ CdfsGetFsVolumeInformation(
 
     DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength));
     DPRINT("LabelLength %hu\n", DeviceObject->Vpb->VolumeLabelLength);
-    DPRINT("Label %*.S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
+    DPRINT("Label %.*S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
 
     if (*BufferLength < sizeof(FILE_FS_VOLUME_INFORMATION))
         return STATUS_INFO_LENGTH_MISMATCH;
@@ -159,7 +159,11 @@ CdfsGetFsDeviceInformation(
     if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
-    FsDeviceInfo->DeviceType = FILE_DEVICE_CD_ROM;
+    if (DeviceObject->DeviceType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+        FsDeviceInfo->DeviceType = FILE_DEVICE_CD_ROM;
+    else
+        FsDeviceInfo->DeviceType = FILE_DEVICE_DISK;
+
     FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
 
     DPRINT("FsdGetFsDeviceInformation() finished.\n");

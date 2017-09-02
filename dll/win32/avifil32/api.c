@@ -1960,44 +1960,6 @@ HRESULT WINAPI AVISaveVW(LPCWSTR szFile, CLSID *pclsidHandler,
 }
 
 /***********************************************************************
- *		CreateEditableStream	(AVIFIL32.@)
- */
-HRESULT WINAPI CreateEditableStream(PAVISTREAM *ppEditable, PAVISTREAM pSource)
-{
-  IAVIEditStream *pEdit = NULL;
-  HRESULT	  hr;
-
-  TRACE("(%p,%p)\n", ppEditable, pSource);
-
-  if (ppEditable == NULL)
-    return AVIERR_BADPARAM;
-
-  *ppEditable = NULL;
-
-  if (pSource != NULL) {
-    hr = IAVIStream_QueryInterface(pSource, &IID_IAVIEditStream,
-				   (LPVOID*)&pEdit);
-    if (SUCCEEDED(hr) && pEdit != NULL) {
-      hr = IAVIEditStream_Clone(pEdit, ppEditable);
-      IAVIEditStream_Release(pEdit);
-
-      return hr;
-    }
-  }
-
-  /* need own implementation of IAVIEditStream */
-  pEdit = AVIFILE_CreateEditStream(pSource);
-  if (pEdit == NULL)
-    return AVIERR_MEMORY;
-
-  hr = IAVIEditStream_QueryInterface(pEdit, &IID_IAVIStream,
-                                     (LPVOID*)ppEditable);
-  IAVIEditStream_Release(pEdit);
-
-  return hr;
-}
-
-/***********************************************************************
  *		EditStreamClone		(AVIFIL32.@)
  */
 HRESULT WINAPI EditStreamClone(PAVISTREAM pStream, PAVISTREAM *ppResult)

@@ -667,6 +667,11 @@ HRESULT WINAPI WMCreateReader(IUnknown *reserved, DWORD rights, IWMReader **ret_
     return S_OK;
 }
 
+HRESULT WINAPI WMCreateReaderPriv(IWMReader **ret_reader)
+{
+    return WMCreateReader(NULL, 0, ret_reader);
+}
+
 HRESULT WINAPI WMCreateSyncReader(IUnknown *pcert, DWORD rights, IWMSyncReader **syncreader)
 {
     FIXME("(%p, %x, %p): stub\n", pcert, rights, syncreader);

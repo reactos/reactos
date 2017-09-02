@@ -507,6 +507,32 @@ static BOOL pe_load_dwarf(struct module* module)
 
 #ifndef DBGHELP_STATIC_LIB
 /******************************************************************
+ *		pe_load_rsym
+ *
+ * look for ReactOS's own rsym format
+ */
+static BOOL pe_load_rsym(struct module* module)
+{
+    struct image_file_map*      fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
+    struct image_section_map    sect_rsym;
+    BOOL                        ret = FALSE;
+
+    if (pe_find_section(fmap, ".rossym", &sect_rsym))
+    {
+        const char* rsym = image_map_section(&sect_rsym);
+        if (rsym != IMAGE_NO_MAP)
+        {
+            ret = rsym_parse(module, module->module.BaseOfImage,
+                             rsym, image_get_map_size(&sect_rsym));
+        }
+        image_unmap_section(&sect_rsym);
+    }
+    TRACE("%s the RSYM debug info\n", ret ? "successfully loaded" : "failed to load");
+
+    return ret;
+}
+
+/******************************************************************
  *		pe_load_dbg_file
  *
  * loads a .dbg file
@@ -704,7 +730,9 @@ BOOL pe_load_debug_info(const struct process* pcs, struct module* module)
         ret = pe_load_dwarf(module) || ret;
         #ifndef DBGHELP_STATIC_LIB
         ret = pe_load_msc_debug_info(pcs, module) || ret;
+        ret = pe_load_rsym(module) || ret;
         #endif
+
         ret = ret || pe_load_coff_symbol_table(module); /* FIXME */
         /* if we still have no debug info (we could only get SymExport at this
          * point), then do the SymExport except if we have an ELF container,

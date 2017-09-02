@@ -397,7 +397,6 @@ struct symt_idx_to_ptr
 };
 #endif
 
-extern const struct wine_rb_functions source_rb_functions DECLSPEC_HIDDEN;
 struct module
 {
     struct process*             process;
@@ -696,6 +695,7 @@ extern const char*  pe_map_directory(struct module* module, int dirno, DWORD* si
 /* source.c */
 extern unsigned     source_new(struct module* module, const char* basedir, const char* source) DECLSPEC_HIDDEN;
 extern const char*  source_get(const struct module* module, unsigned idx) DECLSPEC_HIDDEN;
+extern int          source_rb_compare(const void *key, const struct wine_rb_entry *entry) DECLSPEC_HIDDEN;
 
 /* stabs.c */
 typedef void (*stabs_def_cb)(struct module* module, unsigned long load_offset,
@@ -713,6 +713,12 @@ extern BOOL         dwarf2_parse(struct module* module, unsigned long load_offse
                                  struct image_file_map* fmap) DECLSPEC_HIDDEN;
 extern BOOL         dwarf2_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
                                           CONTEXT* context, ULONG_PTR* cfa) DECLSPEC_HIDDEN;
+
+/* rsym.c */
+extern BOOL         rsym_parse(struct module* module, unsigned long load_offset,
+                                const void* rsym, int rsymlen) DECLSPEC_HIDDEN;
+
+
 
 /* stack.c */
 #ifndef DBGHELP_STATIC_LIB

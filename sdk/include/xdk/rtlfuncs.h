@@ -949,6 +949,12 @@ RtlTimeToTimeFields(
   _Out_ PTIME_FIELDS TimeFields);
 
 NTSYSAPI
+USHORT
+FASTCALL
+RtlUshortByteSwap(
+  _In_ USHORT Source);
+
+NTSYSAPI
 ULONG
 FASTCALL
 RtlUlongByteSwap(
@@ -972,6 +978,18 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlUnicodeStringToAnsiString(
+  _When_(AllocateDestinationString, _Out_ _At_(DestinationString->Buffer, __drv_allocatesMem(Mem)))
+  _When_(!AllocateDestinationString, _Inout_)
+    PANSI_STRING DestinationString,
+  _In_ PCUNICODE_STRING SourceString,
+  _In_ BOOLEAN AllocateDestinationString);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeStringToAnsiString(
   _When_(AllocateDestinationString, _Out_ _At_(DestinationString->Buffer, __drv_allocatesMem(Mem)))
   _When_(!AllocateDestinationString, _Inout_)
     PANSI_STRING DestinationString,
@@ -1006,12 +1024,6 @@ WCHAR
 NTAPI
 RtlUpcaseUnicodeChar(
   _In_ WCHAR SourceCharacter);
-
-NTSYSAPI
-USHORT
-FASTCALL
-RtlUshortByteSwap(
-  _In_ USHORT Source);
 
 _IRQL_requires_max_(APC_LEVEL)
 _Must_inspect_result_
@@ -3302,7 +3314,7 @@ RtlCheckBit(
 # define NT_ASSERTMSGW NT_ASSERTMSGW_NOASSUME
 #endif /* NT_ASSERT_ALWAYS_ASSUMES */
 
-#if defined(_MSC_VER) && (defined(__REACTOS__) || defined(ASSERT_ALWAYS_NT_ASSERT))
+#if defined(_MSC_VER) && (defined(__REACTOS__) || defined(ASSERT_ALWAYS_NT_ASSERT)) && !defined(_BLDR_)
 #undef ASSERT
 #define ASSERT NT_ASSERT
 #undef ASSERTMSG

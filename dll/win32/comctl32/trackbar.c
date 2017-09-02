@@ -32,6 +32,8 @@
 
 #include "comctl32.h"
 
+#include <math.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(trackbar);
 
 typedef struct
@@ -188,7 +190,7 @@ TRACKBAR_ConvertPlaceToPosition (const TRACKBAR_INFO *infoPtr, int place)
         pos = infoPtr->lRangeMin;
 
     TRACE("%.2f\n", pos);
-    return (LONG)(pos + 0.5);
+    return (LONG)floor(pos + 0.5);
 }
 
 
@@ -434,7 +436,7 @@ TRACKBAR_AutoPage (TRACKBAR_INFO *infoPtr, POINT clickPoint)
     LONG dir = TRACKBAR_GetAutoPageDirection(infoPtr, clickPoint);
     LONG prevPos = infoPtr->lPos;
 
-    TRACE("x=%d, y=%d, dir=%d\n", clickPoint.x, clickPoint.y, dir);
+    TRACE("clickPoint=%s, dir=%d\n", wine_dbgstr_point(&clickPoint), dir);
 
     if (dir > 0 && (infoPtr->flags & TB_AUTO_PAGE_RIGHT))
 	TRACKBAR_PageDown(infoPtr);
@@ -936,8 +938,15 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
         if (GetWindowTheme (infoPtr->hwndSelf)) {
             DrawThemeParentBackground (infoPtr->hwndSelf, hdc, 0);
         }
-        else
-	    FillRect (hdc, &rcClient, GetSysColorBrush(COLOR_BTNFACE));
+#ifndef __REACTOS__
+        else {
+#else
+        {
+#endif
+            HBRUSH brush = (HBRUSH)SendMessageW(infoPtr->hwndNotify, WM_CTLCOLORSTATIC,
+                    (WPARAM)hdc, (LPARAM)infoPtr->hwndSelf);
+            FillRect (hdc, &rcClient, brush ? brush : GetSysColorBrush(COLOR_BTNFACE));
+        }
         if (gcdrf != CDRF_DODEFAULT)
 	    notify_customdraw(infoPtr, &nmcd, CDDS_POSTERASE);
     }
@@ -1230,21 +1239,21 @@ TRACKBAR_SetRange (TRACKBAR_INFO *infoPtr, BOOL redraw, LONG range)
     infoPtr->lRangeMin = (SHORT)LOWORD(range);
     infoPtr->lRangeMax = (SHORT)HIWORD(range);
 
-    if (infoPtr->lPos < infoPtr->lRangeMin) {
+    /* clip position to new min/max limit */
+    if (infoPtr->lPos < infoPtr->lRangeMin)
         infoPtr->lPos = infoPtr->lRangeMin;
-        infoPtr->flags |= TB_THUMBPOSCHANGED;
-    }
 
-    if (infoPtr->lPos > infoPtr->lRangeMax) {
+    if (infoPtr->lPos > infoPtr->lRangeMax)
         infoPtr->lPos = infoPtr->lRangeMax;
-        infoPtr->flags |= TB_THUMBPOSCHANGED;
-    }
 
     infoPtr->lPageSize = (infoPtr->lRangeMax - infoPtr->lRangeMin) / 5;
     if (infoPtr->lPageSize == 0) infoPtr->lPageSize = 1;
 
-    if (changed && (infoPtr->dwStyle & TBS_AUTOTICKS))
-        TRACKBAR_RecalculateTics (infoPtr);
+    if (changed) {
+        if (infoPtr->dwStyle & TBS_AUTOTICKS)
+            TRACKBAR_RecalculateTics (infoPtr);
+        infoPtr->flags |= TB_THUMBPOSCHANGED;
+    }
 
     if (redraw) TRACKBAR_InvalidateAll(infoPtr);
 
@@ -1256,10 +1265,11 @@ static inline LRESULT
 TRACKBAR_SetRangeMax (TRACKBAR_INFO *infoPtr, BOOL redraw, LONG lMax)
 {
     BOOL changed = infoPtr->lRangeMax != lMax;
+    LONG rightmost = max(lMax, infoPtr->lRangeMin);
 
     infoPtr->lRangeMax = lMax;
-    if (infoPtr->lPos > infoPtr->lRangeMax) {
-        infoPtr->lPos = infoPtr->lRangeMax;
+    if (infoPtr->lPos > rightmost) {
+        infoPtr->lPos = rightmost;
         infoPtr->flags |= TB_THUMBPOSCHANGED;
     }
 
@@ -1410,6 +1420,7 @@ TRACKBAR_SetTicFreq (TRACKBAR_INFO *infoPtr, WORD wFreq)
 	TRACKBAR_InvalidateAll(infoPtr);
     }
 
+    TRACKBAR_UpdateThumb (infoPtr);
     return 0;
 }
 

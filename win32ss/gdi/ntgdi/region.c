@@ -2051,6 +2051,10 @@ REGION_bXformRgn(
     RECT rect;
     BOOL bResult;
 
+    /* Check for zero rectangles and return TRUE for translation only matrices */
+    if (prgn->rdh.nCount < 1)
+        return (pmx->flAccel & XFORM_UNITY) != 0;
+
     /* Check if this is a scaling only matrix (off-diagonal elements are 0 */
     if (pmx->flAccel & XFORM_SCALE)
     {
@@ -3506,6 +3510,7 @@ NtGdiCombineRgn(
     {
         DPRINT1("NtGdiCombineRgn invalid parameters: %p, %p, %p, %d\n",
                 hrgnDst, hrgnSrc1, hrgnSrc2, iMode);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return ERROR;
     }
 
@@ -4100,6 +4105,7 @@ NtGdiGetRegionData(
                 RtlCopyMemory(lpRgnData, &prgn->rdh, sizeof(RGNDATAHEADER));
                 RtlCopyMemory(lpRgnData->Buffer, prgn->Buffer, cjRects);
                 lpRgnData->rdh.iType = RDH_RECTANGLES;
+                lpRgnData->rdh.nRgnSize = cjRects;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

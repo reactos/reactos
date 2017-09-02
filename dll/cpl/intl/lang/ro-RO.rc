@@ -1,4 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -37,7 +37,7 @@ BEGIN
     LTEXT "Pentru a vedea/modifica limbile de introducere și serviciile de text, apăsați „Detalii”", -1, 12, 15, 220, 18
     PUSHBUTTON "&Detalii…", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Compatibilitate lingvistică suplimentară", -1, 5, 62, 234, 82
-    LTEXT "ReactOS posedă în mod implicit compatibilitate pentru majoritatea limbilor. În caz de necesitate, această compatibilitate se poate extinde prin instalarea de fișiere suplimentare.", -1, 12, 72, 220, 25
+    LTEXT "ReactOS posedă în mod implicit compatibilitate pentru majoritatea limbilor. În caz de necesitate, această compatibilitate poate fi extinsă prin instalarea de fișiere suplimentare.", -1, 12, 72, 220, 25
     CHECKBOX "Instalează fișierele pentru script-uri comple&xe și pentru limbile cu scriere inversă", IDC_INST_FILES_FOR_RTOL_LANG, 12, 100, 215, 22, BS_MULTILINE | BS_TOP
     CHECKBOX "Instalează fișierele pentru limbile din &estul Asiei", IDC_INST_FILES_FOR_ASIAN, 12, 119, 180, 22, BS_MULTILINE | BS_TOP
 END
@@ -214,5 +214,5 @@ BEGIN
     IDS_ERROR_DEF_INT_KEY_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_NLS_KEY_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
     IDS_ERROR_NLS_CODE_REG "Problemă la deschiderea cheii: HKU\\.DEFAULT\\Control Panel\\International"
-    IDS_ERROR_INPUT_DLL "Nu se poate lansa input.dll"
+    IDS_ERROR_INPUT_DLL "„input.dll” nu a putut fi încărcat!"
 END

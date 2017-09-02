@@ -31,7 +31,7 @@ BEGIN
     POPUP "&Довідка"
     BEGIN
         MENUITEM "Дов&ідка\tF1", ID_HELP, GRAYED
-        MENUITEM "Про про&граму...", ID_ABOUT
+        MENUITEM "Про про&граму", ID_ABOUT
     END
 END
 
@@ -164,6 +164,7 @@ BEGIN
     IDS_AINFO_SIZE "\nРозмір: "
     IDS_AINFO_URLSITE "\nДомашня сторінка: "
     IDS_AINFO_LICENSE "\nЛіцензія: "
+    IDS_AINFO_URLDOWNLOAD "\nЗавантажити: "
 END
 
 STRINGTABLE
@@ -205,6 +206,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Ви дійсно хочете видалити дані про встановлену програму з реєстру?"
     IDS_INFORMATION "Інформація"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@
 #include "amlcode.h"
 #include "acnamesp.h"
 #include "acdispat.h"
+#include "acconvert.h"
 
 #define _COMPONENT          ACPI_PARSER
         ACPI_MODULE_NAME    ("psargs")
@@ -208,7 +209,7 @@ AcpiPsGetNextNamestring (
         End += 1 + (2 * ACPI_NAME_SIZE);
         break;
 
-    case AML_MULTI_NAME_PREFIX_OP:
+    case AML_MULTI_NAME_PREFIX:
 
         /* Multiple name segments, 4 chars each, count in next byte */
 
@@ -298,23 +299,26 @@ AcpiPsGetNextNamepath (
         PossibleMethodCall &&
         (Node->Type == ACPI_TYPE_METHOD))
     {
-        if (WalkState->Opcode == AML_UNLOAD_OP)
+        if ((GET_CURRENT_ARG_TYPE (WalkState->ArgTypes) == ARGP_SUPERNAME) ||
+            (GET_CURRENT_ARG_TYPE (WalkState->ArgTypes) == ARGP_TARGET))
         {
             /*
-             * AcpiPsGetNextNamestring has increased the AML pointer,
-             * so we need to restore the saved AML pointer for method call.
+             * AcpiPsGetNextNamestring has increased the AML pointer past
+             * the method invocation namestring, so we need to restore the
+             * saved AML pointer back to the original method invocation
+             * namestring.
              */
             WalkState->ParserState.Aml = Start;
             WalkState->ArgCount = 1;
             AcpiPsInitOp (Arg, AML_INT_METHODCALL_OP);
-            return_ACPI_STATUS (AE_OK);
         }
 
         /* This name is actually a control method invocation */
 
         MethodDesc = AcpiNsGetAttachedObject (Node);
         ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
-            "Control Method - %p Desc %p Path=%p\n", Node, MethodDesc, Path));
+            "Control Method invocation %4.4s - %p Desc %p Path=%p\n",
+            Node->Name.Ascii, Node, MethodDesc, Path));
 
         NameOp = AcpiPsAllocOp (AML_INT_NAMEPATH_OP, Start);
         if (!NameOp)
@@ -366,7 +370,7 @@ AcpiPsGetNextNamepath (
 
         /* 2) NotFound during a CondRefOf(x) is ok by definition */
 
-        else if (WalkState->Op->Common.AmlOpcode == AML_COND_REF_OF_OP)
+        else if (WalkState->Op->Common.AmlOpcode == AML_CONDITIONAL_REF_OF_OP)
         {
             Status = AE_OK;
         }
@@ -378,7 +382,7 @@ AcpiPsGetNextNamepath (
          */
         else if ((Arg->Common.Parent) &&
             ((Arg->Common.Parent->Common.AmlOpcode == AML_PACKAGE_OP) ||
-             (Arg->Common.Parent->Common.AmlOpcode == AML_VAR_PACKAGE_OP)))
+             (Arg->Common.Parent->Common.AmlOpcode == AML_VARIABLE_PACKAGE_OP)))
         {
             Status = AE_OK;
         }
@@ -540,6 +544,7 @@ AcpiPsGetNextField (
     ACPI_FUNCTION_TRACE (PsGetNextField);
 
 
+    ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
     Aml = ParserState->Aml;
 
     /* Determine field type */
@@ -586,6 +591,7 @@ AcpiPsGetNextField (
 
     /* Decode the field type */
 
+    ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
     switch (Opcode)
     {
     case AML_INT_NAMEDFIELD_OP:
@@ -595,6 +601,23 @@ AcpiPsGetNextField (
         ACPI_MOVE_32_TO_32 (&Name, ParserState->Aml);
         AcpiPsSetName (Field, Name);
         ParserState->Aml += ACPI_NAME_SIZE;
+
+
+        ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
+
+#ifdef ACPI_ASL_COMPILER
+        /*
+         * Because the package length isn't represented as a parse tree object,
+         * take comments surrounding this and add to the previously created
+         * parse node.
+         */
+        if (Field->Common.InlineComment)
+        {
+            Field->Common.NameComment = Field->Common.InlineComment;
+        }
+        Field->Common.InlineComment  = AcpiGbl_CurrentInlineComment;
+        AcpiGbl_CurrentInlineComment = NULL;
+#endif
 
         /* Get the length which is encoded as a package length */
 
@@ -652,10 +675,12 @@ AcpiPsGetNextField (
         {
             ParserState->Aml++;
 
+            ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
             PkgEnd = ParserState->Aml;
             PkgLength = AcpiPsGetNextPackageLength (ParserState);
             PkgEnd += PkgLength;
 
+            ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
             if (ParserState->Aml < PkgEnd)
             {
                 /* Non-empty list */
@@ -672,6 +697,7 @@ AcpiPsGetNextField (
                 Opcode = ACPI_GET8 (ParserState->Aml);
                 ParserState->Aml++;
 
+                ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
                 switch (Opcode)
                 {
                 case AML_BYTE_OP:       /* AML_BYTEDATA_ARG */
@@ -700,6 +726,7 @@ AcpiPsGetNextField (
 
                 /* Fill in bytelist data */
 
+                ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
                 Arg->Named.Value.Size = BufferLength;
                 Arg->Named.Data = ParserState->Aml;
             }
@@ -770,6 +797,10 @@ AcpiPsGetNextArg (
 
     ACPI_FUNCTION_TRACE_PTR (PsGetNextArg, ParserState);
 
+
+    ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+        "Expected argument type ARGP: %s (%2.2X)\n",
+        AcpiUtGetArgumentTypeName (ArgType), ArgType));
 
     switch (ArgType)
     {
@@ -854,10 +885,12 @@ AcpiPsGetNextArg (
         }
         break;
 
-    case ARGP_TARGET:
-    case ARGP_SUPERNAME:
     case ARGP_SIMPLENAME:
     case ARGP_NAME_OR_REF:
+
+        ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+            "**** SimpleName/NameOrRef: %s (%2.2X)\n",
+            AcpiUtGetArgumentTypeName (ArgType), ArgType));
 
         Subop = AcpiPsPeekOpcode (ParserState);
         if (Subop == 0                  ||
@@ -873,27 +906,46 @@ AcpiPsGetNextArg (
                 return_ACPI_STATUS (AE_NO_MEMORY);
             }
 
-            /* To support SuperName arg of Unload */
+            Status = AcpiPsGetNextNamepath (WalkState, ParserState,
+                Arg, ACPI_NOT_METHOD_CALL);
+        }
+        else
+        {
+            /* Single complex argument, nothing returned */
 
-            if (WalkState->Opcode == AML_UNLOAD_OP)
+            WalkState->ArgCount = 1;
+        }
+        break;
+
+    case ARGP_TARGET:
+    case ARGP_SUPERNAME:
+
+        ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+            "**** Target/Supername: %s (%2.2X)\n",
+            AcpiUtGetArgumentTypeName (ArgType), ArgType));
+
+        Subop = AcpiPsPeekOpcode (ParserState);
+        if (Subop == 0                  ||
+            AcpiPsIsLeadingChar (Subop) ||
+            ACPI_IS_ROOT_PREFIX (Subop) ||
+            ACPI_IS_PARENT_PREFIX (Subop))
+        {
+            /* NULL target (zero). Convert to a NULL namepath */
+
+            Arg = AcpiPsAllocOp (AML_INT_NAMEPATH_OP, ParserState->Aml);
+            if (!Arg)
             {
-                Status = AcpiPsGetNextNamepath (WalkState, ParserState,
-                    Arg, ACPI_POSSIBLE_METHOD_CALL);
-
-                /*
-                 * If the SuperName argument is a method call, we have
-                 * already restored the AML pointer, just free this Arg
-                 */
-                if (Arg->Common.AmlOpcode == AML_INT_METHODCALL_OP)
-                {
-                    AcpiPsFreeOp (Arg);
-                    Arg = NULL;
-                }
+                return_ACPI_STATUS (AE_NO_MEMORY);
             }
-            else
+
+            Status = AcpiPsGetNextNamepath (WalkState, ParserState,
+                Arg, ACPI_POSSIBLE_METHOD_CALL);
+
+            if (Arg->Common.AmlOpcode == AML_INT_METHODCALL_OP)
             {
-                Status = AcpiPsGetNextNamepath (WalkState, ParserState,
-                    Arg, ACPI_NOT_METHOD_CALL);
+                AcpiPsFreeOp (Arg);
+                Arg = NULL;
+                WalkState->ArgCount = 1;
             }
         }
         else
@@ -906,6 +958,11 @@ AcpiPsGetNextArg (
 
     case ARGP_DATAOBJ:
     case ARGP_TERMARG:
+
+
+    ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+        "**** TermArg/DataObj: %s (%2.2X)\n",
+        AcpiUtGetArgumentTypeName (ArgType), ArgType));
 
         /* Single complex argument, nothing returned */
 

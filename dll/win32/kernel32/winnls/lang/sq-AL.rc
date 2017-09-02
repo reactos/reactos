@@ -24,6 +24,7 @@ BEGIN
     850  "850   (OEM - Shumegjuhe Latine I)"
     852  "852   (OEM - Latine II)"
     855  "855   (OEM - Cyrillik)"
+    856  "856   (OEM - Hebre PC)"
     857  "857   (OEM - Turke)"
     858  "858   (OEM - Shumegjuhe Latine I + Euro)"
     860  "860   (OEM - Portugeze)"
@@ -56,6 +57,7 @@ BEGIN
     65001 "65001 (UTF-8)"
 
     3700  "37    (IBM EBCDIC - U.S./Kanada)" /* FIXME */
+//  424   "424   (IBM EBCDIC - Hebre)" // On Windows, this is CP 20424
     1026  "1026  (IBM EBCDIC - Turke (Latin-5))"
     1047  "1047  (IBM EBCDIC - Latin-1/Sistem i hapur)"
     1140  "1140  (IBM EBCDIC - U.S./Kanada (37 + Euro))"
@@ -99,8 +101,12 @@ BEGIN
     28596 "28596 (ISO 8859-6 Arabik)"
     28597 "28597 (ISO 8859-7 Greeke)"
     28598 "28598 (ISO 8859-8 Hebrew: Liste Vizuale)"
-    28599 "28599 (ISO 8859-9 Latine 5)"
+    28599 "28599 (ISO 8859-9 Latine 5 Turke)"
+    28600 "28600 (ISO 8859-10 Latine 6 Nordike)"
+    28603 "28603 (ISO 8859-13 Latine 7 Estonian)"
+    28604 "28604 (ISO 8859-14 Latine 8 Celtic)"
     28605 "28605 (ISO 8859-15 Latine 9)"
+    28606 "28606 (ISO 8859-16 Latine 10 Balkan)"
     38598 "38598 (ISO 8859-8 Hebrew: Liste Logjike)"
 
     20105 "20105 (IA5 IRV Alfabet Internacional No.5)"
@@ -117,6 +123,7 @@ BEGIN
     20005 "20005 (Wang - Taiwan)"
     20127 "20127 (US-ASCII)"
     20261 "20261 (T.61)"
+//  878   "878   (Rus - KOI8)" // On Windows, this is CP 20866
     20866 "20866 (Rus - KOI8)"
     21027 "21027 (Ext Alpha Lowercase)"
     21866 "21866 (Ukrainiane - KOI8-U)"
@@ -189,6 +196,7 @@ BEGIN
     32+NLSRC_OFFSET "Brazil"
     34+NLSRC_OFFSET "Bhutan"
     35+NLSRC_OFFSET "Bulgaria"
+    37+NLSRC_OFFSET "Brunei"
     38+NLSRC_OFFSET "Burundi"
     39+NLSRC_OFFSET "Canada"
     40+NLSRC_OFFSET "Cambodia"

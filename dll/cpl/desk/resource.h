@@ -1,15 +1,5 @@
 #pragma once
 
-/* Metrics */
-#define PROPSHEETWIDTH   246
-#define PROPSHEETHEIGHT  228
-#define PROPSHEETPADDING 6
-
-#define SYSTEM_COLUMN (18 * PROPSHEETPADDING)
-#define LABELLINE(x)  (((PROPSHEETPADDING + 2) * x) + (x + 2))
-
-#define ICONSIZE 16
-
 /* ids */
 #define IDC_DESK_ICON  40
 #define IDC_DESK_ICON2 100 /* Needed for theme compatability with Windows. */
@@ -24,6 +14,7 @@
 #define IDD_ADVAPPEARANCE    104
 #define IDD_EFFAPPEARANCE    105
 #define IDD_ADVANCED_GENERAL 200
+#define IDD_CONFIRMSETTINGS  201
 
 /* Background Page */
 #define IDC_BACKGROUND_LIST          1000
@@ -180,3 +171,7 @@
 #define IDC_RESTART_RB       5002
 #define IDC_WITHOUTREBOOT_RB 5003
 #define IDC_ASKME_RB         5004
+
+/* Confirm Settings Dialog */
+#define IDC_TIMEOUTTEXT      5100
+#define IDS_TIMEOUTTEXT      3800

@@ -1,6 +1,6 @@
 /*
  * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -39,6 +39,7 @@ typedef struct _DB {
     TAGID stringtable;
     DWORD write_iter;
     GUID database_id;
+    BOOL for_write;
     struct SdbStringHashTable* string_lookup;
     struct _DB* string_buffer;
 } DB, *PDB;

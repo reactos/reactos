@@ -1,0 +1,69 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Type ""EVENTCREATE /?"" for usage information.\n"
+    IDS_HELP "\n\
+EVENTCREATE [/S computer [/U [domain\\]user [/P password]]] /ID EventID\n\
+            {[/L logname] | [/SO source]} /T type /C category /D description\n\
+\n\
+Description:\n\
+    This tool enables an administrator to create a custom event in\n\
+    a specified event log.\n\
+\n\
+Parameters:\n\
+    /S  computer          Specifies the remote computer where to connect.\n\
+\n\
+    /U  [domain\\]user     Specifies the user account under which the command\n\
+                          should execute.\n\
+\n\
+    /P  [password]        Specifies the password of the user account.\n\
+                          Prompts for input if omitted.\n\
+\n\
+    /L  logname           Specifies the name of the log where the event will be\n\
+                          created. The valid names are:\n\
+                          Application, System, Security\n\
+                          (the latter is reserved only for the SYSTEM account).\n\
+\n\
+    /SO source            Specifies the source name to use for the event\n\
+                          (if not specified, the default source name\n\
+                           will be 'eventcreate').\n\
+                          A valid source can be any string and should represent\n\
+                          the application or the component that is generating\n\
+                          the event.\n\
+\n\
+    /T  type              Specifies the type of event to create.\n\
+                          The valid types are: SUCCESS, ERROR, WARNING,\n\
+                          INFORMATION.\n\
+\n\
+    /C  category          Specifies the event category (integer) for the event.\n\
+\n\
+    /ID EventID           Specifies the event ID for the event. This must be\n\
+                          an integer between 0 and 65535.\n\
+\n\
+    /D  description       Specifies the description to use for the newly\n\
+                          created event.\n\
+\n\
+    /?                    Displays this help screen.\n\
+"
+    IDS_INVALIDSWITCH "Invalid switch - '%s'.\n"
+    IDS_BADSYNTAX_0 "Bad command line syntax.\n"
+    IDS_BADSYNTAX_1 "Bad command line syntax. The option '%s' requires a value.\n"
+    IDS_BADSYNTAX_2 "Bad command line syntax. The value for the option '%s' cannot be empty.\n"
+    IDS_BADSYNTAX_3 "Bad command line syntax. The value '%s' is not allowed for the option '%s'.\n"
+    IDS_BADSYNTAX_4 "Bad command line syntax. The value cannot be specified for the option '%s'.\n"
+    IDS_BADSYNTAX_5 "Bad command line syntax. The option '%s' is not allowed more than %lu times.\n"
+    IDS_BADSYNTAX_6 "Bad command line syntax. The mandatory option '%s' is absent.\n"
+    // IDS_BADSYNTAX_7 "Bad command line syntax. The value for the option '%s' is outside the allowed range.\n"
+    IDS_BADSYNTAX_7 "Bad command line syntax. The value for the option '%s' must be between %d and %d.\n"
+
+    IDS_LOG_NOT_FOUND "The log '%s' does not exist. Cannot create the event.\n"
+    IDS_SOURCE_NOCREATE "The new source cannot be created because the log name is not specified.\nPlease use the /L switch to specify the log name.\n"
+    IDS_SOURCE_EXISTS "The source already exists in the log '%s' and cannot be duplicated.\n"
+    IDS_SOURCE_NOT_CUSTOM "The Source parameter is used to identify the custom scripts/applications\n(not the installed applications).\n"
+
+    IDS_SUCCESS_1   "Operation successful: an event of type '%s' has been created in the log '%s'.\n"
+    IDS_SUCCESS_2   "Operation successful: an event of type '%s' has been created with the source '%s'.\n"
+    IDS_SUCCESS_3   "Operation successful: an event of type '%s' has been created\nin the log '%s' with the source '%s'.\n"
+    IDS_SWITCH_UNIMPLEMENTED "The option '%s' is not currently supported, sorry for the inconvenience!\n"
+END

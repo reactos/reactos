@@ -1337,6 +1337,56 @@ GreGetDCPoint(
 
 BOOL
 WINAPI
+GreSetDCOrg(
+    _In_ HDC hdc,
+    _In_ LONG x,
+    _In_ LONG y,
+    _In_opt_ PRECTL Rect)
+{
+    PDC dc;
+
+    dc = DC_LockDc(hdc);
+    if (!dc) return FALSE;
+
+    /* Set DC Origin */
+    dc->ptlDCOrig.x = x;
+    dc->ptlDCOrig.y = y;
+
+    /* Recalculate Fill Origin */
+    dc->ptlFillOrigin.x = dc->dclevel.ptlBrushOrigin.x + x;
+    dc->ptlFillOrigin.y = dc->dclevel.ptlBrushOrigin.y + y;
+
+    /* Set DC Window Rectangle */
+    if (Rect)
+        dc->erclWindow = *Rect;
+
+    DC_UnlockDc(dc);
+    return TRUE;
+}
+
+BOOL
+WINAPI
+GreGetDCOrgEx(
+    _In_ HDC hdc,
+    _Out_ PPOINTL Point,
+    _Out_ PRECTL Rect)
+{
+    PDC dc;
+
+    dc = DC_LockDc(hdc);
+    if (!dc) return FALSE;
+
+    /* Retrieve DC Window Rectangle without a check */
+    *Rect = dc->erclWindow;
+
+    DC_UnlockDc(dc);
+
+    /* Use default call for DC Origin and parameter checking */
+    return GreGetDCPoint( hdc, GdiGetDCOrg, Point);
+}
+
+BOOL
+WINAPI
 GreGetWindowExtEx(
     _In_ HDC hdc,
     _Out_ LPSIZE lpSize)

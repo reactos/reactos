@@ -421,7 +421,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apelare manuală"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ridicați receptorul și apelați (fie cereți operatorului să apeleze).  După ce s-a inițiat apelul, apăsați pe „Confirmă”. Ascultați receptorul până tace, apoi închideți.", 1281, 8, 8, 219, 32
+    LTEXT "Ridicați receptorul și apelați (fie cereți operatorului să apeleze).  După ce a fost inițiat apelul, apăsați pe „Confirmă”. Ascultați receptorul până tace, apoi închideți.", 1281, 8, 8, 219, 32
     LTEXT "Numărul de telefon:", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
     DEFPUSHBUTTON "Con&firmă", 1, 104, 70, 60, 14, WS_GROUP
@@ -476,7 +476,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
 CAPTION "Apelare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aceste preferințe se aplică pentru „Autentificare utilizând rețeaua comutată” la autentificarea Ctrl-Alt-Del.  Ca administrator, veți avea acces la această pagină.", 1007, 7, 4, 221, 40, NOT WS_GROUP
+    LTEXT "Aceste preferințe sunt aplicate pentru „Autentificare utilizând rețeaua comutată” la autentificarea Ctrl-Alt-Del.  Ca administrator, veți avea acces la această pagină.", 1007, 7, 4, 221, 40, NOT WS_GROUP
     LTEXT "Numărul de &reapelări încercate:", 1005, 7, 55, 154, 8
     EDITTEXT 1001, 164, 52, 60, 14, ES_AUTOHSCROLL
     LTEXT "Numărul de s&ecunde între apeluri:", 1009, 7, 73, 156, 8, NOT WS_GROUP
@@ -614,7 +614,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Alegeți un nume pentru această interfață de apelare la cerere.  Vă sugerăm numirea acestei interfețe după numele rețelei sau serverului la care se demarează conectarea.", 1158, 7, 5, 309, 29
+    LTEXT "Alegeți un nume pentru această interfață de apelare la cerere.  Vă sugerăm numirea acestei interfețe după numele rețelei sau serverului la care este realizată conectarea.", 1158, 7, 5, 309, 29
     LTEXT "N&umele interfeței:", 1159, 17, 41, 285, 8, NOT WS_GROUP
     EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "&Cunosc totul despre interfețele de apel la cerere și prefer editarea directă a proprietăților", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
@@ -631,7 +631,7 @@ BEGIN
     LTEXT "&Validează identitatea mea astfel:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "&Utilizează automat datele de autentificare din ReactOS (și domeniul dacă e cazul)", 1174, 26, 58, 184, 18, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Solicită c&riptarea datelor\n(deconectează dacă nu se poate)", 1169, 26, 82, 183, 18, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Solicită c&riptarea datelor\n(deconectează dacă nu este posibil)", 1169, 26, 82, 183, 18, BS_TOP | BS_MULTILINE
     LTEXT "Utilizarea acestor opțiuni cere cunoștințe ale protocoalelor de securitate.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Opțiuni…", 1180, 151, 115, 60, 14
     GROUPBOX "Autentificare interactivă și automatizată", 1177, 8, 146, 215, 62, WS_GROUP
@@ -859,7 +859,7 @@ BEGIN
     AUTOCHECKBOX "Redirecționează pachete I&P prin această interfață", 1386, 20, 19, 285, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Redirecționează pachete IP&X prin această interfață", 1387, 20, 35, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Adăugă un &cont de utilizator pentru accesul serverului de redirecționare", 1382, 20, 52, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "T&rimite parolă necriptată dacă nu se poate altfel", 1385, 20, 70, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "T&rimite parolă necriptată dacă nu este posibil altfel", 1385, 20, 70, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Utilizează script pentru a completa conectarea", 1384, 20, 87, 289, 22, BS_LEFT | BS_TOP | BS_MULTILINE
 END
 
@@ -953,7 +953,7 @@ CAPTION "Conexiuni"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Privelegii de autentificare", 1582, 8, 10, 213, 63
-    LTEXT "Ne-administratorilor li se poate permite crearea sau modificarea conexiunilor înainte de autentificare.", 1581, 16, 21, 194, 30
+    LTEXT "Ne-administratorilor le este permisă crearea sau modificarea conexiunilor înainte de autentificare.", 1581, 16, 21, 194, 30
     AUTOCHECKBOX "&Permite crearea și modificarea conexiunilor înainte de autentificare", 1497, 16, 46, 195, 18, BS_TOP | BS_MULTILINE
 END
 
@@ -962,7 +962,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Retroapelare pentru server de redirecționare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "La apelarea unui server de redirecționare, vi se poate oferi un apel de răspuns pentru a vă reduce costurile de telefonie sau pentru a spori securitatea.  Specificați dacă acceptați sau nu acest lucru.", 1043, 7, 5, 253, 24
+    LTEXT "La apelarea unui server de redirecționare, vă poate fi oferit un apel de răspuns pentru a vă reduce costurile de telefonie sau pentru a spori securitatea.  Specificați dacă acceptați sau nu acest lucru.", 1043, 7, 5, 253, 24
     AUTORADIOBUTTON "N&u doresc retroapel", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Doresc &retroapelare la aceste numere:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
     CONTROL "", 1503, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 15, 63, 240, 143
@@ -1304,7 +1304,7 @@ BEGIN
     LTEXT "&Validează-mi identitatea în felul următor:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "Utilizează a&utomat numele și parola de utilizator ReactOS (și domeniul dacă există)", 1174, 26, 59, 182, 18, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Solicită &criptarea datelor (deconectează dacă nu se poate)", 1169, 26, 81, 182, 18, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Solicită &criptarea datelor (deconectează dacă nu este posibil)", 1169, 26, 81, 182, 18, BS_TOP | BS_MULTILINE
     LTEXT "Utilizarea acestor opțiuni cere cunoștințe ale protocoalelor de securitate.", 1539, 26, 111, 182, 18
     PUSHBUTTON "&Opțiuni…", 1180, 151, 134, 60, 14
     PUSHBUTTON "Opțiuni I&PSec…", 1598, 126, 163, 85, 14
@@ -1462,7 +1462,7 @@ BEGIN
     LTEXT "Introduceți n&umele gazdei sau adresa IP a destinației:\n(de ex. reactos.org sau 145.52.0.1)", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "Preconectare", 1431, 9, 48, 213, 78
-    LTEXT "Înainte de a încerca stabilirea aceastei conexiuni virtuale, se poate stabili mai întâi o conexiune la o rețea publică, cum ar fi rețeaua Internet.", 1432, 17, 60, 199, 24
+    LTEXT "Înainte de a încerca stabilirea aceastei conexiuni virtuale, este posibilă mai întâi stabilirea unei conexiuni la o rețea publică, cum ar fi rețeaua Internet.", 1432, 17, 60, 199, 24
     AUTOCHECKBOX "&Prestabilește această conexiune:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "Afișea&ză pictogramă în zona de notificare pe durata conectării", 1120, 10, 192, 213, 13
@@ -1501,7 +1501,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Creare conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Înainte de a stabili o conexiune virtuală, se poate mai întâi stabili automat o legătură la Internet sau la o altă rețea publică.", -1, 10, 6, 275, 24
+    LTEXT "Înainte de a stabili o conexiune virtuală, este posibilă mai întâi stabilirea automată a unei legături la Internet sau la o altă rețea publică.", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "N&u stabili mai întâi nici o altă conexiune.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Prestabilește automat această conexiune:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1763,7 +1763,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bifați căsuțele fiecărui utilizator căruia i se va permite conectarea la acest calculator.  Rețineți că posibilitățile de conectare ale utilizatorilor depind și de alți factori (cum ar fi dezactivarea conturilor).", -1, 10, 1, 275, 27
+    LTEXT "Bifați căsuțele fiecărui utilizator căruia îi va fi permisă conectarea la acest calculator.  Rețineți că posibilitățile de conectare ale utilizatorilor depind și de alți factori (cum ar fi dezactivarea conturilor).", -1, 10, 1, 275, 27
     LTEXT "&Utilizatori cu permisiune de conectare:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
     PUSHBUTTON "&Adăugare…", 7044, 10, 122, 65, 14, WS_GROUP
@@ -1844,7 +1844,7 @@ BEGIN
     195 "Codul regiunii trebuie să conțină doar cifrele 0-9.\0"
     196 "Numele trebuie să conțină cel puțin un caracter în afară de spațiu și nu poate începe cu un punct.  Alegeți un alt nume.\0"
     197 "Trebuie să alegeți o valoare între %1 și %2 pentru acest câmp.\0"
-    198 "Nu se poate deschide DLL pentru configurarea autentificării particularizate.  Verificați dacă pachetul de autentificare particularizată a fost instalat corect.\0"
+    198 "Nu a putut fi deschisă biblioteca DLL pentru configurarea autentificării particularizate.  Verificați dacă pachetul de autentificare particularizată a fost instalat corect.\0"
     199 "Conexiunea aleasă a fost stabilită de către serverul de redirecționare multiprotocol.\nUtilizați „Gestionarul de redirecționare și acces în rețea” pentru a închide această conexiune.\0"
     200 "Comentariu\0"
     201 "Configurarea pachetului de autentificare particularizată a eșuat.\0"
@@ -1863,7 +1863,7 @@ BEGIN
     215 "Fișiere scurtătură de linie comutată (*.rnk)\0"
     216 "*.rnk\0"
     217 "Crearea scurtăturii de linie comutată\0"
-    218 "Legătura la %1 a căzut.  Se așteaptă reconectarea…\0"
+    218 "Legătura la %1 a căzut.  În curs de reconectare…\0"
     219 "Informațiile de încadrare nu poat fi obținute.\0"
     220 "Informațiile despre porturi nu pot fi obținute.\0"
     221 "Informațiile de proiectare nu pot fi obținute.\0"
@@ -1935,14 +1935,14 @@ BEGIN
     287 "Locații\0"
     288 "Acest dispozitiv va fi utilizat pentru realizarea conexiunii.\0"
     289 "Alegeți un dispozitiv\0"
-    290 "Liniile multiple nu se pot fi împreunate decât dacă serverul apelat este PPP.\0"
+    290 "Liniile multiple nu pot fi împreunate decât dacă serverul apelat este PPP.\0"
     291 "Modem\0"
     292 "Modemul nu este instalat.\0"
     293 "Criptare MS Punct-la-Punct, 128 biți RSA/RC4\0"
     294 "Criptare MS Punct-la-Punct, 40 biți RSA/RC4\0"
     295 "Linii multiple\0"
     296 "(Apăsați „Configurează”)\0"
-    297 "Se pot introduce adrese DNS și WINS fixe.\0"
+    297 "Pot fi introduse adrese DNS și WINS fixe.\0"
     298 "Adrese de Nume Server\0"
     299 "RAS de bază\0"
     300 "PPP\0"
@@ -1959,39 +1959,39 @@ BEGIN
     311 "(nespecificat)\0"
     312 "În listă deja există „%1”.\0"
     313 "Securizează parola și datele\0"
-    314 "Nu se poate selecta protocolul %1 deoarece fie nu este instalat, fie este dezactivat pentru accesul la distanță.  Pentru a activa, mergeți în Panoul de control, deschideți Rețea, apoi în pagina Servicii, alegeți Proprietăți pentru accesul în rețea și apăsați butonul Rețea.\0"
+    314 "Protocolul %1 nu poate fi selectat, deoarece fie nu este instalat, fie este dezactivat pentru accesul la distanță.  Pentru a activa, mergeți în Panoul de control, deschideți Rețea, apoi în pagina Servicii, alegeți Proprietăți pentru accesul în rețea și apăsați butonul Rețea.\0"
     315 "Parola nu poate fi păstrată.\0"
-    316 "Nu se pot afișa datele.\0"
-    317 "Nu se pot prelua informațiile de autoapelare.\0"
-    318 "Nu se poate încărca fereastra de dialog.\0"
-    319 "Nu se poate dezectiva accesul partajat.\0"
-    320 "Nu se poate încărca pagina de proprietăți.\0"
-    321 "Nu se poate încărca agenda de telefoane.\0"
-    322 "Nu se poate încărca informația portului din Gestionarul RAS.\0"
-    323 "Nu se pot citi preferințele de utilizator din registru.\0"
-    324 "Nu se poate încărca informațiile script.\0"
+    316 "Datele nu pot fi afișate.\0"
+    317 "Informațiile de autoapelare nu au putut fi preluate.\0"
+    318 "Fereastra de dialog nu a putut fi încărcată.\0"
+    319 "Accesul partajat nu a putut fi dezactivat.\0"
+    320 "Pagina de proprietăți nu a putut fi încărcată.\0"
+    321 "Agenda de telefoane nu a putut fi încărcată.\0"
+    322 "Informația portului din Gestionarul RAS nu a putut fi încărcată.\0"
+    323 "Preferințele de utilizator din registru nu au putut fi citite.\0"
+    324 "Informațiile script nu au putut fi încărcate.\0"
     325 "script.log nu poate fi afișat cu notepad.exe\0"
     326 "switch.inf nu poate fi editat cu notepad.exe\0"
-    327 "Nu se poate încărca informația TAPI.\0"
-    328 "Nu se poate încărca informația X.25.\0"
-    329 "Nu se poate crea agenda de telefoane.\0"
-    330 "Nu se poate activa accesul partajat.\0"
-    331 "Nu se poate conecta înregistrarea din agenda telefoanică.\0"
-    332 "Nu se poate prelua memoria de transmisie/recepție.\0"
-    333 "Nu se poate prelua informația de stare a unui port.\0"
-    334 "Nu se poate prelua informație despre protocol.\0"
-    335 "Nu se poate recepționa de la dispozitiv.\0"
-    336 "Nu se poate transmite către dispozitiv.\0"
-    337 "Nu se pot prelua date.\0"
-    338 "Nu se poate păstra informația TAPI.\0"
-    339 "Nu se pot păstra date.\0"
+    327 "Informația TAPI nu a putut fi încărcată.\0"
+    328 "Informația X.25 nu a putut fi încărcată.\0"
+    329 "Agenda de telefoane nu a putut fi creată.\0"
+    330 "Accesul partajat nu a putut fi activat.\0"
+    331 "Conexiunea la înregistrarea din agenda telefoanică nu a putut fi realizată.\0"
+    332 "Memoria de transmisie/recepție nu a putut fi obținută.\0"
+    333 "Informația de stare a unui port nu a putut fi obținută.\0"
+    334 "Informația despre protocol nu a putut fi obținută.\0"
+    335 "Recepția de la dispozitiv nu este posibilă.\0"
+    336 "Transmisia către dispozitiv nu este posibilă.\0"
+    337 "Date nu pot fi obținute.\0"
+    338 "Informația TAPI nu poate fi păstrată.\0"
+    339 "Date nu pot fi păstrate.\0"
     340 "Scriptul a fost oprit.\0"
     341 "Scriptul a fost oprit din cauza unei erori. Doriți să vedeți raportul de eroare?\0"
-    342 "Nu se poate stabili informația de autoapelare.\0"
-    343 "Nu se pot elimina parolele păstrate.\0"
-    344 "Nu se poate scrie agenda telefonică.\0"
-    345 "Scrierea preferințelor în registru\0"
-    346 "Nu se poate scrie fișierul scurtătură.\0"
+    342 "Informația de autoapelare nu poate fi accesată.\0"
+    343 "Parolele păstrate nu au putut fi eliminate.\0"
+    344 "Agenda telefonică nu a putut fi scrisă.\0"
+    345 "Scriere preferințe în registru\0"
+    346 "Fișierul scurtătură nu a putut fi scris.\0"
     347 "Con&firmă\0"
     348 "Care este numărul de telefon al furnizorului de Internet?\0"
     349 "Numărul de telefon apelat\0"
@@ -2079,7 +2079,7 @@ BEGIN
     465 "Sufix n&ou:\0"
     466 "Sufi&xuri:\0"
     467 "Sufixe de telefon\0"
-    468 "Dacă este necesar, se pot alege opțiuni speciale.\0"
+    468 "Dacă este necesar, sunt disponibile opțiuni speciale.\0"
     469 "Opțiuni particularizate\0"
     470 "Terminalul de comenzi manuale ale modemului\0"
     471 "Terminal de post-apel\0"
@@ -2111,9 +2111,9 @@ BEGIN
     497 "X.25 PAD\0"
     498 "Puteți permite altor calculatoare accesarea resurselor prin această conexiune de linie comutată.\0"
     499 "Alegerea serverului VPN\0"
-    500 "Nu se poate activa apelarea la cerere.\0"
+    500 "Apelarea la cerere nu a putut fi activată.\0"
     501 "Care este numele sau adresa serverului VPN?\0"
-    502 "Nu se poate dezactiva apelarea la cerere.\0"
+    502 "Apelarea la cerere nu a putut fi dezactivată.\0"
     503 "Rețea publică\0"
     504 "ReactOS poate asigura preconectarea la o rețea publică.\0"
     505 "VPN1\0"
@@ -2190,7 +2190,7 @@ BEGIN
     1546 "Adresele numelor de servere\0"
     1547 "Configurează adresele DNS și WINS utilizate de această interfață.\0"
     1548 "Script pentru serverul de redirecționare\0"
-    1549 "Se poate stabili un script pentru conectarea la serverul de redirecționare.\0"
+    1549 "Este posibilă stabilirea unui script pentru conectarea la serverul de redirecționare.\0"
     1550 "Autentificarea internă\0"
     1551 "Stabiliți numele și parola pe care un alt server le va utiliza pentru conectarea la acest server.\0"
     1552 "Autentificarea externă\0"
@@ -2206,8 +2206,8 @@ BEGIN
     1562 "Este necesar cel puțin un protocol de autentificare cu parolă.\0"
     1563 "Criptare nepermisă (deconectare dacă este solicitată)\0"
     1564 "Criptare opțională (conectare cu sau fără criptare)\0"
-    1565 "Criptare necesară (deconectare dacă se refuză)\0"
-    1566 "Criptare maximă (deconectare dacă se refuză)\0"
+    1565 "Criptare necesară (deconectare în caz de refuz)\0"
+    1566 "Criptare maximă (deconectare în caz de refuz)\0"
     1567 " (criptare activată)\0"
     1568 "Informații ale contului de Internet\0"
     1569 "Vor fi necesare un nume de cont și o parolă pentru autentificarea la contul de Internet.\0"
@@ -2242,7 +2242,7 @@ BEGIN
     1612 "Ați ales să utilizați o cheie prepartajată dar nu ați specificat nici una. \nIntroduceți o cheie prepartajată.\0"
     1613 "Eșec la transmiterea informațiilor de autentificare\0"
     1634 "Deoarece serviciul instrumentației de gestionare ReactOS (WMI) a fost dezactivat, ReactOS nu poate afișa proprietățile acestei conexiuni sau ale rețelei locale.\n\nPentru a configura proprietățile acestei conexiuni sau ale rețelei locale, este necesară activarea serviciului WMI. Pentru a realiza asta, mergeți în Panoul de control, deschideți Servicii, executați clic dreapta pe Instrumentația de Gestionare ReactOS, și alegeți Pornește.\0"
-    1635 "Nu se pot reprezenta proprietățile acestei conexiuni. E posibil ca informațiile instrumentației de gestionare a ReactOS (WMI) să fie corupte. Pentru a corecta, utilizați Restaurarea Sistemului pentru a readuce sistemul la o stare precedentă (numită punct de restaurare). Restaurarea Sistemului se găsește în dosarul Instrumente de Sistem, la Accesorii.\0"
+    1635 "Proprietățile acestei conexiuni nu pot fi reprezentate. E posibil ca informațiile instrumentației de gestionare a ReactOS (WMI) să fie corupte. Pentru a corecta, utilizați „Restaurare sistem” pentru a readuce sistemul la o stare precedentă (numită punct de restaurare). „Restaurare sistem” este amplasat în „Instrumente de sistem”, la „Accesorii”.\0"
     1646 "Acceptă cererea de ecou\0"
     1647 "Acceptă cererea de marcaj temporal\0"
     1648 "Acceptă cererea de mască\0"
@@ -2263,10 +2263,10 @@ BEGIN
     1667 "Acest calculator va primi/răsrăspunde la cereri de informare referitoare la rețeaua publică la care este conectat.\0"
     1668 "Acest calculator va răspunde la cereri de informare referitoare la traseele recunoscute.\0"
     1669 "Datele transmise în Internet care nu reușesc să ajungă la acest calculator din cauza unei erori vor fi înlăturate cu „destinație inaccesibilă” ca mesaj explicativ al erorii.\0"
-    1670 "Când capacitatea de prelucrare a datelor recepționate a acestui calculator nu va mai putea face față ratei de transmisie, se va recurge la suprimarea de cereri și se va cere expeditorului încetinire.\0"
+    1670 "Când capacitatea de prelucrare a datelor recepționate a acestui calculator nu va mai putea face față ratei de transmisie, se va recurge la suprimarea de cereri iar expeditorului îi va fi cerută încetinire.\0"
     1671 "Când acest calculator va suprima cereri din cauza unui antet problematic, expeditorului i se va răspunde cu un mesaj de eroare „antet eronat”.\0"
     1672 "Când acest calculator va suprima o transmisie incompletă de date din cauză că întreaga transmisie depășea timpul permis, expeditorului i se va răspunde cu mesajul „timp expirat”.\0"
-    1673 "Datele transmise de pe acest calculator vor fi redirecționate în caz că traseul cunoscut se modifică.\0"
+    1673 "Datele transmise de pe acest calculator vor fi redirecționate în caz că traseul cunoscut va suferi modificări.\0"
     1675 "Valoarea introdusă pentru dimensiunea fișierului jurnal nu este validă. Introduceți o valoare între 1 și 32767 k.\0"
     1685 "Contul dumneavoastră de utilizator nu deține permisiunea de a utiliza această conexiune.  De obicei, acest lucru se întâmplă deoarece sunteți autentificat ca Oaspete.\0"
     1686 "Introduceți un nume și parolă de cont. (Dacă ați uitat un nume sau o parolă existentă, contactați-vă administratorul de rețea.)\0"
@@ -2300,29 +2300,29 @@ BEGIN
     7327 "Nu dețineți suficiente privilegii pentru a putea adăuga utilizatori în baza de date locală a sistemului.  \0"
     7328 "Utilizatorul pe care încercați să-l creați deja există în baza de date locală de utilizatori.\0"
     7329 "Utilizatorul nu a fost adăugat în baza de date locală de utilizatori deoarece parola introdusă a fost respinsă.\0"
-    7330 "Nu se poate reîncărca baza de date de uzilizatori a sistemului din cauza unei erori interne.\0"
+    7330 "Baza de date de uzilizatori a sistemului nu poate fi reîncărcată din cauza unei erori interne.\0"
     7331 "A survenit o eroare internă:  Accesul la baza de date locală de utilizatori a fost corupt.\0"
-    7332 "Nu se pot încărca resursele necesare pentru a afișa datele de utilizator.\0"
+    7332 "Resursele necesare pentru a afișa datele de utilizator nu au putut fi încărcate.\0"
     7333 "A survenit o eroare internă în încercarea de a anula modificările făcute în baza de date locală de utilizatori.  \0"
     7334 "Accesul la dispozitivul bazei de date a fost corupt.\0"
-    7335 "Nu se pot încărca resursele necesare pentru a afișa datele generale.\0"
+    7335 "Resursele necesare pentru a afișa datele generale nu au putut fi încărcate.\0"
     7336 "A survenit o eroare la încercarea de a institui modificări efectuate referitoare la dispozitive/vpn.  \0"
     7337 "A survenit o eroare internă.\0"
     7338 "A survenit o eroare internă: Accesul la componenta de rețea a bazei de date a fost corupt.\0"
     7339 "A survenit o eroare internă.  \0"
     7340 "A survenit o eroare în încercarea de a institui modificări efectuate la componentele de rețea.\0"
     7341 "A survenit o eroare internă.\0"
-    7342 "Nu se pot institui în sistem modificările efectuate la protocolul TCP/IP.  \0"
-    7343 "Nu se reușește păstrarea în sistem a modificărilor efectuate la protocolul IPX .  \0"
-    7344 "Nu se pot reprezenta proprietățile TCP/IP.\0"
-    7345 "Nu se pot reprezenta proprietățile IPX.\0"
-    7346 "Nu se pot încărca din sistem proprietățile TCP/IP.  \0"
-    7347 "Nu se pot încărca din sistem proprietățile IPX.  \0"
-    7348 "Conexiunile de intrare depind de serviciul de Redirecționare și acces în rețea, care nu se poate porni.  Pentru informații adăugătoare, consultați jurnalul de evenimente al sistemului.\0"
-    7349 "Nu se poate permite la moment modificarea componentelor de rețea deoarece sunt în curs de modificare altundeva.\0"
+    7342 "Modificările efectuate la protocolul TCP/IP nu au putut fi instituite în sistem.  \0"
+    7343 "Modificările efectuate la protocolul IPX nu au putut fi instituite în sistem.  \0"
+    7344 "Proprietățile TCP/IP nu au putut fi afișate.\0"
+    7345 "Proprietățile IPX nu au putut fi afișate.\0"
+    7346 "Proprietățile TCP/IP nu au putut fi încărcate din sistem.  \0"
+    7347 "Proprietățile IPX nu au putut fi încărcate din sistem.  \0"
+    7348 "Conexiunile de intrare depind de serviciul de Redirecționare și acces în rețea, care nu a putut fi pornit.  Pentru informații adăugătoare, consultați jurnalul de evenimente al sistemului.\0"
+    7349 "Modificarea componentelor de rețea nu este permisă la moment, deoarece sunt în curs de modificare altundeva.\0"
     7350 "Noul utilizator introdus nu a fost adăugat la baza de date locală deoarece numele sau parola introdusă încalcă o politică a sistemului (este fie prea mare, fie prea mică, fie prost formată).  \0"
     7351 "Sistemul nu poate șterge utilizatorul cerut.  \0"
-    7352 "Nu se poate elimina componenta selectată de rețe deoarece încă este utilizată.\0"
+    7352 "Componenta selectată de rețea nu poate fi eliminată, deoarece încă este în uz.\0"
     7353 "Avertisment al conexiunilor de intrare\0"
     7354 "Un utilizator șters va fi eliminat definitiv din sistem, chiar dacă va fi apăsat „Anulează”.  Sigur doriți eliminarea irevocabilă a utilizatorului %s? \0"
     7355 "Sunteți pe calea de a comuta în consola de gestiune a sistemului.  Formularul curent al conexiunilor de intrare va fi închis și toate modificările efectuate vor fi instituite în sistem.  Confirmați continuarea?\0"
@@ -2374,6 +2374,6 @@ BEGIN
     7404 "Securitate IP (IKE)\0"
     7405 "127.0.0.1\0"
     7406 "Nu dețineți suficiente drepturi pentru a stabili conexiuni de intrare\0"
-    29900 "Nu se poate încărca serviciul gestionarului conexiunilor de acces în rețea.\0"
-    29901 "Nu se poate deschide fișierul MPRAPI.DLL din directorul system32.\0"
+    29900 "Serviciul gestionarului conexiunilor de acces în rețea nu a putut fi încărcat.\0"
+    29901 "Fișierul MPRAPI.DLL din directorul system32 nu poate fi deschis.\0"
 END

@@ -135,6 +135,10 @@ BEGIN
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
     DEFPUSHBUTTON "Con&firmă", IDOK, 143, 122, 55, 14, WS_GROUP
     PUSHBUTTON "A&nulează", IDCANCEL, 204, 122, 55, 14
+
+    // DEFPUSHBUTTON "Con&firmă", IDOK, 80, 122, 55, 14, WS_GROUP
+    // PUSHBUTTON "A&nulează", IDCANCEL, 143, 122, 55, 14
+    // PUSHBUTTON "&Manual…", IDHELP, 204, 122, 55, 14
 END
 
 IDD_LEGALNOTICE_DLG DIALOGEX 0, 0, 280, 200
@@ -146,19 +150,12 @@ BEGIN
     DEFPUSHBUTTON "Î&nchide", IDOK, 115, 179, 50, 14
 END
 
-IDD_SHUTDOWN_SHELL DIALOGEX 0, 0, 275, 146
+IDD_SHUTDOWN_FANCY DIALOGEX 0, 0, 275, 146
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Închidere ReactOS"
+CAPTION "Luna-XP-style Shut Down dialog"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    ICON IDI_SHUTDOWN, IDI_SHUTDOWN, 9, 57, 21, 20, WS_GROUP
-    LTEXT "&Ce doriți să se întâmple?", IDC_STATIC, 39, 57, 167, 10
-    COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
     DEFPUSHBUTTON "Con&firmă", IDOK, 80, 122, 55, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", IDCANCEL, 143, 122, 55, 14
-    PUSHBUTTON "&Manual…", IDHELP, 204, 122, 55, 14
 END
 
 STRINGTABLE
@@ -179,7 +176,7 @@ BEGIN
     IDS_NONMATCHINGPASSWORDS "Parolele tastate nu corespund. Tastați aceiași parolă în ambele câmpuri de intrpducere."
     IDS_PASSWORDCHANGED "Parola dumneavoastră a fost modificată."
     IDS_LOGONTITLE "Mesaj de autentificare"
-    IDS_LOGONWRONGUSERORPWD "Sistemul nu vă poate autentifica. Asigurați-vă că numele și domeniul sunt corecte apoi tastați din nou parola. În parolă se face distincție între majuscule și minuscule."
+    IDS_LOGONWRONGUSERORPWD "Sistemul nu vă poate autentifica. Asigurați-vă că numele și domeniul sunt corecte apoi tastați din nou parola. În parolă este făcută distincție între majuscule și minuscule."
     IDS_LOGONUSERDISABLED "Contul dumneavoastră a fost dezactivat. Contactați administratorul de sistem."
     IDS_PASSWORDMUSTCHANGE "Este imperativ să vă schimbați parola la prima autentificare."
     IDS_PASSWORDEXPIRED "Parola v-a expirat și trebuie schimbată."

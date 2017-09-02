@@ -38,6 +38,9 @@ IDB_SPECTRUM_16 BITMAP "resources/spectrum_16.bmp"
 #ifdef LANGUAGE_EL_GR
     #include "lang/el-GR.rc"
 #endif
+#ifdef LANGUAGE_EN_GB
+    #include "lang/en-GB.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif

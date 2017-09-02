@@ -3294,6 +3294,10 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define szOID_NETSCAPE_DATA_TYPE             "2.16.840.1.113730.2"
 #define szOID_NETSCAPE_CERT_SEQUENCE         "2.16.840.1.113730.2.5"
 
+#define szOID_NIST_sha256                    "2.16.840.1.101.3.4.2.1"
+#define szOID_NIST_sha384                    "2.16.840.1.101.3.4.2.2"
+#define szOID_NIST_sha512                    "2.16.840.1.101.3.4.2.3"
+
 /* Bits for szOID_NETSCAPE_CERT_TYPE */
 #define NETSCAPE_SSL_CLIENT_AUTH_CERT_TYPE 0x80
 #define NETSCAPE_SSL_SERVER_AUTH_CERT_TYPE 0x40
@@ -4017,6 +4021,22 @@ typedef struct _CMSG_CTRL_KEY_TRANS_DECRYPT_PARA {
     PCMSG_KEY_TRANS_RECIPIENT_INFO pKeyTrans;
     DWORD                          dwRecipientIndex;
 } CMSG_CTRL_KEY_TRANS_DECRYPT_PARA, *PCMSG_CTRL_KEY_TRANS_DECRYPT_PARA;
+
+typedef struct _CERT_STRONG_SIGN_SERIALIZED_INFO {
+    DWORD    dwFlags;
+    WCHAR    *pwszCNGSignHashAlgids;
+    WCHAR    *pwszCNGPubKeyMinBitLengths;
+} CERT_STRONG_SIGN_SERIALIZED_INFO, *PCERT_STRONG_SIGN_SERIALIZED_INFO;
+
+typedef struct _CERT_STRONG_SIGN_PARA {
+    DWORD    cbSize;
+    DWORD    dwInfoChoice;
+    union {
+        void                               *pvInfo;
+        CERT_STRONG_SIGN_SERIALIZED_INFO   *pSerializedInfo;
+        char                               *pszOID;
+    } DUMMYUNIONNAME;
+} CERT_STRONG_SIGN_PARA, *PCERT_STRONG_SIGN_PARA;
 
 typedef BOOL
 (WINAPI *PFN_CMSG_GEN_CONTENT_ENCRYPT_KEY)(

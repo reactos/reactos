@@ -53,10 +53,8 @@ static HRESULT WINAPI IStream_fnQueryInterface(IStream *iface, REFIID riid, LPVO
 
 	*ppvObj = NULL;
 
-	if(IsEqualIID(riid, &IID_IUnknown))	/*IUnknown*/
-	  *ppvObj = This;
-	else if(IsEqualIID(riid, &IID_IStream))	/*IStream*/
-	  *ppvObj = This;
+       if(IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IStream))
+         *ppvObj = &This->IStream_iface;
 
 	if(*ppvObj)
 	{

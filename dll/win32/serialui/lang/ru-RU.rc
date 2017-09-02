@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_EVENPARITY "Чет"
     IDS_MARKPARITY "Маркер (1)"
-    IDS_NOPARITY "No parity"
+    IDS_NOPARITY "Без контроля четности"
     IDS_ODDPARITY "Нечет"
     IDS_SPACEPARITY "Пробел (0)"
     IDS_ONESTOPBIT "1 стоповый бит"

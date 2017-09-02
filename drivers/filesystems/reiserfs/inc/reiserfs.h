@@ -4,7 +4,11 @@
 #include <linux/types.h>
 
 #ifdef __GCC__
+#ifndef __REACTOS__
  #define __PACKED		__PACKED
+#else
+ #define __PACKED		__attribute__((packed))
+#endif
 #else
  #define __PACKED		
 #endif

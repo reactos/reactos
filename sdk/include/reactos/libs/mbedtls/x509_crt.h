@@ -4,19 +4,21 @@
  * \brief X.509 certificate parsing and writing
  *
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
+ *  SPDX-License-Identifier: GPL-2.0
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
@@ -119,6 +121,10 @@ mbedtls_x509_crt_profile;
 
 #define MBEDTLS_X509_RFC5280_MAX_SERIAL_LEN 32
 #define MBEDTLS_X509_RFC5280_UTC_TIME_LEN   15
+
+#if !defined( MBEDTLS_X509_MAX_FILE_PATH_LEN )
+#define MBEDTLS_X509_MAX_FILE_PATH_LEN 512
+#endif
 
 /**
  * Container for writing a certificate (CRT)
@@ -263,7 +269,13 @@ int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
  *
  *                 All flags left after returning from the callback
  *                 are also returned to the application. The function should
- *                 return 0 for anything but a fatal error.
+ *                 return 0 for anything (including invalid certificates)
+ *                 other than fatal error, as a non-zero return code
+ *                 immediately aborts the verification process. For fatal
+ *                 errors, a specific error code should be used (different
+ *                 from MBEDTLS_ERR_X509_CERT_VERIFY_FAILED which should not
+ *                 be returned at this point), or MBEDTLS_ERR_X509_FATAL_ERROR
+ *                 can be used if no better code is available.
  *
  * \note           In case verification failed, the results can be displayed
  *                 using \c mbedtls_x509_crt_verify_info()
@@ -285,12 +297,13 @@ int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
  * \param f_vrfy   verification function
  * \param p_vrfy   verification parameter
  *
- * \return         0 if successful or MBEDTLS_ERR_X509_CERT_VERIFY_FAILED
- *                 in which case *flags will have one or more
- *                 MBEDTLS_X509_BADCERT_XXX or MBEDTLS_X509_BADCRL_XXX flags
- *                 set,
- *                 or another error in case of a fatal error encountered
- *                 during the verification process.
+ * \return         0 (and flags set to 0) if the chain was verified and valid,
+ *                 MBEDTLS_ERR_X509_CERT_VERIFY_FAILED if the chain was verified
+ *                 but found to be invalid, in which case *flags will have one
+ *                 or more MBEDTLS_X509_BADCERT_XXX or MBEDTLS_X509_BADCRL_XXX
+ *                 flags set, or another error (and flags set to 0xffffffff)
+ *                 in case of a fatal error encountered during the
+ *                 verification process.
  */
 int mbedtls_x509_crt_verify( mbedtls_x509_crt *crt,
                      mbedtls_x509_crt *trust_ca,

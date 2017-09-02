@@ -219,12 +219,44 @@ SetVolumeValue(PGLOBAL_DATA pGlobalData){
 }
 
 
+static
+VOID
+SetSystrayVolumeIconState(BOOL bEnabled)
+{
+    HWND hwndTaskBar;
+
+    hwndTaskBar = FindWindowW(L"SystemTray_Main", NULL);
+    if (hwndTaskBar == NULL)
+        return;
+
+    SendMessageW(hwndTaskBar, WM_USER + 220, 4, bEnabled);
+}
+
+static
+BOOL
+GetSystrayVolumeIconState(VOID)
+{
+    HWND hwndTaskBar;
+
+    hwndTaskBar = FindWindowW(L"SystemTray_Main", NULL);
+    if (hwndTaskBar == NULL)
+    {
+        return FALSE;
+    }
+
+    return (BOOL)SendMessageW(hwndTaskBar, WM_USER + 221, 4, 0);
+}
+
 VOID
 InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     UINT NumMixers;
     MIXERCAPS mxc;
     TCHAR szNoDevices[256];
+
+    CheckDlgButton(hwndDlg,
+                   IDC_ICON_IN_TASKBAR,
+                   GetSystrayVolumeIconState() ? BST_CHECKED : BST_UNCHECKED);
 
     LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
 
@@ -233,7 +265,6 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     {
         EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME_TRACKBAR), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_MUTE_CHECKBOX),   FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_ICON_IN_TASKBAR), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED_BTN),    FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
@@ -280,6 +311,15 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pGlobalData->volumeValue/VOLUME_DIVIDER);
 }
 
+VOID
+SaveData(HWND hwndDlg)
+{
+    BOOL bShowIcon;
+
+    bShowIcon = (IsDlgButtonChecked(hwndDlg, IDC_ICON_IN_TASKBAR) == BST_CHECKED);
+
+    SetSystrayVolumeIconState(!bShowIcon);
+}
 
 VOID
 LaunchSoundControl(HWND hwndDlg)
@@ -380,18 +420,29 @@ VolumeDlgProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDC_MUTE_CHECKBOX:
-                    SwitchMuteState(pGlobalData);
-                    if (pGlobalData->muteVal)
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        SwitchMuteState(pGlobalData);
+                        if (pGlobalData->muteVal)
                         {
-                            SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                             SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
                         }
                         else
                         {
-                            SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
                             SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
                         }
+
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
                     break;
+
+                case IDC_ICON_IN_TASKBAR:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+
                 case IDC_ADVANCED_BTN:
                     LaunchSoundControl(hwndDlg);
                     break;
@@ -419,6 +470,13 @@ VolumeDlgProc(HWND hwndDlg,
             DestroyIcon(pGlobalData->hIconNoHW);
             HeapFree(GetProcessHeap(), 0, pGlobalData);
             break;
+
+        case WM_NOTIFY:
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            {
+                SaveData(hwndDlg);
+            }
+            return TRUE;
     }
 
     return FALSE;

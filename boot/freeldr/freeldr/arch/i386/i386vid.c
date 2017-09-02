@@ -22,7 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
-DBG_DEFAULT_CHANNEL(UI);
+DBG_DEFAULT_CHANNEL(HWDETECT);
 
 #include <pshpack2.h>
 typedef struct
@@ -237,3 +237,64 @@ USHORT BiosIsVesaSupported(VOID)
 
     return SvgaInfo->VesaVersion;
 }
+
+
+BOOLEAN
+BiosIsVesaDdcSupported(VOID)
+{
+    REGS Regs;
+
+    TRACE("BiosIsVesaDdcSupported()\n");
+
+    Regs.w.ax = 0x4F15;
+    Regs.b.bl = 0;
+    Regs.w.cx = 0;
+    Regs.w.es = 0;
+    Regs.w.di = 0;
+    Int386(0x10, &Regs, &Regs);
+
+    TRACE("AL = 0x%x\n", Regs.b.al);
+    TRACE("AH = 0x%x\n", Regs.b.ah);
+
+    TRACE("BL = 0x%x\n", Regs.b.bl);
+
+    if (Regs.w.ax != 0x004F)
+    {
+        ERR("VESA/DDC installation check failed\n");
+        return FALSE;
+    }
+
+    return (Regs.b.ah == 0);
+}
+
+
+BOOLEAN
+BiosVesaReadEdid(VOID)
+{
+    REGS Regs;
+
+    TRACE("BiosVesaReadEdid()\n");
+
+    RtlZeroMemory((PVOID)BIOSCALLBUFFER, 128);
+
+    Regs.w.ax = 0x4F15;
+    Regs.b.bl = 1;
+    Regs.w.cx = 0;
+    Regs.w.dx = 0;
+    Regs.w.es = BIOSCALLBUFSEGMENT;
+    Regs.w.di = BIOSCALLBUFOFFSET;
+    Int386(0x10, &Regs, &Regs);
+
+    TRACE("AL = 0x%x\n", Regs.b.al);
+    TRACE("AH = 0x%x\n", Regs.b.ah);
+
+    if (Regs.w.ax != 0x004F)
+    {
+        ERR("Read EDID function not supported!\n");
+        return FALSE;
+    }
+
+    return (Regs.b.ah == 0);
+}
+
+/* EOF */

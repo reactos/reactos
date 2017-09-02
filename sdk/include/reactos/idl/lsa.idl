@@ -64,7 +64,7 @@ typedef struct _SECURITY_QUALITY_OF_SERVICE {
     DWORD Length;
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
     SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
-    BYTE EffectiveOnly;
+    BOOLEAN EffectiveOnly;
 } SECURITY_QUALITY_OF_SERVICE, *PSECURITY_QUALITY_OF_SERVICE;
 
 cpp_quote("#endif")
@@ -304,12 +304,12 @@ typedef struct _POLICY_MODIFICATION_INFO {
 } POLICY_MODIFICATION_INFO, *PPOLICY_MODIFICATION_INFO;
 
 typedef struct _POLICY_AUDIT_FULL_SET_INFO {
-    BOOL ShutDownOnFull;
+    BOOLEAN ShutDownOnFull;
 } POLICY_AUDIT_FULL_SET_INFO, *PPOLICY_AUDIT_FULL_SET_INFO;
 
 typedef struct _POLICY_AUDIT_FULL_QUERY_INFO {
-    BOOL ShutDownOnFull;
-    BOOL LogIsFull;
+    BOOLEAN ShutDownOnFull;
+    BOOLEAN LogIsFull;
 } POLICY_AUDIT_FULL_QUERY_INFO, *PPOLICY_AUDIT_FULL_QUERY_INFO;
 cpp_quote("#endif")
 
@@ -582,13 +582,13 @@ typedef struct _LSA_FOREST_TRUST_COLLISION_INFORMATION {
 cpp_quote("#endif")
 
 [
-  uuid(12345778-1234-abcd-ef00-0123456789ab),
-  version(0.0),
-  pointer_default(unique),
-  endpoint("ncacn_np:[\\pipe\\lsarpc]")
-  #ifndef __midl
-  ,explicit_handle
-  #endif
+    uuid(12345778-1234-abcd-ef00-0123456789ab),
+    version(0.0),
+    pointer_default(unique),
+    endpoint("ncacn_np:[\\pipe\\lsarpc]")
+#ifndef __midl
+    ,explicit_handle
+#endif
 ]
 interface lsarpc
 {
@@ -724,7 +724,7 @@ interface lsarpc
     /* Function 20 */
     NTSTATUS __stdcall LsarRemovePrivilegesFromAccount(
         [in] LSAPR_HANDLE AccountHandle,
-        [in] BOOL AllPrivileges,
+        [in] BOOLEAN AllPrivileges,
         [in, unique] PLSAPR_PRIVILEGE_SET Privileges);
 
     /* Function 21 */
@@ -836,7 +836,7 @@ cpp_quote("#if _WIN32_WINNT >= 0x0351")
     NTSTATUS __stdcall LsarRemoveAccountRights(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] PRPC_SID AccountSid,
-        [in] BOOL AllRights,
+        [in] BOOLEAN AllRights,
         [in] PLSAPR_USER_RIGHT_SET UserRights);
 
     /* Function 39 */
@@ -1059,7 +1059,7 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
         [in] PLSA_UNICODE_STRING TrustedDomainName,
         [in] LSA_FOREST_TRUST_RECORD_TYPE HighestRecordType,
         [in] PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
-        [in] BOOL CheckOnly,
+        [in] BOOLEAN CheckOnly,
         [out] PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo);
 
     /* Function 75 */

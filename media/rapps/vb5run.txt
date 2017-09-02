@@ -44,7 +44,7 @@ Size = 969,6 Kio
 [Section.0419]
 License = Неизвестно
 Description = Необходим для приложений, написанных в Visual Basic 5. Содержит: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
-Size = 969,6 КБ
+Size = 969,6 КиБ
 
 [Section.041f]
 Name = Microsoft Visual Basic 5 Yürütücü

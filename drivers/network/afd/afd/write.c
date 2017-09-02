@@ -30,7 +30,7 @@ static NTSTATUS NTAPI SendComplete
 
     /*
      * The Irp parameter passed in is the IRP of the stream between AFD and
-     * TDI driver. It's not very usefull to us. We need the IRPs of the stream
+     * TDI driver. It's not very useful to us. We need the IRPs of the stream
      * between usermode and AFD. Those are chained from
      * FCB->PendingIrpList[FUNCTION_SEND] and you'll see them in the code
      * below as "NextIrp" ('cause they are the next usermode IRP to be

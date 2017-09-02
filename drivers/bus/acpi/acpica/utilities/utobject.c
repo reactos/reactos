@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -543,6 +543,10 @@ AcpiUtGetSimpleObjectSize (
     {
         /* A namespace node should never get here */
 
+        ACPI_ERROR ((AE_INFO,
+            "Received a namespace node [%4.4s] "
+            "where an operand object is required",
+            ACPI_CAST_PTR (ACPI_NAMESPACE_NODE, InternalObject)->Name.Ascii));
         return_ACPI_STATUS (AE_AML_INTERNAL);
     }
 

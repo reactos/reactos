@@ -97,9 +97,12 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d8_swapchain_Present(IDirect3DSwapChai
     if (device->device_state != D3D8_DEVICE_STATE_OK)
         return D3DERR_DEVICELOST;
 
+    if (dirty_region)
+        FIXME("Ignoring dirty_region %p.\n", dirty_region);
+
     wined3d_mutex_lock();
-    hr = wined3d_swapchain_present(swapchain->wined3d_swapchain, src_rect,
-            dst_rect, dst_window_override, dirty_region, 0);
+    hr = wined3d_swapchain_present(swapchain->wined3d_swapchain,
+            src_rect, dst_rect, dst_window_override, 0);
     wined3d_mutex_unlock();
 
     return hr;

@@ -25,7 +25,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 {
     IDS_STATUS_DONE            "Finalizat"
-    IDS_STATUS_DOWNLOADINGFROM "Se descarcă de la %s…"
+    IDS_STATUS_DOWNLOADINGFROM "În curs de descărcare de la %s…"
 }
 
 STRINGTABLE

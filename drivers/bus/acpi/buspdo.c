@@ -404,7 +404,7 @@ Bus_PDO_QueryDeviceCaps(
        deviceCapabilities->EjectSupported = device->flags.ejectable;
        deviceCapabilities->HardwareDisabled = !device->status.enabled && !device->status.functional;
        deviceCapabilities->Removable = device->flags.removable;
-       deviceCapabilities->SurpriseRemovalOK = device->flags.suprise_removal_ok;
+       deviceCapabilities->SurpriseRemovalOK = device->flags.surprise_removal_ok;
        deviceCapabilities->UniqueID = device->flags.unique_id;
        deviceCapabilities->NoDisplayInUI = !device->status.show_in_ui;
        deviceCapabilities->Address = device->pnp.bus_address;
@@ -454,9 +454,17 @@ Bus_PDO_QueryDeviceId(
         {
             acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
 
-            length = swprintf(temp,
-                              L"ACPI\\%hs",
-                              Device->pnp.hardware_id);
+            if (strcmp(Device->pnp.hardware_id, "Processor") == 0)
+            {
+                length = wcslen(ProcessorIdString);
+                wcscpy(temp, ProcessorIdString);
+            }
+            else
+            {
+                length = swprintf(temp,
+                                  L"ACPI\\%hs",
+                                  Device->pnp.hardware_id);
+            }
         }
         else
         {
@@ -685,77 +693,77 @@ Bus_PDO_QueryDeviceText(
     case DeviceTextDescription:
 
         if (!Irp->IoStatus.Information) {
-          if (wcsstr (DeviceData->HardwareIDs, L"PNP000") != 0)
-            Temp = L"Programmable interrupt controller";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP010") != 0)
-            Temp = L"System timer";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP020") != 0)
-            Temp = L"DMA controller";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP03") != 0)
-            Temp = L"Keyboard";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP040") != 0)
-            Temp = L"Parallel port";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP05") != 0)
-            Temp = L"Serial port";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP06") != 0)
-            Temp = L"Disk controller";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP07") != 0)
-            Temp = L"Disk controller";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP09") != 0)
-            Temp = L"Display adapter";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A0") != 0)
-            Temp = L"Bus controller";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0E0") != 0)
-            Temp = L"PCMCIA controller";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0F") != 0)
-            Temp = L"Mouse device";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP8") != 0)
-            Temp = L"Network adapter";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNPA0") != 0)
-            Temp = L"SCSI controller";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNPB0") != 0)
-            Temp = L"Multimedia device";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNPC00") != 0)
-            Temp = L"Modem";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0C") != 0)
-            Temp = L"Power Button";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0E") != 0)
-            Temp = L"Sleep Button";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0D") != 0)
-            Temp = L"Lid Switch";
-          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C09") != 0)
-            Temp = L"ACPI Embedded Controller";
-           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0B") != 0)
-            Temp = L"ACPI Fan";
-           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0 ||
-                    wcsstr(DeviceData->HardwareIDs, L"PNP0A08") != 0 )
-            Temp = L"PCI Root Bridge";
-           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0A") != 0)
-            Temp = L"ACPI Battery";
-           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0F") != 0)
-            Temp = L"PCI Interrupt Link";
-           else if (wcsstr(DeviceData->HardwareIDs, L"ACPI_PWR") != 0)
-            Temp = L"ACPI Power Resource";
-           else if (wcsstr(DeviceData->HardwareIDs, L"Processor") != 0)
-           {
-               if (ProcessorNameString != NULL)
-                   Temp = ProcessorNameString;
-               else
-                   Temp = L"Processor";
-           }
-           else if (wcsstr(DeviceData->HardwareIDs, L"ThermalZone") != 0)
-            Temp = L"ACPI Thermal Zone";
-           else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0002") != 0)
-            Temp = L"Smart Battery";
-           else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0003") != 0)
-            Temp = L"AC Adapter";
-           /* Simply checking if AcpiHandle is NULL eliminates the need to check
-            * for the 4 different names that ACPI knows the fixed feature button as internally
-            */
-           else if (!DeviceData->AcpiHandle)
-            Temp = L"ACPI Fixed Feature Button";
-          else
-            Temp = L"Other ACPI device";
+            if (wcsstr (DeviceData->HardwareIDs, L"PNP000") != 0)
+                Temp = L"Programmable interrupt controller";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP010") != 0)
+                Temp = L"System timer";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP020") != 0)
+                Temp = L"DMA controller";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP03") != 0)
+                Temp = L"Keyboard";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP040") != 0)
+                Temp = L"Parallel port";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP05") != 0)
+                Temp = L"Serial port";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP06") != 0)
+                Temp = L"Disk controller";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP07") != 0)
+                Temp = L"Disk controller";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP09") != 0)
+                Temp = L"Display adapter";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A0") != 0)
+                Temp = L"Bus controller";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0E0") != 0)
+                Temp = L"PCMCIA controller";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0F") != 0)
+                Temp = L"Mouse device";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP8") != 0)
+                Temp = L"Network adapter";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNPA0") != 0)
+                Temp = L"SCSI controller";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNPB0") != 0)
+                Temp = L"Multimedia device";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNPC00") != 0)
+                Temp = L"Modem";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0C") != 0)
+                Temp = L"Power Button";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0E") != 0)
+                Temp = L"Sleep Button";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0D") != 0)
+                Temp = L"Lid Switch";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C09") != 0)
+                Temp = L"ACPI Embedded Controller";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0B") != 0)
+                Temp = L"ACPI Fan";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0 ||
+                     wcsstr(DeviceData->HardwareIDs, L"PNP0A08") != 0)
+                Temp = L"PCI Root Bridge";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0A") != 0)
+                Temp = L"ACPI Battery";
+            else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0F") != 0)
+                Temp = L"PCI Interrupt Link";
+            else if (wcsstr(DeviceData->HardwareIDs, L"ACPI_PWR") != 0)
+                Temp = L"ACPI Power Resource";
+            else if (wcsstr(DeviceData->HardwareIDs, L"Processor") != 0)
+            {
+                if (ProcessorNameString != NULL)
+                    Temp = ProcessorNameString;
+                else
+                    Temp = L"Processor";
+            }
+            else if (wcsstr(DeviceData->HardwareIDs, L"ThermalZone") != 0)
+                Temp = L"ACPI Thermal Zone";
+            else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0002") != 0)
+                Temp = L"Smart Battery";
+            else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0003") != 0)
+                Temp = L"AC Adapter";
+            /* Simply checking if AcpiHandle is NULL eliminates the need to check
+             * for the 4 different names that ACPI knows the fixed feature button as internally
+             */
+            else if (!DeviceData->AcpiHandle)
+                Temp = L"ACPI Fixed Feature Button";
+            else
+                Temp = L"Other ACPI device";
 
             Buffer = ExAllocatePoolWithTag(PagedPool, (wcslen(Temp) + 1) * sizeof(WCHAR), 'IpcA');
 

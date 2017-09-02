@@ -214,9 +214,7 @@ BlockIopFreeAlignedBuffer (
 
     if (*BufferSize)
     {
-        EfiPrintf(L"Aligned free not yet implemented\r\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        //Status = MmPapFreePages(*Buffer, 1);
+        Status = MmPapFreePages(*Buffer, BL_MM_INCLUDE_MAPPED_ALLOCATED);
 
         *Buffer = NULL;
         *BufferSize = 0;
@@ -600,7 +598,7 @@ BlockIoGetInformation (
     _Out_ PBL_DEVICE_INFORMATION DeviceInformation
     )
 {
-    /* Copy the device speciifc data into the block device information */
+    /* Copy the device specific data into the block device information */
     RtlCopyMemory(&DeviceInformation->BlockDeviceInfo,
                    DeviceEntry->DeviceSpecificData,
                    sizeof(DeviceInformation->BlockDeviceInfo));
@@ -1002,7 +1000,7 @@ BlockIoEfiGetDeviceInformation (
         return Status;
     }
 
-    /* Iteratate twice -- once for the top level, once for the bottom */
+    /* Iterate twice -- once for the top level, once for the bottom */
     for (i = 0, Found = FALSE; Found == FALSE && Protocol[i].Handle; i++)
     {
         /* Check what kind of leaf node device this is */
@@ -1012,7 +1010,7 @@ BlockIoEfiGetDeviceInformation (
         {
             /* We only support floppy drives */
             AcpiPath = (ACPI_HID_DEVICE_PATH*)LeafNode;
-            if ((AcpiPath->HID == EISA_PNP_ID(0x604)) &&
+            if ((AcpiPath->HID == EISA_PNP_ID(0x604)) ||
                 (AcpiPath->HID == EISA_PNP_ID(0x700)))
             {
                 /* Set the boot library specific device types */
@@ -1415,7 +1413,7 @@ BlockIoFirmwareOpen (
     }
 
     /* Build a hash entry, with the value inline */
-    HashEntry.Flags = 1;
+    HashEntry.Flags = BL_HT_VALUE_IS_INLINE;
     HashEntry.Size = sizeof(EFI_HANDLE);
 
     /* Loop each device we got */
@@ -1461,10 +1459,9 @@ BlockIoFirmwareOpen (
                                TblDoNotPurgeEntry);
         if (!NT_SUCCESS(Status))
         {
-            EfiPrintf(L"Failure path not implemented: %lx\r\n", Status);
-#if 0
-            BlHtDelete(HashTableId, &HashKey);
-#endif
+            /* Remove it from teh hash table */
+            BlHtDelete(HashTableId, &HashEntry);
+
             /* Free the block I/O device data */
             BlockIopFreeAllocations(DeviceEntry->DeviceSpecificData);
 
@@ -1881,8 +1878,7 @@ BlockIopInitialize (
         /* Free the prefetch buffer is one was allocated */
         if (BlockIopPrefetchBuffer)
         {
-            EfiPrintf(L"Failure path not implemented %lx\r\n", Status);
-            //MmPapFreePages(BlockIopPrefetchBuffer, 1);
+            MmPapFreePages(BlockIopPrefetchBuffer, BL_MM_INCLUDE_MAPPED_ALLOCATED);
         }
     }
 
@@ -2237,7 +2233,7 @@ BlpDeviceOpen (
         Status = STATUS_NOT_IMPLEMENTED;
     }
 
-    /* Check if the device was opened successfuly */
+    /* Check if the device was opened successfully */
     if (NT_SUCCESS(Status))
     {
 DeviceOpened:

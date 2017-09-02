@@ -47,7 +47,7 @@
 147 stub -noname IEGetNameAndFlags
 148 stub -noname IEGetDisplayName
 149 stub -noname IEBindToObjectEx
-150 stub -noname _GetStdLocation # FIXME: Inspect
+150 stdcall -stub -noname _GetStdLocation(ptr long long)
 151 stdcall -noname URLSubRegQueryA(str str long ptr long long) # FIXME: Inspect
 152 stub -noname CShellUIHelper_CreateInstance2 # FIXME: Inspect
 153 stub -noname IsURLChild

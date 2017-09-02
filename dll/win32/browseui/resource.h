@@ -54,12 +54,15 @@
 #define IDM_TOOLS_DISCONNECTNETWORKDRIVE 0xA082
 #define IDM_TOOLS_SYNCHRONIZE            0xA176
 #define IDM_TOOLS_FOLDEROPTIONS          0xA123
-#define IDM_HELP_ISTHISCOPYLEGAL         0xA104
 #define IDM_HELP_ABOUT                   0xA102
 #define IDM_TASKBAR_TOOLBARS                268
 #define IDM_TASKBAR_TOOLBARS_DESKTOP          3
 #define IDM_TASKBAR_TOOLBARS_QUICKLAUNCH      4
 #define IDM_TASKBAR_TOOLBARS_NEW              1
+
+#define IDM_BAND_MENU                       269
+#define IDM_BAND_TITLE                   0xA200
+#define IDM_BAND_CLOSE                   0xA201
 
 /* Random id for band close button, feel free to change it */
 #define IDM_BASEBAR_CLOSE                0xA200
@@ -93,7 +96,6 @@
 #define IDR_AUTOCOMPLETE         141
 #define IDR_ACLISTISF            142
 
-#define IDS_LEGAL_URL            12299
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302
 #define IDS_SHOWTEXTLABELS       12303
@@ -106,8 +108,6 @@
 #define IDS_ADDRESSBANDLABEL     12902
 #define IDS_FOLDERSLABEL         12919
 #define IDS_HISTORYTEXT          13169
-#define IDS_SORRY_CAPTION        14001
-#define IDS_SORRY_MESSAGE        14002
 #define IDS_UP                   58434
 #define IDS_BACK                 58689
 #define IDS_FORWARD              58690
@@ -129,3 +129,15 @@
 #define IDC_ICONOPTIONS 4097
 
 #define IDB_BANDBUTTONS 545
+#define IDB_SHELL_EXPLORER_LG       214
+#define IDB_SHELL_EXPLORER_LG_HOT   215
+#define IDB_SHELL_EXPLORER_SM       216
+#define IDB_SHELL_EXPLORER_SM_HOT   217
+#define IDB_SHELL_GO                230
+#define IDB_SHELL_GO_HOT            231
+#define IDB_SHELL_BRANDBAND_SM_HI   240
+/*#define IDB_SHELL_BRANDBAND_MD_HI   241
+#define IDB_SHELL_BRANDBAND_LG_HI   242
+#define IDB_SHELL_BRANDBAND_SM_LO   245
+#define IDB_SHELL_BRANDBAND_MD_LO   246
+#define IDB_SHELL_BRANDBAND_LG_LO   247*/

@@ -1256,8 +1256,23 @@ RtlCreateHeap(ULONG Flags,
         Flags &= HEAP_CREATE_VALID_MASK;
     }
 
-    /* TODO: Capture parameters, once we decide to use SEH */
-    if (!Parameters) Parameters = &SafeParams;
+    /* Capture parameters */
+    if (Parameters)
+    {
+        _SEH2_TRY
+        {
+            /* If size of structure correct, then copy it */
+            if (Parameters->Length == sizeof(RTL_HEAP_PARAMETERS))
+                RtlCopyMemory(&SafeParams, Parameters, sizeof(RTL_HEAP_PARAMETERS));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return NULL);
+        }
+        _SEH2_END;
+    }
+
+    Parameters = &SafeParams;
 
     /* Check global flags */
     if (NtGlobalFlags & FLG_HEAP_DISABLE_COALESCING)
@@ -1960,7 +1975,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
     /* Add settable user flags, if any */
     EntryFlags |= (Flags & HEAP_SETTABLE_USER_FLAGS) >> 4;
 
-    Index = AllocationSize >>  HEAP_ENTRY_SHIFT;
+    Index = AllocationSize >> HEAP_ENTRY_SHIFT;
 
     /* Acquire the lock if necessary */
     if (!(Flags & HEAP_NO_SERIALIZE))
@@ -2967,7 +2982,11 @@ RtlLockHeap(IN HANDLE HeapPtr)
 {
     PHEAP Heap = (PHEAP)HeapPtr;
 
-    // FIXME Check for special heap
+    /* Check for page heap */
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+    {
+        return RtlpPageHeapLock(Heap);
+    }
 
     /* Check if it's really a heap */
     if (Heap->Signature != HEAP_SIGNATURE) return FALSE;
@@ -3000,7 +3019,11 @@ RtlUnlockHeap(HANDLE HeapPtr)
 {
     PHEAP Heap = (PHEAP)HeapPtr;
 
-    // FIXME Check for special heap
+    /* Check for page heap */
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+    {
+        return RtlpPageHeapUnlock(Heap);
+    }
 
     /* Check if it's really a heap */
     if (Heap->Signature != HEAP_SIGNATURE) return FALSE;

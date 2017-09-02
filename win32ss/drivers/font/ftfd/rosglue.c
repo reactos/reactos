@@ -41,45 +41,48 @@ DbgPrint(IN PCCH Format, IN ...)
 void *
 malloc(size_t Size)
 {
-  void *Object;
+    void *Object;
 
-  Object = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
-  if (NULL != Object)
+    Object = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
+    if (Object != NULL)
     {
-    *((size_t *) Object) = Size;
-    Object = (void *)((size_t *) Object + 1);
+        *((size_t *)Object) = Size;
+        Object = (void *)((size_t *)Object + 1);
     }
 
-  return Object;
+    return Object;
 }
 
 void *
 realloc(void *Object, size_t Size)
 {
-  void *NewObject;
-  size_t CopySize;
+    void *NewObject;
+    size_t CopySize;
 
-  NewObject = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
-  if (NULL != NewObject)
+    NewObject = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
+    if (NewObject != NULL)
     {
-    *((size_t *) NewObject) = Size;
-    NewObject = (void *)((size_t *) NewObject + 1);
-    CopySize = *((size_t *) Object - 1);
-    if (Size < CopySize)
-      {
-      CopySize = Size;
-      }
-    memcpy(NewObject, Object, CopySize);
-    EngFreeMem((size_t *) Object - 1);
+        *((size_t *)NewObject) = Size;
+        NewObject = (void *)((size_t *)NewObject + 1);
+        CopySize = *((size_t *)Object - 1);
+        if (Size < CopySize)
+        {
+            CopySize = Size;
+        }
+        memcpy(NewObject, Object, CopySize);
+        EngFreeMem((size_t *)Object - 1);
     }
 
-  return NewObject;
+    return NewObject;
 }
 
 void
 free(void *Object)
 {
-  EngFreeMem((size_t *) Object - 1);
+    if (Object != NULL)
+    {
+        EngFreeMem((size_t *)Object - 1);
+    }
 }
 
 /*
@@ -93,39 +96,34 @@ free(void *Object)
 FILE *
 fopen(const char *FileName, const char *Mode)
 {
-  DPRINT1("Freetype tries to open file %s\n", FileName);
-
-  return NULL;
+    DPRINT1("Freetype tries to open file %s\n", FileName);
+    return NULL;
 }
 
 int
 fseek(FILE *Stream, long Offset, int Origin)
 {
-  DPRINT1("Doubleplus ungood: freetype shouldn't fseek!\n");
-
-  return -1;
+    DPRINT1("Doubleplus ungood: freetype shouldn't fseek!\n");
+    return -1;
 }
 
 long
 ftell(FILE *Stream)
 {
-  DPRINT1("Doubleplus ungood: freetype shouldn't ftell!\n");
-
-  return -1;
+    DPRINT1("Doubleplus ungood: freetype shouldn't ftell!\n");
+    return -1;
 }
 
 size_t
 fread(void *Buffer, size_t Size, size_t Count, FILE *Stream)
 {
-  DPRINT1("Doubleplus ungood: freetype shouldn't fread!\n");
-
-  return 0;
+    DPRINT1("Doubleplus ungood: freetype shouldn't fread!\n");
+    return 0;
 }
 
 int
 fclose(FILE *Stream)
 {
-  DPRINT1("Doubleplus ungood: freetype shouldn't fclose!\n");
-
-  return EOF;
+    DPRINT1("Doubleplus ungood: freetype shouldn't fclose!\n");
+    return EOF;
 }

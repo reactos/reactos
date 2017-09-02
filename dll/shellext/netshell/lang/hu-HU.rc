@@ -1,6 +1,6 @@
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
-IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 228
+IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Általános"
 FONT 8, "MS Shell Dlg"
@@ -85,7 +85,7 @@ BEGIN
     LTEXT "Choose whether to use typical or custom settings:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Typical Settings", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Custom Settings", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
-    LTEXT "Creates network connetions using the Client for ReactOS Networks, File and Print Sharing for ReactOS Networks, and the TCP/IP transport protocol with automatic addressing.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Creates network connections using the Client for ReactOS Networks, File and Print Sharing for ReactOS Networks, and the TCP/IP transport protocol with automatic addressing.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Allows you to manually configure network components.", IDC_STATIC, 65, 90, 243, 20
 END
 
@@ -110,7 +110,7 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Do you want this computer to be a member of a domain?\n\
-(You can obtain this information from your network administator.)", IDC_STATIC, 33, 2, 263, 50
+(You can obtain this information from your network administrator.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "No, this computer will be part of a workgroup.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Yes, this computer will be part of a domain.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Workgroup or Domain Name:", IDC_STATIC, 33, 72, 126, 14
@@ -170,7 +170,7 @@ BEGIN
     IDS_NETWORKCOMPONENTTITLE "Network Components"
     IDS_NETWORKCOMPONENTSUBTITLE "Determine which networking components are used on your computer. To add new components, click on Install."
     IDS_NETWORKDOMAINTITLE "Workgroup or Computer Domain"
-    IDS_NETWORKDOMAINSUBTITLE "A domain is a group of computers defined by a network administator. A workgroup is a group of computers sharing the same workgroup name."
+    IDS_NETWORKDOMAINSUBTITLE "A domain is a group of computers defined by a network administrator. A workgroup is a group of computers sharing the same workgroup name."
     IDS_REACTOS_SETUP "ReactOS Setup"
     IDS_WZD_DOMAIN_NAME "Setup cannot continue until you\nenter the name of your domain\nor workgroup."
 END

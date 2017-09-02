@@ -17,54 +17,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /*
  * Unimplemented
  */
-EXTERN_C HLOCAL
-WINAPI
-SHLocalAlloc(UINT uFlags, SIZE_T uBytes)
-{
-    FIXME("SHLocalAlloc() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C HLOCAL
-WINAPI
-SHLocalFree(HLOCAL hMem)
-{
-    FIXME("SHLocalFree() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C HLOCAL
-WINAPI
-SHLocalReAlloc(HLOCAL hMem,
-               SIZE_T uBytes,
-               UINT uFlags)
-{
-    FIXME("SHLocalReAlloc() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C LPWSTR
-WINAPI
-AddCommasW(DWORD dwUnknown, LPWSTR lpNumber)
-{
-    LPCWSTR lpRetBuf = L"0";
-
-    FIXME("AddCommasW() stub\n");
-    return const_cast<LPWSTR>(lpRetBuf);
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C LPWSTR
 WINAPI
 ShortSizeFormatW(LONGLONG llNumber)
@@ -155,6 +107,21 @@ SHSetUnreadMailCountW(LPCWSTR pszMailAddress,
 {
     FIXME("SHSetUnreadMailCountW() stub\n");
     return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+EXTERN_C HRESULT
+WINAPI
+SHEnumerateUnreadMailAccountsW(HKEY user,
+                               DWORD idx,
+                               LPWSTR mailaddress,
+                               INT mailaddresslen)
+{
+    FIXME("SHEnumerateUnreadMailAccountsW(%p %d %p %d) stub\n",
+        user, idx, mailaddress, mailaddresslen);
+    return E_NOTIMPL;
 }
 
 /*

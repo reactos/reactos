@@ -291,7 +291,8 @@ static OLEPictureImpl* OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn)
   newObject->IConnectionPointContainer_iface.lpVtbl = &OLEPictureImpl_IConnectionPointContainer_VTable;
 
   newObject->pCP = NULL;
-  CreateConnectionPoint((IUnknown*)newObject,&IID_IPropertyNotifySink,&newObject->pCP);
+  CreateConnectionPoint((IUnknown*)&newObject->IPicture_iface, &IID_IPropertyNotifySink,
+                        &newObject->pCP);
   if (!newObject->pCP)
   {
     HeapFree(GetProcessHeap(), 0, newObject);
@@ -456,7 +457,7 @@ static HRESULT WINAPI OLEPictureImpl_QueryInterface(
   *ppvObject = 0;
 
   if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IPicture, riid))
-    *ppvObject = This;
+    *ppvObject = &This->IPicture_iface;
   else if (IsEqualIID(&IID_IDispatch, riid))
     *ppvObject = &This->IDispatch_iface;
   else if (IsEqualIID(&IID_IPictureDisp, riid))
@@ -977,32 +978,13 @@ static HRESULT WINAPI OLEPictureImpl_IsDirty(
   return E_NOTIMPL;
 }
 
-static HRESULT OLEPictureImpl_LoadDIB(OLEPictureImpl *This, BYTE *xbuf, ULONG xread)
-{
-    BITMAPFILEHEADER	*bfh = (BITMAPFILEHEADER*)xbuf;
-    BITMAPINFO		*bi = (BITMAPINFO*)(bfh+1);
-    void *bits;
-    BITMAP bmp;
-
-    This->desc.u.bmp.hbitmap = CreateDIBSection(0, bi, DIB_RGB_COLORS, &bits, NULL, 0);
-    if (This->desc.u.bmp.hbitmap == 0)
-        return E_FAIL;
-
-    GetObjectA(This->desc.u.bmp.hbitmap, sizeof(bmp), &bmp);
-    memcpy(bits, xbuf + bfh->bfOffBits, bmp.bmHeight * bmp.bmWidthBytes);
-
-    This->desc.picType = PICTYPE_BITMAP;
-    OLEPictureImpl_SetBitmap(This);
-    return S_OK;
-}
-
 static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSource *src)
 {
     HRESULT hr;
     BITMAPINFOHEADER bih;
     UINT width, height;
     UINT stride, buffersize;
-    BYTE *bits;
+    BYTE *bits, *mask = NULL;
     WICRect rc;
     IWICBitmapSource *real_source;
     UINT x, y;
@@ -1029,6 +1011,13 @@ static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSour
 
     stride = 4 * width;
     buffersize = stride * height;
+
+    mask = HeapAlloc(GetProcessHeap(), 0, buffersize);
+    if (!mask)
+    {
+        hr = E_OUTOFMEMORY;
+        goto end;
+    }
 
     This->desc.u.bmp.hbitmap = CreateDIBSection(0, (BITMAPINFO*)&bih, DIB_RGB_COLORS, (void **)&bits, NULL, 0);
     if (This->desc.u.bmp.hbitmap == 0)
@@ -1058,10 +1047,10 @@ static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSour
             if((*pixel & 0x80000000) == 0)
             {
                 has_alpha = TRUE;
-                *pixel = black;
+                *(DWORD *)(mask + stride * y + 4 * x) = black;
             }
             else
-                *pixel = white;
+                *(DWORD *)(mask + stride * y + 4 * x) = white;
         }
     }
 
@@ -1076,7 +1065,7 @@ static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSour
             hdcref,
             &bih,
             CBM_INIT,
-            bits,
+            mask,
             (BITMAPINFO*)&bih,
             DIB_RGB_COLORS
         );
@@ -1105,6 +1094,7 @@ static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSour
     }
 
 end:
+    HeapFree(GetProcessHeap(), 0, mask);
     IWICBitmapSource_Release(real_source);
     return hr;
 }
@@ -1468,7 +1458,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
     hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICJpegDecoder, xbuf, xread);
     break;
   case BITMAP_FORMAT_BMP: /* Bitmap */
-    hr = OLEPictureImpl_LoadDIB(This, xbuf, xread);
+    hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICBmpDecoder, xbuf, xread);
     break;
   case BITMAP_FORMAT_PNG: /* PNG */
     hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICPngDecoder, xbuf, xread);

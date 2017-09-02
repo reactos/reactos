@@ -256,6 +256,13 @@ PsGetThreadId(
   _In_ PETHREAD Thread);
 
 NTKERNELAPI
+PEPROCESS
+NTAPI
+PsGetThreadProcess(
+  _In_ PETHREAD Thread
+);
+
+NTKERNELAPI
 NTSTATUS
 NTAPI
 PsRemoveCreateThreadNotifyRoutine(

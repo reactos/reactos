@@ -1,36 +1,67 @@
+/*
+ * FILE:        base/applications/network/ping/lang/ru-RU.rc
+ * PURPOSE:     Russian translations for ReactOS Ping Command
+ * TRANSLATORS:
+ */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\nИспользование:\n    ping [-t] [-n <число>] [-l <размер>] [-w <тайм-аут>] конечный_узел\n\n\
+    IDS_USAGE "\n\
+Использование: ping [-t] [-a] [-n <число>] [-l <размер>] [-f] [-i TTL] [-v TOS]\n\
+                    [-w <тайм-аут>] [-4] [-6] конечный_узел\n\
+\n\
 Параметры:\n\
-    -t               Проверка связи с указанным узлом до прекращения.\n\
-                     Для прекращения нажмите CTRL+C.\n\
-    -n <число>       Число отправляемых запросов эха.\n\
-    -l <размер>      Размер буфера отправки.\n\
-    -w <тайм-аут>    Тайм-аут для каждого ответа (в миллисекундах)\n\n\0"
+    -t            Проверка связи с указанным узлом до прекращения.\n\
+                  Для просмотра статистики и продолжения проверки нажмите\n\
+                  Control-Break;\n\
+                  Для прекращения нажмите Control-C.\n\
+    -a            Определение имен узлов по адресам.\n\
+    -n <число>    Число отправляемых эхо-запросов.\n\
+    -l <размер>   Размер буфера отправки.\n\
+    -f            Установить флаг ""Не фрагментировать"" для IP пакета\n\
+                  (только IPv4).\n\
+    -i TTL        Задание срока жизни пакета (TTL).\n\
+    -v TOS        Тип обслуживания (только IPv4. Этот параметр является\n\
+                  устаревшим и не влияет на поле TOS в заголовке IP).\n\
+    -w <тайм-аут> Тайм-аут для каждого ответа (в миллисекундах).\n\
+    -4            Принудительное использование протокола IPv4.\n\
+    -6            Принудительное использование протокола IPv6.\n\
+\n"
 
-    IDS_PING_WITH_BYTES "\nОбмен пакетами с %1 [%2] по %3!d! байта данных:\n\n\0"
-    IDS_PING_STATISTICS "\nСтатистика Ping для %1:\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST "    Пакетов: отправлено = %1!d!, получено = %2!d!, потеряно = %3!d! (%4!d!%% потерь),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP "Приблизительное время приема-передачи в мс:\n\0"
-    IDS_MIN_MAX_AVERAGE "    Минимальное = %1, Максимальное = %2, Среднее = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES "Невозможно выделить требуемую память.\n\0"
-    IDS_UNKNOWN_HOST "Unknown host %1.\n\0"
-    IDS_SETSOCKOPT_FAILED "setsockopt failed (%1!d!).\n\0"
-    IDS_COULD_NOT_CREATE_SOCKET "Не удалось создать сокет (#%1!d!).\n\0"
-    IDS_COULD_NOT_INIT_WINSOCK "Не удается инициализировать интерфейс ReactOS Sockets.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED "Необходимо указать адрес IP.\n\0"
-    IDS_BAD_PARAMETER "Неверный параметр %1.\n\0"
-    IDS_BAD_OPTION_FORMAT "Bad option format %1.\n\0"
-    IDS_BAD_OPTION "Bad option %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L "Недопустимое значение параметра -l, допустимый диапазон с 0 по %1!d!.\n\0"
-    IDS_BAD_VALUE_OPTION_N "Недопустимое значение параметра -n, допустимый диапазон с 1 по %1!u!.\n\0"
-    IDS_REPLY_FROM "Ответ от %1: число байт=%2!d! время%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE "Destination host unreachable.\n\0"
-    IDS_COULD_NOT_TRANSMIT "Could not transmit data (%1!d!).\n\0"
-    IDS_COULD_NOT_RECV "Could not receive data (%1!d!).\n\0"
-    IDS_REQUEST_TIMEOUT "Превышен интервал ожидания для запроса.\n\0"
-    IDS_MS "мсек\0"
-    IDS_1MS "1мсек\0"
+    IDS_CTRL_BREAK "Control-Break\n"
+    IDS_CTRL_C "Control-C\n"
+    IDS_NO_RESOURCES "Невозможно выделить требуемую память.\n"
+    IDS_MISSING_ADDRESS "Необходимо указать адрес IP.\n"
+    IDS_MISSING_VALUE "Для опции %s должно быть указано значение.\n"
+    IDS_BAD_OPTION "Неверная опция %s.\n"
+    IDS_BAD_PARAMETER "Неверный параметр %s.\n"
+    IDS_BAD_VALUE "Недопустимое значение параметра %s, допустимый диапазон с %u по %u.\n"
+    IDS_WRONG_FAMILY "Опция %s доступна только для %s.\n"
+    IDS_UNKNOWN_HOST "Ping не может найти узел %s. Пожалуйста, проверьте имя и повторите попытку.\n"
+    IDS_PINGING_ADDRESS "\nОбмен пакетами с %s "
+    IDS_PINGING_HOSTNAME "\nОбмен пакетами с %s [%s] "
+    IDS_SOURCE_ADDRESS "from %s %s"/* unused string */
+    IDS_PING_SIZE "по %lu байта данных:\n\n"
+    IDS_REPLY_FROM "Ответ от %s: "
+    IDS_REPLY_BYTES "число байт=%d "
+    IDS_REPLY_TIME_MS "время=%luмс "
+    IDS_REPLY_TIME_0MS "время<1мс "
+    IDS_REPLY_TTL "TTL=%d\n"
+    IDS_REPLY_STATUS "Ответ от %lu.\n"
+    IDS_DEST_HOST_UNREACHABLE "Заданный узел недоступен.\n"
+    IDS_DEST_NET_UNREACHABLE "Заданная сеть недоступна.\n"
+    IDS_REQUEST_TIMED_OUT "Превышен интервал ожидания для запроса.\n"
+    IDS_TTL_EXPIRED "Превышен срок жизни (TTL) при передаче пакета.\n"
+    IDS_TRANSMIT_FAILED "PING: сбой передачи. (Ошибка %u)\n"
+
+    IDS_STATISTICS "\n\
+Статистика Ping для %s:\n\
+    Пакетов: отправлено = %d, получено = %d, потеряно %d (%d%% потерь),\n"
+
+    IDS_APPROXIMATE_RTT "Приблизительное время приема-передачи в мс:\n\
+    Минимальное = %luмс, Максимальное = %luмс, Среднее = %luмс\n"
+
+    IDS_WINSOCK_FAIL "Не удалось инициализировать WinSock: %i\n"
 END

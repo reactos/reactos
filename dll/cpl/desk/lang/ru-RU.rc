@@ -95,16 +95,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Применять следующий переходный эффект для меню и подсказок",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "Пр&именять следующий метод сглаживания для экранных шрифтов", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "Применять &крупные значки", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "Отображать &тени, отбрасываемые меню", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "&Отображать содержимое окна при перетаскивании", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "Скр&ывать указатели вызова с клавиатуры до нажатия <Alt>",
@@ -150,6 +150,17 @@ BEGIN
     AUTORADIOBUTTON "З&апросить перед применением новых параметров экрана", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
+IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Параметры экрана"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Сохранить изменённые параметры экрана?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
+    PUSHBUTTON "&Да", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&Нет", IDNO, 175, 36, 50, 14
+END
+
 IDR_PREVIEW_MENU MENU
 BEGIN
     MENUITEM "Обычная", ID_MENU_NORMAL
@@ -178,7 +189,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Обычный"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "FreeType Сглаживание"
 END
 
 STRINGTABLE
@@ -252,4 +263,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "Параметры экрана"
     IDS_APPLY_FAILED "Не удалось применить новые настройки..."
     IDS_APPLY_NEEDS_RESTART "Вы должны перезагрузить компьютер для применения изменений."
+    IDS_TIMEOUTTEXT "Возврат настроек через %d сек."
 END

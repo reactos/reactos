@@ -1,4 +1,4 @@
-/* $Id: tif_predict.h,v 1.8 2010-03-10 18:56:49 bfriesen Exp $ */
+/* $Id: tif_predict.h,v 1.9 2016-10-31 17:24:26 erouault Exp $ */
 
 /*
  * Copyright (c) 1995-1997 Sam Leffler
@@ -30,6 +30,8 @@
  * ``Library-private'' Support for the Predictor Tag
  */
 
+typedef int (*TIFFEncodeDecodeMethod)(TIFF* tif, uint8* buf, tmsize_t size);
+
 /*
  * Codecs that want to support the Predictor tag must place
  * this structure first in their private state block so that
@@ -43,12 +45,12 @@ typedef struct {
 	TIFFCodeMethod  encoderow;	/* parent codec encode/decode row */
 	TIFFCodeMethod  encodestrip;	/* parent codec encode/decode strip */
 	TIFFCodeMethod  encodetile;	/* parent codec encode/decode tile */ 
-	TIFFPostMethod  encodepfunc;	/* horizontal differencer */
+	TIFFEncodeDecodeMethod  encodepfunc;	/* horizontal differencer */
 
 	TIFFCodeMethod  decoderow;	/* parent codec encode/decode row */
 	TIFFCodeMethod  decodestrip;	/* parent codec encode/decode strip */
 	TIFFCodeMethod  decodetile;	/* parent codec encode/decode tile */ 
-	TIFFPostMethod  decodepfunc;	/* horizontal accumulator */
+	TIFFEncodeDecodeMethod  decodepfunc;	/* horizontal accumulator */
 
 	TIFFVGetMethod  vgetparent;	/* super-class method */
 	TIFFVSetMethod  vsetparent;	/* super-class method */

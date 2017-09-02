@@ -47,7 +47,7 @@ enum DriverStringOptions
    DriverStringOptionsCmapLookup      = 1,
    DriverStringOptionsVertical        = 2,
    DriverStringOptionsRealizedAdvance = 4,
-   DriverStringOptionsLimitSubpixel   = 4
+   DriverStringOptionsLimitSubpixel   = 8
 };
 
 enum FillMode
@@ -71,6 +71,12 @@ enum LineCap
 
     LineCapCustom           = 0xff,
     LineCapAnchorMask       = 0xf0
+};
+
+enum CustomLineCapType
+{
+    CustomLineCapTypeDefault         = 0,
+    CustomLineCapTypeAdjustableArrow = 1
 };
 
 enum PathPointType{
@@ -226,6 +232,14 @@ enum EmfType
     EmfTypeEmfOnly     = MetafileTypeEmf,
     EmfTypeEmfPlusOnly = MetafileTypeEmfPlusOnly,
     EmfTypeEmfPlusDual = MetafileTypeEmfPlusDual
+};
+
+enum EmfToWmfBitsFlags
+{
+    EmfToWmfBitsFlagsDefault          = 0,
+    EmfToWmfBitsFlagsEmbedEmf         = 1,
+    EmfToWmfBitsFlagsIncludePlaceable = 2,
+    EmfToWmfBitsFlagsNoXORClip        = 4
 };
 
 enum CompositingMode
@@ -712,6 +726,7 @@ typedef enum BrushType BrushType;
 typedef enum DriverStringOptions DriverStringOptions;
 typedef enum FillMode FillMode;
 typedef enum LineCap LineCap;
+typedef enum CustomLineCapType CustomLineCapType;
 typedef enum PathPointType PathPointType;
 typedef enum LineJoin LineJoin;
 typedef enum QualityMode QualityMode;

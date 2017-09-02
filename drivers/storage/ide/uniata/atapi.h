@@ -712,7 +712,7 @@ typedef struct _IDENTIFY_DATA {
             USHORT UDMASupport : 7;        //     62  ATAPI
             USHORT MultiWordDMASupport : 3;
             USHORT DMASupport : 1;         
-            USHORT Reserved62_11_14 : 4;         
+            USHORT Reseved62_11_14 : 4;         
             USHORT DMADirRequired : 1;         
         } AtapiDMA;
     };
@@ -1302,8 +1302,20 @@ IdeMediaStatus(
     IN ULONG DeviceNumber
     );
 
-ULONG NTAPI
+ULONG
+NTAPI
 AtapiFindIsaController(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Context,
+    IN PVOID BusInformation,
+    IN PCHAR ArgumentString,
+    IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+    OUT PBOOLEAN Again
+    );
+
+ULONG
+NTAPI
+AtapiReadArgumentString(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
     IN PVOID BusInformation,

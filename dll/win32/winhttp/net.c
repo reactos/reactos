@@ -276,6 +276,28 @@ static BOOL ensure_cred_handle(void)
     return ret;
 }
 
+#ifdef __REACTOS__
+static BOOL winsock_initialized = FALSE;
+BOOL netconn_init_winsock()
+{
+    WSADATA wsaData;
+    int error;
+    if (!winsock_initialized)
+    {
+        error = WSAStartup(MAKEWORD(1, 1), &wsaData);
+        if (error)
+        {
+            ERR("WSAStartup failed: %d\n", error);
+            return FALSE;
+        }
+        else
+            winsock_initialized = TRUE;
+    }
+    return winsock_initialized;
+}
+
+#endif
+
 BOOL netconn_init( netconn_t *conn )
 {
     memset(conn, 0, sizeof(*conn));
@@ -290,6 +312,10 @@ void netconn_unload( void )
     DeleteCriticalSection(&init_sechandle_cs);
 #ifndef HAVE_GETADDRINFO
     DeleteCriticalSection(&cs_gethostbyname);
+#endif
+#ifdef __REACTOS__
+    if(winsock_initialized)
+        WSACleanup();
 #endif
 }
 
@@ -340,7 +366,7 @@ BOOL netconn_close( netconn_t *conn )
 BOOL netconn_connect( netconn_t *conn, const struct sockaddr *sockaddr, unsigned int addr_len, int timeout )
 {
     BOOL ret = FALSE;
-    int res = 0;
+    int res;
     ULONG state;
 
     if (timeout > 0)
@@ -348,37 +374,59 @@ BOOL netconn_connect( netconn_t *conn, const struct sockaddr *sockaddr, unsigned
         state = 1;
         ioctlsocket( conn->socket, FIONBIO, &state );
     }
-    if (connect( conn->socket, sockaddr, addr_len ) < 0)
+
+    for (;;)
     {
-        res = sock_get_error( errno );
-        if (res == WSAEWOULDBLOCK || res == WSAEINPROGRESS)
+        res = 0;
+        if (connect( conn->socket, sockaddr, addr_len ) < 0)
         {
+            res = sock_get_error( errno );
+            if (res == WSAEWOULDBLOCK || res == WSAEINPROGRESS)
+            {
 #ifdef __REACTOS__
-            /* ReactOS: use select instead of poll */
-            fd_set outfd;
-            struct timeval tv;
+                /* ReactOS: use select instead of poll */
+                fd_set outfd;
+                struct timeval tv;
 
-            FD_ZERO(&outfd);
-            FD_SET(conn->socket, &outfd);
+                FD_ZERO(&outfd);
+                FD_SET(conn->socket, &outfd);
 
-            tv.tv_sec = 0;
-            tv.tv_usec = timeout * 1000;
+                tv.tv_sec = 0;
+                tv.tv_usec = timeout * 1000;
+                for (;;)
+                {
+                    res = 0;
 
-            if (select( 0, NULL, &outfd, NULL, &tv ) > 0)
+                    if (select( 0, NULL, &outfd, NULL, &tv ) > 0)
 #else
-            struct pollfd pfd;
+                struct pollfd pfd;
 
-            pfd.fd = conn->socket;
-            pfd.events = POLLOUT;
-            if (poll( &pfd, 1, timeout ) > 0)
+                pfd.fd = conn->socket;
+                pfd.events = POLLOUT;
+                for (;;)
+                {
+                    res = 0;
+                    if (poll( &pfd, 1, timeout ) > 0)
 #endif
-                ret = TRUE;
-            else
-                res = sock_get_error( errno );
+                    {
+                        ret = TRUE;
+                        break;
+                    }
+                    else
+                    {
+                        res = sock_get_error( errno );
+                        if (res != WSAEINTR) break;
+                    }
+                }
+            }
+            if (res != WSAEINTR) break;
+        }
+        else
+        {
+            ret = TRUE;
+            break;
         }
     }
-    else
-        ret = TRUE;
     if (timeout > 0)
     {
         state = 0;

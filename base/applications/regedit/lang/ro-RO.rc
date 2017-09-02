@@ -315,9 +315,9 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "Eroare"
     IDS_WARNING "Avertisment"
-    IDS_BAD_KEY "Nu se poate citi cheia „%s”"
-    IDS_BAD_VALUE "Nu se poate citi valoarea „%s”"
-    IDS_UNSUPPORTED_TYPE "Nu se poate edita acest tip de cheie (%ld)"
+    IDS_BAD_KEY "Cheia „%s” nu poate fi citită"
+    IDS_BAD_VALUE "Valoarea „%s” nu poate fi citită"
+    IDS_UNSUPPORTED_TYPE "Acest tip de cheie (%ld) nu poate fi editat"
     IDS_TOO_BIG_VALUE "Valoarea este prea mare (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data de tip REG_MULTI_SZ nu poate conține șiruri goale.\nȘirurile goale au fost eliminate din listă."
     IDS_QUERY_DELETE_KEY_ONE "Sigur doriți ștergerea acestei chei?"
@@ -327,9 +327,9 @@ BEGIN
     IDS_QUERY_DELETE_MORE "Sigur doriți ștergerea acestor valori?"
     IDS_QUERY_DELETE_CONFIRM "Confirmați ștergerea de valori"
     IDS_ERR_DELVAL_CAPTION "Eroare la ștergerea de valori"
-    IDS_ERR_DELETEVALUE "Nu s-a reușit ștergerea tuturor valorilor specificate!"
+    IDS_ERR_DELETEVALUE "Nu au putut fi șterse toate valorile specificate!"
     IDS_ERR_RENVAL_CAPTION "Eroare la redenumirea de valori"
-    IDS_ERR_RENVAL_TOEMPTY "Nu se poate redenumi %s. Numele valorii specificate este gol. Încercați introducerea unui alt nume."
+    IDS_ERR_RENVAL_TOEMPTY "%s nu poate fi redenumită. Numele valorii specificate este gol. Încercați introducerea unui alt nume."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Confirmați restaurarea cheii"
     IDS_QUERY_IMPORT_HIVE_MSG "O cheie va fi restaurată peste cheia curent selectată.\nToate valorile și subcheile acestei chei vor fi eliminate.\nConfirmați continuarea operației?"
     IDS_NEW_KEY "Cheia nouă #%d"
@@ -396,10 +396,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT              "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din '%s', nu o adăugați în registru.\n\nSigur doriți să continuați?"
-    IDS_IMPORT_OK                  "Cheile și valorile conținute în '%s' au fost adăugate cu succes în registru."
-    IDS_IMPORT_ERROR               "Nu se poate importa '%s': Eroare la deschiderea fișierului. Poate fi o problemă a mediului de stocare, a sistemului de fișiere sau fișierul în cauză să nu existe."
-    IDS_EXPORT_ERROR               "Nu se poate exoprta '%s': Eroare la crearea sau scrierea în fișier. Poate fi o problemă a mediului de stocare sau a sistemului de fișiere."
+    IDS_IMPORT_PROMPT              "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din „%s”, nu o adăugați în registru.\n\nSigur doriți să continuați?"
+    IDS_IMPORT_OK                  "Cheile și valorile conținute în „%s” au fost adăugate cu succes în registru."
+    IDS_IMPORT_ERROR               "„%s” nu a putut fi importat: Eroare la deschiderea fișierului. Poate fi o problemă a mediului de stocare, a sistemului de fișiere sau fișierul în cauză să nu existe."
+    IDS_EXPORT_ERROR               "„%s” nu a putut fi exportat: Eroare la crearea sau scrierea în fișier. Poate fi o problemă a mediului de stocare sau a sistemului de fișiere."
 END
 
 STRINGTABLE

@@ -1,63 +1,47 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Bootsector for ISO file system
- * FILE:            boot/freeldr/bootsect/isoboot.S
- * PURPOSE:
- * PROGRAMMERS:     ?
- */
+ * PROJECT:        ReactOS Boot Sector for ISO file system (based on ISOLINUX)
+ * LICENSE:        GNU GPLv2 or any later version as published by the Free Software Foundation
+ * PROGRAMMERS:    H. Peter Anvin
+ *                 Michael K. Ter Louw
+ *                 Eric Kohl
+ *                 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                 Colin Finck <colin@reactos.org>
+ *
+ *****************************************************************************
+ *
+ * isolinux.asm
+ *
+ * A program to boot Linux kernels off a CD-ROM using the El Torito
+ * boot standard in "no emulation" mode, making the entire filesystem
+ * available.  It is based on the SYSLINUX boot loader for MS-DOS
+ * floppies.
+ *
+ *  Copyright 1994-2009 H. Peter Anvin - All Rights Reserved
+ *  Copyright 2009 Intel Corporation *author: H. Peter Anvin
+ *
+ * This program is free software *you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, Inc., 53 Temple Place Ste 330,
+ * Boston MA 02111-1307, USA *either version 2 of the License, or
+ * (at your option) any later version *incorporated herein by reference.
+ *
+ *****************************************************************************/
 
 /* INCLUDES ******************************************************************/
-
 #include <asm.inc>
 #include <freeldr/include/arch/pc/x86common.h>
 
-.code16
-
-// ****************************************************************************
-//
-//  isolinux.asm
-//
-//  A program to boot Linux kernels off a CD-ROM using the El Torito
-//  boot standard in "no emulation" mode, making the entire filesystem
-//  available.  It is based on the SYSLINUX boot loader for MS-DOS
-//  floppies.
-//
-//   Copyright (C) 1994-2001  H. Peter Anvin
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, Inc., 675 Mass Ave, Cambridge MA 02139,
-//  USA; either version 2 of the License, or (at your option) any later
-//  version; incorporated herein by reference.
-//
-// ****************************************************************************
-//
-// THIS FILE IS A MODIFIED VERSION OF ISOLINUX.ASM
-// MODIFICATION DONE BY MICHAEL K TER LOUW
-// LAST UPDATED 3-9-2002
-// SEE "COPYING" FOR INFORMATION ABOUT THE LICENSE THAT APPLIES TO THIS RELEASE
-//
-// ****************************************************************************
-//
-// This file is a modified version of ISOLINUX.ASM.
-// Modification done by Eric Kohl
-// Last update 04-25-2002
-//
-// ****************************************************************************
-
-//#define DEBUG_MESSAGES                /* Uncomment to get debugging messages */
 #ifndef ROS_REGTEST
 #define WAIT_FOR_KEY
 #endif
 
-// ****************************************************************************
-//    BEGIN THE BIOS/CODE/DATA SEGMENT
-// ****************************************************************************
-serial_base = HEX(0400)     // Base addresses for 4 serial ports (4 words)
-BIOS_fbm = HEX(0413)        // Free Base Memory (kilobytes) (1 word)
+
+.code16
+ASSUME CS:.text, DS:.text, ES:.text
+
+/* CONSTANTS ******************************************************************/
 BIOS_timer = HEX(046C)      // Timer ticks (1 word)
 BIOS_magic = HEX(0472)      // BIOS reset magic (1 word)
-BIOS_vidrows = HEX(0484)    // Number of screen rows (1 byte)
 
 // Memory below this point is reserved for the BIOS and the MBR
 trackbuf = HEX(1000)        // Track buffer goes here (8192 bytes)
@@ -65,132 +49,150 @@ trackbufsize = 8192         // trackbuf ends at 3000h
 
 // struct open_file_t
 file_sector = 0             // Sector pointer (0 = structure free)
-file_left = 4               // Number of sectors left
+file_bytesleft = 4          // Number of bytes left
+file_left = 8               // Number of sectors left
+// Another unused DWORD follows here in ISOLINUX
+#define open_file_t_size 16
 
-//struct dir_t
+// struct dir_t
 dir_lba = 0                 // Directory start (LBA)
 dir_len = 4                 // Length in bytes
 dir_clust = 8               // Length in clusters
-
 #define dir_t_size 12
-#define open_file_t_size 8
 
 MAX_OPEN_LG2 = 2            // log2(Max number of open files)
 MAX_OPEN = 4
-SECTORSIZE_LG2 = 11         // 2048 bytes/sector (El Torito requirement)
-SECTORSIZE = 2048
-retry_count    = 6          // How patient are we with the BIOS?
+SECTOR_SHIFT = 11           // 2048 bytes/sector (El Torito requirement)
+SECTOR_SIZE = 2048
+retry_count = 6             // How patient are we with the BIOS?
 
-/******************************************************************************/
+/* UNINITIALIZED VARIABLES ****************************************************/
 absolute HEX(5000)          // Here we keep our BSS stuff
 
-resb DriveNo, 1             // CD-ROM BIOS drive number (BYTE)
-resb DiskError, 1           // Error code for disk I/O (BYTE)
-resb RetryCount, 1          // Used for disk access retries (BYTE)
-resb TimeoutCount, 1        // Timeout counter (BYTE)
-resb ISOFlags, 1            // Flags for ISO directory search (BYTE)
-resb RootDir, dir_t_size    // Root directory (dir_t_size BYTES)
-resb CurDir, dir_t_size     // Current directory (dir_t_size BYTES)
 resb ISOFileName, 64        // ISO filename canonicalization buffer
 resb ISOFileNameEnd, 1
+resb CurrentDir, dir_t_size // Current directory
+resb RootDir, dir_t_size    // Root directory
+resb DiskSys, 2             // Last INT 13h call
+resb GetlinsecPtr, 2        // The sector-read pointer
+resb DiskError, 1           // Error code for disk I/O
+resb DriveNumber, 1         // CD-ROM BIOS drive number
+resb ISOFlags, 1            // Flags for ISO directory search
+resb RetryCount, 1          // Used for disk access retries
 
 //align open_file_t_size
-absolute HEX(5060)
+absolute HEX(5070)
 resb Files, (MAX_OPEN * open_file_t_size)
 
 
-/******************************************************************************/
+/* ENTRY POINTS ***************************************************************/
 
-
+// Entry point when booted from CD (El Torito standard)
 start:
-    cli                     // Disable interrupts
-    xor ax, ax              // ax = segment zero
-    mov ss, ax              // Initialize stack segment
-    mov sp, offset start    // Set up stack
-    mov ds, ax              // Initialize other segment registers
+    mov bx, offset getlinsec_cdrom
+    // Fall through
+
+start_common:
+    // Set up our stack and a flat addressing model.
+    cli
+    xor ax, ax
+    mov ss, ax
+    mov sp, offset start
+    mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-    sti                     // Enable interrupts
-    cld                     // Increment pointers
+    sti
 
-    mov cx, 2048 / 4        // Copy the bootsector
-    mov si, HEX(7C00)       // from 0000:7C00
-    mov di, HEX(7000)       // to 0000:7000
-    rep movsd               // copy the program
+    // Our boot sector has been loaded to address 0x7C00.
+    // Relocate our 2048 bytes boot sector to the given base address (should be 0x7000).
+    cld
+    mov cx, 2048 / 4
+    mov si, HEX(7C00)
+    mov di, offset start
+    rep movsd
 
-    ljmp16 0, relocate      // jump into relocated code
+    ljmp16 0, relocated     // jump into relocated code
 
-relocate:
-#ifdef DEBUG_MESSAGES
-    // Display the banner and copyright
-    mov si, offset isolinux_banner // si points to hello message
-    call writestr            // display the message
-    mov si, offset copyright_str
-    call writestr
-#endif
+.org 64
+hybrid_signature:
+    .long HEX(7078c0fb)
+
+// Entry point when booted through ISOMBR from a drive (isohybrid mode)
+start_hybrid:
+    mov bx, offset getlinsec_ebios
+    jmp start_common
+
+relocated:
+    // Save our passed variables (BX from the entry point, DL from the BIOS) before anybody clobbers the registers.
+    mov word ptr ds:[GetlinsecPtr], bx
+    mov byte ptr ds:[DriveNumber], dl
 
     // Make sure the keyboard buffer is empty
     call pollchar_and_empty
 
-    // Check for MBR on harddisk
-    pusha
+    // If we're booting in hybrid mode and our boot drive is the first HDD (drive 80h),
+    // we have no other option than booting into SETUPLDR.
+    cmp word ptr ds:[GetlinsecPtr], offset getlinsec_ebios
+    jne .read_mbr
+    cmp byte ptr ds:[DriveNumber], HEX(80)
+    je .boot_setupldr
+
+.read_mbr:
+    // Read the first sector (MBR) from the first hard disk (drive 80h) to 7C00h.
+    // If we then decide to boot from HDD, we already have it at the right place.
+    // In case of an error (indicated by the Carry Flag), just boot SETUPLDR from our ReactOS medium.
     mov ax, HEX(0201)
     mov dx, HEX(0080)
     mov cx, HEX(0001)
-    mov bx, trackbuf
-    int HEX(13)
-    popa
-    jc .boot_cdrom          // could not read hdd
+    mov bx, HEX(7C00)
+    call int13
+    jc .boot_setupldr
 
-    push ax
-#ifdef ROS_REGTEST // this change is taken from the original isobtrt.asm
-    mov ax, word ptr ds:[trackbuf+510]
-#else
-    mov ax, word ptr ds:[trackbuf]
-#endif
-    cmp ax, 0
-    je .boot_cdrom // no boot sector found (hopefully there are no weird bootsectors which begin with 0)
-    pop ax
+    // Verify the signature of the read MBR.
+    // If it's invalid, there is probably no OS installed and we just boot SETUPLDR from our ReactOS medium.
+    mov ax, word ptr ds:[HEX(7C00)+510]
+    cmp ax, HEX(AA55)
+    jne .boot_setupldr
 
 #ifdef WAIT_FOR_KEY
-    // Display the 'Press key' message and wait for a maximum of 5 seconds
-    call crlf
-    mov si, offset presskey_msg // si points to 'Press key' message
-    call writestr               // display the message
+    // We could either boot from the ReactOS medium or from hard disk. Let the user decide!
+    // Display the 'Press key' message.
+    call crlf_early
+    mov si, offset presskey_msg
+    call writestr_early
 
-    mov byte ptr ds:[TimeoutCount], 5
+    // Count down 5 seconds.
+    mov cx, 5
+
 .next_second:
-    mov eax, ds:[BIOS_timer]        // load current tick counter
+    // Count in seconds using the BIOS Timer, which runs roughly at 19 ticks per second.
+    // Load its value plus one second into EAX for comparison later.
+    mov eax, ds:[BIOS_timer]
     add eax, 19
 
 .poll_again:
+    // Check for a keypress, boot SETUPLDR from our ReactOS medium if a key was pressed.
     call pollchar_and_empty
-    jnz .boot_cdrom
+    jnz .boot_setupldr
 
+    // Check if another second has passed (in BIOS Timer ticks).
     mov ebx, ds:[BIOS_timer]
     cmp eax, ebx
     jnz .poll_again
 
-    mov si, offset dot_msg            // print '.'
-    call writestr
-    dec byte ptr ds:[TimeoutCount]        // decrement timeout counter
+    // Another second has passed, so print the dot and decrement the second counter.
+    // If the user hasn't pressed a key after the entire 5 seconds have elapsed, just boot from the first hard disk.
+    mov si, offset dot_msg
+    call writestr_early
+    dec cx
     jz .boot_harddisk
     jmp .next_second
 #endif
 
 .boot_harddisk:
-    call crlf
-
-    // Boot first harddisk (drive 0x80)
-    mov ax, HEX(0201)
-    mov dx, HEX(0080)
-    mov cx, HEX(0001)
-    mov bx, HEX(7C00)
-    int HEX(13)
-    jnc .go_hd
-    jmp kaboom
-.go_hd:
+    // Restore a clean context for the hard disk MBR and boot the already loaded MBR.
+    call crlf_early
     mov ax, cs
     mov ds, ax
     mov es, ax
@@ -200,336 +202,430 @@ relocate:
 
     ljmp16 0, HEX(7C00)
 
-.boot_cdrom:
+.boot_setupldr:
 #ifdef WAIT_FOR_KEY
-    call crlf
-    call crlf
+    call crlf_early
+    call crlf_early
 #endif
 
-    // Save and display the boot drive number
-    mov byte ptr ds:[DriveNo], dl
-#ifdef DEBUG_MESSAGES
-    mov si, offset startup_msg
-    call writemsg
-    mov al, dl
-    call writehex2
-    call crlf
-#endif
+    // The BIOS gave us a boot drive number, so in a perfect world we could just use that one now.
+    // Unfortunately, there are many broken BIOSes around, which is why ISOLINUX verifies it and applies some hacks if the number is wrong.
+    // Let's do exactly the same here to achieve maximum compatibility.
 
-    // Now figure out what we're actually doing
-    // Note: use passed-in DL value rather than 7Fh because
-    // at least some BIOSes will get the wrong value otherwise
-    mov ax, HEX(4B01)            // Get disk emulation status
-    mov dl, byte ptr ds:[DriveNo]
+    // Don't do this if we are running in hybrid mode.
+    cmp word ptr ds:[GetlinsecPtr], offset getlinsec_ebios
+    je found_drive
+
+    // Use the INT 13 function 4B01h (Get Disk Emulation Status) to fetch the El Torito Spec Packet.
+    // We can use this information to verify that our passed boot drive number really belongs to our CD.
+    mov ax, HEX(4B01)
+    mov dl, byte ptr ds:[DriveNumber]
     mov si, offset spec_packet
-    int HEX(13)
-    jc    spec_query_failed        // Shouldn't happen (BIOS bug)
-    mov dl, byte ptr ds:[DriveNo]
-    cmp byte ptr ds:[sp_drive], dl            // Should contain the drive number
-    jne    spec_query_failed
+    call int13
 
-#ifdef DEBUG_MESSAGES
-    mov si, offset spec_ok_msg
-    call writemsg
-    mov al, byte ptr ds:[sp_drive]
-    call writehex2
-    call crlf
-#endif
+    // If this INT 13 function yields an error, we may be on a broken AWARD BIOS.
+    // Check this and patch if possible.
+    jc award_hack
+
+    // Check that our passed boot drive number and the number in the Spec Packet match.
+    // If not, try some workarounds to find our drive anyway.
+    mov dl, byte ptr ds:[DriveNumber]
+    cmp byte ptr ds:[sp_drive], dl
+    jne spec_query_failed
 
 found_drive:
-    // Get drive information
-    mov ah, HEX(48)
-    mov dl, byte ptr ds:[DriveNo]
-    mov si, offset drive_params
-    int HEX(13)
-    jnc params_ok
-
-    // mov si, nosecsize_msg    No use in reporting this
-    // call writemsg
-
-params_ok:
-    // Check for the sector size (should be 2048, but
-    // some BIOSes apparently think we're 512-byte media)
-    //
-    // FIX: We need to check what the proper behaviour
-    // is for getlinsec when the BIOS thinks the sector
-    // size is 512!!!  For that, we need such a BIOS, though...
-#ifdef DEBUG_MESSAGES
-    mov si, offset secsize_msg
-    call writemsg
-    mov ax, word ptr ds:[dp_secsize]
-    call writehex4
-    call crlf
-#endif
-
-
-    //
     // Clear Files structures
-    //
     mov di, Files
     mov cx, (MAX_OPEN*open_file_t_size)/4
-    xor    eax, eax
-    rep    stosd
+    xor eax, eax
+    rep stosd
 
-    //
-    // Now, we need to sniff out the actual filesystem data structures.
-    // mkisofs gave us a pointer to the primary volume descriptor
-    // (which will be at 16 only for a single-session disk!); from the PVD
-    // we should be able to find the rest of what we need to know.
-    //
-get_fs_structures:
-    mov eax, 16            // Primary Volume Descriptor (sector 16)
+    // Read the entire 2K-sized ISO9660 Primary Volume Descriptor at sector 16 (32K).
+    // This calculation only holds for single-session ISOs, but we should never encounter anything else.
+    mov eax, 16
     mov bx, trackbuf
     call getonesec
 
+    // Read the LBA address (offset 2 in the Directory Record) of the root directory (offset 156 in the Primary Volume Descriptor).
     mov eax, dword ptr ds:[trackbuf+156+2]
-    mov dword ptr ds:[RootDir+dir_lba],eax
-    mov dword ptr ds:[CurDir+dir_lba],eax
-#ifdef DEBUG_MESSAGES
-    mov si, offset rootloc_msg
-    call writemsg
-    call writehex8
-    call crlf
-#endif
+    mov dword ptr ds:[RootDir+dir_lba], eax
+    mov dword ptr ds:[CurrentDir+dir_lba], eax
 
+    // Read the data length (offset 10 in the Directory Record) of the root directory (offset 156 in the Primary Volume Descriptor).
     mov eax, dword ptr ds:[trackbuf+156+10]
-    mov dword ptr ds:[RootDir+dir_len],eax
-    mov dword ptr ds:[CurDir+dir_len],eax
-#ifdef DEBUG_MESSAGES
-    mov si, offset rootlen_msg
-    call writemsg
-    call writehex8
-    call crlf
-#endif
-    add    eax,SECTORSIZE-1
-    shr    eax,SECTORSIZE_LG2
-    mov dword ptr ds:[RootDir+dir_clust],eax
-    mov dword ptr ds:[CurDir+dir_clust],eax
-#ifdef DEBUG_MESSAGES
-    mov si, offset rootsect_msg
-    call writemsg
-    call writehex8
-    call crlf
-#endif
+    mov dword ptr ds:[RootDir+dir_len], eax
+    mov dword ptr ds:[CurrentDir+dir_len], eax
 
-    // Look for the "REACTOS" directory, and if found,
-    // make it the current directory instead of the root
-    // directory.
-    mov di, offset isolinux_dir
-    mov al, 2                // Search for a directory
+    // Calculate the number of clusters and write that to our RootDir and CurrentDir structures.
+    add eax, SECTOR_SIZE-1
+    shr eax, SECTOR_SHIFT
+    mov dword ptr ds:[RootDir+dir_clust],eax
+    mov dword ptr ds:[CurrentDir+dir_clust],eax
+
+    // Look for the "LOADER" directory (directory is indicated by AL = 2 when using searchdir_iso).
+    mov di, offset loader_dir
+    mov al, 2
     call searchdir_iso
     jnz .dir_found
+
+    // No directory was found, so bail out with an error message.
     mov si, offset no_dir_msg
     call writemsg
-    jmp    kaboom
+    jmp kaboom
 
 .dir_found:
-    mov dword ptr ds:[CurDir+dir_len],eax
+    // The directory was found, so update the information in our CurrentDir structure.
+    // Free the file pointer entry at SI in the process.
+    mov dword ptr ds:[CurrentDir+dir_len], eax
     mov eax, dword ptr ds:[si+file_left]
-    mov dword ptr ds:[CurDir+dir_clust],eax
-    xor    eax,eax                // Free this file pointer entry
-    xchg    eax,dword ptr ds:[si+file_sector]
-    mov dword ptr ds:[CurDir+dir_lba],eax
+    mov dword ptr ds:[CurrentDir+dir_clust], eax
+    xor eax, eax
+    xchg eax, dword ptr ds:[si+file_sector]
+    mov dword ptr ds:[CurrentDir+dir_lba], eax
 
+    // Look for the "SETUPLDR.SYS" file.
+    mov di, offset setupldr_sys
+    call searchdir
+    jnz .setupldr_found
 
-    mov di, offset isolinux_bin        // di points to Isolinux filename
-    call searchdir            // look for the file
-    jnz .isolinux_opened        // got the file
-    mov si, offset no_isolinux_msg        // si points to error message
-    call writemsg            // display the message
-    jmp    kaboom                // fail boot
-
-.isolinux_opened:
-    mov di, si                // save file pointer
-
-#ifdef DEBUG_MESSAGES
-    mov si, offset filelen_msg
+    // The SETUPLDR file was not found, so bail out with an error message.
+    mov si, offset no_setupldr_msg
     call writemsg
-    call writehex8
-    call crlf
-#endif
+    jmp kaboom
 
-    mov ecx, eax            // calculate sector count
-    shr ecx, 11
+.setupldr_found:
+    // Calculate the rounded up number of 2K sectors that need to be read.
+    mov ecx, eax
+    shr ecx, SECTOR_SHIFT
     test eax, HEX(7FF)
-    jz .full_sector
+    jz .load_setupldr
     inc ecx
-.full_sector:
 
-#ifdef DEBUG_MESSAGES
-    mov eax, ecx
-    mov si, offset filesect_msg
-    call writemsg
-    call writehex8
-    call crlf
-#endif
-
-// use high segment, as some bios can fail, when offset is too big
-    mov bx, FREELDR_BASE / 16 // es = load segment
+.load_setupldr:
+    // Load the entire SETUPLDR.SYS (parameter CX = FFFFh) to its designated base address FREELDR_BASE.
+    // Using a high segment address with offset 0 instead of segment 0 with offset FREELDR_BASE apparently increases compatibility with some BIOSes.
+    mov bx, FREELDR_BASE / 16
     mov es, bx
-    xor ebx, ebx              // bx = load offset
-    mov si, di                // restore file pointer
-    mov cx, HEX(0FFFF)        // load the whole file
-    call getfssec             // get the whole file
+    xor ebx, ebx
+    mov cx, HEX(FFFF)
+    call getfssec
 
-#ifdef DEBUG_MESSAGES
-    mov si, offset startldr_msg
-    call writemsg
-    call crlf
-#endif
+    // Pass two parameters to SETUPLDR:
+    //    DL = BIOS Drive Number
+    //    DH = Boot Partition (0 for HDD booting in hybrid mode, FFh for CD booting)
+    movzx dx, byte ptr ds:[DriveNumber]
+    cmp word ptr ds:[GetlinsecPtr], offset getlinsec_ebios
+    je .jump_to_setupldr
+    mov dh, HEX(FF)
 
-    mov dl, byte ptr ds:[DriveNo]            // dl = boot drive
-    mov dh, 0                    // dh = boot partition
-
-    /* Transfer execution to the bootloader */
+.jump_to_setupldr:
+    // Transfer execution to the bootloader.
     ljmp16 0, FREELDR_BASE
+
+
+/* FUNCTIONS *****************************************************************/
+
+///////////////////////////////////////////////////////////////////////////////
+// Start of BrokenAwardHack --- 10-nov-2002           Knut_Petersen@t-online.de
+///////////////////////////////////////////////////////////////////////////////
+//
+// There is a problem with certain versions of the AWARD BIOS ...
+// the boot sector will be loaded and executed correctly, but, because the
+// int 13 vector points to the wrong code in the BIOS, every attempt to
+// load the spec packet will fail. We scan for the equivalent of
+//
+//     mov ax,0201h
+//     mov bx,7c00h
+//     mov cx,0006h
+//     mov dx,0180h
+//     pushf
+//     call <direct far>
+//
+// and use <direct far> as the new vector for int 13. The code above is
+// used to load the boot code into ram, and there should be no reason
+// for anybody to change it now or in the future. There are no opcodes
+// that use encodings relativ to IP, so scanning is easy. If we find the
+// code above in the BIOS code we can be pretty sure to run on a machine
+// with an broken AWARD BIOS ...
+//
+///////////////////////////////////////////////////////////////////////////////
+award_oldint13:
+    .long 0
+award_string:
+    .byte HEX(0b8),1,2,HEX(0bb),0,HEX(7c),HEX(0b9),6,0,HEX(0ba),HEX(80),1,HEX(09c),HEX(09a)
+
+award_hack:
+    mov si, offset spec_err_msg                         // Moved to this place from
+    call writemsg                                       // spec_query_failed
+
+    mov eax, dword ptr ds:[HEX(13)*4]
+    mov dword ptr ds:[award_oldint13], eax
+
+    push es
+    mov ax, HEX(F000)                                   // ES = BIOS Seg
+    mov es, ax
+    cld
+    xor di, di                                          // start at ES:DI = f000:0
+award_loop:
+    push di                                             // save DI
+    mov si, offset award_string                         // scan for award_string
+    mov cx, 7                                           // length of award_string = 7dw
+    repz cmpsw                                          // compare
+    pop di                                              // restore DI
+    jcxz award_found                                    // jmp if found
+    inc di                                              // not found, inc di
+    jno award_loop
+
+award_failed:
+    pop es                                              // No, not this way :-((
+award_fail2:
+    mov eax, dword ptr ds:[award_oldint13]              // restore the original int
+    or eax, eax                                         // 13 vector if there is one
+    jz spec_query_failed                                // and try other workarounds
+    mov dword ptr ds:[HEX(13)*4], eax
+    jmp spec_query_failed
+
+award_found:
+    mov eax, dword ptr es:[di+HEX(0e)]                  // load possible int 13 addr
+    pop es                                              // restore ES
+
+    cmp eax, dword ptr ds:[award_oldint13]              // give up if this is the
+    jz award_failed                                     // active int 13 vector,
+    mov dword ptr ds:[HEX(13)*4], eax                   // otherwise change 0:13h*4
+
+    mov ax, HEX(4B01)                                   // try to read the spec packet
+    mov dl, byte ptr ds:[DriveNumber]                   // now ... it should not fail
+    mov si, offset spec_packet                          // any longer
+    int HEX(13)
+    jc award_fail2
+
+    jmp found_drive                                     // and leave error recovery code
+///////////////////////////////////////////////////////////////////////////////
+// End of BrokenAwardHack ----            10-nov-2002 Knut_Petersen@t-online.de
+///////////////////////////////////////////////////////////////////////////////
+
+
+// INT 13h, AX=4B01h, DL=<passed in value> failed.
+// Try to scan the entire 80h-FFh from the end.
+spec_query_failed:
+    // some code moved to BrokenAwardHack
+
+    mov dl, HEX(FF)
+
+.test_loop:
+    pusha
+    mov ax, HEX(4B01)
+    mov si, offset spec_packet
+    mov byte ptr ds:[si], HEX(13)                       // Size of buffer
+    call int13
+    popa
+    jc .still_broken
+
+    mov si, offset maybe_msg
+    call writemsg
+    mov al, dl
+    call writehex2
+    call crlf_early
+
+    cmp byte ptr ds:[sp_drive], dl
+    jne .maybe_broken
+
+    // Okay, good enough...
+    mov si, offset alright_msg
+    call writemsg
+.found_drive0:
+    mov byte ptr ds:[DriveNumber], dl
+.found_drive:
+    jmp found_drive
+
+    // Award BIOS 4.51 apparently passes garbage in sp_drive,
+    // but if this was the drive number originally passed in
+    // DL then consider it "good enough"
+.maybe_broken:
+    mov al, byte ptr ds:[DriveNumber]
+    cmp al, dl
+    je .found_drive
+
+    // Intel Classic R+ computer with Adaptec 1542CP BIOS 1.02
+    // passes garbage in sp_drive, and the drive number originally
+    // passed in DL does not have 80h bit set.
+    or al, HEX(80)
+    cmp al, dl
+    je .found_drive0
+
+.still_broken:
+    dec dx
+    cmp dl, HEX(80)
+    jnb .test_loop
+
+    // No spec packet anywhere.  Some particularly pathetic
+    // BIOSes apparently don't even implement function
+    // 4B01h, so we can't query a spec packet no matter
+    // what.  If we got a drive number in DL, then try to
+    // use it, and if it works, then well...
+    mov dl, byte ptr ds:[DriveNumber]
+    cmp dl, HEX(81)                                     // Should be 81-FF at least
+    jb fatal_error                                      // If not, it's hopeless
+
+    // Write a warning to indicate we're on *very* thin ice now
+    mov si, offset nospec_msg
+    call writemsg
+    mov al, dl
+    call writehex2
+    call crlf_early
+    jmp .found_drive                                    // Pray that this works...
+
+fatal_error:
+    mov si, offset nothing_msg
+    call writemsg
+
+.norge:
+    jmp short .norge
 
 //
 // searchdir:
 //
-// Open a file
+//      Open a file
 //
-//  On entry:
-//    DS:DI    = filename
-//  If successful:
-//    ZF clear
-//    SI        = file pointer
-//    DX:AX or EAX    = file length in bytes
-//  If unsuccessful
-//    ZF set
+//          On entry:
+//              DS:DI   = filename
+//          If successful:
+//              ZF clear
+//              SI      = file pointer
+//              EAX     = file length in bytes
+//          If unsuccessful
+//              ZF set
 //
-
+// Assumes CS == DS == ES, and trashes BX and CX.
 //
 // searchdir_iso is a special entry point for ISOLINUX only.  In addition
 // to the above, searchdir_iso passes a file flag mask in AL.  This is useful
 // for searching for directories.
 //
 alloc_failure:
-    xor    ax,ax                // ZF <- 1
+    xor ax, ax                                  // ZF <- 1
     ret
 
 searchdir:
-    xor    al, al
+    xor al, al
 searchdir_iso:
-    mov byte ptr ds:[ISOFlags],al
-    call allocate_file            // Temporary file structure for directory
+    mov byte ptr ds:[ISOFlags], al
+    call allocate_file                          // Temporary file structure for directory
     jnz alloc_failure
-    push    es
-    push    ds
-    pop    es                // ES = DS
-    mov si, offset CurDir
-    cmp byte ptr ds:[di], 92 //'\'            // If filename begins with slash
-    jne    .not_rooted
-    inc    di                // Skip leading slash
-    mov si, offset RootDir            // Reference root directory instead
+    push es
+    push ds
+    pop es                                      // ES = DS
+    mov si, offset CurrentDir
+    cmp byte ptr ds:[di], '/'                   // If filename begins with slash
+    jne .not_rooted
+    inc di                                      // Skip leading slash
+    mov si, offset RootDir                      // Reference root directory instead
 .not_rooted:
     mov eax, dword ptr ds:[si+dir_clust]
-    mov dword ptr ds:[bx+file_left],eax
-    mov eax,dword ptr ds:[si+dir_lba]
-    mov dword ptr ds:[bx+file_sector],eax
-    mov edx,dword ptr ds:[si+dir_len]
+    mov dword ptr ds:[bx+file_left], eax
+    shl eax, SECTOR_SHIFT
+    mov dword ptr ds:[bx+file_bytesleft], eax
+    mov eax, dword ptr ds:[si+dir_lba]
+    mov dword ptr ds:[bx+file_sector], eax
+    mov edx, dword ptr ds:[si+dir_len]
 
 .look_for_slash:
-    mov ax,di
+    mov ax, di
 .scan:
     mov cl, byte ptr ds:[di]
-    inc    di
-    and    cl,cl
-    jz    .isfile
-    cmp cl, 92 // '\'
-    jne    .scan
-    mov byte ptr ds:[di-1], 0            // Terminate at directory name
-    mov cl,2                // Search for directory
-    xchg    cl, byte ptr ds:[ISOFlags]
-    push    di
-    push    cx
-    push    offset .resume            // Where to "return" to
-    push    es
+    inc di
+    and cl, cl
+    jz .isfile
+    cmp cl, '/'
+    jne .scan
+    mov byte ptr ds:[di-1], 0                   // Terminate at directory name
+    mov cl, 2                                   // Search for directory
+    xchg cl, byte ptr ds:[ISOFlags]
+
+    push di                                     // Save these...
+    push cx
+
+    // Create recursion stack frame...
+    push offset .resume                         // Where to "return" to
+    push es
 .isfile:
-    xchg    ax,di
+    xchg ax, di
 
 .getsome:
     // Get a chunk of the directory
-    mov si,trackbuf
+    // This relies on the fact that ISOLINUX doesn't change SI
+    mov si, trackbuf
     pushad
-    xchg    bx,si
-    mov cx,1                // load one sector
+    xchg bx, si
+    mov cx, word ptr ds:[BufSafe]
     call getfssec
     popad
 
 .compare:
-    movzx    eax, byte ptr ds:[si]            // Length of directory entry
+    movzx eax, byte ptr ds:[si]                 // Length of directory entry
     cmp al, 33
-    jb    .next_sector
+    jb .next_sector
     mov cl, byte ptr ds:[si+25]
-    xor    cl, byte ptr ds:[ISOFlags]
-    test    cl, HEX(8E)            // Unwanted file attributes!
+    xor cl, byte ptr ds:[ISOFlags]
+    test cl, HEX(8E)                            // Unwanted file attributes!
     jnz .not_file
     pusha
-    movzx    cx, byte ptr ds:[si+32]        // File identifier length
-    add    si, 33            // File identifier offset
+    movzx cx, byte ptr ds:[si+32]               // File identifier length
+    add si, 33                                  // File identifier offset
     call iso_compare_names
     popa
-    je    .success
+    je .success
 .not_file:
-    sub    edx, eax            // Decrease bytes left
-    jbe    .failure
-    add    si, ax                // Advance pointer
+    sub edx, eax                                // Decrease bytes left
+    jbe .failure
+    add si, ax                                  // Advance pointer
 
 .check_overrun:
     // Did we finish the buffer?
     cmp si, trackbuf+trackbufsize
-    jb    .compare            // No, keep going
+    jb .compare                                 // No, keep going
 
-    jmp    .getsome            // Get some more directory
+    jmp short .getsome                          // Get some more directory
 
 .next_sector:
     // Advance to the beginning of next sector
-    lea    ax, [si+SECTORSIZE-1]
-    and    ax, not (SECTORSIZE-1)
-    sub    ax, si
-    jmp    .not_file            // We still need to do length checks
+    lea ax, [si+SECTOR_SIZE-1]
+    and ax, not (SECTOR_SIZE-1)
+    sub ax, si
+    jmp short .not_file                         // We still need to do length checks
 
 .failure:
-#ifdef DEBUG_MESSAGES
-    mov si, offset findfail_msg
-    call writemsg
-    call crlf
-#endif
-    xor    eax, eax            // ZF = 1
+    xor eax, eax                                // ZF = 1
     mov dword ptr ds:[bx+file_sector], eax
-    pop    es
+    pop es
     ret
 
 .success:
-    mov eax, dword ptr ds:[si+2]            // Location of extent
+    mov eax, dword ptr ds:[si+2]                // Location of extent
     mov dword ptr ds:[bx+file_sector], eax
-    mov eax, dword ptr ds:[si+10]            // Data length
-    push    eax
-    add    eax, SECTORSIZE-1
-    shr    eax, SECTORSIZE_LG2
+    mov eax, dword ptr ds:[si+10]               // Data length
+    mov dword ptr ds:[bx+file_bytesleft], eax
+    push eax
+    add eax, SECTOR_SIZE-1
+    shr eax, SECTOR_SHIFT
     mov dword ptr ds:[bx+file_left], eax
-    pop    eax
-    mov edx, eax
-    shr    edx, 16
-    and    bx, bx                // ZF = 0
+    pop eax
+    jz .failure                                 // Empty file?
+    // ZF = 0
     mov si, bx
-    pop    es
+    pop es
     ret
 
 .resume:
     // We get here if we were only doing part of a lookup
     // This relies on the fact that .success returns bx == si
-    xchg    edx, eax            // Directory length in edx
-    pop    cx                // Old ISOFlags
-    pop    di                // Next filename pointer
-
-    // restore the backslash in the filename
-    mov byte ptr ds:[di-1], 92 // '\'
-
-    mov byte ptr ds:[ISOFlags], cl            // Restore the flags
-    jz    .failure            // Did we fail?  If so fail for real!
-    jmp    .look_for_slash            // Otherwise, next level
+    xchg edx, eax                               // Directory length in edx
+    pop cx                                      // Old ISOFlags
+    pop di                                      // Next filename pointer
+    mov byte ptr ds:[di-1], '/'                 // Restore slash
+    mov byte ptr ds:[ISOFlags], cl              // Restore the flags
+    jz .failure                                 // Did we fail?  If so fail for real!
+    jmp .look_for_slash                         // Otherwise, next level
 
 //
 // allocate_file: Allocate a file structure
@@ -546,12 +642,12 @@ allocate_file:
     mov cx, MAX_OPEN
 .check:
     cmp dword ptr ds:[bx], 0
-    je    .found
-    add    bx, open_file_t_size        // ZF = 0
-    loop    .check
+    je .found
+    add bx, open_file_t_size                    // ZF = 0
+    loop .check
     // ZF = 0 if we fell out of the loop
 .found:
-    pop    cx
+    pop cx
     ret
 
 //
@@ -565,233 +661,167 @@ allocate_file:
 //
 iso_compare_names:
     // First, terminate and canonicalize input filename
-    push    di
+    push di
     mov di, offset ISOFileName
 .canon_loop:
-    jcxz    .canon_end
+    jcxz .canon_end
     lodsb
-    dec    cx
+    dec cx
     cmp al, ';'
-    je    .canon_end
-    and    al, al
-    je    .canon_end
+    je .canon_end
+    and al, al
+    je .canon_end
     stosb
-    cmp di, offset ISOFileNameEnd-1        // Guard against buffer overrun
-    jb    .canon_loop
+    cmp di, offset ISOFileNameEnd-1             // Guard against buffer overrun
+    jb .canon_loop
 .canon_end:
     cmp di, ISOFileName
-    jbe    .canon_done
-    cmp byte ptr ds:[di-1], '.'        // Remove terminal dots
-    jne    .canon_done
-    dec    di
-    jmp    short .canon_end
+    jbe .canon_done
+    cmp byte ptr ds:[di-1], '.'                 // Remove terminal dots
+    jne .canon_done
+    dec di
+    jmp short .canon_end
 .canon_done:
-    mov byte ptr ds:[di], 0            // Null-terminate string
-    pop    di
+    mov byte ptr ds:[di], 0                     // Null-terminate string
+    pop di
     mov si, ISOFileName
 .compare2:
     lodsb
     mov ah, byte ptr ds:[di]
-    inc    di
-    and    ax, ax
-    jz    .success2            // End of string for both
-    and    al, al                // Is either one end of string?
-    jz    .failure2            // If so, failure
-    and    ah, ah
-    jz    .failure2
-    or    ax, HEX(2020)            // Convert to lower case
+    inc di
+    and ax, ax
+    jz .success2                                // End of string for both
+    and al, al                                  // Is either one end of string?
+    jz .failure2                                // If so, failure
+    and ah, ah
+    jz .failure2
+    or ax, HEX(2020)                            // Convert to lower case
     cmp al, ah
-    je    .compare2
+    je .compare2
 .failure2:
-    and    ax, ax                // ZF = 0 (at least one will be nonzero)
+    and ax, ax                                  // ZF = 0 (at least one will be nonzero)
 .success2:
     ret
-
-
-
-
-
-
 
 //
 // getfssec: Get multiple clusters from a file, given the file pointer.
 //
 //  On entry:
-//    ES:BX    -> Buffer
-//    SI    -> File pointer
-//    CX    -> Cluster count; 0FFFFh = until end of file
+//       ES:BX   -> Buffer
+//       SI      -> File pointer
+//       CX      -> Cluster count
 //  On exit:
-//    SI    -> File pointer (or 0 on EOF)
-//    CF = 1    -> Hit EOF
+//       SI      -> File pointer (or 0 on EOF)
+//       CF = 1  -> Hit EOF
+//       ECX     -> Bytes actually read
 //
 getfssec:
-    cmp cx, word ptr ds:[si+file_left]
-    jna    .ok_size
-    mov cx, word ptr ds:[si+file_left]
+    push ds
+    push cs
+    pop ds                                      // DS <- CS
 
+    movzx ecx, cx
+    cmp ecx, dword ptr ds:[si+file_left]
+    jna .ok_size
+    mov ecx, dword ptr ds:[si+file_left]
 .ok_size:
-    mov bp, cx
-    push    cx
-    push    si
+    pushad
     mov eax, dword ptr ds:[si+file_sector]
+    mov bp, cx
     call getlinsec
-    xor    ecx, ecx
-    pop    si
-    pop    cx
+    popad
 
-    add    dword ptr ds:[si+file_sector], ecx
-    sub    dword ptr ds:[si+file_left], ecx
-    ja    .not_eof            // CF = 0
-
-    xor    ecx, ecx
-    mov dword ptr ds:[si+file_sector], ecx        // Mark as unused
-    xor    si,si
+    // ECX[31:16] == 0 here...
+    add dword ptr ds:[si+file_sector], ecx
+    sub dword ptr ds:[si+file_left], ecx
+    shl ecx, SECTOR_SHIFT                       // Convert to bytes
+    cmp ecx, dword ptr ds:[si+file_bytesleft]
+    jb .not_all
+    mov ecx, dword ptr ds:[si+file_bytesleft]
+.not_all:
+    sub dword ptr ds:[si+file_bytesleft], ecx
+    jnz .ret                                    // CF = 0 in this case...
+    push eax
+    xor eax, eax
+    mov dword ptr ds:[si+file_sector], eax      // Unused
+    mov si, ax
+    pop eax
     stc
-
-.not_eof:
+.ret:
+    pop ds
     ret
 
-
-// INT 13h, AX=4B01h, DL=<passed in value> failed.
-// Try to scan the entire 80h-FFh from the end.
-spec_query_failed:
-    mov si, offset spec_err_msg
-    call writemsg
-
-    mov dl, HEX(0FF)
-.test_loop:
-    pusha
-    mov ax, HEX(4B01)
-    mov si, offset spec_packet
-    mov byte ptr ds:[si], 13            // Size of buffer
-    int HEX(13)
-    popa
-    jc    .still_broken
-
-    mov si, offset maybe_msg
-    call writemsg
-    mov al, dl
-    call writehex2
-    call crlf
-
-    cmp byte ptr ds:[sp_drive], dl
-    jne    .maybe_broken
-
-    // Okay, good enough...
-    mov si, offset alright_msg
-    call writemsg
-    mov byte ptr ds:[DriveNo], dl
-.found_drive:
-    jmp    found_drive
-
-    // Award BIOS 4.51 apparently passes garbage in sp_drive,
-    // but if this was the drive number originally passed in
-    // DL then consider it "good enough"
-.maybe_broken:
-    cmp byte ptr ds:[DriveNo], dl
-    je .found_drive
-
-.still_broken:
-    dec dx
-    cmp dl, HEX(80)
-    jnb    .test_loop
-
-fatal_error:
-    mov si, offset nothing_msg
-    call writemsg
-
-.norge:
-    jmp    .norge
-
-
-
+//
 // Information message (DS:SI) output
-// Prefix with "isolinux: "
+// Prefix with "ISOBOOT: "
+//
 writemsg:
-    push    ax
-    push    si
-    mov si, offset isolinux_str
-    call writestr
-    pop    si
-    call writestr
-    pop    ax
+    push ax
+    push si
+    mov si, offset isoboot_str
+    call writestr_early
+    pop si
+    call writestr_early
+    pop ax
     ret
 
-//
-// crlf: Print a newline
-crlf:
-    mov si, offset crlf_msg
-    // Fall through
-
-//
-// writestr: write a null-terminated string to the console, saving
-//           registers on entry.
-//
-writestr:
+writestr_early:
     pushfd
     pushad
-writestr_top:
+.top:
     lodsb
-    and    al, al
-    jz    writestr_end
+    and al, al
+    jz .end_writestr
     call writechr
-    jmp    short writestr_top
-writestr_end:
+    jmp short .top
+.end_writestr:
     popad
     popfd
     ret
 
-//
-// writehex[248]: Write a hex number in (AL, AX, EAX) to the console
-//
-writehex2:
-    pushfd
-    pushad
-    shl    eax, 24
-    mov cx, 2
-    jmp    short writehex_common
-writehex4:
-    pushfd
-    pushad
-    shl    eax, 16
-    mov cx, 4
-    jmp    short writehex_common
-writehex8:
-    pushfd
-    pushad
-    mov cx, 8
-writehex_common:
-.loop:
-    rol    eax, 4
-    push    eax
-    and    al, HEX(0F)
-    cmp al, 10
-    jae    .high
-.low:
-    add    al, '0'
-    jmp    short .ischar
-.high:
-    add    al, 'A'-10
-.ischar:
+crlf_early:
+    push ax
+    mov al, 13
     call writechr
-    pop    eax
-    loop    .loop
-    popad
-    popfd
+    mov al, 10
+    call writechr
+    pop ax
     ret
 
 //
-// writechr: Write a character to the screen.  There is a more "sophisticated"
-// version of this in the subsequent code, so we patch the pointer
-// when appropriate.
+// writechr: Write a character to the screen.
+//
 writechr:
     pushfd
     pushad
     mov ah, HEX(0E)
-    xor    bx, bx
+    xor bx, bx
     int HEX(10)
     popad
     popfd
+    ret
+
+//
+// int13: save all the segment registers and call INT 13h.
+// Some CD-ROM BIOSes have been found to corrupt segment registers
+// and/or disable interrupts.
+//
+int13:
+    pushf
+    push bp
+    push ds
+    push es
+    push fs
+    push gs
+    int HEX(13)
+    mov bp, sp
+    setc byte ptr ds:[bp+10]                    // Propagate CF to the caller
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    pop bp
+    popf
     ret
 
 //
@@ -804,48 +834,113 @@ getonesec:
 //
 // Get linear sectors - EBIOS LBA addressing, 2048-byte sectors.
 //
-// Note that we can't always do this as a single request, because at least
-// Phoenix BIOSes has a 127-sector limit.  To be on the safe side, stick
-// to 32 sectors (64K) per request.
-//
-// Input:
-//    EAX    - Linear sector number
-//    ES:BX    - Target buffer
-//    BP    - Sector count
-//
 getlinsec:
-    push es // save es, we reset it later to 0
+    jmp word ptr cs:[GetlinsecPtr]
 
-    mov si, offset dapa            // Load up the DAPA
-    mov word ptr ds:[si+4], bx
-    mov bx, es
-    mov word ptr ds:[si+6], bx
-    xor bx, bx // reset es to 0, some bioses (KVM) require that
-    mov es, bx
-    mov dword ptr ds:[si+8], eax
-.loop2:
-    push bp                // Sectors left
+//
+// getlinsec_ebios:
+//
+// getlinsec implementation for floppy/HDD EBIOS (EDD)
+//
+getlinsec_ebios:
+    xor edx, edx
+    shld edx, eax, 2
+    shl eax, 2                                  // Convert to HDD sectors
+    shl bp, 2
+
+.loop_ebios:
+    push bp                                     // Sectors left
+.retry2:
+    call maxtrans                               // Enforce maximum transfer size
+    movzx edi, bp                               // Sectors we are about to read
+    mov cx, retry_count
+.retry:
+    // Form DAPA on stack
+    push edx
+    push eax
+    push es
+    push bx
+    push di
+    push 16
+    mov si, sp
+    pushad
+    mov dl, byte ptr ds:[DriveNumber]
+    push ds
+    push ss
+    pop ds                                      // DS <- SS
+    mov ah, HEX(42)                             // Extended Read
+    call int13
+    pop ds
+    popad
+    lea sp, [si+16]                             // Remove DAPA
+    jc .error_ebios
+    pop bp
+    add eax, edi                                // Advance sector pointer
+    adc edx, 0
+    sub bp, di                                  // Sectors left
+    shl di, 9                                   // 512-byte sectors
+    add bx, di                                  // Advance buffer pointer
+    jnc .no_overflow                            // Check if we have read more than 64K and need to adjust ES
+    mov di, es
+    add di, HEX(1000)                           // Adjust segment by 64K (1000h * 16 = 10000h = 64K + 1)
+    mov es, di
+.no_overflow:
+    and bp, bp
+    jnz .loop_ebios
+
+    ret
+
+.error_ebios:
+    pushad                                      // Try resetting the device
+    xor ax, ax
+    mov dl, byte ptr ds:[DriveNumber]
+    call int13
+    popad
+    loop .retry                                 // CX-- and jump if not zero
+
+    // Total failure.
+    jmp kaboom
+
+//
+// Truncate BP to MaxTransfer
+//
+maxtrans:
     cmp bp, word ptr ds:[MaxTransfer]
-    jbe .bp_ok
+    jna .ok
     mov bp, word ptr ds:[MaxTransfer]
+.ok:
+    ret
+
+//
+// This is the variant we use for real CD-ROMs:
+// LBA, 2K sectors, some special error handling.
+//
+getlinsec_cdrom:
+    mov si, offset dapa                         // Load up the DAPA
+    mov word ptr ds:[si+4], bx
+    mov word ptr ds:[si+6], es
+    mov dword ptr ds:[si+8], eax
+.loop_cdrom:
+    push bp                                     // Sectors left
+    cmp bp, word ptr ds:[MaxTransferCD]
+    jbe .bp_ok
+    mov bp, word ptr ds:[MaxTransferCD]
 .bp_ok:
     mov word ptr ds:[si+2], bp
     push si
-    mov dl, byte ptr ds:[DriveNo]
-    mov ah, HEX(42)            // Extended Read
+    mov dl, byte ptr ds:[DriveNumber]
+    mov ah, HEX(42)                             // Extended Read
     call xint13
     pop si
     pop bp
-    movzx eax,word ptr ds:[si+2]        // Sectors we read
-    add dword ptr ds:[si+8], eax        // Advance sector pointer
-    sub bp, ax            // Sectors left
-    shl ax, SECTORSIZE_LG2-4        // 2048-byte sectors -> segment
-    add word ptr ds:[si+6], ax            // Advance buffer pointer
+    movzx eax, word ptr ds:[si+2]               // Sectors we read
+    add dword ptr ds:[si+8], eax                // Advance sector pointer
+    sub bp, ax                                  // Sectors left
+    shl ax, SECTOR_SHIFT-4                      // 2048-byte sectors -> segment
+    add word ptr ds:[si+6], ax                  // Advance buffer pointer
     and bp, bp
-    jnz .loop2
-    mov eax, dword ptr ds:[si+8]            // Next sector
-
-    pop es
+    jnz .loop_cdrom
+    mov eax, dword ptr ds:[si+8]                // Next sector
     ret
 
     // INT 13h with retry
@@ -853,30 +948,31 @@ xint13:
     mov byte ptr ds:[RetryCount], retry_count
 .try:
     pushad
-    int HEX(13)
-    jc    .error
-    add    sp, 8*4            // Clean up stack
+    call int13
+    jc .error_cdrom
+    add sp, 8*4                                 // Clean up stack
     ret
-.error:
-    mov byte ptr ds:[DiskError], ah        // Save error code
+.error_cdrom:
+    mov byte ptr ds:[DiskError], ah             // Save error code
     popad
+    mov word ptr ds:[DiskSys], ax               // Save system call number
     dec byte ptr ds:[RetryCount]
     jz .real_error
     push ax
     mov al, byte ptr ds:[RetryCount]
-    mov ah, byte ptr ds:[dapa+2]            // Sector transfer count
-    cmp al,2            // Only 2 attempts left
+    mov ah, byte ptr ds:[dapa+2]                // Sector transfer count
+    cmp al, 2                                   // Only 2 attempts left
     ja .nodanger
-    mov ah,1            // Drop transfer size to 1
+    mov ah, 1                                   // Drop transfer size to 1
     jmp short .setsize
 .nodanger:
     cmp al, retry_count-2
-    ja .again            // First time, just try again
-    shr ah,1            // Otherwise, try to reduce
-    adc ah,0            // the max transfer size, but not to 0
+    ja .again                                   // First time, just try again
+    shr ah, 1                                   // Otherwise, try to reduce
+    adc ah, 0                                   // the max transfer size, but not to 0
 .setsize:
-    mov byte ptr ds:[MaxTransfer],ah
-    mov byte ptr ds:[dapa+2],ah
+    mov byte ptr ds:[MaxTransferCD], ah
+    mov byte ptr ds:[dapa+2], ah
 .again:
     pop ax
     jmp .try
@@ -886,11 +982,15 @@ xint13:
     call writemsg
     mov al, byte ptr ds:[DiskError]
     call writehex2
+    mov si, offset oncall_str
+    call writestr_early
+    mov ax, word ptr ds:[DiskSys]
+    call writehex4
     mov si, offset ondrive_str
-    call writestr
+    call writestr_early
     mov al, dl
     call writehex2
-    call crlf
+    call crlf_early
     // Fall through to kaboom
 
 //
@@ -898,187 +998,174 @@ xint13:
 //      then do a hard reboot.
 //
 kaboom:
+    // Restore a clean context.
     mov ax, cs
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     sti
-    mov si, offset err_bootfailed
-    call writestr
-    xor    ax, ax        // Wait for keypress
-    int HEX(16)
-    cli
-    mov word ptr ds:[BIOS_magic], 0    // Cold reboot
-    ljmp16 HEX(0F000), HEX(0FFF0)        // Reset vector address
 
+    // Display the failure message.
+    mov si, offset err_bootfailed
+    call writestr_early
+
+    // Wait for a keypress.
+    xor ax, ax
+    int HEX(16)
+
+    // Disable interrupts and reset the system through a magic BIOS call.
+    cli
+    mov word ptr ds:[BIOS_magic], 0
+    ljmp16 HEX(0F000), HEX(0FFF0)
 
 //
-// pollchar_and_empty: check if we have an input character pending (ZF = 0) and empty the input buffer afterwards
+// writehex[248]: Write a hex number in (AL, AX, EAX) to the console
+//
+writehex2:
+    pushfd
+    pushad
+    rol eax, 24
+    mov cx,2
+    jmp short writehex_common
+writehex4:
+    pushfd
+    pushad
+    rol eax, 16
+    mov cx, 4
+    jmp short writehex_common
+writehex8:
+    pushfd
+    pushad
+    mov cx, 8
+writehex_common:
+.loop_writehex:
+    rol eax, 4
+    push eax
+    and al, HEX(0F)
+    cmp al, 10
+    jae .high
+.low:
+    add al, '0'
+    jmp short .ischar
+.high:
+    add al, 'A'-10
+.ischar:
+    call writechr
+    pop eax
+    loop .loop_writehex
+    popad
+    popfd
+    ret
+
+//
+// pollchar_and_empty: Check if we have an input character pending (ZF = 0)
+// and empty the input buffer afterwards.
 //
 pollchar_and_empty:
     pushad
-    mov ah, 1        // Did the user press a key?
+    mov ah, 1                                   // Did the user press a key?
     int HEX(16)
-    jz    .end        // No, then we're done
-    mov ah, 0        // Otherwise empty the buffer by reading it
+    jz .end_pollchar                            // No, then we're done
+    mov ah, 0                                   // Otherwise empty the buffer by reading it
     int HEX(16)
-.end:
+.end_pollchar:
     popad
     ret
 
 
-isolinux_banner:
-    .ascii CR, LF, "Loading IsoBoot...", CR, LF, NUL
-copyright_str:
-    .ascii " (C) 1994-2002 H. Peter Anvin", CR, LF, NUL
+/* INITIALIZED VARIABLES *****************************************************/
 presskey_msg:
-    .ascii "Press any key to boot from CD", NUL
+    .ascii "Press any key to boot from the ReactOS medium", NUL
 dot_msg:
     .ascii ".", NUL
-
-#ifdef DEBUG_MESSAGES
-startup_msg:
-    .ascii "Startup, DL = '", NUL
-spec_ok_msg:
-    .ascii "packet OK, drive = ", NUL
-secsize_msg:
-    .ascii "size appears to be ", NUL
-rootloc_msg:
-    .ascii "Root dir loc: ", NUL
-rootlen_msg:
-    .ascii "Root dir len: ", NUL
-rootsect_msg:
-    .ascii "Root dir len(sect): ", NUL
-fileloc_msg:
-    .ascii "SETUPLDR loc: ", NUL
-filelen_msg:
-    .ascii "SETUPLDR len: ", NUL
-filesect_msg:
-    .ascii "SETUPLDR len(sect): ", NUL
-findfail_msg:
-    .ascii "Failed to find file!", NUL
-startldr_msg:
-    .ascii "Starting SETUPLDR.SYS", NUL
-#endif
-
+isoboot_str:
+    .ascii "ISOBOOT: ", NUL
 spec_err_msg:
-    .ascii "Load spec failed, trying wing ...", CR, LF, NUL
+    .ascii "Loading spec packet failed, trying to wing it...", CR, LF, NUL
 maybe_msg:
-    .ascii "Found smth at drive = ", NUL
+    .ascii "Found something at drive = ", NUL
 alright_msg:
-    .ascii "might be ok, continuing...", CR, LF, NUL
+    .ascii "Looks reasonable, continuing...", CR, LF, NUL
+nospec_msg:
+    .ascii "Extremely broken BIOS detected, last attempt with drive = ", NUL
 nothing_msg:
-    .ascii "Failed locate CD-ROM; boot failed.", CR, LF, NUL
-
-isolinux_str:
-    .ascii "IsoBoot: ", NUL
-crlf_msg:
-    .ascii CR, LF, NUL
+    .ascii "Failed to locate CD-ROM device; boot failed.", CR, LF, NUL
 diskerr_msg:
     .ascii "Disk error ", NUL
+oncall_str:
+    .ascii ", AX = ", NUL
 ondrive_str:
     .ascii ", drive ", NUL
-
 err_bootfailed:
-    .ascii CR, LF, "failed..", NUL
-isolinux_dir:
-    .ascii "\\LOADER", NUL
+    .ascii CR, LF, "Boot failed: press a key to retry...", NUL
+loader_dir:
+    .ascii "/LOADER", NUL
 no_dir_msg:
     .ascii "LOADER dir not found.", CR, LF, NUL
-isolinux_bin:
+setupldr_sys:
     .ascii "SETUPLDR.SYS", NUL
-no_isolinux_msg:
-    .ascii "SETUPLDR not found.", CR, LF, NUL
+no_setupldr_msg:
+    .ascii "SETUPLDR.SYS not found.", CR, LF, NUL
 
+.align 4
+BufSafe:
+    .word trackbufsize/SECTOR_SIZE              // Clusters we can load into trackbuf
+
+// Maximum transfer size
+.align 4
+MaxTransfer:
+    .word 127                                   // Hard disk modes
+MaxTransferCD:
+    .word 32                                    // CD mode
 
 //
 // El Torito spec packet
 //
 .align 8
 spec_packet:
-    .byte HEX(13)          // Size of packet
+    .byte HEX(13)                               // Size of packet
 sp_media:
-    .byte 0                // Media type
+    .byte 0                                     // Media type
 sp_drive:
-    .byte 0                // Drive number
+    .byte 0                                     // Drive number
 sp_controller:
-    .byte 0                // Controller index
+    .byte 0                                     // Controller index
 sp_lba:
-    .long 0                // LBA for emulated disk image
+    .long 0                                     // LBA for emulated disk image
 sp_devspec:
-    .word 0                // IDE/SCSI information
+    .word 0                                     // IDE/SCSI information
 sp_buffer:
-    .word 0                // User-provided buffer
+    .word 0                                     // User-provided buffer
 sp_loadseg:
-    .word 0                // Load segment
+    .word 0                                     // Load segment
 sp_sectors:
-    .word 0                // Sector count
+    .word 0                                     // Sector count
 sp_chs:
-    .byte 0,0,0            // Simulated CHS geometry
+    .byte 0,0,0                                 // Simulated CHS geometry
 sp_dummy:
-    .byte 0                // Scratch, safe to overwrite
-
-//
-// EBIOS drive parameter packet
-//
-.align 8
-drive_params:
-    .word 30                // Buffer size
-dp_flags:
-    .word 0                // Information flags
-dp_cyl:
-    .long 0                // Physical cylinders
-dp_head:
-    .long 0                // Physical heads
-dp_sec:
-    .long 0                // Physical sectors/track
-dp_totalsec:
-    .long 0,0                // Total sectors
-dp_secsize:
-    .word 0                // Bytes per sector
-dp_dpte:
-    .long 0                // Device Parameter Table
-dp_dpi_key:
-    .word 0                // 0BEDDh if rest valid
-dp_dpi_len:
-    .byte 0                // DPI len
-    .byte 0
-    .word 0
-dp_bus:
-    .byte 0,0,0,0            // Host bus type
-dp_interface:
-    .byte 0,0,0,0,0,0,0,0            // Interface type
-db_i_path:
-    .long 0,0                // Interface path
-db_d_path:
-    .long 0,0                // Device path
-    .byte 0
-db_dpi_csum:
-    .byte 0                // Checksum for DPI info
+    .byte 0                                     // Scratch, safe to overwrite
 
 //
 // EBIOS disk address packet
 //
 .align 8
 dapa:
-    .word 16                // Packet size
+    .word 16                                    // Packet size
 .count:
-    .word 0                // Block count
+    .word 0                                     // Block count
 .off:
-    .word 0                // Offset of buffer
+    .word 0                                     // Offset of buffer
 .seg:
-    .word 0                // Segment of buffer
+    .word 0                                     // Segment of buffer
 .lba:
-    .long 0                // LBA (LSW)
-    .long 0                // LBA (MSW)
+    .long 0                                     // LBA (LSW)
+    .long 0                                     // LBA (MSW)
 
-.align 4
-MaxTransfer:
-    .word 2 //32                // Max sectors per transfer
 
-.org 2046        // Pad to file offset 2046
-.word HEX(0aa55)    // BootSector signature
+// Extend the size to cover one 2K-sized sector
+.org 2047
+    .byte 0
 
 .endcode16
 

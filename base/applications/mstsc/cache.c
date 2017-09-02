@@ -33,7 +33,7 @@ extern int g_pstcache_fd[];
 /*
  * TODO: Test for optimal value of BUMP_COUNT. TO_TOP gives lowest cpu utilisation but using
  * a positive value will hopefully result in less frequently used bitmaps having a greater chance
- * of being evicted from the cache, and therby reducing the need to load bitmaps from disk.
+ * of being evicted from the cache, and thereby reducing the need to load bitmaps from disk.
  * (Jeroen)
  */
 #define BUMP_COUNT 40

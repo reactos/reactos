@@ -68,14 +68,14 @@ CAPTION "Taakbalk"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Taakbalkweergave", IDC_STATIC, 6, 6, 240, 104
-    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 18, 224, 21
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "Taakbalk &vergrendelen", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "Taakbalk a&utomatisch verbergen", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "Taakbalk altijd o&p voorgrond weergeven", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Gelijksoortige knoppen gegroepeerd weergeven", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Werkbalk &Snel starten weergeven", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     GROUPBOX "Notification area", IDC_STATIC, 6, 114, 240, 98
-    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,13, 126, 223, 28
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
     AUTOCHECKBOX "&Klok", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
     AUTOCHECKBOX "Show seconds", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
     LTEXT "U kunt het systeemvak opruimen door pictogrammen te verbergen waarop u recentelijk niet hebt geklikt.", IDC_STATIC, 13, 169, 223, 16

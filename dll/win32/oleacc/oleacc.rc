@@ -59,6 +59,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_IT_IT
     #include "lang/oleacc_It.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/oleacc_Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/oleacc_Ko.rc"
 #endif

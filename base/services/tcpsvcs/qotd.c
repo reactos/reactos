@@ -96,7 +96,7 @@ RetrieveQuote(SOCKET sock)
         lpStr = lpQuotes;
         for (i = 1; i <= quoteNum; i++)
         {
-            /* move past proceding quote */
+            /* move past preceding quote */
             lpStr++;
 
             if (i == quoteNum)

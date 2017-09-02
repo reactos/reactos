@@ -39,7 +39,7 @@ static void d3drm_texture_destroy(struct d3drm_texture *texture)
 {
     TRACE("texture %p is being destroyed.\n", texture);
 
-    d3drm_object_cleanup((IDirect3DRMObject*)&texture->IDirect3DRMTexture3_iface, &texture->obj);
+    d3drm_object_cleanup((IDirect3DRMObject*)&texture->IDirect3DRMTexture_iface, &texture->obj);
     if (texture->image)
         IDirect3DRM_Release(texture->d3drm);
     HeapFree(GetProcessHeap(), 0, texture);
@@ -213,7 +213,7 @@ static HRESULT WINAPI d3drm_texture1_SetDecalSize(IDirect3DRMTexture *iface, D3D
 {
     struct d3drm_texture *texture = impl_from_IDirect3DRMTexture(iface);
 
-    TRACE("iface %p, width %.8e, height %.8e stub!\n", iface, width, height);
+    TRACE("iface %p, width %.8e, height %.8e.\n", iface, width, height);
 
     return IDirect3DRMTexture3_SetDecalSize(&texture->IDirect3DRMTexture3_iface, width, height);
 }
@@ -513,7 +513,7 @@ static HRESULT WINAPI d3drm_texture2_SetDecalSize(IDirect3DRMTexture2 *iface, D3
 {
     struct d3drm_texture *texture = impl_from_IDirect3DRMTexture2(iface);
 
-    TRACE("iface %p, width %.8e, height %.8e stub!\n", iface, width, height);
+    TRACE("iface %p, width %.8e, height %.8e.\n", iface, width, height);
 
     return IDirect3DRMTexture3_SetDecalSize(&texture->IDirect3DRMTexture3_iface, width, height);
 }
@@ -696,20 +696,20 @@ static HRESULT WINAPI d3drm_texture3_QueryInterface(IDirect3DRMTexture3 *iface, 
 
     TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-    if (IsEqualGUID(riid, &IID_IDirect3DRMTexture3)
+    if (IsEqualGUID(riid, &IID_IDirect3DRMTexture)
             || IsEqualGUID(riid, &IID_IDirect3DRMVisual)
             || IsEqualGUID(riid, &IID_IDirect3DRMObject)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
-        *out = &texture->IDirect3DRMTexture3_iface;
+        *out = &texture->IDirect3DRMTexture_iface;
     }
     else if (IsEqualGUID(riid, &IID_IDirect3DRMTexture2))
     {
         *out = &texture->IDirect3DRMTexture2_iface;
     }
-    else if (IsEqualGUID(riid, &IID_IDirect3DRMTexture))
+    else if (IsEqualGUID(riid, &IID_IDirect3DRMTexture3))
     {
-        *out = &texture->IDirect3DRMTexture_iface;
+        *out = &texture->IDirect3DRMTexture3_iface;
     }
     else
     {

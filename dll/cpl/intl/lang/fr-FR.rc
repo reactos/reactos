@@ -37,9 +37,9 @@ BEGIN
     LTEXT "Pour voir ou changer la langue ou les méthodes de saisie de texte, pressez ""Détails...""", -1, 12, 15, 220, 18
     PUSHBUTTON "Dé&tails...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Support de langues additionnelles", -1, 5, 62, 234, 82
-    LTEXT "La plupart des langues sont installées par défaut. Pour installer des langues supplémentaires, sélectionnez la case à cocher appropriée ci-dessous.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstaller les fichiers pour les scripts complexes et les langues de droite à gauche", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
-    CHECKBOX "In&staller les fichiers pour les langues de l'Asie de l'Est", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
+    LTEXT "La plupart des langues sont installées par défaut. Pour installer des langues supplémentaires, sélectionnez la case à cocher appropriée ci-dessous.", -1, 12, 72, 220, 28
+    CHECKBOX "I&nstaller les fichiers pour les scripts complexes et les langues de droite à gauche", IDC_INST_FILES_FOR_RTOL_LANG, 12, 102, 215, 19, BS_MULTILINE | BS_TOP
+    CHECKBOX "In&staller les fichiers pour les langues de l'Asie de l'Est", IDC_INST_FILES_FOR_ASIAN, 12, 124, 218, 14, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230

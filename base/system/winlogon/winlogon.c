@@ -124,7 +124,7 @@ WaitForLsass(VOID)
     if (hEvent == NULL)
     {
         dwError = GetLastError();
-        TRACE("WL: Failed to create the notication event (Error %lu)\n", dwError);
+        TRACE("WL: Failed to create the notification event (Error %lu)\n", dwError);
 
         if (dwError == ERROR_ALREADY_EXISTS)
         {
@@ -160,7 +160,7 @@ InitKeyboardLayouts(VOID)
     /* Open registry key with preloaded layouts */
     if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        while(TRUE)
+        while (TRUE)
         {
             /* Read values with integer names only */
             swprintf(wszKeyName, L"%d", i++);

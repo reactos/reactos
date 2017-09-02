@@ -296,15 +296,14 @@ KDSTATUS
 NTAPI
 KdpReceiveByte(_Out_ PUCHAR OutByte)
 {
+    USHORT CpStatus = CpGetByte(&KdComPort, OutByte, TRUE, FALSE);
     /* Get the byte */
-    if (CpGetByte(&KdComPort, OutByte, TRUE, FALSE) == CP_GET_SUCCESS)
+    if (CpStatus == CP_GET_SUCCESS)
     {
         return KdPacketReceived;
     }
-    else
-    {
-        return KdPacketTimedOut;
-    }
+
+    return KdPacketTimedOut;
 }
 
 KDSTATUS
@@ -319,6 +318,7 @@ KdpPollBreakIn(VOID)
     {
         if (Byte == 0x03)
         {
+            KDDBGPRINT("BreakIn Polled.\n");
             return KdPacketReceived;
         }
         else if (Byte == '$')

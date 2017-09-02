@@ -921,33 +921,44 @@ typedef PHWPROFILEINFO_A PHWPROFILEINFO;
 CMAPI
 CONFIGRET
 WINAPI
-CMP_Init_Detection(IN DWORD dwMagic);
+CMP_GetServerSideDeviceInstallFlags(
+  _Out_ PULONG pulSSDIFlags,
+  _In_ ULONG ulFlags,
+  _In_ HMACHINE hMachine)
+
+CMAPI
+CONFIGRET
+WINAPI
+CMP_Init_Detection(
+  _In_ DWORD dwMagic);
 
 CMAPI
 CONFIGRET
 WINAPI
 CMP_RegisterNotification(
-  IN HANDLE hRecipient,
-  IN LPVOID lpvNotificationFilter,
-  IN DWORD dwFlags,
-  OUT PULONG pluhDevNotify);
+  _In_ HANDLE hRecipient,
+  _In_ LPVOID lpvNotificationFilter,
+  _In_ DWORD dwFlags,
+  _Out_ PULONG pluhDevNotify);
 
 CMAPI
 CONFIGRET
 WINAPI
 CMP_Report_LogOn(
-  IN DWORD dwMagic,
-  IN DWORD dwProcessId);
+  _In_ DWORD dwMagic,
+  _In_ DWORD dwProcessId);
 
 CMAPI
 CONFIGRET
 WINAPI
-CMP_UnregisterNotification(IN ULONG luhDevNotify);
+CMP_UnregisterNotification(
+  _In_ ULONG luhDevNotify);
 
 CMAPI
 CONFIGRET
 WINAPI
-CMP_WaitServicesAvailable(IN HMACHINE hMachine);
+CMP_WaitServicesAvailable(
+  _In_ IN HMACHINE hMachine);
 */
 
 CMAPI

@@ -76,7 +76,7 @@ VfatLockControl(
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
-    if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY)
+    if (vfatFCBIsDirectory(Fcb))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -106,6 +106,7 @@ VfatDispatchRequest(
     IN PVFAT_IRP_CONTEXT IrpContext)
 {
     NTSTATUS Status;
+    BOOLEAN QueueIrp, CompleteIrp;
 
     DPRINT("VfatDispatchRequest (IrpContext %p), is called for %s\n", IrpContext,
            IrpContext->MajorFunction >= IRP_MJ_MAXIMUM_FUNCTION ? "????" : MajorFunctionNames[IrpContext->MajorFunction]);
@@ -181,17 +182,20 @@ VfatDispatchRequest(
             Status = STATUS_DRIVER_INTERNAL_ERROR;
     }
 
-    ASSERT((!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
-           ((IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
-           (!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && (IrpContext->Flags & IRPCONTEXT_QUEUE)));
+    QueueIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_QUEUE);
+    CompleteIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_COMPLETE);
 
-    if (IrpContext->Flags & IRPCONTEXT_COMPLETE)
+    ASSERT((!CompleteIrp && !QueueIrp) ||
+           (CompleteIrp && !QueueIrp) ||
+           (!CompleteIrp && QueueIrp));
+
+    if (CompleteIrp)
     {
         IrpContext->Irp->IoStatus.Status = Status;
         IoCompleteRequest(IrpContext->Irp, IrpContext->PriorityBoost);
     }
 
-    if (IrpContext->Flags & IRPCONTEXT_QUEUE)
+    if (QueueIrp)
     {
         /* Reset our status flags before queueing the IRP */
         IrpContext->Flags |= IRPCONTEXT_COMPLETE;

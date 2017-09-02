@@ -17,6 +17,7 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
   PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
   ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER *SimpleInt;
   ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING *SimpleStr;
+  CHAR MethodName[5];
 
   if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(ULONG))
       return STATUS_INVALID_PARAMETER;
@@ -67,8 +68,12 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
         return STATUS_NOT_IMPLEMENTED;
   }
 
+  RtlCopyMemory(MethodName,
+                EvalInputBuff->MethodName,
+                sizeof(EvalInputBuff->MethodName));
+  MethodName[4] = ANSI_NULL;
   Status = AcpiEvaluateObject(DeviceData->AcpiHandle,
-                              (CHAR*)EvalInputBuff->MethodName,
+                              MethodName,
                               &ParamList,
                               &RetBuff);
 

@@ -98,9 +98,13 @@ static HRESULT WINAPI ShellUIHelper2_GetIDsOfNames(IShellUIHelper2 *iface, REFII
         LCID lcid, DISPID *rgDispId)
 {
     ShellUIHelper *This = impl_from_IShellUIHelper2(iface);
-    FIXME("(%p)->(%s %p %d %d %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-    return E_NOTIMPL;
+    unsigned i;
+
+    FIXME("(%p)->(%s %p %d %d %p)\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
+    for(i = 0; i < cNames; i++)
+        FIXME("%s\n", debugstr_w(rgszNames[i]));
+
+    return DISP_E_UNKNOWNNAME;
 }
 
 static HRESULT WINAPI ShellUIHelper2_Invoke(IShellUIHelper2 *iface, DISPID dispIdMember,

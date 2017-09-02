@@ -13,7 +13,7 @@ unsigned int __abort_behavior =  _WRITE_ABORT_MSG | _CALL_REPORTFAULT;
 
 static const char abort_msg[] =
     "This application has requested the Runtime to terminate in an unusual way.\n"
-    "Please contact the applications's support team for more information.\0";
+    "Please contact the application's support team for more information.\0";
 
 /*!
  * \brief Aborts the program.

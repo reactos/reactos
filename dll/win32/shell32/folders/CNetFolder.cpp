@@ -51,12 +51,31 @@ HRESULT CNetFolderExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID riid, LP
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
-    if (FAILED(hr))
-        return NULL;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_NETWORK_FOLDER);
 
     return initIcon->QueryInterface(riid, ppvOut);
+}
+
+HRESULT CALLBACK NetFolderMenuCallback(IShellFolder *psf,
+                                       HWND         hwnd,
+                                       IDataObject  *pdtobj,
+                                       UINT         uMsg,
+                                       WPARAM       wParam,
+                                       LPARAM       lParam)
+{
+    switch (uMsg)
+    {
+    case DFM_MERGECONTEXTMENU:
+        return S_OK;
+    case DFM_INVOKECOMMAND:
+    case DFM_INVOKECOMMANDEX:
+    case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+        return S_FALSE;
+    }
+    return E_NOTIMPL;
 }
 
 class CNetFolderEnum :
@@ -75,10 +94,10 @@ class CNetFolderEnum :
 };
 
 static shvheader NetworkPlacesSFHeader[] = {
-    {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
-    {IDS_SHV_COLUMN13, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
+    {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
+    {IDS_SHV_COLUMN_CATEGORY, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
     {IDS_SHV_COLUMN_WORKGROUP, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
-    {IDS_SHV_NETWORKLOCATION, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15}
+    {IDS_SHV_COLUMN_NETLOCATION, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15}
 };
 
 #define COLUMN_NAME          0
@@ -204,16 +223,8 @@ CNetFolder::CNetFolder()
 
 CNetFolder::~CNetFolder()
 {
-    TRACE("-- destroying IShellFolder(%p)\n", this);
-    SHFree(pidlRoot);
-}
-
-HRESULT WINAPI CNetFolder::FinalConstruct()
-{
-    pidlRoot = _ILCreateGuid(PT_GUID, CLSID_NetworkPlaces); /* my qualified pidl */
-    if (pidlRoot == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
+    if (pidlRoot)
+        SHFree(pidlRoot);
 }
 
 /**************************************************************************
@@ -263,7 +274,7 @@ HRESULT WINAPI CNetFolder::ParseDisplayName(HWND hwndOwner, LPBC pbcReserved, LP
 */
 HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CNetFolderEnum>(hwndOwner, dwFlags, IID_IEnumIDList, ppEnumIDList);
+    return ShellObjectCreatorInit<CNetFolderEnum>(hwndOwner, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************
@@ -272,36 +283,13 @@ HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
 HRESULT WINAPI CNetFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
 #ifdef HACKY_UNC_PATHS
-    HRESULT hr;
-    CComPtr<IPersistFolder3> ppf3;
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IPersistFolder3, &ppf3));
-    if (FAILED(hr))
-        return hr;
-
+    /* Create the target folder info */
     PERSIST_FOLDER_TARGET_INFO pfti = {0};
+    pfti.dwAttributes = -1;
     pfti.csidl = -1;
-    wcscpy(pfti.szTargetParsingName, (WCHAR*)pidl->mkid.abID);
+    StringCchCopyW(pfti.szTargetParsingName, MAX_PATH, (WCHAR*)pidl->mkid.abID);
 
-    PCUIDLIST_RELATIVE pidlChild = ILCloneFirst (pidl);
-
-    hr = ppf3->InitializeEx(NULL, ILCombine(pidlRoot,pidlChild), &pfti);
-    if (FAILED(hr))
-        return hr;
-
-    if (_ILIsPidlSimple (pidl))
-    {
-        return ppf3->QueryInterface(riid, ppvOut);
-    }
-    else
-    {
-        CComPtr<IShellFolder> psf;
-        hr = ppf3->QueryInterface(IID_PPV_ARG(IShellFolder, &psf));
-        if (FAILED(hr))
-            return hr;
-
-        return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
-    }
-
+    return SHELL32_BindToSF(pidlRoot, &pfti, pidl, &CLSID_ShellFSFolder, riid, ppvOut);
 #else
     return E_NOTIMPL;
 #endif
@@ -356,7 +344,8 @@ HRESULT WINAPI CNetFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID 
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
-        hr = CDefView_Constructor(this, riid, ppvOut);
+            SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
+            hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
     }
     TRACE("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
@@ -428,8 +417,11 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
 
     if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1))
     {
-        IContextMenu  * pCm = NULL;
-        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, 0, NULL, &pCm);
+        IContextMenu * pCm = NULL;
+        HKEY hkey;
+        UINT cKeys = 0;
+        AddClassKeyToArray(L"Folder", &hkey, &cKeys);
+        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, this, NetFolderMenuCallback, cKeys, &hkey, &pCm);
         pObj = pCm;
     }
     else if (IsEqualIID(riid, IID_IDataObject) && (cidl >= 1))
@@ -465,14 +457,11 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
 */
 HRESULT WINAPI CNetFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    if (!strRet)
+    if (!strRet || !pidl || !pidl->mkid.cb)
         return E_INVALIDARG;
 
-    if (!pidl->mkid.cb)
-        return SHSetStrRet(strRet, IDS_NETWORKPLACE);
 #ifdef HACKY_UNC_PATHS
-    else
-        return SHSetStrRet(strRet, (LPCWSTR)pidl->mkid.abID);
+    return SHSetStrRet(strRet, (LPCWSTR)pidl->mkid.abID);
 #endif
     return E_NOTIMPL;
 }
@@ -584,8 +573,10 @@ HRESULT WINAPI CNetFolder::GetClassID(CLSID *lpClassId)
  */
 HRESULT WINAPI CNetFolder::Initialize(LPCITEMIDLIST pidl)
 {
-    TRACE("(%p)->(%p)\n", this, pidl);
+    if (pidlRoot)
+        SHFree((LPVOID)pidlRoot);
 
+    pidlRoot = ILClone(pidl);
     return S_OK;
 }
 

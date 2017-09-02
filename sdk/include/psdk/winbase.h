@@ -29,7 +29,7 @@ extern "C" {
 #define FILE_SYSTEM_NOT_SUPPORT  6
 #define FILE_USER_DISALLOWED     7
 #define FILE_READ_ONLY           8
-#define FILE_DIR_DISALOWED       9
+#define FILE_DIR_DISALLOWED      9
 
 #define COMMPROP_INITIALIZED 0xE73CF52E
 #define SP_SERIALCOMM 1
@@ -387,16 +387,7 @@ extern "C" {
 #define PURGE_RXABORT 2
 #define PURGE_TXCLEAR 4
 #define PURGE_RXCLEAR 8
-#define EVENTLOG_SUCCESS 0
-#define EVENTLOG_FORWARDS_READ 4
-#define EVENTLOG_BACKWARDS_READ 8
-#define EVENTLOG_SEEK_READ 2
-#define EVENTLOG_SEQUENTIAL_READ 1
-#define EVENTLOG_ERROR_TYPE 1
-#define EVENTLOG_WARNING_TYPE 2
-#define EVENTLOG_INFORMATION_TYPE 4
-#define EVENTLOG_AUDIT_SUCCESS 8
-#define EVENTLOG_AUDIT_FAILURE 16
+
 #define FORMAT_MESSAGE_ALLOCATE_BUFFER 256
 #define FORMAT_MESSAGE_IGNORE_INSERTS 512
 #define FORMAT_MESSAGE_FROM_STRING 1024
@@ -1351,6 +1342,39 @@ typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
 typedef RTL_CONDITION_VARIABLE CONDITION_VARIABLE, *PCONDITION_VARIABLE;
 #endif
 
+typedef struct _PROC_THREAD_ATTRIBUTE_LIST *PPROC_THREAD_ATTRIBUTE_LIST, *LPPROC_THREAD_ATTRIBUTE_LIST;
+
+#define PROC_THREAD_ATTRIBUTE_NUMBER 0x0000ffff
+#define PROC_THREAD_ATTRIBUTE_THREAD 0x00010000
+#define PROC_THREAD_ATTRIBUTE_INPUT 0x00020000
+#define PROC_THREAD_ATTRIBUTE_ADDITIVE 0x00040000
+
+typedef enum _PROC_THREAD_ATTRIBUTE_NUM {
+  ProcThreadAttributeParentProcess = 0,
+  ProcThreadAttributeHandleList = 2,
+  ProcThreadAttributeGroupAffinity = 3,
+  ProcThreadAttributeIdealProcessor = 5,
+  ProcThreadAttributeUmsThread = 6,
+  ProcThreadAttributeMitigationPolicy = 7,
+  ProcThreadAttributeSecurityCapabilities = 9,
+  ProcThreadAttributeProtectionLevel = 11,
+  ProcThreadAttributeJobList = 13,
+  ProcThreadAttributeChildProcessPolicy = 14,
+  ProcThreadAttributeAllApplicationPackagesPolicy = 15,
+  ProcThreadAttributeWin32kFilter = 16,
+  ProcThreadAttributeSafeOpenPromptOriginClaim = 17,
+} PROC_THREAD_ATTRIBUTE_NUM;
+
+#define PROC_THREAD_ATTRIBUTE_IDEAL_PROCESSOR (ProcThreadAttributeIdealProcessor | PROC_THREAD_ATTRIBUTE_THREAD | PROC_THREAD_ATTRIBUTE_INPUT)
+#define PROC_THREAD_ATTRIBUTE_HANDLE_LIST (ProcThreadAttributeHandleList | PROC_THREAD_ATTRIBUTE_INPUT)
+#define PROC_THREAD_ATTRIBUTE_PARENT_PROCESS (ProcThreadAttributeParentProcess | PROC_THREAD_ATTRIBUTE_INPUT)
+
+typedef DWORD
+(WINAPI *PFE_EXPORT_FUNC)(
+  _In_reads_bytes_(ulLength) PBYTE pbData,
+  _In_opt_ PVOID pvCallbackContext,
+  _In_ ULONG ulLength);
+
 typedef DWORD(WINAPI *LPPROGRESS_ROUTINE)(_In_ LARGE_INTEGER, _In_ LARGE_INTEGER, _In_ LARGE_INTEGER, _In_ LARGE_INTEGER, _In_ DWORD, _In_ DWORD, _In_ HANDLE, _In_ HANDLE, _In_opt_ LPVOID);
 
 typedef VOID (WINAPI *PFIBER_START_ROUTINE)( LPVOID lpFiberParameter );
@@ -1470,6 +1494,7 @@ void WINAPI AddRefActCtx(_Inout_ HANDLE);
 #endif
 #if (_WIN32_WINNT >= 0x0500)
 _Ret_maybenull_ PVOID WINAPI AddVectoredExceptionHandler(_In_ ULONG, _In_ PVECTORED_EXCEPTION_HANDLER);
+_Ret_maybenull_ PVOID WINAPI AddVectoredContinueHandler(_In_ ULONG, _In_ PVECTORED_EXCEPTION_HANDLER);
 #endif
 BOOL WINAPI AccessCheckByType(PSECURITY_DESCRIPTOR,PSID,HANDLE,DWORD,POBJECT_TYPE_LIST,DWORD,PGENERIC_MAPPING,PPRIVILEGE_SET,LPDWORD,LPDWORD,LPBOOL);
 BOOL WINAPI AdjustTokenGroups(HANDLE,BOOL,PTOKEN_GROUPS,DWORD,PTOKEN_GROUPS,PDWORD);
@@ -2885,6 +2910,7 @@ BOOL WINAPI RemoveDirectoryA(LPCSTR);
 BOOL WINAPI RemoveDirectoryW(LPCWSTR);
 #if (_WIN32_WINNT >= 0x0500)
 ULONG WINAPI RemoveVectoredExceptionHandler(_In_ PVOID);
+ULONG WINAPI RemoveVectoredContinueHandler(_In_ PVOID);
 #endif
 #if (_WIN32_WINNT >= 0x0500)
 BOOL WINAPI ReplaceFileA(_In_ LPCSTR, _In_ LPCSTR, _In_opt_ LPCSTR, _In_ DWORD, _Reserved_ LPVOID, _Reserved_ LPVOID);

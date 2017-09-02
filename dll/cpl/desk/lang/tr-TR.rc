@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -97,16 +97,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Araç İpuçları ve Seçkeler İçin Aşağıdaki Geçiş Etkisi Kullan:",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "&Görüntülük Yazı Tiplerinin Kıyılarını Yumuşatmak İçin Aşağıdaki Yöntemi Kullan:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "&Büyük Simgeler Kullan", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Seçkeler Altında Gölge Göster", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "S&ürüklerken Pencere İçeriğini Göster", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "S&eçenek Düğmesine Basana Dek Düğme Takımıyla Gezinme İçin Altı Çizili Harfleri Gizle",
@@ -152,6 +152,17 @@ BEGIN
     AUTORADIOBUTTON "ye&ni renk ayarlarıuygulanmadan önce bana sor.", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
+IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Display Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
+    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
+END
+
 IDR_PREVIEW_MENU MENU
 BEGIN
     MENUITEM "Düzgülü", ID_MENU_NORMAL
@@ -180,7 +191,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Ölçünlü"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "FreeType Düzeltmesi"
 END
 
 STRINGTABLE
@@ -254,4 +265,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "Görüntü Ayarları"
     IDS_APPLY_FAILED "Yeni ayarların uygulanması başarısız oldu."
     IDS_APPLY_NEEDS_RESTART "Değişiklikleri uygulamak için bilgisayarınızı yeniden başlatmanız gerekir."
+    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
 END

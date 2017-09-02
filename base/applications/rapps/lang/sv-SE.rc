@@ -30,7 +30,7 @@ BEGIN
     POPUP "Hjälp"
     BEGIN
         MENUITEM "Hjälp\tF1", ID_HELP, GRAYED
-        MENUITEM "Om...", ID_ABOUT
+        MENUITEM "Om", ID_ABOUT
     END
 END
 
@@ -163,6 +163,7 @@ BEGIN
     IDS_AINFO_SIZE "\nStorlek: "
     IDS_AINFO_URLSITE "\nHemsida: "
     IDS_AINFO_LICENSE "\nLicens: "
+    IDS_AINFO_URLDOWNLOAD "\nLadda ner: "
 END
 
 STRINGTABLE
@@ -204,6 +205,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Är du säker på att du vill ta bort data det installerade programmets data från registret?"
     IDS_INFORMATION "Information"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Det gick ej att ta bort programmets data från registret!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."

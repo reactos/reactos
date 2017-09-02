@@ -29,7 +29,7 @@ Size = 2,2 Mio
 
 [Section.0419]
 Description = Свободная аркадная игра в жанре шутер.
-Size = 2,2 МБ
+Size = 2,2 МиБ
 
 [Section.041f]
 Description = Oyun konsolu salonu oyunu türünde, üstten kaydırmalı bir uzay gezleyicisidir.

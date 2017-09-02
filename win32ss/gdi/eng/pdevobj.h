@@ -123,7 +123,7 @@ typedef struct _PDEVOBJ
     DEVINFO                   devinfo;
     GDIINFO                   gdiinfo;
     PSURFACE                  pSurface;       /* SURFACE for this device. */
-//  HANDLE                    hSpooler;       /* Handle to spooler, if spooler dev driver. */
+    HANDLE                    hSpooler;       /* Handle to spooler, if spooler dev driver, DeviceObject if graphics device */
 //  PVOID                     pDesktopId;
     PGRAPHICS_DEVICE          pGraphicsDevice;
     POINTL                    ptlOrigion;

@@ -1,0 +1,29 @@
+Index: fdi.c
+===================================================================
+--- fdi.c	(revision 73922)
++++ fdi.c	(working copy)
+@@ -2039,11 +2039,24 @@
+             fullpath[0] = '\0';
+             if (pathlen) {
+               strcpy(fullpath, userpath);
++#ifndef __REACTOS__
+               if (fullpath[pathlen - 1] != '\\')
+                 strcat(fullpath, "\\");
++#else
++              if (fullpath[pathlen - 1] == '\\')
++                fullpath[pathlen - 1] = '\0';
++#endif
+             }
++#ifndef __REACTOS__
+             if (filenamelen)
++#else
++            if (filenamelen) {
++              strcat(fullpath, "\\");
++#endif
+               strcat(fullpath, cab->mii.nextname);
++#ifdef __REACTOS__
++            }
++#endif
+ 
+             TRACE("full cab path/file name: %s\n", debugstr_a(fullpath));
+ 

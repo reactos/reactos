@@ -39,6 +39,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             ObjectAttributes->ObjectName, ObjectAttributes->RootDirectory,
             DesiredAccess, CreateOptions);
 
+    /* Ignore the WOW64 flag, it's not valid in the kernel */
+    DesiredAccess &= ~KEY_WOW64_RES;
+
     /* Check for user-mode caller */
     if (PreviousMode != KernelMode)
     {
@@ -125,6 +128,9 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     PAGED_CODE();
     DPRINT("NtOpenKey(Path: %wZ, Root %x, Access: %x)\n",
             ObjectAttributes->ObjectName, ObjectAttributes->RootDirectory, DesiredAccess);
+
+    /* Ignore the WOW64 flag, it's not valid in the kernel */
+    DesiredAccess &= ~KEY_WOW64_RES;
 
     /* Check for user-mode caller */
     if (PreviousMode != KernelMode)
@@ -1058,7 +1064,7 @@ NtLockProductActivationKeys(IN PULONG pPrivateVer,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        return _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
@@ -1515,7 +1521,7 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     {
         if (Flags != REG_FORCE_UNLOAD)
         {
-            /* Release two KCBs lock */
+            /* Release the KCB locks */
             CmpReleaseTwoKcbLockByKey(ChildConv, ParentConv);
 
             /* Release the hive loading lock */

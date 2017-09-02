@@ -8,7 +8,7 @@
 13 stdcall AtlMarshalPtrInProc(ptr ptr ptr)
 14 stdcall AtlUnmarshalPtr(ptr ptr ptr)
 15 stdcall AtlModuleGetClassObject(ptr ptr ptr ptr)
-16 stdcall AtlModuleInit(ptr long long)
+16 stdcall AtlModuleInit(ptr ptr long)
 17 stdcall AtlModuleRegisterClassObjects(ptr long long)
 18 stdcall AtlModuleRegisterServer(ptr long ptr)
 19 stdcall AtlModuleRegisterTypeLib(ptr wstr)

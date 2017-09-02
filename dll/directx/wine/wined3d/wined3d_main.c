@@ -41,7 +41,7 @@ struct wined3d_wndproc_table
 {
     struct wined3d_wndproc *entries;
     unsigned int count;
-    unsigned int size;
+    SIZE_T size;
 };
 
 static struct wined3d_wndproc_table wndproc_table;
@@ -70,6 +70,11 @@ static CRITICAL_SECTION wined3d_wndproc_cs = {&wined3d_wndproc_cs_debug, -1, 0, 
  * where appropriate. */
 struct wined3d_settings wined3d_settings =
 {
+#if !defined(STAGING_CSMT)
+    FALSE,          /* No multithreaded CS by default. */
+#else  /* STAGING_CSMT */
+    TRUE,           /* Multithreaded CS by default. */
+#endif /* STAGING_CSMT */
     MAKEDWORD_VERSION(1, 0), /* Default to legacy OpenGL */
     TRUE,           /* Use of GLSL enabled by default */
     ORM_FBO,        /* Use FBOs to do offscreen rendering */
@@ -77,17 +82,16 @@ struct wined3d_settings wined3d_settings =
     PCI_DEVICE_NONE,/* PCI Device ID */
     0,              /* The default of memory is set in init_driver_info */
     NULL,           /* No wine logo by default */
-    TRUE,           /* Multisampling enabled by default. */
+    ~0u,            /* Don't force a specific sample count by default. */
     FALSE,          /* No strict draw ordering. */
-    TRUE,           /* Don't try to render onscreen by default. */
+    FALSE,          /* Don't range check relative addressing indices in float constants. */
     ~0U,            /* No VS shader model limit by default. */
+    ~0U,            /* No HS shader model limit by default. */
+    ~0U,            /* No DS shader model limit by default. */
     ~0U,            /* No GS shader model limit by default. */
     ~0U,            /* No PS shader model limit by default. */
+    ~0u,            /* No CS shader model limit by default. */
     FALSE,          /* 3D support enabled by default. */
-#if defined(STAGING_CSMT)
-    TRUE,           /* Multithreaded CS by default. */
-    FALSE,          /* Do not ignore render target maps. */
-#endif /* STAGING_CSMT */
 };
 
 struct wined3d * CDECL wined3d_create(DWORD flags)
@@ -125,13 +129,20 @@ static DWORD get_config_key(HKEY defkey, HKEY appkey, const char *name, char *bu
     return ERROR_FILE_NOT_FOUND;
 }
 
-static DWORD get_config_key_dword(HKEY defkey, HKEY appkey, const char *name, DWORD *data)
+static DWORD get_config_key_dword(HKEY defkey, HKEY appkey, const char *name, DWORD *value)
 {
-    DWORD type;
-    DWORD size = sizeof(DWORD);
-    if (appkey && !RegQueryValueExA(appkey, name, 0, &type, (BYTE *)data, &size) && (type == REG_DWORD)) return 0;
-    if (defkey && !RegQueryValueExA(defkey, name, 0, &type, (BYTE *)data, &size) && (type == REG_DWORD)) return 0;
+    DWORD type, data, size;
+
+    size = sizeof(data);
+    if (appkey && !RegQueryValueExA(appkey, name, 0, &type, (BYTE *)&data, &size) && type == REG_DWORD) goto success;
+    size = sizeof(data);
+    if (defkey && !RegQueryValueExA(defkey, name, 0, &type, (BYTE *)&data, &size) && type == REG_DWORD) goto success;
+
     return ERROR_FILE_NOT_FOUND;
+
+success:
+    *value = data;
+    return 0;
 }
 
 static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
@@ -202,6 +213,8 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
 
     if (hkey || appkey)
     {
+        if (!get_config_key_dword(hkey, appkey, "csmt", &wined3d_settings.cs_multithreaded))
+            ERR_(winediag)("Setting multithreaded command stream to %#x.\n", wined3d_settings.cs_multithreaded);
         if (!get_config_key_dword(hkey, appkey, "MaxVersionGL", &tmpvalue))
         {
             if (tmpvalue != wined3d_settings.max_gl_version)
@@ -220,19 +233,9 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
                 wined3d_settings.glslRequested = FALSE;
             }
         }
-        if ( !get_config_key( hkey, appkey, "OffscreenRenderingMode", buffer, size) )
-        {
-            if (!strcmp(buffer,"backbuffer"))
-            {
-                TRACE("Using the backbuffer for offscreen rendering\n");
-                wined3d_settings.offscreen_rendering_mode = ORM_BACKBUFFER;
-            }
-            else if (!strcmp(buffer,"fbo"))
-            {
-                TRACE("Using FBOs for offscreen rendering\n");
-                wined3d_settings.offscreen_rendering_mode = ORM_FBO;
-            }
-        }
+        if (!get_config_key(hkey, appkey, "OffscreenRenderingMode", buffer, size)
+                && !strcmp(buffer,"backbuffer"))
+            wined3d_settings.offscreen_rendering_mode = ORM_BACKBUFFER;
         if ( !get_config_key_dword( hkey, appkey, "VideoPciDeviceID", &tmpvalue) )
         {
             int pci_device_id = tmpvalue;
@@ -284,58 +287,41 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             if (!wined3d_settings.logo) ERR("Failed to allocate logo path memory.\n");
             else memcpy(wined3d_settings.logo, buffer, len);
         }
-        if ( !get_config_key( hkey, appkey, "Multisampling", buffer, size) )
-        {
-            if (!strcmp(buffer, "disabled"))
-            {
-                TRACE("Multisampling disabled.\n");
-                wined3d_settings.allow_multisampling = FALSE;
-            }
-        }
+        if (!get_config_key_dword(hkey, appkey, "SampleCount", &wined3d_settings.sample_count))
+            ERR_(winediag)("Forcing sample count to %u. This may not be compatible with all applications.\n",
+                    wined3d_settings.sample_count);
         if (!get_config_key(hkey, appkey, "StrictDrawOrdering", buffer, size)
                 && !strcmp(buffer,"enabled"))
         {
+            ERR_(winediag)("\"StrictDrawOrdering\" is deprecated, please use \"csmt\" instead.");
             TRACE("Enforcing strict draw ordering.\n");
             wined3d_settings.strict_draw_ordering = TRUE;
         }
-        if (!get_config_key(hkey, appkey, "AlwaysOffscreen", buffer, size)
-                && !strcmp(buffer,"disabled"))
+        if (!get_config_key(hkey, appkey, "CheckFloatConstants", buffer, size)
+                && !strcmp(buffer, "enabled"))
         {
-            TRACE("Not always rendering backbuffers offscreen.\n");
-            wined3d_settings.always_offscreen = FALSE;
+            TRACE("Checking relative addressing indices in float constants.\n");
+            wined3d_settings.check_float_constants = TRUE;
         }
         if (!get_config_key_dword(hkey, appkey, "MaxShaderModelVS", &wined3d_settings.max_sm_vs))
             TRACE("Limiting VS shader model to %u.\n", wined3d_settings.max_sm_vs);
+        if (!get_config_key_dword(hkey, appkey, "MaxShaderModelHS", &wined3d_settings.max_sm_hs))
+            TRACE("Limiting HS shader model to %u.\n", wined3d_settings.max_sm_hs);
+        if (!get_config_key_dword(hkey, appkey, "MaxShaderModelDS", &wined3d_settings.max_sm_ds))
+            TRACE("Limiting DS shader model to %u.\n", wined3d_settings.max_sm_ds);
         if (!get_config_key_dword(hkey, appkey, "MaxShaderModelGS", &wined3d_settings.max_sm_gs))
             TRACE("Limiting GS shader model to %u.\n", wined3d_settings.max_sm_gs);
         if (!get_config_key_dword(hkey, appkey, "MaxShaderModelPS", &wined3d_settings.max_sm_ps))
             TRACE("Limiting PS shader model to %u.\n", wined3d_settings.max_sm_ps);
+        if (!get_config_key_dword(hkey, appkey, "MaxShaderModelCS", &wined3d_settings.max_sm_cs))
+            TRACE("Limiting CS shader model to %u.\n", wined3d_settings.max_sm_cs);
         if (!get_config_key(hkey, appkey, "DirectDrawRenderer", buffer, size)
                 && !strcmp(buffer, "gdi"))
         {
             TRACE("Disabling 3D support.\n");
             wined3d_settings.no_3d = TRUE;
         }
-#if defined(STAGING_CSMT)
-        if (!get_config_key(hkey, appkey, "CSMT", buffer, size)
-                && !strcmp(buffer,"disabled"))
-        {
-            TRACE("Disabling multithreaded command stream.\n");
-            wined3d_settings.cs_multithreaded = FALSE;
-        }
-        if (!get_config_key(hkey, appkey, "ignore_rt_map", buffer, size)
-                && !strcmp(buffer,"enabled"))
-        {
-            TRACE("Ignoring render target maps.\n");
-            wined3d_settings.ignore_rt_map = TRUE;
-        }
     }
-
-    FIXME_(winediag)("Experimental wined3d CSMT feature is currently %s.\n",
-        wined3d_settings.cs_multithreaded ? "enabled" : "disabled");
-#else  /* STAGING_CSMT */
-    }
-#endif /* STAGING_CSMT */
 
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );
@@ -456,23 +442,12 @@ BOOL wined3d_register_window(HWND window, struct wined3d_device *device)
         return TRUE;
     }
 
-    if (wndproc_table.size == wndproc_table.count)
+    if (!wined3d_array_reserve((void **)&wndproc_table.entries, &wndproc_table.size,
+            wndproc_table.count + 1, sizeof(*entry)))
     {
-        unsigned int new_size = max(1, wndproc_table.size * 2);
-        struct wined3d_wndproc *new_entries;
-
-        if (!wndproc_table.entries) new_entries = HeapAlloc(GetProcessHeap(), 0, new_size * sizeof(*new_entries));
-        else new_entries = HeapReAlloc(GetProcessHeap(), 0, wndproc_table.entries, new_size * sizeof(*new_entries));
-
-        if (!new_entries)
-        {
-            wined3d_wndproc_mutex_unlock();
-            ERR("Failed to grow table.\n");
-            return FALSE;
-        }
-
-        wndproc_table.entries = new_entries;
-        wndproc_table.size = new_size;
+        wined3d_wndproc_mutex_unlock();
+        ERR("Failed to grow table.\n");
+        return FALSE;
     }
 
     entry = &wndproc_table.entries[wndproc_table.count++];

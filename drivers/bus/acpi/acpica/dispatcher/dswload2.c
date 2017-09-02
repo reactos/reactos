@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -320,6 +320,24 @@ AcpiDsLoad2BeginOp (
             }
         }
 
+#ifdef ACPI_ASL_COMPILER
+
+        /*
+         * Do not open a scope for AML_EXTERNAL_OP
+         * AcpiNsLookup can open a new scope based on the object type
+         * of this op. AML_EXTERNAL_OP is a declaration rather than a
+         * definition. In the case that this external is a method object,
+         * AcpiNsLookup will open a new scope. However, an AML_EXTERNAL_OP
+         * associated with the ACPI_TYPE_METHOD is a declaration, rather than
+         * a definition. Flags is set to avoid opening a scope for any
+         * AML_EXTERNAL_OP.
+         */
+        if (WalkState->Opcode == AML_EXTERNAL_OP)
+        {
+            Flags |= ACPI_NS_DONT_OPEN_SCOPE;
+        }
+#endif
+
         /* Add new entry or lookup existing entry */
 
         Status = AcpiNsLookup (WalkState->ScopeInfo, BufferPtr, ObjectType,
@@ -543,7 +561,7 @@ AcpiDsLoad2EndOp (
             Status = AcpiExCreateProcessor (WalkState);
             break;
 
-        case AML_POWER_RES_OP:
+        case AML_POWER_RESOURCE_OP:
 
             Status = AcpiExCreatePowerResource (WalkState);
             break;
@@ -624,29 +642,10 @@ AcpiDsLoad2EndOp (
                 {
                     return_ACPI_STATUS (Status);
                 }
-
-                AcpiExExitInterpreter ();
             }
 
             Status = AcpiEvInitializeRegion (
-                AcpiNsGetAttachedObject (Node), FALSE);
-            if (WalkState->MethodNode)
-            {
-                AcpiExEnterInterpreter ();
-            }
-
-            if (ACPI_FAILURE (Status))
-            {
-                /*
-                 *  If AE_NOT_EXIST is returned, it is not fatal
-                 *  because many regions get created before a handler
-                 *  is installed for said region.
-                 */
-                if (AE_NOT_EXIST == Status)
-                {
-                    Status = AE_OK;
-                }
-            }
+                AcpiNsGetAttachedObject (Node));
             break;
 
         case AML_NAME_OP:

@@ -15,6 +15,7 @@ DBG_DEFAULT_CHANNEL(UserMsgQ);
 
 static PPAGED_LOOKASIDE_LIST pgMessageLookasideList;
 static PPAGED_LOOKASIDE_LIST pgSendMsgLookasideList;
+INT PostMsgCount = 0;
 INT SendMsgCount = 0;
 PUSER_MESSAGE_QUEUE gpqCursor;
 ULONG_PTR gdwMouseMoveExtraInfo = 0;
@@ -743,20 +744,23 @@ MsqCreateMessage(LPMSG Msg)
 
    RtlZeroMemory(Message, sizeof(*Message));
    RtlMoveMemory(&Message->Msg, Msg, sizeof(MSG));
-
+   PostMsgCount++;
    return Message;
 }
 
 VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message)
 {
+   TRACE("Post Destroy %d\n",PostMsgCount)
    if (Message->pti == NULL)
    {
       ERR("Double Free Message\n");
       return;
    }
+   RemoveEntryList(&Message->ListEntry);
    Message->pti = NULL;
    ExFreeToPagedLookasideList(pgMessageLookasideList, Message);
+   PostMsgCount--;
 }
 
 PUSER_SENT_MESSAGE FASTCALL
@@ -820,7 +824,6 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
             pti->QuitPosted = 1;
             pti->exitCode = PostedMessage->Msg.wParam;
          }
-         RemoveEntryList(&PostedMessage->ListEntry);
          ClearMsgBitsMask(pti, PostedMessage->QS_Flags);
          MsqDestroyMessage(PostedMessage);
          CurrentEntry = pti->PostedMessagesListHead.Flink;
@@ -1374,6 +1377,7 @@ MsqPostMessage(PTHREADINFO pti,
    Message->QS_Flags = MessageBits;
    Message->pti = pti;
    MsqWakeQueue(pti, MessageBits, TRUE);
+   TRACE("Post Message %d\n",PostMsgCount);
 }
 
 VOID FASTCALL
@@ -1468,7 +1472,7 @@ IntTrackMouseMove(PWND pwndTrack, PDESKTOP pDesk, PMSG msg, USHORT hittest)
    }
 }
 
-BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, UINT first, UINT last)
+BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, LONG_PTR ExtraInfo, UINT first, UINT last)
 {
     MSG clk_msg;
     POINT pt;
@@ -1512,7 +1516,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, U
     if (pwndMsg == NULL || pwndMsg->head.pti->MessageQueue != MessageQueue)
     {
         // Crossing a boundary, so set cursor. See default message queue cursor.
-        UserSetCursor(SYSTEMCUR(ARROW), FALSE);
+        IntSystemSetCursor(SYSTEMCUR(ARROW));
         /* Remove and ignore the message */
         *RemoveMessages = TRUE;
         return FALSE;
@@ -1653,6 +1657,12 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, U
         }
     }
 
+    if (pti->TIF_flags & TIF_MSGPOSCHANGED)
+    {
+        pti->TIF_flags &= ~TIF_MSGPOSCHANGED;
+        IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
+    }
+
     /* message is accepted now (but still get dropped) */
 
     event.message = msg->message;
@@ -1665,14 +1675,14 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, U
     hook.pt           = msg->pt;
     hook.hwnd         = msg->hwnd;
     hook.wHitTestCode = hittest;
-    hook.dwExtraInfo  = 0 /* extra_info */ ;
+    hook.dwExtraInfo  = ExtraInfo;
     if (co_HOOK_CallHooks( WH_MOUSE, *RemoveMessages ? HC_ACTION : HC_NOREMOVE,
                         message, (LPARAM)&hook ))
     {
         hook.pt           = msg->pt;
         hook.hwnd         = msg->hwnd;
         hook.wHitTestCode = hittest;
-        hook.dwExtraInfo  = 0 /* extra_info */ ;
+        hook.dwExtraInfo  = ExtraInfo;
         co_HOOK_CallHooks( WH_CBT, HCBT_CLICKSKIPPED, message, (LPARAM)&hook );
 
         ERR("WH_MOUSE dropped mouse message!\n");
@@ -1763,6 +1773,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     PWND pWnd;
     UINT ImmRet;
     BOOL Ret = TRUE;
+    WPARAM wParam = Msg->wParam;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (Msg->message == VK_PACKET)
@@ -1823,6 +1834,90 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
         }
     }
 
+    //// Key Down!
+    if ( *RemoveMessages && Msg->message == WM_SYSKEYDOWN )
+    {
+        if ( HIWORD(Msg->lParam) & KF_ALTDOWN )
+        {
+            if ( Msg->wParam == VK_ESCAPE || Msg->wParam == VK_TAB ) // Alt-Tab/ESC Alt-Shift-Tab/ESC
+            {
+                WPARAM wParamTmp;
+
+                wParamTmp = UserGetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
+                TRACE("Send WM_SYSCOMMAND Alt-Tab/ESC Alt-Shift-Tab/ESC\n");
+                co_IntSendMessage( Msg->hwnd, WM_SYSCOMMAND, wParamTmp, Msg->wParam );
+
+                //// Keep looping.
+                Ret = FALSE;
+                //// Skip the rest.
+                goto Exit;
+            }
+        }
+    }
+
+    if ( *RemoveMessages && (Msg->message == WM_SYSKEYDOWN || Msg->message == WM_KEYDOWN) )
+    {
+        if (gdwLanguageToggleKey < 3)
+        {
+            if (IS_KEY_DOWN(gafAsyncKeyState, gdwLanguageToggleKey == 1 ? VK_LMENU : VK_CONTROL)) // L Alt 1 or Ctrl 2 .
+            {
+                if ( wParam == VK_LSHIFT ) gLanguageToggleKeyState = INPUTLANGCHANGE_FORWARD;  // Left Alt - Left Shift, Next
+                //// FIXME : It seems to always be VK_LSHIFT.
+                if ( wParam == VK_RSHIFT ) gLanguageToggleKeyState = INPUTLANGCHANGE_BACKWARD; // Left Alt - Right Shift, Previous
+            }
+         }
+    }
+
+    //// Key Up!                             Alt Key                        Ctrl Key
+    if ( *RemoveMessages && (Msg->message == WM_SYSKEYUP || Msg->message == WM_KEYUP) )
+    {
+        // When initializing win32k: Reading from the registry hotkey combination
+        // to switch the keyboard layout and store it to global variable.
+        // Using this combination of hotkeys in this function
+
+        if ( gdwLanguageToggleKey < 3 &&
+             IS_KEY_DOWN(gafAsyncKeyState, gdwLanguageToggleKey == 1 ? VK_LMENU : VK_CONTROL) )
+        {
+            if ( Msg->wParam == VK_SHIFT && !(IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT)))
+            {
+                WPARAM wParamILR;
+                PKL pkl = pti->KeyboardLayout;
+
+                if (pWnd) UserDerefObjectCo(pWnd);
+
+                //// Seems to override message window.
+                if (!(pWnd = pti->MessageQueue->spwndFocus))
+                {
+                     pWnd = pti->MessageQueue->spwndActive;
+                }
+                if (pWnd) UserRefObjectCo(pWnd, &Ref);
+
+                if (pkl != NULL && gLanguageToggleKeyState)
+                {
+                    TRACE("Posting WM_INPUTLANGCHANGEREQUEST KeyState %d\n", gLanguageToggleKeyState );
+
+                    wParamILR = gLanguageToggleKeyState;
+                    // If system character set and font signature send flag.
+                    if ( gSystemFS & pkl->dwFontSigs )
+                    {
+                       wParamILR |= INPUTLANGCHANGE_SYSCHARSET;
+                    }
+
+                    UserPostMessage( UserHMGetHandle(pWnd),
+                                     WM_INPUTLANGCHANGEREQUEST,
+                                     wParamILR,
+                                    (LPARAM)pkl->hkl );
+
+                    gLanguageToggleKeyState = 0;
+                    //// Keep looping.
+                    Ret = FALSE;
+                    //// Skip the rest.
+                    goto Exit;
+                }
+            }
+        }
+    }
+
     if (co_HOOK_CallHooks( WH_KEYBOARD,
                           *RemoveMessages ? HC_ACTION : HC_NOREMOVE,
                            LOWORD(Msg->wParam),
@@ -1855,16 +1950,16 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
             }
         }
     }
-
+Exit:
     if (pWnd) UserDerefObjectCo(pWnd);
     return Ret;
 }
 
-BOOL co_IntProcessHardwareMessage(MSG* Msg, BOOL* RemoveMessages, BOOL* NotForUs, UINT first, UINT last)
+BOOL co_IntProcessHardwareMessage(MSG* Msg, BOOL* RemoveMessages, BOOL* NotForUs, LONG_PTR ExtraInfo, UINT first, UINT last)
 {
     if ( IS_MOUSE_MESSAGE(Msg->message))
     {
-        return co_IntProcessMouseMessage(Msg, RemoveMessages, NotForUs, first, last);
+        return co_IntProcessMouseMessage(Msg, RemoveMessages, NotForUs, ExtraInfo, first, last);
     }
     else if ( IS_KBD_MESSAGE(Msg->message))
     {
@@ -1916,6 +2011,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
    MSG msg;
    ULONG_PTR idSave;
    DWORD QS_Flags;
+   LONG_PTR ExtraInfo;
    BOOL Ret = FALSE;
    PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
 
@@ -1964,18 +2060,18 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
          MessageQueue->idSysPeek = (ULONG_PTR)CurrentMessage;
 
          msg = CurrentMessage->Msg;
+         ExtraInfo = CurrentMessage->ExtraInfo;
          QS_Flags = CurrentMessage->QS_Flags;
 
          NotForUs = FALSE;
 
          UpdateKeyStateFromMsg(MessageQueue, &msg);
-         AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, &NotForUs, MsgFilterLow, MsgFilterHigh);
+         AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, &NotForUs, ExtraInfo, MsgFilterLow, MsgFilterHigh);
 
          if (Remove)
          {
-             if (CurrentMessage->pti != NULL)
+             if (CurrentMessage->pti != NULL && (MessageQueue->idSysPeek == (ULONG_PTR)CurrentMessage))
              {
-                RemoveEntryList(&CurrentMessage->ListEntry);
                 MsqDestroyMessage(CurrentMessage);
              }
              ClearMsgBitsMask(pti, QS_Flags);
@@ -1999,7 +2095,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
             }
             pti->ptLast   = msg.pt;
             pti->timeLast = msg.time;
-            //MessageQueue->ExtraInfo = ExtraInfo;
+            MessageQueue->ExtraInfo = ExtraInfo;
             Ret = TRUE;
             break;
          }
@@ -2019,6 +2115,7 @@ MsqPeekMessage(IN PTHREADINFO pti,
                   IN UINT MsgFilterHigh,
                   IN UINT QSflags,
                   OUT LONG_PTR *ExtraInfo,
+                  OUT DWORD *dwQEvent,
                   OUT PMSG Message)
 {
    PUSER_MESSAGE CurrentMessage;
@@ -2049,12 +2146,12 @@ MsqPeekMessage(IN PTHREADINFO pti,
          *Message   = CurrentMessage->Msg;
          *ExtraInfo = CurrentMessage->ExtraInfo;
          QS_Flags   = CurrentMessage->QS_Flags;
+         if (dwQEvent) *dwQEvent = CurrentMessage->dwQEvent;
 
          if (Remove)
          {
              if (CurrentMessage->pti != NULL)
              {
-                RemoveEntryList(&CurrentMessage->ListEntry);
                 MsqDestroyMessage(CurrentMessage);
              }
              ClearMsgBitsMask(pti, QS_Flags);
@@ -2119,9 +2216,7 @@ IsThreadSuspended(PTHREADINFO pti)
    if (pti->pEThread)
    {
       BOOL Ret = TRUE;
-      ObReferenceObject(pti->pEThread);
       if (!(pti->pEThread->Tcb.SuspendCount) && !PsGetThreadFreezeCount(pti->pEThread)) Ret = FALSE;
-      ObDereferenceObject(pti->pEThread);
       return Ret;
    }
    return FALSE;
@@ -2183,8 +2278,9 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    /* cleanup posted messages */
    while (!IsListEmpty(&pti->PostedMessagesListHead))
    {
-      CurrentEntry = RemoveHeadList(&pti->PostedMessagesListHead);
+      CurrentEntry = pti->PostedMessagesListHead.Flink;
       CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
+      ERR("Thread Cleanup Post Messages %p\n",CurrentMessage);
       if (CurrentMessage->dwQEvent)
       {
          if (CurrentMessage->dwQEvent == POSTEVENT_NWE)
@@ -2249,7 +2345,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
             {
                CurrentSentMessage->flags |= SMF_RECEIVERFREE;
             }
-            
+
             if (!(CurrentSentMessage->flags & SMF_RECEIVERFREE))
             {
 
@@ -2271,6 +2367,8 @@ VOID FASTCALL
 MsqCleanupMessageQueue(PTHREADINFO pti)
 {
    PUSER_MESSAGE_QUEUE MessageQueue;
+   PLIST_ENTRY CurrentEntry;
+   PUSER_MESSAGE CurrentMessage;
 
    MessageQueue = pti->MessageQueue;
    MessageQueue->cThreads--;
@@ -2279,6 +2377,18 @@ MsqCleanupMessageQueue(PTHREADINFO pti)
    {
       if (MessageQueue->ptiSysLock == pti) MessageQueue->ptiSysLock = NULL;
    }
+
+   if (MessageQueue->cThreads == 0) //// Fix a crash related to CORE-10471 testing.
+   {
+      /* cleanup posted messages */
+      while (!IsListEmpty(&MessageQueue->HardwareMessagesListHead))
+      {
+         CurrentEntry = MessageQueue->HardwareMessagesListHead.Flink;
+         CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
+         ERR("MQ Cleanup Post Messages %p\n",CurrentMessage);
+         MsqDestroyMessage(CurrentMessage);
+      }
+   } ////
 
    if (MessageQueue->CursorObject)
    {

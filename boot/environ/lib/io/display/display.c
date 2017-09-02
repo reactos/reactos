@@ -276,11 +276,11 @@ DsppInitialize (
         return STATUS_NO_MEMORY;
     }
 
-    /* Display re-initialization not yet handled */
+    /* Check if display re-initialization is requested */
     if (LibraryParameters.LibraryFlags & BL_LIBRARY_FLAG_REINITIALIZE_ALL)
     {
-        EfiPrintf(L"Display path not handled\r\n");
-        return STATUS_NOT_SUPPORTED;
+        /* Recreate a local input console */
+        ConsoleCreateLocalInputConsole();
     }
 
     /* Check if no graphics console is needed */
@@ -339,11 +339,6 @@ DsppInitialize (
                     EfiPrintf(L"GFX FAILED: %lx\r\n", Status);
                     BlMmFreeHeap(GraphicsConsole);
                     GraphicsConsole = NULL;
-                }
-                else
-                {
-                    /* TEST */
-                    RtlFillMemory(GraphicsConsole->FrameBuffer, GraphicsConsole->FrameBufferSize, 0x55);
                 }
             }
         }
@@ -460,7 +455,6 @@ DsppReinitialize (
         !(GraphicsConsole) ||
         !(((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->IsEnabled(GraphicsConsole)))
     {
-        EfiPrintf(L"Nothing to do for re-init\r\n");
         return Status;
     }
 
@@ -548,7 +542,7 @@ BlpDisplayReinitialize (
     VOID
     )
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PBL_TEXT_CONSOLE TextConsole;
     PBL_INPUT_CONSOLE InputConsole;
 
@@ -600,7 +594,7 @@ BlpDisplayInitialize (
         Status = DsppInitialize(Flags);
     }
 
-    /* Return display initailziation state */
+    /* Return display initialization state */
     return Status;
 }
 
@@ -737,7 +731,7 @@ BlDisplayInvalidateOemBitmap (
     if (NT_SUCCESS(Status))
     {
         /* Mark the bitmap as invalid */
-        BgrtTable->Status &= BGRT_STATUS_IMAGE_VALID;
+        BgrtTable->Status &= ~BGRT_STATUS_IMAGE_VALID;
 
         /* Unmap the table */
         BlMmUnmapVirtualAddressEx(BgrtTable, BgrtTable->Header.Length);
@@ -764,7 +758,6 @@ BlDisplayGetOemBitmap (
     Status = BlUtlGetAcpiTable((PVOID*)&BgrtTable, BGRT_SIGNATURE);
     if (!NT_SUCCESS(Status))
     {
-        EfiPrintf(L"no BGRT found\r\n");
         goto Quickie;
     }
 
@@ -835,7 +828,7 @@ BlDisplayGetOemBitmap (
         (Bitmap->DibHeader.Compression) ||
         ((Bitmap->DibHeader.BitCount != 24) &&
          (Bitmap->DibHeader.BitCount != 32)) ||
-        (Bitmap->DibHeader.Size != sizeof(BITMAP)))
+        (Bitmap->DibHeader.Size != sizeof(DIB_HEADER)))
     {
         Status = STATUS_ACPI_INVALID_TABLE;
         goto Quickie;

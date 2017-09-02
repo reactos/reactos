@@ -23,10 +23,10 @@
 
 typedef struct _GEOMETRY
 {
-    ULONG        Cylinders;                        // Number of cylinders on the disk
-    ULONG        Heads;                            // Number of heads on the disk
-    ULONG        Sectors;                        // Number of sectors per track
-    ULONG        BytesPerSector;                    // Number of bytes per sector
+    ULONG   Cylinders;      // Number of cylinders on the disk
+    ULONG   Heads;          // Number of heads on the disk
+    ULONG   Sectors;        // Number of sectors per track
+    ULONG   BytesPerSector; // Number of bytes per sector
 
 } GEOMETRY, *PGEOMETRY;
 
@@ -36,14 +36,15 @@ typedef struct _GEOMETRY
 #include <pshpack1.h>
 typedef struct _EXTENDED_GEOMETRY
 {
-    USHORT        Size;
-    USHORT        Flags;
-    ULONG        Cylinders;
-    ULONG        Heads;
-    ULONG        SectorsPerTrack;
-    ULONGLONG        Sectors;
-    USHORT        BytesPerSector;
-    ULONG        PDPTE;
+    USHORT      Size;
+    USHORT      Flags;
+    ULONG       Cylinders;
+    ULONG       Heads;
+    ULONG       SectorsPerTrack;
+    ULONGLONG   Sectors;
+    USHORT      BytesPerSector;
+    ULONG       PDPTE;
+
 } EXTENDED_GEOMETRY, *PEXTENDED_GEOMETRY;
 
 //
@@ -51,16 +52,17 @@ typedef struct _EXTENDED_GEOMETRY
 //
 typedef struct _PARTITION_TABLE_ENTRY
 {
-    UCHAR        BootIndicator;                    // 0x00 - non-bootable partition, 0x80 - bootable partition (one partition only)
-    UCHAR        StartHead;                        // Beginning head number
-    UCHAR        StartSector;                    // Beginning sector (2 high bits of cylinder #)
-    UCHAR        StartCylinder;                    // Beginning cylinder# (low order bits of cylinder #)
-    UCHAR        SystemIndicator;                // System indicator
-    UCHAR        EndHead;                        // Ending head number
-    UCHAR        EndSector;                        // Ending sector (2 high bits of cylinder #)
-    UCHAR        EndCylinder;                    // Ending cylinder# (low order bits of cylinder #)
-    ULONG        SectorCountBeforePartition;        // Number of sectors preceding the partition
-    ULONG        PartitionSectorCount;            // Number of sectors in the partition
+    UCHAR   BootIndicator;              // 0x00 - non-bootable partition,
+                                        // 0x80 - bootable partition (one partition only)
+    UCHAR   StartHead;                  // Beginning head number
+    UCHAR   StartSector;                // Beginning sector (2 high bits of cylinder #)
+    UCHAR   StartCylinder;              // Beginning cylinder# (low order bits of cylinder #)
+    UCHAR   SystemIndicator;            // System indicator
+    UCHAR   EndHead;                    // Ending head number
+    UCHAR   EndSector;                  // Ending sector (2 high bits of cylinder #)
+    UCHAR   EndCylinder;                // Ending cylinder# (low order bits of cylinder #)
+    ULONG   SectorCountBeforePartition; // Number of sectors preceding the partition
+    ULONG   PartitionSectorCount;       // Number of sectors in the partition
 
 } PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
 
@@ -69,11 +71,11 @@ typedef struct _PARTITION_TABLE_ENTRY
 //
 typedef struct _MASTER_BOOT_RECORD
 {
-    UCHAR            MasterBootRecordCodeAndData[0x1b8];    /* 0x000 */
-    ULONG            Signature;                /* 0x1B8 */
-    USHORT            Reserved;                /* 0x1BC */
-    PARTITION_TABLE_ENTRY    PartitionTable[4];            /* 0x1BE */
-    USHORT            MasterBootRecordMagic;            /* 0x1FE */
+    UCHAR   MasterBootRecordCodeAndData[0x1b8]; /* 0x000 */
+    ULONG   Signature;                          /* 0x1B8 */
+    USHORT  Reserved;                           /* 0x1BC */
+    PARTITION_TABLE_ENTRY   PartitionTable[4];  /* 0x1BE */
+    USHORT  MasterBootRecordMagic;              /* 0x1FE */
 
 } MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
 #include <poppack.h>
@@ -107,16 +109,11 @@ typedef struct _MASTER_BOOT_RECORD
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
-// i386 BIOS Disk Functions (i386disk.c)
+// PC x86/64 BIOS Disk Functions (pcdisk.c)
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 #if defined(__i386__) || defined(_M_AMD64)
-
-BOOLEAN    DiskResetController(UCHAR DriveNumber);
-BOOLEAN    DiskInt13ExtensionsSupported(UCHAR DriveNumber);
-//VOID    DiskStopFloppyMotor(VOID);
-BOOLEAN    DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT BufferSize);
-
+VOID DiskStopFloppyMotor(VOID);
 #endif // defined __i386__ || defined(_M_AMD64)
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -124,18 +121,21 @@ BOOLEAN    DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHOR
 // FreeLoader Disk Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID    DiskReportError (BOOLEAN bError);
-VOID    DiskError(PCSTR ErrorString, ULONG ErrorCode);
-PCSTR    DiskGetErrorCodeString(ULONG ErrorCode);
-BOOLEAN    DiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer); // Implemented in i386disk.c
-BOOLEAN    DiskIsDriveRemovable(UCHAR DriveNumber);
-VOID    DiskStopFloppyMotor(VOID);    // Implemented in i386disk.c
+VOID DiskReportError(BOOLEAN bError);
+VOID DiskError(PCSTR ErrorString, ULONG ErrorCode);
+PCSTR DiskGetErrorCodeString(ULONG ErrorCode);
+BOOLEAN DiskIsDriveRemovable(UCHAR DriveNumber);
+
+BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size);
+/* Platform-specific boot drive and partition numbers */
 extern UCHAR FrldrBootDrive;
 extern ULONG FrldrBootPartition;
+/* ARC path of the boot drive and partition */
+extern CHAR FrldrBootPath[MAX_PATH];
+
+/* Buffer for disk reads */
 extern PVOID DiskReadBuffer;
 extern SIZE_T DiskReadBufferSize;
-
-BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -143,10 +143,24 @@ BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
 // Fixed Disk Partition Management Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOLEAN    DiskGetActivePartitionEntry(UCHAR DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry, ULONG *ActivePartition);
-BOOLEAN    DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOLEAN    DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOLEAN    DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOLEAN    DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
 
+/* Signature of DiskGetPartitionEntry(...) */
+typedef
+BOOLEAN
+(*DISK_GET_PARTITION_ENTRY)(UCHAR DriveNumber,
+                            ULONG PartitionNumber,
+                            PPARTITION_TABLE_ENTRY PartitionTableEntry);
+
+/* This function serves to retrieve a partition entry for devices that handle partitions differently */
+extern DISK_GET_PARTITION_ENTRY DiskGetPartitionEntry;
+
+BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry, ULONG *ActivePartition);
+BOOLEAN DiskGetMbrPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
+
+/*
+ * SCSI support (disk/scsiport.c)
+ */
 ULONG LoadBootDeviceDriver(VOID);

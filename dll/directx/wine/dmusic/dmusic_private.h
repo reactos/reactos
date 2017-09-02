@@ -31,6 +31,8 @@
 #define COM_NO_WINDOWS_H
 
 #define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
 #include <windef.h>
 #include <winbase.h>
@@ -58,8 +60,6 @@ typedef struct IReferenceClockImpl IReferenceClockImpl;
 
 typedef struct IDirectMusicInstrumentImpl IDirectMusicInstrumentImpl;
 
-typedef struct SynthPortImpl SynthPortImpl;
-
 /*****************************************************************************
  * Some stuff to make my life easier :=)
  */
@@ -77,7 +77,8 @@ typedef struct DMUSIC_PRIVATE_CHANNEL_GROUP_ {
 
 typedef struct port_info {
     DMUS_PORTCAPS caps;
-    HRESULT (*create)(LPCGUID guid, LPVOID *object, LPUNKNOWN unkouter, LPDMUS_PORTPARAMS port_params, LPDMUS_PORTCAPS port_caps, DWORD device);
+    HRESULT (*create)(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *port_params,
+            DMUS_PORTCAPS *port_caps, IDirectMusicPort **port);
     ULONG device;
 } port_info;
 
@@ -112,16 +113,14 @@ extern HRESULT DMUSIC_CreateDirectMusicInstrumentImpl (LPCGUID lpcGUID, LPVOID* 
  * IDirectMusic8Impl implementation structure
  */
 struct IDirectMusic8Impl {
-    /* IUnknown fields */
     IDirectMusic8 IDirectMusic8_iface;
     LONG ref;
-
-    /* IDirectMusicImpl fields */
-    IReferenceClockImpl* pMasterClock;
-    IDirectMusicPort** ppPorts;
-    int nrofports;
-    port_info* system_ports;
-    int nb_system_ports;
+    IDirectSound *dsound;
+    IReferenceClockImpl *master_clock;
+    IDirectMusicPort **ports;
+    int num_ports;
+    port_info *system_ports;
+    int num_system_ports;
 };
 
 /*****************************************************************************
@@ -164,33 +163,13 @@ struct IDirectMusicDownloadImpl {
     /* IDirectMusicDownloadImpl fields */
 };
 
-/*****************************************************************************
- * SynthPortImpl implementation structure
- */
-struct SynthPortImpl {
-    /* IUnknown fields */
-    IDirectMusicPort IDirectMusicPort_iface;
-    IDirectMusicPortDownload IDirectMusicPortDownload_iface;
-    IDirectMusicThru IDirectMusicThru_iface;
-    IKsControl IKsControl_iface;
-    LONG ref;
-
-    /* IDirectMusicPort fields */
-    IDirectSound* pDirectSound;
-    IReferenceClock* pLatencyClock;
-    IDirectMusicSynth* synth;
-    IDirectMusicSynthSink* synth_sink;
-    BOOL fActive;
-    DMUS_PORTCAPS caps;
-    DMUS_PORTPARAMS params;
-    int nrofgroups;
-    DMUSIC_PRIVATE_CHANNEL_GROUP group[1];
-};
-
 /** Internal factory */
-extern HRESULT DMUSIC_CreateSynthPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkouter, LPDMUS_PORTPARAMS port_params, LPDMUS_PORTCAPS port_caps, DWORD device) DECLSPEC_HIDDEN;
-extern HRESULT DMUSIC_CreateMidiOutPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkouter, LPDMUS_PORTPARAMS port_params, LPDMUS_PORTCAPS port_caps, DWORD device) DECLSPEC_HIDDEN;
-extern HRESULT DMUSIC_CreateMidiInPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkouter, LPDMUS_PORTPARAMS port_params, LPDMUS_PORTCAPS port_caps, DWORD device) DECLSPEC_HIDDEN;
+extern HRESULT synth_port_create(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *port_params,
+        DMUS_PORTCAPS *port_caps, IDirectMusicPort **port) DECLSPEC_HIDDEN;
+extern HRESULT midi_out_port_create(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *port_params,
+        DMUS_PORTCAPS *port_caps, IDirectMusicPort **port) DECLSPEC_HIDDEN;
+extern HRESULT midi_in_port_create(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *port_params,
+        DMUS_PORTCAPS *port_caps, IDirectMusicPort **port) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * IReferenceClockImpl implementation structure
@@ -254,6 +233,8 @@ static inline void DMUSIC_UnlockModule(void) { InterlockedDecrement( &DMUSIC_ref
 /*****************************************************************************
  * Misc.
  */
+void dmusic_remove_port(IDirectMusic8Impl *dmusic, IDirectMusicPort *port) DECLSPEC_HIDDEN;
+
 /* for simpler reading */
 typedef struct _DMUS_PRIVATE_CHUNK {
 	FOURCC fccID; /* FOURCC ID of the chunk */

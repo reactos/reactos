@@ -8,19 +8,78 @@
 #define _TIFFCONF_
 
 /* Define to 1 if the system has the type `int16'. */
-//#define HAVE_INT16 1
+/* #undef HAVE_INT16 */
 
 /* Define to 1 if the system has the type `int32'. */
-//#define HAVE_INT32 1
+/* #undef HAVE_INT32 */
 
 /* Define to 1 if the system has the type `int8'. */
-//#define HAVE_INT8 1
+/* #undef HAVE_INT8 */
 
 /* The size of a `int', as computed by sizeof. */
 #define SIZEOF_INT 4
 
-/* The size of a `long', as computed by sizeof. */
-#define SIZEOF_LONG 4
+/* Signed 8-bit type */
+#define TIFF_INT8_T signed char
+
+/* Unsigned 8-bit type */
+#define TIFF_UINT8_T unsigned char
+
+/* Signed 16-bit type */
+#define TIFF_INT16_T signed short
+
+/* Unsigned 16-bit type */
+#define TIFF_UINT16_T unsigned short
+
+/* Signed 32-bit type formatter */
+#define TIFF_INT32_FORMAT "%d"
+
+/* Signed 32-bit type */
+#define TIFF_INT32_T signed int
+
+/* Unsigned 32-bit type formatter */
+#define TIFF_UINT32_FORMAT "%u"
+
+/* Unsigned 32-bit type */
+#define TIFF_UINT32_T unsigned int
+
+/* Signed 64-bit type formatter */
+#define TIFF_INT64_FORMAT "%I64d"
+
+/* Signed 64-bit type */
+#ifdef __GNUC__
+#define TIFF_INT64_T signed long long
+#else
+#define TIFF_INT64_T signed __int64
+#endif
+
+/* Unsigned 64-bit type formatter */
+#define TIFF_UINT64_FORMAT "%I64u"
+
+/* Unsigned 64-bit type */
+#ifdef __GNUC__
+#define TIFF_UINT64_T unsigned long long
+#else
+#define TIFF_UINT64_T unsigned __int64
+#endif
+
+#if _WIN64
+/*
+  Windows 64-bit build
+*/
+
+/* Signed size type */
+#  define TIFF_SSIZE_T TIFF_INT64_T
+
+#else
+/*
+  Windows 32-bit build
+*/
+
+/* Signed size type */
+#  define TIFF_SSIZE_T signed int
+
+#endif
 
 /* Compatibility stuff. */
 
@@ -39,10 +98,10 @@
 #define CCITT_SUPPORT 1
 
 /* Support JPEG compression (requires IJG JPEG library) */
-// undef JPEG_SUPPORT
+/* #undef JPEG_SUPPORT */
 
 /* Support JBIG compression (requires JBIG-KIT library) */
-// #undef JBIG_SUPPORT
+/* #undef JBIG_SUPPORT */
 
 /* Support LogLuv high dynamic range encoding */
 #define LOGLUV_SUPPORT 1
@@ -55,7 +114,7 @@
 
 /* Support Old JPEG compresson (read contrib/ojpeg/README first! Compilation
    fails with unpatched IJG JPEG library) */
-// #undef OJPEG_SUPPORT
+/* #undef OJPEG_SUPPORT */
 
 /* Support Macintosh PackBits algorithm */
 #define PACKBITS_SUPPORT 1
@@ -100,42 +159,11 @@
 #define PHOTOSHOP_SUPPORT
 #define IPTC_SUPPORT
 
-/* Signed 16-bit type */
-#define TIFF_INT16_T signed short
-
-/* Signed 32-bit type */
-#define TIFF_INT32_T int
-
-/* Signed 64-bit type */
-#ifndef TIFF_INT64_T
-#define TIFF_INT64_T signed long long
-#endif
-
-/* Signed 8-bit type */
-#define TIFF_INT8_T signed char
-
-/* Unsigned 16-bit type */
-#define TIFF_UINT16_T unsigned short
-
-/* Unsigned 32-bit type */
-#define TIFF_UINT32_T unsigned int
-
-/* Unsigned 64-bit type */
-#ifndef TIFF_UINT64_T
-#define TIFF_UINT64_T unsigned long long
-#endif
-
-/* Unsigned 8-bit type */
-#define TIFF_UINT8_T unsigned char
-
-/* Signed 8-bit type */
-#define TIFF_INT8_T signed char
-
-/* Signed size type */
-#if defined(_WIN64)
-#define TIFF_SSIZE_T signed long long int
-#else
-#define TIFF_SSIZE_T signed long int
-#endif
-
 #endif /* _TIFFCONF_ */
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 8
+ * fill-column: 78
+ * End:
+ */

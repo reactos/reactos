@@ -87,7 +87,7 @@ static HRESULT WINAPI ITSS_IEnumSTATSTG_QueryInterface(
 	|| IsEqualGUID(riid, &IID_IEnumSTATSTG))
     {
 	IEnumSTATSTG_AddRef(iface);
-	*ppvObject = This;
+	*ppvObject = &This->IEnumSTATSTG_iface;
 	return S_OK;
     }
 
@@ -264,7 +264,7 @@ static HRESULT WINAPI ITSS_IStorageImpl_QueryInterface(
 	|| IsEqualGUID(riid, &IID_IStorage))
     {
 	IStorage_AddRef(iface);
-	*ppvObject = This;
+	*ppvObject = &This->IStorage_iface;
 	return S_OK;
     }
 
@@ -647,7 +647,7 @@ static HRESULT WINAPI ITSS_IStream_QueryInterface(
 	|| IsEqualGUID(riid, &IID_IStream))
     {
 	IStream_AddRef(iface);
-	*ppvObject = This;
+	*ppvObject = &This->IStream_iface;
 	return S_OK;
     }
 

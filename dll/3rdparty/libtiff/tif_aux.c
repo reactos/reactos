@@ -1,4 +1,4 @@
-/* $Id: tif_aux.c,v 1.26 2010-07-01 15:33:28 dron Exp $ */
+/* $Id: tif_aux.c,v 1.29 2016-11-11 20:45:53 erouault Exp $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler
@@ -101,7 +101,8 @@ TIFFDefaultTransferFunction(TIFFDirectory* td)
 
 	n = ((tmsize_t)1)<<td->td_bitspersample;
 	nbytes = n * sizeof (uint16);
-	if (!(tf[0] = (uint16 *)_TIFFmalloc(nbytes)))
+        tf[0] = (uint16 *)_TIFFmalloc(nbytes);
+	if (tf[0] == NULL)
 		return 0;
 	tf[0][0] = 0;
 	for (i = 1; i < n; i++) {
@@ -110,10 +111,12 @@ TIFFDefaultTransferFunction(TIFFDirectory* td)
 	}
 
 	if (td->td_samplesperpixel - td->td_extrasamples > 1) {
-		if (!(tf[1] = (uint16 *)_TIFFmalloc(nbytes)))
+                tf[1] = (uint16 *)_TIFFmalloc(nbytes);
+		if(tf[1] == NULL)
 			goto bad;
 		_TIFFmemcpy(tf[1], tf[0], nbytes);
-		if (!(tf[2] = (uint16 *)_TIFFmalloc(nbytes)))
+                tf[2] = (uint16 *)_TIFFmalloc(nbytes);
+		if (tf[2] == NULL)
 			goto bad;
 		_TIFFmemcpy(tf[2], tf[0], nbytes);
 	}
@@ -135,7 +138,8 @@ TIFFDefaultRefBlackWhite(TIFFDirectory* td)
 {
 	int i;
 
-	if (!(td->td_refblackwhite = (float *)_TIFFmalloc(6*sizeof (float))))
+        td->td_refblackwhite = (float *)_TIFFmalloc(6*sizeof (float));
+	if (td->td_refblackwhite == NULL)
 		return 0;
         if (td->td_photometric == PHOTOMETRIC_YCBCR) {
 		/*
@@ -164,7 +168,7 @@ TIFFDefaultRefBlackWhite(TIFFDirectory* td)
  * value if the tag is not present in the directory.
  *
  * NB:	We use the value in the directory, rather than
- *	explcit values so that defaults exist only one
+ *	explicit values so that defaults exist only one
  *	place in the library -- in TIFFDefaultDirectory.
  */
 int
@@ -209,11 +213,18 @@ TIFFVGetFieldDefaulted(TIFF* tif, uint32 tag, va_list ap)
 		*va_arg(ap, uint16 *) = td->td_resolutionunit;
 		return (1);
 	case TIFFTAG_PREDICTOR:
-                {
-			TIFFPredictorState* sp = (TIFFPredictorState*) tif->tif_data;
-			*va_arg(ap, uint16*) = (uint16) sp->predictor;
-			return 1;
-                }
+    {
+        TIFFPredictorState* sp = (TIFFPredictorState*) tif->tif_data;
+        if( sp == NULL )
+        {
+            TIFFErrorExt(tif->tif_clientdata, tif->tif_name,
+                         "Cannot get \"Predictor\" tag as plugin is not configured");
+            *va_arg(ap, uint16*) = 0;
+            return 0;
+        }
+        *va_arg(ap, uint16*) = (uint16) sp->predictor;
+        return 1;
+    }
 	case TIFFTAG_DOTRANGE:
 		*va_arg(ap, uint16 *) = 0;
 		*va_arg(ap, uint16 *) = (1<<td->td_bitspersample)-1;

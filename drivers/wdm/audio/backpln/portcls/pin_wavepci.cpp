@@ -455,7 +455,7 @@ NTSTATUS
 NTAPI
 CPortPinWavePci::TerminatePacket()
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
     return STATUS_SUCCESS;
 }
@@ -488,7 +488,7 @@ CPortPinWavePci::NewIrpTarget(
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -528,7 +528,7 @@ CPortPinWavePci::HandleKsProperty(
         //Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 #if 0
         RtlStringFromGUID(Property->Set, &GuidString);
-        //DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+        //DPRINT("Unhandled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
         RtlFreeUnicodeString(&GuidString);
 #endif
     }
@@ -597,7 +597,7 @@ CPortPinWavePci::DeviceIoControl(
        return HandleKsStream(Irp);
     }
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;

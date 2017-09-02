@@ -43,7 +43,7 @@ Size = 5,1 Mio
 License = Бесплатно
 Description = Текстовый редактор.
 URLSite = http://www.pspad.com/ru/
-Size = 5,0 МБ
+Size = 5,1 МиБ
 
 [Section.041b]
 Description = Textový editor.

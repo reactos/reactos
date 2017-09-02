@@ -141,7 +141,7 @@
 //EEPROM Commands
 #define EE_READ_CMD     0x06
 
-#define RSR_MAR   0x8000  //Mulicast receive
+#define RSR_MAR   0x8000  //Multicast receive
 #define RSR_PAM   0x4000  //Physical address match (directed packet)
 #define RSR_BAR   0x2000  //Broadcast receive
 #define RSR_ISE   0x0020  //Invalid symbol

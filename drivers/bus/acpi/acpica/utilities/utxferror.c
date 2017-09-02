@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -101,7 +101,7 @@ ACPI_EXPORT_SYMBOL (AcpiError)
  *
  * PARAMETERS:  ModuleName          - Caller's module name (for error output)
  *              LineNumber          - Caller's line number (for error output)
- *              Status              - Status to be formatted
+ *              Status              - Status value to be decoded/formatted
  *              Format              - Printf format string + additional args
  *
  * RETURN:      None
@@ -152,8 +152,8 @@ ACPI_EXPORT_SYMBOL (AcpiException)
  *
  * FUNCTION:    AcpiWarning
  *
- * PARAMETERS:  ModuleName          - Caller's module name (for error output)
- *              LineNumber          - Caller's line number (for error output)
+ * PARAMETERS:  ModuleName          - Caller's module name (for warning output)
+ *              LineNumber          - Caller's line number (for warning output)
  *              Format              - Printf format string + additional args
  *
  * RETURN:      None
@@ -190,16 +190,12 @@ ACPI_EXPORT_SYMBOL (AcpiWarning)
  *
  * FUNCTION:    AcpiInfo
  *
- * PARAMETERS:  ModuleName          - Caller's module name (for error output)
- *              LineNumber          - Caller's line number (for error output)
- *              Format              - Printf format string + additional args
+ * PARAMETERS:  Format              - Printf format string + additional args
  *
  * RETURN:      None
  *
  * DESCRIPTION: Print generic "ACPI:" information message. There is no
  *              module/line/version info in order to keep the message simple.
- *
- * TBD: ModuleName and LineNumber args are not needed, should be removed.
  *
  ******************************************************************************/
 
@@ -268,8 +264,8 @@ ACPI_EXPORT_SYMBOL (AcpiBiosError)
  *
  * FUNCTION:    AcpiBiosWarning
  *
- * PARAMETERS:  ModuleName          - Caller's module name (for error output)
- *              LineNumber          - Caller's line number (for error output)
+ * PARAMETERS:  ModuleName          - Caller's module name (for warning output)
+ *              LineNumber          - Caller's line number (for warning output)
  *              Format              - Printf format string + additional args
  *
  * RETURN:      None

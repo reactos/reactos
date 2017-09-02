@@ -8,10 +8,10 @@ CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dizelgede gösterilen tüm giriş dilleri için istediğiniz hizmetleri seçiniz.\nBu dizelgeyi değiştirmek için Ekle veyâ Sil düğmelerini kullanınız.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "&Ön Tanımlı Yap", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Ekle...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Sil...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Sil", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Husûsiyetler...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Yeğlemeler", -1, 7, 185, 240, 36
     PUSHBUTTON "&Düğme Ayarları...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -162,6 +162,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi Tüm Seslik"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Yazı Makinesi"
     IDS_DUTCH_LAYOUT "Hollandaca"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estçe"
     IDS_FAEROESE_LAYOUT "Faroece"
     IDS_FARSI_LAYOUT "Farsça"

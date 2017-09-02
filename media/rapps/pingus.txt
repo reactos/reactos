@@ -6,7 +6,7 @@ Description = A free Lemmings-like puzzle game.
 Size = 15.8 MiB
 Category = 4
 URLSite = http://pingus.seul.org
-URLDownload = http://pingus.googlecode.com/files/Pingus-0.7.6.exe
+URLDownload = https://github.com/Pingus/downloads/raw/master/Pingus-0.7.6.exe
 SHA1 = 925d9a46eb1e063a3f792b9205cac7a01741632c
 CDPath = none
 
@@ -29,7 +29,7 @@ Size = 15,8 Mio
 
 [Section.0419]
 Description = Бесплатная игра-головоломка.
-Size = 15,8 МБ
+Size = 15,8 МиБ
 
 [Section.041f]
 Description = Ücretsiz, Lemmings gibi bir bulmaca oyunudur.

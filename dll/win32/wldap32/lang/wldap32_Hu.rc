@@ -39,7 +39,7 @@ STRINGTABLE
     11 "Adminisztrációs korlát túllépés"
     12 "Nem elérhető kritikus kiterjesztés"
     13 "Bizalmasság szükséges"
-    14 ""
+    14 "SASL Bind in Progress"
     15 ""
     16 "Nincs ilyen attribútum"
     17 "Definiálatlan típus"

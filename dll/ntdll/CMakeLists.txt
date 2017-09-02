@@ -20,6 +20,7 @@ list(APPEND SOURCE
     ldr/ldrpe.c
     ldr/ldrutils.c
     rtl/libsupp.c
+    rtl/uilist.c
     rtl/version.c
     etw/trace.c
     include/ntdll.h)

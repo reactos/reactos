@@ -70,6 +70,13 @@ coclass WICBmpEncoder { interface IWICBitmapEncoder; }
 coclass WICGifDecoder { interface IWICBitmapDecoder; }
 
 [
+    helpstring("WIC GIF Encoder"),
+    threading(both),
+    uuid(114f5598-0b22-40a0-86a1-c83ea495adbd)
+]
+coclass WICGifEncoder { interface IWICBitmapEncoder; }
+
+[
     helpstring("WIC ICO Decoder"),
     threading(both),
     uuid(c61bfcdf-2e0f-4aad-a8d7-e06bafebcdfe)
@@ -138,6 +145,13 @@ coclass WICUnknownMetadataReader { interface IWICMetadataReader; }
     uuid(8f914656-9d0a-4eb2-9019-0bf96d8a9ee6)
 ]
 coclass WICIfdMetadataReader { interface IWICIfdMetadataReader; }
+
+[
+    helpstring("WIC Png cHRM Metadata Reader"),
+    threading(both),
+    uuid(f90b5f36-367b-402a-9dd1-bc0fd59d8f62)
+]
+coclass WICPngChrmMetadataReader { interface IWICMetadataReader; }
 
 [
     helpstring("WIC Png gAMA Metadata Reader"),

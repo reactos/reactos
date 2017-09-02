@@ -30,7 +30,7 @@ Size = 28,1 Mio
 
 [Section.0419]
 Description = Платформа и библиотеки для запуска java-программ.
-Size = 28,1 МБ
+Size = 28,1 МиБ
 
 [Section.0804]
 License = Oracle 二进制代码许可

@@ -256,5 +256,5 @@ BEGIN
     IDS_DMUSIC_DLS "DLS de suport"
     IDS_DMUSIC_EXT "Extern"
     IDS_DMUSIC_PORT "Port implicit"
-    IDS_DDDISABLE_MSG "Se vor dezactiva toate accelerările fizice DirectDraw pentru toate dispozitivele.\nDoriți să continuați?\n"
+    IDS_DDDISABLE_MSG "Accelerările fizice DirectDraw vor fi dezactivate pentru toate dispozitivele.\nDoriți să continuați?\n"
 END

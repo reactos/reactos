@@ -17,6 +17,7 @@ list(APPEND ACPICA_SOURCE
     acpica/dispatcher/dsmthdat.c
     acpica/dispatcher/dsobject.c
     acpica/dispatcher/dsopcode.c
+    acpica/dispatcher/dspkginit.c
     acpica/dispatcher/dsutils.c
     acpica/dispatcher/dswexec.c
     acpica/dispatcher/dswload.c
@@ -132,9 +133,10 @@ list(APPEND ACPICA_SOURCE
     acpica/tables/tbxfroot.c
     acpica/utilities/utaddress.c
     acpica/utilities/utalloc.c
+    acpica/utilities/utascii.c
     acpica/utilities/utbuffer.c
     acpica/utilities/utcache.c
-    acpica/utilities/utclib.c
+    # acpica/utilities/utclib.c
     acpica/utilities/utcopy.c
     # acpica/utilities/utdebug.c
     acpica/utilities/utdecode.c
@@ -155,9 +157,11 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utownerid.c
     acpica/utilities/utpredef.c
     # acpica/utilities/utprint.c
+    # acpica/utilities/utresdecode.c
     acpica/utilities/utresrc.c
     acpica/utilities/utstate.c
     acpica/utilities/utstring.c
+    acpica/utilities/utstrtoul64.c
     # acpica/utilities/utuuid.c
     acpica/utilities/uttrack.c
     acpica/utilities/utxface.c
@@ -172,7 +176,7 @@ add_library(acpica
     acpica/utilities/utglobal.c)
 
 add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
-set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE;ACPI_USE_SYSTEM_CLIBRARY")
+set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE;ACPI_USE_SYSTEM_INTTYPES")
 add_dependencies(acpica bugcodes xdk)
 
 list(APPEND ACPI_SOURCE

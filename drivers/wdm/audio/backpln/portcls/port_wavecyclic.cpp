@@ -116,7 +116,7 @@ NTAPI
 CPortWaveCyclic::AddEventToEventList(
     IN PKSEVENT_ENTRY EventEntry)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -130,7 +130,7 @@ CPortWaveCyclic::GenerateEventList(
     IN  BOOL NodeEvent,
     IN  ULONG NodeId)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 //---------------------------------------------------------------

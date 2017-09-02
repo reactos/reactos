@@ -195,6 +195,7 @@ public:
     LRESULT OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     BEGIN_MSG_MAP(CInternetToolbar)
         COMMAND_ID_HANDLER(IDM_GOTO_BACK, OnTravelBack)
@@ -215,6 +216,7 @@ public:
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLDown)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLUp)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+        MESSAGE_HANDLER(WM_WININICHANGE, OnWinIniChange)
     END_MSG_MAP()
 
     DECLARE_REGISTRY_RESOURCEID(IDR_INTERNETTOOLBAR)

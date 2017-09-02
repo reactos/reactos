@@ -11,7 +11,7 @@ pSdbCreateDatabase
     [Err ][SdbpWriteBufferedData] Failed to allocate 65548 bytes.
 
 pSdbWriteStringTag
-    [Err ][SdbpAddStringToTable] Error Gettting temp path 0x8
+    [Err ][SdbpAddStringToTable] Error Getting temp path 0x8
     [Err ][SdbpCreateFile      ] Failed to convert DOS path "C:\Users\MAE67~1.JAN\AppData\Local\Temp\SDBAB16.tmp"
     [Err ][SdbpAddStringToTable] Error copying string table temp filename
     [Err ][HashCreate          ] Failed to allocate 8 bytes.

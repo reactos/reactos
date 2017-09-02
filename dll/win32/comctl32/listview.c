@@ -230,7 +230,6 @@ typedef struct tagLISTVIEW_INFO
   RANGES selectionRanges;
   INT nSelectionMark;           /* item to start next multiselection from */
   INT nHotItem;
-  BOOL bAutoarrange;		/* Autoarrange flag when NOT in LVS_AUTOARRANGE */
 
   /* columns */
   HDPA hdpaColumns;		/* array of COLUMN_INFO pointers */
@@ -572,23 +571,28 @@ static const char* debugscrollinfo(const SCROLLINFO *pScrollInfo)
 
     if (pScrollInfo == NULL) return "(null)";
     len = snprintf(buf, size, "{cbSize=%u, ", pScrollInfo->cbSize);
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (pScrollInfo->fMask & SIF_RANGE)
 	len = snprintf(buf, size, "nMin=%d, nMax=%d, ", pScrollInfo->nMin, pScrollInfo->nMax);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (pScrollInfo->fMask & SIF_PAGE)
 	len = snprintf(buf, size, "nPage=%u, ", pScrollInfo->nPage);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (pScrollInfo->fMask & SIF_POS)
 	len = snprintf(buf, size, "nPos=%d, ", pScrollInfo->nPos);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (pScrollInfo->fMask & SIF_TRACKPOS)
 	len = snprintf(buf, size, "nTrackPos=%d, ", pScrollInfo->nTrackPos);
     else len = 0;
-    if (len == -1) goto end; buf += len;
+    if (len == -1) goto end;
+    buf += len;
     goto undo;
 end:
     buf = text + strlen(text);
@@ -613,27 +617,33 @@ static const char* debuglvitem_t(const LVITEMW *lpLVItem, BOOL isW)
     
     if (lpLVItem == NULL) return "(null)";
     len = snprintf(buf, size, "{iItem=%d, iSubItem=%d, ", lpLVItem->iItem, lpLVItem->iSubItem);
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_STATE)
 	len = snprintf(buf, size, "state=%x, stateMask=%x, ", lpLVItem->state, lpLVItem->stateMask);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_TEXT)
 	len = snprintf(buf, size, "pszText=%s, cchTextMax=%d, ", debugtext_tn(lpLVItem->pszText, isW, 80), lpLVItem->cchTextMax);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_IMAGE)
 	len = snprintf(buf, size, "iImage=%d, ", lpLVItem->iImage);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_PARAM)
 	len = snprintf(buf, size, "lParam=%lx, ", lpLVItem->lParam);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_INDENT)
 	len = snprintf(buf, size, "iIndent=%d, ", lpLVItem->iIndent);
     else len = 0;
-    if (len == -1) goto end; buf += len;
+    if (len == -1) goto end;
+    buf += len;
     goto undo;
 end:
     buf = text + strlen(text);
@@ -649,31 +659,38 @@ static const char* debuglvcolumn_t(const LVCOLUMNW *lpColumn, BOOL isW)
     
     if (lpColumn == NULL) return "(null)";
     len = snprintf(buf, size, "{");
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_SUBITEM)
 	len = snprintf(buf, size, "iSubItem=%d, ",  lpColumn->iSubItem);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_FMT)
 	len = snprintf(buf, size, "fmt=%x, ", lpColumn->fmt);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_WIDTH)
 	len = snprintf(buf, size, "cx=%d, ", lpColumn->cx);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_TEXT)
 	len = snprintf(buf, size, "pszText=%s, cchTextMax=%d, ", debugtext_tn(lpColumn->pszText, isW, 80), lpColumn->cchTextMax);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_IMAGE)
 	len = snprintf(buf, size, "iImage=%d, ", lpColumn->iImage);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_ORDER)
 	len = snprintf(buf, size, "iOrder=%d, ", lpColumn->iOrder);
     else len = 0;
-    if (len == -1) goto end; buf += len;
+    if (len == -1) goto end;
+    buf += len;
     goto undo;
 end:
     buf = text + strlen(text);
@@ -1550,8 +1567,8 @@ static inline LRESULT CallWindowProcT(WNDPROC proc, HWND hwnd, UINT uMsg,
 
 static inline BOOL is_autoarrange(const LISTVIEW_INFO *infoPtr)
 {
-    return ((infoPtr->dwStyle & LVS_AUTOARRANGE) || infoPtr->bAutoarrange) &&
-	   (infoPtr->uView == LV_VIEW_ICON || infoPtr->uView == LV_VIEW_SMALLICON);
+    return (infoPtr->dwStyle & LVS_AUTOARRANGE) &&
+        (infoPtr->uView == LV_VIEW_ICON || infoPtr->uView == LV_VIEW_SMALLICON);
 }
 
 static void toggle_checkbox_state(LISTVIEW_INFO *infoPtr, INT nItem)
@@ -1998,23 +2015,10 @@ static void LISTVIEW_UpdateHeaderSize(const LISTVIEW_INFO *infoPtr, INT nNewScro
         SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
-/***
- * DESCRIPTION:
- * Update the scrollbars. This functions should be called whenever
- * the content, size or view changes.
- *
- * PARAMETER(S):
- * [I] infoPtr : valid pointer to the listview structure
- *
- * RETURN:
- * None
- */
-static void LISTVIEW_UpdateScroll(const LISTVIEW_INFO *infoPtr)
+static INT LISTVIEW_UpdateHScroll(LISTVIEW_INFO *infoPtr)
 {
-    SCROLLINFO horzInfo, vertInfo;
-    INT dx, dy;
-
-    if ((infoPtr->dwStyle & LVS_NOSCROLL) || !is_redrawing(infoPtr)) return;
+    SCROLLINFO horzInfo;
+    INT dx;
 
     ZeroMemory(&horzInfo, sizeof(SCROLLINFO));
     horzInfo.cbSize = sizeof(SCROLLINFO);
@@ -2066,10 +2070,22 @@ static void LISTVIEW_UpdateScroll(const LISTVIEW_INFO *infoPtr)
     dx -= SetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &horzInfo, TRUE);
     TRACE("horzInfo=%s\n", debugscrollinfo(&horzInfo));
 
-    /* Setting the horizontal scroll can change the listview size
-     * (and potentially everything else) so we need to recompute
-     * everything again for the vertical scroll
-     */
+    /* Update the Header Control */
+    if (infoPtr->hwndHeader)
+    {
+	horzInfo.fMask = SIF_POS;
+	GetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &horzInfo);
+	LISTVIEW_UpdateHeaderSize(infoPtr, horzInfo.nPos);
+    }
+
+    LISTVIEW_UpdateSize(infoPtr);
+    return dx;
+}
+
+static INT LISTVIEW_UpdateVScroll(LISTVIEW_INFO *infoPtr)
+{
+    SCROLLINFO vertInfo;
+    INT dy;
 
     ZeroMemory(&vertInfo, sizeof(SCROLLINFO));
     vertInfo.cbSize = sizeof(SCROLLINFO);
@@ -2099,6 +2115,37 @@ static void LISTVIEW_UpdateScroll(const LISTVIEW_INFO *infoPtr)
     dy -= SetScrollInfo(infoPtr->hwndSelf, SB_VERT, &vertInfo, TRUE);
     TRACE("vertInfo=%s\n", debugscrollinfo(&vertInfo));
 
+    LISTVIEW_UpdateSize(infoPtr);
+    return dy;
+}
+
+/***
+ * DESCRIPTION:
+ * Update the scrollbars. This function should be called whenever
+ * the content, size or view changes.
+ *
+ * PARAMETER(S):
+ * [I] infoPtr : valid pointer to the listview structure
+ *
+ * RETURN:
+ * None
+ */
+static void LISTVIEW_UpdateScroll(LISTVIEW_INFO *infoPtr)
+{
+    INT dx, dy, pass;
+
+    if ((infoPtr->dwStyle & LVS_NOSCROLL) || !is_redrawing(infoPtr)) return;
+
+    /* Setting the horizontal scroll can change the listview size
+     * (and potentially everything else) so we need to recompute
+     * everything again for the vertical scroll and vice-versa
+     */
+    for (dx = 0, dy = 0, pass = 0; pass <= 1; pass++)
+    {
+        dx += LISTVIEW_UpdateHScroll(infoPtr);
+        dy += LISTVIEW_UpdateVScroll(infoPtr);
+    }
+
     /* Change of the range may have changed the scroll pos. If so move the content */
     if (dx != 0 || dy != 0)
     {
@@ -2106,14 +2153,6 @@ static void LISTVIEW_UpdateScroll(const LISTVIEW_INFO *infoPtr)
         listRect = infoPtr->rcList;
         ScrollWindowEx(infoPtr->hwndSelf, dx, dy, &listRect, &listRect, 0, 0,
             SW_ERASE | SW_INVALIDATE);
-    }
-
-    /* Update the Header Control */
-    if (infoPtr->hwndHeader)
-    {
-	horzInfo.fMask = SIF_POS;
-	GetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &horzInfo);
-	LISTVIEW_UpdateHeaderSize(infoPtr, horzInfo.nPos);
     }
 }
 
@@ -2764,7 +2803,6 @@ static BOOL LISTVIEW_Arrange(LISTVIEW_INFO *infoPtr, INT nAlignCode)
     default: return FALSE;
     }
     
-    infoPtr->bAutoarrange = TRUE;
     infoPtr->currIconPos.x = infoPtr->currIconPos.y = 0;
     for (i = 0; i < infoPtr->nItemCount; i++)
     {
@@ -3856,9 +3894,8 @@ static void LISTVIEW_MarqueeHighlight(LISTVIEW_INFO *infoPtr, const POINT *coord
 
     iterator_frameditems_absolute(&old_elems, infoPtr, &infoPtr->marqueeRect);
 
-    CopyRect(&infoPtr->marqueeRect, &rect);
-
-    CopyRect(&infoPtr->marqueeDrawRect, &rect);
+    infoPtr->marqueeRect = rect;
+    infoPtr->marqueeDrawRect = rect;
     OffsetRect(&infoPtr->marqueeDrawRect, offset->x, offset->y);
 
     iterator_frameditems_absolute(&new_elems, infoPtr, &infoPtr->marqueeRect);
@@ -5629,8 +5666,8 @@ static BOOL LISTVIEW_DeleteColumn(LISTVIEW_INFO *infoPtr, INT nColumn)
     
     TRACE("nColumn=%d\n", nColumn);
 
-    if (nColumn < 0 || DPA_GetPtrCount(infoPtr->hdpaColumns) == 0
-           || nColumn >= DPA_GetPtrCount(infoPtr->hdpaColumns)) return FALSE;
+    if (nColumn < 0 || nColumn >= DPA_GetPtrCount(infoPtr->hdpaColumns))
+        return FALSE;
 
     /* While the MSDN specifically says that column zero should not be deleted,
        what actually happens is that the column itself is deleted but no items or subitems
@@ -5871,13 +5908,15 @@ static BOOL LISTVIEW_EndEditLabelT(LISTVIEW_INFO *infoPtr, BOOL storeText, BOOL 
     {
         DWORD len = isW ? GetWindowTextLengthW(infoPtr->hwndEdit) : GetWindowTextLengthA(infoPtr->hwndEdit);
 
-        if (len)
+        if (len++)
         {
-            if ((pszText = Alloc((len+1) * (isW ? sizeof(WCHAR) : sizeof(CHAR)))))
-            {
-                if (isW) GetWindowTextW(infoPtr->hwndEdit, pszText, len+1);
-                else GetWindowTextA(infoPtr->hwndEdit, (CHAR*)pszText, len+1);
-            }
+            if (!(pszText = Alloc(len * (isW ? sizeof(WCHAR) : sizeof(CHAR)))))
+                return FALSE;
+
+            if (isW)
+                GetWindowTextW(infoPtr->hwndEdit, pszText, len);
+            else
+                GetWindowTextA(infoPtr->hwndEdit, (CHAR*)pszText, len);
         }
     }
 
@@ -6312,8 +6351,7 @@ static INT LISTVIEW_FindItemW(const LISTVIEW_INFO *infoPtr, INT nStart,
     if (!lpFindInfo || nItem < 0) return -1;
 
     lvItem.mask = 0;
-    if (lpFindInfo->flags & (LVFI_STRING | LVFI_PARTIAL) ||
-        lpFindInfo->flags &  LVFI_SUBSTRING)
+    if (lpFindInfo->flags & (LVFI_STRING | LVFI_PARTIAL | LVFI_SUBSTRING))
     {
         lvItem.mask |= LVIF_TEXT;
         lvItem.pszText = szDispText;
@@ -6359,6 +6397,8 @@ static INT LISTVIEW_FindItemW(const LISTVIEW_INFO *infoPtr, INT nStart,
 	bNearest = FALSE;
 	lvItem.mask &= ~LVIF_TEXT;
     }
+
+    nItem = bNearest ? -1 : nStart + 1;
 
 again:
     for (; nItem < nLast; nItem++)
@@ -6435,14 +6475,13 @@ again:
 static INT LISTVIEW_FindItemA(const LISTVIEW_INFO *infoPtr, INT nStart,
                               const LVFINDINFOA *lpFindInfo)
 {
-    BOOL hasText = lpFindInfo->flags & (LVFI_STRING | LVFI_PARTIAL) ||
-                   lpFindInfo->flags &  LVFI_SUBSTRING;
     LVFINDINFOW fiw;
     INT res;
     LPWSTR strW = NULL;
 
     memcpy(&fiw, lpFindInfo, sizeof(fiw));
-    if (hasText) fiw.psz = strW = textdupTtoW((LPCWSTR)lpFindInfo->psz, FALSE);
+    if (lpFindInfo->flags & (LVFI_STRING | LVFI_PARTIAL | LVFI_SUBSTRING))
+        fiw.psz = strW = textdupTtoW((LPCWSTR)lpFindInfo->psz, FALSE);
     res = LISTVIEW_FindItemW(infoPtr, nStart, &fiw);
     textfreeT(strW, FALSE);
     return res;
@@ -7814,18 +7853,24 @@ static INT LISTVIEW_InsertItemT(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem,
         HDPA hItem;
         ITEM_INFO *item_s;
         INT i = 0, cmpv;
+        WCHAR *textW;
+
+        textW = textdupTtoW(lpLVItem->pszText, isW);
 
         while (i < infoPtr->nItemCount)
         {
             hItem  = DPA_GetPtr( infoPtr->hdpaItems, i);
             item_s = DPA_GetPtr(hItem, 0);
 
-            cmpv = textcmpWT(item_s->hdr.pszText, lpLVItem->pszText, isW);
+            cmpv = textcmpWT(item_s->hdr.pszText, textW, TRUE);
             if (infoPtr->dwStyle & LVS_SORTDESCENDING) cmpv *= -1;
 
             if (cmpv >= 0) break;
             i++;
         }
+
+        textfreeT(textW, isW);
+
         nItem = i;
     }
     else
@@ -7977,12 +8022,8 @@ static BOOL LISTVIEW_IsItemVisible(const LISTVIEW_INFO *infoPtr, INT nItem)
 static BOOL LISTVIEW_RedrawItems(const LISTVIEW_INFO *infoPtr, INT nFirst, INT nLast)
 {
     INT i;
- 
-    if (nLast < nFirst || min(nFirst, nLast) < 0 || 
-	max(nFirst, nLast) >= infoPtr->nItemCount)
-	return FALSE;
-    
-    for (i = nFirst; i <= nLast; i++)
+
+    for (i = max(nFirst, 0); i <= min(nLast, infoPtr->nItemCount - 1); i++)
 	LISTVIEW_InvalidateItem(infoPtr, i);
 
     return TRUE;
@@ -8931,8 +8972,6 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
     Pt.x -= Origin.x;
     Pt.y -= Origin.y;
 
-    infoPtr->bAutoarrange = FALSE;
-
     return LISTVIEW_MoveIconTo(infoPtr, nItem, &Pt, FALSE);
 }
 
@@ -9064,7 +9103,8 @@ static INT LISTVIEW_SetSelectionMark(LISTVIEW_INFO *infoPtr, INT nIndex)
 
   TRACE("(nIndex=%d)\n", nIndex);
 
-  infoPtr->nSelectionMark = nIndex;
+  if (nIndex >= -1 && nIndex < infoPtr->nItemCount)
+    infoPtr->nSelectionMark = nIndex;
 
   return nOldIndex;
 }
@@ -10617,8 +10657,15 @@ static BOOL LISTVIEW_NCPaint(const LISTVIEW_INFO *infoPtr, HRGN region)
         CombineRgn (cliprgn, cliprgn, region, RGN_AND);
     OffsetRect(&r, -r.left, -r.top);
 
+#ifdef __REACTOS__ /* r73789 */
+    dc = GetWindowDC(infoPtr->hwndSelf);
+    /* Exclude client part */
+    ExcludeClipRect(dc, r.left + cxEdge, r.top + cyEdge,
+        r.right - cxEdge, r.bottom -cyEdge);
+#else
     dc = GetDCEx(infoPtr->hwndSelf, region, DCX_WINDOW|DCX_INTERSECTRGN);
     OffsetRect(&r, -r.left, -r.top);
+#endif
 
     if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
         DrawThemeParentBackground(infoPtr->hwndSelf, dc, &r);

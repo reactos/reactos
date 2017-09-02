@@ -437,7 +437,7 @@ static HRESULT get_textfont_prop_for_pos(const IRichEditOleImpl *reole, int pos,
 
     ME_CursorFromCharOfs(reole->editor, pos, &from);
     to = from;
-    ME_MoveCursorChars(reole->editor, &to, 1);
+    ME_MoveCursorChars(reole->editor, &to, 1, FALSE);
     ME_GetCharFormat(reole->editor, &from, &to, &fmt);
 
     switch (propid)
@@ -1597,7 +1597,7 @@ static HRESULT WINAPI ITextRange_fnGetIDsOfNames(ITextRange *me, REFIID riid, LP
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%p,%p,%u,%d,%p)\n", This, riid, rgszNames, cNames, lcid,
+    TRACE("(%p)->(%s, %p, %u, %d, %p)\n", This, debugstr_guid(riid), rgszNames, cNames, lcid,
             rgDispId);
 
     hr = get_typeinfo(ITextRange_tid, &ti);
@@ -1615,8 +1615,8 @@ static HRESULT WINAPI ITextRange_fnInvoke(ITextRange *me, DISPID dispIdMember, R
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%d,%p,%d,%u,%p,%p,%p,%p)\n", This, dispIdMember, riid, lcid,
-            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+    TRACE("(%p)->(%d, %s, %d, %u, %p, %p, %p, %p)\n", This, dispIdMember, debugstr_guid(riid),
+            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     hr = get_typeinfo(ITextRange_tid, &ti);
     if (SUCCEEDED(hr))
@@ -1970,7 +1970,7 @@ static HRESULT range_Collapse(LONG bStart, LONG *start, LONG *end)
   if (*end == *start)
       return S_FALSE;
 
-  if (bStart == tomEnd || bStart == tomFalse)
+  if (bStart == tomEnd)
       *start = *end;
   else
       *end = *start;
@@ -2618,8 +2618,8 @@ static HRESULT WINAPI TextFont_GetIDsOfNames(ITextFont *iface, REFIID riid,
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%p,%p,%u,%d,%p)\n", This, riid, rgszNames, cNames, lcid,
-            rgDispId);
+    TRACE("(%p)->(%s, %p, %u, %d, %p)\n", This, debugstr_guid(riid),
+            rgszNames, cNames, lcid, rgDispId);
 
     hr = get_typeinfo(ITextFont_tid, &ti);
     if (SUCCEEDED(hr))
@@ -2642,8 +2642,8 @@ static HRESULT WINAPI TextFont_Invoke(
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%d,%p,%d,%u,%p,%p,%p,%p)\n", This, dispIdMember, riid, lcid,
-            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+    TRACE("(%p)->(%d, %s, %d, %u, %p, %p, %p, %p)\n", This, dispIdMember, debugstr_guid(riid),
+            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     hr = get_typeinfo(ITextFont_tid, &ti);
     if (SUCCEEDED(hr))
@@ -3430,8 +3430,8 @@ static HRESULT WINAPI TextPara_GetIDsOfNames(ITextPara *iface, REFIID riid,
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%p,%p,%u,%d,%p)\n", This, riid, rgszNames, cNames, lcid,
-            rgDispId);
+    TRACE("(%p)->(%s, %p, %u, %d, %p)\n", This, debugstr_guid(riid), rgszNames,
+            cNames, lcid, rgDispId);
 
     hr = get_typeinfo(ITextPara_tid, &ti);
     if (SUCCEEDED(hr))
@@ -3454,8 +3454,9 @@ static HRESULT WINAPI TextPara_Invoke(
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%d,%p,%d,%u,%p,%p,%p,%p)\n", This, dispIdMember, riid, lcid,
-            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+    TRACE("(%p)->(%d, %s, %d, %u, %p, %p, %p, %p)\n", This, dispIdMember,
+            debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult,
+            pExcepInfo, puArgErr);
 
     hr = get_typeinfo(ITextPara_tid, &ti);
     if (SUCCEEDED(hr))
@@ -4125,8 +4126,8 @@ ITextDocument_fnGetIDsOfNames(ITextDocument* me, REFIID riid,
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%p,%p,%u,%d,%p)\n", This, riid, rgszNames, cNames, lcid,
-            rgDispId);
+    TRACE("(%p)->(%s, %p, %u, %d, %p)\n", This, debugstr_guid(riid),
+            rgszNames, cNames, lcid, rgDispId);
 
     hr = get_typeinfo(ITextDocument_tid, &ti);
     if (SUCCEEDED(hr))
@@ -4143,8 +4144,9 @@ ITextDocument_fnInvoke(ITextDocument* me, DISPID dispIdMember,
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%d,%p,%d,%u,%p,%p,%p,%p)\n", This, dispIdMember, riid, lcid,
-            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+    TRACE("(%p)->(%d, %s, %d, %u, %p, %p, %p, %p)\n", This, dispIdMember,
+            debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult,
+            pExcepInfo, puArgErr);
 
     hr = get_typeinfo(ITextDocument_tid, &ti);
     if (SUCCEEDED(hr))
@@ -4445,7 +4447,7 @@ static HRESULT WINAPI ITextSelection_fnGetIDsOfNames(ITextSelection *me, REFIID 
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%p,%p,%u,%d,%p)\n", This, riid, rgszNames, cNames, lcid,
+    TRACE("(%p)->(%s, %p, %u, %d, %p)\n", This, debugstr_guid(riid), rgszNames, cNames, lcid,
             rgDispId);
 
     hr = get_typeinfo(ITextSelection_tid, &ti);
@@ -4469,7 +4471,7 @@ static HRESULT WINAPI ITextSelection_fnInvoke(
     ITypeInfo *ti;
     HRESULT hr;
 
-    TRACE("(%p)->(%d,%p,%d,%u,%p,%p,%p,%p)\n", This, dispIdMember, riid, lcid,
+    TRACE("(%p)->(%d, %s, %d, %u, %p, %p, %p, %p)\n", This, dispIdMember, debugstr_guid(riid), lcid,
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     hr = get_typeinfo(ITextSelection_tid, &ti);

@@ -25,6 +25,7 @@ BEGIN
     850  "850   (OEM - Çok Dilli Latin I)"
     852  "852   (OEM - Latin II)"
     855  "855   (OEM - Kiril)"
+    856  "856   (OEM - İbrânice PC)"
     857  "857   (OEM - Türkçe)"
     858  "858   (OEM - Çok Dilli Latin I + Avro)"
     860  "860   (OEM - Portekizce)"
@@ -57,6 +58,7 @@ BEGIN
     65001 "65001 (UTF-8)"
 
     3700  "37    (IBM EBCDIC - ABD/Kanada)" /* FIXME */
+//  424   "424   (IBM EBCDIC - İbrânice)" // On Windows, this is CP 20424
     1026  "1026  (IBM EBCDIC - Türkçe (Latin-5))"
     1047  "1047  (IBM EBCDIC - Latin-1/Açık Dizge)"
     1140  "1140  (IBM EBCDIC - ABD/Kanada (37 + Avro))"
@@ -100,8 +102,12 @@ BEGIN
     28596 "28596 (ISO 8859-6 Arapça)"
     28597 "28597 (ISO 8859-7 Yunanca)"
     28598 "28598 (ISO 8859-8 İbrânice: Görmelik Dizme)"
-    28599 "28599 (ISO 8859-9 Latin 5)"
+    28599 "28599 (ISO 8859-9 Latin 5 Türkçe)"
+    28600 "28600 (ISO 8859-10 Latin 6 Nordik)"
+    28603 "28603 (ISO 8859-13 Latin 7 Estonian)"
+    28604 "28604 (ISO 8859-14 Latin 8 Celtic)"
     28605 "28605 (ISO 8859-15 Latin 9)"
+    28606 "28606 (ISO 8859-16 Latin 10 Balkan)"
     38598 "38598 (ISO 8859-8 İbrânice: Mantıklık Dizme)"
 
     20105 "20105 (IA5 IRV Uluslararası Harflik Nu: 5)"
@@ -118,6 +124,7 @@ BEGIN
     20005 "20005 (Vang - Tayvan)"
     20127 "20127 (ABD-ASCII)"
     20261 "20261 (T.61)"
+//  878   "878   (Rusça - KOI8)" // On Windows, this is CP 20866
     20866 "20866 (Rusça - KOI8)"
     21027 "21027 (Genişletilmiş Alfa Küçük Harf)"
     21866 "21866 (Ukraynaca - KOI8-U)"
@@ -190,6 +197,7 @@ BEGIN
     32+NLSRC_OFFSET "Brezilya"
     34+NLSRC_OFFSET "Bhutan"
     35+NLSRC_OFFSET "Bulgaristan"
+    37+NLSRC_OFFSET "Brunei"
     38+NLSRC_OFFSET "Burundi"
     39+NLSRC_OFFSET "Kanada"
     40+NLSRC_OFFSET "Kamboçya"

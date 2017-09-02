@@ -98,7 +98,9 @@ RpcpAddInterface (
         wcscat(endpointName, IfName);
 
         /* Create a named pipe endpoint with this name */
-        rpcStatus = RpcServerUseProtseqEpW(L"ncacn_np", 10, endpointName, NULL);
+        rpcStatus = RpcServerUseProtseqEpW(L"ncacn_np",
+                                           RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
+                                           endpointName, NULL);
         if ((rpcStatus != RPC_S_OK) && (rpcStatus != RPC_S_DUPLICATE_ENDPOINT))
         {
             /* We couldn't create it, or it already existed... */
@@ -106,7 +108,7 @@ RpcpAddInterface (
         }
         else
         {
-            /* It worked, register an interface on this endpoint now*/
+            /* It worked, register an interface on this endpoint now */
             rpcStatus = RpcServerRegisterIf(IfSpec, 0, 0);
         }
 

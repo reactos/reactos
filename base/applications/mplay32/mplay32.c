@@ -209,16 +209,23 @@ ShowLastWin32Error(HWND hwnd)
     LPTSTR lpMessageBuffer;
     DWORD dwError = GetLastError();
 
-    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                      NULL,
-                      dwError,
-                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                      (LPTSTR)&lpMessageBuffer,
-                      0, NULL) != 0)
+    if (dwError == ERROR_SUCCESS)
+        return;
+
+    if (!FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                       FORMAT_MESSAGE_FROM_SYSTEM |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       NULL,
+                       dwError,
+                       LANG_USER_DEFAULT,
+                       (LPTSTR)&lpMessageBuffer,
+                       0, NULL))
     {
-        MessageBox(hwnd, lpMessageBuffer, szAppTitle, MB_OK | MB_ICONERROR);
-        if (lpMessageBuffer) LocalFree(lpMessageBuffer);
+        return;
     }
+
+    MessageBox(hwnd, lpMessageBuffer, szAppTitle, MB_OK | MB_ICONERROR);
+    LocalFree(lpMessageBuffer);
 }
 
 static VOID
@@ -1054,14 +1061,14 @@ BuildFileFilterAndDeviceMenu(VOID)
         /* Add the description */
         StringCbPrintfEx(c, uSizeRemain, &c, &uSizeRemain, 0, _T("%s (%s)"), szFriendlyName, szExtensionList);
 
-        /* Skip one char to seperate the description from the filter mask */
+        /* Skip one char to separate the description from the filter mask */
         c++;
         uSizeRemain -= sizeof(*c);
 
         /* Append the filter mask */
         StringCbCopyEx(c, uSizeRemain, szExtensionList, &c, &uSizeRemain, 0);
 
-        /* Skip another char to seperate the elements of the filter mask */
+        /* Skip another char to separate the elements of the filter mask */
         c++;
         uSizeRemain -= sizeof(*c);
     }
@@ -1089,7 +1096,7 @@ BuildFileFilterAndDeviceMenu(VOID)
     /* Add the default (all files) description */
     StringCbPrintfEx(c, uSizeRemain, &c, &uSizeRemain, 0, _T("%s (%s)"), szDefaultFilter, szExtensionList);
 
-    /* Skip one char to seperate the description from the filter mask */
+    /* Skip one char to separate the description from the filter mask */
     c++;
     uSizeRemain -= sizeof(*c);
 
@@ -1115,7 +1122,7 @@ Failure:
     /* Add the default (all files) description */
     StringCbPrintfEx(c, uSizeRemain, &c, &uSizeRemain, 0, _T("%s (%s)"), szDefaultFilter, szDefaultExtension);
 
-    /* Skip one char to seperate the description from the filter mask */
+    /* Skip one char to separate the description from the filter mask */
     c++;
     uSizeRemain -= sizeof(*c);
 

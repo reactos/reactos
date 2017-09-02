@@ -2,8 +2,6 @@
 add_definitions(
     -DWIN32
     -DNDEBUG
-    -DBUILD_LIBTIFF_DLL
-    -DDLL_EXPORT
     -DUSE_WIN32_FILEIO)
 
 include_directories(
@@ -11,7 +9,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
 list(APPEND SOURCE
-    mkg3states.c
+    #mkg3states.c
     tif_aux.c
     tif_close.c
     tif_codec.c
@@ -28,18 +26,20 @@ list(APPEND SOURCE
     tif_fax3sm.c
     tif_flush.c
     tif_getimage.c
-    tif_jbig.c
-    tif_jpeg.c
+    #tif_jbig.c
+    #tif_jpeg.c
     tif_luv.c
+    #tif_lzma.c
     tif_lzw.c
     tif_next.c
-    tif_ojpeg.c
+    #tif_ojpeg.c
     tif_open.c
     tif_packbits.c
     tif_pixarlog.c
     tif_predict.c
     tif_print.c
     tif_read.c
+    #tif_stream.cxx
     tif_strip.c
     tif_swab.c
     tif_thunder.c
@@ -51,7 +51,7 @@ list(APPEND SOURCE
     tif_zip.c
     precomp.h)
 
-add_library(libtiff SHARED ${SOURCE})
+add_library(libtiff SHARED ${SOURCE} libtiff.def)
 set_module_type(libtiff win32dll)
 target_link_libraries(libtiff zlib getopt)
 add_importlibs(libtiff user32 msvcrt kernel32 ntdll)

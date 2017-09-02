@@ -15,9 +15,13 @@ BEGIN
     IDS_ERROR_NOMEM "Na vykonanie tejto operácie nie je dostatok voľnej pamäte."
     IDS_ERROR_NOFONT "Požadovaný súbor %1 nie je platným súborom písiem."
     IDS_ERROR_NOCLASS "Nepodarilo sa inicializovať triedu window."
-    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
+    IDS_FILTER_LIST "All Supported Fonts (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType Font (*.ttf)\0*.ttf\0\
+TrueType Font Collection (*.ttc)\0*.ttc\0\
 OpenType Font (*.otf)\0*.otf\0\
-Font File (*.fon)\0*.fon\0\
+OpenType Font Collection (*.otc)\0*.otc\0\
 All Files (*.*)\0*.*\0"
+    IDS_PREVIOUS "< P&revious"
+    IDS_NEXT "&Next >"
 END

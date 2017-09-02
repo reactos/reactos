@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -156,7 +156,7 @@ AcpiTbValidateRsdp (
  *
  ******************************************************************************/
 
-ACPI_STATUS
+ACPI_STATUS ACPI_INIT_FUNCTION
 AcpiFindRootPointer (
     ACPI_PHYSICAL_ADDRESS   *TableAddress)
 {
@@ -262,7 +262,7 @@ AcpiFindRootPointer (
     return_ACPI_STATUS (AE_NOT_FOUND);
 }
 
-ACPI_EXPORT_SYMBOL (AcpiFindRootPointer)
+ACPI_EXPORT_SYMBOL_INIT (AcpiFindRootPointer)
 
 
 /*******************************************************************************

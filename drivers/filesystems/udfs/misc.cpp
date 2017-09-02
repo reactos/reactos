@@ -272,32 +272,32 @@ UDFExceptionFilter(
 #if defined UDF_DBG || defined PRINT_ALWAYS
     ULONG i;
 
-    KdPrint(("UDFExceptionFilter\n"));
-    KdPrint(("    Ex. Code: %x\n",PtrExceptionPointers->ExceptionRecord->ExceptionCode));
-    KdPrint(("    Ex. Addr: %x\n",PtrExceptionPointers->ExceptionRecord->ExceptionAddress));
-    KdPrint(("    Ex. Flag: %x\n",PtrExceptionPointers->ExceptionRecord->ExceptionFlags));
-    KdPrint(("    Ex. Pnum: %x\n",PtrExceptionPointers->ExceptionRecord->NumberParameters));
+    UDFPrint(("UDFExceptionFilter\n"));
+    UDFPrint(("    Ex. Code: %x\n",PtrExceptionPointers->ExceptionRecord->ExceptionCode));
+    UDFPrint(("    Ex. Addr: %x\n",PtrExceptionPointers->ExceptionRecord->ExceptionAddress));
+    UDFPrint(("    Ex. Flag: %x\n",PtrExceptionPointers->ExceptionRecord->ExceptionFlags));
+    UDFPrint(("    Ex. Pnum: %x\n",PtrExceptionPointers->ExceptionRecord->NumberParameters));
     for(i=0;i<PtrExceptionPointers->ExceptionRecord->NumberParameters;i++) {
-        KdPrint(("       %x\n",PtrExceptionPointers->ExceptionRecord->ExceptionInformation[i]));
+        UDFPrint(("       %x\n",PtrExceptionPointers->ExceptionRecord->ExceptionInformation[i]));
     }
 #ifdef _X86_
-    KdPrint(("Exception context:\n"));
+    UDFPrint(("Exception context:\n"));
     if(PtrExceptionPointers->ContextRecord->ContextFlags & CONTEXT_INTEGER) {
-        KdPrint(("EAX=%8.8x   ",PtrExceptionPointers->ContextRecord->Eax));
-        KdPrint(("EBX=%8.8x   ",PtrExceptionPointers->ContextRecord->Ebx));
-        KdPrint(("ECX=%8.8x   ",PtrExceptionPointers->ContextRecord->Ecx));
-        KdPrint(("EDX=%8.8x\n",PtrExceptionPointers->ContextRecord->Edx));
+        UDFPrint(("EAX=%8.8x   ",PtrExceptionPointers->ContextRecord->Eax));
+        UDFPrint(("EBX=%8.8x   ",PtrExceptionPointers->ContextRecord->Ebx));
+        UDFPrint(("ECX=%8.8x   ",PtrExceptionPointers->ContextRecord->Ecx));
+        UDFPrint(("EDX=%8.8x\n",PtrExceptionPointers->ContextRecord->Edx));
 
-        KdPrint(("ESI=%8.8x   ",PtrExceptionPointers->ContextRecord->Esi));
-        KdPrint(("EDI=%8.8x   ",PtrExceptionPointers->ContextRecord->Edi));
+        UDFPrint(("ESI=%8.8x   ",PtrExceptionPointers->ContextRecord->Esi));
+        UDFPrint(("EDI=%8.8x   ",PtrExceptionPointers->ContextRecord->Edi));
     }
     if(PtrExceptionPointers->ContextRecord->ContextFlags & CONTEXT_CONTROL) {
-        KdPrint(("EBP=%8.8x   ",PtrExceptionPointers->ContextRecord->Esp));
-        KdPrint(("ESP=%8.8x\n",PtrExceptionPointers->ContextRecord->Ebp));
+        UDFPrint(("EBP=%8.8x   ",PtrExceptionPointers->ContextRecord->Esp));
+        UDFPrint(("ESP=%8.8x\n",PtrExceptionPointers->ContextRecord->Ebp));
 
-        KdPrint(("EIP=%8.8x\n",PtrExceptionPointers->ContextRecord->Eip));
+        UDFPrint(("EIP=%8.8x\n",PtrExceptionPointers->ContextRecord->Eip));
     }
-//    KdPrint(("Flags: %s %s    ",PtrExceptionPointers->ContextRecord->Eip));
+//    UDFPrint(("Flags: %s %s    ",PtrExceptionPointers->ContextRecord->Eip));
 #endif //_X86_
 
 #endif // UDF_DBG
@@ -319,7 +319,7 @@ UDFExceptionFilter(
 
         // better free up the IrpContext now ...
         if (PtrIrpContext) {
-            KdPrint(("    UDF Driver internal error\n"));
+            UDFPrint(("    UDF Driver internal error\n"));
             BrutePoint();
         } else {
             // we are not ok, propagate this exception.
@@ -366,12 +366,12 @@ UDFExceptionHandler(
     PVPB Vpb;
     PETHREAD Thread;
 
-    KdPrint(("UDFExceptionHandler \n"));
+    UDFPrint(("UDFExceptionHandler \n"));
 
 //    ASSERT(Irp);
 
     if (!Irp) {
-        KdPrint(("  !Irp, return\n"));
+        UDFPrint(("  !Irp, return\n"));
         ASSERT(!PtrIrpContext);
         return ExceptionCode;
     }
@@ -383,7 +383,7 @@ UDFExceptionHandler(
         // Free irp context here
 //        UDFReleaseIrpContext(PtrIrpContext);
     } else {
-        KdPrint(("  complete Irp and return\n"));
+        UDFPrint(("  complete Irp and return\n"));
         // must be insufficient resources ...?
         ExceptionCode = STATUS_INSUFFICIENT_RESOURCES;
         Irp->IoStatus.Status = ExceptionCode;
@@ -408,7 +408,7 @@ UDFExceptionHandler(
 
     if (ExceptionCode == STATUS_VERIFY_REQUIRED) {
         if (KeGetCurrentIrql() >= APC_LEVEL) {
-            KdPrint(("  use UDFPostRequest()\n"));
+            UDFPrint(("  use UDFPostRequest()\n"));
             ExceptionCode = UDFPostRequest( PtrIrpContext, Irp );
         }
     }
@@ -417,7 +417,7 @@ UDFExceptionHandler(
     if ((ExceptionCode == STATUS_PENDING) ||
         (ExceptionCode == STATUS_CANT_WAIT)) {
 
-        KdPrint(("  STATUS_PENDING/STATUS_CANT_WAIT, return\n"));
+        UDFPrint(("  STATUS_PENDING/STATUS_CANT_WAIT, return\n"));
         return ExceptionCode;
     }
 
@@ -448,7 +448,7 @@ UDFExceptionHandler(
                 //  Let's not BugCheck just because the driver screwed up.
                 if (Device == NULL) {
 
-                    KdPrint(("  Device == NULL, return\n"));
+                    UDFPrint(("  Device == NULL, return\n"));
                     ExceptionCode = STATUS_DRIVER_INTERNAL_ERROR;
                     Irp->IoStatus.Status = ExceptionCode;
                     Irp->IoStatus.Information = 0;
@@ -461,7 +461,7 @@ UDFExceptionHandler(
                 }
             }
 
-            KdPrint(("  use UDFPerformVerify()\n"));
+            UDFPrint(("  use UDFPerformVerify()\n"));
             //  UDFPerformVerify() will do the right thing with the Irp.
             //  If we return STATUS_CANT_WAIT then the current thread
             //  can retry the request.
@@ -475,7 +475,7 @@ UDFExceptionHandler(
 
         if (FlagOn( PtrIrpContext->IrpContextFlags, UDF_IRP_CONTEXT_FLAG_DISABLE_POPUPS )) {
   
-            KdPrint(("  DISABLE_POPUPS, complete Irp and return\n"));
+            UDFPrint(("  DISABLE_POPUPS, complete Irp and return\n"));
             Irp->IoStatus.Status = ExceptionCode;
             Irp->IoStatus.Information = 0;
             // complete the IRP
@@ -506,7 +506,7 @@ UDFExceptionHandler(
 
                 //  Let's not BugCheck just because the driver screwed up.
                 if (Device == NULL) {
-                    KdPrint(("  Device == NULL, return(2)\n"));
+                    UDFPrint(("  Device == NULL, return(2)\n"));
                     Irp->IoStatus.Status = ExceptionCode;
                     Irp->IoStatus.Information = 0;
                     // complete the IRP
@@ -528,7 +528,7 @@ UDFExceptionHandler(
             //  We will be handing control back to the caller here, so
             //  reset the saved device object.
 
-            KdPrint(("  use IoSetDeviceToVerify()\n"));
+            UDFPrint(("  use IoSetDeviceToVerify()\n"));
             IoSetDeviceToVerify( Thread, NULL );
             //  The Irp will be completed by Io or resubmitted.  In either
             //  case we must clean up the IrpContext here.
@@ -540,7 +540,7 @@ UDFExceptionHandler(
 
     // If it was a normal request from IOManager then complete it
     if (Irp) {
-        KdPrint(("  complete Irp\n"));
+        UDFPrint(("  complete Irp\n"));
         // set the error code in the IRP
         Irp->IoStatus.Status = ExceptionCode;
         Irp->IoStatus.Information = 0;
@@ -551,7 +551,7 @@ UDFExceptionHandler(
         UDFReleaseIrpContext(PtrIrpContext);
     }
 
-    KdPrint(("  return from exception handler with code %x\n", ExceptionCode));
+    UDFPrint(("  return from exception handler with code %x\n", ExceptionCode));
     return(ExceptionCode);
 } // end UDFExceptionHandler()
 
@@ -725,7 +725,7 @@ UDFAllocateCCB(VOID)
         // if we failed to obtain from the zone, get it directly from the VMM
         Ccb = (PtrUDFCCB)MyAllocatePool__(NonPagedPool, UDFQuadAlign(sizeof(UDFCCB)));
         AllocatedFromZone = FALSE;
-//        KdPrint(("    CCB allocated @%x\n",Ccb));
+//        UDFPrint(("    CCB allocated @%x\n",Ccb));
     }
 
     if (!Ccb) {
@@ -744,7 +744,7 @@ UDFAllocateCCB(VOID)
         UDFSetFlag(Ccb->CCBFlags, UDF_CCB_NOT_FROM_ZONE);
     }
 
-    KdPrint(("UDFAllocateCCB: %x\n", Ccb));
+    UDFPrint(("UDFAllocateCCB: %x\n", Ccb));
     return(Ccb);
 } // end UDFAllocateCCB()
 
@@ -773,7 +773,7 @@ UDFReleaseCCB(
 
     ASSERT(Ccb);
 
-    KdPrint(("UDFReleaseCCB: %x\n", Ccb));
+    UDFPrint(("UDFReleaseCCB: %x\n", Ccb));
     // give back memory either to the zone or to the VMM
     if(!(Ccb->CCBFlags & UDF_CCB_NOT_FROM_ZONE)) {
         // back to the zone
@@ -868,7 +868,7 @@ UDFAllocateFCB(VOID)
     Fcb->NodeIdentifier.NodeType = UDF_NODE_TYPE_FCB;
     Fcb->NodeIdentifier.NodeSize = UDFQuadAlign(sizeof(UDFFCB));
 
-    KdPrint(("UDFAllocateFCB: %x\n", Fcb));
+    UDFPrint(("UDFAllocateFCB: %x\n", Fcb));
     return(Fcb);
 } // end UDFAllocateFCB()
 
@@ -909,7 +909,7 @@ UDFCleanUpFCB(
     PtrUDFFCB Fcb
     )
 {
-    KdPrint(("UDFCleanUpFCB: %x\n", Fcb));
+    UDFPrint(("UDFCleanUpFCB: %x\n", Fcb));
     if(!Fcb) return;
 
     ASSERT(Fcb->NodeIdentifier.NodeType == UDF_NODE_TYPE_FCB);
@@ -927,7 +927,7 @@ UDFCleanUpFCB(
             }
 #ifdef UDF_DBG
             else {
-                KdPrint(("UDF: Fcb has invalid FCBName Buffer\n"));
+                UDFPrint(("UDF: Fcb has invalid FCBName Buffer\n"));
                 BrutePoint();
             }
 #endif
@@ -936,7 +936,7 @@ UDFCleanUpFCB(
         }
 #ifdef UDF_DBG
         else {
-            KdPrint(("UDF: Fcb has invalid FCBName field\n"));
+            UDFPrint(("UDF: Fcb has invalid FCBName field\n"));
             BrutePoint();
         }
 #endif
@@ -1174,7 +1174,7 @@ UDFPostRequest(
         KeReleaseSpinLock( &(Vcb->OverflowQueueSpinLock), SavedIrql );
 
         // queue up the request
-        ExInitializeWorkItem(&(PtrIrpContext->WorkQueueItem), (PWORKER_THREAD_ROUTINE)UDFCommonDispatch, PtrIrpContext);
+        ExInitializeWorkItem(&(PtrIrpContext->WorkQueueItem), UDFCommonDispatch, PtrIrpContext);
 
         ExQueueWorkItem(&(PtrIrpContext->WorkQueueItem), CriticalWorkQueue);
     //    ExQueueWorkItem(&(PtrIrpContext->WorkQueueItem), DelayedWorkQueue);
@@ -1204,6 +1204,7 @@ UDFPostRequest(
 *
 *************************************************************************/
 VOID
+NTAPI
 UDFCommonDispatch(
     IN PVOID Context   // actually is a pointer to IRPContext structure
     )
@@ -1224,7 +1225,7 @@ UDFCommonDispatch(
          (PtrIrpContext->NodeIdentifier.NodeType != UDF_NODE_TYPE_IRP_CONTEXT) ||
          (PtrIrpContext->NodeIdentifier.NodeSize != UDFQuadAlign(sizeof(UDFIrpContext))) /*||
         !(PtrIrpContext->Irp)*/) {
-        KdPrint(("    Invalid Context\n"));
+        UDFPrint(("    Invalid Context\n"));
         BrutePoint();
         return;
     }
@@ -1232,11 +1233,11 @@ UDFCommonDispatch(
     Vcb = (PVCB)(PtrIrpContext->TargetDeviceObject->DeviceExtension);
     ASSERT(Vcb);
 
-    KdPrint(("  *** Thr: %x  ThCnt: %x  QCnt: %x  Started!\n", PsGetCurrentThread(), Vcb->PostedRequestCount, Vcb->OverflowQueueCount));
+    UDFPrint(("  *** Thr: %x  ThCnt: %x  QCnt: %x  Started!\n", PsGetCurrentThread(), Vcb->PostedRequestCount, Vcb->OverflowQueueCount));
 
     while(TRUE) {
 
-        KdPrint(("    Next IRP\n"));
+        UDFPrint(("    Next IRP\n"));
         FsRtlEnterFileSystem();
 
         //  Get a pointer to the IRP structure
@@ -1263,7 +1264,7 @@ UDFCommonDispatch(
             // either in the IrpContext (copied from the IRP), or directly from the
             //  IRP itself (we will need a pointer to the stack location to do that),
             //  Then, switch based on the value on the Major Function code
-            KdPrint(("  *** MJ: %x, Thr: %x\n", PtrIrpContext->MajorFunction, PsGetCurrentThread()));
+            UDFPrint(("  *** MJ: %x, Thr: %x\n", PtrIrpContext->MajorFunction, PsGetCurrentThread()));
             switch (PtrIrpContext->MajorFunction) {
             case IRP_MJ_CREATE:
                 // Invoke the common create routine
@@ -1332,7 +1333,7 @@ UDFCommonDispatch(
 #endif // UDF_ENABLE_SECURITY
             // Continue with the remaining possible dispatch routines below ...
             default:
-                KdPrint(("  unhandled *** MJ: %x, Thr: %x\n", PtrIrpContext->MajorFunction, PsGetCurrentThread()));
+                UDFPrint(("  unhandled *** MJ: %x, Thr: %x\n", PtrIrpContext->MajorFunction, PsGetCurrentThread()));
                 // This is the case where we have an invalid major function
                 Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
                 Irp->IoStatus.Information = 0;
@@ -1344,7 +1345,7 @@ UDFCommonDispatch(
             }
 
             // Note: PtrIrpContext is invalid here
-            KdPrint(("  *** Thr: %x  Done!\n", PsGetCurrentThread()));
+            UDFPrint(("  *** Thr: %x  Done!\n", PsGetCurrentThread()));
 
         } _SEH2_EXCEPT(UDFExceptionFilter(PtrIrpContext, _SEH2_GetExceptionInformation())) {
 
@@ -1386,7 +1387,7 @@ UDFCommonDispatch(
     Vcb->PostedRequestCount--;
     KeReleaseSpinLock(&(Vcb->OverflowQueueSpinLock), SavedIrql);
 
-    KdPrint(("  *** Thr: %x  ThCnt: %x  QCnt: %x  Terminated!\n", PsGetCurrentThread(), Vcb->PostedRequestCount, Vcb->OverflowQueueCount));
+    UDFPrint(("  *** Thr: %x  ThCnt: %x  QCnt: %x  Terminated!\n", PsGetCurrentThread(), Vcb->PostedRequestCount, Vcb->OverflowQueueCount));
 
     return;
 } // end UDFCommonDispatch()
@@ -1637,7 +1638,7 @@ Kill_DevName_buffer:
         }
     }
 
-    KdPrint(("  TargetDevName: %S\n", Vcb->TargetDevName.Buffer));
+    UDFPrint(("  TargetDevName: %S\n", Vcb->TargetDevName.Buffer));
 
     // Initialize caching for the stream file object.
     //CcInitializeCacheMap(Vcb->PtrStreamFileObject, (PCC_FILE_SIZES)(&(Vcb->AllocationSize)),
@@ -2138,18 +2139,18 @@ UDFReleaseVCB(
     )
 {
     LARGE_INTEGER delay;
-    KdPrint(("UDFReleaseVCB\n"));
+    UDFPrint(("UDFReleaseVCB\n"));
 
     delay.QuadPart = -500000; // 0.05 sec
     while(Vcb->PostedRequestCount) {
-        KdPrint(("UDFReleaseVCB: PostedRequestCount = %d\n", Vcb->PostedRequestCount));
+        UDFPrint(("UDFReleaseVCB: PostedRequestCount = %d\n", Vcb->PostedRequestCount));
         // spin until all queues IRPs are processed
         KeDelayExecutionThread(KernelMode, FALSE, &delay);
         delay.QuadPart -= 500000; // grow delay 0.05 sec
     }
 
     _SEH2_TRY {
-        KdPrint(("UDF: Flushing buffers\n"));
+        UDFPrint(("UDF: Flushing buffers\n"));
         UDFVRelease(Vcb);
         WCacheFlushAll__(&(Vcb->FastCache),Vcb);
         WCacheRelease__(&(Vcb->FastCache));
@@ -2161,8 +2162,8 @@ UDFReleaseVCB(
 #ifdef UDF_DBG
     _SEH2_TRY {
         if (!ExIsResourceAcquiredShared(&UDFGlobalData.GlobalDataResource)) {
-            KdPrint(("UDF: attempt to access to not protected data\n"));
-            KdPrint(("UDF: UDFGlobalData\n"));
+            UDFPrint(("UDF: attempt to access to not protected data\n"));
+            UDFPrint(("UDF: UDFGlobalData\n"));
             BrutePoint();
         }
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
@@ -2185,7 +2186,7 @@ UDFReleaseVCB(
     }*/
 
     _SEH2_TRY {
-        KdPrint(("UDF: Delete resources\n"));
+        UDFPrint(("UDF: Delete resources\n"));
         UDFDeleteResource(&(Vcb->VCBResource));
         UDFDeleteResource(&(Vcb->BitMapResource1));
         UDFDeleteResource(&(Vcb->FcbListResource));
@@ -2200,7 +2201,7 @@ UDFReleaseVCB(
     } _SEH2_END;
 
     _SEH2_TRY {
-        KdPrint(("UDF: Cleanup VCB\n"));
+        UDFPrint(("UDF: Cleanup VCB\n"));
         ASSERT(IsListEmpty(&(Vcb->NextNotifyIRP)));
         FsRtlNotifyUninitializeSync(&(Vcb->NotifyIRPMutex));
         UDFCleanupVCB(Vcb);
@@ -2209,7 +2210,7 @@ UDFReleaseVCB(
     } _SEH2_END;
 
     _SEH2_TRY {
-        KdPrint(("UDF: Delete DO\n"));
+        UDFPrint(("UDF: Delete DO\n"));
         IoDeleteDevice(Vcb->VCBDeviceObject);
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         BrutePoint();
@@ -2263,12 +2264,12 @@ UDFRegCheckParameterValue(
 
         paramPath.Buffer = (PWCH)MyAllocatePool__(PagedPool, paramPath.MaximumLength);
         if(!paramPath.Buffer) {
-            KdPrint(("UDFCheckRegValue: couldn't allocate paramPath\n"));
+            UDFPrint(("UDFCheckRegValue: couldn't allocate paramPath\n"));
             try_return(val = DefValue);
         }
         paramPathUnknown.Buffer = (PWCH)MyAllocatePool__(PagedPool, paramPathUnknown.MaximumLength);
         if(!paramPathUnknown.Buffer) {
-            KdPrint(("UDFCheckRegValue: couldn't allocate paramPathUnknown\n"));
+            UDFPrint(("UDFCheckRegValue: couldn't allocate paramPathUnknown\n"));
             try_return(val = DefValue);
         }
 
@@ -2281,7 +2282,7 @@ UDFRegCheckParameterValue(
         if(!NT_SUCCESS(status)) {
             try_return(val = DefValue);
         }
-        KdPrint(("UDFCheckRegValue: (1) |%S|\n", paramPath.Buffer));
+        UDFPrint(("UDFCheckRegValue: (1) |%S|\n", paramPath.Buffer));
 
         RtlZeroMemory(paramPathUnknown.Buffer, paramPathUnknown.MaximumLength);
         status = RtlAppendUnicodeToString(&paramPathUnknown, RegistryPath->Buffer);
@@ -2296,7 +2297,7 @@ UDFRegCheckParameterValue(
         if(!NT_SUCCESS(status)) {
             try_return(val = DefValue);
         }
-        KdPrint(("UDFCheckRegValue: (2) |%S|\n", paramPathUnknown.Buffer));
+        UDFPrint(("UDFCheckRegValue: (2) |%S|\n", paramPathUnknown.Buffer));
 
         // First append \Parameters\Default_XXX to the passed in registry path
         if(DefaultPath) {
@@ -2305,7 +2306,7 @@ UDFRegCheckParameterValue(
             defaultParamPath.MaximumLength = paramPath.Length + defaultParamStr.Length + sizeof(WCHAR);
             defaultParamPath.Buffer = (PWCH)MyAllocatePool__(PagedPool, defaultParamPath.MaximumLength);
             if(!defaultParamPath.Buffer) {
-                KdPrint(("UDFCheckRegValue: couldn't allocate defaultParamPath\n"));
+                UDFPrint(("UDFCheckRegValue: couldn't allocate defaultParamPath\n"));
                 try_return(val = DefValue);
             }
 
@@ -2318,7 +2319,7 @@ UDFRegCheckParameterValue(
             if(!NT_SUCCESS(status)) {
                 try_return(val = DefValue);
             }
-            KdPrint(("UDFCheckRegValue: (3) |%S|\n", defaultParamPath.Buffer));
+            UDFPrint(("UDFCheckRegValue: (3) |%S|\n", defaultParamPath.Buffer));
         }
 
         if(PtrVolumePath) {
@@ -2347,7 +2348,7 @@ UDFRegCheckParameterValue(
             }
         }
 
-        KdPrint(( " Parameter = %ws\n", Name));
+        UDFPrint(( " Parameter = %ws\n", Name));
 
         {
             HKEY hk = NULL;
@@ -2393,7 +2394,7 @@ try_exit:   NOTHING;
         }
     } _SEH2_END;
 
-    KdPrint(( "UDFCheckRegValue: %ws for drive %s is %x\n\n", Name, PtrVolumePath, val));
+    UDFPrint(( "UDFCheckRegValue: %ws for drive %s is %x\n\n", Name, PtrVolumePath, val));
     return val;
 } // end UDFRegCheckParameterValue()
 
@@ -2489,7 +2490,7 @@ UDFQuerySetEA(
 //    PtrUDFIrpContext PtrIrpContext = NULL;
     BOOLEAN          AreWeTopLevel = FALSE;
 
-    KdPrint(("UDFQuerySetEA: \n"));
+    UDFPrint(("UDFQuerySetEA: \n"));
 
     FsRtlEnterFileSystem();
     ASSERT(DeviceObject);
@@ -2533,7 +2534,7 @@ UDFAcquireResourceExclusiveWithCheck(
         ExIsResourceAcquiredExclusiveLite(Resource) ? 1 :
         (ExIsResourceAcquiredSharedLite(Resource) ? 2 : 0);
     if(ReAcqRes) {
-        KdPrint(("UDFAcquireResourceExclusiveWithCheck: ReAcqRes, %x\n", ReAcqRes));
+        UDFPrint(("UDFAcquireResourceExclusiveWithCheck: ReAcqRes, %x\n", ReAcqRes));
     } else {
 //        BrutePoint();
     }
@@ -2542,7 +2543,7 @@ UDFAcquireResourceExclusiveWithCheck(
         // OK
     } else
     if(ReAcqRes == 2) {
-        KdPrint(("UDFAcquireResourceExclusiveWithCheck: !!! Shared !!!\n"));
+        UDFPrint(("UDFAcquireResourceExclusiveWithCheck: !!! Shared !!!\n"));
         //BrutePoint();
     } else {
         UDFAcquireResourceExclusive(Resource, TRUE);
@@ -2560,7 +2561,7 @@ UDFAcquireResourceSharedWithCheck(
         ExIsResourceAcquiredExclusiveLite(Resource) ? 1 :
         (ExIsResourceAcquiredSharedLite(Resource) ? 2 : 0);
     if(ReAcqRes) {
-        KdPrint(("UDFAcquireResourceSharedWithCheck: ReAcqRes, %x\n", ReAcqRes));
+        UDFPrint(("UDFAcquireResourceSharedWithCheck: ReAcqRes, %x\n", ReAcqRes));
 /*    } else {
         BrutePoint();*/
     }
@@ -2569,7 +2570,7 @@ UDFAcquireResourceSharedWithCheck(
         // OK
     } else
     if(ReAcqRes == 1) {
-        KdPrint(("UDFAcquireResourceSharedWithCheck: Exclusive\n"));
+        UDFPrint(("UDFAcquireResourceSharedWithCheck: Exclusive\n"));
         //BrutePoint();
     } else {
         UDFAcquireResourceShared(Resource, TRUE);

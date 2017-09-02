@@ -37,7 +37,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","UseDelayedAcc
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MaxSockAddrLength",0x00010001,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MinSockAddrLength",0x00010001,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","HelperDllName",0x00000000,"%SystemRoot%\System32\wshtcpip.dll"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","Mapping",0x00000001,0c,00,00,00,03,00,00,00,02,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,03,00,00,00,00,00,00,00,02,00,00,00,03,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","Mapping",0x00000001,0e,00,00,00,03,00,00,00,02,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,03,00,00,00,00,00,00,00,02,00,00,00,03,00,00,00,01,00,00,00,02,00,00,00,03,00,00,00,ff,00,00,00,02,00,00,00,03,00,00,00,06,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock\Parameters","Transports",0x00010000,"Tcpip"
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters","AutodialDLL",0x00000000,"rasadhlp.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters","Current_NameSpace_Catalog",0x00000000,"NameSpace_Catalog5"
@@ -53,7 +53,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\NameSpace_Catalog5\C
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\NameSpace_Catalog5\Catalog_Entries\000000000001","ProviderId",0x00000001,40,9D,05,22,9E,7E,CF,11,AE,5A,00,AA,00,A7,11,2B
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\NameSpace_Catalog5\Catalog_Entries\000000000001","LibraryPath",0x00000000,"%SystemRoot%\system32\mswsock.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\NameSpace_Catalog5\Catalog_Entries\000000000001","DisplayString",0x00000000,"mswsock.dll"
-HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\Protocol_Catalog9","Num_Catalog_Entries",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\Protocol_Catalog9","Num_Catalog_Entries",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\Protocol_Catalog9","Next_Catalog_Entry_ID",0x00010001,0x000003e9
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\Protocol_Catalog9","Serial_Access_Num",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\Protocol_Catalog9\Catalog_Entries\000000000001","ProtocolName",0x00000000,"msafd"
@@ -172,9 +172,69 @@ BB,FF,00,00,00,00,00,00,4D,00,53,00,41,00,46,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\Protocol_Catalog9\Catalog_Entries\000000000003","ProtocolName",0x00000000,"msafd"
+HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\Protocol_Catalog9\Catalog_Entries\000000000003","PackedCatalogItem",0x00000001,\
+25,53,79,73,74,65,6D,52,6F,6F,74,25,5C,73,79,73,\
+74,65,6D,33,32,5C,6D,73,61,66,64,2E,64,6C,6C,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,09,06,02,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,0c,00,00,00,a0,1a,0f,e7,8b,ab,cf,11,\
+8c,a3,00,80,5f,48,a1,92,eb,03,00,00,01,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,02,00,00,00,\
+02,00,00,00,10,00,00,00,10,00,00,00,03,00,00,00,\
+00,00,00,00,ff,00,00,00,00,00,00,00,00,00,00,00,\
+00,80,00,00,00,00,00,00,40,00,25,00,53,00,79,00,\
+73,00,74,00,65,00,6d,00,52,00,6f,00,6f,00,74,00,\
+25,00,5c,00,53,00,79,00,73,00,74,00,65,00,6d,00,\
+33,00,32,00,5c,00,77,00,73,00,68,00,74,00,63,00,\
+70,00,69,00,70,00,2e,00,64,00,6c,00,6c,00,2c,00,\
+2d,00,36,00,30,00,31,00,30,00,32,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00
+
 
 [MS_TCPIP.PrimaryInstall.Services]
 AddService = Tcpip, , tcpip_Service_Inst
+AddService = DHCP, , dhcp_Service_Inst
 
 [tcpip_Service_Inst]
 ServiceType   = 1
@@ -194,6 +254,20 @@ HKR,"Parameters","IPEnableRouter",0x00010001,0x00000000
 HKR,"Parameters","SearchList",0x00000000,""
 HKR,"Parameters","EnableSecurityFilters",0x00010001,0x00000000
 ;HKR,"Parameters","PersistentRoutes",,0x00000010
+
+[dhcp_Service_Inst]
+DisplayName   = "DHCP Client"
+Description   = "Attempts to obtain network settings automatically from an available DHCP server"
+ServiceType   = 0x20
+StartType     = 2
+ErrorControl  = 1
+ServiceBinary = "%11%\svchost.exe -k netsvcs"
+LoadOrderGroup = TDI
+AddReg=dhcp_AddReg
+
+[dhcp_AddReg]
+HKR,,"ObjectName",0x00000000,"LocalSystem"
+HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 ;-------------------------------- STRINGS -------------------------------
 

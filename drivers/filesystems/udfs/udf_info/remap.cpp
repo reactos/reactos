@@ -61,18 +61,18 @@ UDFVInit(
     BOOLEAN res_inited = FALSE;
 
     if(VerifyCtx->VInited) {
-        KdPrint(("Already inited\n"));
+        UDFPrint(("Already inited\n"));
         return STATUS_SUCCESS;
     }
     
     _SEH2_TRY {
         RtlZeroMemory(VerifyCtx, sizeof(UDF_VERIFY_CTX));
         if(!Vcb->VerifyOnWrite) {
-            KdPrint(("Verify is disabled\n"));
+            UDFPrint(("Verify is disabled\n"));
             return STATUS_SUCCESS;
         }
         if(Vcb->CDR_Mode) {
-            KdPrint(("Verify is not intended for CD/DVD-R\n"));
+            UDFPrint(("Verify is not intended for CD/DVD-R\n"));
             return STATUS_SUCCESS;
         }
         if(!OS_SUCCESS(status = ExInitializeResourceLite(&(VerifyCtx->VerifyLock)))) {
@@ -84,7 +84,7 @@ UDFVInit(
         if(VerifyCtx->StoredBitMap) {
             RtlZeroMemory(VerifyCtx->StoredBitMap, i);
         } else {
-            KdPrint(("Can't alloc verify bitmap for %x blocks\n", Vcb->LastPossibleLBA));
+            UDFPrint(("Can't alloc verify bitmap for %x blocks\n", Vcb->LastPossibleLBA));
             try_return(status = STATUS_INSUFFICIENT_RESOURCES);
         }
         InitializeListHead(&(VerifyCtx->vrfList));
@@ -113,14 +113,14 @@ UDFVWaitQueued(
     ULONG w;
 
     while(VerifyCtx->QueuedCount) {
-        KdPrint(("UDFVWaitQueued: wait for completion (%d)\n", VerifyCtx->QueuedCount));
+        UDFPrint(("UDFVWaitQueued: wait for completion (%d)\n", VerifyCtx->QueuedCount));
         w = InterlockedIncrement((PLONG)&(VerifyCtx->WaiterCount));
-        KdPrint(("  %d waiters\n", w));
+        UDFPrint(("  %d waiters\n", w));
         DbgWaitForSingleObject(&(VerifyCtx->vrfEvent), NULL);
         if((w = InterlockedDecrement((PLONG)&(VerifyCtx->WaiterCount)))) {
-            KdPrint(("  still %d waiters, q %d\n", w, VerifyCtx->QueuedCount));
+            UDFPrint(("  still %d waiters, q %d\n", w, VerifyCtx->QueuedCount));
             if(!VerifyCtx->QueuedCount) {
-                KdPrint(("  pulse event\n", w));
+                UDFPrint(("  pulse event\n", w));
                 KeSetEvent(&(VerifyCtx->vrfEvent), 0, FALSE);
             }
         }
@@ -141,7 +141,7 @@ UDFVRelease(
         return;
     }
 
-    KdPrint(("UDFVRelease: wait for completion\n"));
+    UDFPrint(("UDFVRelease: wait for completion\n"));
     UDFVWaitQueued(VerifyCtx);
 
     UDFAcquireResourceExclusive(&(VerifyCtx->VerifyLock), TRUE);
@@ -177,7 +177,7 @@ UDFVStoreBlock(
     PUDF_VERIFY_CTX VerifyCtx = &Vcb->VerifyCtx;
     PUDF_VERIFY_ITEM vItem;
 
-    KdPrint(("v-add %x\n", LBA));
+    UDFPrint(("v-add %x\n", LBA));
 
     vItem = (PUDF_VERIFY_ITEM)DbgAllocatePoolWithTag(PagedPool, sizeof(UDF_VERIFY_ITEM)+Vcb->BlockSize, 'bvWD');
     if(!vItem)
@@ -201,7 +201,7 @@ UDFVUpdateBlock(
     PUDF_VERIFY_ITEM vItem
     )
 {
-    KdPrint(("v-upd %x\n", vItem->lba));
+    UDFPrint(("v-upd %x\n", vItem->lba));
     RtlCopyMemory(vItem+1, Buffer, Vcb->BlockSize);
     vItem->crc = crc32((PUCHAR)Buffer, Vcb->BlockSize);
     return;
@@ -213,7 +213,7 @@ UDFVRemoveBlock(
     PUDF_VERIFY_ITEM vItem
     )
 {
-    KdPrint(("v-del %x\n", vItem->lba));
+    UDFPrint(("v-del %x\n", vItem->lba));
     UDFClrBit(VerifyCtx->StoredBitMap, vItem->lba);
     RemoveEntryList(&(vItem->vrfList));
     VerifyCtx->ItemCount--;
@@ -421,7 +421,7 @@ UDFVRead(
             if(!(Flags & PH_READ_VERIFY_CACHE)) {
                 crc = crc32((PUCHAR)Buffer+(vItem->lba - LBA)*Vcb->BlockSize, Vcb->BlockSize);
                 if(vItem->crc != crc) {
-                    KdPrint(("UDFVRead: stored %x != %x\n", vItem->crc, crc));
+                    UDFPrint(("UDFVRead: stored %x != %x\n", vItem->crc, crc));
                     RtlCopyMemory((PUCHAR)Buffer+(vItem->lba - LBA)*Vcb->BlockSize, vItem->Buffer, Vcb->BlockSize);
                     status = STATUS_FT_WRITE_RECOVERY;
 
@@ -431,25 +431,25 @@ UDFVRead(
                         if(bm) {
                             RtlZeroMemory(bm, crc);
                         } else {
-                            KdPrint(("Can't alloc BSBM for %x blocks\n", Vcb->LastPossibleLBA));
+                            UDFPrint(("Can't alloc BSBM for %x blocks\n", Vcb->LastPossibleLBA));
                         }
                     }
                     if(bm) {
                         UDFSetBit(bm, vItem->lba);
-                        KdPrint(("Set BB @ %#x\n", vItem->lba));
+                        UDFPrint(("Set BB @ %#x\n", vItem->lba));
                     }
 #ifdef _BROWSE_UDF_
                     bm = (uint32*)(Vcb->FSBM_Bitmap);
                     if(bm) {
                         UDFSetUsedBit(bm, vItem->lba);
-                        KdPrint(("Set BB @ %#x as used\n", vItem->lba));
+                        UDFPrint(("Set BB @ %#x as used\n", vItem->lba));
                     }
 #endif //_BROWSE_UDF_
                 } else {
                     // ok
                 }
             } else {
-                KdPrint(("UDFVRead: get cached @ %x\n", vItem->lba));
+                UDFPrint(("UDFVRead: get cached @ %x\n", vItem->lba));
                 RtlCopyMemory((PUCHAR)Buffer+(vItem->lba - LBA)*Vcb->BlockSize, vItem->Buffer, Vcb->BlockSize);
             }
             if(i >= n) {
@@ -537,10 +537,12 @@ UDFVForget(
 } // end UDFVForget()
 
 VOID
+NTAPI
 UDFVWorkItem(
-    PUDF_VERIFY_REQ VerifyReq
+    PVOID Context
     )
 {
+    PUDF_VERIFY_REQ VerifyReq = (PUDF_VERIFY_REQ)Context;
     PVCB Vcb = VerifyReq->Vcb;
     ULONG ReadBytes;
 //    OSSTATUS RC;
@@ -561,8 +563,8 @@ UDFVWorkItem(
         WCacheEODirect__(&(Vcb->FastCache), Vcb);
     } else {
         for(i=0; i<VerifyReq->nReq; i++) {
-            KdPrint(("!!! No more space for remap !!!\n"));
-            KdPrint(("  try del from verify cache @ %x\n", VerifyReq->vr[i].lba));
+            UDFPrint(("!!! No more space for remap !!!\n"));
+            UDFPrint(("  try del from verify cache @ %x\n", VerifyReq->vr[i].lba));
             UDFVRead(Vcb, VerifyReq->Buffer, VerifyReq->vr[i].BCount, VerifyReq->vr[i].lba,
                      PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER);
         }
@@ -579,8 +581,8 @@ UDFVWorkItem(
                            PH_TMP_BUFFER | PH_VCB_IN_RETLEN /*| PH_LOCK_CACHE*/);
             WCacheEODirect__(&(Vcb->FastCache), Vcb);
         } else {
-            KdPrint(("!!! No more space for remap !!!\n"));
-            KdPrint(("  try del from verify cache @ %x\n", VerifyReq->vr[i].lba));
+            UDFPrint(("!!! No more space for remap !!!\n"));
+            UDFPrint(("  try del from verify cache @ %x\n", VerifyReq->vr[i].lba));
             RC = UDFVRead(Vcb, VerifyReq->Buffer, VerifyReq->vr[i].BCount, VerifyReq->vr[i].lba,
                           PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER);
         }
@@ -589,8 +591,8 @@ UDFVWorkItem(
     DbgFreePool(VerifyReq->Buffer);
     DbgFreePool(VerifyReq);
     InterlockedDecrement((PLONG)&(Vcb->VerifyCtx.QueuedCount));
-    KdPrint(("  QueuedCount = %d\n", Vcb->VerifyCtx.QueuedCount));
-    KdPrint(("  Setting event...\n"));
+    UDFPrint(("  QueuedCount = %d\n", Vcb->VerifyCtx.QueuedCount));
+    UDFPrint(("  Setting event...\n"));
     KeSetEvent(&(Vcb->VerifyCtx.vrfEvent), 0, FALSE);
     return;
 } // end UDFVWorkItem()
@@ -616,10 +618,10 @@ UDFVVerify(
     }
     if(VerifyCtx->QueuedCount) {
         if(Flags & UFD_VERIFY_FLAG_WAIT) {
-            KdPrint(("  wait for verify flush\n"));
+            UDFPrint(("  wait for verify flush\n"));
             goto wait;
         }
-        KdPrint(("  verify flush already queued\n"));
+        UDFPrint(("  verify flush already queued\n"));
         return;
     }
 
@@ -703,7 +705,7 @@ UDFVVerify(
                         InterlockedIncrement((PLONG)&(VerifyCtx->QueuedCount));
 #ifndef _CONSOLE
                         ExInitializeWorkItem( &(VerifyReq->VerifyItem),
-                                              (PWORKER_THREAD_ROUTINE) UDFVWorkItem,
+                                              UDFVWorkItem,
                                               VerifyReq );
                         ExQueueWorkItem( &(VerifyReq->VerifyItem), CriticalWorkQueue );
 #else
@@ -729,7 +731,7 @@ UDFVVerify(
     }
     if(Flags & UFD_VERIFY_FLAG_WAIT) {
 wait:
-        KdPrint(("UDFVVerify: wait for completion\n"));
+        UDFPrint(("UDFVVerify: wait for completion\n"));
         UDFVWaitQueued(VerifyCtx);
     }
 
@@ -747,12 +749,12 @@ UDFVFlush(
         return;
     }
 
-    KdPrint(("UDFVFlush: wait for completion\n"));
+    UDFPrint(("UDFVFlush: wait for completion\n"));
     UDFVWaitQueued(VerifyCtx);
 
     UDFVVerify(Vcb, UFD_VERIFY_FLAG_FORCE);
 
-    KdPrint(("UDFVFlush: wait for completion (2)\n"));
+    UDFPrint(("UDFVFlush: wait for completion (2)\n"));
     UDFVWaitQueued(VerifyCtx);
 } // end UDFVFlush()
 
@@ -822,9 +824,9 @@ UDFRemapPacket(
 
         // use sparing table for relocation
         if(Vcb->SparingCountFree == (ULONG)-1) {
-            KdPrint(("calculate free spare areas\n"));
+            UDFPrint(("calculate free spare areas\n"));
 re_check:
-            KdPrint(("verify spare area\n"));
+            UDFPrint(("verify spare area\n"));
             Vcb->SparingCountFree = 0;
             Map = Vcb->SparingTable;
             for(i=0;i<max;i++,Map++) {
@@ -832,7 +834,7 @@ re_check:
                     if(UDFCheckArea(Vcb, Map->mappedLocation, BS)) {
                         Vcb->SparingCountFree++;
                     } else {
-                        KdPrint(("initial check: bad spare block @ %x\n", Map->mappedLocation));
+                        UDFPrint(("initial check: bad spare block @ %x\n", Map->mappedLocation));
                         Map->origLocation = SPARING_LOC_CORRUPTED;
                         Vcb->SparingTableModified = TRUE;
                     }
@@ -840,7 +842,7 @@ re_check:
             }
         }
         if(!Vcb->SparingCountFree) {
-            KdPrint(("sparing table full\n"));
+            UDFPrint(("sparing table full\n"));
             return STATUS_DISK_FULL;
         }
 
@@ -851,7 +853,7 @@ re_check:
             if(Lba == (orig & ~(BS-1)) ) {
                 // already remapped
 
-                KdPrint(("remap remapped: bad spare block @ %x\n", Map->mappedLocation));
+                UDFPrint(("remap remapped: bad spare block @ %x\n", Map->mappedLocation));
                 if(!verified) {
                     verified = TRUE;
                     goto re_check;
@@ -871,14 +873,14 @@ re_check:
         Map = Vcb->SparingTable;
         for(i=0;i<max;i++,Map++) {
             if(Map->origLocation == SPARING_LOC_AVAILABLE) {
-                KdPrint(("remap %x -> %x\n", Lba, Map->mappedLocation));
+                UDFPrint(("remap %x -> %x\n", Lba, Map->mappedLocation));
                 Map->origLocation = Lba;
                 Vcb->SparingTableModified = TRUE;
                 Vcb->SparingCountFree--;
                 return STATUS_SUCCESS;
             }
         }
-        KdPrint(("sparing table full\n"));
+        UDFPrint(("sparing table full\n"));
         return STATUS_DISK_FULL;
     }
     return STATUS_UNSUCCESSFUL;
@@ -914,7 +916,7 @@ UDFUnmapRange(
             if(orig >= Lba &&
               (orig+BS) <= (Lba+BCount)) {
                 // unmap
-                KdPrint(("unmap %x -> %x\n", orig, Map->mappedLocation));
+                UDFPrint(("unmap %x -> %x\n", orig, Map->mappedLocation));
                 Map->origLocation = SPARING_LOC_AVAILABLE;
                 Vcb->SparingTableModified = TRUE;
                 Vcb->SparingCountFree++;

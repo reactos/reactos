@@ -162,14 +162,14 @@ static SearchItem *SearchCHM_Storage(SearchItem *item, IStorage *pStorage,
     }
     while (IEnumSTATSTG_Next(elem, 1, &entries, &retr) == NOERROR)
     {
+        filename = entries.pwcsName;
+        while(strchrW(filename, '/'))
+            filename = strchrW(filename, '/')+1;
         switch(entries.type) {
         case STGTY_STORAGE:
-            item = SearchCHM_Folder(item, pStorage, entries.pwcsName, needle);
+            item = SearchCHM_Folder(item, pStorage, filename, needle);
             break;
         case STGTY_STREAM:
-            filename = entries.pwcsName;
-            while(strchrW(filename, '/'))
-                filename = strchrW(filename, '/')+1;
             if(strstrW(filename, szHTMext))
             {
                 WCHAR *title = SearchCHM_File(pStorage, filename, needle);

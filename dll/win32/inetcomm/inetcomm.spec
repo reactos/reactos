@@ -82,7 +82,7 @@
 @ stdcall MimeOleGetPropertySchema(ptr)
 @ stub MimeOleGetRelatedSection
 @ stub MimeOleInetDateToFileTime
-@ stub MimeOleObjectFromMoniker
+@ stdcall MimeOleObjectFromMoniker(long ptr ptr ptr ptr ptr)
 @ stub MimeOleOpenFileStream
 @ stub MimeOleParseMhtmlUrl
 @ stub MimeOleParseRfc822Address

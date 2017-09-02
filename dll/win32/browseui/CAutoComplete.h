@@ -48,6 +48,8 @@ public:
 	static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT APIENTRY ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+	void CreateListbox();
+
 	// IAutoComplete2
 	virtual HRESULT WINAPI Enable(BOOL fEnable);
 	virtual HRESULT WINAPI Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR pwzsRegKeyPath, LPCOLESTR pwszQuickComplete);

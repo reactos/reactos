@@ -23,7 +23,7 @@ BEGIN
     POPUP "Help"
     BEGIN
         MENUITEM "Help\tF1", ID_HELP, GRAYED
-        MENUITEM "About", ID_ABOUT
+        MENUITEM "&About", ID_ABOUT
     END
 END
 
@@ -156,6 +156,7 @@ BEGIN
     IDS_AINFO_SIZE "\nSize: "
     IDS_AINFO_URLSITE "\nHome Page: "
     IDS_AINFO_LICENSE "\nLicense: "
+    IDS_AINFO_URLDOWNLOAD "\nDownload: "
 END
 
 STRINGTABLE
@@ -197,6 +198,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
     IDS_INFORMATION "Information"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."

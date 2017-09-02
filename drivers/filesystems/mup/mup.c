@@ -39,12 +39,6 @@ DriverEntry(
     PUNICODE_STRING RegistryPath
 );
 
-NTSTATUS
-DfsDriverEntry(
-    PDRIVER_OBJECT DriverObject,
-    PUNICODE_STRING RegistryPath
-);
-
 VOID
 MupInitializeData(
     VOID
@@ -57,7 +51,6 @@ MupInitializeVcb(
 
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text(INIT, DriverEntry)
-#pragma alloc_text(INIT, DfsDriverEntry)
 #pragma alloc_text(INIT, MupInitializeData)
 #pragma alloc_text(INIT, MupInitializeVcb)
 #endif
@@ -140,7 +133,7 @@ MuppIsDfsEnabled(VOID)
     KeyName.MaximumLength = sizeof(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Mup");
 
     /* Simply query registry to know whether we have to disable DFS.
-     * Unless explicitely stated in registry, we will try to enable DFS.
+     * Unless explicitly stated in registry, we will try to enable DFS.
      */
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -788,14 +781,6 @@ Cleanup:
 
 NTSTATUS
 NTAPI
-DfsVolumePassThrough(PDEVICE_OBJECT DeviceObject,
-                     PIRP Irp)
-{
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
 MupForwardIoRequest(PDEVICE_OBJECT DeviceObject,
                     PIRP Irp)
 {
@@ -1276,13 +1261,6 @@ RegisterUncProvider(PDEVICE_OBJECT DeviceObject,
 }
 
 NTSTATUS
-DfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
-                        PIRP Irp)
-{
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 NTAPI
 MupFsControl(PDEVICE_OBJECT DeviceObject,
              PIRP Irp)
@@ -1371,7 +1349,7 @@ MupRerouteOpen(PFILE_OBJECT FileObject,
     RtlMoveMemory(FullPath, UncProvider->DeviceName.Buffer, UncProvider->DeviceName.Length);
     RtlMoveMemory((PWSTR)((ULONG_PTR)FullPath + UncProvider->DeviceName.Length), FileObject->FileName.Buffer, FileObject->FileName.Length);
 
-    /* And redo the path in the file oject */
+    /* And redo the path in the file object */
     ExFreePoolWithTag(FileObject->FileName.Buffer, 0);
     FileObject->FileName.Buffer = FullPath;
     FileObject->FileName.MaximumLength = TotalLength;
@@ -1764,7 +1742,7 @@ QueryPathCompletionRoutine(PDEVICE_OBJECT DeviceObject,
             }
 
             /* Otherwise, if the prefix was in the prefix table, just drop it:
-             * we have a provider which superseeds the accepted prefix, so leave
+             * we have a provider which supersedes the accepted prefix, so leave
              * room for the new prefix/provider
              */
             ExAcquireResourceExclusiveLite(&MupPrefixTableLock, TRUE);
@@ -1804,7 +1782,7 @@ QueryPathCompletionRoutine(PDEVICE_OBJECT DeviceObject,
         MasterQueryContext->LatestProvider = QueryContext->UncProvider;
         MasterQueryContext->LatestStatus = Status;
 
-        if (MasterQueryContext->FileObject->FsContext2 != DFS_MAGIC_CCB)
+        if (MasterQueryContext->FileObject->FsContext2 != (PVOID)DFS_DOWNLEVEL_OPEN_CONTEXT)
         {
             /* Allocate a buffer for the prefix */
             AcceptedPrefix = ExAllocatePoolWithTag(PagedPool, QueryResponse->LengthAccepted, TAG_MUP);
@@ -1856,7 +1834,7 @@ QueryPathCompletionRoutine(PDEVICE_OBJECT DeviceObject,
                 TableStatus = MupOrderedErrorList[0];
                 LatestPos = 0;
 
-                /* Otherwise, time to compare statuteses, between the latest failed
+                /* Otherwise, time to compare statuses, between the latest failed
                  * and the current failure.
                  * We have an order table of failed status: the deeper you go in the
                  * table, the more the error is critical.
@@ -1910,14 +1888,6 @@ Cleanup:
     MupDereferenceMasterQueryContext(MasterQueryContext);
 
     return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS
-DfsFsdCreate(PDEVICE_OBJECT DeviceObject,
-             PIRP Irp)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -2045,7 +2015,7 @@ CreateRedirectedFile(PIRP Irp,
     }
 
     /* Ok, at that point, that's a regular MUP opening (if no DFS) */
-    if (!MupEnableDfs || FileObject->FsContext2 == DFS_MAGIC_CCB)
+    if (!MupEnableDfs || FileObject->FsContext2 == (PVOID)DFS_DOWNLEVEL_OPEN_CONTEXT)
     {
         /* We won't complete immediately */
         IoMarkIrpPending(Irp);
@@ -2323,14 +2293,6 @@ MupCloseUncProvider(PMUP_UNC UncProvider)
 }
 
 NTSTATUS
-DfsFsdCleanup(PDEVICE_OBJECT DeviceObject,
-              PIRP Irp)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 NTAPI
 MupCleanup(PDEVICE_OBJECT DeviceObject,
            PIRP Irp)
@@ -2454,14 +2416,6 @@ MupCloseFcb(PDEVICE_OBJECT DeviceObject,
 }
 
 NTSTATUS
-DfsFsdClose(PDEVICE_OBJECT DeviceObject,
-            PIRP Irp)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 NTAPI
 MupClose(PDEVICE_OBJECT DeviceObject,
          PIRP Irp)
@@ -2533,12 +2487,6 @@ MupClose(PDEVICE_OBJECT DeviceObject,
 }
 
 VOID
-DfsUnload(PDRIVER_OBJECT DriverObject)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
 NTAPI
 MupUnload(PDRIVER_OBJECT DriverObject)
 {
@@ -2550,18 +2498,6 @@ MupUnload(PDRIVER_OBJECT DriverObject)
     }
 
     MupUninitializeData();
-}
-
-INIT_SECTION
-NTSTATUS
-DfsDriverEntry(PDRIVER_OBJECT DriverObject,
-               PUNICODE_STRING RegistryPath)
-{
-    /* We don't support DFS yet, so
-     * fail to make sure it remains disabled
-     */
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*

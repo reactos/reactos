@@ -45,10 +45,12 @@
  * Delete it once we don't use inflib anymore */
 typedef struct _INFCONTEXT
 {
-    PVOID Inf;
-    PVOID Section;
-    PVOID Line;
+  HINF Inf;
+  HINF CurrentInf;
+  UINT Section;
+  UINT Line;
 } INFCONTEXT;
+C_ASSERT(sizeof(INFCONTEXT) == 2 * sizeof(PVOID) + 2 * sizeof(UINT));
 
 BOOL
 WINAPI

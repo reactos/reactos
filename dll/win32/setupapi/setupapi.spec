@@ -1,6 +1,6 @@
 # Functions exported by Win2003 SP1
-@ stub CMP_GetBlockedDriverInfo
-@ stub CMP_GetServerSideDeviceInstallFlags
+@ stdcall CMP_GetBlockedDriverInfo(wstr ptr long ptr)
+@ stdcall CMP_GetServerSideDeviceInstallFlags(ptr long ptr)
 @ stdcall CMP_Init_Detection(long)
 @ stdcall CMP_RegisterNotification(ptr ptr long ptr)
 @ stdcall CMP_Report_LogOn(long long)
@@ -13,7 +13,7 @@
 @ stdcall CM_Add_IDW(ptr wstr long)
 @ stdcall CM_Add_ID_ExA(ptr str long ptr)
 @ stdcall CM_Add_ID_ExW(ptr wstr long ptr)
-@ stub CM_Add_Range
+@ stdcall CM_Add_Range(int64 int64 ptr long)
 @ stdcall CM_Add_Res_Des(ptr ptr long ptr long long)
 @ stdcall CM_Add_Res_Des_Ex(ptr ptr long ptr long long long)
 @ stdcall CM_Connect_MachineA(str ptr)
@@ -22,18 +22,18 @@
 @ stdcall CM_Create_DevNodeW(ptr wstr long long)
 @ stdcall CM_Create_DevNode_ExA(ptr str long long long)
 @ stdcall CM_Create_DevNode_ExW(ptr wstr long long long)
-@ stub CM_Create_Range_List
+@ stdcall CM_Create_Range_List(ptr long)
 @ stdcall CM_Delete_Class_Key(ptr long)
 @ stdcall CM_Delete_Class_Key_Ex(ptr long long)
 @ stdcall CM_Delete_DevNode_Key(long long long)
 @ stdcall CM_Delete_DevNode_Key_Ex(long long long ptr)
-@ stub CM_Delete_Range
+@ stdcall CM_Delete_Range(int64 int64 ptr long)
 @ stub CM_Detect_Resource_Conflict
 @ stub CM_Detect_Resource_Conflict_Ex
 @ stdcall CM_Disable_DevNode(long long)
 @ stdcall CM_Disable_DevNode_Ex(long long ptr)
 @ stdcall CM_Disconnect_Machine(long)
-@ stub CM_Dup_Range_List
+@ stdcall CM_Dup_Range_List(ptr ptr long)
 @ stdcall CM_Enable_DevNode(long long)
 @ stdcall CM_Enable_DevNode_Ex(long long ptr)
 @ stdcall CM_Enumerate_Classes(long ptr long)
@@ -42,12 +42,12 @@
 @ stdcall CM_Enumerate_EnumeratorsW(long wstr ptr long)
 @ stdcall CM_Enumerate_Enumerators_ExA(long str ptr long long)
 @ stdcall CM_Enumerate_Enumerators_ExW(long wstr ptr long long)
-@ stub CM_Find_Range
-@ stub CM_First_Range
+@ stdcall CM_Find_Range(ptr int64 long int64 int64 ptr long)
+@ stdcall CM_First_Range(ptr ptr ptr ptr long)
 @ stdcall CM_Free_Log_Conf(ptr long)
 @ stdcall CM_Free_Log_Conf_Ex(ptr long ptr)
 @ stdcall CM_Free_Log_Conf_Handle(ptr)
-@ stub CM_Free_Range_List
+@ stdcall CM_Free_Range_List(ptr long)
 @ stdcall CM_Free_Res_Des(ptr ptr long)
 @ stdcall CM_Free_Res_Des_Ex(ptr ptr long long)
 @ stdcall CM_Free_Res_Des_Handle(ptr)
@@ -133,8 +133,8 @@
 @ stdcall CM_Get_Sibling_Ex(ptr long long long)
 @ stdcall CM_Get_Version()
 @ stdcall CM_Get_Version_Ex(long)
-@ stub CM_Intersect_Range_List
-@ stub CM_Invert_Range_List
+@ stdcall CM_Intersect_Range_List(ptr ptr ptr long)
+@ stdcall CM_Invert_Range_List(ptr ptr int64 long)
 @ stdcall CM_Is_Dock_Station_Present(ptr)
 @ stdcall CM_Is_Dock_Station_Present_Ex(ptr long)
 @ stdcall CM_Is_Version_Available(long)
@@ -143,12 +143,12 @@
 @ stdcall CM_Locate_DevNodeW(ptr wstr long)
 @ stdcall CM_Locate_DevNode_ExA(ptr str long long)
 @ stdcall CM_Locate_DevNode_ExW(ptr wstr long long)
-@ stub CM_Merge_Range_List
+@ stdcall CM_Merge_Range_List(ptr ptr ptr long)
 @ stdcall CM_Modify_Res_Des(ptr ptr long ptr long long)
 @ stdcall CM_Modify_Res_Des_Ex(ptr ptr long ptr long long long)
 @ stdcall CM_Move_DevNode(long long long)
 @ stdcall CM_Move_DevNode_Ex(long long long long)
-@ stub CM_Next_Range
+@ stdcall CM_Next_Range(ptr ptr ptr long)
 @ stdcall CM_Open_Class_KeyA(ptr str long long ptr long)
 @ stdcall CM_Open_Class_KeyW(ptr wstr long long ptr long)
 @ stdcall CM_Open_Class_Key_ExA(ptr str long long ptr long long)
@@ -200,7 +200,7 @@
 @ stdcall CM_Set_HW_Prof_Flags_ExW(wstr long long long long)
 @ stdcall CM_Setup_DevNode(long long)
 @ stdcall CM_Setup_DevNode_Ex(long long long)
-@ stub CM_Test_Range_Available
+@ stdcall CM_Test_Range_Available(int64 int64 ptr long)
 @ stdcall CM_Uninstall_DevNode(long long)
 @ stdcall CM_Uninstall_DevNode_Ex(long long long)
 @ stdcall CM_Unregister_Device_InterfaceA(str long)
@@ -221,8 +221,8 @@
 @ stub SetupAddInstallSectionToDiskSpaceListW
 @ stdcall -stub SetupAddSectionToDiskSpaceListA(long long long str long ptr long)
 @ stub SetupAddSectionToDiskSpaceListW
-@ stdcall -stub SetupAddToDiskSpaceListA(long str double long ptr long)
-@ stub SetupAddToDiskSpaceListW
+@ stdcall SetupAddToDiskSpaceListA(long str int64 long ptr long)
+@ stdcall SetupAddToDiskSpaceListW(long wstr int64 long ptr long)
 @ stub SetupAddToSourceListA
 @ stub SetupAddToSourceListW
 @ stub SetupAdjustDiskSpaceListA
@@ -368,7 +368,7 @@
 @ stdcall SetupDiRegisterCoDeviceInstallers(ptr ptr)
 @ stdcall SetupDiRegisterDeviceInfo(ptr ptr long ptr ptr ptr)
 @ stdcall SetupDiRemoveDevice(ptr ptr)
-@ stub SetupDiRemoveDeviceInterface
+@ stdcall SetupDiRemoveDeviceInterface(ptr ptr)
 @ stub SetupDiRestartDevices
 @ stdcall SetupDiSelectBestCompatDrv(ptr ptr)
 @ stdcall SetupDiSelectDevice(ptr ptr)
@@ -548,7 +548,7 @@
 @ stdcall pSetupDoesUserHavePrivilege(wstr) DoesUserHavePrivilege
 @ stdcall pSetupDuplicateString(wstr)
 @ stdcall pSetupEnablePrivilege(wstr long)
-@ stub pSetupFree
+@ stdcall pSetupFree(ptr) MyFree
 @ stub pSetupFreeStringArray
 @ stub pSetupGetCurrentDriverSigningPolicy
 @ stdcall pSetupGetField(ptr long)
@@ -568,13 +568,13 @@
 @ stub pSetupIsLocalSystem
 @ stdcall pSetupIsUserAdmin()
 @ stub pSetupMakeSurePathExists
-@ stub pSetupMalloc
+@ stdcall pSetupMalloc(long) MyMalloc
 @ stdcall pSetupModifyGlobalFlags(long long)
 @ stdcall pSetupMultiByteToUnicode(str long)
 @ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr)
 @ stub pSetupOutOfMemory
 @ stub pSetupQueryMultiSzValueToArray
-@ stub pSetupRealloc
+@ stdcall pSetupRealloc(ptr long) MyRealloc
 @ stdcall pSetupRegistryDelnode(long long)
 @ stub pSetupRetrieveServiceConfig
 @ stub pSetupSetArrayToMultiSzValue

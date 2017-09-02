@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Ops&laan als...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Pagina-in&stelling...", CMD_PAGE_SETUP
-        MENUITEM "&Afdrukken\tCtrl+P", CMD_PRINT
+        MENUITEM "&Afdrukken...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Afsluiten", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Zoeken\tCtrl+Z", CMD_SEARCH
         MENUITEM "&Volgende zoeken\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace\tCtrl+H", CMD_REPLACE
+        MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "&Alles selecteren\tCtrl+A", CMD_SELECT_ALL

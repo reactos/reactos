@@ -1,7 +1,7 @@
 /*
  * jdarith.c
  *
- * Developed 1997-2013 by Guido Vollbeding.
+ * Developed 1997-2015 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -94,7 +94,7 @@ get_byte (j_decompress_ptr cinfo)
  * (instead of fixed) with the bit shift counter CT.
  * Thus, we also need only one (variable instead of
  * fixed size) shift for the LPS/MPS decision, and
- * we can get away with any renormalization update
+ * we can do away with any renormalization update
  * of C (except for new data insertion, of course).
  *
  * I've also introduced a new scheme for accessing

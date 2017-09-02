@@ -2,23 +2,25 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 IDD_END_NOW DIALOGEX 0, 0, 200, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "סיום תכנית - "
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "מסיים תכנית... נא להמתין", IDC_STATIC, 7, 7, 186, 11
-    CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
-    LTEXT "If you choose to end the program immediately, you will lose any unsaved data. To end the program now, click End Now.", IDC_STATIC, 7, 40, 186, 26
+    CONTROL "התקדמות", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "אם תבחר לסיים את התכנית באופן מיידי, אתה תאבד את כל המידע שלא נשמר. כדי לסיים את התכנית עכשיו, לחץ סיים כעת.", IDC_STATIC, 7, 40, 186, 26
     DEFPUSHBUTTON "סיים כעת", IDC_END_NOW, 150, 71, 43, 17
 END
 
 IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "סיום תכנית - "
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "ביטול", IDCANCEL, 142, 98, 43, 17
     PUSHBUTTON "סיים כעת", IDC_END_NOW, 78, 98, 43, 17
     LTEXT "התכנית אינה מגיבה", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "To return to ReactOS and check the status of the program, click Cancel.", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "If you choose to end the program immediately, you will lose any unsaved data. To end the program now, click End Now.", IDC_STATIC, 7, 53, 178, 26
+    LTEXT "כדי לחזור לReactOS ולבדוק את מצב התכנית, לחץ ביטול.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "אם תבחר לסיים את התכנית באופן מיידי, אתה תאבד את כל המידע שלא נשמר. כדי לסיים את התכנית עכשיו, לחץ סיים כעת.", IDC_STATIC, 7, 53, 178, 26
 END

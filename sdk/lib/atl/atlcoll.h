@@ -155,6 +155,11 @@ private:
             m_Element(Element)
         {
         }
+
+    /* The CNode class does not support construction by copy */
+    private:
+        CNode(_In_ const CNode&);
+        CNode& operator=(_In_ const CNode&);
     };
 
 private:
@@ -164,6 +169,11 @@ private:
     CNode* m_TailNode;
     CNode* m_FreeNode;
     size_t m_NumElements;
+
+/* The CAtlList class does not support construction by copy */
+private:
+    CAtlList(_In_ const CAtlList&);
+    CAtlList& operator=(_In_ const CAtlList&);
 
 public:
     CAtlList(_In_ UINT nBlockSize = 10);
@@ -481,7 +491,7 @@ typename CAtlList<E, ETraits>::CNode* CAtlList<E, ETraits>::CreateNode(
 {
     GetFreeNode();
 
-    CNode* NewNode = GetFreeNode();
+    CNode* NewNode = m_FreeNode;
     CNode* NextFree = m_FreeNode->m_Next;
 
     NewNode = new CNode(element);

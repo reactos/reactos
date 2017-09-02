@@ -69,6 +69,8 @@ HRESULT linuxinput_create_effect(int* fd, REFGUID rguid, struct list *parent_lis
 HRESULT linuxinput_get_info_A(int fd, REFGUID rguid, LPDIEFFECTINFOA info);
 HRESULT linuxinput_get_info_W(int fd, REFGUID rguid, LPDIEFFECTINFOW info);
 
+static HRESULT WINAPI JoystickWImpl_SendForceFeedbackCommand(LPDIRECTINPUTDEVICE8W iface, DWORD dwFlags);
+
 typedef struct JoystickImpl JoystickImpl;
 static const IDirectInputDevice8AVtbl JoystickAvt;
 static const IDirectInputDevice8WVtbl JoystickWvt;
@@ -77,6 +79,7 @@ struct JoyDev {
 	char *device;
 	char *name;
 	GUID guid;
+	GUID guid_product;
 
         BOOL has_ff;
         int num_effects;
@@ -90,7 +93,7 @@ struct JoyDev {
 	/* data returned by the EVIOCGABS() ioctl */
         struct wine_input_absinfo       axes[ABS_MAX];
 
-        WORD vendor_id, product_id;
+        WORD vendor_id, product_id, bus_type;
 };
 
 struct JoystickImpl
@@ -140,6 +143,19 @@ static const GUID DInput_Wine_Joystick_Base_GUID = { /* 9e573eda-7734-11d2-8d4a-
   0x7734,
   0x11d2,
   {0x8d, 0x4a, 0x23, 0x90, 0x3f, 0xb6, 0xbd, 0xf7}
+};
+
+/*
+ * Construct the GUID in the same way of Windows doing this.
+ * Data1 is concatenation of productid and vendorid.
+ * Data2 and Data3 are NULL.
+ * Data4 seems to be a constant.
+ */
+static const GUID DInput_Wine_Joystick_Constant_Part_GUID = {
+  0x000000000,
+  0x0000,
+  0x0000,
+  {0x00, 0x00, 0x50, 0x49, 0x44, 0x56, 0x49, 0x44}
 };
 
 #define test_bit(arr,bit) (((BYTE*)(arr))[(bit)>>3]&(1<<((bit)&7)))
@@ -274,11 +290,19 @@ static void find_joydevs(void)
 	}
 
         if (ioctl(fd, EVIOCGID, &device_id) == -1)
+        {
             WARN("ioctl(EVIOCGID) failed: %d %s\n", errno, strerror(errno));
+            joydev.guid_product = DInput_Wine_Joystick_Base_GUID;
+        }
         else
         {
             joydev.vendor_id = device_id.vendor;
             joydev.product_id = device_id.product;
+            joydev.bus_type = device_id.bustype;
+
+            /* Concatenate product_id with vendor_id to mimic Windows behaviour */
+            joydev.guid_product       = DInput_Wine_Joystick_Constant_Part_GUID;
+            joydev.guid_product.Data1 = MAKELONG(joydev.vendor_id, joydev.product_id);
         }
 
         if (!have_joydevs)
@@ -299,27 +323,6 @@ static void find_joydevs(void)
     }
 }
 
-static void fill_joystick_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
-{
-    DWORD dwSize = lpddi->dwSize;
-
-    TRACE("%d %p\n", dwSize, lpddi);
-    memset(lpddi, 0, dwSize);
-
-    lpddi->dwSize       = dwSize;
-    lpddi->guidInstance = joydevs[id].guid;
-    lpddi->guidProduct  = DInput_Wine_Joystick_Base_GUID;
-    lpddi->guidFFDriver = GUID_NULL;
-
-    if (version >= 0x0800)
-        lpddi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
-    else
-        lpddi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
-
-    strcpy(lpddi->tszInstanceName, joydevs[id].name);
-    strcpy(lpddi->tszProductName, joydevs[id].name);
-}
-
 static void fill_joystick_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
 {
     DWORD dwSize = lpddi->dwSize;
@@ -329,7 +332,7 @@ static void fill_joystick_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD ver
 
     lpddi->dwSize       = dwSize;
     lpddi->guidInstance = joydevs[id].guid;
-    lpddi->guidProduct  = DInput_Wine_Joystick_Base_GUID;
+    lpddi->guidProduct  = joydevs[id].guid_product;
     lpddi->guidFFDriver = GUID_NULL;
 
     if (version >= 0x0800)
@@ -337,8 +340,43 @@ static void fill_joystick_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD ver
     else
         lpddi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
 
+    /* Assume the joystick as HID if it is attached to USB bus and has a valid VID/PID */
+    if (joydevs[id].bus_type == BUS_USB &&
+        joydevs[id].vendor_id && joydevs[id].product_id)
+    {
+        lpddi->dwDevType |= DIDEVTYPE_HID;
+        lpddi->wUsagePage = 0x01; /* Desktop */
+        if (lpddi->dwDevType == DI8DEVTYPE_JOYSTICK || lpddi->dwDevType == DIDEVTYPE_JOYSTICK)
+            lpddi->wUsage = 0x04; /* Joystick */
+        else
+            lpddi->wUsage = 0x05; /* Game Pad */
+    }
+
     MultiByteToWideChar(CP_ACP, 0, joydevs[id].name, -1, lpddi->tszInstanceName, MAX_PATH);
     MultiByteToWideChar(CP_ACP, 0, joydevs[id].name, -1, lpddi->tszProductName, MAX_PATH);
+}
+
+static void fill_joystick_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
+{
+    DIDEVICEINSTANCEW lpddiW;
+    DWORD dwSize = lpddi->dwSize;
+
+    lpddiW.dwSize = sizeof(lpddiW);
+    fill_joystick_dideviceinstanceW(&lpddiW, version, id);
+
+    TRACE("%d %p\n", dwSize, lpddi);
+    memset(lpddi, 0, dwSize);
+
+    /* Convert W->A */
+    lpddi->dwSize = dwSize;
+    lpddi->guidInstance = lpddiW.guidInstance;
+    lpddi->guidProduct = lpddiW.guidProduct;
+    lpddi->dwDevType = lpddiW.dwDevType;
+    strcpy(lpddi->tszInstanceName, joydevs[id].name);
+    strcpy(lpddi->tszProductName,  joydevs[id].name);
+    lpddi->guidFFDriver = lpddiW.guidFFDriver;
+    lpddi->wUsagePage = lpddiW.wUsagePage;
+    lpddi->wUsage = lpddiW.wUsage;
 }
 
 static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
@@ -397,6 +435,7 @@ static JoystickImpl *alloc_device(REFGUID rguid, IDirectInputImpl *dinput, unsig
     LPDIDATAFORMAT df = NULL;
     int i, idx = 0;
     int default_axis_map[WINE_JOYSTICK_MAX_AXES + WINE_JOYSTICK_MAX_POVS*2];
+    DIDEVICEINSTANCEW ddi;
 
     newDevice = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(JoystickImpl));
     if (!newDevice) return NULL;
@@ -516,10 +555,10 @@ static JoystickImpl *alloc_device(REFGUID rguid, IDirectInputImpl *dinput, unsig
     /* Fill the caps */
     newDevice->generic.devcaps.dwSize = sizeof(newDevice->generic.devcaps);
     newDevice->generic.devcaps.dwFlags = DIDC_ATTACHED;
-    if (newDevice->generic.base.dinput->dwVersion >= 0x0800)
-        newDevice->generic.devcaps.dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
-    else
-        newDevice->generic.devcaps.dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
+
+    ddi.dwSize = sizeof(ddi);
+    fill_joystick_dideviceinstanceW(&ddi, newDevice->generic.base.dinput->dwVersion, index);
+    newDevice->generic.devcaps.dwDevType = ddi.dwDevType;
 
     if (newDevice->joydev->has_ff)
         newDevice->generic.devcaps.dwFlags |= DIDC_FORCEFEEDBACK;
@@ -689,18 +728,10 @@ static HRESULT WINAPI JoystickWImpl_Unacquire(LPDIRECTINPUTDEVICE8W iface)
     TRACE("(this=%p)\n",This);
     res = IDirectInputDevice2WImpl_Unacquire(iface);
     if (res==DI_OK && This->joyfd!=-1) {
-      effect_list_item *itr;
       struct input_event event;
 
-      /* For each known effect:
-       * - stop it
-       * - unload it
-       * But, unlike DISFFC_RESET, do not release the effect.
-       */
-      LIST_FOR_EACH_ENTRY(itr, &This->ff_effects, effect_list_item, entry) {
-          IDirectInputEffect_Stop(itr->ref);
-          IDirectInputEffect_Unload(itr->ref);
-      }
+      /* Stop and unload all effects */
+      JoystickWImpl_SendForceFeedbackCommand(iface, DISFFC_RESET);
 
       /* Enable autocenter. */
       event.type = EV_FF;
@@ -846,7 +877,7 @@ static void joy_polldev(LPDIRECTINPUTDEVICE8A iface)
             break;
 #endif
 	default:
-	    FIXME("joystick cannot handle type %d event (code %d)\n",ie.type,ie.code);
+	    TRACE("skipping event\n");
 	    break;
 	}
         if (inst_id >= 0)
@@ -994,10 +1025,16 @@ static HRESULT WINAPI JoystickWImpl_CreateEffect(LPDIRECTINPUTDEVICE8W iface, RE
     JoystickImpl* This = impl_from_IDirectInputDevice8W(iface);
     TRACE("(this=%p,%p,%p,%p,%p)\n", This, rguid, lpeff, ppdef, pUnkOuter);
 
-#ifndef HAVE_STRUCT_FF_EFFECT_DIRECTION
-    TRACE("not available (compiled w/o ff support)\n");
     *ppdef = NULL;
-    return DI_OK;
+    if (!This->joydev->has_ff)
+    {
+        TRACE("No force feedback support\n");
+        return DIERR_UNSUPPORTED;
+    }
+
+#ifndef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    TRACE("not available (compiled w/o force feedback support)\n");
+    return DIERR_UNSUPPORTED;
 #else
 
     if (!(new_effect = HeapAlloc(GetProcessHeap(), 0, sizeof(*new_effect))))
@@ -1269,9 +1306,9 @@ static HRESULT WINAPI JoystickWImpl_SendForceFeedbackCommand(LPDIRECTINPUTDEVICE
     {
     case DISFFC_STOPALL:
     {
-	/* Stop all effects */
         effect_list_item *itr;
 
+        /* Stop all effects */
         LIST_FOR_EACH_ENTRY(itr, &This->ff_effects, effect_list_item, entry)
             IDirectInputEffect_Stop(itr->ref);
         break;
@@ -1279,17 +1316,19 @@ static HRESULT WINAPI JoystickWImpl_SendForceFeedbackCommand(LPDIRECTINPUTDEVICE
 
     case DISFFC_RESET:
     {
-        effect_list_item *itr, *ptr;
+        effect_list_item *itr;
 
-	/* Stop, unload, release and free all effects */
-	/* This returns the device to its "bare" state */
-        LIST_FOR_EACH_ENTRY_SAFE(itr, ptr, &This->ff_effects, effect_list_item, entry)
-            IDirectInputEffect_Release(itr->ref);
+        /* Stop and unload all effects. It is not true that effects are released */
+        LIST_FOR_EACH_ENTRY(itr, &This->ff_effects, effect_list_item, entry)
+        {
+            IDirectInputEffect_Stop(itr->ref);
+            IDirectInputEffect_Unload(itr->ref);
+        }
         break;
     }
     case DISFFC_PAUSE:
     case DISFFC_CONTINUE:
-	FIXME("No support for Pause or Continue in linux\n");
+        FIXME("No support for Pause or Continue in linux\n");
         break;
 
     case DISFFC_SETACTUATORSOFF:
@@ -1298,8 +1337,8 @@ static HRESULT WINAPI JoystickWImpl_SendForceFeedbackCommand(LPDIRECTINPUTDEVICE
         break;
 
     default:
-	FIXME("Unknown Force Feedback Command!\n");
-	return DIERR_INVALIDPARAM;
+        WARN("Unknown Force Feedback Command %u!\n", dwFlags);
+        return DIERR_INVALIDPARAM;
     }
     return DI_OK;
 #else

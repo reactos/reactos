@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -144,7 +144,8 @@ AcpiDsGetPredicateValue (
      * Result of predicate evaluation must be an Integer
      * object. Implicitly convert the argument if necessary.
      */
-    Status = AcpiExConvertToInteger (ObjDesc, &LocalObjDesc, 16);
+    Status = AcpiExConvertToInteger (ObjDesc, &LocalObjDesc,
+        ACPI_STRTOUL_BASE16);
     if (ACPI_FAILURE (Status))
     {
         goto Cleanup;
@@ -535,7 +536,7 @@ AcpiDsExecEndOp (
              */
             if ((Op->Asl.Parent) &&
                ((Op->Asl.Parent->Asl.AmlOpcode == AML_PACKAGE_OP) ||
-                (Op->Asl.Parent->Asl.AmlOpcode == AML_VAR_PACKAGE_OP)))
+                (Op->Asl.Parent->Asl.AmlOpcode == AML_VARIABLE_PACKAGE_OP)))
             {
                 ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
                     "Method Reference in a Package, Op=%p\n", Op));
@@ -614,7 +615,8 @@ AcpiDsExecEndOp (
         case AML_TYPE_CREATE_OBJECT:
 
             ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-                "Executing CreateObject (Buffer/Package) Op=%p\n", Op));
+                "Executing CreateObject (Buffer/Package) Op=%p AMLPtr=%p\n",
+                Op, Op->Named.Data));
 
             switch (Op->Common.Parent->Common.AmlOpcode)
             {

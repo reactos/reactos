@@ -88,6 +88,18 @@ IntGdiCleanDC(HDC hDC)
         DC_vUpdateTextBrush(dc);
     }
 
+    // Remove Path and reset flags.
+    if (dc->dclevel.hPath)
+    {
+        DPRINT("Clean DC Remove Path\n");
+        if (!PATH_Delete(dc->dclevel.hPath))
+        {
+           DPRINT1("Failed to remove Path\n");
+        }
+        dc->dclevel.hPath = 0;
+        dc->dclevel.flPath = 0;
+    }
+
     /* DC_vCopyState frees the Clip rgn and the Meta rgn. Take care of the other ones
      * There is no need to clear prgnVis, as UserGetDC updates it immediately. */
     if (dc->prgnRao)
@@ -175,13 +187,9 @@ DC_vRestoreDC(
             if (pdc->dctype == DCTYPE_MEMORY)
                 DC_vSelectSurface(pdc, pdcSave->dclevel.pSurface);
 
-            // Restore Path by removing it, if the Save flag is set.
-            // BeginPath will takecare of the rest.
-            if (pdc->dclevel.hPath && pdc->dclevel.flPath & DCPATH_SAVE)
+            if (pdcSave->dclevel.hPath)
             {
-                PATH_Delete(pdc->dclevel.hPath);
-                pdc->dclevel.hPath = 0;
-                pdc->dclevel.flPath &= ~DCPATH_SAVE;
+               PATH_RestorePath( pdc, pdcSave );
             }
         }
 
@@ -294,10 +302,11 @@ NtGdiSaveDC(
         DC_vSelectSurface(pdcSave, pdc->dclevel.pSurface);
 
     /* Copy path */
-    /* FIXME: Why this way? */
-    pdcSave->dclevel.hPath = pdc->dclevel.hPath;
+    if (pdc->dclevel.hPath)
+    {
+       PATH_SavePath( pdcSave, pdc );
+    }
     pdcSave->dclevel.flPath = pdc->dclevel.flPath | DCPATH_SAVESTATE;
-    if (pdcSave->dclevel.hPath) pdcSave->dclevel.flPath |= DCPATH_SAVE;
 
     /* Set new dc as save dc */
     pdcSave->dclevel.hdcSave = pdc->dclevel.hdcSave;

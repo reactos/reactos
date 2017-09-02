@@ -36,7 +36,7 @@ STRINGTABLE
     11 "Administrationsbegrænsing overskredet"
     12 "Kritisk udvidelse utilgængelig"
     13 "Kræver konfidencialitet"
-    14 ""
+    14 "SASL Bind in Progress"
     15 ""
     16 "Kender ikke attribut"
     17 "Udefineret type"

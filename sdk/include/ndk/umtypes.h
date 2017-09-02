@@ -29,13 +29,6 @@ Author:
 #endif
 
 //
-// NDK Applications must use Unicode
-//
-#ifndef UNICODE
-#define UNICODE
-#endif
-
-//
 // Don't use the SDK status values
 //
 #ifndef WIN32_NO_STATUS

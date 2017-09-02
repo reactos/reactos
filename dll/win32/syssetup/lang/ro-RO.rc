@@ -38,9 +38,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Scrieți-vă numele complet și compania sau organizația din care faceți parte.", IDC_STATIC, 54, 7, 242, 21
-    LTEXT "N&umele complet:", IDC_STATIC, 54, 37, 70, 8
+    LTEXT "N&ume complet:", IDC_STATIC, 54, 37, 70, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "O&rganizația:", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "O&rganizație:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -51,14 +51,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Scrieți un nume pentru calculator de maxim 15 de caractere. Dacă sunteți într-o rețea, numele calculatorului trebuie să fie unic în acea rețea.", IDC_STATIC, 54, 7, 250, 24
-    LTEXT "N&umele calculatorului:", IDC_STATIC, 54, 38, 75, 8
+    LTEXT "N&ume calculator:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Asistentul va crea un cont de utilizator cu numele Administrator. Îl puteți folosi când veți avea nevoie de control complet asupra calculatorului.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Introduceți o parolă pentru Administrator de maxim 127 caractere.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Parola de administrator:", IDC_STATIC, 54, 104, 105, 8
+    LTEXT "Introduceți o parolă pentru contul Administrator de maxim 127 caractere.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "&Parolă Administrator:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Confirmarea parolei:", IDC_STATIC, 54, 123, 105, 8
+    LTEXT "&Confirmare parolă:", IDC_STATIC, 54, 123, 105, 8
     EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -84,12 +84,21 @@ CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Data și ora:", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "Dată și oră:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32", DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "Fusul orar:", IDC_STATIC, 53, 42, 253, 8
+    LTEXT "Fus orar:", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     AUTOCHECKBOX "Aj&ustează ora automat la schimbarea fusului orar", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+END
+
+IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Asistent de instalare ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON "Tema Lautus", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Tema clasică", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -136,21 +145,23 @@ BEGIN
     IDS_ACKSUBTITLE "Contribuții aduse și informații despre licență"
     IDS_OWNERTITLE "Personalizare sistem"
     IDS_OWNERSUBTITLE "Prelevare informații pentru a personaliza sistemul de operare"
-    IDS_COMPUTERTITLE "Nume calculator și parolă de administrator"
-    IDS_COMPUTERSUBTITLE "Furnizare nume pentru calculator și parolă pentru utilizatorul Administrator"
+    IDS_COMPUTERTITLE "Nume calculator și parolă pentru contul Administrator"
+    IDS_COMPUTERSUBTITLE "Furnizare nume pentru calculator și parolă pentru contul Administrator"
     IDS_LOCALETITLE "Particularizări regionale"
     IDS_LOCALESUBTITLE "Particularizare sistem pentru anumite regiuni sau limbi"
     IDS_DATETIMETITLE "Dată și oră"
     IDS_DATETIMESUBTITLE "Stabilire dată și oră corectă pentru calculator"
     IDS_PROCESSTITLE "Înregistrare componente"
     IDS_PROCESSSUBTITLE "Așteptați…"
+    IDS_THEMESELECTIONTITLE "Aspect"
+    IDS_THEMESELECTIONSUBTITLE "Selectați tema preferată"
 END
 
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "Asistent de instalare ReactOS"
     IDS_UNKNOWN_ERROR "Eroare necunoscută"
-    IDS_REGISTERING_COMPONENTS "Se înregistrează componentele…"
+    IDS_REGISTERING_COMPONENTS "Componente în curs de înregistrare…"
     IDS_LOADLIBRARY_FAILED "LoadLibrary a eșuat: "
     IDS_GETPROCADDR_FAILED "GetProcAddr a eșuat: "
     IDS_REGSVR_FAILED "DllRegisterServer a eșuat: "
@@ -158,8 +169,8 @@ BEGIN
     IDS_TIMEOUT "Timp expirat în timpul înregistrării"
     IDS_REASON_UNKNOWN ""
     /*
-     * ATTENTION: 
-     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     * ATTENTION:
+     *   If you translate the administrator account name, keep IDS_ADMINISTRATOR_NAME and
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
@@ -169,16 +180,23 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME "Nu se poate continua până nu scrieți un nume."
-    IDS_WZD_SETCOMPUTERNAME "Se poate da calculatorului acest nume."
-    IDS_WZD_COMPUTERNAME "Nu se poate continua până nu introduceți un nume pentru calculator."
+    IDS_WZD_NAME "Continuarea nu este posibilă fără un nume."
+    IDS_WZD_SETCOMPUTERNAME "Eșec în instituirea numelui de calculator."
+    IDS_WZD_COMPUTERNAME "Continuarea nu este posibilă fără un nume de calculator."
     IDS_WZD_PASSWORDEMPTY "Trebuie să introduceți o parolă!"
-    IDS_WZD_PASSWORDMATCH "Mostrele pentru parolă nu se potrivesc. Încercați reintroducerea parolei."
+    IDS_WZD_PASSWORDMATCH "Mostrele pentru parolă nu se potrivesc. Încercați să reintroduceți parolele."
     IDS_WZD_PASSWORDCHAR "Parola introdusă de dumneavoastră conține caractere invalide. încercați rescrierea parolei."
-    IDS_WZD_LOCALTIME "Nu se poate stabili ora locală."
+    IDS_WZD_LOCALTIME "Eșec la instituirea orei locale."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Se instalează dispozitivele…"
+    IDS_STATUS_INSTALL_DEV "Dispozitive în curs de instalare…"
+END
+
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMFILES "%SystemDrive%\\Fișiere de program"
+    IDS_COMMONFILES "Fișiere comune"
 END

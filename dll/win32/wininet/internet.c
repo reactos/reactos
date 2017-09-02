@@ -113,7 +113,7 @@ void *alloc_object(object_header_t *parent, const object_vtbl_t *vtbl, size_t si
         handle_table[handle] = ret;
         ret->valid_handle = TRUE;
 
-        while(handle_table[next_handle] && next_handle < handle_table_size)
+        while(next_handle < handle_table_size && handle_table[next_handle])
             next_handle++;
     }
 
@@ -943,7 +943,6 @@ static const object_vtbl_t APPINFOVtbl = {
     APPINFO_SetOption,
     NULL,
     NULL,
-    NULL,
     NULL
 };
 
@@ -1146,11 +1145,7 @@ BOOL WINAPI InternetGetConnectedState(LPDWORD lpdwStatus, DWORD dwReserved)
 {
     TRACE("(%p, 0x%08x)\n", lpdwStatus, dwReserved);
 
-    if (lpdwStatus) {
-	WARN("always returning LAN connection.\n");
-	*lpdwStatus = INTERNET_CONNECTION_LAN;
-    }
-    return TRUE;
+    return InternetGetConnectedStateExW(lpdwStatus, NULL, 0, dwReserved);
 }
 
 
@@ -1896,11 +1891,7 @@ BOOL WINAPI InternetCrackUrlW(const WCHAR *lpszUrl, DWORD dwUrlLength, DWORD dwF
     }
     else
     {
-        if (lpUC->lpszUrlPath && (lpUC->dwUrlPathLength > 0))
-            lpUC->lpszUrlPath[0] = 0;
-        else if (lpUC->dwUrlPathLength > 0)
-            lpUC->lpszUrlPath = (WCHAR*)lpszcp;
-        lpUC->dwUrlPathLength = 0;
+        set_url_component(&lpUC->lpszUrlPath, &lpUC->dwUrlPathLength, lpszcp, 0);
     }
 
     TRACE("%s: scheme(%s) host(%s) path(%s) extra(%s)\n", debugstr_wn(lpszUrl,dwUrlLength),
@@ -2153,8 +2144,11 @@ BOOL WINAPI InternetReadFile(HINTERNET hFile, LPVOID lpBuffer,
         return FALSE;
     }
 
-    if(hdr->vtbl->ReadFile)
-        res = hdr->vtbl->ReadFile(hdr, lpBuffer, dwNumOfBytesToRead, pdwNumOfBytesRead);
+    if(hdr->vtbl->ReadFile) {
+        res = hdr->vtbl->ReadFile(hdr, lpBuffer, dwNumOfBytesToRead, pdwNumOfBytesRead, 0, 0);
+        if(res == ERROR_IO_PENDING)
+            *pdwNumOfBytesRead = 0;
+    }
 
     WININET_Release(hdr);
 
@@ -2212,8 +2206,8 @@ BOOL WINAPI InternetReadFileExA(HINTERNET hFile, LPINTERNET_BUFFERSA lpBuffersOu
         return FALSE;
     }
 
-    if(hdr->vtbl->ReadFileEx)
-        res = hdr->vtbl->ReadFileEx(hdr, lpBuffersOut->lpvBuffer, lpBuffersOut->dwBufferLength,
+    if(hdr->vtbl->ReadFile)
+        res = hdr->vtbl->ReadFile(hdr, lpBuffersOut->lpvBuffer, lpBuffersOut->dwBufferLength,
                 &lpBuffersOut->dwBufferLength, dwFlags, dwContext);
 
     WININET_Release(hdr);
@@ -2250,8 +2244,8 @@ BOOL WINAPI InternetReadFileExW(HINTERNET hFile, LPINTERNET_BUFFERSW lpBuffer,
         return FALSE;
     }
 
-    if(hdr->vtbl->ReadFileEx)
-        res = hdr->vtbl->ReadFileEx(hdr, lpBuffer->lpvBuffer, lpBuffer->dwBufferLength, &lpBuffer->dwBufferLength,
+    if(hdr->vtbl->ReadFile)
+        res = hdr->vtbl->ReadFile(hdr, lpBuffer->lpvBuffer, lpBuffer->dwBufferLength, &lpBuffer->dwBufferLength,
                 dwFlags, dwContext);
 
     WININET_Release(hdr);
@@ -2392,7 +2386,11 @@ static DWORD query_global_option(DWORD option, void *buffer, DWORD *size, BOOL u
         if((ret = INTERNET_LoadProxySettings(&pi)))
             return ret;
 
+#ifdef __REACTOS__
+        WARN("INTERNET_OPTION_PER_CONNECTION_OPTION stub\n");
+#else
         FIXME("INTERNET_OPTION_PER_CONNECTION_OPTION stub\n");
+#endif
 
         if (*size < sizeof(INTERNET_PER_CONN_OPTION_LISTW)) {
             FreeProxyInfo(&pi);
@@ -2451,6 +2449,12 @@ static DWORD query_global_option(DWORD option, void *buffer, DWORD *size, BOOL u
                 memset(&optionW->Value, 0, sizeof(optionW->Value));
                 break;
 
+#ifdef __REACTOS__
+            case INTERNET_PER_CONN_FLAGS_UI:
+                WARN("Unhandled dwOption %d\n", optionW->dwOption);
+                break;
+
+#endif
             default:
                 FIXME("Unknown dwOption %d\n", optionW->dwOption);
                 res = ERROR_INVALID_PARAMETER;
@@ -2787,7 +2791,8 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         FIXME("Option INTERNET_OPTION_RESET_URLCACHE_SESSION: STUB\n");
         break;
     case INTERNET_OPTION_END_BROWSER_SESSION:
-        FIXME("Option INTERNET_OPTION_END_BROWSER_SESSION: STUB\n");
+        FIXME("Option INTERNET_OPTION_END_BROWSER_SESSION: semi-stub\n");
+        free_cookie();
         break;
     case INTERNET_OPTION_CONNECTED_STATE:
         FIXME("Option INTERNET_OPTION_CONNECTED_STATE: STUB\n");
@@ -2832,10 +2837,21 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
 	 FIXME("Option INTERNET_OPTION_DISABLE_AUTODIAL; STUB\n");
 	 break;
     case INTERNET_OPTION_HTTP_DECODING:
-        FIXME("INTERNET_OPTION_HTTP_DECODING; STUB\n");
-        SetLastError(ERROR_INTERNET_INVALID_OPTION);
-        ret = FALSE;
+    {
+        if (!lpwhh)
+        {
+            SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
+            return FALSE;
+        }
+        if (!lpBuffer || dwBufferLength != sizeof(BOOL))
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            ret = FALSE;
+        }
+        else
+            lpwhh->decoding = *(BOOL *)lpBuffer;
         break;
+    }
     case INTERNET_OPTION_COOKIES_3RD_PARTY:
         FIXME("INTERNET_OPTION_COOKIES_3RD_PARTY; STUB\n");
         SetLastError(ERROR_INTERNET_INVALID_OPTION);
@@ -3451,7 +3467,9 @@ static HINTERNET INTERNET_InternetOpenUrlW(appinfo_t *hIC, LPCWSTR lpszUrl,
     if(!InternetCrackUrlW(lpszUrl, strlenW(lpszUrl), 0, &urlComponents))
 	return NULL;
 
-    if(urlComponents.nScheme == INTERNET_SCHEME_HTTP && urlComponents.dwExtraInfoLength) {
+    if ((urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
+        urlComponents.dwExtraInfoLength)
+    {
         assert(urlComponents.lpszUrlPath + urlComponents.dwUrlPathLength == urlComponents.lpszExtraInfo);
         urlComponents.dwUrlPathLength += urlComponents.dwExtraInfoLength;
     }
@@ -4101,8 +4119,7 @@ static BOOL calc_url_length(LPURL_COMPONENTSW lpUrlComponents,
         {
             char szPort[MAX_WORD_DIGITS+1];
 
-            sprintf(szPort, "%d", lpUrlComponents->nPort);
-            *lpdwUrlLength += strlen(szPort);
+            *lpdwUrlLength += sprintf(szPort, "%d", lpUrlComponents->nPort);
             *lpdwUrlLength += strlen(":");
         }
 
@@ -4345,14 +4362,9 @@ BOOL WINAPI InternetCreateUrlW(LPURL_COMPONENTSW lpUrlComponents, DWORD dwFlags,
 
         if (!url_uses_default_port(nScheme, lpUrlComponents->nPort))
         {
-            WCHAR szPort[MAX_WORD_DIGITS+1];
-
-            sprintfW(szPort, fmtW, lpUrlComponents->nPort);
             *lpszUrl = ':';
             lpszUrl++;
-            dwLen = strlenW(szPort);
-            memcpy(lpszUrl, szPort, dwLen * sizeof(WCHAR));
-            lpszUrl += dwLen;
+            lpszUrl += sprintfW(lpszUrl, fmtW, lpUrlComponents->nPort);
         }
 
         /* add slash between hostname and path if necessary */

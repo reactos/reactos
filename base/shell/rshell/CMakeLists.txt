@@ -3,8 +3,7 @@ PROJECT(SHELL)
 set_cpp(WITH_RUNTIME)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl
-    ${REACTOS_SOURCE_DIR}/dll/win32/shell32/shellmenu)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 spec2def(rshell.dll rshell.spec ADD_IMPORTLIB)
 
@@ -17,6 +16,7 @@ add_library(rshell SHARED ${SOURCE})
 set_module_type(rshell win32dll UNICODE)
 
 target_link_libraries(rshell
+    shellbars
     shellmenu
     shelldesktop
     atlnew

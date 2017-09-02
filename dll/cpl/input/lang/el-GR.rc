@@ -6,10 +6,10 @@ CAPTION "Ρυθμίσεις"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Επιλέξτε τις υπηρεσίες που θέλετε για κάθε γλώσσα εισαγωγής που εμφανίζεται στη λίστα.\nΧρησιμοποιήστε τα κουμπιά Προσθήκη και Κατάργηση για την τροποποίηση αυτής της λίστας.", -1, 9, 6, 238, 33
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 42, 237, 95
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 42, 237, 95
     PUSHBUTTON "&Set Default", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "Π&ροσθήκη...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Κατάργηση...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Κατάργηση", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Ιδιότητες...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Προτιμήσεις", -1, 7, 185, 240, 36
     PUSHBUTTON "&Ρυθμίσεις πλήκτρων...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -160,6 +160,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi Phonetic"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Typewriter"
     IDS_DUTCH_LAYOUT "Dutch"
+    IDS_ESPERANTO_LAYOUT "Εσπεράντο"
     IDS_ESTONIAN_LAYOUT "Εσθονικά"
     IDS_FAEROESE_LAYOUT "Faeroese"
     IDS_FARSI_LAYOUT "Farsi"

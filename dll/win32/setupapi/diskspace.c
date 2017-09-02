@@ -248,3 +248,27 @@ BOOL WINAPI SetupDestroyDiskSpaceList(HDSKSPC DiskSpace)
     HeapFree(GetProcessHeap(),0,list);
     return TRUE;
 }
+
+/***********************************************************************
+*		SetupAddToDiskSpaceListA  (SETUPAPI.@)
+*/
+BOOL WINAPI SetupAddToDiskSpaceListA(HDSKSPC diskspace, PCSTR targetfile,
+                                    LONGLONG filesize, UINT operation,
+                                    PVOID reserved1, UINT reserved2)
+{
+    FIXME(": stub\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/***********************************************************************
+*		SetupAddToDiskSpaceListW  (SETUPAPI.@)
+*/
+BOOL WINAPI SetupAddToDiskSpaceListW(HDSKSPC diskspace, PCWSTR targetfile,
+                                    LONGLONG filesize, UINT operation,
+                                    PVOID reserved1, UINT reserved2)
+{
+    FIXME(": stub\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}

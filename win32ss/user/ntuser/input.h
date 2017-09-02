@@ -75,6 +75,8 @@ VOID NTAPI UserProcessKeyboardInput(PKEYBOARD_INPUT_DATA pKeyInput);
 BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);
 PKL NTAPI UserHklToKbl(HKL hKl);
 BOOL NTAPI UserSetDefaultInputLang(HKL hKl);
+extern int gLanguageToggleKeyState;
+extern DWORD gdwLanguageToggleKey;
 
 /* Mouse */
 WORD FASTCALL UserGetMouseButtonsState(VOID);

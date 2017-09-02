@@ -40,7 +40,6 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, PVOID pvReserved)
             if (pvReserved) break;
             crypt_oid_free();
             crypt_sip_free();
-            root_store_free();
             default_chain_engine_free();
             if (hDefProv) CryptReleaseContext(hDefProv, 0);
             break;

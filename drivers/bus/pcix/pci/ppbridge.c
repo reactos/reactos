@@ -695,7 +695,7 @@ PPBridge_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
      * Check for Intel ICH PCI-to-PCI (i82801) bridges (used on the i810,
      * i820, i840, i845 Chipsets) that don't have subtractive decode broken.
      * If they do have broken subtractive support, or if they are not ICH bridges,
-     * then check if the bridge supports substractive decode at all.
+     * then check if the bridge supports subtractive decode at all.
      */
     if ((((PdoExtension->VendorId == 0x8086) &&
          ((PdoExtension->DeviceId == 0x2418) ||

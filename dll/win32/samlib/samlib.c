@@ -1987,7 +1987,7 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
             return Status;
         }
 
-        /* Calculate the NT hash value of the passord */
+        /* Calculate the NT hash value of the password */
         Status = SystemFunction007((PUNICODE_STRING)&PasswordBuffer->Password,
                                    (LPBYTE)&Internal1Buffer.EncryptedNtOwfPassword);
         if (!NT_SUCCESS(Status))

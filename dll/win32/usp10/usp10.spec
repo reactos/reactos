@@ -13,7 +13,7 @@
 @ stdcall ScriptGetFontScriptTags(long ptr ptr long ptr ptr)
 @ stdcall ScriptGetGlyphABCWidth(ptr ptr long ptr)
 @ stdcall ScriptGetLogicalWidths(ptr long long ptr ptr ptr ptr)
-@ stdcall ScriptGetProperties(ptr long)
+@ stdcall ScriptGetProperties(ptr ptr)
 @ stdcall ScriptIsComplex(wstr long long)
 @ stdcall ScriptItemize(wstr long long ptr ptr ptr ptr)
 @ stdcall ScriptItemizeOpenType(wstr long long ptr ptr ptr ptr ptr)
@@ -22,7 +22,7 @@
 @ stdcall ScriptPlace(ptr ptr ptr long ptr ptr ptr ptr ptr)
 @ stdcall ScriptPlaceOpenType(ptr ptr ptr long long ptr ptr long wstr ptr ptr long ptr ptr long ptr ptr ptr)
 @ stub ScriptPositionSingleGlyph
-@ stdcall ScriptRecordDigitSubstitution(ptr ptr)
+@ stdcall ScriptRecordDigitSubstitution(long ptr)
 @ stdcall ScriptShape(ptr ptr ptr long long ptr ptr ptr ptr ptr)
 @ stdcall ScriptShapeOpenType(ptr ptr ptr long long ptr ptr long wstr long long ptr ptr ptr ptr ptr)
 @ stdcall ScriptStringAnalyse(ptr ptr long long long long long ptr ptr ptr ptr ptr ptr)

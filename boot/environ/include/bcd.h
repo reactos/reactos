@@ -42,7 +42,7 @@
 #define BCD_APPLICATION_TYPE_STARTUPCOM 0x09
 
 #define BCD_OBJECT_TYPE_APPLICATION     0x01
-#define BCD_OBJECT_TYPE_INHEREIT        0x02
+#define BCD_OBJECT_TYPE_INHERIT         0x02
 #define BCD_OBJECT_TYPE_DEVICE          0x03
 
 typedef enum BcdLibraryElementTypes

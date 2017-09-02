@@ -28,6 +28,9 @@
 #define SPACING1 8
 #define SPACING2 5
 
+extern INT g_NumFonts;
+extern WCHAR g_FontTitle[];
+
 const WCHAR g_szFontDisplayClassName[] = L"FontDisplayClass";
 LRESULT CALLBACK DisplayProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -94,7 +97,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + SPACING1;
 
-	/* Draw a seperation Line */
+	/* Draw a separation Line */
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 	MoveToEx(hDC, 0, y, NULL);
 	LineTo(hDC, 10000, y);
@@ -117,7 +120,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
-	/* Draw a seperation Line */
+	/* Draw a separation Line */
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 	MoveToEx(hDC, 0, y, NULL);
 	LineTo(hDC, 10000, y);
@@ -162,7 +165,7 @@ EnumFontFamProcW(
 }
 
 static LRESULT
-Display_SetTypeFace(HWND hwnd, PEXTLOGFONTW pExtLogFont)
+Display_SetTypeFace(HWND hwnd, PLOGFONTW pLogFont)
 {
 	DISPLAYDATA* pData;
 	TEXTMETRIC tm;
@@ -171,16 +174,21 @@ Display_SetTypeFace(HWND hwnd, PEXTLOGFONTW pExtLogFont)
 	SCROLLINFO si;
 	int i;
 	LOGFONTW logfont;
+	BOOL fOpenType;
+	BYTE Buffer[512];
+	LPOUTLINETEXTMETRICW pOTM = (LPOUTLINETEXTMETRICW)Buffer;
+	LPWSTR pch;
 
 	/* Set the new type face name */
 	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	_snwprintf(pData->szTypeFaceName, LF_FULLFACESIZE, pExtLogFont->elfFullName);
+	lstrcpynW(pData->szTypeFaceName, pLogFont->lfFaceName,
+	          ARRAYSIZE(pData->szTypeFaceName));
 
 	/* Create the new fonts */
 	hDC = GetDC(hwnd);
 	DeleteObject(pData->hCharSetFont);
 
-	logfont = pExtLogFont->elfLogFont;
+	logfont = *pLogFont;
 	logfont.lfHeight = -MulDiv(16, GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72);
 	pData->hCharSetFont = CreateFontIndirectW(&logfont);
 
@@ -189,8 +197,19 @@ Display_SetTypeFace(HWND hwnd, PEXTLOGFONTW pExtLogFont)
 	GetTextMetrics(hDC, &tm);
 	if (tm.tmPitchAndFamily & TMPF_TRUETYPE)
 	{
-		BOOL fOpenType = FALSE;
+		if (GetOutlineTextMetricsW(hDC, sizeof(Buffer), pOTM))
+		{
+			LPBYTE pb = Buffer;
+			pb += (WORD)(DWORD_PTR)pOTM->otmpStyleName;
+			pch = (LPWSTR)pb;
+			if (*pch)
+			{
+				lstrcatW(pData->szTypeFaceName, L" ");
+				lstrcatW(pData->szTypeFaceName, pch);
+			}
+		}
 
+		fOpenType = FALSE;
 		EnumFontFamiliesExW(hDC, &logfont,
 			EnumFontFamProcW, (LPARAM)&fOpenType, 0);
 
@@ -234,12 +253,12 @@ Display_SetTypeFace(HWND hwnd, PEXTLOGFONTW pExtLogFont)
 }
 
 static LRESULT
-Display_SetString(HWND hwnd, LPARAM lParam)
+Display_SetString(HWND hwnd, LPCWSTR pszString)
 {
 	DISPLAYDATA* pData;
 
 	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	_snwprintf(pData->szString, MAX_STRING, (WCHAR*)lParam);
+	lstrcpynW(pData->szString, pszString, ARRAYSIZE(pData->szString));
 
 	InvalidateRect(hwnd, NULL, TRUE);
 
@@ -252,11 +271,10 @@ Display_OnCreate(HWND hwnd)
 	DISPLAYDATA* pData;
 	const int nSizes[MAX_SIZES] = {8, 12, 18, 24, 36, 48, 60, 72};
 	int i;
-	EXTLOGFONTW ExtLogFont = {{50, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-	                          ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-	                          CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-	                          DEFAULT_PITCH , L"Ms Shell Dlg"},
-	                          L"Ms Shell Dlg"};
+	LOGFONTW LogFont = {50, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+	                    ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+	                    CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+	                    DEFAULT_PITCH , L"MS Shell Dlg"};
 
 	/* Create data structure */
 	pData = malloc(sizeof(DISPLAYDATA));
@@ -270,13 +288,14 @@ Display_OnCreate(HWND hwnd)
 		pData->nSizes[i] = nSizes[i];
 	}
 
-	pData->hCaptionFont = CreateFontIndirectW(&ExtLogFont.elfLogFont);
-	ExtLogFont.elfLogFont.lfHeight = 12;
-	pData->hSizeFont = CreateFontIndirectW(&ExtLogFont.elfLogFont);
+	pData->hCaptionFont = CreateFontIndirectW(&LogFont);
+	LogFont.lfHeight = 12;
+	pData->hSizeFont = CreateFontIndirectW(&LogFont);
 
-	Display_SetString(hwnd, (LPARAM)L"Jackdaws love my big sphinx of quartz. 1234567890");
+	Display_SetString(hwnd,
+		L"Jackdaws love my big sphinx of quartz. 1234567890");
 
-	Display_SetTypeFace(hwnd, &ExtLogFont);
+	Display_SetTypeFace(hwnd, &LogFont);
 
 	return 0;
 }
@@ -449,7 +468,7 @@ Display_OnPrint(HWND hwnd)
 		pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 #endif
 		docinfo.cbSize = sizeof(DOCINFO);
-		docinfo.lpszDocName = "Printing Font";
+		docinfo.lpszDocName = L"Printing Font";
 		docinfo.lpszOutput = NULL;
 		docinfo.lpszDatatype = NULL;
 		docinfo.fwType = 0;
@@ -502,6 +521,24 @@ Display_OnPrint(HWND hwnd)
 	return 0;
 }
 
+LRESULT
+Display_GetFullName(HWND hwnd, INT length, PWSTR ptr)
+{
+    DISPLAYDATA *pData;
+    INT len;
+
+    pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+    len = wcslen(pData->szTypeFaceName) + wcslen(pData->szFormat) + 2;
+
+    if (ptr != NULL && length >= len)
+    {
+        swprintf(ptr, L"%s%s", pData->szTypeFaceName, pData->szFormat);
+    }
+
+    return (LRESULT)len;
+}
+
 LRESULT CALLBACK
 DisplayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -520,10 +557,13 @@ DisplayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return Display_OnVScroll(hwnd, wParam);
 
 		case FVM_SETTYPEFACE:
-			return Display_SetTypeFace(hwnd, (PEXTLOGFONTW)lParam);
+			return Display_SetTypeFace(hwnd, (PLOGFONTW)lParam);
 
 		case FVM_SETSTRING:
-			return Display_SetString(hwnd, lParam);
+			return Display_SetString(hwnd, (WCHAR *)lParam);
+
+		case FVM_GETFULLNAME:
+			return Display_GetFullName(hwnd, (INT)wParam, (PWSTR)lParam);
 
 		case WM_DESTROY:
 			return Display_OnDestroy(hwnd);

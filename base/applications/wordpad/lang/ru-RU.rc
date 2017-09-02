@@ -171,8 +171,8 @@ BEGIN
     STRING_PREVIEW_PAGES,            "Страницы"
     STRING_UNITS_CM,                 "см"
     STRING_UNITS_IN,                 "in"
-    STRING_UNITS_INCH,               "inch"
-    STRING_UNITS_PT,                 "pt"
+    STRING_UNITS_INCH,               "дюйм."
+    STRING_UNITS_PT,                 "точк."
 END
 
 STRINGTABLE
@@ -183,7 +183,7 @@ BEGIN
     STRING_LOAD_RICHED_FAILED,   "Ошибка загрузки библиотеки RichEdit."
     STRING_SAVE_LOSEFORMATTING,  "Сохранение документа в виде неформатированного текста приведёт к потере форматирования. Подтверждаете выполнение этой операции?"
     STRING_INVALID_NUMBER,       "Неправильный числовой формат."
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage документы не поддерживаются."
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "Документы из хранилища OLE не поддерживаются."
     STRING_WRITE_FAILED,              "Невозможно сохранить файл."
     STRING_WRITE_ACCESS_DENIED,       "Недостаточно прав для сохранения файла."
     STRING_OPEN_FAILED,               "Невозможно открыть файл."

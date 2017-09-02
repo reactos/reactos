@@ -72,7 +72,7 @@ typedef struct {
 } EnumTfInputProcessorProfiles;
 
 static HRESULT ProfilesEnumGuid_Constructor(IEnumGUID **ppOut);
-static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguageProfiles **ppOut);
+static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, EnumTfLanguageProfiles **out);
 
 static inline EnumTfInputProcessorProfiles *impl_from_IEnumTfInputProcessorProfiles(IEnumTfInputProcessorProfiles *iface)
 {
@@ -595,8 +595,17 @@ static HRESULT WINAPI InputProcessorProfiles_EnumLanguageProfiles(
         IEnumTfLanguageProfiles **ppEnum)
 {
     InputProcessorProfiles *This = impl_from_ITfInputProcessorProfiles(iface);
+    EnumTfLanguageProfiles *profenum;
+    HRESULT hr;
+
     TRACE("(%p) %x %p\n",This,langid,ppEnum);
-    return EnumTfLanguageProfiles_Constructor(langid, ppEnum);
+
+    if (!ppEnum)
+        return E_INVALIDARG;
+    hr = EnumTfLanguageProfiles_Constructor(langid, &profenum);
+    *ppEnum = &profenum->IEnumTfLanguageProfiles_iface;
+
+    return hr;
 }
 
 static HRESULT WINAPI InputProcessorProfiles_EnableLanguageProfile(
@@ -1267,16 +1276,16 @@ static HRESULT WINAPI EnumTfLanguageProfiles_Clone( IEnumTfLanguageProfiles *ifa
     IEnumTfLanguageProfiles **ppenum)
 {
     EnumTfLanguageProfiles *This = impl_from_IEnumTfLanguageProfiles(iface);
+    EnumTfLanguageProfiles *new_This;
     HRESULT res;
 
     TRACE("(%p)\n",This);
 
     if (ppenum == NULL) return E_POINTER;
 
-    res = EnumTfLanguageProfiles_Constructor(This->langid, ppenum);
+    res = EnumTfLanguageProfiles_Constructor(This->langid, &new_This);
     if (SUCCEEDED(res))
     {
-        EnumTfLanguageProfiles *new_This = (EnumTfLanguageProfiles *)*ppenum;
         new_This->tip_index = This->tip_index;
         lstrcpynW(new_This->szwCurrentClsid,This->szwCurrentClsid,39);
 
@@ -1289,6 +1298,7 @@ static HRESULT WINAPI EnumTfLanguageProfiles_Clone( IEnumTfLanguageProfiles *ifa
             res = RegOpenKeyExW(new_This->tipkey, fullkey, 0, KEY_READ | KEY_WRITE, &This->langkey);
             new_This->lang_index = This->lang_index;
         }
+        *ppenum = &new_This->IEnumTfLanguageProfiles_iface;
     }
     return res;
 }
@@ -1304,7 +1314,7 @@ static const IEnumTfLanguageProfilesVtbl EnumTfLanguageProfilesVtbl =
     EnumTfLanguageProfiles_Skip
 };
 
-static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguageProfiles **ppOut)
+static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, EnumTfLanguageProfiles **out)
 {
     HRESULT hr;
     EnumTfLanguageProfiles *This;
@@ -1331,7 +1341,7 @@ static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguage
         return E_FAIL;
     }
 
-    *ppOut = &This->IEnumTfLanguageProfiles_iface;
-    TRACE("returning %p\n", *ppOut);
+    *out = This;
+    TRACE("returning %p\n", *out);
     return S_OK;
 }

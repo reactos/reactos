@@ -11,9 +11,11 @@
 WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
 SysTrayIconHandlers_t g_IconHandlers [] = {
-        { Volume_Init, Volume_Shutdown, Volume_Update, Volume_Message }
+        { Volume_Init, Volume_Shutdown, Volume_Update, Volume_Message },
+        { Hotplug_Init, Hotplug_Shutdown, Hotplug_Update, Hotplug_Message },
+        { Power_Init, Power_Shutdown, Power_Update, Power_Message }
 };
-const int             g_NumIcons = _countof(g_IconHandlers);
+const int g_NumIcons = _countof(g_IconHandlers);
 
 CSysTray::CSysTray() {}
 CSysTray::~CSysTray() {}
@@ -79,11 +81,11 @@ HRESULT CSysTray::UpdateIcons()
     return S_OK;
 }
 
-HRESULT CSysTray::ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT CSysTray::ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
 {
     for (int i = 0; i < g_NumIcons; i++)
     {
-        HRESULT hr = g_IconHandlers[i].pfnMessage(this, uMsg, wParam, lParam);
+        HRESULT hr = g_IconHandlers[i].pfnMessage(this, uMsg, wParam, lParam, lResult);
         if (FAILED(hr))
             return hr;
 
@@ -210,13 +212,37 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     case WM_NCCREATE:
     case WM_NCDESTROY:
         return FALSE;
+
     case WM_CREATE:
         InitIcons();
         SetTimer(1, 2000, NULL);
         return TRUE;
+
     case WM_TIMER:
-        UpdateIcons();
-        return TRUE;
+        switch (wParam)
+        {
+            case 1:
+                UpdateIcons();
+                return TRUE;
+
+            case POWER_TIMER_ID:
+                Power_OnTimer(hWnd);
+                break;
+
+            case VOLUME_TIMER_ID:
+                Volume_OnTimer(hWnd);
+                break;
+
+            case HOTPLUG_TIMER_ID:
+                Hotplug_OnTimer(hWnd);
+                break;
+        }
+        break;
+
+    case WM_DEVICECHANGE:
+        ERR("WM_DEVICECHANGE\n");
+        break;
+
     case WM_DESTROY:
         KillTimer(1);
         ShutdownIcons();
@@ -225,7 +251,7 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 
     TRACE("SysTray message received %u (%08p %08p)\n", uMsg, wParam, lParam);
 
-    hr = ProcessIconMessage(uMsg, wParam, lParam);
+    hr = ProcessIconMessage(uMsg, wParam, lParam, lResult);
     if (FAILED(hr))
         return FALSE;
 

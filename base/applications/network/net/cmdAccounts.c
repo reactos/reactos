@@ -36,20 +36,20 @@ cmdAccounts(
         if (_wcsicmp(argv[i], L"help") == 0)
         {
             /* Print short syntax help */
-            PrintResourceString(IDS_ACCOUNTS_SYNTAX);
+            ConResPuts(StdOut, IDS_ACCOUNTS_SYNTAX);
             return 0;
         }
 
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
             /* Print full help text*/
-            PrintResourceString(IDS_ACCOUNTS_HELP);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP);
             return 0;
         }
 
         if (_wcsicmp(argv[i], L"/domain") == 0)
         {
-            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
+            ConResPrintf(StdErr, IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
 #if 0
             Domain = TRUE;
 #endif
@@ -75,7 +75,7 @@ cmdAccounts(
                 value = wcstoul(p, &endptr, 10);
                 if (*endptr != 0)
                 {
-                    PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/FORCELOGOFF");
+                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/FORCELOGOFF");
                     result = 1;
                     goto done;
                 }
@@ -90,9 +90,9 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                    PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWLEN");
-                    result = 1;
-                    goto done;
+                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWLEN");
+                result = 1;
+                goto done;
             }
 
             Info0->usrmod0_min_passwd_len = value;
@@ -112,7 +112,7 @@ cmdAccounts(
                 value = wcstoul(p, &endptr, 10);
                 if (*endptr != 0)
                 {
-                    PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/MAXPWLEN");
+                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/MAXPWLEN");
                     result = 1;
                     goto done;
                 }
@@ -127,7 +127,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWAGE");
+                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWAGE");
                 result = 1;
                 goto done;
             }
@@ -141,7 +141,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"/UNIQUEPW");
+                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/UNIQUEPW");
                 result = 1;
                 goto done;
             }
@@ -171,61 +171,61 @@ cmdAccounts(
 
         PrintPaddedResourceString(IDS_ACCOUNTS_FORCE_LOGOFF, nPaddedLength);
         if (Info0->usrmod0_force_logoff == TIMEQ_FOREVER)
-            PrintResourceString(IDS_GENERIC_NEVER);
+            ConResPuts(StdOut, IDS_GENERIC_NEVER);
         else
-            PrintResourceString(IDS_ACCOUNTS_LOGOFF_SECONDS, Info0->usrmod0_force_logoff);
-        PrintToConsole(L"\n");
+            ConResPrintf(StdOut, IDS_ACCOUNTS_LOGOFF_SECONDS, Info0->usrmod0_force_logoff);
+        ConPuts(StdOut, L"\n");
 
         PrintPaddedResourceString(IDS_ACCOUNTS_MIN_PW_AGE, nPaddedLength);
-        PrintToConsole(L"%lu\n", Info0->usrmod0_min_passwd_age / 86400);
+        ConPrintf(StdOut, L"%lu\n", Info0->usrmod0_min_passwd_age / 86400);
 
         PrintPaddedResourceString(IDS_ACCOUNTS_MAX_PW_AGE, nPaddedLength);
-        PrintToConsole(L"%lu\n", Info0->usrmod0_max_passwd_age / 86400);
+        ConPrintf(StdOut, L"%lu\n", Info0->usrmod0_max_passwd_age / 86400);
 
         PrintPaddedResourceString(IDS_ACCOUNTS_MIN_PW_LENGTH, nPaddedLength);
-        PrintToConsole(L"%lu\n", Info0->usrmod0_min_passwd_len);
+        ConPrintf(StdOut, L"%lu\n", Info0->usrmod0_min_passwd_len);
 
         PrintPaddedResourceString(IDS_ACCOUNTS_PW_HIST_LENGTH, nPaddedLength);
         if (Info0->usrmod0_password_hist_len == 0)
-            PrintResourceString(IDS_GENERIC_NONE);
+            ConResPuts(StdOut, IDS_GENERIC_NONE);
         else
-            PrintToConsole(L"%lu", Info0->usrmod0_password_hist_len);
-        PrintToConsole(L"\n");
+            ConPrintf(StdOut, L"%lu", Info0->usrmod0_password_hist_len);
+        ConPuts(StdOut, L"\n");
 
         PrintPaddedResourceString(IDS_ACCOUNTS_LOCKOUT_THRESHOLD, nPaddedLength);
         if (Info3->usrmod3_lockout_threshold == 0)
-            PrintResourceString(IDS_GENERIC_NEVER);
+            ConResPuts(StdOut, IDS_GENERIC_NEVER);
         else
-            PrintToConsole(L"%lu", Info3->usrmod3_lockout_threshold);
-        PrintToConsole(L"\n");
+            ConPrintf(StdOut, L"%lu", Info3->usrmod3_lockout_threshold);
+        ConPuts(StdOut, L"\n");
 
         PrintPaddedResourceString(IDS_ACCOUNTS_LOCKOUT_DURATION, nPaddedLength);
-        PrintToConsole(L"%lu\n", Info3->usrmod3_lockout_duration / 60);
+        ConPrintf(StdOut, L"%lu\n", Info3->usrmod3_lockout_duration / 60);
 
         PrintPaddedResourceString(IDS_ACCOUNTS_LOCKOUT_WINDOW, nPaddedLength);
-        PrintToConsole(L"%lu\n", Info3->usrmod3_lockout_observation_window / 60);
+        ConPrintf(StdOut, L"%lu\n", Info3->usrmod3_lockout_observation_window / 60);
 
         PrintPaddedResourceString(IDS_ACCOUNTS_COMPUTER_ROLE, nPaddedLength);
         if (Info1->usrmod1_role == UAS_ROLE_PRIMARY)
         {
             if (ProductType == NtProductLanManNt)
             {
-                PrintResourceString(IDS_ACCOUNTS_PRIMARY_SERVER);
+                ConResPuts(StdOut, IDS_ACCOUNTS_PRIMARY_SERVER);
             }
             else if (ProductType == NtProductServer)
             {
-                PrintResourceString(IDS_ACCOUNTS_STANDALONE_SERVER);
+                ConResPuts(StdOut, IDS_ACCOUNTS_STANDALONE_SERVER);
             }
             else
             {
-                PrintResourceString(IDS_ACCOUNTS_WORKSTATION);
+                ConResPuts(StdOut, IDS_ACCOUNTS_WORKSTATION);
             }
         }
         else
         {
-            PrintResourceString(IDS_ACCOUNTS_BACKUP_SERVER);
+            ConResPuts(StdOut, IDS_ACCOUNTS_BACKUP_SERVER);
         }
-        PrintToConsole(L"\n");
+        ConPuts(StdOut, L"\n");
     }
 
 done:

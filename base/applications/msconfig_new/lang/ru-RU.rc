@@ -4,13 +4,13 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 229, 98
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе Конфигурация системы"
+CAPTION "О программе Параметры системы"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
-    LTEXT           "Конфигурация системы\nВерсия 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
-//  "Copyright (C) ReactOS Team 2005-"COPYRIGHT_YEAR"\n"
-    LTEXT           "Copyright (C) ReactOS Team 2005-2015\n\
+    LTEXT           "Параметры системы\nВерсия 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
+//  "Copyright (C) Команда ReactOS 2005-"COPYRIGHT_YEAR"\n"
+    LTEXT           "Copyright (C) Команда ReactOS 2005-2015\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
 Gregor Schneider (Gregor.Schneider@reactos.org)\n\
 Hermès BÉLUSCA - MAÏTO (hermes.belusca@sfr.fr)",
@@ -124,19 +124,19 @@ END
 
 IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Expand Files from an Installation Source"
+CAPTION "Развернуть файлы с источника установки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Specify the files you want to restore, the source location containing the installation files, and the destination location for the files.", IDC_STATIC, 7, 7, 339, 17
-    LTEXT           "F&iles to restore:", IDC_STATIC, 7, 34, 93, 10
+    LTEXT           "Укажите файлы, которые вы хотите восстановить, местоположение источника, содержащего установочные файлы, а также местоположение назначения для файлов.", IDC_STATIC, 7, 7, 339, 17
+    LTEXT           "&Файлы для восстановления:", IDC_STATIC, 7, 34, 93, 10
     EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
-    PUSHBUTTON      "&Browse Files...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
-    LTEXT           "&Restore from:", IDC_STATIC, 7, 55, 93, 10
+    PUSHBUTTON      "&Читать файлы...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
+    LTEXT           "&Восстановить из:", IDC_STATIC, 7, 55, 93, 10
     COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Browse &From...", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
+    PUSHBUTTON      "Читать &из...", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
     LTEXT           "&Сохранить в:", IDC_STATIC, 7, 76, 93, 10
     COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Browse &To...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
+    PUSHBUTTON      "Читать &в...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
     DEFPUSHBUTTON   "Распаковать", IDOK, 179, 96, 82, 14
     PUSHBUTTON      "Отмена", IDCANCEL, 264, 96, 82, 14
 END
@@ -187,7 +187,7 @@ END
 
 IDD_REQUIRED_SERVICES_DISABLING_DIALOG DIALOGEX 0, 0, 237, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройки системы"
+CAPTION "Параметры системы"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK", IDOK, 180, 41, 50, 14
@@ -198,7 +198,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG            "Настройки системы"
+    IDS_MSCONFIG            "Параметры системы"
     IDS_MSCONFIG_2          "Конфигурация системы"
     IDS_ABOUT               "&О программе...\tShift+F1"
 END

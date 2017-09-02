@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -50,7 +50,7 @@
 #define SIGN_MEDIA_FMT          L"SIGN.MEDIA=%X %s"
 #endif
 
-
+/* Fixme: use RTL_UNICODE_STRING_BUFFER */
 typedef struct SDB_TMP_STR
 {
     UNICODE_STRING Str;
@@ -109,7 +109,7 @@ BOOL SdbpIsPathOnRemovableMedia(PCWSTR Path)
 {
     WCHAR tmp[] = { 'A',':','\\',0 };
     ULONG type;
-    if (!Path)
+    if (!Path || Path[0] == UNICODE_NULL)
     {
         SHIM_ERR("Invalid argument\n");
         return FALSE;
@@ -131,6 +131,7 @@ BOOL SdbpIsPathOnRemovableMedia(PCWSTR Path)
     return type == DRIVE_REMOVABLE || type == DRIVE_CDROM;
 }
 
+/* Convert a path on removable media to 'SIGN.MEDIA=%X filename' */
 BOOL SdbpBuildSignMediaId(PSDB_TMP_STR LongPath)
 {
     SDB_TMP_STR Scratch;
@@ -159,7 +160,7 @@ BOOL SdbpBuildSignMediaId(PSDB_TMP_STR LongPath)
             FindClose(FindHandle);
             SdbpResizeTempStr(LongPath, (LongPath->Str.Length >> 1) + 20);
             StringCbPrintfW(LongPath->Str.Buffer, LongPath->Str.MaximumLength, SIGN_MEDIA_FMT, SignMedia, Scratch.Str.Buffer + 3);
-            LongPath->Str.Length = wcslen(LongPath->Str.Buffer) * sizeof(WCHAR);
+            LongPath->Str.Length = (USHORT)SdbpStrlen(LongPath->Str.Buffer) * sizeof(WCHAR);
             SdbpFreeTempStr(&Scratch);
             return TRUE;
         }
@@ -169,6 +170,7 @@ BOOL SdbpBuildSignMediaId(PSDB_TMP_STR LongPath)
     return FALSE;
 }
 
+/* Convert a given path to a long or media path */
 BOOL SdbpResolvePath(PSDB_TMP_STR LongPath, PCWSTR wszPath)
 {
     SdbpInitTempStr(LongPath);
@@ -213,11 +215,11 @@ NTSTATUS SdbpOpenKey(PUNICODE_STRING FullPath, BOOL bMachine, ACCESS_MASK Access
         Status = RtlFormatCurrentUserKeyPath(&BasePath);
         if (!NT_SUCCESS(Status))
         {
-            SHIM_ERR("Unable to aquire user registry key, Error: 0x%lx\n", Status);
+            SHIM_ERR("Unable to acquire user registry key, Error: 0x%lx\n", Status);
             return Status;
         }
     }
-    FullPath->MaximumLength = BasePath.Length + (wcslen(LayersKey) + 1) * sizeof(WCHAR);
+    FullPath->MaximumLength = (USHORT)(BasePath.Length + SdbpStrsize(LayersKey));
     FullPath->Buffer = SdbAlloc(FullPath->MaximumLength);
     FullPath->Length = 0;
     RtlAppendUnicodeStringToString(FullPath, &BasePath);
@@ -447,7 +449,7 @@ BOOL WINAPI SdbSetPermLayerKeys(PCWSTR wszPath, PCWSTR wszLayers, BOOL bMachine)
     Status = SdbpOpenKey(&FullKey, bMachine, KEY_SET_VALUE, &KeyHandle);
     if (NT_SUCCESS(Status))
     {
-        Status = NtSetValueKey(KeyHandle, &LongPath.Str, 0, REG_SZ, (PVOID)wszLayers, (wcslen(wszLayers)+1) * sizeof(WCHAR));
+        Status = NtSetValueKey(KeyHandle, &LongPath.Str, 0, REG_SZ, (PVOID)wszLayers, SdbpStrsize(wszLayers));
         if (!NT_SUCCESS(Status))
         {
             SHIM_INFO("Failed to write a value to Key \"%wZ\" Status 0x%lx\n", &FullKey, Status);

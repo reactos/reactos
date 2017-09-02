@@ -41,7 +41,7 @@ Size = 12,4 Mio
 [Section.0419]
 License = Бесплатно
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.
-Size = 12,4 МБ
+Size = 12,4 МиБ
 
 [Section.041f]
 License = Ücretsiz

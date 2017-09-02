@@ -529,7 +529,7 @@ CabinetOpen(VOID)
 
         if (!NT_SUCCESS(NtStatus))
         {
-            DPRINT("Cannot open file (%S) (%x)\n", CabinetName, NtStatus);
+            DPRINT1("Cannot open file (%S) (%x)\n", CabinetName, NtStatus);
             return CAB_STATUS_CANNOT_OPEN;
         }
 
@@ -544,7 +544,7 @@ CabinetOpen(VOID)
 
         if (!NT_SUCCESS(NtStatus))
         {
-            DPRINT("NtCreateSection failed: %x\n", NtStatus);
+            DPRINT1("NtCreateSection failed for %ls: %x\n", CabinetName, NtStatus);
             return CAB_STATUS_NOMEMORY;
         }
 
@@ -562,7 +562,7 @@ CabinetOpen(VOID)
 
         if (!NT_SUCCESS(NtStatus))
         {
-            DPRINT("NtMapViewOfSection failed: %x\n", NtStatus);
+            DPRINT1("NtMapViewOfSection failed: %x\n", NtStatus);
             return CAB_STATUS_NOMEMORY;
         }
 
@@ -578,7 +578,7 @@ CabinetOpen(VOID)
             PCABHeader->FileTableOffset < sizeof(CFHEADER))
         {
             CloseCabinet();
-            DPRINT("File has invalid header\n");
+            DPRINT1("File has invalid header\n");
             return CAB_STATUS_INVALID_CAB;
         }
 
@@ -932,13 +932,13 @@ CabinetExtractFile(PCAB_SEARCH Search)
 
             if (!NT_SUCCESS(NtStatus))
             {
-                DPRINT("NtCreateFile() failed (%S) (%x)\n", DestName, NtStatus);
+                DPRINT1("NtCreateFile() failed (%S) (%x)\n", DestName, NtStatus);
                 return CAB_STATUS_CANNOT_CREATE;
             }
         }
         else
         {
-            DPRINT("File (%S) exists\n", DestName);
+            DPRINT1("File (%S) exists\n", DestName);
             return CAB_STATUS_FILE_EXISTS;
         }
     }
@@ -954,7 +954,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
 
     if (!NT_SUCCESS(NtStatus))
     {
-        DPRINT("NtCreateSection failed: %x\n", NtStatus);
+        DPRINT1("NtCreateSection failed for %ls, %x\n", DestName, NtStatus);
         Status = CAB_STATUS_NOMEMORY;
         goto CloseDestFile;
     }
@@ -972,7 +972,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
 
     if (!NT_SUCCESS(NtStatus))
     {
-        DPRINT("NtMapViewOfSection failed: %x\n", NtStatus);
+        DPRINT1("NtMapViewOfSection failed: %x\n", NtStatus);
         Status = CAB_STATUS_NOMEMORY;
         goto CloseDestFileSection;
     }
@@ -982,7 +982,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
                                       Search->File->FileTime,
                                       &FileTime))
     {
-        DPRINT("DosDateTimeToFileTime() failed\n");
+        DPRINT1("DosDateTimeToFileTime() failed\n");
         Status = CAB_STATUS_CANNOT_WRITE;
         goto UnmapDestFile;
     }

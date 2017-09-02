@@ -44,6 +44,7 @@
 
 #include <ddrawi.h>
 #include <ddrawgdi.h>
+#include <d3dkmthk.h>
 
 /* Public Win32K Headers */
 #include <ntgdityp.h>
@@ -55,5 +56,7 @@
 
 /* Deprecated NTGDI calls which shouldn't exist */
 #include <ntgdibad.h>
+
+#include <undocgdi.h>
 
 #endif /* _GDI32_PCH_ */

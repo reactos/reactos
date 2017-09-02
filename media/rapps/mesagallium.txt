@@ -1,0 +1,32 @@
+[Section]
+Name = Mesa3D Graphics Library
+Version = 17.0.0
+License = MIT
+Description = This build of the Mesa3D Graphics Library consits of Mesa, Gallium and llvmpipe. It provides a significant performance boost for systems with no OpenGL hardware acceleration. It can replace the OGL driver on your system - this can be set during setup or via the OpenGL Configuration control panel applet.
+Size = 5.7 MiB
+Category = 14
+URLSite = https://www.mesa3d.org
+URLDownload = http://svn.reactos.org/packages/mesa3d_setup.exe
+SHA1 = 4c0d42844ff3693612edfdac51799fd7c63dcafd
+CDPath = none
+
+[Section.0405]
+Description = Grafická knihovna obsahujicí moduly Mesa, Gallium a llvmpipe. Poskytuje vyšší výkon na systémech bez hardwarové OpenGL akcelerace. Tato knihovna může nahradit výchozí OGL ovladač na Vašem systému - nastavení lze provést během instalace, nebo pomocí ovládacího panelu Nastavení OpenGL.
+
+[Section.0407]
+Description = Beinhaltet Mesa, Gallium und llvmpipe. Signifikanter Geschwindigkeitsschub für Systeme ohne OpenGL Hardwarebeschleunigung.
+Size = 5,7 MiB
+
+[Section.0418]
+Description = Acest pachet este compus din Mesa, Gallium, și LLVMpipe. Oferă un spor semnificativ de performanță pentru sistemele fără accelerare grafică OpenGL. Poate înlocui modulul-pilot din sistem - fie prin instalare sau cu ajutorul interfeței Configurație OpenGL din Panoul de control.
+Size = 5,7 Mio
+
+[Section.0419]
+Description = Сборка графической библиотеки Mesa3D. Содержит Mesa, Gallium и llvmpipe. Обеспечивает прирост производительности систем без аппаратного ускорения OpenGL. Библиотека может заменить собой системный драйвер OpenGL.
+Size = 5,7 МиБ
+
+[Section.041f]
+Name = Mesa3D Çizge Kitaplığı
+Description = Mesa3D'nin bu yapısı Mesa, Gallium ve llvmpipe'tan oluşmaktadır. OpenGL donanım hızlandırması olmayan dizgeler için önemli bir başarım artışı sağlar. Dizgenizde OGL sürücüsünün yerini alabilir, bunu kurulum sırasında ya da OpenGL Yapılandırma denetim masası ögesi yoluyla ayarlanabilir.
+Size = 5,7 MiB
+

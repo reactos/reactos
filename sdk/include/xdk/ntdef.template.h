@@ -223,6 +223,7 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
     sizeof(s) / sizeof(_RTL_CONSTANT_STRING_type_check(s)), \
     _RTL_CONSTANT_STRING_remove_const_macro(s) }
 
+#ifdef _MSC_VER
 #define DECLARE_UNICODE_STRING_SIZE(_var, _size) \
   WCHAR _var ## _buffer[_size]; \
   __pragma(warning(push)) __pragma(warning(disable:4221)) __pragma(warning(disable:4204)) \
@@ -234,6 +235,15 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
   __pragma(warning(push)) __pragma(warning(disable:4221)) __pragma(warning(disable:4204)) \
   const UNICODE_STRING _var = { sizeof(_string) - sizeof(WCHAR), sizeof(_string), (PWCH)_var##_buffer } \
   __pragma(warning(pop))
+#else
+#define DECLARE_UNICODE_STRING_SIZE(_var, _size) \
+  WCHAR _var ## _buffer[_size]; \
+  UNICODE_STRING _var = { 0, (_size) * sizeof(WCHAR) , _var ## _buffer }
+
+#define DECLARE_CONST_UNICODE_STRING(_var, _string) \
+  const WCHAR _var##_buffer[] = _string; \
+  const UNICODE_STRING _var = { sizeof(_string) - sizeof(WCHAR), sizeof(_string), (PWCH)_var##_buffer }
+#endif
 
 #define DECLARE_GLOBAL_CONST_UNICODE_STRING(_var, _str) \
   extern const __declspec(selectany) UNICODE_STRING _var = RTL_CONSTANT_STRING(_str)

@@ -245,6 +245,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
+    SIZE_T NonPagedSystemSize;
     KIRQL OldIrql;
     PMMPFN Pfn1;
     ULONG Flags;
@@ -298,9 +299,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // nonpaged pool expansion (above) and the system PTEs. Note that it is
     // then aligned to a PDE boundary (4MB).
     //
-    MiNonPagedSystemSize = (MmNumberOfSystemPtes + 1) * PAGE_SIZE;
+    NonPagedSystemSize = (MmNumberOfSystemPtes + 1) * PAGE_SIZE;
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedPoolStart -
-                                    MiNonPagedSystemSize);
+                                    NonPagedSystemSize);
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
                                     ~(PDE_MAPPED_VA - 1));
 

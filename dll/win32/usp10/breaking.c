@@ -25,7 +25,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
 
 extern const unsigned short wine_linebreak_table[] DECLSPEC_HIDDEN;
 
-enum breaking_types { b_BK=1, b_CR, b_LF, b_CM, b_SG, b_GL, b_CB, b_SP, b_ZW, b_NL, b_WJ, b_JL, b_JV, b_JT, b_H2, b_H3, b_XX, b_OP, b_CL, b_CP, b_QU, b_NS, b_EX, b_SY, b_IS, b_PR, b_PO, b_NU, b_AL, b_ID, b_IN, b_HY, b_BB, b_BA, b_SA, b_AI, b_B2, b_HL, b_CJ, b_RI};
+enum breaking_types {
+    b_BK=1, b_CR, b_LF, b_CM, b_SG, b_GL, b_CB, b_SP, b_ZW, b_NL, b_WJ, b_JL, b_JV, b_JT, b_H2, b_H3, b_XX, b_OP, b_CL,
+    b_CP, b_QU, b_NS, b_EX, b_SY, b_IS, b_PR, b_PO, b_NU, b_AL, b_ID, b_IN, b_HY, b_BB, b_BA, b_SA, b_AI, b_B2, b_HL,
+    b_CJ, b_RI, b_EB, b_EM, b_ZWJ
+};
 
 enum breaking_class {b_r=1, b_s, b_x};
 
@@ -64,8 +68,8 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
 
     TRACE("In      %s\n",debugstr_wn(chars,count));
 
-    break_class = HeapAlloc(GetProcessHeap(),0, count * sizeof(short));
-    break_before = HeapAlloc(GetProcessHeap(),0, count * sizeof(short));
+    break_class = heap_alloc(count * sizeof(*break_class));
+    break_before = heap_alloc(count * sizeof(*break_before));
 
     for (i = 0; i < count; i++)
     {
@@ -367,7 +371,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
                     if (break_class[i+1] == b_IN || break_class[i+1] == b_PO)
                         else_break(&break_before[i+1],b_x);
             }
-            if (break_class[i] == b_PO)
+            if (break_class[i] == b_PR)
             {
                 switch (break_class[i+1])
                 {
@@ -397,7 +401,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
                  break_class[i+1] == b_OP)
                 else_break(&break_before[i+1],b_x);
             if (break_class[i] == b_CP &&
-                (break_class[i+1] == b_AL || break_class[i] == b_HL || break_class[i] == b_NU))
+                (break_class[i+1] == b_AL || break_class[i+1] == b_HL || break_class[i+1] == b_NU))
                 else_break(&break_before[i+1],b_x);
 
             /* LB30a */
@@ -421,6 +425,6 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, break_before);
-    HeapFree(GetProcessHeap(), 0, break_class);
+    heap_free(break_before);
+    heap_free(break_class);
 }

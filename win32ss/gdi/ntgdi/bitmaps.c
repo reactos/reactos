@@ -430,13 +430,12 @@ NtGdiCreateCompatibleBitmap(
 }
 
 BOOL
-APIENTRY
-NtGdiGetBitmapDimension(
-    HBITMAP hBitmap,
-    LPSIZE psizDim)
+NTAPI
+GreGetBitmapDimension(
+    _In_ HBITMAP hBitmap,
+    _Out_ LPSIZE psizDim)
 {
     PSURFACE psurfBmp;
-    BOOL bResult = TRUE;
 
     if (hBitmap == NULL)
         return FALSE;
@@ -449,22 +448,38 @@ NtGdiGetBitmapDimension(
         return FALSE;
     }
 
-    /* Use SEH to copy the data to the caller */
-    _SEH2_TRY
-    {
-        ProbeForWrite(psizDim, sizeof(SIZE), 1);
-        *psizDim = psurfBmp->sizlDim;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        bResult = FALSE;
-    }
-    _SEH2_END
+    *psizDim = psurfBmp->sizlDim;
 
     /* Unlock the bitmap */
     SURFACE_ShareUnlockSurface(psurfBmp);
 
-    return bResult;
+    return TRUE;
+}
+
+BOOL
+APIENTRY
+NtGdiGetBitmapDimension(
+    HBITMAP hBitmap,
+    LPSIZE psizDim)
+{
+    SIZE dim;
+
+    if (!GreGetBitmapDimension(hBitmap, &dim))
+        return FALSE;
+
+    /* Use SEH to copy the data to the caller */
+    _SEH2_TRY
+    {
+        ProbeForWrite(psizDim, sizeof(*psizDim), 1);
+        *psizDim = dim;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END
+
+    return TRUE;
 }
 
 

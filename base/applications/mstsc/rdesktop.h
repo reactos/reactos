@@ -191,7 +191,7 @@
         ((tvp)->tv_sec = (tvp)->tv_usec = 0)
 #endif
 
-/* If configure does not define the endianess, try
+/* If configure does not define the endianness, try
    to find it out */
 #if !defined(L_ENDIAN) && !defined(B_ENDIAN)
 #if __BYTE_ORDER == __LITTLE_ENDIAN

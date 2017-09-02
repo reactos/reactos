@@ -1170,7 +1170,7 @@ UINT msi_create_empty_local_file( LPWSTR path, LPCWSTR suffix )
     return ERROR_SUCCESS;
 }
 
-enum platform parse_platform( const WCHAR *str )
+static enum platform parse_platform( const WCHAR *str )
 {
     if (!str[0] || !strcmpW( str, szIntel )) return PLATFORM_INTEL;
     else if (!strcmpW( str, szIntel64 )) return PLATFORM_INTEL64;

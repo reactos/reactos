@@ -1,4 +1,4 @@
-/* $Id: tif_packbits.c,v 1.22 2012-06-20 05:25:33 fwarmerdam Exp $ */
+/* $Id: tif_packbits.c,v 1.26 2017-05-14 02:26:07 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -32,13 +32,15 @@
  *
  * PackBits Compression Algorithm Support
  */
+//#include <stdio.h>
 
 static int
 PackBitsPreEncode(TIFF* tif, uint16 s)
 {
 	(void) s;
 
-	if (!(tif->tif_data = (uint8*)_TIFFmalloc(sizeof(tmsize_t))))
+        tif->tif_data = (uint8*)_TIFFmalloc(sizeof(tmsize_t));
+	if (tif->tif_data == NULL)
 		return (0);
 	/*
 	 * Calculate the scanline/tile-width size in bytes.
@@ -81,7 +83,9 @@ PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 		/*
 		 * Find the longest string of identical bytes.
 		 */
-		b = *bp++, cc--, n = 1;
+		b = *bp++;
+		cc--;
+		n = 1;
 		for (; cc > 0 && b == *bp; cc--, bp++)
 			n++;
 	again:
@@ -96,7 +100,7 @@ PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 				slop = (long)(op - lastliteral);
 				tif->tif_rawcc += (tmsize_t)(lastliteral - tif->tif_rawcp);
 				if (!TIFFFlushData1(tif))
-					return (-1);
+					return (0);
 				op = tif->tif_rawcp;
 				while (slop-- > 0)
 					*op++ = *lastliteral++;
@@ -104,7 +108,7 @@ PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 			} else {
 				tif->tif_rawcc += (tmsize_t)(op - tif->tif_rawcp);
 				if (!TIFFFlushData1(tif))
-					return (-1);
+					return (0);
 				op = tif->tif_rawcp;
 			}
 		}
@@ -222,7 +226,8 @@ PackBitsDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
 	bp = (char*) tif->tif_rawcp;
 	cc = tif->tif_rawcc;
 	while (cc > 0 && occ > 0) {
-		n = (long) *bp++, cc--;
+		n = (long) *bp++;
+		cc--;
 		/*
 		 * Watch out for compilers that
 		 * don't sign extend chars...
@@ -240,8 +245,15 @@ PackBitsDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
 				    (unsigned long) ((tmsize_t)n - occ));
 				n = (long)occ;
 			}
+			if( cc == 0 )
+			{
+				TIFFWarningExt(tif->tif_clientdata, module,
+					       "Terminating PackBitsDecode due to lack of data.");
+				break;
+			}
 			occ -= n;
-			b = *bp++, cc--;
+			b = *bp++;
+			cc--;
 			while (n-- > 0)
 				*op++ = (uint8) b;
 		} else {		/* copy next n+1 bytes literally */

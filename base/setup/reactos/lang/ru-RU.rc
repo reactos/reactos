@@ -16,9 +16,9 @@ CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Установка ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    LTEXT "Установить новую копию системы ReactOS. Эта опция НЕ сохраняет файлы, настройки и программы. Вы можете изменять диски и разделы.", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "Восстановить или изменить установленный ранее ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "Обновить или восстановить установленную копию системы ReactOS. Эта опция СОХРАНЯЕТ файлы, настройки и программы. Доступно только при наличии уже установленной на компьютере системы ReactOS.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Для установки устройств нажмите ""Далее"".", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -70,7 +70,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
 CAPTION "Дополнительные параметры установки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Базовый каталог", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
+    CONTROL "Основной каталог", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
     EDITTEXT IDC_PATH, 10, 12, 283, 14, WS_VISIBLE
     CONTROL "Установка загрузчика", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
     CONTROL "Установить загрузчик на диск (MBR и VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 49, 278, 11
@@ -131,7 +131,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Name"
-    IDS_PARTITION_SIZE "Size"
-    IDS_PARTITION_TYPE "Type"
+    IDS_PARTITION_NAME "Имя"
+    IDS_PARTITION_SIZE "Размер"
+    IDS_PARTITION_TYPE "Тип"
 END

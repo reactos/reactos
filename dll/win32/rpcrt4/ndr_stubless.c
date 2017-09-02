@@ -1829,3 +1829,8 @@ RPCRTAPI LONG RPC_ENTRY NdrAsyncStubCall(struct IRpcStubBuffer* pThis,
     FIXME("unimplemented, expect crash!\n");
     return 0;
 }
+
+void RPC_ENTRY NdrAsyncServerCall(PRPC_MESSAGE pRpcMsg)
+{
+    FIXME("unimplemented, %p\n", pRpcMsg);
+}

@@ -793,7 +793,7 @@ static void GLAPIENTRY vbo_exec_Begin( GLenum mode )
          return;
       }
 
-      /* Heuristic: attempt to isolate attributes occuring outside
+      /* Heuristic: attempt to isolate attributes occurring outside
        * begin/end pairs.
        */
       if (exec->vtx.vertex_size && !exec->vtx.attrsz[0]) 

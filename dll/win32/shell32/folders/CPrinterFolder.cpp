@@ -28,7 +28,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 static shvheader PrinterSFHeader[] = {
-    {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
+    {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN_DOCUMENTS , SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN_STATUS, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
@@ -54,11 +54,11 @@ HRESULT WINAPI CPrintersExtractIconW_CreateInstane(LPCITEMIDLIST pidl, REFIID ri
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit,&initIcon));
-    if (FAILED(hr))
-        return NULL;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     /* FIXME: other icons for default, network, print to file */
-    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_PRINTERS_FOLDER);
+    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_PRINTER);
 
     return initIcon->QueryInterface(riid,ppv);
 }
@@ -192,14 +192,6 @@ CPrinterFolder::~CPrinterFolder()
         SHFree(pidlRoot);
 }
 
-HRESULT WINAPI CPrinterFolder::FinalConstruct()
-{
-    pidlRoot = _ILCreatePrinters();    /* my qualified pidl */
-    if (pidlRoot == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
-}
-
 /**************************************************************************
  *    CPrinterFolder::ParseDisplayName
  *
@@ -234,7 +226,7 @@ static PIDLPrinterStruct * _ILGetPrinterStruct(LPCITEMIDLIST pidl)
  */
 HRESULT WINAPI CPrinterFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST * ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CPrintersEnum>(hwndOwner, dwFlags, IID_IEnumIDList, ppEnumIDList);
+    return ShellObjectCreatorInit<CPrintersEnum>(hwndOwner, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************
@@ -293,7 +285,8 @@ HRESULT WINAPI CPrinterFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPV
     }
     else if(IsEqualIID(riid, IID_IShellView))
     {
-        hr = CDefView_Constructor(this, riid, ppvOut);
+        SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
+        hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
     }
     TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
@@ -375,13 +368,10 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
         return E_INVALIDARG;
     }
 
-    if (!pidl->mkid.cb)
-        return SHSetStrRet(strRet, IDS_PRINTERS);
-
     p = _ILGetPrinterStruct(pidl);
     if (!p)
     {
-        WARN("no printer struct\n");
+        ERR("no printer struct\n");
         return E_INVALIDARG;
     }
 

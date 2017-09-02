@@ -351,7 +351,18 @@ ObpFreeObjectNameBuffer(IN PUNICODE_STRING Name)
     /* We know this is a pool-allocation if the size doesn't match */
     if (Name->MaximumLength != OBP_NAME_LOOKASIDE_MAX_SIZE)
     {
-        /* Free it from the pool */
+        /*
+         * Free it from the pool.
+         *
+         * We cannot use here ExFreePoolWithTag(..., OB_NAME_TAG); , because
+         * the object name may have been massaged during operation by different
+         * object parse routines. If the latter ones have to resolve a symbolic
+         * link (e.g. as is done by CmpParseKey() and CmpGetSymbolicLink()),
+         * the original object name is freed and re-allocated from the pool,
+         * possibly with a different pool tag. At the end of the day, the new
+         * object name can be reallocated and completely different, but we
+         * should still be able to free it!
+         */
         ExFreePool(Buffer);
     }
     else
@@ -394,7 +405,8 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
         }
 
         /* Make sure there really is a string */
-        if ((StringLength = LocalName.Length))
+        StringLength = LocalName.Length;
+        if (StringLength)
         {
             /* Check that the size is a valid WCHAR multiple */
             if ((StringLength & (sizeof(WCHAR) - 1)) ||
@@ -556,7 +568,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
         /* Clear the string */
         RtlInitEmptyUnicodeString(ObjectName, NULL, 0);
 
-        /* He can't have specified a Root Directory */
+        /* It cannot have specified a Root Directory */
         if (ObjectCreateInfo->RootDirectory)
         {
             Status = STATUS_OBJECT_NAME_INVALID;
@@ -1247,7 +1259,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
     ASSERT(LocalObjectType->Index != 0);
 
-    if (LocalObjectType->Index < 32)
+    if (LocalObjectType->Index < RTL_NUMBER_OF(ObpObjectTypes))
     {
         /* It fits, insert it */
         ObpObjectTypes[LocalObjectType->Index - 1] = LocalObjectType;

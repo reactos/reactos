@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,6 +79,7 @@
 #define ACPI_MAX_EXTPARSE_CACHE_DEPTH   96          /* Parse tree objects */
 #define ACPI_MAX_OBJECT_CACHE_DEPTH     96          /* Interpreter operand objects */
 #define ACPI_MAX_NAMESPACE_CACHE_DEPTH  96          /* Namespace objects */
+#define ACPI_MAX_COMMENT_CACHE_DEPTH    96          /* Comments for the -ca option */
 
 /*
  * Should the subsystem abort the loading of an ACPI table if the
@@ -145,6 +146,10 @@
 /* Address Range lists are per-SpaceId (Memory and I/O only) */
 
 #define ACPI_ADDRESS_RANGE_MAX          2
+
+/* Maximum number of While() loops before abort */
+
+#define ACPI_MAX_LOOP_COUNT             0x000FFFFF
 
 
 /******************************************************************************

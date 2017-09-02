@@ -245,7 +245,7 @@ static BOOL enum_drivers(DWORD fccType, enum_handler_t handler, void* param)
 	    lRet = RegEnumValueA(hKey, i++, buf, &name, 0, &type, (LPBYTE)(buf+name), &data);
 	    if (lRet == ERROR_NO_MORE_ITEMS) break;
 	    if (lRet != ERROR_SUCCESS) continue;
-	    if (name != 9 || strncasecmp(buf, fccTypeStr, 5)) continue;
+	    if (fccType && (name != 9 || strncasecmp(buf, fccTypeStr, 5))) continue;
 	    buf[name] = '=';
 	    if ((result = handler(buf, cnt++, param))) break;
 	}
@@ -259,7 +259,7 @@ static BOOL enum_drivers(DWORD fccType, enum_handler_t handler, void* param)
 	for (s = buf; *s; s += strlen(s) + 1)
 	{
             TRACE("got %s\n", s);
-	    if (strncasecmp(s, fccTypeStr, 5) || s[9] != '=') continue;
+	    if (fccType && (strncasecmp(s, fccTypeStr, 5) || s[9] != '=')) continue;
 	    if ((result = handler(s, cnt++, param))) break;
 	}
     }
@@ -296,9 +296,8 @@ static BOOL ICInfo_enum_handler(const char *drv, unsigned int nr, void *param)
     ICINFO *lpicinfo = param;
     DWORD fccHandler = mmioStringToFOURCCA(drv + 5, 0);
 
-    /* exact match of fccHandler or nth driver found */
-    if ((lpicinfo->fccHandler != nr) && (lpicinfo->fccHandler != fccHandler))
-	return FALSE;
+    if (lpicinfo->fccHandler != nr && compare_fourcc(lpicinfo->fccHandler, fccHandler))
+        return FALSE;
 
     lpicinfo->fccHandler = fccHandler;
     lpicinfo->dwFlags = 0;
@@ -619,7 +618,6 @@ LRESULT VFWAPI ICGetInfo(HIC hic, ICINFO *picinfo, DWORD cb)
         lstrcpyW(picinfo->szDriver, ii.szDriver);
     }
 
-    TRACE("	-> %s\n", wine_dbgstr_icerr(ret));
     return ret;
 }
 
@@ -795,7 +793,7 @@ HIC VFWAPI ICGetDisplayFormat(
     if (ICSendMessage(tmphic, ICM_DECOMPRESS_GET_FORMAT, (DWORD_PTR)lpbiIn, (DWORD_PTR)lpbiOut))
         goto errout;
 
-	if (lpbiOut->biCompression != 0) {
+    if (lpbiOut->biCompression != 0) {
            FIXME("Ooch, how come decompressor outputs compressed data (%d)??\n",
 			 lpbiOut->biCompression);
 	}
@@ -867,8 +865,6 @@ DWORD VFWAPIV  ICDecompress(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiFormat,
 	icd.lpOutput	= lpBits;
 	icd.ckid	= 0;
 	ret = ICSendMessage(hic,ICM_DECOMPRESS,(DWORD_PTR)&icd,sizeof(ICDECOMPRESS));
-
-	TRACE("-> %s\n",wine_dbgstr_icerr(ret));
 
 	return ret;
 }

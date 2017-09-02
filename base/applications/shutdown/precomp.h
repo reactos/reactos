@@ -10,14 +10,16 @@
 #include <winreg.h>
 #include <winuser.h>
 
+#include <conutils.h>
+
 #include "resource.h"
 
 /* DEFINES *******************************************************************/
+
 #define MAX_MESSAGE_SIZE    512
 #define MAX_MAJOR_CODE      256
 #define MAX_MINOR_CODE      65536
 #define MAX_TIMEOUT         315360000
-#define MAX_BUFFER_SIZE     5024
 
 /* Reason Code List */
 typedef struct _REASON

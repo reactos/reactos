@@ -463,7 +463,7 @@ GROUP_AddGroup(GROUPFORMAT format, BOOL bIsCommonGroup, LPCWSTR lpszName, LPCWST
                     &WndPl.rcNormalPosition.top,
                     &WndPl.rcNormalPosition.right,
                     &WndPl.rcNormalPosition.bottom,
-                    &WndPl.ptMinPosition,
+                    &WndPl.ptMinPosition.x,
                     &WndPl.ptMinPosition.y,
                     &WndPl.showCmd,
                     &skip) == 7)

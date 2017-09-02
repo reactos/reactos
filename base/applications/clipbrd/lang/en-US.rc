@@ -10,7 +10,7 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&Open...", CMD_OPEN
-        MENUITEM "Save &as...", CMD_SAVE_AS
+        MENUITEM "Save &As...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "E&xit", CMD_EXIT
     END

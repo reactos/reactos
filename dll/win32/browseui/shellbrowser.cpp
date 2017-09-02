@@ -166,8 +166,8 @@ HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder)
     return desktop->BindToObject (path, NULL, IID_PPV_ARG(IShellFolder, newFolder));
 }
 
-static const TCHAR szCabinetWndClass[] = TEXT("CabinetWClassX");
-static const TCHAR szExploreWndClass[] = TEXT("ExploreWClassX");
+static const TCHAR szCabinetWndClass[] = TEXT("CabinetWClass");
+static const TCHAR szExploreWndClass[] = TEXT("ExploreWClass");
 
 class CDockManager;
 class CShellBrowser;
@@ -179,7 +179,7 @@ private:
     CComPtr<IExplorerToolbar>               fExplorerToolbar;
 public:
     void Initialize(HWND parent, IUnknown *explorerToolbar);
-
+    void Destroy();
 private:
 
     // message handlers
@@ -205,6 +205,12 @@ void CToolbarProxy::Initialize(HWND parent, IUnknown *explorerToolbar)
         hResult = explorerToolbar->QueryInterface(
             IID_PPV_ARG(IExplorerToolbar, &fExplorerToolbar));
     }
+}
+
+void CToolbarProxy::Destroy()
+{
+    DestroyWindow();
+    fExplorerToolbar = NULL;
 }
 
 LRESULT CToolbarProxy::OnAddBitmap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -309,7 +315,7 @@ public:
 
     CShellBrowser();
     ~CShellBrowser();
-    HRESULT Initialize(LPITEMIDLIST pidl, long b, long c, long d);
+    HRESULT Initialize(LPITEMIDLIST pidl, DWORD dwFlags);
 public:
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
@@ -587,6 +593,7 @@ public:
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT PropagateMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnMapNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -597,7 +604,6 @@ public:
     LRESULT OnGoUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
-    LRESULT OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleToolbarLock(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -607,6 +613,7 @@ public:
     LRESULT OnToggleTextLabels(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToolbarCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoTravel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     HRESULT OnSearch();
@@ -632,6 +639,7 @@ public:
         MESSAGE_HANDLER(WM_MEASUREITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_DRAWITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_MENUSELECT, RelayMsgToShellView)
+        MESSAGE_HANDLER(WM_WININICHANGE, PropagateMessage)
         COMMAND_ID_HANDLER(IDM_FILE_CLOSE, OnClose)
         COMMAND_ID_HANDLER(IDM_TOOLS_FOLDEROPTIONS, OnFolderOptions)
         COMMAND_ID_HANDLER(IDM_TOOLS_MAPNETWORKDRIVE, OnMapNetworkDrive)
@@ -642,8 +650,8 @@ public:
         COMMAND_ID_HANDLER(IDM_GOTO_UPONELEVEL, OnGoUpLevel)
         COMMAND_ID_HANDLER(IDM_GOTO_HOMEPAGE, OnGoHome)
         COMMAND_ID_HANDLER(IDM_FAVORITES_ORGANIZEFAVORITES, OnOrganizeFavorites)
-        COMMAND_ID_HANDLER(IDM_HELP_ISTHISCOPYLEGAL, OnIsThisLegal)
         COMMAND_ID_HANDLER(IDM_VIEW_STATUSBAR, OnToggleStatusBarVisible)
+        COMMAND_ID_HANDLER(IDM_VIEW_REFRESH, OnRefresh)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_LOCKTOOLBARS, OnToggleToolbarLock)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_STANDARDBUTTONS, OnToggleToolbarBandVisible)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_ADDRESSBAR, OnToggleAddressBandVisible)
@@ -708,7 +716,7 @@ CShellBrowser::~CShellBrowser()
         DSA_Destroy(menuDsa);
 }
 
-HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
+HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, DWORD dwFlags)
 {
     CComPtr<IPersistStreamInit>             persistStreamInit;
     HRESULT                                 hResult;
@@ -781,6 +789,9 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
     hResult = BrowseToPIDL(pidl, BTP_UPDATE_NEXT_HISTORY);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
+    if ((dwFlags & SBSP_EXPLOREMODE) != NULL)
+        ShowBand(CLSID_ExplorerBand, true);
 
     ShowWindow(SW_SHOWNORMAL);
 
@@ -1042,25 +1053,27 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         HIMAGELIST himlSmall, himlLarge;
 
         CComPtr<IShellFolder> sf;
-        SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+        hResult = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+        if (SUCCEEDED(hResult))
+        {
+            index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 
-        index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+            Shell_GetImageLists(&himlLarge, &himlSmall);
 
-        Shell_GetImageLists(&himlLarge, &himlSmall);
+            HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
+            HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
 
-        HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
-        HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
+            /* Hack to make it possible to release the old icons */
+            /* Something seems to go wrong with WM_SETICON */
+            HICON oldSmall = (HICON)SendMessage(WM_GETICON, ICON_SMALL, 0);
+            HICON oldLarge = (HICON)SendMessage(WM_GETICON, ICON_BIG,   0);
 
-        /* Hack to make it possible to release the old icons */
-        /* Something seems to go wrong with WM_SETICON */
-        HICON oldSmall = (HICON)SendMessage(WM_GETICON, ICON_SMALL, 0);
-        HICON oldLarge = (HICON)SendMessage(WM_GETICON, ICON_BIG,   0);
+            SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
+            SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
 
-        SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
-        SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
-
-        DestroyIcon(oldSmall);
-        DestroyIcon(oldLarge);
+            DestroyIcon(oldSmall);
+            DestroyIcon(oldLarge);
+        }
     }
 
     FireCommandStateChangeAll();
@@ -1113,6 +1126,7 @@ HRESULT CShellBrowser::GetBaseBar(bool vertical, REFIID riid, void **theBaseBar)
     
         // we have to store our basebar into cache now
         *cache = newBaseBar;
+        newBaseBar->AddRef();
         
         // tell the new base bar about the shell browser
         hResult = IUnknown_SetSite(newBaseBar, static_cast<IDropTarget *>(this));
@@ -1365,18 +1379,22 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     previousMessage = pThis->m_pCurrentMsg;
     pThis->m_pCurrentMsg = &msg;
 
-    CComPtr<IMenuBand> menuBand;
-    hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
-    if (SUCCEEDED(hResult) && menuBand.p != NULL)
+    /* If the shell browser is initialized, let the menu band preprocess the messages */
+    if (pThis->fCurrentDirectoryPIDL)
     {
-        hResult = menuBand->TranslateMenuMessage(&msg, &lResult);
-        if (hResult == S_OK)
-            return lResult;
-        uMsg = msg.message;
-        wParam = msg.wParam;
-        lParam = msg.lParam;
+        CComPtr<IMenuBand> menuBand;
+        hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
+        if (SUCCEEDED(hResult) && menuBand.p != NULL)
+        {
+            hResult = menuBand->TranslateMenuMessage(&msg, &lResult);
+            if (hResult == S_OK)
+                return lResult;
+            uMsg = msg.message;
+            wParam = msg.wParam;
+            lParam = msg.lParam;
+        }
+        menuBand.Release();
     }
-    menuBand.Release();
 
     handled = pThis->ProcessWindowMessage(hWnd, uMsg, wParam, lParam, lResult, 0);
     ATLASSERT(pThis->m_pCurrentMsg == &msg);
@@ -2182,6 +2200,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::TranslateAcceleratorSB(MSG *pmsg, WORD 
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
 {
+    if ((wFlags & SBSP_EXPLOREMODE) != NULL)
+        ShowBand(CLSID_ExplorerBand, true);
+
     return BrowseToPIDL(pidl, BTP_UPDATE_CUR_HISTORY | BTP_UPDATE_NEXT_HISTORY);
 }
 
@@ -3350,11 +3371,16 @@ LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     HRESULT hr;
+
+    /* The current thread is about to go down so render any IDataObject that may be left in the clipboard */
+    OleFlushClipboard();
+
     // TODO: rip down everything
     {
+        fToolbarProxy.Destroy();
+
         fCurrentShellView->DestroyViewWindow();
         fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
-        ReleaseCComPtrExpectZero(fCurrentShellView);
 
         for (int i = 0; i < 3; i++)
         {
@@ -3383,16 +3409,14 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
                 }
             }
             pdw->CloseDW(0);
+
+            pClient = NULL;
+            pBarSite = NULL;
             pdw = NULL;
-            /* For some reasons, it's like we miss some AddRef in ATL when QueryInterface on
-             * same interface or inherited one, so we are removing already removed (!) object.
-             * TODO: check with MSVC's ATL to see if this behaviour happens too
-             */
-            bar.Detach();
-            pClient.Detach();
-            pBarSite.Detach();
+            bar = NULL;
             ReleaseCComPtrExpectZero(fClientBars[i].clientBar);
         }
+        ReleaseCComPtrExpectZero(fCurrentShellView);
         ReleaseCComPtrExpectZero(fTravelLog);
 
         fCurrentShellFolder.Release();
@@ -3487,6 +3511,12 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
 {
     if (fCurrentShellViewWindow != NULL)
         return SendMessage(fCurrentShellViewWindow, uMsg, wParam, lParam);
+    return 0;
+}
+
+LRESULT CShellBrowser::PropagateMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    SHPropagateMessage(m_hWnd, uMsg, wParam, lParam, TRUE);
     return 0;
 }
 
@@ -3590,41 +3620,6 @@ LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWnd
     return 0;
 }
 
-LRESULT CShellBrowser::OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
-{
-    WCHAR wszSite[256];
-    HINSTANCE hResourceInstance = _AtlBaseModule.GetResourceInstance();
-
-    if (!LoadStringW(hResourceInstance, IDS_LEGAL_URL, wszSite, _countof(wszSite)))
-        StringCchCopyW(wszSite, _countof(wszSite), L"https://www.reactos.org/joining/faqs");
-
-    SHELLEXECUTEINFOW execInfo = { sizeof(execInfo), 0 };
-    execInfo.lpVerb = L"open";
-    execInfo.lpFile = wszSite;
-    execInfo.hwnd = m_hWnd;
-    execInfo.nShow = SW_SHOWNORMAL;
-
-    if (!ShellExecuteExW(&execInfo))
-    {
-        WCHAR wszCaption[256];
-        WCHAR wszMessage[512];
-
-        DWORD error = GetLastError();
-
-        if (!LoadStringW(hResourceInstance, IDS_SORRY_MESSAGE, wszCaption, _countof(wszCaption)))
-            StringCchCopyW(wszCaption, _countof(wszCaption), L"ReactOS could not browse to '%s' (error 0x%lx). Please make sure there is a web browser installed.");
-
-        StringCchPrintfW(wszMessage, _countof(wszMessage), wszCaption, wszSite, error);
-
-        if (!LoadStringW(hResourceInstance, IDS_SORRY_CAPTION, wszCaption, _countof(wszCaption)))
-            StringCchCopyW(wszCaption, _countof(wszCaption), L"Sorry");
-
-        MessageBoxW(wszMessage, wszCaption, MB_OK);
-    }
-
-    return 0;
-}
-
 LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     fStatusBarVisible = !fStatusBarVisible;
@@ -3684,6 +3679,13 @@ LRESULT CShellBrowser::OnToolbarCustomize(WORD wNotifyCode, WORD wID, HWND hWndC
     return 0;
 }
 
+LRESULT CShellBrowser::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    if (fCurrentShellView)
+        fCurrentShellView->Refresh();
+    return 0;
+}
+
 LRESULT CShellBrowser::OnGoTravel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     return 0;
@@ -3730,72 +3732,7 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return 0;
 }
 
-static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
+HRESULT CShellBrowser_CreateInstance(LPITEMIDLIST pidl, DWORD dwFlags, REFIID riid, void **ppv)
 {
-    CComPtr<CShellBrowser>    theCabinet;
-    HRESULT                   hResult;
-    MSG Msg;
-    BOOL Ret;
-
-    // Tell the thread ref we are using it.
-    if (parameters && parameters->offsetF8)
-        parameters->offsetF8->AddRef();
-    
-    ATLTRY(theCabinet = new CComObject<CShellBrowser>);
-    if (theCabinet == NULL)
-    {
-        return E_OUTOFMEMORY;
-    }
-    
-    hResult = theCabinet->Initialize(parameters->directoryPIDL, 0, 0, 0);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return E_OUTOFMEMORY;
-
-    while ((Ret = GetMessage(&Msg, NULL, 0, 0)) != 0)
-    {
-        if (Ret == -1)
-        {
-            // Error: continue or exit?
-            break;
-        }
-
-        if (Msg.message == WM_QUIT)
-            break;
-
-        if (theCabinet->v_MayTranslateAccelerator(&Msg) != S_OK)
-        {
-            TranslateMessage(&Msg);
-            DispatchMessage(&Msg);
-        }
-    }
-
-    int nrc = theCabinet->Release();
-    if (nrc > 0)
-    {
-        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked.\n", nrc);
-    }
-
-    theCabinet.Detach();
-
-    // Tell the thread ref we are not using it anymore.
-    if (parameters && parameters->offsetF8)
-        parameters->offsetF8->Release();
-
-    return hResult;
-}
-
-DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
-{
-    HRESULT hr;
-    IEThreadParamBlock * parameters = (IEThreadParamBlock *) lpThreadParameter;
-
-    OleInitialize(NULL);
-
-    ATLTRY(hr = ExplorerMessageLoop(parameters));
-
-    OleUninitialize();
-
-    SHDestroyIETHREADPARAM(parameters);
-
-    return hr;
+    return ShellObjectCreatorInit<CShellBrowser>(pidl, dwFlags, riid, ppv);
 }

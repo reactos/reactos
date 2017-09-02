@@ -51,7 +51,7 @@
  *
  *    30-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        fixed so that it find_which returns NULL if filename is not
- *        executable (does not have .bat, .com, or .exe extention).
+ *        executable (does not have .bat, .com, or .exe extension).
  *        Before command would to execute any file with any extension (opps!)
  *
  *    03-Dec-1998 (Eric Kohl)
@@ -147,7 +147,7 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
     DWORD  dwBuffer;
     TRACE ("SearchForExecutable: \'%s\'\n", debugstr_aw(pFileName));
 
-    /* load environment varable PATHEXT */
+    /* load environment variable PATHEXT */
     pszPathExt = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
     dwBuffer = GetEnvironmentVariable (_T("PATHEXT"), pszPathExt, ENV_BUFFER_SIZE);
     if (dwBuffer > ENV_BUFFER_SIZE)
@@ -185,7 +185,7 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
         return FALSE;
     }
 
-    /* load environment varable PATH into buffer */
+    /* load environment variable PATH into buffer */
     pszPath = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
     dwBuffer = GetEnvironmentVariable (_T("PATH"), pszPath, ENV_BUFFER_SIZE);
     if (dwBuffer > ENV_BUFFER_SIZE)

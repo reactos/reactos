@@ -140,8 +140,11 @@ HRESULT vertexshader_init(struct d3d9_vertexshader *shader, struct d3d9_device *
     shader->IDirect3DVertexShader9_iface.lpVtbl = &d3d9_vertexshader_vtbl;
 
     desc.byte_code = byte_code;
-    desc.input_signature = NULL;
-    desc.output_signature = NULL;
+    desc.byte_code_size = ~(size_t)0;
+    desc.format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM1;
+    desc.input_signature.element_count = 0;
+    desc.output_signature.element_count = 0;
+    desc.patch_constant_signature.element_count = 0;
     desc.max_version = 3;
 
     wined3d_mutex_lock();
@@ -291,8 +294,11 @@ HRESULT pixelshader_init(struct d3d9_pixelshader *shader, struct d3d9_device *de
     shader->IDirect3DPixelShader9_iface.lpVtbl = &d3d9_pixelshader_vtbl;
 
     desc.byte_code = byte_code;
-    desc.input_signature = NULL;
-    desc.output_signature = NULL;
+    desc.byte_code_size = ~(size_t)0;
+    desc.format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM1;
+    desc.input_signature.element_count = 0;
+    desc.output_signature.element_count = 0;
+    desc.patch_constant_signature.element_count = 0;
     desc.max_version = 3;
 
     wined3d_mutex_lock();

@@ -51,6 +51,7 @@ typedef struct _SERVICE_IMAGE
     HANDLE hProcess;
     DWORD dwProcessId;
     HANDLE hToken;
+    HANDLE hProfile;
 } SERVICE_IMAGE, *PSERVICE_IMAGE;
 
 
@@ -86,7 +87,7 @@ typedef struct _START_LOCK
 {
     DWORD Tag;             /* Must be LOCK_TAG */
     DWORD TimeWhenLocked;  /* Number of seconds since 1970 */
-    PSID LockOwnerSid;     /* It is NULL if the SCM aquired the lock */
+    PSID LockOwnerSid;     /* It is NULL if the SCM acquired the lock */
 } START_LOCK, *PSTART_LOCK;
 
 
@@ -142,6 +143,10 @@ ScmReadSecurityDescriptor(
     _In_ HKEY hServiceKey,
     _Out_ PSECURITY_DESCRIPTOR *ppSecurityDescriptor);
 
+DWORD
+ScmDeleteRegKey(
+    _In_ HKEY hKey,
+    _In_ PCWSTR pszSubKey);
 
 /* controlset.c */
 
@@ -188,6 +193,10 @@ DWORD ScmControlDriver(PSERVICE lpService,
 
 
 /* groupdb.c */
+
+PSERVICE_GROUP
+ScmGetServiceGroupByName(
+    _In_ LPCWSTR lpGroupName);
 
 DWORD ScmCreateGroupList(VOID);
 DWORD ScmSetServiceGroup(PSERVICE lpService,

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -164,7 +164,8 @@ AcpiExDoConcatenate (
     {
     case ACPI_TYPE_INTEGER:
 
-        Status = AcpiExConvertToInteger (LocalOperand1, &TempOperand1, 16);
+        Status = AcpiExConvertToInteger (LocalOperand1, &TempOperand1,
+            ACPI_STRTOUL_BASE16);
         break;
 
     case ACPI_TYPE_BUFFER:

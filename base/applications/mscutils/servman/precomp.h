@@ -1,9 +1,6 @@
 #ifndef __SERVMAN_PRECOMP_H
 #define __SERVMAN_PRECOMP_H
 
-#if 0
-#include <stdarg.h>
-
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -14,13 +11,9 @@
 #include <winsvc.h>
 #include <wincon.h>
 #include <shlobj.h>
+#include <commdlg.h>
 #include <strsafe.h>
-#else
-#include <windows.h>
-#include <commctrl.h>
-#include <process.h>
-#include <strsafe.h>
-#endif
+
 #include "resource.h"
 
 #ifdef _MSC_VER
@@ -61,6 +54,7 @@ typedef struct _MAIN_WND_INFO
 
     ENUM_SERVICE_STATUS_PROCESS *pAllServices;
     ENUM_SERVICE_STATUS_PROCESS *pCurrentService;
+    DWORD NumServices;
 
     INT SelectedItem;/* selection number in the list view */
     INT SortSelection;
@@ -122,9 +116,10 @@ BOOL SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig, LPWSTR lpServiceNam
 LPWSTR GetServiceDescription(LPWSTR lpServiceName);
 BOOL SetServiceDescription(LPWSTR lpServiceName, LPWSTR lpDescription);
 LPWSTR GetExecutablePath(LPWSTR lpServiceName);
+VOID FreeServiceList(PMAIN_WND_INFO Info);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
 BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);
-BOOL GetServiceList(PMAIN_WND_INFO Info, DWORD *NumServices);
+BOOL GetServiceList(PMAIN_WND_INFO Info);
 
 
 /* propsheet.c */

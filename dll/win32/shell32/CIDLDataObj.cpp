@@ -129,7 +129,7 @@ HRESULT WINAPI IEnumFORMATETCImpl::Clone(LPENUMFORMATETC* ppenum)
 
 HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMATETC **ppFormat)
 {
-    return ShellObjectCreatorInit<IEnumFORMATETCImpl>(cfmt, afmt, IID_IEnumFORMATETC, ppFormat);
+    return ShellObjectCreatorInit<IEnumFORMATETCImpl>(cfmt, afmt, IID_PPV_ARG(IEnumFORMATETC, ppFormat));
 }
 
 
@@ -394,12 +394,12 @@ HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync)
 
 HRESULT WINAPI CIDLDataObj::StartOperation(IBindCtx *pbcReserved)
 {
-    FIXME("(%p)->()\n", this);
+    TRACE("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 HRESULT WINAPI CIDLDataObj::EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects)
 {
-    FIXME("(%p)->()\n", this);
+    TRACE("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 
@@ -410,7 +410,7 @@ HRESULT WINAPI CIDLDataObj::EndOperation(HRESULT hResult, IBindCtx *pbcReserved,
 */
 HRESULT IDataObject_Constructor(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidl, UINT cidl, IDataObject **dataObject)
 {
-    return ShellObjectCreatorInit<CIDLDataObj>(hwndOwner, pMyPidl, apidl, cidl, IID_IDataObject, dataObject);
+    return ShellObjectCreatorInit<CIDLDataObj>(hwndOwner, pMyPidl, apidl, cidl, IID_PPV_ARG(IDataObject, dataObject));
 }
 
 /*************************************************************************

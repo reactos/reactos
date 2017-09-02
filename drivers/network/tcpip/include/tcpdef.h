@@ -117,7 +117,7 @@ enum {
 #define TCP_NODELAY		1	/* Turn off Nagle's algorithm. */
 #define TCP_MAXSEG		2	/* Limit MSS */
 #define TCP_CORK		3	/* Never send partially complete segments */
-#define TCP_KEEPIDLE		4	/* Start keeplives after this period */
+#define TCP_KEEPIDLE		4	/* Start keepalives after this period */
 #define TCP_KEEPINTVL		5	/* Interval between keepalives */
 #define TCP_KEEPCNT		6	/* Number of keepalives before death */
 #define TCP_SYNCNT		7	/* Number of SYN retransmits */

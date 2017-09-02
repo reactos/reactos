@@ -307,89 +307,89 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
-    POPUP "Правка"
+    POPUP "&Правка"
     BEGIN
-        MENUITEM "Копировать\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Вставить\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Копировать\tCTRL-C", IDM_EDIT_COPY
+        MENUITEM "Вст&авить\tCTRL-V", IDM_EDIT_PASTE
     END
-    POPUP "Вид"
+    POPUP "В&ид"
     BEGIN
-        MENUITEM "Обычный", IDM_VIEW_STANDARD
-        MENUITEM "Научный", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Преобразование", IDM_VIEW_CONVERSION
+        MENUITEM "&Обычный", IDM_VIEW_STANDARD
+        MENUITEM "&Инженерный", IDM_VIEW_SCIENTIFIC
+        MENUITEM "П&еревод величин", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Шестнадцатеричный\tF5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "Десятичный\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "Восьмеричный\tF7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "Двоичный\tF8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Шестнадцатеричный\tF5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "&Десятичный\tF6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Восьмеричный\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "Двои&чный\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Градусы\tF2", IDM_VIEW_DEG, CHECKED
-        MENUITEM "Радианы\tF3", IDM_VIEW_RAD, CHECKED
-        MENUITEM "Грады\tF4", IDM_VIEW_GRAD, CHECKED
+        MENUITEM "&Градусы\tF2", IDM_VIEW_DEG, CHECKED
+        MENUITEM "Радиа&ны\tF3", IDM_VIEW_RAD, CHECKED
+        MENUITEM "Гр&ады\tF4", IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Количество цифр в группе", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Группировать &цифры", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Справка"
+    POPUP "&Справка"
     BEGIN
-        MENUITEM "Вызов справки", IDM_HELP_HELP
+        MENUITEM "&Вызов справки", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "О программе", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
-    POPUP "Правка"
+    POPUP "&Правка"
     BEGIN
-        MENUITEM "Копировать\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Вставить\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Копировать\tCTRL-C", IDM_EDIT_COPY
+        MENUITEM "Вст&авить\tCTRL-V", IDM_EDIT_PASTE
     END
-    POPUP "Вид"
+    POPUP "В&ид"
     BEGIN
-        MENUITEM "Обычный", IDM_VIEW_STANDARD
-        MENUITEM "Научный", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Преобразование", IDM_VIEW_CONVERSION
+        MENUITEM "&Обычный", IDM_VIEW_STANDARD
+        MENUITEM "&Инженерный", IDM_VIEW_SCIENTIFIC
+        MENUITEM "П&еревод величин", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Шестнадцатеричный\tF5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "Десятичный\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "Восьмеричный\tF7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "Двоичный\tF8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Шестнадцатеричный\tF5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "&Десятичный\tF6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Восьмеричный\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "Двои&чный\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "8 байт\tF12", IDM_VIEW_QWORD, CHECKED
-        MENUITEM "4 байт\tF2", IDM_VIEW_DWORD, CHECKED
-        MENUITEM "2 байт\tF3", IDM_VIEW_WORD, CHECKED
-        MENUITEM "1 байт\tF4", IDM_VIEW_BYTE, CHECKED
+        MENUITEM "&8 байт\tF12", IDM_VIEW_QWORD, CHECKED
+        MENUITEM "&4 байт\tF2", IDM_VIEW_DWORD, CHECKED
+        MENUITEM "&2 байт\tF3", IDM_VIEW_WORD, CHECKED
+        MENUITEM "&1 байт\tF4", IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Количество цифр в группе", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Группировать &цифры", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Справка"
+    POPUP "&Справка"
     BEGIN
-        MENUITEM "Вызов справки", IDM_HELP_HELP
+        MENUITEM "&Вызов справки", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "О программе", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_STANDARD MENU
 BEGIN
-    POPUP "Правка"
+    POPUP "&Правка"
     BEGIN
-        MENUITEM "Копировать\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Вставить\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Копировать\tCTRL-C", IDM_EDIT_COPY
+        MENUITEM "Вст&авить\tCTRL-V", IDM_EDIT_PASTE
     END
-    POPUP "Вид"
+    POPUP "В&ид"
     BEGIN
-        MENUITEM "Обычный", IDM_VIEW_STANDARD
-        MENUITEM "Научный", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Преобразование", IDM_VIEW_CONVERSION
+        MENUITEM "&Обычный", IDM_VIEW_STANDARD
+        MENUITEM "&Инженерный", IDM_VIEW_SCIENTIFIC
+        MENUITEM "П&еревод величин", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Количество цифр в группе", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Группировать &цифры", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Справка"
+    POPUP "&Справка"
     BEGIN
-        MENUITEM "Вызов справки", IDM_HELP_HELP
+        MENUITEM "&Вызов справки", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "О программе", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 
@@ -491,12 +491,15 @@ BEGIN
     IDS_CURRENCY_CZECH_KORUNA "Чешская крона"
     IDS_CURRENCY_DEUTSCHE_MARK "Немецкая марка"
     IDS_CURRENCY_DUTCH_GUILDER "Голландский гульден"
+    IDS_CURRENCY_ESTONIAN_KROON "Estonian kroon"
     IDS_CURRENCY_EURO "Евро"
     IDS_CURRENCY_FINNISH_MARKKA "Финская марка"
     IDS_CURRENCY_FRENCH_FRANC "Французский франк"
     IDS_CURRENCY_GREEK_DRACHMA "Греческая драхма"
     IDS_CURRENCY_IRISH_POUND "Ирландский фунт"
     IDS_CURRENCY_ITALIAN_LIRA "Итальянская лира"
+    IDS_CURRENCY_LATVIAN_LATS "Latvian lats"
+    IDS_CURRENCY_LITHUANIAN_LITAS "Lithuanian litas"
     IDS_CURRENCY_LUXEMBOURG_FRANC "Люксембургский франк"
     IDS_CURRENCY_MALTESE_LIRA "Мальтийская лира"
     IDS_CURRENCY_PORTOGUESE_ESCUDO "Португальское эскудо"

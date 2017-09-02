@@ -296,6 +296,7 @@ typedef struct _function_expression_t {
     source_elements_t *source_elements;
     const WCHAR *src_str;
     DWORD src_len;
+    unsigned func_id;
 
     struct _function_expression_t *next; /* for compiler */
 } function_expression_t;

@@ -689,20 +689,11 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 
             if (Status == STATUS_BUFFER_OVERFLOW)
             {
-                if (Buffer0)
-                {
-                    Buffer0->NextEntryOffset = 0;
-                }
                 break;
             }
         }
         else
         {
-            if (Buffer0)
-            {
-                Buffer0->NextEntryOffset = 0;
-            }
-
             if (First)
             {
                 Status = STATUS_NO_SUCH_FILE;
@@ -717,12 +708,13 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
         Buffer0 = (PFILE_NAMES_INFORMATION)Buffer;
         Buffer0->FileIndex = FileIndex++;
         Ccb->Entry++;
+        BufferLength -= Buffer0->NextEntryOffset;
 
         if (Stack->Flags & SL_RETURN_SINGLE_ENTRY)
         {
             break;
         }
-        BufferLength -= Buffer0->NextEntryOffset;
+
         Buffer += Buffer0->NextEntryOffset;
     }
 
@@ -734,6 +726,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     if (FileIndex > 0)
     {
         Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = Stack->Parameters.QueryDirectory.Length - BufferLength;
     }
 
     return(Status);
@@ -793,6 +786,8 @@ CdfsDirectoryControl(
     Irp = IrpContext->Irp;
     DeviceObject = IrpContext->DeviceObject;
 
+    Irp->IoStatus.Information = 0;
+
     switch (IrpContext->MinorFunction)
     {
     case IRP_MN_QUERY_DIRECTORY:
@@ -809,11 +804,6 @@ CdfsDirectoryControl(
         DPRINT1("CDFS: MinorFunction %u\n", IrpContext->MinorFunction);
         Status = STATUS_INVALID_DEVICE_REQUEST;
         break;
-    }
-
-    if (Status != STATUS_PENDING)
-    {
-        Irp->IoStatus.Information = 0;
     }
 
     return(Status);

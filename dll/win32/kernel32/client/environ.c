@@ -24,6 +24,7 @@
  */
 DWORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetEnvironmentVariableA(IN LPCSTR lpName,
                         IN LPSTR lpBuffer,
                         IN DWORD nSize)
@@ -141,7 +142,7 @@ Quickie:
     RtlFreeUnicodeString(&VarNameU);
     if (VarValueU.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, VarValueU.Buffer);
 
-    /* Check if we suceeded */
+    /* Check if we succeeded */
     if (!NT_SUCCESS(Status))
     {
         /* We did not, clear the result and set the error code */
@@ -158,6 +159,7 @@ Quickie:
  */
 DWORD
 WINAPI
+DECLSPEC_HOTPATCH
 GetEnvironmentVariableW(IN LPCWSTR lpName,
                         IN LPWSTR lpBuffer,
                         IN DWORD nSize)
@@ -212,6 +214,7 @@ GetEnvironmentVariableW(IN LPCWSTR lpName,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetEnvironmentVariableA(IN LPCSTR lpName,
                         IN LPCSTR lpValue)
 {
@@ -252,6 +255,7 @@ SetEnvironmentVariableA(IN LPCSTR lpName,
  */
 BOOL
 WINAPI
+DECLSPEC_HOTPATCH
 SetEnvironmentVariableW(IN LPCWSTR lpName,
                         IN LPCWSTR lpValue)
 {
@@ -495,7 +499,7 @@ Quickie:
     RtlFreeUnicodeString(&SourceU);
     if (DestU.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, DestU.Buffer);
 
-    /* Check if we suceeded */
+    /* Check if we succeeded */
     if (!NT_SUCCESS(Status))
     {
         /* We did not, clear the result and set the error code */

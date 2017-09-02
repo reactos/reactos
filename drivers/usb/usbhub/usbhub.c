@@ -62,7 +62,7 @@ USBHUB_AddDevice(
     PDEVICE_OBJECT DeviceObject;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     NTSTATUS Status;
-    DPRINT("USBHUB: AddDevice\n");
+    DPRINT("USBHUB: AddDevice (%p)\n", PhysicalDeviceObject);
     //
     // Create the Device Object
     //
@@ -86,11 +86,19 @@ USBHUB_AddDevice(
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     RtlZeroMemory(HubDeviceExtension, sizeof(HUB_DEVICE_EXTENSION));
 
+    INITIALIZE_PNP_STATE(HubDeviceExtension->Common);
+
     //
     // Set this to Fdo
     //
     HubDeviceExtension->Common.IsFDO = TRUE;
     DeviceObject->Flags |= DO_POWER_PAGABLE;
+
+    // initialize mutex
+    KeInitializeGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+    // initialize remove lock
+    IoInitializeRemoveLock(&HubDeviceExtension->Common.RemoveLock, 'buH', 0, 0);
 
     //
     // initialize reset complete event
@@ -159,6 +167,18 @@ USBHUB_DispatchDeviceControl(
 }
 
 NTSTATUS NTAPI
+USBHUB_DispatchSystemControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT("Usbhub: DispatchSystemControl\n");
+    if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
+        return USBHUB_IrpStub(DeviceObject, Irp);
+    else
+        return USBHUB_IrpStub(DeviceObject, Irp);
+}
+
+NTSTATUS NTAPI
 USBHUB_DispatchInternalDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -188,37 +208,59 @@ USBHUB_DispatchPower(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-
+    PHUB_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    Status = IoAcquireRemoveLock(&DeviceExtension->Common.RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
     DPRINT1("Power Function %x\n", IoStack->MinorFunction);
 
-    if (IoStack->MinorFunction == IRP_MN_SET_POWER)
+    if (DeviceExtension->Common.IsFDO)
     {
         PoStartNextPowerIrp(Irp);
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
-
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = PoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+        IoReleaseRemoveLock(&DeviceExtension->Common.RemoveLock, Irp);
+        return Status;
     }
-    else if (IoStack->MinorFunction == IRP_MN_QUERY_POWER)
-    {
-        PoStartNextPowerIrp(Irp);
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
 
-    }
-    else if (IoStack->MinorFunction == IRP_MN_WAIT_WAKE)
+    switch (IoStack->MinorFunction)
     {
-        PoStartNextPowerIrp(Irp);
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
+        case IRP_MN_SET_POWER:
+        {
+            DPRINT("IRP_MN_SET_POWER\n");
+            break;
+        }
+        case IRP_MN_QUERY_POWER:
+        {
+            DPRINT("IRP_MN_QUERY_POWER\n");
+            break;
+        }
+        case IRP_MN_WAIT_WAKE:
+        {
+            DPRINT("IRP_MN_WAIT_WAKE\n");
+            break;
+        }
+        default:
+        {
+            DPRINT1("PDO IRP_MJ_POWER / unknown minor function 0x%lx\n", IoStack->MinorFunction);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Irp->IoStatus.Status;
+        }
     }
 
     PoStartNextPowerIrp(Irp);
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoReleaseRemoveLock(&DeviceExtension->Common.RemoveLock, Irp);
     return STATUS_SUCCESS;
 }
 
@@ -227,7 +269,7 @@ NTAPI
 USBHUB_Unload(
     IN PDRIVER_OBJECT DriverObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -245,6 +287,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = USBHUB_Close;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = USBHUB_Cleanup;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = USBHUB_DispatchDeviceControl;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = USBHUB_DispatchSystemControl;
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = USBHUB_DispatchInternalDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_PNP] = USBHUB_DispatchPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] =USBHUB_DispatchPower;

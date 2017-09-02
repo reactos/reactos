@@ -144,7 +144,7 @@ PciQueryForPciBusInterface(IN PPCI_FDO_EXTENSION FdoExtension)
     PAGED_CODE();
     ASSERT(PCI_IS_ROOT_FDO(FdoExtension));
 
-    /* Allocate space for the inteface */
+    /* Allocate space for the interface */
     PciInterface = ExAllocatePoolWithTag(NonPagedPool,
                                          sizeof(PCI_BUS_INTERFACE_STANDARD),
                                          PCI_POOL_TAG);

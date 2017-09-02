@@ -1004,7 +1004,7 @@ clean_up:
 }
 
 NTSTATUS
-WINAPI
+NTAPI
 Ext2Chkdsk(IN PUNICODE_STRING DriveRoot,
            IN BOOLEAN FixErrors,
            IN BOOLEAN Verbose,

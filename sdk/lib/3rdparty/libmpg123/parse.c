@@ -362,7 +362,7 @@ static int check_lame_tag(mpg123_handle *fr)
 		{
 			unsigned char gt     =  fr->bsbuf[lame_offset] >> 5;
 			unsigned char origin = (fr->bsbuf[lame_offset] >> 2) & 0x7;
-			float factor         = (fr->bsbuf[lame_offset] & 0x2) ? -0.1 : 0.1;
+			float factor         = (fr->bsbuf[lame_offset] & 0x2) ? -0.1f : 0.1f;
 			unsigned short gain  = bit_read_short(fr->bsbuf, &lame_offset) & 0x1ff; /* 19 in (2 cycles) */
 			if(origin == 0 || gt < 1 || gt > 2) continue;
 
@@ -1077,6 +1077,44 @@ static int handle_id3v2(mpg123_handle *fr, unsigned long newhead)
 	return PARSE_AGAIN;
 }
 
+static int handle_apetag(mpg123_handle *fr, unsigned long newhead)
+{
+	unsigned char apebuf[28];
+	unsigned long val;
+	int i, ret;
+
+	fr->oldhead = 0;
+
+	/* Apetag headers are 32 bytes, newhead contains 4, read the rest */
+	if((ret=fr->rd->fullread(fr,apebuf,28)) < 0) return ret;
+
+	/* Apetags start with "APETAGEX", "APET" is already tested. */
+	if(strncmp((char *)apebuf,"AGEX",4) != 0)
+		goto apetag_bad;
+
+	/* Version must be 2.000 / 2000 */
+	val = (apebuf[7]<<24)|(apebuf[6]<<16)|(apebuf[5]<<8)|apebuf[4];
+	if(val != 2000)
+		goto apetag_bad;
+
+	/* Last 8 bytes must be 0 */
+	for(i=20; i<28; i++)
+		if(apebuf[i])
+			goto apetag_bad;
+
+	/* Looks good, skip the rest. */
+	val = (apebuf[11]<<24)|(apebuf[10]<<16)|(apebuf[9]<<8)|apebuf[8];
+	if((ret=fr->rd->skip_bytes(fr,val)) < 0) return ret;
+
+	return PARSE_AGAIN;
+
+apetag_bad:	
+	if(fr->rd->back_bytes(fr,31) < 0 && NOQUIET)
+		error("Cannot seek 31 bytes back!");
+
+	return PARSE_AGAIN; /* Give the resync code a chance to fix things */
+}
+
 /* Advance a byte in stream to get next possible header and forget 
    buffered data if possible (for feed reader). */
 #define FORGET_INTERVAL 1024 /* Used by callers to set forget flag each <n> bytes. */
@@ -1201,6 +1239,11 @@ static int wetwork(mpg123_handle *fr, unsigned long *newheadp)
 	if((newhead & (unsigned long) 0xffffff00) == (unsigned long) 0x49443300)
 	{
 		return handle_id3v2(fr, newhead);
+	}
+	/* Check for an apetag header */
+	if(newhead == ('A'<<24)+('P'<<16)+('E'<<8)+'T')
+	{
+		return handle_apetag(fr, newhead);
 	}
 	else if(NOQUIET && fr->silent_resync == 0)
 	{

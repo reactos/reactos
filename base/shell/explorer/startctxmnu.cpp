@@ -176,7 +176,7 @@ public:
             ILFree(pidlStart);
         }
 
-        return NULL;
+        return S_OK;
     }
 
     virtual HRESULT STDMETHODCALLTYPE

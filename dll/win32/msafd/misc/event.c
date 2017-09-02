@@ -4,10 +4,10 @@
  * FILE:        dll/win32/msafd/misc/event.c
  * PURPOSE:     Event handling
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- *				Alex Ionescu (alex@relsoft.net)
+ *              Alex Ionescu (alex@relsoft.net)
  * REVISIONS:
- *   CSH 15/06-2001 Created
- *	 Alex 16/07/2004 - Complete Rewrite
+ *   CSH  15/06/2001 - Created
+ *   Alex 16/07/2004 - Complete Rewrite
  */
 
 #include <msafd.h>
@@ -18,56 +18,57 @@ WINE_DEFAULT_DEBUG_CHANNEL(msafd);
 int
 WSPAPI
 WSPEventSelect(
-	SOCKET Handle,
-	WSAEVENT hEventObject,
-	long lNetworkEvents,
-	LPINT lpErrno)
+    IN SOCKET Handle,
+    IN WSAEVENT hEventObject,
+    IN long lNetworkEvents,
+    OUT LPINT lpErrno)
 {
-	IO_STATUS_BLOCK				IOSB;
-	AFD_EVENT_SELECT_INFO		EventSelectInfo;
-	PSOCKET_INFORMATION			Socket = NULL;
-	NTSTATUS					Status;
-	BOOLEAN						BlockMode;
-	HANDLE                                  SockEvent;
+    IO_STATUS_BLOCK        IOSB;
+    AFD_EVENT_SELECT_INFO  EventSelectInfo;
+    PSOCKET_INFORMATION    Socket = NULL;
+    NTSTATUS               Status;
+    BOOLEAN                BlockMode;
+    HANDLE                 SockEvent;
 
-	Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
-				NULL, 1, FALSE );
+    TRACE("WSPEventSelect (%lx) %lx %lx\n", Handle, hEventObject, lNetworkEvents);
 
-	if( !NT_SUCCESS(Status) ) return -1;
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+        if (lpErrno) *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
 
-	/* Get the Socket Structure associate to this Socket*/
-	Socket = GetSocketStructure(Handle);
-	if (!Socket)
-	{
-		NtClose(SockEvent);
-		*lpErrno = WSAENOTSOCK;
-		return SOCKET_ERROR;
-	}
+    Status = NtCreateEvent(&SockEvent, EVENT_ALL_ACCESS,
+                           NULL, 1, FALSE);
 
-	/* Set Socket to Non-Blocking */
-	BlockMode = TRUE;
-	SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
-	Socket->SharedData.NonBlocking = TRUE;
+    if (!NT_SUCCESS(Status)) return SOCKET_ERROR;
 
-	/* Deactivate Async Select if there is one */
-	if (Socket->EventObject) {
-		Socket->SharedData.hWnd = NULL;
-		Socket->SharedData.wMsg = 0;
-		Socket->SharedData.AsyncEvents = 0;
-		Socket->SharedData.SequenceNumber++; // This will kill Async Select after the next completion
-	}
+    /* Set Socket to Non-Blocking */
+    BlockMode = TRUE;
+    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL, NULL, NULL);
+    Socket->SharedData->NonBlocking = TRUE;
 
-	/* Set Structure Info */
-	EventSelectInfo.EventObject = hEventObject;
-	EventSelectInfo.Events = 0;
+    /* Deactivate Async Select if there is one */
+    if (Socket->EventObject) {
+        Socket->SharedData->hWnd = NULL;
+        Socket->SharedData->wMsg = 0;
+        Socket->SharedData->AsyncEvents = 0;
+        Socket->SharedData->SequenceNumber++; // This will kill Async Select after the next completion
+    }
 
-	/* Set Events to wait for */
-	if (lNetworkEvents & FD_READ) {
-		EventSelectInfo.Events |= AFD_EVENT_RECEIVE;
+    /* Set Structure Info */
+    EventSelectInfo.EventObject = hEventObject;
+    EventSelectInfo.Events = 0;
+
+    /* Set Events to wait for */
+    if (lNetworkEvents & FD_READ) {
+        EventSelectInfo.Events |= AFD_EVENT_RECEIVE;
     }
 
     if (lNetworkEvents & FD_WRITE) {
-	EventSelectInfo.Events |= AFD_EVENT_SEND;
+        EventSelectInfo.Events |= AFD_EVENT_SEND;
     }
 
     if (lNetworkEvents & FD_OOB) {
@@ -75,7 +76,7 @@ WSPEventSelect(
     }
 
     if (lNetworkEvents & FD_ACCEPT) {
-	EventSelectInfo.Events |= AFD_EVENT_ACCEPT;
+        EventSelectInfo.Events |= AFD_EVENT_ACCEPT;
     }
 
     if (lNetworkEvents & FD_CONNECT) {
@@ -83,30 +84,28 @@ WSPEventSelect(
     }
 
     if (lNetworkEvents & FD_CLOSE) {
-	EventSelectInfo.Events |= AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE;
+        EventSelectInfo.Events |= AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE;
     }
 
     if (lNetworkEvents & FD_QOS) {
-	EventSelectInfo.Events |= AFD_EVENT_QOS;
+        EventSelectInfo.Events |= AFD_EVENT_QOS;
     }
 
     if (lNetworkEvents & FD_GROUP_QOS) {
-	EventSelectInfo.Events |= AFD_EVENT_GROUP_QOS;
+        EventSelectInfo.Events |= AFD_EVENT_GROUP_QOS;
     }
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-				   SockEvent,
-				   NULL,
-				   NULL,
-				   &IOSB,
-				   IOCTL_AFD_EVENT_SELECT,
-				   &EventSelectInfo,
-				   sizeof(EventSelectInfo),
-				   NULL,
-				   0);
-
-    TRACE("AFD: %x\n", Status);
+                                   SockEvent,
+                                   NULL,
+                                   NULL,
+                                   &IOSB,
+                                   IOCTL_AFD_EVENT_SELECT,
+                                   &EventSelectInfo,
+                                   sizeof(EventSelectInfo),
+                                   NULL,
+                                   0);
 
     /* Wait for return */
     if (Status == STATUS_PENDING) {
@@ -114,17 +113,13 @@ WSPEventSelect(
         Status = IOSB.Status;
     }
 
-    TRACE("Waited\n");
-
-    NtClose( SockEvent );
+    NtClose (SockEvent);
 
     if (Status != STATUS_SUCCESS)
     {
         ERR("Got status 0x%08x.\n", Status);
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
     }
-
-    TRACE("Closed event\n");
 
     /* Set Socket Data*/
     Socket->EventObject = hEventObject;
@@ -139,51 +134,53 @@ WSPEventSelect(
 INT
 WSPAPI
 WSPEnumNetworkEvents(
-  IN  SOCKET Handle,
-  IN  WSAEVENT hEventObject,
-  OUT LPWSANETWORKEVENTS lpNetworkEvents,
-  OUT LPINT lpErrno)
+    IN  SOCKET Handle,
+    IN  WSAEVENT hEventObject,
+    OUT LPWSANETWORKEVENTS lpNetworkEvents,
+    OUT LPINT lpErrno)
 {
     AFD_ENUM_NETWORK_EVENTS_INFO EnumReq;
-    IO_STATUS_BLOCK				IOSB;
-    PSOCKET_INFORMATION			Socket = NULL;
-    NTSTATUS					Status;
-    HANDLE                                  SockEvent;
+    IO_STATUS_BLOCK              IOSB;
+    PSOCKET_INFORMATION          Socket = NULL;
+    NTSTATUS                     Status;
+    HANDLE                       SockEvent;
 
     TRACE("Called (lpNetworkEvents %x)\n", lpNetworkEvents);
-
-    Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
-			    NULL, 1, FALSE );
-
-    if( !NT_SUCCESS(Status) ) {
-        ERR("Could not make an event %x\n", Status);
-        return -1;
-    }
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       NtClose(SockEvent);
-       *lpErrno = WSAENOTSOCK;
+       if (lpErrno) *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
+    }
+    if (!lpNetworkEvents)
+    {
+       if (lpErrno) *lpErrno = WSAEFAULT;
+       return SOCKET_ERROR;
+    }
+
+    Status = NtCreateEvent(&SockEvent, EVENT_ALL_ACCESS,
+                           NULL, 1, FALSE);
+
+    if( !NT_SUCCESS(Status) ) {
+        ERR("Could not make an event %x\n", Status);
+        return SOCKET_ERROR;
     }
 
     EnumReq.Event = hEventObject;
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-				   SockEvent,
-				   NULL,
-				   NULL,
-				   &IOSB,
-				   IOCTL_AFD_ENUM_NETWORK_EVENTS,
-				   &EnumReq,
-				   sizeof(EnumReq),
-				   NULL,
-				   0);
-
-    TRACE("AFD: %x\n", Status);
+                                   SockEvent,
+                                   NULL,
+                                   NULL,
+                                   &IOSB,
+                                   IOCTL_AFD_ENUM_NETWORK_EVENTS,
+                                   &EnumReq,
+                                   sizeof(EnumReq),
+                                   NULL,
+                                   0);
 
     /* Wait for return */
     if (Status == STATUS_PENDING) {
@@ -191,18 +188,13 @@ WSPEnumNetworkEvents(
         Status = IOSB.Status;
     }
 
-    TRACE("Waited\n");
-
-    NtClose( SockEvent );
+    NtClose (SockEvent);
 
     if (Status != STATUS_SUCCESS)
     {
         ERR("Status 0x%08x", Status);
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
     }
-
-    TRACE("Closed event\n");
-    TRACE("About to touch struct at %x (%d)\n", lpNetworkEvents, sizeof(*lpNetworkEvents));
 
     lpNetworkEvents->lNetworkEvents = 0;
 
@@ -234,14 +226,14 @@ WSPEnumNetworkEvents(
     }
 
     if (EnumReq.PollEvents &
-	(AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE)) {
+            (AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE)) {
         lpNetworkEvents->lNetworkEvents |= FD_CLOSE;
         lpNetworkEvents->iErrorCode[FD_CLOSE_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_CLOSE_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_QOS) {
-	lpNetworkEvents->lNetworkEvents |= FD_QOS;
-	lpNetworkEvents->iErrorCode[FD_QOS_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_QOS_BIT]);
+        lpNetworkEvents->lNetworkEvents |= FD_QOS;
+        lpNetworkEvents->iErrorCode[FD_QOS_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_QOS_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_GROUP_QOS) {

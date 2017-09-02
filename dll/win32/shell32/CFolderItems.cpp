@@ -1,7 +1,7 @@
 /*
  * FolderItem(s) implementation
  *
- * Copyright 2015 Mark Jansen
+ * Copyright 2015,2016 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -162,6 +162,7 @@ HRESULT STDMETHODCALLTYPE CFolderItem::InvokeVerb(VARIANT vVerb)
 
 
 CFolderItems::CFolderItems()
+    :m_Count(-1)
 {
 }
 
@@ -169,11 +170,57 @@ CFolderItems::~CFolderItems()
 {
 }
 
+HRESULT CFolderItems::Init(LPITEMIDLIST idlist)
+{
+    CComPtr<IShellFolder> psfDesktop, psfTarget;
+
+    m_idlist.Attach(idlist);
+
+    HRESULT hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = psfDesktop->BindToObject(m_idlist, NULL, IID_PPV_ARG(IShellFolder, &psfTarget));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = psfTarget->EnumObjects(NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &m_EnumIDList);
+
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
+}
+
 // *** FolderItems methods ***
 HRESULT STDMETHODCALLTYPE CFolderItems::get_Count(long *plCount)
 {
-    TRACE("(%p, %p)\n", this, plCount);
-    return E_NOTIMPL;
+    if (!m_EnumIDList)
+        return E_FAIL;
+
+    if (!plCount)
+        return E_POINTER;
+
+    if (m_Count == -1)
+    {
+        long count = 0;
+
+        HRESULT hr = m_EnumIDList->Reset();
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        CComHeapPtr<ITEMIDLIST> Pidl;
+        hr = m_EnumIDList->Next(1, &Pidl, 0);
+        while (hr != S_FALSE)
+        {
+            count++;
+            Pidl.Free();
+        }
+        m_Count = count;
+    }
+    *plCount = m_Count;
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItems::get_Application(IDispatch **ppid)
@@ -190,13 +237,43 @@ HRESULT STDMETHODCALLTYPE CFolderItems::get_Parent(IDispatch **ppid)
 
 HRESULT STDMETHODCALLTYPE CFolderItems::Item(VARIANT index, FolderItem **ppid)
 {
-    TRACE("(%p, %s, %p)\n", this, wine_dbgstr_variant(&index), ppid);
-    return E_NOTIMPL;
+    if (!m_EnumIDList)
+        return E_FAIL;
+
+    if (V_VT(&index) != VT_I4 && V_VT(&index) != VT_UI4)
+        return E_INVALIDARG;
+
+    ULONG count = V_UI4(&index);
+
+    HRESULT hr = m_EnumIDList->Reset();
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = m_EnumIDList->Skip(count);
+
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComHeapPtr<ITEMIDLIST> spPidl;
+    hr = m_EnumIDList->Next(1, &spPidl, 0);
+    if (hr == S_OK)
+    {
+        CFolderItem* item = new CComObject<CFolderItem>();
+        item->AddRef();
+        item->Init(spPidl.Detach());
+        *ppid = item;
+        return S_OK;
+    }
+
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItems::_NewEnum(IUnknown **ppunk)
 {
-    TRACE("(%p, %p)\n", this, ppunk);
-    return E_NOTIMPL;
+    CFolderItems* items = new CComObject<CFolderItems>();
+    items->AddRef();
+    items->Init(ILClone(m_idlist));
+    *ppunk = items;
+    return S_OK;
 }
 

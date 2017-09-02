@@ -36,7 +36,7 @@ Size = 7,1 Mio
 
 [Section.0419]
 Description = Клон игры Transport Tycoon Deluxe, с открытым исходным кодом.
-Size = 7,1 МБ
+Size = 7,1 МиБ
 
 [Section.041f]
 License = GPL sürüm 2

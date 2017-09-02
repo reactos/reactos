@@ -1,7 +1,7 @@
 /*
  * Copyright 2011 André Hentschel
  * Copyright 2013 Mislav Blaževic
- * Copyright 2015,2016 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,16 +19,13 @@
  */
 
 #include "windef.h"
-#include "winbase.h"
 #include "apphelp.h"
 
-#include "wine/unicode.h"
+
+DWORD WINAPI SdbGetTagDataSize(PDB pdb, TAGID tagid);
 
 
-DWORD WINAPI SdbGetTagDataSize(PDB db, TAGID tagid);
-
-
-BOOL WINAPI SdbpReadData(PDB db, PVOID dest, DWORD offset, DWORD num)
+BOOL WINAPI SdbpReadData(PDB pdb, PVOID dest, DWORD offset, DWORD num)
 {
     DWORD size = offset + num;
 
@@ -37,23 +34,23 @@ BOOL WINAPI SdbpReadData(PDB db, PVOID dest, DWORD offset, DWORD num)
         return FALSE;
 
     /* Overflow */
-    if (db->size < size)
+    if (pdb->size < size)
         return FALSE;
 
-    memcpy(dest, db->data + offset, num);
+    memcpy(dest, pdb->data + offset, num);
     return TRUE;
 }
 
-static DWORD WINAPI SdbpGetTagSize(PDB db, TAGID tagid)
+static DWORD WINAPI SdbpGetTagSize(PDB pdb, TAGID tagid)
 {
     WORD type;
     DWORD size;
 
-    type = SdbGetTagFromTagID(db, tagid) & TAG_TYPE_MASK;
+    type = SdbGetTagFromTagID(pdb, tagid) & TAG_TYPE_MASK;
     if (type == TAG_NULL)
         return 0;
 
-    size = SdbGetTagDataSize(db, tagid);
+    size = SdbGetTagDataSize(pdb, tagid);
     if (type <= TAG_TYPE_STRINGREF)
         return size += sizeof(TAG);
     else size += (sizeof(TAG) + sizeof(DWORD));
@@ -61,26 +58,26 @@ static DWORD WINAPI SdbpGetTagSize(PDB db, TAGID tagid)
     return size;
 }
 
-static LPWSTR WINAPI SdbpGetString(PDB db, TAGID tagid, PDWORD size)
+static LPWSTR WINAPI SdbpGetString(PDB pdb, TAGID tagid, PDWORD size)
 {
     TAG tag;
     TAGID offset;
 
-    tag = SdbGetTagFromTagID(db, tagid);
+    tag = SdbGetTagFromTagID(pdb, tagid);
     if (tag == TAG_NULL)
         return NULL;
 
     if ((tag & TAG_TYPE_MASK) == TAG_TYPE_STRINGREF)
     {
         /* No stringtable; all references are invalid */
-        if (db->stringtable == TAGID_NULL)
+        if (pdb->stringtable == TAGID_NULL)
             return NULL;
 
         /* TAG_TYPE_STRINGREF contains offset of string relative to stringtable */
-        if (!SdbpReadData(db, &tagid, tagid + sizeof(TAG), sizeof(TAGID)))
+        if (!SdbpReadData(pdb, &tagid, tagid + sizeof(TAG), sizeof(TAGID)))
             return NULL;
 
-        offset = db->stringtable + tagid + sizeof(TAG) + sizeof(TAGID);
+        offset = pdb->stringtable + tagid + sizeof(TAG) + sizeof(TAGID);
     }
     else if ((tag & TAG_TYPE_MASK) == TAG_TYPE_STRING)
     {
@@ -93,24 +90,24 @@ static LPWSTR WINAPI SdbpGetString(PDB db, TAGID tagid, PDWORD size)
     }
 
     /* Optionally read string size */
-    if (size && !SdbpReadData(db, size, tagid + sizeof(TAG), sizeof(*size)))
+    if (size && !SdbpReadData(pdb, size, tagid + sizeof(TAG), sizeof(*size)))
         return FALSE;
 
-    return (LPWSTR)(&db->data[offset]);
+    return (LPWSTR)(&pdb->data[offset]);
 }
 
 /**
  * Searches shim database for the tag associated with specified tagid.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  tagid   The TAGID of the tag.
  *
  * @return  Success: The tag associated with specified tagid, Failure: TAG_NULL.
  */
-TAG WINAPI SdbGetTagFromTagID(PDB db, TAGID tagid)
+TAG WINAPI SdbGetTagFromTagID(PDB pdb, TAGID tagid)
 {
     TAG data;
-    if (!SdbpReadData(db, &data, tagid, sizeof(data)))
+    if (!SdbpReadData(pdb, &data, tagid, sizeof(data)))
         return TAG_NULL;
     return data;
 }
@@ -118,12 +115,12 @@ TAG WINAPI SdbGetTagFromTagID(PDB db, TAGID tagid)
 /**
  * Retrieves size of data at specified tagid.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  tagid   Tagid of tag whose size is queried.
  *
  * @return  Success: Size of data at specified tagid, Failure: 0.
  */
-DWORD WINAPI SdbGetTagDataSize(PDB db, TAGID tagid)
+DWORD WINAPI SdbGetTagDataSize(PDB pdb, TAGID tagid)
 {
     /* sizes of data types with fixed size */
     static const SIZE_T sizes[6] = {
@@ -134,7 +131,7 @@ DWORD WINAPI SdbGetTagDataSize(PDB db, TAGID tagid)
     WORD type;
     DWORD size;
 
-    type = SdbGetTagFromTagID(db, tagid) & TAG_TYPE_MASK;
+    type = SdbGetTagFromTagID(pdb, tagid) & TAG_TYPE_MASK;
     if (type == TAG_NULL)
         return 0;
 
@@ -142,7 +139,7 @@ DWORD WINAPI SdbGetTagDataSize(PDB db, TAGID tagid)
         return sizes[(type >> 12) - 1];
 
     /* tag with dynamic size (e.g. list): must read size */
-    if (!SdbpReadData(db, &size, tagid + sizeof(TAG), sizeof(size)))
+    if (!SdbpReadData(pdb, &size, tagid + sizeof(TAG), sizeof(size)))
         return 0;
 
     return size;
@@ -151,25 +148,25 @@ DWORD WINAPI SdbGetTagDataSize(PDB db, TAGID tagid)
 /**
  * Searches shim database for a child of specified parent tag.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  parent  TAGID of parent.
  *
  * @return  Success: TAGID of child tag, Failure: TAGID_NULL.
  */
-TAGID WINAPI SdbGetFirstChild(PDB db, TAGID parent)
+TAGID WINAPI SdbGetFirstChild(PDB pdb, TAGID parent)
 {
     /* if we are at beginning of database */
     if (parent == TAGID_ROOT)
     {
         /* header only database: no tags */
-        if (db->size <= _TAGID_ROOT)
+        if (pdb->size <= _TAGID_ROOT)
             return TAGID_NULL;
         /* return *real* root tagid */
         else return _TAGID_ROOT;
     }
 
     /* only list tag can have children */
-    if ((SdbGetTagFromTagID(db, parent) & TAG_TYPE_MASK) != TAG_TYPE_LIST)
+    if ((SdbGetTagFromTagID(pdb, parent) & TAG_TYPE_MASK) != TAG_TYPE_LIST)
         return TAGID_NULL;
 
     /* first child is sizeof(TAG) + sizeof(DWORD) bytes after beginning of list */
@@ -179,30 +176,30 @@ TAGID WINAPI SdbGetFirstChild(PDB db, TAGID parent)
 /**
  * Searches shim database for next child of specified parent tag.
  *
- * @param [in]  db          Handle to the shim database.
+ * @param [in]  pdb          Handle to the shim database.
  * @param [in]  parent      TAGID of parent.
  * @param [in]  prev_child  TAGID of previous child.
  *
  * @return  Success: TAGID of next child tag, Failure: TAGID_NULL.
  */
-TAGID WINAPI SdbGetNextChild(PDB db, TAGID parent, TAGID prev_child)
+TAGID WINAPI SdbGetNextChild(PDB pdb, TAGID parent, TAGID prev_child)
 {
     TAGID next_child;
     DWORD prev_child_size, parent_size;
 
-    prev_child_size = SdbpGetTagSize(db, prev_child);
+    prev_child_size = SdbpGetTagSize(pdb, prev_child);
     if (prev_child_size == 0)
         return TAGID_NULL;
 
     /* Bound check */
     next_child = prev_child + prev_child_size;
-    if (next_child >= db->size)
+    if (next_child >= pdb->size)
         return TAGID_NULL;
 
     if (parent == TAGID_ROOT)
         return next_child;
 
-    parent_size = SdbpGetTagSize(db, parent);
+    parent_size = SdbpGetTagSize(pdb, parent);
     if (parent_size == 0)
         return TAGID_NULL;
 
@@ -216,22 +213,22 @@ TAGID WINAPI SdbGetNextChild(PDB db, TAGID parent, TAGID prev_child)
 /**
  * Searches shim database for a tag within specified domain.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  parent  TAGID of parent.
  * @param [in]  tag     TAG to be located.
  *
  * @return  Success: TAGID of first matching tag, Failure: TAGID_NULL.
  */
-TAGID WINAPI SdbFindFirstTag(PDB db, TAGID parent, TAG tag)
+TAGID WINAPI SdbFindFirstTag(PDB pdb, TAGID parent, TAG tag)
 {
     TAGID iter;
 
-    iter = SdbGetFirstChild(db, parent);
+    iter = SdbGetFirstChild(pdb, parent);
     while (iter != TAGID_NULL)
     {
-        if (SdbGetTagFromTagID(db, iter) == tag)
+        if (SdbGetTagFromTagID(pdb, iter) == tag)
             return iter;
-        iter = SdbGetNextChild(db, parent, iter);
+        iter = SdbGetNextChild(pdb, parent, iter);
     }
     return TAGID_NULL;
 }
@@ -239,25 +236,25 @@ TAGID WINAPI SdbFindFirstTag(PDB db, TAGID parent, TAG tag)
 /**
  * Searches shim database for a next tag which matches prev_child within parent's domain.
  *
- * @param [in]  db          Handle to the shim database.
+ * @param [in]  pdb          Handle to the shim database.
  * @param [in]  parent      TAGID of parent.
  * @param [in]  prev_child  TAGID of previous match.
  *
  * @return  Success: TAGID of next match, Failure: TAGID_NULL.
  */
-TAGID WINAPI SdbFindNextTag(PDB db, TAGID parent, TAGID prev_child)
+TAGID WINAPI SdbFindNextTag(PDB pdb, TAGID parent, TAGID prev_child)
 {
     TAG tag;
     TAGID iter;
 
-    tag = SdbGetTagFromTagID(db, prev_child);
-    iter = SdbGetNextChild(db, parent, prev_child);
+    tag = SdbGetTagFromTagID(pdb, prev_child);
+    iter = SdbGetNextChild(pdb, parent, prev_child);
 
     while (iter != TAGID_NULL)
     {
-        if (SdbGetTagFromTagID(db, iter) == tag)
+        if (SdbGetTagFromTagID(pdb, iter) == tag)
             return iter;
-        iter = SdbGetNextChild(db, parent, iter);
+        iter = SdbGetNextChild(pdb, parent, iter);
     }
     return TAGID_NULL;
 }
@@ -269,7 +266,7 @@ TAGID WINAPI SdbFindNextTag(PDB db, TAGID parent, TAGID prev_child)
  * If size parameter is less than number of characters in string, this function shall fail and
  * no data shall be copied.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  tagid   TAGID of string or stringref associated with the string.
  * @param [out] buffer  Buffer in which string will be copied.
  * @param [in]  size    Number of characters to copy.
@@ -277,12 +274,12 @@ TAGID WINAPI SdbFindNextTag(PDB db, TAGID parent, TAGID prev_child)
  * @return  TRUE if string was successfully copied to the buffer FALSE if string was not copied
  *          to the buffer.
  */
-BOOL WINAPI SdbReadStringTag(PDB db, TAGID tagid, LPWSTR buffer, DWORD size)
+BOOL WINAPI SdbReadStringTag(PDB pdb, TAGID tagid, LPWSTR buffer, DWORD size)
 {
     LPWSTR string;
     DWORD string_size;
 
-    string = SdbpGetString(db, tagid, &string_size);
+    string = SdbpGetString(pdb, tagid, &string_size);
     if (!string)
         return FALSE;
 
@@ -297,70 +294,70 @@ BOOL WINAPI SdbReadStringTag(PDB db, TAGID tagid, LPWSTR buffer, DWORD size)
 /**
  * Reads WORD value at specified tagid.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  tagid   TAGID of WORD value.
  * @param [in]  ret     Default return value in case function fails.
  *
  * @return  Success: WORD value at specified tagid, or ret on failure.
  */
-WORD WINAPI SdbReadWORDTag(PDB db, TAGID tagid, WORD ret)
+WORD WINAPI SdbReadWORDTag(PDB pdb, TAGID tagid, WORD ret)
 {
-    if (SdbpCheckTagIDType(db, tagid, TAG_TYPE_WORD))
-        SdbpReadData(db, &ret, tagid + 2, sizeof(WORD));
+    if (SdbpCheckTagIDType(pdb, tagid, TAG_TYPE_WORD))
+        SdbpReadData(pdb, &ret, tagid + 2, sizeof(WORD));
     return ret;
 }
 
 /**
  * Reads DWORD value at specified tagid.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  tagid   TAGID of DWORD value.
  * @param [in]  ret     Default return value in case function fails.
  *
  * @return  Success: DWORD value at specified tagid, otherwise ret.
  */
-DWORD WINAPI SdbReadDWORDTag(PDB db, TAGID tagid, DWORD ret)
+DWORD WINAPI SdbReadDWORDTag(PDB pdb, TAGID tagid, DWORD ret)
 {
-    if (SdbpCheckTagIDType(db, tagid, TAG_TYPE_DWORD))
-        SdbpReadData(db, &ret, tagid + 2, sizeof(DWORD));
+    if (SdbpCheckTagIDType(pdb, tagid, TAG_TYPE_DWORD))
+        SdbpReadData(pdb, &ret, tagid + 2, sizeof(DWORD));
     return ret;
 }
 
 /**
  * Reads QWORD value at specified tagid.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  tagid   TAGID of QWORD value.
  * @param [in]  ret     Default return value in case function fails.
  *
  * @return  Success: QWORD value at specified tagid, otherwise ret.
  */
-QWORD WINAPI SdbReadQWORDTag(PDB db, TAGID tagid, QWORD ret)
+QWORD WINAPI SdbReadQWORDTag(PDB pdb, TAGID tagid, QWORD ret)
 {
-    if (SdbpCheckTagIDType(db, tagid, TAG_TYPE_QWORD))
-        SdbpReadData(db, &ret, tagid + sizeof(TAG), sizeof(QWORD));
+    if (SdbpCheckTagIDType(pdb, tagid, TAG_TYPE_QWORD))
+        SdbpReadData(pdb, &ret, tagid + sizeof(TAG), sizeof(QWORD));
     return ret;
 }
 
 /**
  * Reads binary data at specified tagid.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  tagid   TAGID of binary data.
  * @param [out] buffer  Buffer in which data will be copied.
  * @param [in]  size    Size of the buffer.
  *
  * @return  TRUE if data was successfully written, or FALSE otherwise.
  */
-BOOL WINAPI SdbReadBinaryTag(PDB db, TAGID tagid, PBYTE buffer, DWORD size)
+BOOL WINAPI SdbReadBinaryTag(PDB pdb, TAGID tagid, PBYTE buffer, DWORD size)
 {
     DWORD data_size = 0;
 
-    if (SdbpCheckTagIDType(db, tagid, TAG_TYPE_BINARY))
+    if (SdbpCheckTagIDType(pdb, tagid, TAG_TYPE_BINARY))
     {
-        SdbpReadData(db, &data_size, tagid + sizeof(TAG), sizeof(data_size));
+        SdbpReadData(pdb, &data_size, tagid + sizeof(TAG), sizeof(data_size));
         if (size >= data_size)
-            return SdbpReadData(db, buffer, tagid + sizeof(TAG) + sizeof(data_size), data_size);
+            return SdbpReadData(pdb, buffer, tagid + sizeof(TAG) + sizeof(data_size), data_size);
     }
 
     return FALSE;
@@ -369,52 +366,52 @@ BOOL WINAPI SdbReadBinaryTag(PDB db, TAGID tagid, PBYTE buffer, DWORD size)
 /**
  * Retrieves binary data at specified tagid.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  tagid   TAGID of binary data.
  *
  * @return  Success: Pointer to binary data at specified tagid, or NULL on failure.
  */
-PVOID WINAPI SdbGetBinaryTagData(PDB db, TAGID tagid)
+PVOID WINAPI SdbGetBinaryTagData(PDB pdb, TAGID tagid)
 {
-    if (!SdbpCheckTagIDType(db, tagid, TAG_TYPE_BINARY))
+    if (!SdbpCheckTagIDType(pdb, tagid, TAG_TYPE_BINARY))
         return NULL;
-    return &db->data[tagid + sizeof(TAG) + sizeof(DWORD)];
+    return &pdb->data[tagid + sizeof(TAG) + sizeof(DWORD)];
 }
 
 /**
  * Searches shim database for string associated with specified tagid.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [in]  tagid   TAGID of string or stringref associated with the string.
  *
  * @return  the LPWSTR associated with specified tagid, or NULL on failure.
  */
-LPWSTR WINAPI SdbGetStringTagPtr(PDB db, TAGID tagid)
+LPWSTR WINAPI SdbGetStringTagPtr(PDB pdb, TAGID tagid)
 {
-    return SdbpGetString(db, tagid, NULL);
+    return SdbpGetString(pdb, tagid, NULL);
 }
 
 /**
  * Reads binary data at specified tagid.
  *
- * @param [in]  db      Handle to the shim database.
+ * @param [in]  pdb      Handle to the shim database.
  * @param [out] Guid    Database ID.
  *
  * @return  true if the ID was found FALSE otherwise.
  */
-BOOL WINAPI SdbGetDatabaseID(PDB db, GUID* Guid)
+BOOL WINAPI SdbGetDatabaseID(PDB pdb, GUID* Guid)
 {
-    if(SdbIsNullGUID(&db->database_id))
+    if(SdbIsNullGUID(&pdb->database_id))
     {
-        TAGID root = SdbFindFirstTag(db, TAGID_ROOT, TAG_DATABASE);
+        TAGID root = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
         if(root != TAGID_NULL)
         {
-            TAGID id = SdbFindFirstTag(db, root, TAG_DATABASE_ID);
+            TAGID id = SdbFindFirstTag(pdb, root, TAG_DATABASE_ID);
             if(id != TAGID_NULL)
             {
-                if(!SdbReadBinaryTag(db, id, (PBYTE)&db->database_id, sizeof(db->database_id)))
+                if(!SdbReadBinaryTag(pdb, id, (PBYTE)&pdb->database_id, sizeof(pdb->database_id)))
                 {
-                    memset(&db->database_id, 0, sizeof(db->database_id));
+                    memset(&pdb->database_id, 0, sizeof(pdb->database_id));
                 }
             }
             else
@@ -429,9 +426,9 @@ BOOL WINAPI SdbGetDatabaseID(PDB db, GUID* Guid)
             SHIM_ERR("Failed to get root tag\n");
         }
     }
-    if(!SdbIsNullGUID(&db->database_id))
+    if(!SdbIsNullGUID(&pdb->database_id))
     {
-        memcpy(Guid, &db->database_id, sizeof(db->database_id));
+        memcpy(Guid, &pdb->database_id, sizeof(pdb->database_id));
         return TRUE;
     }
     return FALSE;

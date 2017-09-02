@@ -1,0 +1,1719 @@
+﻿CODEPAGE 424
+
+CPINFO 1 0x3F 0x003F
+
+MBTABLE 220
+
+0x00 0x0000 ;Null
+0x01 0x0001 ;Start Of Heading
+0x02 0x0002 ;Start Of Text
+0x03 0x0003 ;End Of Text
+0x04 0x009C ;String Terminator
+0x05 0x0009 ;Character Tabulation
+0x06 0x0086 ;Start Of Selected Area
+0x07 0x007F ;Delete
+0x08 0x0097 ;End Of Guarded Area
+0x09 0x008D ;Reverse Line Feed
+0x0A 0x008E ;Single Shift Two
+0x0B 0x000B ;Line Tabulation
+0x0C 0x000C ;Form Feed (FF)
+0x0D 0x000D ;Carriage Return (CR)
+0x0E 0x000E ;Shift Out
+0x0F 0x000F ;Shift In
+0x10 0x0010 ;Data Link Escape
+0x11 0x0011 ;Device Control One
+0x12 0x0012 ;Device Control Two
+0x13 0x0013 ;Device Control Three
+0x14 0x009D ;Operating System Command
+0x15 0x0085 ;Next Line (NEL)
+0x16 0x0008 ;Backspace
+0x17 0x0087 ;End Of Selected Area
+0x18 0x0018 ;Cancel
+0x19 0x0019 ;End Of Medium
+0x1A 0x0092 ;Private Use Two
+0x1B 0x008F ;Single Shift Three
+0x1C 0x001C ;Information Separator Four
+0x1D 0x001D ;Information Separator Three
+0x1E 0x001E ;Information Separator Two
+0x1F 0x001F ;Information Separator One
+0x20 0x0080 ;Undefined
+0x21 0x0081 ;Undefined
+0x22 0x0082 ;Break Permitted Here
+0x23 0x0083 ;No Break Here
+0x24 0x0084 ;Undefined
+0x25 0x000A ;Line Feed (LF)
+0x26 0x0017 ;End Of Transmission Block
+0x27 0x001B ;Escape
+0x28 0x0088 ;Character Tabulation Set
+0x29 0x0089 ;Character Tabulation With Justification
+0x2A 0x008A ;Line Tabulation Set
+0x2B 0x008B ;Partial Line Forward
+0x2C 0x008C ;Partial Line Backward
+0x2D 0x0005 ;Enquiry
+0x2E 0x0006 ;Acknowledge
+0x2F 0x0007 ;Bell
+0x30 0x0090 ;Device Control String
+0x31 0x0091 ;Private Use One
+0x32 0x0016 ;Synchronous Idle
+0x33 0x0093 ;Set Transmit State
+0x34 0x0094 ;Cancel Character
+0x35 0x0095 ;Message Waiting
+0x36 0x0096 ;Start Of Guarded Area
+0x37 0x0004 ;End Of Transmission
+0x38 0x0098 ;Start Of String
+0x39 0x0099 ;Undefined
+0x3A 0x009A ;Single Character Introducer
+0x3B 0x009B ;Control Sequence Introducer
+0x3C 0x0014 ;Device Control Four
+0x3D 0x0015 ;Negative Acknowledge
+0x3E 0x009E ;Privacy Message
+0x3F 0x001A ;Substitute
+0x40 0x0020 ;Space
+0x41 0x05D0 ;Hebrew Letter Alef
+0x42 0x05D1 ;Hebrew Letter Bet
+0x43 0x05D2 ;Hebrew Letter Gimel
+0x44 0x05D3 ;Hebrew Letter Dalet
+0x45 0x05D4 ;Hebrew Letter He
+0x46 0x05D5 ;Hebrew Letter Vav
+0x47 0x05D6 ;Hebrew Letter Zayin
+0x48 0x05D7 ;Hebrew Letter Het
+0x49 0x05D8 ;Hebrew Letter Tet
+0x4A 0x00A2 ;Cent Sign
+0x4B 0x002E ;Full Stop
+0x4C 0x003C ;Less-Than Sign
+0x4D 0x0028 ;Left Parenthesis
+0x4E 0x002B ;Plus Sign
+0x4F 0x007C ;Vertical Line
+0x50 0x0026 ;Ampersand
+0x51 0x05D9 ;Hebrew Letter Yod
+0x52 0x05DA ;Hebrew Letter Final Kaf
+0x53 0x05DB ;Hebrew Letter Kaf
+0x54 0x05DC ;Hebrew Letter Lamed
+0x55 0x05DD ;Hebrew Letter Final Mem
+0x56 0x05DE ;Hebrew Letter Mem
+0x57 0x05DF ;Hebrew Letter Final Nun
+0x58 0x05E0 ;Hebrew Letter Nun
+0x59 0x05E1 ;Hebrew Letter Samekh
+0x5A 0x0021 ;Exclamation Mark
+0x5B 0x0024 ;Dollar Sign
+0x5C 0x002A ;Asterisk
+0x5D 0x0029 ;Right Parenthesis
+0x5E 0x003B ;Semicolon
+0x5F 0x00AC ;Not Sign
+0x60 0x002D ;Hyphen-Minus
+0x61 0x002F ;Solidus
+0x62 0x05E2 ;Hebrew Letter Ayin
+0x63 0x05E3 ;Hebrew Letter Final Pe
+0x64 0x05E4 ;Hebrew Letter Pe
+0x65 0x05E5 ;Hebrew Letter Final Tsadi
+0x66 0x05E6 ;Hebrew Letter Tsadi
+0x67 0x05E7 ;Hebrew Letter Qof
+0x68 0x05E8 ;Hebrew Letter Resh
+0x69 0x05E9 ;Hebrew Letter Shin
+0x6A 0x00A6 ;Broken Bar
+0x6B 0x002C ;Comma
+0x6C 0x0025 ;Percent Sign
+0x6D 0x005F ;Low Line
+0x6E 0x003E ;Greater-Than Sign
+0x71 0x05EA ;Hebrew Letter Tav
+0x74 0x00A0 ;No-Break Space
+0x78 0x2017 ;Double Low Line
+0x79 0x0060 ;Grave Accent
+0x7A 0x003A ;Colon
+0x7B 0x0023 ;Number Sign
+0x7C 0x0040 ;Commercial At
+0x7D 0x0027 ;Apostrophe
+0x7E 0x003D ;Equals Sign
+0x7F 0x0022 ;Quotation Mark
+0x81 0x0061 ;Latin Small Letter A
+0x82 0x0062 ;Latin Small Letter B
+0x83 0x0063 ;Latin Small Letter C
+0x84 0x0064 ;Latin Small Letter D
+0x85 0x0065 ;Latin Small Letter E
+0x86 0x0066 ;Latin Small Letter F
+0x87 0x0067 ;Latin Small Letter G
+0x88 0x0068 ;Latin Small Letter H
+0x89 0x0069 ;Latin Small Letter I
+0x8A 0x00AB ;Left-Pointing Double Angle Quotation Mark
+0x8B 0x00BB ;Right-Pointing Double Angle Quotation Mark
+0x8F 0x00B1 ;Plus-Minus Sign
+0x90 0x00B0 ;Degree Sign
+0x91 0x006A ;Latin Small Letter J
+0x92 0x006B ;Latin Small Letter K
+0x93 0x006C ;Latin Small Letter L
+0x94 0x006D ;Latin Small Letter M
+0x95 0x006E ;Latin Small Letter N
+0x96 0x006F ;Latin Small Letter O
+0x97 0x0070 ;Latin Small Letter P
+0x98 0x0071 ;Latin Small Letter Q
+0x99 0x0072 ;Latin Small Letter R
+0x9D 0x00B8 ;Cedilla
+0x9F 0x00A4 ;Currency Sign
+0xA0 0x00B5 ;Micro Sign
+0xA1 0x007E ;Tilde
+0xA2 0x0073 ;Latin Small Letter S
+0xA3 0x0074 ;Latin Small Letter T
+0xA4 0x0075 ;Latin Small Letter U
+0xA5 0x0076 ;Latin Small Letter V
+0xA6 0x0077 ;Latin Small Letter W
+0xA7 0x0078 ;Latin Small Letter X
+0xA8 0x0079 ;Latin Small Letter Y
+0xA9 0x007A ;Latin Small Letter Z
+0xAF 0x00AE ;Registered Sign
+0xB0 0x005E ;Circumflex Accent
+0xB1 0x00A3 ;Pound Sign
+0xB2 0x00A5 ;Yen Sign
+0xB3 0x00B7 ;Middle Dot
+0xB4 0x00A9 ;Copyright Sign
+0xB5 0x00A7 ;Section Sign
+0xB6 0x00B6 ;Pilcrow Sign
+0xB7 0x00BC ;Vulgar Fraction One Quarter
+0xB8 0x00BD ;Vulgar Fraction One Half
+0xB9 0x00BE ;Vulgar Fraction Three Quarters
+0xBA 0x005B ;Left Square Bracket
+0xBB 0x005D ;Right Square Bracket
+0xBC 0x00AF ;Macron
+0xBD 0x00A8 ;Diaeresis
+0xBE 0x00B4 ;Acute Accent
+0xBF 0x00D7 ;Multiplication Sign
+0xC0 0x007B ;Left Curly Bracket
+0xC1 0x0041 ;Latin Capital Letter A
+0xC2 0x0042 ;Latin Capital Letter B
+0xC3 0x0043 ;Latin Capital Letter C
+0xC4 0x0044 ;Latin Capital Letter D
+0xC5 0x0045 ;Latin Capital Letter E
+0xC6 0x0046 ;Latin Capital Letter F
+0xC7 0x0047 ;Latin Capital Letter G
+0xC8 0x0048 ;Latin Capital Letter H
+0xC9 0x0049 ;Latin Capital Letter I
+0xCA 0x00AD ;Soft Hyphen
+0xD0 0x007D ;Right Curly Bracket
+0xD1 0x004A ;Latin Capital Letter J
+0xD2 0x004B ;Latin Capital Letter K
+0xD3 0x004C ;Latin Capital Letter L
+0xD4 0x004D ;Latin Capital Letter M
+0xD5 0x004E ;Latin Capital Letter N
+0xD6 0x004F ;Latin Capital Letter O
+0xD7 0x0050 ;Latin Capital Letter P
+0xD8 0x0051 ;Latin Capital Letter Q
+0xD9 0x0052 ;Latin Capital Letter R
+0xDA 0x00B9 ;Superscript One
+0xDE 0x00DE ;Latin Capital Letter Thorn
+0xDF 0x00DF ;Latin Small Letter Sharp S
+0xE0 0x005C ;Reverse Solidus
+0xE1 0x00F7 ;Division Sign
+0xE2 0x0053 ;Latin Capital Letter S
+0xE3 0x0054 ;Latin Capital Letter T
+0xE4 0x0055 ;Latin Capital Letter U
+0xE5 0x0056 ;Latin Capital Letter V
+0xE6 0x0057 ;Latin Capital Letter W
+0xE7 0x0058 ;Latin Capital Letter X
+0xE8 0x0059 ;Latin Capital Letter Y
+0xE9 0x005A ;Latin Capital Letter Z
+0xEA 0x00B2 ;Superscript Two
+0xF0 0x0030 ;Digit Zero
+0xF1 0x0031 ;Digit One
+0xF2 0x0032 ;Digit Two
+0xF3 0x0033 ;Digit Three
+0xF4 0x0034 ;Digit Four
+0xF5 0x0035 ;Digit Five
+0xF6 0x0036 ;Digit Six
+0xF7 0x0037 ;Digit Seven
+0xF8 0x0038 ;Digit Eight
+0xF9 0x0039 ;Digit Nine
+0xFA 0x00B3 ;Superscript Three
+0xFE 0x00FE ;Latin Small Letter Thorn
+0xFF 0x009F ;Application Program Command
+
+WCTABLE 1488
+
+0x0000 0x00 ;Null
+0x0001 0x01 ;Start Of Heading
+0x0002 0x02 ;Start Of Text
+0x0003 0x03 ;End Of Text
+0x0004 0x37 ;End Of Transmission
+0x0005 0x2D ;Enquiry
+0x0006 0x2E ;Acknowledge
+0x0007 0x2F ;Bell
+0x0008 0x16 ;Backspace
+0x0009 0x05 ;Character Tabulation
+0x000A 0x25 ;Line Feed (LF)
+0x000B 0x0B ;Line Tabulation
+0x000C 0x0C ;Form Feed (FF)
+0x000D 0x0D ;Carriage Return (CR)
+0x000E 0x0E ;Shift Out
+0x000F 0x0F ;Shift In
+0x0010 0x10 ;Data Link Escape
+0x0011 0x11 ;Device Control One
+0x0012 0x12 ;Device Control Two
+0x0013 0x13 ;Device Control Three
+0x0014 0x3C ;Device Control Four
+0x0015 0x3D ;Negative Acknowledge
+0x0016 0x32 ;Synchronous Idle
+0x0017 0x26 ;End Of Transmission Block
+0x0018 0x18 ;Cancel
+0x0019 0x19 ;End Of Medium
+0x001B 0x27 ;Escape
+0x001C 0x1C ;Information Separator Four
+0x001D 0x1D ;Information Separator Three
+0x001E 0x1E ;Information Separator Two
+0x001F 0x1F ;Information Separator One
+0x0020 0x40 ;Space
+0x0021 0x5A ;Exclamation Mark
+0x0022 0x7F ;Quotation Mark
+0x0023 0x7B ;Number Sign
+0x0024 0x5B ;Dollar Sign
+0x0025 0x6C ;Percent Sign
+0x0026 0x50 ;Ampersand
+0x0027 0x7D ;Apostrophe
+0x0028 0x4D ;Left Parenthesis
+0x0029 0x5D ;Right Parenthesis
+0x002A 0x5C ;Asterisk
+0x002B 0x4E ;Plus Sign
+0x002C 0x6B ;Comma
+0x002D 0x60 ;Hyphen-Minus
+0x002E 0x4B ;Full Stop
+0x002F 0x61 ;Solidus
+0x0030 0xF0 ;Digit Zero
+0x0031 0xF1 ;Digit One
+0x0032 0xF2 ;Digit Two
+0x0033 0xF3 ;Digit Three
+0x0034 0xF4 ;Digit Four
+0x0035 0xF5 ;Digit Five
+0x0036 0xF6 ;Digit Six
+0x0037 0xF7 ;Digit Seven
+0x0038 0xF8 ;Digit Eight
+0x0039 0xF9 ;Digit Nine
+0x003A 0x7A ;Colon
+0x003B 0x5E ;Semicolon
+0x003C 0x4C ;Less-Than Sign
+0x003D 0x7E ;Equals Sign
+0x003E 0x6E ;Greater-Than Sign
+0x003F 0x6F ;Question Mark
+0x0040 0x7C ;Commercial At
+0x0041 0xC1 ;Latin Capital Letter A
+0x0042 0xC2 ;Latin Capital Letter B
+0x0043 0xC3 ;Latin Capital Letter C
+0x0044 0xC4 ;Latin Capital Letter D
+0x0045 0xC5 ;Latin Capital Letter E
+0x0046 0xC6 ;Latin Capital Letter F
+0x0047 0xC7 ;Latin Capital Letter G
+0x0048 0xC8 ;Latin Capital Letter H
+0x0049 0xC9 ;Latin Capital Letter I
+0x004A 0xD1 ;Latin Capital Letter J
+0x004B 0xD2 ;Latin Capital Letter K
+0x004C 0xD3 ;Latin Capital Letter L
+0x004D 0xD4 ;Latin Capital Letter M
+0x004E 0xD5 ;Latin Capital Letter N
+0x004F 0xD6 ;Latin Capital Letter O
+0x0050 0xD7 ;Latin Capital Letter P
+0x0051 0xD8 ;Latin Capital Letter Q
+0x0052 0xD9 ;Latin Capital Letter R
+0x0053 0xE2 ;Latin Capital Letter S
+0x0054 0xE3 ;Latin Capital Letter T
+0x0055 0xE4 ;Latin Capital Letter U
+0x0056 0xE5 ;Latin Capital Letter V
+0x0057 0xE6 ;Latin Capital Letter W
+0x0058 0xE7 ;Latin Capital Letter X
+0x0059 0xE8 ;Latin Capital Letter Y
+0x005A 0xE9 ;Latin Capital Letter Z
+0x005B 0xBA ;Left Square Bracket
+0x005C 0xE0 ;Reverse Solidus
+0x005D 0xBB ;Right Square Bracket
+0x005E 0xB0 ;Circumflex Accent
+0x005F 0x6D ;Low Line
+0x0060 0x79 ;Grave Accent
+0x0061 0x81 ;Latin Small Letter A
+0x0062 0x82 ;Latin Small Letter B
+0x0063 0x83 ;Latin Small Letter C
+0x0064 0x84 ;Latin Small Letter D
+0x0065 0x85 ;Latin Small Letter E
+0x0066 0x86 ;Latin Small Letter F
+0x0067 0x87 ;Latin Small Letter G
+0x0068 0x88 ;Latin Small Letter H
+0x0069 0x89 ;Latin Small Letter I
+0x006A 0x91 ;Latin Small Letter J
+0x006B 0x92 ;Latin Small Letter K
+0x006C 0x93 ;Latin Small Letter L
+0x006D 0x94 ;Latin Small Letter M
+0x006E 0x95 ;Latin Small Letter N
+0x006F 0x96 ;Latin Small Letter O
+0x0070 0x97 ;Latin Small Letter P
+0x0071 0x98 ;Latin Small Letter Q
+0x0072 0x99 ;Latin Small Letter R
+0x0073 0xA2 ;Latin Small Letter S
+0x0074 0xA3 ;Latin Small Letter T
+0x0075 0xA4 ;Latin Small Letter U
+0x0076 0xA5 ;Latin Small Letter V
+0x0077 0xA6 ;Latin Small Letter W
+0x0078 0xA7 ;Latin Small Letter X
+0x0079 0xA8 ;Latin Small Letter Y
+0x007A 0xA9 ;Latin Small Letter Z
+0x007B 0xC0 ;Left Curly Bracket
+0x007C 0x4F ;Vertical Line
+0x007D 0xD0 ;Right Curly Bracket
+0x007E 0xA1 ;Tilde
+0x007F 0x07 ;Delete
+0x0080 0x20 ;Undefined
+0x0081 0x21 ;Undefined
+0x0082 0x22 ;Break Permitted Here
+0x0083 0x23 ;No Break Here
+0x0084 0x24 ;Undefined
+0x0085 0x15 ;Next Line (NEL)
+0x0086 0x06 ;Start Of Selected Area
+0x0087 0x17 ;End Of Selected Area
+0x0088 0x28 ;Character Tabulation Set
+0x0089 0x29 ;Character Tabulation With Justification
+0x008A 0x2A ;Line Tabulation Set
+0x008B 0x2B ;Partial Line Forward
+0x008C 0x2C ;Partial Line Backward
+0x008D 0x09 ;Reverse Line Feed
+0x008E 0x0A ;Single Shift Two
+0x008F 0x1B ;Single Shift Three
+0x0090 0x30 ;Device Control String
+0x0091 0x31 ;Private Use One
+0x0092 0x1A ;Private Use Two
+0x0093 0x33 ;Set Transmit State
+0x0094 0x34 ;Cancel Character
+0x0095 0x35 ;Message Waiting
+0x0096 0x36 ;Start Of Guarded Area
+0x0097 0x08 ;End Of Guarded Area
+0x0098 0x38 ;Start Of String
+0x0099 0x39 ;Undefined
+0x009A 0x3A ;Single Character Introducer
+0x009B 0x3B ;Control Sequence Introducer
+0x009C 0x04 ;String Terminator
+0x009D 0x14 ;Operating System Command
+0x009E 0x3E ;Privacy Message
+0x009F 0xFF ;Application Program Command
+0x00A0 0x74 ;No-Break Space
+0x00A1 0x5A ;Inverted Exclamation Mark
+0x00A2 0x4A ;Cent Sign
+0x00A3 0xB1 ;Pound Sign
+0x00A4 0x9F ;Currency Sign
+0x00A5 0xB2 ;Yen Sign
+0x00A6 0x6A ;Broken Bar
+0x00A7 0xB5 ;Section Sign
+0x00A8 0xBD ;Diaeresis
+0x00A9 0xB4 ;Copyright Sign
+0x00AA 0x81 ;Feminine Ordinal Indicator
+0x00AB 0x8A ;Left-Pointing Double Angle Quotation Mark
+0x00AC 0x5F ;Not Sign
+0x00AD 0xCA ;Soft Hyphen
+0x00AE 0xAF ;Registered Sign
+0x00AF 0xBC ;Macron
+0x00B0 0x90 ;Degree Sign
+0x00B1 0x8F ;Plus-Minus Sign
+0x00B2 0xEA ;Superscript Two
+0x00B3 0xFA ;Superscript Three
+0x00B4 0xBE ;Acute Accent
+0x00B5 0xA0 ;Micro Sign
+0x00B6 0xB6 ;Pilcrow Sign
+0x00B7 0xB3 ;Middle Dot
+0x00B8 0x9D ;Cedilla
+0x00B9 0xDA ;Superscript One
+0x00BA 0x96 ;Masculine Ordinal Indicator
+0x00BB 0x8B ;Right-Pointing Double Angle Quotation Mark
+0x00BC 0xB7 ;Vulgar Fraction One Quarter
+0x00BD 0xB8 ;Vulgar Fraction One Half
+0x00BE 0xB9 ;Vulgar Fraction Three Quarters
+0x00C0 0xC1 ;Latin Capital Letter A With Grave
+0x00C1 0xC1 ;Latin Capital Letter A With Acute
+0x00C2 0xC1 ;Latin Capital Letter A With Circumflex
+0x00C3 0xC1 ;Latin Capital Letter A With Tilde
+0x00C4 0xC1 ;Latin Capital Letter A With Diaeresis
+0x00C5 0xC1 ;Latin Capital Letter A With Ring Above
+0x00C6 0xC1 ;Latin Capital Letter Ae
+0x00C7 0xC3 ;Latin Capital Letter C With Cedilla
+0x00C8 0xC5 ;Latin Capital Letter E With Grave
+0x00C9 0xC5 ;Latin Capital Letter E With Acute
+0x00CA 0xC5 ;Latin Capital Letter E With Circumflex
+0x00CB 0xC5 ;Latin Capital Letter E With Diaeresis
+0x00CC 0xC9 ;Latin Capital Letter I With Grave
+0x00CD 0xC9 ;Latin Capital Letter I With Acute
+0x00CE 0xC9 ;Latin Capital Letter I With Circumflex
+0x00CF 0xC9 ;Latin Capital Letter I With Diaeresis
+0x00D0 0xC4 ;Latin Capital Letter Eth
+0x00D1 0xD5 ;Latin Capital Letter N With Tilde
+0x00D2 0xD6 ;Latin Capital Letter O With Grave
+0x00D3 0xD6 ;Latin Capital Letter O With Acute
+0x00D4 0xD6 ;Latin Capital Letter O With Circumflex
+0x00D5 0xD6 ;Latin Capital Letter O With Tilde
+0x00D6 0xD6 ;Latin Capital Letter O With Diaeresis
+0x00D7 0xBF ;Multiplication Sign
+0x00D8 0xD6 ;Latin Capital Letter O With Stroke
+0x00D9 0xE4 ;Latin Capital Letter U With Grave
+0x00DA 0xE4 ;Latin Capital Letter U With Acute
+0x00DB 0xE4 ;Latin Capital Letter U With Circumflex
+0x00DC 0xE4 ;Latin Capital Letter U With Diaeresis
+0x00DD 0xE8 ;Latin Capital Letter Y With Acute
+0x00DE 0xDE ;Latin Capital Letter Thorn
+0x00DF 0xDF ;Latin Small Letter Sharp S
+0x00E0 0x81 ;Latin Small Letter A With Grave
+0x00E1 0x81 ;Latin Small Letter A With Acute
+0x00E2 0x81 ;Latin Small Letter A With Circumflex
+0x00E3 0x81 ;Latin Small Letter A With Tilde
+0x00E4 0x81 ;Latin Small Letter A With Diaeresis
+0x00E5 0x81 ;Latin Small Letter A With Ring Above
+0x00E6 0x81 ;Latin Small Letter Ae
+0x00E7 0x83 ;Latin Small Letter C With Cedilla
+0x00E8 0x85 ;Latin Small Letter E With Grave
+0x00E9 0x85 ;Latin Small Letter E With Acute
+0x00EA 0x85 ;Latin Small Letter E With Circumflex
+0x00EB 0x85 ;Latin Small Letter E With Diaeresis
+0x00EC 0x89 ;Latin Small Letter I With Grave
+0x00ED 0x89 ;Latin Small Letter I With Acute
+0x00EE 0x89 ;Latin Small Letter I With Circumflex
+0x00EF 0x89 ;Latin Small Letter I With Diaeresis
+0x00F0 0x84 ;Latin Small Letter Eth
+0x00F1 0x95 ;Latin Small Letter N With Tilde
+0x00F2 0x96 ;Latin Small Letter O With Grave
+0x00F3 0x96 ;Latin Small Letter O With Acute
+0x00F4 0x96 ;Latin Small Letter O With Circumflex
+0x00F5 0x96 ;Latin Small Letter O With Tilde
+0x00F6 0x96 ;Latin Small Letter O With Diaeresis
+0x00F7 0xE1 ;Division Sign
+0x00F8 0x96 ;Latin Small Letter O With Stroke
+0x00F9 0xA4 ;Latin Small Letter U With Grave
+0x00FA 0xA4 ;Latin Small Letter U With Acute
+0x00FB 0xA4 ;Latin Small Letter U With Circumflex
+0x00FC 0xA4 ;Latin Small Letter U With Diaeresis
+0x00FD 0xA8 ;Latin Small Letter Y With Acute
+0x00FE 0xFE ;Latin Small Letter Thorn
+0x00FF 0xA8 ;Latin Small Letter Y With Diaeresis
+0x0100 0xC1 ;Latin Capital Letter A With Macron
+0x0101 0x81 ;Latin Small Letter A With Macron
+0x0102 0xC1 ;Latin Capital Letter A With Breve
+0x0103 0x81 ;Latin Small Letter A With Breve
+0x0104 0xC1 ;Latin Capital Letter A With Ogonek
+0x0105 0x81 ;Latin Small Letter A With Ogonek
+0x0106 0xC3 ;Latin Capital Letter C With Acute
+0x0107 0x83 ;Latin Small Letter C With Acute
+0x0108 0xC3 ;Latin Capital Letter C With Circumflex
+0x0109 0x83 ;Latin Small Letter C With Circumflex
+0x010A 0xC3 ;Latin Capital Letter C With Dot Above
+0x010B 0x83 ;Latin Small Letter C With Dot Above
+0x010C 0xC3 ;Latin Capital Letter C With Caron
+0x010D 0x83 ;Latin Small Letter C With Caron
+0x010E 0xC4 ;Latin Capital Letter D With Caron
+0x010F 0x84 ;Latin Small Letter D With Caron
+0x0110 0xC4 ;Latin Capital Letter D With Stroke
+0x0111 0x84 ;Latin Small Letter D With Stroke
+0x0112 0xC5 ;Latin Capital Letter E With Macron
+0x0113 0x85 ;Latin Small Letter E With Macron
+0x0114 0xC5 ;Latin Capital Letter E With Breve
+0x0115 0x85 ;Latin Small Letter E With Breve
+0x0116 0xC5 ;Latin Capital Letter E With Dot Above
+0x0117 0x85 ;Latin Small Letter E With Dot Above
+0x0118 0xC5 ;Latin Capital Letter E With Ogonek
+0x0119 0x85 ;Latin Small Letter E With Ogonek
+0x011A 0xC5 ;Latin Capital Letter E With Caron
+0x011B 0x85 ;Latin Small Letter E With Caron
+0x011C 0xC7 ;Latin Capital Letter G With Circumflex
+0x011D 0x87 ;Latin Small Letter G With Circumflex
+0x011E 0xC7 ;Latin Capital Letter G With Breve
+0x011F 0x87 ;Latin Small Letter G With Breve
+0x0120 0xC7 ;Latin Capital Letter G With Dot Above
+0x0121 0x87 ;Latin Small Letter G With Dot Above
+0x0122 0xC7 ;Latin Capital Letter G With Cedilla
+0x0123 0x87 ;Latin Small Letter G With Cedilla
+0x0124 0xC8 ;Latin Capital Letter H With Circumflex
+0x0125 0x88 ;Latin Small Letter H With Circumflex
+0x0126 0xC8 ;Latin Capital Letter H With Stroke
+0x0127 0x88 ;Latin Small Letter H With Stroke
+0x0128 0xC9 ;Latin Capital Letter I With Tilde
+0x0129 0x89 ;Latin Small Letter I With Tilde
+0x012A 0xC9 ;Latin Capital Letter I With Macron
+0x012B 0x89 ;Latin Small Letter I With Macron
+0x012C 0xC9 ;Latin Capital Letter I With Breve
+0x012D 0x89 ;Latin Small Letter I With Breve
+0x012E 0xC9 ;Latin Capital Letter I With Ogonek
+0x012F 0x89 ;Latin Small Letter I With Ogonek
+0x0130 0xC9 ;Latin Capital Letter I With Dot Above
+0x0131 0x89 ;Latin Small Letter Dotless I
+0x0134 0xD1 ;Latin Capital Letter J With Circumflex
+0x0135 0x91 ;Latin Small Letter J With Circumflex
+0x0136 0xD2 ;Latin Capital Letter K With Cedilla
+0x0137 0x92 ;Latin Small Letter K With Cedilla
+0x0139 0xD3 ;Latin Capital Letter L With Acute
+0x013A 0x93 ;Latin Small Letter L With Acute
+0x013B 0xD3 ;Latin Capital Letter L With Cedilla
+0x013C 0x93 ;Latin Small Letter L With Cedilla
+0x013D 0xD3 ;Latin Capital Letter L With Caron
+0x013E 0x93 ;Latin Small Letter L With Caron
+0x0141 0xD3 ;Latin Capital Letter L With Stroke
+0x0142 0x93 ;Latin Small Letter L With Stroke
+0x0143 0xD5 ;Latin Capital Letter N With Acute
+0x0144 0x95 ;Latin Small Letter N With Acute
+0x0145 0xD5 ;Latin Capital Letter N With Cedilla
+0x0146 0x95 ;Latin Small Letter N With Cedilla
+0x0147 0xD5 ;Latin Capital Letter N With Caron
+0x0148 0x95 ;Latin Small Letter N With Caron
+0x014C 0xD6 ;Latin Capital Letter O With Macron
+0x014D 0x96 ;Latin Small Letter O With Macron
+0x014E 0xD6 ;Latin Capital Letter O With Breve
+0x014F 0x96 ;Latin Small Letter O With Breve
+0x0150 0xD6 ;Latin Capital Letter O With Double Acute
+0x0151 0x96 ;Latin Small Letter O With Double Acute
+0x0152 0xD6 ;Latin Capital Ligature Oe
+0x0153 0x96 ;Latin Small Ligature Oe
+0x0154 0xD9 ;Latin Capital Letter R With Acute
+0x0155 0x99 ;Latin Small Letter R With Acute
+0x0156 0xD9 ;Latin Capital Letter R With Cedilla
+0x0157 0x99 ;Latin Small Letter R With Cedilla
+0x0158 0xD9 ;Latin Capital Letter R With Caron
+0x0159 0x99 ;Latin Small Letter R With Caron
+0x015A 0xE2 ;Latin Capital Letter S With Acute
+0x015B 0xA2 ;Latin Small Letter S With Acute
+0x015C 0xE2 ;Latin Capital Letter S With Circumflex
+0x015D 0xA2 ;Latin Small Letter S With Circumflex
+0x015E 0xE2 ;Latin Capital Letter S With Cedilla
+0x015F 0xA2 ;Latin Small Letter S With Cedilla
+0x0160 0xE2 ;Latin Capital Letter S With Caron
+0x0161 0xA2 ;Latin Small Letter S With Caron
+0x0162 0xE3 ;Latin Capital Letter T With Cedilla
+0x0163 0xA3 ;Latin Small Letter T With Cedilla
+0x0164 0xE3 ;Latin Capital Letter T With Caron
+0x0165 0xA3 ;Latin Small Letter T With Caron
+0x0166 0xE3 ;Latin Capital Letter T With Stroke
+0x0167 0xA3 ;Latin Small Letter T With Stroke
+0x0168 0xE4 ;Latin Capital Letter U With Tilde
+0x0169 0xA4 ;Latin Small Letter U With Tilde
+0x016A 0xE4 ;Latin Capital Letter U With Macron
+0x016B 0xA4 ;Latin Small Letter U With Macron
+0x016C 0xE4 ;Latin Capital Letter U With Breve
+0x016D 0xA4 ;Latin Small Letter U With Breve
+0x016E 0xE4 ;Latin Capital Letter U With Ring Above
+0x016F 0xA4 ;Latin Small Letter U With Ring Above
+0x0170 0xE4 ;Latin Capital Letter U With Double Acute
+0x0171 0xA4 ;Latin Small Letter U With Double Acute
+0x0172 0xE4 ;Latin Capital Letter U With Ogonek
+0x0173 0xA4 ;Latin Small Letter U With Ogonek
+0x0174 0xE6 ;Latin Capital Letter W With Circumflex
+0x0175 0xA6 ;Latin Small Letter W With Circumflex
+0x0176 0xE8 ;Latin Capital Letter Y With Circumflex
+0x0177 0xA8 ;Latin Small Letter Y With Circumflex
+0x0178 0xE8 ;Latin Capital Letter Y With Diaeresis
+0x0179 0xE9 ;Latin Capital Letter Z With Acute
+0x017A 0xA9 ;Latin Small Letter Z With Acute
+0x017B 0xE9 ;Latin Capital Letter Z With Dot Above
+0x017C 0xA9 ;Latin Small Letter Z With Dot Above
+0x017D 0xE9 ;Latin Capital Letter Z With Caron
+0x017E 0xA9 ;Latin Small Letter Z With Caron
+0x017F 0xA2 ;Latin Small Letter Long S
+0x0180 0x82 ;Latin Small Letter B With Stroke
+0x0189 0xC4 ;Latin Capital Letter African D
+0x0190 0xC5 ;Latin Capital Letter Open E
+0x0191 0xC6 ;Latin Capital Letter F With Hook
+0x0192 0x86 ;Latin Small Letter F With Hook
+0x0197 0xC9 ;Latin Capital Letter I With Stroke
+0x019A 0x93 ;Latin Small Letter L With Bar
+0x019F 0xD6 ;Latin Capital Letter O With Middle Tilde
+0x01A0 0xD6 ;Latin Capital Letter O With Horn
+0x01A1 0x96 ;Latin Small Letter O With Horn
+0x01AB 0xA3 ;Latin Small Letter T With Palatal Hook
+0x01AE 0xE3 ;Latin Capital Letter T With Retroflex Hook
+0x01AF 0xE4 ;Latin Capital Letter U With Horn
+0x01B0 0xA4 ;Latin Small Letter U With Horn
+0x01B6 0xA9 ;Latin Small Letter Z With Stroke
+0x01C0 0x4F ;Latin Letter Dental Click
+0x01C3 0x5A ;Latin Letter Retroflex Click
+0x01CD 0xC1 ;Latin Capital Letter A With Caron
+0x01CE 0x81 ;Latin Small Letter A With Caron
+0x01CF 0xC9 ;Latin Capital Letter I With Caron
+0x01D0 0x89 ;Latin Small Letter I With Caron
+0x01D1 0xD6 ;Latin Capital Letter O With Caron
+0x01D2 0x96 ;Latin Small Letter O With Caron
+0x01D3 0xE4 ;Latin Capital Letter U With Caron
+0x01D4 0xA4 ;Latin Small Letter U With Caron
+0x01D5 0xE4 ;Latin Capital Letter U With Diaeresis And Macron
+0x01D6 0xA4 ;Latin Small Letter U With Diaeresis And Macron
+0x01D7 0xE4 ;Latin Capital Letter U With Diaeresis And Acute
+0x01D8 0xA4 ;Latin Small Letter U With Diaeresis And Acute
+0x01D9 0xE4 ;Latin Capital Letter U With Diaeresis And Caron
+0x01DA 0xA4 ;Latin Small Letter U With Diaeresis And Caron
+0x01DB 0xE4 ;Latin Capital Letter U With Diaeresis And Grave
+0x01DC 0xA4 ;Latin Small Letter U With Diaeresis And Grave
+0x01DE 0xC1 ;Latin Capital Letter A With Diaeresis And Macron
+0x01DF 0x81 ;Latin Small Letter A With Diaeresis And Macron
+0x01E0 0xC1 ;Latin Capital Letter A With Dot Above And Macron
+0x01E1 0x81 ;Latin Small Letter A With Dot Above And Macron
+0x01E2 0xC1 ;Latin Capital Letter Ae With Macron
+0x01E3 0x81 ;Latin Small Letter Ae With Macron
+0x01E4 0xC7 ;Latin Capital Letter G With Stroke
+0x01E5 0x87 ;Latin Small Letter G With Stroke
+0x01E6 0xC7 ;Latin Capital Letter G With Caron
+0x01E7 0x87 ;Latin Small Letter G With Caron
+0x01E8 0xD2 ;Latin Capital Letter K With Caron
+0x01E9 0x92 ;Latin Small Letter K With Caron
+0x01EA 0xD6 ;Latin Capital Letter O With Ogonek
+0x01EB 0x96 ;Latin Small Letter O With Ogonek
+0x01EC 0xD6 ;Latin Capital Letter O With Ogonek And Macron
+0x01ED 0x96 ;Latin Small Letter O With Ogonek And Macron
+0x01F0 0x91 ;Latin Small Letter J With Caron
+0x01F4 0xC7 ;Latin Capital Letter G With Acute
+0x01F5 0x87 ;Latin Small Letter G With Acute
+0x01F8 0xD5 ;Latin Capital Letter N With Grave
+0x01F9 0x95 ;Latin Small Letter N With Grave
+0x01FA 0xC1 ;Latin Capital Letter A With Ring Above And Acute
+0x01FB 0x81 ;Latin Small Letter A With Ring Above And Acute
+0x01FC 0xC1 ;Latin Capital Letter Ae With Acute
+0x01FD 0x81 ;Latin Small Letter Ae With Acute
+0x01FE 0xD6 ;Latin Capital Letter O With Stroke And Acute
+0x01FF 0x96 ;Latin Small Letter O With Stroke And Acute
+0x0200 0xC1 ;Latin Capital Letter A With Double Grave
+0x0201 0x81 ;Latin Small Letter A With Double Grave
+0x0202 0xC1 ;Latin Capital Letter A With Inverted Breve
+0x0203 0x81 ;Latin Small Letter A With Inverted Breve
+0x0204 0xC5 ;Latin Capital Letter E With Double Grave
+0x0205 0x85 ;Latin Small Letter E With Double Grave
+0x0206 0xC5 ;Latin Capital Letter E With Inverted Breve
+0x0207 0x85 ;Latin Small Letter E With Inverted Breve
+0x0208 0xC9 ;Latin Capital Letter I With Double Grave
+0x0209 0x89 ;Latin Small Letter I With Double Grave
+0x020A 0xC9 ;Latin Capital Letter I With Inverted Breve
+0x020B 0x89 ;Latin Small Letter I With Inverted Breve
+0x020C 0xD6 ;Latin Capital Letter O With Double Grave
+0x020D 0x96 ;Latin Small Letter O With Double Grave
+0x020E 0xD6 ;Latin Capital Letter O With Inverted Breve
+0x020F 0x96 ;Latin Small Letter O With Inverted Breve
+0x0210 0xD9 ;Latin Capital Letter R With Double Grave
+0x0211 0x99 ;Latin Small Letter R With Double Grave
+0x0212 0xD9 ;Latin Capital Letter R With Inverted Breve
+0x0213 0x99 ;Latin Small Letter R With Inverted Breve
+0x0214 0xE4 ;Latin Capital Letter U With Double Grave
+0x0215 0xA4 ;Latin Small Letter U With Double Grave
+0x0216 0xE4 ;Latin Capital Letter U With Inverted Breve
+0x0217 0xA4 ;Latin Small Letter U With Inverted Breve
+0x0218 0xE2 ;Latin Capital Letter S With Comma Below
+0x0219 0xA2 ;Latin Small Letter S With Comma Below
+0x021A 0xE3 ;Latin Capital Letter T With Comma Below
+0x021B 0xA3 ;Latin Small Letter T With Comma Below
+0x021E 0xC8 ;Latin Capital Letter H With Caron
+0x021F 0x88 ;Latin Small Letter H With Caron
+0x0226 0xC1 ;Latin Capital Letter A With Dot Above
+0x0227 0x81 ;Latin Small Letter A With Dot Above
+0x0228 0xC5 ;Latin Capital Letter E With Cedilla
+0x0229 0x85 ;Latin Small Letter E With Cedilla
+0x022A 0xD6 ;Latin Capital Letter O With Diaeresis And Macron
+0x022B 0x96 ;Latin Small Letter O With Diaeresis And Macron
+0x022C 0xD6 ;Latin Capital Letter O With Tilde And Macron
+0x022D 0x96 ;Latin Small Letter O With Tilde And Macron
+0x022E 0xD6 ;Latin Capital Letter O With Dot Above
+0x022F 0x96 ;Latin Small Letter O With Dot Above
+0x0230 0xD6 ;Latin Capital Letter O With Dot Above And Macron
+0x0231 0x96 ;Latin Small Letter O With Dot Above And Macron
+0x0232 0xE8 ;Latin Capital Letter Y With Macron
+0x0233 0xA8 ;Latin Small Letter Y With Macron
+0x0261 0x87 ;Latin Small Letter Script G
+0x02B0 0x88 ;Modifier Letter Small H
+0x02B2 0x91 ;Modifier Letter Small J
+0x02B3 0x99 ;Modifier Letter Small R
+0x02B7 0xA6 ;Modifier Letter Small W
+0x02B8 0xA8 ;Modifier Letter Small Y
+0x02B9 0xBE ;Modifier Letter Prime
+0x02BA 0x7F ;Modifier Letter Double Prime
+0x02BB 0x79 ;Modifier Letter Turned Comma
+0x02BC 0x7D ;Modifier Letter Apostrophe
+0x02C4 0xB0 ;Modifier Letter Up Arrowhead
+0x02C6 0xB0 ;Modifier Letter Circumflex Accent
+0x02C7 0xA5 ;Caron
+0x02C8 0x7D ;Modifier Letter Vertical Line
+0x02C9 0xBC ;Modifier Letter Macron
+0x02CA 0xBE ;Modifier Letter Acute Accent
+0x02CB 0x79 ;Modifier Letter Grave Accent
+0x02CD 0x6D ;Modifier Letter Low Macron
+0x02DA 0x90 ;Ring Above
+0x02DC 0xA1 ;Small Tilde
+0x02DD 0x7F ;Double Acute Accent
+0x02E1 0x93 ;Modifier Letter Small L
+0x02E2 0xA2 ;Modifier Letter Small S
+0x02E3 0xA7 ;Modifier Letter Small X
+0x0300 0x79 ;Combining Grave Accent
+0x0301 0xBE ;Combining Acute Accent
+0x0302 0xB0 ;Combining Circumflex Accent
+0x0303 0xA1 ;Combining Tilde
+0x0304 0xBC ;Combining Macron
+0x0305 0xBC ;Combining Overline
+0x0308 0xBD ;Combining Diaeresis
+0x030A 0x90 ;Combining Ring Above
+0x030B 0x7F ;Combining Double Acute Accent
+0x030C 0xA5 ;Combining Caron
+0x030E 0x7F ;Combining Double Vertical Line Above
+0x0327 0x9D ;Combining Cedilla
+0x0331 0x6D ;Combining Macron Below
+0x0332 0x6D ;Combining Low Line
+0x0333 0x6D ;Combining Double Low Line
+0x0340 0x79 ;Combining Grave Tone Mark
+0x0341 0xBE ;Combining Acute Tone Mark
+0x0344 0xBD ;Combining Greek Dialytika Tonos
+0x0374 0xBE ;Greek Numeral Sign
+0x037E 0x5E ;Greek Question Mark
+0x0384 0xBE ;Greek Tonos
+0x0385 0xBD ;Greek Dialytika Tonos
+0x0386 0xC1 ;Greek Capital Letter Alpha With Tonos
+0x0387 0xB3 ;Greek Ano Teleia
+0x0388 0xC5 ;Greek Capital Letter Epsilon With Tonos
+0x0389 0xC8 ;Greek Capital Letter Eta With Tonos
+0x038A 0xC9 ;Greek Capital Letter Iota With Tonos
+0x038C 0xD6 ;Greek Capital Letter Omicron With Tonos
+0x038E 0xE8 ;Greek Capital Letter Upsilon With Tonos
+0x0391 0xC1 ;Greek Capital Letter Alpha
+0x0392 0xC2 ;Greek Capital Letter Beta
+0x0395 0xC5 ;Greek Capital Letter Epsilon
+0x0396 0xE9 ;Greek Capital Letter Zeta
+0x0397 0xC8 ;Greek Capital Letter Eta
+0x0399 0xC9 ;Greek Capital Letter Iota
+0x039A 0xD2 ;Greek Capital Letter Kappa
+0x039C 0xD4 ;Greek Capital Letter Mu
+0x039D 0xD5 ;Greek Capital Letter Nu
+0x039F 0xD6 ;Greek Capital Letter Omicron
+0x03A1 0xD7 ;Greek Capital Letter Rho
+0x03A4 0xE3 ;Greek Capital Letter Tau
+0x03A5 0xE8 ;Greek Capital Letter Upsilon
+0x03A7 0xE7 ;Greek Capital Letter Chi
+0x03AA 0xC9 ;Greek Capital Letter Iota With Dialytika
+0x03AB 0xE8 ;Greek Capital Letter Upsilon With Dialytika
+0x03BC 0xA0 ;Greek Small Letter Mu
+0x03D2 0xE8 ;Greek Upsilon With Hook Symbol
+0x03D3 0xE8 ;Greek Upsilon With Acute And Hook Symbol
+0x03D4 0xE8 ;Greek Upsilon With Diaeresis And Hook Symbol
+0x05D0 0x41 ;Hebrew Letter Alef
+0x05D1 0x42 ;Hebrew Letter Bet
+0x05D2 0x43 ;Hebrew Letter Gimel
+0x05D3 0x44 ;Hebrew Letter Dalet
+0x05D4 0x45 ;Hebrew Letter He
+0x05D5 0x46 ;Hebrew Letter Vav
+0x05D6 0x47 ;Hebrew Letter Zayin
+0x05D7 0x48 ;Hebrew Letter Het
+0x05D8 0x49 ;Hebrew Letter Tet
+0x05D9 0x51 ;Hebrew Letter Yod
+0x05DA 0x52 ;Hebrew Letter Final Kaf
+0x05DB 0x53 ;Hebrew Letter Kaf
+0x05DC 0x54 ;Hebrew Letter Lamed
+0x05DD 0x55 ;Hebrew Letter Final Mem
+0x05DE 0x56 ;Hebrew Letter Mem
+0x05DF 0x57 ;Hebrew Letter Final Nun
+0x05E0 0x58 ;Hebrew Letter Nun
+0x05E1 0x59 ;Hebrew Letter Samekh
+0x05E2 0x62 ;Hebrew Letter Ayin
+0x05E3 0x63 ;Hebrew Letter Final Pe
+0x05E4 0x64 ;Hebrew Letter Pe
+0x05E5 0x65 ;Hebrew Letter Final Tsadi
+0x05E6 0x66 ;Hebrew Letter Tsadi
+0x05E7 0x67 ;Hebrew Letter Qof
+0x05E8 0x68 ;Hebrew Letter Resh
+0x05E9 0x69 ;Hebrew Letter Shin
+0x05EA 0x71 ;Hebrew Letter Tav
+0x1D2C 0xC1 ;Modifier Letter Capital A
+0x1D2D 0xC1 ;Modifier Letter Capital Ae
+0x1D2E 0xC2 ;Modifier Letter Capital B
+0x1D30 0xC4 ;Modifier Letter Capital D
+0x1D31 0xC5 ;Modifier Letter Capital E
+0x1D33 0xC7 ;Modifier Letter Capital G
+0x1D34 0xC8 ;Modifier Letter Capital H
+0x1D35 0xC9 ;Modifier Letter Capital I
+0x1D36 0xD1 ;Modifier Letter Capital J
+0x1D37 0xD2 ;Modifier Letter Capital K
+0x1D38 0xD3 ;Modifier Letter Capital L
+0x1D39 0xD4 ;Modifier Letter Capital M
+0x1D3A 0xD5 ;Modifier Letter Capital N
+0x1D3C 0xD6 ;Modifier Letter Capital O
+0x1D3E 0xD7 ;Modifier Letter Capital P
+0x1D3F 0xD9 ;Modifier Letter Capital R
+0x1D40 0xE3 ;Modifier Letter Capital T
+0x1D41 0xE4 ;Modifier Letter Capital U
+0x1D42 0xE6 ;Modifier Letter Capital W
+0x1D43 0x81 ;Modifier Letter Small A
+0x1D47 0x82 ;Modifier Letter Small B
+0x1D48 0x84 ;Modifier Letter Small D
+0x1D49 0x85 ;Modifier Letter Small E
+0x1D4D 0x87 ;Modifier Letter Small G
+0x1D4F 0x92 ;Modifier Letter Small K
+0x1D50 0x94 ;Modifier Letter Small M
+0x1D52 0x96 ;Modifier Letter Small O
+0x1D56 0x97 ;Modifier Letter Small P
+0x1D57 0xA3 ;Modifier Letter Small T
+0x1D58 0xA4 ;Modifier Letter Small U
+0x1D5B 0xA5 ;Modifier Letter Small V
+0x1D62 0x89 ;Latin Subscript Small Letter I
+0x1D63 0x99 ;Latin Subscript Small Letter R
+0x1D64 0xA4 ;Latin Subscript Small Letter U
+0x1D65 0xA5 ;Latin Subscript Small Letter V
+0x1D9C 0x83 ;Modifier Letter Small C
+0x1D9E 0x84 ;Modifier Letter Small Eth
+0x1DA0 0x86 ;Modifier Letter Small F
+0x1DA2 0x87 ;Modifier Letter Small Script G
+0x1DB5 0xA3 ;Modifier Letter Small T With Palatal Hook
+0x1DBB 0xA9 ;Modifier Letter Small Z
+0x1E00 0xC1 ;Latin Capital Letter A With Ring Below
+0x1E01 0x81 ;Latin Small Letter A With Ring Below
+0x1E02 0xC2 ;Latin Capital Letter B With Dot Above
+0x1E03 0x82 ;Latin Small Letter B With Dot Above
+0x1E04 0xC2 ;Latin Capital Letter B With Dot Below
+0x1E05 0x82 ;Latin Small Letter B With Dot Below
+0x1E06 0xC2 ;Latin Capital Letter B With Line Below
+0x1E07 0x82 ;Latin Small Letter B With Line Below
+0x1E08 0xC3 ;Latin Capital Letter C With Cedilla And Acute
+0x1E09 0x83 ;Latin Small Letter C With Cedilla And Acute
+0x1E0A 0xC4 ;Latin Capital Letter D With Dot Above
+0x1E0B 0x84 ;Latin Small Letter D With Dot Above
+0x1E0C 0xC4 ;Latin Capital Letter D With Dot Below
+0x1E0D 0x84 ;Latin Small Letter D With Dot Below
+0x1E0E 0xC4 ;Latin Capital Letter D With Line Below
+0x1E0F 0x84 ;Latin Small Letter D With Line Below
+0x1E10 0xC4 ;Latin Capital Letter D With Cedilla
+0x1E11 0x84 ;Latin Small Letter D With Cedilla
+0x1E12 0xC4 ;Latin Capital Letter D With Circumflex Below
+0x1E13 0x84 ;Latin Small Letter D With Circumflex Below
+0x1E14 0xC5 ;Latin Capital Letter E With Macron And Grave
+0x1E15 0x85 ;Latin Small Letter E With Macron And Grave
+0x1E16 0xC5 ;Latin Capital Letter E With Macron And Acute
+0x1E17 0x85 ;Latin Small Letter E With Macron And Acute
+0x1E18 0xC5 ;Latin Capital Letter E With Circumflex Below
+0x1E19 0x85 ;Latin Small Letter E With Circumflex Below
+0x1E1A 0xC5 ;Latin Capital Letter E With Tilde Below
+0x1E1B 0x85 ;Latin Small Letter E With Tilde Below
+0x1E1C 0xC5 ;Latin Capital Letter E With Cedilla And Breve
+0x1E1D 0x85 ;Latin Small Letter E With Cedilla And Breve
+0x1E1E 0xC6 ;Latin Capital Letter F With Dot Above
+0x1E1F 0x86 ;Latin Small Letter F With Dot Above
+0x1E20 0xC7 ;Latin Capital Letter G With Macron
+0x1E21 0x87 ;Latin Small Letter G With Macron
+0x1E22 0xC8 ;Latin Capital Letter H With Dot Above
+0x1E23 0x88 ;Latin Small Letter H With Dot Above
+0x1E24 0xC8 ;Latin Capital Letter H With Dot Below
+0x1E25 0x88 ;Latin Small Letter H With Dot Below
+0x1E26 0xC8 ;Latin Capital Letter H With Diaeresis
+0x1E27 0x88 ;Latin Small Letter H With Diaeresis
+0x1E28 0xC8 ;Latin Capital Letter H With Cedilla
+0x1E29 0x88 ;Latin Small Letter H With Cedilla
+0x1E2A 0xC8 ;Latin Capital Letter H With Breve Below
+0x1E2B 0x88 ;Latin Small Letter H With Breve Below
+0x1E2C 0xC9 ;Latin Capital Letter I With Tilde Below
+0x1E2D 0x89 ;Latin Small Letter I With Tilde Below
+0x1E2E 0xC9 ;Latin Capital Letter I With Diaeresis And Acute
+0x1E2F 0x89 ;Latin Small Letter I With Diaeresis And Acute
+0x1E30 0xD2 ;Latin Capital Letter K With Acute
+0x1E31 0x92 ;Latin Small Letter K With Acute
+0x1E32 0xD2 ;Latin Capital Letter K With Dot Below
+0x1E33 0x92 ;Latin Small Letter K With Dot Below
+0x1E34 0xD2 ;Latin Capital Letter K With Line Below
+0x1E35 0x92 ;Latin Small Letter K With Line Below
+0x1E36 0xD3 ;Latin Capital Letter L With Dot Below
+0x1E37 0x93 ;Latin Small Letter L With Dot Below
+0x1E38 0xD3 ;Latin Capital Letter L With Dot Below And Macron
+0x1E39 0x93 ;Latin Small Letter L With Dot Below And Macron
+0x1E3A 0xD3 ;Latin Capital Letter L With Line Below
+0x1E3B 0x93 ;Latin Small Letter L With Line Below
+0x1E3C 0xD3 ;Latin Capital Letter L With Circumflex Below
+0x1E3D 0x93 ;Latin Small Letter L With Circumflex Below
+0x1E3E 0xD4 ;Latin Capital Letter M With Acute
+0x1E3F 0x94 ;Latin Small Letter M With Acute
+0x1E40 0xD4 ;Latin Capital Letter M With Dot Above
+0x1E41 0x94 ;Latin Small Letter M With Dot Above
+0x1E42 0xD4 ;Latin Capital Letter M With Dot Below
+0x1E43 0x94 ;Latin Small Letter M With Dot Below
+0x1E44 0xD5 ;Latin Capital Letter N With Dot Above
+0x1E45 0x95 ;Latin Small Letter N With Dot Above
+0x1E46 0xD5 ;Latin Capital Letter N With Dot Below
+0x1E47 0x95 ;Latin Small Letter N With Dot Below
+0x1E48 0xD5 ;Latin Capital Letter N With Line Below
+0x1E49 0x95 ;Latin Small Letter N With Line Below
+0x1E4A 0xD5 ;Latin Capital Letter N With Circumflex Below
+0x1E4B 0x95 ;Latin Small Letter N With Circumflex Below
+0x1E4C 0xD6 ;Latin Capital Letter O With Tilde And Acute
+0x1E4D 0x96 ;Latin Small Letter O With Tilde And Acute
+0x1E4E 0xD6 ;Latin Capital Letter O With Tilde And Diaeresis
+0x1E4F 0x96 ;Latin Small Letter O With Tilde And Diaeresis
+0x1E50 0xD6 ;Latin Capital Letter O With Macron And Grave
+0x1E51 0x96 ;Latin Small Letter O With Macron And Grave
+0x1E52 0xD6 ;Latin Capital Letter O With Macron And Acute
+0x1E53 0x96 ;Latin Small Letter O With Macron And Acute
+0x1E54 0xD7 ;Latin Capital Letter P With Acute
+0x1E55 0x97 ;Latin Small Letter P With Acute
+0x1E56 0xD7 ;Latin Capital Letter P With Dot Above
+0x1E57 0x97 ;Latin Small Letter P With Dot Above
+0x1E58 0xD9 ;Latin Capital Letter R With Dot Above
+0x1E59 0x99 ;Latin Small Letter R With Dot Above
+0x1E5A 0xD9 ;Latin Capital Letter R With Dot Below
+0x1E5B 0x99 ;Latin Small Letter R With Dot Below
+0x1E5C 0xD9 ;Latin Capital Letter R With Dot Below And Macron
+0x1E5D 0x99 ;Latin Small Letter R With Dot Below And Macron
+0x1E5E 0xD9 ;Latin Capital Letter R With Line Below
+0x1E5F 0x99 ;Latin Small Letter R With Line Below
+0x1E60 0xE2 ;Latin Capital Letter S With Dot Above
+0x1E61 0xA2 ;Latin Small Letter S With Dot Above
+0x1E62 0xE2 ;Latin Capital Letter S With Dot Below
+0x1E63 0xA2 ;Latin Small Letter S With Dot Below
+0x1E64 0xE2 ;Latin Capital Letter S With Acute And Dot Above
+0x1E65 0xA2 ;Latin Small Letter S With Acute And Dot Above
+0x1E66 0xE2 ;Latin Capital Letter S With Caron And Dot Above
+0x1E67 0xA2 ;Latin Small Letter S With Caron And Dot Above
+0x1E68 0xE2 ;Latin Capital Letter S With Dot Below And Dot Above
+0x1E69 0xA2 ;Latin Small Letter S With Dot Below And Dot Above
+0x1E6A 0xE3 ;Latin Capital Letter T With Dot Above
+0x1E6B 0xA3 ;Latin Small Letter T With Dot Above
+0x1E6C 0xE3 ;Latin Capital Letter T With Dot Below
+0x1E6D 0xA3 ;Latin Small Letter T With Dot Below
+0x1E6E 0xE3 ;Latin Capital Letter T With Line Below
+0x1E6F 0xA3 ;Latin Small Letter T With Line Below
+0x1E70 0xE3 ;Latin Capital Letter T With Circumflex Below
+0x1E71 0xA3 ;Latin Small Letter T With Circumflex Below
+0x1E72 0xE4 ;Latin Capital Letter U With Diaeresis Below
+0x1E73 0xA4 ;Latin Small Letter U With Diaeresis Below
+0x1E74 0xE4 ;Latin Capital Letter U With Tilde Below
+0x1E75 0xA4 ;Latin Small Letter U With Tilde Below
+0x1E76 0xE4 ;Latin Capital Letter U With Circumflex Below
+0x1E77 0xA4 ;Latin Small Letter U With Circumflex Below
+0x1E78 0xE4 ;Latin Capital Letter U With Tilde And Acute
+0x1E79 0xA4 ;Latin Small Letter U With Tilde And Acute
+0x1E7A 0xE4 ;Latin Capital Letter U With Macron And Diaeresis
+0x1E7B 0xA4 ;Latin Small Letter U With Macron And Diaeresis
+0x1E7C 0xE5 ;Latin Capital Letter V With Tilde
+0x1E7D 0xA5 ;Latin Small Letter V With Tilde
+0x1E7E 0xE5 ;Latin Capital Letter V With Dot Below
+0x1E7F 0xA5 ;Latin Small Letter V With Dot Below
+0x1E80 0xE6 ;Latin Capital Letter W With Grave
+0x1E81 0xA6 ;Latin Small Letter W With Grave
+0x1E82 0xE6 ;Latin Capital Letter W With Acute
+0x1E83 0xA6 ;Latin Small Letter W With Acute
+0x1E84 0xE6 ;Latin Capital Letter W With Diaeresis
+0x1E85 0xA6 ;Latin Small Letter W With Diaeresis
+0x1E86 0xE6 ;Latin Capital Letter W With Dot Above
+0x1E87 0xA6 ;Latin Small Letter W With Dot Above
+0x1E88 0xE6 ;Latin Capital Letter W With Dot Below
+0x1E89 0xA6 ;Latin Small Letter W With Dot Below
+0x1E8A 0xE7 ;Latin Capital Letter X With Dot Above
+0x1E8B 0xA7 ;Latin Small Letter X With Dot Above
+0x1E8C 0xE7 ;Latin Capital Letter X With Diaeresis
+0x1E8D 0xA7 ;Latin Small Letter X With Diaeresis
+0x1E8E 0xE8 ;Latin Capital Letter Y With Dot Above
+0x1E8F 0xA8 ;Latin Small Letter Y With Dot Above
+0x1E90 0xE9 ;Latin Capital Letter Z With Circumflex
+0x1E91 0xA9 ;Latin Small Letter Z With Circumflex
+0x1E92 0xE9 ;Latin Capital Letter Z With Dot Below
+0x1E93 0xA9 ;Latin Small Letter Z With Dot Below
+0x1E94 0xE9 ;Latin Capital Letter Z With Line Below
+0x1E95 0xA9 ;Latin Small Letter Z With Line Below
+0x1E96 0x88 ;Latin Small Letter H With Line Below
+0x1E97 0xA3 ;Latin Small Letter T With Diaeresis
+0x1E98 0xA6 ;Latin Small Letter W With Ring Above
+0x1E99 0xA8 ;Latin Small Letter Y With Ring Above
+0x1E9B 0xA2 ;Latin Small Letter Long S With Dot Above
+0x1EA0 0xC1 ;Latin Capital Letter A With Dot Below
+0x1EA1 0x81 ;Latin Small Letter A With Dot Below
+0x1EA2 0xC1 ;Latin Capital Letter A With Hook Above
+0x1EA3 0x81 ;Latin Small Letter A With Hook Above
+0x1EA4 0xC1 ;Latin Capital Letter A With Circumflex And Acute
+0x1EA5 0x81 ;Latin Small Letter A With Circumflex And Acute
+0x1EA6 0xC1 ;Latin Capital Letter A With Circumflex And Grave
+0x1EA7 0x81 ;Latin Small Letter A With Circumflex And Grave
+0x1EA8 0xC1 ;Latin Capital Letter A With Circumflex And Hook Above
+0x1EA9 0x81 ;Latin Small Letter A With Circumflex And Hook Above
+0x1EAA 0xC1 ;Latin Capital Letter A With Circumflex And Tilde
+0x1EAB 0x81 ;Latin Small Letter A With Circumflex And Tilde
+0x1EAC 0xC1 ;Latin Capital Letter A With Circumflex And Dot Below
+0x1EAD 0x81 ;Latin Small Letter A With Circumflex And Dot Below
+0x1EAE 0xC1 ;Latin Capital Letter A With Breve And Acute
+0x1EAF 0x81 ;Latin Small Letter A With Breve And Acute
+0x1EB0 0xC1 ;Latin Capital Letter A With Breve And Grave
+0x1EB1 0x81 ;Latin Small Letter A With Breve And Grave
+0x1EB2 0xC1 ;Latin Capital Letter A With Breve And Hook Above
+0x1EB3 0x81 ;Latin Small Letter A With Breve And Hook Above
+0x1EB4 0xC1 ;Latin Capital Letter A With Breve And Tilde
+0x1EB5 0x81 ;Latin Small Letter A With Breve And Tilde
+0x1EB6 0xC1 ;Latin Capital Letter A With Breve And Dot Below
+0x1EB7 0x81 ;Latin Small Letter A With Breve And Dot Below
+0x1EB8 0xC5 ;Latin Capital Letter E With Dot Below
+0x1EB9 0x85 ;Latin Small Letter E With Dot Below
+0x1EBA 0xC5 ;Latin Capital Letter E With Hook Above
+0x1EBB 0x85 ;Latin Small Letter E With Hook Above
+0x1EBC 0xC5 ;Latin Capital Letter E With Tilde
+0x1EBD 0x85 ;Latin Small Letter E With Tilde
+0x1EBE 0xC5 ;Latin Capital Letter E With Circumflex And Acute
+0x1EBF 0x85 ;Latin Small Letter E With Circumflex And Acute
+0x1EC0 0xC5 ;Latin Capital Letter E With Circumflex And Grave
+0x1EC1 0x85 ;Latin Small Letter E With Circumflex And Grave
+0x1EC2 0xC5 ;Latin Capital Letter E With Circumflex And Hook Above
+0x1EC3 0x85 ;Latin Small Letter E With Circumflex And Hook Above
+0x1EC4 0xC5 ;Latin Capital Letter E With Circumflex And Tilde
+0x1EC5 0x85 ;Latin Small Letter E With Circumflex And Tilde
+0x1EC6 0xC5 ;Latin Capital Letter E With Circumflex And Dot Below
+0x1EC7 0x85 ;Latin Small Letter E With Circumflex And Dot Below
+0x1EC8 0xC9 ;Latin Capital Letter I With Hook Above
+0x1EC9 0x89 ;Latin Small Letter I With Hook Above
+0x1ECA 0xC9 ;Latin Capital Letter I With Dot Below
+0x1ECB 0x89 ;Latin Small Letter I With Dot Below
+0x1ECC 0xD6 ;Latin Capital Letter O With Dot Below
+0x1ECD 0x96 ;Latin Small Letter O With Dot Below
+0x1ECE 0xD6 ;Latin Capital Letter O With Hook Above
+0x1ECF 0x96 ;Latin Small Letter O With Hook Above
+0x1ED0 0xD6 ;Latin Capital Letter O With Circumflex And Acute
+0x1ED1 0x96 ;Latin Small Letter O With Circumflex And Acute
+0x1ED2 0xD6 ;Latin Capital Letter O With Circumflex And Grave
+0x1ED3 0x96 ;Latin Small Letter O With Circumflex And Grave
+0x1ED4 0xD6 ;Latin Capital Letter O With Circumflex And Hook Above
+0x1ED5 0x96 ;Latin Small Letter O With Circumflex And Hook Above
+0x1ED6 0xD6 ;Latin Capital Letter O With Circumflex And Tilde
+0x1ED7 0x96 ;Latin Small Letter O With Circumflex And Tilde
+0x1ED8 0xD6 ;Latin Capital Letter O With Circumflex And Dot Below
+0x1ED9 0x96 ;Latin Small Letter O With Circumflex And Dot Below
+0x1EDA 0xD6 ;Latin Capital Letter O With Horn And Acute
+0x1EDB 0x96 ;Latin Small Letter O With Horn And Acute
+0x1EDC 0xD6 ;Latin Capital Letter O With Horn And Grave
+0x1EDD 0x96 ;Latin Small Letter O With Horn And Grave
+0x1EDE 0xD6 ;Latin Capital Letter O With Horn And Hook Above
+0x1EDF 0x96 ;Latin Small Letter O With Horn And Hook Above
+0x1EE0 0xD6 ;Latin Capital Letter O With Horn And Tilde
+0x1EE1 0x96 ;Latin Small Letter O With Horn And Tilde
+0x1EE2 0xD6 ;Latin Capital Letter O With Horn And Dot Below
+0x1EE3 0x96 ;Latin Small Letter O With Horn And Dot Below
+0x1EE4 0xE4 ;Latin Capital Letter U With Dot Below
+0x1EE5 0xA4 ;Latin Small Letter U With Dot Below
+0x1EE6 0xE4 ;Latin Capital Letter U With Hook Above
+0x1EE7 0xA4 ;Latin Small Letter U With Hook Above
+0x1EE8 0xE4 ;Latin Capital Letter U With Horn And Acute
+0x1EE9 0xA4 ;Latin Small Letter U With Horn And Acute
+0x1EEA 0xE4 ;Latin Capital Letter U With Horn And Grave
+0x1EEB 0xA4 ;Latin Small Letter U With Horn And Grave
+0x1EEC 0xE4 ;Latin Capital Letter U With Horn And Hook Above
+0x1EED 0xA4 ;Latin Small Letter U With Horn And Hook Above
+0x1EEE 0xE4 ;Latin Capital Letter U With Horn And Tilde
+0x1EEF 0xA4 ;Latin Small Letter U With Horn And Tilde
+0x1EF0 0xE4 ;Latin Capital Letter U With Horn And Dot Below
+0x1EF1 0xA4 ;Latin Small Letter U With Horn And Dot Below
+0x1EF2 0xE8 ;Latin Capital Letter Y With Grave
+0x1EF3 0xA8 ;Latin Small Letter Y With Grave
+0x1EF4 0xE8 ;Latin Capital Letter Y With Dot Below
+0x1EF5 0xA8 ;Latin Small Letter Y With Dot Below
+0x1EF6 0xE8 ;Latin Capital Letter Y With Hook Above
+0x1EF7 0xA8 ;Latin Small Letter Y With Hook Above
+0x1EF8 0xE8 ;Latin Capital Letter Y With Tilde
+0x1EF9 0xA8 ;Latin Small Letter Y With Tilde
+0x1F08 0xC1 ;Greek Capital Letter Alpha With Psili
+0x1F09 0xC1 ;Greek Capital Letter Alpha With Dasia
+0x1F0A 0xC1 ;Greek Capital Letter Alpha With Psili And Varia
+0x1F0B 0xC1 ;Greek Capital Letter Alpha With Dasia And Varia
+0x1F0C 0xC1 ;Greek Capital Letter Alpha With Psili And Oxia
+0x1F0D 0xC1 ;Greek Capital Letter Alpha With Dasia And Oxia
+0x1F0E 0xC1 ;Greek Capital Letter Alpha With Psili And Perispomeni
+0x1F0F 0xC1 ;Greek Capital Letter Alpha With Dasia And Perispomeni
+0x1F18 0xC5 ;Greek Capital Letter Epsilon With Psili
+0x1F19 0xC5 ;Greek Capital Letter Epsilon With Dasia
+0x1F1A 0xC5 ;Greek Capital Letter Epsilon With Psili And Varia
+0x1F1B 0xC5 ;Greek Capital Letter Epsilon With Dasia And Varia
+0x1F1C 0xC5 ;Greek Capital Letter Epsilon With Psili And Oxia
+0x1F1D 0xC5 ;Greek Capital Letter Epsilon With Dasia And Oxia
+0x1F28 0xC8 ;Greek Capital Letter Eta With Psili
+0x1F29 0xC8 ;Greek Capital Letter Eta With Dasia
+0x1F2A 0xC8 ;Greek Capital Letter Eta With Psili And Varia
+0x1F2B 0xC8 ;Greek Capital Letter Eta With Dasia And Varia
+0x1F2C 0xC8 ;Greek Capital Letter Eta With Psili And Oxia
+0x1F2D 0xC8 ;Greek Capital Letter Eta With Dasia And Oxia
+0x1F2E 0xC8 ;Greek Capital Letter Eta With Psili And Perispomeni
+0x1F2F 0xC8 ;Greek Capital Letter Eta With Dasia And Perispomeni
+0x1F38 0xC9 ;Greek Capital Letter Iota With Psili
+0x1F39 0xC9 ;Greek Capital Letter Iota With Dasia
+0x1F3A 0xC9 ;Greek Capital Letter Iota With Psili And Varia
+0x1F3B 0xC9 ;Greek Capital Letter Iota With Dasia And Varia
+0x1F3C 0xC9 ;Greek Capital Letter Iota With Psili And Oxia
+0x1F3D 0xC9 ;Greek Capital Letter Iota With Dasia And Oxia
+0x1F3E 0xC9 ;Greek Capital Letter Iota With Psili And Perispomeni
+0x1F3F 0xC9 ;Greek Capital Letter Iota With Dasia And Perispomeni
+0x1F48 0xD6 ;Greek Capital Letter Omicron With Psili
+0x1F49 0xD6 ;Greek Capital Letter Omicron With Dasia
+0x1F4A 0xD6 ;Greek Capital Letter Omicron With Psili And Varia
+0x1F4B 0xD6 ;Greek Capital Letter Omicron With Dasia And Varia
+0x1F4C 0xD6 ;Greek Capital Letter Omicron With Psili And Oxia
+0x1F4D 0xD6 ;Greek Capital Letter Omicron With Dasia And Oxia
+0x1F59 0xE8 ;Greek Capital Letter Upsilon With Dasia
+0x1F5B 0xE8 ;Greek Capital Letter Upsilon With Dasia And Varia
+0x1F5D 0xE8 ;Greek Capital Letter Upsilon With Dasia And Oxia
+0x1F5F 0xE8 ;Greek Capital Letter Upsilon With Dasia And Perispomeni
+0x1F88 0xC1 ;Greek Capital Letter Alpha With Psili And Prosgegrammeni
+0x1F89 0xC1 ;Greek Capital Letter Alpha With Dasia And Prosgegrammeni
+0x1F8A 0xC1 ;Greek Capital Letter Alpha With Psili And Varia And Prosgegrammeni
+0x1F8B 0xC1 ;Greek Capital Letter Alpha With Dasia And Varia And Prosgegrammeni
+0x1F8C 0xC1 ;Greek Capital Letter Alpha With Psili And Oxia And Prosgegrammeni
+0x1F8D 0xC1 ;Greek Capital Letter Alpha With Dasia And Oxia And Prosgegrammeni
+0x1F8E 0xC1 ;Greek Capital Letter Alpha With Psili And Perispomeni And Prosgegrammeni
+0x1F8F 0xC1 ;Greek Capital Letter Alpha With Dasia And Perispomeni And Prosgegrammeni
+0x1F98 0xC8 ;Greek Capital Letter Eta With Psili And Prosgegrammeni
+0x1F99 0xC8 ;Greek Capital Letter Eta With Dasia And Prosgegrammeni
+0x1F9A 0xC8 ;Greek Capital Letter Eta With Psili And Varia And Prosgegrammeni
+0x1F9B 0xC8 ;Greek Capital Letter Eta With Dasia And Varia And Prosgegrammeni
+0x1F9C 0xC8 ;Greek Capital Letter Eta With Psili And Oxia And Prosgegrammeni
+0x1F9D 0xC8 ;Greek Capital Letter Eta With Dasia And Oxia And Prosgegrammeni
+0x1F9E 0xC8 ;Greek Capital Letter Eta With Psili And Perispomeni And Prosgegrammeni
+0x1F9F 0xC8 ;Greek Capital Letter Eta With Dasia And Perispomeni And Prosgegrammeni
+0x1FB8 0xC1 ;Greek Capital Letter Alpha With Vrachy
+0x1FB9 0xC1 ;Greek Capital Letter Alpha With Macron
+0x1FBA 0xC1 ;Greek Capital Letter Alpha With Varia
+0x1FBB 0xC1 ;Greek Capital Letter Alpha With Oxia
+0x1FBC 0xC1 ;Greek Capital Letter Alpha With Prosgegrammeni
+0x1FC1 0xBD ;Greek Dialytika And Perispomeni
+0x1FC8 0xC5 ;Greek Capital Letter Epsilon With Varia
+0x1FC9 0xC5 ;Greek Capital Letter Epsilon With Oxia
+0x1FCA 0xC8 ;Greek Capital Letter Eta With Varia
+0x1FCB 0xC8 ;Greek Capital Letter Eta With Oxia
+0x1FCC 0xC8 ;Greek Capital Letter Eta With Prosgegrammeni
+0x1FD8 0xC9 ;Greek Capital Letter Iota With Vrachy
+0x1FD9 0xC9 ;Greek Capital Letter Iota With Macron
+0x1FDA 0xC9 ;Greek Capital Letter Iota With Varia
+0x1FDB 0xC9 ;Greek Capital Letter Iota With Oxia
+0x1FE8 0xE8 ;Greek Capital Letter Upsilon With Vrachy
+0x1FE9 0xE8 ;Greek Capital Letter Upsilon With Macron
+0x1FEA 0xE8 ;Greek Capital Letter Upsilon With Varia
+0x1FEB 0xE8 ;Greek Capital Letter Upsilon With Oxia
+0x1FEC 0xD7 ;Greek Capital Letter Rho With Dasia
+0x1FED 0xBD ;Greek Dialytika And Varia
+0x1FEE 0xBD ;Greek Dialytika And Oxia
+0x1FEF 0x79 ;Greek Varia
+0x1FF8 0xD6 ;Greek Capital Letter Omicron With Varia
+0x1FF9 0xD6 ;Greek Capital Letter Omicron With Oxia
+0x1FFD 0xBE ;Greek Oxia
+0x2000 0x40 ;En Quad
+0x2001 0x40 ;Em Quad
+0x2002 0x40 ;En Space
+0x2003 0x40 ;Em Space
+0x2004 0x40 ;Three-Per-Em Space
+0x2005 0x40 ;Four-Per-Em Space
+0x2006 0x40 ;Six-Per-Em Space
+0x2007 0x40 ;Figure Space
+0x2008 0x40 ;Punctuation Space
+0x2009 0x40 ;Thin Space
+0x200A 0x40 ;Hair Space
+0x2010 0x60 ;Hyphen
+0x2011 0x60 ;Non-Breaking Hyphen
+0x2013 0x60 ;En Dash
+0x2014 0x60 ;Em Dash
+0x2015 0x60 ;Horizontal Bar
+0x2017 0x78 ;Double Low Line
+0x2018 0x79 ;Left Single Quotation Mark
+0x2019 0x7D ;Right Single Quotation Mark
+0x201A 0x6B ;Single Low-9 Quotation Mark
+0x201B 0x79 ;Single High-Reversed-9 Quotation Mark
+0x201C 0x7F ;Left Double Quotation Mark
+0x201D 0x7F ;Right Double Quotation Mark
+0x201E 0x6B ;Double Low-9 Quotation Mark
+0x2024 0x4B ;One Dot Leader
+0x202F 0x40 ;Narrow No-Break Space
+0x2032 0xBE ;Prime
+0x2033 0x7F ;Double Prime
+0x2035 0x79 ;Reversed Prime
+0x2039 0x4C ;Single Left-Pointing Angle Quotation Mark
+0x203A 0x6E ;Single Right-Pointing Angle Quotation Mark
+0x203C 0x5A ;Double Exclamation Mark
+0x203E 0xBC ;Overline
+0x2044 0x61 ;Fraction Slash
+0x205F 0x40 ;Medium Mathematical Space
+0x2070 0x90 ;Superscript Zero
+0x2071 0x89 ;Superscript Latin Small Letter I
+0x2074 0xF4 ;Superscript Four
+0x2075 0xF5 ;Superscript Five
+0x2076 0xF6 ;Superscript Six
+0x2077 0xF7 ;Superscript Seven
+0x2078 0xF8 ;Superscript Eight
+0x2079 0xF9 ;Superscript Nine
+0x207A 0x4E ;Superscript Plus Sign
+0x207B 0x60 ;Superscript Minus
+0x207C 0x7E ;Superscript Equals Sign
+0x207D 0x4D ;Superscript Left Parenthesis
+0x207E 0x5D ;Superscript Right Parenthesis
+0x207F 0x95 ;Superscript Latin Small Letter N
+0x2080 0xF0 ;Subscript Zero
+0x2081 0xF1 ;Subscript One
+0x2082 0xF2 ;Subscript Two
+0x2083 0xF3 ;Subscript Three
+0x2084 0xF4 ;Subscript Four
+0x2085 0xF5 ;Subscript Five
+0x2086 0xF6 ;Subscript Six
+0x2087 0xF7 ;Subscript Seven
+0x2088 0xF8 ;Subscript Eight
+0x2089 0xF9 ;Subscript Nine
+0x208A 0x4E ;Subscript Plus Sign
+0x208B 0x60 ;Subscript Minus
+0x208C 0x7E ;Subscript Equals Sign
+0x208D 0x4D ;Subscript Left Parenthesis
+0x208E 0x5D ;Subscript Right Parenthesis
+0x2090 0x81 ;Latin Subscript Small Letter A
+0x2091 0x85 ;Latin Subscript Small Letter E
+0x2092 0x96 ;Latin Subscript Small Letter O
+0x2093 0xA7 ;Latin Subscript Small Letter X
+0x20A1 0x4A ;Colon Sign
+0x20A4 0xB1 ;Lira Sign
+0x2102 0xC3 ;Double-Struck Capital C
+0x2107 0xC5 ;Euler Constant
+0x210A 0x87 ;Script Small G
+0x210B 0xC8 ;Script Capital H
+0x210C 0xC8 ;Black-Letter Capital H
+0x210D 0xC8 ;Double-Struck Capital H
+0x210E 0x88 ;Planck Constant
+0x210F 0x88 ;Planck Constant Over Two Pi
+0x2110 0xC9 ;Script Capital I
+0x2111 0xC9 ;Black-Letter Capital I
+0x2112 0xD3 ;Script Capital L
+0x2113 0x93 ;Script Small L
+0x2115 0xD5 ;Double-Struck Capital N
+0x2118 0xD7 ;Script Capital P
+0x2119 0xD7 ;Double-Struck Capital P
+0x211A 0xD8 ;Double-Struck Capital Q
+0x211B 0xD9 ;Script Capital R
+0x211C 0xD9 ;Black-Letter Capital R
+0x211D 0xD9 ;Double-Struck Capital R
+0x2124 0xE9 ;Double-Struck Capital Z
+0x2128 0xE9 ;Black-Letter Capital Z
+0x212A 0xD2 ;Kelvin Sign
+0x212B 0xC1 ;Angstrom Sign
+0x212C 0xC2 ;Script Capital B
+0x212D 0xC3 ;Black-Letter Capital C
+0x212E 0x85 ;Estimated Symbol
+0x212F 0x85 ;Script Small E
+0x2130 0xC5 ;Script Capital E
+0x2131 0xC6 ;Script Capital F
+0x2133 0xD4 ;Script Capital M
+0x2134 0x96 ;Script Small O
+0x2135 0x41 ;Alef Symbol
+0x2136 0x42 ;Bet Symbol
+0x2137 0x43 ;Gimel Symbol
+0x2138 0x44 ;Dalet Symbol
+0x2139 0x89 ;Information Source
+0x2145 0xC4 ;Double-Struck Italic Capital D
+0x2146 0x84 ;Double-Struck Italic Small D
+0x2147 0x85 ;Double-Struck Italic Small E
+0x2148 0x89 ;Double-Struck Italic Small I
+0x2149 0x91 ;Double-Struck Italic Small J
+0x2160 0xC9 ;Roman Numeral One
+0x2164 0xE5 ;Roman Numeral Five
+0x2169 0xE7 ;Roman Numeral Ten
+0x216C 0xD3 ;Roman Numeral Fifty
+0x216D 0xC3 ;Roman Numeral One Hundred
+0x216E 0xC4 ;Roman Numeral Five Hundred
+0x216F 0xD4 ;Roman Numeral One Thousand
+0x2170 0x89 ;Small Roman Numeral One
+0x2174 0xA5 ;Small Roman Numeral Five
+0x2179 0xA7 ;Small Roman Numeral Ten
+0x217C 0x93 ;Small Roman Numeral Fifty
+0x217D 0x83 ;Small Roman Numeral One Hundred
+0x217E 0x84 ;Small Roman Numeral Five Hundred
+0x217F 0x94 ;Small Roman Numeral One Thousand
+0x2190 0x4C ;Leftwards Arrow
+0x2191 0xB0 ;Upwards Arrow
+0x2192 0x6E ;Rightwards Arrow
+0x2193 0xA5 ;Downwards Arrow
+0x2194 0x60 ;Left Right Arrow
+0x2195 0x4F ;Up Down Arrow
+0x219A 0x4C ;Leftwards Arrow With Stroke
+0x219B 0x6E ;Rightwards Arrow With Stroke
+0x21AE 0x60 ;Left Right Arrow With Stroke
+0x2205 0xD6 ;Empty Set
+0x2212 0x60 ;Minus Sign
+0x2213 0x8F ;Minus-Or-Plus Sign
+0x2215 0x61 ;Division Slash
+0x2216 0xE0 ;Set Minus
+0x2217 0x5C ;Asterisk Operator
+0x2218 0x90 ;Ring Operator
+0x221A 0xE5 ;Square Root
+0x221F 0xD3 ;Right Angle
+0x2223 0x4F ;Divides
+0x2224 0x4F ;Does Not Divide
+0x2229 0x95 ;Intersection
+0x2236 0x7A ;Ratio
+0x223C 0xA1 ;Tilde Operator
+0x2241 0xA1 ;Not Tilde
+0x2248 0xA1 ;Almost Equal To
+0x2249 0xA1 ;Not Almost Equal To
+0x2260 0x7E ;Not Equal To
+0x2261 0x7E ;Identical To
+0x2262 0x7E ;Not Identical To
+0x2263 0x7E ;Strictly Equivalent To
+0x226A 0x8A ;Much Less-Than
+0x226B 0x8B ;Much Greater-Than
+0x226E 0x4C ;Not Less-Than
+0x226F 0x6E ;Not Greater-Than
+0x22C5 0xB3 ;Dot Operator
+0x2303 0xB0 ;Up Arrowhead
+0x2329 0x4C ;Left-Pointing Angle Bracket
+0x232A 0x6E ;Right-Pointing Angle Bracket
+0x2460 0xF1 ;Circled Digit One
+0x2461 0xF2 ;Circled Digit Two
+0x2462 0xF3 ;Circled Digit Three
+0x2463 0xF4 ;Circled Digit Four
+0x2464 0xF5 ;Circled Digit Five
+0x2465 0xF6 ;Circled Digit Six
+0x2466 0xF7 ;Circled Digit Seven
+0x2467 0xF8 ;Circled Digit Eight
+0x2468 0xF9 ;Circled Digit Nine
+0x24B6 0xC1 ;Circled Latin Capital Letter A
+0x24B7 0xC2 ;Circled Latin Capital Letter B
+0x24B8 0xC3 ;Circled Latin Capital Letter C
+0x24B9 0xC4 ;Circled Latin Capital Letter D
+0x24BA 0xC5 ;Circled Latin Capital Letter E
+0x24BB 0xC6 ;Circled Latin Capital Letter F
+0x24BC 0xC7 ;Circled Latin Capital Letter G
+0x24BD 0xC8 ;Circled Latin Capital Letter H
+0x24BE 0xC9 ;Circled Latin Capital Letter I
+0x24BF 0xD1 ;Circled Latin Capital Letter J
+0x24C0 0xD2 ;Circled Latin Capital Letter K
+0x24C1 0xD3 ;Circled Latin Capital Letter L
+0x24C2 0xD4 ;Circled Latin Capital Letter M
+0x24C3 0xD5 ;Circled Latin Capital Letter N
+0x24C4 0xD6 ;Circled Latin Capital Letter O
+0x24C5 0xD7 ;Circled Latin Capital Letter P
+0x24C6 0xD8 ;Circled Latin Capital Letter Q
+0x24C7 0xD9 ;Circled Latin Capital Letter R
+0x24C8 0xE2 ;Circled Latin Capital Letter S
+0x24C9 0xE3 ;Circled Latin Capital Letter T
+0x24CA 0xE4 ;Circled Latin Capital Letter U
+0x24CB 0xE5 ;Circled Latin Capital Letter V
+0x24CC 0xE6 ;Circled Latin Capital Letter W
+0x24CD 0xE7 ;Circled Latin Capital Letter X
+0x24CE 0xE8 ;Circled Latin Capital Letter Y
+0x24CF 0xE9 ;Circled Latin Capital Letter Z
+0x24D0 0x81 ;Circled Latin Small Letter A
+0x24D1 0x82 ;Circled Latin Small Letter B
+0x24D2 0x83 ;Circled Latin Small Letter C
+0x24D3 0x84 ;Circled Latin Small Letter D
+0x24D4 0x85 ;Circled Latin Small Letter E
+0x24D5 0x86 ;Circled Latin Small Letter F
+0x24D6 0x87 ;Circled Latin Small Letter G
+0x24D7 0x88 ;Circled Latin Small Letter H
+0x24D8 0x89 ;Circled Latin Small Letter I
+0x24D9 0x91 ;Circled Latin Small Letter J
+0x24DA 0x92 ;Circled Latin Small Letter K
+0x24DB 0x93 ;Circled Latin Small Letter L
+0x24DC 0x94 ;Circled Latin Small Letter M
+0x24DD 0x95 ;Circled Latin Small Letter N
+0x24DE 0x96 ;Circled Latin Small Letter O
+0x24DF 0x97 ;Circled Latin Small Letter P
+0x24E0 0x98 ;Circled Latin Small Letter Q
+0x24E1 0x99 ;Circled Latin Small Letter R
+0x24E2 0xA2 ;Circled Latin Small Letter S
+0x24E3 0xA3 ;Circled Latin Small Letter T
+0x24E4 0xA4 ;Circled Latin Small Letter U
+0x24E5 0xA5 ;Circled Latin Small Letter V
+0x24E6 0xA6 ;Circled Latin Small Letter W
+0x24E7 0xA7 ;Circled Latin Small Letter X
+0x24E8 0xA8 ;Circled Latin Small Letter Y
+0x24E9 0xA9 ;Circled Latin Small Letter Z
+0x24EA 0xF0 ;Circled Digit Zero
+0x2500 0x60 ;Box Drawings Light Horizontal
+0x2501 0x60 ;Box Drawings Heavy Horizontal
+0x2502 0x4F ;Box Drawings Light Vertical
+0x2503 0x4F ;Box Drawings Heavy Vertical
+0x2504 0x60 ;Box Drawings Light Triple Dash Horizontal
+0x2505 0x60 ;Box Drawings Heavy Triple Dash Horizontal
+0x2506 0x6A ;Box Drawings Light Triple Dash Vertical
+0x2507 0x6A ;Box Drawings Heavy Triple Dash Vertical
+0x2508 0x60 ;Box Drawings Light Quadruple Dash Horizontal
+0x2509 0x60 ;Box Drawings Heavy Quadruple Dash Horizontal
+0x250A 0x6A ;Box Drawings Light Quadruple Dash Vertical
+0x250B 0x6A ;Box Drawings Heavy Quadruple Dash Vertical
+0x250C 0x4E ;Box Drawings Light Down And Right
+0x250D 0x4E ;Box Drawings Down Light And Right Heavy
+0x250E 0x4E ;Box Drawings Down Heavy And Right Light
+0x250F 0x4E ;Box Drawings Heavy Down And Right
+0x2510 0x5F ;Box Drawings Light Down And Left
+0x2511 0x5F ;Box Drawings Down Light And Left Heavy
+0x2512 0x5F ;Box Drawings Down Heavy And Left Light
+0x2513 0x5F ;Box Drawings Heavy Down And Left
+0x2514 0xD3 ;Box Drawings Light Up And Right
+0x2515 0xD3 ;Box Drawings Up Light And Right Heavy
+0x2516 0xD3 ;Box Drawings Up Heavy And Right Light
+0x2517 0xD3 ;Box Drawings Heavy Up And Right
+0x2518 0x4E ;Box Drawings Light Up And Left
+0x2519 0x4E ;Box Drawings Up Light And Left Heavy
+0x251A 0x4E ;Box Drawings Up Heavy And Left Light
+0x251B 0x4E ;Box Drawings Heavy Up And Left
+0x251C 0x4E ;Box Drawings Light Vertical And Right
+0x251D 0x4E ;Box Drawings Vertical Light And Right Heavy
+0x251E 0x4E ;Box Drawings Up Heavy And Right Down Light
+0x251F 0x4E ;Box Drawings Down Heavy And Right Up Light
+0x2520 0x4E ;Box Drawings Vertical Heavy And Right Light
+0x2521 0x4E ;Box Drawings Down Light And Right Up Heavy
+0x2522 0x4E ;Box Drawings Up Light And Right Down Heavy
+0x2523 0x4E ;Box Drawings Heavy Vertical And Right
+0x2524 0x4E ;Box Drawings Light Vertical And Left
+0x2525 0x4E ;Box Drawings Vertical Light And Left Heavy
+0x2526 0x4E ;Box Drawings Up Heavy And Left Down Light
+0x2527 0x4E ;Box Drawings Down Heavy And Left Up Light
+0x2528 0x4E ;Box Drawings Vertical Heavy And Left Light
+0x2529 0x4E ;Box Drawings Down Light And Left Up Heavy
+0x252A 0x4E ;Box Drawings Up Light And Left Down Heavy
+0x252B 0x4E ;Box Drawings Heavy Vertical And Left
+0x252C 0xE3 ;Box Drawings Light Down And Horizontal
+0x252D 0xE3 ;Box Drawings Left Heavy And Right Down Light
+0x252E 0xE3 ;Box Drawings Right Heavy And Left Down Light
+0x252F 0xE3 ;Box Drawings Down Light And Horizontal Heavy
+0x2530 0xE3 ;Box Drawings Down Heavy And Horizontal Light
+0x2531 0xE3 ;Box Drawings Right Light And Left Down Heavy
+0x2532 0xE3 ;Box Drawings Left Light And Right Down Heavy
+0x2533 0xE3 ;Box Drawings Heavy Down And Horizontal
+0x2534 0x4E ;Box Drawings Light Up And Horizontal
+0x2535 0x4E ;Box Drawings Left Heavy And Right Up Light
+0x2536 0x4E ;Box Drawings Right Heavy And Left Up Light
+0x2537 0x4E ;Box Drawings Up Light And Horizontal Heavy
+0x2538 0x4E ;Box Drawings Up Heavy And Horizontal Light
+0x2539 0x4E ;Box Drawings Right Light And Left Up Heavy
+0x253A 0x4E ;Box Drawings Left Light And Right Up Heavy
+0x253B 0x4E ;Box Drawings Heavy Up And Horizontal
+0x253C 0x4E ;Box Drawings Light Vertical And Horizontal
+0x253D 0x4E ;Box Drawings Left Heavy And Right Vertical Light
+0x253E 0x4E ;Box Drawings Right Heavy And Left Vertical Light
+0x253F 0x4E ;Box Drawings Vertical Light And Horizontal Heavy
+0x2540 0x4E ;Box Drawings Up Heavy And Down Horizontal Light
+0x2541 0x4E ;Box Drawings Down Heavy And Up Horizontal Light
+0x2542 0x4E ;Box Drawings Vertical Heavy And Horizontal Light
+0x2543 0x4E ;Box Drawings Left Up Heavy And Right Down Light
+0x2544 0x4E ;Box Drawings Right Up Heavy And Left Down Light
+0x2545 0x4E ;Box Drawings Left Down Heavy And Right Up Light
+0x2546 0x4E ;Box Drawings Right Down Heavy And Left Up Light
+0x2547 0x4E ;Box Drawings Down Light And Up Horizontal Heavy
+0x2548 0x4E ;Box Drawings Up Light And Down Horizontal Heavy
+0x2549 0x4E ;Box Drawings Right Light And Left Vertical Heavy
+0x254A 0x4E ;Box Drawings Left Light And Right Vertical Heavy
+0x254B 0x4E ;Box Drawings Heavy Vertical And Horizontal
+0x254C 0x60 ;Box Drawings Light Double Dash Horizontal
+0x254D 0x60 ;Box Drawings Heavy Double Dash Horizontal
+0x254E 0x6A ;Box Drawings Light Double Dash Vertical
+0x254F 0x6A ;Box Drawings Heavy Double Dash Vertical
+0x2550 0x7E ;Box Drawings Double Horizontal
+0x2551 0x4F ;Box Drawings Double Vertical
+0x2552 0x4E ;Box Drawings Down Single And Right Double
+0x2553 0x4E ;Box Drawings Down Double And Right Single
+0x2554 0x4E ;Box Drawings Double Down And Right
+0x2555 0x5F ;Box Drawings Down Single And Left Double
+0x2556 0x5F ;Box Drawings Down Double And Left Single
+0x2557 0x5F ;Box Drawings Double Down And Left
+0x2558 0xD3 ;Box Drawings Up Single And Right Double
+0x2559 0xD3 ;Box Drawings Up Double And Right Single
+0x255A 0xD3 ;Box Drawings Double Up And Right
+0x255B 0x4E ;Box Drawings Up Single And Left Double
+0x255C 0x4E ;Box Drawings Up Double And Left Single
+0x255D 0x4E ;Box Drawings Double Up And Left
+0x255E 0x4E ;Box Drawings Vertical Single And Right Double
+0x255F 0x4E ;Box Drawings Vertical Double And Right Single
+0x2560 0x4E ;Box Drawings Double Vertical And Right
+0x2561 0x4E ;Box Drawings Vertical Single And Left Double
+0x2562 0x4E ;Box Drawings Vertical Double And Left Single
+0x2563 0x4E ;Box Drawings Double Vertical And Left
+0x2564 0xE3 ;Box Drawings Down Single And Horizontal Double
+0x2565 0xE3 ;Box Drawings Down Double And Horizontal Single
+0x2566 0xE3 ;Box Drawings Double Down And Horizontal
+0x2567 0x4E ;Box Drawings Up Single And Horizontal Double
+0x2568 0x4E ;Box Drawings Up Double And Horizontal Single
+0x2569 0x4E ;Box Drawings Double Up And Horizontal
+0x256A 0x4E ;Box Drawings Vertical Single And Horizontal Double
+0x256B 0x4E ;Box Drawings Vertical Double And Horizontal Single
+0x256C 0x4E ;Box Drawings Double Vertical And Horizontal
+0x2571 0x61 ;Box Drawings Light Diagonal Upper Right To Lower Left
+0x2572 0xE0 ;Box Drawings Light Diagonal Upper Left To Lower Right
+0x2573 0xE7 ;Box Drawings Light Diagonal Cross
+0x2574 0x60 ;Box Drawings Light Left
+0x2575 0x4F ;Box Drawings Light Up
+0x2576 0x60 ;Box Drawings Light Right
+0x2577 0x4F ;Box Drawings Light Down
+0x2578 0x60 ;Box Drawings Heavy Left
+0x2579 0x4F ;Box Drawings Heavy Up
+0x257A 0x60 ;Box Drawings Heavy Right
+0x257B 0x4F ;Box Drawings Heavy Down
+0x257C 0x60 ;Box Drawings Light Left And Heavy Right
+0x257D 0x4F ;Box Drawings Light Up And Heavy Down
+0x257E 0x60 ;Box Drawings Heavy Left And Light Right
+0x257F 0x4F ;Box Drawings Heavy Up And Light Down
+0x25CB 0xD6 ;White Circle
+0x25EF 0xD6 ;Large Circle
+0x2C7C 0x91 ;Latin Subscript Small Letter J
+0x2C7D 0xE5 ;Modifier Letter Capital V
+0x3000 0x40 ;Ideographic Space
+0x3008 0x4C ;Left Angle Bracket
+0x3009 0x6E ;Right Angle Bracket
+0x300A 0x8A ;Left Double Angle Bracket
+0x300B 0x8B ;Right Double Angle Bracket
+0x301A 0xBA ;Left White Square Bracket
+0x301B 0xBB ;Right White Square Bracket
+0x301D 0x7F ;Reversed Double Prime Quotation Mark
+0x301E 0x7F ;Double Prime Quotation Mark
+0x301F 0x6B ;Low Double Prime Quotation Mark
+0xFB1D 0x51 ;Hebrew Letter Yod With Hiriq
+0xFB20 0x62 ;Hebrew Letter Alternative Ayin
+0xFB21 0x41 ;Hebrew Letter Wide Alef
+0xFB22 0x44 ;Hebrew Letter Wide Dalet
+0xFB23 0x45 ;Hebrew Letter Wide He
+0xFB24 0x53 ;Hebrew Letter Wide Kaf
+0xFB25 0x54 ;Hebrew Letter Wide Lamed
+0xFB26 0x55 ;Hebrew Letter Wide Final Mem
+0xFB27 0x68 ;Hebrew Letter Wide Resh
+0xFB28 0x71 ;Hebrew Letter Wide Tav
+0xFB29 0x4E ;Hebrew Letter Alternative Plus Sign
+0xFB2A 0x69 ;Hebrew Letter Shin With Shin Dot
+0xFB2B 0x69 ;Hebrew Letter Shin With Sin Dot
+0xFB2C 0x69 ;Hebrew Letter Shin With Dagesh And Shin Dot
+0xFB2D 0x69 ;Hebrew Letter Shin With Dagesh And Sin Dot
+0xFB2E 0x41 ;Hebrew Letter Alef With Patah
+0xFB2F 0x41 ;Hebrew Letter Alef With Qamats
+0xFB30 0x41 ;Hebrew Letter Alef With Mapiq
+0xFB31 0x42 ;Hebrew Letter Bet With Dagesh
+0xFB32 0x43 ;Hebrew Letter Gimel With Dagesh
+0xFB33 0x44 ;Hebrew Letter Dalet With Dagesh
+0xFB34 0x45 ;Hebrew Letter He With Mapiq
+0xFB35 0x46 ;Hebrew Letter Vav With Dagesh
+0xFB36 0x47 ;Hebrew Letter Zayin With Dagesh
+0xFB38 0x49 ;Hebrew Letter Tet With Dagesh
+0xFB39 0x51 ;Hebrew Letter Yod With Dagesh
+0xFB3A 0x52 ;Hebrew Letter Final Kaf With Dagesh
+0xFB3B 0x53 ;Hebrew Letter Kaf With Dagesh
+0xFB3C 0x54 ;Hebrew Letter Lamed With Dagesh
+0xFB3E 0x56 ;Hebrew Letter Mem With Dagesh
+0xFB40 0x58 ;Hebrew Letter Nun With Dagesh
+0xFB41 0x59 ;Hebrew Letter Samekh With Dagesh
+0xFB43 0x63 ;Hebrew Letter Final Pe With Dagesh
+0xFB44 0x64 ;Hebrew Letter Pe With Dagesh
+0xFB46 0x66 ;Hebrew Letter Tsadi With Dagesh
+0xFB47 0x67 ;Hebrew Letter Qof With Dagesh
+0xFB48 0x68 ;Hebrew Letter Resh With Dagesh
+0xFB49 0x69 ;Hebrew Letter Shin With Dagesh
+0xFB4A 0x71 ;Hebrew Letter Tav With Dagesh
+0xFB4B 0x46 ;Hebrew Letter Vav With Holam
+0xFB4C 0x42 ;Hebrew Letter Bet With Rafe
+0xFB4D 0x53 ;Hebrew Letter Kaf With Rafe
+0xFB4E 0x64 ;Hebrew Letter Pe With Rafe
+0xFE49 0xBC ;Dashed Overline
+0xFE4A 0xBC ;Centreline Overline
+0xFE4B 0xBC ;Wavy Overline
+0xFE4C 0xBC ;Double Wavy Overline
+0xFE4D 0x6D ;Dashed Low Line
+0xFE4E 0x6D ;Centreline Low Line
+0xFE4F 0x6D ;Wavy Low Line
+0xFE50 0x6B ;Small Comma
+0xFE52 0x4B ;Small Full Stop
+0xFE54 0x5E ;Small Semicolon
+0xFE55 0x7A ;Small Colon
+0xFE56 0x6F ;Small Question Mark
+0xFE57 0x5A ;Small Exclamation Mark
+0xFE58 0x60 ;Small Em Dash
+0xFE59 0x4D ;Small Left Parenthesis
+0xFE5A 0x5D ;Small Right Parenthesis
+0xFE5B 0xC0 ;Small Left Curly Bracket
+0xFE5C 0xD0 ;Small Right Curly Bracket
+0xFE5F 0x7B ;Small Number Sign
+0xFE60 0x50 ;Small Ampersand
+0xFE61 0x5C ;Small Asterisk
+0xFE62 0x4E ;Small Plus Sign
+0xFE63 0x60 ;Small Hyphen-Minus
+0xFE64 0x4C ;Small Less-Than Sign
+0xFE65 0x6E ;Small Greater-Than Sign
+0xFE66 0x7E ;Small Equals Sign
+0xFE68 0xE0 ;Small Reverse Solidus
+0xFE69 0x5B ;Small Dollar Sign
+0xFE6A 0x6C ;Small Percent Sign
+0xFE6B 0x7C ;Small Commercial At
+0xFF01 0x5A ;Fullwidth Exclamation Mark
+0xFF02 0x7F ;Fullwidth Quotation Mark
+0xFF03 0x7B ;Fullwidth Number Sign
+0xFF04 0x5B ;Fullwidth Dollar Sign
+0xFF05 0x6C ;Fullwidth Percent Sign
+0xFF06 0x50 ;Fullwidth Ampersand
+0xFF07 0x7D ;Fullwidth Apostrophe
+0xFF08 0x4D ;Fullwidth Left Parenthesis
+0xFF09 0x5D ;Fullwidth Right Parenthesis
+0xFF0A 0x5C ;Fullwidth Asterisk
+0xFF0B 0x4E ;Fullwidth Plus Sign
+0xFF0C 0x6B ;Fullwidth Comma
+0xFF0D 0x60 ;Fullwidth Hyphen-Minus
+0xFF0E 0x4B ;Fullwidth Full Stop
+0xFF0F 0x61 ;Fullwidth Solidus
+0xFF10 0xF0 ;Fullwidth Digit Zero
+0xFF11 0xF1 ;Fullwidth Digit One
+0xFF12 0xF2 ;Fullwidth Digit Two
+0xFF13 0xF3 ;Fullwidth Digit Three
+0xFF14 0xF4 ;Fullwidth Digit Four
+0xFF15 0xF5 ;Fullwidth Digit Five
+0xFF16 0xF6 ;Fullwidth Digit Six
+0xFF17 0xF7 ;Fullwidth Digit Seven
+0xFF18 0xF8 ;Fullwidth Digit Eight
+0xFF19 0xF9 ;Fullwidth Digit Nine
+0xFF1A 0x7A ;Fullwidth Colon
+0xFF1B 0x5E ;Fullwidth Semicolon
+0xFF1C 0x4C ;Fullwidth Less-Than Sign
+0xFF1D 0x7E ;Fullwidth Equals Sign
+0xFF1E 0x6E ;Fullwidth Greater-Than Sign
+0xFF1F 0x6F ;Fullwidth Question Mark
+0xFF20 0x7C ;Fullwidth Commercial At
+0xFF21 0xC1 ;Fullwidth Latin Capital Letter A
+0xFF22 0xC2 ;Fullwidth Latin Capital Letter B
+0xFF23 0xC3 ;Fullwidth Latin Capital Letter C
+0xFF24 0xC4 ;Fullwidth Latin Capital Letter D
+0xFF25 0xC5 ;Fullwidth Latin Capital Letter E
+0xFF26 0xC6 ;Fullwidth Latin Capital Letter F
+0xFF27 0xC7 ;Fullwidth Latin Capital Letter G
+0xFF28 0xC8 ;Fullwidth Latin Capital Letter H
+0xFF29 0xC9 ;Fullwidth Latin Capital Letter I
+0xFF2A 0xD1 ;Fullwidth Latin Capital Letter J
+0xFF2B 0xD2 ;Fullwidth Latin Capital Letter K
+0xFF2C 0xD3 ;Fullwidth Latin Capital Letter L
+0xFF2D 0xD4 ;Fullwidth Latin Capital Letter M
+0xFF2E 0xD5 ;Fullwidth Latin Capital Letter N
+0xFF2F 0xD6 ;Fullwidth Latin Capital Letter O
+0xFF30 0xD7 ;Fullwidth Latin Capital Letter P
+0xFF31 0xD8 ;Fullwidth Latin Capital Letter Q
+0xFF32 0xD9 ;Fullwidth Latin Capital Letter R
+0xFF33 0xE2 ;Fullwidth Latin Capital Letter S
+0xFF34 0xE3 ;Fullwidth Latin Capital Letter T
+0xFF35 0xE4 ;Fullwidth Latin Capital Letter U
+0xFF36 0xE5 ;Fullwidth Latin Capital Letter V
+0xFF37 0xE6 ;Fullwidth Latin Capital Letter W
+0xFF38 0xE7 ;Fullwidth Latin Capital Letter X
+0xFF39 0xE8 ;Fullwidth Latin Capital Letter Y
+0xFF3A 0xE9 ;Fullwidth Latin Capital Letter Z
+0xFF3B 0xBA ;Fullwidth Left Square Bracket
+0xFF3C 0xE0 ;Fullwidth Reverse Solidus
+0xFF3D 0xBB ;Fullwidth Right Square Bracket
+0xFF3E 0xB0 ;Fullwidth Circumflex Accent
+0xFF3F 0x6D ;Fullwidth Low Line
+0xFF40 0x79 ;Fullwidth Grave Accent
+0xFF41 0x81 ;Fullwidth Latin Small Letter A
+0xFF42 0x82 ;Fullwidth Latin Small Letter B
+0xFF43 0x83 ;Fullwidth Latin Small Letter C
+0xFF44 0x84 ;Fullwidth Latin Small Letter D
+0xFF45 0x85 ;Fullwidth Latin Small Letter E
+0xFF46 0x86 ;Fullwidth Latin Small Letter F
+0xFF47 0x87 ;Fullwidth Latin Small Letter G
+0xFF48 0x88 ;Fullwidth Latin Small Letter H
+0xFF49 0x89 ;Fullwidth Latin Small Letter I
+0xFF4A 0x91 ;Fullwidth Latin Small Letter J
+0xFF4B 0x92 ;Fullwidth Latin Small Letter K
+0xFF4C 0x93 ;Fullwidth Latin Small Letter L
+0xFF4D 0x94 ;Fullwidth Latin Small Letter M
+0xFF4E 0x95 ;Fullwidth Latin Small Letter N
+0xFF4F 0x96 ;Fullwidth Latin Small Letter O
+0xFF50 0x97 ;Fullwidth Latin Small Letter P
+0xFF51 0x98 ;Fullwidth Latin Small Letter Q
+0xFF52 0x99 ;Fullwidth Latin Small Letter R
+0xFF53 0xA2 ;Fullwidth Latin Small Letter S
+0xFF54 0xA3 ;Fullwidth Latin Small Letter T
+0xFF55 0xA4 ;Fullwidth Latin Small Letter U
+0xFF56 0xA5 ;Fullwidth Latin Small Letter V
+0xFF57 0xA6 ;Fullwidth Latin Small Letter W
+0xFF58 0xA7 ;Fullwidth Latin Small Letter X
+0xFF59 0xA8 ;Fullwidth Latin Small Letter Y
+0xFF5A 0xA9 ;Fullwidth Latin Small Letter Z
+0xFF5B 0xC0 ;Fullwidth Left Curly Bracket
+0xFF5C 0x4F ;Fullwidth Vertical Line
+0xFF5D 0xD0 ;Fullwidth Right Curly Bracket
+0xFF5E 0xA1 ;Fullwidth Tilde
+0xFFE0 0x4A ;Fullwidth Cent Sign
+0xFFE1 0xB1 ;Fullwidth Pound Sign
+0xFFE2 0x5F ;Fullwidth Not Sign
+0xFFE3 0xBC ;Fullwidth Macron
+0xFFE4 0x6A ;Fullwidth Broken Bar
+0xFFE5 0xB2 ;Fullwidth Yen Sign
+0xFFE8 0x4F ;Halfwidth Forms Light Vertical
+0xFFE9 0x4C ;Halfwidth Leftwards Arrow
+0xFFEA 0xB0 ;Halfwidth Upwards Arrow
+0xFFEB 0x6E ;Halfwidth Rightwards Arrow
+0xFFEC 0xA5 ;Halfwidth Downwards Arrow
+0xFFEE 0xD6 ;Halfwidth White Circle
+
+ENDCODEPAGE

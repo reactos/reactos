@@ -18,13 +18,19 @@ BEGIN
         MENUITEM "&Păstrează\tCtrl+S", IDM_FILESAVE
         MENUITEM "Păst&rare în…", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Din aparat media…", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM SEPARATOR
         MENUITEM "Pre&vizionează pagina", IDM_FILEPAGEVIEW
         MENUITEM "C&onfigurare pagină…", IDM_FILEPAGESETUP
         MENUITEM "I&mprimă…\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
+        MENUITEM "Transmite…", IDM_FILESEND
+        MENUITEM SEPARATOR
         MENUITEM "Decor de birou (în c&arou)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Decor de birou (&centrat)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Decor de birou (e&xtins)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Cel mai recent fișier", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+F4", IDM_FILEEXIT
     END
@@ -211,8 +217,8 @@ BEGIN
     IDS_TOOLTIP14 "Poligon"
     IDS_TOOLTIP15 "Oval"
     IDS_TOOLTIP16 "Dreptunghi rotunjit"
-    IDS_OPENFILTER "Fișier bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1Orice fișier (*.*)\1*.*\1"
-    IDS_SAVEFILTER "Bitmap pe 24 biți (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "Orice fișier"
+    IDS_ALLPICTUREFILES "Toate fișierele imagine"
     IDS_FILESIZE "%d octeți"
     IDS_PRINTRES "%d x %d pixeli pe metru"
     IDS_INTNUMBERS "Introduceți doar numere întregi!"

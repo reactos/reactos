@@ -73,7 +73,7 @@ typedef struct _DETECTED_DEVICE
     BOOLEAN ThirdPartyOptionSelected;
     ULONG FileTypeBits;
     PDETECTED_DEVICE_FILE Files;
-    PCHAR BasedllName;
+    PCHAR BaseDllName;
     BOOLEAN MigratedDriver;
     PPNP_HARDWARE_ID HardwareIds;
 } DETECTED_DEVICE, *PDETECTED_DEVICE;
@@ -126,7 +126,7 @@ typedef struct _SETUP_LOADER_BLOCK
     ULONG UnsupDriversInfFileLength;
     PVOID BootFontFile;
     ULONG BootFontFileLength;
-    MONITOR_CONFIGURATION_DATA Monitor;
+    PMONITOR_CONFIGURATION_DATA Monitor;
     PCHAR MonitorId;
     PDETECTED_DEVICE BootBusExtenders;
     PDETECTED_DEVICE BusExtenders;

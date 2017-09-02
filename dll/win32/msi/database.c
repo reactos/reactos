@@ -549,7 +549,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
 static LPWSTR msi_build_createsql_postlude(LPWSTR *primary_keys, DWORD num_keys)
 {
     LPWSTR postlude, keys, ptr;
-    DWORD size, key_size, i;
+    DWORD size, i;
 
     static const WCHAR key_fmt[] = {'`','%','s','`',',',' ',0};
     static const WCHAR postlude_fmt[] = {'P','R','I','M','A','R','Y',' ','K','E','Y',' ','%','s',')',0};
@@ -563,9 +563,7 @@ static LPWSTR msi_build_createsql_postlude(LPWSTR *primary_keys, DWORD num_keys)
 
     for (i = 0, ptr = keys; i < num_keys; i++)
     {
-        key_size = lstrlenW(key_fmt) + lstrlenW(primary_keys[i]) -2;
-        sprintfW(ptr, key_fmt, primary_keys[i]);
-        ptr += key_size;
+        ptr += sprintfW(ptr, key_fmt, primary_keys[i]);
     }
 
     /* remove final ', ' */

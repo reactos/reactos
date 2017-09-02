@@ -13,7 +13,7 @@
 
 HANDLE GlobalHeap;
 BOOL Ws2helpInitialized = FALSE;
-CRITICAL_SECTION StartupSyncronization;
+CRITICAL_SECTION StartupSynchronization;
 HINSTANCE LibraryHdl;
 
 /* FUNCTIONS *****************************************************************/
@@ -103,7 +103,7 @@ WINAPI
 Ws2helpInitialize(VOID)
 {
     /* Enter the startup CS */
-    EnterCriticalSection(&StartupSyncronization);
+    EnterCriticalSection(&StartupSynchronization);
 
     /* Check again for init */
     if (!Ws2helpInitialized)
@@ -114,7 +114,7 @@ Ws2helpInitialize(VOID)
     }
 
     /* Leave the CS and return */
-    LeaveCriticalSection(&StartupSyncronization);
+    LeaveCriticalSection(&StartupSynchronization);
     return ERROR_SUCCESS;
 }
 
@@ -135,7 +135,7 @@ DllMain(HANDLE hModule,
             DisableThreadLibraryCalls(hModule);
 
             /* Initialize startup CS */
-            InitializeCriticalSection(&StartupSyncronization);
+            InitializeCriticalSection(&StartupSynchronization);
 
             /* Get Global Heap */
             GlobalHeap = GetProcessHeap();
@@ -160,7 +160,7 @@ DllMain(HANDLE hModule,
                 if (ghWriterEvent) CloseHandle(ghWriterEvent);
 
                 /* Delete the startup CS */
-                DeleteCriticalSection(&StartupSyncronization);
+                DeleteCriticalSection(&StartupSynchronization);
                 Ws2helpInitialized = FALSE;
             }
 			break;

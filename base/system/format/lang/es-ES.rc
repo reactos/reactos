@@ -5,18 +5,18 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     STRING_HELP "Uso: %s unidad: [-FS:sistema de archivos] [-V:etiqueta] [-Q] [-A:tamaño] [-C]\n\n\
-  [unidad:]       		Especifica la unidad a formatear.\n\
-  -FS:sistema de archivos 	Especifica el sistema de archivos (%s).\n\
-  -V:etiqueta         		Especifica la etiqueta del volumen.\n\
-  -Q               		Realiza un formato rápido.\n\
-  -A:tamaño        		Anula el tamaño por defecto de la unidad asignada. Configuración por defecto\n\
-                  		es altamente recomendado para uso general\n\
-                   		NTFS soporta 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
-                   		FAT soporta 8192, 16K, 32K, 64K, 128K, 256K.\n\
-                   		La compresión NTFS no es soportada para tamaños de la unidad asignada\n\
-                   		por encima de 4096.\n\
-  -C               		Por defecto los archivos creados en el nuevo volumen serán \n\
-                   		comprimidos.\n\n"
+  [unidad:]                 Especifica la unidad a formatear.\n\
+  -FS:sistema de archivos   Especifica el sistema de archivos (%s).\n\
+  -V:etiqueta               Especifica la etiqueta del volumen.\n\
+  -Q                        Realiza un formato rápido.\n\
+  -A:tamaño                 Anula el tamaño por defecto de la unidad asignada. Configuración por defecto\n\
+                            es altamente recomendado para uso general\n\
+                            NTFS soporta 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                            FAT soporta 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                            La compresión NTFS no es soportada para tamaños de la unidad asignada\n\
+                            por encima de 4096.\n\
+  -C                        Por defecto los archivos creados en el nuevo volumen serán \n\
+                            comprimidos.\n\n"
     STRING_COMPLETE "%lu por ciento completado.\r"
     STRING_FORMAT_FAIL "FormatEx fue incapaz de completarse satisfactoriamente.\n\n"
     STRING_NO_SUPPORT "Operación No Soportada"

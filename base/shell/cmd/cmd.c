@@ -81,7 +81,7 @@
  *        added showcmds function to show commands and options available
  *
  *    07-Aug-1998 (John P Price <linux-guru@gcfl.net>)
- *        Fixed carrage return output to better match MSDOS with echo
+ *        Fixed carriage return output to better match MSDOS with echo
  *        on or off. (marked with "JPP 19980708")
  *
  *    07-Dec-1998 (Eric Kohl)
@@ -137,8 +137,8 @@
  *
  *    06-jul-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        translate '%errorlevel%' to the internal value.
- *        Add proper memmory alloc ProcessInput, the error
- *        handling for memmory handling need to be improve
+ *        Add proper memory alloc ProcessInput, the error
+ *        handling for memory handling need to be improve
  */
 
 #include "precomp.h"
@@ -157,11 +157,13 @@ BOOL bExit = FALSE;       /* indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
 BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
+static BOOL bWaitForCommand = FALSE; /* When we are executing something passed on the commandline after /c or /k */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 CRITICAL_SECTION ChildProcessRunningLock;
 BOOL bUnicodeOutput = FALSE;
 BOOL bDisableBatchEcho = FALSE;
 BOOL bDelayedExpansion = FALSE;
+BOOL bTitleSet = FALSE;
 DWORD dwChildProcessId = 0;
 HANDLE hIn;
 HANDLE hOut;
@@ -181,7 +183,7 @@ WORD wDefColor;           /* default color */
  * insert commas into a number
  */
 INT
-ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeperator)
+ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeparator)
 {
     TCHAR temp[39];   /* maximum length with nNumberGroups == 1 */
     UINT  n, iTarget;
@@ -192,11 +194,11 @@ ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeperator)
     n = 0;
     iTarget = nNumberGroups;
     if (!nNumberGroups)
-        bPutSeperator = FALSE;
+        bPutSeparator = FALSE;
 
     do
     {
-        if (iTarget == n && bPutSeperator)
+        if (iTarget == n && bPutSeparator)
         {
             iTarget += nNumberGroups + 1;
             temp[38 - n++] = cThousandSeparator;
@@ -313,7 +315,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 {
     TCHAR szFullName[MAX_PATH];
     TCHAR *first, *rest, *dot;
-    TCHAR szWindowTitle[MAX_PATH];
+    TCHAR szWindowTitle[MAX_PATH], szNewTitle[MAX_PATH*2];
     DWORD dwExitCode = 0;
     TCHAR *FirstEnd;
     TCHAR szFullCmdLine [CMDLINE_LENGTH];
@@ -321,7 +323,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     TRACE ("Execute: \'%s\' \'%s\'\n", debugstr_aw(First), debugstr_aw(Rest));
 
     /* Though it was already parsed once, we have a different set of rules
-       for parsing before we pass to CreateProccess */
+       for parsing before we pass to CreateProcess */
     if (First[0] == _T('/') || (First[0] && First[1] == _T(':')))
     {
         /* Use the entire first word as the program name (no change) */
@@ -376,7 +378,10 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         return 1;
     }
 
-    GetConsoleTitle (szWindowTitle, MAX_PATH);
+    GetConsoleTitle(szWindowTitle, ARRAYSIZE(szWindowTitle));
+    bTitleSet = FALSE;
+    _stprintf(szNewTitle, _T("%s - %s%s"), szWindowTitle, First, Rest);
+    SetConsoleTitle(szNewTitle);
 
     /* check if this is a .BAT or .CMD file */
     dot = _tcsrchr (szFullName, _T('.'));
@@ -442,8 +447,9 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 
         if (prci.hProcess != NULL)
         {
-            if (IsConsoleProcess(prci.hProcess))
+            if (bc != NULL || bWaitForCommand || IsConsoleProcess(prci.hProcess))
             {
+                /* when processing a batch file or starting console processes: execute synchronously */
                 EnterCriticalSection(&ChildProcessRunningLock);
                 dwChildProcessId = prci.dwProcessId;
 
@@ -473,7 +479,8 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     /* Get code page if it has been changed */
     InputCodePage= GetConsoleCP();
     OutputCodePage = GetConsoleOutputCP();
-    SetConsoleTitle(szWindowTitle);
+    if (!bTitleSet)
+        SetConsoleTitle(szWindowTitle);
 
     return dwExitCode;
 }
@@ -1760,7 +1767,9 @@ Initialize()
     {
         /* Do the /C or /K command */
         GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
+        bWaitForCommand = TRUE;
         nExitCode = ParseCommandLine(commandline);
+        bWaitForCommand = FALSE;
         if (option != _T('K'))
         {
             nErrorLevel = nExitCode;
@@ -1785,7 +1794,7 @@ static VOID Cleanup()
         ParseCommandLine (_T("\\cmdexit.bat"));
     }
 
-#ifdef FEATURE_DIECTORY_STACK
+#ifdef FEATURE_DIRECTORY_STACK
     /* destroy directory stack */
     DestroyDirectoryStack ();
 #endif

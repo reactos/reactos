@@ -4,10 +4,16 @@
 #define MIN_COORD (INT_MIN / 16)
 #define MAX_COORD (INT_MAX / 16)
 
-#define IntLPtoDP(pdc, ppt, count) DC_vXformWorldToDevice(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));
-#define CoordLPtoDP(pdc, ppt) DC_vXformWorldToDevice(pdc, 1,  (PPOINTL)(ppt), (PPOINTL)(ppt));
-#define IntDPtoLP(pdc, ppt, count) DC_vXformDeviceToWorld(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));
-#define CoordDPtoLP(pdc, ppt) DC_vXformDeviceToWorld(pdc, 1, (PPOINTL)(ppt), (PPOINTL)(ppt));
+#define IntLPtoDP(pdc, ppt, count) \
+        DC_vUpdateWorldToDevice(pdc); \
+        DC_vXformWorldToDevice(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));
+#define CoordLPtoDP(pdc, ppt) \
+        DC_vXformWorldToDevice(pdc, 1,  (PPOINTL)(ppt), (PPOINTL)(ppt));
+#define IntDPtoLP(pdc, ppt, count) \
+        DC_vUpdateDeviceToWorld(pdc); \
+        DC_vXformDeviceToWorld(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt));
+#define CoordDPtoLP(pdc, ppt) \
+        DC_vXformDeviceToWorld(pdc, 1, (PPOINTL)(ppt), (PPOINTL)(ppt));
 
 #define XForm2MatrixS(m, x) XFormToMatrix(m, (XFORML*)x)
 #define MatrixS2XForm(x, m) MatrixToXForm((XFORML*)x, m)
@@ -160,3 +166,5 @@ BOOL APIENTRY GreGetDCPoint(HDC,UINT,PPOINTL);
 BOOL WINAPI GreGetWindowExtEx( _In_ HDC hdc, _Out_ LPSIZE lpSize);
 BOOL WINAPI GreGetViewportExtEx( _In_ HDC hdc, _Out_ LPSIZE lpSize);
 BOOL FASTCALL GreSetViewportOrgEx(HDC,int,int,LPPOINT);
+BOOL WINAPI GreGetDCOrgEx(_In_ HDC, _Out_ PPOINTL, _Out_ PRECTL);
+BOOL WINAPI GreSetDCOrg(_In_  HDC, _In_ LONG, _In_ LONG, _In_opt_ PRECTL);

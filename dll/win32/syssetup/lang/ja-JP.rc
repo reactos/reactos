@@ -83,6 +83,15 @@ BEGIN
     AUTOCHECKBOX "自動的にサマータイムの調整をする(&D)", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
+IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS セットアップ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    PUSHBUTTON "Lautus テーマ", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "クラシック テーマ", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+END
+
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS セットアップ"
@@ -135,6 +144,8 @@ BEGIN
     IDS_DATETIMESUBTITLE "コンピュータの日付と時刻を正しく設定してください。"
     IDS_PROCESSTITLE "コンポーネントの登録中"
     IDS_PROCESSSUBTITLE "お待ちください..."
+    IDS_THEMESELECTIONTITLE "アピアランス"
+    IDS_THEMESELECTIONSUBTITLE "好きなテーマをお選び下さい"
 END
 
 STRINGTABLE
@@ -149,8 +160,8 @@ BEGIN
     IDS_TIMEOUT "登録中にタイムアウトしました"
     IDS_REASON_UNKNOWN ""
     /*
-     * ATTENTION: 
-     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     * ATTENTION:
+     *   If you translate the administrator account name, keep IDS_ADMINISTRATOR_NAME and
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
@@ -172,4 +183,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "デバイスをインストールしています..."
+END
+
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
+    IDS_COMMONFILES "Common Files"
 END

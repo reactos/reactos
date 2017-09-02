@@ -81,7 +81,7 @@ add_library(reiserfs SHARED ${SOURCE} src/rfsd.rc)
 if(NOT MSVC)
     add_target_compile_flags(reiserfs "-Wno-pointer-sign -Wno-unused-function")
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_target_compile_flags(reiserfs "-Wno-unused-but-set-variable -Wno-unused-variable -Wno-missing-braces")
+        add_target_compile_flags(reiserfs "-Wno-unused-but-set-variable -Wno-unused-variable -Wno-missing-braces -D__GCC__")
     endif()
 else()
     #disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"

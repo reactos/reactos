@@ -1,0 +1,37 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+1000, "Black Shade"
+}
+
+STRINGTABLE
+{
+2000, "Black Shade"
+}
+
+STRINGTABLE
+{
+3000, "Обычный"
+3001, "Крупный шрифт"
+3002, "Огромный шрифт"
+}
+
+STRINGTABLE
+{
+4000, "Обычный"
+4001, "Крупный шрифт"
+4002, "Огромный шрифт"
+}
+
+STRINGTABLE
+{
+5000, "Black Shade"
+5001, "Визуальный Стиль"
+5002, "Команда ReactOS"
+5003, "Изображения от David Quintana <gigaherz@gmail.com>"
+5004, "Выпущены под CC-BY-SA 4.0"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Визуальный стиль для ReactOS"
+}

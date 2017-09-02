@@ -407,9 +407,9 @@ NTSTATUS
 NTAPI
 NtQuerySystemInformation(
     _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    _Out_ PVOID SystemInformation,
-    _In_ ULONG InformationLength,
-    _Out_opt_ PULONG ResultLength
+    _Out_writes_bytes_to_opt_(SystemInformationLength, *ReturnLength) PVOID SystemInformation,
+    _In_ ULONG SystemInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSCALLAPI
@@ -876,9 +876,9 @@ NTSTATUS
 NTAPI
 ZwQuerySystemInformation(
     _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    _Out_ PVOID SystemInformation,
-    _In_ SIZE_T Length,
-    _Out_opt_ PSIZE_T ResultLength
+    _Out_writes_bytes_to_opt_(SystemInformationLength, *ReturnLength) PVOID SystemInformation,
+    _In_ ULONG SystemInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSAPI

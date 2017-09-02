@@ -22,7 +22,7 @@ UDFDriverUnload(
     // significant amount of work here deallocating stuff.
     //
 
-    KdPrint( ("UDF: Unloading!!\n") );
+    UDFPrint( ("UDF: Unloading!!\n") );
 
     // prevent mount oparations
     UDFGlobalData.UDFFlags |= UDF_DATA_FLAGS_BEING_UNLOADED;
@@ -30,7 +30,7 @@ UDFDriverUnload(
     // wait for all volumes to be dismounted
     delay.QuadPart = 10*1000*1000*10;
     while(TRUE) {
-        KdPrint(("Poll...\n"));
+        UDFPrint(("Poll...\n"));
         KeDelayExecutionThread(KernelMode, FALSE, &delay);
     }
 

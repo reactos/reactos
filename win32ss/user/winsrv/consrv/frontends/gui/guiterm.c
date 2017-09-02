@@ -56,29 +56,12 @@ UnRegisterConWndClass(HINSTANCE hInstance);
 
 /* FUNCTIONS ******************************************************************/
 
-static VOID
+/* NOTE: Defined in conwnd.c */
+VOID
 GetScreenBufferSizeUnits(IN PCONSOLE_SCREEN_BUFFER Buffer,
                          IN PGUI_CONSOLE_DATA GuiData,
                          OUT PUINT WidthUnit,
-                         OUT PUINT HeightUnit)
-{
-    if (Buffer == NULL || GuiData == NULL ||
-        WidthUnit == NULL || HeightUnit == NULL)
-    {
-        return;
-    }
-
-    if (GetType(Buffer) == TEXTMODE_BUFFER)
-    {
-        *WidthUnit  = GuiData->CharWidth ;
-        *HeightUnit = GuiData->CharHeight;
-    }
-    else /* if (GetType(Buffer) == GRAPHICS_BUFFER) */
-    {
-        *WidthUnit  = 1;
-        *HeightUnit = 1;
-    }
-}
+                         OUT PUINT HeightUnit);
 
 VOID
 GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData)
@@ -194,7 +177,7 @@ GuiConsoleInputThread(PVOID Param)
                 NewWindow = CreateWindowExW(WS_EX_CLIENTEDGE,
                                             GUI_CONWND_CLASS,
                                             Console->Title.Buffer,
-                                            WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
+                                            WS_OVERLAPPEDWINDOW,
                                             CW_USEDEFAULT,
                                             CW_USEDEFAULT,
                                             CW_USEDEFAULT,
@@ -817,13 +800,9 @@ GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
 
     /* Change the current palette */
     if (ActiveBuffer->PaletteHandle == NULL)
-    {
         hPalette = GuiData->hSysPalette;
-    }
     else
-    {
         hPalette = ActiveBuffer->PaletteHandle;
-    }
 
     DPRINT("GuiSetActiveScreenBuffer using palette 0x%p\n", hPalette);
 
@@ -937,9 +916,7 @@ GuiChangeIcon(IN OUT PFRONTEND This,
     }
 
     if (hIcon == NULL)
-    {
         return FALSE;
-    }
 
     if (hIcon != GuiData->hIcon)
     {
@@ -976,41 +953,60 @@ GuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
 {
     PGUI_CONSOLE_DATA GuiData = This->Context;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
-    RECT WorkArea;
-    LONG width, height;
+    HMONITOR hMonitor;
+    MONITORINFO MonitorInfo;
+    LONG Width, Height;
     UINT WidthUnit, HeightUnit;
 
     if (!pSize) return;
 
-    if (!SystemParametersInfoW(SPI_GETWORKAREA, 0, &WorkArea, 0))
+    /*
+     * Retrieve the monitor that is mostly covered by the current console window;
+     * default to primary monitor otherwise.
+     */
+    MonitorInfo.cbSize = sizeof(MonitorInfo);
+    hMonitor = MonitorFromWindow(GuiData->hWindow, MONITOR_DEFAULTTOPRIMARY);
+    if (hMonitor && GetMonitorInfoW(hMonitor, &MonitorInfo))
     {
-        DPRINT1("SystemParametersInfoW failed - What to do ??\n");
-        return;
-    }
-
-    ActiveBuffer = GuiData->ActiveBuffer;
-    if (ActiveBuffer)
-    {
-        GetScreenBufferSizeUnits(ActiveBuffer, GuiData, &WidthUnit, &HeightUnit);
+        /* Retrieve the width and height of the client area of this monitor */
+        Width  = MonitorInfo.rcWork.right - MonitorInfo.rcWork.left;
+        Height = MonitorInfo.rcWork.bottom - MonitorInfo.rcWork.top;
     }
     else
     {
-        /* Default: text mode */
-        WidthUnit  = GuiData->CharWidth ;
-        HeightUnit = GuiData->CharHeight;
+        /*
+         * Retrieve the width and height of the client area for a full-screen
+         * window on the primary display monitor.
+         */
+        Width  = GetSystemMetrics(SM_CXFULLSCREEN);
+        Height = GetSystemMetrics(SM_CYFULLSCREEN);
+
+        // RECT WorkArea;
+        // SystemParametersInfoW(SPI_GETWORKAREA, 0, &WorkArea, 0);
+        // Width  = WorkArea.right;
+        // Height = WorkArea.bottom;
     }
 
-    width  = WorkArea.right;
-    height = WorkArea.bottom;
+    ActiveBuffer = GuiData->ActiveBuffer;
+#if 0
+    // NOTE: This would be surprising if we wouldn't have an associated buffer...
+    if (ActiveBuffer)
+#endif
+        GetScreenBufferSizeUnits(ActiveBuffer, GuiData, &WidthUnit, &HeightUnit);
+#if 0
+    else
+        /* Default: graphics mode */
+        WidthUnit = HeightUnit = 1;
+#endif
 
-    width  -= (2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE)));
-    height -= (2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION));
+    Width  -= (2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE)));
+    Height -= (2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION));
 
-    if (width  < 0) width  = 0;
-    if (height < 0) height = 0;
+    if (Width  < 0) Width  = 0;
+    if (Height < 0) Height = 0;
 
-    pSize->X = (SHORT)(width  / (int)WidthUnit ) /* HACK */ + 2;
-    pSize->Y = (SHORT)(height / (int)HeightUnit) /* HACK */ + 1;
+    pSize->X = (SHORT)(Width  / (int)WidthUnit ) /* HACK */ + 2;
+    pSize->Y = (SHORT)(Height / (int)HeightUnit) /* HACK */ + 1;
 }
 
 static BOOL NTAPI
@@ -1276,8 +1272,8 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
 #endif
 
     // Font data
-    wcsncpy(GuiInitInfo->TermInfo.FaceName, ConsoleInfo->FaceName, LF_FACESIZE);
-    GuiInitInfo->TermInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
+    StringCchCopyNW(GuiInitInfo->TermInfo.FaceName, ARRAYSIZE(GuiInitInfo->TermInfo.FaceName),
+                    ConsoleInfo->FaceName, ARRAYSIZE(ConsoleInfo->FaceName));
     GuiInitInfo->TermInfo.FontFamily = ConsoleInfo->FontFamily;
     GuiInitInfo->TermInfo.FontSize   = ConsoleInfo->FontSize;
     GuiInitInfo->TermInfo.FontWeight = ConsoleInfo->FontWeight;

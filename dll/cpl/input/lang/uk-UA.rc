@@ -14,10 +14,10 @@ CAPTION "Параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Виберіть потрібні розкладки для кожної мови введення зі списку. Для зміни списку використовуйте кнопки ""Додати"" і ""Видалити"".", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "Встановити за замов&чуванням", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Додати...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "В&идалити...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "В&идалити", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "В&ластивості...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Налаштування", -1, 7, 185, 240, 36
     PUSHBUTTON "&Параметри клавіатури...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -168,6 +168,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Мальдівська (фонетична)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Мальдівська (друкарська машинка)"
     IDS_DUTCH_LAYOUT "Нідерландська"
+    IDS_ESPERANTO_LAYOUT "Есперанто"
     IDS_ESTONIAN_LAYOUT "Естонська"
     IDS_FAEROESE_LAYOUT "Фарерська"
     IDS_FARSI_LAYOUT "Перська"

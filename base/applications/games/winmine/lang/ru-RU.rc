@@ -3,7 +3,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPNAME "WineMine"
-    IDS_NOBODY "Nobody"
+    IDS_NOBODY "Игрок"
     IDS_ABOUT "Copyright 2000 Joshua Thielen"
 END
 

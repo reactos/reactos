@@ -45,7 +45,7 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
     _SEH2_TRY
     {
         /* FIXME
-            the D3D object can be optained from here
+            the D3D object can be obtained from here
             Direct3D7
         */
         if (IsEqualGUID(&IID_IDirectDraw7, id))
@@ -161,7 +161,7 @@ Main_DirectDraw_AddRef (LPDDRAWI_DIRECTDRAW_INT This)
 
         if (This->lpLcl->lpGbl != NULL)
         {
-            /* Increment the gobal internal ref counter */
+            /* Increment the global internal ref counter */
             This->lpLcl->lpGbl->dwRefCnt++;
         }
     }
@@ -214,7 +214,7 @@ Main_DirectDraw_Release (LPDDRAWI_DIRECTDRAW_INT This)
 
             if ( This->lpLcl->lpGbl->dwRefCnt == 0)
             {
-                // set resoltion back to the one in registry
+                // set resolution back to the one in registry
                 /*if(This->cooperative_level & DDSCL_EXCLUSIVE)
                 {
                     ChangeDisplaySettings(NULL, 0);
@@ -254,7 +254,7 @@ Main_DirectDraw_Initialize (LPDDRAWI_DIRECTDRAW_INT This, LPGUID lpGUID)
 * @name DDraw->Compact
 * @implemented
 *
-* In exlusive mode the function DDraw->Compact returns DERR_NOEXCLUSIVEMODE, otherwise it returns DD_OK
+* In exclusive mode the function DDraw->Compact returns DERR_NOEXCLUSIVEMODE, otherwise it returns DD_OK
 *
 * @return
 * Returns only error code DD_OK or DERR_NOEXCLUSIVEMODE
@@ -325,7 +325,7 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
 
     _SEH2_TRY
     {
-        // There is no HEL implentation of this api
+        // There is no HEL implementation of this api
         if (!(This->lpLcl->lpDDCB->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY) ||
             (This->lpLcl->lpGbl->dwFlags & DDRAWI_NOHARDWARE) )
         {
@@ -465,7 +465,7 @@ Main_DirectDraw_GetFourCCCodes(LPDDRAWI_DIRECTDRAW_INT This, LPDWORD lpNumCodes,
 
 
 /*
- * We can optain the version of the directdraw object by compare the
+ * We can obtain the version of the directdraw object by compare the
  * vtl table pointer from iface we do not need pass which version
  * we whant to use
  *
@@ -539,7 +539,7 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
     return ret;
 }
 
-/* 5 of 31 DirectDraw7_Vtable api are working simluare to windows */
+/* 5 of 31 DirectDraw7_Vtable api are working similar to windows */
 /* 8 of 31 DirectDraw7_Vtable api are under devloping / testing */
 
 HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,

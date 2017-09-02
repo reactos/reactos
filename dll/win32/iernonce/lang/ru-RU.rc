@@ -1,0 +1,30 @@
+/* Russian language resource file by Stopkin Sergey (stopkin.sergey@gmail.com) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFORMAT "Недопустимый формат записи %1 RunEx или RunOnceEx. Требуется использование вертикальной черты ('|') после имени функции. Также функция должна поддерживать WinMain() параметры"
+    IDS_LOADERROR "Произошла ошибка при загрузке %1. Возможно, файл не был установлен или он был поврежден."
+    IDS_CALLERROR "При вызове функции %1 из %2 произошла ошибка или исключение."
+    IDS_INCORRECTFORMAT "Недопустимый формат команды RunEx или RunOnceEx: %1. Команда выполнения оболочки должна начинаться с ||."
+    // IDS_INCORRECTFORMAT "Неверный формат команды RunEx или RunOnceEx: %1. Команда выполнения для оболочки должна начинаться с ||."
+    IDS_NOEXPORT "Неудалось вызвать функцию %1 в файле %2. Функция не существует или не экспортируется."
+    IDS_EXECUTEERROR "Во время выполнения %1 произошла ошибка или исключение."
+    IDS_NOFUNCTION "Не удается найти функцию %1 в файле %2."
+    IDS_NODEPENDENCY "Не удалось загрузить требуемый файл %1."
+    IDS_SETUPERROR "Произошла ошибка при настройке 1%. Эта ошибка была занесена в журнал, установка будет продолжена"
+    IDS_INCOMPLETE "Предыдущая установка приложения не была завершена.\n\nВойдите в систему, используя учетную запись Администратора для завершения установки."
+    IDS_SETUP "ReactOS Setup"
+    IDS_SERVICEERROR "Некоторые службы не могут быть запущены. Программе установки необходимо перезагрузить систему для того, чтобы запустить службы."
+END
+
+IDD_DIALOG DIALOGEX 0, 0, 206, 166
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS настраивает следующие параметры:", -1, 36, 13, 163, 11
+    LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ICON, -1, 7, 7, 20, 20
+END

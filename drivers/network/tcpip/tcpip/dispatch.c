@@ -324,7 +324,7 @@ NTSTATUS DispTdiAssociateAddress(
   if (Connection->AddressFile) {
     ObDereferenceObject(FileObject);
     UnlockObject(Connection, OldIrql);
-    TI_DbgPrint(MID_TRACE, ("An address file is already asscociated.\n"));
+    TI_DbgPrint(MID_TRACE, ("An address file is already associated.\n"));
     return STATUS_INVALID_PARAMETER;
   }
 
@@ -400,6 +400,8 @@ NTSTATUS DispTdiConnect(
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
+  IoMarkIrpPending(Irp);
+
   /* Get associated connection endpoint file object. Quit if none exists */
 
   TranContext = IrpSp->FileObject->FsContext;
@@ -434,12 +436,11 @@ NTSTATUS DispTdiConnect(
 done:
   if (Status != STATUS_PENDING) {
       DispDataRequestComplete(Irp, Status, 0);
-  } else
-      IoMarkIrpPending(Irp);
+  }
 
   TI_DbgPrint(MAX_TRACE, ("TCP Connect returned %08x\n", Status));
 
-  return Status;
+  return STATUS_PENDING;
 }
 
 
@@ -502,6 +503,8 @@ NTSTATUS DispTdiDisconnect(
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   DisReq = (PTDI_REQUEST_KERNEL_DISCONNECT)&IrpSp->Parameters;
 
+  IoMarkIrpPending(Irp);
+
   /* Get associated connection endpoint file object. Quit if none exists */
 
   TranContext = IrpSp->FileObject->FsContext;
@@ -537,12 +540,11 @@ NTSTATUS DispTdiDisconnect(
 done:
    if (Status != STATUS_PENDING) {
        DispDataRequestComplete(Irp, Status, 0);
-   } else
-       IoMarkIrpPending(Irp);
+   }
 
   TI_DbgPrint(MAX_TRACE, ("TCP Disconnect returned %08x\n", Status));
 
-  return Status;
+  return STATUS_PENDING;
 }
 
 
@@ -566,6 +568,8 @@ NTSTATUS DispTdiListen(
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+  IoMarkIrpPending(Irp);
 
   /* Get associated connection endpoint file object. Quit if none exists */
 
@@ -649,12 +653,11 @@ NTSTATUS DispTdiListen(
 done:
   if (Status != STATUS_PENDING) {
       DispDataRequestComplete(Irp, Status, 0);
-  } else
-      IoMarkIrpPending(Irp);
+  }
 
   TI_DbgPrint(MID_TRACE,("Leaving %x\n", Status));
 
-  return Status;
+  return STATUS_PENDING;
 }
 
 
@@ -807,6 +810,8 @@ NTSTATUS DispTdiReceive(
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   ReceiveInfo = (PTDI_REQUEST_KERNEL_RECEIVE)&(IrpSp->Parameters);
 
+  IoMarkIrpPending(Irp);
+
   TranContext = IrpSp->FileObject->FsContext;
   if (TranContext == NULL)
     {
@@ -844,12 +849,11 @@ NTSTATUS DispTdiReceive(
 done:
   if (Status != STATUS_PENDING) {
       DispDataRequestComplete(Irp, Status, BytesReceived);
-  } else
-      IoMarkIrpPending(Irp);
+  }
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
-  return Status;
+  return STATUS_PENDING;
 }
 
 
@@ -874,6 +878,8 @@ NTSTATUS DispTdiReceiveDatagram(
 
   IrpSp     = IoGetCurrentIrpStackLocation(Irp);
   DgramInfo = (PTDI_REQUEST_KERNEL_RECEIVEDG)&(IrpSp->Parameters);
+
+  IoMarkIrpPending(Irp);
 
   TranContext = IrpSp->FileObject->FsContext;
   if (TranContext == NULL)
@@ -918,12 +924,11 @@ NTSTATUS DispTdiReceiveDatagram(
 done:
    if (Status != STATUS_PENDING) {
        DispDataRequestComplete(Irp, Status, BytesReceived);
-   } else
-       IoMarkIrpPending(Irp);
+   }
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
-  return Status;
+  return STATUS_PENDING;
 }
 
 
@@ -947,6 +952,8 @@ NTSTATUS DispTdiSend(
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   SendInfo = (PTDI_REQUEST_KERNEL_SEND)&(IrpSp->Parameters);
+
+  IoMarkIrpPending(Irp);
 
   TranContext = IrpSp->FileObject->FsContext;
   if (TranContext == NULL)
@@ -990,12 +997,11 @@ NTSTATUS DispTdiSend(
 done:
    if (Status != STATUS_PENDING) {
        DispDataRequestComplete(Irp, Status, BytesSent);
-   } else
-       IoMarkIrpPending(Irp);
+   }
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
-  return Status;
+  return STATUS_PENDING;
 }
 
 
@@ -1019,6 +1025,8 @@ NTSTATUS DispTdiSendDatagram(
 
     IrpSp       = IoGetCurrentIrpStackLocation(Irp);
     DgramInfo   = (PTDI_REQUEST_KERNEL_SENDDG)&(IrpSp->Parameters);
+
+    IoMarkIrpPending(Irp);
 
     TranContext = IrpSp->FileObject->FsContext;
     if (TranContext == NULL)
@@ -1074,12 +1082,11 @@ NTSTATUS DispTdiSendDatagram(
 done:
     if (Status != STATUS_PENDING) {
         DispDataRequestComplete(Irp, Status, Irp->IoStatus.Information);
-    } else
-        IoMarkIrpPending(Irp);
+    }
 
     TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));
 
-    return Status;
+    return STATUS_PENDING;
 }
 
 

@@ -307,7 +307,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
       {
          if (pWnd->pcls->spcur)
          {
-            UserSetCursor(pWnd->pcls->spcur, FALSE);
+            IntSystemSetCursor(pWnd->pcls->spcur);
 	 }
 	 return FALSE;
       }
@@ -319,7 +319,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          {
             break;
          }
-         UserSetCursor(SYSTEMCUR(SIZEWE), FALSE);
+         IntSystemSetCursor(SYSTEMCUR(SIZEWE));
          return TRUE;
       }
 
@@ -330,7 +330,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          {
             break;
          }
-         UserSetCursor(SYSTEMCUR(SIZENS), FALSE);
+         IntSystemSetCursor(SYSTEMCUR(SIZENS));
          return TRUE;
        }
 
@@ -341,7 +341,7 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          {
             break;
          }
-         UserSetCursor(SYSTEMCUR(SIZENWSE), FALSE);
+         IntSystemSetCursor(SYSTEMCUR(SIZENWSE));
          return TRUE;
        }
 
@@ -352,11 +352,11 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          {
             break;
          }
-         UserSetCursor(SYSTEMCUR(SIZENESW), FALSE);
+         IntSystemSetCursor(SYSTEMCUR(SIZENESW));
          return TRUE;
        }
    }
-   UserSetCursor(SYSTEMCUR(ARROW), FALSE);
+   IntSystemSetCursor(SYSTEMCUR(ARROW));
    return FALSE;
 }
 
@@ -720,6 +720,16 @@ IntDefWindowProc(
            */
            ERR("WM_NCRBUTTONUP\n");
           break;
+
+      case WM_XBUTTONUP:
+      case WM_NCXBUTTONUP:
+          if (HIWORD(wParam) == XBUTTON1 || HIWORD(wParam) == XBUTTON2)
+          {
+              co_IntSendMessage(UserHMGetHandle(Wnd), WM_APPCOMMAND, (WPARAM)UserHMGetHandle(Wnd),
+                                MAKELPARAM(LOWORD(wParam), FAPPCOMMAND_MOUSE | HIWORD(wParam)));
+          }
+          break;
+
 
       case WM_CONTEXTMENU:
       {

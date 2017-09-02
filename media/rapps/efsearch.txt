@@ -24,8 +24,8 @@ Size = 944,4 Kio
 
 [Section.0419]
 License = Бесплатно
-Description = Утилита для поиска файлов, совместимая с ReactOS.  
-Size = 944,4 КБ
+Description = Утилита для поиска файлов, совместимая с ReactOS.
+Size = 944,4 КиБ
 
 [Section.041f]
 Name = Etkili Kütük Arama

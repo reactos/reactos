@@ -69,7 +69,7 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "&Oyun"
     BEGIN
-        MENUITEM "&Dağıt\tİ2", IDM_GAME_NEW
+        MENUITEM "&Dağıt\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
         MENUITEM "D&esteler...", IDM_GAME_DECK
         MENUITEM "&Seçenekler...", IDM_GAME_OPTIONS
@@ -78,7 +78,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&İçindekiler\tİ1", IDM_HELP_CONTENTS
+        MENUITEM "&İçindekiler\tF1", IDM_HELP_CONTENTS
         MENUITEM "&Üzerine...", IDM_HELP_ABOUT
     END
 END

@@ -29,7 +29,7 @@ Size = 4,8 Mio
 
 [Section.0419]
 Description = Программа эмуляции аппаратного обеспечения IBM PC (IA-32). Эмулирует x86-совместимые процессоры, поддерживает MMX, SSE, SSE2, 3DNow!, SSE3, SSE4, x86-64, VMX, AES.
-Size = 4,8 МБ
+Size = 4,8 МиБ
 
 [Section.041f]
 License = LGPL sürüm 2

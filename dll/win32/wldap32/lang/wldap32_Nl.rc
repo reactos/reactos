@@ -36,7 +36,7 @@ STRINGTABLE
     11 "Administratieve limiet overschreden"
     12 "Kritieke extensie niet beschikbaar"
     13 "Vertrouwelijkheid vereist"
-    14 ""
+    14 "SASL Bind in Progress"
     15 ""
     16 "Attribuut bestaat niet"
     17 "Ongedefinieerd type"

@@ -20,6 +20,8 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
+/* The error constants are defined in an enum and thus cannot be used here. */
+
 STRINGTABLE
 {
     0 "Success"
@@ -36,7 +38,7 @@ STRINGTABLE
     11 "Administration Limit Exceeded"
     12 "Unavailable Critical Extension"
     13 "Confidentiality Required"
-    14 ""
+    14 "SASL Bind in Progress"
     15 ""
     16 "No Such Attribute"
     17 "Undefined Type"

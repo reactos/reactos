@@ -20,6 +20,7 @@
 #include <winnls.h>
 #include <winreg.h>
 #define NTOS_MODE_USER
+#include <ndk/exfuncs.h>
 #include <ndk/rtlfuncs.h>
 
 #include <secext.h>

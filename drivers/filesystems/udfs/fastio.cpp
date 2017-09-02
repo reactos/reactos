@@ -121,7 +121,7 @@ UDFIsFastIoPossible(
 {
     if( !(Fcb->Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_MOUNTED) /*||
         !FsRtlOplockIsFastIoPossible(&(Fcb->Oplock))*/ ) {
-        KdPrint(("    FastIoIsNotPossible\n"));
+        UDFPrint(("    FastIoIsNotPossible\n"));
         return FastIoIsNotPossible;
     }
 /*
@@ -132,10 +132,10 @@ UDFIsFastIoPossible(
     }
 */
     if(FsRtlAreThereCurrentFileLocks(&(Fcb->NTRequiredFCB->FileLock)) ) {
-        KdPrint(("    FastIoIsQuestionable\n"));
+        UDFPrint(("    FastIoIsQuestionable\n"));
         return FastIoIsQuestionable;
     }
-    KdPrint(("    FastIoIsPossible\n"));
+    UDFPrint(("    FastIoIsPossible\n"));
     return FastIoIsPossible;
 } // end UDFIsFastIoPossible()
 
@@ -175,7 +175,7 @@ UDFFastIoQueryBasicInfo(
 
     FsRtlEnterFileSystem();
 
-    KdPrint(("UDFFastIo  \n"));
+    UDFPrint(("UDFFastIo  \n"));
     // if the file is already opended we can satisfy this request
     // immediately 'cause all the data we need must be cached
     _SEH2_TRY {
@@ -265,7 +265,7 @@ UDFFastIoQueryStdInfo(
 
     FsRtlEnterFileSystem();
 
-    KdPrint(("UDFFastIo  \n"));
+    UDFPrint(("UDFFastIo  \n"));
     // if the file is already opended we can satisfy this request
     // immediately 'cause all the data we need must be cached
     _SEH2_TRY {
@@ -616,7 +616,7 @@ UDFFastIoQueryNetInfo(
 
     FsRtlEnterFileSystem();
 
-    KdPrint(("UDFFastIo  \n"));
+    UDFPrint(("UDFFastIo  \n"));
     // if the file is already opended we can satisfy this request
     // immediately 'cause all the data we need must be cached
     _SEH2_TRY {

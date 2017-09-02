@@ -57,10 +57,13 @@ struct JoyDev
 {
     char device[MAX_PATH];
     char name[MAX_PATH];
+    GUID guid_product;
 
     BYTE axis_count;
     BYTE button_count;
     int  *dev_axes_map;
+
+    WORD vendor_id, product_id, bus_type;
 };
 
 typedef struct JoystickImpl JoystickImpl;
@@ -100,11 +103,47 @@ static const GUID DInput_Wine_Joystick_GUID = { /* 9e573ed9-7734-11d2-8d4a-23903
   {0x8d, 0x4a, 0x23, 0x90, 0x3f, 0xb6, 0xbd, 0xf7}
 };
 
+/*
+ * Construct the GUID in the same way of Windows doing this.
+ * Data1 is concatenation of productid and vendorid.
+ * Data2 and Data3 are NULL.
+ * Data4 seems to be a constant.
+ */
+static const GUID DInput_Wine_Joystick_Constant_Part_GUID = {
+  0x000000000,
+  0x0000,
+  0x0000,
+  {0x00, 0x00, 0x50, 0x49, 0x44, 0x56, 0x49, 0x44}
+};
+
 #define MAX_JOYSTICKS 64
 static INT joystick_devices_count = -1;
 static struct JoyDev *joystick_devices;
 
 static void joy_polldev(LPDIRECTINPUTDEVICE8A iface);
+
+#define SYS_PATH_FORMAT "/sys/class/input/js%d/device/id/%s"
+static BOOL read_sys_id_variable(int index, const char *property, WORD *value)
+{
+    char sys_path[sizeof(SYS_PATH_FORMAT) + 16], id_str[5];
+    int sys_fd;
+    BOOL ret = FALSE;
+
+    sprintf(sys_path, SYS_PATH_FORMAT, index, property);
+    if ((sys_fd = open(sys_path, O_RDONLY)) != -1)
+    {
+        if (read(sys_fd, id_str, 4) == 4)
+        {
+            id_str[4] = '\0';
+            *value = strtol(id_str, NULL, 16);
+            ret = TRUE;
+        }
+
+        close(sys_fd);
+    }
+    return ret;
+}
+#undef SYS_PATH_FORMAT
 
 static INT find_joystick_devices(void)
 {
@@ -120,10 +159,10 @@ static INT find_joystick_devices(void)
         BYTE axes_map[ABS_MAX + 1];
 
         snprintf(joydev.device, sizeof(joydev.device), "%s%d", JOYDEV_NEW, i);
-        if ((fd = open(joydev.device, O_RDONLY)) < 0)
+        if ((fd = open(joydev.device, O_RDONLY)) == -1)
         {
             snprintf(joydev.device, sizeof(joydev.device), "%s%d", JOYDEV_OLD, i);
-            if ((fd = open(joydev.device, O_RDONLY)) < 0) continue;
+            if ((fd = open(joydev.device, O_RDONLY)) == -1) continue;
         }
 
         strcpy(joydev.name, "Wine Joystick");
@@ -169,20 +208,56 @@ static INT find_joystick_devices(void)
         else
             if ((joydev.dev_axes_map = HeapAlloc(GetProcessHeap(), 0, joydev.axis_count * sizeof(int))))
             {
-                INT j;
+                INT j, found_axes = 0;
 
                 /* Remap to DI numbers */
                 for (j = 0; j < joydev.axis_count; j++)
+                {
                     if (axes_map[j] < 8)
+                    {
                         /* Axis match 1-to-1 */
                         joydev.dev_axes_map[j] = j;
+                        found_axes++;
+                    }
                     else if (axes_map[j] == 16 ||
                              axes_map[j] == 17)
+                    {
                         /* POV axis */
                         joydev.dev_axes_map[j] = 8;
+                        found_axes++;
+                    }
                     else
                         joydev.dev_axes_map[j] = -1;
+                }
+
+                /* If no axes were configured but there are axes assume a 1-to-1 (wii controller) */
+                if (joydev.axis_count && !found_axes)
+                {
+                    ERR("Incoherent joystick data, advertised %d axes, detected 0. Assuming 1-to-1.\n",
+                         joydev.axis_count);
+                    for (j = 0; j < joydev.axis_count; j++)
+                        joydev.dev_axes_map[j] = j;
+                }
             }
+
+        /* Find vendor_id and product_id in sysfs */
+        joydev.vendor_id  = 0;
+        joydev.product_id = 0;
+
+        read_sys_id_variable(i, "vendor", &joydev.vendor_id);
+        read_sys_id_variable(i, "product", &joydev.product_id);
+        read_sys_id_variable(i, "bustype", &joydev.bus_type);
+
+        if (joydev.vendor_id == 0 || joydev.product_id == 0)
+        {
+            joydev.guid_product = DInput_Wine_Joystick_GUID;
+        }
+        else
+        {
+            /* Concatenate product_id with vendor_id to mimic Windows behaviour */
+            joydev.guid_product       = DInput_Wine_Joystick_Constant_Part_GUID;
+            joydev.guid_product.Data1 = MAKELONG(joydev.vendor_id, joydev.product_id);
+        }
 
         close(fd);
 
@@ -203,29 +278,6 @@ static INT find_joystick_devices(void)
     return joystick_devices_count;
 }
 
-static void fill_joystick_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
-{
-    DWORD dwSize = lpddi->dwSize;
-
-    TRACE("%d %p\n", dwSize, lpddi);
-    memset(lpddi, 0, dwSize);
-
-    /* Return joystick */
-    lpddi->dwSize = dwSize;
-    lpddi->guidInstance = DInput_Wine_Joystick_GUID;
-    lpddi->guidInstance.Data3 = id;
-    lpddi->guidProduct = DInput_Wine_Joystick_GUID;
-    /* we only support traditional joysticks for now */
-    if (version >= 0x0800)
-        lpddi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
-    else
-        lpddi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
-    strcpy(lpddi->tszInstanceName, joystick_devices[id].name);
-    strcpy(lpddi->tszProductName,  joystick_devices[id].name);
-
-    lpddi->guidFFDriver = GUID_NULL;
-}
-
 static void fill_joystick_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
 {
     DWORD dwSize = lpddi->dwSize;
@@ -237,16 +289,51 @@ static void fill_joystick_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD ver
     lpddi->dwSize = dwSize;
     lpddi->guidInstance = DInput_Wine_Joystick_GUID;
     lpddi->guidInstance.Data3 = id;
-    lpddi->guidProduct = DInput_Wine_Joystick_GUID;
+    lpddi->guidProduct = joystick_devices[id].guid_product;
     /* we only support traditional joysticks for now */
     if (version >= 0x0800)
         lpddi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
     else
         lpddi->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
 
+    /* Assume the joystick as HID if it is attached to USB bus and has a valid VID/PID */
+    if (joystick_devices[id].bus_type == BUS_USB &&
+        joystick_devices[id].vendor_id && joystick_devices[id].product_id)
+    {
+        lpddi->dwDevType |= DIDEVTYPE_HID;
+        lpddi->wUsagePage = 0x01; /* Desktop */
+        if (lpddi->dwDevType == DI8DEVTYPE_JOYSTICK || lpddi->dwDevType == DIDEVTYPE_JOYSTICK)
+            lpddi->wUsage = 0x04; /* Joystick */
+        else
+            lpddi->wUsage = 0x05; /* Game Pad */
+    }
+
     MultiByteToWideChar(CP_ACP, 0, joystick_devices[id].name, -1, lpddi->tszInstanceName, MAX_PATH);
     MultiByteToWideChar(CP_ACP, 0, joystick_devices[id].name, -1, lpddi->tszProductName, MAX_PATH);
     lpddi->guidFFDriver = GUID_NULL;
+}
+
+static void fill_joystick_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
+{
+    DIDEVICEINSTANCEW lpddiW;
+    DWORD dwSize = lpddi->dwSize;
+
+    lpddiW.dwSize = sizeof(lpddiW);
+    fill_joystick_dideviceinstanceW(&lpddiW, version, id);
+
+    TRACE("%d %p\n", dwSize, lpddi);
+    memset(lpddi, 0, dwSize);
+
+    /* Convert W->A */
+    lpddi->dwSize = dwSize;
+    lpddi->guidInstance = lpddiW.guidInstance;
+    lpddi->guidProduct = lpddiW.guidProduct;
+    lpddi->dwDevType = lpddiW.dwDevType;
+    strcpy(lpddi->tszInstanceName, joystick_devices[id].name);
+    strcpy(lpddi->tszProductName,  joystick_devices[id].name);
+    lpddi->guidFFDriver = lpddiW.guidFFDriver;
+    lpddi->wUsagePage = lpddiW.wUsagePage;
+    lpddi->wUsage = lpddiW.wUsage;
 }
 
 static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
@@ -264,14 +351,14 @@ static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINS
 	((dwDevType == DIDEVTYPE_JOYSTICK) && (version > 0x0300 && version < 0x0800)) ||
 	(((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))) {
         /* check whether we have a joystick */
-        if ((fd = open(joystick_devices[id].device, O_RDONLY)) < 0)
+        if ((fd = open(joystick_devices[id].device, O_RDONLY)) == -1)
         {
-            WARN("open(%s, O_RDONLY) failed: %s\n", joystick_devices[id].name, strerror(errno));
+            WARN("open(%s, O_RDONLY) failed: %s\n", joystick_devices[id].device, strerror(errno));
             return S_FALSE;
         }
         fill_joystick_dideviceinstanceA( lpddi, version, id );
         close(fd);
-        TRACE("Enumerating the linux Joystick device: %s (%s)\n", joystick_devices[id].device, lpddi->tszProductName);
+        TRACE("Enumerating the linux Joystick device: %s (%s)\n", joystick_devices[id].device, joystick_devices[id].name);
         return S_OK;
     }
 
@@ -293,9 +380,9 @@ static HRESULT joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINS
 	((dwDevType == DIDEVTYPE_JOYSTICK) && (version > 0x0300 && version < 0x0800)) ||
 	(((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))) {
         /* check whether we have a joystick */
-        if ((fd = open(joystick_devices[id].device, O_RDONLY)) < 0)
+        if ((fd = open(joystick_devices[id].device, O_RDONLY)) == -1)
         {
-            WARN("open(%s,O_RDONLY) failed: %s\n", joystick_devices[id].device, strerror(errno));
+            WARN("open(%s, O_RDONLY) failed: %s\n", joystick_devices[id].device, strerror(errno));
             return S_FALSE;
         }
         fill_joystick_dideviceinstanceW( lpddi, version, id );
@@ -315,6 +402,7 @@ static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,
     HRESULT hr;
     LPDIDATAFORMAT df = NULL;
     int idx = 0;
+    DIDEVICEINSTANCEW ddi;
 
     TRACE("%s %p %p %hu\n", debugstr_guid(rguid), dinput, pdev, index);
 
@@ -405,10 +493,11 @@ static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,
 
     newDevice->generic.devcaps.dwSize = sizeof(newDevice->generic.devcaps);
     newDevice->generic.devcaps.dwFlags = DIDC_ATTACHED;
-    if (newDevice->generic.base.dinput->dwVersion >= 0x0800)
-        newDevice->generic.devcaps.dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
-    else
-        newDevice->generic.devcaps.dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
+
+    ddi.dwSize = sizeof(ddi);
+    fill_joystick_dideviceinstanceW(&ddi, newDevice->generic.base.dinput->dwVersion, index);
+    newDevice->generic.devcaps.dwDevType = ddi.dwDevType;
+
     newDevice->generic.devcaps.dwFFSamplePeriod = 0;
     newDevice->generic.devcaps.dwFFMinTimeResolution = 0;
     newDevice->generic.devcaps.dwFirmwareRevision = 0;
@@ -567,6 +656,16 @@ static HRESULT WINAPI JoystickLinuxWImpl_GetProperty(LPDIRECTINPUTDEVICE8W iface
 
     switch (LOWORD(rguid)) {
 
+        case (DWORD_PTR) DIPROP_VIDPID:
+        {
+            LPDIPROPDWORD pd = (LPDIPROPDWORD)pdiph;
+
+            if (!This->joydev->product_id || !This->joydev->vendor_id)
+                return DIERR_UNSUPPORTED;
+            pd->dwData = MAKELONG(This->joydev->vendor_id, This->joydev->product_id);
+            TRACE("DIPROP_VIDPID(%08x)\n", pd->dwData);
+            break;
+        }
         case (DWORD_PTR) DIPROP_JOYSTICKID:
         {
             LPDIPROPDWORD pd = (LPDIPROPDWORD)pdiph;

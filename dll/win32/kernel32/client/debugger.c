@@ -530,7 +530,7 @@ DebugActiveProcessStop(IN DWORD dwProcessId)
     /* Close all the process handles */
     CloseAllProcessHandles(dwProcessId);
 
-    /* Now stop debgging the process */
+    /* Now stop debugging the process */
     Status = DbgUiStopDebugging(Handle);
     Status1 = NtClose(Handle);
     ASSERT(NT_SUCCESS(Status1));

@@ -652,8 +652,8 @@ HidClassPDO_CreatePDO(
     //
     // first allocate device relations
     //
-    Length = sizeof(DEVICE_RELATIONS) + sizeof(PDEVICE_OBJECT) * FDODeviceExtension->Common.DeviceDescription.CollectionDescLength;
-    DeviceRelations = ExAllocatePoolWithTag(NonPagedPool, Length, HIDCLASS_TAG);
+    Length = FIELD_OFFSET(DEVICE_RELATIONS, Objects) + sizeof(PDEVICE_OBJECT) * FDODeviceExtension->Common.DeviceDescription.CollectionDescLength;
+    DeviceRelations = ExAllocatePoolWithTag(PagedPool, Length, HIDCLASS_TAG);
     if (!DeviceRelations)
     {
         //

@@ -963,8 +963,12 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
     ULONG NumberOfEntries;
     PEFI_PARTITION_HEADER EfiHeader;
     EFI_PARTITION_ENTRY PartitionEntry;
+#if 0
     BOOLEAN UpdatedPartitionTable = FALSE;
     ULONGLONG SectorsForPartitions, PartitionEntryLBA;
+#else
+    ULONGLONG PartitionEntryLBA;
+#endif
     PDRIVE_LAYOUT_INFORMATION_EX DriveLayoutEx = NULL;
     ULONG i, PartitionCount, PartitionIndex, PartitionsPerSector;
     PAGED_CODE();
@@ -996,6 +1000,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+#if 0
     if (!ReadBackupTable)
     {
         /* If we weren't ask to read backup table,
@@ -1015,6 +1020,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
             UpdatedPartitionTable = TRUE;
         }
     }
+#endif
 
     DriveLayoutEx->PartitionStyle = PARTITION_STYLE_GPT;
     /* Translate LBA -> Offset */
@@ -1083,12 +1089,14 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
     }
     DriveLayoutEx->PartitionCount = PartitionCount;
 
+#if 0
     /* If we updated partition table using backup table, rewrite partition table */
     if (UpdatedPartitionTable)
     {
         IoWritePartitionTableEx(Disk->DeviceObject,
                                 DriveLayoutEx);
     }
+#endif
 
     /* Finally, return read data */
     *DriveLayout = DriveLayoutEx;
@@ -2500,6 +2508,10 @@ IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
                                                              DriveLayout->PartitionCount,
                                                              DriveLayout->PartitionEntry);
                     }
+                }
+                else
+                {
+                    Status = STATUS_INVALID_PARAMETER;
                 }
             }
             break;

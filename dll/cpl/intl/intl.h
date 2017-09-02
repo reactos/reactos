@@ -12,7 +12,6 @@
 #include <winuser.h>
 #include <cpl.h>
 #include <setupapi.h>
-#include <malloc.h>
 #include <ndk/exfuncs.h>
 
 #include "resource.h"
@@ -62,13 +61,15 @@ typedef struct _APPLET
 
 typedef struct _GLOBALDATA
 {
+    /* General */
+    WCHAR szNumPositiveSign[MAX_NUMPOSITIVESIGN];
+    WCHAR szNumNativeDigits[MAX_NUMNATIVEDIGITS];
+
     /* Number */
     WCHAR szNumDecimalSep[MAX_NUMDECIMALSEP];
     WCHAR szNumThousandSep[MAX_NUMTHOUSANDSEP];
     WCHAR szNumNegativeSign[MAX_NUMNEGATIVESIGN];
-    WCHAR szNumPositiveSign[MAX_NUMPOSITIVESIGN];
     WCHAR szNumListSep[MAX_NUMLISTSEP];
-    WCHAR szNumNativeDigits[MAX_NUMNATIVEDIGITS];
     INT nNumNegFormat;
     INT nNumDigits;
     INT nNumLeadingZero;
@@ -102,6 +103,7 @@ typedef struct _GLOBALDATA
     INT nFirstWeekOfYear;
     INT nDate;
     INT nCalendarType;
+    BOOL bEnableYearNotification;
 
     /* Other */
     WCHAR szMiscCountry[MAX_MISCCOUNTRY];
@@ -110,11 +112,11 @@ typedef struct _GLOBALDATA
 
     LCID UserLCID;
     LCID SystemLCID;
-    BOOL fUserLocaleChanged;
+    BOOL bUserLocaleChanged;
     BOOL bApplyToDefaultUser;
 
     GEOID geoid;
-    BOOL fGeoIdChanged;
+    BOOL bGeoIdChanged;
 
     /* Misc */
     BOOL bIsUserAdmin;
@@ -134,7 +136,7 @@ extern GROUPINGDATA GroupingFormats[MAX_GROUPINGFORMATS];
 /* intl.c */
 VOID PrintErrorMsgBox(UINT msg);
 
-VOID
+INT
 ResourceMessageBox(
     HWND hwnd,
     UINT uType,
@@ -191,6 +193,19 @@ InsSpacesFmt(PCWSTR szSourceStr, PCWSTR szFmtStr);
 
 PWSTR
 ReplaceSubStr(PCWSTR szSourceStr, PCWSTR szStrToReplace, PCWSTR szTempl);
+
+VOID
+GetSelectedComboBoxText(
+    HWND hwndDlg,
+    INT nIdDlgItem,
+    PWSTR Buffer,
+    UINT uSize);
+
+VOID
+GetSelectedComboBoxIndex(
+    HWND hwndDlg,
+    INT nIdDlgItem,
+    PINT pValue);
 
 /* kblayouts.c */
 VOID AddNewKbLayoutsByLcid(LCID Lcid);

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -225,6 +225,7 @@ AcpiDsMethodError (
     ACPI_WALK_STATE         *WalkState)
 {
     UINT32                  AmlOffset;
+    ACPI_NAME               Name = 0;
 
 
     ACPI_FUNCTION_ENTRY ();
@@ -253,9 +254,16 @@ AcpiDsMethodError (
         AmlOffset = (UINT32) ACPI_PTR_DIFF (WalkState->Aml,
             WalkState->ParserState.AmlStart);
 
-        Status = AcpiGbl_ExceptionHandler (Status,
-            WalkState->MethodNode ?
-                WalkState->MethodNode->Name.Integer : 0,
+        if (WalkState->MethodNode)
+        {
+            Name = WalkState->MethodNode->Name.Integer;
+        }
+        else if (WalkState->DeferredNode)
+        {
+            Name = WalkState->DeferredNode->Name.Integer;
+        }
+
+        Status = AcpiGbl_ExceptionHandler (Status, Name,
             WalkState->Opcode, AmlOffset, NULL);
         AcpiExEnterInterpreter ();
     }
@@ -460,6 +468,9 @@ AcpiDsBeginMethodExecution (
             {
                 ObjDesc->Method.Mutex->Mutex.OriginalSyncLevel =
                     ObjDesc->Method.Mutex->Mutex.SyncLevel;
+
+                ObjDesc->Method.Mutex->Mutex.ThreadId =
+                    AcpiOsGetThreadId ();
             }
         }
 
@@ -775,6 +786,40 @@ AcpiDsTerminateControlMethod (
         AcpiDsMethodDataDeleteAll (WalkState);
 
         /*
+         * Delete any namespace objects created anywhere within the
+         * namespace by the execution of this method. Unless:
+         * 1) This method is a module-level executable code method, in which
+         *    case we want make the objects permanent.
+         * 2) There are other threads executing the method, in which case we
+         *    will wait until the last thread has completed.
+         */
+        if (!(MethodDesc->Method.InfoFlags & ACPI_METHOD_MODULE_LEVEL) &&
+             (MethodDesc->Method.ThreadCount == 1))
+        {
+            /* Delete any direct children of (created by) this method */
+
+            (void) AcpiExExitInterpreter ();
+            AcpiNsDeleteNamespaceSubtree (WalkState->MethodNode);
+            (void) AcpiExEnterInterpreter ();
+
+            /*
+             * Delete any objects that were created by this method
+             * elsewhere in the namespace (if any were created).
+             * Use of the ACPI_METHOD_MODIFIED_NAMESPACE optimizes the
+             * deletion such that we don't have to perform an entire
+             * namespace walk for every control method execution.
+             */
+            if (MethodDesc->Method.InfoFlags & ACPI_METHOD_MODIFIED_NAMESPACE)
+            {
+                (void) AcpiExExitInterpreter ();
+                AcpiNsDeleteNamespaceByOwner (MethodDesc->Method.OwnerId);
+                (void) AcpiExEnterInterpreter ();
+                MethodDesc->Method.InfoFlags &=
+                    ~ACPI_METHOD_MODIFIED_NAMESPACE;
+            }
+        }
+
+        /*
          * If method is serialized, release the mutex and restore the
          * current sync level for this thread
          */
@@ -791,36 +836,6 @@ AcpiDsTerminateControlMethod (
                 AcpiOsReleaseMutex (
                     MethodDesc->Method.Mutex->Mutex.OsMutex);
                 MethodDesc->Method.Mutex->Mutex.ThreadId = 0;
-            }
-        }
-
-        /*
-         * Delete any namespace objects created anywhere within the
-         * namespace by the execution of this method. Unless:
-         * 1) This method is a module-level executable code method, in which
-         *    case we want make the objects permanent.
-         * 2) There are other threads executing the method, in which case we
-         *    will wait until the last thread has completed.
-         */
-        if (!(MethodDesc->Method.InfoFlags & ACPI_METHOD_MODULE_LEVEL) &&
-             (MethodDesc->Method.ThreadCount == 1))
-        {
-            /* Delete any direct children of (created by) this method */
-
-            AcpiNsDeleteNamespaceSubtree (WalkState->MethodNode);
-
-            /*
-             * Delete any objects that were created by this method
-             * elsewhere in the namespace (if any were created).
-             * Use of the ACPI_METHOD_MODIFIED_NAMESPACE optimizes the
-             * deletion such that we don't have to perform an entire
-             * namespace walk for every control method execution.
-             */
-            if (MethodDesc->Method.InfoFlags & ACPI_METHOD_MODIFIED_NAMESPACE)
-            {
-                AcpiNsDeleteNamespaceByOwner (MethodDesc->Method.OwnerId);
-                MethodDesc->Method.InfoFlags &=
-                    ~ACPI_METHOD_MODIFIED_NAMESPACE;
             }
         }
     }

@@ -112,7 +112,6 @@ void __cdecl ept_insert(handle_t h,
             *status = EPT_S_CANT_PERFORM_OP;
             break;
         }
-        list_init(&entry->entry);
         memcpy(entry->annotation, entries[i].annotation, sizeof(entries[i].annotation));
         rpc_status = TowerExplode(entries[i].tower, &entry->iface, &entry->syntax,
                                   &entry->protseq, &entry->endpoint,
@@ -121,6 +120,7 @@ void __cdecl ept_insert(handle_t h,
         {
             WINE_WARN("TowerExplode failed %u\n", rpc_status);
             *status = rpc_status;
+            HeapFree(GetProcessHeap(), 0, entry);
             break; /* FIXME: more cleanup? */
         }
 
@@ -164,6 +164,11 @@ void __cdecl ept_delete(handle_t h,
         if (rpc_status != RPC_S_OK)
             break;
         entry = find_ept_entry(&iface, &syntax, protseq, endpoint, address, &entries[i].object);
+
+        I_RpcFree(protseq);
+        I_RpcFree(endpoint);
+        I_RpcFree(address);
+
         if (entry)
             delete_registered_ept_entry(entry);
         else
@@ -171,9 +176,6 @@ void __cdecl ept_delete(handle_t h,
             *status = EPT_S_NOT_REGISTERED;
             break;
         }
-        I_RpcFree(protseq);
-        I_RpcFree(endpoint);
-        I_RpcFree(address);
     }
 
     LeaveCriticalSection(&csEpm);

@@ -25,6 +25,9 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+#define WRAP_OFFSET(x) ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_WRAP) \
+                       ? ((x) & 0xFFFFF) : LOWORD(x))
+
 static CONST DWORD MemoryBase[] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
 static CONST DWORD MemorySize[] = { 0x20000, 0x10000, 0x08000, 0x08000 };
 
@@ -269,10 +272,11 @@ static BYTE VgaDacRegisters[VGA_PALETTE_SIZE];
 
 // static VGA_REGISTERS VgaRegisters;
 
-static ULONGLONG VerticalRetraceCycle   = 0ULL;
 static ULONGLONG HorizontalRetraceCycle = 0ULL;
-static PHARDWARE_TIMER VSyncTimer;
 static PHARDWARE_TIMER HSyncTimer;
+static DWORD ScanlineCounter = 0;
+static DWORD StartAddressLatch = 0;
+static DWORD ScanlineSizeLatch = 0;
 
 static BOOLEAN NeedsUpdate = FALSE;
 static BOOLEAN ModeChanged = FALSE;
@@ -313,7 +317,12 @@ static inline DWORD VgaGetVideoBaseAddress(VOID)
 
 static inline DWORD VgaGetAddressSize(VOID)
 {
-    if (VgaCrtcRegisters[VGA_CRTC_UNDERLINE_REG] & VGA_CRTC_UNDERLINE_DWORD)
+    if (VgaSeqRegisters[SVGA_SEQ_EXT_MODE_REG] & SVGA_SEQ_EXT_MODE_HIGH_RES)
+    {
+        /* Packed pixel addressing */
+        return 1;
+    }
+    else if (VgaCrtcRegisters[VGA_CRTC_UNDERLINE_REG] & VGA_CRTC_UNDERLINE_DWORD)
     {
         /* Double-word addressing */
         return 4; // sizeof(DWORD)
@@ -330,38 +339,12 @@ static inline DWORD VgaGetAddressSize(VOID)
     }
 }
 
-static inline DWORD VgaTranslateReadAddress(DWORD Address)
+static inline DWORD VgaTranslateAddress(DWORD Address)
 {
     DWORD Offset = LOWORD(Address - VgaGetVideoBaseAddress());
-    BYTE Plane;
-
-    /* Check for chain-4 and odd-even mode */
-    if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
-    {
-        /* The lowest two bits are the plane number */
-        Plane = Offset & 0x03;
-        Offset &= ~3;
-    }
-    else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
-    {
-        /* The LSB is the plane number */
-        Plane = Offset & 0x01;
-        Offset &= ~1;
-    }
-    else
-    {
-        /* Use the read mode */
-        Plane = VgaGcRegisters[VGA_GC_READ_MAP_SEL_REG] & 0x03;
-    }
-
-    /* Return the offset on plane 0 for read mode 1 */
-    if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_READ) return Offset;
-    else return Offset + Plane * VGA_BANK_SIZE;
-}
-
-static inline DWORD VgaTranslateWriteAddress(DWORD Address)
-{
-    DWORD Offset = LOWORD(Address - VgaGetVideoBaseAddress());
+    DWORD ExtOffset = ((VgaGcRegisters[SVGA_GC_EXT_MODE_REG] & SVGA_GC_EXT_MODE_WND_B) && (Offset & (1 << 15)))
+                      ? VgaGcRegisters[SVGA_GC_OFFSET_1_REG]
+                      : VgaGcRegisters[SVGA_GC_OFFSET_0_REG];
 
     /* Check for chain-4 and odd-even mode */
     if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
@@ -373,6 +356,12 @@ static inline DWORD VgaTranslateWriteAddress(DWORD Address)
     {
         /* Clear the lowest bit since it's used to select odd/even */
         Offset &= ~1;
+    }
+
+    if (ExtOffset)
+    {
+        /* Add the extended offset */
+        Offset += ExtOffset << ((VgaGcRegisters[SVGA_GC_EXT_MODE_REG] & SVGA_GC_EXT_MODE_GRAN) ? 14 : 12);
     }
 
     /* Return the offset on plane 0 */
@@ -748,15 +737,11 @@ static VOID VgaUpdateFramebuffer(VOID)
 {
     SHORT i, j, k;
     DWORD AddressSize = VgaGetAddressSize();
-    DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
-    BYTE PresetRowScan = VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F;
+    DWORD Address = StartAddressLatch;
     BYTE BytePanning = (VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3;
-    DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
-                             VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
-                    + PresetRowScan * ScanlineSize
-                    + BytePanning;
     WORD LineCompare = VgaCrtcRegisters[VGA_CRTC_LINE_COMPARE_REG]
-                       | ((VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_LC8) << 4);
+                       | ((VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_LC8) << 4)
+                       | ((VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_LC9) << 3);
     BYTE PixelShift = VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F;
 
     /*
@@ -829,112 +814,116 @@ static VOID VgaUpdateFramebuffer(VOID)
                 /* Apply horizontal pixel panning */
                 if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
                 {
-                    X = j + (PixelShift >> 1);
+                    X = j + ((PixelShift >> 1) & 0x03);
                 }
                 else
                 {
-                    X = j + PixelShift;
+                    X = j + ((PixelShift < 8) ? PixelShift : -1);
                 }
 
-                /* Check the shifting mode */
-                if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_SHIFT256)
+                if (VgaSeqRegisters[SVGA_SEQ_EXT_MODE_REG] & SVGA_SEQ_EXT_MODE_HIGH_RES)
                 {
-                    /* 4 bits shifted from each plane */
+                    // TODO: Check for high color modes
 
-                    /* Check if this is 16 or 256 color mode */
-                    if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
+                    /* 256 color mode */
+                    PixelData = VgaMemory[Address + X];
+                }
+                else
+                {
+                    /* Check the shifting mode */
+                    if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_SHIFT256)
                     {
-                        /* One byte per pixel */
-                        PixelData = VgaMemory[(X % VGA_NUM_BANKS) * VGA_BANK_SIZE
-                                              + LOWORD((Address + (X / VGA_NUM_BANKS))
-                                              * AddressSize)];
-                    }
-                    else
-                    {
-                        /* 4-bits per pixel */
+                        /* 4 bits shifted from each plane */
 
-                        PixelData = VgaMemory[(X % VGA_NUM_BANKS) * VGA_BANK_SIZE
-                                              + LOWORD((Address + (X / (VGA_NUM_BANKS * 2)))
-                                              * AddressSize)];
-
-                        /* Check if we should use the highest 4 bits or lowest 4 */
-                        if (((X / VGA_NUM_BANKS) % 2) == 0)
+                        /* Check if this is 16 or 256 color mode */
+                        if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
                         {
-                            /* Highest 4 */
-                            PixelData >>= 4;
+                            /* One byte per pixel */
+                            PixelData = VgaMemory[WRAP_OFFSET((Address + (X / VGA_NUM_BANKS)) * AddressSize)
+                                                  * VGA_NUM_BANKS + (X % VGA_NUM_BANKS)];
                         }
                         else
                         {
-                            /* Lowest 4 */
-                            PixelData &= 0x0F;
+                            /* 4-bits per pixel */
+
+                            PixelData = VgaMemory[WRAP_OFFSET((Address + (X / (VGA_NUM_BANKS * 2))) * AddressSize)
+                                                  * VGA_NUM_BANKS + ((X / 2) % VGA_NUM_BANKS)];
+
+                            /* Check if we should use the highest 4 bits or lowest 4 */
+                            if ((X % 2) == 0)
+                            {
+                                /* Highest 4 */
+                                PixelData >>= 4;
+                            }
+                            else
+                            {
+                                /* Lowest 4 */
+                                PixelData &= 0x0F;
+                            }
                         }
                     }
-                }
-                else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_SHIFTREG)
-                {
-                    /* Check if this is 16 or 256 color mode */
-                    if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
+                    else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_SHIFTREG)
                     {
-                        // TODO: NOT IMPLEMENTED
-                        DPRINT1("8-bit interleaved mode is not implemented!\n");
-                    }
-                    else
-                    {
-                        /*
-                         * 2 bits shifted from plane 0 and 2 for the first 4 pixels,
-                         * then 2 bits shifted from plane 1 and 3 for the next 4
-                         */
-                        DWORD BankNumber = (X / 4) % 2;
-                        DWORD Offset = Address + (X / 8);
-                        BYTE LowPlaneData = VgaMemory[BankNumber * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
-                        BYTE HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
-
-                        /* Extract the two bits from each plane */
-                        LowPlaneData  = (LowPlaneData  >> (6 - ((X % 4) * 2))) & 0x03;
-                        HighPlaneData = (HighPlaneData >> (6 - ((X % 4) * 2))) & 0x03;
-
-                        /* Combine them into the pixel */
-                        PixelData = LowPlaneData | (HighPlaneData << 2);
-                    }
-                }
-                else
-                {
-                    /* 1 bit shifted from each plane */
-
-                    /* Check if this is 16 or 256 color mode */
-                    if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
-                    {
-                        /* 8 bits per pixel, 2 on each plane */
-
-                        for (k = 0; k < VGA_NUM_BANKS; k++)
+                        /* Check if this is 16 or 256 color mode */
+                        if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
                         {
-                            /* The data is on plane k, 4 pixels per byte */
-                            BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
-                                                       + LOWORD((Address + (X / VGA_NUM_BANKS))
-                                                       * AddressSize)];
+                            // TODO: NOT IMPLEMENTED
+                            DPRINT1("8-bit interleaved mode is not implemented!\n");
+                        }
+                        else
+                        {
+                            /*
+                             * 2 bits shifted from plane 0 and 2 for the first 4 pixels,
+                             * then 2 bits shifted from plane 1 and 3 for the next 4
+                             */
+                            DWORD BankNumber = (X / 4) % 2;
+                            DWORD Offset = Address + (X / 8);
+                            BYTE LowPlaneData = VgaMemory[WRAP_OFFSET(Offset * AddressSize) * VGA_NUM_BANKS + BankNumber];
+                            BYTE HighPlaneData = VgaMemory[WRAP_OFFSET(Offset * AddressSize) * VGA_NUM_BANKS + (BankNumber + 2)];
 
-                            /* The mask of the first bit in the pair */
-                            BYTE BitMask = 1 << (((3 - (X % VGA_NUM_BANKS)) * 2) + 1);
+                            /* Extract the two bits from each plane */
+                            LowPlaneData  = (LowPlaneData  >> (6 - ((X % 4) * 2))) & 0x03;
+                            HighPlaneData = (HighPlaneData >> (6 - ((X % 4) * 2))) & 0x03;
 
-                            /* Bits 0, 1, 2 and 3 come from the first bit of the pair */
-                            if (PlaneData & BitMask) PixelData |= 1 << k;
-
-                            /* Bits 4, 5, 6 and 7 come from the second bit of the pair */
-                            if (PlaneData & (BitMask >> 1)) PixelData |= 1 << (k + 4);
+                            /* Combine them into the pixel */
+                            PixelData = LowPlaneData | (HighPlaneData << 2);
                         }
                     }
                     else
                     {
-                        /* 4 bits per pixel, 1 on each plane */
+                        /* 1 bit shifted from each plane */
 
-                        for (k = 0; k < VGA_NUM_BANKS; k++)
+                        /* Check if this is 16 or 256 color mode */
+                        if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
                         {
-                            BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
-                                                       + LOWORD((Address + (X / (VGA_NUM_BANKS * 2)))
-                                                       * AddressSize)];
+                            /* 8 bits per pixel, 2 on each plane */
 
-                            /* If the bit on that plane is set, set it */
-                            if (PlaneData & (1 << (7 - (X % 8)))) PixelData |= 1 << k;
+                            for (k = 0; k < VGA_NUM_BANKS; k++)
+                            {
+                                /* The data is on plane k, 4 pixels per byte */
+                                BYTE PlaneData = VgaMemory[WRAP_OFFSET((Address + (X >> 2)) * AddressSize) * VGA_NUM_BANKS + k];
+
+                                /* The mask of the first bit in the pair */
+                                BYTE BitMask = 1 << (((3 - (X % VGA_NUM_BANKS)) * 2) + 1);
+
+                                /* Bits 0, 1, 2 and 3 come from the first bit of the pair */
+                                if (PlaneData & BitMask) PixelData |= 1 << k;
+
+                                /* Bits 4, 5, 6 and 7 come from the second bit of the pair */
+                                if (PlaneData & (BitMask >> 1)) PixelData |= 1 << (k + 4);
+                            }
+                        }
+                        else
+                        {
+                            /* 4 bits per pixel, 1 on each plane */
+
+                            for (k = 0; k < VGA_NUM_BANKS; k++)
+                            {
+                                BYTE PlaneData = VgaMemory[WRAP_OFFSET((Address + (X >> 3)) * AddressSize) * VGA_NUM_BANKS + k];
+
+                                /* If the bit on that plane is set, set it */
+                                if (PlaneData & (1 << (7 - (X % 8)))) PixelData |= 1 << k;
+                            }
                         }
                     }
                 }
@@ -1033,7 +1022,7 @@ static VOID VgaUpdateFramebuffer(VOID)
             if (!(VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) || (i & 1))
             {
                 /* Move to the next scanline */
-                Address += ScanlineSize;
+                Address += ScanlineSizeLatch;
             }
         }
 
@@ -1062,13 +1051,13 @@ static VOID VgaUpdateFramebuffer(VOID)
             /* Loop through the characters */
             for (j = 0; j < CurrResolution.X; j++)
             {
-                CurrentAddr = LOWORD((Address + j) * AddressSize);
+                CurrentAddr = WRAP_OFFSET((Address + j) * AddressSize);
 
                 /* Plane 0 holds the character itself */
-                CharInfo.Char = VgaMemory[CurrentAddr];
+                CharInfo.Char = VgaMemory[CurrentAddr * VGA_NUM_BANKS];
 
                 /* Plane 1 holds the attribute */
-                CharInfo.Attributes = VgaMemory[CurrentAddr + VGA_BANK_SIZE];
+                CharInfo.Attributes = VgaMemory[CurrentAddr * VGA_NUM_BANKS + 1];
 
                 /* Now check if the resulting character data has changed */
                 if ((CharBuffer[i * CurrResolution.X + j].Char != CharInfo.Char) ||
@@ -1083,7 +1072,7 @@ static VOID VgaUpdateFramebuffer(VOID)
             }
 
             /* Move to the next scanline */
-            Address += ScanlineSize;
+            Address += ScanlineSizeLatch;
         }
     }
 }
@@ -1131,20 +1120,35 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
         {
             BYTE Result = 0;
             BOOLEAN Vsync, Hsync;
-            ULONGLONG Cycles = GetCycleCount();
-            ULONG CyclesPerMicrosecond = (ULONG)((GetCycleSpeed() + 500000ULL) / 1000000ULL);
+            ULONGLONG Cycles = CurrentCycleCount;
+            ULONG CyclesPerMicrosecond = (ULONG)((CurrentIps + 500000ULL) / 1000000ULL);
             ULONG Dots = (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & 1) ? 9 : 8;
             ULONG Clock = VgaGetClockFrequency() / 1000000;
-            ULONG HorizTotalDots = ((ULONG)VgaCrtcRegisters[VGA_CRTC_HORZ_TOTAL_REG] + 5) * Dots;
-            ULONG VblankStart, VblankEnd, HblankStart, HblankEnd;
-            ULONG HblankDuration, VblankDuration;
+            ULONG HblankStart, HblankEnd;
+            ULONG HblankDuration;
+            ULONG VerticalRetraceStart = VgaCrtcRegisters[VGA_CRTC_START_VERT_RETRACE_REG];
+            ULONG VerticalRetraceEnd;
+    
+            VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS8) << 6;
+            VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS9) << 2;
 
-            /* Calculate the vertical blanking duration in cycles */
-            VblankStart = VgaCrtcRegisters[VGA_CRTC_START_VERT_BLANKING_REG] & 0x7F;
-            VblankEnd = VgaCrtcRegisters[VGA_CRTC_END_VERT_BLANKING_REG] & 0x7F;
-            if (VblankEnd < VblankStart) VblankEnd |= 0x80;
-            VblankDuration = ((VblankEnd - VblankStart) * HorizTotalDots
-                             * CyclesPerMicrosecond + (Clock >> 1)) / Clock;
+            VerticalRetraceEnd = VerticalRetraceStart + (VgaCrtcRegisters[VGA_CRTC_END_VERT_RETRACE_REG] & 0x0F);
+
+            if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
+            {
+                BYTE MaximumScanLine = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
+
+                if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)
+                {
+                    VerticalRetraceStart <<= 1;
+                    VerticalRetraceEnd <<= 1;
+                }
+                else
+                {
+                    VerticalRetraceStart *= MaximumScanLine;
+                    VerticalRetraceEnd *= MaximumScanLine;
+                }
+            }
 
             /* Calculate the horizontal blanking duration in cycles */
             HblankStart = VgaCrtcRegisters[VGA_CRTC_START_HORZ_BLANKING_REG] & 0x1F;
@@ -1153,15 +1157,11 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
             HblankDuration = ((HblankEnd - HblankStart) * Dots
                              * CyclesPerMicrosecond + (Clock >> 1)) / Clock;
 
-            Vsync = (Cycles - VerticalRetraceCycle) < (ULONGLONG)VblankDuration;
+            Vsync = ScanlineCounter >= VerticalRetraceStart && ScanlineCounter <= VerticalRetraceEnd;
             Hsync = (Cycles - HorizontalRetraceCycle) < (ULONGLONG)HblankDuration;
 
             /* Reset the AC latch */
             VgaAcLatch = FALSE;
-
-            /* Reverse the polarity, if needed */
-            if (VgaMiscRegister & VGA_MISC_VSYNCP) Vsync = !Vsync;
-            if (VgaMiscRegister & VGA_MISC_HSYNCP) Hsync = !Hsync;
 
             /* Set a flag if there is a vertical or horizontal retrace */
             if (Vsync || Hsync) Result |= VGA_STAT_DD;
@@ -1176,7 +1176,7 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
             return VgaFeatureRegister;
 
         case VGA_AC_INDEX:
-            return VgaAcIndex;
+            return VgaAcIndex | (VgaAcPalDisable ? 0x20 : 0x00);
 
         case VGA_AC_READ:
             return VgaAcRegisters[VgaAcIndex];
@@ -1610,13 +1610,8 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
     SvgaHdrCounter = 0;
 }
 
-static VOID FASTCALL VgaVerticalRetrace(ULONGLONG ElapsedTime)
+static inline VOID VgaVerticalRetrace(VOID)
 {
-    UNREFERENCED_PARAMETER(ElapsedTime);
-
-    /* Set the vertical retrace cycle */
-    VerticalRetraceCycle = GetCycleCount();
-
     /* If nothing has changed, just return */
     // if (!ModeChanged && !CursorChanged && !PaletteChanged && !NeedsUpdate)
         // return;
@@ -1659,10 +1654,72 @@ static VOID FASTCALL VgaVerticalRetrace(ULONGLONG ElapsedTime)
 
 static VOID FASTCALL VgaHorizontalRetrace(ULONGLONG ElapsedTime)
 {
+    ULONG VerticalTotal = VgaCrtcRegisters[VGA_CRTC_VERT_TOTAL_REG];
+    ULONG VerticalRetraceStart = VgaCrtcRegisters[VGA_CRTC_START_VERT_RETRACE_REG];
+    BOOLEAN BeforeVSync;
+    ULONG ElapsedCycles = CurrentCycleCount - HorizontalRetraceCycle;
+    ULONG Dots = (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & 1) ? 9 : 8;
+    ULONG HorizTotalDots = ((ULONG)VgaCrtcRegisters[VGA_CRTC_HORZ_TOTAL_REG] + 5) * Dots;
+    BYTE MaximumScanLine = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
+    ULONG HSyncsPerSecond, HSyncs;
     UNREFERENCED_PARAMETER(ElapsedTime);
 
+    if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT) HorizTotalDots >>= 1;
+
+    HSyncsPerSecond = VgaGetClockFrequency() / HorizTotalDots;
+    HSyncs = (ElapsedCycles * HSyncsPerSecond + (CurrentIps >> 1)) / CurrentIps;
+    if (HSyncs == 0) HSyncs = 1;
+
+    VerticalTotal |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VT8) << 8;
+    VerticalTotal |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VT9) << 4;
+
+    VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS8) << 6;
+    VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS9) << 2;
+
+    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
+    {
+        if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)
+        {
+            VerticalRetraceStart <<= 1;
+            VerticalTotal <<= 1;
+        }
+        else
+        {
+            VerticalRetraceStart *= MaximumScanLine;
+            VerticalTotal *= MaximumScanLine;
+        }
+    }
+
     /* Set the cycle */
-    HorizontalRetraceCycle = GetCycleCount();
+    HorizontalRetraceCycle = CurrentCycleCount;
+
+    /* Increment the scanline counter, but make sure we don't skip any part of the vertical retrace */
+    BeforeVSync = (ScanlineCounter < VerticalRetraceStart);
+    ScanlineCounter += HSyncs;
+    if (BeforeVSync && ScanlineCounter >= VerticalRetraceStart) ScanlineCounter = VerticalRetraceStart;
+
+    if (ScanlineCounter == VerticalRetraceStart)
+    {
+        /* Save the scanline size */
+        ScanlineSizeLatch = ((DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG]
+                            + (((DWORD)VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_OFFSET_BIT8) << 4)) * 2;
+        if (VgaSeqRegisters[SVGA_SEQ_EXT_MODE_REG] & SVGA_SEQ_EXT_MODE_HIGH_RES) ScanlineSizeLatch <<= 2;
+
+        /* Save the starting address */
+        StartAddressLatch = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
+                                     VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
+                            + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT16) << 16)
+                            + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BITS1718) << 15)
+                            + ((VgaCrtcRegisters[SVGA_CRTC_OVERLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT19) << 12)
+                            + (VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F) * ScanlineSizeLatch
+                            + ((VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3);
+    }
+
+    if (ScanlineCounter > VerticalTotal)
+    {
+        ScanlineCounter = 0;
+        VgaVerticalRetrace();
+    }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -1725,68 +1782,201 @@ COORD VgaGetDisplayResolution(VOID)
 
 VOID VgaRefreshDisplay(VOID)
 {
-    VgaVerticalRetrace(0);
+    /* Save the scanline size */
+    ScanlineSizeLatch = ((DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG]
+                        + (((DWORD)VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_OFFSET_BIT8) << 4)) * 2;
+    if (VgaSeqRegisters[SVGA_SEQ_EXT_MODE_REG] & SVGA_SEQ_EXT_MODE_HIGH_RES) ScanlineSizeLatch <<= 2;
+
+    /* Save the starting address */
+    StartAddressLatch = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
+                                 VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
+                        + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT16) << 16)
+                        + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BITS1718) << 15)
+                        + ((VgaCrtcRegisters[SVGA_CRTC_OVERLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT19) << 12)
+                        + (VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F) * ScanlineSizeLatch
+                        + ((VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3);
+
+    VgaVerticalRetrace();
 }
 
 VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
-    DWORD i, j;
+    DWORD i;
     DWORD VideoAddress;
     PUCHAR BufPtr = (PUCHAR)Buffer;
 
     DPRINT("VgaReadMemory: Address 0x%08X, Size %lu\n", Address, Size);
 
     /* Ignore if video RAM access is disabled */
+    if (!Size) return;
     if ((VgaMiscRegister & VGA_MISC_RAM_ENABLED) == 0) return;
 
     if (!(VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_READ))
     {
-        /* Loop through each byte */
-        for (i = 0; i < Size; i++)
-        {
-            VideoAddress = VgaTranslateReadAddress(Address + i);
+        VideoAddress = VgaTranslateAddress(Address);
 
-            /* Copy the value to the buffer */
-            BufPtr[i] = VgaMemory[VideoAddress];
+        /* Check for packed pixel, chain-4, and odd-even mode */
+        if (VgaSeqRegisters[SVGA_SEQ_EXT_MODE_REG] & SVGA_SEQ_EXT_MODE_HIGH_RES)
+        {
+            /* Just copy from the video memory */
+            PVOID VideoMemory = &VgaMemory[VideoAddress + (Address & 3)];
+
+            switch (Size)
+            {
+                case sizeof(UCHAR):
+                    *(PUCHAR)Buffer = *(PUCHAR)VideoMemory;
+                    return;
+
+                case sizeof(USHORT):
+                    *(PUSHORT)Buffer = *(PUSHORT)VideoMemory;
+                    return;
+
+                case sizeof(ULONG):
+                    *(PULONG)Buffer = *(PULONG)VideoMemory;
+                    return;
+
+                case sizeof(ULONGLONG):
+                    *(PULONGLONG)Buffer = *(PULONGLONG)VideoMemory;
+                    return;
+
+                default:
+#if defined(__GNUC__)
+                    __builtin_memcpy(Buffer, VideoMemory, Size);
+#else
+                    RtlCopyMemory(Buffer, VideoMemory, Size);
+#endif
+            }
+        }
+        else if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
+        {
+            i = 0;
+
+            /* Write the unaligned part first */
+            if (Address & 3)
+            {
+                switch (Address & 3)
+                {
+                    case 1:
+                        BufPtr[i++] = VgaMemory[VideoAddress * VGA_NUM_BANKS + 1];
+                    case 2:
+                        BufPtr[i++] = VgaMemory[VideoAddress * VGA_NUM_BANKS + 2];
+                    case 3:
+                        BufPtr[i++] = VgaMemory[VideoAddress * VGA_NUM_BANKS + 3];
+                }
+
+                VideoAddress += 4;
+            }
+
+            /* Copy the aligned dwords */
+            while ((i + 3) < Size)
+            {
+                *(PULONG)&BufPtr[i] = *(PULONG)&VgaMemory[VideoAddress * VGA_NUM_BANKS];
+
+                i += 4;
+                VideoAddress += 4;
+            }
+
+            /* Write the remaining part */
+            if (i < Size)
+            {
+                switch (Size - i - 3)
+                {
+                    case 3:
+                        BufPtr[i] = VgaMemory[VideoAddress * VGA_NUM_BANKS + ((Address + i) & 3)];
+                        i++;
+                    case 2:
+                        BufPtr[i] = VgaMemory[VideoAddress * VGA_NUM_BANKS + ((Address + i) & 3)];
+                        i++;
+                    case 1:
+                        BufPtr[i] = VgaMemory[VideoAddress * VGA_NUM_BANKS + ((Address + i) & 3)];
+                        i++;
+                }
+            }
+        }
+        else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
+        {
+            i = 0;
+
+            /* Check if the starting address is odd */
+            if (Address & 1)
+            {
+                BufPtr[i++] = VgaMemory[VideoAddress * VGA_NUM_BANKS + 1];
+                VideoAddress += 2;
+            }
+
+            while (i < (Size - 1))
+            {
+                *(PUSHORT)&BufPtr[i] = *(PUSHORT)&VgaMemory[VideoAddress * VGA_NUM_BANKS];
+
+                i += 2;
+                VideoAddress += 2;
+            }
+
+            /* Check if there is one more byte to read */
+            if (i == Size - 1) BufPtr[i] = VgaMemory[VideoAddress * VGA_NUM_BANKS + ((Address + i) & 1)];
+        }
+        else
+        {
+            /* Use the selected map */
+            BYTE Plane = VgaGcRegisters[VGA_GC_READ_MAP_SEL_REG] & 0x03;
+
+            for (i = 0; i < Size; i++)
+            {
+                /* Copy the value to the buffer */
+                BufPtr[i] = VgaMemory[(VideoAddress++) * VGA_NUM_BANKS + Plane];
+            }
         }
     }
     else
     {
+        const ULONG BitExpandInvertTable[] =
+        {
+            0xFFFFFFFF, 0xFFFFFF00, 0xFFFF00FF, 0xFFFF0000,
+            0xFF00FFFF, 0xFF00FF00, 0xFF0000FF, 0xFF000000,
+            0x00FFFFFF, 0x00FFFF00, 0x00FF00FF, 0x00FF0000,
+            0x0000FFFF, 0x0000FF00, 0x000000FF, 0x00000000
+        };
+
+        ULONG ColorCompareBytes = BitExpandInvertTable[VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG] & 0x0F];
+        ULONG ColorIgnoreBytes = BitExpandInvertTable[VgaGcRegisters[VGA_GC_COLOR_IGNORE_REG] & 0x0F];
+
+        /*
+         * These values can also be computed in the following way, but using the table seems to be faster:
+         *
+         * ColorCompareBytes = VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG] * 0x000204081;
+         * ColorCompareBytes &= 0x01010101;
+         * ColorCompareBytes = ~((ColorCompareBytes << 8) - ColorCompareBytes);
+         *
+         * ColorIgnoreBytes = VgaGcRegisters[VGA_GC_COLOR_IGNORE_REG] * 0x000204081;
+         * ColorIgnoreBytes &= 0x01010101;
+         * ColorIgnoreBytes = ~((ColorIgnoreBytes << 8) - ColorIgnoreBytes);
+         */
+
         /* Loop through each byte */
         for (i = 0; i < Size; i++)
         {
-            BYTE Result = 0xFF;
+            ULONG PlaneData = 0;
 
-            /* This should always return a plane 0 address for read mode 1 */
-            VideoAddress = VgaTranslateReadAddress(Address + i);
+            /* This should always return a plane 0 address */
+            VideoAddress = VgaTranslateAddress(Address + i);
 
-            for (j = 0; j < VGA_NUM_BANKS; j++)
-            {
-                /* Don't consider ignored banks */
-                if (!(VgaGcRegisters[VGA_GC_COLOR_IGNORE_REG] & (1 << j))) continue;
+            /* Read all 4 planes */
+            PlaneData = *(PULONG)&VgaMemory[VideoAddress * VGA_NUM_BANKS];
 
-                if (VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG] & (1 << j))
-                {
-                    /* Comparing with 11111111 */
-                    Result &= VgaMemory[j * VGA_BANK_SIZE + LOWORD(VideoAddress)];
-                }
-                else
-                {
-                    /* Comparing with 00000000 */
-                    Result &= ~(VgaMemory[j * VGA_BANK_SIZE + LOWORD(VideoAddress)]);
-                }
-            }
+            /* Reverse the bytes for which the color compare register is zero */
+            PlaneData ^= ColorCompareBytes;
 
-            /* Copy the value to the buffer */
-            BufPtr[i] = Result;
+            /* Apply the color ignore register */
+            PlaneData |= ColorIgnoreBytes;
+
+            /* Store the value in the buffer */
+            BufPtr[i] = (PlaneData & (PlaneData >> 8) & (PlaneData >> 16) & (PlaneData >> 24)) & 0xFF;
         }
     }
 
     /* Load the latch registers */
-    VgaLatchRegisters[0] = VgaMemory[LOWORD(VideoAddress)];
-    VgaLatchRegisters[1] = VgaMemory[VGA_BANK_SIZE + LOWORD(VideoAddress)];
-    VgaLatchRegisters[2] = VgaMemory[(2 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
-    VgaLatchRegisters[3] = VgaMemory[(3 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
+    VideoAddress = VgaTranslateAddress(Address + Size - 1);
+    *(PULONG)VgaLatchRegisters = *(PULONG)&VgaMemory[WRAP_OFFSET(VideoAddress) * VGA_NUM_BANKS];
 }
 
 BOOLEAN FASTCALL VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
@@ -1803,38 +1993,78 @@ BOOLEAN FASTCALL VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
     /* Also ignore if write access to all planes is disabled */
     if ((VgaSeqRegisters[VGA_SEQ_MASK_REG] & 0x0F) == 0x00) return TRUE;
 
-    /* Loop through each byte */
-    for (i = 0; i < Size; i++)
+    if (!(VgaSeqRegisters[SVGA_SEQ_EXT_MODE_REG] & SVGA_SEQ_EXT_MODE_HIGH_RES))
     {
-        VideoAddress = VgaTranslateWriteAddress(Address + i);
-
-        for (j = 0; j < VGA_NUM_BANKS; j++)
+        /* Loop through each byte */
+        for (i = 0; i < Size; i++)
         {
-            /* Make sure the page is writeable */
-            if (!(VgaSeqRegisters[VGA_SEQ_MASK_REG] & (1 << j))) continue;
+            VideoAddress = VgaTranslateAddress(Address + i);
 
-            /* Check if this is chain-4 mode */
-            if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
+            for (j = 0; j < VGA_NUM_BANKS; j++)
             {
-                if (((Address + i) & 0x03) != j)
-                {
-                    /* This plane will not be accessed */
-                    continue;
-                }
-            }
+                /* Make sure the page is writeable */
+                if (!(VgaSeqRegisters[VGA_SEQ_MASK_REG] & (1 << j))) continue;
 
-            /* Check if this is odd-even mode */
-            if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
-            {
-                if (((Address + i) & 0x01) != (j & 1))
+                /* Check if this is chain-4 mode */
+                if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
                 {
-                    /* This plane will not be accessed */
-                    continue;
+                    if (((Address + i) & 0x03) != j)
+                    {
+                        /* This plane will not be accessed */
+                        continue;
+                    }
                 }
-            }
 
-            /* Copy the value to the VGA memory */
-            VgaMemory[VideoAddress + j * VGA_BANK_SIZE] = VgaTranslateByteForWriting(BufPtr[i], j);
+                /* Check if this is odd-even mode */
+                if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
+                {
+                    if (((Address + i) & 0x01) != (j & 1))
+                    {
+                        /* This plane will not be accessed */
+                        continue;
+                    }
+                }
+
+                /* Copy the value to the VGA memory */
+                VgaMemory[VideoAddress * VGA_NUM_BANKS + j] = VgaTranslateByteForWriting(BufPtr[i], j);
+            }
+        }
+    }
+    else
+    {
+        PVOID VideoMemory;
+
+        // TODO: Apply the page write mask!
+        // TODO: Check whether the write mode stuff applies to packed-pixel modes
+
+        /* Just copy to the video memory */
+        VideoAddress = VgaTranslateAddress(Address);
+        VideoMemory = &VgaMemory[VideoAddress + (Address & 3)];
+
+        switch (Size)
+        {
+            case sizeof(UCHAR):
+                *(PUCHAR)VideoMemory = *(PUCHAR)Buffer;
+                return TRUE;
+
+            case sizeof(USHORT):
+                *(PUSHORT)VideoMemory = *(PUSHORT)Buffer;
+                return TRUE;
+
+            case sizeof(ULONG):
+                *(PULONG)VideoMemory = *(PULONG)Buffer;
+                return TRUE;
+
+            case sizeof(ULONGLONG):
+                *(PULONGLONG)VideoMemory = *(PULONGLONG)Buffer;
+                return TRUE;
+
+            default:
+#if defined(__GNUC__)
+                __builtin_memcpy(VideoMemory, Buffer, Size);
+#else
+                RtlCopyMemory(VideoMemory, Buffer, Size);
+#endif
         }
     }
 
@@ -1849,22 +2079,20 @@ VOID VgaClearMemory(VOID)
 VOID VgaWriteTextModeFont(UINT FontNumber, CONST UCHAR* FontData, UINT Height)
 {
     UINT i, j;
-    PUCHAR FontMemory = (PUCHAR)&VgaMemory[VGA_BANK_SIZE * VGA_FONT_BANK + (FontNumber * VGA_FONT_SIZE)];
-
     ASSERT(Height <= VGA_MAX_FONT_HEIGHT);
 
-    for (i = 0 ; i < VGA_FONT_CHARACTERS; i++)
+    for (i = 0; i < VGA_FONT_CHARACTERS; i++)
     {
         /* Write the character */
         for (j = 0; j < Height; j++)
         {
-            FontMemory[i * VGA_MAX_FONT_HEIGHT + j] = FontData[i * Height + j];
+            VgaMemory[(i * VGA_MAX_FONT_HEIGHT + j) * VGA_NUM_BANKS + VGA_FONT_BANK] = FontData[i * Height + j];
         }
 
         /* Clear the unused part */
         for (j = Height; j < VGA_MAX_FONT_HEIGHT; j++)
         {
-            FontMemory[i * VGA_MAX_FONT_HEIGHT + j] = 0;
+            VgaMemory[(i * VGA_MAX_FONT_HEIGHT + j) * VGA_NUM_BANKS + VGA_FONT_BANK] = 0;
         }
     }
 }
@@ -1909,7 +2137,6 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     RegisterIoPort(0x3D9, VgaReadPort, VgaWritePort);   // CGA_PAL_CTRL_REG
 
     HSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, HZ_TO_NS(31469), VgaHorizontalRetrace);
-    VSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, HZ_TO_NS(60), VgaVerticalRetrace);
 
     /* Return success */
     return TRUE;
@@ -1920,7 +2147,6 @@ VOID VgaCleanup(VOID)
     /* Do a final display refresh */
     VgaRefreshDisplay();
 
-    DestroyHardwareTimer(VSyncTimer);
     DestroyHardwareTimer(HSyncTimer);
 
     /* Leave the current video mode */

@@ -29,15 +29,15 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUI
     if (RtCount == 0)
         return InfoCopyOut(NULL, 0, NULL, BufferSize);
 
-    RouteEntries = ExAllocatePool( NonPagedPool, Size );
+    RouteEntries = ExAllocatePoolWithTag( NonPagedPool, Size, ROUTE_ENTRY_TAG );
     RtCurrent = RouteEntries;
 
-    RCache = ExAllocatePool( NonPagedPool, sizeof( FIB_ENTRY ) * RtCount );
+    RCache = ExAllocatePoolWithTag( NonPagedPool, sizeof( FIB_ENTRY ) * RtCount, FIB_TAG );
     RCacheCur = RCache;
 
     if( !RCache || !RouteEntries ) {
-	if( RCache ) ExFreePool( RCache );
-	if( RouteEntries ) ExFreePool( RouteEntries );
+	if( RCache ) ExFreePoolWithTag( RCache, FIB_TAG );
+	if( RouteEntries ) ExFreePoolWithTag( RouteEntries, ROUTE_ENTRY_TAG );
 	return TDI_NO_RESOURCES;
     }
 
@@ -87,8 +87,8 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUI
 
     Status = InfoCopyOut( (PCHAR)RouteEntries, Size, Buffer, BufferSize );
 
-    ExFreePool( RouteEntries );
-    ExFreePool( RCache );
+    ExFreePoolWithTag( RouteEntries, ROUTE_ENTRY_TAG );
+    ExFreePoolWithTag( RCache, FIB_TAG );
 
     TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
 
@@ -122,7 +122,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable(TDIEntityID ID,
         return TDI_INVALID_PARAMETER;
     }
 
-    IPEntry = ExAllocatePool(NonPagedPool, sizeof(IPADDR_ENTRY));
+    IPEntry = ExAllocatePoolWithTag(NonPagedPool, sizeof(IPADDR_ENTRY), IP_ADDRESS_TAG);
     if (!IPEntry)
     {
         TcpipReleaseSpinLock(&EntityListLock, OldIrql);
@@ -147,7 +147,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable(TDIEntityID ID,
     InfoCopyOut((PCHAR)IPEntry, sizeof(IPADDR_ENTRY),
 		Buffer, BufferSize);
 
-    ExFreePool(IPEntry);
+    ExFreePoolWithTag(IPEntry, IP_ADDRESS_TAG);
 
     return TDI_SUCCESS;
 }

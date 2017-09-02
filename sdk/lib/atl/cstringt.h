@@ -83,6 +83,14 @@ public:
         ::CharLowerBuffW(pszSource, nSrcLength);
     }
 
+    static DWORD GetEnvironmentVariable(
+        _In_z_ LPCWSTR pszVar,
+        _Out_writes_opt_(nBufLength) LPWSTR pszBuf,
+        _In_opt_ int nBufLength)
+    {
+        return ::GetEnvironmentVariableW(pszVar, pszBuf, nBufLength);
+    }
+
     static void __cdecl MakeUpper(
         _Out_writes_(nSrcLength) LPWSTR pszSource,
         _In_ int nSrcLength)
@@ -201,6 +209,14 @@ public:
         ::CharLowerBuffA(pszSource, nSrcLength);
     }
 
+    static DWORD GetEnvironmentVariable(
+        _In_z_ LPCSTR pszVar,
+        _Out_writes_opt_(nBufLength) LPSTR pszBuf,
+        _In_opt_ int nBufLength)
+    {
+        return ::GetEnvironmentVariableA(pszVar, pszBuf, nBufLength);
+    }
+
     static void __cdecl MakeUpper(
         _Out_writes_(nSrcLength) LPSTR pszSource,
         _In_ int nSrcLength)
@@ -310,48 +326,52 @@ public:
         *this = static_cast<const YCHAR*>(strSrc);
     }
 
-    CStringT(_In_opt_z_ const XCHAR* pszSrc) :
-        CThisSimpleString( StringTraits::GetDefaultManager() )
+protected:
+    /* helper function */
+    template <typename T_CHAR>
+    void LoadFromPtr_(_In_opt_z_ const T_CHAR* pszSrc)
     {
-        // FIXME: Check whether pszSrc is not a resource string ID!
-        *this = pszSrc;
+        if (pszSrc == NULL)
+            return;
+        if (IS_INTRESOURCE(pszSrc))
+            LoadString(LOWORD(pszSrc));
+        else
+            *this = pszSrc;
     }
 
-    CStringT(
-            _In_opt_z_ const XCHAR* pszSrc,
-            _In_ IAtlStringMgr* pStringMgr) :
-        CThisSimpleString( pStringMgr )
+public:
+    CStringT(_In_opt_z_ const XCHAR* pszSrc) :
+        CThisSimpleString(StringTraits::GetDefaultManager())
     {
-        // FIXME: Check whether pszSrc is not a resource string ID!
-        *this = pszSrc;
+        LoadFromPtr_(pszSrc);
+    }
+
+    CStringT(_In_opt_z_ const XCHAR* pszSrc,
+             _In_ IAtlStringMgr* pStringMgr) : CThisSimpleString(pStringMgr)
+    {
+        LoadFromPtr_(pszSrc);
     }
 
     CStringT(_In_opt_z_ const YCHAR* pszSrc) :
-        CThisSimpleString( StringTraits::GetDefaultManager() )
+        CThisSimpleString(StringTraits::GetDefaultManager())
     {
-        // FIXME: Check whether pszSrc is not a resource string ID!
-        *this = pszSrc;
+        LoadFromPtr_(pszSrc);
     }
 
-    CStringT(
-            _In_opt_z_ const YCHAR* pszSrc,
-            _In_ IAtlStringMgr* pStringMgr) :
-        CThisSimpleString( pStringMgr )
+    CStringT(_In_opt_z_ const YCHAR* pszSrc,
+             _In_ IAtlStringMgr* pStringMgr) : CThisSimpleString(pStringMgr)
     {
-        // FIXME: Check whether pszSrc is not a resource string ID!
-        *this = pszSrc;
+        LoadFromPtr_(pszSrc);
     }
 
-    CStringT(
-            _In_reads_z_(nLength) const XCHAR* pch,
-            _In_ int nLength) : 
+    CStringT(_In_reads_z_(nLength) const XCHAR* pch,
+             _In_ int nLength) : 
         CThisSimpleString(pch, nLength, StringTraits::GetDefaultManager())
     {
     }
 
-    CStringT(
-            _In_reads_z_(nLength) const YCHAR* pch,
-            _In_ int nLength) : 
+    CStringT(_In_reads_z_(nLength) const YCHAR* pch,
+             _In_ int nLength) : 
         CThisSimpleString(pch, nLength, StringTraits::GetDefaultManager())
     {
     }
@@ -433,6 +453,17 @@ public:
         return *this;
     }
 
+    CStringT& operator+=(_In_ XCHAR ch)
+    {
+        CThisSimpleString::operator+=(ch);
+        return *this;
+    }
+
+    BOOL LoadString(_In_ UINT nID)
+    {
+        return LoadString(_AtlBaseModule.GetResourceInstance(), nID);
+    }
+
     _Check_return_ BOOL LoadString(_In_ HINSTANCE hInstance,
                                    _In_ UINT nID)
     {
@@ -445,6 +476,22 @@ public:
         CThisSimpleString::ReleaseBufferSetLength(nLength);
 
         return TRUE;
+    }
+
+    BOOL GetEnvironmentVariable(_In_z_ PCXSTR pszVar)
+    {
+        int nLength = StringTraits::GetEnvironmentVariable(pszVar, NULL, 0);
+
+        if (nLength > 0)
+        {
+            PXSTR pszBuffer = CThisSimpleString::GetBuffer(nLength);
+            StringTraits::GetEnvironmentVariable(pszVar, pszBuffer, nLength);
+            CThisSimpleString::ReleaseBuffer();
+            return TRUE;
+        }
+
+        CThisSimpleString::Empty();
+        return FALSE;
     }
 
     CStringT& MakeLower()
@@ -570,15 +617,15 @@ public:
     }
 
 
-    //void __cdecl Format(UINT nFormatID, ...)
-    //{
-    //    va_list args;
-    //    va_start(args, dwMessageId);
-    //    CStringT formatString;
-    //    formatString.LoadString(?????);
-    //    FormatV(formatString, args);
-    //    va_end(args);
-    //}
+    void __cdecl Format(UINT nFormatID, ...)
+    {
+        va_list args;
+        va_start(args, nFormatID);
+        CStringT formatString;
+        if (formatString.LoadString(nFormatID))
+            FormatV(formatString, args);
+        va_end(args);
+    }
 
     void __cdecl Format(PCXSTR pszFormat, ...)
     {

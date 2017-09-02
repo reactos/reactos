@@ -6,7 +6,7 @@ Description = An instant messaging program which lets you log in to accounts on 
 Size = 8.6 MiB
 Category = 5
 URLSite = https://pidgin.im/
-URLDownload = http://downloads.sourceforge.net/project/pidgin/Pidgin/2.10.12/pidgin-2.10.12.exe
+URLDownload = http://download.sourceforge.net/project/pidgin/Pidgin/2.10.12/pidgin-2.10.12.exe
 SHA1 = 1112b1ec1c6145d6b416b492b6c203219bed6deb
 CDPath = none
 
@@ -20,7 +20,7 @@ Size = 8,6 Mio
 
 [Section.0419]
 Description = Программа обмена мгновенными сообщениями, которая позволит Вам войти в аккаунты нескольких чат-сетей одновременно.
-Size = 8,6 МБ
+Size = 8,6 МиБ
 
 [Section.0804]
 Description = 该对话框允许您登录到帐户多个聊天网络上同时即时消息程序。

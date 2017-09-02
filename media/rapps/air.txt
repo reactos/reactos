@@ -8,6 +8,7 @@ Category = 14
 URLSite = https://get.adobe.com/air/
 URLDownload = http://airdownload.adobe.com/air/win/download/21.0/AdobeAIRInstaller.exe
 CDPath = none
+SHA1 = d8360785c749bd37fb246016bdc5a76761e0a2cd
 
 [Section.0407]
 Description = Mithilfe der Adobe AIR-Laufzeit können Entwickler den gleichen Code in native Anwendungen und Spiele einbinden.
@@ -20,7 +21,7 @@ Size = 17,8 Mio
 
 [Section.0419]
 Description = Кроссплатформенная среда от компании Adobe для запуска приложений, позволяющая использовать HTML/CSS, AJAX, Adobe Flash и Apache Flex для переноса веб-приложений (в том числе Rich Internet Application) на ПК и мобильные устройства.
-Size = 17,8 МБ
+Size = 17,8 МиБ
 
 [Section.041f]
 License = Adobe Yazılım Ruhsatlama Anlaşması

@@ -211,7 +211,7 @@ LPTSTR *WINAPI CommandLineToArgvT(LPCTSTR lpCmdLine, int *lpArgc)
 
 // The macro ConvertToWideChar takes a tstring parameter and returns
 // a pointer to a unicode string.  A conversion is performed if
-// neccessary.  FreeConvertedWideChar string should be used on the
+// necessary.  FreeConvertedWideChar string should be used on the
 // return value of ConvertToWideChar when the string is no longer
 // needed.  The original string or the string that is returned
 // should not be modified until FreeConvertedWideChar has been called.
@@ -258,7 +258,7 @@ int WINAPI _tWinMain(
 	LPCSTR lpFuncName;
 	LPWSTR lpwDllCmdLine;
 	BOOL bUnregister,bSilent,bConsole,bInstall,bNoRegister;
-	UINT nDllCount;
+	UINT nDllCount, fuOldErrorMode;
 	HMODULE hDll;
 	DLLREGISTER fnDllRegister;
 	DLLINSTALL fnDllInstall;
@@ -386,9 +386,11 @@ int WINAPI _tWinMain(
 		if (*argv[i] != _T('/')) {
 			lptDllName = argv[i];
 
+			fuOldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
 			// Everything is all setup, so load the dll now
 			hDll = LoadLibraryEx(lptDllName,0,LOAD_WITH_ALTERED_SEARCH_PATH);
 			if (hDll) {
+				SetErrorMode(fuOldErrorMode);
 				if (!bNoRegister) {
 					// Get the address of DllRegisterServer or DllUnregisterServer
 					fnDllRegister = (DLLREGISTER)GetProcAddress(hDll,lpFuncName);
@@ -463,6 +465,7 @@ int WINAPI _tWinMain(
 			else {
 				// The dll could not be loaded; display an error message
 				dwErr = GetLastError();
+				SetErrorMode(fuOldErrorMode);
 				lptMsgBuffer = (LPTSTR)malloc((_tcslen(DllNotLoaded) + 2 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
 				_stprintf(lptMsgBuffer,DllNotLoaded,lptDllName,dwErr);
 				DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);

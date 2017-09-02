@@ -165,7 +165,7 @@ static void DPLAYX_InitializeLobbyDataEntry( LPDPLAYX_LOBBYDATA lpData )
 }
 
 /* NOTE: This must be called with the semaphore acquired.
- * TRUE/FALSE with a pointer to it's data returned. Pointer data is
+ * TRUE/FALSE with a pointer to its data returned. Pointer data is
  * is only valid if TRUE is returned.
  */
 static BOOL DPLAYX_IsAppIdLobbied( DWORD dwAppID, LPDPLAYX_LOBBYDATA* lplpDplData )

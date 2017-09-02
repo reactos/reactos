@@ -15,11 +15,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Gli sviluppatori di ReactOS desiderano citare i seguenti progetti Open Source, che sono stati usati (in tutto o in parte) per creare ReactOS:", IDC_STATIC, 20, 7, 286, 19
-    LISTBOX IDC_PROJECTS, 20, 30, 280, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS è soggetto alla licenza GPL, per cui se si desidera riusarlo o ridistribuirlo (in tutto o in parte) è necessario rispettare la GPL", IDC_STATIC, 20, 110, 217, 22
+    LTEXT "Gli sviluppatori di ReactOS desiderano citare i seguenti progetti Open Source, che sono stati usati (in tutto o in parte) per creare ReactOS:", IDC_STATIC, 15, 7, 286, 19
+    LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+    LTEXT "ReactOS è soggetto alla licenza GPL, per cui se si desidera riusarlo o ridistribuirlo (in tutto o in parte) è necessario rispettare la GPL.", IDC_STATIC, 15, 110, 217, 22
     PUSHBUTTON "&Mostra la GPL...", IDC_VIEWGPL, 241, 110, 60, 19
-    LTEXT "Selezionare Avanti per proseguire con la configurazione.", IDC_STATIC, 20, 136, 195, 17
+    LTEXT "Selezionare Avanti per proseguire con la configurazione.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -83,6 +83,15 @@ BEGIN
     AUTOCHECKBOX "Cambia automaticamente con l'ora &legale", IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
+IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+END
+
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installazione di ReactOS"
@@ -135,6 +144,8 @@ BEGIN
     IDS_DATETIMESUBTITLE "Impostare la data e l'ora corrette per il proprio computer."
     IDS_PROCESSTITLE "Registrazione dei componenti"
     IDS_PROCESSSUBTITLE "Attendere prego..."
+    IDS_THEMESELECTIONTITLE "Appearance"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
 END
 
 STRINGTABLE
@@ -149,8 +160,8 @@ IDS_REACTOS_SETUP "Installazione di ReactOS"
     IDS_TIMEOUT "Tempo scaduto durante la registrazione"
     IDS_REASON_UNKNOWN ""
     /*
-     * ATTENTION: 
-     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     * ATTENTION:
+     *   If you translate the administrator account name, keep IDS_ADMINISTRATOR_NAME and
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
@@ -172,4 +183,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "Installazione dei dispositivi in corso..."
+END
+
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMFILES "%SystemDrive%\\Programmi"
+    IDS_COMMONFILES "File comuni"
 END

@@ -101,7 +101,10 @@ int main (int argc, char *argv[])
     for (i = 2; i < argc; i++)
     {
         convert_path (FileName, argv[i]);
-        ImportRegistryFile (FileName);
+        if (!ImportRegistryFile (FileName))
+        {
+            return 1;
+        }
     }
 
     convert_path (FileName, argv[1]);

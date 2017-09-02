@@ -80,7 +80,6 @@ BEGIN
     END
     POPUP "Pomo&c", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Czy ta &kopia ReactOS jest legalna?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&O ReactOS", IDM_HELP_ABOUT
     END
 END
@@ -94,6 +93,12 @@ BEGIN
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
 		MENUITEM "&Nowy pasek narzędzi...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
 	END
+END
+
+IDM_BAND_MENU MENUEX
+BEGIN
+	MENUITEM "Sho&w title", IDM_BAND_TITLE
+	MENUITEM "&Close toolbar", IDM_BAND_CLOSE
 END
 
 /* Dialogs */
@@ -280,11 +285,4 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|Wstecz|Dalej|W górę|Wyszukaj|Foldery|Przemieść do|Kopiuj do|Usuń|Cofnij|Widoki|Stop|Odśwież|Strona główna|Mapa dysków|Rozłącz|Ulubione|Historia|Pełny ekran|Właściwości|Wytnij|Kopiuj|Wklej|Opcje folderów||"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_LEGAL_URL, "https://www.reactos.org/joining/faqs"
-    IDS_SORRY_CAPTION, "Sorry"
-    IDS_SORRY_MESSAGE, "ReactOS could not browse to '%s' (error 0x%lx).\nPlease make sure there is a web browser installed."
 END

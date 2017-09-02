@@ -318,7 +318,7 @@ UDFReadFileEntry(
                          Ident))) return status;
     if((FileEntry->descTag.tagIdent != TID_FILE_ENTRY) &&
        (FileEntry->descTag.tagIdent != TID_EXTENDED_FILE_ENTRY)) {
-        KdPrint(("  Not a FileEntry (lbn=%x, tag=%x)\n", Icb->extLocation.logicalBlockNum, FileEntry->descTag.tagIdent));
+        UDFPrint(("  Not a FileEntry (lbn=%x, tag=%x)\n", Icb->extLocation.logicalBlockNum, FileEntry->descTag.tagIdent));
         return STATUS_FILE_CORRUPT_ERROR;
     }
     return STATUS_SUCCESS;
@@ -1069,7 +1069,7 @@ UDFLoadExtInfo(
 {
     EXTENT_AD TmpExt;
 
-    KdPrint(("  UDFLoadExtInfo:\n"));
+    UDFPrint(("  UDFLoadExtInfo:\n"));
     FExtInfo->Mapping = UDFReadMappingFromXEntry(Vcb, fe_loc->extLocation.partitionReferenceNum,
                                        (tag*)fe, &(FExtInfo->Offset), AExtInfo);
     if(!(FExtInfo->Mapping)) {
@@ -1082,12 +1082,12 @@ UDFLoadExtInfo(
         FExtInfo->Mapping = UDFExtentToMapping(&TmpExt);
     }
     if(fe->descTag.tagIdent == TID_FILE_ENTRY) {
-//        KdPrint(("Standard FileEntry\n"));
+//        UDFPrint(("Standard FileEntry\n"));
         FExtInfo->Length = fe->informationLength;
     } else /*if(fe->descTag.tagIdent == TID_EXTENDED_FILE_ENTRY) */ {
         FExtInfo->Length = ((PEXTENDED_FILE_ENTRY)fe)->informationLength;
     }
-    KdPrint(("  FExtInfo->Length %x\n", FExtInfo->Length));
+    UDFPrint(("  FExtInfo->Length %x\n", FExtInfo->Length));
     ASSERT(FExtInfo->Length <= UDFGetExtentLength(FExtInfo->Mapping));
     FExtInfo->Modified = FALSE;
 
@@ -1565,30 +1565,30 @@ UDFReadEntityID_Domain(
 
     dis = (domainIdentSuffix*)&(eID->identSuffix);
 
-    KdPrint(("UDF: Entity Id:\n"));
-    KdPrint(("flags: %x\n", eID->flags));
-    KdPrint(("ident[0]: %x\n", eID->ident[0]));
-    KdPrint(("ident[1]: %x\n", eID->ident[1]));
-    KdPrint(("ident[2]: %x\n", eID->ident[2]));
-    KdPrint(("ident[3]: %x\n", eID->ident[3]));
-    KdPrint(("UDF: Entity Id Domain:\n"));
+    UDFPrint(("UDF: Entity Id:\n"));
+    UDFPrint(("flags: %x\n", eID->flags));
+    UDFPrint(("ident[0]: %x\n", eID->ident[0]));
+    UDFPrint(("ident[1]: %x\n", eID->ident[1]));
+    UDFPrint(("ident[2]: %x\n", eID->ident[2]));
+    UDFPrint(("ident[3]: %x\n", eID->ident[3]));
+    UDFPrint(("UDF: Entity Id Domain:\n"));
     // Get current UDF revision
     Vcb->CurrentUDFRev = max(dis->currentRev, Vcb->CurrentUDFRev);
-    KdPrint(("Effective Revision: %x\n", Vcb->CurrentUDFRev));
+    UDFPrint(("Effective Revision: %x\n", Vcb->CurrentUDFRev));
     // Get Read-Only flags
     flags = dis->flags;
-    KdPrint(("Flags: %x\n", flags));
+    UDFPrint(("Flags: %x\n", flags));
     if((flags & ENTITYID_FLAGS_SOFT_RO) &&
         (Vcb->CompatFlags & UDF_VCB_IC_SOFT_RO)) {
         Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
         Vcb->UserFSFlags |= UDF_USER_FS_FLAGS_SOFT_RO;
-        KdPrint(("       Soft-RO\n"));
+        UDFPrint(("       Soft-RO\n"));
     }
     if((flags & ENTITYID_FLAGS_HARD_RO) &&
        (Vcb->CompatFlags & UDF_VCB_IC_HW_RO)) {
         Vcb->VCBFlags |= UDF_VCB_FLAGS_MEDIA_READ_ONLY;
         Vcb->UserFSFlags |= UDF_USER_FS_FLAGS_HW_RO;
-        KdPrint(("       Hard-RO\n"));
+        UDFPrint(("       Hard-RO\n"));
     }
 
 } // end UDFReadEntityID_Domain()
@@ -1820,7 +1820,7 @@ UDFUnlinkFile__(
     }
     SDirInfo = Dloc->SDirInfo;
 /*    if(FreeSpace && SDirInfo) {
-        KdPrint(("Unlink: SDirInfo should be NULL !!!\n"));
+        UDFPrint(("Unlink: SDirInfo should be NULL !!!\n"));
         BrutePoint();
         return STATUS_CANNOT_DELETE;
     }*/
@@ -2296,15 +2296,15 @@ UDFCleanUpFile__(
     ValidateFileInfo(FileInfo);
 
     if(FileInfo->OpenCount || FileInfo->RefCount) {
-        KdPrint(("UDF: not all references are closed\n"));
-        KdPrint(("     Skipping cleanup\n"));
-        KdPrint(("UDF: OpenCount = %x, RefCount = %x, LinkRefCount = %x\n",
+        UDFPrint(("UDF: not all references are closed\n"));
+        UDFPrint(("     Skipping cleanup\n"));
+        UDFPrint(("UDF: OpenCount = %x, RefCount = %x, LinkRefCount = %x\n",
                               FileInfo->OpenCount,FileInfo->RefCount,FileInfo->Dloc->LinkRefCount));
         return UDF_FREE_NOTHING;
     }
     if(FileInfo->Fcb) {
-        KdPrint(("Operating System still has references to this file\n"));
-        KdPrint(("     Skipping cleanup\n"));
+        UDFPrint(("Operating System still has references to this file\n"));
+        UDFPrint(("     Skipping cleanup\n"));
 //        BrutePoint();
         return UDF_FREE_NOTHING;
     }
@@ -2321,7 +2321,7 @@ UDFCleanUpFile__(
             // we can't delete modified file
             // it should be closed & reopened (or flushed) before deletion
             DirNdx = UDFDirIndex(hDirNdx,Index);
-            KdPrint(("Cleanup Mod: %s%s%s%s%s%s\n",
+            UDFPrint(("Cleanup Mod: %s%s%s%s%s%s\n",
                                  (Dloc->FE_Flags & UDF_FE_FLAG_FE_MODIFIED) ? "FE "       : "",
                                  (Dloc->DataLoc.Modified)                   ? "DataLoc "  : "",
                                  (Dloc->DataLoc.Flags & EXTENT_FLAG_PREALLOCATED) ? "Data-PreAlloc " : "",
@@ -2357,8 +2357,8 @@ UDFCleanUpFile__(
                 if(DirNdx->FileInfo) {
                     if(!KeepDloc) {
                         BrutePoint();
-                        KdPrint(("UDF: Found not cleaned up reference.\n"));
-                        KdPrint(("     Skipping cleanup (1)\n"));
+                        UDFPrint(("UDF: Found not cleaned up reference.\n"));
+                        UDFPrint(("     Skipping cleanup (1)\n"));
 //                        BrutePoint();
                         return UDF_FREE_NOTHING;
                     }
@@ -2389,7 +2389,7 @@ UDFCleanUpFile__(
             }
         }
         if(Dloc->SDirInfo) {
-            KdPrint(("UDF: Found not cleaned up reference (SDir).\n"));
+            UDFPrint(("UDF: Found not cleaned up reference (SDir).\n"));
 
             // (Update Child Objects - II)
             if(Dloc->SDirInfo->ParentFile == FileInfo) {
@@ -2402,7 +2402,7 @@ UDFCleanUpFile__(
             // place (in parallel object)
             if(!KeepDloc) {
                 BrutePoint();
-                KdPrint(("     Skipping cleanup\n"));
+                UDFPrint(("     Skipping cleanup\n"));
                 return UDF_FREE_NOTHING;
             }
 
@@ -2419,7 +2419,9 @@ UDFCleanUpFile__(
 
         if(!KeepDloc) {
 
+#ifdef UDF_DBG
             ASSERT(!Modified);
+#endif
 
 #ifndef UDF_TRACK_ONDISK_ALLOCATION
             if(Dloc->DataLoc.Mapping)  MyFreePool__(Dloc->DataLoc.Mapping);
@@ -2996,7 +2998,7 @@ UDFCloseFile__(
 
     if(!FileInfo) return STATUS_SUCCESS;
     if(FileInfo->Index<2 && (FileInfo->ParentFile) && !UDFIsAStreamDir(FileInfo)) {
-        KdPrint(("Closing Current or Parent Directory... :-\\\n"));
+        UDFPrint(("Closing Current or Parent Directory... :-\\\n"));
         if(FileInfo->RefCount) {
             UDFInterlockedDecrement((PLONG)&(FileInfo->RefCount));
             ASSERT(FileInfo->Dloc);
@@ -3005,7 +3007,7 @@ UDFCloseFile__(
 #ifdef UDF_DBG
         } else {
             BrutePoint();
-            KdPrint(("ERROR: Closing unreferenced file!\n"));
+            UDFPrint(("ERROR: Closing unreferenced file!\n"));
 #endif // UDF_DBG
         }
         if(FileInfo->ParentFile->OpenCount) {
@@ -3013,7 +3015,7 @@ UDFCloseFile__(
 #ifdef UDF_DBG
         } else {
             BrutePoint();
-            KdPrint(("ERROR: Closing unopened file!\n"));
+            UDFPrint(("ERROR: Closing unopened file!\n"));
 #endif // UDF_DBG
         }
         return STATUS_SUCCESS;
@@ -3029,7 +3031,7 @@ UDFCloseFile__(
 #ifdef UDF_DBG
     } else {
         BrutePoint();
-        KdPrint(("ERROR: Closing unreferenced file!\n"));
+        UDFPrint(("ERROR: Closing unreferenced file!\n"));
 #endif // UDF_DBG
     }
     if(DirInfo) {
@@ -3041,7 +3043,7 @@ UDFCloseFile__(
 #ifdef UDF_DBG
         } else {
             BrutePoint();
-            KdPrint(("ERROR: Closing unopened file!\n"));
+            UDFPrint(("ERROR: Closing unopened file!\n"));
 #endif // UDF_DBG
         }
     }
@@ -3054,7 +3056,7 @@ UDFCloseFile__(
 //    ASSERT(FileInfo->Dloc->FELoc.Mapping[0].extLocation);
     PartNum = UDFGetPartNumByPhysLba(Vcb, FileInfo->Dloc->FELoc.Mapping[0].extLocation);
     if(PartNum == (uint32)-1) {
-        KdPrint(("  Is DELETED ?\n"));
+        UDFPrint(("  Is DELETED ?\n"));
         if(DirInfo) {
             PartNum = UDFGetPartNumByPhysLba(Vcb, DirInfo->Dloc->FELoc.Mapping[0].extLocation);
         } else {
@@ -3068,7 +3070,7 @@ UDFCloseFile__(
         //ASSERT(FileInfo->Dloc->FELoc.Mapping[0].extLocation);
         if(UDFIsAStreamDir(FileInfo)) {
             if(!UDFIsSDirDeleted(FileInfo)) {
-                KdPrint(("  Not DELETED SDir\n"));
+                UDFPrint(("  Not DELETED SDir\n"));
                 BrutePoint();
             }
             ASSERT(!FileInfo->Dloc->FELoc.Modified);
@@ -3131,14 +3133,14 @@ UDFCloseFile__(
         }
 
         if(!OS_SUCCESS(status = UDFFlushFE(Vcb, FileInfo, PartNum))) {
-            KdPrint(("Error flushing FE\n"));
+            UDFPrint(("Error flushing FE\n"));
 //flush_recovery:
             BrutePoint();
             if(FileInfo->Index >= 2) {
                 PDIR_INDEX_ITEM DirNdx;
                 DirNdx = UDFDirIndex(UDFGetDirIndexByFileInfo(FileInfo), FileInfo->Index);
                 if(DirNdx) {
-                    KdPrint(("Recovery: mark as deleted & flush FI\n"));
+                    UDFPrint(("Recovery: mark as deleted & flush FI\n"));
                     DirNdx->FI_Flags |= UDF_FI_FLAG_FI_MODIFIED;
                     DirNdx->FileCharacteristics |= FILE_DELETED;
                     FileInfo->FileIdent->fileCharacteristics |= FILE_DELETED;
@@ -3150,7 +3152,7 @@ UDFCloseFile__(
     }
     // ... but FI must be updated (if any)
     if(!OS_SUCCESS(status = UDFFlushFI(Vcb, FileInfo, PartNum))) {
-        KdPrint(("Error flushing FI\n"));
+        UDFPrint(("Error flushing FI\n"));
         return status;
     }
 #ifdef UDF_DBG
@@ -3473,12 +3475,12 @@ UDFResizeFile__(
     int8* OldInIcb = NULL;
     PEXTENT_MAP NewMap;
 
-    KdPrint(("UDFResizeFile__: FI %x, -> %I64x\n", FileInfo, NewLength));
+    UDFPrint(("UDFResizeFile__: FI %x, -> %I64x\n", FileInfo, NewLength));
     ValidateFileInfo(FileInfo);
 //    ASSERT(FileInfo->RefCount >= 1);
 
     if((NewLength >> Vcb->LBlockSizeBits) > Vcb->TotalAllocUnits) {
-        KdPrint(("STATUS_DISK_FULL\n"));
+        UDFPrint(("STATUS_DISK_FULL\n"));
         return STATUS_DISK_FULL;
     }
     if (NewLength == FileInfo->Dloc->DataLoc.Length) return STATUS_SUCCESS;
@@ -3629,7 +3631,7 @@ UDFLoadVAT(
     }
     if((Vcb->LastTrackNum > 1) &&
        (Vcb->LastLBA == Vcb->TrackMap[Vcb->LastTrackNum-1].LastLba)) {
-        KdPrint(("Hardware Read-only volume\n"));
+        UDFPrint(("Hardware Read-only volume\n"));
         Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
     }
 
@@ -3653,7 +3655,7 @@ retry_load_vat:
     len = (uint32)UDFGetFileSize(VatFileInfo);
     if(Vcb->Partitions[PartNdx].PartitionType == UDF_VIRTUAL_MAP15) {
         // load Vat 1.50 header
-        KdPrint(("Load VAT 1.50\n"));
+        UDFPrint(("Load VAT 1.50\n"));
         VirtualAllocationTable15* Buf;
         if(((icbtag*)(VatFileInfo->Dloc->FileEntry+1))->fileType != UDF_FILE_TYPE_VAT15) {
             status = STATUS_FILE_CORRUPT_ERROR;
@@ -3685,7 +3687,7 @@ err_vat_15:
     } else
     if(Vcb->Partitions[PartNdx].PartitionType == UDF_VIRTUAL_MAP20) {
         // load Vat 2.00 header
-        KdPrint(("Load VAT 2.00\n"));
+        UDFPrint(("Load VAT 2.00\n"));
         VirtualAllocationTable20* Buf;
         if(((icbtag*)(VatFileInfo->Dloc->FileEntry+1))->fileType != UDF_FILE_TYPE_VAT20) {
             status = STATUS_FILE_CORRUPT_ERROR;
@@ -3707,7 +3709,7 @@ err_vat_15:
 
     } else {
         // unknown (or wrong) VAT format
-        KdPrint(("unknown (or wrong) VAT format\n"));
+        UDFPrint(("unknown (or wrong) VAT format\n"));
         status = STATUS_FILE_CORRUPT_ERROR;
         goto err_vat_15;
     }
@@ -3884,7 +3886,7 @@ UDFFlushFE(
     }
 #endif // UDF_DBG
 retry_flush_FE:
-    KdPrint(("  FlushFE: %x\n", FileInfo->Dloc->FELoc.Mapping[0].extLocation));
+    UDFPrint(("  FlushFE: %x\n", FileInfo->Dloc->FELoc.Mapping[0].extLocation));
 #ifndef UDF_READ_ONLY_BUILD
     UDFReTagDirectory(Vcb, FileInfo);
     if(FileInfo->Dloc->DataLoc.Modified ||
@@ -3892,7 +3894,7 @@ retry_flush_FE:
         ASSERT(PartNum != (uint32)(-1));
         // prepare new AllocDescs for flushing...
         if(!OS_SUCCESS(status = UDFBuildAllocDescs(Vcb, PartNum, FileInfo, &NewAllocDescs))) {
-            KdPrint(("  FlushFE: UDFBuildAllocDescs() faliled (%x)\n", status));
+            UDFPrint(("  FlushFE: UDFBuildAllocDescs() faliled (%x)\n", status));
             if(NewAllocDescs)
                 MyFreePool__(NewAllocDescs);
             return status;
@@ -3915,7 +3917,7 @@ retry_flush_FE:
             status = UDFWriteExtent(Vcb, &(FileInfo->Dloc->AllocLoc), 0, (uint32)(FileInfo->Dloc->AllocLoc.Length), FALSE, NewAllocDescs, &WrittenBytes);
             MyFreePool__(NewAllocDescs);
             if(!OS_SUCCESS(status)) {
-                KdPrint(("  FlushFE: UDFWriteExtent() faliled (%x)\n", status));
+                UDFPrint(("  FlushFE: UDFWriteExtent() faliled (%x)\n", status));
                 return status;
             }
 #ifdef UDF_DBG
@@ -3949,7 +3951,7 @@ retry_flush_FE:
         ASSERT(PartNum != (uint32)(-1));
         ASSERT(!PartNum);
         if(PartNum == (uint32)(-1) || PartNum == (uint32)(-2)) {
-            KdPrint(("  bad PartNum: %d\n", PartNum));
+            UDFPrint(("  bad PartNum: %d\n", PartNum));
         }
         // update lengthAllocDescs in FE
         UDFSetAllocDescLen(Vcb, FileInfo);
@@ -3974,17 +3976,17 @@ retry_flush_FE:
                   (uint32)(FileInfo->Dloc->FELoc.Length), FALSE,
                   (int8*)(FileInfo->Dloc->FileEntry), &WrittenBytes);
         if(!OS_SUCCESS(status)) {
-            KdPrint(("  FlushFE: UDFWriteExtent(2) faliled (%x)\n", status));
+            UDFPrint(("  FlushFE: UDFWriteExtent(2) faliled (%x)\n", status));
             if(status == STATUS_DEVICE_DATA_ERROR) {
 relocate_FE:
-                KdPrint(("  try to relocate\n"));
+                UDFPrint(("  try to relocate\n"));
 
                 EXTENT_INFO _FEExtInfo;
                 // calculate the length required
                 
                 // allocate block for FE
                 if(OS_SUCCESS(UDFAllocateFESpace(Vcb, FileInfo->ParentFile, PartNum, &_FEExtInfo, (uint32)(FileInfo->Dloc->FELoc.Length)) )) {
-                    KdPrint(("  relocate %x -> %x\n",
+                    UDFPrint(("  relocate %x -> %x\n",
                         lba,
                         _FEExtInfo.Mapping[0].extLocation));
 
@@ -3999,7 +4001,7 @@ relocate_FE:
 
                     AllocMode = ((PFILE_ENTRY)(FileInfo->Dloc->FileEntry))->icbTag.flags & ICB_FLAG_ALLOC_MASK;
                     if(AllocMode == ICB_FLAG_AD_IN_ICB) {
-                        KdPrint(("  IN-ICB data lost\n"));
+                        UDFPrint(("  IN-ICB data lost\n"));
                         FileInfo->Dloc->DataLoc.Mapping[0].extLocation = _FEExtInfo.Mapping[0].extLocation;
                         FileInfo->Dloc->DataLoc.Modified = TRUE;
                     } else {
@@ -4011,7 +4013,7 @@ relocate_FE:
                         PDIR_INDEX_ITEM DirNdx;
                         DirNdx = UDFDirIndex(UDFGetDirIndexByFileInfo(FileInfo), FileInfo->Index);
                         if(DirNdx) {
-                            KdPrint(("  update reference in FI\n"));
+                            UDFPrint(("  update reference in FI\n"));
                             DirNdx->FileEntryLoc.logicalBlockNum =
                                 FileInfo->FileIdent->icb.extLocation.logicalBlockNum =
                                 UDFPhysLbaToPart(Vcb, PartNum, _FEExtInfo.Mapping[0].extLocation);
@@ -4019,7 +4021,7 @@ relocate_FE:
                         }
                     }
                     // this will update 
-                    KdPrint(("  retry flush...\n"));
+                    UDFPrint(("  retry flush...\n"));
                     goto retry_flush_FE;
                 }
             }
@@ -4068,7 +4070,7 @@ UDFFlushFI(
         ASSERT(FileInfo->FileIdent->fileCharacteristics & FILE_DELETED);
     }
 #endif // UDF_DBG
-    KdPrint(("  FlushFI: offs %x\n", (ULONG)(DirNdx->Offset)));
+    UDFPrint(("  FlushFI: offs %x\n", (ULONG)(DirNdx->Offset)));
 #ifndef UDF_READ_ONLY_BUILD
     if((DirNdx->FI_Flags & UDF_FI_FLAG_FI_MODIFIED)) {
         // flush FileIdent
@@ -4127,7 +4129,7 @@ UDFFlushFile__(
     ASSERT(FileInfo->Dloc->FELoc.Mapping[0].extLocation);
     PartNum = UDFGetPartNumByPhysLba(Vcb, FileInfo->Dloc->FELoc.Mapping[0].extLocation);
     if(PartNum == (uint32)-1) {
-        KdPrint(("  Is DELETED ?\n"));
+        UDFPrint(("  Is DELETED ?\n"));
         if(FileInfo->ParentFile) {
             PartNum = UDFGetPartNumByPhysLba(Vcb, FileInfo->ParentFile->Dloc->FELoc.Mapping[0].extLocation);
         } else {
@@ -4140,7 +4142,7 @@ UDFFlushFile__(
 
         if(UDFIsAStreamDir(FileInfo)) {
             if(!UDFIsSDirDeleted(FileInfo)) {
-                KdPrint(("  Not DELETED SDir\n"));
+                UDFPrint(("  Not DELETED SDir\n"));
                 BrutePoint();
             }
             ASSERT(!FileInfo->Dloc->FELoc.Modified);
@@ -4178,10 +4180,10 @@ full_flush:
     }
     // flush FE
     if(!OS_SUCCESS(status = UDFFlushFE(Vcb, FileInfo, PartNum))) {
-        KdPrint(("Error flushing FE\n"));
+        UDFPrint(("Error flushing FE\n"));
         BrutePoint();
         if(FlushFlags & UDF_FLUSH_FLAGS_LITE) {
-            KdPrint(("  flush pre-alloc\n"));
+            UDFPrint(("  flush pre-alloc\n"));
             FlushFlags &= ~UDF_FLUSH_FLAGS_LITE;
             goto full_flush;
         }
@@ -4189,7 +4191,7 @@ full_flush:
             PDIR_INDEX_ITEM DirNdx;
             DirNdx = UDFDirIndex(UDFGetDirIndexByFileInfo(FileInfo), FileInfo->Index);
             if(DirNdx) {
-                KdPrint(("Recovery: mark as deleted & flush FI\n"));
+                UDFPrint(("Recovery: mark as deleted & flush FI\n"));
                 DirNdx->FI_Flags |= UDF_FI_FLAG_FI_MODIFIED;
                 DirNdx->FileCharacteristics |= FILE_DELETED;
                 FileInfo->FileIdent->fileCharacteristics |= FILE_DELETED;
@@ -4602,14 +4604,14 @@ UDFReadTagged(
     _SEH2_TRY {
         RC = UDFReadSectors(Vcb, FALSE, Block, 1, FALSE, Buf, &ReadBytes);
         if(!OS_SUCCESS(RC)) {
-            KdPrint(("UDF: Block=%x, Location=%x: read failed\n", Block, Location));
+            UDFPrint(("UDF: Block=%x, Location=%x: read failed\n", Block, Location));
             try_return(RC);
         }
 
         *Ident = PTag->tagIdent;
 
         if(Location != PTag->tagLocation) {
-            KdPrint(("UDF: location mismatch block %x, tag %x != %x\n",
+            UDFPrint(("UDF: location mismatch block %x, tag %x != %x\n",
                 Block, PTag->tagLocation, Location));
             try_return(RC = STATUS_FILE_CORRUPT_ERROR);
         }
@@ -4621,14 +4623,14 @@ UDFReadTagged(
             checksum += (uint8)((i!=4) ? (*tb) : 0);
 
         if(checksum != PTag->tagChecksum) {
-            KdPrint(("UDF: tag checksum failed block %x\n", Block));
+            UDFPrint(("UDF: tag checksum failed block %x\n", Block));
             try_return(RC = STATUS_CRC_ERROR);
         }
 
         // Verify the tag version
         if((PTag->descVersion != 2) &&
            (PTag->descVersion != 3)) {
-            KdPrint(("UDF: Tag version 0x%04x != 0x0002 || 0x0003 block %x\n",
+            UDFPrint(("UDF: Tag version 0x%04x != 0x0002 || 0x0003 block %x\n",
                 (PTag->descVersion), Block));
             try_return(RC = STATUS_FILE_CORRUPT_ERROR);
         }
@@ -4637,16 +4639,16 @@ UDFReadTagged(
         if(((PTag->descCRCLength) + sizeof(tag) > Vcb->BlockSize) ||
            ((PTag->descCRC) == UDFCrc((uint8*)Buf + sizeof(tag), PTag->descCRCLength)) ||
            !(PTag->descCRC) ) {
-    /*        KdPrint(("Tag ID: %x, ver %x\t", PTag->tagIdent, PTag->descVersion ));
+    /*        UDFPrint(("Tag ID: %x, ver %x\t", PTag->tagIdent, PTag->descVersion ));
             if((i == TID_FILE_ENTRY) ||
                (i == TID_EXTENDED_FILE_ENTRY)) {
-                KdPrint(("StrategType: %x, ", Icb->strategyType ));
-                KdPrint(("FileType: %x\t", Icb->fileType ));
+                UDFPrint(("StrategType: %x, ", Icb->strategyType ));
+                UDFPrint(("FileType: %x\t", Icb->fileType ));
             }
-            KdPrint(("\n"));*/
+            UDFPrint(("\n"));*/
             try_return(RC = STATUS_SUCCESS);
         }
-        KdPrint(("UDF: Crc failure block %x: crc = %x, crclen = %x\n",
+        UDFPrint(("UDF: Crc failure block %x: crc = %x, crclen = %x\n",
             Block, PTag->descCRC, PTag->descCRCLength));
         RC = STATUS_CRC_ERROR;
 
@@ -5321,7 +5323,7 @@ UDFUpdateVAT(
     uint16 PartNdx = (uint16)(Vcb->VatPartNdx);
     uint16 PartNum = (uint16)(Lba ? UDFGetPartNumByPhysLba(Vcb, Lba) : UDFGetPartNumByPartNdx(Vcb, PartNdx));
     if(PartNum != UDFGetPartNumByPartNdx(Vcb, PartNdx)) {
-        KdPrint(("UDFUpdateVAT: Write to Write-Protected partition\n"));
+        UDFPrint(("UDFUpdateVAT: Write to Write-Protected partition\n"));
         return STATUS_MEDIA_WRITE_PROTECTED;
     }
     // !!! NOTE !!!

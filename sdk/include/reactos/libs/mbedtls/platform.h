@@ -4,19 +4,21 @@
  * \brief mbed TLS Platform abstraction layer
  *
  *  Copyright (C) 2006-2016, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
+ *  SPDX-License-Identifier: GPL-2.0
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
@@ -27,6 +29,10 @@
 #include "config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
+#endif
+
+#if defined(MBEDTLS_HAVE_TIME)
+#include "mbedtls/platform_time.h"
 #endif
 
 #ifdef __cplusplus
@@ -244,39 +250,6 @@ int mbedtls_platform_set_exit( void (*exit_func)( int status ) );
 #endif
 
 /*
- * The time_t datatype
- */
-#if defined(MBEDTLS_PLATFORM_TIME_TYPE_MACRO)
-typedef MBEDTLS_PLATFORM_TIME_TYPE_MACRO mbedtls_time_t;
-#else
-/* For time_t */
-#include <time.h>
-typedef time_t mbedtls_time_t;
-#endif /* MBEDTLS_PLATFORM_TIME_TYPE_MACRO */
-
-/*
- * The function pointers for time
- */
-#if defined(MBEDTLS_PLATFORM_TIME_ALT)
-extern mbedtls_time_t (*mbedtls_time)( mbedtls_time_t* time );
-
-/**
- * \brief   Set your own time function pointer
- *
- * \param   time_func   the time function implementation
- *
- * \return              0
- */
-int mbedtls_platform_set_time( mbedtls_time_t (*time_func)( mbedtls_time_t* time ) );
-#else
-#if defined(MBEDTLS_PLATFORM_TIME_MACRO)
-#define mbedtls_time    MBEDTLS_PLATFORM_TIME_MACRO
-#else
-#define mbedtls_time   time
-#endif /* MBEDTLS_PLATFORM_TIME_MACRO */
-#endif /* MBEDTLS_PLATFORM_TIME_ALT */
-
-/*
  * The function pointers for reading from and writing a seed file to
  * Non-Volatile storage (NV) in a platform-independent way
  *
@@ -316,6 +289,54 @@ int mbedtls_platform_set_nv_seed(
 #endif
 #endif /* MBEDTLS_PLATFORM_NV_SEED_ALT */
 #endif /* MBEDTLS_ENTROPY_NV_SEED */
+
+#if !defined(MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT)
+
+/**
+ * \brief   Platform context structure
+ *
+ * \note    This structure may be used to assist platform-specific
+ *          setup/teardown operations.
+ */
+typedef struct {
+    char dummy; /**< Placeholder member as empty structs are not portable */
+}
+mbedtls_platform_context;
+
+#else
+#include "platform_alt.h"
+#endif /* !MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT */
+
+/**
+ * \brief   Perform any platform initialisation operations
+ *
+ * \param   ctx     mbed TLS context
+ *
+ * \return  0 if successful
+ *
+ * \note    This function is intended to allow platform specific initialisation,
+ *          and should be called before any other library functions. Its
+ *          implementation is platform specific, and by default, unless platform
+ *          specific code is provided, it does nothing.
+ *
+ *          Its use and whether its necessary to be called is dependent on the
+ *          platform.
+ */
+int mbedtls_platform_setup( mbedtls_platform_context *ctx );
+/**
+ * \brief   Perform any platform teardown operations
+ *
+ * \param   ctx     mbed TLS context
+ *
+ * \note    This function should be called after every other mbed TLS module has
+ *          been correctly freed using the appropriate free function.
+ *          Its implementation is platform specific, and by default, unless
+ *          platform specific code is provided, it does nothing.
+ *
+ *          Its use and whether its necessary to be called is dependent on the
+ *          platform.
+ */
+void mbedtls_platform_teardown( mbedtls_platform_context *ctx );
 
 #ifdef __cplusplus
 }

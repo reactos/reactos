@@ -2318,15 +2318,20 @@ Ext2InitializeVcb( IN PEXT2_IRP_CONTEXT IrpContext,
             _SEH2_LEAVE;
         }
 
-        /* checking in/compat features */
-        if (IsFlagOn(sb->s_feature_compat, EXT3_FEATURE_COMPAT_HAS_JOURNAL)) {
-            Vcb->IsExt3fs = TRUE;
-        }
-
-        /* don't mount any volumes with external journal devices */
-        if (IsFlagOn(sb->s_feature_incompat, EXT3_FEATURE_INCOMPAT_JOURNAL_DEV)) {
+        /* Reject mounting volume if we encounter unsupported incompat features */
+        if (FlagOn(sb->s_feature_incompat, ~EXT4_FEATURE_INCOMPAT_SUPP)) {
             Status = STATUS_UNRECOGNIZED_VOLUME;
             _SEH2_LEAVE;
+        }
+
+        /* Mount the volume RO if we encounter unsupported ro_compat features */
+        if (FlagOn(sb->s_feature_ro_compat, ~EXT4_FEATURE_RO_COMPAT_SUPP)) {
+            SetLongFlag(Vcb->Flags, VCB_RO_COMPAT_READ_ONLY);
+        }
+
+        /* Recognize the filesystem as Ext3fs if it supports journalling */
+        if (IsFlagOn(sb->s_feature_compat, EXT4_FEATURE_COMPAT_HAS_JOURNAL)) {
+            Vcb->IsExt3fs = TRUE;
         }
 
         /* check block size */

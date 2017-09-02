@@ -2,17 +2,21 @@ LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALL "Installa"
-    IDS_PRINT "Stampa"
+    IDS_INSTALL "&Installa"
+    IDS_PRINT "Stam&pa"
     IDS_STRING "Jackdaws love my big sphinx of quartz. 1234567890"
     IDS_OPEN "Apri Font..."
     IDS_ERROR "Errore"
     IDS_ERROR_NOMEM "Memoria insufficiente per completare l'operazione."
     IDS_ERROR_NOFONT "Il file% 1 non è un file di origine valido."
     IDS_ERROR_NOCLASS "Impossibile avviare la classe."
-    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
-TrueType Font (*.ttf)\0*.ttf\0\
-OpenType Font (*.otf)\0*.otf\0\
-Font File (*.fon)\0*.fon\0\
+    IDS_FILTER_LIST "Tutti i font supportati (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+Font File (*.fon;*.fnt)\0*.fon;*.fnt\0\
+Font TrueType (*.ttf)\0*.ttf\0\
+Collezione Font TrueType (*.ttc)\0*.ttc\0\
+Font OpenType (*.otf)\0*.otf\0\
+Collezione Font OpenType (*.otc)\0*.otc\0\
 All Files (*.*)\0*.*\0"
+    IDS_PREVIOUS "< P&recedente"
+    IDS_NEXT "Ava&nti >"
 END

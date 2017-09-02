@@ -405,13 +405,11 @@ static UINT read_table_from_storage( MSIDATABASE *db, MSITABLE *t, IStorage *stg
         goto err;
     }
 
-    t->row_count = rawsize / row_size;
-    t->data = msi_alloc_zero( t->row_count * sizeof (USHORT*) );
-    if( !t->data )
-        goto err;
-    t->data_persistent = msi_alloc_zero( t->row_count * sizeof(BOOL));
-    if ( !t->data_persistent )
-        goto err;
+    if ((t->row_count = rawsize / row_size))
+    {
+        if (!(t->data = msi_alloc_zero( t->row_count * sizeof(USHORT *) ))) goto err;
+        if (!(t->data_persistent = msi_alloc_zero( t->row_count * sizeof(BOOL) ))) goto err;
+    }
 
     /* transpose all the data */
     TRACE("Transposing data from %d rows\n", t->row_count );
@@ -2721,7 +2719,7 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
     IEnumSTATSTG *stgenum = NULL;
     TRANSFORMDATA *transform;
     TRANSFORMDATA *tables = NULL, *columns = NULL;
-    HRESULT r;
+    HRESULT hr;
     STATSTG stat;
     string_table *strings;
     UINT ret = ERROR_FUNCTION_FAILED;
@@ -2734,8 +2732,8 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
     if( !strings )
         goto end;
 
-    r = IStorage_EnumElements( stg, 0, NULL, 0, &stgenum );
-    if( FAILED( r ) )
+    hr = IStorage_EnumElements( stg, 0, NULL, 0, &stgenum );
+    if (FAILED( hr ))
         goto end;
 
     list_init(&transforms);
@@ -2746,8 +2744,8 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
         WCHAR name[0x40];
         ULONG count = 0;
 
-        r = IEnumSTATSTG_Next( stgenum, 1, &stat, &count );
-        if ( FAILED( r ) || !count )
+        hr = IEnumSTATSTG_Next( stgenum, 1, &stat, &count );
+        if (FAILED( hr ) || !count)
             break;
 
         decode_streamname( stat.pwcsName, name );
@@ -2777,12 +2775,10 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
         TRACE("transform contains stream %s\n", debugstr_w(name));
 
         /* load the table */
-        r = TABLE_CreateView( db, transform->name, (MSIVIEW**) &tv );
-        if( r != ERROR_SUCCESS )
+        if (TABLE_CreateView( db, transform->name, (MSIVIEW**) &tv ) != ERROR_SUCCESS)
             continue;
 
-        r = tv->view.ops->execute( &tv->view, NULL );
-        if( r != ERROR_SUCCESS )
+        if (tv->view.ops->execute( &tv->view, NULL ) != ERROR_SUCCESS)
         {
             tv->view.ops->delete( &tv->view );
             continue;

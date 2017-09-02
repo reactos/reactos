@@ -11,7 +11,7 @@ Compiling
 ~~~~~~~~~
 ROS cmd used to depend on __REACTOS__ to provide two different ways to build cmd.  There is still code left in it for this but...  The __REACTOS__ = 0 has not been develped, maintained.  And therefore it does not even compile anymore.  __REACTOS__ = 1 works fine on both windows(nt). and someday i plan to remove all the __REACTOS__ = 0.
 
-Using rbuild you can compile cmd seperatly by "make cmd_install".  Also you can compile cmd using MSVC 6 and soon 7/8 hopefully.
+Using rbuild you can compile cmd separately by "make cmd_install".  Also you can compile cmd using MSVC 6 and soon 7/8 hopefully.
 
 
 Current Features
@@ -22,7 +22,7 @@ Current Features
  - batch file processing.
  - input/output redirection and piping.
  - alias support.
- - filename completion (use TAB), both unix and windows style.
+ - filename completion (use TAB), both Bash and Windows-CMD style.
 
 
 Credits

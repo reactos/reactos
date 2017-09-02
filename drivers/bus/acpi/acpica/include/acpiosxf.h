@@ -7,7 +7,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -456,6 +456,14 @@ AcpiOsSignal (
     void                    *Info);
 #endif
 
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsEnterSleep
+ACPI_STATUS
+AcpiOsEnterSleep (
+    UINT8                   SleepState,
+    UINT32                  RegaValue,
+    UINT32                  RegbValue);
+#endif
+
 
 /*
  * Debug print routines
@@ -482,7 +490,7 @@ AcpiOsRedirectOutput (
 
 
 /*
- * Debug input
+ * Debug IO
  */
 #ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsGetLine
 ACPI_STATUS
@@ -490,6 +498,39 @@ AcpiOsGetLine (
     char                    *Buffer,
     UINT32                  BufferLength,
     UINT32                  *BytesRead);
+#endif
+
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsInitializeDebugger
+ACPI_STATUS
+AcpiOsInitializeDebugger (
+    void);
+#endif
+
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsTerminateDebugger
+void
+AcpiOsTerminateDebugger (
+    void);
+#endif
+
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsWaitCommandReady
+ACPI_STATUS
+AcpiOsWaitCommandReady (
+    void);
+#endif
+
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsNotifyCommandComplete
+ACPI_STATUS
+AcpiOsNotifyCommandComplete (
+    void);
+#endif
+
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsTracePoint
+void
+AcpiOsTracePoint (
+    ACPI_TRACE_EVENT_TYPE   Type,
+    BOOLEAN                 Begin,
+    UINT8                   *Aml,
+    char                    *Pathname);
 #endif
 
 
@@ -549,64 +590,6 @@ AcpiOsGetNextFilename (
 void
 AcpiOsCloseDirectory (
     void                    *DirHandle);
-#endif
-
-
-/*
- * File I/O and related support
- */
-#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsOpenFile
-ACPI_FILE
-AcpiOsOpenFile (
-    const char              *Path,
-    UINT8                   Modes);
-#endif
-
-#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsCloseFile
-void
-AcpiOsCloseFile (
-    ACPI_FILE               File);
-#endif
-
-#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsReadFile
-int
-AcpiOsReadFile (
-    ACPI_FILE               File,
-    void                    *Buffer,
-    ACPI_SIZE               Size,
-    ACPI_SIZE               Count);
-#endif
-
-#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsWriteFile
-int
-AcpiOsWriteFile (
-    ACPI_FILE               File,
-    void                    *Buffer,
-    ACPI_SIZE               Size,
-    ACPI_SIZE               Count);
-#endif
-
-#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsGetFileOffset
-long
-AcpiOsGetFileOffset (
-    ACPI_FILE               File);
-#endif
-
-#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsSetFileOffset
-ACPI_STATUS
-AcpiOsSetFileOffset (
-    ACPI_FILE               File,
-    long                    Offset,
-    UINT8                   From);
-#endif
-
-#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsTracePoint
-void
-AcpiOsTracePoint (
-    ACPI_TRACE_EVENT_TYPE   Type,
-    BOOLEAN                 Begin,
-    UINT8                   *Aml,
-    char                    *Pathname);
 #endif
 
 

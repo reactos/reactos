@@ -1,7 +1,7 @@
 The Independent JPEG Group's JPEG software
 ==========================================
 
-README for release 9a of 19-Jan-2014
+README for release 9b of 17-Jan-2016
 ====================================
 
 This distribution contains the ninth public release of the Independent JPEG
@@ -60,7 +60,7 @@ OVERVIEW
 
 This package contains C software to implement JPEG image encoding, decoding,
 and transcoding.  JPEG (pronounced "jay-peg") is a standardized compression
-method for full-color and gray-scale images.
+method for full-color and grayscale images.
 
 This software implements JPEG baseline, extended-sequential, and progressive
 compression processes.  Provision is made for supporting all variants of these
@@ -115,7 +115,7 @@ with respect to this software, its quality, accuracy, merchantability, or
 fitness for a particular purpose.  This software is provided "AS IS", and you,
 its user, assume the entire risk as to its quality and accuracy.
 
-This software is copyright (C) 1991-2014, Thomas G. Lane, Guido Vollbeding.
+This software is copyright (C) 1991-2016, Thomas G. Lane, Guido Vollbeding.
 All Rights Reserved except as specified below.
 
 Permission is hereby granted to use, copy, modify, and distribute this
@@ -159,11 +159,6 @@ to produce "uncompressed GIFs".  This technique does not use the LZW
 algorithm; the resulting GIF files are larger than usual, but are readable
 by all standard GIF decoders.
 
-We are required to state that
-    "The Graphics Interchange Format(c) is the Copyright property of
-    CompuServe Incorporated.  GIF(sm) is a Service Mark property of
-    CompuServe Incorporated."
-
 
 REFERENCES
 ==========
@@ -176,8 +171,8 @@ The best short technical introduction to the JPEG compression algorithm is
 	Communications of the ACM, April 1991 (vol. 34 no. 4), pp. 30-44.
 (Adjacent articles in that issue discuss MPEG motion picture compression,
 applications of JPEG, and related topics.)  If you don't have the CACM issue
-handy, a PostScript file containing a revised version of Wallace's article is
-available at http://www.ijg.org/files/wallace.ps.gz.  The file (actually
+handy, a PDF file containing a revised version of Wallace's article is
+available at http://www.ijg.org/files/Wallace.JPEG.pdf.  The file (actually
 a preprint for an article that appeared in IEEE Trans. Consumer Electronics)
 omits the sample images that appeared in CACM, but it includes corrections
 and some added material.  Note: the Wallace article is copyright ACM and IEEE,
@@ -225,14 +220,13 @@ WG1 N 6080 with title "JPEG 9 Lossless Coding", June/July 2012, Paris,
 France.
 
 The JPEG standard does not specify all details of an interchangeable file
-format.  For the omitted details we follow the "JFIF" conventions, revision
-1.02.  JFIF 1.02 has been adopted as an Ecma International Technical Report
-and thus received a formal publication status.  It is available as a free
-download in PDF format from
-http://www.ecma-international.org/publications/techreports/E-TR-098.htm.
-A PostScript version of the JFIF document is available at
-http://www.ijg.org/files/jfif.ps.gz.  There is also a plain text version at
-http://www.ijg.org/files/jfif.txt.gz, but it is missing the figures.
+format.  For the omitted details we follow the "JFIF" conventions, version 2.
+JFIF version 1 has been adopted as Recommendation ITU-T T.871 (05/2011) :
+Information technology - Digital compression and coding of continuous-tone
+still images: JPEG File Interchange Format (JFIF).  It is available as a
+free download in PDF file format from http://www.itu.int/rec/T-REC-T.871.
+A PDF file of the older JFIF document is available at
+http://www.w3.org/Graphics/JPEG/jfif3.pdf.
 
 The TIFF 6.0 file format specification can be obtained by FTP from
 ftp://ftp.sgi.com/graphics/tiff/TIFF6.ps.gz.  The JPEG incorporation scheme
@@ -252,8 +246,8 @@ ARCHIVE LOCATIONS
 The "official" archive site for this software is www.ijg.org.
 The most recent released version can always be found there in
 directory "files".  This particular version will be archived as
-http://www.ijg.org/files/jpegsrc.v9a.tar.gz, and in Windows-compatible
-"zip" archive format as http://www.ijg.org/files/jpegsr9a.zip.
+http://www.ijg.org/files/jpegsrc.v9b.tar.gz, and in Windows-compatible
+"zip" archive format as http://www.ijg.org/files/jpegsr9b.zip.
 
 The JPEG FAQ (Frequently Asked Questions) article is a source of some
 general information about JPEG.

@@ -1039,6 +1039,9 @@ static const WCHAR rc2[] = { 'r','c','2',0 };
 static const WCHAR rc4[] = { 'r','c','4',0 };
 static const WCHAR sha[] = { 's','h','a',0 };
 static const WCHAR sha1[] = { 's','h','a','1',0 };
+static const WCHAR sha256[] = { 's','h','a','2','5','6',0 };
+static const WCHAR sha384[] = { 's','h','a','3','8','4',0 };
+static const WCHAR sha512[] = { 's','h','a','5','1','2',0 };
 static const WCHAR RSA[] = { 'R','S','A',0 };
 static const WCHAR RSA_KEYX[] = { 'R','S','A','_','K','E','Y','X',0 };
 static const WCHAR RSA_SIGN[] = { 'R','S','A','_','S','I','G','N',0 };
@@ -1143,6 +1146,9 @@ static const struct OIDInfoConstructor {
  { 1, szOID_RSA_MD5,                   CALG_MD5,      md5, NULL },
  { 1, szOID_RSA_MD4,                   CALG_MD4,      md4, NULL },
  { 1, szOID_RSA_MD2,                   CALG_MD2,      md2, NULL },
+ { 1, szOID_NIST_sha256,               CALG_SHA_256,  sha256, NULL },
+ { 1, szOID_NIST_sha384,               CALG_SHA_384,  sha384, NULL },
+ { 1, szOID_NIST_sha512,               CALG_SHA_512,  sha512, NULL },
 
  { 2, szOID_OIWSEC_desCBC,             CALG_DES,      des, NULL },
  { 2, szOID_RSA_DES_EDE3_CBC,          CALG_3DES,     tripledes, NULL },

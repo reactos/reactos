@@ -2,17 +2,21 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALL "Installer"
-    IDS_PRINT "Imprimer"
+    IDS_INSTALL "&Installer"
+    IDS_PRINT "Im&primer"
     IDS_STRING "Voix ambiguë d'un cœur qui au zéphyr préfère les jattes de kiwis. 1234567890"
     IDS_OPEN "Ouvrir un fichier police..."
     IDS_ERROR "Erreur"
     IDS_ERROR_NOMEM "Mémoire insuffisante pour terminer l'opération."
-    IDS_ERROR_NOFONT "Le fichier %1 n'est pas un fichier police valide."
+    IDS_ERROR_NOFONT "Le fichier %1 n'est pas un fichier de polices valide."
     IDS_ERROR_NOCLASS "Impossible d'initialiser la classe de fenêtre."
-    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
-TrueType Font (*.ttf)\0*.ttf\0\
-OpenType Font (*.otf)\0*.otf\0\
-Font File (*.fon)\0*.fon\0\
-All Files (*.*)\0*.*\0"
+    IDS_FILTER_LIST "Toutes polices supportées (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+Fichier de polices (*.fon;*.fnt)\0*.fon;*.fnt\0\
+Fichier de polices TrueType (*.ttf)\0*.ttf\0\
+Fichier collection de polices TrueType (*.ttc)\0*.ttc\0\
+Fichier de polices OpenType (*.otf)\0*.otf\0\
+Fichier collection de polices OpenType (*.otc)\0*.otc\0\
+Tous les fichiers (*.*)\0*.*\0"
+    IDS_PREVIOUS "< P&récédent"
+    IDS_NEXT "Suiva&nt >"
 END

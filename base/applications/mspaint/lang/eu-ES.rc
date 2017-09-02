@@ -7,15 +7,21 @@ BEGIN
         MENUITEM "Berria\tCtrl+N", IDM_FILENEW
         MENUITEM "Ireki...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "Gorde\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Gorde honela...", IDM_FILESAVEAS
+        MENUITEM "Gorde &honela...", IDM_FILESAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM SEPARATOR
         MENUITEM "Ezarri azteko plano gisa (Lauza moduan)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Ezarri azteko plano gisa (erdian)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Ezarri azteko plano gisa (tiratuta)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Irten\tAlt+F4", IDM_FILEEXIT
     END
@@ -202,8 +208,8 @@ BEGIN
     IDS_TOOLTIP14 "Poligonoa"
     IDS_TOOLTIP15 "Elipsea"
     IDS_TOOLTIP16 "Laukizuzen biribildua"
-    IDS_OPENFILTER "Bit-mapa fitxategiak(*.bmp;*.dib)\1*.bmp;*.dib\1Fitxategi gustiak (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24 Biteko bit-mapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "Fitxategi gustiak"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bytes"
     IDS_PRINTRES "%d x %d pixels per meter"
     IDS_INTNUMBERS "Please enter integral numbers only!"

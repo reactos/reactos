@@ -311,14 +311,8 @@ static HRESULT WINAPI OLEClipbrd_IEnumFORMATETC_Next
 
     for(i = 0; i < cfetch; i++)
     {
-      rgelt[i] = This->data->entries[This->pos++].fmtetc;
-      if(rgelt[i].ptd)
-      {
-        DVTARGETDEVICE *target = rgelt[i].ptd;
-        rgelt[i].ptd = CoTaskMemAlloc(target->tdSize);
-        if(!rgelt[i].ptd) return E_OUTOFMEMORY;
-        memcpy(rgelt[i].ptd, target, target->tdSize);
-      }
+      hres = copy_formatetc(rgelt + i, &This->data->entries[This->pos++].fmtetc);
+      if(FAILED(hres)) return hres;
     }
   }
   else
@@ -722,7 +716,7 @@ static HRESULT get_data_from_storage(IDataObject *data, FORMATETC *fmt, HGLOBAL 
     hr = IDataObject_GetDataHere(data, &stg_fmt, &med);
     if(FAILED(hr))
     {
-        med.u.pstg = NULL;
+        memset(&med, 0, sizeof(med));
         hr = IDataObject_GetData(data, &stg_fmt, &med);
         if(FAILED(hr)) goto end;
 
@@ -770,7 +764,7 @@ static HRESULT get_data_from_stream(IDataObject *data, FORMATETC *fmt, HGLOBAL *
         LARGE_INTEGER offs;
         ULARGE_INTEGER pos;
 
-        med.u.pstm = NULL;
+        memset(&med, 0, sizeof(med));
         hr = IDataObject_GetData(data, &stm_fmt, &med);
         if(FAILED(hr)) goto error;
 
@@ -807,6 +801,7 @@ static HRESULT get_data_from_global(IDataObject *data, FORMATETC *fmt, HGLOBAL *
 
     mem_fmt = *fmt;
     mem_fmt.tymed = TYMED_HGLOBAL;
+    memset(&med, 0, sizeof(med));
 
     hr = IDataObject_GetData(data, &mem_fmt, &med);
     if(FAILED(hr)) return hr;
@@ -834,6 +829,7 @@ static HRESULT get_data_from_enhmetafile(IDataObject *data, FORMATETC *fmt, HGLO
 
     mem_fmt = *fmt;
     mem_fmt.tymed = TYMED_ENHMF;
+    memset(&med, 0, sizeof(med));
 
     hr = IDataObject_GetData(data, &mem_fmt, &med);
     if(FAILED(hr)) return hr;
@@ -861,6 +857,7 @@ static HRESULT get_data_from_metafilepict(IDataObject *data, FORMATETC *fmt, HGL
 
     mem_fmt = *fmt;
     mem_fmt.tymed = TYMED_MFPICT;
+    memset(&med, 0, sizeof(med));
 
     hr = IDataObject_GetData(data, &mem_fmt, &med);
     if(FAILED(hr)) return hr;
@@ -890,6 +887,7 @@ static HRESULT get_data_from_bitmap(IDataObject *data, FORMATETC *fmt, HBITMAP *
 
     mem_fmt = *fmt;
     mem_fmt.tymed = TYMED_GDI;
+    memset(&med, 0, sizeof(med));
 
     hr = IDataObject_GetData(data, &mem_fmt, &med);
     if(FAILED(hr)) return hr;
@@ -1091,7 +1089,7 @@ static HRESULT get_current_dataobject(IDataObject **data)
 
     h = GetClipboardData(wine_marshal_clipboard_format);
     if(!h) return S_FALSE;
-    if(GlobalSize(h) == 0) return S_FALSE;
+    if(GlobalSize(h) <= 1) return S_FALSE;
     ptr = GlobalLock(h);
     if(!ptr) return S_FALSE;
 
@@ -1179,9 +1177,11 @@ static HRESULT get_priv_data(ole_priv_data **data)
 
         for(cf = 0; (cf = EnumClipboardFormats(cf)) != 0; count++)
         {
-            char buf[100];
-            GetClipboardFormatNameA(cf, buf, sizeof(buf));
-            TRACE("cf %04x %s\n", cf, buf);
+            WCHAR buf[256];
+            if (GetClipboardFormatNameW(cf, buf, sizeof(buf) / sizeof(WCHAR)))
+                TRACE("cf %04x %s\n", cf, debugstr_w(buf));
+            else
+                TRACE("cf %04x\n", cf);
         }
         TRACE("count %d\n", count);
         size += count * sizeof(ret->entries[0]);
@@ -1372,6 +1372,8 @@ static HRESULT WINAPI snapshot_GetData(IDataObject *iface, FORMATETC *fmt,
     TRACE("(%p, %p {%s}, %p)\n", iface, fmt, dump_fmtetc(fmt), med);
 
     if ( !fmt || !med ) return E_INVALIDARG;
+
+    memset(med, 0, sizeof(*med));
 
     if ( !OpenClipboard(NULL)) return CLIPBRD_E_CANT_OPEN;
 
@@ -1765,41 +1767,12 @@ void OLEClipbrd_Initialize(void)
     }
 }
 
-/***********************************************************************
- * OLEClipbrd_UnInitialize()
- * Un-Initializes the OLE clipboard
- */
-void OLEClipbrd_UnInitialize(void)
-{
-    ole_clipbrd *clipbrd = theOleClipboard;
-
-    TRACE("()\n");
-
-    if ( clipbrd )
-    {
-        static const WCHAR ole32W[] = {'o','l','e','3','2',0};
-        HINSTANCE hinst = GetModuleHandleW(ole32W);
-
-        if ( clipbrd->window )
-        {
-            DestroyWindow(clipbrd->window);
-            UnregisterClassW( clipbrd_wndclass, hinst );
-        }
-
-        IStream_Release(clipbrd->marshal_data);
-        if (clipbrd->src_data) IDataObject_Release(clipbrd->src_data);
-        HeapFree(GetProcessHeap(), 0, clipbrd->cached_enum);
-        HeapFree(GetProcessHeap(), 0, clipbrd);
-        theOleClipboard = NULL;
-    }
-}
-
 /*********************************************************************
  *          set_clipboard_formats
  *
  * Enumerate all formats supported by the source and make
  * those formats available using delayed rendering using SetClipboardData.
- * Cache the enumeration list and make that list visibile as the
+ * Cache the enumeration list and make that list visible as the
  * 'Ole Private Data' format on the clipboard.
  *
  */
@@ -1896,6 +1869,12 @@ static HWND create_clipbrd_window(void);
  */
 static inline HRESULT get_clipbrd_window(ole_clipbrd *clipbrd, HWND *wnd)
 {
+#ifdef __REACTOS__
+    /* The clipboard window can get destroyed if the  thread that created it dies so we may need to create it again */
+    if (!IsWindow(clipbrd->window))
+        clipbrd->window = create_clipbrd_window();
+#endif
+
     if ( !clipbrd->window )
         clipbrd->window = create_clipbrd_window();
 
@@ -1938,7 +1917,7 @@ static HRESULT expose_marshalled_dataobject(ole_clipbrd *clipbrd, IDataObject *d
         dup_global_mem(h_stm, GMEM_DDESHARE|GMEM_MOVEABLE, &h);
     }
     else /* flushed */
-        h = GlobalAlloc(GMEM_DDESHARE|GMEM_MOVEABLE, 0);
+        h = GlobalAlloc(GMEM_DDESHARE|GMEM_MOVEABLE, 1);
 
     if(!h) return E_OUTOFMEMORY;
 
@@ -1994,6 +1973,41 @@ static HRESULT set_src_dataobject(ole_clipbrd *clipbrd, IDataObject *data)
 }
 
 /***********************************************************************
+ * OLEClipbrd_UnInitialize()
+ * Un-Initializes the OLE clipboard
+ */
+void OLEClipbrd_UnInitialize(void)
+{
+    ole_clipbrd *clipbrd = theOleClipboard;
+
+    TRACE("()\n");
+
+    if ( clipbrd )
+    {
+        static const WCHAR ole32W[] = {'o','l','e','3','2',0};
+        HINSTANCE hinst = GetModuleHandleW(ole32W);
+
+        /* OleUninitialize() does not release the reference to the dataobject, so
+           take an additional reference here.  This reference is then leaked. */
+        if (clipbrd->src_data)
+        {
+            IDataObject_AddRef(clipbrd->src_data);
+            set_src_dataobject(clipbrd, NULL);
+        }
+
+        if ( clipbrd->window )
+        {
+            DestroyWindow(clipbrd->window);
+            UnregisterClassW( clipbrd_wndclass, hinst );
+        }
+
+        IStream_Release(clipbrd->marshal_data);
+        HeapFree(GetProcessHeap(), 0, clipbrd);
+        theOleClipboard = NULL;
+    }
+}
+
+/***********************************************************************
  *                   clipbrd_wndproc
  */
 static LRESULT CALLBACK clipbrd_wndproc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
@@ -2001,11 +2015,19 @@ static LRESULT CALLBACK clipbrd_wndproc(HWND hwnd, UINT message, WPARAM wparam, 
     ole_clipbrd *clipbrd;
 
     get_ole_clipbrd(&clipbrd);
+#ifdef __REACTOS__
+    if(clipbrd == NULL)
+        return DefWindowProcW(hwnd, message, wparam, lparam);
+#endif
 
     switch (message)
     {
     case WM_RENDERFORMAT:
     {
+#ifdef __REACTOS__
+    if (clipbrd->cached_enum)
+    {
+#endif
         UINT cf = wparam;
         ole_priv_data_entry *entry;
 
@@ -2014,17 +2036,21 @@ static LRESULT CALLBACK clipbrd_wndproc(HWND hwnd, UINT message, WPARAM wparam, 
 
         if(entry)
             render_format(clipbrd->src_data, &entry->fmtetc);
-
+#ifdef __REACTOS__
+    }
+#endif
         break;
     }
 
     case WM_RENDERALLFORMATS:
     {
         DWORD i;
-        ole_priv_data_entry *entries = clipbrd->cached_enum->entries;
+        ole_priv_data_entry *entries;
 
         TRACE("(): WM_RENDERALLFORMATS\n");
 
+        if (!clipbrd || !clipbrd->cached_enum) break;
+        entries = clipbrd->cached_enum->entries;
         for(i = 0; i < clipbrd->cached_enum->count; i++)
         {
             if(entries[i].first_use)
@@ -2075,8 +2101,7 @@ static HWND create_clipbrd_window(void)
     RegisterClassExW(&class);
 
     return CreateWindowW(clipbrd_wndclass, title, WS_POPUP | WS_CLIPSIBLINGS | WS_OVERLAPPED,
-                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                         NULL, NULL, hinst, 0);
+                         0, 0, 0, 0, HWND_MESSAGE, NULL, hinst, 0);
 }
 
 /*********************************************************************

@@ -1,0 +1,37 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+1000, "Ater"
+}
+
+STRINGTABLE
+{
+2000, "Lautus Ater"
+}
+
+STRINGTABLE
+{
+3000, "Normální"
+3001, "Velké písmo"
+3002, "Velmi velké písmo"
+}
+
+STRINGTABLE
+{
+4000, "Normální"
+4001, "Velké písmo"
+4002, "Velmi velké písmo"
+}
+
+STRINGTABLE
+{
+5000, "Lautus"
+5001, "Motiv"
+5002, "Nadace ReactOS"
+5003, "Pisarz, založeno na Luna Inspirat"
+5004, "Uvolněno pod licencí GNU/GPL 2.0, 2011"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Motiv pro ReactOS"
+}

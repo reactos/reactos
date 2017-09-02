@@ -21,6 +21,7 @@
 
 #include "setupapi_private.h"
 
+#include <dbt.h>
 #include <pnp_c.h>
 
 #include "rpc_private.h"
@@ -59,6 +60,31 @@ typedef struct _LOG_CONF_INFO
 #define LOG_CONF_MAGIC 0x464E434C  /* "LCNF" */
 
 
+typedef struct _NOTIFY_DATA
+{
+    ULONG ulMagic;
+    ULONG ulNotifyData;
+} NOTIFY_DATA, *PNOTIFY_DATA;
+
+#define NOTIFY_MAGIC 0x44556677
+
+
+typedef struct _INTERNAL_RANGE_ELEMENT
+{
+    struct _INTERNAL_RANGE_ELEMENT *Next;
+    ULONG ulDummy;
+} INTERNAL_RANGE_ELEMENT, *PINTERNAL_RANGE_ELEMENT;
+
+typedef struct _INTERNAL_RANGE_LIST
+{
+    ULONG ulMagic;
+    PINTERNAL_RANGE_ELEMENT Current;
+    PINTERNAL_RANGE_ELEMENT First;
+} INTERNAL_RANGE_LIST, *PINTERNAL_RANGE_LIST;
+
+#define RANGE_LIST_MAGIC 0x33445566
+
+
 static BOOL GuidToString(LPGUID Guid, LPWSTR String)
 {
     LPWSTR lpString;
@@ -85,18 +111,173 @@ RpcStatusToCmStatus(RPC_STATUS Status)
 }
 
 
+static
+ULONG
+GetRegistryPropertyType(
+    ULONG ulProperty)
+{
+    switch (ulProperty)
+    {
+        case CM_DRP_DEVICEDESC:
+        case CM_DRP_SERVICE:
+        case CM_DRP_CLASS:
+        case CM_DRP_CLASSGUID:
+        case CM_DRP_DRIVER:
+        case CM_DRP_MFG:
+        case CM_DRP_FRIENDLYNAME:
+        case CM_DRP_LOCATION_INFORMATION:
+        case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
+        case CM_DRP_ENUMERATOR_NAME:
+        case CM_DRP_SECURITY_SDS:
+        case CM_DRP_UI_NUMBER_DESC_FORMAT:
+            return REG_SZ;
+
+        case CM_DRP_HARDWAREID:
+        case CM_DRP_COMPATIBLEIDS:
+        case CM_DRP_UPPERFILTERS:
+        case CM_DRP_LOWERFILTERS:
+            return REG_MULTI_SZ;
+
+        case CM_DRP_CONFIGFLAGS:
+        case CM_DRP_CAPABILITIES:
+        case CM_DRP_UI_NUMBER:
+        case CM_DRP_LEGACYBUSTYPE:
+        case CM_DRP_BUSNUMBER:
+        case CM_DRP_DEVTYPE:
+        case CM_DRP_EXCLUSIVE:
+        case CM_DRP_CHARACTERISTICS:
+        case CM_DRP_ADDRESS:
+        case CM_DRP_REMOVAL_POLICY:
+        case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
+        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+        case CM_DRP_INSTALL_STATE:
+            return REG_DWORD;
+
+        case CM_DRP_BUSTYPEGUID:
+        case CM_DRP_SECURITY:
+        case CM_DRP_DEVICE_POWER_DATA:
+        default:
+            return REG_BINARY;
+    }
+
+    return REG_NONE;
+}
+
+
 /***********************************************************************
- * CMP_Init_Detection [SETUPAPI.@]
+ * CMP_GetBlockedDriverInfo [SETUPAPI.@]
  */
-CONFIGRET WINAPI CMP_Init_Detection(
-    DWORD dwMagic)
+CONFIGRET
+WINAPI
+CMP_GetBlockedDriverInfo(
+    _Out_opt_ LPWSTR pszNames,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    ULONG ulTransferLength;
+    CONFIGRET ret;
+
+    TRACE("CMP_GetBlockedDriverInfo(%p %p %lx %p)\n",
+          pszNames, pulLength, ulFlags, hMachine);
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    ulTransferLength = *pulLength;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetBlockedDriverInfo(BindingHandle,
+                                       (PBYTE)pszNames,
+                                       &ulTransferLength,
+                                       pulLength,
+                                       ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CMP_GetServerSideDeviceInstallFlags [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CMP_GetServerSideDeviceInstallFlags(
+    _Out_ PULONG pulSSDIFlags,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    TRACE("%lu\n", dwMagic);
+    TRACE("CMP_GetServerSideDeviceInstallFlags(%p %lx %p)\n",
+          pulSSDIFlags, ulFlags, hMachine);
 
-    if (dwMagic != CMP_MAGIC)
+    if (pulSSDIFlags == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    RpcTryExcept
+    {
+        ret = PNP_GetServerSideDeviceInstallFlags(BindingHandle,
+                                                  pulSSDIFlags,
+                                                  ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CMP_Init_Detection [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CMP_Init_Detection(
+    _In_ ULONG ulMagic)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    CONFIGRET ret;
+
+    TRACE("CMP_Init_Detection(%lu)\n", ulMagic);
+
+    if (ulMagic != CMP_MAGIC)
         return CR_INVALID_DATA;
 
     if (!PnpGetLocalHandles(&BindingHandle, NULL))
@@ -121,30 +302,95 @@ CONFIGRET WINAPI CMP_Init_Detection(
  */
 CONFIGRET
 WINAPI
-CMP_RegisterNotification(IN HANDLE hRecipient,
-                         IN LPVOID lpvNotificationFilter,
-                         IN DWORD dwFlags,
-                         OUT PULONG pluhDevNotify)
+CMP_RegisterNotification(
+    _In_ HANDLE hRecipient,
+    _In_ LPVOID lpvNotificationFilter,
+    _In_ ULONG ulFlags,
+    _Out_ PHDEVNOTIFY phDevNotify)
 {
-    FIXME("Stub %p %p %lu %p\n", hRecipient, lpvNotificationFilter, dwFlags, pluhDevNotify);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return CR_FAILURE;
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    PNOTIFY_DATA pNotifyData = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("CMP_RegisterNotification(%p %p %lu %p)\n",
+          hRecipient, lpvNotificationFilter, ulFlags, phDevNotify);
+
+    if ((hRecipient == NULL) ||
+        (lpvNotificationFilter == NULL) ||
+        (phDevNotify == NULL))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~0x7)
+        return CR_INVALID_FLAG;
+
+    if (((PDEV_BROADCAST_HDR)lpvNotificationFilter)->dbch_size < sizeof(DEV_BROADCAST_HDR))
+        return CR_INVALID_DATA;
+
+    if (!PnpGetLocalHandles(&BindingHandle, NULL))
+        return CR_FAILURE;
+
+    pNotifyData = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            sizeof(NOTIFY_DATA));
+    if (pNotifyData == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    pNotifyData->ulMagic = NOTIFY_MAGIC;
+
+/*
+    if (dwFlags & DEVICE_NOTIFY_SERVICE_HANDLE == DEVICE_NOTYFY_WINDOW_HANDLE)
+    {
+
+    }
+    else if (dwFlags & DEVICE_NOTIFY_SERVICE_HANDLE == DEVICE_NOTYFY_SERVICE_HANDLE)
+    {
+
+    }
+*/
+
+    RpcTryExcept
+    {
+        ret = PNP_RegisterNotification(BindingHandle,
+                                       ulFlags,
+                                       &pNotifyData->ulNotifyData);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret == CR_SUCCESS)
+    {
+        *phDevNotify = (HDEVNOTIFY)pNotifyData;
+    }
+    else
+    {
+        if (pNotifyData != NULL)
+            HeapFree(GetProcessHeap(), 0, pNotifyData);
+
+        *phDevNotify = (HDEVNOTIFY)NULL;
+    }
+
+    return ret;
 }
 
 
 /***********************************************************************
  * CMP_Report_LogOn [SETUPAPI.@]
  */
-CONFIGRET WINAPI CMP_Report_LogOn(
-    DWORD dwMagic,
-    DWORD dwProcessId)
+CONFIGRET
+WINAPI
+CMP_Report_LogOn(
+    _In_ DWORD dwMagic,
+    _In_ DWORD dwProcessId)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret = CR_SUCCESS;
     BOOL bAdmin;
     DWORD i;
 
-    TRACE("%lu\n", dwMagic);
+    TRACE("CMP_Report_LogOn(%lu %lu)\n", dwMagic, dwProcessId);
 
     if (dwMagic != CMP_MAGIC)
         return CR_INVALID_DATA;
@@ -183,21 +429,54 @@ CONFIGRET WINAPI CMP_Report_LogOn(
  */
 CONFIGRET
 WINAPI
-CMP_UnregisterNotification(IN HDEVNOTIFY handle)
+CMP_UnregisterNotification(
+    _In_ HDEVNOTIFY hDevNotify)
 {
-    FIXME("Stub %p\n", handle);
-    return CR_SUCCESS;
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    PNOTIFY_DATA pNotifyData;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("CMP_UnregisterNotification(%p)\n", hDevNotify);
+
+    pNotifyData = (PNOTIFY_DATA)hDevNotify;
+
+    if ((pNotifyData == NULL) ||
+        (pNotifyData->ulMagic != NOTIFY_MAGIC))
+        return CR_INVALID_POINTER;
+
+    if (!PnpGetLocalHandles(&BindingHandle, NULL))
+        return CR_FAILURE;
+
+    RpcTryExcept
+    {
+        ret = PNP_UnregisterNotification(BindingHandle,
+                                         pNotifyData->ulNotifyData);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret == CR_SUCCESS)
+        HeapFree(GetProcessHeap(), 0, pNotifyData);
+
+    return ret;
 }
 
 
 /***********************************************************************
  * CMP_WaitNoPendingInstallEvents [SETUPAPI.@]
  */
-DWORD WINAPI CMP_WaitNoPendingInstallEvents(
-    DWORD dwTimeout)
+DWORD
+WINAPI
+CMP_WaitNoPendingInstallEvents(
+    _In_ DWORD dwTimeout)
 {
     HANDLE hEvent;
     DWORD ret;
+
+    TRACE("CMP_WaitNoPendingInstallEvents(%lu)\n", dwTimeout);
 
     hEvent = OpenEventW(SYNCHRONIZE, FALSE, L"Global\\PnP_No_Pending_Install_Events");
     if (hEvent == NULL)
@@ -214,14 +493,26 @@ DWORD WINAPI CMP_WaitNoPendingInstallEvents(
  */
 CONFIGRET
 WINAPI
-CMP_WaitServicesAvailable(HMACHINE hMachine)
+CMP_WaitServicesAvailable(
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret = CR_SUCCESS;
     WORD Version;
 
-    if (!PnpGetLocalHandles(&BindingHandle, NULL))
-        return CR_FAILURE;
+    TRACE("CMP_WaitServicesAvailable(%p)\n", hMachine);
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
 
     RpcTryExcept
     {
@@ -440,6 +731,23 @@ CONFIGRET WINAPI CM_Add_ID_ExW(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Add_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Add_Range(
+    _In_ DWORDLONG ullStartValue,
+    _In_ DWORDLONG ullEndValue,
+    _In_ RANGE_LIST rlh,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Add_Range(%I64u %I64u %p %lx)\n",
+          ullStartValue, ullEndValue, rlh, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -695,6 +1003,39 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
 
 
 /***********************************************************************
+ * CM_Create_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Create_Range_List(
+    _Out_ PRANGE_LIST prlh,
+    _In_ ULONG ulFlags)
+{
+    PINTERNAL_RANGE_LIST pRangeList = NULL;
+
+    FIXME("CM_Create_Range_List(%p %lx)\n", prlh, ulFlags);
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (prlh == NULL)
+        return CR_INVALID_POINTER;
+
+    pRangeList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(INTERNAL_RANGE_LIST));
+    if (pRangeList == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    pRangeList->ulMagic = RANGE_LIST_MAGIC;
+
+    // TODO: More initialization
+
+    *prlh = (RANGE_LIST)pRangeList;
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
  * CM_Delete_Class_Key [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Delete_Class_Key(
@@ -776,6 +1117,23 @@ CONFIGRET WINAPI CM_Delete_DevNode_Key_Ex(
     FIXME("%p %lu %lx %p\n",
           dnDevNode, ulHardwareProfile, ulFlags, hMachine);
 
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Delete_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Delete_Range(
+    _In_ DWORDLONG ullStartValue,
+    _In_ DWORDLONG ullEndValue,
+    _In_ RANGE_LIST rlh,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Delete_Range(%I64u %I64u %p %lx)\n",
+          ullStartValue, ullEndValue, rlh, ulFlags);
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -876,6 +1234,22 @@ CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
     HeapFree(GetProcessHeap(), 0, pMachine);
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Dup_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Dup_Range_List(
+    _In_ RANGE_LIST rlhOld,
+    _In_ RANGE_LIST rlhNew,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Dup_Range_List(%p %p %lx)\n",
+          rlhOld, rlhNew, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -1146,6 +1520,44 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
 
 
 /***********************************************************************
+ * CM_Find_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Find_Range(
+    _Out_ PDWORDLONG pullStart,
+    _In_ DWORDLONG ullStart,
+    _In_ ULONG ulLength,
+    _In_ DWORDLONG ullAlignment,
+    _In_ DWORDLONG ullEnd,
+    _In_ RANGE_LIST rlh,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Find_Range(%p %I64u %lu %I64u %I64u %p %lx)\n",
+          pullStart, ullStart, ulLength, ullAlignment, ullEnd, rlh, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_First_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_First_Range(
+    _In_ RANGE_LIST rlh,
+    _Out_ PDWORDLONG pullStart,
+    _Out_ PDWORDLONG pullEnd,
+    _Out_ PRANGE_ELEMENT preElement,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_First_Range(%p %p %p %p %lx)\n",
+          rlh, pullStart, pullEnd, preElement, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Free_Log_Conf [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Free_Log_Conf(
@@ -1230,6 +1642,35 @@ CONFIGRET WINAPI CM_Free_Log_Conf_Handle(
         return CR_INVALID_LOG_CONF;
 
     HeapFree(GetProcessHeap(), 0, pLogConfInfo);
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Free_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Free_Range_List(
+    _In_ RANGE_LIST RangeList,
+    _In_ ULONG ulFlags)
+{
+    PINTERNAL_RANGE_LIST pRangeList;
+
+    FIXME("CM_Free_Range_List(%p %lx)\n", RangeList, ulFlags);
+
+    pRangeList = (PINTERNAL_RANGE_LIST)RangeList;
+
+    if (pRangeList == NULL || pRangeList->ulMagic != RANGE_LIST_MAGIC)
+        return CR_INVALID_RANGE_LIST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    // TODO: Free the list of ranges
+
+    HeapFree(GetProcessHeap(), 0, pRangeList);
 
     return CR_SUCCESS;
 }
@@ -1588,10 +2029,68 @@ CONFIGRET WINAPI CM_Get_Class_Registry_PropertyA(
     LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
     PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
 {
-    FIXME("%p %lu %p %p %p %lx %lx\n",
+    PWSTR BufferW = NULL;
+    ULONG ulLength = 0;
+    ULONG ulType;
+    CONFIGRET ret;
+
+    TRACE("%p %lu %p %p %p %lx %lx\n",
           ClassGuid, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
-    return CR_CALL_NOT_IMPLEMENTED;
+
+    if (pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulProperty < CM_CRP_MIN || ulProperty > CM_CRP_MAX)
+        return CR_INVALID_PROPERTY;
+
+    ulType = GetRegistryPropertyType(ulProperty);
+    if (ulType == REG_SZ || ulType == REG_MULTI_SZ)
+    {
+        /* Get the required buffer size */
+        ret = CM_Get_Class_Registry_PropertyW(ClassGuid, ulProperty, pulRegDataType,
+                                              NULL, &ulLength, ulFlags, hMachine);
+        if (ret != CR_BUFFER_SMALL)
+            return ret;
+
+        /* Allocate the unicode buffer */
+        BufferW = HeapAlloc(GetProcessHeap(), 0, ulLength);
+        if (BufferW == NULL)
+            return CR_OUT_OF_MEMORY;
+
+        /* Get the property */
+        ret = CM_Get_Class_Registry_PropertyW(ClassGuid, ulProperty, pulRegDataType,
+                                              BufferW, &ulLength, ulFlags, hMachine);
+        if (ret != CR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, BufferW);
+            return ret;
+        }
+
+        /* Do W->A conversion */
+        *pulLength = WideCharToMultiByte(CP_ACP,
+                                         0,
+                                         BufferW,
+                                         lstrlenW(BufferW) + 1,
+                                         Buffer,
+                                         *pulLength,
+                                         NULL,
+                                         NULL);
+
+        /* Release the unicode buffer */
+        HeapFree(GetProcessHeap(), 0, BufferW);
+
+        if (*pulLength == 0)
+            ret = CR_FAILURE;
+    }
+    else
+    {
+        /* Get the property */
+        ret = CM_Get_Class_Registry_PropertyW(ClassGuid, ulProperty, pulRegDataType,
+                                              Buffer, pulLength, ulFlags, hMachine);
+    }
+
+    return ret;
 }
 
 
@@ -3782,6 +4281,40 @@ WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
 
 
 /***********************************************************************
+ * CM_Intersect_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Intersect_Range_List(
+    _In_ RANGE_LIST rlhOld1,
+    _In_ RANGE_LIST rlhOld2,
+    _In_ RANGE_LIST rlhNew,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Intersect_Range_List(%p %p %p %lx)\n",
+          rlhOld1, rlhOld2, rlhNew, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Invert_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Invert_Range_List(
+    _In_ RANGE_LIST rlhOld,
+    _In_ RANGE_LIST rlhNew,
+    _In_ DWORDLONG ullMaxValue,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Invert_Range_List(%p %p %I64u %lx)\n",
+          rlhOld, rlhNew, ullMaxValue, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Is_Dock_Station_Present [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Is_Dock_Station_Present(
@@ -4022,6 +4555,23 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
 
 
 /***********************************************************************
+ * CM_Merge_Range_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Merge_Range_List(
+    _In_ RANGE_LIST rlhOld1,
+    _In_ RANGE_LIST rlhOld2,
+    _In_ RANGE_LIST rlhNew,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Merge_Range_List(%p %p %p %lx)\n",
+          rlhOld1, rlhOld2, rlhNew, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Modify_Res_Des [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Modify_Res_Des(
@@ -4123,6 +4673,23 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Next_Range [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Next_Range(
+    _Inout_ PRANGE_ELEMENT preElement,
+    _Out_ PDWORDLONG pullStart,
+    _Out_ PDWORDLONG pullEnd,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Next_Range(%p %p %p %lx)\n",
+          preElement, pullStart, pullEnd, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -5334,6 +5901,9 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExA(
     if (Buffer == NULL && ulLength != 0)
         return CR_INVALID_POINTER;
 
+    if (ulProperty < CM_DRP_MIN || ulProperty > CM_DRP_MAX)
+        return CR_INVALID_PROPERTY;
+
     if (Buffer == NULL)
     {
         ret = CM_Set_DevNode_Registry_Property_ExW(dnDevInst,
@@ -5346,87 +5916,7 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExA(
     else
     {
         /* Get property type */
-        switch (ulProperty)
-        {
-            case CM_DRP_DEVICEDESC:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_HARDWAREID:
-                ulType = REG_MULTI_SZ;
-                break;
-
-            case CM_DRP_COMPATIBLEIDS:
-                ulType = REG_MULTI_SZ;
-                break;
-
-            case CM_DRP_SERVICE:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_CLASS:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_CLASSGUID:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_DRIVER:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_CONFIGFLAGS:
-                ulType = REG_DWORD;
-                break;
-
-            case CM_DRP_MFG:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_FRIENDLYNAME:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_LOCATION_INFORMATION:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_UPPERFILTERS:
-                ulType = REG_MULTI_SZ;
-                break;
-
-            case CM_DRP_LOWERFILTERS:
-                ulType = REG_MULTI_SZ;
-                break;
-
-            case CM_DRP_SECURITY:
-                ulType = REG_BINARY;
-                break;
-
-            case CM_DRP_DEVTYPE:
-                ulType = REG_DWORD;
-                break;
-
-            case CM_DRP_EXCLUSIVE:
-                ulType = REG_DWORD;
-                break;
-
-            case CM_DRP_CHARACTERISTICS:
-                ulType = REG_DWORD;
-                break;
-
-            case CM_DRP_UI_NUMBER_DESC_FORMAT:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_REMOVAL_POLICY_OVERRIDE:
-                ulType = REG_DWORD;
-                break;
-
-            default:
-                return CR_INVALID_PROPERTY;
-        }
+        ulType = GetRegistryPropertyType(ulProperty);
 
         /* Allocate buffer if needed */
         if (ulType == REG_SZ ||
@@ -5522,87 +6012,8 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    switch (ulProperty)
-    {
-        case CM_DRP_DEVICEDESC:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_HARDWAREID:
-            ulType = REG_MULTI_SZ;
-            break;
-
-        case CM_DRP_COMPATIBLEIDS:
-            ulType = REG_MULTI_SZ;
-            break;
-
-        case CM_DRP_SERVICE:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_CLASS:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_CLASSGUID:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_DRIVER:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_CONFIGFLAGS:
-            ulType = REG_DWORD;
-            break;
-
-        case CM_DRP_MFG:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_FRIENDLYNAME:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_LOCATION_INFORMATION:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_UPPERFILTERS:
-            ulType = REG_MULTI_SZ;
-            break;
-
-        case CM_DRP_LOWERFILTERS:
-            ulType = REG_MULTI_SZ;
-            break;
-
-        case CM_DRP_SECURITY:
-            ulType = REG_BINARY;
-            break;
-
-        case CM_DRP_DEVTYPE:
-            ulType = REG_DWORD;
-            break;
-
-        case CM_DRP_EXCLUSIVE:
-            ulType = REG_DWORD;
-            break;
-
-        case CM_DRP_CHARACTERISTICS:
-            ulType = REG_DWORD;
-            break;
-
-        case CM_DRP_UI_NUMBER_DESC_FORMAT:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
-            ulType = REG_DWORD;
-            break;
-
-        default:
-            return CR_INVALID_PROPERTY;
-    }
+    /* Get property type */
+    ulType = GetRegistryPropertyType(ulProperty);
 
     RpcTryExcept
     {
@@ -5851,6 +6262,23 @@ CONFIGRET WINAPI CM_Setup_DevNode_Ex(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Test_Range_Available [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Test_Range_Available(
+    _In_ DWORDLONG ullStartValue,
+    _In_ DWORDLONG ullEndValue,
+    _In_ RANGE_LIST rlh,
+    _In_ ULONG ulFlags)
+{
+    FIXME("CM_Test_Range_Available(%I64u %I64u %p %lx)\n",
+          ullStartValue, ullEndValue, rlh, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 

@@ -23,16 +23,16 @@
 #include "precomp.h"
 
 void *
-ssl_rc4_info_create(void);
+rdssl_rc4_info_create(void);
 void
-ssl_rc4_info_delete(void * rc4_info);
+rdssl_rc4_info_delete(void * rc4_info);
 void
-ssl_rc4_set_key(void * rc4_info, char * key, int len);
+rdssl_rc4_set_key(void * rc4_info, char * key, int len);
 void
-ssl_rc4_crypt(void * rc4_info, char * in_data, char * out_data, int len);
+rdssl_rc4_crypt(void * rc4_info, char * in_data, char * out_data, int len);
 int
-ssl_mod_exp(char* out, int out_len, char* in, int in_len,
-            char* mod, int mod_len, char* exp, int exp_len);
+rdssl_mod_exp(char* out, int out_len, char* in, int in_len,
+              char* mod, int mod_len, char* exp, int exp_len);
 
 extern char g_username[256];
 extern char g_hostname[256];
@@ -74,7 +74,7 @@ static void
 licence_info(uint8 * client_random, uint8 * rsa_data,
 	     uint8 * licence_data, int licence_size, uint8 * hwid, uint8 * signature)
 {
-	uint32 sec_flags = SEC_LICENCE_NEG;
+	uint32 sec_flags = SEC_LICENSE_PKT;
 	uint16 length =
 		24 + SEC_RANDOM_SIZE + SEC_MODULUS_SIZE + SEC_PADDING_SIZE +
 		licence_size + LICENCE_HWID_SIZE + LICENCE_SIGNATURE_SIZE;
@@ -114,7 +114,7 @@ licence_info(uint8 * client_random, uint8 * rsa_data,
 static void
 licence_send_new_licence_request(uint8 * client_random, uint8 * rsa_data, char *user, char *host)
 {
-	uint32 sec_flags = SEC_LICENCE_NEG;
+	uint32 sec_flags = SEC_LICENSE_PKT;
 	uint16 userlen = strlen(user) + 1;
 	uint16 hostlen = strlen(host) + 1;
 	uint16 length =
@@ -179,10 +179,10 @@ licence_process_request(STREAM s)
 		sec_sign(signature, 16, g_licence_sign_key, 16, hwid, sizeof(hwid));
 
 		/* Now encrypt the HWID */
-		crypt_key = ssl_rc4_info_create();
-		ssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
-		ssl_rc4_crypt(crypt_key, (char *)hwid, (char *)hwid, sizeof(hwid));
-		ssl_rc4_info_delete(crypt_key);
+		crypt_key = rdssl_rc4_info_create();
+		rdssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
+		rdssl_rc4_crypt(crypt_key, (char *)hwid, (char *)hwid, sizeof(hwid));
+		rdssl_rc4_info_delete(crypt_key);
 
 #if WITH_DEBUG
 		DEBUG(("Sending licensing PDU (message type 0x%02x)\n", LICENCE_TAG_LICENCE_INFO));
@@ -199,11 +199,11 @@ licence_process_request(STREAM s)
 	licence_send_new_licence_request(null_data, null_data, g_username, g_hostname);
 }
 
-/* Send a platform challange response packet */
+/* Send a platform challenge response packet */
 static void
-licence_send_platform_challange_response(uint8 * token, uint8 * crypt_hwid, uint8 * signature)
+licence_send_platform_challenge_response(uint8 * token, uint8 * crypt_hwid, uint8 * signature)
 {
-	uint32 sec_flags = SEC_LICENCE_NEG;
+	uint32 sec_flags = SEC_LICENSE_PKT;
 	uint16 length = 58;
 	STREAM s;
 
@@ -227,9 +227,9 @@ licence_send_platform_challange_response(uint8 * token, uint8 * crypt_hwid, uint
 	sec_send(s, sec_flags);
 }
 
-/* Parse an platform challange request packet */
+/* Parse a platform challenge request packet */
 static RD_BOOL
-licence_parse_platform_challange(STREAM s, uint8 ** token, uint8 ** signature)
+licence_parse_platform_challenge(STREAM s, uint8 ** token, uint8 ** signature)
 {
 	uint16 tokenlen;
 
@@ -248,9 +248,9 @@ licence_parse_platform_challange(STREAM s, uint8 ** token, uint8 ** signature)
 	return s_check_end(s);
 }
 
-/* Process a platform challange  packet */
+/* Process a platform challenge packet */
 static void
-licence_process_platform_challange(STREAM s)
+licence_process_platform_challenge(STREAM s)
 {
 	uint8 *in_token = NULL, *in_sig;
 	uint8 out_token[LICENCE_TOKEN_SIZE], decrypt_token[LICENCE_TOKEN_SIZE];
@@ -260,14 +260,14 @@ licence_process_platform_challange(STREAM s)
 	void * crypt_key;
 
 	/* Parse incoming packet and save the encrypted token */
-	licence_parse_platform_challange(s, &in_token, &in_sig);
+	licence_parse_platform_challenge(s, &in_token, &in_sig);
 	memcpy(out_token, in_token, LICENCE_TOKEN_SIZE);
 
 	/* Decrypt the token. It should read TEST in Unicode. */
-	crypt_key = ssl_rc4_info_create();
-	ssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
-	ssl_rc4_crypt(crypt_key, (char *)in_token, (char *)decrypt_token, LICENCE_TOKEN_SIZE);
-	ssl_rc4_info_delete(crypt_key);
+	crypt_key = rdssl_rc4_info_create();
+	rdssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
+	rdssl_rc4_crypt(crypt_key, (char *)in_token, (char *)decrypt_token, LICENCE_TOKEN_SIZE);
+	rdssl_rc4_info_delete(crypt_key);
 	
 	/* Generate a signature for a buffer of token and HWID */
 	licence_generate_hwid(hwid);
@@ -276,12 +276,11 @@ licence_process_platform_challange(STREAM s)
 	sec_sign(out_sig, 16, g_licence_sign_key, 16, sealed_buffer, sizeof(sealed_buffer));
 
 	/* Now encrypt the HWID */
-	crypt_key = ssl_rc4_info_create();
-	ssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
-	ssl_rc4_crypt(crypt_key, (char *)hwid, (char *)crypt_hwid, LICENCE_HWID_SIZE);
-	ssl_rc4_info_delete(crypt_key);
+	crypt_key = rdssl_rc4_info_create();
+	rdssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
+	rdssl_rc4_crypt(crypt_key, (char *)hwid, (char *)crypt_hwid, LICENCE_HWID_SIZE);
 
-	licence_send_platform_challange_response(out_token, crypt_hwid, out_sig);
+	licence_send_platform_challenge_response(out_token, crypt_hwid, out_sig);
 }
 
 /* Process a new licence packet */
@@ -297,10 +296,10 @@ licence_process_new_license(STREAM s)
 	if (!s_check_rem(s, length))
 		return;
 
-	crypt_key = ssl_rc4_info_create();
-	ssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
-	ssl_rc4_crypt(crypt_key, (char *)s->p, (char *)s->p, length);
-	ssl_rc4_info_delete(crypt_key);
+	crypt_key = rdssl_rc4_info_create();
+	rdssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
+	rdssl_rc4_crypt(crypt_key, (char *)s->p, (char *)s->p, length);
+	rdssl_rc4_info_delete(crypt_key);
 
 	/* Parse NEW_LICENSE_INFO block */
 	in_uint8s(s, 4);	// skip dwVersion
@@ -343,7 +342,7 @@ licence_process_error_alert(STREAM s)
 		return;
 	}
 
-	/* handle error codes, for now, jsut report them */
+	/* handle error codes, for now, just report them */
 	switch (error_code)
 	{
 		case 0x6:	// ERR_NO_LICENSE_SERVER
@@ -363,7 +362,7 @@ licence_process_error_alert(STREAM s)
 			break;
 	}
 
-	/* handle error codes, for now, jsut report them */
+	/* handle error codes, for now, just report them */
 	switch (error_info)
 	{
 		default:
@@ -394,7 +393,7 @@ licence_process(STREAM s)
 			break;
 
 		case LICENCE_TAG_PLATFORM_CHALLANGE:
-			licence_process_platform_challange(s);
+			licence_process_platform_challenge(s);
 			break;
 
 		case LICENCE_TAG_NEW_LICENCE:

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -133,7 +133,7 @@ AcpiExDoMatch (
          * Change to:     (M == P[i])
          */
         Status = AcpiExDoLogicalOp (
-            AML_LEQUAL_OP, MatchObj, PackageObj, &LogicalResult);
+            AML_LOGICAL_EQUAL_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);
@@ -146,7 +146,7 @@ AcpiExDoMatch (
          * Change to:                  (M >= P[i]) (M NotLess than P[i])
          */
         Status = AcpiExDoLogicalOp (
-            AML_LLESS_OP, MatchObj, PackageObj, &LogicalResult);
+            AML_LOGICAL_LESS_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);
@@ -160,7 +160,7 @@ AcpiExDoMatch (
          * Change to:         (M > P[i])
          */
         Status = AcpiExDoLogicalOp (
-            AML_LGREATER_OP, MatchObj, PackageObj, &LogicalResult);
+            AML_LOGICAL_GREATER_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);
@@ -173,7 +173,7 @@ AcpiExDoMatch (
          * Change to:                     (M <= P[i]) (M NotGreater than P[i])
          */
         Status = AcpiExDoLogicalOp (
-            AML_LGREATER_OP, MatchObj, PackageObj, &LogicalResult);
+            AML_LOGICAL_GREATER_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);
@@ -187,7 +187,7 @@ AcpiExDoMatch (
          * Change to:            (M < P[i])
          */
         Status = AcpiExDoLogicalOp (
-            AML_LLESS_OP, MatchObj, PackageObj, &LogicalResult);
+            AML_LOGICAL_LESS_OP, MatchObj, PackageObj, &LogicalResult);
         if (ACPI_FAILURE (Status))
         {
             return (FALSE);

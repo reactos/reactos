@@ -248,7 +248,6 @@ RefreshServiceList(PMAIN_WND_INFO Info)
 {
     ENUM_SERVICE_STATUS_PROCESS *pService;
     LVITEMW lvItem;
-    DWORD NumServices;
     DWORD Index;
 
     SendMessage (Info->hListView,
@@ -258,9 +257,9 @@ RefreshServiceList(PMAIN_WND_INFO Info)
 
     (void)ListView_DeleteAllItems(Info->hListView);
 
-    if (GetServiceList(Info, &NumServices))
+    if (GetServiceList(Info))
     {
-        for (Index = 0; Index < NumServices; Index++)
+        for (Index = 0; Index < Info->NumServices; Index++)
         {
             INT i;
 

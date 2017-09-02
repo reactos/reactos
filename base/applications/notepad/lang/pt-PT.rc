@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Salvar &como...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "C&onfigurar página...", CMD_PAGE_SETUP
-        MENUITEM "&Imprimir\tCtrl+P", CMD_PRINT
+        MENUITEM "&Imprimir...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Sai&r", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Localizar...", CMD_SEARCH
         MENUITEM "Localizar &próxima\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace\tCtrl+H", CMD_REPLACE
+        MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Ir Para...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Selecionar &tudo", CMD_SELECT_ALL

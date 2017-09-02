@@ -22,7 +22,7 @@ InitAudioDlg(HWND hwnd)
     HWND hCB;
     LRESULT Res;
 
-    LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, sizeof(szNoDevices) / sizeof(TCHAR));
+    LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
 
     // Init sound playback devices list
     hCB = GetDlgItem(hwnd, IDC_DEVICE_PLAY_LIST);

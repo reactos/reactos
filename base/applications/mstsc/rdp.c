@@ -70,7 +70,7 @@ extern time_t g_reconnect_random_ts;
 extern RD_BOOL g_has_reconnect_random;
 extern uint8 g_client_random[SEC_RANDOM_SIZE];
 
-void ssl_hmac_md5(char* key, int keylen, char* data, int len, char* output);
+void rdssl_hmac_md5(char* key, int keylen, char* data, int len, char* output);
 
 #if WITH_DEBUG
 static uint32 g_packetno;
@@ -139,7 +139,7 @@ rdp_recv(uint8 * type)
 static STREAM
 rdp_init_data(int maxlen)
 {
-	STREAM s = NULL;
+	STREAM s;
 
 	s = sec_init(g_encryption ? SEC_ENCRYPT : 0, maxlen + 18);
 	s_push_layer(s, rdp_hdr, 18);
@@ -169,6 +169,18 @@ rdp_send_data(STREAM s, uint8 data_pdu_type)
 	out_uint16(s, 0);	/* compress_len */
 
 	sec_send(s, g_encryption ? SEC_ENCRYPT : 0);
+}
+
+/* Output a string in Unicode with mandatory null termination. If
+   string is NULL or len is 0, write an unicode null termination to
+   stream. */
+void
+rdp_out_unistr_mandatory_null(STREAM s, char *string, int len)
+{
+	if (string && len > 0)
+		rdp_out_unistr(s, string, len);
+	else
+		out_uint16_le(s, 0);
 }
 
 /* Output a string in Unicode */
@@ -340,19 +352,23 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 	int len_directory = 2 * strlen(directory);
 
 	/* length of strings in TS_EXTENDED_PACKET includes null terminator */
+	char dllName[MAX_PATH];
 	int len_ip = 2 * strlen(ipaddr) + 2;
-	int len_dll = 2 * strlen("C:\\") + 2;
+	int len_dll = 0;
 
 	int packetlen = 0;
-	uint32 sec_flags = g_encryption ? (SEC_LOGON_INFO | SEC_ENCRYPT) : SEC_LOGON_INFO;
-	STREAM s = NULL;
+	uint32 sec_flags = g_encryption ? (SEC_INFO_PKT | SEC_ENCRYPT) : SEC_INFO_PKT;
+	STREAM s;
 	time_t t = time(NULL);
 	time_t tzone;
 	uint8 security_verifier[16];
 
+	GetModuleFileNameA(NULL, dllName, ARRAYSIZE(dllName));
+	len_dll = 2 * strlen(dllName) + 2;
+
 	if (g_rdp_version == RDP_V4 || 1 == g_server_rdp_version)
 	{
-		DEBUG_RDP5(("Sending RDP4-style Logon packet\n"));
+        DEBUG_RDP5(("Sending RDP4-style Logon packet\n"));
 
 		s = sec_init(sec_flags, 18 + len_domain + len_user + len_password
 			     + len_program + len_directory + 10);
@@ -364,11 +380,12 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 		out_uint16_le(s, len_password);
 		out_uint16_le(s, len_program);
 		out_uint16_le(s, len_directory);
-		rdp_out_unistr(s, domain, len_domain);
-		rdp_out_unistr(s, user, len_user);
-		rdp_out_unistr(s, password, len_password);
-		rdp_out_unistr(s, program, len_program);
-		rdp_out_unistr(s, directory, len_directory);
+
+		rdp_out_unistr_mandatory_null(s, domain, len_domain);
+		rdp_out_unistr_mandatory_null(s, user, len_user);
+		rdp_out_unistr_mandatory_null(s, password, len_password);
+		rdp_out_unistr_mandatory_null(s, program, len_program);
+		rdp_out_unistr_mandatory_null(s, directory, len_directory);
 	}
 	else
 	{
@@ -376,6 +393,7 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 
 		if (g_redirect == True && g_redirect_cookie_len > 0)
 		{
+			flags |= RDP_INFO_AUTOLOGON;
 			len_password = g_redirect_cookie_len;
 			len_password -= 2;	/* substract 2 bytes which is added below */
 		}
@@ -395,8 +413,8 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 			2 + len_program +	/* AlternateShell */
 			2 + len_directory +	/* WorkingDir */
 			/* size of TS_EXTENDED_INFO_PACKET */
-			2 +	/* clientAdressFamily */
-			2 +	/* cbClientAdress */
+			2 +	/* clientAddressFamily */
+			2 +	/* cbClientAddress */
 			len_ip +	/* clientAddress */
 			2 +	/* cbClientDir */
 			len_dll +	/* clientDir */
@@ -427,46 +445,28 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 		out_uint16_le(s, len_program);
 		out_uint16_le(s, len_directory);
 
-		if (0 < len_domain)
-			rdp_out_unistr(s, domain, len_domain);
-		else
-			out_uint16_le(s, 0);	/* mandatory 2 bytes null terminator */
+		rdp_out_unistr_mandatory_null(s, domain, len_domain);
+		rdp_out_unistr_mandatory_null(s, user, len_user);
 
-		if (0 < len_user)
-			rdp_out_unistr(s, user, len_user);
-		else
-			out_uint16_le(s, 0);	/* mandatory 2 bytes null terminator */
-
-		if (0 < len_password)
+		if (g_redirect == True && 0 < g_redirect_cookie_len)
 		{
-			if (g_redirect == True && 0 < g_redirect_cookie_len)
-			{
-				out_uint8p(s, g_redirect_cookie, g_redirect_cookie_len);
-			}
-			else
-			{
-				rdp_out_unistr(s, password, len_password);
-			}
+			out_uint8p(s, g_redirect_cookie, g_redirect_cookie_len);
 		}
 		else
-			out_uint16_le(s, 0);	/* mandatory 2 bytes null terminator */
+		{
+			rdp_out_unistr_mandatory_null(s, password, len_password);
+		}
 
-		if (0 < len_program)
-			rdp_out_unistr(s, program, len_program);
-		else
-			out_uint16_le(s, 0);	/* mandatory 2 bytes null terminator */
 
-		if (0 < len_directory)
-			rdp_out_unistr(s, directory, len_directory);
-		else
-			out_uint16_le(s, 0);	/* mandatory 2 bytes null terminator */
+		rdp_out_unistr_mandatory_null(s, program, len_program);
+		rdp_out_unistr_mandatory_null(s, directory, len_directory);
 
 		/* TS_EXTENDED_INFO_PACKET */
 		out_uint16_le(s, 2);	/* clientAddressFamily = AF_INET */
-		out_uint16_le(s, len_ip);	/* cbClientAddress, Length of client ip */
-		rdp_out_unistr(s, ipaddr, len_ip - 2);	/* clientAddress */
+		out_uint16_le(s, len_ip);	/* cbClientAddress */
+		rdp_out_unistr_mandatory_null(s, ipaddr, len_ip - 2);	/* clientAddress */
 		out_uint16_le(s, len_dll);	/* cbClientDir */
-		rdp_out_unistr(s, "C:\\", len_dll - 2);	/* clientDir */
+		rdp_out_unistr(s, dllName, len_dll - 2);	/* clientDir */
 
 		/* TS_TIME_ZONE_INFORMATION */
 		tzone = (mktime(gmtime(&t)) - mktime(localtime(&t))) / 60;
@@ -498,8 +498,8 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 			out_uint32_le(s, 28);	/* cbLen */
 			out_uint32_le(s, 1);	/* Version */
 			out_uint32_le(s, g_reconnect_logonid);	/* LogonId */
-			ssl_hmac_md5(g_reconnect_random, sizeof(g_reconnect_random),
-				       (char *)g_client_random, SEC_RANDOM_SIZE, (char *)security_verifier);
+			rdssl_hmac_md5(g_reconnect_random, sizeof(g_reconnect_random),
+				           (char *)g_client_random, SEC_RANDOM_SIZE, (char *)security_verifier);
 			out_uint8a(s, security_verifier, sizeof(security_verifier));
 		}
 		else
@@ -1547,7 +1547,7 @@ process_redirect_pdu(STREAM s, RD_BOOL enhanced_redirect /*, uint32 * ext_disc_r
 	/* read connection flags */
 	in_uint32_le(s, g_redirect_flags);
 
-	if (g_redirect_flags & PDU_REDIRECT_HAS_IP)
+	if (g_redirect_flags & LB_TARGET_NET_ADDRESS)
 	{
 		/* read length of ip string */
 		in_uint32_le(s, len);
@@ -1556,7 +1556,7 @@ process_redirect_pdu(STREAM s, RD_BOOL enhanced_redirect /*, uint32 * ext_disc_r
 		rdp_in_unistr(s, len, &g_redirect_server, &g_redirect_server_len);
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_HAS_LOAD_BALANCE_INFO)
+	if (g_redirect_flags & LB_LOAD_BALANCE_INFO)
 	{
 		/* read length of load balance info blob */
 		in_uint32_le(s, g_redirect_lb_info_len);
@@ -1571,7 +1571,7 @@ process_redirect_pdu(STREAM s, RD_BOOL enhanced_redirect /*, uint32 * ext_disc_r
 		in_uint8p(s, g_redirect_lb_info, g_redirect_lb_info_len);
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_HAS_USERNAME)
+	if (g_redirect_flags & LB_USERNAME)
 	{
 		/* read length of username string */
 		in_uint32_le(s, len);
@@ -1580,7 +1580,7 @@ process_redirect_pdu(STREAM s, RD_BOOL enhanced_redirect /*, uint32 * ext_disc_r
 		rdp_in_unistr(s, len, &g_redirect_username, &g_redirect_username_len);
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_HAS_DOMAIN)
+	if (g_redirect_flags & LB_DOMAIN)
 	{
 		/* read length of domain string */
 		in_uint32_le(s, len);
@@ -1589,7 +1589,7 @@ process_redirect_pdu(STREAM s, RD_BOOL enhanced_redirect /*, uint32 * ext_disc_r
 		rdp_in_unistr(s, len, &g_redirect_domain, &g_redirect_domain_len);
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_HAS_PASSWORD)
+	if (g_redirect_flags & LB_PASSWORD)
 	{
 		/* the information in this blob is either a password or a cookie that
 		   should be passed though as blob and not parsed as a unicode string */
@@ -1607,24 +1607,24 @@ process_redirect_pdu(STREAM s, RD_BOOL enhanced_redirect /*, uint32 * ext_disc_r
 		in_uint8p(s, g_redirect_cookie, g_redirect_cookie_len);
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_DONT_STORE_USERNAME)
+	if (g_redirect_flags & LB_DONTSTOREUSERNAME)
 	{
-		warning("PDU_REDIRECT_DONT_STORE_USERNAME set\n");
+		warning("LB_DONTSTOREUSERNAME set\n");
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_USE_SMARTCARD)
+	if (g_redirect_flags & LB_SMARTCARD_LOGON)
 	{
-		warning("PDU_REDIRECT_USE_SMARTCARD set\n");
+		warning("LB_SMARTCARD_LOGON set\n");
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_INFORMATIONAL)
+	if (g_redirect_flags & LB_NOREDIRECT)
 	{
 		/* By spec this is only for information and doesn't mean that an actual
 		   redirect should be performed. How it should be used is not mentioned. */
 		g_redirect = False;
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_HAS_TARGET_FQDN)
+	if (g_redirect_flags & LB_TARGET_FQDN)
 	{
 		in_uint32_le(s, len);
 
@@ -1639,14 +1639,39 @@ process_redirect_pdu(STREAM s, RD_BOOL enhanced_redirect /*, uint32 * ext_disc_r
 		rdp_in_unistr(s, len, &g_redirect_server, &g_redirect_server_len);
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_HAS_TARGET_NETBIOS)
+	if (g_redirect_flags & LB_TARGET_NETBIOS)
 	{
-		warning("PDU_REDIRECT_HAS_TARGET_NETBIOS set\n");
+		warning("LB_TARGET_NETBIOS set\n");
 	}
 
-	if (g_redirect_flags & PDU_REDIRECT_HAS_TARGET_IP_ARRAY)
+	if (g_redirect_flags & LB_TARGET_NET_ADDRESSES)
 	{
-		warning("PDU_REDIRECT_HAS_TARGET_IP_ARRAY set\n");
+		warning("LB_TARGET_NET_ADDRESSES set\n");
+	}
+
+	if (g_redirect_flags & LB_CLIENT_TSV_URL)
+	{
+		warning("LB_CLIENT_TSV_URL set\n");
+	}
+
+	if (g_redirect_flags & LB_SERVER_TSV_CAPABLE)
+	{
+		warning("LB_SERVER_TSV_CAPABLE set\n");
+	}
+
+	if (g_redirect_flags & LB_PASSWORD_IS_PK_ENCRYPTED)
+	{
+		warning("LB_PASSWORD_IS_PK_ENCRYPTED set\n");
+	}
+
+	if (g_redirect_flags & LB_REDIRECTION_GUID)
+	{
+		warning("LB_REDIRECTION_GUID set\n");
+	}
+
+	if (g_redirect_flags & LB_TARGET_CERTIFICATE)
+	{
+		warning("LB_TARGET_CERTIFICATE set\n");
 	}
 
 	return True;

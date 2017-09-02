@@ -1,60 +1,84 @@
 #include "intl.h"
+#include <wingdi.h>
+
+#include <debug.h>
 
 typedef struct CPStruct
 {
-    WORD    Status;
-    UINT    CPage;
-    HANDLE  hCPage;
-    TCHAR   Name[MAX_PATH];
-    struct  CPStruct *NextItem;
-} CPAGE, *LPCPAGE;
+    UINT CodePage;
+    DWORD Flags;
+    WCHAR Name[MAX_PATH];
+    struct CPStruct *NextItem;
+} CPAGE, *PCPAGE;
 
-static LPCPAGE PCPage = NULL;
-static HINF hIntlInf;
+#define CODEPAGE_INSTALLED      0x00000001
+#define CODEPAGE_NOT_REMOVEABLE 0x00000002
+#define CODEPAGE_INSTALL        0x00000004
+#define CODEPAGE_REMOVE         0x00000008
+
+static PCPAGE PCPage = NULL;
 static BOOL bSpain = FALSE;
 static HWND hLangList;
 
 static BOOL
-GetSupportedCP(VOID)
+GetSupportedCP(
+    HINF hInf)
 {
-    UINT uiCPage, Number;
-    LONG Count;
-    INFCONTEXT infCont;
-    LPCPAGE lpCPage;
-    HANDLE hCPage;
+    WCHAR szSection[MAX_PATH];
+    INFCONTEXT Context, Context2;
+    PCPAGE pCodePage;
     CPINFOEX cpInfEx;
-    //TCHAR Section[MAX_PATH];
+    UINT uiCodePage;
 
-    Count = SetupGetLineCountW(hIntlInf, L"CodePages");
-    if (Count <= 0) return FALSE;
+    if (!SetupFindFirstLine(hInf,
+                            L"CodePages",
+                            NULL,
+                            &Context))
+        return FALSE;
 
-    for (Number = 0; Number < (UINT)Count; Number++)
+    for (;;)
     {
-        if (SetupGetLineByIndexW(hIntlInf, L"CodePages", Number, &infCont) &&
-            SetupGetIntField(&infCont, 0, (PINT)&uiCPage))
+        if (SetupGetIntField(&Context, 0, (PINT)&uiCodePage))
         {
-            if (!(hCPage = GlobalAlloc(GHND, sizeof(CPAGE)))) return FALSE;
+            pCodePage = HeapAlloc(GetProcessHeap(), 0, sizeof(CPAGE));
+            if (pCodePage == NULL)
+                return FALSE;
 
-            lpCPage            = GlobalLock(hCPage);
-            lpCPage->CPage     = uiCPage;
-            lpCPage->hCPage    = hCPage;
-            lpCPage->Status    = 0;
-            (lpCPage->Name)[0] = 0;
+            pCodePage->CodePage = uiCodePage;
+            pCodePage->Flags = 0;
+            (pCodePage->Name)[0] = UNICODE_NULL;
 
-            if (GetCPInfoEx(uiCPage, 0, &cpInfEx))
+            if (GetCPInfoExW(uiCodePage, 0, &cpInfEx))
             {
-                wcscpy(lpCPage->Name, cpInfEx.CodePageName);
+                wcscpy(pCodePage->Name, cpInfEx.CodePageName);
             }
-            else if (!SetupGetStringFieldW(&infCont, 1, lpCPage->Name, MAX_PATH, NULL))
+            else
             {
-                GlobalUnlock(hCPage);
-                GlobalFree(hCPage);
-                continue;
+                SetupGetStringFieldW(&Context, 1, pCodePage->Name, MAX_PATH, NULL);
             }
 
-            lpCPage->NextItem = PCPage;
-            PCPage = lpCPage;
+            if (wcslen(pCodePage->Name) != 0)
+            {
+                pCodePage->NextItem = PCPage;
+                PCPage = pCodePage;
+
+                wsprintf(szSection, L"CODEPAGE_REMOVE_%d", uiCodePage);
+
+                if ((uiCodePage == GetACP()) ||
+                    (uiCodePage == GetOEMCP()) ||
+                    (!SetupFindFirstLineW(hInf, szSection, L"AddReg", &Context2)))
+                {
+                    pCodePage->Flags |= CODEPAGE_NOT_REMOVEABLE;
+                }
+            }
+            else
+            {
+                HeapFree(GetProcessHeap(), 0, pCodePage);
+            }
         }
+
+        if (!SetupFindNextLine(&Context, &Context))
+            break;
     }
 
     return TRUE;
@@ -63,7 +87,7 @@ GetSupportedCP(VOID)
 static BOOL CALLBACK
 InstalledCPProc(PWSTR lpStr)
 {
-    LPCPAGE lpCP;
+    PCPAGE lpCP;
     UINT uiCP;
 
     lpCP = PCPage;
@@ -71,12 +95,15 @@ InstalledCPProc(PWSTR lpStr)
 
     for (;;)
     {
-        if (!lpCP) break;
-        if (lpCP->CPage == uiCP)
+        if (!lpCP)
+            break;
+
+        if (lpCP->CodePage == uiCP)
         {
-            lpCP->Status |= 0x0001;
+            lpCP->Flags |= CODEPAGE_INSTALLED;
             break;
         }
+
         lpCP = lpCP->NextItem;
     }
 
@@ -86,17 +113,15 @@ InstalledCPProc(PWSTR lpStr)
 static VOID
 InitCodePagesList(HWND hwndDlg)
 {
-    LPCPAGE lpCPage;
+    PCPAGE pCodePage;
     INT ItemIndex;
     HWND hList;
     LV_COLUMN column;
     LV_ITEM item;
     RECT ListRect;
-
-    hList = GetDlgItem(hwndDlg, IDC_CONV_TABLES);
+    HINF hIntlInf;
 
     hIntlInf = SetupOpenInfFileW(L"intl.inf", NULL, INF_STYLE_WIN4, NULL);
-
     if (hIntlInf == INVALID_HANDLE_VALUE)
         return;
 
@@ -107,40 +132,46 @@ InitCodePagesList(HWND hwndDlg)
         return;
     }
 
-    if (!GetSupportedCP())
+    if (!GetSupportedCP(hIntlInf))
         return;
 
     SetupCloseInfFile(hIntlInf);
 
-    if (!EnumSystemCodePages(InstalledCPProc, CP_INSTALLED))
-        return;
+    if (!EnumSystemCodePagesW(InstalledCPProc, CP_INSTALLED))
+    {
+        /* Hack: EnumSystemCodePages returns FALSE on successful completion! */
+        /* return; */
+    }
+
+    hList = GetDlgItem(hwndDlg, IDC_CONV_TABLES);
 
     ZeroMemory(&column, sizeof(LV_COLUMN));
-    column.mask = LVCF_FMT|LVCF_TEXT|LVCF_WIDTH;
-    column.fmt  = LVCFMT_LEFT;
+    column.mask = LVCF_FMT | LVCF_WIDTH;
+    column.fmt = LVCFMT_LEFT;
     GetClientRect(hList, &ListRect);
-    column.cx   = ListRect.right - GetSystemMetrics(SM_CYHSCROLL);
-    (VOID) ListView_InsertColumn(hList, 0, &column);
+    column.cx = ListRect.right - GetSystemMetrics(SM_CYHSCROLL);
+    ListView_InsertColumn(hList, 0, &column);
 
-    (VOID) ListView_SetExtendedListViewStyle(hList, LVS_EX_CHECKBOXES|LVS_EX_FULLROWSELECT);
+    (VOID) ListView_SetExtendedListViewStyle(hList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
 
-    lpCPage = PCPage;
+    pCodePage = PCPage;
 
     for (;;)
     {
-        if (!lpCPage) break;
+        if (pCodePage == NULL)
+            break;
+
         ZeroMemory(&item, sizeof(LV_ITEM));
-        item.mask      = LVIF_TEXT|LVIF_PARAM|LVIF_STATE;
+        item.mask      = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
         item.state     = 0;
         item.stateMask = LVIS_STATEIMAGEMASK;
-        item.pszText   = lpCPage->Name;
-        item.lParam    = (LPARAM)lpCPage;
+        item.pszText   = pCodePage->Name;
+        item.lParam    = (LPARAM)pCodePage;
 
         ItemIndex = ListView_InsertItem(hList, &item);
-
-        if (ItemIndex >= 0)
+        if (ItemIndex != -1)
         {
-            if (lpCPage->Status & 0x0001)
+            if (pCodePage->Flags & CODEPAGE_INSTALLED)
             {
                 ListView_SetItemState(hList, ItemIndex,
                                       INDEXTOSTATEIMAGEMASK(LVIS_SELECTED),
@@ -154,7 +185,7 @@ InitCodePagesList(HWND hwndDlg)
             }
         }
 
-        lpCPage = lpCPage->NextItem;
+        pCodePage = pCodePage->NextItem;
     }
 }
 
@@ -188,15 +219,15 @@ LocalesEnumProc(PWSTR lpLocale)
 
     if (bNoShow == FALSE)
     {
-    index = SendMessageW(hLangList,
-                         CB_ADDSTRING,
-                         0,
-                         (LPARAM)lang);
+        index = SendMessageW(hLangList,
+                             CB_ADDSTRING,
+                             0,
+                             (LPARAM)lang);
 
-    SendMessageW(hLangList,
-                 CB_SETITEMDATA,
-                 index,
-                 (LPARAM)lcid);
+        SendMessageW(hLangList,
+                     CB_SETITEMDATA,
+                     index,
+                     (LPARAM)lcid);
     }
 
     return TRUE;
@@ -245,7 +276,10 @@ GetCurrentDPI(LPTSTR szDPI)
             return;
         }
     }
-    else wsprintf(szDPI, L"%d", dwDPI);
+    else
+    {
+        wsprintf(szDPI, L"%d", dwDPI);
+    }
 
     RegCloseKey(hKey);
 }
@@ -266,7 +300,6 @@ SaveFontSubstitutionSettings(
     wsprintf(szSection, L"Font.CP%s.%s", szDefCP, szDPI);
 
     hFontInf = SetupOpenInfFileW(L"font.inf", NULL, INF_STYLE_WIN4, NULL);
-
     if (hFontInf == INVALID_HANDLE_VALUE)
         return;
 
@@ -276,13 +309,16 @@ SaveFontSubstitutionSettings(
         return;
     }
 
-    Count = (UINT) SetupGetLineCount(hFontInf, szSection);
-    if (Count <= 0) return;
+    Count = (UINT)SetupGetLineCount(hFontInf, szSection);
+    if (Count <= 0)
+        return;
 
     if (!SetupInstallFromInfSectionW(hwnd, hFontInf, szSection, SPINST_REGISTRY & ~SPINST_FILES,
                                      NULL, NULL, 0, NULL, NULL, NULL, NULL))
+    {
         MessageBoxW(hwnd, L"Unable to install a new language for programs don't support unicode!",
                    NULL, MB_ICONERROR | MB_OK);
+    }
 
     SetupCloseInfFile(hFontInf);
 }
@@ -354,6 +390,37 @@ SaveSystemSettings(
 }
 
 
+LRESULT
+ListViewCustomDraw(
+    LPARAM lParam)
+{
+    LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
+
+    switch (lplvcd->nmcd.dwDrawStage)
+    {
+        case CDDS_PREPAINT:
+            return CDRF_NOTIFYITEMDRAW;
+
+        case CDDS_ITEMPREPAINT:
+            if (((PCPAGE)lplvcd->nmcd.lItemlParam)->Flags & CODEPAGE_NOT_REMOVEABLE)
+            {
+                lplvcd->clrText   = GetSysColor(COLOR_GRAYTEXT);
+                lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
+                return CDRF_NEWFONT;
+            }
+            else
+            {
+                lplvcd->clrText   = GetSysColor(COLOR_WINDOWTEXT);
+                lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
+                return CDRF_NEWFONT;
+            }
+            break;
+    }
+
+    return CDRF_DODEFAULT;
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 AdvancedPageProc(HWND hwndDlg,
@@ -421,10 +488,7 @@ AdvancedPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-
-            if (lpnm->code == (UINT)PSN_APPLY)
+            if (((LPNMHDR)lParam)->code == PSN_APPLY)
             {
                 PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
 
@@ -432,8 +496,15 @@ AdvancedPageProc(HWND hwndDlg,
                 SaveFontSubstitutionSettings(hwndDlg, pGlobalData);
                 SaveFontLinkingSettings(hwndDlg, pGlobalData);
             }
-        }
-        break;
+            else if (((LPNMHDR)lParam)->idFrom == IDC_CONV_TABLES &&
+                     ((LPNMHDR)lParam)->code == NM_CUSTOMDRAW)
+            {
+                SetWindowLong(hwndDlg,
+                              DWL_MSGRESULT,
+                              (LONG)ListViewCustomDraw(lParam));
+                return TRUE;
+            }
+            break;
     }
 
     return FALSE;

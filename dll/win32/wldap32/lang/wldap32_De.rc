@@ -38,7 +38,7 @@ STRINGTABLE
     11 "Verwaltungslimit überschritten"
     12 "Kritische Erweiterung nicht verfügbar"
     13 "Vertraulichkeit erforderlich"
-    14 ""
+    14 "SASL Bind in Progress"
     15 ""
     16 "Attribut nicht vorhanden"
     17 "Nicht definierter Typ"

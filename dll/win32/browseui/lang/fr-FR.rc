@@ -90,7 +90,6 @@ BEGIN
     END
     POPUP "&Aide", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Est-ce que cette copie de ReactOS est &légale ?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "À &propos de ReactOS", IDM_HELP_ABOUT
     END
 END
@@ -104,6 +103,12 @@ BEGIN
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
 		MENUITEM "&Nouvelle barre d'outils...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
 	END
+END
+
+IDM_BAND_MENU MENUEX
+BEGIN
+	MENUITEM "Sho&w title", IDM_BAND_TITLE
+	MENUITEM "&Close toolbar", IDM_BAND_CLOSE
 END
 
 /* Dialogs */
@@ -290,11 +295,4 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|Retour|Avancer|Dossier parent|Recherche|Dossiers|Aller vers|Copier dans|Supprimer|Annuler|Affichage|Stop|Rafraîchir|Home|Map Drive|Déconnecter|Favoris|Historique|Plein écran|Propriétés|Couper|Copier|Coller|Options des dossiers||"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_LEGAL_URL, "https://www.reactos.org/joining/faqs"
-    IDS_SORRY_CAPTION, "Désolé"
-    IDS_SORRY_MESSAGE, "ReactOS ne peut pas atteindre '%s' (erreur 0x%lx).\nVeuillez vérifier qu'un navigateur web est installé."
 END

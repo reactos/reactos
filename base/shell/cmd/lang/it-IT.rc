@@ -63,7 +63,7 @@ ERRORLEVEL è valorizzato alla posizione in elenco delle scelta dell'utente.\n"
     STRING_CMD_HELP2 "\nFunzioni disponibili:"
     STRING_CMD_HELP3 "  [alias]"
     STRING_CMD_HELP4 "  [storia]"
-    STRING_CMD_HELP5 "  [completamento automatico dei nomi dei file]"
+    STRING_CMD_HELP5 "  [completamento automatico dei nomi dei file Bash]"
     STRING_CMD_HELP6 "  [cartelle]"
     STRING_CMD_HELP7 "  [ridirezione e piping]"
     STRING_CMD_HELP8 "Attiva un altro interprete dei comandi ReactOS.\n\n\
@@ -256,16 +256,16 @@ MKLINK [/D | /H | /J] nomelink target\n\n\
   /H  Crea un hard link.\n\
   /J  Crea una directory junction.\n\n\
 Se non sono specificati ne /H ne /J verrà creato un link simbolico."
-    STRING_MEMMORY_HELP1 "Visualizza la quantità della memoria di sistema.\n\n\
+    STRING_MEMORY_HELP1 "Visualizza la quantità della memoria di sistema.\n\n\
 MEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% carico di memoria.\n\n\
+    STRING_MEMORY_HELP2 "\n  %12s%% carico di memoria.\n\n\
   %13s byte RAM fisica totale.\n\
   %13s byte RAM fisica disponibile.\n\n\
   %13s byte file di paginazione totale.\n\
   %13s byte file di paginazione disponibile.\n\n\
   %13s byte memoria virtuale totale.\n\
   %13s byte memoria virtuale totale disponibile.\n"
-    STRING_MISC_HELP1 "Premi un tasto per continuare...\n"
+    STRING_MISC_HELP1 "Premi un tasto per continuare..."
     STRING_MOVE_HELP1 "Sovrascrivi %s (Si/No/Tutti)? "
     STRING_MOVE_HELP2 "Sposta i file o cambia il nome a file e cartelle.\n\n\
 Per spostare uno o più file:\n\
@@ -384,9 +384,18 @@ SET [variabile[=][stringa]]\n\n\
   stringa   Indica il testo da assegnare alla variabile.\n\n\
 Usa SET senza parametri per visualizzare le variabili attuali.\n"
     STRING_START_HELP1 "Attiva un comando.\n\n\
-START comando\n\n\
-  comando     Indica il comando da eseguire.\n\n\
-Al momento tutti i comandi sono attivati in modo asincrono.\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  comando     Indica il comando da eseguire.\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Assegna il titolo per la finestra dei comandi.\n\n\
 TITLE [stringa]\n\n\
 stringa      Indica il titolo.\n"

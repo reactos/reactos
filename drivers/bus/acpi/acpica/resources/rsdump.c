@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -106,6 +106,11 @@ AcpiRsDumpShortByteList (
 static void
 AcpiRsDumpResourceSource (
     ACPI_RESOURCE_SOURCE    *ResourceSource);
+
+static void
+AcpiRsDumpResourceLabel (
+    char                   *Title,
+    ACPI_RESOURCE_LABEL    *ResourceLabel);
 
 static void
 AcpiRsDumpAddressCommon (
@@ -423,6 +428,22 @@ AcpiRsDumpDescriptor (
                 ACPI_RESOURCE_SOURCE, Target));
             break;
 
+        case ACPI_RSD_LABEL:
+            /*
+             * ResourceLabel
+             */
+            AcpiRsDumpResourceLabel ("Resource Label", ACPI_CAST_PTR (
+                ACPI_RESOURCE_LABEL, Target));
+            break;
+
+        case ACPI_RSD_SOURCE_LABEL:
+            /*
+             * ResourceSourceLabel
+             */
+            AcpiRsDumpResourceLabel ("Resource Source Label", ACPI_CAST_PTR (
+                ACPI_RESOURCE_LABEL, Target));
+            break;
+
         default:
 
             AcpiOsPrintf ("**** Invalid table opcode [%X] ****\n",
@@ -467,6 +488,32 @@ AcpiRsDumpResourceSource (
     AcpiRsOutString ("Resource Source",
         ResourceSource->StringPtr ?
             ResourceSource->StringPtr : "[Not Specified]");
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiRsDumpResourceLabel
+ *
+ * PARAMETERS:  Title              - Title of the dumped resource field
+ *              ResourceLabel      - Pointer to a Resource Label struct
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Common routine for dumping the ResourceLabel
+ *
+ ******************************************************************************/
+
+static void
+AcpiRsDumpResourceLabel (
+    char                   *Title,
+    ACPI_RESOURCE_LABEL    *ResourceLabel)
+{
+    ACPI_FUNCTION_ENTRY ();
+
+    AcpiRsOutString (Title,
+        ResourceLabel->StringPtr ?
+            ResourceLabel->StringPtr : "[Not Specified]");
 }
 
 

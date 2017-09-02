@@ -17,7 +17,7 @@ BEGIN
     IDS_ALIAS_USERS_COMMENT "Пользователи не имеют прав на изменение параметров системы и могут запускать большинство приложений."
     /*
      * ATTENTION: 
-     *   If you translate the administator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
      *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
      */
     IDS_USER_ADMINISTRATOR_NAME "Administrator"// Не изменять, иначе будут глюки с нерусскими программами

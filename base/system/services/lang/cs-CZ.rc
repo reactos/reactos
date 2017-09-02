@@ -1,0 +1,12 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_SERVICE_START   "spustit"
+    IDS_SERVICE_STOP    "zastavit"
+    IDS_SERVICE_PAUSE   "pozastavit"
+    IDS_SERVICE_RESUME  "pokračovat"
+    IDS_SERVICE_RUNNING "Spuštěno"
+    IDS_SERVICE_STOPPED "Zastaveno"
+    IDS_SERVICE_PAUSED  "Pozastaveno"
+END

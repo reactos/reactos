@@ -17,7 +17,6 @@
 
 #define TAG_MUP ' puM'
 
-#define DFS_MAGIC_CCB (PVOID)0x11444653
 #define FILE_SIMPLE_RIGHTS_MASK (FILE_ALL_ACCESS & ~STANDARD_RIGHTS_REQUIRED &~ SYNCHRONIZE)
 
 #define NODE_TYPE_VCB 0x1
@@ -141,5 +140,7 @@ typedef struct _QUERY_PATH_CONTEXT
     LIST_ENTRY QueryPathListEntry;
     PIRP Irp;
 } QUERY_PATH_CONTEXT, *PQUERY_PATH_CONTEXT;
+
+#include "dfs.h"
 
 #endif /* _MUP_PCH_ */

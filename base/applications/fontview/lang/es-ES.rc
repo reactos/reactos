@@ -4,17 +4,21 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALL "Instalar"
-    IDS_PRINT "Imprimir"
+    IDS_INSTALL "&Instalar"
+    IDS_PRINT "Im&primir"
     IDS_STRING "Jovencillo emponzoñado de whisky: ¡qué figurota exhibe! 1234567890"
     IDS_OPEN "Abrir fuente..."
     IDS_ERROR "Error"
     IDS_ERROR_NOMEM "No hay memoria suficiente para completar la operación."
     IDS_ERROR_NOFONT "El archivo %1 no es un archivo de fuente válido."
     IDS_ERROR_NOCLASS "No es posible iniciar la clase de ventana."
-    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
-TrueType Font (*.ttf)\0*.ttf\0\
-OpenType Font (*.otf)\0*.otf\0\
-Font File (*.fon)\0*.fon\0\
-All Files (*.*)\0*.*\0"
+    IDS_FILTER_LIST "Todas las tipografías (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+Tipografía de mapa de bits (*.fon;*.fnt)\0*.fon;*.fnt\0\
+Tipografía TrueType (*.ttf)\0*.ttf\0\
+Colección de tipografías TrueType (*.ttc)\0*.ttc\0\
+Tipografía OpenType (*.otf)\0*.otf\0\
+Colección de tipografías OpenType (*.otc)\0*.otc\0\
+Todos los archivos (*.*)\0*.*\0"
+    IDS_PREVIOUS "< Ante&rior"
+    IDS_NEXT "Siguie&nte >"
 END

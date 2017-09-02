@@ -187,6 +187,7 @@ DWORD	MCIAVI_mciInfo(UINT wDevID, DWORD dwFlags, LPMCI_DGV_INFO_PARMSW lpParms)
     WINE_MCIAVI*	wma = MCIAVI_mciGetOpenDev(wDevID);
     DWORD		ret = 0;
     static const WCHAR wszAviPlayer[] = {'W','i','n','e','\'','s',' ','A','V','I',' ','p','l','a','y','e','r',0};
+    static const WCHAR wszVersion[] = {'1','.','1',0};
 
     if (lpParms == NULL || lpParms->lpstrReturn == NULL)
 	return MCIERR_NULL_PARAMETER_BLOCK;
@@ -199,6 +200,8 @@ DWORD	MCIAVI_mciInfo(UINT wDevID, DWORD dwFlags, LPMCI_DGV_INFO_PARMSW lpParms)
 
     if (dwFlags & MCI_INFO_PRODUCT)
 	str = wszAviPlayer;
+    else if (dwFlags & MCI_INFO_VERSION)
+	str = wszVersion;
     else if (dwFlags & MCI_INFO_FILE)
 	str = wma->lpFileName;
     else {

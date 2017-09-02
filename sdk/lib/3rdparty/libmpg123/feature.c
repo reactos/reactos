@@ -100,6 +100,12 @@ int mpg123_feature(const enum mpg123_feature_set key)
 #else
 		return 0;
 #endif
+		case MPG123_FEATURE_EQUALIZER:
+#ifndef NO_EQUALIZER
+		return 1;
+#else
+		return 0;
+#endif
 
 		default: return 0;
 	}

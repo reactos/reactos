@@ -33,7 +33,7 @@ BEGIN
         MENUITEM "Păst&rare în…", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Configurare pagină…", CMD_PAGE_SETUP
-        MENUITEM "I&mprimă\tCtrl+P", CMD_PRINT
+        MENUITEM "I&mprimare…\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", CMD_EXIT
     END
@@ -48,7 +48,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Găsire…\tCtrl+F", CMD_SEARCH
         MENUITEM "Găsește &următoarea\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Î&nlocuiește\tCtrl+H", CMD_REPLACE
+        MENUITEM "Î&nlocuire…\tCtrl+H", CMD_REPLACE
         MENUITEM "S&alt la…\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Selectea&ză tot\tCtrl+A", CMD_SELECT_ALL
@@ -176,7 +176,7 @@ Păstrați modificările aduse?"
     STRING_NOTFOUND "„%s” nu poate fi găsit."
     STRING_OUT_OF_MEMORY "Nu există suficientă memorie pentru a efectua această operație. \
 \nÎnchideți una sau mai multe aplicații pentru a elibera memorie."
-    STRING_CANNOTFIND "Nu se poate găsi „%s”"
+    STRING_CANNOTFIND "„%s” nu poate fi găsit"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (big endian)"
@@ -185,7 +185,7 @@ Păstrați modificările aduse?"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Linia %d, coloana %d"
-    STRING_PRINTERROR "Nu se poate imprima fișierul '%s'.\n\nAsigurați-vă că imprimanta este pornită și configurată corespunzător."
+    STRING_PRINTERROR "Fișierul „%s” nu a putut fi imprimat.\n\nAsigurați-vă că imprimanta este pornită și configurată corespunzător."
 
     STRING_TEXT_DOCUMENT "Document text"
 END

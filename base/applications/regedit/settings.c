@@ -20,8 +20,10 @@
  */
 
 #include "regedit.h"
+#include <strsafe.h>
 
 const WCHAR g_szGeneralRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit";
+DECLSPEC_IMPORT ULONG WINAPIV DbgPrint(PCH Format,...);
 
 /* 
 VV,VV,VV,VV,WA,WA,WA,WA,WB,WB,WB,WB,R1,R1,R1,R1
@@ -66,6 +68,7 @@ extern void LoadSettings(void)
     {
         RegistryBinaryConfig tConfig;
         DWORD iBufferSize = sizeof(tConfig);
+        BOOL bVisible = FALSE;
 
         if (RegQueryValueExW(hKey, L"View", NULL, NULL, (LPBYTE)&tConfig, &iBufferSize) == ERROR_SUCCESS)
         {
@@ -89,11 +92,13 @@ extern void LoadSettings(void)
 
                 /* Apply program window settings */
                 tConfig.tPlacement.length = sizeof(WINDOWPLACEMENT);
-                if (SetWindowPlacement(hFrameWnd, &tConfig.tPlacement) == FALSE)
-                    /* In case we fail, show normal */
-                    ShowWindow(hFrameWnd, SW_SHOWNORMAL);
+                bVisible = SetWindowPlacement(hFrameWnd, &tConfig.tPlacement);
             }
         }
+
+        /* In case we fail to restore the window, or open the key, show normal */
+        if (!bVisible)
+            ShowWindow(hFrameWnd, SW_SHOWNORMAL);
 
         /* Restore key position */
         if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, L"LastKey", szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
@@ -101,7 +106,7 @@ extern void LoadSettings(void)
             SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
         }
 
-    RegCloseKey(hKey);
+        RegCloseKey(hKey);
     }
     else
     {
@@ -118,22 +123,31 @@ extern void SaveSettings(void)
     {
         RegistryBinaryConfig tConfig;
         DWORD iBufferSize = sizeof(tConfig);
-        WCHAR szBuffer[MAX_PATH];
+        WCHAR szBuffer[MAX_PATH]; /* FIXME: a complete registry path can be longer than that */
         LPCWSTR keyPath, rootName;
         HKEY hRootKey;
 
         /* Save key position */
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
-        if (keyPath)
+        rootName = get_root_key_name(hRootKey);
+
+        /* Load "My Computer" string and complete it */
+        if (LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer)) &&
+            SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")) &&
+            SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), rootName)) &&
+            SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))
         {
-            rootName = get_root_key_name(hRootKey);
-
-            /* Load "My Computer" string and complete it */
-            LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer));
-            wcscat(szBuffer, L"\\"); wcscat(szBuffer, rootName);
-            wcscat(szBuffer, L"\\"); wcscat(szBuffer, keyPath);
-
-            RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE)szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
+            HRESULT hr = S_OK;
+            if (keyPath)
+                hr = StringCbCatW(szBuffer, sizeof(szBuffer), keyPath);
+            if (SUCCEEDED(hr))
+                RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE)szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
+            else
+                DbgPrint("err: (%s:%d): Buffer not big enough for '%S + %S'\n", __FILE__, __LINE__, rootName, keyPath);
+        }
+        else
+        {
+            DbgPrint("err: (%s:%d): Buffer not big enough for '%S'\n", __FILE__, __LINE__, rootName);
         }
 
         /* Get statusbar settings */

@@ -38,14 +38,19 @@
 
 extern HINSTANCE g_hInstance;
 
-#define ID_ICON_VOLUME (WM_APP + 0x4CB)
+#define ID_ICON_VOLUME  (WM_APP + 0x4CB)
+#define ID_ICON_HOTPLUG (WM_APP + 0x4CC)
+#define ID_ICON_POWER   (WM_APP + 0x4CD)
+
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 #include "csystray.h"
 
 typedef HRESULT(STDMETHODCALLTYPE * PFNSTINIT)     (_In_ CSysTray * pSysTray);
 typedef HRESULT(STDMETHODCALLTYPE * PFNSTSHUTDOWN) (_In_ CSysTray * pSysTray);
 typedef HRESULT(STDMETHODCALLTYPE * PFNSTUPDATE)   (_In_ CSysTray * pSysTray);
-typedef HRESULT(STDMETHODCALLTYPE * PFNSTMESSAGE)  (_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam);
+typedef HRESULT(STDMETHODCALLTYPE * PFNSTMESSAGE)  (_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
 
 struct SysTrayIconHandlers_t
 {
@@ -63,4 +68,21 @@ extern const int g_NumIcons;
 extern HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray);
-extern HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam);
+extern HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
+extern VOID Volume_OnTimer(HWND hWnd);
+
+extern HRESULT STDMETHODCALLTYPE Hotplug_Init(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Hotplug_Shutdown(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Hotplug_Update(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
+extern VOID Hotplug_OnTimer(HWND hWnd);
+
+extern HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Power_Shutdown(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Power_Update(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
+extern VOID Power_OnTimer(HWND hWnd);
+
+#define POWER_TIMER_ID   2
+#define VOLUME_TIMER_ID  3
+#define HOTPLUG_TIMER_ID 4

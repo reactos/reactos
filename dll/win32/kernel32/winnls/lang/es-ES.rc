@@ -24,6 +24,7 @@ BEGIN
     850  "850   (OEM - Latín I multilíngüe)"
     852  "852   (OEM - Latín II)"
     855  "855   (OEM - Cirílico)"
+    856  "856   (OEM - Hebreo PC)"
     857  "857   (OEM - Turco)"
     858  "858   (OEM - Latín I multilíngüe + Euro)"
     860  "860   (OEM - Portugués)"
@@ -56,6 +57,7 @@ BEGIN
     65001 "65001 (UTF-8)"
 
     3700  "37    (IBM EBCDIC - E.E.U.U y Canadá)" /* FIXME */
+//  424   "424   (IBM EBCDIC - Hebreo)" // On Windows, this is CP 20424
     1026  "1026  (IBM EBCDIC - Turquía (Latin-5))"
     1047  "1047  (IBM EBCDIC - Latin-1 y sistema abierto)"
     1140  "1140  (IBM EBCDIC - E.E.U.U/Canadá (37 + Euro))"
@@ -99,8 +101,12 @@ BEGIN
     28596 "28596 (ISO 8859-6 Árabe)"
     28597 "28597 (ISO 8859-7 Griego)"
     28598 "28598 (ISO 8859-8 Hebreo: orden visual)"
-    28599 "28599 (ISO 8859-9 Latín 5)"
+    28599 "28599 (ISO 8859-9 Latín 5 Turco)"
+    28600 "28600 (ISO 8859-10 Latín 6 Nórdico)"
+    28603 "28603 (ISO 8859-13 Latín 7 Estonian)"
+    28604 "28604 (ISO 8859-14 Latín 8 Celtic)"
     28605 "28605 (ISO 8859-15 Latín 9)"
+    28606 "28606 (ISO 8859-16 Latín 10 Balkan)"
     38598 "38598 (ISO 8859-8 Hebreo: orden lógico)"
 
     20105 "20105 (IA5 IRV Alfabeto international No.5)"
@@ -117,6 +123,7 @@ BEGIN
     20005 "20005 (Wang - Taiwán)"
     20127 "20127 (E.E.U.U.-ASCII)"
     20261 "20261 (T.61)"
+//  878   "878   (Ruso - KOI8)" // On Windows, this is CP 20866
     20866 "20866 (Ruso - KOI8)"
     21027 "21027 (Alfabeto extendido minúsculas)"
     21866 "21866 (Ucraniano - KOI8-U)"
@@ -189,6 +196,7 @@ BEGIN
     32+NLSRC_OFFSET "Brazil"
     34+NLSRC_OFFSET "Bhutan"
     35+NLSRC_OFFSET "Bulgaria"
+    37+NLSRC_OFFSET "Brunei"
     38+NLSRC_OFFSET "Burundi"
     39+NLSRC_OFFSET "Canada"
     40+NLSRC_OFFSET "Cambodia"

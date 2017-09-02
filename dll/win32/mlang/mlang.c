@@ -505,7 +505,7 @@ static void fill_cp_info(const struct mlang_data *ml_data, UINT index, MIMECPINF
 static LONG dll_count;
 
 /*
- * Japanese Detection and Converstion Functions
+ * Japanese Detection and Conversion Functions
  */
 
 #define HANKATA(A)  ((A >= 161) && (A <= 223))

@@ -56,10 +56,7 @@ BOOL fInEndMenu = FALSE;
 #define MII_STATE_MASK (MFS_GRAYED|MFS_CHECKED|MFS_HILITE|MFS_DEFAULT)
 
 #define IS_SYSTEM_MENU(MenuInfo)  \
-	(0 == ((MenuInfo)->fFlags & MNF_POPUP) && 0 != ((MenuInfo)->fFlags & MNF_SYSMENU))
-
-#define IS_SYSTEM_POPUP(MenuInfo) \
-	(0 != ((MenuInfo)->fFlags & MNF_POPUP) && 0 != ((MenuInfo)->fFlags & MNF_SYSMENU))
+	(!((MenuInfo)->fFlags & MNF_POPUP) && ((MenuInfo)->fFlags & MNF_SYSMENU))
 
 #define IS_BITMAP_ITEM(flags) (MF_BITMAP == MENU_ITEM_TYPE(flags))
 
@@ -322,13 +319,9 @@ UserDestroyMenuObject(PVOID Object)
 BOOL FASTCALL
 IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
 {
-   if(Menu)
+   if (Menu)
    {
       PWND Window;
-      ULONG Error;
-
-      /* Remove all menu items */
-      IntDestroyMenu( Menu, bRecurse);
 
       if (PsGetCurrentProcessSessionId() == Menu->head.rpdesk->rpwinstaParent->dwSessionId)
       {
@@ -350,22 +343,14 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
                }
             }
          }
-         if (UserObjectInDestroy(Menu->head.h))
-         {
-            WARN("Menu already dead!\n");
-            return FALSE;
-         }
+
+         if (!UserMarkObjectDestroy(Menu)) return TRUE;
+
+         /* Remove all menu items */
+         IntDestroyMenu( Menu, bRecurse);
+
          ret = UserDeleteObject(Menu->head.h, TYPE_MENU);
-         if (!ret)
-         {  // Make sure it is really dead or just marked for deletion.
-            Error = EngGetLastError();
-            ret = UserObjectInDestroy(Menu->head.h);
-            if (ret && EngGetLastError() == ERROR_INVALID_HANDLE)
-            {
-               EngSetLastError(Error);
-               ret = FALSE;
-            }
-         }  // See test_subpopup_locked_by_menu tests....
+         TRACE("IntDestroyMenuObject %d\n",ret);
          return ret;
       }
    }
@@ -2212,6 +2197,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
     BOOL flat_menu = FALSE;
     int bkgnd;
     UINT arrow_bitmap_width = 0;
+    //RECT bmprc;
 
     if (!menuBar) {
         arrow_bitmap_width  = gpsi->oembmi[OBI_MNARROW].cx; 
@@ -2219,7 +2205,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
 
     if (lpitem->fType & MF_SYSMENU)
     {
-        if ( (Wnd->style & WS_MINIMIZE))
+        if (!(Wnd->style & WS_MINIMIZE))
         {
           NC_GetInsideRect(Wnd, &rect);
           UserDrawSysMenuButton(Wnd, hdc, &rect, lpitem->fState & (MF_HILITE | MF_MOUSESELECT));
@@ -2368,7 +2354,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
 
         rc.left++;
         rc.right--;
-        rc.top += SEPARATOR_HEIGHT / 2;
+        rc.top = ( rc.top + rc.bottom) / 2;
         if (flat_menu)
         {
             oldPen = NtGdiSelectPen( hdc, NtGdiGetStockObject(DC_PEN) );
@@ -2381,7 +2367,6 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             DrawEdge (hdc, &rc, EDGE_ETCHED, BF_TOP);
         return;
     }
-
 #if 0
     /* helper lines for debugging */
     /* This is a very good test tool when hacking menus! (JT) 07/16/2006 */
@@ -2391,7 +2376,33 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
     GreMoveTo(hdc, rect.left, (rect.top + rect.bottom) / 2, NULL);
     NtGdiLineTo(hdc, rect.right, (rect.top + rect.bottom) / 2);
 #endif
+#if 0 // breaks mdi menu bar icons.
+    if (lpitem->hbmp) {
+        /* calculate the bitmap rectangle in coordinates relative
+         * to the item rectangle */
+        if( menuBar) {
+            if( lpitem->hbmp == HBMMENU_CALLBACK)
+                bmprc.left = 3;
+            else 
+                bmprc.left = lpitem->Xlpstr ? MenuCharSize.cx : 0;          
+        }
+        else if ((Menu->fFlags & MNS_STYLE_MASK) & MNS_NOCHECK)
+            bmprc.left = 4;
+        else if ((Menu->fFlags & MNS_STYLE_MASK) & MNS_CHECKORBMP)
+            bmprc.left = 2;
+        else
+            bmprc.left = 4 + UserGetSystemMetrics(SM_CXMENUCHECK);
 
+        bmprc.right =  bmprc.left + lpitem->cxBmp;
+
+        if( menuBar && !(lpitem->hbmp == HBMMENU_CALLBACK))
+            bmprc.top = 0;
+        else
+            bmprc.top = (rect.bottom - rect.top - lpitem->cyBmp) / 2; 
+
+        bmprc.bottom =  bmprc.top + lpitem->cyBmp;
+    }
+#endif
     if (!menuBar)
     {
         HBITMAP bm;
@@ -2423,28 +2434,22 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             {
                 RECT r;
                 r = rect;
-                r.right = r.left + UserGetSystemMetrics(SM_CXMENUCHECK);
+                r.right = r.left + check_bitmap_width;
                 DrawFrameControl( hdc, &r, DFC_MENU,
                                  (lpitem->fType & MFT_RADIOCHECK) ?
                                  DFCS_MENUBULLET : DFCS_MENUCHECK);
                 checked = TRUE;
             }
         }
-        if ( lpitem->hbmp )//&& !( checked && (Menu->dwStyle & MNS_CHECKORBMP)))
+        if ( lpitem->hbmp )//&& !( checked && ((Menu->fFlags & MNS_STYLE_MASK) & MNS_CHECKORBMP)))
         {
-            RECT bmpRect;
-            //CopyRect(&bmpRect, &rect);
-            bmpRect = rect;
+            RECT bmpRect = rect;
             if (!((Menu->fFlags & MNS_STYLE_MASK) & MNS_CHECKORBMP) && !((Menu->fFlags & MNS_STYLE_MASK) & MNS_NOCHECK))
                 bmpRect.left += check_bitmap_width + 2;
             if (!(checked && ((Menu->fFlags & MNS_STYLE_MASK) & MNS_CHECKORBMP)))
             {
-                //POINT origorg;
                 bmpRect.right = bmpRect.left + lpitem->cxBmp;
-                /* some applications make this assumption on the DC's origin */
-                //SetViewportOrgEx( hdc, rect.left, rect.top, &origorg);
                 MENU_DrawBitmapItem(hdc, lpitem, &bmpRect, Menu, WndOwner, odaction, menuBar);
-                //SetViewportOrgEx( hdc, origorg.x, origorg.y, NULL);
             }
         }
         /* Draw the popup-menu arrow */
@@ -2452,21 +2457,17 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
         {
             RECT rectTemp;
             RtlCopyMemory(&rectTemp, &rect, sizeof(RECT));
-            rectTemp.left = rectTemp.right - UserGetSystemMetrics(SM_CXMENUCHECK);
+            rectTemp.left = rectTemp.right - check_bitmap_width;
             DrawFrameControl(hdc, &rectTemp, DFC_MENU, DFCS_MENUARROW);
         }
         rect.left += 4;
         if( !((Menu->fFlags & MNS_STYLE_MASK) & MNS_NOCHECK))
             rect.left += check_bitmap_width;
-        rect.right -= arrow_bitmap_width;//check_bitmap_width;
+        rect.right -= arrow_bitmap_width;
     }
     else if( lpitem->hbmp)
     { /* Draw the bitmap */
-        //POINT origorg;
-
-        //SetViewportOrgEx( hdc, rect.left, rect.top, &origorg);
-        MENU_DrawBitmapItem(hdc, lpitem, &rect, Menu, WndOwner, odaction, menuBar);
-        //SetViewportOrgEx( hdc, origorg.x, origorg.y, NULL);
+        MENU_DrawBitmapItem(hdc, lpitem, &rect/*bmprc*/, Menu, WndOwner, odaction, menuBar);
     }
 
     /* process text if present */
@@ -2495,14 +2496,12 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             if( !(lpitem->hbmp == HBMMENU_CALLBACK)) 
               rect.left += MenuCharSize.cx;
             rect.right -= MenuCharSize.cx;
-            //rect.left += MENU_BAR_ITEMS_SPACE / 2;
-            //rect.right -= MENU_BAR_ITEMS_SPACE / 2;
         }
 
         Text = lpitem->Xlpstr;
         if(Text)
         {
-            for (i = 0; L'\0' != Text[i]; i++)
+            for (i = 0; Text[i]; i++)
                 if (Text[i] == L'\t' || Text[i] == L'\b')
                     break;
         }
@@ -2596,7 +2595,7 @@ static void FASTCALL MENU_DrawPopupMenu(PWND wnd, HDC hdc, PMENU menu )
                 UINT u;
 
                 item = menu->rgItems;
-                for (u = 0; u < menu->cItems; u++, item++)
+                for( u = menu->cItems; u > 0; u--, item++)
                 {
                     MENU_DrawMenuItem(wnd, menu, menu->spwndNotify, hdc, item,
                                          menu->cyMenu, FALSE, ODA_DRAWENTIRE);
@@ -2720,7 +2719,7 @@ UINT MENU_DrawMenuBar( HDC hDC, LPRECT lprect, PWND pWnd, BOOL suppress_draw )
         // No menu. Do not reserve any space
         return 0;
     }
-    
+
     if (lprect == NULL)
     {
         return UserGetSystemMetrics(SM_CYMENU);
@@ -2952,11 +2951,15 @@ static void FASTCALL MENU_SelectItem(PWND pwndOwner, PMENU menu, UINT wIndex,
                                     BOOL sendMenuSelect, PMENU topmenu)
 {
     HDC hdc;
-    PWND pWnd = ValidateHwndNoErr(menu->hWnd);
+    PWND pWnd;
 
     TRACE("M_SI: owner=%p menu=%p index=0x%04x select=0x%04x\n", pwndOwner, menu, wIndex, sendMenuSelect);
 
-    if (!menu || !menu->cItems || !pWnd) return;
+    if (!menu || !menu->cItems) return;
+
+    pWnd = ValidateHwndNoErr(menu->hWnd);
+
+    if (!pWnd) return;
 
     if (menu->iItem == wIndex) return;
 
@@ -3126,6 +3129,8 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
   PWND pWnd;
 
   TRACE("owner=%x menu=%p 0x%04x\n", WndOwner, Menu, SelectFirst);
+
+  if (!Menu) return Menu;
 
   if (Menu->iItem == NO_SELECTED_ITEM) return Menu;
   
@@ -3465,7 +3470,15 @@ static BOOL FASTCALL MENU_MouseMove(MTRACKER *pmt, PMENU PtMenu, UINT Flags)
   if ( PtMenu )
   {
       if (IS_SYSTEM_MENU(PtMenu))
+      {
           Index = 0;
+          //// ReactOS only HACK: CORE-2338
+          // Windows tracks mouse moves to the system menu but does not open it.
+          // Only keyboard tracking can do that.
+          //
+          TRACE("SystemMenu\n");
+          return TRUE; // Stay inside the Loop!
+      }
       else
           MENU_FindItemByCoords( PtMenu, pmt->Pt, &Index );
   }
@@ -3584,7 +3597,7 @@ static LRESULT FASTCALL MENU_DoNextMenu(MTRACKER* pmt, UINT Vk, UINT wFlags)
           {
               /* switch to the system menu */
               MenuTmp = get_win_sys_menu(hNewWnd);
-              hNewMenu = UserHMGetHandle(MenuTmp);
+              if (MenuTmp) hNewMenu = UserHMGetHandle(MenuTmp);
           }
           else
               return FALSE;
@@ -3716,7 +3729,7 @@ static BOOL FASTCALL MENU_KeyEscape(MTRACKER *pmt, UINT Flags)
  *
  * Handle a VK_LEFT key event in a menu.
  */
-static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags)
+static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags, UINT msg)
 {
   PMENU MenuTmp, MenuPrev;
   UINT PrevCol;
@@ -3752,7 +3765,7 @@ static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags)
           /* A sublevel menu was displayed - display the next one
            * unless there is another displacement coming up */
 
-          if (!MENU_SuspendPopup(pmt, WM_KEYDOWN))
+          if (!MENU_SuspendPopup(pmt, msg))
               pmt->CurrentMenu = MENU_ShowSubPopup(pmt->OwnerWnd, pmt->TopMenu,
                                                  TRUE, Flags);
       }
@@ -3764,7 +3777,7 @@ static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags)
  *
  * Handle a VK_RIGHT key event in a menu.
  */
-static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags)
+static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags, UINT msg)
 {
     PMENU menutmp;
     UINT NextCol;
@@ -3809,7 +3822,7 @@ static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags)
 
        if ( menutmp || pmt->TrackFlags & TF_SUSPENDPOPUP )
        {
-           if ( !MENU_SuspendPopup(pmt, WM_KEYDOWN) )
+           if ( !MENU_SuspendPopup(pmt, msg) )
                pmt->CurrentMenu = MENU_ShowSubPopup(pmt->OwnerWnd, pmt->TopMenu, TRUE, Flags);
        }
     }
@@ -3923,7 +3936,6 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
             break;
         }
 
-        IntTranslateKbdMessage(&msg, 0);
         mt.Pt = msg.pt;
 
         if ( (msg.hwnd == mt.CurrentMenu->hWnd) || ((msg.message!=WM_TIMER) && (msg.message!=WM_SYSTIMER)) )
@@ -4025,11 +4037,11 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                         break;
 
                     case VK_LEFT:
-                        MENU_KeyLeft( &mt, wFlags );
+                        MENU_KeyLeft( &mt, wFlags, msg.message );
                         break;
 
                     case VK_RIGHT:
-                        MENU_KeyRight( &mt, wFlags );
+                        MENU_KeyRight( &mt, wFlags, msg.message );
                         break;
 
                     case VK_ESCAPE:
@@ -4053,6 +4065,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     }
 
                     default:
+                        IntTranslateKbdMessage(&msg, 0);
                         break;
                 }
                 break;  /* WM_KEYDOWN */
@@ -4123,9 +4136,12 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
            if (mt.TopMenu->fFlags & MNF_POPUP)
            {
               PWND pwndTM = ValidateHwndNoErr(mt.TopMenu->hWnd);
-              IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND, pwndTM, OBJID_CLIENT, CHILDID_SELF, 0);
+              if (pwndTM)
+              {
+                 IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND, pwndTM, OBJID_CLIENT, CHILDID_SELF, 0);
 
-              co_UserDestroyWindow(pwndTM);
+                 co_UserDestroyWindow(pwndTM);
+              }
               mt.TopMenu->hWnd = NULL;
 
               if (!(wFlags & TPM_NONOTIFY))
@@ -4142,6 +4158,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
        mt.TopMenu->TimeToHide = FALSE;
     }
 
+    EngSetLastError( ERROR_SUCCESS );
     /* The return value is only used by TrackPopupMenu */
     if (!(wFlags & TPM_RETURNCMD)) return TRUE;
     if (executedMenuId == -1) executedMenuId = 0;
@@ -4235,7 +4252,7 @@ static BOOL FASTCALL MENU_ExitTracking(PWND pWnd, BOOL bPopup, UINT wFlags)
  */
 VOID MENU_TrackMouseMenuBar( PWND pWnd, ULONG ht, POINT pt)
 {
-    PMENU pMenu = (ht == HTSYSMENU) ? get_win_sys_menu( UserHMGetHandle(pWnd) ) : IntGetMenu( UserHMGetHandle(pWnd) );
+    PMENU pMenu = (ht == HTSYSMENU) ? IntGetSystemMenu(pWnd, FALSE) : IntGetMenu( UserHMGetHandle(pWnd) ); // See 74276 and CORE-12801
     UINT wFlags = TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
 
     TRACE("wnd=%p ht=0x%04x (%ld,%ld)\n", pWnd, ht, pt.x, pt.y);
@@ -4356,6 +4373,9 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
           co_IntSendMessage( UserHMGetHandle(pWnd), WM_INITMENUPOPUP, (WPARAM) UserHMGetHandle(menu), 0);
        }
 
+       if (menu->fFlags & MNF_SYSMENU)
+          MENU_InitSysMenuPopup( menu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
+
        if (MENU_ShowPopup(pWnd, menu, 0, wFlags, x, y, 0, 0 ))
           ret = MENU_TrackMenu( menu, wFlags | TPM_POPUPMENU, 0, 0, pWnd,
                                 lpTpm ? &lpTpm->rcExclude : NULL);
@@ -4364,14 +4384,6 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
           MsqSetStateWindow(pti, MSQ_STATE_MENUOWNER, NULL);
           pti->MessageQueue->QF_flags &= ~QF_CAPTURELOCKED;
           co_UserSetCapture(NULL); /* release the capture */
-       }
-
-       //
-       // HACK : Until back trace fault in co_IntUpdateWindows and MENU_TrackMenu.
-       //
-       if (EngGetLastError() == ERROR_ACCESS_DENIED)
-       {
-          EngSetLastError(NO_ERROR);
        }
 
        MENU_ExitTracking(pWnd, TRUE, wFlags);
@@ -4738,7 +4750,7 @@ UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags)
 
    if (pItem->spSubMenu)
    {
-      return (pItem->spSubMenu->cItems << 8) | ((pItem->fState|pItem->fType) & 0xff);
+      return (pItem->spSubMenu->cItems << 8) | ((pItem->fState|pItem->fType|MF_POPUP) & 0xff);
    }
    else
       return (pItem->fType | pItem->fState);
@@ -5114,7 +5126,7 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
 
       ItemInfo.cbSize = sizeof(MENUITEMINFOW);
       ItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE | MIIM_SUBMENU;
-      ItemInfo.fType = 0;
+      ItemInfo.fType = MF_POPUP;
       ItemInfo.fState = MFS_ENABLED;
       ItemInfo.dwTypeData = NULL;
       ItemInfo.cch = 0;
@@ -5183,7 +5195,7 @@ IntSetSystemMenu(PWND Window, PMENU Menu)
       if (OldMenu)
       {
           OldMenu->fFlags &= ~MNF_SYSMENU;
-         IntDestroyMenuObject(OldMenu, TRUE);
+          IntDestroyMenuObject(OldMenu, TRUE);
       }
    }
 
@@ -5276,6 +5288,54 @@ IntSetMenu(
 
 
 /* FUNCTIONS *****************************************************************/
+
+/*
+ * @implemented
+ */
+/* http://www.cyber-ta.org/releases/malware-analysis/public/SOURCES/b47155634ccb2c30630da7e3666d3d07/b47155634ccb2c30630da7e3666d3d07.trace.html#NtUserGetIconSize */
+DWORD
+APIENTRY
+NtUserCalcMenuBar(
+    HWND   hwnd,
+    DWORD  leftBorder,
+    DWORD  rightBorder,
+    DWORD  top,
+    LPRECT prc )
+{
+    HDC hdc;
+    PWND Window;
+    RECT Rect;
+    DWORD ret;
+
+    UserEnterExclusive();
+
+    if(!(Window = UserGetWindowObject(hwnd)))
+    {
+        EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+        UserLeave();
+        return 0;
+    }
+
+    hdc = UserGetDCEx(NULL, NULL, DCX_CACHE);
+    if (!hdc)
+    {
+        UserLeave();
+        return 0;
+    }
+
+    Rect.left = leftBorder;
+    Rect.right = Window->rcWindow.right - Window->rcWindow.left - rightBorder;
+    Rect.top = top;
+    Rect.bottom = 0;
+
+    ret = MENU_DrawMenuBar(hdc, &Rect, Window, TRUE);
+
+    UserReleaseDC( 0, hdc, FALSE );
+
+    UserLeave();
+
+    return ret;
+}
 
 /*
  * @implemented
@@ -6036,6 +6096,41 @@ CLEANUP:
    END_CLEANUP;
 }
 
+
+DWORD
+APIENTRY
+NtUserPaintMenuBar(
+    HWND hWnd,
+    HDC hDC,
+    ULONG leftBorder,
+    ULONG rightBorder,
+    ULONG top,
+    BOOL bActive)
+{
+   PWND Window;
+   RECT Rect;
+   DWORD ret;
+
+   UserEnterExclusive();
+
+   if(!(Window = UserGetWindowObject(hWnd)))
+   {
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+      UserLeave();
+      return 0;
+   }
+
+   Rect.left = leftBorder;
+   Rect.right = Window->rcWindow.right - Window->rcWindow.left - rightBorder;
+   Rect.top = top;
+   Rect.bottom = 0;
+
+   ret = MENU_DrawMenuBar(hDC, &Rect, Window, FALSE);
+
+   UserLeave();
+
+   return ret;
+}
 
 /*
  * @implemented

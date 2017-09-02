@@ -226,6 +226,15 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
     return CurIcon;
 }
 
+PCURICON_OBJECT
+IntSystemSetCursor(PCURICON_OBJECT pcurNew)
+{
+    PCURICON_OBJECT pcurOld = UserSetCursor(pcurNew, FALSE);
+    if (pcurNew) UserReferenceObject(pcurNew);
+    if (pcurOld) UserDereferenceObject(pcurOld);
+    return pcurOld;
+}
+
 BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook)
 {
     PWND DesktopWindow;
@@ -1062,9 +1071,12 @@ NtUserSetCursor(
     }
 
     pcurOld = UserSetCursor(pcurNew, FALSE);
-    if (pcurOld)
+
+    // If returning an old cursor than validate it, Justin Case!
+    if ( pcurOld &&
+        (pcurOld = UserGetObjectNoErr(gHandleTable, UserHMGetHandle(pcurOld), TYPE_CURSOR)))
     {
-        hOldCursor = pcurOld->head.h;
+        hOldCursor = UserHMGetHandle(pcurOld);
     /*
         Problem:
 
@@ -1078,12 +1090,12 @@ NtUserSetCursor(
         {
            TRACE("Returning Global Cursor hcur %p\n",hOldCursor);
 
-           if (pcurOld->head.cLockObj > 2) // Throttle down to 2.
+           /*if (pcurOld->head.cLockObj > 2) // Throttle down to 2.
            {
               UserDereferenceObject(pcurOld);
            }
 
-           goto leave;
+           goto leave;*/
         }
 
         /* See if it was destroyed in the meantime */
@@ -1482,7 +1494,9 @@ Exit:
     }
 
     /* Dereference the cursor and return the result */
-    UserDereferenceObject(pcur);
+    if (pcur)
+        UserDereferenceObject(pcur);
+
     return bResult;
 }
 
@@ -1849,7 +1863,7 @@ UserDrawIconEx(
         /* We now have our destination surface */
         psurfDest = psurfOffScreen;
 #else
-        pdcClipObj = &pdc->co.ClipObj;
+        pdcClipObj = (CLIPOBJ *)&pdc->co;
         /* Paint the brush */
         EBRUSHOBJ_vInit(&eboFill, pbrush, psurfDest, 0x00FFFFFF, 0, NULL);
 
@@ -1880,7 +1894,7 @@ UserDrawIconEx(
     {
         /* We directly draw to the DC */
         TRACE("Performing on screen rendering.\n");
-        pdcClipObj = &pdc->co.ClipObj;
+        pdcClipObj = (CLIPOBJ *)&pdc->co;
         // psurfOffScreen = NULL;
     }
 

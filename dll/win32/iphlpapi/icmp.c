@@ -114,8 +114,18 @@ static int in_cksum(u_short *addr, int len)
 HANDLE WINAPI Icmp6CreateFile(VOID)
 {
     icmp_t* icp;
+    int sid;
+#ifdef __REACTOS__
+    WSADATA wsaData;
 
-    int sid=socket(AF_INET6,SOCK_RAW,IPPROTO_ICMPV6);
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != ERROR_SUCCESS)
+    {
+        ERR_(winediag)("Failed to use ICMPV6 (network ping), this requires special permissions.\n");
+        return INVALID_HANDLE_VALUE;
+    }
+#endif
+
+    sid=socket(AF_INET6,SOCK_RAW,IPPROTO_ICMPV6);
 #ifndef __REACTOS__
     if (sid < 0)
     {
@@ -133,6 +143,7 @@ HANDLE WINAPI Icmp6CreateFile(VOID)
     if (icp==NULL) {
 #ifdef __REACTOS__
         closesocket(sid);
+        WSACleanup();
 #else
         close(sid);
 #endif
@@ -180,8 +191,17 @@ HANDLE WINAPI IcmpCreateFile(VOID)
     static int once;
 #endif
     icmp_t* icp;
+    int sid;
+#ifdef __REACTOS__
+    WSADATA wsaData;
 
-    int sid=socket(AF_INET,SOCK_RAW,IPPROTO_ICMP);
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != ERROR_SUCCESS)
+    {
+        ERR_(winediag)("Failed to use ICMPV6 (network ping), this requires special permissions.\n");
+        return INVALID_HANDLE_VALUE;
+    }
+#endif
+    sid=socket(AF_INET,SOCK_RAW,IPPROTO_ICMP);
 #ifdef __REACTOS__
     if (sid < 0) {
         ERR_(winediag)("Failed to use ICMP (network ping), this requires special permissions.\n");
@@ -204,6 +224,7 @@ HANDLE WINAPI IcmpCreateFile(VOID)
     if (icp==NULL) {
 #ifdef __REACTOS__
         closesocket(sid);
+        WSACleanup();
 #else
         if (sid >= 0) close(sid);
 #endif
@@ -222,7 +243,8 @@ HANDLE WINAPI IcmpCreateFile(VOID)
 BOOL WINAPI IcmpCloseHandle(HANDLE  IcmpHandle)
 {
     icmp_t* icp=(icmp_t*)IcmpHandle;
-    if (IcmpHandle==INVALID_HANDLE_VALUE) {
+    // REACTOS: Added a check for NULL handle, CORE-10707
+    if (IcmpHandle==INVALID_HANDLE_VALUE || IcmpHandle==NULL) {
         /* FIXME: in fact win98 seems to ignore the handle value !!! */
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
@@ -234,6 +256,9 @@ BOOL WINAPI IcmpCloseHandle(HANDLE  IcmpHandle)
     if (icp->sid >= 0) close(icp->sid);
 #endif
     HeapFree(GetProcessHeap (), 0, icp);
+#ifdef __REACTOS__
+    WSACleanup();
+#endif
     return TRUE;
 }
 
@@ -513,8 +538,23 @@ DWORD WINAPI IcmpSendEcho(
         return 0;
     }
 
-    if (ReplySize<sizeof(ICMP_ECHO_REPLY)+ICMP_MINLEN) {
-        SetLastError(IP_BUF_TOO_SMALL);
+    if (ReplySize<sizeof(ICMP_ECHO_REPLY)) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (ReplySize-RequestSize<sizeof(ICMP_ECHO_REPLY)) {
+        SetLastError(IP_GENERAL_FAILURE);
+        return 0;
+    }
+
+    if (!ReplyBuffer) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (Timeout == 0 || Timeout == -1) {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
     /* check the request size against SO_MAX_MSG_SIZE using getsockopt */
@@ -539,7 +579,9 @@ DWORD WINAPI IcmpSendEcho(
 #endif
     seq=InterlockedIncrement(&icmp_sequence) & 0xFFFF;
 
-    reqsize=ICMP_MINLEN+RequestSize;
+    reqsize=ICMP_MINLEN;
+    if (RequestData && RequestSize > 0)
+        reqsize += RequestSize;
     reqbuf=HeapAlloc(GetProcessHeap(), 0, reqsize);
     if (reqbuf==NULL) {
         SetLastError(ERROR_OUTOFMEMORY);
@@ -552,7 +594,8 @@ DWORD WINAPI IcmpSendEcho(
     icmp_header->icmp_cksum=0;
     icmp_header->icmp_id=id;
     icmp_header->icmp_seq=seq;
-    memcpy(reqbuf+ICMP_MINLEN, RequestData, RequestSize);
+    if (RequestData && RequestSize > 0)
+        memcpy(reqbuf+ICMP_MINLEN, RequestData, RequestSize);
     icmp_header->icmp_cksum=cksum=in_cksum((u_short*)reqbuf,reqsize);
 
     addr.sin_family=AF_INET;
@@ -608,9 +651,8 @@ DWORD WINAPI IcmpSendEcho(
 #endif
     addrlen=sizeof(addr);
     ier=ReplyBuffer;
-    ip_header=(struct ip *) ((char *) ReplyBuffer+sizeof(ICMP_ECHO_REPLY));
-    endbuf=(char *) ReplyBuffer+ReplySize;
-    maxlen=ReplySize-sizeof(ICMP_ECHO_REPLY);
+    endbuf=((char *) ReplyBuffer)+ReplySize;
+    maxlen=sizeof(struct ip)+ICMP_MINLEN+RequestSize;
 
     /* Send the packet */
     TRACE("Sending %d bytes (RequestSize=%d) to %s\n", reqsize, RequestSize, inet_ntoa(addr.sin_addr));
@@ -648,6 +690,7 @@ DWORD WINAPI IcmpSendEcho(
     }
 
     /* Get the reply */
+    ip_header=HeapAlloc(GetProcessHeap(), 0, maxlen);
     ip_header_len=0; /* because gcc was complaining */
 #ifdef __REACTOS__
     while ((res=select(icp->sid+1,&fdr,NULL,NULL,&timeout))>0) {
@@ -658,6 +701,8 @@ DWORD WINAPI IcmpSendEcho(
         res=recvfrom(icp->sid, (char*)ip_header, maxlen, 0, (struct sockaddr*)&addr,(int*)&addrlen);
         TRACE("received %d bytes from %s\n",res, inet_ntoa(addr.sin_addr));
         ier->Status=IP_REQ_TIMED_OUT;
+        if (res < 0)
+            break;
 
         /* Check whether we should ignore this packet */
         if ((ip_header->ip_p==IPPROTO_ICMP) && (res>=sizeof(struct ip)+ICMP_MINLEN)) {
@@ -679,7 +724,7 @@ DWORD WINAPI IcmpSendEcho(
                     case ICMP_UNREACH_ISOLATED:
 #endif
 #ifdef ICMP_UNREACH_HOST_PROHIB
-		    case ICMP_UNREACH_HOST_PROHIB:
+                    case ICMP_UNREACH_HOST_PROHIB:
 #endif
 #ifdef ICMP_UNREACH_TOSHOST
                     case ICMP_UNREACH_TOSHOST:
@@ -719,9 +764,9 @@ DWORD WINAPI IcmpSendEcho(
                     rep_ip_header=(struct ip*)(((char*)icmp_header)+ICMP_MINLEN);
                     rep_icmp_header=(struct icmp*)(((char*)rep_ip_header)+(rep_ip_header->ip_hl << 2));
 
-		    /* Make sure that this is really a reply to our packet */
+                    /* Make sure that this is really a reply to our packet */
                     if (ip_header_len+ICMP_MINLEN+(rep_ip_header->ip_hl << 2)+ICMP_MINLEN>ip_header->ip_len) {
-			ier->Status=IP_REQ_TIMED_OUT;
+                        ier->Status=IP_REQ_TIMED_OUT;
                     } else if ((rep_icmp_header->icmp_type!=ICMP_ECHO) ||
                         (rep_icmp_header->icmp_code!=0) ||
                         (rep_icmp_header->icmp_id!=id) ||
@@ -737,11 +782,11 @@ DWORD WINAPI IcmpSendEcho(
                         TRACE("expected type,code=8,0 id,seq=%d,%d cksum=%d\n",
                             id,seq,
                             cksum);
-			ier->Status=IP_REQ_TIMED_OUT;
-		    }
+                        ier->Status=IP_REQ_TIMED_OUT;
+                    }
                 }
-	    }
-	}
+            }
+        }
 
         if (ier->Status==IP_REQ_TIMED_OUT) {
             /* This packet was not for us.
@@ -753,6 +798,8 @@ DWORD WINAPI IcmpSendEcho(
             if (t < 0) t = 0;
             timeout.tv_sec = t / 1000;
             timeout.tv_usec = (t % 1000) * 1000;
+            FD_ZERO(&fdr);
+            FD_SET(icp->sid, &fdr);
 #else
             DWORD t = (recv_time - send_time);
             if (Timeout > t) Timeout -= t;
@@ -784,8 +831,6 @@ DWORD WINAPI IcmpSendEcho(
 
             /* Prepare for the next packet */
             ier++;
-            ip_header=(struct ip*)(((char*)ip_header)+sizeof(ICMP_ECHO_REPLY));
-            maxlen=endbuf-(char*)ip_header;
 
             /* Check out whether there is more but don't wait this time */
 #ifdef __REACTOS__
@@ -800,6 +845,7 @@ DWORD WINAPI IcmpSendEcho(
         FD_SET(icp->sid,&fdr);
 #endif
     }
+    HeapFree(GetProcessHeap(), 0, ip_header);
     res=ier-(ICMP_ECHO_REPLY*)ReplyBuffer;
     if (res==0)
         SetLastError(IP_REQ_TIMED_OUT);

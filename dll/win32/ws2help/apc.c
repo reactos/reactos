@@ -75,7 +75,7 @@ WahCloseThread(IN HANDLE ApcHelperHandle,
     /* Close the thread handle */
     if (CloseHandle(ThreadId->ThreadHandle))
     {
-        /* Clear the sturcture */
+        /* Clear the structure */
         ThreadId->ThreadHandle = NULL;
         ThreadId->Reserved = 0;
         return NO_ERROR;

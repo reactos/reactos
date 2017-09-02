@@ -42,67 +42,6 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 }
 
 /************************************************************
- *                NetServerEnum (NETAPI32.@)
- */
-NET_API_STATUS  WINAPI NetServerEnum(
-  LMCSTR servername,
-  DWORD level,
-  LPBYTE* bufptr,
-  DWORD prefmaxlen,
-  LPDWORD entriesread,
-  LPDWORD totalentries,
-  DWORD servertype,
-  LMCSTR domain,
-  LPDWORD resume_handle
-)
-{
-    FIXME("Stub (%s %d %p %d %p %p %d %s %p)\n", debugstr_w(servername),
-     level, bufptr, prefmaxlen, entriesread, totalentries, servertype,
-     debugstr_w(domain), resume_handle);
-
-    return ERROR_NO_BROWSER_SERVERS_FOUND;
-}
-
-/************************************************************
- *                NetServerEnumEx (NETAPI32.@)
- */
-NET_API_STATUS WINAPI NetServerEnumEx(
-    LMCSTR ServerName,
-    DWORD Level,
-    LPBYTE *Bufptr,
-    DWORD PrefMaxlen,
-    LPDWORD EntriesRead,
-    LPDWORD totalentries,
-    DWORD servertype,
-    LMCSTR domain,
-    LMCSTR FirstNameToReturn)
-{
-    FIXME("Stub (%s %d %p %d %p %p %d %s %s)\n",
-           debugstr_w(ServerName), Level, Bufptr, PrefMaxlen, EntriesRead, totalentries,
-           servertype, debugstr_w(domain), debugstr_w(FirstNameToReturn));
-
-    return ERROR_NO_BROWSER_SERVERS_FOUND;
-}
-
-/************************************************************
- *                NetServerDiskEnum (NETAPI32.@)
- */
-NET_API_STATUS WINAPI NetServerDiskEnum(
-    LMSTR ServerName,
-    DWORD Level,
-    LPBYTE *Bufptr,
-    DWORD PrefMaxlen,
-    LPDWORD EntriesRead,
-    LPDWORD totalentries,
-    LPDWORD Resume_Handle)
-{
-    FIXME("Stub (%s %d %p %d %p %p %p)\n", debugstr_w(ServerName),
-     Level, Bufptr, PrefMaxlen, EntriesRead, totalentries, Resume_Handle);
-
-    return ERROR_NO_BROWSER_SERVERS_FOUND;
-}
-
-/************************************************************
  *                NetServerGetInfo  (NETAPI32.@)
  */
 NET_API_STATUS WINAPI NetServerGetInfo(LMSTR servername, DWORD level, LPBYTE* bufptr)

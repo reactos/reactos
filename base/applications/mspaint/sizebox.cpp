@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/sizebox.cpp
  * PURPOSE:     Window procedure of the size boxes
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -12,9 +13,9 @@
 
 /* FUNCTIONS ********************************************************/
 
-BOOL resizing = FALSE;
-short xOrig;
-short yOrig;
+static BOOL resizing = FALSE;
+static short xOrig;
+static short yOrig;
 
 LRESULT CSizeboxWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -42,7 +43,7 @@ LRESULT CSizeboxWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (resizing)
     {
-        TCHAR sizeStr[100];
+        CString strSize;
         short xRel;
         short yRel;
         int imgXRes = imageModel.GetWidth();
@@ -50,22 +51,22 @@ LRESULT CSizeboxWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / toolsModel.GetZoom();
         yRel = (GET_Y_LPARAM(lParam) - yOrig) * 1000 / toolsModel.GetZoom();
         if (m_hWnd == sizeboxLeftTop.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes - xRel, imgYRes - yRel);
+            strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes - yRel);
         if (m_hWnd == sizeboxCenterTop.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes, imgYRes - yRel);
+            strSize.Format(_T("%d x %d"), imgXRes, imgYRes - yRel);
         if (m_hWnd == sizeboxRightTop.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes + xRel, imgYRes - yRel);
+            strSize.Format(_T("%d x %d"), imgXRes + xRel, imgYRes - yRel);
         if (m_hWnd == sizeboxLeftCenter.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes - xRel, imgYRes);
+            strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes);
         if (m_hWnd == sizeboxRightCenter.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes + xRel, imgYRes);
+            strSize.Format(_T("%d x %d"), imgXRes + xRel, imgYRes);
         if (m_hWnd == sizeboxLeftBottom.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes - xRel, imgYRes + yRel);
+            strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes + yRel);
         if (m_hWnd == sizeboxCenterBottom.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes, imgYRes + yRel);
+            strSize.Format(_T("%d x %d"), imgXRes, imgYRes + yRel);
         if (m_hWnd == sizeboxRightBottom.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes + xRel, imgYRes + yRel);
-        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
+            strSize.Format(_T("%d x %d"), imgXRes + xRel, imgYRes + yRel);
+        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
     }
     return 0;
 }
@@ -76,8 +77,6 @@ LRESULT CSizeboxWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     {
         short xRel;
         short yRel;
-        ReleaseCapture();
-        resizing = FALSE;
         int imgXRes = imageModel.GetWidth();
         int imgYRes = imageModel.GetHeight();
         xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / toolsModel.GetZoom();
@@ -99,6 +98,26 @@ LRESULT CSizeboxWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         if (m_hWnd == sizeboxRightBottom.m_hWnd)
             imageModel.Crop(imgXRes + xRel, imgYRes + yRel, 0, 0);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) _T(""));
+    }
+    resizing = FALSE;
+    ReleaseCapture();
+    return 0;
+}
+
+LRESULT CSizeboxWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    resizing = FALSE;
+    return 0;
+}
+
+LRESULT CSizeboxWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (wParam == VK_ESCAPE)
+    {
+        if (GetCapture() == m_hWnd)
+        {
+            ReleaseCapture();
+        }
     }
     return 0;
 }

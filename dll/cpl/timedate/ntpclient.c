@@ -108,7 +108,7 @@ ReceiveData(PINFO pInfo)
     INT Ret;
     ULONG ulTime = 0;
 
-    /* Monitor socket for incomming connections */
+    /* Monitor socket for incoming connections */
     FD_ZERO(&readFDS);
     FD_SET(pInfo->Sock, &readFDS);
 

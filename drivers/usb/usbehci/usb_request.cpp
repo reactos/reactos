@@ -56,8 +56,8 @@ public:
     VOID DumpQueueHead(IN PQUEUE_HEAD QueueHead);
 
     // constructor / destructor
-    CUSBRequest(IUnknown *OuterUnknown){}
-    virtual ~CUSBRequest(){}
+    CUSBRequest(IUnknown *OuterUnknown);
+    virtual ~CUSBRequest();
 
 protected:
     LONG m_Ref;
@@ -136,6 +136,22 @@ protected:
     USB_DEVICE_SPEED m_Speed;
 
 };
+
+//----------------------------------------------------------------------------------------
+CUSBRequest::CUSBRequest(IUnknown *OuterUnknown) :
+    m_CompletionEvent(NULL)
+{
+    UNREFERENCED_PARAMETER(OuterUnknown);
+}
+
+//----------------------------------------------------------------------------------------
+CUSBRequest::~CUSBRequest()
+{
+    if (m_CompletionEvent != NULL)
+    {
+        ExFreePoolWithTag(m_CompletionEvent, TAG_USBEHCI);
+    }
+}
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
@@ -391,7 +407,7 @@ CUSBRequest::CompletionCallback(
         }
 
         //
-        // check if the request was successfull
+        // check if the request was successful
         //
         if (!NT_SUCCESS(NtStatusCode))
         {
@@ -599,8 +615,9 @@ CUSBRequest::InitDescriptor(
     do
     {
         //
-        // get address
+        // get address (HACK)
         //
+        *(volatile char *)TransferBuffer;
         Address = MmGetPhysicalAddress(TransferBuffer);
 
         //
@@ -1455,7 +1472,7 @@ CUSBRequest::BuildSetupPacketFromURB()
         case URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE:
         case URB_FUNCTION_CLEAR_FEATURE_TO_INTERFACE:
         case URB_FUNCTION_CLEAR_FEATURE_TO_ENDPOINT:
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             break;
 
     /* GET CONFIG */
@@ -1523,7 +1540,7 @@ CUSBRequest::BuildSetupPacketFromURB()
         case URB_FUNCTION_SET_DESCRIPTOR_TO_DEVICE:
         case URB_FUNCTION_SET_DESCRIPTOR_TO_INTERFACE:
         case URB_FUNCTION_SET_DESCRIPTOR_TO_ENDPOINT:
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             break;
 
     /* SET FEATURE */
@@ -1559,10 +1576,10 @@ CUSBRequest::BuildSetupPacketFromURB()
 
     /* SYNC FRAME */
         case URB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL:
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             break;
         default:
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             break;
     }
 

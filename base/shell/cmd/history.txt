@@ -148,7 +148,7 @@ o Fixed bug that caused dir *.ext/X not to work (no spaces
 o Added wildcard support for DEL command
 o Added prompt and help switch for DEL command, /P and /?
   respectively.
-o Added support for /C when envoking the shell
+o Added support for /C when invoking the shell
 o Added /P support when Kernel loads shell.  This means
   the shell now is permanent and runs the autoexec.bat
   (/E is not implemented)
@@ -261,7 +261,7 @@ o Added display of available internal commands and options at startup.
 29 Jul 1998 (Rob Lake rlake@cs.mun.ca)
 ~~~~~~~~~~~~~~~~~~~~~~
 o changed date.c and time.c, and wrote datefunc.c and timefunc.c to
-  impliment _dos_getdate, _dos_setdate, _dos_gettime and _dos_settime.
+  implement _dos_getdate, _dos_setdate, _dos_gettime and _dos_settime.
   This is the first of many steps to make the shell compatible under
   Pacific C.
 
@@ -300,7 +300,7 @@ o call.c: added lines to initialize for pointers.  This fixed the
 
 07-Aug-1998 (John P Price <linux-guru@gcfl.net>)
 ~~~~~~~~~~~~~~~~~~~~~~
-o Fixed carrage return output to better match MSDOS with echo on or off.
+o Fixed carriage return output to better match MSDOS with echo on or off.
 
 
 07-Dec-1998 ReactOS CMD version 0.0.1 (Eric Kohl)

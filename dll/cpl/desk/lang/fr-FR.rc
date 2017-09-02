@@ -97,16 +97,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Utilisez l'effet de transition suivant pour les menus et les bulles d'aides",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "U&tilisez la méthode suivante pour aplanir les bords des polices d'écran", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "Uti&liser de grandes icones", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Montrer ombrage sous les menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "Montrer contenu des fenêtres lorsqu'elles sont bougés", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Cacher les lettres soulignées pour la navigation du clavier jusqu'à ce que j'appuie sur la touche Alt",
@@ -152,6 +152,17 @@ BEGIN
     AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des couleurs.", IDC_ASKME_RB, 14, 146, 243, 10
 END
 
+IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Paramètres d'affichage"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Voulez-vous conserver ces paramètres d'affichage ?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
+    PUSHBUTTON "&Oui", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&Non", IDNO, 175, 36, 50, 14
+END
+
 IDR_PREVIEW_MENU MENU
 BEGIN
     MENUITEM "Normal", ID_MENU_NORMAL
@@ -180,7 +191,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Standard"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "Anticrénelage FreeType"
 END
 
 STRINGTABLE
@@ -252,6 +263,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_DISPLAY_SETTINGS "Paramètres d'affichage"
-    IDS_APPLY_FAILED "Echec lors de l'application des nouveaux paramètres..."
+    IDS_APPLY_FAILED "Échec lors de l'application des nouveaux paramètres..."
     IDS_APPLY_NEEDS_RESTART "Vous devez redémarrer votre ordinateur pour appliquer les modifications."
+    IDS_TIMEOUTTEXT "Rétablissement des précédents paramètres dans %d secondes."
 END

@@ -266,6 +266,11 @@ UserUpdateMonitorSize(IN HDEV hDev)
     if (pMonitor->hrgnMonitor)
         IntGdiSetRegionOwner(pMonitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
+    //
+    // Should be Virtual accumulation of all the available monitors.
+    //
+    gpsi->rcScreenReal = pMonitor->rcMonitor;
+
     return STATUS_SUCCESS;
 }
 

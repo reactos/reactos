@@ -72,6 +72,7 @@ struct _IMAGELIST
     INT     cInitial;
     UINT    uBitsPixel;
     char   *has_alpha;
+    BOOL    color_table_set;
 
     LONG        ref;                       /* reference count */
 };
@@ -298,6 +299,9 @@ done:
     return ret;
 }
 
+UINT WINAPI
+ImageList_SetColorTable(HIMAGELIST himl, UINT uStartIndex, UINT cEntries, const RGBQUAD *prgb);
+
 /*************************************************************************
  * IMAGELIST_InternalExpandBitmaps [Internal]
  *
@@ -420,7 +424,8 @@ ImageList_Add (HIMAGELIST himl,	HBITMAP hbmImage, HBITMAP hbmMask)
 
     nImageCount = bmp.bmWidth / himl->cx;
 
-    TRACE("%p has %d images (%d x %d)\n", hbmImage, nImageCount, bmp.bmWidth, bmp.bmHeight);
+    TRACE("%p has %d images (%d x %d) bpp %d\n", hbmImage, nImageCount, bmp.bmWidth, bmp.bmHeight,
+          bmp.bmBitsPixel);
 
     IMAGELIST_InternalExpandBitmaps(himl, nImageCount);
 
@@ -436,6 +441,14 @@ ImageList_Add (HIMAGELIST himl,	HBITMAP hbmImage, HBITMAP hbmMask)
     {
         hdcTemp = CreateCompatibleDC(0);
         SelectObject(hdcTemp, hbmMask);
+    }
+
+    if (himl->uBitsPixel <= 8 && bmp.bmBitsPixel <= 8 &&
+        !himl->color_table_set && himl->cCurImage == 0)
+    {
+        RGBQUAD colors[256];
+        UINT num = GetDIBColorTable( hdcBitmap, 0, 1 << bmp.bmBitsPixel, colors );
+        if (num) ImageList_SetColorTable( himl, 0, num, colors );
     }
 
     for (i=0; i<nImageCount; i++)
@@ -787,6 +800,7 @@ ImageList_Create (INT cx, INT cy, UINT flags,
     himl->cGrow     = cGrow;
     himl->clrFg     = CLR_DEFAULT;
     himl->clrBk     = CLR_NONE;
+    himl->color_table_set = FALSE;
 
     /* initialize overlay mask indices */
     for (nCount = 0; nCount < MAX_OVERLAYIMAGE; nCount++)
@@ -1430,6 +1444,9 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     HBRUSH hOldBrush;
     POINT pt;
     BOOL has_alpha;
+#ifdef __REACTOS__
+    HDC hdcSaturated = NULL;
+#endif
 
     if (!pimldp || !(himl = pimldp->himl)) return FALSE;
     if (!is_valid(himl)) return FALSE;
@@ -1486,9 +1503,10 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
      */
     if (fState & ILS_SATURATE)
     {
-        hImageListDC = saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
+        hdcSaturated = saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
                                       pt.x, pt.y, cx, cy, pimldp->rgbFg);
 
+        hImageListDC = hdcSaturated;
         /* shitty way of getting subroutines to blit at the right place (top left corner),
            as our modified imagelist only contains a single image for performance reasons */
         pt.x = 0;
@@ -1658,6 +1676,10 @@ end:
     SetTextColor(hImageDC, oldImageFg);
     SelectObject(hImageDC, hOldImageBmp);
 cleanup:
+#ifdef __REACTOS__
+    if (hdcSaturated)
+        DeleteDC(hdcSaturated);
+#endif
     DeleteObject(hBlendMaskBmp);
     DeleteObject(hImageBmp);
     DeleteDC(hImageDC);
@@ -2254,7 +2276,7 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
 
 
 /* helper for ImageList_Read, see comments below */
-static void *read_bitmap(LPSTREAM pstm, BITMAPINFO *bmi)
+static void *read_bitmap(IStream *pstm, BITMAPINFO *bmi)
 {
     BITMAPFILEHEADER	bmfh;
     int bitsperpixel, palspace;
@@ -2330,7 +2352,7 @@ static void *read_bitmap(LPSTREAM pstm, BITMAPINFO *bmi)
  *
  *	BYTE			maskbits[imagesize];
  */
-HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
+HIMAGELIST WINAPI ImageList_Read(IStream *pstm)
 {
     char image_buf[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 256];
     char mask_buf[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 256];
@@ -3064,8 +3086,7 @@ ImageList_SetOverlayImage (HIMAGELIST himl, INT iImage, INT iOverlay)
 /* helper for ImageList_Write - write bitmap to pstm
  * currently everything is written as 24 bit RGB, except masks
  */
-static BOOL
-_write_bitmap(HBITMAP hBitmap, LPSTREAM pstm)
+static BOOL _write_bitmap(HBITMAP hBitmap, IStream *pstm)
 {
     LPBITMAPFILEHEADER bmfh;
     LPBITMAPINFOHEADER bmih;
@@ -3151,8 +3172,7 @@ failed:
  *     probably.
  */
 
-BOOL WINAPI
-ImageList_Write (HIMAGELIST himl, LPSTREAM pstm)
+BOOL WINAPI ImageList_Write(HIMAGELIST himl, IStream *pstm)
 {
     ILHEAD ilHead;
     int i;
@@ -3221,11 +3241,25 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count)
 
 	if (himl->uBitsPixel <= ILC_COLOR8)
 	{
-            /* retrieve the default color map */
-            HBITMAP tmp = CreateBitmap( 1, 1, 1, 1, NULL );
-            GetDIBits( hdc, tmp, 0, 0, NULL, bmi, DIB_RGB_COLORS );
-            DeleteObject( tmp );
-	}
+            if (!himl->color_table_set)
+            {
+                /* retrieve the default color map */
+                HBITMAP tmp = CreateBitmap( 1, 1, 1, 1, NULL );
+                GetDIBits( hdc, tmp, 0, 0, NULL, bmi, DIB_RGB_COLORS );
+                DeleteObject( tmp );
+                if (ilc == ILC_COLOR4)
+                {
+                    RGBQUAD tmp;
+                    tmp = bmi->bmiColors[7];
+                    bmi->bmiColors[7] = bmi->bmiColors[8];
+                    bmi->bmiColors[8] = tmp;
+                }
+            }
+            else
+            {
+                GetDIBColorTable(himl->hdcImage, 0, 1 << himl->uBitsPixel, bmi->bmiColors);
+            }
+        }
 	hbmNewBitmap = CreateDIBSection(hdc, bmi, DIB_RGB_COLORS, NULL, 0, 0);
     }
     else /*if (ilc == ILC_COLORDDB)*/
@@ -3260,6 +3294,8 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count)
 UINT WINAPI
 ImageList_SetColorTable(HIMAGELIST himl, UINT uStartIndex, UINT cEntries, const RGBQUAD *prgb)
 {
+    TRACE("(%p, %d, %d, %p)\n", himl, uStartIndex, cEntries, prgb);
+    himl->color_table_set = TRUE;
     return SetDIBColorTable(himl->hdcImage, uStartIndex, cEntries, prgb);
 }
 
@@ -3558,7 +3594,9 @@ static HRESULT WINAPI ImageListImpl_GetImageRect(IImageList2 *iface, int i,
     if (!ImageList_GetImageInfo(imgl, i, &info))
         return E_FAIL;
 
-    return CopyRect(prc, &info.rcImage) ? S_OK : E_FAIL;
+    *prc = info.rcImage;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ImageListImpl_GetIconSize(IImageList2 *iface, int *cx,

@@ -4,19 +4,21 @@
  * \brief X.509 generic defines and structures
  *
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
+ *  SPDX-License-Identifier: GPL-2.0
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
@@ -76,6 +78,7 @@
 #define MBEDTLS_ERR_X509_ALLOC_FAILED                     -0x2880  /**< Allocation of memory failed. */
 #define MBEDTLS_ERR_X509_FILE_IO_ERROR                    -0x2900  /**< Read/write of file failed. */
 #define MBEDTLS_ERR_X509_BUFFER_TOO_SMALL                 -0x2980  /**< Destination buffer is too small. */
+#define MBEDTLS_ERR_X509_FATAL_ERROR                      -0x3000  /**< A fatal error occured, eg the chain is too long or the vrfy callback failed. */
 /* \} name */
 
 /**
@@ -157,7 +160,7 @@
 #define MBEDTLS_X509_EXT_INIHIBIT_ANYPOLICY          (1 << 13)
 #define MBEDTLS_X509_EXT_FRESHEST_CRL                (1 << 14)
 
-#define MBEDTLS_X509_EXT_NS_CERT_TYPE                (1 << 16)   /* Parsed (and then ?) */
+#define MBEDTLS_X509_EXT_NS_CERT_TYPE                (1 << 16)
 
 /*
  * Storage format identifiers
@@ -246,12 +249,12 @@ int mbedtls_x509_serial_gets( char *buf, size_t size, const mbedtls_x509_buf *se
  * \note           Intended usage is "if( is_past( valid_to ) ) ERROR".
  *                 Hence the return value of 1 if on internal errors.
  *
- * \param time     mbedtls_x509_time to check
+ * \param to       mbedtls_x509_time to check
  *
  * \return         1 if the given time is in the past or an error occured,
  *                 0 otherwise.
  */
-int mbedtls_x509_time_is_past( const mbedtls_x509_time *time );
+int mbedtls_x509_time_is_past( const mbedtls_x509_time *to );
 
 /**
  * \brief          Check a given mbedtls_x509_time against the system time
@@ -260,12 +263,12 @@ int mbedtls_x509_time_is_past( const mbedtls_x509_time *time );
  * \note           Intended usage is "if( is_future( valid_from ) ) ERROR".
  *                 Hence the return value of 1 if on internal errors.
  *
- * \param time     mbedtls_x509_time to check
+ * \param from     mbedtls_x509_time to check
  *
  * \return         1 if the given time is in the future or an error occured,
  *                 0 otherwise.
  */
-int mbedtls_x509_time_is_future( const mbedtls_x509_time *time );
+int mbedtls_x509_time_is_future( const mbedtls_x509_time *from );
 
 /**
  * \brief          Checkup routine
@@ -294,7 +297,7 @@ int mbedtls_x509_get_sig_alg( const mbedtls_x509_buf *sig_oid, const mbedtls_x50
                       mbedtls_md_type_t *md_alg, mbedtls_pk_type_t *pk_alg,
                       void **sig_opts );
 int mbedtls_x509_get_time( unsigned char **p, const unsigned char *end,
-                   mbedtls_x509_time *time );
+                   mbedtls_x509_time *t );
 int mbedtls_x509_get_serial( unsigned char **p, const unsigned char *end,
                      mbedtls_x509_buf *serial );
 int mbedtls_x509_get_ext( unsigned char **p, const unsigned char *end,

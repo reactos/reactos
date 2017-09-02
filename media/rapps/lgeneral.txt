@@ -36,7 +36,7 @@ Size = 1,9 Mio
 
 [Section.0419]
 Description = Клон Panzer General, использующий библиотеки SDL.
-Size = 1,9 МБ
+Size = 1,9 МиБ
 
 [Section.041f]
 Description = SDL kitaplıklarını kullanan Panzer General taklidi.

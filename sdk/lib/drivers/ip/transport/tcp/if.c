@@ -15,6 +15,8 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     IP_PACKET Packet;
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
+    ULONG Length;
+    ULONG TotalLength;
 
     /* The caller frees the pbuf struct */
 
@@ -39,7 +41,7 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     {
         return ERR_RTE;
     }
-    
+
     NdisStatus = AllocatePacketWithBuffer(&Packet.NdisPacket, NULL, p->tot_len);
     if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
@@ -49,13 +51,22 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     GetDataPtr(Packet.NdisPacket, 0, (PCHAR*)&Packet.Header, &Packet.TotalSize);
     Packet.MappedHeader = TRUE;
 
-    ASSERT(p->tot_len == p->len);
-    ASSERT(Packet.TotalSize == p->len);
+    ASSERT(Packet.TotalSize == p->tot_len);
 
-    RtlCopyMemory(Packet.Header, p->payload, p->len);
+    TotalLength = p->tot_len;
+    Length = 0;
+    while (Length < TotalLength)
+    {
+        ASSERT(p->len <= TotalLength - Length);
+        ASSERT(p->tot_len == TotalLength - Length);
+        RtlCopyMemory((PCHAR)Packet.Header + Length, p->payload, p->len);
+        Length += p->len;
+        p = p->next;
+    }
+    ASSERT(Length == TotalLength);
 
     Packet.HeaderSize = sizeof(IPv4_HEADER);
-    Packet.TotalSize = p->tot_len;
+    Packet.TotalSize = TotalLength;
     Packet.SrcAddr = LocalAddress;
     Packet.DstAddr = RemoteAddress;
 
@@ -71,9 +82,9 @@ TCPUpdateInterfaceLinkStatus(PIP_INTERFACE IF)
 {
 #if 0
     ULONG OperationalStatus;
-    
+
     GetInterfaceConnectionStatus(IF, &OperationalStatus);
-    
+
     if (OperationalStatus == MIB_IF_OPER_STATUS_OPERATIONAL)
         netif_set_link_up(IF->TCPContext);
     else

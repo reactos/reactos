@@ -21,7 +21,7 @@
  * PROJECT:          ReactOS kernel
  * FILE:             base/services/umpnpmgr/umpnpmgr.c
  * PURPOSE:          User-mode Plug and Play manager
- * PROGRAMMER:       Eric Kohl
+ * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
  *                   Hervé Poussineau (hpoussin@reactos.org)
  *                   Colin Finck (colin@reactos.org)
  */
@@ -37,6 +37,8 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <winsvc.h>
+#include <winuser.h>
+#include <dbt.h>
 #include <stdio.h>
 #include <cmfuncs.h>
 #include <rtlfuncs.h>
@@ -489,7 +491,7 @@ PNP_GetDeviceList(
     DWORD ulFlags)
 {
     PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
-    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
     DPRINT("PNP_GetDeviceList() called\n");
@@ -501,9 +503,7 @@ PNP_GetDeviceList(
         return CR_INVALID_POINTER;
 
 //    if (Buffer == NULL)
-//        return 
-
-    *pulLength = 0;
+//        return CR_INVALID_POINTER;
 
     if (ulFlags &
         (CM_GETIDLIST_FILTER_BUSRELATIONS |
@@ -519,8 +519,7 @@ PNP_GetDeviceList(
         }
         else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
         {
-            /* FIXME */
-            PlugPlayData.Relations = 0;
+            PlugPlayData.Relations = 2;
         }
         else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
         {
@@ -531,7 +530,7 @@ PNP_GetDeviceList(
             PlugPlayData.Relations = 0;
         }
 
-        PlugPlayData.BufferSize = *pulLength;
+        PlugPlayData.BufferSize = *pulLength * sizeof(WCHAR);
         PlugPlayData.Buffer = Buffer;
 
         Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
@@ -539,7 +538,7 @@ PNP_GetDeviceList(
                                    sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
         if (NT_SUCCESS(Status))
         {
-            *pulLength = PlugPlayData.BufferSize;
+            *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
         }
         else
         {
@@ -548,15 +547,15 @@ PNP_GetDeviceList(
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
 
     return ret;
@@ -573,7 +572,7 @@ PNP_GetDeviceListSize(
     DWORD ulFlags)
 {
     PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
-    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
     DPRINT("PNP_GetDeviceListSize() called\n");
@@ -600,8 +599,7 @@ PNP_GetDeviceListSize(
         }
         else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
         {
-            /* FIXME */
-            PlugPlayData.Relations = 0;
+            PlugPlayData.Relations = 2;
         }
         else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
         {
@@ -620,7 +618,7 @@ PNP_GetDeviceListSize(
                                    sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
         if (NT_SUCCESS(Status))
         {
-            *pulLength = PlugPlayData.BufferSize;
+            *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
         }
         else
         {
@@ -629,15 +627,15 @@ PNP_GetDeviceListSize(
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
 
     return ret;
@@ -950,7 +948,7 @@ PNP_GetDeviceRegProp(
 #endif
 
             case CM_DRP_REMOVAL_POLICY:
-                PlugPlayData.Property = 0x12; // DevicePropertyRemovalPolicy
+                PlugPlayData.Property = 0x13; // DevicePropertyRemovalPolicy
                 break;
 
 #if 0
@@ -993,7 +991,9 @@ PNP_GetDeviceRegProp(
     }
 
 done:
-    *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
+
+    if (pulTransferLen)
+        *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
 
     if (hKey != NULL)
         RegCloseKey(hKey);
@@ -2857,10 +2857,28 @@ PNP_RunDetection(
 DWORD
 WINAPI
 PNP_RegisterNotification(
-    handle_t hBinding)
+    handle_t hBinding,
+    DWORD ulFlags,
+    DWORD *pulNotify)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+#if 0
+    PNOTIFY_DATA pNotifyData;
+#endif
+
+    DPRINT1("PNP_RegisterNotification(%p 0x%lx %p)\n",
+           hBinding, ulFlags, pulNotify);
+
+#if 0
+    pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_DATA));
+    if (pNotifyData == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    *pulNotify = (DWORD)pNotifyData;
+#endif
+
+    *pulNotify = 1;
+
+    return CR_SUCCESS;
 }
 
 
@@ -2868,10 +2886,18 @@ PNP_RegisterNotification(
 DWORD
 WINAPI
 PNP_UnregisterNotification(
-    handle_t hBinding)
+    handle_t hBinding,
+    DWORD ulNotify)
 {
+    DPRINT1("PNP_UnregisterNotification(%p 0x%lx)\n",
+           hBinding, ulNotify);
+
+#if 0
     UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
+#endif
+
+    return CR_SUCCESS;
 }
 
 
@@ -2978,6 +3004,8 @@ PNP_GetVersionInternal(
     handle_t hBinding,
     WORD *pwVersion)
 {
+    UNREFERENCED_PARAMETER(hBinding);
+
     *pwVersion = 0x501;
     return CR_SUCCESS;
 }
@@ -3006,8 +3034,21 @@ PNP_GetServerSideDeviceInstallFlags(
     DWORD *pulSSDIFlags,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_GetServerSideDeviceInstallFlags(%p %p %lu)\n",
+            hBinding, pulSSDIFlags, ulFlags);
+
+    if (pulSSDIFlags == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    /* FIXME */
+    *pulSSDIFlags = 0;
+
+    return CR_SUCCESS;
 }
 
 
@@ -3187,6 +3228,22 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
             DPRINT("No need to install: %S\n", DeviceInstance);
             RegCloseKey(DeviceKey);
             return TRUE;
+        }
+
+        BytesWritten = sizeof(DWORD);
+        if (RegQueryValueExW(DeviceKey,
+                             L"ConfigFlags",
+                             NULL,
+                             NULL,
+                             (PBYTE)&Value,
+                             &BytesWritten) == ERROR_SUCCESS)
+        {
+            if (Value & CONFIGFLAG_FAILEDINSTALL)
+            {
+                DPRINT("No need to install: %S\n", DeviceInstance);
+                RegCloseKey(DeviceKey);
+                return TRUE;
+            }
         }
 
         RegCloseKey(DeviceKey);
@@ -3539,8 +3596,17 @@ PnpEventThread(LPVOID lpParameter)
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
+//            DWORD dwRecipient;
+
             DPRINT("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
-            /* FIXME: ? */
+
+//            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+//            BroadcastSystemMessageW(BSF_POSTMESSAGE,
+//                                    &dwRecipient,
+//                                    WM_DEVICECHANGE,
+//                                    DBT_DEVNODES_CHANGED,
+//                                    0);
+            SendMessageW(HWND_BROADCAST, WM_DEVICECHANGE, DBT_DEVNODES_CHANGED, 0);
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_EJECT_VETOED, &RpcStatus))
         {
@@ -3552,11 +3618,31 @@ PnpEventThread(LPVOID lpParameter)
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_SAFE_REMOVAL, &RpcStatus))
         {
+//            DWORD dwRecipient;
+
             DPRINT1("Safe removal: %S\n", PnpEvent->TargetDevice.DeviceIds);
+
+//            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+//            BroadcastSystemMessageW(BSF_POSTMESSAGE,
+//                                    &dwRecipient,
+//                                    WM_DEVICECHANGE,
+//                                    DBT_DEVNODES_CHANGED,
+//                                    0);
+            SendMessageW(HWND_BROADCAST, WM_DEVICECHANGE, DBT_DEVNODES_CHANGED, 0);
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_SURPRISE_REMOVAL, &RpcStatus))
         {
+//            DWORD dwRecipient;
+
             DPRINT1("Surprise removal: %S\n", PnpEvent->TargetDevice.DeviceIds);
+
+//            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+//            BroadcastSystemMessageW(BSF_POSTMESSAGE,
+//                                    &dwRecipient,
+//                                    WM_DEVICECHANGE,
+//                                    DBT_DEVNODES_CHANGED,
+//                                    0);
+            SendMessageW(HWND_BROADCAST, WM_DEVICECHANGE, DBT_DEVNODES_CHANGED, 0);
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_REMOVAL_VETOED, &RpcStatus))
         {

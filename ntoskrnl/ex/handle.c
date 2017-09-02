@@ -1246,8 +1246,7 @@ ExEnumHandleTable(IN PHANDLE_TABLE HandleTable,
     while ((HandleTableEntry = ExpLookupHandleTableEntry(HandleTable, Handle)))
     {
         /* Validate the entry */
-        if ((HandleTableEntry) &&
-            (HandleTableEntry->Object) &&
+        if ((HandleTableEntry->Object) &&
             (HandleTableEntry->NextFreeTableEntry != -2))
         {
             /* Lock the entry */

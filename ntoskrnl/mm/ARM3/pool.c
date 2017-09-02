@@ -493,7 +493,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // Out of memory!
                 //
-                DPRINT1("OUT OF PAGED POOL!!!\n");
+                DPRINT1("FAILED to allocate %Iu bytes from paged pool\n", SizeInBytes);
                 KeReleaseGuardedMutex(&MmPagedPoolMutex);
                 return NULL;
             }
@@ -610,7 +610,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // Out of memory!
                 //
-                DPRINT1("OUT OF PAGED POOL!!!\n");
+                DPRINT1("FAILED to allocate %Iu bytes from paged pool\n", SizeInBytes);
                 KeReleaseGuardedMutex(&MmPagedPoolMutex);
                 return NULL;
             }

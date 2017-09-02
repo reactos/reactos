@@ -436,6 +436,12 @@ RtlpPageHeapReAllocate(HANDLE HeapPtr,
                        SIZE_T Size);
 
 BOOLEAN NTAPI
+RtlpPageHeapLock(HANDLE HeapPtr);
+
+BOOLEAN NTAPI
+RtlpPageHeapUnlock(HANDLE HeapPtr);
+
+BOOLEAN NTAPI
 RtlpPageHeapGetUserInfo(PVOID HeapHandle,
                         ULONG Flags,
                         PVOID BaseAddress,

@@ -124,7 +124,7 @@ typedef enum _CM_SHARE_DISPOSITION
 #define CM_BOOT_FLAG_SMSS                 0x0000
 #define CM_BOOT_FLAG_SETUP                0x0001
 #define CM_BOOT_FLAG_ACCEPTED             0x0002
-#define CM_BOOT_FLAG_MAX                  0x03E9
+#define CM_BOOT_FLAG_MAX                  (CM_BOOT_FLAG_ACCEPTED + 999)
 
 #ifdef NTOS_MODE_USER
 
@@ -466,7 +466,7 @@ typedef struct _PLUGPLAY_CONTROL_DEPTH_DATA
 typedef struct _PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA
 {
     UNICODE_STRING DeviceInstance;
-    ULONG Relations; // 0:EjectRelations, 1:RemovalRelations, 3:BusRelations
+    ULONG Relations; // 0:EjectRelations, 1:RemovalRelations, 2:PowerRelations, 3:BusRelations
     ULONG BufferSize;
     PWCHAR Buffer;
 } PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA, *PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA;

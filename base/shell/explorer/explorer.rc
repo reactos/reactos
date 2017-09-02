@@ -32,7 +32,6 @@ IDI_INTERNET        ICON "res/ico/253.ico"
 IDI_MAIL            ICON "res/ico/254.ico"
 IDI_MAILSMALL       ICON "res/ico/256.ico"
 IDI_STARTMENU2      ICON "res/ico/257.ico"
-IDI_START           ICON "res/ico/4711.ico"
 
 
 /*******************************************************************************\
@@ -52,6 +51,7 @@ IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL BITMAP "res/bmp/153.bmp"
 IDB_SYSTRAYPROP_SHOW_SECONDS        BITMAP "res/bmp/154.bmp"
 IDB_SYSTRAYPROP_HIDE_SECONDS        BITMAP "res/bmp/155.bmp"
 IDB_STARTMENU                       BITMAP "res/bmp/158.bmp"
+IDB_STARTPREVIEW                    BITMAP "res/bmp/170.bmp"
 IDB_STARTPREVIEW_CLASSIC            BITMAP "res/bmp/171.bmp"
 IDB_SYSTRAYPROP_HIDE_CLOCK          BITMAP "res/bmp/180.bmp"
 IDB_SYSTRAYPROP_HIDE_NOCLOCK        BITMAP "res/bmp/181.bmp"

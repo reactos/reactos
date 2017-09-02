@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/selection.cpp
  * PURPOSE:     Window procedure of the selection window
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -155,7 +156,6 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     if (m_bMoving)
     {
-        TCHAR sizeStr[100];
         imageModel.ResetToPrevious();
         m_ptFrac.x += GET_X_LPARAM(lParam) - m_ptPos.x;
         m_ptFrac.y += GET_Y_LPARAM(lParam) - m_ptPos.y;
@@ -173,8 +173,9 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         }
         selectionModel.ModifyDestRect(m_ptDelta, m_iAction);
 
-        _stprintf(sizeStr, _T("%d x %d"), selectionModel.GetDestRectWidth(), selectionModel.GetDestRectHeight());
-        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
+        CString strSize;
+        strSize.Format(_T("%d x %d"), selectionModel.GetDestRectWidth(), selectionModel.GetDestRectHeight());
+        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
 
         if (toolsModel.GetActiveTool() == TOOL_TEXT)
         {
@@ -226,6 +227,39 @@ LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         placeSelWin();
         ShowWindow(SW_HIDE);
         ShowWindow(SW_SHOW);
+    }
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (m_bMoving)
+    {
+        m_bMoving = FALSE;
+        if (m_iAction == ACTION_MOVE)
+        {
+            // FIXME: dirty hack
+            placeSelWin();
+            imageModel.Undo();
+            imageModel.Undo();
+        }
+        else
+        {
+            m_iAction = ACTION_MOVE;
+        }
+        ShowWindow(SW_HIDE);
+    }
+    return 0;
+}
+
+LRESULT CSelectionWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (wParam == VK_ESCAPE)
+    {
+        if (GetCapture() == m_hWnd)
+        {
+            ReleaseCapture();
+        }
     }
     return 0;
 }

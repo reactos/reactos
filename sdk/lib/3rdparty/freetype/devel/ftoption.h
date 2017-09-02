@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -73,6 +73,36 @@ FT_BEGIN_HEADER
   /****                                                                 ****/
   /*************************************************************************/
   /*************************************************************************/
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* If you enable this configuration option, FreeType recognizes an       */
+  /* environment variable called `FREETYPE_PROPERTIES', which can be used  */
+  /* to control the various font drivers and modules.  The controllable    */
+  /* properties are listed in the section `Controlling FreeType Modules'   */
+  /* in the reference's table of contents; currently there are properties  */
+  /* for the auto-hinter (file `ftautoh.h'), CFF (file `ftcffdrv.h'),      */
+  /* TrueType (file `ftttdrv.h'), and PCF (file `ftpcfdrv.h').             */
+  /*                                                                       */
+  /* `FREETYPE_PROPERTIES' has the following syntax form (broken here into */
+  /* multiple lines for better readability).                               */
+  /*                                                                       */
+  /*   <optional whitespace>                                               */
+  /*   <module-name1> ':'                                                  */
+  /*   <property-name1> '=' <property-value1>                              */
+  /*   <whitespace>                                                        */
+  /*   <module-name2> ':'                                                  */
+  /*   <property-name2> '=' <property-value2>                              */
+  /*   ...                                                                 */
+  /*                                                                       */
+  /* Example:                                                              */
+  /*                                                                       */
+  /*   FREETYPE_PROPERTIES=truetype:interpreter-version=35 \               */
+  /*                       cff:no-stem-darkening=1 \                       */
+  /*                       autofitter:warping=1                            */
+  /*                                                                       */
+//#define FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
 
 
   /*************************************************************************/
@@ -492,7 +522,21 @@ FT_BEGIN_HEADER
   /*   code will be used.                                                  */
   /*                                                                       */
   /*   Setting this macro is needed for systems that prohibit address      */
-  /*   fixups, such as BREW.                                               */
+  /*   fixups, such as BREW.  [Note that standard compilers like gcc or    */
+  /*   clang handle PIC generation automatically; you don't have to set    */
+  /*   FT_CONFIG_OPTION_PIC, which is only necessary for very special      */
+  /*   compilers.]                                                         */
+  /*                                                                       */
+  /*   Note that FT_CONFIG_OPTION_PIC support is not available for all     */
+  /*   modules (see `modules.cfg' for a complete list).  For building with */
+  /*   FT_CONFIG_OPTION_PIC support, do the following.                     */
+  /*                                                                       */
+  /*     0. Clone the repository.                                          */
+  /*     1. Define FT_CONFIG_OPTION_PIC.                                   */
+  /*     2. Remove all subdirectories in `src' that don't have             */
+  /*        FT_CONFIG_OPTION_PIC support.                                  */
+  /*     3. Comment out the corresponding modules in `modules.cfg'.        */
+  /*     4. Compile.                                                       */
   /*                                                                       */
 /* #define FT_CONFIG_OPTION_PIC */
 
@@ -791,6 +835,33 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*************************************************************************/
   /****                                                                 ****/
+  /****         P C F   D R I V E R    C O N F I G U R A T I O N        ****/
+  /****                                                                 ****/
+  /*************************************************************************/
+  /*************************************************************************/
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* There are many PCF fonts just called `Fixed' which look completely    */
+  /* different, and which have nothing to do with each other.  When        */
+  /* selecting `Fixed' in KDE or Gnome one gets results that appear rather */
+  /* random, the style changes often if one changes the size and one       */
+  /* cannot select some fonts at all.  This option makes the PCF module    */
+  /* prepend the foundry name (plus a space) to the family name.           */
+  /*                                                                       */
+  /* We also check whether we have `wide' characters; all put together, we */
+  /* get family names like `Sony Fixed' or `Misc Fixed Wide'.              */
+  /*                                                                       */
+  /* If this option is activated, it can be controlled with the            */
+  /* `no-long-family-names' property of the pcf driver module.             */
+  /*                                                                       */
+#define PCF_CONFIG_OPTION_LONG_FAMILY_NAMES
+
+
+  /*************************************************************************/
+  /*************************************************************************/
+  /****                                                                 ****/
   /****    A U T O F I T   M O D U L E    C O N F I G U R A T I O N     ****/
   /****                                                                 ****/
   /*************************************************************************/
@@ -842,12 +913,14 @@ FT_BEGIN_HEADER
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
 #define  TT_USE_BYTECODE_INTERPRETER
 
+#ifdef TT_CONFIG_OPTION_SUBPIXEL_HINTING
 #if TT_CONFIG_OPTION_SUBPIXEL_HINTING & 1
 #define  TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
 #endif
 
 #if TT_CONFIG_OPTION_SUBPIXEL_HINTING & 2
 #define  TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
+#endif
 #endif
 #endif
 

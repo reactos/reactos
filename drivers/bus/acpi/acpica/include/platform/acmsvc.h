@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,26 +53,6 @@
  * out if these are actually defined.
  */
 
-/*
- * Map low I/O functions for MS. This allows us to disable MS language
- * extensions for maximum portability.
- */
-#define open            _open
-#define read            _read
-#define write           _write
-#define close           _close
-#define stat            _stat
-#define fstat           _fstat
-#define mkdir           _mkdir
-#define O_RDONLY        _O_RDONLY
-#define O_BINARY        _O_BINARY
-#define O_CREAT         _O_CREAT
-#define O_WRONLY        _O_WRONLY
-#define O_TRUNC         _O_TRUNC
-#define S_IREAD         _S_IREAD
-#define S_IWRITE        _S_IWRITE
-#define S_IFDIR         _S_IFDIR
-
 /* Eliminate warnings for "old" (non-secure) versions of clib functions */
 
 #ifndef _CRT_SECURE_NO_WARNINGS
@@ -102,10 +82,14 @@
 #define ACPI_INTERNAL_XFACE
 #define ACPI_INTERNAL_VAR_XFACE     __cdecl
 
-#ifndef _LINT
+
+/* Do not maintain the architecture specific stuffs for the EFI ports */
+
+#if defined(__i386__) && !defined(_GNU_EFI) && !defined(_EDK2_EFI)
 /*
  * Math helper functions
  */
+#ifndef ACPI_DIV_64_BY_32
 #define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32) \
 {                           \
     __asm mov    edx, n_hi  \
@@ -114,27 +98,54 @@
     __asm mov    q32, eax   \
     __asm mov    r32, edx   \
 }
+#endif
 
+#ifndef ACPI_MUL_64_BY_32
+#define ACPI_MUL_64_BY_32(n_hi, n_lo, m32, p32, c32) \
+{                           \
+    __asm mov    edx, n_hi  \
+    __asm mov    eax, n_lo  \
+    __asm mul    m32        \
+    __asm mov    p32, eax   \
+    __asm mov    c32, edx   \
+}
+#endif
+
+#ifndef ACPI_SHIFT_LEFT_64_BY_32
+#define ACPI_SHIFT_LEFT_64_BY_32(n_hi, n_lo, s32) \
+{                               \
+    __asm mov    edx, n_hi      \
+    __asm mov    eax, n_lo      \
+    __asm mov    ecx, s32       \
+    __asm and    ecx, 31        \
+    __asm shld   edx, eax, cl   \
+    __asm shl    eax, cl        \
+    __asm mov    n_hi, edx      \
+    __asm mov    n_lo, eax      \
+}
+#endif
+
+#ifndef ACPI_SHIFT_RIGHT_64_BY_32
+#define ACPI_SHIFT_RIGHT_64_BY_32(n_hi, n_lo, s32) \
+{                               \
+    __asm mov    edx, n_hi      \
+    __asm mov    eax, n_lo      \
+    __asm mov    ecx, s32       \
+    __asm and    ecx, 31        \
+    __asm shrd   eax, edx, cl   \
+    __asm shr    edx, cl        \
+    __asm mov    n_hi, edx      \
+    __asm mov    n_lo, eax      \
+}
+#endif
+
+#ifndef ACPI_SHIFT_RIGHT_64
 #define ACPI_SHIFT_RIGHT_64(n_hi, n_lo) \
 {                           \
     __asm shr    n_hi, 1    \
     __asm rcr    n_lo, 1    \
 }
-#else
-
-/* Fake versions to make lint happy */
-
-#define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32) \
-{                           \
-    q32 = n_hi / d32;       \
-    r32 = n_lo / d32;       \
-}
-
-#define ACPI_SHIFT_RIGHT_64(n_hi, n_lo) \
-{                           \
-    n_hi >>= 1;    \
-    n_lo >>= 1;    \
-}
+#endif
 #endif
 
 #ifdef __REACTOS__
@@ -254,5 +265,16 @@ _CrtSetBreakAlloc (937);
 #define COMPILER_VA_MACRO               1
 #else
 #endif
+
+/* Begin standard headers */
+
+/*
+ * warn C4001: nonstandard extension 'single line comment' was used
+ *
+ * We need to enable this for ACPICA internal files, but disable it for
+ * buggy MS runtime headers.
+ */
+#pragma warning(push)
+#pragma warning(disable:4001)
 
 #endif /* __ACMSVC_H__ */

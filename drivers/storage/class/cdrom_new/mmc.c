@@ -865,7 +865,7 @@ CdRomUpdateMmcDriveCapabilitiesCompletion(
     LARGE_INTEGER delay;
 
     
-    // completion routine should retry as neccessary.
+    // completion routine should retry as necessary.
     // when success, clear the flag to allow startio to proceed.
     // else fail original request when retries are exhausted.
 
@@ -1087,7 +1087,7 @@ CdRomUpdateMmcDriveCapabilities(
     ASSERT(Context == NULL);
 
     //
-    // NOTE: a remove lock is unneccessary, since the delayed irp
+    // NOTE: a remove lock is unnecessary, since the delayed irp
     // will have said lock held for itself, preventing a remove.
     //
     CdRomPrepareUpdateCapabilitiesIrp(Fdo);

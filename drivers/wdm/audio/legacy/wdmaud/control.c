@@ -55,11 +55,11 @@ WdmAudControlDeviceType(
     }
     else if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        Result = WdmAudGetWaveInDeviceCount();
+        Result = WdmAudGetWaveOutDeviceCount();
     }
     else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
     {
-        Result = WdmAudGetWaveOutDeviceCount();
+        Result = WdmAudGetWaveInDeviceCount();
     }
     else if (DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE)
     {
@@ -166,11 +166,8 @@ WdmAudIoctlClose(
         }
         else if (ClientInfo->hPins[Index].Handle == DeviceInfo->hDevice && ClientInfo->hPins[Index].Type == MIXER_DEVICE_TYPE)
         {
-            if (ClientInfo->hPins[Index].NotifyEvent)
-            {
-                ObDereferenceObject(ClientInfo->hPins[Index].NotifyEvent);
-                ClientInfo->hPins[Index].NotifyEvent = NULL;
-            }
+            DPRINT1("Closing mixer %p\n", DeviceInfo->hDevice);
+            return WdmAudControlCloseMixer(DeviceObject, Irp, DeviceInfo, ClientInfo, Index);
         }
     }
 
@@ -373,7 +370,7 @@ WdmAudDeviceControl(
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:
 
-           DPRINT1("Unhandeled %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+           DPRINT1("Unhandled %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
            break;
     }
 
@@ -485,7 +482,7 @@ WdmAudReadWrite(
     /* store mdl address */
     Mdl = Irp->MdlAddress;
 
-    /* remove mdladdress as KsProbeStreamIrp will interprete it as an already probed audio buffer */
+    /* remove mdladdress as KsProbeStreamIrp will interpret it as an already probed audio buffer */
     Irp->MdlAddress = NULL;
 
     if (IoStack->MajorFunction == IRP_MJ_WRITE)

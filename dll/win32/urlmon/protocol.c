@@ -391,13 +391,7 @@ HRESULT protocol_continue(Protocol *protocol, PROTOCOLDATA *data)
                 if(res) {
                     TRACE("available %u bytes\n", protocol->query_available);
                     if(!protocol->query_available) {
-                        if(is_start) {
-                            TRACE("empty file\n");
-                            all_data_read(protocol);
-                        }else {
-                            WARN("unexpected end of file?\n");
-                            report_result(protocol, INET_E_DOWNLOAD_FAILURE);
-                        }
+                        all_data_read(protocol);
                         return S_OK;
                     }
                     protocol->available_bytes = protocol->query_available;

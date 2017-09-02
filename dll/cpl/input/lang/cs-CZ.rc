@@ -11,10 +11,10 @@ CAPTION "Nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Zvolte služby pro každý vstupní jazyk v seznamu.\nSeznam lze měnit pomocí tlačítek Přidat a Odebrat.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "Nas&tavit výchozí", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Přidat...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Odebrat...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Odebrat", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Vlastnosti...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Předvolby", -1, 7, 185, 240, 36
     PUSHBUTTON "&Nastavení kláves...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -165,6 +165,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehština (Fonetická)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehština (Psací stroj)"
     IDS_DUTCH_LAYOUT "Holandština"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estonština"
     IDS_FAEROESE_LAYOUT "Faerština"
     IDS_FARSI_LAYOUT "Fársí"

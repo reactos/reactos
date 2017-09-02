@@ -22,6 +22,41 @@ LIST_ENTRY UnknownGroupListHead;
 
 /* FUNCTIONS *****************************************************************/
 
+PSERVICE_GROUP
+ScmGetServiceGroupByName(
+    _In_ LPCWSTR lpGroupName)
+{
+    PLIST_ENTRY GroupEntry;
+    PSERVICE_GROUP lpGroup;
+
+    DPRINT("ScmGetServiceGroupByName(%S)\n", lpGroupName);
+
+    GroupEntry = GroupListHead.Flink;
+    while (GroupEntry != &GroupListHead)
+    {
+        lpGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
+
+        if (!_wcsicmp(lpGroup->lpGroupName, lpGroupName))
+            return lpGroup;
+
+        GroupEntry = GroupEntry->Flink;
+    }
+
+    GroupEntry = UnknownGroupListHead.Flink;
+    while (GroupEntry != &UnknownGroupListHead)
+    {
+        lpGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
+
+        if (!_wcsicmp(lpGroup->lpGroupName, lpGroupName))
+            return lpGroup;
+
+        GroupEntry = GroupEntry->Flink;
+    }
+
+    return NULL;
+}
+
+
 DWORD
 ScmSetServiceGroup(PSERVICE lpService,
                    LPCWSTR lpGroupName)

@@ -222,7 +222,7 @@ Arguments:
         is to be returned
 
     Length - Supplies the length of the buffer in byte.  This variable
-        upon return recieves the remaining bytes free in the buffer
+        upon return receives the remaining bytes free in the buffer
 
 Return Value:
 
@@ -312,7 +312,7 @@ Arguments:
         is to be returned
 
     Length - Supplies the length of the buffer in byte.  This variable
-        upon return recieves the remaining bytes free in the buffer
+        upon return receives the remaining bytes free in the buffer
 
 Return Value:
 
@@ -373,7 +373,7 @@ Arguments:
         is to be returned
 
     Length - Supplies the length of the buffer in byte.  This variable
-        upon return recieves the remaining bytes free in the buffer
+        upon return receives the remaining bytes free in the buffer
 
 Return Value:
 
@@ -431,7 +431,7 @@ Arguments:
         is to be returned
 
     Length - Supplies the length of the buffer in byte.  This variable
-        upon return recieves the remaining bytes free in the buffer
+        upon return receives the remaining bytes free in the buffer
 
 Return Value:
 

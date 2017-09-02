@@ -22,11 +22,11 @@ BEGIN
     IDS_SCROLLUP "Posunout nahoru"
     IDS_SCROLLDOWN "Posunout dolů"
 */
-    IDS_TERMINAL_TITLE "ReactOS Console"
+    IDS_TERMINAL_TITLE "Příkazový řádek ReactOS"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Mark"
-    IDS_SELECT_TITLE "Select"
+    IDS_MARK_TITLE "Označit"
+    IDS_SELECT_TITLE "Vybrat"
 END

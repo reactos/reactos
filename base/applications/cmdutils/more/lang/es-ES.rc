@@ -9,6 +9,7 @@ BEGIN
   [Unidad:][Ruta]Nombre del archivo    Un archivo, cuyo contenido pueda ser mostrado.\n\
   Comando\t\t     Un comando, cuya salida pueda ser mostrada.\n\n\
   Al visualizar ""-- Continuar --"" presione cualquier tecla para mostrar la siguiente página.\n"
-    IDS_CONTINUE " -- Continuar (100%) -- "
-    IDS_FILE_ACCESS "No se puede acceder al fichero %s."
+    IDS_CONTINUE "-- Continuar --"
+    IDS_CONTINUE_PROGRESS "-- Continuar (%d%%) --"
+    IDS_FILE_ACCESS "No se puede acceder al fichero %s.\n"
 END

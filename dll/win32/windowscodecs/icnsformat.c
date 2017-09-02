@@ -159,8 +159,7 @@ static ULONG WINAPI IcnsFrameEncode_Release(IWICBitmapFrameEncode *iface)
             This->encoder->outstanding_commits--;
             LeaveCriticalSection(&This->encoder->lock);
         }
-        if (This->icns_image != NULL)
-            HeapFree(GetProcessHeap(), 0, This->icns_image);
+        HeapFree(GetProcessHeap(), 0, This->icns_image);
 
         IWICBitmapEncoder_Release(&This->encoder->IWICBitmapEncoder_iface);
         HeapFree(GetProcessHeap(), 0, This);
@@ -400,7 +399,7 @@ static HRESULT WINAPI IcnsFrameEncode_Commit(IWICBitmapFrameEncode *iface)
     OSErr ret;
     HRESULT hr = S_OK;
 
-    TRACE("(%p): stub\n", iface);
+    TRACE("(%p)\n", iface);
 
     EnterCriticalSection(&This->encoder->lock);
 

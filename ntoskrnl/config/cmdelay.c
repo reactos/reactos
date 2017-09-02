@@ -356,8 +356,7 @@ CmpAddToDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb,
     PAGED_CODE();
 
     /* Sanity check */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    CMP_ASSERT_KCB_LOCK(Kcb);
 
     /* Make sure it's valid */
     if (Kcb->DelayedCloseIndex != CmpDelayedCloseSize) ASSERT(FALSE);
@@ -430,8 +429,7 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
     PAGED_CODE();
 
     /* Sanity checks */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    CMP_ASSERT_KCB_LOCK(Kcb);
     if (Kcb->DelayedCloseIndex == CmpDelayedCloseSize) ASSERT(FALSE);
 
     /* Get the entry and lock the table */

@@ -277,7 +277,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
         }
     }
 
-    //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
+    //FIXME: Get canonical path name (remove .'s, ..'s and extra separators)
 
     DPRINT("PathName to open: %S\n", FileName);
 

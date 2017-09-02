@@ -271,7 +271,7 @@ CPortFilterWaveCyclic::FastRead(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -287,7 +287,7 @@ CPortFilterWaveCyclic::FastWrite(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return FALSE;
 }
 

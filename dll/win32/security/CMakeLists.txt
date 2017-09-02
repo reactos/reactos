@@ -8,5 +8,5 @@ list(APPEND SOURCE
 
 add_library(security SHARED ${SOURCE})
 set_module_type(security win32dll ENTRYPOINT 0 UNICODE)
-add_importlibs(security secur32 advapi32 ntdll kernel32)
+add_importlibs(security secur32)
 add_cd_file(TARGET security DESTINATION reactos/system32 FOR all)

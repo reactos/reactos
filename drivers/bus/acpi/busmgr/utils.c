@@ -24,6 +24,7 @@
  */
 
 #include <precomp.h>
+#include <ntstrsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -116,7 +117,7 @@ acpi_extract_package (
 				tail_offset += sizeof(char*);
 				break;
 			default:
-				ACPI_DEBUG_PRINT((ACPI_DB_WARN, "Invalid package element [%d]: got number, expecing [%c].\n", i, format_string[i]));
+				ACPI_DEBUG_PRINT((ACPI_DB_WARN, "Invalid package element [%d]: got number, expecting [%c].\n", i, format_string[i]));
 				return_ACPI_STATUS(AE_BAD_DATA);
 				break;
 			}
@@ -134,7 +135,7 @@ acpi_extract_package (
 				tail_offset += sizeof(UINT8*);
 				break;
 			default:
-				ACPI_DEBUG_PRINT((ACPI_DB_WARN, "Invalid package element [%d] got string/buffer, expecing [%c].\n", i, format_string[i]));
+				ACPI_DEBUG_PRINT((ACPI_DB_WARN, "Invalid package element [%d] got string/buffer, expecting [%c].\n", i, format_string[i]));
 				return_ACPI_STATUS(AE_BAD_DATA);
 				break;
 			}
@@ -369,4 +370,281 @@ end:
 	return_ACPI_STATUS(status);
 }
 
+NTSTATUS
+acpi_create_registry_table(HANDLE ParentKeyHandle, ACPI_TABLE_HEADER *OutTable, PCWSTR KeyName)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING HardwareKeyName, ValueName;
+    ANSI_STRING HardwareKeyNameA;
+    HANDLE KeyHandle = NULL, SubKeyHandle = NULL;
+    NTSTATUS Status;
+    char OemId[7] = { 0 }; /* exactly one byte more than ACPI_TABLE_HEADER->OemId */
+    char OemTableId[9] = { 0 }; /* exactly one byte more than ACPI_TABLE_HEADER->OemTableId */
+    WCHAR OemRevision[9] = { 0 }; /* enough to accept hex DWORD */
 
+    C_ASSERT(sizeof(OemId) == RTL_FIELD_SIZE(ACPI_TABLE_HEADER, OemId) + 1);
+    C_ASSERT(sizeof(OemTableId) == RTL_FIELD_SIZE(ACPI_TABLE_HEADER, OemTableId) + 1);
+    /* Copy OEM data from the table */
+    RtlCopyMemory(OemId, OutTable->OemId, sizeof(OutTable->OemId));
+    RtlCopyMemory(OemTableId, OutTable->OemTableId, sizeof(OutTable->OemTableId));
+    /* Create table subkey */
+    RtlInitUnicodeString(&HardwareKeyName, KeyName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &HardwareKeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               ParentKeyHandle,
+                               NULL);
+    Status = ZwCreateKey(&KeyHandle,
+                         KEY_WRITE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwCreateKey() for %ws failed (Status 0x%08lx)\n", KeyName, Status);
+        return Status;
+    }
+
+    if (OutTable->OemRevision != 0)
+    {
+        /* We have OEM info in table, so create other OEM subkeys */
+        RtlInitAnsiString(&HardwareKeyNameA, OemId);
+        Status = RtlAnsiStringToUnicodeString(&HardwareKeyName, &HardwareKeyNameA, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("RtlAnsiStringToUnicodeString() for %s failed (Status 0x%08lx)\n", HardwareKeyNameA, Status);
+            return Status;
+        }
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &HardwareKeyName,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   KeyHandle,
+                                   NULL);
+        Status = ZwCreateKey(&SubKeyHandle,
+                             KEY_WRITE,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE,
+                             NULL);
+        RtlFreeUnicodeString(&HardwareKeyName);
+        ZwClose(KeyHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwCreateKey() for %s failed (Status 0x%08lx)\n", HardwareKeyNameA, Status);
+            return Status;
+        }
+        KeyHandle = SubKeyHandle;
+
+        RtlInitAnsiString(&HardwareKeyNameA, OemTableId);
+        Status = RtlAnsiStringToUnicodeString(&HardwareKeyName, &HardwareKeyNameA, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("RtlAnsiStringToUnicodeString() for %s failed (Status 0x%08lx)\n", HardwareKeyNameA, Status);
+            return Status;
+        }
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &HardwareKeyName,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   KeyHandle,
+                                   NULL);
+        Status = ZwCreateKey(&SubKeyHandle,
+                             KEY_WRITE,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE,
+                             NULL);
+        RtlFreeUnicodeString(&HardwareKeyName);
+        ZwClose(KeyHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwCreateKey() for %s failed (Status 0x%08lx)\n", HardwareKeyNameA, Status);
+            return Status;
+        }
+        KeyHandle = SubKeyHandle;
+
+        Status = RtlStringCbPrintfW(OemRevision,
+                                    sizeof(OemRevision),
+                                    L"%08X",
+                                    OutTable->OemRevision);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("RtlStringCbPrintfW() for 0x%08lx failed (Status 0x%08lx)\n", OutTable->OemRevision, Status);
+            return Status;
+        }
+        RtlInitUnicodeString(&HardwareKeyName, OemRevision);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &HardwareKeyName,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   KeyHandle,
+                                   NULL);
+        Status = ZwCreateKey(&SubKeyHandle,
+                             KEY_WRITE,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE,
+                             NULL);
+        ZwClose(KeyHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwCreateKey() for %ws failed (Status 0x%08lx)\n", KeyName, Status);
+            return Status;
+        }
+        KeyHandle = SubKeyHandle;
+    }
+    /* Table reg value name is always '00000000' */
+    RtlInitUnicodeString(&ValueName,
+                         L"00000000");
+    Status = ZwSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_BINARY,
+                           OutTable,
+                           OutTable->Length);
+    ZwClose(KeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwSetValueKey() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+acpi_create_volatile_registry_tables(void)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING HardwareKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\ACPI");
+    HANDLE KeyHandle = NULL;
+    NTSTATUS Status;
+    ACPI_STATUS AcpiStatus;
+    ACPI_TABLE_HEADER *OutTable;
+    ACPI_PHYSICAL_ADDRESS RsdpAddress;
+    ACPI_TABLE_RSDP *Rsdp;
+    ACPI_PHYSICAL_ADDRESS Address;
+    UINT32 TableEntrySize;
+
+    /* Create Main Hardware ACPI key*/
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &HardwareKeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwCreateKey(&KeyHandle,
+                         KEY_WRITE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwCreateKey() for ACPI failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+    /* Read DSDT table */
+    AcpiStatus = AcpiGetTable(ACPI_SIG_DSDT, 0, &OutTable);
+    if (ACPI_FAILURE(AcpiStatus))
+    {
+        DPRINT1("AcpiGetTable() for DSDT failed (Status 0x%08lx)\n", AcpiStatus);
+        Status = STATUS_UNSUCCESSFUL;
+        goto done;
+    }
+    /* Dump DSDT table */
+    Status = acpi_create_registry_table(KeyHandle, OutTable, L"DSDT");
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("acpi_dump_table_to_registry() for DSDT failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+    /* Read FACS table */
+    AcpiStatus = AcpiGetTable(ACPI_SIG_FACS, 0, &OutTable);
+    if (ACPI_FAILURE(AcpiStatus))
+    {
+        DPRINT1("AcpiGetTable() for FACS failed (Status 0x%08lx)\n", AcpiStatus);
+        Status = STATUS_UNSUCCESSFUL;
+        goto done;
+    }
+    /* Dump FACS table */
+    Status = acpi_create_registry_table(KeyHandle, OutTable, L"FACS");
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("acpi_dump_table_to_registry() for FACS failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+    /* Read FACS table */
+    AcpiStatus = AcpiGetTable(ACPI_SIG_FADT, 0, &OutTable);
+    if (ACPI_FAILURE(AcpiStatus))
+    {
+        DPRINT1("AcpiGetTable() for FADT failed (Status 0x%08lx)\n", AcpiStatus);
+        Status = STATUS_UNSUCCESSFUL;
+        goto done;
+    }
+    /* Dump FADT table */
+    Status = acpi_create_registry_table(KeyHandle, OutTable, L"FADT");
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("acpi_dump_table_to_registry() for FADT failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+    /* This is a rough copy from ACPICA reading of RSDT/XSDT and added to avoid patching acpica */
+    RsdpAddress = AcpiOsGetRootPointer();
+    /* Map the entire RSDP and extract the address of the RSDT or XSDT */
+    Rsdp = AcpiOsMapMemory(RsdpAddress, sizeof(ACPI_TABLE_RSDP));
+    if (!Rsdp)
+    {
+        DPRINT1("AcpiOsMapMemory() failed\n");
+        Status = STATUS_NO_MEMORY;
+        goto done;
+    }
+    /* Use XSDT if present and not overridden. Otherwise, use RSDT */
+    if ((Rsdp->Revision > 1) &&
+        Rsdp->XsdtPhysicalAddress &&
+        !AcpiGbl_DoNotUseXsdt)
+    {
+        /*
+        * RSDP contains an XSDT (64-bit physical addresses). We must use
+        * the XSDT if the revision is > 1 and the XSDT pointer is present,
+        * as per the ACPI specification.
+        */
+        Address = (ACPI_PHYSICAL_ADDRESS)Rsdp->XsdtPhysicalAddress;
+        TableEntrySize = ACPI_XSDT_ENTRY_SIZE;
+    }
+    else
+    {
+        /* Root table is an RSDT (32-bit physical addresses) */
+        Address = (ACPI_PHYSICAL_ADDRESS)Rsdp->RsdtPhysicalAddress;
+        TableEntrySize = ACPI_RSDT_ENTRY_SIZE;
+    }
+    /*
+    * It is not possible to map more than one entry in some environments,
+    * so unmap the RSDP here before mapping other tables
+    */
+    AcpiOsUnmapMemory(Rsdp, sizeof(ACPI_TABLE_RSDP));
+    OutTable = AcpiOsMapMemory(Address, TableEntrySize);
+    if (!OutTable)
+    {
+        DPRINT1("AcpiOsMapMemory() failed\n");
+        Status = STATUS_NO_MEMORY;
+        goto done;
+    }
+    /* Dump RSDT table */
+    Status = acpi_create_registry_table(KeyHandle, OutTable, L"RSDT");
+    AcpiOsUnmapMemory(OutTable, TableEntrySize);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("acpi_dump_table_to_registry() for RSDT failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    ZwClose(KeyHandle);
+    return Status;
+}

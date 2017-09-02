@@ -88,9 +88,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         _SEH2_TRY
         {
             /* Probe the buffer */
-            ProbeForWrite(ProcessInformation,
-                          ProcessInformationLength,
-                          sizeof(ULONG));
+            ProbeForRead(ProcessInformation,
+                         ProcessInformationLength,
+                         sizeof(ULONG));
 
             /* Probe the return length if required */
             if (ReturnLength) ProbeForWriteUlong(ReturnLength);
@@ -121,14 +121,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Basic process information */
         case ProcessBasicInformation:
 
-            /* Set return length */
-            Length = sizeof(PROCESS_BASIC_INFORMATION);
-
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(PROCESS_BASIC_INFORMATION))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set return length */
+            Length = sizeof(PROCESS_BASIC_INFORMATION);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -167,12 +167,13 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Process quota limits */
         case ProcessQuotaLimits:
 
-            Length = sizeof(QUOTA_LIMITS);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(QUOTA_LIMITS))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            Length = sizeof(QUOTA_LIMITS);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -230,12 +231,13 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessIoCounters:
 
-            Length = sizeof(IO_COUNTERS);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(IO_COUNTERS))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            Length = sizeof(IO_COUNTERS);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -273,13 +275,13 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         case ProcessTimes:
 
             /* Set the return length */
-            Length = sizeof(KERNEL_USER_TIMES);
-
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(KERNEL_USER_TIMES))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            Length = sizeof(KERNEL_USER_TIMES);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -314,14 +316,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Process Debug Port */
         case ProcessDebugPort:
 
-            /* Set return length */
-            Length = sizeof(HANDLE);
-
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(HANDLE))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set return length */
+            Length = sizeof(HANDLE);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -352,14 +354,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessHandleCount:
 
-            /* Set the return length*/
-            Length = sizeof(ULONG);
-
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length*/
+            Length = sizeof(ULONG);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -393,14 +395,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Session ID for the process */
         case ProcessSessionInformation:
 
-            /* Set the return length*/
-            Length = sizeof(PROCESS_SESSION_INFORMATION);
-
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(PROCESS_SESSION_INFORMATION))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length*/
+            Length = sizeof(PROCESS_SESSION_INFORMATION);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -483,14 +485,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Hard Error Processing Mode */
         case ProcessDefaultHardErrorMode:
 
-            /* Set the return length*/
-            Length = sizeof(ULONG);
-
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length*/
+            Length = sizeof(ULONG);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -522,14 +524,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Priority Boosting status */
         case ProcessPriorityBoost:
 
-            /* Set the return length */
-            Length = sizeof(ULONG);
-
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length */
+            Length = sizeof(ULONG);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -561,10 +563,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* DOS Device Map */
         case ProcessDeviceMap:
 
-            /* Set the return length */
-            Length = sizeof(PROCESS_DEVICEMAP_INFORMATION);
-
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION))
             {
                 if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
                 {
@@ -577,6 +576,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 }
                 break;
             }
+
+            /* Set the return length */
+            Length = sizeof(PROCESS_DEVICEMAP_INFORMATION);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -609,14 +611,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Priority class */
         case ProcessPriorityClass:
 
-            /* Set the return length*/
-            Length = sizeof(PROCESS_PRIORITY_CLASS);
-
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(PROCESS_PRIORITY_CLASS))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length*/
+            Length = sizeof(PROCESS_PRIORITY_CLASS);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -701,13 +703,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessDebugFlags:
 
-            /* Set the return length*/
-            Length = sizeof(ULONG);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length*/
+            Length = sizeof(ULONG);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -737,13 +740,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessBreakOnTermination:
 
-            /* Set the return length*/
-            Length = sizeof(ULONG);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length */
+            Length = sizeof(ULONG);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -818,14 +822,15 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessImageInformation:
 
-            /* Set the length required and validate it */
-            Length = sizeof(SECTION_IMAGE_INFORMATION);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(SECTION_IMAGE_INFORMATION))
             {
                 /* Break out */
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the length required and validate it */
+            Length = sizeof(SECTION_IMAGE_INFORMATION);
 
             /* Enter SEH to protect write */
             _SEH2_TRY
@@ -845,13 +850,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessDebugObjectHandle:
 
-            /* Set the return length */
-            Length = sizeof(HANDLE);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(HANDLE))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length */
+            Length = sizeof(HANDLE);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -889,13 +895,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessLUIDDeviceMapsEnabled:
 
-            /* Set the return length */
-            Length = sizeof(ULONG);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length */
+            Length = sizeof(ULONG);
 
             /* Indicate success */
             Status = STATUS_SUCCESS;
@@ -916,13 +923,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessWx86Information:
 
-            /* Set the return length */
-            Length = sizeof(ULONG);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set the return length */
+            Length = sizeof(ULONG);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -952,14 +960,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessWow64Information:
 
-            /* Set return length */
-            Length = sizeof(ULONG_PTR);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(ULONG_PTR))
             {
-                Length = 0;
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set return length */
+            Length = sizeof(ULONG_PTR);
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -1002,13 +1010,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessExecuteFlags:
 
-            /* Set return length */
-            Length = sizeof(ULONG);
-            if (ProcessInformationLength != Length)
+            if (ProcessInformationLength != sizeof(ULONG))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
+
+            /* Set return length */
+            Length = sizeof(ULONG);
 
             if (ProcessHandle != NtCurrentProcess())
             {

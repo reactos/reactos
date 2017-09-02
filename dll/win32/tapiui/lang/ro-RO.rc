@@ -105,7 +105,7 @@ BEGIN
     EDITTEXT 1018, 7, 46, 116, 14, ES_AUTOHSCROLL
     LTEXT "Număr de Identificare &Personal (PIN):", -1, 7, 68, 238, 8
     EDITTEXT 1019, 7, 80, 116, 14, ES_AUTOHSCROLL
-    LTEXT "Această cartelă de apel se va utiliza în cazul:", 1056, 14, 117, 224, 8
+    LTEXT "Această cartelă de apel va fi utilizată în cazul:", 1056, 14, 117, 224, 8
     GROUPBOX "Detaliile cartelei de apel", 2001, 7, 105, 238, 66
     LTEXT "", 1000, 22, 131, 216, 8
     LTEXT "", 1001, 22, 143, 216, 8
@@ -181,7 +181,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Reguli pentru cod nou de regiune"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Această regulă se va aplica doar apelurilor către codul de regiune și prefixele pe care le veți specifica mai jos.", 2000, 7, 6, 238, 16
+    LTEXT "Această regulă va fi aplicată doar apelurilor către codul de regiune și prefixele pe care le veți specifica mai jos.", 2000, 7, 6, 238, 16
     LTEXT "Codul de regiune apelat:", -1, 7, 31, 110, 8
     LTEXT "&Cod reg.:", -1, 7, 47, 36, 8
     EDITTEXT 1034, 46, 44, 50, 14, ES_AUTOHSCROLL
@@ -288,7 +288,7 @@ BEGIN
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "În ce &zonă (sau oraș) vă aflați?", -1, 107, 74, 189, 10
     EDITTEXT 1034, 107, 87, 45, 12, ES_AUTOHSCROLL
-    LTEXT "Dacă se folosește și un careva &cod purtător, care este?", -1, 107, 105, 189, 10
+    LTEXT "Dacă este necesar și un careva &cod purtător, care este acesta?", -1, 107, 105, 189, 10
     EDITTEXT 1058, 106, 118, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Dacă formați un cod pentru liniile e&xterne, care este?", -1, 107, 137, 189, 10
     EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
@@ -402,7 +402,7 @@ BEGIN
     70 "Nespecificat"
     71 "Sigur doriți eliminarea Furnizorului de Servicii de Telefonie?"
     72 "<nu există furnizori de servicii disponibili>"
-    73 "Este necesară introducerea prefixelor pentru care se aplică această regulă."
+    73 "Este necesară introducerea prefixelor pentru care este aplicată această regulă."
     74 "&Cifre:"
     75 "&Prefixe:"
     76 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, spațiu și virgulă."
@@ -412,7 +412,7 @@ BEGIN
     80 "Sigur doriți ștergerea acestui reguli de cod regional?"
     81 "Pentru a apela trebuie să introduceți cifre."
     82 "Numele cartelei pe care ați introdus-o există deja.  Introduceți un nume unic."
-    83 "Este necesară informația de telefonie despre locația din care se efectuează apelul. Dacă omiteți furnizarea acestei informații, pot surveni cazuri de funcționare incorectă a procedurii de apel. De asemenea, unele aplicații pot răspunde la închiderea acestei ferestre prin redeschiderea ei.\nSigur doriți anularea?"
+    83 "Este necesară informația de telefonie despre locația din care este efectuat apelul. Dacă omiteți furnizarea acestei informații, pot surveni cazuri de funcționare incorectă a procedurii de apel. De asemenea, unele aplicații pot răspunde la închiderea acestei ferestre prin redeschiderea ei.\nSigur doriți anularea?"
     84 "Confirmă anularea"
     85 "Locația mea"
     86 "<nu există furnizori disponibili pentru instalare>"

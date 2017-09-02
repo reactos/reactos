@@ -2,7 +2,7 @@
  * PROJECT:        ReactOS Floppy Disk Controller Driver
  * LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
  * FILE:           drivers/storage/fdc/fdc/fdc.rc
- * PURPOSE:        Resrouce definition file
+ * PURPOSE:        Resource definition file
  * PROGRAMMERS:    Eric Kohl
  */
 

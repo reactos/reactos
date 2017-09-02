@@ -23,7 +23,7 @@ NdisSetPacketStatus(
     IN NDIS_HANDLE  Handle,
     IN ULONG  Code)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -35,7 +35,7 @@ NdisQueryPendingIOCount(
     IN  PVOID  NdisBindingHandle,
     OUT PULONG  IoCount)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -49,7 +49,7 @@ NdisIMNotifyPnPEvent(
     IN  NDIS_HANDLE  MiniportHandle,
     IN  PNET_PNP_EVENT  NetPnPEvent)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -63,7 +63,7 @@ NdisIMGetCurrentPacketStack(
     IN PNDIS_PACKET  Packet,
     OUT BOOLEAN  *StacksRemaining)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     *StacksRemaining = FALSE;
 
@@ -78,7 +78,7 @@ EXPORT
 NdisFreeToBlockPool(
     IN PUCHAR  Block)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -89,7 +89,7 @@ EXPORT
 NdisDestroyBlockPool(
     IN NDIS_HANDLE  BlockPoolHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -103,7 +103,7 @@ NdisCreateBlockPool(
     IN ULONG  Tag,
     IN NDIS_BLOCK_INITIALIZER  InitFunction OPTIONAL)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NULL;
 }
@@ -116,7 +116,7 @@ EXPORT
 NdisAllocateFromBlockPool(
     IN NDIS_HANDLE  BlockPoolHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NULL;
 }
@@ -129,7 +129,7 @@ EXPORT
 NdisGetRoutineAddress(
     IN PUNICODE_STRING  NdisRoutineName)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NULL;
 }
@@ -143,7 +143,7 @@ NdisQueryBindInstanceName(
     OUT PNDIS_STRING  pAdapterInstanceName,
     IN NDIS_HANDLE  BindingContext)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -157,7 +157,7 @@ NdisSetPacketPoolProtocolId(
     IN NDIS_HANDLE  PacketPoolHandle,
     IN UINT  ProtocolId)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -170,7 +170,7 @@ NdisCompleteQueryStatistics(
     IN  PNDIS_REQUEST   NdisRequest,
     IN  NDIS_STATUS     Status)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -182,7 +182,7 @@ EXPORT
 NdisIMDeInitializeDeviceInstance(
     IN  NDIS_HANDLE NdisMiniportHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
 	return NDIS_STATUS_FAILURE;
 }
@@ -198,7 +198,7 @@ NdisIMInitializeDeviceInstance(
     IN  NDIS_HANDLE     DriverHandle,
     IN  PNDIS_STRING    DeviceInstance)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
 	return NDIS_STATUS_FAILURE;
 }
@@ -215,7 +215,7 @@ NdisIMRegisterLayeredMiniport(
     IN  UINT                            CharacteristicsLength,
     OUT PNDIS_HANDLE                    DriverHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
 	return NDIS_STATUS_FAILURE;
 }
@@ -234,7 +234,7 @@ NdisMWanIndicateReceive(
     IN  PUCHAR          PacketBuffer,
     IN  UINT            PacketSize)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -248,7 +248,7 @@ NdisMWanIndicateReceiveComplete(
     IN NDIS_HANDLE MiniportAdapterHandle,
     IN NDIS_HANDLE NdisLinkContext)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -263,7 +263,7 @@ NdisMWanSendComplete(
     IN  PNDIS_WAN_PACKET    Packet,
     IN  NDIS_STATUS         Status)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -275,7 +275,7 @@ NdisRegisterTdiCallBack(
     IN  TDI_REGISTER_CALLBACK   RegisterCallback,
     IN  TDI_PNP_HANDLER         PnPHandler)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -285,7 +285,7 @@ VOID
 EXPORT
 NdisDeregisterTdiCallBack(VOID)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -303,7 +303,7 @@ NdisSetProtocolFilter(
     IN  UINT                    Size,
     IN  PUCHAR                  Pattern)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -323,7 +323,7 @@ NdisConvertStringToAtmAddress(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -342,7 +342,7 @@ NdisGetReceivedPacket(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NULL;
 }
@@ -362,7 +362,7 @@ NdisMPromoteMiniport(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -382,7 +382,7 @@ NdisMRemoveMiniport(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -403,7 +403,7 @@ NdisMSetMiniportSecondary(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -424,7 +424,7 @@ NdisIMAssociateMiniport(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -443,7 +443,7 @@ NdisIMCancelInitializeDeviceInstance(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -463,7 +463,7 @@ NdisIMDeregisterLayeredMiniport(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -483,7 +483,7 @@ NdisIMInitializeDeviceInstanceEx(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -503,7 +503,7 @@ NdisPacketPoolUsage(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return 0;
 }

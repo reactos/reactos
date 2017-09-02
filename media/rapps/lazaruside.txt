@@ -31,7 +31,7 @@ Size = 114,4 Mio
 [Section.0419]
 License = Измененная LGPL, GPL
 Description = Открытая среда разработки программного обеспечения на языке Object Pascal для компилятора Free Pascal.
-Size = 114,4 МБ
+Size = 114,4 МиБ
 
 [Section.041f]
 License = Değiştirilmiş LGPL, GPL

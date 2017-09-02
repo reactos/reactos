@@ -369,6 +369,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
         stride = 0;
         rightcount = w;
     }
+    rightcount = (rightcount + 1) / 2;
 
     /* Reset the destination. */
     for (j = 0; j < h; j++)
@@ -414,7 +415,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 
                 row = UnpackPixel[pixel] << plane;
 
-                /* Store the data for each pixel in the destination. */
+                /* Store the data for each byte in the destination. */
                 for (i = 0; i < rightcount; i++)
                 {
                     ((PUCHAR)destline)[i] |= (row & 0xFF);
@@ -681,6 +682,19 @@ vgaWriteScan ( int x, int y, int w, void *b )
             i += 8, off++;
         while (i < w)
         {
+            /*
+             * In write mode 2, the incoming data is 4-bit and represents the
+             * value of entire bytes on each of the 4 memory planes. First, VGA
+             * performs a logical operation on these bytes and the value of the
+             * latch register, but in this case there is none. Then, only the
+             * bits that are set in the bit mask are used from the resulting
+             * bytes, and the other bits are taken from the latch register.
+             *
+             * The latch register always contains the value previously read from
+             * VGA memory, and therefore, we must first read from vp[off] to
+             * load the latch register, and then write bp[i] to vp[off], which
+             * will be converted to 4 bytes of VGA memory as described.
+             */
             dummy = vp[off];
             dummy = bp[i];
             vp[off] = dummy;

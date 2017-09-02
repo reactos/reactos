@@ -364,7 +364,8 @@ static HRESULT WINAPI BackgroundCopyJob_Resume(
              && This->state != BG_JOB_STATE_TRANSFERRING)
     {
         This->state = BG_JOB_STATE_QUEUED;
-        This->error.context = This->error.code = 0;
+        This->error.context = 0;
+        This->error.code = S_OK;
         if (This->error.file)
         {
             IBackgroundCopyFile2_Release(This->error.file);
@@ -1238,7 +1239,7 @@ HRESULT BackgroundCopyJobConstructor(LPCWSTR displayName, BG_JOB_TYPE type, GUID
     This->callback2 = FALSE;
 
     This->error.context = 0;
-    This->error.code = 0;
+    This->error.code = S_OK;
     This->error.file = NULL;
 
     memset(&This->http_options, 0, sizeof(This->http_options));

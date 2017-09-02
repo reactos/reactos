@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
- * PURPOSE:               Platform independant delete command
+ * PURPOSE:               Platform independent delete command
  */
 
 #include <dirent.h>

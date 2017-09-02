@@ -139,26 +139,26 @@ UDFCommonFileInfo(
         TopIrp = IoGetTopLevelIrp();
         switch((ULONG)TopIrp) {
         case FSRTL_FSP_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_CACHE_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_CACHE_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_CACHE_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_MOD_WRITE_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_MOD_WRITE_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_MOD_WRITE_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_FAST_IO_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_FAST_IO_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_FAST_IO_TOP_LEVEL_IRP\n"));
             BrutePoint()
             break;
         case NULL:
-            KdPrint(("  NULL TOP_LEVEL_IRP\n"));
+            UDFPrint(("  NULL TOP_LEVEL_IRP\n"));
             break;
         default:
             if(TopIrp == Irp) {
-                KdPrint(("  TOP_LEVEL_IRP\n"));
+                UDFPrint(("  TOP_LEVEL_IRP\n"));
             } else {
-                KdPrint(("  RECURSIVE_IRP, TOP = %x\n", TopIrp));
+                UDFPrint(("  RECURSIVE_IRP, TOP = %x\n", TopIrp));
             }
         }
 
@@ -697,6 +697,7 @@ UDFGetNetworkInformation(
         PtrBuffer->CreationTime = Fcb->NTRequiredFCB->CreationTime;
         PtrBuffer->LastAccessTime = Fcb->NTRequiredFCB->LastAccessTime;
         PtrBuffer->LastWriteTime = Fcb->NTRequiredFCB->LastWriteTime;
+        PtrBuffer->ChangeTime = Fcb->NTRequiredFCB->ChangeTime;
 
         FileInfo = Fcb->FileInfo;
 
@@ -711,6 +712,13 @@ UDFGetNetworkInformation(
 #ifdef UDF_DBG
             if(!FileInfo->Dloc->DirIndex) AdPrint(("*****!!!!! Directory has no DirIndex !!!!!*****\n"));
 #endif
+        } else {
+            if(Fcb->NTRequiredFCB->CommonFCBHeader.AllocationSize.LowPart == 0xffffffff) {
+                Fcb->NTRequiredFCB->CommonFCBHeader.AllocationSize.QuadPart =
+                    UDFSysGetAllocSize(Fcb->Vcb, UDFGetFileSize(FileInfo));
+            }
+            PtrBuffer->AllocationSize = Fcb->NTRequiredFCB->CommonFCBHeader.AllocationSize;
+            PtrBuffer->EndOfFile = Fcb->NTRequiredFCB->CommonFCBHeader.FileSize;
         }
         // Similarly, fill in attributes indicating a hidden file, system
         // file, compressed file, temporary file, etc. if the FSD supports
@@ -831,20 +839,22 @@ UDFGetFullNameInformation(
  IN OUT PLONG                      PtrReturnedLength
     )
 {
+    ULONG BytesToCopy;
     NTSTATUS RC = STATUS_SUCCESS;
 
 
     AdPrint(("UDFGetFullNameInformation\n"));
 
     PtrBuffer->FileNameLength = FileObject->FileName.Length;
+    BytesToCopy = FileObject->FileName.Length;
 
     if (PtrBuffer->FileNameLength + sizeof( ULONG ) > (ULONG)(*PtrReturnedLength)) {
 
-        PtrBuffer->FileNameLength = *PtrReturnedLength - sizeof( ULONG );
+        BytesToCopy = *PtrReturnedLength - sizeof( ULONG );
         RC = STATUS_BUFFER_OVERFLOW;
     }
 
-    RtlCopyMemory( PtrBuffer->FileName, FileObject->FileName.Buffer, PtrBuffer->FileNameLength );
+    RtlCopyMemory( PtrBuffer->FileName, FileObject->FileName.Buffer, BytesToCopy );
 
     //  Reduce the available bytes by the amount stored into this buffer.
     *PtrReturnedLength -= sizeof( ULONG ) + PtrBuffer->FileNameLength;
@@ -1232,7 +1242,7 @@ UDFMarkStreamsForDeletion(
                                                         UDF_FCB_DELETE_PARENT);
                         } else {
                             AdPrint(("    CLEAR stream DeleteOnClose\n"));
-                            FileInfo->Fcb->FCBFlags &= !(UDF_FCB_DELETE_ON_CLOSE |
+                            FileInfo->Fcb->FCBFlags &= ~(UDF_FCB_DELETE_ON_CLOSE |
                                                          UDF_FCB_DELETE_PARENT);
                         }
                     }
@@ -2029,7 +2039,7 @@ UDFRename(
             // removed (in UDFRenameMoveFile__()). Otherwise
             // return STATUS_ACCESS_DENIED
             if(UDFHasAStreamDir(File1)) {
-                KdPrint(("TODO: We should remove Streams from source file\n"));
+                UDFPrint(("TODO: We should remove Streams from source file\n"));
                 try_return (RC = STATUS_ACCESS_DENIED);
             }
 #else  //UDF_ENABLE_SECURITY

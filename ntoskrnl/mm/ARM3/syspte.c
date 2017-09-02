@@ -25,6 +25,15 @@ MMPTE MmFirstFreeSystemPte[MaximumPtePoolTypes];
 ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
 ULONG MmTotalSystemPtes;
 ULONG MiNumberOfExtraSystemPdes;
+const ULONG MmSysPteIndex[5] = { 1, 2, 4, 8, 16 };
+const UCHAR MmSysPteTables[] = { 0, // 1
+                                 0, // 1
+                                 1, // 2
+                                 2, 2, // 4
+                                 3, 3, 3, 3, // 8
+                                 4, 4, 4, 4, 4, 4, 4, 4 // 16
+                               };
+LONG MmSysPteListBySizeCount[5];
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

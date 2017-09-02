@@ -3,9 +3,6 @@
 
 /* Constants ******************************************************************/
 
-/* Get/SetBounds/Rect support. */
-#define DCB_WINDOWMGR 0x8000 /* Queries the Windows bounding rectangle instead of the application's */
-
 /* flFontState */
 enum _FONT_STATE
 {
@@ -183,6 +180,7 @@ COLORREF FASTCALL GreGetBkColor(HDC);
 COLORREF FASTCALL IntSetDCBrushColor(HDC,COLORREF);
 COLORREF FASTCALL IntSetDCPenColor(HDC,COLORREF);
 int FASTCALL GreGetGraphicsMode(HDC);
+BOOL FASTCALL GreSetBrushOrg(HDC,INT,INT,LPPOINT);
 
 INIT_FUNCTION NTSTATUS NTAPI InitDcImpl(VOID);
 PPDEVOBJ FASTCALL IntEnumHDev(VOID);
@@ -207,6 +205,7 @@ VOID FASTCALL IntGdiUnreferencePdev(PPDEVOBJ pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
+VOID FASTCALL IntUpdateBoundsRect(PDC,PRECTL);
 
 BOOL NTAPI GreSetDCOwner(HDC hdc, ULONG ulOwner);
 HDC APIENTRY GreCreateCompatibleDC(HDC hdc, BOOL bAltDc);

@@ -258,7 +258,7 @@ AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundIte
                 pData->listViewItemCount++;
             }
 
-            if(!FindNextFile(hFind, &fd))
+            if (!FindNextFile(hFind, &fd))
                 break;
         }
 
@@ -1111,9 +1111,9 @@ BackgroundPageProc(HWND hwndDlg,
                 switch(lpnm->code)
                 {
                     case PSN_APPLY:
-                        if(pData->bWallpaperChanged)
+                        if (pData->bWallpaperChanged)
                             SetWallpaper(pData);
-                        if(pData->bClrBackgroundChanged)
+                        if (pData->bClrBackgroundChanged)
                             SetDesktopBackColor(hwndDlg, pData);
                         SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)_T(""));
                         return TRUE;

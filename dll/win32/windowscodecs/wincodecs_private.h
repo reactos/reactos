@@ -169,6 +169,7 @@ extern HRESULT PngEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN
 extern HRESULT BmpEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT DibDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT GifDecoder_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT GifEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT IcoDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT JpegDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT JpegEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
@@ -242,6 +243,7 @@ extern HRESULT MetadataReader_Create(const MetadataHandlerVtbl *vtable, REFIID i
 
 extern HRESULT UnknownMetadataReader_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT IfdMetadataReader_CreateInstance(REFIID iid, void **ppv) DECLSPEC_HIDDEN;
+extern HRESULT PngChrmReader_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT PngGamaReader_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT PngTextReader_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT LSDReader_CreateInstance(REFIID iid, void **ppv) DECLSPEC_HIDDEN;

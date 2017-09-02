@@ -5,6 +5,7 @@
  * PURPOSE:     Window procedure of the main window and all children apart from
  *              hPalWin, hToolSettings and hSelection
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -66,7 +67,13 @@ void CMainWindow::alignChildrenToMainWindow()
         h = clientRect.bottom - 3;
     }
 
-    scrollboxWindow.MoveWindow(x, y, w, ::IsWindowVisible(hStatusBar) ? h - 23 : h, TRUE);
+    RECT statusBarRect0;
+    SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&statusBarRect0);
+    int statusBarBorders[3];
+    SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&statusBarBorders);
+    int statusBarHeight = statusBarRect0.bottom - statusBarRect0.top + statusBarBorders[1];
+
+    scrollboxWindow.MoveWindow(x, y, w, ::IsWindowVisible(hStatusBar) ? h - statusBarHeight : h, TRUE);
     paletteWindow.MoveWindow(x, 9, 255, 32, TRUE);
 }
 
@@ -78,30 +85,27 @@ void CMainWindow::saveImage(BOOL overwrite)
     }
     else if (GetSaveFileName(&sfn) != 0)
     {
-        TCHAR tempstr[1000];
-        TCHAR resstr[100];
         imageModel.SaveImage(sfn.lpstrFile);
-        CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
-        CopyMemory(filepathname, sfn.lpstrFile, sizeof(filepathname));
-        LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
-        _stprintf(tempstr, resstr, filename);
-        SetWindowText(tempstr);
+        CString strTitle;
+        strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)sfn.lpstrFileTitle);
+        SetWindowText(strTitle);
         isAFile = TRUE;
     }
 }
 
-void CMainWindow::UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename, LPTSTR newfilepathname)
+void CMainWindow::UpdateApplicationProperties(HBITMAP bitmap, LPCTSTR newfilepathname)
 {
-    TCHAR tempstr[1000];
-    TCHAR resstr[100];
     imageModel.Insert(bitmap);
-    CopyMemory(filename, newfilename, sizeof(filename));
     CopyMemory(filepathname, newfilepathname, sizeof(filepathname));
-    LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
-    _stprintf(tempstr, resstr, filename);
-    SetWindowText(tempstr);
+    CPath pathFileName(newfilepathname);
+    pathFileName.StripPath();
+    CString strTitle;
+    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
+    SetWindowText(strTitle);
     imageModel.ClearHistory();
     isAFile = TRUE;
+
+    registrySettings.SetMostRecentFile(newfilepathname);
 }
 
 void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
@@ -170,10 +174,7 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     LoadDIBFromFile(&bmNew, droppedfile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
     if (bmNew != NULL)
     {
-        TCHAR *pathend;
-        pathend = _tcsrchr(droppedfile, '\\');
-        pathend++;
-        UpdateApplicationProperties(bmNew, pathend, pathend);
+        UpdateApplicationProperties(bmNew, droppedfile);
     }
     return 0;
 }
@@ -196,13 +197,13 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 {
     if (!imageModel.IsImageSaved())
     {
-        TCHAR programname[20];
-        TCHAR saveprompttext[100];
-        TCHAR temptext[500];
-        LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
-        LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, saveprompttext, SIZEOF(saveprompttext));
-        _stprintf(temptext, saveprompttext, filename);
-        switch (MessageBox(temptext, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
+        CString strProgramName;
+        strProgramName.LoadString(IDS_PROGRAMNAME);
+        CPath pathFileName(filepathname);
+        pathFileName.StripPath();
+        CString strSavePromptText;
+        strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
+        switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
         {
             case IDNO:
                 DestroyWindow();
@@ -228,9 +229,40 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     switch (lParam)
     {
         case 0: /* File menu */
+            if ((HMENU)wParam != GetSubMenu(menu, 0))
+                break;
             EnableMenuItem(menu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(isAFile));
             EnableMenuItem(menu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(isAFile));
             EnableMenuItem(menu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile));
+            RemoveMenu(menu, IDM_FILE1, MF_BYCOMMAND);
+            RemoveMenu(menu, IDM_FILE2, MF_BYCOMMAND);
+            RemoveMenu(menu, IDM_FILE3, MF_BYCOMMAND);
+            RemoveMenu(menu, IDM_FILE4, MF_BYCOMMAND);
+            if (!registrySettings.strFile1.IsEmpty())
+            {
+                RemoveMenu(menu, IDM_FILEMOSTRECENTLYUSEDFILE, MF_BYCOMMAND);
+                CPath pathFile1(registrySettings.strFile1);
+                pathFile1.CompactPathEx(30);
+                if (!registrySettings.strFile2.IsEmpty())
+                {
+                    CPath pathFile2(registrySettings.strFile2);
+                    pathFile2.CompactPathEx(30);
+                    if (!registrySettings.strFile3.IsEmpty())
+                    {
+                        CPath pathFile3(registrySettings.strFile3);
+                        pathFile3.CompactPathEx(30);
+                        if (!registrySettings.strFile4.IsEmpty())
+                        {
+                            CPath pathFile4(registrySettings.strFile4);
+                            pathFile4.CompactPathEx(30);
+                            InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE4, _T("4 ") + pathFile4);
+                        }
+                        InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE3, _T("3 ") + pathFile3);
+                    }
+                    InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE2, _T("2 ") + pathFile2);
+                }
+                InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE1, _T("1 ") + pathFile1);
+            }
             break;
         case 1: /* Edit menu */
             EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.HasUndoSteps()));
@@ -302,18 +334,33 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 {
     if (wParam == VK_ESCAPE)
     {
-        if (!imageArea.drawing)
+        HWND hwndCapture = GetCapture();
+        if (hwndCapture)
         {
-            /* Deselect */
-            if ((toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
+            if (selectionWindow.m_hWnd == hwndCapture ||
+                imageArea.m_hWnd == hwndCapture ||
+                fullscreenWindow.m_hWnd == hwndCapture ||
+                sizeboxLeftTop.m_hWnd == hwndCapture ||
+                sizeboxCenterTop.m_hWnd == hwndCapture ||
+                sizeboxRightTop.m_hWnd == hwndCapture ||
+                sizeboxLeftCenter.m_hWnd == hwndCapture ||
+                sizeboxRightCenter.m_hWnd == hwndCapture ||
+                sizeboxLeftBottom.m_hWnd == hwndCapture ||
+                sizeboxCenterBottom.m_hWnd == hwndCapture ||
+                sizeboxRightBottom.m_hWnd == hwndCapture)
             {
-                startPaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-                whilePaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-                endPaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-                selectionWindow.ShowWindow(SW_HIDE);
+                SendMessage(hwndCapture, nMsg, wParam, lParam);
             }
         }
-        /* FIXME: also cancel current drawing underway */
+        else
+        {
+            switch (toolsModel.GetActiveTool())
+            {
+                case TOOL_SHAPE: case TOOL_BEZIER:
+                    imageArea.SendMessage(nMsg, wParam, lParam);
+                    break;
+            }
+        }
     }
     return 0;
 }
@@ -352,13 +399,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             BOOL reset = TRUE;
             if (!imageModel.IsImageSaved())
             {
-                TCHAR programname[20];
-                TCHAR saveprompttext[100];
-                TCHAR temptext[500];
-                LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
-                LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, saveprompttext, SIZEOF(saveprompttext));
-                _stprintf(temptext, saveprompttext, filename);
-                switch (MessageBox(temptext, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
+                CString strProgramName;
+                strProgramName.LoadString(IDS_PROGRAMNAME);
+                CPath pathFileName(filepathname);
+                pathFileName.StripPath();
+                CString strSavePromptText;
+                strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
+                switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
                 {
                     case IDNO:
                         imageModel.imageSaved = TRUE; //TODO: move to ImageModel
@@ -385,7 +432,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 LoadDIBFromFile(&bmNew, ofn.lpstrFile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
                 if (bmNew != NULL)
                 {
-                    UpdateApplicationProperties(bmNew, ofn.lpstrFileTitle, ofn.lpstrFileTitle);
+                    UpdateApplicationProperties(bmNew, ofn.lpstrFile);
                 }
             }
             break;
@@ -428,14 +475,54 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 GlobalFree(pd.hDevNames);
             break;
         case IDM_FILEASWALLPAPERPLANE:
-            RegistrySettings::SetWallpaper(filepathname, 1, 1);
+            RegistrySettings::SetWallpaper(filepathname, RegistrySettings::TILED);
             break;
         case IDM_FILEASWALLPAPERCENTERED:
-            RegistrySettings::SetWallpaper(filepathname, 1, 0);
+            RegistrySettings::SetWallpaper(filepathname, RegistrySettings::CENTERED);
             break;
         case IDM_FILEASWALLPAPERSTRETCHED:
-            RegistrySettings::SetWallpaper(filepathname, 2, 0);
+            RegistrySettings::SetWallpaper(filepathname, RegistrySettings::STRETCHED);
             break;
+        case IDM_FILE1:
+        {
+            HBITMAP bmNew = NULL;
+            LoadDIBFromFile(&bmNew, registrySettings.strFile1, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+            if (bmNew != NULL)
+            {
+                UpdateApplicationProperties(bmNew, registrySettings.strFile1);
+            }
+            break;
+        }
+        case IDM_FILE2:
+        {
+            HBITMAP bmNew = NULL;
+            LoadDIBFromFile(&bmNew, registrySettings.strFile2, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+            if (bmNew != NULL)
+            {
+                UpdateApplicationProperties(bmNew, registrySettings.strFile2);
+            }
+            break;
+        }
+        case IDM_FILE3:
+        {
+            HBITMAP bmNew = NULL;
+            LoadDIBFromFile(&bmNew, registrySettings.strFile3, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+            if (bmNew != NULL)
+            {
+                UpdateApplicationProperties(bmNew, registrySettings.strFile3);
+            }
+            break;
+        }
+        case IDM_FILE4:
+        {
+            HBITMAP bmNew = NULL;
+            LoadDIBFromFile(&bmNew, registrySettings.strFile4, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+            if (bmNew != NULL)
+            {
+                UpdateApplicationProperties(bmNew, registrySettings.strFile4);
+            }
+            break;
+        }
         case IDM_EDITUNDO:
             imageModel.Undo();
             imageArea.Invalidate(FALSE);
@@ -582,7 +669,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FORMATICONBAR:
             textEditWindow.ShowWindow(textEditWindow.IsWindowVisible() ? SW_HIDE : SW_SHOW);
-
+            break;
         case IDM_VIEWSHOWGRID:
             showGrid = !showGrid;
             imageArea.Invalidate(FALSE);

@@ -28,9 +28,14 @@ static BOOLEAN STDCALL acquire_for_lazy_write(PVOID Context, BOOLEAN Wait) {
     
 //     if (!fcb || FileObject->Flags & FO_CLEANUP_COMPLETE)
 //         return FALSE;
-
-    if (!ExAcquireResourceSharedLite(fcb->Header.PagingIoResource, Wait))
+    
+    if (!ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, Wait))
         return FALSE;
+
+    if (!ExAcquireResourceExclusiveLite(fcb->Header.Resource, Wait)) {
+        ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+        return FALSE;
+    }
     
     fcb->lazy_writer_thread = KeGetCurrentThread();
     
@@ -48,7 +53,9 @@ static void STDCALL release_from_lazy_write(PVOID Context) {
     
     fcb->lazy_writer_thread = NULL;
     
-    ExReleaseResourceLite(fcb->Header.PagingIoResource);
+    ExReleaseResourceLite(fcb->Header.Resource);
+    
+    ExReleaseResourceLite(&fcb->Vcb->tree_lock);
 }
 
 static BOOLEAN STDCALL acquire_for_read_ahead(PVOID Context, BOOLEAN Wait) {

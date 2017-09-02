@@ -25,7 +25,7 @@ CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Instalează ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Instalarea unei noi copii a ReactOS. Fișierele, configurațiile și programele existente nu vor fi păstrate. Se pot face ajustări asupra discurilor și partițiilor.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    LTEXT "Instalarea unei noi copii a ReactOS. Fișierele, configurațiile și programele existente nu vor fi păstrate. Sunt posibile ajustări asupra discurilor și partițiilor.", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "Repară sau actualizează ReactOS", IDC_UPDATE, 7, 50, 277, 10
     LTEXT "Repararea sau actualizarea ReactOS. Această opțiune menține fișierele, configurațiile și programele existente. Opțiune validă doar dacă ReactOS e deja instalat în calculator.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Apăsați pe „Înainte” pentru configurarea de dispozitive.", IDC_STATIC, 7, 128, 297, 8
@@ -52,9 +52,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysListView32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "&Crează", IDC_PARTCREATE, 7, 122, 50, 15
-    PUSHBUTTON "&Șterge", IDC_PARTDELETE, 63, 122, 50, 15
+    PUSHBUTTON "Șt&erge", IDC_PARTDELETE, 63, 122, 50, 15
     PUSHBUTTON "Mo&dul pilot", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
-    PUSHBUTTON "&Opțiuni avansate…", IDC_PARTMOREOPTS, 230, 122, 80, 15
+    PUSHBUTTON "Opțiuni a&vansate…", IDC_PARTMOREOPTS, 230, 122, 80, 15
     LTEXT "Apăsați pe „Înainte” pentru a verifica sumarul.", IDC_STATIC, 10, 180, 277, 20
 END
 
@@ -102,7 +102,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Se instalează fișierele…", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "Fișiere în copiere…", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
@@ -134,13 +134,13 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lista cu opțiuni de instalare ce necesită verificare înainte de a continua instalarea."
     IDS_ABORTSETUP "ReactOS încă nu este complet instalat în calculator. Daca întrerupeți procesul de instalare, pentru a instala va fi necesară repetarea pașilor parcurși până acum. Sigur doriți asta?"
     IDS_ABORTSETUP2 "Abandonați instalarea?"
-    IDS_NO_TXTSETUP_SIF "Nu se poate găsi „txtsetup.sif”\nInstalarea nu se poate continua."
+    IDS_NO_TXTSETUP_SIF "Fișierulu „txtsetup.sif” nu poate fi găsit!\nInstalarea nu poate continua."
     IDS_CAPTION "Asistentul de instalare ReactOS"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Name"
-    IDS_PARTITION_SIZE "Size"
-    IDS_PARTITION_TYPE "Type"
+    IDS_PARTITION_NAME "Nume"
+    IDS_PARTITION_SIZE "Dimensiune"
+    IDS_PARTITION_TYPE "Tip"
 END

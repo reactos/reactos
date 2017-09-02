@@ -117,7 +117,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
         SendMessageW(pIconContext->hDlgCtrl, LB_SETCOLUMNWIDTH, 32, 0);
         EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext->hDlgCtrl);
-        if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
+        if (ExpandEnvironmentStringsW(pIconContext->szName, szText, MAX_PATH))
             SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText);
         else
             SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szName);
@@ -177,7 +177,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                 pIconContext->hLibrary = hLibrary;
                 wcscpy(pIconContext->szName, szText);
                 EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext->hDlgCtrl);
-                if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
+                if (ExpandEnvironmentStringsW(pIconContext->szName, szText, MAX_PATH))
                     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText);
                 else
                     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szName);
@@ -802,14 +802,62 @@ Cleanup:
  */
 static BOOL ConfirmDialog(HWND hWndOwner, UINT PromptId, UINT TitleId)
 {
-  WCHAR Prompt[256];
-  WCHAR Title[256];
+    WCHAR Prompt[256];
+    WCHAR Title[256];
 
-  LoadStringW(shell32_hInstance, PromptId, Prompt, sizeof(Prompt) / sizeof(WCHAR));
-  LoadStringW(shell32_hInstance, TitleId, Title, sizeof(Title) / sizeof(WCHAR));
-  return MessageBoxW(hWndOwner, Prompt, Title, MB_YESNO|MB_ICONQUESTION) == IDYES;
+    LoadStringW(shell32_hInstance, PromptId, Prompt, _countof(Prompt));
+    LoadStringW(shell32_hInstance, TitleId, Title, _countof(Title));
+    return MessageBoxW(hWndOwner, Prompt, Title, MB_YESNO | MB_ICONQUESTION) == IDYES;
 }
 
+typedef HRESULT (WINAPI *tShellDimScreen)(IUnknown** Unknown, HWND* hWindow);
+
+BOOL
+CallShellDimScreen(IUnknown** pUnknown, HWND* hWindow)
+{
+    static tShellDimScreen ShellDimScreen;
+    static BOOL Initialized = FALSE;
+    if (!Initialized)
+    {
+        HMODULE mod = LoadLibraryW(L"msgina.dll");
+        ShellDimScreen = (tShellDimScreen)GetProcAddress(mod, (LPCSTR)16);
+        Initialized = TRUE;
+    }
+
+    HRESULT hr = E_FAIL;
+    if (ShellDimScreen)
+        hr = ShellDimScreen(pUnknown, hWindow);
+    return SUCCEEDED(hr);
+}
+
+
+/* Used to get the shutdown privilege */
+static BOOL
+EnablePrivilege(LPCWSTR lpszPrivilegeName, BOOL bEnablePrivilege)
+{
+    BOOL   Success;
+    HANDLE hToken;
+    TOKEN_PRIVILEGES tp;
+
+    Success = OpenProcessToken(GetCurrentProcess(),
+                               TOKEN_ADJUST_PRIVILEGES,
+                               &hToken);
+    if (!Success) return Success;
+
+    Success = LookupPrivilegeValueW(NULL,
+                                    lpszPrivilegeName,
+                                    &tp.Privileges[0].Luid);
+    if (!Success) goto Quit;
+
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Attributes = (bEnablePrivilege ? SE_PRIVILEGE_ENABLED : 0);
+
+    Success = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL);
+
+Quit:
+    CloseHandle(hToken);
+    return Success;
+}
 
 /*************************************************************************
  * RestartDialogEx                [SHELL32.730]
@@ -819,22 +867,18 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 {
     TRACE("(%p)\n", hWndOwner);
 
-    /* FIXME: use lpwstrReason */
-    if (ConfirmDialog(hWndOwner, IDS_RESTART_PROMPT, IDS_RESTART_TITLE))
-    {
-        HANDLE hToken;
-        TOKEN_PRIVILEGES npr;
+    CComPtr<IUnknown> fadeHandler;
+    HWND parent;
 
-        /* enable the shutdown privilege for the current process */
-        if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
-        {
-            LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
-            npr.PrivilegeCount = 1;
-            npr.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-            AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
-            CloseHandle(hToken);
-        }
+    if (!CallShellDimScreen(&fadeHandler, &parent))
+        parent = hWndOwner;
+
+    /* FIXME: use lpwstrReason */
+    if (ConfirmDialog(parent, IDS_RESTART_PROMPT, IDS_RESTART_TITLE))
+    {
+        EnablePrivilege(L"SeShutdownPrivilege", TRUE);
         ExitWindowsEx(EWX_REBOOT, uReason);
+        EnablePrivilege(L"SeShutdownPrivilege", FALSE);
     }
 
     return 0;
@@ -844,36 +888,45 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
  * LogOffDialogProc
  *
  * NOTES: Used to make the Log Off dialog work
- *     
  */
-INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch(Message)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             return TRUE;
-        }
+
         case WM_CLOSE:
             EndDialog(hwnd, IDCANCEL);
             break;
+
+#if 0
+        case WM_ACTIVATE:
+        {
+            if (LOWORD(wParam) == WA_INACTIVE)
+                EndDialog(hwnd, 0);
+            return FALSE;
+        }
+#endif
+
         case WM_COMMAND:
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
                 case IDOK:
                     ExitWindowsEx(EWX_LOGOFF, 0);
-                break;
+                    break;
+
                 case IDCANCEL:
                     EndDialog(hwnd, IDCANCEL);
-                break;
+                    break;
             }
             break;
+
         default:
             break;
     }
     return FALSE;
 }
-
 
 /*************************************************************************
  * LogoffWindowsDialog  [SHELL32.54]
@@ -881,10 +934,15 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM
 
 EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
-    DialogBox(shell32_hInstance, MAKEINTRESOURCE(IDD_LOG_OFF), hWndOwner, LogOffDialogProc);
+    CComPtr<IUnknown> fadeHandler;
+    HWND parent;
+
+    if (!CallShellDimScreen(&fadeHandler, &parent))
+        parent = hWndOwner;
+
+    DialogBoxW(shell32_hInstance, MAKEINTRESOURCEW(IDD_LOG_OFF), parent, LogOffDialogProc);
     return 0;
 }
-
 
 /*************************************************************************
  * RestartDialog                [SHELL32.59]
@@ -895,33 +953,12 @@ int WINAPI RestartDialog(HWND hWndOwner, LPCWSTR lpstrReason, DWORD uFlags)
     return RestartDialogEx(hWndOwner, lpstrReason, uFlags, 0);
 }
 
- /*************************************************************************
- * Used to get the shutdown privilege
- */
-VOID ExitWindows_GetShutdownPrivilege(VOID)
-{
-    HANDLE hToken;
-    TOKEN_PRIVILEGES npr;
-
-    /* enable shut down privilege for current process */
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
-    {
-        LookupPrivilegeValueA(0, "SeShutdownPrivilege", &npr.Privileges[0].Luid);
-
-        npr.PrivilegeCount = 1;
-        npr.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-        AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0);
-
-        CloseHandle(hToken);
-    }
-}
-
 /*************************************************************************
  * ExitWindowsDialog_backup
  *
  * NOTES
- *     used as a backup solution to shutdown the OS in case msgina.dll somehow
- *     cannot be found.
+ *     Used as a backup solution to shutdown the OS in case msgina.dll
+ *     somehow cannot be found.
  */
 VOID ExitWindowsDialog_backup(HWND hWndOwner)
 {
@@ -929,8 +966,9 @@ VOID ExitWindowsDialog_backup(HWND hWndOwner)
 
     if (ConfirmDialog(hWndOwner, IDS_SHUTDOWN_PROMPT, IDS_SHUTDOWN_TITLE))
     {
-        ExitWindows_GetShutdownPrivilege();
+        EnablePrivilege(L"SeShutdownPrivilege", TRUE);
         ExitWindowsEx(EWX_SHUTDOWN, 0);
+        EnablePrivilege(L"SeShutdownPrivilege", FALSE);
     }
 }
 
@@ -948,27 +986,32 @@ VOID ExitWindowsDialog_backup(HWND hWndOwner)
 void WINAPI ExitWindowsDialog(HWND hWndOwner)
 {
     typedef DWORD (WINAPI *ShellShFunc)(HWND hParent, WCHAR *Username, BOOL bHideLogoff);
-    HINSTANCE msginaDll = LoadLibraryA("msgina.dll");
+    HINSTANCE msginaDll = LoadLibraryW(L"msgina.dll");
 
     TRACE("(%p)\n", hWndOwner);
 
+    CComPtr<IUnknown> fadeHandler;
+    HWND parent;
+    if (!CallShellDimScreen(&fadeHandler, &parent))
+        parent = hWndOwner;
+
     /* If the DLL cannot be found for any reason, then it simply uses a
        dialog box to ask if the user wants to shut down the computer. */
-    if(!msginaDll)
+    if (!msginaDll)
     {
         TRACE("Unable to load msgina.dll.\n");
-        ExitWindowsDialog_backup(hWndOwner);
+        ExitWindowsDialog_backup(parent);
         return;
     }
 
-    ShellShFunc pShellShutdownDialog = (ShellShFunc) GetProcAddress(msginaDll, "ShellShutdownDialog");
+    ShellShFunc pShellShutdownDialog = (ShellShFunc)GetProcAddress(msginaDll, "ShellShutdownDialog");
 
-    if(pShellShutdownDialog)
+    if (pShellShutdownDialog)
     {
         /* Actually call the function */
-        DWORD returnValue = pShellShutdownDialog(hWndOwner, NULL, FALSE);
+        DWORD returnValue = pShellShutdownDialog(parent, NULL, FALSE);
 
-        switch(returnValue)
+        switch (returnValue)
         {
         case 0x01: /* Log off user */
         {
@@ -977,8 +1020,9 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
         }
         case 0x02: /* Shut down */
         {
-            ExitWindows_GetShutdownPrivilege();
+            EnablePrivilege(L"SeShutdownPrivilege", TRUE);
             ExitWindowsEx(EWX_SHUTDOWN, 0);
+            EnablePrivilege(L"SeShutdownPrivilege", FALSE);
             break;
         }
         case 0x03: /* Install Updates/Shutdown (?) */
@@ -987,25 +1031,28 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
         }
         case 0x04: /* Reboot */
         {
-            ExitWindows_GetShutdownPrivilege();
+            EnablePrivilege(L"SeShutdownPrivilege", TRUE);
             ExitWindowsEx(EWX_REBOOT, 0);
+            EnablePrivilege(L"SeShutdownPrivilege", FALSE);
             break;
         }
         case 0x10: /* Sleep */
         {
-            if(IsPwrSuspendAllowed())
+            if (IsPwrSuspendAllowed())
             {
-                ExitWindows_GetShutdownPrivilege();
+                EnablePrivilege(L"SeShutdownPrivilege", TRUE);
                 SetSuspendState(FALSE, FALSE, FALSE);
+                EnablePrivilege(L"SeShutdownPrivilege", FALSE);
             }
             break;
         }
         case 0x40: /* Hibernate */
         {
-            if(IsPwrHibernateAllowed())
+            if (IsPwrHibernateAllowed())
             {
-                ExitWindows_GetShutdownPrivilege();
+                EnablePrivilege(L"SeShutdownPrivilege", TRUE);
                 SetSuspendState(TRUE, FALSE, TRUE);
+                EnablePrivilege(L"SeShutdownPrivilege", FALSE);
             }
             break;
         }
@@ -1018,7 +1065,8 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
     {
         /* If the function cannot be found, then revert to using the backup solution */
         TRACE("Unable to find the 'ShellShutdownDialog' function");
-        FreeLibrary(msginaDll);
-        ExitWindowsDialog_backup(hWndOwner);
+        ExitWindowsDialog_backup(parent);
     }
+
+    FreeLibrary(msginaDll);
 }

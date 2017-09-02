@@ -314,7 +314,7 @@ LogonPageProc(
                 case IDC_LOGON_INTERACTIVE:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        if (pLogonData->bInitialized && pLogonData->bInitialized)
+                        if (pLogonData->bInitialized)
                         {
                             pLogonData->bAccountChanged = TRUE;
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);

@@ -201,6 +201,7 @@ void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 uid) {
     um = ExAllocatePoolWithTag(PagedPool, sizeof(uid_map), ALLOC_TAG);
     if (!um) {
         ERR("out of memory\n");
+        ExFreePool(sid);
         return;
     }
     
@@ -210,7 +211,7 @@ void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 uid) {
     InsertTailList(&uid_map_list, &um->listentry);
 }
 
-static void uid_to_sid(UINT32 uid, PSID* sid) {
+void uid_to_sid(UINT32 uid, PSID* sid) {
     LIST_ENTRY* le;
     uid_map* um;
     sid_header* sh;
@@ -400,13 +401,9 @@ static ACL* load_default_acl() {
 //     }
 // }
 
-static BOOL get_sd_from_xattr(fcb* fcb) {
-    ULONG buflen;
+BOOL get_sd_from_xattr(fcb* fcb, ULONG buflen) {
     NTSTATUS Status;
     PSID sid, usersid;
-    
-    if (!get_xattr(fcb->Vcb, fcb->subvol, fcb->inode, EA_NTACL, EA_NTACL_HASH, (UINT8**)&fcb->sd, (UINT16*)&buflen))
-        return FALSE;
     
     TRACE("using xattr " EA_NTACL " for security descriptor\n");
     
@@ -654,13 +651,16 @@ end:
         ExFreePool(groupsid);
 }
 
-void fcb_get_sd(fcb* fcb, struct _fcb* parent) {
+void fcb_get_sd(fcb* fcb, struct _fcb* parent, BOOL look_for_xattr, PIRP Irp) {
     NTSTATUS Status;
     PSID usersid = NULL, groupsid = NULL;
     SECURITY_SUBJECT_CONTEXT subjcont;
+    ULONG buflen;
     
-    if (get_sd_from_xattr(fcb))
-        return;
+    if (look_for_xattr && get_xattr(fcb->Vcb, fcb->subvol, fcb->inode, EA_NTACL, EA_NTACL_HASH, (UINT8**)&fcb->sd, (UINT16*)&buflen, Irp)) {
+        if (get_sd_from_xattr(fcb, buflen))
+            return;
+    }
     
     if (!parent) {
         get_top_level_sd(fcb);
@@ -833,8 +833,7 @@ static NTSTATUS STDCALL set_file_security(device_extension* Vcb, PFILE_OBJECT Fi
             fcb = fileref->parent->fcb;
         else {
             ERR("could not find parent fcb for stream\n");
-            Status = STATUS_INTERNAL_ERROR;
-            goto end;
+            return STATUS_INTERNAL_ERROR;
         }
     }
     
@@ -860,7 +859,10 @@ static NTSTATUS STDCALL set_file_security(device_extension* Vcb, PFILE_OBJECT Fi
     win_time_to_unix(time, &now);
     
     fcb->inode_item.transid = Vcb->superblock.generation;
-    fcb->inode_item.st_ctime = now;
+    
+    if (!ccb->user_set_change_time)
+        fcb->inode_item.st_ctime = now;
+    
     fcb->inode_item.sequence++;
     
     if (flags & OWNER_SECURITY_INFORMATION) {
@@ -878,6 +880,7 @@ static NTSTATUS STDCALL set_file_security(device_extension* Vcb, PFILE_OBJECT Fi
     }
     
     fcb->sd_dirty = TRUE;
+    fcb->inode_item_changed = TRUE;
     
     fcb->subvol->root_item.ctransid = Vcb->superblock.generation;
     fcb->subvol->root_item.ctime = now;
@@ -985,7 +988,7 @@ NTSTATUS fcb_get_new_sd(fcb* fcb, file_ref* parfileref, ACCESS_STATE* as) {
         ERR("RtlGetOwnerSecurityDescriptor returned %08x\n", Status);
         fcb->inode_item.st_uid = UID_NOBODY;
     } else {
-        fcb->inode_item.st_uid = sid_to_uid(&owner);
+        fcb->inode_item.st_uid = sid_to_uid(owner);
     }
     
     return STATUS_SUCCESS;

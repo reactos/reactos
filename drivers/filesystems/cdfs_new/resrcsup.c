@@ -109,7 +109,7 @@ Return Value:
     }
 
     //
-    //  If not acquired and the user didn't specifiy IgnoreWait then
+    //  If not acquired and the user didn't specify IgnoreWait then
     //  raise CANT_WAIT.
     //
 

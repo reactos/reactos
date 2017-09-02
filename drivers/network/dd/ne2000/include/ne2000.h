@@ -19,7 +19,7 @@
 /* Define NOCARD to test NDIS without a card */
 //#define NOCARD
 
-/* NE2000 sepcific constants */
+/* NE2000 specific constants */
 #define NIC_DATA            0x10    /* Data register */
 #define NIC_RESET           0x1F    /* Reset register */
 

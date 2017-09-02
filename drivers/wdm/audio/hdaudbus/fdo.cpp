@@ -351,7 +351,7 @@ HDA_InitCorbRirbPos(
     value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS)) & HDAC_CORB_WRITE_POS_MASK;
     WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS), value);
 
-    // Reset CORB read pointer. Preseve bits marked as RsvdP.
+    // Reset CORB read pointer. Preserve bits marked as RsvdP.
     // After setting the reset bit, we must wait for the hardware
     // to acknowledge it, then manually unset it and wait for that
     // to be acknowledged as well.
@@ -603,7 +603,7 @@ HDA_FDOStartDevice(
         // them, as we want to use the STATE_STATUS register to identify
         // available codecs. We'd have to clear that register in the interrupt
         // handler to 'ack' the codec change.
-        Value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_WAKE_ENABLE)) & HDAC_WAKE_ENABLE_MASK;
+        Value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_WAKE_ENABLE)) & ~HDAC_WAKE_ENABLE_MASK;
         WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_WAKE_ENABLE), Value);
 
         // Enable controller interrupts
@@ -662,7 +662,7 @@ HDA_FDOQueryBusRelations(
     if (!DeviceRelations)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    DeviceCount = 0;
+    DeviceRelations->Count = 0;
     for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
     {
         if (DeviceExtension->Codecs[CodecIndex] == NULL)

@@ -90,7 +90,7 @@ Pin_fnWrite(
     {
         // FIXME
         // call kmixer to convert stream
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
     }
 
     /* acquire real pin file object */

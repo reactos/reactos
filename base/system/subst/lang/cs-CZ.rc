@@ -1,0 +1,20 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INCORRECT_PARAMETER_COUNT "Nesprávný počet parametrů - %s\n"
+    IDS_INVALID_PARAMETER "Nesprávný počet parametrů - %s\n"
+    IDS_INVALID_PARAMETER2 "Neplatný parametr - %s\n"
+    IDS_PATH_NOT_FOUND "Cesta nenealzena - %s\n"
+    IDS_ACCESS_DENIED "Přistup odepřen - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Jednotka je již substituována\n"
+    IDS_FAILED_WITH_ERRORCODE "Selhalo s chybou 0x%x: %s\n"
+    IDS_USAGE "Přiřadí cestě písmeno jednotky.\n\n\
+SUBST [jednotka1: [jednotka2:]cesta]\n\
+SUBST jednotka: /D\n\n\
+  jednotka1:         Určuje virtuální jednoku, ke které bude přiřazena cesta.\n\
+  [jednotka2:]cesta  Určuje fyzickou jednotku a cestu, kterou chcete přiřadit\n\
+                     k virtuální jednotce.\n\
+  /D                 Odstraní substituovanou (virtuální) jednotku.\n\n\
+Příkaz SUBST bez parametrů vypíše seznam virtuálních jednotek.\n"
+END

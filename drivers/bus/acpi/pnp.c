@@ -299,6 +299,12 @@ Bus_StartFdo (
         return STATUS_UNSUCCESSFUL;
     }
 
+    status = acpi_create_volatile_registry_tables();
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT1("Unable to create ACPI tables in registry\n");
+    }
+
 	DPRINT("Acpi subsystem init\n");
     /* Initialize ACPI bus manager */
     AcpiStatus = acpi_init();

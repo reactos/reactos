@@ -77,6 +77,16 @@ DsSetupUnbind(
 }
 
 
+VOID
+WINAPI
+DsRoleFreeMemory(
+    _In_ PVOID Buffer)
+{
+    TRACE("DsRoleFreeMemory(%p)\n", Buffer);
+    HeapFree(GetProcessHeap(), 0, Buffer);
+}
+
+
 DWORD
 WINAPI
 DsRoleGetPrimaryDomainInformation(

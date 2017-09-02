@@ -969,7 +969,7 @@ GetModuleBaseNameW(HANDLE hProcess,
             lpBaseName[nSize - 1] = UNICODE_NULL;
         }
     }
-    /* Otherwise, nullify at last writen char */
+    /* Otherwise, nullify at last written char */
     else
     {
         ASSERT(Len + sizeof(UNICODE_NULL) <= nSize * sizeof(WCHAR));
@@ -1061,7 +1061,7 @@ GetModuleFileNameExW(HANDLE hProcess,
             lpFilename[nSize - 1] = UNICODE_NULL;
         }
     }
-    /* Otherwise, nullify at last writen char */
+    /* Otherwise, nullify at last written char */
     else
     {
         ASSERT(Len + sizeof(UNICODE_NULL) <= nSize * sizeof(WCHAR));
@@ -1267,7 +1267,7 @@ GetProcessImageFileNameA(HANDLE hProcess,
     /* Copy name */
     Len = WideCharToMultiByte(CP_ACP, 0, ImageFileName->Buffer,
                               ImageFileName->Length, lpImageFileName, nSize, NULL, NULL);
-    /* If conversion was successfull, don't return len with added \0 */
+    /* If conversion was successful, don't return len with added \0 */
     if (Len != 0)
     {
         Len -= sizeof(ANSI_NULL);
@@ -1604,7 +1604,7 @@ GetProcessMemoryInfo(HANDLE Process,
         ppsmemCounters->QuotaNonPagedPoolUsage = Counters.QuotaNonPagedPoolUsage;
         ppsmemCounters->PagefileUsage = Counters.PagefileUsage;
         ppsmemCounters->PeakPagefileUsage = Counters.PeakPagefileUsage;
-        /* And if needed, additionnal field for _EX version */
+        /* And if needed, additional field for _EX version */
         if (cb >= sizeof(PROCESS_MEMORY_COUNTERS_EX))
         {
             ((PPROCESS_MEMORY_COUNTERS_EX)ppsmemCounters)->PrivateUsage = Counters.PrivateUsage;

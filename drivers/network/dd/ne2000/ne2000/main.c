@@ -796,7 +796,7 @@ static NDIS_STATUS NTAPI MiniportSetInformation(
             Adapter->LookaheadSize = GenericULONG;
         break;
     case OID_802_3_MULTICAST_LIST:
-        /* Verify length. Must be multiplum of hardware address length */
+        /* Verify length. Must be multiple of hardware address length */
         if ((InformationBufferLength % DRIVER_LENGTH_OF_ADDRESS) != 0) {
             *BytesRead   = 0;
             *BytesNeeded = 0;

@@ -670,7 +670,7 @@ EXTERN_C DWORD WINAPI Win32DeleteFileW(LPCWSTR path)
  *  dest       [I]   path to target file to move to
  *
  * RETURNS
- *  ERORR_SUCCESS if successful
+ *  ERROR_SUCCESS if successful
  */
 static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BOOL isdir)
 {
@@ -804,7 +804,7 @@ int WINAPI SHCreateDirectory(HWND hWnd, LPCWSTR path)
  *  ERROR_INVALID_NAME if the path contains invalid chars
  *  ERROR_FILE_EXISTS when a file with that name exists
  *  ERROR_ALREADY_EXISTS when the directory already exists
- *  ERROR_FILENAME_EXCED_RANGE if the filename was to long to process
+ *  ERROR_FILENAME_EXCED_RANGE if the filename was too long to process
  *
  *  FIXME: Not implemented yet;
  *  SHCreateDirectoryEx also verifies that the files in the directory will be visible
@@ -878,9 +878,9 @@ int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES s
 
         if (ret && hWnd && (ERROR_CANCELLED != ret))
         {
-            /* We failed and should show a dialog box */
-            FIXME("Show system error message, creating path %s, failed with error %d\n", debugstr_w(path), ret);
-            ret = ERROR_CANCELLED; /* Error has been already presented to user (not really yet!) */
+            ShellMessageBoxW(shell32_hInstance, hWnd, MAKEINTRESOURCEW(IDS_CREATEFOLDER_DENIED), MAKEINTRESOURCEW(IDS_CREATEFOLDER_CAPTION),
+                                    MB_ICONEXCLAMATION | MB_OK, path);
+            ret = ERROR_CANCELLED;
         }
     }
 
@@ -1266,7 +1266,7 @@ static BOOL copy_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCH
     if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo))
     {
         if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FILE, PathFindFileNameW(szTo), op))
-            return 0;
+            return FALSE;
     }
 
     return SHNotifyCopyFileW(op, szFrom, szTo, FALSE) == 0;
@@ -1480,6 +1480,19 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
             return 0;
         }
 
+    /* Check files. Do not delete one if one file does not exists */
+    for (i = 0; i < flFrom->dwNumFiles; i++)
+    {
+        fileEntry = &flFrom->feFiles[i];
+
+        if ((HANDLE)fileEntry->attributes == INVALID_HANDLE_VALUE)
+        {
+            // This is a windows 2003 server specific value which has been removed.
+            // Later versions of windows return ERROR_FILE_NOT_FOUND.
+            return ERROR_SHELL_INTERNAL_FILE_NOT_FOUND;
+        }
+    }
+
     for (i = 0; i < flFrom->dwNumFiles; i++)
     {
         bPathExists = TRUE;
@@ -1527,7 +1540,7 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
             {
                 // This is a windows 2003 server specific value which ahs been removed.
                 // Later versions of windows return ERROR_FILE_NOT_FOUND.
-                return 1026;
+                return ERROR_SHELL_INTERNAL_FILE_NOT_FOUND;
             }
             else
             {
@@ -1957,7 +1970,7 @@ EXTERN_C HRESULT WINAPI SHPathPrepareForWriteW(HWND hwnd, IUnknown *modless, LPC
     WCHAR* last_slash;
     WCHAR* temppath=NULL;
 
-    TRACE("%p %p %s 0x%80x\n", hwnd, modless, debugstr_w(path), flags);
+    TRACE("%p %p %s 0x%08x\n", hwnd, modless, debugstr_w(path), flags);
 
     if (flags & ~(SHPPFW_DIRCREATE|SHPPFW_ASKDIRCREATE|SHPPFW_IGNOREFILENAME))
         FIXME("unimplemented flags 0x%08x\n", flags);

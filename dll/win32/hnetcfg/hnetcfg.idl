@@ -43,3 +43,11 @@ coclass NetFwAuthorizedApplication { interface INetFwAuthorizedApplications; }
     uuid(0ca545c6-37ad-4a6c-bf92-9f7610067ef5)
 ]
 coclass NetFwOpenPort { interface INetFwOpenPort; }
+
+[
+    helpstring("HNetCfg.FwPolicy2"),
+    progid("HNetCfg.FwPolicy2"),
+    threading(both),
+    uuid(e2b3c97f-6ae1-41ac-817a-f6f92166d7dd)
+]
+coclass NetFwPolicy2 { interface INetFwPolicy2; }

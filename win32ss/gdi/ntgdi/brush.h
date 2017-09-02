@@ -33,7 +33,7 @@ typedef struct _BRUSHBODY
 
     /* The following members are for PENs only */
     LONG lWidth;
-    FLOAT eWidth;
+    FLOATOBJ eWidth;
     ULONG ulPenStyle;
     DWORD *pStyle;
     ULONG dwStyleCount;

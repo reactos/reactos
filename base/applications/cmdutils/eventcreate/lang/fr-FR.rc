@@ -1,0 +1,70 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Entrez ""EVENTCREATE /?"" pour afficher la syntaxe.\n"
+    IDS_HELP "\n\
+EVENTCREATE [/S système [/U utilisateur [/P mot_de_passe]]] /ID id_événement\n\
+            {[/L journal] | [/SO source]} /T type /C catégorie /D description\n\
+\n\
+Description :\n\
+    Cet outil permet à un administrateur de créer un événement ayant un\n\
+    message et un identificateur personnalisés dans un journal d'événements\n\
+    spécifié.\n\
+\n\
+Liste de paramètres :\n\
+    /S  système           Spécifie le système distant auquel se connecter.\n\
+\n\
+    /U  [domaine\\]utili.  Spécifie le contexte de l'utilisateur\n\
+                          sous lequel la commande doit s'exécuter.\n\
+\n\
+    /P  [mot_de_passe]    Spécifie le mot de passe du contexte\n\
+                          utilisateur donné. Il est demandé s'il est omis.\n\
+\n\
+    /L  journal           Spécifie le journal d'événement dans lequel\n\
+                          l'événementest créé. Les noms valides sont :\n\
+                          Application, System, Security\n\
+                          (le dernier est réservé seulement pour le compte\n\
+                           SYSTEM).\n\
+\n\
+    /SO source            Spécifie la source devant être utilisée pour\n\
+                          l'événement (s'il n'est pas spécifié, la valeur\n\
+                          par défaut de la source sera 'eventcreate').\n\
+                          Une source valide peut être une chaîne et doit\n\
+                          représenter l'application ou le composant qui génère\n\
+                          l'événement.\n\
+\n\
+    /T  type              Spécifie le type d'événement à créer.\n\
+                          Les types autorisés sont : SUCCESS, ERROR, WARNING,\n\
+                          INFORMATION.\n\
+\n\
+    /C  catégorie         Spécifie la catégorie de l'événement (nombre entier).\n\
+\n\
+    /ID identificateur    Spécifie l'ID de l'événement. Un identificateur\n\
+                          peut être un nombre entier compris entre 0 et 65535.\n\
+\n\
+    /D  description       Spécifie la description du nouvel événement.\n\
+\n\
+    /?                    Affiche cet écran d'aide.\n\
+"
+    IDS_INVALIDSWITCH "Option invalide - '%s'.\n"
+    IDS_BADSYNTAX_0 "Syntaxe incorrecte.\n"
+    IDS_BADSYNTAX_1 "Syntaxe incorrecte. L'option '%s' requiert une valeur.\n"
+    IDS_BADSYNTAX_2 "Syntaxe incorrecte. La valeur pour l'option '%s' ne peut pas être vide.\n"
+    IDS_BADSYNTAX_3 "Syntaxe incorrecte. La valeur '%s' n'est pas autorisée pour l'option '%s'.\n"
+    IDS_BADSYNTAX_4 "Syntaxe incorrecte. La valeur ne peut pas être spécifiée pour l'option '%s'.\n"
+    IDS_BADSYNTAX_5 "Syntaxe incorrecte. L'option '%s' n'est pas autorisée plus de %lu fois.\n"
+    IDS_BADSYNTAX_6 "Syntaxe incorrecte. L'option obligatoire '%s' est absente.\n"
+    // IDS_BADSYNTAX_7 "Syntaxe incorrecte. La valeur pour l'option '%s' est en dehors de la plage autorisée.\n"
+    IDS_BADSYNTAX_7 "Syntaxe incorrecte. La valeur pour l'option '%s' doit être comprise entre %d et %d.\n"
+
+    IDS_LOG_NOT_FOUND "Le journal '%s' n'existe pas. Impossible de créer l'événement.\n"
+    IDS_SOURCE_NOCREATE "La nouvelle source ne peut être créée car le nom du journal n'est pas spécifié.\nUtilisez le commutateur /L pour spécifier le nom du journal.\n"
+    IDS_SOURCE_EXISTS "La source existe déjà dans le journal '%s' et ne peut pas être dupliquée.\n"
+    IDS_SOURCE_NOT_CUSTOM "Le paramètre Source est utilisé pour identifier les scripts/applications\npersonnalisées (pas les applications installées).\n"
+
+    IDS_SUCCESS_1   "Opération réussie : un événement de type '%s' a été créé dans le journal '%s'.\n"
+    IDS_SUCCESS_2   "Opération réussie : un événement de type '%s' a été créé avec la source '%s'.\n"
+    IDS_SUCCESS_3   "Opération réussie : un événement de type '%s' a été créé\ndans le journal '%s' avec la source '%s'.\n"
+    IDS_SWITCH_UNIMPLEMENTED "L'option '%s' n'est pas supporté pour le moment, désolé pour le désagrément!\n"
+END

@@ -37,7 +37,7 @@ BEGIN
     END
     POPUP "說明(&H)"
     BEGIN
-        MENUITEM "關於(&A)...", IDM_ABOUT
+        MENUITEM "關於(&A)", IDM_ABOUT
     END
 END
 

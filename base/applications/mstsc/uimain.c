@@ -33,7 +33,7 @@ RD_BOOL g_desktop_save = False; /* desktop save order */
 RD_BOOL g_polygon_ellipse_orders = False; /* polygon / ellipse orders */
 RD_BOOL g_bitmap_compression = True;
 uint32 g_rdp5_performanceflags =
-  RDP5_NO_WALLPAPER | RDP5_NO_FULLWINDOWDRAG | RDP5_NO_MENUANIMATIONS | RDP5_NO_CURSOR_SHADOW;
+  PERF_DISABLE_WALLPAPER | PERF_DISABLE_FULLWINDOWDRAG | PERF_DISABLE_MENUANIMATIONS | PERF_DISABLE_CURSOR_SHADOW;
 RD_BOOL g_bitmap_cache_persist_enable = False;
 RD_BOOL g_bitmap_cache_precache = True;
 RD_BOOL g_bitmap_cache = True;
@@ -199,7 +199,7 @@ ui_create_cursor(unsigned int x, unsigned int y,
       {
         bs_set_pixel_on(am, j, 31 - i, 32, 1, 1);
       }
-      if (bs_is_pixel_on((char *)xormask, j, i, 32, 24))
+      if (bs_is_pixel_on((char *)xormask, j, i, 32, xor_bpp))
       {
         bs_set_pixel_on(xm, j, 31 - i, 32, 1, 1);
       }

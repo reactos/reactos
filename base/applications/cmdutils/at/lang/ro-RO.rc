@@ -1,0 +1,56 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Comanda AT planifică comenzi și programe pentru fi executate într-un\n\
+calculator la o anumită dată și oră. Serviciul «Schedule» trebuie să fie\n\
+pornit pentru a utiliza această comandă.\n\n\
+AT [\\\\numecalculator] [ [id] [/DELETE] | /DELETE [/YES]]\n\
+AT [\\\\numecalculator] timp [/INTERACTIVE]\n\
+    [ /EVERY:dată[,...] | /NEXT:dată[,...]] ""comandă""\n\n\
+\\\\numecalculator   Specifică un calculator la distanță. Fără acest\n\
+                   parametru, planificarea va fi pentru calculatorul local.\n\
+id                 Un număr de identificare atribuit comenzii planificate.\n\
+/DELETE            Anulează o comandă planificată. Fără acest parametru,\n\
+                   vor fi anulate toate comenzile planificate.\n\
+/YES               Utilizat cu opțiunea «DELETE», pentru suprimarea cerințelor\n\
+                   de confirmare a eliminărilor de comenzi planificate.\n\
+timp               Specifică timpul de lansare a comenzii.\n\
+/INTERACTIVE       Permite programelor să interacționeze cu utilizatorul\n\
+                   autentificat la momentul execuției planificate.\n\
+/EVERY:dată[,...]  Execută comanda la ziua sau zilele specificate din fiecare\n\
+                   săptămână sau lună. Dacă data este omisă, este considerată\n\
+                   ziua curentă a lunii.\n\
+/NEXT:dată[,...]   Execută comanda în următoarea zi (spre exemplu marțea\n\
+                   viitoare). Dacă data este omisă, e considerată ziua\n\
+                   curentă a lunii.\n\
+""comandă""          Numele comenzii sau programului pentru execuție.\n"
+
+    IDS_DELETE_ALL "Această operație va elimina planificarea pentru toate comenzile.\n"
+    IDS_NEW_JOB "A fost planificată o nouă activitate cu ID = %lu\n"
+    IDS_JOBS_LIST "ID stare    Zi                      Oră           Comanda\n"
+    IDS_NO_ENTRIES "Nu există comenzi planificate.\n"
+
+    IDS_CONFIRM_QUESTION "Sigur doriți continuarea acestei operații? (D|N) [N]: "
+    IDS_CONFIRM_INVALID "\nAcesta nu este un răspuns valid.\n"
+    IDS_CONFIRM_YES "D"
+    IDS_CONFIRM_NO "N"
+
+    IDS_TODAY "Astăzi"
+    IDS_TOMORROW "Mâine"
+    IDS_EVERY "În fiecare"
+    IDS_NEXT "În următoarea"
+
+    IDS_YES "Da"
+    IDS_NO "Nu"
+    IDS_ERROR "EROARE"
+    IDS_OK "OK"
+
+    IDS_TASKID      "ID sarcină:    %lu\n"
+    IDS_STATUS      "Stare:         %s\n"
+    IDS_SCHEDULE    "Pentru:        %s\n"
+    IDS_TIME        "La ora:        %s\n"
+    IDS_INTERACTIVE "Interactiv:    %s\n"
+    IDS_COMMAND     "Comandă:       %s\n"
+END

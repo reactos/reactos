@@ -21,6 +21,7 @@ BEGIN
                                              būti atvaizduotas.\n\n\
   Pasirodžius raginimui ""-- Toliau --"" spauskite bet kurį klavišą, kad\n\
   pamatytumėte sekantį puslapį.\n"
-    IDS_CONTINUE " -- Toliau (100%) -- "
-    IDS_FILE_ACCESS "Nepavyko atverti bylos %s."
+    IDS_CONTINUE "-- Toliau --"
+    IDS_CONTINUE_PROGRESS "-- Toliau (%d%%) --"
+    IDS_FILE_ACCESS "Nepavyko atverti bylos %s.\n"
 END

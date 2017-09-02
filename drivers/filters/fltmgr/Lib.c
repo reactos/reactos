@@ -1,7 +1,7 @@
 /*
 * PROJECT:         Filesystem Filter Manager
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            drivers/fs_minifilter/fltmgr/Lib.c
+* FILE:            drivers/filters/fltmgr/Lib.c
 * PURPOSE:         Miscellaneous library functions
 * PROGRAMMERS:     Ged Murphy (gedmurphy@reactos.org)
 */

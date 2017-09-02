@@ -426,16 +426,20 @@ void read_boot(DOS_FS * fs)
 
     fs->label = calloc(12, sizeof(uint8_t));
     if (fs->fat_bits == 12 || fs->fat_bits == 16) {
-	struct boot_sector_16 *b16 = (struct boot_sector_16 *)&b;
-	if (b16->extended_sig == 0x29)
-	    memmove(fs->label, b16->label, 11);
-	else
-	    fs->label = NULL;
+        struct boot_sector_16 *b16 = (struct boot_sector_16 *)&b;
+        if (b16->extended_sig == 0x29)
+            memmove(fs->label, b16->label, 11);
+        else {
+            free(fs->label);
+            fs->label = NULL;
+        }
     } else if (fs->fat_bits == 32) {
-	if (b.extended_sig == 0x29)
-	    memmove(fs->label, &b.label, 11);
-	else
-	    fs->label = NULL;
+        if (b.extended_sig == 0x29)
+            memmove(fs->label, &b.label, 11);
+        else {
+            free(fs->label);
+            fs->label = NULL;
+        }
     }
 
     if (fs->data_clusters >

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -76,9 +76,18 @@ AcpiHwSleepDispatch (
 
 static ACPI_SLEEP_FUNCTIONS         AcpiSleepDispatch[] =
 {
-    {ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacySleep),    AcpiHwExtendedSleep},
-    {ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacyWakePrep), AcpiHwExtendedWakePrep},
-    {ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacyWake),     AcpiHwExtendedWake}
+    {ACPI_STRUCT_INIT (legacy_function,
+                       ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacySleep)),
+     ACPI_STRUCT_INIT (extended_function,
+                       AcpiHwExtendedSleep) },
+    {ACPI_STRUCT_INIT (legacy_function,
+                       ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacyWakePrep)),
+     ACPI_STRUCT_INIT (extended_function,
+                       AcpiHwExtendedWakePrep) },
+    {ACPI_STRUCT_INIT (legacy_function,
+                       ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacyWake)),
+     ACPI_STRUCT_INIT (extended_function,
+                       AcpiHwExtendedWake) }
 };
 
 

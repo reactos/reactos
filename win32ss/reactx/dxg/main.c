@@ -17,7 +17,8 @@ VOID *gpDummyPage = NULL;
 PEPROCESS gpepSession = NULL;
 PLARGE_INTEGER gpLockShortDelay = NULL;
 
-PDRVFN gpEngFuncs;
+DXENG_FUNCTIONS gpEngFuncs;
+
 const ULONG gcDxgFuncs = DXG_INDEX_DxDdIoctl + 1;
 
 
@@ -39,6 +40,9 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 {
 
     PDRVFN drv_func;
+    ULONG peng_funcs;
+    PULONG peng_func;
+
     UINT i;
 
     /* Test see if the data is vaild we got from win32k.sys */
@@ -71,6 +75,8 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
      * and if it really are exported
      */
 
+    peng_funcs = (ULONG)&gpEngFuncs;
+
     for (i=1 ; i < DXENG_INDEX_DxEngLoadImage + 1; i++)
     {
         drv_func = &pDxEngDrv->pdrvfn[i];
@@ -80,9 +86,9 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
         {
             return STATUS_INTERNAL_ERROR;
         }
+        peng_func = (PULONG)(peng_funcs+(i * sizeof(ULONG)));
+        *peng_func = (ULONG)drv_func->pfn;
     }
-
-    gpEngFuncs = pDxEngDrv->pdrvfn;
 
     /* Note 12/1-2004 : Why is this set to 0x618 */
     *DirectDrawContext = 0x618;

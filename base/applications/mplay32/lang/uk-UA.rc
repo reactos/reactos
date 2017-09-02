@@ -37,7 +37,7 @@ BEGIN
     END
     POPUP "&Довідка"
     BEGIN
-        MENUITEM "&Про програму...", IDM_ABOUT
+        MENUITEM "&Про програму", IDM_ABOUT
     END
 END
 

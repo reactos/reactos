@@ -10,8 +10,6 @@
 
 #include <atlwin.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
-
 BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_NtObjectFolder, CNtObjectFolder)
     OBJECT_ENTRY(CLSID_RegistryFolder, CRegistryFolder)
@@ -19,11 +17,6 @@ END_OBJECT_MAP()
 
 HINSTANCE  g_hInstance;
 CComModule g_Module;
-
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
 
 STDAPI_(BOOL)
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)

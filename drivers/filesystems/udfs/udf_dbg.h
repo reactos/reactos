@@ -39,7 +39,7 @@
 
 //#define UDF_SIMULATE_WRITES
 
-#define USE_PERF_PRINT
+//#define USE_PERF_PRINT
 
 #define USE_KD_PRINT
 #define USE_MM_PRINT

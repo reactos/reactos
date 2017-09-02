@@ -52,6 +52,13 @@ typedef struct _SOCKET_CONTEXT {
     BOOL DontRoute;
 } SOCKET_CONTEXT, *PSOCKET_CONTEXT;
 
+INT
+WSHIoctl_GetInterfaceList(
+    IN  LPVOID OutputBuffer,
+    IN  DWORD OutputBufferLength,
+    OUT LPDWORD NumberOfBytesReturned,
+    OUT LPBOOL NeedsCompletion);
+
 #endif /* __WSHTCPIP_H */
 
 /* EOF */

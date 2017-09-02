@@ -1,0 +1,61 @@
+/*
+ * DNS Resolver Service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+#define UNICODE
+#include <sal.h>
+#include <windns.h>
+
+typedef [handle, string] LPWSTR DNSRSLVR_HANDLE;
+
+[
+    uuid(45776b01-5956-4485-9f80-f428f7d60129),
+    version(2.0),
+    pointer_default(unique)
+#ifndef __midl
+    ,explicit_handle
+#endif
+] 
+
+interface DnsResolver
+{
+    /* Function: 0x00 */
+    /* CRrReadCache */
+
+    /* Function: 0x01 */
+    /* CRrReadCacheEntry */
+
+    /* Function: 0x02 */
+    /* CRrGetHashTableStats */
+
+    /* Function: 0x03 */
+    /* R_ResolverGetConfig */
+
+    /* Function: 0x04 */
+    DWORD R_ResolverFlushCache(
+        [in][unique][string] DNSRSLVR_HANDLE pwszServerName);
+
+    /* Function: 0x05 */
+    /* R_ResolverFlushCacheEntry */
+
+    /* Function: 0x06 */
+    /* R_ResolverRegisterCluster */
+
+    /* Function: 0x07 */
+    DWORD R_ResolverQuery(
+        [in][unique][string] DNSRSLVR_HANDLE pwszServerName,
+        [in][unique][string] LPCWSTR pwsName, 
+        [in] WORD wType, 
+        [in] DWORD Flags, 
+        [in][out] DWORD *dwRecords, 
+        [out][ref] DNS_RECORDW** ppResultRecords);
+
+    /* Function: 0x08 */
+    /* R_ResolverEnumCache */
+
+    /* Function: 0x09 */
+    /* R_ResolverPoke */
+
+}

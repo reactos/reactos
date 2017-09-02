@@ -13,25 +13,142 @@
 
 /* DATA VARIABLES ************************************************************/
 
-BL_TRANSLATION_TYPE MmTranslationType, MmOriginalTranslationType;
+/* This is a bug in Windows, but is required for MmTrInitialize to load */
+BL_TRANSLATION_TYPE MmTranslationType = BlMax;
+BL_TRANSLATION_TYPE MmOriginalTranslationType;
 ULONG MmDescriptorCallTreeCount;
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+TrpGenerateMappingTracker (
+    _In_ PVOID VirtualAddress, 
+    _In_ ULONG Flags, 
+    _In_ LARGE_INTEGER PhysicalAddress,
+    _In_ ULONGLONG Size
+    )
+{
+    PBL_MEMORY_DESCRIPTOR Descriptor, NextDescriptor;
+    PLIST_ENTRY ListHead, NextEntry;
+
+    /* Increment descriptor call count */
+    MmDescriptorCallTreeCount++;
+
+    /* Initialize a descriptor for this allocation */
+    Descriptor = MmMdInitByteGranularDescriptor(Flags,
+                                                0,
+                                                PhysicalAddress.QuadPart,
+                                                (ULONG_PTR)VirtualAddress,
+                                                Size);
+
+    /* Loop the current tracker list */
+    ListHead = MmMdlMappingTrackers.First;
+    NextEntry = ListHead->Flink;
+    if (IsListEmpty(ListHead))
+    {
+        /* If it's empty, just add the descriptor at the end */
+        InsertTailList(ListHead, &Descriptor->ListEntry);
+        goto Quickie;
+    }
+     
+    /* Otherwise, go to the last descriptor */
+    NextDescriptor = CONTAINING_RECORD(NextEntry,
+                                       BL_MEMORY_DESCRIPTOR,
+                                       ListEntry);
+    while (NextDescriptor->VirtualPage < Descriptor->VirtualPage)
+    {
+        /* Keep going... */
+        NextEntry = NextEntry->Flink;
+        NextDescriptor = CONTAINING_RECORD(NextEntry,
+                                           BL_MEMORY_DESCRIPTOR,
+                                           ListEntry);
+
+        /* If we hit the end of the list, just add it at the end */
+        if (NextEntry == ListHead)
+        {
+            goto Quickie;
+        }
+
+        /* Otherwise, add it right after this descriptor */
+        InsertTailList(&NextDescriptor->ListEntry, &Descriptor->ListEntry);
+    }
+
+Quickie:
+    /* Release any global descriptors allocated */
+    MmMdFreeGlobalDescriptors();
+    --MmDescriptorCallTreeCount;
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 MmTrInitialize (
     VOID
     )
 {
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+    NTSTATUS Status;
+    PLIST_ENTRY NextEntry;
+
     /* Nothing to track if we're using physical memory */
     if (MmTranslationType == BlNone)
     {
         return STATUS_SUCCESS;
     }
 
-    /* TODO */
-    EfiPrintf(L"Required for protected mode\r\n");
-    return STATUS_NOT_IMPLEMENTED;
+    /* Initialize all the virtual lists */
+    MmMdInitializeListHead(&MmMdlMappingTrackers);
+    MmMdlMappingTrackers.Type = BlMdTracker;
+    MmMdInitializeListHead(&MmMdlFreeVirtual);
+    MmMdlFreeVirtual.Type = BlMdVirtual;
+
+    /* Initialize a 4GB free descriptor */
+    Descriptor = MmMdInitByteGranularDescriptor(0,
+                                                BlConventionalMemory,
+                                                0,
+                                                0,
+                                                ((ULONGLONG)4 * 1024 * 1024 * 1024) >>
+                                                PAGE_SHIFT);
+    if (!Descriptor)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Add this 4GB region to the free virtual address space list */
+    Status = MmMdAddDescriptorToList(&MmMdlFreeVirtual,
+                                     Descriptor,
+                                     BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+        goto Quickie;
+    }
+
+    /* Remove any reserved regions of virtual address space */
+    NextEntry = MmMdlReservedAllocated.First->Flink;
+    while (NextEntry != MmMdlReservedAllocated.First)
+    {
+        /* Grab the descriptor and see if it's mapped */
+        Descriptor = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+        if (Descriptor->VirtualPage)
+        {
+            EfiPrintf(L"Need to handle reserved allocation: %llx %llx\r\n",
+                      Descriptor->VirtualPage, Descriptor->PageCount);
+            EfiStall(100000);
+            Status = STATUS_NOT_IMPLEMENTED;
+            goto Quickie;
+        }
+
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Set success if we made it */
+    Status = STATUS_SUCCESS;
+
+Quickie:
+    /* Return back to caller */
+    return Status;
 }
 
 NTSTATUS
@@ -72,67 +189,6 @@ BlMmRemoveBadMemory (
 }
 
 NTSTATUS
-MmSelectMappingAddress (
-    _Out_ PVOID* MappingAddress,
-    _In_ ULONGLONG Size,
-    _In_ ULONG AllocationAttributes,
-    _In_ ULONG Flags,
-    _In_ PHYSICAL_ADDRESS PhysicalAddress
-    )
-{
-    /* Are we in physical mode? */
-    if (MmTranslationType == BlNone)
-    {
-        /* Just return the physical address as the mapping address */
-        *MappingAddress = (PVOID)PhysicalAddress.LowPart;
-        return STATUS_SUCCESS;
-    }
-
-    /* Have to allocate physical pages */
-    EfiPrintf(L"VM Todo\r\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-MmMapPhysicalAddress (
-    _Inout_ PPHYSICAL_ADDRESS PhysicalAddress,
-    _Out_ PVOID VirtualAddress,
-    _Inout_ PULONGLONG Size,
-    _In_ ULONG CacheAttributes
-    )
-{
-    ULONGLONG MappingSize;
-
-    /* Fail if any parameters are missing */
-    if (!(PhysicalAddress) || !(VirtualAddress) || !(Size))
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Fail if the size is over 32-bits */
-    MappingSize = *Size;
-    if (MappingSize > 0xFFFFFFFF)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Nothing to do if we're in physical mode */
-    if (MmTranslationType == BlNone)
-    {
-        return STATUS_SUCCESS;
-    }
-
-    /* Can't use virtual memory in real mode */
-    if (CurrentExecutionContext->Mode == BlRealMode)
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    EfiPrintf(L"VM todo\r\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 BlMmMapPhysicalAddressEx (
     _In_ PVOID* VirtualAddress,
     _In_ ULONG Flags,
@@ -146,6 +202,11 @@ BlMmMapPhysicalAddressEx (
     PVOID MappedBase;
     ULONGLONG MapSize;
     UCHAR CacheAttributes;
+    ULONGLONG BasePage, EndPage, MappedPage, FoundBasePage;
+    ULONGLONG PageOffset, FoundPageCount;
+    PBL_MEMORY_DESCRIPTOR Descriptor, NewDescriptor;
+    PBL_MEMORY_DESCRIPTOR_LIST List;
+    ULONG AddPages;
 
     /* Increase call depth */
     ++MmDescriptorCallTreeCount;
@@ -168,7 +229,7 @@ BlMmMapPhysicalAddressEx (
 
     /* Check for invalid requirement flag, if one is present */
     if (((Flags & BlMemoryValidAllocationAttributes) != BlMemoryFixed) &&
-        ((Flags & BlMemoryValidAllocationAttributes) != BlMemoryNonFixed) &&
+        ((Flags & BlMemoryValidAllocationAttributes) != BlMemoryKernelRange) &&
         (Flags & BlMemoryValidAllocationAttributes))
     {
         Status = STATUS_INVALID_PARAMETER;
@@ -185,6 +246,7 @@ BlMmMapPhysicalAddressEx (
 
     /* Select an address to map this at */
     Status = MmSelectMappingAddress(&MappingAddress,
+                                    *VirtualAddress,
                                     Size,
                                     Flags & BlMemoryValidAllocationAttributes,
                                     Flags,
@@ -208,21 +270,175 @@ BlMmMapPhysicalAddressEx (
         goto Quickie;
     }
 
-    /* Compute the final adress where the mapping was made */
-    MappedBase = (PVOID)((ULONG_PTR)MappingAddress +
-                         PhysicalAddress.LowPart -
-                         MappedAddress.LowPart);
+    /* Compute the final address where the mapping was made */
+    MappedBase = (PVOID)(ULONG_PTR)((ULONG_PTR)MappingAddress +
+                                    PhysicalAddress.QuadPart -
+                                    MappedAddress.QuadPart);
+    MappedAddress.QuadPart = (ULONG_PTR)MappedBase;
 
     /* Check if we're in physical or virtual mode */
-    if (MmTranslationType != BlNone)
+    if (MmTranslationType == BlNone)
     {
-        /* For virtual memory, there's more to do */
-        EfiPrintf(L"VM not supported for mapping\r\n");
-        Status = STATUS_NOT_IMPLEMENTED;
+        /* We are in physical mode -- just return this address directly */
+        Status = STATUS_SUCCESS;
+        *VirtualAddress = MappedBase;
         goto Quickie;
     }
 
-    /* Return the mapped virtual address */
+    /* Remove the mapping address from the list of free virtual memory */
+    Status = MmMdRemoveRegionFromMdlEx(&MmMdlFreeVirtual,
+                                       BL_MM_REMOVE_VIRTUAL_REGION_FLAG,
+                                       (ULONG_PTR)MappingAddress >> PAGE_SHIFT,
+                                       MapSize >> PAGE_SHIFT,
+                                       NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* And then add an entry for the fact we mapped it */
+        Status = TrpGenerateMappingTracker(MappedBase,
+                                           CacheAttributes,
+                                           PhysicalAddress,
+                                           MapSize);
+    }
+
+    /* Abandon if we didn't update the memory map successfully */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Unmap the virtual address so it can be used later */
+        MmUnmapVirtualAddress(MappingAddress, &MapSize);
+        goto Quickie;
+    }
+
+    /* Check if no real mapping into RAM was made */
+    if (PhysicalAddress.QuadPart == -1)
+    {
+        /* Then we're done here */
+        Status = STATUS_SUCCESS;
+        *VirtualAddress = MappedBase;
+        goto Quickie;
+    }
+
+
+    /* Loop over the entire allocation */
+    BasePage = MappedAddress.QuadPart >> PAGE_SHIFT;
+    EndPage = (MappedAddress.QuadPart + MapSize) >> PAGE_SHIFT;
+    MappedPage = (ULONG_PTR)MappingAddress >> PAGE_SHIFT;
+    do
+    {
+        /* Start with the unmapped allocated list */
+        List = &MmMdlUnmappedAllocated;
+        Descriptor = MmMdFindDescriptor(BL_MM_INCLUDE_UNMAPPED_ALLOCATED,
+                                        BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                        BasePage);
+        if (!Descriptor)
+        {
+            /* Try persistent next */
+            List = &MmMdlPersistentMemory;
+            Descriptor = MmMdFindDescriptor(BL_MM_INCLUDE_PERSISTENT_MEMORY,
+                                            BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                            BasePage);
+        }
+        if (!Descriptor)
+        {
+            /* Try unmapped, unallocated, next */
+            List = &MmMdlUnmappedUnallocated;
+            Descriptor = MmMdFindDescriptor(BL_MM_INCLUDE_UNMAPPED_UNALLOCATED,
+                                            BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                            BasePage);
+        }
+        if (!Descriptor)
+        {
+            /* Try reserved next */
+            List = &MmMdlReservedAllocated;
+            Descriptor = MmMdFindDescriptor(BL_MM_INCLUDE_RESERVED_ALLOCATED,
+                                            BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                            BasePage);
+        }
+
+        /* Check if we have a descriptor */
+        if (Descriptor)
+        {
+            /* Remove it from its list */
+            MmMdRemoveDescriptorFromList(List, Descriptor);
+
+            /* Check if it starts before our allocation */
+            FoundBasePage = Descriptor->BasePage;
+            if (FoundBasePage < BasePage)
+            {
+                /* Create a new descriptor to cover the gap before our allocation */
+                PageOffset = BasePage - FoundBasePage;
+                NewDescriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
+                                                               Descriptor->Type,
+                                                               FoundBasePage,
+                                                               0,
+                                                               PageOffset);
+
+                /* Insert it */
+                MmMdAddDescriptorToList(List, NewDescriptor, 0);
+
+                /* Adjust ours to ignore that piece */
+                Descriptor->PageCount -= PageOffset;
+                Descriptor->BasePage = BasePage;
+            }
+
+            /* Check if it goes beyond our allocation */
+            FoundPageCount = Descriptor->PageCount;
+            if (EndPage < (FoundPageCount + Descriptor->BasePage))
+            {
+                /* Create a new descriptor to cover the range after our allocation */
+                PageOffset = EndPage - BasePage;
+                NewDescriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
+                                                               Descriptor->Type,
+                                                               EndPage,
+                                                               0,
+                                                               FoundPageCount -
+                                                               PageOffset);
+
+                /* Insert it */
+                MmMdAddDescriptorToList(List, NewDescriptor, 0);
+
+                /* Adjust ours to ignore that piece */
+                Descriptor->PageCount = PageOffset;
+            }
+
+            /* Update the descriptor to be mapepd at this virtual page */
+            Descriptor->VirtualPage = MappedPage;
+
+            /* Check if this was one of the regular lists */
+            if ((List != &MmMdlReservedAllocated) &&
+                (List != &MmMdlPersistentMemory))
+            {
+                /* Was it allocated, or unallocated? */
+                if (List != &MmMdlUnmappedAllocated)
+                {
+                    /* In which case use the unallocated mapped list */
+                    List = &MmMdlMappedUnallocated;
+                }
+                else
+                {
+                    /* Insert it into the mapped list */
+                    List = &MmMdlMappedAllocated;
+                }
+            }
+
+            /* Add the descriptor that was removed, into the right list */
+            MmMdAddDescriptorToList(List, Descriptor, 0);
+
+            /* Add the pages this descriptor had */
+            AddPages = Descriptor->PageCount;
+        }
+        else
+        {
+            /* Nope, so just add one page */
+            AddPages = 1;
+        }
+
+        /* Increment the number of pages the descriptor had */
+        MappedPage += AddPages;
+        BasePage += AddPages;
+    }
+    while (BasePage < EndPage);
+
+    /* We're done -- returned the address */
     Status = STATUS_SUCCESS;
     *VirtualAddress = MappedBase;
 
@@ -249,9 +465,13 @@ MmUnmapVirtualAddress (
         {
             Status = STATUS_SUCCESS;
         }
-
-        /* TODO */
-        Status = STATUS_NOT_IMPLEMENTED;
+        else
+        {
+            /* We don't support virtual memory yet @TODO */
+            EfiPrintf(L"unmap not yet implemented in %S\r\n", __FUNCTION__);
+            EfiStall(1000000);
+            Status = STATUS_NOT_IMPLEMENTED;
+        }
     }
     else
     {
@@ -274,7 +494,7 @@ BlMmUnmapVirtualAddressEx (
     /* Increment call depth */
     ++MmDescriptorCallTreeCount;
 
-    /* Make sure all parameters are tehre */
+    /* Make sure all parameters are there */
     if ((VirtualAddress) && (Size))
     {
         /* Unmap the virtual address */
@@ -283,7 +503,9 @@ BlMmUnmapVirtualAddressEx (
         /* Check if we actually had a virtual mapping active */
         if ((NT_SUCCESS(Status)) && (MmTranslationType != BlNone))
         {
-            /* TODO */
+            /* We don't support virtual memory yet @TODO */
+            EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+            EfiStall(1000000);
             Status = STATUS_NOT_IMPLEMENTED;
         }
     }
@@ -297,6 +519,22 @@ BlMmUnmapVirtualAddressEx (
     MmMdFreeGlobalDescriptors();
     --MmDescriptorCallTreeCount;
     return Status;
+}
+
+BOOLEAN
+BlMmTranslateVirtualAddress (
+    _In_ PVOID VirtualAddress,
+    _Out_ PPHYSICAL_ADDRESS PhysicalAddress
+    )
+{
+    /* Make sure arguments are present */
+    if (!(VirtualAddress) || !(PhysicalAddress))
+    {
+        return FALSE;
+    }
+
+    /* Do the architecture-specific translation */
+    return MmArchTranslateVirtualAddress(VirtualAddress, PhysicalAddress, NULL);
 }
 
 NTSTATUS
@@ -338,6 +576,7 @@ BlpMmInitialize (
     Status = MmTrInitialize();
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"TR Mm init failed: %lx\r\n", Status);
         //MmArchDestroy();
         //MmPaDestroy(1);
         goto Quickie;
@@ -362,6 +601,7 @@ BlpMmInitialize (
     if (!NT_SUCCESS(Status))
     {
         /* Kill everything set setup so far */
+        EfiPrintf(L"Phase 1 Mm init failed: %lx\r\n", Status);
         //MmPaDestroy(0);
         //MmTrDestroy();
         //MmArchDestroy();
@@ -397,6 +637,7 @@ BlpMmInitialize (
     if (!NT_SUCCESS(Status))
     {
         /* Go back to static descriptors and kill the heap */
+        EfiPrintf(L"Phase 2 Mm init failed: %lx\r\n", Status);
         //MmMdpSwitchToStaticDescriptors();
         //HapInitializationStatus = 0;
         //++MmDescriptorCallTreeCount;

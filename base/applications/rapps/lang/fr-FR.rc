@@ -156,6 +156,7 @@ BEGIN
     IDS_AINFO_SIZE "\nTaille : "
     IDS_AINFO_URLSITE "\nSite internet : "
     IDS_AINFO_LICENSE "\nLicence : "
+    IDS_AINFO_URLDOWNLOAD "\nTélécharger : "
 END
 
 STRINGTABLE
@@ -197,6 +198,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Êtes-vous sûr de vouloir supprimer du registre les données du programme installé ?"
     IDS_INFORMATION "Information"
     IDS_UNABLE_TO_DOWNLOAD "Impossible de télécharger le paquet : adresse introuvable !"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Impossible de supprimer du registre les données du programme !"
     IDS_CERT_DOES_NOT_MATCH "La vérification du certificat SSL a échoué."
     IDS_INTEG_CHECK_TITLE "Vérification de l'intégrité du paquet..."

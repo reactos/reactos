@@ -804,7 +804,7 @@ DATETIME_HitTest (const DATETIME_INFO *infoPtr, POINT pt)
 {
     int i;
 
-    TRACE ("%d, %d\n", pt.x, pt.y);
+    TRACE ("%s\n", wine_dbgstr_point(&pt));
 
     if (PtInRect (&infoPtr->calbutton, pt)) return DTHT_MCPOPUP;
     if (PtInRect (&infoPtr->checkbox, pt)) return DTHT_CHECKBOX;

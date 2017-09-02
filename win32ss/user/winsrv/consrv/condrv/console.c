@@ -217,7 +217,8 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     }
 
     /* Set-up the code page */
-    Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
+    if (IsValidCodePage(ConsoleInfo->CodePage))
+        Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
 
     /* Initialize a new text-mode screen buffer with default settings */
     ScreenBufferInfo.ScreenBufferSize = ConsoleInfo->ScreenBufferSize;

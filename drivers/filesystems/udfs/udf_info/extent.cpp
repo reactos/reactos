@@ -342,7 +342,7 @@ UDFShortAllocDescToMapping(
             AllocExt.extLength = len;
             AllocExt.extLocation = UDFPartLbaToPhys(Vcb, &locAddr);
             if(AllocExt.extLocation == LBA_OUT_OF_EXTENT) {
-                KdPrint(("bad address\n"));
+                UDFPrint(("bad address\n"));
                 MyFreePool__(NextAllocDesc);
                 MyFreePool__(Extent);
                 return NULL;
@@ -370,10 +370,10 @@ UDFShortAllocDescToMapping(
             // check integrity
             if((NextAllocDesc->descTag.tagIdent != TID_ALLOC_EXTENT_DESC) ||
                (NextAllocDesc->lengthAllocDescs > (len - sizeof(ALLOC_EXT_DESC))) ) {
-                KdPrint(("Integrity check failed\n"));
-                KdPrint(("NextAllocDesc->descTag.tagIdent = %x\n", NextAllocDesc->descTag.tagIdent));
-                KdPrint(("NextAllocDesc->lengthAllocDescs = %x\n", NextAllocDesc->lengthAllocDescs));
-                KdPrint(("len = %x\n", len));
+                UDFPrint(("Integrity check failed\n"));
+                UDFPrint(("NextAllocDesc->descTag.tagIdent = %x\n", NextAllocDesc->descTag.tagIdent));
+                UDFPrint(("NextAllocDesc->lengthAllocDescs = %x\n", NextAllocDesc->lengthAllocDescs));
+                UDFPrint(("len = %x\n", len));
                 MyFreePool__(NextAllocDesc);
                 MyFreePool__(Extent);
                 return NULL;
@@ -415,7 +415,7 @@ UDFShortAllocDescToMapping(
         if(type != EXTENT_NOT_RECORDED_NOT_ALLOCATED && len) {
             Extent[i].extLocation = UDFPartLbaToPhys(Vcb, &locAddr);
             if(Extent[i].extLocation == LBA_OUT_OF_EXTENT) {
-                KdPrint(("bad address (2)\n"));
+                UDFPrint(("bad address (2)\n"));
                 MyFreePool__(Extent);
                 return NULL;
             }
@@ -502,7 +502,7 @@ UDFLongAllocDescToMapping(
             AllocExt.extLength = len;
             AllocExt.extLocation = UDFPartLbaToPhys(Vcb,&(AllocDesc[i].extLocation));
             if(AllocExt.extLocation == LBA_OUT_OF_EXTENT) {
-                KdPrint(("bad address\n"));
+                UDFPrint(("bad address\n"));
                 MyFreePool__(NextAllocDesc);
                 MyFreePool__(Extent);
                 return NULL;
@@ -530,10 +530,10 @@ UDFLongAllocDescToMapping(
             // check integrity
             if((NextAllocDesc->descTag.tagIdent != TID_ALLOC_EXTENT_DESC) ||
                (NextAllocDesc->lengthAllocDescs > (len - sizeof(ALLOC_EXT_DESC))) ) {
-                KdPrint(("Integrity check failed\n"));
-                KdPrint(("NextAllocDesc->descTag.tagIdent = %x\n", NextAllocDesc->descTag.tagIdent));
-                KdPrint(("NextAllocDesc->lengthAllocDescs = %x\n", NextAllocDesc->lengthAllocDescs));
-                KdPrint(("len = %x\n", len));
+                UDFPrint(("Integrity check failed\n"));
+                UDFPrint(("NextAllocDesc->descTag.tagIdent = %x\n", NextAllocDesc->descTag.tagIdent));
+                UDFPrint(("NextAllocDesc->lengthAllocDescs = %x\n", NextAllocDesc->lengthAllocDescs));
+                UDFPrint(("len = %x\n", len));
                 MyFreePool__(NextAllocDesc);
                 MyFreePool__(Extent);
                 return NULL;
@@ -564,7 +564,7 @@ UDFLongAllocDescToMapping(
         if(type != EXTENT_NOT_RECORDED_NOT_ALLOCATED && len) {
             Extent[i].extLocation = UDFPartLbaToPhys(Vcb,&(AllocDesc[i].extLocation));
             if(Extent[i].extLocation == LBA_OUT_OF_EXTENT) {
-                KdPrint(("bad address (2)\n"));
+                UDFPrint(("bad address (2)\n"));
                 MyFreePool__(Extent);
                 return NULL;
             }
@@ -638,7 +638,7 @@ UDFExtAllocDescToMapping(
             AllocExt.extLength = len;
             AllocExt.extLocation = UDFPartLbaToPhys(Vcb,&(AllocDesc[i].extLocation));
             if(AllocExt.extLocation == LBA_OUT_OF_EXTENT) {
-                KdPrint(("bad address\n"));
+                UDFPrint(("bad address\n"));
                 MyFreePool__(NextAllocDesc);
                 MyFreePool__(Extent);
                 return NULL;
@@ -666,7 +666,7 @@ UDFExtAllocDescToMapping(
             // check integrity
             if((NextAllocDesc->descTag.tagIdent != TID_ALLOC_EXTENT_DESC) ||
                (NextAllocDesc->lengthAllocDescs > (len - sizeof(ALLOC_EXT_DESC))) ) {
-                KdPrint(("Integrity check failed\n"));
+                UDFPrint(("Integrity check failed\n"));
                 MyFreePool__(NextAllocDesc);
                 MyFreePool__(Extent);
                 return NULL;
@@ -700,7 +700,7 @@ UDFExtAllocDescToMapping(
         if(type != EXTENT_NOT_RECORDED_NOT_ALLOCATED && len) {
             Extent[i].extLocation = UDFPartLbaToPhys(Vcb,&(AllocDesc[i].extLocation));
             if(Extent[i].extLocation == LBA_OUT_OF_EXTENT) {
-                KdPrint(("bad address (2)\n"));
+                UDFPrint(("bad address (2)\n"));
                 MyFreePool__(Extent);
                 return NULL;
             }
@@ -751,7 +751,7 @@ UDFReadMappingFromXEntry(
 
 
     if(XEntry->tagIdent == TID_FILE_ENTRY) {
-//        KdPrint(("Standard FileEntry\n"));
+//        UDFPrint(("Standard FileEntry\n"));
         PFILE_ENTRY FileEntry = (PFILE_ENTRY)XEntry;
         ExtPrint(("Standard FileEntry\n"));
 
@@ -763,7 +763,7 @@ UDFReadMappingFromXEntry(
         AllocMode = FileEntry->icbTag.flags & ICB_FLAG_ALLOC_MASK;
 
     } else if(XEntry->tagIdent == TID_EXTENDED_FILE_ENTRY) {
-//        KdPrint(("Extended FileEntry\n"));
+//        UDFPrint(("Extended FileEntry\n"));
         ExtPrint(("Extended FileEntry\n"));
         PEXTENDED_FILE_ENTRY ExFileEntry = (PEXTENDED_FILE_ENTRY)XEntry;
 
@@ -925,14 +925,14 @@ UDFBuildShortAllocDescs(
         (*Buff) = (int8*)MyAllocatePoolTag__(NonPagedPool, NewLen, MEM_SHAD_TAG);
         if(!(*Buff)) {
             status = STATUS_INSUFFICIENT_RESOURCES;
-            KdPrint(("UDFResizeExtent() failed (%x)\n",status));
+            UDFPrint(("UDFResizeExtent() failed (%x)\n",status));
             BrutePoint();
             goto sh_alloc_err;
         }
         if(UDFGetExtentLength(AllocExtent->Mapping) < NewLen) {
             status = UDFResizeExtent(Vcb, PartNum, NewLen, TRUE, AllocExtent);
             if(!OS_SUCCESS(status)) {
-                KdPrint(("UDFResizeExtent(2) failed (%x)\n",status));
+                UDFPrint(("UDFResizeExtent(2) failed (%x)\n",status));
                 BrutePoint();
 sh_alloc_err:
                 MyFreePool__(Alloc);
@@ -1336,16 +1336,16 @@ UDFDiscardFESpace(
     PEXTENT_MAP Mapping2;
     uint32 i;
 
-    KdPrint(("  DiscardFESpace\n"));
+    UDFPrint(("  DiscardFESpace\n"));
     Mapping2 = Mapping;
     for(i=0;i<lim;i++, Mapping++) {
         // we should not discard allocated FEs
         if( (Mapping->extLength >> 30) == EXTENT_RECORDED_ALLOCATED) {
-            KdPrint(("  used @ %x\n", Mapping->extLocation));
+            UDFPrint(("  used @ %x\n", Mapping->extLocation));
             Mapping->extLength = Vcb->LBlockSize | (EXTENT_NOT_RECORDED_NOT_ALLOCATED << 30);
             Mapping->extLocation = 0;
         } else {
-            KdPrint(("  free @ %x\n", Mapping->extLocation));
+            UDFPrint(("  free @ %x\n", Mapping->extLocation));
         }
     }
     UDFMarkSpaceAsXXX(Vcb, 0, Mapping2, AS_DISCARDED);
@@ -1373,13 +1373,13 @@ UDFInitAllocationCache(
 
     switch(AllocClass) {
     case UDF_PREALLOC_CLASS_FE:
-        KdPrint(("AllocationCache FE:\n"));
+        UDFPrint(("AllocationCache FE:\n"));
         pAllocCache = &(Vcb->FEChargeCache);
         plim = &(Vcb->FEChargeCacheMaxSize);
         lim = 32;
         break;
     case UDF_PREALLOC_CLASS_DIR:
-        KdPrint(("AllocationCache DIR:\n"));
+        UDFPrint(("AllocationCache DIR:\n"));
         pAllocCache = &(Vcb->PreallocCache);
         plim = &(Vcb->PreallocCacheMaxSize);
         lim = 32;
@@ -1433,7 +1433,7 @@ UDFGetCachedAllocation(
         UDFReleaseResource(&(Vcb->PreallocResource));
         return status;
     }
-    KdPrint(("Get AllocationCache for %x\n", ParentLocation));
+    UDFPrint(("Get AllocationCache for %x\n", ParentLocation));
 
     for(i=0; i<lim; i++) {
         if(AllocCache[i].ParentLocation == ParentLocation) {
@@ -1473,7 +1473,7 @@ UDFStoreCachedAllocation(
         UDFReleaseResource(&(Vcb->PreallocResource));
         return status;
     }
-    KdPrint(("Store AllocationCache for %x, map %x\n", ParentLocation, Ext->Mapping));
+    UDFPrint(("Store AllocationCache for %x, map %x\n", ParentLocation, Ext->Mapping));
 
     for(i=0; i<lim; i++) {
         if(AllocCache[i].ParentLocation == LBA_NOT_ALLOCATED) {
@@ -1514,7 +1514,7 @@ UDFFlushAllCachedAllocations(
     uint32 i, lim;
     OSSTATUS status;
 
-    KdPrint(("Flush AllocationCache\n"));
+    UDFPrint(("Flush AllocationCache\n"));
     UDFAcquireResourceExclusive(&(Vcb->PreallocResource),TRUE);
 
     status = UDFInitAllocationCache(Vcb, AllocClass, &AllocCache, &lim, FALSE);
@@ -1621,7 +1621,7 @@ UDFAllocateFESpace(
             if(Vcb->LowFreeSpace) {
                 status = UDFAllocFreeExtent(Vcb, Len << Vcb->LBlockSizeBits,p_start, p_end, FEExtInfo, EXTENT_FLAG_VERIFY);
                 if(OS_SUCCESS(status)) {
-                    KdPrint(("FE @ %x (1)\n", FEExtInfo->Mapping[0].extLocation ));
+                    UDFPrint(("FE @ %x (1)\n", FEExtInfo->Mapping[0].extLocation ));
                 }
                 return status;
             } else {
@@ -1647,11 +1647,11 @@ UDFAllocateFESpace(
                 }
                 if(!OS_SUCCESS(status = UDFAllocFreeExtent(Vcb, lim << Vcb->LBlockSizeBits, p_start, p_end, Ext, EXTENT_FLAG_VERIFY) )) {
                     // can't pre-allocate space for multiple FEs. Try single FE
-                    KdPrint(("allocate single FE entry\n"));
+                    UDFPrint(("allocate single FE entry\n"));
                     status = UDFAllocFreeExtent(Vcb, Len,
                            p_start, p_end, FEExtInfo, EXTENT_FLAG_VERIFY);
                     if(OS_SUCCESS(status)) {
-                        KdPrint(("FE @ %x (2)\n", FEExtInfo->Mapping[0].extLocation ));
+                        UDFPrint(("FE @ %x (2)\n", FEExtInfo->Mapping[0].extLocation ));
                     }
                     return status;
                 }
@@ -1674,7 +1674,7 @@ UDFAllocateFESpace(
                 if(Vcb->BSBM_Bitmap) {
                     uint32 lba = Ext->Mapping[i].extLocation;
                     if(UDFGetBadBit((uint32*)(Vcb->BSBM_Bitmap), lba)) {
-                        KdPrint(("Remove BB @ %x from FE charge\n", lba));
+                        UDFPrint(("Remove BB @ %x from FE charge\n", lba));
                         Ext->Mapping[i].extLength |= (EXTENT_NOT_RECORDED_NOT_ALLOCATED << 30);
                         Ext->Mapping[i].extLocation = 0;
                         continue;
@@ -1687,7 +1687,7 @@ UDFAllocateFESpace(
                     Ext->Mapping[i].extLength |= (EXTENT_NOT_RECORDED_ALLOCATED << 30);
                     return STATUS_INSUFFICIENT_RESOURCES;
                 }
-                KdPrint(("FE @ %x (3)\n", FEExtInfo->Mapping[0].extLocation ));
+                UDFPrint(("FE @ %x (3)\n", FEExtInfo->Mapping[0].extLocation ));
                 FEExtInfo->Length = Len;
                 FEExtInfo->Offset = 0;
                 FEExtInfo->Modified = TRUE;
@@ -1699,7 +1699,7 @@ UDFAllocateFESpace(
             status = UDFAllocFreeExtent(Vcb, Len,
                    UDFPartStart(Vcb, PartNum), UDFPartEnd(Vcb, PartNum), FEExtInfo, EXTENT_FLAG_VERIFY);
             if(OS_SUCCESS(status)) {
-                KdPrint(("FE @ %x (4)\n", FEExtInfo->Mapping[0].extLocation ));
+                UDFPrint(("FE @ %x (4)\n", FEExtInfo->Mapping[0].extLocation ));
             }
             return status;
         }
@@ -1860,7 +1860,9 @@ UDFMarkAllocatedAsRecorded(
             UDFPackMapping(Vcb, ExtInfo);
         }
         AdPrint(("Alloc->Rec (1) new %x\n", ExtInfo->Mapping));
+#ifdef UDF_DBG
         ASSERT(check_size == UDFGetExtentLength(ExtInfo->Mapping));
+#endif
         AdPrint(("Alloc->Rec: ExtInfo %x, Extent %x\n", ExtInfo, ExtInfo->Mapping));
         return STATUS_SUCCESS;
     }
@@ -1928,8 +1930,10 @@ UDFMarkAllocatedAsRecorded(
     ExtInfo->Mapping = NewExtent;
     if(TryPack)
         UDFPackMapping(Vcb, ExtInfo);
+#ifdef UDF_DBG
     ASSERT(check_size == UDFGetExtentLength(ExtInfo->Mapping));
     ASSERT(!(check_size & (LBS-1)));
+#endif
 
     AdPrint(("Alloc->Rec: ExtInfo %x, Extent %x\n", ExtInfo, ExtInfo->Mapping));
 
@@ -2293,7 +2297,7 @@ UDFResizeExtent(
                 int64 l2 = ((l-1)/MaxGrow + 1)*MaxGrow;
                 status = UDFResizeExtent(Vcb, PartNum, l2, AlwaysInIcb, ExtInfo);
                 if(!OS_SUCCESS(status)) {
-                    KdPrint(("Sub-call to UDFResizeExtent() failed (%x)\n", status));
+                    UDFPrint(("Sub-call to UDFResizeExtent() failed (%x)\n", status));
                     return status;
                 }
                 l = ExtInfo->Length;
@@ -2302,7 +2306,7 @@ UDFResizeExtent(
             while((Length - l) > MaxGrow) {
                 status = UDFResizeExtent(Vcb, PartNum, l+MaxGrow, AlwaysInIcb, ExtInfo);
                 if(!OS_SUCCESS(status)) {
-                    KdPrint(("Sub-call (2) to UDFResizeExtent() failed (%x)\n", status));
+                    UDFPrint(("Sub-call (2) to UDFResizeExtent() failed (%x)\n", status));
                     return status;
                 }
                 l = ExtInfo->Length;
@@ -2409,7 +2413,7 @@ UDFResizeExtent(
                         TmpExtInf.Mapping = (PEXTENT_MAP)MyAllocatePoolTag__(NonPagedPool , (i+1)*sizeof(EXTENT_MAP),
                                                                            MEM_EXTMAP_TAG);
                         if(!TmpExtInf.Mapping) {
-                            KdPrint(("UDFResizeExtent: !TmpExtInf.Mapping\n"));
+                            UDFPrint(("UDFResizeExtent: !TmpExtInf.Mapping\n"));
                             UDFReleaseResource(&(Vcb->BitMapResource1));
                             return STATUS_INSUFFICIENT_RESOURCES;
                         }
@@ -2502,7 +2506,7 @@ UDFResizeExtent(
                                                    &TmpExtInf,
                                                    ExtInfo->Flags /*& EXTENT_FLAG_ALLOC_MASK*/);
                 if(!OS_SUCCESS(status)) {
-                    KdPrint(("UDFResizeExtent: UDFAllocFreeExtent() failed (%x)\n", status));
+                    UDFPrint(("UDFResizeExtent: UDFAllocFreeExtent() failed (%x)\n", status));
                     return status;
                 }
                 ExtInfo->Mapping = UDFMergeMappings(ExtInfo->Mapping, TmpExtInf.Mapping);
@@ -2636,6 +2640,7 @@ UDFBuildAllocDescs(
     InitSz = Vcb->LBlockSize - FileInfo->Dloc->FileEntryLen;
     Allocs = (int8*)MyAllocatePool__(NonPagedPool, InitSz);
     if(!Allocs) {
+        *AllocData = NULL;
         AdPrint(("BuildAllocDesc: cant alloc %x bytes for Allocs\n", InitSz));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -2828,8 +2833,10 @@ UDFPackMapping(
     NewMap[j].extLength =
     NewMap[j].extLocation = 0;
 
+#ifdef UDF_DBG
     ASSERT(check_size == UDFGetExtentLength(ExtInfo->Mapping));
     ASSERT(check_size == UDFGetExtentLength(NewMap));
+#endif
 
     AdPrint(("Pack ExtInfo %x, NewMap %x, OldMap %x\n", ExtInfo, NewMap, OldMap));
     

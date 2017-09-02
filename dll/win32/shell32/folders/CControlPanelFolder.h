@@ -32,13 +32,13 @@ class CControlPanelFolder :
         /* both paths are parsible from the desktop */
         LPITEMIDLIST pidlRoot;  /* absolute pidl */
         int dwAttributes;       /* attributes returned by GetAttributesOf FIXME: use it */
+        CComPtr<IShellFolder2> m_regFolder;
 
         HRESULT WINAPI ExecuteFromIdList(LPCITEMIDLIST pidl);
 
     public:
         CControlPanelFolder();
         ~CControlPanelFolder();
-        HRESULT WINAPI FinalConstruct();
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
@@ -96,7 +96,6 @@ public:
     CCPLItemMenu();
     ~CCPLItemMenu();
     HRESULT WINAPI Initialize(UINT cidl, PCUITEMID_CHILD_ARRAY apidl);
-    HRESULT WINAPI FinalConstruct();
 
     // IContextMenu
     virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);

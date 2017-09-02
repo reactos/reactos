@@ -295,8 +295,8 @@
 295 stdcall GetUserNameW(ptr ptr)
 296 stdcall GetWindowsAccountDomainSid(ptr ptr ptr)
 297 stub I_QueryTagInformation
-298 stub I_ScIsSecurityProcess
-299 stub I_ScPnPGetServiceName
+298 stdcall I_ScIsSecurityProcess()
+299 stdcall I_ScPnPGetServiceName(ptr wstr long)
 300 stub I_ScSendTSMessage
 301 stdcall I_ScSetServiceBitsA(ptr long long long str)
 302 stdcall I_ScSetServiceBitsW(ptr long long long wstr)
@@ -313,7 +313,7 @@
 313 stdcall InitiateSystemShutdownExW(wstr wstr long long long long)
 314 stdcall InitiateSystemShutdownW(str str long long long)
 315 stub InstallApplication
-316 stdcall IsTextUnicode(ptr long ptr) ntdll.RtlIsTextUnicode
+316 stdcall IsTextUnicode(ptr long ptr)
 317 stdcall IsTokenRestricted(long)
 318 stub IsTokenUntrusted
 319 stdcall IsValidAcl(ptr)
@@ -674,8 +674,8 @@
 674 stub WmiQuerySingleInstanceMultipleA
 675 stub WmiQuerySingleInstanceMultipleW
 676 stub WmiQuerySingleInstanceW
-677 stdcall WmiReceiveNotificationsA() ntdll.EtwReceiveNotificationsA # FIXME prototype
-678 stdcall WmiReceiveNotificationsW() ntdll.EtwReceiveNotificationsW # FIXME prototype
+677 stdcall WmiReceiveNotificationsA(long long long long) ntdll.EtwReceiveNotificationsA
+678 stdcall WmiReceiveNotificationsW(long long long long) ntdll.EtwReceiveNotificationsW
 679 stub WmiSetSingleInstanceA
 680 stub WmiSetSingleInstanceW
 681 stub WmiSetSingleItemA

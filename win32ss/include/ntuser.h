@@ -13,7 +13,8 @@ typedef HANDLE HIMC;
 #define FIRST_USER_HANDLE 0x0020 /* first possible value for low word of user handle */
 #define LAST_USER_HANDLE 0xffef /* last possible value for low word of user handle */
 
-#define HANDLEENTRY_INDESTROY 1
+#define HANDLEENTRY_DESTROY 1
+#define HANDLEENTRY_INDESTROY 2
 
 typedef struct _USER_HANDLE_ENTRY
 {
@@ -1211,11 +1212,11 @@ NtUserBuildHimcList(
 DWORD
 NTAPI
 NtUserCalcMenuBar(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5);
+    HWND   hwnd,
+    DWORD  x,
+    DWORD  width,
+    DWORD  y,
+    LPRECT prc);
 
 DWORD
 NTAPI
@@ -2062,7 +2063,7 @@ NTAPI
 NtUserEvent(
     DWORD Unknown0);
 
-DWORD
+INT
 NTAPI
 NtUserExcludeUpdateRgn(
     HDC hDC,
@@ -2469,7 +2470,7 @@ NtUserGetUpdateRect(
     LPRECT lpRect,
     BOOL fErase);
 
-int
+INT
 NTAPI
 NtUserGetUpdateRgn(
     HWND hWnd,
@@ -2712,12 +2713,12 @@ NtUserPaintDesktop(
 DWORD
 NTAPI
 NtUserPaintMenuBar(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6);
+    HWND hWnd,
+    HDC hDC,
+    ULONG left,    // x,
+    ULONG right,   // width, // Scale the edge thickness, offset?
+    ULONG top,     // y, 
+    BOOL bActive); // DWORD Flags); DC_ACTIVE or WS_ACTIVECAPTION, by checking WNDS_ACTIVEFRAME and foreground.
 
 BOOL
 APIENTRY
@@ -2836,7 +2837,7 @@ NTAPI
 NtUserRegisterClassExWOW(
     WNDCLASSEXW* lpwcx,
     PUNICODE_STRING pustrClassName,
-    PUNICODE_STRING pustrCNVersion,
+    PUNICODE_STRING pustrCVersion,
     PCLSMENUNAME pClassMenuName,
     DWORD fnID,
     DWORD Flags,

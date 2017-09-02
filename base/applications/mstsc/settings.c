@@ -275,7 +275,10 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
                 else if (lpToken[0] == L's')
                 {
                     pRdpSettings->pSettings[i].Type = lpToken[0];
-                    lpToken = wcstok(NULL, szNewline);
+                    if (lpToken[2] == 13 || lpToken[2] == 10 || lpToken[2] == 0)
+                        lpToken[0] = 0; // terminate string
+                    else
+                        lpToken = wcstok(NULL, szNewline);
                     if (lpToken != NULL)
                         wcscpy(pRdpSettings->pSettings[i].Value.s, lpToken);
                 }
@@ -374,7 +377,6 @@ SaveRdpSettingsToFile(LPWSTR lpFile,
     /* use default file */
     if (lpFile == NULL)
     {
-#ifndef __REACTOS__
         HRESULT hr;
         LPITEMIDLIST lpidl= NULL;
 
@@ -392,10 +394,6 @@ SaveRdpSettingsToFile(LPWSTR lpFile,
                 CoTaskMemFree(lpidl);
             }
         }
-#else
-        wcscpy(pszPath, L"C:\\Default.rdp");
-        lpFile = pszPath;
-#endif
     }
 
     if (lpFile)
@@ -427,7 +425,6 @@ LoadRdpSettingsFromFile(PRDPSETTINGS pRdpSettings,
     /* use default file */
     if (lpFile == NULL)
     {
-#ifndef __REACTOS__  // remove when this is working
         HRESULT hr;
         LPITEMIDLIST lpidl= NULL;
 
@@ -445,10 +442,6 @@ LoadRdpSettingsFromFile(PRDPSETTINGS pRdpSettings,
                 CoTaskMemFree(lpidl);
             }
         }
-#else
-        wcscpy(pszPath, L"C:\\Default.rdp");
-        lpFile = pszPath;
-#endif
     }
 
     if (lpFile)

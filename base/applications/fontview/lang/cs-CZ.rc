@@ -2,17 +2,21 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALL "Nainstalovat"
-    IDS_PRINT "Tisk"
+    IDS_INSTALL "&Nainstalovat"
+    IDS_PRINT "&Tisk"
     IDS_STRING "Příliš žluťoučký kůň úpěl ďábelské ódy. 1234567890"
     IDS_OPEN "Otevřít soubor písma..."
     IDS_ERROR "Chyba"
     IDS_ERROR_NOMEM "K dokončení operace není dostatek paměti."
     IDS_ERROR_NOFONT "Soubor %1 není platným souborem písma."
     IDS_ERROR_NOCLASS "Inicializace okna aplikace selhala."
-    IDS_FILTER_LIST "All Supported Fonts (*.ttf;*.fon;*.otf)\0*.ttf;*.fon;*.otf\0\
-TrueType Font (*.ttf)\0*.ttf\0\
-OpenType Font (*.otf)\0*.otf\0\
-Font File (*.fon)\0*.fon\0\
-All Files (*.*)\0*.*\0"
+    IDS_FILTER_LIST "Podporované soubory písem (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+Písmo Font (*.fon;*.fnt)\0*.fon;*.fnt\0\
+Písmo TrueType (*.ttf)\0*.ttf\0\
+TrueType Font Collection (*.ttc)\0*.ttc\0\
+Písmo OpenType (*.otf)\0*.otf\0\
+OpenType Font Collection (*.otc)\0*.otc\0\
+Všechny soubory (*.*)\0*.*\0"
+    IDS_PREVIOUS "< &Previous"
+    IDS_NEXT "&Next >"
 END

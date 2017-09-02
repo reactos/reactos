@@ -170,7 +170,7 @@ Dns_StringToAddressEx(OUT PVOID Address,
     ULONG AddrSize = *AddressSize;
     IN6_ADDR Addr;
     BOOLEAN Return;
-    INT ErrorCode;
+    INT ErrorCode = ERROR_SUCCESS;
     CHAR AnsiName[INET6_ADDRSTRLEN + sizeof("ip6.arpa.")];
     ULONG Size = sizeof(AnsiName);
 

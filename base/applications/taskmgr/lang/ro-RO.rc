@@ -253,7 +253,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Con&firmă", IDOK, 120, 133, 50, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 174, 133, 50, 14
-    LTEXT "Aici se poate specifica repartiția calculelor efectuate de fiecare procesor în parte.", IDC_STATIC, 5, 5, 220, 16
+    LTEXT "Aici poate fi specificată repartiția calculelor efectuate de fiecare procesor în parte.", IDC_STATIC, 5, 5, 220, 16
     CONTROL "CPU 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
     CONTROL "CPU 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
     CONTROL "CPU 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 37, 10
@@ -337,9 +337,9 @@ STRINGTABLE
 BEGIN
     ID_FILE_NEW "Pornește un nou program."
     ID_OPTIONS_ALWAYSONTOP "Gestionarul rămâne deasupra celorlaltor ferestre până când e minimizat."
-    ID_OPTIONS_MINIMIZEONUSE "Gestionarul se minimizează automat când se comută la o aplicație."
+    ID_OPTIONS_MINIMIZEONUSE "Gestionarul va fi minimizat automat la comutarea către o aplicație."
     ID_OPTIONS_HIDEWHENMINIMIZED "La minimizare, ascunde Gestionarul de activități în zona de notificare."
-    ID_VIEW_REFRESH "Forțează Gestionarul să se actualizeze acum, indiferent Rata de împrospătare."
+    ID_VIEW_REFRESH "Forțează actualizarea Gestionarului acum, indiferent Rata de împrospătare."
     ID_VIEW_LARGE "Afișează aplicațiile reprezentându-le ca dale (pictograme mari)."
     ID_VIEW_SMALL "Afișează aplicațiile reprezentându-le ca pictograme (mici)."
     ID_VIEW_DETAILS "Afișează informații despre fiecare aplicație."
@@ -430,16 +430,16 @@ BEGIN
     IDS_MENU_SHOWKERNELTIMES "Afișea&ză timpi nucleu"
     IDS_CREATENEWTASK "Creare activitate nouă"
     IDS_CREATENEWTASK_DESC "Tastați numele unui program, dosar, document, sau a unei resurse de Internet, în vederea deschiderii în ReactOS."
-    IDS_MSG_ACCESSPROCESSAFF "Nu se poate accesa/stabili afinitatea."
+    IDS_MSG_ACCESSPROCESSAFF "Afinitatea nu a putut fi accesată/stabilită."
     IDS_MSG_PROCESSONEPRO "Procesul trebuie să aibă o afinitate de cel puțin un procesor."
     IDS_MSG_INVALIDOPTION "Opțiune nevalidă"
     IDS_MSG_UNABLEDEBUGPROCESS "Procesul nu poate fi depanat"
     IDS_MSG_WARNINGDEBUG "Operația de depanare poate duce la pierderi de date.\nSigur doriți să atașați aplicația de depanare?"
     IDS_MSG_TASKMGRWARNING "Avertisment"
-    IDS_MSG_WARNINGTERMINATING "Terminarea forțată a unui proces poate duce la pierderi\nde date sau la instabilitatea sistemului. Procesului nu i\nse va permite îndeplinirea formalităților de închidere.\nSigur doriți terminarea forțată a procesului?"
+    IDS_MSG_WARNINGTERMINATING "Terminarea forțată a unui proces poate duce la pierderi\nde date sau la instabilitatea sistemului. Procesului nu-i\nva fi permisă îndeplinirea formalităților de închidere.\nSigur doriți terminarea forțată a procesului?"
     IDS_MSG_UNABLETERMINATEPRO "Procesul nu poate fi oprit"
     IDS_MSG_CLOSESYSTEMPROCESS "Acesta este un proces critic de sistem. Gestionarul de aplicații nu va opri acest proces."
-    IDS_MSG_UNABLECHANGEPRIORITY "Nu se poate schimba prioritatea"
+    IDS_MSG_UNABLECHANGEPRIORITY "Prioritatea nu a putut fi schimbată"
     IDS_MSG_WARNINGCHANGEPRIORITY "Schimbarea priorității poate duce la efecte colaterale\nprecum instabilitatea sistemului.\nSigur doriți schimbarea priorității procesului?"
     IDS_MSG_TRAYICONCPUUSAGE "Utilizare procesor: %d%%"
     IDS_STATUS_MEMUSAGE "Utilizare memorie: %s / %s (%d%%)"

@@ -358,6 +358,106 @@ NEWco_IntGetScrollInfo(
   return (Mask & SIF_ALL) !=0;
 }
 
+/*************************************************************************
+ *           SCROLL_GetScrollBarInfo
+ *
+ * Internal helper for the API function
+ *
+ * PARAMS
+ *    hwnd     [I]  Handle of window with scrollbar(s)
+ *    idObject [I]  One of OBJID_CLIENT, OBJID_HSCROLL, or OBJID_VSCROLL
+ *    info     [IO] cbSize specifies the size of the structure
+ *
+ * RETURNS
+ *    FALSE if failed
+ */
+#if 0
+static BOOL SCROLL_GetScrollBarInfo(HWND hwnd, LONG idObject, LPSCROLLBARINFO info)
+{
+    LPSCROLLBAR_INFO infoPtr;
+    INT nBar;
+    INT nDummy;
+    DWORD style = GetWindowLongW(hwnd, GWL_STYLE);
+    BOOL pressed;
+    RECT rect;
+
+    switch (idObject)
+    {
+        case OBJID_CLIENT: nBar = SB_CTL; break;
+        case OBJID_HSCROLL: nBar = SB_HORZ; break;
+        case OBJID_VSCROLL: nBar = SB_VERT; break;
+        default: return FALSE;
+    }
+
+    /* handle invalid data structure */
+    if (info->cbSize != sizeof(*info))
+        return FALSE;
+
+    SCROLL_GetScrollBarRect(hwnd, nBar, &info->rcScrollBar, &nDummy,
+                            &info->dxyLineButton, &info->xyThumbTop);
+    /* rcScrollBar needs to be in screen coordinates */
+    GetWindowRect(hwnd, &rect);
+    OffsetRect(&info->rcScrollBar, rect.left, rect.top);
+
+    info->xyThumbBottom = info->xyThumbTop + info->dxyLineButton;
+
+    infoPtr = SCROLL_GetInternalInfo(hwnd, nBar, TRUE);
+    if (!infoPtr)
+        return FALSE;
+
+    /* Scroll bar state */
+    info->rgstate[0] = 0;
+    if ((nBar == SB_HORZ && !(style & WS_HSCROLL))
+        || (nBar == SB_VERT && !(style & WS_VSCROLL)))
+        info->rgstate[0] |= STATE_SYSTEM_INVISIBLE;
+    if (infoPtr->minVal >= infoPtr->maxVal - max(infoPtr->page - 1, 0))
+    {
+        if (!(info->rgstate[0] & STATE_SYSTEM_INVISIBLE))
+            info->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
+        else
+            info->rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
+    }
+    if (nBar == SB_CTL && !IsWindowEnabled(hwnd))
+        info->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
+    
+    pressed = ((nBar == SB_VERT) == SCROLL_trackVertical && GetCapture() == hwnd);
+    
+    /* Top/left arrow button state. MSDN says top/right, but I don't believe it */
+    info->rgstate[1] = 0;
+    if (pressed && SCROLL_trackHitTest == SCROLL_TOP_ARROW)
+        info->rgstate[1] |= STATE_SYSTEM_PRESSED;
+    if (infoPtr->flags & ESB_DISABLE_LTUP)
+        info->rgstate[1] |= STATE_SYSTEM_UNAVAILABLE;
+
+    /* Page up/left region state. MSDN says up/right, but I don't believe it */
+    info->rgstate[2] = 0;
+    if (infoPtr->curVal == infoPtr->minVal)
+        info->rgstate[2] |= STATE_SYSTEM_INVISIBLE;
+    if (pressed && SCROLL_trackHitTest == SCROLL_TOP_RECT)
+        info->rgstate[2] |= STATE_SYSTEM_PRESSED;
+
+    /* Thumb state */
+    info->rgstate[3] = 0;
+    if (pressed && SCROLL_trackHitTest == SCROLL_THUMB)
+        info->rgstate[3] |= STATE_SYSTEM_PRESSED;
+
+    /* Page down/right region state. MSDN says down/left, but I don't believe it */
+    info->rgstate[4] = 0;
+    if (infoPtr->curVal >= infoPtr->maxVal - 1)
+        info->rgstate[4] |= STATE_SYSTEM_INVISIBLE;
+    if (pressed && SCROLL_trackHitTest == SCROLL_BOTTOM_RECT)
+        info->rgstate[4] |= STATE_SYSTEM_PRESSED;
+    
+    /* Bottom/right arrow button state. MSDN says bottom/left, but I don't believe it */
+    info->rgstate[5] = 0;
+    if (pressed && SCROLL_trackHitTest == SCROLL_BOTTOM_ARROW)
+        info->rgstate[5] |= STATE_SYSTEM_PRESSED;
+    if (infoPtr->flags & ESB_DISABLE_RTDN)
+        info->rgstate[5] |= STATE_SYSTEM_UNAVAILABLE;
+        
+    return TRUE;
+}
+#endif
 static DWORD FASTCALL
 co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 {
@@ -575,6 +675,21 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
    IntGetScrollBarRect(Window, Bar, &(sbi->rcScrollBar));
    IntCalculateThumb(Window, Bar, sbi, pSBData);
 
+    /* Scroll bar state */
+    psbi->rgstate[0] = 0;
+    if ((Bar == SB_HORZ && !(Window->style & WS_HSCROLL))
+        || (Bar == SB_VERT && !(Window->style & WS_VSCROLL)))
+        psbi->rgstate[0] |= STATE_SYSTEM_INVISIBLE;
+    if (pSBData->posMin >= pSBData->posMax - max(pSBData->page - 1, 0))
+    {
+        if (!(psbi->rgstate[0] & STATE_SYSTEM_INVISIBLE))
+            psbi->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
+        else
+            psbi->rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
+    }
+    if (Bar == SB_CTL && !(Window->style & WS_DISABLED))
+        psbi->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
+
    RtlCopyMemory(psbi, sbi, sizeof(SCROLLBARINFO));
 
    return TRUE;
@@ -750,7 +865,7 @@ co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV)
          break;
       default:
          EngSetLastError(ERROR_INVALID_PARAMETER);
-         return FALSE;
+         return FALSE; /* Nothing to do! */
    }
 
    old_style = IntSetStyle( Wnd, set_bits, clear_bits );
@@ -761,11 +876,11 @@ co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV)
       //if (Wnd->style & WS_VSCROLL) IntUpdateSBInfo(Wnd, SB_VERT);
       /////
          /* Frame has been changed, let the window redraw itself */
-      co_WinPosSetWindowPos(Wnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-                            SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+      co_WinPosSetWindowPos( Wnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE
+                           | SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
       return TRUE;
    }
-   return FALSE;
+   return FALSE; /* no frame changes */
 }
 
 static void
@@ -1161,9 +1276,8 @@ NtUserEnableScrollBar(
    TRACE("Enter NtUserEnableScrollBar\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)) || // FIXME:
-         Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-         Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+   if (!(Window = UserGetWindowObject(hWnd)) ||
+        UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       RETURN(FALSE);
    }
@@ -1247,9 +1361,8 @@ NtUserSetScrollInfo(
    TRACE("Enter NtUserSetScrollInfo\n");
    UserEnterExclusive();
 
-   if(!(Window = UserGetWindowObject(hWnd)) || // FIXME:
-        Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-        Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+   if(!(Window = UserGetWindowObject(hWnd)) ||
+        UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       RETURN( 0);
    }

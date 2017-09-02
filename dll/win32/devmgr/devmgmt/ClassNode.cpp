@@ -114,7 +114,6 @@ CClassNode::ConvertResourceDescriptorToString(
     DWORD Size;
     DWORD dwError;
 
-
     // First check for a semi colon */
     ptr = wcschr(ResourceDescriptor, L';');
     if (ptr)
@@ -127,15 +126,18 @@ CClassNode::ConvertResourceDescriptorToString(
     {
         // This must be a dll resource based descriptor. Find the comma
         ptr = wcschr(ResourceDescriptor, L',');
-        if (ptr == NULL) return ERROR_INVALID_DATA;
+        if (ptr == NULL)
+            return ERROR_INVALID_DATA;
 
         // Terminate the string where the comma was
         *ptr = UNICODE_NULL;
 
         // Expand any environment strings
         Size = ExpandEnvironmentStringsW(&ResourceDescriptor[1], ModulePath, MAX_PATH);
-        if (Size > MAX_PATH) return ERROR_BUFFER_OVERFLOW;
-        if (Size == 0) return GetLastError();
+        if (Size > MAX_PATH)
+            return ERROR_BUFFER_OVERFLOW;
+        if (Size == 0)
+            return GetLastError();
 
         // Put the comma back and move past it
         *ptr = L',';
@@ -143,13 +145,15 @@ CClassNode::ConvertResourceDescriptorToString(
 
         // Load the dll
         hModule = LoadLibraryExW(ModulePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
-        if (hModule == NULL) return GetLastError();
+        if (hModule == NULL)
+            return GetLastError();
 
         // Convert the resource id to a number
         ResourceId = _wtoi(ptr);
 
         // If the number is negative, make it positive
-        if (ResourceId < 0) ResourceId = -ResourceId;
+        if (ResourceId < 0)
+            ResourceId = -ResourceId;
 
         // Load the string from the dll
         if (LoadStringW(hModule, ResourceId, ResString, 256))

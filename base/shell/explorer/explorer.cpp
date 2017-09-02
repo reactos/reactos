@@ -36,11 +36,6 @@ END_OBJECT_MAP()
 CExplorerModule                             gModule;
 CAtlWinModule                               gWinModule;
 
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
-
 static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 {
     if (bInitialize)
@@ -132,7 +127,7 @@ StartWithDesktop(IN HINSTANCE hInstance)
     hExplorerInstance = hInstance;
     hProcessHeap = GetProcessHeap();
 
-    LoadAdvancedSettings();
+    LoadTaskBarSettings();
     InitCommonControls();
     OleInitialize(NULL);
 
@@ -204,6 +199,8 @@ _tWinMain(IN HINSTANCE hInstance,
     * but before any TaskMgr instance (which has a shutdown level of 1).
     */
     SetProcessShutdownParameters(2, 0);
+
+    InitRSHELL();
 
 #if !WIN7_COMPAT_MODE
     BOOL CreateShellDesktop = FALSE;

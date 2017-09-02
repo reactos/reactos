@@ -36,7 +36,7 @@ Size = 2,1 Mio
 
 [Section.0419]
 Description = Позволяет получить доступ к общим папкам Windows и принтерам в ReactOS.
-Size = 2,1 МБ
+Size = 2,1 МиБ
 
 [Section.041f]
 Description = Size, ReactOS'la Windows paylaşılan dizinlere ve paylaşılan yazıcılara erişime olanak sağlar.

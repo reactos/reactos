@@ -1735,7 +1735,7 @@ BEGIN
     PUSHBUTTON "&Удалить", 7038, 80, 110, 67, 14, WS_GROUP
     PUSHBUTTON "С&войства", 7039, 153, 110, 67, 14, WS_GROUP
     GROUPBOX "Описание", -1, 7, 138, 213, 69
-    LTEXT "<protocol description>", 7040, 17, 150, 193, 48
+    LTEXT "<описание протокола>", 7040, 17, 150, 193, 48
 END
 
 7042 DIALOGEX 0, 0, 230, 215
@@ -1785,7 +1785,7 @@ BEGIN
     PUSHBUTTON "Ус&тановить...", 7037, 108, 71, 60, 14, WS_GROUP
     PUSHBUTTON "&Удалить", 7038, 172, 71, 60, 14, WS_GROUP
     PUSHBUTTON "&Свойства", 7039, 236, 71, 60, 14, WS_GROUP
-    LTEXT "<protocol description>", 7040, 21, 105, 273, 38
+    LTEXT "<описание протокола>", 7040, 21, 105, 273, 38
     LTEXT "Описание:", -1, 21, 95, 275, 8
 END
 

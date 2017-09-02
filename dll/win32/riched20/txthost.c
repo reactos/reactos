@@ -65,7 +65,7 @@ static HRESULT WINAPI ITextHostImpl_QueryInterface(ITextHost *iface, REFIID riid
     ITextHostImpl *This = impl_from_ITextHost(iface);
 
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_ITextHost)) {
-        *ppvObject = This;
+        *ppvObject = &This->ITextHost_iface;
         ITextHost_AddRef((ITextHost *)*ppvObject);
         return S_OK;
     }

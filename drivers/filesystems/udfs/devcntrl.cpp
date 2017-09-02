@@ -171,7 +171,7 @@ UDFCommonDeviceControl(
     PCHAR                   CdbData;
     PCHAR                   ModeSelectData;
 
-    KdPrint(("UDFCommonDeviceControl\n"));
+    UDFPrint(("UDFCommonDeviceControl\n"));
 
     _SEH2_TRY {
         // First, get a pointer to the current I/O stack location
@@ -197,14 +197,14 @@ UDFCommonDeviceControl(
             case IOCTL_UDF_REGISTER_AUTOFORMAT:
                 break;
             default:
-                KdPrint(("UDFCommonDeviceControl: STATUS_INVALID_PARAMETER %x for FsDevObj\n", IoControlCode));
+                UDFPrint(("UDFCommonDeviceControl: STATUS_INVALID_PARAMETER %x for FsDevObj\n", IoControlCode));
                 CompleteIrp = TRUE;
                 try_return(RC = STATUS_INVALID_PARAMETER);
             }
         } else {
             Ccb = (PtrUDFCCB)(FileObject->FsContext2);
             if(!Ccb) {
-                KdPrint(("  !Ccb\n"));
+                UDFPrint(("  !Ccb\n"));
                 goto ioctl_do_default;
             }
             ASSERT(Ccb);
@@ -225,7 +225,7 @@ UDFCommonDeviceControl(
                 case IOCTL_UDF_SET_FILE_ALLOCATION_MODE:
                     break;
                 default:
-                    KdPrint(("UDFCommonDeviceControl: STATUS_INVALID_PARAMETER %x for File/Dir Obj\n", IoControlCode));
+                    UDFPrint(("UDFCommonDeviceControl: STATUS_INVALID_PARAMETER %x for File/Dir Obj\n", IoControlCode));
                     try_return(RC = STATUS_INVALID_PARAMETER);
                 }
             }
@@ -323,7 +323,7 @@ UDFCommonDeviceControl(
             AcquiredVcb = TRUE;
         }
 
-        KdPrint(("UDF Irp %x, ctx %x, DevIoCtl %x\n", Irp, PtrIrpContext, IoControlCode));
+        UDFPrint(("UDF Irp %x, ctx %x, DevIoCtl %x\n", Irp, PtrIrpContext, IoControlCode));
 
         // We may wish to allow only   volume open operations.
         switch (IoControlCode) {
@@ -349,7 +349,7 @@ UDFCommonDeviceControl(
             ScsiCommand = Cdb->CDB6.OperationCode;
 
             if(ScsiCommand == SCSIOP_WRITE_CD) {
-                KdPrint(("Write10, LBA %2.2x%2.2x%2.2x%2.2x\n",
+                UDFPrint(("Write10, LBA %2.2x%2.2x%2.2x%2.2x\n",
                          Cdb->WRITE_CD.LBA[0],
                          Cdb->WRITE_CD.LBA[1],
                          Cdb->WRITE_CD.LBA[2],
@@ -357,7 +357,7 @@ UDFCommonDeviceControl(
                          ));
             } else
             if(ScsiCommand == SCSIOP_WRITE12) {
-                KdPrint(("Write12, LBA %2.2x%2.2x%2.2x%2.2x\n",
+                UDFPrint(("Write12, LBA %2.2x%2.2x%2.2x%2.2x\n",
                          Cdb->CDB12READWRITE.LBA[0],
                          Cdb->CDB12READWRITE.LBA[1],
                          Cdb->CDB12READWRITE.LBA[2],
@@ -374,7 +374,7 @@ UDFCommonDeviceControl(
                 case MODE_PAGE_MRW2:
                 case MODE_PAGE_WRITE_PARAMS:
                 case MODE_PAGE_MRW:
-                    KdPrint(("Unsafe MODE_SELECT_6 via pass-through (%2.2x)\n", ModeSelectData[0]));
+                    UDFPrint(("Unsafe MODE_SELECT_6 via pass-through (%2.2x)\n", ModeSelectData[0]));
                     goto unsafe_direct_scsi_cmd;
                 }
                 break; }
@@ -386,7 +386,7 @@ UDFCommonDeviceControl(
                 case MODE_PAGE_MRW2:
                 case MODE_PAGE_WRITE_PARAMS:
                 case MODE_PAGE_MRW:
-                    KdPrint(("Unsafe MODE_SELECT_10 via pass-through (%2.2x)\n", ModeSelectData[0]));
+                    UDFPrint(("Unsafe MODE_SELECT_10 via pass-through (%2.2x)\n", ModeSelectData[0]));
                     goto unsafe_direct_scsi_cmd;
                 }
                 break; }
@@ -401,12 +401,12 @@ UDFCommonDeviceControl(
             case SCSIOP_BLANK:
             case SCSIOP_WRITE12:
             case SCSIOP_SET_STREAMING:
-                KdPrint(("UDF Direct media modification via pass-through (%2.2x)\n", ScsiCommand));
+                UDFPrint(("UDF Direct media modification via pass-through (%2.2x)\n", ScsiCommand));
 unsafe_direct_scsi_cmd:
                 if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_MOUNTED))
                     goto ioctl_do_default;
 
-                KdPrint(("Forget this volume\n"));
+                UDFPrint(("Forget this volume\n"));
                 // Acquire Vcb resource (Shared -> Exclusive)
                 UDFInterlockedIncrement((PLONG)&(Vcb->VCBOpenCount));
                 UDFReleaseResource(&(Vcb->VCBResource));
@@ -447,7 +447,7 @@ unsafe_direct_scsi_cmd:
                 // some CD-recording libraries
                 Vcb->SerialNumber--;
 
-                KdPrint(("Forgotten\n"));
+                UDFPrint(("Forgotten\n"));
 
                 goto notify_media_change;
 
@@ -455,7 +455,7 @@ unsafe_direct_scsi_cmd:
             case SCSIOP_DOORLOCK:
             case SCSIOP_DOORUNLOCK:
             case SCSIOP_MEDIUM_REMOVAL:
-                KdPrint(("UDF Medium/Tray control IOCTL via pass-through\n"));
+                UDFPrint(("UDF Medium/Tray control IOCTL via pass-through\n"));
             }
             goto ioctl_do_default;
 
@@ -473,7 +473,7 @@ notify_media_change:
 
         case IOCTL_UDF_REGISTER_AUTOFORMAT: {
 
-            KdPrint(("UDF Register Autoformat\n"));
+            UDFPrint(("UDF Register Autoformat\n"));
             if(UDFGlobalData.AutoFormatCount) {
                 RC = STATUS_SHARING_VIOLATION;
             } else {
@@ -487,7 +487,7 @@ notify_media_change:
 
         case IOCTL_UDF_DISABLE_DRIVER: {
 
-            KdPrint(("UDF Disable driver\n"));
+            UDFPrint(("UDF Disable driver\n"));
             IoUnregisterFileSystem(UDFGlobalData.UDFDeviceObject);
             // Now, delete any device objects, etc. we may have created
             if (UDFGlobalData.UDFDeviceObject) {
@@ -513,7 +513,7 @@ notify_media_change:
             break;
         }
         case IOCTL_UDF_INVALIDATE_VOLUMES: {
-            KdPrint(("UDF Invaidate volume\n"));
+            UDFPrint(("UDF Invaidate volume\n"));
             if(AcquiredVcb) {
                 UDFReleaseResource(&(Vcb->VCBResource));
                 AcquiredVcb = FALSE;
@@ -594,13 +594,13 @@ notify_media_change:
 
         //case FSCTL_GET_RETRIEVAL_POINTERS
         case IOCTL_UDF_GET_RETRIEVAL_POINTERS: {
-            KdPrint(("UDF: Get Retrieval Pointers\n"));
+            UDFPrint(("UDF: Get Retrieval Pointers\n"));
             RC = UDFGetRetrievalPointers( PtrIrpContext, Irp, 0 );
             CompleteIrp = TRUE;
             break;
         }
         case IOCTL_UDF_GET_SPEC_RETRIEVAL_POINTERS: {
-            KdPrint(("UDF: Get Spec Retrieval Pointers\n"));
+            UDFPrint(("UDF: Get Spec Retrieval Pointers\n"));
             PUDF_GET_SPEC_RETRIEVAL_POINTERS_IN SpecRetrPointer;
             SpecRetrPointer = (PUDF_GET_SPEC_RETRIEVAL_POINTERS_IN)(Irp->AssociatedIrp.SystemBuffer);
             RC = UDFGetRetrievalPointers( PtrIrpContext, Irp, SpecRetrPointer->Special );
@@ -608,14 +608,14 @@ notify_media_change:
             break;
         }
         case IOCTL_UDF_GET_FILE_ALLOCATION_MODE: {
-            KdPrint(("UDF: Get File Alloc mode (from ICB)\n"));
+            UDFPrint(("UDF: Get File Alloc mode (from ICB)\n"));
             RC = UDFGetFileAllocModeFromICB( PtrIrpContext, Irp );
             CompleteIrp = TRUE;
             break;
         }
 #ifndef UDF_READ_ONLY_BUILD
         case IOCTL_UDF_SET_FILE_ALLOCATION_MODE: {
-            KdPrint(("UDF: Set File Alloc mode\n"));
+            UDFPrint(("UDF: Set File Alloc mode\n"));
             RC = UDFSetFileAllocModeFromICB( PtrIrpContext, Irp );
             CompleteIrp = TRUE;
             break;
@@ -650,24 +650,24 @@ notify_media_change:
 
             PUDF_GET_VERSION_OUT udf_ver;
 
-            KdPrint(("UDFUserFsCtrlRequest: IOCTL_UDF_GET_VERSION\n"));
+            UDFPrint(("UDFUserFsCtrlRequest: IOCTL_UDF_GET_VERSION\n"));
 
             Irp->IoStatus.Information = 0;
             CompleteIrp = TRUE;
 
             if(!IrpSp->Parameters.DeviceIoControl.OutputBufferLength) {
-                KdPrint(("!OutputBufferLength\n"));
+                UDFPrint(("!OutputBufferLength\n"));
                 try_return(RC = STATUS_SUCCESS);
             }
             //  Check the size of the output buffer.
             if(IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(UDF_GET_VERSION_OUT)) {
-                KdPrint(("OutputBufferLength < %x\n", sizeof(UDF_GET_VERSION_OUT)));
+                UDFPrint(("OutputBufferLength < %x\n", sizeof(UDF_GET_VERSION_OUT)));
                 try_return(RC = STATUS_BUFFER_TOO_SMALL);
             }
 
             udf_ver = (PUDF_GET_VERSION_OUT)(Irp->AssociatedIrp.SystemBuffer);
             if(!udf_ver) {
-                KdPrint(("!udf_ver\n"));
+                UDFPrint(("!udf_ver\n"));
                 try_return(RC = STATUS_INVALID_USER_BUFFER);
             }
 
@@ -685,23 +685,23 @@ notify_media_change:
                 (Vcb->CompatFlags & UDF_VCB_IC_DIRTY_RO)) 
                     ||
                (Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) ) {
-                KdPrint(("  UDF_USER_FS_FLAGS_RO\n"));
+                UDFPrint(("  UDF_USER_FS_FLAGS_RO\n"));
                 udf_ver->FSFlags |= UDF_USER_FS_FLAGS_RO;
             }
             if(Vcb->VCBFlags & UDF_VCB_FLAGS_OUR_DEVICE_DRIVER) {
-                KdPrint(("  UDF_USER_FS_FLAGS_OUR_DRIVER\n"));
+                UDFPrint(("  UDF_USER_FS_FLAGS_OUR_DRIVER\n"));
                 udf_ver->FSFlags |= UDF_USER_FS_FLAGS_OUR_DRIVER;
             }
             if(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK) {
-                KdPrint(("  UDF_USER_FS_FLAGS_RAW\n"));
+                UDFPrint(("  UDF_USER_FS_FLAGS_RAW\n"));
                 udf_ver->FSFlags |= UDF_USER_FS_FLAGS_RAW;
             }
             if(Vcb->VCBFlags & UDF_VCB_FLAGS_MEDIA_READ_ONLY) {
-                KdPrint(("  UDF_USER_FS_FLAGS_MEDIA_RO\n"));
+                UDFPrint(("  UDF_USER_FS_FLAGS_MEDIA_RO\n"));
                 udf_ver->FSFlags |= UDF_USER_FS_FLAGS_MEDIA_RO;
             }
             if(Vcb->FP_disc) {
-                KdPrint(("  UDF_USER_FS_FLAGS_FP\n"));
+                UDFPrint(("  UDF_USER_FS_FLAGS_FP\n"));
                 udf_ver->FSFlags |= UDF_USER_FS_FLAGS_FP;
             }
             udf_ver->FSCompatFlags = Vcb->CompatFlags;
@@ -718,24 +718,24 @@ notify_media_change:
             PUDF_SET_OPTIONS_IN udf_opt;
             BOOLEAN PrevVerifyOnWrite;
 
-            KdPrint(("UDF: IOCTL_UDF_SET_OPTIONS\n"));
+            UDFPrint(("UDF: IOCTL_UDF_SET_OPTIONS\n"));
 
             Irp->IoStatus.Information = 0;
             CompleteIrp = TRUE;
 
             if(IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(UDF_SET_OPTIONS_IN)) {
-                KdPrint(("InputBufferLength < %x\n", sizeof(UDF_SET_OPTIONS_IN)));
+                UDFPrint(("InputBufferLength < %x\n", sizeof(UDF_SET_OPTIONS_IN)));
                 try_return(RC = STATUS_BUFFER_TOO_SMALL);
             }
 
             udf_opt = (PUDF_SET_OPTIONS_IN)(Irp->AssociatedIrp.SystemBuffer);
             if(!udf_opt) {
-                KdPrint(("!udf_opt\n"));
+                UDFPrint(("!udf_opt\n"));
                 try_return(RC = STATUS_INVALID_USER_BUFFER);
             }
 
             if((udf_opt->header.Flags & UDF_SET_OPTIONS_FLAG_MASK) != UDF_SET_OPTIONS_FLAG_TEMPORARY) {
-                KdPrint(("invalid opt target\n"));
+                UDFPrint(("invalid opt target\n"));
                 try_return(RC = STATUS_INVALID_PARAMETER);
             }
 
@@ -772,19 +772,19 @@ notify_media_change:
 
             PUDF_GET_OPTIONS_VERSION_OUT udf_opt_ver;
 
-            KdPrint(("UDF: IOCTL_UDF_GET_OPTIONS_VERSION\n"));
+            UDFPrint(("UDF: IOCTL_UDF_GET_OPTIONS_VERSION\n"));
 
             Irp->IoStatus.Information = 0;
             CompleteIrp = TRUE;
 
             if(IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(UDF_GET_OPTIONS_VERSION_OUT)) {
-                KdPrint(("OutputBufferLength < %x\n", sizeof(UDF_GET_OPTIONS_VERSION_OUT)));
+                UDFPrint(("OutputBufferLength < %x\n", sizeof(UDF_GET_OPTIONS_VERSION_OUT)));
                 try_return(RC = STATUS_BUFFER_TOO_SMALL);
             }
 
             udf_opt_ver = (PUDF_GET_OPTIONS_VERSION_OUT)(Irp->AssociatedIrp.SystemBuffer);
             if(!udf_opt_ver) {
-                KdPrint(("!udf_opt-ver\n"));
+                UDFPrint(("!udf_opt-ver\n"));
                 try_return(RC = STATUS_INVALID_USER_BUFFER);
             }
 /*
@@ -803,14 +803,14 @@ notify_media_change:
 #endif //0
         case IOCTL_CDRW_RESET_DRIVER:
 
-            KdPrint(("UDF: IOCTL_CDRW_RESET_DRIVER\n"));
+            UDFPrint(("UDF: IOCTL_CDRW_RESET_DRIVER\n"));
             Vcb->MediaLockCount = 0;
             Vcb->VCBFlags &= ~UDF_VCB_FLAGS_MEDIA_LOCKED;
             goto ioctl_do_default;
 
         case FSCTL_ALLOW_EXTENDED_DASD_IO:
 
-            KdPrint(("UDFUserFsCtrlRequest: FSCTL_ALLOW_EXTENDED_DASD_IO\n"));
+            UDFPrint(("UDFUserFsCtrlRequest: FSCTL_ALLOW_EXTENDED_DASD_IO\n"));
             // DASD i/o is always permitted
             // So, no-op this call
             RC = STATUS_SUCCESS;
@@ -822,7 +822,7 @@ notify_media_change:
 
         case FSCTL_IS_VOLUME_DIRTY:
 
-            KdPrint(("UDFUserFsCtrlRequest: FSCTL_IS_VOLUME_DIRTY\n"));
+            UDFPrint(("UDFUserFsCtrlRequest: FSCTL_IS_VOLUME_DIRTY\n"));
             // DASD i/o is always permitted
             // So, no-op this call
             RC = UDFIsVolumeDirty(PtrIrpContext, Irp);
@@ -833,18 +833,18 @@ notify_media_change:
         case IOCTL_DISK_EJECT_MEDIA:
         case IOCTL_CDROM_EJECT_MEDIA: {
 
-            KdPrint(("UDF Reset/Eject request\n"));
+            UDFPrint(("UDF Reset/Eject request\n"));
 //            PPREVENT_MEDIA_REMOVAL_USER_IN Buf;
 
             if(Vcb->EjectWaiter) {
-                KdPrint(("  Vcb->EjectWaiter present\n"));
+                UDFPrint(("  Vcb->EjectWaiter present\n"));
                 Irp->IoStatus.Information = 0;
                 Vcb->EjectWaiter->SoftEjectReq = TRUE;
                 Vcb->SoftEjectReq = TRUE;
                 CompleteIrp = TRUE;
                 try_return(RC = STATUS_SUCCESS);
             }
-            KdPrint(("  !Vcb->EjectWaiter\n"));
+            UDFPrint(("  !Vcb->EjectWaiter\n"));
             goto ioctl_do_default;
 /*
             Buf = (PPREVENT_MEDIA_REMOVAL_USER_IN)MyAllocatePool__(NonPagedPool, sizeof(PREVENT_MEDIA_REMOVAL_USER_IN));
@@ -869,7 +869,7 @@ notify_media_change:
         }
         case IOCTL_CDROM_DISK_TYPE: {
 
-            KdPrint(("UDF Cdrom Disk Type\n"));
+            UDFPrint(("UDF Cdrom Disk Type\n"));
             CompleteIrp = TRUE;
             //  Verify the Vcb in this case to detect if the volume has changed.
             Irp->IoStatus.Information = 0;
@@ -900,15 +900,15 @@ notify_media_change:
         case IOCTL_STORAGE_MEDIA_REMOVAL:
         case IOCTL_DISK_MEDIA_REMOVAL:
         case IOCTL_CDROM_MEDIA_REMOVAL: {
-            KdPrint(("UDF Lock/Unlock\n"));
+            UDFPrint(("UDF Lock/Unlock\n"));
             PPREVENT_MEDIA_REMOVAL_USER_IN buffer; // user supplied buffer
             buffer = (PPREVENT_MEDIA_REMOVAL_USER_IN)(Irp->AssociatedIrp.SystemBuffer);
             if(!buffer) {
                 if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_MOUNTED)) {
-                    KdPrint(("!mounted\n"));
+                    UDFPrint(("!mounted\n"));
                     goto ioctl_do_default;
                 }
-                KdPrint(("abort\n"));
+                UDFPrint(("abort\n"));
                 CompleteIrp = TRUE;
                 Irp->IoStatus.Information = 0;
                 UnsafeIoctl = FALSE;
@@ -918,9 +918,9 @@ notify_media_change:
             if(!buffer->PreventMediaRemoval &&
                !Vcb->MediaLockCount) {
 
-                KdPrint(("!locked + unlock req\n"));
+                UDFPrint(("!locked + unlock req\n"));
                 if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_MOUNTED)) {
-                    KdPrint(("!mounted\n"));
+                    UDFPrint(("!mounted\n"));
                     goto ioctl_do_default;
                 }
 #if 0
@@ -954,40 +954,40 @@ notify_media_change:
                 // just ignore
 #endif
 ignore_lock:
-                KdPrint(("ignore lock/unlock\n"));
+                UDFPrint(("ignore lock/unlock\n"));
                 CompleteIrp = TRUE;
                 Irp->IoStatus.Information = 0;
                 RC = STATUS_SUCCESS;
                 break;
             }
             if(buffer->PreventMediaRemoval) {
-                KdPrint(("lock req\n"));
+                UDFPrint(("lock req\n"));
                 Vcb->MediaLockCount++;
                 Vcb->VCBFlags |= UDF_VCB_FLAGS_MEDIA_LOCKED;
                 UnsafeIoctl = FALSE;
             } else {
-                KdPrint(("unlock req\n"));
+                UDFPrint(("unlock req\n"));
                 if(Vcb->MediaLockCount) {
-                    KdPrint(("lock count %d\n", Vcb->MediaLockCount));
+                    UDFPrint(("lock count %d\n", Vcb->MediaLockCount));
                     UnsafeIoctl = FALSE;
                     Vcb->MediaLockCount--;
                 }
             }
             if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_MOUNTED)) {
-                KdPrint(("!mounted\n"));
+                UDFPrint(("!mounted\n"));
                 goto ioctl_do_default;
             }
             goto ignore_lock;
         }
         default:
 
-            KdPrint(("default processing Irp %x, ctx %x, DevIoCtl %x\n", Irp, PtrIrpContext, IoControlCode));
+            UDFPrint(("default processing Irp %x, ctx %x, DevIoCtl %x\n", Irp, PtrIrpContext, IoControlCode));
 ioctl_do_default:
 
             // make sure volume is Sync'ed BEFORE sending unsafe IOCTL
             if(Vcb && UnsafeIoctl) {
                 UDFFlushLogicalVolume(NULL, NULL, Vcb, 0);
-                KdPrint(("  sync'ed\n"));
+                UDFPrint(("  sync'ed\n"));
             }
             // Invoke the lower level driver in the chain.
             //PtrNextIoStackLocation = IoGetNextIrpStackLocation(Irp);
@@ -1007,7 +1007,7 @@ ioctl_do_default:
         }
 
         if(Vcb && UnsafeIoctl) {
-            KdPrint(("  set UnsafeIoctl\n"));
+            UDFPrint(("  set UnsafeIoctl\n"));
             Vcb->VCBFlags |= UDF_VCB_FLAGS_UNSAFE_IOCTL;
         }
 
@@ -1026,7 +1026,7 @@ try_exit: NOTHING;
 
         if (!_SEH2_AbnormalTermination() &&
             CompleteIrp) {
-            KdPrint(("  complete Irp %x, ctx %x, status %x, iolen %x\n",
+            UDFPrint(("  complete Irp %x, ctx %x, status %x, iolen %x\n",
                 Irp, PtrIrpContext, RC, Irp->IoStatus.Information));
             Irp->IoStatus.Status = RC;
             // complete the IRP
@@ -1065,9 +1065,9 @@ UDFDevIoctlCompletion(
     ULONG                   IoControlCode = 0;*/
     PtrUDFIrpContext       PtrIrpContext = (PtrUDFIrpContext)Context;
 
-    KdPrint(("UDFDevIoctlCompletion Irp %x, ctx %x\n", Irp, Context));
+    UDFPrint(("UDFDevIoctlCompletion Irp %x, ctx %x\n", Irp, Context));
     if (Irp->PendingReturned) {
-        KdPrint(("  IoMarkIrpPending\n"));
+        UDFPrint(("  IoMarkIrpPending\n"));
         IoMarkIrpPending(Irp);
     }
 
@@ -1111,7 +1111,7 @@ VOID           *BufferPointer)
     ULONG                       LengthOfMatchedName = 0;
     WCHAR                *NameToBeMatched = RequestBuffer->FilePathName;
 
-    KdPrint(("UDFHandleQueryPath\n"));
+    UDFPrint(("UDFHandleQueryPath\n"));
     // So here we are. Simply check the name supplied.
     // We can use whatever algorithm we like to determine whether the
     // sent in name is acceptable.
@@ -1142,7 +1142,7 @@ UDFGetFileAllocModeFromICB(
     PtrUDFCCB Ccb;
     PUDF_GET_FILE_ALLOCATION_MODE_OUT OutputBuffer;
 
-    KdPrint(("UDFGetFileAllocModeFromICB\n"));
+    UDFPrint(("UDFGetFileAllocModeFromICB\n"));
 
     // Decode the file object, the only type of opens we accept are
     // user volume opens.
@@ -1181,7 +1181,7 @@ UDFSetFileAllocModeFromICB(
     NTSTATUS RC;
     UCHAR AllocMode;
 
-    KdPrint(("UDFSetFileAllocModeFromICB\n"));
+    UDFPrint(("UDFSetFileAllocModeFromICB\n"));
 
     Ccb = (PtrUDFCCB)(IrpSp->FileObject->FsContext2);
     Fcb = Ccb->Fcb;

@@ -21,6 +21,8 @@ GdiProcessCreate(PEPROCESS Process)
     ASSERT(ppiCurrent);
 
     InitializeListHead(&ppiCurrent->PrivateFontListHead);
+    InitializeListHead(&ppiCurrent->PrivateMemFontListHead);
+    ppiCurrent->PrivateMemFontHandleCount = 0;
     ExInitializeFastMutex(&ppiCurrent->PrivateFontListLock);
 
     InitializeListHead(&ppiCurrent->GDIBrushAttrFreeList);
@@ -47,6 +49,8 @@ GdiProcessDestroy(PEPROCESS Process)
     PPROCESSINFO ppiCurrent = PsGetProcessWin32Process(Process);
     ASSERT(ppiCurrent);
     ASSERT(ppiCurrent->peProcess == Process);
+
+    IntGdiCleanupPrivateFontsForProcess();
 
     /* And GDI ones too */
     GDI_CleanupForProcess(Process);

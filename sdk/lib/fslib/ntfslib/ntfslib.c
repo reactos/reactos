@@ -23,7 +23,7 @@ NtfsFormat(IN PUNICODE_STRING DriveRoot,
 }
 
 
-NTSTATUS WINAPI
+NTSTATUS NTAPI
 NtfsChkdsk(IN PUNICODE_STRING DriveRoot,
            IN BOOLEAN FixErrors,
            IN BOOLEAN Verbose,

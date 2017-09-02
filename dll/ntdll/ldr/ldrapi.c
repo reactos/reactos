@@ -17,7 +17,7 @@
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY LdrpUnloadHead;
-LONG LdrpLoaderLockAcquisitonCount;
+LONG LdrpLoaderLockAcquisitionCount;
 BOOLEAN LdrpShowRecursiveLoads, LdrpBreakOnRecursiveDllLoads;
 UNICODE_STRING LdrApiDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
 ULONG AlternateResourceModuleCount;
@@ -90,7 +90,7 @@ LdrpMakeCookie(VOID)
 {
     /* Generate a cookie */
     return (((ULONG_PTR)NtCurrentTeb()->RealClientId.UniqueThread & 0xFFF) << 16) |
-                        (_InterlockedIncrement(&LdrpLoaderLockAcquisitonCount) & 0xFFFF);
+            (_InterlockedIncrement(&LdrpLoaderLockAcquisitionCount) & 0xFFFF);
 }
 
 /*
@@ -580,7 +580,7 @@ LdrGetDllHandleEx(IN ULONG Flags,
     }
     else if (Status != STATUS_SXS_KEY_NOT_FOUND)
     {
-        /* Unrecoverable SxS failure; */
+        /* Unrecoverable SxS failure */
         goto Quickie;
     }
     else
@@ -1404,7 +1404,12 @@ LdrUnloadDll(IN PVOID BaseAddress)
                         LdrEntry->EntryPoint);
             }
 
-            /* FIXME: Call Shim Engine and notify */
+            /* Call Shim Engine and notify */
+            if (g_ShimsEnabled)
+            {
+                VOID (NTAPI* SE_DllUnloaded)(PVOID) = RtlDecodeSystemPointer(g_pfnSE_DllUnloaded);
+                SE_DllUnloaded(LdrEntry);
+            }
 
             /* Unlink it */
             CurrentEntry = LdrEntry;

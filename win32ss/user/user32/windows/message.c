@@ -13,6 +13,22 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+
+#ifdef __i386__
+/* For bad applications which provide bad (non stdcall) WndProc */
+extern
+LRESULT
+__cdecl
+CALL_EXTERN_WNDPROC(
+     WNDPROC WndProc,
+     HWND hWnd,
+     UINT Msg,
+     WPARAM wParam,
+     LPARAM lParam);
+#else
+#  define CALL_EXTERN_WNDPROC(proc, h, m, w, l) proc(h, m, w, l)
+#endif
+
 /* From wine: */
 /* flag for messages that contain pointers */
 /* 32 messages per entry, messages 0..31 map to bits 0..31 */
@@ -28,8 +44,7 @@ static const unsigned int message_pointer_flags[] =
     SET(WM_GETMINMAXINFO) | SET(WM_DRAWITEM) | SET(WM_MEASUREITEM) | SET(WM_DELETEITEM) |
     SET(WM_COMPAREITEM),
     /* 0x40 - 0x5f */
-    SET(WM_WINDOWPOSCHANGING) | SET(WM_WINDOWPOSCHANGED) | SET(WM_COPYDATA) |
-    SET(WM_COPYGLOBALDATA) | SET(WM_NOTIFY) | SET(WM_HELP),
+    SET(WM_WINDOWPOSCHANGING) | SET(WM_WINDOWPOSCHANGED) | SET(WM_COPYDATA) | SET(WM_COPYGLOBALDATA) | SET(WM_HELP),
     /* 0x60 - 0x7f */
     SET(WM_STYLECHANGING) | SET(WM_STYLECHANGED),
     /* 0x80 - 0x9f */
@@ -919,6 +934,7 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
           /* Ansi string might contain MBCS chars so we need 2 * the number of chars */
           AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, UnicodeMsg->wParam * 2);
           //ERR("WM_GETTEXT U2A Size %d\n",AnsiMsg->wParam);
+
           if (!AnsiMsg->lParam) return FALSE;
           break;
         }
@@ -1393,7 +1409,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
+  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog, DlgOverride = FALSE;
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
 
@@ -1411,10 +1427,9 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   Hook = BeginIfHookedUserApiHook();
   if (Hook)
   {
-     if (!Dialog)
-        MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
-     else
-        MsgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+     if (Dialog)
+        DlgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+     MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
   }
 
   if (IsAnsiProc)
@@ -1431,11 +1446,11 @@ IntCallWindowProcW(BOOL IsAnsiProc,
           goto Exit;
       }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                PreResult = guah.PreWndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
             else
                PreResult = guah.PreDefDlgProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
@@ -1448,21 +1463,26 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      _SEH2_TRY // wine does this.
+      if (!Dialog)
+      Result = CALL_EXTERN_WNDPROC(WndProc, AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
+      else
       {
-         Result = WndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
+      _SEH2_TRY
+      {
+         Result = CALL_EXTERN_WNDPROC(WndProc, AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Exception when calling Ansi WndProc %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
+         ERR("Exception Dialog Ansi %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
+      }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                guah.PostWndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
             else
                guah.PostDefDlgProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
@@ -1480,11 +1500,11 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   }
   else
   {
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                PreResult = guah.PreWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
             else
                PreResult = guah.PreDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
@@ -1497,21 +1517,26 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
+      if (!Dialog)
+      Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
+      else
+      {
       _SEH2_TRY
       {
-         Result = WndProc(hWnd, Msg, wParam, lParam);
+         Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Exception when calling unicode WndProc %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
+         ERR("Exception Dialog unicode %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
+      }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                guah.PostWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
             else
                guah.PostDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
@@ -1539,7 +1564,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
+  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog, DlgOverride = FALSE;
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
 
@@ -1560,19 +1585,18 @@ IntCallWindowProcA(BOOL IsAnsiProc,
   Hook = BeginIfHookedUserApiHook();
   if (Hook)
   {
-     if (!Dialog)
-        MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
-     else
-        MsgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+     if (Dialog)
+        DlgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+     MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
   }
 
   if (IsAnsiProc)
   {
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                PreResult = guah.PreWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
             else
                PreResult = guah.PreDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
@@ -1585,21 +1609,26 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
+      if (!Dialog)
+      Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
+      else
+      {
       _SEH2_TRY
       {
-         Result = WndProc(hWnd, Msg, wParam, lParam);
+         Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Exception when calling Ansi WndProc %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
+         ERR("Exception Dialog Ansi %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
+      }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                guah.PostWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
             else
                guah.PostDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
@@ -1624,11 +1653,11 @@ IntCallWindowProcA(BOOL IsAnsiProc,
           goto Exit;
       }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                PreResult = guah.PreWndProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
             else
                PreResult = guah.PreDefDlgProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
@@ -1641,22 +1670,26 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
+      if (!Dialog)
+      Result = CALL_EXTERN_WNDPROC(WndProc, UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam);
+      else
+      {
       _SEH2_TRY
       {
-         Result = WndProc(UnicodeMsg.hwnd, UnicodeMsg.message,
-                          UnicodeMsg.wParam, UnicodeMsg.lParam);
+         Result = CALL_EXTERN_WNDPROC(WndProc, UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         ERR("Exception when calling unicode WndProc %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
+         ERR("Exception Dialog unicode %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
+      }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                guah.PostWndProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
             else
                guah.PostDefDlgProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );

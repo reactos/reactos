@@ -31,7 +31,7 @@ Size = 5,0 Mio
 [Section.0419]
 License = Бесплатно
 Description = Компактный универсальный графический редактор. Эта версия имеет некоторые ограничения. Русификатор: http://static.infomaniak.ch/photofiltre/utils/StudioRU.zip
-Size = 5,0 МБ
+Size = 5,0 МиБ
 
 [Section.041f]
 License = Ücretsiz

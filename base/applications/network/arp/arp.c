@@ -42,11 +42,11 @@
 /*
  * Globals
  */
-const char SEPERATOR = '-';
+const char SEPARATOR = '-';
 int _CRT_glob = 0; // stop * from listing dir files in arp -d *
 
 /*
- * function declerations
+ * function declarations
  */
 DWORD DoFormatMessage(VOID);
 INT PrintEntries(PMIB_IPNETROW pIpAddRow);
@@ -220,7 +220,7 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     for (i=0; i < pIpNetTable->dwNumEntries; i++)
     {
 
-        /* if the user has supplied their own internet addesss *
+        /* if the user has supplied their own internet address *
          * only print the arp entry which matches that */
         if (pszInetAddr)
         {
@@ -287,7 +287,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     }
     for (i=0; i<17; i++)
     {
-        if (pszEthAddr[i] == SEPERATOR)
+        if (pszEthAddr[i] == SEPARATOR)
             continue;
 
         if (!isxdigit(pszEthAddr[i]))
@@ -568,24 +568,30 @@ INT main(int argc, char* argv[])
                      else if ((argc == 5) && ((strcmp(argv[3], "-N")) == 0))
                          DisplayArpEntries(argv[2], argv[4]);
                      else
+                     {
                          Usage();
                          return EXIT_FAILURE;
+                     }
                      break;
            case 'd': if (argc == 3)
                          Deletehost(argv[2], NULL);
                      else if (argc == 4)
                          Deletehost(argv[2], argv[3]);
                      else
+                     {
                          Usage();
                          return EXIT_FAILURE;
+                     }
                      break;
            case 's': if (argc == 4)
                          Addhost(argv[2], argv[3], NULL);
                      else if (argc == 5)
                          Addhost(argv[2], argv[3], argv[4]);
                      else
+                     {
                          Usage();
                          return EXIT_FAILURE;
+                     }
                      break;
            default:
               Usage();

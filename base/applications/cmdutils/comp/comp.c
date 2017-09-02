@@ -26,40 +26,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-// #include <string.h>
-// #include <wchar.h>
 #include <assert.h>
 
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
+
+#include <conutils.h>
 
 #include "resource.h"
 
 #define STRBUF 1024
 
-VOID PrintResourceString(INT resID, ...)
-{
-    WCHAR bufSrc[RC_STRING_MAX_SIZE];
-    WCHAR bufFormatted[RC_STRING_MAX_SIZE];
-    CHAR bufFormattedOem[RC_STRING_MAX_SIZE];
-
-    va_list args;
-    va_start(args, resID);
-
-    if (LoadStringW(GetModuleHandleW(NULL), resID, bufSrc, ARRAYSIZE(bufSrc)))
-        vswprintf(bufFormatted, bufSrc, args);
-    else
-        swprintf(bufFormatted, L"Resource loading error!");
-
-    CharToOemW(bufFormatted, bufFormattedOem);
-    fputs(bufFormattedOem, stdout);
-
-    va_end(args);
-}
-
-/* getline:  read a line, return length */
+/* getline: read a line, return length */
 INT GetBuff(PBYTE buff, FILE* in)
 {
     return fread(buff, sizeof(BYTE), STRBUF, in);
@@ -76,14 +55,8 @@ INT FileSize(FILE* fd)
     return result;
 }
 
-/* Print program usage */
-VOID Usage(VOID)
-{
-    PrintResourceString(IDS_HELP);
-}
 
-
-int wmain (int argc, WCHAR* argv[])
+int wmain(int argc, WCHAR* argv[])
 {
     INT i;
 
@@ -106,30 +79,33 @@ int wmain (int argc, WCHAR* argv[])
     INT  FilesOK = 1;
     INT  Status = EXIT_SUCCESS;
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     /* Parse command line for options */
     for (i = 1; i < argc; i++)
     {
         if (argv[i][0] == L'/')
         {
-            switch (argv[i][1])
+            switch (towlower(argv[i][1]))
             {
-                case L'A':
+                case L'a':
                     bAscii = TRUE;
                     NumberOfOptions++;
                     break;
 
-                case L'L':
+                case L'l':
                     bLineNos = TRUE;
                     NumberOfOptions++;
                     break;
 
                 case L'?':
-                    Usage();
+                    ConResPuts(StdOut, IDS_HELP);
                     return EXIT_SUCCESS;
 
                 default:
-                    PrintResourceString(IDS_INVALIDSWITCH, argv[i][1]);
-                    Usage();
+                    ConResPrintf(StdErr, IDS_INVALIDSWITCH, argv[i][1]);
+                    ConResPuts(StdOut, IDS_HELP);
                     return EXIT_FAILURE;
             }
         }
@@ -142,14 +118,14 @@ int wmain (int argc, WCHAR* argv[])
     }
     else
     {
-        PrintResourceString(IDS_BADSYNTAX);
+        ConResPuts(StdErr, IDS_BADSYNTAX);
         return EXIT_FAILURE;
     }
 
     Buff1 = (PBYTE)malloc(STRBUF);
     if (Buff1 == NULL)
     {
-        wprintf(L"Can't get free memory for Buff1\n");
+        ConPuts(StdErr, L"Can't get free memory for Buff1\n");
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
@@ -157,30 +133,30 @@ int wmain (int argc, WCHAR* argv[])
     Buff2 = (PBYTE)malloc(STRBUF);
     if (Buff2 == NULL)
     {
-        wprintf(L"Can't get free memory for Buff2\n");
+        ConPuts(StdErr, L"Can't get free memory for Buff2\n");
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
 
     if ((fp1 = _wfopen(File1, L"rb")) == NULL)
     {
-        PrintResourceString(IDS_FILEERROR, File1);
+        ConResPrintf(StdErr, IDS_FILEERROR, File1);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
     if ((fp2 = _wfopen(File2, L"rb")) == NULL)
     {
-        PrintResourceString(IDS_FILEERROR, File2);
+        ConResPrintf(StdErr, IDS_FILEERROR, File2);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
 
-    PrintResourceString(IDS_COMPARING, File1, File2);
+    ConResPrintf(StdOut, IDS_COMPARING, File1, File2);
 
     FileSizeFile1 = FileSize(fp1);
     if (FileSizeFile1 == -1)
     {
-        PrintResourceString(IDS_FILESIZEERROR, File1);
+        ConResPrintf(StdErr, IDS_FILESIZEERROR, File1);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
@@ -188,14 +164,14 @@ int wmain (int argc, WCHAR* argv[])
     FileSizeFile2 = FileSize(fp2);
     if (FileSizeFile2 == -1)
     {
-        PrintResourceString(IDS_FILESIZEERROR, File2);
+        ConResPrintf(StdErr, IDS_FILESIZEERROR, File2);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
 
     if (FileSizeFile1 != FileSizeFile2)
     {
-        PrintResourceString(IDS_SIZEDIFFERS);
+        ConResPuts(StdOut, IDS_SIZEDIFFERS);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
@@ -209,7 +185,7 @@ int wmain (int argc, WCHAR* argv[])
 
         if (ferror(fp1) || ferror(fp2))
         {
-            PrintResourceString(IDS_READERROR);
+            ConResPuts(StdErr, IDS_READERROR);
             Status = EXIT_FAILURE;
             goto Cleanup;
         }
@@ -226,23 +202,19 @@ int wmain (int argc, WCHAR* argv[])
 
                 /* Reporting here a mismatch */
                 if (bLineNos)
-                {
-                    PrintResourceString(IDS_MISMATCHLINE, LineNumber);
-                }
+                    ConResPrintf(StdOut, IDS_MISMATCHLINE, LineNumber);
                 else
-                {
-                    PrintResourceString(IDS_MISMATCHOFFSET, Offset);
-                }
+                    ConResPrintf(StdOut, IDS_MISMATCHOFFSET, Offset);
 
                 if (bAscii)
                 {
-                    PrintResourceString(IDS_ASCIIDIFF, 1, Buff1[i]);
-                    PrintResourceString(IDS_ASCIIDIFF, 2, Buff2[i]);
+                    ConResPrintf(StdOut, IDS_ASCIIDIFF, 1, Buff1[i]);
+                    ConResPrintf(StdOut, IDS_ASCIIDIFF, 2, Buff2[i]);
                 }
                 else
                 {
-                    PrintResourceString(IDS_HEXADECIMALDIFF, 1, Buff1[i]);
-                    PrintResourceString(IDS_HEXADECIMALDIFF, 2, Buff2[i]);
+                    ConResPrintf(StdOut, IDS_HEXADECIMALDIFF, 1, Buff1[i]);
+                    ConResPrintf(StdOut, IDS_HEXADECIMALDIFF, 2, Buff2[i]);
                 }
             }
 
@@ -254,7 +226,7 @@ int wmain (int argc, WCHAR* argv[])
     }
 
     if (FilesOK)
-        PrintResourceString(IDS_MATCH);
+        ConResPuts(StdOut, IDS_MATCH);
 
 Cleanup:
     if (fp2)

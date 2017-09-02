@@ -35,8 +35,8 @@ Description = Lector audio, simplu și ușor.
 Size = 1,9 Mio
 
 [Section.0419]
-Description = Простой и лёгкий аудио плеер.  
-Size = 1,9 МБ
+Description = Простой и лёгкий аудио плеер.
+Size = 1,9 МиБ
 
 [Section.041f]
 Name = Fox Ses Oynatıcısı

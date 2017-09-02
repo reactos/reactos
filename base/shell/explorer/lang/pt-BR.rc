@@ -70,14 +70,14 @@ CAPTION "Barra de Tarefas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Aparência da barra de tarefas", IDC_STATIC, 6, 6, 240, 104
-    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 18, 224, 21
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "&Bloquear a barra de tarefas", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "&Ocultar automaticamente a barra de tarefas", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "&Manter barra de tarefas sobre outros janelas", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Agrupar botões similares da barra de tarefas", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "&Exibir Inicialização Rápida", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     GROUPBOX "Notification area", IDC_STATIC, 6, 114, 240, 98
-    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 126, 223, 28
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
     AUTOCHECKBOX "Reló&gio", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
     AUTOCHECKBOX "Show seconds", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
     LTEXT "Você pode manter a área de notificação organizada escondendo os ícones que você não tenha clicado recentemente.", IDC_STATIC, 13, 169, 223, 16

@@ -39,7 +39,7 @@ BEGIN
         MENUITEM "&Підключити мережевий реєстр...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Відключити мережевий реєстр...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Д&рук\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "Д&рук...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "В&ихід", ID_REGISTRY_EXIT
     END
@@ -65,7 +65,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Копіювати ім'я розділу", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "З&найти\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "З&найти...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Зна&йти далі\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Вигляд"
@@ -125,7 +125,7 @@ BEGIN
             MENUITEM "&Багаторядкове значення", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Розширюване рядкове значення", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "З&найти", ID_EDIT_FIND
+        MENUITEM "З&найти...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "В&идалити", ID_TREE_DELETE
         MENUITEM "Перей&менувати", ID_TREE_RENAME

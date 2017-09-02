@@ -113,17 +113,23 @@ function(add_message_headers _type)
     else()
         set(_flag "-A")
     endif()
-    foreach(_in_FILE ${ARGN})
-        get_filename_component(FILE ${_in_FILE} NAME_WE)
-        macro_mc(${_flag} ${FILE})
+    foreach(_file ${ARGN})
+        get_filename_component(_file_name ${_file} NAME_WE)
+        set(_converted_file ${CMAKE_CURRENT_BINARY_DIR}/${_file}) ## ${_file_name}.mc
+        set(_source_file ${CMAKE_CURRENT_SOURCE_DIR}/${_file})    ## ${_file_name}.mc
         add_custom_command(
-            OUTPUT ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h
-            COMMAND ${COMMAND_MC} ${MC_FLAGS}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
+            OUTPUT "${_converted_file}"
+            COMMAND native-utf16le "${_source_file}" "${_converted_file}" nobom
+            DEPENDS native-utf16le "${_source_file}")
+        macro_mc(${_flag} ${_converted_file})
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc
+            COMMAND ${COMMAND_MC}
+            DEPENDS "${_converted_file}")
         set_source_files_properties(
-            ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc
+            ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc
             PROPERTIES GENERATED TRUE)
-        add_custom_target(${FILE} ALL DEPENDS ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc)
+        add_custom_target(${_file_name} ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc)
     endforeach()
 endfunction()
 
@@ -284,49 +290,49 @@ function(add_cd_file)
         message(FATAL_ERROR "You must provide a cd name (or \"all\" for all of them) to install the file on!")
     endif()
 
-    #get file if we need to
+    # get file if we need to
     if(NOT _CD_FILE)
         get_target_property(_CD_FILE ${_CD_TARGET} LOCATION_${CMAKE_BUILD_TYPE})
     endif()
 
-    #do we add it to all CDs?
+    # do we add it to all CDs?
     list(FIND _CD_FOR all __cd)
     if(NOT __cd EQUAL -1)
         list(REMOVE_AT _CD_FOR __cd)
         list(INSERT _CD_FOR __cd "bootcd;livecd;regtest")
     endif()
 
-    #do we add it to bootcd?
+    # do we add it to bootcd?
     list(FIND _CD_FOR bootcd __cd)
     if(NOT __cd EQUAL -1)
-        #whether or not we should put it in reactos.cab or directly on cd
+        # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
-            #directly on cd
+            # directly on cd
             foreach(item ${_CD_FILE})
                 if(_CD_NAME_ON_CD)
-                    #rename it in the cd tree
+                    # rename it in the cd tree
                     set(__file ${_CD_NAME_ON_CD})
                 else()
                     get_filename_component(__file ${item} NAME)
                 endif()
                 set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-                #add it also into the hybridcd if not specified otherwise
+                # add it also into the hybridcd if not specified otherwise
                 if(NOT _CD_NOT_IN_HYBRIDCD)
                     set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
                 endif()
             endforeach()
+            # manage dependency
             if(_CD_TARGET)
-                #manage dependency
                 add_dependencies(bootcd ${_CD_TARGET} registry_inf)
             endif()
         else()
-            #add it in reactos.cab
+            # add it in reactos.cab
             dir_to_num(${_CD_DESTINATION} _num)
             file(RELATIVE_PATH __relative_file ${REACTOS_SOURCE_DIR} ${_CD_FILE})
             file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "\"${__relative_file}\" ${_num}\n")
             unset(__relative_file)
+            # manage dependency - target level
             if(_CD_TARGET)
-                #manage dependency - target level
                 add_dependencies(reactos_cab_inf ${_CD_TARGET})
             endif()
             # manage dependency - file level
@@ -334,34 +340,38 @@ function(add_cd_file)
         endif()
     endif() #end bootcd
 
-    #do we add it to livecd?
+    # do we add it to livecd?
     list(FIND _CD_FOR livecd __cd)
     if(NOT __cd EQUAL -1)
-        #manage dependency
+        # manage dependency
         if(_CD_TARGET)
             add_dependencies(livecd ${_CD_TARGET} registry_inf)
         endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)
-                #rename it in the cd tree
+                # rename it in the cd tree
                 set(__file ${_CD_NAME_ON_CD})
             else()
                 get_filename_component(__file ${item} NAME)
             endif()
             set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-            #add it also into the hybridcd if not specified otherwise
+            # add it also into the hybridcd if not specified otherwise
             if(NOT _CD_NOT_IN_HYBRIDCD)
                 set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
             endif()
         endforeach()
     endif() #end livecd
 
-    #do we need also to add it to hybridcd?
+    # do we need also to add it to hybridcd?
     list(FIND _CD_FOR hybridcd __cd)
     if(NOT __cd EQUAL -1)
+        # manage dependency
+        if(_CD_TARGET)
+            add_dependencies(hybridcd ${_CD_TARGET})
+        endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)
-                #rename it in the cd tree
+                # rename it in the cd tree
                 set(__file ${_CD_NAME_ON_CD})
             else()
                 get_filename_component(__file ${item} NAME)
@@ -370,23 +380,23 @@ function(add_cd_file)
         endforeach()
     endif() #end hybridcd
 
-    #do we add it to regtest?
+    # do we add it to regtest?
     list(FIND _CD_FOR regtest __cd)
     if(NOT __cd EQUAL -1)
-        #whether or not we should put it in reactos.cab or directly on cd
+        # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
-            #directly on cd
+            # directly on cd
             foreach(item ${_CD_FILE})
                 if(_CD_NAME_ON_CD)
-                    #rename it in the cd tree
+                    # rename it in the cd tree
                     set(__file ${_CD_NAME_ON_CD})
                 else()
                     get_filename_component(__file ${item} NAME)
                 endif()
                 set_property(GLOBAL APPEND PROPERTY BOOTCDREGTEST_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
             endforeach()
+            # manage dependency
             if(_CD_TARGET)
-                #manage dependency
                 add_dependencies(bootcdregtest ${_CD_TARGET} registry_inf)
             endif()
         else()
@@ -571,12 +581,20 @@ function(set_module_type MODULE TYPE)
         set_subsystem(${MODULE} ${__subsystem})
     endif()
 
-    #set unicode definitions
+    # Set the PE image version numbers from the NT OS version ReactOS is based on
+    if (MSVC)
+        add_target_link_flags(${MODULE} "/VERSION:5.01")
+    else()
+        add_target_link_flags(${MODULE} "-Wl,--major-image-version,5 -Wl,--minor-image-version,01")
+        add_target_link_flags(${MODULE} "-Wl,--major-os-version,5 -Wl,--minor-os-version,01")
+    endif()
+
+    # Set unicode definitions
     if(__module_UNICODE)
         add_target_compile_definitions(${MODULE} UNICODE _UNICODE)
     endif()
 
-    # set entry point
+    # Set entry point
     if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
         list(GET __module_ENTRYPOINT 0 __entrypoint)
         list(LENGTH __module_ENTRYPOINT __length)
@@ -623,7 +641,7 @@ function(set_module_type MODULE TYPE)
         endif()
     endif()
 
-    #set base address
+    # Set base address
     if(__module_IMAGEBASE)
         set_image_base(${MODULE} ${__module_IMAGEBASE})
     elseif(${TYPE} STREQUAL win32dll)
@@ -652,7 +670,7 @@ function(set_module_type MODULE TYPE)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
     endif()
 
-    # do compiler specific stuff
+    # Do compiler specific stuff
     set_module_type_toolchain(${MODULE} ${TYPE})
 endfunction()
 
@@ -764,6 +782,7 @@ function(create_registry_hives)
             ${CMAKE_BINARY_DIR}/boot/bootdata/security
             ${CMAKE_BINARY_DIR}/boot/bootdata/software
             ${CMAKE_BINARY_DIR}/boot/bootdata/system
+            ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
         COMMAND native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata ${_livecd_inf_files}
         DEPENDS native-mkhive ${_livecd_inf_files})
 
@@ -772,7 +791,8 @@ function(create_registry_hives)
             ${CMAKE_BINARY_DIR}/boot/bootdata/default
             ${CMAKE_BINARY_DIR}/boot/bootdata/security
             ${CMAKE_BINARY_DIR}/boot/bootdata/software
-            ${CMAKE_BINARY_DIR}/boot/bootdata/system)
+            ${CMAKE_BINARY_DIR}/boot/bootdata/system
+            ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
 
     add_cd_file(
         FILE ${CMAKE_BINARY_DIR}/boot/bootdata/sam
@@ -784,18 +804,9 @@ function(create_registry_hives)
         DESTINATION reactos/system32/config
         FOR livecd)
 
-    # BCD Hive
-    add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
-        COMMAND native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
-        DEPENDS native-mkhive ${CMAKE_SOURCE_DIR}/boot/bootdata/hivebcd.inf)
-
-    add_custom_target(bcd_hive
-        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
-
     add_cd_file(
         FILE ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
-        TARGET bcd_hive
+        TARGET livecd_hives
         DESTINATION efi/boot
         NO_CAB
         FOR bootcd regtest livecd)
@@ -810,4 +821,34 @@ endif()
 
 function(add_rc_deps _target_rc)
     set_source_files_properties(${_target_rc} PROPERTIES OBJECT_DEPENDS "${ARGN}")
+endfunction()
+
+add_custom_target(rostests_install COMMAND ${CMAKE_COMMAND} -DCOMPONENT=rostests -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
+function(add_rostests_file)
+    cmake_parse_arguments(_ROSTESTS "" "RENAME;SUBDIR;TARGET" "FILE" ${ARGN})
+    if(NOT (_ROSTESTS_TARGET OR _ROSTESTS_FILE))
+        message(FATAL_ERROR "You must provide a target or a file to install!")
+    endif()
+
+    if(NOT _ROSTESTS_FILE)
+        get_target_property(_ROSTESTS_FILE ${_ROSTESTS_TARGET} LOCATION_${CMAKE_BUILD_TYPE})
+    endif()
+
+    if(NOT _ROSTESTS_RENAME)
+        get_filename_component(_ROSTESTS_RENAME ${_ROSTESTS_FILE} NAME)
+    endif()
+
+    if(_ROSTESTS_SUBDIR)
+        set(_ROSTESTS_SUBDIR "/${_ROSTESTS_SUBDIR}")
+    endif()
+
+    if(_ROSTESTS_TARGET)
+        add_cd_file(TARGET ${_ROSTESTS_TARGET} FILE ${_ROSTESTS_FILE} DESTINATION "reactos/bin${_ROSTESTS_SUBDIR}" NAME_ON_CD ${_ROSTESTS_RENAME} FOR all)
+    else()
+        add_cd_file(FILE ${_ROSTESTS_FILE} DESTINATION "reactos/bin${_ROSTESTS_SUBDIR}" NAME_ON_CD ${_ROSTESTS_RENAME} FOR all)
+    endif()
+
+    if(DEFINED ENV{ROSTESTS_INSTALL})
+        install(FILES ${_ROSTESTS_FILE} DESTINATION "$ENV{ROSTESTS_INSTALL}${_ROSTESTS_SUBDIR}" COMPONENT rostests RENAME ${_ROSTESTS_RENAME})
+    endif()
 endfunction()

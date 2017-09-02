@@ -27,6 +27,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
+#include <atlstr.h>
 #include <powrprof.h>
 #include <winnetwk.h>
 #include <objsafe.h>
@@ -67,12 +68,12 @@
 #include "folders/CAdminToolsFolder.h"
 #include "folders/CRecycleBin.h"
 #include "droptargets/CexeDropHandler.h"
+#include "droptargets/CFSDropTarget.h"
 #include "COpenWithMenu.h"
 #include "CNewMenu.h"
 #include "dialogs/filedefext.h"
 #include "dialogs/drvdefext.h"
 #include "CQueryAssociations.h"
-#include "shellmenu/CBandSite.h"
 #include "shellmenu/CMenuBand.h"
 #include "shellmenu/CMenuDeskBar.h"
 #include "shellmenu/CMenuSite.h"

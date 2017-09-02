@@ -253,25 +253,41 @@ SetServiceDescription(LPWSTR lpServiceName,
     return bRet;
 }
 
-BOOL
-GetServiceList(PMAIN_WND_INFO Info,
-               DWORD *NumServices)
+VOID
+FreeServiceList(PMAIN_WND_INFO Info)
 {
+    DWORD i;
+
+    if (Info->pAllServices != NULL)
+    {
+        for (i = 0; i < Info->NumServices; i++)
+        {
+            if (Info->pAllServices[i].lpServiceName)
+                HeapFree(ProcessHeap, 0, Info->pAllServices[i].lpServiceName);
+
+            if (Info->pAllServices[i].lpDisplayName)
+                HeapFree(ProcessHeap, 0, Info->pAllServices[i].lpDisplayName);
+        }
+
+        HeapFree(ProcessHeap, 0, Info->pAllServices);
+        Info->pAllServices = NULL;
+        Info->NumServices = 0;
+    }
+}
+
+BOOL
+GetServiceList(PMAIN_WND_INFO Info)
+{
+    ENUM_SERVICE_STATUS_PROCESS *pServices = NULL;
     SC_HANDLE ScHandle;
     BOOL bRet = FALSE;
 
     DWORD BytesNeeded = 0;
     DWORD ResumeHandle = 0;
+    DWORD NumServices = 0;
+    DWORD i;
 
-    *NumServices = 0;
-
-    if (Info->pAllServices != NULL)
-    {
-        HeapFree(ProcessHeap,
-                     0,
-                     Info->pAllServices);
-        Info->pAllServices = NULL;
-    }
+    FreeServiceList(Info);
 
     ScHandle = OpenSCManagerW(NULL,
                               NULL,
@@ -285,7 +301,7 @@ GetServiceList(PMAIN_WND_INFO Info,
                                   NULL,
                                   0,
                                   &BytesNeeded,
-                                  NumServices,
+                                  &NumServices,
                                   &ResumeHandle,
                                   0))
         {
@@ -293,20 +309,20 @@ GetServiceList(PMAIN_WND_INFO Info,
             if (GetLastError() == ERROR_MORE_DATA)
             {
                 /* reserve memory for service info array */
-                Info->pAllServices = (ENUM_SERVICE_STATUS_PROCESS *) HeapAlloc(ProcessHeap,
-                                                                         0,
-                                                                         BytesNeeded);
-                if (Info->pAllServices)
+                pServices = (ENUM_SERVICE_STATUS_PROCESS *)HeapAlloc(ProcessHeap,
+                                                                     0,
+                                                                     BytesNeeded);
+                if (pServices)
                 {
                     /* fill array with service info */
                     if (EnumServicesStatusEx(ScHandle,
                                              SC_ENUM_PROCESS_INFO,
                                              SERVICE_WIN32,
                                              SERVICE_STATE_ALL,
-                                             (LPBYTE)Info->pAllServices,
+                                             (LPBYTE)pServices,
                                              BytesNeeded,
                                              &BytesNeeded,
-                                             NumServices,
+                                             &NumServices,
                                              &ResumeHandle,
                                              0))
                     {
@@ -320,12 +336,35 @@ GetServiceList(PMAIN_WND_INFO Info,
     if (ScHandle)
         CloseServiceHandle(ScHandle);
 
-    if (!bRet && Info->pAllServices)
+    Info->pAllServices = (ENUM_SERVICE_STATUS_PROCESS *)HeapAlloc(ProcessHeap,
+                                                                  HEAP_ZERO_MEMORY,
+                                                                  NumServices * sizeof(ENUM_SERVICE_STATUS_PROCESS));
+    if (Info->pAllServices != NULL)
     {
-        HeapFree(ProcessHeap,
-                 0,
-                 Info->pAllServices);
+        Info->NumServices = NumServices;
+
+        for (i = 0; i < NumServices; i++)
+        {
+            Info->pAllServices[i].lpServiceName = HeapAlloc(ProcessHeap,
+                                                            HEAP_ZERO_MEMORY,
+                                                            (wcslen(pServices[i].lpServiceName) + 1) * sizeof(WCHAR));
+            if (Info->pAllServices[i].lpServiceName)
+                wcscpy(Info->pAllServices[i].lpServiceName, pServices[i].lpServiceName);
+
+            Info->pAllServices[i].lpDisplayName = HeapAlloc(ProcessHeap,
+                                                            HEAP_ZERO_MEMORY,
+                                                            (wcslen(pServices[i].lpDisplayName) + 1) * sizeof(WCHAR));
+            if (Info->pAllServices[i].lpDisplayName)
+                wcscpy(Info->pAllServices[i].lpDisplayName, pServices[i].lpDisplayName);
+
+            CopyMemory(&Info->pAllServices[i].ServiceStatusProcess,
+                       &pServices[i].ServiceStatusProcess,
+                       sizeof(SERVICE_STATUS_PROCESS));
+        }
     }
+
+    if (pServices)
+        HeapFree(ProcessHeap, 0, pServices);
 
     return bRet;
 }

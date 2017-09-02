@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
  * FILE:            lib/dnsapi/precomp.h
- * PURPOSE:         Win32 DNS API Libary Header
+ * PURPOSE:         Win32 DNS API Library Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 

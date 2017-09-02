@@ -56,7 +56,7 @@ BEGIN
         MENUITEM "&Riproduce al contrario", ID_EFFECTS_REVERSE
     END
     POPUP "?"
-    BEGIN        MENUITEM "Informazioni...", ID_ABOUT
+    BEGIN        MENUITEM "Informazioni", ID_ABOUT
     END
 END
 

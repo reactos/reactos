@@ -847,10 +847,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
     /* Create dialog main window */
 
-    rect.left = rect.top = 0;
-    rect.right = MulDiv(template.cx, xBaseUnit, 4);
-    rect.bottom =  MulDiv(template.cy, yBaseUnit, 8);
-
+    SetRect(&rect, 0, 0, MulDiv(template.cx, xBaseUnit, 4), MulDiv(template.cy, yBaseUnit, 8));
     if (template.style & DS_CONTROL)
         template.style &= ~(WS_CAPTION|WS_SYSMENU);
     template.style |= DS_3DLOOK;
@@ -926,23 +923,14 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
          * even if dialog has WS_CHILD, but only for modal dialogs, which matched what
          * Windows does.
          */
-
-        ////// Wine'ie babies need to fix your code!!!! CORE-11633
-        if ((GetWindowLongW( owner, GWL_STYLE ) & (WS_POPUP|WS_CHILD)) == WS_CHILD)
+        while ((GetWindowLongW( owner, GWL_STYLE ) & (WS_POPUP|WS_CHILD)) == WS_CHILD)
         {
-           parent = owner;
-           while ((GetWindowLongW( parent, GWL_STYLE ) & (WS_POPUP|WS_CHILD)) == WS_CHILD)
-           {
-               parent = GetParent( owner );
-               if (!parent || parent == GetDesktopWindow())
-               {
-                  parent = NULL;
-                  break;
-               } 
-           }
+            parent = GetParent( owner );
+            if (!parent || parent == GetDesktopWindow()) break;
+            owner = parent;
         }
-        else
-           parent = GetAncestor( owner, GA_ROOT );
+        ////// Wine'ie babies need to fix your code!!!! CORE-11633
+        if (!parent) parent = GetAncestor( owner, GA_ROOT );
 
         if (parent)
         {
@@ -2488,6 +2476,9 @@ IsDialogMessageW(
   LPMSG lpMsg)
 {
     INT dlgCode = 0;
+
+    if (!IsWindow( hDlg ))
+        return FALSE;
 
     if (CallMsgFilterW( lpMsg, MSGF_DIALOGBOX )) return TRUE;
 

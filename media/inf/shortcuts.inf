@@ -14,12 +14,12 @@ CommunicationsShortcuts=2, %ACCESSORIES%\%COMMUNICATIONS%
 GamesShortcuts=2, %GAMES%
 
 [DesktopShortcuts]
-%SystemRoot%\readme.txt, %README_TITLE%, %README_DESC%, 0
+%SystemRoot%\readme.txt, %README_TITLE%, %README_DESC%
 %SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE_SHORT%, %RAPPS_DESC%, 0
 
 [ProgramShortcuts]
-%SystemRoot%\explorer.exe, %EXPLORER_TITLE%, %EXPLORER_DESC%, 1
+%SystemRoot%\explorer.exe, %EXPLORER_TITLE%, %EXPLORER_DESC%, 1, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE%, %RAPPS_DESC%, 0
 
 [AdminToolsShortcuts]
@@ -29,15 +29,14 @@ GamesShortcuts=2, %GAMES%
 %SystemRoot%\system32\msconfig.exe, %MSCONFIG_TITLE%, %MSCONFIG_DESC%, 0
 
 [CommunicationsShortcuts]
-%SystemRoot%\system32\mstsc.exe, %MSTSC_TITLE%, %MSTSC_DESC%, 0
+%SystemRoot%\system32\mstsc.exe, %MSTSC_TITLE%, %MSTSC_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [AccessoriesShortcuts]
-%SystemRoot%\system32\calc.exe, %CALC_TITLE%, %CALC_DESC%, 0
+%SystemRoot%\system32\calc.exe, %CALC_TITLE%, %CALC_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
-%SystemRoot%\system32\notepad.exe, %NOTEPAD_TITLE%, %NOTEPAD_DESC%, 0
-%SystemRoot%\system32\screenshot.exe, %SCREENSHOT_TITLE%, %SCREENSHOT_DESC%, 0
-%SystemRoot%\system32\wordpad.exe, %WORDPAD_TITLE%, %WORDPAD_DESC%, 0
-%SystemRoot%\system32\mspaint.exe, %MSPAINT_TITLE%, %MSPAINT_DESC%, 0
+%SystemRoot%\system32\notepad.exe, %NOTEPAD_TITLE%, %NOTEPAD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\wordpad.exe, %WORDPAD_TITLE%, %WORDPAD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\mspaint.exe, %MSPAINT_TITLE%, %MSPAINT_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [SystemToolsShortcuts]
 %SystemRoot%\system32\charmap.exe, %CHARMAP_TITLE%, %CHARMAP_DESC%, 0
@@ -48,13 +47,13 @@ GamesShortcuts=2, %GAMES%
 %SystemRoot%\system32\dxdiag.exe, %DXDIAG_TITLE%, %DXDIAG_DESC%, 0
 
 [AccessibilityShortcuts]
-%SystemRoot%\system32\magnify.exe, %MAGNIFY_TITLE%, %MAGNIFY_DESC%, 0
-%SystemRoot%\system32\osk.exe, %OSK_TITLE%, %OSK_DESC%, 0
+%SystemRoot%\system32\magnify.exe, %MAGNIFY_TITLE%, %MAGNIFY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\osk.exe, %OSK_TITLE%, %OSK_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [EntertainmentShortcuts]
-%SystemRoot%\system32\mplay32.exe, %MPLAY_TITLE%, %MPLAY_DESC%, 0
+%SystemRoot%\system32\mplay32.exe, %MPLAY_TITLE%, %MPLAY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\sndvol32.exe, %SNDVOL_TITLE%, %SNDVOL_DESC%, 0
-%SystemRoot%\system32\sndrec32.exe, %SNDREC32_TITLE%, %SNDREC32_DESC%, 0
+%SystemRoot%\system32\sndrec32.exe, %SNDREC32_TITLE%, %SNDREC32_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [GamesShortcuts]
 %SystemRoot%\system32\sol.exe, %SOL_TITLE%, %SOL_DESC%, 0
@@ -96,8 +95,6 @@ NOTEPAD_TITLE=Notepad
 NOTEPAD_DESC=Launch Text Editor
 MSTSC_TITLE=Remote Desktop Connection
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Take screenshot
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Launch Document Editor
 MSPAINT_TITLE=Paint
@@ -161,8 +158,6 @@ NOTEPAD_TITLE=Бележник
 NOTEPAD_DESC=Пускане на текстообратващата
 MSTSC_TITLE=Далечна работна площ
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=Снимка
-SCREENSHOT_DESC=Заснемане на екрана
 WORDPAD_TITLE=Тетрадка
 WORDPAD_DESC=Пускане на документната обработваща
 MSPAINT_TITLE=Рисунък
@@ -224,8 +219,6 @@ NOTEPAD_TITLE=Poznámkový blok
 NOTEPAD_DESC=Spustit Poznámkový blok
 MSTSC_TITLE=Vzdálená plocha
 MSTSC_DESC=Spustit Vzdálenou plochu
-SCREENSHOT_TITLE=Sejmout obrazovku
-SCREENSHOT_DESC=Sejmout obrazovku
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Spustit WordPad
 MSPAINT_TITLE=Malování
@@ -290,8 +283,6 @@ NOTEPAD_TITLE=Editor
 NOTEPAD_DESC=Starte Texteditor
 MSTSC_TITLE=Remote Desktop
 MSTSC_DESC=Remote Desktop Verbindung starten
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Screenshot erstellen
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Starte Dokumenteneditor
 MSPAINT_TITLE=Paint
@@ -353,8 +344,6 @@ NOTEPAD_TITLE=Σημειωματάριο
 NOTEPAD_DESC=Σημειωματάριο
 MSTSC_TITLE=Σύνδεση απομακρυσμένης επιφάνειας εργασίας
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Take screenshot
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Launch Document Editor
 MSPAINT_TITLE=Paint
@@ -419,8 +408,6 @@ NOTEPAD_TITLE=Bloc de notas
 NOTEPAD_DESC=Ejecuta un editor de texto simple.
 MSTSC_TITLE=Escritorio remoto
 MSTSC_DESC=Ejecuta una conexión de escritorio remoto.
-SCREENSHOT_TITLE=Captura de pantalla
-SCREENSHOT_DESC=Guarda secciones de la pantalla como un archivo de imagen.
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Ejecuta un editor de documentos de texto enriquecido.
 MSPAINT_TITLE=Paint
@@ -482,8 +469,6 @@ NOTEPAD_TITLE=Notepad
 NOTEPAD_DESC=Ava Tekstiredaktor
 MSTSC_TITLE=Remote Desktop
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Tee ekraanitõmmis
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Ava Dokumendiredaktor
 MSPAINT_TITLE=Paint
@@ -548,8 +533,6 @@ NOTEPAD_TITLE=Notepad
 NOTEPAD_DESC=Lancer l'Éditeur de Texte
 MSTSC_TITLE=Bureau Distant
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=Capture d'écran
-SCREENSHOT_DESC=Faire une capture d'écran
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Lancer l'Éditeur de Documents
 MSPAINT_TITLE=Paint
@@ -613,8 +596,6 @@ NOTEPAD_TITLE=פנקס הרשימות
 NOTEPAD_DESC=עורך טקסט
 MSTSC_TITLE=שולחן עבודה מרוחק
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=צילום מסך
 WORDPAD_TITLE=כתבן
 WORDPAD_DESC=עורך המסמכים
 MSPAINT_TITLE=צייר
@@ -676,8 +657,6 @@ NOTEPAD_TITLE=Notepad
 NOTEPAD_DESC=Launch Text Editor
 MSTSC_TITLE=Remote Desktop
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Take screenshot
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Launch Document Editor
 MSPAINT_TITLE=Paint
@@ -739,8 +718,6 @@ NOTEPAD_TITLE=Notepad
 NOTEPAD_DESC=Jalankan Editor Teks
 MSTSC_TITLE=Remote Desktop
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Ambil foto layar
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Jalankan Editor Dokumen
 MSPAINT_TITLE=Paint
@@ -805,8 +782,6 @@ NOTEPAD_TITLE=Blocco note
 NOTEPAD_DESC=Lancia l'editor dei testi
 MSTSC_TITLE=Connessione desktop remoto
 MSTSC_DESC=Avva la connessione a desktop remoto
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Salva una schermata
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Lancia l'editor dei documenti
 MSPAINT_TITLE=Paint
@@ -868,8 +843,6 @@ NOTEPAD_TITLE=メモ帳
 NOTEPAD_DESC=テキストエディタを起動します
 MSTSC_TITLE=リモート デスクトップ接続
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=スナップショット
-SCREENSHOT_DESC=スクリーンショットを撮ります
 WORDPAD_TITLE=ワードパッド
 WORDPAD_DESC=ドキュメントエディタを起動します
 MSPAINT_TITLE=ペイント
@@ -934,8 +907,6 @@ NOTEPAD_TITLE=Notepad
 NOTEPAD_DESC=Launch Text Editor
 MSTSC_TITLE=Remote Desktop
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Take screenshot
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Launch Document Editor
 MSPAINT_TITLE=Paint
@@ -997,8 +968,6 @@ NOTEPAD_TITLE=Notepad
 NOTEPAD_DESC=Start Tekstredigering
 MSTSC_TITLE=Remote Desktop
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Ta skjermbilde
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Start Dokument redigering
 MSPAINT_TITLE=Paint
@@ -1060,8 +1029,6 @@ NOTEPAD_TITLE=Notatnik
 NOTEPAD_DESC=Uruchom Edytor tekstu
 MSTSC_TITLE=Dostęp zdalny
 MSTSC_DESC=Uruchom Dostęp zdalny
-SCREENSHOT_TITLE=Zrzut ekranu
-SCREENSHOT_DESC=Zrób zrzut ekranu
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Uruchom WordPada
 MSPAINT_TITLE=MSPaint
@@ -1126,8 +1093,6 @@ NOTEPAD_TITLE=Notepad
 NOTEPAD_DESC=Iniciar Editor de Texto
 MSTSC_TITLE=Remote Desktop
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=SnapShot
-SCREENSHOT_DESC=Capturar Tela
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Iniciar Editor de Documentos
 MSPAINT_TITLE=Paint
@@ -1192,8 +1157,6 @@ NOTEPAD_TITLE=Carnețel
 NOTEPAD_DESC=Editorul de text simplu.
 MSTSC_TITLE=Birou la distanță
 MSTSC_DESC=Program pentru conectarea și autentificarea la un alt birou.
-SCREENSHOT_TITLE=Captură de ecran
-SCREENSHOT_DESC=Program pentru executarea de capturi de ecran.
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Editor de documente.
 MSPAINT_TITLE=Pictare
@@ -1206,6 +1169,8 @@ KBSWITCH_TITLE=Comutator aranjamente de tastatură
 KBSWITCH_DESC=Program pentru comutarea aranjamentelor de tastatură.
 REGEDIT_TITLE=Editor de registru
 REGEDIT_DESC=Program pentru editarea registrului de sistem.
+TASKMGR_TITLE=Gestionar de activități
+TASKMGR_DESC=Program de gestiune a activităților
 DXDIAG_TITLE=Diagnostic ReactX
 DXDIAG_DESC=Instrument de diagnostic ReactX.
 MAGNIFY_TITLE=Lupă
@@ -1258,8 +1223,6 @@ NOTEPAD_TITLE=Блокнот
 NOTEPAD_DESC=Используется для создания и редактирования текстовых файлов простого формата.
 MSTSC_TITLE=Подключение к удаленному рабочему столу
 MSTSC_DESC=Этот компьютер можно использовать для подключения к другому компьютеру, чтобы запускать на нем программы и получать доступ к файлам.
-SCREENSHOT_TITLE=Скриншот
-SCREENSHOT_DESC=Сделать снимок экрана
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Используется для создания и редактирования текстовых файлов со сложным форматированием.
 MSPAINT_TITLE=Paint
@@ -1272,6 +1235,8 @@ KBSWITCH_TITLE=Переключатель раскладки клавиатур�
 KBSWITCH_DESC=Переключатель раскладки клавиатуры
 REGEDIT_TITLE=Редактор реестра
 REGEDIT_DESC=Запустить редактор реестра
+TASKMGR_TITLE=Диспетчер задач
+TASKMGR_DESC=Запустить диспетчер задач
 DXDIAG_TITLE=Средство диагностики ReactX
 DXDIAG_DESC=Запустить программу диагностики ReactX
 MAGNIFY_TITLE=Экранная лупа
@@ -1321,8 +1286,6 @@ NOTEPAD_TITLE=Poznámkový blok
 NOTEPAD_DESC=Spustiť Textový editor
 MSTSC_TITLE=Vzdialená pracovná plocha
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=Momentka //SnapShot
-SCREENSHOT_DESC=Uložiť obrazovku
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Spustiť Editor dokumentov
 MSPAINT_TITLE=Skicár
@@ -1387,8 +1350,6 @@ NOTEPAD_TITLE=Not Defteri
 NOTEPAD_DESC=Metin Düzenleyicisi'ni başlat
 MSTSC_TITLE=Uzak Masaüstü Bağlantısı
 MSTSC_DESC=Uzak Masaüstü Bağlantısı'nı başlat
-SCREENSHOT_TITLE=Ekran Görüntüsü
-SCREENSHOT_DESC=Ekran görüntüsü al
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Belge Düzenleyicisi'ni başlat
 MSPAINT_TITLE=Paint
@@ -1453,8 +1414,6 @@ NOTEPAD_TITLE=Блокнот
 NOTEPAD_DESC=Запустити Текстовий редактор
 MSTSC_TITLE=Віддалене керування робочим столом
 MSTSC_DESC=Launch Remote Desktop Connection
-SCREENSHOT_TITLE=Знімок екрану
-SCREENSHOT_DESC=Зробити знімок екрана
 WORDPAD_TITLE=WordPad
 WORDPAD_DESC=Запустити Редактор документів
 MSPAINT_TITLE=Paint
@@ -1516,8 +1475,6 @@ NOTEPAD_TITLE=记事本
 NOTEPAD_DESC=记事本
 MSTSC_TITLE=远程桌面连接
 MSTSC_DESC=启动远程桌面连接
-SCREENSHOT_TITLE=屏幕截图
-SCREENSHOT_DESC=屏幕截图
 WORDPAD_TITLE=写字板
 WORDPAD_DESC=写字板
 MSPAINT_TITLE=小画家

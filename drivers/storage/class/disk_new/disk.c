@@ -534,7 +534,7 @@ Return Value:
     if(DasdAccessOnly) {
 
         //
-        // Inidicate that only RAW should be allowed to mount on the root
+        // Indicate that only RAW should be allowed to mount on the root
         // partition object.  This ensures that a file system can't doubly
         // mount on a super-floppy by mounting once on P0 and once on P1.
         //
@@ -706,7 +706,7 @@ Return Value:
         if (!NT_SUCCESS(status)) {
 
             //
-            // Flag this as a user errror so that a popup is generated.
+            // Flag this as a user error so that a popup is generated.
             //
 
             DebugPrint((1, "DiskReadWriteVerification: ReadyStatus is %lx\n",
@@ -3074,7 +3074,7 @@ Retry:
 
             //
             // Plan ahead and get the container's container before
-            // modifing the current size.
+            // modifying the current size.
             //
 
             nextContainerPartition =
@@ -3387,7 +3387,7 @@ Return Value:
                                          0,
                                          TRUE);
 
-        DebugPrint((1, "DiskShutdownFlush: Synchonize cache sent. Status = %lx\n", status ));
+        DebugPrint((1, "DiskShutdownFlush: Synchronize cache sent. Status = %lx\n", status ));
     }
 
     //
@@ -3713,7 +3713,7 @@ DiskIoctlVerify(
 
     IoFreeWorkItem(Context->WorkItem);
 
-    DebugPrint((1, "Disk.DiskIoctlVerify: Spliting up the request\n"));
+    DebugPrint((1, "Disk.DiskIoctlVerify: Splitting up the request\n"));
 
     //
     // Add disk offset to starting the sector
@@ -4015,7 +4015,7 @@ DiskSetSpecialHacks(
 
 Routine Description:
 
-    This function checks to see if an SCSI logical unit requires speical
+    This function checks to see if an SCSI logical unit requires special
     flags to be set.
 
 Arguments:
@@ -4964,7 +4964,7 @@ DiskSetInfoExceptionInformation(
 
     //
     // We will attempt (twice) to issue the mode select with the page.
-    // Make the setting persistant so that we don't have to turn it back
+    // Make the setting persistent so that we don't have to turn it back
     // on after a bus reset.
     //
 
@@ -5624,7 +5624,7 @@ Return Values:
     if (inputBufferLength < listSize) {
 
         //
-        // The remaning size of the input buffer not big enough to
+        // The remaining size of the input buffer not big enough to
         // hold the additional partition entries
         //
 
@@ -5635,7 +5635,7 @@ Return Values:
     }
 
     //
-    // Convert the parititon information structure into an extended
+    // Convert the partition information structure into an extended
     // structure.
     //
 
@@ -5782,7 +5782,7 @@ Return Values:
     if (inputBufferLength < listSize) {
 
         //
-        // The remaning size of the input buffer not big enough to
+        // The remaining size of the input buffer not big enough to
         // hold the additional partition entries
         //
 
@@ -6283,7 +6283,7 @@ DiskIoctlSetPartitionInfo(
     // The HAL routines IoGet- and IoSetPartitionInformation were
     // developed before support of dynamic partitioning and therefore
     // don't distinguish between partition ordinal (that is the order
-    // of a paritition on a disk) and the partition number.  (The
+    // of a partition on a disk) and the partition number.  (The
     // partition number is assigned to a partition to identify it to
     // the system.) Use partition ordinals for these legacy calls.
     //
@@ -6354,7 +6354,7 @@ DiskIoctlSetPartitionInfoEx(
     // The HAL routines IoGet- and IoSetPartitionInformation were
     // developed before support of dynamic partitioning and therefore
     // don't distinguish between partition ordinal (that is the order
-    // of a paritition on a disk) and the partition number.  (The
+    // of a partition on a disk) and the partition number.  (The
     // partition number is assigned to a partition to identify it to
     // the system.) Use partition ordinals for these legacy calls.
     //

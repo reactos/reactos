@@ -3,8 +3,8 @@
 
 MUI_LAYOUTS roROLayouts[] =
 {
-    { L"0409", L"00000409" },
     { L"0418", L"00000418" },
+    { L"0409", L"00000409" },
     { NULL, NULL }
 };
 
@@ -159,13 +159,13 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         6,
         9,
-        "de dezvoltare ºi nu conþine toate funcþionalitãþile unei",
+        "de dezvoltare ºi nu conþine toate funcþionalitãþile unui",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "aplicaþii de instalare complete.",
+        "program de instalare complet.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -247,13 +247,13 @@ static MUI_ENTRY roROLicensePageEntries[] =
     {
         8,
         9,
-        "Publice Generale GNU, denumit în continuare GPL, cu pãrþi de",
+        "Publice Generale GNU, referitã în continuare ca GPL, cu pãrþi",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "cod din alte licenþe compatibile (ca X11, BSD ºi LGPL).",
+        "de cod din alte licenþe compatibile (ca X11, BSD, ºi LGPL).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -401,7 +401,7 @@ static MUI_ENTRY roRODevicePageEntries[] =
     {
         24,
         14,
-        " Aranj. tastaturã:",
+        "Aranj. tastaturã:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -412,7 +412,8 @@ static MUI_ENTRY roRODevicePageEntries[] =
     },
     {
         25,
-        16, "Accept configuraþia dispozitivelor",
+        16,
+        "Accept configuraþia dispozitivelor",
         TEXT_STYLE_NORMAL
     },
     {
@@ -494,7 +495,7 @@ static MUI_ENTRY roRORepairPageEntries[] =
     {
         8,
         15,
-        "\x07  Tastaþi U pentru actualizarea SO.",
+        "\x07  Tastaþi U pentru actualizarea sistemului.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -592,7 +593,7 @@ static MUI_ENTRY roROFlushPageEntries[] =
     {
         10,
         6,
-        "Se verificã stocarea datelor necesare.",
+        "Sistemul verificã integritatea datelor scrise pe disc.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -610,7 +611,7 @@ static MUI_ENTRY roROFlushPageEntries[] =
     {
         0,
         0,
-        "Se elibereazã memoria...",
+        "Eliberare memorie...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -632,7 +633,7 @@ static MUI_ENTRY roROQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS nu a fost instalat complet.",
+        "ReactOS nu a fost instalat în întregime.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -775,13 +776,13 @@ static MUI_ENTRY roROBootPageEntries[] =
     {
         6,
         8,
-        "Programul de instalare nu poate instala aplicaþia de iniþializare",
+        "Programul de instalare nu poate instala modulul de",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "a calculatorului pe discul calculatorului dumneavoastrã.",
+        "iniþializare a calculatorului pe discul local.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -928,13 +929,13 @@ static MUI_ENTRY roROConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         16,
-        "ªtergând partiþia se poate sã nu mai puteþi porni calculatorul de pe",
+        "ªtergând partiþia apare riscul de a nu mai putea porni calculatorul de",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "discul local decât dupã finalizarea instalãrii ReactOS.",
+        "pe discul local decât dupã finalizarea instalãrii ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1044,7 +1045,7 @@ static MUI_ENTRY roROInstallDirectoryEntries[] =
     {
         6,
         16,
-        "doriþi instalarea ReactOS.",
+        "doriþi sã instalaþi ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1072,19 +1073,19 @@ static MUI_ENTRY roROFileCopyEntries[] =
     {
         0,
         12,
-        " Aºteptaþi copierea de fiºiere în directorul ReactOS specificat.",
+        "Are loc copierea de fiºiere în directorul ReactOS specificat.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         14,
-        "(aceasta poate dura câteva minute)",
+        "(aceasta poate dura câteva momente)",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         50,
         0,
-        "\xB3 Aºteptaþi...    ",
+        "\xB3 Aºteptaþi...",
         TEXT_TYPE_STATUS
     },
     {
@@ -1106,7 +1107,7 @@ static MUI_ENTRY roROBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalare aplicaþie de iniþializare a calculatorului",
+        "Instalare modul de iniþializare al calculatorului",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1130,7 +1131,7 @@ static MUI_ENTRY roROBootLoaderEntries[] =
     {
         8,
         15,
-        "Omite instalarea aplicaþiei de iniþializare.",
+        "Omite instalarea modulului de iniþializare.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1263,13 +1264,13 @@ static MUI_ENTRY roROPrepareCopyEntries[] =
     {
         6,
         8,
-        "Se fac pregãtirile necesare pentru copierea de fiºiere...",
+        "Au loc pregãtirile necesare pentru copierea de fiºiere.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Se creazã lista de fiºiere...",
+        "Listã de fiºiere în curs de creare...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1391,13 +1392,13 @@ static MUI_ENTRY roRORegistryEntries[] =
     {
         6,
         8,
-        "Se actualizeazã configuraþia sistemului...",
+        "Are loc actualizarea configuraþiei sistemului.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Se creazã registrul...",
+        "Registru în curs de creare...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1417,9 +1418,9 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS nu a fost instalat complet în calculatorul\n"
-        "dumneavoastrã. Dacã abandonaþi instalarea ReactOS\n"
-        "acum, va fi nevoie sã o reluaþi din nou altã datã.\n"
+        "ReactOS nu a fost instalat în totalitate în calculator.\n"
+        "Dacã abandonaþi instalarea acum, altã datã, pentru a\n"
+        "instala ReactOS, va fi nevoie sã repetaþi toþi paºii.\n"
         "\n"
         "  \x07  Apãsaþi ENTER pentru a continua instalarea.\n"
         "  \x07  Apãsaþi F3 pentru a abandona instalarea.",
@@ -1427,17 +1428,17 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_NO_HDD
-        "Nu se pot gãsi discuri interne.",
+        "Eºec la identificarea unitãþilor interne de stocare.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Nu se poate gãsi unitatea de citire.",
+        "Eºec la accesarea unitatãþii de instalare.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Nu poate încãrca fiºierul TXTSETUP.SIF.",
+        "Eºec la încãrcarea fiºierul TXTSETUP.SIF.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1452,44 +1453,44 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Nu se pot obþine informaþii despre dispozitiv(ele)\n"
-        "din calculator.\n",
+        "Eºec la obþinerea de informaþii despre\n"
+        "dispozitivele din calculator.\n",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Nu s-a reuºit instalarea codului FAT de iniþializare\n"
+        "Eºec la instalarea codului FAT de iniþializare\n"
         "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "A eºuat încãrcarea listei cu arhitecturi de\n"
+        "Eºec la încãrcarea listei cu arhitecturi de\n"
         "calcul disponibile.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "A eºuat încãrcarea listei cu parametri de\n"
+        "Eºec la încãrcarea listei cu parametri de\n"
         "afiºare pentru ecran.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "A eºuat încãrcarea listei cu tipuri\n"
+        "Eºec la încãrcarea listei cu tipuri\n"
         "disponibile de tastaturã.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "A eºuat încãrcarea listei de configuraþii\n"
+        "Eºec la încãrcarea listei de configuraþii\n"
         "ale tastaturii.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_WARN_PARTITION,
-        "A fost gãsit cel puþin un disc cu tabelã de partiþii\n"
-        "nerecunoscutã, ce nu pot fi gestionatã corespunzãtor!\n"
+        "A fost gãsitã cel puþin un disc cu tabelã nerecunoscutã\n"
+        "de partiþii, care nu poate fi gestionatã corespunzãtor!\n"
         "\n"
         "Crearea sau ºtergerea de partiþii poate astfel cauza\n"
         "distrugerea tabelei de partiþii."
@@ -1500,7 +1501,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_NEW_PARTITION,
-        "O partiþie nouã nu se creazã în interiorul\n"
+        "O partiþie nouã nu poate fi creatã în interiorul\n"
         "unei partiþii existente!\n"
         "\n"
         "  * Tastaþi pentru a continua.",
@@ -1516,7 +1517,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Nu s-a reuºit instalarea codului FAT de iniþializare\n"
+        "Eºec la instalarea codului FAT de iniþializare\n"
         "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },
@@ -1527,111 +1528,111 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "A eºuat actualizarea configuraþiei de tastaturã.",
+        "Eºec la actualizarea configuraþiei de tastaturã.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Nu s-a reuºit actualizarea registrului cu\n"
+        "Eºec la actualizarea registrului cu\n"
         "parametrii grafici ai ecranului!",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Nu s-a reuºit importarea registrului.",
+        "Eºec la importarea registrului.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Fiºierele cu datele registrului\n"
-        "nu au putut fi localizate.",
+        "Eºec la localizarea fiºierelor\n"
+        "cu datele registrului.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Crearea registrului local a eºuat!",
+        "Eºec la crearea registrului.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Iniþializarea registrului a eºuat.",
+        "Eºec la iniþializarea registrului.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Fiºierul cabinet nu conþine nici un fiºier\n"
-        "valid de tip inf.",
+        "Fiºierul cabinet nu conþine nici\n"
+        "un fiºier valid de tip inf.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Fiºierul cabinet nu e gãsit.\n",
+        "Eºec la localizarea fiºierului cabinet.\n",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Fiºierul cabinet nu conþine nici un script\n"
-        "de instalare.",
+        "Fiºierul cabinet nu conþine nici\n"
+        "un script de instalare.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_COPY_QUEUE,
-        "Nu se poate deschide lista de fiºiere\n"
-        "pentru copiere.",
+        "Eºec la accesarea listei cu\n"
+        "fiºiere pentru copiere.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_CREATE_DIR,
-        "Nu se pot crea directoarele de instalare.",
+        "Eºec la crearea directoarelor de instalare.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Nu se poate gãsi secþiunea de directoare\n"
-        "în fiºierul TXTSETUP.SIF.",
+        "Eºec la identificarea secþiunii de\n"
+        "directoare în fiºierul TXTSETUP.SIF.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Nu se poate gãsi secþiunea de directoare\n"
-        "în fiºierul cabinet.",
+        "Eºec la identificarea secþiunii de\n"
+        "directoare în fiºierul cabinet.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Nu se poate crea directorul de instalare.",
+        "Eºec la crearea directorului de instalare.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Nu se poate gãsi secþiunea pentru date de\n"
-        "instalare din fiºierul TXTSETUP.SIF.",
+        "Eºec la localizarea secþiunii pentru date\n"
+        "de instalare din fiºierul TXTSETUP.SIF.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "A eºuat scrierea tabelelor de partiþii.\n",
+        "Eºec la scrierea tabelelor de partiþii.\n",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "A eºuat includerea paginãrii în registre.\n",
+        "Eºec la includerea paginãrii în registru.\n",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Nu se poate institui sistemul de localizare.\n",
+        "Eºec la instituirea sistemului de localizare.\n",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "A eºuat includerea în registre a configuraþiei\n"
+        "Eºec la includerea în registru a configuraþiei\n"
         "de tastaturã.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Nu s-a reuºit instituirea de geo id.",
+        "Eºec la instituirea de geo id.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1643,27 +1644,27 @@ MUI_ERROR roROErrorEntries[] =
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Partiþia selectatã este prea micã pentru a instala ReactOS.\n"
-        "Partiþia de instalare trebuie sã fie de cel puþin %lu Mocteþi.\n"
+        "Partiþia de instalare trebuie sã aibã cel puþin %lu Mocteþi.\n"
         "\n"
         "  * Tastaþi pentru a continua.",
         NULL
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "Nu se poate crea o nouã partiþie primarã sau extinsã în tabela\n"
+        "Nu poate fi creatã o nouã partiþie primarã sau extinsã în tabela\n"
         "de partiþii a acestui disc deoarece tabela de partiþii e plinã.\n"
         "\n"
         "  * Tastaþi pentru a continua."
     },
     {
         //ERROR_ONLY_ONE_EXTENDED,
-        "Nu se poate crea mai mult de o partiþie extinsã pe un disc.\n"
+        "Nu poate fi creatã mai mult de o partiþie extinsã pe un disc.\n"
         "\n"
         "  * Tastaþi pentru a continua."
     },
     {
         //ERROR_FORMATTING_PARTITION,
-        "Nu s-a reuºit formatarea partiþiei:\n"
+        "Eºec la formatarea partiþiei:\n"
         " %S\n"
         "\n"
         "ENTER = Repornire calculator"
@@ -1825,33 +1826,33 @@ MUI_STRING roROStrings[] =
     {STRING_COPYING,
      "   Fiºierul curent: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Se copie fiºierele..."},
+     "Fiºiere în curs de copiere..."},
     {STRING_REGHIVEUPDATE,
-    "   Se actualizeazã registrul..."},
+    "   Registru în curs de actualizare..."},
     {STRING_IMPORTFILE,
-    "   Se importã %S..."},
+    "   În curs de importare din %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Se actualizeazã registrul configuraþiei grafice..."},
+    "   Registru de configuraþie graficã în actualizare..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Se actualizeazã particularitãþile locale..."},
+    "   Particularitãþi locale în actualizare..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Se actualizeazã configuraþia tastaturii..."},
+    "   Configuraþie de tastaturã în actualizare..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Se adaugã datele de paginare în registru..."},
+    "   Date de paginare în curs de adaugare în registru..."},
     {STRING_DONE,
     "   Terminat!"},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Repornire calculator"},
     {STRING_CONSOLEFAIL1,
-    "Nu se poate deschide consola\r\n\r\n"},
+    "Eºec la deschiderea consolei\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
     "Cea mai frecventã cauzã pentru asta este utilizarea unei tastaturi USB\r\n"},
     {STRING_CONSOLEFAIL3,
-    "Tastaturile USB încã nu sunt complet suportate\r\n"},
+    "Tastaturile USB nu sunt încã toate acceptate\r\n"},
     {STRING_FORMATTINGDISK,
-    "Se formateazã discul..."},
+    "Disc în curs de formatare..."},
     {STRING_CHECKINGDISK,
-    "Se verificã discul..."},
+    "Disc în curs de verificare..."},
     {STRING_FORMATDISK1,
     " Formateazã partiþia ca sistem de fiºiere %S (formatare rapidã) "},
     {STRING_FORMATDISK2,

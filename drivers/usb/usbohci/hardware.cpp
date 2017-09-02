@@ -23,7 +23,7 @@ InterruptServiceRoutine(
 
 VOID
 NTAPI
-OhciDefferedRoutine(
+OhciDeferredRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -68,7 +68,7 @@ public:
 
     // friend function
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
-    friend VOID NTAPI OhciDefferedRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
+    friend VOID NTAPI OhciDeferredRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
     friend VOID NTAPI StatusChangeWorkItemRoutine(PVOID Context);
     // constructor / destructor
     CUSBHardwareDevice(IUnknown *OuterUnknown){}
@@ -190,7 +190,7 @@ CUSBHardwareDevice::Initialize(
     KeInitializeSpinLock(&m_Lock);
 
     //
-    // intialize status change work item
+    // initialize status change work item
     //
     ExInitializeWorkItem(&m_StatusChangeWorkItem, StatusChangeWorkItemRoutine, PVOID(this));
 
@@ -200,7 +200,7 @@ CUSBHardwareDevice::Initialize(
     Status = GetBusInterface(PhysicalDeviceObject, &BusInterface);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get BusInteface!\n");
+        DPRINT1("Failed to get BusInterface!\n");
         return Status;
     }
 
@@ -248,7 +248,7 @@ CUSBHardwareDevice::PnpStart(
             case CmResourceTypeInterrupt:
             {
                 KeInitializeDpc(&m_IntDpcObject,
-                                OhciDefferedRoutine,
+                                OhciDeferredRoutine,
                                 this);
 
                 Status = IoConnectInterrupt(&m_Interrupt,
@@ -393,7 +393,7 @@ NTSTATUS
 STDMETHODCALLTYPE
 CUSBHardwareDevice::PnpStop(void)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -800,7 +800,7 @@ CUSBHardwareDevice::AllocateEndpointDescriptor(
     }
 
     //
-    // intialize descriptor
+    // initialize descriptor
     //
     Descriptor->Flags = OHCI_ENDPOINT_SKIP;
     Descriptor->HeadPhysicalDescriptor = 0;
@@ -1422,7 +1422,7 @@ InterruptServiceRoutine(
 
 VOID
 NTAPI
-OhciDefferedRoutine(
+OhciDeferredRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -1439,7 +1439,7 @@ OhciDefferedRoutine(
     CStatus = (ULONG) SystemArgument1;
     DoneHead = (ULONG)SystemArgument2;
 
-    DPRINT("OhciDefferedRoutine Status %x DoneHead %x\n", CStatus, DoneHead);
+    DPRINT("OhciDeferredRoutine Status %x DoneHead %x\n", CStatus, DoneHead);
 
     if (CStatus & OHCI_WRITEBACK_DONE_HEAD)
     {

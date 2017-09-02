@@ -1,0 +1,123 @@
+/*
+ * Japanese resources for WLDAP32
+ *
+ * Copyright 2016 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    0 "成功"
+    1 "操作失敗"
+    2 "プロトコル エラー"
+    3 "時間制限を超えました"
+    4 "サイズ制限を超えました"
+    5 "比較は偽"
+    6 "比較は真"
+    7 "認証方式がサポートされていません"
+    8 "強い認証が必要です"
+    9 "委託 (v2)"
+    10 "委託"
+    11 "認証制限を超えました"
+    12 "重大な拡張が利用できません"
+    13 "機密を要します"
+    14 "SASL Bind in Progress"
+    15 ""
+    16 "そのような属性はありません"
+    17 "未定義の型"
+    18 "不適切なマッチング"
+    19 "制約の違反"
+    20 "属性または値が存在します"
+    21 "無効な文法"
+    22 ""
+    23 ""
+    24 ""
+    25 ""
+    26 ""
+    27 ""
+    28 ""
+    29 ""
+    30 ""
+    31 ""
+    32 "そのようなオブジェクトはありません"
+    33 "エイリアス問題"
+    34 "不正なDN文法"
+    35 "リーフか"
+    36 "エイリアス値参照問題"
+    37 ""
+    38 ""
+    39 ""
+    40 ""
+    41 ""
+    42 ""
+    43 ""
+    44 ""
+    45 ""
+    46 ""
+    47 ""
+    48 "不適切な認証"
+    49 "無効な証明書"
+    50 "権限が不足"
+    51 "ビジー"
+    52 "利用できません"
+    53 "望まない実行"
+    54 "ループが検出されました"
+    55 ""
+    56 ""
+    57 ""
+    58 ""
+    59 ""
+    60 "並べ替え制御がありません"
+    61 "インデックス範囲外エラー"
+    62 ""
+    63 ""
+    64 "名前付け違反"
+    65 "オブジェクト クラス違反"
+    66 "ノンリーフでは許されていません"
+    67 "RDNでは許されていません"
+    68 "すでに存在します"
+    69 "オブジェクト クラス モジュールがありません"
+    70 "結果が大きすぎます"
+    71 "複数のDSAに影響します"
+    72 ""
+    73 ""
+    74 ""
+    75 ""
+    76 ""
+    77 ""
+    78 ""
+    79 ""
+    80 "その他"
+    81 "サーバーが落ちています"
+    82 "ローカル エラー"
+    83 "エンコーディング エラー"
+    84 "デコーディング エラー"
+    85 "タイムアウト"
+    86 "未知の認証"
+    87 "フィルター エラー"
+    88 "ユーザーによってキャンセルされました"
+    89 "引数エラー"
+    90 "メモリー不足"
+    91 "LDAPサーバーに接続できません"
+    92 "操作はこのバージョンのLDAPプロトコルではサポートされていません"
+    93 "指定した制御は、メッセージ内で見つかりませんでした"
+    94 "メッセージに結果がありません"
+    95 "さらなる結果が返されました"
+    96 "ハンドリング委託の間、ループ"
+    97 "委託巡りが限界を超えました"
+}

@@ -83,7 +83,7 @@ KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->DbgArgMark = 0xBADB0D00;
     TrapFrame->DbgEip = TrapFrame->Eip;
     TrapFrame->DbgEbp = TrapFrame->Ebp;
-    TrapFrame->PreviousPreviousMode = -1;
+    TrapFrame->PreviousPreviousMode = (ULONG)-1;
 }
 
 #define DR7_RESERVED_READ_AS_1 0x400

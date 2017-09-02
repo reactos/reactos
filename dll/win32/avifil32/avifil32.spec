@@ -49,7 +49,7 @@
 49 stdcall AVIStreamOpenFromFileW(ptr wstr long long long ptr)
 50 stdcall AVIStreamRead(ptr long long ptr long ptr ptr)
 51 stdcall AVIStreamReadData(ptr long ptr ptr)
-52 stdcall AVIStreamReadFormat(ptr long ptr long)
+52 stdcall AVIStreamReadFormat(ptr long ptr ptr)
 53 stdcall AVIStreamRelease(ptr)
 54 stdcall AVIStreamSampleToTime(ptr long)
 55 stdcall AVIStreamSetFormat(ptr long ptr long)

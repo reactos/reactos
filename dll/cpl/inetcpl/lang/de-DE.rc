@@ -25,7 +25,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CPL_NAME        "Internetoptionen"
+    IDS_CPL_NAME        "Internet"
     IDS_CPL_INFO        "Konfiguration des Wine Internet Browsers und dessen Einstellungen"
     IDS_SEC_SETTINGS    "Sicherheitseinstellungen für Zone: "
     IDS_SEC_LEVEL0      "Benutzerdefiniert"

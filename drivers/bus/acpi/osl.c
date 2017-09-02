@@ -114,8 +114,6 @@ AcpiOsMapMemory (
 
     DPRINT("AcpiOsMapMemory(phys 0x%p  size 0x%X)\n", phys, length);
 
-    ASSERT(phys);
-
     Address.QuadPart = (ULONG)phys;
     Ptr = MmMapIoSpace(Address, length, MmNonCached);
     if (!Ptr)
@@ -928,6 +926,16 @@ AcpiOsSignal (
     ASSERT(FALSE);
 
     return (AE_OK);
+}
+
+ACPI_STATUS
+AcpiOsEnterSleep(
+    UINT8 SleepState,
+    UINT32 RegaValue,
+    UINT32 RegbValue)
+{
+    DPRINT1("Entering sleep state S%u.\n", SleepState);
+    return AE_OK;
 }
 
 ACPI_STATUS

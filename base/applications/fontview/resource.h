@@ -15,4 +15,7 @@
 #define IDS_CHARSUPPER   701
 #define IDS_SPECIALCHARS 702
 
+#define IDS_PREVIOUS   800
+#define IDS_NEXT       801
+
 #define IDI_TT 800

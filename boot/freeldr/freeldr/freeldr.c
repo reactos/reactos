@@ -38,7 +38,7 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
     MachInit(CmdLine);
 
     /* Check if the CPU is new enough */
-    FrLdrCheckCpuCompatiblity(); // FIXME: Should be done inside MachInit!
+    FrLdrCheckCpuCompatibility(); // FIXME: Should be done inside MachInit!
 
     /* UI pre-initialization */
     if (!UiInitialize(FALSE))
@@ -61,7 +61,9 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
 
 Quit:
     /* If we reach this point, something went wrong before, therefore reboot */
+#if defined(__i386__) || defined(_M_AMD64)
     DiskStopFloppyMotor();
+#endif
     Reboot();
 }
 

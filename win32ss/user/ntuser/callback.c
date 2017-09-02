@@ -279,6 +279,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 
    if (!NT_SUCCESS(Status))
    {
+      ERR("KeUserModeCallback failed with %lx\n", Status);
       return;
    }
    return;
@@ -346,7 +347,7 @@ co_IntCallWindowProc(WNDPROC Proc,
                                &ResultLength);
    if (!NT_SUCCESS(Status))
    {
-      ERR("Error Callback to User space Status %lx\n",Status);
+      ERR("Error Callback to User space Status %lx Message %d\n",Status,Message);
       UserEnterCo();
       return 0;
    }

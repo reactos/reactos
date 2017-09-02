@@ -89,7 +89,6 @@ typedef BOOL(WINAPI* GETVERSIONEXAPROC)(LPOSVERSIONINFOEXA);
 
 
 #define SHIM_NS         Win95VersionLie
-
 #include <setup_shim.inl>
 
 DWORD WINAPI SHIM_OBJ_NAME(APIHook_GetVersion)()
@@ -128,7 +127,6 @@ BOOL WINAPI SHIM_OBJ_NAME(APIHook_GetVersionExW)(LPOSVERSIONINFOEXA lpOsVersionI
 
 
 #define SHIM_NS         Win98VersionLie
-
 #include <setup_shim.inl>
 
 DWORD WINAPI SHIM_OBJ_NAME(APIHook_GetVersion)()

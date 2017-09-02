@@ -22,11 +22,12 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <stdarg.h>
+#include <math.h>
+
 #include <windef.h>
-//#include "winbase.h"
-//#include "winuser.h"
 #include <mmddk.h>
 #include <wine/debug.h>
+
 #include "mciqtz_private.h"
 #include <digitalv.h>
 #include <wownt32.h>
@@ -361,6 +362,18 @@ static DWORD CALLBACK MCIQTZ_notifyThread(LPVOID parm)
                 }
             } while (hr == S_OK && event_code != EC_COMPLETE);
             if (hr == S_OK && event_code == EC_COMPLETE) {
+                /* Repeat the music by seeking and running again */
+                if (wma->mci_flags & MCI_DGV_PLAY_REPEAT) {
+                    TRACE("repeat media as requested\n");
+                    IMediaControl_Stop(wma->pmctrl);
+                    IMediaSeeking_SetPositions(wma->seek,
+                                               &wma->seek_start,
+                                               AM_SEEKING_AbsolutePositioning,
+                                               &wma->seek_stop,
+                                               AM_SEEKING_AbsolutePositioning);
+                    IMediaControl_Run(wma->pmctrl);
+                    continue;
+                }
                 old = InterlockedExchangePointer(&wma->callback, NULL);
                 if (old)
                     mciDriverNotify(old, wma->notify_devid, MCI_NOTIFY_SUCCESSFUL);
@@ -389,9 +402,8 @@ static DWORD MCIQTZ_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
 {
     WINE_MCIQTZ* wma;
     HRESULT hr;
-    REFERENCE_TIME time1 = 0, time2 = 0;
     GUID format;
-    DWORD pos1;
+    DWORD start_flags;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
@@ -410,23 +422,29 @@ static DWORD MCIQTZ_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
             mciDriverNotify(old, wma->notify_devid, MCI_NOTIFY_ABORTED);
     }
 
+    wma->mci_flags = dwFlags;
     IMediaSeeking_GetTimeFormat(wma->seek, &format);
     if (dwFlags & MCI_FROM) {
         if (IsEqualGUID(&format, &TIME_FORMAT_MEDIA_TIME))
-            time1 = lpParms->dwFrom * 10000;
+            wma->seek_start = lpParms->dwFrom * 10000;
         else
-            time1 = lpParms->dwFrom;
-        pos1 = AM_SEEKING_AbsolutePositioning;
-    } else
-        pos1 = AM_SEEKING_NoPositioning;
+            wma->seek_start = lpParms->dwFrom;
+        start_flags = AM_SEEKING_AbsolutePositioning;
+    } else {
+        wma->seek_start = 0;
+        start_flags = AM_SEEKING_NoPositioning;
+    }
     if (dwFlags & MCI_TO) {
         if (IsEqualGUID(&format, &TIME_FORMAT_MEDIA_TIME))
-            time2 = lpParms->dwTo * 10000;
+            wma->seek_stop = lpParms->dwTo * 10000;
         else
-            time2 = lpParms->dwTo;
-    } else
-        IMediaSeeking_GetDuration(wma->seek, &time2);
-    IMediaSeeking_SetPositions(wma->seek, &time1, pos1, &time2, AM_SEEKING_AbsolutePositioning);
+            wma->seek_stop = lpParms->dwTo;
+    } else {
+        wma->seek_stop = 0;
+        IMediaSeeking_GetDuration(wma->seek, &wma->seek_stop);
+    }
+    IMediaSeeking_SetPositions(wma->seek, &wma->seek_start, start_flags,
+                               &wma->seek_stop, AM_SEEKING_AbsolutePositioning);
 
     hr = IMediaControl_Run(wma->pmctrl);
     if (FAILED(hr)) {
@@ -1073,7 +1091,7 @@ static DWORD MCIQTZ_mciSetAudio(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SETAUDIO_P
         switch (lpParms->dwItem) {
         case MCI_DGV_SETAUDIO_VOLUME:
             if (dwFlags & MCI_DGV_SETAUDIO_VALUE) {
-                long vol = -10000;
+                long vol;
                 HRESULT hr;
                 if (lpParms->dwValue > 1000) {
                     ret = MCIERR_OUTOFRANGE;
@@ -1081,7 +1099,11 @@ static DWORD MCIQTZ_mciSetAudio(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SETAUDIO_P
                 }
                 if (dwFlags & MCI_TEST)
                     break;
-                vol += (long)lpParms->dwValue * 10;
+                if (lpParms->dwValue != 0)
+                    vol = (long)(2000.0 * (log10(lpParms->dwValue) - 3.0));
+                else
+                    vol = -10000;
+                TRACE("Setting volume to %ld\n", vol);
                 hr = IBasicAudio_put_Volume(wma->audio, vol);
                 if (FAILED(hr)) {
                     WARN("Cannot set volume (hr = %x)\n", hr);

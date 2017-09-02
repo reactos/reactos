@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Serial mouse driver
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        drivers/input/sermouse/fdo.c
- * PURPOSE:     Misceallenous operations
+ * PURPOSE:     Miscellaneous operations
  * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 

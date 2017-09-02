@@ -8,6 +8,7 @@ include_directories(
 list(APPEND SOURCE
     enhmetafile.c
     metafile.c
+    path.c
     enhmfdrv/bitblt.c
     enhmfdrv/dc.c
     enhmfdrv/graphics.c

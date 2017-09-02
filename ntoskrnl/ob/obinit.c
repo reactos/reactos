@@ -54,6 +54,78 @@ ULONG ObpInitializationPhase;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+static
+NTSTATUS
+NTAPI
+INIT_FUNCTION
+ObpCreateKernelObjectsSD(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
+{
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    PACL Dacl;
+    ULONG AclSize, SdSize;
+    NTSTATUS Status;
+
+    AclSize = sizeof(ACL) +
+              sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+              sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid) +
+              sizeof(ACE) + RtlLengthSid(SeLocalSystemSid);
+
+    SdSize = sizeof(SECURITY_DESCRIPTOR) + AclSize;
+
+    /* Allocate the SD and ACL */
+    Sd = ExAllocatePoolWithTag(PagedPool, SdSize, TAG_SD);
+    if (Sd == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Initialize the SD */
+    Status = RtlCreateSecurityDescriptor(Sd,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Dacl = (PACL)((INT_PTR)Sd + sizeof(SECURITY_DESCRIPTOR));
+
+    /* Initialize the DACL */
+    RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
+
+    /* Add the ACEs */
+    RtlAddAccessAllowedAce(Dacl,
+                           ACL_REVISION,
+                           GENERIC_READ,
+                           SeWorldSid);
+
+    RtlAddAccessAllowedAce(Dacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           SeAliasAdminsSid);
+
+    RtlAddAccessAllowedAce(Dacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           SeLocalSystemSid);
+
+    /* Attach the DACL to the SD */
+    Status = RtlSetDaclSecurityDescriptor(Sd,
+                                          TRUE,
+                                          Dacl,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *SecurityDescriptor = Sd;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (Sd != NULL)
+            ExFreePoolWithTag(Sd, TAG_SD);
+    }
+
+    return Status;
+}
+
 BOOLEAN
 INIT_FUNCTION
 NTAPI
@@ -136,6 +208,7 @@ ObInitSystem(VOID)
     POBJECT_HEADER Header;
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
     POBJECT_HEADER_NAME_INFO NameInfo;
+    PSECURITY_DESCRIPTOR KernelObjectsSD = NULL;
     NTSTATUS Status;
 
     /* Check if this is actually Phase 1 initialization */
@@ -258,25 +331,31 @@ ObPostPhase0:
     Status = NtClose(Handle);
     if (!NT_SUCCESS(Status)) return FALSE;
 
-    /* Initialize Object Types directory attributes */
+    /* Create a custom security descriptor for the KernelObjects directory */
+    Status = ObpCreateKernelObjectsSD(&KernelObjectsSD);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    /* Initialize the KernelObjects directory attributes */
     RtlInitUnicodeString(&Name, L"\\KernelObjects");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                NULL,
-                               NULL);
-    
+                               KernelObjectsSD);
+
     /* Create the directory */
     Status = NtCreateDirectoryObject(&Handle,
                                      DIRECTORY_ALL_ACCESS,
                                      &ObjectAttributes);
+    ExFreePoolWithTag(KernelObjectsSD, TAG_SD);
     if (!NT_SUCCESS(Status)) return FALSE;
-    
+
     /* Close the extra handle */
     Status = NtClose(Handle);
     if (!NT_SUCCESS(Status)) return FALSE;
 
-    /* Initialize Object Types directory attributes */
+    /* Initialize ObjectTypes directory attributes */
     RtlInitUnicodeString(&Name, L"\\ObjectTypes");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,

@@ -17,19 +17,29 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*
+ * TODO: This is here where we should add support for GPT partitions
+ * as well as partitionless disks!
+ */
+
 #ifndef _M_ARM
 #include <freeldr.h>
+
+#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(DISK);
 
+/* This function serves to retrieve a partition entry for devices that handle partitions differently */
+DISK_GET_PARTITION_ENTRY DiskGetPartitionEntry = DiskGetMbrPartitionEntry;
+
 BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber,
-                                 PPARTITION_TABLE_ENTRY PartitionTableEntry,
-                                 ULONG *ActivePartition)
+                                    PPARTITION_TABLE_ENTRY PartitionTableEntry,
+                                    ULONG *ActivePartition)
 {
-    ULONG              BootablePartitionCount = 0;
-    ULONG              CurrentPartitionNumber;
-    ULONG              Index;
+    ULONG BootablePartitionCount = 0;
+    ULONG CurrentPartitionNumber;
+    ULONG Index;
     MASTER_BOOT_RECORD MasterBootRecord;
     PPARTITION_TABLE_ENTRY ThisPartitionTableEntry;
 
@@ -81,15 +91,15 @@ BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber,
     return TRUE;
 }
 
-BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOLEAN DiskGetMbrPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-    MASTER_BOOT_RECORD        MasterBootRecord;
-    PARTITION_TABLE_ENTRY    ExtendedPartitionTableEntry;
-    ULONG                        ExtendedPartitionNumber;
-    ULONG                        ExtendedPartitionOffset;
-    ULONG                        Index;
-    ULONG                        CurrentPartitionNumber;
-    PPARTITION_TABLE_ENTRY       ThisPartitionTableEntry;
+    MASTER_BOOT_RECORD MasterBootRecord;
+    PARTITION_TABLE_ENTRY ExtendedPartitionTableEntry;
+    ULONG ExtendedPartitionNumber;
+    ULONG ExtendedPartitionOffset;
+    ULONG Index;
+    ULONG CurrentPartitionNumber;
+    PPARTITION_TABLE_ENTRY ThisPartitionTableEntry;
 
     // Read master boot record
     if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
@@ -101,7 +111,7 @@ BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITI
     for (Index=0; Index<4; Index++)
     {
         ThisPartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
-        
+
         if (ThisPartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED &&
             ThisPartitionTableEntry->SystemIndicator != PARTITION_EXTENDED &&
             ThisPartitionTableEntry->SystemIndicator != PARTITION_XINT13_EXTENDED)
@@ -166,7 +176,7 @@ BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITI
 
 BOOLEAN DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-    ULONG        Index;
+    ULONG Index;
 
     for (Index=0; Index<4; Index++)
     {
@@ -187,7 +197,7 @@ BOOLEAN DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTIT
 
 BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-    ULONG        Index;
+    ULONG Index;
 
     for (Index=0; Index<4; Index++)
     {

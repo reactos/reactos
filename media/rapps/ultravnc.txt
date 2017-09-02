@@ -6,7 +6,7 @@ Description = Open source VNC client/server.
 Size = 3.1 MiB
 Category = 5
 URLSite = http://www.uvnc.com/
-URLDownload = http://www.uvnc.eu/download/1211/UltraVNC_1_2_11_X86_Setup.exe
+URLDownload = http://www.dpfox.com/files/VNC/UltraVNC_1_2_11_X86_Setup.exe
 SHA1 = 24c774bc3d5b16e84f4dc734dda520dd54e5b7f9
 CDPath = none
 
@@ -36,7 +36,7 @@ Size = 3,1 Mio
 
 [Section.0419]
 Description = VNC клиент/сервер с открытым исходным кодом.
-Size = 3,1 МБ
+Size = 3,1 МиБ
 
 [Section.041f]
 Description = Açık kaynak VNC istemcisi ve sunucusu.

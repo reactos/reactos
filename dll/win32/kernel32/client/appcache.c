@@ -15,8 +15,21 @@
 
 /* GLOBALS ********************************************************************/
 
-ULONG g_ShimsEnabled;
- 
+ULONG g_ShimsDisabled = -1;
+static BOOL g_ApphelpInitialized = FALSE;
+static PVOID g_pApphelpCheckRunAppEx;
+static PVOID g_pSdbPackAppCompatData;
+
+typedef BOOL (WINAPI *tApphelpCheckRunAppEx)(HANDLE FileHandle, PVOID Unk1, PVOID Unk2, PWCHAR ApplicationName, PVOID Environment, USHORT ExeType, PULONG Reason,
+                                             PVOID* SdbQueryAppCompatData, PULONG SdbQueryAppCompatDataSize, PVOID* SxsData, PULONG SxsDataSize,
+                                             PULONG FusionFlags, PULONG64 SomeFlag1, PULONG SomeFlag2);
+typedef BOOL (WINAPI *tSdbPackAppCompatData)(PVOID hsdb, PVOID pQueryResult, PVOID* ppData, DWORD *dwSize);
+
+#define APPHELP_VALID_RESULT        0x10000
+#define APPHELP_RESULT_NOTFOUND     0x20000
+#define APPHELP_RESULT_FOUND        0x40000
+
+
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN
@@ -41,8 +54,10 @@ IsShimInfrastructureDisabled(VOID)
      * This is a TROOLEAN, -1 means we haven't yet figured it out.
      * 0 means shims are enabled, and 1 means shims are disabled!
      */
-    if (g_ShimsEnabled == -1)
+    if (g_ShimsDisabled == -1)
     {
+        ULONG DisableShims = FALSE;
+
         /* Open the safe mode key */
         Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &OptionKeyAttributes);
         if (NT_SUCCESS(Status))
@@ -61,66 +76,63 @@ IsShimInfrastructureDisabled(VOID)
                  (KeyInfo.Data[0] == TRUE))
             {
                 /* It is, so disable shims! */
-                g_ShimsEnabled = TRUE;
+                DisableShims = TRUE;
             }
-            else
+        }
+
+        if (!DisableShims)
+        {
+            /* Open the app compatibility engine settings key */
+            Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &AppCompatKeyAttributes);
+            if (NT_SUCCESS(Status))
             {
-                /* Open the app compatibility engine settings key */
-                Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &AppCompatKeyAttributes);
-                if (NT_SUCCESS(Status))
+                /* Check if the app compat engine is turned off */
+                Status = NtQueryValueKey(KeyHandle,
+                                         &DisableAppCompat,
+                                         KeyValuePartialInformation,
+                                         &KeyInfo,
+                                         sizeof(KeyInfo),
+                                         &ResultLength);
+                NtClose(KeyHandle);
+                if ((NT_SUCCESS(Status)) &&
+                    (KeyInfo.Type == REG_DWORD) &&
+                    (KeyInfo.DataLength == sizeof(ULONG)) &&
+                    (KeyInfo.Data[0] == TRUE))
                 {
-                    /* Check if the app compat engine is turned off */
-                    Status = NtQueryValueKey(KeyHandle,
-                                             &DisableAppCompat,
-                                             KeyValuePartialInformation,
-                                             &KeyInfo,
-                                             sizeof(KeyInfo),
-                                             &ResultLength);
-                    NtClose(KeyHandle);
-                    if ((NT_SUCCESS(Status)) &&
-                        (KeyInfo.Type == REG_DWORD) &&
-                        (KeyInfo.DataLength == sizeof(ULONG)) &&
-                        (KeyInfo.Data[0] == TRUE))
-                    {
-                        /* It is, so disable shims! */
-                        g_ShimsEnabled = TRUE;
-                    }
-                    else
-                    {
-                        /* Finally, open the app compatibility policy key */
-                        Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &PolicyKeyAttributes);
-                        if (NT_SUCCESS(Status))
-                        {
-                            /* Check if the system policy disables app compat */
-                            Status = NtQueryValueKey(KeyHandle,
-                                                     &DisableEngine,
-                                                     KeyValuePartialInformation,
-                                                     &KeyInfo,
-                                                     sizeof(KeyInfo),
-                                                     &ResultLength),
-                                                     NtClose(KeyHandle);
-                            if ((NT_SUCCESS(Status)) &&
-                                (KeyInfo.Type == REG_DWORD) &&
-                                (KeyInfo.DataLength == sizeof(ULONG)) &&
-                                (KeyInfo.Data[0] == TRUE))
-                            {
-                                /* It does, so disable shims! */
-                                g_ShimsEnabled = TRUE;
-                            }
-                            else
-                            {
-                                /* No keys are set, so enable shims! */
-                                g_ShimsEnabled = FALSE;
-                            }
-                        }
-                    }
+                    /* It is, so disable shims! */
+                    DisableShims = TRUE;
                 }
             }
         }
+        if (!DisableShims)
+        {
+            /* Finally, open the app compatibility policy key */
+            Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &PolicyKeyAttributes);
+            if (NT_SUCCESS(Status))
+            {
+                /* Check if the system policy disables app compat */
+                Status = NtQueryValueKey(KeyHandle,
+                                         &DisableEngine,
+                                         KeyValuePartialInformation,
+                                         &KeyInfo,
+                                         sizeof(KeyInfo),
+                                         &ResultLength);
+                NtClose(KeyHandle);
+                if ((NT_SUCCESS(Status)) &&
+                    (KeyInfo.Type == REG_DWORD) &&
+                    (KeyInfo.DataLength == sizeof(ULONG)) &&
+                    (KeyInfo.Data[0] == TRUE))
+                {
+                    /* It does, so disable shims! */
+                    DisableShims = TRUE;
+                }
+            }
+        }
+        g_ShimsDisabled = DisableShims;
     }
 
     /* Return if shims are disabled or not ("Enabled == 1" means disabled!) */
-    return g_ShimsEnabled ? TRUE : FALSE;
+    return g_ShimsDisabled ? TRUE : FALSE;
 }
 
 /*
@@ -133,9 +145,123 @@ BaseCheckAppcompatCache(IN PWCHAR ApplicationName,
                         IN PWCHAR Environment,
                         OUT PULONG Reason)
 {
-    UNIMPLEMENTED;
+    DPRINT("BaseCheckAppcompatCache is UNIMPLEMENTED\n");
+
     if (Reason) *Reason = 0;
-    return TRUE;
+
+    // We don't know this app.
+    return FALSE;
+}
+
+static
+VOID
+BaseInitApphelp(VOID)
+{
+    WCHAR Buffer[MAX_PATH*2];
+    UNICODE_STRING DllPath = {0};
+    PVOID ApphelpAddress;
+    PVOID pApphelpCheckRunAppEx = NULL, pSdbPackAppCompatData = NULL;
+
+    RtlInitEmptyUnicodeString(&DllPath, Buffer, sizeof(Buffer));
+    RtlCopyUnicodeString(&DllPath, &BaseWindowsDirectory);
+    RtlAppendUnicodeToString(&DllPath, L"\\system32\\apphelp.dll");
+
+    if (NT_SUCCESS(LdrLoadDll(NULL, NULL, &DllPath, &ApphelpAddress)))
+    {
+        ANSI_STRING ProcName;
+
+        RtlInitAnsiString(&ProcName, "ApphelpCheckRunAppEx");
+        if (!NT_SUCCESS(LdrGetProcedureAddress(ApphelpAddress, &ProcName, 0, &pApphelpCheckRunAppEx)))
+            pApphelpCheckRunAppEx = NULL;
+
+        RtlInitAnsiString(&ProcName, "SdbPackAppCompatData");
+        if (!NT_SUCCESS(LdrGetProcedureAddress(ApphelpAddress, &ProcName, 0, &pSdbPackAppCompatData)))
+            pSdbPackAppCompatData = NULL;
+    }
+
+    if (InterlockedCompareExchangePointer(&g_pApphelpCheckRunAppEx, RtlEncodeSystemPointer(pApphelpCheckRunAppEx), NULL) == NULL)
+    {
+        g_pSdbPackAppCompatData = RtlEncodeSystemPointer(pSdbPackAppCompatData);
+    }
+}
+
+/*
+ *
+ */
+BOOL
+WINAPI
+BaseCheckRunApp(IN HANDLE FileHandle,
+                 IN PWCHAR ApplicationName,
+                 IN PWCHAR Environment,
+                 IN USHORT ExeType,
+                 IN PULONG pReason,
+                 IN PVOID* SdbQueryAppCompatData,
+                 IN PULONG SdbQueryAppCompatDataSize,
+                 IN PVOID* SxsData,
+                 IN PULONG SxsDataSize,
+                 OUT PULONG FusionFlags)
+{
+    ULONG Reason = 0;
+    ULONG64 Flags1 = 0;
+    ULONG Flags2 = 0;
+    BOOL Continue, NeedCleanup = FALSE;
+    tApphelpCheckRunAppEx pApphelpCheckRunAppEx;
+    tSdbPackAppCompatData pSdbPackAppCompatData;
+    PVOID QueryResult = NULL;
+    ULONG QueryResultSize = 0;
+
+    if (!g_ApphelpInitialized)
+    {
+        BaseInitApphelp();
+        g_ApphelpInitialized = TRUE;
+    }
+
+    pApphelpCheckRunAppEx = RtlDecodeSystemPointer(g_pApphelpCheckRunAppEx);
+    pSdbPackAppCompatData = RtlDecodeSystemPointer(g_pSdbPackAppCompatData);
+
+    if (!pApphelpCheckRunAppEx || !pSdbPackAppCompatData)
+        return TRUE;
+
+    if (pReason)
+        Reason = *pReason;
+
+    Continue = pApphelpCheckRunAppEx(FileHandle, NULL, NULL, ApplicationName, Environment, ExeType, &Reason,
+        &QueryResult, &QueryResultSize, SxsData, SxsDataSize, FusionFlags, &Flags1, &Flags2);
+
+    if (pReason)
+        *pReason = Reason;
+
+    if (Continue)
+    {
+        if ((Reason & (APPHELP_VALID_RESULT|APPHELP_RESULT_FOUND)) == (APPHELP_VALID_RESULT|APPHELP_RESULT_FOUND))
+        {
+            if (!pSdbPackAppCompatData(NULL, QueryResult, SdbQueryAppCompatData, SdbQueryAppCompatDataSize))
+            {
+                DPRINT1("SdbPackAppCompatData returned a failure!\n");
+                NeedCleanup = TRUE;
+            }
+        }
+        else
+        {
+            NeedCleanup = TRUE;
+        }
+    }
+
+    if (QueryResult)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, QueryResult);
+
+    if (NeedCleanup)
+    {
+        BasepFreeAppCompatData(*SdbQueryAppCompatData, *SxsData);
+        *SdbQueryAppCompatData = NULL;
+        if (SdbQueryAppCompatDataSize)
+            *SdbQueryAppCompatDataSize = 0;
+        *SxsData = NULL;
+        if (SxsDataSize)
+            *SxsDataSize = 0;
+    }
+
+    return Continue;
 }
 
 /*
@@ -170,9 +296,11 @@ BasepCheckBadapp(IN HANDLE FileHandle,
                                      Environment,
                                      &Reason))
         {
-            /* We don't support this yet */
-            UNIMPLEMENTED;
-            Status = STATUS_ACCESS_DENIED;
+            if (!BaseCheckRunApp(FileHandle, ApplicationName, Environment, ExeType, &Reason,
+                                SdbQueryAppCompatData, SdbQueryAppCompatDataSize, SxsData, SxsDataSize, FusionFlags))
+            {
+                Status = STATUS_ACCESS_DENIED;
+            }
         }
     }
 

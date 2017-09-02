@@ -255,9 +255,9 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
         case REG_DWORD_BIG_ENDIAN: /* Yes, this is correct! */
         {
             LPWSTR rest;
-            DWORD val;
+            unsigned long val;
             val = strtoulW(data, &rest, (tolowerW(data[1]) == 'x') ? 16 : 10);
-            if (*rest || data[0] == '-' || (val == ~0u && errno == ERANGE)) {
+            if (*rest || data[0] == '-' || (val == ~0u && errno == ERANGE) || val > ~0u) {
                 output_message(STRING_MISSING_INTEGER);
                 break;
             }
@@ -351,32 +351,12 @@ static BOOL sane_path(const WCHAR *key)
     return TRUE;
 }
 
-static int reg_add(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
-    WCHAR *type, WCHAR separator, WCHAR *data, BOOL force)
+static int reg_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
+                   WCHAR *type, WCHAR separator, WCHAR *data, BOOL force)
 {
-    LPWSTR p;
-    HKEY root,subkey;
+    HKEY key;
 
-    if (!sane_path(key_name))
-        return 1;
-
-    p = strchrW(key_name,'\\');
-    if (p) p++;
-
-    root = path_get_rootkey(key_name);
-    if (!root)
-    {
-        output_message(STRING_INVALID_KEY);
-        return 1;
-    }
-
-    if (value_name && value_empty)
-    {
-        output_message(STRING_INVALID_CMDLINE);
-        return 1;
-    }
-
-    if(RegCreateKeyW(root,p,&subkey)!=ERROR_SUCCESS)
+    if (RegCreateKeyW(root, path, &key) != ERROR_SUCCESS)
     {
         output_message(STRING_INVALID_KEY);
         return 1;
@@ -390,11 +370,11 @@ static int reg_add(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
 
         if (!force)
         {
-            if (RegQueryValueExW(subkey, value_name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+            if (RegQueryValueExW(key, value_name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
             {
                 if (!ask_confirm(STRING_OVERWRITE_VALUE, value_name))
                 {
-                    RegCloseKey(subkey);
+                    RegCloseKey(key);
                     output_message(STRING_CANCELLED);
                     return 0;
                 }
@@ -404,57 +384,37 @@ static int reg_add(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
         reg_type = wchar_get_type(type);
         if (reg_type == ~0u)
         {
-            RegCloseKey(subkey);
+            RegCloseKey(key);
             output_message(STRING_UNSUPPORTED_TYPE, type);
             return 1;
         }
         if ((reg_type == REG_DWORD || reg_type == REG_DWORD_BIG_ENDIAN) && !data)
         {
-             RegCloseKey(subkey);
+             RegCloseKey(key);
              output_message(STRING_INVALID_CMDLINE);
              return 1;
         }
 
         if (!(reg_data = get_regdata(data, reg_type, separator, &reg_count)))
         {
-            RegCloseKey(subkey);
+            RegCloseKey(key);
             return 1;
         }
 
-        RegSetValueExW(subkey,value_name,0,reg_type,reg_data,reg_count);
+        RegSetValueExW(key, value_name, 0, reg_type, reg_data, reg_count);
         HeapFree(GetProcessHeap(),0,reg_data);
     }
 
-    RegCloseKey(subkey);
+    RegCloseKey(key);
     output_message(STRING_SUCCESS);
 
     return 0;
 }
 
-static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
-    BOOL value_all, BOOL force)
+static int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
+                      BOOL value_empty, BOOL value_all, BOOL force)
 {
-    LPWSTR p;
-    HKEY root,subkey;
-
-    if (!sane_path(key_name))
-        return 1;
-
-    p = strchrW(key_name,'\\');
-    if (p) p++;
-
-    root = path_get_rootkey(key_name);
-    if (!root)
-    {
-        output_message(STRING_INVALID_KEY);
-        return 1;
-    }
-
-    if ((value_name && value_empty) || (value_name && value_all) || (value_empty && value_all))
-    {
-        output_message(STRING_INVALID_CMDLINE);
-        return 1;
-    }
+    HKEY key;
 
     if (!force)
     {
@@ -477,7 +437,7 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
     /* Delete subtree only if no /v* option is given */
     if (!value_name && !value_empty && !value_all)
     {
-        if (RegDeleteTreeW(root,p)!=ERROR_SUCCESS)
+        if (RegDeleteTreeW(root, path) != ERROR_SUCCESS)
         {
             output_message(STRING_CANNOT_FIND);
             return 1;
@@ -486,7 +446,7 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
         return 0;
     }
 
-    if(RegOpenKeyW(root,p,&subkey)!=ERROR_SUCCESS)
+    if (RegOpenKeyW(root, path, &key) != ERROR_SUCCESS)
     {
         output_message(STRING_CANNOT_FIND);
         return 1;
@@ -499,11 +459,11 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
         DWORD count;
         LONG rc;
 
-        rc = RegQueryInfoKeyW(subkey, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-            &maxValue, NULL, NULL, NULL);
+        rc = RegQueryInfoKeyW(key, NULL, NULL, NULL, NULL, NULL, NULL,
+                              NULL, &maxValue, NULL, NULL, NULL);
         if (rc != ERROR_SUCCESS)
         {
-            RegCloseKey(subkey);
+            RegCloseKey(key);
             output_message(STRING_GENERAL_FAILURE);
             return 1;
         }
@@ -513,32 +473,33 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
         while (1)
         {
             count = maxValue;
-            rc = RegEnumValueW(subkey, 0, szValue, &count, NULL, NULL, NULL, NULL);
+            rc = RegEnumValueW(key, 0, szValue, &count, NULL, NULL, NULL, NULL);
             if (rc == ERROR_SUCCESS)
             {
-                rc = RegDeleteValueW(subkey, szValue);
+                rc = RegDeleteValueW(key, szValue);
                 if (rc != ERROR_SUCCESS)
                 {
                     HeapFree(GetProcessHeap(), 0, szValue);
-                    RegCloseKey(subkey);
+                    RegCloseKey(key);
                     output_message(STRING_VALUEALL_FAILED, key_name);
                     return 1;
                 }
             }
             else break;
         }
+        HeapFree(GetProcessHeap(), 0, szValue);
     }
     else if (value_name || value_empty)
     {
-        if (RegDeleteValueW(subkey, value_empty ? NULL : value_name) != ERROR_SUCCESS)
+        if (RegDeleteValueW(key, value_empty ? NULL : value_name) != ERROR_SUCCESS)
         {
-            RegCloseKey(subkey);
+            RegCloseKey(key);
             output_message(STRING_CANNOT_FIND);
             return 1;
         }
     }
 
-    RegCloseKey(subkey);
+    RegCloseKey(key);
     output_message(STRING_SUCCESS);
     return 0;
 }
@@ -628,6 +589,7 @@ static const WCHAR *reg_type_to_wchar(DWORD type)
 static void output_value(const WCHAR *value_name, DWORD type, BYTE *data, DWORD data_size)
 {
     WCHAR fmt[] = {' ',' ',' ',' ','%','1',0};
+    WCHAR defval[32];
     WCHAR *reg_data;
     WCHAR newlineW[] = {'\n',0};
 
@@ -635,14 +597,22 @@ static void output_value(const WCHAR *value_name, DWORD type, BYTE *data, DWORD 
         output_string(fmt, value_name);
     else
     {
-        WCHAR defval[32];
         LoadStringW(GetModuleHandleW(NULL), STRING_DEFAULT_VALUE, defval, ARRAY_SIZE(defval));
         output_string(fmt, defval);
     }
     output_string(fmt, reg_type_to_wchar(type));
-    reg_data = reg_data_to_wchar(type, data, data_size);
-    output_string(fmt, reg_data);
-    HeapFree(GetProcessHeap(), 0, reg_data);
+
+    if (data)
+    {
+        reg_data = reg_data_to_wchar(type, data, data_size);
+        output_string(fmt, reg_data);
+        HeapFree(GetProcessHeap(), 0, reg_data);
+    }
+    else
+    {
+        LoadStringW(GetModuleHandleW(NULL), STRING_VALUE_NOT_SET, defval, ARRAY_SIZE(defval));
+        output_string(fmt, defval);
+    }
     output_string(newlineW);
 }
 
@@ -706,8 +676,13 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
     {
         if (rc == ERROR_FILE_NOT_FOUND)
         {
-            output_message(STRING_CANNOT_FIND);
-            return 1;
+            if (value_name && *value_name)
+            {
+                output_message(STRING_CANNOT_FIND);
+                return 1;
+            }
+            output_string(fmt, path);
+            output_value(NULL, REG_SZ, NULL, 0);
         }
         return 0;
     }
@@ -835,33 +810,14 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
     return 0;
 }
 
-static int reg_query(WCHAR *key_name, WCHAR *value_name, BOOL value_empty, BOOL recurse)
+static int reg_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
+                     BOOL value_empty, BOOL recurse)
 {
-    WCHAR *p;
-    HKEY root, key;
+    HKEY key;
     WCHAR newlineW[] = {'\n',0};
     int ret;
 
-    if (!sane_path(key_name))
-        return 1;
-
-    if (value_name && value_empty)
-    {
-        output_message(STRING_INVALID_CMDLINE);
-        return 1;
-    }
-
-    root = path_get_rootkey(key_name);
-    if (!root)
-    {
-        output_message(STRING_INVALID_KEY);
-        return 1;
-    }
-
-    p = strchrW(key_name, '\\');
-    if (p) p++;
-
-    if (RegOpenKeyExW(root, p, 0, KEY_READ, &key) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(root, path, 0, KEY_READ, &key) != ERROR_SUCCESS)
     {
         output_message(STRING_CANNOT_FIND);
         return 1;
@@ -883,22 +839,107 @@ static int reg_query(WCHAR *key_name, WCHAR *value_name, BOOL value_empty, BOOL 
     return ret;
 }
 
+static WCHAR *get_long_key(HKEY root, WCHAR *path)
+{
+    DWORD i, array_size = ARRAY_SIZE(root_rels), len;
+    WCHAR *long_key;
+    WCHAR fmt[] = {'%','s','\\','%','s',0};
+
+    for (i = 0; i < array_size; i++)
+    {
+        if (root == root_rels[i].key)
+            break;
+    }
+
+    len = strlenW(root_rels[i].long_name);
+
+    if (!path)
+    {
+        long_key = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+        strcpyW(long_key, root_rels[i].long_name);
+        return long_key;
+    }
+
+    len += strlenW(path) + 1; /* add one for the backslash */
+    long_key = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+    sprintfW(long_key, fmt, root_rels[i].long_name, path);
+    return long_key;
+}
+
+static BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path, WCHAR **long_key)
+{
+    if (!sane_path(key))
+        return FALSE;
+
+    *root = path_get_rootkey(key);
+    if (!*root)
+    {
+        output_message(STRING_INVALID_KEY);
+        return FALSE;
+    }
+
+    *path = strchrW(key, '\\');
+    if (*path) (*path)++;
+
+    *long_key = get_long_key(*root, *path);
+
+    return TRUE;
+}
+
+static BOOL is_help_switch(const WCHAR *s)
+{
+    if (strlenW(s) > 2)
+        return FALSE;
+
+    if ((s[0] == '/' || s[0] == '-') && (s[1] == 'h' || s[1] == '?'))
+        return TRUE;
+
+    return FALSE;
+}
+
+enum operations {
+    REG_ADD,
+    REG_DELETE,
+    REG_QUERY,
+    REG_INVALID
+};
+
+static const WCHAR addW[] = {'a','d','d',0};
+static const WCHAR deleteW[] = {'d','e','l','e','t','e',0};
+static const WCHAR queryW[] = {'q','u','e','r','y',0};
+
+static enum operations get_operation(const WCHAR *str, int *op_help)
+{
+    if (!lstrcmpiW(str, addW))
+    {
+        *op_help = STRING_ADD_USAGE;
+        return REG_ADD;
+    }
+
+    if (!lstrcmpiW(str, deleteW))
+    {
+        *op_help = STRING_DELETE_USAGE;
+        return REG_DELETE;
+    }
+
+    if (!lstrcmpiW(str, queryW))
+    {
+        *op_help = STRING_QUERY_USAGE;
+        return REG_QUERY;
+    }
+
+    return REG_INVALID;
+}
+
 int wmain(int argc, WCHAR *argvW[])
 {
-    int i;
-
-    static const WCHAR addW[] = {'a','d','d',0};
-    static const WCHAR deleteW[] = {'d','e','l','e','t','e',0};
-    static const WCHAR queryW[] = {'q','u','e','r','y',0};
-    static const WCHAR slashDW[] = {'/','d',0};
-    static const WCHAR slashFW[] = {'/','f',0};
-    static const WCHAR slashHW[] = {'/','h',0};
-    static const WCHAR slashSW[] = {'/','s',0};
-    static const WCHAR slashTW[] = {'/','t',0};
-    static const WCHAR slashVW[] = {'/','v',0};
-    static const WCHAR slashVAW[] = {'/','v','a',0};
-    static const WCHAR slashVEW[] = {'/','v','e',0};
-    static const WCHAR slashHelpW[] = {'/','?',0};
+    int i, op, op_help, ret;
+    BOOL show_op_help = FALSE;
+    static const WCHAR switchVAW[] = {'v','a',0};
+    static const WCHAR switchVEW[] = {'v','e',0};
+    WCHAR *key_name, *path, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
+    BOOL value_empty = FALSE, value_all = FALSE, recurse = FALSE, force = FALSE;
+    HKEY root;
 
     if (argc == 1)
     {
@@ -907,148 +948,120 @@ int wmain(int argc, WCHAR *argvW[])
         return 1;
     }
 
-    if (!lstrcmpW(argvW[1], slashHelpW) || !lstrcmpiW(argvW[1], slashHW))
+    if (is_help_switch(argvW[1]))
     {
         output_message(STRING_USAGE);
         return 0;
     }
 
-    if (!lstrcmpiW(argvW[1], addW))
+    op = get_operation(argvW[1], &op_help);
+
+    if (op == REG_INVALID)
     {
-        WCHAR *key_name, *value_name = NULL, *type = NULL, separator = '\0', *data = NULL;
-        BOOL value_empty = FALSE, force = FALSE;
+        output_message(STRING_INVALID_OPTION, argvW[1]);
+        output_message(STRING_REG_HELP);
+        return 1;
+    }
 
-        if (argc < 3)
-        {
-            output_message(STRING_INVALID_SYNTAX);
-            output_message(STRING_FUNC_HELP, struprW(argvW[1]));
-            return 1;
-        }
-        else if (argc == 3 && (!lstrcmpW(argvW[2], slashHelpW) ||
-                               !lstrcmpiW(argvW[2], slashHW)))
-        {
-            output_message(STRING_ADD_USAGE);
-            return 0;
-        }
+    if (argc > 2)
+        show_op_help = is_help_switch(argvW[2]);
 
-        key_name = argvW[2];
-        for (i = 1; i < argc; i++)
+    if (argc == 2 || (show_op_help && argc > 3))
+    {
+        output_message(STRING_INVALID_SYNTAX);
+        output_message(STRING_FUNC_HELP, struprW(argvW[1]));
+        return 1;
+    }
+    else if (show_op_help)
+    {
+        output_message(op_help);
+        return 0;
+    }
+
+    if (!parse_registry_key(argvW[2], &root, &path, &key_name))
+        return 1;
+
+    for (i = 3; i < argc; i++)
+    {
+        if (argvW[i][0] == '/' || argvW[i][0] == '-')
         {
-            if (!lstrcmpiW(argvW[i], slashVW))
+            WCHAR *ptr = &argvW[i][1];
+
+            if (!lstrcmpiW(ptr, switchVEW))
             {
+                value_empty = TRUE;
+                continue;
+            }
+            else if (!lstrcmpiW(ptr, switchVAW))
+            {
+                value_all = TRUE;
+                continue;
+            }
+            else if (!ptr[0] || ptr[1])
+            {
+                output_message(STRING_INVALID_CMDLINE);
+                return 1;
+            }
+
+            switch(tolowerW(argvW[i][1]))
+            {
+            case 'v':
                 if (value_name || !(value_name = argvW[++i]))
                 {
                     output_message(STRING_INVALID_CMDLINE);
                     return 1;
                 }
-            }
-            else if (!lstrcmpiW(argvW[i], slashVEW))
-                value_empty = TRUE;
-            else if (!lstrcmpiW(argvW[i], slashTW))
-                type = argvW[++i];
-            else if (!lstrcmpiW(argvW[i], slashSW))
-            {
-                WCHAR *ptr = argvW[++i];
+                break;
+            case 't':
+                if (type || !(type = argvW[++i]))
+                {
+                    output_message(STRING_INVALID_CMDLINE);
+                    return 1;
+                }
+                break;
+            case 'd':
+                if (data || !(data = argvW[++i]))
+                {
+                    output_message(STRING_INVALID_CMDLINE);
+                    return 1;
+                }
+                break;
+            case 's':
+                if (op == REG_QUERY)
+                {
+                    recurse = TRUE;
+                    break;
+                }
 
+                ptr = argvW[++i];
                 if (!ptr || strlenW(ptr) != 1)
                 {
                     output_message(STRING_INVALID_CMDLINE);
                     return 1;
                 }
                 separator = ptr[0];
-            }
-            else if (!lstrcmpiW(argvW[i], slashDW))
-            {
-                if (!(data = argvW[++i]))
-                {
-                    output_message(STRING_INVALID_CMDLINE);
-                    return 1;
-                }
-            }
-            else if (!lstrcmpiW(argvW[i], slashFW))
+                break;
+            case 'f':
                 force = TRUE;
-        }
-        return reg_add(key_name, value_name, value_empty, type, separator,
-            data, force);
-    }
-    else if (!lstrcmpiW(argvW[1], deleteW))
-    {
-        WCHAR *key_name, *value_name = NULL;
-        BOOL value_empty = FALSE, value_all = FALSE, force = FALSE;
-
-        if (argc < 3)
-        {
-            output_message(STRING_INVALID_SYNTAX);
-            output_message(STRING_FUNC_HELP, struprW(argvW[1]));
-            return 1;
-        }
-        else if (argc == 3 && (!lstrcmpW(argvW[2], slashHelpW) ||
-                               !lstrcmpiW(argvW[2], slashHW)))
-        {
-            output_message(STRING_DELETE_USAGE);
-            return 0;
-        }
-
-        key_name = argvW[2];
-        for (i = 1; i < argc; i++)
-        {
-            if (!lstrcmpiW(argvW[i], slashVW))
-            {
-                if (value_name || !(value_name = argvW[++i]))
-                {
-                    output_message(STRING_INVALID_CMDLINE);
-                    return 1;
-                }
+                break;
+            default:
+                output_message(STRING_INVALID_CMDLINE);
+                return 1;
             }
-            else if (!lstrcmpiW(argvW[i], slashVEW))
-                value_empty = TRUE;
-            else if (!lstrcmpiW(argvW[i], slashVAW))
-                value_all = TRUE;
-            else if (!lstrcmpiW(argvW[i], slashFW))
-                force = TRUE;
         }
-        return reg_delete(key_name, value_name, value_empty, value_all, force);
     }
-    else if (!lstrcmpiW(argvW[1], queryW))
-    {
-        WCHAR *key_name, *value_name = NULL;
-        BOOL value_empty = FALSE, recurse = FALSE;
 
-        if (argc < 3)
-        {
-            output_message(STRING_INVALID_SYNTAX);
-            output_message(STRING_FUNC_HELP, struprW(argvW[1]));
-            return 1;
-        }
-        else if (argc == 3 && (!lstrcmpW(argvW[2], slashHelpW) ||
-                               !lstrcmpiW(argvW[2], slashHW)))
-        {
-            output_message(STRING_QUERY_USAGE);
-            return 0;
-        }
-
-        key_name = argvW[2];
-        for (i = 1; i < argc; i++)
-        {
-            if (!lstrcmpiW(argvW[i], slashVW))
-            {
-                if (value_name || !(value_name = argvW[++i]))
-                {
-                    output_message(STRING_INVALID_CMDLINE);
-                    return 1;
-                }
-            }
-            else if (!lstrcmpiW(argvW[i], slashVEW))
-                value_empty = TRUE;
-            else if (!lstrcmpiW(argvW[i], slashSW))
-                recurse = TRUE;
-        }
-        return reg_query(key_name, value_name, value_empty, recurse);
-    }
-    else
+    if ((value_name && value_empty) || (value_name && value_all) || (value_empty && value_all))
     {
-        output_message(STRING_INVALID_OPTION, argvW[1]);
-        output_message(STRING_REG_HELP);
+        output_message(STRING_INVALID_CMDLINE);
         return 1;
     }
+
+    if (op == REG_ADD)
+        ret = reg_add(root, path, value_name, value_empty, type, separator, data, force);
+    else if (op == REG_DELETE)
+        ret = reg_delete(root, path, key_name, value_name, value_empty, value_all, force);
+    else if (op == REG_QUERY)
+        ret = reg_query(root, path, key_name, value_name, value_empty, recurse);
+    return ret;
 }

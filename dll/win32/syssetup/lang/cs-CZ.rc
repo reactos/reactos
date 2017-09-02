@@ -23,7 +23,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Vývojáři systému ReactOS by rádi zmínili následující Open Source projekty. Tyto projekty (nebo jejich části) byly použity při vývoji systému ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS je licencován pod GPL. Pokud chcete systém (nebo jeho části) použít nebo redistribuovat, musíte respektovat GPL", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "ReactOS je licencován pod GPL. Pokud chcete systém (nebo jeho části) použít nebo redistribuovat, musíte respektovat GPL.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "&Zobrazit GPL...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "Kliknutím na Další pokračujte v instalaci.", IDC_STATIC, 15, 136, 195, 17
 END
@@ -65,7 +65,7 @@ CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Lokalizace systému by měla souhlasit s jazykem aplikací, které chcete používat. Localizace určí jak budou zobrazena čísla, měny a kalendářní data.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Lokalizace systému by měla souhlasit s jazykem aplikací, které chcete používat. Localizace určí, jak budou zobrazena čísla, měny a kalendářní data.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pro změnu lokalizace systému klikněte na Změnit.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Změnit...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
@@ -87,6 +87,15 @@ BEGIN
     LTEXT "Časové pásmo", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     AUTOCHECKBOX "Automaticky nastavit hodiny při přechodu na &letní čas a zpět", IDC_AUTODAYLIGHT, 53, 124, 201, 10
+END
+
+IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,12, 130,120, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -141,6 +150,8 @@ BEGIN
     IDS_DATETIMESUBTITLE "Nastavte správný čas pro Váš počítač."
     IDS_PROCESSTITLE "Registrace součástí"
     IDS_PROCESSSUBTITLE "Prosím čekejte..."
+    IDS_THEMESELECTIONTITLE "Appearance"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
 END
 
 STRINGTABLE
@@ -148,15 +159,15 @@ BEGIN
     IDS_REACTOS_SETUP "ReactOS Instalátor"
     IDS_UNKNOWN_ERROR "Neznámá chyba"
     IDS_REGISTERING_COMPONENTS "Registruji součásti..."
-    IDS_LOADLIBRARY_FAILED "LoadLibrary failed: "
-    IDS_GETPROCADDR_FAILED "GetProcAddr failed: "
-    IDS_REGSVR_FAILED "DllRegisterServer failed: "
-    IDS_DLLINSTALL_FAILED "DllInstall failed: "
+    IDS_LOADLIBRARY_FAILED "LoadLibrary selhalo: "
+    IDS_GETPROCADDR_FAILED "GetProcAddr selhalo: "
+    IDS_REGSVR_FAILED "DllRegisterServer selhalo: "
+    IDS_DLLINSTALL_FAILED "DllInstall selhalo: "
     IDS_TIMEOUT "Vypršel časový limit registrace"
     IDS_REASON_UNKNOWN ""
     /*
      * ATTENTION:
-     *   If you translate the administator account name, keep IDS_ADMINISTRATOR_NAME and
+     *   If you translate the administrator account name, keep IDS_ADMINISTRATOR_NAME and
      *   samsrv.dll:IDS_USER_ADMINISTRATOR_NAME synchronized.
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
@@ -178,4 +189,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "Instaluji zařízení..."
+END
+
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
+    IDS_COMMONFILES "Common Files"
 END

@@ -52,6 +52,44 @@ CenterWindow(
 }
 
 static BOOL
+SetFailedInstall(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DevInfoData OPTIONAL,
+    IN BOOLEAN Set)
+{
+    DWORD dwType, dwSize, dwFlags = 0;
+
+    dwSize = sizeof(dwFlags);
+    if (!SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                          DevInfoData,
+                                          SPDRP_CONFIGFLAGS,
+                                          &dwType,
+                                          (PBYTE)&dwFlags,
+                                          dwSize,
+                                          &dwSize))
+    {
+        return FALSE;
+    }
+
+    if (Set)
+        dwFlags |= CONFIGFLAG_FAILEDINSTALL;
+    else
+        dwFlags &= ~CONFIGFLAG_FAILEDINSTALL;
+
+    if (!SetupDiSetDeviceRegistryProperty(DeviceInfoSet,
+                                          DevInfoData,
+                                          SPDRP_CONFIGFLAGS,
+                                          (PBYTE)&dwFlags,
+                                          dwSize))
+    {
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static BOOL
 CanDisableDevice(
     IN DEVINST DevInst,
     IN HMACHINE hMachine,
@@ -462,6 +500,10 @@ WelcomeDlgProc(
                 BM_SETCHECK,
                 (WPARAM)TRUE,
                 (LPARAM)0);
+
+            SetFailedInstall(DevInstData->hDevInfo,
+                             &DevInstData->devInfoData,
+                             TRUE);
             break;
         }
 
@@ -807,8 +849,13 @@ InstallDrvDlgProc(
             hThread = 0;
             if (wParam == 0)
             {
-                /* Should we reboot? */
                 SP_DEVINSTALL_PARAMS installParams;
+
+                SetFailedInstall(DevInstData->hDevInfo,
+                                 &DevInstData->devInfoData,
+                                 FALSE);
+
+                /* Should we reboot? */
                 installParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
                 if (SetupDiGetDeviceInstallParams(
                     DevInstData->hDevInfo,
@@ -962,6 +1009,12 @@ NoDriverDlgProc(
                             FALSE,
                             0,
                             NULL);
+                    }
+                    else
+                    {
+                        SetFailedInstall(DevInstData->hDevInfo,
+                                         &DevInstData->devInfoData,
+                                         FALSE);
                     }
                     break;
                 }

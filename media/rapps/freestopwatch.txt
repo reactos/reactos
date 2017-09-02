@@ -21,8 +21,8 @@ Size = 1,5 Mio
 
 [Section.0419]
 License = Бесплатно
-Description = Цифровой секундомер. 
-Size = 1,5 МБ
+Description = Цифровой секундомер.
+Size = 1,5 МиБ
 
 [Section.041f]
 Name = Ücretsiz Süreölçer

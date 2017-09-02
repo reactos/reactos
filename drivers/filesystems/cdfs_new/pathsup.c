@@ -22,7 +22,7 @@ Abstract:
     of the tree.  The children of a given directory will be grouped together.
 
     The directories are assigned ordinal numbers based on their position in
-    the path table.  The root dirctory is assigned ordinal value 1.
+    the path table.  The root directory is assigned ordinal value 1.
 
     Path table sectors:
 
@@ -493,7 +493,7 @@ Routine Description:
 
     This routine is called to map (or allocate and copy) the next
     data block in the path table.  We check if the next block will
-    span a view boundary and allocate an auxilary buffer in that case.
+    span a view boundary and allocate an auxiliary buffer in that case.
 
 Arguments:
 
@@ -521,7 +521,7 @@ Return Value:
 
     //
     //  Map the new block and set the enumeration context to this
-    //  point.  Allocate an auxilary buffer if necessary.
+    //  point.  Allocate an auxiliary buffer if necessary.
     //
 
     CurrentLength = 2 * SECTOR_SIZE;
@@ -564,7 +564,7 @@ Return Value:
         (FlagOn( ((ULONG) BaseOffset), VACB_MAPPING_MASK ) == LAST_VACB_SECTOR_OFFSET )) {
 
         //
-        //  Map each sector individually and store into an auxilary
+        //  Map each sector individually and store into an auxiliary
         //  buffer.
         //
 
@@ -605,7 +605,7 @@ Return Value:
 
         //
         //  There is a slight chance that we have allocated an
-        //  auxilary buffer on the previous sector.
+        //  auxiliary buffer on the previous sector.
         //
 
         if (PathContext->AllocatedData) {
@@ -789,7 +789,7 @@ Routine Description:
     path entry.  If this is a Joliet name then we will make sure we have
     an allocated buffer and need to convert from big endian to little
     endian.  We also correctly update the case name.  If this operation is ignore
-    case then we need an auxilary buffer for the name.
+    case then we need an auxiliary buffer for the name.
 
     For an Ansi disk we can use the name from the disk for the exact case.  We only
     need to allocate a buffer for the ignore case name.  The on-disk representation of

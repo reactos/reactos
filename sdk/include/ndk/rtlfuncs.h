@@ -619,15 +619,26 @@ RtlAddVectoredExceptionHandler(
     _In_ PVECTORED_EXCEPTION_HANDLER VectoredHandler
 );
 
-__analysis_noreturn
 NTSYSAPI
-VOID
+ULONG
 NTAPI
-RtlAssert(
-    _In_ PVOID FailedAssertion,
-    _In_ PVOID FileName,
-    _In_ ULONG LineNumber,
-    _In_opt_z_ PCHAR Message
+RtlRemoveVectoredExceptionHandler(
+    _In_ PVOID VectoredHandlerHandle
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlAddVectoredContinueHandler(
+    _In_ ULONG FirstHandler,
+    _In_ PVECTORED_EXCEPTION_HANDLER VectoredHandler
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlRemoveVectoredContinueHandler(
+    _In_ PVOID VectoredHandlerHandle
 );
 
 NTSYSAPI
@@ -642,6 +653,17 @@ LONG
 NTAPI
 RtlUnhandledExceptionFilter(
     _In_ struct _EXCEPTION_POINTERS* ExceptionInfo
+);
+
+__analysis_noreturn
+NTSYSAPI
+VOID
+NTAPI
+RtlAssert(
+    _In_ PVOID FailedAssertion,
+    _In_ PVOID FileName,
+    _In_ ULONG LineNumber,
+    _In_opt_z_ PCHAR Message
 );
 
 NTSYSAPI
@@ -1048,6 +1070,8 @@ RtlWalkHeap(
 
 #endif // NTOS_MODE_USER
 
+#define NtCurrentPeb() (NtCurrentTeb()->ProcessEnvironmentBlock)
+
 NTSYSAPI
 SIZE_T
 NTAPI
@@ -1279,13 +1303,13 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCopySidAndAttributesArray(
-    ULONG Count,
-    PSID_AND_ATTRIBUTES Src,
-    ULONG SidAreaSize,
-    PSID_AND_ATTRIBUTES Dest,
-    PVOID SidArea,
-    PVOID* RemainingSidArea,
-    PULONG RemainingSidAreaSize
+    _In_ ULONG Count,
+    _In_ PSID_AND_ATTRIBUTES Src,
+    _In_ ULONG SidAreaSize,
+    _In_ PSID_AND_ATTRIBUTES Dest,
+    _In_ PSID SidArea,
+    _Out_ PSID* RemainingSidArea,
+    _Out_ PULONG RemainingSidAreaSize
 );
 
 _IRQL_requires_max_(APC_LEVEL)
@@ -1468,6 +1492,13 @@ NTSYSAPI
 ULONG
 NTAPI
 RtlLengthRequiredSid(IN ULONG SubAuthorityCount);
+
+_IRQL_requires_max_(APC_LEVEL)
+NTSYSAPI
+ULONG
+NTAPI
+RtlLengthSecurityDescriptor(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 NTSYSAPI
 ULONG
@@ -2199,9 +2230,9 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlIsTextUnicode(
-    PVOID Buffer,
-    INT Length,
-    INT *Flags
+    _In_ CONST VOID* Buffer,
+    _In_ INT Size,
+    _Inout_opt_ INT* Flags
 );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -2304,6 +2335,60 @@ RtlValidateUnicodeString(
     _In_ ULONG Flags,
     _In_ PCUNICODE_STRING String
 );
+
+#define RTL_SKIP_BUFFER_COPY    0x00000001
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpEnsureBufferSize(
+    _In_ ULONG Flags,
+    _Inout_ PRTL_BUFFER Buffer,
+    _In_ SIZE_T RequiredSize
+);
+
+#ifdef NTOS_MODE_USER
+
+FORCEINLINE
+VOID
+RtlInitBuffer(
+    _Inout_ PRTL_BUFFER Buffer,
+    _In_ PUCHAR Data,
+    _In_ ULONG DataSize
+)
+{
+    Buffer->Buffer = Buffer->StaticBuffer = Data;
+    Buffer->Size = Buffer->StaticSize = DataSize;
+    Buffer->ReservedForAllocatedSize = 0;
+    Buffer->ReservedForIMalloc = NULL;
+}
+
+FORCEINLINE
+NTSTATUS
+RtlEnsureBufferSize(
+    _In_ ULONG Flags,
+    _Inout_ PRTL_BUFFER Buffer,
+    _In_ ULONG RequiredSize
+)
+{
+    if (Buffer && RequiredSize <= Buffer->Size)
+        return STATUS_SUCCESS;
+    return RtlpEnsureBufferSize(Flags, Buffer, RequiredSize);
+}
+
+FORCEINLINE
+VOID
+RtlFreeBuffer(
+    _Inout_ PRTL_BUFFER Buffer
+)
+{
+    if (Buffer->Buffer != Buffer->StaticBuffer && Buffer->Buffer)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer->Buffer);
+    Buffer->Buffer = Buffer->StaticBuffer;
+    Buffer->Size = Buffer->StaticSize;
+}
+
+#endif /* NTOS_MODE_USER */
 
 //
 // Ansi String Functions
@@ -2619,7 +2704,6 @@ RtlGetCurrentProcessorNumber(
     VOID
 );
 
-#define NtCurrentPeb() (NtCurrentTeb()->ProcessEnvironmentBlock)
 
 //
 // Thread Pool Functions
@@ -2755,6 +2839,23 @@ RtlDosPathNameToNtPathName_U(
     _Out_opt_ PRTL_RELATIVE_NAME_U DirectoryInfo
 );
 
+
+#define RTL_UNCHANGED_UNK_PATH  1
+#define RTL_CONVERTED_UNC_PATH  2
+#define RTL_CONVERTED_NT_PATH   3
+#define RTL_UNCHANGED_DOS_PATH  4
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlNtPathNameToDosPathName(
+    _In_ ULONG Flags,
+    _Inout_ PRTL_UNICODE_STRING_BUFFER Path,
+    _Out_opt_ PULONG PathType,
+    _Out_opt_ PULONG Unknown
+);
+
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -2866,7 +2967,7 @@ NTSTATUS
 NTAPI
 RtlQueryEnvironmentVariable_U(
     _In_opt_ PWSTR Environment,
-    _In_ PUNICODE_STRING Name,
+    _In_ PCUNICODE_STRING Name,
     _Out_ PUNICODE_STRING Value
 );
 
@@ -2922,6 +3023,20 @@ NTAPI
 RtlInitializeCriticalSectionAndSpinCount(
     _In_ PRTL_CRITICAL_SECTION CriticalSection,
     _In_ ULONG SpinCount
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlIsCriticalSectionLocked(
+    _In_ PRTL_CRITICAL_SECTION CriticalSection
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlIsCriticalSectionLockedByThread(
+    _In_ PRTL_CRITICAL_SECTION CriticalSection
 );
 
 NTSYSAPI
@@ -3101,6 +3216,8 @@ RtlQueryProcessDebugInformation(
 //
 // Bitmap Functions
 //
+#ifdef NTOS_MODE_USER
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -3124,6 +3241,14 @@ VOID
 NTAPI
 RtlClearAllBits(
     _In_ PRTL_BITMAP BitMapHeader
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlClearBit(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _In_range_(<, BitMapHeader->SizeOfBitMap) ULONG BitNumber
 );
 
 NTSYSAPI
@@ -3185,6 +3310,14 @@ CCHAR
 NTAPI
 RtlFindLeastSignificantBit(
     _In_ ULONGLONG Value
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindLongestRunClear(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _Out_ PULONG StartingIndex
 );
 
 NTSYSAPI
@@ -3289,6 +3422,23 @@ RtlTestBit(
     _In_ PRTL_BITMAP BitMapHeader,
     _In_range_(<, BitMapHeader->SizeOfBitMap) ULONG BitNumber
 );
+
+#if defined(_M_AMD64)
+_Must_inspect_result_
+FORCEINLINE
+BOOLEAN
+RtlCheckBit(
+  _In_ PRTL_BITMAP BitMapHeader,
+  _In_range_(<, BitMapHeader->SizeOfBitMap) ULONG BitPosition)
+{
+  return BitTest64((LONG64 CONST*)BitMapHeader->Buffer, (LONG64)BitPosition);
+}
+#else
+#define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP)/32]) >> ((BP)%32)) & 0x1)
+#endif /* defined(_M_AMD64) */
+
+#endif // NTOS_MODE_USER
+
 
 //
 // Timer Functions

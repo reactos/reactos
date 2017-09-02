@@ -3,20 +3,36 @@
  * PROJECT:         ReactOS Shim library
  * FILE:            dll/appcompat/shims/shimlib/shimlib.c
  * PURPOSE:         Shim helper functions
- * PROGRAMMER:      Mark Jansen
+ * PROGRAMMER:      Mark Jansen (mark.jansen@reactos.org)
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
 #include <shimlib.h>
 #include <strsafe.h>
+#include <ndk/rtlfuncs.h>
 
-HINSTANCE g_hinstDll;
+typedef struct UsedShim
+{
+    SLIST_ENTRY Entry;
+    PSHIMREG pShim;
+#if (WINVER > _WIN32_WINNT_WS03)
+    BOOL bInitCalled;
+#endif
+} UsedShim, *pUsedShim;
+
+
+ULONG g_ShimEngDebugLevel = 0xffffffff;
 static HANDLE g_ShimLib_Heap;
+static PSLIST_HEADER g_UsedShims;
 
 void ShimLib_Init(HINSTANCE hInstance)
 {
-    g_hinstDll = hInstance;
     g_ShimLib_Heap = HeapCreate(0, 0x10000, 0);
+
+    g_UsedShims = (PSLIST_HEADER)ShimLib_ShimMalloc(sizeof(SLIST_HEADER));
+    RtlInitializeSListHead(g_UsedShims);
 }
 
 void ShimLib_Deinit()
@@ -42,6 +58,18 @@ PCSTR ShimLib_StringDuplicateA(PCSTR szString)
     return lstrcpyA(NewString, szString);
 }
 
+BOOL ShimLib_StrAEqualsW(PCSTR szString, PCWSTR wszString)
+{
+    while (*szString == *wszString)
+    {
+        if (!*szString)
+            return TRUE;
+
+        szString++; wszString++;
+    }
+    return FALSE;
+}
+
 #if defined(_MSC_VER)
 
 #if defined(_M_IA64) || defined(_M_AMD64)
@@ -61,8 +89,8 @@ PCSTR ShimLib_StringDuplicateA(PCSTR szString)
 #endif
 
 
-_SHMALLOC(".shm") _PVSHIM _shim_start = 0;
-_SHMALLOC(".shm$ZZZ") _PVSHIM _shim_end = 0;
+_SHMALLOC(".shm") SHIMREG _shim_start = { 0 };
+_SHMALLOC(".shm$ZZZ") SHIMREG _shim_end = { 0 };
 
 
 /* Generic GetHookAPIs function.
@@ -71,21 +99,139 @@ _SHMALLOC(".shm$ZZZ") _PVSHIM _shim_end = 0;
    This helper function will return the correct shim, and call the init function */
 PHOOKAPI WINAPI ShimLib_GetHookAPIs(IN LPCSTR szCommandLine, IN LPCWSTR wszShimName, OUT PDWORD pdwHookCount)
 {
-    uintptr_t ps = (uintptr_t)&_shim_start;
-    ps += sizeof(uintptr_t);
-    for (; ps != (uintptr_t)&_shim_end; ps += sizeof(uintptr_t))
+    PSHIMREG ps = &_shim_start;
+    ps++;
+    for (; ps != &_shim_end; ps++)
     {
-        _PVSHIM* pfunc = (_PVSHIM *)ps;
-        if (*pfunc != NULL)
+        if (ps->GetHookAPIs != NULL && ps->ShimName != NULL)
         {
-            PVOID res = (*pfunc)(wszShimName);
-            if (res)
+            if (ShimLib_StrAEqualsW(ps->ShimName, wszShimName))
             {
-                PHOOKAPI (WINAPI* PFN)(DWORD, PCSTR, PDWORD) = res;
-                return (*PFN)(SHIM_REASON_ATTACH, szCommandLine, pdwHookCount);
+                pUsedShim shim = (pUsedShim)ShimLib_ShimMalloc(sizeof(UsedShim));
+                shim->pShim = ps;
+#if (WINVER > _WIN32_WINNT_WS03)
+                shim->bInitCalled = FALSE;
+#endif
+                RtlInterlockedPushEntrySList(g_UsedShims, &(shim->Entry));
+
+                return ps->GetHookAPIs(SHIM_NOTIFY_ATTACH, szCommandLine, pdwHookCount);
             }
         }
     }
     return NULL;
+}
+
+
+BOOL WINAPI ShimLib_NotifyShims(DWORD fdwReason, PVOID ptr)
+{
+    PSLIST_ENTRY pEntry = RtlFirstEntrySList(g_UsedShims);
+
+    if (fdwReason < SHIM_REASON_INIT)
+        fdwReason += (SHIM_REASON_INIT - SHIM_NOTIFY_ATTACH);
+
+    while (pEntry)
+    {
+        pUsedShim pUsed = CONTAINING_RECORD(pEntry, UsedShim, Entry);
+        _PVNotify Notify = pUsed->pShim->Notify;
+#if (WINVER > _WIN32_WINNT_WS03)
+        if (pUsed->bInitCalled && fdwReason == SHIM_REASON_INIT)
+            Notify = NULL;
+#endif
+        if (Notify)
+            Notify(fdwReason, ptr);
+#if (WINVER > _WIN32_WINNT_WS03)
+        if (fdwReason == SHIM_REASON_INIT)
+            pUsed->bInitCalled = TRUE;
+#endif
+
+        pEntry = pEntry->Next;
+    }
+
+    return TRUE;
+}
+
+
+VOID SeiInitDebugSupport(VOID)
+{
+    static const UNICODE_STRING DebugKey = RTL_CONSTANT_STRING(L"SHIM_DEBUG_LEVEL");
+    UNICODE_STRING DebugValue;
+    NTSTATUS Status;
+    ULONG NewLevel = 0;
+    WCHAR Buffer[40];
+
+    RtlInitEmptyUnicodeString(&DebugValue, Buffer, sizeof(Buffer));
+
+    Status = RtlQueryEnvironmentVariable_U(NULL, &DebugKey, &DebugValue);
+
+    if (NT_SUCCESS(Status))
+    {
+        if (!NT_SUCCESS(RtlUnicodeStringToInteger(&DebugValue, 10, &NewLevel)))
+            NewLevel = 0;
+    }
+    g_ShimEngDebugLevel = NewLevel;
+}
+
+
+/**
+* Outputs diagnostic info.
+*
+* @param [in]  Level           The level to log this message with, choose any of [SHIM_ERR,
+*                              SHIM_WARN, SHIM_INFO].
+* @param [in]  FunctionName    The function this log should be attributed to.
+* @param [in]  Format          The format string.
+* @param   ...                 Variable arguments providing additional information.
+*
+* @return  Success: TRUE Failure: FALSE.
+*/
+BOOL WINAPIV SeiDbgPrint(SEI_LOG_LEVEL Level, PCSTR Function, PCSTR Format, ...)
+{
+    char Buffer[512];
+    char* Current = Buffer;
+    const char* LevelStr;
+    size_t Length = sizeof(Buffer);
+    va_list ArgList;
+    HRESULT hr;
+
+    if (g_ShimEngDebugLevel == 0xffffffff)
+        SeiInitDebugSupport();
+
+    if (Level > g_ShimEngDebugLevel)
+        return FALSE;
+
+    switch (Level)
+    {
+    case SEI_MSG:
+        LevelStr = "MSG ";
+        break;
+    case SEI_FAIL:
+        LevelStr = "FAIL";
+        break;
+    case SEI_WARN:
+        LevelStr = "WARN";
+        break;
+    case SEI_INFO:
+        LevelStr = "INFO";
+        break;
+    default:
+        LevelStr = "USER";
+        break;
+    }
+
+    if (Function)
+        hr = StringCchPrintfExA(Current, Length, &Current, &Length, STRSAFE_NULL_ON_FAILURE, "[%s] [%s] ", LevelStr, Function);
+    else
+        hr = StringCchPrintfExA(Current, Length, &Current, &Length, STRSAFE_NULL_ON_FAILURE, "[%s] ", LevelStr);
+
+    if (!SUCCEEDED(hr))
+        return FALSE;
+
+    va_start(ArgList, Format);
+    hr = StringCchVPrintfExA(Current, Length, &Current, &Length, STRSAFE_NULL_ON_FAILURE, Format, ArgList);
+    va_end(ArgList);
+    if (!SUCCEEDED(hr))
+        return FALSE;
+
+    DbgPrint("%s", Buffer);
+    return TRUE;
 }
 

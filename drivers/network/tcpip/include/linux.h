@@ -341,7 +341,7 @@ struct ustat {
  *    separated swab functions from cpu_to_XX,
  *    to clean up support for bizarre-endian architectures.
  *
- * See asm-i386/byteorder.h and suches for examples of how to provide
+ * See asm-i386/byteorder.h and such for examples of how to provide
  * architecture-dependent optimized versions
  *
  */
@@ -1465,7 +1465,7 @@ typedef struct __wait_queue_head wait_queue_head_t;
 #endif
 
 /*
- * Macros for declaration and initialisaton of the datatypes
+ * Macros for declaration and initialisation of the datatypes
  */
 
 #if WAITQUEUE_DEBUG
@@ -1635,7 +1635,7 @@ typedef struct kmem_cache_s kmem_cache_t;
  * The first 3 are only valid when the allocator as been build
  * SLAB_DEBUG_SUPPORT.
  */
-#define	SLAB_DEBUG_FREE		0x00000100UL	/* Peform (expensive) checks on free */
+#define	SLAB_DEBUG_FREE		0x00000100UL	/* Perform (expensive) checks on free */
 #define	SLAB_DEBUG_INITIAL	0x00000200UL	/* Call constructor (as verifier) */
 #define	SLAB_RED_ZONE		0x00000400UL	/* Red zone objs in a cache */
 #define	SLAB_POISON		0x00000800UL	/* Poison objects */
@@ -1775,7 +1775,7 @@ extern void poll_freewait(poll_table* pt);
 
 
 /*
- * Scaleable version of the fd_set.
+ * Scalable version of the fd_set.
  */
 
 typedef struct {

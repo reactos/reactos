@@ -16,12 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
-
-#include "ntobjenum.h"
+#include "precomp.h"
 #include <strsafe.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
 
 static struct RootKeyEntry {
     HKEY key;
@@ -42,7 +38,7 @@ const LPCWSTR ObjectTypeNames [] = {
     L"Mutant", L"Section", L"Event", L"Semaphore",
     L"Timer", L"Key", L"EventPair", L"IoCompletion",
     L"Device", L"File", L"Controller", L"Profile",
-    L"Type", L"Desktop", L"WindowStatiom", L"Driver",
+    L"Type", L"Desktop", L"WindowStation", L"Driver",
     L"Token", L"Process", L"Thread", L"Adapter", L"Port",
     0
 };
@@ -86,7 +82,7 @@ static DWORD NtOpenObject(OBJECT_TYPE type, PHANDLE phandle, DWORD access, LPCWS
     case TIMER_OBJECT:          return NtOpenTimer(phandle, access, &open_struct);
     case KEY_OBJECT:            return NtOpenKey(phandle, access, &open_struct);
     case EVENTPAIR_OBJECT:      return NtOpenEventPair(phandle, access, &open_struct);
-    case IOCOMPLETITION_OBJECT: return NtOpenIoCompletion(phandle, access, &open_struct);
+    case IOCOMPLETION_OBJECT:   return NtOpenIoCompletion(phandle, access, &open_struct);
     case FILE_OBJECT:           return NtOpenFile(phandle, access, &open_struct, &ioStatusBlock, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0);
     default:
         return ERROR_INVALID_FUNCTION;
@@ -172,7 +168,10 @@ HRESULT GetNTObjectSymbolicLinkTarget(LPCWSTR path, LPCWSTR entryName, PUNICODE_
     StringCbCopyExW(buffer, sizeof(buffer), path, &pend, NULL, 0);
 
     if (pend[-1] != '\\')
+    {
         *pend++ = '\\';
+        *pend = 0;
+    }
 
     StringCbCatW(buffer, sizeof(buffer), entryName);
 
@@ -180,11 +179,11 @@ HRESULT GetNTObjectSymbolicLinkTarget(LPCWSTR path, LPCWSTR entryName, PUNICODE_
 
     LinkTarget->Length = 0;
 
-    DWORD err = NtOpenObject(SYMBOLICLINK_OBJECT, &handle, 0, buffer);
+    DWORD err = NtOpenObject(SYMBOLICLINK_OBJECT, &handle, SYMBOLIC_LINK_QUERY, buffer);
     if (!NT_SUCCESS(err))
         return HRESULT_FROM_NT(err);
 
-    err = NT_SUCCESS(NtQuerySymbolicLinkObject(handle, LinkTarget, NULL));
+    err = NtQuerySymbolicLinkObject(handle, LinkTarget, NULL);
     if (!NT_SUCCESS(err))
         return HRESULT_FROM_NT(err);
 
@@ -224,7 +223,7 @@ public:
         DWORD entryBufferLength = FIELD_OFFSET(RegPidlEntry, entryName) + sizeof(WCHAR) + cchName * sizeof(WCHAR);
 
         // allocate space for the terminator
-        entryBufferLength += 2;
+        entryBufferLength += FIELD_OFFSET(SHITEMID, abID);
 
         RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength);
         if (!entry)
@@ -374,7 +373,7 @@ public:
         }
 
         // allocate space for the terminator
-        entryBufferLength += 2;
+        entryBufferLength += FIELD_OFFSET(SHITEMID, abID);
 
         RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength);
         if (!entry)
@@ -429,7 +428,8 @@ public:
 
         DWORD entryBufferLength = FIELD_OFFSET(RegPidlEntry, entryName) + sizeof(WCHAR) + cchName * sizeof(WCHAR);
 
-        BOOL copyData = dataSize < 32;
+#define MAX_EMBEDDED_DATA 32
+        BOOL copyData = dataSize <= MAX_EMBEDDED_DATA;
         if (copyData)
         {
             entryBufferLength += dataSize + sizeof(WCHAR);
@@ -437,7 +437,10 @@ public:
             otype = REG_ENTRY_VALUE_WITH_CONTENT;
         }
 
-        RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength + 2);
+        // allocate space for the terminator
+        entryBufferLength += FIELD_OFFSET(SHITEMID, abID);
+
+        RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength);
         if (!entry)
             return E_OUTOFMEMORY;
 
@@ -630,7 +633,7 @@ public:
         }
 
         // allocate space for the terminator
-        entryBufferLength += 2;
+        entryBufferLength += FIELD_OFFSET(SHITEMID, abID);
 
         NtPidlEntry* entry = (NtPidlEntry*) CoTaskMemAlloc(entryBufferLength);
         if (!entry)

@@ -19,6 +19,7 @@ BOOL FASTCALL UserObjectInDestroy(HANDLE);
 void DbgUserDumpHandleTable();
 PVOID FASTCALL ValidateHandle(HANDLE handle, HANDLE_TYPE type);
 BOOLEAN UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner);
+BOOL FASTCALL UserMarkObjectDestroy(PVOID);
 
 static __inline VOID
 UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)

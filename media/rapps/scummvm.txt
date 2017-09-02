@@ -36,7 +36,7 @@ Size = 8,7 Mio
 
 [Section.0419]
 Description = Коллекция игровых движков, созданных заново (независимо от разработчиков оригиналов), таких игр, как:  Monkey Island, Sam and Max или Day of the Tentacle, заставляя их работать в ReactOS.
-Size = 8,7 МБ
+Size = 8,7 МиБ
 
 [Section.041f]
 Description = Sam ve Max, Day of the Tentacle, Monkey Island gibi kökleşik mâcera vidyo oyunlarının oyun motorlarının ReactOS üzerinde çalışmasını sağlayan açık kaynak uyarlaması.

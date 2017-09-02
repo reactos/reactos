@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Gorde &honela...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Prestatu &orrialdea...", CMD_PAGE_SETUP
-        MENUITEM "&Inprimatu\tCtrl+P", CMD_PRINT
+        MENUITEM "&Inprimatu...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Irten", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Bilatu\tCtrl+F", CMD_SEARCH
         MENUITEM "Bilatu &hurrengoa\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Ordeztu\tCtrl+H", CMD_REPLACE
+        MENUITEM "Ordeztu...\tCtrl+H", CMD_REPLACE
         MENUITEM "Joan...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Hautatu dena\tCtrl+A", CMD_SELECT_ALL

@@ -31,7 +31,7 @@ AppearancePage_UpdateThemePreview(HWND hwndDlg, GLOBALS *g)
     SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SET_HDC_PREVIEW, 0, 0);
 }
 
-static void 
+static void
 AppearancePage_LoadSelectedScheme(HWND hwndDlg, GLOBALS *g)
 {
     if (g->ActiveTheme.ThemeActive == FALSE )
@@ -39,7 +39,7 @@ AppearancePage_LoadSelectedScheme(HWND hwndDlg, GLOBALS *g)
         LoadSchemeFromReg(&g->Scheme, &g->ActiveTheme);
     }
     else
-    { 
+    {
         LoadSchemeFromTheme(&g->Scheme, &g->ActiveTheme);
     }
 
@@ -71,9 +71,9 @@ AppearancePage_ShowStyles(HWND hwndDlg, int nIDDlgItem, PTHEME_STYLE pStyles, PT
 static void
 AppearancePage_ShowColorSchemes(HWND hwndDlg, GLOBALS *g)
 {
-    AppearancePage_ShowStyles(hwndDlg, 
-                              IDC_APPEARANCE_COLORSCHEME, 
-                              g->ActiveTheme.Theme->ColoursList, 
+    AppearancePage_ShowStyles(hwndDlg,
+                              IDC_APPEARANCE_COLORSCHEME,
+                              g->ActiveTheme.Theme->ColoursList,
                               g->ActiveTheme.Color);
 }
 
@@ -87,9 +87,9 @@ AppearancePage_ShowSizes(HWND hwndDlg, GLOBALS *g)
     else
         pSizes = g->ActiveTheme.Color->ChildStyle;
 
-    AppearancePage_ShowStyles(hwndDlg, 
-                              IDC_APPEARANCE_SIZE, 
-                              pSizes, 
+    AppearancePage_ShowStyles(hwndDlg,
+                              IDC_APPEARANCE_SIZE,
+                              pSizes,
                               g->ActiveTheme.Size);
 }
 
@@ -117,10 +117,37 @@ AppearancePage_OnInit(HWND hwndDlg)
     g->pThemes = LoadThemes();
     if (g->pThemes)
     {
-        if (!GetActiveTheme(g->pThemes, &g->ActiveTheme))
-            g->ActiveTheme.ThemeActive = FALSE;
+        BOOL bLoadedTheme = FALSE;
 
-        /* 
+        if (g_GlobalData.pwszAction && 
+            g_GlobalData.pwszFile && 
+            wcscmp(g_GlobalData.pwszAction, L"OpenMSTheme") == 0)
+        {
+            bLoadedTheme = FindOrAppendTheme(g->pThemes, 
+                                             g_GlobalData.pwszFile,
+                                             NULL,
+                                             NULL,
+                                             &g->ActiveTheme);
+        }
+
+        if (bLoadedTheme)
+        {
+            g->bThemeChanged = TRUE;
+            g->bSchemeChanged = TRUE;
+
+            PostMessageW(GetParent(hwndDlg), PSM_CHANGED, (WPARAM)hwndDlg, 0);
+
+            AppearancePage_LoadSelectedScheme(hwndDlg, g);
+        }
+        else
+        {
+            if (!GetActiveTheme(g->pThemes, &g->ActiveTheme))
+            {
+                g->ActiveTheme.ThemeActive = FALSE;
+            }
+        }
+
+        /*
          * Keep a copy of the selected classic theme in order to select this
          * when user selects the classic theme (and not a horrible random theme )
          */
@@ -203,7 +230,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            if(g == NULL || g->bInitializing)
+            if (g == NULL || g->bInitializing)
                 return FALSE;
 
             switch (LOWORD(wParam))
@@ -254,7 +281,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         PTHEME pTheme  = (PTHEME)GetSelectedData(hwndDlg, IDC_APPEARANCE_VISUAL_STYLE);
-                       
+
                         if (g->ClassicTheme.Theme == pTheme)
                             g->ActiveTheme = g->ClassicTheme;
                         else
@@ -282,7 +309,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     {
                         g->ActiveTheme.Size = (PTHEME_STYLE)GetSelectedData(hwndDlg, IDC_APPEARANCE_SIZE);
                         g->bSchemeChanged = TRUE;
-                        if(g->ActiveTheme.ThemeActive)
+                        if (g->ActiveTheme.ThemeActive)
                             g->bThemeChanged = TRUE;
 
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);

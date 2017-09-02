@@ -133,7 +133,7 @@ If you know why this is happening or why the XP mixer tries to render the AC3 pi
 
 0.9.5:
 - recording support for Windows Vista
-- selection of spdif-in suppported
+- selection of spdif-in supported
 - recording mixer fix for XP
 
 0.9.4a:

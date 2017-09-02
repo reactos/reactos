@@ -1089,7 +1089,7 @@ USBSTOR_SendModeSense(
     // MODE_PARAMETER_BLOCK
     //
     //
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     //
     // send csw
@@ -1201,7 +1201,7 @@ USBSTOR_SendReadWrite(
     // sanity check
     //
     Temp = (Cmd.ContiguousLogicBlocksByte0 << 8 | Cmd.ContiguousLogicBlocksByte1);
-    ASSERT(NTOHL(Temp == BlockCount));
+    ASSERT(Temp == BlockCount);
 
     DPRINT("USBSTOR_SendReadWrite BlockAddress %x%x%x%x BlockCount %lu BlockLength %lu\n", Cmd.LogicalBlockByte0, Cmd.LogicalBlockByte1, Cmd.LogicalBlockByte2, Cmd.LogicalBlockByte3, BlockCount, PDODeviceExtension->BlockLength);
 

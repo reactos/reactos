@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Պահպանել &ինչպես...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Էջի& պարամետրերը...", CMD_PAGE_SETUP
-        MENUITEM "&Տպել\tCtrl+P", CMD_PRINT
+        MENUITEM "&Տպել...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Ե&լք", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Գտնել", CMD_SEARCH
         MENUITEM "Գտնել &հաջորդը\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Փոխարինել\tCtrl+H", CMD_REPLACE
+        MENUITEM "Փոխարինել...\tCtrl+H", CMD_REPLACE
         MENUITEM "Տեղափոխվել...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Նշել բելերը", CMD_SELECT_ALL

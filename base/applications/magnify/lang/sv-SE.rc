@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "A&vsluta", IDM_EXIT
         MENUITEM "&Inställningar", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Om...", IDM_ABOUT
+        MENUITEM "&Om", IDM_ABOUT
     END
 END
 

@@ -91,12 +91,16 @@
 #define IDS_USER_ENTER_PASSWORD2       491
 #define IDS_USER_NO_PASSWORD_MATCH     492
 
-#define IDS_GENERIC_YES                500
-#define IDS_GENERIC_NO                 501
-#define IDS_GENERIC_NEVER              502
-#define IDS_GENERIC_NONE               503
-#define IDS_GENERIC_ALL                504
-#define IDS_GENERIC_LOCKED             505
+#define IDS_USE_NOW_CONNECTED          500
 
-#define IDS_ERROR_OPTION_NOT_SUPPORTED 600
-#define IDS_ERROR_INVALID_OPTION_VALUE 601
+#define IDS_GENERIC_YES                600
+#define IDS_GENERIC_NO                 601
+#define IDS_GENERIC_NEVER              602
+#define IDS_GENERIC_NONE               603
+#define IDS_GENERIC_ALL                604
+#define IDS_GENERIC_LOCKED             605
+
+#define IDS_ERROR_OPTION_NOT_SUPPORTED 700
+#define IDS_ERROR_INVALID_OPTION_VALUE 701
+#define IDS_ERROR_SYSTEM_ERROR         702
+#define IDS_ERROR_NO_ERROR             703

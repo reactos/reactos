@@ -24,6 +24,7 @@ BEGIN
     850  "850   (OEM - vícejazyčná latin I)"
     852  "852   (OEM - latin II)"
     855  "855   (OEM - azbuka)"
+    856  "856   (OEM - hebrejština PC)"
     857  "857   (OEM - turečtina)"
     858  "858   (OEM - vícejazyčná Latin I + Euro)"
     860  "860   (OEM - portugalština)"
@@ -33,7 +34,7 @@ BEGIN
     864  "864   (OEM - arabština)"
     865  "865   (OEM - severské jazyky)"
     866  "866   (OEM - ruština)"
-    869  "869   (OEM - moderní řečtina )"
+    869  "869   (OEM - moderní řečtina)"
 
     10000 "10000 (MAC - románské jazyky)"
     10001 "10001 (MAC - japonština)"
@@ -56,6 +57,7 @@ BEGIN
     65001 "65001 (UTF-8)"
 
     3700  "37    (IBM EBCDIC - U.S.A./Kanada)" /* FIXME */
+//  424   "424   (IBM EBCDIC - hebrejština)" // On Windows, this is CP 20424
     1026  "1026  (IBM EBCDIC - turečtina (latin-5))"
     1047  "1047  (IBM EBCDIC - latin-1/Open System)"
     1140  "1140  (IBM EBCDIC - U.S.A/Kanada (37 + Euro))"
@@ -99,8 +101,12 @@ BEGIN
     28596 "28596 (ISO 8859-6 arabština)"
     28597 "28597 (ISO 8859-7 Řecko)"
     28598 "28598 (ISO 8859-8 hebrejština: vizuální řazení)"
-    28599 "28599 (ISO 8859-9 latin 5)"
+    28599 "28599 (ISO 8859-9 latin 5 turečtina)"
+    28600 "28600 (ISO 8859-10 latin 6 severské jazyky)"
+    28603 "28603 (ISO 8859-13 latin 7 Estonian)"
+    28604 "28604 (ISO 8859-14 latin 8 Celtic)"
     28605 "28605 (ISO 8859-15 latin 9)"
+    28606 "28606 (ISO 8859-16 latin 10 Balkan)"
     38598 "38598 (ISO 8859-8 hebrejština: logické řazení)"
 
     20105 "20105 (IA5 IRV mezinárodní abeceda No.5)"
@@ -117,6 +123,7 @@ BEGIN
     20005 "20005 (Wang - Tchaj-wan)"
     20127 "20127 (US-ASCII)"
     20261 "20261 (T.61)"
+//  878   "878   (ruština - KOI8)" // On Windows, this is CP 20866
     20866 "20866 (ruština - KOI8)"
     21027 "21027 (rozšířená Alfa - malá písmena)"
     21866 "21866 (ukrajinština - KOI8-U)"
@@ -189,6 +196,7 @@ BEGIN
     32+NLSRC_OFFSET "Brazil"
     34+NLSRC_OFFSET "Bhutan"
     35+NLSRC_OFFSET "Bulgaria"
+    37+NLSRC_OFFSET "Brunei"
     38+NLSRC_OFFSET "Burundi"
     39+NLSRC_OFFSET "Canada"
     40+NLSRC_OFFSET "Cambodia"

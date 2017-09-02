@@ -32,7 +32,7 @@
  *	DataLength: length in bytes of the Data buffer; it must be
  *		set and must match the SmInformationClass info size;
  *	ReturnedDataLength: optional pointer to storage to receive
- *		the size of the returnede data.
+ *		the size of the returned data.
  *
  * RETURN VALUE
  * 	STATUS_SUCCESS: OK you get what you asked for;

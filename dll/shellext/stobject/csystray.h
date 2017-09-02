@@ -4,7 +4,7 @@
  * FILE:        dll/shellext/stobject/csystray.h
  * PURPOSE:     Systray shell service object
  * PROGRAMMERS: Robert Naumann
- David Quintana <gigaherz@gmail.com>
+ *              David Quintana <gigaherz@gmail.com>
  */
 #pragma once
 
@@ -37,7 +37,7 @@ class CSysTray :
     HRESULT InitIcons();
     HRESULT ShutdownIcons();
     HRESULT UpdateIcons();
-    HRESULT ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    HRESULT ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
 
     HRESULT InitNetShell();
     HRESULT ShutdownNetShell();

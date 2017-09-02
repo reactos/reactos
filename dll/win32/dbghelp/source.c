@@ -30,35 +30,12 @@ struct source_rb
     unsigned                    source;
 };
 
-static void *source_rb_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static void *source_rb_realloc(void *ptr, size_t size)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, ptr, size);
-}
-
-static void source_rb_free(void *ptr)
-{
-    HeapFree(GetProcessHeap(), 0, ptr);
-}
-
-static int source_rb_compare(const void *key, const struct wine_rb_entry *entry)
+int source_rb_compare(const void *key, const struct wine_rb_entry *entry)
 {
     const struct source_rb *t = WINE_RB_ENTRY_VALUE(entry, const struct source_rb, entry);
 
     return strcmp((const char*)key, rb_module->sources + t->source);
 }
-
-const struct wine_rb_functions source_rb_functions =
-{
-    source_rb_alloc,
-    source_rb_realloc,
-    source_rb_free,
-    source_rb_compare,
-};
 
 /******************************************************************
  *		source_find

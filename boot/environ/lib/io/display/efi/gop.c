@@ -114,7 +114,7 @@ ConsoleEfiGopEnable (
     {
         /* Switch modes */
         Status = EfiGopSetMode(Protocol, Mode);
-        if (Status < 0)
+        if (!NT_SUCCESS(Status))
         {
             return Status;
         }
@@ -164,7 +164,7 @@ ConsoleEfiGopEnable (
     }
     else if (CurrentMode != GraphicsConsole->Mode)
     {
-        /* We failed seomewhere, reset the mode and the OEM bitmap back */
+        /* We failed somewhere, reset the mode and the OEM bitmap back */
         EfiGopSetMode(Protocol, CurrentMode);
         BlDisplayInvalidateOemBitmap();
     }

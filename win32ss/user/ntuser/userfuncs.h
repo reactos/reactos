@@ -102,7 +102,8 @@ UserSystemParametersInfo(
 VOID FASTCALL IntSetWindowState(PWND, UINT);
 VOID FASTCALL IntClearWindowState(PWND, UINT);
 PTHREADINFO FASTCALL IntTID2PTI(HANDLE);
-HBRUSH FASTCALL GetControlBrush(PWND pwnd,HDC  hdc,UINT ctlType);
+HBRUSH FASTCALL GetControlBrush(PWND,HDC,UINT);
+HBRUSH FASTCALL GetControlColor(PWND,PWND,HDC,UINT);
 
 /*************** MESSAGE.C ***************/
 

@@ -1,0 +1,65 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Открыть...", CMD_OPEN
+        MENUITEM "Сохранить &как...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "В&ыход", CMD_EXIT
+    END
+    POPUP "&Правка"
+    BEGIN
+        MENUITEM "&Удалить\tDel", CMD_DELETE
+    END
+    POPUP "&Вид"
+    BEGIN
+        MENUITEM "&Автоматически", CMD_AUTOMATIC
+    END
+    POPUP "&Справка"
+    BEGIN
+        MENUITEM "&Вызов справки", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&О программе", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Просмотр буфера обмена"
+    STRING_CLIPFILE  "Элемент буфера обмена"
+    STRING_DELETE_MSG "Очистить содержимое буфера обмена?"
+    STRING_DELETE_TITLE "Очистить буфер обмена"
+    STRING_FORMAT_NT "Файлы буфера обмена ReactOS (*.clp)"
+    STRING_FORMAT_GEN "Файлы буфера обмена (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Неизвестный формат"
+    STRING_CF_TEXT "Текст"
+    STRING_CF_BITMAP "Точечный рисунок"
+    STRING_CF_OEMTEXT "Текст в кодировке OEM"
+    STRING_CF_UNICODETEXT "Текст в кодировке Юникод"
+    STRING_CF_DIB "Аппаратно-независимый точечный рисунок (DIB)"
+    STRING_CF_LOCALE "Языковые данные"
+    STRING_CF_ENHMETAFILE "Расширенный метафайл"
+    STRING_CF_METAFILEPICT "Метафайл"
+    STRING_CF_PALETTE "Цветовая палитра"
+    STRING_CF_DIBV5 "Аппаратно-независимый точечный рисунок (DIB) (Версия 5)"
+    STRING_CF_SYLK "Формат символических ссылок"
+    STRING_CF_DIF "Формат обмена данными"
+    STRING_CF_HDROP "Очистить данные"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "Буфер обмена содержит данные, которые невозможно отобразить."
+    ERROR_INVALID_FILE_FORMAT "Выбранный файл не является файлом буфера обмена."
+END

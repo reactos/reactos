@@ -256,7 +256,7 @@ UDFQueryDirectory(
     // do some pre-init...
     SearchPattern.Buffer = NULL;
 
-    KdPrint(("UDFQueryDirectory: @=%#x\n", &PtrIrpContext));
+    UDFPrint(("UDFQueryDirectory: @=%#x\n", &PtrIrpContext));
 
 #define CanBe8dot3    (FNM_Flags & UDF_FNM_FLAG_CAN_BE_8D3)
 #define IgnoreCase    (FNM_Flags & UDF_FNM_FLAG_IGNORE_CASE)
@@ -589,7 +589,7 @@ try_exit:   NOTHING;
         } else {
 #ifdef UDF_DBG
             if(!NT_SUCCESS(RC)) {
-               KdPrint(("    Not found\n"));
+               UDFPrint(("    Not found\n"));
             }
 #endif // UDF_DBG
             // Remember to update the CurrentByteOffset field in the CCB if required.
@@ -700,7 +700,7 @@ UDFNotifyChangeDirectory(
     BOOLEAN                     AcquiredFCB = FALSE;
     PEXTENDED_IO_STACK_LOCATION pStackLocation = (PEXTENDED_IO_STACK_LOCATION) IrpSp;
 
-    KdPrint(("UDFNotifyChangeDirectory\n"));
+    UDFPrint(("UDFNotifyChangeDirectory\n"));
 
     _SEH2_TRY {
 

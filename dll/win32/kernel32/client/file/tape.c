@@ -62,7 +62,7 @@ BasepDoTapeOperation(IN HANDLE DeviceHandle,
     }
     else
     {
-        /* Set sucess */
+        /* Set success */
         ErrorCode = ERROR_SUCCESS;
     }
 

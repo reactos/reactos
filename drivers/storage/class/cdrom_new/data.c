@@ -51,7 +51,7 @@ CLASSPNP_SCAN_FOR_SPECIAL_INFO CdromHackItems[] = {
     // these hitachi drives don't work properly in PIO mode
     { "HITACHI ", "CDR-1750S"                      , NULL,   0x0004 },
     { "HITACHI ", "CDR-3650/1650S"                 , NULL,   0x0004 },
-    // this particular gem doesn't automatcially spin up
+    // this particular gem doesn't automatically spin up
     // on some media access commands.
     { ""        , "HITACHI GD-2000"                , NULL,   0x0008 },
     { ""        , "HITACHI DVD-ROM GD-2000"        , NULL,   0x0008 },

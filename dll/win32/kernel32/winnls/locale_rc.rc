@@ -125,6 +125,9 @@
 #include "nls/enp.nls"   /* 0x3409  LANG_ENGLISH, SUBLANG_ENGLISH_PHILIPPINES */
 
 #pragma code_page(1252)
+#include "nls/eoa.nls"   /* 0x048F  LANG_ESPERANTO, SUBLANG_ESPERANTO */
+
+#pragma code_page(1252)
 #include "nls/esp.nls"   /* 0x040a  LANG_SPANISH, SUBLANG_SPANISH */
 #pragma code_page(1252)
 #include "nls/esm.nls"   /* 0x080a  LANG_SPANISH, SUBLANG_SPANISH_MEXICAN */

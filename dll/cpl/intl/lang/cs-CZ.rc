@@ -152,14 +152,14 @@ BEGIN
     CONTROL "",IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 113, 30, 10, 12
     LTEXT "Typ kalendáře:", -1, 13, 48, 56, 10
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    LTEXT "Muslimský kalendář:", -1, 13, 65, 60, 12
+    LTEXT "Islámský kalendář:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Zkrácený formát data", -1, 7, 83, 230, 81
+    GROUPBOX "Krátký formát data", -1, 7, 83, 230, 81
     LTEXT "Ukázka:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Ukázka zprava doleva:", -1, 13, 109, 60, 16
     EDITTEXT IDC_SHRTDATERTOL_EDIT, 77, 111, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
-    LTEXT "Zkrácený formát:", -1, 13, 131, 60, 10
+    LTEXT "Krátký formát:", -1, 13, 131, 60, 10
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
     LTEXT "Oddělovač částí data:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
@@ -199,23 +199,23 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPLY_DEFAULT_TITLE "Change default settings"
-    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
-These changes apply to the logon screen and new user accounts.\n\
-The computer must be rebooted, in order to apply the changes to some system services."
+    IDS_APPLY_DEFAULT_TITLE "Změnit výchozí nastavení"
+    IDS_APPLY_DEFAULT_TEXT "Tato nastavení budou použita pro výchozího uživatelský účet.\n\n\
+Tyto změny platí pro přihlašovací obrazovku a nové uživatelské účty.\n\
+Tento počítač je třeba restartovat, aby bylo možné nastavit některé systémové služby."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR "Error"
-    IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
-    IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
-    IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"
-    IDS_ERROR_OEM_CODE_PAGE "There was a problem reading the OEM code page"
-    IDS_ERROR_ANSI_CODE_PAGE "There was a problem reading the ANSI code page"
-    IDS_ERROR_INT_KEY_REG "Problem opening key: HKCU\\Control Panel\\International"
-    IDS_ERROR_DEF_INT_KEY_REG "Problem opening key: HKU\\.DEFAULT\\Control Panel\\International"
-    IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
-    IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
-    IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+    IDS_ERROR "Chyba"
+    IDS_ERROR_SYMBOL_SEPARATE "Oddělovač krátkého data obsahuje neplatný znak"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Formát krátkého data obsahuje neplatný znak"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Formát úplného data obsahuje neplatný znak"
+    IDS_ERROR_OEM_CODE_PAGE "Vyskytl se problém při načítání znakové sady OEM"
+    IDS_ERROR_ANSI_CODE_PAGE "Vyskytl se problém při načítání znakové sady ANSI"
+    IDS_ERROR_INT_KEY_REG "Problém při otevírání klíče: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "Problém při otevírání klíče: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "Problém při otevírání klíče: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "Problém při otevírání klíče: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "Nebylo možné spustit input.dll"
 END

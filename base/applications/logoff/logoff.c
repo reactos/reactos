@@ -1,151 +1,129 @@
 /*
- * COPYRIGHT:	See COPYING in the top level directory
- * PROJECT:	ReactOS logoff utility
- * FILE:		base/applications/logoff/logoff.c
- * PURPOSE:	Logoff current session, or another session, potentially on another machine
- * AUTHOR:	30.07.2007 - Frode Lillerud
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS logoff utility
+ * FILE:        base/applications/logoff/logoff.c
+ * PURPOSE:     Logoff current session, or another session, potentially on another machine
+ * AUTHOR:      30.07.2007 - Frode Lillerud
  */
 
 /* Note
- * This application is a lightweight version of shutdown.exe. It is intended to be function-compatible
- * with Windows' system32\logoff.exe commandline application.
+ * This application is a lightweight version of shutdown.exe. It is intended
+ * to be function-compatible with Windows' system32\logoff.exe application.
  */
 
-#include "precomp.h"
-
 #include <stdio.h>
-#include <tchar.h>
 
-//Commandline argument switches
-LPTSTR szRemoteServerName = NULL;
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+
+#include <conutils.h>
+
+#include "resource.h"
+
+/* Command-line argument switches */
+LPWSTR szRemoteServerName = NULL;
 BOOL bVerbose;
-
-//----------------------------------------------------------------------
-//
-//Retrieve resource string and output the Usage to the console
-//
-//----------------------------------------------------------------------
-static void PrintUsage() {
-	LPTSTR lpUsage = NULL;
-
-	if (AllocAndLoadString(&lpUsage, GetModuleHandle(NULL), IDS_USAGE)) {
-		_putts(lpUsage);
-		LocalFree(lpUsage);
-	}
-
-}
 
 //----------------------------------------------------------------------
 //
 // Writes the last error as both text and error code to the console.
 //
 //----------------------------------------------------------------------
-void DisplayLastError()
+VOID DisplayError(DWORD dwError)
 {
-	int errorCode = GetLastError();
-	LPTSTR lpMsgBuf;
-
-	// Display the error message to the user
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL,
-		errorCode,
-		LANG_USER_DEFAULT,
-		(LPTSTR) &lpMsgBuf,
-		0,
-		NULL);
-
-	_ftprintf(stderr, lpMsgBuf);
-	_ftprintf(stderr, _T("Error code: %d\n"), errorCode);
-
-	LocalFree(lpMsgBuf);
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, dwError, LANG_USER_DEFAULT);
+    ConPrintf(StdErr, L"Error code: %lu\n", dwError);
 }
 
 //----------------------------------------------------------------------
 //
-//Sets flags based on commandline arguments
+// Sets flags based on command-line arguments
 //
 //----------------------------------------------------------------------
-BOOL ParseCommandLine(int argc, TCHAR *argv[])
+BOOL ParseCommandLine(int argc, WCHAR *argv[])
 {
-	int i;
-	LPTSTR lpIllegalMsg;
+    int i;
 
-	//FIXME: Add handling of commandline arguments to select the session number and name, and also name of remote machine
-	//Example: logoff.exe 4 /SERVER:Master should logoff session number 4 on remote machine called Master.
+    // FIXME: Add handling of command-line arguments to select
+    // the session number and name, and also name of remote machine.
+    // Example: logoff.exe 4 /SERVER:Master
+    // should logoff session number 4 on remote machine called Master.
 
-	for (i = 1; i < argc; i++) {
-		switch(argv[i][0]){
-		case '-':
-		case '/':
-			// -v (verbose)
-			if (argv[i][1] == 'v') {
-				bVerbose = TRUE;
-				break; //continue parsing the arguments
-			}
-			// -? (usage)
-			else if(argv[i][1] == '?') {
-				return FALSE; //display the Usage
-			}
-		default:
-			//Invalid parameter detected
-			if (AllocAndLoadString(&lpIllegalMsg, GetModuleHandle(NULL), IDS_ILLEGAL_PARAM)) {
-				_putts(lpIllegalMsg);
-				LocalFree(lpIllegalMsg);
-			}
-			return FALSE;
-		}
-	}
+    for (i = 1; i < argc; i++)
+    {
+        switch (argv[i][0])
+        {
+        case L'-':
+        case L'/':
+            // -v (verbose)
+            if (argv[i][1] == L'v')
+            {
+                bVerbose = TRUE;
+                break;
+            }
+            // -? (usage)
+            else if (argv[i][1] == L'?')
+            {
+                /* Will display the Usage */
+                return FALSE;
+            }
+        /* Fall through */
+        default:
+            /* Invalid parameter detected */
+            ConResPuts(StdErr, IDS_ILLEGAL_PARAM);
+            return FALSE;
+        }
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 //----------------------------------------------------------------------
 //
-//Main entry for program
+// Main entry for program
 //
 //----------------------------------------------------------------------
-int _tmain(int argc, TCHAR *argv[])
+int wmain(int argc, WCHAR *argv[])
 {
-	LPTSTR lpLogoffRemote, lpLogoffLocal;
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
 
-	//
-	// Parse command line
-	//
-	if (!ParseCommandLine(argc, argv)) {
-		PrintUsage();
-		return 1;
-	}
+    /* Parse command line */
+    if (!ParseCommandLine(argc, argv))
+    {
+        ConResPuts(StdOut, IDS_USAGE);
+        return 1;
+    }
 
-	//
-	//Should we log off session on remote server?
-	//
-	if (szRemoteServerName) {
-		if (bVerbose) {
-			if (AllocAndLoadString(&lpLogoffRemote, GetModuleHandle(NULL), IDS_LOGOFF_REMOTE))
-			_putts(lpLogoffRemote);
-		}
+    /* Should we log off session on remote server? */
+    if (szRemoteServerName)
+    {
+        if (bVerbose)
+            ConResPuts(StdOut, IDS_LOGOFF_REMOTE);
 
-		//FIXME: Add Remote Procedure Call to logoff user on a remote machine
-		_ftprintf(stderr, "Remote Procedure Call in logoff.exe has not been implemented");
-	}
-	//
-	//Perform logoff of current session on local machine instead
-	//
-	else {
-		if (bVerbose) {
-			//Get resource string, and print it.
-			if (AllocAndLoadString(&lpLogoffLocal, GetModuleHandle(NULL), IDS_LOGOFF_LOCAL))
-			_putts(lpLogoffLocal);
-		}
+        // FIXME: Add Remote Procedure Call to logoff user on a remote machine
+        ConPuts(StdErr, L"Remote Procedure Call in logoff.exe has not been implemented");
+    }
+    /* Perform logoff of current session on local machine instead */
+    else
+    {
+        if (bVerbose)
+        {
+            /* Get resource string and print it */
+            ConResPuts(StdOut, IDS_LOGOFF_LOCAL);
+        }
 
-		//Actual logoff
-		if (!ExitWindows(NULL, NULL)) {
-			DisplayLastError();
-			return 1;
-		}
-	}
+        /* Actual logoff */
+        if (!ExitWindowsEx(EWX_LOGOFF, 0))
+        {
+            DisplayError(GetLastError());
+            return 1;
+        }
+    }
 
-	return 0;
+    return 0;
 }
+
 /* EOF */

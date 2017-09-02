@@ -70,7 +70,7 @@ typedef struct _MI_FREED_SPECIAL_POOL
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID NTAPI MiTestSpecialPool();
+VOID NTAPI MiTestSpecialPool(VOID);
 
 BOOLEAN
 NTAPI
@@ -78,7 +78,14 @@ MmUseSpecialPool(SIZE_T NumberOfBytes, ULONG Tag)
 {
     /* Special pool is not suitable for allocations bigger than 1 page */
     if (NumberOfBytes > (PAGE_SIZE - sizeof(POOL_HEADER)))
+    {
         return FALSE;
+    }
+
+    if (MmSpecialPoolTag == '*')
+    {
+        return TRUE;
+    }
 
     return Tag == MmSpecialPoolTag;
 }
@@ -268,6 +275,13 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
                      0x30);
     }
 
+    /* Some allocations from Mm must never use special pool */
+    if (Tag == 'tSmM')
+    {
+        /* Reject and let normal pool handle it */
+        return NULL;
+    }
+
     /* TODO: Take into account various limitations */
 
     /* Heed the maximum limit of nonpaged pages */
@@ -314,6 +328,15 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     MiSpecialPoolFirstPte = MmSystemPteBase + PointerPte->u.List.NextEntry;
 
     /* Allocate a physical page */
+    if (PoolType == PagedPool)
+    {
+        MI_SET_USAGE(MI_USAGE_PAGED_POOL);
+    }
+    else
+    {
+        MI_SET_USAGE(MI_USAGE_NONPAGED_POOL);
+    }
+    MI_SET_PROCESS2("Kernel-Special");
     PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
 
     /* Initialize PFN and make it valid */

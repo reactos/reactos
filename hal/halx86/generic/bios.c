@@ -63,8 +63,8 @@ HalpOpcodeInvalid(IN PHAL_BIOS_FRAME BiosFrame)
     PUCHAR Inst = (PUCHAR)(BiosFrame->CsBase + BiosFrame->Eip);
 
     /* Print error message */
-    DPRINT1("HAL: An invalid V86 opcode was encountered at address %X:%X\n",
-            "Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+    DPRINT1("HAL: An invalid V86 opcode was encountered at address %X:%X\n"
+            "Opcode: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
             BiosFrame->SegCs, BiosFrame->Eip,
             Inst[0], Inst[1], Inst[2], Inst[3], Inst[4],
             Inst[5], Inst[6], Inst[7], Inst[8], Inst[9]);
@@ -390,7 +390,7 @@ HalpStoreAndClearIopm(VOID)
     //
     // Loop the I/O Map
     //
-    for (i = j = 0; i < (IOPM_SIZE) / 2; i++)
+    for (i = j = 0; i < IOPM_SIZE / sizeof(USHORT); i++)
     {
         //
         // Check for non-FFFF entry
@@ -415,7 +415,10 @@ HalpStoreAndClearIopm(VOID)
     //
     // Terminate it
     //
-    while (i++ < (IOPM_FULL_SIZE / 2)) *Entry++ = 0xFFFF;
+    while (i++ < IOPM_FULL_SIZE / sizeof(USHORT))
+    {
+        *Entry++ = 0xFFFF;
+    }
 
     //
     // Return the entries we saved
@@ -542,7 +545,7 @@ HalpSetupRealModeIoPermissionsAndTask(VOID)
     //
     // Save a copy of the I/O Map and delete it
     //
-    HalpSavedIoMap = (PUSHORT)&(KeGetPcr()->TSS->IoMaps[0]);
+    HalpSavedIoMap = (PUSHORT)KeGetPcr()->TSS->IoMaps[0].IoMap;
     HalpStoreAndClearIopm();
 
     //

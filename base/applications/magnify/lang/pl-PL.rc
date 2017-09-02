@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Wyjście", IDM_EXIT
         MENUITEM "&Opcje", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "O p&rogramie ...", IDM_ABOUT
+        MENUITEM "O p&rogramie", IDM_ABOUT
     END
 END
 

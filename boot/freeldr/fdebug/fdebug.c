@@ -1,11 +1,13 @@
-// fdebug.cpp : Defines the entry point for the application.
-//
+/* fdebug.c : Defines the entry point for the application. */
 
-#include <windows.h>
+#include <tchar.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commdlg.h>
 #include <process.h>
-#include <stdio.h>
-#include <tchar.h>
 
 #include "resource.h"
 #include "rs232.h"
@@ -28,7 +30,7 @@ BOOL        bLocalEcho = FALSE;                            // Tells us if local 
 HANDLE        hCaptureFile;                                // Handle to the capture file
 DWORD        dwThreadId = 0;                                // Thread id of RS232 communication thread
 
-// Foward declarations of functions included in this code module:
+// Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);

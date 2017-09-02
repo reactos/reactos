@@ -1,4 +1,6 @@
-DejaVu fonts 2.35 (c)2004-2015 DejaVu fonts team
+[![Build Status](https://travis-ci.org/dejavu-fonts/dejavu-fonts.svg)](https://travis-ci.org/dejavu-fonts/dejavu-fonts)
+
+DejaVu fonts 2.37 (c)2004-2016 DejaVu fonts team
 ------------------------------------------------
 
 The DejaVu fonts are a font family based on the Bitstream Vera Fonts
@@ -31,6 +33,7 @@ DejaVu Serif Condensed (experimental)
 DejaVu Serif Condensed Bold (experimental)
 DejaVu Serif Condensed Bold Italic (experimental)
 DejaVu Serif Condensed Italic (experimental)
+DejaVu Math TeX Gyre
 
 All fonts are also available as derivative called DejaVu LGC with support
 only for Latin, Greek and Cyrillic scripts.
@@ -56,4 +59,9 @@ U+213C-U+2140, U+2295-U+2298, U+2308-U+230B, U+26A2-U+26B1, U+2701-U+2704,
 U+2706-U+2709, U+270C-U+274B, U+2758-U+275A, U+2761-U+2775, U+2780-U+2794,
 U+2798-U+27AF, U+27B1-U+27BE, U+FB05-U+FB06
 
-$Id: README 2595 2015-05-17 07:57:27Z ben_laenen $
+DejaVu Math TeX Gyre
+--------------------
+TeX Gyre DJV Math by B. Jackowski, P. Strzelczyk and P. Pianowski
+(on behalf of TeX users groups).
+
+$Id$

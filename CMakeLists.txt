@@ -16,6 +16,11 @@ if(POLICY CMP0051)
     cmake_policy(SET CMP0051 NEW)
 endif()
 
+if(POLICY CMP0058)
+    # Ninja requires custom command byproducts to be explicit
+    cmake_policy(SET CMP0058 OLD)
+endif()
+
 project(REACTOS)
 
 # Versioning
@@ -35,7 +40,6 @@ set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
 set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
 set(CMAKE_COLOR_MAKEFILE OFF)
 #set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
-set(CMAKE_SKIP_INSTALL_RULES ON)
 
 if(NOT DEFINED NEW_STYLE_BUILD)
     set(NEW_STYLE_BUILD TRUE)
@@ -94,8 +98,6 @@ if(NOT CMAKE_CROSSCOMPILING)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)
         endif()
         add_definitions(/Dinline=__inline)
-    else()
-        add_compile_flags("-fshort-wchar -Wno-multichar")
     endif()
 
     include_directories(sdk/include/host)
@@ -108,9 +110,9 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     if(NOT NEW_STYLE_BUILD)
         if(NOT MSVC)
-            export(TARGETS bin2c widl gendib cabman cdmake fatten hpp mkhive obj2bin spec2def geninc rsym mkshelllink utf16le xml2sdb FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+            export(TARGETS bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc rsym mkshelllink utf16le xml2sdb FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
         else()
-            export(TARGETS bin2c widl gendib cabman cdmake fatten hpp mkhive obj2bin spec2def geninc mkshelllink utf16le xml2sdb FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+            export(TARGETS bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink utf16le xml2sdb FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
         endif()
     endif()
 
@@ -235,6 +237,7 @@ else()
         ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
         ${REACTOS_BINARY_DIR}/sdk/include/ddk
         ${REACTOS_BINARY_DIR}/sdk/include/reactos
+        ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc
         sdk/include/crt
         sdk/include/ddk
         sdk/include/ndk

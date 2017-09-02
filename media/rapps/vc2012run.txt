@@ -44,7 +44,7 @@ Size = 6,3 Mio
 [Section.0419]
 License = Неизвестно
 Description = Необходим для приложений, написанных в Visual Studio 2012. Содержит: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
-Size = 6,3 МБ
+Size = 6,3 МиБ
 
 [Section.041f]
 Name = Microsoft Visual C++ 2012 Yeniden Dağıtılabilir Paket

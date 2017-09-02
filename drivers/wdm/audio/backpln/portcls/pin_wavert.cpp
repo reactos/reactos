@@ -119,7 +119,7 @@ CPortPinWaveRT::NewIrpTarget(
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -275,7 +275,7 @@ CPortPinWaveRT::HandleKsProperty(
 
     }
     RtlStringFromGUID(Property->Set, &GuidString);
-    DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+    DPRINT("Unhandled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
     RtlFreeUnicodeString(&GuidString);
 
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
@@ -333,7 +333,7 @@ CPortPinWaveRT::DeviceIoControl(
         return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
     }
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -627,7 +627,7 @@ CPortPinWaveRT::Init(
         goto cleanup;
 
     m_Stream->GetHWLatency(&Latency);
-    // delay of 10 milisec
+    // delay of 10 millisec
     m_Delay = Int32x32To64(10, -10000);
 
     Status = m_Stream->AllocateAudioBuffer(16384 * 11, &m_Mdl, &m_CommonBufferSize, &m_CommonBufferOffset, &m_CacheType);

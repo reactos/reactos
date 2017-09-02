@@ -562,13 +562,14 @@ IoAllocateIrp(IN CCHAR StackSize,
     /* Set Charge Quota Flag */
     if (ChargeQuota) Flags |= IRP_QUOTA_CHARGED;
 
-    /* FIXME: Implement Lookaside Floats */
+    /* Get the PRCB */
+    Prcb = KeGetCurrentPrcb();
 
     /* Figure out which Lookaside List to use */
-    if ((StackSize <= 8) && (ChargeQuota == FALSE))
+    if ((StackSize <= 8) && (ChargeQuota == FALSE || Prcb->LookasideIrpFloat > 0))
     {
         /* Set Fixed Size Flag */
-        Flags = IRP_ALLOCATED_FIXED_SIZE;
+        Flags |= IRP_ALLOCATED_FIXED_SIZE;
 
         /* See if we should use big list */
         if (StackSize != 1)
@@ -576,9 +577,6 @@ IoAllocateIrp(IN CCHAR StackSize,
             Size = IoSizeOfIrp(8);
             ListType = LookasideLargeIrpList;
         }
-
-        /* Get the PRCB */
-        Prcb = KeGetCurrentPrcb();
 
         /* Get the P List First */
         List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[ListType].P;
@@ -622,8 +620,12 @@ IoAllocateIrp(IN CCHAR StackSize,
         /* Make sure it was sucessful */
         if (!Irp) return NULL;
     }
-    else
+    else if (Flags & IRP_QUOTA_CHARGED)
     {
+        /* Decrement lookaside float */
+        InterlockedDecrement(&Prcb->LookasideIrpFloat);
+        Flags |= IRP_LOOKASIDE_ALLOCATION;
+
         /* In this case there is no charge quota */
         Flags &= ~IRP_QUOTA_CHARGED;
     }
@@ -1048,7 +1050,7 @@ IoCancelIrp(IN PIRP Irp)
     Irp->Cancel = TRUE;
 
     /* Clear the cancel routine and get the old one */
-    CancelRoutine = (PVOID)IoSetCancelRoutine(Irp, NULL);
+    CancelRoutine = IoSetCancelRoutine(Irp, NULL);
     if (CancelRoutine)
     {
         /* We had a routine, make sure the IRP isn't completed */
@@ -1587,7 +1589,7 @@ NTAPI
 IoFreeIrp(IN PIRP Irp)
 {
     PNPAGED_LOOKASIDE_LIST List;
-    PP_NPAGED_LOOKASIDE_NUMBER ListType =  LookasideSmallIrpList;
+    PP_NPAGED_LOOKASIDE_NUMBER ListType = LookasideSmallIrpList;
     PKPRCB Prcb;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Freeing IRPs %p\n",
@@ -1599,6 +1601,16 @@ IoFreeIrp(IN PIRP Irp)
     ASSERT(IsListEmpty(&Irp->ThreadListEntry));
     ASSERT(Irp->CurrentLocation >= Irp->StackCount);
 
+    /* Get the PRCB */
+    Prcb = KeGetCurrentPrcb();
+
+    /* If this was a lookaside alloc, increment lookaside float */
+    if (Irp->AllocationFlags & IRP_LOOKASIDE_ALLOCATION)
+    {
+        Irp->AllocationFlags &= ~IRP_LOOKASIDE_ALLOCATION;
+        InterlockedIncrement(&Prcb->LookasideIrpFloat);
+    }
+
     /* If this was a pool alloc, free it with the pool */
     if (!(Irp->AllocationFlags & IRP_ALLOCATED_FIXED_SIZE))
     {
@@ -1609,9 +1621,6 @@ IoFreeIrp(IN PIRP Irp)
     {
         /* Check if this was a Big IRP */
         if (Irp->StackCount != 1) ListType = LookasideLargeIrpList;
-
-        /* Get the PRCB */
-        Prcb = KeGetCurrentPrcb();
 
         /* Use the P List */
         List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[ListType].P;
@@ -1640,8 +1649,16 @@ IoFreeIrp(IN PIRP Irp)
         /* The free was within the Depth */
         if (Irp)
         {
-           InterlockedPushEntrySList(&List->L.ListHead,
-                                     (PSLIST_ENTRY)Irp);
+            /* Remove the association with the process */
+            if (Irp->AllocationFlags & IRP_QUOTA_CHARGED)
+            {
+                ExReturnPoolQuota(Irp);
+                Irp->AllocationFlags &= ~IRP_QUOTA_CHARGED;
+            }
+
+            /* Add it to the lookaside list */
+            InterlockedPushEntrySList(&List->L.ListHead,
+                                      (PSLIST_ENTRY)Irp);
         }
     }
 }

@@ -39,7 +39,7 @@ Size = 13,5 Mio
 
 [Section.0419]
 Description = Свободный графический редактор для детей.
-Size = 13,5 МБ
+Size = 13,5 МиБ
 
 [Section.041f]
 Description = Küçük çocuklar için yapılmış bir açık kaynak bit eşlem çizge düzenleyicisi.

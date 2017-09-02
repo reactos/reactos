@@ -15,14 +15,14 @@
 
 #ifdef INCLUDE_CMD_CHCP
 
-INT CommandChcp (LPTSTR param)
+INT CommandChcp(LPTSTR param)
 {
     LPTSTR *arg;
     INT    args;
     UINT uNewCodePage;
 
-    /* print help */
-    if (!_tcsncmp (param, _T("/?"), 2))
+    /* Print help */
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE,STRING_CHCP_HELP);
         return 0;
@@ -30,23 +30,23 @@ INT CommandChcp (LPTSTR param)
 
     nErrorLevel = 0;
 
-    /* get parameters */
-    arg = split (param, &args, FALSE, FALSE);
+    /* Get parameters */
+    arg = split(param, &args, FALSE, FALSE);
 
     if (args == 0)
     {
-        /* display active code page number */
-        ConErrResPrintf(STRING_CHCP_ERROR1, InputCodePage);
-        freep (arg);
+        /* Display the active code page number */
+        ConOutResPrintf(STRING_CHCP_ERROR1, OutputCodePage);
+        freep(arg);
         return 0;
     }
 
     if (args >= 2)
     {
-        /* too many parameters */
+        /* Too many parameters */
         ConErrResPrintf(STRING_ERROR_INVALID_PARAM_FORMAT, param);
+        freep(arg);
         nErrorLevel = 1;
-        freep (arg);
         return 1;
     }
 
@@ -55,24 +55,38 @@ INT CommandChcp (LPTSTR param)
     if (uNewCodePage == 0)
     {
         ConErrResPrintf(STRING_ERROR_INVALID_PARAM_FORMAT, arg[0]);
-        freep (arg);
+        freep(arg);
         nErrorLevel = 1;
         return 1;
     }
 
+    freep(arg);
+
+    // TODO: In case of failure of SetConsoleCP or SetConsoleOutputCP,
+    // restore the old code page!
+
+    /*
+     * Try changing the console input codepage. If it works then also change
+     * the console output codepage, and refresh our local codepage cache.
+     */
     if (!SetConsoleCP(uNewCodePage))
     {
         ConErrResPuts(STRING_CHCP_ERROR4);
     }
     else
     {
+        SetConsoleOutputCP(uNewCodePage);
 
-        SetConsoleOutputCP (uNewCodePage);
-        InitLocale ();
-        InputCodePage= GetConsoleCP();
+        /* Update our local codepage cache */
+        InputCodePage  = GetConsoleCP();
+        OutputCodePage = GetConsoleOutputCP();
+
+        InitLocale();
+
+        /* Display the active code page number */
+        ConOutResPrintf(STRING_CHCP_ERROR1, OutputCodePage);
     }
 
-    freep (arg);
     return 0;
 }
 

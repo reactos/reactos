@@ -161,7 +161,7 @@ IKsAllocator_fnDeviceIoControl(
     if (IoStack->Parameters.DeviceIoControl.IoControlCode  != IOCTL_KS_PROPERTY)
     {
         /* only KSPROPERTY requests are supported */
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
 
         /* complete and forget irps */
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
@@ -593,20 +593,27 @@ KsCreateDefaultAllocatorEx(
 
     /* check the valid file alignment */
     if (AllocatorFraming->FileAlignment > (PAGE_SIZE-1))
+    {
+        FreeItem(AllocatorFraming);
         return STATUS_INVALID_PARAMETER;
+    }
 
     /* allocate allocator struct */
     Allocator = AllocateItem(NonPagedPool, sizeof(ALLOCATOR));
     if (!Allocator)
+    {
+        FreeItem(AllocatorFraming);
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* allocate object header */
     
     Status = KsAllocateObjectHeader((KSOBJECT_HEADER*)&Allocator->Header, 0, NULL, Irp, &DispatchTable);
     if (!NT_SUCCESS(Status))
     {
-         FreeItem(Allocator);
-         return Status;
+        FreeItem(AllocatorFraming);
+        FreeItem(Allocator);
+        return Status;
     }
 
     /* set allocator type in object header */
@@ -652,6 +659,7 @@ KsCreateDefaultAllocatorEx(
 
     /* backup allocator framing */
     RtlMoveMemory(&Allocator->Status.Framing, AllocatorFraming, sizeof(KSALLOCATOR_FRAMING));
+    FreeItem(AllocatorFraming);
 
     return Status;
 }

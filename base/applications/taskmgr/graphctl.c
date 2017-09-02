@@ -434,7 +434,7 @@ void GraphCtrl_DrawPoint(TGraphCtrl* this)
                SRCCOPY);
 
         /*  establish a rectangle over the right side of plot */
-        /*  which now needs to be cleaned up proir to adding the new point */
+        /*  which now needs to be cleaned up prior to adding the new point */
         rectCleanUp = this->m_rectPlot;
         rectCleanUp.left  = rectCleanUp.right - this->m_nShiftPixels;
 

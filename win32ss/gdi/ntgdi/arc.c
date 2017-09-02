@@ -8,7 +8,7 @@
  */
 #define PUTPIXEL(x,y,BrushInst)        \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       &dc->co.ClipObj,                         \
+       (CLIPOBJ *)&dc->co,                       \
        &BrushInst.BrushObject,                   \
        x, y, (x)+1, y,                           \
        &RectBounds,                              \
@@ -16,7 +16,7 @@
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
   ret = ret && IntEngLineTo(&psurf->SurfObj, \
-       &dc->co.ClipObj,                         \
+       (CLIPOBJ *)&dc->co,                       \
        &BrushInst.BrushObject,                   \
        x1, y1, x2, y2,                           \
        &RectBounds,                              \
@@ -143,15 +143,18 @@ IntArc( DC *dc,
               arctype);
     }
 
-    ret = IntDrawArc( dc,
-              RectBounds.left,
-              RectBounds.top,
-              abs(RectBounds.right-RectBounds.left), // Width
-              abs(RectBounds.bottom-RectBounds.top), // Height
-              AngleStart,
-              AngleEnd,
-              arctype,
-              pbrPen);
+    if(ret)
+    {
+        ret = IntDrawArc( dc,
+                  RectBounds.left,
+                  RectBounds.top,
+                  abs(RectBounds.right-RectBounds.left), // Width
+                  abs(RectBounds.bottom-RectBounds.top), // Height
+                  AngleStart,
+                  AngleEnd,
+                  arctype,
+                  pbrPen);
+    }
 
     psurf = dc->dclevel.pSurface;
     if (NULL == psurf)
@@ -211,6 +214,7 @@ IntGdiArcInternal(
                YStartArc,
                  XEndArc,
                  YEndArc,
+                       0,
                  arctype);
   }
 
@@ -238,9 +242,9 @@ IntGdiArcInternal(
   if (arctype == GdiTypeArcTo)
   {
      if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
-       IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL, TRUE);
+       IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL);
      else
-       IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL, TRUE);
+       IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL);
   }
   return Ret;
 }
@@ -285,7 +289,7 @@ IntGdiAngleArc( PDC pDC,
 
   if (result)
   {
-     IntGdiMoveToEx(pDC, x2, y2, NULL, TRUE);
+     IntGdiMoveToEx(pDC, x2, y2, NULL);
   }
   return result;
 }
@@ -313,12 +317,6 @@ NtGdiAngleArc(
   {
     EngSetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
-  }
-  if (pDC->dctype == DC_TYPE_INFO)
-  {
-    DC_UnlockDc(pDC);
-    /* Yes, Windows really returns TRUE in this case */
-    return TRUE;
   }
 
   status = KeSaveFloatingPointState(&FloatSave);
@@ -369,11 +367,11 @@ NtGdiArcInternal(
     EngSetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  if (dc->dctype == DC_TYPE_INFO)
+  if (arctype > GdiTypePie)
   {
     DC_UnlockDc(dc);
-    /* Yes, Windows really returns TRUE in this case */
-    return TRUE;
+    EngSetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
   }
 
   DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);

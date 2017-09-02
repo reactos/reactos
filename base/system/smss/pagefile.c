@@ -580,7 +580,7 @@ SmpCreatePagingFileOnFixedDrive(IN PSMP_PAGEFILE_DESCRIPTOR Descriptor,
             break;
         }
 
-        /* We failed, try a slighly smaller pagefile */
+        /* We failed, try a slightly smaller pagefile */
         Descriptor->ActualMinSize.QuadPart -= FuzzFactor->QuadPart;
     }
 

@@ -12,31 +12,17 @@
 #include <winbase.h>
 #include <winuser.h>
 
+#include <conutils.h>
+
 #include "resource.h"
 
-static void PrintError(void)
+VOID PrintError(DWORD dwError)
 {
-    DWORD dwError;
-    LPWSTR lpMsgBuf = NULL;
-
-    dwError = GetLastError();
-    if (dwError == NO_ERROR)
+    if (dwError == ERROR_SUCCESS)
         return;
 
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                   NULL, dwError, 0, (LPWSTR)&lpMsgBuf, 0,  NULL);
-    wprintf(L"%s", lpMsgBuf);
-    LocalFree(lpMsgBuf);
-}
-
-static void PrintResourceString(UINT uID)
-{
-    WCHAR buff[500];
-
-    if (LoadStringW(GetModuleHandle(NULL), uID, buff, ARRAYSIZE(buff)))
-    {
-        wprintf(L"%s", buff);
-    }
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, dwError, LANG_USER_DEFAULT);
 }
 
 static BOOL IsDataUnicode(HGLOBAL hGlobal)
@@ -61,28 +47,27 @@ int wmain(int argc, wchar_t** argv)
     LPBYTE lpBuffer;
     SIZE_T dwSize = 0;
 
+    /* Initialize the Console Standard Streams */
     hInput = GetStdHandle(STD_INPUT_HANDLE);
+    ConInitStdStreams();
 
     /* Check for usage */
     if (argc > 1 && wcsncmp(argv[1], L"/?", 2) == 0)
     {
-        PrintResourceString(IDS_HELP);
+        ConResPuts(StdOut, IDS_HELP);
         return 0;
     }
 
     if (GetFileType(hInput) == FILE_TYPE_CHAR)
     {
-        PrintResourceString(IDS_USAGE);
+        ConResPuts(StdOut, IDS_USAGE);
         return 0;
     }
 
     /* Initialize a growable buffer for holding clipboard data */
     hBuffer = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, 4096);
     if (!hBuffer)
-    {
-        PrintError();
-        return -1;
-    }
+        goto Failure;
 
     /*
      * Read data from the input stream by chunks of 4096 bytes
@@ -92,7 +77,7 @@ int wmain(int argc, wchar_t** argv)
     {
         lpBuffer = GlobalLock(hBuffer);
         if (!lpBuffer)
-            goto cleanup;
+            goto Failure;
 
         bStatus = ReadFile(hInput, lpBuffer + dwSize, 4096, &dwBytesRead, NULL);
         dwSize += dwBytesRead;
@@ -100,11 +85,11 @@ int wmain(int argc, wchar_t** argv)
 
         hTemp = GlobalReAlloc(hBuffer, GlobalSize(hBuffer) + 4096, GMEM_ZEROINIT);
         if (!hTemp)
-            goto cleanup;
+            goto Failure;
 
         hBuffer = hTemp;
     }
-    while (dwBytesRead > 0 && bStatus);
+    while (bStatus && dwBytesRead > 0);
 
     /*
      * Resize the buffer to the total size of data read.
@@ -118,7 +103,7 @@ int wmain(int argc, wchar_t** argv)
 
     /* Attempt to open the clipboard */
     if (!OpenClipboard(NULL))
-        goto cleanup;
+        goto Failure;
 
     /* Empty it, copy our data, then close it */
 
@@ -138,8 +123,8 @@ int wmain(int argc, wchar_t** argv)
     CloseClipboard();
     return 0;
 
-cleanup:
-    GlobalFree(hBuffer);
-    PrintError();
+Failure:
+    if (hBuffer) GlobalFree(hBuffer);
+    PrintError(GetLastError());
     return -1;
 }

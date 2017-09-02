@@ -33,7 +33,7 @@ void invalid_switch(LPTSTR is)
     ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
 }
 
-/* retrives the pathe dependen om the input file name */
+/* retrieves the path dependent on the input file name */
 void getPath(TCHAR* out, LPTSTR in)
 {
     if (_tcslen(in) == 2 && in[1] == _T(':'))
@@ -86,7 +86,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
     if (IsExistingFile (dest))
     {
         /*
-         * Resets the attributes to avoid probles with read only files,
+         * Resets the attributes to avoid problems with read only files,
          * checks for read only has been made earlier.
          */
         SetFileAttributes(dest,FILE_ATTRIBUTE_NORMAL);
@@ -239,7 +239,7 @@ INT recReplace(DWORD dwFlags,
             break;
     }
 
-    /* Go through all the soursfiles and copy/replace them */
+    /* Go through all the sourcefiles and copy/replace them */
     do
     {
         if (CheckCtrlBreak(BREAK_INPUT))
@@ -332,7 +332,7 @@ INT recFindSubDirs(DWORD dwFlags,
     /* Get the first file in the directory */
     hFile = FindFirstFile (szDestPath, &findBuffer);
 
-    /* Remove the star added earlyer to dest path */
+    /* Remove the star added earlier to dest path */
     for(i = (_tcslen(szDestPath) -  1); i > -1; i--)
     {
         if (szDestPath[i] != _T('\\'))
@@ -376,7 +376,7 @@ INT recFindSubDirs(DWORD dwFlags,
             if (!*doMore)
                 break;
             _tcscpy(tmpSrcPath,szSrcPath);
-            /* Controle the next level of subdirs */
+            /* Control the next level of subdirs */
             filesReplaced += recFindSubDirs(dwFlags,tmpSrcPath,tmpDestPath, doMore);
             if (!*doMore)
                 break;

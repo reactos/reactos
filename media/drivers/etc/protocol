@@ -1,7 +1,7 @@
 # The ReactOS protocols file
 #
 # Updated for NetBSD based on RFC 1340, Assigned Numbers (July 1992).
-# Last IANA update included dated 2009-06-18
+# Last IANA update included dated 2017-05-24
 #
 # See also http://www.iana.org/assignments/protocol-numbers
 
@@ -93,6 +93,7 @@ vmtp       81       VMTP            # Versatile Message Transport
 secure-vmtp 82      SECURE-VMTP     # SECURE-VMTP
 vines      83       VINES           # VINES
 ttp        84       TTP             # TTP
+iptm       84       IPTM            # Internet Protocol Traffic Manager
 nsfnet-igp 85       NSFNET-IGP      # NSFNET-IGP
 dgp        86       DGP             # Dissimilar Gateway Protocol
 tcf        87       TCF             # TCF
@@ -149,7 +150,9 @@ mpls-in-ip 137      MPLS-in-IP
 manet     138       manet           # MANET Protocols  [RFC5498]
 hip       139       HIP             # Host Identity Protocol
 shim6     140       Shim6           #Shim6 Protocol                         [RFC5533]
-#         141-252   Unassigned        [IANA]
+wesp      141       WESP            # Wrapped Encapsulating Security Payload
+rohc      142       ROHC            # Robust Header Compression
+#         143-252   Unassigned        [IANA]
 #         253       Use for experimentation and testing           [RFC3692]
 #         254       Use for experimentation and testing           [RFC3692]
 #         255       Reserved          [IANA]

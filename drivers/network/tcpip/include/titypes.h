@@ -265,7 +265,7 @@ typedef struct _CONNECTION_ENDPOINT {
     PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
 
     /* Requests */
-    LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
+    LIST_ENTRY ConnectRequest; /* Queued connect requests */
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
     LIST_ENTRY SendRequest;    /* Queued send requests */

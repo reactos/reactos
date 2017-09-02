@@ -32,7 +32,7 @@ FsdGetFsVolumeInformation(
 
     DPRINT("Required length %lu\n", FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel) + DeviceObject->Vpb->VolumeLabelLength);
     DPRINT("LabelLength %hu\n", DeviceObject->Vpb->VolumeLabelLength);
-    DPRINT("Label %*.S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
+    DPRINT("Label %.*S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
 
     ASSERT(*BufferLength >= sizeof(FILE_FS_VOLUME_INFORMATION));
     *BufferLength -= FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel);
@@ -59,7 +59,7 @@ FsdGetFsVolumeInformation(
         *BufferLength -= DeviceObject->Vpb->VolumeLabelLength;
     }
 
-    if (DeviceExt->VolumeFcb->Flags & FCB_IS_FATX_ENTRY)
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    DeviceExt->VolumeFcb->entry.FatX.CreationDate,
@@ -250,17 +250,19 @@ FsdSetFsLabelInformation(
     CHAR cString[43];
     ULONG SizeDirEntry;
     ULONG EntriesPerPage;
+    BOOLEAN IsFatX;
 
     DPRINT("FsdSetFsLabelInformation()\n");
 
     DeviceExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    IsFatX = vfatVolumeIsFatX(DeviceExt);
 
     if (sizeof(DeviceObject->Vpb->VolumeLabel) < FsLabelInfo->VolumeLabelLength)
     {
         return STATUS_NAME_TOO_LONG;
     }
 
-    if (DeviceExt->Flags & VCB_IS_FATX)
+    if (IsFatX)
     {
         if (FsLabelInfo->VolumeLabelLength / sizeof(WCHAR) > 42)
             return STATUS_NAME_TOO_LONG;
@@ -289,7 +291,7 @@ FsdSetFsLabelInformation(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    if (DeviceExt->Flags & VCB_IS_FATX)
+    if (IsFatX)
     {
         RtlCopyMemory(VolumeLabelDirEntry.FatX.Filename, cString, LabelLen);
         memset(&VolumeLabelDirEntry.FatX.Filename[LabelLen], ' ', 42 - LabelLen);
@@ -328,7 +330,7 @@ FsdSetFsLabelInformation(
     {
         while (TRUE)
         {
-            if (ENTRY_VOLUME(DeviceExt, Entry))
+            if (ENTRY_VOLUME(IsFatX, Entry))
             {
                 /* Update entry */
                 LabelFound = TRUE;
@@ -338,7 +340,7 @@ FsdSetFsLabelInformation(
                 break;
             }
 
-            if (ENTRY_END(DeviceExt, Entry))
+            if (ENTRY_END(IsFatX, Entry))
             {
                 break;
             }

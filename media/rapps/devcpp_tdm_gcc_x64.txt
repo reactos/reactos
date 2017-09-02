@@ -21,12 +21,12 @@ Description = Una versión en desarrollo de Dev-C++. Viene con el compilador de 
 Description = Una versione sostenuta di Dev-C++. Contiene il compilatore a 64bit TDM-GCC.
 
 [Section.0418]
-Description = O versiune menținută a Dev-C++. Conține compilatorul TDM-GCC pe 64 biți.
+Description = Versiune menținută a Dev-C++. Conține compilatorul TDM-GCC pe 64 biți.
 Size = 48,1 Mio
 
 [Section.0419]
 Description = Свободная интегрированная среда разработки приложений для языков программирования C/C++. Содержит 64 битный TDM-GCC компилятор.
-Size = 48,1 МБ
+Size = 48,1 МиБ
 
 [Section.041f]
 License = GPL sürüm 2

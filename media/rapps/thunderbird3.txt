@@ -61,7 +61,7 @@ SHA1 = 663954b75ee6613ecfd83186d2f8bbbda0b6bd14
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
-Size = 9.3 МБ
+Size = 9,3 МиБ
 URLSite = https://www.mozilla.org/ru/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/ru/Thunderbird%20Setup%203.1.20.exe
 SHA1 = 0d2cb1b8d781c2e8c7be2f78ee7c7687f62dc360

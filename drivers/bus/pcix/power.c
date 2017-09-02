@@ -141,7 +141,7 @@ PciSetPowerManagedDevicePowerState(IN PPCI_PDO_EXTENSION DeviceExtension,
     /* Does the device support power management at all? */
     if (!(DeviceExtension->HackFlags & PCI_HACK_NO_PM_CAPS))
     {
-        /* Get the PM capabailities register */
+        /* Get the PM capabilities register */
         CapsOffset = PciReadDeviceCapability(DeviceExtension,
                                              DeviceExtension->CapabilitiesPtr,
                                              PCI_CAPABILITY_ID_POWER_MANAGEMENT,

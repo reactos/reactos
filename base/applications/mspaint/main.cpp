@@ -54,7 +54,6 @@ HWND hToolBtn[16];
 
 HINSTANCE hProgInstance;
 
-TCHAR filename[256];
 TCHAR filepathname[1000];
 BOOL isAFile = FALSE;
 int fileSize;
@@ -85,6 +84,66 @@ CSizeboxWindow sizeboxCenterBottom;
 CSizeboxWindow sizeboxRightBottom;
 CTextEditWindow textEditWindow;
 
+// get file name extension from filter string
+static BOOL
+FileExtFromFilter(LPTSTR pExt, LPCTSTR pTitle, OPENFILENAME *pOFN)
+{
+    LPTSTR pchExt = pExt;
+    *pchExt = 0;
+
+    DWORD nIndex = 1;
+    for (LPCTSTR pch = pOFN->lpstrFilter; *pch; ++nIndex)
+    {
+        pch += lstrlen(pch) + 1;
+        if (pOFN->nFilterIndex == nIndex)
+        {
+            for (++pch; *pch && *pch != _T(';'); ++pch)
+            {
+                *pchExt++ = *pch;
+            }
+            *pchExt = 0;
+            CharLower(pExt);
+            return TRUE;
+        }
+        pch += lstrlen(pch) + 1;
+    }
+    return FALSE;
+}
+
+// Hook procedure for OPENFILENAME to change the file name extension
+static UINT_PTR APIENTRY
+OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HWND hParent;
+    OFNOTIFY *pon;
+    switch (uMsg)
+    {
+    case WM_NOTIFY:
+        pon = (OFNOTIFY *)lParam;
+        if (pon->hdr.code == CDN_TYPECHANGE)
+        {
+            hParent = GetParent(hwnd);
+            TCHAR Path[MAX_PATH];
+            SendMessage(hParent, CDM_GETFILEPATH, SIZEOF(Path), (LPARAM)Path);
+            LPTSTR pchTitle = _tcsrchr(Path, _T('\\'));
+            if (pchTitle == NULL)
+                pchTitle = _tcsrchr(Path, _T('/'));
+
+            LPTSTR pch = _tcsrchr((pchTitle ? pchTitle : Path), _T('.'));
+            if (pch && pchTitle)
+            {
+                pchTitle++;
+                *pch = 0;
+                FileExtFromFilter(pch, pchTitle, pon->lpOFN);
+                SendMessage(hParent, CDM_SETCONTROLTEXT, 0x047c, (LPARAM)pchTitle);
+                lstrcpyn(pon->lpOFN->lpstrFile, Path, SIZEOF(pon->lpOFN->lpstrFile));
+            }
+        }
+        break;
+    }
+    return 0;
+}
+
 /* entry point */
 
 int WINAPI
@@ -93,18 +152,13 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     HWND hwnd;               /* This is the handle for our window */
     MSG messages;            /* Here messages to the application are saved */
 
-    TCHAR progtitle[1000];
-    TCHAR resstr[100];
     HMENU menu;
-    HANDLE haccel;
+    HACCEL haccel;
 
-    TCHAR *c;
     TCHAR sfnFilename[1000];
     TCHAR sfnFiletitle[256];
-    TCHAR sfnFilter[1000];
     TCHAR ofnFilename[1000];
     TCHAR ofnFiletitle[256];
-    TCHAR ofnFilter[1000];
     TCHAR miniaturetitle[100];
     static int custColors[16] = { 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
@@ -132,9 +186,11 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* initialize common controls library */
     InitCommonControls();
 
-    LoadString(hThisInstance, IDS_DEFAULTFILENAME, filename, SIZEOF(filename));
-    LoadString(hThisInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
-    _stprintf(progtitle, resstr, filename);
+    LoadString(hThisInstance, IDS_DEFAULTFILENAME, filepathname, SIZEOF(filepathname));
+    CPath pathFileName(filepathname);
+    pathFileName.StripPath();
+    CString strTitle;
+    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
     LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, SIZEOF(miniaturetitle));
 
     /* load settings from registry */
@@ -144,7 +200,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     /* create main window */
     RECT mainWindowPos = {0, 0, 544, 375};	// FIXME: use equivalent of CW_USEDEFAULT for position
-    hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, progtitle, WS_OVERLAPPEDWINDOW);
+    hwnd = mainWindow.Create(HWND_DESKTOP, mainWindowPos, strTitle, WS_OVERLAPPEDWINDOW);
 
     RECT fullscreenWindowPos = {0, 0, 100, 100};
     fullscreenWindow.Create(HWND_DESKTOP, fullscreenWindowPos, NULL, WS_POPUPWINDOW | WS_MAXIMIZE);
@@ -214,15 +270,14 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         LoadDIBFromFile(&bmNew, lpszArgument, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
         if (bmNew != NULL)
         {
-            TCHAR tempstr[1000];
-            TCHAR resstr[100];
             TCHAR *temp;
             imageModel.Insert(bmNew);
             GetFullPathName(lpszArgument, SIZEOF(filepathname), filepathname, &temp);
-            _tcscpy(filename, temp);
-            LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
-            _stprintf(tempstr, resstr, filename);
-            mainWindow.SetWindowText(tempstr);
+            CPath pathFileName(filepathname);
+            pathFileName.StripPath();
+            CString strTitle;
+            strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
+            mainWindow.SetWindowText(strTitle);
             imageModel.ClearHistory();
             isAFile = TRUE;
         }
@@ -244,37 +299,41 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     choosecolor.lpTemplateName = NULL;
 
     /* initializing the OPENFILENAME structure for use with GetOpenFileName and GetSaveFileName */
-    CopyMemory(ofnFilename, filename, sizeof(filename));
-    LoadString(hThisInstance, IDS_OPENFILTER, ofnFilter, SIZEOF(ofnFilter));
-    for(c = ofnFilter; *c; c++)
-        if (*c == '\1')
-            *c = '\0';
+    CopyMemory(ofnFilename, filepathname, sizeof(filepathname));
+    CString strImporters;
+    CSimpleArray<GUID> aguidFileTypesI;
+    CString strAllPictureFiles;
+    strAllPictureFiles.LoadString(hThisInstance, IDS_ALLPICTUREFILES);
+    CImage::GetImporterFilterString(strImporters, aguidFileTypesI, strAllPictureFiles, CImage::excludeDefaultLoad, _T('\0'));
+//     CAtlStringW strAllFiles;
+//     strAllFiles.LoadString(hThisInstance, IDS_ALLFILES);
+//     strImporters = strAllFiles + CAtlStringW(_T("|*.*|")).Replace('|', '\0') + strImporters;
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
     ofn.lStructSize    = sizeof(OPENFILENAME);
     ofn.hwndOwner      = hwnd;
     ofn.hInstance      = hThisInstance;
-    ofn.lpstrFilter    = ofnFilter;
+    ofn.lpstrFilter    = strImporters;
     ofn.lpstrFile      = ofnFilename;
     ofn.nMaxFile       = SIZEOF(ofnFilename);
     ofn.lpstrFileTitle = ofnFiletitle;
     ofn.nMaxFileTitle  = SIZEOF(ofnFiletitle);
     ofn.Flags          = OFN_HIDEREADONLY;
 
-    CopyMemory(sfnFilename, filename, sizeof(filename));
-    LoadString(hThisInstance, IDS_SAVEFILTER, sfnFilter, SIZEOF(sfnFilter));
-    for(c = sfnFilter; *c; c++)
-        if (*c == '\1')
-            *c = '\0';
+    CopyMemory(sfnFilename, filepathname, sizeof(filepathname));
+    CString strExporters;
+    CSimpleArray<GUID> aguidFileTypesE;
+    CImage::GetExporterFilterString(strExporters, aguidFileTypesE, NULL, CImage::excludeDefaultSave, _T('\0'));
     ZeroMemory(&sfn, sizeof(OPENFILENAME));
     sfn.lStructSize    = sizeof(OPENFILENAME);
     sfn.hwndOwner      = hwnd;
     sfn.hInstance      = hThisInstance;
-    sfn.lpstrFilter    = sfnFilter;
+    sfn.lpstrFilter    = strExporters;
     sfn.lpstrFile      = sfnFilename;
     sfn.nMaxFile       = SIZEOF(sfnFilename);
     sfn.lpstrFileTitle = sfnFiletitle;
     sfn.nMaxFileTitle  = SIZEOF(sfnFiletitle);
-    sfn.Flags          = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+    sfn.Flags          = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLEHOOK;
+    sfn.lpfnHook       = OFNHookProc;
 
     /* creating the size boxes */
     RECT sizeboxPos = {0, 0, 0 + 3, 0 + 3};
@@ -305,7 +364,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* Run the message loop. It will run until GetMessage() returns 0 */
     while (GetMessage(&messages, NULL, 0, 0))
     {
-        TranslateAccelerator(hwnd, (HACCEL) haccel, &messages);
+        TranslateAccelerator(hwnd, haccel, &messages);
 
         /* Translate virtual-key messages into character messages */
         TranslateMessage(&messages);

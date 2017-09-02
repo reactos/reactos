@@ -33,6 +33,7 @@
 ULONG CsrssInitialized = FALSE;
 PKPROCESS Csrss = NULL;
 ULONG VideoPortDeviceNumber = 0;
+KMUTEX VideoPortInt10Mutex;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -250,7 +251,6 @@ IntVideoPortFindAdapter(
 {
     WCHAR DeviceVideoBuffer[20];
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-    SIZE_T Size;
     NTSTATUS Status;
     VIDEO_PORT_CONFIG_INFO ConfigInfo;
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
@@ -279,11 +279,10 @@ IntVideoPortFindAdapter(
     ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
     ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
 
-    Size = sizeof(SystemBasicInfo);
     Status = ZwQuerySystemInformation(SystemBasicInformation,
                                       &SystemBasicInfo,
-                                      Size,
-                                      &Size);
+                                      sizeof(SystemBasicInfo),
+                                      NULL);
     if (NT_SUCCESS(Status))
     {
         ConfigInfo.SystemMemorySize = SystemBasicInfo.NumberOfPhysicalPages *
@@ -464,8 +463,15 @@ VideoPortInitialize(
     NTSTATUS Status;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
     BOOLEAN PnpDriver = FALSE, LegacyDetection = FALSE;
+    static BOOLEAN Int10MutexInitialized;
 
     TRACE_(VIDEOPRT, "VideoPortInitialize\n");
+
+    if (!Int10MutexInitialized)
+    {
+        KeInitializeMutex(&VideoPortInt10Mutex, 0);
+        Int10MutexInitialized = TRUE;
+    }
 
     /* As a first thing do parameter checks. */
     if (HwInitializationData->HwInitDataSize > sizeof(VIDEO_HW_INITIALIZATION_DATA))

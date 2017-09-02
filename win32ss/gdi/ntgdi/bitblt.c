@@ -78,6 +78,11 @@ NtGdiAlphaBlend(
     DestRect.right  += DCDest->ptlDCOrig.x;
     DestRect.bottom += DCDest->ptlDCOrig.y;
 
+    if (DCDest->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(DCDest, &DestRect);
+    }
+
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc + WidthSrc;
@@ -125,7 +130,7 @@ NtGdiAlphaBlend(
     TRACE("Performing the alpha blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
-                               &DCDest->co.ClipObj,
+                               (CLIPOBJ *)&DCDest->co,
                                &exlo.xlo,
                                &DestRect,
                                &SourceRect,
@@ -262,6 +267,11 @@ NtGdiTransparentBlt(
     rcSrc.right  += DCSrc->ptlDCOrig.x;
     rcSrc.bottom += DCSrc->ptlDCOrig.y;
 
+    if (DCDest->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(DCDest, &rcDest);
+    }
+
     /* Prepare for blit */
     DC_vPrepareDCsForBlit(DCDest, &rcDest, DCSrc, &rcSrc);
 
@@ -285,7 +295,7 @@ NtGdiTransparentBlt(
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        &DCDest->co.ClipObj, &exlo.xlo, &rcDest, &rcSrc,
+        (CLIPOBJ *)&DCDest->co, &exlo.xlo, &rcDest, &rcSrc,
         TransparentColor, 0);
 
     EXLATEOBJ_vCleanup(&exlo);
@@ -420,6 +430,11 @@ NtGdiMaskBlt(
     DestRect.right  += DCDest->ptlDCOrig.x;
     DestRect.bottom += DCDest->ptlDCOrig.y;
 
+    if (DCDest->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(DCDest, &DestRect);
+    }
+
     SourcePoint.x = nXSrc;
     SourcePoint.y = nYSrc;
 
@@ -470,12 +485,11 @@ NtGdiMaskBlt(
         XlateObj = &exlo.xlo;
     }
 
-
     /* Perform the bitblt operation */
     Status = IntEngBitBlt(&BitmapDest->SurfObj,
                           BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                           psurfMask ? &psurfMask->SurfObj : NULL,
-                          &DCDest->co.ClipObj,
+                          (CLIPOBJ *)&DCDest->co,
                           XlateObj,
                           &DestRect,
                           &SourcePoint,
@@ -619,6 +633,11 @@ GreStretchBltMask(
     DestRect.right  += DCDest->ptlDCOrig.x;
     DestRect.bottom += DCDest->ptlDCOrig.y;
 
+    if (DCDest->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(DCDest, &DestRect);
+    }
+
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc+WidthSrc;
@@ -688,7 +707,7 @@ GreStretchBltMask(
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,
                               BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                               BitmapMask ? &BitmapMask->SurfObj : NULL,
-                              &DCDest->co.ClipObj,
+                              (CLIPOBJ *)&DCDest->co,
                               XlateObj,
                               &DCDest->dclevel.ca,
                               &DestRect,
@@ -807,6 +826,12 @@ IntPatBlt(
     DestRect.top    += pdc->ptlDCOrig.y;
     DestRect.right  += pdc->ptlDCOrig.x;
     DestRect.bottom += pdc->ptlDCOrig.y;
+
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(pdc, &DestRect);
+    }
+
 #ifdef _USE_DIBLIB_
     BrushOrigin.x = pbrush->ptOrigin.x + pdc->ptlDCOrig.x + XLeft;
     BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y + YLeft;
@@ -822,7 +847,7 @@ IntPatBlt(
     ret = IntEngBitBlt(&psurf->SurfObj,
                        NULL,
                        NULL,
-                       &pdc->co.ClipObj,
+                       (CLIPOBJ *)&pdc->co,
                        NULL,
                        &DestRect,
                        NULL,
@@ -1058,6 +1083,13 @@ IntGdiBitBltRgn(
         return FALSE;
     }
 
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+        RECTL rcrgn;        
+        REGION_GetRgnBox(prgnClip, &rcrgn);
+        IntUpdateBoundsRect(pdc, &rcrgn);
+    }
+
     /* Prepare the DC */
     DC_vPrepareDCsForBlit(pdc, &prgnClip->rdh.rcBound, NULL, NULL);
 
@@ -1072,7 +1104,7 @@ IntGdiBitBltRgn(
     bResult = IntEngBitBlt(&pdc->dclevel.pSurface->SurfObj,
                            NULL,
                            NULL,
-                           &xcoClip.ClipObj,
+                           (CLIPOBJ *)&xcoClip,
                            NULL,
                            &prgnClip->rdh.rcBound,
                            NULL,
@@ -1137,6 +1169,13 @@ IntGdiFillRgn(
         return FALSE;
     }
 
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+        RECTL rcrgn;        
+        REGION_GetRgnBox(prgnClip, &rcrgn);
+        IntUpdateBoundsRect(pdc, &rcrgn);
+    }
+
     IntEngInitClipObj(&xcoClip);
     IntEngUpdateClipRegion(&xcoClip,
                            prgnClip->rdh.nCount,
@@ -1170,7 +1209,7 @@ IntGdiFillRgn(
 
     /* Call the internal function */
     bRet = IntEngPaint(&pdc->dclevel.pSurface->SurfObj,
-                       &xcoClip.ClipObj,
+                       (CLIPOBJ *)&xcoClip,
                        pbo,
                        &pdc->pdcattr->ptlBrushOrigin,
                        mix);
@@ -1349,6 +1388,22 @@ NtGdiSetPixel(
         /* Fail! */
         DC_UnlockDc(pdc);
         return -1;
+    }
+
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       RECTL rcDst;
+
+       RECTL_vSetRect(&rcDst, x, y, x+1, y+1);
+
+       IntLPtoDP(pdc, (LPPOINT)&rcDst, 2);
+
+       rcDst.left   += pdc->ptlDCOrig.x;
+       rcDst.top    += pdc->ptlDCOrig.y;
+       rcDst.right  += pdc->ptlDCOrig.x;
+       rcDst.bottom += pdc->ptlDCOrig.y;
+
+       IntUpdateBoundsRect(pdc, &rcDst);
     }
 
     /* Translate the color to the target format */

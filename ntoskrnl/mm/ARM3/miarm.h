@@ -527,7 +527,6 @@ extern SIZE_T MmMaximumNonPagedPoolInBytes;
 extern PFN_NUMBER MmMaximumNonPagedPoolInPages;
 extern PFN_NUMBER MmSizeOfPagedPoolInPages;
 extern PVOID MmNonPagedSystemStart;
-extern SIZE_T MiNonPagedSystemSize;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
 extern PVOID MmNonPagedPoolEnd;
@@ -879,6 +878,18 @@ MI_IS_MAPPED_PTE(PMMPTE PointerPte)
 }
 
 #endif
+
+FORCEINLINE
+VOID
+MI_MAKE_TRANSITION_PTE(_Out_ PMMPTE NewPte,
+                       _In_ PFN_NUMBER Page,
+                       _In_ ULONG Protection)
+{
+    NewPte->u.Long = 0;
+    NewPte->u.Trans.Transition = 1;
+    NewPte->u.Trans.Protection = Protection;
+    NewPte->u.Trans.PageFrameNumber = Page;
+}
 
 //
 // Returns if the page is physically resident (ie: a large page)
@@ -1663,7 +1674,7 @@ MmArmInitSystem(
 
 VOID
 NTAPI
-MiInitializeSessionSpaceLayout();
+MiInitializeSessionSpaceLayout(VOID);
 
 NTSTATUS
 NTAPI
@@ -1865,22 +1876,6 @@ MiAllocatePagesForMdl(
     IN ULONG Flags
 );
 
-PVOID
-NTAPI
-MiMapLockedPagesInUserSpace(
-    IN PMDL Mdl,
-    IN PVOID BaseVa,
-    IN MEMORY_CACHING_TYPE CacheType,
-    IN PVOID BaseAddress
-);
-
-VOID
-NTAPI
-MiUnmapLockedPagesInUserSpace(
-    IN PVOID BaseAddress,
-    IN PMDL Mdl
-);
-
 VOID
 NTAPI
 MiInsertPageInList(
@@ -2064,6 +2059,12 @@ MiCheckSecuredVad(
     IN ULONG ProtectionMask
 );
 
+VOID
+NTAPI
+MiInsertVad(
+    _Inout_ PMMVAD Vad,
+    _Inout_ PMM_AVL_TABLE VadRoot);
+
 NTSTATUS
 NTAPI
 MiInsertVadEx(
@@ -2093,7 +2094,7 @@ NTAPI
 MiRosUnmapViewOfSection(
     IN PEPROCESS Process,
     IN PVOID BaseAddress,
-    IN ULONG Flags
+    IN BOOLEAN SkipDebuggerNotify
 );
 
 VOID
@@ -2167,6 +2168,15 @@ MiDeleteVirtualAddresses(
     IN ULONG_PTR Va,
     IN ULONG_PTR EndingAddress,
     IN PMMVAD Vad
+);
+
+VOID
+NTAPI
+MiDeletePte(
+    IN PMMPTE PointerPte,
+    IN PVOID VirtualAddress,
+    IN PEPROCESS CurrentProcess,
+    IN PMMPTE PrototypePte
 );
 
 ULONG

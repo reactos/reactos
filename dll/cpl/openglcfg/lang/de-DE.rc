@@ -1,0 +1,28 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
+    GROUPBOX "Renderereinstellungen", -1, 5, 25, 230, 90
+    LTEXT "&Renderer:", -1, 15, 42, 37, 10
+    COMBOBOX IDC_RENDERER, 55, 40, 160, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Dies wird die Standardeinstellungen Ihres Grafiktreibers überschreiben! Wählen Sie ""Standard"", um zur Standardeinstellung zurückzukehren.", -1, 15, 60, 210, 40
+    GROUPBOX "Debugging", -1, 5, 125, 230, 90
+    LTEXT "DEBUGCHANNEL:", -1, 15, 142, 65, 10
+    COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Aktiviert/Deaktiviert die Debug-Ausgabe von opengl32.\n\nWARNUNG: Wenn Sie ""Setzen"" oder ""Löschen"" wählen, wird den Inhalt der DEBUGCHANNEL Umgebungsvariable überschreiben!", -1, 15, 165, 210, 40
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RENDERER_DEFAULT "Standard"
+    IDS_RENDERER_RSWR "ReactOS Software Implementierung"
+    IDS_CPLNAME "OpenGL Konfiguration"
+    IDS_CPLDESCRIPTION "Konfiguriert den OpenGL Renderer."
+    IDS_DEBUG_SET "Setzen"
+    IDS_DEBUG_CLEAR "Löschen"
+    IDS_DEBUG_DNM "Nicht verändern"
+END

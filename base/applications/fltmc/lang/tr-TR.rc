@@ -1,0 +1,29 @@
+/* TRANSLATOR: 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nGeçerli komutlar:\n\
+               load        Bir süzgeç sürücüsünü yükler\n\
+               unload      Bir süzgeç sürücüsünü kaldırır\n\
+               filters     Dizgede şimdilik kayıtlı süzgeçleri dizelgeler\n\n"
+
+    IDS_USAGE_LOAD      "Bir süzgeç sürücüsünü yükler\n"
+    IDS_USAGE_UNLOAD    "Bir süzgeç sürücüsünü kaldırır\n"
+    IDS_USAGE_FILTERS   "Kayıtlı tüm süzgeçleri dizelgeler\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAY_FILTERS1    "Süzgeç Adı                      Örnek Sayısı     Yükseklik    Kare\n"
+    IDS_DISPLAY_FILTERS2    "Süzgeç Adı                      Örnek Sayısı       Kare\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_PRIV      "Sürücü yüklemesi ayrıcalığı ayarlama başarısız (0x%X)\n"
+    IDS_ERROR_FILTERS   "Süzgeçleri dizelgeleme başarısız (0x%X)\n"
+    IDS_ERROR_LOAD      "Süzgeçleri yükleme başarısız (0x%X)\n"
+    IDS_ERROR_UNLOAD    "Süzgeçleri kaldırma başarısız (0x%X)\n"
+END

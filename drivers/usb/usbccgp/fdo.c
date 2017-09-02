@@ -46,7 +46,7 @@ FDO_QueryCapabilities(
     /* Init event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    /* Now allocte the irp */
+    /* Now allocate the irp */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
     if (!Irp)
     {
@@ -223,7 +223,7 @@ FDO_CreateChildPdo(
         PDODeviceExtension->ConfigurationHandle = FDODeviceExtension->ConfigurationHandle;
         PDODeviceExtension->ConfigurationDescriptor = FDODeviceExtension->ConfigurationDescriptor;
         RtlCopyMemory(&PDODeviceExtension->Capabilities, &FDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
-        RtlCopyMemory(&PDODeviceExtension->DeviceDescriptor, &FDODeviceExtension->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
+        RtlCopyMemory(&PDODeviceExtension->DeviceDescriptor, FDODeviceExtension->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
 
         /* Patch the stack size */
         PDODeviceObject->StackSize = DeviceObject->StackSize + 1;

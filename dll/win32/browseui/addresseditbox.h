@@ -38,10 +38,15 @@ private:
     DWORD                                   fAdviseCookie;
     CComPtr<IUnknown>                       fSite;
     LPITEMIDLIST                            pidlLastParsed;
+    HWND                                    hComboBoxEx;
 public:
     CAddressEditBox();
     ~CAddressEditBox();
 private:
+    void PopulateComboBox(LPITEMIDLIST pidl);
+    void AddComboBoxItem(LPITEMIDLIST pidl, int index, int indent);
+    void FillOneLevel(int index, int levelIndent, int indent);
+    LPITEMIDLIST GetItemData(int index);
 public:
     // *** IShellService methods ***
     virtual HRESULT STDMETHODCALLTYPE SetOwner(IUnknown *);

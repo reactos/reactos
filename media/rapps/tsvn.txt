@@ -1,0 +1,28 @@
+[Section]
+Name = TortoiseSVN
+Version = 1.8.12
+License = GPL
+Description = Graphical SVN client for code synchronization/updating.
+Size = 14.9 MiB
+Category = 7
+URLSite = http://www.tortoisesvn.net/
+URLDownload = https://download.sourceforge.net/project/tortoisesvn/1.8.12/Application/TortoiseSVN-1.8.12.26645-win32-svn-1.8.14.msi
+SHA1 = 5caa4cf8c30c2ced5a439016a7f43b309bf83293
+CDPath = none
+
+[Section.0407]
+Description = Grafischer SVN Client für Code Synchronisation/Aktualisierung.
+Size = 14,9 MiB
+
+[Section.0418]
+Description = Client SVN cu interfață grafică pentru sincronizare/actualizare de cod sursă.
+Size = 14,9 Mio
+
+[Section.0419]
+Description = Графический SVN клиент для обновления/синхронизации кода.
+Size = 14,9 МиБ
+
+[Section.041f]
+Description = Kod eş zamanlama ve şimdikileştirme için çizgelik SVN istemcisi.
+Size = 14,9 MiB
+

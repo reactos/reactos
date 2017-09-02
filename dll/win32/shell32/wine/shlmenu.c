@@ -608,7 +608,7 @@ LRESULT WINAPI FileMenu_DrawItem(
 	  clrPrevBkgnd = SetBkColor(lpdis->hDC, GetSysColor (COLOR_MENU));
 	}
 
-	CopyRect(&TextRect, &(lpdis->rcItem));
+        TextRect = lpdis->rcItem;
 
 	/* add the menubitmap */
 	menuinfo = FM_GetMenuInfo(pMyItem->hMenu);
@@ -628,7 +628,7 @@ LRESULT WINAPI FileMenu_DrawItem(
 	Shell_GetImageLists(0, &hImageList);
 	ImageList_Draw(hImageList, pMyItem->iIconIndex, lpdis->hDC, xi, yi, ILD_NORMAL);
 
-	TRACE("-- 0x%04x 0x%04x 0x%04x 0x%04x\n", TextRect.left, TextRect.top, TextRect.right, TextRect.bottom);
+        TRACE("-- %s\n", wine_dbgstr_rect(&TextRect));
 
 	SetTextColor(lpdis->hDC, clrPrevText);
 	SetBkColor(lpdis->hDC, clrPrevBkgnd);
@@ -789,8 +789,8 @@ DWORD WINAPI FileMenu_GetItemExtent (HMENU hMenu, UINT uPos)
 	FIXME("%p 0x%08x\n", hMenu, uPos);
 
 	if (GetMenuItemRect(0, hMenu, uPos, &rect))
-	{ FIXME("0x%04x 0x%04x 0x%04x 0x%04x\n",
-	  rect.right, rect.left, rect.top, rect.bottom);
+        {
+          FIXME("%s\n", wine_dbgstr_rect(&rect));
 	  return ((rect.right-rect.left)<<16) + (rect.top-rect.bottom);
 	}
 	return 0x00100010; /*FIXME*/

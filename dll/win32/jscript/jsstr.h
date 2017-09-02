@@ -42,7 +42,7 @@ struct _jsstr_t {
 };
 
 #define JSSTR_LENGTH_SHIFT 4
-#define JSSTR_MAX_LENGTH (1 << (32-JSSTR_LENGTH_SHIFT))
+#define JSSTR_MAX_LENGTH ((1 << (32-JSSTR_LENGTH_SHIFT))-1)
 #define JSSTR_FLAGS_MASK ((1 << JSSTR_LENGTH_SHIFT)-1)
 
 #define JSSTR_FLAG_LBIT     1
@@ -98,7 +98,7 @@ typedef struct {
 } jsstr_rope_t;
 
 jsstr_t *jsstr_alloc_len(const WCHAR*,unsigned) DECLSPEC_HIDDEN;
-WCHAR *jsstr_alloc_buf(unsigned,jsstr_t**) DECLSPEC_HIDDEN;
+jsstr_t *jsstr_alloc_buf(unsigned,WCHAR**) DECLSPEC_HIDDEN;
 
 static inline jsstr_t *jsstr_alloc(const WCHAR *str)
 {
@@ -109,12 +109,8 @@ void jsstr_free(jsstr_t*) DECLSPEC_HIDDEN;
 
 static inline void jsstr_release(jsstr_t *str)
 {
-    if(!--str->ref) {
-        if(jsstr_is_inline(str))
-            heap_free(str);
-        else
-            jsstr_free(str);
-    }
+    if(!--str->ref)
+        jsstr_free(str);
 }
 
 static inline jsstr_t *jsstr_addref(jsstr_t *str)
@@ -169,8 +165,8 @@ static inline jsstr_t *jsstr_substr(jsstr_t *str, unsigned off, unsigned len)
     jsstr_t *ret;
     WCHAR *ptr;
 
-    ptr = jsstr_alloc_buf(len, &ret);
-    if(ptr)
+    ret = jsstr_alloc_buf(len, &ptr);
+    if(ret)
         jsstr_extract(str, off, len, ptr);
     return ret;
 }

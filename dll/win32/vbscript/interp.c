@@ -177,7 +177,7 @@ static HRESULT lookup_identifier(exec_ctx_t *ctx, BSTR name, vbdisp_invoke_type_
             if(!item->disp) {
                 IUnknown *unk;
 
-                hres = IActiveScriptSite_GetItemInfo(ctx->script->site, name, SCRIPTINFO_IUNKNOWN, &unk, NULL);
+                hres = IActiveScriptSite_GetItemInfo(ctx->script->site, item->name, SCRIPTINFO_IUNKNOWN, &unk, NULL);
                 if(FAILED(hres)) {
                     WARN("GetItemInfo failed: %08x\n", hres);
                     continue;

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,8 +75,46 @@ AcpiUtHexToAsciiChar (
     UINT64                  Integer,
     UINT32                  Position)
 {
+    UINT64                  Index;
 
-    return (AcpiGbl_HexToAscii[(Integer >> Position) & 0xF]);
+    AcpiUtShortShiftRight (Integer, Position, &Index);
+    return (AcpiGbl_HexToAscii[Index & 0xF]);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiUtAsciiToHexByte
+ *
+ * PARAMETERS:  TwoAsciiChars               - Pointer to two ASCII characters
+ *              ReturnByte                  - Where converted byte is returned
+ *
+ * RETURN:      Status and converted hex byte
+ *
+ * DESCRIPTION: Perform ascii-to-hex translation, exactly two ASCII characters
+ *              to a single converted byte value.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiUtAsciiToHexByte (
+    char                    *TwoAsciiChars,
+    UINT8                   *ReturnByte)
+{
+
+    /* Both ASCII characters must be valid hex digits */
+
+    if (!isxdigit ((int) TwoAsciiChars[0]) ||
+        !isxdigit ((int) TwoAsciiChars[1]))
+    {
+        return (AE_BAD_HEX_CONSTANT);
+    }
+
+    *ReturnByte =
+        AcpiUtAsciiCharToHex (TwoAsciiChars[1]) |
+        (AcpiUtAsciiCharToHex (TwoAsciiChars[0]) << 4);
+
+    return (AE_OK);
 }
 
 
@@ -84,7 +122,8 @@ AcpiUtHexToAsciiChar (
  *
  * FUNCTION:    AcpiUtAsciiCharToHex
  *
- * PARAMETERS:  HexChar                 - Hex character in Ascii
+ * PARAMETERS:  HexChar                 - Hex character in Ascii. Must be:
+ *                                        0-9 or A-F or a-f
  *
  * RETURN:      The binary value of the ascii/hex character
  *
@@ -97,15 +136,21 @@ AcpiUtAsciiCharToHex (
     int                     HexChar)
 {
 
-    if (HexChar <= 0x39)
+    /* Values 0-9 */
+
+    if (HexChar <= '9')
     {
-        return ((UINT8) (HexChar - 0x30));
+        return ((UINT8) (HexChar - '0'));
     }
 
-    if (HexChar <= 0x46)
+    /* Upper case A-F */
+
+    if (HexChar <= 'F')
     {
         return ((UINT8) (HexChar - 0x37));
     }
+
+    /* Lower case a-f */
 
     return ((UINT8) (HexChar - 0x57));
 }

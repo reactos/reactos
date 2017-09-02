@@ -33,11 +33,11 @@ private:
 	ENUMLIST				*mpCurrent;
 public:
 	CEnumIDListBase();
-	~CEnumIDListBase();
+	virtual ~CEnumIDListBase();
 	BOOL AddToEnumList(LPITEMIDLIST pidl);
 	BOOL DeleteList();
 	BOOL HasItemWithCLSID(LPITEMIDLIST pidl);
-	BOOL CreateFolderEnumList(LPCWSTR lpszPath, DWORD dwFlags);
+    HRESULT AppendItemsFromEnumerator(IEnumIDList* pEnum);
 
 	// *** IEnumIDList methods ***
 	virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched);

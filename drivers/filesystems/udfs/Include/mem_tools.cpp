@@ -67,14 +67,14 @@ MyAllocDumpDescr(
     BOOLEAN Used;
 
     Used = (Allocs[i].Len & MY_HEAP_FLAG_USED) ? TRUE : FALSE;
-    KdPrint(("block %x \t%s addr %x len %x  \t", i, Used ? "used" : "free", Allocs[i].Addr, (Allocs[i].Len) & MY_HEAP_FLAG_LEN_MASK));
+    UDFPrint(("block %x \t%s addr %x len %x  \t", i, Used ? "used" : "free", Allocs[i].Addr, (Allocs[i].Len) & MY_HEAP_FLAG_LEN_MASK));
 #ifdef MY_HEAP_TRACK_OWNERS
-    KdPrint(("src %x   \t line %d     \t", Allocs[i].Src, Allocs[i].Line));
+    UDFPrint(("src %x   \t line %d     \t", Allocs[i].Src, Allocs[i].Line));
 #endif
 #ifdef MY_HEAP_TRACK_REF
-    KdPrint(("%s%s", Used ? " " : "-", Allocs[i].Tag ? Allocs[i].Tag : ""));
+    UDFPrint(("%s%s", Used ? " " : "-", Allocs[i].Tag ? Allocs[i].Tag : ""));
 #endif
-    KdPrint(("\n"));
+    UDFPrint(("\n"));
 }
 
 //#define CHECK_ALLOC_FRAMES
@@ -103,20 +103,20 @@ MyAllocDumpFrame(
 #endif //DUMP_MEM_FRAMES
         return;
 
-    KdPrint(("Dumping frame %x\n",Frame));
-    KdPrint(("FirstFree %x   LastUsed %x  ", FrameList[Frame].FirstFree, FrameList[Frame].LastUsed));
-    KdPrint(("Type %x\n", FrameList[Frame].Type));
+    UDFPrint(("Dumping frame %x\n",Frame));
+    UDFPrint(("FirstFree %x   LastUsed %x  ", FrameList[Frame].FirstFree, FrameList[Frame].LastUsed));
+    UDFPrint(("Type %x\n", FrameList[Frame].Type));
     if(Allocs) {
         for(i=0;i< (MY_HEAP_MAX_BLOCKS/*-1*/);i++) {
             Used = (Allocs[i].Len & MY_HEAP_FLAG_USED) ? TRUE : FALSE;
-            KdPrint(("block %x \t%s addr %x len %x  \t", i, Used ? "used" : "free", Allocs[i].Addr, (Allocs[i].Len) & MY_HEAP_FLAG_LEN_MASK));
+            UDFPrint(("block %x \t%s addr %x len %x  \t", i, Used ? "used" : "free", Allocs[i].Addr, (Allocs[i].Len) & MY_HEAP_FLAG_LEN_MASK));
 #ifdef MY_HEAP_TRACK_OWNERS
-            KdPrint(("src %x   \t line %d     \t", Allocs[i].Src, Allocs[i].Line));
+            UDFPrint(("src %x   \t line %d     \t", Allocs[i].Src, Allocs[i].Line));
 #endif
 #ifdef MY_HEAP_TRACK_REF
-            KdPrint(("%s%s", Used ? " " : "-", Allocs[i].Tag ? Allocs[i].Tag : ""));
+            UDFPrint(("%s%s", Used ? " " : "-", Allocs[i].Tag ? Allocs[i].Tag : ""));
 #endif
-            KdPrint(("\n"));
+            UDFPrint(("\n"));
             if(!(Allocs[i].Len) && !(Allocs[i].Addr)) {
                 break;
             }
@@ -124,7 +124,7 @@ MyAllocDumpFrame(
                 k += ((Allocs[i].Len) & MY_HEAP_FLAG_LEN_MASK);
         }
     }
-    KdPrint(("    Wasted %x bytes from %x\n", MY_HEAP_FRAME_SIZE - k, MY_HEAP_FRAME_SIZE));
+    UDFPrint(("    Wasted %x bytes from %x\n", MY_HEAP_FRAME_SIZE - k, MY_HEAP_FRAME_SIZE));
 } // end MyAllocDumpFrame()
 
 VOID
@@ -140,12 +140,12 @@ MyAllocDumpFrames(
         }
     }
 
-    KdPrint(("\n"));
+    UDFPrint(("\n"));
 
     for(i=0;i<MY_HEAP_MAX_FRAMES; i++) {
         if(FrameList[i].Frame) {
-            KdPrint(("Addr %x   ", FrameList[i].Frame));
-            KdPrint(("Type %x\n" , FrameList[i].Type));
+            UDFPrint(("Addr %x   ", FrameList[i].Frame));
+            UDFPrint(("Type %x\n" , FrameList[i].Type));
         }
     }
 
@@ -166,9 +166,9 @@ MyAllocCheck(
         addr = Allocs[i].Addr;
         if( len != (Allocs[i+1].Addr - addr) ) {
             if(Allocs[i+1].Addr) {
-                KdPrint(("ERROR! Memory block aliasing\n"));
-                KdPrint(("block %x, frame %x\n", i, Frame));
-                KdPrint(("block descriptor %x\n", &(Allocs[i]) ));
+                UDFPrint(("ERROR! Memory block aliasing\n"));
+                UDFPrint(("block %x, frame %x\n", i, Frame));
+                UDFPrint(("block descriptor %x\n", &(Allocs[i]) ));
                 BrutePoint();
                 MyAllocDumpFrame(Frame);
             }
@@ -291,7 +291,7 @@ MyAllocatePoolInFrame(
     Allocs->Tag = Tag;
 #endif //MY_HEAP_TRACK_REF
 
-//    KdPrint(( "Mem: Allocated %x at addr %x\n", size, (ULONG)addr ));
+//    UDFPrint(( "Mem: Allocated %x at addr %x\n", size, (ULONG)addr ));
     // this will set IntegrityTag to zero
     *((PULONG)addr) = 0x00000000;
 #ifdef MY_HEAP_CHECK_BOUNDS
@@ -320,7 +320,7 @@ MyFindMemDescByAddr(
 
     Allocs = FrameList[Frame].Frame;
 //    i = FrameList[Frame].LastUsed >> 1;
-//    KdPrint(("Mem: Freeing %x\n", (ULONG)addr)); DEADDA7A
+//    UDFPrint(("Mem: Freeing %x\n", (ULONG)addr)); DEADDA7A
 //    for(i=0;i<MY_HEAP_MAX_BLOCKS;i++) {
     left = 0;
     right = FrameList[Frame].LastUsed;
@@ -364,7 +364,7 @@ MyFreePoolInFrame(
     pc = 0;
     i = MyFindMemDescByAddr(Frame, addr);
     if(i < 0) {
-        KdPrint(("Mem: <<<*** WARNING ***>>> Double deallocation at %x !!!   ;( \n", addr));
+        UDFPrint(("Mem: <<<*** WARNING ***>>> Double deallocation at %x !!!   ;( \n", addr));
         MyAllocDumpFrame(Frame);
         BrutePoint();
         return;
@@ -451,7 +451,7 @@ MyResizePoolInFrame(
     Allocs = FrameList[Frame].Frame;
     i = MyFindMemDescByAddr(Frame, addr);
     if(i < 0) {
-        KdPrint(("Mem: <<<*** WARNING ***>>> Double deallocation at %x !!!   ;( \n", addr));
+        UDFPrint(("Mem: <<<*** WARNING ***>>> Double deallocation at %x !!!   ;( \n", addr));
         MyAllocDumpFrame(Frame);
         BrutePoint();
         return FALSE;
@@ -553,7 +553,7 @@ MyAllocInitFrame(
 
     Allocs = (PMEM_ALLOC_DESC)DbgAllocatePool(NonPagedPool, sizeof(MEM_ALLOC_DESC)*(MY_HEAP_MAX_BLOCKS+1));
     if(!Allocs) {
-        KdPrint(("Insufficient resources to allocate frame descriptor\n"));
+        UDFPrint(("Insufficient resources to allocate frame descriptor\n"));
         FrameList[Frame].Frame = NULL;
         MyAllocDumpFrames();
         BrutePoint();
@@ -563,7 +563,7 @@ MyAllocInitFrame(
     // alloc heap
     Allocs[0].Addr = (ULONG)DbgAllocatePool((POOL_TYPE)Type, MY_HEAP_FRAME_SIZE);
     if(!Allocs[0].Addr) {
-        KdPrint(("Insufficient resources to allocate frame\n"));
+        UDFPrint(("Insufficient resources to allocate frame\n"));
         DbgFreePool(Allocs);
         FrameList[Frame].Frame = NULL;
         MyAllocDumpFrames();
@@ -625,7 +625,7 @@ MyAllocatePool(
     ULONG i;
     ULONG addr;
 
-//    KdPrint(("MemFrames: %x\n",FrameCount));
+//    UDFPrint(("MemFrames: %x\n",FrameCount));
 
     if(!size || (size > MY_HEAP_FRAME_SIZE)) return NULL;
 
@@ -650,8 +650,8 @@ MyAllocatePool(
 #ifdef UDF_DBG
 //            if(addr >= (ULONG)BreakAddr && addr < sizeof(UDF_FILE_INFO) + (ULONG)BreakAddr) {
 //            if(addr<=(ULONG)BreakAddr && addr+sizeof(UDF_FILE_INFO) > (ULONG)BreakAddr) {
-//                KdPrint(("ERROR !!! Allocating in examined block\n"));
-//                KdPrint(("addr %x\n", addr));
+//                UDFPrint(("ERROR !!! Allocating in examined block\n"));
+//                UDFPrint(("addr %x\n", addr));
 //                MyAllocDumpFrame(i);
 //                BrutePoint();
 //            }
@@ -683,8 +683,8 @@ MyAllocatePool(
 #ifdef UDF_DBG
 //                if(addr >= (ULONG)BreakAddr && addr < sizeof(UDF_FILE_INFO) + (ULONG)BreakAddr) {
 //                if(addr<=(ULONG)BreakAddr && addr+sizeof(UDF_FILE_INFO) > (ULONG)BreakAddr) {
-//                    KdPrint(("ERROR !!! Allocating in examined block\n"));
-//                    KdPrint(("addr %x\n", addr));
+//                    UDFPrint(("ERROR !!! Allocating in examined block\n"));
+//                    UDFPrint(("addr %x\n", addr));
 //                    MyAllocDumpFrame(i);
 //                    BrutePoint();
 //                }
@@ -730,13 +730,13 @@ MyFreePool(
 {
     LONG i;
 
-//    KdPrint(("MemFrames: %x\n",FrameCount));
+//    UDFPrint(("MemFrames: %x\n",FrameCount));
 
     LockMemoryManager();
     i = MyFindFrameByAddr(addr);
     if(i < 0) {
         UnlockMemoryManager();
-        KdPrint(("Mem: <<<*** WARNING ***>>> Double deallocation at %x !!!   ;( \n", addr));
+        UDFPrint(("Mem: <<<*** WARNING ***>>> Double deallocation at %x !!!   ;( \n", addr));
         BrutePoint();
         return;
     }
@@ -744,8 +744,8 @@ MyFreePool(
 #ifdef UDF_DBG
             // BreakAddr <= addr < BreakAddr + sizeof(UDF_FILE_INFO)
 //            if((ULONG)addr >= (ULONG)BreakAddr && (ULONG)addr < sizeof(UDF_FILE_INFO) + (ULONG)BreakAddr) {
-//                KdPrint(("Deallocating in examined block\n"));
-//                KdPrint(("addr %x\n", addr));
+//                UDFPrint(("Deallocating in examined block\n"));
+//                UDFPrint(("addr %x\n", addr));
 //                MyAllocDumpFrame(i);
 //                BrutePoint();
 //                BreakAddr = NULL;
@@ -786,7 +786,7 @@ MyReallocPool(
     PCHAR Tag;
 #endif
 
-//    KdPrint(("MemFrames: %x\n",FrameCount));
+//    UDFPrint(("MemFrames: %x\n",FrameCount));
     (*NewBuff) = addr;
     if(OldLength == NewLength) return OldLength;
 
@@ -799,7 +799,7 @@ MyReallocPool(
     i = MyFindFrameByAddr(addr);
     if(i < 0) {
         UnlockMemoryManager();
-        KdPrint(("Mem: <<<*** WARNING ***>>> Double deallocation at %x !!!   ;( \n", addr));
+        UDFPrint(("Mem: <<<*** WARNING ***>>> Double deallocation at %x !!!   ;( \n", addr));
         BrutePoint();
         return 0;
     }
@@ -864,7 +864,7 @@ MyFindMemDescByRangeInFrame(
 
     Allocs = FrameList[Frame].Frame;
 //    i = FrameList[Frame].LastUsed >> 1;
-//    KdPrint(("Mem: Freeing %x\n", (ULONG)addr)); DEADDA7A
+//    UDFPrint(("Mem: Freeing %x\n", (ULONG)addr)); DEADDA7A
 //    for(i=0;i<MY_HEAP_MAX_BLOCKS;i++) {
     left = 0;
     right = FrameList[Frame].LastUsed;
@@ -907,7 +907,7 @@ MyFindMemBaseByAddr(
     Frame = MyFindFrameByAddr(addr);
     if(Frame < 0) {
         UnlockMemoryManager();
-        KdPrint(("Mem: <<<*** WARNING ***>>> Unknown base for %x !!!   ;( \n", addr));
+        UDFPrint(("Mem: <<<*** WARNING ***>>> Unknown base for %x !!!   ;( \n", addr));
         BrutePoint();
         return -1;
     }

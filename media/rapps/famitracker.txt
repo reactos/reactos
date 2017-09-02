@@ -21,8 +21,8 @@ Size = 1,5 Mio
 
 [Section.0419]
 License = Бесплатно
-Description = Эмулятор звукового чипа NES и Famicom.  
-Size = 1,5 МБ
+Description = Эмулятор звукового чипа NES и Famicom.
+Size = 1,5 МиБ
 
 [Section.041f]
 License = Ücretsiz

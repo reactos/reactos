@@ -11,6 +11,7 @@ BEGIN
   [Sürücü:][Yol]Kütük adı    İçeriği görüntülenecek bir kütük.\n\
   Komut\t\t     Çıkışı görüntülenecek bir komut.\n\n\
   İstemde ""-- Sürdür --"" ile bir sonraki sayfayı göstermek için rastgele bir düğmeye basabilirsiniz.\n"
-    IDS_CONTINUE " -- Sürdür (%100) -- "
-    IDS_FILE_ACCESS "%s kütüğüne erişilemiyor."
+    IDS_CONTINUE "-- Sürdür --"
+    IDS_CONTINUE_PROGRESS "-- Sürdür (%%%d) --"
+    IDS_FILE_ACCESS "%s kütüğüne erişilemiyor.\n"
 END

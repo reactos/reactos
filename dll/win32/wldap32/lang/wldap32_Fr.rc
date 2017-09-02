@@ -40,7 +40,7 @@ STRINGTABLE
     11 "Limite administrative dépassée"
     12 "Extension critique indisponible"
     13 "Confidentialité requise"
-    14 ""
+    14 "SASL Bind in Progress"
     15 ""
     16 "Attribut inconnu"
     17 "Type non défini"

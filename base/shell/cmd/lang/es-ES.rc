@@ -66,7 +66,7 @@ ERRORLEVEL se configura al offset de la tecla que presione el usuario.\n"
     STRING_CMD_HELP2 "\nCaracterísticas disponibles:"
     STRING_CMD_HELP3 "  [alias]"
     STRING_CMD_HELP4 "  [historia]"
-    STRING_CMD_HELP5 "  [Completador de nombres de archivos unix]"
+    STRING_CMD_HELP5 "  [Completador de nombres de archivos Bash]"
     STRING_CMD_HELP6 "  [Pila de directorios]"
     STRING_CMD_HELP7 "  [Redirecciones y túneles]"
     STRING_CMD_HELP8 "Comienza una nueva sesion del interprete de comandos de ReactOS.\n\n\
@@ -254,15 +254,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "Muestra la cantidad de memoria del sistema.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% carga de memoria.\n\n\
+    STRING_MEMORY_HELP1 "Muestra la cantidad de memoria del sistema.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% carga de memoria.\n\n\
   %13s bytes totales de RAM física.\n\
   %13s bytes libres de RAM física.\n\n\
   %13s bytes totales del archivo de paginación.\n\
   %13s bytes disponibles del archivo de paginación.\n\n\
   %13s bytes totales de memoria virtual.\n\
   %13s bytes disponibles de memoria virtual.\n"
-    STRING_MISC_HELP1 "Pulsa cualquier tecla para continuar...\n"
+    STRING_MISC_HELP1 "Pulsa cualquier tecla para continuar..."
     STRING_MOVE_HELP1 "¿Sobreescribir %s (Si/No/Todos)? "
     STRING_MOVE_HELP2 "Mueve archivos y renombra archivos y directorios.\n\n\
 Para mover uno o más archivos:\n\
@@ -378,9 +378,18 @@ SET [variable[=][cadena]]\n\n\
   string    Especifies la serie de caracteres para asignar a la variable.\n\n\
 Escribe SET sin parámetros para mostrar las variables de entorno actuales.\n"
     STRING_START_HELP1 "Empieza un comando.\n\n\
-START comando\n\n\
-  comando     Especifica el comando a ejecutar.\n\n\
-Por el momento todos los comandos son ejecutados de forma asincrónica.\n"
+START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+  ""title""     Title of the window.\n\
+  path        Specifies the startup directory.\n\
+  I           Uses the original environment given to cmd.exe,\n\
+              instead of the current environment.\n\
+  B           Starts the command or program without creating any window.\n\
+  MIN         Starts with a minimized window.\n\
+  MAX         Starts with a maximized window.\n\
+  WAIT        Starts the command or program and waits for its termination.\n\
+  comando     Especifica el comando a ejecutar.\n\
+  parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Cambia el título de la ventqana del intérprete de comandos.\n\n\
 TITLE [cadena]\n\n\
 cadena       Especifica el título de la ventana del intérprete de comandos.\n"

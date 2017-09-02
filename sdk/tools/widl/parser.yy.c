@@ -1368,7 +1368,7 @@ YY_RULE_SETUP
 #line 232 "parser.l"
 ECHO;
 	YY_BREAK
-#line 1372 "E:/reactos-sync-gcc/host-tools/sdk/tools/widl/parser.yy.c"
+#line 1372 "parser.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{

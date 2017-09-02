@@ -259,7 +259,7 @@ static BOOL WINAPI winsock_startup(INIT_ONCE *once, void *param, void **context)
     WSADATA wsa_data;
     DWORD res;
 
-    res = WSAStartup(MAKEWORD(1,1), &wsa_data);
+    res = WSAStartup(MAKEWORD(2,2), &wsa_data);
     if(res == ERROR_SUCCESS)
         winsock_loaded = TRUE;
     else
@@ -860,32 +860,6 @@ DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, BOOL blocking, i
         *recvd = size;
         return res;
     }
-}
-
-/******************************************************************************
- * NETCON_query_data_available
- * Returns the number of bytes of peeked data plus the number of bytes of
- * queued, but unread data.
- */
-BOOL NETCON_query_data_available(netconn_t *connection, DWORD *available)
-{
-    *available = 0;
-
-    if(!connection->secure)
-    {
-        ULONG unread;
-        int retval = ioctlsocket(connection->socket, FIONREAD, &unread);
-        if (!retval)
-        {
-            TRACE("%d bytes of queued, but unread data\n", unread);
-            *available += unread;
-        }
-    }
-    else
-    {
-        *available = connection->peek_len;
-    }
-    return TRUE;
 }
 
 BOOL NETCON_is_alive(netconn_t *netconn)

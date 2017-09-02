@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2016, Intel Corp.
+ * Copyright (C) 2000 - 2017, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,7 +98,7 @@ AcpiNsPrintNodePathname (
             AcpiOsPrintf ("%s ", Message);
         }
 
-        AcpiOsPrintf ("[%s] (Node %p)", (char *) Buffer.Pointer, Node);
+        AcpiOsPrintf ("%s", (char *) Buffer.Pointer);
         ACPI_FREE (Buffer.Pointer);
     }
 }
@@ -294,7 +294,7 @@ AcpiNsBuildInternalName (
         }
         else
         {
-            InternalName[1] = AML_MULTI_NAME_PREFIX_OP;
+            InternalName[1] = AML_MULTI_NAME_PREFIX;
             InternalName[2] = (char) NumSegments;
             Result = &InternalName[3];
         }
@@ -325,7 +325,7 @@ AcpiNsBuildInternalName (
         }
         else
         {
-            InternalName[i] = AML_MULTI_NAME_PREFIX_OP;
+            InternalName[i] = AML_MULTI_NAME_PREFIX;
             InternalName[(ACPI_SIZE) i+1] = (char) NumSegments;
             Result = &InternalName[(ACPI_SIZE) i+2];
         }
@@ -534,7 +534,7 @@ AcpiNsExternalizeName (
     {
         switch (InternalName[PrefixLength])
         {
-        case AML_MULTI_NAME_PREFIX_OP:
+        case AML_MULTI_NAME_PREFIX:
 
             /* <count> 4-byte names */
 
@@ -694,28 +694,23 @@ AcpiNsTerminate (
     void)
 {
     ACPI_STATUS             Status;
+    ACPI_OPERAND_OBJECT     *Prev;
+    ACPI_OPERAND_OBJECT     *Next;
 
 
     ACPI_FUNCTION_TRACE (NsTerminate);
 
 
-#ifdef ACPI_EXEC_APP
+    /* Delete any module-level code blocks */
+
+    Next = AcpiGbl_ModuleCodeList;
+    while (Next)
     {
-        ACPI_OPERAND_OBJECT     *Prev;
-        ACPI_OPERAND_OBJECT     *Next;
-
-        /* Delete any module-level code blocks */
-
-        Next = AcpiGbl_ModuleCodeList;
-        while (Next)
-        {
-            Prev = Next;
-            Next = Next->Method.Mutex;
-            Prev->Method.Mutex = NULL; /* Clear the Mutex (cheated) field */
-            AcpiUtRemoveReference (Prev);
-        }
+        Prev = Next;
+        Next = Next->Method.Mutex;
+        Prev->Method.Mutex = NULL; /* Clear the Mutex (cheated) field */
+        AcpiUtRemoveReference (Prev);
     }
-#endif
 
     /*
      * Free the entire namespace -- all nodes and all objects
@@ -771,7 +766,7 @@ AcpiNsOpensScope (
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiNsGetNode
+ * FUNCTION:    AcpiNsGetNodeUnlocked
  *
  * PARAMETERS:  *Pathname   - Name to be found, in external (ASL) format. The
  *                            \ (backslash) and ^ (carat) prefixes, and the
@@ -787,12 +782,12 @@ AcpiNsOpensScope (
  * DESCRIPTION: Look up a name relative to a given scope and return the
  *              corresponding Node. NOTE: Scope can be null.
  *
- * MUTEX:       Locks namespace
+ * MUTEX:       Doesn't locks namespace
  *
  ******************************************************************************/
 
 ACPI_STATUS
-AcpiNsGetNode (
+AcpiNsGetNodeUnlocked (
     ACPI_NAMESPACE_NODE     *PrefixNode,
     const char              *Pathname,
     UINT32                  Flags,
@@ -803,7 +798,7 @@ AcpiNsGetNode (
     char                    *InternalPath;
 
 
-    ACPI_FUNCTION_TRACE_PTR (NsGetNode, ACPI_CAST_PTR (char, Pathname));
+    ACPI_FUNCTION_TRACE_PTR (NsGetNodeUnlocked, ACPI_CAST_PTR (char, Pathname));
 
 
     /* Simplest case is a null pathname */
@@ -835,14 +830,6 @@ AcpiNsGetNode (
         return_ACPI_STATUS (Status);
     }
 
-    /* Must lock namespace during lookup */
-
-    Status = AcpiUtAcquireMutex (ACPI_MTX_NAMESPACE);
-    if (ACPI_FAILURE (Status))
-    {
-        goto Cleanup;
-    }
-
     /* Setup lookup scope (search starting point) */
 
     ScopeInfo.Scope.Node = PrefixNode;
@@ -858,9 +845,55 @@ AcpiNsGetNode (
             Pathname, AcpiFormatException (Status)));
     }
 
-    (void) AcpiUtReleaseMutex (ACPI_MTX_NAMESPACE);
-
-Cleanup:
     ACPI_FREE (InternalPath);
+    return_ACPI_STATUS (Status);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiNsGetNode
+ *
+ * PARAMETERS:  *Pathname   - Name to be found, in external (ASL) format. The
+ *                            \ (backslash) and ^ (carat) prefixes, and the
+ *                            . (period) to separate segments are supported.
+ *              PrefixNode   - Root of subtree to be searched, or NS_ALL for the
+ *                            root of the name space. If Name is fully
+ *                            qualified (first INT8 is '\'), the passed value
+ *                            of Scope will not be accessed.
+ *              Flags       - Used to indicate whether to perform upsearch or
+ *                            not.
+ *              ReturnNode  - Where the Node is returned
+ *
+ * DESCRIPTION: Look up a name relative to a given scope and return the
+ *              corresponding Node. NOTE: Scope can be null.
+ *
+ * MUTEX:       Locks namespace
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiNsGetNode (
+    ACPI_NAMESPACE_NODE     *PrefixNode,
+    const char              *Pathname,
+    UINT32                  Flags,
+    ACPI_NAMESPACE_NODE     **ReturnNode)
+{
+    ACPI_STATUS             Status;
+
+
+    ACPI_FUNCTION_TRACE_PTR (NsGetNode, ACPI_CAST_PTR (char, Pathname));
+
+
+    Status = AcpiUtAcquireMutex (ACPI_MTX_NAMESPACE);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    Status = AcpiNsGetNodeUnlocked (PrefixNode, Pathname,
+        Flags, ReturnNode);
+
+    (void) AcpiUtReleaseMutex (ACPI_MTX_NAMESPACE);
     return_ACPI_STATUS (Status);
 }

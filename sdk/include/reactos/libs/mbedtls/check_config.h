@@ -4,19 +4,21 @@
  * \brief Consistency checks for configuration options
  *
  *  Copyright (C) 2006-2016, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
+ *  SPDX-License-Identifier: GPL-2.0
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
@@ -75,6 +77,11 @@
 
 #if defined(MBEDTLS_DHM_C) && !defined(MBEDTLS_BIGNUM_C)
 #error "MBEDTLS_DHM_C defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_CMAC_C) && \
+    !defined(MBEDTLS_AES_C) && !defined(MBEDTLS_DES_C)
+#error "MBEDTLS_CMAC_C defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_ECDH_C) && !defined(MBEDTLS_ECP_C)
@@ -143,6 +150,38 @@
 #if defined(MBEDTLS_GCM_C) && (                                        \
         !defined(MBEDTLS_AES_C) && !defined(MBEDTLS_CAMELLIA_C) )
 #error "MBEDTLS_GCM_C defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ECP_RANDOMIZE_JAC_ALT) && !defined(MBEDTLS_ECP_INTERNAL_ALT)
+#error "MBEDTLS_ECP_RANDOMIZE_JAC_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ECP_ADD_MIXED_ALT) && !defined(MBEDTLS_ECP_INTERNAL_ALT)
+#error "MBEDTLS_ECP_ADD_MIXED_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ECP_DOUBLE_JAC_ALT) && !defined(MBEDTLS_ECP_INTERNAL_ALT)
+#error "MBEDTLS_ECP_DOUBLE_JAC_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ECP_NORMALIZE_JAC_MANY_ALT) && !defined(MBEDTLS_ECP_INTERNAL_ALT)
+#error "MBEDTLS_ECP_NORMALIZE_JAC_MANY_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ECP_NORMALIZE_JAC_ALT) && !defined(MBEDTLS_ECP_INTERNAL_ALT)
+#error "MBEDTLS_ECP_NORMALIZE_JAC_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ECP_DOUBLE_ADD_MXZ_ALT) && !defined(MBEDTLS_ECP_INTERNAL_ALT)
+#error "MBEDTLS_ECP_DOUBLE_ADD_MXZ_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ECP_RANDOMIZE_MXZ_ALT) && !defined(MBEDTLS_ECP_INTERNAL_ALT)
+#error "MBEDTLS_ECP_RANDOMIZE_MXZ_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_ECP_NORMALIZE_MXZ_ALT) && !defined(MBEDTLS_ECP_INTERNAL_ALT)
+#error "MBEDTLS_ECP_NORMALIZE_MXZ_ALT defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_HAVEGE_C) && !defined(MBEDTLS_TIMING_C)
@@ -256,6 +295,36 @@
 #error "MBEDTLS_PLATFORM_EXIT_MACRO and MBEDTLS_PLATFORM_STD_EXIT/MBEDTLS_PLATFORM_EXIT_ALT cannot be defined simultaneously"
 #endif
 
+#if defined(MBEDTLS_PLATFORM_TIME_ALT) &&\
+    ( !defined(MBEDTLS_PLATFORM_C) ||\
+        !defined(MBEDTLS_HAVE_TIME) )
+#error "MBEDTLS_PLATFORM_TIME_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_TIME_MACRO) &&\
+    ( !defined(MBEDTLS_PLATFORM_C) ||\
+        !defined(MBEDTLS_HAVE_TIME) )
+#error "MBEDTLS_PLATFORM_TIME_MACRO defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_TIME_TYPE_MACRO) &&\
+    ( !defined(MBEDTLS_PLATFORM_C) ||\
+        !defined(MBEDTLS_HAVE_TIME) )
+#error "MBEDTLS_PLATFORM_TIME_TYPE_MACRO defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_TIME_MACRO) &&\
+    ( defined(MBEDTLS_PLATFORM_STD_TIME) ||\
+        defined(MBEDTLS_PLATFORM_TIME_ALT) )
+#error "MBEDTLS_PLATFORM_TIME_MACRO and MBEDTLS_PLATFORM_STD_TIME/MBEDTLS_PLATFORM_TIME_ALT cannot be defined simultaneously"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_TIME_TYPE_MACRO) &&\
+    ( defined(MBEDTLS_PLATFORM_STD_TIME) ||\
+        defined(MBEDTLS_PLATFORM_TIME_ALT) )
+#error "MBEDTLS_PLATFORM_TIME_TYPE_MACRO and MBEDTLS_PLATFORM_STD_TIME/MBEDTLS_PLATFORM_TIME_ALT cannot be defined simultaneously"
+#endif
+
 #if defined(MBEDTLS_PLATFORM_FPRINTF_ALT) && !defined(MBEDTLS_PLATFORM_C)
 #error "MBEDTLS_PLATFORM_FPRINTF_ALT defined, but not all prerequisites"
 #endif
@@ -350,6 +419,12 @@
 #if defined(MBEDTLS_PLATFORM_STD_EXIT) &&\
     !defined(MBEDTLS_PLATFORM_EXIT_ALT)
 #error "MBEDTLS_PLATFORM_STD_EXIT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_STD_TIME) &&\
+    ( !defined(MBEDTLS_PLATFORM_TIME_ALT) ||\
+        !defined(MBEDTLS_HAVE_TIME) )
+#error "MBEDTLS_PLATFORM_STD_TIME defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_PLATFORM_STD_FPRINTF) &&\
@@ -576,6 +651,15 @@
 #if defined(MBEDTLS_X509_CSR_WRITE_C) && ( !defined(MBEDTLS_X509_CREATE_C) )
 #error "MBEDTLS_X509_CSR_WRITE_C defined, but not all prerequisites"
 #endif
+
+#if defined(MBEDTLS_HAVE_INT32) && defined(MBEDTLS_HAVE_INT64)
+#error "MBEDTLS_HAVE_INT32 and MBEDTLS_HAVE_INT64 cannot be defined simultaneously"
+#endif /* MBEDTLS_HAVE_INT32 && MBEDTLS_HAVE_INT64 */
+
+#if ( defined(MBEDTLS_HAVE_INT32) || defined(MBEDTLS_HAVE_INT64) ) && \
+    defined(MBEDTLS_HAVE_ASM)
+#error "MBEDTLS_HAVE_INT32/MBEDTLS_HAVE_INT64 and MBEDTLS_HAVE_ASM cannot be defined simultaneously"
+#endif /* (MBEDTLS_HAVE_INT32 || MBEDTLS_HAVE_INT64) && MBEDTLS_HAVE_ASM */
 
 /*
  * Avoid warning from -pedantic. This is a convenient place for this

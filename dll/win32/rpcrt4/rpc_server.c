@@ -79,11 +79,9 @@ static CRITICAL_SECTION server_auth_info_cs = { &server_auth_info_cs_debug, -1, 
 
 /* whether the server is currently listening */
 static BOOL std_listen;
-/* number of manual listeners (calls to RpcServerListen) */
-static LONG manual_listen_count;
 /* total listeners including auto listeners */
 static LONG listen_count;
-/* event set once all listening is finished */
+/* event set once all manual listening is finished */
 static HANDLE listen_done_event;
 
 static UUID uuid_nil;
@@ -649,9 +647,12 @@ static DWORD CALLBACK RPCRT4_server_thread(LPVOID the_arg)
     {
       /* cleanup */
       cps->ops->free_wait_array(cps, objs);
+
       EnterCriticalSection(&cps->cs);
-      for (conn = cps->conn; conn; conn = conn->Next)
+      LIST_FOR_EACH_ENTRY(conn, &cps->listeners, RpcConnection, protseq_entry)
         RPCRT4_CloseConnection(conn);
+      LIST_FOR_EACH_ENTRY(conn, &cps->connections, RpcConnection, protseq_entry)
+        rpcrt4_conn_close_read(conn);
       LeaveCriticalSection(&cps->cs);
 
       if (res == 0 && !std_listen)
@@ -713,13 +714,16 @@ static RPC_STATUS RPCRT4_start_listen(BOOL auto_listen)
   TRACE("\n");
 
   EnterCriticalSection(&listen_cs);
-  if (auto_listen || (manual_listen_count++ == 0))
+  if (auto_listen || !listen_done_event)
   {
     status = RPC_S_OK;
+    if(!auto_listen)
+      listen_done_event = CreateEventW(NULL, TRUE, FALSE, NULL);
     if (++listen_count == 1)
       std_listen = TRUE;
   }
   LeaveCriticalSection(&listen_cs);
+  if (status) return status;
 
   if (std_listen)
   {
@@ -742,51 +746,53 @@ static RPC_STATUS RPCRT4_start_listen(BOOL auto_listen)
 
 static RPC_STATUS RPCRT4_stop_listen(BOOL auto_listen)
 {
+  BOOL stop_listen = FALSE;
   RPC_STATUS status = RPC_S_OK;
 
   EnterCriticalSection(&listen_cs);
-
-  if (!std_listen)
+  if (!std_listen && (auto_listen || !listen_done_event))
   {
     status = RPC_S_NOT_LISTENING;
-    goto done;
   }
-
-  if (auto_listen || (--manual_listen_count == 0))
+  else
   {
-    if (listen_count != 0 && --listen_count == 0) {
-      RpcServerProtseq *cps;
-
-      std_listen = FALSE;
-      LeaveCriticalSection(&listen_cs);
-
-      LIST_FOR_EACH_ENTRY(cps, &protseqs, RpcServerProtseq, entry)
-        RPCRT4_sync_with_server_thread(cps);
-
-      EnterCriticalSection(&listen_cs);
-      if (listen_done_event) SetEvent( listen_done_event );
-      listen_done_event = 0;
-      goto done;
-    }
+    stop_listen = listen_count != 0 && --listen_count == 0;
     assert(listen_count >= 0);
+    if (stop_listen)
+      std_listen = FALSE;
+  }
+  LeaveCriticalSection(&listen_cs);
+
+  if (status) return status;
+
+  if (stop_listen) {
+    RpcServerProtseq *cps;
+    LIST_FOR_EACH_ENTRY(cps, &protseqs, RpcServerProtseq, entry)
+      RPCRT4_sync_with_server_thread(cps);
   }
 
-done:
-  LeaveCriticalSection(&listen_cs);
-  return status;
+  if (!auto_listen)
+  {
+      EnterCriticalSection(&listen_cs);
+      SetEvent( listen_done_event );
+      LeaveCriticalSection(&listen_cs);
+  }
+  return RPC_S_OK;
 }
 
 static BOOL RPCRT4_protseq_is_endpoint_registered(RpcServerProtseq *protseq, const char *endpoint)
 {
   RpcConnection *conn;
+  BOOL registered = FALSE;
   EnterCriticalSection(&protseq->cs);
-  for (conn = protseq->conn; conn; conn = conn->Next)
-  {
-    if (!endpoint || !strcmp(endpoint, conn->Endpoint))
+  LIST_FOR_EACH_ENTRY(conn, &protseq->listeners, RpcConnection, protseq_entry) {
+    if (!endpoint || !strcmp(endpoint, conn->Endpoint)) {
+      registered = TRUE;
       break;
+    }
   }
   LeaveCriticalSection(&protseq->cs);
-  return (conn != NULL);
+  return registered;
 }
 
 static RPC_STATUS RPCRT4_use_protseq(RpcServerProtseq* ps, const char *endpoint)
@@ -835,7 +841,7 @@ RPC_STATUS WINAPI RpcServerInqBindings( RPC_BINDING_VECTOR** BindingVector )
   count = 0;
   LIST_FOR_EACH_ENTRY(ps, &protseqs, RpcServerProtseq, entry) {
     EnterCriticalSection(&ps->cs);
-    for (conn = ps->conn; conn; conn = conn->Next)
+    LIST_FOR_EACH_ENTRY(conn, &ps->listeners, RpcConnection, protseq_entry)
       count++;
     LeaveCriticalSection(&ps->cs);
   }
@@ -848,7 +854,7 @@ RPC_STATUS WINAPI RpcServerInqBindings( RPC_BINDING_VECTOR** BindingVector )
     count = 0;
     LIST_FOR_EACH_ENTRY(ps, &protseqs, RpcServerProtseq, entry) {
       EnterCriticalSection(&ps->cs);
-      for (conn = ps->conn; conn; conn = conn->Next) {
+      LIST_FOR_EACH_ENTRY(conn, &ps->listeners, RpcConnection, protseq_entry) {
        RPCRT4_MakeBinding((RpcBinding**)&(*BindingVector)->BindingH[count],
                           conn);
        count++;
@@ -919,13 +925,10 @@ static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, const char *Protseq, RpcSe
   (*ps)->MaxCalls = MaxCalls;
   (*ps)->Protseq = RPCRT4_strdupA(Protseq);
   (*ps)->ops = ops;
-  (*ps)->MaxCalls = 0;
-  (*ps)->conn = NULL;
+  list_init(&(*ps)->listeners);
+  list_init(&(*ps)->connections);
   InitializeCriticalSection(&(*ps)->cs);
   (*ps)->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": RpcServerProtseq.cs");
-  (*ps)->is_listening = FALSE;
-  (*ps)->mgr_mutex = NULL;
-  (*ps)->server_ready_event = NULL;
 
   list_add_head(&protseqs, &(*ps)->entry);
 
@@ -1287,25 +1290,64 @@ RPC_STATUS WINAPI RpcObjectSetType( UUID* ObjUuid, UUID* TypeUuid )
 struct rpc_server_registered_auth_info
 {
     struct list entry;
-    TimeStamp exp;
-    CredHandle cred;
-    ULONG max_token;
     USHORT auth_type;
+    WCHAR *package_name;
+    WCHAR *principal;
+    ULONG max_token;
 };
+
+static RPC_STATUS find_security_package(ULONG auth_type, SecPkgInfoW **packages_buf, SecPkgInfoW **ret)
+{
+    SECURITY_STATUS sec_status;
+    SecPkgInfoW *packages;
+    ULONG package_count;
+    ULONG i;
+
+    sec_status = EnumerateSecurityPackagesW(&package_count, &packages);
+    if (sec_status != SEC_E_OK)
+    {
+        ERR("EnumerateSecurityPackagesW failed with error 0x%08x\n", sec_status);
+        return RPC_S_SEC_PKG_ERROR;
+    }
+
+    for (i = 0; i < package_count; i++)
+        if (packages[i].wRPCID == auth_type)
+            break;
+
+    if (i == package_count)
+    {
+        WARN("unsupported AuthnSvc %u\n", auth_type);
+        FreeContextBuffer(packages);
+        return RPC_S_UNKNOWN_AUTHN_SERVICE;
+    }
+
+    TRACE("found package %s for service %u\n", debugstr_w(packages[i].Name), auth_type);
+    *packages_buf = packages;
+    *ret = packages + i;
+    return RPC_S_OK;
+}
 
 RPC_STATUS RPCRT4_ServerGetRegisteredAuthInfo(
     USHORT auth_type, CredHandle *cred, TimeStamp *exp, ULONG *max_token)
 {
     RPC_STATUS status = RPC_S_UNKNOWN_AUTHN_SERVICE;
     struct rpc_server_registered_auth_info *auth_info;
+    SECURITY_STATUS sec_status;
 
     EnterCriticalSection(&server_auth_info_cs);
     LIST_FOR_EACH_ENTRY(auth_info, &server_registered_auth_info, struct rpc_server_registered_auth_info, entry)
     {
         if (auth_info->auth_type == auth_type)
         {
-            *cred = auth_info->cred;
-            *exp = auth_info->exp;
+            sec_status = AcquireCredentialsHandleW((SEC_WCHAR *)auth_info->principal, auth_info->package_name,
+                                                   SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL,
+                                                   cred, exp);
+            if (sec_status != SEC_E_OK)
+            {
+                status = RPC_S_SEC_PKG_ERROR;
+                break;
+            }
+
             *max_token = auth_info->max_token;
             status = RPC_S_OK;
             break;
@@ -1323,7 +1365,8 @@ void RPCRT4_ServerFreeAllRegisteredAuthInfo(void)
     EnterCriticalSection(&server_auth_info_cs);
     LIST_FOR_EACH_ENTRY_SAFE(auth_info, cursor2, &server_registered_auth_info, struct rpc_server_registered_auth_info, entry)
     {
-        FreeCredentialsHandle(&auth_info->cred);
+        HeapFree(GetProcessHeap(), 0, auth_info->package_name);
+        HeapFree(GetProcessHeap(), 0, auth_info->principal);
         HeapFree(GetProcessHeap(), 0, auth_info);
     }
     LeaveCriticalSection(&server_auth_info_cs);
@@ -1336,63 +1379,18 @@ void RPCRT4_ServerFreeAllRegisteredAuthInfo(void)
 RPC_STATUS WINAPI RpcServerRegisterAuthInfoA( RPC_CSTR ServerPrincName, ULONG AuthnSvc, RPC_AUTH_KEY_RETRIEVAL_FN GetKeyFn,
                             LPVOID Arg )
 {
-    SECURITY_STATUS sec_status;
-    CredHandle cred;
-    TimeStamp exp;
-    ULONG package_count;
-    ULONG i;
-    PSecPkgInfoA packages;
-    ULONG max_token;
-    struct rpc_server_registered_auth_info *auth_info;
+    WCHAR *principal_name = NULL;
+    RPC_STATUS status;
 
     TRACE("(%s,%u,%p,%p)\n", ServerPrincName, AuthnSvc, GetKeyFn, Arg);
 
-    sec_status = EnumerateSecurityPackagesA(&package_count, &packages);
-    if (sec_status != SEC_E_OK)
-    {
-        ERR("EnumerateSecurityPackagesA failed with error 0x%08x\n",
-            sec_status);
-        return RPC_S_SEC_PKG_ERROR;
-    }
-
-    for (i = 0; i < package_count; i++)
-        if (packages[i].wRPCID == AuthnSvc)
-            break;
-
-    if (i == package_count)
-    {
-        WARN("unsupported AuthnSvc %u\n", AuthnSvc);
-        FreeContextBuffer(packages);
-        return RPC_S_UNKNOWN_AUTHN_SERVICE;
-    }
-    TRACE("found package %s for service %u\n", packages[i].Name,
-          AuthnSvc);
-    sec_status = AcquireCredentialsHandleA((SEC_CHAR *)ServerPrincName,
-                                           packages[i].Name,
-                                           SECPKG_CRED_INBOUND, NULL, NULL,
-                                           NULL, NULL, &cred, &exp);
-    max_token = packages[i].cbMaxToken;
-    FreeContextBuffer(packages);
-    if (sec_status != SEC_E_OK)
-        return RPC_S_SEC_PKG_ERROR;
-
-    auth_info = HeapAlloc(GetProcessHeap(), 0, sizeof(*auth_info));
-    if (!auth_info)
-    {
-        FreeCredentialsHandle(&cred);
+    if(ServerPrincName && !(principal_name = RPCRT4_strdupAtoW((const char*)ServerPrincName)))
         return RPC_S_OUT_OF_RESOURCES;
-    }
 
-    auth_info->exp = exp;
-    auth_info->cred = cred;
-    auth_info->max_token = max_token;
-    auth_info->auth_type = AuthnSvc;
+    status = RpcServerRegisterAuthInfoW(principal_name, AuthnSvc, GetKeyFn, Arg);
 
-    EnterCriticalSection(&server_auth_info_cs);
-    list_add_tail(&server_registered_auth_info, &auth_info->entry);
-    LeaveCriticalSection(&server_auth_info_cs);
-
-    return RPC_S_OK;
+    HeapFree(GetProcessHeap(), 0, principal_name);
+    return status;
 }
 
 /***********************************************************************
@@ -1401,57 +1399,39 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoA( RPC_CSTR ServerPrincName, ULONG Au
 RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( RPC_WSTR ServerPrincName, ULONG AuthnSvc, RPC_AUTH_KEY_RETRIEVAL_FN GetKeyFn,
                             LPVOID Arg )
 {
-    SECURITY_STATUS sec_status;
-    CredHandle cred;
-    TimeStamp exp;
-    ULONG package_count;
-    ULONG i;
-    PSecPkgInfoW packages;
-    ULONG max_token;
     struct rpc_server_registered_auth_info *auth_info;
+    SecPkgInfoW *packages, *package;
+    WCHAR *package_name;
+    ULONG max_token;
+    RPC_STATUS status;
 
     TRACE("(%s,%u,%p,%p)\n", debugstr_w(ServerPrincName), AuthnSvc, GetKeyFn, Arg);
 
-    sec_status = EnumerateSecurityPackagesW(&package_count, &packages);
-    if (sec_status != SEC_E_OK)
-    {
-        ERR("EnumerateSecurityPackagesW failed with error 0x%08x\n",
-            sec_status);
-        return RPC_S_SEC_PKG_ERROR;
-    }
+    status = find_security_package(AuthnSvc, &packages, &package);
+    if (status != RPC_S_OK)
+        return status;
 
-    for (i = 0; i < package_count; i++)
-        if (packages[i].wRPCID == AuthnSvc)
-            break;
-
-    if (i == package_count)
-    {
-        WARN("unsupported AuthnSvc %u\n", AuthnSvc);
-        FreeContextBuffer(packages);
-        return RPC_S_UNKNOWN_AUTHN_SERVICE;
-    }
-    TRACE("found package %s for service %u\n", debugstr_w(packages[i].Name),
-          AuthnSvc);
-    sec_status = AcquireCredentialsHandleW((SEC_WCHAR *)ServerPrincName,
-                                           packages[i].Name,
-                                           SECPKG_CRED_INBOUND, NULL, NULL,
-                                           NULL, NULL, &cred, &exp);
-    max_token = packages[i].cbMaxToken;
+    package_name = RPCRT4_strdupW(package->Name);
+    max_token = package->cbMaxToken;
     FreeContextBuffer(packages);
-    if (sec_status != SEC_E_OK)
-        return RPC_S_SEC_PKG_ERROR;
+    if (!package_name)
+        return RPC_S_OUT_OF_RESOURCES;
 
-    auth_info = HeapAlloc(GetProcessHeap(), 0, sizeof(*auth_info));
-    if (!auth_info)
-    {
-        FreeCredentialsHandle(&cred);
+    auth_info = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*auth_info));
+    if (!auth_info) {
+        HeapFree(GetProcessHeap(), 0, package_name);
         return RPC_S_OUT_OF_RESOURCES;
     }
 
-    auth_info->exp = exp;
-    auth_info->cred = cred;
-    auth_info->max_token = max_token;
+    if (ServerPrincName && !(auth_info->principal = RPCRT4_strdupW(ServerPrincName))) {
+        HeapFree(GetProcessHeap(), 0, package_name);
+        HeapFree(GetProcessHeap(), 0, auth_info);
+        return RPC_S_OUT_OF_RESOURCES;
+    }
+
     auth_info->auth_type = AuthnSvc;
+    auth_info->package_name = package_name;
+    auth_info->max_token = max_token;
 
     EnterCriticalSection(&server_auth_info_cs);
     list_add_tail(&server_registered_auth_info, &auth_info->entry);
@@ -1528,25 +1508,23 @@ RPC_STATUS WINAPI RpcMgmtWaitServerListen( void )
   TRACE("()\n");
 
   EnterCriticalSection(&listen_cs);
-
-  if (!std_listen) {
-    LeaveCriticalSection(&listen_cs);
-    return RPC_S_NOT_LISTENING;
-  }
-  if (listen_done_event) {
-    LeaveCriticalSection(&listen_cs);
-    return RPC_S_ALREADY_LISTENING;
-  }
-  event = CreateEventW( NULL, TRUE, FALSE, NULL );
-  listen_done_event = event;
-
+  event = listen_done_event;
   LeaveCriticalSection(&listen_cs);
+
+  if (!event)
+      return RPC_S_NOT_LISTENING;
 
   TRACE( "waiting for server calls to finish\n" );
   WaitForSingleObject( event, INFINITE );
   TRACE( "done waiting\n" );
 
-  CloseHandle( event );
+  EnterCriticalSection(&listen_cs);
+  if (listen_done_event == event)
+  {
+      listen_done_event = NULL;
+      CloseHandle( event );
+  }
+  LeaveCriticalSection(&listen_cs);
   return RPC_S_OK;
 }
 
@@ -1672,7 +1650,7 @@ RPC_STATUS WINAPI RpcMgmtIsServerListening(RPC_BINDING_HANDLE Binding)
     status = RPCRT4_IsServerListening(rpc_binding->Protseq, rpc_binding->Endpoint);
   }else {
     EnterCriticalSection(&listen_cs);
-    if (manual_listen_count > 0) status = RPC_S_OK;
+    if (listen_done_event && std_listen) status = RPC_S_OK;
     LeaveCriticalSection(&listen_cs);
   }
 

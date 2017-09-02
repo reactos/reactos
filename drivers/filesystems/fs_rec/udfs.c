@@ -125,7 +125,7 @@ FsRecUdfsFsControl(IN PDEVICE_OBJECT DeviceObject,
             MountDevice = Stack->Parameters.MountVolume.DeviceObject;
             if (FsRecGetDeviceSectorSize(MountDevice, &SectorSize))
             {
-                /* Check if it's an actual FAT volume */
+                /* Check if it's an actual UDF volume */
                 if (FsRecIsUdfsVolume(MountDevice, SectorSize))
                 {
                     /* It is! */
