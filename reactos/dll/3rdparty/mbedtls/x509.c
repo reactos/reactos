@@ -498,25 +498,25 @@ static int x509_parse_int( unsigned char **p, size_t n, int *res )
     return( 0 );
 }
 
-static int x509_date_is_valid(const mbedtls_x509_time *time)
+static int x509_date_is_valid(const mbedtls_x509_time *t)
 {
     int ret = MBEDTLS_ERR_X509_INVALID_DATE;
 
-    CHECK_RANGE( 0, 9999, time->year );
-    CHECK_RANGE( 0, 23,   time->hour );
-    CHECK_RANGE( 0, 59,   time->min  );
-    CHECK_RANGE( 0, 59,   time->sec  );
+    CHECK_RANGE( 0, 9999, t->year );
+    CHECK_RANGE( 0, 23,   t->hour );
+    CHECK_RANGE( 0, 59,   t->min  );
+    CHECK_RANGE( 0, 59,   t->sec  );
 
-    switch( time->mon )
+    switch( t->mon )
     {
         case 1: case 3: case 5: case 7: case 8: case 10: case 12:
-            CHECK_RANGE( 1, 31, time->day );
+            CHECK_RANGE( 1, 31, t->day );
             break;
         case 4: case 6: case 9: case 11:
-            CHECK_RANGE( 1, 30, time->day );
+            CHECK_RANGE( 1, 30, t->day );
             break;
         case 2:
-            CHECK_RANGE( 1, 28 + (time->year % 4 == 0), time->day );
+            CHECK_RANGE( 1, 28 + (t->year % 4 == 0), t->day );
             break;
         default:
             return( ret );
@@ -530,7 +530,7 @@ static int x509_date_is_valid(const mbedtls_x509_time *time)
  * field.
  */
 static int x509_parse_time( unsigned char **p, size_t len, size_t yearlen,
-        mbedtls_x509_time *time )
+                            mbedtls_x509_time *tm )
 {
     int ret;
 
@@ -544,26 +544,26 @@ static int x509_parse_time( unsigned char **p, size_t len, size_t yearlen,
     /*
      * Parse year, month, day, hour, minute
      */
-    CHECK( x509_parse_int( p, yearlen, &time->year ) );
+    CHECK( x509_parse_int( p, yearlen, &tm->year ) );
     if ( 2 == yearlen )
     {
-        if ( time->year < 50 )
-            time->year += 100;
+        if ( tm->year < 50 )
+            tm->year += 100;
 
-        time->year += 1900;
+        tm->year += 1900;
     }
 
-    CHECK( x509_parse_int( p, 2, &time->mon ) );
-    CHECK( x509_parse_int( p, 2, &time->day ) );
-    CHECK( x509_parse_int( p, 2, &time->hour ) );
-    CHECK( x509_parse_int( p, 2, &time->min ) );
+    CHECK( x509_parse_int( p, 2, &tm->mon ) );
+    CHECK( x509_parse_int( p, 2, &tm->day ) );
+    CHECK( x509_parse_int( p, 2, &tm->hour ) );
+    CHECK( x509_parse_int( p, 2, &tm->min ) );
 
     /*
      * Parse seconds if present
      */
     if ( len >= 2 )
     {
-        CHECK( x509_parse_int( p, 2, &time->sec ) );
+        CHECK( x509_parse_int( p, 2, &tm->sec ) );
         len -= 2;
     }
     else
@@ -584,7 +584,7 @@ static int x509_parse_time( unsigned char **p, size_t len, size_t yearlen,
     if ( 0 != len )
         return ( MBEDTLS_ERR_X509_INVALID_DATE );
 
-    CHECK( x509_date_is_valid( time ) );
+    CHECK( x509_date_is_valid( tm ) );
 
     return ( 0 );
 }
@@ -595,7 +595,7 @@ static int x509_parse_time( unsigned char **p, size_t len, size_t yearlen,
  *       generalTime    GeneralizedTime }
  */
 int mbedtls_x509_get_time( unsigned char **p, const unsigned char *end,
-                   mbedtls_x509_time *time )
+                           mbedtls_x509_time *tm )
 {
     int ret;
     size_t len, year_len;
@@ -621,7 +621,7 @@ int mbedtls_x509_get_time( unsigned char **p, const unsigned char *end,
     if( ret != 0 )
         return( MBEDTLS_ERR_X509_INVALID_DATE + ret );
 
-    return x509_parse_time( p, len, year_len, time );
+    return x509_parse_time( p, len, year_len, tm );
 }
 
 int mbedtls_x509_get_sig( unsigned char **p, const unsigned char *end, mbedtls_x509_buf *sig )
@@ -1037,7 +1037,7 @@ int mbedtls_x509_time_is_future( const mbedtls_x509_time *from )
  */
 int mbedtls_x509_self_test( int verbose )
 {
-#if defined(MBEDTLS_CERTS_C) && defined(MBEDTLS_SHA1_C)
+#if defined(MBEDTLS_CERTS_C) && defined(MBEDTLS_SHA256_C)
     int ret;
     uint32_t flags;
     mbedtls_x509_crt cacert;

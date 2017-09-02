@@ -71,6 +71,10 @@ extern "C" {
  * \param f_rng     RNG function
  * \param p_rng     RNG parameter
  *
+ * \note            If the bitlength of the message hash is larger than the
+ *                  bitlength of the group order, then the hash is truncated as
+ *                  prescribed by SEC1 4.1.3 step 5.
+ *
  * \return          0 if successful,
  *                  or a MBEDTLS_ERR_ECP_XXX or MBEDTLS_MPI_XXX error code
  */
@@ -91,6 +95,10 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
  * \param blen      Length of buf
  * \param md_alg    MD algorithm used to hash the message
  *
+ * \note            If the bitlength of the message hash is larger than the
+ *                  bitlength of the group order, then the hash is truncated as
+ *                  prescribed by SEC1 4.1.3 step 5.
+ *
  * \return          0 if successful,
  *                  or a MBEDTLS_ERR_ECP_XXX or MBEDTLS_MPI_XXX error code
  */
@@ -109,6 +117,10 @@ int mbedtls_ecdsa_sign_det( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi 
  * \param r         First integer of the signature
  * \param s         Second integer of the signature
  *
+ * \note            If the bitlength of the message hash is larger than the
+ *                  bitlength of the group order, then the hash is truncated as
+ *                  prescribed by SEC1 4.1.4 step 3.
+ *
  * \return          0 if successful,
  *                  MBEDTLS_ERR_ECP_BAD_INPUT_DATA if signature is invalid
  *                  or a MBEDTLS_ERR_ECP_XXX or MBEDTLS_MPI_XXX error code
@@ -122,7 +134,7 @@ int mbedtls_ecdsa_verify( mbedtls_ecp_group *grp,
  *                  serialized as defined in RFC 4492 page 20.
  *                  (Not thread-safe to use same context in multiple threads)
  *
- * \note            The deterministice version (RFC 6979) is used if
+ * \note            The deterministic version (RFC 6979) is used if
  *                  MBEDTLS_ECDSA_DETERMINISTIC is defined.
  *
  * \param ctx       ECDSA context
@@ -137,6 +149,10 @@ int mbedtls_ecdsa_verify( mbedtls_ecp_group *grp,
  * \note            The "sig" buffer must be at least as large as twice the
  *                  size of the curve used, plus 9 (eg. 73 bytes if a 256-bit
  *                  curve is used). MBEDTLS_ECDSA_MAX_LEN is always safe.
+ *
+ * \note            If the bitlength of the message hash is larger than the
+ *                  bitlength of the group order, then the hash is truncated as
+ *                  prescribed by SEC1 4.1.3 step 5.
  *
  * \return          0 if successful,
  *                  or a MBEDTLS_ERR_ECP_XXX, MBEDTLS_ERR_MPI_XXX or
@@ -174,6 +190,10 @@ int mbedtls_ecdsa_write_signature( mbedtls_ecdsa_context *ctx, mbedtls_md_type_t
  *                  size of the curve used, plus 9 (eg. 73 bytes if a 256-bit
  *                  curve is used). MBEDTLS_ECDSA_MAX_LEN is always safe.
  *
+ * \note            If the bitlength of the message hash is larger than the
+ *                  bitlength of the group order, then the hash is truncated as
+ *                  prescribed by SEC1 4.1.3 step 5.
+ *
  * \return          0 if successful,
  *                  or a MBEDTLS_ERR_ECP_XXX, MBEDTLS_ERR_MPI_XXX or
  *                  MBEDTLS_ERR_ASN1_XXX error code
@@ -194,6 +214,10 @@ int mbedtls_ecdsa_write_signature_det( mbedtls_ecdsa_context *ctx,
  * \param hlen      Size of hash
  * \param sig       Signature to read and verify
  * \param slen      Size of sig
+ *
+ * \note            If the bitlength of the message hash is larger than the
+ *                  bitlength of the group order, then the hash is truncated as
+ *                  prescribed by SEC1 4.1.4 step 3.
  *
  * \return          0 if successful,
  *                  MBEDTLS_ERR_ECP_BAD_INPUT_DATA if signature is invalid,

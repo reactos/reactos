@@ -618,11 +618,11 @@ int mbedtls_mpi_read_file( mbedtls_mpi *X, int radix, FILE *fin )
     if( slen == sizeof( s ) - 2 )
         return( MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL );
 
-    if( s[slen - 1] == '\n' ) { slen--; s[slen] = '\0'; }
-    if( s[slen - 1] == '\r' ) { slen--; s[slen] = '\0'; }
+    if( slen > 0 && s[slen - 1] == '\n' ) { slen--; s[slen] = '\0'; }
+    if( slen > 0 && s[slen - 1] == '\r' ) { slen--; s[slen] = '\0'; }
 
     p = s + slen;
-    while( --p >= s )
+    while( p-- > s )
         if( mpi_get_digit( &d, radix, *p ) != 0 )
             break;
 
@@ -1792,7 +1792,7 @@ int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
      */
     MBEDTLS_MPI_CHK( mpi_montred( X, N, mm, &T ) );
 
-    if( neg )
+    if( neg && E->n != 0 && ( E->p[0] & 1 ) != 0 )
     {
         X->s = -1;
         MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( X, N, X ) );
@@ -1895,7 +1895,7 @@ int mbedtls_mpi_inv_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
     int ret;
     mbedtls_mpi G, TA, TU, U1, U2, TB, TV, V1, V2;
 
-    if( mbedtls_mpi_cmp_int( N, 0 ) <= 0 )
+    if( mbedtls_mpi_cmp_int( N, 1 ) <= 0 )
         return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
 
     mbedtls_mpi_init( &TA ); mbedtls_mpi_init( &TU ); mbedtls_mpi_init( &U1 ); mbedtls_mpi_init( &U2 );

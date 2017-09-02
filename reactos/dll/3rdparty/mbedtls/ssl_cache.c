@@ -140,7 +140,7 @@ int mbedtls_ssl_cache_set( void *data, const mbedtls_ssl_session *session )
 {
     int ret = 1;
 #if defined(MBEDTLS_HAVE_TIME)
-    mbedtls_time_t t = time( NULL ), oldest = 0;
+    mbedtls_time_t t = mbedtls_time( NULL ), oldest = 0;
     mbedtls_ssl_cache_entry *old = NULL;
 #endif
     mbedtls_ssl_cache_context *cache = (mbedtls_ssl_cache_context *) data;

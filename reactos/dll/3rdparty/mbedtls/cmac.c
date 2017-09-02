@@ -1,4 +1,4 @@
-/*
+/**
  * \file cmac.c
  *
  * \brief NIST SP800-38B compliant CMAC implementation for AES and 3DES
@@ -171,10 +171,10 @@ static void cmac_xor_block( unsigned char *output, const unsigned char *input1,
                             const unsigned char *input2,
                             const size_t block_size )
 {
-    size_t index;
+    size_t idx;
 
-    for( index = 0; index < block_size; index++ )
-        output[ index ] = input1[ index ] ^ input2[ index ];
+    for( idx = 0; idx < block_size; idx++ )
+        output[ idx ] = input1[ idx ] ^ input2[ idx ];
 }
 
 /*

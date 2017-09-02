@@ -34,7 +34,7 @@
 #if defined(MBEDTLS_THREADING_PTHREAD)
 static void threading_mutex_init_pthread( mbedtls_threading_mutex_t *mutex )
 {
-    if( mutex == NULL || mutex->is_valid )
+    if( mutex == NULL )
         return;
 
     mutex->is_valid = pthread_mutex_init( &mutex->mutex, NULL ) == 0;
