@@ -3628,7 +3628,7 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
  */
 static LRESULT EDIT_WM_KillFocus(EDITSTATE *es)
 {
-#ifdef __REACTOS__
+#if 0 // See CORE-10266.
 	HWND hCombo;
 	LONG lStyles;
 
