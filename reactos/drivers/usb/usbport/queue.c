@@ -1042,7 +1042,7 @@ USBPORT_QueuePendingTransferIrp(IN PIRP Irp)
 
     IoSetCancelRoutine(Irp, USBPORT_CancelPendingTransferIrp);
 
-    if (Irp->Cancel && !IoSetCancelRoutine(Irp, NULL))
+    if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
     {
         USBPORT_CompleteTransfer(Urb, USBD_STATUS_CANCELED);
     }
