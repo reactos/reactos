@@ -759,10 +759,8 @@ USBPORT_FlushPendingTransfers(IN PUSBPORT_ENDPOINT Endpoint)
     BOOLEAN IsEnd = FALSE;
     PLIST_ENTRY List;
     PUSBPORT_TRANSFER Transfer;
-    KIRQL PrevIrql;
     PURB Urb;
     PIRP Irp;
-    PIRP irp;
     KIRQL OldIrql;
     BOOLEAN Result;
 
@@ -877,11 +875,9 @@ USBPORT_FlushPendingTransfers(IN PUSBPORT_ENDPOINT Endpoint)
         Transfer->TransferLink.Flink = NULL;
         Transfer->TransferLink.Blink = NULL;
 
-        irp = Irp;
-
         if (Irp)
         {
-            irp = USBPORT_RemovePendingTransferIrp(FdoDevice, Irp);
+            Irp = USBPORT_RemovePendingTransferIrp(FdoDevice, Irp);
         }
 
         KeReleaseSpinLockFromDpcLevel(&Endpoint->EndpointSpinLock);
@@ -890,13 +886,13 @@ USBPORT_FlushPendingTransfers(IN PUSBPORT_ENDPOINT Endpoint)
 
         KeAcquireSpinLock(&FdoExtension->FlushTransferSpinLock, &OldIrql);
 
-        if (irp)
+        if (Irp)
         {
-            IoSetCancelRoutine(irp, USBPORT_CancelActiveTransferIrp);
+            IoSetCancelRoutine(Irp, USBPORT_CancelActiveTransferIrp);
 
-            if (Irp->Cancel && IoSetCancelRoutine(irp, NULL))
+            if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
             {
-                DPRINT_CORE("USBPORT_FlushPendingTransfers: irp - %p\n", irp);
+                DPRINT_CORE("USBPORT_FlushPendingTransfers: irp - %p\n", Irp);
 
                 KeReleaseSpinLock(&FdoExtension->FlushTransferSpinLock,
                                   OldIrql);
@@ -905,8 +901,8 @@ USBPORT_FlushPendingTransfers(IN PUSBPORT_ENDPOINT Endpoint)
                 goto Worker;
             }
 
-            USBPORT_FindUrbInIrpTable(FdoExtension->ActiveIrpTable, Urb, irp);
-            USBPORT_InsertIrpInTable(FdoExtension->ActiveIrpTable, irp);
+            USBPORT_FindUrbInIrpTable(FdoExtension->ActiveIrpTable, Urb, Irp);
+            USBPORT_InsertIrpInTable(FdoExtension->ActiveIrpTable, Irp);
         }
 
         IsMapTransfer = USBPORT_QueueActiveUrbToEndpoint(Endpoint, Urb);
@@ -920,9 +916,9 @@ USBPORT_FlushPendingTransfers(IN PUSBPORT_ENDPOINT Endpoint)
         }
 
 Worker:
-        KeRaiseIrql(DISPATCH_LEVEL, &PrevIrql);
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
         Result = USBPORT_EndpointWorker(Endpoint, FALSE);
-        KeLowerIrql(PrevIrql);
+        KeLowerIrql(OldIrql);
 
         if (Result)
             USBPORT_InvalidateEndpointHandler(FdoDevice,
