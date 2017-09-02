@@ -940,10 +940,13 @@ VOID UserDrawCaptionBar(
       /* Draw menu bar */
       if (pWnd->state & WNDS_HASMENU && pWnd->IDMenu) // Should be pWnd->spmenu
       {
-          PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)); // FIXME!
-          TempRect = CurrentRect;
-          TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
-          CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+          PMENU menu;
+          if ((menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)))) // FIXME! Use pWnd->spmenu,
+          {
+             TempRect = CurrentRect;
+             TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
+             CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+          }
       }
 
       if (ExStyle & WS_EX_CLIENTEDGE)
@@ -1111,10 +1114,14 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
      {
          if (!(Flags & DC_NOSENDMSG))
          {
-             PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)); // FIXME!
-             TempRect = CurrentRect;
-             TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
-             CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+             PMENU menu;
+             // Fix crash in test_menu_locked_by_window, should use pWnd->spmenu....
+             if ((menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)))) // FIXME! Use pWnd->spmenu,
+             {
+                TempRect = CurrentRect;
+                TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
+                CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+             }
          }
      }
 
