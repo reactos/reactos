@@ -323,7 +323,7 @@ typedef UCHAR
 (NTAPI *PPROCESS_ENTRY_ROUTINE)(
     IN PWCHAR KeyName,
     IN PWCHAR KeyValue,
-    IN PCHAR DisplayText,
+    OUT PWCHAR DisplayText,
     IN SIZE_T DisplayTextSize,
     OUT PVOID* UserData,
     OUT PBOOLEAN Current,
@@ -344,7 +344,7 @@ AddEntriesFromInfSection(
     PVOID UserData;
     BOOLEAN Current;
     UCHAR RetVal;
-    CHAR DisplayText[128];
+    WCHAR DisplayText[128];
 
     if (!SetupFindFirstLineW(InfFile, SectionName, NULL, pContext))
         return -1;
@@ -404,7 +404,7 @@ NTAPI
 DefaultProcessEntry(
     IN PWCHAR KeyName,
     IN PWCHAR KeyValue,
-    IN PCHAR DisplayText,
+    OUT PWCHAR DisplayText,
     IN SIZE_T DisplayTextSize,
     OUT PVOID* UserData,
     OUT PBOOLEAN Current,
@@ -422,7 +422,7 @@ DefaultProcessEntry(
     }
 
     wcscpy((PWCHAR)*UserData, KeyName);
-    sprintf(DisplayText, "%S", KeyValue);
+    wcscpy(DisplayText, KeyValue);
 
     *Current = (CompareKey ? !_wcsicmp(KeyName, CompareKey) : FALSE);
 
@@ -739,7 +739,7 @@ CreateDisplayDriverList(
     }
 
 #if 0
-    AppendGenericListEntry(List, "Other display driver", NULL, TRUE);
+    AppendGenericListEntry(List, L"Other display driver", NULL, TRUE);
 #endif
 
     return List;
@@ -1086,7 +1086,7 @@ NTAPI
 ProcessLangEntry(
     IN PWCHAR KeyName,
     IN PWCHAR KeyValue,
-    IN PCHAR DisplayText,
+    OUT PWCHAR DisplayText,
     IN SIZE_T DisplayTextSize,
     OUT PVOID* UserData,
     OUT PBOOLEAN Current,
@@ -1110,7 +1110,7 @@ ProcessLangEntry(
     }
 
     wcscpy((PWCHAR)*UserData, KeyName);
-    sprintf(DisplayText, "%S", KeyValue);
+    wcscpy(DisplayText, KeyValue);
 
     *Current = FALSE;
 

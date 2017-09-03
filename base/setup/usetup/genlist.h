@@ -40,6 +40,9 @@ typedef struct _GENERIC_LIST_UI
     SHORT Right;
     SHORT Bottom;
     BOOL Redraw;
+
+    CHAR CurrentItemText[256];
+
 } GENERIC_LIST_UI, *PGENERIC_LIST_UI;
 
 VOID
