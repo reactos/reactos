@@ -2268,7 +2268,11 @@ InstallFatBootcodeToFloppy(
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
 
-    /* Format the floppy first */
+    /* Verify that the floppy disk is accessible */
+    if (DoesDirExist(NULL, FloppyDevice.Buffer) == FALSE)
+        return STATUS_DEVICE_NOT_READY;
+
+    /* Format the floppy disk */
     FatFS = GetFileSystemByName(L"FAT");
     if (!FatFS)
     {

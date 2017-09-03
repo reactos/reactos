@@ -4186,16 +4186,14 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
         {
-            if (DoesDirExist(NULL, L"\\Device\\Floppy0\\") == FALSE)
-            {
-                MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
-                return BOOT_LOADER_FLOPPY_PAGE;
-            }
-
-            Status = InstallFatBootcodeToFloppy(&USetupData.SourceRootPath, &USetupData.DestinationArcPath);
+            Status = InstallFatBootcodeToFloppy(&USetupData.SourceRootPath,
+                                                &USetupData.DestinationArcPath);
             if (!NT_SUCCESS(Status))
             {
-                /* Print error message */
+                if (Status == STATUS_DEVICE_NOT_READY)
+                    MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
+
+                /* TODO: Print error message */
                 return BOOT_LOADER_FLOPPY_PAGE;
             }
 
@@ -4279,8 +4277,7 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
                                       DestinationDevicePathBuffer);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
-                Status);
+        DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n", Status);
         MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
