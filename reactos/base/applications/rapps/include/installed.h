@@ -3,14 +3,6 @@
 #include <windef.h>
 #include <atlstr.h>
 
-#define ENUM_APPLICATIONS      31
-#define ENUM_UPDATES           32
-
-#define ENUM_INSTALLED_MIN ENUM_ALL_COMPONENTS
-#define ENUM_INSTALLED_MAX ENUM_UPDATES
-
-#define IS_INSTALLED_ENUM(a) (a >= ENUM_INSTALLED_MIN && a <= ENUM_INSTALLED_MAX)
-
 struct INSTALLED_INFO
 {
     HKEY hRootKey;

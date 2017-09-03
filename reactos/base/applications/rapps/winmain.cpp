@@ -15,7 +15,7 @@
 
 HWND hMainWnd;
 HINSTANCE hInst;
-INT SelectedEnumType = ENUM_ALL_COMPONENTS;
+INT SelectedEnumType = ENUM_ALL_INSTALLED;
 SETTINGS_INFO SettingsInfo;
 
 ATL::CStringW szSearchPattern;

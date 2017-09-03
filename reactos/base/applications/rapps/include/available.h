@@ -7,34 +7,6 @@
 
 #include "misc.h"
 
-/* EnumType flags for EnumAvailableApplications */
-enum AvailableCategories
-{
-    ENUM_ALL_AVAILABLE,
-    ENUM_CAT_AUDIO,
-    ENUM_CAT_VIDEO,
-    ENUM_CAT_GRAPHICS,
-    ENUM_CAT_GAMES,
-    ENUM_CAT_INTERNET,
-    ENUM_CAT_OFFICE,
-    ENUM_CAT_DEVEL,
-    ENUM_CAT_EDU,
-    ENUM_CAT_ENGINEER,
-    ENUM_CAT_FINANCE,
-    ENUM_CAT_SCIENCE,
-    ENUM_CAT_TOOLS,
-    ENUM_CAT_DRIVERS,
-    ENUM_CAT_LIBS,
-    ENUM_CAT_OTHER,
-    ENUM_AVAILABLE_MIN = ENUM_ALL_AVAILABLE,
-    ENUM_AVAILABLE_MAX = ENUM_CAT_OTHER
-};
-
-inline BOOL IsAvailableEnum(INT x)
-{
-    return (x >= AvailableCategories::ENUM_AVAILABLE_MIN && x <= AvailableCategories::ENUM_AVAILABLE_MAX);
-}
-
 enum LicenseType
 {
     LICENSE_NONE,

@@ -923,7 +923,7 @@ private:
             FreeLogs();
             m_AvailableApps.FreeCachedEntries();
 
-            if (IS_INSTALLED_ENUM(SelectedEnumType))
+            if (IsInstalledEnum(SelectedEnumType))
                 FreeInstalledAppList();
 
             delete m_ClientPanel;
@@ -953,7 +953,7 @@ private:
                         break;
 
                     case IDS_APPLICATIONS:
-                        UpdateApplicationsList(ENUM_APPLICATIONS);
+                        UpdateApplicationsList(ENUM_INSTALLED_APPLICATIONS);
                         break;
 
                     case IDS_UPDATES:
@@ -1087,7 +1087,7 @@ private:
                         (pnic->uNewState & LVIS_FOCUSED) &&
                         !(pnic->uOldState & LVIS_FOCUSED))
                     {
-                        if (IS_INSTALLED_ENUM(SelectedEnumType))
+                        if (IsInstalledEnum(SelectedEnumType))
                             ShowInstalledAppInfo(ItemIndex);
                         if (IsAvailableEnum(SelectedEnumType))
                             CAvailableAppView::ShowAvailableAppInfo(ItemIndex);
@@ -1125,7 +1125,7 @@ private:
             {
                 if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
                 {
-                    if (IS_INSTALLED_ENUM(SelectedEnumType))
+                    if (IsInstalledEnum(SelectedEnumType))
                         ShowInstalledAppInfo(-1);
                     if (IsAvailableEnum(SelectedEnumType))
                         CAvailableAppView::ShowAvailableAppInfo(-1);
@@ -1502,7 +1502,7 @@ private:
     {
         ATL::CStringW szBuffer1, szBuffer2;
         HIMAGELIST hImageListView;
-        BOOL bWasInInstalled = IS_INSTALLED_ENUM(SelectedEnumType);
+        BOOL bWasInInstalled = IsInstalledEnum(SelectedEnumType);
 
         bUpdating = TRUE;
         m_ListView->SetRedraw(FALSE);
@@ -1533,7 +1533,7 @@ private:
             ImageList_Destroy(hImageListBuf);
         }
 
-        if (IS_INSTALLED_ENUM(EnumType))
+        if (IsInstalledEnum(EnumType))
         {
             if (!bWasInInstalled)
             {

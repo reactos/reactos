@@ -54,7 +54,7 @@ UninstallApplication(INT Index, BOOL bModify)
     HKEY hKey;
     PINSTALLED_INFO ItemInfo;
 
-    if (!IS_INSTALLED_ENUM(SelectedEnumType))
+    if (!IsInstalledEnum(SelectedEnumType))
         return FALSE;
 
     if (Index == -1)
@@ -146,7 +146,7 @@ RemoveAppFromRegistry(INT Index)
     ATL::CStringW szMsgText, szMsgTitle;
     INT ItemIndex = SendMessageW(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
 
-    if (!IS_INSTALLED_ENUM(SelectedEnumType))
+    if (!IsInstalledEnum(SelectedEnumType))
         return;
 
     Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
@@ -238,13 +238,13 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
                                  &dwSize) == ERROR_SUCCESS)
             {
                 szDisplayName.ReleaseBuffer();
-                if (EnumType < ENUM_ALL_COMPONENTS || EnumType > ENUM_UPDATES)
-                    EnumType = ENUM_ALL_COMPONENTS;
+                if (EnumType < ENUM_ALL_INSTALLED || EnumType > ENUM_UPDATES)
+                    EnumType = ENUM_ALL_INSTALLED;
 
                 if (!bIsSystemComponent)
                 {
-                    if ((EnumType == ENUM_ALL_COMPONENTS) || /* All components */
-                        ((EnumType == ENUM_APPLICATIONS) && (!bIsUpdate)) || /* Applications only */
+                    if ((EnumType == ENUM_ALL_INSTALLED) || /* All components */
+                        ((EnumType == ENUM_INSTALLED_APPLICATIONS) && (!bIsUpdate)) || /* Applications only */
                         ((EnumType == ENUM_UPDATES) && (bIsUpdate))) /* Updates only */
                     {
                         if (!lpEnumProc(ItemIndex, szDisplayName, &Info))
