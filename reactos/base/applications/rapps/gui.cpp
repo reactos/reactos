@@ -949,7 +949,7 @@ private:
                     switch (((LPNMTREEVIEW) lParam)->itemNew.lParam)
                     {
                     case IDS_INSTALLED:
-                        UpdateApplicationsList(ENUM_ALL_COMPONENTS);
+                        UpdateApplicationsList(ENUM_ALL_INSTALLED);
                         break;
 
                     case IDS_APPLICATIONS:
