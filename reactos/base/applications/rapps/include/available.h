@@ -4,6 +4,7 @@
 #include <atlstr.h> 
 #include <atlsimpcoll.h>
 #include <atlcoll.h>
+
 #include "misc.h"
 
 /* EnumType flags for EnumAvailableApplications */
@@ -31,41 +32,46 @@ enum AvailableCategories
 
 inline BOOL IsAvailableEnum(INT x)
 {
-    return (x >= ENUM_AVAILABLE_MIN && x <= ENUM_AVAILABLE_MAX);
+    return (x >= AvailableCategories::ENUM_AVAILABLE_MIN && x <= AvailableCategories::ENUM_AVAILABLE_MAX);
 }
 
-typedef enum LICENSE_TYPE
+enum LicenseType
 {
-    None,
-    OpenSource,
-    Freeware,
-    Trial,
-    Max = Trial,
-    Min = None
-} *PLICENSE_TYPE;
+    LICENSE_NONE,
+    LICENSE_OPENSOURCE,
+    LICENSE_FREEWARE,
+    LICENSE_TRIAL,
+    LICENSE_MIN = LICENSE_NONE,
+    LICENSE_MAX = LICENSE_TRIAL
+};
+
+inline BOOL IsLicenseType(INT x)
+{
+    return (x >= LicenseType::LICENSE_MIN && x <= LicenseType::LICENSE_MAX);
+}
 
 struct CAvailableApplicationInfo
 {
-    INT Category;
-    LICENSE_TYPE LicenseType;
-    ATL::CStringW szName;
-    ATL::CStringW szRegName;
-    ATL::CStringW szVersion;
-    ATL::CStringW szLicense;
-    ATL::CStringW szDesc;
-    ATL::CStringW szSize;
-    ATL::CStringW szUrlSite;
-    ATL::CStringW szUrlDownload;
-    ATL::CStringW szCDPath;
-    ATL::CSimpleArray<LCID> Languages;
+    INT m_Category;
+    LicenseType m_LicenseType;
+    ATL::CStringW m_szName;
+    ATL::CStringW m_szRegName;
+    ATL::CStringW m_szVersion;
+    ATL::CStringW m_szLicense;
+    ATL::CStringW m_szDesc;
+    ATL::CStringW m_szSize;
+    ATL::CStringW m_szUrlSite;
+    ATL::CStringW m_szUrlDownload;
+    ATL::CStringW m_szCDPath;
+    ATL::CSimpleArray<LCID> m_LanguageLCIDs;
 
     // Caching mechanism related entries
-    ATL::CStringW sFileName;
-    FILETIME ftCacheStamp;
+    ATL::CStringW m_sFileName;
+    FILETIME m_ftCacheStamp;
 
     // Optional integrity checks (SHA-1 digests are 160 bit = 40 characters in hex string form)
-    ATL::CStringW szSHA1;
-    ATL::CStringW szInstalledVersion;
+    ATL::CStringW m_szSHA1;
+    ATL::CStringW m_szInstalledVersion;
 
     CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam);
 
@@ -115,16 +121,18 @@ public:
 
     static BOOL UpdateAppsDB();
     static BOOL ForceUpdateAppsDB();
+    static VOID DeleteCurrentAppsDB();
 
     VOID FreeCachedEntries();
-    static VOID DeleteCurrentAppsDB();
-    BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
-    CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName);
-    ATL::CSimpleArray<CAvailableApplicationInfo*> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames);
-    const ATL::CStringW& GetFolderPath();
-    const ATL::CStringW& GetAppPath();
-    const ATL::CStringW& GetCabPath();
-    const LPCWSTR GetFolderPathString();
-    const LPCWSTR GetAppPathString();
-    const LPCWSTR GetCabPathString();
+    BOOL Enum(INT EnumType, AVAILENUMPROC lpEnumProc);
+
+    CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName) const;
+    ATL::CSimpleArray<CAvailableApplicationInfo*> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
+
+    const ATL::CStringW& GetFolderPath() const;
+    const ATL::CStringW& GetAppPath() const;
+    const ATL::CStringW& GetCabPath() const;
+    LPCWSTR GetFolderPathString() const;
+    LPCWSTR GetAppPathString() const;
+    LPCWSTR GetCabPathString() const;
 };

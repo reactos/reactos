@@ -1,3 +1,11 @@
+/*
+* PROJECT:         ReactOS Applications Manager
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            base/applications/rapps/unattended.cpp
+* PURPOSE:         Functions to parse command-line flags and process them
+* PROGRAMMERS:     Alexander Shaposhnikov (chaez.san@gmail.com)
+*/
+
 #include "unattended.h"
 #include "defines.h"
 #include "available.h"
@@ -5,13 +13,14 @@
 
 #include "setupapi.h"
 
+#define MIN_ARGS 2
+
 BOOL CmdParser(LPWSTR lpCmdLine)
 {
     INT argc;
     LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);
-    ATL::CString szName;
 
-    if (!argv || argc < 2)
+    if (!argv || argc < MIN_ARGS)
     {
         return FALSE;
     }
@@ -56,8 +65,9 @@ BOOL CmdParser(LPWSTR lpCmdLine)
     }
 
     CAvailableApps apps;
-    CAvailableApps::UpdateAppsDB();
-    apps.EnumAvailableApplications(ENUM_ALL_AVAILABLE, NULL);
+    apps.UpdateAppsDB();
+    apps.Enum(ENUM_ALL_AVAILABLE, NULL);
+
     ATL::CSimpleArray<CAvailableApplicationInfo*> arrAppInfo = apps.FindInfoList(arrNames);
     if (arrAppInfo.GetSize() > 0)
     {

@@ -72,12 +72,12 @@ struct DownloadInfo
 {
     DownloadInfo() {}
     DownloadInfo(const CAvailableApplicationInfo& AppInfo)
-        :szUrl(AppInfo.szUrlDownload), szName(AppInfo.szName), szSHA1(AppInfo.szSHA1)
+        :szUrl(AppInfo.m_szUrlDownload), m_szName(AppInfo.m_szName), szSHA1(AppInfo.m_szSHA1)
     {
     }
 
     ATL::CStringW szUrl;
-    ATL::CStringW szName;
+    ATL::CStringW m_szName;
     ATL::CStringW szSHA1;
 };
 
@@ -259,7 +259,7 @@ public:
     {
         for (INT i = 0; i < arrInfo.GetSize(); ++i)
         {
-            AddRow(i, arrInfo[i].szName.GetString(), DOWNLOAD_STATUS::DLWaiting);
+            AddRow(i, arrInfo[i].m_szName.GetString(), DOWNLOAD_STATUS::DLWaiting);
         }
     }
 
@@ -639,7 +639,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         // Change caption to show the currently downloaded app
         if (!bCab)
         {
-            szNewCaption.Format(szCaption, CurrentInfo.szName.GetString());
+            szNewCaption.Format(szCaption, CurrentInfo.m_szName.GetString());
         }
         else
         {
@@ -868,7 +868,7 @@ VOID CDownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
 {
     static DownloadInfo DatabaseDLInfo;
     DatabaseDLInfo.szUrl = lpUrl;
-    DatabaseDLInfo.szName.LoadStringW(IDS_DL_DIALOG_DB_DISP);
+    DatabaseDLInfo.m_szName.LoadStringW(IDS_DL_DIALOG_DB_DISP);
     Download(DatabaseDLInfo, TRUE);
 }
 
