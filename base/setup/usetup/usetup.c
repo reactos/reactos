@@ -3864,6 +3864,37 @@ FileCopyPage(PINPUT_RECORD Ir)
 }
 
 
+static VOID
+NTAPI
+RegistryStatus(IN REGISTRY_STATUS RegStatus, ...)
+{
+    /* WARNING: Please keep this lookup table in sync with the resources! */
+    static const UINT StringIDs[] =
+    {
+        STRING_DONE,                    /* Success */
+        STRING_REGHIVEUPDATE,           /* RegHiveUpdate */
+        STRING_IMPORTFILE,              /* ImportRegHive */
+        STRING_DISPLAYSETTINGSUPDATE,   /* DisplaySettingsUpdate */
+        STRING_LOCALESETTINGSUPDATE,    /* LocaleSettingsUpdate */
+        STRING_ADDKBLAYOUTS,            /* KeybLayouts */
+        STRING_KEYBOARDSETTINGSUPDATE,  /* KeybSettingsUpdate */
+        STRING_CODEPAGEINFOUPDATE,      /* CodePageInfoUpdate */
+    };
+
+    va_list args;
+
+    if (RegStatus < ARRAYSIZE(StringIDs))
+    {
+        va_start(args, RegStatus);
+        CONSOLE_SetStatusTextV(MUIGetString(StringIDs[RegStatus]), args);
+        va_end(args);
+    }
+    else
+    {
+        CONSOLE_SetStatusText("Unknown status %d", RegStatus);
+    }
+}
+
 /*
  * Displays the RegistryPage.
  *
@@ -3873,10 +3904,7 @@ FileCopyPage(PINPUT_RECORD Ir)
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Calls RegInitializeRegistry
- *  Calls ImportRegistryFile
- *  Calls SetDefaultPagefile
- *  Calls SetMountedDeviceValues
+ *  Calls UpdateRegistry
  *
  * RETURNS
  *   Number of the next page.
@@ -3884,225 +3912,29 @@ FileCopyPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 RegistryPage(PINPUT_RECORD Ir)
 {
-    NTSTATUS Status;
-    INFCONTEXT InfContext;
-    PWSTR Action;
-    PWSTR File;
-    PWSTR Section;
-    BOOLEAN Success;
-    BOOLEAN ShouldRepairRegistry = FALSE;
-    BOOLEAN Delete;
+    ULONG Error;
 
     MUIDisplayPage(REGISTRY_PAGE);
 
-    if (RepairUpdateFlag)
+    Error = UpdateRegistry(SetupInf,
+                           &USetupData,
+                           RepairUpdateFlag,
+                           PartitionList,
+                           DestinationDriveLetter,
+                           SelectedLanguageId,
+                           DisplayList,
+                           LayoutList,
+                           LanguageList,
+                           RegistryStatus);
+    if (Error != ERROR_SUCCESS)
     {
-        DPRINT1("TODO: Updating / repairing the registry is not completely implemented yet!\n");
-
-        /* Verify the registry hives and check whether we need to update or repair any of them */
-        Status = VerifyRegistryHives(&USetupData.DestinationPath, &ShouldRepairRegistry);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("VerifyRegistryHives failed, Status 0x%08lx\n", Status);
-            ShouldRepairRegistry = FALSE;
-        }
-        if (!ShouldRepairRegistry)
-            DPRINT1("No need to repair the registry\n");
-    }
-
-DoUpdate:
-    /* Update the registry */
-    CONSOLE_SetStatusText(MUIGetString(STRING_REGHIVEUPDATE));
-
-    /* Initialize the registry and setup the registry hives */
-    Status = RegInitializeRegistry(&USetupData.DestinationPath);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("RegInitializeRegistry() failed\n");
-        /********** HACK!!!!!!!!!!! **********/
-        if (Status == STATUS_NOT_IMPLEMENTED)
-        {
-            /* The hack was called, display its corresponding error */
-            MUIDisplayError(ERROR_INITIALIZE_REGISTRY, Ir, POPUP_WAIT_ENTER);
-        }
-        else
-        /*************************************/
-        {
-            /* Something else failed */
-            MUIDisplayError(ERROR_CREATE_HIVE, Ir, POPUP_WAIT_ENTER);
-        }
+        MUIDisplayError(Error, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
-    }
-
-    if (!RepairUpdateFlag || ShouldRepairRegistry)
-    {
-        /*
-         * We fully setup the hives, in case we are doing a fresh installation
-         * (RepairUpdateFlag == FALSE), or in case we are doing an update
-         * (RepairUpdateFlag == TRUE) BUT we have some registry hives to
-         * "repair" (aka. recreate: ShouldRepairRegistry == TRUE).
-         */
-
-        Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Fresh", NULL, &InfContext);       // Windows-compatible
-        if (!Success)
-            Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Install", NULL, &InfContext); // ReactOS-specific
-
-        if (!Success)
-        {
-            DPRINT1("SetupFindFirstLine() failed\n");
-            MUIDisplayError(ERROR_FIND_REGISTRY, Ir, POPUP_WAIT_ENTER);
-            goto Cleanup;
-        }
-    }
-    else // if (RepairUpdateFlag && !ShouldRepairRegistry)
-    {
-        /*
-         * In case we are doing an update (RepairUpdateFlag == TRUE) and
-         * NO registry hives need a repair (ShouldRepairRegistry == FALSE),
-         * we only update the hives.
-         */
-
-        Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Upgrade", NULL, &InfContext);
-        if (!Success)
-        {
-            /* Nothing to do for update! */
-            DPRINT1("No update needed for the registry!\n");
-            goto Cleanup;
-        }
-    }
-
-    do
-    {
-        INF_GetDataField(&InfContext, 0, &Action);
-        INF_GetDataField(&InfContext, 1, &File);
-        INF_GetDataField(&InfContext, 2, &Section);
-
-        DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
-
-        if (Action == NULL)
-        {
-            INF_FreeData(Action);
-            INF_FreeData(File);
-            INF_FreeData(Section);
-            break; // Hackfix
-        }
-
-        if (!_wcsicmp(Action, L"AddReg"))
-            Delete = FALSE;
-        else if (!_wcsicmp(Action, L"DelReg"))
-            Delete = TRUE;
-        else
-        {
-            DPRINT1("Unrecognized registry INF action '%S'\n", Action);
-            INF_FreeData(Action);
-            INF_FreeData(File);
-            INF_FreeData(Section);
-            continue;
-        }
-
-        INF_FreeData(Action);
-
-        CONSOLE_SetStatusText(MUIGetString(STRING_IMPORTFILE), File);
-
-        if (!ImportRegistryFile(USetupData.SourcePath.Buffer, File, Section, USetupData.LanguageId, Delete))
-        {
-            DPRINT1("Importing %S failed\n", File);
-            INF_FreeData(File);
-            INF_FreeData(Section);
-            MUIDisplayError(ERROR_IMPORT_HIVE, Ir, POPUP_WAIT_ENTER);
-            goto Cleanup;
-        }
-    } while (SetupFindNextLine(&InfContext, &InfContext));
-
-    if (!RepairUpdateFlag || ShouldRepairRegistry)
-    {
-        /* See the explanation for this test above */
-
-        /* Update display registry settings */
-        CONSOLE_SetStatusText(MUIGetString(STRING_DISPLAYSETTINGSUPDATE));
-        if (!ProcessDisplayRegistry(SetupInf, DisplayList))
-        {
-            MUIDisplayError(ERROR_UPDATE_DISPLAY_SETTINGS, Ir, POPUP_WAIT_ENTER);
-            goto Cleanup;
-        }
-
-        /* Set the locale */
-        CONSOLE_SetStatusText(MUIGetString(STRING_LOCALESETTINGSUPDATE));
-        if (!ProcessLocaleRegistry(LanguageList))
-        {
-            MUIDisplayError(ERROR_UPDATE_LOCALESETTINGS, Ir, POPUP_WAIT_ENTER);
-            goto Cleanup;
-        }
-
-        /* Add keyboard layouts */
-        CONSOLE_SetStatusText(MUIGetString(STRING_ADDKBLAYOUTS));
-        if (!AddKeyboardLayouts(SelectedLanguageId))
-        {
-            MUIDisplayError(ERROR_ADDING_KBLAYOUTS, Ir, POPUP_WAIT_ENTER);
-            goto Cleanup;
-        }
-
-        /* Set GeoID */
-        if (!SetGeoID(MUIGetGeoID(SelectedLanguageId)))
-        {
-            MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
-            goto Cleanup;
-        }
-
-        if (!IsUnattendedSetup)
-        {
-            /* Update keyboard layout settings */
-            CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
-            if (!ProcessKeyboardLayoutRegistry(LayoutList, SelectedLanguageId))
-            {
-                MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
-                goto Cleanup;
-            }
-        }
-
-        /* Add codepage information to registry */
-        CONSOLE_SetStatusText(MUIGetString(STRING_CODEPAGEINFOUPDATE));
-        if (!AddCodePage(SelectedLanguageId))
-        {
-            MUIDisplayError(ERROR_ADDING_CODEPAGE, Ir, POPUP_WAIT_ENTER);
-            goto Cleanup;
-        }
-
-        /* Set the default pagefile entry */
-        SetDefaultPagefile(DestinationDriveLetter);
-
-        /* Update the mounted devices list */
-        // FIXME: This should technically be done by mountmgr (if AutoMount is enabled)!
-        SetMountedDeviceValues(PartitionList);
-    }
-
-Cleanup:
-    //
-    // TODO: Unload all the registry stuff, perform cleanup,
-    // and copy the created hive files into .sav files.
-    //
-    RegCleanupRegistry(&USetupData.DestinationPath);
-
-    /*
-     * Check whether we were in update/repair mode but we were actually
-     * repairing the registry hives. If so, we have finished repairing them,
-     * and we now reset the flag and run the proper registry update.
-     * Otherwise we have finished the registry update!
-     */
-    if (RepairUpdateFlag && ShouldRepairRegistry)
-    {
-        ShouldRepairRegistry = FALSE;
-        goto DoUpdate;
-    }
-
-    if (NT_SUCCESS(Status))
-    {
-        CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
-        return BOOT_LOADER_PAGE;
     }
     else
     {
-        return QUIT_PAGE;
+        CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
+        return BOOT_LOADER_PAGE;
     }
 }
 

@@ -565,4 +565,240 @@ LoadSetupInf(
     return ERROR_SUCCESS;
 }
 
+/*
+ * SIDEEFFECTS
+ *  Calls RegInitializeRegistry
+ *  Calls ImportRegistryFile
+ *  Calls SetDefaultPagefile
+ *  Calls SetMountedDeviceValues
+ */
+ERROR_NUMBER
+UpdateRegistry(
+    IN HINF SetupInf,
+    IN OUT PUSETUP_DATA pSetupData,
+    /**/IN BOOLEAN RepairUpdateFlag,     /* HACK HACK! */
+    /**/IN PPARTLIST PartitionList,      /* HACK HACK! */
+    /**/IN WCHAR DestinationDriveLetter, /* HACK HACK! */
+    /**/IN PWCHAR SelectedLanguageId,    /* HACK HACK! */
+    IN PGENERIC_LIST DisplayList,
+    IN PGENERIC_LIST LayoutList,
+    IN PGENERIC_LIST LanguageList,
+    IN PREGISTRY_STATUS_ROUTINE StatusRoutine OPTIONAL)
+{
+    ERROR_NUMBER ErrorNumber;
+    NTSTATUS Status;
+    INFCONTEXT InfContext;
+    PWSTR Action;
+    PWSTR File;
+    PWSTR Section;
+    BOOLEAN Success;
+    BOOLEAN ShouldRepairRegistry = FALSE;
+    BOOLEAN Delete;
+
+    if (RepairUpdateFlag)
+    {
+        DPRINT1("TODO: Updating / repairing the registry is not completely implemented yet!\n");
+
+        /* Verify the registry hives and check whether we need to update or repair any of them */
+        Status = VerifyRegistryHives(&pSetupData->DestinationPath, &ShouldRepairRegistry);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("VerifyRegistryHives failed, Status 0x%08lx\n", Status);
+            ShouldRepairRegistry = FALSE;
+        }
+        if (!ShouldRepairRegistry)
+            DPRINT1("No need to repair the registry\n");
+    }
+
+DoUpdate:
+    ErrorNumber = ERROR_SUCCESS;
+
+    /* Update the registry */
+    if (StatusRoutine) StatusRoutine(RegHiveUpdate);
+
+    /* Initialize the registry and setup the registry hives */
+    Status = RegInitializeRegistry(&pSetupData->DestinationPath);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RegInitializeRegistry() failed\n");
+        /********** HACK!!!!!!!!!!! **********/
+        if (Status == STATUS_NOT_IMPLEMENTED)
+        {
+            /* The hack was called, return its corresponding error */
+            return ERROR_INITIALIZE_REGISTRY;
+        }
+        else
+        /*************************************/
+        {
+            /* Something else failed */
+            return ERROR_CREATE_HIVE;
+        }
+    }
+
+    if (!RepairUpdateFlag || ShouldRepairRegistry)
+    {
+        /*
+         * We fully setup the hives, in case we are doing a fresh installation
+         * (RepairUpdateFlag == FALSE), or in case we are doing an update
+         * (RepairUpdateFlag == TRUE) BUT we have some registry hives to
+         * "repair" (aka. recreate: ShouldRepairRegistry == TRUE).
+         */
+
+        Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Fresh", NULL, &InfContext);       // Windows-compatible
+        if (!Success)
+            Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Install", NULL, &InfContext); // ReactOS-specific
+
+        if (!Success)
+        {
+            DPRINT1("SetupFindFirstLine() failed\n");
+            ErrorNumber = ERROR_FIND_REGISTRY;
+            goto Cleanup;
+        }
+    }
+    else // if (RepairUpdateFlag && !ShouldRepairRegistry)
+    {
+        /*
+         * In case we are doing an update (RepairUpdateFlag == TRUE) and
+         * NO registry hives need a repair (ShouldRepairRegistry == FALSE),
+         * we only update the hives.
+         */
+
+        Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Upgrade", NULL, &InfContext);
+        if (!Success)
+        {
+            /* Nothing to do for update! */
+            DPRINT1("No update needed for the registry!\n");
+            goto Cleanup;
+        }
+    }
+
+    do
+    {
+        INF_GetDataField(&InfContext, 0, &Action);
+        INF_GetDataField(&InfContext, 1, &File);
+        INF_GetDataField(&InfContext, 2, &Section);
+
+        DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
+
+        if (Action == NULL)
+        {
+            INF_FreeData(Action);
+            INF_FreeData(File);
+            INF_FreeData(Section);
+            break; // Hackfix
+        }
+
+        if (!_wcsicmp(Action, L"AddReg"))
+            Delete = FALSE;
+        else if (!_wcsicmp(Action, L"DelReg"))
+            Delete = TRUE;
+        else
+        {
+            DPRINT1("Unrecognized registry INF action '%S'\n", Action);
+            INF_FreeData(Action);
+            INF_FreeData(File);
+            INF_FreeData(Section);
+            continue;
+        }
+
+        INF_FreeData(Action);
+
+        if (StatusRoutine) StatusRoutine(ImportRegHive, File);
+
+        if (!ImportRegistryFile(pSetupData->SourcePath.Buffer,
+                                File, Section,
+                                pSetupData->LanguageId, Delete))
+        {
+            DPRINT1("Importing %S failed\n", File);
+            INF_FreeData(File);
+            INF_FreeData(Section);
+            ErrorNumber = ERROR_IMPORT_HIVE;
+            goto Cleanup;
+        }
+    } while (SetupFindNextLine(&InfContext, &InfContext));
+
+    if (!RepairUpdateFlag || ShouldRepairRegistry)
+    {
+        /* See the explanation for this test above */
+
+        /* Update display registry settings */
+        if (StatusRoutine) StatusRoutine(DisplaySettingsUpdate);
+        if (!ProcessDisplayRegistry(SetupInf, DisplayList))
+        {
+            ErrorNumber = ERROR_UPDATE_DISPLAY_SETTINGS;
+            goto Cleanup;
+        }
+
+        /* Set the locale */
+        if (StatusRoutine) StatusRoutine(LocaleSettingsUpdate);
+        if (!ProcessLocaleRegistry(LanguageList))
+        {
+            ErrorNumber = ERROR_UPDATE_LOCALESETTINGS;
+            goto Cleanup;
+        }
+
+        /* Add keyboard layouts */
+        if (StatusRoutine) StatusRoutine(KeybLayouts);
+        if (!AddKeyboardLayouts(SelectedLanguageId))
+        {
+            ErrorNumber = ERROR_ADDING_KBLAYOUTS;
+            goto Cleanup;
+        }
+
+        /* Set GeoID */
+        if (!SetGeoID(MUIGetGeoID(SelectedLanguageId)))
+        {
+            ErrorNumber = ERROR_UPDATE_GEOID;
+            goto Cleanup;
+        }
+
+        if (!IsUnattendedSetup)
+        {
+            /* Update keyboard layout settings */
+            if (StatusRoutine) StatusRoutine(KeybSettingsUpdate);
+            if (!ProcessKeyboardLayoutRegistry(LayoutList, SelectedLanguageId))
+            {
+                ErrorNumber = ERROR_UPDATE_KBSETTINGS;
+                goto Cleanup;
+            }
+        }
+
+        /* Add codepage information to registry */
+        if (StatusRoutine) StatusRoutine(CodePageInfoUpdate);
+        if (!AddCodePage(SelectedLanguageId))
+        {
+            ErrorNumber = ERROR_ADDING_CODEPAGE;
+            goto Cleanup;
+        }
+
+        /* Set the default pagefile entry */
+        SetDefaultPagefile(DestinationDriveLetter);
+
+        /* Update the mounted devices list */
+        // FIXME: This should technically be done by mountmgr (if AutoMount is enabled)!
+        SetMountedDeviceValues(PartitionList);
+    }
+
+Cleanup:
+    //
+    // TODO: Unload all the registry stuff, perform cleanup,
+    // and copy the created hive files into .sav files.
+    //
+    RegCleanupRegistry(&pSetupData->DestinationPath);
+
+    /*
+     * Check whether we were in update/repair mode but we were actually
+     * repairing the registry hives. If so, we have finished repairing them,
+     * and we now reset the flag and run the proper registry update.
+     * Otherwise we have finished the registry update!
+     */
+    if (RepairUpdateFlag && ShouldRepairRegistry)
+    {
+        ShouldRepairRegistry = FALSE;
+        goto DoUpdate;
+    }
+
+    return ErrorNumber;
+}
+
 /* EOF */
