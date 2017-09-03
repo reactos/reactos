@@ -52,6 +52,7 @@
 
 #include <ntstrsafe.h>
 
+
 /* Setup library headers */
 #include <reactos/rosioctl.h>
 #include <../lib/setuplib.h>

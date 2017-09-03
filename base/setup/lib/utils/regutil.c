@@ -13,9 +13,6 @@
 
 #include "regutil.h"
 
-// HACK!
-#include <strsafe.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -180,7 +177,8 @@ CreateRegistryFile(
 
         // i = 1;
         /* Try first by just appending the '.old' extension */
-        StringCchPrintfW(PathBuffer2, ARRAYSIZE(PathBuffer2), L"%s.%s", PathBuffer, Extension);
+        RtlStringCchPrintfW(PathBuffer2, ARRAYSIZE(PathBuffer2),
+                            L"%s.%s", PathBuffer, Extension);
 #if 0
         while (DoesFileExist(NULL, PathBuffer2))
         {
@@ -188,7 +186,8 @@ CreateRegistryFile(
             if (i <= 0xFFFF)
             {
                 /* Append '_N.old' extension */
-                StringCchPrintfW(PathBuffer2, ARRAYSIZE(PathBuffer2), L"%s_%lu.%s", PathBuffer, i, Extension);
+                RtlStringCchPrintfW(PathBuffer2, ARRAYSIZE(PathBuffer2),
+                                    L"%s_%lu.%s", PathBuffer, i, Extension);
                 ++i;
             }
             else
@@ -197,7 +196,8 @@ CreateRegistryFile(
                  * Too many old files exist, we will rename the file
                  * using the name of the oldest one.
                  */
-                StringCchPrintfW(PathBuffer2, ARRAYSIZE(PathBuffer2), L"%s.%s", PathBuffer, Extension);
+                RtlStringCchPrintfW(PathBuffer2, ARRAYSIZE(PathBuffer2),
+                                    L"%s.%s", PathBuffer, Extension);
                 break;
             }
         }

@@ -20,8 +20,6 @@
 
 #include <ntstatus.h>
 
-#include <strsafe.h>
-
 #include "arcname.h"
 
 #define OBJ_NAME_PATH_SEPARATOR ((WCHAR)L'\\')

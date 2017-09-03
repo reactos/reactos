@@ -36,9 +36,6 @@
 #define NDEBUG
 #include <debug.h>
 
-// HACK!
-#include <strsafe.h>
-
 
 /* GLOBALS & LOCALS *********************************************************/
 
@@ -1679,7 +1676,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 return SELECT_PARTITION_PAGE;
             }
 
-            StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                     L"\\Device\\Harddisk%lu\\Partition%lu\\",
                     PartitionList->CurrentDisk->DiskNumber,
                     PartitionList->CurrentPartition->PartitionNumber);
@@ -3007,7 +3004,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             }
 
             /* Set PartitionRootPath */
-            StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                     L"\\Device\\Harddisk%lu\\Partition%lu",
                     DiskEntry->DiskNumber,
                     PartEntry->PartitionNumber);
@@ -3080,7 +3077,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     }
 
     /* Set PartitionRootPath */
-    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
             L"\\Device\\Harddisk%lu\\Partition%lu",
             DiskEntry->DiskNumber,
             PartEntry->PartitionNumber);
@@ -3171,7 +3168,7 @@ BuildInstallPaths(PWSTR InstallDir,
 
     /* Create 'USetupData.DestinationRootPath' string */
     RtlFreeUnicodeString(&USetupData.DestinationRootPath);
-    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
             L"\\Device\\Harddisk%lu\\Partition%lu\\",
             DiskEntry->DiskNumber,
             PartEntry->PartitionNumber);
@@ -3188,7 +3185,7 @@ BuildInstallPaths(PWSTR InstallDir,
 /** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
     /* Create 'USetupData.DestinationArcPath' */
     RtlFreeUnicodeString(&USetupData.DestinationArcPath);
-    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
             L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
             DiskEntry->BiosDiskNumber,
             PartEntry->PartitionNumber);
@@ -3598,8 +3595,8 @@ AddSectionToCopyQueue(HINF InfFile,
             /* Installation path */
             DPRINT("InstallationPath: '%S'\n", DirKeyValue);
 
-            StringCchCopyW(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName),
-                           USetupData.SourceRootDir.Buffer);
+            RtlStringCchCopyW(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName),
+                              USetupData.SourceRootDir.Buffer);
 
             DPRINT("InstallationPath(2): '%S'\n", CompleteOrigDirName);
         }
@@ -3608,8 +3605,8 @@ AddSectionToCopyQueue(HINF InfFile,
             /* Absolute path */
             DPRINT("AbsolutePath: '%S'\n", DirKeyValue);
 
-            StringCchCopyW(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName),
-                           DirKeyValue);
+            RtlStringCchCopyW(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName),
+                              DirKeyValue);
 
             DPRINT("AbsolutePath(2): '%S'\n", CompleteOrigDirName);
         }
@@ -3684,7 +3681,7 @@ PrepareCopyPageInfFile(HINF InfFile,
      */
 
     /* Get destination path */
-    StringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer), USetupData.DestinationPath.Buffer);
+    RtlStringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer), USetupData.DestinationPath.Buffer);
 
     DPRINT("FullPath(1): '%S'\n", PathBuffer);
 
@@ -3726,8 +3723,8 @@ PrepareCopyPageInfFile(HINF InfFile,
             /* Installation path */
             DPRINT("InstallationPath: '%S'\n", DirKeyValue);
 
-            StringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer),
-                           USetupData.DestinationPath.Buffer);
+            RtlStringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer),
+                              USetupData.DestinationPath.Buffer);
 
             DPRINT("InstallationPath(2): '%S'\n", PathBuffer);
         }
@@ -4321,7 +4318,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
     RtlFreeUnicodeString(&USetupData.SystemRootPath);
-    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
             L"\\Device\\Harddisk%lu\\Partition%lu\\",
             PartitionList->SystemPartition->DiskEntry->DiskNumber,
             PartitionList->SystemPartition->PartitionNumber);
@@ -4620,7 +4617,7 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     }
 
     /* Step 2: Write the MBR */
-    StringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
+    RtlStringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
             L"\\Device\\Harddisk%d\\Partition0",
             PartitionList->SystemPartition->DiskEntry->DiskNumber);
     Status = InstallMbrBootCodeToDisk(&USetupData.SystemRootPath,

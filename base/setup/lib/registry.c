@@ -34,9 +34,6 @@
 
 #include "registry.h"
 
-// HACK!
-#include <strsafe.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -1098,8 +1095,8 @@ RegCleanupRegistry(
 
         CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 3,
                      InstallPath->Buffer, L"System32\\config", RegistryHives[i].HiveName);
-        StringCchCopyW(DstPath, ARRAYSIZE(DstPath), SrcPath);
-        StringCchCatW(DstPath, ARRAYSIZE(DstPath), L".sav");
+        RtlStringCchCopyW(DstPath, ARRAYSIZE(DstPath), SrcPath);
+        RtlStringCchCatW(DstPath, ARRAYSIZE(DstPath), L".sav");
 
         DPRINT1("Copy hive: %S ==> %S\n", SrcPath, DstPath);
         Status = SetupCopyFile(SrcPath, DstPath, FALSE);

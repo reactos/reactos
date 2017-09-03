@@ -883,9 +883,9 @@ InstallMbrBootCodeToDisk(
 
 #if 0
     WCHAR DestinationDevicePathBuffer[MAX_PATH];
-    StringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
-            L"\\Device\\Harddisk%d\\Partition0",
-            DiskNumber);
+    RtlStringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
+                        L"\\Device\\Harddisk%d\\Partition0",
+                        DiskNumber);
 #endif
 
     CombinePaths(SourceMbrPathBuffer, ARRAYSIZE(SourceMbrPathBuffer), 2,
