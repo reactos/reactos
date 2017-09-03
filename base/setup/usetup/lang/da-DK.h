@@ -1847,7 +1847,7 @@ MUI_STRING daDKStrings[] =
     "   Opdatere registreringsdatabasen..."},
     {STRING_IMPORTFILE,
     "   Importere %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Opdatere indstillinger for registrering af sk‘rm..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Opdatere indstillinger for sprog..."},

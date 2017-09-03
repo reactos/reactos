@@ -1866,7 +1866,7 @@ MUI_STRING ptBRStrings[] =
     "   Atualizando a estrutura do registro..."},
     {STRING_IMPORTFILE,
     "   Importando %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Atualizando as configura‡äes de v¡deo..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Atualizando as configura‡äes regionais..."},

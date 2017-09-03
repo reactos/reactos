@@ -1836,7 +1836,7 @@ MUI_STRING deDEStrings[] =
     "   Registrierungseintr„ge werden aktualisiert..."},
     {STRING_IMPORTFILE,
     "   Importiere %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Anzeigeeinstellungen werden aktualisiert..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Lokalisierungseinstellungen werden aktualisiert..."},

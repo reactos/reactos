@@ -1842,7 +1842,7 @@ MUI_STRING svSEStrings[] =
     "   Uppdaterar registerdatafiler..."},
     {STRING_IMPORTFILE,
     "   Importerar %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Uppdaterar sk„rmregisterinst„llningar..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Uppdaterar lokala inst„llningar..."},
