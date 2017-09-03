@@ -55,26 +55,32 @@ extern SHORT xScreen, yScreen;
 
 BOOLEAN
 CONSOLE_Init(
-	VOID);
+    VOID);
 
 VOID
 CONSOLE_ClearScreen(VOID);
 
 VOID
 CONSOLE_ConInKey(
-	OUT PINPUT_RECORD Buffer);
+    OUT PINPUT_RECORD Buffer);
 
 VOID
 CONSOLE_ConOutChar(
-	IN CHAR c);
+    IN CHAR c);
+
+VOID
+CONSOLE_ConOutPrintfV(
+    IN LPCSTR szFormat,
+    IN va_list args);
 
 VOID
 CONSOLE_ConOutPrintf(
-	IN LPCSTR szFormat, ...);
+    IN LPCSTR szFormat,
+    ...);
 
 VOID
 CONSOLE_ConOutPuts(
-	IN LPCSTR szText);
+    IN LPCSTR szText);
 
 BOOL
 CONSOLE_Flush(VOID);
@@ -92,97 +98,110 @@ CONSOLE_GetCursorY(VOID);
 
 VOID
 CONSOLE_InvertTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT col,
-	IN SHORT row);
+    IN SHORT x,
+    IN SHORT y,
+    IN SHORT col,
+    IN SHORT row);
 
 VOID
 CONSOLE_NormalTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT col,
-	IN SHORT row);
+    IN SHORT x,
+    IN SHORT y,
+    IN SHORT col,
+    IN SHORT row);
 
 VOID
 CONSOLE_PrintTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR fmt, ...);
+    IN SHORT x,
+    IN SHORT y,
+    IN LPCSTR fmt, ...);
 
 VOID
 CONSOLE_PrintTextXYN(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT len,
-	IN LPCSTR fmt, ...);
+    IN SHORT x,
+    IN SHORT y,
+    IN SHORT len,
+    IN LPCSTR fmt, ...);
 
 VOID
 CONSOLE_SetCursorType(
-	IN BOOL bInsert,
-	IN BOOL bVisible);
+    IN BOOL bInsert,
+    IN BOOL bVisible);
 
 VOID
 CONSOLE_SetCursorXY(
-	IN SHORT x,
-	IN SHORT y);
+    IN SHORT x,
+    IN SHORT y);
 
 VOID
 CONSOLE_SetCursorXY(
-	IN SHORT x,
-	IN SHORT y);
+    IN SHORT x,
+    IN SHORT y);
 
 VOID
 CONSOLE_SetHighlightedTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR Text);
+    IN SHORT x,
+    IN SHORT y,
+    IN LPCSTR Text);
 
 VOID
 CONSOLE_SetInputTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN SHORT len,
-	IN LPCWSTR Text);
+    IN SHORT x,
+    IN SHORT y,
+    IN SHORT len,
+    IN LPCWSTR Text);
 
 VOID
 CONSOLE_SetInvertedTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR Text);
+    IN SHORT x,
+    IN SHORT y,
+    IN LPCSTR Text);
+
+VOID
+CONSOLE_SetStatusTextV(
+    IN LPCSTR fmt,
+    IN va_list args);
 
 VOID
 CONSOLE_SetStatusText(
-	IN LPCSTR fmt, ...);
+    IN LPCSTR fmt,
+    ...);
+
+VOID
+CONSOLE_SetStatusTextXV(
+    IN SHORT x,
+    IN LPCSTR fmt,
+    IN va_list args);
 
 VOID
 CONSOLE_SetStatusTextX(
     IN SHORT x,
-	IN LPCSTR fmt, ...);
+    IN LPCSTR fmt,
+    ...);
 
 VOID
 CONSOLE_SetStatusTextAutoFitX(
     IN SHORT x,
-	IN LPCSTR fmt, ...);
+    IN LPCSTR fmt, ...);
 
 VOID
 CONSOLE_SetTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR Text);
+    IN SHORT x,
+    IN SHORT y,
+    IN LPCSTR Text);
 
 VOID
 CONSOLE_SetUnderlinedTextXY(
-	IN SHORT x,
-	IN SHORT y,
-	IN LPCSTR Text);
+    IN SHORT x,
+    IN SHORT y,
+    IN LPCSTR Text);
 
 VOID
 CONSOLE_SetStyledText(
-	IN SHORT x,
-	IN SHORT y,
-	IN INT Flags,
-	IN LPCSTR Text);
+    IN SHORT x,
+    IN SHORT y,
+    IN INT Flags,
+    IN LPCSTR Text);
 
 VOID
 CONSOLE_ClearStyledText(IN SHORT x,
