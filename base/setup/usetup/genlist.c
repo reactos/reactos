@@ -16,7 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/genlist.c
  * PURPOSE:         Generic list functions
@@ -61,75 +62,75 @@ DrawListFrame(
     /* Draw upper left corner */
     coPos.X = ListUi->Left;
     coPos.Y = ListUi->Top;
-    FillConsoleOutputCharacterA (StdOutput,
-                                 0xDA, // '+',
-                                 1,
-                                 coPos,
-                                 &Written);
+    FillConsoleOutputCharacterA(StdOutput,
+                                0xDA, // '+',
+                                1,
+                                coPos,
+                                &Written);
 
     /* Draw upper edge */
     coPos.X = ListUi->Left + 1;
     coPos.Y = ListUi->Top;
-    FillConsoleOutputCharacterA (StdOutput,
-                                 0xC4, // '-',
-                                 ListUi->Right - ListUi->Left - 1,
-                                 coPos,
-                                 &Written);
+    FillConsoleOutputCharacterA(StdOutput,
+                                0xC4, // '-',
+                                ListUi->Right - ListUi->Left - 1,
+                                coPos,
+                                &Written);
 
     /* Draw upper right corner */
     coPos.X = ListUi->Right;
     coPos.Y = ListUi->Top;
-    FillConsoleOutputCharacterA (StdOutput,
-                                 0xBF, // '+',
-                                 1,
-                                 coPos,
-                                 &Written);
+    FillConsoleOutputCharacterA(StdOutput,
+                                0xBF, // '+',
+                                1,
+                                coPos,
+                                &Written);
 
     /* Draw left and right edge */
     for (i = ListUi->Top + 1; i < ListUi->Bottom; i++)
     {
         coPos.X = ListUi->Left;
         coPos.Y = i;
-        FillConsoleOutputCharacterA (StdOutput,
-                                     0xB3, // '|',
-                                     1,
-                                     coPos,
-                                     &Written);
+        FillConsoleOutputCharacterA(StdOutput,
+                                    0xB3, // '|',
+                                    1,
+                                    coPos,
+                                    &Written);
 
         coPos.X = ListUi->Right;
-        FillConsoleOutputCharacterA (StdOutput,
-                                     0xB3, //'|',
-                                     1,
-                                     coPos,
-                                     &Written);
+        FillConsoleOutputCharacterA(StdOutput,
+                                    0xB3, //'|',
+                                    1,
+                                    coPos,
+                                    &Written);
     }
 
     /* Draw lower left corner */
     coPos.X = ListUi->Left;
     coPos.Y = ListUi->Bottom;
-    FillConsoleOutputCharacterA (StdOutput,
-                                 0xC0, // '+',
-                                 1,
-                                 coPos,
-                                 &Written);
+    FillConsoleOutputCharacterA(StdOutput,
+                                0xC0, // '+',
+                                1,
+                                coPos,
+                                &Written);
 
     /* Draw lower edge */
     coPos.X = ListUi->Left + 1;
     coPos.Y = ListUi->Bottom;
-    FillConsoleOutputCharacterA (StdOutput,
-                                 0xC4, // '-',
-                                 ListUi->Right - ListUi->Left - 1,
-                                 coPos,
-                                 &Written);
+    FillConsoleOutputCharacterA(StdOutput,
+                                0xC4, // '-',
+                                ListUi->Right - ListUi->Left - 1,
+                                coPos,
+                                &Written);
 
     /* Draw lower right corner */
     coPos.X = ListUi->Right;
     coPos.Y = ListUi->Bottom;
-    FillConsoleOutputCharacterA (StdOutput,
-                                 0xD9, // '+',
-                                 1,
-                                 coPos,
-                                 &Written);
+    FillConsoleOutputCharacterA(StdOutput,
+                                0xD9, // '+',
+                                1,
+                                coPos,
+                                &Written);
 }
 
 static
@@ -157,26 +158,26 @@ DrawListEntries(
             break;
         ListUi->LastShown = Entry;
 
-        FillConsoleOutputAttribute (StdOutput,
-                                    (List->CurrentEntry == ListEntry) ?
-                                    FOREGROUND_BLUE | BACKGROUND_WHITE :
-                                    FOREGROUND_WHITE | BACKGROUND_BLUE,
+        FillConsoleOutputAttribute(StdOutput,
+                                   (List->CurrentEntry == ListEntry) ?
+                                   FOREGROUND_BLUE | BACKGROUND_WHITE :
+                                   FOREGROUND_WHITE | BACKGROUND_BLUE,
+                                   Width,
+                                   coPos,
+                                   &Written);
+
+        FillConsoleOutputCharacterA(StdOutput,
+                                    ' ',
                                     Width,
                                     coPos,
                                     &Written);
 
-        FillConsoleOutputCharacterA (StdOutput,
-                                     ' ',
-                                     Width,
+        coPos.X++;
+        WriteConsoleOutputCharacterA(StdOutput,
+                                     ListEntry->Text,
+                                     min(strlen(ListEntry->Text), (SIZE_T)Width - 2),
                                      coPos,
                                      &Written);
-
-        coPos.X++;
-        WriteConsoleOutputCharacterA (StdOutput,
-                                      ListEntry->Text,
-                                      min (strlen(ListEntry->Text), (SIZE_T)Width - 2),
-                                      coPos,
-                                      &Written);
         coPos.X--;
 
         coPos.Y++;
@@ -185,17 +186,17 @@ DrawListEntries(
 
     while (coPos.Y < ListUi->Bottom)
     {
-        FillConsoleOutputAttribute (StdOutput,
-                                    FOREGROUND_WHITE | BACKGROUND_BLUE,
+        FillConsoleOutputAttribute(StdOutput,
+                                   FOREGROUND_WHITE | BACKGROUND_BLUE,
+                                   Width,
+                                   coPos,
+                                   &Written);
+
+        FillConsoleOutputCharacterA(StdOutput,
+                                    ' ',
                                     Width,
                                     coPos,
                                     &Written);
-
-        FillConsoleOutputCharacterA (StdOutput,
-                                     ' ',
-                                     Width,
-                                     coPos,
-                                     &Written);
         coPos.Y++;
     }
 }
@@ -214,37 +215,37 @@ DrawScrollBarGenericList(
 
     if (ListUi->FirstShown != List->ListHead.Flink)
     {
-        FillConsoleOutputCharacterA (StdOutput,
-                                     '\x18',
-                                     1,
-                                     coPos,
-                                     &Written);
+        FillConsoleOutputCharacterA(StdOutput,
+                                    '\x18',
+                                    1,
+                                    coPos,
+                                    &Written);
     }
     else
     {
-        FillConsoleOutputCharacterA (StdOutput,
-                                     ' ',
-                                     1,
-                                     coPos,
-                                     &Written);
+        FillConsoleOutputCharacterA(StdOutput,
+                                    ' ',
+                                    1,
+                                    coPos,
+                                    &Written);
     }
 
     coPos.Y = ListUi->Bottom;
     if (ListUi->LastShown != List->ListHead.Blink)
     {
-        FillConsoleOutputCharacterA (StdOutput,
-                                     '\x19',
-                                     1,
-                                     coPos,
-                                     &Written);
+        FillConsoleOutputCharacterA(StdOutput,
+                                    '\x19',
+                                    1,
+                                    coPos,
+                                    &Written);
     }
     else
     {
-        FillConsoleOutputCharacterA (StdOutput,
-                                     ' ',
-                                     1,
-                                     coPos,
-                                     &Written);
+        FillConsoleOutputCharacterA(StdOutput,
+                                    ' ',
+                                    1,
+                                    coPos,
+                                    &Written);
     }
 }
 
