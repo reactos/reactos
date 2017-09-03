@@ -25,7 +25,7 @@ CreateNestedKey(PHANDLE KeyHandle,
  */
 NTSTATUS
 CreateRegistryFile(
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey,
     IN BOOLEAN IsHiveNew,
     IN HANDLE ProtoKeyHandle
@@ -49,7 +49,7 @@ ConnectRegistry(
     IN HKEY RootKey OPTIONAL,
     IN PCWSTR RegMountPoint,
     // IN HANDLE RootDirectory OPTIONAL,
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey
 /*
     IN PUCHAR Descriptor,
@@ -73,7 +73,7 @@ NTSTATUS
 VerifyRegistryHive(
     // IN HKEY RootKey OPTIONAL,
     // // IN HANDLE RootDirectory OPTIONAL,
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey /* ,
     IN PCWSTR RegMountPoint */);
 

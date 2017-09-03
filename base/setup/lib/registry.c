@@ -611,7 +611,7 @@ C_ASSERT(_countof(SecurityRegistryHives) == NUMBER_OF_SECURITY_REGISTRY_HIVES);
 
 NTSTATUS
 VerifyRegistryHives(
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     OUT PBOOLEAN ShouldRepairRegistry)
 {
     NTSTATUS Status;
@@ -642,7 +642,7 @@ VerifyRegistryHives(
 
     for (i = 0; i < ARRAYSIZE(RegistryHives); ++i)
     {
-        Status = VerifyRegistryHive(InstallPath, RegistryHives[i].HiveName);
+        Status = VerifyRegistryHive(NtSystemRoot, RegistryHives[i].HiveName);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Registry hive '%S' needs repair!\n", RegistryHives[i].HiveName);
@@ -658,7 +658,7 @@ VerifyRegistryHives(
     /** These hives are created by LSASS during 2nd stage setup */
     for (i = 0; i < ARRAYSIZE(SecurityRegistryHives); ++i)
     {
-        Status = VerifyRegistryHive(InstallPath, SecurityRegistryHives[i].HiveName);
+        Status = VerifyRegistryHive(NtSystemRoot, SecurityRegistryHives[i].HiveName);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Registry hive '%S' needs repair!\n", SecurityRegistryHives[i].HiveName);
@@ -687,7 +687,7 @@ VerifyRegistryHives(
 
 NTSTATUS
 RegInitializeRegistry(
-    IN PUNICODE_STRING InstallPath)
+    IN PUNICODE_STRING NtSystemRoot)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
@@ -750,7 +750,7 @@ RegInitializeRegistry(
         if (RegistryHives[i].State != Create && RegistryHives[i].State != Repair)
             continue;
 
-        Status = CreateRegistryFile(InstallPath,
+        Status = CreateRegistryFile(NtSystemRoot,
                                     RegistryHives[i].HiveName,
                                     RegistryHives[i].State != Repair, // RegistryHives[i].State == Create,
                                     KeyHandle);
@@ -833,7 +833,7 @@ RegInitializeRegistry(
         {
             Status = ConnectRegistry(NULL,
                                      RegistryHives[i].HiveRegistryPath,
-                                     InstallPath,
+                                     NtSystemRoot,
                                      RegistryHives[i].HiveName
                                      /* SystemSecurity, sizeof(SystemSecurity) */);
             if (!NT_SUCCESS(Status))
@@ -995,7 +995,7 @@ Quit:
 
 VOID
 RegCleanupRegistry(
-    IN PUNICODE_STRING InstallPath)
+    IN PUNICODE_STRING NtSystemRoot)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
@@ -1094,7 +1094,7 @@ RegCleanupRegistry(
             continue;
 
         CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 3,
-                     InstallPath->Buffer, L"System32\\config", RegistryHives[i].HiveName);
+                     NtSystemRoot->Buffer, L"System32\\config", RegistryHives[i].HiveName);
         RtlStringCchCopyW(DstPath, ARRAYSIZE(DstPath), SrcPath);
         RtlStringCchCatW(DstPath, ARRAYSIZE(DstPath), L".sav");
 

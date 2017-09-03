@@ -133,7 +133,7 @@ CreateNestedKey(PHANDLE KeyHandle,
  */
 NTSTATUS
 CreateRegistryFile(
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey,
     IN BOOLEAN IsHiveNew,
     IN HANDLE ProtoKeyHandle
@@ -156,7 +156,7 @@ CreateRegistryFile(
     WCHAR PathBuffer2[MAX_PATH];
 
     CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 3,
-                 InstallPath->Buffer, L"System32\\config", RegistryKey);
+                 NtSystemRoot->Buffer, L"System32\\config", RegistryKey);
 
     Extension = Extensions[IsHiveNew ? 0 : 1];
 
@@ -212,7 +212,7 @@ CreateRegistryFile(
     InitializeObjectAttributes(&ObjectAttributes,
                                &FileName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,  // Could have been InstallPath, etc...
+                               NULL,  // Could have been NtSystemRoot, etc...
                                NULL); // Descriptor
 
     Status = NtCreateFile(&FileHandle,
@@ -320,7 +320,7 @@ ConnectRegistry(
     IN HKEY RootKey OPTIONAL,
     IN PCWSTR RegMountPoint,
     // IN HANDLE RootDirectory OPTIONAL,
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey
 /*
     IN PUCHAR Descriptor,
@@ -341,7 +341,7 @@ ConnectRegistry(
                                NULL);   // Descriptor
 
     CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 3,
-                 InstallPath->Buffer, L"System32\\config", RegistryKey);
+                 NtSystemRoot->Buffer, L"System32\\config", RegistryKey);
     RtlInitUnicodeString(&FileName, PathBuffer);
     InitializeObjectAttributes(&FileObjectAttributes,
                                &FileName,
@@ -383,7 +383,7 @@ NTSTATUS
 VerifyRegistryHive(
     // IN HKEY RootKey OPTIONAL,
     // // IN HANDLE RootDirectory OPTIONAL,
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey /* ,
     IN PCWSTR RegMountPoint */)
 {
@@ -392,7 +392,7 @@ VerifyRegistryHive(
     /* Try to mount the specified registry hive */
     Status = ConnectRegistry(NULL,
                              L"\\Registry\\Machine\\USetup_VerifyHive",
-                             InstallPath,
+                             NtSystemRoot,
                              RegistryKey
                              /* NULL, 0 */);
     if (!NT_SUCCESS(Status))
