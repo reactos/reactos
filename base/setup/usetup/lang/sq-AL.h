@@ -1766,7 +1766,7 @@ MUI_STRING sqALStrings[] =
     "   Apdejtimi i kosheres s‰ regjistrit..."},
     {STRING_IMPORTFILE,
     "   Importimi %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Apdejtimi i regjistrit p‰r ekranin..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Apdejtimi i konfigurimit vendas..."},

@@ -4019,7 +4019,7 @@ DoUpdate:
         /* See the explanation for this test above */
 
         /* Update display registry settings */
-        CONSOLE_SetStatusText(MUIGetString(STRING_DISPLAYETTINGSUPDATE));
+        CONSOLE_SetStatusText(MUIGetString(STRING_DISPLAYSETTINGSUPDATE));
         if (!ProcessDisplayRegistry(SetupInf, DisplayList))
         {
             MUIDisplayError(ERROR_UPDATE_DISPLAY_SETTINGS, Ir, POPUP_WAIT_ENTER);

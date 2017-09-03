@@ -1648,7 +1648,7 @@ MUI_STRING msMYStrings[] =
     "   Mengemaskini daftaran gatal..."},
     {STRING_IMPORTFILE,
     "   Mengimport %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Mengemaskini seting paparan pendaftaran..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Mengemaskini seting tempatan..."},

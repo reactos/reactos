@@ -1777,7 +1777,7 @@ MUI_STRING frFRStrings[] =
     "   Mise Ö jour de la base de registre..."},
     {STRING_IMPORTFILE,
     "   Importe %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Mise Ö jour des paramätres du registre pour l'Çcran..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Mise Ö jour des paramätres rÇgionaux..."},

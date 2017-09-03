@@ -1768,7 +1768,7 @@ MUI_STRING esESStrings[] =
     "   Actualizando el  rbol del registro..."},
     {STRING_IMPORTFILE,
     "   Importando %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Actualizando configuraci¢n del tipo de pantalla..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Actualizando configuraci¢n regional..."},

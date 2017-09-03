@@ -1830,7 +1830,7 @@ MUI_STRING roROStrings[] =
     "   Registru în curs de actualizare..."},
     {STRING_IMPORTFILE,
     "   În curs de importare din %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Registru de configuraþie graficã în actualizare..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Particularitãþi locale în actualizare..."},

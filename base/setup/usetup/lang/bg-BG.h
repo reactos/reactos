@@ -1771,7 +1771,7 @@ MUI_STRING bgBGStrings[] =
     "   Осъвременяване на регистърните роеве..."},
     {STRING_IMPORTFILE,
     "   Внасяне на %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Осъвременяване регистровите настройки на екрана..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Осъвременяване на местните настройки..."},

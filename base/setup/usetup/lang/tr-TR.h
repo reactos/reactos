@@ -1738,7 +1738,7 @@ MUI_STRING trTRStrings[] =
     "   Deßer yçßçnlarç üimdikileütiriliyor..."},
     {STRING_IMPORTFILE,
     "   Alçnçyor: %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   GîrÅntÅ ayarlarç deßerleri üimdikileütiriliyor..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Yerli ayarlar üimdikileütiriliyor..."},

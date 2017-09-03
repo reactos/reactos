@@ -1759,7 +1759,7 @@ MUI_STRING etEEStrings[] =
     "   Registritarude uuendamine..."},
     {STRING_IMPORTFILE,
     "   %S importimine..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Monitori seadistuse uuendamine registris..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Lokaadi seadistuse uuendamine..."},

@@ -1762,7 +1762,7 @@ MUI_STRING jaJPStrings[] =
     "   Ú¼Þ½ÄØ Ê²ÌÞÉ º³¼Ý Á­³..."},
     {STRING_IMPORTFILE,
     "   %S ¦ ²ÝÎß°Ä Á­³..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   ÃÞ¨½ÌßÚ² Ú¼Þ½ÄØ ¾¯Ã²¦ º³¼Ý Á­³..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Á²· ¾¯Ã²É º³¼Ý Á­³..."},

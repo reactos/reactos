@@ -1793,7 +1793,7 @@ MUI_STRING nlNLStrings[] =
     "   Bijwerken registerbestanden..."},
     {STRING_IMPORTFILE,
     "   Importeren %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Bijwerken beeldscherminstellingen..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Bijwerken systeemtaalinstellingen..."},

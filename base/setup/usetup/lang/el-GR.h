@@ -1777,7 +1777,7 @@ MUI_STRING elGRStrings[] =
     "   ‚å¤œ«˜  ˜¤˜¤âà©ž «à¤ registry hives..."},
     {STRING_IMPORTFILE,
     "   ‚å¤œ«˜  œ ©˜šàšã «¦¬ %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   ‚å¤œ«˜  ˜¤˜¤âà©ž «à¤ ¨¬Ÿ£å©œà¤ œ£­á¤ ©žª «¦¬ £ž«¨é¦¬..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   ‚å¤œ«˜  ˜¤˜¤âà©ž «à¤ ¨¬Ÿ£å©œà¤ š¢é©©˜ª..."},

@@ -1759,7 +1759,7 @@ MUI_STRING ruRUStrings[] =
     "   Обновление кустов реестра..."},
     {STRING_IMPORTFILE,
     "   Импортирование %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Обновление параметров экрана в реестре..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Обновление параметров языка..."},

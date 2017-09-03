@@ -1760,7 +1760,7 @@ MUI_STRING heILStrings[] =
     "   Updating registry hives..."},
     {STRING_IMPORTFILE,
     "   éââÅÄ %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Updating display registry settings..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Updating locale settings..."},

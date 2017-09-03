@@ -1768,7 +1768,7 @@ MUI_STRING ukUAStrings[] =
     "   Оновлення кущiв реєстру..."},
     {STRING_IMPORTFILE,
     "   Iмпортування %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Оновлення параметрiв екрану в реєстрi..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Оновлення параметрiв локалi..."},
