@@ -5,7 +5,7 @@ class CRichEdit :
     public CWindow
 {
     HMODULE LoadedLibrary;
-    inline VOID GenericInsertText(LPCWSTR lpszText, LONG InsertedTextLen, DWORD dwEffects)
+    VOID GenericInsertText(LPCWSTR lpszText, LONG InsertedTextLen, DWORD dwEffects)
     {
         SETTEXTEX SetText;
         LONG Len = GetTextLen();
