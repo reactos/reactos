@@ -999,13 +999,13 @@ AddBootStoreEntry(
             return STATUS_INSUFFICIENT_RESOURCES;
 
         *Buffer = UNICODE_NULL;
-        if (IsNameNotQuoted) wcscat(Buffer, L"\"");
-        wcscat(Buffer, InstallName);
-        if (IsNameNotQuoted) wcscat(Buffer, L"\"");
+        if (IsNameNotQuoted) StringCchCatW(Buffer, BufferLength, L"\"");
+        StringCchCatW(Buffer, BufferLength, InstallName);
+        if (IsNameNotQuoted) StringCchCatW(Buffer, BufferLength, L"\"");
         if (OsOptions)
         {
-            wcscat(Buffer, L" ");
-            wcscat(Buffer, OsOptions);
+            StringCchCatW(Buffer, BufferLength, L" ");
+            StringCchCatW(Buffer, BufferLength, OsOptions);
         }
 
         /* Insert the entry into the "Operating Systems" section */

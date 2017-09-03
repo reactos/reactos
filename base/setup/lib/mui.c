@@ -298,10 +298,10 @@ AddKbLayoutsToRegistry(
     {
         if (uIndex > 19) break;
 
-        swprintf(szValueName, L"%u", uIndex + 1);
+        StringCchPrintfW(szValueName, ARRAYSIZE(szValueName), L"%u", uIndex + 1);
         RtlInitUnicodeString(&ValueName, szValueName);
 
-        swprintf(szLangID, L"0000%s", MuiLayouts[uIndex].LangID);
+        StringCchPrintfW(szLangID, ARRAYSIZE(szLangID), L"0000%s", MuiLayouts[uIndex].LangID);
 
         if (_wcsicmp(szLangID, MuiLayouts[uIndex].LayoutID) == 0)
         {
@@ -321,7 +321,7 @@ AddKbLayoutsToRegistry(
         }
         else
         {
-            swprintf(szLangID, L"d%03lu%s", uCount, MuiLayouts[uIndex].LangID);
+            StringCchPrintfW(szLangID, ARRAYSIZE(szLangID), L"d%03lu%s", uCount, MuiLayouts[uIndex].LangID);
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,

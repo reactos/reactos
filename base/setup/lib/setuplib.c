@@ -144,7 +144,11 @@ CheckUnattendedSetup(
             DPRINT("INF_GetData() failed for key 'InstallationDirectory'\n");
             goto Quit;
         }
-        wcscpy(pSetupData->InstallationDirectory, Value);
+
+        StringCchCopyW(pSetupData->InstallationDirectory,
+                       ARRAYSIZE(pSetupData->InstallationDirectory),
+                       Value);
+
         INF_FreeData(Value);
     }
 
@@ -186,7 +190,9 @@ CheckUnattendedSetup(
         if (INF_GetData(&Context, NULL, &Value))
         {
             LONG Id = wcstol(Value, NULL, 16);
-            swprintf(pSetupData->LocaleID, L"%08lx", Id);
+            StringCchPrintfW(pSetupData->LocaleID,
+                             ARRAYSIZE(pSetupData->LocaleID),
+                             L"%08lx", Id);
             INF_FreeData(Value);
        }
     }
@@ -558,7 +564,10 @@ LoadSetupInf(
         if (!INF_GetData(&Context, NULL, &Value))
             return ERROR_CORRUPT_TXTSETUPSIF;
 
-        wcscpy(pSetupData->InstallationDirectory, Value);
+        StringCchCopyW(pSetupData->InstallationDirectory,
+                       ARRAYSIZE(pSetupData->InstallationDirectory),
+                       Value);
+
         INF_FreeData(Value);
     }
 

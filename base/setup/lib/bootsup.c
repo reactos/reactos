@@ -368,7 +368,7 @@ EnumerateReactOSEntries(
         goto SkipThisEntry;
     }
 
-    swprintf(SystemPath, L"\"%s\"", Data->ArcPath);
+    StringCchPrintfW(SystemPath, ARRAYSIZE(SystemPath), L"\"%s\"", Data->ArcPath);
     if ((_wcsicmp(Options->OsLoadPath, Data->ArcPath) != 0) &&
         (_wcsicmp(Options->OsLoadPath, SystemPath)    != 0))
     {

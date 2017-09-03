@@ -23,9 +23,7 @@ CreateGenericList(VOID)
 {
     PGENERIC_LIST List;
 
-    List = (PGENERIC_LIST)RtlAllocateHeap(ProcessHeap,
-                                          0,
-                                          sizeof(GENERIC_LIST));
+    List = RtlAllocateHeap(ProcessHeap, 0, sizeof(GENERIC_LIST));
     if (List == NULL)
         return NULL;
 
@@ -72,15 +70,15 @@ AppendGenericListEntry(
     IN BOOLEAN Current)
 {
     PGENERIC_LIST_ENTRY Entry;
+    SIZE_T TextSize;
 
-    Entry = (PGENERIC_LIST_ENTRY)RtlAllocateHeap(ProcessHeap,
-                                                 0,
-                                                 sizeof(GENERIC_LIST_ENTRY) +
-                                                    (wcslen(Text) + 1) * sizeof(WCHAR));
+    TextSize = (wcslen(Text) + 1) * sizeof(WCHAR);
+    Entry = RtlAllocateHeap(ProcessHeap, 0,
+                            sizeof(GENERIC_LIST_ENTRY) + TextSize);
     if (Entry == NULL)
         return FALSE;
 
-    wcscpy(Entry->Text, Text);
+    StringCbCopyW(Entry->Text, TextSize, Text);
     Entry->List = List;
     Entry->UserData = UserData;
 
