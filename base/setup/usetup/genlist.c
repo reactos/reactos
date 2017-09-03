@@ -48,6 +48,8 @@ InitGenericListUi(
     ListUi->Right = 0;
     ListUi->Bottom = 0;
     ListUi->Redraw = TRUE;
+
+    ListUi->CurrentItemText[0] = ANSI_NULL;
 }
 
 static
@@ -158,6 +160,8 @@ DrawListEntries(
             break;
         ListUi->LastShown = Entry;
 
+        sprintf(ListUi->CurrentItemText, "%S", ListEntry->Text);
+
         FillConsoleOutputAttribute(StdOutput,
                                    (List->CurrentEntry == ListEntry) ?
                                    FOREGROUND_BLUE | BACKGROUND_WHITE :
@@ -174,8 +178,8 @@ DrawListEntries(
 
         coPos.X++;
         WriteConsoleOutputCharacterA(StdOutput,
-                                     ListEntry->Text,
-                                     min(strlen(ListEntry->Text), (SIZE_T)Width - 2),
+                                     ListUi->CurrentItemText,
+                                     min(strlen(ListUi->CurrentItemText), (SIZE_T)Width - 2),
                                      coPos,
                                      &Written);
         coPos.X--;
@@ -415,7 +419,7 @@ ScrollPageUpGenericList(
 
     for (i = ListUi->Bottom - 1; i > ListUi->Top + 1; i--)
     {
-         ScrollUpGenericList(ListUi);
+        ScrollUpGenericList(ListUi);
     }
 
     /* Update user interface */
@@ -490,13 +494,17 @@ GenericListKeyPress(
 
     ListUi->Redraw = FALSE;
 
-    if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciiChar) &&
+    sprintf(ListUi->CurrentItemText, "%S", ListEntry->Text);
+
+    if ((strlen(ListUi->CurrentItemText) > 0) && (tolower(ListUi->CurrentItemText[0]) == AsciiChar) &&
          (List->CurrentEntry->Entry.Flink != &List->ListHead))
     {
         ScrollDownGenericList(ListUi);
         ListEntry = List->CurrentEntry;
 
-        if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciiChar))
+        sprintf(ListUi->CurrentItemText, "%S", ListEntry->Text);
+
+        if ((strlen(ListUi->CurrentItemText) > 0) && (tolower(ListUi->CurrentItemText[0]) == AsciiChar))
             goto End;
     }
 
@@ -507,7 +515,9 @@ GenericListKeyPress(
 
     for (;;)
     {
-        if ((strlen(ListEntry->Text) > 0) && (tolower(ListEntry->Text[0]) == AsciiChar))
+        sprintf(ListUi->CurrentItemText, "%S", ListEntry->Text);
+
+        if ((strlen(ListUi->CurrentItemText) > 0) && (tolower(ListUi->CurrentItemText[0]) == AsciiChar))
         {
             Flag = TRUE;
             break;

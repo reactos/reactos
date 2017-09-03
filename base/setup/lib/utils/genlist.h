@@ -13,7 +13,7 @@ typedef struct _GENERIC_LIST_ENTRY
     LIST_ENTRY Entry;
     struct _GENERIC_LIST* List;
     PVOID UserData;
-    CHAR Text[1];       // FIXME: UI stuff
+    WCHAR Text[1];      // FIXME: UI stuff
 
 } GENERIC_LIST_ENTRY, *PGENERIC_LIST_ENTRY;
 
@@ -39,7 +39,7 @@ DestroyGenericList(
 BOOLEAN
 AppendGenericListEntry(
     IN OUT PGENERIC_LIST List,
-    IN PCHAR Text,
+    IN PCWSTR Text,
     IN PVOID UserData,
     IN BOOLEAN Current);
 
@@ -64,7 +64,7 @@ PVOID
 GetListEntryUserData(
     IN PGENERIC_LIST_ENTRY Entry);
 
-LPCSTR
+PCWSTR
 GetListEntryText(
     IN PGENERIC_LIST_ENTRY Entry);
 

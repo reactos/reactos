@@ -1045,6 +1045,7 @@ static PAGE_NUMBER
 DeviceSettingsPage(PINPUT_RECORD Ir)
 {
     static ULONG Line = 16;
+    CHAR CurrentItemText[256];
 
     /* Initialize the computer settings list */
     if (ComputerList == NULL)
@@ -1099,10 +1100,14 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(DEVICE_SETTINGS_PAGE);
 
-    CONSOLE_SetTextXY(25, 11, GetListEntryText(GetCurrentListEntry(ComputerList)));
-    CONSOLE_SetTextXY(25, 12, GetListEntryText(GetCurrentListEntry(DisplayList)));
-    CONSOLE_SetTextXY(25, 13, GetListEntryText(GetCurrentListEntry(KeyboardList)));
-    CONSOLE_SetTextXY(25, 14, GetListEntryText(GetCurrentListEntry(LayoutList)));
+    sprintf(CurrentItemText, "%S", GetListEntryText(GetCurrentListEntry(ComputerList)));
+    CONSOLE_SetTextXY(25, 11, CurrentItemText);
+    sprintf(CurrentItemText, "%S", GetListEntryText(GetCurrentListEntry(DisplayList)));
+    CONSOLE_SetTextXY(25, 12, CurrentItemText);
+    sprintf(CurrentItemText, "%S", GetListEntryText(GetCurrentListEntry(KeyboardList)));
+    CONSOLE_SetTextXY(25, 13, CurrentItemText);
+    sprintf(CurrentItemText, "%S", GetListEntryText(GetCurrentListEntry(LayoutList)));
+    CONSOLE_SetTextXY(25, 14, CurrentItemText);
 
     CONSOLE_InvertTextXY(24, Line, 48, 1);
 

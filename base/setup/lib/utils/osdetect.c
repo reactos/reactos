@@ -571,7 +571,6 @@ AddNTOSInstallation(
 {
     PNTOS_INSTALLATION NtOsInstall;
     SIZE_T ArcPathLength, NtPathLength;
-    CHAR InstallNameA[MAX_PATH];
 
     /* Is there already any installation with these settings? */
     NtOsInstall = FindExistingNTOSInstall(List, SystemRootArcPath, SystemRootNtPath);
@@ -617,8 +616,7 @@ AddNTOSInstallation(
     StringCchCopyW(NtOsInstall->InstallationName, ARRAYSIZE(NtOsInstall->InstallationName), InstallationName);
 
     // Having the GENERIC_LIST storing the display item string plainly sucks...
-    StringCchPrintfA(InstallNameA, ARRAYSIZE(InstallNameA), "%S", InstallationName);
-    AppendGenericListEntry(List, InstallNameA, NtOsInstall, FALSE);
+    AppendGenericListEntry(List, InstallationName, NtOsInstall, FALSE);
 
     return NtOsInstall;
 }

@@ -67,7 +67,7 @@ DestroyGenericList(
 BOOLEAN
 AppendGenericListEntry(
     IN OUT PGENERIC_LIST List,
-    IN PCHAR Text,
+    IN PCWSTR Text,
     IN PVOID UserData,
     IN BOOLEAN Current)
 {
@@ -75,11 +75,12 @@ AppendGenericListEntry(
 
     Entry = (PGENERIC_LIST_ENTRY)RtlAllocateHeap(ProcessHeap,
                                                  0,
-                                                 sizeof(GENERIC_LIST_ENTRY) + strlen(Text));
+                                                 sizeof(GENERIC_LIST_ENTRY) +
+                                                    (wcslen(Text) + 1) * sizeof(WCHAR));
     if (Entry == NULL)
         return FALSE;
 
-    strcpy (Entry->Text, Text);
+    wcscpy(Entry->Text, Text);
     Entry->List = List;
     Entry->UserData = UserData;
 
@@ -140,7 +141,7 @@ GetListEntryUserData(
     return Entry->UserData;
 }
 
-LPCSTR
+PCWSTR
 GetListEntryText(
     IN PGENERIC_LIST_ENTRY Entry)
 {
