@@ -7,6 +7,7 @@ list(APPEND SOURCE
     endpoint.c
     iface.c
     ioctl.c
+    iso.c
     pnp.c
     power.c
     queue.c

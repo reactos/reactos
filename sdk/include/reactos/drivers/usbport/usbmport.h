@@ -43,7 +43,7 @@
 
 typedef struct _USBPORT_RESOURCES {
   ULONG ResourcesTypes;
-  ULONG HcFlavor;
+  USB_CONTROLLER_FLAVOR HcFlavor;
   ULONG InterruptVector;
   KIRQL InterruptLevel;
   UCHAR Padded1[3];
@@ -364,7 +364,7 @@ typedef ULONG
   PVOID,
   PVOID);
 
-typedef ULONG
+typedef VOID
 (NTAPI *PUSBPORT_COMPLETE_TRANSFER)(
   PVOID,
   PVOID,
@@ -581,6 +581,8 @@ typedef struct _USBPORT_MINIPORT_INTERFACE {
 C_ASSERT(sizeof(USBPORT_MINIPORT_INTERFACE) == 32 + 76 * sizeof(PVOID));
 
 #define USBPORT_TRANSFER_DIRECTION_OUT  1 // From host to device
+#define USBPORT_MAX_DEVICE_ADDRESS      127
+
 typedef struct _USBPORT_ENDPOINT_PROPERTIES {
   USHORT DeviceAddress;
   USHORT EndpointAddress;
