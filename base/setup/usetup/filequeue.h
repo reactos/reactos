@@ -69,6 +69,12 @@ typedef struct _COPYCONTEXT
 
 /* FUNCTIONS ****************************************************************/
 
+NTSTATUS
+SetupExtractFile(
+    PWCHAR CabinetFileName,
+    PWCHAR SourceFileName,
+    PWCHAR DestinationFileName);
+
 HSPFILEQ
 WINAPI
 SetupOpenFileQueue(VOID);

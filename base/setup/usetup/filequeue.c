@@ -57,6 +57,90 @@ typedef struct _FILEQUEUEHEADER
 
 /* FUNCTIONS ****************************************************************/
 
+#ifdef __REACTOS__
+static BOOLEAN HasCurrentCabinet = FALSE;
+static WCHAR CurrentCabinetName[MAX_PATH];
+static CAB_SEARCH Search;
+
+NTSTATUS
+SetupExtractFile(
+    PWCHAR CabinetFileName,
+    PWCHAR SourceFileName,
+    PWCHAR DestinationPathName)
+{
+    ULONG CabStatus;
+
+    DPRINT("SetupExtractFile(CabinetFileName %S, SourceFileName %S, DestinationPathName %S)\n",
+           CabinetFileName, SourceFileName, DestinationPathName);
+
+    if (HasCurrentCabinet)
+    {
+        DPRINT("CurrentCabinetName: %S\n", CurrentCabinetName);
+    }
+
+    if ((HasCurrentCabinet) && (wcscmp(CabinetFileName, CurrentCabinetName) == 0))
+    {
+        DPRINT("Using same cabinet as last time\n");
+
+        /* Use our last location because the files should be sequential */
+        CabStatus = CabinetFindNextFileSequential(SourceFileName, &Search);
+        if (CabStatus != CAB_STATUS_SUCCESS)
+        {
+            DPRINT("Sequential miss on file: %S\n", SourceFileName);
+
+            /* Looks like we got unlucky */
+            CabStatus = CabinetFindFirst(SourceFileName, &Search);
+        }
+    }
+    else
+    {
+        DPRINT("Using new cabinet\n");
+
+        if (HasCurrentCabinet)
+        {
+            CabinetCleanup();
+        }
+
+        wcscpy(CurrentCabinetName, CabinetFileName);
+
+        CabinetInitialize();
+        CabinetSetEventHandlers(NULL, NULL, NULL);
+        CabinetSetCabinetName(CabinetFileName);
+
+        CabStatus = CabinetOpen();
+        if (CabStatus == CAB_STATUS_SUCCESS)
+        {
+            DPRINT("Opened cabinet %S\n", CabinetGetCabinetName());
+            HasCurrentCabinet = TRUE;
+        }
+        else
+        {
+            DPRINT("Cannot open cabinet (%d)\n", CabStatus);
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        /* We have to start at the beginning here */
+        CabStatus = CabinetFindFirst(SourceFileName, &Search);
+    }
+
+    if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+        DPRINT1("Unable to find '%S' in cabinet '%S'\n", SourceFileName, CabinetGetCabinetName());
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    CabinetSetDestinationPath(DestinationPathName);
+    CabStatus = CabinetExtractFile(&Search);
+    if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+        DPRINT("Cannot extract file %S (%d)\n", SourceFileName, CabStatus);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    return STATUS_SUCCESS;
+}
+#endif
+
 HSPFILEQ
 WINAPI
 SetupOpenFileQueue(VOID)

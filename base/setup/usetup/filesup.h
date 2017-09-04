@@ -13,12 +13,6 @@ NTSTATUS
 SetupCreateDirectory(
     PWCHAR DirectoryName);
 
-NTSTATUS
-SetupExtractFile(
-    PWCHAR CabinetFileName,
-    PWCHAR SourceFileName,
-    PWCHAR DestinationFileName);
-
 BOOLEAN
 IsValidPath(
     IN PWCHAR InstallDir,
