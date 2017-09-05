@@ -627,6 +627,21 @@ typedef struct {
     ((t)==PARTITION_EXTENDED)||\
     ((t)==PARTITION_XINT13_EXTENDED))
 
+#ifndef _FILESYSTEMFSCTL_
+#define _FILESYSTEMFSCTL_
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_NT4)
+#define FSCTL_IS_VOLUME_DIRTY CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#endif
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN2K)
+#define VOLUME_IS_DIRTY                  (0x00000001)
+#define VOLUME_UPGRADE_SCHEDULED         (0x00000002)
+#define VOLUME_SESSION_OPEN              (0x00000004)
+#endif
+
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
