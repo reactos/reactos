@@ -45,3 +45,24 @@ int FindHandler(int argc,
 
     return ret;
 }
+
+void PrintDefaultUsage(const TCHAR * Command,
+                       const TCHAR * SubCommand,
+                       HandlerItem * HandlersList,
+                       int HandlerListCount)
+{
+    int i;
+
+    /* If we were given a command, print it's not supported */
+    if (SubCommand != NULL)
+    {
+        _ftprintf(stderr, _T("Unhandled%scommand: %s\n"), Command, SubCommand);
+    }
+
+    /* And dump any available command */
+    _ftprintf(stderr, _T("---- Handled%scommands ----\n\n"), Command);
+    for (i = 0; i < HandlerListCount; ++i)
+    {
+        _ftprintf(stderr, _T("%s\t%s\n"), HandlersList[i].Command, HandlersList[i].Desc);
+    }
+}

@@ -18,4 +18,9 @@ int FindHandler(int argc,
                 int HandlerListCount,
                 void (*UsageHelper)(const TCHAR *));
 
+void PrintDefaultUsage(const TCHAR * Command,
+                       const TCHAR * SubCommand,
+                       HandlerItem * HandlersList,
+                       int HandlerListCount);
+
 #endif

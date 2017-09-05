@@ -19,20 +19,8 @@ static HandlerItem HandlersList[] =
 static void
 PrintUsage(const TCHAR * Command)
 {
-    int i;
-
-    /* If we were given a command, print it's not supported */
-    if (Command != NULL)
-    {
-        _ftprintf(stderr, _T("Unhandled command: %s\n"), Command);
-    }
-
-    /* And dump any available command */
-    _ftprintf(stderr, _T("---- Handled commands ----\n\n"));
-    for (i = 0; i < (sizeof(HandlersList) / sizeof(HandlersList[0])); ++i)
-    {
-        _ftprintf(stderr, _T("%s\t%s\n"), HandlersList[i].Command, HandlersList[i].Desc);
-    }
+    PrintDefaultUsage(_T(" "), Command, (HandlerItem *)&HandlersList,
+                      (sizeof(HandlersList) / sizeof(HandlersList[0])));
 }
 
 int
