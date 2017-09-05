@@ -12,4 +12,10 @@ typedef struct
     const TCHAR * Desc;
 } HandlerItem;
 
+int FindHandler(int argc,
+                const TCHAR *argv[],
+                HandlerItem * HandlersList,
+                int HandlerListCount,
+                void (*UsageHelper)(const TCHAR *));
+
 #endif

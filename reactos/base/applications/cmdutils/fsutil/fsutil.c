@@ -39,34 +39,7 @@ int
 __cdecl
 _tmain(int argc, const TCHAR *argv[])
 {
-    int i;
-    int ret;
-    const TCHAR * Command;
-
-    ret = 1;
-    Command = NULL;
-    i = (sizeof(HandlersList) / sizeof(HandlersList[0]));
-
-    /* If we have a command, does it match a known one? */
-    if (argc > 1)
-    {
-        /* Browse all the known commands finding the right one */
-        Command = argv[1];
-        for (i = 0; i < (sizeof(HandlersList) / sizeof(HandlersList[0])); ++i)
-        {
-            if (_tcsicmp(Command, HandlersList[i].Command) == 0)
-            {
-                ret = HandlersList[i].Handler(argc - 1, &argv[1]);
-                break;
-            }
-        }
-    }
-
-    /* We failed finding someone to handle the caller's needs, print out */
-    if (i == (sizeof(HandlersList) / sizeof(HandlersList[0])))
-    {
-        PrintUsage(Command);
-    }
-
-    return ret;
+    return FindHandler(argc, argv, (HandlerItem *)&HandlersList,
+                       (sizeof(HandlersList) / sizeof(HandlersList[0])),
+                       PrintUsage);
 }

@@ -1,4 +1,5 @@
 list(APPEND SOURCE
+    common.c
     dirty.c
     fsutil.c
     fsutil.h)
