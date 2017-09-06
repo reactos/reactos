@@ -6,6 +6,8 @@
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>
  */
 
+#include "fsutil.h"
+
 /* Add handlers here for subcommands */
 static int DrivesMain(int argc, const TCHAR *argv[]);
 static int DriveTypeMain(int argc, const TCHAR *argv[]);
