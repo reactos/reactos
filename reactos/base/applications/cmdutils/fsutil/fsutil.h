@@ -18,6 +18,9 @@ int FindHandler(int argc,
                 int HandlerListCount,
                 void (*UsageHelper)(const TCHAR *));
 
+HANDLE OpenVolume(const TCHAR * Volume,
+                  BOOLEAN AllowRemote);
+
 void PrintDefaultUsage(const TCHAR * Command,
                        const TCHAR * SubCommand,
                        HandlerItem * HandlersList,

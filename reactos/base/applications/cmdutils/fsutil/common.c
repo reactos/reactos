@@ -46,6 +46,39 @@ int FindHandler(int argc,
     return ret;
 }
 
+HANDLE OpenVolume(const TCHAR * Volume,
+                  BOOLEAN AllowRemote)
+{
+    UINT Type;
+    HANDLE hVolume;
+    TCHAR VolumeID[PATH_MAX];
+
+    /* Create full name */
+    _stprintf(VolumeID, _T("\\\\.\\%s"), Volume);
+
+    /* Get volume type */
+    if (!AllowRemote && Volume[1] == L':')
+    {
+        Type = GetDriveType(Volume);
+        if (Type == DRIVE_REMOTE)
+        {
+            _ftprintf(stderr, _T("FSUTIL needs a local device\n"));
+            return INVALID_HANDLE_VALUE;
+        }
+    }
+
+    /* Open the volume */
+    hVolume = CreateFile(VolumeID, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                         NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hVolume == INVALID_HANDLE_VALUE)
+    {
+        _ftprintf(stderr, _T("Error: %d\n"), GetLastError());
+        return INVALID_HANDLE_VALUE;
+    }
+
+    return hVolume;
+}
+
 void PrintDefaultUsage(const TCHAR * Command,
                        const TCHAR * SubCommand,
                        HandlerItem * HandlersList,

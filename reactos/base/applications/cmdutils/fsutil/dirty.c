@@ -23,7 +23,6 @@ static int
 QueryMain(int argc, const TCHAR *argv[])
 {
     HANDLE Volume;
-    TCHAR VolumeID[PATH_MAX];
     ULONG VolumeStatus, BytesRead;
 
     /* We need a volume (letter or GUID) */
@@ -34,15 +33,10 @@ QueryMain(int argc, const TCHAR *argv[])
         return 1;
     }
 
-    /* Create full name */
-    _stprintf(VolumeID, _T("\\\\.\\%s"), argv[1]);
-
-    /* Open the volume */
-    Volume = CreateFile(VolumeID, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    /* Get a handle for the volume */
+    Volume = OpenVolume(argv[1], FALSE);
     if (Volume == INVALID_HANDLE_VALUE)
     {
-        _ftprintf(stderr, _T("Error: %d\n"), GetLastError());
         return 1;
     }
 
@@ -68,7 +62,6 @@ SetMain(int argc, const TCHAR *argv[])
 {
     HANDLE Volume;
     DWORD BytesRead;
-    TCHAR VolumeID[PATH_MAX];
 
     /* We need a volume (letter or GUID) */
     if (argc < 2)
@@ -78,15 +71,10 @@ SetMain(int argc, const TCHAR *argv[])
         return 1;
     }
 
-    /* Create full name */
-    _stprintf(VolumeID, _T("\\\\.\\%s"), argv[1]);
-
-    /* Open the volume */
-    Volume = CreateFile(VolumeID, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    /* Get a handle for the volume */
+    Volume = OpenVolume(argv[1], FALSE);
     if (Volume == INVALID_HANDLE_VALUE)
     {
-        _ftprintf(stderr, _T("Error: %d\n"), GetLastError());
         return 1;
     }
 
