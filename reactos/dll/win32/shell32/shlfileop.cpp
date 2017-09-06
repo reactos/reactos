@@ -130,6 +130,7 @@ static INT_PTR ConfirmMsgBox_Paint(HWND hDlg)
 
     BeginPaint(hDlg, &ps);
     hdc = ps.hdc;
+    SetBkMode(hdc, TRANSPARENT);
 
     GetClientRect(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), &r);
     /* this will remap the rect to dialog coords */
