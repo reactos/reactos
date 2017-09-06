@@ -1,6 +1,7 @@
 list(APPEND SOURCE
     common.c
     dirty.c
+    fsinfo.c
     fsutil.c
     fsutil.h)
 add_executable(fsutil ${SOURCE} fsutil.rc)
