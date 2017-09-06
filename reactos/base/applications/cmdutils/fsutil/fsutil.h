@@ -26,4 +26,6 @@ void PrintDefaultUsage(const TCHAR * Command,
                        HandlerItem * HandlersList,
                        int HandlerListCount);
 
+int PrintErrorMessage(DWORD Error);
+
 #endif

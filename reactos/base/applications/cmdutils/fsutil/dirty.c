@@ -44,7 +44,7 @@ QueryMain(int argc, const TCHAR *argv[])
     if (DeviceIoControl(Volume, FSCTL_IS_VOLUME_DIRTY, NULL, 0, &VolumeStatus,
                         sizeof(ULONG), &BytesRead, NULL) == FALSE)
     {
-        _ftprintf(stderr, _T("Error: %d\n"), GetLastError());
+        PrintErrorMessage(GetLastError());
         CloseHandle(Volume);
         return 1;
     }
@@ -81,7 +81,7 @@ SetMain(int argc, const TCHAR *argv[])
     /* And set the dirty bit */
     if (DeviceIoControl(Volume, FSCTL_MARK_VOLUME_DIRTY, NULL, 0, NULL, 0, &BytesRead, NULL) == FALSE)
     {
-        _ftprintf(stderr, _T("Error: %d\n"), GetLastError());
+        PrintErrorMessage(GetLastError());
         CloseHandle(Volume);
         return 1;
     }

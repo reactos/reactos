@@ -30,7 +30,7 @@ DrivesMain(int argc, const TCHAR *argv[])
     Drives = GetLogicalDrives();
     if (Drives == 0)
     {
-        _ftprintf(stderr, _T("Error: %d\n"), GetLastError());
+        PrintErrorMessage(GetLastError());
         return 1;
     }
 
@@ -119,7 +119,7 @@ VolumeInfoMain(int argc, const TCHAR *argv[])
     if (!GetVolumeInformation(argv[1], VolumeName,  MAX_PATH + 1, &Serial,
                               &MaxComponentLen, &Flags, FileSystem, MAX_PATH + 1))
     {
-        _ftprintf(stderr, _T("Error: %d\n"), GetLastError());
+        PrintErrorMessage(GetLastError());
         return 1;
     }
 

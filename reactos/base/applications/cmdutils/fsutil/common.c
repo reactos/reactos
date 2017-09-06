@@ -72,7 +72,7 @@ HANDLE OpenVolume(const TCHAR * Volume,
                          NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hVolume == INVALID_HANDLE_VALUE)
     {
-        _ftprintf(stderr, _T("Error: %d\n"), GetLastError());
+        PrintErrorMessage(GetLastError());
         return INVALID_HANDLE_VALUE;
     }
 
@@ -98,4 +98,25 @@ void PrintDefaultUsage(const TCHAR * Command,
     {
         _ftprintf(stderr, _T("%s\t%s\n"), HandlersList[i].Command, HandlersList[i].Desc);
     }
+}
+
+int PrintErrorMessage(DWORD Error)
+{
+    TCHAR * String;
+
+    /* Try to get textual error */
+    if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                       NULL, Error, 0, (TCHAR *)&String, 0, NULL) != 0)
+    {
+        /* And print it */
+        _ftprintf(stderr, _T("Error: %s\n"), String);
+        LocalFree(String);
+    }
+    else
+    {
+        /* Otherwise, just print the error number */
+        _ftprintf(stderr, _T("Error: %d\n"), Error);
+    }
+
+    return Error;
 }
