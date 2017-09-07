@@ -52,7 +52,7 @@ QueryMain(int argc, const TCHAR *argv[])
     CloseHandle(Volume);
 
     /* Print the status */
-    _ftprintf(stdout, _T("The %s volume is %s\n"), argv[1], (VolumeStatus & VOLUME_IS_DIRTY ? _T("dirty") : _T("clean")));
+    _ftprintf(stdout, _T("The %s volume is %s\n"), argv[1], ((VolumeStatus & VOLUME_IS_DIRTY) ? _T("dirty") : _T("clean")));
 
     return 0;
 }
