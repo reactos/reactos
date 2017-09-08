@@ -1,10 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS xml to sdb converter
- * FILE:            sdk/tools/xml2sdb/main.cpp
- * PURPOSE:         Implement platform agnostic read / write / allocation functions, parse commandline
- * PROGRAMMERS:     Mark Jansen (mark.jansen@reactos.org)
- *
+ * PROJECT:     xml2sdb
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Implement platform agnostic read / write / allocation functions, parse commandline
+ * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "xml2sdb.h"

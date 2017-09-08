@@ -1,8 +1,8 @@
 /*
- * PROJECT:         shimdbg utility for WINE and ReactOS
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * PURPOSE:         Test tool for SHIM engine caching.
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     shimdbg
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Test tool for SHIM engine caching
+ * COPYRIGHT:   Copyright 2016-2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <stdio.h>
