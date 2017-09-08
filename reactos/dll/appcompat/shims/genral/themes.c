@@ -1,12 +1,15 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Shim library
- * FILE:            dll/appcompat/shims/genral/themes.c
- * PURPOSE:         Theme related shims
- * PROGRAMMER:      Mark Jansen (mark.jansen@reactos.org)
+ * PROJECT:     ReactOS 'General' Shim library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Theme related shims
+ * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wingdi.h>
 #include <shimlib.h>
 #include <strsafe.h>
 #include <uxtheme.h>

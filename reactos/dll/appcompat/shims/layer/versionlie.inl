@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Shim library
- * FILE:            dll/appcompat/shims/layer/versionlie.inl
- * PURPOSE:         Version lie implementation helper
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS 'Layers' Shim library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Version lie implementation helper
+ * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
  */
-
 
 #include <setup_shim.inl>
 

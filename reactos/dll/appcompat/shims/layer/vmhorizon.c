@@ -1,14 +1,14 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Shim library
- * FILE:            dll/appcompat/shims/layer/vmhorizon.c
- * PURPOSE:         Shim for VMWare Horizon setup
- * PROGRAMMER:      Thomas Faber (thomas.faber@reactos.org)
- *                  Mark Jansen (mark.jansen@reactos.org)
+ * PROJECT:     ReactOS 'Layers' Shim library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Shim for VMWare Horizon setup
+ * COPYRIGHT:   Copyright 2017 Thomas Faber (thomas.faber@reactos.org)
+ *              Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
 #include <shimlib.h>
 #include "ntndk.h"
 
