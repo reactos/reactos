@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Shim library
- * FILE:            dll/appcompat/shims/shimlib/shimlib.c
- * PURPOSE:         Shim helper functions
- * PROGRAMMER:      Mark Jansen (mark.jansen@reactos.org)
+ * PROJECT:     ReactOS Shim helper library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Shim helper functions
+ * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS

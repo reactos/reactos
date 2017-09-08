@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Shim library
- * FILE:            dll/appcompat/shims/shimlib/setup_shim.inl
- * PURPOSE:         Shimlib helper file, used for setting up the macro's used when registering a shim.
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS Shim helper library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Shimlib helper file, used for setting up the macro's used when registering a shim.
+ * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
  */
-
 
 #ifndef SHIM_NS
 #error "A namespace should be provided in SHIM_NS before including this file!"

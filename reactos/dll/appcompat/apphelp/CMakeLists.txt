@@ -19,11 +19,20 @@ list(APPEND SOURCE
     sdbwrite.c
     shimeng.c
     apphelp.spec
-    apphelp.h
     ${CMAKE_CURRENT_BINARY_DIR}/apphelp_stubs.c)
+
+list(APPEND HEADERS
+    apphelp.h
+    sdbpapi.h
+    sdbstringtable.h
+    sdbtagid.h
+    sdbtypes.h
+    sdbwrite.h
+    shimeng.h)
 
 add_library(apphelp SHARED
     ${SOURCE}
+    ${HEADERS}
     apphelp.rc
     ${CMAKE_CURRENT_BINARY_DIR}/apphelp.def)
 

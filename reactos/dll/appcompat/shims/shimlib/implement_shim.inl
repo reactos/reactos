@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Shim library
- * FILE:            dll/appcompat/shims/shimlib/implement_shim.inl
- * PURPOSE:         Shimlib helper file, used to register shims setup with macro's from setup_shim.inl
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS Shim helper library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Shimlib helper file, used to register shims setup with macro's from setup_shim.inl
+ * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #ifndef SHIM_NS
