@@ -211,63 +211,65 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
     {
         HBRUSH hBlueBrush = CreateSolidBrush(RGB(0, 0, 255));
         HBRUSH hMagBrush = CreateSolidBrush(RGB(255, 0, 255));
+        HBRUSH hbrOld;
         HPEN hDarkBluePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 128));
         HPEN hDarkMagPen = CreatePen(PS_SOLID, 1, RGB(128, 0, 128));
-
-        INT xCenter = (pDrawItem->rcItem.left + pDrawItem->rcItem.right)/2;
-        INT yCenter = (pDrawItem->rcItem.top + pDrawItem->rcItem.bottom - 10)/2;
+        HPEN hOldPen = (HPEN)SelectObject(pDrawItem->hDC, hDarkMagPen);
+        INT xCenter = (pDrawItem->rcItem.left + pDrawItem->rcItem.right) / 2;
+        INT yCenter = (pDrawItem->rcItem.top + pDrawItem->rcItem.bottom - 10) / 2;
         INT cx = pDrawItem->rcItem.right - pDrawItem->rcItem.left;
         INT cy = pDrawItem->rcItem.bottom - pDrawItem->rcItem.top - 10;
-        TRACE("FreeSpace %u a %f cx %d\n", m_FreeSpacePerc, M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f, cx);
+        INT xRadial = xCenter + (INT)(cos(M_PI + m_FreeSpacePerc / 100.0f * M_PI * 2.0f) * cx / 2);
+        INT yRadial = yCenter - (INT)(sin(M_PI + m_FreeSpacePerc / 100.0f * M_PI * 2.0f) * cy / 2);
 
-        HBRUSH hbrOld = (HBRUSH)SelectObject(pDrawItem->hDC, hMagBrush);
-        INT xRadial = xCenter + (INT)(cos(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cx/2);
-        INT yRadial = yCenter - (INT)(sin(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cy/2);
-        if (m_FreeSpacePerc > 0)
-        {
-            Pie(pDrawItem->hDC,
-                pDrawItem->rcItem.left,
-                pDrawItem->rcItem.top,
-                pDrawItem->rcItem.right,
-                pDrawItem->rcItem.bottom - 10,
-                pDrawItem->rcItem.left,
-                yCenter,
-                xRadial,
-                yRadial);
+        TRACE("FreeSpace %u a %f cx %d\n", m_FreeSpacePerc, M_PI+m_FreeSpacePerc / 100.0f * M_PI * 2.0f, cx);
 
-            SelectObject(pDrawItem->hDC, hBlueBrush);
-            Pie(pDrawItem->hDC,
-                pDrawItem->rcItem.left,
-                pDrawItem->rcItem.top,
-                pDrawItem->rcItem.right,
-                pDrawItem->rcItem.bottom - 10,
-                xRadial,
-                yRadial,
-                pDrawItem->rcItem.left,
-                yCenter);
-            SelectObject(pDrawItem->hDC, hbrOld);
-        }
-        else
-        {
-            SelectObject(pDrawItem->hDC, hBlueBrush);
-            Ellipse(pDrawItem->hDC,
-                    pDrawItem->rcItem.left,
-                    pDrawItem->rcItem.top,
-                    pDrawItem->rcItem.right,
-                    pDrawItem->rcItem.bottom - 10);
-        }
-        HPEN hOldPen = (HPEN)SelectObject(pDrawItem->hDC, hDarkMagPen);
         for (INT x = pDrawItem->rcItem.left; x < pDrawItem->rcItem.right; ++x)
         {
+            double cos_val = (x - xCenter) * 2.0f / cx;
+            INT y = yCenter + (INT)(sin(acos(cos_val)) * cy / 2) - 1;
+
             if (m_FreeSpacePerc < 50 && x == xRadial)
                 SelectObject(pDrawItem->hDC, hDarkBluePen);
 
-            double cos_val = (x - xCenter)*2.0f/cx;
-            INT y = yCenter+(INT)(sin(acos(cos_val))*cy/2);
             MoveToEx(pDrawItem->hDC, x, y, NULL);
             LineTo(pDrawItem->hDC, x, y + 10);
         }
+
         SelectObject(pDrawItem->hDC, hOldPen);
+
+        if (m_FreeSpacePerc > 50)
+        {
+            hbrOld = (HBRUSH)SelectObject(pDrawItem->hDC, hMagBrush);
+
+            Ellipse(pDrawItem->hDC, pDrawItem->rcItem.left, pDrawItem->rcItem.top,
+                    pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10);
+
+            SelectObject(pDrawItem->hDC, hBlueBrush);
+
+            if (m_FreeSpacePerc < 100)
+            {
+                Pie(pDrawItem->hDC, pDrawItem->rcItem.left, pDrawItem->rcItem.top, pDrawItem->rcItem.right,
+                    pDrawItem->rcItem.bottom - 10, xRadial, yRadial, pDrawItem->rcItem.left, yCenter);
+            }
+        }
+        else
+        {
+            hbrOld = (HBRUSH)SelectObject(pDrawItem->hDC, hBlueBrush);
+
+            Ellipse(pDrawItem->hDC, pDrawItem->rcItem.left, pDrawItem->rcItem.top,
+                    pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10);
+
+            SelectObject(pDrawItem->hDC, hMagBrush);
+            
+            if (m_FreeSpacePerc > 0)
+            {
+                Pie(pDrawItem->hDC, pDrawItem->rcItem.left, pDrawItem->rcItem.top, pDrawItem->rcItem.right,
+                    pDrawItem->rcItem.bottom - 10, pDrawItem->rcItem.left, yCenter, xRadial, yRadial);
+            }
+        }
+
+        SelectObject(pDrawItem->hDC, hbrOld);
 
         DeleteObject(hBlueBrush);
         DeleteObject(hMagBrush);
