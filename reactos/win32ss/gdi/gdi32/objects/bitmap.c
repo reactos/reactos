@@ -436,7 +436,7 @@ CreateDIBitmap(
         /* CBM_CREATDIB needs Data. */
         if (pbmiConverted == NULL)
         {
-            DPRINT1("CBM_CREATDIB needs a BITMAINFO!\n");
+            DPRINT1("CBM_CREATDIB needs a BITMAPINFO!\n");
             goto Exit;
         }
 

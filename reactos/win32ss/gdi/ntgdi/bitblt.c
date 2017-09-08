@@ -382,7 +382,7 @@ NtGdiMaskBlt(
     ahDC[1] = UsesSource ? hdcSrc : NULL;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiMaskBlt\n", hdcDest, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -393,7 +393,7 @@ NtGdiMaskBlt(
     if (NULL == DCDest)
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
-        WARN("Invalid destination dc handle (0x%p) passed to NtGdiBitBlt\n", hdcDest);
+        WARN("Invalid destination dc handle (0x%p) passed to NtGdiMaskBlt\n", hdcDest);
         return FALSE;
     }
 
