@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB Hub Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBHub declarations
+ * COPYRIGHT:   Copyright 2017 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #ifndef _USBHUB_H_
 #define _USBHUB_H_
 

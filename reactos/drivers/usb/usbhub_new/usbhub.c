@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB Hub Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBHub main driver functions
+ * COPYRIGHT:   Copyright 2017 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #include "usbhub.h"
 
 #define NDEBUG
