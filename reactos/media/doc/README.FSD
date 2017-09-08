@@ -3,7 +3,7 @@
 
 The following FSD are shared with: https://github.com/maharmstone/btrfs.
 
-reactos/drivers/filesystems/btrfs           # Synced to 0.8
+reactos/drivers/filesystems/btrfs           # Synced to 1.0
 reactos/dll/shellext/shellbtrfs             # Synced to 0.7
 reactos/sdk/lib/fslib/btrfslib              # Synced to 0.8
 
