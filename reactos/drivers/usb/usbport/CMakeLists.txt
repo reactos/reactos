@@ -12,6 +12,7 @@ list(APPEND SOURCE
     power.c
     queue.c
     roothub.c
+    trfsplit.c
     urb.c
     usb2.c
     usbport.c

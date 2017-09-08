@@ -529,6 +529,8 @@ USBPORT_CancelActiveTransferIrp(IN PDEVICE_OBJECT DeviceObject,
     PUSBPORT_TRANSFER Transfer;
     PUSBPORT_ENDPOINT Endpoint;
     PIRP irp;
+    PUSBPORT_TRANSFER SplitTransfer;
+    PLIST_ENTRY Entry;
     KIRQL OldIrql;
 
     DPRINT_CORE("USBPORT_CancelActiveTransferIrp: Irp - %p\n", Irp);
@@ -543,30 +545,52 @@ USBPORT_CancelActiveTransferIrp(IN PDEVICE_OBJECT DeviceObject,
 
     irp = USBPORT_FindActiveTransferIrp(FdoDevice, Irp);
 
-    if (irp)
+    if (!irp)
     {
-        Urb = URB_FROM_IRP(irp);
-        Transfer = Urb->UrbControlTransfer.hca.Reserved8[0];
-        Endpoint = Transfer->Endpoint;
-
-        DPRINT_CORE("USBPORT_CancelActiveTransferIrp: irp - %p, Urb - %p, Transfer - %p\n",
-                    irp,
-                    Urb,
-                    Transfer);
-
-        KeAcquireSpinLockAtDpcLevel(&Endpoint->EndpointSpinLock);
-        Transfer->Flags |= TRANSFER_FLAG_CANCELED;
-        KeReleaseSpinLockFromDpcLevel(&Endpoint->EndpointSpinLock);
-
         KeReleaseSpinLock(&FdoExtension->FlushTransferSpinLock, OldIrql);
-
-        USBPORT_InvalidateEndpointHandler(FdoDevice,
-                                          Endpoint,
-                                          INVALIDATE_ENDPOINT_WORKER_THREAD);
         return;
     }
 
+    Urb = URB_FROM_IRP(irp);
+    Transfer = Urb->UrbControlTransfer.hca.Reserved8[0];
+    Endpoint = Transfer->Endpoint;
+
+    DPRINT_CORE("USBPORT_CancelActiveTransferIrp: irp - %p, Urb - %p, Transfer - %p\n",
+                irp,
+                Urb,
+                Transfer);
+
+    KeAcquireSpinLockAtDpcLevel(&Endpoint->EndpointSpinLock);
+
+    Transfer->Flags |= TRANSFER_FLAG_CANCELED;
+
+    if (Transfer->Flags & TRANSFER_FLAG_PARENT)
+    {
+        KeAcquireSpinLockAtDpcLevel(&Transfer->TransferSpinLock);
+
+        Entry = Transfer->SplitTransfersList.Flink;
+
+        while (Entry && Entry != &Transfer->SplitTransfersList)
+        {
+            SplitTransfer = CONTAINING_RECORD(Entry,
+                                              USBPORT_TRANSFER,
+                                              SplitLink);
+
+            SplitTransfer->Flags |= TRANSFER_FLAG_CANCELED;
+
+            Entry = Entry->Flink;
+        }
+
+        KeReleaseSpinLockFromDpcLevel(&Transfer->TransferSpinLock);
+    }
+
+    KeReleaseSpinLockFromDpcLevel(&Endpoint->EndpointSpinLock);
     KeReleaseSpinLock(&FdoExtension->FlushTransferSpinLock, OldIrql);
+
+    USBPORT_InvalidateEndpointHandler(FdoDevice,
+                                      Endpoint,
+                                      INVALIDATE_ENDPOINT_WORKER_THREAD);
+    return;
 }
 
 VOID

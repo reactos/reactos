@@ -121,11 +121,14 @@
 /* Transfer Flags (USBPORT_TRANSFER) */
 #define TRANSFER_FLAG_CANCELED   0x00000001
 #define TRANSFER_FLAG_DMA_MAPPED 0x00000002
+#define TRANSFER_FLAG_HIGH_SPEED 0x00000004
 #define TRANSFER_FLAG_SUBMITED   0x00000008
 #define TRANSFER_FLAG_ABORTED    0x00000010
 #define TRANSFER_FLAG_ISO        0x00000020
 #define TRANSFER_FLAG_DEVICE_GONE 0x00000080
 #define TRANSFER_FLAG_SPLITED    0x00000100
+#define TRANSFER_FLAG_COMPLETED  0x00000200
+#define TRANSFER_FLAG_PARENT     0x00000400
 
 extern KSPIN_LOCK USBPORT_SpinLock;
 extern LIST_ENTRY USBPORT_MiniPortDrivers;
@@ -218,6 +221,8 @@ typedef struct _USBPORT_ENDPOINT {
   LIST_ENTRY FlushAbortLink;
 } USBPORT_ENDPOINT, *PUSBPORT_ENDPOINT;
 
+typedef struct _USBPORT_ISO_BLOCK *PUSBPORT_ISO_BLOCK;
+
 typedef struct _USBPORT_TRANSFER {
   ULONG Flags;
   PIRP Irp;
@@ -237,8 +242,15 @@ typedef struct _USBPORT_TRANSFER {
   PVOID MapRegisterBase;
   ULONG TimeOut;
   LARGE_INTEGER Time;
+  struct _USBPORT_TRANSFER * ParentTransfer;
+  KSPIN_LOCK TransferSpinLock;
+  LIST_ENTRY SplitTransfersList; // for parent transfers
+  LIST_ENTRY SplitLink; // for splitted transfers
+  ULONG Period;
+  PUSBPORT_ISO_BLOCK IsoBlockPtr; // pointer on IsoBlock
   // SgList should be LAST field
-  USBPORT_SCATTER_GATHER_LIST SgList; // Non IsoTransfer
+  USBPORT_SCATTER_GATHER_LIST SgList; // variable length
+  //USBPORT_ISO_BLOCK IsoBlock; // variable length
 } USBPORT_TRANSFER, *PUSBPORT_TRANSFER;
 
 typedef struct _USBPORT_IRP_TABLE {
@@ -572,6 +584,11 @@ NTAPI
 USBPORT_InvalidateControllerHandler(
   IN PDEVICE_OBJECT FdoDevice,
   IN ULONG Type);
+
+VOID
+NTAPI
+USBPORT_DoneTransfer(
+  IN PUSBPORT_TRANSFER Transfer);
 
 /* debug.c */
 ULONG
@@ -1119,6 +1136,25 @@ VOID
 NTAPI
 USBPORT_RootHubPowerAndChirpAllCcPorts(
   IN PDEVICE_OBJECT FdoDevice);
+
+/* trfsplit.c */
+VOID
+NTAPI
+USBPORT_SplitTransfer(
+  IN PDEVICE_OBJECT FdoDevice,
+  IN PUSBPORT_ENDPOINT Endpoint,
+  IN PUSBPORT_TRANSFER Transfer,
+  IN PLIST_ENTRY List);
+
+VOID
+NTAPI
+USBPORT_DoneSplitTransfer(
+  IN PUSBPORT_TRANSFER SplitTransfer);
+
+VOID
+NTAPI
+USBPORT_CancelSplitTransfer(
+  IN PUSBPORT_TRANSFER SplitTransfer);
 
 /* urb.c */
 NTSTATUS

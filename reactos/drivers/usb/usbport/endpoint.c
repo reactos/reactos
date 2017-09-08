@@ -1279,8 +1279,7 @@ USBPORT_DmaEndpointPaused(IN PDEVICE_OBJECT FdoDevice,
 
             if (Transfer->Flags & TRANSFER_FLAG_SPLITED)
             {
-                DPRINT1("USBPORT_DmaEndpointActive: FIXME call USBPORT_CancelSplitTransfer\n");
-                ASSERT(FALSE); //USBPORT_CancelSplitTransfer();
+                USBPORT_CancelSplitTransfer(Transfer);
             }
             else
             {
