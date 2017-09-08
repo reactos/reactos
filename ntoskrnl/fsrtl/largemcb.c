@@ -5,6 +5,7 @@
  * PURPOSE:         Large Mapped Control Block (MCB) support for File System Drivers
  * PROGRAMMERS:     Aleksey Bragin <aleksey@reactos.org>
  *                  Jan Kratochvil <project-captive@jankratochvil.net>
+ *                  Trevor Thompson
  */
 
 /* INCLUDES ******************************************************************/
@@ -328,20 +329,18 @@ FsRtlGetNextBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     OUT PLONGLONG Lbn,
     OUT PLONGLONG SectorCount)
 {
+    BOOLEAN Result = FALSE;
     PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
     PLARGE_MCB_MAPPING_ENTRY Run = NULL;
     ULONG CurrentIndex = 0;
     ULONGLONG LastVbn = 0;
     ULONGLONG LastSectorCount = 0;
-    ULONG TableElementsConsumed = 0;
 
     // Traverse the tree 
     for (Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, TRUE);
     Run;
         Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, FALSE))
     {
-        TableElementsConsumed++; // we consume one element in the table everytime we call RtlEnumeratGenericTable
-
         // is the current index a hole?
         if (Run->RunStartVbn.QuadPart > (LastVbn + LastSectorCount))
         {
@@ -352,7 +351,8 @@ FsRtlGetNextBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
                 *Lbn = -1;
                 *SectorCount = Run->RunStartVbn.QuadPart - *Vbn;
 
-                return TRUE;
+                Result = TRUE;
+                goto quit;
             }
 
             CurrentIndex++;
@@ -364,7 +364,8 @@ FsRtlGetNextBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
             *Lbn = Run->StartingLbn.QuadPart;
             *SectorCount = Run->RunEndVbn.QuadPart - Run->RunStartVbn.QuadPart;
 
-            return TRUE;
+            Result = TRUE;
+            goto quit;
         }
 
         CurrentIndex++;
@@ -373,10 +374,13 @@ FsRtlGetNextBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     }
 
     // these values are meaningless when returning false (but setting them can be helpful for debugging purposes)
-    *Vbn = -7777;
-    *Lbn = -7777;
-    *SectorCount = -7777;
-    return FALSE;
+    *Vbn = 0xdeadbeef;
+    *Lbn = 0xdeadbeef;
+    *SectorCount = 0xdeadbeef;
+
+quit:
+    DPRINT("FsRtlGetNextBaseMcbEntry(%p, %d, %p, %p, %p) = %d (%I64d, %I64d, %I64d)\n", Mcb, RunIndex, Vbn, Lbn, SectorCount, Result, *Vbn, *Lbn, *SectorCount);
+    return Result;
 }
 
 /*
@@ -505,8 +509,11 @@ FsRtlLookupBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
     OUT PULONG Index OPTIONAL)
 {
+    BOOLEAN Result = FALSE;
     ULONG i;
     LONGLONG LastVbn = 0, LastLbn = 0, Count = 0;   // the last values we've found during traversal
+
+    DPRINT("FsRtlLookupBaseMcbEntry(%p, %I64d, %p, %p, %p, %p, %p)\n", OpaqueMcb, Vbn, Lbn, SectorCountFromLbn, StartingLbn, SectorCountFromStartingLbn, Index);
 
     for (i = 0; FsRtlGetNextBaseMcbEntry(OpaqueMcb, i, &LastVbn, &LastLbn, &Count); i++)
     {
@@ -530,7 +537,8 @@ FsRtlLookupBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
             if (Index)
                 *Index = i;
 
-            return TRUE;
+            Result = TRUE;
+            goto quit;
         }
     }
 
@@ -539,7 +547,13 @@ FsRtlLookupBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     if (StartingLbn)
         *StartingLbn = -1;
 
-    return FALSE;
+quit:
+    DPRINT("FsRtlLookupBaseMcbEntry(%p, %I64d, %p, %p, %p, %p, %p) = %d (%I64d, %I64d, %I64d, %I64d, %d)\n",
+           OpaqueMcb, Vbn, Lbn, SectorCountFromLbn, StartingLbn, SectorCountFromStartingLbn, Index, Result,
+           (Lbn ? *Lbn : (ULONGLONG)-1), (SectorCountFromLbn ? *SectorCountFromLbn : (ULONGLONG)-1), (StartingLbn ? *StartingLbn : (ULONGLONG)-1),
+           (SectorCountFromStartingLbn ? *SectorCountFromStartingLbn : (ULONGLONG)-1), (Index ? *Index : (ULONG)-1));
+
+    return Result;
 }
 
 /*
