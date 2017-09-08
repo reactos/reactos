@@ -41,6 +41,7 @@
 
 #define SUBVOL_ROOT_INODE 0x100
 
+#ifndef __REACTOS__
 #ifndef __MINGW32__ // in winternl.h in mingw
 
 typedef struct _FILE_ACCESS_INFORMATION {
@@ -49,6 +50,7 @@ typedef struct _FILE_ACCESS_INFORMATION {
 
 #define FileAccessInformation (FILE_INFORMATION_CLASS)8
 
+#endif
 #endif
 
 HRESULT __stdcall BtrfsPropSheet::QueryInterface(REFIID riid, void **ppObj) {
