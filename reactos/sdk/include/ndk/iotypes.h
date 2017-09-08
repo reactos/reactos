@@ -314,6 +314,25 @@ typedef enum _FILE_INFORMATION_CLASS
     FileIdFullDirectoryInformation,
     FileValidDataLengthInformation,
     FileShortNameInformation,
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    FileIoCompletionNotificationInformation,
+    FileIoStatusBlockRangeInformation,
+    FileIoPriorityHintInformation,
+    FileSfioReserveInformation,
+    FileSfioVolumeInformation,
+    FileHardLinkInformation,
+    FileProcessIdsUsingFileInformation,
+    FileNormalizedNameInformation,
+    FileNetworkPhysicalNameInformation,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    FileIdGlobalTxDirectoryInformation,
+    FileIsRemoteDeviceInformation,
+    FileUnusedInformation,
+    FileNumaNodeInformation,
+    FileStandardLinkInformation,
+    FileRemoteProtocolInformation,
+#endif
     FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
@@ -437,6 +456,11 @@ typedef struct _FILE_EA_INFORMATION
 {
     ULONG EaSize;
 } FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
+
+typedef struct _FILE_ACCESS_INFORMATION
+{
+    ACCESS_MASK AccessFlags;
+} FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
 
 typedef struct _FILE_COMPRESSION_INFORMATION
 {
