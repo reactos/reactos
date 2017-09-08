@@ -16,30 +16,44 @@
  * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <shlobj.h>
+#ifndef __REACTOS__
+#include "../btrfsioctl.h"
+#include "../btrfs.h"
+#else
+#include "btrfsioctl.h"
+#include "btrfs.h"
+#endif
+#include "balance.h"
+#include "scrub.h"
 
 extern LONG objs_loaded;
 
-class BtrfsContextMenu : public IShellExtInit, IContextMenu {
+class BtrfsVolPropSheet : public IShellExtInit, IShellPropSheetExt {
 public:
-    BtrfsContextMenu() {
+    BtrfsVolPropSheet() {
         refcount = 0;
         ignore = TRUE;
         stgm_set = FALSE;
-        uacicon = NULL;
-        allow_snapshot = FALSE;
+        devices = NULL;
+
         InterlockedIncrement(&objs_loaded);
+
+        balance = NULL;
     }
 
-    virtual ~BtrfsContextMenu() {
+    virtual ~BtrfsVolPropSheet() {
         if (stgm_set) {
             GlobalUnlock(stgm.hGlobal);
             ReleaseStgMedium(&stgm);
         }
 
-        if (uacicon)
-            DeleteObject(uacicon);
+        if (devices)
+            free(devices);
 
         InterlockedDecrement(&objs_loaded);
+
+        if (balance)
+            delete balance;
     }
 
     // IUnknown
@@ -63,21 +77,34 @@ public:
 
     virtual HRESULT __stdcall Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject* pdtobj, HKEY hkeyProgID);
 
-    // IContextMenu
+    // IShellPropSheetExt
 
-    virtual HRESULT __stdcall QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT __stdcall InvokeCommand(LPCMINVOKECOMMANDINFO pici);
-    virtual HRESULT __stdcall GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT* pwReserved, LPSTR pszName, UINT cchMax);
+    virtual HRESULT __stdcall AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
+    virtual HRESULT __stdcall ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam);
+
+    void FormatUsage(HWND hwndDlg, WCHAR* s, ULONG size, btrfs_usage* usage);
+    void RefreshUsage(HWND hwndDlg);
+    void ShowUsage(HWND hwndDlg);
+    INT_PTR CALLBACK UsageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void RefreshDevList(HWND devlist);
+    INT_PTR CALLBACK DeviceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void ShowDevices(HWND hwndDlg);
+    void ShowScrub(HWND hwndDlg);
+    INT_PTR CALLBACK StatsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void ShowStats(HWND hwndDlg, UINT64 devid);
+    void ResetStats(HWND hwndDlg);
+
+    btrfs_device* devices;
+    BOOL readonly;
+    BtrfsBalance* balance;
+    BTRFS_UUID uuid;
+    BOOL uuid_set;
 
 private:
     LONG refcount;
-    BOOL ignore, allow_snapshot;
-    BOOL bg;
-    WCHAR path[MAX_PATH];
+    BOOL ignore;
     STGMEDIUM stgm;
     BOOL stgm_set;
-    HBITMAP uacicon;
-
-    BOOL reflink_copy(HWND hwnd, const WCHAR* fn, const WCHAR* dir);
-    void get_uac_icon();
+    WCHAR fn[MAX_PATH];
+    UINT64 stats_dev;
 };
