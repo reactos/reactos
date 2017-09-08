@@ -3,6 +3,7 @@ list(APPEND SOURCE
     dirty.c
     fsinfo.c
     fsutil.c
+    hardlink.c
     fsutil.h)
 add_executable(fsutil ${SOURCE} fsutil.rc)
 set_module_type(fsutil win32cui UNICODE)
