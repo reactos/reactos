@@ -67,8 +67,10 @@ typedef struct {
     LIST_ENTRY list_entry;
 } data_reloc_ref;
 
+#ifndef __REACTOS__
 #ifndef _MSC_VER // not in mingw yet
 #define DEVICE_DSM_FLAG_TRIM_NOT_FS_ALLOCATED 0x80000000
+#endif
 #endif
 
 #define BALANCE_UNIT 0x100000 // only read 1 MB at a time
