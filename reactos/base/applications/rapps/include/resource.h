@@ -77,7 +77,7 @@
 #define ID_REFRESH               559
 #define ID_REGREMOVE             560
 #define ID_RESETDB               561
-#define ID_CHECK_ALL            562
+#define ID_CHECK_ALL             562
 
 /* Strings */
 #define IDS_APPTITLE             100
