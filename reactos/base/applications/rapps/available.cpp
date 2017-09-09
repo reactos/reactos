@@ -5,7 +5,7 @@
  * PURPOSE:     Classes for working with available applications
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov     (chaez.san@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  */
 #include "defines.h"
 

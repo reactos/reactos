@@ -3,7 +3,7 @@
 * LICENSE:      GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
 * FILE:         base/applications/rapps/unattended.cpp
 * PURPOSE:      Functions to parse command-line flags and process them
-* COPYRIGHT:    Copyright 2017 Alexander Shaposhnikov (chaez.san@gmail.com)
+* COPYRIGHT:    Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
 */
 #include "unattended.h"
 #include "defines.h"

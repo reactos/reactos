@@ -4,7 +4,7 @@
  * FILE:        base/applications/rapps/settingsdlg.cpp
  * PURPOSE:     Settings Dialog
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
- *              Copyright 2017 Alexander Shaposhnikov     (chaez.san@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  */
 #include "defines.h"
 

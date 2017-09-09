@@ -3,8 +3,8 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE:        base/applications/rapps/aboutdlg.cpp
  * PURPOSE:     About Dialog
- * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
- *              Copyright 2017 Alexander Shaposhikov (chaez.san@gmail.com)
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev      (dmitry@reactos.org)
+ *              Copyright 2017 Alexander Shaposhikov (sanchaez@reactos.org)
  */
 #include "defines.h"
 

@@ -4,7 +4,7 @@
  * FILE:        base/applications/rapps/installed.cpp
  * PURPOSE:     Functions for working with installed applications
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev         (dmitry@reactos.org)
- *              Copyright 2017 Alexander Shaposhnikov   (chaez.san@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov   (sanchaez@reactos.org)
  */
 #include "defines.h"
 

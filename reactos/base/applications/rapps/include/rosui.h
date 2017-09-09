@@ -4,7 +4,6 @@
  * FILE:        base/applications/rapps/include/rosui.h
  * PURPOSE:     ATL Layout engine for RAPPS
  * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov   (chaez.san@gmail.com)
  */
 #pragma once
 

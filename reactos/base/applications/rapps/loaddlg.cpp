@@ -8,7 +8,7 @@
  *              Copyright 2005 Ge van Geldorp             (gvg@reactos.org)
  *              Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov     (chaez.san@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  */
 
  /*

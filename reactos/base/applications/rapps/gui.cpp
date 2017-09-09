@@ -4,7 +4,7 @@
  * FILE:        base/applications/rapps/gui.cpp
  * PURPOSE:     GUI classes for RAPPS
  * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov   (chaez.san@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov   (sanchaez@reactos.org)
  */
 #include "defines.h"
 
