@@ -4,7 +4,8 @@
 class CRichEdit :
     public CWindow
 {
-    HMODULE LoadedLibrary;
+    HMODULE m_LoadedLibrary;
+
     VOID GenericInsertText(LPCWSTR lpszText, LONG InsertedTextLen, DWORD dwEffects)
     {
         SETTEXTEX SetText;
@@ -24,6 +25,8 @@ class CRichEdit :
     }
 
 public:
+    CRichEdit() : CWindow(), m_LoadedLibrary(NULL) {}
+
     VOID SetRangeFormatting(LONG Start, LONG End, DWORD dwEffects)
     {
         CHARFORMAT2W CharFormat;
@@ -84,7 +87,7 @@ public:
 
     HWND Create(HWND hwndParent)
     {
-        LoadedLibrary = LoadLibraryW(L"riched20.dll");
+        m_LoadedLibrary = LoadLibraryW(L"riched20.dll");
 
         m_hWnd = CreateWindowExW(0,
                                  L"RichEdit20W",
@@ -114,7 +117,10 @@ public:
 
     ~CRichEdit()
     {
-        FreeLibrary(LoadedLibrary);
+        if (m_LoadedLibrary)
+        {
+            FreeLibrary(m_LoadedLibrary);
+        }
     }
 
 };
