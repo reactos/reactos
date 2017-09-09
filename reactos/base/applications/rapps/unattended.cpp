@@ -15,7 +15,7 @@
 
 #define MIN_ARGS 2
 
-BOOL CmdParser(LPWSTR lpCmdLine)
+BOOL UseCmdParameters(LPWSTR lpCmdLine)
 {
     INT argc;
     LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);

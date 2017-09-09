@@ -160,7 +160,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     InitCommonControls();
 
     // skip window creation if there were some keys
-    if (!CmdParser(lpCmdLine))
+    if (!UseCmdParameters(lpCmdLine))
     {
         if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
             CAvailableApps::ForceUpdateAppsDB();

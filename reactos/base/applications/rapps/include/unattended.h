@@ -5,4 +5,4 @@
 #define CMD_KEY_SETUP L"/SETUP"
 
 // return TRUE if the SETUP key was valid
-BOOL CmdParser(LPWSTR lpCmdLine);
+BOOL UseCmdParameters(LPWSTR lpCmdLine);
