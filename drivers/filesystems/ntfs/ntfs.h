@@ -769,6 +769,9 @@ GetAllocationOffsetFromVCN(PDEVICE_EXTENSION DeviceExt,
                            ULONG IndexBufferSize,
                            ULONGLONG Vcn);
 
+ULONGLONG
+GetIndexEntryVCN(PINDEX_ENTRY_ATTRIBUTE IndexEntry);
+
 ULONG
 GetSizeOfIndexEntries(PB_TREE_FILENAME_NODE Node);
 
@@ -1001,6 +1004,9 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
                PDEVICE_EXTENSION DeviceExt,
                PULONGLONG DestinationIndex,
                BOOLEAN CanWait);
+
+VOID
+NtfsDumpData(ULONG_PTR Buffer, ULONG Length);
 
 PNTFS_ATTR_CONTEXT
 PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord);
