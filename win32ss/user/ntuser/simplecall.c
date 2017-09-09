@@ -58,7 +58,6 @@ APIENTRY
 NtUserCallNoParam(DWORD Routine)
 {
     DWORD_PTR Result = 0;
-    DECLARE_RETURN(DWORD_PTR);
 
     TRACE("Enter NtUserCallNoParam\n");
     UserEnterExclusive();
@@ -86,19 +85,23 @@ NtUserCallNoParam(DWORD Routine)
             break;
 
         case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
-            RETURN((DWORD_PTR)IntMsqClearWakeMask());
+            Result = (DWORD_PTR)IntMsqClearWakeMask();
+            break;
 
         case NOPARAM_ROUTINE_GETMSESSAGEPOS:
         {
             PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-            RETURN((DWORD_PTR)MAKELONG(pti->ptLast.x, pti->ptLast.y));
+            Result = (DWORD_PTR)MAKELONG(pti->ptLast.x, pti->ptLast.y);
+            break;
         }
 
         case NOPARAM_ROUTINE_RELEASECAPTURE:
-            RETURN((DWORD_PTR)IntReleaseCapture());
+            Result = (DWORD_PTR)IntReleaseCapture();
+            break;
 
         case NOPARAM_ROUTINE_LOADUSERAPIHOOK:
-            RETURN(UserLoadApiHook());
+            Result = UserLoadApiHook();
+            break;
 
         case NOPARAM_ROUTINE_ZAPACTIVEANDFOUS:
         {
@@ -106,28 +109,30 @@ NtUserCallNoParam(DWORD Routine)
             TRACE("Zapping the Active and Focus window out of the Queue!\n");
             pti->MessageQueue->spwndFocus = NULL;
             pti->MessageQueue->spwndActive = NULL;
-            RETURN(0);
+            Result = 0;
+            break;
         }
 
         /* this is a ReactOS only case and is needed for gui-on-demand */
         case NOPARAM_ROUTINE_ISCONSOLEMODE:
-            RETURN(ScreenDeviceContext == NULL);
+            Result = (ScreenDeviceContext == NULL);
+            break;
 
         case NOPARAM_ROUTINE_UPDATEPERUSERIMMENABLING:
             gpsi->dwSRVIFlags |= SRVINFO_IMM32; // Always set.
-            RETURN(1); // Always return TRUE.
+            Result = TRUE; // Always return TRUE.
+            break;
 
         default:
             ERR("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             break;
     }
-    RETURN(Result);
 
-CLEANUP:
-    TRACE("Leave NtUserCallNoParam, ret=%p\n", (PVOID)_ret_);
+    TRACE("Leave NtUserCallNoParam, ret=%p\n",(PVOID)Result);
     UserLeave();
-    END_CLEANUP;
+
+    return Result;
 }
 
 
@@ -140,7 +145,7 @@ NtUserCallOneParam(
     DWORD_PTR Param,
     DWORD Routine)
 {
-    DECLARE_RETURN(DWORD_PTR);
+    DWORD_PTR Result;
 
     TRACE("Enter NtUserCallOneParam\n");
 
@@ -153,7 +158,8 @@ NtUserCallOneParam(
             PTHREADINFO pti;
             pti = PsGetCurrentThreadWin32Thread();
             MsqPostQuitMessage(pti, Param);
-            RETURN(TRUE);
+            Result = TRUE;
+            break;
         }
 
         case ONEPARAM_ROUTINE_BEGINDEFERWNDPOS:
@@ -165,7 +171,8 @@ NtUserCallOneParam(
             if (count < 0)
             {
                 EngSetLastError(ERROR_INVALID_PARAMETER);
-                RETURN(0);
+                Result = 0;
+                break;
             }
 
             /* Windows allows zero count, in which case it allocates context for 8 moves */
@@ -177,24 +184,31 @@ NtUserCallOneParam(
                                             (PHANDLE)&hDwp,
                                             TYPE_SETWINDOWPOS,
                                             sizeof(SMWP));
-            if (!psmwp) RETURN(0);
+            if (!psmwp)
+            {
+                Result = 0;
+                break;
+            }
 
             psmwp->acvr = ExAllocatePoolWithTag(PagedPool, count * sizeof(CVR), USERTAG_SWP);
             if (!psmwp->acvr)
             {
                 UserDeleteObject(hDwp, TYPE_SETWINDOWPOS);
-                RETURN(0);
+                Result = 0;
+                break;
             }
 
             RtlZeroMemory(psmwp->acvr, count * sizeof(CVR));
             psmwp->bHandle = TRUE;
             psmwp->ccvr = 0;          // actualCount
             psmwp->ccvrAlloc = count; // suggestedCount
-            RETURN((DWORD_PTR)hDwp);
+            Result = (DWORD_PTR)hDwp;
+            break;
         }
 
         case ONEPARAM_ROUTINE_SHOWCURSOR:
-            RETURN((DWORD_PTR)UserShowCursor((BOOL)Param));
+            Result = (DWORD_PTR)UserShowCursor((BOOL)Param);
+            break;
 
         case ONEPARAM_ROUTINE_GETDESKTOPMAPPING:
         {
@@ -204,43 +218,43 @@ NtUserCallOneParam(
             {
                 /* Try convert the pointer to a user mode pointer if the desktop is
                    mapped into the process */
-                RETURN((DWORD_PTR)DesktopHeapAddressToUser((PVOID)Param));
+                Result = (DWORD_PTR)DesktopHeapAddressToUser((PVOID)Param);
             }
             else
             {
-                RETURN(0);
+                Result = 0;
             }
+            break;
         }
 
         case ONEPARAM_ROUTINE_WINDOWFROMDC:
-            RETURN((DWORD_PTR)IntWindowFromDC((HDC)Param));
+            Result = (DWORD_PTR)IntWindowFromDC((HDC)Param);
+            break;
 
         case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
         {
-            DWORD_PTR Result;
-
             Result = gspv.bMouseBtnSwap;
             gspv.bMouseBtnSwap = Param ? TRUE : FALSE;
             gpsi->aiSysMet[SM_SWAPBUTTON] = gspv.bMouseBtnSwap;
-            RETURN(Result);
+            break;
         }
 
         case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
-            RETURN((DWORD_PTR)IntSetCaretBlinkTime((UINT)Param));
+            Result = (DWORD_PTR)IntSetCaretBlinkTime((UINT)Param);
+            break;
 
         case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
-            RETURN((DWORD_PTR)MsqSetMessageExtraInfo((LPARAM)Param));
+            Result = (DWORD_PTR)MsqSetMessageExtraInfo((LPARAM)Param);
+            break;
 
         case ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT:
         {
-            DWORD_PTR Result;
-
             if (!(Result = (DWORD_PTR)IntCreateCurIconHandle((DWORD)Param)))
             {
                 EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                RETURN(0);
+                Result = 0;
             }
-            RETURN(Result);
+            break;
         }
 
         case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
@@ -261,54 +275,67 @@ NtUserCallOneParam(
                     Process->W32PF_flags |= W32PF_NOWINDOWGHOSTING;
                 }
 
-                RETURN(TRUE);
+                Result = TRUE;
+                break;
             }
 
-            RETURN(FALSE);
+            Result = FALSE;
+            break;
         }
 
         case ONEPARAM_ROUTINE_GETINPUTEVENT:
-            RETURN((DWORD_PTR)IntMsqSetWakeMask(Param));
+            Result = (DWORD_PTR)IntMsqSetWakeMask(Param);
+            break;
 
         case ONEPARAM_ROUTINE_GETKEYBOARDTYPE:
-            RETURN(UserGetKeyboardType(Param));
+            Result = UserGetKeyboardType(Param);
+            break;
 
         case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
-            RETURN((DWORD_PTR)UserGetKeyboardLayout(Param));
+            Result = (DWORD_PTR)UserGetKeyboardLayout(Param);
+            break;
 
         case ONEPARAM_ROUTINE_RELEASEDC:
-            RETURN(UserReleaseDC(NULL, (HDC)Param, FALSE));
+            Result = UserReleaseDC(NULL, (HDC) Param, FALSE);
+            break;
 
         case ONEPARAM_ROUTINE_REALIZEPALETTE:
-            RETURN(UserRealizePalette((HDC)Param));
+            Result = UserRealizePalette((HDC) Param);
+            break;
 
         case ONEPARAM_ROUTINE_GETQUEUESTATUS:
         {
-            RETURN(IntGetQueueStatus((DWORD)Param));
+            Result = IntGetQueueStatus((DWORD)Param);
+            break;
         }
 
         case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
             /* FIXME: Should use UserEnterShared */
-            RETURN(UserEnumClipboardFormats(Param));
+            Result = UserEnumClipboardFormats(Param);
+            break;
 
         case ONEPARAM_ROUTINE_GETCURSORPOS:
         {
-            BOOL Ret = TRUE;
             PPOINTL pptl;
             PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-            if (pti->rpdesk != IntGetActiveDesktop()) RETURN(FALSE);
+            Result = TRUE;
+            if (pti->rpdesk != IntGetActiveDesktop())
+            {
+                Result = FALSE;
+                break;
+            }
             _SEH2_TRY
             {
                 ProbeForWrite((POINT*)Param,sizeof(POINT),1);
                pptl = (PPOINTL)Param;
                *pptl = gpsi->ptCursor;
             }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Ret = FALSE;
+                Result = FALSE;
             }
             _SEH2_END;
-            RETURN(Ret);
+            break;
         }
 
         case ONEPARAM_ROUTINE_SETPROCDEFLAYOUT:
@@ -318,64 +345,75 @@ NtUserCallOneParam(
             {
                 ppi = PsGetCurrentProcessWin32Process();
                 ppi->dwLayout = Param;
-                RETURN(TRUE);
+                Result = TRUE;
+                break;
             }
             EngSetLastError(ERROR_INVALID_PARAMETER);
-            RETURN(FALSE);
+            Result = FALSE;
+            break;
         }
 
         case ONEPARAM_ROUTINE_GETPROCDEFLAYOUT:
         {
-            BOOL Ret = TRUE;
             PPROCESSINFO ppi;
             PDWORD pdwLayout;
+            Result = TRUE;
+
             if (PsGetCurrentProcess() == gpepCSRSS)
             {
                 EngSetLastError(ERROR_INVALID_ACCESS);
-                RETURN(FALSE);
+                Result = FALSE;
+                break;
             }
+
             ppi = PsGetCurrentProcessWin32Process();
             _SEH2_TRY
             {
                pdwLayout = (PDWORD)Param;
                *pdwLayout = ppi->dwLayout;
             }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 SetLastNtError(_SEH2_GetExceptionCode());
-                Ret = FALSE;
+                Result = FALSE;
             }
             _SEH2_END;
-            RETURN(Ret);
+            break;
         }
 
         case ONEPARAM_ROUTINE_REPLYMESSAGE:
-            RETURN(co_MsqReplyMessage((LRESULT)Param));
+            Result = co_MsqReplyMessage((LRESULT)Param);
+            break;
 
         case ONEPARAM_ROUTINE_MESSAGEBEEP:
             /* TODO: Implement sound sentry */
-            RETURN(UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param));
+            Result = UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param);
+           break;
 
         case ONEPARAM_ROUTINE_CREATESYSTEMTHREADS:
-            RETURN(CreateSystemThreads(Param));
+            Result = CreateSystemThreads(Param);
+            break;
 
         case ONEPARAM_ROUTINE_LOCKFOREGNDWINDOW:
-            RETURN((DWORD_PTR)IntLockSetForegroundWindow(Param));
+            Result = (DWORD_PTR)IntLockSetForegroundWindow(Param);
+            break;
 
         case ONEPARAM_ROUTINE_ALLOWSETFOREGND:
+            Result = (DWORD_PTR)IntAllowSetForegroundWindow(Param);
+            break;
 
-            RETURN((DWORD_PTR)IntAllowSetForegroundWindow(Param));
+        default:
+            ERR("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
+                Routine, Param);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            Result = 0;
+            break;
     }
 
-    ERR("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
-        Routine, Param);
-    EngSetLastError(ERROR_INVALID_PARAMETER);
-    RETURN(0);
+   TRACE("Leave NtUserCallOneParam, ret=%p\n", (PVOID)Result);
+   UserLeave();
 
-CLEANUP:
-    TRACE("Leave NtUserCallOneParam, ret=%p\n", (PVOID)_ret_);
-    UserLeave();
-    END_CLEANUP;
+   return Result;
 }
 
 
@@ -390,8 +428,7 @@ NtUserCallTwoParam(
     DWORD Routine)
 {
     PWND Window;
-    DECLARE_RETURN(DWORD_PTR);
-
+    DWORD_PTR Ret;
     TRACE("Enter NtUserCallTwoParam\n");
     UserEnterExclusive();
 
@@ -399,18 +436,19 @@ NtUserCallTwoParam(
     {
         case TWOPARAM_ROUTINE_REDRAWTITLE:
         {
-            DWORD_PTR Ret;
             Window = UserGetWindowObject((HWND)Param1);
             Ret = (DWORD_PTR)UserPaintCaption(Window, (INT)Param2);
-            RETURN(Ret);
+            break;
         }
 
         case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
         {
-            DWORD_PTR Ret;
             PMENU MenuObject = IntGetMenuObject((HMENU)Param1);
             if (!MenuObject)
-                RETURN(0);
+            {
+                Ret = 0;
+                break;
+            }
 
             if (Param2 > 0)
             {
@@ -420,66 +458,85 @@ NtUserCallTwoParam(
             else
                 Ret = (DWORD_PTR)MenuObject->cyMenu;
             IntReleaseMenuObject(MenuObject);
-            RETURN(Ret);
+            break;
         }
 
         case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
         {
             PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
             ASSERT(pti->MessageQueue);
-            RETURN((DWORD_PTR)MsqSetStateWindow(pti, (ULONG)Param1, (HWND)Param2));
+            Ret = (DWORD_PTR)MsqSetStateWindow(pti, (ULONG)Param1, (HWND)Param2);
+            break;
         }
 
         case TWOPARAM_ROUTINE_ENABLEWINDOW:
-            RETURN(IntEnableWindow((HWND)Param1, (BOOL)Param2));
+            Ret = IntEnableWindow((HWND)Param1, (BOOL)Param2);
+            break;
 
         case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
         {
             Window = UserGetWindowObject((HWND)Param1);
-            if (!Window) RETURN(0);
+            if (!Window)
+            {
+                Ret = 0;
+                break;
+            }
 
-            RETURN((DWORD_PTR)IntShowOwnedPopups(Window, (BOOL)Param2));
+            Ret = (DWORD_PTR)IntShowOwnedPopups(Window, (BOOL)Param2);
+            break;
         }
 
         case TWOPARAM_ROUTINE_ROS_UPDATEUISTATE:
         {
             WPARAM wParam;
             Window = UserGetWindowObject((HWND)Param1);
-            if (!Window) RETURN(0);
+            if (!Window)
+            {
+                Ret = 0;
+                break;
+            }
 
             /* Unpack wParam */
             wParam = MAKEWPARAM((Param2 >> 3) & 0x3,
                                 Param2 & (UISF_HIDEFOCUS | UISF_HIDEACCEL | UISF_ACTIVE));
 
-            RETURN(UserUpdateUiState(Window, wParam));
+            Ret = UserUpdateUiState(Window, wParam);
+            break;
         }
 
         case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
             STUB
-                RETURN(0);
+            Ret = 0;
+            break;
 
         case TWOPARAM_ROUTINE_SETCARETPOS:
-            RETURN((DWORD_PTR)co_IntSetCaretPos((int)Param1, (int)Param2));
+            Ret = (DWORD_PTR)co_IntSetCaretPos((int)Param1, (int)Param2);
+            break;
 
         case TWOPARAM_ROUTINE_REGISTERLOGONPROCESS:
-            RETURN((DWORD_PTR)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
+            Ret = (DWORD_PTR)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2);
+            break;
 
         case TWOPARAM_ROUTINE_SETCURSORPOS:
-            RETURN((DWORD_PTR)UserSetCursorPos((int)Param1, (int)Param2, 0, 0, FALSE));
+            Ret = (DWORD_PTR)UserSetCursorPos((int)Param1, (int)Param2, 0, 0, FALSE);
+            break;
 
         case TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK:
-            RETURN(IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2));
+            Ret = IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2);
+            break;
+
+        default:
+            ERR("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
+                Routine, Param1, Param2);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            Ret = 0;
     }
 
-    ERR("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
-        Routine, Param1, Param2);
-    EngSetLastError(ERROR_INVALID_PARAMETER);
-    RETURN(0);
 
-CLEANUP:
-    TRACE("Leave NtUserCallTwoParam, ret=%p\n", (PVOID)_ret_);
+    TRACE("Leave NtUserCallTwoParam, ret=%p\n", (PVOID)Ret);
     UserLeave();
-    END_CLEANUP;
+
+    return Ret;
 }
 
 
@@ -492,17 +549,17 @@ NtUserCallHwndLock(
     HWND hWnd,
     DWORD Routine)
 {
-    BOOL Ret = 0;
+    BOOL Ret = FALSE;
     PWND Window;
     USER_REFERENCE_ENTRY Ref;
-    DECLARE_RETURN(BOOLEAN);
 
     TRACE("Enter NtUserCallHwndLock\n");
     UserEnterExclusive();
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
-        RETURN(FALSE);
+        Ret = FALSE;
+        goto Exit;
     }
 
     UserRefObjectCo(Window, &Ref);
@@ -578,12 +635,11 @@ NtUserCallHwndLock(
 
     UserDerefObjectCo(Window);
 
-    RETURN(Ret);
-
-CLEANUP:
-    TRACE("Leave NtUserCallHwndLock, ret=%u\n", _ret_);
+Exit:
+    TRACE("Leave NtUserCallHwndLock, ret=%u\n", Ret);
     UserLeave();
-    END_CLEANUP;
+
+    return Ret;
 }
 
 /*
@@ -781,18 +837,19 @@ NtUserCallHwndParamLock(
     DWORD Param,
     DWORD Routine)
 {
-    DWORD Ret = 0;
+    DWORD Ret = FALSE;
     PWND Window;
     USER_REFERENCE_ENTRY Ref;
-    DECLARE_RETURN(DWORD);
 
     TRACE("Enter NtUserCallHwndParamLock\n");
     UserEnterExclusive();
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
-        RETURN(FALSE);
+        Ret = FALSE;
+        goto Exit;
     }
+
     UserRefObjectCo(Window, &Ref);
 
     switch (Routine)
@@ -808,13 +865,12 @@ NtUserCallHwndParamLock(
 
     UserDerefObjectCo(Window);
 
-    RETURN(Ret);
+Exit:
 
-CLEANUP:
-    TRACE("Leave NtUserCallHwndParamLock, ret=%lu\n", _ret_);
+    TRACE("Leave NtUserCallHwndParamLock, ret=%lu\n", Ret);
     UserLeave();
-    END_CLEANUP;
 
+    return Ret;
 }
 
 /* EOF */
