@@ -110,7 +110,14 @@ REM Parse command line parameters
         ) else if /I "%1" == "RTC" (
             echo. && echo 	Warning: RTC switch is ignored outside of a Visual Studio environment. && echo.
         ) else if /I "%1" NEQ "" (
-            echo. && echo   Warning: Unrecognized switch "%1" && echo.
+            echo %1| find /I "-D" > NUL
+            if %ERRORLEVEL% == 0 (
+                Rem User is passing a switch to CMake
+                Rem Ignore it, and ignore the next parameter that follows
+                Shift
+            ) else (
+                echo. && echo   Warning: Unrecognized switch "%1" && echo.
+            )
         ) else (
             goto continue
         )
@@ -176,7 +183,14 @@ REM Parse command line parameters
             echo Runtime checks enabled
             set VS_RUNTIME_CHECKS=1
         ) else if /I "%1" NEQ "" (
-            echo. && echo   Warning: Unrecognized switch "%1" && echo.
+            echo %1| find /I "-D" > NUL
+            if %ERRORLEVEL% == 0 (
+                Rem User is passing a switch to CMake
+                Rem Ignore it, and ignore the next parameter that follows
+                Shift
+            ) else (
+                echo. && echo   Warning: Unrecognized switch "%1" && echo.
+            )
         ) else (
             goto continue
         )
