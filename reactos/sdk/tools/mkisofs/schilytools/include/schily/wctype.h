@@ -1,8 +1,8 @@
-/* @(#)wctype.h	1.8 13/07/08 Copyright 2009-2013 J. Schilling */
+/* @(#)wctype.h	1.9 17/08/05 Copyright 2009-2017 J. Schilling */
 /*
  *	Abstraction from wctype.h
  *
- *	Copyright (c) 2009-2013 J. Schilling
+ *	Copyright (c) 2009-2017 J. Schilling
  */
 /*
  * The contents of this file are subject to the terms of the
@@ -68,6 +68,10 @@
 #define	iswalnum(c)	isalnum(c)
 #undef	iswalpha
 #define	iswalpha(c)	isalpha(c)
+#ifdef	HAVE_ISBLANK
+#undef	iswblank
+#define	iswblank(c)	isblank(c)
+#endif
 #undef	iswcntrl
 #define	iswcntrl(c)	iscntrl(c)
 #undef	iswcntrl

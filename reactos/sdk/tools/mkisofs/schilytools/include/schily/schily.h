@@ -1,4 +1,4 @@
-/* @(#)schily.h	1.122 16/12/18 Copyright 1985-2016 J. Schilling */
+/* @(#)schily.h	1.123 17/08/03 Copyright 1985-2016 J. Schilling */
 /*
  *	Definitions for libschily
  *
@@ -46,9 +46,6 @@
 #endif
 #ifndef _SCHILY_CCOMDEFS_H
 #include <schily/ccomdefs.h>
-#endif
-#ifndef _SCHILY_STDINT_H
-#include <schily/stdint.h>
 #endif
 
 #ifdef	__cplusplus
@@ -467,12 +464,12 @@ extern	size_t	wcslcatl __PR((wchar_t *, size_t, ...));
 extern	int	wcseql __PR((const wchar_t *, const wchar_t *));
 #endif
 #ifdef	va_arg
-extern	int	format __PR((void (*)(char, intptr_t), intptr_t, const char *,
+extern	int	format __PR((void (*)(char, void *), void *, const char *,
 							va_list));
-extern	int	fprformat __PR((intptr_t, const char *, va_list));
+extern	int	fprformat __PR((void *, const char *, va_list));
 #else
-extern	int	format __PR((void (*)(char, intptr_t), intptr_t, const char *, void *));
-extern	int	fprformat __PR((intptr_t, const char *, void *));
+extern	int	format __PR((void (*)(char, void *), void *, const char *, void *));
+extern	int	fprformat __PR((void *, const char *, void *));
 #endif
 
 extern	int	ftoes __PR((char *, double, int, int));

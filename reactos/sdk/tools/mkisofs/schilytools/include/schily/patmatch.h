@@ -1,11 +1,11 @@
-/* @(#)patmatch.h	1.15 10/08/27 Copyright 1985,1993-2010 J. Schilling */
+/* @(#)patmatch.h	1.16 17/07/02 Copyright 1985,1993-2017 J. Schilling */
 
 #ifndef	_SCHILY_PATMATCH_H
 #define	_SCHILY_PATMATCH_H
 /*
  *	Definitions for the pattern matching functions.
  *
- *	Copyright (c) 1985,1993-2010 J. Schilling
+ *	Copyright (c) 1985,1993-2017 J. Schilling
  */
 /*
  * The contents of this file are subject to the terms of the
@@ -14,6 +14,8 @@
  * with the License.
  *
  * See the file CDDL.Schily.txt in this distribution for details.
+ * A copy of the CDDL is also available via the Internet at
+ * http://www.opensource.org/licenses/cddl1.txt
  *
  * When distributing Covered Code, include this CDDL HEADER in each
  * file and include the License file CDDL.Schily.txt from this distribution.
@@ -118,6 +120,17 @@ extern	wchar_t	*patwmatch	__PR((const wchar_t *__pat, const int *__aux,
 						int __alt, int __state[]));
 extern	wchar_t	*patwlmatch	__PR((const wchar_t *__pat, const int *__aux,
 						const  wchar_t *__str,
+						int __soff, int __slen,
+						int __alt, int __state[]));
+
+extern	unsigned char *patmbmatch __PR((const wchar_t *__pat,
+						const int *__aux,
+						const  unsigned char *__str,
+						int __soff, int __slen,
+						int __alt, int __state[]));
+extern	unsigned char *patmblmatch __PR((const wchar_t *__pat,
+						const int *__aux,
+						const  unsigned char *__str,
 						int __soff, int __slen,
 						int __alt, int __state[]));
 

@@ -1,9 +1,9 @@
-/* @(#)libport.h	1.44 15/05/09 Copyright 1995-2015 J. Schilling */
+/* @(#)libport.h	1.45 17/05/02 Copyright 1995-2017 J. Schilling */
 /*
  *	Prototypes for POSIX standard functions that may be missing on the
  *	local platform and thus are implemented inside libschily.
  *
- *	Copyright (c) 1995-2015 J. Schilling
+ *	Copyright (c) 1995-2017 J. Schilling
  */
 /*
  * The contents of this file are subject to the terms of the
@@ -213,8 +213,8 @@ extern	wchar_t		*wcsstr		__PR((const wchar_t *s1,
 #endif	/* _SCHILY_WCHAR_H */
 
 #ifndef	HAVE_RENAME
-extern	int		rename		__PR((const char *old,
-							const char *new));
+extern	int		rename		__PR((const char *__old,
+							const char *__new));
 #endif
 
 /*
@@ -378,8 +378,8 @@ extern	ssize_t		readlinkat __PR((int fd, const char *name,
 					char *lbuf, size_t lbufsize));
 #endif
 #ifndef	HAVE_RENAMEAT
-extern	int		renameat __PR((int oldfd, const char *old,
-					int newfd, const char *new));
+extern	int		renameat __PR((int oldfd, const char *__old,
+					int newfd, const char *__new));
 #endif
 #ifndef	HAVE_SYMLINKAT
 extern	int		symlinkat __PR((const char *content,
