@@ -405,14 +405,10 @@ BOOL GetInstalledVersion(ATL::CStringW *pszVersion, const ATL::CStringW &szRegNa
 }
 
 // CConfigParser
-ATL::CStringW CConfigParser::m_szLocaleID;
-ATL::CStringW CConfigParser::m_szCachedINISectionLocale;
-ATL::CStringW CConfigParser::m_szCachedINISectionLocaleNeutral;
 
 CConfigParser::CConfigParser(const ATL::CStringW& FileName) : szConfigPath(GetINIFullPath(FileName))
 {
-    // we don't have cached section strings for the current system language, create them, lazy
-    CacheINILocaleLazy();
+    CacheINILocale();
 }
 
 ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
@@ -426,32 +422,18 @@ ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
     return szBuffer;
 }
 
-VOID CConfigParser::CacheINILocaleLazy()
+VOID CConfigParser::CacheINILocale()
 {
-    if (m_szLocaleID.IsEmpty())
-    {
-        // TODO: Set default locale if call fails
-        // find out what is the current system lang code (e.g. "0a") and append it to SectionLocale
-        GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
-                       m_szLocaleID.GetBuffer(m_cchLocaleSize), m_cchLocaleSize);
+    // TODO: Set default locale if call fails
+    // find out what is the current system lang code (e.g. "0a") and append it to SectionLocale
+    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
+                    m_szLocaleID.GetBuffer(m_cchLocaleSize), m_cchLocaleSize);
 
-        m_szLocaleID.ReleaseBuffer();
-        m_szCachedINISectionLocale = L"Section." + m_szLocaleID;
+    m_szLocaleID.ReleaseBuffer();
+    m_szCachedINISectionLocale = L"Section." + m_szLocaleID;
 
-        // turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part
-        m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale + m_szLocaleID.Right(2);
-    }
-}
-
-const ATL::CStringW& CConfigParser::GetLocale()
-{
-    CacheINILocaleLazy();
-    return m_szLocaleID;
-}
-
-INT CConfigParser::GetLocaleSize()
-{
-    return m_cchLocaleSize;
+    // turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part
+    m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale + m_szLocaleID.Right(2);
 }
 
 UINT CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)

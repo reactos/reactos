@@ -25,19 +25,16 @@ class CConfigParser
     // Locale names cache
     const static INT m_cchLocaleSize = 5;
 
-    static ATL::CStringW m_szLocaleID;
-    static ATL::CStringW m_szCachedINISectionLocale;
-    static ATL::CStringW m_szCachedINISectionLocaleNeutral;
+    ATL::CStringW m_szLocaleID;
+    ATL::CStringW m_szCachedINISectionLocale;
+    ATL::CStringW m_szCachedINISectionLocaleNeutral;
 
     const ATL::CStringW szConfigPath;
 
-    static ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName);
-    static VOID CacheINILocaleLazy();
+    ATL::CStringW GetINIFullPath(const ATL::CStringW& FileName);
+    VOID CacheINILocale();
 
 public:
-    static const ATL::CStringW& GetLocale();
-    static INT CConfigParser::GetLocaleSize();
-
     CConfigParser(const ATL::CStringW& FileName = "");
 
     UINT GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString);
