@@ -10,7 +10,6 @@ list(APPEND SOURCE
     aboutdlg.cpp
     available.cpp
     gui.cpp
-    installdlg.cpp
     installed.cpp
     integrity.cpp
     loaddlg.cpp

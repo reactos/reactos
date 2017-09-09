@@ -37,6 +37,3 @@ VOID CreateSettingsDlg(HWND hwnd);
 
 // About dialog (aboutdlg.cpp)
 VOID ShowAboutDialog();
-
-// Installation dialog (installdlg.cpp)
-//BOOL InstallApplication(INT Index);
