@@ -19,8 +19,15 @@ class CRichEdit :
 
             SendMessageW(EM_SETTEXTEX, (WPARAM) &SetText, (LPARAM) lpszText);
 
-            SetRangeFormatting(Len, Len + InsertedTextLen,
-                (dwEffects == CFM_LINK) ? (PathIsURLW(lpszText) ? dwEffects : 0) : dwEffects);
+            if ((dwEffects == CFM_LINK) && !PathIsURLW(lpszText))
+            {
+                // if text is not an URL, no styling is used
+                SetRangeFormatting(Len, Len + InsertedTextLen, 0); 
+            }
+            else
+            {
+                SetRangeFormatting(Len, Len + InsertedTextLen, dwEffects);
+            }
         }
     }
 
