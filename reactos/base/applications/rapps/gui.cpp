@@ -1,7 +1,10 @@
-﻿/* PROJECT:     ReactOS CE Applications Manager
- * LICENSE:     GPL - See COPYING in the top level directory
- * AUTHORS:     David Quintana             <gigaherz@gmail.com>
- *              Alexander Shaposhnikov     <chaez.san@gmail.com>
+﻿/* 
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        base/applications/rapps/gui.cpp
+ * PURPOSE:     GUI classes for RAPPS
+ * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov   (chaez.san@gmail.com)
  */
 #include "defines.h"
 
@@ -633,18 +636,18 @@ public:
 class CMainWindow :
     public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
 {
-    CUiPanel * m_ClientPanel;
-    CUiSplitPanel * m_VSplitter;
-    CUiSplitPanel * m_HSplitter;
+    CUiPanel* m_ClientPanel;
+    CUiSplitPanel* m_VSplitter;
+    CUiSplitPanel* m_HSplitter;
 
-    CMainToolbar * m_Toolbar;
-    CAppsListView * m_ListView;
+    CMainToolbar* m_Toolbar;
+    CAppsListView* m_ListView;
 
-    CSideTreeView * m_TreeView;
-    CUiWindow<CStatusBar> * m_StatusBar;
-    CUiWindow<CRichEdit> * m_RichEdit;
+    CSideTreeView* m_TreeView;
+    CUiWindow<CStatusBar>* m_StatusBar;
+    CUiWindow<CRichEdit>* m_RichEdit;
 
-    CUiWindow<CSearchBar> * m_SearchBar;
+    CUiWindow<CSearchBar>* m_SearchBar;
     CAvailableApps m_AvailableApps;
 
     LPWSTR pLink;
@@ -1636,8 +1639,7 @@ public:
     }
 };
 
-// File interface
-
+// global interface
 CMainWindow * g_MainWindow;
 
 HWND CreateMainWindow()
@@ -1675,7 +1677,12 @@ VOID InsertRichEditText(LPCWSTR szText, DWORD flags)
     g_MainWindow->GetRichEdit()->InsertText(szText, flags);
 }
 
-/* ATL version of functions */
+CAvailableApps* GetAvailableApps()
+{
+    return g_MainWindow->GetAvailableApps();
+}
+
+// ATL version of functions above
 VOID SetStatusBarText(const ATL::CStringW& szText)
 {
     SetStatusBarText(szText.GetString());
@@ -1694,9 +1701,4 @@ VOID NewRichEditText(const ATL::CStringW& szText, DWORD flags)
 VOID InsertRichEditText(const ATL::CStringW& szText, DWORD flags)
 {
     InsertRichEditText(szText.GetString(), flags);
-}
-
-CAvailableApps* GetAvailableApps()
-{
-    return g_MainWindow->GetAvailableApps();
 }

@@ -1,12 +1,11 @@
 /*
- * PROJECT:         ReactOS Applications Manager
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/installed.cpp
- * PURPOSE:         Functions for working with installed applications
- * PROGRAMMERS:     Dmitry Chapyshev            (dmitry@reactos.org)
- *                  Alexander Shaposhnikov      (chaez.san@gmail.com)
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        base/applications/rapps/installed.cpp
+ * PURPOSE:     Functions for working with installed applications
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev         (dmitry@reactos.org)
+ *              Copyright 2017 Alexander Shaposhnikov   (chaez.san@gmail.com)
  */
-
 #include "defines.h"
 
 #include "installed.h"
@@ -14,16 +13,14 @@
 #include "gui.h"
 #include "misc.h"
 
-BOOL
-GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, ATL::CStringW& String)
+BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, ATL::CStringW& String)
 {
     BOOL result = GetApplicationString(hKey, lpKeyName, String.GetBuffer(MAX_PATH));
     String.ReleaseBuffer();
     return result;
 }
 
-BOOL
-GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
+BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
 {
     DWORD dwSize = MAX_PATH * sizeof(WCHAR);
 
@@ -41,8 +38,7 @@ GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
     return FALSE;
 }
 
-BOOL
-UninstallApplication(INT Index, BOOL bModify)
+BOOL UninstallApplication(INT Index, BOOL bModify)
 {
     LPCWSTR szModify = L"ModifyPath";
     LPCWSTR szUninstall = L"UninstallString";
@@ -96,8 +92,7 @@ UninstallApplication(INT Index, BOOL bModify)
     return StartProcess(szPath, TRUE);
 }
 
-BOOL
-ShowInstalledAppInfo(INT Index)
+BOOL ShowInstalledAppInfo(INT Index)
 {
     ATL::CStringW szText;
     ATL::CStringW szInfo;
@@ -138,8 +133,7 @@ ShowInstalledAppInfo(INT Index)
     return TRUE;
 }
 
-VOID
-RemoveAppFromRegistry(INT Index)
+VOID RemoveAppFromRegistry(INT Index)
 {
     PINSTALLED_INFO Info;
     WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
@@ -176,8 +170,7 @@ RemoveAppFromRegistry(INT Index)
     }
 }
 
-BOOL
-EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
+BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
 {
     DWORD dwSize = MAX_PATH, dwType, dwValue;
     BOOL bIsSystemComponent, bIsUpdate;

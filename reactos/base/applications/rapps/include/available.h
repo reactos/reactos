@@ -80,13 +80,14 @@ typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, LPCWSTR s
 
 class CAvailableApps
 {
-    ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
     static ATL::CStringW m_szPath;
     static ATL::CStringW m_szCabPath;
     static ATL::CStringW m_szAppsPath;
     static ATL::CStringW m_szSearchPath;
 
     static BOOL InitializeStaticStrings();
+    
+    ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
 
 public:
     CAvailableApps();

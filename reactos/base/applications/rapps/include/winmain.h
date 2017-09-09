@@ -1,7 +1,7 @@
 #pragma once
 #include <windef.h>
-//TODO: Separate main and settings related definitions
 
+//TODO: Separate main and settings related definitions
 struct SETTINGS_INFO
 {
     BOOL bSaveWndPos;

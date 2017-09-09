@@ -1,10 +1,10 @@
 /*
- * PROJECT:         ReactOS Applications Manager
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/integrity.cpp
- * PURPOSE:         Various integrity check mechanisms
- * PROGRAMMERS:     Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
- *                  Mark Jansen
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        base/applications/rapps/integrity.cpp
+ * PURPOSE:     Various integrity check mechanisms
+ * COPYRIGHT:   Copyright Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+ *              Copyright Mark Jansen
  */
 #include "defines.h"
 

@@ -9,6 +9,7 @@ struct INSTALLED_INFO
     HKEY hSubKey;
     ATL::CStringW szKeyName;
 };
+
 typedef INSTALLED_INFO *PINSTALLED_INFO;
 typedef BOOL(CALLBACK *APPENUMPROC)(INT ItemIndex, ATL::CStringW &Name, PINSTALLED_INFO Info);
 

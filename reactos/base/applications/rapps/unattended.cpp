@@ -1,11 +1,10 @@
 /*
-* PROJECT:         ReactOS Applications Manager
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            base/applications/rapps/unattended.cpp
-* PURPOSE:         Functions to parse command-line flags and process them
-* PROGRAMMERS:     Alexander Shaposhnikov (chaez.san@gmail.com)
+* PROJECT:      ReactOS Applications Manager
+* LICENSE:      GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+* FILE:         base/applications/rapps/unattended.cpp
+* PURPOSE:      Functions to parse command-line flags and process them
+* COPYRIGHT:    Copyright 2017 Alexander Shaposhnikov (chaez.san@gmail.com)
 */
-
 #include "unattended.h"
 #include "defines.h"
 #include "available.h"
@@ -25,9 +24,7 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
         return FALSE;
     }
 
-    // Setup key - single app expected
     // TODO: use DB filenames as names because they're shorter
-
     ATL::CSimpleArray<ATL::CStringW> arrNames;
     if (!StrCmpW(argv[0], CMD_KEY_INSTALL))
     {

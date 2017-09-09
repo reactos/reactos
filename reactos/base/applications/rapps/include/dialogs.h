@@ -16,6 +16,7 @@ class CDownloadManager
     static INT iCurrentApp;
 
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
+
 public:
     static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK DownloadProgressProc(HWND hWnd,

@@ -1,11 +1,11 @@
 /*
- * PROJECT:         ReactOS Applications Manager
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/winmain.cpp
- * PURPOSE:         Main program
- * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
- *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
- *                  Alexander Shaposhnikov     (chaez.san@gmail.com)
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        base/applications/rapps/winmain.cpp
+ * PURPOSE:     Main program
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev            (dmitry@reactos.org)
+ *              Copyright 2015 Ismael Ferreras Morezuelas  (swyterzone+ros@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov      (chaez.san@gmail.com)
  */
 #include "defines.h"
 #include "rapps.h"
