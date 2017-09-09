@@ -66,6 +66,7 @@ typedef enum _FLPFE
     PFE_VERT_FACE   = 0x0100,
 } FLPFE;
 
+/* The PFE structure describes a Physical Font Entry */
 typedef struct _PFE
 {
     struct _PFF * pPFF;
@@ -98,6 +99,7 @@ typedef struct _PFEOBJ
     PPFE ppfe;
 } PFEOBJ, *PPFEOBJ;
 
+/* The PFF structure describes a Physical Font File */
 typedef struct _PFF
 {
     ULONG sizeofThis;

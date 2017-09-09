@@ -183,6 +183,7 @@ RFONT_vXlateGlpyhs(
             }
         }
 
+        /* Store the glyph handle */
         *phg++ = hg;
     }
 }

@@ -27,7 +27,7 @@ InitFontSupport(VOID)
     ghsemFontDriver = EngCreateSemaphore();
     if (!ghsemFontDriver) return FALSE;
 
-    /* Initialize the global public font taböe */
+    /* Initialize the global public font table */
     if (!PFT_bInit(&gpftPublic)) return FALSE;
 
     return TRUE;

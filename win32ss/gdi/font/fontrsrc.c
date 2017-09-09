@@ -160,6 +160,11 @@ GreGetDefaultCharset()
     return ANSI_CHARSET;
 }
 
+/*!
+
+    \see http://msdn.microsoft.com/en-us/library/ms969909.aspx
+
+*/
 ULONG
 NTAPI
 PFE_ulPenalty(
@@ -210,7 +215,7 @@ PFE_ulPenalty(
     }
 
 
-    /* There are contrary claims about the font mapper behaviour towards
+    /* There are contrary claims about the font mapper behavior towards
        different lfOutPrecision values between MS LOGFONT structure docs
        and the font mapper article. */
     if ((plfw->lfOutPrecision == OUT_DEVICE_PRECIS) &&
@@ -675,7 +680,7 @@ GreAddFontResourceW(
         return 0;
     }
 
-    /* Insert the PFF into the list */
+    /* Insert the PFF into the font table */
     PFT_vInsertPFF(ppft, ppff, iFileNameHash);
 
     /* Return the number of faces */
