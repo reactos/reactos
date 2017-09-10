@@ -324,14 +324,14 @@ BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
 }
 
 BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
-                                 const ATL::CStringW& RegName,
+                                 const ATL::CStringW& szRegName,
                                  BOOL IsUserKey,
                                  REGSAM keyWow)
 {
     BOOL bHasSucceded = FALSE;
     ATL::CRegKey key;
     ATL::CStringW szVersion;
-    ATL::CStringW szPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + RegName;
+    ATL::CStringW szPath = ATL::CStringW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%ls") + szRegName;
 
     if (key.Open(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
                  szPath.GetString(),
@@ -389,7 +389,7 @@ ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
     ATL::CStringW szBuffer;
 
     GetStorageDirectory(szDir);
-    szBuffer.Format(L"%ls\\rapps\\%ls", szDir, FileName);
+    szBuffer.Format(L"%ls\\rapps\\%ls", szDir.GetString(), FileName.GetString());
 
     return szBuffer;
 }

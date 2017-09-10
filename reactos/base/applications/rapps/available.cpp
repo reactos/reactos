@@ -19,9 +19,9 @@
 
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
-    : m_Parser(sFileNameParam)
+    : m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE), m_Parser(sFileNameParam)
 {
-    m_LicenseType = LicenseType::LICENSE_NONE;
+    m_LicenseType = LICENSE_NONE;
 
     m_sFileName = sFileNameParam;
 
@@ -74,7 +74,8 @@ VOID CAvailableApplicationInfo::RetrieveInstalledStatus()
 
 VOID CAvailableApplicationInfo::RetrieveInstalledVersion()
 {
-    ATL::CStringW szNameVersion = m_szName + L" " + m_szVersion;
+    ATL::CStringW szNameVersion;
+    szNameVersion = m_szName + L" " + m_szVersion;
     m_HasInstalledVersion = ::GetInstalledVersion(&m_szInstalledVersion, m_szRegName)
         || ::GetInstalledVersion(&m_szInstalledVersion, m_szName)
         || ::GetInstalledVersion(&m_szInstalledVersion, szNameVersion);
@@ -133,7 +134,7 @@ VOID CAvailableApplicationInfo::RetrieveLicenseType()
     }
     else
     {
-        m_LicenseType = LicenseType::LICENSE_NONE;
+        m_LicenseType = LICENSE_NONE;
     }
 }
 

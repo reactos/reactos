@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef _RAPPS_H
 #define _RAPPS_H
 

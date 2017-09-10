@@ -13,7 +13,6 @@ class CDownloadManager
 {
     static ATL::CSimpleArray<DownloadInfo> AppsToInstallList;
     static CDowloadingAppsListView DownloadsListView;
-    static INT iCurrentApp;
 
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
 

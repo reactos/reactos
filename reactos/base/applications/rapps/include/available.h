@@ -19,7 +19,7 @@ enum LicenseType
 
 inline BOOL IsLicenseType(INT x)
 {
-    return (x >= LicenseType::LICENSE_MIN && x <= LicenseType::LICENSE_MAX);
+    return (x >= LICENSE_MIN && x <= LICENSE_MAX);
 }
 
 struct CAvailableApplicationInfo
@@ -60,9 +60,9 @@ struct CAvailableApplicationInfo
     VOID SetLastWriteTime(FILETIME* ftTime);
 
 private:
-    BOOL m_IsInstalled = FALSE;
-    BOOL m_HasLanguageInfo = FALSE;
-    BOOL m_HasInstalledVersion = FALSE;
+    BOOL m_IsInstalled;
+    BOOL m_HasLanguageInfo;
+    BOOL m_HasInstalledVersion;
     CConfigParser m_Parser;
 
     inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString);
@@ -86,7 +86,7 @@ class CAvailableApps
     static ATL::CStringW m_szSearchPath;
 
     static BOOL InitializeStaticStrings();
-    
+
     ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
 
 public:

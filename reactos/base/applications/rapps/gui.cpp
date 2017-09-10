@@ -1,4 +1,4 @@
-﻿/* 
+﻿/*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE:        base/applications/rapps/gui.cpp
@@ -113,13 +113,13 @@ class CAvailableAppView
         ATL::CStringW szLicense;
         switch (Info->m_LicenseType)
         {
-        case LicenseType::LICENSE_OPENSOURCE:
+        case LICENSE_OPENSOURCE:
             szLicense.LoadStringW(IDS_LICENSE_OPENSOURCE);
             break;
-        case LicenseType::LICENSE_FREEWARE:
+        case LICENSE_FREEWARE:
             szLicense.LoadStringW(IDS_LICENSE_FREEWARE);
             break;
-        case LicenseType::LICENSE_TRIAL:
+        case LICENSE_TRIAL:
             szLicense.LoadStringW(IDS_LICENSE_TRIAL);
             break;
         default:
@@ -368,8 +368,8 @@ class CAppsListView :
 
 public:
     CAppsListView() :
-        bAscending(TRUE),
         bHasAllChecked(FALSE),
+        bAscending(TRUE),
         bHasCheckboxes(FALSE)
     {
     }
@@ -557,11 +557,17 @@ public:
 class CSideTreeView :
     public CUiWindow<CTreeView>
 {
-    HIMAGELIST hImageTreeView = ImageList_Create(TREEVIEW_ICON_SIZE, TREEVIEW_ICON_SIZE,
-                                                 GetSystemColorDepth() | ILC_MASK,
-                                                 0, 1);
+    HIMAGELIST hImageTreeView;
 
 public:
+    CSideTreeView() :
+        CUiWindow(),
+        hImageTreeView(ImageList_Create(TREEVIEW_ICON_SIZE, TREEVIEW_ICON_SIZE,
+                                        GetSystemColorDepth() | ILC_MASK,
+                                        0, 1))
+    {
+    }
+
     HTREEITEM AddItem(HTREEITEM hParent, ATL::CStringW &Text, INT Image, INT SelectedImage, LPARAM lParam)
     {
         return CUiWindow<CTreeView>::AddItem(hParent, const_cast<LPWSTR>(Text.GetString()), Image, SelectedImage, lParam);
@@ -603,7 +609,6 @@ public:
     ~CSideTreeView()
     {
         DestroyImageList();
-        CUiWindow<CTreeView>::~CUiWindow();
     }
 };
 
@@ -1352,7 +1357,7 @@ private:
                     UpdateApplicationsList(-1);
                 }
 
-            }          
+            }
             break;
 
         case ID_UNINSTALL:
@@ -1409,7 +1414,7 @@ private:
         }
     }
 
-    static BOOL SearchPatternMatch(PCWSTR szHaystack, PCWSTR szNeedle)
+    static BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
     {
         if (!*szNeedle)
             return TRUE;
@@ -1456,15 +1461,15 @@ private:
 
         HIMAGELIST hImageListView = ListView_GetImageList(hListView, LVSIL_SMALL);
 
-        if (!SearchPatternMatch(Info->m_szName, szSearchPattern) &&
-            !SearchPatternMatch(Info->m_szDesc, szSearchPattern))
+        if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
+            !SearchPatternMatch(Info->m_szDesc.GetString(), szSearchPattern))
         {
             return TRUE;
         }
 
         /* Load icon from file */
         ATL::CStringW szIconPath;
-        szIconPath.Format(L"%lsicons\\%ls.ico", szFolderPath, Info->m_szName);
+        szIconPath.Format(L"%lsicons\\%ls.ico", szFolderPath, Info->m_szName.GetString());
         hIcon = (HICON) LoadImageW(NULL,
                                    szIconPath.GetString(),
                                    IMAGE_ICON,
@@ -1481,7 +1486,7 @@ private:
         Index = ImageList_AddIcon(hImageListView, hIcon);
         DestroyIcon(hIcon);
 
-        Index = ListViewAddItem(Info->m_Category, Index, Info->m_szName, (LPARAM) Info);
+        Index = ListViewAddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM) Info);
         ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
 
         ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(Info->m_szVersion.GetString()));
@@ -1515,7 +1520,7 @@ private:
         {
             EnumType = SelectedEnumType;
         }
-        
+
         //if previous one was INSTALLED purge the list
         //TODO: make the Installed category a separate class to avoid doing this
         if (bWasInInstalled)

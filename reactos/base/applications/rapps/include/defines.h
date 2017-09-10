@@ -61,10 +61,10 @@ enum AppsCategories
 
 inline BOOL IsAvailableEnum(INT x)
 {
-    return (x >= AppsCategories::ENUM_AVAILABLE_MIN && x <= AppsCategories::ENUM_AVAILABLE_MAX);
+    return (x >= ENUM_AVAILABLE_MIN && x <= ENUM_AVAILABLE_MAX);
 }
 
 inline BOOL IsInstalledEnum(INT x)
 {
-    return (x >= AppsCategories::ENUM_INSTALLED_MIN && x <= AppsCategories::ENUM_INSTALLED_MAX);
+    return (x >= ENUM_INSTALLED_MIN && x <= ENUM_INSTALLED_MAX);
 }
