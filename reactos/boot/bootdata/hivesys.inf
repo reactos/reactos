@@ -763,6 +763,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5140"
 
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout File",0x00000000,"kbdeo.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout Text",0x00000000,"Esperanto"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5142"
+
 ; Keyboard layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000402",2,"bg"
@@ -797,6 +801,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000424",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000425",2,"et"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000426",2,"us"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000427",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000048f",2,"eo"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000804",2,"ch"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000807",2,"sg"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000809",2,"uk"

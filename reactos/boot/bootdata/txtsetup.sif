@@ -383,6 +383,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000809 = "English (United Kingdom)"
 00000409 = "English (USA)"
 00010409 = "English (USA-Dvorak)"
+0000048F = "Esperanto"
 00000425 = "Estonian"
 0000040B = "Finnish"
 0000080C = "French (Belgium)"
@@ -521,6 +522,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000044C = kbdinmal.dll
 0000044D = kbdinasa.dll
 00000455 = kbdbur.dll
+0000048F = kbdeo.dll
 
 [HiveInfs.Install]
 AddReg=registry.inf,AddReg
