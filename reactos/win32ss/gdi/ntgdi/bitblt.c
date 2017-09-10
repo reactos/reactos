@@ -1496,7 +1496,9 @@ NtGdiGetPixel(
     /* Check if the pixel is outside the surface */
     psurfSrc = pdc->dclevel.pSurface;
     if ((ptlSrc.x >= psurfSrc->SurfObj.sizlBitmap.cx) ||
-        (ptlSrc.y >= psurfSrc->SurfObj.sizlBitmap.cy))
+        (ptlSrc.y >= psurfSrc->SurfObj.sizlBitmap.cy) ||
+        (ptlSrc.x < 0) ||
+        (ptlSrc.y < 0))
     {
         /* Fail! */
         goto leave;
