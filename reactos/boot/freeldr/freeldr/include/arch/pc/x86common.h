@@ -22,7 +22,12 @@
 #define BIOSCALLBUFOFFSET   HEX(0000) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFSIZE     PAGE_SIZE /* max is sizeof(VESA_SVGA_INFO) = 512 */
 #define MAX_FREELDR_PE_SIZE (MEMORY_MARGIN - FREELDR_PE_BASE - PAGE_SIZE)
-#define MAX_DISKREADBUFFER_SIZE HEX(10000)
+
+/* MAX_DISKREADBUFFER_SIZE is later passed to INT 13h, AH=42h.
+   According to https://en.wikipedia.org/wiki/INT_13H#INT_13h_AH.3D42h:_Extended_Read_Sectors_From_Drive
+   some BIOSes can only read a maximum of 127 sectors. (0xFE00 / 512 = 127)
+   Confirmed when booting from USB on Dell Latitude D531 and Lenovo ThinkPad X61. */
+#define MAX_DISKREADBUFFER_SIZE HEX(FE00)
 
 /* These addresses specify the realmode "BSS section" layout */
 #define BSS_RealModeEntry        (BSS_START +  0)

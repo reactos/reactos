@@ -10,6 +10,7 @@ extern void func_CMyComputer(void);
 extern void func_CShellDesktop(void);
 extern void func_CShellLink(void);
 extern void func_menu(void);
+extern void func_PathResolve(void);
 extern void func_ShellExecuteEx(void);
 extern void func_SHParseDisplayName(void);
 
@@ -22,6 +23,7 @@ const struct test winetest_testlist[] =
     { "CShellDesktop", func_CShellDesktop },
     { "CShellLink", func_CShellLink },
     { "menu", func_menu },
+    { "PathResolve", func_PathResolve },
     { "ShellExecuteEx", func_ShellExecuteEx },
     { "SHParseDisplayName", func_SHParseDisplayName },
     { 0, 0 }

@@ -85,6 +85,12 @@ CreateFileMappingW(HANDLE hFile,
         /* Give it */
         DesiredAccess |= SECTION_MAP_EXECUTE;
     }
+    else if ((flProtect == PAGE_EXECUTE_WRITECOPY) &&
+             (NtCurrentPeb()->OSMajorVersion >= 6))
+    {
+        /* Give it */
+        DesiredAccess |= (SECTION_MAP_WRITE | SECTION_MAP_EXECUTE);
+    }
     else if ((flProtect != PAGE_READONLY) && (flProtect != PAGE_WRITECOPY))
     {
         SetLastError(ERROR_INVALID_PARAMETER);

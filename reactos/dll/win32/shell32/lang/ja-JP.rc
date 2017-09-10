@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "エクスプローラ(&X)", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "開く(&O)", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "切り取り(&U)", FCIDM_SHVIEW_CUT
-        MENUITEM "コピー(&C)", FCIDM_SHVIEW_COPY
+        MENUITEM "切り取り(&U)", IDM_CUT
+        MENUITEM "コピー(&C)", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "ショートカットの作成(&L)", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "削除(&D)", FCIDM_SHVIEW_DELETE
-        MENUITEM "名前の変更(&R)", FCIDM_SHVIEW_RENAME
+        MENUITEM "ショートカットの作成(&L)", IDM_CREATELINK
+        MENUITEM "削除(&D)", IDM_DELETE
+        MENUITEM "名前の変更(&R)", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "プロパティ(&P)", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "プロパティ(&P)", IDM_PROPERTIES
     END
 END
 
@@ -631,24 +629,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "名前"
-    IDS_SHV_COLUMN2 "サイズ"
-    IDS_SHV_COLUMN3 "種類"
-    IDS_SHV_COLUMN4 "更新日時"
-    IDS_SHV_COLUMN5 "属性"
-    IDS_SHV_COLUMN6 "合計サイズ"
-    IDS_SHV_COLUMN7 "空き容量"
-    IDS_SHV_COLUMN8 "作成者"
-    IDS_SHV_COLUMN9 "コメント"
-    IDS_SHV_COLUMN10 "所有者"
-    IDS_SHV_COLUMN11 "グループ"
-    IDS_SHV_COLUMN12 "ファイル名"
-    IDS_SHV_COLUMN13 "カテゴリ"
+    IDS_SHV_COLUMN_NAME "作成者"
+    IDS_SHV_COLUMN_SIZE "サイズ"
+    IDS_SHV_COLUMN_TYPE "種類"
+    IDS_SHV_COLUMN_MODIFIED "更新日時"
+    IDS_SHV_COLUMN_ATTRIBUTES "属性"
+    IDS_SHV_COLUMN_DISK_CAPACITY "合計サイズ"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "空き容量"
+    IDS_SHV_COLUMN_OWNER "所有者"
+    IDS_SHV_COLUMN_GROUP "グループ"
+    IDS_SHV_COLUMN_FILENAME "ファイル名"
+    IDS_SHV_COLUMN_CATEGORY "カテゴリ"
     IDS_SHV_COLUMN_DELFROM "元の場所"
     IDS_SHV_COLUMN_DELDATE "削除日"
     IDS_SHV_COLUMN_FONTTYPE "フォントの種類"
     IDS_SHV_COLUMN_WORKGROUP "ワークグループ"
-    IDS_SHV_NETWORKLOCATION "ネットワークの場所"
+    IDS_SHV_COLUMN_NETLOCATION "ネットワークの場所"
     IDS_SHV_COLUMN_DOCUMENTS "ドキュメント"
     IDS_SHV_COLUMN_STATUS "状態"
     IDS_SHV_COLUMN_COMMENTS "コメント"
@@ -823,7 +819,7 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "%s ファイル"
 
     IDS_BYTES_FORMAT "バイト"
     IDS_UNKNOWN_APP "未知のアプリ"
@@ -833,23 +829,23 @@ BEGIN
     IDS_OBJECTS "%d 個のオブジェクト"
     IDS_OBJECTS_SELECTED "%d 個のオブジェクトが選択済み"
 
-    IDS_ADVANCED_FOLDER "Files and Folders"
-    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
-    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
-    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
-    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
-    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
-    IDS_ADVANCED_HIDDEN "Hidden files and folders"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
-    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
-    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
-    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
-    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
-    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
-    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
+    IDS_ADVANCED_FOLDER "ファイルとフォルダ"
+    IDS_ADVANCED_NET_CRAWLER "自動的にネットワークフォルダとプリンタを検索する"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "フォルダ チップにファイルサイズ情報を表示する"
+    IDS_ADVANCED_FRIENDLY_TREE "エクスプローラのフォルダ リストでシンプルなフォルダビューを表示する"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "システム フォルダの中身を表示する"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "アドレス バーでフルパスを表示する"
+    IDS_ADVANCED_SHOW_FULL_PATH "タイトルバーでフルパスを表示する"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "サムネイルをキャッシュしない"
+    IDS_ADVANCED_HIDDEN "隠しファイルとフォルダ"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "隠しファイルとフォルダを表示しない"
+    IDS_ADVANCED_SHOW_HIDDEN "隠しファイルとフォルダを表示する"
+    IDS_ADVANCED_HIDE_FILE_EXT "既知のファイル タイプの拡張子を隠す"
+    IDS_ADVANCED_SUPER_HIDDEN "保護されたオペレーティングシステムのファイルを隠す (推奨)"
+    IDS_ADVANCED_DESKTOP_PROCESS "別のプロセスでフォルダ ウィンドウを起動する"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "それぞれのフォルダ表示設定を記憶する"
+    IDS_ADVANCED_PERSIST_BROWSERS "ログオン時に以前のフォルダ ウィンドウを復元する"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "マイ コンピュータでコントロール パネルを表示する"
+    IDS_ADVANCED_SHOW_COMP_COLOR "暗号化または圧縮されたNTFSファイルを色付きで表示する"
+    IDS_ADVANCED_SHOW_INFO_TIP "フォルダとデスクトップの項目にポップアップ式の説明を表示する"
 END

@@ -1692,6 +1692,7 @@ static void test_startSession(void)
     ITfContext_Release(cxt);
     ITfContext_Release(cxt2);
     ITfContext_Release(cxt3);
+    ITextStoreACP_Release(ts);
 }
 
 static void test_endSession(void)

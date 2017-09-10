@@ -2,8 +2,8 @@
  * PROJECT:         ReactOS EventLog File Library
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            sdk/lib/evtlib/evtlib.h
- * PURPOSE:         Provides a library for reading and writing EventLog files
- *                  in the NT <= 5.2 (.evt) format.
+ * PURPOSE:         Provides functionality for reading and writing
+ *                  EventLog files in the NT <= 5.2 (.evt) format.
  * PROGRAMMERS:     Copyright 2005 Saveliy Tretiakov
  *                  Michael Martin
  *                  Hermes Belusca-Maito
@@ -11,6 +11,8 @@
 
 #ifndef __EVTLIB_H__
 #define __EVTLIB_H__
+
+#pragma once
 
 /* PSDK/NDK Headers */
 // #define WIN32_NO_STATUS
@@ -157,7 +159,8 @@ typedef PVOID
 typedef VOID
 (NTAPI *PELF_FREE_ROUTINE)(
     IN PVOID Ptr,
-    IN ULONG Flags
+    IN ULONG Flags,
+    IN ULONG Tag
 );
 
 typedef NTSTATUS
@@ -214,7 +217,7 @@ typedef struct _EVTLOGFILE
 NTSTATUS
 NTAPI
 ElfCreateFile(
-    IN PEVTLOGFILE LogFile,
+    IN OUT PEVTLOGFILE LogFile,
     IN PUNICODE_STRING FileName OPTIONAL,
     IN ULONG    FileSize,
     IN ULONG    MaxSize,

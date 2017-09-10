@@ -43,7 +43,7 @@ _AddPrintProviderToList(PCWSTR pwszFileName)
     if (!pPrintProvider)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
@@ -117,7 +117,7 @@ _InitializePrintProviderList()
     if (!pwszPrintProviderName)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
@@ -246,3 +246,14 @@ SpoolerInit()
     SetLastError(ERROR_SUCCESS);
     return TRUE;
 }
+
+BOOL WINAPI
+BuildOtherNamesFromMachineName(LPVOID * ptr1, LPVOID * ptr2)
+{
+    FIXME("(%p, %p) stub\n", ptr1, ptr2);
+
+    *ptr1 = NULL;
+    *ptr2 = NULL;
+    return FALSE;
+}
+

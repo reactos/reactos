@@ -2463,6 +2463,7 @@ static void test_menu_input(void) {
     HANDLE hThread, hWnd;
     DWORD tid;
     ATOM aclass;
+    POINT orig_pos;
 
     if (!pSendInput)
     {
@@ -2507,6 +2508,8 @@ static void test_menu_input(void) {
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
 
+    GetCursorPos(&orig_pos);
+
     hThread = CreateThread(NULL, 0, test_menu_input_thread, hWnd, 0, &tid);
     while(1)
     {
@@ -2514,6 +2517,7 @@ static void test_menu_input(void) {
             break;
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     }
+    SetCursorPos(orig_pos.x, orig_pos.y);
     DestroyWindow(hWnd);
 }
 

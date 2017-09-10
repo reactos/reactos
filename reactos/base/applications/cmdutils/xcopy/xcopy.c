@@ -648,7 +648,7 @@ cleanup:
 /* =========================================================================
    XCOPY_ParseCommandLine - Parses the command line
    ========================================================================= */
-static BOOL is_whitespace(WCHAR c)
+static inline BOOL is_whitespace(WCHAR c)
 {
     return c == ' ' || c == '\t';
 }
@@ -657,6 +657,11 @@ static WCHAR *skip_whitespace(WCHAR *p)
 {
     for (; *p && is_whitespace(*p); p++);
     return p;
+}
+
+static inline BOOL is_digit(WCHAR c)
+{
+    return c >= '0' && c <= '9';
 }
 
 /* Windows XCOPY uses a simplified command line parsing algorithm
@@ -775,7 +780,7 @@ static int XCOPY_ParseCommandLine(WCHAR *suppliedsource,
                       break;
 
             /* D can be /D or /D: */
-            case 'D': if (word[2]==':' && isdigit(word[3])) {
+            case 'D': if (word[2]==':' && is_digit(word[3])) {
                           SYSTEMTIME st;
                           WCHAR     *pos = &word[3];
                           BOOL       isError = FALSE;
@@ -786,18 +791,18 @@ static int XCOPY_ParseCommandLine(WCHAR *suppliedsource,
                            * It is hardcoded to month-day-year.
                            */
                           st.wMonth = _wtol(pos);
-                          while (*pos && isdigit(*pos)) pos++;
+                          while (*pos && is_digit(*pos)) pos++;
                           if (*pos++ != '-') isError = TRUE;
 
                           if (!isError) {
                               st.wDay = _wtol(pos);
-                              while (*pos && isdigit(*pos)) pos++;
+                              while (*pos && is_digit(*pos)) pos++;
                               if (*pos++ != '-') isError = TRUE;
                           }
 
                           if (!isError) {
                               st.wYear = _wtol(pos);
-                              while (*pos && isdigit(*pos)) pos++;
+                              while (*pos && is_digit(*pos)) pos++;
                               if (st.wYear < 100) st.wYear+=2000;
                           }
 

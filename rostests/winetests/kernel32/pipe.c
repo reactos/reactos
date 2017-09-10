@@ -26,6 +26,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wine/winternl.h"
+#include "winioctl.h"
 #include "wine/test.h"
 
 #define PIPENAME "\\\\.\\PiPe\\tests_pipe.c"
@@ -37,6 +38,7 @@ static HANDLE alarm_event;
 static BOOL (WINAPI *pDuplicateTokenEx)(HANDLE,DWORD,LPSECURITY_ATTRIBUTES,
                                         SECURITY_IMPERSONATION_LEVEL,TOKEN_TYPE,PHANDLE);
 static DWORD (WINAPI *pQueueUserAPC)(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData);
+static BOOL (WINAPI *pCancelIoEx)(HANDLE handle, LPOVERLAPPED lpOverlapped);
 
 static BOOL user_apc_ran;
 static void CALLBACK user_apc(ULONG_PTR param)
@@ -47,9 +49,7 @@ static void CALLBACK user_apc(ULONG_PTR param)
 
 enum rpcThreadOp
 {
-    RPC_READFILE,
-    RPC_WRITEFILE,
-    RPC_PEEKNAMEDPIPE
+    RPC_READFILE
 };
 
 struct rpcThreadArgs
@@ -57,7 +57,7 @@ struct rpcThreadArgs
     ULONG_PTR returnValue;
     DWORD lastError;
     enum rpcThreadOp op;
-    ULONG_PTR args[6];
+    ULONG_PTR args[5];
 };
 
 static DWORD CALLBACK rpcThreadMain(LPVOID arg)
@@ -74,23 +74,6 @@ static DWORD CALLBACK rpcThreadMain(LPVOID arg)
                                                         (DWORD)rpcargs->args[2],          /* bytesToRead */
                                                         (LPDWORD)rpcargs->args[3],        /* bytesRead */
                                                         (LPOVERLAPPED)rpcargs->args[4] ); /* overlapped */
-            break;
-
-        case RPC_WRITEFILE:
-            rpcargs->returnValue = (ULONG_PTR)WriteFile( (HANDLE)rpcargs->args[0],        /* hFile */
-                                                         (LPCVOID)rpcargs->args[1],       /* buffer */
-                                                         (DWORD)rpcargs->args[2],         /* bytesToWrite */
-                                                         (LPDWORD)rpcargs->args[3],       /* bytesWritten */
-                                                         (LPOVERLAPPED)rpcargs->args[4] ); /* overlapped */
-            break;
-
-        case RPC_PEEKNAMEDPIPE:
-            rpcargs->returnValue = (ULONG_PTR)PeekNamedPipe( (HANDLE)rpcargs->args[0],    /* hPipe */
-                                                             (LPVOID)rpcargs->args[1],    /* lpvBuffer */
-                                                             (DWORD)rpcargs->args[2],     /* cbBuffer */
-                                                             (LPDWORD)rpcargs->args[3],   /* lpcbRead */
-                                                             (LPDWORD)rpcargs->args[4],   /* lpcbAvail */
-                                                             (LPDWORD)rpcargs->args[5] ); /* lpcbMessage */
             break;
 
         default:
@@ -130,31 +113,32 @@ static BOOL RpcReadFile(HANDLE hFile, LPVOID buffer, DWORD bytesToRead, LPDWORD 
     return (BOOL)rpcargs.returnValue;
 }
 
-/* Runs PeekNamedPipe(...) from a different thread */
-static BOOL RpcPeekNamedPipe(HANDLE hPipe, LPVOID lpvBuffer, DWORD cbBuffer,
-                             LPDWORD lpcbRead, LPDWORD lpcbAvail, LPDWORD lpcbMessage)
+#define test_not_signaled(h) _test_not_signaled(__LINE__,h)
+static void _test_not_signaled(unsigned line, HANDLE handle)
 {
-    struct rpcThreadArgs rpcargs;
-    HANDLE thread;
-    DWORD threadId;
+    DWORD res = WaitForSingleObject(handle, 0);
+    ok_(__FILE__,line)(res == WAIT_TIMEOUT, "WaitForSingleObject returned %u (%u)\n", res, GetLastError());
+}
 
-    rpcargs.returnValue = 0;
-    rpcargs.lastError = GetLastError();
-    rpcargs.op = RPC_PEEKNAMEDPIPE;
-    rpcargs.args[0] = (ULONG_PTR)hPipe;
-    rpcargs.args[1] = (ULONG_PTR)lpvBuffer;
-    rpcargs.args[2] = (ULONG_PTR)cbBuffer;
-    rpcargs.args[3] = (ULONG_PTR)lpcbRead;
-    rpcargs.args[4] = (ULONG_PTR)lpcbAvail;
-    rpcargs.args[5] = (ULONG_PTR)lpcbMessage;
+#define test_signaled(h) _test_signaled(__LINE__,h)
+static void _test_signaled(unsigned line, HANDLE handle)
+{
+    DWORD res = WaitForSingleObject(handle, 0);
+    ok_(__FILE__,line)(res == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", res);
+}
 
-    thread = CreateThread(NULL, 0, rpcThreadMain, (void *)&rpcargs, 0, &threadId);
-    ok(thread != NULL, "CreateThread failed. %d\n", GetLastError());
-    ok(WaitForSingleObject(thread, INFINITE) == WAIT_OBJECT_0,"WaitForSingleObject failed with %d.\n", GetLastError());
-    CloseHandle(thread);
+#define test_pipe_info(a,b,c,d,e) _test_pipe_info(__LINE__,a,b,c,d,e)
+static void _test_pipe_info(unsigned line, HANDLE pipe, DWORD ex_flags, DWORD ex_out_buf_size, DWORD ex_in_buf_size, DWORD ex_max_instances)
+{
+    DWORD flags = 0xdeadbeef, out_buf_size = 0xdeadbeef, in_buf_size = 0xdeadbeef, max_instances = 0xdeadbeef;
+    BOOL res;
 
-    SetLastError(rpcargs.lastError);
-    return (BOOL)rpcargs.returnValue;
+    res = GetNamedPipeInfo(pipe, &flags, &out_buf_size, &in_buf_size, &max_instances);
+    ok_(__FILE__,line)(res, "GetNamedPipeInfo failed: %x\n", res);
+    ok_(__FILE__,line)(flags == ex_flags, "flags = %x, expected %x\n", flags, ex_flags);
+    ok_(__FILE__,line)(out_buf_size == ex_out_buf_size, "out_buf_size = %x, expected %u\n", out_buf_size, ex_out_buf_size);
+    ok_(__FILE__,line)(in_buf_size == ex_in_buf_size, "in_buf_size = %x, expected %u\n", in_buf_size, ex_in_buf_size);
+    ok_(__FILE__,line)(max_instances == ex_max_instances, "max_instances = %x, expected %u\n", max_instances, ex_max_instances);
 }
 
 static void test_CreateNamedPipe(int pipemode)
@@ -166,8 +150,8 @@ static void test_CreateNamedPipe(int pipemode)
     char ibuf[32], *pbuf;
     DWORD written;
     DWORD readden;
-    DWORD leftmsg;
     DWORD avail;
+    DWORD left;
     DWORD lpmode;
     BOOL ret;
 
@@ -224,6 +208,7 @@ static void test_CreateNamedPipe(int pipemode)
         /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
         /* lpSecurityAttrib */ NULL);
     ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
+    test_signaled(hnp);
 
     ret = WaitNamedPipeA(PIPENAME, 2000);
     ok(ret, "WaitNamedPipe failed (%d)\n", GetLastError());
@@ -231,7 +216,7 @@ static void test_CreateNamedPipe(int pipemode)
     hFile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
     ok(hFile != INVALID_HANDLE_VALUE, "CreateFile failed (%d)\n", GetLastError());
 
-    ok(!WaitNamedPipeA(PIPENAME, 1000), "WaitNamedPipe succeeded\n");
+    ok(!WaitNamedPipeA(PIPENAME, 100), "WaitNamedPipe succeeded\n");
 
     ok(GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError());
 
@@ -258,8 +243,12 @@ static void test_CreateNamedPipe(int pipemode)
         memset(ibuf, 0, sizeof(ibuf));
         ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
         ok(written == sizeof(obuf), "write file len 1\n");
-        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, NULL), "Peek\n");
-        ok(readden == sizeof(obuf), "peek 1 got %d bytes\n", readden);
+        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &avail, &left), "Peek\n");
+        ok(avail == sizeof(obuf), "peek 1 got %d bytes\n", avail);
+        if (pipemode == PIPE_TYPE_BYTE)
+            ok(left == 0, "peek 1 got %d bytes left\n", left);
+        else
+            ok(left == sizeof(obuf), "peek 1 got %d bytes left\n", left);
         ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
         ok(readden == sizeof(obuf), "read 1 got %d bytes\n", readden);
         ok(memcmp(obuf, ibuf, written) == 0, "content 1 check\n");
@@ -267,10 +256,18 @@ static void test_CreateNamedPipe(int pipemode)
         memset(ibuf, 0, sizeof(ibuf));
         ok(WriteFile(hFile, obuf2, sizeof(obuf2), &written, NULL), "WriteFile\n");
         ok(written == sizeof(obuf2), "write file len 2\n");
-        ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, NULL), "Peek\n");
-        ok(readden == sizeof(obuf2), "peek 2 got %d bytes\n", readden);
-        ok(PeekNamedPipe(hnp, (LPVOID)1, 0, NULL, &readden, NULL), "Peek\n");
-        ok(readden == sizeof(obuf2), "peek 2 got %d bytes\n", readden);
+        ok(PeekNamedPipe(hnp, NULL, 0, NULL, &avail, &left), "Peek\n");
+        ok(avail == sizeof(obuf2), "peek 2 got %d bytes\n", avail);
+        if (pipemode == PIPE_TYPE_BYTE)
+            ok(left == 0, "peek 2 got %d bytes left\n", left);
+        else
+            ok(left == sizeof(obuf2), "peek 2 got %d bytes left\n", left);
+        ok(PeekNamedPipe(hnp, (LPVOID)1, 0, NULL, &avail, &left), "Peek\n");
+        ok(avail == sizeof(obuf2), "peek 2 got %d bytes\n", avail);
+        if (pipemode == PIPE_TYPE_BYTE)
+            ok(left == 0, "peek 2 got %d bytes left\n", left);
+        else
+            ok(left == sizeof(obuf2), "peek 2 got %d bytes left\n", left);
         ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
         ok(readden == sizeof(obuf2), "read 2 got %d bytes\n", readden);
         ok(memcmp(obuf2, ibuf, written) == 0, "content 2 check\n");
@@ -279,32 +276,33 @@ static void test_CreateNamedPipe(int pipemode)
         memset(ibuf, 0, sizeof(ibuf));
         ok(WriteFile(hnp, obuf2, sizeof(obuf2), &written, NULL), "WriteFile\n");
         ok(written == sizeof(obuf2), "write file len\n");
+        ok(PeekNamedPipe(hFile, ibuf, 4, &readden, &avail, &left), "Peek\n");
+        ok(readden == 4, "peek got %d bytes\n", readden);
+        ok(avail == sizeof(obuf2), "peek got %d bytes available\n", avail);
+        if (pipemode == PIPE_TYPE_BYTE)
+            ok(left == -4, "peek got %d bytes left\n", left);
+        else
+            ok(left == sizeof(obuf2)-4, "peek got %d bytes left\n", left);
         ok(ReadFile(hFile, ibuf, 4, &readden, NULL), "ReadFile\n");
         ok(readden == 4, "read got %d bytes\n", readden);
-        readden = leftmsg = -1;
-        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe\n");
-        ok(readden == sizeof(obuf2) - 4, "peek got %d bytes total\n", readden);
-        if (pipemode == PIPE_TYPE_BYTE)
-            ok(leftmsg == 0, "peek got %d bytes left in message\n", leftmsg);
-        else
-            ok(leftmsg == sizeof(obuf2) - 4, "peek got %d bytes left in message\n", leftmsg);
         ok(ReadFile(hFile, ibuf + 4, sizeof(ibuf) - 4, &readden, NULL), "ReadFile\n");
         ok(readden == sizeof(obuf2) - 4, "read got %d bytes\n", readden);
         ok(memcmp(obuf2, ibuf, written) == 0, "content check\n");
-        readden = leftmsg = -1;
-        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe\n");
-        ok(readden == 0, "peek got %d bytes total\n", readden);
-        ok(leftmsg == 0, "peek got %d bytes left in message\n", leftmsg);
 
         memset(ibuf, 0, sizeof(ibuf));
         ok(WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
         ok(written == sizeof(obuf), "write file len\n");
+        ok(PeekNamedPipe(hnp, ibuf, 4, &readden, &avail, &left), "Peek\n");
+        ok(readden == 4, "peek got %d bytes\n", readden);
+        ok(avail == sizeof(obuf), "peek got %d bytes available\n", avail);
         if (pipemode == PIPE_TYPE_BYTE)
         {
+            ok(left == -4, "peek got %d bytes left\n", left);
             ok(ReadFile(hnp, ibuf, 4, &readden, NULL), "ReadFile\n");
         }
         else
         {
+            ok(left == sizeof(obuf)-4, "peek got %d bytes left\n", left);
             SetLastError(0xdeadbeef);
             ok(!ReadFile(hnp, ibuf, 4, &readden, NULL), "ReadFile\n");
             ok(GetLastError() == ERROR_MORE_DATA, "wrong error\n");
@@ -339,159 +337,30 @@ static void test_CreateNamedPipe(int pipemode)
         ok(readden == sizeof(obuf2) - 8, "read got %d bytes\n", readden);
         ok(memcmp(obuf2, ibuf, written) == 0, "content check\n");
 
-        /* Tests for sending empty messages */
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len\n");
-        if (pipemode != PIPE_TYPE_BYTE)
-        {
-            ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-            ok(readden == 0, "read got %d bytes\n", readden);
-        }
-
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(WriteFile(hFile, obuf, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len\n");
-        if (pipemode != PIPE_TYPE_BYTE)
-        {
-            ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-            ok(readden == 0, "read got %d bytes\n", readden);
-        }
-
-        /* similar to above, but with an additional call to PeekNamedPipe inbetween */
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len\n");
-        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, NULL), "Peek\n");
-        ok(readden == 0, "peek got %d bytes\n", readden);
-        if (pipemode != PIPE_TYPE_BYTE)
-        {
-            struct rpcThreadArgs rpcargs;
-            HANDLE thread;
-            DWORD threadId;
-
-            rpcargs.returnValue = 0;
-            rpcargs.lastError = GetLastError();
-            rpcargs.op = RPC_READFILE;
-            rpcargs.args[0] = (ULONG_PTR)hFile;
-            rpcargs.args[1] = (ULONG_PTR)ibuf;
-            rpcargs.args[2] = (ULONG_PTR)sizeof(ibuf);
-            rpcargs.args[3] = (ULONG_PTR)&readden;
-            rpcargs.args[4] = (ULONG_PTR)NULL;
-
-            thread = CreateThread(NULL, 0, rpcThreadMain, (void *)&rpcargs, 0, &threadId);
-            ok(thread != NULL, "CreateThread failed. %d\n", GetLastError());
-            ret = WaitForSingleObject(thread, 200);
-            todo_wine
-            ok(ret == WAIT_OBJECT_0, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_OBJECT_0);
-            if (ret == WAIT_TIMEOUT)
-            {
-                ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-                ok(written == 0, "write file len\n");
-                ret = WaitForSingleObject(thread, 200);
-                ok(ret == WAIT_OBJECT_0, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_OBJECT_0);
-            }
-            CloseHandle(thread);
-            ok((BOOL)rpcargs.returnValue, "ReadFile\n");
-            ok(readden == 0, "read got %d bytes\n", readden);
-        }
-
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(WriteFile(hFile, obuf, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len\n");
-        ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, NULL), "Peek\n");
-        ok(readden == 0, "peek got %d bytes\n", readden);
-        if (pipemode != PIPE_TYPE_BYTE)
-        {
-            struct rpcThreadArgs rpcargs;
-            HANDLE thread;
-            DWORD threadId;
-
-            rpcargs.returnValue = 0;
-            rpcargs.lastError = GetLastError();
-            rpcargs.op = RPC_READFILE;
-            rpcargs.args[0] = (ULONG_PTR)hnp;
-            rpcargs.args[1] = (ULONG_PTR)ibuf;
-            rpcargs.args[2] = (ULONG_PTR)sizeof(ibuf);
-            rpcargs.args[3] = (ULONG_PTR)&readden;
-            rpcargs.args[4] = (ULONG_PTR)NULL;
-
-            thread = CreateThread(NULL, 0, rpcThreadMain, (void *)&rpcargs, 0, &threadId);
-            ok(thread != NULL, "CreateThread failed. %d\n", GetLastError());
-            ret = WaitForSingleObject(thread, 200);
-            todo_wine
-            ok(ret == WAIT_OBJECT_0, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_OBJECT_0);
-            if (ret == WAIT_TIMEOUT)
-            {
-                ok(WriteFile(hFile, obuf, 0, &written, NULL), "WriteFile\n");
-                ok(written == 0, "write file len\n");
-                ret = WaitForSingleObject(thread, 200);
-                ok(ret == WAIT_OBJECT_0, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_OBJECT_0);
-            }
-            CloseHandle(thread);
-            ok((BOOL)rpcargs.returnValue, "ReadFile\n");
-            ok(readden == 0, "read got %d bytes\n", readden);
-        }
-
-        /* similar to above, but now with PeekNamedPipe and multiple messages */
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len\n");
-        ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
-        ok(written == sizeof(obuf), "write file len\n");
-        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "Peek\n");
-        ok(readden == sizeof(obuf), "peek got %d bytes\n", readden);
-        ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "Peek\n");
-        ok(readden == sizeof(obuf), "peek got %d bytes\n", readden);
-        if (pipemode != PIPE_TYPE_BYTE)
-            todo_wine
-            ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-        else
-            ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-        ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-        ok(readden == sizeof(obuf), "read got %d bytes\n", readden);
-        ok(memcmp(obuf, ibuf, sizeof(obuf)) == 0, "content check\n");
-
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(WriteFile(hFile, obuf2, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len\n");
-        ok(WriteFile(hFile, obuf2, sizeof(obuf2), &written, NULL), "WriteFile\n");
-        ok(written == sizeof(obuf2), "write file len\n");
-        ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "Peek\n");
-        ok(readden == sizeof(obuf2), "peek got %d bytes\n", readden);
-        ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-        ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "Peek\n");
-        ok(readden == sizeof(obuf2), "peek got %d bytes\n", readden);
-        if (pipemode != PIPE_TYPE_BYTE)
-            todo_wine
-            ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-        else
-            ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-        ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-        if (pipemode != PIPE_TYPE_BYTE)
-        {
-            todo_wine
-            ok(readden == 0, "read got %d bytes\n", readden);
-            if (readden == 0)
-                ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-        }
-        ok(readden == sizeof(obuf2), "read got %d bytes\n", readden);
-        ok(memcmp(obuf2, ibuf, sizeof(obuf2)) == 0, "content check\n");
-
         /* Test reading of multiple writes */
         memset(ibuf, 0, sizeof(ibuf));
         ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile3a\n");
         ok(written == sizeof(obuf), "write file len 3a\n");
         ok(WriteFile(hnp, obuf2, sizeof(obuf2), &written, NULL), " WriteFile3b\n");
         ok(written == sizeof(obuf2), "write file len 3b\n");
-        ok(PeekNamedPipe(hFile, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek3\n");
+        ok(PeekNamedPipe(hFile, ibuf, 4, &readden, &avail, &left), "Peek3\n");
+        ok(readden == 4, "peek3 got %d bytes\n", readden);
+        if (pipemode == PIPE_TYPE_BYTE)
+            ok(left == -4, "peek3 got %d bytes left\n", left);
+        else
+            ok(left == sizeof(obuf)-4, "peek3 got %d bytes left\n", left);
+        ok(avail == sizeof(obuf) + sizeof(obuf2), "peek3 got %d bytes available\n", avail);
+        ok(PeekNamedPipe(hFile, ibuf, sizeof(ibuf), &readden, &avail, &left), "Peek3\n");
         if (pipemode == PIPE_TYPE_BYTE) {
-            ok(readden == sizeof(obuf) + sizeof(obuf2), "peek3 got %d bytes\n", readden);
+            /* currently the Wine behavior depends on the kernel version */
+            /* ok(readden == sizeof(obuf) + sizeof(obuf2), "peek3 got %d bytes\n", readden); */
+            if (readden != sizeof(obuf) + sizeof(obuf2)) todo_wine ok(0, "peek3 got %d bytes\n", readden);
+            ok(left == (DWORD) -(sizeof(obuf) + sizeof(obuf2)), "peek3 got %d bytes left\n", left);
         }
         else
         {
             ok(readden == sizeof(obuf), "peek3 got %d bytes\n", readden);
+            ok(left == 0, "peek3 got %d bytes left\n", left);
         }
         ok(avail == sizeof(obuf) + sizeof(obuf2), "peek3 got %d bytes available\n", avail);
         pbuf = ibuf;
@@ -513,13 +382,24 @@ static void test_CreateNamedPipe(int pipemode)
         ok(written == sizeof(obuf), "write file len 4a\n");
         ok(WriteFile(hFile, obuf2, sizeof(obuf2), &written, NULL), " WriteFile4b\n");
         ok(written == sizeof(obuf2), "write file len 4b\n");
-        ok(PeekNamedPipe(hnp, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek4\n");
+        ok(PeekNamedPipe(hnp, ibuf, 4, &readden, &avail, &left), "Peek3\n");
+        ok(readden == 4, "peek3 got %d bytes\n", readden);
+        if (pipemode == PIPE_TYPE_BYTE)
+            ok(left == -4, "peek3 got %d bytes left\n", left);
+        else
+            ok(left == sizeof(obuf)-4, "peek3 got %d bytes left\n", left);
+        ok(avail == sizeof(obuf) + sizeof(obuf2), "peek3 got %d bytes available\n", avail);
+        ok(PeekNamedPipe(hnp, ibuf, sizeof(ibuf), &readden, &avail, &left), "Peek4\n");
         if (pipemode == PIPE_TYPE_BYTE) {
-            ok(readden == sizeof(obuf) + sizeof(obuf2), "peek4 got %d bytes\n", readden);
+            /* currently the Wine behavior depends on the kernel version */
+            /* ok(readden == sizeof(obuf) + sizeof(obuf2), "peek4 got %d bytes\n", readden); */
+            if (readden != sizeof(obuf) + sizeof(obuf2)) todo_wine ok(0, "peek4 got %d bytes\n", readden);
+            ok(left == (DWORD) -(sizeof(obuf) + sizeof(obuf2)), "peek4 got %d bytes left\n", left);
         }
         else
         {
             ok(readden == sizeof(obuf), "peek4 got %d bytes\n", readden);
+            ok(left == 0, "peek4 got %d bytes left\n", left);
         }
         ok(avail == sizeof(obuf) + sizeof(obuf2), "peek4 got %d bytes available\n", avail);
         pbuf = ibuf;
@@ -557,9 +437,10 @@ static void test_CreateNamedPipe(int pipemode)
             ok(written == sizeof(obuf), "write file len 3a\n");
             ok(WriteFile(hnp, obuf2, sizeof(obuf2), &written, NULL), " WriteFile5b\n");
             ok(written == sizeof(obuf2), "write file len 3b\n");
-            ok(PeekNamedPipe(hFile, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek5\n");
+            ok(PeekNamedPipe(hFile, ibuf, sizeof(ibuf), &readden, &avail, &left), "Peek5\n");
             ok(readden == sizeof(obuf), "peek5 got %d bytes\n", readden);
             ok(avail == sizeof(obuf) + sizeof(obuf2), "peek5 got %d bytes available\n", avail);
+            ok(left == 0, "peek5 got %d bytes left\n", left);
             pbuf = ibuf;
             ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 5a check\n");
             ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
@@ -587,6 +468,7 @@ static void test_CreateNamedPipe(int pipemode)
             ok(written == sizeof(obuf2), "write file len 6b\n");
             ok(PeekNamedPipe(hnp, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek6\n");
             ok(readden == sizeof(obuf), "peek6 got %d bytes\n", readden);
+
             ok(avail == sizeof(obuf) + sizeof(obuf2), "peek6b got %d bytes available\n", avail);
             pbuf = ibuf;
             ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 6a check\n");
@@ -596,133 +478,6 @@ static void test_CreateNamedPipe(int pipemode)
             ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 6a check\n");
             if (readden <= sizeof(obuf))
                 ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-
-            /* Tests for sending empty messages */
-            memset(ibuf, 0, sizeof(ibuf));
-            ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-            ok(written == 0, "write file len\n");
-            ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-            ok(readden == 0, "read got %d bytes\n", readden);
-
-            memset(ibuf, 0, sizeof(ibuf));
-            ok(WriteFile(hFile, obuf, 0, &written, NULL), "WriteFile\n");
-            ok(written == 0, "write file len\n");
-            ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-            ok(readden == 0, "read got %d bytes\n", readden);
-
-            /* similar to above, but with an additional call to PeekNamedPipe inbetween */
-            memset(ibuf, 0, sizeof(ibuf));
-            ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-            ok(written == 0, "write file len\n");
-            ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, NULL), "Peek\n");
-            ok(readden == 0, "peek got %d bytes\n", readden);
-            {
-                struct rpcThreadArgs rpcargs;
-                HANDLE thread;
-                DWORD threadId;
-
-                rpcargs.returnValue = 0;
-                rpcargs.lastError = GetLastError();
-                rpcargs.op = RPC_READFILE;
-                rpcargs.args[0] = (ULONG_PTR)hFile;
-                rpcargs.args[1] = (ULONG_PTR)ibuf;
-                rpcargs.args[2] = (ULONG_PTR)sizeof(ibuf);
-                rpcargs.args[3] = (ULONG_PTR)&readden;
-                rpcargs.args[4] = (ULONG_PTR)NULL;
-
-                thread = CreateThread(NULL, 0, rpcThreadMain, (void *)&rpcargs, 0, &threadId);
-                ok(thread != NULL, "CreateThread failed. %d\n", GetLastError());
-                ret = WaitForSingleObject(thread, 200);
-                todo_wine
-                ok(ret == WAIT_OBJECT_0, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_OBJECT_0);
-                if (ret == WAIT_TIMEOUT)
-                {
-                    ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-                    ok(written == 0, "write file len\n");
-                    ret = WaitForSingleObject(thread, 200);
-                    ok(ret == WAIT_OBJECT_0, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_OBJECT_0);
-                }
-                CloseHandle(thread);
-                ok((BOOL)rpcargs.returnValue, "ReadFile\n");
-                ok(readden == 0, "read got %d bytes\n", readden);
-            }
-
-            memset(ibuf, 0, sizeof(ibuf));
-            ok(WriteFile(hFile, obuf, 0, &written, NULL), "WriteFile\n");
-            ok(written == 0, "write file len\n");
-            ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, NULL), "Peek\n");
-            ok(readden == 0, "peek got %d bytes\n", readden);
-            {
-                struct rpcThreadArgs rpcargs;
-                HANDLE thread;
-                DWORD threadId;
-
-                rpcargs.returnValue = 0;
-                rpcargs.lastError = GetLastError();
-                rpcargs.op = RPC_READFILE;
-                rpcargs.args[0] = (ULONG_PTR)hnp;
-                rpcargs.args[1] = (ULONG_PTR)ibuf;
-                rpcargs.args[2] = (ULONG_PTR)sizeof(ibuf);
-                rpcargs.args[3] = (ULONG_PTR)&readden;
-                rpcargs.args[4] = (ULONG_PTR)NULL;
-
-                thread = CreateThread(NULL, 0, rpcThreadMain, (void *)&rpcargs, 0, &threadId);
-                ok(thread != NULL, "CreateThread failed. %d\n", GetLastError());
-                ret = WaitForSingleObject(thread, 200);
-                todo_wine
-                ok(ret == WAIT_OBJECT_0, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_OBJECT_0);
-                if (ret == WAIT_TIMEOUT)
-                {
-                    ok(WriteFile(hFile, obuf, 0, &written, NULL), "WriteFile\n");
-                    ok(written == 0, "write file len\n");
-                    ret = WaitForSingleObject(thread, 200);
-                    ok(ret == WAIT_OBJECT_0, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_OBJECT_0);
-                }
-                CloseHandle(thread);
-                ok((BOOL)rpcargs.returnValue, "ReadFile\n");
-                ok(readden == 0, "read got %d bytes\n", readden);
-            }
-
-            /* similar to above, but now with PeekNamedPipe and multiple messages */
-            memset(ibuf, 0, sizeof(ibuf));
-            ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-            ok(written == 0, "write file len\n");
-            ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
-            ok(written == sizeof(obuf), "write file len\n");
-            ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "Peek\n");
-            ok(readden == sizeof(obuf), "peek got %d bytes\n", readden);
-            ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-            ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "Peek\n");
-            ok(readden == sizeof(obuf), "peek got %d bytes\n", readden);
-            todo_wine
-            ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-            ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-            todo_wine
-            ok(readden == 0, "read got %d bytes\n", readden);
-            if (readden == 0)
-                ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-            ok(readden == sizeof(obuf), "read got %d bytes\n", readden);
-            ok(memcmp(obuf, ibuf, sizeof(obuf)) == 0, "content check\n");
-
-            memset(ibuf, 0, sizeof(ibuf));
-            ok(WriteFile(hFile, obuf2, 0, &written, NULL), "WriteFile\n");
-            ok(written == 0, "write file len\n");
-            ok(WriteFile(hFile, obuf2, sizeof(obuf2), &written, NULL), "WriteFile\n");
-            ok(written == sizeof(obuf2), "write file len\n");
-            ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "Peek\n");
-            ok(readden == sizeof(obuf2), "peek got %d bytes\n", readden);
-            ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-            ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "Peek\n");
-            ok(readden == sizeof(obuf2), "peek got %d bytes\n", readden);
-            todo_wine
-            ok(leftmsg == 0, "peek got %d bytes left in msg\n", leftmsg);
-            ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-            todo_wine
-            ok(readden == 0, "read got %d bytes\n", readden);
-            if (readden == 0)
-                ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-            ok(readden == sizeof(obuf2), "read got %d bytes\n", readden);
-            ok(memcmp(obuf2, ibuf, sizeof(obuf2)) == 0, "content check\n");
 
             /* Test how ReadFile behaves when the buffer is not big enough for the whole message */
             memset(ibuf, 0, sizeof(ibuf));
@@ -756,14 +511,6 @@ static void test_CreateNamedPipe(int pipemode)
             ok(written == sizeof(obuf), "write file len 9\n");
             ok(WriteFile(hnp, obuf2, sizeof(obuf2), &written, NULL), "WriteFile 9\n");
             ok(written == sizeof(obuf2), "write file len 9\n");
-            readden = leftmsg = -1;
-            ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 9\n");
-            ok(readden == sizeof(obuf) + sizeof(obuf2), "peek got %d bytes total 9\n", readden);
-            ok(leftmsg == sizeof(obuf), "peek got %d bytes left in message 9\n", leftmsg);
-            readden = leftmsg = -1;
-            ok(RpcPeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 9\n");
-            ok(readden == sizeof(obuf) + sizeof(obuf2), "peek got %d bytes total 9\n", readden);
-            ok(leftmsg == sizeof(obuf), "peek got %d bytes left in message 9\n", leftmsg);
             SetLastError(0xdeadbeef);
             ok(!ReadFile(hFile, ibuf, 4, &readden, NULL), "ReadFile 9\n");
             ok(GetLastError() == ERROR_MORE_DATA, "wrong error 9\n");
@@ -773,14 +520,6 @@ static void test_CreateNamedPipe(int pipemode)
             ok(!ret, "RpcReadFile 9\n");
             ok(GetLastError() == ERROR_MORE_DATA, "wrong error 9\n");
             ok(readden == 4, "read got %d bytes 9\n", readden);
-            readden = leftmsg = -1;
-            ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 9\n");
-            ok(readden == sizeof(obuf) - 8 + sizeof(obuf2), "peek got %d bytes total 9\n", readden);
-            ok(leftmsg == sizeof(obuf) - 8, "peek got %d bytes left in message 9\n", leftmsg);
-            readden = leftmsg = -1;
-            ok(RpcPeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 9\n");
-            ok(readden == sizeof(obuf) - 8 + sizeof(obuf2), "peek got %d bytes total 9\n", readden);
-            ok(leftmsg == sizeof(obuf) - 8, "peek got %d bytes left in message 9\n", leftmsg);
             ret = RpcReadFile(hFile, ibuf + 8, sizeof(ibuf), &readden, NULL);
             ok(ret, "RpcReadFile 9\n");
             ok(readden == sizeof(obuf) - 8, "read got %d bytes 9\n", readden);
@@ -788,14 +527,6 @@ static void test_CreateNamedPipe(int pipemode)
             if (readden <= sizeof(obuf) - 8) /* blocks forever if second part was already received */
             {
                 memset(ibuf, 0, sizeof(ibuf));
-                readden = leftmsg = -1;
-                ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 9\n");
-                ok(readden == sizeof(obuf2), "peek got %d bytes total 9\n", readden);
-                ok(leftmsg == sizeof(obuf2), "peek got %d bytes left in message 9\n", leftmsg);
-                readden = leftmsg = -1;
-                ok(RpcPeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 9\n");
-                ok(readden == sizeof(obuf2), "peek got %d bytes total 9\n", readden);
-                ok(leftmsg == sizeof(obuf2), "peek got %d bytes left in message 9\n", leftmsg);
                 SetLastError(0xdeadbeef);
                 ret = RpcReadFile(hFile, ibuf, 4, &readden, NULL);
                 ok(!ret, "RpcReadFile 9\n");
@@ -805,27 +536,11 @@ static void test_CreateNamedPipe(int pipemode)
                 ok(!ReadFile(hFile, ibuf + 4, 4, &readden, NULL), "ReadFile 9\n");
                 ok(GetLastError() == ERROR_MORE_DATA, "wrong error 9\n");
                 ok(readden == 4, "read got %d bytes 9\n", readden);
-                readden = leftmsg = -1;
-                ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 9\n");
-                ok(readden == sizeof(obuf2) - 8, "peek got %d bytes total 9\n", readden);
-                ok(leftmsg == sizeof(obuf2) - 8, "peek got %d bytes left in message 9\n", leftmsg);
-                readden = leftmsg = -1;
-                ok(RpcPeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 9\n");
-                ok(readden == sizeof(obuf2) - 8, "peek got %d bytes total 9\n", readden);
-                ok(leftmsg == sizeof(obuf2) - 8, "peek got %d bytes left in message 9\n", leftmsg);
                 ret = RpcReadFile(hFile, ibuf + 8, sizeof(ibuf), &readden, NULL);
                 ok(ret, "RpcReadFile 9\n");
                 ok(readden == sizeof(obuf2) - 8, "read got %d bytes 9\n", readden);
                 ok(memcmp(obuf2, ibuf, sizeof(obuf2)) == 0, "content check 9\n");
             }
-            readden = leftmsg = -1;
-            ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 9\n");
-            ok(readden == 0, "peek got %d bytes total 9\n", readden);
-            ok(leftmsg == 0, "peek got %d bytes left in message 9\n", leftmsg);
-            readden = leftmsg = -1;
-            ok(RpcPeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 9\n");
-            ok(readden == 0, "peek got %d bytes total 9\n", readden);
-            ok(leftmsg == 0, "peek got %d bytes left in message 9\n", leftmsg);
 
             /* Now the reverse direction */
             memset(ibuf, 0, sizeof(ibuf));
@@ -833,14 +548,6 @@ static void test_CreateNamedPipe(int pipemode)
             ok(written == sizeof(obuf2), "write file len 10\n");
             ok(WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile 10\n");
             ok(written == sizeof(obuf), "write file len 10\n");
-            readden = leftmsg = -1;
-            ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 10\n");
-            ok(readden == sizeof(obuf) + sizeof(obuf2), "peek got %d bytes total 10\n", readden);
-            ok(leftmsg == sizeof(obuf2), "peek got %d bytes left in message 10\n", leftmsg);
-            readden = leftmsg = -1;
-            ok(RpcPeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 10\n");
-            ok(readden == sizeof(obuf) + sizeof(obuf2), "peek got %d bytes total 10\n", readden);
-            ok(leftmsg == sizeof(obuf2), "peek got %d bytes left in message 10\n", leftmsg);
             SetLastError(0xdeadbeef);
             ok(!ReadFile(hnp, ibuf, 4, &readden, NULL), "ReadFile 10\n");
             ok(GetLastError() == ERROR_MORE_DATA, "wrong error 10\n");
@@ -850,14 +557,6 @@ static void test_CreateNamedPipe(int pipemode)
             ok(!ret, "RpcReadFile 10\n");
             ok(GetLastError() == ERROR_MORE_DATA, "wrong error 10\n");
             ok(readden == 4, "read got %d bytes 10\n", readden);
-            readden = leftmsg = -1;
-            ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 10\n");
-            ok(readden == sizeof(obuf2) - 8 + sizeof(obuf), "peek got %d bytes total 10\n", readden);
-            ok(leftmsg == sizeof(obuf2) - 8, "peek got %d bytes left in message 10\n", leftmsg);
-            readden = leftmsg = -1;
-            ok(RpcPeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 10\n");
-            ok(readden == sizeof(obuf2) - 8 + sizeof(obuf), "peek got %d bytes total 10\n", readden);
-            ok(leftmsg == sizeof(obuf2) - 8, "peek got %d bytes left in message 10\n", leftmsg);
             ret = RpcReadFile(hnp, ibuf + 8, sizeof(ibuf), &readden, NULL);
             ok(ret, "RpcReadFile 10\n");
             ok(readden == sizeof(obuf2) - 8, "read got %d bytes 10\n", readden);
@@ -865,14 +564,6 @@ static void test_CreateNamedPipe(int pipemode)
             if (readden <= sizeof(obuf2) - 8) /* blocks forever if second part was already received */
             {
                 memset(ibuf, 0, sizeof(ibuf));
-                readden = leftmsg = -1;
-                ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 10\n");
-                ok(readden == sizeof(obuf), "peek got %d bytes total 10\n", readden);
-                ok(leftmsg == sizeof(obuf), "peek got %d bytes left in message 10\n", leftmsg);
-                readden = leftmsg = -1;
-                ok(RpcPeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 10\n");
-                ok(readden == sizeof(obuf), "peek got %d bytes total 10\n", readden);
-                ok(leftmsg == sizeof(obuf), "peek got %d bytes left in message 10\n", leftmsg);
                 SetLastError(0xdeadbeef);
                 ret = RpcReadFile(hnp, ibuf, 4, &readden, NULL);
                 ok(!ret, "RpcReadFile 10\n");
@@ -882,139 +573,12 @@ static void test_CreateNamedPipe(int pipemode)
                 ok(!ReadFile(hnp, ibuf + 4, 4, &readden, NULL), "ReadFile 10\n");
                 ok(GetLastError() == ERROR_MORE_DATA, "wrong error 10\n");
                 ok(readden == 4, "read got %d bytes 10\n", readden);
-                readden = leftmsg = -1;
-                ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 10\n");
-                ok(readden == sizeof(obuf) - 8, "peek got %d bytes total 10\n", readden);
-                ok(leftmsg == sizeof(obuf) - 8, "peek got %d bytes left in message 10\n", leftmsg);
-                readden = leftmsg = -1;
-                ok(RpcPeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 10\n");
-                ok(readden == sizeof(obuf) - 8, "peek got %d bytes total 10\n", readden);
-                ok(leftmsg == sizeof(obuf) - 8, "peek got %d bytes left in message 10\n", leftmsg);
                 ret = RpcReadFile(hnp, ibuf + 8, sizeof(ibuf), &readden, NULL);
                 ok(ret, "RpcReadFile 10\n");
                 ok(readden == sizeof(obuf) - 8, "read got %d bytes 10\n", readden);
                 ok(memcmp(obuf, ibuf, sizeof(obuf)) == 0, "content check 10\n");
             }
-            readden = leftmsg = -1;
-            ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe 10\n");
-            ok(readden == 0, "peek got %d bytes total 10\n", readden);
-            ok(leftmsg == 0, "peek got %d bytes left in message 10\n", leftmsg);
-            readden = leftmsg = -1;
-            ok(RpcPeekNamedPipe(hnp, NULL, 0, NULL, &readden, &leftmsg), "RpcPeekNamedPipe 10\n");
-            ok(readden == 0, "peek got %d bytes total 10\n", readden);
-            ok(leftmsg == 0, "peek got %d bytes left in message 10\n", leftmsg);
 
-        }
-
-        /* Test behaviour for very huge messages (which don't fit completely in the buffer) */
-        {
-            static char big_obuf[512 * 1024];
-            static char big_ibuf[512 * 1024];
-            struct rpcThreadArgs rpcargs;
-            HANDLE thread;
-            DWORD threadId;
-            memset(big_obuf, 0xAA, sizeof(big_obuf));
-
-            /* Ensure that both pipes are empty before we continue with the next test */
-            while (PeekNamedPipe(hFile, NULL, 0, NULL, &readden, NULL) && readden > 0)
-                ok(ReadFile(hFile, big_ibuf, sizeof(big_ibuf), &readden, NULL) ||
-                   GetLastError() == ERROR_MORE_DATA, "ReadFile\n");
-
-            while (PeekNamedPipe(hnp, NULL, 0, NULL, &readden, NULL) && readden > 0)
-                ok(ReadFile(hnp, big_ibuf, sizeof(big_ibuf), &readden, NULL) ||
-                   GetLastError() == ERROR_MORE_DATA, "ReadFile\n");
-
-            readden = leftmsg = -1;
-            ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe\n");
-            ok(readden == 0, "peek got %d bytes total\n", readden);
-            ok(leftmsg == 0, "peek got %d bytes left in message\n", leftmsg);
-
-            /* transmit big message, receive with buffer of equal size */
-            memset(big_ibuf, 0, sizeof(big_ibuf));
-            rpcargs.returnValue = 0;
-            rpcargs.lastError = GetLastError();
-            rpcargs.op = RPC_WRITEFILE;
-            rpcargs.args[0] = (ULONG_PTR)hnp;
-            rpcargs.args[1] = (ULONG_PTR)big_obuf;
-            rpcargs.args[2] = (ULONG_PTR)sizeof(big_obuf);
-            rpcargs.args[3] = (ULONG_PTR)&written;
-            rpcargs.args[4] = (ULONG_PTR)NULL;
-
-            thread = CreateThread(NULL, 0, rpcThreadMain, (void *)&rpcargs, 0, &threadId);
-            ok(thread != NULL, "CreateThread failed. %d\n", GetLastError());
-            ret = WaitForSingleObject(thread, 200);
-            ok(ret == WAIT_TIMEOUT, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_TIMEOUT);
-            ok(ReadFile(hFile, big_ibuf, sizeof(big_ibuf), &readden, NULL), "ReadFile\n");
-            todo_wine
-            ok(readden == sizeof(big_obuf), "read got %d bytes\n", readden);
-            todo_wine
-            ok(memcmp(big_ibuf, big_obuf, sizeof(big_obuf)) == 0, "content check\n");
-            do
-            {
-                ret = WaitForSingleObject(thread, 1);
-                while (PeekNamedPipe(hFile, NULL, 0, NULL, &readden, NULL) && readden > 0)
-                    ok(ReadFile(hFile, big_ibuf, sizeof(big_ibuf), &readden, NULL) ||
-                       GetLastError() == ERROR_MORE_DATA, "ReadFile\n");
-            }
-            while (ret == WAIT_TIMEOUT);
-            ok(WaitForSingleObject(thread, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed with %d.\n", GetLastError());
-            ok((BOOL)rpcargs.returnValue, "WriteFile\n");
-            ok(written == sizeof(big_obuf), "write file len\n");
-            CloseHandle(thread);
-
-            readden = leftmsg = -1;
-            ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe\n");
-            ok(readden == 0, "peek got %d bytes total\n", readden);
-            ok(leftmsg == 0, "peek got %d bytes left in message\n", leftmsg);
-
-            /* same as above, but receive as multiple parts */
-            memset(big_ibuf, 0, sizeof(big_ibuf));
-            rpcargs.returnValue = 0;
-            rpcargs.lastError = GetLastError();
-
-            thread = CreateThread(NULL, 0, rpcThreadMain, (void *)&rpcargs, 0, &threadId);
-            ok(thread != NULL, "CreateThread failed. %d\n", GetLastError());
-            ret = WaitForSingleObject(thread, 200);
-            ok(ret == WAIT_TIMEOUT, "WaitForSingleObject returned %d instead of %d.\n", ret, WAIT_TIMEOUT);
-            if (pipemode == PIPE_TYPE_BYTE)
-            {
-                ok(ReadFile(hFile, big_ibuf, 32, &readden, NULL), "ReadFile\n");
-                ok(readden == 32, "read got %d bytes\n", readden);
-                ok(ReadFile(hFile, big_ibuf + 32, 32, &readden, NULL), "ReadFile\n");
-            }
-            else
-            {
-                SetLastError(0xdeadbeef);
-                ok(!ReadFile(hFile, big_ibuf, 32, &readden, NULL), "ReadFile\n");
-                ok(GetLastError() == ERROR_MORE_DATA, "wrong error\n");
-                ok(readden == 32, "read got %d bytes\n", readden);
-                SetLastError(0xdeadbeef);
-                ok(!ReadFile(hFile, big_ibuf + 32, 32, &readden, NULL), "ReadFile\n");
-                ok(GetLastError() == ERROR_MORE_DATA, "wrong error\n");
-            }
-            ok(readden == 32, "read got %d bytes\n", readden);
-            ok(ReadFile(hFile, big_ibuf + 64, sizeof(big_ibuf) - 64, &readden, NULL), "ReadFile\n");
-            todo_wine
-            ok(readden == sizeof(big_obuf) - 64, "read got %d bytes\n", readden);
-            todo_wine
-            ok(memcmp(big_ibuf, big_obuf, sizeof(big_obuf)) == 0, "content check\n");
-            do
-            {
-                ret = WaitForSingleObject(thread, 1);
-                while (PeekNamedPipe(hFile, NULL, 0, NULL, &readden, NULL) && readden > 0)
-                    ok(ReadFile(hFile, big_ibuf, sizeof(big_ibuf), &readden, NULL) ||
-                       GetLastError() == ERROR_MORE_DATA, "ReadFile\n");
-            }
-            while (ret == WAIT_TIMEOUT);
-            ok(WaitForSingleObject(thread, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed with %d.\n", GetLastError());
-            ok((BOOL)rpcargs.returnValue, "WriteFile\n");
-            ok(written == sizeof(big_obuf), "write file len\n");
-            CloseHandle(thread);
-
-            readden = leftmsg = -1;
-            ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, &leftmsg), "PeekNamedPipe\n");
-            ok(readden == 0, "peek got %d bytes total\n", readden);
-            ok(leftmsg == 0, "peek got %d bytes left in message\n", leftmsg);
         }
 
         /* Picky conformance tests */
@@ -1823,6 +1387,9 @@ static void test_CreatePipe(void)
     pipe_attr.bInheritHandle = TRUE; 
     pipe_attr.lpSecurityDescriptor = NULL;
     ok(CreatePipe(&piperead, &pipewrite, &pipe_attr, 0) != 0, "CreatePipe failed\n");
+    test_pipe_info(piperead, FILE_PIPE_SERVER_END, 4096, 4096, 1);
+    test_pipe_info(pipewrite, 0, 4096, 4096, 1);
+
     ok(WriteFile(pipewrite,PIPENAME,sizeof(PIPENAME), &written, NULL), "Write to anonymous pipe failed\n");
     ok(written == sizeof(PIPENAME), "Write to anonymous pipe wrote %d bytes\n", written);
     ok(ReadFile(piperead,readbuf,sizeof(readbuf),&read, NULL), "Read from non empty pipe failed\n");
@@ -1836,8 +1403,8 @@ static void test_CreatePipe(void)
     ok(written == sizeof(PIPENAME), "Write to anonymous pipe wrote %d bytes\n", written);
     /* and close the write end, read should still succeed*/
     ok(CloseHandle(pipewrite), "CloseHandle for the Write Pipe failed\n");
-    ok(ReadFile(piperead,readbuf,sizeof(readbuf),&read, NULL), "Read from broken pipe withe with pending data failed\n");
-    ok(read == sizeof(PIPENAME), "Read from  anonymous pipe got %d bytes\n", read);
+    ok(ReadFile(piperead,readbuf,sizeof(readbuf),&read, NULL), "Read from broken pipe with pending data failed\n");
+    ok(read == sizeof(PIPENAME), "Read from anonymous pipe got %d bytes\n", read);
     /* But now we need to get informed that the pipe is closed */
     ok(ReadFile(piperead,readbuf,sizeof(readbuf),&read, NULL) == 0, "Broken pipe not detected\n");
     ok(CloseHandle(piperead), "CloseHandle for the read pipe failed\n");
@@ -1852,8 +1419,8 @@ static void test_CreatePipe(void)
     /* and close the write end, read should still succeed*/
     ok(CloseHandle(pipewrite), "CloseHandle for the Write Pipe failed\n");
     memset( buffer, 0, size );
-    ok(ReadFile(piperead, buffer, size, &read, NULL), "Read from broken pipe withe with pending data failed\n");
-    ok(read == size, "Read from  anonymous pipe got %d bytes\n", read);
+    ok(ReadFile(piperead, buffer, size, &read, NULL), "Read from broken pipe with pending data failed\n");
+    ok(read == size, "Read from anonymous pipe got %d bytes\n", read);
     for (i = 0; i < size; i++) ok( buffer[i] == (BYTE)i, "invalid data %x at %x\n", buffer[i], i );
     /* But now we need to get informed that the pipe is closed */
     ok(ReadFile(piperead,readbuf,sizeof(readbuf),&read, NULL) == 0, "Broken pipe not detected\n");
@@ -1862,6 +1429,12 @@ static void test_CreatePipe(void)
 
     ok(user_apc_ran == FALSE, "user apc ran, pipe using alertable io mode\n");
     SleepEx(0, TRUE); /* get rid of apc */
+
+    ok(CreatePipe(&piperead, &pipewrite, &pipe_attr, 1) != 0, "CreatePipe failed\n");
+    test_pipe_info(piperead, FILE_PIPE_SERVER_END, 1, 1, 1);
+    test_pipe_info(pipewrite, 0, 1, 1, 1);
+    ok(CloseHandle(pipewrite), "CloseHandle for the Write Pipe failed\n");
+    ok(CloseHandle(piperead), "CloseHandle for the read pipe failed\n");
 }
 
 static void test_CloseHandle(void)
@@ -1919,7 +1492,7 @@ static void test_CloseHandle(void)
     SetLastError(0xdeadbeef);
     ret = WriteFile(hfile, testdata, sizeof(testdata), &numbytes, NULL);
     ok(!ret, "WriteFile unexpectedly succeeded\n");
-    ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %u\n", GetLastError());
+    todo_wine ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %u\n", GetLastError());
 
     CloseHandle(hfile);
 
@@ -1942,8 +1515,13 @@ static void test_CloseHandle(void)
     numbytes = 0xdeadbeef;
     memset(buffer, 0, sizeof(buffer));
     ret = ReadFile(hfile, buffer, sizeof(buffer), &numbytes, NULL);
-    todo_wine ok(ret, "ReadFile failed with %u\n", GetLastError());
+    ok(ret, "ReadFile failed with %u\n", GetLastError());
     ok(numbytes == 0, "expected 0, got %u\n", numbytes);
+
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(hfile, buffer, 0, &numbytes, NULL);
+    ok(!ret, "ReadFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_BROKEN_PIPE, "expected ERROR_BROKEN_PIPE, got %u\n", GetLastError());
 
     ret = GetNamedPipeHandleStateA(hfile, &state, NULL, NULL, NULL, NULL, 0);
     ok(ret, "GetNamedPipeHandleState failed with %u\n", GetLastError());
@@ -1959,7 +1537,7 @@ static void test_CloseHandle(void)
     SetLastError(0xdeadbeef);
     ret = WriteFile(hfile, testdata, sizeof(testdata), &numbytes, NULL);
     ok(!ret, "WriteFile unexpectedly succeeded\n");
-    ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %u\n", GetLastError());
+    todo_wine ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %u\n", GetLastError());
 
     CloseHandle(hfile);
 
@@ -1989,8 +1567,8 @@ static void test_CloseHandle(void)
     numbytes = 0xdeadbeef;
     memset(buffer, 0, sizeof(buffer));
     ret = ReadFile(hpipe, buffer, 0, &numbytes, NULL);
-    ok(ret || broken(GetLastError() == ERROR_MORE_DATA) /* >= Win 8 */,
-       "ReadFile failed with %u\n", GetLastError());
+    ok(ret || GetLastError() == ERROR_MORE_DATA /* >= Win 8 */,
+                 "ReadFile failed with %u\n", GetLastError());
     ok(numbytes == 0, "expected 0, got %u\n", numbytes);
 
     numbytes = 0xdeadbeef;
@@ -2036,8 +1614,13 @@ static void test_CloseHandle(void)
     numbytes = 0xdeadbeef;
     memset(buffer, 0, sizeof(buffer));
     ret = ReadFile(hpipe, buffer, sizeof(buffer), &numbytes, NULL);
-    todo_wine ok(ret, "ReadFile failed with %u\n", GetLastError());
+    ok(ret, "ReadFile failed with %u\n", GetLastError());
     ok(numbytes == 0, "expected 0, got %u\n", numbytes);
+
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(hpipe, buffer, 0, &numbytes, NULL);
+    ok(!ret, "ReadFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_BROKEN_PIPE, "expected ERROR_BROKEN_PIPE, got %u\n", GetLastError());
 
     ret = GetNamedPipeHandleStateA(hpipe, &state, NULL, NULL, NULL, NULL, 0);
     ok(ret, "GetNamedPipeHandleState failed with %u\n", GetLastError());
@@ -2540,6 +2123,20 @@ static DWORD CALLBACK overlapped_server(LPVOID arg)
     ok(ret == 1, "ret %d\n", ret);
 
     DisconnectNamedPipe(pipe);
+
+    ret = ConnectNamedPipe(pipe, &ol);
+    err = GetLastError();
+    ok(ret == 0, "ret %d\n", ret);
+    ok(err == ERROR_IO_PENDING, "gle %d\n", err);
+    CancelIo(pipe);
+    ret = WaitForSingleObjectEx(ol.hEvent, INFINITE, 1);
+    ok(ret == WAIT_OBJECT_0, "ret %x\n", ret);
+
+    ret = GetOverlappedResult(pipe, &ol, &num, 1);
+    err = GetLastError();
+    ok(ret == 0, "ret %d\n", ret);
+    ok(err == ERROR_OPERATION_ABORTED, "gle %d\n", err);
+
     CloseHandle(ol.hEvent);
     CloseHandle(pipe);
     return 1;
@@ -2627,121 +2224,6 @@ static void test_overlapped_error(void)
     CloseHandle(pipe);
 
     CloseHandle(event);
-}
-
-static void test_nowait(int pipemode)
-{
-    HANDLE hnp;
-    HANDLE hFile;
-    static const char obuf[] = "Bit Bucket";
-    char ibuf[32];
-    DWORD written;
-    DWORD readden;
-    DWORD lpmode;
-
-    hnp = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
-                           pipemode | PIPE_NOWAIT,
-                           /* nMaxInstances */ 1,
-                           /* nOutBufSize */ 1024,
-                           /* nInBufSize */ 1024,
-                           /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
-                           /* lpSecurityAttrib */ NULL);
-    ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
-
-    hFile = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
-    ok(hFile != INVALID_HANDLE_VALUE, "CreateFile failed (%d)\n", GetLastError());
-
-    /* don't try to do i/o if one side couldn't be opened, as it hangs */
-    if (hFile != INVALID_HANDLE_VALUE)
-    {
-        /* send message from client to server */
-        ok(WriteFile(hFile, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
-        ok(written == sizeof(obuf), "write file len\n");
-        ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, NULL), "Peek\n");
-        ok(readden == sizeof(obuf), "got %d bytes\n", readden);
-
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-        ok(readden == sizeof(obuf), "got %d bytes\n", readden);
-        ok(memcmp(obuf, ibuf, sizeof(obuf)) == 0, "content check\n");
-
-        readden = 0xdeadbeef;
-        SetLastError(0xdeadbeef);
-        ok(!ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
-        ok(readden == 0, "got %d bytes\n", readden);
-        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-
-        lpmode = (pipemode & PIPE_READMODE_MESSAGE) | PIPE_NOWAIT;
-        ok(SetNamedPipeHandleState(hFile, &lpmode, NULL, NULL), "Change mode\n");
-
-        /* send message from server to client */
-        ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile\n");
-        ok(written == sizeof(obuf), "write file len\n");
-        ok(PeekNamedPipe(hFile, NULL, 0, NULL, &readden, NULL), "Peek\n");
-        ok(readden == sizeof(obuf), "got %d bytes\n", readden);
-
-        memset(ibuf, 0, sizeof(ibuf));
-        ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-        ok(readden == sizeof(obuf), "got %d bytes\n", readden);
-        ok(memcmp(obuf, ibuf, sizeof(obuf)) == 0, "content check\n");
-
-        readden = 0xdeadbeef;
-        SetLastError(0xdeadbeef);
-        ok(!ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
-        ok(readden == 0, "got %d bytes\n", readden);
-        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-
-        /* now again the bad zero byte message test */
-        ok(WriteFile(hFile, obuf, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len\n");
-
-        if (pipemode != PIPE_TYPE_BYTE)
-        {
-            ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-            ok(readden == 0, "got %d bytes\n", readden);
-        }
-        else
-        {
-            SetLastError(0xdeadbeef);
-            ok(!ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
-            ok(readden == 0, "got %d bytes\n", readden);
-            ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-        }
-
-        readden = 0xdeadbeef;
-        SetLastError(0xdeadbeef);
-        ok(!ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
-        ok(readden == 0, "got %d bytes\n", readden);
-        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-
-        /* and the same for the reverse direction */
-        ok(WriteFile(hnp, obuf, 0, &written, NULL), "WriteFile\n");
-        ok(written == 0, "write file len\n");
-
-        if (pipemode != PIPE_TYPE_BYTE)
-        {
-            ok(ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() failed: %08x\n", GetLastError());
-            ok(readden == 0, "got %d bytes\n", readden);
-        }
-        else
-        {
-            SetLastError(0xdeadbeef);
-            ok(!ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
-            ok(readden == 0, "got %d bytes\n", readden);
-            ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-        }
-
-        readden = 0xdeadbeef;
-        SetLastError(0xdeadbeef);
-        ok(!ReadFile(hFile, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile() succeeded\n");
-        ok(readden == 0, "got %d bytes\n", readden);
-        ok(GetLastError() == ERROR_NO_DATA, "GetLastError() returned %08x, expected ERROR_NO_DATA\n", GetLastError());
-
-        ok(CloseHandle(hFile), "CloseHandle\n");
-    }
-
-    ok(CloseHandle(hnp), "CloseHandle\n");
-
 }
 
 static void test_NamedPipeHandleState(void)
@@ -2845,15 +2327,71 @@ static void test_NamedPipeHandleState(void)
     CloseHandle(server);
 }
 
+static void test_GetNamedPipeInfo(void)
+{
+    HANDLE server;
+
+    server = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
+        /* dwOpenMode */ PIPE_TYPE_BYTE | PIPE_WAIT,
+        /* nMaxInstances */ 1,
+        /* nOutBufSize */ 1024,
+        /* nInBufSize */ 1024,
+        /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
+        /* lpSecurityAttrib */ NULL);
+    ok(server != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
+
+    test_pipe_info(server, PIPE_SERVER_END | PIPE_TYPE_BYTE, 1024, 1024, 1);
+
+    CloseHandle(server);
+
+    server = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
+        /* dwOpenMode */ PIPE_TYPE_MESSAGE | PIPE_NOWAIT,
+        /* nMaxInstances */ 3,
+        /* nOutBufSize */ 1024,
+        /* nInBufSize */ 1024,
+        /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
+        /* lpSecurityAttrib */ NULL);
+    ok(server != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
+
+    test_pipe_info(server, PIPE_SERVER_END | PIPE_TYPE_MESSAGE, 1024, 1024, 3);
+
+    CloseHandle(server);
+
+    server = CreateNamedPipeA(PIPENAME, FILE_FLAG_OVERLAPPED | PIPE_ACCESS_DUPLEX,
+        /* dwOpenMode */ PIPE_TYPE_MESSAGE | PIPE_WAIT,
+        /* nMaxInstances */ 1,
+        /* nOutBufSize */ 0,
+        /* nInBufSize */ 0,
+        /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
+        /* lpSecurityAttrib */ NULL);
+    ok(server != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
+
+    test_pipe_info(server, PIPE_SERVER_END | PIPE_TYPE_MESSAGE, 0, 0, 1);
+
+    CloseHandle(server);
+
+    server = CreateNamedPipeA(PIPENAME, FILE_FLAG_OVERLAPPED | PIPE_ACCESS_DUPLEX,
+        /* dwOpenMode */ PIPE_TYPE_MESSAGE | PIPE_WAIT,
+        /* nMaxInstances */ 1,
+        /* nOutBufSize */ 0xf000,
+        /* nInBufSize */ 0xf000,
+        /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
+        /* lpSecurityAttrib */ NULL);
+    ok(server != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
+
+    test_pipe_info(server, PIPE_SERVER_END | PIPE_TYPE_MESSAGE, 0xf000, 0xf000, 1);
+
+    CloseHandle(server);
+}
+
 static void test_readfileex_pending(void)
 {
     HANDLE server, client, event;
     BOOL ret;
-    DWORD err, wait, num_bytes, lpmode;
+    DWORD err, wait, num_bytes;
     OVERLAPPED overlapped;
     char read_buf[1024];
     char write_buf[1024];
-    const char long_test_string[] = "12test3456ab";
     const char test_string[] = "test";
     int i;
 
@@ -2893,9 +2431,6 @@ static void test_readfileex_pending(void)
     ret = ReadFileEx(server, read_buf, sizeof(read_buf), &overlapped, completion_routine);
     ok(ret == TRUE, "ReadFileEx failed, err=%i\n", GetLastError());
     ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_TIMEOUT, "WaitForSingleObjectEx returned %x\n", wait);
-    ok(completion_called == 0, "completion routine called before WriteFile started\n");
 
     ret = WriteFile(client, test_string, strlen(test_string), &num_bytes, NULL);
     ok(ret == TRUE, "WriteFile failed\n");
@@ -2975,6 +2510,7 @@ static void test_readfileex_pending(void)
     SetLastError(0xdeadbeef);
     ret = ReadFile(server, read_buf, 0, &num_bytes, &overlapped);
     ok(!ret, "ReadFile should fail\n");
+todo_wine
     ok(GetLastError() == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %d\n", GetLastError());
     ok(num_bytes == 0, "bytes %u\n", num_bytes);
     ok((NTSTATUS)overlapped.Internal == STATUS_PENDING, "expected STATUS_PENDING, got %#lx\n", overlapped.Internal);
@@ -2990,9 +2526,11 @@ todo_wine
     ok(num_bytes == 1, "bytes %u\n", num_bytes);
 
     wait = WaitForSingleObject(event, 100);
+todo_wine
     ok(wait == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", wait);
 
     ok(num_bytes == 1, "bytes %u\n", num_bytes);
+todo_wine
     ok((NTSTATUS)overlapped.Internal == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %#lx\n", overlapped.Internal);
     ok(overlapped.InternalHigh == 0, "expected 0, got %lu\n", overlapped.InternalHigh);
 
@@ -3004,449 +2542,513 @@ todo_wine
 
     CloseHandle(client);
     CloseHandle(server);
-
-    /* On Windows versions > 2000 it is not possible to add PIPE_NOWAIT to a byte-mode
-     * PIPE after creating. Create a new pipe for the following tests. */
-    server = CreateNamedPipeA(PIPENAME, FILE_FLAG_OVERLAPPED | PIPE_ACCESS_DUPLEX,
-        /* dwOpenMode */ PIPE_TYPE_BYTE | PIPE_NOWAIT,
-        /* nMaxInstances */ 1,
-        /* nOutBufSize */ 1024,
-        /* nInBufSize */ 1024,
-        /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
-        /* lpSecurityAttrib */ NULL);
-    ok(server != INVALID_HANDLE_VALUE, "cf failed\n");
-
-    client = CreateFileA(PIPENAME, GENERIC_READ|GENERIC_WRITE, 0, NULL,
-        OPEN_EXISTING, 0, NULL);
-    ok(client != INVALID_HANDLE_VALUE, "cf failed\n");
-
-    memset(&overlapped, 0, sizeof(overlapped));
-    overlapped.hEvent = event;
-
-    /* Initial check with empty pipe */
-    memset(read_buf, 0, sizeof(read_buf));
-    completion_called = 0;
-    ResetEvent(event);
-    ret = ReadFileEx(server, read_buf, 4, &overlapped, completion_routine);
-    ok(ret == FALSE, "ReadFileEx succeded\n");
-    ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
-    ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %d\n", GetLastError());
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_TIMEOUT, "WaitForSingleObjectEx returned %x\n", wait);
-    ok(completion_called == 0, "completion routine called before writing to file\n");
-
-    /* Call ReadFileEx after writing content to the pipe */
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    completion_called = 0;
-    ResetEvent(event);
-    ret = ReadFileEx(server, read_buf, 4, &overlapped, completion_routine);
-    ok(ret == TRUE, "ReadFileEx failed, err=%i\n", GetLastError());
-    ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObjectEx returned %x\n", wait);
-    ok(completion_called == 1, "completion not called after writing pipe\n");
-    ok(completion_errorcode == 0, "completion called with error %x\n", completion_errorcode);
-    ok(completion_num_bytes == 4, "ReadFileEx returned only %d bytes\n", completion_num_bytes);
-    ok(completion_lpoverlapped == &overlapped, "completion called with wrong overlapped pointer\n");
-
-    ret = ReadFile(server, read_buf + 4, sizeof(read_buf) - 4, &num_bytes, NULL);
-    ok(ret == TRUE, "ReadFile succeeded\n");
-    ok(num_bytes == strlen(long_test_string)-4, "ReadFile returned only %d bytes\n", num_bytes);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Same again, but read as a single part */
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    completion_called = 0;
-    ResetEvent(event);
-    ret = ReadFileEx(server, read_buf, sizeof(read_buf), &overlapped, completion_routine);
-    ok(ret == TRUE, "ReadFileEx failed, err=%i\n", GetLastError());
-    ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObjectEx returned %x\n", wait);
-    ok(completion_called == 1, "completion not called after writing pipe\n");
-    ok(completion_errorcode == 0, "completion called with error %x\n", completion_errorcode);
-    ok(completion_num_bytes == strlen(long_test_string), "ReadFileEx returned only %d bytes\n", completion_num_bytes);
-    ok(completion_lpoverlapped == &overlapped, "completion called with wrong overlapped pointer\n");
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Check content of overlapped structure */
-    memset(read_buf, 0, sizeof(read_buf));
-    S(U(overlapped)).Offset = 0;
-    S(U(overlapped)).OffsetHigh = 0;
-    overlapped.Internal = -1;
-    overlapped.InternalHigh = -1;
-    overlapped.hEvent = event;
-    num_bytes = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = ReadFile(server, read_buf, 4, &num_bytes, &overlapped);
-    ok(ret == FALSE, "ReadFile succeeded\n");
-    ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %d\n", GetLastError());
-    ok(num_bytes == 0, "bytes %u\n", num_bytes);
-    ok((NTSTATUS)overlapped.Internal == STATUS_PENDING, "expected STATUS_PENDING, got %#lx\n", overlapped.Internal);
-    todo_wine
-    ok(overlapped.InternalHigh == -1, "expected -1, got %lu\n", overlapped.InternalHigh);
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_TIMEOUT, "WaitForSingleObjectEx returned %x\n", wait);
-    ok((NTSTATUS)overlapped.Internal == STATUS_PENDING, "expected STATUS_PENDING, got %#lx\n", overlapped.Internal);
-    todo_wine
-    ok(overlapped.InternalHigh == -1, "expected -1, got %lu\n", overlapped.InternalHigh);
-
-    /* Call ReadFile after writing to the pipe */
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    S(U(overlapped)).Offset = 0;
-    S(U(overlapped)).OffsetHigh = 0;
-    overlapped.Internal = -1;
-    overlapped.InternalHigh = -1;
-    overlapped.hEvent = event;
-    num_bytes = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = ReadFile(server, read_buf, 4, &num_bytes, &overlapped);
-    ok(ret == TRUE, "ReadFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == 4, "bytes %u\n", num_bytes);
-    ok((NTSTATUS)overlapped.Internal == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == 4, "expected 4, got %lu\n", overlapped.InternalHigh);
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", wait);
-    ok((NTSTATUS)overlapped.Internal == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == 4, "expected 4, got %lu\n", overlapped.InternalHigh);
-
-    ret = ReadFile(server, read_buf + 4, sizeof(read_buf) - 4, &num_bytes, NULL);
-    ok(ret == TRUE, "ReadFile failed\n");
-    ok(num_bytes == strlen(long_test_string)-4, "ReadFile returned only %d bytes\n", num_bytes);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Same again, but read as a single part */
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    S(U(overlapped)).Offset = 0;
-    S(U(overlapped)).OffsetHigh = 0;
-    overlapped.Internal = -1;
-    overlapped.InternalHigh = -1;
-    overlapped.hEvent = event;
-    num_bytes = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = ReadFile(server, read_buf, sizeof(read_buf), &num_bytes, &overlapped);
-    ok(ret == TRUE, "ReadFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-    ok((NTSTATUS)overlapped.Internal == 0, "expected 0, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == strlen(long_test_string), "expected %u, got %lu\n", (DWORD)strlen(long_test_string), overlapped.InternalHigh);
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", wait);
-    ok((NTSTATUS)overlapped.Internal == 0, "expected 0, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == strlen(long_test_string), "expected %u, got %lu\n", (DWORD)strlen(long_test_string), overlapped.InternalHigh);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    CloseHandle(client);
-    CloseHandle(server);
-
-    server = CreateNamedPipeA(PIPENAME, FILE_FLAG_OVERLAPPED | PIPE_ACCESS_DUPLEX,
-        /* dwOpenMode */ PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-        /* nMaxInstances */ 1,
-        /* nOutBufSize */ 1024,
-        /* nInBufSize */ 1024,
-        /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
-        /* lpSecurityAttrib */ NULL);
-    ok(server != INVALID_HANDLE_VALUE, "cf failed\n");
-
-    client = CreateFileA(PIPENAME, GENERIC_READ|GENERIC_WRITE, 0, NULL,
-        OPEN_EXISTING, 0, NULL);
-    ok(client != INVALID_HANDLE_VALUE, "cf failed\n");
-
-    memset(&overlapped, 0, sizeof(overlapped));
-    overlapped.hEvent = event;
-
-    /* Start a call to ReadFileEx which cannot complete immediately */
-    memset(read_buf, 0, sizeof(read_buf));
-    completion_called = 0;
-    ResetEvent(event);
-    ret = ReadFileEx(server, read_buf, 4, &overlapped, completion_routine);
-    ok(ret == TRUE, "ReadFileEx failed, err=%i\n", GetLastError());
-    ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_TIMEOUT, "WaitForSingleObject returned %x\n", wait);
-    ok(completion_called == 0, "completion routine called before WriteFile started\n");
-
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret == TRUE, "WriteFile failed\n");
-    ok(num_bytes == strlen(long_test_string), "only %i bytes written\n", num_bytes);
-    ok(completion_called == 0, "completion routine called during WriteFile\n");
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObjectEx returned %x\n", wait);
-
-    ok(completion_called == 1, "completion not called after writing pipe\n");
-    ok(completion_errorcode == 0, "completion called with error %x\n", completion_errorcode);
-    ok(completion_num_bytes == 4, "ReadFileEx returned only %d bytes\n", completion_num_bytes);
-    ok(completion_lpoverlapped == &overlapped, "completion called with wrong overlapped pointer\n");
-    ok(!memcmp(long_test_string, read_buf, 4), "ReadFileEx read wrong bytes\n");
-
-    ret = ReadFile(server, read_buf + 4, 4, &num_bytes, NULL);
-    ok(ret == FALSE, "ReadFile succeeded\n");
-    ok(num_bytes == 4, "ReadFile returned only %d bytes\n", num_bytes);
-    ok(GetLastError() == ERROR_MORE_DATA, "wrong error\n");
-    ret = ReadFile(server, read_buf + 8, sizeof(read_buf) - 8, &num_bytes, NULL);
-    ok(ret == TRUE, "ReadFile failed\n");
-    ok(num_bytes == strlen(long_test_string)-8, "ReadFile returned only %d bytes\n", num_bytes);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Call ReadFileEx when there is already some content in the pipe */
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret == TRUE, "WriteFile failed\n");
-    ok(num_bytes == strlen(long_test_string), "only %i bytes written\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    completion_called = 0;
-    ResetEvent(event);
-    ret = ReadFileEx(server, read_buf, 4, &overlapped, completion_routine);
-    ok(ret == TRUE, "ReadFileEx failed, err=%i\n", GetLastError());
-    ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObjectEx returned %x\n", wait);
-    ok(completion_called == 1, "completion not called after writing pipe\n");
-    ok(completion_errorcode == 0, "completion called with error %x\n", completion_errorcode);
-    ok(completion_num_bytes == 4, "ReadFileEx returned only %d bytes\n", completion_num_bytes);
-    ok(completion_lpoverlapped == &overlapped, "completion called with wrong overlapped pointer\n");
-    ok(!memcmp(long_test_string, read_buf, 4), "ReadFileEx read wrong bytes\n");
-
-    ret = ReadFile(server, read_buf + 4, sizeof(read_buf) - 4, &num_bytes, NULL);
-    ok(ret == TRUE, "ReadFile failed\n");
-    ok(num_bytes == strlen(long_test_string)-4, "ReadFile returned only %d bytes\n", num_bytes);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Check content of overlapped structure */
-    memset(read_buf, 0, sizeof(read_buf));
-    S(U(overlapped)).Offset = 0;
-    S(U(overlapped)).OffsetHigh = 0;
-    overlapped.Internal = -1;
-    overlapped.InternalHigh = -1;
-    overlapped.hEvent = event;
-    num_bytes = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = ReadFile(server, read_buf, 4, &num_bytes, &overlapped);
-    ok(GetLastError() == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %d\n", GetLastError());
-    ok(num_bytes == 0, "bytes %u\n", num_bytes);
-    ok((NTSTATUS)overlapped.Internal == STATUS_PENDING, "expected STATUS_PENDING, got %#lx\n", overlapped.Internal);
-    todo_wine
-    ok(overlapped.InternalHigh == -1, "expected -1, got %lu\n", overlapped.InternalHigh);
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_TIMEOUT, "WaitForSingleObject returned %x\n", wait);
-    ok((NTSTATUS)overlapped.Internal == STATUS_PENDING, "expected STATUS_PENDING, got %#lx\n", overlapped.Internal);
-
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed\n");
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", wait);
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-    ok((NTSTATUS)overlapped.Internal == STATUS_BUFFER_OVERFLOW, "expected STATUS_BUFFER_OVERFLOW, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == 4, "expected 4, got %lu\n", overlapped.InternalHigh);
-
-    ret = ReadFile(server, read_buf + 4, sizeof(read_buf) - 4, &num_bytes, NULL);
-    ok(ret == TRUE, "ReadFile failed\n");
-    ok(num_bytes == strlen(long_test_string)-4, "ReadFile returned only %d bytes\n", num_bytes);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Call ReadFile when there is already some content in the pipe */
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed\n");
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    S(U(overlapped)).Offset = 0;
-    S(U(overlapped)).OffsetHigh = 0;
-    overlapped.Internal = -1;
-    overlapped.InternalHigh = -1;
-    overlapped.hEvent = event;
-    num_bytes = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = ReadFile(server, read_buf, 4, &num_bytes, &overlapped);
-    ok(ret == FALSE, "ReadFile succeeded\n");
-    ok(GetLastError() == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %d\n", GetLastError());
-    todo_wine
-    ok(num_bytes == 0, "ReadFile returned %d bytes\n", num_bytes);
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_OBJECT_0, "WaitForSingleObjectEx returned %x\n", wait);
-    todo_wine
-    ok(num_bytes == 0, "bytes %u\n", num_bytes);
-    ok((NTSTATUS)overlapped.Internal == STATUS_BUFFER_OVERFLOW, "expected STATUS_BUFFER_OVERFLOW, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == 4, "expected 4, got %lu\n", overlapped.InternalHigh);
-
-    ret = ReadFile(server, read_buf + 4, sizeof(read_buf) - 4, &num_bytes, NULL);
-    ok(ret == TRUE, "ReadFile failed\n");
-    ok(num_bytes == strlen(long_test_string)-4, "ReadFile returned only %d bytes\n", num_bytes);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Tests for PIPE_NOWAIT in message mode */
-    lpmode = PIPE_READMODE_MESSAGE | PIPE_NOWAIT;
-    ok(SetNamedPipeHandleState(server, &lpmode, NULL, NULL), "Change mode\n");
-
-    /* Initial check with empty pipe */
-    memset(read_buf, 0, sizeof(read_buf));
-    completion_called = 0;
-    ResetEvent(event);
-    ret = ReadFileEx(server, read_buf, 4, &overlapped, completion_routine);
-    ok(ret == FALSE, "ReadFileEx succeded\n");
-    ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
-    ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %d\n", GetLastError());
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_TIMEOUT, "WaitForSingleObjectEx returned %x\n", wait);
-    ok(completion_called == 0, "completion routine called before writing to file\n");
-
-    /* Call ReadFileEx after writing content to the pipe */
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    completion_called = 0;
-    ResetEvent(event);
-    ret = ReadFileEx(server, read_buf, 4, &overlapped, completion_routine);
-    ok(ret == TRUE, "ReadFileEx failed, err=%i\n", GetLastError());
-    ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObjectEx returned %x\n", wait);
-    ok(completion_called == 1, "completion not called after writing pipe\n");
-    ok(completion_errorcode == 0, "completion called with error %x\n", completion_errorcode);
-    ok(completion_num_bytes == 4, "ReadFileEx returned only %d bytes\n", completion_num_bytes);
-    ok(completion_lpoverlapped == &overlapped, "completion called with wrong overlapped pointer\n");
-
-    ret = ReadFile(server, read_buf + 4, sizeof(read_buf) - 4, &num_bytes, NULL);
-    ok(ret == TRUE, "ReadFile succeeded\n");
-    ok(num_bytes == strlen(long_test_string)-4, "ReadFile returned only %d bytes\n", num_bytes);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Same again, but read as a single part */
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    completion_called = 0;
-    ResetEvent(event);
-    ret = ReadFileEx(server, read_buf, sizeof(read_buf), &overlapped, completion_routine);
-    ok(ret == TRUE, "ReadFileEx failed, err=%i\n", GetLastError());
-    ok(completion_called == 0, "completion routine called before ReadFileEx returned\n");
-    wait = WaitForSingleObjectEx(event, 0, TRUE);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObjectEx returned %x\n", wait);
-    ok(completion_called == 1, "completion not called after writing pipe\n");
-    ok(completion_errorcode == 0, "completion called with error %x\n", completion_errorcode);
-    ok(completion_num_bytes == strlen(long_test_string), "ReadFileEx returned only %d bytes\n", completion_num_bytes);
-    ok(completion_lpoverlapped == &overlapped, "completion called with wrong overlapped pointer\n");
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Check content of overlapped structure */
-    memset(read_buf, 0, sizeof(read_buf));
-    S(U(overlapped)).Offset = 0;
-    S(U(overlapped)).OffsetHigh = 0;
-    overlapped.Internal = -1;
-    overlapped.InternalHigh = -1;
-    overlapped.hEvent = event;
-    num_bytes = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = ReadFile(server, read_buf, 4, &num_bytes, &overlapped);
-    ok(ret == FALSE, "ReadFile succeeded\n");
-    ok(GetLastError() == ERROR_NO_DATA, "expected ERROR_NO_DATA, got %d\n", GetLastError());
-    ok(num_bytes == 0, "bytes %u\n", num_bytes);
-    ok((NTSTATUS)overlapped.Internal == STATUS_PENDING, "expected STATUS_PENDING, got %#lx\n", overlapped.Internal);
-    todo_wine
-    ok(overlapped.InternalHigh == -1, "expected -1, got %lu\n", overlapped.InternalHigh);
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_TIMEOUT, "WaitForSingleObjectEx returned %x\n", wait);
-    ok((NTSTATUS)overlapped.Internal == STATUS_PENDING, "expected STATUS_PENDING, got %#lx\n", overlapped.Internal);
-    todo_wine
-    ok(overlapped.InternalHigh == -1, "expected -1, got %lu\n", overlapped.InternalHigh);
-
-    /* Call ReadFile after writing to the pipe */
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    S(U(overlapped)).Offset = 0;
-    S(U(overlapped)).OffsetHigh = 0;
-    overlapped.Internal = -1;
-    overlapped.InternalHigh = -1;
-    overlapped.hEvent = event;
-    num_bytes = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = ReadFile(server, read_buf, 4, &num_bytes, &overlapped);
-    ok(ret == FALSE, "ReadFile succeeded\n");
-    ok(GetLastError() == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %d\n", GetLastError());
-    todo_wine
-    ok(num_bytes == 0, "bytes %u\n", num_bytes);
-    ok((NTSTATUS)overlapped.Internal == STATUS_BUFFER_OVERFLOW, "expected STATUS_BUFFER_OVERFLOW, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == 4, "expected 4, got %lu\n", overlapped.InternalHigh);
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", wait);
-    ok((NTSTATUS)overlapped.Internal == STATUS_BUFFER_OVERFLOW, "expected STATUS_BUFFER_OVERFLOW, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == 4, "expected 4, got %lu\n", overlapped.InternalHigh);
-
-    ret = ReadFile(server, read_buf + 4, sizeof(read_buf) - 4, &num_bytes, NULL);
-    ok(ret == TRUE, "ReadFile failed\n");
-    ok(num_bytes == strlen(long_test_string)-4, "ReadFile returned only %d bytes\n", num_bytes);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    /* Same again, but read as a single part */
-    num_bytes = 0xdeadbeef;
-    ret = WriteFile(client, long_test_string, strlen(long_test_string), &num_bytes, NULL);
-    ok(ret, "WriteFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-
-    memset(read_buf, 0, sizeof(read_buf));
-    S(U(overlapped)).Offset = 0;
-    S(U(overlapped)).OffsetHigh = 0;
-    overlapped.Internal = -1;
-    overlapped.InternalHigh = -1;
-    overlapped.hEvent = event;
-    num_bytes = 0xdeadbeef;
-    SetLastError(0xdeadbeef);
-    ret = ReadFile(server, read_buf, sizeof(read_buf), &num_bytes, &overlapped);
-    ok(ret == TRUE, "ReadFile failed, err=%i\n", GetLastError());
-    ok(num_bytes == strlen(long_test_string), "bytes %u\n", num_bytes);
-    ok((NTSTATUS)overlapped.Internal == 0, "expected 0, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == strlen(long_test_string), "expected %u, got %lu\n", (DWORD)strlen(long_test_string), overlapped.InternalHigh);
-    wait = WaitForSingleObject(event, 100);
-    ok(wait == WAIT_IO_COMPLETION || wait == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", wait);
-    ok((NTSTATUS)overlapped.Internal == 0, "expected 0, got %#lx\n", overlapped.Internal);
-    ok(overlapped.InternalHigh == strlen(long_test_string), "expected %u, got %lu\n", (DWORD)strlen(long_test_string), overlapped.InternalHigh);
-    ok(!memcmp(long_test_string, read_buf, strlen(long_test_string)), "ReadFile read wrong bytes\n");
-
-    CloseHandle(client);
-    CloseHandle(server);
     CloseHandle(event);
+}
+
+#define test_peek_pipe(a,b,c,d) _test_peek_pipe(__LINE__,a,b,c,d)
+static void _test_peek_pipe(unsigned line, HANDLE pipe, DWORD expected_read, DWORD expected_avail, DWORD expected_message_length)
+{
+    DWORD bytes_read = 0xdeadbeed, avail = 0xdeadbeef, left = 0xdeadbeed;
+    char buf[4000];
+    FILE_PIPE_PEEK_BUFFER *peek_buf = (void*)buf;
+    IO_STATUS_BLOCK io;
+    NTSTATUS status;
+    BOOL r;
+
+    r = PeekNamedPipe(pipe, buf, sizeof(buf), &bytes_read, &avail, &left);
+    ok_(__FILE__,line)(r, "PeekNamedPipe failed: %u\n", GetLastError());
+    ok_(__FILE__,line)(bytes_read == expected_read, "bytes_read = %u, expected %u\n", bytes_read, expected_read);
+    ok_(__FILE__,line)(avail == expected_avail, "avail = %u, expected %u\n", avail, expected_avail);
+    ok_(__FILE__,line)(left == expected_message_length - expected_read, "left = %d, expected %d\n",
+                       left, expected_message_length - expected_read);
+
+    status = NtFsControlFile(pipe, 0, NULL, NULL, &io, FSCTL_PIPE_PEEK, NULL, 0, buf, sizeof(buf));
+    ok_(__FILE__,line)(!status || status == STATUS_PENDING, "NtFsControlFile(FSCTL_PIPE_PEEK) failed: %x\n", status);
+    ok_(__FILE__,line)(io.Information == FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[expected_read]),
+                       "io.Information = %lu\n", io.Information);
+    ok_(__FILE__,line)(peek_buf->ReadDataAvailable == expected_avail, "ReadDataAvailable = %u, expected %u\n",
+                       peek_buf->ReadDataAvailable, expected_avail);
+    ok_(__FILE__,line)(peek_buf->MessageLength == expected_message_length, "MessageLength = %u, expected %u\n",
+                       peek_buf->MessageLength, expected_message_length);
+
+    if (expected_read)
+    {
+        r = PeekNamedPipe(pipe, buf, 1, &bytes_read, &avail, &left);
+        ok_(__FILE__,line)(r, "PeekNamedPipe failed: %u\n", GetLastError());
+        ok_(__FILE__,line)(bytes_read == 1, "bytes_read = %u, expected %u\n", bytes_read, expected_read);
+        ok_(__FILE__,line)(avail == expected_avail, "avail = %u, expected %u\n", avail, expected_avail);
+        ok_(__FILE__,line)(left == expected_message_length-1, "left = %d, expected %d\n", left, expected_message_length-1);
+    }
+}
+
+#define overlapped_read_sync(a,b,c,d,e) _overlapped_read_sync(__LINE__,a,b,c,d,e)
+static void _overlapped_read_sync(unsigned line, HANDLE reader, void *buf, DWORD buf_size, DWORD expected_result, BOOL partial_read)
+{
+    DWORD read_bytes = 0xdeadbeef;
+    OVERLAPPED overlapped;
+    BOOL res;
+
+    memset(&overlapped, 0, sizeof(overlapped));
+    overlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    res = ReadFile(reader, buf, buf_size, &read_bytes, &overlapped);
+    if (partial_read)
+        ok_(__FILE__,line)(!res && GetLastError() == ERROR_MORE_DATA, "ReadFile returned: %x (%u)\n", res, GetLastError());
+    else
+        ok_(__FILE__,line)(res, "ReadFile failed: %u\n", GetLastError());
+    if(partial_read)
+        todo_wine ok_(__FILE__,line)(!read_bytes, "read_bytes %u expected 0\n", read_bytes);
+    else
+        ok_(__FILE__,line)(read_bytes == expected_result, "read_bytes %u expected %u\n", read_bytes, expected_result);
+
+    read_bytes = 0xdeadbeef;
+    res = GetOverlappedResult(reader, &overlapped, &read_bytes, FALSE);
+    if (partial_read)
+        ok_(__FILE__,line)(!res && GetLastError() == ERROR_MORE_DATA,
+                           "GetOverlappedResult returned: %x (%u)\n", res, GetLastError());
+    else
+        ok_(__FILE__,line)(res, "GetOverlappedResult failed: %u\n", GetLastError());
+    ok_(__FILE__,line)(read_bytes == expected_result, "read_bytes %u expected %u\n", read_bytes, expected_result);
+    CloseHandle(overlapped.hEvent);
+}
+
+#define overlapped_read_async(a,b,c,d) _overlapped_read_async(__LINE__,a,b,c,d)
+static void _overlapped_read_async(unsigned line, HANDLE reader, void *buf, DWORD buf_size, OVERLAPPED *overlapped)
+{
+    DWORD read_bytes = 0xdeadbeef;
+    BOOL res;
+
+    memset(overlapped, 0, sizeof(*overlapped));
+    overlapped->hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    res = ReadFile(reader, buf, buf_size, &read_bytes, overlapped);
+    ok_(__FILE__,line)(!res && GetLastError() == ERROR_IO_PENDING, "ReadFile returned %x(%u)\n", res, GetLastError());
+    ok_(__FILE__,line)(!read_bytes, "read_bytes %u expected 0\n", read_bytes);
+
+    _test_not_signaled(line, overlapped->hEvent);
+}
+
+#define overlapped_write_sync(a,b,c) _overlapped_write_sync(__LINE__,a,b,c)
+static void _overlapped_write_sync(unsigned line, HANDLE writer, void *buf, DWORD size)
+{
+    DWORD written_bytes = 0xdeadbeef;
+    OVERLAPPED overlapped;
+    BOOL res;
+
+    memset(&overlapped, 0, sizeof(overlapped));
+    overlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    res = WriteFile(writer, buf, size, &written_bytes, &overlapped);
+    ok_(__FILE__,line)(res, "WriteFile returned %x(%u)\n", res, GetLastError());
+    ok_(__FILE__,line)(written_bytes == size, "WriteFile returned written_bytes = %u\n", written_bytes);
+
+    written_bytes = 0xdeadbeef;
+    res = GetOverlappedResult(writer, &overlapped, &written_bytes, FALSE);
+    ok_(__FILE__,line)(res, "GetOverlappedResult failed: %u\n", GetLastError());
+    ok_(__FILE__,line)(written_bytes == size, "GetOverlappedResult returned written_bytes %u expected %u\n", written_bytes, size);
+
+    CloseHandle(overlapped.hEvent);
+}
+
+#define overlapped_write_async(a,b,c,d) _overlapped_write_async(__LINE__,a,b,c,d)
+static void _overlapped_write_async(unsigned line, HANDLE writer, void *buf, DWORD size, OVERLAPPED *overlapped)
+{
+    DWORD written_bytes = 0xdeadbeef;
+    BOOL res;
+
+    memset(overlapped, 0, sizeof(*overlapped));
+    overlapped->hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    res = WriteFile(writer, buf, size, &written_bytes, overlapped);
+    ok_(__FILE__,line)(!res && GetLastError() == ERROR_IO_PENDING, "WriteFile returned %x(%u)\n", res, GetLastError());
+    todo_wine ok_(__FILE__,line)(!written_bytes, "written_bytes = %u\n", written_bytes);
+
+    _test_not_signaled(line, overlapped->hEvent);
+}
+
+#define test_flush_sync(a) _test_flush_sync(__LINE__,a)
+static void _test_flush_sync(unsigned line, HANDLE pipe)
+{
+    BOOL res;
+
+    res = FlushFileBuffers(pipe);
+    ok_(__FILE__,line)(res, "FlushFileBuffers failed: %u\n", GetLastError());
+}
+
+static DWORD expected_flush_error;
+
+static DWORD CALLBACK flush_proc(HANDLE pipe)
+{
+    BOOL res;
+
+    res = FlushFileBuffers(pipe);
+    if (expected_flush_error == ERROR_SUCCESS)
+        ok(res, "FlushFileBuffers failed: %u\n", GetLastError());
+    else
+        todo_wine ok(!res && GetLastError() == expected_flush_error, "FlushFileBuffers failed: %u\n", GetLastError());
+    return 0;
+}
+
+#define test_flush_async(a,b) _test_flush_async(__LINE__,a,b)
+static HANDLE _test_flush_async(unsigned line, HANDLE pipe, DWORD error)
+{
+    HANDLE thread;
+    DWORD tid;
+
+    expected_flush_error = error;
+    thread = CreateThread(NULL, 0, flush_proc, pipe, 0, &tid);
+    ok_(__FILE__,line)(thread != NULL, "CreateThread failed: %u\n", GetLastError());
+
+    Sleep(50);
+    _test_not_signaled(line, thread);
+    return thread;
+}
+
+#define test_flush_done(a) _test_flush_done(__LINE__,a)
+static void _test_flush_done(unsigned line, HANDLE thread)
+{
+    DWORD res = WaitForSingleObject(thread, 1000);
+    ok_(__FILE__,line)(res == WAIT_OBJECT_0, "WaitForSingleObject returned %u (%u)\n", res, GetLastError());
+    CloseHandle(thread);
+}
+
+#define test_overlapped_result(a,b,c,d) _test_overlapped_result(__LINE__,a,b,c,d)
+static void _test_overlapped_result(unsigned line, HANDLE handle, OVERLAPPED *overlapped, DWORD expected_result, BOOL partial_read)
+{
+    DWORD result = 0xdeadbeef;
+    BOOL res;
+
+    _test_signaled(line, overlapped->hEvent);
+
+    res = GetOverlappedResult(handle, overlapped, &result, FALSE);
+    if (partial_read)
+        ok_(__FILE__,line)(!res && GetLastError() == ERROR_MORE_DATA, "GetOverlappedResult returned: %x (%u)\n", res, GetLastError());
+    else
+        ok_(__FILE__,line)(res, "GetOverlappedResult failed: %u\n", GetLastError());
+    ok_(__FILE__,line)(result == expected_result, "read_bytes = %u, expected %u\n", result, expected_result);
+    CloseHandle(overlapped->hEvent);
+}
+
+#define test_overlapped_failure(a,b,c) _test_overlapped_failure(__LINE__,a,b,c)
+static void _test_overlapped_failure(unsigned line, HANDLE handle, OVERLAPPED *overlapped, DWORD error)
+{
+    DWORD result;
+    BOOL res;
+
+    _test_signaled(line, overlapped->hEvent);
+
+    res = GetOverlappedResult(handle, overlapped, &result, FALSE);
+    ok_(__FILE__,line)(!res && GetLastError() == error, "GetOverlappedResult returned: %x (%u), expected error %u\n",
+                       res, GetLastError(), error);
+    ok_(__FILE__,line)(!result, "result = %u\n", result);
+    CloseHandle(overlapped->hEvent);
+}
+
+#define cancel_overlapped(a,b) _cancel_overlapped(__LINE__,a,b)
+static void _cancel_overlapped(unsigned line, HANDLE handle, OVERLAPPED *overlapped)
+{
+    BOOL res;
+
+    res = pCancelIoEx(handle, overlapped);
+    ok_(__FILE__,line)(res, "CancelIoEx failed: %u\n", GetLastError());
+
+    _test_overlapped_failure(line, handle, overlapped, ERROR_OPERATION_ABORTED);
+}
+
+static void test_blocking_rw(HANDLE writer, HANDLE reader, DWORD buf_size, BOOL msg_mode, BOOL msg_read)
+{
+    OVERLAPPED read_overlapped, read_overlapped2, write_overlapped, write_overlapped2;
+    char buf[10000], read_buf[10000];
+    HANDLE flush_thread;
+
+    memset(buf, 0xaa, sizeof(buf));
+
+    /* test pending read with overlapped event */
+    overlapped_read_async(reader, read_buf, 1000, &read_overlapped);
+    test_flush_sync(writer);
+    test_peek_pipe(reader, 0, 0, 0);
+
+    /* write more data than needed for read */
+    overlapped_write_sync(writer, buf, 4000);
+    test_overlapped_result(reader, &read_overlapped, 1000, msg_read);
+
+    /* test pending write with overlapped event */
+    overlapped_write_async(writer, buf, buf_size, &write_overlapped);
+
+    /* write one more byte */
+    overlapped_write_async(writer, buf, 1, &write_overlapped2);
+    flush_thread = test_flush_async(writer, ERROR_SUCCESS);
+    test_not_signaled(write_overlapped.hEvent);
+
+    /* empty write will not block */
+    overlapped_write_sync(writer, buf, 0);
+    test_not_signaled(write_overlapped.hEvent);
+    test_not_signaled(write_overlapped2.hEvent);
+
+    /* read remaining data from the first write */
+    overlapped_read_sync(reader, read_buf, 3000, 3000, FALSE);
+    test_overlapped_result(writer, &write_overlapped, buf_size, FALSE);
+    test_not_signaled(write_overlapped2.hEvent);
+    test_not_signaled(flush_thread);
+
+    /* read one byte so that the next write fits the buffer */
+    overlapped_read_sync(reader, read_buf, 1, 1, msg_read);
+    test_overlapped_result(writer, &write_overlapped2, 1, FALSE);
+
+    /* read the whole buffer */
+    overlapped_read_sync(reader, read_buf, buf_size, buf_size-msg_read, FALSE);
+
+    if(msg_read)
+        overlapped_read_sync(reader, read_buf, 1000, 1, FALSE);
+
+    if(msg_mode) {
+        /* we still have an empty message in queue */
+        overlapped_read_sync(reader, read_buf, 1000, 0, FALSE);
+    }
+    test_flush_done(flush_thread);
+
+    /* pipe is empty, the next read will block */
+    overlapped_read_async(reader, read_buf, 0, &read_overlapped);
+    overlapped_read_async(reader, read_buf, 1000, &read_overlapped2);
+
+    /* write one byte */
+    overlapped_write_sync(writer, buf, 1);
+    test_overlapped_result(reader, &read_overlapped, 0, msg_read);
+    test_overlapped_result(reader, &read_overlapped2, 1, FALSE);
+
+    /* write a message larger than buffer */
+    overlapped_write_async(writer, buf, buf_size+2000, &write_overlapped);
+
+    /* read so that pending write is still larger than the buffer */
+    overlapped_read_sync(reader, read_buf, 1999, 1999, msg_read);
+    test_not_signaled(write_overlapped.hEvent);
+
+    /* read one more byte */
+    overlapped_read_sync(reader, read_buf, 1, 1, msg_read);
+    test_overlapped_result(writer, &write_overlapped, buf_size+2000, FALSE);
+
+    /* read remaining data */
+    overlapped_read_sync(reader, read_buf, buf_size+1, buf_size, FALSE);
+
+    /* simple pass of empty message */
+    overlapped_write_sync(writer, buf, 0);
+    if(msg_mode)
+        overlapped_read_sync(reader, read_buf, 1, 0, FALSE);
+
+    /* pipe is empty, the next read will block */
+    test_flush_sync(writer);
+    overlapped_read_async(reader, read_buf, 0, &read_overlapped);
+    overlapped_read_async(reader, read_buf, 1, &read_overlapped2);
+
+    /* 0 length write wakes one read in msg mode */
+    overlapped_write_sync(writer, buf, 0);
+    if(msg_mode)
+        test_overlapped_result(reader, &read_overlapped, 0, FALSE);
+    else
+        test_not_signaled(read_overlapped.hEvent);
+    test_not_signaled(read_overlapped2.hEvent);
+    overlapped_write_sync(writer, buf, 1);
+    test_overlapped_result(reader, &read_overlapped2, 1, FALSE);
+
+    overlapped_write_sync(writer, buf, 20);
+    test_peek_pipe(reader, 20, 20, msg_mode ? 20 : 0);
+    overlapped_write_sync(writer, buf, 15);
+    test_peek_pipe(reader, msg_mode ? 20 : 35, 35, msg_mode ? 20 : 0);
+    overlapped_read_sync(reader, read_buf, 10, 10, msg_read);
+    test_peek_pipe(reader, msg_mode ? 10 : 25, 25, msg_mode ? 10 : 0);
+    overlapped_read_sync(reader, read_buf, 10, 10, FALSE);
+    test_peek_pipe(reader, 15, 15, msg_mode ? 15 : 0);
+    overlapped_read_sync(reader, read_buf, 15, 15, FALSE);
+
+    if(!pCancelIoEx) {
+        win_skip("CancelIoEx not available\n");
+        return;
+    }
+
+    /* add one more pending read, then cancel the first one */
+    overlapped_read_async(reader, read_buf, 1, &read_overlapped);
+    overlapped_read_async(reader, read_buf, 1, &read_overlapped2);
+    cancel_overlapped(reader, &read_overlapped2);
+    test_not_signaled(read_overlapped.hEvent);
+    overlapped_write_sync(writer, buf, 1);
+    test_overlapped_result(reader, &read_overlapped, 1, FALSE);
+
+    /* make two async writes, cancel the first one and make sure that we read from the second one */
+    overlapped_write_async(writer, buf, buf_size+2000, &write_overlapped);
+    overlapped_write_async(writer, buf, 1, &write_overlapped2);
+    cancel_overlapped(writer, &write_overlapped);
+    overlapped_read_sync(reader, read_buf, 1000, 1, FALSE);
+    test_overlapped_result(writer, &write_overlapped2, 1, FALSE);
+
+    /* same as above, but parially read written data before canceling */
+    overlapped_write_async(writer, buf, buf_size+2000, &write_overlapped);
+    overlapped_write_async(writer, buf, 1, &write_overlapped2);
+    overlapped_read_sync(reader, read_buf, 10, 10, msg_read);
+    test_not_signaled(write_overlapped.hEvent);
+    cancel_overlapped(writer, &write_overlapped);
+    overlapped_read_sync(reader, read_buf, 1000, 1, FALSE);
+    test_overlapped_result(writer, &write_overlapped2, 1, FALSE);
+
+    /* empty queue by canceling write and make sure that flush is signaled */
+    overlapped_write_async(writer, buf, buf_size+2000, &write_overlapped);
+    flush_thread = test_flush_async(writer, ERROR_SUCCESS);
+    test_not_signaled(flush_thread);
+    cancel_overlapped(writer, &write_overlapped);
+    test_flush_done(flush_thread);
+}
+
+static void child_process_write_pipe(HANDLE pipe)
+{
+    OVERLAPPED overlapped;
+    char buf[10000];
+
+    memset(buf, 'x', sizeof(buf));
+    overlapped_write_async(pipe, buf, sizeof(buf), &overlapped);
+
+    /* sleep until parent process terminates this process */
+    Sleep(INFINITE);
+}
+
+static HANDLE create_writepipe_process(HANDLE pipe)
+{
+    STARTUPINFOA si = { sizeof(si) };
+    PROCESS_INFORMATION info;
+    char **argv, buf[MAX_PATH];
+    BOOL res;
+
+    winetest_get_mainargs(&argv);
+    sprintf(buf, "\"%s\" pipe writepipe %lx", argv[0], (UINT_PTR)pipe);
+    res = CreateProcessA(NULL, buf, NULL, NULL, TRUE, 0L, NULL, NULL, &si, &info);
+    ok(res, "CreateProcess failed: %u\n", GetLastError());
+    CloseHandle(info.hThread);
+
+    return info.hProcess;
+}
+
+static void create_overlapped_pipe(DWORD mode, HANDLE *client, HANDLE *server)
+{
+    SECURITY_ATTRIBUTES sec_attr = { sizeof(sec_attr), NULL, TRUE };
+    DWORD read_mode = mode & (PIPE_READMODE_BYTE | PIPE_READMODE_MESSAGE);
+    OVERLAPPED overlapped;
+    BOOL res;
+
+    *server = CreateNamedPipeA(PIPENAME, FILE_FLAG_OVERLAPPED | PIPE_ACCESS_DUPLEX,
+                               PIPE_WAIT | mode, 1, 5000, 6000, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+    ok(&server != INVALID_HANDLE_VALUE, "CreateNamedPipe failed: %u\n", GetLastError());
+    test_signaled(*server);
+
+    memset(&overlapped, 0, sizeof(overlapped));
+    overlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    res = ConnectNamedPipe(*server, &overlapped);
+    ok(!res && GetLastError() == ERROR_IO_PENDING, "WriteFile returned %x(%u)\n", res, GetLastError());
+    test_not_signaled(*server);
+    test_not_signaled(overlapped.hEvent);
+
+    *client = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, &sec_attr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+    ok(*server != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
+
+    res = SetNamedPipeHandleState(*client, &read_mode, NULL, NULL);
+    ok(res, "SetNamedPipeHandleState failed: %u\n", GetLastError());
+
+    test_signaled(*client);
+    test_not_signaled(*server);
+    test_overlapped_result(*server, &overlapped, 0, FALSE);
+}
+
+static void test_overlapped_transport(BOOL msg_mode, BOOL msg_read_mode)
+{
+    OVERLAPPED overlapped, overlapped2;
+    HANDLE server, client, flush;
+    DWORD read_bytes;
+    HANDLE process;
+    char buf[60000];
+    BOOL res;
+
+    DWORD create_flags =
+        (msg_mode ? PIPE_TYPE_MESSAGE : PIPE_TYPE_BYTE) |
+        (msg_read_mode ? PIPE_READMODE_MESSAGE : PIPE_READMODE_BYTE);
+
+    create_overlapped_pipe(create_flags, &client, &server);
+
+    trace("testing %s, %s server->client writes...\n",
+          msg_mode ? "message mode" : "byte mode", msg_read_mode ? "message read" : "byte read");
+    test_blocking_rw(server, client, 5000, msg_mode, msg_read_mode);
+    trace("testing %s, %s client->server writes...\n",
+          msg_mode ? "message mode" : "byte mode", msg_read_mode ? "message read" : "byte read");
+    test_blocking_rw(client, server, 6000, msg_mode, msg_read_mode);
+
+    CloseHandle(client);
+    CloseHandle(server);
+
+    /* close client with pending writes */
+    create_overlapped_pipe(create_flags, &client, &server);
+    overlapped_write_async(server, buf, 7000, &overlapped);
+    flush = test_flush_async(server, ERROR_BROKEN_PIPE);
+    CloseHandle(client);
+    test_overlapped_failure(server, &overlapped, ERROR_BROKEN_PIPE);
+    test_flush_done(flush);
+    CloseHandle(server);
+
+    /* close server with pending writes */
+    create_overlapped_pipe(create_flags, &client, &server);
+    overlapped_write_async(client, buf, 7000, &overlapped);
+    flush = test_flush_async(client, ERROR_BROKEN_PIPE);
+    CloseHandle(server);
+    test_overlapped_failure(client, &overlapped, ERROR_BROKEN_PIPE);
+    test_flush_done(flush);
+    CloseHandle(client);
+
+    /* disconnect with pending writes */
+    create_overlapped_pipe(create_flags, &client, &server);
+    overlapped_write_async(client, buf, 7000, &overlapped);
+    overlapped_write_async(server, buf, 7000, &overlapped2);
+    flush = test_flush_async(client, ERROR_PIPE_NOT_CONNECTED);
+    res = DisconnectNamedPipe(server);
+    ok(res, "DisconnectNamedPipe failed: %u\n", GetLastError());
+    test_overlapped_failure(client, &overlapped, ERROR_PIPE_NOT_CONNECTED);
+    test_overlapped_failure(client, &overlapped2, ERROR_PIPE_NOT_CONNECTED);
+    test_flush_done(flush);
+    CloseHandle(server);
+    CloseHandle(client);
+
+    /* terminate process with pending write */
+    create_overlapped_pipe(create_flags, &client, &server);
+    process = create_writepipe_process(client);
+    /* successfully read part of write that is pending in child process */
+    res = ReadFile(server, buf, 10, &read_bytes, NULL);
+    if(!msg_read_mode)
+        ok(res, "ReadFile failed: %u\n", GetLastError());
+    else
+        ok(!res && GetLastError() == ERROR_MORE_DATA, "ReadFile returned: %x %u\n", res, GetLastError());
+    ok(read_bytes == 10, "read_bytes = %u\n", read_bytes);
+    TerminateProcess(process, 0);
+    winetest_wait_child_process(process);
+    /* after terminating process, there is no pending write and pipe buffer is empty */
+    overlapped_read_async(server, buf, 10, &overlapped);
+    overlapped_write_sync(client, buf, 1);
+    test_overlapped_result(server, &overlapped, 1, FALSE);
+    CloseHandle(process);
+    CloseHandle(server);
+    CloseHandle(client);
 }
 
 START_TEST(pipe)
 {
+    char **argv;
+    int argc;
     HMODULE hmod;
 
     hmod = GetModuleHandleA("advapi32.dll");
     pDuplicateTokenEx = (void *) GetProcAddress(hmod, "DuplicateTokenEx");
     hmod = GetModuleHandleA("kernel32.dll");
     pQueueUserAPC = (void *) GetProcAddress(hmod, "QueueUserAPC");
+    pCancelIoEx = (void *) GetProcAddress(hmod, "CancelIoEx");
+
+    argc = winetest_get_mainargs(&argv);
+
+    if (argc > 3 && !strcmp(argv[2], "writepipe"))
+    {
+        UINT_PTR handle;
+        sscanf(argv[3], "%lx", &handle);
+        child_process_write_pipe((HANDLE)handle);
+        return;
+    }
 
     if (test_DisconnectNamedPipe())
         return;
@@ -3459,8 +3061,11 @@ START_TEST(pipe)
     test_impersonation();
     test_overlapped();
     test_overlapped_error();
-    test_nowait(PIPE_TYPE_BYTE);
-    test_nowait(PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE);
     test_NamedPipeHandleState();
+    test_GetNamedPipeInfo();
     test_readfileex_pending();
+    test_overlapped_transport(TRUE, FALSE);
+    test_overlapped_transport(TRUE, TRUE);
+    if (broken(1)) /* FIXME: Remove once Wine is ready. */
+        test_overlapped_transport(FALSE, FALSE);
 }

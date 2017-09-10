@@ -67,17 +67,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Eksploruj", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Otwórz", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Wytnij", FCIDM_SHVIEW_CUT
-        MENUITEM "&Kopiuj", FCIDM_SHVIEW_COPY
+        MENUITEM "&Wytnij", IDM_CUT
+        MENUITEM "&Kopiuj", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Utwórz &Skrót", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Usuń", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Zmień nazwę", FCIDM_SHVIEW_RENAME
+        MENUITEM "Utwórz &Skrót", IDM_CREATELINK
+        MENUITEM "&Usuń", IDM_DELETE
+        MENUITEM "&Zmień nazwę", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "Wł&aściwości", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "Wł&aściwości", IDM_PROPERTIES
     END
 END
 
@@ -638,24 +636,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Plik"
-    IDS_SHV_COLUMN2 "Wielkość"
-    IDS_SHV_COLUMN3 "Typ"
-    IDS_SHV_COLUMN4 "Modyfikacja"
-    IDS_SHV_COLUMN5 "Atrybuty"
-    IDS_SHV_COLUMN6 "Wielkość"
-    IDS_SHV_COLUMN7 "Dostępna wielkość"
-    IDS_SHV_COLUMN8 "Nazwa"
-    IDS_SHV_COLUMN9 "Komentarz"
-    IDS_SHV_COLUMN10 "Właściciel"
-    IDS_SHV_COLUMN11 "Grupa"
-    IDS_SHV_COLUMN12 "Nazwa pliku"
-    IDS_SHV_COLUMN13 "Kategoria"
+    IDS_SHV_COLUMN_NAME "Nazwa"
+    IDS_SHV_COLUMN_SIZE "Wielkość"
+    IDS_SHV_COLUMN_TYPE "Typ"
+    IDS_SHV_COLUMN_MODIFIED "Modyfikacja"
+    IDS_SHV_COLUMN_ATTRIBUTES "Atrybuty"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Wielkość"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Dostępna wielkość"
+    IDS_SHV_COLUMN_OWNER "Właściciel"
+    IDS_SHV_COLUMN_GROUP "Grupa"
+    IDS_SHV_COLUMN_FILENAME "Nazwa pliku"
+    IDS_SHV_COLUMN_CATEGORY "Kategoria"
     IDS_SHV_COLUMN_DELFROM "Lokalizacja oryginalna"
     IDS_SHV_COLUMN_DELDATE "Data usunięcia"
     IDS_SHV_COLUMN_FONTTYPE "Czcionka"
     IDS_SHV_COLUMN_WORKGROUP "Grupa robocza"
-    IDS_SHV_NETWORKLOCATION "Lokalizacja sieciowa"
+    IDS_SHV_COLUMN_NETLOCATION "Lokalizacja sieciowa"
     IDS_SHV_COLUMN_DOCUMENTS "Dokumenty"
     IDS_SHV_COLUMN_STATUS "Stan"
     IDS_SHV_COLUMN_COMMENTS "Komentarze"

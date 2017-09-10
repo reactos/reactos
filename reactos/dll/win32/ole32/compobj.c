@@ -2974,6 +2974,8 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoGetClassObject(
             if (release_apt) apartment_release(apt);
             return FTMarshalCF_Create(iid, ppv);
         }
+        if (IsEqualCLSID(rclsid, &CLSID_GlobalOptions))
+            return IClassFactory_QueryInterface(&GlobalOptionsCF, iid, ppv);
     }
 
     if (CLSCTX_INPROC & dwClsContext)
@@ -5048,6 +5050,122 @@ HRESULT WINAPI CoGetApartmentType(APTTYPE *type, APTTYPEQUALIFIER *qualifier)
     *qualifier = APTTYPEQUALIFIER_NONE;
 
     return info->apt ? S_OK : CO_E_NOTINITIALIZED;
+}
+
+/***********************************************************************
+ *           CoRegisterSurrogate [OLE32.@]
+ */
+HRESULT WINAPI CoRegisterSurrogate(ISurrogate *surrogate)
+{
+    FIXME("(%p): stub\n", surrogate);
+
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *           CoRegisterSurrogateEx [OLE32.@]
+ */
+HRESULT WINAPI CoRegisterSurrogateEx(REFGUID guid, void *reserved)
+{
+    FIXME("(%s %p): stub\n", debugstr_guid(guid), reserved);
+
+    return E_NOTIMPL;
+}
+
+typedef struct {
+    IGlobalOptions IGlobalOptions_iface;
+    LONG ref;
+} GlobalOptions;
+
+static inline GlobalOptions *impl_from_IGlobalOptions(IGlobalOptions *iface)
+{
+    return CONTAINING_RECORD(iface, GlobalOptions, IGlobalOptions_iface);
+}
+
+static HRESULT WINAPI GlobalOptions_QueryInterface(IGlobalOptions *iface, REFIID riid, void **ppv)
+{
+    GlobalOptions *This = impl_from_IGlobalOptions(iface);
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+
+    if (IsEqualGUID(&IID_IGlobalOptions, riid) || IsEqualGUID(&IID_IUnknown, riid))
+    {
+        *ppv = iface;
+    }
+    else
+    {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI GlobalOptions_AddRef(IGlobalOptions *iface)
+{
+    GlobalOptions *This = impl_from_IGlobalOptions(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI GlobalOptions_Release(IGlobalOptions *iface)
+{
+    GlobalOptions *This = impl_from_IGlobalOptions(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if (!ref)
+        heap_free(This);
+
+    return ref;
+}
+
+static HRESULT WINAPI GlobalOptions_Set(IGlobalOptions *iface, GLOBALOPT_PROPERTIES property, ULONG_PTR value)
+{
+    GlobalOptions *This = impl_from_IGlobalOptions(iface);
+    FIXME("(%p)->(%u %lx)\n", This, property, value);
+    return S_OK;
+}
+
+static HRESULT WINAPI GlobalOptions_Query(IGlobalOptions *iface, GLOBALOPT_PROPERTIES property, ULONG_PTR *value)
+{
+    GlobalOptions *This = impl_from_IGlobalOptions(iface);
+    FIXME("(%p)->(%u %p)\n", This, property, value);
+    return E_NOTIMPL;
+}
+
+static const IGlobalOptionsVtbl GlobalOptionsVtbl = {
+    GlobalOptions_QueryInterface,
+    GlobalOptions_AddRef,
+    GlobalOptions_Release,
+    GlobalOptions_Set,
+    GlobalOptions_Query
+};
+
+HRESULT WINAPI GlobalOptions_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID riid, void **ppv)
+{
+    GlobalOptions *global_options;
+    HRESULT hres;
+
+    TRACE("(%p %s %p)\n", outer, debugstr_guid(riid), ppv);
+
+    if (outer)
+        return E_INVALIDARG;
+
+    global_options = heap_alloc(sizeof(*global_options));
+    if (!global_options)
+        return E_OUTOFMEMORY;
+    global_options->IGlobalOptions_iface.lpVtbl = &GlobalOptionsVtbl;
+    global_options->ref = 1;
+
+    hres = IGlobalOptions_QueryInterface(&global_options->IGlobalOptions_iface, riid, ppv);
+    IGlobalOptions_Release(&global_options->IGlobalOptions_iface);
+    return hres;
 }
 
 /***********************************************************************

@@ -120,6 +120,7 @@ extern "C" {
 
 #define PEXTENDED_IO_STACK_LOCATION  PIO_STACK_LOCATION
 
+#define NDEBUG
 #ifndef NDEBUG
 #define UDF_DBG
 #endif
@@ -219,6 +220,13 @@ extern CCHAR   DefLetter[];
             0 /*WRITE_DAC*/ ))                \
 ))
 
+
+#if !defined(UDF_DBG) && !defined(PRINT_ALWAYS)
+#define UDFPrint(Args)
+#else
+#define UDFPrint(Args) KdPrint(Args)
+#endif
+#define UDFPrintErr(Args) KdPrint(Args)
 
 // 
 #if !defined(UDF_DBG) && !defined(PRINT_ALWAYS)

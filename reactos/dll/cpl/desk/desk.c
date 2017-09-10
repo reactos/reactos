@@ -124,7 +124,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     HPROPSHEETPAGE hpsp[MAX_DESK_PAGES];
     PROPSHEETHEADER psh;
-    HPSXA hpsxa;
+    HPSXA hpsxa = NULL;
     TCHAR Caption[1024];
     UINT i;
     LPWSTR *argv = NULL;
@@ -140,36 +140,38 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     {
         int argc;
         int i;
-        LPCWSTR pszCommandLine = (LPCWSTR)lParam;
 
-        argv = CommandLineToArgvW(pszCommandLine, &argc);
+#if 0
+        argv = CommandLineToArgvW((LPCWSTR)lParam, &argc);
+#else
+        argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+#endif
 
         if (argv && argc)
         {
             for (i = 0; i<argc; i++)
             {
+#if 0
                 if (argv[i][0] == L'@')
                     pwszSelectedTab = &argv[i][1];
+#else
+                if (wcsncmp(argv[i], L"desk,@", 6) == 0)
+                    pwszSelectedTab = &argv[i][6];
+#endif
                 else if (wcsncmp(argv[i], L"/Action:", 8) == 0)
                     pwszAction = &argv[i][8];
                 else if (wcsncmp(argv[i], L"/file:", 6) == 0)
                     pwszFile = &argv[i][6];
             }
         }
-
-        /* HACK: shell32 doesn't give the correct params to CPL_STARTWPARMSW so we need to ... improvise */
-        if (wcsncmp(pszCommandLine, L"/file:", 6) == 0)
-        {
-            LPCWSTR pwszType = wcsrchr(pszCommandLine, L'.');
-            if (pwszType && wcsicmp(pwszType, L".msstyles") == 0)
-            {
-                pwszFile = &pszCommandLine[6];
-                pwszSelectedTab = L"Appearance";
-                pwszAction = L"OpenMSTheme";
-            }
-        }
     }
 
+    if(pwszAction && wcsncmp(pwszAction, L"ActivateMSTheme", 15) == 0)
+    {
+        ActivateThemeFile(pwszFile);
+        goto cleanup;
+    }
+    
     g_GlobalData.pwszFile = pwszFile;
     g_GlobalData.pwszAction = pwszAction;
     g_GlobalData.desktop_color = GetSysColor(COLOR_DESKTOP);
@@ -212,6 +214,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     PropertySheet(&psh);
 
+cleanup:
     if (hpsxa != NULL)
         SHDestroyPropSheetExtArray(hpsxa);
 

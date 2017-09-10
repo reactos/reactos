@@ -853,7 +853,7 @@ static LRESULT CC_WMInitDialog( HWND hDlg, WPARAM wParam, LPARAM lParam )
    SetPropW( hDlg, szColourDialogProp, lpp );
 
    if (!(lpp->lpcc->Flags & CC_SHOWHELP))
-      ShowWindow( GetDlgItem(hDlg,0x40e), SW_HIDE);
+      ShowWindow(GetDlgItem(hDlg, pshHelp), SW_HIDE);
    lpp->msetrgb = RegisterWindowMessageA(SETRGBSTRINGA);
 
 #if 0
@@ -1029,7 +1029,7 @@ static LRESULT CC_WMCommand(CCPRIV *lpp, WPARAM wParam, LPARAM lParam, WORD noti
 	       CC_PaintTriangle(lpp);
 	       break;
 
-	  case 0x40e:           /* Help! */ /* The Beatles, 1965  ;-) */
+	  case pshHelp:           /* Help! */ /* The Beatles, 1965  ;-) */
 	       i = RegisterWindowMessageA(HELPMSGSTRINGA);
                    if (lpp->lpcc->hwndOwner)
 		       SendMessageA(lpp->lpcc->hwndOwner, i, 0, (LPARAM)lpp->lpcc);

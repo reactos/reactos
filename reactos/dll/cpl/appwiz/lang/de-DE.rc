@@ -67,7 +67,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Programme hinzufügen/entfernen"
+    IDS_CPLSYSTEMNAME "Software"
     IDS_CPLSYSTEMDESCRIPTION "Installiert Programme und erstellt Verknüpfungen."
     IDS_CREATE_SHORTCUT "Verknüpfung erstellen"
     IDS_ERROR_NOT_FOUND "Die Datei %s konnte nicht gefunden werden."

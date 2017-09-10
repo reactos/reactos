@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Print Processors
- * COPYRIGHT:   Copyright 2015-2016 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -48,7 +48,8 @@ _OpenEnvironment(PCWSTR pEnvironment, PHKEY hKey)
     pwszEnvironmentKey = DllAllocSplMem((cchEnvironmentsKey + cchEnvironment + 1) * sizeof(WCHAR));
     if (!pwszEnvironmentKey)
     {
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
@@ -81,6 +82,8 @@ FindDatatype(const PLOCAL_PRINT_PROCESSOR pPrintProcessor, PCWSTR pwszDatatype)
     DWORD i;
     PDATATYPES_INFO_1W pCurrentDatatype = pPrintProcessor->pDatatypesInfo1;
 
+    TRACE("FindDatatype(%p, %S)\n", pPrintProcessor, pwszDatatype);
+
     if (!pwszDatatype)
         return FALSE;
 
@@ -100,6 +103,8 @@ FindPrintProcessor(PCWSTR pwszName)
 {
     PLIST_ENTRY pEntry;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
+
+    TRACE("FindPrintProcessor(%S)\n", pwszName);
 
     if (!pwszName)
         return NULL;
@@ -121,7 +126,7 @@ FindPrintProcessor(PCWSTR pwszName)
  * Initializes a singly linked list of locally available Print Processors.
  */
 BOOL
-InitializePrintProcessorList()
+InitializePrintProcessorList(void)
 {
     DWORD cbDatatypes;
     DWORD cbFileName;
@@ -138,6 +143,8 @@ InitializePrintProcessorList()
     PLOCAL_PRINT_PROCESSOR pPrintProcessor = NULL;
     WCHAR wszFileName[MAX_PATH];
     WCHAR wszPrintProcessorPath[MAX_PATH];
+
+    TRACE("InitializePrintProcessorList()\n");
 
     // Initialize an empty list for our Print Processors.
     InitializeListHead(&_PrintProcessorList);
@@ -205,7 +212,7 @@ InitializePrintProcessorList()
         if (!pPrintProcessor)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -214,7 +221,7 @@ InitializePrintProcessorList()
         if (!pPrintProcessor->pwszName)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -311,7 +318,7 @@ InitializePrintProcessorList()
         if (!pPrintProcessor->pDatatypesInfo1)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -397,6 +404,8 @@ LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD
     DWORD dwErrorCode;
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
 
+    TRACE("LocalEnumPrintProcessorDatatypes(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
+
     // Sanity checks
     if (Level != 1)
     {
@@ -473,6 +482,8 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     PRINTPROCESSOR_INFO_1W PrintProcessorInfo1;
     PWSTR pwszTemp = NULL;
 
+    TRACE("LocalEnumPrintProcessors(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
+
     // Sanity checks
     if (Level != 1)
     {
@@ -514,7 +525,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     if (!pwszTemp)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
@@ -628,6 +639,8 @@ LocalGetPrintProcessorDirectory(PWSTR pName, PWSTR pEnvironment, DWORD Level, PB
     DWORD dwErrorCode;
     HKEY hKey = NULL;
     PWSTR pwszDirectory = (PWSTR)pPrintProcessorInfo;
+
+    TRACE("LocalGetPrintProcessorDirectory(%S, %S, %lu, %p, %lu, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
 
     // Verify pEnvironment and open its registry key.
     dwErrorCode = _OpenEnvironment(pEnvironment, &hKey);

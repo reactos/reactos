@@ -41,6 +41,7 @@ private:
         IOleWindow                          *OleWindow;
         IWinEventHandler                    *WndEvtHandler;
         DESKBANDINFO                        dbi;
+        BOOL                                bHiddenTitle;
     };
 
     LONG                                    fBandsCount;
@@ -120,6 +121,8 @@ private:
     HRESULT UpdateAllBands();
     HRESULT UpdateBand(DWORD dwBandID);
     struct BandObject *GetBandFromHwnd(HWND hwnd);
+    HRESULT _IsBandDeletable(DWORD dwBandID);
+    HRESULT OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult);
 
     BEGIN_COM_MAP(CBandSiteBase)
         COM_INTERFACE_ENTRY_IID(IID_IBandSite, IBandSite)

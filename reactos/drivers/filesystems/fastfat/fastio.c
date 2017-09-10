@@ -142,7 +142,7 @@ VfatFastIoQueryBasicInfo(
 
     Status = VfatGetBasicInformation(FileObject,
                                      FCB,
-                                     DeviceObject,
+                                     DeviceObject->DeviceExtension,
                                      Buffer,
                                      &BufferLength);
 

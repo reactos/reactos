@@ -123,71 +123,20 @@ BOOL CEnumIDListBase::HasItemWithCLSID(LPITEMIDLIST pidl)
     return FALSE;
 }
 
-
-/**************************************************************************
- *  CreateFolderEnumList()
- */
-BOOL CEnumIDListBase::CreateFolderEnumList(
-    LPCWSTR lpszPath,
-    DWORD dwFlags)
+HRESULT CEnumIDListBase::AppendItemsFromEnumerator(IEnumIDList* pEnum)
 {
-    WIN32_FIND_DATAW stffile;
-    HANDLE hFile;
-    WCHAR  szPath[MAX_PATH];
-    BOOL succeeded = TRUE;
-    static const WCHAR stars[] = { '*','.','*',0 };
-    static const WCHAR dot[] = { '.',0 };
-    static const WCHAR dotdot[] = { '.','.',0 };
+    LPITEMIDLIST pidl;
+    DWORD dwFetched;
 
-    TRACE("(%p)->(path=%s flags=0x%08x)\n", this, debugstr_w(lpszPath), dwFlags);
+    if (!pEnum)
+        return E_INVALIDARG;
 
-    if(!lpszPath || !lpszPath[0]) return FALSE;
+    pEnum->Reset();
 
-    wcscpy(szPath, lpszPath);
-    PathAddBackslashW(szPath);
-    wcscat(szPath,stars);
+    while((S_OK == pEnum->Next(1, &pidl, &dwFetched)) && dwFetched)
+        AddToEnumList(pidl);
 
-    hFile = FindFirstFileW(szPath,&stffile);
-    if ( hFile != INVALID_HANDLE_VALUE )
-    {
-        BOOL findFinished = FALSE;
-
-        do
-        {
-            if ( !(stffile.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-             || (dwFlags & SHCONTF_INCLUDEHIDDEN) )
-            {
-                LPITEMIDLIST pidl = NULL;
-
-                if ( (stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-                 dwFlags & SHCONTF_FOLDERS &&
-                 strcmpW(stffile.cFileName, dot) && strcmpW(stffile.cFileName, dotdot))
-                {
-                    pidl = _ILCreateFromFindDataW(&stffile);
-                    succeeded = succeeded && AddToEnumList(pidl);
-                }
-                else if (!(stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                 && dwFlags & SHCONTF_NONFOLDERS)
-                {
-                    pidl = _ILCreateFromFindDataW(&stffile);
-                    succeeded = succeeded && AddToEnumList(pidl);
-                }
-            }
-            if (succeeded)
-            {
-                if (!FindNextFileW(hFile, &stffile))
-                {
-                    if (GetLastError() == ERROR_NO_MORE_FILES)
-                        findFinished = TRUE;
-                    else
-                        succeeded = FALSE;
-                }
-            }
-        } while (succeeded && !findFinished);
-        FindClose(hFile);
-    }
-
-    return succeeded;
+    return S_OK;
 }
 
 /**************************************************************************

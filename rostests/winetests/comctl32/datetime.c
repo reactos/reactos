@@ -142,15 +142,14 @@ static LRESULT WINAPI datetime_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
 {
     WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
     LRESULT ret;
-    struct message msg;
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
-    msg.id = 0;
     add_message(sequences, DATETIME_SEQ_INDEX, &msg);
 
     defwndproc_counter++;

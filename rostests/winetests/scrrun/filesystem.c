@@ -624,6 +624,7 @@ static void test_GetFile(void)
     HRESULT hr;
     HANDLE hf;
     BOOL ret;
+    DATE date;
 
     get_temp_path(NULL, pathW);
 
@@ -648,6 +649,14 @@ static void test_GetFile(void)
 
     hr = IFileSystem3_GetFile(fs3, path, &file);
     ok(hr == S_OK, "GetFile returned %x, expected S_OK\n", hr);
+
+    hr = IFile_get_DateLastModified(file, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    date = 0.0;
+    hr = IFile_get_DateLastModified(file, &date);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(date > 0.0, "got %f\n", date);
 
     hr = IFile_get_Path(file, NULL);
     ok(hr == E_POINTER, "got 0x%08x\n", hr);
@@ -1396,6 +1405,17 @@ static void test_DriveCollection(void)
             hr = IDrive_get_IsReady(drive, &ready);
             ok(hr == S_OK, "got 0x%08x\n", hr);
             ok(ready == VARIANT_TRUE, "got %x\n", ready);
+
+            if (ready != VARIANT_TRUE) {
+                hr = IDrive_get_DriveLetter(drive, &str);
+                ok(hr == S_OK, "got 0x%08x\n", hr);
+
+                skip("Drive %s is not ready, skipping some tests\n", wine_dbgstr_w(str));
+
+                VariantClear(&var);
+                SysFreeString(str);
+                continue;
+            }
 
             V_VT(&size) = VT_EMPTY;
             hr = IDrive_get_TotalSize(drive, &size);

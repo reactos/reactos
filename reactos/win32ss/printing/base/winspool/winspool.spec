@@ -147,9 +147,9 @@
 246 stdcall GetPrintProcessorDirectoryA(str str long ptr long ptr)
 247 stdcall GetPrintProcessorDirectoryW(wstr wstr long ptr long ptr)
 248 stdcall GetPrinterA(long long ptr long ptr)
-249 stub GetPrinterDataA
-250 stub GetPrinterDataExA
-251 stub GetPrinterDataExW
+249 stdcall GetPrinterDataA(long str ptr ptr long ptr)
+250 stdcall GetPrinterDataExA(long str str ptr ptr long ptr)
+251 stdcall GetPrinterDataExW(long wstr wstr ptr ptr long ptr)
 252 stdcall GetPrinterDataW(long wstr ptr ptr long ptr)
 253 stdcall GetPrinterDriverA(long str long ptr long ptr)
 254 stdcall -stub GetPrinterDriverDirectoryA(str str long ptr long ptr)
@@ -181,9 +181,9 @@
 280 stub SetPortA
 281 stub SetPortW
 282 stub SetPrinterA
-283 stub SetPrinterDataA
-284 stub SetPrinterDataExA
-285 stub SetPrinterDataExW
+283 stdcall SetPrinterDataA(long str long ptr long)
+284 stdcall SetPrinterDataExA(long str str long ptr long)
+285 stdcall SetPrinterDataExW(long wstr wstr long ptr long)
 286 stdcall SetPrinterDataW(long wstr long ptr long)
 287 stdcall SetPrinterW(long long ptr long)
 288 stub SplDriverUnloadComplete

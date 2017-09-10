@@ -168,6 +168,7 @@ FontSizeList_GetSelectedFontSize(
 {
     INT nSel;
     LONG FontSize;
+    PWCHAR pszNext = NULL;
     WCHAR szFontSize[100];
 
     if (SizeList->UseRasterOrTTList)
@@ -196,6 +197,11 @@ FontSizeList_GetSelectedFontSize(
              */
             nSel = SendMessageW(SizeList->hWndTTSizeList, CB_GETCURSEL, 0, 0);
             SendMessageW(SizeList->hWndTTSizeList, CB_GETLBTEXT, nSel, (LPARAM)szFontSize);
+
+            /* Validate the font size */
+            FontSize = wcstoul(szFontSize, &pszNext, 10);
+            if ((FontSize == 0) || (*pszNext))
+                return 0;
         }
         else
         {
@@ -203,7 +209,12 @@ FontSizeList_GetSelectedFontSize(
             // ComboBox_GetText(...)
             GetWindowTextW(SizeList->hWndTTSizeList, szFontSize, ARRAYSIZE(szFontSize));
 
-            // HACK???
+            /* Validate the font size */
+            FontSize = wcstoul(szFontSize, &pszNext, 10);
+            if ((FontSize == 0) || (*pszNext))
+                return 0;
+
+            /* Find if the font size already exists in the list; if not, add it */
             nSel = SendMessageW(SizeList->hWndTTSizeList, CB_FINDSTRINGEXACT, 0, (LPARAM)szFontSize);
             if (nSel == CB_ERR)
             {
@@ -216,11 +227,6 @@ FontSizeList_GetSelectedFontSize(
         }
 
         SizeList->bIsTTSizeDirty = FALSE;
-
-        /* If _wtol fails and returns 0, the font size is considered invalid */
-        // FontSize = wcstoul(szFontSize, &pszNext, 10); if (!*pszNext) { /* Error */ }
-        FontSize = _wtol(szFontSize);
-        if (FontSize == 0) return 0;
 
         SizeList->CurrentTTSize = FontSize;
 
@@ -601,7 +607,10 @@ FontSizeChange(
      *   if SizeList->TTSizePixelUnit is TRUE, then the font size is in pixels;
      * - If SizeList->TTSizePixelUnit is FALSE, then the font size is in points.
      */
-    FontSize   = FontSizeList_GetSelectedFontSize(SizeList);
+    FontSize = FontSizeList_GetSelectedFontSize(SizeList);
+    if (FontSize == 0)
+        return FALSE; // We have got an invalid font size...
+
     CharHeight = (SizeList->UseRasterOrTTList ? (LONG)HIWORD(FontSize) : FontSize);
     CharWidth  = (SizeList->UseRasterOrTTList ? (LONG)LOWORD(FontSize) : 0);
 
@@ -776,14 +785,16 @@ FontProc(HWND hDlg,
                 WCHAR szFontSize[100];
                 WCHAR szMessage[260];
 
+                /* Read the ComboBox edit string, as the user has entered a custom size */
                 GetWindowTextW(SizeList->hWndTTSizeList, szFontSize, ARRAYSIZE(szFontSize));
+
+                /* Validate the font size */
                 FontSize = wcstoul(szFontSize, &pszNext, 10);
-                if (!*pszNext)
+                if ((FontSize == 0) || (*pszNext))
                 {
                     // FIXME: Localize!
                     StringCchPrintfW(szMessage, ARRAYSIZE(szMessage), L"\"%s\" is not a valid font size.", szFontSize);
                     MessageBoxW(hDlg, szMessage, L"Error", MB_ICONINFORMATION | MB_OK);
-                    FontSizeList_SelectFontSize(SizeList, FontSize);
                 }
                 /**/SizeList->bIsTTSizeDirty = TRUE;/**/
             }

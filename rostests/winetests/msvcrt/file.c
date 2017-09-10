@@ -49,6 +49,8 @@ static HANDLE proc_handles[2];
 
 static int (__cdecl *p_fopen_s)(FILE**, const char*, const char*);
 static int (__cdecl *p__wfopen_s)(FILE**, const wchar_t*, const wchar_t*);
+static errno_t (__cdecl *p__get_fmode)(int*);
+static errno_t (__cdecl *p__set_fmode)(int);
 
 static const char* get_base_name(const char *path)
 {
@@ -71,6 +73,8 @@ static void init(void)
     p_fopen_s = (void*)GetProcAddress(hmod, "fopen_s");
     p__wfopen_s = (void*)GetProcAddress(hmod, "_wfopen_s");
     __pioinfo = (void*)GetProcAddress(hmod, "__pioinfo");
+    p__get_fmode = (void*)GetProcAddress(hmod, "_get_fmode");
+    p__set_fmode = (void*)GetProcAddress(hmod, "_set_fmode");
 }
 
 static void test_filbuf( void )
@@ -2386,6 +2390,59 @@ static void test_close(void)
     DeleteFileA( "fdopen.tst" );
 }
 
+static void test__creat(void)
+{
+    int fd, pos, count, readonly, old_fmode = 0, have_fmode;
+    char buf[6], testdata[4] = {'a', '\n', 'b', '\n'};
+
+    have_fmode = p__get_fmode && p__set_fmode && !p__get_fmode(&old_fmode);
+    if (!have_fmode)
+        win_skip("_fmode can't be set, skipping mode tests\n");
+
+    if (have_fmode)
+        p__set_fmode(_O_TEXT);
+    fd = _creat("_creat.tst", 0);
+    ok(fd > 0, "_creat failed\n");
+    _write(fd, testdata, 4);
+    if (have_fmode) {
+        pos = _tell(fd);
+        ok(pos == 6, "expected pos 6 (text mode), got %d\n", pos);
+    }
+    ok(_lseek(fd, SEEK_SET, 0) == 0, "_lseek failed\n");
+    count = _read(fd, buf, 6);
+    ok(count == 4, "_read returned %d, expected 4\n", count);
+    count = count > 0 ? count > 4 ? 4 : count : 0;
+    ok(memcmp(buf, testdata, count) == 0, "_read returned wrong contents\n");
+    _close(fd);
+    readonly = GetFileAttributesA("_creat.tst") & FILE_ATTRIBUTE_READONLY;
+    ok(readonly, "expected read-only file\n");
+    SetFileAttributesA("_creat.tst", FILE_ATTRIBUTE_NORMAL);
+    DeleteFileA("_creat.tst");
+
+    if (have_fmode)
+        p__set_fmode(_O_BINARY);
+    fd = _creat("_creat.tst", _S_IREAD | _S_IWRITE);
+    ok(fd > 0, "_creat failed\n");
+    _write(fd, testdata, 4);
+    if (have_fmode) {
+        pos = _tell(fd);
+        ok(pos == 4, "expected pos 4 (binary mode), got %d\n", pos);
+    }
+    ok(_lseek(fd, SEEK_SET, 0) == 0, "_lseek failed\n");
+    count = _read(fd, buf, 6);
+    ok(count == 4, "_read returned %d, expected 4\n", count);
+    count = count > 0 ? count > 4 ? 4 : count : 0;
+    ok(memcmp(buf, testdata, count) == 0, "_read returned wrong contents\n");
+    _close(fd);
+    readonly = GetFileAttributesA("_creat.tst") & FILE_ATTRIBUTE_READONLY;
+    ok(!readonly, "expected rw file\n");
+    SetFileAttributesA("_creat.tst", FILE_ATTRIBUTE_NORMAL);
+    DeleteFileA("_creat.tst");
+
+    if (have_fmode)
+        p__set_fmode(old_fmode);
+}
+
 START_TEST(file)
 {
     int arg_c;
@@ -2453,6 +2510,7 @@ START_TEST(file)
     test__open_osfhandle();
     test_write_flush();
     test_close();
+    test__creat();
 
     /* Wait for the (_P_NOWAIT) spawned processes to finish to make sure the report
      * file contains lines in the correct order

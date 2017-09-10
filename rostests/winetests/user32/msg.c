@@ -122,6 +122,8 @@ static DWORD cbt_hook_thread_id;
 static const WCHAR testWindowClassW[] =
 { 'T','e','s','t','W','i','n','d','o','w','C','l','a','s','s','W',0 };
 
+static LRESULT WINAPI ParentMsgCheckProcA(HWND, UINT, WPARAM, LPARAM);
+
 /*
 FIXME: add tests for these
 Window Edge Styles (Win31/Win95/98 look), in order of precedence:
@@ -773,7 +775,7 @@ static const struct message WmCreateInvisibleMaxPopupSeq[] = {
     { 0 }
 };
 /* ShowWindow(SW_SHOWMAXIMIZED) for a resized not visible popup window */
-static const struct message WmShowMaxPopupResizedSeq[] = {
+static const struct message WmShowMaxPopupResizedSeq_todo[] = {
     { HCBT_MINMAX, hook|lparam, 0, SW_MAXIMIZE },
     { WM_GETMINMAXINFO, sent },
     { WM_WINDOWPOSCHANGING, sent|wparam, SWP_SHOWWINDOW|SWP_FRAMECHANGED },
@@ -796,6 +798,37 @@ static const struct message WmShowMaxPopupResizedSeq[] = {
     { WM_SETFOCUS, sent|wparam|defwinproc, 0 },
     { WM_GETTEXT, sent|optional },
     { WM_NCPAINT, sent|wparam|optional, 1 },
+    { WM_ERASEBKGND, sent|optional },
+    { WM_WINDOWPOSCHANGED, sent },
+    /* WinNT4.0 sends WM_MOVE */
+    { WM_MOVE, sent|defwinproc|optional },
+    { WM_SIZE, sent|defwinproc|wparam, SIZE_MAXIMIZED },
+    { EVENT_OBJECT_LOCATIONCHANGE, winevent_hook|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message WmShowMaxPopupResizedSeq[] = {
+    { HCBT_MINMAX, hook|lparam, 0, SW_MAXIMIZE },
+    { WM_GETMINMAXINFO, sent },
+    { WM_WINDOWPOSCHANGING, sent|wparam, SWP_SHOWWINDOW|SWP_FRAMECHANGED },
+    { WM_NCCALCSIZE, sent|wparam, TRUE },
+    { EVENT_OBJECT_SHOW, winevent_hook|wparam|lparam, 0, 0 },
+    { HCBT_ACTIVATE, hook },
+    { EVENT_SYSTEM_FOREGROUND, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_QUERYNEWPALETTE, sent|wparam|lparam|optional, 0, 0 },
+    { WM_WINDOWPOSCHANGING, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE },
+    { WM_NCPAINT, sent|wparam|optional, 1 },
+    { WM_ERASEBKGND, sent|optional },
+    { WM_WINDOWPOSCHANGED, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE },
+    { WM_ACTIVATEAPP, sent|wparam, 1 },
+    { WM_NCACTIVATE, sent },
+    { WM_ACTIVATE, sent|wparam, 1 },
+    { HCBT_SETFOCUS, hook },
+    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_SETFOCUS, sent|wparam|defwinproc, 0 },
+    { WM_GETTEXT, sent|optional },
+    { WM_NCPAINT, sent|optional }, /* We'll check WM_NCPAINT behaviour in another test */
     { WM_ERASEBKGND, sent|optional },
     { WM_WINDOWPOSCHANGED, sent },
     /* WinNT4.0 sends WM_MOVE */
@@ -940,6 +973,242 @@ static const struct message WmShowVisiblePopupSeq_3[] = {
     { WM_SETFOCUS, sent|defwinproc },
     { WM_GETTEXT, sent|optional },
     { WM_WINDOWPOSCHANGED, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE, 0, SWP_SHOWWINDOW },
+    { 0 }
+};
+/* CreateWindow (for a popup window with WS_VISIBLE style set and extreme location)
+ */
+static const struct message WmShowPopupExtremeLocationSeq[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_NCCREATE, sent },
+    { WM_NCCALCSIZE, sent|wparam, 0 },
+    { WM_CREATE, sent },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SIZE, sent|wparam, SIZE_RESTORED },
+    { WM_MOVE, sent },
+    { WM_SHOWWINDOW, sent|wparam, 1 },
+    { WM_WINDOWPOSCHANGING, sent },
+    { HCBT_ACTIVATE, hook },
+    { WM_WINDOWPOSCHANGING, sent|optional },
+    { WM_QUERYNEWPALETTE, sent|optional },
+    { WM_ACTIVATEAPP, sent },
+    { WM_NCACTIVATE, sent },
+    { WM_ACTIVATE, sent },
+    { WM_IME_SETCONTEXT, sent|parent|wparam|optional, 0 },
+    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { HCBT_SETFOCUS, hook },
+    { WM_SETFOCUS, sent|defwinproc },
+    { WM_NCPAINT, sent|wparam, 1 },
+    { WM_ERASEBKGND, sent },
+    { WM_WINDOWPOSCHANGED, sent },
+    /* occasionally received on test machines */
+    { WM_NCPAINT, sent|optional },
+    { WM_ERASEBKGND, sent|optional },
+    { 0 }
+};
+/* CreateWindow (for a popup window with WS_VISIBLE style set)
+ */
+static const struct message WmShowPopupFirstDrawSeq_1[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_NCCREATE, sent },
+    { WM_NCCALCSIZE, sent|wparam, 0 },
+    { WM_CREATE, sent },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SIZE, sent|wparam, SIZE_RESTORED },
+    { WM_MOVE, sent },
+    { WM_SHOWWINDOW, sent|wparam, 1 },
+    { WM_WINDOWPOSCHANGING, sent },
+    { HCBT_ACTIVATE, hook },
+    { WM_WINDOWPOSCHANGING, sent|optional },
+    { WM_QUERYNEWPALETTE, sent|optional },
+    { WM_ACTIVATEAPP, sent },
+    { WM_NCACTIVATE, sent },
+    { WM_ACTIVATE, sent },
+    { WM_IME_SETCONTEXT, sent|parent|wparam|optional, 0 },
+    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { HCBT_SETFOCUS, hook },
+    { WM_SETFOCUS, sent|defwinproc },
+    { WM_NCPAINT, sent|wparam, 1 },
+    { WM_ERASEBKGND, sent },
+    { WM_WINDOWPOSCHANGED, sent },
+    { WM_PAINT, sent },
+    /* occasionally received on test machines */
+    { WM_NCPAINT, sent|beginpaint|optional },
+    { WM_ERASEBKGND, sent|beginpaint|optional },
+    { 0 }
+};
+/* CreateWindow (for a popup window that is shown with ShowWindow(SW_SHOWMAXIMIZED))
+ */
+static const struct message WmShowPopupFirstDrawSeq_2[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_NCCREATE, sent },
+    { WM_NCCALCSIZE, sent|wparam, 0 },
+    { WM_CREATE, sent },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SIZE, sent|wparam, SIZE_RESTORED },
+    { WM_MOVE, sent },
+    { HCBT_MINMAX, hook|lparam, 0, SW_MAXIMIZE },
+    { WM_GETMINMAXINFO, sent },
+    { WM_WINDOWPOSCHANGING, sent|wparam, SWP_STATECHANGED|SWP_SHOWWINDOW|SWP_FRAMECHANGED  },
+    { WM_NCCALCSIZE, sent|wparam, TRUE },
+    { HCBT_ACTIVATE, hook },
+    { WM_WINDOWPOSCHANGING, sent|optional },
+    { WM_NCPAINT, sent|optional|wparam, 1 },
+    { WM_ERASEBKGND, sent|optional },
+    { WM_WINDOWPOSCHANGED, sent|optional },
+    { WM_QUERYNEWPALETTE, sent|optional },
+    { WM_ACTIVATEAPP, sent },
+    { WM_NCACTIVATE, sent },
+    { WM_ACTIVATE, sent },
+    { WM_IME_SETCONTEXT, sent|parent|wparam|optional, 0 },
+    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { HCBT_SETFOCUS, hook },
+    { WM_SETFOCUS, sent|defwinproc },
+    { WM_NCPAINT, sent|wparam, 1 },
+    { WM_ERASEBKGND, sent },
+    { WM_WINDOWPOSCHANGED, sent|optional },
+    { WM_MOVE, sent|defwinproc },
+    { WM_SIZE, sent|defwinproc, 0 },
+    { WM_PAINT, sent},
+    /* occasionally received on test machines */
+    { WM_NCPAINT, sent|beginpaint|optional },
+    { WM_ERASEBKGND, sent|beginpaint|optional },
+    { 0 }
+};
+static const struct message WmFirstDrawSetWindowPosSeq1[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_NCCREATE, sent },
+    { WM_NCCALCSIZE, sent|wparam, 0 },
+    { WM_CREATE, sent },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SIZE, sent|wparam, SIZE_RESTORED },
+    { WM_MOVE, sent },
+    { WM_WINDOWPOSCHANGING, sent },
+    { HCBT_ACTIVATE, hook },
+    { WM_WINDOWPOSCHANGING, sent|optional },
+    { WM_QUERYNEWPALETTE, sent|optional },
+    { WM_ACTIVATEAPP, sent },
+    { WM_NCACTIVATE, sent },
+    { WM_ACTIVATE, sent },
+    { WM_IME_SETCONTEXT, sent|parent|wparam|optional, 0 },
+    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { HCBT_SETFOCUS, hook },
+    { WM_SETFOCUS, sent|defwinproc },
+    { WM_NCPAINT, sent|wparam, 1 },
+    { WM_ERASEBKGND, sent },
+    { WM_WINDOWPOSCHANGED, sent },
+    { WM_MOVE, sent|defwinproc },
+    { 0 }
+};
+static const struct message WmFirstDrawSetWindowPosSeq2[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_NCCREATE, sent },
+    { WM_NCCALCSIZE, sent|wparam, 0 },
+    { WM_CREATE, sent },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SIZE, sent|wparam, SIZE_RESTORED },
+    { WM_MOVE, sent },
+    { WM_WINDOWPOSCHANGING, sent },
+    { HCBT_ACTIVATE, hook },
+    { WM_QUERYNEWPALETTE, sent|optional },
+    { WM_WINDOWPOSCHANGING, sent|optional },
+    { WM_ACTIVATEAPP, sent },
+    { WM_NCACTIVATE, sent },
+    { WM_ACTIVATE, sent },
+    { WM_IME_SETCONTEXT, sent|parent|wparam|optional, 0 },
+    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { HCBT_SETFOCUS, hook },
+    { WM_SETFOCUS, sent|defwinproc },
+    { WM_WINDOWPOSCHANGED, sent },
+    { WM_MOVE, sent|defwinproc },
+    { 0 }
+};
+static const struct message WmFirstDrawSetWindowPosSeq3[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_NCCREATE, sent },
+    { WM_NCCALCSIZE, sent|wparam, 0 },
+    { WM_CREATE, sent },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SIZE, sent|wparam, SIZE_RESTORED },
+    { WM_MOVE, sent },
+    { HCBT_ACTIVATE, hook|optional },
+    /* Probably shouldn't happen, but not part of this test */
+    { WM_QUERYNEWPALETTE, sent|optional },
+    { WM_ACTIVATEAPP, sent|optional },
+    { WM_NCACTIVATE, sent|optional },
+    { WM_ACTIVATE, sent|optional },
+    { HCBT_SETFOCUS, hook|optional },
+    { WM_SETFOCUS, sent|defwinproc|optional },
+    { 0 }
+};
+static const struct message WmFirstDrawSetWindowPosSeq4[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_NCCREATE, sent },
+    { WM_NCCALCSIZE, sent|wparam, 0 },
+    { WM_CREATE, sent },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SIZE, sent|wparam, SIZE_RESTORED },
+    { WM_MOVE, sent },
+    { WM_WINDOWPOSCHANGING, sent },
+    { HCBT_ACTIVATE, hook },
+    { WM_WINDOWPOSCHANGING, sent|optional },
+    { WM_QUERYNEWPALETTE, sent|optional },
+    { WM_ACTIVATEAPP, sent },
+    { WM_NCACTIVATE, sent },
+    { WM_ACTIVATE, sent },
+    { WM_IME_SETCONTEXT, sent|parent|wparam|optional, 0 },
+    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { HCBT_SETFOCUS, hook },
+    { WM_SETFOCUS, sent|defwinproc },
+    { WM_NCPAINT, sent|wparam, 1 },
+    { WM_ERASEBKGND, sent },
+    { WM_WINDOWPOSCHANGED, sent },
+    { 0 }
+};
+static const struct message WmFirstDrawSetWindowPosSeq5[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_NCCREATE, sent },
+    { WM_NCCALCSIZE, sent|wparam, 0 },
+    { WM_CREATE, sent },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SIZE, sent|wparam, SIZE_RESTORED },
+    { WM_MOVE, sent },
+    { WM_WINDOWPOSCHANGING, sent },
+    { HCBT_ACTIVATE, hook },
+    { WM_WINDOWPOSCHANGING, sent|optional },
+    { WM_QUERYNEWPALETTE, sent|optional },
+    { WM_ACTIVATEAPP, sent },
+    { WM_NCACTIVATE, sent },
+    { WM_ACTIVATE, sent },
+    { WM_IME_SETCONTEXT, sent|parent|wparam|optional, 0 },
+    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { HCBT_SETFOCUS, hook },
+    { WM_SETFOCUS, sent|defwinproc },
+    { WM_WINDOWPOSCHANGED, sent },
+    { 0 }
+};
+static const struct message WmFirstDrawChildSeq1[] = {
+    { 0 }
+};
+static const struct message WmFirstDrawChildSeq2[] = {
+    { WM_NCPAINT, sent|wparam, 1 },
+    { WM_ERASEBKGND, sent },
+    /* occasionally received on test machines */
+    { WM_NCPAINT, sent|optional },
+    { WM_ERASEBKGND, sent|optional },
     { 0 }
 };
 /* CreateWindow (for child window, not initially visible) */
@@ -1544,8 +1813,21 @@ static const struct message WmEnableWindowSeq_1[] =
 
 static const struct message WmEnableWindowSeq_2[] =
 {
+    { WM_CANCELMODE, sent|wparam|lparam, 0, 0 },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, 0, 0 },
+    { 0 }
+};
+
+static const struct message WmEnableWindowSeq_3[] =
+{
     { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, 0, 0 },
     { WM_ENABLE, sent|wparam|lparam, TRUE, 0 },
+    { 0 }
+};
+
+static const struct message WmEnableWindowSeq_4[] =
+{
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, 0, 0 },
     { 0 }
 };
 
@@ -1687,6 +1969,10 @@ static const struct message WmTrackPopupMenu[] = {
     { WM_UNINITMENUPOPUP, sent|lparam, 0, 0 },
     { WM_MENUSELECT, sent|wparam|lparam, 0xffff0000, 0 },
     { WM_EXITMENULOOP, sent|wparam|lparam, 1, 0 },
+    { 0 }
+};
+
+static const struct message WmTrackPopupMenuEsc[] = {
     { 0 }
 };
 
@@ -1958,10 +2244,17 @@ static void add_message_(int line, const struct recvd_message *msg)
             {
                 MEASURE_ITEM_STRUCT mi;
                 MEASUREITEMSTRUCT *mis = (MEASUREITEMSTRUCT *)msg->lParam;
+                BOOL is_unicode_data = TRUE;
 
                 sprintf( seq->output, "%s: %p WM_MEASUREITEM: CtlType %#x, CtlID %#x, itemID %#x, itemData %#lx",
                          msg->descr, msg->hwnd, mis->CtlType, mis->CtlID,
                          mis->itemID, mis->itemData);
+
+                if (mis->CtlType == ODT_LISTBOX)
+                {
+                    HWND ctrl = GetDlgItem(msg->hwnd, mis->CtlID);
+                    is_unicode_data = GetWindowLongA(ctrl, GWL_STYLE) & LBS_HASSTRINGS;
+                }
 
                 mi.u.wp = 0;
                 mi.u.item.CtlType = mis->CtlType;
@@ -1969,7 +2262,41 @@ static void add_message_(int line, const struct recvd_message *msg)
                 mi.u.item.itemID = mis->itemID;
                 mi.u.item.wParam = msg->wParam;
                 seq->wParam = mi.u.wp;
-                seq->lParam = mis->itemData ? hash_Ly_W((const WCHAR *)mis->itemData) : 0;
+                if (is_unicode_data)
+                    seq->lParam = mis->itemData ? hash_Ly_W((const WCHAR *)mis->itemData) : 0;
+                else
+                    seq->lParam = mis->itemData ? hash_Ly((const char *)mis->itemData) : 0;
+                break;
+            }
+
+            case WM_COMPAREITEM:
+            {
+                COMPAREITEMSTRUCT *cis = (COMPAREITEMSTRUCT *)msg->lParam;
+                HWND ctrl = GetDlgItem(msg->hwnd, cis->CtlID);
+                BOOL is_unicode_data = TRUE;
+
+                ok(msg->wParam == cis->CtlID, "expected %#x, got %#lx\n", cis->CtlID, msg->wParam);
+                ok(cis->hwndItem == ctrl, "expected %p, got %p\n", ctrl, cis->hwndItem);
+                ok((int)cis->itemID1 >= 0, "expected >= 0, got %d\n", cis->itemID1);
+                ok((int)cis->itemID2 == -1, "expected -1, got %d\n", cis->itemID2);
+
+                sprintf( seq->output, "%s: %p WM_COMPAREITEM: CtlType %#x, CtlID %#x, itemID1 %#x, itemData1 %#lx, itemID2 %#x, itemData2 %#lx",
+                         msg->descr, msg->hwnd, cis->CtlType, cis->CtlID,
+                         cis->itemID1, cis->itemData1, cis->itemID2, cis->itemData2);
+
+                if (cis->CtlType == ODT_LISTBOX)
+                    is_unicode_data = GetWindowLongA(ctrl, GWL_STYLE) & LBS_HASSTRINGS;
+
+                if (is_unicode_data)
+                {
+                    seq->wParam = cis->itemData1 ? hash_Ly_W((const WCHAR *)cis->itemData1) : 0;
+                    seq->lParam = cis->itemData2 ? hash_Ly_W((const WCHAR *)cis->itemData2) : 0;
+                }
+                else
+                {
+                    seq->wParam = cis->itemData1 ? hash_Ly((const char *)cis->itemData1) : 0;
+                    seq->lParam = cis->itemData2 ? hash_Ly((const char *)cis->itemData2) : 0;
+                }
                 break;
             }
 
@@ -4426,6 +4753,18 @@ static void test_showwindow(void)
     DestroyWindow(hwnd);
     flush_sequence();
 
+    /* Test again, this time the NC_PAINT message */
+    hwnd = CreateWindowExA(0, "TestWindowClass", "Test popup", WS_POPUP | WS_MAXIMIZE,
+                           100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (hwnd != 0, "Failed to create popup window\n");
+    SetWindowPos(hwnd, 0, 10, 10, 200, 200, SWP_NOZORDER | SWP_NOACTIVATE);
+    flush_sequence();
+    ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    ok_sequence(WmShowMaxPopupResizedSeq_todo,
+            "ShowWindow(SW_SHOWMAXIMIZED):invisible maximized and resized popup TODO", TRUE);
+    DestroyWindow(hwnd);
+    flush_sequence();
+
     /* Test 2:
      * 1. Create invisible maximized popup window.
      * 2. Show it maximized.
@@ -4754,6 +5093,23 @@ static DWORD CALLBACK show_window_thread(LPVOID arg)
    return 0;
 }
 
+/* Helper function to easier test SetWindowPos messages */
+#define test_msg_setpos( expected_list, flags, todo ) \
+        test_msg_setpos_( (expected_list), (flags), (todo), __FILE__, __LINE__)
+static void test_msg_setpos_(const struct message *expected_list, UINT flags, BOOL todo, const char *file, int line)
+{
+    HWND hwnd;
+
+    flush_events();
+    flush_sequence();
+    hwnd = CreateWindowExA(0, "TestWindowClass", "Test Popup", WS_POPUP,
+                             10, 10, 100, 100, NULL, 0, 0, NULL );
+    ok (hwnd != 0, "Failed to create popup window\n");
+    SetWindowPos(hwnd, NULL, 0, 0, 100, 100, flags);
+    ok_sequence_(expected_list, "SetWindowPos:show_popup_first_show_window", todo, file, line);
+    DestroyWindow(hwnd);
+}
+
 /* test if we receive the right sequence of messages */
 static void test_messages(void)
 {
@@ -4879,6 +5235,116 @@ static void test_messages(void)
 
     DestroyWindow(hwnd);
     ok_sequence(WmDestroyOverlappedSeq, "DestroyWindow:overlapped", FALSE);
+
+    /* Test if windows are correctly drawn when first shown */
+
+    /* Visible, redraw */
+    flush_events();
+    flush_sequence();
+    hwnd = CreateWindowExA(0, "TestWindowClass", "Test Popup", WS_POPUP | WS_VISIBLE,
+                             10, 10, 100, 100, NULL, 0, 0, NULL );
+    ok (hwnd != 0, "Failed to create popup window\n");
+    RedrawWindow(hwnd, NULL, NULL, RDW_UPDATENOW);
+    ok_sequence(WmShowPopupFirstDrawSeq_1, "RedrawWindow:show_popup_first_draw_visible", FALSE);
+    DestroyWindow(hwnd);
+
+    /* Invisible, show, message */
+    flush_events();
+    flush_sequence();
+    hwnd = CreateWindowExA(0, "TestWindowClass", "Test Popup", WS_POPUP,
+                             10, 10, 100, 100, NULL, 0, 0, NULL );
+    ok (hwnd != 0, "Failed to create popup window\n");
+    ShowWindow(hwnd, SW_SHOW);
+    SendMessageW(hwnd, WM_PAINT, 0, 0);
+    ok_sequence(WmShowPopupFirstDrawSeq_1, "RedrawWindow:show_popup_first_draw_show", FALSE);
+    DestroyWindow(hwnd);
+
+    /* Invisible, show maximized, redraw */
+    flush_events();
+    flush_sequence();
+    hwnd = CreateWindowExA(0, "TestWindowClass", "Test Popup", WS_POPUP,
+                             10, 10, 100, 100, NULL, 0, 0, NULL );
+    ok (hwnd != 0, "Failed to create popup window\n");
+    ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    RedrawWindow(hwnd, NULL, NULL, RDW_UPDATENOW);
+    ok_sequence(WmShowPopupFirstDrawSeq_2, "RedrawWindow:show_popup_first_draw_show_maximized", FALSE);
+    DestroyWindow(hwnd);
+
+    /* Test SetWindowPos */
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq1, SWP_SHOWWINDOW, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq2, 0, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq3,
+            SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOCLIENTSIZE | SWP_NOCLIENTMOVE | SWP_NOZORDER, FALSE);
+
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq1, SWP_SHOWWINDOW | SWP_NOSIZE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq4, SWP_SHOWWINDOW | SWP_NOMOVE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq3, SWP_SHOWWINDOW | SWP_NOCLIENTSIZE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq3, SWP_SHOWWINDOW | SWP_NOCLIENTMOVE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq1, SWP_SHOWWINDOW | SWP_NOZORDER, FALSE);
+
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq2, SWP_SHOWWINDOW | SWP_DEFERERASE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq3, SWP_SHOWWINDOW | SWP_DEFERERASE | SWP_NOCLIENTMOVE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq3, SWP_SHOWWINDOW | SWP_DEFERERASE | SWP_NOCLIENTSIZE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq5, SWP_SHOWWINDOW | SWP_DEFERERASE | SWP_NOMOVE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq2, SWP_SHOWWINDOW | SWP_DEFERERASE | SWP_NOSIZE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq2, SWP_SHOWWINDOW | SWP_DEFERERASE | SWP_NOZORDER, FALSE);
+
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq1, SWP_SHOWWINDOW | SWP_NOCOPYBITS, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq3, SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOCLIENTMOVE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq3, SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOCLIENTSIZE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq4, SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOMOVE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq1, SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOSIZE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq1, SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOZORDER, FALSE);
+
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq2, SWP_SHOWWINDOW | SWP_NOREDRAW, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq3, SWP_SHOWWINDOW | SWP_NOREDRAW | SWP_NOCLIENTMOVE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq3, SWP_SHOWWINDOW | SWP_NOREDRAW | SWP_NOCLIENTSIZE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq5, SWP_SHOWWINDOW | SWP_NOREDRAW | SWP_NOMOVE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq2, SWP_SHOWWINDOW | SWP_NOREDRAW | SWP_NOSIZE, FALSE);
+    test_msg_setpos(WmFirstDrawSetWindowPosSeq2, SWP_SHOWWINDOW | SWP_NOREDRAW | SWP_NOZORDER, FALSE);
+
+    /* Test SetWindowPos with child windows */
+    flush_events();
+    hparent = CreateWindowExA(0, "TestParentClass", "Test parent", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                              100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (hparent != 0, "Failed to create parent window\n");
+
+    hchild = CreateWindowExA(0, "TestWindowClass", "Test child", WS_CHILD | WS_VISIBLE,
+                             0, 0, 10, 10, hparent, 0, 0, NULL);
+    ok (hchild != 0, "Failed to create child window\n");
+    flush_sequence();
+    SetWindowPos(hparent, NULL, 0, 0, 100, 100, SWP_SHOWWINDOW);
+    ok_sequence(WmFirstDrawChildSeq1, /* Expect no messages for the child */
+                "SetWindowPos:show_popup_first_show_window_child1", FALSE);
+    DestroyWindow(hchild);
+    DestroyWindow(hparent);
+
+    flush_events();
+    hparent = CreateWindowExA(0, "TestParentClass", "Test parent", WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPCHILDREN,
+                              100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (hparent != 0, "Failed to create parent window\n");
+
+    hchild = CreateWindowExA(0, "TestWindowClass", "Test child", WS_CHILD | WS_VISIBLE,
+                             0, 0, 10, 10, hparent, 0, 0, NULL);
+    ok (hchild != 0, "Failed to create child window\n");
+    flush_sequence();
+    SetWindowPos(hparent, NULL, 0, 0, 100, 100, SWP_SHOWWINDOW);
+    ok_sequence(WmFirstDrawChildSeq2, /* Expect child to be redrawn */
+                "SetWindowPos:show_popup_first_show_window_child2", FALSE);
+    DestroyWindow(hchild);
+    DestroyWindow(hparent);
+
+    /* Test message sequence for extreme position and size */
+
+    flush_sequence();
+    hwnd = CreateWindowExA(0, "TestWindowClass", "Test Popup", WS_POPUP | WS_VISIBLE,
+                             -10, -10, 10000, 10000, NULL, 0, 0, NULL );
+    ok (hwnd != 0, "Failed to create popup window\n");
+    ok_sequence(WmShowPopupExtremeLocationSeq, "RedrawWindow:show_popup_extreme_location", TRUE);
+    DestroyWindow(hwnd);
+
+
+    /* Test child windows */
 
     hparent = CreateWindowExA(0, "TestParentClass", "Test parent", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                               100, 100, 200, 200, 0, 0, 0, NULL);
@@ -5128,8 +5594,14 @@ static void test_messages(void)
     EnableWindow(hparent, FALSE);
     ok_sequence(WmEnableWindowSeq_1, "EnableWindow(FALSE)", FALSE);
 
+    EnableWindow(hparent, FALSE);
+    ok_sequence(WmEnableWindowSeq_2, "EnableWindow(FALSE)", FALSE);
+
     EnableWindow(hparent, TRUE);
-    ok_sequence(WmEnableWindowSeq_2, "EnableWindow(TRUE)", FALSE);
+    ok_sequence(WmEnableWindowSeq_3, "EnableWindow(TRUE)", FALSE);
+
+    EnableWindow(hparent, TRUE);
+    ok_sequence(WmEnableWindowSeq_4, "EnableWindow(TRUE)", FALSE);
 
     flush_events();
     flush_sequence();
@@ -5704,6 +6176,23 @@ static const struct message WmClearStateButtonSeq[] =
     { WM_APP, sent|wparam|lparam, 0, 0 },
     { 0 }
 };
+static const struct message WmDisableButtonSeq[] =
+{
+    { WM_LBUTTONDOWN, sent },
+    { BM_SETSTATE, sent|defwinproc },
+    { WM_CTLCOLORSTATIC, sent|defwinproc|optional },
+    { WM_CTLCOLORBTN, sent|optional },
+    { WM_LBUTTONUP, sent },
+    { BM_SETSTATE, sent|defwinproc },
+    { WM_CTLCOLORBTN, sent|defwinproc|optional },
+    { WM_CTLCOLORSTATIC, sent|defwinproc|optional },
+    { BM_SETCHECK, sent|defwinproc|optional },
+    { WM_CTLCOLORBTN, sent|optional },
+    { WM_CTLCOLORSTATIC, sent|defwinproc|optional },
+    { WM_CAPTURECHANGED, sent|defwinproc },
+    { WM_COMMAND, sent },
+    { 0 }
+};
 static const struct message WmClearStateOwnerdrawSeq[] =
 {
     { BM_SETSTATE, sent },
@@ -5743,7 +6232,24 @@ static LRESULT CALLBACK button_hook_proc(HWND hwnd, UINT message, WPARAM wParam,
     case BM_SETSTATE:
         if (GetCapture())
             ok(GetCapture() == hwnd, "GetCapture() = %p\n", GetCapture());
+
+        lParam = (ULONG_PTR)GetMenu(hwnd);
+        goto log_it;
+
+    case WM_GETDLGCODE:
+        if (lParam)
+        {
+            MSG *msg = (MSG *)lParam;
+            lParam = MAKELPARAM(msg->message, msg->wParam);
+        }
+        wParam = (ULONG_PTR)GetMenu(hwnd);
+        goto log_it;
+
+    case BM_SETCHECK:
+    case BM_GETCHECK:
+        lParam = (ULONG_PTR)GetMenu(hwnd);
         /* fall through */
+log_it:
     default:
         msg.hwnd = hwnd;
         msg.message = message;
@@ -5850,10 +6356,11 @@ static void test_button_messages(void)
           WmLButtonDownSeq, WmLButtonUpSeq, WmSetFontButtonSeq,
           WmSetTextButtonSeq },
     };
+    LOGFONTA logfont = { 0 };
+    HFONT zfont, hfont2;
     unsigned int i;
     HWND hwnd, parent;
     DWORD dlg_code;
-    HFONT zfont;
 
     /* selection with VK_SPACE should capture button window */
     hwnd = CreateWindowExA(0, "button", "test", BS_CHECKBOX | WS_VISIBLE | WS_POPUP,
@@ -5872,11 +6379,21 @@ static void test_button_messages(void)
                              100, 100, 200, 200, 0, 0, 0, NULL);
     ok(parent != 0, "Failed to create parent window\n");
 
+    memset(&logfont, 0, sizeof(logfont));
+    logfont.lfHeight = -12;
+    logfont.lfWeight = FW_NORMAL;
+    strcpy(logfont.lfFaceName, "Tahoma");
+
+    hfont2 = CreateFontIndirectA(&logfont);
+    ok(hfont2 != NULL, "Failed to create Tahoma font\n");
+
     for (i = 0; i < sizeof(button)/sizeof(button[0]); i++)
     {
         MSG msg;
         DWORD style, state;
+        HFONT prevfont;
         char desc[64];
+        HDC hdc;
 
         trace("button style %08x\n", button[i].style);
 
@@ -6051,14 +6568,483 @@ static void test_button_messages(void)
         ok_sequence(button[i].lbuttonup, desc, FALSE);
 
         flush_sequence();
-        zfont = GetStockObject(SYSTEM_FONT);
+        zfont = GetStockObject(DEFAULT_GUI_FONT);
         SendMessageA(hwnd, WM_SETFONT, (WPARAM)zfont, TRUE);
         UpdateWindow(hwnd);
         sprintf(desc, "button[%i]: WM_SETFONT on a button", i);
         ok_sequence(button[i].setfont, desc, FALSE);
 
+        /* Test that original font is not selected back after painting */
+        hdc = CreateCompatibleDC(0);
+
+        prevfont = SelectObject(hdc, hfont2);
+        ok(prevfont == GetStockObject(SYSTEM_FONT), "Unexpected default font\n");
+        SendMessageA(hwnd, WM_PRINTCLIENT, (WPARAM)hdc, 0);
+    todo_wine
+        ok(GetStockObject(SYSTEM_FONT) == GetCurrentObject(hdc, OBJ_FONT), "button[%u]: unexpected font selected after WM_PRINTCLIENT\n", i);
+        SelectObject(hdc, prevfont);
+
+        prevfont = SelectObject(hdc, hfont2);
+        ok(prevfont == GetStockObject(SYSTEM_FONT), "Unexpected default font\n");
+        SendMessageA(hwnd, WM_PAINT, (WPARAM)hdc, 0);
+    todo_wine
+        ok(GetStockObject(SYSTEM_FONT) == GetCurrentObject(hdc, OBJ_FONT), "button[%u]: unexpected font selected after WM_PAINT\n", i);
+        SelectObject(hdc, prevfont);
+
+        DeleteDC(hdc);
+
         DestroyWindow(hwnd);
     }
+
+    DeleteObject(hfont2);
+    DestroyWindow(parent);
+
+    /* Test if WM_LBUTTONDOWN and WM_LBUTTONUP to a disabled button leads to a WM_COMMAND for the parent */
+
+    parent = CreateWindowExA(0, "TestWindowClass", "Test overlapped", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (hwnd != 0, "Failed to create overlapped window\n");
+
+    hwnd = CreateWindowExA(0, "my_button_class", "test", BS_DEFPUSHBUTTON | WS_VISIBLE | WS_CHILD,
+                                   0, 0, 50, 14, parent, 0, 0, NULL);
+
+    EnableWindow(hwnd, FALSE);
+    flush_sequence();
+    SendMessageA(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, 0);
+    SendMessageA(hwnd, WM_LBUTTONUP, 0, 0);
+    ok_sequence(WmDisableButtonSeq, "Mouseclick on a disabled button", FALSE);
+
+    DestroyWindow(hwnd);
+    DestroyWindow(parent);
+}
+
+#define ID_RADIO1 501
+#define ID_RADIO2 502
+#define ID_RADIO3 503
+#define ID_TEXT   504
+
+static const struct message auto_radio_button_BM_CLICK[] =
+{
+    { BM_CLICK, sent|wparam|lparam, 0, 0 },
+    { WM_LBUTTONDOWN, sent|wparam|lparam|defwinproc, 0, 0 },
+    { EVENT_SYSTEM_CAPTURESTART, winevent_hook|wparam|lparam, 0, 0 },
+    { BM_SETSTATE, sent|wparam|lparam|defwinproc, BST_CHECKED, ID_RADIO2 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_LBUTTONUP, sent|wparam|lparam|defwinproc, 0, 0 },
+    { BM_SETSTATE, sent|wparam|lparam|defwinproc, BST_UNCHECKED, ID_RADIO2 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam|defwinproc, ID_RADIO2, 0 },
+    { BM_SETCHECK, sent|wparam|lparam|defwinproc, BST_CHECKED, ID_RADIO2 },
+    { WM_GETDLGCODE, sent|wparam|lparam|defwinproc, ID_RADIO1, 0 },
+    { BM_SETCHECK, sent|wparam|lparam|defwinproc, 0, ID_RADIO1 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam|defwinproc, ID_RADIO3, 0 },
+    { BM_SETCHECK, sent|wparam|lparam|defwinproc, 0, ID_RADIO3 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam|defwinproc, ID_TEXT, 0 },
+    { EVENT_SYSTEM_CAPTUREEND, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_CAPTURECHANGED, sent|wparam|lparam|defwinproc, 0, 0 },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_RADIO2, BN_CLICKED) },
+    { WM_NCHITTEST, sent|optional, 0, 0 }, /* FIXME: Wine doesn't send it */
+    { WM_SETCURSOR, sent|optional, 0, 0 }, /* FIXME: Wine doesn't send it */
+    { WM_MOUSEMOVE, sent|optional, 0, 0 }, /* FIXME: Wine doesn't send it */
+    { 0 }
+};
+
+static const struct message auto_radio_button_VK_UP_child[] =
+{
+    { WM_KEYDOWN, sent|wparam|lparam, VK_UP, 0 },
+    { WM_KEYUP, sent|wparam|lparam, VK_UP, 0 },
+    { 0 }
+};
+
+static const struct message auto_radio_button_VK_UP_parent[] =
+{
+    { WM_KEYDOWN, sent|wparam|lparam|parent, VK_UP, 0 },
+    { WM_KEYUP, sent|wparam|lparam|parent, VK_UP, 0 },
+    { 0 }
+};
+
+static const struct message auto_radio_button_VK_UP_dialog[] =
+{
+    { WM_GETDLGCODE, sent|parent, 0, 0 },
+
+    /* optional trailer seen on some windows setups */
+    { WM_CHANGEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_CTLCOLORSTATIC, sent|parent|optional },
+    { WM_CTLCOLORSTATIC, sent|parent|optional },
+    { WM_CTLCOLORSTATIC, sent|parent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_CTLCOLORSTATIC, sent|parent|optional },
+    { WM_CTLCOLORSTATIC, sent|parent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_CTLCOLORBTN, sent|parent|optional },
+    { WM_CTLCOLORBTN, sent|parent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_CTLCOLORSTATIC, sent|parent|optional },
+    { WM_CTLCOLORSTATIC, sent|parent|optional },
+    { 0 }
+};
+
+static const struct message auto_radio_button_VK_DOWN_dialog[] =
+{
+    { WM_GETDLGCODE, sent|parent, 0, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam, ID_RADIO1, MAKELPARAM(WM_KEYDOWN, VK_DOWN) },
+    { WM_GETDLGCODE, sent|wparam|lparam, ID_RADIO1, 0 },
+    { HCBT_SETFOCUS, hook },
+    { WM_KILLFOCUS, sent, 0, 0 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_RADIO3, BN_KILLFOCUS) },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_SETFOCUS, sent, 0, 0 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_RADIO1, BN_SETFOCUS) },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_RADIO1, BN_CLICKED) },
+    { WM_GETDLGCODE, sent|wparam|lparam, ID_RADIO1, 0 },
+    { WM_GETDLGCODE, sent|parent, 0, 0 },
+    { DM_GETDEFID, sent|parent, 0, 0 },
+    { BM_GETCHECK, sent|wparam|lparam, 0, ID_RADIO1 },
+    { BM_CLICK, sent|wparam|lparam, 1, 0 },
+    { WM_LBUTTONDOWN, sent|wparam|lparam|defwinproc, 0, 0 },
+    { EVENT_SYSTEM_CAPTURESTART, winevent_hook|wparam|lparam, 0, 0 },
+    { BM_SETSTATE, sent|wparam|lparam|defwinproc, BST_CHECKED, ID_RADIO1 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_LBUTTONUP, sent|wparam|lparam|defwinproc, 0, 0 },
+    { BM_SETSTATE, sent|wparam|lparam|defwinproc, BST_UNCHECKED, ID_RADIO1 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam|defwinproc, ID_RADIO1, 0 },
+    { BM_SETCHECK, sent|wparam|lparam|defwinproc, BST_CHECKED, ID_RADIO1 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam|defwinproc, ID_RADIO3, 0 },
+    { BM_SETCHECK, sent|wparam|lparam|defwinproc, BST_UNCHECKED, ID_RADIO3 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam|defwinproc, ID_TEXT, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam|defwinproc, ID_RADIO2, 0 },
+    { BM_SETCHECK, sent|wparam|lparam|defwinproc, BST_UNCHECKED, ID_RADIO2 },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { EVENT_SYSTEM_CAPTUREEND, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_CAPTURECHANGED, sent|wparam|lparam|defwinproc, 0, 0 },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_RADIO1, BN_CLICKED) },
+    { WM_NCHITTEST, sent|optional, 0, 0 }, /* FIXME: Wine doesn't send it */
+    { WM_SETCURSOR, sent|optional, 0, 0 }, /* FIXME: Wine doesn't send it */
+    { WM_MOUSEMOVE, sent|optional, 0, 0 }, /* FIXME: Wine doesn't send it */
+    { WM_PAINT, sent },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { 0 }
+};
+
+static const struct message auto_radio_button_VK_DOWN_radio3[] =
+{
+    { BM_GETCHECK, sent|wparam|lparam, 0, ID_RADIO1 },
+    { BM_GETCHECK, sent|wparam|lparam, 0, ID_RADIO2 },
+    { BM_GETCHECK, sent|wparam|lparam, 0, ID_RADIO3 },
+    { WM_GETDLGCODE, sent|parent, 0, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam, ID_RADIO1, MAKELPARAM(WM_KEYDOWN, VK_DOWN) },
+    { WM_GETDLGCODE, sent|wparam|lparam, ID_RADIO1, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam, ID_RADIO1, 0 },
+    { WM_GETDLGCODE, sent|wparam|lparam|parent, 0, 0 },
+    { WM_USER, sent|parent, 0, 0 },
+    { BM_GETCHECK, sent|wparam|lparam, 0, ID_RADIO1 },
+    { 0 }
+};
+
+static const struct message auto_radio_button_VK_UP_radio1[] =
+{
+    { WM_GETDLGCODE, sent|parent, 0, 0 },
+    { 0 }
+};
+
+static INT_PTR WINAPI radio_test_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    ParentMsgCheckProcA(hwnd, msg, wp, lp);
+    return 1;
+}
+
+static void test_autoradio_BM_CLICK(void)
+{
+    HWND parent, radio1, radio2, radio3;
+    RECT rc;
+    MSG msg;
+    DWORD ret;
+
+    subclass_button();
+
+    parent = CreateDialogParamA(0, "AUTORADIO_TEST_DIALOG_1", 0, radio_test_dlg_proc, 0);
+    ok(parent != 0, "failed to create parent window\n");
+
+    radio1 = GetDlgItem(parent, ID_RADIO1);
+    radio2 = GetDlgItem(parent, ID_RADIO2);
+    radio3 = GetDlgItem(parent, ID_RADIO3);
+
+    /* this avoids focus messages in the generated sequence */
+    SetFocus(radio2);
+
+    flush_events();
+    flush_sequence();
+
+    ret = SendMessageA(radio1, BM_GETCHECK, 0, 0);
+    ok(ret == BST_UNCHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio2, BM_GETCHECK, 0, 0);
+    ok(ret == BST_UNCHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio3, BM_GETCHECK, 0, 0);
+    ok(ret == BST_UNCHECKED, "got %08x\n", ret);
+
+    SendMessageA(radio1, BM_SETCHECK, BST_CHECKED, 0);
+
+    ret = SendMessageA(radio1, BM_GETCHECK, 0, 0);
+    ok(ret == BST_CHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio2, BM_GETCHECK, 0, 0);
+    ok(ret == BST_UNCHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio3, BM_GETCHECK, 0, 0);
+    ok(ret == BST_UNCHECKED, "got %08x\n", ret);
+
+    SendMessageA(radio2, BM_SETCHECK, BST_CHECKED, 0);
+
+    ret = SendMessageA(radio1, BM_GETCHECK, 0, 0);
+    ok(ret == BST_CHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio2, BM_GETCHECK, 0, 0);
+    ok(ret == BST_CHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio3, BM_GETCHECK, 0, 0);
+    ok(ret == BST_UNCHECKED, "got %08x\n", ret);
+
+    SendMessageA(radio3, BM_SETCHECK, BST_CHECKED, 0);
+
+    ret = SendMessageA(radio1, BM_GETCHECK, 0, 0);
+    ok(ret == BST_CHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio2, BM_GETCHECK, 0, 0);
+    ok(ret == BST_CHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio3, BM_GETCHECK, 0, 0);
+    ok(ret == BST_CHECKED, "got %08x\n", ret);
+
+    GetWindowRect(radio2, &rc);
+    SetCursorPos(rc.left+1, rc.top+1);
+
+    flush_events();
+    flush_sequence();
+
+    log_all_parent_messages++;
+
+    SendMessageA(radio2, BM_CLICK, 0, 0);
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    ok_sequence(auto_radio_button_BM_CLICK, "BM_CLICK on auto-radio button", FALSE);
+
+    log_all_parent_messages--;
+
+    ret = SendMessageA(radio1, BM_GETCHECK, 0, 0);
+    ok(ret == BST_UNCHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio2, BM_GETCHECK, 0, 0);
+    ok(ret == BST_CHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio3, BM_GETCHECK, 0, 0);
+    ok(ret == BST_UNCHECKED, "got %08x\n", ret);
+
+    DestroyWindow(parent);
+}
+
+#define test_radio(r1, s1, r2, s2, r3, s3) test_radio_dbg(r1, s1, r2, s2, r3, s3, __LINE__)
+static void test_radio_dbg(HWND radio1, int state1, HWND radio2, int state2, HWND radio3, int state3, int line)
+{
+    DWORD ret;
+
+    ret = SendMessageA(radio1, BM_GETCHECK, 0, 0);
+    ok_(__FILE__,line)(ret == state1 ? BST_CHECKED : BST_UNCHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio2, BM_GETCHECK, 0, 0);
+    ok_(__FILE__,line)(ret == state2 ? BST_CHECKED : BST_UNCHECKED, "got %08x\n", ret);
+    ret = SendMessageA(radio3, BM_GETCHECK, 0, 0);
+    ok_(__FILE__,line)(ret == state3 ? BST_CHECKED : BST_UNCHECKED, "got %08x\n", ret);
+}
+
+static void set_radio(HWND radio1, int state1, HWND radio2, int state2, HWND radio3, int state3)
+{
+    SendMessageA(radio1, BM_SETCHECK, state1 ? BST_CHECKED : BST_UNCHECKED, 0);
+    SendMessageA(radio2, BM_SETCHECK, state2 ? BST_CHECKED : BST_UNCHECKED, 0);
+    SendMessageA(radio3, BM_SETCHECK, state3 ? BST_CHECKED : BST_UNCHECKED, 0);
+}
+
+static void test_autoradio_kbd_move(void)
+{
+    HWND parent, radio1, radio2, radio3, hwnd;
+    RECT rc;
+    MSG msg;
+    DWORD ret;
+
+    subclass_button();
+
+    parent = CreateDialogParamA(0, "AUTORADIO_TEST_DIALOG_2", 0, radio_test_dlg_proc, 0);
+    ok(parent != 0, "failed to create parent window\n");
+
+    radio1 = GetDlgItem(parent, ID_RADIO1);
+    radio2 = GetDlgItem(parent, ID_RADIO2);
+    radio3 = GetDlgItem(parent, ID_RADIO3);
+
+    flush_events();
+    flush_sequence();
+
+    test_radio(radio1, 0, radio2, 0, radio3, 0);
+    set_radio(radio1, 1, radio2, 1, radio3, 1);
+    test_radio(radio1, 1, radio2, 1, radio3, 1);
+
+    SetFocus(radio3);
+
+    flush_events();
+    flush_sequence();
+
+    log_all_parent_messages++;
+
+    SendMessageA(radio3, WM_KEYDOWN, VK_UP, 0);
+    SendMessageA(radio3, WM_KEYUP, VK_UP, 0);
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    ok_sequence(auto_radio_button_VK_UP_child, "press/release VK_UP on auto-radio button", FALSE);
+
+    test_radio(radio1, 1, radio2, 1, radio3, 1);
+
+    flush_events();
+    flush_sequence();
+
+    DefDlgProcA(parent, WM_KEYDOWN, VK_UP, 0);
+    DefDlgProcA(parent, WM_KEYUP, VK_UP, 0);
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    ok_sequence(auto_radio_button_VK_UP_parent, "press/release VK_UP on dialog", FALSE);
+
+    test_radio(radio1, 1, radio2, 1, radio3, 1);
+
+    SetFocus(radio3);
+    GetWindowRect(radio3, &rc);
+
+    flush_events();
+    flush_sequence();
+
+    msg.hwnd = parent;
+    msg.message = WM_KEYDOWN;
+    msg.wParam = VK_UP;
+    msg.lParam = 0;
+    msg.pt.x = rc.left + 1;
+    msg.pt.y = rc.top + 1;
+    ret = IsDialogMessageA(parent, &msg);
+    ok(ret, "IsDialogMessage should return TRUE\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+if (0) /* actual message sequence is different on every run in some Windows setups */
+    ok_sequence(auto_radio_button_VK_UP_dialog, "IsDialogMessage(VK_UP) #1", FALSE);
+    /* what really matters is that nothing has changed */
+    test_radio(radio1, 1, radio2, 1, radio3, 1);
+
+    set_radio(radio1, 0, radio2, 1, radio3, 1);
+    test_radio(radio1, 0, radio2, 1, radio3, 1);
+
+    flush_events();
+    flush_sequence();
+
+    ret = IsDialogMessageA(parent, &msg);
+    ok(ret, "IsDialogMessage should return TRUE\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+if (0) /* actual message sequence is different on every run in some Windows setups */
+    ok_sequence(auto_radio_button_VK_UP_dialog, "IsDialogMessage(VK_UP) #2", FALSE);
+    /* what really matters is that nothing has changed */
+    test_radio(radio1, 0, radio2, 1, radio3, 1);
+
+    /* switch from radio3 ro radio1 */
+    SetFocus(radio3);
+    GetWindowRect(radio3, &rc);
+
+    flush_events();
+    flush_sequence();
+
+    msg.hwnd = parent;
+    msg.message = WM_KEYDOWN;
+    msg.wParam = VK_DOWN;
+    msg.lParam = 0;
+    msg.pt.x = rc.left + 1;
+    msg.pt.y = rc.top + 1;
+    ret = IsDialogMessageA(parent, &msg);
+    ok(ret, "IsDialogMessage should return TRUE\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    ok_sequence(auto_radio_button_VK_DOWN_dialog, "IsDialogMessage(VK_DOWN)", TRUE);
+
+    test_radio(radio1, 1, radio2, 0, radio3, 0);
+
+    hwnd = GetFocus();
+    ok(hwnd == radio1, "focus should be on radio1, not on %p\n", hwnd);
+    GetWindowRect(radio1, &rc);
+
+    msg.hwnd = parent;
+    msg.message = WM_KEYDOWN;
+    msg.wParam = VK_DOWN;
+    msg.lParam = 0;
+    msg.pt.x = rc.left + 1;
+    msg.pt.y = rc.top + 1;
+    ret = IsDialogMessageA(parent, &msg);
+    ok(ret, "IsDialogMessage should return TRUE\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    ok_sequence(auto_radio_button_VK_DOWN_radio3, "down to radio3", TRUE);
+
+    test_radio(radio1, 1, radio2, 0, radio3, 0);
+
+    hwnd = GetFocus();
+    ok(hwnd == radio1, "focus should be on radio1, not on %p\n", hwnd);
+
+    flush_events();
+    flush_sequence();
+
+    msg.hwnd = parent;
+    msg.message = WM_KEYDOWN;
+    msg.wParam = VK_UP;
+    msg.lParam = 0;
+    msg.pt.x = rc.left + 1;
+    msg.pt.y = rc.top + 1;
+    ret = IsDialogMessageA(parent, &msg);
+    ok(ret, "IsDialogMessage should return TRUE\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    ok_sequence(auto_radio_button_VK_UP_radio1, "up to radio1", TRUE);
+
+    test_radio(radio1, 1, radio2, 0, radio3, 0);
+
+    hwnd = GetFocus();
+    ok(hwnd == radio1, "focus should be on radio1, not on %p\n", hwnd);
+
+    flush_events();
+    flush_sequence();
+
+    msg.hwnd = parent;
+    msg.message = WM_KEYDOWN;
+    msg.wParam = VK_UP;
+    msg.lParam = 0;
+    msg.pt.x = rc.left + 1;
+    msg.pt.y = rc.top + 1;
+    ret = IsDialogMessageA(parent, &msg);
+    ok(ret, "IsDialogMessage should return TRUE\n");
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+if (0) /* actual message sequence is different on every run in some Windows setups */
+    ok_sequence(auto_radio_button_VK_UP_dialog, "IsDialogMessage(VK_UP) #3", FALSE);
+    /* what really matters is that nothing has changed */
+    test_radio(radio1, 1, radio2, 0, radio3, 0);
+
+    log_all_parent_messages--;
 
     DestroyWindow(parent);
 }
@@ -6517,7 +7503,7 @@ void dump_region(HRGN hrgn)
     GetRegionData( hrgn, size, data );
     printf("%d rects:", data->rdh.nCount );
     for (i = 0, rect = (RECT *)data->Buffer; i < data->rdh.nCount; i++, rect++)
-        printf( " (%d,%d)-(%d,%d)", rect->left, rect->top, rect->right, rect->bottom );
+        printf( " %s", wine_dbgstr_rect( rect ));
     printf("\n");
     HeapFree( GetProcessHeap(), 0, data );
 }
@@ -6698,7 +7684,7 @@ static const struct message WmSetParentStyle[] = {
 static void test_paint_messages(void)
 {
     BOOL ret;
-    RECT rect;
+    RECT rect, rect2;
     POINT pt;
     MSG msg;
     HWND hparent, hchild;
@@ -6763,7 +7749,8 @@ static void test_paint_messages(void)
      */
     trace("testing ValidateRect(0, NULL)\n");
     SetRectEmpty( &rect );
-    if (ValidateRect(0, &rect))  /* not supported on Win9x */
+    if (ValidateRect(0, &rect) && /* not supported on Win9x */
+        GetUpdateRect(hwnd, NULL, FALSE))  /* or >= Win 8 */
     {
         check_update_rgn( hwnd, hrgn );
         ok_sequence( WmInvalidateErase, "InvalidateErase", FALSE );
@@ -7237,15 +8224,21 @@ static void test_paint_messages(void)
     SetRectRgn( hrgn, 10, 10, 40, 40 );
     check_update_rgn( hchild, hrgn );
     MoveWindow( hparent, -20, -20, 200, 200, FALSE );
-    SetRectRgn( hrgn, 20, 20, 100, 100 );
+    GetUpdateRect( hparent, &rect2, FALSE );
+    if (!EqualRect( &rect2, &rect )) /* Win 8 and later don't crop update to screen */
+    {
+        rect.left += 20;
+        rect.top += 20;
+    }
+    SetRectRgn( hrgn, rect.left, rect.top, rect.right, rect.bottom );
     check_update_rgn( hparent, hrgn );
-    SetRectRgn( hrgn, 30, 30, 40, 40 );
+    SetRectRgn( hrgn, rect.left + 10, rect.top + 10, 40, 40 );
     check_update_rgn( hchild, hrgn );
 
     /* invalidated region is cropped by the parent rects */
     SetRect( &rect, 0, 0, 50, 50 );
     RedrawWindow( hchild, &rect, 0, RDW_INVALIDATE | RDW_ERASE );
-    SetRectRgn( hrgn, 30, 30, 50, 50 );
+    SetRectRgn( hrgn, rect2.left + 10, rect2.top + 10, 50, 50 );
     check_update_rgn( hchild, hrgn );
 
     DestroyWindow( hparent );
@@ -8327,7 +9320,7 @@ static LRESULT WINAPI ParentMsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam
         message == WM_PARENTNOTIFY || message == WM_CANCELMODE ||
 	message == WM_SETFOCUS || message == WM_KILLFOCUS ||
 	message == WM_ENABLE ||	message == WM_ENTERIDLE ||
-	message == WM_DRAWITEM || message == WM_MEASUREITEM ||
+	message == WM_DRAWITEM || message == WM_MEASUREITEM || message == WM_COMPAREITEM ||
 	message == WM_COMMAND || message == WM_IME_SETCONTEXT)
     {
         switch (message)
@@ -8375,7 +9368,7 @@ static LRESULT WINAPI ParentMsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam
     ret = DefWindowProcA(hwnd, message, wParam, lParam);
     defwndproc_counter--;
 
-    return ret;
+    return message == WM_COMPAREITEM ? -1 : ret;
 }
 
 static INT_PTR CALLBACK StopQuitMsgCheckProcA(HWND hwnd, UINT message, WPARAM wp, LPARAM lp)
@@ -11154,8 +12147,9 @@ static void test_PeekMessage3(void)
     PostMessageA(hwnd, WM_USER + 1, 0, 0);
     PostMessageA(hwnd, WM_USER, 0, 0);
     ret = PeekMessageA(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
-    todo_wine
     ok(ret && msg.message == WM_USER, "msg.message = %u instead of WM_USER\n", msg.message);
+    ret = PeekMessageA(&msg, NULL, WM_USER, WM_USER + 1, PM_NOREMOVE);
+    ok(ret && msg.message == WM_USER + 1, "msg.message = %u instead of WM_USER + 1\n", msg.message);
     ret = PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE);
     ok(ret && msg.message == WM_TIMER, "msg.message = %u instead of WM_TIMER\n", msg.message);
     ret = PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE);
@@ -12125,9 +13119,8 @@ static void test_ShowWindow(void)
         SetLastError(0xdeadbeef);
         ret = pGetMonitorInfoA(hmon, &mi);
         ok(ret, "GetMonitorInfo error %u\n", GetLastError());
-        trace("monitor (%d,%d-%d,%d), work (%d,%d-%d,%d)\n",
-            mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right, mi.rcMonitor.bottom,
-            mi.rcWork.left, mi.rcWork.top, mi.rcWork.right, mi.rcWork.bottom);
+        trace("monitor %s, work %s\n", wine_dbgstr_rect(&mi.rcMonitor),
+              wine_dbgstr_rect(&mi.rcWork));
         work_rc = mi.rcWork;
     }
 
@@ -12145,11 +13138,8 @@ static void test_ShowWindow(void)
     ok(wp.ptMaxPosition.x == -1 && wp.ptMaxPosition.y == -1,
        "expected -1,-1 got %d,%d\n", wp.ptMaxPosition.x, wp.ptMaxPosition.y);
     todo_wine_if (work_rc.left || work_rc.top) /* FIXME: remove once Wine is fixed */
-    ok(EqualRect(&win_rc, &wp.rcNormalPosition),
-       "expected %d,%d-%d,%d got %d,%d-%d,%d\n",
-        win_rc.left, win_rc.top, win_rc.right, win_rc.bottom,
-        wp.rcNormalPosition.left, wp.rcNormalPosition.top,
-        wp.rcNormalPosition.right, wp.rcNormalPosition.bottom);
+    ok(EqualRect(&win_rc, &wp.rcNormalPosition), "expected %s got %s\n", wine_dbgstr_rect(&win_rc),
+       wine_dbgstr_rect(&wp.rcNormalPosition));
 
     for (i = 0; i < sizeof(sw)/sizeof(sw[0]); i++)
     {
@@ -12201,11 +13191,8 @@ static void test_ShowWindow(void)
            "expected %d,%d got %d,%d\n", sw[i].wp_max.x, sw[i].wp_max.y, wp.ptMaxPosition.x, wp.ptMaxPosition.y);
 
 if (0) /* FIXME: Wine behaves completely different here */
-        ok(EqualRect(&win_rc, &wp.rcNormalPosition),
-           "expected %d,%d-%d,%d got %d,%d-%d,%d\n",
-            win_rc.left, win_rc.top, win_rc.right, win_rc.bottom,
-            wp.rcNormalPosition.left, wp.rcNormalPosition.top,
-            wp.rcNormalPosition.right, wp.rcNormalPosition.bottom);
+        ok(EqualRect(&win_rc, &wp.rcNormalPosition), "expected %s got %s\n",
+           wine_dbgstr_rect(&win_rc), wine_dbgstr_rect(&wp.rcNormalPosition));
     }
     DestroyWindow(hwnd);
     flush_events();
@@ -12230,6 +13217,8 @@ static INT_PTR WINAPI test_dlg_proc(HWND hwnd, UINT message, WPARAM wParam, LPAR
     switch (message)
     {
     case WM_INITDIALOG:
+        return lParam;
+
     case WM_GETDLGCODE:
         return 0;
     }
@@ -12338,6 +13327,20 @@ static const struct message WmDefDlgSetFocus_2[] = {
     { 0 }
 };
 /* Creation of a dialog */
+static const struct message WmCreateDialogParamSeq_0[] = {
+    { HCBT_CREATEWND, hook },
+    { WM_NCCREATE, sent },
+    { WM_NCCALCSIZE, sent|wparam, 0 },
+    { WM_CREATE, sent },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SIZE, sent|wparam, SIZE_RESTORED },
+    { WM_MOVE, sent },
+    { WM_SETFONT, sent },
+    { WM_INITDIALOG, sent },
+    { WM_CHANGEUISTATE, sent|optional },
+    { 0 }
+};
+/* Creation of a dialog */
 static const struct message WmCreateDialogParamSeq_1[] = {
     { HCBT_CREATEWND, hook },
     { WM_NCCREATE, sent },
@@ -12348,6 +13351,16 @@ static const struct message WmCreateDialogParamSeq_1[] = {
     { WM_MOVE, sent },
     { WM_SETFONT, sent },
     { WM_INITDIALOG, sent },
+    { WM_GETDLGCODE, sent|wparam|lparam|optional, 0, 0 }, /* FIXME: Wine doesn't send it */
+    { HCBT_SETFOCUS, hook },
+    { HCBT_ACTIVATE, hook },
+    { WM_QUERYNEWPALETTE, sent|optional },
+    { WM_PALETTEISCHANGING, sent|optional },
+    { WM_WINDOWPOSCHANGING, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE },
+    { WM_ACTIVATEAPP, sent|wparam, 1 },
+    { WM_NCACTIVATE, sent },
+    { WM_ACTIVATE, sent|wparam, 1 },
+    { WM_SETFOCUS, sent },
     { WM_CHANGEUISTATE, sent|optional },
     { 0 }
 };
@@ -12511,9 +13524,24 @@ static void test_dialog_messages(void)
     cls.lpfnWndProc = test_dlg_proc;
     if (!RegisterClassA(&cls)) assert(0);
 
+    SetFocus(0);
+    flush_sequence();
     hdlg = CreateDialogParamA(0, "CLASS_TEST_DIALOG_2", 0, test_dlg_proc, 0);
     ok(IsWindow(hdlg), "CreateDialogParam failed\n");
+    ok_sequence(WmCreateDialogParamSeq_0, "CreateDialogParam_0", FALSE);
+    hfocus = GetFocus();
+    ok(hfocus == 0, "wrong focus %p\n", hfocus);
+    EndDialog(hdlg, 0);
+    DestroyWindow(hdlg);
+    flush_sequence();
+
+    SetFocus(0);
+    flush_sequence();
+    hdlg = CreateDialogParamA(0, "CLASS_TEST_DIALOG_2", 0, test_dlg_proc, 1);
+    ok(IsWindow(hdlg), "CreateDialogParam failed\n");
     ok_sequence(WmCreateDialogParamSeq_1, "CreateDialogParam_1", FALSE);
+    hfocus = GetFocus();
+    ok(hfocus == hdlg, "wrong focus %p\n", hfocus);
     EndDialog(hdlg, 0);
     DestroyWindow(hdlg);
     flush_sequence();
@@ -13461,6 +14489,19 @@ static const struct message wm_lb_addstring[] =
     { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf2f2, 0xf30604ef },
     { 0 }
 };
+static const struct message wm_lb_addstring_sort[] =
+{
+    { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ed },
+    { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf0f2, 0xf30604ed },
+    { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ee },
+    { WM_COMPAREITEM, sent|wparam|lparam|parent, 0xf30604ed, 0xf30604ee },
+    { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf1f2, 0xf30604ee },
+    { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ef },
+    { WM_COMPAREITEM, sent|wparam|lparam|parent, 0xf30604ed, 0xf30604ef },
+    { WM_COMPAREITEM, sent|wparam|lparam|parent, 0xf30604ee, 0xf30604ef },
+    { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf2f2, 0xf30604ef },
+    { 0 }
+};
 
 #define check_lb_state(a1, a2, a3, a4, a5) check_lb_state_dbg(a1, a2, a3, a4, a5, __LINE__)
 
@@ -13526,6 +14567,7 @@ static void test_listbox_messages(void)
 
     parent = CreateWindowExA(0, "TestParentClass", NULL, WS_OVERLAPPEDWINDOW  | WS_VISIBLE,
                              100, 100, 200, 200, 0, 0, 0, NULL);
+    /* with LBS_HASSTRINGS */
     listbox = CreateWindowExA(WS_EX_NOPARENTNOTIFY, "ListBox", NULL,
                               WS_CHILD | LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | WS_VISIBLE,
                               10, 10, 80, 80, parent, (HMENU)ID_LISTBOX, 0, NULL);
@@ -13603,6 +14645,32 @@ static void test_listbox_messages(void)
     ok(ret == LB_ERR, "expected LB_ERR, got %ld\n", ret);
     check_lb_state(listbox, 0, -1, 0, 0);
     flush_sequence();
+
+    log_all_parent_messages--;
+
+    DestroyWindow(listbox);
+
+    /* with LBS_SORT and without LBS_HASSTRINGS */
+    listbox = CreateWindowExA(WS_EX_NOPARENTNOTIFY, "ListBox", NULL,
+                              WS_CHILD | LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_SORT | WS_VISIBLE,
+                              10, 10, 80, 80, parent, (HMENU)ID_LISTBOX, 0, NULL);
+    listbox_orig_proc = (WNDPROC)SetWindowLongPtrA(listbox, GWLP_WNDPROC, (ULONG_PTR)listbox_hook_proc);
+
+    check_lb_state(listbox, 0, LB_ERR, 0, 0);
+
+    flush_sequence();
+
+    log_all_parent_messages++;
+
+    ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 0");
+    ok(ret == 0, "expected 0, got %ld\n", ret);
+    ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 1");
+    ok(ret == 1, "expected 1, got %ld\n", ret);
+    ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 2");
+    ok(ret == 2, "expected 2, got %ld\n", ret);
+
+    ok_sequence(wm_lb_addstring_sort, "LB_ADDSTRING", FALSE);
+    check_lb_state(listbox, 3, LB_ERR, 0, 0);
 
     log_all_parent_messages--;
 
@@ -13983,6 +15051,37 @@ static const struct message NCRBUTTONDOWNSeq[] =
     { 0 }
 };
 
+static const struct message NCXBUTTONUPSeq1[] =
+{
+    { WM_APPCOMMAND, sent|lparam, /*hwnd*/0, MAKELPARAM(0, FAPPCOMMAND_MOUSE | APPCOMMAND_BROWSER_BACKWARD) },
+    { 0 }
+};
+
+static const struct message NCXBUTTONUPSeq2[] =
+{
+    { WM_APPCOMMAND, sent|lparam, /*hwnd*/0, MAKELPARAM(0, FAPPCOMMAND_MOUSE | APPCOMMAND_BROWSER_FORWARD) },
+    { 0 }
+};
+
+struct rbuttonup_thread_data
+{
+    HWND hwnd;
+    HANDLE wndproc_finished;
+};
+
+static DWORD CALLBACK post_rbuttonup_msg( void *arg )
+{
+    struct rbuttonup_thread_data *data = arg;
+    DWORD ret;
+
+    ret = WaitForSingleObject( data->wndproc_finished, 500 );
+    todo_wine ok( ret == WAIT_OBJECT_0, "WaitForSingleObject returned %x\n", ret );
+    if( ret == WAIT_OBJECT_0 ) return 0;
+
+    PostMessageA( data->hwnd, WM_RBUTTONUP, 0, 0 );
+    return 0;
+}
+
 static void test_defwinproc(void)
 {
     HWND hwnd;
@@ -13992,11 +15091,31 @@ static void test_defwinproc(void)
     RECT rect;
     INT x, y;
     LRESULT res;
+    struct rbuttonup_thread_data data;
+    char buffA[64];
+    HANDLE thread;
 
     hwnd = CreateWindowExA(0, "TestWindowClass", "test_defwndproc",
             WS_VISIBLE | WS_CAPTION | WS_OVERLAPPEDWINDOW, 0,0,500,100,0,0,0, NULL);
     assert(hwnd);
     flush_events();
+
+    buffA[0] = 0;
+    GetWindowTextA(hwnd, buffA, sizeof(buffA)/sizeof(*buffA));
+    ok(!strcmp(buffA, "test_defwndproc"), "unexpected window text, %s\n", buffA);
+
+    /* Zero high word of the lParam */
+    res = DefWindowProcA(hwnd, WM_SETTEXT, 0, 0x1234);
+    ok(res == 0, "WM_SETTEXT was expected to fail, %ld\n", res);
+
+    GetWindowTextA(hwnd, buffA, sizeof(buffA)/sizeof(*buffA));
+    ok(!strcmp(buffA, "test_defwndproc"), "unexpected window text, %s\n", buffA);
+
+    res = DefWindowProcW(hwnd, WM_SETTEXT, 0, 0x1234);
+    ok(res == 0, "WM_SETTEXT was expected to fail, %ld\n", res);
+
+    GetWindowTextA(hwnd, buffA, sizeof(buffA)/sizeof(*buffA));
+    ok(!strcmp(buffA, "test_defwndproc"), "unexpected window text, %s\n", buffA);
 
     GetCursorPos(&pos);
     GetWindowRect(hwnd, &rect);
@@ -14007,10 +15126,40 @@ static void test_defwinproc(void)
     res = DefWindowProcA( hwnd, WM_NCHITTEST, 0, MAKELPARAM(x, y));
     ok(res == HTCAPTION, "WM_NCHITTEST returned %ld\n", res);
 
+    mouse_event( MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0 );
+    mouse_event( MOUSEEVENTF_LEFTUP, 0, 0, 0, 0 );
+    flush_events();
+
     flush_sequence();
-    PostMessageA( hwnd, WM_RBUTTONUP, 0, 0);
+    mouse_event( MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0 );
+    /* workaround for missing support for clicking on window frame */
+    data.hwnd = hwnd;
+    data.wndproc_finished = CreateEventA( NULL, FALSE, FALSE, NULL );
+    thread = CreateThread( NULL, 0, post_rbuttonup_msg, (void*)&data, 0, NULL );
+
     DefWindowProcA( hwnd, WM_NCRBUTTONDOWN, HTCAPTION, MAKELPARAM(x, y));
     ok_sequence(NCRBUTTONDOWNSeq, "WM_NCRBUTTONDOWN on caption", FALSE);
+
+    res = DefWindowProcA(hwnd, WM_NCXBUTTONUP, 0, MAKELPARAM(x, y));
+    ok(!res, "WM_NCXBUTTONUP returned %ld\n", res);
+    ok_sequence(WmEmptySeq, "WM_NCXBUTTONUP without button", FALSE);
+
+    res = DefWindowProcA(hwnd, WM_NCXBUTTONUP, MAKEWPARAM(0, XBUTTON1), MAKELPARAM(x, y));
+    ok(!res, "WM_NCXBUTTONUP returned %ld\n", res);
+    ok_sequence(NCXBUTTONUPSeq1, "WM_NCXBUTTONUP with XBUTTON1", FALSE);
+
+    res = DefWindowProcA(hwnd, WM_NCXBUTTONUP, MAKEWPARAM(0, XBUTTON2), MAKELPARAM(x, y));
+    ok(!res, "WM_NCXBUTTONUP returned %ld\n", res);
+    ok_sequence(NCXBUTTONUPSeq2, "WM_NCXBUTTONUP with XBUTTON2", FALSE);
+
+    res = DefWindowProcA(hwnd, WM_NCXBUTTONUP, MAKEWPARAM(0, 3), MAKELPARAM(x, y));
+    ok(!res, "WM_NCXBUTTONUP returned %ld\n", res);
+    ok_sequence(WmEmptySeq, "WM_NCXBUTTONUP with invalid button", FALSE);
+
+    SetEvent( data.wndproc_finished );
+    WaitForSingleObject( thread, 1000 );
+    CloseHandle( data.wndproc_finished );
+    CloseHandle( thread );
 
     SetCursorPos(pos.x, pos.y);
 
@@ -14100,6 +15249,7 @@ static void test_clipboard_viewers(void)
     trace("clipbd viewers: hWnd1=%p, hWnd2=%p, hWnd3=%p\n", hWnd1, hWnd2, hWnd3);
     assert(hWnd1 && hWnd2 && hWnd3);
 
+    CountClipboardFormats(); /* Ensure that we do not have an X11 update to the clipboard */
     flush_sequence();
 
     /* Test getting the clipboard viewer and setting the viewer to NULL. */
@@ -15604,8 +16754,8 @@ static void test_layered_window(void)
     size.cx = 0;
     ret = pUpdateLayeredWindow( hwnd, 0, &pos, &size, hdc, &src, 0, NULL, ULW_OPAQUE );
     ok( !ret, "UpdateLayeredWindow should fail on non-layered window\n" );
-    ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(ERROR_MR_MID_NOT_FOUND) /* win7 */,
-        "wrong error %u\n", GetLastError() );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == ERROR_MR_MID_NOT_FOUND) ||
+        broken(GetLastError() == ERROR_GEN_FAILURE) /* win7 */, "wrong error %u\n", GetLastError() );
     size.cx = 1;
     size.cy = -1;
     ret = pUpdateLayeredWindow( hwnd, 0, &pos, &size, hdc, &src, 0, NULL, ULW_OPAQUE );
@@ -15686,6 +16836,7 @@ static LRESULT WINAPI cancel_init_proc(HWND hwnd, UINT message, WPARAM wParam, L
 
 static void test_TrackPopupMenu(void)
 {
+    MSG msg;
     HWND hwnd;
     BOOL ret;
 
@@ -15707,6 +16858,20 @@ static void test_TrackPopupMenu(void)
     ret = TrackPopupMenu(hpopupmenu, 0, 100,100, 0, hwnd, NULL);
     ok_sequence(WmTrackPopupMenu, "TrackPopupMenu", TRUE);
     ok(ret == 1, "TrackPopupMenu failed with error %i\n", GetLastError());
+
+    /* Test popup closing with an ESC-press */
+    flush_events();
+    PostMessageW(hwnd, WM_KEYDOWN, VK_ESCAPE, 0);
+    ret = TrackPopupMenu(hpopupmenu, 0, 100,100, 0, hwnd, NULL);
+    ok(ret == 1, "TrackPopupMenu failed with error %i\n", GetLastError());
+    PostQuitMessage(0);
+    flush_sequence();
+    while ( PeekMessageA(&msg, 0, 0, 0, PM_REMOVE) )
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+    ok_sequence(WmTrackPopupMenuEsc, "TrackPopupMenuEsc", FALSE); /* Shouldn't get any message */
 
     SetWindowLongPtrA( hwnd, GWLP_WNDPROC, (LONG_PTR)cancel_init_proc);
 
@@ -15809,8 +16974,8 @@ static DWORD WINAPI SendMessage_thread_2(void *param)
     PostMessageA(wnd_event->hwnd, WM_USER+1, 0, 0);
 
     /* this leads to sending an internal message under Wine */
-    trace("thread: call EnableWindow\n");
-    EnableWindow(wnd_event->hwnd, TRUE);
+    trace("thread: call SetParent\n");
+    SetParent(wnd_event->hwnd, wnd_event->hwnd);
 
     trace("thread: call SendMessage\n");
     SendMessageA(wnd_event->hwnd, WM_USER+2, 0, 0);
@@ -16125,6 +17290,8 @@ START_TEST(msg)
     invisible_parent_tests();
     test_mdi_messages();
     test_button_messages();
+    test_autoradio_BM_CLICK();
+    test_autoradio_kbd_move();
     test_static_messages();
     test_listbox_messages();
     test_combobox_messages();
@@ -16425,6 +17592,8 @@ START_TEST(msg_controls)
 {
     init_tests();
     test_button_messages();
+    test_autoradio_BM_CLICK();
+    test_autoradio_kbd_move();
     test_static_messages();
     test_listbox_messages();
     test_combobox_messages();

@@ -593,6 +593,7 @@ public:
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT PropagateMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnMapNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -638,6 +639,7 @@ public:
         MESSAGE_HANDLER(WM_MEASUREITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_DRAWITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_MENUSELECT, RelayMsgToShellView)
+        MESSAGE_HANDLER(WM_WININICHANGE, PropagateMessage)
         COMMAND_ID_HANDLER(IDM_FILE_CLOSE, OnClose)
         COMMAND_ID_HANDLER(IDM_TOOLS_FOLDEROPTIONS, OnFolderOptions)
         COMMAND_ID_HANDLER(IDM_TOOLS_MAPNETWORKDRIVE, OnMapNetworkDrive)
@@ -1377,18 +1379,22 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     previousMessage = pThis->m_pCurrentMsg;
     pThis->m_pCurrentMsg = &msg;
 
-    CComPtr<IMenuBand> menuBand;
-    hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
-    if (SUCCEEDED(hResult) && menuBand.p != NULL)
+    /* If the shell browser is initialized, let the menu band preprocess the messages */
+    if (pThis->fCurrentDirectoryPIDL)
     {
-        hResult = menuBand->TranslateMenuMessage(&msg, &lResult);
-        if (hResult == S_OK)
-            return lResult;
-        uMsg = msg.message;
-        wParam = msg.wParam;
-        lParam = msg.lParam;
+        CComPtr<IMenuBand> menuBand;
+        hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
+        if (SUCCEEDED(hResult) && menuBand.p != NULL)
+        {
+            hResult = menuBand->TranslateMenuMessage(&msg, &lResult);
+            if (hResult == S_OK)
+                return lResult;
+            uMsg = msg.message;
+            wParam = msg.wParam;
+            lParam = msg.lParam;
+        }
+        menuBand.Release();
     }
-    menuBand.Release();
 
     handled = pThis->ProcessWindowMessage(hWnd, uMsg, wParam, lParam, lResult, 0);
     ATLASSERT(pThis->m_pCurrentMsg == &msg);
@@ -3505,6 +3511,12 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
 {
     if (fCurrentShellViewWindow != NULL)
         return SendMessage(fCurrentShellViewWindow, uMsg, wParam, lParam);
+    return 0;
+}
+
+LRESULT CShellBrowser::PropagateMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    SHPropagateMessage(m_hWnd, uMsg, wParam, lParam, TRUE);
     return 0;
 }
 

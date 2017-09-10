@@ -644,6 +644,42 @@ static void test_VarFormatFromTokens(void)
     SysFreeString(bstr);
 }
 
+static void test_GetAltMonthNames(void)
+{
+    LPOLESTR *str, *str2;
+    HRESULT hr;
+
+    str = (void *)0xdeadbeef;
+    hr = GetAltMonthNames(0, &str);
+    ok(hr == S_OK, "Unexpected return value %08x\n", hr);
+    ok(str == NULL, "Got %p\n", str);
+
+    str = (void *)0xdeadbeef;
+    hr = GetAltMonthNames(MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT), &str);
+    ok(hr == S_OK, "Unexpected return value %08x\n", hr);
+    ok(str == NULL, "Got %p\n", str);
+
+    str = NULL;
+    hr = GetAltMonthNames(MAKELCID(MAKELANGID(LANG_ARABIC, SUBLANG_ARABIC_EGYPT), SORT_DEFAULT), &str);
+    ok(hr == S_OK, "Unexpected return value %08x\n", hr);
+    ok(str != NULL, "Got %p\n", str);
+
+    str2 = NULL;
+    hr = GetAltMonthNames(MAKELCID(MAKELANGID(LANG_ARABIC, SUBLANG_ARABIC_EGYPT), SORT_DEFAULT), &str2);
+    ok(hr == S_OK, "Unexpected return value %08x\n", hr);
+    ok(str2 == str, "Got %p\n", str2);
+
+    str = NULL;
+    hr = GetAltMonthNames(MAKELCID(MAKELANGID(LANG_RUSSIAN, SUBLANG_DEFAULT), SORT_DEFAULT), &str);
+    ok(hr == S_OK, "Unexpected return value %08x\n", hr);
+    ok(str != NULL, "Got %p\n", str);
+
+    str = NULL;
+    hr = GetAltMonthNames(MAKELCID(MAKELANGID(LANG_POLISH, SUBLANG_DEFAULT), SORT_DEFAULT), &str);
+    ok(hr == S_OK, "Unexpected return value %08x\n", hr);
+    ok(str != NULL, "Got %p\n", str);
+}
+
 START_TEST(varformat)
 {
   hOleaut32 = GetModuleHandleA("oleaut32.dll");
@@ -654,4 +690,5 @@ START_TEST(varformat)
   test_VarFormat();
   test_VarWeekdayName();
   test_VarFormatFromTokens();
+  test_GetAltMonthNames();
 }

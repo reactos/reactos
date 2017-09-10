@@ -1376,24 +1376,30 @@ static HRESULT compile_forin_statement(compiler_ctx_t *ctx, forin_statement_t *s
     return S_OK;
 }
 
-static HRESULT pop_to_stat(compiler_ctx_t *ctx, BOOL var_stack, BOOL scope_stack, statement_ctx_t *stat_ctx)
+static HRESULT pop_to_stat(compiler_ctx_t *ctx, statement_ctx_t *stat_ctx)
 {
     unsigned stack_pop = 0;
     statement_ctx_t *iter;
+    HRESULT hres;
 
     for(iter = ctx->stat_ctx; iter != stat_ctx; iter = iter->next) {
-        if(scope_stack) {
-            if(iter->using_scope && !push_instr(ctx, OP_pop_scope))
-                return E_OUTOFMEMORY;
-            if(iter->using_except && !push_instr(ctx, OP_pop_except))
-                return E_OUTOFMEMORY;
+        if(iter->using_scope && !push_instr(ctx, OP_pop_scope))
+            return E_OUTOFMEMORY;
+        if(iter->using_except) {
+            if(stack_pop) {
+                hres = push_instr_uint(ctx, OP_pop, stack_pop);
+                if(FAILED(hres))
+                    return hres;
+                stack_pop = 0;
+            }
+            hres = push_instr_uint(ctx, OP_pop_except, ctx->code_off+1);
+            if(FAILED(hres))
+                return hres;
         }
         stack_pop += iter->stack_use;
     }
 
-    if(var_stack && stack_pop) {
-        HRESULT hres;
-
+    if(stack_pop) {
         hres = push_instr_uint(ctx, OP_pop, stack_pop);
         if(FAILED(hres))
             return hres;
@@ -1448,7 +1454,7 @@ static HRESULT compile_continue_statement(compiler_ctx_t *ctx, branch_statement_
         }
     }
 
-    hres = pop_to_stat(ctx, TRUE, TRUE, pop_ctx);
+    hres = pop_to_stat(ctx, pop_ctx);
     if(FAILED(hres))
         return hres;
 
@@ -1485,7 +1491,7 @@ static HRESULT compile_break_statement(compiler_ctx_t *ctx, branch_statement_t *
         }
     }
 
-    hres = pop_to_stat(ctx, TRUE, TRUE, pop_ctx->next);
+    hres = pop_to_stat(ctx, pop_ctx->next);
     if(FAILED(hres))
         return hres;
 
@@ -1502,10 +1508,6 @@ static HRESULT compile_return_statement(compiler_ctx_t *ctx, expression_statemen
         return JS_E_MISPLACED_RETURN;
     }
 
-    hres = pop_to_stat(ctx, TRUE, FALSE, NULL);
-    if(FAILED(hres))
-        return hres;
-
     if(stat->expr) {
         hres = compile_expression(ctx, stat->expr, TRUE);
         if(FAILED(hres))
@@ -1514,7 +1516,7 @@ static HRESULT compile_return_statement(compiler_ctx_t *ctx, expression_statemen
             return E_OUTOFMEMORY;
     }
 
-    hres = pop_to_stat(ctx, FALSE, TRUE, NULL);
+    hres = pop_to_stat(ctx, NULL);
     if(FAILED(hres))
         return hres;
 
@@ -1680,9 +1682,8 @@ static HRESULT compile_throw_statement(compiler_ctx_t *ctx, expression_statement
 /* ECMA-262 3rd Edition    12.14 */
 static HRESULT compile_try_statement(compiler_ctx_t *ctx, try_statement_t *stat)
 {
-    statement_ctx_t try_ctx = {0, FALSE, TRUE}, catch_ctx = {0, TRUE, FALSE};
-    statement_ctx_t finally_ctx = {2, FALSE, FALSE};
-    unsigned push_except;
+    statement_ctx_t try_ctx = {0, FALSE, TRUE}, finally_ctx = {2, FALSE, FALSE};
+    unsigned push_except, finally_off = 0, catch_off = 0, pop_except, catch_pop_except = 0;
     BSTR ident;
     HRESULT hres;
 
@@ -1698,26 +1699,25 @@ static HRESULT compile_try_statement(compiler_ctx_t *ctx, try_statement_t *stat)
         ident = NULL;
     }
 
-    instr_ptr(ctx, push_except)->u.arg[1].bstr = ident;
-
-    if(!stat->catch_block)
-        try_ctx.stack_use = 2;
-
     hres = compile_statement(ctx, &try_ctx, stat->try_statement);
     if(FAILED(hres))
         return hres;
 
-    if(!push_instr(ctx, OP_pop_except))
+    pop_except = push_instr(ctx, OP_pop_except);
+    if(!pop_except)
         return E_OUTOFMEMORY;
 
     if(stat->catch_block) {
-        unsigned jmp_finally;
+        statement_ctx_t catch_ctx = {0, TRUE, stat->finally_statement != NULL};
 
-        jmp_finally = push_instr(ctx, OP_jmp);
-        if(!jmp_finally)
-            return E_OUTOFMEMORY;
+        if(stat->finally_statement)
+            catch_ctx.using_except = TRUE;
 
-        instr_ptr(ctx, push_except)->u.arg[0].uint = ctx->code_off;
+        catch_off = ctx->code_off;
+
+        hres = push_instr_bstr(ctx, OP_enter_catch, ident);
+        if(FAILED(hres))
+            return hres;
 
         hres = compile_statement(ctx, &catch_ctx, stat->catch_block->statement);
         if(FAILED(hres))
@@ -1726,20 +1726,33 @@ static HRESULT compile_try_statement(compiler_ctx_t *ctx, try_statement_t *stat)
         if(!push_instr(ctx, OP_pop_scope))
             return E_OUTOFMEMORY;
 
-        set_arg_uint(ctx, jmp_finally, ctx->code_off);
-    }else {
-        set_arg_uint(ctx, push_except, ctx->code_off);
+        if(stat->finally_statement) {
+            catch_pop_except = push_instr(ctx, OP_pop_except);
+            if(!catch_pop_except)
+                return E_OUTOFMEMORY;
+        }
     }
 
     if(stat->finally_statement) {
-        hres = compile_statement(ctx, stat->catch_block ? NULL : &finally_ctx, stat->finally_statement);
+        /*
+         * finally block expects two elements on the stack, which may be:
+         * - (true, return_addr) set by OP_pop_except, OP_end_finally jumps back to passed addres
+         * - (false, exception_value) set when unwinding an exception, which OP_end_finally rethrows
+         */
+        finally_off = ctx->code_off;
+        hres = compile_statement(ctx, &finally_ctx, stat->finally_statement);
         if(FAILED(hres))
             return hres;
 
-        if(!stat->catch_block && !push_instr(ctx, OP_end_finally))
+        if(!push_instr(ctx, OP_end_finally))
             return E_OUTOFMEMORY;
     }
 
+    instr_ptr(ctx, pop_except)->u.arg[0].uint = ctx->code_off;
+    if(catch_pop_except)
+        instr_ptr(ctx, catch_pop_except)->u.arg[0].uint = ctx->code_off;
+    instr_ptr(ctx, push_except)->u.arg[0].uint = catch_off;
+    instr_ptr(ctx, push_except)->u.arg[1].uint = finally_off;
     return S_OK;
 }
 

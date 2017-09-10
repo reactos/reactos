@@ -1,10 +1,8 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS xml to sdb converter
- * FILE:        sdk/tools/xml2sdb/main.cpp
+ * PROJECT:     xml2sdb
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Implement platform agnostic read / write / allocation functions, parse commandline
- * PROGRAMMERS: Mark Jansen
- *
+ * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "xml2sdb.h"
@@ -53,7 +51,7 @@ DWORD WINAPI SdbpStrsize(PCWSTR string)
 
 PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
 {
-    PDB db;
+    PDB pdb;
     FILE* f;
     std::string pathA(path, path + SdbpStrlen(path));
 
@@ -61,30 +59,33 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
     if (!f)
         return NULL;
 
-    db = (PDB)SdbAlloc(sizeof(DB));
-    db->file = f;
+    pdb = (PDB)SdbAlloc(sizeof(DB));
+    pdb->file = f;
+    pdb->for_write = write;
 
-    return db;
+    return pdb;
 }
 
-void WINAPI SdbpFlush(PDB db)
+void WINAPI SdbpFlush(PDB pdb)
 {
-    fwrite(db->data, db->write_iter, 1, (FILE*)db->file);
+    ASSERT(pdb->for_write);
+
+    fwrite(pdb->data, pdb->write_iter, 1, (FILE*)pdb->file);
 }
 
-void WINAPI SdbCloseDatabase(PDB db)
+void WINAPI SdbCloseDatabase(PDB pdb)
 {
-    if (!db)
+    if (!pdb)
         return;
 
-    if (db->file)
-        fclose((FILE*)db->file);
-    if (db->string_buffer)
-        SdbCloseDatabase(db->string_buffer);
-    if (db->string_lookup)
-        SdbpTableDestroy(&db->string_lookup);
-    SdbFree(db->data);
-    SdbFree(db);
+    if (pdb->file)
+        fclose((FILE*)pdb->file);
+    if (pdb->string_buffer)
+        SdbCloseDatabase(pdb->string_buffer);
+    if (pdb->string_lookup)
+        SdbpTableDestroy(&pdb->string_lookup);
+    SdbFree(pdb->data);
+    SdbFree(pdb);
 }
 
 BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type)
@@ -94,7 +95,7 @@ BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type)
     return TRUE;
 }
 
-BOOL WINAPI SdbpReadData(PDB db, PVOID dest, DWORD offset, DWORD num)
+BOOL WINAPI SdbpReadData(PDB pdb, PVOID dest, DWORD offset, DWORD num)
 {
     DWORD size = offset + num;
 
@@ -103,24 +104,24 @@ BOOL WINAPI SdbpReadData(PDB db, PVOID dest, DWORD offset, DWORD num)
         return FALSE;
 
     /* Overflow */
-    if (db->size < size)
+    if (pdb->size < size)
         return FALSE;
 
-    memcpy(dest, db->data + offset, num);
+    memcpy(dest, pdb->data + offset, num);
     return TRUE;
 }
 
-TAG WINAPI SdbGetTagFromTagID(PDB db, TAGID tagid)
+TAG WINAPI SdbGetTagFromTagID(PDB pdb, TAGID tagid)
 {
     TAG data;
-    if (!SdbpReadData(db, &data, tagid, sizeof(data)))
+    if (!SdbpReadData(pdb, &data, tagid, sizeof(data)))
         return TAG_NULL;
     return data;
 }
 
-BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
+BOOL WINAPI SdbpCheckTagIDType(PDB pdb, TAGID tagid, WORD type)
 {
-    TAG tag = SdbGetTagFromTagID(db, tagid);
+    TAG tag = SdbGetTagFromTagID(pdb, tagid);
     if (tag == TAG_NULL)
         return FALSE;
     return SdbpCheckTagType(tag, type);
@@ -186,17 +187,21 @@ static bool run_one(std::string& input, std::string& output)
 
 static std::string get_strarg(int argc, char* argv[], int& i)
 {
-    if (argv[i][2] == 0)
-    {
-        ++i;
-        if (i >= argc || !argv[i])
-            return std::string();
-        return argv[i];
-    }
-    return std::string(argv[i] + 2);
+    if (argv[i][2] != 0)
+        return std::string(argv[i] + 2);
+
+    ++i;
+    if (i >= argc || !argv[i])
+        return std::string();
+    return argv[i];
 }
 
-// -i R:\src\apphelp\reactos\media\sdb\sysmain.xml -oR:\build\apphelp\devenv_msvc\media\sdb\ros2.sdb
+static void update_loglevel(int argc, char* argv[], int& i)
+{
+    std::string value = get_strarg(argc, argv, i);
+    g_ShimDebugLevel = strtoul(value.c_str(), NULL, 10);
+}
+
 int main(int argc, char * argv[])
 {
     std::string input, output;
@@ -204,25 +209,28 @@ int main(int argc, char * argv[])
 
     for (int i = 1; i < argc; ++i)
     {
-        if (argv[i][0] == '/' || argv[i][0] == '-')
+        if (argv[i][0] != '/' && argv[i][0] != '-')
+            continue;
+
+        switch(argv[i][1])
         {
-            switch(argv[i][1])
-            {
-            case 'i':
-                input = get_strarg(argc, argv, i);
-                break;
-            case 'o':
-                output = get_strarg(argc, argv, i);
-                break;
-            }
-            if (!input.empty() && !output.empty())
-            {
-                if (!run_one(input, output))
-                {
-                    printf("Failed converting '%s' to '%s'\n", input.c_str(), output.c_str());
-                    return 1;
-                }
-            }
+        case 'i':
+            input = get_strarg(argc, argv, i);
+            break;
+        case 'o':
+            output = get_strarg(argc, argv, i);
+            break;
+        case 'l':
+            update_loglevel(argc, argv, i);
+            break;
+        }
+        if (input.empty() || output.empty())
+            continue;
+
+        if (!run_one(input, output))
+        {
+            printf("Failed converting '%s' to '%s'\n", input.c_str(), output.c_str());
+            return 1;
         }
     }
     return 0;

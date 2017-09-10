@@ -658,10 +658,45 @@ void test_ICGetDisplayFormat(void)
     ICClose(ic);
 }
 
+static void test_ICInfo(void)
+{
+    ICINFO info, info2;
+    DWORD i, found;
+    unsigned char *fcc;
+
+    for (i = found = 0; ICInfo(0, i, &info); i++)
+    {
+        trace("Codec name: %s, fccHandler: 0x%08x\n", wine_dbgstr_w(info.szName), info.fccHandler);
+
+        ok(ICInfo(info.fccType, info.fccHandler, &info2),
+           "ICInfo failed on fcc 0x%08x\n", info.fccHandler);
+
+        fcc = (unsigned char *)&info.fccHandler;
+        if (!isalpha(fcc[0])) continue;
+
+        found++;
+        /* Test getting info with a different case - bug 41602 */
+        if (fcc[0] & 0x20)
+        {
+            fcc[0] &= ~0x20;
+            ok(ICInfo(info.fccType, info.fccHandler, &info2),
+               "ICInfo failed on fcc 0x%08x using lowercase fccHandler\n", info.fccHandler);
+        }
+        else
+        {
+            fcc[0] |= 0x20;
+            ok(ICInfo(info.fccType, info.fccHandler, &info2),
+               "ICInfo failed on fcc 0x%08x using uppercase fccHandler\n", info.fccHandler);
+        }
+    }
+    ok(found != 0, "expected at least one codec\n");
+}
+
 START_TEST(msvfw)
 {
     test_OpenCase();
     test_Locate();
     test_ICSeqCompress();
     test_ICGetDisplayFormat();
+    test_ICInfo();
 }

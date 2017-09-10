@@ -1520,8 +1520,7 @@ static HRESULT WINAPI FilterGraph2_RenderFile(IFilterGraph2 *iface, LPCWSTR lpcw
     if (FAILED(hr))
         return hr;
 
-    if (SUCCEEDED(hr))
-        hr = IBaseFilter_EnumPins(preader, &penumpins);
+    hr = IBaseFilter_EnumPins(preader, &penumpins);
     if (SUCCEEDED(hr))
     {
         while (IEnumPins_Next(penumpins, 1, &ppinreader, NULL) == S_OK)

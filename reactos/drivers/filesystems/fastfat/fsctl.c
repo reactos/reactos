@@ -1021,6 +1021,8 @@ VfatIsVolumeDirty(
         *Flags |= VOLUME_IS_DIRTY;
     }
 
+    IrpContext->Irp->IoStatus.Information = sizeof(ULONG);
+
     return STATUS_SUCCESS;
 }
 

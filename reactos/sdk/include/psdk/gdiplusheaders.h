@@ -43,7 +43,7 @@ public:
   Image *Clone(VOID)
   {
     Image *newImage = new Image();
-    SetStatus(DllExports::GdipCloneImage(image, &(newImage->image)));
+    SetStatus(DllExports::GdipCloneImage(image, newImage ? &newImage->image : NULL));
     return newImage;
   }
 
@@ -139,7 +139,7 @@ public:
 
   Status GetPhysicalDimension(SizeF *size)
   {
-    return SetStatus(DllExports::GdipGetImageDimension(image, &size->Width, &size->Height));
+    return SetStatus(DllExports::GdipGetImageDimension(image, size ? &size->Width : NULL, size ? &size->Height : NULL));
   }
 
   PixelFormat GetPixelFormat(VOID)
@@ -186,7 +186,7 @@ public:
   Image *GetThumbnailImage(UINT thumbWidth, UINT thumbHeight, GetThumbnailImageAbort callback, VOID *callbackData)
   {
     Image *thumbImage = new Image();
-    SetStatus(DllExports::GdipGetImageThumbnail(image, thumbWidth, thumbHeight, &(thumbImage->image), callback, callbackData));
+    SetStatus(DllExports::GdipGetImageThumbnail(image, thumbWidth, thumbHeight, thumbImage ? &thumbImage->image : NULL, callback, callbackData));
     return thumbImage;
   }
 
@@ -238,7 +238,7 @@ public:
 
   Status SaveAdd(Image *newImage, const EncoderParameters *encoderParams)
   {
-    return NotImplemented;  // FIXME: not available: SetStatus(DllExports::GdipSaveAddImage(image, newImage->image, encoderParams));
+    return NotImplemented;  // FIXME: not available: SetStatus(DllExports::GdipSaveAddImage(image, newImage ? newImage->image : NULL, encoderParams));
   }
 
   Status SelectActiveFrame(const GUID *dimensionID, UINT frameIndex)
@@ -287,7 +287,7 @@ public:
 
   Bitmap(INT width, INT height, Graphics *target)
   {
-    status = DllExports::GdipCreateBitmapFromGraphics(width, height, target->graphics, &bitmap);
+    status = DllExports::GdipCreateBitmapFromGraphics(width, height, target ? target->graphics : NULL, &bitmap);
   }
 
   Bitmap(const BITMAPINFO *gdiBitmapInfo, VOID *gdiBitmapData)
@@ -338,28 +338,28 @@ public:
   Bitmap *Clone(const Rect &rect, PixelFormat format)
   {
     Bitmap *dstBitmap = new Bitmap();
-    SetStatus(DllExports::GdipCloneBitmapAreaI(rect.X, rect.Y, rect.Width, rect.Height, format, bitmap, &(dstBitmap->bitmap)));
+    SetStatus(DllExports::GdipCloneBitmapAreaI(rect.X, rect.Y, rect.Width, rect.Height, format, bitmap, dstBitmap ? &dstBitmap->bitmap : NULL));
     return dstBitmap;
   }
 
   Bitmap *Clone(const RectF &rect, PixelFormat format)
   {
     Bitmap *dstBitmap = new Bitmap();
-    SetStatus(DllExports::GdipCloneBitmapArea(rect.X, rect.Y, rect.Width, rect.Height, format, bitmap, &(dstBitmap->bitmap)));
+    SetStatus(DllExports::GdipCloneBitmapArea(rect.X, rect.Y, rect.Width, rect.Height, format, bitmap, dstBitmap ? &dstBitmap->bitmap : NULL));
     return dstBitmap;
   }
 
   Bitmap *Clone(REAL x, REAL y, REAL width, REAL height, PixelFormat format)
   {
     Bitmap *dstBitmap = new Bitmap();
-    SetStatus(DllExports::GdipCloneBitmapArea(x, y, width, height, format, bitmap, &(dstBitmap->bitmap)));
+    SetStatus(DllExports::GdipCloneBitmapArea(x, y, width, height, format, bitmap, dstBitmap ? &dstBitmap->bitmap : NULL));
     return dstBitmap;
   }
 
   Bitmap *Clone(INT x, INT y, INT width, INT height, PixelFormat format)
   {
     Bitmap *dstBitmap = new Bitmap();
-    SetStatus(DllExports::GdipCloneBitmapAreaI(x, y, width, height, format, bitmap, &(dstBitmap->bitmap)));
+    SetStatus(DllExports::GdipCloneBitmapAreaI(x, y, width, height, format, bitmap, dstBitmap ? &dstBitmap->bitmap : NULL));
     return dstBitmap;
   }
 
@@ -461,7 +461,7 @@ class CachedBitmap : public GdiplusBase
 public:
   CachedBitmap(Bitmap *bitmap, Graphics *graphics)
   {
-    status = DllExports::GdipCreateCachedBitmap(bitmap->bitmap, graphics->graphics, &cachedBitmap);
+    status = DllExports::GdipCreateCachedBitmap(bitmap->bitmap, graphics ? graphics->graphics : NULL, &cachedBitmap);
   }
 
   Status GetLastStatus(VOID)
@@ -515,7 +515,7 @@ public:
 
   FontFamily(const WCHAR *name, const FontCollection *fontCollection)
   {
-    status = DllExports::GdipCreateFontFamilyFromName(name, fontCollection->fontCollection, &fontFamily);
+    status = DllExports::GdipCreateFontFamilyFromName(name, fontCollection ? fontCollection->fontCollection : NULL, &fontFamily);
   }
 
   FontFamily *Clone(VOID)
@@ -526,21 +526,21 @@ public:
   static const FontFamily *GenericMonospace(VOID)
   {
     FontFamily *genericMonospace = new FontFamily();
-    genericMonospace->status = DllExports::GdipGetGenericFontFamilyMonospace(&(genericMonospace->fontFamily));
+    genericMonospace->status = DllExports::GdipGetGenericFontFamilyMonospace(genericMonospace ? &genericMonospace->fontFamily : NULL);
     return genericMonospace;
   }
 
   static const FontFamily *GenericSansSerif(VOID)
   {
     FontFamily *genericSansSerif = new FontFamily();
-    genericSansSerif->status = DllExports::GdipGetGenericFontFamilySansSerif(&(genericSansSerif->fontFamily));
+    genericSansSerif->status = DllExports::GdipGetGenericFontFamilySansSerif(genericSansSerif ? &genericSansSerif->fontFamily : NULL);
     return genericSansSerif;
   }
 
   static const FontFamily *GenericSerif(VOID)
   {
     FontFamily *genericSerif = new FontFamily();
-    genericSerif->status = DllExports::GdipGetGenericFontFamilyMonospace(&(genericSerif->fontFamily));
+    genericSerif->status = DllExports::GdipGetGenericFontFamilyMonospace(genericSerif ? &genericSerif->fontFamily : NULL);
     return genericSerif;
   }
 
@@ -674,19 +674,19 @@ public:
   Font *Clone(VOID) const
   {
     Font *cloneFont = new Font();
-    cloneFont->status = DllExports::GdipCloneFont(font, &(cloneFont->font));
+    cloneFont->status = DllExports::GdipCloneFont(font, cloneFont ? &cloneFont->font : NULL);
     return cloneFont;
   }
 
   Status GetFamily(FontFamily* family) const
   {
-    return SetStatus(DllExports::GdipGetFamily(font, &(family->fontFamily)));
+    return SetStatus(DllExports::GdipGetFamily(font, family ? &family->fontFamily : NULL));
   }
 
   REAL GetHeight(const Graphics* graphics) const
   {
     REAL height;
-    SetStatus(DllExports::GdipGetFontHeight(font, graphics->graphics, &height));
+    SetStatus(DllExports::GdipGetFontHeight(font, graphics ? graphics->graphics : NULL, &height));
     return height;
   }
 
@@ -704,12 +704,12 @@ public:
 
   Status GetLogFontA(const Graphics *g, LOGFONTA *logfontA) const
   {
-    return SetStatus(DllExports::GdipGetLogFontA(font, g->graphics, logfontA));
+    return SetStatus(DllExports::GdipGetLogFontA(font, g ? g->graphics : NULL, logfontA));
   }
 
   Status GetLogFontW(const Graphics *g, LOGFONTW *logfontW) const
   {
-    return SetStatus(DllExports::GdipGetLogFontW(font, g->graphics, logfontW));
+    return SetStatus(DllExports::GdipGetLogFontW(font, g ? g->graphics : NULL, logfontW));
   }
 
   REAL GetSize(VOID) const
@@ -797,18 +797,18 @@ public:
   Region *Clone(VOID)
   {
     Region *cloneRegion = new Region();
-    cloneRegion->status = DllExports::GdipCloneRegion(region, &cloneRegion->region);
+    cloneRegion->status = DllExports::GdipCloneRegion(region, cloneRegion ? &cloneRegion->region : NULL);
     return cloneRegion;
   }
 
   Status Complement(const GraphicsPath *path)
   {
-    return SetStatus(DllExports::GdipCombineRegionPath(region, path->path, CombineModeComplement));
+    return SetStatus(DllExports::GdipCombineRegionPath(region, path ? path->path : NULL, CombineModeComplement));
   }
 
   Status Complement(const Region *region)
   {
-    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region->region, CombineModeComplement));
+    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region ? region->region : NULL, CombineModeComplement));
   }
 
   Status Complement(const Rect &rect)
@@ -824,13 +824,13 @@ public:
   BOOL Equals(const Region *region, const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsEqualRegion(this->region, region->region, g->graphics, &result));
+    SetStatus(DllExports::GdipIsEqualRegion(this->region, region ? region->region : NULL, g ? g->graphics : NULL, &result));
     return result;
   }
 
   Status Exclude(const GraphicsPath *path)
   {
-    return SetStatus(DllExports::GdipCombineRegionPath(region, path->path, CombineModeExclude));
+    return SetStatus(DllExports::GdipCombineRegionPath(region, path ? path->path : NULL, CombineModeExclude));
   }
 
   Status Exclude(const RectF &rect)
@@ -845,7 +845,7 @@ public:
 
   Status Exclude(const Region *region)
   {
-    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region->region, CombineModeExclude));
+    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region ? region->region : NULL, CombineModeExclude));
   }
 
   static Region *FromHRGN(HRGN hRgn)
@@ -855,12 +855,12 @@ public:
 
   Status GetBounds(Rect *rect, const Graphics *g) const
   {
-    return SetStatus(DllExports::GdipGetRegionBoundsI(region, g->graphics, rect));
+    return SetStatus(DllExports::GdipGetRegionBoundsI(region, g ? g->graphics : NULL, rect));
   }
 
   Status GetBounds(RectF *rect, const Graphics *g) const
   {
-    return SetStatus(DllExports::GdipGetRegionBounds(region, g->graphics, rect));
+    return SetStatus(DllExports::GdipGetRegionBounds(region, g ? g->graphics : NULL, rect));
   }
 
   Status GetData(BYTE *buffer, UINT bufferSize, UINT *sizeFilled) const
@@ -878,7 +878,7 @@ public:
   HRGN GetHRGN(const Graphics *g) const
   {
     HRGN hRgn;
-    SetStatus(DllExports::GdipGetRegionHRgn(region, g->graphics, &hRgn));
+    SetStatus(DllExports::GdipGetRegionHRgn(region, g ? g->graphics : NULL, &hRgn));
     return hRgn;
   }
 
@@ -889,18 +889,18 @@ public:
 
   Status GetRegionScans(const Matrix *matrix, Rect *rects, INT *count) const
   {
-    return SetStatus(DllExports::GdipGetRegionScansI(region, rects, count, matrix->matrix));
+    return SetStatus(DllExports::GdipGetRegionScansI(region, rects, count, matrix ? matrix->matrix : NULL));
   }
 
   Status GetRegionScans(const Matrix *matrix, RectF *rects, INT *count) const
   {
-    return SetStatus(DllExports::GdipGetRegionScans(region, rects, count, matrix->matrix));
+    return SetStatus(DllExports::GdipGetRegionScans(region, rects, count, matrix ? matrix->matrix : NULL));
   }
 
   UINT GetRegionScansCount(const Matrix *matrix) const
   {
     UINT count;
-    SetStatus(DllExports::GdipGetRegionScansCount(region, &count, matrix->matrix));
+    SetStatus(DllExports::GdipGetRegionScansCount(region, &count, matrix ? matrix->matrix : NULL));
     return count;
   }
 
@@ -911,7 +911,7 @@ public:
 
   Status Intersect(const GraphicsPath *path)
   {
-    return SetStatus(DllExports::GdipCombineRegionPath(region, path->path, CombineModeIntersect));
+    return SetStatus(DllExports::GdipCombineRegionPath(region, path ? path->path : NULL, CombineModeIntersect));
   }
 
   Status Intersect(const RectF &rect)
@@ -921,76 +921,76 @@ public:
 
   Status Intersect(const Region *region)
   {
-    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region->region, CombineModeIntersect));
+    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region ? region->region : NULL, CombineModeIntersect));
   }
 
   BOOL IsEmpty(const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsEmptyRegion(region, g->graphics, &result));
+    SetStatus(DllExports::GdipIsEmptyRegion(region, g ? g->graphics : NULL, &result));
     return result;
   }
 
   BOOL IsInfinite(const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsInfiniteRegion(region, g->graphics, &result));
+    SetStatus(DllExports::GdipIsInfiniteRegion(region, g ? g->graphics : NULL, &result));
     return result;
   }
 
   BOOL IsVisible(const PointF &point, const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsVisibleRegionPoint(region, point.X, point.Y, g->graphics, &result));
+    SetStatus(DllExports::GdipIsVisibleRegionPoint(region, point.X, point.Y, g ? g->graphics : NULL, &result));
     return result;
   }
 
   BOOL IsVisible(const RectF &rect, const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsVisibleRegionRect(region, rect.X, rect.Y, rect.Width, rect.Height, g->graphics, &result));
+    SetStatus(DllExports::GdipIsVisibleRegionRect(region, rect.X, rect.Y, rect.Width, rect.Height, g ? g->graphics : NULL, &result));
     return result;
   }
 
   BOOL IsVisible(const Rect &rect, const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsVisibleRegionRectI(region, rect.X, rect.Y, rect.Width, rect.Height, g->graphics, &result));
+    SetStatus(DllExports::GdipIsVisibleRegionRectI(region, rect.X, rect.Y, rect.Width, rect.Height, g ? g->graphics : NULL, &result));
     return result;
   }
 
   BOOL IsVisible(INT x, INT y, const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsVisibleRegionPointI(region, x, y, g->graphics, &result));
+    SetStatus(DllExports::GdipIsVisibleRegionPointI(region, x, y, g ? g->graphics : NULL, &result));
     return result;
   }
 
   BOOL IsVisible(REAL x, REAL y, const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsVisibleRegionPoint(region, x, y, g->graphics, &result));
+    SetStatus(DllExports::GdipIsVisibleRegionPoint(region, x, y, g ? g->graphics : NULL, &result));
     return result;
   }
 
   BOOL IsVisible(INT x, INT y, INT width, INT height, const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsVisibleRegionRectI(region, x, y, width, height, g->graphics, &result));
+    SetStatus(DllExports::GdipIsVisibleRegionRectI(region, x, y, width, height, g ? g->graphics : NULL, &result));
     return result;
   }
 
   BOOL IsVisible(const Point &point, const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsVisibleRegionPointI(region, point.X, point.Y, g->graphics, &result));
+    SetStatus(DllExports::GdipIsVisibleRegionPointI(region, point.X, point.Y, g ? g->graphics : NULL, &result));
     return result;
   }
 
   BOOL IsVisible(REAL x, REAL y, REAL width, REAL height, const Graphics *g) const
   {
     BOOL result;
-    SetStatus(DllExports::GdipIsVisibleRegionRect(region, x, y, width, height, g->graphics, &result));
+    SetStatus(DllExports::GdipIsVisibleRegionRect(region, x, y, width, height, g ? g->graphics : NULL, &result));
     return result;
   }
 
@@ -1006,7 +1006,7 @@ public:
 
   Status Transform(const Matrix *matrix)
   {
-    return SetStatus(DllExports::GdipTransformRegion(region, matrix->matrix));
+    return SetStatus(DllExports::GdipTransformRegion(region, matrix ? matrix->matrix : NULL));
   }
 
   Status Translate(REAL dx, REAL dy)
@@ -1026,7 +1026,7 @@ public:
 
   Status Union(const Region *region)
   {
-    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region->region, CombineModeUnion));
+    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region ? region->region : NULL, CombineModeUnion));
   }
 
   Status Union(const RectF &rect)
@@ -1036,12 +1036,12 @@ public:
 
   Status Union(const GraphicsPath *path)
   {
-    return SetStatus(DllExports::GdipCombineRegionPath(region, path->path, CombineModeUnion));
+    return SetStatus(DllExports::GdipCombineRegionPath(region, path ? path->path : NULL, CombineModeUnion));
   }
 
   Status Xor(const GraphicsPath *path)
   {
-    return SetStatus(DllExports::GdipCombineRegionPath(region, path->path, CombineModeXor));
+    return SetStatus(DllExports::GdipCombineRegionPath(region, path ? path->path : NULL, CombineModeXor));
   }
 
   Status Xor(const RectF &rect)
@@ -1056,7 +1056,7 @@ public:
 
   Status Xor(const Region *region)
   {
-    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region->region, CombineModeXor));
+    return SetStatus(DllExports::GdipCombineRegionRegion(this->region, region ? region->region : NULL, CombineModeXor));
   }
 
 private:

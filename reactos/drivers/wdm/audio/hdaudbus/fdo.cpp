@@ -603,7 +603,7 @@ HDA_FDOStartDevice(
         // them, as we want to use the STATE_STATUS register to identify
         // available codecs. We'd have to clear that register in the interrupt
         // handler to 'ack' the codec change.
-        Value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_WAKE_ENABLE)) & HDAC_WAKE_ENABLE_MASK;
+        Value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_WAKE_ENABLE)) & ~HDAC_WAKE_ENABLE_MASK;
         WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_WAKE_ENABLE), Value);
 
         // Enable controller interrupts
@@ -662,7 +662,7 @@ HDA_FDOQueryBusRelations(
     if (!DeviceRelations)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    DeviceCount = 0;
+    DeviceRelations->Count = 0;
     for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
     {
         if (DeviceExtension->Codecs[CodecIndex] == NULL)

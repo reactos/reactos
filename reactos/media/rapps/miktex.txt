@@ -1,18 +1,18 @@
 [Section]
 Name = MikTEX 2.9
-Version = 2.9.6236
+Version = 2.9.6361
 License = Freeware
 Description = An up-to-date implementation of TeX/LaTeX and related programs for Windows.
-Size = 181.8 MiB
+Size = 179.0 MiB
 Category = 6
 URLSite = http://www.miktex.org/
 URLDownload = http://ftp.gwdg.de/pub/ctan/systems/win32/miktex/setup/basic-miktex.exe
-SHA1 = 49804d4daec38167ec103a40a91ac2fb8f8a58e5
+SHA1 = 365b71cf9f23552b99f8d8c69637e6bec6853979
 CDPath = none
 
 [Section.0407]
 Description = Aktuelle Implementierung von TeX/LaTeX und zugehöriger Programme für Windows.
-Size = 181,8 MiB
+Size = 179,0 MiB
 
 [Section.0a]
 License = Gratuita
@@ -21,17 +21,17 @@ Description = MikTEX es una implementación actualizada de TeX/LaTeX y otros pro
 [Section.0418]
 License = Gratuită
 Description = MikTEX este o implementare actualizată de TeX/LaTeX și aprogramelor aferente.
-Size = 181,8 Mio
+Size = 179,0 Mio
 
 [Section.0419]
 License = Бесплатно
 Description = Открытый дистрибутив TeX/LaTeX для платформы Windows.
-Size = 181,8 МиБ
+Size = 179,0 МиБ
 
 [Section.041f]
 License = Ücretsiz
 Description = Windows için, TeX'in, LaTeX'in ve ilişkili izlencelerin bir şimdiki uygulaması.
-Size = 181,8 MiB
+Size = 179,0 MiB
 
 [Section.0804]
 Description = TeX/LaTeX 和相关的程序的 Windows 的一个最新执行情况。

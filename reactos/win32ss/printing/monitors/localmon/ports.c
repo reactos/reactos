@@ -2,15 +2,26 @@
  * PROJECT:     ReactOS Local Port Monitor
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to ports
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
 
-
 // Local Constants
 static const WCHAR wszNonspooledPrefix[] = L"NONSPOOLED_";
 static const DWORD cchNonspooledPrefix = _countof(wszNonspooledPrefix) - 1;
+
+static DWORD dwPortInfo1Offsets[] = {
+    FIELD_OFFSET(PORT_INFO_1W, pName),
+    MAXDWORD
+};
+
+static DWORD dwPortInfo2Offsets[] = {
+    FIELD_OFFSET(PORT_INFO_2W, pPortName),
+    FIELD_OFFSET(PORT_INFO_2W, pMonitorName),
+    FIELD_OFFSET(PORT_INFO_2W, pDescription),
+    MAXDWORD
+};
 
 
 /**
@@ -359,130 +370,60 @@ _FindPort(PLOCALMON_HANDLE pLocalmon, PCWSTR pwszPortName)
     return NULL;
 }
 
-static DWORD
-_LocalmonEnumPortsLevel1(PLOCALMON_HANDLE pLocalmon, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+static void
+_LocalmonGetPortLevel1(PLOCALMON_PORT pPort, PPORT_INFO_1W* ppPortInfo, PBYTE* ppPortInfoEnd, PDWORD pcbNeeded)
 {
     DWORD cbPortName;
-    DWORD dwErrorCode;
-    DWORD dwPortCount = 0;
-    PBYTE pPortInfo;
-    PBYTE pPortString;
-    PLIST_ENTRY pEntry;
-    PLOCALMON_PORT pPort;
-    PORT_INFO_1W PortInfo1;
+    PWSTR pwszStrings[1];
 
-    // Count the required buffer size and the number of datatypes.
-    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
+    // Calculate the string lengths.
+    if (!ppPortInfo)
     {
-        pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
-
         cbPortName = (wcslen(pPort->pwszPortName) + 1) * sizeof(WCHAR);
+
         *pcbNeeded += sizeof(PORT_INFO_1W) + cbPortName;
-        dwPortCount++;
+        return;
     }
 
-    // Check if the supplied buffer is large enough.
-    if (cbBuf < *pcbNeeded)
-    {
-        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
-        goto Cleanup;
-    }
+    // Set the pName field.
+    pwszStrings[0] = pPort->pwszPortName;
 
-    // Put the strings right after the last PORT_INFO_1W structure.
-    pPortInfo = pPorts;
-    pPortString = pPorts + dwPortCount * sizeof(PORT_INFO_1W);
-
-    // Copy over all ports.
-    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
-    {
-        pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
-
-        // Copy the port name.
-        PortInfo1.pName = (PWSTR)pPortString;
-        cbPortName = (wcslen(pPort->pwszPortName) + 1) * sizeof(WCHAR);
-        CopyMemory(pPortString, pPort->pwszPortName, cbPortName);
-        pPortString += cbPortName;
-
-        // Copy the structure and advance to the next one in the output buffer.
-        CopyMemory(pPortInfo, &PortInfo1, sizeof(PORT_INFO_1W));
-        pPortInfo += sizeof(PORT_INFO_1W);
-    }
-
-    *pcReturned = dwPortCount;
-    dwErrorCode = ERROR_SUCCESS;
-
-Cleanup:
-    return dwErrorCode;
+    // Copy the structure and advance to the next one in the output buffer.
+    *ppPortInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppPortInfo), dwPortInfo1Offsets, *ppPortInfoEnd);
+    (*ppPortInfo)++;
 }
 
-static DWORD
-_LocalmonEnumPortsLevel2(PLOCALMON_HANDLE pLocalmon, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+static void
+_LocalmonGetPortLevel2(PLOCALMON_PORT pPort, PPORT_INFO_2W* ppPortInfo, PBYTE* ppPortInfoEnd, PDWORD pcbNeeded)
 {
     DWORD cbPortName;
-    DWORD dwErrorCode;
-    DWORD dwPortCount = 0;
-    PBYTE pPortInfo;
-    PBYTE pPortString;
-    PLIST_ENTRY pEntry;
-    PLOCALMON_PORT pPort;
-    PORT_INFO_2W PortInfo2;
+    PWSTR pwszStrings[3];
 
-    // Count the required buffer size and the number of datatypes.
-    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
+    // Calculate the string lengths.
+    if (!ppPortInfo)
     {
-        pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
-
         cbPortName = (wcslen(pPort->pwszPortName) + 1) * sizeof(WCHAR);
+
         *pcbNeeded += sizeof(PORT_INFO_2W) + cbPortName + cbLocalMonitor + cbLocalPort;
-        dwPortCount++;
+        return;
     }
 
-    // Check if the supplied buffer is large enough.
-    if (cbBuf < *pcbNeeded)
-    {
-        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
-        goto Cleanup;
-    }
+    // All local ports are writable and readable.
+    (*ppPortInfo)->fPortType = PORT_TYPE_WRITE | PORT_TYPE_READ;
+    (*ppPortInfo)->Reserved = 0;
 
-    // Put the strings right after the last PORT_INFO_2W structure.
-    pPortInfo = pPorts;
-    pPortString = pPorts + dwPortCount * sizeof(PORT_INFO_2W);
+    // Set the pPortName field.
+    pwszStrings[0] = pPort->pwszPortName;
 
-    // Copy over all ports.
-    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
-    {
-        pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
+    // Set the pMonitorName field.
+    pwszStrings[1] = (PWSTR)pwszLocalMonitor;
 
-        // All local ports are writable and readable.
-        PortInfo2.fPortType = PORT_TYPE_WRITE | PORT_TYPE_READ;
-        PortInfo2.Reserved = 0;
+    // Set the pDescription field.
+    pwszStrings[2] = (PWSTR)pwszLocalPort;
 
-        // Copy the port name.
-        PortInfo2.pPortName = (PWSTR)pPortString;
-        cbPortName = (wcslen(pPort->pwszPortName) + 1) * sizeof(WCHAR);
-        CopyMemory(pPortString, pPort->pwszPortName, cbPortName);
-        pPortString += cbPortName;
-
-        // Copy the monitor name.
-        PortInfo2.pMonitorName = (PWSTR)pPortString;
-        CopyMemory(pPortString, pwszLocalMonitor, cbLocalMonitor);
-        pPortString += cbLocalMonitor;
-
-        // Copy the description.
-        PortInfo2.pDescription = (PWSTR)pPortString;
-        CopyMemory(pPortString, pwszLocalPort, cbLocalPort);
-        pPortString += cbLocalPort;
-
-        // Copy the structure and advance to the next one in the output buffer.
-        CopyMemory(pPortInfo, &PortInfo2, sizeof(PORT_INFO_2W));
-        pPortInfo += sizeof(PORT_INFO_2W);
-    }
-
-    *pcReturned = dwPortCount;
-    dwErrorCode = ERROR_SUCCESS;
-
-Cleanup:
-    return dwErrorCode;
+    // Copy the structure and advance to the next one in the output buffer.
+    *ppPortInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppPortInfo), dwPortInfo2Offsets, *ppPortInfoEnd);
+    (*ppPortInfo)++;
 }
 
 /**
@@ -590,20 +531,18 @@ BOOL WINAPI
 LocalmonEnumPorts(HANDLE hMonitor, PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
+    PBYTE pPortInfoEnd;
+    PLIST_ENTRY pEntry;
     PLOCALMON_HANDLE pLocalmon = (PLOCALMON_HANDLE)hMonitor;
+    PLOCALMON_PORT pPort;
 
     TRACE("LocalmonEnumPorts(%p, %S, %lu, %p, %lu, %p, %p)\n", hMonitor, pName, Level, pPorts, cbBuf, pcbNeeded, pcReturned);
 
-    // Sanity checks
-    if (!pLocalmon || (cbBuf && !pPorts) || !pcbNeeded || !pcReturned)
+    // Windows Server 2003's Local Port Monitor does absolutely no sanity checks here, not even for the Level parameter.
+    // As we implement a more modern MONITOR2-based Port Monitor, check at least our hMonitor.
+    if (!pLocalmon)
     {
-        dwErrorCode = ERROR_INVALID_PARAMETER;
-        goto Cleanup;
-    }
-
-    if (Level > 2)
-    {
-        dwErrorCode = ERROR_INVALID_LEVEL;
+        dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
     }
 
@@ -613,13 +552,42 @@ LocalmonEnumPorts(HANDLE hMonitor, PWSTR pName, DWORD Level, PBYTE pPorts, DWORD
 
     EnterCriticalSection(&pLocalmon->Section);
 
-    // The function behaves differently for each level.
-    if (Level == 1)
-        dwErrorCode = _LocalmonEnumPortsLevel1(pLocalmon, pPorts, cbBuf, pcbNeeded, pcReturned);
-    else if (Level == 2)
-        dwErrorCode = _LocalmonEnumPortsLevel2(pLocalmon, pPorts, cbBuf, pcbNeeded, pcReturned);
+    // Count the required buffer size and the number of ports.
+    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
+    {
+        pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
+
+        if (Level == 1)
+            _LocalmonGetPortLevel1(pPort, NULL, NULL, pcbNeeded);
+        else if (Level == 2)
+            _LocalmonGetPortLevel2(pPort, NULL, NULL, pcbNeeded);
+    }
+
+    // Check if the supplied buffer is large enough.
+    if (cbBuf < *pcbNeeded)
+    {
+        LeaveCriticalSection(&pLocalmon->Section);
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
+    }
+
+    // Copy over the Port information.
+    pPortInfoEnd = &pPorts[*pcbNeeded];
+
+    for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
+    {
+        pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
+
+        if (Level == 1)
+            _LocalmonGetPortLevel1(pPort, (PPORT_INFO_1W*)&pPorts, &pPortInfoEnd, NULL);
+        else if (Level == 2)
+            _LocalmonGetPortLevel2(pPort, (PPORT_INFO_2W*)&pPorts, &pPortInfoEnd, NULL);
+
+        (*pcReturned)++;
+    }
 
     LeaveCriticalSection(&pLocalmon->Section);
+    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     SetLastError(dwErrorCode);
@@ -729,6 +697,8 @@ LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle)
         goto Cleanup;
     }
 
+    EnterCriticalSection(&pLocalmon->Section);
+
     // Check if this is a FILE: port.
     if (_wcsicmp(pName, L"FILE:") == 0)
     {
@@ -739,13 +709,10 @@ LocalmonOpenPort(HANDLE hMonitor, PWSTR pName, PHANDLE pHandle)
         pPort->hFile = INVALID_HANDLE_VALUE;
 
         // Add it to the list of file ports.
-        EnterCriticalSection(&pLocalmon->Section);
         InsertTailList(&pLocalmon->FilePorts, &pPort->Entry);
     }
     else
     {
-        EnterCriticalSection(&pLocalmon->Section);
-
         // Check if the port name is valid.
         pPort = _FindPort(pLocalmon, pName);
         if (!pPort)

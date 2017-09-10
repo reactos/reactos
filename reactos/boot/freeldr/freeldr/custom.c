@@ -388,6 +388,8 @@ VOID OptionMenuReboot(VOID)
 {
     UiMessageBox("The system will now reboot.");
 
+#if defined(__i386__) || defined(_M_AMD64)
     DiskStopFloppyMotor();
+#endif
     Reboot();
 }

@@ -79,7 +79,7 @@ static ULONG WINAPI PropertyBag_Release(IPropertyBag2 *iface)
         {
             for (i=0; i < This->prop_count; i++)
             {
-                HeapFree(GetProcessHeap(), 0, This->properties[i].pstrName);
+                CoTaskMemFree(This->properties[i].pstrName);
                 VariantClear( This->values+i );
             }
         }
@@ -198,18 +198,14 @@ static HRESULT WINAPI PropertyBag_CountProperties(IPropertyBag2 *iface, ULONG *p
     return S_OK;
 }
 
-static HRESULT copy_propbag2(PROPBAG2 *dest, PROPBAG2 *src, BOOL useCoAlloc)
+static HRESULT copy_propbag2(PROPBAG2 *dest, PROPBAG2 *src)
 {
     dest->cfType = src->cfType;
     dest->clsid = src->clsid;
     dest->dwHint = src->dwHint;
     dest->dwType = src->dwType;
     dest->vt = src->vt;
-    if(useCoAlloc)
-        dest->pstrName = CoTaskMemAlloc((strlenW(src->pstrName)+1) * sizeof(WCHAR));
-    else
-        dest->pstrName = HeapAlloc(GetProcessHeap(), 0, (strlenW(src->pstrName)+1) * sizeof(WCHAR));
-
+    dest->pstrName = CoTaskMemAlloc((strlenW(src->pstrName)+1) * sizeof(WCHAR));
     if(!dest->pstrName)
         return E_OUTOFMEMORY;
 
@@ -236,7 +232,7 @@ static HRESULT WINAPI PropertyBag_GetPropertyInfo(IPropertyBag2 *iface, ULONG iP
 
     for (i=0; i < *pcProperties; i++)
     {
-        res = copy_propbag2(pPropBag+i, This->properties+iProperty+i, TRUE);
+        res = copy_propbag2(pPropBag+i, This->properties+iProperty+i);
         if (FAILED(res))
         {
             do {
@@ -296,7 +292,7 @@ HRESULT CreatePropertyBag2(PROPBAG2 *options, UINT count,
         else
             for (i=0; i < count; i++)
             {
-                res = copy_propbag2(This->properties+i, options+i, FALSE);
+                res = copy_propbag2(This->properties+i, options+i);
                 if (FAILED(res))
                     break;
                 This->properties[i].dwHint = i+1; /* 0 means unset, so we start with 1 */

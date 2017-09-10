@@ -167,8 +167,10 @@ LogfpAlloc(IN SIZE_T Size,
 static
 VOID NTAPI
 LogfpFree(IN PVOID Ptr,
-          IN ULONG Flags)
+          IN ULONG Flags,
+          IN ULONG Tag)
 {
+    UNREFERENCED_PARAMETER(Tag);
     RtlFreeHeap(GetProcessHeap(), Flags, Ptr);
 }
 
@@ -305,7 +307,7 @@ LogfCreate(PLOGFILE* LogFile,
     SIZE_T LogNameLen;
     BOOLEAN CreateNew;
 
-    pLogFile = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pLogFile));
+    pLogFile = LogfpAlloc(sizeof(*pLogFile), HEAP_ZERO_MEMORY, TAG_ELF);
     if (!pLogFile)
     {
         DPRINT1("Cannot allocate heap!\n");
@@ -313,9 +315,7 @@ LogfCreate(PLOGFILE* LogFile,
     }
 
     LogNameLen = (LogName ? wcslen(LogName) : 0) + 1;
-    pLogFile->LogName = RtlAllocateHeap(GetProcessHeap(),
-                                        HEAP_ZERO_MEMORY,
-                                        LogNameLen * sizeof(WCHAR));
+    pLogFile->LogName = LogfpAlloc(LogNameLen * sizeof(WCHAR), HEAP_ZERO_MEMORY, 0);
     if (pLogFile->LogName == NULL)
     {
         DPRINT1("Cannot allocate heap\n");
@@ -412,9 +412,9 @@ Quit:
             NtClose(pLogFile->FileHandle);
 
         if (pLogFile->LogName)
-            RtlFreeHeap(GetProcessHeap(), 0, pLogFile->LogName);
+            LogfpFree(pLogFile->LogName, 0, 0);
 
-        RtlFreeHeap(GetProcessHeap(), 0, pLogFile);
+        LogfpFree(pLogFile, 0, TAG_ELF);
     }
     else
     {
@@ -440,11 +440,11 @@ LogfClose(PLOGFILE LogFile,
 
     ElfCloseFile(&LogFile->LogFile);
     NtClose(LogFile->FileHandle);
-    RtlFreeHeap(GetProcessHeap(), 0, LogFile->LogName);
+    LogfpFree(LogFile->LogName, 0, 0);
 
     RtlDeleteResource(&LogFile->Lock);
 
-    RtlFreeHeap(GetProcessHeap(), 0, LogFile);
+    LogfpFree(LogFile, 0, TAG_ELF);
 
     return;
 }
@@ -583,7 +583,7 @@ ReadRecord(IN  PEVTLOGFILE LogFile,
     if (BytesNeeded)
         *BytesNeeded = 0;
 
-    UnicodeBuffer = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, BufSize);
+    UnicodeBuffer = LogfpAlloc(BufSize, HEAP_ZERO_MEMORY, TAG_ELF_BUF);
     if (UnicodeBuffer == NULL)
     {
         DPRINT1("Alloc failed!\n");
@@ -705,7 +705,7 @@ ReadRecord(IN  PEVTLOGFILE LogFile,
     Status = STATUS_SUCCESS;
 
 Quit:
-    RtlFreeHeap(GetProcessHeap(), 0, UnicodeBuffer);
+    LogfpFree(UnicodeBuffer, 0, TAG_ELF_BUF);
 
     return Status;
 }

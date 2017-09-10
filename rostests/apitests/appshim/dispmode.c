@@ -1,19 +1,8 @@
 /*
- * Copyright 2016 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     appshim_apitest
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Tests for display mode shims
+ * COPYRIGHT:   Copyright 2016 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -27,6 +16,7 @@
 #include <stdio.h>
 #include <strsafe.h>
 #include "wine/test.h"
+#include "apitest_iathook.h"
 
 static DWORD g_Version;
 #define WINVER_ANY     0
@@ -311,58 +301,6 @@ static void post_theme_no(void)
     }
 }
 
-static PIMAGE_IMPORT_DESCRIPTOR FindImportDescriptor(PBYTE DllBase, PCSTR DllName)
-{
-    ULONG Size;
-    PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor = RtlImageDirectoryEntryToData((HMODULE)DllBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &Size);
-    while (ImportDescriptor->Name && ImportDescriptor->OriginalFirstThunk)
-    {
-        PCHAR Name = (PCHAR)(DllBase + ImportDescriptor->Name);
-        if (!lstrcmpiA(Name, DllName))
-        {
-            return ImportDescriptor;
-        }
-        ImportDescriptor++;
-    }
-    return NULL;
-}
-
-static BOOL RedirectIat(HMODULE TargetDll, PCSTR DllName, PCSTR FunctionName, ULONG_PTR NewFunction, ULONG_PTR* OriginalFunction)
-{
-    PBYTE DllBase = (PBYTE)TargetDll;
-    PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor = FindImportDescriptor(DllBase, DllName);
-    if (ImportDescriptor)
-    {
-        // On loaded images, OriginalFirstThunk points to the name / ordinal of the function
-        PIMAGE_THUNK_DATA OriginalThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->OriginalFirstThunk);
-        // FirstThunk points to the resolved address.
-        PIMAGE_THUNK_DATA FirstThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->FirstThunk);
-        while (OriginalThunk->u1.AddressOfData && FirstThunk->u1.Function)
-        {
-            if (!IMAGE_SNAP_BY_ORDINAL32(OriginalThunk->u1.AddressOfData))
-            {
-                PIMAGE_IMPORT_BY_NAME ImportName = (PIMAGE_IMPORT_BY_NAME)(DllBase + OriginalThunk->u1.AddressOfData);
-                if (!lstrcmpiA((PCSTR)ImportName->Name, FunctionName))
-                {
-                    DWORD dwOld;
-                    VirtualProtect(&FirstThunk->u1.Function, sizeof(ULONG_PTR), PAGE_EXECUTE_READWRITE, &dwOld);
-                    *OriginalFunction = FirstThunk->u1.Function;
-                    FirstThunk->u1.Function = NewFunction;
-                    VirtualProtect(&FirstThunk->u1.Function, sizeof(ULONG_PTR), dwOld, &dwOld);
-                    return TRUE;
-                }
-            }
-            OriginalThunk++;
-            FirstThunk++;
-        }
-        skip("Unable to find the Import %s!%s\n", DllName, FunctionName);
-    }
-    else
-    {
-        skip("Unable to find the ImportDescriptor for %s\n", DllName);
-    }
-    return FALSE;
-}
 
 static BOOL hook_disp(HMODULE dll)
 {
@@ -370,11 +308,21 @@ static BOOL hook_disp(HMODULE dll)
         RedirectIat(dll, "user32.dll", "EnumDisplaySettingsA", (ULONG_PTR)mEnumDisplaySettingsA, (ULONG_PTR*)&pEnumDisplaySettingsA);
 }
 
+static VOID unhook_disp(HMODULE dll)
+{
+    RestoreIat(dll, "user32.dll", "ChangeDisplaySettingsA", (ULONG_PTR)pChangeDisplaySettingsA);
+    RestoreIat(dll, "user32.dll", "EnumDisplaySettingsA", (ULONG_PTR)pEnumDisplaySettingsA);
+}
+
 static BOOL hook_theme(HMODULE dll)
 {
     return RedirectIat(dll, "uxtheme.dll", "SetThemeAppProperties", (ULONG_PTR)mSetThemeAppProperties, (ULONG_PTR*)&pSetThemeAppProperties);
 }
 
+static VOID unhook_theme(HMODULE dll)
+{
+    RestoreIat(dll, "uxtheme.dll", "SetThemeAppProperties", (ULONG_PTR)pSetThemeAppProperties);
+}
 
 static void test_one(LPCSTR shim, DWORD dwReason, void(*pre)(), void(*post)(), void(*second)(void))
 {
@@ -424,24 +372,25 @@ static struct test_info
     DWORD winver;
     DWORD reason;
     BOOL(*hook)(HMODULE);
+    void(*unhook)(HMODULE);
     void(*pre)(void);
     void(*post)(void);
     void(*second)(void);
 } tests[] =
 {
     /* Success */
-    { "Force8BitColor", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, pre_8bit, post_8bit, post_8bit_no },
-    { "Force8BitColor", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, pre_8bit, post_8bit, post_8bit_no },
-    { "Force640x480", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, pre_640, post_640, post_640_no },
-    { "Force640x480", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, pre_640, post_640, post_640_no },
-    { "DisableThemes", L"\\acgenral.dll", WINVER_ANY, 1, hook_theme, pre_theme, post_theme, post_theme_no },
-    { "DisableThemes", L"\\acgenral.dll", _WIN32_WINNT_VISTA, 100, hook_theme, pre_theme, post_theme, post_theme_no },
+    { "Force8BitColor", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_8bit, post_8bit, post_8bit_no },
+    { "Force8BitColor", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp,pre_8bit, post_8bit, post_8bit_no },
+    { "Force640x480", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_640, post_640, post_640_no },
+    { "Force640x480", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp, pre_640, post_640, post_640_no },
+    { "DisableThemes", L"\\acgenral.dll", WINVER_ANY, 1, hook_theme, unhook_theme, pre_theme, post_theme, post_theme_no },
+    { "DisableThemes", L"\\acgenral.dll", _WIN32_WINNT_VISTA, 100, hook_theme, unhook_theme, pre_theme, post_theme, post_theme_no },
 
     /* No need to change anything */
-    { "Force8BitColor", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, pre_8bit_2, post_8bit_2, post_8bit_2_no },
-    { "Force8BitColor", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, pre_8bit_2, post_8bit_2, post_8bit_2_no },
-    { "Force640x480", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, pre_640_2, post_640_2, post_640_2_no },
-    { "Force640x480", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, pre_640_2, post_640_2, post_640_2_no },
+    { "Force8BitColor", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_8bit_2, post_8bit_2, post_8bit_2_no },
+    { "Force8BitColor", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp, pre_8bit_2, post_8bit_2, post_8bit_2_no },
+    { "Force640x480", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_640_2, post_640_2, post_640_2_no },
+    { "Force640x480", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp, pre_640_2, post_640_2, post_640_2_no },
 };
 
 
@@ -476,6 +425,7 @@ static void run_test(size_t n, BOOL unload)
         if (ret)
         {
             test_one(tests[n].name, tests[n].reason, tests[n].pre, tests[n].post, tests[n].second);
+            tests[n].unhook(dll);
         }
         else
         {

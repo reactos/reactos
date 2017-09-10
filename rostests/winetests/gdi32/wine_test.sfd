@@ -15,7 +15,7 @@ LayerCount: 2
 Layer: 0 1 "Back" 1
 Layer: 1 1 "Fore" 0
 XUID: [1021 905 592216984 1247726]
-FSType: 0
+FSType: 32767
 OS2Version: 2
 OS2_WeightWidthSlopeOnly: 0
 OS2_UseTypoMetrics: 1

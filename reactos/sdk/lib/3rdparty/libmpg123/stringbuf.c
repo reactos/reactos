@@ -1,7 +1,8 @@
 /*
 	stringbuf: mimicking a bit of C++ to more safely handle strings
 
-	copyright 2006-10 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2006-17 by the mpg123 project
+	    - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis
 */
@@ -15,6 +16,7 @@
 
 void attribute_align_arg mpg123_init_string(mpg123_string* sb)
 {
+	/* Handing in NULL here is a fatal mistake and rightfully so. */
 	sb->p = NULL;
 	sb->size = 0;
 	sb->fill = 0;
@@ -22,18 +24,24 @@ void attribute_align_arg mpg123_init_string(mpg123_string* sb)
 
 void attribute_align_arg mpg123_free_string(mpg123_string* sb)
 {
+	if(!sb)
+		return;
 	if(sb->p != NULL) free(sb->p);
 	mpg123_init_string(sb);
 }
 
 int attribute_align_arg mpg123_grow_string(mpg123_string* sb, size_t new)
 {
+	if(!sb)
+		return 0;
 	if(sb->size < new) return mpg123_resize_string(sb, new);
 	else return 1;
 }
 
 int attribute_align_arg mpg123_resize_string(mpg123_string* sb, size_t new)
 {
+	if(!sb)
+		return 0;
 	debug3("resizing string pointer %p from %lu to %lu", (void*) sb->p, (unsigned long)sb->size, (unsigned long)new);
 	if(new == 0)
 	{
@@ -62,9 +70,10 @@ int attribute_align_arg mpg123_copy_string(mpg123_string* from, mpg123_string* t
 {
 	size_t fill;
 	char  *text;
-	if(to == NULL) return -1;
 
 	debug2("called copy_string with %p -> %p", (void*)from, (void*)to);
+	if(to == NULL)
+		return 0;
 	if(from == NULL)
 	{
 		fill = 0;
@@ -78,7 +87,8 @@ int attribute_align_arg mpg123_copy_string(mpg123_string* from, mpg123_string* t
 
 	if(mpg123_resize_string(to, fill))
 	{
-		memcpy(to->p, text, fill);
+		if(fill) /* Avoid memcpy(NULL, NULL, 0) */
+			memcpy(to->p, text, fill);
 		to->fill = fill;
 		return 1;
 	}
@@ -88,12 +98,14 @@ int attribute_align_arg mpg123_copy_string(mpg123_string* from, mpg123_string* t
 int attribute_align_arg mpg123_add_string(mpg123_string* sb, const char* stuff)
 {
 	debug1("adding %s", stuff);
-	return mpg123_add_substring(sb, stuff, 0, strlen(stuff));
+	return mpg123_add_substring(sb, stuff, 0, stuff ? strlen(stuff) : 0);
 }
 
 int attribute_align_arg mpg123_add_substring(mpg123_string *sb, const char *stuff, size_t from, size_t count)
 {
 	debug("adding a substring");
+	if(!sb || !stuff)
+		return 0;
 	if(sb->fill) /* includes zero byte... */
 	{
 		if( (SIZE_MAX - sb->fill >= count) /* Avoid overflow. */
@@ -120,12 +132,16 @@ int attribute_align_arg mpg123_add_substring(mpg123_string *sb, const char *stuf
 
 int attribute_align_arg mpg123_set_substring(mpg123_string* sb, const char* stuff, size_t from, size_t count)
 {
+	if(!sb)
+		return 0;
 	sb->fill = 0;
 	return mpg123_add_substring(sb, stuff, from, count);
 }
 
 int attribute_align_arg mpg123_set_string(mpg123_string* sb, const char* stuff)
 {
+	if(!sb)
+		return 0;
 	sb->fill = 0;
 	return mpg123_add_string(sb, stuff);
 }
@@ -136,7 +152,7 @@ size_t attribute_align_arg mpg123_strlen(mpg123_string *sb, int utf8)
 	size_t bytelen;
 
 	/* Notions of empty string. If there's only a single character, it has to be the trailing zero, and if the first is the trailing zero anyway, we got empty. */
-	if(sb->fill < 2 || sb->p[0] == 0) return 0;
+	if(!sb || sb->fill < 2 || sb->p[0] == 0) return 0;
 
 	/* Find the first non-null character from the back.
 	   We already established that the first character is non-null

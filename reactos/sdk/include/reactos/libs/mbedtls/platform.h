@@ -290,6 +290,54 @@ int mbedtls_platform_set_nv_seed(
 #endif /* MBEDTLS_PLATFORM_NV_SEED_ALT */
 #endif /* MBEDTLS_ENTROPY_NV_SEED */
 
+#if !defined(MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT)
+
+/**
+ * \brief   Platform context structure
+ *
+ * \note    This structure may be used to assist platform-specific
+ *          setup/teardown operations.
+ */
+typedef struct {
+    char dummy; /**< Placeholder member as empty structs are not portable */
+}
+mbedtls_platform_context;
+
+#else
+#include "platform_alt.h"
+#endif /* !MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT */
+
+/**
+ * \brief   Perform any platform initialisation operations
+ *
+ * \param   ctx     mbed TLS context
+ *
+ * \return  0 if successful
+ *
+ * \note    This function is intended to allow platform specific initialisation,
+ *          and should be called before any other library functions. Its
+ *          implementation is platform specific, and by default, unless platform
+ *          specific code is provided, it does nothing.
+ *
+ *          Its use and whether its necessary to be called is dependent on the
+ *          platform.
+ */
+int mbedtls_platform_setup( mbedtls_platform_context *ctx );
+/**
+ * \brief   Perform any platform teardown operations
+ *
+ * \param   ctx     mbed TLS context
+ *
+ * \note    This function should be called after every other mbed TLS module has
+ *          been correctly freed using the appropriate free function.
+ *          Its implementation is platform specific, and by default, unless
+ *          platform specific code is provided, it does nothing.
+ *
+ *          Its use and whether its necessary to be called is dependent on the
+ *          platform.
+ */
+void mbedtls_platform_teardown( mbedtls_platform_context *ctx );
+
 #ifdef __cplusplus
 }
 #endif

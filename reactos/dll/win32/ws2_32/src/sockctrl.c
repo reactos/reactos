@@ -39,54 +39,62 @@ connect(IN SOCKET s,
         /* Get the Socket Context */
         if ((Socket = WsSockGetSocket(s)))
         {
-            while (TRUE)
+            if (!IsBadReadPtr(name, sizeof(struct sockaddr)))
             {
-                /* Make the call */
-                Status = Socket->Provider->Service.lpWSPConnect(s,
-                                                                name,
-                                                                namelen,
-                                                                NULL,
-                                                                NULL,
-                                                                NULL,
-                                                                NULL,
-                                                                &ErrorCode);
-
-                /* Check if error code was due to the host not being found */
-                if ((Status == SOCKET_ERROR) &&
-                    ((ErrorCode == WSAEHOSTUNREACH) ||
-                     (ErrorCode == WSAENETUNREACH)))
+                while (TRUE)
                 {
-                    /* Check if we can try again */
-                    if (TryAgain)
-                    {
-                        /* Save the old error code */
-                        OldErrorCode = ErrorCode;
+                    /* Make the call */
+                    Status = Socket->Provider->Service.lpWSPConnect(s,
+                                                                    name,
+                                                                    namelen,
+                                                                    NULL,
+                                                                    NULL,
+                                                                    NULL,
+                                                                    NULL,
+                                                                    &ErrorCode);
 
-                        /* Make sure we don't retry 3 times */
-                        TryAgain = FALSE;
-
-                        /* Make the RAS Auto-dial attempt */
-                        if (WSAttemptAutodialAddr(name, namelen)) continue;
-                    }
-                    else
+                    /* Check if error code was due to the host not being found */
+                    if ((Status == SOCKET_ERROR) &&
+                        ((ErrorCode == WSAEHOSTUNREACH) ||
+                         (ErrorCode == WSAENETUNREACH)))
                     {
-                        /* Restore the error code */
-                        ErrorCode = OldErrorCode;
+                        /* Check if we can try again */
+                        if (TryAgain)
+                        {
+                            /* Save the old error code */
+                            OldErrorCode = ErrorCode;
+
+                            /* Make sure we don't retry 3 times */
+                            TryAgain = FALSE;
+
+                            /* Make the RAS Auto-dial attempt */
+                            if (WSAttemptAutodialAddr(name, namelen)) continue;
+                        }
+                        else
+                        {
+                            /* Restore the error code */
+                            ErrorCode = OldErrorCode;
+                        }
                     }
+
+                    /* Break out of the loop */
+                    break;
                 }
 
-                /* Break out of the loop */
-                break;
+                /* Deference the Socket Context */
+                WsSockDereference(Socket);
+
+                /* Return Provider Value */
+                if (Status == ERROR_SUCCESS) return Status;
+
+                /* If everything seemed fine, then the WSP call failed itself */
+                if (ErrorCode == NO_ERROR) ErrorCode = WSASYSCALLFAILURE;
             }
-
-            /* Deference the Socket Context */
-            WsSockDereference(Socket);
-
-            /* Return Provider Value */
-            if (Status == ERROR_SUCCESS) return Status;
-
-            /* If everything seemed fine, then the WSP call failed itself */
-            if (ErrorCode == NO_ERROR) ErrorCode = WSASYSCALLFAILURE;
+            else
+            {
+                /* Invalid user pointer */
+                ErrorCode = WSAEFAULT;
+            }
         }
         else
         {
@@ -217,20 +225,31 @@ getsockname(IN SOCKET s,
         /* Get the Socket Context */
         if ((Socket = WsSockGetSocket(s)))
         {
-            /* Make the call */
-            Status = Socket->Provider->Service.lpWSPGetSockName(s,
-                                                                name,
-                                                                namelen,
-                                                                &ErrorCode);
+            if (name && namelen && (*namelen >= sizeof(*name)))
+            {
+                /* Make the call */
+                Status = Socket->Provider->Service.lpWSPGetSockName(s,
+                                                                    name,
+                                                                    namelen,
+                                                                    &ErrorCode);
 
-            /* Deference the Socket Context */
-            WsSockDereference(Socket);
+                /* Deference the Socket Context */
+                WsSockDereference(Socket);
 
-            /* Return Provider Value */
-            if (Status == ERROR_SUCCESS) return Status;
+                /* Return Provider Value */
+                if (Status == ERROR_SUCCESS) return Status;
 
-            /* If everything seemed fine, then the WSP call failed itself */
-            if (ErrorCode == NO_ERROR) ErrorCode = WSASYSCALLFAILURE;
+                /* If everything seemed fine, then the WSP call failed itself */
+                if (ErrorCode == NO_ERROR) ErrorCode = WSASYSCALLFAILURE;
+            }
+            else
+            {
+                /* Deference the Socket Context */
+                WsSockDereference(Socket);
+
+                /* name or namelen not valid */
+                ErrorCode = WSAEFAULT;
+            }
         }
         else
         {

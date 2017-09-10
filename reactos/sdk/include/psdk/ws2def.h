@@ -306,6 +306,8 @@ typedef USHORT ADDRESS_FAMILY;
 #define AI_FQDN                     0x00020000
 #define AI_FILESERVER               0x00040000
 
+#define AI_DISABLE_IDN_ENCODING 0x00080000
+
 #define NS_ALL                      0
 
 #define NS_SAP                      1

@@ -451,15 +451,15 @@ HvWriteHive(
 BOOLEAN
 CMAPI
 HvTrackCellRef(
-    PHV_TRACK_CELL_REF CellRef,
-    PHHIVE Hive,
-    HCELL_INDEX Cell
+    IN OUT PHV_TRACK_CELL_REF CellRef,
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell
 );
 
 VOID
 CMAPI
 HvReleaseFreeCellRefArray(
-    PHV_TRACK_CELL_REF CellRef
+    IN OUT PHV_TRACK_CELL_REF CellRef
 );
 
 /*
@@ -576,14 +576,14 @@ USHORT
 NTAPI
 CmpCopyName(
     IN PHHIVE Hive,
-    IN PWCHAR Destination,
+    OUT PWCHAR Destination,
     IN PUNICODE_STRING Source
 );
 
 VOID
 NTAPI
 CmpCopyCompressedName(
-    IN PWCHAR Destination,
+    OUT PWCHAR Destination,
     IN ULONG DestinationLength,
     IN PWCHAR Source,
     IN ULONG SourceLength
@@ -722,13 +722,13 @@ CmpAllocate(
     IN SIZE_T Size,
     IN BOOLEAN Paged,
     IN ULONG Tag
-    );
+);
 
 VOID
 NTAPI
 CmpFree(
     IN PVOID Ptr,
     IN ULONG Quota
-    );
+);
 
 #endif /* _CMLIB_H_ */

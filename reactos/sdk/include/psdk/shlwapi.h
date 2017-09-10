@@ -1853,6 +1853,12 @@ SHCreateStreamOnFileW(
 
 #define SHCreateStreamOnFile WINELIB_NAME_AW(SHCreateStreamOnFile)
 
+struct IStream*
+WINAPI
+SHCreateMemStream(
+  _In_reads_bytes_opt_(cbInit) const BYTE *pInit,
+  _In_ UINT cbInit);
+
 HRESULT
 WINAPI
 SHCreateStreamOnFileEx(

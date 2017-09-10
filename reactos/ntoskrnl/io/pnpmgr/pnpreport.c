@@ -181,12 +181,7 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     DPRINT("IoReportDetectedDevice (DeviceObject %p, *DeviceObject %p)\n",
       DeviceObject, DeviceObject ? *DeviceObject : NULL);
 
-    /* Create the service name (eg. ACPI_HAL) */
-    ServiceName.Buffer = DriverObject->DriverName.Buffer +
-       sizeof(DRIVER_ROOT_NAME) / sizeof(WCHAR) - 1;
-    ServiceName.Length = DriverObject->DriverName.Length -
-       sizeof(DRIVER_ROOT_NAME) + sizeof(WCHAR);
-    ServiceName.MaximumLength = ServiceName.Length;
+    ServiceName = DriverObject->DriverExtension->ServiceKeyName;
 
     /* If the interface type is unknown, treat it as internal */
     if (LegacyBusType == InterfaceTypeUndefined)

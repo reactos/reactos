@@ -26,3 +26,4 @@ Size = 10,8 МиБ
 License = GPL sürüm 3
 Description = Çalışan uygulamaların gereksinim duyduğu secur32.dll (ör: NTLM ...) yetkilendirme sağlayıcılarını sağlar.
 Size = 10,8 MiB
+

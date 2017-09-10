@@ -1,20 +1,9 @@
 /*
- * Copyright 2013 Mislav Blažević
- * Copyright 2015-2017 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS Application compatibility module
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     common structures / functions
+ * COPYRIGHT:   Copyright 2013 Mislav Blažević
+ *              Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #ifndef APPHELP_H
@@ -36,7 +25,7 @@ extern "C" {
 #define SDB_DATABASE_MAIN_DRIVERS 0x80040000
 
 typedef struct _SDB {
-    PDB db;
+    PDB pdb;
     BOOL auto_loaded;
 } SDB, *HSDB;
 
@@ -83,30 +72,38 @@ typedef struct tagSDBQUERYRESULT {
     GUID   rgGuidDB[SDB_MAX_SDBS];
 } SDBQUERYRESULT, *PSDBQUERYRESULT;
 
+#ifndef APPHELP_NOSDBPAPI
 #include "sdbpapi.h"
+#endif
 
 /* sdbapi.c */
 PWSTR SdbpStrDup(LPCWSTR string);
+DWORD SdbpStrsize(PCWSTR string);
 HSDB WINAPI SdbInitDatabase(DWORD, LPCWSTR);
 void WINAPI SdbReleaseDatabase(HSDB);
 BOOL WINAPI SdbGUIDToString(CONST GUID *Guid, PWSTR GuidString, SIZE_T Length);
+LPCWSTR WINAPI SdbTagToString(TAG tag);
 
 PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type);
 void WINAPI SdbCloseDatabase(PDB);
 BOOL WINAPI SdbIsNullGUID(CONST GUID *Guid);
 BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size);
-LPWSTR WINAPI SdbGetStringTagPtr(PDB db, TAGID tagid);
-TAGID WINAPI SdbFindFirstNamedTag(PDB db, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name);
+LPWSTR WINAPI SdbGetStringTagPtr(PDB pdb, TAGID tagid);
+TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name);
 
 /* sdbread.c */
-BOOL WINAPI SdbpReadData(PDB db, PVOID dest, DWORD offset, DWORD num);
-TAG WINAPI SdbGetTagFromTagID(PDB db, TAGID tagid);
-TAGID WINAPI SdbFindFirstTag(PDB db, TAGID parent, TAG tag);
-TAGID WINAPI SdbFindNextTag(PDB db, TAGID parent, TAGID prev_child);
-BOOL WINAPI SdbGetDatabaseID(PDB db, GUID* Guid);
-DWORD WINAPI SdbReadDWORDTag(PDB db, TAGID tagid, DWORD ret);
+BOOL WINAPI SdbpReadData(PDB pdb, PVOID dest, DWORD offset, DWORD num);
+TAG WINAPI SdbGetTagFromTagID(PDB pdb, TAGID tagid);
+TAGID WINAPI SdbFindFirstTag(PDB pdb, TAGID parent, TAG tag);
+TAGID WINAPI SdbFindNextTag(PDB pdb, TAGID parent, TAGID prev_child);
+BOOL WINAPI SdbGetDatabaseID(PDB pdb, GUID* Guid);
+DWORD WINAPI SdbReadDWORDTag(PDB pdb, TAGID tagid, DWORD ret);
+QWORD WINAPI SdbReadQWORDTag(PDB pdb, TAGID tagid, QWORD ret);
+TAGID WINAPI SdbGetFirstChild(PDB pdb, TAGID parent);
+TAGID WINAPI SdbGetNextChild(PDB pdb, TAGID parent, TAGID prev_child);
 
 /* sdbfileattr.c*/
+BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD attr_count);
 BOOL WINAPI SdbFreeFileAttributes(PATTRINFO attr_info);
 
 /* layer.c */
@@ -117,7 +114,8 @@ BOOL WINAPI SetPermLayerState(PCWSTR wszPath, PCWSTR wszLayer, DWORD dwFlags, BO
 /* hsdb.c */
 BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name, LPCWSTR env, DWORD flags, PSDBQUERYRESULT result);
 BOOL WINAPI SdbTagIDToTagRef(HSDB hsdb, PDB pdb, TAGID tiWhich, TAGREF* ptrWhich);
-
+BOOL WINAPI SdbTagRefToTagID(HSDB hsdb, TAGREF trWhich, PDB* ppdb, TAGID* ptiWhich);
+BOOL WINAPI SdbUnpackAppCompatData(HSDB hsdb, LPCWSTR pszImageName, PVOID pData, PSDBQUERYRESULT pQueryResult);
 
 #define ATTRIBUTE_AVAILABLE 0x1
 #define ATTRIBUTE_FAILED 0x2

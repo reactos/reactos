@@ -547,7 +547,6 @@ static void EMF_Update_MF_Xform(HDC hdc, const enum_emh_data *info)
     if (!SetWorldTransform(hdc, &final_trans))
     {
         __debugbreak();
-        SetWorldTransform(hdc, &final_trans);
         ERR("World transform failed!\n");
     }
 }
@@ -787,6 +786,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             break;
         info->state.mode = pSetMapMode->iMode;
         EMF_SetMapMode(hdc, info);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
 	break;
       }
     case EMR_SETBKMODE:
@@ -888,12 +891,16 @@ BOOL WINAPI PlayEnhMetaFileRecord(
         info->state.wndOrgY = pSetWindowOrgEx->ptlOrigin.y;
 
         TRACE("SetWindowOrgEx: %d,%d\n", info->state.wndOrgX, info->state.wndOrgY);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
         break;
       }
     case EMR_SETWINDOWEXTEX:
       {
 	const EMRSETWINDOWEXTEX *pSetWindowExtEx = (const EMRSETWINDOWEXTEX *)mr;
-
+	
         if (info->state.mode != MM_ISOTROPIC && info->state.mode != MM_ANISOTROPIC)
 	    break;
         info->state.wndExtX = pSetWindowExtEx->szlExtent.cx;
@@ -902,6 +909,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             EMF_FixIsotropic(hdc, info);
 
         TRACE("SetWindowExtEx: %d,%d\n",info->state.wndExtX, info->state.wndExtY);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
 	break;
       }
     case EMR_SETVIEWPORTORGEX:
@@ -911,6 +922,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
         info->state.vportOrgX = pSetViewportOrgEx->ptlOrigin.x;
         info->state.vportOrgY = pSetViewportOrgEx->ptlOrigin.y;
         TRACE("SetViewportOrgEx: %d,%d\n", info->state.vportOrgX, info->state.vportOrgY);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
 	break;
       }
     case EMR_SETVIEWPORTEXTEX:
@@ -924,6 +939,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
         if (info->state.mode == MM_ISOTROPIC)
             EMF_FixIsotropic(hdc, info);
         TRACE("SetViewportExtEx: %d,%d\n", info->state.vportExtX, info->state.vportExtY);
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
 	break;
       }
     case EMR_CREATEPEN:
@@ -1140,9 +1159,9 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	rc.top = pExtTextOutA->emrtext.rcl.top;
 	rc.right = pExtTextOutA->emrtext.rcl.right;
 	rc.bottom = pExtTextOutA->emrtext.rcl.bottom;
-        TRACE("EMR_EXTTEXTOUTA: x,y = %d, %d. rect = %d, %d - %d, %d. flags %08x\n",
+        TRACE("EMR_EXTTEXTOUTA: x,y = %d, %d. rect = %s. flags %08x\n",
               pExtTextOutA->emrtext.ptlReference.x, pExtTextOutA->emrtext.ptlReference.y,
-              rc.left, rc.top, rc.right, rc.bottom, pExtTextOutA->emrtext.fOptions);
+              wine_dbgstr_rect(&rc), pExtTextOutA->emrtext.fOptions);
 
         old_mode = SetGraphicsMode(hdc, pExtTextOutA->iGraphicsMode);
         /* Reselect the font back into the dc so that the transformation
@@ -1176,9 +1195,9 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	rc.top = pExtTextOutW->emrtext.rcl.top;
 	rc.right = pExtTextOutW->emrtext.rcl.right;
 	rc.bottom = pExtTextOutW->emrtext.rcl.bottom;
-        TRACE("EMR_EXTTEXTOUTW: x,y = %d, %d.  rect = %d, %d - %d, %d. flags %08x\n",
+        TRACE("EMR_EXTTEXTOUTW: x,y = %d, %d.  rect = %s. flags %08x\n",
               pExtTextOutW->emrtext.ptlReference.x, pExtTextOutW->emrtext.ptlReference.y,
-              rc.left, rc.top, rc.right, rc.bottom, pExtTextOutW->emrtext.fOptions);
+              wine_dbgstr_rect(&rc), pExtTextOutW->emrtext.fOptions);
 
         old_mode = SetGraphicsMode(hdc, pExtTextOutW->iGraphicsMode);
         /* Reselect the font back into the dc so that the transformation
@@ -1232,13 +1251,18 @@ BOOL WINAPI PlayEnhMetaFileRecord(
     case EMR_EXTSELECTCLIPRGN:
       {
 	const EMREXTSELECTCLIPRGN *lpRgn = (const EMREXTSELECTCLIPRGN *)mr;
+#ifdef __REACTOS__
 	const RGNDATA *pRgnData = (const RGNDATA *)lpRgn->RgnData;
 	DWORD dwSize = sizeof(RGNDATAHEADER) + pRgnData->rdh.nCount * sizeof(RECT);
+#endif
 	HRGN hRgn = 0;
 
         if (mr->nSize >= sizeof(*lpRgn) + sizeof(RGNDATAHEADER))
+#ifdef __REACTOS__
             hRgn = ExtCreateRegion( &info->init_transform, dwSize, pRgnData );
-
+#else
+            hRgn = ExtCreateRegion( &info->init_transform, 0, (const RGNDATA *)lpRgn->RgnData );
+#endif
 	ExtSelectClipRgn(hdc, hRgn, (INT)(lpRgn->iMode));
 	/* ExtSelectClipRgn created a copy of the region */
 	DeleteObject(hRgn);
@@ -1255,6 +1279,10 @@ BOOL WINAPI PlayEnhMetaFileRecord(
       {
         const EMRSETWORLDTRANSFORM *lpXfrm = (const EMRSETWORLDTRANSFORM *)mr;
         info->state.world_transform = lpXfrm->xform;
+
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
         break;
       }
 
@@ -1410,6 +1438,9 @@ BOOL WINAPI PlayEnhMetaFileRecord(
              lpScaleViewportExtEx->xNum,lpScaleViewportExtEx->xDenom,
              lpScaleViewportExtEx->yNum,lpScaleViewportExtEx->yDenom);
 
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
         break;
       }
 
@@ -1435,6 +1466,9 @@ BOOL WINAPI PlayEnhMetaFileRecord(
              lpScaleWindowExtEx->xNum,lpScaleWindowExtEx->xDenom,
              lpScaleWindowExtEx->yNum,lpScaleWindowExtEx->yDenom);
 
+        if (!IS_WIN9X())
+            EMF_Update_MF_Xform(hdc, info);
+
         break;
       }
 
@@ -1447,14 +1481,20 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             info->state.world_transform.eM11 = info->state.world_transform.eM22 = 1;
             info->state.world_transform.eM12 = info->state.world_transform.eM21 = 0;
             info->state.world_transform.eDx  = info->state.world_transform.eDy  = 0;
+            if (!IS_WIN9X())
+                EMF_Update_MF_Xform(hdc, info);
             break;
         case MWT_LEFTMULTIPLY:
             CombineTransform(&info->state.world_transform, &lpModifyWorldTrans->xform,
                              &info->state.world_transform);
+            if (!IS_WIN9X())
+                ModifyWorldTransform(hdc, &lpModifyWorldTrans->xform, MWT_LEFTMULTIPLY);
             break;
         case MWT_RIGHTMULTIPLY:
             CombineTransform(&info->state.world_transform, &info->state.world_transform,
                              &lpModifyWorldTrans->xform);
+            if (!IS_WIN9X())
+                EMF_Update_MF_Xform(hdc, info);
             break;
         default:
             FIXME("Unknown imode %d\n", lpModifyWorldTrans->iMode);
@@ -1824,6 +1864,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             HBITMAP hBmp = 0, hBmpOld = 0;
             const BITMAPINFO *pbi = (const BITMAPINFO *)((const BYTE *)mr + pBitBlt->offBmiSrc);
 
+            SetGraphicsMode(hdcSrc, GM_ADVANCED);
             SetWorldTransform(hdcSrc, &pBitBlt->xformSrc);
 
             hBrush = CreateSolidBrush(pBitBlt->crBkColorSrc);
@@ -1866,6 +1907,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             HBITMAP hBmp = 0, hBmpOld = 0;
             const BITMAPINFO *pbi = (const BITMAPINFO *)((const BYTE *)mr + pStretchBlt->offBmiSrc);
 
+            SetGraphicsMode(hdcSrc, GM_ADVANCED);
             SetWorldTransform(hdcSrc, &pStretchBlt->xformSrc);
 
             hBrush = CreateSolidBrush(pStretchBlt->crBkColorSrc);
@@ -1908,6 +1950,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             const BITMAPINFO *pbi = (const BITMAPINFO *)((const BYTE *)mr + pAlphaBlend->offBmiSrc);
             void *bits;
 
+            SetGraphicsMode(hdcSrc, GM_ADVANCED);
             SetWorldTransform(hdcSrc, &pAlphaBlend->xformSrc);
 
             hBmp = CreateDIBSection(hdc, pbi, pAlphaBlend->iUsageSrc, &bits, NULL, 0);
@@ -1933,6 +1976,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	HBITMAP hBmp, hBmpOld, hBmpMask;
 	const BITMAPINFO *pbi;
 
+        SetGraphicsMode(hdcSrc, GM_ADVANCED);
 	SetWorldTransform(hdcSrc, &pMaskBlt->xformSrc);
 
 	hBrush = CreateSolidBrush(pMaskBlt->crBkColorSrc);
@@ -1981,6 +2025,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	const BITMAPINFO *pbi;
 	POINT pts[3];
 
+        SetGraphicsMode(hdcSrc, GM_ADVANCED);
 	SetWorldTransform(hdcSrc, &pPlgBlt->xformSrc);
 
 	pts[0].x = pPlgBlt->aptlDest[0].x; pts[0].y = pPlgBlt->aptlDest[0].y;
@@ -2179,6 +2224,14 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	break;
     }
 
+    case EMR_GRADIENTFILL:
+    {
+        EMRGRADIENTFILL *grad = (EMRGRADIENTFILL *)mr;
+        GdiGradientFill( hdc, grad->Ver, grad->nVer, grad->Ver + grad->nVer,
+                         grad->nTri, grad->ulMode );
+        break;
+    }
+
     case EMR_POLYDRAW16:
     case EMR_GLSRECORD:
     case EMR_GLSBOUNDEDRECORD:
@@ -2192,7 +2245,6 @@ BOOL WINAPI PlayEnhMetaFileRecord(
     case EMR_SETICMPROFILEA:
     case EMR_SETICMPROFILEW:
     case EMR_TRANSPARENTBLT:
-    case EMR_GRADIENTFILL:
     case EMR_SETLINKEDUFI:
     case EMR_COLORMATCHTOTARGETW:
     case EMR_CREATECOLORSPACEW:
@@ -2206,8 +2258,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
   tmprc.left = tmprc.top = 0;
   tmprc.right = tmprc.bottom = 1000;
   LPtoDP(hdc, (POINT*)&tmprc, 2);
-  TRACE("L:0,0 - 1000,1000 -> D:%d,%d - %d,%d\n", tmprc.left,
-	tmprc.top, tmprc.right, tmprc.bottom);
+  TRACE("L:0,0 - 1000,1000 -> D:%s\n", wine_dbgstr_rect(&tmprc));
 
   return TRUE;
 }
@@ -2375,8 +2426,7 @@ BOOL WINAPI EnumEnhMetaFile(
             double xSrcPixSize, ySrcPixSize, xscale, yscale;
             XFORM xform;
 
-            TRACE("rect: %d,%d - %d,%d. rclFrame: %d,%d - %d,%d\n",
-               lpRect->left, lpRect->top, lpRect->right, lpRect->bottom,
+            TRACE("rect: %s. rclFrame: (%d,%d)-(%d,%d)\n", wine_dbgstr_rect(lpRect),
                emh->rclFrame.left, emh->rclFrame.top, emh->rclFrame.right,
                emh->rclFrame.bottom);
 
@@ -2421,11 +2471,6 @@ BOOL WINAPI EnumEnhMetaFile(
 	TRACE("Calling EnumFunc with record %s, size %d\n", get_emr_name(emr->iType), emr->nSize);
 	ret = (*callback)(hdc, ht, emr, emh->nHandles, (LPARAM)data);
 	offset += emr->nSize;
-
-        /* WinNT - update the transform (win9x updates when the next graphics
-           output record is played). */
-        if (hdc && !IS_WIN9X())
-            EMF_Update_MF_Xform(hdc, info);
     }
 
     if (hdc)

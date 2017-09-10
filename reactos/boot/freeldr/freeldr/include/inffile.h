@@ -39,7 +39,7 @@ typedef PULONG HINF, *PHINF;
 typedef struct _INFCONTEXT
 {
   PVOID Inf;
-//  PVOID CurrentInf;
+  PVOID CurrentInf;
   PVOID Section;
   PVOID Line;
 } INFCONTEXT, *PINFCONTEXT;

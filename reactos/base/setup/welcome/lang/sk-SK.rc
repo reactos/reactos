@@ -8,33 +8,33 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Vitajte"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Vitajte v operačnom systéme ReactOS.\n\nKliknite na tlačidlo v ľavom stĺpci."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Vitajte v operačnom systéme ReactOS.\n\nKliknite na tlačidlo v ľavom stĺpci."
 
-    IDS_CHECKTEXT "Zobraziť toto okno aj nabudúce"
-    IDS_CLOSETEXT "Koniec"
+    IDS_CHECKTEXT "&Zobraziť toto okno aj nabudúce"
+    IDS_CLOSETEXT "&Koniec"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Inštalovať ReactOS"
-    IDS_TOPICBUTTON1 "Prezerať toto CD"
-    IDS_TOPICBUTTON2 "Koniec"
+    IDS_TOPIC_BUTTON0 "&Inštalovať ReactOS"
+    IDS_TOPIC_BUTTON1 "&Prezerať toto CD"
+    IDS_TOPIC_BUTTON2 "&Koniec"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Inštalovať ReactOS"
-    IDS_TOPICTITLE1 "Prezerať toto CD"
-    IDS_TOPICTITLE2 "Koniec"
+    IDS_TOPIC_TITLE0 "Inštalovať ReactOS"
+    IDS_TOPIC_TITLE1 "Prezerať toto CD"
+    IDS_TOPIC_TITLE2 "Koniec"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Nainštaluje ReactOS na Váš počítač alebo zaktualizuje už existujúci systém."
-    IDS_TOPICDESC1 "Prezerať toto CD."
-    IDS_TOPICDESC2 "Kliknutím ukončíte tento program."
+    IDS_TOPIC_DESC0 "Nainštaluje ReactOS na Váš počítač alebo zaktualizuje už existujúci systém."
+    IDS_TOPIC_DESC1 "Prezerať toto CD."
+    IDS_TOPIC_DESC2 "Kliknutím ukončíte tento program."
 END

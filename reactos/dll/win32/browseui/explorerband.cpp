@@ -86,16 +86,6 @@ HRESULT GetDisplayName(LPCITEMIDLIST pidlDirectory,TCHAR *szDisplayName,UINT cch
     return hr;
 }
 
-extern "C"
-HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv)
-{
-#ifdef __REACTOS__
-    return ShellObjectCreator<CExplorerBand>(riid, ppv);
-#else
-    return S_OK;
-#endif
-}
-
 /*
  This is a Windows hack, because shell event messages in Windows gives an 
  ill-formed PIDL stripped from useful data that parses incorrectly with SHGetFileInfo.
@@ -584,11 +574,14 @@ HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, 
 
     /* Get the name of the node */
     WCHAR wszDisplayName[MAX_PATH];
-    if (!ILGetDisplayNameEx(psfParent, pElt, wszDisplayName, ILGDN_INFOLDER))
-    {
-        ERR("Failed to get node name\n");
+    STRRET strret;
+    hr = psfParent->GetDisplayNameOf(pEltRelative, SHGDN_INFOLDER, &strret);
+    if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
-    }
+
+    hr = StrRetToBufW(&strret, pEltRelative, wszDisplayName, MAX_PATH);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return NULL;
 
     /* Get the icon of the node */
     INT iIcon = SHMapPIDLToSystemImageListIndex(psfParent, pEltRelative, NULL);

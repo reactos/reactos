@@ -6,6 +6,7 @@ spec2def(aclayers.dll layer.spec)
 list(APPEND SOURCE
     dispmode.c
     versionlie.c
+    vmhorizon.c
     main.c
     layer.spec)
 

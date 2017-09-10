@@ -53,6 +53,8 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
+#include "wingdi.h"
+#include "winnls.h"
 
 #include "wine/test.h"
 
@@ -78,6 +80,7 @@ static struct {
 static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
 static int (WINAPI *pGetMouseMovePointsEx) (UINT, LPMOUSEMOVEPOINT, LPMOUSEMOVEPOINT, int, DWORD);
 static UINT (WINAPI *pGetRawInputDeviceList) (PRAWINPUTDEVICELIST, PUINT, UINT);
+static int  (WINAPI *pGetWindowRgnBox)(HWND, LPRECT);
 
 #define MAXKEYEVENTS 12
 #define MAXKEYMESSAGES MAXKEYEVENTS /* assuming a key event generates one
@@ -162,6 +165,7 @@ static void init_function_pointers(void)
     GET_PROC(SendInput)
     GET_PROC(GetMouseMovePointsEx)
     GET_PROC(GetRawInputDeviceList)
+    GET_PROC(GetWindowRgnBox)
 
 #undef GET_PROC
 }
@@ -1647,6 +1651,8 @@ static void test_ToUnicode(void)
     const BYTE SC_RETURN = 0x1c, SC_TAB = 0x0f, SC_A = 0x1e;
     const BYTE HIGHEST_BIT = 0x80;
     int i, ret;
+    BOOL us_kbd = (GetKeyboardLayout(0) == (HKL)(ULONG_PTR)0x04090409);
+
     for(i=0; i<256; i++)
         state[i]=0;
 
@@ -1673,7 +1679,10 @@ static void test_ToUnicode(void)
 
         if(!vk)
         {
-            short vk_ret = VkKeyScanW(utests[i].chr);
+            short vk_ret;
+
+            if (!us_kbd) continue;
+            vk_ret = VkKeyScanW(utests[i].chr);
             if (vk_ret == -1) continue;
             vk = vk_ret & 0xff;
             if (vk_ret & 0x100) mod |= shift;
@@ -1921,8 +1930,15 @@ static void test_Input_mouse(void)
     struct thread_data thread_data;
     HANDLE thread;
     DWORD thread_id;
-    POINT pt;
+    WNDCLASSA wclass;
+    POINT pt, pt_org;
+    int region_type;
+    HRGN hregion;
+    RECT region;
+    BOOL ret;
     MSG msg;
+
+    GetCursorPos(&pt_org);
 
     button_win = CreateWindowA("button", "button", WS_VISIBLE | WS_POPUP,
             100, 100, 100, 100, 0, NULL, NULL, NULL);
@@ -2123,6 +2139,224 @@ static void test_Input_mouse(void)
     ok(got_button_up, "expected WM_LBUTTONUP message\n");
     DestroyWindow(hwnd);
     ok(ReleaseCapture(), "ReleaseCapture failed\n");
+
+    wclass.style         = 0;
+    wclass.lpfnWndProc   = WndProc;
+    wclass.cbClsExtra    = 0;
+    wclass.cbWndExtra    = 0;
+    wclass.hInstance     = GetModuleHandleA(NULL);
+    wclass.hIcon         = LoadIconA(0, (LPCSTR)IDI_APPLICATION);
+    wclass.hCursor       = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
+    wclass.hbrBackground = CreateSolidBrush(RGB(128, 128, 128));
+    wclass.lpszMenuName  = NULL;
+    wclass.lpszClassName = "InputLayeredTestClass";
+    RegisterClassA( &wclass );
+
+    /* click through layered window with alpha channel / color key */
+    hwnd = CreateWindowA(wclass.lpszClassName, "InputLayeredTest",
+            WS_VISIBLE | WS_POPUP, 100, 100, 100, 100, button_win, NULL, NULL, NULL);
+    ok(hwnd != NULL, "CreateWindowEx failed\n");
+
+    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    SetWindowLongA(hwnd, GWL_EXSTYLE, GetWindowLongA(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+    ret = SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+    ok(ret, "SetLayeredWindowAttributes failed\n");
+    while (wait_for_message(&msg)) DispatchMessageA(&msg);
+    Sleep(100);
+
+    if (pGetWindowRgnBox)
+    {
+        region_type = pGetWindowRgnBox(hwnd, &region);
+        ok(region_type == ERROR, "expected ERROR, got %d\n", region_type);
+    }
+
+    got_button_down = got_button_up = FALSE;
+    simulate_click(TRUE, 150, 150);
+    while (wait_for_message(&msg))
+    {
+        DispatchMessageA(&msg);
+
+        if (msg.message == WM_LBUTTONDOWN)
+        {
+            ok(msg.hwnd == hwnd, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_down = TRUE;
+        }
+        else if (msg.message == WM_LBUTTONUP)
+        {
+            ok(msg.hwnd == hwnd, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_up = TRUE;
+            break;
+        }
+    }
+    ok(got_button_down, "expected WM_LBUTTONDOWN message\n");
+    ok(got_button_up, "expected WM_LBUTTONUP message\n");
+
+    ret = SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
+    ok(ret, "SetLayeredWindowAttributes failed\n");
+    while (wait_for_message(&msg)) DispatchMessageA(&msg);
+    Sleep(100);
+
+    if (pGetWindowRgnBox)
+    {
+        region_type = pGetWindowRgnBox(hwnd, &region);
+        ok(region_type == ERROR, "expected ERROR, got %d\n", region_type);
+    }
+
+    got_button_down = got_button_up = FALSE;
+    simulate_click(TRUE, 150, 150);
+    while (wait_for_message(&msg))
+    {
+        DispatchMessageA(&msg);
+
+        if (msg.message == WM_LBUTTONDOWN)
+        {
+            todo_wine
+            ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_down = TRUE;
+        }
+        else if (msg.message == WM_LBUTTONUP)
+        {
+            todo_wine
+            ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_up = TRUE;
+            break;
+        }
+    }
+    ok(got_button_down || broken(!got_button_down), "expected WM_LBUTTONDOWN message\n");
+    ok(got_button_up, "expected WM_LBUTTONUP message\n");
+
+    ret = SetLayeredWindowAttributes(hwnd, RGB(0, 255, 0), 255, LWA_ALPHA | LWA_COLORKEY);
+    ok(ret, "SetLayeredWindowAttributes failed\n");
+    while (wait_for_message(&msg)) DispatchMessageA(&msg);
+    Sleep(100);
+
+    if (pGetWindowRgnBox)
+    {
+        region_type = pGetWindowRgnBox(hwnd, &region);
+        ok(region_type == ERROR, "expected ERROR, got %d\n", region_type);
+    }
+
+    got_button_down = got_button_up = FALSE;
+    simulate_click(TRUE, 150, 150);
+    while (wait_for_message(&msg))
+    {
+        DispatchMessageA(&msg);
+
+        if (msg.message == WM_LBUTTONDOWN)
+        {
+            ok(msg.hwnd == hwnd, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_down = TRUE;
+        }
+        else if (msg.message == WM_LBUTTONUP)
+        {
+            ok(msg.hwnd == hwnd, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_up = TRUE;
+            break;
+        }
+    }
+    ok(got_button_down, "expected WM_LBUTTONDOWN message\n");
+    ok(got_button_up, "expected WM_LBUTTONUP message\n");
+
+    ret = SetLayeredWindowAttributes(hwnd, RGB(128, 128, 128), 0, LWA_COLORKEY);
+    ok(ret, "SetLayeredWindowAttributes failed\n");
+    while (wait_for_message(&msg)) DispatchMessageA(&msg);
+    Sleep(100);
+
+    if (pGetWindowRgnBox)
+    {
+        region_type = pGetWindowRgnBox(hwnd, &region);
+        ok(region_type == ERROR, "expected ERROR, got %d\n", region_type);
+    }
+
+    got_button_down = got_button_up = FALSE;
+    simulate_click(TRUE, 150, 150);
+    while (wait_for_message(&msg))
+    {
+        DispatchMessageA(&msg);
+
+        if (msg.message == WM_LBUTTONDOWN)
+        {
+            ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_down = TRUE;
+        }
+        else if (msg.message == WM_LBUTTONUP)
+        {
+            ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_up = TRUE;
+            break;
+        }
+    }
+    ok(got_button_down, "expected WM_LBUTTONDOWN message\n");
+    ok(got_button_up, "expected WM_LBUTTONUP message\n");
+
+    SetWindowLongA(hwnd, GWL_EXSTYLE, GetWindowLongA(hwnd, GWL_EXSTYLE) & ~WS_EX_LAYERED);
+    while (wait_for_message(&msg)) DispatchMessageA(&msg);
+    Sleep(100);
+
+    if (pGetWindowRgnBox)
+    {
+        region_type = pGetWindowRgnBox(hwnd, &region);
+        ok(region_type == ERROR, "expected ERROR, got %d\n", region_type);
+    }
+
+    got_button_down = got_button_up = FALSE;
+    simulate_click(TRUE, 150, 150);
+    while (wait_for_message(&msg))
+    {
+        DispatchMessageA(&msg);
+
+        if (msg.message == WM_LBUTTONDOWN)
+        {
+            ok(msg.hwnd == hwnd, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_down = TRUE;
+        }
+        else if (msg.message == WM_LBUTTONUP)
+        {
+            ok(msg.hwnd == hwnd, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_up = TRUE;
+            break;
+        }
+    }
+    ok(got_button_down, "expected WM_LBUTTONDOWN message\n");
+    ok(got_button_up, "expected WM_LBUTTONUP message\n");
+
+    hregion = CreateRectRgn(0, 0, 10, 10);
+    ok(hregion != NULL, "CreateRectRgn failed\n");
+    ret = SetWindowRgn(hwnd, hregion, TRUE);
+    ok(ret, "SetWindowRgn failed\n");
+    DeleteObject(hregion);
+    while (wait_for_message(&msg)) DispatchMessageA(&msg);
+    Sleep(1000);
+
+    if (pGetWindowRgnBox)
+    {
+        region_type = pGetWindowRgnBox(hwnd, &region);
+        ok(region_type == SIMPLEREGION, "expected SIMPLEREGION, got %d\n", region_type);
+    }
+
+    got_button_down = got_button_up = FALSE;
+    simulate_click(TRUE, 150, 150);
+    while (wait_for_message(&msg))
+    {
+        DispatchMessageA(&msg);
+
+        if (msg.message == WM_LBUTTONDOWN)
+        {
+            ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_down = TRUE;
+        }
+        else if (msg.message == WM_LBUTTONUP)
+        {
+            ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
+            got_button_up = TRUE;
+            break;
+        }
+    }
+    ok(got_button_down, "expected WM_LBUTTONDOWN message\n");
+    ok(got_button_up, "expected WM_LBUTTONUP message\n");
+
+    DestroyWindow(hwnd);
+    SetCursorPos(pt_org.x, pt_org.y);
 
     CloseHandle(thread_data.start_event);
     CloseHandle(thread_data.end_event);
@@ -2493,6 +2727,36 @@ static void test_GetKeyState(void)
     CloseHandle(semaphores[1]);
 }
 
+static void test_OemKeyScan(void)
+{
+    DWORD ret, expect, vkey, scan;
+    WCHAR oem, wchr;
+    char oem_char;
+
+    for (oem = 0; oem < 0x200; oem++)
+    {
+        ret = OemKeyScan( oem );
+
+        oem_char = LOBYTE( oem );
+        if (!OemToCharBuffW( &oem_char, &wchr, 1 ))
+            expect = -1;
+        else
+        {
+            vkey = VkKeyScanW( wchr );
+            scan = MapVirtualKeyW( LOBYTE( vkey ), MAPVK_VK_TO_VSC );
+            if (!scan)
+                expect = -1;
+            else
+            {
+                vkey &= 0xff00;
+                vkey <<= 8;
+                expect = vkey | scan;
+            }
+        }
+        ok( ret == expect, "%04x: got %08x expected %08x\n", oem, ret, expect );
+    }
+}
+
 START_TEST(input)
 {
     init_function_pointers();
@@ -2516,6 +2780,7 @@ START_TEST(input)
     test_key_names();
     test_attach_input();
     test_GetKeyState();
+    test_OemKeyScan();
 
     if(pGetMouseMovePointsEx)
         test_GetMouseMovePointsEx();

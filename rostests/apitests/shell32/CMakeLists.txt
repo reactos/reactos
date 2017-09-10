@@ -13,6 +13,7 @@ add_executable(shell32_apitest
     CShellDesktop.cpp
     CShellLink.cpp
     menu.cpp
+    PathResolve.cpp
     ShellExecuteEx.cpp
     shelltest.cpp
     SHParseDisplayName.cpp

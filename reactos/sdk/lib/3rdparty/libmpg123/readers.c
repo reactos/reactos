@@ -1049,8 +1049,10 @@ static int default_init(mpg123_handle *fr)
 	if(fr->p.icy_interval > 0) fr->rdat.lseek = nix_lseek;
 #endif
 
-	fr->rdat.filelen = get_fileinfo(fr);
+	fr->rdat.filelen = fr->p.flags & MPG123_NO_PEEK_END ? -1 : get_fileinfo(fr);
 	fr->rdat.filepos = 0;
+	if(fr->p.flags & MPG123_FORCE_SEEKABLE)
+		fr->rdat.flags |= READER_SEEKABLE;
 	/*
 		Don't enable seeking on ICY streams, just plain normal files.
 		This check is necessary since the client can enforce ICY parsing on files that would otherwise be seekable.

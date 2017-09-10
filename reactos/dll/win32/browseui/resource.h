@@ -60,6 +60,10 @@
 #define IDM_TASKBAR_TOOLBARS_QUICKLAUNCH      4
 #define IDM_TASKBAR_TOOLBARS_NEW              1
 
+#define IDM_BAND_MENU                       269
+#define IDM_BAND_TITLE                   0xA200
+#define IDM_BAND_CLOSE                   0xA201
+
 /* Random id for band close button, feel free to change it */
 #define IDM_BASEBAR_CLOSE                0xA200
 
@@ -125,3 +129,15 @@
 #define IDC_ICONOPTIONS 4097
 
 #define IDB_BANDBUTTONS 545
+#define IDB_SHELL_EXPLORER_LG       214
+#define IDB_SHELL_EXPLORER_LG_HOT   215
+#define IDB_SHELL_EXPLORER_SM       216
+#define IDB_SHELL_EXPLORER_SM_HOT   217
+#define IDB_SHELL_GO                230
+#define IDB_SHELL_GO_HOT            231
+#define IDB_SHELL_BRANDBAND_SM_HI   240
+/*#define IDB_SHELL_BRANDBAND_MD_HI   241
+#define IDB_SHELL_BRANDBAND_LG_HI   242
+#define IDB_SHELL_BRANDBAND_SM_LO   245
+#define IDB_SHELL_BRANDBAND_MD_LO   246
+#define IDB_SHELL_BRANDBAND_LG_LO   247*/

@@ -163,6 +163,21 @@ void make_decode_tables_mmx(mpg123_handle *fr)
 #endif
 #endif
 
+#ifdef REAL_IS_FIXED
+/* Need saturating multiplication that keeps table values in 32 bit range,
+   with the option to swap sign at will (so -2**31 is out).
+   This code is far from the decoder core and so assembly optimization might
+   be overkill. */
+static int32_t sat_mul32(int32_t a, int32_t b)
+{
+	int64_t prod = (int64_t)a * (int64_t)b;
+	/* TODO: record the clipping? An extra flag? */
+	if(prod >  2147483647L) return  2147483647L;
+	if(prod < -2147483647L) return -2147483647L;
+	return (int32_t)prod;
+}
+#endif
+
 void make_decode_tables(mpg123_handle *fr)
 {
 	int i,j;
@@ -176,12 +191,23 @@ void make_decode_tables(mpg123_handle *fr)
 	debug1("decode tables with scaleval %g", scaleval);
 #ifdef REAL_IS_FIXED
 	scaleval_long = DOUBLE_TO_REAL_15(scaleval);
+	debug1("decode table with fixed scaleval %li", (long)scaleval_long);
+	if(scaleval_long > 28618 || scaleval_long < -28618)
+	{
+		/* TODO: Limit the scaleval itself or limit the multiplication afterwards?
+		   The former basically disables significant amplification for fixed-point
+		   decoders, but avoids (possibly subtle) distortion. */
+		/* This would limit the amplification instead:
+		   scaleval_long = scaleval_long < 0 ? -28618 : 28618; */
+		if(NOQUIET) warning("Desired amplification may introduce distortion.");
+	}
 #endif
 	for(i=0,j=0;i<256;i++,j++,idx+=32)
 	{
 		if(idx < 512+16)
 #ifdef REAL_IS_FIXED
-		fr->decwin[idx+16] = fr->decwin[idx] = REAL_SCALE_WINDOW(intwinbase[j] * scaleval_long);
+		fr->decwin[idx+16] = fr->decwin[idx] =
+			REAL_SCALE_WINDOW(sat_mul32(intwinbase[j],scaleval_long));
 #else
 		fr->decwin[idx+16] = fr->decwin[idx] = DOUBLE_TO_REAL((double) intwinbase[j] * scaleval);
 #endif
@@ -200,7 +226,8 @@ void make_decode_tables(mpg123_handle *fr)
 	{
 		if(idx < 512+16)
 #ifdef REAL_IS_FIXED
-		fr->decwin[idx+16] = fr->decwin[idx] = REAL_SCALE_WINDOW(intwinbase[j] * scaleval_long);
+		fr->decwin[idx+16] = fr->decwin[idx] =
+			REAL_SCALE_WINDOW(sat_mul32(intwinbase[j],scaleval_long));
 #else
 		fr->decwin[idx+16] = fr->decwin[idx] = DOUBLE_TO_REAL((double) intwinbase[j] * scaleval);
 #endif

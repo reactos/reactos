@@ -296,6 +296,21 @@ static BOOL compare_bits(const struct bitmap_data *expect, UINT buffersize, cons
     if (!equal && expect->alt_data)
         equal = compare_bits(expect->alt_data, buffersize, converted_bits);
 
+    if (!equal && winetest_debug > 1)
+    {
+        UINT i, bps;
+        bps = expect->bpp / 8;
+        if (!bps) bps = buffersize;
+        printf("converted_bits (%u bytes):\n    ", buffersize);
+        for (i = 0; i < buffersize; i++)
+        {
+            printf("%u,", converted_bits[i]);
+            if (!((i + 1) % 32)) printf("\n    ");
+            else if (!((i+1) % bps)) printf(" ");
+        }
+        printf("\n");
+    }
+
     return equal;
 }
 
@@ -443,6 +458,10 @@ static const BYTE bits_32bppBGR[] = {
     0,255,255,80, 255,0,255,80, 255,255,0,80, 255,255,255,80, 0,255,255,80, 255,0,255,80, 255,255,0,80, 255,255,255,80};
 static const struct bitmap_data testdata_32bppBGR = {
     &GUID_WICPixelFormat32bppBGR, 32, bits_32bppBGR, 32, 2, 96.0, 96.0};
+static const struct bitmap_data testdata_32bppBGRA80 = {
+    &GUID_WICPixelFormat32bppBGRA, 32, bits_32bppBGR, 32, 2, 96.0, 96.0};
+static const struct bitmap_data testdata_32bppRGBA80 = {
+    &GUID_WICPixelFormat32bppRGBA, 32, bits_32bppBGR, 32, 2, 96.0, 96.0};
 
 static const BYTE bits_32bppBGRA[] = {
     255,0,0,255, 0,255,0,255, 0,0,255,255, 0,0,0,255, 255,0,0,255, 0,255,0,255, 0,0,255,255, 0,0,0,255,
@@ -455,6 +474,24 @@ static const BYTE bits_32bppBGRA[] = {
     0,255,255,255, 255,0,255,255, 255,255,0,255, 255,255,255,255, 0,255,255,255, 255,0,255,255, 255,255,0,255, 255,255,255,255};
 static const struct bitmap_data testdata_32bppBGRA = {
     &GUID_WICPixelFormat32bppBGRA, 32, bits_32bppBGRA, 32, 2, 96.0, 96.0};
+static const struct bitmap_data testdata_32bppRGBA = {
+    &GUID_WICPixelFormat32bppRGBA, 32, bits_32bppBGRA, 32, 2, 96.0, 96.0};
+static const struct bitmap_data testdata_32bppRGB = {
+    &GUID_WICPixelFormat32bppRGB, 32, bits_32bppBGRA, 32, 2, 96.0, 96.0};
+
+static const BYTE bits_32bppPBGRA[] = {
+    80,0,0,80, 0,80,0,80, 0,0,80,80, 0,0,0,80, 80,0,0,80, 0,80,0,80, 0,0,80,80, 0,0,0,80,
+    80,0,0,80, 0,80,0,80, 0,0,80,80, 0,0,0,80, 80,0,0,80, 0,80,0,80, 0,0,80,80, 0,0,0,80,
+    80,0,0,80, 0,80,0,80, 0,0,80,80, 0,0,0,80, 80,0,0,80, 0,80,0,80, 0,0,80,80, 0,0,0,80,
+    80,0,0,80, 0,80,0,80, 0,0,80,80, 0,0,0,80, 80,0,0,80, 0,80,0,80, 0,0,80,80, 0,0,0,80,
+    0,80,80,80, 80,0,80,80, 80,80,0,80, 80,80,80,80, 0,80,80,80, 80,0,80,80, 80,80,0,80, 80,80,80,80,
+    0,80,80,80, 80,0,80,80, 80,80,0,80, 80,80,80,80, 0,80,80,80, 80,0,80,80, 80,80,0,80, 80,80,80,80,
+    0,80,80,80, 80,0,80,80, 80,80,0,80, 80,80,80,80, 0,80,80,80, 80,0,80,80, 80,80,0,80, 80,80,80,80,
+    0,80,80,80, 80,0,80,80, 80,80,0,80, 80,80,80,80, 0,80,80,80, 80,0,80,80, 80,80,0,80, 80,80,80,80};
+static const struct bitmap_data testdata_32bppPBGRA = {
+    &GUID_WICPixelFormat32bppPBGRA, 32, bits_32bppPBGRA, 32, 2, 96.0, 96.0};
+static const struct bitmap_data testdata_32bppPRGBA = {
+    &GUID_WICPixelFormat32bppPRGBA, 32, bits_32bppPBGRA, 32, 2, 96.0, 96.0};
 
 /* XP and 2003 use linear color conversion, later versions use sRGB gamma */
 static const float bits_32bppGrayFloat_xp[] = {
@@ -520,7 +557,7 @@ static void test_conversion(const struct bitmap_data *src, const struct bitmap_d
     hr = WICConvertBitmapSource(dst->format, &src_obj->IWICBitmapSource_iface, &dst_bitmap);
     todo_wine_if (todo)
         ok(hr == S_OK ||
-           broken(hr == E_INVALIDARG) /* XP */, "WICConvertBitmapSource(%s) failed, hr=%x\n", name, hr);
+           broken(hr == E_INVALIDARG || hr == WINCODEC_ERR_COMPONENTNOTFOUND) /* XP */, "WICConvertBitmapSource(%s) failed, hr=%x\n", name, hr);
 
     if (hr == S_OK)
     {
@@ -587,15 +624,23 @@ typedef struct property_opt_test_data
     VARTYPE initial_var_type;
     int i_init_val;
     float f_init_val;
+    BOOL skippable;
 } property_opt_test_data;
 
 static const WCHAR wszTiffCompressionMethod[] = {'T','i','f','f','C','o','m','p','r','e','s','s','i','o','n','M','e','t','h','o','d',0};
 static const WCHAR wszCompressionQuality[] = {'C','o','m','p','r','e','s','s','i','o','n','Q','u','a','l','i','t','y',0};
 static const WCHAR wszInterlaceOption[] = {'I','n','t','e','r','l','a','c','e','O','p','t','i','o','n',0};
+static const WCHAR wszFilterOption[] = {'F','i','l','t','e','r','O','p','t','i','o','n',0};
 
 static const struct property_opt_test_data testdata_tiff_props[] = {
     { wszTiffCompressionMethod, VT_UI1,         VT_UI1,  WICTiffCompressionDontCare },
     { wszCompressionQuality,    VT_R4,          VT_EMPTY },
+    { NULL }
+};
+
+static const struct property_opt_test_data testdata_png_props[] = {
+    { wszInterlaceOption, VT_BOOL, VT_BOOL, 0 },
+    { wszFilterOption,    VT_UI1,  VT_UI1, WICPngFilterUnspecified, 0.0f, TRUE /* not supported on XP/2k3 */},
     { NULL }
 };
 
@@ -624,6 +669,13 @@ static void test_specific_encoder_properties(IPropertyBag2 *options, const prope
         pb.pstrName = (LPOLESTR)data[i].name;
 
         hr = IPropertyBag2_Read(options, 1, &pb, NULL, &pvarValue, &phrError);
+
+        if (data[i].skippable && idx == -1)
+        {
+            win_skip("Property %s is not supported on this machine.\n", wine_dbgstr_w(data[i].name));
+            i++;
+            continue;
+        }
 
         ok(idx >= 0, "Property %s not in output of GetPropertyInfo\n",
            wine_dbgstr_w(data[i].name));
@@ -712,8 +764,10 @@ static void test_encoder_properties(const CLSID* clsid_encoder, IPropertyBag2 *o
            (int)cProperties, (int)cProperties2);
     }
 
-    if (clsid_encoder == &CLSID_WICTiffEncoder)
+    if (IsEqualCLSID(clsid_encoder, &CLSID_WICTiffEncoder))
         test_specific_encoder_properties(options, testdata_tiff_props, all_props, cProperties2);
+    else if (IsEqualCLSID(clsid_encoder, &CLSID_WICPngEncoder))
+        test_specific_encoder_properties(options, testdata_png_props, all_props, cProperties2);
 
     for (i=0; i < cProperties2; i++)
     {
@@ -727,9 +781,9 @@ static void load_stream(IUnknown *reader, IStream *stream)
     HRESULT hr;
     IWICPersistStream *persist;
 #ifdef WORDS_BIGENDIAN
-    DWORD persist_options = WICPersistOptionsBigEndian;
+    DWORD persist_options = WICPersistOptionBigEndian;
 #else
-    DWORD persist_options = WICPersistOptionsLittleEndian;
+    DWORD persist_options = WICPersistOptionLittleEndian;
 #endif
 
     hr = IUnknown_QueryInterface(reader, &IID_IWICPersistStream, (void **)&persist);
@@ -1117,6 +1171,50 @@ struct setting {
     void *value;
 };
 
+#define EXPECT_REF(obj,ref) _expect_ref((IUnknown*)obj, ref, __LINE__)
+static void _expect_ref(IUnknown* obj, ULONG ref, int line)
+{
+    ULONG rc;
+    IUnknown_AddRef(obj);
+    rc = IUnknown_Release(obj);
+    ok_(__FILE__,line)(rc == ref, "expected refcount %d, got %d\n", ref, rc);
+}
+
+static void test_set_frame_palette(IWICBitmapFrameEncode *frameencode)
+{
+    IWICComponentFactory *factory;
+    IWICPalette *palette;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IWICComponentFactory, (void **)&factory);
+    ok(hr == S_OK, "CoCreateInstance failed, hr=%x\n", hr);
+
+    hr = IWICBitmapFrameEncode_SetPalette(frameencode, NULL);
+    ok(hr == E_INVALIDARG, "SetPalette failed, hr=%x\n", hr);
+
+    hr = IWICComponentFactory_CreatePalette(factory, &palette);
+    ok(hr == S_OK, "CreatePalette failed, hr=%x\n", hr);
+
+    hr = IWICBitmapFrameEncode_SetPalette(frameencode, palette);
+todo_wine
+    ok(hr == WINCODEC_ERR_NOTINITIALIZED, "Unexpected hr=%x\n", hr);
+
+    hr = IWICPalette_InitializePredefined(palette, WICBitmapPaletteTypeFixedHalftone256, FALSE);
+    ok(hr == S_OK, "InitializePredefined failed, hr=%x\n", hr);
+
+    EXPECT_REF(palette, 1);
+    hr = IWICBitmapFrameEncode_SetPalette(frameencode, palette);
+    ok(hr == S_OK, "SetPalette failed, hr=%x\n", hr);
+    EXPECT_REF(palette, 1);
+
+    hr = IWICBitmapFrameEncode_SetPalette(frameencode, NULL);
+    ok(hr == E_INVALIDARG, "SetPalette failed, hr=%x\n", hr);
+
+    IWICPalette_Release(palette);
+    IWICComponentFactory_Release(factory);
+}
+
 static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* clsid_encoder,
     const struct bitmap_data **dsts, const CLSID *clsid_decoder, WICRect *rc,
     const struct setting *settings, const char *name, IWICPalette *palette)
@@ -1219,6 +1317,9 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
 
                     hr = IWICBitmapFrameEncode_SetSize(frameencode, srcs[i]->width, srcs[i]->height);
                     ok(SUCCEEDED(hr), "SetSize failed, hr=%x\n", hr);
+
+                    if (IsEqualGUID(clsid_encoder, &CLSID_WICPngEncoder))
+                        test_set_frame_palette(frameencode);
 
                     if (palette)
                     {
@@ -1680,7 +1781,7 @@ START_TEST(converter)
 
     test_converter_8bppIndexed();
 
-    test_conversion(&testdata_24bppRGB, &testdata_2bppIndexed, "24bppRGB -> 1bppIndexed", TRUE);
+    test_conversion(&testdata_24bppRGB, &testdata_1bppIndexed, "24bppRGB -> 1bppIndexed", TRUE);
     test_conversion(&testdata_24bppRGB, &testdata_2bppIndexed, "24bppRGB -> 2bppIndexed", TRUE);
     test_conversion(&testdata_24bppRGB, &testdata_4bppIndexed, "24bppRGB -> 4bppIndexed", TRUE);
     test_conversion(&testdata_24bppRGB, &testdata_8bppIndexed, "24bppRGB -> 8bppIndexed", FALSE);
@@ -1693,6 +1794,12 @@ START_TEST(converter)
     test_conversion(&testdata_32bppBGRA, &testdata_32bppBGR, "BGRA -> BGR", FALSE);
     test_conversion(&testdata_32bppBGR, &testdata_32bppBGRA, "BGR -> BGRA", FALSE);
     test_conversion(&testdata_32bppBGRA, &testdata_32bppBGRA, "BGRA -> BGRA", FALSE);
+    test_conversion(&testdata_32bppBGRA80, &testdata_32bppPBGRA, "BGRA -> PBGRA", FALSE);
+
+    test_conversion(&testdata_32bppRGBA, &testdata_32bppRGB, "RGBA -> RGB", FALSE);
+    test_conversion(&testdata_32bppRGB, &testdata_32bppRGBA, "RGB -> RGBA", FALSE);
+    test_conversion(&testdata_32bppRGBA, &testdata_32bppRGBA, "RGBA -> RGBA", FALSE);
+    test_conversion(&testdata_32bppRGBA80, &testdata_32bppPRGBA, "RGBA -> PRGBA", FALSE);
 
     test_conversion(&testdata_24bppBGR, &testdata_24bppBGR, "24bppBGR -> 24bppBGR", FALSE);
     test_conversion(&testdata_24bppBGR, &testdata_24bppRGB, "24bppBGR -> 24bppRGB", FALSE);

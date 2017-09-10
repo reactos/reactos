@@ -150,16 +150,15 @@ snprintf(str, n, fmt, va_alist)
 	va_dcl
 #endif
 {
-	int nchar;
 	va_list ap;
 #if __STDC__
 	va_start(ap, fmt);
 #else
 	va_start(ap);
 #endif
-	nchar = vsnprintf(str, n, fmt, ap)
+
+	return (vsnprintf(str, n, fmt, ap));
 	va_end(ap);
-	return (nchar);
 }
 
 

@@ -798,6 +798,14 @@ DnsQuery_W(LPCWSTR Name,
             }
         }
 
+        if (!adns_numservers(astate))
+        {
+            /* There are no servers to query so bail out */
+            adns_finish(astate);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
+            return ERROR_FILE_NOT_FOUND;
+        }
+
         /*
         * adns doesn't resolve chained CNAME records (a CNAME which points to
         * another CNAME pointing to another... pointing to an A record), according

@@ -32,12 +32,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
 #define UNIMPLEMENTED TRACE("%s is UNIMPLEMENTED!\n", __FUNCTION__)
 
-extern "C"
-HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreator<CMenuBand>(riid, ppv);
-}
-
 CMenuBand::CMenuBand() :
     m_staticToolbar(NULL),
     m_SFToolbar(NULL),
@@ -240,10 +234,18 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
 
     CComPtr<IOleWindow> pTopLevelWindow;
     hr = IUnknown_QueryService(m_site, SID_STopLevelBrowser, IID_PPV_ARG(IOleWindow, &pTopLevelWindow));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (SUCCEEDED(hr))
+    {
+        hr = pTopLevelWindow->GetWindow(&m_topLevelWindow);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+    else
+    {
+        m_topLevelWindow = hwndParent;
+    }
 
-    return pTopLevelWindow->GetWindow(&m_topLevelWindow);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE  CMenuBand::GetSite(REFIID riid, PVOID *ppvSite)
@@ -720,6 +722,13 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
         BOOL bFlatMenus;
         SystemParametersInfo(SPI_GETFLATMENU, 0, &bFlatMenus, 0);
         AdjustForTheme(bFlatMenus);
+
+        if (m_staticToolbar)
+            m_staticToolbar->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
+
+        if (m_SFToolbar)
+            m_SFToolbar->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
+
         return S_OK;
     }
 
@@ -1041,25 +1050,11 @@ HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RE
     CComPtr<IDeskBar> pDeskBar;
 
     // Create the necessary objects
-#if USE_SYSTEM_MENUSITE
-    hr = CoCreateInstance(CLSID_MenuBandSite,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IBandSite, &pBandSite));
-#else
-    hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
-#endif
+    hr = CMenuSite_CreateInstance(IID_PPV_ARG(IBandSite, &pBandSite));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if USE_SYSTEM_MENUDESKBAR
-    hr = CoCreateInstance(CLSID_MenuDeskBar,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IDeskBar, &pDeskBar));
-#else
-    hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
-#endif
+    hr = CMenuDeskBar_CreateInstance(IID_PPV_ARG(IDeskBar, &pDeskBar));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1303,4 +1298,10 @@ HRESULT STDMETHODCALLTYPE CMenuBand::QueryStatus(const GUID *pguidCmdGroup, ULON
 {
     UNIMPLEMENTED;
     return S_OK;
+}
+
+extern "C"
+HRESULT WINAPI RSHELL_CMenuBand_CreateInstance(REFIID riid, LPVOID *ppv)
+{
+    return ShellObjectCreator<CMenuBand>(riid, ppv);
 }

@@ -922,36 +922,34 @@ static void check_iml_data(HIMAGELIST himl, INT cx, INT cy, INT cur, INT max, IN
     char *data;
     HRESULT hr;
 
-    trace("%s\n", comment);
-
     ret = ImageList_GetImageCount(himl);
-    ok(ret == cur, "expected image count %d got %d\n", cur, ret);
+    ok(ret == cur, "%s: expected image count %d got %d\n", comment, cur, ret);
 
     ret = ImageList_GetIconSize(himl, &cxx, &cyy);
     ok(ret, "ImageList_GetIconSize failed\n");
-    ok(cxx == cx, "wrong cx %d (expected %d)\n", cxx, cx);
-    ok(cyy == cy, "wrong cy %d (expected %d)\n", cyy, cy);
+    ok(cxx == cx, "%s: wrong cx %d (expected %d)\n", comment, cxx, cx);
+    ok(cyy == cy, "%s: wrong cy %d (expected %d)\n", comment, cyy, cy);
 
     init_memstream(&stream);
     ret = ImageList_Write(himl, &stream.IStream_iface);
-    ok(ret, "ImageList_Write failed\n");
+    ok(ret, "%s: ImageList_Write failed\n", comment);
 
     hr = GetHGlobalFromStream(stream.stream, &hglobal);
-    ok(hr == S_OK, "Failed to get hglobal, %#x\n", hr);
+    ok(hr == S_OK, "%s: Failed to get hglobal, %#x\n", comment, hr);
 
     IStream_Stat(stream.stream, &stat, STATFLAG_NONAME);
 
     data = GlobalLock(hglobal);
 
-    ok(data != 0, "ImageList_Write didn't write any data\n");
-    ok(stat.cbSize.LowPart > sizeof(ILHEAD), "ImageList_Write wrote not enough data\n");
+    ok(data != 0, "%s: ImageList_Write didn't write any data\n", comment);
+    ok(stat.cbSize.LowPart > sizeof(ILHEAD), "%s: ImageList_Write wrote not enough data\n", comment);
 
     check_ilhead_data(data, cx, cy, cur, max, grow, flags);
     size = check_bitmap_data(data + sizeof(ILHEAD), stat.cbSize.LowPart - sizeof(ILHEAD),
             width, height, flags & 0xfe, comment);
     if (size < stat.cbSize.LowPart - sizeof(ILHEAD))  /* mask is present */
     {
-        ok( flags & ILC_MASK, "extra data %u/%u but mask not expected\n", stat.cbSize.LowPart, size );
+        ok( flags & ILC_MASK, "%s: extra data %u/%u but mask not expected\n", comment, stat.cbSize.LowPart, size );
         check_bitmap_data(data + sizeof(ILHEAD) + size, stat.cbSize.LowPart - sizeof(ILHEAD) - size,
                           width, height, 1, comment);
     }
@@ -960,7 +958,7 @@ static void check_iml_data(HIMAGELIST himl, INT cx, INT cy, INT cur, INT max, IN
     mv.QuadPart = 0;
     IStream_Seek(stream.stream, mv, STREAM_SEEK_SET, NULL);
     himl2 = ImageList_Read(&stream.IStream_iface);
-    ok(himl2 != NULL, "Failed to deserialize imagelist\n");
+    ok(himl2 != NULL, "%s: Failed to deserialize imagelist\n", comment);
     ImageList_Destroy(himl2);
 
     GlobalUnlock(hglobal);
@@ -2048,9 +2046,9 @@ static void check_color_table(const char *name, HDC hdc, HIMAGELIST himl, UINT i
         ok((bmi->bmiColors[i].rgbRed == expect[i].rgbRed &&
             bmi->bmiColors[i].rgbGreen == expect[i].rgbGreen &&
             bmi->bmiColors[i].rgbBlue == expect[i].rgbBlue) ||
-           broken(bmi->bmiColors[i].rgbRed == broken_expect[i].rgbRed &&
+           (broken_expect && broken(bmi->bmiColors[i].rgbRed == broken_expect[i].rgbRed &&
                   bmi->bmiColors[i].rgbGreen == broken_expect[i].rgbGreen &&
-                  bmi->bmiColors[i].rgbBlue == broken_expect[i].rgbBlue),
+                  bmi->bmiColors[i].rgbBlue == broken_expect[i].rgbBlue)),
            "%d: %s: got color[%d] %02x %02x %02x expect %02x %02x %02x\n", depth, name, i,
            bmi->bmiColors[i].rgbRed, bmi->bmiColors[i].rgbGreen, bmi->bmiColors[i].rgbBlue,
            expect[i].rgbRed, expect[i].rgbGreen, expect[i].rgbBlue);
@@ -2220,6 +2218,29 @@ static void test_color_table(UINT ilc)
     ImageList_Destroy(himl);
 }
 
+static void test_copy(void)
+{
+    HIMAGELIST dst, src;
+    BOOL ret;
+    int count;
+
+    dst = ImageList_Create(5, 11, ILC_COLOR, 1, 1);
+    count = ImageList_GetImageCount(dst);
+    ok(!count, "ImageList not empty.\n");
+    src = createImageList(7, 13);
+    count = ImageList_GetImageCount(src);
+    ok(count > 2, "Tests need an ImageList with more than 2 images\n");
+
+    /* ImageList_Copy() cannot copy between two ImageLists */
+    ret = ImageList_Copy(dst, 0, src, 2, ILCF_MOVE);
+    ok(!ret, "ImageList_Copy() should have returned FALSE\n");
+    count = ImageList_GetImageCount(dst);
+    ok(count == 0, "Expected no image in dst ImageList, got %d\n", count);
+
+    ImageList_Destroy(dst);
+    ImageList_Destroy(src);
+}
+
 static void test_IImageList_Clone(void)
 {
     IImageList *imgl, *imgl2;
@@ -2370,6 +2391,7 @@ START_TEST(imagelist)
     test_iconsize();
     test_color_table(ILC_COLOR4);
     test_color_table(ILC_COLOR8);
+    test_copy();
 
     FreeLibrary(hComCtl32);
 

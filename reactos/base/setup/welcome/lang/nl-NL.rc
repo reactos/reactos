@@ -6,33 +6,33 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Welkom"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Welkom bij het ReactOS Operation System.\n\nKlik links op een onderwerp."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Welkom bij het ReactOS Operation System.\n\nKlik links op een onderwerp."
 
-    IDS_CHECKTEXT "Ga terug naar dit scherm"
-    IDS_CLOSETEXT "Afsluiten"
+    IDS_CHECKTEXT "&Ga terug naar dit scherm"
+    IDS_CLOSETEXT "&Afsluiten"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Installeer ReactOS"
-    IDS_TOPICBUTTON1 "Deze CD Verkennen"
-    IDS_TOPICBUTTON2 "Afsluiten"
+    IDS_TOPIC_BUTTON0 "&Installeer ReactOS"
+    IDS_TOPIC_BUTTON1 "&Deze CD Verkennen"
+    IDS_TOPIC_BUTTON2 "&Afsluiten"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Installeer ReactOS"
-    IDS_TOPICTITLE1 "Deze CD Verkennen"
-    IDS_TOPICTITLE2 "Afsluiten"
+    IDS_TOPIC_TITLE0 "Installeer ReactOS"
+    IDS_TOPIC_TITLE1 "Deze CD Verkennen"
+    IDS_TOPIC_TITLE2 "Afsluiten"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Maak een nieuwe ReactOS installatie of upgrade een bestaande installatie."
-    IDS_TOPICDESC1 "Deze CD Verkennen."
-    IDS_TOPICDESC2 "Klik om dit programma af te sluiten."
+    IDS_TOPIC_DESC0 "Maak een nieuwe ReactOS installatie of upgrade een bestaande installatie."
+    IDS_TOPIC_DESC1 "Deze CD Verkennen."
+    IDS_TOPIC_DESC2 "Klik om dit programma af te sluiten."
 END

@@ -26,6 +26,7 @@ UDFKeyWaiter(
     This routine checks for User Eject request & initiates Dismount
  */
 void
+NTAPI
 UDFEjectReqWaiter(
     IN void* Context
     )
@@ -57,7 +58,7 @@ UDFEjectReqWaiter(
 
 //    BOOLEAN FlushAndEject = FALSE;
 
-    KdPrint(("    UDFEjectReqWaiter: start\n"));
+    UDFPrint(("    UDFEjectReqWaiter: start\n"));
     uint8 supported_evt_classes = 0;
     uint32 i, j;
     uint8 evt_type;
@@ -72,10 +73,10 @@ UDFEjectReqWaiter(
     if(UseEvent) {
         supported_evt_classes = EventStat_Class_Media;
     } else {
-        KdPrint(("    Eject Button ignored\n"));
+        UDFPrint(("    Eject Button ignored\n"));
     }
     for(j=0; j<4; j++) {
-        KdPrint(("    Reading events... (0)\n"));
+        UDFPrint(("    Reading events... (0)\n"));
         if(supported_evt_classes) {
             for(i=1; i<=EventRetStat_Class_Mask;i++) {
                 evt_type = (((UCHAR)1) << i);
@@ -129,7 +130,7 @@ stop_waiter:
                 KeSetEvent(WC->WaiterStopped, 0, FALSE);
                 MyFreePool__(WC);
                 WC = NULL;
-                KdPrint(("    UDFEjectReqWaiter: exit 3\n"));
+                UDFPrint(("    UDFEjectReqWaiter: exit 3\n"));
                 return;
             }
             BM_FlushPriod = Vcb->BM_FlushPriod;
@@ -213,7 +214,7 @@ wait_eject:
                                 Error,sizeof(GET_LAST_ERROR_USER_OUT),
                                 TRUE,NULL);
                 UDFReleaseResource(&(Vcb->IoResource));
-                KdPrint(("SK=%x ASC=%x, ASCQ=%x, IE=%x\n",
+                UDFPrint(("SK=%x ASC=%x, ASCQ=%x, IE=%x\n",
                          Error->SenseKey, Error->AdditionalSenseCode, Error->AdditionalSenseCodeQualifier, Error->LastError));
                 // check for Long Write In Progress
                 if( ((Error->SenseKey == SCSI_SENSE_NOT_READY) &&
@@ -225,9 +226,9 @@ wait_eject:
                                 ||
                        (Vcb->VCBFlags & UDF_VCB_FLAGS_UNSAFE_IOCTL)) {
                           // we should forget about this disk...
-                        KdPrint(("    LAST_WRITE %x\n", !!(Vcb->VCBFlags & UDF_VCB_LAST_WRITE)));
-                        KdPrint(("    UDF_VCB_FLAGS_UNSAFE_IOCTL %x\n", !!(Vcb->VCBFlags & UDF_VCB_FLAGS_UNSAFE_IOCTL)));
-                        KdPrint(("    UDFEjectReqWaiter: Unexpected write-in-progress on !Modified volume\n"));
+                        UDFPrint(("    LAST_WRITE %x\n", !!(Vcb->VCBFlags & UDF_VCB_LAST_WRITE)));
+                        UDFPrint(("    UDF_VCB_FLAGS_UNSAFE_IOCTL %x\n", !!(Vcb->VCBFlags & UDF_VCB_FLAGS_UNSAFE_IOCTL)));
+                        UDFPrint(("    UDFEjectReqWaiter: Unexpected write-in-progress on !Modified volume\n"));
                         //ASSERT(FALSE);
                         Vcb->ForgetVolume = TRUE;
                         Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY | UDF_VCB_FLAGS_MEDIA_READ_ONLY;
@@ -240,7 +241,7 @@ wait_eject:
                    !(WC->DevCap.Capabilities2 & DevCap_lock_state)) {
                     // probably bus reset or power failure occured
                     // re-lock tray
-                    KdPrint(("    UDFEjectReqWaiter: Unexpected tray unlock encountered. Try to re-lock\n"));
+                    UDFPrint(("    UDFEjectReqWaiter: Unexpected tray unlock encountered. Try to re-lock\n"));
 
                     UDFAcquireResourceExclusive(&(Vcb->VCBResource), TRUE);
                     VcbAcquired = TRUE;
@@ -278,14 +279,14 @@ wait_eject:
 
                     AllFlushed = FALSE;
 
-                    KdPrint(("    SkipCount=%x, SkipCountLimit=%x\n",
+                    UDFPrint(("    SkipCount=%x, SkipCountLimit=%x\n",
                         SkipCount,
                         Vcb->SkipCountLimit));
 
                     if( Tree_FlushPriod &&
                        (Tree_FlushPriod < Vcb->Tree_FlushTime)) {
 
-                        KdPrint(("    Tree_FlushPriod %I64x, Vcb->Tree_FlushTime %I64x\n",
+                        UDFPrint(("    Tree_FlushPriod %I64x, Vcb->Tree_FlushTime %I64x\n",
                             Tree_FlushPriod,
                             Vcb->Tree_FlushTime));
 
@@ -307,13 +308,13 @@ wait_eject:
                             VcbAcquired = TRUE;
                         }
 
-                        KdPrint(("UDF: Flushing Directory Tree....\n"));
+                        UDFPrint(("UDF: Flushing Directory Tree....\n"));
                         if( BM_FlushPriod &&
                            (BM_FlushPriod < Vcb->BM_FlushTime)) {
-                            KdPrint(("  full flush\n"));
+                            UDFPrint(("  full flush\n"));
                             flush_stat = UDFFlushADirectory(Vcb, Vcb->RootDirFCB->FileInfo, &IoStatus, UDF_FLUSH_FLAGS_BREAKABLE);
                         } else {
-                            KdPrint(("  light flush\n"));
+                            UDFPrint(("  light flush\n"));
                             flush_stat = UDFFlushADirectory(Vcb, Vcb->RootDirFCB->FileInfo, &IoStatus, UDF_FLUSH_FLAGS_BREAKABLE | UDF_FLUSH_FLAGS_LITE);
                         }
                         if(flush_stat & UDF_FLUSH_FLAGS_INTERRUPTED)
@@ -327,7 +328,7 @@ skip_BM_flush:
                     if( BM_FlushPriod &&
                        (BM_FlushPriod < Vcb->BM_FlushTime)) {
 
-                        KdPrint(("    BM_FlushPriod %I64x, Vcb->BM_FlushTime %I64x\n",
+                        UDFPrint(("    BM_FlushPriod %I64x, Vcb->BM_FlushTime %I64x\n",
                             BM_FlushPriod,
                             Vcb->BM_FlushTime));
 
@@ -369,20 +370,20 @@ skip_BM_flush:
                         UDFUpdateVolIdent(Vcb, Vcb->PVolDescAddr2, &(Vcb->VolIdent));
 
                         if(Vcb->VerifyOnWrite) {
-                            KdPrint(("UDF: Flushing cache for verify\n"));
+                            UDFPrint(("UDF: Flushing cache for verify\n"));
                             //WCacheFlushAll__(&(Vcb->FastCache), Vcb);
                             WCacheFlushBlocks__(&(Vcb->FastCache), Vcb, 0, Vcb->LastLBA);
                             UDFVFlush(Vcb);
                         }
 #ifdef UDF_DBG
-                        KdPrint(("UDF: Flushing Free Space Bitmap....\n"));
+                        UDFPrint(("UDF: Flushing Free Space Bitmap....\n"));
 
 //                        if(!OS_SUCCESS(UDFUpdateVolIdent(Vcb, Vcb->PVolDescAddr, &(Vcb->VolIdent))))
-//                            KdPrint(("Error updating VolIdent\n"));
+//                            UDFPrint(("Error updating VolIdent\n"));
                         if(!OS_SUCCESS(UDFUpdateVDS(Vcb, Vcb->VDS1, Vcb->VDS1 + Vcb->VDS1_Len, flags)))
-                            KdPrint(("Error updating Main VDS\n"));
+                            UDFPrint(("Error updating Main VDS\n"));
                         if(!OS_SUCCESS(UDFUpdateVDS(Vcb, Vcb->VDS2, Vcb->VDS2 + Vcb->VDS2_Len, flags)))
-                            KdPrint(("Error updating Reserve VDS\n"));
+                            UDFPrint(("Error updating Reserve VDS\n"));
 #else
                         UDFUpdateVDS(Vcb, Vcb->VDS1, Vcb->VDS1 + Vcb->VDS1_Len, flags);
                         UDFUpdateVDS(Vcb, Vcb->VDS2, Vcb->VDS2 + Vcb->VDS2_Len, flags);
@@ -425,7 +426,7 @@ skip_BM_flush2:
             if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_REMOVABLE_MEDIA))
                 try_return(RC);
 
-            KdPrint(("    UDFEjectReqWaiter: check removable media\n"));
+            UDFPrint(("    UDFEjectReqWaiter: check removable media\n"));
             if(!WC->SoftEjectReq && SkipEject) {
                 try_return(RC);
             }
@@ -433,7 +434,7 @@ skip_BM_flush2:
             if(!WC->SoftEjectReq) {
 
                 if(!UseEvent) {
-                    KdPrint(("    Eject Button ignored\n"));
+                    UDFPrint(("    Eject Button ignored\n"));
                     try_return(RC);
                 }
 
@@ -443,7 +444,7 @@ skip_BM_flush2:
             //        KeDelayExecutionThread(KernelMode, FALSE, &delay);
                     OSSTATUS RC;
 
-                    KdPrint(("    Sync cache before GET_EVENT\n"));
+                    UDFPrint(("    Sync cache before GET_EVENT\n"));
                     RC = UDFSyncCache(Vcb);
                     if(RC == STATUS_INVALID_DEVICE_REQUEST) {
                         Vcb->VCBFlags |= UDF_VCB_FLAGS_NO_SYNC_CACHE;
@@ -465,15 +466,15 @@ skip_BM_flush2:
                 if(RC != STATUS_SUCCESS &&
                    RC != STATUS_DATA_OVERRUN) {
                     if(RC == STATUS_NO_SUCH_DEVICE) {
-                        KdPrint(("    Device loss\n"));
+                        UDFPrint(("    Device loss\n"));
                         goto device_failure;
                     }
                     if(RC == STATUS_NO_MEDIA_IN_DEVICE) {
-                        KdPrint(("    Media loss\n"));
+                        UDFPrint(("    Media loss\n"));
                         goto media_loss;
                     }
                 }
-                KdPrint(("    Reading events...\n"));
+                UDFPrint(("    Reading events...\n"));
                 if(supported_evt_classes) {
                     for(i=1; i<=EventRetStat_Class_Mask;i++) {
                         evt_type = (((UCHAR)1) << i);
@@ -499,7 +500,7 @@ skip_BM_flush2:
                             continue;
                         }
                         if(RC == STATUS_NO_SUCH_DEVICE) {
-                            KdPrint(("    Device loss (2)\n"));
+                            UDFPrint(("    Device loss (2)\n"));
                             goto device_failure;
                         }
                         if(!OS_SUCCESS(RC)) {
@@ -510,7 +511,7 @@ skip_BM_flush2:
                             continue;
                         }
                         if( evt_type == EventStat_Class_Media ) {
-                            KdPrint(("    EventStat_Class_Media:\n"));
+                            UDFPrint(("    EventStat_Class_Media:\n"));
                             if((WC->EjectReqBuffer.MediaChange.Header.Flags.Flags & EventRetStat_Class_Mask) !=
                                 EventRetStat_Class_Media) {
                                 continue;
@@ -527,14 +528,14 @@ retry_media_presence_check:
 
                                 if(RC == STATUS_SUCCESS ||
                                    RC == STATUS_DATA_OVERRUN) {
-                                    KdPrint(("    Buggy GET_EVENT media presence flag %x\n",
+                                    UDFPrint(("    Buggy GET_EVENT media presence flag %x\n",
                                         WC->EjectReqBuffer.MediaChange.Byte1));
                                     WC->EjectReqBuffer.MediaChange.Byte1.Flags |= EventStat_MediaStat_Present;
                                     WC->EjectReqBuffer.MediaChange.Byte1.Flags &= ~EventStat_MediaStat_DoorOpen;
                                     goto retry_media_presence_check;
                                 }
 media_loss:
-                                KdPrint(("    Unexpected media loss. Check device status\n"));
+                                UDFPrint(("    Unexpected media loss. Check device status\n"));
                                 UseEject = FALSE;
                                 MediaLoss = TRUE;
                             } else
@@ -543,12 +544,12 @@ media_loss:
                                            EventStat_MediaEvent_EjectReq ) {
                                 continue;
                             }
-                            KdPrint(("    eject requested\n"));
+                            UDFPrint(("    eject requested\n"));
                             WC->SoftEjectReq = TRUE;
                             break;
                         }
                         if( evt_type == EventStat_Class_ExternalReq ) {
-                            KdPrint(("    EventStat_Class_ExternalReq:\n"));
+                            UDFPrint(("    EventStat_Class_ExternalReq:\n"));
                             if((WC->EjectReqBuffer.ExternalReq.Header.Flags.Flags & EventRetStat_Class_Mask) !=
                                 EventRetStat_Class_ExternReq)
                                 continue;
@@ -556,7 +557,7 @@ media_loss:
                             case EventStat_ExtrnReqEvent_KeyDown:
                             case EventStat_ExtrnReqEvent_KeyUp:
                             case EventStat_ExtrnReqEvent_ExtrnReq:
-                                KdPrint(("    eject requested (%x)\n", WC->EjectReqBuffer.ExternalReq.Byte0.Flags));
+                                UDFPrint(("    eject requested (%x)\n", WC->EjectReqBuffer.ExternalReq.Byte0.Flags));
                                 WC->SoftEjectReq = TRUE;
                                 break;
                             }
@@ -571,7 +572,7 @@ media_loss:
                     }
                 } else {
 
-                    KdPrint(("    Reading Media Event...\n"));
+                    UDFPrint(("    Reading Media Event...\n"));
                     ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->Immed = TRUE;
                     ((PGET_EVENT_USER_IN)(&(WC->EjectReqBuffer)))->EventClass = EventStat_Class_Media;
                 
@@ -610,26 +611,26 @@ device_failure:
             // Acquire Vcb resource
             Vcb->SoftEjectReq = TRUE;
 
-            KdPrint(("    UDFEjectReqWaiter: ejecting...\n"));
+            UDFPrint(("    UDFEjectReqWaiter: ejecting...\n"));
 #ifdef UDF_DELAYED_CLOSE
             UDFAcquireResourceExclusive(&(Vcb->VCBResource), TRUE);
-            KdPrint(("    UDFEjectReqWaiter:     set UDF_VCB_FLAGS_NO_DELAYED_CLOSE\n"));
+            UDFPrint(("    UDFEjectReqWaiter:     set UDF_VCB_FLAGS_NO_DELAYED_CLOSE\n"));
             Vcb->VCBFlags |= UDF_VCB_FLAGS_NO_DELAYED_CLOSE;
             UDFReleaseResource(&(Vcb->VCBResource));
 #endif //UDF_DELAYED_CLOSE
 
-            KdPrint(("    UDFEjectReqWaiter:     UDFCloseAllSystemDelayedInDir\n"));
+            UDFPrint(("    UDFEjectReqWaiter:     UDFCloseAllSystemDelayedInDir\n"));
             RC = UDFCloseAllSystemDelayedInDir(Vcb, Vcb->RootDirFCB->FileInfo);
             ASSERT(OS_SUCCESS(RC));
 #ifdef UDF_DELAYED_CLOSE
-            KdPrint(("    UDFEjectReqWaiter:     UDFCloseAllDelayed\n"));
+            UDFPrint(("    UDFEjectReqWaiter:     UDFCloseAllDelayed\n"));
             UDFCloseAllDelayed(Vcb);
             //ASSERT(OS_SUCCESS(RC));
 #endif //UDF_DELAYED_CLOSE
 
             UDFAcquireResourceExclusive(&(Vcb->VCBResource), TRUE);
 
-            KdPrint(("    UDFEjectReqWaiter:     UDFDoDismountSequence\n"));
+            UDFPrint(("    UDFEjectReqWaiter:     UDFDoDismountSequence\n"));
             UDFDoDismountSequence(Vcb, (PPREVENT_MEDIA_REMOVAL_USER_IN)&(WC->EjectReqBuffer), UseEject);
             if (MediaLoss) {
                 Vcb->VCBFlags &= ~UDF_VCB_FLAGS_VOLUME_MOUNTED;
@@ -639,12 +640,12 @@ device_failure:
             Vcb->SoftEjectReq = FALSE;
             UDFReleaseResource(&(Vcb->VCBResource));
 
-            KdPrint(("    UDFEjectReqWaiter:     set WaiterStopped\n"));
+            UDFPrint(("    UDFEjectReqWaiter:     set WaiterStopped\n"));
             KeSetEvent(WC->WaiterStopped, 0, FALSE);
             MyFreePool__(WC);
             WC = NULL;
 
-            KdPrint(("    UDFEjectReqWaiter: exit 1\n"));
+            UDFPrint(("    UDFEjectReqWaiter: exit 1\n"));
             return;
     
 try_exit:   NOTHING;
@@ -671,11 +672,11 @@ try_exit:   NOTHING;
 void
 UDFStopEjectWaiter(PVCB Vcb) {
 
-    KdPrint(("    UDFStopEjectWaiter: try\n"));
+    UDFPrint(("    UDFStopEjectWaiter: try\n"));
     UDFAcquireResourceExclusive(&(Vcb->VCBResource), TRUE);
     _SEH2_TRY {
         if(Vcb->EjectWaiter) {
-            KdPrint(("    UDFStopEjectWaiter: set flag\n"));
+            UDFPrint(("    UDFStopEjectWaiter: set flag\n"));
             KeSetEvent( &(Vcb->EjectWaiter->StopReq), 0, FALSE );
         } else {
 //            return;
@@ -687,7 +688,7 @@ UDFStopEjectWaiter(PVCB Vcb) {
 
     _SEH2_TRY {
         if(Vcb->VCBFlags & UDF_VCB_FLAGS_STOP_WAITER_EVENT) {
-            KdPrint(("    UDFStopEjectWaiter: wait\n"));
+            UDFPrint(("    UDFStopEjectWaiter: wait\n"));
             KeWaitForSingleObject(&(Vcb->WaiterStopped), Executive, KernelMode, FALSE, NULL);
         }
         Vcb->VCBFlags &= ~UDF_VCB_FLAGS_STOP_WAITER_EVENT;
@@ -695,7 +696,7 @@ UDFStopEjectWaiter(PVCB Vcb) {
         BrutePoint();
     } _SEH2_END;
     ASSERT(!Vcb->EjectWaiter);
-    KdPrint(("    UDFStopEjectWaiter: exit\n"));
+    UDFPrint(("    UDFStopEjectWaiter: exit\n"));
 
 } // end UDFStopEjectWaiter()
 
@@ -712,7 +713,7 @@ UDFDoDismountSequence(
 
     // flush system cache
     UDFFlushLogicalVolume(NULL, NULL, Vcb, 0);
-    KdPrint(("UDFDoDismountSequence:\n"));
+    UDFPrint(("UDFDoDismountSequence:\n"));
 
     delay.QuadPart = -1000000; // 0.1 sec
     KeDelayExecutionThread(KernelMode, FALSE, &delay);
@@ -728,7 +729,7 @@ UDFDoDismountSequence(
 
     // unlock media, drop our own Locks
     if(Vcb->VCBFlags & UDF_VCB_FLAGS_REMOVABLE_MEDIA) {
-        KdPrint(("  cleanup tray-lock (%d+2):\n", Vcb->MediaLockCount));
+        UDFPrint(("  cleanup tray-lock (%d+2):\n", Vcb->MediaLockCount));
         for(i=0; i<Vcb->MediaLockCount+2; i++) {
             Buf->PreventMediaRemoval = FALSE;
             UDFPhSendIOCTL(IOCTL_STORAGE_MEDIA_REMOVAL,
@@ -745,7 +746,7 @@ UDFDoDismountSequence(
 
         if(!UDFIsDvdMedia(Vcb)) {
             // send speed limits to drive
-            KdPrint(("    Restore drive speed on dismount\n"));
+            UDFPrint(("    Restore drive speed on dismount\n"));
             Vcb->SpeedBuf.ReadSpeed  = Vcb->MaxReadSpeed;
             Vcb->SpeedBuf.WriteSpeed = Vcb->MaxWriteSpeed;
             UDFPhSendIOCTL(IOCTL_CDRW_SET_SPEED,
@@ -765,7 +766,7 @@ UDFDoDismountSequence(
             memset(&CBuff,0,sizeof(CLOSE_TRK_SES_USER_IN));
             // stop BG format
             if(Vcb->MRWStatus) {
-                KdPrint(("    Stop background formatting\n"));
+                UDFPrint(("    Stop background formatting\n"));
 
                 CBuff.Byte1.Flags = 0;//CloseTrkSes_Immed;
                 CBuff.Byte2.Flags = CloseTrkSes_Ses;
@@ -778,7 +779,7 @@ UDFDoDismountSequence(
                                FALSE, NULL );
     /*        } else
             if(Vcb->MediaClassEx == CdMediaClass_DVDRW) {
-                KdPrint(("    Close BG-formatted track\n"));
+                UDFPrint(("    Close BG-formatted track\n"));
 
                 CBuff.Byte1.Flags = 0;//CloseTrkSes_Immed;
                 CBuff.Byte2.Flags = CloseTrkSes_Trk;
@@ -835,7 +836,7 @@ UDFDoDismountSequence(
         ExFreePool(Vcb->CDBurnerVolume.Buffer);
     }
 */
-    KdPrint(("  set UnsafeIoctl\n"));
+    UDFPrint(("  set UnsafeIoctl\n"));
     Vcb->VCBFlags |= UDF_VCB_FLAGS_UNSAFE_IOCTL;
 
     return STATUS_SUCCESS;

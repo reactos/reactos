@@ -99,13 +99,16 @@ static const char inf_data6[] =
     "[CopyAlways.Windir.Files]\n"
     "WindowsCodecs.dll\n";
 
-static void create_inf_file(LPSTR filename, const char *data, DWORD size)
+static BOOL create_inf_file(LPSTR filename, const char *data, DWORD size)
 {
+    BOOL ret;
     DWORD dwNumberOfBytesWritten;
     HANDLE hf = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
                             CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    WriteFile(hf, data, size, &dwNumberOfBytesWritten, NULL);
+    if (hf == INVALID_HANDLE_VALUE) return FALSE;
+    ret = WriteFile(hf, data, size, &dwNumberOfBytesWritten, NULL);
     CloseHandle(hf);
+    return ret;
 }
 
 static BOOL check_info_filename(PSP_INF_INFORMATION info, LPSTR test)
@@ -258,7 +261,13 @@ static void test_SetupGetInfInformation(void)
     lstrcpyA(inf_two, WIN_DIR);
     lstrcatA(inf_two, "\\system32\\");
     lstrcatA(inf_two, "test.inf");
-    create_inf_file(inf_two, inf_data1, sizeof(inf_data1) - 1);
+    ret = create_inf_file(inf_two, inf_data1, sizeof(inf_data1) - 1);
+    if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        skip("need admin rights\n");
+        goto done;
+    }
+    ok(ret, "can't create inf file %u\n", GetLastError());
 
     HeapFree(GetProcessHeap(), 0, info);
     info = alloc_inf_info("test.inf", INFINFO_DEFAULT_SEARCH, &size);
@@ -291,8 +300,8 @@ static void test_SetupGetInfInformation(void)
     ok(ret == TRUE, "Expected SetupGetInfInformation to succeed\n");
     ok(check_info_filename(info, revfile), "Expected returned filename to be equal\n");
 
+done:
     HeapFree(GetProcessHeap(), 0, info);
-
     DeleteFileA(inf_filename);
     DeleteFileA(inf_one);
     DeleteFileA(inf_two);

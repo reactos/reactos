@@ -3429,6 +3429,39 @@ RegOpenKeyExW(HKEY hKey,
                        samDesired,
                        &ObjectAttributes);
 
+    if (Status == STATUS_DATATYPE_MISALIGNMENT)
+    {
+        HANDLE hAligned;
+        UNICODE_STRING AlignedString;
+
+        Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                           &SubKeyString,
+                                           &AlignedString);
+        if (NT_SUCCESS(Status))
+        {
+            /* Try again with aligned parameters */
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &AlignedString,
+                                       Attributes,
+                                       KeyHandle,
+                                       NULL);
+
+            Status = NtOpenKey(&hAligned,
+                               samDesired,
+                               &ObjectAttributes);
+
+            RtlFreeUnicodeString(&AlignedString);
+
+            if (NT_SUCCESS(Status))
+                *phkResult = hAligned;
+        }
+        else
+        {
+            /* Restore the original error */
+            Status = STATUS_DATATYPE_MISALIGNMENT;
+        }
+    }
+
     if (!NT_SUCCESS(Status))
     {
         ErrorCode = RtlNtStatusToDosError(Status);
@@ -3729,6 +3762,9 @@ RegQueryInfoKeyW(HKEY hKey,
         FullInfo = &FullInfoBuffer;
     }
 
+    if (lpcbSecurityDescriptor != NULL)
+        *lpcbSecurityDescriptor = 0;
+
     Status = NtQueryKey(KeyHandle,
                         KeyFullInformation,
                         FullInfo,
@@ -3786,10 +3822,7 @@ RegQueryInfoKeyW(HKEY hKey,
                                        NULL,
                                        0,
                                        lpcbSecurityDescriptor);
-        if (Status != STATUS_BUFFER_TOO_SMALL)
-        {
-            *lpcbSecurityDescriptor = 0;
-        }
+        TRACE("NtQuerySecurityObject() returned status 0x%X\n", Status);
     }
 
     if (lpftLastWriteTime != NULL)

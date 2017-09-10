@@ -46,6 +46,7 @@ extern "C" {
 #define WM_NCUAHDRAWFRAME   0x000000AF
 #define WM_SYSTIMER         0x00000118
 #define WM_LBTRACKPOINT     0x00000131
+#define WM_CBLOSTTEXTFOCUS  0x00000167
 #define LB_CARETON          0x000001a3
 #define LB_CARETOFF         0x000001a4
 #define MN_SETHMENU         0x000001e0

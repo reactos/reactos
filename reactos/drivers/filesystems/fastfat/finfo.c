@@ -125,13 +125,13 @@ NTSTATUS
 VfatGetPositionInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_POSITION_INFORMATION PositionInfo,
     PULONG BufferLength)
 {
     UNREFERENCED_PARAMETER(FileObject);
     UNREFERENCED_PARAMETER(FCB);
-    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     DPRINT("VfatGetPositionInformation()\n");
 
@@ -239,17 +239,13 @@ NTSTATUS
 VfatGetBasicInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_BASIC_INFORMATION BasicInfo,
     PULONG BufferLength)
 {
-    PDEVICE_EXTENSION DeviceExt;
-
     UNREFERENCED_PARAMETER(FileObject);
 
     DPRINT("VfatGetBasicInformation()\n");
-
-    DeviceExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
@@ -310,11 +306,9 @@ NTSTATUS
 VfatSetDispositionInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
-    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-
     DPRINT("FsdSetDispositionInformation(<%wZ>, Delete %u)\n", &FCB->PathNameU, DispositionInfo->DeleteFile);
 
     ASSERT(DeviceExt != NULL);
@@ -965,14 +959,14 @@ NTSTATUS
 VfatGetNameInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_NAME_INFORMATION NameInfo,
     PULONG BufferLength)
 {
     ULONG BytesToCopy;
 
     UNREFERENCED_PARAMETER(FileObject);
-    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     ASSERT(NameInfo != NULL);
     ASSERT(FCB != NULL);
@@ -1009,6 +1003,7 @@ static
 NTSTATUS
 VfatGetInternalInformation(
     PVFATFCB Fcb,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_INTERNAL_INFORMATION InternalInfo,
     PULONG BufferLength)
 {
@@ -1017,8 +1012,9 @@ VfatGetInternalInformation(
 
     if (*BufferLength < sizeof(FILE_INTERNAL_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
-    // FIXME: get a real index, that can be used in a create operation
-    InternalInfo->IndexNumber.QuadPart = 0;
+
+    InternalInfo->IndexNumber.QuadPart = (LONGLONG)vfatDirEntryGetFirstCluster(DeviceExt, &Fcb->entry) * DeviceExt->FatInfo.BytesPerCluster;
+
     *BufferLength -= sizeof(FILE_INTERNAL_INFORMATION);
     return STATUS_SUCCESS;
 }
@@ -1107,12 +1103,10 @@ NTSTATUS
 VfatGetEaInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB Fcb,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_EA_INFORMATION Info,
     PULONG BufferLength)
 {
-    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-
     UNREFERENCED_PARAMETER(FileObject);
     UNREFERENCED_PARAMETER(Fcb);
 
@@ -1137,7 +1131,7 @@ NTSTATUS
 VfatGetAllInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB Fcb,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_ALL_INFORMATION Info,
     PULONG BufferLength)
 {
@@ -1150,28 +1144,28 @@ VfatGetAllInformation(
         return STATUS_BUFFER_OVERFLOW;
 
     /* Basic Information */
-    Status = VfatGetBasicInformation(FileObject, Fcb, DeviceObject, &Info->BasicInformation, BufferLength);
+    Status = VfatGetBasicInformation(FileObject, Fcb, DeviceExt, &Info->BasicInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* Standard Information */
     Status = VfatGetStandardInformation(Fcb, &Info->StandardInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* Internal Information */
-    Status = VfatGetInternalInformation(Fcb, &Info->InternalInformation, BufferLength);
+    Status = VfatGetInternalInformation(Fcb, DeviceExt, &Info->InternalInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* EA Information */
-    Status = VfatGetEaInformation(FileObject, Fcb, DeviceObject, &Info->EaInformation, BufferLength);
+    Status = VfatGetEaInformation(FileObject, Fcb, DeviceExt, &Info->EaInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* Access Information: The IO-Manager adds this information */
     *BufferLength -= sizeof(FILE_ACCESS_INFORMATION);
     /* Position Information */
-    Status = VfatGetPositionInformation(FileObject, Fcb, DeviceObject, &Info->PositionInformation, BufferLength);
+    Status = VfatGetPositionInformation(FileObject, Fcb, DeviceExt, &Info->PositionInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
     /* Mode Information: The IO-Manager adds this information */
     *BufferLength -= sizeof(FILE_MODE_INFORMATION);
     /* Alignment Information: The IO-Manager adds this information */
     *BufferLength -= sizeof(FILE_ALIGNMENT_INFORMATION);
     /* Name Information */
-    Status = VfatGetNameInformation(FileObject, Fcb, DeviceObject, &Info->NameInformation, BufferLength);
+    Status = VfatGetNameInformation(FileObject, Fcb, DeviceExt, &Info->NameInformation, BufferLength);
 
     return Status;
 }
@@ -1473,7 +1467,7 @@ VfatQueryInformation(
         case FilePositionInformation:
             Status = VfatGetPositionInformation(IrpContext->FileObject,
                                                 FCB,
-                                                IrpContext->DeviceObject,
+                                                IrpContext->DeviceExt,
                                                 SystemBuffer,
                                                 &BufferLength);
             break;
@@ -1481,7 +1475,7 @@ VfatQueryInformation(
         case FileBasicInformation:
             Status = VfatGetBasicInformation(IrpContext->FileObject,
                                              FCB,
-                                             IrpContext->DeviceObject,
+                                             IrpContext->DeviceExt,
                                              SystemBuffer,
                                              &BufferLength);
             break;
@@ -1489,13 +1483,14 @@ VfatQueryInformation(
         case FileNameInformation:
             Status = VfatGetNameInformation(IrpContext->FileObject,
                                             FCB,
-                                            IrpContext->DeviceObject,
+                                            IrpContext->DeviceExt,
                                             SystemBuffer,
                                             &BufferLength);
             break;
 
         case FileInternalInformation:
             Status = VfatGetInternalInformation(FCB,
+                                                IrpContext->DeviceExt,
                                                 SystemBuffer,
                                                 &BufferLength);
             break;
@@ -1510,7 +1505,7 @@ VfatQueryInformation(
         case FileAllInformation:
             Status = VfatGetAllInformation(IrpContext->FileObject,
                                            FCB,
-                                           IrpContext->DeviceObject,
+                                           IrpContext->DeviceExt,
                                            SystemBuffer,
                                            &BufferLength);
             break;
@@ -1518,7 +1513,7 @@ VfatQueryInformation(
         case FileEaInformation:
             Status = VfatGetEaInformation(IrpContext->FileObject,
                                           FCB,
-                                          IrpContext->DeviceObject,
+                                          IrpContext->DeviceExt,
                                           SystemBuffer,
                                           &BufferLength);
             break;
@@ -1630,7 +1625,7 @@ VfatSetInformation(
         case FileDispositionInformation:
             Status = VfatSetDispositionInformation(IrpContext->FileObject,
                                                    FCB,
-                                                   IrpContext->DeviceObject,
+                                                   IrpContext->DeviceExt,
                                                    SystemBuffer);
             break;
 

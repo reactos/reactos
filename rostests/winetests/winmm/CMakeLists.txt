@@ -14,7 +14,7 @@ list(APPEND SOURCE
 add_executable(winmm_winetest ${SOURCE})
 target_link_libraries(winmm_winetest dxguid)
 set_module_type(winmm_winetest win32cui)
-add_importlibs(winmm_winetest winmm user32 advapi32 msvcrt kernel32)
+add_importlibs(winmm_winetest winmm user32 advapi32 ole32 msvcrt kernel32)
 add_rostests_file(TARGET winmm_winetest)
 
 if(NOT MSVC)

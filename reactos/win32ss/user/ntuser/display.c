@@ -697,6 +697,7 @@ UserChangeDisplaySettings(
     HKEY hkey;
     NTSTATUS Status;
     PPDEVOBJ ppdev;
+    WORD OrigBC;
     //PDESKTOP pdesk;
 
     /* If no DEVMODE is given, use registry settings */
@@ -714,6 +715,9 @@ UserChangeDisplaySettings(
         return DISP_CHANGE_BADMODE; /* This is what winXP SP3 returns */
     else
         dm = *pdm;
+
+    /* Save original bit count */
+    OrigBC = gpsi->BitCount;
 
     /* Check params */
     if ((dm.dmFields & (DM_PELSWIDTH | DM_PELSHEIGHT)) != (DM_PELSWIDTH | DM_PELSHEIGHT))
@@ -775,18 +779,12 @@ UserChangeDisplaySettings(
         }
     }
 
-    /* Check if DEVMODE matches the current mode */
-    if (pdm == ppdev->pdmwDev && !(flags & CDS_RESET))
-    {
-        ERR("DEVMODE matches, nothing to do\n");
-        goto leave;
-    }
-
     /* Shall we apply the settings? */
     if (!(flags & CDS_NORESET))
     {
         ULONG ulResult;
         PVOID pvOldCursor;
+        TEXTMETRICW tmw;
 
         /* Remove mouse pointer */
         pvOldCursor = UserSetCursor(NULL, TRUE);
@@ -813,10 +811,23 @@ UserChangeDisplaySettings(
         /* Update the system metrics */
         InitMetrics();
 
-        //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
-
         /* Set new size of the monitor */
         UserUpdateMonitorSize((HDEV)ppdev);
+
+        /* Update the SERVERINFO */
+        gpsi->dmLogPixels = ppdev->gdiinfo.ulLogPixelsY;
+        gpsi->Planes      = ppdev->gdiinfo.cPlanes;
+        gpsi->BitsPixel   = ppdev->gdiinfo.cBitsPixel;
+        gpsi->BitCount    = gpsi->Planes * gpsi->BitsPixel;
+        if (ppdev->gdiinfo.flRaster & RC_PALETTE)
+        {
+            gpsi->PUSIFlags |= PUSIF_PALETTEDISPLAY;
+        }
+        else
+            gpsi->PUSIFlags &= ~PUSIF_PALETTEDISPLAY;
+        // Font is realized and this dc was previously set to internal DC_ATTR.
+        gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
+        gpsi->tmSysFont     = tmw;
 
         /* Remove all cursor clipping */
         UserClipCursor(NULL);
@@ -825,13 +836,21 @@ UserChangeDisplaySettings(
         //IntHideDesktop(pdesk);
 
         /* Send WM_DISPLAYCHANGE to all toplevel windows */
-        co_IntSendMessageTimeout(HWND_BROADCAST,
-                                 WM_DISPLAYCHANGE,
-                                 (WPARAM)ppdev->gdiinfo.cBitsPixel,
-                                 (LPARAM)(ppdev->gdiinfo.ulHorzRes + (ppdev->gdiinfo.ulVertRes << 16)),
-                                 SMTO_NORMAL,
-                                 100,
-                                 &ulResult);
+        UserSendNotifyMessage( HWND_BROADCAST,
+                               WM_DISPLAYCHANGE,
+                               gpsi->BitCount,
+                               MAKELONG(gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN]) );
+
+        ERR("BitCount New %d Orig %d ChkNew %d\n",gpsi->BitCount,OrigBC,ppdev->gdiinfo.cBitsPixel);
+
+        /* Not full screen and different bit count, send messages */
+        if (!(flags & CDS_FULLSCREEN) &&
+              gpsi->BitCount != OrigBC )
+        {
+           ERR("Detect settings changed.\n");
+           UserSendNotifyMessage( HWND_BROADCAST, WM_SETTINGCHANGE, 0, 0 );
+           UserSendNotifyMessage( HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0 );
+        }
 
         //co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
 

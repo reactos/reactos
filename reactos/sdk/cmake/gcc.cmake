@@ -289,7 +289,7 @@ function(set_entrypoint MODULE ENTRYPOINT)
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
-    add_target_link_flags(${MODULE} "-Wl,--subsystem,${SUBSYSTEM}")
+    add_target_link_flags(${MODULE} "-Wl,--subsystem,${SUBSYSTEM}:5.01")
 endfunction()
 
 function(set_image_base MODULE IMAGE_BASE)

@@ -45,8 +45,9 @@
 #include <uxtheme.h>
 #include <vssym32.h>
 
-#include <wine/unicode.h>
 #include <wine/debug.h>
+#include <wine/list.h>
+#include <wine/unicode.h>
 
 #include "resource.h"
 
@@ -176,6 +177,10 @@ extern void UPDOWN_Register(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
 extern void BUTTON_Register();
 extern void BUTTON_Unregister();
+#ifdef __REACTOS__
+extern void TOOLBARv6_Register(void) DECLSPEC_HIDDEN;
+extern void TOOLBARv6_Unregister(void) DECLSPEC_HIDDEN;
+#endif
 
 int MONTHCAL_MonthLength(int month, int year) DECLSPEC_HIDDEN;
 int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace) DECLSPEC_HIDDEN;

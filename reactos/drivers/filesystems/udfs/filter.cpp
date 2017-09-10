@@ -63,9 +63,9 @@ UDFCheckOtherFS(PDEVICE_OBJECT deviceObject) {
     FilterDevExt->NodeIdentifier.NodeType = UDF_NODE_TYPE_FILTER_DEVOBJ;
     FilterDevExt->NodeIdentifier.NodeSize = sizeof(FILTER_DEV_EXTENSION);
 
-    KdPrint(("UDFCheckOtherFS: Attaching filter devobj %x to FS devobj %x \n",filterDeviceObject,deviceObject));
+    UDFPrint(("UDFCheckOtherFS: Attaching filter devobj %x to FS devobj %x \n",filterDeviceObject,deviceObject));
     deviceObject = IoGetAttachedDevice( deviceObject );
-    KdPrint(("UDFCheckOtherFS: top devobj is %x \n",deviceObject));
+    UDFPrint(("UDFCheckOtherFS: top devobj is %x \n",deviceObject));
     FilterDevExt->lowerFSDeviceObject = deviceObject;
 
     RC = IoAttachDeviceByPointer( filterDeviceObject, deviceObject );
@@ -85,7 +85,7 @@ UDFCheckOtherFSByName(PCWSTR DeviceObjectName) {
     UNICODE_STRING nameString;
     NTSTATUS RC;
 
-    KdPrint(("UDFCheckOtherFSByName: trying %s \n",DeviceObjectName));
+    UDFPrint(("UDFCheckOtherFSByName: trying %s \n",DeviceObjectName));
 
     RtlInitUnicodeString( &nameString, DeviceObjectName );
     RC = IoGetDeviceObjectPointer(
@@ -96,7 +96,7 @@ UDFCheckOtherFSByName(PCWSTR DeviceObjectName) {
                 );
         
     if (!NT_SUCCESS(RC)) {
-        KdPrint(("UDFCheckOtherFSByName: error %x while calling IoGetDeviceObjectPointer \n",RC));
+        UDFPrint(("UDFCheckOtherFSByName: error %x while calling IoGetDeviceObjectPointer \n",RC));
         return;        
     }
 
@@ -151,7 +151,7 @@ Return Value:
     // Begin by determining whether this file system is registering or
     // unregistering as an active file system.
     if (FsActive) {
-        KdPrint(("UDFFSNotification \n"));
+        UDFPrint(("UDFFSNotification \n"));
         UDFCheckOtherFS(DeviceObject);
     }
 }

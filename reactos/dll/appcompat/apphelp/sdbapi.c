@@ -1,31 +1,16 @@
 /*
- * Copyright 2011 André Hentschel
- * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS Application compatibility module
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Sdb low level glue layer
+ * COPYRIGHT:   Copyright 2011 André Hentschel
+ *              Copyright 2013 Mislav Blaževic
+ *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
-#define WIN32_NO_STATUS
-#include "windows.h"
 #include "ntndk.h"
 #include "strsafe.h"
 #include "apphelp.h"
 #include "sdbstringtable.h"
-
-#include "wine/unicode.h"
 
 
 static const GUID GUID_DATABASE_MSI = {0xd8ff6d16,0x6a3a,0x468a, {0x8b,0x44,0x01,0x71,0x4d,0xdc,0x49,0xea}};
@@ -36,128 +21,30 @@ static HANDLE SdbpHeap(void);
 
 #if SDBAPI_DEBUG_ALLOC
 
-typedef struct SHIM_ALLOC_ENTRY
-{
-    PVOID Address;
-    SIZE_T Size;
-    int Line;
-    const char* File;
-    PVOID Next;
-    PVOID Prev;
-} SHIM_ALLOC_ENTRY, *PSHIM_ALLOC_ENTRY;
-
-
-static RTL_AVL_TABLE g_SdbpAllocationTable;
-
-
-static RTL_GENERIC_COMPARE_RESULTS
-NTAPI ShimAllocCompareRoutine(_In_ PRTL_AVL_TABLE Table, _In_ PVOID FirstStruct, _In_ PVOID SecondStruct)
-{
-    PVOID First = ((PSHIM_ALLOC_ENTRY)FirstStruct)->Address;
-    PVOID Second = ((PSHIM_ALLOC_ENTRY)SecondStruct)->Address;
-
-    if (First < Second)
-        return GenericLessThan;
-    else if (First == Second)
-        return GenericEqual;
-    return GenericGreaterThan;
-}
-
-static PVOID NTAPI ShimAllocAllocateRoutine(_In_ PRTL_AVL_TABLE Table, _In_ CLONG ByteSize)
-{
-    return HeapAlloc(SdbpHeap(), HEAP_ZERO_MEMORY, ByteSize);
-}
-
-static VOID NTAPI ShimAllocFreeRoutine(_In_ PRTL_AVL_TABLE Table, _In_ PVOID Buffer)
-{
-    HeapFree(SdbpHeap(), 0, Buffer);
-}
-
-static void SdbpInsertAllocation(PVOID address, SIZE_T size, int line, const char* file)
-{
-    SHIM_ALLOC_ENTRY Entry = {0};
-
-    Entry.Address = address;
-    Entry.Size = size;
-    Entry.Line = line;
-    Entry.File = file;
-    RtlInsertElementGenericTableAvl(&g_SdbpAllocationTable, &Entry, sizeof(Entry), NULL);
-}
-
-static void SdbpUpdateAllocation(PVOID address, PVOID newaddress, SIZE_T size, int line, const char* file)
-{
-    SHIM_ALLOC_ENTRY Lookup = {0};
-    PSHIM_ALLOC_ENTRY Entry;
-    Lookup.Address = address;
-    Entry = RtlLookupElementGenericTableAvl(&g_SdbpAllocationTable, &Lookup);
-
-    if (address == newaddress)
-    {
-        Entry->Size = size;
-    }
-    else
-    {
-        Lookup.Address = newaddress;
-        Lookup.Size = size;
-        Lookup.Line = line;
-        Lookup.File = file;
-        Lookup.Prev = address;
-        RtlInsertElementGenericTableAvl(&g_SdbpAllocationTable, &Lookup, sizeof(Lookup), NULL);
-        Entry->Next = newaddress;
-    }
-}
-
-static void SdbpRemoveAllocation(PVOID address, int line, const char* file)
-{
-    char buf[512];
-    SHIM_ALLOC_ENTRY Lookup = {0};
-    PSHIM_ALLOC_ENTRY Entry;
-
-    sprintf(buf, "\r\n===============\r\n%s(%d): SdbpFree called, tracing alloc:\r\n", file, line);
-    OutputDebugStringA(buf);
-
-    Lookup.Address = address;
-    while (Lookup.Address)
-    {
-        Entry = RtlLookupElementGenericTableAvl(&g_SdbpAllocationTable, &Lookup);
-        if (Entry)
-        {
-            Lookup = *Entry;
-            RtlDeleteElementGenericTableAvl(&g_SdbpAllocationTable, Entry);
-
-            sprintf(buf, " > %s(%d): %s%sAlloc( %d ) ==> %p\r\n", Lookup.File, Lookup.Line,
-                Lookup.Next ? "Invalidated " : "", Lookup.Prev ? "Re" : "", Lookup.Size, Lookup.Address);
-            OutputDebugStringA(buf);
-            Lookup.Address = Lookup.Prev;
-        }
-        else
-        {
-            Lookup.Address = NULL;
-        }
-    }
-    sprintf(buf, "\r\n===============\r\n");
-    OutputDebugStringA(buf);
-}
+/* dbgheap.c */
+void SdbpInsertAllocation(PVOID address, SIZE_T size, int line, const char* file);
+void SdbpUpdateAllocation(PVOID address, PVOID newaddress, SIZE_T size, int line, const char* file);
+void SdbpRemoveAllocation(PVOID address, int line, const char* file);
+void SdbpDebugHeapInit(HANDLE privateHeapPtr);
+void SdbpDebugHeapDeinit(void);
 
 #endif
 
 static HANDLE g_Heap;
 void SdbpHeapInit(void)
 {
+    g_Heap = RtlCreateHeap(HEAP_GROWABLE, NULL, 0, 0x10000, NULL, NULL);
 #if SDBAPI_DEBUG_ALLOC
-    RtlInitializeGenericTableAvl(&g_SdbpAllocationTable, ShimAllocCompareRoutine,
-        ShimAllocAllocateRoutine, ShimAllocFreeRoutine, NULL);
+    SdbpDebugHeapInit(g_Heap);
 #endif
-    g_Heap = HeapCreate(0, 0x10000, 0);
 }
 
 void SdbpHeapDeinit(void)
 {
 #if SDBAPI_DEBUG_ALLOC
-    if (g_SdbpAllocationTable.NumberGenericTableElements != 0)
-        __debugbreak();
+    SdbpDebugHeapDeinit();
 #endif
-    HeapDestroy(g_Heap);
+    RtlDestroyHeap(g_Heap);
 }
 
 static HANDLE SdbpHeap(void)
@@ -171,7 +58,7 @@ LPVOID SdbpAlloc(SIZE_T size
 #endif
     )
 {
-    LPVOID mem = HeapAlloc(SdbpHeap(), HEAP_ZERO_MEMORY, size);
+    LPVOID mem = RtlAllocateHeap(SdbpHeap(), HEAP_ZERO_MEMORY, size);
 #if SDBAPI_DEBUG_ALLOC
     SdbpInsertAllocation(mem, size, line, file);
 #endif
@@ -184,7 +71,7 @@ LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size, SIZE_T oldSize
 #endif
     )
 {
-    LPVOID newmem = HeapReAlloc(SdbpHeap(), HEAP_ZERO_MEMORY, mem, size);
+    LPVOID newmem = RtlReAllocateHeap(SdbpHeap(), HEAP_ZERO_MEMORY, mem, size);
 #if SDBAPI_DEBUG_ALLOC
     SdbpUpdateAllocation(mem, newmem, size, line, file);
 #endif
@@ -200,7 +87,7 @@ void SdbpFree(LPVOID mem
 #if SDBAPI_DEBUG_ALLOC
     SdbpRemoveAllocation(mem, line, file);
 #endif
-    HeapFree(SdbpHeap(), 0, mem);
+    RtlFreeHeap(SdbpHeap(), 0, mem);
 }
 
 PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
@@ -209,7 +96,7 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
     IO_STATUS_BLOCK io;
     OBJECT_ATTRIBUTES attr;
     UNICODE_STRING str;
-    PDB db;
+    PDB pdb;
 
     if (type == DOS_PATH)
     {
@@ -217,11 +104,13 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
             return NULL;
     }
     else
+    {
         RtlInitUnicodeString(&str, path);
+    }
 
     /* SdbAlloc zeroes the memory. */
-    db = (PDB)SdbAlloc(sizeof(DB));
-    if (!db)
+    pdb = (PDB)SdbAlloc(sizeof(DB));
+    if (!pdb)
     {
         SHIM_ERR("Failed to allocate memory for shim database\n");
         return NULL;
@@ -229,35 +118,40 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
 
     InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-    Status = NtCreateFile(&db->file, (write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ )| SYNCHRONIZE,
+    Status = NtCreateFile(&pdb->file, (write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ )| SYNCHRONIZE,
                           &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
                           write ? FILE_SUPERSEDE : FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+
+    pdb->for_write = write;
 
     if (type == DOS_PATH)
         RtlFreeUnicodeString(&str);
 
     if (!NT_SUCCESS(Status))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to create shim database file: %lx\n", Status);
         return NULL;
     }
 
-    return db;
+    return pdb;
 }
 
-void WINAPI SdbpFlush(PDB db)
+void WINAPI SdbpFlush(PDB pdb)
 {
     IO_STATUS_BLOCK io;
-    NTSTATUS Status = NtWriteFile(db->file, NULL, NULL, NULL, &io,
-        db->data, db->write_iter, NULL, NULL);
+    NTSTATUS Status;
+
+    ASSERT(pdb->for_write);
+    Status = NtWriteFile(pdb->file, NULL, NULL, NULL, &io,
+        pdb->data, pdb->write_iter, NULL, NULL);
     if( !NT_SUCCESS(Status))
         SHIM_WARN("failed with 0x%lx\n", Status);
 }
 
 DWORD SdbpStrlen(PCWSTR string)
 {
-    return lstrlenW(string);
+    return wcslen(string);
 }
 
 DWORD SdbpStrsize(PCWSTR string)
@@ -267,8 +161,8 @@ DWORD SdbpStrsize(PCWSTR string)
 
 PWSTR SdbpStrDup(LPCWSTR string)
 {
-    PWSTR ret = SdbpAlloc(SdbpStrsize(string));
-    lstrcpyW(ret, string);
+    PWSTR ret = SdbAlloc(SdbpStrsize(string));
+    wcscpy(ret, string);
     return ret;
 }
 
@@ -357,9 +251,9 @@ BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type)
     return TRUE;
 }
 
-BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
+BOOL WINAPI SdbpCheckTagIDType(PDB pdb, TAGID tagid, WORD type)
 {
-    TAG tag = SdbGetTagFromTagID(db, tagid);
+    TAG tag = SdbGetTagFromTagID(pdb, tagid);
     if (tag == TAG_NULL)
         return FALSE;
     return SdbpCheckTagType(tag, type);
@@ -368,35 +262,44 @@ BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
 PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
 {
     IO_STATUS_BLOCK io;
-    PDB db;
+    FILE_STANDARD_INFORMATION fsi;
+    PDB pdb;
     NTSTATUS Status;
     BYTE header[12];
 
-    db = SdbpCreate(path, type, FALSE);
-    if (!db)
+    pdb = SdbpCreate(path, type, FALSE);
+    if (!pdb)
         return NULL;
 
-    db->size = GetFileSize(db->file, NULL);
-    db->data = SdbAlloc(db->size);
-    Status = NtReadFile(db->file, NULL, NULL, NULL, &io, db->data, db->size, NULL, NULL);
+    Status = NtQueryInformationFile(pdb->file, &io, &fsi, sizeof(FILE_STANDARD_INFORMATION), FileStandardInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        SdbCloseDatabase(pdb);
+        SHIM_ERR("Failed to get shim database size: 0x%lx\n", Status);
+        return NULL;
+    }
+
+    pdb->size = fsi.EndOfFile.u.LowPart;
+    pdb->data = SdbAlloc(pdb->size);
+    Status = NtReadFile(pdb->file, NULL, NULL, NULL, &io, pdb->data, pdb->size, NULL, NULL);
 
     if (!NT_SUCCESS(Status))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to open shim database file: 0x%lx\n", Status);
         return NULL;
     }
 
-    if (!SdbpReadData(db, &header, 0, 12))
+    if (!SdbpReadData(pdb, &header, 0, 12))
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Failed to read shim database header\n");
         return NULL;
     }
 
     if (memcmp(&header[8], "sdbf", 4) != 0)
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Shim database header is invalid\n");
         return NULL;
     }
@@ -404,7 +307,7 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
     *major = *(DWORD*)&header[0];
     *minor = *(DWORD*)&header[4];
 
-    return db;
+    return pdb;
 }
 
 
@@ -418,46 +321,46 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
  */
 PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
 {
-    PDB db;
+    PDB pdb;
     DWORD major, minor;
 
-    db = SdbpOpenDatabase(path, type, &major, &minor);
-    if (!db)
+    pdb = SdbpOpenDatabase(path, type, &major, &minor);
+    if (!pdb)
         return NULL;
 
     if (major != 2 && major != 3)
     {
-        SdbCloseDatabase(db);
+        SdbCloseDatabase(pdb);
         SHIM_ERR("Invalid shim database version\n");
         return NULL;
     }
 
-    db->stringtable = SdbFindFirstTag(db, TAGID_ROOT, TAG_STRINGTABLE);
-    if(!SdbGetDatabaseID(db, &db->database_id))
+    pdb->stringtable = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_STRINGTABLE);
+    if(!SdbGetDatabaseID(pdb, &pdb->database_id))
     {
         SHIM_INFO("Failed to get the database id\n");
     }
-    return db;
+    return pdb;
 }
 
 /**
  * Closes specified database and frees its memory.
  *
- * @param [in]  db  Handle to the shim database.
+ * @param [in]  pdb  Handle to the shim database.
  */
-void WINAPI SdbCloseDatabase(PDB db)
+void WINAPI SdbCloseDatabase(PDB pdb)
 {
-    if (!db)
+    if (!pdb)
         return;
 
-    if (db->file)
-        NtClose(db->file);
-    if (db->string_buffer)
-        SdbCloseDatabase(db->string_buffer);
-    if (db->string_lookup)
-        SdbpTableDestroy(&db->string_lookup);
-    SdbFree(db->data);
-    SdbFree(db);
+    if (pdb->file)
+        NtClose(pdb->file);
+    if (pdb->string_buffer)
+        SdbCloseDatabase(pdb->string_buffer);
+    if (pdb->string_lookup)
+        SdbpTableDestroy(&pdb->string_lookup);
+    SdbFree(pdb->data);
+    SdbFree(pdb);
 }
 
 /**
@@ -553,11 +456,11 @@ BOOL WINAPI SdbGetStandardDatabaseGUID(DWORD Flags, GUID* Guid)
  */
 BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD VersionLo)
 {
-    PDB db;
+    PDB pdb;
 
-    db = SdbpOpenDatabase(database, DOS_PATH, VersionHi, VersionLo);
-    if (db)
-        SdbCloseDatabase(db);
+    pdb = SdbpOpenDatabase(database, DOS_PATH, VersionHi, VersionLo);
+    if (pdb)
+        SdbCloseDatabase(pdb);
 
     return TRUE;
 }
@@ -574,22 +477,22 @@ BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD Ver
  *
  * @return  The found tag, or TAGID_NULL on failure
  */
-TAGID WINAPI SdbFindFirstNamedTag(PDB db, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name)
+TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name)
 {
     TAGID iter;
 
-    iter = SdbFindFirstTag(db, root, find);
+    iter = SdbFindFirstTag(pdb, root, find);
 
     while (iter != TAGID_NULL)
     {
-        TAGID tmp = SdbFindFirstTag(db, iter, nametag);
+        TAGID tmp = SdbFindFirstTag(pdb, iter, nametag);
         if (tmp != TAGID_NULL)
         {
-            LPCWSTR name = SdbGetStringTagPtr(db, tmp);
-            if (name && !lstrcmpiW(name, find_name))
+            LPCWSTR name = SdbGetStringTagPtr(pdb, tmp);
+            if (name && !wcsicmp(name, find_name))
                 return iter;
         }
-        iter = SdbFindNextTag(db, root, iter);
+        iter = SdbFindNextTag(pdb, root, iter);
     }
     return TAGID_NULL;
 }
@@ -605,16 +508,16 @@ TAGID WINAPI SdbFindFirstNamedTag(PDB db, TAGID root, TAGID find, TAGID nametag,
  */
 TAGREF WINAPI SdbGetLayerTagRef(HSDB hsdb, LPCWSTR layerName)
 {
-    PDB db = hsdb->db;
+    PDB pdb = hsdb->pdb;
 
-    TAGID database = SdbFindFirstTag(db, TAGID_ROOT, TAG_DATABASE);
+    TAGID database = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
     if (database != TAGID_NULL)
     {
-        TAGID layer = SdbFindFirstNamedTag(db, database, TAG_LAYER, TAG_NAME, layerName);
+        TAGID layer = SdbFindFirstNamedTag(pdb, database, TAG_LAYER, TAG_NAME, layerName);
         if (layer != TAGID_NULL)
         {
             TAGREF tr;
-            if (SdbTagIDToTagRef(hsdb, db, layer, &tr))
+            if (SdbTagIDToTagRef(hsdb, pdb, layer, &tr))
             {
                 return tr;
             }

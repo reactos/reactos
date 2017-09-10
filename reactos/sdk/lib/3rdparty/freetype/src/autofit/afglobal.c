@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter routines to compute global hinting values (body).        */
 /*                                                                         */
-/*  Copyright 2003-2016 by                                                 */
+/*  Copyright 2003-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -411,10 +411,7 @@
 
 #ifdef FT_CONFIG_OPTION_USE_HARFBUZZ
       hb_font_destroy( globals->hb_font );
-      globals->hb_font = NULL;
-
       hb_buffer_destroy( globals->hb_buf );
-      globals->hb_buf = NULL;
 #endif
 
       /* no need to free `globals->glyph_styles'; */

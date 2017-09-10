@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Spooler Router
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Print Monitors
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -10,7 +10,7 @@
 BOOL WINAPI
 EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL bReturnValue;
+    BOOL bReturnValue = TRUE;
     DWORD cbCallBuffer;
     DWORD cbNeeded;
     DWORD dwReturned;
@@ -19,9 +19,9 @@ EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcb
     PLIST_ENTRY pEntry;
 
     // Sanity checks.
-    if ((cbBuf && !pMonitors) || !pcbNeeded || !pcReturned)
+    if (cbBuf && !pMonitors)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_USER_BUFFER);
         return FALSE;
     }
 
@@ -43,6 +43,8 @@ EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcb
             continue;
 
         // Call the EnumMonitors function of this Print Provider.
+        cbNeeded = 0;
+        dwReturned = 0;
         bReturnValue = pPrintProvider->PrintProvider.fpEnumMonitors(pName, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
 
         // Add the returned counts to the total values.

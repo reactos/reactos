@@ -251,7 +251,6 @@ IntVideoPortFindAdapter(
 {
     WCHAR DeviceVideoBuffer[20];
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-    SIZE_T Size;
     NTSTATUS Status;
     VIDEO_PORT_CONFIG_INFO ConfigInfo;
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
@@ -280,11 +279,10 @@ IntVideoPortFindAdapter(
     ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
     ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
 
-    Size = sizeof(SystemBasicInfo);
     Status = ZwQuerySystemInformation(SystemBasicInformation,
                                       &SystemBasicInfo,
-                                      Size,
-                                      &Size);
+                                      sizeof(SystemBasicInfo),
+                                      NULL);
     if (NT_SUCCESS(Status))
     {
         ConfigInfo.SystemMemorySize = SystemBasicInfo.NumberOfPhysicalPages *

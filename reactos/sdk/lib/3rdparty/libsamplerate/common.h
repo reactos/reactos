@@ -1,25 +1,9 @@
 /*
-** Copyright (C) 2002-2011 Erik de Castro Lopo <erikd@mega-nerd.com>
+** Copyright (c) 2002-2016, Erik de Castro Lopo <erikd@mega-nerd.com>
+** All rights reserved.
 **
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-*/
-
-/*
-** This code is part of Secret Rabbit Code aka libsamplerate. A commercial
-** use license for this code is available, please see:
-**		http://www.mega-nerd.com/SRC/procedure.html
+** This code is released under 2-clause BSD license. Please see the
+** file at : https://github.com/erikd/libsamplerate/blob/master/COPYING
 */
 
 #ifndef COMMON_H_INCLUDED
@@ -99,6 +83,7 @@ enum
 	SRC_ERR_NULL_CALLBACK,
 	SRC_ERR_NO_VARIABLE_RATIO,
 	SRC_ERR_SINC_PREPARE_DATA_BAD_LEN,
+	SRC_ERR_BAD_INTERNAL_STATE,
 
 	/* This must be the last error number. */
 	SRC_ERR_MAX_ERROR
@@ -129,7 +114,7 @@ typedef struct SRC_PRIVATE_tag
 	src_callback_t	callback_func ;
 	void			*user_callback_data ;
 	long			saved_frames ;
-	float			*saved_data ;
+	const float		*saved_data ;
 } SRC_PRIVATE ;
 
 /* In src_sinc.c */
@@ -164,6 +149,12 @@ fmod_one (double x)
 
 	return res ;
 } /* fmod_one */
+
+static inline int
+is_bad_src_ratio (double ratio)
+{	return (ratio < (1.0 / SRC_MAX_RATIO) || ratio > (1.0 * SRC_MAX_RATIO)) ;
+} /* is_bad_src_ratio */
+
 
 #endif	/* COMMON_H_INCLUDED */
 

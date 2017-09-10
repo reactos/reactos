@@ -56,10 +56,7 @@ BOOL fInEndMenu = FALSE;
 #define MII_STATE_MASK (MFS_GRAYED|MFS_CHECKED|MFS_HILITE|MFS_DEFAULT)
 
 #define IS_SYSTEM_MENU(MenuInfo)  \
-	(0 == ((MenuInfo)->fFlags & MNF_POPUP) && 0 != ((MenuInfo)->fFlags & MNF_SYSMENU))
-
-#define IS_SYSTEM_POPUP(MenuInfo) \
-	(0 != ((MenuInfo)->fFlags & MNF_POPUP) && 0 != ((MenuInfo)->fFlags & MNF_SYSMENU))
+	(!((MenuInfo)->fFlags & MNF_POPUP) && ((MenuInfo)->fFlags & MNF_SYSMENU))
 
 #define IS_BITMAP_ITEM(flags) (MF_BITMAP == MENU_ITEM_TYPE(flags))
 
@@ -2200,6 +2197,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
     BOOL flat_menu = FALSE;
     int bkgnd;
     UINT arrow_bitmap_width = 0;
+    //RECT bmprc;
 
     if (!menuBar) {
         arrow_bitmap_width  = gpsi->oembmi[OBI_MNARROW].cx; 
@@ -2356,7 +2354,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
 
         rc.left++;
         rc.right--;
-        rc.top += SEPARATOR_HEIGHT / 2;
+        rc.top = ( rc.top + rc.bottom) / 2;
         if (flat_menu)
         {
             oldPen = NtGdiSelectPen( hdc, NtGdiGetStockObject(DC_PEN) );
@@ -2369,7 +2367,6 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             DrawEdge (hdc, &rc, EDGE_ETCHED, BF_TOP);
         return;
     }
-
 #if 0
     /* helper lines for debugging */
     /* This is a very good test tool when hacking menus! (JT) 07/16/2006 */
@@ -2379,7 +2376,33 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
     GreMoveTo(hdc, rect.left, (rect.top + rect.bottom) / 2, NULL);
     NtGdiLineTo(hdc, rect.right, (rect.top + rect.bottom) / 2);
 #endif
+#if 0 // breaks mdi menu bar icons.
+    if (lpitem->hbmp) {
+        /* calculate the bitmap rectangle in coordinates relative
+         * to the item rectangle */
+        if( menuBar) {
+            if( lpitem->hbmp == HBMMENU_CALLBACK)
+                bmprc.left = 3;
+            else 
+                bmprc.left = lpitem->Xlpstr ? MenuCharSize.cx : 0;          
+        }
+        else if ((Menu->fFlags & MNS_STYLE_MASK) & MNS_NOCHECK)
+            bmprc.left = 4;
+        else if ((Menu->fFlags & MNS_STYLE_MASK) & MNS_CHECKORBMP)
+            bmprc.left = 2;
+        else
+            bmprc.left = 4 + UserGetSystemMetrics(SM_CXMENUCHECK);
 
+        bmprc.right =  bmprc.left + lpitem->cxBmp;
+
+        if( menuBar && !(lpitem->hbmp == HBMMENU_CALLBACK))
+            bmprc.top = 0;
+        else
+            bmprc.top = (rect.bottom - rect.top - lpitem->cyBmp) / 2; 
+
+        bmprc.bottom =  bmprc.top + lpitem->cyBmp;
+    }
+#endif
     if (!menuBar)
     {
         HBITMAP bm;
@@ -2411,28 +2434,22 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             {
                 RECT r;
                 r = rect;
-                r.right = r.left + UserGetSystemMetrics(SM_CXMENUCHECK);
+                r.right = r.left + check_bitmap_width;
                 DrawFrameControl( hdc, &r, DFC_MENU,
                                  (lpitem->fType & MFT_RADIOCHECK) ?
                                  DFCS_MENUBULLET : DFCS_MENUCHECK);
                 checked = TRUE;
             }
         }
-        if ( lpitem->hbmp )//&& !( checked && (Menu->dwStyle & MNS_CHECKORBMP)))
+        if ( lpitem->hbmp )//&& !( checked && ((Menu->fFlags & MNS_STYLE_MASK) & MNS_CHECKORBMP)))
         {
-            RECT bmpRect;
-            //CopyRect(&bmpRect, &rect);
-            bmpRect = rect;
+            RECT bmpRect = rect;
             if (!((Menu->fFlags & MNS_STYLE_MASK) & MNS_CHECKORBMP) && !((Menu->fFlags & MNS_STYLE_MASK) & MNS_NOCHECK))
                 bmpRect.left += check_bitmap_width + 2;
             if (!(checked && ((Menu->fFlags & MNS_STYLE_MASK) & MNS_CHECKORBMP)))
             {
-                //POINT origorg;
                 bmpRect.right = bmpRect.left + lpitem->cxBmp;
-                /* some applications make this assumption on the DC's origin */
-                //SetViewportOrgEx( hdc, rect.left, rect.top, &origorg);
                 MENU_DrawBitmapItem(hdc, lpitem, &bmpRect, Menu, WndOwner, odaction, menuBar);
-                //SetViewportOrgEx( hdc, origorg.x, origorg.y, NULL);
             }
         }
         /* Draw the popup-menu arrow */
@@ -2440,21 +2457,17 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
         {
             RECT rectTemp;
             RtlCopyMemory(&rectTemp, &rect, sizeof(RECT));
-            rectTemp.left = rectTemp.right - UserGetSystemMetrics(SM_CXMENUCHECK);
+            rectTemp.left = rectTemp.right - check_bitmap_width;
             DrawFrameControl(hdc, &rectTemp, DFC_MENU, DFCS_MENUARROW);
         }
         rect.left += 4;
         if( !((Menu->fFlags & MNS_STYLE_MASK) & MNS_NOCHECK))
             rect.left += check_bitmap_width;
-        rect.right -= arrow_bitmap_width;//check_bitmap_width;
+        rect.right -= arrow_bitmap_width;
     }
     else if( lpitem->hbmp)
     { /* Draw the bitmap */
-        //POINT origorg;
-
-        //SetViewportOrgEx( hdc, rect.left, rect.top, &origorg);
-        MENU_DrawBitmapItem(hdc, lpitem, &rect, Menu, WndOwner, odaction, menuBar);
-        //SetViewportOrgEx( hdc, origorg.x, origorg.y, NULL);
+        MENU_DrawBitmapItem(hdc, lpitem, &rect/*bmprc*/, Menu, WndOwner, odaction, menuBar);
     }
 
     /* process text if present */
@@ -2483,14 +2496,12 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             if( !(lpitem->hbmp == HBMMENU_CALLBACK)) 
               rect.left += MenuCharSize.cx;
             rect.right -= MenuCharSize.cx;
-            //rect.left += MENU_BAR_ITEMS_SPACE / 2;
-            //rect.right -= MENU_BAR_ITEMS_SPACE / 2;
         }
 
         Text = lpitem->Xlpstr;
         if(Text)
         {
-            for (i = 0; L'\0' != Text[i]; i++)
+            for (i = 0; Text[i]; i++)
                 if (Text[i] == L'\t' || Text[i] == L'\b')
                     break;
         }
@@ -3718,7 +3729,7 @@ static BOOL FASTCALL MENU_KeyEscape(MTRACKER *pmt, UINT Flags)
  *
  * Handle a VK_LEFT key event in a menu.
  */
-static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags)
+static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags, UINT msg)
 {
   PMENU MenuTmp, MenuPrev;
   UINT PrevCol;
@@ -3754,7 +3765,7 @@ static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags)
           /* A sublevel menu was displayed - display the next one
            * unless there is another displacement coming up */
 
-          if (!MENU_SuspendPopup(pmt, WM_KEYDOWN))
+          if (!MENU_SuspendPopup(pmt, msg))
               pmt->CurrentMenu = MENU_ShowSubPopup(pmt->OwnerWnd, pmt->TopMenu,
                                                  TRUE, Flags);
       }
@@ -3766,7 +3777,7 @@ static void FASTCALL MENU_KeyLeft(MTRACKER* pmt, UINT Flags)
  *
  * Handle a VK_RIGHT key event in a menu.
  */
-static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags)
+static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags, UINT msg)
 {
     PMENU menutmp;
     UINT NextCol;
@@ -3811,7 +3822,7 @@ static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags)
 
        if ( menutmp || pmt->TrackFlags & TF_SUSPENDPOPUP )
        {
-           if ( !MENU_SuspendPopup(pmt, WM_KEYDOWN) )
+           if ( !MENU_SuspendPopup(pmt, msg) )
                pmt->CurrentMenu = MENU_ShowSubPopup(pmt->OwnerWnd, pmt->TopMenu, TRUE, Flags);
        }
     }
@@ -3925,7 +3936,6 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
             break;
         }
 
-        IntTranslateKbdMessage(&msg, 0);
         mt.Pt = msg.pt;
 
         if ( (msg.hwnd == mt.CurrentMenu->hWnd) || ((msg.message!=WM_TIMER) && (msg.message!=WM_SYSTIMER)) )
@@ -4027,11 +4037,11 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                         break;
 
                     case VK_LEFT:
-                        MENU_KeyLeft( &mt, wFlags );
+                        MENU_KeyLeft( &mt, wFlags, msg.message );
                         break;
 
                     case VK_RIGHT:
-                        MENU_KeyRight( &mt, wFlags );
+                        MENU_KeyRight( &mt, wFlags, msg.message );
                         break;
 
                     case VK_ESCAPE:
@@ -4055,6 +4065,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     }
 
                     default:
+                        IntTranslateKbdMessage(&msg, 0);
                         break;
                 }
                 break;  /* WM_KEYDOWN */
@@ -4147,6 +4158,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
        mt.TopMenu->TimeToHide = FALSE;
     }
 
+    EngSetLastError( ERROR_SUCCESS );
     /* The return value is only used by TrackPopupMenu */
     if (!(wFlags & TPM_RETURNCMD)) return TRUE;
     if (executedMenuId == -1) executedMenuId = 0;
@@ -4240,7 +4252,7 @@ static BOOL FASTCALL MENU_ExitTracking(PWND pWnd, BOOL bPopup, UINT wFlags)
  */
 VOID MENU_TrackMouseMenuBar( PWND pWnd, ULONG ht, POINT pt)
 {
-    PMENU pMenu = (ht == HTSYSMENU) ? IntGetSystemMenu(pWnd, FALSE) : IntGetMenu( UserHMGetHandle(pWnd) );
+    PMENU pMenu = (ht == HTSYSMENU) ? IntGetSystemMenu(pWnd, FALSE) : IntGetMenu( UserHMGetHandle(pWnd) ); // See 74276 and CORE-12801
     UINT wFlags = TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
 
     TRACE("wnd=%p ht=0x%04x (%ld,%ld)\n", pWnd, ht, pt.x, pt.y);
@@ -4372,14 +4384,6 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
           MsqSetStateWindow(pti, MSQ_STATE_MENUOWNER, NULL);
           pti->MessageQueue->QF_flags &= ~QF_CAPTURELOCKED;
           co_UserSetCapture(NULL); /* release the capture */
-       }
-
-       //
-       // HACK : Until back trace fault in co_IntUpdateWindows and MENU_TrackMenu.
-       //
-       if (EngGetLastError() == ERROR_ACCESS_DENIED)
-       {
-          EngSetLastError(NO_ERROR);
        }
 
        MENU_ExitTracking(pWnd, TRUE, wFlags);

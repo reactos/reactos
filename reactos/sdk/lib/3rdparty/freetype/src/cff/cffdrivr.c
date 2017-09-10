@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,6 +34,7 @@
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 #include FT_SERVICE_MULTIPLE_MASTERS_H
+#include FT_SERVICE_METRICS_VARIATIONS_H
 #endif
 
 #include "cfferrs.h"
@@ -832,6 +833,7 @@
       {
         FT_UInt*  hinting_engine = (FT_UInt*)value;
 
+
         if ( *hinting_engine == FT_CFF_HINTING_ADOBE
 #ifdef CFF_CONFIG_OPTION_OLD_ENGINE
              || *hinting_engine == FT_CFF_HINTING_FREETYPE
@@ -853,12 +855,10 @@
         long         nsd = ft_strtol( s, NULL, 10 );
 
 
-        if ( nsd == 0 )
-          driver->no_stem_darkening = 0;
-        else if ( nsd == 1 )
-          driver->no_stem_darkening = 1;
+        if ( !nsd )
+          driver->no_stem_darkening = FALSE;
         else
-          return FT_THROW( Invalid_Argument );
+          driver->no_stem_darkening = TRUE;
       }
       else
 #endif
@@ -868,6 +868,30 @@
 
         driver->no_stem_darkening = *no_stem_darkening;
       }
+
+      return error;
+    }
+    else if ( !ft_strcmp( property_name, "random-seed" ) )
+    {
+      FT_Int32  random_seed;
+
+
+#ifdef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
+      if ( value_is_string )
+      {
+        const char*  s = (const char*)value;
+
+
+        random_seed = (FT_Int32)ft_strtol( s, NULL, 10 );
+      }
+      else
+#endif
+        random_seed = *(FT_Int32*)value;
+
+      if ( random_seed < 0 )
+        random_seed = 0;
+
+      driver->random_seed = random_seed;
 
       return error;
     }
@@ -1018,6 +1042,49 @@
     (FT_Get_Var_Blend_Func) cff_get_var_blend,      /* get_var_blend  */
     (FT_Done_Blend_Func)    cff_done_blend          /* done_blend     */
   )
+
+
+  /*
+   *  METRICS VARIATIONS SERVICE
+   *
+   */
+
+  static FT_Error
+  cff_hadvance_adjust( CFF_Face  face,
+                       FT_UInt   gindex,
+                       FT_Int   *avalue )
+  {
+    FT_Service_MetricsVariations  var = (FT_Service_MetricsVariations)face->var;
+
+
+    return var->hadvance_adjust( FT_FACE( face ), gindex, avalue );
+  }
+
+
+  static void
+  cff_metrics_adjust( CFF_Face  face )
+  {
+    FT_Service_MetricsVariations  var = (FT_Service_MetricsVariations)face->var;
+
+
+    var->metrics_adjust( FT_FACE( face ) );
+  }
+
+
+  FT_DEFINE_SERVICE_METRICSVARIATIONSREC(
+    cff_service_metrics_variations,
+
+    (FT_HAdvance_Adjust_Func)cff_hadvance_adjust,    /* hadvance_adjust */
+    (FT_LSB_Adjust_Func)     NULL,                   /* lsb_adjust      */
+    (FT_RSB_Adjust_Func)     NULL,                   /* rsb_adjust      */
+
+    (FT_VAdvance_Adjust_Func)NULL,                   /* vadvance_adjust */
+    (FT_TSB_Adjust_Func)     NULL,                   /* tsb_adjust      */
+    (FT_BSB_Adjust_Func)     NULL,                   /* bsb_adjust      */
+    (FT_VOrg_Adjust_Func)    NULL,                   /* vorg_adjust     */
+
+    (FT_Metrics_Adjust_Func) cff_metrics_adjust      /* metrics_adjust  */
+  )
 #endif
 
 
@@ -1035,11 +1102,12 @@
 
 #if !defined FT_CONFIG_OPTION_NO_GLYPH_NAMES && \
      defined TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_DEFINE_SERVICEDESCREC8(
+  FT_DEFINE_SERVICEDESCREC9(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
     FT_SERVICE_ID_MULTI_MASTERS,        &CFF_SERVICE_MULTI_MASTERS_GET,
+    FT_SERVICE_ID_METRICS_VARIATIONS,   &CFF_SERVICE_METRICS_VAR_GET,
     FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
     FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
     FT_SERVICE_ID_GLYPH_DICT,           &CFF_SERVICE_GLYPH_DICT_GET,
@@ -1060,11 +1128,12 @@
     FT_SERVICE_ID_PROPERTIES,           &CFF_SERVICE_PROPERTIES_GET
   )
 #elif defined TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_DEFINE_SERVICEDESCREC7(
+  FT_DEFINE_SERVICEDESCREC8(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
     FT_SERVICE_ID_MULTI_MASTERS,        &CFF_SERVICE_MULTI_MASTERS_GET,
+    FT_SERVICE_ID_METRICS_VARIATIONS,   &CFF_SERVICE_METRICS_VAR_GET,
     FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
     FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
     FT_SERVICE_ID_TT_CMAP,              &CFF_SERVICE_GET_CMAP_INFO_GET,

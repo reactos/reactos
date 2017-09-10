@@ -168,6 +168,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Malediwski (Fonetyczny)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Malediwski (Maszynisty)"
     IDS_DUTCH_LAYOUT "Holenderski"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estoński"
     IDS_FAEROESE_LAYOUT "Farerski"
     IDS_FARSI_LAYOUT "Perski"

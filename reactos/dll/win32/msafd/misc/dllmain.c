@@ -677,14 +677,15 @@ WSPCloseSocket(IN SOCKET Handle,
         if (lpErrno) *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
     }
-    /* Set the state to close */
-    OldState = Socket->SharedData->State;
-    Socket->SharedData->State = SocketClosed;
 
     /* Decrement reference count on SharedData */
     References = InterlockedDecrement(&Socket->SharedData->RefCount);
     if (References)
         goto ok;
+
+    /* Set the state to close */
+    OldState = Socket->SharedData->State;
+    Socket->SharedData->State = SocketClosed;
 
     /* If SO_LINGER is ON and the Socket is connected, we need to disconnect */
     /* FIXME: Should we do this on Datagram Sockets too? */
@@ -860,6 +861,27 @@ WSPBind(SOCKET Handle,
        if (lpErrno) *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
+    if (Socket->SharedData->State != SocketOpen)
+    {
+       if (lpErrno) *lpErrno = WSAEINVAL;
+       return SOCKET_ERROR;
+    }
+    if (!SocketAddress || SocketAddressLength < Socket->SharedData->SizeOfLocalAddress)
+    {
+        if (lpErrno) *lpErrno = WSAEINVAL;
+        return SOCKET_ERROR;
+    }
+
+    /* Get Address Information */
+    Socket->HelperData->WSHGetSockaddrType ((PSOCKADDR)SocketAddress,
+                                            SocketAddressLength,
+                                            &SocketInfo);
+
+    if (SocketInfo.AddressInfo == SockaddrAddressInfoBroadcast && !Socket->SharedData->Broadcast)
+    {
+       if (lpErrno) *lpErrno = WSAEADDRNOTAVAIL;
+       return SOCKET_ERROR;
+    }
 
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
@@ -886,11 +908,6 @@ WSPBind(SOCKET Handle,
     RtlCopyMemory (BindData->Address.Address[0].Address,
                    SocketAddress->sa_data,
                    SocketAddressLength - sizeof(SocketAddress->sa_family));
-
-    /* Get Address Information */
-    Socket->HelperData->WSHGetSockaddrType ((PSOCKADDR)SocketAddress,
-                                            SocketAddressLength,
-                                            &SocketInfo);
 
     /* Set the Share Type */
     if (Socket->SharedData->ExclusiveAddressUse)
@@ -1445,6 +1462,11 @@ WSPAccept(SOCKET Handle,
     if (!Socket)
     {
        if (lpErrno) *lpErrno = WSAENOTSOCK;
+       return SOCKET_ERROR;
+    }
+    if (!Socket->SharedData->Listening)
+    {
+       if (lpErrno) *lpErrno = WSAEINVAL;
        return SOCKET_ERROR;
     }
     if ((SocketAddress && !SocketAddressLength) ||

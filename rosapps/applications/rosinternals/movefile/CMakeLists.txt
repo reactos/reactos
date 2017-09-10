@@ -1,0 +1,5 @@
+list(APPEND SOURCE movefile.c movefile.rc)
+add_executable(movefile ${SOURCE})
+set_module_type(movefile win32cui UNICODE)
+add_importlibs(movefile msvcrt kernel32 ntdll)
+add_cd_file(TARGET movefile DESTINATION reactos/system32 FOR all)

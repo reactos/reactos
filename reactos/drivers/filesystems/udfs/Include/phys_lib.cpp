@@ -53,7 +53,7 @@ UDFSyncCache(
     IN PVCB Vcb
     )
 {
-    KdPrint(("UDFSyncCache:\n"));
+    UDFPrint(("UDFSyncCache:\n"));
     OSSTATUS RC;
     RC = UDFPhSendIOCTL( IOCTL_CDRW_SYNC_CACHE, Vcb->TargetDeviceObject,
                     NULL,0, NULL,0, FALSE, NULL);
@@ -129,10 +129,10 @@ UDFTIOVerify(
 
     tmp_wb = (uint32)_Vcb;
     if(Flags & PH_EX_WRITE) {
-        KdPrint(("IO-Write-Verify\n"));
+        UDFPrint(("IO-Write-Verify\n"));
         RC = UDFTWrite(_Vcb, Buffer, Length, LBA, &tmp_wb, Flags | PH_VCB_IN_RETLEN);
     } else {
-        KdPrint(("IO-Read-Verify\n"));
+        UDFPrint(("IO-Read-Verify\n"));
         RC = UDFTRead(_Vcb, Buffer, Length, LBA, &tmp_wb, Flags | PH_VCB_IN_RETLEN);
     }
     (*IOBytes) = tmp_wb;
@@ -151,18 +151,18 @@ UDFTIOVerify(
     if(!Vcb->SparingCount ||
        !Vcb->SparingCountFree ||
        Vcb->CDR_Mode) {
-        KdPrint(("Can't remap\n"));
+        UDFPrint(("Can't remap\n"));
         UDFReleaseResource(&(Vcb->IoResource));
         return RC;
     }
 
     if(Flags & PH_EX_WRITE) {
-        KdPrint(("Write failed, try relocation\n"));
+        UDFPrint(("Write failed, try relocation\n"));
     } else {
         if(Vcb->Modified) {
-            KdPrint(("Read failed, try relocation\n"));
+            UDFPrint(("Read failed, try relocation\n"));
         } else {
-            KdPrint(("no remap on not modified volume\n"));
+            UDFPrint(("no remap on not modified volume\n"));
             UDFReleaseResource(&(Vcb->IoResource));
             return RC;
         }
@@ -187,7 +187,7 @@ UDFTIOVerify(
     } else {
         tmp_buff = (PUCHAR)DbgAllocatePoolWithTag(NonPagedPool, Vcb->SparingBlockSize << Vcb->BlockSizeBits, 'bNWD');
         if(!tmp_buff) {
-            KdPrint(("  can't alloc tmp\n"));
+            UDFPrint(("  can't alloc tmp\n"));
             UDFReleaseResource(&(Vcb->IoResource));
             return STATUS_DEVICE_DATA_ERROR;
         }
@@ -196,10 +196,10 @@ UDFTIOVerify(
 
     for(i=0; i<len; i++) {
         if(!Vcb->SparingCountFree) {
-            KdPrint(("  no more free spare blocks, abort verification\n"));
+            UDFPrint(("  no more free spare blocks, abort verification\n"));
             break;
         }
-        KdPrint(("  read LBA %x (%x)\n", lba0+i, j));
+        UDFPrint(("  read LBA %x (%x)\n", lba0+i, j));
         if(!j) {
             need_remap = FALSE;
             lba1 = lba0+i;
@@ -208,12 +208,12 @@ UDFTIOVerify(
                 // single packet requested
                 tmp_buff = (PUCHAR)Buffer;
                 if(Flags & PH_EX_WRITE) {
-                    KdPrint(("  remap single write\n"));
-                    KdPrint(("  try del from verify cache @ %x, %x\n", lba0, len));
+                    UDFPrint(("  remap single write\n"));
+                    UDFPrint(("  try del from verify cache @ %x, %x\n", lba0, len));
                     UDFVForget(Vcb, len, UDFRelocateSector(Vcb, lba0), 0);
                     goto do_remap;
                 } else {
-                    KdPrint(("  recover and remap single read\n"));
+                    UDFPrint(("  recover and remap single read\n"));
                 }
             }
         }
@@ -225,20 +225,20 @@ UDFTIOVerify(
         // check if block valid
         if(Vcb->BSBM_Bitmap) {
             if(UDFGetBit((uint32*)(Vcb->BSBM_Bitmap), UDFRelocateSector(Vcb, lba0+i))) {
-                KdPrint(("  remap: known BB @ %x, mapped to %x\n", lba0+i, UDFRelocateSector(Vcb, lba0+i)));
+                UDFPrint(("  remap: known BB @ %x, mapped to %x\n", lba0+i, UDFRelocateSector(Vcb, lba0+i)));
                 need_remap = TRUE;
             }
         }
         zero = FALSE;
         if(Vcb->FSBM_Bitmap) {
             if(UDFGetFreeBit((uint32*)(Vcb->FSBM_Bitmap), lba0+i)) {
-                KdPrint(("  unused @ %x\n", lba0+i));
+                UDFPrint(("  unused @ %x\n", lba0+i));
                 zero = TRUE;
             }
         }
         if(!zero && Vcb->ZSBM_Bitmap) {
             if(UDFGetZeroBit((uint32*)(Vcb->ZSBM_Bitmap), lba0+i)) {
-                KdPrint(("  unused @ %x (Z)\n", lba0+i));
+                UDFPrint(("  unused @ %x (Z)\n", lba0+i));
                 zero = TRUE;
             }
         }
@@ -257,7 +257,7 @@ UDFTIOVerify(
                 RC = STATUS_UNSUCCESSFUL;
             }
             if(RC == STATUS_SUCCESS) {
-                KdPrint(("  packet ok @ %x\n", lba0+i));
+                UDFPrint(("  packet ok @ %x\n", lba0+i));
                 packet_ok = TRUE;
                 i += Vcb->SparingBlockSize-1;
                 continue;
@@ -275,7 +275,7 @@ UDFTIOVerify(
                     RC = UDFTRead(_Vcb, p, Vcb->BlockSize, lba0+i, &tmp_wb,
                                   Flags | PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER | PH_VCB_IN_RETLEN);
                     if(!OS_SUCCESS(RC)) {
-                        KdPrint(("  Found BB @ %x\n", lba0+i));
+                        UDFPrint(("  Found BB @ %x\n", lba0+i));
                     }
 
                 }
@@ -306,12 +306,12 @@ UDFTIOVerify(
                 }
                 if(!OS_SUCCESS(RC)) {
 /*
-                    KdPrint(("  retry @ %x\n", lba0+i));
+                    UDFPrint(("  retry @ %x\n", lba0+i));
                     tmp_wb = (uint32)_Vcb;
                     RC = UDFTRead(_Vcb, p, Vcb->BlockSize, lba0+i, &tmp_wb,
                                   Flags | PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER | PH_VCB_IN_RETLEN);
 */
-                    KdPrint(("  try get from verify cache @ %x\n", lba0+i));
+                    UDFPrint(("  try get from verify cache @ %x\n", lba0+i));
                     RC = UDFVRead(Vcb, p, 1, UDFRelocateSector(Vcb, lba0+i),
                                   Flags | PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER);
                     need_remap = TRUE;
@@ -321,12 +321,12 @@ UDFTIOVerify(
             RtlZeroMemory(p, Vcb->BlockSize);
         }
         if(!packet_ok) {
-            KdPrint(("  try del from verify cache @ %x\n", lba0+i));
+            UDFPrint(("  try del from verify cache @ %x\n", lba0+i));
             RC = UDFVForget(Vcb, 1, UDFRelocateSector(Vcb, lba0+i), 0);
         }
 
         if(!packet_ok || need_remap) {
-            KdPrint(("  block in bad packet @ %x\n", lba0+i));
+            UDFPrint(("  block in bad packet @ %x\n", lba0+i));
             if(Vcb->BSBM_Bitmap) {
                 UDFSetBit(Vcb->BSBM_Bitmap, lba0+i);
             }
@@ -341,17 +341,17 @@ UDFTIOVerify(
             if(need_remap) {
                 ASSERT(!packet_ok);
                 if(!non_zero) {
-                    KdPrint(("  forget Z packet @ %x\n", lba1));
+                    UDFPrint(("  forget Z packet @ %x\n", lba1));
                     UDFUnmapRange(Vcb, lba1, Vcb->SparingBlockSize);
                     RC = STATUS_SUCCESS;
                 } else {
 do_remap:
                     for(j=0; j<3; j++) {
-                        KdPrint(("  remap packet @ %x\n", lba1));
+                        UDFPrint(("  remap packet @ %x\n", lba1));
                         RC = UDFRemapPacket(Vcb, lba1, FALSE);
                         if(!OS_SUCCESS(RC)) {
                             if(RC == STATUS_SHARING_VIOLATION) {
-                                KdPrint(("  remap2\n"));
+                                UDFPrint(("  remap2\n"));
                                 // remapped location have died
                                 RC = UDFRemapPacket(Vcb, lba1, TRUE);
                             }
@@ -360,26 +360,26 @@ do_remap:
                                 RC = STATUS_DEVICE_DATA_ERROR;
                             }
                         }
-                        KdPrint(("  remap status %x\n", RC));
+                        UDFPrint(("  remap status %x\n", RC));
                         if(OS_SUCCESS(RC)) {
                             // write to remapped area
                             tmp_wb = (uint32)_Vcb;
                             RC = UDFTWrite(_Vcb, tmp_buff, Vcb->SparingBlockSize << Vcb->BlockSizeBits, lba1, &tmp_wb,
                                           Flags | PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER | PH_VCB_IN_RETLEN);
-                            KdPrint(("  write status %x\n", RC));
+                            UDFPrint(("  write status %x\n", RC));
                             if(RC != STATUS_SUCCESS) {
                                 // will be remapped
-                                KdPrint(("  retry remap\n"));
+                                UDFPrint(("  retry remap\n"));
 
                                 // Note: when remap of already remapped block is requested, verify of
                                 // entire sparing are will be performed.
 
                             } else {
-                                KdPrint(("  remap OK\n"));
+                                UDFPrint(("  remap OK\n"));
                                 break;
                             }
                         } else {
-                            KdPrint(("  failed remap\n"));
+                            UDFPrint(("  failed remap\n"));
                             break;
                         }
                     } // for
@@ -388,7 +388,7 @@ do_remap:
                     final_RC = RC;
                 }
             } else {
-                KdPrint(("  NO remap for @ %x\n", (lba0+i) & ~mask));
+                UDFPrint(("  NO remap for @ %x\n", (lba0+i) & ~mask));
             }
             j=0;
         }
@@ -399,14 +399,14 @@ do_remap:
 
     tmp_wb = (uint32)_Vcb;
     if(Flags & PH_EX_WRITE) {
-        KdPrint(("IO-Write-Verify (2)\n"));
+        UDFPrint(("IO-Write-Verify (2)\n"));
         //RC = UDFTWrite(_Vcb, Buffer, Length, LBA, &tmp_wb, Flags | PH_FORGET_VERIFIED | PH_VCB_IN_RETLEN);
     } else {
-        KdPrint(("IO-Read-Verify (2)\n"));
+        UDFPrint(("IO-Read-Verify (2)\n"));
         RC = UDFTRead(_Vcb, Buffer, Length, LBA, &tmp_wb, Flags | PH_FORGET_VERIFIED | PH_VCB_IN_RETLEN);
     }
     (*IOBytes) = tmp_wb;
-    KdPrint(("Final %x\n", RC));
+    UDFPrint(("Final %x\n", RC));
 
     UDFReleaseResource(&(Vcb->IoResource));
     if(Flags & PH_LOCK_CACHE) {
@@ -481,10 +481,10 @@ UDFTWrite(
     (*WrittenBytes) = 0;
     BCount = Length>>Vcb->BlockSizeBits;
 
-    KdPrint(("TWrite %x (%x)\n", LBA, BCount));
+    UDFPrint(("TWrite %x (%x)\n", LBA, BCount));
 #ifdef _BROWSE_UDF_
     if(Vcb->VCBFlags & UDF_VCB_FLAGS_DEAD) {
-        KdPrint(("DEAD\n"));
+        UDFPrint(("DEAD\n"));
         return STATUS_NO_SUCH_DEVICE;
     }
 
@@ -492,7 +492,7 @@ UDFTWrite(
     if(!Vcb->CDR_Mode) {
         RelocExtent = UDFRelocateSectors(Vcb, LBA, BCount);
         if(!RelocExtent) {
-            KdPrint(("can't relocate\n"));
+            UDFPrint(("can't relocate\n"));
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         rLba = LBA;
@@ -522,7 +522,7 @@ UDFTWrite(
 retry_1:
             RC = UDFPrepareForWriteOperation(Vcb, rLba, BCount);
             if(!OS_SUCCESS(RC)) {
-                KdPrint(("prepare failed\n"));
+                UDFPrint(("prepare failed\n"));
                 try_return(RC);
             }
             if(Flags & PH_VCB_IN_RETLEN) {
@@ -550,7 +550,7 @@ retry_1:
 retry_2:
             RC = UDFPrepareForWriteOperation(Vcb, rLba, BCount);
             if(!OS_SUCCESS(RC)) {
-                KdPrint(("prepare failed (2)\n"));
+                UDFPrint(("prepare failed (2)\n"));
                 break;
             }
             if(Flags & PH_VCB_IN_RETLEN) {
@@ -580,7 +580,7 @@ try_exit: NOTHING;
         }
 #endif //_BROWSE_UDF_
     } _SEH2_END;
-    KdPrint(("TWrite: %x\n", RC));
+    UDFPrint(("TWrite: %x\n", RC));
     return RC;
 
 #undef Vcb
@@ -823,10 +823,10 @@ UDFSetMRWMode(
 //#endif //_BROWSE_UDF_
 
     if(!Vcb->MRWStatus) {
-        KdPrint(("Non-MRW disk. Skip setting MRW_MODE\n"));
+        UDFPrint(("Non-MRW disk. Skip setting MRW_MODE\n"));
         return STATUS_SUCCESS;
     }
-    KdPrint(("try set MRW_MODE\n"));
+    UDFPrint(("try set MRW_MODE\n"));
     RC = UDFPhSendIOCTL(IOCTL_CDRW_GET_MRW_MODE, Vcb->TargetDeviceObject,
                     NULL,0,
                     (PVOID)&MRWPage,sizeof(MRWPage),
@@ -834,14 +834,14 @@ UDFSetMRWMode(
     if(!NT_SUCCESS(RC)) {
         return RC;
     }
-    KdPrint(("GET_MRW_MODE ok (current %x)\n", MRWPage.AddressMode));
+    UDFPrint(("GET_MRW_MODE ok (current %x)\n", MRWPage.AddressMode));
     MRWPage.AddressMode = Vcb->MRWStatus ? 0 : MrwPage_use_GAA;
-    KdPrint(("SET_MRW_MODE %x\n", MRWPage.AddressMode));
+    UDFPrint(("SET_MRW_MODE %x\n", MRWPage.AddressMode));
     RC = UDFPhSendIOCTL(IOCTL_CDRW_SET_MRW_MODE, Vcb->TargetDeviceObject,
                     (PVOID)&MRWPage,sizeof(MRWPage),
                     NULL,0,
                     FALSE, NULL);
-    KdPrint(("SET_MRW_MODE status %x\n", RC));
+    UDFPrint(("SET_MRW_MODE status %x\n", RC));
 
     return STATUS_SUCCESS;
 } // end UDFSetMRWMode()
@@ -853,7 +853,7 @@ UDFDoOPC(
 {
     OSSTATUS RC;
     if(Vcb->OPCNum && !Vcb->OPCDone) {
-        KdPrint(("UDFDoOPC\n"));
+        UDFPrint(("UDFDoOPC\n"));
         if(!Vcb->OPCh) {
             Vcb->OPCh =
                 (PSEND_OPC_INFO_HEADER_USER_IN)MyAllocatePool__(NonPagedPool,
@@ -868,7 +868,7 @@ UDFDoOPC(
                         NULL,0,
                         FALSE, NULL);
         if(!OS_SUCCESS(RC)) {
-            KdPrint(("UDFDoOPC failed\n"));
+            UDFPrint(("UDFDoOPC failed\n"));
             Vcb->OPCNum = 0;
 //            Vcb->VCBFlags |= UDF_VCB_FLAGS_OPC_FAILED;
         }
@@ -908,7 +908,7 @@ UDFPrepareForWriteOperation(
         ULONG i;
         for(i=0; i<BCount; i++) {
             if(UDFGetBit((uint32*)(Vcb->BSBM_Bitmap), Lba+i)) {
-                KdPrint(("W: Known BB @ %#x\n", Lba));
+                UDFPrint(("W: Known BB @ %#x\n", Lba));
                 //return STATUS_FT_WRITE_RECOVERY; // this shall not be treated as error and
                                                    // we shall get IO request to BAD block
                 return STATUS_DEVICE_DATA_ERROR;
@@ -932,7 +932,7 @@ UDFPrepareForWriteOperation(
 #endif //UDF_FORMAT_MEDIA
        !(Vcb->VCBFlags & UDF_VCB_FLAGS_OUR_DEVICE_DRIVER)
        ) {
-        KdPrint(("Skip prepare for Write @%x\n", Lba));
+        UDFPrint(("Skip prepare for Write @%x\n", Lba));
         return STATUS_SUCCESS;
     }
 
@@ -956,7 +956,7 @@ UDFPrepareForWriteOperation(
         // Ok, we needn't change Write Parameters
 //        if(Vcb->TrackMap[Vcb->LastModifiedTrack].Flags & TrackMap_Try_variation)
 //            Vcb->TrackMap[Vcb->LastModifiedTrack].Flags |= TrackMap_Use_variation;
-        KdPrint(("Skip prepare for Write (2) @%x\n", Lba));
+        UDFPrint(("Skip prepare for Write (2) @%x\n", Lba));
         return STATUS_SUCCESS;
     }
 
@@ -973,7 +973,7 @@ UDFPrepareForWriteOperation(
     for(uint32 i=Vcb->FirstTrackNum; i<=Vcb->LastTrackNum; i++) {
         if((Vcb->TrackMap[i].FirstLba > Lba) ||
            (Vcb->TrackMap[i].LastLba < Lba)) {
-            //KdPrint(("not in track %d\n"));
+            //UDFPrint(("not in track %d\n"));
             continue;
         }
         OSSTATUS RC;
@@ -989,7 +989,7 @@ UDFPrepareForWriteOperation(
                 (PGET_WRITE_MODE_USER_OUT)MyAllocatePool__(NonPagedPool, 512);
         }
         if(!(WParams = Vcb->WParams)) {
-            KdPrint(("!WParams\n"));
+            UDFPrint(("!WParams\n"));
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -1005,7 +1005,7 @@ UDFPrepareForWriteOperation(
                 return STATUS_SUCCESS;
             }
 #endif //UDF_FORMAT_MEDIA
-            KdPrint(("!get WParams\n"));
+            UDFPrint(("!get WParams\n"));
             return RC;
         }
         // clear unnecassary flags
@@ -1072,7 +1072,7 @@ UDFPrepareForWriteOperation(
                 return STATUS_SUCCESS;
             }
 #endif //UDF_FORMAT_MEDIA
-            KdPrint(("  inv sector mode\n"));
+            UDFPrint(("  inv sector mode\n"));
             return STATUS_INVALID_PARAMETER;
         }
         // set packet size
@@ -1132,7 +1132,7 @@ UDFPrepareForWriteOperation(
 
 check_dvd_bg_format:
 
-        KdPrint(("  check BGF\n"));
+        UDFPrint(("  check BGF\n"));
         if(!Vcb->CDR_Mode) {
             if(OS_SUCCESS(RC)) {
                 Vcb->LastModifiedTrack = i;
@@ -1167,18 +1167,18 @@ check_dvd_bg_format:
             ASSERT((Vcb->LastLBA+1) == Vcb->NWA);
 
             if(Lba+BCount <= (Vcb->LastLBA+1) ) {
-                KdPrint(("DVD cont. fmt, LBA+BCount<=NWA, exiting\n"));
+                UDFPrint(("DVD cont. fmt, LBA+BCount<=NWA, exiting\n"));
                 return STATUS_SUCCESS;
             }
             if((Vcb->MRWStatus != DiscInfo_BGF_Interrupted) &&
                (Lba <= (Vcb->LastLBA+1)) ) {
-                KdPrint(("!PausedBGF + DVD cont. fmt, LBA<=NWA, exiting\n"));
+                UDFPrint(("!PausedBGF + DVD cont. fmt, LBA<=NWA, exiting\n"));
                 return STATUS_SUCCESS;
             }
 
             if(Vcb->MRWStatus == DiscInfo_BGF_Interrupted) {
                 // This code also can restart background MRW formatting
-                KdPrint(("DVD cont. fmt, LastLBA %x, Lba %x\n", Vcb->LastLBA, Lba));
+                UDFPrint(("DVD cont. fmt, LastLBA %x, Lba %x\n", Vcb->LastLBA, Lba));
 
                 ForBuf = (PFORMAT_CDRW_PARAMETERS_USER_IN)DbgAllocatePoolWithTag(NonPagedPool, sizeof(FORMAT_CDRW_PARAMETERS_USER_IN), 'zNWD');
                 if(ForBuf) {
@@ -1191,7 +1191,7 @@ check_dvd_bg_format:
                             NULL,0,FALSE, NULL);
                     DbgFreePool(ForBuf);
                     if(OS_SUCCESS(RC)) {
-                        KdPrint(("BGFormat restarted Interrupted->InProgress\n"));
+                        UDFPrint(("BGFormat restarted Interrupted->InProgress\n"));
                         Vcb->MRWStatus = DiscInfo_BGF_InProgress;
                     } else {
                         PGET_LAST_ERROR_USER_OUT Error = NULL;
@@ -1205,7 +1205,7 @@ check_dvd_bg_format:
                                             NULL,0,
                                             Error,sizeof(GET_LAST_ERROR_USER_OUT),
                                             TRUE,NULL);
-                            KdPrint(("SK=%x ASC=%x, ASCQ=%x, IE=%x\n",
+                            UDFPrint(("SK=%x ASC=%x, ASCQ=%x, IE=%x\n",
                                      Error->SenseKey, Error->AdditionalSenseCode, Error->AdditionalSenseCodeQualifier, Error->LastError));
                             // check for Long Write In Progress
                             if( (Error->SenseKey == SCSI_SENSE_NOT_READY) &&
@@ -1213,7 +1213,7 @@ check_dvd_bg_format:
                                  ((Error->AdditionalSenseCodeQualifier == SCSI_SENSEQ_LONG_WRITE_IN_PROGRESS) ||
                                   (Error->AdditionalSenseCodeQualifier == SCSI_SENSEQ_FORMAT_IN_PROGRESS)) ) {
                                 RC = STATUS_SUCCESS;
-                                KdPrint(("Seems, BGFormat already restarted\n"));
+                                UDFPrint(("Seems, BGFormat already restarted\n"));
                                 Vcb->MRWStatus = DiscInfo_BGF_InProgress;
                             }
                         }
@@ -1223,7 +1223,7 @@ check_dvd_bg_format:
                 RC = STATUS_SUCCESS;
             }
 
-            KdPrint(("DVD cont. write, LastLBA %x, Lba %x\n", Vcb->LastLBA, Lba));
+            UDFPrint(("DVD cont. write, LastLBA %x, Lba %x\n", Vcb->LastLBA, Lba));
 
             ASSERT(Vcb->MediaClassEx == CdMediaClass_DVDRW);
             if(!Vcb->fZBuffer) {
@@ -1246,30 +1246,30 @@ retry_1:
                     RC = UDFPhWriteVerifySynchronous(Vcb->TargetDeviceObject, Vcb->fZBuffer, PSz,
                            ((uint64)fLba) << Vcb->BlockSizeBits, &WrittenBytes, PH_TMP_BUFFER);
                     Vcb->VCBFlags |= UDF_VCB_SKIP_EJECT_CHECK;
-                    KdPrint(("Fmt status: %x\n", RC));
+                    UDFPrint(("Fmt status: %x\n", RC));
 #ifdef _BROWSE_UDF_
                     if(!OS_SUCCESS(RC) &&
                         OS_SUCCESS(RC = UDFRecoverFromError(Vcb, TRUE, RC, fLba, BCount, &retry)) ) {
                         goto retry_1;
-                        KdPrint(("Fmt retry\n"));
+                        UDFPrint(("Fmt retry\n"));
                     }
 #endif //_BROWSE_UDF_
                     if(!OS_SUCCESS(RC)) {
                         BrutePoint();
-                        KdPrint(("Fmt break on ERROR\n"));
+                        UDFPrint(("Fmt break on ERROR\n"));
                         break;
                     }
                     UDFUpdateNWA(Vcb, fLba, BCount, RC);
                 }
             }
         } else {
-            KdPrint(("  no special processing\n"));
+            UDFPrint(("  no special processing\n"));
         }
         
         return RC;
     }
 #endif //UDF_READ_ONLY_BUILD
-    KdPrint(("  no suitable track!\n"));
+    UDFPrint(("  no suitable track!\n"));
     return STATUS_INVALID_PARAMETER;
 } // end UDFPrepareForWriteOperation()
 
@@ -1308,14 +1308,14 @@ UDFRecoverFromError(
                 try_return(status);
         }
         if(status == STATUS_NO_SUCH_DEVICE) {
-            KdPrint(("Error recovery: STATUS_NO_SUCH_DEVICE, die.....\n"));
+            UDFPrint(("Error recovery: STATUS_NO_SUCH_DEVICE, die.....\n"));
             Vcb->VCBFlags |= UDF_VCB_FLAGS_UNSAFE_IOCTL | UDF_VCB_FLAGS_DEAD;
             try_return(status);
         }
 
 #ifdef _UDF_STRUCTURES_H_
         if(status == STATUS_NO_MEDIA_IN_DEVICE && !Vcb->EjectWaiter) {
-            KdPrint(("Error recovery: STATUS_NO_MEDIA_IN_DEVICE, prevent further remount.....\n"));
+            UDFPrint(("Error recovery: STATUS_NO_MEDIA_IN_DEVICE, prevent further remount.....\n"));
             // Make sure, that volume will never be quick-remounted
             // It is very important for ChkUdf utility and
             // some CD-recording libraries
@@ -1329,7 +1329,7 @@ UDFRecoverFromError(
                         NULL,0,
                         Error,sizeof(GET_LAST_ERROR_USER_OUT),
                         TRUE,NULL);
-        KdPrint(("SK=%x ASC=%x, ASCQ=%x, IE=%x\n",
+        UDFPrint(("SK=%x ASC=%x, ASCQ=%x, IE=%x\n",
                  Error->SenseKey, Error->AdditionalSenseCode, Error->AdditionalSenseCodeQualifier, Error->LastError));
         // check for Long Write In Progress
         if( ((Error->SenseKey == SCSI_SENSE_NOT_READY) &&
@@ -1338,28 +1338,28 @@ UDFRecoverFromError(
             // we should wait...
             if(WriteOp) {
                 if((*retry) == UDF_WRITE_MAX_RETRY-1) {
-                    KdPrint(("Error recovery: reserve retry count for write retries\n"));
+                    UDFPrint(("Error recovery: reserve retry count for write retries\n"));
                     (*retry) = UDF_WRITE_MAX_RETRY*3;
                 } else
                 if((*retry) == UDF_WRITE_MAX_RETRY) {
-                    KdPrint(("Error recovery: jump over UDF_WRITE_MAX_RETRY\n"));
+                    UDFPrint(("Error recovery: jump over UDF_WRITE_MAX_RETRY\n"));
                     (*retry)--;
                 }
                 delay.QuadPart = -500000; // 0.05 sec
                 KeDelayExecutionThread(KernelMode, FALSE, &delay);
                 if(WriteOp && ((*retry) > UDF_WRITE_MAX_RETRY-1)) {
-                    KdPrint(("Error recovery: simple write retry with delay\n"));
+                    UDFPrint(("Error recovery: simple write retry with delay\n"));
                     try_return(status = STATUS_SUCCESS);
                 }
             } else {
                 delay.QuadPart = -500000; // 0.05 sec
                 KeDelayExecutionThread(KernelMode, FALSE, &delay);
                 if((*retry) == UDF_WRITE_MAX_RETRY-1) {
-                    KdPrint(("Error recovery: retry read after small delay\n"));
+                    UDFPrint(("Error recovery: retry read after small delay\n"));
                     try_return(status = STATUS_SUCCESS);
                 }
             }
-            KdPrint(("Error recovery: sync cache\n"));
+            UDFPrint(("Error recovery: sync cache\n"));
             // ...flush device cache...
             UDFSyncCache(Vcb);
             // wait again & retry
@@ -1377,7 +1377,7 @@ UDFRecoverFromError(
            (Error->AdditionalSenseCodeQualifier == SCSI_SENSEQ_BECOMING_READY) ||
            (Error->AdditionalSenseCodeQualifier == SCSI_SENSEQ_OPERATION_IN_PROGRESS) ) ) {
             // we should wait & retry
-            KdPrint(("Error recovery: op. in progress, waiting 0.3 sec\n"));
+            UDFPrint(("Error recovery: op. in progress, waiting 0.3 sec\n"));
             delay.QuadPart = -3000000; // 0.3 sec
             KeDelayExecutionThread(KernelMode, FALSE, &delay);
 #ifdef _UDF_STRUCTURES_H_
@@ -1391,10 +1391,10 @@ UDFRecoverFromError(
            (Error->AdditionalSenseCode == SCSI_ADSENSE_INVALID_CMD_SEQUENCE)) {
             // we should wait & retry
             if(!WriteOp) {
-                KdPrint(("Error recovery: invalid command sequence on read\n"));
+                UDFPrint(("Error recovery: invalid command sequence on read\n"));
                 delay.QuadPart = -1000000; // 0.1 sec
                 KeDelayExecutionThread(KernelMode, FALSE, &delay);
-                KdPrint(("Error recovery: sync cache\n"));
+                UDFPrint(("Error recovery: sync cache\n"));
                 // ...flush device cache...
                 UDFSyncCache(Vcb);
                 // wait again & retry
@@ -1411,7 +1411,7 @@ UDFRecoverFromError(
         if((Error->SenseKey == SCSI_SENSE_UNIT_ATTENTION) &&
            (Error->AdditionalSenseCode == SCSI_ADSENSE_BUS_RESET) ) {
             // we should wait
-            KdPrint(("Error recovery: bus reset...\n"));
+            UDFPrint(("Error recovery: bus reset...\n"));
             Vcb->MediaChangeCount = Error->MediaChangeCount;
             delay.QuadPart = -1000000; // 0.1 sec
             KeDelayExecutionThread(KernelMode, FALSE, &delay);
@@ -1504,11 +1504,11 @@ bad_rw_seek_recovery:
             } else
             if((Vcb->CompatFlags & UDF_VCB_IC_BAD_RW_SEEK) &&
                (Vcb->IncrementalSeekState != INCREMENTAL_SEEK_DONE)) {
-                KdPrint(("Using incremental seek workaround...\n"));
+                UDFPrint(("Using incremental seek workaround...\n"));
                 Vcb->IncrementalSeekState = INCREMENTAL_SEEK_WORKAROUND;
                 try_return(status = STATUS_SUCCESS);
             } else {
-                KdPrint(("Seems to be BB @ %x\n", Lba));
+                UDFPrint(("Seems to be BB @ %x\n", Lba));
                 UpdateBB = TRUE;
             }
         } else
@@ -1517,7 +1517,7 @@ bad_rw_seek_recovery:
             if(WriteOp &&
                (Vcb->SavedFeatures & CDRW_FEATURE_STREAMING) &&
                Lba+BCount <= Vcb->LastLBA+1) {
-                KdPrint(("bad Session in streaming mode. Lba %x, try fix-up\n", Lba));
+                UDFPrint(("bad Session in streaming mode. Lba %x, try fix-up\n", Lba));
                 // ...flush device cache...
                 UDFSyncCache(Vcb);
                 // we should wait
@@ -1529,7 +1529,7 @@ bad_rw_seek_recovery:
         if((Error->LastError == CDRW_ERR_WRITE_IN_PROGRESS_BUSY) ||
            (status == STATUS_DEVICE_BUSY)) {
             delay.QuadPart = -5000000; // 0.5 sec
-            KdPrint(("CDRW_ERR_WRITE_IN_PROGRESS_BUSY || STATUS_DEVICE_BUSY\n"));
+            UDFPrint(("CDRW_ERR_WRITE_IN_PROGRESS_BUSY || STATUS_DEVICE_BUSY\n"));
             KeDelayExecutionThread(KernelMode, FALSE, &delay);
 #ifdef _UDF_STRUCTURES_H_
             if(Vcb->BGWriters) (*retry)++;
@@ -1553,15 +1553,15 @@ bad_rw_seek_recovery:
             (Error->AdditionalSenseCode == SCSI_ADSENSE_SEEK_ERROR))*/ &&
            !WriteOp) {
             if(Error->AdditionalSenseCode == SCSI_ADSENSE_SEEK_ERROR) {
-                KdPrint(("Seek error\n"));
+                UDFPrint(("Seek error\n"));
                 if(Vcb->CompatFlags & UDF_VCB_IC_BAD_RW_SEEK) {
-                    KdPrint(("try recovery\n"));
+                    UDFPrint(("try recovery\n"));
                     goto bad_rw_seek_recovery;
                 }
-                KdPrint(("map error to STATUS_NONEXISTENT_SECTOR\n"));
+                UDFPrint(("map error to STATUS_NONEXISTENT_SECTOR\n"));
                 status = STATUS_NONEXISTENT_SECTOR;
             }
-            KdPrint(("Seems to be BB @ %x (read 2)\n", Lba));
+            UDFPrint(("Seems to be BB @ %x (read 2)\n", Lba));
             UpdateBB = TRUE;
         } else
         // handle invalid block address
@@ -1570,7 +1570,7 @@ bad_rw_seek_recovery:
             if(!WriteOp &&
                (Vcb->SavedFeatures & CDRW_FEATURE_STREAMING) &&
                Lba+BCount <= Vcb->LastLBA+1) {
-                KdPrint(("bad LBA %x in streaming mode, try fix-up\n", Lba));
+                UDFPrint(("bad LBA %x in streaming mode, try fix-up\n", Lba));
                 // ...flush device cache...
                 UDFSyncCache(Vcb);
                 try_return(status = STATUS_SUCCESS);
@@ -1578,7 +1578,7 @@ bad_rw_seek_recovery:
 
             if((Lba+BCount >= Vcb->LastLBA) &&
                (Vcb->MRWStatus == DiscInfo_BGF_Interrupted)) {
-                KdPrint(("stupid drive, cannot read beyond formatted area on DiscInfo_BGF_Interrupted\n"));
+                UDFPrint(("stupid drive, cannot read beyond formatted area on DiscInfo_BGF_Interrupted\n"));
                 UpdateBB = FALSE;
                 try_return(status = STATUS_BUFFER_ALL_ZEROS);
             }
@@ -1590,7 +1590,7 @@ try_exit: NOTHING;
     } _SEH2_FINALLY {
 #ifdef UDF_DBG
         if(OS_SUCCESS(status)) {
-            KdPrint(("Retry\n"));
+            UDFPrint(("Retry\n"));
         }
 #endif //UDF_DBG
     } _SEH2_END;
@@ -1607,18 +1607,18 @@ try_exit: NOTHING;
                 if(bm) {
                     RtlZeroMemory(bm, i);
                 } else {
-                    KdPrint(("Can't alloc BSBM for %x blocks\n", Vcb->LastPossibleLBA));
+                    UDFPrint(("Can't alloc BSBM for %x blocks\n", Vcb->LastPossibleLBA));
                 }
             }
             if(bm) {
                 UDFSetBit(bm, Lba);
-                KdPrint(("Set BB @ %#x\n", Lba));
+                UDFPrint(("Set BB @ %#x\n", Lba));
             }
 #ifdef _BROWSE_UDF_
             bm = (uint32*)(Vcb->FSBM_Bitmap);
             if(bm) {
                 UDFSetUsedBit(bm, Lba);
-                KdPrint(("Set BB @ %#x as used\n", Lba));
+                UDFPrint(("Set BB @ %#x as used\n", Lba));
             }
 #endif //_BROWSE_UDF_
         }
@@ -1662,7 +1662,7 @@ MRWRetry_label:
                 NULL, 0, 
                 DiscInfo,sizeof(DISC_INFO_BLOCK_USER_OUT), TRUE, NULL);
         if(!OS_SUCCESS(RC)) {
-            KdPrint(("ReadDiskInfo failed. Use default.\n"));
+            UDFPrint(("ReadDiskInfo failed. Use default.\n"));
             if(Vcb->MediaClassEx == CdMediaClass_DVDRW ||
                 Vcb->MediaClassEx == CdMediaClass_DVDpRW ||
                 Vcb->MediaClassEx == CdMediaClass_DVDRAM) {
@@ -1685,17 +1685,17 @@ MRWRetry_label:
                 NULL, 0, 
                 &CapacityBuffer,sizeof(READ_CAPACITY_USER_OUT), TRUE, NULL);
         if(!OS_SUCCESS(RC)) {
-            KdPrint(("ReadCapacity failed.\n"));
+            UDFPrint(("ReadCapacity failed.\n"));
             if(Vcb->MediaClassEx == CdMediaClass_DVDpRW) {
                 Vcb->LastPossibleLBA = DEFAULT_LAST_LBA_DVD;
             }
         } else {
-            KdPrint(("ReadCapacity ok.\n"));
-            KdPrint(("Last possible LBA %#x.\n", CapacityBuffer.LogicalBlockAddress));
+            UDFPrint(("ReadCapacity ok.\n"));
+            UDFPrint(("Last possible LBA %#x.\n", CapacityBuffer.LogicalBlockAddress));
             if(!(CapacityBuffer.LogicalBlockAddress  & 0xc0000000) &&
                 (CapacityBuffer.LogicalBlockAddress != 0x7fffffff)) {
                 // good value from ReadCapacity
-                KdPrint(("Update Last possible LBA %#x.\n", CapacityBuffer.LogicalBlockAddress));
+                UDFPrint(("Update Last possible LBA %#x.\n", CapacityBuffer.LogicalBlockAddress));
                 Vcb->LastPossibleLBA = CapacityBuffer.LogicalBlockAddress;
 //                ReadCapacityOk = TRUE;
 #ifdef UDF_FORMAT_MEDIA
@@ -1715,7 +1715,7 @@ MRWRetry_label:
         // save OPC info
         if(DiscInfo->OPCNum)
             Vcb->OPCNum = DiscInfo->OPCNum;
-        KdPrint(("DiskInfo: SN %x, OPCn %x(%x), Stat %x, Flg: %x\n",
+        UDFPrint(("DiskInfo: SN %x, OPCn %x(%x), Stat %x, Flg: %x\n",
             Vcb->PhSerialNumber, Vcb->OPCNum, DiscInfo->OPCNum, DiscInfo->DiscStat.Flags, DiscInfo->Flags.Flags));
 #ifdef UDF_FORMAT_MEDIA
         if(fms && fms->opt_disk_info) {
@@ -1782,7 +1782,7 @@ MRWRetry_label:
         // Save disk status
         Vcb->DiscStat = DiscInfo->DiscStat.Flags;
         if((DiscInfo->DiscStat.Flags & DiscInfo_Disk_Mask) == DiscInfo_Disk_Empty) {
-            KdPrint(("Blank\n"));
+            UDFPrint(("Blank\n"));
             Vcb->BlankCD = TRUE;
         }
         if( (DiscInfo->DiscStat.Flags & DiscInfo_Disk_Mask) == DiscInfo_Disk_Empty ||
@@ -1790,7 +1790,7 @@ MRWRetry_label:
             // we shall mount empty disk to make it possible for
             // external applications to perform format operation
             // or something like this
-            KdPrint(("Try RAW_MOUNT\n"));
+            UDFPrint(("Try RAW_MOUNT\n"));
             Vcb->VCBFlags |= UDF_VCB_FLAGS_RAW_DISK;
             PacketTrack = TRUE;
         }
@@ -1801,7 +1801,7 @@ MRWRetry_label:
         if(Vcb->MediaClassEx != CdMediaClass_DVDpRW &&
            !ReadCapacityOk) {
             // +RW returns bad value
-            KdPrint(("+RW returns bad value\n"));
+            UDFPrint(("+RW returns bad value\n"));
             Vcb->LastPossibleLBA = (DiscInfo->LastSesLeadOutLBA & 0x80000000) ?
                 0 : DiscInfo->LastSesLeadOutLBA;
             if(!(DiscInfo->LastSesLeadInLBA & 0x80000000)) {
@@ -1810,7 +1810,7 @@ MRWRetry_label:
         }
 #endif // _BROWSE_UDF_
         if((DiscInfo->Flags.Flags & DiscInfo_BGF_Mask) != 0) {
-            KdPrint(("ForceFP + MRW\n"));
+            UDFPrint(("ForceFP + MRW\n"));
             ForceFP = TRUE;
             Vcb->MRWStatus = DiscInfo->Flags.Flags & DiscInfo_BGF_Mask;
             // update addressing mode
@@ -1820,22 +1820,22 @@ MRWRetry_label:
                 goto MRWRetry_label;
             }
         }
-        KdPrint(("MRW state %x\n", Vcb->MRWStatus));
+        UDFPrint(("MRW state %x\n", Vcb->MRWStatus));
         if(Vcb->MediaClassEx == CdMediaClass_DVDRW) {
             if(Vcb->PhMediaCapFlags & CdCapFlags_RandomWritable) {
-                KdPrint(("DVD-RW Rewritable\n"));
+                UDFPrint(("DVD-RW Rewritable\n"));
                 ForceFP = TRUE;
             } else
             if((DiscInfo->DiscStat.Flags & DiscInfo_Disk_Mask) == DiscInfo_Disk_Empty) {
-                KdPrint(("Blank DVD-RW\n"));
+                UDFPrint(("Blank DVD-RW\n"));
                 ForceFP = TRUE;
             } else {
-                KdPrint(("DVD-RW Sequential\n"));
+                UDFPrint(("DVD-RW Sequential\n"));
                 NotFP = TRUE;
             }
         } else
         if(CdrwIsDvdOverwritable(Vcb->MediaClassEx)) {
-            KdPrint(("force Rewritable (2)\n"));
+            UDFPrint(("force Rewritable (2)\n"));
             ForceFP = TRUE;
         }
         // We have incomplete last session, so process each track from last to first
@@ -1847,10 +1847,10 @@ MRWRetry_label:
         // some devices report LastTrackNum=0 for full disks
         Vcb->LastTrackNum = max(Vcb->LastTrackNum, Vcb->FirstTrackNum);
         if(!Vcb->LastTrackNum) {
-            KdPrint(("Try read 1st track...\n"));
+            UDFPrint(("Try read 1st track...\n"));
             Vcb->LastTrackNum = 1;
         }
-        KdPrint(("DiskInfo: 1st trk %x, last trk %x\n", Vcb->FirstTrackNum, Vcb->LastTrackNum));
+        UDFPrint(("DiskInfo: 1st trk %x, last trk %x\n", Vcb->FirstTrackNum, Vcb->LastTrackNum));
 #ifdef UDF_FORMAT_MEDIA
         if(fms && fms->opt_disk_info) {
             UserPrint(("First track: %d\n"
@@ -1882,11 +1882,11 @@ MRWRetry_label:
                 if(TrackInfoOut->TrackLength > 1) {
                     Vcb->LastPossibleLBA =
                         TrackInfoOut->TrackStartLBA + TrackInfoOut->TrackLength - (TrackInfoOut->TrackLength ? 1 : 0);
-                    KdPrint((" set LastPossibleLBA=%x\n", Vcb->LastPossibleLBA));
+                    UDFPrint((" set LastPossibleLBA=%x\n", Vcb->LastPossibleLBA));
                 }
             }
 
-            KdPrint(("Ses %d, Track %d (%x, len %x) PckSize %x: \n"
+            UDFPrint(("Ses %d, Track %d (%x, len %x) PckSize %x: \n"
                      "  NWA: %x (%s)  DatType:%x, %s %s %s %s TrkType:%x %s %s\n"
                      "  LRA: %x (%s)  RC_LBA:%x\n",
                 TrackInfoOut->SesNum,
@@ -1957,13 +1957,13 @@ MRWRetry_label:
                     TrackInfoOut,sizeof(TRACK_INFO_BLOCK_USER_OUT), TRUE, NULL);
             // fill sector type map
             if(TrackInfoOut->TrackStartLBA & 0x80000000) {
-                KdPrint(("TrkInfo: Bad FirstLba (%x), change to %x\n", TrackInfoOut->TrackStartLBA, 0));
+                UDFPrint(("TrkInfo: Bad FirstLba (%x), change to %x\n", TrackInfoOut->TrackStartLBA, 0));
                 Vcb->TrackMap[TrackNumber].FirstLba = 0;
             } else {
                 Vcb->TrackMap[TrackNumber].FirstLba = TrackInfoOut->TrackStartLBA;
             }
             if(TrackInfoOut->TrackLength & 0x80000000) {
-                KdPrint(("TrkInfo: Bad TrackLength (%x), change to %x\n", TrackInfoOut->TrackLength,
+                UDFPrint(("TrkInfo: Bad TrackLength (%x), change to %x\n", TrackInfoOut->TrackLength,
                     Vcb->LastPossibleLBA - Vcb->TrackMap[TrackNumber].FirstLba + 1));
                 TrackInfoOut->TrackLength = Vcb->LastPossibleLBA - Vcb->TrackMap[TrackNumber].FirstLba + 1;
             }
@@ -1977,21 +1977,21 @@ MRWRetry_label:
             if((TrackInfoOut->NextWriteLBA & 0x80000000) || 
                (TrackInfoOut->NextWriteLBA < TrackInfoOut->TrackStartLBA)) {
                 if(!(Vcb->TrackMap[TrackNumber].LastLba & 0x8000000)) {
-                    KdPrint(("TrkInfo: set NWA to LastLba (%x)\n", Vcb->TrackMap[TrackNumber].LastLba));
+                    UDFPrint(("TrkInfo: set NWA to LastLba (%x)\n", Vcb->TrackMap[TrackNumber].LastLba));
                     Vcb->TrackMap[TrackNumber].NWA =
                         Vcb->TrackMap[TrackNumber].LastLba;
                 } else {
-                    KdPrint(("TrkInfo: set NWA to INV (1)\n"));
+                    UDFPrint(("TrkInfo: set NWA to INV (1)\n"));
                     Vcb->TrackMap[TrackNumber].NWA = 0;
                     Vcb->TrackMap[TrackNumber].NWA_V = 0;
                 }
             } else {
                 if(!(TrackInfoOut->NextWriteLBA & 0x80000000)) {
-                    KdPrint(("TrkInfo: Good NWA (%x)\n", TrackInfoOut->NextWriteLBA));
+                    UDFPrint(("TrkInfo: Good NWA (%x)\n", TrackInfoOut->NextWriteLBA));
                     Vcb->TrackMap[TrackNumber].NWA =
                         TrackInfoOut->NextWriteLBA;
                 } else {
-                    KdPrint(("TrkInfo: set NWA to INV (2)\n"));
+                    UDFPrint(("TrkInfo: set NWA to INV (2)\n"));
                     Vcb->TrackMap[TrackNumber].NWA = 0;
                     Vcb->TrackMap[TrackNumber].NWA_V = 0;
                 }
@@ -2000,14 +2000,14 @@ MRWRetry_label:
             // for FP tracks we shall get PacketSize from returned info
             // otherwise set to default UDF value (0x20)
             if(NotFP) {
-                KdPrint(("Apply NotFP\n"));
+                UDFPrint(("Apply NotFP\n"));
                 Vcb->TrackMap[TrackNumber].DataParam &= ~TrkInfo_FP;
 #ifdef DBG
                 TrackInfoOut->DataParam.Flags &= ~TrkInfo_FP;
 #endif //DBG
             } else
             if(ForceFP) {
-                KdPrint(("Apply ForceFP\n"));
+                UDFPrint(("Apply ForceFP\n"));
                 PacketTrack = TRUE;
                 Vcb->TrackMap[TrackNumber].DataParam |= TrkInfo_FP;
 #ifdef DBG
@@ -2023,19 +2023,19 @@ MRWRetry_label:
             }
             // presence of Damaged track means, that we should mount this disk in RAW mode
             if(Vcb->TrackMap[TrackNumber].TrackParam & TrkInfo_Damage) {
-                KdPrint(("TrkInfo_Damage, Try RAW_MOUNT\n"));
+                UDFPrint(("TrkInfo_Damage, Try RAW_MOUNT\n"));
                 Vcb->VCBFlags |= UDF_VCB_FLAGS_RAW_DISK;
             }
             // presence of track with Unknown data type means, that we should mount
             // this disk in RAW mode
             if((TrackInfoOut->DataParam.Flags & TrkInfo_Dat_Mask) == TrkInfo_Trk_unknown) {
-                KdPrint(("Unknown DatType, Try RAW_MOUNT\n"));
+                UDFPrint(("Unknown DatType, Try RAW_MOUNT\n"));
                 Vcb->VCBFlags |= UDF_VCB_FLAGS_RAW_DISK;
             }
 
             PacketTrack |= ((TrackInfoOut->DataParam.Flags & TrkInfo_Packet) != 0);
 
-            KdPrint(("Ses %d, Track %d (%x - %x) PckSize %x: \n"
+            UDFPrint(("Ses %d, Track %d (%x - %x) PckSize %x: \n"
                      "  NWA: %x (%s)  DatType:%x, %s %s %s %s TrkType:%x %s %s\n"
                      "  LRA: %x (%s)  RC_LBA:%x\n",
                 TrackInfoOut->SesNum,
@@ -2095,13 +2095,13 @@ MRWRetry_label:
 
             if(TrackNumber == DiscInfo->FirstTrackNum) {
                 if(!(Vcb->TrackMap[TrackNumber].FirstLba & 0x80000000)) {
-                    KdPrint(("TrkInfo: Update FirstLBA (%x)\n", Vcb->TrackMap[TrackNumber].FirstLba));
+                    UDFPrint(("TrkInfo: Update FirstLBA (%x)\n", Vcb->TrackMap[TrackNumber].FirstLba));
                     Vcb->FirstLBA = Vcb->TrackMap[TrackNumber].FirstLba;
                 }
             }
             if((TrackInfoOut->SesNum == Vcb->LastSession) && !Vcb->FirstTrackNumLastSes) {
                 if(!(Vcb->TrackMap[TrackNumber].FirstLba & 0x80000000)) {
-                    KdPrint(("TrkInfo: Update FirstLBALastSes (%x)\n", Vcb->TrackMap[TrackNumber].FirstLba));
+                    UDFPrint(("TrkInfo: Update FirstLBALastSes (%x)\n", Vcb->TrackMap[TrackNumber].FirstLba));
                     Vcb->FirstLBALastSes = Vcb->TrackMap[TrackNumber].FirstLba;
                 }
                 Vcb->FirstTrackNumLastSes = TrackNumber;
@@ -2112,7 +2112,7 @@ MRWRetry_label:
            !(TrackInfoOut->TrackLength  & 0x80000000) &&
             (Vcb->NWA < TrackInfoOut->NextWriteLBA)
            ) {
-            KdPrint((" set NWA to %x\n", TrackInfoOut->NextWriteLBA));
+            UDFPrint((" set NWA to %x\n", TrackInfoOut->NextWriteLBA));
             if(Vcb->MediaClassEx != CdMediaClass_DVDpRW) {
                 Vcb->NWA = TrackInfoOut->NextWriteLBA;
             } else {
@@ -2125,22 +2125,22 @@ MRWRetry_label:
            TrackInfoOut->TrackLength > 1) {
             Vcb->LastPossibleLBA =
                 TrackInfoOut->TrackStartLBA + TrackInfoOut->TrackLength - (TrackInfoOut->TrackLength ? 1 : 0);
-            KdPrint((" set LastPossibleLBA=%x\n", Vcb->LastPossibleLBA));
+            UDFPrint((" set LastPossibleLBA=%x\n", Vcb->LastPossibleLBA));
         }
         TrackNumber = Vcb->LastTrackNum;
         // quick formatted +RW returns bogus value
         if(Vcb->MediaClassEx == CdMediaClass_DVDpRW) {
-            KdPrint((" check quick formatted +RW\n"));
+            UDFPrint((" check quick formatted +RW\n"));
             if(Vcb->TrackMap[TrackNumber].LastLba &&
                !(Vcb->TrackMap[TrackNumber].LastLba & 0x80000000) &&
                Vcb->TrackMap[TrackNumber].LastLba < Vcb->LastPossibleLBA /*&&
                Vcb->TrackMap[TrackNumber].LastLba != Vcb->LastPossibleLBA*/
                ) {
-                KdPrint((" track LastLBA %x != LastPossibleLBA %x, verify\n",
+                UDFPrint((" track LastLBA %x != LastPossibleLBA %x, verify\n",
                     Vcb->TrackMap[TrackNumber].LastLba, Vcb->LastPossibleLBA));
 
                 if(Vcb->MRWStatus == DiscInfo_BGF_Complete) {
-                    KdPrint((" complete MRW state\n"));
+                    UDFPrint((" complete MRW state\n"));
 #ifdef _BROWSE_UDF_
                     Vcb->LastPossibleLBA =
                     Vcb->NWA = 
@@ -2153,7 +2153,7 @@ MRWRetry_label:
                     uint8* buff;
                     uint32 ReadBytes;
 
-                    KdPrint((" MRW state %x\n", Vcb->MRWStatus));
+                    UDFPrint((" MRW state %x\n", Vcb->MRWStatus));
 
                     buff = (uint8*)DbgAllocatePoolWithTag(NonPagedPool, Vcb->WriteBlockSize, 'bNWD' );
                     if(buff) {
@@ -2165,7 +2165,7 @@ MRWRetry_label:
                                        PH_TMP_BUFFER);
                         DbgFreePool(buff);
                         if(!OS_SUCCESS(RC)) {
-                            KdPrint((" Can't read beyond track LastLBA (%x)\n", Vcb->TrackMap[TrackNumber].LastLba+1));
+                            UDFPrint((" Can't read beyond track LastLBA (%x)\n", Vcb->TrackMap[TrackNumber].LastLba+1));
                             Vcb->LastLBA = Vcb->TrackMap[TrackNumber].LastLba;
                             Vcb->NWA = Vcb->LastLBA+1;
                             Vcb->TrackMap[TrackNumber].NWA_V = 1;
@@ -2177,7 +2177,7 @@ MRWRetry_label:
                     }
                 }
             }
-            KdPrint((" set track LastLBA %x\n", Vcb->LastPossibleLBA));
+            UDFPrint((" set track LastLBA %x\n", Vcb->LastPossibleLBA));
             Vcb->NWA = 
             Vcb->LastLBA =
             Vcb->TrackMap[TrackNumber].LastLba =
@@ -2211,18 +2211,18 @@ valid_track_length:
 #endif //_BROWSE_UDF_
 
         if(Vcb->TrackMap[TrackNumber].NWA_V & TrkInfo_NWA_V) {
-            KdPrint((" NWA ok, set LastLBA to min(Last %x, NWA %x\n",
+            UDFPrint((" NWA ok, set LastLBA to min(Last %x, NWA %x\n",
                 Vcb->TrackMap[TrackNumber].LastLba,
                 Vcb->TrackMap[TrackNumber].NWA));
             Vcb->LastLBA = min(Vcb->TrackMap[TrackNumber].LastLba, Vcb->TrackMap[TrackNumber].NWA);
         } else {
-            KdPrint((" no NWA, set LastLBA to Last %x\n", Vcb->TrackMap[TrackNumber].LastLba));
+            UDFPrint((" no NWA, set LastLBA to Last %x\n", Vcb->TrackMap[TrackNumber].LastLba));
             Vcb->LastLBA = Vcb->TrackMap[TrackNumber].LastLba;
         }
 
         Vcb->VCBFlags |= UDF_VCB_FLAGS_TRACKMAP;
         if(!PacketTrack && Vcb->MediaClassEx != CdMediaClass_DVDRAM ) {
-            KdPrint((" disable Raw mount\n"));
+            UDFPrint((" disable Raw mount\n"));
             Vcb->VCBFlags &= ~UDF_VCB_FLAGS_RAW_DISK;
         }
 
@@ -2253,7 +2253,7 @@ UDFReadAndProcessFullToc(
     uint32 LastLeadOut = 0;
 //    BOOLEAN IsMRW = FALSE;
 
-    KdPrint(("UDFReadAndProcessFullToc\n"));
+    UDFPrint(("UDFReadAndProcessFullToc\n"));
 
     if(!toc) return STATUS_INSUFFICIENT_RESOURCES;
     Vcb->FirstTrackNum = 0xFF;
@@ -2364,7 +2364,7 @@ UDFReadAndProcessFullToc(
     }
 
 /*    if(!IsMRW) {
-        KdPrint(("No MRW\n"));
+        UDFPrint(("No MRW\n"));
         Vcb->CompatFlags &= ~UDF_VCB_IC_MRW_ADDR_PROBLEM;
     }*/
 //        Vcb->CompatFlags &= ~UDF_VCB_IC_MRW_ADDR_PROBLEM;
@@ -2405,7 +2405,7 @@ UDFUseStandard(
   #define fms FALSE
 #endif //UDF_FORMAT_MEDIA
 
-    KdPrint(("UDFUseStandard\n"));
+    UDFPrint(("UDFUseStandard\n"));
 
     _SEH2_TRY {
 
@@ -2533,11 +2533,11 @@ UDFUseStandard(
 #ifdef UDF_DBG
             if (TrkNum >= MAXIMUM_NUMBER_OF_TRACKS &&
                 TrkNum != TOC_LastTrack_ID) {
-                KdPrint(("UDFUseStandard: Array out of bounds\n"));
+                UDFPrint(("UDFUseStandard: Array out of bounds\n"));
                 BrutePoint();
                 try_return(RC = STATUS_SUCCESS);
             }
-            KdPrint(("Track N %d (0x%x) first LBA %ld (%lx) \n",TrkNum,TrkNum,
+            UDFPrint(("Track N %d (0x%x) first LBA %ld (%lx) \n",TrkNum,TrkNum,
                 MSF_TO_LBA(TempMSF[1],TempMSF[2],TempMSF[3]),
                 MSF_TO_LBA(TempMSF[1],TempMSF[2],TempMSF[3])));
 #endif // UDF_DBG
@@ -2550,7 +2550,7 @@ UDFUseStandard(
             if(TOC_LastTrack_ID   == TrkNum) {
                 Vcb->LastLBA  = MSF_TO_LBA(TempMSF[1],TempMSF[2],TempMSF[3])-1;
                 Vcb->TrackMap[OldTrkNum].LastLba = Vcb->LastLBA-1;
-                KdPrint(("UDFUseStandard: Last track entry, break TOC scan\n"));
+                UDFPrint(("UDFUseStandard: Last track entry, break TOC scan\n"));
 //                continue;
                 break;
             } else {
@@ -2559,7 +2559,7 @@ UDFUseStandard(
                     Vcb->TrackMap[TrkNum].FirstLba = 0;
                 if(TrkNum) {
                     if (TOC_LastTrack_ID == OldTrkNum) {
-                        KdPrint(("UDFUseStandard: Wrong previous track number\n"));
+                        UDFPrint(("UDFUseStandard: Wrong previous track number\n"));
                         BrutePoint();
                     } else {
                         Vcb->TrackMap[OldTrkNum].LastLba = Vcb->TrackMap[TrkNum].FirstLba-1;
@@ -2594,7 +2594,7 @@ UDFUseStandard(
         }
         // no valid tracks...
         if(!TrkNum) {
-            KdPrint(("UDFUseStandard: no valid tracks...\n"));
+            UDFPrint(("UDFUseStandard: no valid tracks...\n"));
             try_return(RC = STATUS_UNRECOGNIZED_VOLUME);
         }
         i = 0;
@@ -2706,7 +2706,7 @@ UDFGetBlockSize(
 #ifdef UDF_HDD_SUPPORT
     if(!fms) {
         if(UDFGetDevType(DeviceObject) == FILE_DEVICE_DISK) {
-            KdPrint(("UDFGetBlockSize: HDD\n"));
+            UDFPrint(("UDFGetBlockSize: HDD\n"));
             RC = UDFPhSendIOCTL(IOCTL_DISK_GET_DRIVE_GEOMETRY,DeviceObject,
                 0,NULL,
                 DiskGeometry,sizeof(DISK_GEOMETRY),
@@ -2719,13 +2719,13 @@ UDFGetBlockSize(
                 PartitionInfo,sizeof(PARTITION_INFORMATION),
                 TRUE,NULL );
             if(!NT_SUCCESS(RC)) {
-                KdPrint(("UDFGetBlockSize: IOCTL_DISK_GET_PARTITION_INFO failed\n"));
+                UDFPrint(("UDFGetBlockSize: IOCTL_DISK_GET_PARTITION_INFO failed\n"));
                 if(RC == STATUS_INVALID_DEVICE_REQUEST) /* ReactOS Code Change (was =) */
                     RC = STATUS_UNRECOGNIZED_VOLUME;
                 try_return(RC);
             }
             if(PartitionInfo->PartitionType != PARTITION_IFS) {
-                KdPrint(("UDFGetBlockSize: PartitionInfo->PartitionType != PARTITION_IFS\n"));
+                UDFPrint(("UDFGetBlockSize: PartitionInfo->PartitionType != PARTITION_IFS\n"));
                 try_return(RC = STATUS_UNRECOGNIZED_VOLUME);
             }
         } else {
@@ -2856,7 +2856,7 @@ UDFGetBlockSize(
 
 try_exit:   NOTHING;
 
-    KdPrint(("UDFGetBlockSize:\nBlock size is %x, Block size bits %x, Last LBA is %x\n",
+    UDFPrint(("UDFGetBlockSize:\nBlock size is %x, Block size bits %x, Last LBA is %x\n",
               Vcb->BlockSize, Vcb->BlockSizeBits, Vcb->LastLBA));
 
     MyFreePool__(PartitionInfo);
@@ -2936,14 +2936,14 @@ UDFCheckTrackFPAddressing(
 
         // skip unreadable
         if(!OS_SUCCESS(RC)) {
-            KdPrint(("  Read error at lba %x\n", i));
+            UDFPrint(("  Read error at lba %x\n", i));
             continue;
         }
 
         // skip strange (damaged ?) blocks
         if((pHdr->Mode.Flags & WParam_SubHdr_Mode_Mask) != WParam_SubHdr_Mode1 &&
            (pHdr->Mode.Flags & WParam_SubHdr_Mode_Mask) != WParam_SubHdr_Mode2) {
-            KdPrint(("  Unexpected data type (%x) at lba %x\n", pHdr->Mode.Flags & WParam_SubHdr_Mode_Mask, i));
+            UDFPrint(("  Unexpected data type (%x) at lba %x\n", pHdr->Mode.Flags & WParam_SubHdr_Mode_Mask, i));
             continue;
         }
 
@@ -2959,7 +2959,7 @@ UDFCheckTrackFPAddressing(
         if((pHdr->Mode.Flags & WParam_SubHdr_Format_Mask) != WParam_SubHdr_Format_UserData &&
             user_data) {
 //        if(!OS_SUCCESS(RC) && OS_SUCCESS(RC2)) {
-            KdPrint(("  %x - %x (%x sectors)\n", lba, i-1, i-lba));
+            UDFPrint(("  %x - %x (%x sectors)\n", lba, i-1, i-lba));
             if(!FirstChunkLen) {
                 FirstChunkLen = i-lba;
             } else {
@@ -3035,7 +3035,7 @@ UDFFixFPAddress(
             return Lba;
         pk = Lba / Vcb->TrackMap[i].PacketSize;
         rel = Lba % Vcb->TrackMap[i].PacketSize;
-        KdPrint(("FixFPAddr: %x -> %x\n", Lba, pk*(Vcb->TrackMap[i].PacketSize+7) + rel));
+        UDFPrint(("FixFPAddr: %x -> %x\n", Lba, pk*(Vcb->TrackMap[i].PacketSize+7) + rel));
         return pk*(Vcb->TrackMap[i].PacketSize+7) + rel /*- Vcb->TrackMap[i].PacketFPOffset*/;
     }
     return Lba;
@@ -3065,7 +3065,7 @@ UDFGetDiskInfo(
   #define fms FALSE
 #endif //UDF_FORMAT_MEDIA
 
-    KdPrint(("UDFGetDiskInfo\n"));
+    UDFPrint(("UDFGetDiskInfo\n"));
 
     if(!ioBuf) {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -3094,14 +3094,14 @@ UDFGetDiskInfo(
 #endif //_BROWSE_UDF_
         }
 
-        KdPrint(("UDF: Signature of low driver is : %s \n",
+        UDFPrint(("UDF: Signature of low driver is : %s \n",
             ((PGET_SIGNATURE_USER_OUT)(ioBuf))->VendorId));
     
         if(!strncmp( (const char *)(&( ((PGET_SIGNATURE_USER_OUT)(ioBuf))->VendorId[0]) ),
             Signature,strlen(Signature) )) {
-            KdPrint(("UDF: *****************************************\n"));
-            KdPrint(("UDF: ********* Our Device Driver Found ******\n"));
-            KdPrint(("UDF: *****************************************\n"));
+            UDFPrint(("UDF: *****************************************\n"));
+            UDFPrint(("UDF: ********* Our Device Driver Found ******\n"));
+            UDFPrint(("UDF: *****************************************\n"));
     
             (Vcb->VCBFlags) |= UDF_VCB_FLAGS_OUR_DEVICE_DRIVER;
 #ifndef _BROWSE_UDF_
@@ -3132,47 +3132,47 @@ UDFGetDiskInfo(
             Vcb->SavedFeatures =
                 SavedFeatures = ((PGET_DEVICE_INFO_USER_OUT)ioBuf)->Features;
             if(!(SavedFeatures & CDRW_FEATURE_SYNC_ON_WRITE)) {
-                KdPrint(("UDFGetDiskInfo: UDF_VCB_IC_NO_SYNCCACHE_AFTER_WRITE\n"));
+                UDFPrint(("UDFGetDiskInfo: UDF_VCB_IC_NO_SYNCCACHE_AFTER_WRITE\n"));
                 Vcb->CompatFlags |= UDF_VCB_IC_NO_SYNCCACHE_AFTER_WRITE;
             }
             if(!(SavedFeatures & CDRW_FEATURE_FORCE_SYNC_BEFORE_READ)) {
-                KdPrint(("UDFGetDiskInfo: UDF_VCB_IC_SYNCCACHE_BEFORE_READ\n"));
+                UDFPrint(("UDFGetDiskInfo: UDF_VCB_IC_SYNCCACHE_BEFORE_READ\n"));
                 Vcb->CompatFlags |= UDF_VCB_IC_SYNCCACHE_BEFORE_READ;
             }
             if(SavedFeatures & CDRW_FEATURE_BAD_RW_SEEK) {
-                KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_BAD_RW_SEEK\n"));
+                UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_BAD_RW_SEEK\n"));
                 Vcb->CompatFlags |= UDF_VCB_IC_BAD_RW_SEEK;
             }
             // we must check if this is FP-formatted disk in old devices
             // independently of MediaType they report
             if(SavedFeatures & CDRW_FEATURE_FP_ADDRESSING_PROBLEM) {
-                KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_FP_ADDRESSING_PROBLEM ?\n"));
+                UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_FP_ADDRESSING_PROBLEM ?\n"));
                 Vcb->CompatFlags |= UDF_VCB_IC_FP_ADDR_PROBLEM;
             }
             if(SavedFeatures & CDRW_FEATURE_MRW_ADDRESSING_PROBLEM) {
-                KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_MRW_ADDRESSING_PROBLEM ?\n"));
+                UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_MRW_ADDRESSING_PROBLEM ?\n"));
             }
             if(SavedFeatures & CDRW_FEATURE_FORCE_SYNC_ON_WRITE) {
-                KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_FORCE_SYNC_ON_WRITE\n"));
+                UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_FORCE_SYNC_ON_WRITE\n"));
                 Vcb->VCBFlags |= UDF_VCB_FLAGS_FORCE_SYNC_CACHE;
             }
             if(SavedFeatures & CDRW_FEATURE_BAD_DVD_LAST_LBA) {
-                KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_BAD_DVD_LAST_LBA\n"));
+                UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_BAD_DVD_LAST_LBA\n"));
                 Vcb->CompatFlags |= UDF_VCB_IC_BAD_DVD_LAST_LBA;
             }
             if(SavedFeatures & CDRW_FEATURE_STREAMING) {
-                KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_STREAMING\n"));
+                UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_STREAMING\n"));
             }
             if(SavedFeatures & CDRW_FEATURE_OPC) {
-                KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_OPC -> assume OPCNum=1\n"));
+                UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_OPC -> assume OPCNum=1\n"));
                 Vcb->OPCNum = 1;
             }
 #ifdef UDF_FORMAT_MEDIA
             if(SavedFeatures & CDRW_FEATURE_FULL_BLANK_ON_FORMAT) {
-                KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_FULL_BLANK_ON_FORMAT\n"));
+                UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_FULL_BLANK_ON_FORMAT\n"));
                 if((fms->opt_probe || fms->opt_smart_f)/* &&
                    (fms->format_media && fms->blank_media*/) {
-                    KdPrint(("UDFGetDiskInfo: force Full Erase\n"));
+                    UDFPrint(("UDFGetDiskInfo: force Full Erase\n"));
                     fms->opt_qblank = FALSE;
                 }
             }
@@ -3189,7 +3189,7 @@ UDFGetDiskInfo(
             } else {
                 Vcb->CdrwBufferSize = 0;
             }
-            KdPrint(("UDFGetDiskInfo: CdrwBufferSize = %dKb\n", Vcb->CdrwBufferSize / 1024));
+            UDFPrint(("UDFGetDiskInfo: CdrwBufferSize = %dKb\n", Vcb->CdrwBufferSize / 1024));
             Vcb->CdrwBufferSizeCounter = 0;
 #endif //_BROWSE_UDF_
             // get media type
@@ -3199,7 +3199,7 @@ UDFGetDiskInfo(
             if(!OS_SUCCESS(RC)) goto Try_FullToc;
             Vcb->MediaType =
             MediaType = ((PGET_MEDIA_TYPE_USER_OUT)ioBuf)->MediaType;
-            KdPrint(("UDFGetDiskInfo: MediaType %x\n", MediaType));
+            UDFPrint(("UDFGetDiskInfo: MediaType %x\n", MediaType));
 
 #ifndef UDF_FORMAT_MEDIA
             // we shall ignore audio-disks
@@ -3211,19 +3211,19 @@ UDFGetDiskInfo(
             case MediaType_120mm_CDRW_AudioOnly:
             case MediaType_80mm_CDRW_AudioOnly:
 //            case :
-                KdPrint(("UDFGetDiskInfo: we shall ignore audio-disks...\n"));
+                UDFPrint(("UDFGetDiskInfo: we shall ignore audio-disks...\n"));
                 try_return(RC = STATUS_UNRECOGNIZED_VOLUME);
             }
 #endif //UDF_FORMAT_MEDIA
 
-            KdPrint(("UDFGetDiskInfo: Check DVD-disks...\n"));
+            UDFPrint(("UDFGetDiskInfo: Check DVD-disks...\n"));
             RC = UDFPhSendIOCTL(IOCTL_CDRW_GET_MEDIA_TYPE_EX,DeviceObject,
                     NULL,0,ioBuf,sizeof(GET_MEDIA_TYPE_EX_USER_OUT),
                     FALSE, NULL);
             if(!OS_SUCCESS(RC)) goto Try_FullToc;
             Vcb->MediaClassEx =
             MediaType = (((PGET_MEDIA_TYPE_EX_USER_OUT)ioBuf)->MediaClass);
-            KdPrint(("UDFGetDiskInfo: MediaClassEx %x\n", MediaType));
+            UDFPrint(("UDFGetDiskInfo: MediaClassEx %x\n", MediaType));
 
 #ifdef _BROWSE_UDF_
             if(!fms) {
@@ -3235,13 +3235,13 @@ UDFGetDiskInfo(
                 case CdMediaClass_DVDpR:
                 case CdMediaClass_HD_DVDR:
                 case CdMediaClass_BDR:
-                    KdPrint(("UDFGetDiskInfo: MediaClass R\n"));
+                    UDFPrint(("UDFGetDiskInfo: MediaClass R\n"));
                     Vcb->MediaType = MediaType_UnknownSize_CDR;
                     break;
                 case CdMediaClass_CDRW:
 
                     if(SavedFeatures & CDRW_FEATURE_MRW_ADDRESSING_PROBLEM) {
-                        KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_MRW_ADDRESSING_PROBLEM on CD-RW\n"));
+                        UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_MRW_ADDRESSING_PROBLEM on CD-RW\n"));
                         Vcb->CompatFlags |= UDF_VCB_IC_MRW_ADDR_PROBLEM;
                     }
 
@@ -3251,19 +3251,19 @@ UDFGetDiskInfo(
                 case CdMediaClass_HD_DVDRW:
                 case CdMediaClass_HD_DVDRAM:
                 case CdMediaClass_BDRE:
-                    KdPrint(("UDFGetDiskInfo: MediaClass RW\n"));
+                    UDFPrint(("UDFGetDiskInfo: MediaClass RW\n"));
                     Vcb->MediaType = MediaType_UnknownSize_CDRW;
                     break;
                 case CdMediaClass_CDROM:
                 case CdMediaClass_DVDROM:
                 case CdMediaClass_HD_DVDROM:
                 case CdMediaClass_BDROM:
-                    KdPrint(("UDFGetDiskInfo: MediaClass ROM\n"));
+                    UDFPrint(("UDFGetDiskInfo: MediaClass ROM\n"));
                     Vcb->MediaType = MediaType_Unknown;
     //                    Vcb->MediaType = MediaType_UnknownSize_CDROM;
                     break;
                 default:
-                    KdPrint(("UDFGetDiskInfo: MediaClass Unknown\n"));
+                    UDFPrint(("UDFGetDiskInfo: MediaClass Unknown\n"));
                     Vcb->MediaType = MediaType_Unknown;
                     break;
                 }
@@ -3278,93 +3278,93 @@ UDFGetDiskInfo(
 
                 switch(MediaType) {
                 case CdMediaClass_CDR:
-                    KdPrint(("CdMediaClass_CDR\n"));
+                    UDFPrint(("CdMediaClass_CDR\n"));
                     MediaType = MediaType_UnknownSize_CDR;
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_CDR;
                     break;
                 case CdMediaClass_DVDR:
-                    KdPrint(("CdMediaClass_DVDR -> MediaType_UnknownSize_CDR\n"));
+                    UDFPrint(("CdMediaClass_DVDR -> MediaType_UnknownSize_CDR\n"));
                     MediaType = MediaType_UnknownSize_CDR;
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDR;
                     break;
                 case CdMediaClass_DVDpR:
-                    KdPrint(("CdMediaClass_DVDpR -> MediaType_UnknownSize_CDR\n"));
+                    UDFPrint(("CdMediaClass_DVDpR -> MediaType_UnknownSize_CDR\n"));
                     MediaType = MediaType_UnknownSize_CDR;
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDpR;
                     break;
                 case CdMediaClass_HD_DVDR:
-                    KdPrint(("CdMediaClass_HD_DVDR -> MediaType_UnknownSize_CDR\n"));
+                    UDFPrint(("CdMediaClass_HD_DVDR -> MediaType_UnknownSize_CDR\n"));
                     MediaType = MediaType_UnknownSize_CDR;
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDR;
                     break;
                 case CdMediaClass_BDR:
-                    KdPrint(("CdMediaClass_BDR -> MediaType_UnknownSize_CDR\n"));
+                    UDFPrint(("CdMediaClass_BDR -> MediaType_UnknownSize_CDR\n"));
                     MediaType = MediaType_UnknownSize_CDR;
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDR;
                     break;
                 case CdMediaClass_CDRW:
-                    KdPrint(("CdMediaClass_CDRW\n"));
+                    UDFPrint(("CdMediaClass_CDRW\n"));
                     MediaType = MediaType_UnknownSize_CDRW;
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_CDRW;
                     if(SavedFeatures & CDRW_FEATURE_MRW_ADDRESSING_PROBLEM) {
-                        KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_MRW_ADDRESSING_PROBLEM on CD-RW\n"));
+                        UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_MRW_ADDRESSING_PROBLEM on CD-RW\n"));
                         Vcb->CompatFlags |= UDF_VCB_IC_MRW_ADDR_PROBLEM;
                     }
                     break;
                 case CdMediaClass_DVDRW:
-                    KdPrint(("  CdMediaClass_DVDRW -> MediaType_UnknownSize_CDRW\n"));
+                    UDFPrint(("  CdMediaClass_DVDRW -> MediaType_UnknownSize_CDRW\n"));
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDRW;
                     MediaType = MediaType_UnknownSize_CDRW;
                     break;
                 case CdMediaClass_DVDpRW:
-                    KdPrint(("  CdMediaClass_DVDpRW -> MediaType_UnknownSize_CDRW\n"));
+                    UDFPrint(("  CdMediaClass_DVDpRW -> MediaType_UnknownSize_CDRW\n"));
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDpRW;
                     MediaType = MediaType_UnknownSize_CDRW;
                     break;
                 case CdMediaClass_DVDRAM:
-                    KdPrint(("  CdMediaClass_DVDRAM -> MediaType_UnknownSize_CDRW\n"));
+                    UDFPrint(("  CdMediaClass_DVDRAM -> MediaType_UnknownSize_CDRW\n"));
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDRAM;
                     MediaType = MediaType_UnknownSize_CDRW;
                     break;
                 case CdMediaClass_HD_DVDRW:
-                    KdPrint(("  CdMediaClass_HD_DVDRW -> MediaType_UnknownSize_CDRW\n"));
+                    UDFPrint(("  CdMediaClass_HD_DVDRW -> MediaType_UnknownSize_CDRW\n"));
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDRW;
                     MediaType = MediaType_UnknownSize_CDRW;
                     break;
                 case CdMediaClass_HD_DVDRAM:
-                    KdPrint(("  CdMediaClass_HD_DVDRAM -> MediaType_UnknownSize_CDRW\n"));
+                    UDFPrint(("  CdMediaClass_HD_DVDRAM -> MediaType_UnknownSize_CDRW\n"));
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDRAM;
                     MediaType = MediaType_UnknownSize_CDRW;
                     break;
                 case CdMediaClass_BDRE:
-                    KdPrint(("  CdMediaClass_BDRE -> MediaType_UnknownSize_CDRW\n"));
+                    UDFPrint(("  CdMediaClass_BDRE -> MediaType_UnknownSize_CDRW\n"));
                     if(fms->opt_media == MT_AUTO)
                         fms->opt_media = MT_DVDRW;
                     MediaType = MediaType_UnknownSize_CDRW;
                     break;
                 case CdMediaClass_NoDiscPresent:
-                    KdPrint(("  CdMediaClass_NoDiscPresent -> MediaType_NoDiscPresent\n"));
+                    UDFPrint(("  CdMediaClass_NoDiscPresent -> MediaType_NoDiscPresent\n"));
                     MediaType = MediaType_NoDiscPresent;
                     fms->opt_media = MT_none;
                     break;
                 case CdMediaClass_DoorOpen:
-                    KdPrint(("  CdMediaClass_DoorOpen -> MediaType_DoorOpen\n"));
+                    UDFPrint(("  CdMediaClass_DoorOpen -> MediaType_DoorOpen\n"));
                     MediaType = MediaType_DoorOpen;
                     fms->opt_media = MT_none;
                     break;
                 default:
-                    KdPrint(("  MediaType_Unknown\n"));
+                    UDFPrint(("  MediaType_Unknown\n"));
                     MediaType = MediaType_Unknown;
                     break;
                 }
@@ -3380,8 +3380,8 @@ UDFGetDiskInfo(
             Vcb->WriteParamsReq = (Vcb->PhMediaCapFlags & CdCapFlags_WriteParamsReq) ? TRUE : FALSE;
             if(Vcb->DVD_Mode &&
                 !(Vcb->PhMediaCapFlags & CdCapFlags_RandomWritable)) {
-                KdPrint(("UDFGetDiskInfo: DVD && !CdCapFlags_RandomWritable\n"));
-                KdPrint(("  Read-only volume\n"));
+                UDFPrint(("UDFGetDiskInfo: DVD && !CdCapFlags_RandomWritable\n"));
+                UDFPrint(("  Read-only volume\n"));
 //                BrutePoint();
 #ifndef UDF_CDRW_EMULATION_ON_ROM
                 Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
@@ -3397,10 +3397,10 @@ UDFGetDiskInfo(
             }
 #endif //UDF_FORMAT_MEDIA
             if(!Vcb->WriteParamsReq) {
-                KdPrint(("UDFGetDiskInfo: do not use WriteParams\n"));
+                UDFPrint(("UDFGetDiskInfo: do not use WriteParams\n"));
             }
             if(Vcb->PhMediaCapFlags & CdCapFlags_Cav) {
-                KdPrint(("UDFGetDiskInfo: Use CAV (1)\n"));
+                UDFPrint(("UDFGetDiskInfo: Use CAV (1)\n"));
                 Vcb->VCBFlags |= UDF_VCB_FLAGS_USE_CAV;
             }
 
@@ -3409,13 +3409,13 @@ UDFGetDiskInfo(
                 // check if this device is capable to write on such media
                 if(UDFIsDvdMedia(Vcb)) {
                     //RC =
-                    KdPrint(("UDFGetDiskInfo: update defaulted LastLBA\n"));
+                    UDFPrint(("UDFGetDiskInfo: update defaulted LastLBA\n"));
                     UDFGetBlockSize(DeviceObject,Vcb);
                     //if(!OS_SUCCESS(RC)) goto Try_FullToc;
                 } else {
                     if((SavedFeatures & CDRW_FEATURE_MRW_ADDRESSING_PROBLEM) &&
                        (SavedFeatures & UDF_VCB_IC_FP_ADDR_PROBLEM)) {
-                        KdPrint(("UDFGetDiskInfo: CDRW_FEATURE_MRW_ADDRESSING_PROBLEM on old CD-ROM\n"));
+                        UDFPrint(("UDFGetDiskInfo: CDRW_FEATURE_MRW_ADDRESSING_PROBLEM on old CD-ROM\n"));
                         Vcb->CompatFlags |= UDF_VCB_IC_MRW_ADDR_PROBLEM;
                     }
                 }
@@ -3442,7 +3442,7 @@ UDFGetDiskInfo(
             RC = UDFPhSendIOCTL(IOCTL_DISK_IS_WRITABLE,DeviceObject,
                     NULL,0,NULL,0,FALSE, NULL);
             if(RC != STATUS_SUCCESS) {
-                KdPrint(("IS_WRITABLE - false, doing additional check...\n"));
+                UDFPrint(("IS_WRITABLE - false, doing additional check...\n"));
                 if( ((MediaType >= MediaType_UnknownSize_CDRW) && !(cap->WriteCap & DevCap_write_cd_rw)) ||
                     ((MediaType >= MediaType_UnknownSize_CDR) && !(cap->WriteCap & DevCap_write_cd_r)) ||
                      (MediaType < MediaType_UnknownSize_CDR) ) {
@@ -3456,7 +3456,7 @@ UDFGetDiskInfo(
 #endif //UDF_FORMAT_MEDIA
                 }
             } else {
-                KdPrint(("Writable disk\n"));
+                UDFPrint(("Writable disk\n"));
             }
             Vcb->MaxWriteSpeed = cap->MaximumWriteSpeedSupported;
             Vcb->MaxReadSpeed  = cap->MaximumSpeedSupported;
@@ -3464,7 +3464,7 @@ UDFGetDiskInfo(
                 Vcb->CurSpeed = max(cap->CurrentSpeed, cap->CurrentWriteSpeed3);
                 if(cap->LunWPerfDescriptorCount && cap->LunWPerfDescriptorCount != 0xffff) {
                     ULONG n;
-                    KdPrint(("Write performance descriptor(s) found: %x\n", cap->LunWPerfDescriptorCount));
+                    UDFPrint(("Write performance descriptor(s) found: %x\n", cap->LunWPerfDescriptorCount));
                     n = (4096 - sizeof(GET_CAPABILITIES_3_USER_OUT)) / sizeof(LUN_WRITE_PERF_DESC_USER);
                     n = min(n, cap->LunWPerfDescriptorCount);
                     // get device capabilities
@@ -3481,16 +3481,16 @@ UDFGetDiskInfo(
                                 if(!n) {
                                     Vcb->CurSpeed = WPerfDesc[i].WriteSpeedSupported;
                                     n = TRUE;
-                                    KdPrint(("Use CAV\n"));
+                                    UDFPrint(("Use CAV\n"));
                                 } else {
                                     Vcb->CurSpeed = max(WPerfDesc[i].WriteSpeedSupported, Vcb->CurSpeed);
                                 }
-                                KdPrint(("supports speed %dX\n", Vcb->CurSpeed/176));
+                                UDFPrint(("supports speed %dX\n", Vcb->CurSpeed/176));
                                 //break;
                             }
                         }
                         if(n) {
-                            KdPrint(("Set r/w speeds to %dX\n", Vcb->CurSpeed/176));
+                            UDFPrint(("Set r/w speeds to %dX\n", Vcb->CurSpeed/176));
                             Vcb->MaxWriteSpeed =
                             Vcb->MaxReadSpeed  = Vcb->CurSpeed;
                         }
@@ -3499,7 +3499,7 @@ UDFGetDiskInfo(
             } else {
                 Vcb->CurSpeed = max(cap->CurrentSpeed, cap->CurrentWriteSpeed);
             }
-            KdPrint((" Speeds r/w %dX/%dX\n", Vcb->CurSpeed/176, cap->CurrentWriteSpeed/176));
+            UDFPrint((" Speeds r/w %dX/%dX\n", Vcb->CurSpeed/176, cap->CurrentWriteSpeed/176));
 
             if(Vcb->VCBFlags & UDF_VCB_FLAGS_USE_CAV) {
                 // limit both read & write speed to last write speed for CAV mode
@@ -3530,7 +3530,7 @@ UDFGetDiskInfo(
             if(!OS_SUCCESS(RC)) {
                 // may be we have a CD-ROM device
 Try_FullToc:
-                KdPrint(("Hardware Read-only volume (2)\n"));
+                UDFPrint(("Hardware Read-only volume (2)\n"));
 //                BrutePoint();
 #ifndef UDF_CDRW_EMULATION_ON_ROM
                 Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_READ_ONLY;
@@ -3563,20 +3563,20 @@ try_exit:   NOTHING;
            (Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) &&
             Vcb->LastLBA &&
            (Vcb->LastLBA < DEFAULT_LAST_LBA_DVD)) {
-            KdPrint(("UDF: Bad DVD last LBA %x, fixup!\n", Vcb->LastLBA));
+            UDFPrint(("UDF: Bad DVD last LBA %x, fixup!\n", Vcb->LastLBA));
             Vcb->LastLBA = DEFAULT_LAST_LBA_DVD;
             Vcb->NWA = 0;
         }
 
 
         if(UDFIsDvdMedia(Vcb) && !Vcb->FirstLBA && !Vcb->LastPossibleLBA) {
-            KdPrint(("UDF: Empty DVD. Use bogus values for now\n"));
+            UDFPrint(("UDF: Empty DVD. Use bogus values for now\n"));
             Vcb->LastPossibleLBA = DEFAULT_LAST_LBA_DVD;
             Vcb->LastLBA = 0;
         }
         
         if((Vcb->LastPossibleLBA & 0x80000000) || (Vcb->LastPossibleLBA < Vcb->LastLBA)) {
-            KdPrint(("UDF: bad LastPossibleLBA %x -> %x\n", Vcb->LastPossibleLBA, Vcb->LastLBA));
+            UDFPrint(("UDF: bad LastPossibleLBA %x -> %x\n", Vcb->LastPossibleLBA, Vcb->LastLBA));
             Vcb->LastPossibleLBA = Vcb->LastLBA;
         }
         if(!Vcb->WriteBlockSize)
@@ -3614,7 +3614,7 @@ try_exit:   NOTHING;
             UDFCheckTrackFPAddressing(Vcb, Vcb->FirstTrackNum);
             // if we really have such a problem, fix LastLBA
             if(Vcb->CompatFlags & UDF_VCB_IC_FP_ADDR_PROBLEM) {
-                KdPrint(("UDF: Fix LastLBA: %x -> %x\n", Vcb->LastLBA, (Vcb->LastLBA*32) / 39));
+                UDFPrint(("UDF: Fix LastLBA: %x -> %x\n", Vcb->LastLBA, (Vcb->LastLBA*32) / 39));
                 Vcb->LastLBA = (Vcb->LastLBA*32) / 39;
             }
         }
@@ -3622,30 +3622,30 @@ try_exit:   NOTHING;
 
         if(Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY) {
             if(!Vcb->BlankCD && Vcb->MediaType != MediaType_UnknownSize_CDRW) {
-                KdPrint(("UDFGetDiskInfo: R/O+!Blank+!RW -> !RAW\n"));
+                UDFPrint(("UDFGetDiskInfo: R/O+!Blank+!RW -> !RAW\n"));
                 Vcb->VCBFlags &= ~UDF_VCB_FLAGS_RAW_DISK;
             } else {
-                KdPrint(("UDFGetDiskInfo: Blank or RW\n"));
+                UDFPrint(("UDFGetDiskInfo: Blank or RW\n"));
             }
         }
 
-        KdPrint(("UDF: ------------------------------------------\n"));
-        KdPrint(("UDF: Media characteristics\n"));
-        KdPrint(("UDF: Last session: %d\n",Vcb->LastSession));
-        KdPrint(("UDF: First track in first session: %d\n",Vcb->FirstTrackNum));
-        KdPrint(("UDF: First track in last session: %d\n",Vcb->FirstTrackNumLastSes));
-        KdPrint(("UDF: Last track in last session: %d\n",Vcb->LastTrackNum));
-        KdPrint(("UDF: First LBA in first session: %x\n",Vcb->FirstLBA));
-        KdPrint(("UDF: First LBA in last session: %x\n",Vcb->FirstLBALastSes));
-        KdPrint(("UDF: Last LBA in last session: %x\n",Vcb->LastLBA));
-        KdPrint(("UDF: First writable LBA (NWA) in last session: %x\n",Vcb->NWA));
-        KdPrint(("UDF: Last available LBA beyond end of last session: %x\n",Vcb->LastPossibleLBA));
-        KdPrint(("UDF: blocks per frame: %x\n",1 << Vcb->WCacheBlocksPerFrameSh));
-        KdPrint(("UDF: Flags: %s%s\n",
+        UDFPrint(("UDF: ------------------------------------------\n"));
+        UDFPrint(("UDF: Media characteristics\n"));
+        UDFPrint(("UDF: Last session: %d\n",Vcb->LastSession));
+        UDFPrint(("UDF: First track in first session: %d\n",Vcb->FirstTrackNum));
+        UDFPrint(("UDF: First track in last session: %d\n",Vcb->FirstTrackNumLastSes));
+        UDFPrint(("UDF: Last track in last session: %d\n",Vcb->LastTrackNum));
+        UDFPrint(("UDF: First LBA in first session: %x\n",Vcb->FirstLBA));
+        UDFPrint(("UDF: First LBA in last session: %x\n",Vcb->FirstLBALastSes));
+        UDFPrint(("UDF: Last LBA in last session: %x\n",Vcb->LastLBA));
+        UDFPrint(("UDF: First writable LBA (NWA) in last session: %x\n",Vcb->NWA));
+        UDFPrint(("UDF: Last available LBA beyond end of last session: %x\n",Vcb->LastPossibleLBA));
+        UDFPrint(("UDF: blocks per frame: %x\n",1 << Vcb->WCacheBlocksPerFrameSh));
+        UDFPrint(("UDF: Flags: %s%s\n",
                  Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK ? "RAW " : "",
                  Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_READ_ONLY ? "R/O " : "WR "
                  ));
-        KdPrint(("UDF: ------------------------------------------\n"));
+        UDFPrint(("UDF: ------------------------------------------\n"));
 
 #ifdef UDF_FORMAT_MEDIA
         if(fms && fms->opt_disk_info) {
@@ -3659,7 +3659,7 @@ try_exit:   NOTHING;
 
     } _SEH2_END;
 
-    KdPrint(("UDFGetDiskInfo: %x\n", RC));
+    UDFPrint(("UDFGetDiskInfo: %x\n", RC));
     return(RC);
 
 } // end UDFGetDiskInfo()
@@ -3690,7 +3690,7 @@ UDFPrepareForReadOperation(
         ULONG i;
         for(i=0; i<BCount; i++) {
             if(UDFGetBit((uint32*)(Vcb->BSBM_Bitmap), Lba+i)) {
-                KdPrint(("R: Known BB @ %#x\n", Lba));
+                UDFPrint(("R: Known BB @ %#x\n", Lba));
                 //return STATUS_FT_WRITE_RECOVERY; // this shall not be treated as error and
                                                    // we shall get IO request to BAD block
                 return STATUS_DEVICE_DATA_ERROR;
@@ -3758,7 +3758,7 @@ UDFPrepareForReadOperation(
             if(Vcb->VCBFlags & UDF_VCB_FLAGS_USE_CAV) {
                 Vcb->SpeedBuf.RotCtrl = CdSpeed_RotCtrl_CAV;
             }
-            KdPrint(("    UDFPrepareForReadOperation: set speed to %s %dX/%dX\n",
+            UDFPrint(("    UDFPrepareForReadOperation: set speed to %s %dX/%dX\n",
                 (Vcb->VCBFlags & UDF_VCB_FLAGS_USE_CAV) ? "CAV" : "CLV",
                 Vcb->SpeedBuf.ReadSpeed,
                 Vcb->SpeedBuf.WriteSpeed));
@@ -3801,7 +3801,7 @@ check_for_data_track:
         Vcb->IncrementalSeekState = INCREMENTAL_SEEK_NONE;
         return STATUS_SUCCESS;
     }
-    KdPrint(("    UDFPrepareForReadOperation: seek workaround...\n"));
+    UDFPrint(("    UDFPrepareForReadOperation: seek workaround...\n"));
     Vcb->IncrementalSeekState = INCREMENTAL_SEEK_DONE;
 
     tmp = (PUCHAR)DbgAllocatePoolWithTag(NonPagedPool, Vcb->BlockSize, 'bNWD');
@@ -3812,7 +3812,7 @@ check_for_data_track:
     for(i=0x1000; i<=Lba; i+=0x1000) {
         RC = UDFPhReadSynchronous(Vcb->TargetDeviceObject, tmp, Vcb->BlockSize,
                    ((uint64)UDFFixFPAddress(Vcb,i)) << Vcb->BlockSizeBits, &ReadBytes, 0);
-        KdPrint(("    seek workaround, LBA %x, status %x\n", i, RC));
+        UDFPrint(("    seek workaround, LBA %x, status %x\n", i, RC));
     }
     DbgFreePool(tmp);
 #endif //_BROWSE_UDF_
@@ -3852,7 +3852,7 @@ UDFUpdateNWA(
 /*        if(Vcb->CdrwBufferSize) {
             Vcb->CdrwBufferSizeCounter += BCount * 2048;
             if(Vcb->CdrwBufferSizeCounter >= Vcb->CdrwBufferSize + 2*2048) {
-                KdPrint(("    UDFUpdateNWA: buffer is full, sync...\n"));
+                UDFPrint(("    UDFUpdateNWA: buffer is full, sync...\n"));
                 Vcb->CdrwBufferSizeCounter = 0;
                 goto sync_cache;
             }
@@ -3869,7 +3869,7 @@ UDFUpdateNWA(
         Vcb->NWA+=BCount+7;
 sync_cache:
     if(!(Vcb->CompatFlags & UDF_VCB_IC_NO_SYNCCACHE_AFTER_WRITE)) {
-        KdPrint(("    UDFUpdateNWA: syncing...\n"));
+        UDFPrint(("    UDFUpdateNWA: syncing...\n"));
         RC = UDFSyncCache(Vcb);
     }
 #endif //_BROWSE_UDF_
@@ -4128,7 +4128,7 @@ EO_WrSctD:
     }
     ASSERT(OS_SUCCESS(status));
     if(!OS_SUCCESS(status)) {
-        KdPrint(("UDFWriteInSector() for LBA %x failed\n", Lba));
+        UDFPrint(("UDFWriteInSector() for LBA %x failed\n", Lba));
     }
 #endif //_BROWSE_UDF_
     return status;
@@ -4247,7 +4247,7 @@ UDFSetSpeeds(
         Vcb->SpeedBuf.ReadSpeed  = Vcb->CurSpeed;
         Vcb->SpeedBuf.WriteSpeed = Vcb->MaxWriteSpeed;
     }
-    KdPrint(("    UDFSetSpeeds: set speed to %s %dX/%dX\n",
+    UDFPrint(("    UDFSetSpeeds: set speed to %s %dX/%dX\n",
         (Vcb->VCBFlags & UDF_VCB_FLAGS_USE_CAV) ? "CAV" : "CLV",
         Vcb->SpeedBuf.ReadSpeed / 176,
         Vcb->SpeedBuf.WriteSpeed / 176));
@@ -4255,7 +4255,7 @@ UDFSetSpeeds(
                         Vcb->TargetDeviceObject,
                         &(Vcb->SpeedBuf),sizeof(SET_CD_SPEED_EX_USER_IN),
                         NULL,0,TRUE,NULL);
-    KdPrint(("UDFSetSpeeds: %x\n", RC));
+    UDFPrint(("UDFSetSpeeds: %x\n", RC));
     return RC;
 } // end UDFSetSpeeds()
 
@@ -4285,7 +4285,7 @@ UDFSetCaching(
     MODE_SENSE_USER_IN ModeSenseCtl;
     OSSTATUS RC;
 
-    KdPrint(("UDFSetCaching:\n"));
+    UDFPrint(("UDFSetCaching:\n"));
 
     ModeSenseCtl.PageCode.Byte = MODE_PAGE_ERROR_RECOVERY;
     RC = UDFPhSendIOCTL(IOCTL_CDRW_MODE_SENSE, Vcb->TargetDeviceObject,
@@ -4293,7 +4293,7 @@ UDFSetCaching(
                     (PVOID)&RecoveryPage,sizeof(RecoveryPage),
                     FALSE, NULL);
     if(OS_SUCCESS(RC)) {
-        KdPrint(("  Error recovery page:\n"
+        UDFPrint(("  Error recovery page:\n"
             "PageCode         %d\n"
             "PageLength       %d\n"
 
@@ -4348,7 +4348,7 @@ UDFSetCaching(
         return RC;
     }
 
-    KdPrint(("  Caching page:\n"
+    UDFPrint(("  Caching page:\n"
         "PageCode         %d\n"
         "PageLength       %d\n"
         "ReadDisableCache %d\n"
@@ -4380,6 +4380,6 @@ UDFSetCaching(
     } else {
         RC = STATUS_SUCCESS;
     }
-    KdPrint(("UDFSetCaching: %x\n", RC));
+    UDFPrint(("UDFSetCaching: %x\n", RC));
     return RC;
 } // end UDFSetCaching()

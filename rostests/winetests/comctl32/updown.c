@@ -169,8 +169,8 @@ static const struct message test_updown_pos_nochange_seq[] = {
 static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
     LRESULT ret;
-    struct message msg;
 
     /* log system messages, except for painting */
     if (message < WM_USER &&
@@ -187,7 +187,6 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         if (defwndproc_counter) msg.flags |= defwinproc;
         msg.wParam = wParam;
         msg.lParam = lParam;
-        msg.id = 0;
         add_message(sequences, PARENT_SEQ_INDEX, &msg);
     }
 
@@ -232,8 +231,8 @@ static LRESULT WINAPI edit_subclass_proc(HWND hwnd, UINT message, WPARAM wParam,
 {
     WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
     LRESULT ret;
-    struct message msg;
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
@@ -272,8 +271,8 @@ static LRESULT WINAPI updown_subclass_proc(HWND hwnd, UINT message, WPARAM wPara
 {
     WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
     LRESULT ret;
-    struct message msg;
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;

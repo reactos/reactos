@@ -115,7 +115,7 @@ NtfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
            sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength);
     DPRINT("LabelLength %hu\n",
            DeviceObject->Vpb->VolumeLabelLength);
-    DPRINT("Label %*.S\n",
+    DPRINT("Label %.*S\n",
            DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR),
            DeviceObject->Vpb->VolumeLabel);
 

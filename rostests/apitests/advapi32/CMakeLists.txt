@@ -9,6 +9,7 @@ list(APPEND SOURCE
     QueryServiceConfig2.c
     RegEnumKey.c
     RegEnumValueW.c
+    RegOpenKeyExW.c
     RegQueryInfoKey.c
     RegQueryValueExW.c
     RtlEncryptMemory.c

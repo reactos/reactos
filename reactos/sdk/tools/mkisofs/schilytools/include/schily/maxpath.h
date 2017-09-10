@@ -1,8 +1,8 @@
-/* @(#)maxpath.h	1.12 10/08/27 Copyright 1985, 1995, 1998, 2001-2010 J. Schilling */
+/* @(#)maxpath.h	1.13 17/04/27 Copyright 1985, 1995, 1998, 2001-2017 J. Schilling */
 /*
  *	Definitions for dealing with statically limitations on pathnames
  *
- *	Copyright (c) 1985, 1995, 1998, 2001-2010 J. Schilling
+ *	Copyright (c) 1985, 1995, 1998, 2001-2017 J. Schilling
  */
 /*
  * The contents of this file are subject to the terms of the
@@ -11,6 +11,8 @@
  * with the License.
  *
  * See the file CDDL.Schily.txt in this distribution for details.
+ * A copy of the CDDL is also available via the Internet at
+ * http://www.opensource.org/licenses/cddl1.txt
  *
  * When distributing Covered Code, include this CDDL HEADER in each
  * file and include the License file CDDL.Schily.txt from this distribution.
@@ -54,7 +56,7 @@
 #endif
 
 #if !defined(FOUND_MAXPATHNAME)
-#	define	MAXPATHNAME	256		/* Is there a limit? */
+#	define	MAXPATHNAME	1024		/* Is there a limit? */
 #endif
 
 #ifndef	PATH_MAX
@@ -95,7 +97,7 @@
 #	define	FOUND_MAXFILENAME
 #endif
 
-#if !defined(FOUND_MAXPATHNAME)
+#if !defined(FOUND_MAXFILENAME)
 #include <schily/stdlib.h>
 #endif
 #if !defined(FOUND_MAXFILENAME) && defined(_MAX_FNAME)
@@ -103,11 +105,18 @@
 #	define	FOUND_MAXFILENAME
 #endif
 
+#if !defined(FOUND_MAXFILENAME)
+#	define	MAXFILENAME	256
+#endif
+
 #ifndef	NAME_MAX
 #define	NAME_MAX	MAXFILENAME
 #endif
 #ifndef	MAXNAMLEN
 #define	MAXNAMLEN	MAXFILENAME
+#endif
+#ifndef	MAXNAMELEN
+#define	MAXNAMELEN	MAXFILENAME
 #endif
 
 #endif	/* _SCHILY_MAXPATH_H */

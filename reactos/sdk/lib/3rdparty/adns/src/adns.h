@@ -368,7 +368,11 @@ ADNS_API int adns_init(adns_state *newstate_r, adns_initflags flags,
 
 /* ReactOS addition */
 ADNS_API void adns_addserver(adns_state state, struct in_addr server);
-ADNS_API void adns_ccf_search(adns_state ads, const char *fn, int lno, const char *buf);
+ADNS_API void adns_ccf_search(adns_state state,
+                              const char *fn,
+                              int lno,
+                              const char *buf);
+ADNS_API int adns_numservers(adns_state state);
 
 ADNS_API int adns_init_strcfg(adns_state *newstate_r, adns_initflags flags,
 		     FILE *diagfile /*0=>discard*/, const char *configtext);

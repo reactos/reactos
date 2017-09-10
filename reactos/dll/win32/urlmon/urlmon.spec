@@ -8,7 +8,7 @@
 #107 CoInternetApproveExtension
 108 stdcall -noname IsInternetESCEnabledLocal()
 #109 stub AsyncGetClassBits
-110 stdcall AsyncInstallDistributionUnit(ptr ptr ptr long long ptr ptr ptr long)
+110 stdcall AsyncInstallDistributionUnit(wstr wstr wstr long long wstr ptr ptr long)
 111 stdcall -noname IsProtectedModeURL(ptr)
 #112 IsProtectedModeIUri
 #113 IsFileInSpecialDirs
@@ -29,7 +29,7 @@
 128 stdcall CoInternetCreateZoneManager(ptr ptr long)
 #129 CoInternetFeatureSettingsChanged
 #130 stub CoInternetGetProtocolFlags
-131 stdcall CoInternetGetSecurityUrl(ptr ptr long long)
+131 stdcall CoInternetGetSecurityUrl(wstr ptr long long)
 132 stdcall CoInternetGetSecurityUrlEx(ptr ptr long long)
 133 stdcall CoInternetGetSession(long ptr long)
 134 stdcall CoInternetIsFeatureEnabled(long long)
@@ -38,7 +38,7 @@
 137 stdcall CoInternetIsFeatureZoneElevationEnabled(wstr wstr ptr long)
 138 stdcall CoInternetParseIUri(ptr long long wstr long ptr long)
 139 stdcall CoInternetParseUrl(wstr long long wstr long ptr long)
-140 stdcall CoInternetQueryInfo(ptr long long ptr long ptr long)
+140 stdcall CoInternetQueryInfo(wstr long long ptr long ptr long)
 141 stdcall CoInternetSetFeatureEnabled(long long long)
 142 stdcall CompareSecurityIds(ptr long ptr long long)
 #143 CompatFlagsFromClsid
@@ -61,11 +61,11 @@
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllRegisterServerEx()
 @ stdcall -private DllUnregisterServer()
-163 stdcall Extract(long ptr)
+163 stdcall Extract(ptr str)
 164 stdcall FaultInIEFeature(long ptr ptr long)
 #165 stub FindMediaType
 #166 stub FindMediaTypeClass
-167 stdcall FindMimeFromData(ptr ptr ptr long ptr long ptr long)
+167 stdcall FindMimeFromData(ptr wstr ptr long wstr long ptr long)
 #168 GetAddSitesFileUrl
 169 stdcall GetClassFileOrMime(ptr wstr ptr long wstr long ptr)
 #170 stub GetClassURL
@@ -77,7 +77,7 @@
 #176 GetPortFromUrlScheme
 #177 GetPropertyFromName
 #178 GetPropertyName
-179 stdcall GetSoftwareUpdateInfo(ptr ptr)
+179 stdcall GetSoftwareUpdateInfo(wstr ptr)
 #180 GetUrlmonThreadNotificationHwnd
 181 stdcall -stub HlinkGoBack(ptr)
 182 stdcall -stub HlinkGoForward(ptr)

@@ -30,30 +30,21 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
  * Builds a list of paths like the one used in SHFileOperation from a table of
  * PIDLs relative to the given base folder
  */
-WCHAR *
-BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls, BOOL bRelative)
+static WCHAR* BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls)
 {
-    WCHAR *pwszPathsList;
-    WCHAR *pwszListPos;
-    int iPathLen, i;
+    WCHAR *pwszPathsList = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
+    WCHAR *pwszListPos = pwszPathsList;
 
-    iPathLen = wcslen(wszBasePath);
-    pwszPathsList = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) * cidl + 1);
-    pwszListPos = pwszPathsList;
-
-    for (i = 0; i < cidl; i++)
+    for (int i = 0; i < cidl; i++)
     {
-        if (!_ILIsFolder(pidls[i]) && !_ILIsValue(pidls[i]))
+        FileStructW* pDataW = _ILGetFileStructW(pidls[i]);
+        if (!pDataW)
+        {
+            ERR("Got garbage pidl\n");
             continue;
+        }
 
-        wcscpy(pwszListPos, wszBasePath);
-        pwszListPos += iPathLen;
-
-        if (_ILIsFolder(pidls[i]) && bRelative)
-            continue;
-
-        /* FIXME: abort if path too long */
-        _ILSimpleGetTextW(pidls[i], pwszListPos, MAX_PATH - iPathLen);
+        PathCombineW(pwszListPos, wszBasePath, pDataW->wszName);
         pwszListPos += wcslen(pwszListPos) + 1;
     }
     *pwszListPos = 0;
@@ -68,119 +59,42 @@ BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls, BOOL bRelati
 HRESULT WINAPI CFSDropTarget::CopyItems(IShellFolder * pSFFrom, UINT cidl,
                                     LPCITEMIDLIST * apidl, BOOL bCopy)
 {
-    CComPtr<IPersistFolder2> ppf2 = NULL;
-    WCHAR szSrcPath[MAX_PATH];
-    WCHAR szTargetPath[MAX_PATH];
-    SHFILEOPSTRUCTW op;
-    LPITEMIDLIST pidl;
-    LPWSTR pszSrc, pszTarget, pszSrcList, pszTargetList, pszFileName;
-    int res, length;
+    LPWSTR pszSrcList;
     HRESULT hr;
+    WCHAR wszTargetPath[MAX_PATH + 1];
+
+    wcscpy(wszTargetPath, sPathTarget);
+    //Double NULL terminate.
+    wszTargetPath[wcslen(wszTargetPath) + 1] = '\0';
 
     TRACE ("(%p)->(%p,%u,%p)\n", this, pSFFrom, cidl, apidl);
 
-    hr = pSFFrom->QueryInterface (IID_PPV_ARG(IPersistFolder2, &ppf2));
-    if (SUCCEEDED(hr))
-    {
-        hr = ppf2->GetCurFolder(&pidl);
-        if (FAILED(hr))
-        {
-            return hr;
-        }
+    STRRET strretFrom;
+    hr = pSFFrom->GetDisplayNameOf(NULL, SHGDN_FORPARSING, &strretFrom);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-        hr = SHGetPathFromIDListW(pidl, szSrcPath);
-        SHFree(pidl);
+    pszSrcList = BuildPathsList(strretFrom.pOleStr, cidl, apidl);
+    ERR("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(sPathTarget), bCopy);
+    CoTaskMemFree(strretFrom.pOleStr);
+    if (!pszSrcList)
+        return E_OUTOFMEMORY;
 
-        if (FAILED(hr))
-            return hr;
+    SHFILEOPSTRUCTW op = {0};
+    op.pFrom = pszSrcList;
+    op.pTo = wszTargetPath;
+    op.hwnd = GetActiveWindow();
+    op.wFunc = bCopy ? FO_COPY : FO_MOVE;
+    op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
 
-        pszSrc = PathAddBackslashW(szSrcPath);
+    int res = SHFileOperationW(&op);
 
-        wcscpy(szTargetPath, sPathTarget);
-        pszTarget = PathAddBackslashW(szTargetPath);
+    HeapFree(GetProcessHeap(), 0, pszSrcList);
 
-        pszSrcList = BuildPathsList(szSrcPath, cidl, apidl, FALSE);
-        pszTargetList = BuildPathsList(szTargetPath, cidl, apidl, TRUE);
-
-        if (!pszSrcList || !pszTargetList)
-        {
-            if (pszSrcList)
-                HeapFree(GetProcessHeap(), 0, pszSrcList);
-
-            if (pszTargetList)
-                HeapFree(GetProcessHeap(), 0, pszTargetList);
-
-            SHFree(pidl);
-            return E_OUTOFMEMORY;
-        }
-
-        ZeroMemory(&op, sizeof(op));
-        if (!pszSrcList[0])
-        {
-            /* remove trailing backslash */
-            pszSrc--;
-            pszSrc[0] = L'\0';
-            op.pFrom = szSrcPath;
-        }
-        else
-        {
-            op.pFrom = pszSrcList;
-        }
-
-        if (!pszTargetList[0])
-        {
-            /* remove trailing backslash */
-            if (pszTarget - szTargetPath > 3)
-            {
-                pszTarget--;
-                pszTarget[0] = L'\0';
-            }
-            else
-            {
-                pszTarget[1] = L'\0';
-            }
-
-            op.pTo = szTargetPath;
-            op.fFlags = 0;
-        }
-        else
-        {
-            op.pTo = pszTargetList;
-            op.fFlags = FOF_MULTIDESTFILES;
-        }
-        op.hwnd = GetActiveWindow();
-        op.wFunc = bCopy ? FO_COPY : FO_MOVE;
-        op.fFlags |= FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
-
-        res = SHFileOperationW(&op);
-
-        if (res == DE_SAMEFILE)
-        {
-            length = wcslen(szTargetPath);
-
-            pszFileName = wcsrchr(pszSrcList, '\\');
-            pszFileName++;
-
-            if (LoadStringW(shell32_hInstance, IDS_COPY_OF, pszTarget, MAX_PATH - length))
-            {
-                wcscat(szTargetPath, L" ");
-            }
-
-            wcscat(szTargetPath, pszFileName);
-            op.pTo = szTargetPath;
-
-            res = SHFileOperationW(&op);
-        }
-
-        HeapFree(GetProcessHeap(), 0, pszSrcList);
-        HeapFree(GetProcessHeap(), 0, pszTargetList);
-
-        if (res)
-            return E_FAIL;
-        else
-            return S_OK;
-    }
-    return E_FAIL;
+    if (res)
+        return E_FAIL;
+    else
+        return S_OK;
 }
 
 CFSDropTarget::CFSDropTarget():
@@ -192,6 +106,9 @@ CFSDropTarget::CFSDropTarget():
 
 HRESULT WINAPI CFSDropTarget::Initialize(LPWSTR PathTarget)
 {
+    if (!PathTarget)
+        return E_UNEXPECTED;
+
     cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     if (!cfShellIDList)
         return E_FAIL;
@@ -199,6 +116,7 @@ HRESULT WINAPI CFSDropTarget::Initialize(LPWSTR PathTarget)
     sPathTarget = (WCHAR *)SHAlloc((wcslen(PathTarget) + 1) * sizeof(WCHAR));
     if (!sPathTarget)
         return E_OUTOFMEMORY;
+
     wcscpy(sPathTarget, PathTarget);
 
     return S_OK;
@@ -550,8 +468,7 @@ HRESULT WINAPI CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 return E_FAIL;
             }
             pszSrcList = (LPWSTR) (((byte*) lpdf) + lpdf->pFiles);
-            TRACE("Source file (just the first) = %s\n", debugstr_w(pszSrcList));
-            TRACE("Target path = %s\n", debugstr_w(wszTargetPath));
+            ERR("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(wszTargetPath), bCopy);
 
             SHFILEOPSTRUCTW op;
             ZeroMemory(&op, sizeof(op));

@@ -228,11 +228,11 @@ AcpiTbLoadNamespace (
     {
         Table = &AcpiGbl_RootTableList.Tables[i];
 
-        if (!AcpiGbl_RootTableList.Tables[i].Address ||
+        if (!Table->Address ||
             (!ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_SSDT) &&
              !ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_PSDT) &&
              !ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_OSDT)) ||
-             ACPI_FAILURE (AcpiTbValidateTable (Table)))
+            ACPI_FAILURE (AcpiTbValidateTable (Table)))
         {
             continue;
         }

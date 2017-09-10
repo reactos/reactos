@@ -90,7 +90,7 @@ static ULONG WINAPI d3d9_surface_Release(IDirect3DSurface9 *iface)
 
     if (!surface->resource.refcount)
     {
-        ERR("Surface doesn't have any references.\n");
+        WARN("Surface does not have any references.\n");
         return 0;
     }
 
@@ -179,7 +179,7 @@ static void WINAPI d3d9_surface_PreLoad(IDirect3DSurface9 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    wined3d_texture_preload(surface->wined3d_texture);
+    wined3d_resource_preload(wined3d_texture_get_resource(surface->wined3d_texture));
     wined3d_mutex_unlock();
 }
 
@@ -210,18 +210,16 @@ static HRESULT WINAPI d3d9_surface_GetContainer(IDirect3DSurface9 *iface, REFIID
 static HRESULT WINAPI d3d9_surface_GetDesc(IDirect3DSurface9 *iface, D3DSURFACE_DESC *desc)
 {
     struct d3d9_surface *surface = impl_from_IDirect3DSurface9(iface);
-    struct wined3d_resource_desc wined3d_desc;
-    struct wined3d_resource *sub_resource;
+    struct wined3d_sub_resource_desc wined3d_desc;
 
     TRACE("iface %p, desc %p.\n", iface, desc);
 
     wined3d_mutex_lock();
-    sub_resource = wined3d_texture_get_sub_resource(surface->wined3d_texture, surface->sub_resource_idx);
-    wined3d_resource_get_desc(sub_resource, &wined3d_desc);
+    wined3d_texture_get_sub_resource_desc(surface->wined3d_texture, surface->sub_resource_idx, &wined3d_desc);
     wined3d_mutex_unlock();
 
     desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
-    desc->Type = wined3d_desc.resource_type;
+    desc->Type = D3DRTYPE_SURFACE;
     desc->Usage = wined3d_desc.usage & WINED3DUSAGE_MASK;
     desc->Pool = wined3d_desc.pool;
     desc->MultiSampleType = wined3d_desc.multisample_type;
@@ -244,17 +242,10 @@ static HRESULT WINAPI d3d9_surface_LockRect(IDirect3DSurface9 *iface,
             iface, locked_rect, wine_dbgstr_rect(rect), flags);
 
     if (rect)
-    {
-        box.left = rect->left;
-        box.top = rect->top;
-        box.right = rect->right;
-        box.bottom = rect->bottom;
-        box.front = 0;
-        box.back = 1;
-    }
+        wined3d_box_set(&box, rect->left, rect->top, rect->right, rect->bottom, 0, 1);
 
     wined3d_mutex_lock();
-    hr = wined3d_resource_sub_resource_map(wined3d_texture_get_resource(surface->wined3d_texture), surface->sub_resource_idx,
+    hr = wined3d_resource_map(wined3d_texture_get_resource(surface->wined3d_texture), surface->sub_resource_idx,
             &map_desc, rect ? &box : NULL, flags);
     wined3d_mutex_unlock();
 
@@ -275,14 +266,19 @@ static HRESULT WINAPI d3d9_surface_UnlockRect(IDirect3DSurface9 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    hr = wined3d_resource_sub_resource_unmap(wined3d_texture_get_resource(surface->wined3d_texture), surface->sub_resource_idx);
+    hr = wined3d_resource_unmap(wined3d_texture_get_resource(surface->wined3d_texture), surface->sub_resource_idx);
     wined3d_mutex_unlock();
 
-    switch(hr)
+    if (hr == WINEDDERR_NOTLOCKED)
     {
-        case WINEDDERR_NOTLOCKED:       return D3DERR_INVALIDCALL;
-        default:                        return hr;
+        D3DRESOURCETYPE type;
+        if (surface->texture)
+            type = IDirect3DBaseTexture9_GetType(&surface->texture->IDirect3DBaseTexture9_iface);
+        else
+            type = D3DRTYPE_SURFACE;
+        hr = type == D3DRTYPE_TEXTURE ? D3D_OK : D3DERR_INVALIDCALL;
     }
+    return hr;
 }
 
 static HRESULT WINAPI d3d9_surface_GetDC(IDirect3DSurface9 *iface, HDC *dc)
@@ -291,13 +287,6 @@ static HRESULT WINAPI d3d9_surface_GetDC(IDirect3DSurface9 *iface, HDC *dc)
     HRESULT hr;
 
     TRACE("iface %p, dc %p.\n", iface, dc);
-
-    if (!surface->getdc_supported)
-    {
-        WARN("Surface does not support GetDC, returning D3DERR_INVALIDCALL\n");
-        /* Don't touch the DC */
-        return D3DERR_INVALIDCALL;
-    }
 
     wined3d_mutex_lock();
     hr = wined3d_texture_get_dc(surface->wined3d_texture, surface->sub_resource_idx, dc);
@@ -317,11 +306,7 @@ static HRESULT WINAPI d3d9_surface_ReleaseDC(IDirect3DSurface9 *iface, HDC dc)
     hr = wined3d_texture_release_dc(surface->wined3d_texture, surface->sub_resource_idx, dc);
     wined3d_mutex_unlock();
 
-    switch (hr)
-    {
-        case WINEDDERR_NODC:    return D3DERR_INVALIDCALL;
-        default:                return hr;
-    }
+    return hr;
 }
 
 static const struct IDirect3DSurface9Vtbl d3d9_surface_vtbl =
@@ -363,7 +348,6 @@ static const struct wined3d_parent_ops d3d9_surface_wined3d_parent_ops =
 void surface_init(struct d3d9_surface *surface, struct wined3d_texture *wined3d_texture,
         unsigned int sub_resource_idx, const struct wined3d_parent_ops **parent_ops)
 {
-    struct wined3d_resource_desc desc;
     IDirect3DBaseTexture9 *texture;
 
     surface->IDirect3DSurface9_iface.lpVtbl = &d3d9_surface_vtbl;
@@ -379,23 +363,6 @@ void surface_init(struct d3d9_surface *surface, struct wined3d_texture *wined3d_
     {
         surface->texture = unsafe_impl_from_IDirect3DBaseTexture9(texture);
         IDirect3DBaseTexture9_Release(texture);
-    }
-
-    wined3d_resource_get_desc(wined3d_texture_get_resource(wined3d_texture), &desc);
-    switch (d3dformat_from_wined3dformat(desc.format))
-    {
-        case D3DFMT_A8R8G8B8:
-        case D3DFMT_X8R8G8B8:
-        case D3DFMT_R5G6B5:
-        case D3DFMT_X1R5G5B5:
-        case D3DFMT_A1R5G5B5:
-        case D3DFMT_R8G8B8:
-            surface->getdc_supported = TRUE;
-            break;
-
-        default:
-            surface->getdc_supported = FALSE;
-            break;
     }
 
     *parent_ops = &d3d9_surface_wined3d_parent_ops;
@@ -423,9 +390,21 @@ static const struct wined3d_parent_ops d3d9_view_wined3d_parent_ops =
     view_wined3d_object_destroyed,
 };
 
-struct wined3d_rendertarget_view *d3d9_surface_get_rendertarget_view(struct d3d9_surface *surface)
+struct d3d9_device *d3d9_surface_get_device(const struct d3d9_surface *surface)
+{
+    IDirect3DDevice9Ex *device;
+    device = surface->texture ? surface->texture->parent_device : surface->parent_device;
+    return impl_from_IDirect3DDevice9Ex(device);
+}
+
+struct wined3d_rendertarget_view *d3d9_surface_acquire_rendertarget_view(struct d3d9_surface *surface)
 {
     HRESULT hr;
+
+    /* The surface reference count can be equal to 0 when this function is
+     * called. In order to properly manage the render target view reference
+     * count, we temporarily increment the surface reference count. */
+    d3d9_surface_AddRef(&surface->IDirect3DSurface9_iface);
 
     if (surface->wined3d_rtv)
         return surface->wined3d_rtv;
@@ -434,6 +413,7 @@ struct wined3d_rendertarget_view *d3d9_surface_get_rendertarget_view(struct d3d9
             surface->sub_resource_idx, surface, &d3d9_view_wined3d_parent_ops, &surface->wined3d_rtv)))
     {
         ERR("Failed to create rendertarget view, hr %#x.\n", hr);
+        d3d9_surface_Release(&surface->IDirect3DSurface9_iface);
         return NULL;
     }
 
@@ -441,6 +421,13 @@ struct wined3d_rendertarget_view *d3d9_surface_get_rendertarget_view(struct d3d9
         list_add_head(&surface->texture->rtv_list, &surface->rtv_entry);
 
     return surface->wined3d_rtv;
+}
+
+void d3d9_surface_release_rendertarget_view(struct d3d9_surface *surface,
+        struct wined3d_rendertarget_view *rtv)
+{
+    if (rtv)
+        d3d9_surface_Release(&surface->IDirect3DSurface9_iface);
 }
 
 struct d3d9_surface *unsafe_impl_from_IDirect3DSurface9(IDirect3DSurface9 *iface)

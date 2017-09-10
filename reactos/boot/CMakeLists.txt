@@ -68,7 +68,7 @@ add_custom_target(bootcd
         -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
         -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
         -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst
-    COMMAND native-isohybrid -b ${_isombr_file} ${REACTOS_BINARY_DIR}/bootcd.iso
+    COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/bootcd.iso
     DEPENDS isombr native-isohybrid native-mkisofs
     VERBATIM)
 
@@ -83,7 +83,7 @@ add_custom_target(bootcdregtest
         -eltorito-boot loader/isobtrt.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
         -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
         -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst
-    COMMAND native-isohybrid -b ${_isombr_file} ${REACTOS_BINARY_DIR}/bootcdregtest.iso
+    COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/bootcdregtest.iso
     DEPENDS isombr native-isohybrid native-mkisofs
     VERBATIM)
 
@@ -126,7 +126,7 @@ add_custom_target(livecd
         -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
         -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
         -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst
-    COMMAND native-isohybrid -b ${_isombr_file} ${REACTOS_BINARY_DIR}/livecd.iso
+    COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/livecd.iso
     DEPENDS isombr native-isohybrid native-mkisofs
     VERBATIM)
 
@@ -169,7 +169,7 @@ add_custom_target(hybridcd
         -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
         -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
         -duplicates-once -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst
-    COMMAND native-isohybrid -b ${_isombr_file} ${REACTOS_BINARY_DIR}/hybridcd.iso
+    COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/hybridcd.iso
     DEPENDS bootcd livecd
     VERBATIM)
 

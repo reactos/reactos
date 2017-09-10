@@ -32,8 +32,8 @@ static HWND hMainWnd;
 
 #define expect_eq(expr, value, type, fmt); { type val = expr; ok(val == (value), #expr " expected " #fmt " got " #fmt "\n", (value), val); }
 #define expect_rect(r, _left, _top, _right, _bottom) ok(r.left == _left && r.top == _top && \
-    r.bottom == _bottom && r.right == _right, "Invalid rect (%d,%d) (%d,%d) vs (%d,%d) (%d,%d)\n", \
-    r.left, r.top, r.right, r.bottom, _left, _top, _right, _bottom);
+    r.bottom == _bottom && r.right == _right, "Invalid rect %s vs (%d,%d)-(%d,%d)\n", \
+    wine_dbgstr_rect(&r), _left, _top, _right, _bottom);
 
 static HWND build_combo(DWORD style)
 {

@@ -1016,7 +1016,7 @@ static void xml_write_quotedstring(xmlOutputBufferPtr buf, const xmlChar *string
 static int XMLCALL transform_to_stream_write(void *context, const char *buffer, int len)
 {
     DWORD written;
-    HRESULT hr = IStream_Write((IStream*)context, buffer, len, &written);
+    HRESULT hr = ISequentialStream_Write((ISequentialStream *)context, buffer, len, &written);
     return hr == S_OK ? written : -1;
 }
 
@@ -1261,7 +1261,7 @@ static HRESULT node_transform_write_to_bstr(xsltStylesheetPtr style, xmlDocPtr r
     return *str ? hr : E_OUTOFMEMORY;
 }
 
-static HRESULT node_transform_write_to_stream(xsltStylesheetPtr style, xmlDocPtr result, IStream *stream)
+static HRESULT node_transform_write_to_stream(xsltStylesheetPtr style, xmlDocPtr result, ISequentialStream *stream)
 {
     static const xmlChar *utf16 = (const xmlChar*)"UTF-16";
     xmlOutputBufferPtr output;
@@ -1297,7 +1297,7 @@ static HRESULT node_transform_write_to_stream(xsltStylesheetPtr style, xmlDocPtr
 #endif
 
 HRESULT node_transform_node_params(const xmlnode *This, IXMLDOMNode *stylesheet, BSTR *p,
-    IStream *stream, const struct xslprocessor_params *params)
+    ISequentialStream *stream, const struct xslprocessor_params *params)
 {
 #ifdef SONAME_LIBXSLT
     xsltStylesheetPtr xsltSS;

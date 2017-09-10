@@ -3599,58 +3599,72 @@ SetupDiInstallClassExA(
 
 HKEY SETUP_CreateClassKey(HINF hInf)
 {
-    static const WCHAR slash[] = { '\\',0 };
     WCHAR FullBuffer[MAX_PATH];
     WCHAR Buffer[MAX_PATH];
     DWORD RequiredSize;
     HKEY hClassKey;
+    DWORD Disposition;
 
+    /* Obtain the Class GUID for this class */
     if (!SetupGetLineTextW(NULL,
                            hInf,
                            Version,
                            REGSTR_VAL_CLASSGUID,
                            Buffer,
-                           MAX_PATH,
+                           sizeof(Buffer) / sizeof(WCHAR),
                            &RequiredSize))
     {
         return INVALID_HANDLE_VALUE;
     }
 
+    /* Build the corresponding registry key name */
     lstrcpyW(FullBuffer, REGSTR_PATH_CLASS_NT);
-    lstrcatW(FullBuffer, slash);
+    lstrcatW(FullBuffer, BackSlash);
     lstrcatW(FullBuffer, Buffer);
 
+    /* Obtain the Class name for this class */
+    if (!SetupGetLineTextW(NULL,
+                           hInf,
+                           Version,
+                           REGSTR_VAL_CLASS,
+                           Buffer,
+                           sizeof(Buffer) / sizeof(WCHAR),
+                           &RequiredSize))
+    {
+        return INVALID_HANDLE_VALUE;
+    }
+
+    /* Try to open or create the registry key */
+    TRACE("Opening class key %s\n", debugstr_w(FullBuffer));
+#if 0 // I keep this for reference...
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       FullBuffer,
                       0,
                       KEY_SET_VALUE,
                       &hClassKey))
     {
-        if (!SetupGetLineTextW(NULL,
-                               hInf,
-                               Version,
-                               REGSTR_VAL_CLASS,
-                               Buffer,
-                               MAX_PATH,
-                               &RequiredSize))
-        {
-            return INVALID_HANDLE_VALUE;
-        }
-
-        if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                            FullBuffer,
-                            0,
-                            NULL,
-                            REG_OPTION_NON_VOLATILE,
-                            KEY_SET_VALUE,
-                            NULL,
-                            &hClassKey,
-                            NULL))
-        {
-            return INVALID_HANDLE_VALUE;
-        }
+        /* Use RegCreateKeyExW */
     }
+#endif
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                        FullBuffer,
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_SET_VALUE,
+                        NULL,
+                        &hClassKey,
+                        &Disposition))
+    {
+        ERR("RegCreateKeyExW(%s) failed\n", debugstr_w(FullBuffer));
+        return INVALID_HANDLE_VALUE;
+    }
+    if (Disposition == REG_CREATED_NEW_KEY)
+        TRACE("The class key %s was successfully created\n", debugstr_w(FullBuffer));
+    else
+        TRACE("The class key %s was successfully opened\n", debugstr_w(FullBuffer));
 
+    TRACE( "setting value %s to %s\n", debugstr_w(REGSTR_VAL_CLASS), debugstr_w(Buffer) );
     if (RegSetValueExW(hClassKey,
                        REGSTR_VAL_CLASS,
                        0,

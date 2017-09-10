@@ -98,7 +98,8 @@ AcpiTbValidateTempTable (
 ACPI_STATUS
 AcpiTbVerifyTempTable (
     ACPI_TABLE_DESC         *TableDesc,
-    char                    *Signature);
+    char                    *Signature,
+    UINT32                  *TableIndex);
 
 BOOLEAN
 AcpiTbIsTableLoaded (
@@ -193,6 +194,11 @@ AcpiTbInstallAndLoadTable (
 ACPI_STATUS
 AcpiTbUnloadTable (
     UINT32                  TableIndex);
+
+void
+AcpiTbNotifyTable (
+    UINT32                          Event,
+    void                            *Table);
 
 void
 AcpiTbTerminate (

@@ -8,33 +8,33 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Selamat Datang"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Selamat datang di ReactOS Operating System.\n\nKlik topik di sisi kiri."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Selamat datang di ReactOS Operating System.\n\nKlik topik di sisi kiri."
 
-    IDS_CHECKTEXT "Show this dialog again"
-    IDS_CLOSETEXT "Exit"
+    IDS_CHECKTEXT "&Show this dialog again"
+    IDS_CLOSETEXT "&Keluar"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Instalasi ReactOS"
-    IDS_TOPICBUTTON1 "Lihat CD ini"
-    IDS_TOPICBUTTON2 "Keluar"
+    IDS_TOPIC_BUTTON0 "&Instalasi ReactOS"
+    IDS_TOPIC_BUTTON1 "Lihat &CD ini"
+    IDS_TOPIC_BUTTON2 "&Keluar"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Instalasi ReactOS"
-    IDS_TOPICTITLE1 "Lihat CD ini"
-    IDS_TOPICTITLE2 "Keluar"
+    IDS_TOPIC_TITLE0 "Instalasi ReactOS"
+    IDS_TOPIC_TITLE1 "Lihat CD ini"
+    IDS_TOPIC_TITLE2 "Keluar"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Buat instalasi baru ReactOS pada komputer anda atau tingkatkan instalasi yang sudah ada."
-    IDS_TOPICDESC1 "Lihat CD."
-    IDS_TOPICDESC2 "Klik untuk keluar aplikasi ini."
+    IDS_TOPIC_DESC0 "Buat instalasi baru ReactOS pada komputer anda atau tingkatkan instalasi yang sudah ada."
+    IDS_TOPIC_DESC1 "Lihat CD."
+    IDS_TOPIC_DESC2 "Klik untuk keluar aplikasi ini."
 END

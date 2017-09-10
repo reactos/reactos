@@ -1888,7 +1888,7 @@ static struct symt* dwarf2_parse_subprogram(dwarf2_parse_context_t* ctx,
         inline_flags.u.uvalue != DW_INL_not_inlined)
     {
         TRACE("Function %s declared as inlined (%ld)... skipping\n",
-              name.u.string ? name.u.string : "(null)", inline_flags.u.uvalue);
+              debugstr_a(name.u.string), inline_flags.u.uvalue);
         return NULL;
     }
 

@@ -167,7 +167,7 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
      */
     do
     {
-        mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng ) );
 
         while( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
             MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->X, 1 ) );
@@ -253,7 +253,7 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
      */
     do
     {
-        mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &ctx->X, x_size, f_rng, p_rng ) );
 
         while( mbedtls_mpi_cmp_mpi( &ctx->X, &ctx->P ) >= 0 )
             MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->X, 1 ) );
@@ -326,7 +326,7 @@ static int dhm_update_blinding( mbedtls_dhm_context *ctx,
     count = 0;
     do
     {
-        mbedtls_mpi_fill_random( &ctx->Vi, mbedtls_mpi_size( &ctx->P ), f_rng, p_rng );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &ctx->Vi, mbedtls_mpi_size( &ctx->P ), f_rng, p_rng ) );
 
         while( mbedtls_mpi_cmp_mpi( &ctx->Vi, &ctx->P ) >= 0 )
             MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &ctx->Vi, 1 ) );

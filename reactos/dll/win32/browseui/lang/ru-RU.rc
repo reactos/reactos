@@ -89,6 +89,12 @@ BEGIN
 	END
 END
 
+IDM_BAND_MENU MENUEX
+BEGIN
+	MENUITEM "Показать заголовок", IDM_BAND_TITLE
+	MENUITEM "Закрыть панель инструментов", IDM_BAND_CLOSE
+END
+
 /* Dialogs */
 
 IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85

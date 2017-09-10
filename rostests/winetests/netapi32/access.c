@@ -66,6 +66,7 @@ static NET_API_STATUS (WINAPI *pNetUserDel)(LPCWSTR,LPCWSTR);
 static NET_API_STATUS (WINAPI *pNetLocalGroupGetInfo)(LPCWSTR,LPCWSTR,DWORD,LPBYTE*);
 static NET_API_STATUS (WINAPI *pNetLocalGroupGetMembers)(LPCWSTR,LPCWSTR,DWORD,LPBYTE*,DWORD,LPDWORD,LPDWORD,PDWORD_PTR);
 static DWORD (WINAPI *pDavGetHTTPFromUNCPath)(LPCWSTR,LPWSTR,LPDWORD);
+static DWORD (WINAPI *pDavGetUNCFromHTTPPath)(LPCWSTR,LPWSTR,LPDWORD);
 
 static BOOL init_access_tests(void)
 {
@@ -550,6 +551,156 @@ static void test_DavGetHTTPFromUNCPath(void)
     }
 }
 
+static void test_DavGetUNCFromHTTPPath(void)
+{
+    static const WCHAR path[] =
+        {0};
+    static const WCHAR path2[] =
+        {'h','t','t','p',':','/','/','s','e','r','v','e','r','/','p','a','t','h',0};
+    static const WCHAR path3[] =
+        {'h','t','t','p','s',':','/','/','h','o','s','t','/','p','a','t','h',0};
+    static const WCHAR path4[] =
+        {'\\','\\','s','e','r','v','e','r',0};
+    static const WCHAR path5[] =
+        {'\\','\\','s','e','r','v','e','r','\\','p','a','t','h',0};
+    static const WCHAR path6[] =
+        {'\\','\\','h','t','t','p',':','/','/','s','e','r','v','e','r','/','p','a','t','h',0};
+    static const WCHAR path7[] =
+        {'h','t','t','p',':','/','/',0};
+    static const WCHAR path8[] =
+        {'h','t','t','p',':',0};
+    static const WCHAR path9[] =
+        {'h','t','t','p',0};
+    static const WCHAR path10[] =
+        {'h','t','t','p',':','s','e','r','v','e','r',0};
+    static const WCHAR path11[] =
+        {'h','t','t','p',':','/','/','s','e','r','v','e','r',':','8','0',0};
+    static const WCHAR path12[] =
+        {'h','t','t','p',':','/','/','s','e','r','v','e','r',':','8','1',0};
+    static const WCHAR path13[] =
+        {'h','t','t','p','s',':','/','/','s','e','r','v','e','r',':','8','0',0};
+    static const WCHAR path14[] =
+        {'H','T','T','P',':','/','/','s','e','r','v','e','r','/','p','a','t','h',0};
+    static const WCHAR path15[] =
+        {'h','t','t','p',':','/','/','s','e','r','v','e','r',':','6','5','5','3','7',0};
+    static const WCHAR path16[] =
+        {'h','t','t','p',':','/','/','s','e','r','v','e','r','/','p','a','t','h','/',0};
+    static const WCHAR path17[] =
+        {'h','t','t','p',':','/','/','s','e','r','v','e','r','/','p','a','t','h','/','/',0};
+    static const WCHAR path18[] =
+        {'h','t','t','p',':','/','/','s','e','r','v','e','r',':','/','p','a','t','h',0};
+    static const WCHAR path19[] =
+        {'h','t','t','p',':','/','/','s','e','r','v','e','r',0};
+    static const WCHAR path20[] =
+        {'h','t','t','p','s',':','/','/','s','e','r','v','e','r',':','4','4','3',0};
+    static const WCHAR path21[] =
+        {'h','t','t','p','s',':','/','/','s','e','r','v','e','r',':','8','0',0};
+    static const WCHAR result[] =
+        {'\\','\\','s','e','r','v','e','r','\\','D','a','v','W','W','W','R','o','o','t','\\','p','a','t','h',0};
+    static const WCHAR result2[] =
+        {'\\','\\','h','o','s','t','@','S','S','L','\\','D','a','v','W','W','W','R','o','o','t','\\',
+         'p','a','t','h',0};
+    static const WCHAR result3[] =
+        {'\\','\\','s','e','r','v','e','r','\\','D','a','v','W','W','W','R','o','o','t',0};
+    static const WCHAR result4[] =
+        {'\\','\\','s','e','r','v','e','r','@','8','1','\\','D','a','v','W','W','W','R','o','o','t',0};
+    static const WCHAR result5[] =
+        {'\\','\\','s','e','r','v','e','r','@','S','S','L','@','8','0','\\','D','a','v','W','W','W','R','o','o','t',0};
+    static const WCHAR result6[] =
+        {'\\','\\','s','e','r','v','e','r','@','6','5','5','3','7','\\','D','a','v','W','W','W','R','o','o','t',0};
+    static const WCHAR result7[] =
+        {'\\','\\','s','e','r','v','e','r','@','\\','D','a','v','W','W','W','R','o','o','t','\\','p','a','t','h',0};
+    static const WCHAR result8[] =
+        {'\\','\\','s','e','r','v','e','r','@','S','S','L','\\','D','a','v','W','W','W','R','o','o','t',0};
+    static const WCHAR result9[] =
+        {'\\','\\','s','e','r','v','e','r','@','S','S','L','@','8','0','\\','D','a','v','W','W','W','R','o','o','t',0};
+    static const struct
+    {
+        const WCHAR *path;
+        DWORD        size;
+        DWORD        ret;
+        const WCHAR *ret_path;
+        DWORD        ret_size;
+    }
+    tests[] =
+    {
+        { path, MAX_PATH, ERROR_INVALID_PARAMETER, NULL, MAX_PATH },
+        { path2, MAX_PATH, ERROR_SUCCESS, result, 25 },
+        { path3, MAX_PATH, ERROR_SUCCESS, result2, 27 },
+        { path4, MAX_PATH, ERROR_INVALID_PARAMETER, NULL, MAX_PATH },
+        { path5, MAX_PATH, ERROR_INVALID_PARAMETER, NULL, MAX_PATH },
+        { path6, MAX_PATH, ERROR_INVALID_PARAMETER, NULL, MAX_PATH },
+        { path7, MAX_PATH, ERROR_BAD_NET_NAME, NULL, MAX_PATH },
+        { path8, MAX_PATH, ERROR_INVALID_PARAMETER, NULL, MAX_PATH },
+        { path9, MAX_PATH, ERROR_INVALID_PARAMETER, NULL, MAX_PATH },
+        { path10, MAX_PATH, ERROR_INVALID_PARAMETER, NULL, MAX_PATH },
+        { path11, MAX_PATH, ERROR_SUCCESS, result3, 20 },
+        { path12, MAX_PATH, ERROR_SUCCESS, result4, 23 },
+        { path13, MAX_PATH, ERROR_SUCCESS, result5, 27 },
+        { path14, MAX_PATH, ERROR_SUCCESS, result, 25 },
+        { path15, MAX_PATH, ERROR_SUCCESS, result6, 26 },
+        { path16, MAX_PATH, ERROR_SUCCESS, result, 25 },
+        { path17, MAX_PATH, ERROR_BAD_NET_NAME, NULL, MAX_PATH },
+        { path18, MAX_PATH, ERROR_SUCCESS, result7, 26 },
+        { path19, MAX_PATH, ERROR_SUCCESS, result3, 20 },
+        { path20, MAX_PATH, ERROR_SUCCESS, result8, 24 },
+        { path21, MAX_PATH, ERROR_SUCCESS, result9, 27 },
+    };
+    WCHAR buf[MAX_PATH];
+    DWORD i, ret, size;
+
+    if (!pDavGetUNCFromHTTPPath)
+    {
+        win_skip( "DavGetUNCFromHTTPPath is missing\n" );
+        return;
+    }
+
+    if (0) { /* crash */
+    ret = pDavGetUNCFromHTTPPath( NULL, NULL, NULL );
+    ok( ret == ERROR_INVALID_PARAMETER, "got %u\n", ret );
+    }
+    ret = pDavGetUNCFromHTTPPath( path, buf, NULL );
+    ok( ret == ERROR_INVALID_PARAMETER, "got %u\n", ret );
+
+    size = 0;
+    ret = pDavGetUNCFromHTTPPath( path, NULL, &size );
+    ok( ret == ERROR_INVALID_PARAMETER, "got %u\n", ret );
+
+    buf[0] = 0;
+    size = 0;
+    ret = pDavGetUNCFromHTTPPath( path, buf, &size );
+    ok( ret == ERROR_INVALID_PARAMETER, "got %u\n", ret );
+
+    if (0) { /* crash */
+    ret = pDavGetUNCFromHTTPPath( path2, buf, NULL );
+    ok( ret == ERROR_INVALID_PARAMETER, "got %u\n", ret );
+    }
+    size = 0;
+    ret = pDavGetUNCFromHTTPPath( path2, NULL, &size );
+    ok( ret == ERROR_INSUFFICIENT_BUFFER, "got %u\n", ret );
+
+    buf[0] = 0;
+    size = 0;
+    ret = pDavGetUNCFromHTTPPath( path2, buf, &size );
+    ok( ret == ERROR_INSUFFICIENT_BUFFER, "got %u\n", ret );
+    ok( size == 25, "got %u\n", size );
+
+    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    {
+        buf[0] = 0;
+        size = tests[i].size;
+        ret = pDavGetUNCFromHTTPPath( tests[i].path, buf, &size );
+        ok( ret == tests[i].ret, "%u: expected %u got %u\n", i, tests[i].ret, ret );
+        if (tests[i].ret_path)
+        {
+            ok( !lstrcmpW( buf, tests[i].ret_path ), "%u: expected %s got %s\n",
+                i, wine_dbgstr_w(tests[i].ret_path), wine_dbgstr_w(buf) );
+        }
+        ok( size == tests[i].ret_size, "%u: expected %u got %u\n", i, tests[i].ret_size, size );
+    }
+}
+
+
 START_TEST(access)
 {
     HMODULE hnetapi32=LoadLibraryA("netapi32.dll");
@@ -564,6 +715,7 @@ START_TEST(access)
     pNetLocalGroupGetInfo=(void*)GetProcAddress(hnetapi32, "NetLocalGroupGetInfo");
     pNetLocalGroupGetMembers=(void*)GetProcAddress(hnetapi32, "NetLocalGroupGetMembers");
     pDavGetHTTPFromUNCPath = (void*)GetProcAddress(hnetapi32, "DavGetHTTPFromUNCPath");
+    pDavGetUNCFromHTTPPath = (void*)GetProcAddress(hnetapi32, "DavGetUNCFromHTTPPath");
 
     /* These functions were introduced with NT. It's safe to assume that
      * if one is not available, none are.
@@ -583,5 +735,6 @@ START_TEST(access)
     }
 
     test_DavGetHTTPFromUNCPath();
+    test_DavGetUNCFromHTTPPath();
     FreeLibrary(hnetapi32);
 }

@@ -385,12 +385,26 @@ AcpiExResolveMultiple (
                 (ACPI_NAMESPACE_NODE *) ObjDesc);
         }
 
-        if (!ObjDesc)
+        switch (Type)
         {
-            ACPI_ERROR ((AE_INFO,
-                "[%4.4s] Node is unresolved or uninitialized",
-                AcpiUtGetNodeName (Node)));
-            return_ACPI_STATUS (AE_AML_UNINITIALIZED_NODE);
+        case ACPI_TYPE_DEVICE:
+        case ACPI_TYPE_THERMAL:
+
+            /* These types have no attached subobject */
+            break;
+
+        default:
+
+            /* All other types require a subobject */
+
+            if (!ObjDesc)
+            {
+                ACPI_ERROR ((AE_INFO,
+                    "[%4.4s] Node is unresolved or uninitialized",
+                    AcpiUtGetNodeName (Node)));
+                return_ACPI_STATUS (AE_AML_UNINITIALIZED_NODE);
+            }
+            break;
         }
         break;
 

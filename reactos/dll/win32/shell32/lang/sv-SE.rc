@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "U&tforska", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Öppna", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "K&lipp ut", FCIDM_SHVIEW_CUT
-        MENUITEM "&Kopiera", FCIDM_SHVIEW_COPY
+        MENUITEM "K&lipp ut", IDM_CUT
+        MENUITEM "&Kopiera", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Skapa &genväg", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Ta bort", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Byt namn", FCIDM_SHVIEW_RENAME
+        MENUITEM "Skapa &genväg", IDM_CREATELINK
+        MENUITEM "&Ta bort", IDM_DELETE
+        MENUITEM "&Byt namn", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Egenskaper", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Egenskaper", IDM_PROPERTIES
     END
 END
 
@@ -634,24 +632,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Fil"
-    IDS_SHV_COLUMN2 "Storlek"
-    IDS_SHV_COLUMN3 "Typ"
-    IDS_SHV_COLUMN4 "Ändrad"
-    IDS_SHV_COLUMN5 "Attribut"
-    IDS_SHV_COLUMN6 "Storlek"
-    IDS_SHV_COLUMN7 "Tillgänglig storlek"
-    IDS_SHV_COLUMN8 "Namn"
-    IDS_SHV_COLUMN9 "Kommentar"
-    IDS_SHV_COLUMN10 "Ägare"
-    IDS_SHV_COLUMN11 "Grupp"
-    IDS_SHV_COLUMN12 "Filnamn"
-    IDS_SHV_COLUMN13 "Kategori"
+    IDS_SHV_COLUMN_NAME "Namn"
+    IDS_SHV_COLUMN_SIZE "Storlek"
+    IDS_SHV_COLUMN_TYPE "Typ"
+    IDS_SHV_COLUMN_MODIFIED "Ändrad"
+    IDS_SHV_COLUMN_ATTRIBUTES "Attribut"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Storlek"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Tillgänglig storlek"
+    IDS_SHV_COLUMN_OWNER "Ägare"
+    IDS_SHV_COLUMN_GROUP "Grupp"
+    IDS_SHV_COLUMN_FILENAME "Filnamn"
+    IDS_SHV_COLUMN_CATEGORY "Kategori"
     IDS_SHV_COLUMN_DELFROM "Ursprungsplats"
     IDS_SHV_COLUMN_DELDATE "Borttagningsdatum"
     IDS_SHV_COLUMN_FONTTYPE "Teckensnittstyp"
     IDS_SHV_COLUMN_WORKGROUP "Arbetsgrupp"
-    IDS_SHV_NETWORKLOCATION "Nätverksplats"
+    IDS_SHV_COLUMN_NETLOCATION "Nätverksplats"
     IDS_SHV_COLUMN_DOCUMENTS "Dokument"
     IDS_SHV_COLUMN_STATUS "Status"
     IDS_SHV_COLUMN_COMMENTS "Kommentar"

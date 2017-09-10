@@ -2589,11 +2589,18 @@ ExAllocatePoolWithTagPriority(IN POOL_TYPE PoolType,
                               IN ULONG Tag,
                               IN EX_POOL_PRIORITY Priority)
 {
+    PVOID Buffer;
+
     //
     // Allocate the pool
     //
-    UNIMPLEMENTED;
-    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
+    Buffer = ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
+    if (Buffer == NULL)
+    {
+        UNIMPLEMENTED;
+    }
+
+    return Buffer;
 }
 
 /*

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Ports of the Print Monitors
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -16,6 +16,8 @@ FindPort(PCWSTR pwszName)
 {
     PLIST_ENTRY pEntry;
     PLOCAL_PORT pPort;
+
+    TRACE("FindPort(%S)\n", pwszName);
 
     if (!pwszName)
         return NULL;
@@ -32,7 +34,7 @@ FindPort(PCWSTR pwszName)
 }
 
 BOOL
-InitializePortList()
+InitializePortList(void)
 {
     BOOL bReturnValue;
     DWORD cbNeeded;
@@ -45,6 +47,8 @@ InitializePortList()
     PLIST_ENTRY pEntry;
     PPORT_INFO_1W p;
     PPORT_INFO_1W pPortInfo1 = NULL;
+
+    TRACE("InitializePortList()\n");
 
     // Initialize an empty list for our Ports.
     InitializeListHead(&_PortList);
@@ -79,7 +83,7 @@ InitializePortList()
         if (!pPortInfo1)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -108,7 +112,7 @@ InitializePortList()
             if (!pPort)
             {
                 dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-                ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+                ERR("DllAllocSplMem failed!\n");
                 goto Cleanup;
             }
 
@@ -136,7 +140,7 @@ Cleanup:
 BOOL WINAPI
 LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL bReturnValue;
+    BOOL bReturnValue = TRUE;
     DWORD cbCallBuffer;
     DWORD cbNeeded;
     DWORD dwReturned;
@@ -144,12 +148,7 @@ LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNe
     PLOCAL_PRINT_MONITOR pPrintMonitor;
     PLIST_ENTRY pEntry;
 
-    // Sanity checks.
-    if ((cbBuf && !pPorts) || !pcbNeeded || !pcReturned)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+    TRACE("LocalEnumPorts(%S, %lu, %p, %lu, %p, %p)\n", pName, Level, pPorts, cbBuf, pcbNeeded, pcReturned);
 
     // Begin counting.
     *pcbNeeded = 0;
@@ -165,6 +164,9 @@ LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNe
         pPrintMonitor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_MONITOR, Entry);
 
         // Call the EnumPorts function of this Print Monitor.
+        cbNeeded = 0;
+        dwReturned = 0;
+
         if (pPrintMonitor->bIsLevel2)
             bReturnValue = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnEnumPorts(pPrintMonitor->hMonitor, pName, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
         else

@@ -160,6 +160,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Дивихай фонетическая"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Дивихай машинопись"
     IDS_DUTCH_LAYOUT "Голландская"
+    IDS_ESPERANTO_LAYOUT "Эсперанто"
     IDS_ESTONIAN_LAYOUT "Эстонская"
     IDS_FAEROESE_LAYOUT "Фарерская"
     IDS_FARSI_LAYOUT "Фарси"

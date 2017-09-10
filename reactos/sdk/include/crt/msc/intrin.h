@@ -173,7 +173,6 @@ extern "C" {
 #pragma intrinsic(_byteswap_uint64)
 #if defined(_M_IX86) || defined(_M_AMD64)
 #pragma intrinsic(__ll_lshift)
-__int64 __ll_rshift(__int64 Mask, int Bit);
 #pragma intrinsic(__ll_rshift)
 #pragma intrinsic(__ull_rshift)
 #pragma intrinsic(__lzcnt)
@@ -195,17 +194,14 @@ __int64 __ll_rshift(__int64 Mask, int Bit);
 #endif
 
 /*** 64/128-bit math ***/
-__int64 __cdecl _abs64(__int64);
 #pragma intrinsic(_abs64)
 #if defined(_M_IX86) || defined(_M_AMD64)
 #pragma intrinsic(__emul)
 #pragma intrinsic(__emulu)
 #endif
 #ifdef _M_AMD64
-__int64 __mulh(__int64 a, __int64 b);
 #pragma intrinsic(__mulh)
 #pragma intrinsic(__umulh)
-__int64 _mul128(__int64 Multiplier, __int64 Multiplicand, __int64 * HighProduct);
 #pragma intrinsic(_mul128)
 #pragma intrinsic(_umul128)
 #elif defined(_M_ARM)

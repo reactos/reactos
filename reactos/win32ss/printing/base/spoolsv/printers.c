@@ -150,8 +150,8 @@ _RpcClosePrinter(WINSPOOL_PRINTER_HANDLE* phPrinter)
 
     if (ClosePrinter(*phPrinter))
         *phPrinter = NULL;
-
-    dwErrorCode = GetLastError();
+    else
+        dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
     return dwErrorCode;
@@ -176,8 +176,8 @@ _RpcEndDocPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
         return dwErrorCode;
     }
 
-    EndDocPrinter(hPrinter);
-    dwErrorCode = GetLastError();
+    if (!EndDocPrinter(hPrinter))
+        dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
     return dwErrorCode;
@@ -195,8 +195,8 @@ _RpcEndPagePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
         return dwErrorCode;
     }
 
-    EndPagePrinter(hPrinter);
-    dwErrorCode = GetLastError();
+    if (!EndPagePrinter(hPrinter))
+        dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
     return dwErrorCode;
@@ -216,16 +216,18 @@ _RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterE
     }
 
     pPrinterEnumAligned = AlignRpcPtr(pPrinterEnum, &cbBuf);
-    EnumPrintersW(Flags, Name, Level, pPrinterEnumAligned, cbBuf, pcbNeeded, pcReturned);
-    dwErrorCode = GetLastError();
 
-    if (dwErrorCode == ERROR_SUCCESS)
+    if (EnumPrintersW(Flags, Name, Level, pPrinterEnumAligned, cbBuf, pcbNeeded, pcReturned))
     {
         DWORD i;
         PBYTE p = pPrinterEnumAligned;
 
         for (i = 0; i < *pcReturned; i++)
             _MarshallDownPrinterInfo(&p, Level);
+    }
+    else
+    {
+        dwErrorCode = GetLastError();
     }
 
     RpcRevertToSelf();
@@ -255,13 +257,15 @@ _RpcGetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pPrinter, DW
     }
 
     pPrinterAligned = AlignRpcPtr(pPrinter, &cbBuf);
-    GetPrinterW(hPrinter, Level, pPrinterAligned, cbBuf, pcbNeeded);
-    dwErrorCode = GetLastError();
 
-    if (dwErrorCode == ERROR_SUCCESS)
+    if (GetPrinterW(hPrinter, Level, pPrinterAligned, cbBuf, pcbNeeded))
     {
         PBYTE p = pPrinterAligned;
         _MarshallDownPrinterInfo(&p, Level);
+    }
+    else
+    {
+        dwErrorCode = GetLastError();
     }
 
     RpcRevertToSelf();
@@ -287,8 +291,8 @@ _RpcOpenPrinter(WINSPOOL_HANDLE pPrinterName, WINSPOOL_PRINTER_HANDLE* phPrinter
     Default.pDatatype = pDatatype;
     Default.pDevMode = (PDEVMODEW)pDevModeContainer->pDevMode;
 
-    OpenPrinterW(pPrinterName, phPrinter, &Default);
-    dwErrorCode = GetLastError();
+    if (!OpenPrinterW(pPrinterName, phPrinter, &Default))
+        dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
     return dwErrorCode;
@@ -313,8 +317,8 @@ _RpcReadPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE* pBuf, DWORD cbBuf, DWORD
         return dwErrorCode;
     }
 
-    ReadPrinter(hPrinter, pBuf, cbBuf, pcNoBytesRead);
-    dwErrorCode = GetLastError();
+    if (!ReadPrinter(hPrinter, pBuf, cbBuf, pcNoBytesRead))
+        dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
     return dwErrorCode;
@@ -379,8 +383,8 @@ _RpcStartPagePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
         return dwErrorCode;
     }
 
-    StartPagePrinter(hPrinter);
-    dwErrorCode = GetLastError();
+    if (!StartPagePrinter(hPrinter))
+        dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
     return dwErrorCode;
@@ -398,8 +402,8 @@ _RpcWritePrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE* pBuf, DWORD cbBuf, DWOR
         return dwErrorCode;
     }
 
-    WritePrinter(hPrinter, pBuf, cbBuf, pcWritten);
-    dwErrorCode = GetLastError();
+    if (!WritePrinter(hPrinter, pBuf, cbBuf, pcWritten))
+        dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
     return dwErrorCode;

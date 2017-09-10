@@ -23,6 +23,7 @@ extern void func_status(void);
 extern void func_subclass(void);
 extern void func_syslink(void);
 extern void func_tab(void);
+extern void func_taskdialog(void);
 extern void func_toolbar(void);
 extern void func_tooltips(void);
 extern void func_trackbar(void);
@@ -51,6 +52,7 @@ const struct test winetest_testlist[] =
     { "subclass", func_subclass },
     { "syslink", func_syslink },
     { "tab", func_tab },
+    { "taskdialog", func_taskdialog },
     { "toolbar", func_toolbar },
     { "tooltips", func_tooltips },
     { "trackbar", func_trackbar },

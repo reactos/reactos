@@ -2982,7 +2982,11 @@ RtlLockHeap(IN HANDLE HeapPtr)
 {
     PHEAP Heap = (PHEAP)HeapPtr;
 
-    // FIXME Check for special heap
+    /* Check for page heap */
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+    {
+        return RtlpPageHeapLock(Heap);
+    }
 
     /* Check if it's really a heap */
     if (Heap->Signature != HEAP_SIGNATURE) return FALSE;
@@ -3015,7 +3019,11 @@ RtlUnlockHeap(HANDLE HeapPtr)
 {
     PHEAP Heap = (PHEAP)HeapPtr;
 
-    // FIXME Check for special heap
+    /* Check for page heap */
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+    {
+        return RtlpPageHeapUnlock(Heap);
+    }
 
     /* Check if it's really a heap */
     if (Heap->Signature != HEAP_SIGNATURE) return FALSE;

@@ -13,8 +13,8 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - ยินดีต้อนรับ"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "ยินดีต้อนรับสู่ระบบปฏิบัติการ ReactOS \n\nกดเลือกเนื้อหาบนแถบซ้ายมือ"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "ยินดีต้อนรับสู่ระบบปฏิบัติการ ReactOS \n\nกดเลือกเนื้อหาบนแถบซ้ายมือ"
 
     IDS_CHECKTEXT "แสดงคำแนะนำอีกครั้ง"
     IDS_CLOSETEXT "ออกจากโปรแกรม"
@@ -23,23 +23,23 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "ติดตั้ง ReactOS"
-    IDS_TOPICBUTTON1 "ดูรายละเอียดของแผ่นซีดีนี้"
-    IDS_TOPICBUTTON2 "ออกจากโปรแกรม"
+    IDS_TOPIC_BUTTON0 "ติดตั้ง ReactOS"
+    IDS_TOPIC_BUTTON1 "ดูรายละเอียดของแผ่นซีดีนี้"
+    IDS_TOPIC_BUTTON2 "ออกจากโปรแกรม"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "ติดตั้ง ReactOS"
-    IDS_TOPICTITLE1 "ดูรายละเอียดของแผ่นซีดีนี้"
-    IDS_TOPICTITLE2 "ออกจากโปรแกรม"
+    IDS_TOPIC_TITLE0 "ติดตั้ง ReactOS"
+    IDS_TOPIC_TITLE1 "ดูรายละเอียดของแผ่นซีดีนี้"
+    IDS_TOPIC_TITLE2 "ออกจากโปรแกรม"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "คุณต้องการติดตั้ง ReactOS ลงในเครื่องคอมพิวเตอร์ของคุณ\n\nหรือต้องการปรับแต่งเพิ่มเติมจากที่มีอยู่เดิม."
-    IDS_TOPICDESC1 "ดูรายละเอียดของแผ่นซีดีนี้."
-    IDS_TOPICDESC2 "กดเลือกที่นี่เพื่อต้องการออกจากการติดตั้ง."
+    IDS_TOPIC_DESC0 "คุณต้องการติดตั้ง ReactOS ลงในเครื่องคอมพิวเตอร์ของคุณ\n\nหรือต้องการปรับแต่งเพิ่มเติมจากที่มีอยู่เดิม."
+    IDS_TOPIC_DESC1 "ดูรายละเอียดของแผ่นซีดีนี้."
+    IDS_TOPIC_DESC2 "กดเลือกที่นี่เพื่อต้องการออกจากการติดตั้ง."
 END

@@ -328,9 +328,9 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
          * If there is not enough data for a full block, cache it.
          */
         if( ( ctx->operation == MBEDTLS_DECRYPT &&
-                ilen + ctx->unprocessed_len <= block_size ) ||
+                ilen <= block_size - ctx->unprocessed_len ) ||
              ( ctx->operation == MBEDTLS_ENCRYPT &&
-                ilen + ctx->unprocessed_len < block_size ) )
+                ilen < block_size - ctx->unprocessed_len ) )
         {
             memcpy( &( ctx->unprocessed_data[ctx->unprocessed_len] ), input,
                     ilen );

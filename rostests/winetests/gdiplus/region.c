@@ -152,6 +152,8 @@ static void test_region_data(DWORD *data, UINT size, INT line)
     /* some Windows versions fail to properly clear the aligned DWORD */
     ok_(__FILE__, line)(data[size - 1] == buf[size - 1] || broken(data[size - 1] != buf[size - 1]),
         "off %u: %#x != %#x\n", size - 1, data[size - 1], buf[size - 1]);
+
+    GdipDeleteRegion(region);
 }
 
 static void test_getregiondata(void)

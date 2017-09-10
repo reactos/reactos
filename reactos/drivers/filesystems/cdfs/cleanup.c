@@ -97,7 +97,7 @@ CdfsCleanup(
     DeviceObject = IrpContext->DeviceObject;
     Stack = IrpContext->Stack;
 
-    if (DeviceObject == CdfsGlobalData->DeviceObject)
+    if (DeviceObject == CdfsGlobalData->CdFsDeviceObject || DeviceObject == CdfsGlobalData->HddFsDeviceObject)
     {
         DPRINT("Closing file system\n");
         Status = STATUS_SUCCESS;

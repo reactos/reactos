@@ -48,6 +48,8 @@
 #define ACPI_USE_SYSTEM_CLIBRARY
 
 #define ACPI_MACHINE_WIDTH      32
+#define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_NATIVE_MATH64
 
 #ifdef ACPI_DEFINE_ALTERNATE_TYPES
 /*
@@ -61,6 +63,30 @@ typedef unsigned short                  u16;
 typedef unsigned int                    u32;
 typedef COMPILER_DEPENDENT_UINT64       u64;
 #endif
+
+/*
+ * Map low I/O functions for MS. This allows us to disable MS language
+ * extensions for maximum portability.
+ */
+#define open            _open
+#define read            _read
+#define write           _write
+#define close           _close
+#define stat            _stat
+#define fstat           _fstat
+#define mkdir           _mkdir
+#define snprintf        _snprintf
+#if _MSC_VER <= 1200 /* Versions below VC++ 6 */
+#define vsnprintf       _vsnprintf
+#endif
+#define O_RDONLY        _O_RDONLY
+#define O_BINARY        _O_BINARY
+#define O_CREAT         _O_CREAT
+#define O_WRONLY        _O_WRONLY
+#define O_TRUNC         _O_TRUNC
+#define S_IREAD         _S_IREAD
+#define S_IWRITE        _S_IWRITE
+#define S_IFDIR         _S_IFDIR
 
 
 /*

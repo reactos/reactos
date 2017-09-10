@@ -181,6 +181,80 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
     return initIcon->QueryInterface(iid, ppvOut);
 }
 
+class CRegFolderEnum :
+    public CEnumIDListBase
+{
+    public:
+        CRegFolderEnum();
+        ~CRegFolderEnum();
+        HRESULT Initialize(LPCWSTR lpszEnumKeyName, DWORD dwFlags);
+        HRESULT AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath);
+
+        BEGIN_COM_MAP(CRegFolderEnum)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
+};
+
+CRegFolderEnum::CRegFolderEnum()
+{
+}
+
+CRegFolderEnum::~CRegFolderEnum()
+{
+}
+
+HRESULT CRegFolderEnum::Initialize(LPCWSTR lpszEnumKeyName, DWORD dwFlags)
+{
+    WCHAR KeyName[MAX_PATH];
+    static const WCHAR KeyNameFormat[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\%s\\Namespace";
+
+    if (!(dwFlags & SHCONTF_FOLDERS))
+        return S_OK;
+
+    HRESULT hr = StringCchPrintfW(KeyName, MAX_PATH, KeyNameFormat, lpszEnumKeyName);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    AddItemsFromKey(HKEY_LOCAL_MACHINE, KeyName);
+    AddItemsFromKey(HKEY_CURRENT_USER, KeyName);
+
+    return S_OK;
+}
+
+HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
+{
+    WCHAR name[MAX_PATH];
+    HKEY hkey;
+
+    if (RegOpenKeyW(hkey_root, szRepPath, &hkey) != ERROR_SUCCESS)
+        return S_FALSE;
+
+    for (int idx = 0; ; idx++)
+    {
+        if (RegEnumKeyW(hkey, idx, name, MAX_PATH) != ERROR_SUCCESS)
+            break;
+
+        /* If the name of the key is not a guid try to get the default value of the key */
+        if (name[0] != L'{')
+        {
+            DWORD dwSize = sizeof(name);
+            RegGetValueW(hkey, name, NULL, RRF_RT_REG_SZ, NULL, name, &dwSize);
+        }
+
+        if (*name == '{')
+        {
+            LPITEMIDLIST pidl = _ILCreateGuidFromStrW(name);
+
+            if (pidl)
+                AddToEnumList(pidl);
+        }
+    }
+
+    RegCloseKey(hkey);
+
+    return S_OK;
+}
+
 class CRegFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2
@@ -188,13 +262,14 @@ class CRegFolder :
     private:
         GUID m_guid;
         CAtlStringW m_rootPath;
+        CAtlStringW m_enumKeyName;
         CComHeapPtr<ITEMIDLIST> m_pidlRoot;
 
         HRESULT GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
     public:
         CRegFolder();
         ~CRegFolder();
-        HRESULT WINAPI Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath);
+        HRESULT WINAPI Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName);
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes);
@@ -235,12 +310,16 @@ CRegFolder::~CRegFolder()
 {
 }
 
-HRESULT WINAPI CRegFolder::Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath)
+HRESULT WINAPI CRegFolder::Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName)
 {
     memcpy(&m_guid, pGuid, sizeof(m_guid));
 
     m_rootPath = lpszPath;
     if (!m_rootPath)
+        return E_OUTOFMEMORY;
+
+    m_enumKeyName = lpszEnumKeyName;
+    if (!m_enumKeyName)
         return E_OUTOFMEMORY;
 
     m_pidlRoot.Attach(ILClone(pidlRoot));
@@ -319,7 +398,7 @@ HRESULT WINAPI CRegFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR l
 
 HRESULT WINAPI CRegFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return E_NOTIMPL;
+    return ShellObjectCreatorInit<CRegFolderEnum>(m_enumKeyName, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 HRESULT WINAPI CRegFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
@@ -339,24 +418,11 @@ HRESULT WINAPI CRegFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserve
         return E_INVALIDARG;
     }
 
-    LPITEMIDLIST pidlChild = ILCloneFirst (pidl);
-    if (!pidlChild)
-        return E_OUTOFMEMORY;
-
-    CComPtr<IShellFolder> psf;
-    hr = SHELL32_CoCreateInitSF(m_pidlRoot, NULL, pidlChild, pGUID, -1, IID_PPV_ARG(IShellFolder, &psf));
-    ILFree(pidlChild);
-    if (FAILED(hr))
+    hr = SHELL32_BindToSF(m_pidlRoot, NULL, pidl, pGUID, riid, ppvOut);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (_ILIsPidlSimple (pidl))
-    {
-        return psf->QueryInterface(riid, ppvOut);
-    }
-    else
-    {
-        return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
-    }
+    return S_OK;
 }
 
 HRESULT WINAPI CRegFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
@@ -485,7 +551,14 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
         }
         else
         {
-            return HCR_GetClassName(m_guid, strRet);
+            BOOL bRet;
+            WCHAR wstrName[MAX_PATH+1];
+            bRet = HCR_GetClassNameW(m_guid, wstrName, MAX_PATH);
+            if (!bRet)
+                return E_FAIL;
+
+            return SHSetStrRet(strRet, wstrName);
+
         }
     }
 
@@ -637,7 +710,7 @@ HRESULT WINAPI CRegFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *
 
 HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    if (!psd || iColumn >= 2)
+    if (!psd)
         return E_INVALIDARG;
 
     GUID const *clsid = _ILGetGUIDPointer (pidl);
@@ -648,20 +721,31 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
         return E_INVALIDARG;
     }
 
+    if (iColumn >= 3)
+    {
+        /* Return an empty string when we area asked for a column we don't support. 
+           Only  the regfolder is supposed to do this as it supports less columns compared to other folder
+           and its contents are supposed to be presented alongside items that support more columns. */
+        return SHSetStrRet(&psd->str, "");
+    }
+
     switch(iColumn)
     {
         case 0:        /* name */
             return GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-        case 1:        /* comment */
+        case 1:        /* comments */
             HKEY hKey;
-            if (HCR_RegOpenClassIDKey(*clsid, &hKey))
-            {
-                psd->str.cStr[0] = 0x00;
-                psd->str.uType = STRRET_CSTR;
-                RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
-                RegCloseKey(hKey);
-                return S_OK;
-            }
+            if (!HCR_RegOpenClassIDKey(*clsid, &hKey))
+                return SHSetStrRet(&psd->str, "");
+
+            psd->str.cStr[0] = 0x00;
+            psd->str.uType = STRRET_CSTR;
+            RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
+            RegCloseKey(hKey);
+            return S_OK;
+        case 2:        /* type */
+            //return SHSetStrRet(&psd->str, resource_id); /* FIXME: translate */
+            return SHSetStrRet(&psd->str, "System Folder");
     }
     return E_FAIL;
 }
@@ -672,7 +756,7 @@ HRESULT WINAPI CRegFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
 }
 
 /* In latest windows version this is exported but it takes different arguments! */
-HRESULT CRegFolder_CreateInstance(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, REFIID riid, void **ppv)
+HRESULT CRegFolder_CreateInstance(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, LPCWSTR lpszEnumKeyName, REFIID riid, void **ppv)
 {
-    return ShellObjectCreatorInit<CRegFolder>(pGuid, pidlRoot, lpszPath, riid, ppv);
+    return ShellObjectCreatorInit<CRegFolder>(pGuid, pidlRoot, lpszPath, lpszEnumKeyName, riid, ppv);
 }

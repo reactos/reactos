@@ -39,7 +39,7 @@ VfatDiskShutDown(
     }
     else
     {
-        Status = IoStatus.Status;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
     }
 
     return Status;

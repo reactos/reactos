@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Standard Print Processor
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Main functions
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -112,7 +112,6 @@ EnumPrintProcessorDatatypesW(PWSTR pName, PWSTR pPrintProcessorName, DWORD Level
 {
     DWORD cbDatatype;
     DWORD dwDatatypeCount = 0;
-    DWORD dwErrorCode;
     DWORD dwOffsets[_countof(_pwszDatatypes)];
     PWSTR* pCurrentDatatype;
     PDWORD pCurrentOffset = dwOffsets;
@@ -121,10 +120,7 @@ EnumPrintProcessorDatatypesW(PWSTR pName, PWSTR pPrintProcessorName, DWORD Level
 
     // Sanity checks
     if (Level != 1 || !pcbNeeded || !pcReturned)
-    {
-        dwErrorCode = ERROR_INVALID_PARAMETER;
-        goto Cleanup;
-    }
+        return FALSE;
 
     // Count the required buffer size and the number of datatypes.
     *pcbNeeded = 0;
@@ -145,15 +141,15 @@ EnumPrintProcessorDatatypesW(PWSTR pName, PWSTR pPrintProcessorName, DWORD Level
     // Check if the supplied buffer is large enough.
     if (cbBuf < *pcbNeeded)
     {
-        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
-        goto Cleanup;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
     }
 
     // Check if a buffer was supplied at all.
     if (!pDatatypes)
     {
-        dwErrorCode = ERROR_INVALID_PARAMETER;
-        goto Cleanup;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
 
     // Copy over all datatypes.
@@ -161,11 +157,7 @@ EnumPrintProcessorDatatypesW(PWSTR pName, PWSTR pPrintProcessorName, DWORD Level
     PackStrings(_pwszDatatypes, pDatatypes, dwOffsets, &pDatatypes[*pcbNeeded]);
 
     *pcReturned = dwDatatypeCount;
-    dwErrorCode = ERROR_SUCCESS;
-
-Cleanup:
-    SetLastError(dwErrorCode);
-    return (dwErrorCode == ERROR_SUCCESS);
+    return TRUE;
 }
 
 

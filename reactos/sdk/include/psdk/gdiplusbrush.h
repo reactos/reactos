@@ -24,6 +24,9 @@ class Image;
 class Brush : public GdiplusBase
 {
 public:
+  friend class Graphics;
+  friend class Pen;
+
   Brush *Clone(VOID) const
   {
     return NULL;
@@ -31,12 +34,26 @@ public:
 
   Status GetLastStatus(VOID)
   {
-    return NotImplemented;
+    return status;
   }
 
   BrushType GetType(VOID)
   {
-    return BrushTypeSolidColor;
+    BrushType type;
+    SetStatus(DllExports::GdipGetBrushType(brush, &type));
+    return type;
+  }
+
+private:
+  mutable Status status;
+  GpBrush *brush;
+
+  Status SetStatus(Status status) const
+  {
+    if (status == Ok)
+      return status;
+    this->status = status;
+    return status;
   }
 };
 

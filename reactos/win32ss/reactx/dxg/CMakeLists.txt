@@ -7,6 +7,7 @@ list(APPEND SOURCE
     d3d.c
     dd.c
     ddraw.c
+    ddsurf.c
     eng.c
     historic.c
     dxg_int.h)

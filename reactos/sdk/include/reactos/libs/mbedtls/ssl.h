@@ -187,6 +187,9 @@
 #define MBEDTLS_SSL_PRESET_DEFAULT              0
 #define MBEDTLS_SSL_PRESET_SUITEB               2
 
+#define MBEDTLS_SSL_CERT_REQ_CA_LIST_ENABLED       1
+#define MBEDTLS_SSL_CERT_REQ_CA_LIST_DISABLED      0
+
 /*
  * Default range for DTLS retransmission timer value, in milliseconds.
  * RFC 6347 4.2.4.1 says from 1 second to 60 seconds.
@@ -533,6 +536,7 @@ typedef struct mbedtls_ssl_config  mbedtls_ssl_config;
 /* Defined in ssl_internal.h */
 typedef struct mbedtls_ssl_transform mbedtls_ssl_transform;
 typedef struct mbedtls_ssl_handshake_params mbedtls_ssl_handshake_params;
+typedef struct mbedtls_ssl_sig_hash_set_t mbedtls_ssl_sig_hash_set_t;
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 typedef struct mbedtls_ssl_key_cert mbedtls_ssl_key_cert;
 #endif
@@ -751,6 +755,10 @@ struct mbedtls_ssl_config
 #if defined(MBEDTLS_SSL_FALLBACK_SCSV) && defined(MBEDTLS_SSL_CLI_C)
     unsigned int fallback : 1;      /*!< is this a fallback?                */
 #endif
+#if defined(MBEDTLS_SSL_SRV_C)
+    unsigned int cert_req_ca_list : 1;  /*!< enable sending CA list in
+                                          Certificate Request messages?     */
+#endif
 };
 
 
@@ -839,7 +847,9 @@ struct mbedtls_ssl_context
     size_t in_hslen;            /*!< current handshake message length,
                                      including the handshake header   */
     int nb_zero;                /*!< # of 0-length encrypted messages */
-    int record_read;            /*!< record is already present        */
+
+    int keep_current_message;   /*!< drop or reuse current message
+                                     on next call to record layer? */
 
     /*
      * Record layer (outgoing data)
@@ -1044,7 +1054,7 @@ void mbedtls_ssl_conf_authmode( mbedtls_ssl_config *conf, int authmode );
  *
  *                 If set, the verify callback is called for each
  *                 certificate in the chain. For implementation
- *                 information, please see \c x509parse_verify()
+ *                 information, please see \c mbedtls_x509_crt_verify()
  *
  * \param conf     SSL configuration
  * \param f_vrfy   verification function
@@ -1148,7 +1158,7 @@ void mbedtls_ssl_conf_read_timeout( mbedtls_ssl_config *conf, uint32_t timeout )
  *
  * \note           See the documentation of \c mbedtls_ssl_set_timer_t and
  *                 \c mbedtls_ssl_get_timer_t for the conventions this pair of
- *                 callbacks must fallow.
+ *                 callbacks must follow.
  *
  * \note           On some platforms, timing.c provides
  *                 \c mbedtls_timing_set_delay() and
@@ -2033,6 +2043,20 @@ void mbedtls_ssl_conf_extended_master_secret( mbedtls_ssl_config *conf, char ems
 void mbedtls_ssl_conf_arc4_support( mbedtls_ssl_config *conf, char arc4 );
 #endif /* MBEDTLS_ARC4_C */
 
+#if defined(MBEDTLS_SSL_SRV_C)
+/**
+ * \brief          Whether to send a list of acceptable CAs in
+ *                 CertificateRequest messages.
+ *                 (Default: do send)
+ *
+ * \param conf     SSL configuration
+ * \param cert_req_ca_list   MBEDTLS_SSL_CERT_REQ_CA_LIST_ENABLED or
+ *                          MBEDTLS_SSL_CERT_REQ_CA_LIST_DISABLED
+ */
+void mbedtls_ssl_conf_cert_req_ca_list( mbedtls_ssl_config *conf,
+                                          char cert_req_ca_list );
+#endif /* MBEDTLS_SSL_SRV_C */
+
 #if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
 /**
  * \brief          Set the maximum fragment length to emit and/or negotiate
@@ -2185,7 +2209,7 @@ void mbedtls_ssl_conf_renegotiation_enforced( mbedtls_ssl_config *conf, int max_
 
 /**
  * \brief          Set record counter threshold for periodic renegotiation.
- *                 (Default: 2^64 - 256.)
+ *                 (Default: 2^48 - 1)
  *
  *                 Renegotiation is automatically triggered when a record
  *                 counter (outgoing or ingoing) crosses the defined
@@ -2196,9 +2220,17 @@ void mbedtls_ssl_conf_renegotiation_enforced( mbedtls_ssl_config *conf, int max_
  *                 Lower values can be used to enforce policies such as "keys
  *                 must be refreshed every N packets with cipher X".
  *
+ *                 The renegotiation period can be disabled by setting
+ *                 conf->disable_renegotiation to
+ *                 MBEDTLS_SSL_RENEGOTIATION_DISABLED.
+ *
+ * \note           When the configured transport is
+ *                 MBEDTLS_SSL_TRANSPORT_DATAGRAM the maximum renegotiation
+ *                 period is 2^48 - 1, and for MBEDTLS_SSL_TRANSPORT_STREAM,
+ *                 the maximum renegotiation period is 2^64 - 1.
+ *
  * \param conf     SSL configuration
  * \param period   The threshold value: a big-endian 64-bit number.
- *                 Set to 2^64 - 1 to disable periodic renegotiation
  */
 void mbedtls_ssl_conf_renegotiation_period( mbedtls_ssl_config *conf,
                                    const unsigned char period[8] );
@@ -2430,7 +2462,7 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
  * \param len      how many bytes must be written
  *
  * \return         the number of bytes actually written (may be less than len),
- *                 or MBEDTLS_ERR_SSL_WANT_WRITE of MBEDTLS_ERR_SSL_WANT_READ,
+ *                 or MBEDTLS_ERR_SSL_WANT_WRITE or MBEDTLS_ERR_SSL_WANT_READ,
  *                 or another negative error code.
  *
  * \note           If this function returns something other than a positive
@@ -2515,7 +2547,6 @@ void mbedtls_ssl_config_init( mbedtls_ssl_config *conf );
  * \param transport MBEDTLS_SSL_TRANSPORT_STREAM for TLS, or
  *                  MBEDTLS_SSL_TRANSPORT_DATAGRAM for DTLS
  * \param preset   a MBEDTLS_SSL_PRESET_XXX value
- *                 (currently unused).
  *
  * \note           See \c mbedtls_ssl_conf_transport() for notes on DTLS.
  *

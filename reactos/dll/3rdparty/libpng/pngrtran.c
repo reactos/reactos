@@ -1,8 +1,8 @@
 
 /* pngrtran.c - transforms the data in a row for PNG readers
  *
- * Last changed in libpng 1.6.24 [August 4, 2016]
- * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.31 [July 27, 2017]
+ * Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -49,6 +49,7 @@ png_set_crc_action(png_structrp png_ptr, int crit_action, int ancil_action)
       case PNG_CRC_WARN_DISCARD:    /* Not a valid action for critical data */
          png_warning(png_ptr,
              "Can't discard critical data on CRC error");
+         /* FALLTHROUGH */
       case PNG_CRC_ERROR_QUIT:                                /* Error/quit */
 
       case PNG_CRC_DEFAULT:
@@ -1253,7 +1254,7 @@ png_init_rgb_transformations(png_structrp png_ptr)
             default:
 
             case 8:
-               /* FALL THROUGH (Already 8 bits) */
+               /* FALLTHROUGH */ /*  (Already 8 bits) */
 
             case 16:
                /* Already a full 16 bits */
@@ -2934,7 +2935,7 @@ png_do_gray_to_rgb(png_row_infop row_info, png_bytep row)
  * using the equation given in Poynton's ColorFAQ of 1998-01-04 at
  * <http://www.inforamp.net/~poynton/>  (THIS LINK IS DEAD June 2008 but
  * versions dated 1998 through November 2002 have been archived at
- * http://web.archive.org/web/20000816232553/http://www.inforamp.net/
+ * https://web.archive.org/web/20000816232553/www.inforamp.net/
  * ~poynton/notes/colour_and_gamma/ColorFAQ.txt )
  * Charles Poynton poynton at poynton.com
  *
@@ -4302,7 +4303,7 @@ png_do_expand_palette(png_row_infop row_info, png_bytep row,
             if (num_trans > 0)
             {
                sp = row + (png_size_t)row_width - 1;
-               dp = row + (png_size_t)(row_width << 2) - 1;
+               dp = row + ((png_size_t)row_width << 2) - 1;
 
                for (i = 0; i < row_width; i++)
                {
@@ -4463,7 +4464,7 @@ png_do_expand(png_row_infop row_info, png_bytep row,
             {
                gray = gray & 0xff;
                sp = row + (png_size_t)row_width - 1;
-               dp = row + (png_size_t)(row_width << 1) - 1;
+               dp = row + ((png_size_t)row_width << 1) - 1;
 
                for (i = 0; i < row_width; i++)
                {
@@ -4519,7 +4520,7 @@ png_do_expand(png_row_infop row_info, png_bytep row,
             png_byte green = (png_byte)(trans_color->green & 0xff);
             png_byte blue = (png_byte)(trans_color->blue & 0xff);
             sp = row + (png_size_t)row_info->rowbytes - 1;
-            dp = row + (png_size_t)(row_width << 2) - 1;
+            dp = row + ((png_size_t)row_width << 2) - 1;
             for (i = 0; i < row_width; i++)
             {
                if (*(sp - 2) == red && *(sp - 1) == green && *(sp) == blue)
@@ -4542,7 +4543,7 @@ png_do_expand(png_row_infop row_info, png_bytep row,
             png_byte green_low = (png_byte)(trans_color->green & 0xff);
             png_byte blue_low = (png_byte)(trans_color->blue & 0xff);
             sp = row + row_info->rowbytes - 1;
-            dp = row + (png_size_t)(row_width << 3) - 1;
+            dp = row + ((png_size_t)row_width << 3) - 1;
             for (i = 0; i < row_width; i++)
             {
                if (*(sp - 5) == red_high &&
@@ -4601,7 +4602,9 @@ png_do_expand_16(png_row_infop row_info, png_bytep row)
       png_byte *sp = row + row_info->rowbytes; /* source, last byte + 1 */
       png_byte *dp = sp + row_info->rowbytes;  /* destination, end + 1 */
       while (dp > sp)
-         dp[-2] = dp[-1] = *--sp, dp -= 2;
+      {
+         dp[-2] = dp[-1] = *--sp; dp -= 2;
+      }
 
       row_info->rowbytes *= 2;
       row_info->bit_depth = 16;

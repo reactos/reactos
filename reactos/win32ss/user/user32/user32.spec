@@ -366,7 +366,7 @@
 363 stdcall GetUserObjectInformationA(long long ptr long ptr)
 364 stdcall GetUserObjectInformationW(long long ptr long ptr) NtUserGetObjectInformation
 365 stdcall GetUserObjectSecurity (long ptr ptr long ptr)
-# GetWinStationInfo
+366 stdcall GetWinStationInfo(ptr)
 367 stdcall GetWindow(long long)
 368 stdcall GetWindowContextHelpId(long)
 369 stdcall GetWindowDC(long) NtUserGetWindowDC

@@ -1400,7 +1400,7 @@ static DWORD _copyStringToEnumW(const WCHAR *source, DWORD* left, void** end)
 static DWORD _enumerateConnectedW(PWNetEnumerator enumerator, DWORD* user_count,
                                   void* user_buffer, DWORD* user_size)
 {
-    DWORD ret, index, count, size, i, left;
+    DWORD ret, index, count, total_count, size, i, left;
     void* end;
     NETRESOURCEW* curr, * buffer;
     HANDLE* handles;
@@ -1424,6 +1424,7 @@ static DWORD _enumerateConnectedW(PWNetEnumerator enumerator, DWORD* user_count,
     curr = user_buffer;
     end = (char *)user_buffer + size;
     count = *user_count;
+    total_count = 0;
 
     ret = WN_NO_MORE_ENTRIES;
     for (index = 0; index < providerTable->numProviders; index++)
@@ -1443,6 +1444,7 @@ static DWORD _enumerateConnectedW(PWNetEnumerator enumerator, DWORD* user_count,
             ret = providerTable->table[index].enumResource(handles[index],
                                                            &count, buffer,
                                                            &size);
+            total_count += count;
             if (ret == WN_MORE_DATA)
                 break;
 
@@ -1477,19 +1479,20 @@ static DWORD _enumerateConnectedW(PWNetEnumerator enumerator, DWORD* user_count,
                     ++curr;
                 }
 
-                count = *user_count - count;
                 size = left;
             }
 
-            if (ret != WN_SUCCESS || count == 0)
-                break;
+            if (*user_count != -1)
+                count = *user_count - total_count;
+            else
+                count = *user_count;
         }
     }
 
-    if (count == 0)
+    if (total_count == 0)
         ret = WN_NO_MORE_ENTRIES;
 
-    *user_count = *user_count - count;
+    *user_count = total_count;
     if (ret != WN_MORE_DATA && ret != WN_NO_MORE_ENTRIES)
         ret = WN_SUCCESS;
 
@@ -2666,10 +2669,18 @@ DWORD WINAPI WNetGetUserW( LPCWSTR lpName, LPWSTR lpUserID, LPDWORD lpBufferSize
  */
 DWORD WINAPI WNetConnectionDialog( HWND hwnd, DWORD dwType )
 {
-    FIXME( "(%p, %08X): stub\n", hwnd, dwType );
+    CONNECTDLGSTRUCTW conn_dlg;
+    NETRESOURCEW net_res;
 
-    SetLastError(WN_NO_NETWORK);
-    return WN_NO_NETWORK;
+    ZeroMemory(&conn_dlg, sizeof(conn_dlg));
+    ZeroMemory(&net_res, sizeof(net_res));
+
+    conn_dlg.cbStructure = sizeof(conn_dlg);
+    conn_dlg.lpConnRes = &net_res;
+    conn_dlg.hwndOwner = hwnd;
+    net_res.dwType = dwType;
+
+    return WNetConnectionDialog1W(&conn_dlg);
 }
 
 /*********************************************************************

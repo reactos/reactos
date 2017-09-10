@@ -5,6 +5,7 @@
  * PURPOSE:     Window procedure of the main window and all children apart from
  *              hPalWin, hToolSettings and hSelection
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 class CImgAreaWindow : public CWindowImpl<CMainWindow>
@@ -24,6 +25,8 @@ public:
         MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
         MESSAGE_HANDLER(WM_IMAGEMODELDIMENSIONSCHANGED, OnImageModelDimensionsChanged)
         MESSAGE_HANDLER(WM_IMAGEMODELIMAGECHANGED, OnImageModelImageChanged)
+        MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
+        MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
     END_MSG_MAP()
 
     BOOL drawing;
@@ -40,6 +43,9 @@ private:
     LRESULT OnMouseLeave(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnImageModelDimensionsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnImageModelImageChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     void drawZoomFrame(int mouseX, int mouseY);
+    void cancelDrawing();
 };

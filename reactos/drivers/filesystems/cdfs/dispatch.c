@@ -63,7 +63,7 @@ CdfsLockControl(
 
     DPRINT("CdfsLockControl(IrpContext %p)\n", IrpContext);
 
-    if (IrpContext->DeviceObject == CdfsGlobalData->DeviceObject)
+    if (IrpContext->DeviceObject == CdfsGlobalData->CdFsDeviceObject || IrpContext->DeviceObject == CdfsGlobalData->HddFsDeviceObject)
     {
         return STATUS_INVALID_DEVICE_REQUEST;
     }

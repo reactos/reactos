@@ -8,33 +8,33 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Добре дошли"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Добре дошли в операционна система ReactOS.\n\nИзберете си от темите в ляво."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Добре дошли в операционна система ReactOS.\n\nИзберете си от темите в ляво."
 
-    IDS_CHECKTEXT "Показвай отново този прозорец"
-    IDS_CLOSETEXT "Изход"
+    IDS_CHECKTEXT "&Показвай отново този прозорец"
+    IDS_CLOSETEXT "&Изход"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Инсталиране на ReactOS"
-    IDS_TOPICBUTTON1 "Разгледай това CD"
-    IDS_TOPICBUTTON2 "Изход"
+    IDS_TOPIC_BUTTON0 "Инсталиране на &ReactOS"
+    IDS_TOPIC_BUTTON1 "&Разгледай това CD"
+    IDS_TOPIC_BUTTON2 "&Изход"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Инсталиране на ReactOSS"
-    IDS_TOPICTITLE1 "Разгледай това CD"
-    IDS_TOPICTITLE2 "Изход"
+    IDS_TOPIC_TITLE0 "Инсталиране на ReactOSS"
+    IDS_TOPIC_TITLE1 "Разгледай това CD"
+    IDS_TOPIC_TITLE2 "Изход"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Създаване на нова инсталация ня ReactOS или обновяване на съществуваща такава."
-    IDS_TOPICDESC1 "Разглеждане на CD-то."
-    IDS_TOPICDESC2 "Натиснете за изход от програмата."
+    IDS_TOPIC_DESC0 "Създаване на нова инсталация ня ReactOS или обновяване на съществуваща такава."
+    IDS_TOPIC_DESC1 "Разглеждане на CD-то."
+    IDS_TOPIC_DESC2 "Натиснете за изход от програмата."
 END

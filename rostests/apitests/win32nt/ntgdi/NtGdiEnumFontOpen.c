@@ -19,7 +19,9 @@ START_TEST(NtGdiEnumFontOpen)
 	// FIXME: We should load the font first
 
 	idEnum = NtGdiEnumFontOpen(hDC, 2, 0, 32, L"Courier", ANSI_CHARSET, &ulCount);
-	ASSERT(idEnum != 0);
+	TEST(idEnum != 0);
+	if (idEnum == 0)
+		return;
 
 	/* we should have a gdi handle here */
 	TEST(GDI_HANDLE_GET_TYPE(idEnum) == GDI_OBJECT_TYPE_ENUMFONT);

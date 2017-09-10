@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Various tools
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -41,7 +41,7 @@ AllocAndRegQueryWSZ(HKEY hKey, PCWSTR pwszValueName)
     pwszValue = DllAllocSplMem(cbNeeded);
     if (!pwszValue)
     {
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         return NULL;
     }
 
@@ -66,7 +66,7 @@ DuplicateDevMode(PDEVMODEW pInput)
     pOutput = DllAllocSplMem(pInput->dmSize + pInput->dmDriverExtra);
     if (!pOutput)
     {
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         return NULL;
     }
 

@@ -39,7 +39,7 @@
 #define D3DCLIPPLANE4 (1 << 4)
 #define D3DCLIPPLANE5 (1 << 5)
 
-#define D3DCOLOR_ARGB(a,r,g,b)       ((D3DCOLOR)((((a)&0xff)<<24)|(((r)&0xff)<<16)|(((g)&0xff)<<8)|((b)&0xff)))
+#define D3DCOLOR_ARGB(a,r,g,b)       ((D3DCOLOR)((((a)&0xffu)<<24)|(((r)&0xffu)<<16)|(((g)&0xffu)<<8)|((b)&0xffu)))
 #define D3DCOLOR_COLORVALUE(r,g,b,a) D3DCOLOR_RGBA((DWORD)((r)*255.f),(DWORD)((g)*255.f),(DWORD)((b)*255.f),(DWORD)((a)*255.f))
 #define D3DCOLOR_RGBA(r,g,b,a)       D3DCOLOR_ARGB(a,r,g,b)
 #define D3DCOLOR_XRGB(r,g,b)         D3DCOLOR_ARGB(0xff,r,g,b)
@@ -299,7 +299,8 @@ typedef enum _D3DQUERYTYPE {
     D3DQUERYTYPE_VERTEXTIMINGS = 15,
     D3DQUERYTYPE_PIXELTIMINGS = 16,
     D3DQUERYTYPE_BANDWIDTHTIMINGS = 17,
-    D3DQUERYTYPE_CACHEUTILIZATION = 18
+    D3DQUERYTYPE_CACHEUTILIZATION = 18,
+    D3DQUERYTYPE_MEMORYPRESSURE = 19,
 } D3DQUERYTYPE;
 
 #define D3DISSUE_BEGIN   (1 << 1)

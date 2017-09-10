@@ -1,0 +1,4 @@
+#define REACTOS_STR_FILE_DESCRIPTION  "RPC library"
+#define REACTOS_STR_INTERNAL_NAME     "libtirpc"
+#define REACTOS_STR_ORIGINAL_FILENAME "libtirpc.dll"
+#include <reactos/version.rc>

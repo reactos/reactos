@@ -24,6 +24,28 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
+#include "wine/winternl.h"
+
+static NTSTATUS (WINAPI *pNtQueryObject)(HANDLE,OBJECT_INFORMATION_CLASS,PVOID,ULONG,PULONG);
+
+static void init(void)
+{
+    HMODULE hntdll = GetModuleHandleA("ntdll.dll");
+    pNtQueryObject = (void *)GetProcAddress(hntdll, "NtQueryObject");
+}
+
+#define TEST_GRANTED_ACCESS(a,b) test_granted_access(a,b,__LINE__)
+static void test_granted_access(HANDLE handle, ACCESS_MASK access, int line)
+{
+    OBJECT_BASIC_INFORMATION obj_info;
+    NTSTATUS status;
+
+    status = pNtQueryObject(handle, ObjectBasicInformation, &obj_info,
+                            sizeof(obj_info), NULL);
+    ok_(__FILE__, line)(!status, "NtQueryObject with err: %08x\n", status);
+    ok_(__FILE__, line)(obj_info.GrantedAccess == access, "Granted access should "
+        "be 0x%08x, instead of 0x%08x\n", access, obj_info.GrantedAccess);
+}
 
 /* If you change something in these tests, please do the same
  * for GetSystemDirectory tests.
@@ -424,6 +446,7 @@ static void test_CreateDirectoryW(void)
 
 static void test_RemoveDirectoryA(void)
 {
+    char curdir[MAX_PATH];
     char tmpdir[MAX_PATH];
     BOOL ret;
 
@@ -432,6 +455,18 @@ static void test_RemoveDirectoryA(void)
     ret = CreateDirectoryA(tmpdir, NULL);
     ok(ret == TRUE, "CreateDirectoryA should always succeed\n");
 
+    GetCurrentDirectoryA(MAX_PATH, curdir);
+    ok(SetCurrentDirectoryA(tmpdir), "SetCurrentDirectoryA failed\n");
+
+    SetLastError(0xdeadbeef);
+    ok(!RemoveDirectoryA(tmpdir), "RemoveDirectoryA succeeded\n");
+    ok(GetLastError() == ERROR_SHARING_VIOLATION,
+       "Expected ERROR_SHARING_VIOLATION, got %u\n", GetLastError());
+
+    TEST_GRANTED_ACCESS(NtCurrentTeb()->Peb->ProcessParameters->CurrentDirectory.Handle,
+                        FILE_TRAVERSE | SYNCHRONIZE);
+
+    SetCurrentDirectoryA(curdir);
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE, "RemoveDirectoryA should always succeed\n");
 
@@ -452,6 +487,7 @@ static void test_RemoveDirectoryA(void)
 
 static void test_RemoveDirectoryW(void)
 {
+    WCHAR curdir[MAX_PATH];
     WCHAR tmpdir[MAX_PATH];
     BOOL ret;
     static const WCHAR tmp_dir_name[] = {'P','l','e','a','s','e',' ','R','e','m','o','v','e',' ','M','e',0};
@@ -468,6 +504,18 @@ static void test_RemoveDirectoryW(void)
 
     ok(ret == TRUE, "CreateDirectoryW should always succeed\n");
 
+    GetCurrentDirectoryW(MAX_PATH, curdir);
+    ok(SetCurrentDirectoryW(tmpdir), "SetCurrentDirectoryW failed\n");
+
+    SetLastError(0xdeadbeef);
+    ok(!RemoveDirectoryW(tmpdir), "RemoveDirectoryW succeeded\n");
+    ok(GetLastError() == ERROR_SHARING_VIOLATION,
+       "Expected ERROR_SHARING_VIOLATION, got %u\n", GetLastError());
+
+    TEST_GRANTED_ACCESS(NtCurrentTeb()->Peb->ProcessParameters->CurrentDirectory.Handle,
+                        FILE_TRAVERSE | SYNCHRONIZE);
+
+    SetCurrentDirectoryW(curdir);
     ret = RemoveDirectoryW(tmpdir);
     ok(ret == TRUE, "RemoveDirectoryW should always succeed\n");
 
@@ -495,6 +543,8 @@ static void test_SetCurrentDirectoryA(void)
 
 START_TEST(directory)
 {
+    init();
+
     test_GetWindowsDirectoryA();
     test_GetWindowsDirectoryW();
 

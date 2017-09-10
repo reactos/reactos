@@ -75,8 +75,10 @@ AcpiUtHexToAsciiChar (
     UINT64                  Integer,
     UINT32                  Position)
 {
+    UINT64                  Index;
 
-    return (AcpiGbl_HexToAscii[(Integer >> Position) & 0xF]);
+    AcpiUtShortShiftRight (Integer, Position, &Index);
+    return (AcpiGbl_HexToAscii[Index & 0xF]);
 }
 
 

@@ -4,6 +4,7 @@
 #include <wingdi.h>
 #include <winreg.h>
 #include <shellapi.h>
+#include <commctrl.h>
 
 #define HTMLHELP_PATH(_pt)  TEXT("%systemroot%\\Help\\calc.chm::") TEXT(_pt)
 
@@ -1784,6 +1785,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 {
     MSG msg;
     DWORD dwLayout;
+
+    InitCommonControls();
 
     calc.hInstance = hInstance;
 

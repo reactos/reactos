@@ -476,15 +476,64 @@ LPITEMIDLIST WINAPI ILGlobalClone(LPCITEMIDLIST pidl)
     return newpidl;
 }
 
+BOOL _ILHACKCompareSimpleIds(LPCITEMIDLIST pidltemp1, LPCITEMIDLIST pidltemp2)
+{
+    LPPIDLDATA pdata1 = _ILGetDataPointer(pidltemp1);
+    LPPIDLDATA pdata2 = _ILGetDataPointer(pidltemp2);
+
+    IID *iid1 = _ILGetGUIDPointer(pidltemp1);
+    IID *iid2 = _ILGetGUIDPointer(pidltemp2);
+
+    FileStructW* pDataW1 = _ILGetFileStructW(pidltemp1);
+    FileStructW* pDataW2 = _ILGetFileStructW(pidltemp2);
+
+    if (_ILIsDesktop(pidltemp1) && _ILIsDesktop(pidltemp2))
+    {
+        return TRUE;
+    }
+    else if (_ILIsDesktop(pidltemp1) || _ILIsDesktop(pidltemp2))
+    {
+        return FALSE;
+    }
+    else if (iid1 || iid2)
+    {
+        if (!iid1 || !iid2 || memcmp(iid1, iid2, sizeof(GUID)))
+            return FALSE;
+    }
+    else if (pDataW1 || pDataW2)
+    {
+        if (!pDataW1 || !pDataW2 || wcsicmp(pDataW1->wszName, pDataW2->wszName))
+            return FALSE;
+    }
+    else if (_ILIsFolder(pidltemp1) || _ILIsFolder(pidltemp2))
+    {
+        if (!_ILIsFolder(pidltemp1) || !_ILIsFolder(pidltemp2) || strcmp(pdata1->u.file.szNames, pdata2->u.file.szNames))
+            return FALSE;
+    }
+    else if (_ILIsValue(pidltemp1) || _ILIsValue(pidltemp2))
+    {
+        if (!_ILIsValue(pidltemp1) || !_ILIsValue(pidltemp2) || strcmp(pdata1->u.file.szNames, pdata2->u.file.szNames))
+            return FALSE;
+    }
+    else if (_ILIsDrive(pidltemp1) || _ILIsDrive(pidltemp2))
+    {
+        if (!_ILIsDrive(pidltemp1) || !_ILIsDrive(pidltemp2) || pdata1->u.drive.szDriveName[0] != pdata2->u.drive.szDriveName[0])
+            return FALSE;
+    }
+    else
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 /*************************************************************************
  * ILIsEqual [SHELL32.21]
  *
  */
 BOOL WINAPI ILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
-    char    szData1[MAX_PATH];
-    char    szData2[MAX_PATH];
-
     LPCITEMIDLIST pidltemp1 = pidl1;
     LPCITEMIDLIST pidltemp2 = pidl2;
 
@@ -505,10 +554,7 @@ BOOL WINAPI ILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 
     while (pidltemp1->mkid.cb && pidltemp2->mkid.cb)
     {
-        _ILSimpleGetText(pidltemp1, szData1, MAX_PATH);
-        _ILSimpleGetText(pidltemp2, szData2, MAX_PATH);
-
-        if (strcasecmp( szData1, szData2 ))
+        if (!_ILHACKCompareSimpleIds(pidltemp1, pidltemp2))
             return FALSE;
 
         pidltemp1 = ILGetNext(pidltemp1);
@@ -545,8 +591,6 @@ BOOL WINAPI ILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
  */
 BOOL WINAPI ILIsParent(LPCITEMIDLIST pidlParent, LPCITEMIDLIST pidlChild, BOOL bImmediate)
 {
-    char    szData1[MAX_PATH];
-    char    szData2[MAX_PATH];
     LPCITEMIDLIST pParent = pidlParent;
     LPCITEMIDLIST pChild = pidlChild;
 
@@ -557,10 +601,7 @@ BOOL WINAPI ILIsParent(LPCITEMIDLIST pidlParent, LPCITEMIDLIST pidlChild, BOOL b
 
     while (pParent->mkid.cb && pChild->mkid.cb)
     {
-        _ILSimpleGetText(pParent, szData1, MAX_PATH);
-        _ILSimpleGetText(pChild, szData2, MAX_PATH);
-
-        if (strcasecmp( szData1, szData2 ))
+        if (!_ILHACKCompareSimpleIds(pParent, pChild))
             return FALSE;
 
         pParent = ILGetNext(pParent);
@@ -599,9 +640,6 @@ BOOL WINAPI ILIsParent(LPCITEMIDLIST pidlParent, LPCITEMIDLIST pidlChild, BOOL b
  */
 LPITEMIDLIST WINAPI ILFindChild(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
-    char    szData1[MAX_PATH];
-    char    szData2[MAX_PATH];
-
     LPCITEMIDLIST pidltemp1 = pidl1;
     LPCITEMIDLIST pidltemp2 = pidl2;
     LPCITEMIDLIST ret=NULL;
@@ -624,11 +662,8 @@ LPITEMIDLIST WINAPI ILFindChild(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     {
         while (pidltemp1->mkid.cb && pidltemp2->mkid.cb)
         {
-            _ILSimpleGetText(pidltemp1, szData1, MAX_PATH);
-            _ILSimpleGetText(pidltemp2, szData2, MAX_PATH);
-
-            if (strcasecmp(szData1,szData2))
-                break;
+            if (!_ILHACKCompareSimpleIds(pidltemp1, pidltemp2))
+                return FALSE;
 
             pidltemp1 = ILGetNext(pidltemp1);
             pidltemp2 = ILGetNext(pidltemp2);

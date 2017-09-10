@@ -750,7 +750,7 @@ BOOL PidlToSicIndex (
 
     if (SUCCEEDED (sh->GetUIObjectOf(0, 1, &pidl, IID_NULL_PPV_ARG(IExtractIconW, &ei))))
     {
-      if (SUCCEEDED(ei->GetIconLocation(uFlags, szIconFile, MAX_PATH, &iSourceIndex, &dwFlags)))
+      if (SUCCEEDED(ei->GetIconLocation(uFlags &~ GIL_FORSHORTCUT, szIconFile, MAX_PATH, &iSourceIndex, &dwFlags)))
       {
         *pIndex = SIC_GetIconIndex(szIconFile, iSourceIndex, uFlags);
         ret = TRUE;

@@ -25,12 +25,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(menusite);
 
-extern "C"
-HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreator<CMenuSite>(riid, ppv);
-}
-
 CMenuSite::CMenuSite() :
     m_DeskBarSite(NULL),
     m_BandObject(NULL),
@@ -361,4 +355,10 @@ HRESULT STDMETHODCALLTYPE CMenuSite::HasFocusIO()
 HRESULT STDMETHODCALLTYPE CMenuSite::OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus)
 {
     return S_OK;
+}
+
+extern "C"
+HRESULT WINAPI RSHELL_CMenuSite_CreateInstance(REFIID riid, LPVOID *ppv)
+{
+    return ShellObjectCreator<CMenuSite>(riid, ppv);
 }

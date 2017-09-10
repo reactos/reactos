@@ -698,10 +698,10 @@ CUSBDevice::GetConfigurationDescriptor(
     //
     // build setup packet
     //
-    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
-    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
-    CtrlSetup.bmRequestType._BM.Reserved = 0;
-    CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
+    CtrlSetup.bmRequestType.Recipient = BMREQUEST_TO_DEVICE;
+    CtrlSetup.bmRequestType.Type = BMREQUEST_STANDARD;
+    CtrlSetup.bmRequestType.Reserved = 0;
+    CtrlSetup.bmRequestType.Dir = BMREQUEST_DEVICE_TO_HOST;
     CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
     CtrlSetup.wValue.LowByte = ConfigurationIndex;
     CtrlSetup.wValue.HiByte = USB_CONFIGURATION_DESCRIPTOR_TYPE;

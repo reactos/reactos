@@ -1,32 +1,19 @@
-/*
- * Copyright 2011 André Hentschel
- * Copyright 2013 Mislav Blaevic
- * Copyright 2015 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ï»¿/*
+ * PROJECT:     ReactOS Application compatibility module
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Query file attributes used to match exe's
+ * COPYRIGHT:   Copyright 2011 AndrÃ© Hentschel
+ *              Copyright 2013 Mislav BlaÅ¾evic
+ *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS
 #include "windef.h"
-#include "winbase.h"
 #include "apphelp.h"
-#include "imagehlp.h"
+#include "strsafe.h"
 #include "winver.h"
 #include "rtlfuncs.h"
 
-#include "wine/unicode.h"
 
 #define NUM_ATTRIBUTES  28
 enum APPHELP_MODULETYPE
@@ -79,14 +66,14 @@ static WCHAR* WINAPI SdbpGetStringAttr(LPWSTR translation, LPCWSTR attr, PVOID f
     if (!file_info)
         return NULL;
 
-    snprintfW(value, 128, translation, attr);
+    StringCchPrintfW(value, ARRAYSIZE(value), translation, attr);
     if (VerQueryValueW(file_info, value, &buffer, &size) && size != 0)
         return (WCHAR*)buffer;
 
     return NULL;
 }
 
-static void WINAPI SdbpSetStringAttrFromAnsiString(PATTRINFO attr, TAG tag, PBYTE string, BYTE len)
+static void WINAPI SdbpSetStringAttrFromAnsiString(PATTRINFO attr, TAG tag, PBYTE string, size_t len)
 {
     WCHAR* dest;
     if (!string)
@@ -97,7 +84,7 @@ static void WINAPI SdbpSetStringAttrFromAnsiString(PATTRINFO attr, TAG tag, PBYT
 
     attr->type = tag;
     attr->flags = ATTRIBUTE_AVAILABLE;
-    dest = attr->lpattr = SdbpAlloc((len+1) * sizeof(WCHAR));
+    dest = attr->lpattr = SdbAlloc((len+1) * sizeof(WCHAR));
     while (len--)
         *(dest++) = *(string++);
     *dest = 0;
@@ -309,7 +296,7 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
             file_info = SdbAlloc(info_size);
             GetFileVersionInfoW(path, 0, info_size, file_info);
             VerQueryValueW(file_info, str_tinfo, (LPVOID)&lang_page, &page_size);
-            snprintfW(translation, 128, str_trans, lang_page->language, lang_page->code_page);
+            StringCchPrintfW(translation, ARRAYSIZE(translation), str_trans, lang_page->language, lang_page->code_page);
         }
 
         /* Handles 2, 3, 12, 13, 14, 15, 21, 22 */

@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/sizebox.cpp
  * PURPOSE:     Window procedure of the size boxes
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -12,9 +13,9 @@
 
 /* FUNCTIONS ********************************************************/
 
-BOOL resizing = FALSE;
-short xOrig;
-short yOrig;
+static BOOL resizing = FALSE;
+static short xOrig;
+static short yOrig;
 
 LRESULT CSizeboxWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -76,8 +77,6 @@ LRESULT CSizeboxWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     {
         short xRel;
         short yRel;
-        ReleaseCapture();
-        resizing = FALSE;
         int imgXRes = imageModel.GetWidth();
         int imgYRes = imageModel.GetHeight();
         xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / toolsModel.GetZoom();
@@ -99,6 +98,26 @@ LRESULT CSizeboxWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         if (m_hWnd == sizeboxRightBottom.m_hWnd)
             imageModel.Crop(imgXRes + xRel, imgYRes + yRel, 0, 0);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) _T(""));
+    }
+    resizing = FALSE;
+    ReleaseCapture();
+    return 0;
+}
+
+LRESULT CSizeboxWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    resizing = FALSE;
+    return 0;
+}
+
+LRESULT CSizeboxWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (wParam == VK_ESCAPE)
+    {
+        if (GetCapture() == m_hWnd)
+        {
+            ReleaseCapture();
+        }
     }
     return 0;
 }

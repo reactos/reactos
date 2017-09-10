@@ -427,6 +427,20 @@ AcpiNsInitOneObject (
 
         Info->PackageInit++;
         Status = AcpiDsGetPackageArguments (ObjDesc);
+        if (ACPI_FAILURE (Status))
+        {
+            break;
+        }
+
+        /*
+         * Resolve all named references in package objects (and all
+         * sub-packages). This action has been deferred until the entire
+         * namespace has been loaded, in order to support external and
+         * forward references from individual package elements (05/2017).
+         */
+        Status = AcpiUtWalkPackageTree (ObjDesc, NULL,
+            AcpiDsInitPackageElement, NULL);
+        ObjDesc->Package.Flags |= AOPOBJ_DATA_VALID;
         break;
 
     default:

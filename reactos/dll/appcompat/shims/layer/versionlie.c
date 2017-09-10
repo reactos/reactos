@@ -1,12 +1,13 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Shim library
- * FILE:            dll/appcompat/shims/layer/versionlie.c
- * PURPOSE:         Version lie shims
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS 'Layers' Shim library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Version lie shims
+ * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
 #include <shimlib.h>
 #include <strsafe.h>
 

@@ -115,6 +115,7 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
             SetDlgItemTextW(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, stringValueData);
+        SendMessage(GetDlgItem(hwndDlg, IDC_VALUE_DATA), EM_SETSEL, 0, -1);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
         return FALSE;
     case WM_COMMAND:
@@ -305,6 +306,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         CheckRadioButton (hwndDlg, IDC_FORMAT_HEX, IDC_FORMAT_DEC, IDC_FORMAT_HEX);
         swprintf(ValueString, L"%lx", dwordValueData);
         SetDlgItemTextW(hwndDlg, IDC_VALUE_DATA, ValueString);
+        SendMessage(GetDlgItem(hwndDlg, IDC_VALUE_DATA), EM_SETSEL, 0, -1);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
         return FALSE;
 

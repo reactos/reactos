@@ -23,22 +23,21 @@ import "oaidl.idl";
 [
     object,
     dual,
-    uuid(D97A6DA0-A85F-11df-83AE-00A0C90C2BD8)
+    uuid(D97A6DA0-A864-11cf-83BE-00A0C90C2BD8)
 ]
 interface IRequestDictionary : IDispatch
 {
     [propget]
-    HRESULT Item(IRequestDictionary *iface, [in, optional] VARIANT Var,
-        [retval, out] VARIANT *pVariantReturn);
+    HRESULT Item([in, optional] VARIANT Var, [retval, out] VARIANT *pVariantReturn);
 
     [restricted, propget]
-    HRESULT _NewEnum(IRequestDictionary *iface, [retval, out] IUnknown **ppEnumReturn);
+    HRESULT _NewEnum([retval, out] IUnknown **ppEnumReturn);
 
     [propget]
-    HRESULT Count(IRequestDictionary *iface, [retval, out] int *cStrRet);
+    HRESULT Count([retval, out] int *count);
 
     [propget]
-    HRESULT Key(IRequestDictionary *iface, [in] VARIANT VarKey, [retval, out]VARIANT *pvar);
+    HRESULT Key([in] VARIANT key, [retval, out] VARIANT *value);
 };
 
 [
@@ -49,85 +48,85 @@ interface IRequestDictionary : IDispatch
 interface IResponse : IDispatch
 {
     [propget]
-    HRESULT Buffer(IResponse *iface, [retval, out] VARIANT_BOOL *fIsBuffering);
+    HRESULT Buffer([retval, out] VARIANT_BOOL *is_buffering);
 
     [propput]
-    HRESULT Buffer(IResponse *iface, [in] VARIANT_BOOL fIsBuffering);
+    HRESULT Buffer([in] VARIANT_BOOL is_buffering);
 
     [propget]
-    HRESULT ContentType(IResponse *iface, [retval, out] BSTR *pbstrContentTypeRet);
+    HRESULT ContentType([retval, out] BSTR *content_type);
 
     [propput]
-    HRESULT ContentType(IResponse *iface, [in] BSTR bstrContentType);
+    HRESULT ContentType([in] BSTR content_type);
 
     [propget]
-    HRESULT Expires(IResponse *iface, [retval, out] VARIANT *pvarExpiresMinutesRet);
+    HRESULT Expires([retval, out] VARIANT *minutes);
 
     [propput]
-    HRESULT Expires(IResponse *iface, [in] long lExpiresMinutes);
+    HRESULT Expires([in] LONG minutes);
 
     [propget]
-    HRESULT ExpiresAbsolute(IResponse *iface, [retval, out] VARIANT *pvarExpiresRet);
+    HRESULT ExpiresAbsolute([retval, out] VARIANT *expires);
 
     [propput]
-    HRESULT ExpiresAbsolute(IResponse *iface, [in] DATE dtExpires);
+    HRESULT ExpiresAbsolute([in] DATE expires);
 
     [propget]
-    HRESULT Cookies(IResponse *iface, [retval, out] IRequestDictionary **ppCookies);
+    HRESULT Cookies([retval, out] IRequestDictionary **cookies);
 
     [propget]
-    HRESULT Status(IResponse *iface, [retval][out] BSTR *pbstrStatusRet);
+    HRESULT Status([retval, out] BSTR *status);
 
     [propput]
-    HRESULT Status(IResponse *iface, [in] BSTR bstrStatus);
+    HRESULT Status([in] BSTR status);
 
     [hidden]
-    HRESULT Add(IResponse *iface, [in] BSTR bstrHeaderValue, [in] BSTR bstrHeaderName);
+    HRESULT Add([in] BSTR value, [in] BSTR name);
 
-    HRESULT AddHeader(IResponse *iface, [in] BSTR bstrHeaderName, [in] BSTR bstrHeaderValue);
+    HRESULT AddHeader([in] BSTR name, [in] BSTR value);
 
-    HRESULT AppendToLog(IResponse *iface, [in] BSTR bstrLogEntry);
+    HRESULT AppendToLog([in] BSTR log_entry);
 
-    HRESULT BinaryWrite(IResponse *iface, [in] VARIANT varInput);
+    HRESULT BinaryWrite([in] VARIANT input);
 
-    HRESULT Clear(IResponse *iface);
+    HRESULT Clear();
 
-    HRESULT End(IResponse *iface);
+    HRESULT End();
 
-    HRESULT Flush(IResponse *iface);
+    HRESULT Flush();
 
-    HRESULT Redirect(IResponse *iface, [in] BSTR bstrURL);
+    HRESULT Redirect(BSTR url);
 
-    HRESULT Write(IResponse *iface, [in] VARIANT varText);
+    HRESULT Write([in] VARIANT text);
 
     [hidden]
-    HRESULT WriteBlock(IResponse *iface, [in] short iBlockNumber);
+    HRESULT WriteBlock([in] short block_number);
 
-    HRESULT IsClientConnected(IResponse *iface, [retval, out] VARIANT_BOOL *pfIsClientConnected);
-
-    [propget]
-    HRESULT get_CharSet( IResponse *iface, [retval, out] BSTR *pbstrCharSetRet);
-
-    [propput]
-    HRESULT put_CharSet(IResponse *iface, [in] BSTR bstrCharSet);
-
-    HRESULT Pics(IResponse *iface, [in] BSTR bstrHeaderValue);
+    HRESULT IsClientConnected([retval, out] VARIANT_BOOL *is_connected);
 
     [propget]
-    HRESULT get_CacheControl(IResponse *iface, [retval, out] BSTR *pbstrCacheControl);
+    HRESULT CharSet([retval, out] BSTR *charset);
 
     [propput]
-    HRESULT put_CacheControl(IResponse *iface, [in] BSTR bstrCacheControl);
+    HRESULT CharSet([in] BSTR charset);
+
+    HRESULT Pics([in] BSTR value);
 
     [propget]
-    HRESULT get_CodePage(IResponse *iface, [retval, out] long *plvar);
+    HRESULT CacheControl([retval, out] BSTR *cache_control);
 
     [propput]
-    HRESULT put_CodePage(IResponse *iface, [in] long lvar);
+    HRESULT CacheControl([in] BSTR cache_control);
 
     [propget]
-    HRESULT get_LCID(IResponse *iface, [retval, out] long *plvar);
+    HRESULT CodePage([retval, out] LONG *codepage);
 
     [propput]
-    HRESULT put_LCID(IResponse *iface, [in] long lvar);
-};
+    HRESULT CodePage([in] LONG codepage);
+
+    [propget]
+    HRESULT LCID([retval, out] LONG *lcid);
+
+    [propput]
+    HRESULT LCID([in] LONG lcid);
+}

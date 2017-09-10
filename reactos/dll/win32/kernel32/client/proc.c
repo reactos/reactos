@@ -4660,9 +4660,7 @@ CreateProcessInternalA(HANDLE hToken,
                        LPPROCESS_INFORMATION lpProcessInformation,
                        PHANDLE hNewToken)
 {
-    PUNICODE_STRING CommandLine = NULL;
-    UNICODE_STRING DummyString;
-    UNICODE_STRING LiveCommandLine;
+    UNICODE_STRING CommandLine;
     UNICODE_STRING ApplicationName;
     UNICODE_STRING CurrentDirectory;
     BOOL bRetVal;
@@ -4677,8 +4675,7 @@ CreateProcessInternalA(HANDLE hToken,
     RtlMoveMemory(&StartupInfo, lpStartupInfo, sizeof(*lpStartupInfo));
 
     /* Initialize all strings to nothing */
-    LiveCommandLine.Buffer = NULL;
-    DummyString.Buffer = NULL;
+    CommandLine.Buffer = NULL;
     ApplicationName.Buffer = NULL;
     CurrentDirectory.Buffer = NULL;
     StartupInfo.lpDesktop = NULL;
@@ -4688,24 +4685,8 @@ CreateProcessInternalA(HANDLE hToken,
     /* Convert the Command line */
     if (lpCommandLine)
     {
-        /* If it's too long, then we'll have a problem */
-        if ((strlen(lpCommandLine) + 1) * sizeof(WCHAR) <
-            NtCurrentTeb()->StaticUnicodeString.MaximumLength)
-        {
-            /* Cache it in the TEB */
-            CommandLine = Basep8BitStringToStaticUnicodeString(lpCommandLine);
-        }
-        else
-        {
-            /* Use a dynamic version */
-            Basep8BitStringToDynamicUnicodeString(&LiveCommandLine,
-                                                  lpCommandLine);
-        }
-    }
-    else
-    {
-        /* The logic below will use CommandLine, so we must make it valid */
-        CommandLine = &DummyString;
+        Basep8BitStringToDynamicUnicodeString(&CommandLine,
+                                              lpCommandLine);
     }
 
     /* Convert the Name and Directory */
@@ -4740,8 +4721,7 @@ CreateProcessInternalA(HANDLE hToken,
     /* Call the Unicode function */
     bRetVal = CreateProcessInternalW(hToken,
                                      ApplicationName.Buffer,
-                                     LiveCommandLine.Buffer ?
-                                     LiveCommandLine.Buffer : CommandLine->Buffer,
+                                     CommandLine.Buffer,
                                      lpProcessAttributes,
                                      lpThreadAttributes,
                                      bInheritHandles,
@@ -4754,7 +4734,7 @@ CreateProcessInternalA(HANDLE hToken,
 
     /* Clean up */
     RtlFreeUnicodeString(&ApplicationName);
-    RtlFreeUnicodeString(&LiveCommandLine);
+    RtlFreeUnicodeString(&CommandLine);
     RtlFreeUnicodeString(&CurrentDirectory);
     RtlFreeHeap(RtlGetProcessHeap(), 0, StartupInfo.lpDesktop);
     RtlFreeHeap(RtlGetProcessHeap(), 0, StartupInfo.lpReserved);

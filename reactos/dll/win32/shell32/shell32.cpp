@@ -208,7 +208,7 @@ public:
             *ppv = NULL;
             if (pv != NULL)
                 return CLASS_E_NOAGGREGATION;
-            return CStartMenu_Constructor(riid, ppv);
+            return RSHELL_CStartMenu_CreateInstance(riid, ppv);
         }
     };
 };
@@ -312,11 +312,6 @@ STDAPI DllGetVersion(DLLVERSIONINFO *pdvi)
  *
  */
 HINSTANCE    shell32_hInstance;
-
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
 
 /*************************************************************************
  * SHELL32 DllMain

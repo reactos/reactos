@@ -53,6 +53,10 @@ typedef struct
 
 #define SHV_CHANGE_NOTIFY WM_USER + 0x1111
 
+/* For the context menu of the def view, the id of the items are based on 1 because we need
+   to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled */
+#define CONTEXT_MENU_BASE_ID 1
+
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -103,10 +107,11 @@ class CDefView :
         BOOL                      m_isEditing;
 
         CLSID m_Category;
-        BOOL m_Destroyed;
-    private:
+        BOOL  m_Destroyed;
 
+    private:
         HRESULT _MergeToolbar();
+        BOOL _Sort();
 
     public:
         CDefView();
@@ -325,6 +330,7 @@ class CDefView :
         // Windows returns E_NOINTERFACE for IOleWindow
         // COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
         COM_INTERFACE_ENTRY_IID(IID_IShellView, IShellView)
+        COM_INTERFACE_ENTRY_IID(IID_CDefView, IShellView)
         COM_INTERFACE_ENTRY_IID(IID_IShellView2, IShellView2)
         COM_INTERFACE_ENTRY_IID(IID_IFolderView, IFolderView)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderView, IShellFolderView)
@@ -687,6 +693,40 @@ INT CALLBACK CDefView::ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPAR
     return nDiff;
 }
 
+BOOL CDefView::_Sort()
+{
+    HWND hHeader;
+    HDITEM hColumn;
+
+    if ((m_ListView.GetWindowLongPtr(GWL_STYLE) & ~LVS_NOSORTHEADER) == 0)
+        return TRUE;
+
+    hHeader = (HWND)m_ListView.SendMessage(LVM_GETHEADER, 0, 0);
+    ZeroMemory(&hColumn, sizeof(hColumn));
+
+    /* If the sorting column changed, remove the sorting style from the old column */
+    if ( (m_sortInfo.nLastHeaderID != -1) &&
+         (m_sortInfo.nLastHeaderID != m_sortInfo.nHeaderID) )
+    {
+        hColumn.mask = HDI_FORMAT;
+        Header_GetItem(hHeader, m_sortInfo.nLastHeaderID, &hColumn);
+        hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+        Header_SetItem(hHeader, m_sortInfo.nLastHeaderID, &hColumn);
+    }
+
+    /* Set the sorting style to the new column */
+    hColumn.mask = HDI_FORMAT;
+    Header_GetItem(hHeader, m_sortInfo.nHeaderID, &hColumn);
+
+    hColumn.fmt &= (m_sortInfo.bIsAscending ? ~HDF_SORTDOWN : ~HDF_SORTUP );
+    hColumn.fmt |= (m_sortInfo.bIsAscending ?  HDF_SORTUP   : HDF_SORTDOWN);
+    Header_SetItem(hHeader, m_sortInfo.nHeaderID, &hColumn);
+
+    /* Sort the list, using the current values of nHeaderID and bIsAscending */
+    m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
+    return m_ListView.SortItems(ListViewCompareItems, this);
+}
+
 PCUITEMID_CHILD CDefView::_PidlByItem(int i)
 {
     return reinterpret_cast<PCUITEMID_CHILD>(m_ListView.GetItemData(i));
@@ -905,8 +945,7 @@ HRESULT CDefView::FillList()
         FIXME("no m_pSF2Parent\n");
     }
     m_sortInfo.bIsAscending = TRUE;
-    m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
-    m_ListView.SortItems(ListViewCompareItems, this);
+    _Sort();
 
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
@@ -1237,7 +1276,7 @@ HRESULT CDefView::OpenSelectedItems()
 
     IUnknown_SetSite(m_pCM, (IShellView *)this);
 
-    hResult = m_pCM->QueryContextMenu(hMenu, 0, 0x20, 0x7fff, CMF_DEFAULTONLY);
+    hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_DEFAULTONLY);
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
 
@@ -1290,7 +1329,8 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     IUnknown_SetSite(m_pCM, (IShellView *)this);
 
-    hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
+    /* Use 1 as the first id as we want 0 the mean that the user canceled the menu */
+    hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, CONTEXT_MENU_BASE_ID, FCIDM_SHVIEWLAST, CMF_NORMAL);
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
 
@@ -1303,7 +1343,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (uCommand == FCIDM_SHVIEW_OPEN && OnDefaultCommand() == S_OK)
         goto cleanup;
 
-    InvokeContextMenuCommand(uCommand);
+    InvokeContextMenuCommand(uCommand - CONTEXT_MENU_BASE_ID);
 
 cleanup:
     if (m_pCM)
@@ -1524,15 +1564,14 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             CheckToolbar();
             break;
 
-            /* the menu-ID's for sorting are 0x30... see shrec.rc */
+        /* the menu-ID's for sorting are 0x30... see shrec.rc */
         case 0x30:
         case 0x31:
         case 0x32:
         case 0x33:
             m_sortInfo.nHeaderID = dwCmdID - 0x30;
             m_sortInfo.bIsAscending = TRUE;
-            m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
-            m_ListView.SortItems(ListViewCompareItems, this);
+            _Sort();
             break;
 
         case FCIDM_SHVIEW_SNAPTOGRID:
@@ -1566,7 +1605,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             return OnExplorerCommand(dwCmdID, FALSE);
         default:
             /* WM_COMMAND messages from the file menu are routed to the CDefView so as to let m_pCM handle the command */
-            if (m_pCM)
+            if (m_pCM && dwCmd == 0)
             {
                 InvokeContextMenuCommand(dwCmdID);
             }
@@ -1668,9 +1707,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 m_sortInfo.bIsAscending = !m_sortInfo.bIsAscending;
             else
                 m_sortInfo.bIsAscending = TRUE;
-            m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
-
-            m_ListView.SortItems(ListViewCompareItems, this);
+            _Sort();
             break;
 
         case LVN_GETDISPINFOA:
@@ -1923,6 +1960,9 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     return TRUE;
 }
 
+HRESULT SHGetMenuIdFromMenuMsg(UINT uMsg, LPARAM lParam, UINT *CmdId);
+HRESULT SHSetMenuIdInMenuMsg(UINT uMsg, LPARAM lParam, UINT CmdId);
+
 /**********************************************************
 *  CDefView::OnCustomItem
 */
@@ -1935,12 +1975,18 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return FALSE;
     }
 
-    LRESULT result;
-    HRESULT hres = SHForwardContextMenuMsg(m_pCM, uMsg, wParam, lParam, &result, TRUE);
+    /* The lParam of WM_DRAWITEM WM_MEASUREITEM contain a menu id and this also needs to 
+       be changed to a menu identifier offset */
+    UINT CmdID;
+    HRESULT hres = SHGetMenuIdFromMenuMsg(uMsg, lParam, &CmdID);
     if (SUCCEEDED(hres))
-        return TRUE;
-    else
-        return FALSE;
+        SHSetMenuIdInMenuMsg(uMsg, lParam, CmdID - CONTEXT_MENU_BASE_ID);
+
+    /* Forward the message to the IContextMenu2 */
+    LRESULT result;
+    hres = SHForwardContextMenuMsg(m_pCM, uMsg, wParam, lParam, &result, TRUE);
+
+    return (SUCCEEDED(hres));
 }
 
 LRESULT CDefView::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -3152,15 +3198,49 @@ HRESULT CDefView::_MergeToolbar()
 
     return S_OK;
 }
-/**********************************************************
- *    IShellView_Constructor
- */
-HRESULT WINAPI IShellView_Constructor(IShellFolder *pFolder, IShellView **newView)
-{
-    return ShellObjectCreatorInit<CDefView>(pFolder, IID_PPV_ARG(IShellView, newView));
-}
 
-HRESULT WINAPI CDefView_Constructor(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)
+HRESULT CDefView_CreateInstance(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CDefView>(pFolder, riid, ppvOut);
+}
+
+HRESULT WINAPI SHCreateShellFolderViewEx(
+    LPCSFV psvcbi,    /* [in] shelltemplate struct */
+    IShellView **ppsv) /* [out] IShellView pointer */
+{
+    CComPtr<IShellView> psv;
+    HRESULT hRes;
+
+    TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
+      psvcbi->pshf, psvcbi->pidl, psvcbi->pfnCallback,
+      psvcbi->fvm, psvcbi->psvOuter);
+
+    *ppsv = NULL;
+    hRes = CDefView_CreateInstance(psvcbi->pshf, IID_PPV_ARG(IShellView, &psv));
+    if (FAILED_UNEXPECTEDLY(hRes))
+        return hRes;
+
+    *ppsv = psv.Detach();
+    return hRes;
+}
+
+HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
+                        IShellView **ppsv)
+{
+    CComPtr<IShellView> psv;
+    HRESULT hRes;
+
+    *ppsv = NULL;
+    if (!pcsfv || pcsfv->cbSize != sizeof(*pcsfv))
+        return E_INVALIDARG;
+
+    TRACE("sf=%p outer=%p callback=%p\n",
+      pcsfv->pshf, pcsfv->psvOuter, pcsfv->psfvcb);
+
+    hRes = CDefView_CreateInstance(pcsfv->pshf, IID_PPV_ARG(IShellView, &psv));
+    if (FAILED(hRes))
+        return hRes;
+
+    *ppsv = psv.Detach();
+    return hRes;
 }

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Load the metrics tables common to TTF and OTF fonts (body).          */
 /*                                                                         */
-/*  Copyright 2006-2016 by                                                 */
+/*  Copyright 2006-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -28,6 +28,14 @@
 #include "ttmtx.h"
 
 #include "sferrors.h"
+
+
+  /* IMPORTANT: The TT_HoriHeader and TT_VertHeader structures should   */
+  /*            be identical except for the names of their fields,      */
+  /*            which are different.                                    */
+  /*                                                                    */
+  /*            This ensures that `tt_face_load_hmtx' is able to read   */
+  /*            both the horizontal and vertical headers.               */
 
 
   /*************************************************************************/

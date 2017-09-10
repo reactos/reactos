@@ -24,7 +24,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Изменить режимы совместимости"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    EDITTEXT IDC_NEWCOMPATIBILITYMODE, 9, 6, 148, 14, ES_AUTOHSCROLL
+    COMBOBOX IDC_NEWCOMPATIBILITYMODE, 9, 6, 148, 14, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL
     LISTBOX IDC_COMPATIBILITYMODE, 9, 25, 148, 86, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_BORDER
     PUSHBUTTON "&Добавить...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
     PUSHBUTTON "&Редактировать...", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
@@ -38,4 +38,5 @@ BEGIN
     IDS_TABTITLE "Совместимость"
     IDS_FAILED_NETWORK "Режим совместимости не может быть установлен для этой программы, потому что она находится на сетевом диске."
     IDS_FAILED_PROTECTED "Режим совместимости не может быть использован для компонентов ReactOS."
+    IDS_YOU_DID_NOT_ADD "Вы не добавили режим, добавить его сейчас?"
 END

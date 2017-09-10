@@ -1049,7 +1049,7 @@ BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, LPCWSTR pszX500,
             else
             {
                 str = token.end;
-                while (isspace(*str))
+                while (isspaceW(*str))
                     str++;
                 if (*str != '=')
                 {

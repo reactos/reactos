@@ -152,6 +152,17 @@ BEGIN
     AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des couleurs.", IDC_ASKME_RB, 14, 146, 243, 10
 END
 
+IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Paramètres d'affichage"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Voulez-vous conserver ces paramètres d'affichage ?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
+    PUSHBUTTON "&Oui", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&Non", IDNO, 175, 36, 50, 14
+END
+
 IDR_PREVIEW_MENU MENU
 BEGIN
     MENUITEM "Normal", ID_MENU_NORMAL
@@ -252,6 +263,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_DISPLAY_SETTINGS "Paramètres d'affichage"
-    IDS_APPLY_FAILED "Echec lors de l'application des nouveaux paramètres..."
+    IDS_APPLY_FAILED "Échec lors de l'application des nouveaux paramètres..."
     IDS_APPLY_NEEDS_RESTART "Vous devez redémarrer votre ordinateur pour appliquer les modifications."
+    IDS_TIMEOUTTEXT "Rétablissement des précédents paramètres dans %d secondes."
 END

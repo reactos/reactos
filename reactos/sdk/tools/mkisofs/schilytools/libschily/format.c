@@ -1,4 +1,4 @@
-/* @(#)format.c	1.61 16/08/10 Copyright 1985-2016 J. Schilling */
+/* @(#)format.c	1.62 17/08/03 Copyright 1985-2017 J. Schilling */
 /*
  *	format
  *	common code for printf fprintf & sprintf
@@ -6,7 +6,7 @@
  *	allows recursive printf with "%r", used in:
  *	error, comerr, comerrno, errmsg, errmsgno and the like
  *
- *	Copyright (c) 1985-2016 J. Schilling
+ *	Copyright (c) 1985-2017 J. Schilling
  */
 /*
  * The contents of this file are subject to the terms of the
@@ -138,9 +138,9 @@ typedef struct f_args {
 	char	*ptr;			/* Current ptr in buf		*/
 	int	cnt;			/* Free char count in buf	*/
 #else
-	void  (*outf)__PR((char, long)); /* Func from format(fun, arg)	*/
+	void  (*outf)__PR((char, void *)); /* Func from format(fun, arg)	*/
 #endif
-	long	farg;			/* Arg from format (fun, arg)	*/
+	void	*farg;			/* Arg from format (fun, arg)	*/
 	int	minusflag;		/* Fieldwidth is negative	*/
 	int	flags;			/* General flags (+-#)		*/
 	int	fldwidth;		/* Field width as in %3d	*/
@@ -227,7 +227,7 @@ xflsbuf(c, ap)
 #define	FORMAT_FUNC_NAME	format
 #define	FORMAT_FUNC_PARM
 
-#define	FORMAT_FUNC_PROTO_DECL	void (*fun)(char, long),
+#define	FORMAT_FUNC_PROTO_DECL	void (*fun)(char, void *),
 #define	FORMAT_FUNC_KR_DECL	register void (*fun)();
 #define	FORMAT_FUNC_KR_ARGS	fun,
 
@@ -235,7 +235,7 @@ xflsbuf(c, ap)
 #endif
 
 #ifdef	FORMAT_BUFFER
-#define	FARG		(farg|1)
+#define	FARG		((void *)((UIntptr_t)farg|1))
 #else
 #define	FARG		farg
 #endif
@@ -243,14 +243,14 @@ xflsbuf(c, ap)
 #ifdef	PROTOTYPES
 EXPORT int
 FORMAT_FUNC_NAME(FORMAT_FUNC_PROTO_DECL
-			long farg,
+			void *farg,
 			const char *fmt,
 			va_list oargs)
 #else
 EXPORT int
 FORMAT_FUNC_NAME(FORMAT_FUNC_KR_ARGS farg, fmt, oargs)
 	FORMAT_FUNC_KR_DECL
-	register long	farg;
+	register void	*farg;
 	register char	*fmt;
 	va_list		oargs;
 #endif
@@ -287,14 +287,14 @@ FORMAT_FUNC_NAME(FORMAT_FUNC_KR_ARGS farg, fmt, oargs)
 #endif
 
 #ifdef	FORMAT_BUFFER
-	if ((farg & 1) == 0) {		/* Called externally	*/
+	if (((UIntptr_t)farg & 1) == 0) { /* Called externally	*/
 		fa.cnt	= BFSIZ;
 		fa.ptr	= fa.iobuf;
 		fa.fp	= (FILE *)farg;
 		fa.err	= 0;
-		farg	= fa.farg = (long)&fa;
+		farg	= fa.farg = &fa;
 	} else {			/* recursion		*/
-		farg &= ~1;
+		farg = (void *)((UIntptr_t)farg & ~1);
 	}
 #endif
 #ifdef	FORMAT_FUNC_PARM
@@ -1023,7 +1023,7 @@ error sizeof (ptrdiff_t) is unknown
 	}
 out:
 #ifdef	FORMAT_BUFFER
-	if (farg == (long)&fa) {	/* Top level call, flush buffer */
+	if (farg == &fa) {		/* Top level call, flush buffer */
 		if (fa.err)
 			return (EOF);
 		if ((fa.ptr != fa.iobuf) &&
@@ -1208,9 +1208,9 @@ prbuf(s, fa)
 {
 	register int diff;
 	register int rfillc;
-	register long arg			= fa->farg;
+	register void *arg				= fa->farg;
 #ifdef	FORMAT_FUNC_PARM
-	register void (*fun) __PR((char, long))	= fa->outf;
+	register void (*fun) __PR((char, void *))	= fa->outf;
 #endif
 	register int count;
 	register int lzero = 0;
@@ -1274,9 +1274,9 @@ prc(c, fa)
 {
 	register int diff;
 	register int rfillc;
-	register long arg			= fa->farg;
+	register void *arg				= fa->farg;
 #ifdef	FORMAT_FUNC_PARM
-	register void (*fun) __PR((char, long))	= fa->outf;
+	register void (*fun) __PR((char, void *))	= fa->outf;
 #endif
 	register int count;
 

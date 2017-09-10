@@ -268,16 +268,16 @@ ObKillProcess(
 NTSTATUS
 NTAPI
 ObpLookupObjectName(
-    IN HANDLE RootHandle,
-    IN PUNICODE_STRING ObjectName,
+    IN HANDLE RootHandle OPTIONAL,
+    IN OUT PUNICODE_STRING ObjectName,
     IN ULONG Attributes,
     IN POBJECT_TYPE ObjectType,
     IN KPROCESSOR_MODE AccessMode,
     IN OUT PVOID ParseContext,
-    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    IN PVOID InsertObject,
-    IN PACCESS_STATE AccessState,
-    IN POBP_LOOKUP_CONTEXT LookupContext,
+    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+    IN PVOID InsertObject OPTIONAL,
+    IN OUT PACCESS_STATE AccessState,
+    OUT POBP_LOOKUP_CONTEXT LookupContext,
     OUT PVOID *FoundObject
 );
 

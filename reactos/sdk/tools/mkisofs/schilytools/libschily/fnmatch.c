@@ -1,8 +1,8 @@
-/* @(#)fnmatch.c	8.20 15/07/06 2005-2015 J. Schilling from 8.2 (Berkeley) */
+/* @(#)fnmatch.c	8.24 17/08/30 2005-2017 J. Schilling from 8.2 (Berkeley) */
 #include <schily/mconfig.h>
 #ifndef lint
 static	UConst char sccsid[] =
-	"@(#)fnmatch.c	8.20 15/07/06 2005-2015 J. Schilling from 8.2 (Berkeley)";
+	"@(#)fnmatch.c	8.24 17/08/30 2005-2017 J. Schilling from 8.2 (Berkeley)";
 #endif
 /*
  * Copyright (c) 1989, 1993, 1994
@@ -10,6 +10,12 @@ static	UConst char sccsid[] =
  *
  * This code is derived from software contributed to Berkeley by
  * Guido van Rossum.
+ *
+ * Copyright (c) 2005-2017 J. Schilling
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,7 +43,7 @@ static	UConst char sccsid[] =
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static UConst char sccsid[] = "@(#)fnmatch.c	8.20 (Berkeley) 07/06/15";
+static UConst char sccsid[] = "@(#)fnmatch.c	8.24 (Berkeley) 08/30/17";
 #endif /* LIBC_SCCS and not lint */
 /* "FBSD src/lib/libc/gen/fnmatch.c,v 1.19 2010/04/16 22:29:24 jilles Exp $" */
 
@@ -70,6 +76,8 @@ static UConst char sccsid[] = "@(#)fnmatch.c	8.20 (Berkeley) 07/06/15";
 #define	RANGE_MATCH	1
 #define	RANGE_NOMATCH	0
 #define	RANGE_ERROR	(-1)
+
+#define	CL_SIZE		32	/* Max size for '[: :]'			*/
 
 static int rangematch __PR((const char *, wchar_t, int, char **, mbstate_t *));
 static int fnmatch1 __PR((const char *, const char *, const char *, int,
@@ -127,11 +135,14 @@ fnmatch1(pattern, string, stringstart, flags, patmbs, strmbs)
 	mbstate_t	patmbs;
 	mbstate_t	strmbs;
 {
+	const char *bt_pattern, *bt_string;
+	mbstate_t bt_patmbs, bt_strmbs;
 	char *newp;
 	char c;
 	wchar_t pc, sc;
 	size_t pclen, sclen;
 
+	bt_pattern = bt_string = NULL;
 	for (;;) {
 		pclen = mbrtowc(&pc, pattern, MB_LEN_MAX, &patmbs);
 		if (pclen == (size_t)-1 || pclen == (size_t)-2)
@@ -147,16 +158,18 @@ fnmatch1(pattern, string, stringstart, flags, patmbs, strmbs)
 		case EOS:
 			if ((flags & FNM_LEADING_DIR) && sc == '/')
 				return (0);
-			return (sc == EOS ? 0 : FNM_NOMATCH);
+			if (sc == EOS)
+				return (0);
+			goto backtrack;
 		case '?':
 			if (sc == EOS)
 				return (FNM_NOMATCH);
 			if (sc == '/' && (flags & FNM_PATHNAME))
-				return (FNM_NOMATCH);
+				goto backtrack;
 			if (sc == '.' && (flags & FNM_PERIOD) &&
 			    (string == stringstart ||
 			    ((flags & FNM_PATHNAME) && *(string - 1) == '/')))
-				return (FNM_NOMATCH);
+				goto backtrack;
 			string += sclen;
 			break;
 		case '*':
@@ -168,7 +181,7 @@ fnmatch1(pattern, string, stringstart, flags, patmbs, strmbs)
 			if (sc == '.' && (flags & FNM_PERIOD) &&
 			    (string == stringstart ||
 			    ((flags & FNM_PATHNAME) && *(string - 1) == '/')))
-				return (FNM_NOMATCH);
+				goto backtrack;
 
 			/* Optimize for pattern with * at end or before /. */
 			if (c == EOS) {
@@ -184,43 +197,34 @@ fnmatch1(pattern, string, stringstart, flags, patmbs, strmbs)
 				break;
 			}
 
-			/* General case, use recursion. */
-			while (sc != EOS) {
-				if (!fnmatch1(pattern, string, stringstart,
-				    flags, patmbs, strmbs))
-					return (0);
-				sclen = mbrtowc(&sc, string, MB_LEN_MAX,
-				    &strmbs);
-				if (sclen == (size_t)-1 ||
-				    sclen == (size_t)-2) {
-					sc = (unsigned char)*string;
-					sclen = 1;
-					memset(&strmbs, 0, sizeof (strmbs));
-				}
-				if (sc == '/' && (flags & FNM_PATHNAME))
-					break;
-				string += sclen;
-			}
-			return (FNM_NOMATCH);
+			/*
+			 * First try the shortest match for the '*' that
+			 * could work. We can forget any earlier '*' since
+			 * there is no way having it match more characters
+			 * can help us, given that we are already here.
+			 */
+			bt_pattern = pattern, bt_patmbs = patmbs;
+			bt_string = string, bt_strmbs = strmbs;
+			break;
 		case '[':
 			if (sc == EOS)
 				return (FNM_NOMATCH);
 			if (sc == '/' && (flags & FNM_PATHNAME))
-				return (FNM_NOMATCH);
+				goto backtrack;
 			if (sc == '.' && (flags & FNM_PERIOD) &&
 			    (string == stringstart ||
 			    ((flags & FNM_PATHNAME) && *(string - 1) == '/')))
-				return (FNM_NOMATCH);
+				goto backtrack;
 
 			switch (rangematch(pattern, sc, flags, &newp,
-						&patmbs)) {
+			    &patmbs)) {
 			case RANGE_ERROR:
 				goto norm;
 			case RANGE_MATCH:
 				pattern = newp;
 				break;
 			case RANGE_NOMATCH:
-				return (FNM_NOMATCH);
+				goto backtrack;
 			}
 			string += sclen;
 			break;
@@ -231,20 +235,45 @@ fnmatch1(pattern, string, stringstart, flags, patmbs, strmbs)
 				if (pclen == (size_t)-1 || pclen == (size_t)-2)
 					return (FNM_NOMATCH);
 				if (pclen == 0)
-					pc = '\\';
+					return (FNM_NOMATCH);
 				pattern += pclen;
 			}
 			/* FALLTHROUGH */
 		default:
 		norm:
-			if (pc == sc)
-				;
-			else if ((flags & FNM_CASEFOLD) &&
-				    (towlower(pc) == towlower(sc)))
-				;
-			else
-				return (FNM_NOMATCH);
 			string += sclen;
+			if (pc == sc) {
+				;
+			} else if ((flags & FNM_CASEFOLD) &&
+				    (towlower(pc) == towlower(sc))) {
+				;
+			} else {
+		backtrack:
+				/*
+				 * If we have a mismatch (other than hitting
+				 * the end of the string), go back to the last
+				 * '*' seen and have it match one additional
+				 * character.
+				 */
+				if (bt_pattern == NULL)
+					return (FNM_NOMATCH);
+				sclen = mbrtowc(&sc, bt_string, MB_LEN_MAX,
+				    &bt_strmbs);
+				if (sclen == (size_t)-1 ||
+				    sclen == (size_t)-2) {
+					sc = (unsigned char)*bt_string;
+					sclen = 1;
+					memset(&bt_strmbs, 0,
+					    sizeof (bt_strmbs));
+				}
+				if (sc == EOS)
+					return (FNM_NOMATCH);
+				if (sc == '/' && flags & FNM_PATHNAME)
+					return (FNM_NOMATCH);
+				bt_string += sclen;
+				pattern = bt_pattern, patmbs = bt_patmbs;
+				string = bt_string, strmbs = bt_strmbs;
+			}
 			break;
 		}
 	}
@@ -253,7 +282,8 @@ fnmatch1(pattern, string, stringstart, flags, patmbs, strmbs)
 
 #ifdef	PROTOTYPES
 static int
-rangematch(const char *pattern, wchar_t test, int flags, char **newp, mbstate_t *patmbs)
+rangematch(const char *pattern, wchar_t test, int flags, char **newp,
+	    mbstate_t *patmbs)
 #else
 static int
 rangematch(pattern, test, flags, newp, patmbs)
@@ -266,8 +296,13 @@ rangematch(pattern, test, flags, newp, patmbs)
 {
 	int negate, ok;
 	wchar_t c, c2;
+	wchar_t	otest = test;
 	size_t pclen;
 	const char *origpat;
+#ifdef	XXX_COLLATE
+	struct xlocale_collate *table = (struct xlocale_collate *)
+				    __get_locale()->components[XLC_COLLATE];
+#endif
 
 	/*
 	 * A bracket expression starting with an unquoted circumflex
@@ -290,6 +325,8 @@ rangematch(pattern, test, flags, newp, patmbs)
 	ok = 0;
 	origpat = pattern;
 	for (;;) {
+		int	quoted = 0;
+
 		if (*pattern == ']' && pattern > origpat) {
 			pattern++;
 			break;
@@ -297,12 +334,53 @@ rangematch(pattern, test, flags, newp, patmbs)
 			return (RANGE_ERROR);
 		} else if (*pattern == '/' && (flags & FNM_PATHNAME)) {
 			return (RANGE_NOMATCH);
-		} else if (*pattern == '\\' && !(flags & FNM_NOESCAPE))
+		} else if (*pattern == '\\' && !(flags & FNM_NOESCAPE)) {
 			pattern++;
+			quoted++;
+		}
 		pclen = mbrtowc(&c, pattern, MB_LEN_MAX, patmbs);
 		if (pclen == (size_t)-1 || pclen == (size_t)-2)
 			return (RANGE_NOMATCH);
 		pattern += pclen;
+
+		if (!quoted && c == '[') {
+			if (pattern[0] == ':') {
+				char	class[CL_SIZE+1];
+				char	*pc = class;
+				const char	*p;
+
+				p = pattern + 1;	/* Eat ':' */
+				for (;;) {
+					if (*p == '\0')
+						return (RANGE_ERROR);
+					if (*p == ':' && p[1] == ']')
+						break;
+					if (pc >= &class[CL_SIZE])
+						return (RANGE_ERROR);
+					*pc++ = *p++;
+				}
+				if (pc == class)
+					return (RANGE_ERROR);
+				*pc = '\0';
+				pattern = p + 2;	/* Skip ":]" */
+				if (iswctype(otest, wctype(class))) {
+					ok = 1;
+				} else if (flags & FNM_CASEFOLD) {
+					/*
+					 * Convert to the other case
+					 */
+					if (strcmp(class, "upper") == 0)
+						if (iswctype(otest,
+						    wctype("lower")))
+							ok = 1;
+					else if (strcmp(class, "lower") == 0)
+						if (iswctype(otest,
+						    wctype("upper")))
+							ok = 1;
+				}
+				continue;
+			}
+		}
 
 		if (flags & FNM_CASEFOLD)
 			c = towlower(c);
@@ -323,10 +401,10 @@ rangematch(pattern, test, flags, newp, patmbs)
 				c2 = towlower(c2);
 
 #ifdef	XXX_COLLATE
-			if (__collate_load_error ?
+			if (table->__collate_load_error ?
 			    c <= test && test <= c2 :
-			    __collate_range_cmp(c, test) <= 0 &&
-			    __collate_range_cmp(test, c2) <= 0)
+			    __wcollate_range_cmp(c, test) <= 0 &&
+			    __wcollate_range_cmp(test, c2) <= 0)
 				ok = 1;
 #else
 			if (c <= test && test <= c2)

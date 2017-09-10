@@ -325,6 +325,11 @@ end if
 while false
 wend
 
+x = 0
+WHILE x < 3 : x = x + 1
+Wend
+Call ok(x = 3, "x not equal to 3")
+
 x = false
 y = false
 do while not (x and y)
@@ -342,6 +347,11 @@ do while true
     exit do
     ok false, "exit do didn't work"
 loop
+
+x = 0
+Do While x < 2 : x = x + 1
+Loop
+Call ok(x = 2, "x not equal to 2")
 
 x = false
 y = false
@@ -361,12 +371,25 @@ do until false
     ok false, "exit do didn't work"
 loop
 
+x = 0
+Do: :: x = x + 2
+Loop Until x = 4
+Call ok(x = 4, "x not equal to 4")
+
 x = false
 do
     if x then exit do
     x = true
 loop
 call ok(x, "x is false after do..loop?")
+
+x = 0
+Do :If x = 6 Then
+        Exit Do
+    End If
+    x = x + 3
+Loop
+Call ok(x = 6, "x not equal to 6")
 
 x = false
 y = false
@@ -451,6 +474,11 @@ for x = 5 to 8 step z
 next
 Call ok(y = "for7: 5 6 7 8", "y = " & y)
 
+z = 0
+For x = 10 To 18 Step 2 : : z = z + 1
+Next
+Call ok(z = 5, "z not equal to 5")
+
 y = "for8:"
 for x = 5 to 8
     y = y & " " & x
@@ -482,11 +510,13 @@ wend
 Call collectionObj.reset()
 y = 0
 x = 10
-for each x in collectionObj
+z = 0
+for each x in collectionObj : z = z + 2
     y = y+1
     Call ok(x = y, "x <> y")
 next
 Call ok(y = 3, "y = " & y)
+Call ok(z = 6, "z = " & z)
 Call ok(getVT(x) = "VT_EMPTY*", "getVT(x) = " & getVT(x))
 
 Call collectionObj.reset()

@@ -914,7 +914,18 @@ DoParse(
                 // case TYPE_U16:
                 case TYPE_U32:
                 {
-                    *(ULONG*)Options[Option].Value = (ULONG)_wtol(argv[i]);
+                    PWCHAR pszNext = NULL;
+
+                    /* The number is specified in base 10 */
+                    // NOTE: We might use '0' so that the base is automatically determined.
+                    *(ULONG*)Options[Option].Value = wcstoul(argv[i], &pszNext, 10);
+                    if (*pszNext)
+                    {
+                        /* The value is not a valid numeric value and is not allowed */
+                        if (PrintErrorFunc)
+                            PrintErrorFunc(InvalidValue, argv[i], OptionStr);
+                        return FALSE;
+                    }
                     break;
                 }
 

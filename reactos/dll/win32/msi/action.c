@@ -1756,6 +1756,45 @@ static BOOL process_overrides( MSIPACKAGE *package, int level )
     return ret;
 }
 
+static void disable_children( MSIFEATURE *feature, int level )
+{
+    FeatureList *fl;
+
+    LIST_FOR_EACH_ENTRY( fl, &feature->Children, FeatureList, entry )
+    {
+        if (!is_feature_selected( feature, level ))
+        {
+            TRACE("child %s (level %d request %d) follows disabled parent %s (level %d request %d)\n",
+                  debugstr_w(fl->feature->Feature), fl->feature->Level, fl->feature->ActionRequest,
+                  debugstr_w(feature->Feature), feature->Level, feature->ActionRequest);
+
+            fl->feature->Level = feature->Level;
+            fl->feature->Action = INSTALLSTATE_UNKNOWN;
+            fl->feature->ActionRequest = INSTALLSTATE_UNKNOWN;
+        }
+        disable_children( fl->feature, level );
+    }
+}
+
+static void follow_parent( MSIFEATURE *feature )
+{
+    FeatureList *fl;
+
+    LIST_FOR_EACH_ENTRY( fl, &feature->Children, FeatureList, entry )
+    {
+        if (fl->feature->Attributes & msidbFeatureAttributesFollowParent)
+        {
+            TRACE("child %s (level %d request %d) follows parent %s (level %d request %d)\n",
+                  debugstr_w(fl->feature->Feature), fl->feature->Level, fl->feature->ActionRequest,
+                  debugstr_w(feature->Feature), feature->Level, feature->ActionRequest);
+
+            fl->feature->Action = feature->Action;
+            fl->feature->ActionRequest = feature->ActionRequest;
+        }
+        follow_parent( fl->feature );
+    }
+}
+
 UINT MSI_SetFeatureStates(MSIPACKAGE *package)
 {
     int level;
@@ -1794,24 +1833,9 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
         /* disable child features of unselected parent or follow parent */
         LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
         {
-            FeatureList *fl;
-
-            LIST_FOR_EACH_ENTRY( fl, &feature->Children, FeatureList, entry )
-            {
-                if (!is_feature_selected( feature, level ))
-                {
-                    fl->feature->Action = INSTALLSTATE_UNKNOWN;
-                    fl->feature->ActionRequest = INSTALLSTATE_UNKNOWN;
-                }
-                else if (fl->feature->Attributes & msidbFeatureAttributesFollowParent)
-                {
-                    TRACE("feature %s (level %d request %d) follows parent %s (level %d request %d)\n",
-                          debugstr_w(fl->feature->Feature), fl->feature->Level, fl->feature->ActionRequest,
-                          debugstr_w(feature->Feature), feature->Level, feature->ActionRequest);
-                    fl->feature->Action = feature->Action;
-                    fl->feature->ActionRequest = feature->ActionRequest;
-                }
-            }
+            if (feature->Feature_Parent) continue;
+            disable_children( feature, level );
+            follow_parent( feature );
         }
     }
     else /* preselected */
@@ -1836,22 +1860,9 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
         }
         LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
         {
-            FeatureList *fl;
-
-            if (!is_feature_selected( feature, level )) continue;
-
-            LIST_FOR_EACH_ENTRY( fl, &feature->Children, FeatureList, entry )
-            {
-                if (fl->feature->Attributes & msidbFeatureAttributesFollowParent &&
-                    (!(feature->Attributes & msidbFeatureAttributesFavorAdvertise)))
-                {
-                    TRACE("feature %s (level %d request %d) follows parent %s (level %d request %d)\n",
-                          debugstr_w(fl->feature->Feature), fl->feature->Level, fl->feature->ActionRequest,
-                          debugstr_w(feature->Feature), feature->Level, feature->ActionRequest);
-                    fl->feature->Action = feature->Action;
-                    fl->feature->ActionRequest = feature->ActionRequest;
-                }
-            }
+            if (feature->Feature_Parent) continue;
+            disable_children( feature, level );
+            follow_parent( feature );
         }
     }
 
@@ -4404,7 +4415,16 @@ static UINT msi_publish_patches( MSIPACKAGE *package )
         if (res != ERROR_SUCCESS)
             goto done;
 
-        res = RegSetValueExW( patch_key, szState, 0, REG_DWORD, (const BYTE *)&patch->state, sizeof(patch->state) );
+        res = RegSetValueExW( patch_key, szState, 0, REG_DWORD, (const BYTE *)&patch->state,
+                              sizeof(patch->state) );
+        if (res != ERROR_SUCCESS)
+        {
+            RegCloseKey( patch_key );
+            goto done;
+        }
+
+        res = RegSetValueExW( patch_key, szUninstallable, 0, REG_DWORD, (const BYTE *)&patch->uninstallable,
+                              sizeof(patch->uninstallable) );
         RegCloseKey( patch_key );
         if (res != ERROR_SUCCESS)
             goto done;

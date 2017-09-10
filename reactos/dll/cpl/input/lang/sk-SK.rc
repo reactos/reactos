@@ -165,6 +165,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehi Phonetic"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Typewriter"
     IDS_DUTCH_LAYOUT "Holandské"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estónske"
     IDS_FAEROESE_LAYOUT "Faeroese"
     IDS_FARSI_LAYOUT "Farsi"

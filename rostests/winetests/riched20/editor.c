@@ -3936,6 +3936,25 @@ static void test_EM_STREAMOUT_FONTTBL(void)
   DestroyWindow(hwndRichEdit);
 }
 
+static void test_EM_STREAMOUT_empty_para(void)
+{
+    HWND hwnd = new_richedit(NULL);
+    char buf[1024], *p = buf;
+    EDITSTREAM es;
+
+    SendMessageA(hwnd, WM_SETTEXT, 0, (LPARAM)"");
+
+    memset(buf, 0, sizeof(buf));
+    es.dwCookie    = (DWORD_PTR)&p;
+    es.dwError     = 0;
+    es.pfnCallback = test_WM_SETTEXT_esCallback;
+
+    SendMessageA(hwnd, EM_STREAMOUT, SF_RTF, (LPARAM)&es);
+    ok((p = strstr(buf, "\\pard")) != NULL, "missing \\pard\n");
+    ok(((p = strstr(p, "\\fs")) && isdigit(p[3])), "missing \\fs\n");
+
+    DestroyWindow(hwnd);
+}
 
 static void test_EM_SETTEXTEX(void)
 {
@@ -8753,6 +8772,7 @@ START_TEST( editor )
   test_EM_STREAMIN();
   test_EM_STREAMOUT();
   test_EM_STREAMOUT_FONTTBL();
+  test_EM_STREAMOUT_empty_para();
   test_EM_StreamIn_Undo();
   test_EM_FORMATRANGE();
   test_unicode_conversions();

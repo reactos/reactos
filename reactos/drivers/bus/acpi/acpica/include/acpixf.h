@@ -46,7 +46,7 @@
 
 /* Current ACPICA subsystem version in YYYYMMDD format */
 
-#define ACPI_CA_VERSION                 0x20170303
+#define ACPI_CA_VERSION                 0x20170728
 
 #include "acconfig.h"
 #include "actypes.h"
@@ -162,13 +162,14 @@ ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_CreateOsiMethod, TRUE);
 ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_UseDefaultRegisterWidths, TRUE);
 
 /*
- * Whether or not to verify the table checksum before installation. Set
- * this to TRUE to verify the table checksum before install it to the table
- * manager. Note that enabling this option causes errors to happen in some
- * OSPMs during early initialization stages. Default behavior is to do such
- * verification.
+ * Whether or not to validate (map) an entire table to verify
+ * checksum/duplication in early stage before install. Set this to TRUE to
+ * allow early table validation before install it to the table manager.
+ * Note that enabling this option causes errors to happen in some OSPMs
+ * during early initialization stages. Default behavior is to allow such
+ * validation.
  */
-ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_VerifyTableChecksum, TRUE);
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_EnableTableValidation, TRUE);
 
 /*
  * Optionally enable output from the AML Debug Object.

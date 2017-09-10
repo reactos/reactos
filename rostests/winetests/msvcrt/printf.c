@@ -27,6 +27,7 @@
  
 #include <stdio.h>
 #include <errno.h>
+#include <locale.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -768,6 +769,39 @@ static void test_sprintf( void )
     r = sprintf(buffer, format, INFINITY);
     ok(r==10, "r = %d\n", r);
     ok(!strcmp(buffer, "0000001.#J"), "failed: \"%s\"\n", buffer);
+
+    format = "%c";
+    r = sprintf(buffer, format, 'a');
+    ok(r==1, "r = %d\n", r);
+    ok(!strcmp(buffer, "a"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, 0xa082);
+    ok(r==1, "r = %d\n", r);
+    ok(!strcmp(buffer, "\x82"), "failed: \"%s\"\n", buffer);
+
+    format = "%C";
+    r = sprintf(buffer, format, 'a');
+    ok(r==1, "r = %d\n", r);
+    ok(!strcmp(buffer, "a"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, 0x3042);
+    ok(r==0, "r = %d\n", r);
+    ok(!strcmp(buffer, ""), "failed: \"%s\"\n", buffer);
+
+    if(!setlocale(LC_ALL, "Japanese_Japan.932")) {
+        win_skip("Japanese_Japan.932 locale not available\n");
+        return;
+    }
+
+    format = "%c";
+    r = sprintf(buffer, format, 0xa082);
+    ok(r==1, "r = %d\n", r);
+    ok(!strcmp(buffer, "\x82"), "failed: \"%s\"\n", buffer);
+
+    format = "%C";
+    r = sprintf(buffer, format, 0x3042);
+    ok(r==2, "r = %d\n", r);
+    ok(!strcmp(buffer, "\x82\xa0"), "failed: \"%s\"\n", buffer);
+
+    setlocale(LC_ALL, "C");
 }
 
 static void test_swprintf( void )
@@ -911,7 +945,7 @@ static void test_fcvt(void)
 {
     char *str;
     int dec=100, sign=100;
-    
+
     /* Numbers less than 1.0 with different precisions */
     str = _fcvt(0.0001, 1, &dec, &sign );
     ok( 0 == strcmp(str,""), "bad return '%s'\n", str);

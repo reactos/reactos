@@ -1,17 +1,17 @@
-/* Copyright (c) Mark Harmstone 2016
- * 
+/* Copyright (c) Mark Harmstone 2016-17
+ *
  * This file is part of WinBtrfs.
- * 
+ *
  * WinBtrfs is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public Licence as published by
  * the Free Software Foundation, either version 3 of the Licence, or
  * (at your option) any later version.
- * 
+ *
  * WinBtrfs is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public Licence for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public Licence
  * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
 
@@ -23,659 +23,719 @@
 #include <mountmgr.h>
 #include <windef.h>
 #endif
+#include <ntddstor.h>
+#include <ntdddisk.h>
 
 #include <initguid.h>
-#ifndef __REACTOS__
-#include <winioctl.h>
-#endif
 #include <wdmguid.h>
 
-extern LIST_ENTRY volumes;
-extern ERESOURCE volumes_lock;
-extern LIST_ENTRY pnp_disks;
+extern ERESOURCE pdo_list_lock;
+extern LIST_ENTRY pdo_list;
+extern UNICODE_STRING registry_path;
+extern KEVENT mountmgr_thread_event;
+extern HANDLE mountmgr_thread_handle;
+extern BOOL shutting_down;
 
-static NTSTATUS create_part0(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT DeviceObject, PUNICODE_STRING devpath,
-                             PUNICODE_STRING nameus, BTRFS_UUID* uuid) {
-    PDEVICE_OBJECT newdevobj;
-    UNICODE_STRING name;
+typedef void (*pnp_callback)(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath);
+
+extern PDEVICE_OBJECT master_devobj;
+
+static BOOL fs_ignored(BTRFS_UUID* uuid) {
+    UNICODE_STRING path, ignoreus;
     NTSTATUS Status;
-    part0_device_extension* p0de;
-    
-    static const WCHAR part0_suffix[] = L"Btrfs";
-    
-    name.Length = name.MaximumLength = devpath->Length + (wcslen(part0_suffix) * sizeof(WCHAR));
-    name.Buffer = ExAllocatePoolWithTag(PagedPool, name.Length, ALLOC_TAG);
-    if (!name.Buffer) {
+    OBJECT_ATTRIBUTES oa;
+    KEY_VALUE_FULL_INFORMATION* kvfi;
+    ULONG dispos, retlen, kvfilen, i, j;
+    HANDLE h;
+    BOOL ret = FALSE;
+
+    path.Length = path.MaximumLength = registry_path.Length + (37 * sizeof(WCHAR));
+
+    path.Buffer = ExAllocatePoolWithTag(PagedPool, path.Length, ALLOC_TAG);
+    if (!path.Buffer) {
         ERR("out of memory\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return FALSE;
     }
-    
-    RtlCopyMemory(name.Buffer, devpath->Buffer, devpath->Length);
-    RtlCopyMemory(&name.Buffer[devpath->Length / sizeof(WCHAR)], part0_suffix, wcslen(part0_suffix) * sizeof(WCHAR));
-    
-    Status = IoCreateDevice(DriverObject, sizeof(part0_device_extension), &name, FILE_DEVICE_DISK, FILE_DEVICE_SECURE_OPEN, FALSE, &newdevobj);
+
+    RtlCopyMemory(path.Buffer, registry_path.Buffer, registry_path.Length);
+
+    i = registry_path.Length / sizeof(WCHAR);
+
+    path.Buffer[i] = '\\';
+    i++;
+
+    for (j = 0; j < 16; j++) {
+        path.Buffer[i] = hex_digit((uuid->uuid[j] & 0xF0) >> 4);
+        path.Buffer[i+1] = hex_digit(uuid->uuid[j] & 0xF);
+
+        i += 2;
+
+        if (j == 3 || j == 5 || j == 7 || j == 9) {
+            path.Buffer[i] = '-';
+            i++;
+        }
+    }
+
+    InitializeObjectAttributes(&oa, &path, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+
+    Status = ZwCreateKey(&h, KEY_QUERY_VALUE, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
+
     if (!NT_SUCCESS(Status)) {
-        ERR("IoCreateDevice returned %08x\n", Status);
-        ExFreePool(name.Buffer);
-        return Status;
+        TRACE("ZwCreateKey returned %08x\n", Status);
+        ExFreePool(path.Buffer);
+        return FALSE;
     }
-    
-    p0de = newdevobj->DeviceExtension;
-    p0de->type = VCB_TYPE_PARTITION0;
-    p0de->devobj = DeviceObject;
-    RtlCopyMemory(&p0de->uuid, uuid, sizeof(BTRFS_UUID));
-    
-    p0de->name.Length = name.Length;
-    p0de->name.MaximumLength = name.MaximumLength;
-    p0de->name.Buffer = ExAllocatePoolWithTag(PagedPool, p0de->name.MaximumLength, ALLOC_TAG);
-    
-    if (!p0de->name.Buffer) {
-        ERR("out of memory\b");
-        ExFreePool(name.Buffer);
-        ExFreePool(p0de->name.Buffer);
-        IoDeleteDevice(newdevobj);
-        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlInitUnicodeString(&ignoreus, L"Ignore");
+
+    kvfilen = (ULONG)offsetof(KEY_VALUE_FULL_INFORMATION, Name[0]) + (255 * sizeof(WCHAR));
+    kvfi = ExAllocatePoolWithTag(PagedPool, kvfilen, ALLOC_TAG);
+    if (!kvfi) {
+        ERR("out of memory\n");
+        ZwClose(h);
+        ExFreePool(path.Buffer);
+        return FALSE;
     }
-    
-    RtlCopyMemory(p0de->name.Buffer, name.Buffer, name.Length);
-    
-    ObReferenceObject(DeviceObject);
-    
-    newdevobj->StackSize = DeviceObject->StackSize + 1;
-    newdevobj->SectorSize = DeviceObject->SectorSize;
-    
-    newdevobj->Flags |= DO_DIRECT_IO;
-    newdevobj->Flags &= ~DO_DEVICE_INITIALIZING;
-    
-    *nameus = name;
-    
-    return STATUS_SUCCESS;
+
+    Status = ZwQueryValueKey(h, &ignoreus, KeyValueFullInformation, kvfi, kvfilen, &retlen);
+    if (NT_SUCCESS(Status)) {
+        if (kvfi->Type == REG_DWORD && kvfi->DataLength >= sizeof(UINT32)) {
+            UINT32* pr = (UINT32*)((UINT8*)kvfi + kvfi->DataOffset);
+
+            ret = *pr;
+        }
+    }
+
+    ZwClose(h);
+    ExFreePool(kvfi);
+    ExFreePool(path.Buffer);
+
+    return ret;
 }
 
-void add_volume(PDEVICE_OBJECT mountmgr, PUNICODE_STRING us) {
-    ULONG tnsize;
-    MOUNTMGR_TARGET_NAME* tn;
-    KEVENT Event;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PIRP Irp;
+static void test_vol(PDEVICE_OBJECT mountmgr, PDEVICE_OBJECT DeviceObject, PUNICODE_STRING devpath,
+                     DWORD disk_num, DWORD part_num, UINT64 length) {
     NTSTATUS Status;
-    ULONG mmdltsize;
-    MOUNTMGR_DRIVE_LETTER_TARGET* mmdlt;
-    MOUNTMGR_DRIVE_LETTER_INFORMATION mmdli;
-    
-    TRACE("found BTRFS volume\n");
-    
-    tnsize = sizeof(MOUNTMGR_TARGET_NAME) - sizeof(WCHAR) + us->Length;
-    tn = ExAllocatePoolWithTag(NonPagedPool, tnsize, ALLOC_TAG);
-    if (!tn) {
-        ERR("out of memory\n");
-        return;
-    }
-    
-    tn->DeviceNameLength = us->Length;
-    RtlCopyMemory(tn->DeviceName, us->Buffer, tn->DeviceNameLength);
-    
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION,
-                                        mountmgr, tn, tnsize, 
-                                        NULL, 0, FALSE, &Event, &IoStatusBlock);
-    if (!Irp) {
-        ERR("%.*S: IoBuildDeviceIoControlRequest 1 failed\n", us->Length / sizeof(WCHAR), us->Buffer);
-        ExFreePool(tn);
-        return;
-    }
-
-    Status = IoCallDriver(mountmgr, Irp);
-    if (Status == STATUS_PENDING) {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    if (!NT_SUCCESS(Status)) {
-        ERR("%.*S: IoCallDriver 1 returned %08x\n", us->Length / sizeof(WCHAR), us->Buffer, Status);
-        return;
-    }
-    
-    ExFreePool(tn);
-    
-    mmdltsize = offsetof(MOUNTMGR_DRIVE_LETTER_TARGET, DeviceName[0]) + us->Length;
-    
-    mmdlt = ExAllocatePoolWithTag(NonPagedPool, mmdltsize, ALLOC_TAG);
-    if (!mmdlt) {
-        ERR("out of memory\n");
-        return;
-    }
-    
-    mmdlt->DeviceNameLength = us->Length;
-    RtlCopyMemory(&mmdlt->DeviceName, us->Buffer, us->Length);
-    TRACE("mmdlt = %.*S\n", mmdlt->DeviceNameLength / sizeof(WCHAR), mmdlt->DeviceName);
-    
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER,
-                                        mountmgr, mmdlt, mmdltsize, 
-                                        &mmdli, sizeof(MOUNTMGR_DRIVE_LETTER_INFORMATION), FALSE, &Event, &IoStatusBlock);
-    if (!Irp) {
-        ERR("%.*S: IoBuildDeviceIoControlRequest 2 failed\n", us->Length / sizeof(WCHAR), us->Buffer);
-        return;
-    }
-
-    Status = IoCallDriver(mountmgr, Irp);
-    if (Status == STATUS_PENDING) {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    if (!NT_SUCCESS(Status)) {
-        ERR("%.*S: IoCallDriver 2 returned %08x\n", us->Length / sizeof(WCHAR), us->Buffer, Status);
-    } else
-        TRACE("DriveLetterWasAssigned = %u, CurrentDriveLetter = %c\n", mmdli.DriveLetterWasAssigned, mmdli.CurrentDriveLetter);
-    
-    ExFreePool(mmdlt);
-}
-
-static void STDCALL test_vol(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT mountmgr, PUNICODE_STRING devpath, DWORD disk_num, DWORD part_num, LIST_ENTRY* volumes) {
-    KEVENT Event;
-    PIRP Irp;
-    IO_STATUS_BLOCK IoStatusBlock;
-    NTSTATUS Status;
-    PFILE_OBJECT FileObject;
-    PDEVICE_OBJECT DeviceObject;
-    LARGE_INTEGER Offset;
     ULONG toread;
     UINT8* data = NULL;
     UINT32 sector_size;
-    
+
     TRACE("%.*S\n", devpath->Length / sizeof(WCHAR), devpath->Buffer);
-    
-    Status = IoGetDeviceObjectPointer(devpath, FILE_READ_ATTRIBUTES, &FileObject, &DeviceObject);
-    if (!NT_SUCCESS(Status)) {
-        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
-        return;
-    }
 
     sector_size = DeviceObject->SectorSize;
-    
+
     if (sector_size == 0) {
         DISK_GEOMETRY geometry;
         IO_STATUS_BLOCK iosb;
-        
+
         Status = dev_ioctl(DeviceObject, IOCTL_DISK_GET_DRIVE_GEOMETRY, NULL, 0,
-                        &geometry, sizeof(DISK_GEOMETRY), TRUE, &iosb);
-        
+                           &geometry, sizeof(DISK_GEOMETRY), TRUE, &iosb);
+
         if (!NT_SUCCESS(Status)) {
             ERR("%.*S had a sector size of 0, and IOCTL_DISK_GET_DRIVE_GEOMETRY returned %08x\n",
                 devpath->Length / sizeof(WCHAR), devpath->Buffer, Status);
             goto deref;
         }
-        
+
         if (iosb.Information < sizeof(DISK_GEOMETRY)) {
             ERR("%.*S: IOCTL_DISK_GET_DRIVE_GEOMETRY returned %u bytes, expected %u\n",
                 devpath->Length / sizeof(WCHAR), devpath->Buffer, iosb.Information, sizeof(DISK_GEOMETRY));
         }
-        
+
         sector_size = geometry.BytesPerSector;
-        
+
         if (sector_size == 0) {
             ERR("%.*S had a sector size of 0\n", devpath->Length / sizeof(WCHAR), devpath->Buffer);
             goto deref;
         }
     }
-    
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    Offset.QuadPart = superblock_addrs[0];
-    
-    toread = sector_align(sizeof(superblock), sector_size);
+    toread = (ULONG)sector_align(sizeof(superblock), sector_size);
     data = ExAllocatePoolWithTag(NonPagedPool, toread, ALLOC_TAG);
     if (!data) {
         ERR("out of memory\n");
         goto deref;
     }
 
-    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ, DeviceObject, data, toread, &Offset, &Event, &IoStatusBlock);
-    
-    if (!Irp) {
-        ERR("IoBuildSynchronousFsdRequest failed\n");
-        goto deref;
-    }
+    Status = sync_read_phys(DeviceObject, superblock_addrs[0], toread, data, TRUE);
 
-    Status = IoCallDriver(DeviceObject, Irp);
-
-    if (Status == STATUS_PENDING) {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    if (NT_SUCCESS(Status) && IoStatusBlock.Information > 0 && ((superblock*)data)->magic == BTRFS_MAGIC) {
-        int i;
-        GET_LENGTH_INFORMATION gli;
+    if (NT_SUCCESS(Status) && ((superblock*)data)->magic == BTRFS_MAGIC) {
         superblock* sb = (superblock*)data;
-        volume* v = ExAllocatePoolWithTag(PagedPool, sizeof(volume), ALLOC_TAG);
-        
-        if (!v) {
-            ERR("out of memory\n");
-            goto deref;
-        }
-        
-        Status = dev_ioctl(DeviceObject, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0,
-                           &gli, sizeof(gli), TRUE, NULL);
-        if (!NT_SUCCESS(Status)) {
-            ERR("error reading length information: %08x\n", Status);
-            ExFreePool(v);
-            goto deref;
-        }
-        
-        if (part_num == 0) {
-            UNICODE_STRING us3;
-            
-            Status = create_part0(DriverObject, DeviceObject, devpath, &us3, &sb->dev_item.device_uuid);
-            
-            if (!NT_SUCCESS(Status)) {
-                ERR("create_part0 returned %08x\n", Status);
-                ExFreePool(v);
-                goto deref;
-            }
-            
-            v->devpath = us3;
-        } else {
-            v->devpath.Length = v->devpath.MaximumLength = devpath->Length;
-            v->devpath.Buffer = ExAllocatePoolWithTag(PagedPool, v->devpath.Length, ALLOC_TAG);
-            
-            if (!v->devpath.Buffer) {
-                ERR("out of memory\n");
-                ExFreePool(v);
-                goto deref;
-            }
-            
-            RtlCopyMemory(v->devpath.Buffer, devpath->Buffer, v->devpath.Length);
-        }
-        
-        RtlCopyMemory(&v->fsuuid, &sb->uuid, sizeof(BTRFS_UUID));
-        RtlCopyMemory(&v->devuuid, &sb->dev_item.device_uuid, sizeof(BTRFS_UUID));
-        v->devnum = sb->dev_item.dev_id;
-        v->processed = FALSE;
-        v->length = gli.Length.QuadPart;
-        v->gen1 = sb->generation;
-        v->gen2 = 0;
-        v->seeding = sb->flags & BTRFS_SUPERBLOCK_FLAGS_SEEDING ? TRUE : FALSE;
-        v->disk_num = disk_num;
-        v->part_num = part_num;
-        
-        ExAcquireResourceExclusiveLite(&volumes_lock, TRUE);
-        InsertTailList(volumes, &v->list_entry);
-        ExReleaseResourceLite(&volumes_lock);
-        
-        i = 1;
-        while (superblock_addrs[i] != 0 && superblock_addrs[i] + toread <= v->length) {
-            KeInitializeEvent(&Event, NotificationEvent, FALSE);
-            
-            Offset.QuadPart = superblock_addrs[i];
-            
-            Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ, DeviceObject, data, toread, &Offset, &Event, &IoStatusBlock);
-            
-            if (!Irp) {
-                ERR("IoBuildSynchronousFsdRequest failed\n");
-                goto deref;
-            }
+        UINT32 crc32 = ~calc_crc32c(0xffffffff, (UINT8*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
 
-            Status = IoCallDriver(DeviceObject, Irp);
+        if (crc32 != *((UINT32*)sb->checksum))
+            ERR("checksum error on superblock\n");
+        else {
+            TRACE("volume found\n");
 
-            if (Status == STATUS_PENDING) {
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status = IoStatusBlock.Status;
-            }
-            
-            if (NT_SUCCESS(Status)) {
-                UINT32 crc32 = ~calc_crc32c(0xffffffff, (UINT8*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
-                
-                if (crc32 != *((UINT32*)sb->checksum))
-                    WARN("superblock %u CRC error\n", i);
-                else if (sb->generation > v->gen1) {
-                    v->gen2 = v->gen1;
-                    v->gen1 = sb->generation;
+            if (length >= superblock_addrs[1] + toread) {
+                ULONG i = 1;
+
+                superblock* sb2 = ExAllocatePoolWithTag(NonPagedPool, toread, ALLOC_TAG);
+                if (!sb2) {
+                    ERR("out of memory\n");
+                    goto deref;
                 }
-            } else {
-                ERR("got error %08x while reading superblock %u\n", Status, i);
+
+                while (superblock_addrs[i] > 0 && length >= superblock_addrs[i] + toread) {
+                    Status = sync_read_phys(DeviceObject, superblock_addrs[i], toread, (PUCHAR)sb2, TRUE);
+
+                    if (NT_SUCCESS(Status) && sb2->magic == BTRFS_MAGIC) {
+                        crc32 = ~calc_crc32c(0xffffffff, (UINT8*)&sb2->uuid, (ULONG)sizeof(superblock) - sizeof(sb2->checksum));
+
+                        if (crc32 == *((UINT32*)sb2->checksum) && sb2->generation > sb->generation)
+                            RtlCopyMemory(sb, sb2, toread);
+                    }
+
+                    i++;
+                }
+
+                ExFreePool(sb2);
             }
-            
-            i++;
+
+            if (!fs_ignored(&sb->uuid)) {
+                DeviceObject->Flags &= ~DO_VERIFY_VOLUME;
+                add_volume_device(sb, mountmgr, devpath, length, disk_num, part_num);
+            }
         }
-        
-        TRACE("volume found\n");
-        TRACE("gen1 = %llx, gen2 = %llx\n", v->gen1, v->gen2);
-        TRACE("FS uuid %02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",
-              v->fsuuid.uuid[0], v->fsuuid.uuid[1], v->fsuuid.uuid[2], v->fsuuid.uuid[3], v->fsuuid.uuid[4], v->fsuuid.uuid[5], v->fsuuid.uuid[6], v->fsuuid.uuid[7],
-              v->fsuuid.uuid[8], v->fsuuid.uuid[9], v->fsuuid.uuid[10], v->fsuuid.uuid[11], v->fsuuid.uuid[12], v->fsuuid.uuid[13], v->fsuuid.uuid[14], v->fsuuid.uuid[15]);
-        TRACE("device uuid %02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",
-              v->devuuid.uuid[0], v->devuuid.uuid[1], v->devuuid.uuid[2], v->devuuid.uuid[3], v->devuuid.uuid[4], v->devuuid.uuid[5], v->devuuid.uuid[6], v->devuuid.uuid[7],
-              v->devuuid.uuid[8], v->devuuid.uuid[9], v->devuuid.uuid[10], v->devuuid.uuid[11], v->devuuid.uuid[12], v->devuuid.uuid[13], v->devuuid.uuid[14], v->devuuid.uuid[15]);
-        TRACE("device number %llx\n", v->devnum);
     }
-    
+
 deref:
     if (data)
         ExFreePool(data);
-    
-    ObDereferenceObject(FileObject);
 }
 
-void remove_drive_letter(PDEVICE_OBJECT mountmgr, volume* v) {
+NTSTATUS remove_drive_letter(PDEVICE_OBJECT mountmgr, PUNICODE_STRING devpath) {
     NTSTATUS Status;
-    KEVENT Event;
-    PIRP Irp;
     MOUNTMGR_MOUNT_POINT* mmp;
     ULONG mmpsize;
     MOUNTMGR_MOUNT_POINTS mmps1, *mmps2;
-    IO_STATUS_BLOCK IoStatusBlock;
-    
-    mmpsize = sizeof(MOUNTMGR_MOUNT_POINT) + v->devpath.Length;
-    
+
+    TRACE("removing drive letter\n");
+
+    mmpsize = sizeof(MOUNTMGR_MOUNT_POINT) + devpath->Length;
+
     mmp = ExAllocatePoolWithTag(PagedPool, mmpsize, ALLOC_TAG);
     if (!mmp) {
         ERR("out of memory\n");
-        return;
-    }
-    
-    RtlZeroMemory(mmp, mmpsize);
-    
-    mmp->DeviceNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
-    mmp->DeviceNameLength = v->devpath.Length;
-    RtlCopyMemory(&mmp[1], v->devpath.Buffer, v->devpath.Length);
-    
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_DELETE_POINTS,
-                                        mountmgr, mmp, mmpsize, 
-                                        &mmps1, sizeof(MOUNTMGR_MOUNT_POINTS), FALSE, &Event, &IoStatusBlock);
-    if (!Irp) {
-        ERR("%.*S: IoBuildDeviceIoControlRequest 1 failed\n", v->devpath.Length / sizeof(WCHAR), v->devpath.Buffer);
-        ExFreePool(mmp);
-        return;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Status = IoCallDriver(mountmgr, Irp);
-    if (Status == STATUS_PENDING) {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
+    RtlZeroMemory(mmp, mmpsize);
+
+    mmp->DeviceNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
+    mmp->DeviceNameLength = devpath->Length;
+    RtlCopyMemory(&mmp[1], devpath->Buffer, devpath->Length);
+
+    Status = dev_ioctl(mountmgr, IOCTL_MOUNTMGR_DELETE_POINTS, mmp, mmpsize, &mmps1, sizeof(MOUNTMGR_MOUNT_POINTS), FALSE, NULL);
 
     if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
-        ERR("%.*S: IoCallDriver 1  returned %08x\n", v->devpath.Length / sizeof(WCHAR), v->devpath.Buffer, Status);
+        ERR("IOCTL_MOUNTMGR_DELETE_POINTS 1 returned %08x\n", Status);
         ExFreePool(mmp);
-        return;
+        return Status;
     }
-    
+
     if (Status != STATUS_BUFFER_OVERFLOW || mmps1.Size == 0) {
         ExFreePool(mmp);
-        return;
+        return STATUS_NOT_FOUND;
     }
-    
+
     mmps2 = ExAllocatePoolWithTag(PagedPool, mmps1.Size, ALLOC_TAG);
     if (!mmps2) {
         ERR("out of memory\n");
         ExFreePool(mmp);
-        return;
-    }
-    
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_DELETE_POINTS,
-                                        mountmgr, mmp, mmpsize, 
-                                        mmps2, mmps1.Size, FALSE, &Event, &IoStatusBlock);
-    if (!Irp) {
-        ERR("%.*S: IoBuildDeviceIoControlRequest 2 failed\n", v->devpath.Length / sizeof(WCHAR), v->devpath.Buffer);
-        ExFreePool(mmps2);
-        ExFreePool(mmp);
-        return;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Status = IoCallDriver(mountmgr, Irp);
-    if (Status == STATUS_PENDING) {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
+    Status = dev_ioctl(mountmgr, IOCTL_MOUNTMGR_DELETE_POINTS, mmp, mmpsize, mmps2, mmps1.Size, FALSE, NULL);
 
-    if (!NT_SUCCESS(Status)) {
-        ERR("%.*S: IoCallDriver 2 returned %08x\n", v->devpath.Length / sizeof(WCHAR), v->devpath.Buffer, Status);
-        ExFreePool(mmps2);
-        ExFreePool(mmp);
-        return;
-    }
-    
+    if (!NT_SUCCESS(Status))
+        ERR("IOCTL_MOUNTMGR_DELETE_POINTS 2 returned %08x\n", Status);
+
     ExFreePool(mmps2);
     ExFreePool(mmp);
+
+    return Status;
 }
 
-static void refresh_mountmgr(PDEVICE_OBJECT mountmgr, LIST_ENTRY* volumes) {
-    LIST_ENTRY* le;
-    
-    ExAcquireResourceExclusiveLite(&volumes_lock, TRUE);
-    
-    le = volumes->Flink;
-    while (le != volumes) {
-        volume* v = CONTAINING_RECORD(le, volume, list_entry);
-        
-        if (!v->processed) {
-            LIST_ENTRY* le2 = le;
-            volume* mountvol = v;
-            
-            while (le2 != volumes) {
-                volume* v2 = CONTAINING_RECORD(le2, volume, list_entry);
-                
-                if (RtlCompareMemory(&v2->fsuuid, &v->fsuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
-                    v2->processed = TRUE;
-                    
-                    if (v2->devnum < mountvol->devnum) {
-                        remove_drive_letter(mountmgr, mountvol);
-                        mountvol = v2;
-                    } else if (v2->devnum > mountvol->devnum)
-                        remove_drive_letter(mountmgr, v2);
-                }
-                
-                le2 = le2->Flink;
-            }
-            
-            add_volume(mountmgr, &mountvol->devpath);
-        }
-        
-        le = le->Flink;
-    }
-    
-    ExReleaseResourceLite(&volumes_lock);
-}
-
-static void add_pnp_disk(ULONG disk_num, PUNICODE_STRING devpath) {
-    LIST_ENTRY* le;
-    pnp_disk* disk;
-    
-    le = pnp_disks.Flink;
-    while (le != &pnp_disks) {
-        disk = CONTAINING_RECORD(le, pnp_disk, list_entry);
-        
-        if (disk->devpath.Length == devpath->Length &&
-            RtlCompareMemory(disk->devpath.Buffer, devpath->Buffer, devpath->Length) == devpath->Length)
-            return;
-        
-        le = le->Flink;
-    }
-    
-    disk = ExAllocatePoolWithTag(PagedPool, sizeof(pnp_disk), ALLOC_TAG);
-    if (!disk) {
-        ERR("out of memory\n");
-        return;
-    }
-    
-    disk->devpath.Length = disk->devpath.MaximumLength = devpath->Length;
-    disk->devpath.Buffer = ExAllocatePoolWithTag(PagedPool, devpath->Length, ALLOC_TAG);
-    
-    if (!disk->devpath.Buffer) {
-        ERR("out of memory\n");
-        ExFreePool(disk);
-        return;
-    }
-    
-    RtlCopyMemory(disk->devpath.Buffer, devpath->Buffer, devpath->Length);
-    
-    disk->disk_num = disk_num;
-    
-    InsertTailList(&pnp_disks, &disk->list_entry);
-}
-
-static void disk_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
-    PFILE_OBJECT FileObject, FileObject2;
+void disk_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
+    PFILE_OBJECT FileObject, mountmgrfo;
     PDEVICE_OBJECT devobj, mountmgr;
     NTSTATUS Status;
     STORAGE_DEVICE_NUMBER sdn;
     ULONG dlisize;
-    DRIVE_LAYOUT_INFORMATION_EX* dli;
+    DRIVE_LAYOUT_INFORMATION_EX* dli = NULL;
     IO_STATUS_BLOCK iosb;
-    int i, num_parts = 0;
-    UNICODE_STRING devname, num, bspus, mmdevpath;
-    WCHAR devnamew[255], numw[20];
-    USHORT preflen;
-    
-    static WCHAR device_harddisk[] = L"\\Device\\Harddisk";
-    static WCHAR bs_partition[] = L"\\Partition";
-    
-    // FIXME - work with CD-ROMs and floppies(?)
-        
+    GET_LENGTH_INFORMATION gli;
+    UNICODE_STRING mmdevpath;
+
+    UNUSED(DriverObject);
+
     Status = IoGetDeviceObjectPointer(devpath, FILE_READ_ATTRIBUTES, &FileObject, &devobj);
     if (!NT_SUCCESS(Status)) {
         ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
         return;
     }
-    
+
     RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
-    Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &FileObject2, &mountmgr);
+    Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &mountmgrfo, &mountmgr);
     if (!NT_SUCCESS(Status)) {
         ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
         ObDereferenceObject(FileObject);
         return;
     }
-    
-    Status = dev_ioctl(devobj, IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0,
-                       &sdn, sizeof(STORAGE_DEVICE_NUMBER), TRUE, &iosb);
-    if (!NT_SUCCESS(Status)) {
-        ERR("IOCTL_STORAGE_GET_DEVICE_NUMBER returned %08x\n", Status);
-        goto end;
-    }
-    
-    ExAcquireResourceExclusiveLite(&volumes_lock, TRUE);
-    add_pnp_disk(sdn.DeviceNumber, devpath);
-    ExReleaseResourceLite(&volumes_lock);
-    
+
     dlisize = 0;
-    
+
     do {
         dlisize += 1024;
+
+        if (dli)
+            ExFreePool(dli);
+
         dli = ExAllocatePoolWithTag(PagedPool, dlisize, ALLOC_TAG);
-    
+        if (!dli) {
+            ERR("out of memory\n");
+            goto end;
+        }
+
         Status = dev_ioctl(devobj, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0,
                            dli, dlisize, TRUE, &iosb);
     } while (Status == STATUS_BUFFER_TOO_SMALL);
-    
-    if (!NT_SUCCESS(Status)) {
+
+    // only consider disk as a potential filesystem if it has no partitions
+    if (NT_SUCCESS(Status) && dli->PartitionCount > 0) {
         ExFreePool(dli);
-        goto no_parts;
+        goto end;
     }
-    
-    wcscpy(devnamew, device_harddisk);
-    devname.Buffer = devnamew;
-    devname.MaximumLength = sizeof(devnamew);
-    devname.Length = wcslen(device_harddisk) * sizeof(WCHAR);
 
-    num.Buffer = numw;
-    num.MaximumLength = sizeof(numw);
-    RtlIntegerToUnicodeString(sdn.DeviceNumber, 10, &num);
-    RtlAppendUnicodeStringToString(&devname, &num);
-    
-    bspus.Buffer = bs_partition;
-    bspus.Length = bspus.MaximumLength = wcslen(bs_partition) * sizeof(WCHAR);
-    RtlAppendUnicodeStringToString(&devname, &bspus);
-    
-    preflen = devname.Length;
-    
-    for (i = 0; i < dli->PartitionCount; i++) {
-        if (dli->PartitionEntry[i].PartitionLength.QuadPart != 0 && dli->PartitionEntry[i].PartitionNumber != 0) {
-            devname.Length = preflen;
-            RtlIntegerToUnicodeString(dli->PartitionEntry[i].PartitionNumber, 10, &num);
-            RtlAppendUnicodeStringToString(&devname, &num);
-            
-            test_vol(DriverObject, mountmgr, &devname, sdn.DeviceNumber, dli->PartitionEntry[i].PartitionNumber, &volumes);
-            
-            num_parts++;
-        }
-    }
-    
     ExFreePool(dli);
-    
-no_parts:
-    if (num_parts == 0) {
-        devname.Length = preflen;
-        devname.Buffer[devname.Length / sizeof(WCHAR)] = '0';
-        devname.Length += sizeof(WCHAR);
-        
-        test_vol(DriverObject, mountmgr, &devname, sdn.DeviceNumber, 0, &volumes);
-    }
-    
-end:
-    refresh_mountmgr(mountmgr, &volumes);
 
+    Status = dev_ioctl(devobj, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0,
+                        &gli, sizeof(gli), TRUE, NULL);
+
+    if (!NT_SUCCESS(Status)) {
+        ERR("error reading length information: %08x\n", Status);
+        goto end;
+    }
+
+    Status = dev_ioctl(devobj, IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0,
+                       &sdn, sizeof(STORAGE_DEVICE_NUMBER), TRUE, NULL);
+    if (!NT_SUCCESS(Status)) {
+        TRACE("IOCTL_STORAGE_GET_DEVICE_NUMBER returned %08x\n", Status);
+        sdn.DeviceNumber = 0xffffffff;
+        sdn.PartitionNumber = 0;
+    } else
+        TRACE("DeviceType = %u, DeviceNumber = %u, PartitionNumber = %u\n", sdn.DeviceType, sdn.DeviceNumber, sdn.PartitionNumber);
+
+    test_vol(mountmgr, devobj, devpath, sdn.DeviceNumber, sdn.PartitionNumber, gli.Length.QuadPart);
+
+end:
     ObDereferenceObject(FileObject);
-    ObDereferenceObject(FileObject2);
+    ObDereferenceObject(mountmgrfo);
 }
 
-static void disk_removal(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
-    LIST_ENTRY* le;
-    pnp_disk* disk = NULL;
-    
-    // FIXME - remove Partition0Btrfs devices and unlink from mountmgr
-    // FIXME - emergency unmount of RAIDed volumes
-    
-    ExAcquireResourceExclusiveLite(&volumes_lock, TRUE);
-    
-    le = pnp_disks.Flink;
-    while (le != &pnp_disks) {
-        pnp_disk* disk2 = CONTAINING_RECORD(le, pnp_disk, list_entry);
-        
-        if (disk2->devpath.Length == devpath->Length &&
-            RtlCompareMemory(disk2->devpath.Buffer, devpath->Buffer, devpath->Length) == devpath->Length) {
-            disk = disk2;
-            break;
-        }
-        
-        le = le->Flink;
+void remove_volume_child(_Inout_ _Requires_exclusive_lock_held_(_Curr_->child_lock) _Releases_exclusive_lock_(_Curr_->child_lock) _In_ volume_device_extension* vde,
+                         _In_ volume_child* vc, _In_ BOOL skip_dev) {
+    NTSTATUS Status;
+    pdo_device_extension* pdode = vde->pdode;
+    device_extension* Vcb = vde->mounted_device ? vde->mounted_device->DeviceExtension : NULL;
+
+    if (vc->notification_entry)
+#ifdef __REACTOS__
+        IoUnregisterPlugPlayNotification(vc->notification_entry);
+#else
+        IoUnregisterPlugPlayNotificationEx(vc->notification_entry);
+#endif
+
+    if (vde->mounted_device && (!Vcb || !Vcb->options.allow_degraded)) {
+        Status = pnp_surprise_removal(vde->mounted_device, NULL);
+        if (!NT_SUCCESS(Status))
+            ERR("pnp_surprise_removal returned %08x\n", Status);
     }
-    
-    if (!disk) {
-        ExReleaseResourceLite(&volumes_lock);
+
+    if (!Vcb || !Vcb->options.allow_degraded) {
+        Status = IoSetDeviceInterfaceState(&vde->bus_name, FALSE);
+        if (!NT_SUCCESS(Status))
+            WARN("IoSetDeviceInterfaceState returned %08x\n", Status);
+    }
+
+    if (pdode->children_loaded > 0) {
+        UNICODE_STRING mmdevpath;
+        PFILE_OBJECT FileObject;
+        PDEVICE_OBJECT mountmgr;
+        LIST_ENTRY* le;
+
+        if (!Vcb || !Vcb->options.allow_degraded) {
+            RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
+            Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &FileObject, &mountmgr);
+            if (!NT_SUCCESS(Status))
+                ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+            else {
+                le = pdode->children.Flink;
+
+                while (le != &pdode->children) {
+                    volume_child* vc2 = CONTAINING_RECORD(le, volume_child, list_entry);
+
+                    if (vc2->had_drive_letter) { // re-add entry to mountmgr
+                        MOUNTDEV_NAME mdn;
+
+                        Status = dev_ioctl(vc2->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &mdn, sizeof(MOUNTDEV_NAME), TRUE, NULL);
+                        if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+                            ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                        else {
+                            MOUNTDEV_NAME* mdn2;
+                            ULONG mdnsize = (ULONG)offsetof(MOUNTDEV_NAME, Name[0]) + mdn.NameLength;
+
+                            mdn2 = ExAllocatePoolWithTag(PagedPool, mdnsize, ALLOC_TAG);
+                            if (!mdn2)
+                                ERR("out of memory\n");
+                            else {
+                                Status = dev_ioctl(vc2->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, mdn2, mdnsize, TRUE, NULL);
+                                if (!NT_SUCCESS(Status))
+                                    ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                                else {
+                                    UNICODE_STRING name;
+
+                                    name.Buffer = mdn2->Name;
+                                    name.Length = name.MaximumLength = mdn2->NameLength;
+
+                                    Status = mountmgr_add_drive_letter(mountmgr, &name);
+                                    if (!NT_SUCCESS(Status))
+                                        WARN("mountmgr_add_drive_letter returned %08x\n", Status);
+                                }
+
+                                ExFreePool(mdn2);
+                            }
+                        }
+                    }
+
+                    le = le->Flink;
+                }
+
+                ObDereferenceObject(FileObject);
+            }
+        } else if (!skip_dev) {
+            ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
+
+            le = Vcb->devices.Flink;
+            while (le != &Vcb->devices) {
+                device* dev = CONTAINING_RECORD(le, device, list_entry);
+
+                if (dev->devobj == vc->devobj) {
+                    dev->devobj = NULL; // mark as missing
+                    break;
+                }
+
+                le = le->Flink;
+            }
+
+            ExReleaseResourceLite(&Vcb->tree_lock);
+        }
+
+        if (vde->device->Characteristics & FILE_REMOVABLE_MEDIA) {
+            vde->device->Characteristics &= ~FILE_REMOVABLE_MEDIA;
+
+            le = pdode->children.Flink;
+            while (le != &pdode->children) {
+                volume_child* vc2 = CONTAINING_RECORD(le, volume_child, list_entry);
+
+                if (vc2 != vc && vc2->devobj->Characteristics & FILE_REMOVABLE_MEDIA) {
+                    vde->device->Characteristics |= FILE_REMOVABLE_MEDIA;
+                    break;
+                }
+
+                le = le->Flink;
+            }
+        }
+    }
+
+    ObDereferenceObject(vc->fileobj);
+    ExFreePool(vc->pnp_name.Buffer);
+    RemoveEntryList(&vc->list_entry);
+    ExFreePool(vc);
+
+    pdode->children_loaded--;
+
+    if (pdode->children_loaded == 0) { // remove volume device
+        BOOL remove = FALSE;
+
+        RemoveEntryList(&pdode->list_entry);
+
+        vde->removing = TRUE;
+
+        Status = IoSetDeviceInterfaceState(&vde->bus_name, FALSE);
+        if (!NT_SUCCESS(Status))
+            WARN("IoSetDeviceInterfaceState returned %08x\n", Status);
+
+        if (vde->pdo->AttachedDevice)
+            IoDetachDevice(vde->pdo);
+
+        if (vde->open_count == 0)
+            remove = TRUE;
+
+        ExReleaseResourceLite(&pdode->child_lock);
+
+        if (!no_pnp) {
+            control_device_extension* cde = master_devobj->DeviceExtension;
+
+            IoInvalidateDeviceRelations(cde->buspdo, BusRelations);
+        }
+
+        if (remove) {
+            PDEVICE_OBJECT pdo;
+
+            if (vde->name.Buffer)
+                ExFreePool(vde->name.Buffer);
+
+            if (Vcb)
+                Vcb->vde = NULL;
+
+            ExDeleteResourceLite(&pdode->child_lock);
+
+            pdo = vde->pdo;
+            IoDeleteDevice(vde->device);
+
+            if (no_pnp)
+                IoDeleteDevice(pdo);
+        }
+    } else
+        ExReleaseResourceLite(&pdode->child_lock);
+}
+
+void volume_arrival(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
+    STORAGE_DEVICE_NUMBER sdn;
+    PFILE_OBJECT FileObject, mountmgrfo;
+    UNICODE_STRING mmdevpath;
+    PDEVICE_OBJECT devobj, mountmgr;
+    GET_LENGTH_INFORMATION gli;
+    NTSTATUS Status;
+
+    TRACE("%.*S\n", devpath->Length / sizeof(WCHAR), devpath->Buffer);
+
+    Status = IoGetDeviceObjectPointer(devpath, FILE_READ_ATTRIBUTES, &FileObject, &devobj);
+    if (!NT_SUCCESS(Status)) {
+        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
         return;
     }
 
-    le = volumes.Flink;
-    while (le != &volumes) {
-        volume* v = CONTAINING_RECORD(le, volume, list_entry);
-        LIST_ENTRY* le2 = le->Flink;
-        
-        if (v->disk_num == disk->disk_num) {
-            if (v->devpath.Buffer)
-                ExFreePool(v->devpath.Buffer);
-            
-            RemoveEntryList(&v->list_entry);
-            
-            ExFreePool(v);
-        }
-        
-        le = le2;
+    // make sure we're not processing devices we've created ourselves
+
+    if (devobj->DriverObject == DriverObject)
+        goto end;
+
+    Status = dev_ioctl(devobj, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, &gli, sizeof(gli), TRUE, NULL);
+    if (!NT_SUCCESS(Status)) {
+        ERR("IOCTL_DISK_GET_LENGTH_INFO returned %08x\n", Status);
+        goto end;
     }
-    
-    ExReleaseResourceLite(&volumes_lock);
-    
-    ExFreePool(disk->devpath.Buffer);
-    
-    RemoveEntryList(&disk->list_entry);
-    
-    ExFreePool(disk);
+
+    Status = dev_ioctl(devobj, IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0,
+                       &sdn, sizeof(STORAGE_DEVICE_NUMBER), TRUE, NULL);
+    if (!NT_SUCCESS(Status)) {
+        TRACE("IOCTL_STORAGE_GET_DEVICE_NUMBER returned %08x\n", Status);
+        sdn.DeviceNumber = 0xffffffff;
+        sdn.PartitionNumber = 0;
+    } else
+        TRACE("DeviceType = %u, DeviceNumber = %u, PartitionNumber = %u\n", sdn.DeviceType, sdn.DeviceNumber, sdn.PartitionNumber);
+
+    // If we've just added a partition to a whole-disk filesystem, unmount it
+    if (sdn.DeviceNumber != 0xffffffff) {
+        LIST_ENTRY* le;
+
+        ExAcquireResourceExclusiveLite(&pdo_list_lock, TRUE);
+
+        le = pdo_list.Flink;
+        while (le != &pdo_list) {
+            pdo_device_extension* pdode = CONTAINING_RECORD(le, pdo_device_extension, list_entry);
+            LIST_ENTRY* le2;
+            BOOL changed = FALSE;
+
+            if (pdode->vde) {
+                ExAcquireResourceExclusiveLite(&pdode->child_lock, TRUE);
+
+                le2 = pdode->children.Flink;
+                while (le2 != &pdode->children) {
+                    volume_child* vc = CONTAINING_RECORD(le2, volume_child, list_entry);
+                    LIST_ENTRY* le3 = le2->Flink;
+
+                    if (vc->disk_num == sdn.DeviceNumber && vc->part_num == 0) {
+                        TRACE("removing device\n");
+
+                        remove_volume_child(pdode->vde, vc, FALSE);
+                        changed = TRUE;
+
+                        break;
+                    }
+
+                    le2 = le3;
+                }
+
+                if (!changed)
+                    ExReleaseResourceLite(&pdode->child_lock);
+                else
+                    break;
+            }
+
+            le = le->Flink;
+        }
+
+        ExReleaseResourceLite(&pdo_list_lock);
+    }
+
+    RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
+    Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &mountmgrfo, &mountmgr);
+    if (!NT_SUCCESS(Status)) {
+        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+        goto end;
+    }
+
+    test_vol(mountmgr, devobj, devpath, sdn.DeviceNumber, sdn.PartitionNumber, gli.Length.QuadPart);
+
+    ObDereferenceObject(mountmgrfo);
+
+end:
+    ObDereferenceObject(FileObject);
 }
 
+void volume_removal(PDRIVER_OBJECT DriverObject, PUNICODE_STRING devpath) {
+    LIST_ENTRY* le;
+    UNICODE_STRING devpath2;
+
+    TRACE("%.*S\n", devpath->Length / sizeof(WCHAR), devpath->Buffer);
+
+    UNUSED(DriverObject);
+
+    devpath2 = *devpath;
+
+    if (devpath->Length > 4 * sizeof(WCHAR) && devpath->Buffer[0] == '\\' && (devpath->Buffer[1] == '\\' || devpath->Buffer[1] == '?') &&
+        devpath->Buffer[2] == '?' && devpath->Buffer[3] == '\\') {
+        devpath2.Buffer = &devpath2.Buffer[3];
+        devpath2.Length -= 3 * sizeof(WCHAR);
+        devpath2.MaximumLength -= 3 * sizeof(WCHAR);
+    }
+
+    ExAcquireResourceExclusiveLite(&pdo_list_lock, TRUE);
+
+    le = pdo_list.Flink;
+    while (le != &pdo_list) {
+        pdo_device_extension* pdode = CONTAINING_RECORD(le, pdo_device_extension, list_entry);
+        LIST_ENTRY* le2;
+        BOOL changed = FALSE;
+
+        if (pdode->vde) {
+            ExAcquireResourceExclusiveLite(&pdode->child_lock, TRUE);
+
+            le2 = pdode->children.Flink;
+            while (le2 != &pdode->children) {
+                volume_child* vc = CONTAINING_RECORD(le2, volume_child, list_entry);
+                LIST_ENTRY* le3 = le2->Flink;
+
+                if (vc->pnp_name.Length == devpath2.Length && RtlCompareMemory(vc->pnp_name.Buffer, devpath2.Buffer, devpath2.Length) == devpath2.Length) {
+                    TRACE("removing device\n");
+
+                    remove_volume_child(pdode->vde, vc, FALSE);
+                    changed = TRUE;
+
+                    break;
+                }
+
+                le2 = le3;
+            }
+
+            if (!changed)
+                ExReleaseResourceLite(&pdode->child_lock);
+            else
+                break;
+        }
+
+        le = le->Flink;
+    }
+
+    ExReleaseResourceLite(&pdo_list_lock);
+}
+
+typedef struct {
+    PDRIVER_OBJECT DriverObject;
+    UNICODE_STRING name;
+    pnp_callback func;
+    PIO_WORKITEM work_item;
+} pnp_callback_context;
+
+_Function_class_(IO_WORKITEM_ROUTINE)
+#ifdef __REACTOS__
+static void NTAPI do_pnp_callback(PDEVICE_OBJECT DeviceObject, PVOID con) {
+#else
+static void do_pnp_callback(PDEVICE_OBJECT DeviceObject, PVOID con) {
+#endif
+    pnp_callback_context* context = con;
+
+    UNUSED(DeviceObject);
+
+    context->func(context->DriverObject, &context->name);
+
+    if (context->name.Buffer)
+        ExFreePool(context->name.Buffer);
+
+    IoFreeWorkItem(context->work_item);
+}
+
+static void enqueue_pnp_callback(PDRIVER_OBJECT DriverObject, PUNICODE_STRING name, pnp_callback func) {
+    PIO_WORKITEM work_item;
+    pnp_callback_context* context;
+
+    work_item = IoAllocateWorkItem(master_devobj);
+
+    context = ExAllocatePoolWithTag(PagedPool, sizeof(pnp_callback_context), ALLOC_TAG);
+
+    if (!context) {
+        ERR("out of memory\n");
+        IoFreeWorkItem(work_item);
+        return;
+    }
+
+    context->DriverObject = DriverObject;
+
+    if (name->Length > 0) {
+        context->name.Buffer = ExAllocatePoolWithTag(PagedPool, name->Length, ALLOC_TAG);
+        if (!context->name.Buffer) {
+            ERR("out of memory\n");
+            ExFreePool(context);
+            IoFreeWorkItem(work_item);
+            return;
+        }
+
+        RtlCopyMemory(context->name.Buffer, name->Buffer, name->Length);
+        context->name.Length = context->name.MaximumLength = name->Length;
+    } else {
+        context->name.Length = context->name.MaximumLength = 0;
+        context->name.Buffer = NULL;
+    }
+
+    context->func = func;
+    context->work_item = work_item;
+
+    IoQueueWorkItem(work_item, do_pnp_callback, DelayedWorkQueue, context);
+}
+
+_Function_class_(DRIVER_NOTIFICATION_CALLBACK_ROUTINE)
+#ifdef __REACTOS__
+NTSTATUS NTAPI volume_notification(PVOID NotificationStructure, PVOID Context) {
+#else
+NTSTATUS volume_notification(PVOID NotificationStructure, PVOID Context) {
+#endif
+    DEVICE_INTERFACE_CHANGE_NOTIFICATION* dicn = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
+    PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Context;
+
+    if (RtlCompareMemory(&dicn->Event, &GUID_DEVICE_INTERFACE_ARRIVAL, sizeof(GUID)) == sizeof(GUID))
+        enqueue_pnp_callback(DriverObject, dicn->SymbolicLinkName, volume_arrival);
+    else if (RtlCompareMemory(&dicn->Event, &GUID_DEVICE_INTERFACE_REMOVAL, sizeof(GUID)) == sizeof(GUID))
+        enqueue_pnp_callback(DriverObject, dicn->SymbolicLinkName, volume_removal);
+
+    return STATUS_SUCCESS;
+}
+
+_Function_class_(DRIVER_NOTIFICATION_CALLBACK_ROUTINE)
 #ifdef __REACTOS__
 NTSTATUS NTAPI pnp_notification(PVOID NotificationStructure, PVOID Context) {
 #else
@@ -683,11 +743,200 @@ NTSTATUS pnp_notification(PVOID NotificationStructure, PVOID Context) {
 #endif
     DEVICE_INTERFACE_CHANGE_NOTIFICATION* dicn = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
     PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Context;
-    
+
     if (RtlCompareMemory(&dicn->Event, &GUID_DEVICE_INTERFACE_ARRIVAL, sizeof(GUID)) == sizeof(GUID))
-        disk_arrival(DriverObject, dicn->SymbolicLinkName);
+        enqueue_pnp_callback(DriverObject, dicn->SymbolicLinkName, disk_arrival);
     else if (RtlCompareMemory(&dicn->Event, &GUID_DEVICE_INTERFACE_REMOVAL, sizeof(GUID)) == sizeof(GUID))
-        disk_removal(DriverObject, dicn->SymbolicLinkName);
-    
+        enqueue_pnp_callback(DriverObject, dicn->SymbolicLinkName, volume_removal);
+
     return STATUS_SUCCESS;
+}
+
+static void mountmgr_process_drive(PDEVICE_OBJECT mountmgr, PUNICODE_STRING device_name) {
+    NTSTATUS Status;
+    LIST_ENTRY* le;
+    BOOL done = FALSE;
+
+    ExAcquireResourceSharedLite(&pdo_list_lock, TRUE);
+
+    le = pdo_list.Flink;
+    while (le != &pdo_list) {
+        pdo_device_extension* pdode = CONTAINING_RECORD(le, pdo_device_extension, list_entry);
+        LIST_ENTRY* le2;
+
+        ExAcquireResourceSharedLite(&pdode->child_lock, TRUE);
+
+        le2 = pdode->children.Flink;
+
+        while (le2 != &pdode->children) {
+            volume_child* vc = CONTAINING_RECORD(le2, volume_child, list_entry);
+
+            if (vc->devobj) {
+                MOUNTDEV_NAME mdn;
+
+                Status = dev_ioctl(vc->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &mdn, sizeof(MOUNTDEV_NAME), TRUE, NULL);
+                if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+                    ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                else {
+                    MOUNTDEV_NAME* mdn2;
+                    ULONG mdnsize = (ULONG)offsetof(MOUNTDEV_NAME, Name[0]) + mdn.NameLength;
+
+                    mdn2 = ExAllocatePoolWithTag(NonPagedPool, mdnsize, ALLOC_TAG);
+                    if (!mdn2)
+                        ERR("out of memory\n");
+                    else {
+                        Status = dev_ioctl(vc->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, mdn2, mdnsize, TRUE, NULL);
+                        if (!NT_SUCCESS(Status))
+                            ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                        else {
+                            if (mdn2->NameLength == device_name->Length && RtlCompareMemory(mdn2->Name, device_name->Buffer, device_name->Length) == device_name->Length) {
+                                Status = remove_drive_letter(mountmgr, device_name);
+                                if (!NT_SUCCESS(Status))
+                                    ERR("remove_drive_letter returned %08x\n", Status);
+                                else
+                                    vc->had_drive_letter = TRUE;
+
+                                done = TRUE;
+                                break;
+                            }
+                        }
+
+                        ExFreePool(mdn2);
+                    }
+                }
+            }
+
+            le2 = le2->Flink;
+        }
+
+        ExReleaseResourceLite(&pdode->child_lock);
+
+        if (done)
+            break;
+
+        le = le->Flink;
+    }
+
+    ExReleaseResourceLite(&pdo_list_lock);
+}
+
+static void mountmgr_updated(PDEVICE_OBJECT mountmgr, MOUNTMGR_MOUNT_POINTS* mmps) {
+    ULONG i;
+
+    static WCHAR pref[] = L"\\DosDevices\\";
+
+    for (i = 0; i < mmps->NumberOfMountPoints; i++) {
+        UNICODE_STRING symlink, device_name;
+
+        if (mmps->MountPoints[i].SymbolicLinkNameOffset != 0) {
+            symlink.Buffer = (WCHAR*)(((UINT8*)mmps) + mmps->MountPoints[i].SymbolicLinkNameOffset);
+            symlink.Length = symlink.MaximumLength = mmps->MountPoints[i].SymbolicLinkNameLength;
+        } else {
+            symlink.Buffer = NULL;
+            symlink.Length = symlink.MaximumLength = 0;
+        }
+
+        if (mmps->MountPoints[i].DeviceNameOffset != 0) {
+            device_name.Buffer = (WCHAR*)(((UINT8*)mmps) + mmps->MountPoints[i].DeviceNameOffset);
+            device_name.Length = device_name.MaximumLength = mmps->MountPoints[i].DeviceNameLength;
+        } else {
+            device_name.Buffer = NULL;
+            device_name.Length = device_name.MaximumLength = 0;
+        }
+
+        if (symlink.Length > wcslen(pref) * sizeof(WCHAR) &&
+            RtlCompareMemory(symlink.Buffer, pref, wcslen(pref) * sizeof(WCHAR)) == wcslen(pref) * sizeof(WCHAR))
+            mountmgr_process_drive(mountmgr, &device_name);
+    }
+}
+
+_Function_class_(KSTART_ROUTINE)
+#ifdef __REACTOS__
+void NTAPI mountmgr_thread(_In_ void* context) {
+#else
+void mountmgr_thread(_In_ void* context) {
+#endif
+    UNICODE_STRING mmdevpath;
+    NTSTATUS Status;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT mountmgr;
+    MOUNTMGR_CHANGE_NOTIFY_INFO mcni;
+
+    UNUSED(context);
+
+    RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
+    Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &FileObject, &mountmgr);
+    if (!NT_SUCCESS(Status)) {
+        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+        return;
+    }
+
+    mcni.EpicNumber = 0;
+
+    while (TRUE) {
+        PIRP Irp;
+        MOUNTMGR_MOUNT_POINT mmp;
+        MOUNTMGR_MOUNT_POINTS mmps;
+        IO_STATUS_BLOCK iosb;
+
+        KeClearEvent(&mountmgr_thread_event);
+
+        Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_CHANGE_NOTIFY, mountmgr, &mcni, sizeof(MOUNTMGR_CHANGE_NOTIFY_INFO),
+                                            &mcni, sizeof(MOUNTMGR_CHANGE_NOTIFY_INFO), FALSE, &mountmgr_thread_event, &iosb);
+
+        if (!Irp) {
+            ERR("out of memory\n");
+            break;
+        }
+
+        Status = IoCallDriver(mountmgr, Irp);
+
+        if (Status == STATUS_PENDING) {
+            KeWaitForSingleObject(&mountmgr_thread_event, Executive, KernelMode, FALSE, NULL);
+            Status = iosb.Status;
+        }
+
+        if (shutting_down)
+            break;
+
+        if (!NT_SUCCESS(Status)) {
+            ERR("IOCTL_MOUNTMGR_CHANGE_NOTIFY returned %08x\n", Status);
+            break;
+        }
+
+        TRACE("mountmgr changed\n");
+
+        RtlZeroMemory(&mmp, sizeof(MOUNTMGR_MOUNT_POINT));
+
+        Status = dev_ioctl(mountmgr, IOCTL_MOUNTMGR_QUERY_POINTS, &mmp, sizeof(MOUNTMGR_MOUNT_POINT), &mmps, sizeof(MOUNTMGR_MOUNT_POINTS),
+                           FALSE, NULL);
+
+        if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+            ERR("IOCTL_MOUNTMGR_QUERY_POINTS 1 returned %08x\n", Status);
+
+        if (mmps.Size > 0) {
+            MOUNTMGR_MOUNT_POINTS* mmps2;
+
+            mmps2 = ExAllocatePoolWithTag(NonPagedPool, mmps.Size, ALLOC_TAG);
+            if (!mmps2) {
+                ERR("out of memory\n");
+                break;
+            }
+
+            Status = dev_ioctl(mountmgr, IOCTL_MOUNTMGR_QUERY_POINTS, &mmp, sizeof(MOUNTMGR_MOUNT_POINTS), mmps2, mmps.Size,
+                               FALSE, NULL);
+            if (!NT_SUCCESS(Status))
+                ERR("IOCTL_MOUNTMGR_QUERY_POINTS returned %08x\n", Status);
+            else
+                mountmgr_updated(mountmgr, mmps2);
+
+            ExFreePool(mmps2);
+        }
+    }
+
+    ObDereferenceObject(FileObject);
+
+    mountmgr_thread_handle = NULL;
+
+    PsTerminateSystemThread(STATUS_SUCCESS);
 }

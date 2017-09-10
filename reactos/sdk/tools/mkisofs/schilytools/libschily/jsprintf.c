@@ -1,6 +1,6 @@
-/* @(#)jsprintf.c	1.19 16/01/21 Copyright 1985, 1995-2016 J. Schilling */
+/* @(#)jsprintf.c	1.20 17/08/03 Copyright 1985, 1995-2017 J. Schilling */
 /*
- *	Copyright (c) 1985, 1995-2016 J. Schilling
+ *	Copyright (c) 1985, 1995-2017 J. Schilling
  */
 /*
  * The contents of this file are subject to the terms of the
@@ -57,7 +57,7 @@ js_printf(form, va_alist)
 #else
 	va_start(args);
 #endif
-	ret = fprformat((long)stdout, form, args);
+	ret = fprformat(stdout, form, args);
 	va_end(args);
 	return (ret);
 }
@@ -82,7 +82,7 @@ js_fprintf(file, form, va_alist)
 #else
 	va_start(args);
 #endif
-	ret = fprformat((long)file, form, args);
+	ret = fprformat(file, form, args);
 	va_end(args);
 	return (ret);
 }
@@ -103,7 +103,7 @@ typedef struct {
 } *BUF, _BUF;
 
 LOCAL	void	_bflush		__PR((BUF));
-LOCAL	void	_bput		__PR((char, long));
+LOCAL	void	_bput		__PR((char, void *));
 EXPORT	int	js_fprintf	__PR((FILE *, const char *, ...));
 EXPORT	int	js_printf	__PR((const char *, ...));
 
@@ -120,12 +120,12 @@ _bflush(bp)
 
 #ifdef	PROTOTYPES
 LOCAL void
-_bput(char c, long l)
+_bput(char c, void *l)
 #else
 LOCAL void
 _bput(c, l)
 		char	c;
-		long	l;
+		void	*l;
 #endif
 {
 	register BUF	bp = (BUF)l;
@@ -158,7 +158,7 @@ js_printf(form, va_alist)
 #else
 	va_start(args);
 #endif
-	format(_bput, (long)&bb, form, args);
+	format(_bput, &bb, form, args);
 	va_end(args);
 	if (bb.cnt < BFSIZ)
 		_bflush(&bb);
@@ -189,7 +189,7 @@ js_fprintf(file, form, va_alist)
 #else
 	va_start(args);
 #endif
-	format(_bput, (long)&bb, form, args);
+	format(_bput, &bb, form, args);
 	va_end(args);
 	if (bb.cnt < BFSIZ)
 		_bflush(&bb);

@@ -16,6 +16,8 @@
 #include <time.h>
 #include <winnls.h>
 #include <windowsx.h>
+#include <wincon.h>
+#include <shlobj.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -704,7 +706,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup && WriteComputerSettings(pSetupData->ComputerName, hwndDlg))
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_THEMEPAGE);
                         return TRUE;
                     }
                     break;
@@ -1605,6 +1607,89 @@ DateTimePageDlgProc(HWND hwndDlg,
 }
 
 
+static INT_PTR CALLBACK
+ThemePageDlgProc(HWND hwndDlg,
+                    UINT uMsg,
+                    WPARAM wParam,
+                    LPARAM lParam)
+{
+    PSETUPDATA SetupData;
+
+    /* Retrieve pointer to the global setup data */
+    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            BUTTON_IMAGELIST imldata = {0, {0,10,0,10}, BUTTON_IMAGELIST_ALIGN_TOP};
+            
+            /* Save pointer to the global setup data */
+            SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            
+            imldata.himl = ImageList_LoadImage(hDllInstance, MAKEINTRESOURCE(IDB_CLASSIC), 0, 0, CLR_NONE , IMAGE_BITMAP, LR_CREATEDIBSECTION);
+            SendDlgItemMessage(hwndDlg, IDC_CLASSICSTYLE, BCM_SETIMAGELIST, 0, (LPARAM)&imldata);
+
+            imldata.himl = ImageList_LoadImage(hDllInstance, MAKEINTRESOURCE(IDB_LAUTUS), 0, 0, CLR_NONE , IMAGE_BITMAP, LR_CREATEDIBSECTION);
+            SendDlgItemMessage(hwndDlg, IDC_THEMEDSTYLE, BCM_SETIMAGELIST, 0, (LPARAM)&imldata);
+            
+            SendDlgItemMessage(hwndDlg, IDC_CLASSICSTYLE, BM_SETCHECK, BST_CHECKED, 0);
+            break;
+        }
+        case WM_COMMAND:
+            if (HIWORD(wParam) == BN_CLICKED)
+            {
+                switch (LOWORD(wParam))
+                {
+                    case IDC_THEMEDSTYLE:
+                    {
+                        WCHAR wszParams[1024];
+                        WCHAR wszTheme[MAX_PATH];
+                        WCHAR* format = L"desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:\"%s\"";
+
+                        SHGetFolderPathAndSubDirW(0, CSIDL_RESOURCES, NULL, SHGFP_TYPE_DEFAULT, L"themes\\lautus\\lautus.msstyles", wszTheme);
+                        swprintf(wszParams, format, wszTheme);
+                        RunControlPanelApplet(hwndDlg, wszParams);
+                        break;
+                    }
+                    case IDC_CLASSICSTYLE:
+                        RunControlPanelApplet(hwndDlg, L"desk.cpl desk,@Appearance /Action:ActivateMSTheme");
+                        break;
+                }
+            }
+        case WM_NOTIFY:
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case PSN_SETACTIVE:
+                    /* Enable the Back and Next buttons */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                    if (SetupData->UnattendSetup)
+                    {
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SetupData->uFirstNetworkWizardPage);
+                        return TRUE;
+                    }
+                    break;
+
+                case PSN_WIZNEXT:
+                    break;
+
+                case PSN_WIZBACK:
+                    SetupData->UnattendSetup = FALSE;
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
 static UINT CALLBACK
 RegistrationNotificationProc(PVOID Context,
                              UINT Notification,
@@ -2211,6 +2296,70 @@ ProcessUnattendInf(
     }
     while (SetupFindNextLine(&InfContext, &InfContext));
 
+    if (SetupFindFirstLineW(pSetupData->hUnattendedInf,
+                            L"Display",
+                            NULL,
+                            &InfContext))
+    {
+        DEVMODEW dm = { { 0 } };
+        dm.dmSize = sizeof(dm);
+        if (EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm))
+        {
+            do
+            {
+                int iValue;
+                if (!SetupGetStringFieldW(&InfContext,
+                                          0,
+                                          szName,
+                                          sizeof(szName) / sizeof(WCHAR),
+                                          &LineLength))
+                {
+                    DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+                    return;
+                }
+
+                if (!SetupGetStringFieldW(&InfContext,
+                                          1,
+                                          szValue,
+                                          sizeof(szValue) / sizeof(WCHAR),
+                                          &LineLength))
+                {
+                    DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+                    return;
+                }
+                iValue = _wtoi(szValue);
+                DPRINT1("Name %S Value %i\n", szName, iValue);
+
+                if (!iValue)
+                    continue;
+
+                if (!wcscmp(szName, L"BitsPerPel"))
+                {
+                    dm.dmFields |= DM_BITSPERPEL;
+                    dm.dmBitsPerPel = iValue;
+                }
+                else if (!wcscmp(szName, L"XResolution"))
+                {
+                    dm.dmFields |= DM_PELSWIDTH;
+                    dm.dmPelsWidth = iValue;
+                }
+                else if (!wcscmp(szName, L"YResolution"))
+                {
+                    dm.dmFields |= DM_PELSHEIGHT;
+                    dm.dmPelsHeight = iValue;
+                }
+                else if (!wcscmp(szName, L"VRefresh"))
+                {
+                    dm.dmFields |= DM_DISPLAYFREQUENCY;
+                    dm.dmDisplayFrequency = iValue;
+                }
+            }
+            while (SetupFindNextLine(&InfContext, &InfContext));
+
+            ChangeDisplaySettingsW(&dm, CDS_UPDATEREGISTRY);
+        }
+    }
+
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
                       0,
@@ -2342,6 +2491,25 @@ ProcessUnattendSetup(
 
 typedef DWORD(WINAPI *PFNREQUESTWIZARDPAGES)(PDWORD, HPROPSHEETPAGE *, PSETUPDATA);
 
+BOOL ActivateComctl32v6ActCtx(ULONG_PTR *cookie, HANDLE* hActCtx)
+{
+    ACTCTXW ActCtx = {sizeof(ACTCTX), ACTCTX_FLAG_RESOURCE_NAME_VALID};
+    WCHAR fileBuffer[MAX_PATH];
+
+    *hActCtx = INVALID_HANDLE_VALUE;
+
+    if (!GetModuleFileName(hDllInstance, fileBuffer, MAX_PATH))
+        return FALSE;
+
+    ActCtx.lpSource = fileBuffer;
+    ActCtx.lpResourceName = ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
+    *hActCtx = CreateActCtx(&ActCtx);
+    if (*hActCtx == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    return ActivateActCtx(*hActCtx, cookie);
+}
+
 VOID
 InstallWizard(VOID)
 {
@@ -2355,6 +2523,9 @@ InstallWizard(VOID)
     HMODULE hNetShell = NULL;
     PFNREQUESTWIZARDPAGES pfn = NULL;
     DWORD dwPageCount = 8, dwNetworkPageCount = 0;
+    BOOL bActCtxActivated;
+    ULONG_PTR cookie;
+    HANDLE hActCtx;
 
     LogItem(L"BEGIN_SECTION", L"InstallWizard");
 
@@ -2371,6 +2542,11 @@ InstallWizard(VOID)
                     MB_ICONERROR | MB_OK);
         goto done;
     }
+
+    /* Load and activate the act ctx for comctl32v6 now manually. 
+     *  Even if the exe of the process had a manifest, at the point of its launch
+     *  the manifest of comctl32 wouldn't be installed so it wouldn't be loaded at all */
+    bActCtxActivated = ActivateComctl32v6ActCtx(&cookie, &hActCtx);
 
     hNetShell = LoadLibraryW(L"netshell.dll");
     if (hNetShell != NULL)
@@ -2455,6 +2631,13 @@ InstallWizard(VOID)
     psp.pszTemplate = MAKEINTRESOURCE(IDD_DATETIMEPAGE);
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
+    /* Create the theme selection page */
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_THEMESELECTIONTITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_THEMESELECTIONSUBTITLE);
+    psp.pfnDlgProc = ThemePageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_THEMEPAGE);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     pSetupData->uFirstNetworkWizardPage = IDD_PROCESSPAGE;
     pSetupData->uPostNetworkWizardPage = IDD_PROCESSPAGE;
@@ -2517,6 +2700,12 @@ done:
 
     if (hNetShell != NULL)
         FreeLibrary(hNetShell);
+
+    if (bActCtxActivated)
+    {
+        DeactivateActCtx(0, cookie);
+        ReleaseActCtx(hActCtx);
+    }
 
     if (pSetupData != NULL)
     {

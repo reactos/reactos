@@ -4563,6 +4563,14 @@ Language=English
 The domain controller does not support the Kerberos Service for User protocol.
 .
 
+MessageId=0x425
+Severity=Error
+Facility=System
+SymbolicName=STATUS_HIVE_UNLOADED
+Language=English
+The operation is not valid because the registry hive was unloaded.
+.
+
 MessageId=0x9898
 Severity=Error
 Facility=System

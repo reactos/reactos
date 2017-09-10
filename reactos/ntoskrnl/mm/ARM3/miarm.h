@@ -1876,22 +1876,6 @@ MiAllocatePagesForMdl(
     IN ULONG Flags
 );
 
-PVOID
-NTAPI
-MiMapLockedPagesInUserSpace(
-    IN PMDL Mdl,
-    IN PVOID BaseVa,
-    IN MEMORY_CACHING_TYPE CacheType,
-    IN PVOID BaseAddress
-);
-
-VOID
-NTAPI
-MiUnmapLockedPagesInUserSpace(
-    IN PVOID BaseAddress,
-    IN PMDL Mdl
-);
-
 VOID
 NTAPI
 MiInsertPageInList(
@@ -2075,6 +2059,12 @@ MiCheckSecuredVad(
     IN ULONG ProtectionMask
 );
 
+VOID
+NTAPI
+MiInsertVad(
+    _Inout_ PMMVAD Vad,
+    _Inout_ PMM_AVL_TABLE VadRoot);
+
 NTSTATUS
 NTAPI
 MiInsertVadEx(
@@ -2104,7 +2094,7 @@ NTAPI
 MiRosUnmapViewOfSection(
     IN PEPROCESS Process,
     IN PVOID BaseAddress,
-    IN ULONG Flags
+    IN BOOLEAN SkipDebuggerNotify
 );
 
 VOID

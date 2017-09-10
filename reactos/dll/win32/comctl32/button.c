@@ -395,6 +395,47 @@ cleanup:
     return ret;
 }
 
+BOOL BUTTON_DrawIml(HDC hDC, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCalc)
+{
+    SIZE ImageSize;
+    int left, top;
+
+    if (!pimlData->himl)
+        return FALSE;
+
+    if (!ImageList_GetIconSize(pimlData->himl, &ImageSize.cx, &ImageSize.cy))
+        return FALSE;
+
+    if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_LEFT)
+    {
+        left = prc->left + pimlData->margin.left;
+        top = prc->top + (prc->bottom - prc->top - ImageSize.cy) / 2;
+        prc->left = left + pimlData->margin.right + ImageSize.cx;
+    }
+    else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
+    {
+        left = prc->right - pimlData->margin.right - ImageSize.cx;
+        top = prc->top + (prc->bottom - prc->top - ImageSize.cy) / 2;
+        prc->right = left - pimlData->margin.left;
+    }
+    else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
+    {
+        left = prc->left + (prc->right - prc->left - ImageSize.cy) / 2;
+        top = prc->top + pimlData->margin.top;
+        prc->top = top + ImageSize.cy + pimlData->margin.bottom;
+    }
+    else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
+    {
+        left = prc->left + (prc->right - prc->left - ImageSize.cy) / 2;
+        top = prc->bottom - pimlData->margin.bottom - ImageSize.cy;
+        prc->bottom = top - pimlData->margin.top;
+    }
+
+    if (!bOnlyCalc)
+        ImageList_Draw(pimlData->himl, 0, hDC, left, top, 0);
+
+    return TRUE;
+}
 #endif
 
 
@@ -1140,6 +1181,9 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
    UINT        dtStyle = BUTTON_BStoDT( style, ex_style );
    RECT        r = *rc;
    INT         n;
+#ifdef __REACTOS__
+   PBUTTON_DATA pdata = _GetButtonData(hwnd);
+#endif
 
    /* Calculate label rectangle according to label type */
    switch (style & (BS_ICON|BS_BITMAP))
@@ -1147,6 +1191,11 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
       case BS_TEXT:
       {
           HFONT hFont, hPrevFont = 0;
+#ifdef __REACTOS__
+          BOOL bHasIml;
+
+          bHasIml = BUTTON_DrawIml(hdc, &pdata->imlData, &r, TRUE);
+#endif
 
           if (!(text = get_button_text( hwnd ))) goto empty_rect;
           if (!text[0])
@@ -1162,6 +1211,18 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
 #ifdef __REACTOS__
           if (get_ui_state(hwnd) & UISF_HIDEACCEL)
               dtStyle |= DT_HIDEPREFIX;
+
+          if (bHasIml)
+          {
+            if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT)
+                r.left = pdata->imlData.margin.left;
+            else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
+                r.right = pdata->imlData.margin.right;
+            else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
+                r.top = pdata->imlData.margin.top;
+            else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
+                r.bottom = pdata->imlData.margin.bottom;
+          }
 #endif
           break;
       }
@@ -1253,20 +1314,13 @@ static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int 
     HWND hwnd = (HWND)lp;
     RECT rc;
     PBUTTON_DATA pdata = _GetButtonData(hwnd);
-    SIZE ImageSize;
     WCHAR *text = NULL;
 
     if (!(text = get_button_text( hwnd ))) return TRUE;
 
     SetRect(&rc, 0, 0, cx, cy);
 
-    if (pdata->imlData.himl && ImageList_GetIconSize(pdata->imlData.himl, &ImageSize.cx, &ImageSize.cy))
-    {
-        int left = pdata->imlData.margin.left;
-        int top = (cy - ImageSize.cy) / 2;
-        rc.left += pdata->imlData.margin.left + pdata->imlData.margin.right + ImageSize.cy;
-        ImageList_Draw(pdata->imlData.himl, 0, hdc, left, top, 0);
-    }
+    BUTTON_DrawIml(hdc, &pdata->imlData, &rc, FALSE);
 
     DrawTextW(hdc, text, -1, &rc, (UINT)wp);
     HeapFree(GetProcessHeap(), 0, text);

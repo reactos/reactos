@@ -113,6 +113,39 @@ MMixerOpen(
 }
 
 MIXER_STATUS
+MMixerClose(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG MixerId,
+    IN PVOID MixerEventContext,
+    IN PMIXER_EVENT MixerEventRoutine)
+{
+    MIXER_STATUS Status;
+    LPMIXER_INFO MixerInfo;
+
+    /* verify mixer context */
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        /* invalid context passed */
+        DPRINT1("invalid context\n");
+        return Status;
+    }
+
+    /* get mixer info */
+    MixerInfo = MMixerGetMixerInfoByIndex(MixerContext, MixerId);
+    if (!MixerInfo)
+    {
+        /* invalid mixer id */
+        DPRINT1("invalid mixer id %lu\n", MixerId);
+        return MM_STATUS_INVALID_PARAMETER;
+    }
+
+    /* remove event from list */
+    return MMixerRemoveEvent(MixerContext, MixerInfo, MixerEventContext, MixerEventRoutine);
+}
+
+MIXER_STATUS
 MMixerGetLineInfo(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,

@@ -39,10 +39,10 @@ class CFSFolder :
         LPITEMIDLIST pidlRoot; /* absolute pidl */
 
         DWORD m_bGroupPolicyActive;
-        virtual HRESULT WINAPI _GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut);
-        virtual HRESULT WINAPI _LoadDynamicDropTargetHandlerForKey(HKEY hRootKey, LPCWSTR pwcsname, LPVOID *ppvOut);
-        virtual HRESULT WINAPI _LoadDynamicDropTargetHandler(const CLSID *pclsid, LPCWSTR pwcsname, LPVOID *ppvOut);
-
+        HRESULT _CreateShellExtInstance(const CLSID *pclsid, LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut);
+        HRESULT _CreateExtensionUIObject(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut);
+        HRESULT _GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut);
+        HRESULT _GetIconHandler(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut);
     public:
         CFSFolder();
         ~CFSFolder();

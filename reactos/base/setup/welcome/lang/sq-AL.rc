@@ -10,33 +10,33 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Mirë se vini"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Mirë se vini në Sistemin Operative ReactOS.\n\nKliko në një topik në të majtë."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Mirë se vini në Sistemin Operative ReactOS.\n\nKliko në një topik në të majtë."
 
-    IDS_CHECKTEXT "Trego këtë dialog përsëri"
-    IDS_CLOSETEXT "Dil"
+    IDS_CHECKTEXT "&Trego këtë dialog përsëri"
+    IDS_CLOSETEXT "&Dil"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Instalo ReactOS"
-    IDS_TOPICBUTTON1 "Shfleto këtë CD"
-    IDS_TOPICBUTTON2 "Dil"
+    IDS_TOPIC_BUTTON0 "&Instalo ReactOS"
+    IDS_TOPIC_BUTTON1 "&Shfleto këtë CD"
+    IDS_TOPIC_BUTTON2 "&Dil"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Instalo ReactOS"
-    IDS_TOPICTITLE1 "Shfleto këtë CD"
-    IDS_TOPICTITLE2 "Dil"
+    IDS_TOPIC_TITLE0 "Instalo ReactOS"
+    IDS_TOPIC_TITLE1 "Shfleto këtë CD"
+    IDS_TOPIC_TITLE2 "Dil"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Krijo një instalim ose përmirësim të ReactOS'it në instalimin ekzistues në kompjuterin tuaj."
-    IDS_TOPICDESC1 "Shfleto këtë CD."
-    IDS_TOPICDESC2 "Kliko për të dalë nga ky program."
+    IDS_TOPIC_DESC0 "Krijo një instalim ose përmirësim të ReactOS'it në instalimin ekzistues në kompjuterin tuaj."
+    IDS_TOPIC_DESC1 "Shfleto këtë CD."
+    IDS_TOPIC_DESC2 "Kliko për të dalë nga ky program."
 END

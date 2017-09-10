@@ -155,14 +155,7 @@ private:
         int csidl = 0;
         IShellMenu *pShellMenu;
 
-#if USE_SYSTEM_MENUBAND
-        hr = CoCreateInstance(CLSID_MenuBand,
-                              NULL,
-                              CLSCTX_INPROC_SERVER,
-                              IID_PPV_ARG(IShellMenu, &pShellMenu));
-#else
-        hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
-#endif
+        hr = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &pShellMenu));
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -384,11 +377,7 @@ static HRESULT GetMergedFolder(int folder1, int folder2, IShellFolder ** ppsfSta
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if !USE_SYSTEM_MERGED_FOLDERS
-    hr = CMergedFolder_Constructor(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
-#else
-    hr = CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IAugmentedShellFolder, &pasf));
-#endif
+    hr = CMergedFolder_CreateInstance(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
     if (FAILED_UNEXPECTEDLY(hr))
     {
         *ppsfStartMenu = psfUserStartMenu.Detach();
@@ -426,7 +415,7 @@ static HRESULT GetProgramsFolder(IShellFolder ** ppsfStartMenu)
 
 extern "C"
 HRESULT WINAPI
-CStartMenu_Constructor(REFIID riid, void **ppv)
+RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv)
 {
     CComPtr<IShellMenu> pShellMenu;
     CComPtr<IBandSite> pBandSite;
@@ -439,36 +428,15 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     LPITEMIDLIST pidlPrograms;
     CComPtr<IShellFolder> psfPrograms;
 
-#if USE_SYSTEM_MENUBAND
-    hr = CoCreateInstance(CLSID_MenuBand,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IShellMenu, &pShellMenu));
-#else
-    hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
-#endif
+    hr = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &pShellMenu));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if USE_SYSTEM_MENUSITE
-    hr = CoCreateInstance(CLSID_MenuBandSite,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IBandSite, &pBandSite));
-#else
-    hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
-#endif
+    hr = CMenuSite_CreateInstance(IID_PPV_ARG(IBandSite, &pBandSite));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if USE_SYSTEM_MENUDESKBAR
-    hr = CoCreateInstance(CLSID_MenuDeskBar,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IDeskBar, &pDeskBar));
-#else
-    hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
-#endif
+    hr = CMenuDeskBar_CreateInstance(IID_PPV_ARG(IDeskBar, &pDeskBar));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -476,6 +444,7 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     hr = CComObject<CShellMenuCallback>::CreateInstance(&pCallback);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
     pCallback->AddRef(); // CreateInstance returns object with 0 ref count */
     pCallback->Initialize(pShellMenu, pBandSite, pDeskBar);
 

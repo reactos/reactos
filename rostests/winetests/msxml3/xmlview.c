@@ -137,6 +137,7 @@ static HRESULT WINAPI HTMLEvents_Invoke(IDispatch *iface, DISPID dispIdMember, R
         ok(hr == S_OK, "got 0x%08x\n", hr);
         if(!memcmp(state, completeW, sizeof(completeW)))
             loaded = TRUE;
+        SysFreeString(state);
     }
 
     return S_OK;

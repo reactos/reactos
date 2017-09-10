@@ -1050,7 +1050,7 @@ static DWORD WINAPI test_default_ime_with_message_only_window_cb(void *arg)
                           CW_USEDEFAULT, CW_USEDEFAULT,
                           240, 120, hwnd1, NULL, GetModuleHandleW(NULL), NULL);
     default_ime_wnd = ImmGetDefaultIMEWnd(hwnd2);
-    ok(IsWindow(default_ime_wnd), "Expected IME window existance\n");
+    ok(IsWindow(default_ime_wnd), "Expected IME window existence\n");
 
     DestroyWindow(hwnd2);
     DestroyWindow(hwnd1);

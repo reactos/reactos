@@ -1,0 +1,21 @@
+#ifndef _RDBSSSTRUCHDR_
+#define _RDBSSSTRUCHDR_
+
+typedef struct _RX_PREFIX_ENTRY *PRX_PREFIX_ENTRY;
+typedef struct _RX_PREFIX_TABLE *PRX_PREFIX_TABLE;
+typedef struct _RX_FSD_DISPATCH_VECTOR *PRX_FSD_DISPATCH_VECTOR;
+typedef struct _RDBSS_DEVICE_OBJECT *PRDBSS_DEVICE_OBJECT;
+typedef struct _SRV_CALL *PSRV_CALL;
+typedef struct _NET_ROOT *PNET_ROOT;
+typedef struct _V_NET_ROOT *PV_NET_ROOT;
+typedef struct _NON_PAGED_FCB *PNON_PAGED_FCB;
+typedef struct _FCB *PFCB;
+typedef struct _SRV_OPEN *PSRV_OPEN;
+typedef struct _FOBX *PFOBX;
+typedef struct _RX_CONTEXT *PRX_CONTEXT;
+typedef struct _LOWIO_CONTEXT *PLOWIO_CONTEXT;
+typedef struct _MINIRDR_DISPATCH *PMINIRDR_DISPATCH;
+typedef struct _MRX_SRVCALLDOWN_STRUCTURE *PMRX_SRVCALLDOWN_STRUCTURE;
+typedef struct _MRX_CREATENETROOT_CONTEXT *PMRX_CREATENETROOT_CONTEXT;
+
+#endif

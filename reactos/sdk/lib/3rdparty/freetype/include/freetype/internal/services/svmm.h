@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType Multiple Masters and GX var services (specification).   */
 /*                                                                         */
-/*  Copyright 2003-2016 by                                                 */
+/*  Copyright 2003-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -72,6 +72,7 @@ FT_BEGIN_HEADER
   (*FT_Get_Var_Blend_Func)( FT_Face      face,
                             FT_UInt     *num_coords,
                             FT_Fixed*   *coords,
+                            FT_Fixed*   *normalizedcoords,
                             FT_MM_Var*  *mm_var );
 
   typedef void

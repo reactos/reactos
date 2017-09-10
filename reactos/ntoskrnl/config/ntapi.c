@@ -1521,7 +1521,7 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     {
         if (Flags != REG_FORCE_UNLOAD)
         {
-            /* Release two KCBs lock */
+            /* Release the KCB locks */
             CmpReleaseTwoKcbLockByKey(ChildConv, ParentConv);
 
             /* Release the hive loading lock */

@@ -74,7 +74,7 @@ ULONG CMSZipCodec::Compress(void* OutputBuffer,
 
     ZStream.next_in   = (unsigned char*)InputBuffer;
     ZStream.avail_in  = InputLength;
-    ZStream.next_out  = (unsigned char*)((unsigned long)OutputBuffer + 2);
+    ZStream.next_out  = ((unsigned char *)OutputBuffer + 2);
     ZStream.avail_out = CAB_BLOCKSIZE + 12;
 
     /* WindowBits is passed < 0 to tell that there is no zlib header */
@@ -137,7 +137,7 @@ ULONG CMSZipCodec::Uncompress(void* OutputBuffer,
         return CS_BADSTREAM;
     }
 
-    ZStream.next_in   = (unsigned char*)((unsigned long)InputBuffer + 2);
+    ZStream.next_in   = ((unsigned char*)InputBuffer + 2);
     ZStream.avail_in  = InputLength - 2;
     ZStream.next_out  = (unsigned char*)OutputBuffer;
     ZStream.avail_out = CAB_BLOCKSIZE + 12;

@@ -553,7 +553,7 @@ static HRESULT create_metadata_reader(const void *data, int data_size,
     }
 
     stream = create_stream(data, data_size);
-    IWICPersistStream_LoadEx(persist, stream, NULL, WICPersistOptionsDefault);
+    IWICPersistStream_LoadEx(persist, stream, NULL, WICPersistOptionDefault);
     IStream_Release(stream);
 
     IWICPersistStream_Release(persist);
@@ -923,7 +923,7 @@ static HRESULT create_IMD_metadata_reader(GifFrameDecode *This, IWICMetadataRead
     }
 
     stream = create_stream(&IMD_data, sizeof(IMD_data));
-    IWICPersistStream_LoadEx(persist, stream, NULL, WICPersistOptionsDefault);
+    IWICPersistStream_LoadEx(persist, stream, NULL, WICPersistOptionDefault);
     IStream_Release(stream);
 
     IWICPersistStream_Release(persist);

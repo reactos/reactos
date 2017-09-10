@@ -169,8 +169,8 @@ static BOOL COMDLG32_StrRetToStrNW (LPVOID dest, DWORD len, LPSTRRET src, LPCITE
 */
 IShellBrowser * IShellBrowserImpl_Construct(HWND hwndOwner)
 {
+    FileOpenDlgInfos *fodInfos = get_filedlg_infoptr(hwndOwner);
     IShellBrowserImpl *sb;
-    FileOpenDlgInfos *fodInfos = GetPropA(hwndOwner,FileOpenDlgInfosStr);
 
     sb = COMDLG32_SHAlloc(sizeof(IShellBrowserImpl));
 
@@ -330,7 +330,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
     TRACE("(%p)(pidl=%p,flags=0x%08x)\n", This, pidl, wFlags);
     COMDLG32_DumpSBSPFlags(wFlags);
 
-    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = get_filedlg_infoptr(This->hwndOwner);
 
     /* Format the pidl according to its parameter's category */
     if(wFlags & SBSP_RELATIVE)
@@ -539,7 +539,7 @@ static HRESULT WINAPI IShellBrowserImpl_QueryActiveShellView(IShellBrowser *ifac
 
     TRACE("(%p)\n", This);
 
-    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = get_filedlg_infoptr(This->hwndOwner);
 
     if(!(*ppshv = fodInfos->Shell.FOIShellView))
     {
@@ -743,7 +743,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnDefaultCommand(ICommDl
 
     TRACE("(%p)\n", This);
 
-    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = get_filedlg_infoptr(This->hwndOwner);
 
     /* If the selected object is not a folder, send an IDOK command to parent window */
     if((pidl = GetPidlFromDataObject(fodInfos->Shell.FOIDataObject, 1)))
@@ -781,7 +781,7 @@ static HRESULT IShellBrowserImpl_OnSelChange(IShellBrowserImpl *This, const IShe
 {
     FileOpenDlgInfos *fodInfos;
 
-    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = get_filedlg_infoptr(This->hwndOwner);
     TRACE("(%p do=%p view=%p)\n", This, fodInfos->Shell.FOIDataObject, fodInfos->Shell.FOIShellView);
 
     /* release old selections */
@@ -824,7 +824,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnStateChange(ICommDlgBr
             break;
         case CDBOSC_KILLFOCUS:
 	    {
-                FileOpenDlgInfos *fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+                FileOpenDlgInfos *fodInfos = get_filedlg_infoptr(This->hwndOwner);
 		if(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG)
 		{
 		    WCHAR szSave[16];
@@ -850,7 +850,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnStateChange(ICommDlgBr
 static LRESULT send_includeitem_notification(HWND hwndParentDlg, LPCITEMIDLIST pidl)
 {
     LRESULT hook_result = 0;
-    FileOpenDlgInfos *fodInfos = GetPropA(hwndParentDlg, FileOpenDlgInfosStr);
+    FileOpenDlgInfos *fodInfos = get_filedlg_infoptr(hwndParentDlg);
 
     if(!fodInfos) return 0;
 
@@ -900,7 +900,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_IncludeObject(ICommDlgBr
 
     TRACE("(%p)\n", This);
 
-    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    fodInfos = get_filedlg_infoptr(This->hwndOwner);
 
     ulAttr = SFGAO_HIDDEN | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR | SFGAO_LINK;
     IShellFolder_GetAttributesOf(fodInfos->Shell.FOIShellFolder, 1, &pidl, &ulAttr);

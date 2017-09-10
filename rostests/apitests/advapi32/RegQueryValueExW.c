@@ -253,7 +253,7 @@ START_TEST(RegQueryValueExW)
     ret = RegQueryValueExW(hkey_main, L"LONGSTRING", NULL, &type, (LPBYTE)data22, &size);
     ok(ret == ERROR_MORE_DATA, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
-    ok(type == REG_SZ, "Expected REG_NONE, Type is: %ld\n", type);
+    ok(type == REG_SZ, "Expected REG_SZ, Type is: %ld\n", type);
     ok(size == 46, "Expected size = 46, size is: %ld\n", size);
     ok(wcscmp(data22, string22W), "Expected being different!");
 
@@ -264,7 +264,7 @@ START_TEST(RegQueryValueExW)
     ret = RegQueryValueExW(hkey_main, L"LONGSTRING", NULL, &type, (LPBYTE)data23, &size);
     ok(ret == ERROR_SUCCESS, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
-    ok(type == REG_SZ, "Expected REG_NONE, Type is: %ld\n", type);
+    ok(type == REG_SZ, "Expected REG_SZ, Type is: %ld\n", type);
     ok(size == 46, "Expected size = 46, size is: %ld", size);
     ok(!wcscmp(data23,string22W), "Expected same string! data23: %S, string22W: %S", data23, string22W);
 
@@ -275,7 +275,7 @@ START_TEST(RegQueryValueExW)
     ret = RegQueryValueExW(hkey_main, L"LONGSTRING", NULL, &type, (LPBYTE)data24, &size);
     ok(ret == ERROR_SUCCESS, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
-    ok(type == REG_SZ, "Expected REG_NONE, Type is: %ld\n", type);
+    ok(type == REG_SZ, "Expected REG_SZ, Type is: %ld\n", type);
     ok(size == 46, "Expected size = 46, size is: %ld\n", size);
     ok(!wcscmp(data24, string22W), "Expected same string! data24: %S, string22W: %S\n", data24, string22W);
 
@@ -287,7 +287,7 @@ START_TEST(RegQueryValueExW)
     ret = RegQueryValueExW(hkey_main, L"LONGSTRING", NULL, &type, (LPBYTE)data23, &size);
     ok(ret == ERROR_MORE_DATA, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
-    ok(type == REG_SZ, "Expected REG_NONE, Type is: %ld\n", type);
+    ok(type == REG_SZ, "Expected REG_SZ, Type is: %ld\n", type);
     ok(size == 46, "Expected size = 46, size is: %ld", size);
     ok(wcscmp(data23, string22W), "Expected different string!\n");
 
@@ -299,7 +299,7 @@ START_TEST(RegQueryValueExW)
     ret = RegQueryValueExW(hkey_main, L"LONGSTRING", NULL, &type, (LPBYTE)data23, &size);
     ok(ret == ERROR_SUCCESS, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
-    ok(type == REG_SZ, "Expected REG_NONE, Type is: %ld\n", type);
+    ok(type == REG_SZ, "Expected REG_SZ, Type is: %ld\n", type);
     ok(size == 46, "Expected size = 46, size is: %ld", size);
     ok(!wcscmp(data23, string22W), "Expected same string! data23: %S, string22W: %S", data23, string22W);
 

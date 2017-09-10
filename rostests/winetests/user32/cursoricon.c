@@ -83,6 +83,7 @@ typedef struct {
 
 typedef struct {
     BYTE data[32*32*4];
+    BYTE mask_data[32*32/8];
 } ani_data32x32x32;
 
 typedef struct {
@@ -2621,7 +2622,9 @@ static void test_monochrome_icon(void)
         CloseHandle(handle);
 
         handle = LoadImageA(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
-        ok(handle != NULL, "LoadImage() failed with %u.\n", GetLastError());
+        ok(handle != NULL ||
+           broken(use_core_info && handle == NULL), /* Win 8, 10 */
+           "LoadImage() failed with %u.\n", GetLastError());
         if (handle == NULL)
         {
             skip("Icon failed to load: %s, %s\n",

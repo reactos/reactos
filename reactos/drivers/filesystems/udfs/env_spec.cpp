@@ -43,7 +43,7 @@ UDFAsyncCompletionRoutine(
     IN PVOID Contxt
     )
 {
-    KdPrint(("UDFAsyncCompletionRoutine ctx=%x\n", Contxt));
+    UDFPrint(("UDFAsyncCompletionRoutine ctx=%x\n", Contxt));
     PUDF_PH_CALL_CONTEXT Context = (PUDF_PH_CALL_CONTEXT)Contxt;
     PMDL Mdl, NextMdl;
 
@@ -85,7 +85,7 @@ UDFSyncCompletionRoutine(
     IN PVOID Contxt
     )
 {
-    KdPrint(("UDFSyncCompletionRoutine ctx=%x\n", Contxt));
+    UDFPrint(("UDFSyncCompletionRoutine ctx=%x\n", Contxt));
     PUDF_PH_CALL_CONTEXT Context = (PUDF_PH_CALL_CONTEXT)Contxt;
 
     Context->IosbToUse = Irp->IoStatus;
@@ -102,7 +102,7 @@ UDFSyncCompletionRoutine2(
     IN PVOID Contxt
     )
 {
-    KdPrint(("UDFSyncCompletionRoutine2\n"));
+    UDFPrint(("UDFSyncCompletionRoutine2\n"));
     PKEVENT SyncEvent = (PKEVENT)Contxt;
 
     KeSetEvent( SyncEvent, 0, FALSE );
@@ -160,8 +160,8 @@ UDFPhReadSynchronous(
     KeQuerySystemTime((PLARGE_INTEGER)&IoEnterTime);
 #endif //MEASURE_IO_PERFORMANCE
 
-    KdPrint(("UDFPhRead: Length: %x Lba: %lx\n",Length>>0xb,Offset>>0xb));
-//    KdPrint(("UDFPhRead: Length: %x Lba: %lx\n",Length>>0x9,Offset>>0x9));
+    UDFPrint(("UDFPhRead: Length: %x Lba: %lx\n",Length>>0xb,Offset>>0xb));
+//    UDFPrint(("UDFPhRead: Length: %x Lba: %lx\n",Length>>0x9,Offset>>0x9));
 
     ROffset.QuadPart = Offset;
     (*ReadBytes) = 0;
@@ -175,12 +175,12 @@ UDFPhReadSynchronous(
         IoBuf = DbgAllocatePoolWithTag(NonPagedPool, Length, 'bNWD');
     }
     if (!IoBuf) {
-        KdPrint(("    !IoBuf\n"));
+        UDFPrint(("    !IoBuf\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     Context = (PUDF_PH_CALL_CONTEXT)MyAllocatePool__( NonPagedPool, sizeof(UDF_PH_CALL_CONTEXT) );
     if (!Context) {
-        KdPrint(("    !Context\n"));
+        UDFPrint(("    !Context\n"));
         try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
     }
     // Create notification event object to be used to signal the request completion.
@@ -190,7 +190,7 @@ UDFPhReadSynchronous(
         irp = IoBuildAsynchronousFsdRequest(IRP_MJ_READ, DeviceObject, IoBuf,
                                                Length, &ROffset, &(Context->IosbToUse) );
         if (!irp) {
-            KdPrint(("    !irp Async\n"));
+            UDFPrint(("    !irp Async\n"));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
         MmPrint(("    Alloc async Irp MDL=%x, ctx=%x\n", irp->MdlAddress, Context));
@@ -200,7 +200,7 @@ UDFPhReadSynchronous(
         irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ, DeviceObject, IoBuf,
                                                Length, &ROffset, &(Context->event), &(Context->IosbToUse) );
         if (!irp) {
-            KdPrint(("    !irp Sync\n"));
+            UDFPrint(("    !irp Sync\n"));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
         MmPrint(("    Alloc Irp MDL=%x, ctx=%x\n", irp->MdlAddress, Context));
@@ -228,7 +228,7 @@ UDFPhReadSynchronous(
     if(NT_SUCCESS(RC)) {
 /*
         for(i=0; i<(*ReadBytes); i+=2048) {
-            KdPrint(("IOCRC %8.8x R %x\n", crc32((PUCHAR)Buffer+i, 2048), (ULONG)((Offset+i)/2048) ));
+            UDFPrint(("IOCRC %8.8x R %x\n", crc32((PUCHAR)Buffer+i, 2048), (ULONG)((Offset+i)/2048) ));
         }
 */
 #ifdef _BROWSE_UDF_
@@ -250,7 +250,7 @@ try_exit: NOTHING;
     dtm = (ULONG)(((IoExitTime-IoEnterTime)/10)%1000);
     PerfPrint(("\nUDFPhReadSynchronous() exit: %08X, after %d.%4.4d msec.\n", RC, dt, dtm));
 #else
-    KdPrint(("UDFPhReadSynchronous() exit: %08X\n", RC));
+    UDFPrint(("UDFPhReadSynchronous() exit: %08X\n", RC));
 #endif //MEASURE_IO_PERFORMANCE
     
     return(RC);
@@ -307,11 +307,11 @@ UDFPhWriteSynchronous(
     KeQuerySystemTime((PLARGE_INTEGER)&IoEnterTime);
 #endif //MEASURE_IO_PERFORMANCE
 
-#if defined DBG || defined USE_PERF_PRINT
+#if defined UDF_DBG || defined USE_PERF_PRINT
     ULONG Lba = (ULONG)(Offset>>0xb);
 //    ASSERT(!(Lba & (32-1)));
     PerfPrint(("UDFPhWrite: Length: %x Lba: %lx\n",Length>>0xb,Lba));
-//    KdPrint(("UDFPhWrite: Length: %x Lba: %lx\n",Length>>0x9,Offset>>0x9));
+//    UDFPrint(("UDFPhWrite: Length: %x Lba: %lx\n",Length>>0x9,Offset>>0x9));
 #endif //DBG
 
 #ifdef DBG
@@ -367,7 +367,7 @@ UDFPhWriteSynchronous(
     RC = IoCallDriver(DeviceObject, irp);
 /*
     for(i=0; i<Length; i+=2048) {
-        KdPrint(("IOCRC %8.8x W %x\n", crc32((PUCHAR)Buffer+i, 2048), (ULONG)((Offset+i)/2048) ));
+        UDFPrint(("IOCRC %8.8x W %x\n", crc32((PUCHAR)Buffer+i, 2048), (ULONG)((Offset+i)/2048) ));
     }
 */
 #ifdef _BROWSE_UDF_
@@ -395,7 +395,7 @@ try_exit: NOTHING;
 //    if(IoBuf) ExFreePool(IoBuf);
 //    if(IoBuf && !(Flags & PH_TMP_BUFFER)) DbgFreePool(IoBuf);
     if(!NT_SUCCESS(RC)) {
-        KdPrint(("WriteError\n"));
+        UDFPrint(("WriteError\n"));
     }
 
 #ifdef MEASURE_IO_PERFORMANCE
@@ -411,7 +411,7 @@ try_exit: NOTHING;
     dtm = (ULONG)(((IoExitTime-IoEnterTime)/10)%1000);
     PerfPrint(("\nUDFPhWriteSynchronous() exit: %08X, after %d.%4.4d msec.\n", RC, dt, dtm));
 #else
-    KdPrint(("nUDFPhWriteSynchronous() exit: %08X\n", RC));
+    UDFPrint(("nUDFPhWriteSynchronous() exit: %08X\n", RC));
 #endif //MEASURE_IO_PERFORMANCE
     
     return(RC);
@@ -524,7 +524,7 @@ UDFPhSendIOCTL(
     PUDF_PH_CALL_CONTEXT Context;
     LARGE_INTEGER timeout;
 
-    KdPrint(("UDFPhDevIOCTL: Code %8x  \n",IoControlCode));
+    UDFPrint(("UDFPhDevIOCTL: Code %8x  \n",IoControlCode));
 
     Context = (PUDF_PH_CALL_CONTEXT)MyAllocatePool__( NonPagedPool, sizeof(UDF_PH_CALL_CONTEXT) );
     if (!Context) return STATUS_INSUFFICIENT_RESOURCES;
@@ -540,7 +540,7 @@ UDFPhSendIOCTL(
     MmPrint(("    Alloc Irp MDL=%x, ctx=%x\n", irp->MdlAddress, Context));
 /*
     if (KeGetCurrentIrql() > PASSIVE_LEVEL) {
-        KdPrint(("Setting completion routine\n"));
+        UDFPrint(("Setting completion routine\n"));
         IoSetCompletionRoutine( irp, &UDFSyncCompletionRoutine,
                                 Context, TRUE, TRUE, TRUE );
     }
@@ -553,15 +553,15 @@ UDFPhSendIOCTL(
 
     if (RC == STATUS_PENDING) {
         ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
-        KdPrint(("Enter wait state on evt %x\n", Context));
+        UDFPrint(("Enter wait state on evt %x\n", Context));
 
         if (KeGetCurrentIrql() > PASSIVE_LEVEL) {
             timeout.QuadPart = -1000;
-            KdPrint(("waiting, TO=%I64d\n", timeout.QuadPart));
+            UDFPrint(("waiting, TO=%I64d\n", timeout.QuadPart));
             RC = DbgWaitForSingleObject(&(Context->event), &timeout);
             while(RC == STATUS_TIMEOUT) {
                 timeout.QuadPart *= 2;
-                KdPrint(("waiting, TO=%I64d\n", timeout.QuadPart));
+                UDFPrint(("waiting, TO=%I64d\n", timeout.QuadPart));
                 RC = DbgWaitForSingleObject(&(Context->event), &timeout);
             }
 
@@ -571,12 +571,12 @@ UDFPhSendIOCTL(
         if ((RC = Context->IosbToUse.Status) == STATUS_DATA_OVERRUN) {
             RC = STATUS_SUCCESS;
         }
-        KdPrint(("Exit wait state on evt %x, status %8.8x\n", Context, RC));
+        UDFPrint(("Exit wait state on evt %x, status %8.8x\n", Context, RC));
 /*        if(Iosb) {
             (*Iosb) = Context->IosbToUse;
         }*/
     } else {
-        KdPrint(("No wait completion on evt %x\n", Context));
+        UDFPrint(("No wait completion on evt %x\n", Context));
 /*        if(Iosb) {
             (*Iosb) = irp->IoStatus;
         }*/

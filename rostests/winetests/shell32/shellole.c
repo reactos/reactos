@@ -866,7 +866,7 @@ static void test_SHCreateSessionKey(void)
 
     if (!pSHCreateSessionKey)
     {
-        skip("SHCreateSessionKey is not implemented\n");
+        win_skip("SHCreateSessionKey is not implemented\n");
         return;
     }
 
@@ -889,12 +889,38 @@ static void test_SHCreateSessionKey(void)
     RegCloseKey(hkey2);
 }
 
+static void test_dragdrophelper(void)
+{
+    IDragSourceHelper *dragsource;
+    IDropTargetHelper *target;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER, &IID_IDropTargetHelper, (void **)&target);
+    ok(hr == S_OK, "Failed to create IDropTargetHelper, %#x\n", hr);
+
+    hr = IDropTargetHelper_QueryInterface(target, &IID_IDragSourceHelper, (void **)&dragsource);
+    ok(hr == S_OK, "QI failed, %#x\n", hr);
+    IDragSourceHelper_Release(dragsource);
+
+    IDropTargetHelper_Release(target);
+}
+
 START_TEST(shellole)
 {
+    HRESULT hr;
+
     init();
+
+    hr = CoInitialize(NULL);
+    ok(hr == S_OK, "CoInitialize failed (0x%08x)\n", hr);
+    if (hr != S_OK)
+        return;
 
     test_SHPropStg_functions();
     test_SHCreateQueryCancelAutoPlayMoniker();
     test_DragQueryFile();
     test_SHCreateSessionKey();
+    test_dragdrophelper();
+
+    CoUninitialize();
 }

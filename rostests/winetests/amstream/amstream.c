@@ -579,7 +579,7 @@ static void test_IDirectDrawStreamSample(void)
     EXPECT_REF(surface, 2);
 
     surface2 = NULL;
-    memset(&rect, 0, sizeof(rect));
+    SetRectEmpty(&rect);
     hr = IDirectDrawStreamSample_GetSurface(pddsample, &surface2, &rect);
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(surface == surface2, "got %p\n", surface2);

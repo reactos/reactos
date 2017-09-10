@@ -154,6 +154,17 @@ BEGIN
     AUTORADIOBUTTON "Pyet para se te aplikosh parametrat e ngjyrave te reja.", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
+IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Display Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
+    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
+END
+
 IDR_PREVIEW_MENU MENU
 BEGIN
     MENUITEM "Normale", ID_MENU_NORMAL
@@ -256,4 +267,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "Konfigurimi i Ekranit"
     IDS_APPLY_FAILED "Deshtoj ne apilimin e konfigurimit..."
     IDS_APPLY_NEEDS_RESTART "Ju duhet te rifilloni sistemin tuaj qe te aplikoni ndryshimet."
+    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
 END

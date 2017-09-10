@@ -175,9 +175,7 @@ HRESULT WINAPI CFontsFolder::Initialize(LPCITEMIDLIST pidl)
     if (!m_pidlInner)
         return E_OUTOFMEMORY;
 
-    return SHELL32_CoCreateInitSF(m_pidlInner, 
-                                  NULL,
-                                  NULL,
+    return SHELL32_CoCreateInitSF(m_pidlInner,
                                   &CLSID_ShellFSFolder,
                                   CSIDL_FONTS,
                                   IID_PPV_ARG(IShellFolder2, &m_pisfInner));

@@ -222,26 +222,29 @@ CdfsGetVolumeData(
                                  &Toc,
                                  &Size,
                                  TRUE);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(Buffer, CDFS_TAG);
-        return Status;
+
+        DPRINT("FirstTrack %u, LastTrack %u, TrackNumber %u\n",
+               Toc.FirstTrack, Toc.LastTrack, Toc.TrackData[0].TrackNumber);
+
+        Offset =  Toc.TrackData[0].Address[1] * 60 * 75;
+        Offset += Toc.TrackData[0].Address[2] * 75;
+        Offset += Toc.TrackData[0].Address[3];
+        if (Offset >= 150)
+        {
+            /* Remove MSF numbering offset of first frame */
+            /* FIXME: should be done only for real cdroms? */
+            Offset -= 150;
+        }
     }
-
-    DPRINT("FirstTrack %u, LastTrack %u, TrackNumber %u\n",
-           Toc.FirstTrack, Toc.LastTrack, Toc.TrackData[0].TrackNumber);
-
-    Offset =  Toc.TrackData[0].Address[1] * 60 * 75;
-    Offset += Toc.TrackData[0].Address[2] * 75;
-    Offset += Toc.TrackData[0].Address[3];
-    if (Offset >= 150)
+    else
     {
-        /* Remove MSF numbering offset of first frame */
-        /* FIXME: should be done only for real cdroms? */
-        Offset -= 150;
+        DPRINT1("Allowing mount of CDFS volume on non-CD device\n");
+        Offset = 0;
     }
+    
     CdInfo->VolumeOffset = Offset;
-
     DPRINT("Offset of first track in last session %u\n", Offset);
 
     CdInfo->JolietLevel = 0;
@@ -325,10 +328,19 @@ CdfsMountVolume(
     PVPB Vpb;
     NTSTATUS Status;
     CDINFO CdInfo;
+    DEVICE_TYPE FilesystemDeviceType;
 
     DPRINT("CdfsMountVolume() called\n");
 
-    if (DeviceObject != CdfsGlobalData->DeviceObject)
+    if (DeviceObject == CdfsGlobalData->CdFsDeviceObject)
+    {
+        FilesystemDeviceType = FILE_DEVICE_CD_ROM_FILE_SYSTEM;
+    }
+    else if (DeviceObject == CdfsGlobalData->HddFsDeviceObject)
+    {
+        FilesystemDeviceType = FILE_DEVICE_DISK_FILE_SYSTEM;
+    }
+    else
     {
         Status = STATUS_INVALID_DEVICE_REQUEST;
         goto ByeBye;
@@ -347,7 +359,7 @@ CdfsMountVolume(
     Status = IoCreateDevice(CdfsGlobalData->DriverObject,
                             sizeof(DEVICE_EXTENSION),
                             NULL,
-                            FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+                            FilesystemDeviceType,
                             DeviceToMount->Characteristics,
                             FALSE,
                             &NewDeviceObject);

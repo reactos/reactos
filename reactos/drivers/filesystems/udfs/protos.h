@@ -87,7 +87,7 @@ extern ULONG    UDFCleanUpFcbChain(IN PVCB Vcb,
 
 extern VOID UDFCloseAllDelayed(PVCB Vcb);
 
-extern VOID UDFDelayedClose(PVOID unused = NULL);
+extern VOID NTAPI UDFDelayedClose(PVOID unused = NULL);
 
 extern NTSTATUS UDFCloseAllXXXDelayedInDir(IN PVCB           Vcb,
                                            IN PUDF_FILE_INFO FileInfo,
@@ -642,7 +642,7 @@ extern NTSTATUS UDFPostRequest(
 PtrUDFIrpContext            PtrIrpContext,
 PIRP                        Irp);
 
-extern VOID UDFCommonDispatch(
+extern VOID NTAPI UDFCommonDispatch(
 VOID                            *Context);  // actually an IRPContext structure
 
 extern NTSTATUS UDFInitializeVCB(
@@ -756,7 +756,7 @@ extern OSSTATUS UDFGetBlockSize(PDEVICE_OBJECT DeviceObject, // the target devic
 extern OSSTATUS UDFGetDiskInfo(IN PDEVICE_OBJECT DeviceObject, // the target device object
                                IN PVCB           Vcb);         // Volume control block from this DevObj
 
-extern VOID     UDFEjectReqWaiter(IN PVOID Context);
+extern VOID NTAPI UDFEjectReqWaiter(IN PVOID Context);
 
 extern VOID     UDFStopEjectWaiter(PVCB Vcb);
 

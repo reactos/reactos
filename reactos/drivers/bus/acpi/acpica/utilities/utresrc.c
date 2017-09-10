@@ -50,287 +50,6 @@
         ACPI_MODULE_NAME    ("utresrc")
 
 
-#if defined(ACPI_DEBUG_OUTPUT) || defined (ACPI_DISASSEMBLER) || defined (ACPI_DEBUGGER)
-
-/*
- * Strings used to decode resource descriptors.
- * Used by both the disassembler and the debugger resource dump routines
- */
-const char                      *AcpiGbl_BmDecode[] =
-{
-    "NotBusMaster",
-    "BusMaster"
-};
-
-const char                      *AcpiGbl_ConfigDecode[] =
-{
-    "0 - Good Configuration",
-    "1 - Acceptable Configuration",
-    "2 - Suboptimal Configuration",
-    "3 - ***Invalid Configuration***",
-};
-
-const char                      *AcpiGbl_ConsumeDecode[] =
-{
-    "ResourceProducer",
-    "ResourceConsumer"
-};
-
-const char                      *AcpiGbl_DecDecode[] =
-{
-    "PosDecode",
-    "SubDecode"
-};
-
-const char                      *AcpiGbl_HeDecode[] =
-{
-    "Level",
-    "Edge"
-};
-
-const char                      *AcpiGbl_IoDecode[] =
-{
-    "Decode10",
-    "Decode16"
-};
-
-const char                      *AcpiGbl_LlDecode[] =
-{
-    "ActiveHigh",
-    "ActiveLow",
-    "ActiveBoth",
-    "Reserved"
-};
-
-const char                      *AcpiGbl_MaxDecode[] =
-{
-    "MaxNotFixed",
-    "MaxFixed"
-};
-
-const char                      *AcpiGbl_MemDecode[] =
-{
-    "NonCacheable",
-    "Cacheable",
-    "WriteCombining",
-    "Prefetchable"
-};
-
-const char                      *AcpiGbl_MinDecode[] =
-{
-    "MinNotFixed",
-    "MinFixed"
-};
-
-const char                      *AcpiGbl_MtpDecode[] =
-{
-    "AddressRangeMemory",
-    "AddressRangeReserved",
-    "AddressRangeACPI",
-    "AddressRangeNVS"
-};
-
-const char                      *AcpiGbl_RngDecode[] =
-{
-    "InvalidRanges",
-    "NonISAOnlyRanges",
-    "ISAOnlyRanges",
-    "EntireRange"
-};
-
-const char                      *AcpiGbl_RwDecode[] =
-{
-    "ReadOnly",
-    "ReadWrite"
-};
-
-const char                      *AcpiGbl_ShrDecode[] =
-{
-    "Exclusive",
-    "Shared",
-    "ExclusiveAndWake",         /* ACPI 5.0 */
-    "SharedAndWake"             /* ACPI 5.0 */
-};
-
-const char                      *AcpiGbl_SizDecode[] =
-{
-    "Transfer8",
-    "Transfer8_16",
-    "Transfer16",
-    "InvalidSize"
-};
-
-const char                      *AcpiGbl_TrsDecode[] =
-{
-    "DenseTranslation",
-    "SparseTranslation"
-};
-
-const char                      *AcpiGbl_TtpDecode[] =
-{
-    "TypeStatic",
-    "TypeTranslation"
-};
-
-const char                      *AcpiGbl_TypDecode[] =
-{
-    "Compatibility",
-    "TypeA",
-    "TypeB",
-    "TypeF"
-};
-
-const char                      *AcpiGbl_PpcDecode[] =
-{
-    "PullDefault",
-    "PullUp",
-    "PullDown",
-    "PullNone"
-};
-
-const char                      *AcpiGbl_IorDecode[] =
-{
-    "IoRestrictionNone",
-    "IoRestrictionInputOnly",
-    "IoRestrictionOutputOnly",
-    "IoRestrictionNoneAndPreserve"
-};
-
-const char                      *AcpiGbl_DtsDecode[] =
-{
-    "Width8bit",
-    "Width16bit",
-    "Width32bit",
-    "Width64bit",
-    "Width128bit",
-    "Width256bit",
-};
-
-/* GPIO connection type */
-
-const char                      *AcpiGbl_CtDecode[] =
-{
-    "Interrupt",
-    "I/O"
-};
-
-/* Serial bus type */
-
-const char                      *AcpiGbl_SbtDecode[] =
-{
-    "/* UNKNOWN serial bus type */",
-    "I2C",
-    "SPI",
-    "UART"
-};
-
-/* I2C serial bus access mode */
-
-const char                      *AcpiGbl_AmDecode[] =
-{
-    "AddressingMode7Bit",
-    "AddressingMode10Bit"
-};
-
-/* I2C serial bus slave mode */
-
-const char                      *AcpiGbl_SmDecode[] =
-{
-    "ControllerInitiated",
-    "DeviceInitiated"
-};
-
-/* SPI serial bus wire mode */
-
-const char                      *AcpiGbl_WmDecode[] =
-{
-    "FourWireMode",
-    "ThreeWireMode"
-};
-
-/* SPI serial clock phase */
-
-const char                      *AcpiGbl_CphDecode[] =
-{
-    "ClockPhaseFirst",
-    "ClockPhaseSecond"
-};
-
-/* SPI serial bus clock polarity */
-
-const char                      *AcpiGbl_CpoDecode[] =
-{
-    "ClockPolarityLow",
-    "ClockPolarityHigh"
-};
-
-/* SPI serial bus device polarity */
-
-const char                      *AcpiGbl_DpDecode[] =
-{
-    "PolarityLow",
-    "PolarityHigh"
-};
-
-/* UART serial bus endian */
-
-const char                      *AcpiGbl_EdDecode[] =
-{
-    "LittleEndian",
-    "BigEndian"
-};
-
-/* UART serial bus bits per byte */
-
-const char                      *AcpiGbl_BpbDecode[] =
-{
-    "DataBitsFive",
-    "DataBitsSix",
-    "DataBitsSeven",
-    "DataBitsEight",
-    "DataBitsNine",
-    "/* UNKNOWN Bits per byte */",
-    "/* UNKNOWN Bits per byte */",
-    "/* UNKNOWN Bits per byte */"
-};
-
-/* UART serial bus stop bits */
-
-const char                      *AcpiGbl_SbDecode[] =
-{
-    "StopBitsZero",
-    "StopBitsOne",
-    "StopBitsOnePlusHalf",
-    "StopBitsTwo"
-};
-
-/* UART serial bus flow control */
-
-const char                      *AcpiGbl_FcDecode[] =
-{
-    "FlowControlNone",
-    "FlowControlHardware",
-    "FlowControlXON",
-    "/* UNKNOWN flow control keyword */"
-};
-
-/* UART serial bus parity type */
-
-const char                      *AcpiGbl_PtDecode[] =
-{
-    "ParityTypeNone",
-    "ParityTypeEven",
-    "ParityTypeOdd",
-    "ParityTypeMark",
-    "ParityTypeSpace",
-    "/* UNKNOWN parity keyword */",
-    "/* UNKNOWN parity keyword */",
-    "/* UNKNOWN parity keyword */"
-};
-
-#endif
-
-
 /*
  * Base sizes of the raw AML resource descriptors, indexed by resource type.
  * Zero indicates a reserved (and therefore invalid) resource type.
@@ -371,8 +90,12 @@ const UINT8                 AcpiGbl_ResourceAmlSizes[] =
     ACPI_AML_SIZE_LARGE (AML_RESOURCE_ADDRESS64),
     ACPI_AML_SIZE_LARGE (AML_RESOURCE_EXTENDED_ADDRESS64),
     ACPI_AML_SIZE_LARGE (AML_RESOURCE_GPIO),
-    0,
+    ACPI_AML_SIZE_LARGE (AML_RESOURCE_PIN_FUNCTION),
     ACPI_AML_SIZE_LARGE (AML_RESOURCE_COMMON_SERIALBUS),
+    ACPI_AML_SIZE_LARGE (AML_RESOURCE_PIN_CONFIG),
+    ACPI_AML_SIZE_LARGE (AML_RESOURCE_PIN_GROUP),
+    ACPI_AML_SIZE_LARGE (AML_RESOURCE_PIN_GROUP_FUNCTION),
+    ACPI_AML_SIZE_LARGE (AML_RESOURCE_PIN_GROUP_CONFIG),
 };
 
 const UINT8                 AcpiGbl_ResourceAmlSerialBusSizes[] =
@@ -426,8 +149,12 @@ static const UINT8          AcpiGbl_ResourceTypes[] =
     ACPI_VARIABLE_LENGTH,           /* 0A Qword* address */
     ACPI_FIXED_LENGTH,              /* 0B Extended* address */
     ACPI_VARIABLE_LENGTH,           /* 0C Gpio* */
-    0,
-    ACPI_VARIABLE_LENGTH            /* 0E *SerialBus */
+    ACPI_VARIABLE_LENGTH,           /* 0D PinFunction */
+    ACPI_VARIABLE_LENGTH,           /* 0E *SerialBus */
+    ACPI_VARIABLE_LENGTH,           /* 0F PinConfig */
+    ACPI_VARIABLE_LENGTH,           /* 10 PinGroup */
+    ACPI_VARIABLE_LENGTH,           /* 11 PinGroupFunction */
+    ACPI_VARIABLE_LENGTH,           /* 12 PinGroupConfig */
 };
 
 
@@ -468,10 +195,8 @@ AcpiUtWalkAmlResources (
     ACPI_FUNCTION_TRACE (UtWalkAmlResources);
 
 
-    /*
-     * The absolute minimum resource template is one EndTag descriptor.
-     * However, we will treat a lone EndTag as just a simple buffer.
-     */
+    /* The absolute minimum resource template is one EndTag descriptor */
+
     if (AmlLength < sizeof (AML_RESOURCE_END_TAG))
     {
         return_ACPI_STATUS (AE_AML_NO_RESOURCE_END_TAG);
@@ -505,8 +230,8 @@ AcpiUtWalkAmlResources (
 
         if (UserFunction)
         {
-            Status = UserFunction (Aml, Length, Offset,
-                ResourceIndex, Context);
+            Status = UserFunction (
+                Aml, Length, Offset, ResourceIndex, Context);
             if (ACPI_FAILURE (Status))
             {
                 return_ACPI_STATUS (Status);
@@ -527,27 +252,17 @@ AcpiUtWalkAmlResources (
             }
 
             /*
-             * The EndTag opcode must be followed by a zero byte.
-             * Although this byte is technically defined to be a checksum,
-             * in practice, all ASL compilers set this byte to zero.
+             * Don't attempt to perform any validation on the 2nd byte.
+             * Although all known ASL compilers insert a zero for the 2nd
+             * byte, it can also be a checksum (as per the ACPI spec),
+             * and this is occasionally seen in the field. July 2017.
              */
-            if (*(Aml + 1) != 0)
-            {
-                return_ACPI_STATUS (AE_AML_NO_RESOURCE_END_TAG);
-            }
 
             /* Return the pointer to the EndTag if requested */
 
             if (!UserFunction)
             {
                 *Context = Aml;
-            }
-
-            /* Check if buffer is defined to be longer than the resource length */
-
-            if (AmlLength > (Offset + Length))
-            {
-                return_ACPI_STATUS (AE_AML_NO_RESOURCE_END_TAG);
             }
 
             /* Normal exit */

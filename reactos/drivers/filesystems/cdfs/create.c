@@ -266,7 +266,7 @@ CdfsCreate(
     ASSERT(IrpContext);
 
     DeviceObject = IrpContext->DeviceObject;
-    if (DeviceObject == CdfsGlobalData->DeviceObject)
+    if (DeviceObject == CdfsGlobalData->CdFsDeviceObject || DeviceObject == CdfsGlobalData->HddFsDeviceObject)
     {
         /* DeviceObject represents FileSystem instead of logical volume */
         DPRINT("Opening file system\n");

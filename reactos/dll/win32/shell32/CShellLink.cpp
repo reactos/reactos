@@ -1690,28 +1690,31 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(LPWSTR pszIconPath, INT cc
     return S_OK;
 }
 
-static HRESULT SHELL_PidlGetIconLocationW(IShellFolder* psf, LPCITEMIDLIST pidl,
+static HRESULT SHELL_PidlGetIconLocationW(PCIDLIST_ABSOLUTE pidl,
         UINT uFlags, PWSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
     LPCITEMIDLIST pidlLast;
+    CComPtr<IShellFolder> psf;
 
     HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
-    if (SUCCEEDED(hr))
-    {
-        CComPtr<IExtractIconW> pei;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_NULL_PPV_ARG(IExtractIconW, &pei));
-        if (SUCCEEDED(hr))
-            hr = pei->GetIconLocation(uFlags, pszIconFile, cchMax, piIndex, pwFlags);
+    CComPtr<IExtractIconW> pei;
+    hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_NULL_PPV_ARG(IExtractIconW, &pei));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-        psf->Release();
-    }
+    hr = pei->GetIconLocation(uFlags, pszIconFile, cchMax, piIndex, pwFlags);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    return hr;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
+    HRESULT hr;
     /*
      * It is possible for a shell link to point to another shell link,
      * and in particular there is the possibility to point to itself.
@@ -1732,33 +1735,30 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
 
     if (m_pPidl || m_sPath)
     {
-        CComPtr<IShellFolder> pdsk;
-
-        HRESULT hr = SHGetDesktopFolder(&pdsk);
-        if (SUCCEEDED(hr))
-        {
-            /* first look for an icon using the PIDL (if present) */
-            if (m_pPidl)
-                hr = SHELL_PidlGetIconLocationW(pdsk, m_pPidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
-            else
-                hr = E_FAIL;
+        /* first look for an icon using the PIDL (if present) */
+        if (m_pPidl)
+            hr = SHELL_PidlGetIconLocationW(m_pPidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
+        else
+            hr = E_FAIL;
 
 #if 0 // FIXME: Analyse further whether this is needed...
-            /* if we couldn't find an icon yet, look for it using the file system path */
-            if (FAILED(hr) && m_sPath)
-            {
-                LPITEMIDLIST pidl;
+        /* if we couldn't find an icon yet, look for it using the file system path */
+        if (FAILED(hr) && m_sPath)
+        {
+            LPITEMIDLIST pidl;
+            CComPtr<IShellFolder> pdsk;
 
-                /* LPITEMIDLIST pidl = ILCreateFromPathW(sPath); */
-                hr = pdsk->ParseDisplayName(0, NULL, m_sPath, NULL, &pidl, NULL);
-                if (SUCCEEDED(hr))
-                {
-                    hr = SHELL_PidlGetIconLocationW(pdsk, pidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
-                    SHFree(pidl);
-                }
+            hr = SHGetDesktopFolder(&pdsk);
+
+            /* LPITEMIDLIST pidl = ILCreateFromPathW(sPath); */
+            hr = pdsk->ParseDisplayName(0, NULL, m_sPath, NULL, &pidl, NULL);
+            if (SUCCEEDED(hr))
+            {
+                hr = SHELL_PidlGetIconLocationW(pidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
+                SHFree(pidl);
             }
-#endif
         }
+#endif
         return hr;
     }
 

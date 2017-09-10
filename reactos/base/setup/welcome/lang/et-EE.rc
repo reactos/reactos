@@ -6,33 +6,33 @@ LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Tere tulemast"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Tere tulemast operatsioonisüsteemi ReactOS.\n\nVali teema vasakult."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Tere tulemast operatsioonisüsteemi ReactOS.\n\nVali teema vasakult."
 
-    IDS_CHECKTEXT "Näita seda dialoogi veel"
-    IDS_CLOSETEXT "Välju"
+    IDS_CHECKTEXT "&Näita seda dialoogi veel"
+    IDS_CLOSETEXT "&Välju"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Paigalda ReactOS"
-    IDS_TOPICBUTTON1 "Sirvi CD sisu"
-    IDS_TOPICBUTTON2 "Välju"
+    IDS_TOPIC_BUTTON0 "&Paigalda ReactOS"
+    IDS_TOPIC_BUTTON1 "&Sirvi CD sisu"
+    IDS_TOPIC_BUTTON2 "&Välju"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Paigalda ReactOS"
-    IDS_TOPICTITLE1 "Sirvi CD sisu"
-    IDS_TOPICTITLE2 "Välju"
+    IDS_TOPIC_TITLE0 "Paigalda ReactOS"
+    IDS_TOPIC_TITLE1 "Sirvi CD sisu"
+    IDS_TOPIC_TITLE2 "Välju"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Paigalda ReactOS oma arvutisse või uuenda olemasolevat installatsiooni."
-    IDS_TOPICDESC1 "Sirvi CD sisu."
-    IDS_TOPICDESC2 "Vajuta, et väljuda."
+    IDS_TOPIC_DESC0 "Paigalda ReactOS oma arvutisse või uuenda olemasolevat installatsiooni."
+    IDS_TOPIC_DESC1 "Sirvi CD sisu."
+    IDS_TOPIC_DESC2 "Vajuta, et väljuda."
 END

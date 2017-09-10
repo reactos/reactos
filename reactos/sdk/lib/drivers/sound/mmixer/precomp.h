@@ -354,6 +354,13 @@ MMixerAddEvent(
     IN PMIXER_EVENT MixerEventRoutine);
 
 MIXER_STATUS
+MMixerRemoveEvent(
+    IN PMIXER_CONTEXT MixerContext,
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN PVOID MixerEventContext,
+    IN PMIXER_EVENT MixerEventRoutine);
+
+MIXER_STATUS
 MMixerGetDeviceName(
     IN PMIXER_CONTEXT MixerContext,
     OUT LPWSTR DeviceName,

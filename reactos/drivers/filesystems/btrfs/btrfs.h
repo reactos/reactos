@@ -34,12 +34,16 @@ static const UINT64 superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4
 #define TYPE_SHARED_BLOCK_REF  0xB6
 #define TYPE_SHARED_DATA_REF   0xB8
 #define TYPE_BLOCK_GROUP_ITEM  0xC0
+#define TYPE_FREE_SPACE_INFO   0xC6
+#define TYPE_FREE_SPACE_EXTENT 0xC7
+#define TYPE_FREE_SPACE_BITMAP 0xC8
 #define TYPE_DEV_EXTENT        0xCC
 #define TYPE_DEV_ITEM          0xD8
 #define TYPE_CHUNK_ITEM        0xE4
 #define TYPE_TEMP_ITEM         0xF8
 #define TYPE_DEV_STATS         0xF9
 #define TYPE_SUBVOL_UUID       0xFB
+#define TYPE_SUBVOL_REC_UUID   0xFC
 
 #define BTRFS_ROOT_ROOT         1
 #define BTRFS_ROOT_EXTENT       2
@@ -48,6 +52,7 @@ static const UINT64 superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4
 #define BTRFS_ROOT_FSTREE       5
 #define BTRFS_ROOT_CHECKSUM     7
 #define BTRFS_ROOT_UUID         9
+#define BTRFS_ROOT_FREE_SPACE   0xa
 #define BTRFS_ROOT_DATA_RELOC   0xFFFFFFFFFFFFFFF7
 
 #define BTRFS_COMPRESSION_NONE  0
@@ -91,7 +96,8 @@ static const UINT64 superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4
 
 #define BTRFS_SUBVOL_READONLY   0x1
 
-#define BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE  0x1
+#define BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE          0x1
+#define BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE_VALID    0x2
 
 #define BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF      0x0001
 #define BTRFS_INCOMPAT_FLAGS_DEFAULT_SUBVOL     0x0002
@@ -494,6 +500,85 @@ typedef struct {
     BALANCE_ARGS system;
     UINT8 reserved[32];
 } BALANCE_ITEM;
+
+#define BTRFS_FREE_SPACE_USING_BITMAPS      1
+
+typedef struct {
+    UINT32 count;
+    UINT32 flags;
+} FREE_SPACE_INFO;
+
+#define BTRFS_DEV_STAT_WRITE_ERRORS          0
+#define BTRFS_DEV_STAT_READ_ERRORS           1
+#define BTRFS_DEV_STAT_FLUSH_ERRORS          2
+#define BTRFS_DEV_STAT_CORRUPTION_ERRORS     3
+#define BTRFS_DEV_STAT_GENERATION_ERRORS     4
+
+#define BTRFS_SEND_CMD_SUBVOL          1
+#define BTRFS_SEND_CMD_SNAPSHOT        2
+#define BTRFS_SEND_CMD_MKFILE          3
+#define BTRFS_SEND_CMD_MKDIR           4
+#define BTRFS_SEND_CMD_MKNOD           5
+#define BTRFS_SEND_CMD_MKFIFO          6
+#define BTRFS_SEND_CMD_MKSOCK          7
+#define BTRFS_SEND_CMD_SYMLINK         8
+#define BTRFS_SEND_CMD_RENAME          9
+#define BTRFS_SEND_CMD_LINK           10
+#define BTRFS_SEND_CMD_UNLINK         11
+#define BTRFS_SEND_CMD_RMDIR          12
+#define BTRFS_SEND_CMD_SET_XATTR      13
+#define BTRFS_SEND_CMD_REMOVE_XATTR   14
+#define BTRFS_SEND_CMD_WRITE          15
+#define BTRFS_SEND_CMD_CLONE          16
+#define BTRFS_SEND_CMD_TRUNCATE       17
+#define BTRFS_SEND_CMD_CHMOD          18
+#define BTRFS_SEND_CMD_CHOWN          19
+#define BTRFS_SEND_CMD_UTIMES         20
+#define BTRFS_SEND_CMD_END            21
+#define BTRFS_SEND_CMD_UPDATE_EXTENT  22
+
+#define BTRFS_SEND_TLV_UUID             1
+#define BTRFS_SEND_TLV_TRANSID          2
+#define BTRFS_SEND_TLV_INODE            3
+#define BTRFS_SEND_TLV_SIZE             4
+#define BTRFS_SEND_TLV_MODE             5
+#define BTRFS_SEND_TLV_UID              6
+#define BTRFS_SEND_TLV_GID              7
+#define BTRFS_SEND_TLV_RDEV             8
+#define BTRFS_SEND_TLV_CTIME            9
+#define BTRFS_SEND_TLV_MTIME           10
+#define BTRFS_SEND_TLV_ATIME           11
+#define BTRFS_SEND_TLV_OTIME           12
+#define BTRFS_SEND_TLV_XATTR_NAME      13
+#define BTRFS_SEND_TLV_XATTR_DATA      14
+#define BTRFS_SEND_TLV_PATH            15
+#define BTRFS_SEND_TLV_PATH_TO         16
+#define BTRFS_SEND_TLV_PATH_LINK       17
+#define BTRFS_SEND_TLV_OFFSET          18
+#define BTRFS_SEND_TLV_DATA            19
+#define BTRFS_SEND_TLV_CLONE_UUID      20
+#define BTRFS_SEND_TLV_CLONE_CTRANSID  21
+#define BTRFS_SEND_TLV_CLONE_PATH      22
+#define BTRFS_SEND_TLV_CLONE_OFFSET    23
+#define BTRFS_SEND_TLV_CLONE_LENGTH    24
+
+#define BTRFS_SEND_MAGIC "btrfs-stream\0"
+
+typedef struct {
+    UINT8 magic[13];
+    UINT32 version;
+} btrfs_send_header;
+
+typedef struct {
+    UINT32 length;
+    UINT16 cmd;
+    UINT32 csum;
+} btrfs_send_command;
+
+typedef struct {
+    UINT16 type;
+    UINT16 length;
+} btrfs_send_tlv;
 
 #pragma pack(pop)
 

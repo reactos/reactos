@@ -739,7 +739,10 @@ NtGdiGetBoundsRect(
        DPRINT("    r %d b %d\n",rc.right,rc.bottom);
     }
     else
+    {
        rc = pdc->erclBounds;
+       ret = DCB_SET;
+    }
 
     /* Copy the rect to the caller */
     _SEH2_TRY

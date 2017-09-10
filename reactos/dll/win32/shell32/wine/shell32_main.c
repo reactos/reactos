@@ -423,7 +423,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
     TRACE("%s fattr=0x%x sfi=%p(attr=0x%08x) size=0x%x flags=0x%x\n",
           (flags & SHGFI_PIDL)? "pidl" : debugstr_w(path), dwFileAttributes,
-          psfi, psfi->dwAttributes, sizeofpsfi, flags);
+          psfi, psfi ? psfi->dwAttributes : 0, sizeofpsfi, flags);
 
     if (!path)
         return FALSE;

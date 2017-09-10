@@ -1,11 +1,12 @@
 /*
-* COPYRIGHT:   See COPYING in the top level directory
-* PROJECT:     ReactOS C runtime library
-* FILE:        lib/sdk/crt/stdio/popen.c
-* PURPOSE:     Pipe Functions
-* PROGRAMERS:  Eric Kohl
-               Hartmut Birr
-*/
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS C runtime library
+ * FILE:            lib/sdk/crt/stdio/popen.c
+ * PURPOSE:         Pipe Functions
+ * PROGRAMMERS:     Eric Kohl
+ *                  Hartmut Birr
+ *                  Also adapted from Wine team code by Andreas Maier.
+ */
 
 #include <precomp.h>
 #include <tchar.h>
@@ -22,11 +23,13 @@ int msvcrt_alloc_fd(HANDLE hand, int flag); //FIXME: Remove
 unsigned split_oflags(unsigned oflags); //FIXME: Remove
 
 #ifndef _UNICODE
-static struct popen_handle {
-    FILE *f;
-    HANDLE proc;
-} *popen_handles;
-static DWORD popen_handles_size;
+struct popen_handle *popen_handles = NULL;
+DWORD popen_handles_size = 0;
+
+void msvcrt_free_popen_data(void)
+{
+    free(popen_handles);
+}
 #endif
 
 /*
@@ -37,17 +40,19 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
     _TCHAR *szCmdLine=NULL;
     _TCHAR *szComSpec=NULL;
     _TCHAR *s;
-    FILE *pf;
+    FILE *ret;
     HANDLE hReadPipe, hWritePipe;
     BOOL result;
     STARTUPINFO StartupInfo;
     PROCESS_INFORMATION ProcessInformation;
     SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+    struct popen_handle *container;
+    DWORD i;
 
     TRACE(MK_STR(_tpopen)"('%"sT"', '%"sT"')\n", cm, md);
 
     if (cm == NULL)
-        return( NULL );
+        return NULL;
 
     szComSpec = _tgetenv(_T("COMSPEC"));
     if (szComSpec == NULL)
@@ -80,6 +85,7 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
         return NULL;
     }
 
+    memset(&ProcessInformation, 0, sizeof(ProcessInformation));
     memset(&StartupInfo, 0, sizeof(STARTUPINFO));
     StartupInfo.cb = sizeof(STARTUPINFO);
 
@@ -117,20 +123,48 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
     }
 
     CloseHandle(ProcessInformation.hThread);
-    CloseHandle(ProcessInformation.hProcess);
+
+    _mlock(_POPEN_LOCK);
+    for(i=0; i<popen_handles_size; i++)
+    {
+        if (!popen_handles[i].f)
+            break;
+    }
+    if (i==popen_handles_size)
+    {
+        i = (popen_handles_size ? popen_handles_size*2 : 8);
+        container = realloc(popen_handles, i*sizeof(*container));
+        if (!container) goto error;
+
+        popen_handles = container;
+        container = popen_handles+popen_handles_size;
+        memset(container, 0, (i-popen_handles_size)*sizeof(*container));
+        popen_handles_size = i;
+    }
+    else container = popen_handles+i;
 
     if ( *md == 'r' )
     {
-        pf = _tfdopen(msvcrt_alloc_fd(hReadPipe,  split_oflags(_fmode)) , _T("r"));
+        ret = _tfdopen(msvcrt_alloc_fd(hReadPipe,  split_oflags(_fmode)) , _T("r"));
         CloseHandle(hWritePipe);
     }
     else
     {
-        pf = _tfdopen( msvcrt_alloc_fd(hWritePipe, split_oflags(_fmode)) , _T("w"));
+        ret = _tfdopen( msvcrt_alloc_fd(hWritePipe, split_oflags(_fmode)) , _T("w"));
         CloseHandle(hReadPipe);
     }
 
-    return( pf );
+    container->f = ret;
+    container->proc = ProcessInformation.hProcess;
+    _munlock(_POPEN_LOCK);
+
+    return ret;
+
+error:
+    _munlock(_POPEN_LOCK);
+    if (ProcessInformation.hProcess != 0)
+        CloseHandle(ProcessInformation.hProcess);
+    return NULL;
 }
 
 #ifndef _UNICODE

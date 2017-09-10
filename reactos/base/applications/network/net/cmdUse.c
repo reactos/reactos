@@ -78,12 +78,32 @@ PrintError(DWORD Status)
     }
 }
 
+static
+BOOL
+ValidateDeviceName(PWSTR DevName)
+{
+    DWORD Len;
+
+    Len = wcslen(DevName);
+    if (Len != 2)
+    {
+        return FALSE;
+    }
+
+    if (!iswalpha(DevName[0]) || DevName[1] != L':')
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 INT
 cmdUse(
     INT argc,
     WCHAR **argv)
 {
-    DWORD Status, Len;
+    DWORD Status, Len, Delete;
 
     if (argc == 2)
     {
@@ -97,14 +117,7 @@ cmdUse(
     }
     else if (argc == 3)
     {
-        Len = wcslen(argv[2]);
-        if (Len != 2)
-        {
-            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
-            return 1;
-        }
-
-        if (!iswalpha(argv[2][0]) || argv[2][1] != L':')
+        if (!ValidateDeviceName(argv[2]))
         {
             ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
             return 1;
@@ -119,34 +132,39 @@ cmdUse(
         return 0;
     }
 
-    Len = wcslen(argv[2]);
-    if (Len != 1 && Len != 2)
+    Delete = 0;
+    if (wcsicmp(argv[2], L"/DELETE") == 0)
     {
-        ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
-        return 1;
+        Delete = 3;
     }
-
-    if (Len == 2 && argv[2][1] != L':')
+    else
     {
-        ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
-        return 1;
-    }
-
-    if (argv[2][0] != L'*' && !iswalpha(argv[2][0]))
-    {
-        ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
-        return 1;
+        if ((argv[2][0] != '*' && argv[2][1] != 0) &&
+            !ValidateDeviceName(argv[2]))
+        {
+            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+            return 1;
+        }
     }
 
     if (wcsicmp(argv[3], L"/DELETE") == 0)
     {
-        if (argv[2][0] == L'*')
+        Delete = 2;
+    }
+
+    if (Delete != 0)
+    {
+        if (!ValidateDeviceName(argv[Delete]) || argv[Delete][0] == L'*')
         {
             ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
             return 1;
         }
 
-        return WNetCancelConnection2(argv[2], CONNECT_UPDATE_PROFILE, FALSE);
+        Status = WNetCancelConnection2(argv[Delete], CONNECT_UPDATE_PROFILE, FALSE);
+        if (Status != NO_ERROR)
+            PrintError(Status);
+
+        return Status;
     }
     else
     {

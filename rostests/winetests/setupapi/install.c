@@ -454,6 +454,14 @@ static void test_profile_items(void)
         goto cleanup;
     }
 
+    snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
+    if (!CreateDirectoryA(path, NULL) && GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        skip("need admin rights\n");
+        return;
+    }
+    RemoveDirectoryA(path);
+
     create_inf_file(inffile, inf);
     sprintf(path, "%s\\%s", CURR_DIR, inffile);
     run_cmdline("DefaultInstall", 128, path);

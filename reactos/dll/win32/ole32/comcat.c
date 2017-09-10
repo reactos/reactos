@@ -684,53 +684,7 @@ static const ICatInformationVtbl COMCAT_ICatInformation_Vtbl =
     COMCAT_ICatInformation_EnumReqCategoriesOfClass
 };
 
-/**********************************************************************
- * COMCAT_IClassFactory_QueryInterface (also IUnknown)
- */
-static HRESULT WINAPI COMCAT_IClassFactory_QueryInterface(
-    LPCLASSFACTORY iface,
-    REFIID riid,
-    LPVOID *ppvObj)
-{
-    TRACE("%s\n",debugstr_guid(riid));
-
-    if (ppvObj == NULL) return E_POINTER;
-
-    if (IsEqualGUID(riid, &IID_IUnknown) ||
-	IsEqualGUID(riid, &IID_IClassFactory))
-    {
-        *ppvObj = iface;
-        IClassFactory_AddRef(iface);
-	return S_OK;
-    }
-
-    return E_NOINTERFACE;
-}
-
-/**********************************************************************
- * COMCAT_IClassFactory_AddRef (also IUnknown)
- */
-static ULONG WINAPI COMCAT_IClassFactory_AddRef(LPCLASSFACTORY iface)
-{
-    return 2; /* non-heap based object */
-}
-
-/**********************************************************************
- * COMCAT_IClassFactory_Release (also IUnknown)
- */
-static ULONG WINAPI COMCAT_IClassFactory_Release(LPCLASSFACTORY iface)
-{
-    return 1; /* non-heap based object */
-}
-
-/**********************************************************************
- * COMCAT_IClassFactory_CreateInstance
- */
-static HRESULT WINAPI COMCAT_IClassFactory_CreateInstance(
-    LPCLASSFACTORY iface,
-    LPUNKNOWN pUnkOuter,
-    REFIID riid,
-    LPVOID *ppvObj)
+HRESULT WINAPI ComCat_CreateInstance(IClassFactory *iface, IUnknown *pUnkOuter, REFIID riid, void **ppvObj)
 {
     HRESULT res;
     TRACE("%s\n",debugstr_guid(riid));
@@ -746,36 +700,6 @@ static HRESULT WINAPI COMCAT_IClassFactory_CreateInstance(
     }
 
     return CLASS_E_CLASSNOTAVAILABLE;
-}
-
-/**********************************************************************
- * COMCAT_IClassFactory_LockServer
- */
-static HRESULT WINAPI COMCAT_IClassFactory_LockServer(
-    LPCLASSFACTORY iface,
-    BOOL fLock)
-{
-    FIXME("(%d), stub!\n",fLock);
-    return S_OK;
-}
-
-/**********************************************************************
- * static ClassFactory instance
- */
-static const IClassFactoryVtbl ComCatCFVtbl =
-{
-    COMCAT_IClassFactory_QueryInterface,
-    COMCAT_IClassFactory_AddRef,
-    COMCAT_IClassFactory_Release,
-    COMCAT_IClassFactory_CreateInstance,
-    COMCAT_IClassFactory_LockServer
-};
-
-static const IClassFactoryVtbl *ComCatCF = &ComCatCFVtbl;
-
-HRESULT ComCatCF_Create(REFIID riid, LPVOID *ppv)
-{
-    return IClassFactory_QueryInterface((IClassFactory *)&ComCatCF, riid, ppv);
 }
 
 /**********************************************************************

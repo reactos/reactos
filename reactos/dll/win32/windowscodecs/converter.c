@@ -40,8 +40,11 @@ enum pixelformat {
     format_24bppRGB,
     format_32bppGrayFloat,
     format_32bppBGR,
+    format_32bppRGB,
     format_32bppBGRA,
+    format_32bppRGBA,
     format_32bppPBGRA,
+    format_32bppPRGBA,
     format_48bppRGB,
     format_64bppRGBA,
     format_32bppCMYK,
@@ -845,6 +848,27 @@ static HRESULT copypixels_to_32bppBGRA(struct FormatConverter *This, const WICRe
     }
 }
 
+static HRESULT copypixels_to_32bppRGBA(struct FormatConverter *This, const WICRect *prc,
+    UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer, enum pixelformat source_format)
+{
+    HRESULT hr;
+
+    switch (source_format)
+    {
+    case format_32bppRGB:
+    case format_32bppRGBA:
+    case format_32bppPRGBA:
+        if (prc)
+            return IWICBitmapSource_CopyPixels(This->source, prc, cbStride, cbBufferSize, pbBuffer);
+        return S_OK;
+    default:
+        hr = copypixels_to_32bppBGRA(This, prc, cbStride, cbBufferSize, pbBuffer, source_format);
+        if (SUCCEEDED(hr) && prc)
+              reverse_bgr8(4, pbBuffer, prc->Width, prc->Height, cbStride);
+        return hr;
+    }
+}
+
 static HRESULT copypixels_to_32bppBGR(struct FormatConverter *This, const WICRect *prc,
     UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer, enum pixelformat source_format)
 {
@@ -861,6 +885,22 @@ static HRESULT copypixels_to_32bppBGR(struct FormatConverter *This, const WICRec
     }
 }
 
+static HRESULT copypixels_to_32bppRGB(struct FormatConverter *This, const WICRect *prc,
+    UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer, enum pixelformat source_format)
+{
+    switch (source_format)
+    {
+    case format_32bppRGB:
+    case format_32bppRGBA:
+    case format_32bppPRGBA:
+        if (prc)
+            return IWICBitmapSource_CopyPixels(This->source, prc, cbStride, cbBufferSize, pbBuffer);
+        return S_OK;
+    default:
+        return copypixels_to_32bppRGBA(This, prc, cbStride, cbBufferSize, pbBuffer, source_format);
+    }
+}
+
 static HRESULT copypixels_to_32bppPBGRA(struct FormatConverter *This, const WICRect *prc,
     UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer, enum pixelformat source_format)
 {
@@ -874,6 +914,39 @@ static HRESULT copypixels_to_32bppPBGRA(struct FormatConverter *This, const WICR
         return S_OK;
     default:
         hr = copypixels_to_32bppBGRA(This, prc, cbStride, cbBufferSize, pbBuffer, source_format);
+        if (SUCCEEDED(hr) && prc)
+        {
+            INT x, y;
+
+            for (y=0; y<prc->Height; y++)
+                for (x=0; x<prc->Width; x++)
+                {
+                    BYTE alpha = pbBuffer[cbStride*y+4*x+3];
+                    if (alpha != 255)
+                    {
+                        pbBuffer[cbStride*y+4*x] = pbBuffer[cbStride*y+4*x] * alpha / 255;
+                        pbBuffer[cbStride*y+4*x+1] = pbBuffer[cbStride*y+4*x+1] * alpha / 255;
+                        pbBuffer[cbStride*y+4*x+2] = pbBuffer[cbStride*y+4*x+2] * alpha / 255;
+                    }
+                }
+        }
+        return hr;
+    }
+}
+
+static HRESULT copypixels_to_32bppPRGBA(struct FormatConverter *This, const WICRect *prc,
+    UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer, enum pixelformat source_format)
+{
+    HRESULT hr;
+
+    switch (source_format)
+    {
+    case format_32bppPRGBA:
+        if (prc)
+            return IWICBitmapSource_CopyPixels(This->source, prc, cbStride, cbBufferSize, pbBuffer);
+        return S_OK;
+    default:
+        hr = copypixels_to_32bppRGBA(This, prc, cbStride, cbBufferSize, pbBuffer, source_format);
         if (SUCCEEDED(hr) && prc)
         {
             INT x, y;
@@ -1275,8 +1348,11 @@ static const struct pixelformatinfo supported_formats[] = {
     {format_24bppRGB, &GUID_WICPixelFormat24bppRGB, copypixels_to_24bppRGB},
     {format_32bppGrayFloat, &GUID_WICPixelFormat32bppGrayFloat, copypixels_to_32bppGrayFloat},
     {format_32bppBGR, &GUID_WICPixelFormat32bppBGR, copypixels_to_32bppBGR},
+    {format_32bppRGB, &GUID_WICPixelFormat32bppRGB, copypixels_to_32bppRGB},
     {format_32bppBGRA, &GUID_WICPixelFormat32bppBGRA, copypixels_to_32bppBGRA},
+    {format_32bppRGBA, &GUID_WICPixelFormat32bppRGBA, copypixels_to_32bppRGBA},
     {format_32bppPBGRA, &GUID_WICPixelFormat32bppPBGRA, copypixels_to_32bppPBGRA},
+    {format_32bppPRGBA, &GUID_WICPixelFormat32bppPRGBA, copypixels_to_32bppPRGBA},
     {format_48bppRGB, &GUID_WICPixelFormat48bppRGB, NULL},
     {format_64bppRGBA, &GUID_WICPixelFormat64bppRGBA, NULL},
     {format_32bppCMYK, &GUID_WICPixelFormat32bppCMYK, NULL},

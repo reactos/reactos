@@ -553,6 +553,12 @@ static void gdip_get_font_metrics(GpFont *font, struct font_metrics *fm)
     stat = GdipGetFontStyle(font, &style);
     expect(Ok, stat);
 
+    stat = GdipGetFontHeight(NULL, NULL, &fm->font_height);
+    expect(InvalidParameter, stat);
+
+    stat = GdipGetFontHeight(font, NULL, NULL);
+    expect(InvalidParameter, stat);
+
     stat = GdipGetFontHeight(font, NULL, &fm->font_height);
     expect(Ok, stat);
     stat = GdipGetFontSize(font, &fm->font_size);

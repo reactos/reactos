@@ -1109,23 +1109,26 @@ SetupDiBuildDriverInfoList(
                                 }
                                 /* FIXME: Check ExcludeFromSelect list */
                                 DriverAlreadyAdded = FALSE;
-                                for (DriverRank = 0, currentId = (LPCWSTR)HardwareIDs; !DriverAlreadyAdded && *currentId; currentId += strlenW(currentId) + 1, DriverRank++)
+                                if (HardwareIDs)
                                 {
-                                    if (strcmpiW(DeviceId, currentId) == 0)
+                                    for (DriverRank = 0, currentId = (LPCWSTR)HardwareIDs; !DriverAlreadyAdded && *currentId; currentId += strlenW(currentId) + 1, DriverRank++)
                                     {
-                                        AddDriverToList(
-                                            pDriverListHead,
-                                            DriverType,
-                                            &ClassGuid,
-                                            ContextDevice,
-                                            currentInfFileDetails,
-                                            FullInfFileName,
-                                            ProviderName,
-                                            ManufacturerName,
-                                            currentId,
-                                            DriverDate, DriverVersion,
-                                            DriverRank  + (i == 2 ? 0 : 0x1000 + i - 3));
-                                        DriverAlreadyAdded = TRUE;
+                                        if (strcmpiW(DeviceId, currentId) == 0)
+                                        {
+                                            AddDriverToList(
+                                                pDriverListHead,
+                                                DriverType,
+                                                &ClassGuid,
+                                                ContextDevice,
+                                                currentInfFileDetails,
+                                                FullInfFileName,
+                                                ProviderName,
+                                                ManufacturerName,
+                                                currentId,
+                                                DriverDate, DriverVersion,
+                                                DriverRank  + (i == 2 ? 0 : 0x1000 + i - 3));
+                                            DriverAlreadyAdded = TRUE;
+                                        }
                                     }
                                 }
                                 if (CompatibleIDs)

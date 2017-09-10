@@ -301,6 +301,12 @@ AcpiDsInitializeObjects (
  * dsobject - Parser/Interpreter interface - object initialization and conversion
  */
 ACPI_STATUS
+AcpiDsBuildInternalObject (
+    ACPI_WALK_STATE         *WalkState,
+    ACPI_PARSE_OBJECT       *Op,
+    ACPI_OPERAND_OBJECT     **ObjDescPtr);
+
+ACPI_STATUS
 AcpiDsBuildInternalBufferObj (
     ACPI_WALK_STATE         *WalkState,
     ACPI_PARSE_OBJECT       *Op,
@@ -326,6 +332,17 @@ AcpiDsCreateNode (
     ACPI_WALK_STATE         *WalkState,
     ACPI_NAMESPACE_NODE     *Node,
     ACPI_PARSE_OBJECT       *Op);
+
+
+/*
+ * dspkginit - Package object initialization
+ */
+ACPI_STATUS
+AcpiDsInitPackageElement (
+    UINT8                   ObjectType,
+    ACPI_OPERAND_OBJECT     *SourceObject,
+    ACPI_GENERIC_STATE      *State,
+    void                    *Context);
 
 
 /*

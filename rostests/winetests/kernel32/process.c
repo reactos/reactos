@@ -88,6 +88,10 @@ static BOOL   (WINAPI *pThread32First)(HANDLE, THREADENTRY32*);
 static BOOL   (WINAPI *pThread32Next)(HANDLE, THREADENTRY32*);
 static BOOL   (WINAPI *pGetLogicalProcessorInformationEx)(LOGICAL_PROCESSOR_RELATIONSHIP,SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*,DWORD*);
 static SIZE_T (WINAPI *pGetLargePageMinimum)(void);
+static BOOL   (WINAPI *pInitializeProcThreadAttributeList)(struct _PROC_THREAD_ATTRIBUTE_LIST*, DWORD, DWORD, SIZE_T*);
+static BOOL   (WINAPI *pUpdateProcThreadAttribute)(struct _PROC_THREAD_ATTRIBUTE_LIST*, DWORD, DWORD_PTR, void *,SIZE_T,void*,SIZE_T*);
+static void   (WINAPI *pDeleteProcThreadAttributeList)(struct _PROC_THREAD_ATTRIBUTE_LIST*);
+static DWORD  (WINAPI *pGetActiveProcessorCount)(WORD);
 
 /* ############################### */
 static char     base[MAX_PATH];
@@ -252,6 +256,10 @@ static BOOL init(void)
     pThread32Next = (void *)GetProcAddress(hkernel32, "Thread32Next");
     pGetLogicalProcessorInformationEx = (void *)GetProcAddress(hkernel32, "GetLogicalProcessorInformationEx");
     pGetLargePageMinimum = (void *)GetProcAddress(hkernel32, "GetLargePageMinimum");
+    pInitializeProcThreadAttributeList = (void *)GetProcAddress(hkernel32, "InitializeProcThreadAttributeList");
+    pUpdateProcThreadAttribute = (void *)GetProcAddress(hkernel32, "UpdateProcThreadAttribute");
+    pDeleteProcThreadAttributeList = (void *)GetProcAddress(hkernel32, "DeleteProcThreadAttributeList");
+    pGetActiveProcessorCount = (void *)GetProcAddress(hkernel32, "GetActiveProcessorCount");
 
     return TRUE;
 }
@@ -626,7 +634,7 @@ static void test_Startup(void)
     okChildInt("StartupInfoA", "dwFlags", startup.dwFlags);
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* not so simplistic now */
     memset(&startup, 0, sizeof(startup));
@@ -664,7 +672,7 @@ static void test_Startup(void)
     okChildInt("StartupInfoA", "dwFlags", startup.dwFlags);
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* not so simplistic now */
     memset(&startup, 0, sizeof(startup));
@@ -702,7 +710,7 @@ static void test_Startup(void)
     okChildInt("StartupInfoA", "dwFlags", startup.dwFlags);
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* not so simplistic now */
     memset(&startup, 0, sizeof(startup));
@@ -740,7 +748,7 @@ static void test_Startup(void)
     okChildInt("StartupInfoA", "dwFlags", startup.dwFlags);
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* not so simplistic now */
     memset(&startup, 0, sizeof(startup));
@@ -780,7 +788,7 @@ static void test_Startup(void)
     okChildInt("StartupInfoA", "dwFlags", startup.dwFlags);
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* not so simplistic now */
     memset(&startup, 0, sizeof(startup));
@@ -818,7 +826,7 @@ static void test_Startup(void)
     okChildInt("StartupInfoA", "dwFlags", startup.dwFlags);
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* not so simplistic now */
     memset(&startup, 0, sizeof(startup));
@@ -856,7 +864,7 @@ static void test_Startup(void)
     okChildInt("StartupInfoA", "dwFlags", startup.dwFlags);
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* TODO: test for A/W and W/A and W/W */
 }
@@ -888,7 +896,7 @@ static void test_CommandLine(void)
     okChildString("Arguments", "argvA5", NULL);
     okChildString("Arguments", "CommandLineA", buffer);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
@@ -911,7 +919,7 @@ static void test_CommandLine(void)
     okChildString("Arguments", "argvA7", NULL);
     okChildString("Arguments", "CommandLineA", buffer);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* Test for Bug1330 to show that XP doesn't change '/' to '\\' in argv[0]*/
     get_file_name(resfile);
@@ -927,7 +935,7 @@ static void test_CommandLine(void)
     sprintf(buffer, "./%s", exename);
     okChildString("Arguments", "argvA0", buffer);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     get_file_name(resfile);
     /* Use exename to avoid buffer containing things like 'C:' */
@@ -942,8 +950,8 @@ static void test_CommandLine(void)
     sprintf(buffer, ".\\%s", exename);
     okChildString("Arguments", "argvA0", buffer);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
-    
+    DeleteFileA(resfile);
+
     get_file_name(resfile);
     GetFullPathNameA(selfname, MAX_PATH, fullpath, &lpFilePart);
     assert ( lpFilePart != 0);
@@ -963,7 +971,7 @@ static void test_CommandLine(void)
     else sprintf(buffer, "./%s", exename);
     okChildString("Arguments", "argvA0", buffer);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* Using AppName */
     get_file_name(resfile);
@@ -987,7 +995,7 @@ static void test_CommandLine(void)
     okChildString("Arguments", "CommandLineA", buffer2);
     okChildStringWA("Arguments", "CommandLineW", buffer2);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     if (0) /* Test crashes on NT-based Windows. */
     {
@@ -1082,7 +1090,7 @@ static void test_Directory(void)
 
     okChildIString("Misc", "CurrDirA", windir);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     /* search PATH for the exe if directory is NULL */
     ok(CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
@@ -1295,7 +1303,7 @@ static void test_Environment(void)
     env = GetEnvironmentStringsA();
     cmpEnvironment(env);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
@@ -1354,7 +1362,7 @@ static void test_Environment(void)
     HeapFree(GetProcessHeap(), 0, child_env);
     FreeEnvironmentStringsA(env);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 }
 
 static  void    test_SuspendFlag(void)
@@ -1402,7 +1410,7 @@ static  void    test_SuspendFlag(void)
     okChildInt("StartupInfoA", "dwFlags", startup.dwFlags);
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 }
 
 static  void    test_DebuggingFlag(void)
@@ -1464,7 +1472,7 @@ static  void    test_DebuggingFlag(void)
     okChildInt("StartupInfoA", "dwFlags", startup.dwFlags);
     okChildInt("StartupInfoA", "wShowWindow", startup.wShowWindow);
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 }
 
 static BOOL is_console(HANDLE h)
@@ -1514,8 +1522,8 @@ static void test_Console(void)
     startup.hStdError = startup.hStdOutput;
 
     ok(GetConsoleScreenBufferInfo(startup.hStdOutput, &sbi), "Getting sb info\n");
-    ok(GetConsoleMode(startup.hStdInput, &modeIn) && 
-       GetConsoleMode(startup.hStdOutput, &modeOut), "Getting console modes\n");
+    ok(GetConsoleMode(startup.hStdInput, &modeIn), "Getting console in mode\n");
+    ok(GetConsoleMode(startup.hStdOutput, &modeOut), "Getting console out mode\n");
     cpIn = GetConsoleCP();
     cpOut = GetConsoleOutputCP();
 
@@ -1530,8 +1538,8 @@ static void test_Console(void)
 
     /* now get the modification the child has made, and resets parents expected values */
     ok(GetConsoleScreenBufferInfo(startup.hStdOutput, &sbiC), "Getting sb info\n");
-    ok(GetConsoleMode(startup.hStdInput, &modeInC) && 
-       GetConsoleMode(startup.hStdOutput, &modeOutC), "Getting console modes\n");
+    ok(GetConsoleMode(startup.hStdInput, &modeInC), "Getting console in mode\n");
+    ok(GetConsoleMode(startup.hStdOutput, &modeOutC), "Getting console out mode\n");
 
     SetConsoleMode(startup.hStdInput, modeIn);
     SetConsoleMode(startup.hStdOutput, modeOut);
@@ -1611,7 +1619,7 @@ static void test_Console(void)
     ok(sbiC.dwCursorPosition.Y == (sbi.dwCursorPosition.Y ^ 1), "Wrong cursor position\n");
 
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 
     ok(CreatePipe(&hParentIn, &hChildOut, NULL, 0), "Creating parent-input pipe\n");
     ok(DuplicateHandle(GetCurrentProcess(), hChildOut, GetCurrentProcess(), 
@@ -1654,7 +1662,7 @@ static void test_Console(void)
     okChildString("StdHandle", "msg", msg);
 
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 }
 
 static  void    test_ExitCode(void)
@@ -1683,7 +1691,7 @@ static  void    test_ExitCode(void)
     okChildInt("ExitCode", "value", code);
 
     release_memory();
-    assert(DeleteFileA(resfile) != 0);
+    DeleteFileA(resfile);
 }
 
 static void test_OpenProcess(void)
@@ -1953,7 +1961,7 @@ static void test_QueryFullProcessImageNameW(void)
     expect_eq_d(lstrlenW(buf), size);
     expect_eq_ws_i(buf, module_name);
 
-    hSelf = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
+    hSelf = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, GetCurrentProcessId());
     /* Real handle */
     size = sizeof(buf) / sizeof(buf[0]);
     expect_eq_d(TRUE, pQueryFullProcessImageNameW(hSelf, 0, buf, &size));
@@ -2509,7 +2517,6 @@ static void test_QueryInformationJobObject(void)
     ret = QueryInformationJobObject(job, JobObjectBasicProcessIdList, pid_list,
                                     FIELD_OFFSET(JOBOBJECT_BASIC_PROCESS_ID_LIST, ProcessIdList), &ret_len);
     ok(!ret, "QueryInformationJobObject expected failure\n");
-    todo_wine
     expect_eq_d(ERROR_BAD_LENGTH, GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -2518,18 +2525,20 @@ static void test_QueryInformationJobObject(void)
     pid_list->NumberOfProcessIdsInList  = 42;
     ret = QueryInformationJobObject(job, JobObjectBasicProcessIdList, pid_list,
                                     FIELD_OFFSET(JOBOBJECT_BASIC_PROCESS_ID_LIST, ProcessIdList[1]), &ret_len);
+    todo_wine
     ok(!ret, "QueryInformationJobObject expected failure\n");
     todo_wine
     expect_eq_d(ERROR_MORE_DATA, GetLastError());
     if (ret)
     {
+        todo_wine
         expect_eq_d(42, pid_list->NumberOfAssignedProcesses);
+        todo_wine
         expect_eq_d(42, pid_list->NumberOfProcessIdsInList);
     }
 
     memset(buf, 0, sizeof(buf));
     ret = pQueryInformationJobObject(job, JobObjectBasicProcessIdList, pid_list, sizeof(buf), &ret_len);
-    todo_wine
     ok(ret, "QueryInformationJobObject error %u\n", GetLastError());
     if(ret)
     {
@@ -2539,12 +2548,17 @@ static void test_QueryInformationJobObject(void)
         {
             ULONG_PTR *list = pid_list->ProcessIdList;
 
+            todo_wine
             ok(ret_len == FIELD_OFFSET(JOBOBJECT_BASIC_PROCESS_ID_LIST, ProcessIdList[2]),
                "QueryInformationJobObject returned ret_len=%u\n", ret_len);
 
+            todo_wine
             expect_eq_d(2, pid_list->NumberOfAssignedProcesses);
+            todo_wine
             expect_eq_d(2, pid_list->NumberOfProcessIdsInList);
+            todo_wine
             expect_eq_d(pi[0].dwProcessId, list[0]);
+            todo_wine
             expect_eq_d(pi[1].dwProcessId, list[1]);
         }
     }
@@ -2693,6 +2707,13 @@ static void test_WaitForJobObject(void)
 
     if (dwret == WAIT_TIMEOUT) /* Win 2000/XP */
     {
+#ifdef __REACTOS__
+        if (!ret)
+        {
+            ok(0, "HACK: Killing process to speed up the test\n");
+            TerminateProcess(pi.hProcess, 0);
+        }
+#endif
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
         CloseHandle(job);
@@ -2889,6 +2910,98 @@ static void test_StartupNoConsole(void)
 #endif
 }
 
+static void test_DetachConsoleHandles(void)
+{
+#ifndef _WIN64
+    char                buffer[MAX_PATH];
+    STARTUPINFOA        startup;
+    PROCESS_INFORMATION info;
+    UINT                result;
+
+    memset(&startup, 0, sizeof(startup));
+    startup.cb = sizeof(startup);
+    startup.dwFlags = STARTF_USESHOWWINDOW|STARTF_USESTDHANDLES;
+    startup.wShowWindow = SW_SHOWNORMAL;
+    startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+    startup.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    startup.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+    get_file_name(resfile);
+    sprintf(buffer, "\"%s\" tests/process.c dump \"%s\"", selfname, resfile);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, TRUE, DETACHED_PROCESS, NULL, NULL, &startup,
+                      &info), "CreateProcess\n");
+    ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+
+    result = GetPrivateProfileIntA("StartupInfoA", "hStdInput", 0, resfile);
+    ok(result != 0 && result != (UINT)INVALID_HANDLE_VALUE, "bad handle %x\n", result);
+    result = GetPrivateProfileIntA("StartupInfoA", "hStdOutput", 0, resfile);
+    ok(result != 0 && result != (UINT)INVALID_HANDLE_VALUE, "bad handle %x\n", result);
+    result = GetPrivateProfileIntA("StartupInfoA", "hStdError", 0, resfile);
+    ok(result != 0 && result != (UINT)INVALID_HANDLE_VALUE, "bad handle %x\n", result);
+    result = GetPrivateProfileIntA("TEB", "hStdInput", 0, resfile);
+    ok(result != 0 && result != (UINT)INVALID_HANDLE_VALUE, "bad handle %x\n", result);
+    result = GetPrivateProfileIntA("TEB", "hStdOutput", 0, resfile);
+    ok(result != 0 && result != (UINT)INVALID_HANDLE_VALUE, "bad handle %x\n", result);
+    result = GetPrivateProfileIntA("TEB", "hStdError", 0, resfile);
+    ok(result != 0 && result != (UINT)INVALID_HANDLE_VALUE, "bad handle %x\n", result);
+
+    release_memory();
+    DeleteFileA(resfile);
+#endif
+}
+
+static void test_DetachStdHandles(void)
+{
+#ifndef _WIN64
+    char                buffer[MAX_PATH], tempfile[MAX_PATH];
+    STARTUPINFOA        startup;
+    PROCESS_INFORMATION info;
+    HANDLE              hstdin, hstdout, hstderr, htemp;
+    BOOL                res;
+
+    hstdin = GetStdHandle(STD_INPUT_HANDLE);
+    hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    hstderr = GetStdHandle(STD_ERROR_HANDLE);
+
+    get_file_name(tempfile);
+    htemp = CreateFileA(tempfile, GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+    ok(htemp != INVALID_HANDLE_VALUE, "failed opening temporary file\n");
+
+    memset(&startup, 0, sizeof(startup));
+    startup.cb = sizeof(startup);
+    startup.dwFlags = STARTF_USESHOWWINDOW;
+    startup.wShowWindow = SW_SHOWNORMAL;
+    get_file_name(resfile);
+    sprintf(buffer, "\"%s\" tests/process.c dump \"%s\"", selfname, resfile);
+
+    SetStdHandle(STD_INPUT_HANDLE, htemp);
+    SetStdHandle(STD_OUTPUT_HANDLE, htemp);
+    SetStdHandle(STD_ERROR_HANDLE, htemp);
+
+    res = CreateProcessA(NULL, buffer, NULL, NULL, TRUE, DETACHED_PROCESS, NULL, NULL, &startup,
+                      &info);
+
+    SetStdHandle(STD_INPUT_HANDLE, hstdin);
+    SetStdHandle(STD_OUTPUT_HANDLE, hstdout);
+    SetStdHandle(STD_ERROR_HANDLE, hstderr);
+
+    ok(res, "CreateProcess failed\n");
+    ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+    okChildInt("StartupInfoA", "hStdInput", (UINT)INVALID_HANDLE_VALUE);
+    okChildInt("StartupInfoA", "hStdOutput", (UINT)INVALID_HANDLE_VALUE);
+    okChildInt("StartupInfoA", "hStdError", (UINT)INVALID_HANDLE_VALUE);
+    okChildInt("TEB", "hStdInput", 0);
+    okChildInt("TEB", "hStdOutput", 0);
+    okChildInt("TEB", "hStdError", 0);
+    release_memory();
+    DeleteFileA(resfile);
+
+    CloseHandle(htemp);
+    DeleteFileA(tempfile);
+#endif
+}
+
 static void test_GetNumaProcessorNode(void)
 {
     SYSTEM_INFO si;
@@ -2981,23 +3094,23 @@ static void test_process_info(void)
         sizeof(buf) /* ProcessHandleTracing */,
         sizeof(ULONG) /* ProcessIoPriority */,
         sizeof(ULONG) /* ProcessExecuteFlags */,
-#if 0 /* FIXME: Add remaining classes */
-        ProcessResourceManagement,
-        sizeof(ULONG) /* ProcessCookie */,
+        0 /* FIXME: sizeof(?) ProcessTlsInformation */,
+        0 /* FIXME: sizeof(?) ProcessCookie */,
         sizeof(SECTION_IMAGE_INFORMATION) /* ProcessImageInformation */,
-        sizeof(PROCESS_CYCLE_TIME_INFORMATION) /* ProcessCycleTime */,
+        0 /* FIXME: sizeof(PROCESS_CYCLE_TIME_INFORMATION) ProcessCycleTime */,
         sizeof(ULONG) /* ProcessPagePriority */,
         40 /* ProcessInstrumentationCallback */,
-        sizeof(PROCESS_STACK_ALLOCATION_INFORMATION) /* ProcessThreadStackAllocation */,
-        sizeof(PROCESS_WS_WATCH_INFORMATION_EX[]) /* ProcessWorkingSetWatchEx */,
+        0 /* FIXME: sizeof(PROCESS_STACK_ALLOCATION_INFORMATION) ProcessThreadStackAllocation */,
+        0 /* FIXME: sizeof(PROCESS_WS_WATCH_INFORMATION_EX[]) ProcessWorkingSetWatchEx */,
         sizeof(buf) /* ProcessImageFileNameWin32 */,
         sizeof(HANDLE) /* ProcessImageFileMapping */,
-        sizeof(PROCESS_AFFINITY_UPDATE_MODE) /* ProcessAffinityUpdateMode */,
-        sizeof(PROCESS_MEMORY_ALLOCATION_MODE) /* ProcessMemoryAllocationMode */,
-        sizeof(USHORT[]) /* ProcessGroupInformation */,
+        0 /* FIXME: sizeof(PROCESS_AFFINITY_UPDATE_MODE) ProcessAffinityUpdateMode */,
+        0 /* FIXME: sizeof(PROCESS_MEMORY_ALLOCATION_MODE) ProcessMemoryAllocationMode */,
+        sizeof(USHORT) /* ProcessGroupInformation */,
         sizeof(ULONG) /* ProcessTokenVirtualizationEnabled */,
         sizeof(ULONG_PTR) /* ProcessConsoleHostProcess */,
-        sizeof(PROCESS_WINDOW_INFORMATION) /* ProcessWindowInformation */,
+        0 /* FIXME: sizeof(PROCESS_WINDOW_INFORMATION) ProcessWindowInformation */,
+#if 0 /* FIXME: Add remaining classes */
         sizeof(PROCESS_HANDLE_SNAPSHOT_INFORMATION) /* ProcessHandleInformation */,
         sizeof(PROCESS_MITIGATION_POLICY_INFORMATION) /* ProcessMitigationPolicy */,
         sizeof(ProcessDynamicFunctionTableInformation) /* ProcessDynamicFunctionTableInformation */,
@@ -3061,16 +3174,17 @@ static void test_process_info(void)
         case ProcessWow64Information:
         case ProcessDefaultHardErrorMode:
         case ProcessHandleCount:
-            ok(status == STATUS_SUCCESS, "for info %u expected STATUS_SUCCESS, got %08x (ret_len %u)\n", i, status, ret_len);
-            break;
-
         case ProcessImageFileName:
-todo_wine
+        case ProcessImageInformation:
+        case ProcessPagePriority:
+        case ProcessImageFileNameWin32:
             ok(status == STATUS_SUCCESS, "for info %u expected STATUS_SUCCESS, got %08x (ret_len %u)\n", i, status, ret_len);
             break;
 
         case ProcessAffinityMask:
         case ProcessBreakOnTermination:
+        case ProcessGroupInformation:
+        case ProcessConsoleHostProcess:
             ok(status == STATUS_ACCESS_DENIED /* before win8 */ || status == STATUS_SUCCESS /* win8 is less strict */,
                "for info %u expected STATUS_SUCCESS, got %08x (ret_len %u)\n", i, status, ret_len);
             break;
@@ -3083,6 +3197,7 @@ todo_wine
         case ProcessExecuteFlags:
         case ProcessDebugPort:
         case ProcessDebugFlags:
+        case ProcessCookie:
 todo_wine
             ok(status == STATUS_ACCESS_DENIED, "for info %u expected STATUS_ACCESS_DENIED, got %08x (ret_len %u)\n", i, status, ret_len);
             break;
@@ -3139,6 +3254,142 @@ static void test_largepages(void)
     size = pGetLargePageMinimum();
 
     ok((size == 0) || (size == 2*1024*1024) || (size == 4*1024*1024), "GetLargePageMinimum reports %ld size\n", size);
+}
+
+struct proc_thread_attr
+{
+    DWORD_PTR attr;
+    SIZE_T size;
+    void *value;
+};
+
+struct _PROC_THREAD_ATTRIBUTE_LIST
+{
+    DWORD mask;  /* bitmask of items in list */
+    DWORD size;  /* max number of items in list */
+    DWORD count; /* number of items in list */
+    DWORD pad;
+    DWORD_PTR unk;
+    struct proc_thread_attr attrs[10];
+};
+
+static void test_ProcThreadAttributeList(void)
+{
+    BOOL ret;
+    SIZE_T size, needed;
+    int i;
+    struct _PROC_THREAD_ATTRIBUTE_LIST list, expect_list;
+    HANDLE handles[4];
+
+    if (!pInitializeProcThreadAttributeList)
+    {
+        win_skip("No support for ProcThreadAttributeList\n");
+        return;
+    }
+
+    for (i = 0; i <= 10; i++)
+    {
+        needed = FIELD_OFFSET(struct _PROC_THREAD_ATTRIBUTE_LIST, attrs[i]);
+        ret = pInitializeProcThreadAttributeList(NULL, i, 0, &size);
+        ok(!ret, "got %d\n", ret);
+        if(i >= 4 && GetLastError() == ERROR_INVALID_PARAMETER) /* Vista only allows a maximium of 3 slots */
+            break;
+        ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "got %d\n", GetLastError());
+        ok(size == needed, "%d: got %ld expect %ld\n", i, size, needed);
+
+        memset(&list, 0xcc, sizeof(list));
+        ret = pInitializeProcThreadAttributeList(&list, i, 0, &size);
+        ok(ret, "got %d\n", ret);
+        ok(list.mask == 0, "%d: got %08x\n", i, list.mask);
+        ok(list.size == i, "%d: got %08x\n", i, list.size);
+        ok(list.count == 0, "%d: got %08x\n", i, list.count);
+        ok(list.unk == 0, "%d: got %08lx\n", i, list.unk);
+    }
+
+    memset(handles, 0, sizeof(handles));
+    memset(&expect_list, 0xcc, sizeof(expect_list));
+    expect_list.mask = 0;
+    expect_list.size = i - 1;
+    expect_list.count = 0;
+    expect_list.unk = 0;
+
+    ret = pUpdateProcThreadAttribute(&list, 0, 0xcafe, handles, sizeof(PROCESSOR_NUMBER), NULL, NULL);
+    ok(!ret, "got %d\n", ret);
+    ok(GetLastError() == ERROR_NOT_SUPPORTED, "got %d\n", GetLastError());
+
+    ret = pUpdateProcThreadAttribute(&list, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, handles, sizeof(handles[0]) / 2, NULL, NULL);
+    ok(!ret, "got %d\n", ret);
+    ok(GetLastError() == ERROR_BAD_LENGTH, "got %d\n", GetLastError());
+
+    ret = pUpdateProcThreadAttribute(&list, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, handles, sizeof(handles[0]) * 2, NULL, NULL);
+    ok(!ret, "got %d\n", ret);
+    ok(GetLastError() == ERROR_BAD_LENGTH, "got %d\n", GetLastError());
+
+    ret = pUpdateProcThreadAttribute(&list, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, handles, sizeof(handles[0]), NULL, NULL);
+    ok(ret, "got %d\n", ret);
+
+    expect_list.mask |= 1 << ProcThreadAttributeParentProcess;
+    expect_list.attrs[0].attr = PROC_THREAD_ATTRIBUTE_PARENT_PROCESS;
+    expect_list.attrs[0].size = sizeof(handles[0]);
+    expect_list.attrs[0].value = handles;
+    expect_list.count++;
+
+    ret = pUpdateProcThreadAttribute(&list, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, handles, sizeof(handles[0]), NULL, NULL);
+    ok(!ret, "got %d\n", ret);
+    ok(GetLastError() == ERROR_OBJECT_NAME_EXISTS, "got %d\n", GetLastError());
+
+    ret = pUpdateProcThreadAttribute(&list, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, handles, sizeof(handles) - 1, NULL, NULL);
+    ok(!ret, "got %d\n", ret);
+    ok(GetLastError() == ERROR_BAD_LENGTH, "got %d\n", GetLastError());
+
+    ret = pUpdateProcThreadAttribute(&list, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, handles, sizeof(handles), NULL, NULL);
+    ok(ret, "got %d\n", ret);
+
+    expect_list.mask |= 1 << ProcThreadAttributeHandleList;
+    expect_list.attrs[1].attr = PROC_THREAD_ATTRIBUTE_HANDLE_LIST;
+    expect_list.attrs[1].size = sizeof(handles);
+    expect_list.attrs[1].value = handles;
+    expect_list.count++;
+
+    ret = pUpdateProcThreadAttribute(&list, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, handles, sizeof(handles), NULL, NULL);
+    ok(!ret, "got %d\n", ret);
+    ok(GetLastError() == ERROR_OBJECT_NAME_EXISTS, "got %d\n", GetLastError());
+
+    ret = pUpdateProcThreadAttribute(&list, 0, PROC_THREAD_ATTRIBUTE_IDEAL_PROCESSOR, handles, sizeof(PROCESSOR_NUMBER), NULL, NULL);
+    ok(ret || (!ret && GetLastError() == ERROR_NOT_SUPPORTED), "got %d gle %d\n", ret, GetLastError());
+
+    if (ret)
+    {
+        expect_list.mask |= 1 << ProcThreadAttributeIdealProcessor;
+        expect_list.attrs[2].attr = PROC_THREAD_ATTRIBUTE_IDEAL_PROCESSOR;
+        expect_list.attrs[2].size = sizeof(PROCESSOR_NUMBER);
+        expect_list.attrs[2].value = handles;
+        expect_list.count++;
+    }
+
+    ok(!memcmp(&list, &expect_list, size), "mismatch\n");
+
+    pDeleteProcThreadAttributeList(&list);
+}
+
+static void test_GetActiveProcessorCount(void)
+{
+    DWORD count;
+
+    if (!pGetActiveProcessorCount)
+    {
+        win_skip("GetActiveProcessorCount not available, skipping test\n");
+        return;
+    }
+
+    count = pGetActiveProcessorCount(0);
+    ok(count, "GetActiveProcessorCount failed, error %u\n", GetLastError());
+
+    /* Test would fail on systems with more than 6400 processors */
+    SetLastError(0xdeadbeef);
+    count = pGetActiveProcessorCount(101);
+    ok(count == 0, "Expeced GetActiveProcessorCount to fail\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
 }
 
 START_TEST(process)
@@ -3210,10 +3461,14 @@ START_TEST(process)
     test_RegistryQuota();
     test_DuplicateHandle();
     test_StartupNoConsole();
+    test_DetachConsoleHandles();
+    test_DetachStdHandles();
     test_GetNumaProcessorNode();
     test_session_info();
     test_GetLogicalProcessorInformationEx();
+    test_GetActiveProcessorCount();
     test_largepages();
+    test_ProcThreadAttributeList();
 
     /* things that can be tested:
      *  lookup:         check the way program to be executed is searched

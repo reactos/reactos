@@ -1,0 +1,894 @@
+/*
+ * PROJECT:         ReactOS api tests
+ * LICENSE:         GPLv2+ - See COPYING in the top level directory
+ * PURPOSE:         Tests for PathResolve
+ * PROGRAMMER:      Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
+#include "shelltest.h"
+#include <assert.h>
+
+/*
+ * NOTE: "App Paths" registry key and PATHEXT environment variable
+ *       have no effect for PathResolve.
+ */
+
+/* PathResolve */
+typedef int (WINAPI *PATHRESOLVE)(LPWSTR, LPWSTR *, UINT);
+
+static HINSTANCE    s_hShell32 = NULL;
+static PATHRESOLVE  s_pPathResolve = NULL;
+static WCHAR        s_TestDataPath[MAX_PATH];
+static WCHAR        s_LinkFilePath[MAX_PATH];
+static WCHAR        s_LinkTargetPath[MAX_PATH];
+static LPWSTR       s_Dirs[2];
+
+/* PathResolve flags */
+#ifndef PRF_VERIFYEXISTS
+    #define PRF_VERIFYEXISTS         0x01
+    #define PRF_EXECUTABLE           0x02
+    #define PRF_TRYPROGRAMEXTENSIONS (PRF_EXECUTABLE | PRF_VERIFYEXISTS)
+    #define PRF_FIRSTDIRDEF          0x04
+    #define PRF_DONTFINDLNK          0x08
+#endif
+#ifndef PRF_REQUIREABSOLUTE
+    #define PRF_REQUIREABSOLUTE      0x10
+#endif
+
+#define FLAGS0      0
+#define FLAGS1      PRF_VERIFYEXISTS
+#define FLAGS2      PRF_EXECUTABLE
+#define FLAGS3      PRF_TRYPROGRAMEXTENSIONS
+#define FLAGS4      (PRF_FIRSTDIRDEF | PRF_VERIFYEXISTS)
+#define FLAGS5      (PRF_FIRSTDIRDEF | PRF_EXECUTABLE)
+#define FLAGS6      (PRF_FIRSTDIRDEF | PRF_TRYPROGRAMEXTENSIONS)
+#define FLAGS7      (PRF_REQUIREABSOLUTE | PRF_VERIFYEXISTS)
+#define FLAGS8      (PRF_REQUIREABSOLUTE | PRF_EXECUTABLE)
+#define FLAGS9      (PRF_REQUIREABSOLUTE | PRF_TRYPROGRAMEXTENSIONS)
+#define FLAGS10     (PRF_REQUIREABSOLUTE | PRF_FIRSTDIRDEF | PRF_VERIFYEXISTS)
+#define FLAGS11     (PRF_REQUIREABSOLUTE | PRF_FIRSTDIRDEF | PRF_EXECUTABLE)
+#define FLAGS12     (PRF_REQUIREABSOLUTE | PRF_FIRSTDIRDEF | PRF_TRYPROGRAMEXTENSIONS)
+#define FLAGS13     0xFFFFFFFF
+
+#define EF_FULLPATH     1
+#define EF_TESTDATA     2
+#define EF_WINDOWS_DIR  4
+#define EF_SYSTEM_DIR   8
+#define EF_TYPE_MASK    0xF
+
+#define EF_NAME_ONLY    16
+#define EF_APP_PATH     32
+
+typedef struct ENTRY
+{
+    INT         EntryNumber;    /* # */
+    INT         Ret;
+    DWORD       Error;
+    UINT        EF_;
+    LPCWSTR     NameBefore;
+    LPCWSTR     NameExpected;
+    UINT        Flags;
+    LPWSTR     *Dirs;
+} ENTRY;
+
+#define BEEF        0xBEEF      /* Error Code 48879 */
+#define DEAD        0xDEAD      /* Error Code 57005 */
+#define IGNORE_ERR  0x7F7F7F7F  /* Ignore Error Code */
+#define RAISED      9999        /* exception raised */
+
+static const ENTRY s_Entries[] =
+{
+    /* null path */
+    { 0, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS0 },
+    { 1, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS1 },
+    { 2, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS2 },
+    { 3, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS3 },
+    { 4, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS4 },
+    { 5, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS5 },
+    { 6, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS6 },
+    { 7, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS7 },
+    { 8, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS8 },
+    { 9, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS9 },
+    { 10, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS10 },
+    { 11, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS11 },
+    { 12, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS12 },
+    { 13, RAISED, DEAD, EF_FULLPATH, NULL, NULL, FLAGS13 },
+    /* empty path */
+    { 14, 1, BEEF, EF_FULLPATH, L"", NULL, FLAGS0 },
+    { 15, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS1 },
+    { 16, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS2 },
+    { 17, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS3 },
+    { 18, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS4 },
+    { 19, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS5 },
+    { 20, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS6 },
+    { 21, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS7 },
+    { 22, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS8 },
+    { 23, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS9 },
+    { 24, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS10 },
+    { 25, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS11 },
+    { 26, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS12 },
+    { 27, 1, ERROR_NO_MORE_FILES, EF_FULLPATH, L"", NULL, FLAGS13 },
+    /* Fonts folder (path) */
+    { 28, 1, IGNORE_ERR, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS0 },
+    { 29, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS1 },
+    { 30, 1, BEEF, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS2 },
+    { 31, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS3 },
+    { 32, RAISED, DEAD, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS4 },
+    { 33, RAISED, DEAD, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS5 },
+    { 34, RAISED, DEAD, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS6 },
+    { 35, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS7 },
+    { 36, 1, BEEF, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS8 },
+    { 37, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS9 },
+    { 38, RAISED, DEAD, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS10 },
+    { 39, RAISED, DEAD, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS11 },
+    { 40, RAISED, DEAD, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS12 },
+    { 41, RAISED, DEAD, EF_WINDOWS_DIR, L"Fonts", L"Fonts", FLAGS13 },
+    /* Fonts folder (name only) */
+    { 42, 1, ERROR_FILE_NOT_FOUND, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS0 },
+    { 43, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS1 },
+    { 44, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS2 },
+    { 45, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS3 },
+    { 46, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS4 },
+    { 47, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS5 },
+    { 48, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS6 },
+    { 49, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS7 },
+    { 50, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS8 },
+    { 51, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS9 },
+    { 52, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS10 },
+    { 53, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS11 },
+    { 54, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS12 },
+    { 55, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS13 },
+    /* Fonts folder with dirs (name only) */
+    { 56, 1, ERROR_FILE_NOT_FOUND, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS0, s_Dirs },
+    { 57, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS1, s_Dirs },
+    { 58, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS2, s_Dirs },
+    { 59, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS3, s_Dirs },
+    { 60, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS4, s_Dirs },
+    { 61, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS5, s_Dirs },
+    { 62, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS6, s_Dirs },
+    { 63, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS7, s_Dirs },
+    { 64, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS8, s_Dirs },
+    { 65, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS9, s_Dirs },
+    { 66, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS10, s_Dirs },
+    { 67, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS11, s_Dirs },
+    { 68, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS12, s_Dirs },
+    { 69, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"Fonts", L"Fonts", FLAGS13, s_Dirs },
+    /* system32 folder (path) */
+    { 70, 1, BEEF, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS0 },
+    { 71, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS1 },
+    { 72, 1, BEEF, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS2 },
+    { 73, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS3 },
+    { 74, RAISED, DEAD, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS4 },
+    { 75, RAISED, DEAD, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS5 },
+    { 76, RAISED, DEAD, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS6 },
+    { 77, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS7 },
+    { 78, 1, BEEF, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS8 },
+    { 79, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS9 },
+    { 80, RAISED, DEAD, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS10 },
+    { 81, RAISED, DEAD, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS11 },
+    { 82, RAISED, DEAD, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS12 },
+    { 83, RAISED, DEAD, EF_WINDOWS_DIR, L"system32", L"system32", FLAGS13 },
+    /* system32 folder (name only) */
+    { 84, 1, ERROR_FILE_NOT_FOUND, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS0 },
+    { 85, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS1 },
+    { 86, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS2 },
+    { 87, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS3 },
+    { 88, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS4 },
+    { 89, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS5 },
+    { 90, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS6 },
+    { 91, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS7 },
+    { 92, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS8 },
+    { 93, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS9 },
+    { 94, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS10 },
+    { 95, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS11 },
+    { 96, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS12 },
+    { 97, 1, ERROR_NO_MORE_FILES, EF_WINDOWS_DIR | EF_NAME_ONLY, L"system32", L"system32", FLAGS13 },
+    /* notepad (path) */
+    { 98, 1, BEEF, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS0 },
+    { 99, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR, L"notepad", L"notepad.exe", FLAGS1 },
+    { 100, 1, BEEF, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS2 },
+    { 101, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR, L"notepad", L"notepad.exe", FLAGS3 },
+    { 102, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS4 },
+    { 103, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS5 },
+    { 104, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS6 },
+    { 105, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR, L"notepad", L"notepad.exe", FLAGS7 },
+    { 106, 1, BEEF, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS8 },
+    { 107, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR, L"notepad", L"notepad.exe", FLAGS9 },
+    { 108, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS10 },
+    { 109, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS11 },
+    { 110, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS12 },
+    { 111, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad", L"notepad", FLAGS13 },
+    /* notepad (name only) */
+    { 112, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS0 },
+    { 113, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS1 },
+    { 114, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS2 },
+    { 115, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS3 },
+    { 116, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS4 },
+    { 117, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS5 },
+    { 118, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS6 },
+    { 119, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS7 },
+    { 120, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS8 },
+    { 121, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS9 },
+    { 122, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS10 },
+    { 123, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS11 },
+    { 124, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS12 },
+    { 125, 1, ERROR_NO_MORE_FILES, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad", NULL, FLAGS13 },
+    /* notepad.exe (path) */
+    { 126, 1, BEEF, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS0 },
+    { 127, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS1 },
+    { 128, 1, BEEF, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS2 },
+    { 129, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS3 },
+    { 130, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS4 },
+    { 131, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS5 },
+    { 132, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS6 },
+    { 133, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS7 },
+    { 134, 1, BEEF, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS8 },
+    { 135, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS9 },
+    { 136, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS10 },
+    { 137, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS11 },
+    { 138, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS12 },
+    { 139, RAISED, DEAD, EF_SYSTEM_DIR, L"notepad.exe", L"notepad.exe", FLAGS13 },
+    /* notepad.exe (name only) */
+    { 140, 1, BEEF, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS0 },
+    { 141, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS1 },
+    { 142, 1, BEEF, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS2 },
+    { 143, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS3 },
+    { 144, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS4 },
+    { 145, 1, BEEF, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS5 },
+    { 146, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS6 },
+    { 147, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS7 },
+    { 148, 1, BEEF, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS8 },
+    { 149, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS9 },
+    { 150, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS10 },
+    { 151, 1, BEEF, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS11 },
+    { 152, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS12 },
+    { 153, 1, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.exe", L"notepad.exe", FLAGS13 },
+    /* notepad.com (name only) */
+    { 154, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS0 },
+    { 155, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS1 },
+    { 156, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS2 },
+    { 157, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS3 },
+    { 158, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS4 },
+    { 159, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS5 },
+    { 160, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS6 },
+    { 161, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS7 },
+    { 162, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS8 },
+    { 163, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS9 },
+    { 164, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS10 },
+    { 165, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS11 },
+    { 166, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS12 },
+    { 167, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY, L"notepad.com", NULL, FLAGS13 },
+    /* GhostProgram.exe -> notepad.exe (name only, app path) */
+    { 168, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS0 },
+    { 169, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS1 },
+    { 170, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS2 },
+    { 171, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS3 },
+    { 172, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS4 },
+    { 173, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS5 },
+    { 174, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS6 },
+    { 175, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS7 },
+    { 176, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS8 },
+    { 177, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS9 },
+    { 178, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS10 },
+    { 179, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS11 },
+    { 180, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS12 },
+    { 181, 0, ERROR_FILE_NOT_FOUND, EF_SYSTEM_DIR | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"notepad.exe", FLAGS13 },
+    /* invalid name */
+    { 182, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS0 },
+    { 183, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS1 },
+    { 184, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS2 },
+    { 185, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS3 },
+    { 186, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS4 },
+    { 187, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS5 },
+    { 188, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS6 },
+    { 189, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS7 },
+    { 190, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS8 },
+    { 191, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS9 },
+    { 192, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS10 },
+    { 193, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS11 },
+    { 194, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS12 },
+    { 195, 0, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"invalid name", L"invalid name", FLAGS13 },
+    /* testdata/2PRONG (path) */
+    { 196, 1, BEEF, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS0 },
+    { 197, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS1 },
+    { 198, 1, BEEF, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS2 },
+    { 199, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS3 },
+    { 200, RAISED, DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS4 },
+    { 201, RAISED, DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS5 },
+    { 202, RAISED, DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS6 },
+    { 203, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS7 },
+    { 204, 1, BEEF, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS8 },
+    { 205, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS9 },
+    { 206, RAISED, DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS10 },
+    { 207, RAISED, DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS11 },
+    { 208, RAISED, DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS12 },
+    { 209, RAISED, DEAD, EF_TESTDATA, L"2PRONG", L"2PRONG", FLAGS13 },
+    /* testdata/2PRONG (name only) */
+    { 210, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS0 },
+    { 211, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS1 },
+    { 212, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS2 },
+    { 213, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS3 },
+    { 214, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS4 },
+    { 215, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS5 },
+    { 216, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS6 },
+    { 217, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS7 },
+    { 218, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS8 },
+    { 219, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS9 },
+    { 220, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS10 },
+    { 221, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS11 },
+    { 222, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS12 },
+    { 223, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS13 },
+    /* testdata/2PRONG with dirs (name only) */
+    { 224, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS0, s_Dirs },
+    { 225, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS1, s_Dirs },
+    { 226, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS2, s_Dirs },
+    { 227, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS3, s_Dirs },
+    { 228, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS4, s_Dirs },
+    { 229, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS5, s_Dirs },
+    { 230, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS6, s_Dirs },
+    { 231, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS7, s_Dirs },
+    { 232, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS8, s_Dirs },
+    { 233, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS9, s_Dirs },
+    { 234, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS10, s_Dirs },
+    { 235, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS11, s_Dirs },
+    { 236, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS12, s_Dirs },
+    { 237, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG", NULL, FLAGS13, s_Dirs },
+    /* testdata/2PRONG (name only, app path) */
+    { 238, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS0 },
+    { 239, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS1 },
+    { 240, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS2 },
+    { 241, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS3 },
+    { 242, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS4 },
+    { 243, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS5 },
+    { 244, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS6 },
+    { 245, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS7 },
+    { 246, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS8 },
+    { 247, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS9 },
+    { 248, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS10 },
+    { 249, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS11 },
+    { 250, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS12 },
+    { 251, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"2PRONG", L"2PRONG", FLAGS13 },
+    /* testdata/2PRONG.txt (path) */
+    { 252, 1, BEEF, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS0 },
+    { 253, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS1 },
+    { 254, 1, BEEF, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS2 },
+    { 255, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS3 },
+    { 256, RAISED, DEAD, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS4 },
+    { 257, RAISED, DEAD, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS5 },
+    { 258, RAISED, DEAD, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS6 },
+    { 259, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS7 },
+    { 260, 1, BEEF, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS8 },
+    { 261, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS9 },
+    { 262, RAISED, DEAD, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS10 },
+    { 263, RAISED, DEAD, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS11 },
+    { 264, RAISED, DEAD, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS12 },
+    { 265, RAISED, DEAD, EF_TESTDATA, L"2PRONG.txt", L"2PRONG.txt", FLAGS13 },
+    /* 2PRONG.txt (name only) */
+    { 266, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS0 },
+    { 267, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS1 },
+    { 268, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS2 },
+    { 269, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS3 },
+    { 270, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS4 },
+    { 271, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS5 },
+    { 272, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS6 },
+    { 273, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS7 },
+    { 274, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS8 },
+    { 275, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS9 },
+    { 276, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS10 },
+    { 277, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS11 },
+    { 278, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS12 },
+    { 279, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", NULL, FLAGS13 },
+    /* 2PRONG.txt with dirs (name only) */
+    { 280, 1, BEEF, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS0, s_Dirs },
+    { 281, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS1, s_Dirs },
+    { 282, 1, BEEF, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS2, s_Dirs },
+    { 283, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS3, s_Dirs },
+    { 284, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS4, s_Dirs },
+    { 285, 1, BEEF, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS5, s_Dirs },
+    { 286, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS6, s_Dirs },
+    { 287, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS7, s_Dirs },
+    { 288, 1, BEEF, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS8, s_Dirs },
+    { 289, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS9, s_Dirs },
+    { 290, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS10, s_Dirs },
+    { 291, 1, BEEF, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS11, s_Dirs },
+    { 292, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS12, s_Dirs },
+    { 293, 1, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"2PRONG.txt", L"2PRONG.txt", FLAGS13, s_Dirs },
+    /* testdata/CmdLineUtils (path) */
+    { 294, 1, BEEF, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS0 },
+    { 295, 1, ERROR_NO_MORE_FILES, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS1 },
+    { 296, 1, BEEF, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS2 },
+    { 297, 1, ERROR_NO_MORE_FILES, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS3 },
+    { 298, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS4 },
+    { 299, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS5 },
+    { 300, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS6 },
+    { 301, 1, ERROR_NO_MORE_FILES, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS7 },
+    { 302, 1, BEEF, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS8 },
+    { 303, 1, ERROR_NO_MORE_FILES, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils.lnk", FLAGS9 },
+    { 304, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS10 },
+    { 305, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS11 },
+    { 306, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS12 },
+    { 307, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS13 },
+    /* testdata/CmdLineUtils with PRF_DONTFINDLNK (path) */
+    { 308, 1, BEEF, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS0 | PRF_DONTFINDLNK },
+    { 309, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS1 | PRF_DONTFINDLNK },
+    { 310, 1, BEEF, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS2 | PRF_DONTFINDLNK },
+    { 311, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS3 | PRF_DONTFINDLNK },
+    { 312, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS4 | PRF_DONTFINDLNK },
+    { 313, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS5 | PRF_DONTFINDLNK },
+    { 314, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS6 | PRF_DONTFINDLNK },
+    { 315, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS7 | PRF_DONTFINDLNK },
+    { 316, 1, BEEF, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS8 | PRF_DONTFINDLNK },
+    { 317, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS9 | PRF_DONTFINDLNK },
+    { 318, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS10 | PRF_DONTFINDLNK },
+    { 319, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS11 | PRF_DONTFINDLNK },
+    { 320, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS12 | PRF_DONTFINDLNK },
+    { 321, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils", L"CmdLineUtils", FLAGS13 | PRF_DONTFINDLNK },
+    /* testdata/CmdLineUtils (name only) */
+    { 222, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS0 },
+    { 323, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS1 },
+    { 324, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS2 },
+    { 325, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS3 },
+    { 326, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS4 },
+    { 327, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS5 },
+    { 328, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS6 },
+    { 329, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS7 },
+    { 330, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS8 },
+    { 331, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS9 },
+    { 332, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS10 },
+    { 333, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS11 },
+    { 334, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS12 },
+    { 335, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils", NULL, FLAGS13 },
+    /* testdata/CmdLineUtils.exe (path) */
+    { 336, 1, BEEF, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS0 },
+    { 337, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS1 },
+    { 338, 1, BEEF, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS2 },
+    { 339, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS3 },
+    { 340, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS4 },
+    { 341, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS5 },
+    { 342, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS6 },
+    { 343, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS7 },
+    { 344, 1, BEEF, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS8 },
+    { 345, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS9 },
+    { 346, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS10 },
+    { 347, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS11 },
+    { 348, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS12 },
+    { 349, RAISED, DEAD, EF_TESTDATA, L"CmdLineUtils.exe", L"CmdLineUtils.exe", FLAGS13 },
+    /* testdata/CmdLineUtils.exe (name only) */
+    { 350, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS0 },
+    { 351, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS1 },
+    { 352, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS2 },
+    { 353, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS3 },
+    { 354, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS4 },
+    { 355, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS5 },
+    { 356, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS6 },
+    { 357, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS7 },
+    { 358, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS8 },
+    { 359, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS9 },
+    { 360, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS10 },
+    { 361, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS11 },
+    { 362, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS12 },
+    { 363, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS13 },
+    /* testdata/CmdLineUtils.exe with dirs (name only) */
+    { 364, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS0, s_Dirs },
+    { 365, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS1, s_Dirs },
+    { 366, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS2, s_Dirs },
+    { 367, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS3, s_Dirs },
+    { 368, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS4, s_Dirs },
+    { 369, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS5, s_Dirs },
+    { 370, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS6, s_Dirs },
+    { 371, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS7, s_Dirs },
+    { 372, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS8, s_Dirs },
+    { 373, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS9, s_Dirs },
+    { 374, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS10, s_Dirs },
+    { 375, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS11, s_Dirs },
+    { 376, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS12, s_Dirs },
+    { 377, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS13, s_Dirs },
+    /* testdata/CmdLineUtils.exe with dirs (name only) */
+    { 378, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS0, s_Dirs },
+    { 379, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS1, s_Dirs },
+    { 380, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS2, s_Dirs },
+    { 381, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS3, s_Dirs },
+    { 382, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS4, s_Dirs },
+    { 383, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS5, s_Dirs },
+    { 384, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS6, s_Dirs },
+    { 385, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS7, s_Dirs },
+    { 386, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS8, s_Dirs },
+    { 387, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS9, s_Dirs },
+    { 388, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS10, s_Dirs },
+    { 389, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS11, s_Dirs },
+    { 390, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS12, s_Dirs },
+    { 391, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY, L"CmdLineUtils.exe", NULL, FLAGS13, s_Dirs },
+    /* GhostProgram.exe -> testdata/CmdLineUtils.exe (name only, app path) */
+    { 392, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS0 },
+    { 393, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS1 },
+    { 394, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS2 },
+    { 395, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS3 },
+    { 396, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS4 },
+    { 397, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS5 },
+    { 398, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS6 },
+    { 399, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS7 },
+    { 400, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS8 },
+    { 401, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS9 },
+    { 402, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS10 },
+    { 403, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS11 },
+    { 404, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS12 },
+    { 405, 0, ERROR_FILE_NOT_FOUND, EF_TESTDATA | EF_NAME_ONLY | EF_APP_PATH, L"GhostProgram.exe", L"CmdLineUtils.exe", FLAGS13 },
+    /* C:\ */
+    { 406, 1, BEEF, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS0 },
+    { 407, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS1 },
+    { 408, 1, BEEF, EF_FULLPATH, L"C:\\", NULL, FLAGS2 },
+    { 409, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS3 },
+    { 410, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS4 },
+    { 411, 1, BEEF, EF_FULLPATH, L"C:\\", NULL, FLAGS5 },
+    { 412, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS6 },
+    { 413, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS7 },
+    { 414, 1, BEEF, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS8 },
+    { 415, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS9 },
+    { 416, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS10 },
+    { 417, 1, BEEF, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS11 },
+    { 418, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS12 },
+    { 419, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, L"C:\\", L"C:\\", FLAGS13 },
+    /* CmdLineUtils.lnk */
+    { 420, 1, BEEF, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS0 },
+    { 421, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS1 },
+    { 422, 1, BEEF, EF_FULLPATH, s_LinkFilePath, NULL, FLAGS2 },
+    { 423, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS3 },
+    { 424, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS4 },
+    { 425, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS5 },
+    { 426, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS6 },
+    { 427, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS7 },
+    { 428, 1, BEEF, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS8 },
+    { 429, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS9 },
+    { 430, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS10 },
+    { 431, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS11 },
+    { 432, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS12 },
+    { 433, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS13 },
+    /* CmdLineUtils.lnk (with PRF_DONTFINDLNK) */
+    { 434, 1, BEEF, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS0 | PRF_DONTFINDLNK },
+    { 435, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS1 | PRF_DONTFINDLNK },
+    { 436, 1, BEEF, EF_FULLPATH, s_LinkFilePath, NULL, FLAGS2 | PRF_DONTFINDLNK },
+    { 437, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS3 | PRF_DONTFINDLNK },
+    { 438, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS4 | PRF_DONTFINDLNK },
+    { 439, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS5 | PRF_DONTFINDLNK },
+    { 440, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS6 | PRF_DONTFINDLNK },
+    { 441, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS7 | PRF_DONTFINDLNK },
+    { 442, 1, BEEF, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS8 | PRF_DONTFINDLNK },
+    { 443, 1, ERROR_FILE_NOT_FOUND, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS9 | PRF_DONTFINDLNK },
+    { 444, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS10 | PRF_DONTFINDLNK },
+    { 445, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS11 | PRF_DONTFINDLNK },
+    { 446, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS12 | PRF_DONTFINDLNK },
+    { 447, RAISED, DEAD, EF_FULLPATH, s_LinkFilePath, s_LinkFilePath, FLAGS13 | PRF_DONTFINDLNK },
+};
+
+static BOOL
+CreateShortcut(LPCWSTR pszLnkFileName, 
+               LPCWSTR pszTargetPathName)
+{
+    IPersistFile *ppf;
+    IShellLinkW* psl;
+    HRESULT hres;
+
+    hres = CoInitialize(NULL);
+    if (SUCCEEDED(hres))
+    {
+        hres = CoCreateInstance(CLSID_ShellLink, NULL, 
+            CLSCTX_INPROC_SERVER, IID_IShellLinkW, (LPVOID*)&psl);
+        if (SUCCEEDED(hres))
+        {
+            psl->SetPath(pszTargetPathName);
+            hres = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
+            if (SUCCEEDED(hres))
+            {
+                hres = ppf->Save(pszLnkFileName, TRUE);
+                ppf->Release();
+            }
+            psl->Release();
+        }
+        CoUninitialize();
+    }
+    SetLastError(hres);
+
+    return SUCCEEDED(hres);
+}
+
+static BOOL
+CreateRegAppPath(INT EntryNumber, const WCHAR* Name, const WCHAR* Value)
+{
+    HKEY RegistryKey;
+    LONG Result;
+    WCHAR Buffer[1024];
+    DWORD Disposition;
+
+    wcscpy(Buffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
+    wcscat(Buffer, Name);
+    Result = RegCreateKeyExW(HKEY_LOCAL_MACHINE, Buffer, 0, NULL,
+        0, KEY_WRITE, NULL, &RegistryKey, &Disposition);
+    if (Result != ERROR_SUCCESS)
+    {
+        trace("#%d: Could not create test key. Status: %lu\n", EntryNumber, Result);
+        return FALSE;
+    }
+    Result = RegSetValueW(RegistryKey, NULL, REG_SZ, Value, 0);
+    if (Result != ERROR_SUCCESS)
+    {
+        trace("#%d: Could not set value of the test key. Status: %lu\n", EntryNumber, Result);
+        RegCloseKey(RegistryKey);
+        return FALSE;
+    }
+    RegCloseKey(RegistryKey);
+    return TRUE;
+}
+
+static BOOL
+DeleteRegAppPath(INT EntryNumber, const WCHAR* Name)
+{
+    LONG Result;
+    WCHAR Buffer[1024];
+    wcscpy(Buffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
+    wcscat(Buffer, Name);
+    Result = RegDeleteKeyW(HKEY_LOCAL_MACHINE, Buffer);
+    if (Result != ERROR_SUCCESS)
+    {
+        trace("#%d: Could not remove the test key. Status: %lu\n", EntryNumber, Result);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static void DoEntry(INT EntryNumber, const ENTRY *pEntry)
+{
+    WCHAR Path[MAX_PATH], PathExpected[MAX_PATH];
+    INT Ret;
+    DWORD Error;
+
+    if (pEntry->NameBefore == NULL)
+    {
+        assert(pEntry->NameExpected == NULL);
+    }
+
+    switch (pEntry->EF_ & EF_TYPE_MASK)
+    {
+    case EF_FULLPATH:
+        if (pEntry->NameBefore)
+        {
+            lstrcpyW(Path, pEntry->NameBefore);
+        }
+        if (pEntry->NameExpected)
+        {
+            lstrcpyW(PathExpected, pEntry->NameExpected);
+        }
+        break;
+
+    case EF_TESTDATA:
+        if (pEntry->EF_ & EF_NAME_ONLY)
+        {
+            lstrcpyW(Path, pEntry->NameBefore);
+        }
+        else
+        {
+            lstrcpyW(Path, s_TestDataPath);
+            lstrcatW(Path, L"\\");
+            lstrcatW(Path, pEntry->NameBefore);
+        }
+
+        if (pEntry->NameExpected)
+        {
+            lstrcpyW(PathExpected, s_TestDataPath);
+            lstrcatW(PathExpected, L"\\");
+            lstrcatW(PathExpected, pEntry->NameExpected);
+        }
+        break;
+
+    case EF_WINDOWS_DIR:
+        if (pEntry->EF_ & EF_NAME_ONLY)
+        {
+            lstrcpyW(Path, pEntry->NameBefore);
+        }
+        else
+        {
+            GetWindowsDirectoryW(Path, _countof(Path));
+            lstrcatW(Path, L"\\");
+            lstrcatW(Path, pEntry->NameBefore);
+        }
+
+        if (pEntry->NameExpected)
+        {
+            GetWindowsDirectoryW(PathExpected, _countof(PathExpected));
+            lstrcatW(PathExpected, L"\\");
+            lstrcatW(PathExpected, pEntry->NameExpected);
+        }
+        break;
+
+    case EF_SYSTEM_DIR:
+        if (pEntry->EF_ & EF_NAME_ONLY)
+        {
+            lstrcpyW(Path, pEntry->NameBefore);
+        }
+        else
+        {
+            GetSystemDirectoryW(Path, _countof(Path));
+            lstrcatW(Path, L"\\");
+            lstrcatW(Path, pEntry->NameBefore);
+        }
+
+        if (pEntry->NameExpected)
+        {
+            GetSystemDirectoryW(PathExpected, _countof(PathExpected));
+            lstrcatW(PathExpected, L"\\");
+            lstrcatW(PathExpected, pEntry->NameExpected);
+        }
+        break;
+    }
+
+    if (pEntry->EF_ & EF_APP_PATH)
+    {
+        if (!CreateRegAppPath(EntryNumber, pEntry->NameBefore, PathExpected))
+        {
+            skip("#%d: CreateRegAppPath failure\n", EntryNumber);
+            return;
+        }
+    }
+
+    _SEH2_TRY
+    {
+        SetLastError(BEEF);
+        if (pEntry->NameBefore)
+        {
+            Ret = (*s_pPathResolve)(Path, pEntry->Dirs, pEntry->Flags);
+        }
+        else
+        {
+            Ret = (*s_pPathResolve)(NULL, pEntry->Dirs, pEntry->Flags);
+        }
+        Error = GetLastError();
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Ret = RAISED;
+        Error = DEAD;
+    }
+    _SEH2_END;
+
+    if (pEntry->EF_ & EF_APP_PATH)
+    {
+        ok(DeleteRegAppPath(EntryNumber, pEntry->NameBefore),
+           "#%d: DeleteRegAppPath failed\n", EntryNumber);
+    }
+
+    ok(Ret == pEntry->Ret, "#%d: Ret expected %d, was %d.\n",
+       EntryNumber, pEntry->Ret, Ret);
+    if (pEntry->Error != IGNORE_ERR)
+    {
+        ok(Error == pEntry->Error, "#%d: last error expected %ld, was %ld.\n",
+           EntryNumber, pEntry->Error, Error);
+    }
+
+    if (pEntry->NameExpected && !(pEntry->EF_ & EF_APP_PATH))
+    {
+        ok(lstrcmpW(Path, PathExpected) == 0, "#%d: Path expected %s, was %s.\n",
+           EntryNumber, wine_dbgstr_w(PathExpected), wine_dbgstr_w(Path));
+    }
+}
+
+static void TestMain_PathResolve(void)
+{
+    UINT i;
+    WCHAR Saved[128], *pPathExtSaved;
+
+    /* save PATHEXT */
+    if (GetEnvironmentVariableW(L"PATHEXT", Saved, _countof(Saved)))
+    {
+        pPathExtSaved = Saved;
+    }
+    else
+    {
+        pPathExtSaved = NULL;
+    }
+
+    /* normal */
+    for (i = 0; i < _countof(s_Entries); ++i)
+    {
+        DoEntry(s_Entries[i].EntryNumber, &s_Entries[i]);
+    }
+
+    /* +#1000: reset PATHEXT */
+    if (SetEnvironmentVariableW(L"PATHEXT", NULL))
+    {
+        for (i = 0; i < _countof(s_Entries); ++i)
+        {
+            DoEntry(s_Entries[i].EntryNumber + 1000, &s_Entries[i]);
+        }
+    }
+    else
+    {
+        skip("SetEnvironmentVariableW failed\n");
+    }
+
+    /* +#2000: set PATHEXT to ".COM;.EXE;.BAT" */
+    if (SetEnvironmentVariableW(L"PATHEXT", L".COM;.EXE;.BAT"))
+    {
+        for (i = 0; i < _countof(s_Entries); ++i)
+        {
+            DoEntry(s_Entries[i].EntryNumber + 2000, &s_Entries[i]);
+        }
+    }
+    else
+    {
+        skip("SetEnvironmentVariableW failed\n");
+    }
+
+    /* +#3000: set PATHEXT to ".TXT" */
+    if (SetEnvironmentVariableW(L"PATHEXT", L".TXT"))
+    {
+        for (i = 0; i < _countof(s_Entries); ++i)
+        {
+            DoEntry(s_Entries[i].EntryNumber + 3000, &s_Entries[i]);
+        }
+    }
+    else
+    {
+        skip("SetEnvironmentVariableW failed\n");
+    }
+
+    /* restore PATHEXT */
+    SetEnvironmentVariableW(L"PATHEXT", pPathExtSaved);
+}
+
+START_TEST(PathResolve)
+{
+    LPWSTR pch;
+
+    GetModuleFileNameW(NULL, s_TestDataPath, _countof(s_TestDataPath));
+    pch = wcsrchr(s_TestDataPath, L'\\');
+    if (pch == NULL)
+        pch = wcsrchr(s_TestDataPath, L'/');
+    if (pch == NULL)
+    {
+        skip("GetModuleFileName and/or wcsrchr are insane.\n");
+        return;
+    }
+    lstrcpyW(pch, L"\\testdata");
+    if (GetFileAttributesW(s_TestDataPath) == INVALID_FILE_ATTRIBUTES)
+    {
+        skip("testdata is not found.\n");
+        return;
+    }
+
+    s_Dirs[0] = s_TestDataPath;
+    s_Dirs[1] = NULL;
+
+    lstrcpyW(s_LinkFilePath, s_TestDataPath);
+    lstrcatW(s_LinkFilePath, L"\\");
+    lstrcatW(s_LinkFilePath, L"CmdLineUtils.lnk");
+
+    lstrcpyW(s_LinkTargetPath, s_TestDataPath);
+    lstrcatW(s_LinkTargetPath, L"\\");
+    lstrcatW(s_LinkTargetPath, L"2PRONG.txt");
+
+    ok(CreateShortcut(s_LinkFilePath, s_LinkTargetPath),
+       "CreateShortcut(%s, %s) failed.\n",
+       wine_dbgstr_w(s_LinkFilePath), wine_dbgstr_w(s_LinkTargetPath));
+
+    s_hShell32 = LoadLibraryA("shell32");
+    if (s_hShell32 == NULL)
+    {
+        skip("Unable to load shell32.\n");
+        return;
+    }
+
+    s_pPathResolve = (PATHRESOLVE)GetProcAddress(s_hShell32, "PathResolve");
+    if (s_pPathResolve == NULL)
+    {
+        skip("Unable to get PathResolve address.\n");
+        return;
+    }
+
+    TestMain_PathResolve();
+
+    ok(DeleteFileW(s_LinkFilePath), "DeleteFileW(%s) failed\n",
+       wine_dbgstr_w(s_LinkFilePath));
+
+    FreeLibrary(s_hShell32);
+    s_hShell32 = NULL;
+    s_pPathResolve = NULL;
+}

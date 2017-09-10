@@ -2898,7 +2898,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
                         PLARGE_INTEGER UMaximumSize,
                         ULONG SectionPageProtection,
                         ULONG AllocationAttributes,
-                        HANDLE FileHandle)
+                        PFILE_OBJECT FileObject)
 /*
  * Create a section backed by a data file
  */
@@ -2906,9 +2906,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     PROS_SECTION_OBJECT Section;
     NTSTATUS Status;
     LARGE_INTEGER MaximumSize;
-    PFILE_OBJECT FileObject;
     PMM_SECTION_SEGMENT Segment;
-    ULONG FileAccess;
     FILE_STANDARD_INFORMATION FileInfo;
     ULONG Length;
 
@@ -2926,6 +2924,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
                             (PVOID*)&Section);
     if (!NT_SUCCESS(Status))
     {
+        ObDereferenceObject(FileObject);
         return(Status);
     }
     /*
@@ -2936,22 +2935,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     Section->Size = 'TN';
     Section->SectionPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
-
-    /*
-     * Reference the file handle
-     */
-    FileAccess = MiArm3GetCorrectFileAccessMask(SectionPageProtection);
-    Status = ObReferenceObjectByHandle(FileHandle,
-                                       FileAccess,
-                                       IoFileObjectType,
-                                       ExGetPreviousMode(),
-                                       (PVOID*)(PVOID)&FileObject,
-                                       NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(Section);
-        return(Status);
-    }
 
     /*
      * FIXME: This is propably not entirely correct. We can't look into
@@ -4142,7 +4125,7 @@ NTSTATUS
 NTAPI
 MiRosUnmapViewOfSection(IN PEPROCESS Process,
                         IN PVOID BaseAddress,
-                        IN ULONG Flags)
+                        IN BOOLEAN SkipDebuggerNotify)
 {
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
@@ -4230,7 +4213,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     MmUnlockAddressSpace(AddressSpace);
 
     /* Notify debugger */
-    if (ImageBaseAddress) DbgkUnMapViewOfSection(ImageBaseAddress);
+    if (ImageBaseAddress && !SkipDebuggerNotify) DbgkUnMapViewOfSection(ImageBaseAddress);
 
     return(STATUS_SUCCESS);
 }
@@ -5132,9 +5115,7 @@ MmCreateSection (OUT PVOID  * Section,
                                           MaximumSize,
                                           SectionPageProtection,
                                           AllocationAttributes,
-                                          FileHandle);
-        if (FileObject)
-            ObDereferenceObject(FileObject);
+                                          FileObject);
     }
 #else
     else if (FileHandle != NULL || FileObject != NULL)

@@ -248,7 +248,8 @@ typedef struct _CCB
 typedef struct _CDFS_GLOBAL_DATA
 {
   PDRIVER_OBJECT DriverObject;
-  PDEVICE_OBJECT DeviceObject;
+  PDEVICE_OBJECT CdFsDeviceObject;
+  PDEVICE_OBJECT HddFsDeviceObject;
   ULONG Flags;
   CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
   FAST_IO_DISPATCH FastIoDispatch;

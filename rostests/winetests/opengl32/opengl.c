@@ -713,6 +713,9 @@ static void test_bitmap_rendering( BOOL use_dib )
             glGetIntegerv( GL_VIEWPORT, viewport );
             ok( viewport[0] == 0 && viewport[1] == 0 && viewport[2] == 12 && viewport[3] == 12,
                 "wrong viewport %d,%d,%d,%d\n", viewport[0], viewport[1], viewport[2], viewport[3] );
+
+            wglDeleteContext(hglrc2);
+            wglDeleteContext(hglrc);
         }
     }
 
@@ -927,12 +930,13 @@ static void test_opengl3(HDC hdc)
     {
         HGLRC gl3Ctx;
         DWORD error;
+        SetLastError(0xdeadbeef);
         gl3Ctx = pwglCreateContextAttribsARB((HDC)0xdeadbeef, 0, 0);
         ok(gl3Ctx == 0, "pwglCreateContextAttribsARB using an invalid HDC passed\n");
         error = GetLastError();
-        todo_wine ok(error == ERROR_DC_NOT_FOUND ||
-                     broken(error == NVIDIA_HRESULT_FROM_WIN32(ERROR_INVALID_DATA)), /* Nvidia Vista + Win7 */
-                     "Expected ERROR_DC_NOT_FOUND, got error=%x\n", error);
+        ok(error == ERROR_DC_NOT_FOUND ||
+           broken(error == NVIDIA_HRESULT_FROM_WIN32(ERROR_INVALID_DATA)), /* Nvidia Vista + Win7 */
+           "Expected ERROR_DC_NOT_FOUND, got error=%x\n", error);
         wglDeleteContext(gl3Ctx);
     }
 
@@ -940,12 +944,13 @@ static void test_opengl3(HDC hdc)
     {
         HGLRC gl3Ctx;
         DWORD error;
+        SetLastError(0xdeadbeef);
         gl3Ctx = pwglCreateContextAttribsARB(hdc, (HGLRC)0xdeadbeef, 0);
         ok(gl3Ctx == 0, "pwglCreateContextAttribsARB using an invalid shareList passed\n");
         error = GetLastError();
         /* The Nvidia implementation seems to return hresults instead of win32 error codes */
-        todo_wine ok(error == ERROR_INVALID_OPERATION ||
-                     error == NVIDIA_HRESULT_FROM_WIN32(ERROR_INVALID_OPERATION), "Expected ERROR_INVALID_OPERATION, got error=%x\n", error);
+        ok(error == ERROR_INVALID_OPERATION ||
+           error == NVIDIA_HRESULT_FROM_WIN32(ERROR_INVALID_OPERATION), "Expected ERROR_INVALID_OPERATION, got error=%x\n", error);
         wglDeleteContext(gl3Ctx);
     }
 

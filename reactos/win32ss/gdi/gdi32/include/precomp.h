@@ -44,6 +44,7 @@
 
 #include <ddrawi.h>
 #include <ddrawgdi.h>
+#include <d3dkmthk.h>
 
 /* Public Win32K Headers */
 #include <ntgdityp.h>

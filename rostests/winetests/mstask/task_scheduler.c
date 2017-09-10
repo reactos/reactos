@@ -184,6 +184,11 @@ static void test_SetTargetComputer(void)
 
     /* the two backslashes are optional */
     hres = ITaskScheduler_SetTargetComputer(test_task_scheduler, oldname + 2);
+    if (hres == E_ACCESSDENIED)
+    {
+        skip("SetTargetComputer failed with E_ACCESSDENIED (needs admin rights)\n");
+        goto done;
+    }
     ok(hres == S_OK, "got 0x%x (expected S_OK)\n", hres);
 
     /* the case is ignored */
@@ -198,6 +203,7 @@ static void test_SetTargetComputer(void)
     hres = ITaskScheduler_SetTargetComputer(test_task_scheduler, oldname);
     ok(hres == S_OK, "got 0x%x (expected S_OK)\n", hres);
 
+done:
     CoTaskMemFree(oldname);
     ITaskScheduler_Release(test_task_scheduler);
     return;

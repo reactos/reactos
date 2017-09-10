@@ -2765,6 +2765,14 @@ typedef struct _TRIVERTEX {
 	COLOR16 Blue;
 	COLOR16 Alpha;
 } TRIVERTEX, *PTRIVERTEX, *LPTRIVERTEX;
+typedef struct tagEMRGRADIENTFILL {
+    EMR       emr;
+    RECTL     rclBounds;
+    DWORD     nVer;
+    DWORD     nTri;
+    ULONG     ulMode;
+    TRIVERTEX Ver[1];
+} EMRGRADIENTFILL, *PEMRGRADIENTFILL;
 typedef struct _GRADIENT_TRIANGLE {
 	ULONG Vertex1;
 	ULONG Vertex2;

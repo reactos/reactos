@@ -32,6 +32,27 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(wlanapi);
 
+DWORD
+WlanRpcStatusToWinError(RPC_STATUS Status)
+{
+    switch (Status)
+    {
+        case RPC_S_INVALID_BINDING:
+        case RPC_X_SS_IN_NULL_CONTEXT:
+            return ERROR_INVALID_HANDLE;
+
+        case RPC_X_ENUM_VALUE_OUT_OF_RANGE:
+        case RPC_X_BYTE_COUNT_TOO_SMALL:
+            return ERROR_INVALID_PARAMETER;
+
+        case RPC_X_NULL_REF_POINTER:
+            return ERROR_INVALID_ADDRESS;
+
+        default:
+            return (DWORD)Status;
+    }
+}
+
 handle_t __RPC_USER
 WLANSVC_HANDLE_bind(WLANSVC_HANDLE szMachineName)
 {
@@ -117,7 +138,7 @@ WlanConnect(IN HANDLE hClientHandle,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwResult = RpcExceptionCode();
+        dwResult = WlanRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
 
@@ -141,7 +162,7 @@ WlanDisconnect(IN HANDLE hClientHandle,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwResult = RpcExceptionCode();
+        dwResult = WlanRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
 
@@ -170,7 +191,7 @@ WlanOpenHandle(IN DWORD dwClientVersion,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwResult = RpcExceptionCode();
+        dwResult = WlanRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
 
@@ -193,7 +214,7 @@ WlanCloseHandle(IN HANDLE hClientHandle,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwResult = RpcExceptionCode();
+        dwResult = WlanRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
 
@@ -217,7 +238,7 @@ WlanEnumInterfaces(IN HANDLE hClientHandle,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwResult = RpcExceptionCode();
+        dwResult = WlanRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
 
@@ -243,7 +264,7 @@ WlanScan(IN HANDLE hClientHandle,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwResult = RpcExceptionCode();
+        dwResult = WlanRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
 
@@ -342,7 +363,7 @@ WlanSetSecuritySettings(IN HANDLE hClientHandle,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwResult = RpcExceptionCode();
+        dwResult = WlanRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
 

@@ -71,6 +71,10 @@ DEFINE_GUID(IID_UnknownInterface17,   0x3d5d8c60, 0x21e4, 0x4b03, 0x83,0xb8, 0xc
 DEFINE_GUID(IID_UnknownInterface18,   0x1fc45c07, 0x9e35, 0x4276, 0xad,0x7f, 0x08,0x60,0x3a,0xa0,0xf6,0x0f);
 DEFINE_GUID(IID_UnknownInterface19,   0xacd9b67a, 0xceab, 0x4c6c, 0x90,0xa1, 0xe8,0x57,0xc6,0x59,0xe3,0x9d);
 DEFINE_GUID(IID_UnknownInterface20,   0xd0fe6f62, 0xdea4, 0x46c9, 0x9d,0xae, 0x36,0xcb,0x13,0x99,0x78,0xfa);
+DEFINE_GUID(IID_UnknownInterface21,   0x732c1ccd, 0xbc5c, 0x4065, 0x88,0xcb, 0xfb,0x5b,0xce,0xa7,0x1f,0x66);
+DEFINE_GUID(IID_UnknownInterface22,   0xc13b3d3a, 0x10d6, 0x43f5, 0x98,0xdb, 0xb7,0xdd,0xd9,0x87,0xb3,0x3d);
+DEFINE_GUID(IID_UnknownInterface23,   0x2e228ba3, 0xea25, 0x4378, 0x97,0xb6, 0xd5,0x74,0xfa,0xeb,0xa3,0x56);
+DEFINE_GUID(IID_UnknownInterface24,   0xd56a2092, 0x7dbf, 0x4144, 0xa1,0x10, 0xc2,0x96,0x3a,0x70,0x98,0x32);
 
 static HWND hwnd;
 
@@ -571,7 +575,7 @@ static void test_QueryInterface(void)
     test_qinterface(IID_IUnknown, S_OK);
     test_qinterface(IID_IExplorerBrowser, S_OK);
     test_qinterface(IID_IShellBrowser, S_OK);
-    todo_wine test_qinterface(IID_IOleWindow, S_OK);
+    test_qinterface(IID_IOleWindow, S_OK);
     test_qinterface(IID_ICommDlgBrowser, S_OK);
     test_qinterface(IID_ICommDlgBrowser2, S_OK);
     test_qinterface(IID_ICommDlgBrowser3, S_OK);
@@ -960,6 +964,13 @@ static void test_SetSite(void)
         { &IID_UnknownInterface16,      &IID_UnknownInterface16, 0, NULL },
         { &IID_UnknownInterface17,      &IID_UnknownInterface17, 0, NULL },
         { &IID_UnknownInterface17,      &IID_UnknownInterface19, 0, NULL },
+        /* Win 10 */
+        { &IID_UnknownInterface21,      &IID_UnknownInterface21, 0, NULL },
+        { &IID_UnknownInterface21,      &IID_IFileDialog, 0, NULL },
+        { &IID_UnknownInterface22,      &IID_UnknownInterface22, 0, NULL },
+        { &IID_UnknownInterface23,      &IID_UnknownInterface23, 0, NULL },
+        { &IID_UnknownInterface24,      &IID_UnknownInterface24, 0, NULL },
+        { &IID_UnknownInterface24,      &IID_IFileDialog, 0, NULL },
 
         /* Other services requested in Vista, Windows 2008 but not in Windows 7 */
         { &IID_IBrowserSettings_Vista,  &IID_IBrowserSettings_Vista, 0, NULL },

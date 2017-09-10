@@ -794,7 +794,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 		process_case = 1;
 		break;
 	    }
-            if (isalnum(*mrelative) && (*(mrelative + 1) == ':')) {
+            if (isalnumW(*mrelative) && (*(mrelative + 1) == ':')) {
 		/* case that becomes "file:///" */
 		strcpyW(preliminary, myfilestr);
 		process_case = 1;

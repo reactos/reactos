@@ -1344,19 +1344,75 @@ PnpRootAddDevice(
     return STATUS_SUCCESS;
 }
 
+#if MI_TRACE_PFNS
+PDEVICE_OBJECT IopPfnDumpDeviceObject;
+
+NTSTATUS NTAPI
+PnpRootCreateClose(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+
+    if (DeviceObject != IopPfnDumpDeviceObject)
+    {
+        Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    if (IoStack->MajorFunction == IRP_MJ_CREATE)
+    {
+        MmDumpArmPfnDatabase(TRUE);
+    }
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
+#endif
+
 NTSTATUS NTAPI
 PnpRootDriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath)
 {
+#if MI_TRACE_PFNS
+    NTSTATUS Status;
+    UNICODE_STRING PfnDumpDeviceName = RTL_CONSTANT_STRING(L"\\Device\\PfnDump");
+#endif
+
     DPRINT("PnpRootDriverEntry(%p %wZ)\n", DriverObject, RegistryPath);
 
     IopRootDriverObject = DriverObject;
 
     DriverObject->DriverExtension->AddDevice = PnpRootAddDevice;
 
+#if MI_TRACE_PFNS
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = PnpRootCreateClose;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = PnpRootCreateClose;
+#endif
     DriverObject->MajorFunction[IRP_MJ_PNP] = PnpRootPnpControl;
     DriverObject->MajorFunction[IRP_MJ_POWER] = PnpRootPowerControl;
+
+#if MI_TRACE_PFNS
+    Status = IoCreateDevice(DriverObject,
+                            0,
+                            &PfnDumpDeviceName,
+                            FILE_DEVICE_UNKNOWN,
+                            0,
+                            FALSE,
+                            &IopPfnDumpDeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Creating PFN Dump device failed with %lx\n", Status);
+    }
+    else
+    {
+        IopPfnDumpDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+    }
+#endif
 
     return STATUS_SUCCESS;
 }

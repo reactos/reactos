@@ -50,7 +50,7 @@ PerformSampleRateConversion(
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
-    NewSamples = lrintf(((FLOAT)NumSamples * ((FLOAT)NewRate / (FLOAT)OldRate))) + 2;
+    NewSamples = ((((ULONG64)NumSamples * NewRate) + (OldRate / 2)) / OldRate) + 2;
 
     FloatOut = HeapAlloc(GetProcessHeap(), 0, NewSamples * NumChannels * sizeof(FLOAT));
     if (!FloatOut)

@@ -11,7 +11,6 @@ list(APPEND SOURCE
     error.c
     exception.c
     file.c
-    generated.c
     info.c
     large_int.c
     om.c
@@ -25,6 +24,12 @@ list(APPEND SOURCE
     string.c
     time.c
     testlist.c)
+
+if(ARCH STREQUAL "i386")
+    list(APPEND SOURCE
+    generated.c
+    )
+endif()
 
 add_executable(ntdll_winetest ${SOURCE})
 set_module_type(ntdll_winetest win32cui)

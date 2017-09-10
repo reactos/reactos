@@ -169,13 +169,11 @@ MmInsertMemoryArea(
 {
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
-    marea->VadNode.StartingVpn = marea->StartingVpn;
-    marea->VadNode.EndingVpn = marea->EndingVpn;
     marea->VadNode.u.VadFlags.Spare = 1;
     marea->VadNode.u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
 
     /* Build a lame VAD if this is a user-space allocation */
-    if (marea->EndingVpn + 1 < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT)
+    if (marea->VadNode.EndingVpn + 1 < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT)
     {
         ASSERT(Process != NULL);
         if (marea->Type != MEMORY_AREA_OWNED_BY_ARM3)
@@ -354,7 +352,7 @@ MmFreeMemoryArea(
         //if (MemoryArea->VadNode.StartingVpn < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT
         if (MemoryArea->Vad)
         {
-            ASSERT(MemoryArea->EndingVpn + 1 < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT);
+            ASSERT(MemoryArea->VadNode.EndingVpn + 1 < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT);
             ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
 
             /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
@@ -470,8 +468,8 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
             return STATUS_NO_MEMORY;
         }
 
-        MemoryArea->StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
-        MemoryArea->EndingVpn = ((ULONG_PTR)*BaseAddress + tmpLength - 1) >> PAGE_SHIFT;
+        MemoryArea->VadNode.StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
+        MemoryArea->VadNode.EndingVpn = ((ULONG_PTR)*BaseAddress + tmpLength - 1) >> PAGE_SHIFT;
         MmInsertMemoryArea(AddressSpace, MemoryArea);
     }
     else
@@ -508,8 +506,8 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
             }
         }
 
-        MemoryArea->StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
-        MemoryArea->EndingVpn = ((ULONG_PTR)*BaseAddress + tmpLength - 1) >> PAGE_SHIFT;
+        MemoryArea->VadNode.StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
+        MemoryArea->VadNode.EndingVpn = ((ULONG_PTR)*BaseAddress + tmpLength - 1) >> PAGE_SHIFT;
         MmInsertMemoryArea(AddressSpace, MemoryArea);
     }
 
@@ -545,7 +543,7 @@ MiRosCleanupMemoryArea(
 
     if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
-        Status = MiRosUnmapViewOfSection(Process, BaseAddress, 0);
+        Status = MiRosUnmapViewOfSection(Process, BaseAddress, Process->ProcessExiting);
     }
     else if (MemoryArea->Type == MEMORY_AREA_CACHE)
     {

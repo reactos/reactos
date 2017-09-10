@@ -116,7 +116,7 @@ static const struct
 {
     { {'M','S','C','F'}, 0, 0x59, 0, sizeof(struct CFHEADER) + sizeof(struct CFFOLDER), 0, 3,1, 1, 1, 0, 0x1225, 0x2013 },
     { sizeof(struct CFHEADER) + sizeof(struct CFFOLDER) + sizeof(struct CFFILE) + sizeof("file.dat"), 1, tcompTYPE_NONE },
-    { sizeof("Hello World!")-1, 0, 0, 0x1225, 0x2013, 0xa114 },
+    { sizeof("Hello World!")-1, 0, 0x1234, 0x1225, 0x2013, 0xa114 },
     { 'f','i','l','e','.','d','a','t',0 },
     { 0, sizeof("Hello World!")-1, sizeof("Hello World!")-1 },
     { 'H','e','l','l','o',' ','W','o','r','l','d','!' }
@@ -841,7 +841,7 @@ static INT_PTR CDECL fdi_mem_notify(FDINOTIFICATIONTYPE fdint, FDINOTIFICATION *
         ok(info->date == 0x1225, "expected 0x1225, got %#x\n", info->date);
         ok(info->time == 0x2013, "expected 0x2013, got %#x\n", info->time);
         ok(info->attribs == 0xa114, "expected 0xa114, got %#x\n", info->attribs);
-        ok(info->iFolder == 0, "expected 0, got %#x\n", info->iFolder);
+        ok(info->iFolder == 0x1234, "expected 0x1234, got %#x\n", info->iFolder);
         return 1;
 
     case fdintCOPY_FILE:
@@ -850,6 +850,7 @@ static INT_PTR CDECL fdi_mem_notify(FDINOTIFICATIONTYPE fdint, FDINOTIFICATION *
 
         ok(info->cb == 12, "expected 12, got %u\n", info->cb);
         ok(!strcmp(info->psz1, expected), "expected %s, got %s\n", expected, info->psz1);
+        ok(info->iFolder == 0x1234, "expected 0x1234, got %#x\n", info->iFolder);
         return 0x12345678; /* call write() callback */
     }
 

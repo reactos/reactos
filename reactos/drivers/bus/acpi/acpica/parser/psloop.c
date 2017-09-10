@@ -174,6 +174,9 @@ AcpiPsGetArguments (
             INCREMENT_ARG_LIST (WalkState->ArgTypes);
         }
 
+        ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+            "Final argument count: %u pass %u\n",
+            WalkState->ArgCount, WalkState->PassNumber));
 
         /*
          * Handle executable code at "module-level". This refers to
@@ -272,6 +275,10 @@ AcpiPsGetArguments (
                 (Op->Common.Parent->Common.AmlOpcode == AML_NAME_OP) &&
                 (WalkState->PassNumber <= ACPI_IMODE_LOAD_PASS2))
             {
+                ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+                    "Setup Package/Buffer: Pass %u, AML Ptr: %p\n",
+                    WalkState->PassNumber, AmlOpStart));
+
                 /*
                  * Skip parsing of Buffers and Packages because we don't have
                  * enough info in the first pass to parse them correctly.
@@ -580,6 +587,9 @@ AcpiPsParseLoop (
         }
 
         /* Check for arguments that need to be processed */
+
+        ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+            "Parseloop: argument count: %u\n", WalkState->ArgCount));
 
         if (WalkState->ArgCount)
         {

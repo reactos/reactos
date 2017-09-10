@@ -124,8 +124,8 @@ static BOOL ignore_message( UINT message )
 static LRESULT CALLBACK button_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR ref_data)
 {
     static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
     LRESULT ret;
-    struct message msg;
 
     if (ignore_message( message )) return pDefSubclassProc(hwnd, message, wParam, lParam);
 
@@ -160,8 +160,8 @@ static LRESULT WINAPI test_parent_wndproc(HWND hwnd, UINT message, WPARAM wParam
 {
     static LONG defwndproc_counter = 0;
     static LONG beginpaint_counter = 0;
+    struct message msg = { 0 };
     LRESULT ret;
-    struct message msg;
 
     if (ignore_message( message )) return 0;
 
@@ -171,17 +171,6 @@ static LRESULT WINAPI test_parent_wndproc(HWND hwnd, UINT message, WPARAM wParam
         message == WM_DRAWITEM || message == WM_COMMAND ||
         message == WM_IME_SETCONTEXT)
     {
-        switch (message)
-        {
-            /* ignore */
-            case WM_NCHITTEST:
-                return HTCLIENT;
-            case WM_SETCURSOR:
-            case WM_MOUSEMOVE:
-            case WM_NCMOUSEMOVE:
-                return 0;
-        }
-
         msg.message = message;
         msg.flags = sent|parent|wparam|lparam;
         if (defwndproc_counter) msg.flags |= defwinproc;

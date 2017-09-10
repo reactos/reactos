@@ -29,8 +29,6 @@
 
 #include "comctl32.h"
 
-#include <wine/list.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(syslink);
 
 typedef struct

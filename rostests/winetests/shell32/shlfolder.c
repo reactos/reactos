@@ -73,9 +73,8 @@ static HRESULT (WINAPI *pSHGetItemFromObject)(IUnknown*,REFIID,void**);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 static UINT (WINAPI *pGetSystemWow64DirectoryW)(LPWSTR, UINT);
 static HRESULT (WINAPI *pSHCreateDefaultContextMenu)(const DEFCONTEXTMENU*,REFIID,void**);
-static HRESULT (WINAPI *pSHCreateShellFolderView)(const SFV_CREATE *pcsfv, IShellView **ppsv);
-static HRESULT (WINAPI *pSHCreateShellFolderViewEx)(LPCSFV psvcbi, IShellView **ppv);
 static HRESULT (WINAPI *pSHILCreateFromPath)(LPCWSTR, LPITEMIDLIST *,DWORD*);
+static BOOL (WINAPI *pSHGetPathFromIDListEx)(PCIDLIST_ABSOLUTE,WCHAR*,DWORD,GPFIDL_FLAGS);
 
 static WCHAR *make_wstr(const char *str)
 {
@@ -133,8 +132,7 @@ static void init_function_pointers(void)
     MAKEFUNC(SHGetIDListFromObject);
     MAKEFUNC(SHGetItemFromObject);
     MAKEFUNC(SHCreateDefaultContextMenu);
-    MAKEFUNC(SHCreateShellFolderView);
-    MAKEFUNC(SHCreateShellFolderViewEx);
+    MAKEFUNC(SHGetPathFromIDListEx);
 #undef MAKEFUNC
 
 #define MAKEFUNC_ORD(f, ord) (p##f = (void*)GetProcAddress(hmod, (LPSTR)(ord)))
@@ -452,7 +450,7 @@ static void test_EnumObjects(IShellFolder *iFolder)
         flags = ~0u;
         hr = IShellFolder_GetAttributesOf(iFolder, 1, (LPCITEMIDLIST*)(idlArr + i), &flags);
         ok(hr == S_OK, "GetAttributesOf returns %08x\n", hr);
-        ok((flags & ~SFGAO_HASSUBFOLDER) == full_attrs[i], "%d: got %08x expected %08x\n", i, flags, full_attrs[i]);
+        ok((flags & ~(SFGAO_HASSUBFOLDER|SFGAO_COMPRESSED)) == full_attrs[i], "%d: got %08x expected %08x\n", i, flags, full_attrs[i]);
     }
 
     for (i=0;i<5;i++)
@@ -1347,10 +1345,34 @@ static void test_SHGetPathFromIDList(void)
 
     result = pSHGetPathFromIDListW(pidlTestFile, wszPath);
     ok(result, "SHGetPathFromIDListW failed! Last error: %u\n", GetLastError());
-    IMalloc_Free(ppM, pidlTestFile);
-    if (!result) return;
     ok(0 == lstrcmpW(wszFileName, wszPath), "SHGetPathFromIDListW returned incorrect path for file placed on desktop\n");
 
+    if (pSHGetPathFromIDListEx)
+    {
+        result = pSHGetPathFromIDListEx(pidlEmpty, wszPath, MAX_PATH, SFGAO_FILESYSTEM);
+        ok(result, "SHGetPathFromIDListEx failed: %u\n", GetLastError());
+        ok(!lstrcmpiW(wszDesktop, wszPath), "Unexpected SHGetPathFromIDListEx result %s, expected %s\n",
+           wine_dbgstr_w(wszPath), wine_dbgstr_w(wszDesktop));
+
+        result = pSHGetPathFromIDListEx(pidlTestFile, wszPath, MAX_PATH, SFGAO_FILESYSTEM);
+        ok(result, "SHGetPathFromIDListEx failed: %u\n", GetLastError());
+        ok(!lstrcmpiW(wszFileName, wszPath), "Unexpected SHGetPathFromIDListEx result %s, expected %s\n",
+           wine_dbgstr_w(wszPath), wine_dbgstr_w(wszFileName));
+
+        SetLastError(0xdeadbeef);
+        memset(wszPath, 0x55, sizeof(wszPath));
+        result = pSHGetPathFromIDListEx(pidlTestFile, wszPath, 5, SFGAO_FILESYSTEM);
+        ok(!result, "SHGetPathFromIDListEx returned: %x(%u)\n", result, GetLastError());
+
+        SetLastError(0xdeadbeef);
+        memset(wszPath, 0x55, sizeof(wszPath));
+        result = pSHGetPathFromIDListEx(pidlEmpty, wszPath, 5, SFGAO_FILESYSTEM);
+        ok(!result, "SHGetPathFromIDListEx returned: %x(%u)\n", result, GetLastError());
+    }
+    else
+        win_skip("SHGetPathFromIDListEx not available\n");
+
+    IMalloc_Free(ppM, pidlTestFile);
 
     /* Test if we can get the path from the start menu "program files" PIDL. */
     hr = pSHGetSpecialFolderLocation(NULL, CSIDL_PROGRAM_FILES, &pidlPrograms);
@@ -1358,7 +1380,7 @@ static void test_SHGetPathFromIDList(void)
 
     SetLastError(0xdeadbeef);
     result = pSHGetPathFromIDListW(pidlPrograms, wszPath);
-	IMalloc_Free(ppM, pidlPrograms);
+    IMalloc_Free(ppM, pidlPrograms);
     ok(result, "SHGetPathFromIDListW failed\n");
 }
 
@@ -1588,7 +1610,8 @@ static void test_FolderShortcut(void) {
     if (hr != S_OK) return;
 
     hr = IShellFolder_GetDisplayNameOf(pShellFolder, NULL, SHGDN_FORPARSING, &strret);
-    ok(hr == S_OK, "IShellFolder_GetDisplayNameOf(NULL) failed! hr = %08x\n", hr);
+    ok(hr == S_OK || broken(hr == E_INVALIDARG) /* win10 */,
+       "IShellFolder_GetDisplayNameOf(NULL) failed! hr = %08x\n", hr);
     if (hr != S_OK) {
         IShellFolder_Release(pShellFolder);
         return;
@@ -3773,10 +3796,10 @@ static void test_ShellItemArrayEnumItems(void)
         hr = IShellFolder_BindToObject(pdesktopsf, pidl_testdir, NULL, (REFIID)&IID_IShellFolder,
                                        (void**)&psf);
         ok(hr == S_OK, "Got 0x%08x\n", hr);
-        if(SUCCEEDED(hr))
-            pILFree(pidl_testdir);
+        pILFree(pidl_testdir);
     }
     IShellFolder_Release(pdesktopsf);
+    if (FAILED(hr)) return;
 
     hr = IShellFolder_EnumObjects(psf, NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &peidl);
     ok(hr == S_OK, "Got %08x\n", hr);
@@ -5152,123 +5175,6 @@ static void test_SHCreateDefaultContextMenu(void)
     Cleanup();
 }
 
-static void test_SHCreateShellFolderView(void)
-{
-    HRESULT hr;
-    IShellView *psv;
-    SFV_CREATE sfvc;
-    IShellFolder *desktop;
-    ULONG refCount;
-
-    if (!pSHCreateShellFolderView)
-    {
-        win_skip("SHCreateShellFolderView missing.\n");
-        return;
-    }
-
-    hr = SHGetDesktopFolder(&desktop);
-    ok(hr == S_OK, "got (0x%08x)\n", hr);
-
-    if (0)
-    {
-        /* crash on win7 */
-        pSHCreateShellFolderView(NULL, NULL);
-    }
-
-    psv = (void *)0xdeadbeef;
-    hr = pSHCreateShellFolderView(NULL, &psv);
-    ok(hr == E_INVALIDARG, "Got 0x%08x\n", hr);
-    ok(psv == NULL, "psv = %p\n", psv);
-
-    memset(&sfvc, 0, sizeof(sfvc));
-    psv = (void *)0xdeadbeef;
-    hr = pSHCreateShellFolderView(&sfvc, &psv);
-    ok(hr == E_INVALIDARG, "Got 0x%08x\n", hr);
-    ok(psv == NULL, "psv = %p\n", psv);
-
-    memset(&sfvc, 0, sizeof(sfvc));
-    sfvc.cbSize = sizeof(sfvc) - 1;
-    psv = (void *)0xdeadbeef;
-    hr = pSHCreateShellFolderView(&sfvc, &psv);
-    ok(hr == E_INVALIDARG, "Got 0x%08x\n", hr);
-    ok(psv == NULL, "psv = %p\n", psv);
-
-    memset(&sfvc, 0, sizeof(sfvc));
-    sfvc.cbSize = sizeof(sfvc) + 1;
-    psv = (void *)0xdeadbeef;
-    hr = pSHCreateShellFolderView(&sfvc, &psv);
-    ok(hr == E_INVALIDARG, "Got 0x%08x\n", hr);
-    ok(psv == NULL, "psv = %p\n", psv);
-
-    memset(&sfvc, 0, sizeof(sfvc));
-    sfvc.cbSize = sizeof(sfvc);
-    sfvc.pshf = desktop;
-    psv = NULL;
-    hr = pSHCreateShellFolderView(&sfvc, &psv);
-    ok(hr == S_OK, "Got 0x%08x\n", hr);
-    ok(psv != NULL, "psv = %p\n", psv);
-    if (psv)
-    {
-        refCount = IShellView_Release(psv);
-        ok(refCount == 0, "refCount = %u\n", refCount);
-    }
-
-    IShellFolder_Release(desktop);
-}
-
-static void test_SHCreateShellFolderViewEx(void)
-{
-    HRESULT hr;
-    IShellView *psv;
-    CSFV csfv;
-    IShellFolder *desktop;
-    ULONG refCount;
-
-    if (!pSHCreateShellFolderViewEx)
-    {
-        win_skip("SHCreateShellFolderViewEx missing.\n");
-        return;
-    }
-
-    hr = SHGetDesktopFolder(&desktop);
-    ok(hr == S_OK, "got (0x%08x)\n", hr);
-
-    if (0)
-    {
-        /* crash on win7 */
-        pSHCreateShellFolderViewEx(NULL, NULL);
-        pSHCreateShellFolderViewEx(NULL, &psv);
-        pSHCreateShellFolderViewEx(&csfv, NULL);
-    }
-
-    memset(&csfv, 0, sizeof(csfv));
-    csfv.pshf = desktop;
-    psv = NULL;
-    hr = pSHCreateShellFolderViewEx(&csfv, &psv);
-    ok(hr == S_OK, "Got 0x%08x\n", hr);
-    ok(psv != NULL, "psv = %p\n", psv);
-    if (psv)
-    {
-        refCount = IShellView_Release(psv);
-        ok(refCount == 0, "refCount = %u\n", refCount);
-    }
-
-    memset(&csfv, 0, sizeof(csfv));
-    csfv.cbSize = sizeof(csfv);
-    csfv.pshf = desktop;
-    psv = NULL;
-    hr = pSHCreateShellFolderViewEx(&csfv, &psv);
-    ok(hr == S_OK, "Got 0x%08x\n", hr);
-    ok(psv != NULL, "psv = %p\n", psv);
-    if (psv)
-    {
-        refCount = IShellView_Release(psv);
-        ok(refCount == 0, "refCount = %u\n", refCount);
-    }
-
-    IShellFolder_Release(desktop);
-}
-
 static void test_DataObject(void)
 {
     IShellFolder *desktop;
@@ -5364,8 +5270,6 @@ START_TEST(shlfolder)
     test_ShellItemGetAttributes();
     test_ShellItemArrayGetAttributes();
     test_SHCreateDefaultContextMenu();
-    test_SHCreateShellFolderView();
-    test_SHCreateShellFolderViewEx();
     test_DataObject();
 
     OleUninitialize();

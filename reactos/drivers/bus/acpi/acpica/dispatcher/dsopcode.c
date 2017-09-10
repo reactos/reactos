@@ -245,10 +245,9 @@ AcpiDsInitBufferField (
         (8 * (UINT32) BufferDesc->Buffer.Length))
     {
         ACPI_ERROR ((AE_INFO,
-            "Field [%4.4s] at %u exceeds Buffer [%4.4s] size %u (bits)",
-            AcpiUtGetNodeName (ResultDesc),
-            BitOffset + BitCount,
-            AcpiUtGetNodeName (BufferDesc->Buffer.Node),
+            "Field [%4.4s] at bit offset/length %u/%u "
+            "exceeds size of target Buffer (%u bits)",
+            AcpiUtGetNodeName (ResultDesc), BitOffset, BitCount,
             8 * (UINT32) BufferDesc->Buffer.Length));
         Status = AE_AML_BUFFER_LIMIT;
         goto Cleanup;
@@ -639,6 +638,16 @@ AcpiDsEvalDataObjectOperands (
      * invoked inside AcpiDsCreateOperand.
      */
     WalkState->OperandIndex = WalkState->NumOperands;
+
+    /* Ignore if child is not valid */
+
+    if (!Op->Common.Value.Arg)
+    {
+        ACPI_ERROR ((AE_INFO,
+            "Dispatch: Missing child while executing TermArg for %X",
+            Op->Common.AmlOpcode));
+        return_ACPI_STATUS (AE_OK);
+    }
 
     Status = AcpiDsCreateOperand (WalkState, Op->Common.Value.Arg, 1);
     if (ACPI_FAILURE (Status))

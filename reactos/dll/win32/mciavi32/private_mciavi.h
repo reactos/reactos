@@ -81,6 +81,11 @@ typedef struct {
     DWORD               dwToVideoFrame; /* play to */
     DWORD		dwCurrAudioBlock;	/* current audio block being played */
     RECT                source, dest;
+    struct
+    {
+        DWORD flags;
+        MCI_BREAK_PARMS parms;
+    } mci_break;
     /* data for the background mechanism */
     CRITICAL_SECTION	cs;
     HANDLE              hStopEvent;

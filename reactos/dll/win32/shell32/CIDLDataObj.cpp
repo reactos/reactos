@@ -394,12 +394,12 @@ HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync)
 
 HRESULT WINAPI CIDLDataObj::StartOperation(IBindCtx *pbcReserved)
 {
-    FIXME("(%p)->()\n", this);
+    TRACE("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 HRESULT WINAPI CIDLDataObj::EndOperation(HRESULT hResult, IBindCtx *pbcReserved, DWORD dwEffects)
 {
-    FIXME("(%p)->()\n", this);
+    TRACE("(%p)->()\n", this);
     return E_NOTIMPL;
 }
 

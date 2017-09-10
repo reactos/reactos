@@ -685,9 +685,16 @@ static void test_builtinproc(void)
     cls.lpfnWndProc = pDefWindowProcW;
     atom = RegisterClassExA(&cls);
 
-    hwnd = CreateWindowExW(0, classW, NULL, WS_OVERLAPPEDWINDOW,
+    hwnd = CreateWindowExW(0, classW, unistring, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 680, 260, NULL, NULL, GetModuleHandleW(NULL), 0);
-    ok(IsWindowUnicode(hwnd), "Windows should be Unicode\n");
+    ok(IsWindowUnicode(hwnd) ||
+       broken(!IsWindowUnicode(hwnd)) /* Windows 8 and 10 */,
+       "Windows should be Unicode\n");
+    SendMessageW(hwnd, WM_GETTEXT, sizeof(buf) / sizeof(buf[0]), (LPARAM)buf);
+    if (IsWindowUnicode(hwnd))
+        ok(memcmp(buf, unistring, sizeof(unistring)) == 0, "WM_GETTEXT invalid return\n");
+    else
+        ok(memcmp(buf, unistring, sizeof(unistring)) != 0, "WM_GETTEXT invalid return\n");
     SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)pDefWindowProcA);
     ok(IsWindowUnicode(hwnd), "Windows should have remained Unicode\n");
     if (GetWindowLongPtrW(hwnd, GWLP_WNDPROC) == (LONG_PTR)pDefWindowProcA)

@@ -110,7 +110,7 @@ typedef struct _CONFIGURATION_COMPONENT
     ULONG AffinityMask;
     ULONG ConfigurationDataLength;
     ULONG IdentifierLength;
-    LPSTR Identifier;
+    PCHAR Identifier;
 } CONFIGURATION_COMPONENT, *PCONFIGURATION_COMPONENT;
 
 typedef struct _CONFIGURATION_COMPONENT_DATA
@@ -338,19 +338,22 @@ typedef struct _LOADER_PERFORMANCE_DATA
 //
 // Extended Loader Parameter Block
 //
+// See http://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/loader_parameter_extension.htm
+// for more details.
+//
 typedef struct _LOADER_PARAMETER_EXTENSION
 {
     ULONG Size;
     PROFILE_PARAMETER_BLOCK Profile;
-    ULONG MajorVersion;
-    ULONG MinorVersion;
+    ULONG MajorVersion;             /* Not anymore present starting NT 6.1 */
+    ULONG MinorVersion;             /* Not anymore present starting NT 6.1 */
     PVOID EmInfFileImage;
     ULONG EmInfFileSize;
     PVOID TriageDumpBlock;
     //
     // NT 5.1
     //
-    ULONG LoaderPagesSpanned;
+    ULONG_PTR LoaderPagesSpanned;   /* Not anymore present starting NT 6.2 */
     PHEADLESS_LOADER_BLOCK HeadlessLoaderBlock;
     PSMBIOS_TABLE_HEADER SMBiosEPSHeader;
     PVOID DrvDBImage;
@@ -359,18 +362,22 @@ typedef struct _LOADER_PARAMETER_EXTENSION
     //
     // NT 5.2+
     //
-    PCHAR HalpIRQLToTPR;
-    PCHAR HalpVectorToIRQL;
+#ifdef _X86_
+    PUCHAR HalpIRQLToTPR;
+    PUCHAR HalpVectorToIRQL;
+#endif
     LIST_ENTRY FirmwareDescriptorListHead;
     PVOID AcpiTable;
     ULONG AcpiTableSize;
     //
     // NT 5.2 SP1+
     //
+/** NT-version-dependent flags **/
     ULONG BootViaWinload:1;
     ULONG BootViaEFI:1;
     ULONG Reserved:30;
-    LOADER_PERFORMANCE_DATA LoaderPerformanceData;
+/********************************/
+    PLOADER_PERFORMANCE_DATA LoaderPerformanceData;
     LIST_ENTRY BootApplicationPersistentData;
     PVOID WmdTestResult;
     GUID BootIdentifier;
@@ -478,6 +485,9 @@ typedef struct _FIRMWARE_INFORMATION_LOADER_BLOCK
 //
 // Loader Parameter Block
 //
+// See http://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/loader_parameter_block.htm
+// for more details.
+//
 typedef struct _LOADER_PARAMETER_BLOCK
 {
     LIST_ENTRY LoadOrderListHead;
@@ -490,11 +500,11 @@ typedef struct _LOADER_PARAMETER_BLOCK
     ULONG RegistryLength;
     PVOID RegistryBase;
     PCONFIGURATION_COMPONENT_DATA ConfigurationRoot;
-    LPSTR ArcBootDeviceName;
-    LPSTR ArcHalDeviceName;
-    LPSTR NtBootPathName;
-    LPSTR NtHalPathName;
-    LPSTR LoadOptions;
+    PSTR ArcBootDeviceName;
+    PSTR ArcHalDeviceName;
+    PSTR NtBootPathName;
+    PSTR NtHalPathName;
+    PSTR LoadOptions;
     PNLS_DATA_BLOCK NlsData;
     PARC_DISK_INFORMATION ArcDiskInformation;
     PVOID OemFontFile;

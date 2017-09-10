@@ -41,14 +41,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(hlink);
 extern HRESULT HLink_Constructor(IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 extern HRESULT HLinkBrowseContext_Constructor(IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 
-static inline void *heap_alloc(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, len);
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static inline void *heap_alloc_zero(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 
 static inline BOOL heap_free(void *mem)

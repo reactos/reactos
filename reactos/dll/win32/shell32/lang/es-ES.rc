@@ -65,17 +65,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "E&xplorar", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Abrir", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "C&ortar", FCIDM_SHVIEW_CUT
-        MENUITEM "&Copiar", FCIDM_SHVIEW_COPY
+        MENUITEM "C&ortar", IDM_CUT
+        MENUITEM "&Copiar", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "C&rear acceso directo", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Eliminar", FCIDM_SHVIEW_DELETE
-        MENUITEM "Re&nombrar", FCIDM_SHVIEW_RENAME
+        MENUITEM "C&rear acceso directo", IDM_CREATELINK
+        MENUITEM "&Eliminar", IDM_DELETE
+        MENUITEM "Re&nombrar", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Propiedades", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Propiedades", IDM_PROPERTIES
     END
 END
 
@@ -636,24 +634,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Archivo"
-    IDS_SHV_COLUMN2 "Tamaño"
-    IDS_SHV_COLUMN3 "Tipo"
-    IDS_SHV_COLUMN4 "Modificado"
-    IDS_SHV_COLUMN5 "Atributos"
-    IDS_SHV_COLUMN6 "Tamaño"
-    IDS_SHV_COLUMN7 "Tamaño disponible"
-    IDS_SHV_COLUMN8 "Nombre"
-    IDS_SHV_COLUMN9 "Comentarios"
-    IDS_SHV_COLUMN10 "Propietario"
-    IDS_SHV_COLUMN11 "Grupo"
-    IDS_SHV_COLUMN12 "Nombre del archivo"
-    IDS_SHV_COLUMN13 "Categoría"
+    IDS_SHV_COLUMN_NAME "Nombre"
+    IDS_SHV_COLUMN_SIZE "Tamaño"
+    IDS_SHV_COLUMN_TYPE "Tipo"
+    IDS_SHV_COLUMN_MODIFIED "Modificado"
+    IDS_SHV_COLUMN_ATTRIBUTES "Atributos"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Tamaño"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Tamaño disponible"
+    IDS_SHV_COLUMN_OWNER "Propietario"
+    IDS_SHV_COLUMN_GROUP "Grupo"
+    IDS_SHV_COLUMN_FILENAME "Nombre del archivo"
+    IDS_SHV_COLUMN_CATEGORY "Categoría"
     IDS_SHV_COLUMN_DELFROM "Ubicación original"
     IDS_SHV_COLUMN_DELDATE "Fecha de eliminación"
     IDS_SHV_COLUMN_FONTTYPE "Tipo de fuente"
     IDS_SHV_COLUMN_WORKGROUP "Grupo de trabajo"
-    IDS_SHV_NETWORKLOCATION "Ubicación en red"
+    IDS_SHV_COLUMN_NETLOCATION "Ubicación en red"
     IDS_SHV_COLUMN_DOCUMENTS "Documentos"
     IDS_SHV_COLUMN_STATUS "Estado"
     IDS_SHV_COLUMN_COMMENTS "Comentarios"

@@ -254,25 +254,18 @@ static HRESULT WINAPI d3d9_CheckDeviceFormat(IDirect3D9Ex *iface, UINT adapter, 
     usage = usage & (WINED3DUSAGE_MASK | WINED3DUSAGE_QUERY_MASK);
     switch (resource_type)
     {
-        case D3DRTYPE_SURFACE:
-            wined3d_rtype = WINED3D_RTYPE_SURFACE;
-            break;
-
-        case D3DRTYPE_VOLUME:
-            wined3d_rtype = WINED3D_RTYPE_VOLUME;
-            break;
-
+        case D3DRTYPE_CUBETEXTURE:
+            usage |= WINED3DUSAGE_LEGACY_CUBEMAP;
         case D3DRTYPE_TEXTURE:
+            usage |= WINED3DUSAGE_TEXTURE;
+        case D3DRTYPE_SURFACE:
             wined3d_rtype = WINED3D_RTYPE_TEXTURE_2D;
             break;
 
         case D3DRTYPE_VOLUMETEXTURE:
+        case D3DRTYPE_VOLUME:
+            usage |= WINED3DUSAGE_TEXTURE;
             wined3d_rtype = WINED3D_RTYPE_TEXTURE_3D;
-            break;
-
-        case D3DRTYPE_CUBETEXTURE:
-            wined3d_rtype = WINED3D_RTYPE_TEXTURE_2D;
-            usage |= WINED3DUSAGE_LEGACY_CUBEMAP;
             break;
 
         case D3DRTYPE_VERTEXBUFFER:
@@ -350,87 +343,10 @@ static HRESULT WINAPI d3d9_CheckDeviceFormatConversion(IDirect3D9Ex *iface, UINT
     return hr;
 }
 
-void filter_caps(D3DCAPS9* pCaps)
-{
-    DWORD ps_minor_version[] = {0, 4, 0, 0};
-    DWORD vs_minor_version[] = {0, 1, 0, 0};
-    DWORD textureFilterCaps =
-        D3DPTFILTERCAPS_MINFPOINT      | D3DPTFILTERCAPS_MINFLINEAR    | D3DPTFILTERCAPS_MINFANISOTROPIC |
-        D3DPTFILTERCAPS_MINFPYRAMIDALQUAD                              | D3DPTFILTERCAPS_MINFGAUSSIANQUAD|
-        D3DPTFILTERCAPS_MIPFPOINT      | D3DPTFILTERCAPS_MIPFLINEAR    | D3DPTFILTERCAPS_MAGFPOINT       |
-        D3DPTFILTERCAPS_MAGFLINEAR     |D3DPTFILTERCAPS_MAGFANISOTROPIC|D3DPTFILTERCAPS_MAGFPYRAMIDALQUAD|
-        D3DPTFILTERCAPS_MAGFGAUSSIANQUAD;
-    pCaps->TextureFilterCaps &= textureFilterCaps;
-    pCaps->CubeTextureFilterCaps &= textureFilterCaps;
-    pCaps->VolumeTextureFilterCaps &= textureFilterCaps;
-
-    pCaps->DevCaps &=
-        D3DDEVCAPS_EXECUTESYSTEMMEMORY | D3DDEVCAPS_EXECUTEVIDEOMEMORY | D3DDEVCAPS_TLVERTEXSYSTEMMEMORY |
-        D3DDEVCAPS_TLVERTEXVIDEOMEMORY | D3DDEVCAPS_TEXTURESYSTEMMEMORY| D3DDEVCAPS_TEXTUREVIDEOMEMORY   |
-        D3DDEVCAPS_DRAWPRIMTLVERTEX    | D3DDEVCAPS_CANRENDERAFTERFLIP | D3DDEVCAPS_TEXTURENONLOCALVIDMEM|
-        D3DDEVCAPS_DRAWPRIMITIVES2     | D3DDEVCAPS_SEPARATETEXTUREMEMORIES                              |
-        D3DDEVCAPS_DRAWPRIMITIVES2EX   | D3DDEVCAPS_HWTRANSFORMANDLIGHT| D3DDEVCAPS_CANBLTSYSTONONLOCAL  |
-        D3DDEVCAPS_HWRASTERIZATION     | D3DDEVCAPS_PUREDEVICE         | D3DDEVCAPS_QUINTICRTPATCHES     |
-        D3DDEVCAPS_RTPATCHES           | D3DDEVCAPS_RTPATCHHANDLEZERO  | D3DDEVCAPS_NPATCHES;
-
-    pCaps->ShadeCaps &=
-        D3DPSHADECAPS_COLORGOURAUDRGB  | D3DPSHADECAPS_SPECULARGOURAUDRGB |
-        D3DPSHADECAPS_ALPHAGOURAUDBLEND | D3DPSHADECAPS_FOGGOURAUD;
-
-    pCaps->RasterCaps &=
-        D3DPRASTERCAPS_DITHER          | D3DPRASTERCAPS_ZTEST          | D3DPRASTERCAPS_FOGVERTEX        |
-        D3DPRASTERCAPS_FOGTABLE        | D3DPRASTERCAPS_MIPMAPLODBIAS  | D3DPRASTERCAPS_ZBUFFERLESSHSR   |
-        D3DPRASTERCAPS_FOGRANGE        | D3DPRASTERCAPS_ANISOTROPY     | D3DPRASTERCAPS_WBUFFER          |
-        D3DPRASTERCAPS_WFOG            | D3DPRASTERCAPS_ZFOG           | D3DPRASTERCAPS_COLORPERSPECTIVE |
-        D3DPRASTERCAPS_SCISSORTEST     | D3DPRASTERCAPS_SLOPESCALEDEPTHBIAS                              |
-        D3DPRASTERCAPS_DEPTHBIAS       | D3DPRASTERCAPS_MULTISAMPLE_TOGGLE;
-
-    pCaps->DevCaps2 &=
-        D3DDEVCAPS2_STREAMOFFSET       | D3DDEVCAPS2_DMAPNPATCH        | D3DDEVCAPS2_ADAPTIVETESSRTPATCH |
-        D3DDEVCAPS2_ADAPTIVETESSNPATCH | D3DDEVCAPS2_CAN_STRETCHRECT_FROM_TEXTURES                       |
-        D3DDEVCAPS2_PRESAMPLEDDMAPNPATCH| D3DDEVCAPS2_VERTEXELEMENTSCANSHARESTREAMOFFSET;
-
-    pCaps->Caps2 &=
-        D3DCAPS2_FULLSCREENGAMMA       | D3DCAPS2_CANCALIBRATEGAMMA    | D3DCAPS2_RESERVED               |
-        D3DCAPS2_CANMANAGERESOURCE     | D3DCAPS2_DYNAMICTEXTURES      | D3DCAPS2_CANAUTOGENMIPMAP;
-
-    pCaps->VertexProcessingCaps &=
-        D3DVTXPCAPS_TEXGEN             | D3DVTXPCAPS_MATERIALSOURCE7   | D3DVTXPCAPS_DIRECTIONALLIGHTS   |
-        D3DVTXPCAPS_POSITIONALLIGHTS   | D3DVTXPCAPS_LOCALVIEWER       | D3DVTXPCAPS_TWEENING            |
-        D3DVTXPCAPS_TEXGEN_SPHEREMAP   | D3DVTXPCAPS_NO_TEXGEN_NONLOCALVIEWER;
-
-    pCaps->TextureCaps &=
-        D3DPTEXTURECAPS_PERSPECTIVE    | D3DPTEXTURECAPS_POW2          | D3DPTEXTURECAPS_ALPHA           |
-        D3DPTEXTURECAPS_SQUAREONLY     | D3DPTEXTURECAPS_TEXREPEATNOTSCALEDBYSIZE                        |
-        D3DPTEXTURECAPS_ALPHAPALETTE   | D3DPTEXTURECAPS_NONPOW2CONDITIONAL                              |
-        D3DPTEXTURECAPS_PROJECTED      | D3DPTEXTURECAPS_CUBEMAP       | D3DPTEXTURECAPS_VOLUMEMAP       |
-        D3DPTEXTURECAPS_MIPMAP         | D3DPTEXTURECAPS_MIPVOLUMEMAP  | D3DPTEXTURECAPS_MIPCUBEMAP      |
-        D3DPTEXTURECAPS_CUBEMAP_POW2   | D3DPTEXTURECAPS_VOLUMEMAP_POW2| D3DPTEXTURECAPS_NOPROJECTEDBUMPENV;
-
-    pCaps->MaxVertexShaderConst = min(D3D9_MAX_VERTEX_SHADER_CONSTANTF, pCaps->MaxVertexShaderConst);
-    pCaps->NumSimultaneousRTs = min(D3D9_MAX_SIMULTANEOUS_RENDERTARGETS, pCaps->NumSimultaneousRTs);
-
-    if (pCaps->PixelShaderVersion > 3)
-        pCaps->PixelShaderVersion = D3DPS_VERSION(3,0);
-    else
-    {
-        DWORD major = pCaps->PixelShaderVersion;
-        pCaps->PixelShaderVersion = D3DPS_VERSION(major,ps_minor_version[major]);
-    }
-
-    if (pCaps->VertexShaderVersion > 3)
-        pCaps->VertexShaderVersion = D3DVS_VERSION(3,0);
-    else
-    {
-        DWORD major = pCaps->VertexShaderVersion;
-        pCaps->VertexShaderVersion = D3DVS_VERSION(major,vs_minor_version[major]);
-    }
-}
-
 static HRESULT WINAPI d3d9_GetDeviceCaps(IDirect3D9Ex *iface, UINT adapter, D3DDEVTYPE device_type, D3DCAPS9 *caps)
 {
     struct d3d9 *d3d9 = impl_from_IDirect3D9Ex(iface);
-    WINED3DCAPS *wined3d_caps;
+    WINED3DCAPS wined3d_caps;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, device_type %#x, caps %p.\n", iface, adapter, device_type, caps);
@@ -438,21 +354,13 @@ static HRESULT WINAPI d3d9_GetDeviceCaps(IDirect3D9Ex *iface, UINT adapter, D3DD
     if (!caps)
         return D3DERR_INVALIDCALL;
 
-    if (!(wined3d_caps = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WINED3DCAPS))))
-        return D3DERR_INVALIDCALL; /*well this is what MSDN says to return*/
     memset(caps, 0, sizeof(*caps));
 
     wined3d_mutex_lock();
-    hr = wined3d_get_device_caps(d3d9->wined3d, adapter, device_type, wined3d_caps);
+    hr = wined3d_get_device_caps(d3d9->wined3d, adapter, device_type, &wined3d_caps);
     wined3d_mutex_unlock();
 
-    WINECAPSTOD3D9CAPS(caps, wined3d_caps)
-    HeapFree(GetProcessHeap(), 0, wined3d_caps);
-
-    /* Some functionality is implemented in d3d9.dll, not wined3d.dll. Add the needed caps */
-    caps->DevCaps2 |= D3DDEVCAPS2_CAN_STRETCHRECT_FROM_TEXTURES;
-
-    filter_caps(caps);
+    d3dcaps_from_wined3dcaps(caps, &wined3d_caps);
 
     return hr;
 }
@@ -502,7 +410,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_CreateDevice(IDirect3D9Ex *iface, U
     }
 
     TRACE("Created device %p.\n", object);
-    *device = (IDirect3DDevice9 *)object;
+    *device = (IDirect3DDevice9 *)&object->IDirect3DDevice9Ex_iface;
 
     return D3D_OK;
 }
@@ -668,7 +576,8 @@ static const struct IDirect3D9ExVtbl d3d9_vtbl =
 BOOL d3d9_init(struct d3d9 *d3d9, BOOL extended)
 {
     DWORD flags = WINED3D_PRESENT_CONVERSION | WINED3D_HANDLE_RESTORE | WINED3D_PIXEL_CENTER_INTEGER
-            | WINED3D_SRGB_READ_WRITE_CONTROL;
+            | WINED3D_SRGB_READ_WRITE_CONTROL | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR
+            | WINED3D_NO_PRIMITIVE_RESTART | WINED3D_LEGACY_CUBEMAP_FILTERING;
 
     if (!extended)
         flags |= WINED3D_VIDMEM_ACCOUNTING;

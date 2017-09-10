@@ -118,6 +118,10 @@ AcGetAllTablesFromFile (
     UINT8                   GetOnlyAmlTables,
     ACPI_NEW_TABLE_DESC     **ReturnListHead);
 
+void
+AcDeleteTableList (
+    ACPI_NEW_TABLE_DESC     *ListHead);
+
 BOOLEAN
 AcIsFileBinary (
     FILE                    *File);
@@ -186,7 +190,7 @@ AcpiDmFinishNamespaceLoad (
     ACPI_OWNER_ID           OwnerId);
 
 void
-AcpiDmConvertResourceIndexes (
+AcpiDmConvertParseObjects (
     ACPI_PARSE_OBJECT       *ParseTreeRoot,
     ACPI_NAMESPACE_NODE     *NamespaceRoot);
 

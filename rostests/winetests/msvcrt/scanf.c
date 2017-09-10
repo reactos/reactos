@@ -251,6 +251,10 @@ static void test_sscanf( void )
     ok(ret == 2, "got %d\n", ret);
     ok(!strcmp(buffer, "test"), "buf %s\n", buffer);
     ok(!strcmp(buffer1, "value\xda"), "buf %s\n", buffer1);
+
+    ret = sscanf("\x81\x82test", "\x81%\x82%s", buffer);
+    ok(ret == 1, "got %d\n", ret);
+    ok(!strcmp(buffer, "test"), "buf = %s\n", buffer);
 }
 
 static void test_sscanf_s(void)
@@ -299,6 +303,8 @@ static void test_swscanf( void )
     wchar_t buffer[100];
     int result, ret;
     static const WCHAR formatd[] = {'%','d',0};
+    const WCHAR format2[] = {'a',0x1234,'%',0x1234,'%','c',0};
+    WCHAR c;
 
     /* check WEOF */
     /* WEOF is an unsigned short -1 but swscanf returns int
@@ -308,6 +314,14 @@ static void test_swscanf( void )
     /* msvcrt returns 0 but should return -1 (later versions do) */
     ok( ret == (short)WEOF || broken(ret == 0),
         "swscanf returns %x instead of %x\n", ret, WEOF );
+
+    buffer[0] = 'a';
+    buffer[1] = 0x1234;
+    buffer[2] = 0x1234;
+    buffer[3] = 'b';
+    ret = swscanf(buffer, format2, &c);
+    ok(ret == 1, "swscanf returned %d\n", ret);
+    ok(c == 'b', "c = %x\n", c);
 }
 
 START_TEST(scanf)

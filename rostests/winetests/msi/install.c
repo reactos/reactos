@@ -1220,6 +1220,69 @@ static const char shc_install_exec_seq_dat[] =
     "PublishProduct\t\t1900\n"
     "InstallFinalize\t\t2000\n";
 
+static const char ft_file_dat[] =
+    "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
+    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
+    "File\tFile\n"
+    "featuretree\tcomp\tfeaturetree.txt\t1000\t\t\t8192\t1\n";
+
+static const char ft_comp_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "comp\t{12345678-1234-1234-1234-222222222222}\tTARGETDIR\t0\t\t\n"
+    "comp2\t{12345678-1234-1234-1234-333333333333}\tTARGETDIR\t0\t\tfeaturetree\n";
+
+static const char ft_feature_dat[] =
+    "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
+    "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
+    "Feature\tFeature\n"
+    "A\t\t\t\t2\t1\t\t0\n"
+    "C\tB\t\t\t2\t1\t\t0\n"
+    "B\tA\t\t\t4\t1\t\t0\n"
+    "D\t\t\t\t2\t1\t\t0\n";
+
+static const char ft_feature_comp_dat[] =
+    "Feature_\tComponent_\n"
+    "s38\ts72\n"
+    "FeatureComponents\tFeature_\tComponent_\n"
+    "C\tcomp\n"
+    "D\tcomp2\n";
+
+static const char ft_condition_dat[] =
+    "Feature_\tLevel\tCondition\n"
+    "s38\ti2\tS255\n"
+    "Condition\tFeature_\tLevel\n"
+    "A\t0\t\"0\"<>INSTALLTYPE\n";
+
+static const char ft_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\tISComments\n"
+    "s72\ti2\tS64\tS0\tS255\n"
+    "CustomAction\tAction\n"
+    "Run A\t19\t\tA\t\n"
+    "Run B\t19\t\tB\t\n"
+    "Run C\t19\t\tC\t\n";
+
+static const char ft_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "CostInitialize\t\t100\n"
+    "FileCost\t\t200\n"
+    "CostFinalize\t\t300\n"
+    "InstallValidate\t\t400\n"
+    "InstallInitialize\t\t500\n"
+    "Run C\t3 = &C AND NOT Installed\t600\n"
+    "Run B\t3 = &B AND NOT Installed\t700\n"
+    "Run A\t3 = &A AND NOT Installed\t800\n"
+    "ProcessComponents\t\t900\n"
+    "RemoveFiles\t\t1000\n"
+    "InstallFiles\t\t1100\n"
+    "RegisterProduct\t\t1200\n"
+    "PublishFeatures\t\t1300\n"
+    "PublishProduct\t\t1400\n"
+    "InstallFinalize\t\t1500\n";
+
 typedef struct _msi_table
 {
     const CHAR *filename;
@@ -1858,6 +1921,20 @@ static const msi_table shc2_tables[] =
     ADD_TABLE(shc_custom_action),
     ADD_TABLE(shc_install_exec_seq),
     ADD_TABLE(shc2_property)
+};
+
+static const msi_table ft_tables[] =
+{
+    ADD_TABLE(media),
+    ADD_TABLE(directory),
+    ADD_TABLE(ft_file),
+    ADD_TABLE(ft_comp),
+    ADD_TABLE(ft_feature),
+    ADD_TABLE(ft_feature_comp),
+    ADD_TABLE(ft_condition),
+    ADD_TABLE(ft_custom_action),
+    ADD_TABLE(ft_install_exec_seq),
+    ADD_TABLE(property)
 };
 
 /* cabinet definitions */
@@ -5937,6 +6014,35 @@ static void test_remove_upgrade_code(void)
     DeleteFileA( msifile );
 }
 
+static void test_feature_tree(void)
+{
+    UINT r;
+
+    if (is_process_limited())
+    {
+        skip( "process is limited\n" );
+        return;
+    }
+
+    create_file( "msitest\\featuretree.txt", 1000 );
+    create_database( msifile, ft_tables, sizeof(ft_tables)/sizeof(ft_tables[0]) );
+
+    MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
+
+    r = MsiInstallProductA( msifile, "INSTALLTYPE=\"0\"" );
+    ok( r == ERROR_INSTALL_FAILURE, "got %u\n", r );
+
+    r = MsiInstallProductA( msifile, "INSTALLTYPE=\"1\"" );
+    ok( r == ERROR_SUCCESS, "got %u\n", r );
+
+    r = MsiInstallProductA( msifile, "REMOVE=ALL" );
+    ok( r == ERROR_SUCCESS, "got %u\n", r );
+
+    DeleteFileA( "msitest\\featuretree.txt" );
+    RemoveDirectoryA( "msitest" );
+    DeleteFileA( msifile );
+}
+
 START_TEST(install)
 {
     DWORD len;
@@ -6024,6 +6130,7 @@ START_TEST(install)
     test_volume_props();
     test_shared_component();
     test_remove_upgrade_code();
+    test_feature_tree();
 
     DeleteFileA(log_file);
 

@@ -200,17 +200,13 @@ typedef struct _ROS_SECTION_OBJECT
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
-#define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->StartingVpn << PAGE_SHIFT)
-#define MA_GetEndingAddress(_MemoryArea) (((_MemoryArea)->EndingVpn + 1) << PAGE_SHIFT)
+#define MA_GetStartingAddress(_MemoryArea) (_MemoryArea->VadNode.StartingVpn << PAGE_SHIFT)
+#define MA_GetEndingAddress(_MemoryArea) ((_MemoryArea->VadNode.EndingVpn + 1) << PAGE_SHIFT)
 
 typedef struct _MEMORY_AREA
 {
     MMVAD VadNode;
-    ULONG_PTR StartingVpn;
-    ULONG_PTR EndingVpn;
-    struct _MEMORY_AREA *Parent;
-    struct _MEMORY_AREA *LeftChild;
-    struct _MEMORY_AREA *RightChild;
+
     ULONG Type;
     ULONG Protect;
     ULONG Flags;

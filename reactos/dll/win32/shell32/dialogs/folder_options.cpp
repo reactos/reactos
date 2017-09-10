@@ -137,7 +137,6 @@ typedef struct ADVANCED_ENTRY
     DWORD   dwResourceID;           // resource ID
     WCHAR   szKeyName[64];          // entry key name
     DWORD   dwType;                 // ADVANCED_ENTRY_TYPE
-    DWORD   dwOrdinal;              // ordinal number
     WCHAR   szText[MAX_PATH];       // text
     INT     nIconID;                // icon ID (See ADVANCED_ICON)
 
@@ -419,7 +418,7 @@ Advanced_InsertEntry(HWND hwndTreeView, ADVANCED_ENTRY *pEntry)
 {
     ADVANCED_ENTRY *pParent = Advanced_GetItem(pEntry->dwParentID);
     HTREEITEM hParent = TVI_ROOT;
-    if (pParent != NULL)
+    if (pParent)
         hParent = pParent->hItem;
 
     TV_INSERTSTRUCT Insertion;
@@ -539,12 +538,6 @@ Advanced_LoadTree(HKEY hKey, LPCWSTR pszKeyName, DWORD dwParentID)
         }
         pEntry->nIconID = Advanced_AddIcon(szExpanded, nIconIndex);
     }
-
-    // Ordinal (ReactOS extension)
-    Size = sizeof(Value);
-    Value = DWORD(-1);
-    RegQueryValueExW(hKey, L"Ordinal", NULL, NULL, LPBYTE(&Value), &Size);
-    pEntry->dwOrdinal = Value;
 
     if (pEntry->dwType == AETYPE_GROUP)
     {
@@ -710,11 +703,25 @@ Advanced_Compare(const void *x, const void *y)
 {
     ADVANCED_ENTRY *pEntry1 = (ADVANCED_ENTRY *)x;
     ADVANCED_ENTRY *pEntry2 = (ADVANCED_ENTRY *)y;
-    if (pEntry1->dwOrdinal < pEntry2->dwOrdinal)
-        return -1;
-    if (pEntry1->dwOrdinal > pEntry2->dwOrdinal)
-        return 1;
-    return 0;
+    DWORD dwParentID1 = pEntry1->dwParentID;
+    DWORD dwParentID2 = pEntry2->dwParentID;
+    while (dwParentID1 != dwParentID2)
+    {
+        ADVANCED_ENTRY *pParent1 = Advanced_GetItem(dwParentID1);
+        ADVANCED_ENTRY *pParent2 = Advanced_GetItem(dwParentID2);
+        if (!pParent1 && !pParent2)
+            break;
+        if (!pParent1 && pParent2)
+            return -1;
+        if (pParent1 && !pParent2)
+            return 1;
+        INT nCompare = lstrcmpi(pParent1->szText, pParent2->szText);
+        if (nCompare)
+            return nCompare;
+        dwParentID1 = pParent1->dwParentID;
+        dwParentID2 = pParent2->dwParentID;
+    }
+    return lstrcmpi(pEntry1->szText, pEntry2->szText);
 }
 
 static VOID

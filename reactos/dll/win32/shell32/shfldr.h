@@ -40,12 +40,7 @@ LPCWSTR GetNextElementW (LPCWSTR pszNext, LPWSTR pszOut, DWORD dwOut);
 HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc, LPITEMIDLIST * pidlInOut,
                   LPOLESTR szNext, DWORD * pEaten, DWORD * pdwAttributes);
 
-HRESULT HCR_GetClassName(REFIID riid, LPSTRRET strRet);
-
 HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf, LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet);
-
-HRESULT SHELL32_BindToFS (LPCITEMIDLIST pidlRoot,
-                 LPCWSTR pathRoot, LPCITEMIDLIST pidlComplete, REFIID riid, LPVOID * ppvOut);
 
 LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path);
 
@@ -55,8 +50,16 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
 
 HRESULT SHELL32_CompareChildren(IShellFolder2* psf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 
-HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
-                LPCITEMIDLIST pidlChild, const GUID* clsid, int csidl, REFIID riid, LPVOID *ppvOut);
+#ifdef __cplusplus
+HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TARGET_INFO* ppfti,
+                LPCITEMIDLIST pidlChild, const GUID* clsid, REFIID riid, LPVOID *ppvOut);
+
+HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, const GUID* clsid,
+                                int csidl, REFIID riid, LPVOID *ppvOut);
+#endif
+
+HRESULT SHELL32_BindToSF (LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TARGET_INFO* ppfti,
+                LPCITEMIDLIST pidl, const GUID* clsid, REFIID riid, LPVOID *ppvOut);
                 
 extern "C"
 BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);

@@ -230,6 +230,13 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,           &IID_IUnknown },
         }
     },
+    {
+        ID_NAME(CLSID_AttachmentServices ),
+        {
+            {    0x0,   &IID_IAttachmentExecute },
+            {    0x0,       &IID_IUnknown },
+        }
+    },
 };
 static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
 

@@ -5,6 +5,7 @@
  * PURPOSE:     Window procedure of the main window and all children apart from
  *              hPalWin, hToolSettings and hSelection
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -191,8 +192,6 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (drawing)
     {
-        ReleaseCapture();
-        drawing = FALSE;
         endPaintingL(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
                      paletteModel.GetBgColor());
         Invalidate(FALSE);
@@ -205,6 +204,71 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
+    drawing = FALSE;
+    ReleaseCapture();
+    return 0;
+}
+
+void CImgAreaWindow::cancelDrawing()
+{
+    POINT pt;
+    switch (toolsModel.GetActiveTool())
+    {
+        case TOOL_FREESEL: case TOOL_RECTSEL:
+        case TOOL_TEXT: case TOOL_ZOOM: case TOOL_SHAPE:
+            imageModel.ResetToPrevious();
+            selectionModel.ResetPtStack();
+            pointSP = 0;
+            Invalidate(FALSE);
+            break;
+        default:
+            GetCursorPos(&pt);
+            ScreenToClient(&pt);
+            // FIXME: dirty hack
+            if (GetKeyState(VK_LBUTTON) < 0)
+            {
+                endPaintingL(imageModel.GetDC(), pt.x * 1000 / toolsModel.GetZoom(), pt.y * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
+                             paletteModel.GetBgColor());
+            }
+            else if (GetKeyState(VK_RBUTTON) < 0)
+            {
+                endPaintingR(imageModel.GetDC(), pt.x * 1000 / toolsModel.GetZoom(), pt.y * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
+                             paletteModel.GetBgColor());
+            }
+            imageModel.Undo();
+            pointSP = 0;
+            selectionModel.ResetPtStack();
+    }
+}
+
+LRESULT CImgAreaWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (drawing)
+    {
+        cancelDrawing();
+        drawing = FALSE;
+    }
+    return 0;
+}
+
+LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (wParam == VK_ESCAPE)
+    {
+        if (GetCapture() == m_hWnd)
+        {
+            ReleaseCapture();
+        }
+        else
+        {
+            switch (toolsModel.GetActiveTool())
+            {
+                case TOOL_SHAPE: case TOOL_BEZIER:
+                    cancelDrawing();
+                    break;
+            }
+        }
+    }
     return 0;
 }
 
@@ -212,8 +276,6 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (drawing)
     {
-        ReleaseCapture();
-        drawing = FALSE;
         endPaintingR(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
                      paletteModel.GetBgColor());
         Invalidate(FALSE);
@@ -226,6 +288,8 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
+    ReleaseCapture();
+    drawing = FALSE;
     return 0;
 }
 

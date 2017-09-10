@@ -8,33 +8,33 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Willkommen"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Willkommen in ReactOS.\n\nKlicken Sie auf ein Thema auf der linken Seite."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Willkommen in ReactOS.\n\nKlicken Sie auf ein Thema auf der linken Seite."
 
-    IDS_CHECKTEXT "Dialog beim nächsen Start wieder anzeigen"
-    IDS_CLOSETEXT "Beenden"
+    IDS_CHECKTEXT "&Dialog beim nächsen Start wieder anzeigen"
+    IDS_CLOSETEXT "&Beenden"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "ReactOS installieren"
-    IDS_TOPICBUTTON1 "CD durchsuchen"
-    IDS_TOPICBUTTON2 "Beenden"
+    IDS_TOPIC_BUTTON0 "&ReactOS installieren"
+    IDS_TOPIC_BUTTON1 "&CD durchsuchen"
+    IDS_TOPIC_BUTTON2 "&Beenden"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "ReactOS installieren"
-    IDS_TOPICTITLE1 "CD durchsuchen"
-    IDS_TOPICTITLE2 "Beenden"
+    IDS_TOPIC_TITLE0 "ReactOS installieren"
+    IDS_TOPIC_TITLE1 "CD durchsuchen"
+    IDS_TOPIC_TITLE2 "Beenden"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Installiert ReactOS auf ihrem Computer oder aktualisiert eine bestehende Installation."
-    IDS_TOPICDESC1 "Die ReactOS-CD durchsuchen."
-    IDS_TOPICDESC2 "Klicken Sie, um dieses Programm zu beenden."
+    IDS_TOPIC_DESC0 "Installiert ReactOS auf ihrem Computer oder aktualisiert eine bestehende Installation."
+    IDS_TOPIC_DESC1 "Die ReactOS-CD durchsuchen."
+    IDS_TOPIC_DESC2 "Klicken Sie, um dieses Programm zu beenden."
 END

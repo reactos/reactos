@@ -9,7 +9,7 @@ BEGIN
     IDS_CALLERROR "При вызове функции %1 из %2 произошла ошибка или исключение."
     IDS_INCORRECTFORMAT "Недопустимый формат команды RunEx или RunOnceEx: %1. Команда выполнения оболочки должна начинаться с ||."
     // IDS_INCORRECTFORMAT "Неверный формат команды RunEx или RunOnceEx: %1. Команда выполнения для оболочки должна начинаться с ||."
-    IDS_NOEXPORT "Unable to call the function %1 in the file %2 because that function does not exist or is not exported."
+    IDS_NOEXPORT "Неудалось вызвать функцию %1 в файле %2. Функция не существует или не экспортируется."
     IDS_EXECUTEERROR "Во время выполнения %1 произошла ошибка или исключение."
     IDS_NOFUNCTION "Не удается найти функцию %1 в файле %2."
     IDS_NODEPENDENCY "Не удалось загрузить требуемый файл %1."

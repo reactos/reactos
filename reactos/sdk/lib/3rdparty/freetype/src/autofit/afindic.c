@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for Indic writing system (body).        */
 /*                                                                         */
-/*  Copyright 2007-2016 by                                                 */
+/*  Copyright 2007-2017 by                                                 */
 /*  Rahul Bhalerao <rahul.bhalerao@redhat.com>, <b.rahul.pm@gmail.com>.    */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,13 +18,13 @@
 
 #include "aftypes.h"
 #include "aflatin.h"
+#include "afcjk.h"
 
 
 #ifdef AF_CONFIG_OPTION_INDIC
 
 #include "afindic.h"
 #include "aferrors.h"
-#include "afcjk.h"
 
 
 #ifdef AF_CONFIG_OPTION_USE_WARPER

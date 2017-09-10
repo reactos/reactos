@@ -1529,6 +1529,39 @@ static const IUnknownVtbl UnknownVtbl =
 
 static IUnknown unknown = { &UnknownVtbl };
 
+static void check_enum_cache(IOleCache2 *cache, STATDATA *expect, int num)
+{
+    IEnumSTATDATA *enum_stat;
+    STATDATA stat;
+    HRESULT hr;
+
+    hr = IOleCache2_EnumCache( cache, &enum_stat );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    while (IEnumSTATDATA_Next(enum_stat, 1, &stat, NULL) == S_OK)
+    {
+        ok( stat.formatetc.cfFormat == expect->formatetc.cfFormat, "got %d expect %d\n",
+            stat.formatetc.cfFormat, expect->formatetc.cfFormat );
+        ok( !stat.formatetc.ptd == !expect->formatetc.ptd, "got %p expect %p\n",
+            stat.formatetc.ptd, expect->formatetc.ptd );
+        ok( stat.formatetc.dwAspect == expect->formatetc.dwAspect, "got %d expect %d\n",
+            stat.formatetc.dwAspect, expect->formatetc.dwAspect );
+        ok( stat.formatetc.lindex == expect->formatetc.lindex, "got %d expect %d\n",
+            stat.formatetc.lindex, expect->formatetc.lindex );
+        ok( stat.formatetc.tymed == expect->formatetc.tymed, "got %d expect %d\n",
+            stat.formatetc.tymed, expect->formatetc.tymed );
+        ok( stat.advf == expect->advf, "got %d expect %d\n", stat.advf, expect->advf );
+        ok( stat.pAdvSink == 0, "got %p\n", stat.pAdvSink );
+        ok( stat.dwConnection == expect->dwConnection, "got %d expect %d\n", stat.dwConnection, expect->dwConnection );
+        num--;
+        expect++;
+    }
+
+    ok( num == 0, "incorrect number. num %d\n", num );
+
+    IEnumSTATDATA_Release( enum_stat );
+}
+
 static void test_data_cache(void)
 {
     HRESULT hr;
@@ -1967,6 +2000,18 @@ static IStorage *create_storage( int num )
     return stg;
 }
 
+static HGLOBAL create_dib( void )
+{
+    HGLOBAL h;
+    void *ptr;
+
+    h = GlobalAlloc( GMEM_MOVEABLE, sizeof(dib) - sizeof(BITMAPFILEHEADER) );
+    ptr = GlobalLock( h );
+    memcpy( ptr, dib + sizeof(BITMAPFILEHEADER), sizeof(dib) - sizeof(BITMAPFILEHEADER) );
+    GlobalUnlock( h );
+    return h;
+}
+
 static void test_data_cache_dib_contents_stream(int num)
 {
     HRESULT hr;
@@ -1975,10 +2020,18 @@ static void test_data_cache_dib_contents_stream(int num)
     IDataObject *data;
     IViewObject2 *view;
     IStorage *stg;
+    IOleCache2 *cache;
     FORMATETC fmt = {CF_DIB, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     STGMEDIUM med;
     CLSID cls;
     SIZEL sz;
+    BYTE *ptr;
+    BITMAPINFOHEADER expect_info;
+    STATDATA enum_expect[] =
+    {
+        {{ CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL }, 0, NULL, 1 },
+        {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 1 },
+    };
 
     hr = CreateDataCache( NULL, &CLSID_Picture_Metafile, &IID_IUnknown, (void **)&unk );
     ok( SUCCEEDED(hr), "got %08x\n", hr );
@@ -1987,6 +2040,8 @@ static void test_data_cache_dib_contents_stream(int num)
     hr = IUnknown_QueryInterface( unk, &IID_IDataObject, (void **)&data );
     ok( SUCCEEDED(hr), "got %08x\n", hr );
     hr = IUnknown_QueryInterface( unk, &IID_IViewObject2, (void **)&view );
+    ok( SUCCEEDED(hr), "got %08x\n", hr );
+    hr = IUnknown_QueryInterface( unk, &IID_IOleCache2, (void **)&cache );
     ok( SUCCEEDED(hr), "got %08x\n", hr );
 
     stg = create_storage( num );
@@ -2001,11 +2056,26 @@ static void test_data_cache_dib_contents_stream(int num)
 
     hr = IDataObject_GetData( data, &fmt, &med );
     ok( SUCCEEDED(hr), "got %08x\n", hr );
-    if (SUCCEEDED(hr))
+    ok( med.tymed == TYMED_HGLOBAL, "got %x\n", med.tymed );
+    ok( GlobalSize( U(med).hGlobal ) >= sizeof(dib) - sizeof(BITMAPFILEHEADER),
+        "got %lu\n", GlobalSize( U(med).hGlobal ) );
+    ptr = GlobalLock( U(med).hGlobal );
+
+    expect_info = *(BITMAPINFOHEADER *)(dib + sizeof(BITMAPFILEHEADER));
+    if (expect_info.biXPelsPerMeter == 0 || expect_info.biYPelsPerMeter == 0)
     {
-        ok( med.tymed == TYMED_HGLOBAL, "got %x\n", med.tymed );
-        ReleaseStgMedium( &med );
+        HDC hdc = GetDC( 0 );
+        expect_info.biXPelsPerMeter = MulDiv( GetDeviceCaps( hdc, LOGPIXELSX ), 10000, 254 );
+        expect_info.biYPelsPerMeter = MulDiv( GetDeviceCaps( hdc, LOGPIXELSY ), 10000, 254 );
+        ReleaseDC( 0, hdc );
     }
+    ok( !memcmp( ptr, &expect_info, sizeof(expect_info) ), "mismatch\n" );
+    ok( !memcmp( ptr + sizeof(expect_info), dib + sizeof(BITMAPFILEHEADER) + sizeof(expect_info),
+                 sizeof(dib) - sizeof(BITMAPFILEHEADER) - sizeof(expect_info) ), "mismatch\n" );
+    GlobalUnlock( U(med).hGlobal );
+    ReleaseStgMedium( &med );
+
+    check_enum_cache( cache, enum_expect, 2 );
 
     hr = IViewObject2_GetExtent( view, DVASPECT_CONTENT, -1, NULL, &sz );
     ok( SUCCEEDED(hr), "got %08x\n", hr );
@@ -2025,10 +2095,168 @@ static void test_data_cache_dib_contents_stream(int num)
         ReleaseDC( 0, hdc );
     }
 
+    IOleCache2_Release( cache );
     IViewObject2_Release( view );
     IDataObject_Release( data );
     IPersistStorage_Release( persist );
     IUnknown_Release( unk );
+}
+
+static void check_bitmap_size( HBITMAP h, int cx, int cy )
+{
+    BITMAP bm;
+
+    GetObjectW( h, sizeof(bm), &bm );
+    ok( bm.bmWidth == cx, "got %d expect %d\n", bm.bmWidth, cx );
+    ok( bm.bmHeight == cy, "got %d expect %d\n", bm.bmHeight, cy );
+}
+
+static void check_dib_size( HGLOBAL h, int cx, int cy )
+{
+    BITMAPINFO *info;
+
+    info = GlobalLock( h );
+    ok( info->bmiHeader.biWidth == cx, "got %d expect %d\n", info->bmiHeader.biWidth, cx );
+    ok( info->bmiHeader.biHeight == cy, "got %d expect %d\n", info->bmiHeader.biHeight, cy );
+    GlobalUnlock( h );
+}
+
+static void test_data_cache_bitmap(void)
+{
+    HRESULT hr;
+    IOleCache2 *cache;
+    IDataObject *data;
+    FORMATETC fmt;
+    DWORD conn;
+    STGMEDIUM med;
+    STATDATA expect[] =
+    {
+        {{ CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL }, 0, NULL, 0 },
+        {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 0 },
+        {{ CF_METAFILEPICT, 0, DVASPECT_CONTENT, -1, TYMED_MFPICT },  0, NULL, 0 },
+        {{ CF_ENHMETAFILE,  0, DVASPECT_CONTENT, -1, TYMED_ENHMF },   0, NULL, 0 }
+    };
+
+    hr = CreateDataCache( NULL, &CLSID_NULL, &IID_IOleCache2, (void **)&cache );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    /* create a dib entry which will also create a bitmap entry too */
+    fmt.cfFormat = CF_DIB;
+    fmt.ptd = NULL;
+    fmt.dwAspect = DVASPECT_CONTENT;
+    fmt.lindex = -1;
+    fmt.tymed = TYMED_HGLOBAL;
+
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( hr == S_OK, "got %08x\n", hr );
+    expect[0].dwConnection = conn;
+    expect[1].dwConnection = conn;
+
+    check_enum_cache( cache, expect, 2 );
+
+    /* now try to add a bitmap */
+    fmt.cfFormat = CF_BITMAP;
+    fmt.tymed = TYMED_GDI;
+
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( hr == CACHE_S_SAMECACHE, "got %08x\n", hr );
+
+    /* metafile */
+    fmt.cfFormat = CF_METAFILEPICT;
+    fmt.tymed = TYMED_MFPICT;
+
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( hr == S_OK, "got %08x\n", hr );
+    expect[2].dwConnection = conn;
+
+    check_enum_cache( cache, expect,  3);
+
+    /* enhmetafile */
+    fmt.cfFormat = CF_ENHMETAFILE;
+    fmt.tymed = TYMED_ENHMF;
+
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( hr == S_OK, "got %08x\n", hr );
+    expect[3].dwConnection = conn;
+
+    check_enum_cache( cache, expect, 4 );
+
+    /* uncache everything */
+    hr = IOleCache2_Uncache( cache, expect[3].dwConnection );
+    ok( hr == S_OK, "got %08x\n", hr );
+    hr = IOleCache2_Uncache( cache, expect[2].dwConnection );
+    ok( hr == S_OK, "got %08x\n", hr );
+    hr = IOleCache2_Uncache( cache, expect[0].dwConnection );
+    ok( hr == S_OK, "got %08x\n", hr );
+    hr = IOleCache2_Uncache( cache, expect[0].dwConnection );
+    ok( hr == OLE_E_NOCONNECTION, "got %08x\n", hr );
+
+    check_enum_cache( cache, expect, 0 );
+
+    /* just create a bitmap entry which again adds both dib and bitmap */
+    fmt.cfFormat = CF_BITMAP;
+    fmt.tymed = TYMED_GDI;
+
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    expect[0].dwConnection = conn;
+    expect[1].dwConnection = conn;
+
+    check_enum_cache( cache, expect, 2 );
+
+    /* Try setting a 1x1 bitmap */
+    hr = IOleCache2_QueryInterface( cache, &IID_IDataObject, (void **) &data );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    med.tymed = TYMED_GDI;
+    U(med).hBitmap = CreateBitmap( 1, 1, 1, 1, NULL );
+    med.pUnkForRelease = NULL;
+
+    hr = IOleCache2_SetData( cache, &fmt, &med, TRUE );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    hr = IDataObject_GetData( data, &fmt, &med );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( med.tymed == TYMED_GDI, "got %d\n", med.tymed );
+    check_bitmap_size( U(med).hBitmap, 1, 1 );
+    ReleaseStgMedium( &med );
+
+    fmt.cfFormat = CF_DIB;
+    fmt.tymed = TYMED_HGLOBAL;
+    hr = IDataObject_GetData( data, &fmt, &med );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( med.tymed == TYMED_HGLOBAL, "got %d\n", med.tymed );
+    check_dib_size( U(med).hGlobal, 1, 1 );
+    ReleaseStgMedium( &med );
+
+    /* Now set a 2x1 dib */
+    fmt.cfFormat = CF_DIB;
+    fmt.tymed = TYMED_HGLOBAL;
+    med.tymed = TYMED_HGLOBAL;
+    U(med).hGlobal = create_dib();
+
+    hr = IOleCache2_SetData( cache, &fmt, &med, TRUE );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    fmt.cfFormat = CF_BITMAP;
+    fmt.tymed = TYMED_GDI;
+    hr = IDataObject_GetData( data, &fmt, &med );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( med.tymed == TYMED_GDI, "got %d\n", med.tymed );
+    check_bitmap_size( U(med).hBitmap, 2, 1 );
+    ReleaseStgMedium( &med );
+
+    fmt.cfFormat = CF_DIB;
+    fmt.tymed = TYMED_HGLOBAL;
+    hr = IDataObject_GetData( data, &fmt, &med );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( med.tymed == TYMED_HGLOBAL, "got %d\n", med.tymed );
+    check_dib_size( U(med).hGlobal, 2, 1 );
+    ReleaseStgMedium( &med );
+
+    IDataObject_Release( data );
+    IOleCache2_Release( cache );
 }
 
 static void test_default_handler(void)
@@ -2783,6 +3011,7 @@ START_TEST(ole2)
     test_data_cache();
     test_data_cache_dib_contents_stream( 0 );
     test_data_cache_dib_contents_stream( 1 );
+    test_data_cache_bitmap();
     test_default_handler();
     test_runnable();
     test_OleRun();

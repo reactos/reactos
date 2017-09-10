@@ -62,6 +62,8 @@ static char* get_msg_name(UINT msg)
         case WM_COMMAND: return "WM_COMMAND";
         case WM_PRINTCLIENT: return "WM_PRINTCLIENT";
         case WM_CTLCOLORSTATIC: return "WM_CTLCOLORSTATIC";
+        case WM_STYLECHANGING: return "WM_STYLECHANGING";
+        case WM_STYLECHANGED: return "WM_STYLECHANGED";
         default: return NULL;
     }
 }
@@ -97,12 +99,14 @@ void sprintf_msg_entry(char* buffer, MSG_ENTRY* msg)
         switch (msg->type)
         {
         case POST:
+        case MARKER:
             msgName = get_msg_name(msg->msg);
-            msgType = "post msg";
+            msgType = msg->type == POST ? "post msg" : "marker";
             break;
         case SENT:
+        case SENT_RET:
             msgName = get_msg_name(msg->msg);
-            msgType = "sent msg";
+            msgType = msg->type == SENT ? "sent msg" : "sent_ret msg";
             break;
         case HOOK:
             msgName = get_hook_name(msg->msg);

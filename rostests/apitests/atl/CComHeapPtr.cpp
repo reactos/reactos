@@ -33,7 +33,7 @@ struct CMallocSpy : public IMallocSpy
 
     virtual ULONG STDMETHODCALLTYPE AddRef() { return 1; }
     virtual ULONG STDMETHODCALLTYPE Release() { return 1; }
-    virtual ULONG STDMETHODCALLTYPE PreAlloc(ULONG cbRequest) { return cbRequest; }
+    virtual SIZE_T STDMETHODCALLTYPE PreAlloc(SIZE_T cbRequest) { return cbRequest; }
     virtual LPVOID STDMETHODCALLTYPE PostAlloc(LPVOID pActual)
     {
         InterlockedIncrement(&g_OpenAllocations);
@@ -45,7 +45,7 @@ struct CMallocSpy : public IMallocSpy
         if (fSpyed)
             InterlockedDecrement(&g_OpenAllocations);
     }
-    virtual ULONG STDMETHODCALLTYPE PreRealloc(LPVOID pRequest, ULONG cbRequest, LPVOID *ppNewRequest, BOOL)
+    virtual SIZE_T STDMETHODCALLTYPE PreRealloc(LPVOID pRequest, SIZE_T cbRequest, LPVOID *ppNewRequest, BOOL)
     {
         *ppNewRequest = pRequest;
         return cbRequest;
@@ -57,7 +57,7 @@ struct CMallocSpy : public IMallocSpy
         return pActual;
     }
     virtual LPVOID STDMETHODCALLTYPE PreGetSize(LPVOID pRequest, BOOL) { return pRequest; }
-    virtual ULONG STDMETHODCALLTYPE PostGetSize(ULONG cbActual, BOOL) { return cbActual; }
+    virtual SIZE_T STDMETHODCALLTYPE PostGetSize(SIZE_T cbActual, BOOL) { return cbActual; }
     virtual LPVOID STDMETHODCALLTYPE PreDidAlloc(LPVOID pRequest, BOOL) { return pRequest; }
     virtual int STDMETHODCALLTYPE PostDidAlloc(LPVOID, BOOL, int fActual) { return fActual; }
     virtual void STDMETHODCALLTYPE PreHeapMinimize() {}

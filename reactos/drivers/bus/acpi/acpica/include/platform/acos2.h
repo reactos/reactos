@@ -56,6 +56,7 @@
 #define COMPILER_DEPENDENT_INT64    long long
 #define COMPILER_DEPENDENT_UINT64   unsigned long long
 #define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_NATIVE_MATH64
 
 #define ACPI_SYSTEM_XFACE           APIENTRY
 #define ACPI_EXTERNAL_XFACE         APIENTRY

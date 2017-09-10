@@ -1500,47 +1500,58 @@ HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, U
  */
 HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, UINT len)
 {
-        TRACE("dest=%p len=0x%x strret=%p pidl=%p\n", dest, len, src, pidl);
+    TRACE("dest=%p len=0x%x strret=%p pidl=%p\n", dest, len, src, pidl);
 
-	if (!src)
+    if (!dest || !len)
+        return E_FAIL;
+
+    if (!src)
+    {
+        WARN("Invalid lpStrRet would crash under Win32!\n");
+        if (dest)
+            *dest = '\0';
+        return E_FAIL;
+    }
+
+    *dest = '\0';
+
+    switch (src->uType) {
+    case STRRET_WSTR: {
+        size_t dst_len;
+        if (!src->u.pOleStr)
+            return E_FAIL;
+        dst_len = strlenW(src->u.pOleStr);
+        memcpy(dest, src->u.pOleStr, min(dst_len, len-1) * sizeof(WCHAR));
+        dest[min(dst_len, len-1)] = 0;
+        CoTaskMemFree(src->u.pOleStr);
+        if (len <= dst_len)
+        {
+            dest[0] = 0;
+            return E_NOT_SUFFICIENT_BUFFER;
+        }
+        break;
+    }
+
+    case STRRET_CSTR:
+        if (!MultiByteToWideChar( CP_ACP, 0, src->u.cStr, -1, dest, len ))
+            dest[len-1] = 0;
+        break;
+
+    case STRRET_OFFSET:
+        if (pidl)
 	{
-	  WARN("Invalid lpStrRet would crash under Win32!\n");
-	  if (dest)
-	    *dest = '\0';
-	  return E_FAIL;
-	}
+            if (!MultiByteToWideChar( CP_ACP, 0, ((LPCSTR)&pidl->mkid)+src->u.uOffset, -1,
+                                      dest, len ))
+                dest[len-1] = 0;
+        }
+        break;
 
-	if (!dest || !len)
-	  return E_FAIL;
+    default:
+        FIXME("unknown type!\n");
+        return E_NOTIMPL;
+    }
 
-	*dest = '\0';
-
-	switch (src->uType)
-	{
-	  case STRRET_WSTR:
-            lstrcpynW(dest, src->u.pOleStr, len);
-	    CoTaskMemFree(src->u.pOleStr);
-	    break;
-
-	  case STRRET_CSTR:
-              if (!MultiByteToWideChar( CP_ACP, 0, src->u.cStr, -1, dest, len ))
-                  dest[len-1] = 0;
-	    break;
-
-	  case STRRET_OFFSET:
-	    if (pidl)
-	    {
-              if (!MultiByteToWideChar( CP_ACP, 0, ((LPCSTR)&pidl->mkid)+src->u.uOffset, -1,
-                                        dest, len ))
-                  dest[len-1] = 0;
-	    }
-	    break;
-
-	  default:
-	    FIXME("unknown type!\n");
-	    return E_NOTIMPL;
-	}
-	return S_OK;
+    return S_OK;
 }
 
 /*************************************************************************

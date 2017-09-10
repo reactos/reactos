@@ -42,15 +42,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(wbemdisp);
 
 HRESULT SWbemLocator_create(LPVOID *) DECLSPEC_HIDDEN;
 
-static void *heap_alloc( size_t len ) __WINE_ALLOC_SIZE(1);
-static inline void *heap_alloc( size_t len )
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc( GetProcessHeap(), 0, len );
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static inline BOOL heap_free( void *mem )
+static inline BOOL heap_free(void *mem)
 {
-    return HeapFree( GetProcessHeap(), 0, mem );
+    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 #endif /* _WBEMDISP_PRIVATE_H_ */

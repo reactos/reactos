@@ -1,20 +1,10 @@
 /*
- * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS Application compatibility module
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Shim database manipulation interface
+ * COPYRIGHT:   Copyright 2011 André Hentschel
+ *              Copyright 2013 Mislav Blažević
+ *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #ifndef SDBWRITE_H
@@ -32,7 +22,7 @@ BOOL WINAPI SdbWriteDWORDTag(PDB db, TAG tag, DWORD data);
 BOOL WINAPI SdbWriteQWORDTag(PDB db, TAG tag, QWORD data);
 BOOL WINAPI SdbWriteStringTag(PDB db, TAG tag, LPCWSTR string);
 BOOL WINAPI SdbWriteStringRefTag(PDB db, TAG tag, TAGID tagid);
-BOOL WINAPI SdbWriteBinaryTag(PDB db, TAG tag, BYTE* data, DWORD size);
+BOOL WINAPI SdbWriteBinaryTag(PDB db, TAG tag, const BYTE* data, DWORD size);
 BOOL WINAPI SdbWriteBinaryTagFromFile(PDB db, TAG tag, LPCWSTR path);
 TAGID WINAPI SdbBeginWriteListTag(PDB db, TAG tag);
 BOOL WINAPI SdbEndWriteListTag(PDB db, TAGID tagid);

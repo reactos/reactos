@@ -851,7 +851,7 @@ AcpiExOpcode_1A_0T_1R (
         if (ACPI_GET_DESCRIPTOR_TYPE (Operand[0]) == ACPI_DESC_TYPE_NAMED)
         {
             TempDesc = AcpiNsGetAttachedObject (
-                           (ACPI_NAMESPACE_NODE *) Operand[0]);
+                (ACPI_NAMESPACE_NODE *) Operand[0]);
             if (TempDesc &&
                  ((TempDesc->Common.Type == ACPI_TYPE_STRING) ||
                   (TempDesc->Common.Type == ACPI_TYPE_LOCAL_REFERENCE)))
@@ -964,11 +964,27 @@ AcpiExOpcode_1A_0T_1R (
              * This is a DerefOf (ObjectReference)
              * Get the actual object from the Node (This is the dereference).
              * This case may only happen when a LocalX or ArgX is
-             * dereferenced above.
+             * dereferenced above, or for references to device and
+             * thermal objects.
              */
-            ReturnDesc = AcpiNsGetAttachedObject (
-                (ACPI_NAMESPACE_NODE *) Operand[0]);
-            AcpiUtAddReference (ReturnDesc);
+            switch (((ACPI_NAMESPACE_NODE *) Operand[0])->Type)
+            {
+            case ACPI_TYPE_DEVICE:
+            case ACPI_TYPE_THERMAL:
+
+                /* These types have no node subobject, return the NS node */
+
+                ReturnDesc = Operand[0];
+                break;
+
+            default:
+                /* For most types, get the object attached to the node */
+
+                ReturnDesc = AcpiNsGetAttachedObject (
+                    (ACPI_NAMESPACE_NODE *) Operand[0]);
+                AcpiUtAddReference (ReturnDesc);
+                break;
+            }
         }
         else
         {

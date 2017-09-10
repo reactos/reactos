@@ -749,9 +749,9 @@ HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
     HRESULT res;
     DWORD len = 0;
 
-    TRACE("(%p, %s, %s, %s, %s, %d, %p, %p)\n", hInf, debugstr_a(pszInfFilename),
+    TRACE("(%p, %s, %s, %s, %p, %d, %p, %p)\n", hInf, debugstr_a(pszInfFilename),
           debugstr_a(pszTranslateSection), debugstr_a(pszTranslateKey),
-          debugstr_a(pszBuffer), dwBufferSize, pdwRequiredSize, pvReserved);
+          pszBuffer, dwBufferSize, pdwRequiredSize, pvReserved);
 
     if (!pszInfFilename || !pszTranslateSection ||
         !pszTranslateKey || !pdwRequiredSize)
@@ -829,9 +829,9 @@ HRESULT WINAPI TranslateInfStringExW(HINF hInf, LPCWSTR pszInfFilename,
                                      LPWSTR pszBuffer, DWORD dwBufferSize,
                                      PDWORD pdwRequiredSize, PVOID pvReserved)
 {
-    TRACE("(%p, %s, %s, %s, %s, %d, %p, %p)\n", hInf, debugstr_w(pszInfFilename),
+    TRACE("(%p, %s, %s, %s, %p, %d, %p, %p)\n", hInf, debugstr_w(pszInfFilename),
           debugstr_w(pszTranslateSection), debugstr_w(pszTranslateKey),
-          debugstr_w(pszBuffer), dwBufferSize, pdwRequiredSize, pvReserved);
+          pszBuffer, dwBufferSize, pdwRequiredSize, pvReserved);
 
     if (!hInf || !pszInfFilename || !pszTranslateSection || !pszTranslateKey)
         return E_INVALIDARG;

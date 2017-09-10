@@ -69,17 +69,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "P&rozkoumat", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "O&tevřít", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Vyj&mout", FCIDM_SHVIEW_CUT
-        MENUITEM "&Kopírovat", FCIDM_SHVIEW_COPY
+        MENUITEM "Vyj&mout", IDM_CUT
+        MENUITEM "&Kopírovat", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Vytvořit zástupc&e", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "O&dstranit", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Přejmenovat", FCIDM_SHVIEW_RENAME
+        MENUITEM "Vytvořit zástupc&e", IDM_CREATELINK
+        MENUITEM "O&dstranit", IDM_DELETE
+        MENUITEM "&Přejmenovat", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Vlastnosti", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Vlastnosti", IDM_PROPERTIES
     END
 END
 
@@ -640,24 +638,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Název"
-    IDS_SHV_COLUMN2 "Velikost"
-    IDS_SHV_COLUMN3 "Typ"
-    IDS_SHV_COLUMN4 "Změněno"
-    IDS_SHV_COLUMN5 "Atributy"
-    IDS_SHV_COLUMN6 "Velikost"
-    IDS_SHV_COLUMN7 "Volné místo"
-    IDS_SHV_COLUMN8 "Jméno"
-    IDS_SHV_COLUMN9 "Komentář"
-    IDS_SHV_COLUMN10 "Vlastník"
-    IDS_SHV_COLUMN11 "Skupina"
-    IDS_SHV_COLUMN12 "Název souboru"
-    IDS_SHV_COLUMN13 "Kategorie"
+    IDS_SHV_COLUMN_NAME "Jméno"
+    IDS_SHV_COLUMN_SIZE "Velikost"
+    IDS_SHV_COLUMN_TYPE "Typ"
+    IDS_SHV_COLUMN_MODIFIED "Změněno"
+    IDS_SHV_COLUMN_ATTRIBUTES "Atributy"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Velikost"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Volné místo"
+    IDS_SHV_COLUMN_OWNER "Vlastník"
+    IDS_SHV_COLUMN_GROUP "Skupina"
+    IDS_SHV_COLUMN_FILENAME "Název souboru"
+    IDS_SHV_COLUMN_CATEGORY "Kategorie"
     IDS_SHV_COLUMN_DELFROM "Původní umístění"
     IDS_SHV_COLUMN_DELDATE "Odstraněno"
     IDS_SHV_COLUMN_FONTTYPE "Druh písma" //fonttype
     IDS_SHV_COLUMN_WORKGROUP "Pracovní skupina"
-    IDS_SHV_NETWORKLOCATION "Síťové umístění"
+    IDS_SHV_COLUMN_NETLOCATION "Síťové umístění"
     IDS_SHV_COLUMN_DOCUMENTS "Dokumenty"
     IDS_SHV_COLUMN_STATUS "Stav"
     IDS_SHV_COLUMN_COMMENTS "Komentáře"

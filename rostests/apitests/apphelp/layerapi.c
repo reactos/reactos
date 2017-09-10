@@ -1,19 +1,8 @@
 /*
- * Copyright 2015,2016 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     apphelp_apitest
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Tests for (registry)layer manipulation api's
+ * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -30,7 +19,7 @@
 #include <stdio.h>
 
 #include "wine/test.h"
-
+#include "apitest_iathook.h"
 #include "apphelp_apitest.h"
 
 #define GPLK_USER 1
@@ -612,73 +601,6 @@ UINT WINAPI mGetDriveTypeW(LPCWSTR target)
     return uRet;
 }
 
-
-static PIMAGE_IMPORT_DESCRIPTOR FindImportDescriptor(PBYTE DllBase, PCSTR DllName)
-{
-    ULONG Size;
-    PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor = RtlImageDirectoryEntryToData((HMODULE)DllBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &Size);
-    while (ImportDescriptor->Name && ImportDescriptor->OriginalFirstThunk)
-    {
-        PCHAR Name = (PCHAR)(DllBase + ImportDescriptor->Name);
-        if (!lstrcmpiA(Name, DllName))
-        {
-            return ImportDescriptor;
-        }
-        ImportDescriptor++;
-    }
-    return NULL;
-}
-
-static BOOL RedirectIat(PCSTR TargetDllName, PCSTR DllName, PCSTR FunctionName, ULONG_PTR NewFunction, ULONG_PTR* OriginalFunction)
-{
-    PBYTE DllBase = (PBYTE)GetModuleHandleA(TargetDllName);
-    if (DllBase)
-    {
-        PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor = FindImportDescriptor(DllBase, DllName);
-        if (ImportDescriptor)
-        {
-            // On loaded images, OriginalFirstThunk points to the name / ordinal of the function
-            PIMAGE_THUNK_DATA OriginalThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->OriginalFirstThunk);
-            // FirstThunk points to the resolved address.
-            PIMAGE_THUNK_DATA FirstThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->FirstThunk);
-            while (OriginalThunk->u1.AddressOfData && FirstThunk->u1.Function)
-            {
-                if (!IMAGE_SNAP_BY_ORDINAL32(OriginalThunk->u1.AddressOfData))
-                {
-                    PIMAGE_IMPORT_BY_NAME ImportName = (PIMAGE_IMPORT_BY_NAME)(DllBase + OriginalThunk->u1.AddressOfData);
-                    if (!lstrcmpiA((PCSTR)ImportName->Name, FunctionName))
-                    {
-                        DWORD dwOld;
-                        VirtualProtect(&FirstThunk->u1.Function, sizeof(ULONG_PTR), PAGE_EXECUTE_READWRITE, &dwOld);
-                        *OriginalFunction = FirstThunk->u1.Function;
-                        FirstThunk->u1.Function = NewFunction;
-                        VirtualProtect(&FirstThunk->u1.Function, sizeof(ULONG_PTR), dwOld, &dwOld);
-                        return TRUE;
-                    }
-                }
-                OriginalThunk++;
-                FirstThunk++;
-            }
-            skip("Unable to find the Import '%s' from '%s' in %s'\n", FunctionName, DllName, TargetDllName);
-        }
-        else
-        {
-            skip("Unable to find the ImportDescriptor for '%s' in '%s'\n", DllName, TargetDllName);
-        }
-    }
-    else
-    {
-        skip("Unable to find the loaded module '%s'\n", TargetDllName);
-    }
-    return FALSE;
-}
-
-static BOOL RestoreIat(PCSTR target, PCSTR DllName, PCSTR FunctionName, ULONG_PTR OriginalFunction)
-{
-    ULONG_PTR old = 0;
-    return RedirectIat(target, DllName, FunctionName, OriginalFunction, &old);
-}
-
 static BOOL wrapSdbSetPermLayerKeys2(LPCSTR dir, LPCSTR name, PCSTR szLayers, BOOL bMachine)
 {
     char szPath[MAX_PATH];
@@ -759,7 +681,8 @@ static void test_Sign_Media(void)
     ok(ret, "DefineDosDeviceA error: %d\n", GetLastError());
     if(ret)
     {
-        ret = RedirectIat("apphelp.dll", "kernel32.dll", "GetDriveTypeW", (ULONG_PTR)mGetDriveTypeW, (ULONG_PTR*)&pGetDriveTypeW);
+        ret = RedirectIat(GetModuleHandleA("apphelp.dll"), "kernel32.dll", "GetDriveTypeW",
+                          (ULONG_PTR)mGetDriveTypeW, (ULONG_PTR*)&pGetDriveTypeW);
         if (g_WinVersion < WINVER_WIN8)
             ok(ret, "Expected redirect_iat to succeed\n");
         if(ret)
@@ -862,7 +785,7 @@ static void test_Sign_Media(void)
                 ok(wrapSdbSetPermLayerKeys2(drive, "sub\\test.exe", "", 0), "Expected wrapSdbSetPermLayerKeys2 to succeed\n");
             }
 
-            ret = RestoreIat("apphelp.dll", "kernel32.dll", "GetDriveTypeW", (ULONG_PTR)pGetDriveTypeW);
+            ret = RestoreIat(GetModuleHandleA("apphelp.dll"), "kernel32.dll", "GetDriveTypeW", (ULONG_PTR)pGetDriveTypeW);
             ok(ret, "Expected restore_iat to succeed\n");
 
             ok(delete_file(subdir, "test.bbb"), "delete_file error: %d\n", GetLastError());

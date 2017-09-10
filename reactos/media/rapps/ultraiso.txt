@@ -1,13 +1,13 @@
 [Section]
 Name = UltraISO
-Version = 9.6.6.3300
+Version = 9.7.0.3476
 License = Trial verison
 Description = An ISO CD/DVD image file creating/editing/converting tool and a bootable CD/DVD maker, it can directly edit the CD/DVD image file and extract files and folders from it, as well as directly make ISO files from your CD/DVD-ROM or hard disk.
 Size = 4.3 MiB
 Category = 12
 URLSite = https://www.ezbsystems.com/ultraiso/
 URLDownload = http://dw.ezbsys.net/uiso9_pe.exe
-SHA1 = 4d059739da3e2e93cd5f52dfee0db7b73e937610
+SHA1 = 14a1f3ff0929185ee5943ecec56d066c3cb0d986
 CDPath = none
 
 [Section.0418]

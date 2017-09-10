@@ -239,7 +239,7 @@ int mbedtls_platform_std_nv_seed_read( unsigned char *buf, size_t buf_len )
     }
 
     fclose( file );
-    return( n );
+    return( (int)n );
 }
 
 int mbedtls_platform_std_nv_seed_write( unsigned char *buf, size_t buf_len )
@@ -257,7 +257,7 @@ int mbedtls_platform_std_nv_seed_write( unsigned char *buf, size_t buf_len )
     }
 
     fclose( file );
-    return( n );
+    return( (int)n );
 }
 #endif /* MBEDTLS_PLATFORM_NO_STD_FUNCTIONS */
 
@@ -305,5 +305,25 @@ int mbedtls_platform_set_nv_seed(
 }
 #endif /* MBEDTLS_PLATFORM_NV_SEED_ALT */
 #endif /* MBEDTLS_ENTROPY_NV_SEED */
+
+#if !defined(MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT)
+/*
+ * Placeholder platform setup that does nothing by default
+ */
+int mbedtls_platform_setup( mbedtls_platform_context *ctx )
+{
+    (void)ctx;
+
+    return( 0 );
+}
+
+/*
+ * Placeholder platform teardown that does nothing by default
+ */
+void mbedtls_platform_teardown( mbedtls_platform_context *ctx )
+{
+    (void)ctx;
+}
+#endif /* MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT */
 
 #endif /* MBEDTLS_PLATFORM_C */

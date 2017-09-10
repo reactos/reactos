@@ -166,7 +166,7 @@ if (0)
 
     details.str.u.pOleStr = NULL;
     hr = IShellFolder2_GetDetailsOf(folder, NULL, 0, &details);
-    ok(hr == S_OK || broken(E_NOTIMPL) /* W2K */, "got 0x%08x\n", hr);
+    ok(hr == S_OK || broken(hr == E_NOTIMPL) /* W2K */, "got 0x%08x\n", hr);
     if (SHELL_OsIsUnicode()) SHFree(details.str.u.pOleStr);
 
     /* test every column if method is implemented */

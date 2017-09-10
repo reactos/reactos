@@ -3,6 +3,7 @@ add_subdirectory(redirptest)
 
 list(APPEND SOURCE
     Console.c
+    CreateProcess.c
     DefaultActCtx.c
     DeviceIoControl.c
     dosdev.c
@@ -13,6 +14,7 @@ list(APPEND SOURCE
     GetDriveType.c
     GetModuleFileName.c
     interlck.c
+    IsDBCSLeadByteEx.c
     LoadLibraryExW.c
     lstrcpynW.c
     lstrlen.c

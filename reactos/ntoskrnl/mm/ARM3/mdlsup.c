@@ -21,6 +21,327 @@ BOOLEAN MmTrackPtes;
 BOOLEAN MmTrackLockedPages;
 SIZE_T MmSystemLockPagesCount;
 
+/* INTERNAL FUNCTIONS *********************************************************/
+static
+PVOID
+NTAPI
+MiMapLockedPagesInUserSpace(
+    _In_ PMDL Mdl,
+    _In_ PVOID StartVa,
+    _In_ MEMORY_CACHING_TYPE CacheType,
+    _In_opt_ PVOID BaseAddress)
+{
+    NTSTATUS Status;
+    PEPROCESS Process = PsGetCurrentProcess();
+    PETHREAD Thread = PsGetCurrentThread();
+    TABLE_SEARCH_RESULT Result;
+    MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
+    BOOLEAN IsIoMapping;
+    KIRQL OldIrql;
+    ULONG_PTR StartingVa;
+    ULONG_PTR EndingVa;
+    PMMADDRESS_NODE Parent;
+    PMMVAD_LONG Vad;
+    ULONG NumberOfPages;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
+    MMPTE TempPte;
+    PPFN_NUMBER MdlPages;
+    PMMPFN Pfn1;
+    PMMPFN Pfn2;
+    BOOLEAN AddressSpaceLocked = FALSE;
+
+    PAGED_CODE();
+
+    DPRINT("MiMapLockedPagesInUserSpace(%p, %p, 0x%x, %p)\n",
+           Mdl, StartVa, CacheType, BaseAddress);
+
+    NumberOfPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(StartVa,
+                                                   MmGetMdlByteCount(Mdl));
+    MdlPages = MmGetMdlPfnArray(Mdl);
+
+    ASSERT(CacheType <= MmWriteCombined);
+
+    IsIoMapping = (Mdl->MdlFlags & MDL_IO_SPACE) != 0;
+    CacheAttribute = MiPlatformCacheAttributes[IsIoMapping][CacheType];
+
+    /* Large pages are always cached, make sure we're not asking for those */
+    if (CacheAttribute != MiCached)
+    {
+        DPRINT1("FIXME: Need to check for large pages\n");
+    }
+
+    /* Allocate a VAD for our mapped region */
+    Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
+    if (Vad == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Error;
+    }
+
+    /* Initialize PhysicalMemory VAD */
+    RtlZeroMemory(Vad, sizeof(*Vad));
+    Vad->u2.VadFlags2.LongVad = 1;
+    Vad->u.VadFlags.VadType = VadDevicePhysicalMemory;
+    Vad->u.VadFlags.Protection = MM_READWRITE;
+    Vad->u.VadFlags.PrivateMemory = 1;
+
+    /* Did the caller specify an address? */
+    if (BaseAddress == NULL)
+    {
+        /* We get to pick the address */
+        MmLockAddressSpace(&Process->Vm);
+        AddressSpaceLocked = TRUE;
+        if (Process->VmDeleted)
+        {
+            Status = STATUS_PROCESS_IS_TERMINATING;
+            goto Error;
+        }
+
+        Result = MiFindEmptyAddressRangeInTree(NumberOfPages << PAGE_SHIFT,
+                                               MM_VIRTMEM_GRANULARITY,
+                                               &Process->VadRoot,
+                                               &Parent,
+                                               &StartingVa);
+        if (Result == TableFoundNode)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Error;
+        }
+        EndingVa = StartingVa + NumberOfPages * PAGE_SIZE - 1;
+        BaseAddress = (PVOID)StartingVa;
+    }
+    else
+    {
+        /* Caller specified a base address */
+        StartingVa = (ULONG_PTR)BaseAddress;
+        EndingVa = StartingVa + NumberOfPages * PAGE_SIZE - 1;
+
+        /* Make sure it's valid */
+        if (BYTE_OFFSET(StartingVa) != 0 ||
+            EndingVa <= StartingVa ||
+            EndingVa > (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS)
+        {
+            Status = STATUS_INVALID_ADDRESS;
+            goto Error;
+        }
+
+        MmLockAddressSpace(&Process->Vm);
+        AddressSpaceLocked = TRUE;
+        if (Process->VmDeleted)
+        {
+            Status = STATUS_PROCESS_IS_TERMINATING;
+            goto Error;
+        }
+
+        /* Check if it's already in use */
+        Result = MiCheckForConflictingNode(StartingVa >> PAGE_SHIFT,
+                                           EndingVa >> PAGE_SHIFT,
+                                           &Process->VadRoot,
+                                           &Parent);
+        if (Result == TableFoundNode)
+        {
+            Status = STATUS_CONFLICTING_ADDRESSES;
+            goto Error;
+        }
+    }
+
+    Vad->StartingVpn = StartingVa >> PAGE_SHIFT;
+    Vad->EndingVpn = EndingVa >> PAGE_SHIFT;
+
+    MiLockProcessWorkingSetUnsafe(Process, Thread);
+
+    ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
+
+    MiInsertVad((PMMVAD)Vad, &Process->VadRoot);
+
+    /* Check if this is uncached */
+    if (CacheAttribute != MiCached)
+    {
+        /* Flush all caches */
+        KeFlushEntireTb(TRUE, TRUE);
+        KeInvalidateAllCaches();
+    }
+
+    PointerPte = MiAddressToPte(BaseAddress);
+    while (NumberOfPages != 0 &&
+           *MdlPages != LIST_HEAD)
+    {
+        PointerPde = MiPteToPde(PointerPte);
+        MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
+        ASSERT(PointerPte->u.Hard.Valid == 0);
+
+        /* Add a PDE reference for each page */
+        MiIncrementPageTableReferences(BaseAddress);
+
+        /* Set up our basic user PTE */
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
+                                  PointerPte,
+                                  MM_READWRITE,
+                                  *MdlPages);
+
+        /* FIXME: We need to respect the PFN's caching information in some cases */
+        Pfn2 = MiGetPfnEntry(*MdlPages);
+        if (Pfn2 != NULL)
+        {
+            ASSERT(Pfn2->u3.e2.ReferenceCount != 0);
+
+            if (Pfn2->u3.e1.CacheAttribute != CacheAttribute)
+            {
+                DPRINT1("FIXME: Using caller's cache attribute instead of PFN override\n");
+            }
+
+            /* We don't support AWE magic */
+            ASSERT(Pfn2->u3.e1.CacheAttribute != MiNotMapped);
+        }
+
+        /* Configure caching */
+        switch (CacheAttribute)
+        {
+            case MiNonCached:
+                MI_PAGE_DISABLE_CACHE(&TempPte);
+                MI_PAGE_WRITE_THROUGH(&TempPte);
+                break;
+            case MiCached:
+                break;
+            case MiWriteCombined:
+                MI_PAGE_DISABLE_CACHE(&TempPte);
+                MI_PAGE_WRITE_COMBINED(&TempPte);
+                break;
+            default:
+                ASSERT(FALSE);
+                break;
+        }
+
+        /* Make the page valid */
+        MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
+        /* Acquire a share count */
+        Pfn1 = MI_PFN_ELEMENT(PointerPde->u.Hard.PageFrameNumber);
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        Pfn1->u2.ShareCount++;
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+        /* Next page */
+        MdlPages++;
+        PointerPte++;
+        NumberOfPages--;
+        BaseAddress = (PVOID)((ULONG_PTR)BaseAddress + PAGE_SIZE);
+    }
+
+    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
+    ASSERT(AddressSpaceLocked);
+    MmUnlockAddressSpace(&Process->Vm);
+
+    ASSERT(StartingVa != 0);
+    return (PVOID)((ULONG_PTR)StartingVa + MmGetMdlByteOffset(Mdl));
+
+Error:
+    if (AddressSpaceLocked)
+    {
+        MmUnlockAddressSpace(&Process->Vm);
+    }
+    if (Vad != NULL)
+    {
+        ExFreePoolWithTag(Vad, 'ldaV');
+    }
+    ExRaiseStatus(Status);
+}
+
+static
+VOID
+NTAPI
+MiUnmapLockedPagesInUserSpace(
+    _In_ PVOID BaseAddress,
+    _In_ PMDL Mdl)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+    PETHREAD Thread = PsGetCurrentThread();
+    PMMVAD Vad;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
+    KIRQL OldIrql;
+    ULONG NumberOfPages;
+    PPFN_NUMBER MdlPages;
+    PFN_NUMBER PageTablePage;
+
+    DPRINT("MiUnmapLockedPagesInUserSpace(%p, %p)\n", BaseAddress, Mdl);
+
+    NumberOfPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Mdl),
+                                                   MmGetMdlByteCount(Mdl));
+    ASSERT(NumberOfPages != 0);
+    MdlPages = MmGetMdlPfnArray(Mdl);
+
+    /* Find the VAD */
+    MmLockAddressSpace(&Process->Vm);
+    Vad = MiLocateAddress(BaseAddress);
+    if (!Vad ||
+        Vad->u.VadFlags.VadType != VadDevicePhysicalMemory)
+    {
+        DPRINT1("MiUnmapLockedPagesInUserSpace invalid for %p\n", BaseAddress);
+        MmUnlockAddressSpace(&Process->Vm);
+        return;
+    }
+
+    MiLockProcessWorkingSetUnsafe(Process, Thread);
+
+    /* Remove it from the process VAD tree */
+    ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
+    MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
+
+    /* MiRemoveNode should have removed us if we were the hint */
+    ASSERT(Process->VadRoot.NodeHint != Vad);
+
+    PointerPte = MiAddressToPte(BaseAddress);
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    while (NumberOfPages != 0 &&
+           *MdlPages != LIST_HEAD)
+    {
+        ASSERT(MiAddressToPte(PointerPte)->u.Hard.Valid == 1);
+        ASSERT(PointerPte->u.Hard.Valid == 1);
+
+        /* Dereference the page */
+        MiDecrementPageTableReferences(BaseAddress);
+
+        /* Invalidate it */
+        MI_ERASE_PTE(PointerPte);
+
+        /* We invalidated this PTE, so dereference the PDE */
+        PointerPde = MiAddressToPde(BaseAddress);
+        PageTablePage = PointerPde->u.Hard.PageFrameNumber;
+        MiDecrementShareCount(MiGetPfnEntry(PageTablePage), PageTablePage);
+
+        /* Next page */
+        PointerPte++;
+        NumberOfPages--;
+        BaseAddress = (PVOID)((ULONG_PTR)BaseAddress + PAGE_SIZE);
+        MdlPages++;
+
+        /* Moving to a new PDE? */
+        if (PointerPde != MiAddressToPde(BaseAddress))
+        {
+            /* See if we should delete it */
+            KeFlushProcessTb();
+            PointerPde = MiPteToPde(PointerPte - 1);
+            ASSERT(PointerPde->u.Hard.Valid == 1);
+            if (MiQueryPageTableReferences(BaseAddress) == 0)
+            {
+                ASSERT(PointerPde->u.Long != 0);
+                MiDeletePte(PointerPde,
+                            MiPteToAddress(PointerPde),
+                            Process,
+                            NULL);
+            }
+        }
+    }
+
+    KeFlushProcessTb();
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
+    MmUnlockAddressSpace(&Process->Vm);
+    ExFreePoolWithTag(Vad, 'ldaV');
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -460,8 +781,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
         return Base;
     }
 
-    UNIMPLEMENTED;
-    return NULL;
+    return MiMapLockedPagesInUserSpace(Mdl, Base, CacheType, BaseAddress);
 }
 
 /*
@@ -573,7 +893,7 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
     }
     else
     {
-        UNIMPLEMENTED;
+        MiUnmapLockedPagesInUserSpace(BaseAddress, Mdl);
     }
 }
 

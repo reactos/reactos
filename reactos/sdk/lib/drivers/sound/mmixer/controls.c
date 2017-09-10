@@ -1834,17 +1834,19 @@ MMixerAddEvent(
     IN PMIXER_EVENT MixerEventRoutine)
 {
     //KSE_NODE Property;
-    PEVENT_NOTIFICATION_ENTRY EventData;
+    //KSEVENTDATA EventData
     //ULONG BytesReturned;
     //MIXER_STATUS Status;
+    PEVENT_NOTIFICATION_ENTRY EventNotification;
 
-    EventData = (PEVENT_NOTIFICATION_ENTRY)MixerContext->AllocEventData(sizeof(EVENT_NOTIFICATION_ENTRY));
-    if (!EventData)
+    EventNotification = (PEVENT_NOTIFICATION_ENTRY)MixerContext->Alloc(sizeof(EVENT_NOTIFICATION_ENTRY));
+    if (!EventNotification)
     {
         /* not enough memory */
         return MM_STATUS_NO_MEMORY;
     }
 
+    /* FIXME: what is it supposed to happen with KSEVENTDATA ? */
 #if 0
     /* setup request */
     Property.Event.Set = KSEVENTSETID_AudioControlChange;
@@ -1864,10 +1866,39 @@ MMixerAddEvent(
 #endif
 
     /* initialize notification entry */
-    EventData->MixerEventContext = MixerEventContext;
-    EventData->MixerEventRoutine = MixerEventRoutine;
+    EventNotification->MixerEventContext = MixerEventContext;
+    EventNotification->MixerEventRoutine = MixerEventRoutine;
 
     /* store event */
-    InsertTailList(&MixerInfo->EventList, &EventData->Entry);
+    InsertTailList(&MixerInfo->EventList, &EventNotification->Entry);
+    return MM_STATUS_SUCCESS;
+}
+
+MIXER_STATUS
+MMixerRemoveEvent(
+    IN PMIXER_CONTEXT MixerContext,
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN PVOID MixerEventContext,
+    IN PMIXER_EVENT MixerEventRoutine)
+{
+    PLIST_ENTRY EventList;
+    PEVENT_NOTIFICATION_ENTRY NotificationEntry; 
+
+    /* Lookup through mixers */
+    EventList = MixerInfo->EventList.Flink;
+    while(EventList != &MixerInfo->EventList)
+    {
+        NotificationEntry = CONTAINING_RECORD(EventList, EVENT_NOTIFICATION_ENTRY, Entry);
+        EventList = EventList->Flink;
+        /* TODO: find a better way to identify an event ? */
+        if(NotificationEntry->MixerEventRoutine == MixerEventRoutine &&
+                NotificationEntry->MixerEventContext == MixerEventContext)
+        {
+            DPRINT1("Freeing entry %p\n", NotificationEntry);
+            /* We found the event to remove */
+            RemoveEntryList(&NotificationEntry->Entry);
+            MixerContext->Free(NotificationEntry);
+        }
+    }
     return MM_STATUS_SUCCESS;
 }

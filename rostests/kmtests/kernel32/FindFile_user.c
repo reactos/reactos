@@ -1,13 +1,13 @@
 /*
  * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
+ * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test for FindFirstFile's wildcard substitution
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
 #include <kmt_test.h>
 
-#include "FindFile.h"
+#include "kernel32_test.h"
 
 START_TEST(FindFile)
 {
@@ -98,14 +98,14 @@ START_TEST(FindFile)
     INT i;
     WCHAR ExpressionBuffer[MAX_PATH];
 
-    KmtLoadDriver(L"FindFile", FALSE);
+    KmtLoadDriver(L"kernel32", FALSE);
     KmtOpenDriver();
 
     for (i = 0; i < TestCount; i++)
     {
         trace("[%d] '%ls', '%ls'\n", i, Tests[i].Expression, Tests[i].ExpectedExpression);
-        KmtSendWStringToDriver(IOCTL_EXPECT, Tests[i].ExpectedExpression);
-        wcscpy(ExpressionBuffer, L"\\\\.\\Global\\GLOBALROOT\\Device\\Kmtest-FindFile\\");
+        KmtSendWStringToDriver(IOCTL_EXPECT_EXPRESSION, Tests[i].ExpectedExpression);
+        wcscpy(ExpressionBuffer, L"\\\\.\\Global\\GLOBALROOT\\Device\\Kmtest-kernel32\\");
         wcscat(ExpressionBuffer, Tests[i].Expression);
         FindHandle = FindFirstFileW(ExpressionBuffer, &FindData);
         ok(FindHandle != NULL && FindHandle != INVALID_HANDLE_VALUE, "Handle: %p, error=%lu\n", (PVOID)FindHandle, GetLastError());

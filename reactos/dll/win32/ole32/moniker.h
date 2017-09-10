@@ -30,13 +30,13 @@ DEFINE_OLEGUID( CLSID_CompositeMoniker, 0x309, 0, 0 );
 DEFINE_OLEGUID( CLSID_ClassMoniker,     0x31a, 0, 0 );
 DEFINE_OLEGUID( CLSID_PointerMoniker,   0x306, 0, 0 );
 
-HRESULT FileMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
-HRESULT ItemMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
-HRESULT AntiMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
-HRESULT CompositeMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
-HRESULT ClassMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
-HRESULT PointerMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
-HRESULT ComCatCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+HRESULT WINAPI FileMoniker_CreateInstance(IClassFactory *iface, IUnknown *pUnk, REFIID riid, void **ppv);
+HRESULT WINAPI ItemMoniker_CreateInstance(IClassFactory *iface, IUnknown *pUnk, REFIID riid, void **ppv);
+HRESULT WINAPI AntiMoniker_CreateInstance(IClassFactory *iface, IUnknown *pUnk, REFIID riid, void **ppv);
+HRESULT WINAPI CompositeMoniker_CreateInstance(IClassFactory *iface, IUnknown *pUnk, REFIID riid, void **ppv);
+HRESULT WINAPI ClassMoniker_CreateInstance(IClassFactory *iface, IUnknown *pUnk, REFIID riid, void **ppv);
+HRESULT WINAPI PointerMoniker_CreateInstance(IClassFactory *iface, IUnknown *pUnk, REFIID riid, void **ppv);
+HRESULT WINAPI ComCat_CreateInstance(IClassFactory *iface, IUnknown *pUnk, REFIID riid, void **ppv);
 
 /* This function decomposes a String path to a String Table containing all the elements ("\" or "subDirectory" or "Directory" or "FileName") of the path */
 int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable) DECLSPEC_HIDDEN;

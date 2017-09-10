@@ -267,8 +267,7 @@ InitNegSignCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 static VOID
 InitNegNumFmtCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 {
-    WCHAR szNewSample[MAX_SAMPLES_STR_SIZE];
-    PWSTR pszResultStr;
+    PWSTR pszString1, pszString2;
     INT nCBIndex;
 
     /* Clear all box content */
@@ -281,26 +280,26 @@ InitNegNumFmtCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
     for (nCBIndex = 0; nCBIndex < MAX_NEG_NUMBERS_SAMPLES; nCBIndex++)
     {
         /* Replace standard separator to setted */
-        pszResultStr = ReplaceSubStr(lpNegNumFmtSamples[nCBIndex],
-                                     pGlobalData->szNumDecimalSep,
-                                     L",");
-        if (pszResultStr != NULL)
+        pszString1 = ReplaceSubStr(lpNegNumFmtSamples[nCBIndex],
+                                   pGlobalData->szNumDecimalSep,
+                                   L",");
+        if (pszString1 != NULL)
         {
-            wcscpy(szNewSample, pszResultStr);
-            HeapFree(GetProcessHeap(), 0, pszResultStr);
-        }
+            /* Replace standard negative sign to setted */
+            pszString2 = ReplaceSubStr(pszString1,
+                                       pGlobalData->szNumNegativeSign,
+                                       L"-");
+            if (pszString2 != NULL)
+            {
+                SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
+                                    CB_ADDSTRING,
+                                    0,
+                                    (LPARAM)pszString2);
 
-        /* Replace standard negative sign to setted */
-        pszResultStr = ReplaceSubStr(szNewSample,
-                                     pGlobalData->szNumNegativeSign,
-                                     L"-");
-        if (pszResultStr != NULL)
-        {
-            SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
-                                CB_ADDSTRING,
-                                0,
-                                (LPARAM)pszResultStr);
-            HeapFree(GetProcessHeap(), 0, pszResultStr);
+                HeapFree(GetProcessHeap(), 0, pszString2);
+            }
+
+            HeapFree(GetProcessHeap(), 0, pszString1);
         }
     }
 

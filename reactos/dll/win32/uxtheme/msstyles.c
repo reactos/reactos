@@ -26,10 +26,6 @@
  * Defines and global variables
  */
 
-static BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, int *value);
-static BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LPWSTR lpBuff, DWORD buffSize);
-static HRESULT MSSTYLES_GetFont (LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LOGFONTW* logfont);
-
 extern int alphaBlendMode;
 
 #define MSSTYLES_VERSION 0x0003
@@ -879,7 +875,6 @@ static BOOL prepare_alpha (HBITMAP bmp, BOOL* hasAlpha)
         /* nothing to do */
         return TRUE;
 
-    *hasAlpha = TRUE;
     p = dib.dsBm.bmBits;
     n = dib.dsBmih.biHeight * dib.dsBmih.biWidth;
     /* AlphaBlend() wants premultiplied alpha, so do that now */
@@ -890,6 +885,9 @@ static BOOL prepare_alpha (HBITMAP bmp, BOOL* hasAlpha)
         p[1] = (p[1] * a) >> 8;
         p[2] = (p[2] * a) >> 8;
         p += 4;
+
+        if (a != 256)
+            *hasAlpha = TRUE;
     }
 
     return TRUE;
@@ -967,9 +965,9 @@ static BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LP
         return FALSE;
     }
     start = cur;
-    while(cur < lpStringEnd && *cur != ',') cur++;
+    while(cur < lpStringEnd && *cur != '\n'&& *cur != ',') cur++;
     end = cur;
-    while(isspace(*end)) end--;
+    while(isspace(*(end-1))) end--;
 
     lstrcpynW(lpBuff, start, min(buffSize, end-start+1));
 

@@ -232,7 +232,7 @@ IntEngTransparentBlt(
     ASSERT(psurfSource);
 
     /* If no clip object is given, use trivial one */
-    if (!Clip) Clip = &gxcoTrivial.ClipObj;
+    if (!Clip) Clip = (CLIPOBJ *)&gxcoTrivial;
 
     InputClippedRect = *DestRect;
     if (InputClippedRect.right < InputClippedRect.left)

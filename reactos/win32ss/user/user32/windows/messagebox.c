@@ -40,7 +40,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /* DEFINES *******************************************************************/
 
 #define MSGBOX_IDICON   (1088)
-#define MSGBOX_IDTEXT   (100)
+#define MSGBOX_IDTEXT   (0xffff)
 
 #define IDI_HANDW          MAKEINTRESOURCEW(32513)
 #define IDI_QUESTIONW      MAKEINTRESOURCEW(32514)

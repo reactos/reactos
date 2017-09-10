@@ -1346,8 +1346,13 @@ IntPaintDesktop(HDC hDC)
 
         if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &Rect, 0))
         {
+            Rect.left = Rect.top = 0;
             Rect.right  = UserGetSystemMetrics(SM_CXSCREEN);
             Rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+        }
+        else
+        {
+            RECTL_vOffsetRect(&Rect, -Rect.left, -Rect.top);
         }
 
         /*
@@ -2378,7 +2383,6 @@ IntSetThreadDesktop(IN HDESK hDesktop,
                     IN BOOL FreeOnFailure)
 {
     PDESKTOP pdesk = NULL, pdeskOld;
-    HDESK hdeskOld;
     PTHREADINFO pti;
     NTSTATUS Status;
     PCLIENTTHREADINFO pctiOld, pctiNew = NULL;
@@ -2467,7 +2471,6 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     }
 
     pdeskOld = pti->rpdesk;
-    hdeskOld = pti->hdesk;
     if (pti->pcti != &pti->cti)
         pctiOld = pti->pcti;
     else
@@ -2515,7 +2518,6 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         if (pctiOld) DesktopHeapFree(pdeskOld, pctiOld);
         IntUnmapDesktopView(pdeskOld);
         ObDereferenceObject(pdeskOld);
-        ZwClose(hdeskOld);
     }
 
     if (pdesk)

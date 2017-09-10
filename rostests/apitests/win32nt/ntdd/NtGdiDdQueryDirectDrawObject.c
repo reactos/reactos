@@ -68,7 +68,12 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
 
     /* Create ReactX handle */
     hDirectDraw = (HANDLE) NtGdiDdCreateDirectDrawObject(hdc);
-    ASSERT(hDirectDraw != NULL);
+    RTEST(hDirectDraw != NULL);
+    if (hDirectDraw == NULL)
+    {
+        DeleteDC(hdc);
+        return;
+    }
 
     /* Start Test ReactX NtGdiDdQueryDirectDrawObject function */
 

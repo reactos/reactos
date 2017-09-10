@@ -11,6 +11,9 @@
 #include "debug.h"
 
 #include "gapless.h"
+/* Want accurate rounding function regardless of decoder setup. */
+#define FORCE_ACCURATE
+#include "sample.h"
 
 #define SEEKFRAME(mh) ((mh)->ignoreframe < 0 ? 0 : (mh)->ignoreframe)
 
@@ -31,6 +34,15 @@ int attribute_align_arg mpg123_init(void)
 	prepare_decode_tables();
 	check_decoders();
 	initialized = 1;
+#if (defined REAL_IS_FLOAT) && (defined IEEE_FLOAT)
+	/* This is rather pointless but it eases my mind to check that we did
+	   not enable the special rounding on a VAX or something. */
+	if(12346 != REAL_TO_SHORT_ACCURATE(12345.67f))
+	{
+		error("Bad IEEE 754 rounding. Re-build libmpg123 properly.");
+		return MPG123_ERR;
+	}
+#endif
 	return MPG123_OK;
 }
 
@@ -357,7 +369,7 @@ int attribute_align_arg mpg123_getstate(mpg123_handle *mh, enum mpg123_state key
 		{
 			size_t sval = bc_fill(&mh->rdat.buffer);
 			theval = (long)sval;
-			if((size_t)theval != sval)
+			if(theval < 0 || (size_t)theval != sval)
 			{
 				mh->err = MPG123_INT_OVERFLOW;
 				ret = MPG123_ERR;
@@ -382,9 +394,9 @@ int attribute_align_arg mpg123_getstate(mpg123_handle *mh, enum mpg123_state key
 
 	return ret;
 }
-
 int attribute_align_arg mpg123_eq(mpg123_handle *mh, enum mpg123_channels channel, int band, double val)
 {
+#ifndef NO_EQUALIZER
 	if(mh == NULL) return MPG123_BAD_HANDLE;
 	if(band < 0 || band > 31){ mh->err = MPG123_BAD_BAND; return MPG123_ERR; }
 	switch(channel)
@@ -399,12 +411,14 @@ int attribute_align_arg mpg123_eq(mpg123_handle *mh, enum mpg123_channels channe
 			return MPG123_ERR;
 	}
 	mh->have_eq_settings = TRUE;
+#endif
 	return MPG123_OK;
 }
 
 double attribute_align_arg mpg123_geteq(mpg123_handle *mh, enum mpg123_channels channel, int band)
 {
 	double ret = 0.;
+#ifndef NO_EQUALIZER
 
 	/* Handle this gracefully. When there is no band, it has no volume. */
 	if(mh != NULL && band > -1 && band < 32)
@@ -417,10 +431,9 @@ double attribute_align_arg mpg123_geteq(mpg123_handle *mh, enum mpg123_channels 
 		case MPG123_RIGHT: ret = REAL_TO_DOUBLE(mh->equalizer[1][band]); break;
 		/* Default case is already handled: ret = 0 */
 	}
-
+#endif
 	return ret;
 }
-
 
 /* plain file access, no http! */
 int attribute_align_arg mpg123_open(mpg123_handle *mh, const char *path)
@@ -1034,7 +1047,8 @@ int attribute_align_arg mpg123_info(mpg123_handle *mh, struct mpg123_frameinfo *
 	return MPG123_OK;
 }
 
-int attribute_align_arg mpg123_getformat(mpg123_handle *mh, long *rate, int *channels, int *encoding)
+int attribute_align_arg mpg123_getformat2( mpg123_handle *mh
+,	long *rate, int *channels, int *encoding, int clear_flag )
 {
 	int b;
 
@@ -1045,8 +1059,13 @@ int attribute_align_arg mpg123_getformat(mpg123_handle *mh, long *rate, int *cha
 	if(rate != NULL) *rate = mh->af.rate;
 	if(channels != NULL) *channels = mh->af.channels;
 	if(encoding != NULL) *encoding = mh->af.encoding;
-	mh->new_format = 0;
+	if(clear_flag) mh->new_format = 0;
 	return MPG123_OK;
+}
+
+int attribute_align_arg mpg123_getformat(mpg123_handle *mh, long *rate, int *channels, int *encoding)
+{
+	return mpg123_getformat2(mh, rate, channels, encoding, 1);
 }
 
 off_t attribute_align_arg mpg123_timeframe(mpg123_handle *mh, double seconds)
@@ -1311,6 +1330,31 @@ int attribute_align_arg mpg123_set_filesize(mpg123_handle *mh, off_t size)
 	return MPG123_OK;
 }
 
+off_t attribute_align_arg mpg123_framelength(mpg123_handle *mh)
+{
+	int b;
+	if(mh == NULL)
+		return MPG123_ERR;
+	b = init_track(mh);
+	if(b<0)
+		return b;
+	if(mh->track_frames > 0)
+		return mh->track_frames;
+	if(mh->rdat.filelen > 0)
+	{ /* A bad estimate. Ignoring tags 'n stuff. */
+		double bpf = mh->mean_framesize > 0.
+			? mh->mean_framesize
+			: compute_bpf(mh);
+		return (off_t)((double)(mh->rdat.filelen)/bpf+0.5);
+	}
+	/* Last resort: No view of the future, can at least count the frames that
+	   were already parsed. */
+	if(mh->num > -1)
+		return mh->num+1;
+	/* Giving up. */
+	return MPG123_ERR;
+}
+
 off_t attribute_align_arg mpg123_length(mpg123_handle *mh)
 {
 	int b;
@@ -1337,6 +1381,7 @@ off_t attribute_align_arg mpg123_length(mpg123_handle *mh)
 	length = SAMPLE_ADJUST(mh,length);
 	return length;
 }
+
 
 int attribute_align_arg mpg123_scan(mpg123_handle *mh)
 {

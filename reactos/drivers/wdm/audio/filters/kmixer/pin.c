@@ -59,7 +59,7 @@ PerformSampleRateConversion(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    NewSamples = lrintf(((FLOAT)NumSamples * ((FLOAT)NewRate / (FLOAT)OldRate))) + 2;
+    NewSamples = ((((ULONG64)NumSamples * NewRate) + (OldRate / 2)) / OldRate) + 2;
 
     FloatOut = ExAllocatePool(NonPagedPool, NewSamples * NumChannels * sizeof(FLOAT));
     if (!FloatOut)

@@ -884,12 +884,13 @@ static void test_dibsections(void)
     ok( ret == 1, "SetDIBColorTable returned unexpected result %u\n", ret );
     ok( rgb[0].rgbReserved == 123, "Expected rgbReserved = 123, got %u\n", rgb[0].rgbReserved );
 
+    rgb[0].rgbRed = rgb[0].rgbGreen = rgb[0].rgbBlue = rgb[0].rgbReserved = -1;
     ret = GetDIBColorTable( hdcmem, 0, 1, rgb );
     ok( ret == 1, "GetDIBColorTable returned unexpected result %u\n", ret );
     ok( rgb[0].rgbRed == 1, "Expected rgbRed = 1, got %u\n", rgb[0].rgbRed );
     ok( rgb[0].rgbGreen == 2, "Expected rgbGreen = 2, got %u\n", rgb[0].rgbGreen );
     ok( rgb[0].rgbBlue == 3, "Expected rgbBlue = 3, got %u\n", rgb[0].rgbBlue );
-    todo_wine ok( rgb[0].rgbReserved == 0, "Expected rgbReserved = 0, got %u\n", rgb[0].rgbReserved );
+    ok( rgb[0].rgbReserved == 0, "Expected rgbReserved = 0, got %u\n", rgb[0].rgbReserved );
 
     SelectObject(hdcmem, oldbm);
     DeleteObject(hdib);
@@ -4315,8 +4316,10 @@ static void test_GetDIBits_scanlines(void)
     memset( data, 0xaa, sizeof(data) );
 
     info->bmiHeader.biHeight = 16;
+    info->bmiHeader.biSizeImage = 0;
     ret = GetDIBits( hdc, dib, 1, 12, data, info, DIB_RGB_COLORS );
     ok( ret == 5, "got %d\n", ret );
+    ok( info->bmiHeader.biSizeImage == 128 * 4, "got %d\n", info->bmiHeader.biSizeImage );
     for (i = 0; i < 56; i++) ok( data[i] == 0, "%d: got %08x\n", i, data[i] );
     ok( !memcmp( data + 56, dib_bits, 40 * 4 ), "bits differ\n");
     for (i = 96; i < 128; i++) ok( data[i] == 0xaaaaaaaa, "%d: got %08x\n", i, data[i] );
@@ -5674,8 +5677,10 @@ static void test_D3DKMTCreateDCFromMemory( void )
     HGDIOBJ *bitmap;
     DIBSECTION dib;
     BOOL fail, ret;
-    DWORD type;
+    DWORD type, pixel;
     int size;
+    HDC bmp_dc;
+    HBITMAP bmp;
 
     static const struct
     {
@@ -5870,6 +5875,15 @@ static void test_D3DKMTCreateDCFromMemory( void )
         ret = BitBlt( create_desc.hDc, 1, 1, 2, 2, NULL, 0, 0, WHITENESS );
         ok(ret, "Failed to blit.\n");
 
+        /* Also test blitting to a regular bitmap */
+        bmp_dc = CreateCompatibleDC( create_desc.hDeviceDc );
+        ok(bmp_dc != NULL, "failed to create DC\n");
+        bmp = CreateCompatibleBitmap( bmp_dc, create_desc.Width, create_desc.Height );
+        ok(bmp != NULL, "failed to create bmp\n");
+        bmp = SelectObject( bmp_dc, bmp );
+        ret = BitBlt( bmp_dc, 0, 0, create_desc.Width, create_desc.Height, create_desc.hDc, 0, 0, SRCCOPY );
+        ok(ret, "Failed to blit.\n");
+
         destroy_desc.hDc = create_desc.hDc;
         destroy_desc.hBitmap = create_desc.hBitmap;
 
@@ -5902,8 +5916,25 @@ static void test_D3DKMTCreateDCFromMemory( void )
                    test_data[i].name, colour, x, y, expected);
                 if (colour != expected)
                     fail = TRUE;
+
+                /* 'Xn' or 'An' formats don't successfully blit to the regular bmp */
+                if (test_data[i].format == D3DDDIFMT_R8G8B8 || test_data[i].format == D3DDDIFMT_R5G6B5)
+                {
+                    pixel = GetPixel( bmp_dc, x, y );
+                    if ((x == 1 || x == 2) && (y == 1 || y == 2))
+                        expected = 0x00ffffff;
+                    else if (x < create_desc.Width && y < create_desc.Height)
+                        expected = 0x00000000;
+                    else
+                        expected = CLR_INVALID;
+                    ok(pixel == expected, "%s: got 0x%08x at %u, %u, expect 0x%08x\n", test_data[i].name,
+                       pixel, x, y, expected);
+                }
             }
         }
+
+        DeleteObject( SelectObject( bmp_dc, bmp ) );
+        DeleteDC( bmp_dc );
     }
 }
 #endif /* __REACTOS__ */

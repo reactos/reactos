@@ -720,7 +720,6 @@ static inline int ext3_valid_inum(struct super_block *sb, unsigned long ino)
 					EXT4_FEATURE_INCOMPAT_RECOVER|          \
 					EXT4_FEATURE_INCOMPAT_META_BG|          \
 					EXT4_FEATURE_INCOMPAT_EXTENTS|          \
-					EXT4_FEATURE_INCOMPAT_64BIT|            \
 					EXT4_FEATURE_INCOMPAT_FLEX_BG)
 #define EXT4_FEATURE_RO_COMPAT_SUPP	(                       \
                     EXT4_FEATURE_RO_COMPAT_SPARSE_SUPER|    \

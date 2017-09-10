@@ -94,65 +94,40 @@ AcpiExCreateAlias (
         TargetNode = ACPI_CAST_PTR (ACPI_NAMESPACE_NODE, TargetNode->Object);
     }
 
-    /*
-     * For objects that can never change (i.e., the NS node will
-     * permanently point to the same object), we can simply attach
-     * the object to the new NS node. For other objects (such as
-     * Integers, buffers, etc.), we have to point the Alias node
-     * to the original Node.
-     */
+    /* Ensure that the target node is valid */
+
+    if (!TargetNode)
+    {
+        return_ACPI_STATUS (AE_NULL_OBJECT);
+    }
+
+    /* Construct the alias object (a namespace node) */
+
     switch (TargetNode->Type)
     {
-
-    /* For these types, the sub-object can change dynamically via a Store */
-
-    case ACPI_TYPE_INTEGER:
-    case ACPI_TYPE_STRING:
-    case ACPI_TYPE_BUFFER:
-    case ACPI_TYPE_PACKAGE:
-    case ACPI_TYPE_BUFFER_FIELD:
-    /*
-     * These types open a new scope, so we need the NS node in order to access
-     * any children.
-     */
-    case ACPI_TYPE_DEVICE:
-    case ACPI_TYPE_POWER:
-    case ACPI_TYPE_PROCESSOR:
-    case ACPI_TYPE_THERMAL:
-    case ACPI_TYPE_LOCAL_SCOPE:
+    case ACPI_TYPE_METHOD:
         /*
+         * Control method aliases need to be differentiated with
+         * a special type
+         */
+        AliasNode->Type = ACPI_TYPE_LOCAL_METHOD_ALIAS;
+        break;
+
+    default:
+        /*
+         * All other object types.
+         *
          * The new alias has the type ALIAS and points to the original
          * NS node, not the object itself.
          */
         AliasNode->Type = ACPI_TYPE_LOCAL_ALIAS;
         AliasNode->Object = ACPI_CAST_PTR (ACPI_OPERAND_OBJECT, TargetNode);
         break;
-
-    case ACPI_TYPE_METHOD:
-        /*
-         * Control method aliases need to be differentiated
-         */
-        AliasNode->Type = ACPI_TYPE_LOCAL_METHOD_ALIAS;
-        AliasNode->Object = ACPI_CAST_PTR (ACPI_OPERAND_OBJECT, TargetNode);
-        break;
-
-    default:
-
-        /* Attach the original source object to the new Alias Node */
-
-        /*
-         * The new alias assumes the type of the target, and it points
-         * to the same object. The reference count of the object has an
-         * additional reference to prevent deletion out from under either the
-         * target node or the alias Node
-         */
-        Status = AcpiNsAttachObject (AliasNode,
-            AcpiNsGetAttachedObject (TargetNode), TargetNode->Type);
-        break;
     }
 
     /* Since both operands are Nodes, we don't need to delete them */
 
+    AliasNode->Object = ACPI_CAST_PTR (ACPI_OPERAND_OBJECT, TargetNode);
     return_ACPI_STATUS (Status);
 }
 

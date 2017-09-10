@@ -43,7 +43,8 @@
 #include <msxml2did.h>
 #include <dispex.h>
 #include <objsafe.h>
-//#include "initguid.h"
+#include <initguid.h>
+#include <asptlb.h>
 
 /* undef the #define in msxml2 so that we can access all versions */
 #undef CLSID_DOMDocument
@@ -353,6 +354,305 @@ static const IStreamVtbl StreamVtbl = {
 };
 
 static IStream savestream = { &StreamVtbl };
+
+static HRESULT WINAPI response_QI(IResponse *iface, REFIID riid, void **obj)
+{
+    if (IsEqualIID(&IID_IResponse, riid) ||
+            IsEqualIID(&IID_IDispatch, riid) ||
+            IsEqualIID(&IID_IUnknown, riid))
+    {
+        *obj = iface;
+        return S_OK;
+    }
+
+    if (!IsEqualIID(&IID_IStream, riid) && !IsEqualIID(&IID_ISequentialStream, riid))
+        ok(0, "unexpected call\n");
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI response_AddRef(IResponse *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI response_Release(IResponse *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI response_GetTypeInfoCount(IResponse *iface, UINT *count)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_GetTypeInfo(IResponse *iface, UINT ti, LCID lcid, ITypeInfo **tinfo)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_GetIDsOfNames(IResponse *iface, REFIID riid, LPOLESTR *names,
+        UINT cnames, LCID lcid, DISPID *rgDispId)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_Invoke(IResponse *iface, DISPID dispid, REFIID riid, LCID lcid,
+    WORD flags, DISPPARAMS *params, VARIANT *result, EXCEPINFO *ei, UINT *argerr)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_Buffer(IResponse *iface, VARIANT_BOOL *fIsBuffering)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_put_Buffer(IResponse *iface, VARIANT_BOOL fIsBuffering)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_ContentType(IResponse *iface, BSTR *pbstrContentTypeRet)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_put_ContentType(IResponse *iface, BSTR bstrContentType)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_Expires(IResponse *iface, VARIANT *pvarExpiresMinutesRet)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_put_Expires(IResponse *iface, LONG lExpiresMinutes)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_ExpiresAbsolute(IResponse *iface, VARIANT *pvarExpiresRet)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_put_ExpiresAbsolute(IResponse *iface, DATE dtExpires)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_Cookies(IResponse *iface, IRequestDictionary **ppCookies)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_Status(IResponse *iface, BSTR *pbstrStatusRet)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_put_Status(IResponse *iface, BSTR bstrStatus)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_Add(IResponse *iface, BSTR bstrHeaderValue, BSTR bstrHeaderName)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_AddHeader(IResponse *iface, BSTR bstrHeaderName, BSTR bstrHeaderValue)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_AppendToLog(IResponse *iface, BSTR bstrLogEntry)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_BinaryWrite(IResponse *iface, VARIANT input)
+{
+    HRESULT hr;
+    LONG bound;
+    UINT dim;
+
+    ok(V_VT(&input) == (VT_ARRAY | VT_UI1), "got wrong input type %x\n", V_VT(&input));
+
+    dim = SafeArrayGetDim(V_ARRAY(&input));
+    ok(dim == 1, "got wrong array dimensions %u\n", dim);
+
+    bound = 1;
+    hr = SafeArrayGetLBound(V_ARRAY(&input), 1, &bound);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(bound == 0, "wrong array low bound %d\n", bound);
+
+    bound = 0;
+    hr = SafeArrayGetUBound(V_ARRAY(&input), 1, &bound);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(bound > 0, "wrong array high bound %d\n", bound);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_Clear(IResponse *iface)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_End(IResponse *iface)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_Flush(IResponse *iface)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_Redirect(IResponse *iface, BSTR bstrURL)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_Write(IResponse *iface, VARIANT varText)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_WriteBlock(IResponse *iface, short iBlockNumber)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_IsClientConnected(IResponse *iface, VARIANT_BOOL *pfIsClientConnected)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_CharSet(IResponse *iface, BSTR *pbstrCharSetRet)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_put_CharSet(IResponse *iface, BSTR bstrCharSet)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_Pics(IResponse *iface, BSTR bstrHeaderValue)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_CacheControl(IResponse *iface, BSTR *pbstrCacheControl)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_put_CacheControl(IResponse *iface, BSTR bstrCacheControl)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_CodePage(IResponse *iface, LONG *plvar)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_put_CodePage(IResponse *iface, LONG codepage)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_get_LCID(IResponse *iface, LONG *lcid)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI response_put_LCID(IResponse *iface, LONG lcid)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static const IResponseVtbl testresponsevtbl =
+{
+    response_QI,
+    response_AddRef,
+    response_Release,
+    response_GetTypeInfoCount,
+    response_GetTypeInfo,
+    response_GetIDsOfNames,
+    response_Invoke,
+    response_get_Buffer,
+    response_put_Buffer,
+    response_get_ContentType,
+    response_put_ContentType,
+    response_get_Expires,
+    response_put_Expires,
+    response_get_ExpiresAbsolute,
+    response_put_ExpiresAbsolute,
+    response_get_Cookies,
+    response_get_Status,
+    response_put_Status,
+    response_Add,
+    response_AddHeader,
+    response_AppendToLog,
+    response_BinaryWrite,
+    response_Clear,
+    response_End,
+    response_Flush,
+    response_Redirect,
+    response_Write,
+    response_WriteBlock,
+    response_IsClientConnected,
+    response_get_CharSet,
+    response_put_CharSet,
+    response_Pics,
+    response_get_CacheControl,
+    response_put_CacheControl,
+    response_get_CodePage,
+    response_put_CodePage,
+    response_get_LCID,
+    response_put_LCID,
+};
+
+static IResponse testresponse = { &testresponsevtbl };
 
 #define EXPECT_CHILDREN(node) _expect_children((IXMLDOMNode*)node, __LINE__)
 static void _expect_children(IXMLDOMNode *node, int line)
@@ -1250,7 +1550,7 @@ if (0)
     ok( b == VARIANT_FALSE, "succeeded in loading XML string\n");
     SysFreeString( str );
 
-    str = (BSTR)0x1;
+    str = (void *)0xdeadbeef;
     hr = IXMLDOMDocument_get_url(doc, &str);
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
     ok(str == NULL, "got %p\n", str);
@@ -1329,7 +1629,7 @@ if (0)
     r = IXMLDOMDocument_get_nodeName( doc, NULL );
     ok ( r == E_INVALIDARG, "get_nodeName (NULL) wrong code\n");
 
-    str = (BSTR)0xdeadbeef;
+    str = (void *)0xdeadbeef;
     r = IXMLDOMDocument_get_baseName( doc, &str );
     ok ( r == S_FALSE, "got 0x%08x\n", r);
     ok (str == NULL, "got %p\n", str);
@@ -1451,25 +1751,25 @@ if (0)
         ok(r == E_INVALIDARG, "ret %08x\n", r );
 
         /* test substringData - Invalid offset */
-        str = (BSTR)&szElement;
+        str = (void *)0xdeadbeef;
         r = IXMLDOMText_substringData(nodetext, -1, 4, &str);
         ok(r == E_INVALIDARG, "ret %08x\n", r );
         ok( str == NULL, "incorrect string\n");
 
         /* test substringData - Invalid offset */
-        str = (BSTR)&szElement;
+        str = (void *)0xdeadbeef;
         r = IXMLDOMText_substringData(nodetext, 30, 0, &str);
         ok(r == S_FALSE, "ret %08x\n", r );
         ok( str == NULL, "incorrect string\n");
 
         /* test substringData - Invalid size */
-        str = (BSTR)&szElement;
+        str = (void *)0xdeadbeef;
         r = IXMLDOMText_substringData(nodetext, 0, -1, &str);
         ok(r == E_INVALIDARG, "ret %08x\n", r );
         ok( str == NULL, "incorrect string\n");
 
         /* test substringData - Invalid size */
-        str = (BSTR)&szElement;
+        str = (void *)0xdeadbeef;
         r = IXMLDOMText_substringData(nodetext, 2, 0, &str);
         ok(r == S_FALSE, "ret %08x\n", r );
         ok( str == NULL, "incorrect string\n");
@@ -1724,7 +2024,7 @@ if (0)
     /* empty comment */
     r = IXMLDOMDocument_createComment(doc, _bstr_(""), &node_comment);
     ok( r == S_OK, "returns %08x\n", r );
-    str = (BSTR)0x1;
+    str = NULL;
     r = IXMLDOMComment_get_data(node_comment, &str);
     ok( r == S_OK, "returns %08x\n", r );
     ok( str && SysStringLen(str) == 0, "expected empty string data\n");
@@ -1733,7 +2033,7 @@ if (0)
 
     r = IXMLDOMDocument_createComment(doc, NULL, &node_comment);
     ok( r == S_OK, "returns %08x\n", r );
-    str = (BSTR)0x1;
+    str = NULL;
     r = IXMLDOMComment_get_data(node_comment, &str);
     ok( r == S_OK, "returns %08x\n", r );
     ok( str && (SysStringLen(str) == 0), "expected empty string data\n");
@@ -1756,7 +2056,7 @@ if (0)
         ok(nodeChild == NULL, "pLastChild not NULL\n");
 
         /* baseName */
-        str = (BSTR)0xdeadbeef;
+        str = (void *)0xdeadbeef;
         r = IXMLDOMComment_get_baseName(node_comment, &str);
         ok(r == S_FALSE, "ret %08x\n", r );
         ok(str == NULL, "Expected NULL\n");
@@ -1803,7 +2103,7 @@ if (0)
         SysFreeString(str);
 
         /* test baseName */
-        str = (BSTR)0x1;
+        str = NULL;
         r = IXMLDOMProcessingInstruction_get_baseName(nodePI, &str);
         ok(r == S_OK, "ret %08x\n", r );
         ok( !lstrcmpW( str, _bstr_("xml") ), "incorrect nodeName string\n");
@@ -1847,12 +2147,15 @@ if (0)
     free_bstrs();
 }
 
-static void test_persiststreaminit(void)
+static void test_persiststream(void)
 {
-    IXMLDOMDocument *doc;
     IPersistStreamInit *streaminit;
+    IPersistStream *stream;
+    IXMLDOMDocument *doc;
     ULARGE_INTEGER size;
+    IPersist *persist;
     HRESULT hr;
+    CLSID clsid;
 
     doc = create_document(&IID_IXMLDOMDocument);
 
@@ -1865,6 +2168,26 @@ static void test_persiststreaminit(void)
     hr = IPersistStreamInit_GetSizeMax(streaminit, &size);
     ok(hr == E_NOTIMPL, "got 0x%08x\n", hr);
 
+    hr = IXMLDOMDocument_QueryInterface(doc, &IID_IPersistStream, (void **)&stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok((IUnknown *)stream == (IUnknown *)streaminit, "got %p, %p\n", stream, streaminit);
+
+    hr = IPersistStream_QueryInterface(stream, &IID_IPersist, (void **)&persist);
+    ok(hr == E_NOINTERFACE, "got 0x%08x\n", hr);
+
+    hr = IXMLDOMDocument_QueryInterface(doc, &IID_IPersist, (void **)&persist);
+    ok(hr == E_NOINTERFACE, "got 0x%08x\n", hr);
+
+    hr = IPersistStreamInit_GetClassID(streaminit, NULL);
+    ok(hr == E_POINTER, "got 0x%08x\n", hr);
+
+    memset(&clsid, 0, sizeof(clsid));
+    hr = IPersistStreamInit_GetClassID(streaminit, &clsid);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(IsEqualGUID(&clsid, &CLSID_DOMDocument2), "wrong clsid %s\n", wine_dbgstr_guid(&clsid));
+
+    IPersistStream_Release(stream);
+    IPersistStreamInit_Release(streaminit);
     IXMLDOMDocument_Release(doc);
 }
 
@@ -2109,7 +2432,7 @@ static void test_domnode( void )
             ok( r == S_OK, "getNamedItem returned wrong code\n");
             ok( type == NODE_TEXT, "node not text\n");
 
-            str = (BSTR) 1;
+            str = (void *)0xdeadbeef;
             r = IXMLDOMNode_get_baseName( next, &str );
             ok( r == S_FALSE, "get_baseName returned wrong code\n");
             ok( str == NULL, "basename was wrong\n");
@@ -5173,25 +5496,25 @@ static void test_xmlTypes(void)
                 ok(hr == E_INVALIDARG, "ret %08x\n", hr );
 
                 /* test substringData - Invalid offset */
-                str = (BSTR)&szElement;
+                str = (void *)0xdeadbeef;
                 hr = IXMLDOMComment_substringData(pComment, -1, 4, &str);
                 ok(hr == E_INVALIDARG, "ret %08x\n", hr );
                 ok( str == NULL, "incorrect string\n");
 
                 /* test substringData - Invalid offset */
-                str = (BSTR)&szElement;
+                str = (void *)0xdeadbeef;
                 hr = IXMLDOMComment_substringData(pComment, 30, 0, &str);
                 ok(hr == S_FALSE, "ret %08x\n", hr );
                 ok( str == NULL, "incorrect string\n");
 
                 /* test substringData - Invalid size */
-                str = (BSTR)&szElement;
+                str = (void *)0xdeadbeef;
                 hr = IXMLDOMComment_substringData(pComment, 0, -1, &str);
                 ok(hr == E_INVALIDARG, "ret %08x\n", hr );
                 ok( str == NULL, "incorrect string\n");
 
                 /* test substringData - Invalid size */
-                str = (BSTR)&szElement;
+                str = (void *)0xdeadbeef;
                 hr = IXMLDOMComment_substringData(pComment, 2, 0, &str);
                 ok(hr == S_FALSE, "ret %08x\n", hr );
                 ok( str == NULL, "incorrect string\n");
@@ -5611,25 +5934,25 @@ static void test_xmlTypes(void)
                 ok(hr == E_INVALIDARG, "ret %08x\n", hr );
 
                 /* test substringData - Invalid offset */
-                str = (BSTR)&szElement;
+                str = (void *)0xdeadbeef;
                 hr = IXMLDOMCDATASection_substringData(pCDataSec, -1, 4, &str);
                 ok(hr == E_INVALIDARG, "ret %08x\n", hr );
                 ok( str == NULL, "incorrect string\n");
 
                 /* test substringData - Invalid offset */
-                str = (BSTR)&szElement;
+                str = (void *)0xdeadbeef;
                 hr = IXMLDOMCDATASection_substringData(pCDataSec, 30, 0, &str);
                 ok(hr == S_FALSE, "ret %08x\n", hr );
                 ok( str == NULL, "incorrect string\n");
 
                 /* test substringData - Invalid size */
-                str = (BSTR)&szElement;
+                str = (void *)0xdeadbeef;
                 hr = IXMLDOMCDATASection_substringData(pCDataSec, 0, -1, &str);
                 ok(hr == E_INVALIDARG, "ret %08x\n", hr );
                 ok( str == NULL, "incorrect string\n");
 
                 /* test substringData - Invalid size */
-                str = (BSTR)&szElement;
+                str = (void *)0xdeadbeef;
                 hr = IXMLDOMCDATASection_substringData(pCDataSec, 2, 0, &str);
                 ok(hr == S_FALSE, "ret %08x\n", hr );
                 ok( str == NULL, "incorrect string\n");
@@ -6351,7 +6674,7 @@ static void test_namespaces_basic(void)
     EXPECT_HR(hr, S_OK);
     ok(b == VARIANT_TRUE, "got %d\n", b);
 
-    str = (BSTR)0xdeadbeef;
+    str = (void *)0xdeadbeef;
     hr = IXMLDOMDocument_get_namespaceURI(doc, &str);
     EXPECT_HR(hr, S_FALSE);
     ok(str == NULL, "got %p\n", str);
@@ -8511,14 +8834,15 @@ static void test_get_xml(void)
 
 static void test_xsltemplate(void)
 {
+    IXMLDOMDocument *doc, *doc2, *doc3;
     IXSLTemplate *template;
     IXSLProcessor *processor;
-    IXMLDOMDocument *doc, *doc2;
     IStream *stream;
     VARIANT_BOOL b;
     HRESULT hr;
     ULONG ref1, ref2;
     VARIANT v;
+    BSTR str;
 
     if (!is_clsid_supported(&CLSID_XSLTemplate, &IID_IXSLTemplate)) return;
     template = create_xsltemplate(&IID_IXSLTemplate);
@@ -8598,6 +8922,16 @@ todo_wine {
     hr = IXSLProcessor_put_output(processor, v);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
+    V_VT(&v) = VT_UNKNOWN;
+    V_UNKNOWN(&v) = NULL;
+    hr = IXSLProcessor_put_output(processor, v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    V_VT(&v) = VT_UNKNOWN;
+    V_DISPATCH(&v) = NULL;
+    hr = IXSLProcessor_put_output(processor, v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
     ok(hr == S_OK, "got 0x%08x\n", hr);
     EXPECT_REF(stream, 1);
@@ -8634,7 +8968,7 @@ todo_wine {
     /* no output interface set, check output */
     doc2 = create_document(&IID_IXMLDOMDocument);
 
-    b = VARIANT_TRUE;
+    b = VARIANT_FALSE;
     hr = IXMLDOMDocument_loadXML( doc2, _bstr_("<a>test</a>"), &b );
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok( b == VARIANT_TRUE, "got %d\n", b);
@@ -8652,10 +8986,62 @@ todo_wine {
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(V_VT(&v) == VT_BSTR, "got type %d\n", V_VT(&v));
     ok(*V_BSTR(&v) == 0, "got %s\n", wine_dbgstr_w(V_BSTR(&v)));
-    IXMLDOMDocument_Release(doc2);
     VariantClear(&v);
 
+    /* transform to document */
+    b = VARIANT_FALSE;
+    hr = IXMLDOMDocument_loadXML(doc2, _bstr_(szTransformXML), &b);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(b == VARIANT_TRUE, "got %d\n", b);
+
+    V_VT(&v) = VT_UNKNOWN;
+    V_UNKNOWN(&v) = (IUnknown*)doc2;
+    hr = IXSLProcessor_put_input(processor, v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    doc3 = create_document(&IID_IXMLDOMDocument);
+    V_VT(&v) = VT_UNKNOWN;
+    V_UNKNOWN(&v) = (IUnknown *)doc3;
+    hr = IXSLProcessor_put_output(processor, v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXMLDOMDocument_get_xml(doc3, &str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!*str, "Expected empty document\n");
+    SysFreeString(str);
+
+    hr = IXSLProcessor_transform(processor, &b);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    V_VT(&v) = VT_EMPTY;
+    hr = IXSLProcessor_get_output(processor, &v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&v) == VT_UNKNOWN, "got type %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    hr = IXMLDOMDocument_get_xml(doc3, &str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!!*str, "Expected document\n");
+    SysFreeString(str);
+
+    /* transform to IResponse */
+    V_VT(&v) = VT_EMPTY;
+    hr = IXSLProcessor_put_output(processor, v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    V_VT(&v) = VT_UNKNOWN;
+    V_UNKNOWN(&v) = (IUnknown *)&testresponse;
+    hr = IXSLProcessor_put_output(processor, v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    b = VARIANT_FALSE;
+    hr = IXSLProcessor_transform(processor, &b);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(b == VARIANT_TRUE, "got %x\n", b);
+
     IXSLProcessor_Release(processor);
+    IXMLDOMDocument_Release(doc2);
+    IXMLDOMDocument_Release(doc3);
 
     /* drop reference */
     hr = IXSLTemplate_putref_stylesheet(template, NULL);
@@ -9889,7 +10275,7 @@ static void test_load(void)
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
     ok(b == VARIANT_FALSE, "got %d\n", b);
 
-    bstr1 = (BSTR)0x1;
+    bstr1 = (void *)0xdeadbeef;
     hr = IXMLDOMDocument_get_url(doc, &bstr1);
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
     ok(bstr1 == NULL, "got %p\n", bstr1);
@@ -11738,6 +12124,7 @@ static void test_put_data(void)
               break;
            }
            default:
+              get_data = NULL;
               break;
        }
 
@@ -12137,7 +12524,7 @@ static void test_url(void)
     hr = IXMLDOMDocument_get_url(doc, NULL);
     ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
 
-    s = (BSTR)0x1;
+    s = (void *)0xdeadbeef;
     hr = IXMLDOMDocument_get_url(doc, &s);
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
     ok(s == NULL, "got %s\n", wine_dbgstr_w(s));
@@ -12227,7 +12614,7 @@ START_TEST(domdoc)
     }
 
     test_domdoc();
-    test_persiststreaminit();
+    test_persiststream();
     test_domnode();
     test_refs();
     test_create();

@@ -15,20 +15,20 @@ typedef struct _EDD_DIRECTDRAW_LOCAL
     //
 /* 0x00 */    DD_BASEOBJECT pobj; // verified to match Windows XP
 /* 0x10 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;    // verified to match Windows XP
-/* 0x14 */    struct _EDD_SURFACE * peSurface_DdList;
-/* 0x18 */    ULONG unk_018;
-/* 0x1C */    ULONG unk_01c;
+/* 0x14 */    ULONG hRefCount;
+/* 0x18 */    struct _EDD_SURFACE * peSurface_DdList;
+/* 0x1C */    ULONG hSurface;
 /* 0x20 */    ULONG unk_020;
 /* 0x24 */    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;   // verified to match Windows XP
 /* 0x28 */    FLATPTR fpProcess;
 /* 0x2C */    FLONG fl;
 /* 0x30 */    struct _EDD_DIRECTDRAW_LOCAL *peDirectDrawLocal_prev;  // verified to match Windows XP,
                                                                      // points to the old DDLocal when new handle is created.
-/* 0x34 */    ULONG unk_034;
-/* 0x38 */    ULONG unk_038;
-/* 0x3C */    HANDLE UniqueProcess;
+/* 0x34 */    FLATPTR fpProcess2;                                    // surface memory address returned by graphic driver
+/* 0x38 */    ULONG isMemoryMapped;                                  // surface memory mapped?
+/* 0x3C */    HANDLE hCreatorProcess;
 /* 0x40 */    PEPROCESS Process;
-/* 0x44 */    VOID *unk_044;
+/* 0x44 */    VOID *heapList;
 /* 0x48 */    ULONG unk_048;
 /* 0x4C */    ULONG unk_04C;
 /* 0x50 */    ULONG unk_050;
@@ -68,12 +68,8 @@ typedef struct _EDD_SURFACE
     // Private Direct Draw Data
     //
     struct _EDD_DIRECTDRAW_GLOBAL* peDirectDrawGlobal;
+    struct _EDD_DIRECTDRAW_GLOBAL* peDirectDrawGlobalNext;
     struct _EDD_DIRECTDRAW_LOCAL* peDirectDrawLocal;
-
-    //
-    // Flags
-    //
-    FLONG fl;
 
     //
     // Surface Attributes
@@ -84,17 +80,23 @@ typedef struct _EDD_SURFACE
     HANDLE hSecure;
     HANDLE hdc;
     HBITMAP hbmGdi;
-
-    //
-    // Unknown
-    //
-    ULONG field_E8;
+    HANDLE hGdiSurface;
 
     //
     // Surface Lock
     //
     RECTL rclLock;
-    ULONG field_FC[2];
+    ULONG field_FC;
+    ULONG field_100;
+    ULONG field_104;
+    ULONG field_108;
+    ULONG field_10C;
+
+    ULONG ldev;
+    struct _EDD_DIRECTDRAW_GLOBAL* peDirectDrawGlobal3;
+    ULONG gdev;
+    ULONG wWidth;
+    ULONG wHeight;
 } EDD_SURFACE, *PEDD_SURFACE;
 
 
@@ -118,7 +120,9 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x000 */    PVOID dhpdev;           // 0x000 <-- verified to match Windows XP, dhpdev, the drv hPDev --> 
 /* 0x004 */    DWORD dwReserved1;
 /* 0x008 */    DWORD dwReserved2;
-/* 0x00C */    ULONG unk_000c[3];
+/* 0x00C */    LPDDVIDEOPORTCAPS lpDDVideoPortCaps;                    // 0x00C <-- verified to match Win2k3
+/* 0x010 */    ULONG unk_010;
+/* 0x014 */    ULONG unk_014;
 /* 0x018 */    LONG cDriverReferences;
 /* 0x01C */    ULONG unk_01c;
 /* 0x020 */    DWORD dwCallbackFlags; /* 0x020 <-- verified to match Windows XP, dwCallbackFlags

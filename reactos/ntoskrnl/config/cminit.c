@@ -234,18 +234,18 @@ CmpDestroyHive(IN PCMHIVE CmHive)
     RemoveEntryList(&CmHive->HiveList);
     ExReleasePushLock(&CmpHiveListHeadLock);
 
+    /* Destroy the security descriptor cache */
+    CmpDestroySecurityCache(CmHive);
+
+    /* Destroy the view list */
+    CmpDestroyHiveViewList(CmHive);
+
     /* Delete the flusher lock */
     ExDeleteResourceLite(CmHive->FlusherLock);
     ExFreePoolWithTag(CmHive->FlusherLock, TAG_CMHIVE);
 
     /* Delete the view lock */
     ExFreePoolWithTag(CmHive->ViewLock, TAG_CMHIVE);
-
-    /* Destroy the security descriptor cache */
-    CmpDestroySecurityCache(CmHive);
-
-    /* Destroy the view list */
-    CmpDestroyHiveViewList(CmHive);
 
     /* Free the hive storage */
     HvFree(&CmHive->Hive);
@@ -309,7 +309,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         /* Build the full name */
         FullName.Buffer = NameBuffer;
         FullName.MaximumLength = Length;
-        RtlAppendUnicodeStringToString(&FullName, BaseName);
+        RtlCopyUnicodeString(&FullName, BaseName);
     }
     else
     {
@@ -376,15 +376,16 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     /* Check if anything failed until now */
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("ZwCreateFile(%wZ) failed, Status 0x%08lx.\n", ObjectAttributes.ObjectName, Status);
+
         /* Close handles and free buffers */
         if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
         ObDereferenceObject(Event);
         ZwClose(EventHandle);
-        DPRINT1("ZwCreateFile failed : %lx.\n", Status);
         *Primary = NULL;
         return Status;
     }
-                          
+
     if (MarkAsSystemHive)
     {
         /* We opened it, mark it as a system hive */

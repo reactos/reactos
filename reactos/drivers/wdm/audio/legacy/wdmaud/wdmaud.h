@@ -129,6 +129,14 @@ WdmAudControlOpenMixer(
     IN  PWDMAUD_CLIENT ClientInfo);
 
 NTSTATUS
+WdmAudControlCloseMixer(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo,
+    IN  ULONG Index);
+
+NTSTATUS
 WdmAudControlOpenWave(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,

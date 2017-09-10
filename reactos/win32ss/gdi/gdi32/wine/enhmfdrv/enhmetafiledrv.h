@@ -33,6 +33,7 @@
 typedef struct
 {
     struct gdi_physdev dev;
+    struct gdi_physdev pathdev;
     ENHMETAHEADER  *emh;           /* Pointer to enhanced metafile header */
     UINT       handles_size, cur_handles;
     HGDIOBJ   *handles;
@@ -58,8 +59,11 @@ extern DWORD EMFDRV_CreateBrushIndirect( PHYSDEV dev, HBRUSH hBrush ) DECLSPEC_H
 
 /* Metafile driver functions */
 extern BOOL     EMFDRV_AbortPath( PHYSDEV dev ) DECLSPEC_HIDDEN;
+extern BOOL     EMFDRV_AngleArc( PHYSDEV dev, INT x, INT y, DWORD radius, FLOAT start, FLOAT sweep ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_Arc( PHYSDEV dev, INT left, INT top, INT right,
                             INT bottom, INT xstart, INT ystart, INT xend, INT yend ) DECLSPEC_HIDDEN;
+extern BOOL     EMFDRV_ArcTo( PHYSDEV dev, INT left, INT top, INT right,
+                              INT bottom, INT xstart, INT ystart, INT xend, INT yend ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_BeginPath( PHYSDEV dev ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_BitBlt( PHYSDEV devDst, INT xDst, INT yDst, INT width, INT height,
                                PHYSDEV devSrc, INT xSrc, INT ySrc, DWORD rop ) DECLSPEC_HIDDEN;
@@ -80,6 +84,8 @@ extern BOOL     EMFDRV_FlattenPath( PHYSDEV dev ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_FrameRgn( PHYSDEV dev, HRGN hrgn, HBRUSH hbrush, INT width, INT height ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_GdiComment( PHYSDEV dev, UINT bytes, const BYTE *buffer ) DECLSPEC_HIDDEN;
 extern INT      EMFDRV_GetDeviceCaps( PHYSDEV dev, INT cap ) DECLSPEC_HIDDEN;
+extern BOOL     EMFDRV_GradientFill( PHYSDEV dev, TRIVERTEX *vert_array, ULONG nvert,
+                                     void *grad_array, ULONG ngrad, ULONG mode ) DECLSPEC_HIDDEN;
 extern INT      EMFDRV_IntersectClipRect( PHYSDEV dev, INT left, INT top, INT right, INT bottom ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_InvertRgn( PHYSDEV dev, HRGN hrgn ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_LineTo( PHYSDEV dev, INT x, INT y ) DECLSPEC_HIDDEN;
@@ -94,10 +100,12 @@ extern BOOL     EMFDRV_Pie( PHYSDEV dev, INT left, INT top, INT right, INT botto
                             INT xstart, INT ystart, INT xend, INT yend ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_PolyBezier( PHYSDEV dev, const POINT *pts, DWORD count ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_PolyBezierTo( PHYSDEV dev, const POINT *pts, DWORD count ) DECLSPEC_HIDDEN;
+extern BOOL     EMFDRV_PolyDraw( PHYSDEV dev, const POINT *pts, const BYTE *types, DWORD count ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_PolyPolygon( PHYSDEV dev, const POINT* pt, const INT* counts, UINT polys) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_PolyPolyline( PHYSDEV dev, const POINT* pt, const DWORD* counts, DWORD polys) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_Polygon( PHYSDEV dev, const POINT* pt, INT count ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_Polyline( PHYSDEV dev, const POINT* pt,INT count) DECLSPEC_HIDDEN;
+extern BOOL     EMFDRV_PolylineTo( PHYSDEV dev, const POINT* pt,INT count) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_Rectangle( PHYSDEV dev, INT left, INT top, INT right, INT bottom) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_RestoreDC( PHYSDEV dev, INT level ) DECLSPEC_HIDDEN;
 extern BOOL     EMFDRV_RoundRect( PHYSDEV dev, INT left, INT top, INT right, INT bottom,

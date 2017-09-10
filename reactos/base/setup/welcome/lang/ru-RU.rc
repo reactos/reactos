@@ -6,33 +6,33 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Добро пожаловать!"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Добро пожаловать в ReactOS.\n\nВыберите пункт слева."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Добро пожаловать в ReactOS.\n\nВыберите пункт слева."
 
-    IDS_CHECKTEXT "Показывать это окно снова"
-    IDS_CLOSETEXT "Выход"
+    IDS_CHECKTEXT "&Показывать это окно снова"
+    IDS_CLOSETEXT "&Выход"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Установить ReactOS"
-    IDS_TOPICBUTTON1 "Обзор диска"
-    IDS_TOPICBUTTON2 "Выход"
+    IDS_TOPIC_BUTTON0 "&Установить ReactOS"
+    IDS_TOPIC_BUTTON1 "&Обзор диска"
+    IDS_TOPIC_BUTTON2 "&Выход"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Установить ReactOS"
-    IDS_TOPICTITLE1 "Обзор диска"
-    IDS_TOPICTITLE2 "Выход"
+    IDS_TOPIC_TITLE0 "Установить ReactOS"
+    IDS_TOPIC_TITLE1 "Обзор диска"
+    IDS_TOPIC_TITLE2 "Выход"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Установит ReactOS на Ваш компьютер с нуля или обновит уже установленную версию."
-    IDS_TOPICDESC1 "Обзор диска."
-    IDS_TOPICDESC2 "Выберите для выхода из этого приложения."
+    IDS_TOPIC_DESC0 "Установит ReactOS на Ваш компьютер с нуля или обновит уже установленную версию."
+    IDS_TOPIC_DESC1 "Обзор диска."
+    IDS_TOPIC_DESC2 "Выберите для выхода из этого приложения."
 END

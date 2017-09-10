@@ -259,54 +259,56 @@ static void test_WNetCachePassword(void)
 
 static void test_WNetUseConnection(void)
 {
-    DWORD ret;
-    DWORD bufSize;
-    DWORD outRes;
+    DWORD ret, bufSize, outRes;
     LPNETRESOURCEA netRes;
-    CHAR outBuf[4];
+    char outBuf[4], drive[] = "J:", letter;
 
-    if (pWNetUseConnectionA)
+    if (!pWNetUseConnectionA)
     {
-        netRes = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NETRESOURCEA) + sizeof("\\\\127.0.0.1\\c$") + sizeof("J:"));
-        netRes->dwType = RESOURCETYPE_DISK;
-        netRes->dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
-        netRes->dwUsage = RESOURCEUSAGE_CONNECTABLE;
-        netRes->lpLocalName = (LPSTR)((LPBYTE)netRes + sizeof(NETRESOURCEA));
-        netRes->lpRemoteName = (LPSTR)((LPBYTE)netRes + sizeof(NETRESOURCEA) + sizeof("J:"));
-        strcpy(netRes->lpLocalName, "J:");
+        win_skip("WNetUseConnection() is not supported.\n");
+        return;
+    }
+    netRes = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NETRESOURCEA) + sizeof("\\\\127.0.0.1\\c$") + sizeof("J:"));
+    netRes->dwType        = RESOURCETYPE_DISK;
+    netRes->dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
+    netRes->dwUsage       = RESOURCEUSAGE_CONNECTABLE;
+    netRes->lpLocalName   = (LPSTR)((LPBYTE)netRes + sizeof(NETRESOURCEA));
+    netRes->lpRemoteName  = (LPSTR)((LPBYTE)netRes + sizeof(NETRESOURCEA) + sizeof("J:"));
+
+    for (letter = 'J'; letter <= 'Z'; letter++)
+    {
+        drive[0] = letter;
+        strcpy(netRes->lpLocalName, drive);
         strcpy(netRes->lpRemoteName, "\\\\127.0.0.1\\c$");
         bufSize = 0;
         ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, NULL, &bufSize, &outRes);
-        todo_wine
-        ok(ret == WN_SUCCESS, "Unexpected return: %u\n", ret);
-        ok(bufSize == 0, "Unexpected buffer size: %u\n", bufSize);
-        if (ret == WN_SUCCESS)
-            WNetCancelConnectionA("J:", TRUE);
-        bufSize = 0;
-        ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, outBuf, &bufSize, &outRes);
-        todo_wine
-        ok(ret == ERROR_INVALID_PARAMETER, "Unexpected return: %u\n", ret);
-        ok(bufSize == 0, "Unexpected buffer size: %u\n", bufSize);
-        if (ret == WN_SUCCESS)
-            WNetCancelConnectionA("J:", TRUE);
-        bufSize = 1;
-        todo_wine {
-        ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, outBuf, &bufSize, &outRes);
-        ok(ret == ERROR_MORE_DATA, "Unexpected return: %u\n", ret);
-        ok(bufSize == 3, "Unexpected buffer size: %u\n", bufSize);
-        if (ret == WN_SUCCESS)
-            WNetCancelConnectionA("J:", TRUE);
-        bufSize = 4;
-        ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, outBuf, &bufSize, &outRes);
-        ok(ret == WN_SUCCESS, "Unexpected return: %u\n", ret);
-        }
-        ok(bufSize == 4, "Unexpected buffer size: %u\n", bufSize);
-        if (ret == WN_SUCCESS)
-            WNetCancelConnectionA("J:", TRUE);
-        HeapFree(GetProcessHeap(), 0, netRes);
-    } else {
-        win_skip("WNetUseConnection() is not supported.\n");
+        if (ret == ERROR_ALREADY_ASSIGNED) continue;
     }
+    todo_wine ok(ret == WN_SUCCESS, "Unexpected return: %u\n", ret);
+    ok(bufSize == 0, "Unexpected buffer size: %u\n", bufSize);
+    if (ret == WN_SUCCESS) WNetCancelConnectionA(drive, TRUE);
+
+    bufSize = 0;
+    ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, outBuf, &bufSize, &outRes);
+    todo_wine ok(ret == ERROR_INVALID_PARAMETER, "Unexpected return: %u\n", ret);
+    ok(bufSize == 0, "Unexpected buffer size: %u\n", bufSize);
+    if (ret == WN_SUCCESS) WNetCancelConnectionA(drive, TRUE);
+
+    todo_wine {
+    bufSize = 1;
+    ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, outBuf, &bufSize, &outRes);
+    ok(ret == ERROR_MORE_DATA, "Unexpected return: %u\n", ret);
+    ok(bufSize == 3, "Unexpected buffer size: %u\n", bufSize);
+    if (ret == WN_SUCCESS) WNetCancelConnectionA(drive, TRUE);
+
+    bufSize = 4;
+    ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, outBuf, &bufSize, &outRes);
+    ok(ret == WN_SUCCESS, "Unexpected return: %u\n", ret);
+    }
+    ok(bufSize == 4, "Unexpected buffer size: %u\n", bufSize);
+    if (ret == WN_SUCCESS) WNetCancelConnectionA(drive, TRUE);
+
+    HeapFree(GetProcessHeap(), 0, netRes);
 }
 
 START_TEST(mpr)

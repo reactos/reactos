@@ -209,6 +209,40 @@ static void test_other_invalid_parameters(void)
     BOOL used;
     INT len;
 
+    /* Unrecognized flag => ERROR_INVALID_FLAGS */
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_ACP, 0x100, w_string, -1, c_string, c_string_len, NULL, NULL);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_FLAGS, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_ACP, 0x800, w_string, -1, c_string, c_string_len, NULL, NULL);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_FLAGS, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = MultiByteToWideChar(CP_ACP, 0x10, c_string, -1, w_string, w_string_len);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_FLAGS, "len=%d error=%x\n", len, GetLastError());
+
+
+    /* Unrecognized flag and invalid codepage => ERROR_INVALID_PARAMETER */
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(0xdeadbeef, 0x100, w_string, w_string_len, c_string, c_string_len, NULL, NULL);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = MultiByteToWideChar(0xdeadbeef, 0x10, c_string, c_string_len, w_string, w_string_len);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+
+    /* Unrecognized flag and src is NULL => ERROR_INVALID_PARAMETER */
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_ACP, 0x100, NULL, -1, c_string, c_string_len, NULL, NULL);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = MultiByteToWideChar(CP_ACP, 0x10, NULL, -1, w_string, w_string_len);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+
     /* srclen=0 => ERROR_INVALID_PARAMETER */
     SetLastError(0xdeadbeef);
     len = WideCharToMultiByte(CP_ACP, 0, w_string, 0, c_string, c_string_len, NULL, NULL);
@@ -265,6 +299,11 @@ static void test_other_invalid_parameters(void)
        instead except on Windows NT4 */
     SetLastError(0xdeadbeef);
     len = WideCharToMultiByte(CP_UTF7, 1, w_string, w_string_len, c_string, c_string_len, NULL, &used);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+    /* CP_UTF8, unrecognized flag and used not NULL => ERROR_INVALID_PARAMETER */
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_UTF8, 0x100, w_string, w_string_len, c_string, c_string_len, NULL, &used);
     ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
 }
 

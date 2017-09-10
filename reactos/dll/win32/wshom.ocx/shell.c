@@ -1189,7 +1189,7 @@ static HRESULT WINAPI WshShell3_Invoke(IWshShell3 *iface, DISPID dispIdMember, R
     hr = get_typeinfo(IWshShell3_tid, &typeinfo);
     if(SUCCEEDED(hr))
     {
-        hr = ITypeInfo_Invoke(typeinfo, &WshShell3, dispIdMember, wFlags,
+        hr = ITypeInfo_Invoke(typeinfo, &WshShell3.IWshShell3_iface, dispIdMember, wFlags,
                 pDispParams, pVarResult, pExcepInfo, puArgErr);
         ITypeInfo_Release(typeinfo);
     }

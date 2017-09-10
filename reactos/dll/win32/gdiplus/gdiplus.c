@@ -46,11 +46,13 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved)
     {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls( hinst );
+        init_generic_string_formats();
         break;
 
     case DLL_PROCESS_DETACH:
         if (reserved) break;
         free_installed_fonts();
+        free_generic_string_formats();
         break;
     }
     return TRUE;

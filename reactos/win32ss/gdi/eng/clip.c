@@ -157,13 +157,13 @@ VOID
 FASTCALL
 IntEngInitClipObj(XCLIPOBJ *Clip)
 {
-    Clip->Rects = &Clip->ClipObj.rclBounds;
+    Clip->Rects = &Clip->rclBounds;
 }
 
 VOID FASTCALL
 IntEngFreeClipResources(XCLIPOBJ *Clip)
 {
-    if (Clip->Rects != &Clip->ClipObj.rclBounds)
+    if (Clip->Rects != &Clip->rclBounds)
         EngFreeMem(Clip->Rects);
 }
 
@@ -183,34 +183,34 @@ IntEngUpdateClipRegion(
         if(NewRects != NULL)
         {
             Clip->RectCount = count;
-            Clip->EnumOrder = CD_ANY;
+            Clip->iDirection = CD_ANY;
             RtlCopyMemory(NewRects, pRect, count * sizeof(RECTL));
 
-            Clip->ClipObj.iDComplexity = DC_COMPLEX;
-            Clip->ClipObj.iFComplexity = ((Clip->RectCount <= 4) ? FC_RECT4 : FC_COMPLEX);
-            Clip->ClipObj.iMode = TC_RECTANGLES;
-            Clip->ClipObj.rclBounds = *rcBounds;
+            Clip->iDComplexity = DC_COMPLEX;
+            Clip->iFComplexity = ((Clip->RectCount <= 4) ? FC_RECT4 : FC_COMPLEX);
+            Clip->iMode = TC_RECTANGLES;
+            Clip->rclBounds = *rcBounds;
 
-            if (Clip->Rects != &Clip->ClipObj.rclBounds)
+            if (Clip->Rects != &Clip->rclBounds)
                 EngFreeMem(Clip->Rects);
             Clip->Rects = NewRects;
         }
     }
     else
     {
-        Clip->EnumOrder = CD_ANY;
+        Clip->iDirection = CD_ANY;
 
-        Clip->ClipObj.iDComplexity = (((rcBounds->top == rcBounds->bottom) &&
+        Clip->iDComplexity = (((rcBounds->top == rcBounds->bottom) &&
                                      (rcBounds->left == rcBounds->right))
                                      ? DC_TRIVIAL : DC_RECT);
 
-        Clip->ClipObj.iFComplexity = FC_RECT;
-        Clip->ClipObj.iMode = TC_RECTANGLES;
-        Clip->ClipObj.rclBounds = *rcBounds;
+        Clip->iFComplexity = FC_RECT;
+        Clip->iMode = TC_RECTANGLES;
+        Clip->rclBounds = *rcBounds;
         Clip->RectCount = 1;
-        if (Clip->Rects != &Clip->ClipObj.rclBounds)
+        if (Clip->Rects != &Clip->rclBounds)
             EngFreeMem(Clip->Rects);
-        Clip->Rects = &Clip->ClipObj.rclBounds;
+        Clip->Rects = &Clip->rclBounds;
     }
 }
 
@@ -226,7 +226,7 @@ EngCreateClip(VOID)
     {
         IntEngInitClipObj(Clip);
         TRACE("Created Clip Obj %p.\n", Clip);
-        return &Clip->ClipObj;
+        return (CLIPOBJ *)Clip;
     }
 
     ERR("Clip object allocation failed!\n");
@@ -241,7 +241,7 @@ APIENTRY
 EngDeleteClip(
     _In_ _Post_ptr_invalid_ CLIPOBJ *pco)
 {
-    XCLIPOBJ* pxco = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
+    XCLIPOBJ* pxco = (XCLIPOBJ *)pco;
     TRACE("Deleting %p.\n", pco);
     IntEngFreeClipResources(pxco);
     EngFreeMem(pxco);
@@ -259,13 +259,15 @@ CLIPOBJ_cEnumStart(
     _In_ ULONG iDirection,
     _In_ ULONG cMaxRects)
 {
-    XCLIPOBJ* Clip = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
+    XCLIPOBJ* Clip = (XCLIPOBJ *)pco;
     SORTCOMP CompareFunc;
 
+    Clip->bAll    = bAll;
+    Clip->iType   = iType;
     Clip->EnumPos = 0;
     Clip->EnumMax = (cMaxRects > 0) ? cMaxRects : Clip->RectCount;
 
-    if (CD_ANY != iDirection && Clip->EnumOrder != iDirection)
+    if (CD_ANY != iDirection && Clip->iDirection != iDirection)
     {
         switch (iDirection)
         {
@@ -287,7 +289,7 @@ CLIPOBJ_cEnumStart(
 
             default:
                 ERR("Invalid iDirection %lu\n", iDirection);
-                iDirection = Clip->EnumOrder;
+                iDirection = Clip->iDirection;
                 CompareFunc = NULL;
                 break;
         }
@@ -297,7 +299,7 @@ CLIPOBJ_cEnumStart(
             EngSort((PBYTE) Clip->Rects, sizeof(RECTL), Clip->RectCount, CompareFunc);
         }
 
-        Clip->EnumOrder = iDirection;
+        Clip->iDirection = iDirection;
     }
 
     /* Return the number of rectangles enumerated */
@@ -320,7 +322,7 @@ CLIPOBJ_bEnum(
     _Out_bytecap_(cj) ULONG *pulEnumRects)
 {
     const RECTL* src;
-    XCLIPOBJ* Clip = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
+    XCLIPOBJ* Clip = (XCLIPOBJ *)pco;
     ULONG nCopy;
     ENUMRECTS* pERects = (ENUMRECTS*)pulEnumRects;
 

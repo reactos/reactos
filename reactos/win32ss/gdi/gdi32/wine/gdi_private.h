@@ -55,15 +55,17 @@ struct gdi_obj_funcs
 typedef struct tagWINEDC
 {
     HDC          hdc;
+    struct gdi_physdev NullPhysDev;
     PHYSDEV      physDev;          /* current top of the physdev stack */
     LONG         refcount;         /* thread refcount */
     INT          saveLevel;
-    struct gdi_physdev NullPhysDev;
     HFONT hFont;
     HBRUSH hBrush;
     HPEN hPen;
     HPALETTE hPalette;
 } WINEDC, DC;
+
+WINEDC* get_physdev_dc( PHYSDEV dev );
 
 /* brush.c */
 extern BOOL get_brush_bitmap_info( HBRUSH handle, BITMAPINFO *info, void **bits, UINT *usage ) DECLSPEC_HIDDEN;
@@ -119,6 +121,27 @@ extern UINT WINAPI GDIRealizePalette( HDC hdc ) DECLSPEC_HIDDEN;
 
 #define EMR_SETLINKEDUFI        119
 
+#define GET_DC_PHYSDEV(dc,func) \
+    get_physdev_entry_point( (dc)->physDev, FIELD_OFFSET(struct gdi_dc_funcs,func))
+
+static inline PHYSDEV pop_dc_driver( DC *dc, const struct gdi_dc_funcs *funcs )
+{
+    PHYSDEV dev, *pdev = &dc->physDev;
+    while (*pdev && (*pdev)->funcs != funcs) pdev = &(*pdev)->next;
+    if (!*pdev) return NULL;
+    dev = *pdev;
+    *pdev = dev->next;
+    return dev;
+}
+
+static inline PHYSDEV find_dc_driver( DC *dc, const struct gdi_dc_funcs *funcs )
+{
+    PHYSDEV dev;
+
+    for (dev = dc->physDev; dev; dev = dev->next) if (dev->funcs == funcs) return dev;
+    return NULL;
+}
+
 /* Undocumented value for DIB's iUsage: Indicates a mono DIB w/o pal entries */
 #define DIB_PAL_MONO 2
 
@@ -144,6 +167,9 @@ static inline int get_dib_info_size( const BITMAPINFO *info, UINT coloruse )
         return sizeof(BITMAPINFOHEADER) + info->bmiHeader.biClrUsed * sizeof(WORD);
     return FIELD_OFFSET( BITMAPINFO, bmiColors[info->bmiHeader.biClrUsed] );
 }
+
+#define GdiWorldSpaceToDeviceSpace  0x204
+BOOL APIENTRY NtGdiGetTransform( _In_ HDC hdc, _In_ DWORD iXform, _Out_ LPXFORM pxf);
 
 /* Special sauce for reactos */
 #define GDIRealizePalette RealizePalette

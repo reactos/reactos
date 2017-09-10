@@ -36,11 +36,6 @@ END_OBJECT_MAP()
 CExplorerModule                             gModule;
 CAtlWinModule                               gWinModule;
 
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
-
 static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 {
     if (bInitialize)

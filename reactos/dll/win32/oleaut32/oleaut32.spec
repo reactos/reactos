@@ -323,7 +323,7 @@
 329 stdcall VarCyMulI8(int64 int64 ptr)
 330 stdcall VarDateFromUdate(ptr long ptr)
 331 stdcall VarUdateFromDate(double long ptr)
-332 stub GetAltMonthNames
+332 stdcall GetAltMonthNames(long ptr)
 333 stdcall VarI8FromUI1(long long)
 334 stdcall VarI8FromI2(long long)
 335 stdcall VarI8FromR4(float long)
@@ -361,7 +361,7 @@
 377 stdcall VarI1FromUI8(int64 ptr)
 378 stdcall VarUI2FromI8(int64 ptr)
 379 stdcall VarUI2FromUI8(int64 ptr)
-401 stdcall OleLoadPictureEx(ptr long long long long long long ptr)
+401 stdcall OleLoadPictureEx(ptr long long ptr long long long ptr)
 402 stub OleLoadPictureFileEx
 411 stdcall SafeArrayCreateVector(long long long)
 412 stdcall SafeArrayCopyData(ptr ptr)

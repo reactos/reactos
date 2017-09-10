@@ -575,31 +575,8 @@ HRESULT WINAPI CreatePointerMoniker(LPUNKNOWN punk, LPMONIKER *ppmk)
     return S_OK;
 }
 
-static HRESULT WINAPI PointerMonikerCF_QueryInterface(LPCLASSFACTORY iface,
-                                                  REFIID riid, LPVOID *ppv)
-{
-    *ppv = NULL;
-    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
-    {
-        *ppv = iface;
-        IClassFactory_AddRef(iface);
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI PointerMonikerCF_AddRef(LPCLASSFACTORY iface)
-{
-    return 2; /* non-heap based object */
-}
-
-static ULONG WINAPI PointerMonikerCF_Release(LPCLASSFACTORY iface)
-{
-    return 1; /* non-heap based object */
-}
-
-static HRESULT WINAPI PointerMonikerCF_CreateInstance(LPCLASSFACTORY iface,
-    LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI PointerMoniker_CreateInstance(IClassFactory *iface,
+    IUnknown *pUnk, REFIID riid, void **ppv)
 {
     IMoniker *pMoniker;
     HRESULT  hr;
@@ -621,25 +598,4 @@ static HRESULT WINAPI PointerMonikerCF_CreateInstance(LPCLASSFACTORY iface,
         IMoniker_Release(pMoniker);
 
     return hr;
-}
-
-static HRESULT WINAPI PointerMonikerCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
-{
-    FIXME("(%d), stub!\n",fLock);
-    return S_OK;
-}
-
-static const IClassFactoryVtbl PointerMonikerCFVtbl =
-{
-    PointerMonikerCF_QueryInterface,
-    PointerMonikerCF_AddRef,
-    PointerMonikerCF_Release,
-    PointerMonikerCF_CreateInstance,
-    PointerMonikerCF_LockServer
-};
-static const IClassFactoryVtbl *PointerMonikerCF = &PointerMonikerCFVtbl;
-
-HRESULT PointerMonikerCF_Create(REFIID riid, LPVOID *ppv)
-{
-    return IClassFactory_QueryInterface((IClassFactory *)&PointerMonikerCF, riid, ppv);
 }

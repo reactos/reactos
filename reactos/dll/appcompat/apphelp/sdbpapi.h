@@ -1,20 +1,9 @@
 /*
- * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS Application compatibility module
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Shim engine private functions
+ * COPYRIGHT:   Copyright 2013 Mislav Blažević
+ *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #ifndef SDBPAPI_H
@@ -64,12 +53,12 @@ void WINAPI SdbpCloseMemMappedFile(PMEMMAPPED mapping);
 
 
 PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write);
-void WINAPI SdbpFlush(PDB db);
+void WINAPI SdbpFlush(PDB pdb);
 DWORD SdbpStrlen(PCWSTR string);
 DWORD SdbpStrsize(PCWSTR string);
 
 BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type);
-BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type);
+BOOL WINAPI SdbpCheckTagIDType(PDB pdb, TAGID tagid, WORD type);
 
 #ifndef WINAPIV
 #define WINAPIV

@@ -44,3 +44,9 @@ BlpArchInitialize (
     return STATUS_NOT_IMPLEMENTED;
 }
 
+VOID
+Archx86TransferTo32BitApplicationAsm (VOID)
+{
+    EfiPrintf(L" Archx86TransferTo32BitApplicationAsm NOT IMPLEMENTED for this platform\r\n");
+}
+

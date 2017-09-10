@@ -1,6 +1,6 @@
 /*
  * Copyright 2011 Vincent Povirk for CodeWeavers
- * Copyright 2012 Dmitry Timoshkov
+ * Copyright 2012,2017 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -267,7 +267,7 @@ static void test_metadata_unknown(void)
     ok(hr == S_OK, "CoCreateInstance failed, hr=%x\n", hr);
     if (FAILED(hr)) return;
 
-    load_stream((IUnknown*)reader, metadata_unknown, sizeof(metadata_unknown), WICPersistOptionsDefault);
+    load_stream((IUnknown*)reader, metadata_unknown, sizeof(metadata_unknown), WICPersistOptionDefault);
 
     hr = IWICMetadataReader_GetEnumerator(reader, &enumerator);
     ok(hr == S_OK, "GetEnumerator failed, hr=%x\n", hr);
@@ -334,7 +334,7 @@ static void test_metadata_tEXt(void)
     ok(hr == S_OK, "GetCount failed, hr=%x\n", hr);
     ok(count == 0, "unexpected count %i\n", count);
 
-    load_stream((IUnknown*)reader, metadata_tEXt, sizeof(metadata_tEXt), WICPersistOptionsDefault);
+    load_stream((IUnknown*)reader, metadata_tEXt, sizeof(metadata_tEXt), WICPersistOptionDefault);
 
     hr = IWICMetadataReader_GetCount(reader, &count);
     ok(hr == S_OK, "GetCount failed, hr=%x\n", hr);
@@ -445,7 +445,7 @@ static void test_metadata_gAMA(void)
     ok(hr == S_OK || broken(hr == REGDB_E_CLASSNOTREG) /*winxp*/, "CoCreateInstance failed, hr=%x\n", hr);
     if (FAILED(hr)) return;
 
-    load_stream((IUnknown*)reader, metadata_gAMA, sizeof(metadata_gAMA), WICPersistOptionsDefault);
+    load_stream((IUnknown*)reader, metadata_gAMA, sizeof(metadata_gAMA), WICPersistOptionDefault);
 
     hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
     ok(hr == S_OK, "GetMetadataFormat failed, hr=%x\n", hr);
@@ -503,7 +503,7 @@ static void test_metadata_cHRM(void)
     ok(hr == S_OK || broken(hr == REGDB_E_CLASSNOTREG) /*winxp*/, "CoCreateInstance failed, hr=%x\n", hr);
     if (FAILED(hr)) return;
 
-    load_stream((IUnknown*)reader, metadata_cHRM, sizeof(metadata_cHRM), WICPersistOptionsDefault);
+    load_stream((IUnknown*)reader, metadata_cHRM, sizeof(metadata_cHRM), WICPersistOptionDefault);
 
     hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
     ok(hr == S_OK, "GetMetadataFormat failed, hr=%x\n", hr);
@@ -797,9 +797,9 @@ static void test_metadata_IFD(void)
     GUID format;
     char *IFD_data_swapped;
 #ifdef WORDS_BIGENDIAN
-    DWORD persist_options = WICPersistOptionsBigEndian;
+    DWORD persist_options = WICPersistOptionBigEndian;
 #else
-    DWORD persist_options = WICPersistOptionsLittleEndian;
+    DWORD persist_options = WICPersistOptionLittleEndian;
 #endif
 
     hr = CoCreateInstance(&CLSID_WICIfdMetadataReader, NULL, CLSCTX_INPROC_SERVER,
@@ -822,10 +822,10 @@ static void test_metadata_IFD(void)
     compare_metadata(reader, td, count);
 
     /* test IFD data with different endianness */
-    if (persist_options == WICPersistOptionsLittleEndian)
-        persist_options = WICPersistOptionsBigEndian;
+    if (persist_options == WICPersistOptionLittleEndian)
+        persist_options = WICPersistOptionBigEndian;
     else
-        persist_options = WICPersistOptionsLittleEndian;
+        persist_options = WICPersistOptionLittleEndian;
 
     IFD_data_swapped = HeapAlloc(GetProcessHeap(), 0, sizeof(IFD_data));
     memcpy(IFD_data_swapped, &IFD_data, sizeof(IFD_data));
@@ -969,22 +969,22 @@ static void test_create_reader(void)
     stream = create_stream(metadata_tEXt, sizeof(metadata_tEXt));
 
     hr = IWICComponentFactory_CreateMetadataReaderFromContainer(factory,
-        NULL, NULL, WICPersistOptionsDefault,
+        NULL, NULL, WICPersistOptionDefault,
         stream, &reader);
     ok(hr == E_INVALIDARG, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
 
     hr = IWICComponentFactory_CreateMetadataReaderFromContainer(factory,
-        &GUID_ContainerFormatPng, NULL, WICPersistOptionsDefault,
+        &GUID_ContainerFormatPng, NULL, WICPersistOptionDefault,
         NULL, &reader);
     ok(hr == E_INVALIDARG, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
 
     hr = IWICComponentFactory_CreateMetadataReaderFromContainer(factory,
-        &GUID_ContainerFormatPng, NULL, WICPersistOptionsDefault,
+        &GUID_ContainerFormatPng, NULL, WICPersistOptionDefault,
         stream, NULL);
     ok(hr == E_INVALIDARG, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
 
     hr = IWICComponentFactory_CreateMetadataReaderFromContainer(factory,
-        &GUID_ContainerFormatPng, NULL, WICPersistOptionsDefault,
+        &GUID_ContainerFormatPng, NULL, WICPersistOptionDefault,
         stream, &reader);
     ok(hr == S_OK, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
 
@@ -1002,7 +1002,7 @@ static void test_create_reader(void)
     }
 
     hr = IWICComponentFactory_CreateMetadataReaderFromContainer(factory,
-        &GUID_ContainerFormatWmp, NULL, WICPersistOptionsDefault,
+        &GUID_ContainerFormatWmp, NULL, WICPersistOptionDefault,
         stream, &reader);
     ok(hr == S_OK, "CreateMetadataReaderFromContainer failed, hr=%x\n", hr);
 
@@ -1965,10 +1965,300 @@ static void test_metadata_GIF_comment(void)
     IStream_Release(stream);
 }
 
+static void test_WICMapGuidToShortName(void)
+{
+    static const WCHAR unkW[] = { 'u','n','k',0 };
+    static const WCHAR unknownW[] = { 'u','n','k','n','o','w','n',0 };
+    HRESULT hr;
+    UINT len;
+    WCHAR name[16];
+
+    name[0] = 0;
+    len = 0xdeadbeef;
+    hr = WICMapGuidToShortName(&GUID_MetadataFormatUnknown, 8, name, &len);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(len == 8, "got %u\n", len);
+    ok(!lstrcmpW(name, unknownW), "got %s\n", wine_dbgstr_w(name));
+
+    name[0] = 0;
+    hr = WICMapGuidToShortName(&GUID_MetadataFormatUnknown, 8, name, NULL);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(!lstrcmpW(name, unknownW), "got %s\n", wine_dbgstr_w(name));
+
+    len = 0xdeadbeef;
+    hr = WICMapGuidToShortName(&GUID_MetadataFormatUnknown, 8, NULL, &len);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(len == 8, "got %u\n", len);
+
+    len = 0xdeadbeef;
+    hr = WICMapGuidToShortName(&GUID_MetadataFormatUnknown, 0, NULL, &len);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(len == 8, "got %u\n", len);
+
+    hr = WICMapGuidToShortName(&GUID_MetadataFormatUnknown, 0, NULL, NULL);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    hr = WICMapGuidToShortName(&GUID_MetadataFormatUnknown, 8, NULL, NULL);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    hr = WICMapGuidToShortName(&GUID_NULL, 0, NULL, NULL);
+    ok(hr == WINCODEC_ERR_PROPERTYNOTFOUND, "got %#x\n", hr);
+
+    name[0] = 0;
+    len = 0xdeadbeef;
+    hr = WICMapGuidToShortName(&GUID_MetadataFormatUnknown, 4, name, &len);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), "got %#x\n", hr);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+    ok(!lstrcmpW(name, unkW), "got %s\n", wine_dbgstr_w(name));
+
+    name[0] = 0;
+    len = 0xdeadbeef;
+    hr = WICMapGuidToShortName(&GUID_MetadataFormatUnknown, 0, name, &len);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+    ok(!name[0], "got %s\n", wine_dbgstr_w(name));
+
+    hr = WICMapGuidToShortName(NULL, 8, name, NULL);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+}
+
+static void test_WICMapShortNameToGuid(void)
+{
+    static const WCHAR unkW[] = { 'u','n','k',0 };
+    static const WCHAR xmpW[] = { 'x','m','p',0 };
+    static const WCHAR XmPW[] = { 'X','m','P',0 };
+    static const WCHAR unknownW[] = { 'u','n','k','n','o','w','n',0 };
+    HRESULT hr;
+    GUID guid;
+
+    hr = WICMapShortNameToGuid(NULL, NULL);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+    hr = WICMapShortNameToGuid(NULL, &guid);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+    hr = WICMapShortNameToGuid(unknownW, NULL);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+    hr = WICMapShortNameToGuid(unkW, &guid);
+    ok(hr == WINCODEC_ERR_PROPERTYNOTFOUND, "got %#x\n", hr);
+
+    hr = WICMapShortNameToGuid(unknownW, &guid);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(IsEqualGUID(&guid, &GUID_MetadataFormatUnknown), "got %s\n", wine_dbgstr_guid(&guid));
+
+    hr = WICMapShortNameToGuid(xmpW, &guid);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(IsEqualGUID(&guid, &GUID_MetadataFormatXMP), "got %s\n", wine_dbgstr_guid(&guid));
+
+    guid = GUID_NULL;
+    hr = WICMapShortNameToGuid(XmPW, &guid);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(IsEqualGUID(&guid, &GUID_MetadataFormatXMP), "got %s\n", wine_dbgstr_guid(&guid));
+}
+
+static const GUID *guid_list[] =
+{
+    &GUID_ContainerFormatBmp,
+    &GUID_ContainerFormatPng,
+    &GUID_ContainerFormatIco,
+    &GUID_ContainerFormatJpeg,
+    &GUID_ContainerFormatTiff,
+    &GUID_ContainerFormatGif,
+    &GUID_ContainerFormatWmp,
+    &GUID_MetadataFormatUnknown,
+    &GUID_MetadataFormatIfd,
+    &GUID_MetadataFormatSubIfd,
+    &GUID_MetadataFormatExif,
+    &GUID_MetadataFormatGps,
+    &GUID_MetadataFormatInterop,
+    &GUID_MetadataFormatApp0,
+    &GUID_MetadataFormatApp1,
+    &GUID_MetadataFormatApp13,
+    &GUID_MetadataFormatIPTC,
+    &GUID_MetadataFormatIRB,
+    &GUID_MetadataFormat8BIMIPTC,
+    &GUID_MetadataFormat8BIMResolutionInfo,
+    &GUID_MetadataFormat8BIMIPTCDigest,
+    &GUID_MetadataFormatXMP,
+    &GUID_MetadataFormatThumbnail,
+    &GUID_MetadataFormatChunktEXt,
+    &GUID_MetadataFormatXMPStruct,
+    &GUID_MetadataFormatXMPBag,
+    &GUID_MetadataFormatXMPSeq,
+    &GUID_MetadataFormatXMPAlt,
+    &GUID_MetadataFormatLSD,
+    &GUID_MetadataFormatIMD,
+    &GUID_MetadataFormatGCE,
+    &GUID_MetadataFormatAPE,
+    &GUID_MetadataFormatJpegChrominance,
+    &GUID_MetadataFormatJpegLuminance,
+    &GUID_MetadataFormatJpegComment,
+    &GUID_MetadataFormatGifComment,
+    &GUID_MetadataFormatChunkgAMA,
+    &GUID_MetadataFormatChunkbKGD,
+    &GUID_MetadataFormatChunkiTXt,
+    &GUID_MetadataFormatChunkcHRM,
+    &GUID_MetadataFormatChunkhIST,
+    &GUID_MetadataFormatChunkiCCP,
+    &GUID_MetadataFormatChunksRGB,
+    &GUID_MetadataFormatChunktIME
+};
+
+static WCHAR rdf_scheme[] = { 'h','t','t','p',':','/','/','w','w','w','.','w','3','.','o','r','g','/','1','9','9','9','/','0','2','/','2','2','-','r','d','f','-','s','y','n','t','a','x','-','n','s','#',0 };
+static WCHAR dc_scheme[] = { 'h','t','t','p',':','/','/','p','u','r','l','.','o','r','g','/','d','c','/','e','l','e','m','e','n','t','s','/','1','.','1','/',0 };
+static WCHAR xmp_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/',0 };
+static WCHAR xmpidq_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','m','p','/','I','d','e','n','t','i','f','i','e','r','/','q','u','a','l','/','1','.','0','/',0 };
+static WCHAR xmpRights_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','r','i','g','h','t','s','/',0 };
+static WCHAR xmpMM_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','m','m','/',0 };
+static WCHAR xmpBJ_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','b','j','/',0 };
+static WCHAR xmpTPg_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','t','/','p','g','/',0 };
+static WCHAR pdf_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','p','d','f','/','1','.','3','/',0 };
+static WCHAR photoshop_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','p','h','o','t','o','s','h','o','p','/','1','.','0','/',0 };
+static WCHAR tiff_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','t','i','f','f','/','1','.','0','/',0 };
+static WCHAR exif_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','e','x','i','f','/','1','.','0','/',0 };
+static WCHAR stDim_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','D','i','m','e','n','s','i','o','n','s','#',0 };
+static WCHAR xapGImg_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','g','/','i','m','g','/',0 };
+static WCHAR stEvt_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','R','e','s','o','u','r','c','e','E','v','e','n','t','#',0 };
+static WCHAR stRef_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','R','e','s','o','u','r','c','e','R','e','f','#',0 };
+static WCHAR stVer_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','V','e','r','s','i','o','n','#',0 };
+static WCHAR stJob_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','J','o','b','#',0 };
+static WCHAR aux_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','e','x','i','f','/','1','.','0','/','a','u','x','/',0 };
+static WCHAR crs_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','c','a','m','e','r','a','-','r','a','w','-','s','e','t','t','i','n','g','s','/','1','.','0','/',0 };
+static WCHAR xmpDM_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','m','p','/','1','.','0','/','D','y','n','a','m','i','c','M','e','d','i','a','/',0 };
+static WCHAR Iptc4xmpCore_scheme[] = { 'h','t','t','p',':','/','/','i','p','t','c','.','o','r','g','/','s','t','d','/','I','p','t','c','4','x','m','p','C','o','r','e','/','1','.','0','/','x','m','l','n','s','/',0 };
+static WCHAR MicrosoftPhoto_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','m','i','c','r','o','s','o','f','t','.','c','o','m','/','p','h','o','t','o','/','1','.','0','/',0 };
+static WCHAR MP_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','m','i','c','r','o','s','o','f','t','.','c','o','m','/','p','h','o','t','o','/','1','.','2','/',0 };
+static WCHAR MPRI_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','m','i','c','r','o','s','o','f','t','.','c','o','m','/','p','h','o','t','o','/','1','.','2','/','t','/','R','e','g','i','o','n','I','n','f','o','#',0 };
+static WCHAR MPReg_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','m','i','c','r','o','s','o','f','t','.','c','o','m','/','p','h','o','t','o','/','1','.','2','/','t','/','R','e','g','i','o','n','#',0 };
+
+static WCHAR *schema_list[] =
+{
+    aux_scheme,
+    rdf_scheme,
+    dc_scheme,
+    xmp_scheme,
+    xmpidq_scheme,
+    xmpRights_scheme,
+    xmpMM_scheme,
+    xmpBJ_scheme,
+    xmpTPg_scheme,
+    pdf_scheme,
+    photoshop_scheme,
+    tiff_scheme,
+    exif_scheme,
+    stDim_scheme,
+    xapGImg_scheme,
+    stEvt_scheme,
+    stRef_scheme,
+    stVer_scheme,
+    stJob_scheme,
+    crs_scheme,
+    xmpDM_scheme,
+    Iptc4xmpCore_scheme,
+    MicrosoftPhoto_scheme,
+    MP_scheme,
+    MPRI_scheme,
+    MPReg_scheme
+};
+
+static void test_WICMapSchemaToName(void)
+{
+    static const WCHAR xmW[] = { 'x','m',0 };
+    static const WCHAR xmpW[] = { 'x','m','p',0 };
+    static WCHAR schemaW[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/',0 };
+    static WCHAR SCHEMAW[] = { 'H','T','T','P',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/',0 };
+    HRESULT hr;
+    UINT len, i, j;
+    WCHAR name[16];
+
+    hr = WICMapSchemaToName(&GUID_MetadataFormatUnknown, NULL, 0, NULL, NULL);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+    hr = WICMapSchemaToName(&GUID_MetadataFormatUnknown, schemaW, 0, NULL, NULL);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+    hr = WICMapSchemaToName(&GUID_MetadataFormatUnknown, schemaW, 0, NULL, &len);
+    ok(hr == WINCODEC_ERR_PROPERTYNOTFOUND, "got %#x\n", hr);
+
+    hr = WICMapSchemaToName(NULL, schemaW, 0, NULL, &len);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+    hr = WICMapSchemaToName(&GUID_MetadataFormatXMP, schemaW, 0, NULL, NULL);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+    len = 0xdeadbeef;
+    hr = WICMapSchemaToName(&GUID_MetadataFormatXMP, schemaW, 0, NULL, &len);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(len == 4, "got %u\n", len);
+
+    len = 0xdeadbeef;
+    hr = WICMapSchemaToName(&GUID_MetadataFormatXMP, schemaW, 4, NULL, &len);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(len == 4, "got %u\n", len);
+
+    len = 0xdeadbeef;
+    hr = WICMapSchemaToName(&GUID_MetadataFormatXMP, SCHEMAW, 0, NULL, &len);
+    ok(hr == WINCODEC_ERR_PROPERTYNOTFOUND, "got %#x\n", hr);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+
+    name[0] = 0;
+    len = 0xdeadbeef;
+    hr = WICMapSchemaToName(&GUID_MetadataFormatXMP, schemaW, 4, name, &len);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(len == 4, "got %u\n", len);
+    ok(!lstrcmpW(name, xmpW), "got %s\n", wine_dbgstr_w(name));
+
+    len = 0xdeadbeef;
+    hr = WICMapSchemaToName(&GUID_MetadataFormatXMP, schemaW, 0, name, &len);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+
+    name[0] = 0;
+    len = 0xdeadbeef;
+    hr = WICMapSchemaToName(&GUID_MetadataFormatXMP, schemaW, 3, name, &len);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), "got %#x\n", hr);
+    ok(len == 0xdeadbeef, "got %u\n", len);
+    ok(!lstrcmpW(name, xmW), "got %s\n", wine_dbgstr_w(name));
+
+    hr = WICMapSchemaToName(&GUID_MetadataFormatXMP, schemaW, 4, name, NULL);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+    /* Check whether modern schemas are supported */
+    hr = WICMapSchemaToName(&GUID_MetadataFormatXMP, schema_list[0], 0, NULL, &len);
+    if (hr == WINCODEC_ERR_PROPERTYNOTFOUND)
+    {
+        win_skip("Modern schemas are not supported\n");
+        return;
+    }
+
+    for (i = 0; i < sizeof(guid_list)/sizeof(guid_list[0]); i++)
+    {
+        for (j = 0; j < sizeof(schema_list)/sizeof(schema_list[0]); j++)
+        {
+            hr = WICMapSchemaToName(guid_list[i], schema_list[j], 0, NULL, &len);
+            if (IsEqualGUID(guid_list[i], &GUID_MetadataFormatXMP) ||
+                IsEqualGUID(guid_list[i], &GUID_MetadataFormatXMPStruct))
+            {
+                ok(hr == S_OK, "%u: %u: format %s does not support schema %s\n",
+                   i, j, wine_dbgstr_guid(guid_list[i]), wine_dbgstr_w(schema_list[j]));
+            }
+            else
+            {
+                ok(hr == WINCODEC_ERR_PROPERTYNOTFOUND, "%u: %u: format %s supports schema %s\n",
+                   i, j, wine_dbgstr_guid(guid_list[i]), wine_dbgstr_w(schema_list[j]));
+            }
+        }
+    }
+}
+
 START_TEST(metadata)
 {
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
+    test_WICMapGuidToShortName();
+    test_WICMapShortNameToGuid();
+    test_WICMapSchemaToName();
     test_metadata_unknown();
     test_metadata_tEXt();
     test_metadata_gAMA();

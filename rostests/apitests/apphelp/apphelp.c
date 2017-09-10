@@ -1,23 +1,11 @@
 /*
- * Copyright 2012 Detlef Riekenberg
- * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     apphelp_apitest
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Misc apphelp tests
+ * COPYRIGHT:   Copyright 2012 Detlef Riekenberg
+ *              Copyright 2013 Mislav Blažević
+ *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
-
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
@@ -40,11 +28,6 @@
 
 #include "apphelp_apitest.h"
 
-
-typedef WORD TAG;
-typedef DWORD TAGID;
-typedef DWORD TAGREF;
-typedef UINT64 QWORD;
 
 #define TAG_TYPE_MASK 0xF000
 
@@ -608,7 +591,7 @@ static void test_crc_imp(size_t len, DWORD expected)
     DWORD num = 333;
     BOOL ret;
 
-    test_create_file_imp("testxx.exe", crc_test, len);
+    test_create_file_imp(L"testxx.exe", crc_test, len);
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     winetest_ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     winetest_ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
@@ -634,7 +617,7 @@ static void test_crc2_imp(size_t len, int fill, DWORD expected)
     for (n = 0; n < len; ++n)
         crc_test[n] = (char)(fill ? fill : n);
 
-    test_create_file_imp("testxx.exe", crc_test, len);
+    test_create_file_imp(L"testxx.exe", crc_test, len);
     free(crc_test);
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     winetest_ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
@@ -683,7 +666,7 @@ static void test_ApplicationAttributes(void)
         pSdbFreeFileAttributes(pattrinfo);
 
     /* Test a file with as much features as possible */
-    test_create_exe("testxx.exe", 0);
+    test_create_exe(L"testxx.exe", 0);
 
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
@@ -726,7 +709,7 @@ static void test_ApplicationAttributes(void)
 
 
     /* Disable resource and exports */
-    test_create_exe("testxx.exe", 1);
+    test_create_exe(L"testxx.exe", 1);
 
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
@@ -752,7 +735,7 @@ static void test_ApplicationAttributes(void)
         pSdbFreeFileAttributes(pattrinfo);
 
     /* A file with just 'MZ' */
-    test_create_file("testxx.exe", "MZ", 2);
+    test_create_file(L"testxx.exe", "MZ", 2);
 
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
@@ -773,7 +756,7 @@ static void test_ApplicationAttributes(void)
         pSdbFreeFileAttributes(pattrinfo);
 
     /* Empty file */
-    test_create_file("testxx.exe", NULL, 0);
+    test_create_file(L"testxx.exe", NULL, 0);
 
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
@@ -791,7 +774,7 @@ static void test_ApplicationAttributes(void)
         pSdbFreeFileAttributes(pattrinfo);
 
     /* minimal NE executable */
-    test_create_ne("testxx.exe", 0);
+    test_create_ne(L"testxx.exe", 0);
 
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
@@ -816,7 +799,7 @@ static void test_ApplicationAttributes(void)
         pSdbFreeFileAttributes(pattrinfo);
 
     /* NE executable with description / module name pointers zero, to show they are always used */
-    test_create_ne("testxx.exe", 1);
+    test_create_ne(L"testxx.exe", 1);
 
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");

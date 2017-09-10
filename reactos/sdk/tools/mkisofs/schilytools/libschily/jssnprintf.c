@@ -1,6 +1,6 @@
-/* @(#)jssnprintf.c	1.13 16/08/10 Copyright 1985, 1995-2016 J. Schilling */
+/* @(#)jssnprintf.c	1.14 17/08/03 Copyright 1985, 1995-2017 J. Schilling */
 /*
- *	Copyright (c) 1985, 1995-2016 J. Schilling
+ *	Copyright (c) 1985, 1995-2017 J. Schilling
  */
 /*
  * The contents of this file are subject to the terms of the
@@ -33,12 +33,12 @@ typedef struct {
 
 #ifdef	PROTOTYPES
 static void
-_cput(char c, long l)
+_cput(char c, void *l)
 #else
 static void
 _cput(c, l)
 	char	c;
-	long	l;
+	void	*l;
 #endif
 {
 	register BUF	bp = (BUF)l;
@@ -78,7 +78,7 @@ js_snprintf(buf, maxcnt, form, va_alist)
 #else
 	va_start(args);
 #endif
-	cnt = format(_cput, (long)&bb, form,  args);
+	cnt = format(_cput, &bb, form,  args);
 	va_end(args);
 	if (maxcnt > 0)
 		*(bb.ptr) = '\0';

@@ -41,10 +41,12 @@
 
 static const WCHAR upper_case[] = {'\t','J','U','S','T','!',' ','A',',',' ','T','E','S','T',';',' ','S','T','R','I','N','G',' ','1','/','*','+','-','.','\r','\n',0};
 static const WCHAR lower_case[] = {'\t','j','u','s','t','!',' ','a',',',' ','t','e','s','t',';',' ','s','t','r','i','n','g',' ','1','/','*','+','-','.','\r','\n',0};
+static const WCHAR title_case[] = {'\t','J','u','s','t','!',' ','A',',',' ','T','e','s','t',';',' ','S','t','r','i','n','g',' ','1','/','*','+','-','.','\r','\n',0};
 static const WCHAR symbols_stripped[] = {'j','u','s','t','a','t','e','s','t','s','t','r','i','n','g','1',0};
 static const WCHAR localeW[] = {'e','n','-','U','S',0};
 static const WCHAR fooW[] = {'f','o','o',0};
 static const WCHAR emptyW[] = {0};
+static const WCHAR invalidW[] = {'i','n','v','a','l','i','d',0};
 
 static inline unsigned int strlenW( const WCHAR *str )
 {
@@ -101,6 +103,7 @@ static INT (WINAPI *pGetGeoInfoW)(GEOID, GEOTYPE, LPWSTR, INT, LANGID);
 static BOOL (WINAPI *pEnumSystemGeoID)(GEOCLASS, GEOID, GEO_ENUMPROC);
 static BOOL (WINAPI *pGetSystemPreferredUILanguages)(DWORD, ULONG*, WCHAR*, ULONG*);
 static BOOL (WINAPI *pGetThreadPreferredUILanguages)(DWORD, ULONG*, WCHAR*, ULONG*);
+static BOOL (WINAPI *pGetUserPreferredUILanguages)(DWORD, ULONG*, WCHAR*, ULONG*);
 static WCHAR (WINAPI *pRtlUpcaseUnicodeChar)(WCHAR);
 static INT (WINAPI *pGetNumberFormatEx)(LPCWSTR, DWORD, LPCWSTR, const NUMBERFMTW *, LPWSTR, int);
 
@@ -133,6 +136,7 @@ static void InitFunctionPointers(void)
   X(EnumSystemGeoID);
   X(GetSystemPreferredUILanguages);
   X(GetThreadPreferredUILanguages);
+  X(GetUserPreferredUILanguages);
   X(GetNumberFormatEx);
 
   mod = GetModuleHandleA("ntdll");
@@ -254,7 +258,7 @@ static const struct neutralsublang_name2_t neutralsublang_names2[] = {
     { {'e','s',0}, {'e','s','-','E','S',0},
       MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT),
       MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT) /* vista */,
-      {'e','s','-','E','S','_','t','r','a','d','n','l',0}, 0x1 },
+      {'e','s','-','E','S','_','t','r','a','d','n','l',0} },
     { {'g','a',0}, {'g','a','-','I','E',0},
       MAKELCID(MAKELANGID(LANG_IRISH, SUBLANG_IRISH_IRELAND), SORT_DEFAULT), 0, {0}, 0x3 },
     { {'i','t',0}, {'i','t','-','I','T',0},
@@ -272,7 +276,7 @@ static const struct neutralsublang_name2_t neutralsublang_names2[] = {
     { {'u','z',0}, {'u','z','-','L','a','t','n','-','U','Z',0},
       MAKELCID(MAKELANGID(LANG_UZBEK, SUBLANG_UZBEK_LATIN), SORT_DEFAULT) },
     { {'z','h',0}, {'z','h','-','C','N',0},
-      MAKELCID(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT), 0, {0}, 0x3 },
+      MAKELCID(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT) },
     { {0} }
 };
 
@@ -2198,9 +2202,37 @@ static void test_CompareStringEx(void)
 
 }
 
+static const DWORD lcmap_invalid_flags[] = {
+    0,
+    LCMAP_HIRAGANA | LCMAP_KATAKANA,
+    LCMAP_HALFWIDTH | LCMAP_FULLWIDTH,
+    LCMAP_TRADITIONAL_CHINESE | LCMAP_SIMPLIFIED_CHINESE,
+    LCMAP_LOWERCASE | SORT_STRINGSORT,
+    LCMAP_UPPERCASE | NORM_IGNORESYMBOLS,
+    LCMAP_LOWERCASE | NORM_IGNORESYMBOLS,
+    LCMAP_UPPERCASE | NORM_IGNORENONSPACE,
+    LCMAP_LOWERCASE | NORM_IGNORENONSPACE,
+    LCMAP_HIRAGANA | NORM_IGNORENONSPACE,
+    LCMAP_HIRAGANA | NORM_IGNORESYMBOLS,
+    LCMAP_HIRAGANA | LCMAP_SIMPLIFIED_CHINESE,
+    LCMAP_HIRAGANA | LCMAP_TRADITIONAL_CHINESE,
+    LCMAP_KATAKANA | NORM_IGNORENONSPACE,
+    LCMAP_KATAKANA | NORM_IGNORESYMBOLS,
+    LCMAP_KATAKANA | LCMAP_SIMPLIFIED_CHINESE,
+    LCMAP_KATAKANA | LCMAP_TRADITIONAL_CHINESE,
+    LCMAP_FULLWIDTH | NORM_IGNORENONSPACE,
+    LCMAP_FULLWIDTH | NORM_IGNORESYMBOLS,
+    LCMAP_FULLWIDTH | LCMAP_SIMPLIFIED_CHINESE,
+    LCMAP_FULLWIDTH | LCMAP_TRADITIONAL_CHINESE,
+    LCMAP_HALFWIDTH | NORM_IGNORENONSPACE,
+    LCMAP_HALFWIDTH | NORM_IGNORESYMBOLS,
+    LCMAP_HALFWIDTH | LCMAP_SIMPLIFIED_CHINESE,
+    LCMAP_HALFWIDTH | LCMAP_TRADITIONAL_CHINESE,
+};
+
 static void test_LCMapStringA(void)
 {
-    int ret, ret2;
+    int ret, ret2, i;
     char buf[256], buf2[256];
     static const char upper_case[] = "\tJUST! A, TEST; STRING 1/*+-.\r\n";
     static const char lower_case[] = "\tjust! a, test; string 1/*+-.\r\n";
@@ -2220,30 +2252,18 @@ static void test_LCMapStringA(void)
     ok(GetLastError() == ERROR_INVALID_FLAGS,
        "unexpected error code %d\n", GetLastError());
 
-    ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_HIRAGANA | LCMAP_KATAKANA,
-                       upper_case, -1, buf, sizeof(buf));
-    ok(!ret, "LCMAP_HIRAGANA and LCMAP_KATAKANA are mutually exclusive\n");
-    ok(GetLastError() == ERROR_INVALID_FLAGS,
-       "unexpected error code %d\n", GetLastError());
-
-    ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH | LCMAP_FULLWIDTH,
-                       upper_case, -1, buf, sizeof(buf));
-    ok(!ret, "LCMAP_HALFWIDTH | LCMAP_FULLWIDTH are mutually exclusive\n");
-    ok(GetLastError() == ERROR_INVALID_FLAGS,
-       "unexpected error code %d\n", GetLastError());
-
-    ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_TRADITIONAL_CHINESE | LCMAP_SIMPLIFIED_CHINESE,
-                       upper_case, -1, buf, sizeof(buf));
-    ok(!ret, "LCMAP_TRADITIONAL_CHINESE and LCMAP_SIMPLIFIED_CHINESE are mutually exclusive\n");
-    ok(GetLastError() == ERROR_INVALID_FLAGS,
-       "unexpected error code %d\n", GetLastError());
-
-    /* SORT_STRINGSORT must be used exclusively with LCMAP_SORTKEY */
-    SetLastError(0xdeadbeef);
-    ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_LOWERCASE | SORT_STRINGSORT,
-                       upper_case, -1, buf, sizeof(buf));
-    ok(GetLastError() == ERROR_INVALID_FLAGS, "expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
-    ok(!ret, "SORT_STRINGSORT without LCMAP_SORTKEY must fail\n");
+    /* test invalid flag combinations */
+    for (i = 0; i < sizeof(lcmap_invalid_flags)/sizeof(lcmap_invalid_flags[0]); i++) {
+        lstrcpyA(buf, "foo");
+        SetLastError(0xdeadbeef);
+        ret = LCMapStringA(LOCALE_USER_DEFAULT, lcmap_invalid_flags[i],
+                           lower_case, -1, buf, sizeof(buf));
+        ok(GetLastError() == ERROR_INVALID_FLAGS,
+           "LCMapStringA (flag %08x) unexpected error code %d\n",
+           lcmap_invalid_flags[i], GetLastError());
+        ok(!ret, "LCMapStringA (flag %08x) should return 0, got %d\n",
+           lcmap_invalid_flags[i], ret);
+    }
 
     /* test LCMAP_LOWERCASE */
     ret = LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_LOWERCASE,
@@ -2354,6 +2374,14 @@ static void test_LCMapStringA(void)
 	lstrlenA(symbols_stripped) + 1, ret);
     ok(!lstrcmpA(buf, symbols_stripped), "LCMapStringA should return %s, but not %s\n", lower_case, buf);
 
+    /* test NORM_IGNORESYMBOLS | NORM_IGNORENONSPACE */
+    lstrcpyA(buf, "foo");
+    ret = LCMapStringA(LOCALE_USER_DEFAULT, NORM_IGNORESYMBOLS | NORM_IGNORENONSPACE,
+                       lower_case, -1, buf, sizeof(buf));
+    ok(ret == lstrlenA(symbols_stripped) + 1, "LCMapStringA should return %d, ret = %d\n",
+	lstrlenA(symbols_stripped) + 1, ret);
+    ok(!lstrcmpA(buf, symbols_stripped), "LCMapStringA should return %s, but not %s\n", lower_case, buf);
+
     /* test srclen = 0 */
     SetLastError(0xdeadbeef);
     ret = LCMapStringA(LOCALE_USER_DEFAULT, 0, upper_case, 0, buf, sizeof(buf));
@@ -2366,47 +2394,47 @@ typedef INT (*lcmapstring_wrapper)(DWORD, LPCWSTR, INT, LPWSTR, INT);
 
 static void test_lcmapstring_unicode(lcmapstring_wrapper func_ptr, const char *func_name)
 {
-    int ret, ret2;
+    static const WCHAR japanese_text[] = {
+        0x3044, 0x309d, 0x3084, 0x3001, 0x30a4, 0x30fc, 0x30cf,
+        0x30c8, 0x30fc, 0x30f4, 0x30a9, 0x306e, 0x2026, 0
+    };
+    static const WCHAR hiragana_text[] = {
+        0x3044, 0x309d, 0x3084, 0x3001, 0x3044, 0x30fc, 0x306f,
+        0x3068, 0x30fc, 0x3094, 0x3049, 0x306e, 0x2026, 0
+    };
+    static const WCHAR katakana_text[] = {
+        0x30a4, 0x30fd, 0x30e4, 0x3001, 0x30a4, 0x30fc, 0x30cf,
+        0x30c8, 0x30fc, 0x30f4, 0x30a9, 0x30ce, 0x2026, 0
+    };
+    static const WCHAR halfwidth_text[] = {
+        0x3044, 0x309d, 0x3084, 0xff64, 0xff72, 0xff70, 0xff8a,
+        0xff84, 0xff70, 0xff73, 0xff9e, 0xff6b, 0x306e, 0x2026, 0
+    };
+    int ret, ret2, i;
     WCHAR buf[256], buf2[256];
     char *p_buf = (char *)buf, *p_buf2 = (char *)buf2;
 
+    /* LCMAP_LOWERCASE | LCMAP_UPPERCASE makes LCMAP_TITLECASE, so it's valid now. */
     ret = func_ptr(LCMAP_LOWERCASE | LCMAP_UPPERCASE,
-                       upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    if (broken(ret))
-        ok(lstrcmpW(buf, upper_case) == 0, "Expected upper case string\n");
-    else
-    {
-        ok(!ret, "%s LCMAP_LOWERCASE and LCMAP_UPPERCASE are mutually exclusive\n", func_name);
-        ok(GetLastError() == ERROR_INVALID_FLAGS, "%s unexpected error code %d\n",
-           func_name, GetLastError());
+                       lower_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    todo_wine ok(ret == lstrlenW(title_case) + 1 || broken(!ret),
+       "%s ret %d, error %d, expected value %d\n", func_name,
+       ret, GetLastError(), lstrlenW(title_case) + 1);
+    todo_wine ok(lstrcmpW(buf, title_case) == 0 || broken(!ret),
+       "Expected title case string\n");
+
+    /* test invalid flag combinations */
+    for (i = 0; i < sizeof(lcmap_invalid_flags)/sizeof(lcmap_invalid_flags[0]); i++) {
+        lstrcpyW(buf, fooW);
+        SetLastError(0xdeadbeef);
+        ret = func_ptr(lcmap_invalid_flags[i],
+                           lower_case, -1, buf, sizeof(buf));
+        ok(GetLastError() == ERROR_INVALID_FLAGS,
+           "%s (flag %08x) unexpected error code %d\n",
+           func_name, lcmap_invalid_flags[i], GetLastError());
+        ok(!ret, "%s (flag %08x) should return 0, got %d\n",
+           func_name, lcmap_invalid_flags[i], ret);
     }
-
-    ret = func_ptr(LCMAP_HIRAGANA | LCMAP_KATAKANA,
-                       upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(!ret, "%s LCMAP_HIRAGANA and LCMAP_KATAKANA are mutually exclusive\n", func_name);
-    ok(GetLastError() == ERROR_INVALID_FLAGS, "%s unexpected error code %d\n",
-       func_name, GetLastError());
-
-    ret = func_ptr(LCMAP_HALFWIDTH | LCMAP_FULLWIDTH,
-                       upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(!ret, "%s LCMAP_HALFWIDTH | LCMAP_FULLWIDTH are mutually exclusive\n", func_name);
-    ok(GetLastError() == ERROR_INVALID_FLAGS, "%s unexpected error code %d\n",
-       func_name, GetLastError());
-
-    ret = func_ptr(LCMAP_TRADITIONAL_CHINESE | LCMAP_SIMPLIFIED_CHINESE,
-                       upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(!ret, "%s LCMAP_TRADITIONAL_CHINESE and LCMAP_SIMPLIFIED_CHINESE are mutually exclusive\n",
-       func_name);
-    ok(GetLastError() == ERROR_INVALID_FLAGS, "%s unexpected error code %d\n",
-       func_name, GetLastError());
-
-    /* SORT_STRINGSORT must be used exclusively with LCMAP_SORTKEY */
-    SetLastError(0xdeadbeef);
-    ret = func_ptr(LCMAP_LOWERCASE | SORT_STRINGSORT,
-                       upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(GetLastError() == ERROR_INVALID_FLAGS, "%s expected ERROR_INVALID_FLAGS, got %d\n",
-       func_name, GetLastError());
-    ok(!ret, "%s SORT_STRINGSORT without LCMAP_SORTKEY must fail\n", func_name);
 
     /* test LCMAP_LOWERCASE */
     ret = func_ptr(LCMAP_LOWERCASE,
@@ -2422,10 +2450,71 @@ static void test_lcmapstring_unicode(lcmapstring_wrapper func_ptr, const char *f
        ret, GetLastError(), lstrlenW(lower_case) + 1);
     ok(!lstrcmpW(buf, upper_case), "%s string compare mismatch\n", func_name);
 
+    /* test LCMAP_HIRAGANA */
+    ret = func_ptr(LCMAP_HIRAGANA,
+                   japanese_text, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    ok(ret == lstrlenW(hiragana_text) + 1, "%s ret %d, error %d, expected value %d\n", func_name,
+       ret, GetLastError(), lstrlenW(hiragana_text) + 1);
+    ok(!lstrcmpW(buf, hiragana_text), "%s string compare mismatch\n", func_name);
+
+    buf[0] = 0x30f5; /* KATAKANA LETTER SMALL KA */
+    ret = func_ptr(LCMAP_HIRAGANA, buf, 1, buf2, 1);
+    ok(ret == 1, "%s ret %d, error %d, expected value 1\n", func_name,
+       ret, GetLastError());
+    /* U+3095: HIRAGANA LETTER SMALL KA was added in Unicode 3.2 */
+    ok(buf2[0] == 0x3095 || broken(buf2[0] == 0x30f5 /* Vista and earlier versions */),
+       "%s expected %04x, got %04x\n", func_name, 0x3095, buf2[0]);
+
+    /* test LCMAP_KATAKANA | LCMAP_LOWERCASE */
+    ret = func_ptr(LCMAP_KATAKANA | LCMAP_LOWERCASE,
+                   japanese_text, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    ok(ret == lstrlenW(katakana_text) + 1, "%s ret %d, error %d, expected value %d\n", func_name,
+       ret, GetLastError(), lstrlenW(katakana_text) + 1);
+    ok(!lstrcmpW(buf, katakana_text), "%s string compare mismatch\n", func_name);
+
+    /* test LCMAP_FULLWIDTH */
+    ret = func_ptr(LCMAP_FULLWIDTH,
+                   halfwidth_text, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    ok(ret == lstrlenW(japanese_text) + 1, "%s ret %d, error %d, expected value %d\n", func_name,
+       ret, GetLastError(), lstrlenW(japanese_text) + 1);
+    ok(!lstrcmpW(buf, japanese_text), "%s string compare mismatch\n", func_name);
+
+    ret2 = func_ptr(LCMAP_FULLWIDTH, halfwidth_text, -1, NULL, 0);
+    ok(ret == ret2, "%s ret %d, expected value %d\n", func_name, ret2, ret);
+
+    /* test LCMAP_FULLWIDTH | LCMAP_HIRAGANA
+       (half-width katakana is converted into full-wdith hiragana) */
+    ret = func_ptr(LCMAP_FULLWIDTH | LCMAP_HIRAGANA,
+                   halfwidth_text, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    ok(ret == lstrlenW(hiragana_text) + 1, "%s ret %d, error %d, expected value %d\n", func_name,
+       ret, GetLastError(), lstrlenW(hiragana_text) + 1);
+    ok(!lstrcmpW(buf, hiragana_text), "%s string compare mismatch\n", func_name);
+
+    ret2 = func_ptr(LCMAP_FULLWIDTH | LCMAP_HIRAGANA, halfwidth_text, -1, NULL, 0);
+    ok(ret == ret2, "%s ret %d, expected value %d\n", func_name, ret, ret2);
+
+    /* test LCMAP_HALFWIDTH */
+    ret = func_ptr(LCMAP_HALFWIDTH,
+                   japanese_text, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    ok(ret == lstrlenW(halfwidth_text) + 1, "%s ret %d, error %d, expected value %d\n", func_name,
+       ret, GetLastError(), lstrlenW(halfwidth_text) + 1);
+    ok(!lstrcmpW(buf, halfwidth_text), "%s string compare mismatch\n", func_name);
+
+    ret2 = func_ptr(LCMAP_HALFWIDTH, japanese_text, -1, NULL, 0);
+    ok(ret == ret2, "%s ret %d, expected value %d\n", func_name, ret, ret2);
+
     /* test buffer overflow */
     SetLastError(0xdeadbeef);
     ret = func_ptr(LCMAP_UPPERCASE,
                        lower_case, -1, buf, 4);
+    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "%s should return 0 and ERROR_INSUFFICIENT_BUFFER, got %d\n", func_name, ret);
+
+    /* KATAKANA LETTER GA (U+30AC) is converted into two half-width characters.
+       Thus, it requires two WCHARs. */
+    buf[0] = 0x30ac;
+    SetLastError(0xdeadbeef);
+    ret = func_ptr(LCMAP_HALFWIDTH, buf, 1, buf2, 1);
     ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
        "%s should return 0 and ERROR_INSUFFICIENT_BUFFER, got %d\n", func_name, ret);
 
@@ -2502,6 +2591,14 @@ static void test_lcmapstring_unicode(lcmapstring_wrapper func_ptr, const char *f
     lstrlenW(symbols_stripped) + 1, ret);
     ok(!lstrcmpW(buf, symbols_stripped), "%s string comparison mismatch\n", func_name);
 
+    /* test NORM_IGNORESYMBOLS | NORM_IGNORENONSPACE */
+    lstrcpyW(buf, fooW);
+    ret = func_ptr(NORM_IGNORESYMBOLS | NORM_IGNORENONSPACE,
+                       lower_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    ok(ret == lstrlenW(symbols_stripped) + 1, "%s func_ptr should return %d, ret = %d\n", func_name,
+    lstrlenW(symbols_stripped) + 1, ret);
+    ok(!lstrcmpW(buf, symbols_stripped), "%s string comparison mismatch\n", func_name);
+
     /* test srclen = 0 */
     SetLastError(0xdeadbeef);
     ret = func_ptr(0, upper_case, 0, buf, sizeof(buf)/sizeof(WCHAR));
@@ -2551,7 +2648,7 @@ static void test_LCMapStringEx(void)
     trace("testing LCMapStringEx\n");
 
     SetLastError(0xdeadbeef);
-    ret = pLCMapStringEx(fooW, LCMAP_LOWERCASE,
+    ret = pLCMapStringEx(invalidW, LCMAP_LOWERCASE,
                          upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR), NULL, NULL, 0);
     todo_wine {
     ok(!ret, "LCMapStringEx should fail with bad locale name\n");
@@ -2581,25 +2678,26 @@ static void test_LCMapStringEx(void)
 
 struct neutralsublang_name_t {
     WCHAR name[3];
+    WCHAR sname[16];
     LCID lcid;
     int todo;
 };
 
 static const struct neutralsublang_name_t neutralsublang_names[] = {
-    { {'a','r',0}, MAKELCID(MAKELANGID(LANG_ARABIC,     SUBLANG_ARABIC_SAUDI_ARABIA), SORT_DEFAULT) },
-    { {'a','z',0}, MAKELCID(MAKELANGID(LANG_AZERI,      SUBLANG_AZERI_LATIN), SORT_DEFAULT) },
-    { {'d','e',0}, MAKELCID(MAKELANGID(LANG_GERMAN,     SUBLANG_GERMAN), SORT_DEFAULT) },
-    { {'e','n',0}, MAKELCID(MAKELANGID(LANG_ENGLISH,    SUBLANG_ENGLISH_US), SORT_DEFAULT) },
-    { {'e','s',0}, MAKELCID(MAKELANGID(LANG_SPANISH,    SUBLANG_SPANISH_MODERN), SORT_DEFAULT), 1 },
-    { {'g','a',0}, MAKELCID(MAKELANGID(LANG_IRISH,      SUBLANG_IRISH_IRELAND), SORT_DEFAULT) },
-    { {'i','t',0}, MAKELCID(MAKELANGID(LANG_ITALIAN,    SUBLANG_ITALIAN), SORT_DEFAULT) },
-    { {'m','s',0}, MAKELCID(MAKELANGID(LANG_MALAY,      SUBLANG_MALAY_MALAYSIA), SORT_DEFAULT) },
-    { {'n','l',0}, MAKELCID(MAKELANGID(LANG_DUTCH,      SUBLANG_DUTCH), SORT_DEFAULT) },
-    { {'p','t',0}, MAKELCID(MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN), SORT_DEFAULT) },
-    { {'s','r',0}, MAKELCID(MAKELANGID(LANG_SERBIAN,    SUBLANG_SERBIAN_SERBIA_LATIN), SORT_DEFAULT), 1 },
-    { {'s','v',0}, MAKELCID(MAKELANGID(LANG_SWEDISH,    SUBLANG_SWEDISH), SORT_DEFAULT) },
-    { {'u','z',0}, MAKELCID(MAKELANGID(LANG_UZBEK,      SUBLANG_UZBEK_LATIN), SORT_DEFAULT) },
-    { {'z','h',0}, MAKELCID(MAKELANGID(LANG_CHINESE,    SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT), 1 },
+    { {'a','r',0}, {'a','r','-','S','A',0}, MAKELCID(MAKELANGID(LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA), SORT_DEFAULT) },
+    { {'a','z',0}, {'a','z','-','L','a','t','n','-','A','Z',0}, MAKELCID(MAKELANGID(LANG_AZERI, SUBLANG_AZERI_LATIN), SORT_DEFAULT) },
+    { {'d','e',0}, {'d','e','-','D','E',0}, MAKELCID(MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN), SORT_DEFAULT) },
+    { {'e','n',0}, {'e','n','-','U','S',0}, MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT) },
+    { {'e','s',0}, {'e','s','-','E','S',0}, MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT) },
+    { {'g','a',0}, {'g','a','-','I','E',0}, MAKELCID(MAKELANGID(LANG_IRISH, SUBLANG_IRISH_IRELAND), SORT_DEFAULT) },
+    { {'i','t',0}, {'i','t','-','I','T',0}, MAKELCID(MAKELANGID(LANG_ITALIAN, SUBLANG_ITALIAN), SORT_DEFAULT) },
+    { {'m','s',0}, {'m','s','-','M','Y',0}, MAKELCID(MAKELANGID(LANG_MALAY, SUBLANG_MALAY_MALAYSIA), SORT_DEFAULT) },
+    { {'n','l',0}, {'n','l','-','N','L',0}, MAKELCID(MAKELANGID(LANG_DUTCH, SUBLANG_DUTCH), SORT_DEFAULT) },
+    { {'p','t',0}, {'p','t','-','B','R',0}, MAKELCID(MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN), SORT_DEFAULT) },
+    { {'s','r',0}, {'s','r','-','L','a','t','n','-','R','S',0}, MAKELCID(MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_SERBIA_LATIN), SORT_DEFAULT), 1 },
+    { {'s','v',0}, {'s','v','-','S','E',0}, MAKELCID(MAKELANGID(LANG_SWEDISH, SUBLANG_SWEDISH), SORT_DEFAULT) },
+    { {'u','z',0}, {'u','z','-','L','a','t','n','-','U','Z',0}, MAKELCID(MAKELANGID(LANG_UZBEK, SUBLANG_UZBEK_LATIN), SORT_DEFAULT) },
+    { {'z','h',0}, {'z','h','-','C','N',0}, MAKELCID(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT) },
     { {0} }
 };
 
@@ -2609,6 +2707,13 @@ static void test_LocaleNameToLCID(void)
     INT ret;
     WCHAR buffer[LOCALE_NAME_MAX_LENGTH];
     static const WCHAR enW[] = {'e','n',0};
+    static const WCHAR esesW[] = {'e','s','-','e','s',0};
+    static const WCHAR zhHansW[] = {'z','h','-','H','a','n','s',0};
+    static const WCHAR zhhansW[] = {'z','h','-','h','a','n','s',0};
+    static const WCHAR zhHantW[] = {'z','h','-','H','a','n','t',0};
+    static const WCHAR zhhantW[] = {'z','h','-','h','a','n','t',0};
+    static const WCHAR zhcnW[] = {'z','h','-','C','N',0};
+    static const WCHAR zhhkW[] = {'z','h','-','H','K',0};
 
     if (!pLocaleNameToLCID)
     {
@@ -2645,9 +2750,13 @@ static void test_LocaleNameToLCID(void)
 
     /* bad name */
     SetLastError(0xdeadbeef);
-    lcid = pLocaleNameToLCID(fooW, 0);
+    lcid = pLocaleNameToLCID(invalidW, 0);
     ok(!lcid && GetLastError() == ERROR_INVALID_PARAMETER,
        "Expected lcid == 0, got %08x, error %d\n", lcid, GetLastError());
+
+    /* lower-case */
+    lcid = pLocaleNameToLCID(esesW, 0);
+    ok(lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT), "Got wrong lcid for es-es: 0x%x\n", lcid);
 
     /* english neutral name */
     lcid = pLocaleNameToLCID(enW, 0);
@@ -2667,11 +2776,49 @@ static void test_LocaleNameToLCID(void)
             *buffer = 0;
             ret = pLCIDToLocaleName(lcid, buffer, sizeof(buffer)/sizeof(WCHAR), 0);
             ok(ret > 0, "%s: got %d\n", wine_dbgstr_w(ptr->name), ret);
-            ok(lstrcmpW(ptr->name, buffer), "%s: got wrong locale name %s\n",
+            ok(!lstrcmpW(ptr->sname, buffer), "%s: got wrong locale name %s\n",
                 wine_dbgstr_w(ptr->name), wine_dbgstr_w(buffer));
 
             ptr++;
         }
+
+        /* zh-Hant */
+        lcid = pLocaleNameToLCID(zhHantW, 0);
+        todo_wine ok(lcid == MAKELCID(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_HONGKONG), SORT_DEFAULT),
+           "%s: got wrong lcid 0x%04x\n", wine_dbgstr_w(zhHantW), lcid);
+        ret = pLCIDToLocaleName(lcid, buffer, sizeof(buffer)/sizeof(WCHAR), 0);
+        ok(ret > 0, "%s: got %d\n", wine_dbgstr_w(zhHantW), ret);
+        todo_wine ok(!lstrcmpW(zhhkW, buffer), "%s: got wrong locale name %s\n",
+           wine_dbgstr_w(zhHantW), wine_dbgstr_w(buffer));
+
+        /* zh-hant */
+        lcid = pLocaleNameToLCID(zhhantW, 0);
+        todo_wine ok(lcid == MAKELCID(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_HONGKONG), SORT_DEFAULT),
+           "%s: got wrong lcid 0x%04x\n", wine_dbgstr_w(zhhantW),
+           MAKELCID(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_HONGKONG), SORT_DEFAULT));
+        ret = pLCIDToLocaleName(lcid, buffer, sizeof(buffer)/sizeof(WCHAR), 0);
+        ok(ret > 0, "%s: got %d\n", wine_dbgstr_w(zhhantW), ret);
+        todo_wine ok(!lstrcmpW(zhhkW, buffer), "%s: got wrong locale name %s\n",
+           wine_dbgstr_w(zhhantW), wine_dbgstr_w(buffer));
+
+        /* zh-Hans */
+        lcid = pLocaleNameToLCID(zhHansW, 0);
+        todo_wine ok(lcid == MAKELCID(MAKELANGID(LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT),
+           "%s: got wrong lcid 0x%04x\n", wine_dbgstr_w(zhHansW), lcid);
+        ret = pLCIDToLocaleName(lcid, buffer, sizeof(buffer)/sizeof(WCHAR), 0);
+        ok(ret > 0, "%s: got %d\n", wine_dbgstr_w(zhHansW), ret);
+        todo_wine ok(!lstrcmpW(zhcnW, buffer), "%s: got wrong locale name %s\n",
+           wine_dbgstr_w(zhHansW), wine_dbgstr_w(buffer));
+
+        /* zh-hans */
+        lcid = pLocaleNameToLCID(zhhansW, 0);
+        todo_wine ok(lcid == MAKELCID(MAKELANGID(LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT),
+           "%s: got wrong lcid 0x%04x\n", wine_dbgstr_w(zhhansW),
+           MAKELCID(MAKELANGID(LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT));
+        ret = pLCIDToLocaleName(lcid, buffer, sizeof(buffer)/sizeof(WCHAR), 0);
+        ok(ret > 0, "%s: got %d\n", wine_dbgstr_w(zhhansW), ret);
+        todo_wine ok(!lstrcmpW(zhcnW, buffer), "%s: got wrong locale name %s\n",
+           wine_dbgstr_w(zhhansW), wine_dbgstr_w(buffer));
     }
 }
 
@@ -4370,7 +4517,8 @@ static void test_IsValidLocaleName(void)
 {
     static const WCHAR enusW[] = {'e','n','-','U','S',0};
     static const WCHAR zzW[] = {'z','z',0};
-    static const WCHAR zzzzW[] = {'z','z','-','Z','Z',0};
+    static const WCHAR zz_zzW[] = {'z','z','-','Z','Z',0};
+    static const WCHAR zzzzW[] = {'z','z','z','z',0};
     BOOL ret;
 
     if (!pIsValidLocaleName)
@@ -4382,7 +4530,9 @@ static void test_IsValidLocaleName(void)
     ret = pIsValidLocaleName(enusW);
     ok(ret, "IsValidLocaleName failed\n");
     ret = pIsValidLocaleName(zzW);
-    ok(!ret, "IsValidLocaleName should have failed\n");
+    ok(!ret || broken(ret), "IsValidLocaleName should have failed\n");
+    ret = pIsValidLocaleName(zz_zzW);
+    ok(!ret || broken(ret), "IsValidLocaleName should have failed\n");
     ret = pIsValidLocaleName(zzzzW);
     ok(!ret, "IsValidLocaleName should have failed\n");
     ret = pIsValidLocaleName(LOCALE_NAME_INVARIANT);
@@ -4629,7 +4779,7 @@ static void test_EnumSystemGeoID(void)
 struct invariant_entry {
   const char *name;
   int id;
-  const char *expect;
+  const char *expect, *expect2;
 };
 
 #define X(x)  #x, x
@@ -4640,7 +4790,7 @@ static const struct invariant_entry invariant_list[] = {
     { X(LOCALE_SNATIVELANGNAME),          "Invariant Language" },
     { X(LOCALE_ICOUNTRY),                 "1" },
     { X(LOCALE_SENGCOUNTRY),              "Invariant Country" },
-    { X(LOCALE_SABBREVCTRYNAME),          "IVC" },
+    { X(LOCALE_SABBREVCTRYNAME),          "IVC", "" },
     { X(LOCALE_SNATIVECTRYNAME),          "Invariant Country" },
     { X(LOCALE_IDEFAULTLANGUAGE),         "0409" },
     { X(LOCALE_IDEFAULTCOUNTRY),          "1" },
@@ -4767,19 +4917,21 @@ static void test_invariant(void)
     else
     {
         len = strlen(ptr->expect)+1; /* include \0 */
-        ok(ret == len, "For id %d, expected ret == %d, got %d, error %d\n",
+        ok(ret == len || (ptr->expect2 && ret == strlen(ptr->expect2)+1),
+           "For id %d, expected ret == %d, got %d, error %d\n",
             ptr->id, len, ret, GetLastError());
-        ok(!strcmp(buffer, ptr->expect), "For id %d, Expected %s, got '%s'\n",
+        ok(!strcmp(buffer, ptr->expect) || (ptr->expect2 && !strcmp(buffer, ptr->expect2)),
+           "For id %d, Expected %s, got '%s'\n",
             ptr->id, ptr->expect, buffer);
     }
 
     ptr++;
   }
 
-  if ((PRIMARYLANGID(LANGIDFROMLCID(GetSystemDefaultLCID())) != LANG_ENGLISH) ||
-      (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH))
+ if ((LANGIDFROMLCID(GetSystemDefaultLCID()) != MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)) ||
+     (LANGIDFROMLCID(GetThreadLocale()) != MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)))
   {
-      skip("Non-English locale\n");
+      skip("Non US-English locale\n");
   }
   else
   {
@@ -5026,6 +5178,143 @@ static void test_GetThreadPreferredUILanguages(void)
     HeapFree(GetProcessHeap(), 0, buf);
 }
 
+static void test_GetUserPreferredUILanguages(void)
+{
+    BOOL ret;
+    ULONG count, size, size_id, size_name, size_buffer;
+    WCHAR *buffer;
+
+
+    if (!pGetUserPreferredUILanguages)
+    {
+        win_skip("GetUserPreferredUILanguages is not available.\n");
+        return;
+    }
+
+    count = 0xdeadbeef;
+    size = 0;
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_FULL_LANGUAGE, &count, NULL, &size);
+    ok(!ret, "Expected GetUserPreferredUILanguages to fail\n");
+    ok(ERROR_INVALID_PARAMETER == GetLastError(),
+       "Expected error ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    count = 0xdeadbeef;
+    size = 0;
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_LANGUAGE_ID | MUI_FULL_LANGUAGE, &count, NULL, &size);
+    ok(!ret, "Expected GetUserPreferredUILanguages to fail\n");
+    ok(ERROR_INVALID_PARAMETER == GetLastError(),
+       "Expected error ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    count = 0xdeadbeef;
+    size = 0;
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_LANGUAGE_ID | MUI_MACHINE_LANGUAGE_SETTINGS, &count, NULL, &size);
+    ok(!ret, "Expected GetUserPreferredUILanguages to fail\n");
+    ok(ERROR_INVALID_PARAMETER == GetLastError(),
+       "Expected error ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    count = 0xdeadbeef;
+    size = 1;
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_LANGUAGE_ID, &count, NULL, &size);
+    ok(!ret, "Expected GetUserPreferredUILanguages to fail\n");
+    ok(ERROR_INVALID_PARAMETER == GetLastError(),
+       "Expected error ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+    count = 0xdeadbeef;
+    size_id = 0;
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_LANGUAGE_ID, &count, NULL, &size_id);
+    ok(ret, "Expected GetUserPreferredUILanguages to succeed\n");
+    ok(count, "Expected count > 0\n");
+    ok(size_id  % 5 == 1, "Expected size (%d) %% 5 == 1\n", size_id);
+
+    count = 0xdeadbeef;
+    size_name = 0;
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &count, NULL, &size_name);
+    ok(ret, "Expected GetUserPreferredUILanguages to succeed\n");
+    ok(count, "Expected count > 0\n");
+    ok(size_name % 6 == 1, "Expected size (%d) %% 6 == 1\n", size_name);
+
+    size_buffer = max(size_id, size_name);
+    if(!size_buffer)
+    {
+        skip("No valid buffer size\n");
+        return;
+    }
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, size_buffer * sizeof(WCHAR));
+
+    count = 0xdeadbeef;
+    size = size_buffer;
+    memset(buffer, 0x5a, size_buffer * sizeof(WCHAR));
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(0, &count, buffer, &size);
+    ok(ret, "Expected GetUserPreferredUILanguages to succeed\n");
+    ok(count, "Expected count > 0\n");
+    ok(size % 6 == 1, "Expected size (%d) %% 6 == 1\n", size);
+    if (ret && size % 6 == 1)
+        ok(!buffer[size -2] && !buffer[size -1],
+           "Expected last two WCHARs being empty, got 0x%x 0x%x\n",
+           buffer[size -2], buffer[size -1]);
+
+    count = 0xdeadbeef;
+    size = size_buffer;
+    memset(buffer, 0x5a, size_buffer * sizeof(WCHAR));
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_LANGUAGE_ID, &count, buffer, &size);
+    ok(ret, "Expected GetUserPreferredUILanguages to succeed\n");
+    ok(count, "Expected count > 0\n");
+    ok(size % 5 == 1, "Expected size (%d) %% 5 == 1\n", size);
+    if (ret && size % 5 == 1)
+        ok(!buffer[size -2] && !buffer[size -1],
+           "Expected last two WCHARs being empty, got 0x%x 0x%x\n",
+           buffer[size -2], buffer[size -1]);
+
+    count = 0xdeadbeef;
+    size = size_buffer;
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &count, buffer, &size);
+    ok(ret, "Expected GetUserPreferredUILanguages to succeed\n");
+    ok(count, "Expected count > 0\n");
+    ok(size % 6 == 1, "Expected size (%d) %% 6 == 1\n", size);
+    if (ret && size % 5 == 1)
+        ok(!buffer[size -2] && !buffer[size -1],
+           "Expected last two WCHARs being empty, got 0x%x 0x%x\n",
+           buffer[size -2], buffer[size -1]);
+
+    count = 0xdeadbeef;
+    size = 1;
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_LANGUAGE_ID, &count, buffer, &size);
+    ok(!ret, "Expected GetUserPreferredUILanguages to fail\n");
+    ok(ERROR_INSUFFICIENT_BUFFER == GetLastError(),
+       "Expected error ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+
+    count = 0xdeadbeef;
+    size = size_id -1;
+    memset(buffer, 0x5a, size_buffer * sizeof(WCHAR));
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(MUI_LANGUAGE_ID, &count, buffer, &size);
+    ok(!ret, "Expected GetUserPreferredUILanguages to fail\n");
+    ok(ERROR_INSUFFICIENT_BUFFER == GetLastError(),
+       "Expected error ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+
+    count = 0xdeadbeef;
+    size = size_id -2;
+    memset(buffer, 0x5a, size_buffer * sizeof(WCHAR));
+    SetLastError(0xdeadbeef);
+    ret = pGetUserPreferredUILanguages(0, &count, buffer, &size);
+    ok(!ret, "Expected GetUserPreferredUILanguages to fail\n");
+    ok(ERROR_INSUFFICIENT_BUFFER == GetLastError(),
+       "Expected error ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+
+    HeapFree(GetProcessHeap(), 0, buffer);
+}
+
 START_TEST(locale)
 {
   InitFunctionPointers();
@@ -5071,5 +5360,6 @@ START_TEST(locale)
   test_invariant();
   test_GetSystemPreferredUILanguages();
   test_GetThreadPreferredUILanguages();
+  test_GetUserPreferredUILanguages();
   test_sorting();
 }

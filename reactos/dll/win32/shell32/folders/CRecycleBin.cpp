@@ -40,12 +40,12 @@ typedef struct
 
 static const columninfo RecycleBinColumns[] =
 {
-    {IDS_SHV_COLUMN1,        &FMTID_Storage,   PID_STG_NAME,       SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
+    {IDS_SHV_COLUMN_NAME,        &FMTID_Storage,   PID_STG_NAME,       SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
     {IDS_SHV_COLUMN_DELFROM, &FMTID_Displaced, PID_DISPLACED_FROM, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
     {IDS_SHV_COLUMN_DELDATE, &FMTID_Displaced, PID_DISPLACED_DATE, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
-    {IDS_SHV_COLUMN2,        &FMTID_Storage,   PID_STG_SIZE,       SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_RIGHT, 20},
-    {IDS_SHV_COLUMN3,        &FMTID_Storage,   PID_STG_STORAGETYPE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  20},
-    {IDS_SHV_COLUMN4,        &FMTID_Storage,   PID_STG_WRITETIME,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
+    {IDS_SHV_COLUMN_SIZE,        &FMTID_Storage,   PID_STG_SIZE,       SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_RIGHT, 20},
+    {IDS_SHV_COLUMN_TYPE,        &FMTID_Storage,   PID_STG_STORAGETYPE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  20},
+    {IDS_SHV_COLUMN_MODIFIED,        &FMTID_Storage,   PID_STG_WRITETIME,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
     /*    {"creation time",  &FMTID_Storage,   PID_STG_CREATETIME, SHCOLSTATE_TYPE_DATE,                        LVCFMT_LEFT,  20}, */
     /*    {"attribs",        &FMTID_Storage,   PID_STG_ATTRIBUTES, SHCOLSTATE_TYPE_STR,                         LVCFMT_LEFT,  20},       */
 };
@@ -410,29 +410,13 @@ HRESULT WINAPI CRecycleBinItemContextMenu::HandleMenuMsg(UINT uMsg, WPARAM wPara
     return E_NOTIMPL;
 }
 
-/**************************************************************************
-* registers clipboardformat once
-*/
-void CRecycleBin::SF_RegisterClipFmt()
-{
-    TRACE ("(%p)\n", this);
-
-    if (!cfShellIDList)
-        cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-}
-
 CRecycleBin::CRecycleBin()
 {
     pidl = NULL;
-    iIdEmpty = 0;
-    cfShellIDList = 0;
-    SF_RegisterClipFmt();
-    fAcceptFmt = FALSE;
 }
 
 CRecycleBin::~CRecycleBin()
 {
-    /*    InterlockedDecrement(&objCount);*/
     SHFree(pidl);
 }
 
@@ -556,7 +540,7 @@ HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void *
 
     if (IsEqualIID (riid, IID_IDropTarget))
     {
-        hr = this->QueryInterface (IID_IDropTarget, ppv);
+        hr = CRecyclerDropTarget_CreateInstance(riid, ppv);
     }
     else if (IsEqualIID (riid, IID_IContextMenu) || IsEqualIID (riid, IID_IContextMenu2))
     {
@@ -564,10 +548,12 @@ HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void *
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
-        hr = CDefView_Constructor(this, riid, ppv);
+        SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
+        hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppv);
     }
     else
         return hr;
+
     TRACE ("-- (%p)->(interface=%p)\n", this, ppv);
     return hr;
 
@@ -598,12 +584,6 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_C
     if ((IsEqualIID (riid, IID_IContextMenu) || IsEqualIID(riid, IID_IContextMenu2)) && (cidl >= 1))
     {
         hr = ShellObjectCreatorInit<CRecycleBinItemContextMenu>(apidl[0], riid, &pObj);
-    }
-    else if (IsEqualIID (riid, IID_IDropTarget) && (cidl == 1))
-    {
-        IDropTarget * pDt = NULL;
-        hr = QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
-        pObj = pDt;
     }
     else if((IsEqualIID(riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && (cidl == 1))
     {
@@ -757,14 +737,16 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
             // FIXME: We should in fact use a UNICODE version of _ILGetFileType
             szTypeName[0] = L'\0';
             wcscpy(buffer, PathFindExtensionW(pFileDetails->szName));
-            if (!( HCR_MapTypeToValueW(buffer, buffer, sizeof(buffer) / sizeof(WCHAR), TRUE) &&
-                    HCR_MapTypeToValueW(buffer, szTypeName, sizeof(szTypeName) / sizeof(WCHAR), FALSE )))
+            if (!( HCR_MapTypeToValueW(buffer, buffer, _countof(buffer), TRUE) &&
+                    HCR_MapTypeToValueW(buffer, szTypeName, _countof(szTypeName), FALSE )))
             {
-                wcscpy (szTypeName, PathFindExtensionW(pFileDetails->szName));
-                wcscat(szTypeName, L"-");
-                Length = wcslen(szTypeName);
-                if (LoadStringW(shell32_hInstance, IDS_SHV_COLUMN1, &szTypeName[Length], (sizeof(szTypeName) / sizeof(WCHAR)) - Length))
-                    szTypeName[(sizeof(szTypeName)/sizeof(WCHAR))-1] = L'\0';
+                /* load localized file string */
+                szTypeName[0] = '\0';
+                if(LoadStringW(shell32_hInstance, IDS_ANY_FILE, szTypeName, _countof(szTypeName)))
+                {
+                    szTypeName[63] = '\0';
+                    StringCchPrintfW(buffer, _countof(buffer), szTypeName, PathFindExtensionW(pFileDetails->szName));
+                }
             }
             return SHSetStrRet(&pDetails->str, szTypeName);
         default:
@@ -903,13 +885,19 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
         return FALSE;
     }
 
-    if (GetDriveTypeW(wszPath) != DRIVE_FIXED)
+    // Only keep the base path.
+    WCHAR wszRootPathName[MAX_PATH];
+    strcpyW(wszRootPathName, wszPath);
+    PathRemoveFileSpecW(wszRootPathName);
+    PathAddBackslashW(wszRootPathName);
+
+    if (GetDriveTypeW(wszRootPathName) != DRIVE_FIXED)
     {
         /* no bitbucket on removable media */
         return FALSE;
     }
 
-    if (!GetVolumeInformationW(wszPath, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0))
+    if (!GetVolumeInformationW(wszRootPathName, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0))
     {
         ERR("GetVolumeInformationW failed with %u\n", GetLastError());
         return FALSE;
@@ -980,246 +968,7 @@ EXTERN_C HRESULT WINAPI SHUpdateRecycleBinIcon(void)
 {
     FIXME("stub\n");
 
-
-
     return S_OK;
-}
-
-/****************************************************************************
- * IDropTarget implementation
- */
-BOOL CRecycleBin::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
-{
-    /* TODO on shift we should delete, we should update the cursor manager to show this. */
-
-    DWORD dwEffect = DROPEFFECT_COPY;
-
-    *pdwEffect = DROPEFFECT_NONE;
-
-    if (fAcceptFmt) { /* Does our interpretation of the keystate ... */
-        *pdwEffect = KeyStateToDropEffect (dwKeyState);
-
-        if (*pdwEffect == DROPEFFECT_NONE)
-            *pdwEffect = dwEffect;
-
-        /* ... matches the desired effect ? */
-        if (dwEffect & *pdwEffect) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-HRESULT WINAPI CRecycleBin::DragEnter(IDataObject *pDataObject,
-                                    DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
-{
-    TRACE("Recycle bin drag over (%p)\n", this);
-    /* The recycle bin accepts pretty much everything, and sets a CSIDL flag. */
-    fAcceptFmt = TRUE;
-
-    QueryDrop(dwKeyState, pdwEffect);
-    return S_OK;
-}
-
-HRESULT WINAPI CRecycleBin::DragOver(DWORD dwKeyState, POINTL pt,
-                                   DWORD *pdwEffect)
-{
-    TRACE("(%p)\n", this);
-
-    if (!pdwEffect)
-        return E_INVALIDARG;
-
-    QueryDrop(dwKeyState, pdwEffect);
-
-    return S_OK;
-}
-
-HRESULT WINAPI CRecycleBin::DragLeave()
-{
-    TRACE("(%p)\n", this);
-
-    fAcceptFmt = FALSE;
-
-    return S_OK;
-}
-
-HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
-                               DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
-{
-    TRACE("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
-
-    /* TODO: pdwEffect should be read and make the drop object be permanently deleted in the move case (shift held) */
-
-    FORMATETC fmt;
-    TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
-    InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
-
-    /* Handle cfShellIDList Drop objects here, otherwise send the approriate message to other software */
-    if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
-    {
-        DWORD fMask = 0;
-
-        if ((dwKeyState & MK_SHIFT) == MK_SHIFT)
-            fMask |= CMIC_MASK_SHIFT_DOWN;
-
-        DoDeleteAsync(pDataObject, fMask);
-    }
-    else
-    {
-        /*
-         * TODO call SetData on the data object with format CFSTR_TARGETCLSID
-         * set to the Recycle Bin's class identifier CLSID_RecycleBin.
-         */
-    }
-    return S_OK;
-}
-
-HRESULT WINAPI DoDeleteDataObject(IDataObject *pda, DWORD fMask)
-{
-    TRACE("performing delete");
-    HRESULT hr;
-
-    STGMEDIUM medium;
-    FORMATETC formatetc;
-    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-    hr = pda->GetData(&formatetc, &medium);
-    if (FAILED(hr))
-        return hr;
-
-    /* lock the handle */
-    LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
-    if (!lpcida)
-    {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    /* convert the data into pidl */
-    LPITEMIDLIST pidl;
-    LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
-    if (!apidl)
-    {
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    CComPtr<IShellFolder> psfDesktop;
-    CComPtr<IShellFolder> psfFrom = NULL;
-
-    /* Grab the desktop shell folder */
-    hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED(hr))
-    {
-        ERR("SHGetDesktopFolder failed\n");
-        SHFree(pidl);
-        _ILFreeaPidl(apidl, lpcida->cidl);
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    /* Find source folder, this is where the clipboard data was copied from */
-    if (_ILIsDesktop(pidl))
-    {
-        psfFrom = psfDesktop;
-    }
-    else
-    {
-        hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfFrom));
-        if (FAILED(hr))
-        {
-            ERR("no IShellFolder\n");
-            SHFree(pidl);
-            _ILFreeaPidl(apidl, lpcida->cidl);
-            ReleaseStgMedium(&medium);
-            return E_FAIL;
-        }
-    }
-
-    STRRET strTemp;
-    hr = psfFrom->GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strTemp);
-    if (FAILED(hr))
-    {
-        ERR("IShellFolder_GetDisplayNameOf failed with %x\n", hr);
-        SHFree(pidl);
-        _ILFreeaPidl(apidl, lpcida->cidl);
-        ReleaseStgMedium(&medium);
-        return hr;
-    }
-
-    WCHAR wszPath[MAX_PATH];
-    hr = StrRetToBufW(&strTemp, apidl[0], wszPath, _countof(wszPath));
-    if (FAILED(hr))
-    {
-        ERR("StrRetToBufW failed with %x\n", hr);
-        SHFree(pidl);
-        _ILFreeaPidl(apidl, lpcida->cidl);
-        ReleaseStgMedium(&medium);
-        return hr;
-    }
-
-    /* Only keep the base path */
-    LPWSTR pwszFilename = PathFindFileNameW(wszPath);
-    *pwszFilename = L'\0';
-
-    /* Build paths list */
-    LPWSTR pwszPaths = BuildPathsList(wszPath, lpcida->cidl, (LPCITEMIDLIST*) apidl, FALSE);
-    if (!pwszPaths)
-    {
-        SHFree(pidl);
-        _ILFreeaPidl(apidl, lpcida->cidl);
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    /* Delete them */
-    SHFILEOPSTRUCTW FileOp;
-    ZeroMemory(&FileOp, sizeof(FileOp));
-    FileOp.wFunc = FO_DELETE;
-    FileOp.pFrom = pwszPaths;
-    if ((fMask & CMIC_MASK_SHIFT_DOWN) == 0)
-        FileOp.fFlags = FOF_ALLOWUNDO;
-
-    if (SHFileOperationW(&FileOp) != 0)
-    {
-        ERR("SHFileOperation failed with 0x%x for %s\n", GetLastError(), debugstr_w(pwszPaths));
-        hr = E_FAIL;
-    }
-
-    HeapFree(GetProcessHeap(), 0, pwszPaths);
-    SHFree(pidl);
-    _ILFreeaPidl(apidl, lpcida->cidl);
-    ReleaseStgMedium(&medium);
-
-    return hr;
-}
-
-struct DeleteThreadData {
-    IStream *s;
-    DWORD fMask;
-};
-
-DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter)
-{
-    DeleteThreadData *data = static_cast<DeleteThreadData*>(lpParameter);
-    CoInitialize(NULL);
-    IDataObject *pDataObject;
-    HRESULT hr = CoGetInterfaceAndReleaseStream (data->s, IID_PPV_ARG(IDataObject, &pDataObject));
-    if (SUCCEEDED(hr))
-    {
-        DoDeleteDataObject(pDataObject, data->fMask);
-    }
-    pDataObject->Release();
-    CoUninitialize();
-    HeapFree(GetProcessHeap(), 0, data);
-    return 0;
-}
-
-void DoDeleteAsync(IDataObject *pda, DWORD fMask)
-{
-    DeleteThreadData *data = static_cast<DeleteThreadData*>(HeapAlloc(GetProcessHeap(), 0, sizeof(DeleteThreadData)));
-    data->fMask = fMask;
-    CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pda, &data->s);
-    SHCreateThread(DoDeleteThreadProc, data, NULL, NULL);
 }
 
 /*************************************************************************

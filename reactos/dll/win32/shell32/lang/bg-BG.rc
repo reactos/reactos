@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Обзор", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "О&тваряне", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Из&рязване", FCIDM_SHVIEW_CUT
-        MENUITEM "За&помняне", FCIDM_SHVIEW_COPY
+        MENUITEM "Из&рязване", IDM_CUT
+        MENUITEM "За&помняне", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Създаване на &връзка", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "Из&триване", FCIDM_SHVIEW_DELETE
-        MENUITEM "Пре&именуване", FCIDM_SHVIEW_RENAME
+        MENUITEM "Създаване на &връзка", IDM_CREATELINK
+        MENUITEM "Из&триване", IDM_DELETE
+        MENUITEM "Пре&именуване", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Свойства", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Свойства", IDM_PROPERTIES
     END
 END
 
@@ -634,24 +632,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Файл"
-    IDS_SHV_COLUMN2 "Размер"
-    IDS_SHV_COLUMN3 "Вид"
-    IDS_SHV_COLUMN4 "Променен"
-    IDS_SHV_COLUMN5 "Признак"
-    IDS_SHV_COLUMN6 "Размер"
-    IDS_SHV_COLUMN7 "Наличен размер"
-    IDS_SHV_COLUMN8 "Име"
-    IDS_SHV_COLUMN9 "Забележки"
-    IDS_SHV_COLUMN10 "Собственик"
-    IDS_SHV_COLUMN11 "Група"
-    IDS_SHV_COLUMN12 "Файлово име"
-    IDS_SHV_COLUMN13 "Раздел"
+    IDS_SHV_COLUMN_NAME "Име"
+    IDS_SHV_COLUMN_SIZE "Размер"
+    IDS_SHV_COLUMN_TYPE "Вид"
+    IDS_SHV_COLUMN_MODIFIED "Променен"
+    IDS_SHV_COLUMN_ATTRIBUTES "Признак"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Размер"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Наличен размер"
+    IDS_SHV_COLUMN_OWNER "Собственик"
+    IDS_SHV_COLUMN_GROUP "Група"
+    IDS_SHV_COLUMN_FILENAME "Файлово име"
+    IDS_SHV_COLUMN_CATEGORY "Раздел"
     IDS_SHV_COLUMN_DELFROM "Първоначално място"
     IDS_SHV_COLUMN_DELDATE "Дата на изтриване"
     IDS_SHV_COLUMN_FONTTYPE "Вид шрифт"
     IDS_SHV_COLUMN_WORKGROUP "Работна група"
-    IDS_SHV_NETWORKLOCATION "Място в мрежата"
+    IDS_SHV_COLUMN_NETLOCATION "Място в мрежата"
     IDS_SHV_COLUMN_DOCUMENTS "Книжа"
     IDS_SHV_COLUMN_STATUS "Състояние"
     IDS_SHV_COLUMN_COMMENTS "Забележки"

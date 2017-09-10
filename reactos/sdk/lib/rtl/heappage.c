@@ -2349,4 +2349,32 @@ RtlpDphNormalHeapValidate(PDPH_HEAP_ROOT DphRoot,
     return RtlValidateHeap(DphRoot->NormalHeap, Flags, BlockInfo);
 }
 
+BOOLEAN
+NTAPI
+RtlpPageHeapLock(HANDLE HeapPtr)
+{
+    PDPH_HEAP_ROOT DphRoot;
+
+    /* Get pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapPtr);
+    if (!DphRoot) return FALSE;
+
+    RtlpDphEnterCriticalSection(DphRoot, DphRoot->HeapFlags);
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+RtlpPageHeapUnlock(HANDLE HeapPtr)
+{
+    PDPH_HEAP_ROOT DphRoot;
+
+    /* Get pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapPtr);
+    if (!DphRoot) return FALSE;
+
+    RtlpDphLeaveCriticalSection(DphRoot);
+    return TRUE;
+}
+
 /* EOF */

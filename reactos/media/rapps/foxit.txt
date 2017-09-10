@@ -7,13 +7,13 @@ Size = 51.6 MiB
 Category = 6
 URLSite = http://www.foxitsoftware.com/Secure_PDF_Reader/
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/en_us/FoxitReader734_prom_enu_Setup.exe
-SHA1 = ed6a6ca77dbd3f6fbd2ff923b661cb384adaeb05
+SHA1 = a0798bb1d11b93b54f6531c93c03592aa41bd5b2
 CDPath = none
 
 [Section.0407]
 Version = 7.3.6
 Description = Alternativer PDF Reader. Neben Adobe Reader der beste PDF Reader.
-Size = 172 MiB
+Size = 172,5 MiB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/L10N/FoxitReader736.321_L10N.exe
 SHA1 = 6295bb977a12460a3aee8d3d1209d453832e4095
 
@@ -21,7 +21,7 @@ SHA1 = 6295bb977a12460a3aee8d3d1209d453832e4095
 Version = 7.3.6
 License = Gratuito
 Description = Uno de los mejores lectores de PDF, parecido a Adobe Reader.
-Size = 172 MiB
+Size = 172.5 MiB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/L10N/FoxitReader736.321_L10N.exe
 SHA1 = 6295bb977a12460a3aee8d3d1209d453832e4095
 
@@ -34,7 +34,7 @@ Size = 51,6 Mio
 Version = 7.3.6
 License = Бесплатно
 Description = Бесплатное приложение для просмотра электронных документов в формате PDF.
-Size = 172 МиБ
+Size = 172,5 МиБ
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/L10N/FoxitReader736.321_L10N.exe
 SHA1 = 6295bb977a12460a3aee8d3d1209d453832e4095
 
@@ -43,7 +43,7 @@ Name = Foxit Okuyucu
 Version = 7.3.6
 License = Ücretsiz
 Description = Başka PDF okuyucusu, işlevlilik yöntemi olarak Adobe Okuyucu'yla yarışıyor.
-Size = 172 MiB
+Size = 172,5 MiB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/L10N/FoxitReader736.321_L10N.exe
 SHA1 = 6295bb977a12460a3aee8d3d1209d453832e4095
 

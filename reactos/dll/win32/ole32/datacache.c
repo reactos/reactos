@@ -209,12 +209,41 @@ const char *debugstr_formatetc(const FORMATETC *formatetc)
         formatetc->lindex, formatetc->tymed);
 }
 
+/***********************************************************************
+ *           bitmap_info_size
+ *
+ * Return the size of the bitmap info structure including color table.
+ */
+int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
+{
+    unsigned int colors, size, masks = 0;
+
+    if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+        const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *)info;
+        colors = (core->bcBitCount <= 8) ? 1 << core->bcBitCount : 0;
+        return sizeof(BITMAPCOREHEADER) + colors *
+            ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBTRIPLE) : sizeof(WORD));
+    }
+    else  /* assume BITMAPINFOHEADER */
+    {
+        colors = info->bmiHeader.biClrUsed;
+        if (colors > 256) /* buffer overflow otherwise */
+            colors = 256;
+        if (!colors && (info->bmiHeader.biBitCount <= 8))
+            colors = 1 << info->bmiHeader.biBitCount;
+        if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
+        size = max( info->bmiHeader.biSize, sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) );
+        return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
+    }
+}
+
 static void DataCacheEntry_Destroy(DataCache *cache, DataCacheEntry *cache_entry)
 {
     list_remove(&cache_entry->entry);
     if (cache_entry->stream)
         IStream_Release(cache_entry->stream);
-    HeapFree(GetProcessHeap(), 0, cache_entry->fmtetc.ptd);
+    CoTaskMemFree(cache_entry->fmtetc.ptd);
     ReleaseStgMedium(&cache_entry->stgmedium);
     if(cache_entry->sink_id)
         IDataObject_DUnadvise(cache->running_object, cache_entry->sink_id);
@@ -253,13 +282,21 @@ static void DataCache_Destroy(
 static DataCacheEntry *DataCache_GetEntryForFormatEtc(DataCache *This, const FORMATETC *formatetc)
 {
     DataCacheEntry *cache_entry;
+    FORMATETC fmt = *formatetc;
+
+    if (fmt.cfFormat == CF_BITMAP)
+    {
+        fmt.cfFormat = CF_DIB;
+        fmt.tymed = TYMED_HGLOBAL;
+    }
+
     LIST_FOR_EACH_ENTRY(cache_entry, &This->cache_list, DataCacheEntry, entry)
     {
         /* FIXME: also compare DVTARGETDEVICEs */
-        if ((!cache_entry->fmtetc.cfFormat || !formatetc->cfFormat || (formatetc->cfFormat == cache_entry->fmtetc.cfFormat)) &&
-            (formatetc->dwAspect == cache_entry->fmtetc.dwAspect) &&
-            (formatetc->lindex == cache_entry->fmtetc.lindex) &&
-            (!cache_entry->fmtetc.tymed || !formatetc->tymed || (formatetc->tymed == cache_entry->fmtetc.tymed)))
+        if ((!cache_entry->fmtetc.cfFormat || !fmt.cfFormat || (fmt.cfFormat == cache_entry->fmtetc.cfFormat)) &&
+            (fmt.dwAspect == cache_entry->fmtetc.dwAspect) &&
+            (fmt.lindex == cache_entry->fmtetc.lindex) &&
+            (!cache_entry->fmtetc.tymed || !fmt.tymed || (fmt.tymed == cache_entry->fmtetc.tymed)))
             return cache_entry;
     }
     return NULL;
@@ -285,7 +322,30 @@ static HRESULT check_valid_clipformat_and_tymed(CLIPFORMAT cfFormat, DWORD tymed
     }
 }
 
-static HRESULT DataCache_CreateEntry(DataCache *This, const FORMATETC *formatetc, DataCacheEntry **cache_entry, BOOL load)
+static BOOL init_cache_entry(DataCacheEntry *entry, const FORMATETC *fmt, DWORD advf,
+                             DWORD id)
+{
+    HRESULT hr;
+
+    hr = copy_formatetc(&entry->fmtetc, fmt);
+    if (FAILED(hr)) return FALSE;
+
+    entry->data_cf = 0;
+    entry->stgmedium.tymed = TYMED_NULL;
+    entry->stgmedium.pUnkForRelease = NULL;
+    entry->stream = NULL;
+    entry->stream_type = no_stream;
+    entry->id = id;
+    entry->dirty = TRUE;
+    entry->stream_number = -1;
+    entry->sink_id = 0;
+    entry->advise_flags = advf;
+
+    return TRUE;
+}
+
+static HRESULT DataCache_CreateEntry(DataCache *This, const FORMATETC *formatetc, DWORD advf,
+                                     DataCacheEntry **cache_entry, BOOL load)
 {
     HRESULT hr;
 
@@ -299,24 +359,17 @@ static HRESULT DataCache_CreateEntry(DataCache *This, const FORMATETC *formatetc
     if (!*cache_entry)
         return E_OUTOFMEMORY;
 
-    (*cache_entry)->fmtetc = *formatetc;
-    if (formatetc->ptd)
-    {
-        (*cache_entry)->fmtetc.ptd = HeapAlloc(GetProcessHeap(), 0, formatetc->ptd->tdSize);
-        memcpy((*cache_entry)->fmtetc.ptd, formatetc->ptd, formatetc->ptd->tdSize);
-    }
-    (*cache_entry)->data_cf = 0;
-    (*cache_entry)->stgmedium.tymed = TYMED_NULL;
-    (*cache_entry)->stgmedium.pUnkForRelease = NULL;
-    (*cache_entry)->stream = NULL;
-    (*cache_entry)->stream_type = no_stream;
-    (*cache_entry)->id = This->last_cache_id++;
-    (*cache_entry)->dirty = TRUE;
-    (*cache_entry)->stream_number = -1;
-    (*cache_entry)->sink_id = 0;
-    (*cache_entry)->advise_flags = 0;
+    if (!init_cache_entry(*cache_entry, formatetc, advf, This->last_cache_id))
+        goto fail;
+
     list_add_tail(&This->cache_list, &(*cache_entry)->entry);
+    This->last_cache_id++;
+
     return hr;
+
+fail:
+    HeapFree(GetProcessHeap(), 0, *cache_entry);
+    return E_OUTOFMEMORY;
 }
 
 /************************************************************************
@@ -573,7 +626,9 @@ static HRESULT load_dib( DataCacheEntry *cache_entry, IStream *stm )
     STATSTG stat;
     void *dib;
     HGLOBAL hglobal;
-    ULONG read;
+    ULONG read, info_size, bi_size;
+    BITMAPFILEHEADER file;
+    BITMAPINFOHEADER *info;
 
     if (cache_entry->stream_type != contents_stream)
     {
@@ -584,24 +639,71 @@ static HRESULT load_dib( DataCacheEntry *cache_entry, IStream *stm )
     hr = IStream_Stat( stm, &stat, STATFLAG_NONAME );
     if (FAILED( hr )) return hr;
 
+    if (stat.cbSize.QuadPart < sizeof(file) + sizeof(DWORD)) return E_FAIL;
+    hr = IStream_Read( stm, &file, sizeof(file), &read );
+    if (hr != S_OK || read != sizeof(file)) return E_FAIL;
+    stat.cbSize.QuadPart -= sizeof(file);
+
     hglobal = GlobalAlloc( GMEM_MOVEABLE, stat.cbSize.u.LowPart );
     if (!hglobal) return E_OUTOFMEMORY;
     dib = GlobalLock( hglobal );
 
-    hr = IStream_Read( stm, dib, stat.cbSize.u.LowPart, &read );
-    GlobalUnlock( hglobal );
+    hr = IStream_Read( stm, dib, sizeof(DWORD), &read );
+    if (hr != S_OK || read != sizeof(DWORD)) goto fail;
+    bi_size = *(DWORD *)dib;
+    if (stat.cbSize.QuadPart < bi_size) goto fail;
 
-    if (hr != S_OK || read != stat.cbSize.u.LowPart)
+    hr = IStream_Read( stm, (char *)dib + sizeof(DWORD), bi_size - sizeof(DWORD), &read );
+    if (hr != S_OK || read != bi_size - sizeof(DWORD)) goto fail;
+
+    info_size = bitmap_info_size( dib, DIB_RGB_COLORS );
+    if (stat.cbSize.QuadPart < info_size) goto fail;
+    if (info_size > bi_size)
     {
-        GlobalFree( hglobal );
-        return E_FAIL;
+        hr = IStream_Read( stm, (char *)dib + bi_size, info_size - bi_size, &read );
+        if (hr != S_OK || read != info_size - bi_size) goto fail;
     }
+    stat.cbSize.QuadPart -= info_size;
+
+    if (file.bfOffBits)
+    {
+        LARGE_INTEGER skip;
+
+        skip.QuadPart = file.bfOffBits - sizeof(file) - info_size;
+        if (stat.cbSize.QuadPart < skip.QuadPart) goto fail;
+        hr = IStream_Seek( stm, skip, STREAM_SEEK_CUR, NULL );
+        if (hr != S_OK) goto fail;
+        stat.cbSize.QuadPart -= skip.QuadPart;
+    }
+
+    hr = IStream_Read( stm, (char *)dib + info_size, stat.cbSize.u.LowPart, &read );
+    if (hr != S_OK || read != stat.cbSize.QuadPart) goto fail;
+
+    if (bi_size >= sizeof(*info))
+    {
+        info = (BITMAPINFOHEADER *)dib;
+        if (info->biXPelsPerMeter == 0 || info->biYPelsPerMeter == 0)
+        {
+            HDC hdc = GetDC( 0 );
+            info->biXPelsPerMeter = MulDiv( GetDeviceCaps( hdc, LOGPIXELSX ), 10000, 254 );
+            info->biYPelsPerMeter = MulDiv( GetDeviceCaps( hdc, LOGPIXELSY ), 10000, 254 );
+            ReleaseDC( 0, hdc );
+        }
+    }
+
+    GlobalUnlock( hglobal );
 
     cache_entry->data_cf = cache_entry->fmtetc.cfFormat;
     cache_entry->stgmedium.tymed = TYMED_HGLOBAL;
     cache_entry->stgmedium.u.hGlobal = hglobal;
 
     return S_OK;
+
+fail:
+    GlobalUnlock( hglobal );
+    GlobalFree( hglobal );
+    return E_FAIL;
+
 }
 
 /************************************************************************
@@ -792,11 +894,56 @@ static HRESULT copy_stg_medium(CLIPFORMAT cf, STGMEDIUM *dest_stgm,
     return S_OK;
 }
 
+static HGLOBAL synthesize_dib( HBITMAP bm )
+{
+    HDC hdc = GetDC( 0 );
+    BITMAPINFOHEADER header;
+    BITMAPINFO *bmi;
+    HGLOBAL ret = 0;
+    DWORD header_size;
+
+    memset( &header, 0, sizeof(header) );
+    header.biSize = sizeof(header);
+    if (!GetDIBits( hdc, bm, 0, 0, NULL, (BITMAPINFO *)&header, DIB_RGB_COLORS )) goto done;
+
+    header_size = bitmap_info_size( (BITMAPINFO *)&header, DIB_RGB_COLORS );
+    if (!(ret = GlobalAlloc( GMEM_MOVEABLE, header_size + header.biSizeImage ))) goto done;
+    bmi = GlobalLock( ret );
+    memset( bmi, 0, header_size );
+    memcpy( bmi, &header, header.biSize );
+    GetDIBits( hdc, bm, 0, abs(header.biHeight), (char *)bmi + header_size, bmi, DIB_RGB_COLORS );
+    GlobalUnlock( ret );
+
+done:
+    ReleaseDC( 0, hdc );
+    return ret;
+}
+
+static HBITMAP synthesize_bitmap( HGLOBAL dib )
+{
+    HBITMAP ret = 0;
+    BITMAPINFO *bmi;
+    HDC hdc = GetDC( 0 );
+
+    if ((bmi = GlobalLock( dib )))
+    {
+        /* FIXME: validate data size */
+        ret = CreateDIBitmap( hdc, &bmi->bmiHeader, CBM_INIT,
+                              (char *)bmi + bitmap_info_size( bmi, DIB_RGB_COLORS ),
+                              bmi, DIB_RGB_COLORS );
+        GlobalUnlock( dib );
+    }
+    ReleaseDC( 0, hdc );
+    return ret;
+}
+
 static HRESULT DataCacheEntry_SetData(DataCacheEntry *cache_entry,
                                       const FORMATETC *formatetc,
-                                      const STGMEDIUM *stgmedium,
+                                      STGMEDIUM *stgmedium,
                                       BOOL fRelease)
 {
+    STGMEDIUM dib_copy;
+
     if ((!cache_entry->fmtetc.cfFormat && !formatetc->cfFormat) ||
         (cache_entry->fmtetc.tymed == TYMED_NULL && formatetc->tymed == TYMED_NULL) ||
         stgmedium->tymed == TYMED_NULL)
@@ -808,6 +955,17 @@ static HRESULT DataCacheEntry_SetData(DataCacheEntry *cache_entry,
     cache_entry->dirty = TRUE;
     ReleaseStgMedium(&cache_entry->stgmedium);
     cache_entry->data_cf = cache_entry->fmtetc.cfFormat ? cache_entry->fmtetc.cfFormat : formatetc->cfFormat;
+
+    if (formatetc->cfFormat == CF_BITMAP)
+    {
+        dib_copy.tymed = TYMED_HGLOBAL;
+        dib_copy.u.hGlobal = synthesize_dib( stgmedium->u.hBitmap );
+        dib_copy.pUnkForRelease = NULL;
+        if (fRelease) ReleaseStgMedium(stgmedium);
+        stgmedium = &dib_copy;
+        fRelease = TRUE;
+    }
+
     if (fRelease)
     {
         cache_entry->stgmedium = *stgmedium;
@@ -818,9 +976,9 @@ static HRESULT DataCacheEntry_SetData(DataCacheEntry *cache_entry,
                                &cache_entry->stgmedium, stgmedium);
 }
 
-static HRESULT DataCacheEntry_GetData(DataCacheEntry *cache_entry, STGMEDIUM *stgmedium)
+static HRESULT DataCacheEntry_GetData(DataCacheEntry *cache_entry, FORMATETC *fmt, STGMEDIUM *stgmedium)
 {
-    if (stgmedium->tymed == TYMED_NULL && cache_entry->stream)
+    if (cache_entry->stgmedium.tymed == TYMED_NULL && cache_entry->stream)
     {
         HRESULT hr = DataCacheEntry_LoadData(cache_entry);
         if (FAILED(hr))
@@ -828,6 +986,14 @@ static HRESULT DataCacheEntry_GetData(DataCacheEntry *cache_entry, STGMEDIUM *st
     }
     if (cache_entry->stgmedium.tymed == TYMED_NULL)
         return OLE_E_BLANK;
+
+    if (fmt->cfFormat == CF_BITMAP)
+    {
+        stgmedium->tymed = TYMED_GDI;
+        stgmedium->u.hBitmap = synthesize_bitmap( cache_entry->stgmedium.u.hGlobal );
+        stgmedium->pUnkForRelease = NULL;
+        return S_OK;
+    }
     return copy_stg_medium(cache_entry->data_cf, stgmedium, &cache_entry->stgmedium);
 }
 
@@ -1000,7 +1166,7 @@ static HRESULT WINAPI DataCache_GetData(
     if (!cache_entry)
         return OLE_E_BLANK;
 
-    return DataCacheEntry_GetData(cache_entry, pmedium);
+    return DataCacheEntry_GetData(cache_entry, pformatetcIn, pmedium);
 }
 
 static HRESULT WINAPI DataCache_GetDataHere(
@@ -1245,7 +1411,7 @@ static HRESULT add_cache_entry( DataCache *This, const FORMATETC *fmt, IStream *
 
     cache_entry = DataCache_GetEntryForFormatEtc( This, fmt );
     if (!cache_entry)
-        hr = DataCache_CreateEntry( This, fmt, &cache_entry, TRUE );
+        hr = DataCache_CreateEntry( This, fmt, 0, &cache_entry, TRUE );
     if (SUCCEEDED( hr ))
     {
         DataCacheEntry_DiscardData( cache_entry );
@@ -1641,16 +1807,14 @@ static HRESULT WINAPI DataCache_Draw(
       }
       case CF_DIB:
       {
-          BITMAPFILEHEADER *file_head;
           BITMAPINFO *info;
           BYTE *bits;
 
           if ((cache_entry->stgmedium.tymed != TYMED_HGLOBAL) ||
-              !((file_head = GlobalLock( cache_entry->stgmedium.u.hGlobal ))))
+              !((info = GlobalLock( cache_entry->stgmedium.u.hGlobal ))))
               continue;
 
-          info = (BITMAPINFO *)(file_head + 1);
-          bits = (BYTE *) file_head + file_head->bfOffBits;
+          bits = (BYTE *) info + bitmap_info_size( info, DIB_RGB_COLORS );
           StretchDIBits( hdcDraw, lprcBounds->left, lprcBounds->top,
                          lprcBounds->right - lprcBounds->left, lprcBounds->bottom - lprcBounds->top,
                          0, 0, info->bmiHeader.biWidth, info->bmiHeader.biHeight,
@@ -1861,16 +2025,13 @@ static HRESULT WINAPI DataCache_GetExtent(
       }
       case CF_DIB:
       {
-          BITMAPFILEHEADER *file_head;
           BITMAPINFOHEADER *info;
           LONG x_pels_m, y_pels_m;
 
 
           if ((cache_entry->stgmedium.tymed != TYMED_HGLOBAL) ||
-              !((file_head = GlobalLock( cache_entry->stgmedium.u.hGlobal ))))
+              !((info = GlobalLock( cache_entry->stgmedium.u.hGlobal ))))
               continue;
-
-          info = (BITMAPINFOHEADER *)(file_head + 1);
 
           x_pels_m = info->biXPelsPerMeter;
           y_pels_m = info->biYPelsPerMeter;
@@ -1975,6 +2136,7 @@ static HRESULT WINAPI DataCache_Cache(
     DataCache *This = impl_from_IOleCache2(iface);
     DataCacheEntry *cache_entry;
     HRESULT hr;
+    FORMATETC fmt_cpy;
 
     TRACE("(%p, 0x%x, %p)\n", pformatetc, advf, pdwConnection);
 
@@ -1983,9 +2145,16 @@ static HRESULT WINAPI DataCache_Cache(
 
     TRACE("pformatetc = %s\n", debugstr_formatetc(pformatetc));
 
+    fmt_cpy = *pformatetc; /* No need for a deep copy */
+    if (fmt_cpy.cfFormat == CF_BITMAP && fmt_cpy.tymed == TYMED_GDI)
+    {
+        fmt_cpy.cfFormat = CF_DIB;
+        fmt_cpy.tymed = TYMED_HGLOBAL;
+    }
+
     *pdwConnection = 0;
 
-    cache_entry = DataCache_GetEntryForFormatEtc(This, pformatetc);
+    cache_entry = DataCache_GetEntryForFormatEtc(This, &fmt_cpy);
     if (cache_entry)
     {
         TRACE("found an existing cache entry\n");
@@ -1993,12 +2162,11 @@ static HRESULT WINAPI DataCache_Cache(
         return CACHE_S_SAMECACHE;
     }
 
-    hr = DataCache_CreateEntry(This, pformatetc, &cache_entry, FALSE);
+    hr = DataCache_CreateEntry(This, &fmt_cpy, advf, &cache_entry, FALSE);
 
     if (SUCCEEDED(hr))
     {
         *pdwConnection = cache_entry->id;
-        cache_entry->advise_flags = advf;
         setup_sink(This, cache_entry);
     }
 
@@ -2026,12 +2194,58 @@ static HRESULT WINAPI DataCache_Uncache(
     return OLE_E_NOCONNECTION;
 }
 
-static HRESULT WINAPI DataCache_EnumCache(
-            IOleCache2*     iface,
-	    IEnumSTATDATA** ppenumSTATDATA)
+static HRESULT WINAPI DataCache_EnumCache(IOleCache2 *iface,
+                                          IEnumSTATDATA **enum_stat)
 {
-  FIXME("stub\n");
-  return E_NOTIMPL;
+    DataCache *This = impl_from_IOleCache2( iface );
+    DataCacheEntry *cache_entry;
+    int i = 0, count = 0;
+    STATDATA *data;
+    HRESULT hr;
+
+    TRACE( "(%p, %p)\n", This, enum_stat );
+
+    LIST_FOR_EACH_ENTRY( cache_entry, &This->cache_list, DataCacheEntry, entry )
+    {
+        count++;
+        if (cache_entry->fmtetc.cfFormat == CF_DIB)
+            count++;
+    }
+
+    data = CoTaskMemAlloc( count * sizeof(*data) );
+    if (!data) return E_OUTOFMEMORY;
+
+    LIST_FOR_EACH_ENTRY( cache_entry, &This->cache_list, DataCacheEntry, entry )
+    {
+        if (i == count) goto fail;
+        hr = copy_formatetc( &data[i].formatetc, &cache_entry->fmtetc );
+        if (FAILED(hr)) goto fail;
+        data[i].advf = cache_entry->advise_flags;
+        data[i].pAdvSink = NULL;
+        data[i].dwConnection = cache_entry->id;
+        i++;
+
+        if (cache_entry->fmtetc.cfFormat == CF_DIB)
+        {
+            if (i == count) goto fail;
+            hr = copy_formatetc( &data[i].formatetc, &cache_entry->fmtetc );
+            if (FAILED(hr)) goto fail;
+            data[i].formatetc.cfFormat = CF_BITMAP;
+            data[i].formatetc.tymed = TYMED_GDI;
+            data[i].advf = cache_entry->advise_flags;
+            data[i].pAdvSink = NULL;
+            data[i].dwConnection = cache_entry->id;
+            i++;
+        }
+    }
+
+    hr = EnumSTATDATA_Construct( NULL, 0, i, data, FALSE, enum_stat );
+    if (SUCCEEDED(hr)) return hr;
+
+fail:
+    while (i--) CoTaskMemFree( data[i].formatetc.ptd );
+    CoTaskMemFree( data );
+    return hr;
 }
 
 static HRESULT WINAPI DataCache_InitCache(

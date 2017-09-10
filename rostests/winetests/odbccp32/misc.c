@@ -412,6 +412,199 @@ static void test_SQLGetPrivateProfileStringW(void)
     }
 }
 
+static void test_SQLInstallDriverEx(void)
+{
+    char path[MAX_PATH];
+    char syspath[MAX_PATH];
+    WORD size = 0;
+    BOOL ret, sql_ret;
+    DWORD cnt, error_code = 0;
+    HKEY hkey;
+    LONG res;
+    char error[1000];
+
+    GetSystemDirectoryA(syspath, MAX_PATH);
+
+    ret = SQLConfigDriver(NULL, ODBC_CONFIG_DRIVER, "WINE ODBC Driver", "CPTimeout=59", error, sizeof(error), NULL);
+    ok(!ret, "SQLConfigDriver returned %d\n", ret);
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    ok(sql_ret && error_code == ODBC_ERROR_COMPONENT_NOT_FOUND, "SQLConfigDriver returned %d, %u\n", sql_ret, error_code);
+
+    ret = SQLInstallDriverEx("WINE ODBC Driver\0Driver=sample.dll\0Setup=sample.dll\0\0", NULL,
+                             path, MAX_PATH, &size, ODBC_INSTALL_COMPLETE, NULL);
+    ok(ret, "SQLInstallDriverEx failed\n");
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    if (sql_ret && error_code == ODBC_ERROR_WRITING_SYSINFO_FAILED)
+    {
+         win_skip("not enough privileges\n");
+         return;
+    }
+    ok(sql_ret == SQL_NO_DATA || (sql_ret && error_code == SQL_SUCCESS), "SQLInstallDriverEx failed %d, %u\n", sql_ret, error_code);
+    ok(!strcmp(path, syspath), "invalid path %s\n", path);
+
+if (0)  /* Crashes on XP. */
+{
+    sql_ret = 0;
+    ret = SQLConfigDriver(NULL, ODBC_CONFIG_DRIVER, "WINE ODBC Driver", NULL, error, sizeof(error), NULL);
+    ok(!ret, "SQLConfigDriver failed '%s'\n",error);
+}
+
+    ret = SQLConfigDriver(NULL, ODBC_CONFIG_DRIVER, "WINE ODBC Driver", "CPTimeout=59\0NoWrite=60\0", error, sizeof(error), NULL);
+    ok(ret, "SQLConfigDriver failed\n");
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    ok(sql_ret == SQL_NO_DATA || (sql_ret && error_code == SQL_SUCCESS), "SQLConfigDriver failed %d, %u\n", sql_ret, error_code);
+
+    ret = SQLInstallDriverEx("WINE ODBC Driver Path\0Driver=sample.dll\0Setup=sample.dll\0\0", "c:\\temp", path, MAX_PATH, &size, ODBC_INSTALL_COMPLETE, NULL);
+    ok(ret, "SQLInstallDriverEx failed\n");
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    ok(sql_ret == SQL_NO_DATA || (sql_ret && error_code == SQL_SUCCESS), "SQLInstallDriverEx failed %d, %u\n", sql_ret, error_code);
+    ok(!strcmp(path, "c:\\temp"), "invalid path %s\n", path);
+
+    ret = SQLConfigDriver(NULL, ODBC_CONFIG_DRIVER, "WINE ODBC Driver Path", "empty", error, sizeof(error), NULL);
+    ok(!ret, "SQLConfigDriver successful\n");
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    ok(sql_ret && error_code == ODBC_ERROR_INVALID_KEYWORD_VALUE, "SQLConfigDriver failed %d, %u\n", sql_ret, error_code);
+
+    ret = SQLConfigDriver(NULL, ODBC_CONFIG_DRIVER, "WINE ODBC Driver Path", "NoWrite=60;xxxx=555", error, sizeof(error), NULL);
+    ok(ret, "SQLConfigDriver failed\n");
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    ok(sql_ret == SQL_NO_DATA || (sql_ret && error_code == SQL_SUCCESS), "SQLConfigDriver failed %d, %u\n", sql_ret, error_code);
+
+    if (ret)
+    {
+        DWORD type = 0xdeadbeef, size = MAX_PATH;
+
+        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\ODBC\\ODBCINST.INI\\WINE ODBC Driver", 0, KEY_READ, &hkey);
+        ok(res == ERROR_SUCCESS, "RegOpenKeyExW failed\n");
+        if (res == ERROR_SUCCESS)
+        {
+            char driverpath[MAX_PATH];
+
+            strcpy(driverpath, syspath);
+            strcat(driverpath, "\\sample.dll");
+
+            memset(path, 0, sizeof(path));
+            res = RegQueryValueExA(hkey, "Driver", NULL, &type, (BYTE *)path, &size);
+            ok(res == ERROR_SUCCESS, "got %d\n", res);
+            ok(type == REG_SZ, "got %u\n", type);
+            ok(size == strlen(driverpath) + 1, "got %u\n", size);
+            ok(!strcmp(path, driverpath), "invalid path %s\n", path);
+
+            res = RegQueryValueExA(hkey, "CPTimeout", NULL, &type, (BYTE *)&path, &size);
+            ok(res == ERROR_SUCCESS, "got %d\n", res);
+            ok(type == REG_SZ, "got %u\n", type);
+            ok(size == strlen("59") + 1, "got %u\n", size);
+            ok(!strcmp(path, "59"), "invalid value %s\n", path);
+
+            res = RegQueryValueExA(hkey, "NoWrite", NULL, &type, (BYTE *)&path, &size);
+            ok(res == ERROR_FILE_NOT_FOUND, "got %d\n", res);
+
+            RegCloseKey(hkey);
+        }
+
+        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\ODBC\\ODBCINST.INI\\WINE ODBC Driver Path", 0, KEY_READ, &hkey);
+        ok(res == ERROR_SUCCESS, "RegOpenKeyExW failed\n");
+        if (res == ERROR_SUCCESS)
+        {
+            size = sizeof(path);
+            res = RegQueryValueExA(hkey, "NoWrite", NULL, &type, (BYTE *)&path, &size);
+            ok(res == ERROR_SUCCESS, "got %d\n", res);
+            ok(type == REG_SZ, "got %u\n", type);
+            ok(size == strlen("60;xxxx=555") + 1, "got %u\n", size);
+            ok(!strcmp(path, "60;xxxx=555"), "invalid value %s\n", path);
+
+            res = RegQueryValueExA(hkey, "CPTimeout", NULL, &type, (BYTE *)&path, &size);
+            ok(res == ERROR_FILE_NOT_FOUND, "got %d\n", res);
+            RegCloseKey(hkey);
+        }
+    }
+
+    cnt = 100;
+    ret = SQLRemoveDriver("WINE ODBC Driver", FALSE, &cnt);
+    ok(ret, "SQLRemoveDriver failed\n");
+    ok(cnt == 0, "SQLRemoveDriver failed %d\n", cnt);
+
+    cnt = 100;
+    ret = SQLRemoveDriver("WINE ODBC Driver Path", FALSE, &cnt);
+    ok(ret, "SQLRemoveDriver failed\n");
+    ok(cnt == 0, "SQLRemoveDriver failed %d\n", cnt);
+}
+
+void test_SQLInstallTranslatorEx(void)
+{
+    char path[MAX_PATH];
+    char syspath[MAX_PATH];
+    WORD size = 0;
+    BOOL ret, sql_ret;
+    DWORD cnt, error_code = 0;
+    HKEY hkey;
+    LONG res;
+
+    GetSystemDirectoryA(syspath, MAX_PATH);
+
+    ret = SQLInstallTranslatorEx("WINE ODBC Translator\0Translator=sample.dll\0Setup=sample.dll\0",
+                                 NULL, path, MAX_PATH, &size, ODBC_INSTALL_COMPLETE, NULL);
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    if (sql_ret && error_code == ODBC_ERROR_WRITING_SYSINFO_FAILED)
+    {
+         win_skip("not enough privileges\n");
+         return;
+    }
+    ok(sql_ret && error_code == SQL_SUCCESS, "SQLInstallDriverEx failed %d, %u\n", sql_ret, error_code);
+    ok(!strcmp(path, syspath), "invalid path %s\n", path);
+    ok(size == strlen(path), "invalid length %d\n", size);
+
+    ret = SQLInstallTranslatorEx("WINE ODBC Translator Path\0Translator=sample.dll\0Setup=sample.dll\0",
+                                 "c:\\temp", path, MAX_PATH, &size, ODBC_INSTALL_COMPLETE, NULL);
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    ok(sql_ret && error_code == SQL_SUCCESS, "SQLInstallTranslatorEx failed %d, %u\n", sql_ret, error_code);
+    ok(!strcmp(path, "c:\\temp"), "invalid path %s\n", path);
+    ok(size == strlen(path), "invalid length %d\n", size);
+
+    if(ret)
+    {
+        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\ODBC\\ODBCINST.INI\\WINE ODBC Translator", 0,
+                            KEY_READ, &hkey);
+        ok(res == ERROR_SUCCESS, "RegOpenKeyExW failed\n");
+        if (res == ERROR_SUCCESS)
+        {
+            DWORD type = 0xdeadbeef, size = MAX_PATH;
+            char driverpath[MAX_PATH];
+
+            strcpy(driverpath, syspath);
+            strcat(driverpath, "\\sample.dll");
+
+            memset(path, 0, sizeof(path));
+            res = RegQueryValueExA(hkey, "Translator", NULL, &type, (BYTE *)path, &size);
+            ok(res == ERROR_SUCCESS, "RegGetValueA failed\n");
+            ok(type == REG_SZ, "got %u\n", type);
+            ok(size == strlen(driverpath) + 1, "got %u\n", size);
+            ok(!strcmp(path, driverpath), "invalid path %s\n", path);
+
+            RegCloseKey(hkey);
+        }
+    }
+
+    cnt = 100;
+    ret = SQLRemoveTranslator("WINE ODBC Translator", &cnt);
+    ok(ret, "SQLRemoveTranslator failed\n");
+    ok(cnt == 0, "SQLRemoveTranslator failed %d\n", cnt);
+
+    cnt = 100;
+    ret = SQLRemoveTranslator("WINE ODBC Translator Path", &cnt);
+    ok(ret, "SQLRemoveTranslator failed\n");
+    ok(cnt == 0, "SQLRemoveTranslator failed %d\n", cnt);
+
+    cnt = 100;
+    ret = SQLRemoveTranslator("WINE ODBC Translator NonExist", &cnt);
+    ok(!ret, "SQLRemoveTranslator succeeded\n");
+    ok(cnt == 100, "SQLRemoveTranslator succeeded %d\n", cnt);
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    ok(sql_ret && error_code == ODBC_ERROR_COMPONENT_NOT_FOUND,
+        "SQLInstallTranslatorEx failed %d, %u\n", sql_ret, error_code);
+
+}
+
 START_TEST(misc)
 {
     test_SQLConfigMode();
@@ -420,4 +613,6 @@ START_TEST(misc)
     test_SQLWritePrivateProfileString();
     test_SQLGetPrivateProfileString();
     test_SQLGetPrivateProfileStringW();
+    test_SQLInstallDriverEx();
+    test_SQLInstallTranslatorEx();
 }

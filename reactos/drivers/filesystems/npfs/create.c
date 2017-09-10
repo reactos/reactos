@@ -676,7 +676,7 @@ NpCreateNewNamedPipe(IN PNP_DCB Dcb,
 
     if (!(Parameters->TimeoutSpecified) ||
         !(Parameters->MaximumInstances) ||
-        (Parameters->DefaultTimeout.HighPart >= 0))
+        (Parameters->DefaultTimeout.QuadPart >= 0))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Quickie;
@@ -706,7 +706,8 @@ NpCreateNewNamedPipe(IN PNP_DCB Dcb,
         goto Quickie;
     }
 
-    if (!Parameters->NamedPipeType && Parameters->ReadMode == 1)
+    if (Parameters->NamedPipeType == FILE_PIPE_BYTE_STREAM_TYPE &&
+        Parameters->ReadMode == FILE_PIPE_MESSAGE_MODE)
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Quickie;

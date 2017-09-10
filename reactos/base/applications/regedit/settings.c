@@ -23,6 +23,7 @@
 #include <strsafe.h>
 
 const WCHAR g_szGeneralRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit";
+DECLSPEC_IMPORT ULONG WINAPIV DbgPrint(PCH Format,...);
 
 /* 
 VV,VV,VV,VV,WA,WA,WA,WA,WB,WB,WB,WB,R1,R1,R1,R1
@@ -122,25 +123,31 @@ extern void SaveSettings(void)
     {
         RegistryBinaryConfig tConfig;
         DWORD iBufferSize = sizeof(tConfig);
-        WCHAR szBuffer[MAX_PATH];
+        WCHAR szBuffer[MAX_PATH]; /* FIXME: a complete registry path can be longer than that */
         LPCWSTR keyPath, rootName;
         HKEY hRootKey;
 
         /* Save key position */
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
-        if (keyPath)
-        {
-            rootName = get_root_key_name(hRootKey);
+        rootName = get_root_key_name(hRootKey);
 
-            /* Load "My Computer" string and complete it */
-            if (LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer)) &&
-                SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")) &&
-                SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), rootName)) &&
-                SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")) &&
-                SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), keyPath)))
-            {
+        /* Load "My Computer" string and complete it */
+        if (LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer)) &&
+            SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")) &&
+            SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), rootName)) &&
+            SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))
+        {
+            HRESULT hr = S_OK;
+            if (keyPath)
+                hr = StringCbCatW(szBuffer, sizeof(szBuffer), keyPath);
+            if (SUCCEEDED(hr))
                 RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE)szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
-            }
+            else
+                DbgPrint("err: (%s:%d): Buffer not big enough for '%S + %S'\n", __FILE__, __LINE__, rootName, keyPath);
+        }
+        else
+        {
+            DbgPrint("err: (%s:%d): Buffer not big enough for '%S'\n", __FILE__, __LINE__, rootName);
         }
 
         /* Get statusbar settings */

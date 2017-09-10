@@ -43,7 +43,7 @@ UDFLockControl(
     PtrUDFIrpContext    PtrIrpContext = NULL;
     BOOLEAN             AreWeTopLevel = FALSE;
 
-    KdPrint(("UDFLockControl\n"));
+    UDFPrint(("UDFLockControl\n"));
 //    BrutePoint();
 
     FsRtlEnterFileSystem();
@@ -118,7 +118,7 @@ UDFCommonLockControl(
     PtrUDFFCB           Fcb = NULL;
     PtrUDFCCB           Ccb = NULL;
 
-    KdPrint(("UDFCommonLockControl\n"));
+    UDFPrint(("UDFCommonLockControl\n"));
 
     _SEH2_TRY {
         // First, get a pointer to the current I/O stack location.
@@ -220,7 +220,7 @@ UDFFastLock (
     PtrUDFFCB           Fcb = NULL;
     PtrUDFCCB           Ccb = NULL;
 
-    KdPrint(("UDFFastLock\n"));
+    UDFPrint(("UDFFastLock\n"));
     //  Decode the type of file object we're being asked to process and make
     //  sure it is only a user file open.
 
@@ -323,7 +323,7 @@ UDFFastUnlockSingle(
     PtrUDFFCB           Fcb = NULL;
     PtrUDFCCB           Ccb = NULL;
 
-    KdPrint(("UDFFastUnlockSingle\n"));
+    UDFPrint(("UDFFastUnlockSingle\n"));
     //  Decode the type of file object we're being asked to process and make
     //  sure it is only a user file open.
 
@@ -415,7 +415,7 @@ UDFFastUnlockAll(
     PtrUDFFCB           Fcb = NULL;
     PtrUDFCCB           Ccb = NULL;
 
-    KdPrint(("UDFFastUnlockAll\n"));
+    UDFPrint(("UDFFastUnlockAll\n"));
 
     IoStatus->Information = 0;
     //  Decode the type of file object we're being asked to process and make
@@ -506,7 +506,7 @@ UDFFastUnlockAllByKey(
     PtrUDFFCB           Fcb = NULL;
     PtrUDFCCB           Ccb = NULL;
 
-    KdPrint(("UDFFastUnlockAllByKey\n"));
+    UDFPrint(("UDFFastUnlockAllByKey\n"));
 
     IoStatus->Information = 0;
     //  Decode the type of file object we're being asked to process and make

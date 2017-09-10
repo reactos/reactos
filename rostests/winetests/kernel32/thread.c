@@ -1084,10 +1084,10 @@ static void test_SetThreadContext(void)
     ctx.ContextFlags = CONTEXT_FULL;
     SetLastError(0xdeadbeef);
     ret = GetThreadContext( thread, &ctx );
-    ok( (!ret && (GetLastError() == ERROR_GEN_FAILURE)) ||
+    ok( (!ret && ((GetLastError() == ERROR_GEN_FAILURE) || (GetLastError() == ERROR_ACCESS_DENIED))) ||
         (!ret && broken(GetLastError() == ERROR_INVALID_HANDLE)) || /* win2k */
         broken(ret),   /* 32bit application on NT 5.x 64bit */
-        "got %d with %u (expected FALSE with ERROR_GEN_FAILURE)\n",
+        "got %d with %u (expected FALSE with ERROR_GEN_FAILURE or ERROR_ACCESS_DENIED)\n",
         ret, GetLastError() );
 
     SetLastError(0xdeadbeef);
@@ -2042,6 +2042,7 @@ todo_wine
 
         case ThreadAffinityMask:
         case ThreadQuerySetWin32StartAddress:
+        case ThreadIsIoPending:
 todo_wine
             ok(status == STATUS_ACCESS_DENIED, "for info %u expected STATUS_ACCESS_DENIED, got %08x (ret_len %u)\n", i, status, ret_len);
             break;

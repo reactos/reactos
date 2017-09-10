@@ -55,8 +55,12 @@ CmpFileRead(
     OUT PVOID Buffer,
     IN SIZE_T BufferLength)
 {
-    DPRINT1("CmpFileRead() unimplemented\n");
-    return FALSE;
+    PCMHIVE CmHive = (PCMHIVE)RegistryHive;
+    FILE *File = CmHive->FileHandles[HFILE_TYPE_PRIMARY];
+    if (fseek(File, *FileOffset, SEEK_SET) != 0)
+        return FALSE;
+
+    return (fread(Buffer, 1, BufferLength, File) == BufferLength);
 }
 
 static BOOLEAN

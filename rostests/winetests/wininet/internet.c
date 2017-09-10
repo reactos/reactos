@@ -1610,12 +1610,16 @@ static void test_InternetGetConnectedStateExA(void)
         return;
     }
 
+    flags = 0;
+    buffer[0] = 0;
     res = pInternetGetConnectedStateExA(&flags, buffer, sizeof(buffer), 0);
+    trace("Internet Connection: Flags 0x%02x - Name '%s'\n", flags, buffer);
+todo_wine
+    ok (flags & INTERNET_RAS_INSTALLED, "Missing RAS flag\n");
     if(!res) {
         win_skip("InternetGetConnectedStateExA tests require a valid connection\n");
         return;
     }
-    trace("Internet Connection: Flags 0x%02x - Name '%s'\n", flags, buffer);
 
     res = pInternetGetConnectedStateExA(NULL, NULL, 0, 0);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
@@ -1623,7 +1627,16 @@ static void test_InternetGetConnectedStateExA(void)
     flags = 0;
     res = pInternetGetConnectedStateExA(&flags, NULL, 0, 0);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(flags, "Expected at least one flag set\n");
+    if (flags & INTERNET_CONNECTION_CONFIGURED)
+    {
+        ok(flags & INTERNET_CONNECTION_MODEM, "Modem connection flag missing\n");
+        ok(flags & ~INTERNET_CONNECTION_LAN, "Mixed Modem and LAN flags\n");
+    }
+    else
+    {
+        ok(flags & INTERNET_CONNECTION_LAN, "LAN connection flag missing\n");
+        ok(flags & ~INTERNET_CONNECTION_MODEM, "Mixed Modem and LAN flags\n");
+    }
 
     buffer[0] = 0;
     flags = 0;
@@ -1699,12 +1712,16 @@ static void test_InternetGetConnectedStateExW(void)
         return;
     }
 
+    flags = 0;
+    buffer[0] = 0;
     res = pInternetGetConnectedStateExW(&flags, buffer, sizeof(buffer) / sizeof(buffer[0]), 0);
+    trace("Internet Connection: Flags 0x%02x - Name '%s'\n", flags, wine_dbgstr_w(buffer));
+todo_wine
+    ok (flags & INTERNET_RAS_INSTALLED, "Missing RAS flag\n");
     if(!res) {
         win_skip("InternetGetConnectedStateExW tests require a valid connection\n");
         return;
     }
-    trace("Internet Connection: Flags 0x%02x - Name '%s'\n", flags, wine_dbgstr_w(buffer));
 
     res = pInternetGetConnectedStateExW(NULL, NULL, 0, 0);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
@@ -1712,7 +1729,16 @@ static void test_InternetGetConnectedStateExW(void)
     flags = 0;
     res = pInternetGetConnectedStateExW(&flags, NULL, 0, 0);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
-    ok(flags, "Expected at least one flag set\n");
+    if (flags & INTERNET_CONNECTION_CONFIGURED)
+    {
+        ok(flags & INTERNET_CONNECTION_MODEM, "Modem connection flag missing\n");
+        ok(flags & ~INTERNET_CONNECTION_LAN, "Mixed Modem and LAN flags\n");
+    }
+    else
+    {
+        ok(flags & INTERNET_CONNECTION_LAN, "LAN connection flag missing\n");
+        ok(flags & ~INTERNET_CONNECTION_MODEM, "Mixed Modem and LAN flags\n");
+    }
 
     buffer[0] = 0;
     flags = 0;
@@ -1746,14 +1772,20 @@ static void test_InternetGetConnectedStateExW(void)
     res = pInternetGetConnectedStateExW(&flags, buffer, sz, 0);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(flags, "Expected at least one flag set\n");
-    ok(sz - 1 == lstrlenW(buffer), "Expected %u bytes, got %u\n", sz - 1, lstrlenW(buffer));
+    if (flags & INTERNET_CONNECTION_MODEM)
+        ok(!buffer[0], "Expected 0 bytes, got %u\n", lstrlenW(buffer));
+    else
+        ok(sz - 1 == lstrlenW(buffer), "Expected %u bytes, got %u\n", sz - 1, lstrlenW(buffer));
 
     buffer[0] = 0;
     flags = 0;
     res = pInternetGetConnectedStateExW(&flags, buffer, sz / 2, 0);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(flags, "Expected at least one flag set\n");
-    ok(sz / 2 - 1 == lstrlenW(buffer), "Expected %u bytes, got %u\n", sz / 2 - 1, lstrlenW(buffer));
+    if (flags & INTERNET_CONNECTION_MODEM)
+        ok(!buffer[0], "Expected 0 bytes, got %u\n", lstrlenW(buffer));
+    else
+        ok(sz / 2 - 1 == lstrlenW(buffer), "Expected %u bytes, got %u\n", sz / 2 - 1, lstrlenW(buffer));
 
     buffer[0] = 0;
     flags = 0;
@@ -1767,7 +1799,10 @@ static void test_InternetGetConnectedStateExW(void)
     res = pInternetGetConnectedStateExW(&flags, buffer, 2, 0);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(flags, "Expected at least one flag set\n");
-    ok(lstrlenW(buffer) == 1, "Expected 1 byte, got %u\n", lstrlenW(buffer));
+    if (flags & INTERNET_CONNECTION_MODEM)
+        ok(!buffer[0], "Expected 0 bytes, got %u\n", lstrlenW(buffer));
+    else
+        ok(lstrlenW(buffer) == 1, "Expected 1 byte, got %u\n", lstrlenW(buffer));
 
     buffer[0] = 0xDEAD;
     flags = 0;

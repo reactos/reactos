@@ -20,6 +20,9 @@ class CDefViewBckgrndMenu :
         CComPtr<IShellFolder> m_psf;
         CComPtr<IContextMenu> m_folderCM;
 
+        UINT m_idCmdFirst;
+        UINT m_LastFolderCMId;
+
         BOOL _bIsDesktopBrowserMenu();
         BOOL _bCanPaste();
     public:
@@ -52,6 +55,8 @@ class CDefViewBckgrndMenu :
 
 CDefViewBckgrndMenu::CDefViewBckgrndMenu()
 {
+    m_idCmdFirst = 0;
+    m_LastFolderCMId = 0;
 }
 
 CDefViewBckgrndMenu::~CDefViewBckgrndMenu()
@@ -135,6 +140,39 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
 {
     HRESULT hr;
     HMENU hMenuPart;
+    UINT cIds = 0;
+
+    /* This is something the implementations of IContextMenu should never really do.
+       However CDefViewBckgrndMenu is more or less an overengineering result, its code could really be part of the 
+       CDefView. Given this, I think that abusing the interface here is not that bad since only CDefView is the ony
+       user of this class. Here we need to do two things to keep things as simple as possible. 
+       First we want the menu part added by the shell folder to be the first to add so as to make as few id translations
+       as possible. Second, we want to add the default part of the background menu without shifted ids, so as 
+       to let the CDefView fill some parts like filling the arrange modes or checking the view mode. In order 
+       for that to work we need to save idCmdFirst because our caller will pass id offsets to InvokeCommand.
+       This makes it impossible to concatenate the CDefViewBckgrndMenu with other menus since it abuses IContextMenu
+       but as stated above, its sole user is CDefView and should really be that way. */
+    m_idCmdFirst = idCmdFirst;
+
+    /* Query the shell folder to add any items it wants to add in the background context menu */
+    hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &m_folderCM));
+    if (SUCCEEDED(hr))
+    {
+        hr = m_folderCM->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+        if (SUCCEEDED(hr))
+        {
+            m_LastFolderCMId = LOWORD(hr);
+            cIds = m_LastFolderCMId;
+        }
+        else
+        {
+            WARN("QueryContextMenu failed!\n");
+        }
+    }
+    else
+    {
+        WARN("GetUIObjectOf didn't give any context menu!\n");
+    }
 
     /* Load the default part of the background context menu */
     hMenuPart = LoadMenuW(shell32_hInstance, L"MENU_002");
@@ -154,8 +192,7 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
         }
 
         /* merge general background context menu in */
-        Shell_MergeMenus(hMenu, GetSubMenu(hMenuPart, 0), indexMenu, 0, 0xFFFF, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
-        indexMenu += GetMenuItemCount(GetSubMenu(hMenuPart, 0));
+        Shell_MergeMenus(hMenu, GetSubMenu(hMenuPart, 0), indexMenu, 0, idCmdLast, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS | MM_ADDSEPARATOR);
         DestroyMenu(hMenuPart);
     }
     else
@@ -163,53 +200,29 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
         ERR("Failed to load menu from resource!\n");
     }
 
-    /* Query the shell folder to add any items it wants to add in the background context menu */
-    hMenuPart = CreatePopupMenu();
-    if (hMenuPart)
-    {
-        hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &m_folderCM));
-        if (SUCCEEDED(hr))
-        {
-            InsertMenuA(hMenu, indexMenu++, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-            UINT SeparatorIndex = indexMenu;
-            int count = GetMenuItemCount(hMenu);
-
-            hr = m_folderCM->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
-            if (SUCCEEDED(hr))
-            {
-                //Shell_MergeMenus(hMenu, hMenuPart, indexMenu, 0, UINT_MAX, MM_ADDSEPARATOR| MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
-                //DestroyMenu(hMenuPart);
-            }
-            else
-            {
-                WARN("QueryContextMenu failed!\n");
-            }
-
-            /* If no item was added after the separator, remove it */
-            if (count == GetMenuItemCount(hMenu))
-                DeleteMenu(hMenu, SeparatorIndex, MF_BYPOSITION);
-
-        }
-        else
-        {
-            WARN("GetUIObjectOf didn't give any context menu!\n");   
-        }          
-    }
-    else
-    {
-        ERR("CreatePopupMenu failed!\n");
-    }
-
-    return S_OK;
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cIds);
 }
 
 HRESULT
 WINAPI
 CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
-    /* The commands that are handled by the def view are forwarded to it */
-    switch (LOWORD(lpcmi->lpVerb))
+    UINT idCmd = LOWORD(lpcmi->lpVerb);
+    if(HIWORD(lpcmi->lpVerb) != 0 || idCmd < m_LastFolderCMId)
     {
+        return m_folderCM->InvokeCommand(lpcmi);
+    }
+
+    /* The default part of the background menu doesn't have shifted ids so we need to convert the id offset to the real id */
+    idCmd += m_idCmdFirst;
+
+    /* The commands that are handled by the def view are forwarded to it */
+    switch (idCmd)
+    {
+    case FCIDM_SHVIEW_INSERT:
+    case FCIDM_SHVIEW_INSERTLINK:
+        lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd);
+        return m_folderCM->InvokeCommand(lpcmi);
     case FCIDM_SHVIEW_BIGICON:
     case FCIDM_SHVIEW_SMALLICON:
     case FCIDM_SHVIEW_LISTVIEW:
@@ -232,13 +245,12 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
         HWND hwndSV = NULL;
         if (SUCCEEDED(psv->GetWindow(&hwndSV)))
-            SendMessageW(hwndSV, WM_COMMAND, MAKEWPARAM(LOWORD(lpcmi->lpVerb), 0), 0);
+            SendMessageW(hwndSV, WM_COMMAND, MAKEWPARAM(idCmd, 0), 0);
         return S_OK;
     }
 
-    /* Unknown commands are added by the folder context menu so forward the invocation */
-    return m_folderCM->InvokeCommand(lpcmi);
-
+    ERR("Got unknown command id %ul\n", LOWORD(lpcmi->lpVerb));
+    return E_FAIL;
 }
 
 HRESULT

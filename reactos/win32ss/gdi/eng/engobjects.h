@@ -39,63 +39,68 @@
 
 ---------------------------------------------------------------------------*/
 
-/* EXtended CLip and Window Region Object */
+typedef struct _RWNDOBJ {
+  PVOID   pvConsumer;
+  RECTL   rclClient;
+  SURFOBJ *psoOwner;
+} RWNDOBJ;
+
+/* EXtended CLip and Window Region Objects */
 #ifdef __cplusplus
-typedef struct _XCLIPOBJ : _WNDOBJ
+typedef struct _XCLIPOBJ : _CLIPOBJ, _RWNDOBJ
 {
 #else
 typedef struct _XCLIPOBJ
 {
-  WNDOBJ;
+  CLIPOBJ;
+  RWNDOBJ;
 #endif
-  PVOID   pClipRgn;    /* prgnRao_ or (prgnVis_ if (prgnRao_ == z)) */
+  struct _REGION *pClipRgn;    /* prgnRao_ or (prgnVis_ if (prgnRao_ == z)) */
+  //
   RECTL   rclClipRgn;
-  PVOID   pscanClipRgn; /* Ptr to regions rect buffer based on iDirection. */
+  //PVOID   pscanClipRgn; /* Ptr to regions rect buffer based on iDirection. */
+  RECTL*  Rects;
   DWORD   cScan;
   DWORD   reserved;
-  ULONG   ulBSize;
+  ULONG   EnumPos;
   LONG    lscnSize;
-  ULONG   ulObjSize;
+  ULONG   EnumMax;
   ULONG   iDirection;
-  ULONG   ulClipType;
+  ULONG   iType;
   DWORD   reserved1;
   LONG    lUpDown;
   DWORD   reserved2;
-  BOOL    bShouldDoAll;
-  DWORD   nComplexity; /* count/mode based on # of rect in regions scan. */
+  BOOL    bAll;
+  //
+  DWORD   RectCount;   /* count/mode based on # of rect in regions scan. */
   PVOID   pDDA;        /* Pointer to a large drawing structure. */
 } XCLIPOBJ, *PXCLIPOBJ;
+
 /*
-  EngCreateClip allocates XCLIPOBJ and RGNOBJ, pco->co.pClipRgn = &pco->ro.
+  EngCreateClip allocates XCLIPOBJ and REGION, pco->co.pClipRgn = &pco->ro.
   {
     XCLIPOBJ co;
-    RGNOBJ   ro;
+    REGION   ro;
   }
  */
-typedef struct _CLIPGDI {
-    union
-    {
-        CLIPOBJ ClipObj;
-        WNDOBJ WndObj;
-    };
-    /* WNDOBJ part */
+
+extern XCLIPOBJ gxcoTrivial;
+
+#ifdef __cplusplus
+typedef struct _EWNDOBJ : _XCLIPOBJ
+{
+#else
+typedef struct _EWNDOBJ
+{
+    XCLIPOBJ;
+#endif
+    /* Extended WNDOBJ part */
     HWND              Hwnd;
     WNDOBJCHANGEPROC  ChangeProc;
     FLONG             Flags;
     int               PixelFormat;
-    /* CLIPOBJ part */
-    ULONG EnumPos;
-    ULONG EnumOrder;
-    ULONG EnumMax;
-    ULONG RectCount;
-    RECTL* Rects;
-} CLIPGDI, *PCLIPGDI;
-C_ASSERT(FIELD_OFFSET(CLIPGDI, ClipObj) == FIELD_OFFSET(CLIPGDI, WndObj.coClient));
+} EWNDOBJ, *PEWNDOBJ;
 
-// HACK, until we use the original structure
-#define XCLIPOBJ CLIPGDI
-
-extern XCLIPOBJ gxcoTrivial;
 
 /*ei What is this for? */
 typedef struct _DRVFUNCTIONSGDI {

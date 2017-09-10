@@ -24,6 +24,8 @@
 #include "winbase.h"
 #include "winnls.h"
 
+#define ULL(a,b)   (((ULONG64)(a) << 32) | (b))
+
 static DWORD __cdecl doit(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
                           LPSTR out, DWORD outsize, ... )
 {
@@ -1781,6 +1783,80 @@ static void test_message_invalid_flags_wide(void)
        "Expected the output buffer to be untouched\n");
 }
 
+static void test_message_from_64bit_number(void)
+{
+    static const WCHAR I64d[] = {'%', '1', '!', 'I', '6', '4', 'd', '!', 0};
+    static const WCHAR I64u[] = {'%', '1', '!', 'I', '6', '4', 'u', '!', 0};
+    WCHAR outW[0x100], expW[0x100];
+    char outA[0x100];
+    DWORD r;
+    static const struct
+    {
+        UINT64 number;
+        const char expected[32];
+        int len;
+    } unsigned_tests[] =
+    {
+        { 0, "0", 1 },
+        { 1234567890, "1234567890", 10},
+        { ULL(0xFFFFFFFF,0xFFFFFFFF), "18446744073709551615", 20 },
+        { ULL(0x7FFFFFFF,0xFFFFFFFF), "9223372036854775807", 19 },
+    };
+    static const struct
+    {
+        INT64 number;
+        const char expected[32];
+        int len;
+    } signed_tests[] =
+    {
+        { 0, "0" , 1},
+        { 1234567890, "1234567890", 10 },
+        { -1, "-1", 2},
+        { ULL(0xFFFFFFFF,0xFFFFFFFF), "-1", 2},
+        { ULL(0x7FFFFFFF,0xFFFFFFFF), "9223372036854775807", 19 },
+        { -ULL(0x7FFFFFFF,0xFFFFFFFF), "-9223372036854775807", 20},
+    };
+    int i;
+
+    for (i = 0; i < sizeof(unsigned_tests) / sizeof(unsigned_tests[0]); i++)
+    {
+        r = doitW(FORMAT_MESSAGE_FROM_STRING, I64u,
+                  0, 0, outW, sizeof(outW) / sizeof(WCHAR), unsigned_tests[i].number);
+        MultiByteToWideChar(CP_ACP, 0, unsigned_tests[i].expected, -1, expW, sizeof(expW) / sizeof(WCHAR));
+todo_wine {
+        ok(!lstrcmpW(outW, expW),"[%d] failed, expected %s, got %s\n", i,
+                     unsigned_tests[i].expected, wine_dbgstr_w(outW));
+        ok(r == unsigned_tests[i].len,"[%d] failed: r=%d\n", i, r);
+}
+        r = doit(FORMAT_MESSAGE_FROM_STRING, "%1!I64u!",
+                  0, 0, outA, sizeof(outA), unsigned_tests[i].number);
+todo_wine {
+        ok(!strcmp(outA, unsigned_tests[i].expected),"[%d] failed, expected %s, got %s\n", i,
+                   unsigned_tests[i].expected, outA);
+        ok(r == unsigned_tests[i].len,"[%d] failed: r=%d\n", i, r);
+}
+    }
+
+    for (i = 0; i < sizeof(signed_tests) / sizeof(signed_tests[0]); i++)
+    {
+        r = doitW(FORMAT_MESSAGE_FROM_STRING, I64d,
+                  0, 0, outW, sizeof(outW) / sizeof(WCHAR), signed_tests[i].number);
+        MultiByteToWideChar(CP_ACP, 0, signed_tests[i].expected, -1, expW, sizeof(expW) / sizeof(WCHAR));
+todo_wine {
+        ok(!lstrcmpW(outW, expW),"[%d] failed, expected %s, got %s\n", i,
+                     signed_tests[i].expected, wine_dbgstr_w(outW));
+        ok(r == signed_tests[i].len,"[%d] failed: r=%d\n", i, r);
+}
+        r = doit(FORMAT_MESSAGE_FROM_STRING, "%1!I64d!",
+                  0, 0, outA, sizeof(outA), signed_tests[i].number);
+todo_wine {
+        ok(!strcmp(outA, signed_tests[i].expected),"[%d] failed, expected %s, got %s\n", i,
+                   signed_tests[i].expected, outA);
+        ok(r == signed_tests[i].len,"[%d] failed: r=%d\n", i, r);
+}
+    }
+}
+
 START_TEST(format_msg)
 {
     DWORD ret;
@@ -1808,4 +1884,5 @@ START_TEST(format_msg)
     test_message_null_buffer_wide();
     test_message_allocate_buffer_wide();
     test_message_invalid_flags_wide();
+    test_message_from_64bit_number();
 }

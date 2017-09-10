@@ -4,6 +4,7 @@
 #include <apitest.h>
 
 extern void func_Console(void);
+extern void func_CreateProcess(void);
 extern void func_DefaultActCtx(void);
 extern void func_DeviceIoControl(void);
 extern void func_dosdev(void);
@@ -14,6 +15,7 @@ extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
 extern void func_interlck(void);
+extern void func_IsDBCSLeadByteEx(void);
 extern void func_LoadLibraryExW(void);
 extern void func_lstrcpynW(void);
 extern void func_lstrlen(void);
@@ -30,6 +32,7 @@ extern void func_WideCharToMultiByte(void);
 const struct test winetest_testlist[] =
 {
     { "ConsoleCP",                   func_Console },
+    { "CreateProcess",               func_CreateProcess },
     { "DefaultActCtx",               func_DefaultActCtx },
     { "DeviceIoControl",             func_DeviceIoControl },
     { "dosdev",                      func_dosdev },
@@ -40,6 +43,7 @@ const struct test winetest_testlist[] =
     { "GetDriveType",                func_GetDriveType },
     { "GetModuleFileName",           func_GetModuleFileName },
     { "interlck",                    func_interlck },
+    { "IsDBCSLeadByteEx",            func_IsDBCSLeadByteEx },
     { "LoadLibraryExW",              func_LoadLibraryExW },
     { "lstrcpynW",                   func_lstrcpynW },
     { "lstrlen",                     func_lstrlen },

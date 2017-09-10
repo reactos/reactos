@@ -52,7 +52,6 @@ VfatCloseFile(
     FileObject->FsContext2 = NULL;
     FileObject->FsContext = NULL;
     FileObject->SectionObjectPointer = NULL;
-    DeviceExt->OpenHandleCount--;
 
     if (pCcb)
     {

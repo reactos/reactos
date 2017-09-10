@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "E&xplorer", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Ouvrir", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "C&ouper", FCIDM_SHVIEW_CUT
-        MENUITEM "&Copier", FCIDM_SHVIEW_COPY
+        MENUITEM "C&ouper", IDM_CUT
+        MENUITEM "&Copier", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Créer un &lien", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Supprimer", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Renommer", FCIDM_SHVIEW_RENAME
+        MENUITEM "Créer un &lien", IDM_CREATELINK
+        MENUITEM "&Supprimer", IDM_DELETE
+        MENUITEM "&Renommer", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Propriétés", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Propriétés", IDM_PROPERTIES
     END
 END
 
@@ -634,24 +632,22 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Fichier"
-    IDS_SHV_COLUMN2 "Taille"
-    IDS_SHV_COLUMN3 "Type"
-    IDS_SHV_COLUMN4 "Modifié"
-    IDS_SHV_COLUMN5 "Attributs"
-    IDS_SHV_COLUMN6 "Capacité"
-    IDS_SHV_COLUMN7 "Espace disponible"
-    IDS_SHV_COLUMN8 "Nom"
-    IDS_SHV_COLUMN9 "Commentaires"
-    IDS_SHV_COLUMN10 "Propriétaire"
-    IDS_SHV_COLUMN11 "Groupe"
-    IDS_SHV_COLUMN12 "Nom de fichier"
-    IDS_SHV_COLUMN13 "Catégorie"
+    IDS_SHV_COLUMN_NAME "Nom"
+    IDS_SHV_COLUMN_SIZE "Taille"
+    IDS_SHV_COLUMN_TYPE "Type"
+    IDS_SHV_COLUMN_MODIFIED "Modifié"
+    IDS_SHV_COLUMN_ATTRIBUTES "Attributs"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Capacité"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Espace disponible"
+    IDS_SHV_COLUMN_OWNER "Propriétaire"
+    IDS_SHV_COLUMN_GROUP "Groupe"
+    IDS_SHV_COLUMN_FILENAME "Nom de fichier"
+    IDS_SHV_COLUMN_CATEGORY "Catégorie"
     IDS_SHV_COLUMN_DELFROM "Localisation d'origine"
     IDS_SHV_COLUMN_DELDATE "Date de suppression"
     IDS_SHV_COLUMN_FONTTYPE "Type de police"
     IDS_SHV_COLUMN_WORKGROUP "Workgroup"
-    IDS_SHV_NETWORKLOCATION "Emplacement réseau"
+    IDS_SHV_COLUMN_NETLOCATION "Emplacement réseau"
     IDS_SHV_COLUMN_DOCUMENTS "Documents"
     IDS_SHV_COLUMN_STATUS "État"
     IDS_SHV_COLUMN_COMMENTS "Commentaires"

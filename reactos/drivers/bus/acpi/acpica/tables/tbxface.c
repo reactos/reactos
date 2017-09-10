@@ -184,7 +184,8 @@ AcpiReallocateRootTable (
     void)
 {
     ACPI_STATUS             Status;
-    UINT32                  i;
+    ACPI_TABLE_DESC         *TableDesc;
+    UINT32                  i, j;
 
 
     ACPI_FUNCTION_TRACE (AcpiReallocateRootTable);
@@ -199,6 +200,8 @@ AcpiReallocateRootTable (
         return_ACPI_STATUS (AE_SUPPORT);
     }
 
+    (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
+
     /*
      * Ensure OS early boot logic, which is required by some hosts. If the
      * table state is reported to be wrong, developers should fix the
@@ -207,17 +210,41 @@ AcpiReallocateRootTable (
      */
     for (i = 0; i < AcpiGbl_RootTableList.CurrentTableCount; ++i)
     {
-        if (AcpiGbl_RootTableList.Tables[i].Pointer)
+        TableDesc = &AcpiGbl_RootTableList.Tables[i];
+        if (TableDesc->Pointer)
         {
             ACPI_ERROR ((AE_INFO,
                 "Table [%4.4s] is not invalidated during early boot stage",
-                AcpiGbl_RootTableList.Tables[i].Signature.Ascii));
+                TableDesc->Signature.Ascii));
+        }
+    }
+
+    if (!AcpiGbl_EnableTableValidation)
+    {
+        /*
+         * Now it's safe to do full table validation. We can do deferred
+         * table initilization here once the flag is set.
+         */
+        AcpiGbl_EnableTableValidation = TRUE;
+        for (i = 0; i < AcpiGbl_RootTableList.CurrentTableCount; ++i)
+        {
+            TableDesc = &AcpiGbl_RootTableList.Tables[i];
+            if (!(TableDesc->Flags & ACPI_TABLE_IS_VERIFIED))
+            {
+                Status = AcpiTbVerifyTempTable (TableDesc, NULL, &j);
+                if (ACPI_FAILURE (Status))
+                {
+                    AcpiTbUninstallTable (TableDesc);
+                }
+            }
         }
     }
 
     AcpiGbl_RootTableList.Flags |= ACPI_ROOT_ALLOW_RESIZE;
-
     Status = AcpiTbResizeRootTableList ();
+    AcpiGbl_RootTableList.Flags |= ACPI_ROOT_ORIGIN_ALLOCATED;
+
+    (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
     return_ACPI_STATUS (Status);
 }
 
@@ -413,6 +440,11 @@ AcpiPutTable (
 
     ACPI_FUNCTION_TRACE (AcpiPutTable);
 
+
+    if (!Table)
+    {
+        return_VOID;
+    }
 
     (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
 

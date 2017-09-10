@@ -1,12 +1,12 @@
-/* @(#)getargs.c	2.70 16/10/23 Copyright 1985, 1988, 1994-2016 J. Schilling */
+/* @(#)getargs.c	2.71 17/07/16 Copyright 1985, 1988, 1994-2017 J. Schilling */
 #include <schily/mconfig.h>
 #ifndef lint
 static	UConst char sccsid[] =
-	"@(#)getargs.c	2.70 16/10/23 Copyright 1985, 1988, 1994-2016 J. Schilling";
+	"@(#)getargs.c	2.71 17/07/16 Copyright 1985, 1988, 1994-2017 J. Schilling";
 #endif
 #define	NEW
 /*
- *	Copyright (c) 1985, 1988, 1994-2016 J. Schilling
+ *	Copyright (c) 1985, 1988, 1994-2017 J. Schilling
  *
  *	1.3.88	 Start implementation of release 2
  */
@@ -1096,8 +1096,10 @@ dosflags(argp, vfmt, pac, pav, flags, oargs)
 			if (rsf[i].c == *p)
 				break;
 		}
-		if (i >= MAXSF)
+		if (i >= MAXSF) {
+			va_end(args);
 			return (BADFLAG);
+		}
 		if (i == nsf) {
 			rsf[i].curarg = (void *)0;
 			rsf[i].curfun = (void *)0;

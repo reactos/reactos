@@ -283,7 +283,11 @@ LoadProvider(
     {
       RtlInitUnicodeString(&ProviderDll, L"uffs.dll");
     }
-    else
+    else if (wcscmp(FileSystem, L"CDFS") == 0)
+    {
+      RtlInitUnicodeString(&ProviderDll, L"ucdfs.dll");
+    }
+    else 
     {
       return NULL;
     }

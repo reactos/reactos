@@ -58,6 +58,8 @@ static BOOL     (WINAPI *pSetupDiSetDeviceRegistryPropertyA)(HDEVINFO, PSP_DEVIN
 static BOOL     (WINAPI *pSetupDiSetDeviceRegistryPropertyW)(HDEVINFO, PSP_DEVINFO_DATA, DWORD, const BYTE *, DWORD);
 static BOOL     (WINAPI *pSetupDiGetDeviceRegistryPropertyA)(HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD);
 static BOOL     (WINAPI *pSetupDiGetDeviceRegistryPropertyW)(HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD);
+static BOOL     (WINAPI *pSetupDiRemoveDevice)(HDEVINFO, PSP_DEVINFO_DATA);
+static BOOL     (WINAPI *pSetupDiRemoveDeviceInterface)(HDEVINFO, PSP_DEVICE_INTERFACE_DATA);
 static BOOL     (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
 /* This is a unique guid for testing purposes */
@@ -92,74 +94,11 @@ static void init_function_pointers(void)
     pSetupDiSetDeviceRegistryPropertyW = (void *)GetProcAddress(hSetupAPI, "SetupDiSetDeviceRegistryPropertyW");
     pSetupDiGetDeviceRegistryPropertyA = (void *)GetProcAddress(hSetupAPI, "SetupDiGetDeviceRegistryPropertyA");
     pSetupDiGetDeviceRegistryPropertyW = (void *)GetProcAddress(hSetupAPI, "SetupDiGetDeviceRegistryPropertyW");
+    pSetupDiRemoveDeviceInterface = (void *)GetProcAddress(hSetupAPI, "SetupDiRemoveDeviceInterface");
+    pSetupDiRemoveDevice = (void *)GetProcAddress(hSetupAPI, "SetupDiRemoveDevice");
     pIsWow64Process = (void *)GetProcAddress(hKernel32, "IsWow64Process");
 }
 
-static void change_reg_permissions(const WCHAR *regkey)
-{
-    HKEY hkey;
-    SID_IDENTIFIER_AUTHORITY ident = { SECURITY_WORLD_SID_AUTHORITY };
-    SECURITY_DESCRIPTOR sd;
-    PSID EveryoneSid;
-    PACL pacl = NULL;
-
-    RegOpenKeyExW(HKEY_LOCAL_MACHINE, regkey, 0, WRITE_DAC, &hkey);
-
-    /* Initialize the 'Everyone' sid */
-    AllocateAndInitializeSid(&ident, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0, &EveryoneSid);
-
-    pacl = HeapAlloc(GetProcessHeap(), 0, 256);
-    InitializeAcl(pacl, 256, ACL_REVISION);
-
-    /* Add 'Full Control' for 'Everyone' */
-    AddAccessAllowedAce(pacl, ACL_REVISION, KEY_ALL_ACCESS, EveryoneSid);
-
-    InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
-
-    SetSecurityDescriptorDacl(&sd, TRUE, pacl, FALSE);
-
-    /* Set the new security on the registry key */
-    RegSetKeySecurity(hkey, DACL_SECURITY_INFORMATION, &sd);
-
-    RegCloseKey(hkey);
-
-    HeapFree(GetProcessHeap(), 0, pacl);
-    if (EveryoneSid)
-        FreeSid(EveryoneSid);
-}
-
-static BOOL remove_device(void)
-{
-    HDEVINFO set;
-    SP_DEVINFO_DATA devInfo = { sizeof(devInfo), { 0 } };
-    BOOL ret, retval;
-
-    SetLastError(0xdeadbeef);
-    set = pSetupDiGetClassDevsA(&guid, NULL, 0, 0);
-    ok(set != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsA failed: %08x\n",
-     GetLastError());
-
-    SetLastError(0xdeadbeef);
-    ret = pSetupDiEnumDeviceInfo(set, 0, &devInfo);
-    ok(ret, "SetupDiEnumDeviceInfo failed: %08x\n", GetLastError());
-
-    SetLastError(0xdeadbeef);
-    retval = pSetupDiCallClassInstaller(DIF_REMOVE, set, &devInfo);
-    if(is_wow64)
-        todo_wine ok(!retval && GetLastError() == ERROR_IN_WOW64,
-                     "SetupDiCallClassInstaller(DIF_REMOVE...) succeeded: %08x\n", GetLastError());
-    else
-        todo_wine ok(retval,
-                     "SetupDiCallClassInstaller(DIF_REMOVE...) failed: %08x\n", GetLastError());
-
-    SetLastError(0xdeadbeef);
-    ret = pSetupDiDestroyDeviceInfoList(set);
-    ok(ret, "SetupDiDestroyDeviceInfoList failed: %08x\n", GetLastError());
-
-    return retval;
-}
-
-/* RegDeleteTreeW from dlls/advapi32/registry.c */
 static LSTATUS devinst_RegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey)
 {
     LONG ret;
@@ -226,35 +165,7 @@ cleanup:
     return ret;
 }
 
-static void clean_devclass_key(void)
-{
-    static const WCHAR devclass[] = {'S','y','s','t','e','m','\\',
-     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-     'C','o','n','t','r','o','l','\\','D','e','v','i','c','e','C','l','a','s','s','e','s','\\',
-     '{','6','a','5','5','b','5','a','4','-','3','f','6','5','-',
-     '1','1','d','b','-','b','7','0','4','-',
-     '0','0','1','1','9','5','5','c','2','b','d','b','}',0};
-    HKEY key;
-    DWORD subkeys;
-
-    /* Check if we have subkeys as Windows 2000 doesn't delete
-     * the keys under the DeviceClasses key after a SetupDiDestroyDeviceInfoList.
-     */
-    RegOpenKeyW(HKEY_LOCAL_MACHINE, devclass, &key);
-    RegQueryInfoKeyW(key, NULL, NULL, NULL, &subkeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    if (subkeys > 0)
-    {
-        trace("We are most likely on Windows 2000\n");
-        devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, devclass);
-    }
-    else
-    {
-        ok(!RegDeleteKeyW(HKEY_LOCAL_MACHINE, devclass),
-         "Couldn't delete deviceclass key\n");
-    }
-}
-
-static void test_SetupDiCreateDeviceInfoListEx(void) 
+static void test_SetupDiCreateDeviceInfoListEx(void)
 {
     HDEVINFO devlist;
     BOOL ret;
@@ -342,7 +253,7 @@ static void test_SetupDiOpenClassRegKeyExA(void)
         RegCloseKey(hkey);
     }
     else
-        trace("failed to open classes key\n");
+        trace("failed to open classes key %u\n", GetLastError());
 }
 
 static void create_inf_file(LPCSTR filename)
@@ -423,12 +334,6 @@ static void testCreateDeviceInfo(void)
 {
     BOOL ret;
     HDEVINFO set;
-    HKEY key;
-    LONG res;
-    static const WCHAR bogus[] = {'S','y','s','t','e','m','\\',
-     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-     'E','n','u','m','\\','R','o','o','t','\\',
-     'L','E','G','A','C','Y','_','B','O','G','U','S',0};
 
     SetLastError(0xdeadbeef);
     ret = pSetupDiCreateDeviceInfoA(NULL, NULL, NULL, NULL, NULL, 0, NULL);
@@ -451,19 +356,6 @@ static void testCreateDeviceInfo(void)
         DWORD i;
         static GUID deadbeef =
          {0xdeadbeef, 0xdead, 0xbeef, {0xde,0xad,0xbe,0xef,0xde,0xad,0xbe,0xef}};
-        HKEY key;
-        static const WCHAR bogus0000[] = {'S','y','s','t','e','m','\\',
-         'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-         'E','n','u','m','\\','R','o','o','t','\\',
-         'L','E','G','A','C','Y','_','B','O','G','U','S','\\','0','0','0','0',0};
-
-        /* So we know we have a clean start */
-        if (!RegOpenKeyW(HKEY_LOCAL_MACHINE, bogus0000, &key))
-        {
-            trace("Expected LEGACY_BOGUS\\0000 key to not exist, will be removed now\n");
-            change_reg_permissions(bogus0000);
-            ok(!RegDeleteKeyW(HKEY_LOCAL_MACHINE, bogus0000), "Could not delete LEGACY_BOGUS\\0000 key\n");
-        }
 
         /* No GUID given */
         SetLastError(0xdeadbeef);
@@ -471,30 +363,14 @@ static void testCreateDeviceInfo(void)
          NULL, NULL, 0, NULL);
         ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
             "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
-        /* Even though NT4 fails it still adds some stuff to the registry that
-         * can't be deleted via normal setupapi functions. As the registry is written
-         * by a different user (SYSTEM) we have to do some magic to get rid of the key
-         */
-        if (!RegOpenKeyW(HKEY_LOCAL_MACHINE, bogus0000, &key))
-        {
-            trace("NT4 created a bogus key on failure, will be removed now\n");
-            change_reg_permissions(bogus0000);
-            ok(!RegDeleteKeyW(HKEY_LOCAL_MACHINE, bogus0000),
-             "Could not delete LEGACY_BOGUS\\0000 key\n");
-        }
+
         /* We can't add device information to the set with a different GUID */
         SetLastError(0xdeadbeef);
         ret = pSetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000",
          &deadbeef, NULL, NULL, 0, NULL);
         ok(!ret && GetLastError() == ERROR_CLASS_MISMATCH,
          "Expected ERROR_CLASS_MISMATCH, got %08x\n", GetLastError());
-        if (!RegOpenKeyW(HKEY_LOCAL_MACHINE, bogus0000, &key))
-        {
-            trace("NT4 created a bogus key on failure, will be removed now\n");
-            change_reg_permissions(bogus0000);
-            ok(!RegDeleteKeyW(HKEY_LOCAL_MACHINE, bogus0000),
-             "Could not delete LEGACY_BOGUS\\0000 key\n");
-        }
+
         /* Finally, with all three required parameters, this succeeds: */
         ret = pSetupDiCreateDeviceInfoA(set, "Root\\LEGACY_BOGUS\\0000", &guid,
          NULL, NULL, 0, NULL);
@@ -526,44 +402,10 @@ static void testCreateDeviceInfo(void)
         ok(i == 3, "Expected 3 devices, got %d\n", i);
         ok(GetLastError() == ERROR_NO_MORE_ITEMS,
          "SetupDiEnumDeviceInfo failed: %08x\n", GetLastError());
+
+        ret = pSetupDiRemoveDevice(set, &devInfo);
+        todo_wine ok(ret, "got %u\n", GetLastError());
         pSetupDiDestroyDeviceInfoList(set);
-    }
-
-    /* The bogus registry key shouldn't be there after this test. The only
-     * reasons this key would still be present:
-     *
-     * - We are running on Wine which has to be fixed
-     * - We have leftovers from old tests
-     */
-    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, bogus, &key);
-    todo_wine
-    ok(res == ERROR_FILE_NOT_FOUND, "Expected key to not exist\n");
-    if (res == ERROR_SUCCESS)
-    {
-        DWORD subkeys;
-
-        /* Check if we have subkeys */
-        RegQueryInfoKeyA(key, NULL, NULL, NULL, &subkeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-        if (subkeys > 0)
-        {
-            int i;
-
-            /* Leftovers from old tests */
-            trace("Going to remove %d devices\n", subkeys);
-            for (i = 0; i < subkeys; i++)
-            {
-                BOOL ret;
-
-                ret = remove_device();
-                ok(ret, "Expected a device to be removed\n");
-            }
-        }
-        else
-        {
-            /* Wine doesn't delete the bogus key itself currently */
-            trace("We are most likely on Wine\n");
-            RegDeleteKeyW(HKEY_LOCAL_MACHINE, bogus);
-        }
     }
 }
 
@@ -627,12 +469,18 @@ static void testGetDeviceInstanceId(void)
         /* NT4 returns 'Root' and W2K and above 'ROOT' */
         ok(!lstrcmpiA(instanceID, "ROOT\\LEGACY_BOGUS\\0001"),
          "Unexpected instance ID %s\n", instanceID);
+
+        ret = pSetupDiRemoveDevice(set, &devInfo);
+        todo_wine ok(ret, "got %u\n", GetLastError());
         pSetupDiDestroyDeviceInfoList(set);
     }
 }
 
 static void testRegisterDeviceInfo(void)
 {
+    static const WCHAR bogus[] = {'S','y','s','t','e','m','\\',
+     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+     'E','n','u','m','\\','U','S','B','\\','B','O','G','U','S',0};
     BOOL ret;
     HDEVINFO set;
 
@@ -659,22 +507,20 @@ static void testRegisterDeviceInfo(void)
         ret = pSetupDiRegisterDeviceInfo(set, &devInfo, 0, NULL, NULL, NULL);
         ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
          "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
         ret = pSetupDiCreateDeviceInfoA(set, "USB\\BOGUS\\0000", &guid,
          NULL, NULL, 0, &devInfo);
-        ok(ret || GetLastError() == ERROR_DEVINST_ALREADY_EXISTS,
-                "SetupDiCreateDeviceInfoA failed: %d\n", GetLastError());
-        if (ret)
-        {
-            /* If it already existed, registering it again will fail */
-            ret = pSetupDiRegisterDeviceInfo(set, &devInfo, 0, NULL, NULL,
-             NULL);
-            ok(ret, "SetupDiCreateDeviceInfoA failed: %d\n", GetLastError());
-        }
-        /* FIXME: On Win2K+ systems, this is now persisted to registry in
-         * HKLM\System\CCS\Enum\USB\Bogus\0000.
-         * FIXME: the key also becomes undeletable.  How to get rid of it?
-         */
+        ok(ret, "SetupDiCreateDeviceInfoA failed: %08x\n", GetLastError());
+
+        ret = pSetupDiRegisterDeviceInfo(set, &devInfo, 0, NULL, NULL, NULL);
+        ok(ret, "SetupDiRegisterDeviceInfo failed: %d\n", GetLastError());
+
+        ret = pSetupDiRemoveDevice(set, &devInfo);
+        todo_wine ok(ret, "got %u\n", GetLastError());
         pSetupDiDestroyDeviceInfoList(set);
+
+        /* remove once Wine is fixed */
+        devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, bogus);
     }
 }
 
@@ -682,17 +528,6 @@ static void testCreateDeviceInterface(void)
 {
     BOOL ret;
     HDEVINFO set;
-    HKEY key;
-    static const WCHAR bogus[] = {'S','y','s','t','e','m','\\',
-     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-     'E','n','u','m','\\','R','o','o','t','\\',
-     'L','E','G','A','C','Y','_','B','O','G','U','S',0};
-    static const WCHAR devclass[] = {'S','y','s','t','e','m','\\',
-     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-     'C','o','n','t','r','o','l','\\','D','e','v','i','c','e','C','l','a','s','s','e','s','\\',
-     '{','6','a','5','5','b','5','a','4','-','3','f','6','5','-',
-     '1','1','d','b','-','b','7','0','4','-',
-     '0','0','1','1','9','5','5','c','2','b','d','b','}',0};
 
     if (!pSetupDiCreateDeviceInterfaceA || !pSetupDiEnumDeviceInterfaces)
     {
@@ -754,32 +589,26 @@ static void testCreateDeviceInterface(void)
         ok(i == 2, "expected 2 interfaces, got %d\n", i);
         ok(GetLastError() == ERROR_NO_MORE_ITEMS,
          "SetupDiEnumDeviceInterfaces failed: %08x\n", GetLastError());
+
+        for (i = 0; i < 2; i++)
+        {
+            ret = pSetupDiEnumDeviceInterfaces(set, &devInfo, &guid, i, &interfaceData);
+            ok(ret, "SetupDiEnumDeviceInterfaces failed: %08x\n", GetLastError());
+
+            ret = pSetupDiRemoveDeviceInterface(set, &interfaceData);
+            todo_wine ok(ret, "SetupDiRemoveDeviceInterface failed: %08x\n", GetLastError());
+        }
+
+        ret = pSetupDiRemoveDevice(set, &devInfo);
+        todo_wine ok(ret, "got %u\n", GetLastError());
+
         ret = pSetupDiDestroyDeviceInfoList(set);
         ok(ret, "SetupDiDestroyDeviceInfoList failed: %08x\n", GetLastError());
-
-        /* Cleanup */
-        /* FIXME: On Wine we still have the bogus entry in Enum\Root and
-         * subkeys, as well as the deviceclass key with subkeys.
-         * Only clean the deviceclass key once Wine if fixed.
-         */
-        if (!RegOpenKeyW(HKEY_LOCAL_MACHINE, bogus, &key))
-        {
-            /* Wine doesn't delete the information currently */
-            trace("We are most likely on Wine\n");
-            devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, bogus);
-            devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, devclass);
-        }
-        else
-        {
-            clean_devclass_key();
-        }
     }
 }
 
 static void testGetDeviceInterfaceDetail(void)
 {
-    BOOL ret;
-    HDEVINFO set;
     static const WCHAR bogus[] = {'S','y','s','t','e','m','\\',
      'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
      'E','n','u','m','\\','R','o','o','t','\\',
@@ -790,6 +619,8 @@ static void testGetDeviceInterfaceDetail(void)
      '{','6','a','5','5','b','5','a','4','-','3','f','6','5','-',
      '1','1','d','b','-','b','7','0','4','-',
      '0','0','1','1','9','5','5','c','2','b','d','b','}',0};
+    BOOL ret;
+    HDEVINFO set;
 
     if (!pSetupDiCreateDeviceInterfaceA || !pSetupDiGetDeviceInterfaceDetailA)
     {
@@ -808,7 +639,6 @@ static void testGetDeviceInterfaceDetail(void)
         SP_DEVICE_INTERFACE_DATA interfaceData = { sizeof(interfaceData),
             { 0 } };
         DWORD size = 0;
-        HKEY key;
 
         SetLastError(0xdeadbeef);
         ret = pSetupDiGetDeviceInterfaceDetailA(set, NULL, NULL, 0, NULL,
@@ -884,24 +714,20 @@ static void testGetDeviceInterfaceDetail(void)
 
             HeapFree(GetProcessHeap(), 0, buf);
         }
+
+        ret = pSetupDiEnumDeviceInterfaces(set, &devInfo, &guid, 0, &interfaceData);
+        ok(ret, "SetupDiEnumDeviceInterfaces failed: %08x\n", GetLastError());
+
+        ret = pSetupDiRemoveDeviceInterface(set, &interfaceData);
+        todo_wine ok(ret, "SetupDiRemoveDeviceInterface failed: %08x\n", GetLastError());
+
+        ret = pSetupDiRemoveDevice(set, &devInfo);
+        todo_wine ok(ret, "got %u\n", GetLastError());
         pSetupDiDestroyDeviceInfoList(set);
 
-        /* Cleanup */
-        /* FIXME: On Wine we still have the bogus entry in Enum\Root and
-         * subkeys, as well as the deviceclass key with subkeys.
-         * Only do the RegDeleteKey, once Wine is fixed.
-         */
-        if (!RegOpenKeyW(HKEY_LOCAL_MACHINE, bogus, &key))
-        {
-            /* Wine doesn't delete the information currently */
-            trace("We are most likely on Wine\n");
-            devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, bogus);
-            devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, devclass);
-        }
-        else
-        {
-            clean_devclass_key();
-        }
+        /* remove once Wine is fixed */
+        devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, bogus);
+        devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, devclass);
     }
 }
 
@@ -920,7 +746,6 @@ static void testDevRegKey(void)
     BOOL ret;
     HDEVINFO set;
     HKEY key = NULL;
-    BOOL classKeyCreated;
 
     SetLastError(0xdeadbeef);
     key = pSetupDiCreateDevRegKeyW(NULL, NULL, 0, 0, 0, NULL, NULL);
@@ -1012,7 +837,6 @@ static void testDevRegKey(void)
          "SetupDiCreateDevRegKey failed: %08x\n", GetLastError());
         if (key != INVALID_HANDLE_VALUE)
         {
-            classKeyCreated = TRUE;
             RegCloseKey(key);
             /* The class key should have been created */
             ok(!RegOpenKeyW(HKEY_LOCAL_MACHINE, classKey, &key),
@@ -1030,55 +854,39 @@ static void testDevRegKey(void)
              DIREG_DRV, KEY_READ);
             ok(key != INVALID_HANDLE_VALUE, "SetupDiOpenDevRegKey failed: %08x\n",
              GetLastError());
-            pSetupDiDestroyDeviceInfoList(set);
+            RegCloseKey(key);
         }
-        else
-            classKeyCreated = FALSE;
 
-        /* Cleanup */
-        ret = remove_device();
-        if(!is_wow64)
-            todo_wine ok(ret, "Expected the device to be removed: %08x\n", GetLastError());
+        ret = pSetupDiRemoveDevice(set, &devInfo);
+        todo_wine ok(ret, "got %u\n", GetLastError());
+        pSetupDiDestroyDeviceInfoList(set);
 
-        /* FIXME: Only do the RegDeleteKey, once Wine is fixed */
-        if (!ret)
-        {
-            /* Wine doesn't delete the information currently */
-            trace("We are most likely on Wine\n");
-            devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, bogus);
-            devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, classKey);
-        }
-        else if (classKeyCreated)
-        {
-            /* There should only be a class key entry, so a simple
-             * RegDeleteKey should work
-             *
-             * This could fail if it's the first time for this new test
-             * after running the old tests.
-             */
-            ok(!RegDeleteKeyW(HKEY_LOCAL_MACHINE, classKey),
-             "Couldn't delete classkey\n");
-        }
+        /* remove once Wine is fixed */
+        devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, bogus);
+        devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, classKey);
     }
 }
 
 static void testRegisterAndGetDetail(void)
 {
-    HDEVINFO set;
-    BOOL ret;
-    SP_DEVINFO_DATA devInfo = { sizeof(SP_DEVINFO_DATA), { 0 } };
-    SP_DEVICE_INTERFACE_DATA interfaceData = { sizeof(interfaceData), { 0 } };
-    DWORD dwSize = 0;
+    static const WCHAR classKey[] = {'S','y','s','t','e','m','\\',
+     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+     'C','o','n','t','r','o','l','\\','C','l','a','s','s','\\',
+     '{','6','a','5','5','b','5','a','4','-','3','f','6','5','-',
+     '1','1','d','b','-','b','7','0','4','-',
+     '0','0','1','1','9','5','5','c','2','b','d','b','}',0};
     static const WCHAR bogus[] = {'S','y','s','t','e','m','\\',
      'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
      'E','n','u','m','\\','R','o','o','t','\\',
      'L','E','G','A','C','Y','_','B','O','G','U','S',0};
-    static const WCHAR devclass[] = {'S','y','s','t','e','m','\\',
-     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-     'C','o','n','t','r','o','l','\\','D','e','v','i','c','e','C','l','a','s','s','e','s','\\',
-     '{','6','a','5','5','b','5','a','4','-','3','f','6','5','-',
-     '1','1','d','b','-','b','7','0','4','-',
-     '0','0','1','1','9','5','5','c','2','b','d','b','}',0};
+    HDEVINFO set, set2;
+    BOOL ret;
+    SP_DEVINFO_DATA devInfo = { sizeof(SP_DEVINFO_DATA), { 0 } };
+    SP_DEVICE_INTERFACE_DATA interfaceData = { sizeof(interfaceData), { 0 } };
+    SP_DEVICE_INTERFACE_DATA interfaceData2 = { sizeof(interfaceData2), { 0 } };
+    DWORD dwSize = 0;
+    HKEY key;
+    LONG res;
 
     if (!pSetupDiCreateDeviceInterfaceA || !pSetupDiEnumDeviceInterfaces ||
         !pSetupDiGetDeviceInterfaceDetailA)
@@ -1092,6 +900,10 @@ static void testRegisterAndGetDetail(void)
     ok(set != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsA failed: %08x\n",
      GetLastError());
 
+    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, bogus, &key);
+    ok(res != ERROR_SUCCESS, "Expected key to not exist\n");
+    RegCloseKey(key);
+
     SetLastError(0xdeadbeef);
     ret = pSetupDiCreateDeviceInfoA(set, "LEGACY_BOGUS", &guid, NULL, 0,
      DICD_GENERATE_ID, &devInfo);
@@ -1103,25 +915,23 @@ static void testRegisterAndGetDetail(void)
     ret = pSetupDiRegisterDeviceInfo(set, &devInfo, 0, NULL, NULL, NULL);
     ok(ret, "SetupDiRegisterDeviceInfo failed: %08x\n", GetLastError());
 
-    pSetupDiDestroyDeviceInfoList(set);
-
     SetLastError(0xdeadbeef);
-    set = pSetupDiGetClassDevsA(&guid, NULL, 0, DIGCF_DEVICEINTERFACE);
-    ok(set != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsA failed: %08x\n",
+    set2 = pSetupDiGetClassDevsA(&guid, NULL, 0, DIGCF_DEVICEINTERFACE);
+    ok(set2 != INVALID_HANDLE_VALUE, "SetupDiGetClassDevsA failed: %08x\n",
      GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = pSetupDiEnumDeviceInterfaces(set, NULL, &guid, 0, &interfaceData);
+    ret = pSetupDiEnumDeviceInterfaces(set2, NULL, &guid, 0, &interfaceData2);
     ok(ret, "SetupDiEnumDeviceInterfaces failed: %08x\n", GetLastError());
     SetLastError(0xdeadbeef);
-    ret = pSetupDiGetDeviceInterfaceDetailA(set, &interfaceData, NULL, 0, &dwSize, NULL);
+    ret = pSetupDiGetDeviceInterfaceDetailA(set2, &interfaceData2, NULL, 0, &dwSize, NULL);
     ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
      "Expected ERROR_INSUFFICIENT_BUFFER, got %08x\n", GetLastError());
     if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
         static const char path[] =
             "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}";
-        static const char path_wow64[] =
+        static const char path_w10[] =
             "\\\\?\\root#legacy_bogus#0001#{6a55b5a4-3f65-11db-b704-0011955c2bdb}";
         static const char path_w2k[] =
             "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}\\";
@@ -1132,42 +942,29 @@ static void testRegisterAndGetDetail(void)
         {
             detail->cbSize = sizeof(*detail);
             SetLastError(0xdeadbeef);
-            ret = pSetupDiGetDeviceInterfaceDetailA(set, &interfaceData,
+            ret = pSetupDiGetDeviceInterfaceDetailA(set2, &interfaceData2,
              detail, dwSize, &dwSize, NULL);
             ok(ret, "SetupDiGetDeviceInterfaceDetailA failed: %08x\n", GetLastError());
-            /* FIXME: This one only worked because old data wasn't removed properly. As soon
-             * as all the tests are cleaned up correctly this has to be (or should be) fixed
-             */
-            if(is_wow64)
-                ok(!lstrcmpiA(path_wow64, detail->DevicePath),
-                   "Unexpected path %s\n", detail->DevicePath);
-            else
-                todo_wine ok(!lstrcmpiA(path, detail->DevicePath) ||
-                             !lstrcmpiA(path_w2k, detail->DevicePath),
-                             "Unexpected path %s\n", detail->DevicePath);
+            ok(!lstrcmpiA(path, detail->DevicePath) ||
+               !lstrcmpiA(path_w10, detail->DevicePath) ||
+               !lstrcmpiA(path_w2k, detail->DevicePath),
+               "Unexpected path %s\n", detail->DevicePath);
             HeapFree(GetProcessHeap(), 0, detail);
         }
     }
 
+    ret = pSetupDiRemoveDeviceInterface(set, &interfaceData);
+    todo_wine ok(ret, "SetupDiRemoveDeviceInterface failed: %08x\n", GetLastError());
+
+    ret = pSetupDiRemoveDevice(set, &devInfo);
+    todo_wine ok(ret, "got %u\n", GetLastError());
+
     pSetupDiDestroyDeviceInfoList(set);
+    pSetupDiDestroyDeviceInfoList(set2);
 
-    /* Cleanup */
-    ret = remove_device();
-    if(!is_wow64)
-        todo_wine ok(ret, "Expected the device to be removed: %08x\n", GetLastError());
-
-    /* FIXME: Only do the RegDeleteKey, once Wine is fixed */
-    if (!ret)
-    {
-        /* Wine doesn't delete the information currently */
-        trace("We are most likely on Wine\n");
-        devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, bogus);
-        devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, devclass);
-    }
-    else
-    {
-        clean_devclass_key();
-    }
+    /* remove once Wine is fixed */
+    devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, bogus);
+    devinst_RegDeleteTreeW(HKEY_LOCAL_MACHINE, classKey);
 }
 
 static void testDeviceRegistryPropertyA(void)
@@ -1260,6 +1057,10 @@ static void testDeviceRegistryPropertyA(void)
     todo_wine
     ok(!ret && GetLastError() == ERROR_INVALID_DATA,
      "Expected ERROR_INVALID_DATA, got %08x\n", GetLastError());
+    ret = pSetupDiGetDeviceRegistryPropertyA(set, &devInfo, SPDRP_HARDWAREID,
+     NULL, NULL, 0, &size);
+    ok(!ret && GetLastError() == ERROR_INVALID_DATA,
+     "Expected ERROR_INVALID_DATA, got %08x\n", GetLastError());
     pSetupDiDestroyDeviceInfoList(set);
 
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, bogus, &key);
@@ -1269,7 +1070,6 @@ static void testDeviceRegistryPropertyA(void)
     if (res == ERROR_SUCCESS)
     {
         /* Wine doesn't delete the information currently */
-        trace("We are most likely on Wine\n");
         RegDeleteKeyA(HKEY_LOCAL_MACHINE, bogus);
     }
 }
@@ -1366,6 +1166,10 @@ static void testDeviceRegistryPropertyW(void)
     todo_wine
     ok(!ret && GetLastError() == ERROR_INVALID_DATA,
      "Expected ERROR_INVALID_DATA, got %08x\n", GetLastError());
+    ret = pSetupDiGetDeviceRegistryPropertyW(set, &devInfo, SPDRP_HARDWAREID,
+     NULL, NULL, 0, &size);
+    ok(!ret && GetLastError() == ERROR_INVALID_DATA,
+     "Expected ERROR_INVALID_DATA, got %08x\n", GetLastError());
     pSetupDiDestroyDeviceInfoList(set);
 
     res = RegOpenKeyW(HKEY_LOCAL_MACHINE, bogus, &key);
@@ -1375,7 +1179,6 @@ static void testDeviceRegistryPropertyW(void)
     if (res == ERROR_SUCCESS)
     {
         /* Wine doesn't delete the information currently */
-        trace("We are most likely on Wine\n");
         RegDeleteKeyW(HKEY_LOCAL_MACHINE, bogus);
     }
 }
@@ -1462,7 +1265,7 @@ static void testSetupDiGetINFClassA(void)
 
     for(i=0; i < sizeof(signatures)/sizeof(char*); i++)
     {
-        trace("testing signarture %s\n", signatures[i]);
+        trace("testing signature %s\n", signatures[i]);
         h = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                         FILE_ATTRIBUTE_NORMAL, NULL);
         if(h == INVALID_HANDLE_VALUE)
@@ -1580,7 +1383,16 @@ static void testSetupDiGetClassDevsA(void)
 
 START_TEST(devinst)
 {
+    HKEY hkey;
+
     init_function_pointers();
+
+    if ((hkey = SetupDiOpenClassRegKey(NULL, KEY_ALL_ACCESS)) == INVALID_HANDLE_VALUE)
+    {
+        skip("needs admin rights\n");
+        return;
+    }
+    RegCloseKey(hkey);
 
     if (pIsWow64Process)
         pIsWow64Process(GetCurrentProcess(), &is_wow64);

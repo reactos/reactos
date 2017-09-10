@@ -8,33 +8,33 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Üdvözlünk"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Üdvözlünk a ReactOS Operációs Rendszerben.\n\n"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Üdvözlünk a ReactOS Operációs Rendszerben.\n\n"
 
-    IDS_CHECKTEXT "Show this dialog again"
-    IDS_CLOSETEXT "Kilépés"
+    IDS_CHECKTEXT "&Show this dialog again"
+    IDS_CLOSETEXT "&Kilépés"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "ReactOS telepítése"
-    IDS_TOPICBUTTON1 "A CD böngészése"
-    IDS_TOPICBUTTON2 "Kilépés"
+    IDS_TOPIC_BUTTON0 "&ReactOS telepítése"
+    IDS_TOPIC_BUTTON1 "&A CD böngészése"
+    IDS_TOPIC_BUTTON2 "&Kilépés"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "ReactOS telepítése"
-    IDS_TOPICTITLE1 "A CD böngészése"
-    IDS_TOPICTITLE2 "Kilépés"
+    IDS_TOPIC_TITLE0 "ReactOS telepítése"
+    IDS_TOPIC_TITLE1 "A CD böngészése"
+    IDS_TOPIC_TITLE2 "Kilépés"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "A ReactOS telepítése vagy frissítése."
-    IDS_TOPICDESC1 "A CD böngészése"
-    IDS_TOPICDESC2 "Kilépés"
+    IDS_TOPIC_DESC0 "A ReactOS telepítése vagy frissítése."
+    IDS_TOPIC_DESC1 "A CD böngészése"
+    IDS_TOPIC_DESC2 "Kilépés"
 END

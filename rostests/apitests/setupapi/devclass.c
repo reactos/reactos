@@ -89,9 +89,10 @@ static void test_SetupDiBuildClassInfoList(void)
 
     if ( size > 0 )
     {
-       /* That's better to use the first class found, as we know for sure that it exists */
-       memcpy(&test_class_guid, &guid_list[0], sizeof( GUID ) );
-       SetupDiClassNameFromGuidA( &test_class_guid, test_class_name, sizeof( test_class_name ), NULL );
+        /* That's better to use the first class found, as we know for sure that it exists */
+        memcpy(&test_class_guid, &guid_list[0], sizeof( GUID ) );
+        ok( SetupDiClassNameFromGuidA( &test_class_guid, test_class_name, sizeof( test_class_name ), NULL ),
+            "Error reported %lx\n", GetLastError() );
     }
     HeapFree( GetProcessHeap(), 0, guid_list );
 }
@@ -131,13 +132,13 @@ static void test_SetupDiClassGuidsFromNameA(void)
         "Error reported %lx\n", GetLastError() );
     ok( size == required_size, "Expected size %lu, got %lu\n", required_size, size );
     ok( IsEqualIID( &guid_list[0], &test_class_guid ),
-        "Expected %s, got %s\n", debugstr_guid( &test_class_guid ), debugstr_guid( &guid_list[0] ) );
+        "Expected %s, got %s for class %s\n", debugstr_guid( &test_class_guid ), debugstr_guid( &guid_list[0] ), test_class_name );
     SetLastError( 0xdeadbeef );
     ok( SetupDiClassGuidsFromNameA( test_class_name, guid_list, required_size + 1, &size ),
         "Error reported %lx\n", GetLastError() );
     ok( size == required_size, "Expected size %lu, got %lu\n", required_size, size );
     ok( IsEqualIID( &guid_list[0], &test_class_guid ),
-        "Expected %s, got %s\n", debugstr_guid( &test_class_guid ), debugstr_guid( &guid_list[0] ) );
+        "Expected %s, got %s for class %s\n", debugstr_guid( &test_class_guid ), debugstr_guid( &guid_list[0] ), test_class_name );
 
     HeapFree( GetProcessHeap(), 0, guid_list );
 }
@@ -162,7 +163,7 @@ static void test_SetupDiClassNameFromGuidA(void)
         "Fail expected\n" );
     ok_lasterr( ERROR_INSUFFICIENT_BUFFER );
     ok( required_size > 0, "Expected > 0, got %lu\n", required_size );
-    ok( required_size < MAX_CLASS_NAME_LEN, "Expected < %u, got %lu\n", MAX_CLASS_NAME_LEN, required_size );
+    ok( required_size < MAX_CLASS_NAME_LEN, "Expected < %u, got %lu for GUID %s\n", MAX_CLASS_NAME_LEN, required_size, debugstr_guid( &test_class_guid ) );
 
     class_name = HeapAlloc( GetProcessHeap(), 0, required_size );
     if ( !class_name )

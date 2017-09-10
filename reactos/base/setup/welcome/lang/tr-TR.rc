@@ -8,33 +8,33 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Hoş Geldiniz"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "ReactOS İşletim Dizgesi'ne hoş geldiniz.\n\nSolda bir konuya tıklayınız."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "ReactOS İşletim Dizgesi'ne hoş geldiniz.\n\nSolda bir konuya tıklayınız."
 
-    IDS_CHECKTEXT "Bu iletiyi yine göster."
-    IDS_CLOSETEXT "Çıkış"
+    IDS_CHECKTEXT "&Bu iletiyi yine göster."
+    IDS_CLOSETEXT "&Çıkış"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "ReactOS'u Kur"
-    IDS_TOPICBUTTON1 "Bu CD'yi Araştır"
-    IDS_TOPICBUTTON2 "Çıkış"
+    IDS_TOPIC_BUTTON0 "&ReactOS'u Kur"
+    IDS_TOPIC_BUTTON1 "Bu &CD'yi Araştır"
+    IDS_TOPIC_BUTTON2 "&Çıkış"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "ReactOS'u Kur"
-    IDS_TOPICTITLE1 "Bu CD'yi Araştır"
-    IDS_TOPICTITLE2 "Çıkış"
+    IDS_TOPIC_TITLE0 "ReactOS'u Kur"
+    IDS_TOPIC_TITLE1 "Bu CD'yi Araştır"
+    IDS_TOPIC_TITLE2 "Çıkış"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Bilgisayarınıza yeni bir ReactOS yükleyiniz ya da var olan bir yüklemeyi yükseltiniz."
-    IDS_TOPICDESC1 "CD'yi araştır."
-    IDS_TOPICDESC2 "Bu uygulamadan çıkmak için tıklayınız."
+    IDS_TOPIC_DESC0 "Bilgisayarınıza yeni bir ReactOS yükleyiniz ya da var olan bir yüklemeyi yükseltiniz."
+    IDS_TOPIC_DESC1 "CD'yi araştır."
+    IDS_TOPIC_DESC2 "Bu uygulamadan çıkmak için tıklayınız."
 END

@@ -1,5 +1,7 @@
 
 list(APPEND SOURCE
+    bind.c
+    close.c
     getaddrinfo.c
     getnameinfo.c
     getservbyname.c

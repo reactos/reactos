@@ -1,4 +1,4 @@
-/* $Id: tif_luv.c,v 1.43 2016-09-04 21:32:56 erouault Exp $ */
+/* $Id: tif_luv.c,v 1.47 2017-05-14 10:17:27 erouault Exp $ */
 
 /*
  * Copyright (c) 1997 Greg Ward Larson
@@ -159,6 +159,7 @@
 typedef struct logLuvState LogLuvState;
 
 struct logLuvState {
+        int                     encoder_state;  /* 1 if encoder correctly initialized */
 	int                     user_datafmt;   /* user data format */
 	int                     encode_meth;    /* encoding method */
 	int                     pixel_size;     /* bytes per pixel */
@@ -473,7 +474,7 @@ LogL16Encode(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
 				tif->tif_rawcp = op;
 				tif->tif_rawcc = tif->tif_rawdatasize - occ;
 				if (!TIFFFlushData1(tif))
-					return (-1);
+					return (0);
 				op = tif->tif_rawcp;
 				occ = tif->tif_rawdatasize - tif->tif_rawcc;
 			}
@@ -505,7 +506,7 @@ LogL16Encode(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
 					tif->tif_rawcp = op;
 					tif->tif_rawcc = tif->tif_rawdatasize - occ;
 					if (!TIFFFlushData1(tif))
-						return (-1);
+						return (0);
 					op = tif->tif_rawcp;
 					occ = tif->tif_rawdatasize - tif->tif_rawcc;
 				}
@@ -565,7 +566,7 @@ LogLuvEncode24(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
 			tif->tif_rawcp = op;
 			tif->tif_rawcc = tif->tif_rawdatasize - occ;
 			if (!TIFFFlushData1(tif))
-				return (-1);
+				return (0);
 			op = tif->tif_rawcp;
 			occ = tif->tif_rawdatasize - tif->tif_rawcc;
 		}
@@ -624,7 +625,7 @@ LogLuvEncode32(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
 				tif->tif_rawcp = op;
 				tif->tif_rawcc = tif->tif_rawdatasize - occ;
 				if (!TIFFFlushData1(tif))
-					return (-1);
+					return (0);
 				op = tif->tif_rawcp;
 				occ = tif->tif_rawdatasize - tif->tif_rawcc;
 			}
@@ -656,7 +657,7 @@ LogLuvEncode32(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
 					tif->tif_rawcp = op;
 					tif->tif_rawcc = tif->tif_rawdatasize - occ;
 					if (!TIFFFlushData1(tif))
-						return (-1);
+						return (0);
 					op = tif->tif_rawcp;
 					occ = tif->tif_rawdatasize - tif->tif_rawcc;
 				}
@@ -1264,15 +1265,16 @@ LogL16GuessDataFmt(TIFFDirectory *td)
 	return (SGILOGDATAFMT_UNKNOWN);
 }
 
+
+#define TIFF_SIZE_T_MAX ((size_t) ~ ((size_t)0))
+#define TIFF_TMSIZE_T_MAX (tmsize_t)(TIFF_SIZE_T_MAX >> 1)
+
 static tmsize_t
 multiply_ms(tmsize_t m1, tmsize_t m2)
 {
-	tmsize_t bytes = m1 * m2;
-
-	if (m1 && bytes / m1 != m2)
-		bytes = 0;
-
-	return bytes;
+        if( m1 == 0 || m2 > TIFF_TMSIZE_T_MAX / m1 )
+            return 0;
+        return m1 * m2;
 }
 
 static int
@@ -1313,8 +1315,10 @@ LogL16InitState(TIFF* tif)
 	}
         if( isTiled(tif) )
             sp->tbuflen = multiply_ms(td->td_tilewidth, td->td_tilelength);
-        else
+        else if( td->td_rowsperstrip != (uint32)-1 )
             sp->tbuflen = multiply_ms(td->td_imagewidth, td->td_rowsperstrip);
+        else
+            sp->tbuflen = multiply_ms(td->td_imagewidth, td->td_imagelength);
 	if (multiply_ms(sp->tbuflen, sizeof (int16)) == 0 ||
 	    (sp->tbuf = (uint8*) _TIFFmalloc(sp->tbuflen * sizeof (int16))) == NULL) {
 		TIFFErrorExt(tif->tif_clientdata, module, "No space for SGILog translation buffer");
@@ -1553,6 +1557,7 @@ LogLuvSetupEncode(TIFF* tif)
 		    td->td_photometric, "must be either LogLUV or LogL");
 		break;
 	}
+	sp->encoder_state = 1;
 	return (1);
 notsupported:
 	TIFFErrorExt(tif->tif_clientdata, module,
@@ -1564,19 +1569,27 @@ notsupported:
 static void
 LogLuvClose(TIFF* tif)
 {
+        LogLuvState* sp = (LogLuvState*) tif->tif_data;
 	TIFFDirectory *td = &tif->tif_dir;
 
+	assert(sp != 0);
 	/*
 	 * For consistency, we always want to write out the same
 	 * bitspersample and sampleformat for our TIFF file,
 	 * regardless of the data format being used by the application.
 	 * Since this routine is called after tags have been set but
 	 * before they have been recorded in the file, we reset them here.
+         * Note: this is really a nasty approach. See PixarLogClose
 	 */
-	td->td_samplesperpixel =
-	    (td->td_photometric == PHOTOMETRIC_LOGL) ? 1 : 3;
-	td->td_bitspersample = 16;
-	td->td_sampleformat = SAMPLEFORMAT_INT;
+        if( sp->encoder_state )
+        {
+            /* See PixarLogClose. Might avoid issues with tags whose size depends
+             * on those below, but not completely sure this is enough. */
+            td->td_samplesperpixel =
+                (td->td_photometric == PHOTOMETRIC_LOGL) ? 1 : 3;
+            td->td_bitspersample = 16;
+            td->td_sampleformat = SAMPLEFORMAT_INT;
+        }
 }
 
 static void

@@ -10,8 +10,10 @@ list(APPEND SOURCE
     NtCreateThread.c
     NtDeleteKey.c
     NtFreeVirtualMemory.c
+    NtLoadUnloadKey.c
     NtMapViewOfSection.c
     NtMutant.c
+    NtOpenKey.c
     NtOpenProcessToken.c
     NtOpenThreadToken.c
     NtProtectVirtualMemory.c

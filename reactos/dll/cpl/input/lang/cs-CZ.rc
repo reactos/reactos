@@ -165,6 +165,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehština (Fonetická)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehština (Psací stroj)"
     IDS_DUTCH_LAYOUT "Holandština"
+    IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estonština"
     IDS_FAEROESE_LAYOUT "Faerština"
     IDS_FARSI_LAYOUT "Fársí"

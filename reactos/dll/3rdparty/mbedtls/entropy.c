@@ -134,24 +134,24 @@ int mbedtls_entropy_add_source( mbedtls_entropy_context *ctx,
                         mbedtls_entropy_f_source_ptr f_source, void *p_source,
                         size_t threshold, int strong )
 {
-    int index, ret = 0;
+    int idx, ret = 0;
 
 #if defined(MBEDTLS_THREADING_C)
     if( ( ret = mbedtls_mutex_lock( &ctx->mutex ) ) != 0 )
         return( ret );
 #endif
 
-    index = ctx->source_count;
-    if( index >= MBEDTLS_ENTROPY_MAX_SOURCES )
+    idx = ctx->source_count;
+    if( idx >= MBEDTLS_ENTROPY_MAX_SOURCES )
     {
         ret = MBEDTLS_ERR_ENTROPY_MAX_SOURCES;
         goto exit;
     }
 
-    ctx->source[index].f_source  = f_source;
-    ctx->source[index].p_source  = p_source;
-    ctx->source[index].threshold = threshold;
-    ctx->source[index].strong    = strong;
+    ctx->source[idx].f_source  = f_source;
+    ctx->source[idx].p_source  = p_source;
+    ctx->source[idx].threshold = threshold;
+    ctx->source[idx].strong    = strong;
 
     ctx->source_count++;
 

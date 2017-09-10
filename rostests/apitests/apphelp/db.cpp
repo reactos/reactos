@@ -1,23 +1,11 @@
 /*
- * Copyright 2012 Detlef Riekenberg
- * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     apphelp_apitest
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Tests for shim-database api's
+ * COPYRIGHT:   Copyright 2012 Detlef Riekenberg
+ *              Copyright 2013 Mislav Blažević
+ *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
-
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
@@ -38,15 +26,6 @@
 
 #include "apphelp_apitest.h"
 
-
-
-typedef WORD TAG;
-typedef DWORD TAGID;
-typedef DWORD TAGREF;
-typedef UINT64 QWORD;
-typedef VOID* PDB;
-typedef VOID* HSDB;
-typedef INT PATH_TYPE;
 
 #define DOS_PATH 0
 #define HID_DATABASE_FULLPATH 2
@@ -119,6 +98,7 @@ typedef INT PATH_TYPE;
 #define TAG_APP_NAME (0x6 | TAG_TYPE_STRINGREF)
 #define TAG_COMMAND_LINE (0x8 | TAG_TYPE_STRINGREF)
 #define TAG_COMPANY_NAME (0x9 | TAG_TYPE_STRINGREF)
+#define TAG_WILDCARD_NAME (0xB | TAG_TYPE_STRINGREF)
 #define TAG_PRODUCT_NAME (0x10 | TAG_TYPE_STRINGREF)
 #define TAG_PRODUCT_VERSION (0x11 | TAG_TYPE_STRINGREF)
 #define TAG_FILE_DESCRIPTION (0x12 | TAG_TYPE_STRINGREF)
@@ -138,54 +118,6 @@ typedef INT PATH_TYPE;
 #define TAG_DATA_BITS (0x5 | TAG_TYPE_BINARY)
 #define TAG_DATABASE_ID (0x7 | TAG_TYPE_BINARY)
 
-
-#define SDB_MAX_SDBS_VISTA 16
-#define SDB_MAX_EXES_VISTA 16
-#define SDB_MAX_LAYERS_VISTA 8
-
-#define SDBQUERYRESULT_EXPECTED_SIZE_VISTA    456
-
-typedef struct tagSDBQUERYRESULT
-{
-    TAGREF atrExes[SDB_MAX_EXES_VISTA];
-    DWORD  adwExeFlags[SDB_MAX_EXES_VISTA];
-    TAGREF atrLayers[SDB_MAX_LAYERS_VISTA];
-    DWORD  dwLayerFlags;
-    TAGREF trApphelp;
-    DWORD  dwExeCount;
-    DWORD  dwLayerCount;
-    GUID   guidID;
-    DWORD  dwFlags;
-    DWORD  dwCustomSDBMap;
-    GUID   rgGuidDB[SDB_MAX_SDBS_VISTA];
-} SDBQUERYRESULT, *PSDBQUERYRESULT;
-
-
-#define SDBQUERYRESULT_EXPECTED_SIZE_2k3    344
-
-#define SDB_MAX_EXES_2k3    4
-#define SDB_MAX_LAYERS_2k3  8
-
-typedef struct tagSDBQUERYRESULT_2k3
-{
-    TAGREF atrExes[SDB_MAX_EXES_2k3];
-    TAGREF atrLayers[SDB_MAX_LAYERS_2k3];
-    DWORD  dwLayerFlags;
-    TAGREF trApphelp;       // probably?
-    DWORD  dwExeCount;
-    DWORD  dwLayerCount;
-    GUID   guidID;          // probably?
-    DWORD  dwFlags;         // probably?
-    DWORD  dwCustomSDBMap;
-    GUID   rgGuidDB[SDB_MAX_SDBS_VISTA];
-} SDBQUERYRESULT_2k3, *PSDBQUERYRESULT_2k3;
-
-
-
-
-
-C_ASSERT(sizeof(SDBQUERYRESULT) == SDBQUERYRESULT_EXPECTED_SIZE_VISTA);
-C_ASSERT(sizeof(SDBQUERYRESULT_2k3) == SDBQUERYRESULT_EXPECTED_SIZE_2k3);
 
 
 static HMODULE hdll;
@@ -222,7 +154,7 @@ static BOOL (WINAPI *pSdbGetDatabaseID)(PDB, GUID*);
 static BOOL (WINAPI *pSdbGUIDToString)(CONST GUID *, PCWSTR, SIZE_T);
 static HSDB (WINAPI *pSdbInitDatabase)(DWORD, LPCWSTR);
 static void (WINAPI *pSdbReleaseDatabase)(HSDB);
-static BOOL (WINAPI *pSdbGetMatchingExe)(HSDB hsdb, LPCWSTR path, LPCWSTR module_name, LPCWSTR env, DWORD flags, PSDBQUERYRESULT result);
+static BOOL (WINAPI *pSdbGetMatchingExe)(HSDB hsdb, LPCWSTR path, LPCWSTR module_name, LPCWSTR env, DWORD flags, PSDBQUERYRESULT_VISTA result);
 static BOOL (WINAPI *pSdbTagRefToTagID)(HSDB hSDB, TAGREF trWhich, PDB *ppdb, TAGID *ptiWhich);
 static BOOL (WINAPI *pSdbTagIDToTagRef)(HSDB hSDB, PDB pdb, TAGID tiWhich, TAGREF *ptrWhich);
 static TAGREF (WINAPI *pSdbGetLayerTagRef)(HSDB hsdb, LPCWSTR layerName);
@@ -375,7 +307,11 @@ static void test_Sdb(void)
 
         /* FIXME: doesnt work on win10?! */
         pdb = pSdbOpenDatabase(path1, DOS_PATH);
-        ok(pdb != NULL, "unexpected NULL handle\n");
+        if (g_WinVersion < WINVER_WIN10)
+        {
+            /* ERROR,SdbOpenDatabaseEx,845,Failed to open SDB - File size too large or small. */
+            ok(pdb != NULL, "unexpected NULL handle\n");
+        }
         if (pdb)
         {
             binary = (PBYTE)pSdbGetBinaryTagData(pdb, _TAGID_ROOT);
@@ -602,7 +538,7 @@ static void test_stringtable()
     }
 }
 
-static void match_str_attr_imp(PDB pdb, TAGID parent, TAG find, const char* compare)
+static void match_strw_attr_imp(PDB pdb, TAGID parent, TAG find, const WCHAR* compare)
 {
     TAGID attr = pSdbFindFirstTag(pdb, parent, find);
     winetest_ok(attr != TAG_NULL, "Could not find: %x\n", find);
@@ -612,9 +548,7 @@ static void match_str_attr_imp(PDB pdb, TAGID parent, TAG find, const char* comp
         winetest_ok(name != NULL, "Could not convert attr to str.\n");
         if (name)
         {
-            char name_a[100];
-            WideCharToMultiByte(CP_ACP, 0, name, -1, name_a, sizeof(name_a), NULL, NULL);
-            winetest_ok(strcmp(name_a, compare) == 0, "Expected tagid %x to be %s, was %s\n", attr, compare, name_a);
+            winetest_ok(wcscmp(name, compare) == 0, "Expected tagid %x to be %s, was %s\n", attr, wine_dbgstr_w(compare), wine_dbgstr_w(name));
         }
     }
 }
@@ -654,7 +588,7 @@ static void match_guid_attr_imp(PDB pdb, TAGID parent, TAG find, const GUID* com
     }
 }
 
-#define match_str_attr  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : match_str_attr_imp
+#define match_strw_attr  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : match_strw_attr_imp
 #define match_dw_attr  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : match_dw_attr_imp
 #define match_qw_attr  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : match_qw_attr_imp
 #define match_guid_attr  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : match_guid_attr_imp
@@ -688,8 +622,8 @@ static void check_db_properties(PDB pdb, TAGID root)
         }
     }
     match_qw_attr(pdb, root, TAG_TIME, 0x1d1b91a02c0d63e);
-    match_str_attr(pdb, root, TAG_COMPILER_VERSION, "2.1.0.3");
-    match_str_attr(pdb, root, TAG_NAME, "apphelp_test1");
+    match_strw_attr(pdb, root, TAG_COMPILER_VERSION, L"2.1.0.3");
+    match_strw_attr(pdb, root, TAG_NAME, L"apphelp_test1");
     match_dw_attr(pdb, root, TAG_OS_PLATFORM, 1);
 }
 
@@ -700,14 +634,14 @@ static void check_db_layer(PDB pdb, TAGID layer)
     if (!layer)
         return;
 
-    match_str_attr(pdb, layer, TAG_NAME, "TestNewMode");
+    match_strw_attr(pdb, layer, TAG_NAME, L"TestNewMode");
     shimref = pSdbFindFirstTag(pdb, layer, TAG_SHIM_REF);
     ok(shimref != TAGID_NULL, "Expected a valid shim ref, got NULL\n");
     if (!shimref)
         return;
 
-    match_str_attr(pdb, shimref, TAG_NAME, "VirtualRegistry");
-    match_str_attr(pdb, shimref, TAG_COMMAND_LINE, "ThemeActive");
+    match_strw_attr(pdb, shimref, TAG_NAME, L"VirtualRegistry");
+    match_strw_attr(pdb, shimref, TAG_COMMAND_LINE, L"ThemeActive");
     inexclude = pSdbFindFirstTag(pdb, shimref, TAG_INEXCLUD);
     ok(inexclude != TAGID_NULL, "Expected a valid in/exclude ref, got NULL\n");
     if (!inexclude)
@@ -715,7 +649,7 @@ static void check_db_layer(PDB pdb, TAGID layer)
 
     is_include = pSdbFindFirstTag(pdb, inexclude, TAG_INCLUDE);
     ok(is_include == TAGID_NULL, "Expected a NULL include ref, but got one anyway.\n");
-    match_str_attr(pdb, inexclude, TAG_MODULE, "exclude.dll");
+    match_strw_attr(pdb, inexclude, TAG_MODULE, L"exclude.dll");
 
     inexclude = pSdbFindNextTag(pdb, shimref, inexclude);
     ok(inexclude != TAGID_NULL, "Expected a valid in/exclude ref, got NULL\n");
@@ -724,7 +658,7 @@ static void check_db_layer(PDB pdb, TAGID layer)
 
     is_include = pSdbFindFirstTag(pdb, inexclude, TAG_INCLUDE);
     ok(is_include != TAGID_NULL, "Expected a valid include ref, got NULL\n");
-    match_str_attr(pdb, inexclude, TAG_MODULE, "include.dll");
+    match_strw_attr(pdb, inexclude, TAG_MODULE, L"include.dll");
 }
 
 static void check_matching_file(PDB pdb, TAGID exe, TAGID matching_file, int num)
@@ -738,11 +672,11 @@ static void check_matching_file(PDB pdb, TAGID exe, TAGID matching_file, int num
         return;
 
 
-    match_str_attr(pdb, matching_file, TAG_NAME, "*");
-    match_str_attr(pdb, matching_file, TAG_COMPANY_NAME, "CompanyName");
-    match_str_attr(pdb, matching_file, TAG_PRODUCT_NAME, "ProductName");
-    match_str_attr(pdb, matching_file, TAG_PRODUCT_VERSION, "1.0.0.1");
-    match_str_attr(pdb, matching_file, TAG_FILE_VERSION, "1.0.0.0");
+    match_strw_attr(pdb, matching_file, TAG_NAME, L"*");
+    match_strw_attr(pdb, matching_file, TAG_COMPANY_NAME, L"CompanyName");
+    match_strw_attr(pdb, matching_file, TAG_PRODUCT_NAME, L"ProductName");
+    match_strw_attr(pdb, matching_file, TAG_PRODUCT_VERSION, L"1.0.0.1");
+    match_strw_attr(pdb, matching_file, TAG_FILE_VERSION, L"1.0.0.0");
 
     if (num == 0 || num == 3)
     {
@@ -762,14 +696,14 @@ static void check_matching_file(PDB pdb, TAGID exe, TAGID matching_file, int num
     {
         match_dw_attr(pdb, matching_file, TAG_SIZE, 0x800);
         match_dw_attr(pdb, matching_file, TAG_CHECKSUM, 0x178bd629);
-        match_str_attr(pdb, matching_file, TAG_FILE_DESCRIPTION, "FileDescription");
+        match_strw_attr(pdb, matching_file, TAG_FILE_DESCRIPTION, L"FileDescription");
         match_dw_attr(pdb, matching_file, TAG_MODULE_TYPE, 3);
         match_dw_attr(pdb, matching_file, TAG_VERFILEOS, 4);
         match_dw_attr(pdb, matching_file, TAG_VERFILETYPE, 1);
         match_dw_attr(pdb, matching_file, TAG_LINKER_VERSION, 0x40002);
-        match_str_attr(pdb, matching_file, TAG_ORIGINAL_FILENAME, "OriginalFilename");
-        match_str_attr(pdb, matching_file, TAG_INTERNAL_NAME, "InternalName");
-        match_str_attr(pdb, matching_file, TAG_LEGAL_COPYRIGHT, "LegalCopyright");
+        match_strw_attr(pdb, matching_file, TAG_ORIGINAL_FILENAME, L"OriginalFilename");
+        match_strw_attr(pdb, matching_file, TAG_INTERNAL_NAME, L"InternalName");
+        match_strw_attr(pdb, matching_file, TAG_LEGAL_COPYRIGHT, L"LegalCopyright");
         match_dw_attr(pdb, matching_file, TAG_LINK_DATE, 0x12345);
         match_dw_attr(pdb, matching_file, TAG_UPTO_LINK_DATE, 0x12345);
     }
@@ -781,7 +715,7 @@ static void check_matching_file(PDB pdb, TAGID exe, TAGID matching_file, int num
     if (num == 2)
     {
         ok(matching_file != TAGID_NULL, "Did expect a secondary match on %d\n", num);
-        match_str_attr(pdb, matching_file, TAG_NAME, "test_checkfile.txt");
+        match_strw_attr(pdb, matching_file, TAG_NAME, L"test_checkfile.txt");
         match_dw_attr(pdb, matching_file, TAG_SIZE, 0x4);
         match_dw_attr(pdb, matching_file, TAG_CHECKSUM, 0xb0b0b0b0);
     }
@@ -847,23 +781,23 @@ static void check_matching_layer(PDB pdb, TAGID layer, int num)
     if (num == 2)
     {
         match_dw_attr(pdb, layer, TAG_LAYER_TAGID, 0x18e);
-        match_str_attr(pdb, layer, TAG_NAME, "TestNewMode");
+        match_strw_attr(pdb, layer, TAG_NAME, L"TestNewMode");
     }
     else
     {
         TAGID layer_tagid = pSdbFindFirstTag(pdb, layer, TAG_LAYER_TAGID);
         ok(layer_tagid == TAGID_NULL, "expected not to find a layer tagid, got %x\n", layer_tagid);
-        match_str_attr(pdb, layer, TAG_NAME, "WinSrv03");
+        match_strw_attr(pdb, layer, TAG_NAME, L"WinSrv03");
     }
 }
 
 static struct
 {
-    const char* name;
-    const char* app_name;
-    const char* vendor;
+    const WCHAR* name;
+    const WCHAR* app_name;
+    const WCHAR* vendor;
     GUID exe_id;
-    const char* extra_file;
+    const WCHAR* extra_file;
     DWORD dwLayerCount;
     TAGREF atrExes_0;
     DWORD adwExeFlags_0;
@@ -872,9 +806,9 @@ static struct
     const char* env_var;
 } test_exedata[5] = {
     {
-        "test_allow.exe",
-        "apphelp_name_allow",
-        "apphelp_vendor_allow",
+        L"test_allow.exe",
+        L"apphelp_name_allow",
+        L"apphelp_vendor_allow",
         { 0x4e50c93f, 0xb863, 0x4dfa, { 0xba, 0xe2, 0xd8, 0x0e, 0xf4, 0xce, 0x5c, 0x89 } },
         NULL,
         0,
@@ -885,9 +819,9 @@ static struct
         NULL,
     },
     {
-        "test_disallow.exe",
-        "apphelp_name_disallow",
-        "apphelp_vendor_disallow",
+        L"test_disallow.exe",
+        L"apphelp_name_disallow",
+        L"apphelp_vendor_disallow",
         { 0x156720e1, 0xef98, 0x4d04, { 0x96, 0x5a, 0xd8, 0x5d, 0xe0, 0x5e, 0x6d, 0x9f } },
         NULL,
         0,
@@ -898,11 +832,11 @@ static struct
         NULL,
     },
     {
-        "test_new.exe",
-        "fixnew_name",
-        "fixnew_vendor",
+        L"test_new.exe",
+        L"fixnew_name",
+        L"fixnew_vendor",
         { 0xce70ef69, 0xa21d, 0x408b, { 0x84, 0x5b, 0xf9, 0x9e, 0xac, 0x06, 0x09, 0xe7 } },
-        "test_checkfile.txt",
+        L"test_checkfile.txt",
         1,
         0x2ec,
         0,
@@ -911,9 +845,9 @@ static struct
         NULL,
     },
     {
-        "test_w2k3.exe",
-        "fix_name",
-        "fix_vendor",
+        L"test_w2k3.exe",
+        L"fix_name",
+        L"fix_vendor",
         { 0xb4ead144, 0xf640, 0x4e4b, { 0x94, 0xc4, 0x0c, 0x7f, 0xa8, 0x66, 0x23, 0xb0 } },
         NULL,
         0,
@@ -924,9 +858,9 @@ static struct
         NULL,
     },
     {
-        "test_unknown_file.exe",
-        "apphelp_name_allow",
-        "apphelp_vendor_allow",
+        L"test_unknown_file.exe",
+        L"apphelp_name_allow",
+        L"apphelp_vendor_allow",
         { 0x00000000, 0x0000, 0x0000, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } },
         NULL,
         1,
@@ -950,9 +884,9 @@ static void check_db_exes(PDB pdb, TAGID root)
         ok(num < 4, "Too many matches, expected only 4!\n");
         if (num >= 4)
             break;
-        match_str_attr(pdb, exe, TAG_NAME, test_exedata[num].name);
-        match_str_attr(pdb, exe, TAG_APP_NAME, test_exedata[num].app_name);
-        match_str_attr(pdb, exe, TAG_VENDOR, test_exedata[num].vendor);
+        match_strw_attr(pdb, exe, TAG_NAME, test_exedata[num].name);
+        match_strw_attr(pdb, exe, TAG_APP_NAME, test_exedata[num].app_name);
+        match_strw_attr(pdb, exe, TAG_VENDOR, test_exedata[num].vendor);
         match_guid_attr(pdb, exe, TAG_EXE_ID, &test_exedata[num].exe_id);
         check_matching_file(pdb, exe, pSdbFindFirstTag(pdb, exe, TAG_MATCHING_FILE), num);
         apphelp = pSdbFindFirstTag(pdb, exe, TAG_APPHELP);
@@ -986,21 +920,21 @@ static void check_db_exes(PDB pdb, TAGID root)
 static struct
 {
     DWORD htmlhelpid;
-    const char* link;
-    const char* apphelp_title;
-    const char* apphelp_details;
+    const WCHAR* link;
+    const WCHAR* apphelp_title;
+    const WCHAR* apphelp_details;
 } test_layerdata[2] = {
     {
         2,
-        "http://reactos.org/disallow",
-        "apphelp_name_disallow",
-        "Not allowed!",
+        L"http://reactos.org/disallow",
+        L"apphelp_name_disallow",
+        L"Not allowed!",
     },
     {
         1,
-        "http://reactos.org/allow",
-        "apphelp_name_allow",
-        "Allow it!",
+        L"http://reactos.org/allow",
+        L"apphelp_name_allow",
+        L"Allow it!",
     },
 };
 
@@ -1019,10 +953,10 @@ static void check_db_apphelp(PDB pdb, TAGID root)
         ok(link != TAGID_NULL, "expected to find a link tag\n");
         if (link != TAGID_NULL)
         {
-            match_str_attr(pdb, link, TAG_LINK_URL, test_layerdata[num].link);
+            match_strw_attr(pdb, link, TAG_LINK_URL, test_layerdata[num].link);
         }
-        match_str_attr(pdb, apphelp, TAG_APPHELP_TITLE, test_layerdata[num].apphelp_title);
-        match_str_attr(pdb, apphelp, TAG_APPHELP_DETAILS, test_layerdata[num].apphelp_details);
+        match_strw_attr(pdb, apphelp, TAG_APPHELP_TITLE, test_layerdata[num].apphelp_title);
+        match_strw_attr(pdb, apphelp, TAG_APPHELP_DETAILS, test_layerdata[num].apphelp_details);
         apphelp = pSdbFindNextTag(pdb, root, apphelp);
         num++;
     }
@@ -1037,7 +971,7 @@ static void test_CheckDatabaseManually(void)
     BOOL ret;
     DWORD ver_hi, ver_lo;
 
-    test_create_db("test_db.sdb", g_WinVersion >= WINVER_WIN10);
+    test_create_db(L"test_db.sdb", g_WinVersion >= WINVER_WIN10);
 
     /* both ver_hi and ver_lo cannot be null, it'll crash. */
     ver_hi = ver_lo = 0x12345678;
@@ -1123,6 +1057,29 @@ static void test_is_testdb(PDB pdb)
     }
 }
 
+static BOOL IsUserAdmin()
+{
+    BOOL Result;
+    SID_IDENTIFIER_AUTHORITY NtAuthority = { SECURITY_NT_AUTHORITY };
+    PSID AdministratorsGroup; 
+
+    Result = AllocateAndInitializeSid(&NtAuthority, 2,
+                                      SECURITY_BUILTIN_DOMAIN_RID,
+                                      DOMAIN_ALIAS_RID_ADMINS,
+                                      0, 0, 0, 0, 0, 0,
+                                      &AdministratorsGroup);
+    if (Result)
+    {
+        if (!CheckTokenMembership( NULL, AdministratorsGroup, &Result))
+            Result = FALSE;
+        FreeSid(AdministratorsGroup); 
+    }
+
+    return Result;
+}
+
+
+
 template<typename SDBQUERYRESULT_T>
 static void check_adwExeFlags(DWORD adwExeFlags_0, SDBQUERYRESULT_T& query, const char* file, int line, int cur)
 {
@@ -1138,10 +1095,9 @@ void check_adwExeFlags(DWORD, SDBQUERYRESULT_2k3&, const char*, int, int)
 
 
 template<typename SDBQUERYRESULT_T>
-static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
+static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, int cur)
 {
-    char exename[MAX_PATH], testfile[MAX_PATH];
-    WCHAR exenameW[MAX_PATH];
+    WCHAR exename[MAX_PATH], testfile[MAX_PATH];
     BOOL ret;
     SDBQUERYRESULT_T query;
     PDB pdb;
@@ -1152,17 +1108,16 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
 
     memset(&query, 0xab, sizeof(query));
 
-    sprintf(exename, "%s\\%s", workdir, test_exedata[cur].name);
+    swprintf(exename, L"%s\\%s", workdir, test_exedata[cur].name);
     if (test_exedata[cur].extra_file)
-        sprintf(testfile, "%s\\%s", workdir, test_exedata[cur].extra_file);
+        swprintf(testfile, L"%s\\%s", workdir, test_exedata[cur].extra_file);
     test_create_exe(exename, 0);
-    MultiByteToWideChar(CP_ACP, 0, exename, -1, exenameW, MAX_PATH);
 
     if (test_exedata[cur].extra_file)
     {
         /* First we try without the file at all. */
-        DeleteFileA(testfile);
-        ret = pSdbGetMatchingExe(hsdb, exenameW, NULL, NULL, 0, (SDBQUERYRESULT*)&query);
+        DeleteFileW(testfile);
+        ret = pSdbGetMatchingExe(hsdb, exename, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
         ok(ret == 0, "SdbGetMatchingExe should have failed for %d.\n", cur);
         /* Now re-try with the correct file */
         test_create_file(testfile, "aaaa", 4);
@@ -1170,13 +1125,13 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
 
 #if 0
     // Results seem to be cached based on filename, until we can invalidate this, do not test the same filename twice!
-    DeleteFileA(exename);
+    DeleteFileW(exename);
     // skip exports
     test_create_exe(exename, 1);
     ret = pSdbGetMatchingExe(hsdb, exenameW, NULL, NULL, 0, &query);
     ok(ret == 0, "SdbGetMatchingExe should have failed for %d.\n", cur);
 
-    DeleteFileA(exename);
+    DeleteFileW(exename);
     test_create_exe(exename, 0);
 #endif
 
@@ -1185,7 +1140,7 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
         SetEnvironmentVariableA("__COMPAT_LAYER", test_exedata[cur].env_var);
     }
 
-    ret = pSdbGetMatchingExe(hsdb, exenameW, NULL, NULL, 0, (SDBQUERYRESULT*)&query);
+    ret = pSdbGetMatchingExe(hsdb, exename, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
     ok(ret, "SdbGetMatchingExe should not fail for %d.\n", cur);
 
     exe_count = (test_exedata[cur].env_var == NULL) ? 1 : 0;
@@ -1204,7 +1159,11 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
     else if (g_WinVersion < WINVER_WIN10)
         expect_flags = 0x101;
     else
+    {
         expect_flags = 0x121;   /* for 2 and 3, this becomes 101 when not elevated. */
+        if ((cur == 2 || cur == 3) && !IsUserAdmin())
+            expect_flags &= ~0x20;
+    }
 
     if (test_exedata[cur].env_var)
         expect_flags &= ~0x100;
@@ -1244,7 +1203,7 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
             TAG tag = pSdbGetTagFromTagID(pdb, tagid);
             test_is_testdb(pdb);
             ok(tag == TAG_EXE, "Expected tag to be TAG_EXE, was 0x%x for %d.\n", tag, cur);
-            match_str_attr(pdb, tagid, TAG_NAME, test_exedata[cur].name);
+            match_strw_attr(pdb, tagid, TAG_NAME, test_exedata[cur].name);
 
             /* And back again */
             ret = pSdbTagIDToTagRef(hsdb, pdb, tagid, &tr);
@@ -1272,7 +1231,7 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
             TAG tag = pSdbGetTagFromTagID(pdb, tagid);
             test_is_testdb(pdb);
             ok(tag == TAG_LAYER, "Expected tag to be TAG_LAYER, was 0x%x for %d.\n", tag, cur);
-            match_str_attr(pdb, tagid, TAG_NAME, "TestNewMode");
+            match_strw_attr(pdb, tagid, TAG_NAME, L"TestNewMode");
 
             /* And back again */
             ret = pSdbTagIDToTagRef(hsdb, pdb, tagid, &tr);
@@ -1293,17 +1252,21 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
 
 
 
-    if (RtlDosPathNameToNtPathName_U(exenameW, &exenameNT, NULL, NULL))
+    if (RtlDosPathNameToNtPathName_U(exename, &exenameNT, NULL, NULL))
     {
-        ret = pSdbGetMatchingExe(hsdb, exenameNT.Buffer, NULL, NULL, 0, (SDBQUERYRESULT*)&query);
-        ok(ret, "SdbGetMatchingExe should not fail for %d.\n", cur);
+        /*
+        ERROR,AslPathGetLongFileNameLongpath,110,Long path conversion failed 123 [c0000001]
+        ERROR,AslPathBuildSignatureLongpath,1086,AslPathGetLongFileNameLongpath failed for \??\C:\Users\MARK~1.DEV\AppData\Local\Temp\apphelp_test\test_allow.exe [c0000001]
+        */
+        ret = pSdbGetMatchingExe(hsdb, exenameNT.Buffer, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
+        ok(!ret, "SdbGetMatchingExe should not succeed for %d.\n", cur);
 
         RtlFreeUnicodeString(&exenameNT);
     }
 
     if (test_exedata[cur].extra_file)
-        DeleteFileA(testfile);
-    DeleteFileA(exename);
+        DeleteFileW(testfile);
+    DeleteFileW(exename);
 
     if (test_exedata[cur].env_var)
     {
@@ -1314,25 +1277,23 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
 template<typename SDBQUERYRESULT_T>
 static void test_MatchApplications(void)
 {
-    char workdir[MAX_PATH], dbpath[MAX_PATH];
-    WCHAR dbpathW[MAX_PATH];
+    WCHAR workdir[MAX_PATH], dbpath[MAX_PATH];
     BOOL ret;
     HSDB hsdb;
 
-    ret = GetTempPathA(MAX_PATH, workdir);
-    ok(ret, "GetTempPathA error: %d\n", GetLastError());
-    lstrcatA(workdir, "apphelp_test");
+    ret = GetTempPathW(_countof(workdir), workdir);
+    ok(ret, "GetTempPathW error: %d\n", GetLastError());
+    wcscat(workdir, L"apphelp_test");
 
-    ret = CreateDirectoryA(workdir, NULL);
-    ok(ret, "CreateDirectoryA error: %d\n", GetLastError());
+    ret = CreateDirectoryW(workdir, NULL);
+    ok(ret, "CreateDirectoryW error: %d\n", GetLastError());
 
     /* SdbInitDatabase needs an nt-path */
-    sprintf(dbpath, "\\??\\%s\\test.sdb", workdir);
+    swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
 
     test_create_db(dbpath + 4, g_WinVersion >= WINVER_WIN10);
 
-    MultiByteToWideChar(CP_ACP, 0, dbpath, -1, dbpathW, MAX_PATH);
-    hsdb = pSdbInitDatabase(HID_DATABASE_FULLPATH, dbpathW);
+    hsdb = pSdbInitDatabase(HID_DATABASE_FULLPATH, dbpath);
 
     ok(hsdb != NULL, "Expected a valid database handle\n");
 
@@ -1349,16 +1310,156 @@ static void test_MatchApplications(void)
         pSdbReleaseDatabase(hsdb);
     }
 
-    DeleteFileA(dbpath + 4);
+    DeleteFileW(dbpath + 4);
 
-    ret = RemoveDirectoryA(workdir);
-    ok(ret, "RemoveDirectoryA error: %d\n", GetLastError());
+    ret = RemoveDirectoryW(workdir);
+    ok(ret, "RemoveDirectoryW error: %d\n", GetLastError());
 }
+
+static BOOL write_raw_file(const WCHAR* FileName, const void* Data, DWORD Size)
+{
+    BOOL Success;
+    DWORD dwWritten;
+    HANDLE Handle = CreateFileW(FileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (Handle == INVALID_HANDLE_VALUE)
+    {
+        skip("Failed to create temp file %ls, error %u\n", FileName, GetLastError());
+        return FALSE;
+    }
+    Success = WriteFile(Handle, Data, Size, &dwWritten, NULL);
+    ok(Success == TRUE, "WriteFile failed with %u\n", GetLastError());
+    ok(dwWritten == Size, "WriteFile wrote %u bytes instead of %u\n", dwWritten, Size);
+    CloseHandle(Handle);
+    return Success && (dwWritten == Size);
+}
+
+static bool extract_resource(const WCHAR* Filename, LPCWSTR ResourceName)
+{
+    HMODULE hMod = GetModuleHandleW(NULL);
+    HRSRC hRsrc = FindResourceW(hMod, ResourceName, MAKEINTRESOURCEW(RT_RCDATA));
+    ok(!!hRsrc, "Unable to find %s\n", wine_dbgstr_w(ResourceName));
+    if (!hRsrc)
+        return false;
+
+    HGLOBAL hGlobal = LoadResource(hMod, hRsrc);
+    DWORD Size = SizeofResource(hMod, hRsrc);
+    LPVOID pData = LockResource(hGlobal);
+
+    ok(Size && !!pData, "Unable to load %s\n", wine_dbgstr_w(ResourceName));
+    if (!Size || !pData)
+        return false;
+
+    BOOL Written = write_raw_file(Filename, pData, Size);
+    UnlockResource(pData);
+    return Written;
+}
+
+template<typename SDBQUERYRESULT_T>
+static void test_match_ex(const WCHAR* workdir, HSDB hsdb)
+{
+    WCHAR exename[MAX_PATH];
+    PWCHAR Vendor, AppName, TestName;
+    SDBQUERYRESULT_T query;
+    TAGID dbtag, exetag, tagid;
+    BOOL ret, Succeed;
+    PDB pdb;
+
+    memset(&query, 0xab, sizeof(query));
+
+    ret = pSdbTagRefToTagID(hsdb, 0, &pdb, &tagid);
+    ok(pdb != NULL && pdb != (PDB)0x12345678, "Expected pdb to be set to a valid pdb, was: %p\n", pdb);
+
+    dbtag = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
+    ok(dbtag != TAGID_NULL, "Expected to get a valid TAG_DATABASE\n");
+
+    for (exetag = pSdbFindFirstTag(pdb, dbtag, TAG_EXE); exetag; exetag = pSdbFindNextTag(pdb, dbtag, exetag))
+    {
+        tagid = pSdbFindFirstTag(pdb, exetag, TAG_VENDOR);
+        Vendor = pSdbGetStringTagPtr(pdb, tagid);
+        if (!Vendor)
+            continue;
+        Succeed = !wcsicmp(Vendor, L"Succeed");
+        if (!Succeed && wcsicmp(Vendor, L"Fail"))
+            continue;
+        tagid = pSdbFindFirstTag(pdb, exetag, TAG_APP_NAME);
+        AppName = pSdbGetStringTagPtr(pdb, tagid);
+        if (!AppName)
+            continue;
+
+        tagid = pSdbFindFirstTag(pdb, exetag, TAG_NAME);
+        TestName = pSdbGetStringTagPtr(pdb, tagid);
+        if (!TestName)
+            continue;
+
+        swprintf(exename, L"%s\\%s", workdir, AppName);
+        test_create_exe(exename, 0);
+
+        ret = pSdbGetMatchingExe(hsdb, exename, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
+        DWORD exe_count = Succeed ? 1 : 0;
+
+        if (Succeed)
+            ok(ret, "SdbGetMatchingExe should not fail for %s.\n", wine_dbgstr_w(TestName));
+        else
+            ok(!ret, "SdbGetMatchingExe should not succeed for %s.\n", wine_dbgstr_w(TestName));
+
+        ok(query.dwExeCount == exe_count, "Expected dwExeCount to be %d, was %d for %s\n", exe_count, query.dwExeCount, wine_dbgstr_w(TestName));
+        DeleteFileW(exename);
+    }
+}
+
+
+template<typename SDBQUERYRESULT_T>
+static void test_MatchApplicationsEx(void)
+{
+    WCHAR workdir[MAX_PATH], dbpath[MAX_PATH];
+    BOOL ret;
+    HSDB hsdb;
+
+    ret = GetTempPathW(_countof(workdir), workdir);
+    ok(ret, "GetTempPathW error: %d\n", GetLastError());
+    lstrcatW(workdir, L"apphelp_test");
+
+    ret = CreateDirectoryW(workdir, NULL);
+    ok(ret, "CreateDirectoryW error: %d\n", GetLastError());
+
+    /* SdbInitDatabase needs an nt-path */
+    swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
+
+    if (extract_resource(dbpath + 4, MAKEINTRESOURCEW(101)))
+    {
+        hsdb = pSdbInitDatabase(HID_DATABASE_FULLPATH, dbpath);
+
+        ok(hsdb != NULL, "Expected a valid database handle\n");
+
+        if (!hsdb)
+        {
+            skip("SdbInitDatabase not implemented?\n");
+        }
+        else
+        {
+            /* now that our enviroment is setup, let's go ahead and run the actual tests.. */
+            test_match_ex<SDBQUERYRESULT_T>(workdir, hsdb);
+            pSdbReleaseDatabase(hsdb);
+        }
+    }
+    else
+    {
+        ok(0, "Unable to extract database\n");
+    }
+
+    DeleteFileW(dbpath + 4);
+
+    ret = RemoveDirectoryW(workdir);
+    ok(ret, "RemoveDirectoryW error: %d\n", GetLastError());
+}
+
+
+
 
 static void test_TagRef(void)
 {
-    char tmpdir[MAX_PATH], dbpath[MAX_PATH];
-    WCHAR dbpathW[MAX_PATH];
+    WCHAR tmpdir[MAX_PATH], dbpath[MAX_PATH];
     BOOL ret;
     HSDB hsdb;
     PDB pdb;
@@ -1366,16 +1467,15 @@ static void test_TagRef(void)
     DWORD size;
     TAGREF tr;
 
-    ret = GetTempPathA(MAX_PATH, tmpdir);
+    ret = GetTempPathW(_countof(tmpdir), tmpdir);
     ok(ret, "GetTempPathA error: %d\n", GetLastError());
 
     /* SdbInitDatabase needs an nt-path */
-    sprintf(dbpath, "\\??\\%stest.sdb", tmpdir);
+    swprintf(dbpath, L"\\??\\%stest.sdb", tmpdir);
 
     test_create_db(dbpath + 4, g_WinVersion >= WINVER_WIN10);
 
-    MultiByteToWideChar(CP_ACP, 0, dbpath, -1, dbpathW, MAX_PATH);
-    hsdb = pSdbInitDatabase(HID_DATABASE_FULLPATH, dbpathW);
+    hsdb = pSdbInitDatabase(HID_DATABASE_FULLPATH, dbpath);
 
     /* HSDB is the only arg that can't be null */
     ret = pSdbTagRefToTagID(hsdb, 0, NULL, NULL);
@@ -1494,7 +1594,7 @@ static void test_TagRef(void)
 
     pSdbReleaseDatabase(hsdb);
 
-    DeleteFileA(dbpath + 4);
+    DeleteFileW(dbpath + 4);
 }
 
 
@@ -1594,7 +1694,7 @@ static int validate_SDBQUERYRESULT_size()
     memset(buffer, 0xab, sizeof(buffer));
 
     GetModuleFileNameW(NULL, path, MAX_PATH);
-    pSdbGetMatchingExe(NULL, path, NULL, NULL, 0, (SDBQUERYRESULT*)buffer);
+    pSdbGetMatchingExe(NULL, path, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)buffer);
     if (buffer[0] == 0xab)
     {
         trace("SdbGetMatchingExe didnt do anything, cannot determine SDBQUERYRESULT size\n");
@@ -1685,9 +1785,11 @@ START_TEST(db)
     {
     case 1:
         test_MatchApplications<SDBQUERYRESULT_2k3>();
+        test_MatchApplicationsEx<SDBQUERYRESULT_2k3>();
         break;
     case 2:
-        test_MatchApplications<SDBQUERYRESULT>();
+        test_MatchApplications<SDBQUERYRESULT_VISTA>();
+        test_MatchApplicationsEx<SDBQUERYRESULT_VISTA>();
         break;
     default:
         skip("Skipping tests with SDBQUERYRESULT due to a wrong size reported\n");

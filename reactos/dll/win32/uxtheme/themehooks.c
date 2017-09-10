@@ -8,11 +8,11 @@
  
 #include "uxthemep.h"
 
-USERAPIHOOK user32ApiHook;
+USERAPIHOOK g_user32ApiHook;
 BYTE gabDWPmessages[UAHOWP_MAX_SIZE];
 BYTE gabMSGPmessages[UAHOWP_MAX_SIZE];
 BYTE gabDLGPmessages[UAHOWP_MAX_SIZE];
-BOOL gbThemeHooksActive = FALSE;
+BOOL g_bThemeHooksActive = FALSE;
 
 PWND_DATA ThemeGetWndData(HWND hWnd)
 {
@@ -55,7 +55,7 @@ void ThemeDestroyWndData(HWND hWnd)
 
     if(pwndData->HasThemeRgn)
     {
-        user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
+        g_user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
     }
 
     if (pwndData->hTabBackgroundBrush != NULL)
@@ -98,6 +98,16 @@ HTHEME GetNCCaptionTheme(HWND hWnd, DWORD style)
     if (pwndData == NULL)
         return NULL;
 
+    if (!(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
+    {
+        if (pwndData->hthemeWindow)
+        {
+            CloseThemeData(pwndData->hthemeWindow);
+            pwndData->hthemeWindow = NULL;
+        }
+        return NULL;
+    }
+
     /* If the theme data was not cached, open it now */
     if (!pwndData->hthemeWindow)
         pwndData->hthemeWindow = OpenThemeDataEx(hWnd, L"WINDOW", OTD_NONCLIENT);
@@ -117,6 +127,16 @@ HTHEME GetNCScrollbarTheme(HWND hWnd, DWORD style)
     pwndData = ThemeGetWndData(hWnd);
     if (pwndData == NULL)
         return NULL;
+
+    if (!(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
+    {
+        if (pwndData->hthemeScrollbar)
+        {
+            CloseThemeData(pwndData->hthemeScrollbar);
+            pwndData->hthemeScrollbar = NULL;
+        }
+        return NULL;
+    }
 
     /* If the theme data was not cached, open it now */
     if (!pwndData->hthemeScrollbar)
@@ -192,7 +212,7 @@ void SetThemeRegion(HWND hWnd)
 
     DeleteObject(hrgn1);
 
-    user32ApiHook.SetWindowRgn(hWnd, hrgn, TRUE);
+    g_user32ApiHook.SetWindowRgn(hWnd, hrgn, TRUE);
 }
 
 int OnPostWinPosChanged(HWND hWnd, WINDOWPOS* pWinPos)
@@ -222,12 +242,12 @@ int OnPostWinPosChanged(HWND hWnd, WINDOWPOS* pWinPos)
     if (pwndData->UpdatingRgn == TRUE)
         return 0;
 
-    if(!IsAppThemed())
+    if(!IsAppThemed() || !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
     {
         if(pwndData->HasThemeRgn)
         {
             pwndData->HasThemeRgn = FALSE;
-            user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
+            g_user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
         }
         return 0;
     }
@@ -248,9 +268,9 @@ int OnPostWinPosChanged(HWND hWnd, WINDOWPOS* pWinPos)
 static LRESULT CALLBACK
 ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {      
-    if(!IsAppThemed())
+    if(!IsAppThemed() || !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
     {
-        return user32ApiHook.DefWindowProcW(hWnd, 
+        return g_user32ApiHook.DefWindowProcW(hWnd, 
                                             Msg, 
                                             wParam, 
                                             lParam);
@@ -260,15 +280,15 @@ ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                         Msg, 
                         wParam, 
                         lParam, 
-                        user32ApiHook.DefWindowProcW);
+                        g_user32ApiHook.DefWindowProcW);
 }
 
 static LRESULT CALLBACK
 ThemeDefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    if(!IsAppThemed())
+    if(!IsAppThemed() || !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
     {
-        return user32ApiHook.DefWindowProcA(hWnd, 
+        return g_user32ApiHook.DefWindowProcA(hWnd, 
                                             Msg, 
                                             wParam, 
                                             lParam);
@@ -278,7 +298,7 @@ ThemeDefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                         Msg, 
                         wParam, 
                         lParam, 
-                        user32ApiHook.DefWindowProcA);
+                        g_user32ApiHook.DefWindowProcA);
 }
 
 static LRESULT CALLBACK
@@ -286,6 +306,14 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
 {
     switch(Msg)
     {
+        case WM_CREATE:
+        case WM_STYLECHANGED:
+        case WM_SIZE:
+        case WM_WINDOWPOSCHANGED:
+        {
+            ThemeCalculateCaptionButtonsPos(hWnd, NULL);
+            break;
+        }
         case WM_THEMECHANGED:
         {
             PWND_DATA pwndData = ThemeGetWndData(hWnd);
@@ -319,6 +347,8 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
                 CloseThemeData(pwndData->hthemeScrollbar);
                 pwndData->hthemeScrollbar = NULL;
             }
+
+            ThemeCalculateCaptionButtonsPos(hWnd, NULL);
         }
         case WM_NCCREATE:
         {
@@ -446,7 +476,7 @@ ThemeDlgPostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_
             HBRUSH* phbrush = (HBRUSH*)ret;
             HTHEME hTheme;
 
-            if (!IsAppThemed())
+            if(!IsAppThemed() || !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
                 break;
 
             if (!IsThemeDialogTextureEnabled (hWnd))
@@ -487,7 +517,7 @@ int WINAPI ThemeSetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw)
         pwndData->HasThemeRgn = FALSE;
     }
 
-    return user32ApiHook.SetWindowRgn(hWnd, hRgn, bRedraw);
+    return g_user32ApiHook.SetWindowRgn(hWnd, hRgn, bRedraw);
 }
 
 BOOL WINAPI ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
@@ -497,7 +527,7 @@ BOOL WINAPI ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
     BOOL ret;
 
     /* Avoid creating a window context if it is not needed */
-    if(!IsAppThemed())
+    if(!IsAppThemed() || !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
         goto dodefault;
 
     style = GetWindowLongW(hwnd, GWL_STYLE);
@@ -514,7 +544,7 @@ BOOL WINAPI ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
      * with GetScrollInfo, it will get wrong data. So uxtheme needs to
      * hook it and set the correct tracking position itself
      */
-    ret = user32ApiHook.GetScrollInfo(hwnd, fnBar, lpsi);
+    ret = g_user32ApiHook.GetScrollInfo(hwnd, fnBar, lpsi);
     if ( lpsi && 
         (lpsi->fMask & SIF_TRACKPOS) &&
          pwndData->SCROLL_TrackingWin == hwnd && 
@@ -525,7 +555,7 @@ BOOL WINAPI ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
     return ret;
 
 dodefault:
-    return user32ApiHook.GetScrollInfo(hwnd, fnBar, lpsi);
+    return g_user32ApiHook.GetScrollInfo(hwnd, fnBar, lpsi);
 }
 
 /**********************************************************************
@@ -539,14 +569,14 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     {
         UXTHEME_LoadTheme(FALSE);
         ThemeCleanupWndContext(NULL, 0);
-        gbThemeHooksActive = FALSE;
+        g_bThemeHooksActive = FALSE;
         return TRUE;
     }
 
-    gbThemeHooksActive = TRUE;
+    g_bThemeHooksActive = TRUE;
 
     /* Store the original functions from user32 */
-    user32ApiHook = *puah;
+    g_user32ApiHook = *puah;
     
     puah->DefWindowProcA = ThemeDefWindowProcA;
     puah->DefWindowProcW = ThemeDefWindowProcW;
@@ -673,9 +703,9 @@ ThemeHooksRemove()
 
 INT WINAPI ClassicSystemParametersInfoW(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni)
 {
-    if (gbThemeHooksActive)
+    if (g_bThemeHooksActive)
     {
-        return user32ApiHook.SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
+        return g_user32ApiHook.SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
     }
 
     return SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
@@ -683,9 +713,9 @@ INT WINAPI ClassicSystemParametersInfoW(UINT uiAction, UINT uiParam, PVOID pvPar
 
 INT WINAPI ClassicSystemParametersInfoA(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni)
 {
-    if (gbThemeHooksActive)
+    if (g_bThemeHooksActive)
     {
-        return user32ApiHook.SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
+        return g_user32ApiHook.SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
     }
 
     return SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
@@ -693,9 +723,9 @@ INT WINAPI ClassicSystemParametersInfoA(UINT uiAction, UINT uiParam, PVOID pvPar
 
 INT WINAPI ClassicGetSystemMetrics(int nIndex)
 {
-    if (gbThemeHooksActive)
+    if (g_bThemeHooksActive)
     {
-        return user32ApiHook.GetSystemMetrics(nIndex);
+        return g_user32ApiHook.GetSystemMetrics(nIndex);
     }
 
     return GetSystemMetrics(nIndex);
@@ -703,9 +733,9 @@ INT WINAPI ClassicGetSystemMetrics(int nIndex)
 
 BOOL WINAPI ClassicAdjustWindowRectEx(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle)
 {
-    if (gbThemeHooksActive)
+    if (g_bThemeHooksActive)
     {
-        return user32ApiHook.AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);
+        return g_user32ApiHook.AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);
     }
 
     return AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);

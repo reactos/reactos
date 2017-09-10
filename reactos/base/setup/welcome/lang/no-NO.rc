@@ -6,33 +6,33 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Velkommen"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Velkommen til ReactOS Operativsystem.\n\nTrykk et emne til venstre."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Velkommen til ReactOS Operativsystem.\n\nTrykk et emne til venstre."
 
-    IDS_CHECKTEXT "Vis denne dialoget igjen"
-    IDS_CLOSETEXT "Avslutt"
+    IDS_CHECKTEXT "&Vis denne dialoget igjen"
+    IDS_CLOSETEXT "&Avslutt"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Innstaller ReactOS"
-    IDS_TOPICBUTTON1 "Utforsk denne CD"
-    IDS_TOPICBUTTON2 "Avslutt"
+    IDS_TOPIC_BUTTON0 "&Innstaller ReactOS"
+    IDS_TOPIC_BUTTON1 "&Utforsk denne CD"
+    IDS_TOPIC_BUTTON2 "&Avslutt"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Innstaller ReactOS"
-    IDS_TOPICTITLE1 "Utforsk denne CD"
-    IDS_TOPICTITLE2 "Avslutt"
+    IDS_TOPIC_TITLE0 "Innstaller ReactOS"
+    IDS_TOPIC_TITLE1 "Utforsk denne CD"
+    IDS_TOPIC_TITLE2 "Avslutt"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Opprett en ny ReactOS innstallasjon på din datamaskin eller oppgrader eksisterende innstallasjon."
-    IDS_TOPICDESC1 "Utforsk CDen."
-    IDS_TOPICDESC2 "Trykk avslutt for å avslutte denne applikasjonen."
+    IDS_TOPIC_DESC0 "Opprett en ny ReactOS innstallasjon på din datamaskin eller oppgrader eksisterende innstallasjon."
+    IDS_TOPIC_DESC1 "Utforsk CDen."
+    IDS_TOPIC_DESC2 "Trykk avslutt for å avslutte denne applikasjonen."
 END

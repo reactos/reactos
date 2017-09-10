@@ -105,7 +105,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Energieoptionen"
+    IDS_CPLNAME_1 "Energie"
     IDS_CPLDESCRIPTION_1 "Konfiguriert die Energiespareinstellungen für den Computer."
     IDS_PROCENT "%i%%"
     IDS_SOUND "Klang"

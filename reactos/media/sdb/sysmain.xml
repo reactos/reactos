@@ -4,228 +4,306 @@
         <OS_PLATFORM >1</OS_PLATFORM>
         <DATABASE_ID>{11111111-1111-1111-1111-111111111111}</DATABASE_ID>
         <LIBRARY>
+            <INCLUDE MODULE="kernel32.dll" />
+            <INCLUDE MODULE="msvcrt.dll" />
+            <INCLUDE MODULE="ole32.dll" />
+            <INCLUDE MODULE="oleaut32.dll" />
 
             <!-- Version lie shims -->
 
-            <SHIM>
-                <NAME>Win95VersionLie</NAME>
+            <SHIM NAME="Win95VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Win98VersionLie</NAME>
+            <SHIM NAME="Win98VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>WinNT4SP5VersionLie</NAME>
+            <SHIM NAME="WinNT4SP5VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Win2000VersionLie</NAME>
+            <SHIM NAME="Win2000VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Win2000SP1VersionLie</NAME>
+            <SHIM NAME="Win2000SP1VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Win2000SP2VersionLie</NAME>
+            <SHIM NAME="Win2000SP2VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Win2000SP3VersionLie</NAME>
+            <SHIM NAME="Win2000SP3VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>WinXPVersionLie</NAME>
+            <SHIM NAME="WinXPVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>WinXPSP1VersionLie</NAME>
+            <SHIM NAME="WinXPSP1VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>WinXPSP2VersionLie</NAME>
+            <SHIM NAME="WinXPSP2VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>WinXPSP3VersionLie</NAME>
+            <SHIM NAME="WinXPSP3VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Win2k3RTMVersionLie</NAME>
+            <SHIM NAME="Win2k3RTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Win2k3SP1VersionLie</NAME>
+            <SHIM NAME="Win2k3SP1VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Win2k3SP2VersionLie</NAME>
+            <SHIM NAME="Win2k3SP2VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>VistaRTMVersionLie</NAME>
+            <SHIM NAME="VistaRTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>VistaSP1VersionLie</NAME>
+            <SHIM NAME="VistaSP1VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>VistaSP2VersionLie</NAME>
+            <SHIM NAME="VistaSP2VersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Win7RTMVersionLie</NAME>
+            <SHIM NAME="Win7RTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
 
             <!-- Display mode shims -->
 
-            <SHIM>
-                <NAME>Force640x480</NAME>
+            <SHIM NAME="Force640x480">
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
-            <SHIM>
-                <NAME>Force8BitColor</NAME>
+            <SHIM NAME="Force8BitColor">
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
 
             <!-- misc shims -->
 
-            <SHIM>
-                <NAME>DisableThemes</NAME>
+            <SHIM NAME="DisableThemes">
                 <DLLFILE>acgenral.dll</DLLFILE>
+            </SHIM>
+            <SHIM NAME="VMHorizonSetup">
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
+
+            <SHIM NAME="HideShimEnv">
+                <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
 
         </LIBRARY>
 
         <!-- Backwards compatibility layers, incomplete! -->
 
-        <LAYER>
-            <NAME>WIN95</NAME>
+        <LAYER NAME="WIN95">
             <SHIM_REF NAME="Win95VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WIN98</NAME>
+        <LAYER NAME="WIN98">
             <SHIM_REF NAME="Win98VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>NT4SP5</NAME>
+        <LAYER NAME="NT4SP5">
             <SHIM_REF NAME="WinNT4SP5VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WIN2000</NAME>
+        <LAYER NAME="WIN2000">
             <SHIM_REF NAME="Win2000VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WIN2000SP1</NAME>
+        <LAYER NAME="WIN2000SP1">
             <SHIM_REF NAME="Win2000SP1VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WIN2000SP2</NAME>
+        <LAYER NAME="WIN2000SP2">
             <SHIM_REF NAME="Win2000SP2VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WIN2000SP3</NAME>
+        <LAYER NAME="WIN2000SP3">
             <SHIM_REF NAME="Win2000SP3VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINXP</NAME>
+        <LAYER NAME="WINXP">
             <SHIM_REF NAME="WinXPVersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINXPSP1</NAME>
+        <LAYER NAME="WINXPSP1">
             <SHIM_REF NAME="WinXPSP1VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINXPSP2</NAME>
+        <LAYER NAME="WINXPSP2">
             <SHIM_REF NAME="WinXPSP2VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINXPSP3</NAME>
+        <LAYER NAME="WINXPSP3">
             <SHIM_REF NAME="WinXPSP3VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINSRV03RTM</NAME>
+        <LAYER NAME="WINSRV03RTM">
             <SHIM_REF NAME="Win2k3RTMVersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINSRV03SP1</NAME>
+        <LAYER NAME="WINSRV03SP1">
             <SHIM_REF NAME="Win2k3SP1VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINSRV03SP2</NAME>
+        <LAYER NAME="WINSRV03SP2">
             <SHIM_REF NAME="Win2k3SP2VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>VISTARTM</NAME>
+        <LAYER NAME="VISTARTM">
             <SHIM_REF NAME="VistaRTMVersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>VISTASP1</NAME>
+        <LAYER NAME="VISTASP1">
             <SHIM_REF NAME="VistaSP1VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>VISTASP2</NAME>
+        <LAYER NAME="VISTASP2">
             <SHIM_REF NAME="VistaSP2VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINSRV08</NAME>
+        <LAYER NAME="WINSRV08">
             <SHIM_REF NAME="VistaRTMVersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINSRV08SP1</NAME>
+        <LAYER NAME="WINSRV08SP1">
             <SHIM_REF NAME="VistaSP1VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WINSRV08SP2</NAME>
+        <LAYER NAME="WINSRV08SP2">
             <SHIM_REF NAME="VistaSP2VersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
-        <LAYER>
-            <NAME>WIN7RTM</NAME>
+        <LAYER NAME="WIN7RTM">
             <SHIM_REF NAME="Win7RTMVersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
 
         <!-- Display mode layers -->
 
-        <LAYER>
-            <NAME>256Color</NAME>
+        <LAYER NAME="256Color">
             <SHIM_REF NAME="DisableThemes" />
             <SHIM_REF NAME="Force8BitColor" />
         </LAYER>
-        <LAYER>
-            <NAME>640X480</NAME>
+        <LAYER NAME="640X480">
             <SHIM_REF NAME="Force640x480" />
         </LAYER>
 
 
         <!-- misc layers -->
 
-        <LAYER>
-            <NAME>DisableThemes</NAME>
+        <LAYER NAME="DisableThemes">
             <SHIM_REF NAME="DisableThemes" />
+        </LAYER>
+        <LAYER NAME="VMHorizonSetup">
+            <!-- ProductId: {7051C96D-AA61-4D83-AF37-646E82D616ED} -->
+            <SHIM_REF NAME="VMHorizonSetup" />
         </LAYER>
 
     </DATABASE>

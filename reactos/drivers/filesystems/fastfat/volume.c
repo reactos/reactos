@@ -32,7 +32,7 @@ FsdGetFsVolumeInformation(
 
     DPRINT("Required length %lu\n", FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel) + DeviceObject->Vpb->VolumeLabelLength);
     DPRINT("LabelLength %hu\n", DeviceObject->Vpb->VolumeLabelLength);
-    DPRINT("Label %*.S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
+    DPRINT("Label %.*S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
 
     ASSERT(*BufferLength >= sizeof(FILE_FS_VOLUME_INFORMATION));
     *BufferLength -= FIELD_OFFSET(FILE_FS_VOLUME_INFORMATION, VolumeLabel);

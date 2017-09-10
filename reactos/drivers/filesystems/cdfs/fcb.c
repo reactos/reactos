@@ -138,9 +138,9 @@ CdfsGrabFCB(PDEVICE_EXTENSION Vcb,
 {
     KIRQL  oldIrql;
 
-    DPRINT("grabbing FCB at %p: %S, refCount:%d\n",
+    DPRINT("grabbing FCB at %p: %wZ, refCount:%d\n",
         Fcb,
-        Fcb->PathName,
+        &Fcb->PathName,
         Fcb->RefCount);
 
     KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
@@ -208,7 +208,8 @@ CdfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
     {
         Fcb = CONTAINING_RECORD(current_entry, FCB, FcbListEntry);
 
-        DPRINT("Comparing '%wZ' and '%wZ'\n", FileName, &Fcb->PathName);
+        // Disabled the DPRINT! Can't be called at DISPATCH_LEVEL!
+        //DPRINT("Comparing '%wZ' and '%wZ'\n", FileName, &Fcb->PathName);
         if (RtlCompareUnicodeString(FileName, &Fcb->PathName, TRUE) == 0)
         {
             Fcb->RefCount++;

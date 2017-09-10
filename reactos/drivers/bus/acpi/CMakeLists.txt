@@ -17,6 +17,7 @@ list(APPEND ACPICA_SOURCE
     acpica/dispatcher/dsmthdat.c
     acpica/dispatcher/dsobject.c
     acpica/dispatcher/dsopcode.c
+    acpica/dispatcher/dspkginit.c
     acpica/dispatcher/dsutils.c
     acpica/dispatcher/dswexec.c
     acpica/dispatcher/dswload.c
@@ -156,6 +157,7 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utownerid.c
     acpica/utilities/utpredef.c
     # acpica/utilities/utprint.c
+    # acpica/utilities/utresdecode.c
     acpica/utilities/utresrc.c
     acpica/utilities/utstate.c
     acpica/utilities/utstring.c

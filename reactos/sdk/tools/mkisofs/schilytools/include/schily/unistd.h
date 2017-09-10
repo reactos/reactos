@@ -1,8 +1,8 @@
-/* @(#)unistd.h	1.27 14/06/19 Copyright 1996-2014 J. Schilling */
+/* @(#)unistd.h	1.28 17/04/30 Copyright 1996-2017 J. Schilling */
 /*
  *	Definitions for unix system interface
  *
- *	Copyright (c) 1996-2014 J. Schilling
+ *	Copyright (c) 1996-2017 J. Schilling
  */
 /*
  * The contents of this file are subject to the terms of the
@@ -124,12 +124,12 @@
 #define	SEEK_END	2	/* Set file pointer to EOF plus "offset" */
 #endif
 
-#ifndef	HAVE_ENVIRON_DEF
-extern	char	**environ;
-#endif
-
 #ifdef	__cplusplus
 extern "C" {
+#endif
+
+#ifndef	HAVE_ENVIRON_DEF
+extern	char	**environ;
 #endif
 
 #if	!defined(HAVE_UNISTD_H) || !defined(_POSIX_VERSION)

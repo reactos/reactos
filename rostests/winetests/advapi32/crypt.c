@@ -255,6 +255,9 @@ static void test_incorrect_api_usage(void)
     ok (result, "%d\n", GetLastError());
     if (!result) return;
 
+    result = pCryptDestroyKey(hKey);
+    ok (result, "%d\n", GetLastError());
+
     result = pCryptGenKey(hProv, CALG_RC4, 0, &hKey2);
     ok (result, "%d\n", GetLastError());
     if (!result) return;

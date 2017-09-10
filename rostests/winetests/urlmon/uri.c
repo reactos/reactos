@@ -7440,12 +7440,13 @@ static inline LPWSTR a2w(LPCSTR str) {
     return ret;
 }
 
-static inline void *heap_alloc(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, len);
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static inline BOOL heap_free(void* mem) {
+static inline BOOL heap_free(void *mem)
+{
     return HeapFree(GetProcessHeap(), 0, mem);
 }
 

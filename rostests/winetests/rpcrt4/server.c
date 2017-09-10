@@ -1752,10 +1752,42 @@ server(void)
   if (ret == WAIT_OBJECT_0)
   {
     status = RpcMgmtWaitServerListen();
-    todo_wine {
-      ok(status == RPC_S_OK, "RpcMgmtWaitServerListening failed with status %d\n", status);
-    }
+    ok(status == RPC_S_OK, "RpcMgmtWaitServerListening failed with status %d\n", status);
   }
+
+  CloseHandle(stop_event);
+  stop_event = NULL;
+}
+
+static void test_server_listening(void)
+{
+    static unsigned char np[] = "ncacn_np";
+    static unsigned char pipe[] = PIPE "listen_test";
+    RPC_STATUS status;
+
+    status = RpcServerUseProtseqEpA(np, 0, pipe, NULL);
+    ok(status == RPC_S_OK, "RpcServerUseProtseqEp(ncacn_np) failed with status %d\n", status);
+
+    status = RpcServerRegisterIf(s_IServer_v0_0_s_ifspec, NULL, NULL);
+    ok(status == RPC_S_OK, "RpcServerRegisterIf failed with status %d\n", status);
+
+    test_is_server_listening(NULL, RPC_S_NOT_LISTENING);
+    status = RpcServerListen(1, 20, TRUE);
+    ok(status == RPC_S_OK, "RpcServerListen failed with status %d\n", status);
+    test_is_server_listening(NULL, RPC_S_OK);
+
+    status = RpcServerListen(1, 20, TRUE);
+    ok(status == RPC_S_ALREADY_LISTENING, "RpcServerListen failed with status %d\n", status);
+
+    status = RpcMgmtStopServerListening(NULL);
+    ok(status == RPC_S_OK, "RpcMgmtStopServerListening\n");
+    test_is_server_listening(NULL, RPC_S_NOT_LISTENING);
+
+    status = RpcMgmtWaitServerListen();
+    ok(status == RPC_S_OK, "RpcMgmtWaitServerListening failed with status %d\n", status);
+
+    status = RpcMgmtWaitServerListen();
+    ok(status == RPC_S_NOT_LISTENING, "RpcMgmtWaitServerListening failed with status %d\n", status);
 }
 
 static BOOL is_process_elevated(void)
@@ -1843,7 +1875,7 @@ static HRESULT set_firewall( enum firewall_op op )
     hr = INetFwPolicy_get_CurrentProfile( policy, &profile );
     if (hr != S_OK) goto done;
 
-    INetFwProfile_get_AuthorizedApplications( profile, &apps );
+    hr = INetFwProfile_get_AuthorizedApplications( profile, &apps );
     ok( hr == S_OK, "got %08x\n", hr );
     if (hr != S_OK) goto done;
 
@@ -1913,6 +1945,10 @@ START_TEST(server)
     }
     RpcEndExcept
   }
+  else if (argc == 4)
+  {
+    test_server_listening();
+  }
   else
   {
     if (firewall_enabled)
@@ -1926,6 +1962,7 @@ START_TEST(server)
       }
     }
     server();
+    run_client("test listen");
     if (firewall_enabled) set_firewall(APP_REMOVE);
   }
 

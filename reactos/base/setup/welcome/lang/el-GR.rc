@@ -6,33 +6,33 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Καλώς Ήλθατε"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Καλώς ήλθατε στο ReactOS Λειτουργικό Σύστημα.\n\nΕπιλέξτε ένα θέμα από το μενού στα αριστερά."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Καλώς ήλθατε στο ReactOS Λειτουργικό Σύστημα.\n\nΕπιλέξτε ένα θέμα από το μενού στα αριστερά."
 
-    IDS_CHECKTEXT "Show this dialog again"
-    IDS_CLOSETEXT "Exit"
+    IDS_CHECKTEXT "&Show this dialog again"
+    IDS_CLOSETEXT "&Έξοδος"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Εγκατάσταση του ReactOS"
-    IDS_TOPICBUTTON1 "Εξερεύνηση αυτού του CD"
-    IDS_TOPICBUTTON2 "Έξοδος"
+    IDS_TOPIC_BUTTON0 "Εγκατάσταση του &ReactOS"
+    IDS_TOPIC_BUTTON1 "Εξερεύνηση αυτού του &CD"
+    IDS_TOPIC_BUTTON2 "&Έξοδος"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Εγκατάσταση του ReactOS"
-    IDS_TOPICTITLE1 "Εξερεύνηση αυτού του CD"
-    IDS_TOPICTITLE2 "Έξοδος"
+    IDS_TOPIC_TITLE0 "Εγκατάσταση του ReactOS"
+    IDS_TOPIC_TITLE1 "Εξερεύνηση αυτού του CD"
+    IDS_TOPIC_TITLE2 "Έξοδος"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Δημιουργία νέας εγκατάστασης του ReactOS στον υπολογιστή ή αναβάθμιση μιας ήδη υπάρχουσας εγκατάστασης."
-    IDS_TOPICDESC1 "Εξερεύνηση αυτού του CD."
-    IDS_TOPICDESC2 "Πατήστε για να τερματίσετε την εφαρμογή αυτή."
+    IDS_TOPIC_DESC0 "Δημιουργία νέας εγκατάστασης του ReactOS στον υπολογιστή ή αναβάθμιση μιας ήδη υπάρχουσας εγκατάστασης."
+    IDS_TOPIC_DESC1 "Εξερεύνηση αυτού του CD."
+    IDS_TOPIC_DESC2 "Πατήστε για να τερματίσετε την εφαρμογή αυτή."
 END

@@ -130,7 +130,7 @@ NtGdiAlphaBlend(
     TRACE("Performing the alpha blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
-                               &DCDest->co.ClipObj,
+                               (CLIPOBJ *)&DCDest->co,
                                &exlo.xlo,
                                &DestRect,
                                &SourceRect,
@@ -295,7 +295,7 @@ NtGdiTransparentBlt(
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        &DCDest->co.ClipObj, &exlo.xlo, &rcDest, &rcSrc,
+        (CLIPOBJ *)&DCDest->co, &exlo.xlo, &rcDest, &rcSrc,
         TransparentColor, 0);
 
     EXLATEOBJ_vCleanup(&exlo);
@@ -382,7 +382,7 @@ NtGdiMaskBlt(
     ahDC[1] = UsesSource ? hdcSrc : NULL;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiMaskBlt\n", hdcDest, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -393,7 +393,7 @@ NtGdiMaskBlt(
     if (NULL == DCDest)
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
-        WARN("Invalid destination dc handle (0x%p) passed to NtGdiBitBlt\n", hdcDest);
+        WARN("Invalid destination dc handle (0x%p) passed to NtGdiMaskBlt\n", hdcDest);
         return FALSE;
     }
 
@@ -485,12 +485,11 @@ NtGdiMaskBlt(
         XlateObj = &exlo.xlo;
     }
 
-
     /* Perform the bitblt operation */
     Status = IntEngBitBlt(&BitmapDest->SurfObj,
                           BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                           psurfMask ? &psurfMask->SurfObj : NULL,
-                          &DCDest->co.ClipObj,
+                          (CLIPOBJ *)&DCDest->co,
                           XlateObj,
                           &DestRect,
                           &SourcePoint,
@@ -708,7 +707,7 @@ GreStretchBltMask(
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,
                               BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                               BitmapMask ? &BitmapMask->SurfObj : NULL,
-                              &DCDest->co.ClipObj,
+                              (CLIPOBJ *)&DCDest->co,
                               XlateObj,
                               &DCDest->dclevel.ca,
                               &DestRect,
@@ -848,7 +847,7 @@ IntPatBlt(
     ret = IntEngBitBlt(&psurf->SurfObj,
                        NULL,
                        NULL,
-                       &pdc->co.ClipObj,
+                       (CLIPOBJ *)&pdc->co,
                        NULL,
                        &DestRect,
                        NULL,
@@ -1105,7 +1104,7 @@ IntGdiBitBltRgn(
     bResult = IntEngBitBlt(&pdc->dclevel.pSurface->SurfObj,
                            NULL,
                            NULL,
-                           &xcoClip.ClipObj,
+                           (CLIPOBJ *)&xcoClip,
                            NULL,
                            &prgnClip->rdh.rcBound,
                            NULL,
@@ -1210,7 +1209,7 @@ IntGdiFillRgn(
 
     /* Call the internal function */
     bRet = IntEngPaint(&pdc->dclevel.pSurface->SurfObj,
-                       &xcoClip.ClipObj,
+                       (CLIPOBJ *)&xcoClip,
                        pbo,
                        &pdc->pdcattr->ptlBrushOrigin,
                        mix);
@@ -1497,7 +1496,9 @@ NtGdiGetPixel(
     /* Check if the pixel is outside the surface */
     psurfSrc = pdc->dclevel.pSurface;
     if ((ptlSrc.x >= psurfSrc->SurfObj.sizlBitmap.cx) ||
-        (ptlSrc.y >= psurfSrc->SurfObj.sizlBitmap.cy))
+        (ptlSrc.y >= psurfSrc->SurfObj.sizlBitmap.cy) ||
+        (ptlSrc.x < 0) ||
+        (ptlSrc.y < 0))
     {
         /* Fail! */
         goto leave;

@@ -89,12 +89,12 @@ static void test_enumdisplaydevices(void)
     }
 
     dd.cb = sizeof(dd);
-    while(1)
+    for (num = 0;; num++)
     {
-        BOOL ret;
         HDC dc;
         ret = pEnumDisplayDevicesA(NULL, num, &dd, 0);
         if(!ret) break;
+
         if(dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
         {
             strcpy(primary_device_name, dd.DeviceName);
@@ -107,7 +107,6 @@ static void test_enumdisplaydevices(void)
             ok(dc != NULL, "Failed to CreateDC(\"%s\") err=%d\n", dd.DeviceName, GetLastError());
             DeleteDC(dc);
         }
-        num++;
     }
 
     if (primary_num == -1 || !pEnumDisplayMonitors || !pGetMonitorInfoA)
@@ -122,6 +121,17 @@ static void test_enumdisplaydevices(void)
     ok(!strcmp(primary_monitor_device_name, primary_device_name),
        "monitor device name %s, device name %s\n", primary_monitor_device_name,
        primary_device_name);
+
+    dd.cb = sizeof(dd);
+    for (num = 0;; num++)
+    {
+        ret = pEnumDisplayDevicesA(primary_device_name, num, &dd, 0);
+        if (!ret) break;
+
+        dd.DeviceID[63] = 0;
+        ok(!strcasecmp(dd.DeviceID, "Monitor\\Default_Monitor\\{4D36E96E-E325-11CE-BFC1-08002BE10318}\\"),
+           "DeviceID \"%s\" does not start with \"Monitor\\Default_Monitor\\...\" prefix\n", dd.DeviceID);
+    }
 }
 
 struct vid_mode
@@ -131,9 +141,9 @@ struct vid_mode
 };
 
 static const struct vid_mode vid_modes_test[] = {
-    {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY, 1},
+    {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY, 0},
     {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT |                 DM_DISPLAYFREQUENCY, 1},
-    {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL                      , 1},
+    {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL                      , 0},
     {640, 480, 0, 0, DM_PELSWIDTH | DM_PELSHEIGHT                                      , 1},
     {640, 480, 0, 0,                                DM_BITSPERPEL                      , 0},
     {640, 480, 0, 0,                                                DM_DISPLAYFREQUENCY, 0},

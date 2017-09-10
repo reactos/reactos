@@ -89,7 +89,7 @@ AcpiDsExecuteArguments (
     ACPI_WALK_STATE         *WalkState;
 
 
-    ACPI_FUNCTION_TRACE (DsExecuteArguments);
+    ACPI_FUNCTION_TRACE_PTR (DsExecuteArguments, AmlStart);
 
 
     /* Allocate a new parser op to be the root of the parsed tree */
@@ -366,7 +366,8 @@ AcpiDsGetPackageArguments (
         return_ACPI_STATUS (AE_AML_INTERNAL);
     }
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "Package Arg Init\n"));
+    ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "Package Argument Init, AML Ptr: %p\n",
+        ObjDesc->Package.AmlStart));
 
     /* Execute the AML code for the TermArg arguments */
 

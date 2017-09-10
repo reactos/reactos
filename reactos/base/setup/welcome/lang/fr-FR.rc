@@ -6,33 +6,33 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Bienvenue"
-    IDS_DEFAULTTOPICTITLE "ReactOS"
-    IDS_DEFAULTTOPICDESC "Bienvenue sur le système d'exploitation ReactOS.\n\nCliquez sur une section à gauche."
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Bienvenue sur le système d'exploitation ReactOS.\n\nCliquez sur une section à gauche."
 
-    IDS_CHECKTEXT "Afficher cette boîte de dialogue de nouveau."
-    IDS_CLOSETEXT "Quitter"
+    IDS_CHECKTEXT "&Afficher cette boîte de dialogue de nouveau."
+    IDS_CLOSETEXT "&Quitter"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Installer ReactOS"
-    IDS_TOPICBUTTON1 "Naviguer dans ce CD"
-    IDS_TOPICBUTTON2 "Quitter"
+    IDS_TOPIC_BUTTON0 "&Installer ReactOS"
+    IDS_TOPIC_BUTTON1 "&Naviguer dans ce CD"
+    IDS_TOPIC_BUTTON2 "&Quitter"
 END
 
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0 "Installer ReactOS"
-    IDS_TOPICTITLE1 "Naviguer dans ce CD"
-    IDS_TOPICTITLE2 "Quitter"
+    IDS_TOPIC_TITLE0 "Installer ReactOS"
+    IDS_TOPIC_TITLE1 "Naviguer dans ce CD"
+    IDS_TOPIC_TITLE2 "Quitter"
 END
 
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPICDESC0 "Crée une nouvelle installation de ReactOS sur votre ordinateur ou met à jour votre installation actuelle."
-    IDS_TOPICDESC1 "Explore le CD."
-    IDS_TOPICDESC2 "Cliquez pour quitter l'installation."
+    IDS_TOPIC_DESC0 "Crée une nouvelle installation de ReactOS sur votre ordinateur ou met à jour votre installation actuelle."
+    IDS_TOPIC_DESC1 "Explore le CD."
+    IDS_TOPIC_DESC2 "Cliquez pour quitter l'installation."
 END

@@ -208,19 +208,36 @@ static INT find_joystick_devices(void)
         else
             if ((joydev.dev_axes_map = HeapAlloc(GetProcessHeap(), 0, joydev.axis_count * sizeof(int))))
             {
-                INT j;
+                INT j, found_axes = 0;
 
                 /* Remap to DI numbers */
                 for (j = 0; j < joydev.axis_count; j++)
+                {
                     if (axes_map[j] < 8)
+                    {
                         /* Axis match 1-to-1 */
                         joydev.dev_axes_map[j] = j;
+                        found_axes++;
+                    }
                     else if (axes_map[j] == 16 ||
                              axes_map[j] == 17)
+                    {
                         /* POV axis */
                         joydev.dev_axes_map[j] = 8;
+                        found_axes++;
+                    }
                     else
                         joydev.dev_axes_map[j] = -1;
+                }
+
+                /* If no axes were configured but there are axes assume a 1-to-1 (wii controller) */
+                if (joydev.axis_count && !found_axes)
+                {
+                    ERR("Incoherent joystick data, advertised %d axes, detected 0. Assuming 1-to-1.\n",
+                         joydev.axis_count);
+                    for (j = 0; j < joydev.axis_count; j++)
+                        joydev.dev_axes_map[j] = j;
+                }
             }
 
         /* Find vendor_id and product_id in sysfs */

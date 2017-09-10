@@ -4,6 +4,7 @@ add_subdirectory(CmdLineUtil)
 list(APPEND SOURCE
     CommandLine.c
     ieee.c
+    popen.c
     splitpath.c
     testlist.c)
 

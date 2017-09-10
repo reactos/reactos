@@ -84,6 +84,9 @@ static int I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT
 	return 0;
 }
 
+/* Something sane in place of undefined (-1)<<n. Well, not really. */
+#define MINUS_SHIFT(n) ( (int)(((unsigned int)-1)<<(n)) )
+
 static void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT], unsigned int scale_index[2][SBLIMIT],mpg123_handle *fr)
 {
 	int i,n;
@@ -112,18 +115,18 @@ static void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
 		for(sample=smpb,i=0;i<jsbound;i++)
 		{
 			if((n=*ba++))
-			*f0++ = REAL_MUL_SCALE_LAYER12(DOUBLE_TO_REAL_15( ((-1)<<n) + (*sample++) + 1), fr->muls[n+1][*sca++]);
+			*f0++ = REAL_MUL_SCALE_LAYER12(DOUBLE_TO_REAL_15(MINUS_SHIFT(n) + (*sample++) + 1), fr->muls[n+1][*sca++]);
 			else *f0++ = DOUBLE_TO_REAL(0.0);
 
 			if((n=*ba++))
-			*f1++ = REAL_MUL_SCALE_LAYER12(DOUBLE_TO_REAL_15( ((-1)<<n) + (*sample++) + 1), fr->muls[n+1][*sca++]);
+			*f1++ = REAL_MUL_SCALE_LAYER12(DOUBLE_TO_REAL_15(MINUS_SHIFT(n) + (*sample++) + 1), fr->muls[n+1][*sca++]);
 			else *f1++ = DOUBLE_TO_REAL(0.0);
 		}
 		for(i=jsbound;i<SBLIMIT;i++)
 		{
 			if((n=*ba++))
 			{
-				real samp = DOUBLE_TO_REAL_15( ((-1)<<n) + (*sample++) + 1);
+				real samp = DOUBLE_TO_REAL_15(MINUS_SHIFT(n) + (*sample++) + 1);
 				*f0++ = REAL_MUL_SCALE_LAYER12(samp, fr->muls[n+1][*sca++]);
 				*f1++ = REAL_MUL_SCALE_LAYER12(samp, fr->muls[n+1][*sca++]);
 			}
@@ -144,7 +147,7 @@ static void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
 		for(sample=smpb,i=0;i<SBLIMIT;i++)
 		{
 			if((n=*ba++))
-			*f0++ = REAL_MUL_SCALE_LAYER12(DOUBLE_TO_REAL_15( ((-1)<<n) + (*sample++) + 1), fr->muls[n+1][*sca++]);
+			*f0++ = REAL_MUL_SCALE_LAYER12(DOUBLE_TO_REAL_15(MINUS_SHIFT(n) + (*sample++) + 1), fr->muls[n+1][*sca++]);
 			else *f0++ = DOUBLE_TO_REAL(0.0);
 		}
 		for(i=fr->down_sample_sblimit;i<32;i++)

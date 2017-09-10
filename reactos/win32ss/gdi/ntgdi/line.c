@@ -202,7 +202,7 @@ IntGdiLineTo(DC  *dc,
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
             Ret = IntEngLineTo(&psurf->SurfObj,
-                               &dc->co.ClipObj,
+                               (CLIPOBJ *)&dc->co,
                                &dc->eboLine.BrushObject,
                                Points[0].x, Points[0].y,
                                Points[1].x, Points[1].y,
@@ -303,7 +303,7 @@ IntGdiPolyline(DC      *dc,
 
     if (!dc->dclevel.pSurface)
     {
-        return FALSE;
+        return TRUE;
     }
 
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
@@ -334,7 +334,7 @@ IntGdiPolyline(DC      *dc,
             }
 
             Ret = IntEngPolyline(&psurf->SurfObj,
-                                 &dc->co.ClipObj,
+                                 (CLIPOBJ *)&dc->co,
                                  &dc->eboLine.BrushObject,
                                  Points,
                                  Count,
@@ -439,12 +439,6 @@ NtGdiLineTo(HDC  hDC,
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
-    }
-    if (dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(dc);
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
     }
 
     rcLockRect.left = dc->pdcattr->ptlCurrent.x;

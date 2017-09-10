@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType & CFF data/program tables loader (specification).           */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -61,11 +61,15 @@ FT_BEGIN_HEADER
                              FT_UInt      cid );
 
 
+  FT_LOCAL( FT_UInt32 )
+  cff_random( FT_UInt32  r );
+
   FT_LOCAL( FT_Error )
   cff_font_load( FT_Library  library,
                  FT_Stream   stream,
                  FT_Int      face_index,
                  CFF_Font    font,
+                 CFF_Face    face,
                  FT_Bool     pure_cff,
                  FT_Bool     cff2 );
 
@@ -108,6 +112,7 @@ FT_BEGIN_HEADER
   cff_get_var_blend( CFF_Face     face,
                      FT_UInt     *num_coords,
                      FT_Fixed*   *coords,
+                     FT_Fixed*   *normalizedcoords,
                      FT_MM_Var*  *mm_var );
 
   FT_LOCAL( void )

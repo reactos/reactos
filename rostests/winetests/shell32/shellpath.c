@@ -808,7 +808,7 @@ static void test_NonExistentPath(void)
                 memset(&startup, 0, sizeof(startup));
                 startup.cb = sizeof(startup);
                 startup.dwFlags = STARTF_USESHOWWINDOW;
-                startup.dwFlags = SW_SHOWNORMAL;
+                startup.wShowWindow = SW_SHOWNORMAL;
                 CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL,
                  &startup, &info);
                 winetest_wait_child_process( info.hProcess );
@@ -823,7 +823,7 @@ static void test_NonExistentPath(void)
                 memset(&startup, 0, sizeof(startup));
                 startup.cb = sizeof(startup);
                 startup.dwFlags = STARTF_USESHOWWINDOW;
-                startup.dwFlags = SW_SHOWNORMAL;
+                startup.wShowWindow = SW_SHOWNORMAL;
                 CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL,
                  &startup, &info);
                 ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0,
@@ -860,12 +860,13 @@ if (0) { /* crashes */
     ok(path == NULL, "got %p\n", path);
 
     path = NULL;
-    hr = pSHGetKnownFolderPath(&FOLDERID_Desktop, 0, NULL, &path);
+    hr = pSHGetKnownFolderPath(&FOLDERID_Desktop, KF_FLAG_DEFAULT_PATH, NULL, &path);
     ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
     ok(path != NULL, "expected path != NULL\n");
+    CoTaskMemFree(path);
 
     path = NULL;
-    hr = pSHGetKnownFolderPath(&FOLDERID_Desktop, KF_FLAG_DEFAULT_PATH, NULL, &path);
+    hr = pSHGetKnownFolderPath(&FOLDERID_Desktop, 0, NULL, &path);
     ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
     ok(path != NULL, "expected path != NULL\n");
 
@@ -2038,9 +2039,11 @@ static void check_known_folder(IKnownFolderManager *mgr, KNOWNFOLDERID *folderId
 static void test_knownFolders(void)
 {
     static const WCHAR sWindows[] = {'W','i','n','d','o','w','s',0};
+    static const WCHAR sWindows2[] = {'w','i','n','d','o','w','s',0};
     static const WCHAR sExample[] = {'E','x','a','m','p','l','e',0};
     static const WCHAR sExample2[] = {'E','x','a','m','p','l','e','2',0};
     static const WCHAR sSubFolder[] = {'S','u','b','F','o','l','d','e','r',0};
+    static const WCHAR sNoSuch[] = {'N','o','S','u','c','h',0};
     static const WCHAR sBackslash[] = {'\\',0};
     static const KNOWNFOLDERID newFolderId = {0x01234567, 0x89AB, 0xCDEF, {0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x01} };
     static const KNOWNFOLDERID subFolderId = {0xFEDCBA98, 0x7654, 0x3210, {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF} };
@@ -2142,7 +2145,6 @@ static void test_knownFolders(void)
         }
 
         hr = IKnownFolderManager_GetFolderByName(mgr, sWindows, &folder);
-        todo_wine
         ok(hr == S_OK, "failed to get known folder: 0x%08x\n", hr);
         if(SUCCEEDED(hr))
         {
@@ -2153,6 +2155,23 @@ static void test_knownFolders(void)
             hr = IKnownFolder_Release(folder);
             ok(hr == S_OK, "failed to release KnownFolder instance: 0x%08x\n", hr);
         }
+
+        hr = IKnownFolderManager_GetFolderByName(mgr, sWindows2, &folder);
+        ok(hr == S_OK, "failed to get known folder: 0x%08x\n", hr);
+        if(SUCCEEDED(hr))
+        {
+            hr = IKnownFolder_GetId(folder, &folderId);
+            ok(hr == S_OK, "failed to get folder id: 0x%08x\n", hr);
+            ok(IsEqualGUID(&folderId, &FOLDERID_Windows)==TRUE, "invalid KNOWNFOLDERID returned\n");
+
+            hr = IKnownFolder_Release(folder);
+            ok(hr == S_OK, "failed to release KnownFolder instance: 0x%08x\n", hr);
+        }
+
+        folder = (IKnownFolder *)0xdeadbeef;
+        hr = IKnownFolderManager_GetFolderByName(mgr, sNoSuch, &folder);
+        ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got 0x%08x\n", hr);
+        ok(folder == NULL, "got %p\n", folder);
 
         for(i=0; i<sizeof(known_folder_found)/sizeof(known_folder_found[0]); ++i)
             known_folder_found[i] = FALSE;

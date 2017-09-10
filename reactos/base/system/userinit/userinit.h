@@ -39,7 +39,8 @@ typedef enum
 typedef enum
 {
     SHELL,
-    INSTALLER
+    INSTALLER,
+    REBOOT
 } RUN;
 
 typedef struct _IMGINFO
@@ -47,6 +48,8 @@ typedef struct _IMGINFO
     HBITMAP hBitmap;
     INT cxSource;
     INT cySource;
+    INT iPlanes;
+    INT iBits;
 } IMGINFO, *PIMGINFO;
 
 typedef struct

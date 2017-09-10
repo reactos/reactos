@@ -69,7 +69,8 @@ BOOL
 mswBufferAppendBlob_Hostent(
   _Inout_ PMSW_BUFFER mswBuf,
   _Inout_ LPWSAQUERYSETW lpRes,
-  _In_ char* hostnameA,
+    _In_ char** hostAliasesA,
+    _In_ char* hostnameA,
   _In_ DWORD ip4addr);
 
 BOOL
@@ -115,5 +116,14 @@ char**
 StrAryCpyHeapAllocA(
   _In_opt_ HANDLE hHeap,
   _In_ char** aStrAry);
+
+/* strary:
+   ptr1 ... ptrn \0
+   data1 ... datan
+*/
+char**
+StrAryCpyHeapAllocWToA(
+  _In_opt_ HANDLE hHeap,
+  _In_ WCHAR** aStrAry);
 
 #endif // _MSWHELPER_H

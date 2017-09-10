@@ -1043,6 +1043,12 @@ typedef HWND (WINAPI *FINDPROC)(LPFINDREPLACE lpfr);
 
 static VOID DIALOG_SearchDialog(FINDPROC pfnProc)
 {
+    if (Globals.hFindReplaceDlg != NULL)
+    {
+        SetFocus(Globals.hFindReplaceDlg);
+        return;
+    }
+
     ZeroMemory(&Globals.find, sizeof(Globals.find));
     Globals.find.lStructSize = sizeof(Globals.find);
     Globals.find.hwndOwner = Globals.hMainWnd;
@@ -1057,7 +1063,7 @@ static VOID DIALOG_SearchDialog(FINDPROC pfnProc)
     /* notify us of incoming events using hMainWnd Window Messages    */
 
     Globals.hFindReplaceDlg = pfnProc(&Globals.find);
-    assert(Globals.hFindReplaceDlg != 0);
+    assert(Globals.hFindReplaceDlg != NULL);
 }
 
 VOID DIALOG_Search(VOID)

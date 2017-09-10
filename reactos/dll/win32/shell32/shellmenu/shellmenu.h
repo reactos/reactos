@@ -17,13 +17,6 @@
 #pragma warning(disable:4512) // assignment operator could not be gernerated
 #endif
 
-#define USE_SYSTEM_MENUDESKBAR 0
-#define USE_SYSTEM_MENUSITE 0
-#define USE_SYSTEM_MENUBAND 0
-#define USE_SYSTEM_MERGED_FOLDERS 0
-
-#define MERGE_FOLDERS 1
-
 #include <stdio.h>
 #include <tchar.h>
 
@@ -69,14 +62,45 @@
 #pragma warning(pop)
 #endif
 
+#define USE_SYSTEM_MENUDESKBAR 0
+#define USE_SYSTEM_MENUSITE 0
+#define USE_SYSTEM_MENUBAND 0
+#define USE_SYSTEM_MERGED_FOLDERS 0
+
+#define MERGE_FOLDERS 1
+
+#if USE_SYSTEM_MENUDESKBAR
+#define CMenuDeskBar_CreateInstance(riid, ppv) (CoCreateInstance(CLSID_MenuDeskBar, NULL, CLSCTX_INPROC_SERVER,riid, ppv))
+#else
+#define CMenuDeskBar_CreateInstance RSHELL_CMenuDeskBar_CreateInstance
+#endif
+
+#if USE_SYSTEM_MENUBAND
+#define CMenuBand_CreateInstance(riid, ppv) (CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,riid, ppv))
+#else
+#define CMenuBand_CreateInstance RSHELL_CMenuBand_CreateInstance
+#endif
+
+#if USE_SYSTEM_MENUSITE
+#define CMenuSite_CreateInstance(riid, ppv) (CoCreateInstance(CLSID_MenuBandSite, NULL, CLSCTX_INPROC_SERVER,riid, ppv))
+#else
+#define CMenuSite_CreateInstance RSHELL_CMenuSite_CreateInstance
+#endif
+
+#if USE_SYSTEM_MERGED_FOLDERS
+#define CMergedFolder_CreateInstance(riid, ppv) (CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER,riid, ppv))
+#else
+#define CMergedFolder_CreateInstance RSHELL_CMergedFolder_CreateInstance
+#endif
+
 extern "C"
 {
 extern HINSTANCE shell32_hInstance;
 
-HRESULT WINAPI CStartMenu_Constructor(REFIID riid, void **ppv);
-HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI CMergedFolder_Constructor(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv);
+HRESULT WINAPI RSHELL_CMenuDeskBar_CreateInstance(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI RSHELL_CMenuSite_CreateInstance(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI RSHELL_CMenuBand_CreateInstance(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI RSHELL_CMergedFolder_CreateInstance(REFIID riid, LPVOID *ppv);
 
 }

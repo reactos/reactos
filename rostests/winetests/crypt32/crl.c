@@ -148,6 +148,7 @@ static void testAddCRL(void)
     BOOL ret;
     DWORD GLE;
 
+    ok(store != NULL, "CertOpenStore failed: %08x\n", GetLastError());
     if (!store) return;
 
     /* Bad CRL encoding type */
@@ -425,20 +426,23 @@ static const BYTE rootSignedCRL[] = {
 
 static void testFindCRL(void)
 {
-    HCERTSTORE store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
-     CERT_STORE_CREATE_NEW_FLAG, NULL);
+    HCERTSTORE store;
     PCCRL_CONTEXT context;
     PCCERT_CONTEXT cert, endCert, rootCert;
     CRL_FIND_ISSUED_FOR_PARA issuedForPara = { NULL, NULL };
     DWORD count, revoked_count;
     BOOL ret;
 
-    if (!store) return;
     if (!pCertFindCRLInStore || !pCertFindCertificateInCRL)
     {
         win_skip("CertFindCRLInStore or CertFindCertificateInCRL not available\n");
         return;
     }
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+                          CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed: %08x\n", GetLastError());
+    if (!store) return;
 
     ret = CertAddEncodedCRLToStore(store, X509_ASN_ENCODING, signedCRL,
      sizeof(signedCRL), CERT_STORE_ADD_ALWAYS, NULL);
@@ -783,6 +787,7 @@ static void testGetCRLFromStore(void)
     DWORD flags;
     BOOL ret;
 
+    ok(store != NULL, "CertOpenStore failed: %08x\n", GetLastError());
     if (!store) return;
 
     /* Crash

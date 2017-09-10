@@ -63,17 +63,15 @@ MENU_SHV_FILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Εξερεύνηση", FCIDM_SHVIEW_EXPLORE
-        MENUITEM "&Άνοιγμα", FCIDM_SHVIEW_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Α&ποκοπή", FCIDM_SHVIEW_CUT
-        MENUITEM "Α&ντιγραφή", FCIDM_SHVIEW_COPY
+        MENUITEM "Α&ποκοπή", IDM_CUT
+        MENUITEM "Α&ντιγραφή", IDM_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Δημιουργία &συντόμευσης", FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Διαγραφή", FCIDM_SHVIEW_DELETE
-        MENUITEM "&Μετονομασία", FCIDM_SHVIEW_RENAME
+        MENUITEM "Δημιουργία &συντόμευσης", IDM_CREATELINK
+        MENUITEM "&Διαγραφή", IDM_DELETE
+        MENUITEM "&Μετονομασία", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Ιδιότητες", FCIDM_SHVIEW_PROPERTIES
+        MENUITEM "&Ιδιότητες", IDM_PROPERTIES
     END
 END
 
@@ -634,27 +632,25 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Αρχείο"
-    IDS_SHV_COLUMN2 "Μέγεθος"
-    IDS_SHV_COLUMN3 "Τύπος"
-    IDS_SHV_COLUMN4 "Τροποποίηση"
-    IDS_SHV_COLUMN5 "Χαρακτηριστικά"
-    IDS_SHV_COLUMN6 "Μέγεθος"
-    IDS_SHV_COLUMN7 "Ελεύθερος χώρος"
-    IDS_SHV_COLUMN8 "Όνομα"
-    IDS_SHV_COLUMN9 "Σχόλια"
-    IDS_SHV_COLUMN10 "Κάτοχος"
-    IDS_SHV_COLUMN11 "Ομάδα"
-    IDS_SHV_COLUMN12 "Filename"
-    IDS_SHV_COLUMN13 "Category"
+    IDS_SHV_COLUMN_NAME "Όνομα"
+    IDS_SHV_COLUMN_SIZE "Μέγεθος"
+    IDS_SHV_COLUMN_TYPE "Τύπος"
+    IDS_SHV_COLUMN_MODIFIED "Τροποποίηση"
+    IDS_SHV_COLUMN_ATTRIBUTES "Χαρακτηριστικά"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Μέγεθος"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Ελεύθερος χώρος"
+    IDS_SHV_COLUMN_OWNER "Κάτοχος"
+    IDS_SHV_COLUMN_GROUP "Ομάδα"
+    IDS_SHV_COLUMN_FILENAME "Filename"
+    IDS_SHV_COLUMN_CATEGORY "Category"
     IDS_SHV_COLUMN_DELFROM "Αρχική θέση"
     IDS_SHV_COLUMN_DELDATE "Ημερομηνία διαγραφής"
     IDS_SHV_COLUMN_FONTTYPE "Fonttype"
     IDS_SHV_COLUMN_WORKGROUP "Workgroup"
-    IDS_SHV_NETWORKLOCATION "Network Location"
+    IDS_SHV_COLUMN_NETLOCATION "Network Location"
     IDS_SHV_COLUMN_DOCUMENTS "Documents"
     IDS_SHV_COLUMN_STATUS "Status"
-    IDS_SHV_COLUMN_COMMENTS "Comments"
+    IDS_SHV_COLUMN_COMMENTS "Σχόλια"
     IDS_SHV_COLUMN_LOCATION "Location"
     IDS_SHV_COLUMN_MODEL "Model"
 
