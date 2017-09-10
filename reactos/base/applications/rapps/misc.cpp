@@ -11,42 +11,13 @@
 
 #include "gui.h"
 #include "misc.h"
+#include "cabinet.h"
 
  /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
 #define EXTRACT_EXTRACTFILES  0x00000002
 
 static HANDLE hLog = NULL;
-
-struct ERF
-{
-    INT erfOper;
-    INT erfType;
-    BOOL fError;
-};
-
-struct FILELIST
-{
-    LPSTR FileName;
-    FILELIST *next;
-    BOOL DoExtract;
-};
-
-struct SESSION
-{
-    INT FileSize;
-    ERF Error;
-    FILELIST *FileList;
-    INT FileCount;
-    INT Operation;
-    CHAR Destination[MAX_PATH];
-    CHAR CurrentFile[MAX_PATH];
-    CHAR Reserved[MAX_PATH];
-    FILELIST *FilterList;
-};
-
-typedef HRESULT(WINAPI *fnExtract)(SESSION *dest, LPCSTR szCabName);
-fnExtract pfnExtract;
 
 INT GetWindowWidth(HWND hwnd)
 {
@@ -243,7 +214,8 @@ BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
     CHAR szCabName[MAX_PATH];
     SESSION Dest;
     HRESULT Result;
-
+    fnExtract pfnExtract;
+    
     hCabinetDll = LoadLibraryW(L"cabinet.dll");
     if (hCabinetDll)
     {
