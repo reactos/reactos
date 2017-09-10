@@ -5,6 +5,7 @@
 * PURPOSE:      Functions to parse command-line flags and process them
 * COPYRIGHT:    Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
 */
+#include "rapps.h"
 #include "unattended.h"
 #include "defines.h"
 #include "available.h"
