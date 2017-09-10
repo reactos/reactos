@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev      (dmitry@reactos.org)
  *              Copyright 2017 Alexander Shaposhikov (sanchaez@reactos.org)
  */
-#include "defines.h"
+#include "rapps.h"
 
 static INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {

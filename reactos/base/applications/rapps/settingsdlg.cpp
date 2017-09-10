@@ -6,9 +6,7 @@
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
  *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  */
-#include "defines.h"
-
-#include "dialogs.h"
+#include "rapps.h"
 
 SETTINGS_INFO NewSettingsInfo;
 

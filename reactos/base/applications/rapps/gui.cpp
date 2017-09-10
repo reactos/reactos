@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
  *              Copyright 2017 Alexander Shaposhnikov   (sanchaez@reactos.org)
  */
-#include "defines.h"
+#include "rapps.h"
 
 #include "rapps.h"
 #include "rosui.h"

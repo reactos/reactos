@@ -7,8 +7,8 @@
  *              Copyright 2015 Ismael Ferreras Morezuelas  (swyterzone+ros@gmail.com)
  *              Copyright 2017 Alexander Shaposhnikov      (sanchaez@reactos.org)
  */
-#include "defines.h"
 #include "rapps.h"
+
 #include "unattended.h"
 
 #include <atlcom.h>

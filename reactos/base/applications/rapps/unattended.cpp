@@ -6,12 +6,10 @@
 * COPYRIGHT:    Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
 */
 #include "rapps.h"
-#include "unattended.h"
-#include "defines.h"
-#include "available.h"
-#include "dialogs.h"
 
-#include "setupapi.h"
+#include "unattended.h"
+
+#include <setupapi.h>
 
 #define MIN_ARGS 2
 

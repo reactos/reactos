@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  *              Copyright Mark Jansen
  */
-#include "defines.h"
+#include "rapps.h"
 
 #include <sha1.h>
 
