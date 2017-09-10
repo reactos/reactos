@@ -12,6 +12,7 @@
 #define IDI_APPUPD               18
 #define IDI_CATEGORY             19
 #define IDI_UPDATE_DB            20
+#define IDI_CHECK_ALL            21
 
 /* Icons for categories */
 #define IDI_CAT_AUDIO            50
@@ -76,6 +77,7 @@
 #define ID_REFRESH               559
 #define ID_REGREMOVE             560
 #define ID_RESETDB               561
+#define ID_CHECK_ALL             562
 
 /* Strings */
 #define IDS_APPTITLE             100
@@ -103,6 +105,9 @@
 #define IDS_INTEG_CHECK_FAIL     123
 #define IDS_INTERRUPTED_DOWNLOAD 124
 #define IDS_UNABLE_TO_WRITE      125
+#define IDS_SELECT_ALL           126
+#define IDS_INSTALL_SELECTED     127
+#define IDS_UNABLE_TO_INSTALL    128
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200
@@ -111,7 +116,7 @@
 #define IDS_TOOLTIP_SETTINGS     203
 #define IDS_TOOLTIP_REFRESH      204
 #define IDS_TOOLTIP_EXIT         205
-#define IDS_TOOLTIP_UPDATE_DB            206
+#define IDS_TOOLTIP_UPDATE_DB    206
 
 /* Columns info */
 #define IDS_APP_NAME             250
@@ -119,31 +124,34 @@
 #define IDS_APP_DESCRIPTION      252
 
 /* Apps info */
-#define IDS_INFO_VERSION         280
-#define IDS_INFO_DESCRIPTION     281
-#define IDS_INFO_PUBLISHER       282
-#define IDS_INFO_HELPLINK        283
-#define IDS_INFO_HELPPHONE       284
-#define IDS_INFO_README          285
-#define IDS_INFO_REGOWNER        286
-#define IDS_INFO_PRODUCTID       287
-#define IDS_INFO_CONTACT         288
-#define IDS_INFO_UPDATEINFO      289
-#define IDS_INFO_INFOABOUT       290
-#define IDS_INFO_COMMENTS        291
-#define IDS_INFO_INSTLOCATION    292
-#define IDS_INFO_INSTALLSRC      293
-#define IDS_INFO_UNINSTALLSTR    294
-#define IDS_INFO_MODIFYPATH      295
-#define IDS_INFO_INSTALLDATE     296
+#define IDS_INFO_VERSION          280
+#define IDS_INFO_DESCRIPTION      281
+#define IDS_INFO_PUBLISHER        282
+#define IDS_INFO_HELPLINK         283
+#define IDS_INFO_HELPPHONE        284
+#define IDS_INFO_README           285
+#define IDS_INFO_REGOWNER         286
+#define IDS_INFO_PRODUCTID        287
+#define IDS_INFO_CONTACT          288
+#define IDS_INFO_UPDATEINFO       289
+#define IDS_INFO_INFOABOUT        290
+#define IDS_INFO_COMMENTS         291
+#define IDS_INFO_INSTLOCATION     292
+#define IDS_INFO_INSTALLSRC       293
+#define IDS_INFO_UNINSTALLSTR     294
+#define IDS_INFO_MODIFYPATH       295
+#define IDS_INFO_INSTALLDATE      296
 
 /* Info for available apps */
-#define IDS_AINFO_VERSION        350
-#define IDS_AINFO_DESCRIPTION    351
-#define IDS_AINFO_SIZE           352
-#define IDS_AINFO_URLSITE        353
-#define IDS_AINFO_LICENSE        354
-#define IDS_AINFO_URLDOWNLOAD    355
+#define IDS_AINFO_VERSION            350
+#define IDS_AINFO_DESCRIPTION        351
+#define IDS_AINFO_SIZE               352
+#define IDS_AINFO_URLSITE            353
+#define IDS_AINFO_LICENSE            354
+#define IDS_AINFO_URLDOWNLOAD        355
+#define IDS_AINFO_AVAILABLEVERSION   356
+#define IDS_AINFO_LANGUAGES          357
+
 
 /* Names of categories */
 #define IDS_CAT_AUDIO            700
@@ -161,6 +169,33 @@
 #define IDS_CAT_SCIENCE          712
 #define IDS_CAT_TOOLS            713
 #define IDS_CAT_VIDEO            714
+
+/* App installation status */
+#define IDS_STATUS_INSTALLED          800     
+#define IDS_STATUS_NOTINSTALLED       801
+#define IDS_STATUS_DOWNLOADED         802
+#define IDS_STATUS_UPDATE_AVAILABLE   803
+#define IDS_STATUS_DOWNLOADING        804
+#define IDS_STATUS_INSTALLING         805
+#define IDS_STATUS_WAITING            806
+#define IDS_STATUS_FINISHED           807
+
+/* App license names */
+#define IDS_LICENSE_OPENSOURCE      900
+#define IDS_LICENSE_FREEWARE        901
+#define IDS_LICENSE_TRIAL           902
+
+/* Language related strings */
+#define IDS_LANGUAGE_AVAILABLE_TRANSLATION      910
+#define IDS_LANGUAGE_NO_TRANSLATION             911
+#define IDS_LANGUAGE_ENGLISH_TRANSLATION        912
+#define IDS_LANGUAGE_SINGLE                     913
+#define IDS_LANGUAGE_MORE_PLACEHOLDER           914
+#define IDS_LANGUAGE_AVAILABLE_PLACEHOLDER      915
+
+/* Dialog related entries */
+#define IDS_DL_DIALOG_DB_DISP                   950
+#define IDS_DL_DIALOG_DB_DOWNLOAD_DISP          951
 
 /* Accelerators */
 #define HOTKEYS                  715

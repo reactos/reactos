@@ -90,9 +90,9 @@ BEGIN
     PUSHBUTTON "Отмена", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Загрузка..."
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_SYSMENU | WS_VISIBLE
+CAPTION "Загрузка %ls..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -152,11 +152,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nВерсия: "
+    IDS_AINFO_AVAILABLEVERSION "\nДоступная версия: "
     IDS_AINFO_DESCRIPTION "\nОписание: "
     IDS_AINFO_SIZE "\nРазмер: "
     IDS_AINFO_URLSITE "\nДомашняя страница: "
     IDS_AINFO_LICENSE "\nЛицензия: "
     IDS_AINFO_URLDOWNLOAD "\nЗагрузить: "
+    IDS_AINFO_LANGUAGES "\nЯзыки: "
 END
 
 STRINGTABLE
@@ -185,7 +187,7 @@ BEGIN
     IDS_INSTALL "Установить"
     IDS_UNINSTALL "Удалить"
     IDS_MODIFY "Изменить"
-    IDS_APPS_COUNT "Количество: %d"
+    IDS_APPS_COUNT "Количество приложений: %d; Выбрано: %d"
     IDS_WELCOME_TITLE "Добро пожаловать в ""Менеджер приложений ReactOS""!\n\n"
     IDS_WELCOME_TEXT "Выберите категорию слева и приложение для установки или удаления.\nСайт ReactOS: "
     IDS_WELCOME_URL "http://www.reactos.org"
@@ -200,9 +202,47 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD "Не удалось скачать приложение! Не найден адрес!"
     IDS_UNABLE_TO_DOWNLOAD2 "Не удалось скачать приложение! Проверьте подключение к сети Интернет!"
     IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
+    IDS_UNABLE_TO_INSTALL "Не удалось завершить установку!"
     IDS_CERT_DOES_NOT_MATCH "Ошибка проверки SSL сертификата."
     IDS_INTEG_CHECK_TITLE "Проверка целостности приложения..."
     IDS_INTEG_CHECK_FAIL "Приложение не прошло проверку целостности, возможно оно было повреждено или подменено. Запуск приложения не рекомендуется."
     IDS_INTERRUPTED_DOWNLOAD "Загрузка была прервана. Проверьте подключение к сети Интернет."
     IDS_UNABLE_TO_WRITE "Не удалось записать данные на диск. Возможно, недостаточно свободного места на диске."
+    IDS_SELECT_ALL "Выбрать все"
+    IDS_INSTALL_SELECTED "Установить выбранное"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "Установлено"
+    IDS_STATUS_NOTINSTALLED "Не установлено"
+    IDS_STATUS_DOWNLOADED "Загружено"
+    IDS_STATUS_UPDATE_AVAILABLE "Есть обновления"
+    IDS_STATUS_DOWNLOADING "Загружается…"
+    IDS_STATUS_INSTALLING "Установка..."
+    IDS_STATUS_WAITING "Ожидание установки…"
+    IDS_STATUS_FINISHED "Завершено"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE_OPENSOURCE "Свободное ПО"
+    IDS_LICENSE_FREEWARE "Бесплатное ПО"
+    IDS_LICENSE_TRIAL "Пробная версия"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Доступно на вашем языке"
+    IDS_LANGUAGE_NO_TRANSLATION "Доступно на других языках"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Доступно на Английском"
+    IDS_LANGUAGE_SINGLE "Один язык"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+еще %d )"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d доступно)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "База данных приложений"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Обновление базы данных..."
 END

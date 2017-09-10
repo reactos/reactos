@@ -26,7 +26,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Оновити\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Оновити список &програм\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Довідка"
     BEGIN
@@ -56,7 +56,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Оновити\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Оновити список &програм\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -79,7 +79,7 @@ BEGIN
     CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
     CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    LTEXT "Виключення", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Стандартно", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
     PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
@@ -98,9 +98,9 @@ BEGIN
     PUSHBUTTON "Скасувати", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Завантаження..."
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_SYSMENU | WS_VISIBLE
+CAPTION "Завантаження %ls..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -125,7 +125,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "Змінити"
     IDS_TOOLTIP_SETTINGS "Налаштування"
     IDS_TOOLTIP_REFRESH "Оновити"
-    IDS_TOOLTIP_UPDATE_DB "Update Database"
+    IDS_TOOLTIP_UPDATE_DB "Оновити список програм"
     IDS_TOOLTIP_EXIT "Вихід"
 END
 
@@ -160,11 +160,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nВерсія: "
+    IDS_AINFO_AVAILABLEVERSION "\nДоступна версія: "
     IDS_AINFO_DESCRIPTION "\nОпис: "
     IDS_AINFO_SIZE "\nРозмір: "
     IDS_AINFO_URLSITE "\nДомашня сторінка: "
     IDS_AINFO_LICENSE "\nЛіцензія: "
     IDS_AINFO_URLDOWNLOAD "\nЗавантажити: "
+    IDS_AINFO_LANGUAGES "\nМови: "
 END
 
 STRINGTABLE
@@ -193,7 +195,7 @@ BEGIN
     IDS_INSTALL "Встановити"
     IDS_UNINSTALL "Видалити"
     IDS_MODIFY "Змінити"
-    IDS_APPS_COUNT "Kількість додатків: %d"
+    IDS_APPS_COUNT "Kількість додатків: %d; Обрано: %d"
     IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків ReactOS!\n\n"
     IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка ReactOS: "
     IDS_WELCOME_URL "http://www.reactos.org"
@@ -205,12 +207,50 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Ви вказали неіснуючу теку!"
     IDS_APP_REG_REMOVE "Ви дійсно хочете видалити дані про встановлену програму з реєстру?"
     IDS_INFORMATION "Інформація"
-    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
-    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
+    IDS_UNABLE_TO_DOWNLOAD "Неможливо завантажити додаток! Адресу не знайдено!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Неможливо завантажити додаток! Перевірте підключення до мережі Інтернет!"
     IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
-    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
-    IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
-    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
-    IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
-    IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
+    IDS_UNABLE_TO_INSTALL "Не вдалося завершити інсталювання!"
+    IDS_CERT_DOES_NOT_MATCH "Помилка перевіки сертифікату SSL."
+    IDS_INTEG_CHECK_TITLE "Перевірка цілістності додатку..."
+    IDS_INTEG_CHECK_FAIL "Додаток не пройшов перевірку цілістності, його молги пошкодити чи замінити. Запуск додатку не рекомендується."
+    IDS_INTERRUPTED_DOWNLOAD "Завантаження перервано. Перевірте підключення до мережі Інтернет."
+    IDS_UNABLE_TO_WRITE "Записк на диск неможливий. Можливо, на диску недостатньо містця."
+    IDS_SELECT_ALL "Вибрати все"
+    IDS_INSTALL_SELECTED "Встановити обране"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "Встановлено"
+    IDS_STATUS_NOTINSTALLED "Не встановлено"
+    IDS_STATUS_DOWNLOADED "Завантажено"
+    IDS_STATUS_UPDATE_AVAILABLE "Є оновлення"
+    IDS_STATUS_DOWNLOADING "Завантажується…"
+    IDS_STATUS_INSTALLING "Встановлюється…"
+    IDS_STATUS_WAITING "Очікування завантаження..."
+    IDS_STATUS_FINISHED "Завершено"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE_OPENSOURCE "Вільне ПЗ"
+    IDS_LICENSE_FREEWARE "Безкоштовне ПЗ"
+    IDS_LICENSE_TRIAL "Пробна версія"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Є переклад вашою мовою"
+    IDS_LANGUAGE_NO_TRANSLATION "Доступно іншими мовами"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Є переклад Англійською"
+    IDS_LANGUAGE_SINGLE "Одна мова"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+ще %d)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d доступно)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "Список програм"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Оновлення списку програм..."
 END

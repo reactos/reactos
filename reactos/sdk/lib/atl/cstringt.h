@@ -319,6 +319,11 @@ public:
     {
     }
 
+    CStringT(_In_ const CThisSimpleString& strSrc) :
+        CThisSimpleString(strSrc)
+    {
+    }
+
     template<class StringTraits_>
     CStringT(_In_ const CStringT<YCHAR, StringTraits_> & strSrc) :
         CThisSimpleString(StringTraits::GetDefaultManager())
@@ -404,6 +409,12 @@ public:
         return *this;
     }
 
+    CStringT& operator=(_In_ const CThisSimpleString &strSrc)
+    {
+        CThisSimpleString::operator=(strSrc);
+        return *this;
+    }
+
     friend bool operator==(const CStringT& str1, const CStringT& str2) throw()
     {
         return str1.Compare(str2) == 0;
@@ -417,7 +428,7 @@ public:
     friend bool operator==(const CStringT& str1, PCYSTR psz2) throw()
     {
         CStringT tmp(psz2, str1.GetManager());
-        return tmp == str1;
+        return tmp.Compare(str1) == 0;
     }
 
     friend bool operator==(const CStringT& str1, XCHAR ch2) throw()

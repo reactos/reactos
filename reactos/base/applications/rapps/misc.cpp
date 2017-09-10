@@ -1,84 +1,25 @@
 /*
- * PROJECT:         ReactOS Applications Manager
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/misc.cpp
- * PURPOSE:         Misc functions
- * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
- *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        base/applications/rapps/misc.cpp
+ * PURPOSE:     Misc functions
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
+ *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  */
+#include "defines.h"
 
-#include "rapps.h"
+#include "gui.h"
+#include "misc.h"
+#include "cabinet.h"
 
-/* SESSION Operation */
+ /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
 #define EXTRACT_EXTRACTFILES  0x00000002
 
 static HANDLE hLog = NULL;
-WCHAR szCachedINISectionLocale[MAX_PATH] = L"Section.";
-WCHAR szCachedINISectionLocaleNeutral[MAX_PATH] = {0};
-BYTE bCachedSectionStatus = FALSE;
 
-typedef struct
-{
-    int erfOper;
-    int erfType;
-    BOOL fError;
-} ERF, *PERF;
-
-struct FILELIST
-{
-    LPSTR FileName;
-    struct FILELIST *next;
-    BOOL DoExtract;
-};
-
-typedef struct
-{
-    INT FileSize;
-    ERF Error;
-    struct FILELIST *FileList;
-    INT FileCount;
-    INT Operation;
-    CHAR Destination[MAX_PATH];
-    CHAR CurrentFile[MAX_PATH];
-    CHAR Reserved[MAX_PATH];
-    struct FILELIST *FilterList;
-} SESSION;
-
-typedef HRESULT(WINAPI *fnExtract)(SESSION *dest, LPCSTR szCabName);
-fnExtract pfnExtract;
-
-
-INT
-GetSystemColorDepth(VOID)
-{
-    DEVMODE pDevMode;
-    INT ColorDepth;
-
-    pDevMode.dmSize = sizeof(pDevMode);
-    pDevMode.dmDriverExtra = 0;
-
-    if (!EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &pDevMode))
-    {
-        /* TODO: Error message */
-        return ILC_COLOR;
-    }
-
-    switch (pDevMode.dmBitsPerPel)
-    {
-        case 32: ColorDepth = ILC_COLOR32; break;
-        case 24: ColorDepth = ILC_COLOR24; break;
-        case 16: ColorDepth = ILC_COLOR16; break;
-        case  8: ColorDepth = ILC_COLOR8;  break;
-        case  4: ColorDepth = ILC_COLOR4;  break;
-        default: ColorDepth = ILC_COLOR;   break;
-    }
-
-    return ColorDepth;
-}
-
-int
-GetWindowWidth(HWND hwnd)
+INT GetWindowWidth(HWND hwnd)
 {
     RECT Rect;
 
@@ -86,8 +27,7 @@ GetWindowWidth(HWND hwnd)
     return (Rect.right - Rect.left);
 }
 
-int
-GetWindowHeight(HWND hwnd)
+INT GetWindowHeight(HWND hwnd)
 {
     RECT Rect;
 
@@ -95,8 +35,7 @@ GetWindowHeight(HWND hwnd)
     return (Rect.bottom - Rect.top);
 }
 
-int
-GetClientWindowWidth(HWND hwnd)
+INT GetClientWindowWidth(HWND hwnd)
 {
     RECT Rect;
 
@@ -104,8 +43,7 @@ GetClientWindowWidth(HWND hwnd)
     return (Rect.right - Rect.left);
 }
 
-int
-GetClientWindowHeight(HWND hwnd)
+INT GetClientWindowHeight(HWND hwnd)
 {
     RECT Rect;
 
@@ -113,52 +51,51 @@ GetClientWindowHeight(HWND hwnd)
     return (Rect.bottom - Rect.top);
 }
 
-VOID
-CopyTextToClipboard(LPCWSTR lpszText)
+VOID CopyTextToClipboard(LPCWSTR lpszText)
 {
+    if (!OpenClipboard(NULL))
+    {
+        return;
+    }
+
     HRESULT hr;
+    HGLOBAL ClipBuffer;
+    LPWSTR Buffer;
+    DWORD cchBuffer;
 
-    if (OpenClipboard(NULL))
-    {
-        HGLOBAL ClipBuffer;
-        WCHAR *Buffer;
-        DWORD cchBuffer;
+    EmptyClipboard();
+    cchBuffer = wcslen(lpszText) + 1;
+    ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
 
-        EmptyClipboard();
-        cchBuffer = wcslen(lpszText) + 1;
-        ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
-        Buffer = (PWCHAR)GlobalLock(ClipBuffer);
-        hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
-        GlobalUnlock(ClipBuffer);
+    Buffer = (PWCHAR) GlobalLock(ClipBuffer);
+    hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
+    GlobalUnlock(ClipBuffer);
 
-        if (SUCCEEDED(hr))
-            SetClipboardData(CF_UNICODETEXT, ClipBuffer);
+    if (SUCCEEDED(hr))
+        SetClipboardData(CF_UNICODETEXT, ClipBuffer);
 
-        CloseClipboard();
-    }
+    CloseClipboard();
 }
 
-VOID
-SetWelcomeText(VOID)
+VOID SetWelcomeText()
 {
-    WCHAR szText[MAX_STR_LEN*3];
+    ATL::CStringW szText;
 
-    LoadStringW(hInst, IDS_WELCOME_TITLE, szText, _countof(szText));
+    szText.LoadStringW(IDS_WELCOME_TITLE);
     NewRichEditText(szText, CFE_BOLD);
 
-    LoadStringW(hInst, IDS_WELCOME_TEXT, szText, _countof(szText));
+    szText.LoadStringW(IDS_WELCOME_TEXT);
     InsertRichEditText(szText, 0);
 
-    LoadStringW(hInst, IDS_WELCOME_URL, szText, _countof(szText));
+    szText.LoadStringW(IDS_WELCOME_URL);
     InsertRichEditText(szText, CFM_LINK);
 }
 
-VOID
-ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
+VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
 {
     HMENU hMenu = NULL;
     HMENU hPopupMenu;
-    MENUITEMINFO mii;
+    MENUITEMINFO ItemInfo;
     POINT pt;
 
     if (MenuID)
@@ -167,15 +104,20 @@ ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
         hPopupMenu = GetSubMenu(hMenu, 0);
     }
     else
+    {
         hPopupMenu = GetMenu(hwnd);
+    }
 
-    ZeroMemory(&mii, sizeof(mii));
-    mii.cbSize = sizeof(mii);
-    mii.fMask = MIIM_STATE;
-    GetMenuItemInfo(hPopupMenu, DefaultItem, FALSE, &mii);
+    ZeroMemory(&ItemInfo, sizeof(ItemInfo));
+    ItemInfo.cbSize = sizeof(ItemInfo);
+    ItemInfo.fMask = MIIM_STATE;
 
-    if (!(mii.fState & MFS_GRAYED))
+    GetMenuItemInfoW(hPopupMenu, DefaultItem, FALSE, &ItemInfo);
+
+    if (!(ItemInfo.fState & MFS_GRAYED))
+    {
         SetMenuDefaultItem(hPopupMenu, DefaultItem, FALSE);
+    }
 
     GetCursorPos(&pt);
 
@@ -183,11 +125,17 @@ ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
     TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hMainWnd, NULL);
 
     if (hMenu)
+    {
         DestroyMenu(hMenu);
+    }
 }
 
-BOOL
-StartProcess(LPWSTR lpPath, BOOL Wait)
+BOOL StartProcess(ATL::CStringW &Path, BOOL Wait)
+{
+    return StartProcess(const_cast<LPWSTR>(Path.GetString()), Wait);;
+}
+
+BOOL StartProcess(LPWSTR lpPath, BOOL Wait)
 {
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
@@ -205,7 +153,11 @@ StartProcess(LPWSTR lpPath, BOOL Wait)
     }
 
     CloseHandle(pi.hThread);
-    if (Wait) EnableWindow(hMainWnd, FALSE);
+
+    if (Wait)
+    {
+        EnableWindow(hMainWnd, FALSE);
+    }
 
     while (Wait)
     {
@@ -215,7 +167,7 @@ StartProcess(LPWSTR lpPath, BOOL Wait)
             while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
             {
                 TranslateMessage(&msg);
-                DispatchMessage(&msg);
+                DispatchMessageW(&msg);
             }
         }
         else
@@ -237,35 +189,33 @@ StartProcess(LPWSTR lpPath, BOOL Wait)
     return TRUE;
 }
 
-BOOL
-GetStorageDirectory(PWCHAR lpDirectory, DWORD cch)
+BOOL GetStorageDirectory(ATL::CStringW& Directory)
 {
-    if (cch < MAX_PATH)
-        return FALSE;
-
-    if (!SHGetSpecialFolderPathW(NULL, lpDirectory, CSIDL_LOCAL_APPDATA, TRUE))
-        return FALSE;
-
-    if (FAILED(StringCchCatW(lpDirectory, cch, L"\\rapps")))
-        return FALSE;
-
-    if (!CreateDirectoryW(lpDirectory, NULL) &&
-        GetLastError() != ERROR_ALREADY_EXISTS)
+    if (!SHGetSpecialFolderPathW(NULL, Directory.GetBuffer(MAX_PATH), CSIDL_LOCAL_APPDATA, TRUE))
     {
+        Directory.ReleaseBuffer();
         return FALSE;
     }
 
-    return TRUE;
+    Directory.ReleaseBuffer();
+    Directory += L"\\rapps";
+
+    return (CreateDirectoryW(Directory.GetString(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS);
 }
 
-BOOL
-ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
+BOOL ExtractFilesFromCab(const ATL::CStringW &CabName, const ATL::CStringW &OutputPath)
+{
+    return ExtractFilesFromCab(CabName.GetString(), OutputPath.GetString());
+}
+
+BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
 {
     HINSTANCE hCabinetDll;
     CHAR szCabName[MAX_PATH];
     SESSION Dest;
     HRESULT Result;
-
+    fnExtract pfnExtract;
+    
     hCabinetDll = LoadLibraryW(L"cabinet.dll");
     if (hCabinetDll)
     {
@@ -282,11 +232,17 @@ ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
             if (Result == S_OK)
             {
                 Dest.Operation = EXTRACT_EXTRACTFILES;
+                CreateDirectoryW(lpOutputPath, NULL);
+
                 Result = pfnExtract(&Dest, szCabName);
                 if (Result == S_OK)
                 {
                     FreeLibrary(hCabinetDll);
                     return TRUE;
+                }
+                else
+                {
+                    RemoveDirectoryW(lpOutputPath);
                 }
             }
         }
@@ -296,102 +252,70 @@ ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
     return FALSE;
 }
 
-VOID
-InitLogs(VOID)
+VOID InitLogs()
 {
-    WCHAR szBuf[MAX_PATH] = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager";
+    if (!SettingsInfo.bLogEnabled)
+    {
+        return;
+    }
+
     WCHAR szPath[MAX_PATH];
     DWORD dwCategoryNum = 1;
     DWORD dwDisp, dwData;
-    HKEY hKey;
+    ATL::CRegKey key;
 
-    if (!SettingsInfo.bLogEnabled) return;
-
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                        szBuf, 0, NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_WRITE, NULL, &hKey, &dwDisp) != ERROR_SUCCESS)
+    if (key.Create(HKEY_LOCAL_MACHINE,
+                   L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager",
+                   REG_NONE, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &dwDisp) != ERROR_SUCCESS)
     {
         return;
     }
 
     if (!GetModuleFileNameW(NULL, szPath, _countof(szPath)))
-        return;
-
-    if (RegSetValueExW(hKey,
-                       L"EventMessageFile",
-                       0,
-                       REG_EXPAND_SZ,
-                       (LPBYTE)szPath,
-                       (DWORD)(wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey);
         return;
     }
 
     dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE |
-             EVENTLOG_INFORMATION_TYPE;
+        EVENTLOG_INFORMATION_TYPE;
 
-    if (RegSetValueExW(hKey,
-                       L"TypesSupported",
-                       0,
-                       REG_DWORD,
-                       (LPBYTE)&dwData,
-                       sizeof(DWORD)) != ERROR_SUCCESS)
+    if ((key.SetStringValue(L"EventMessageFile",
+                            szPath,
+                            REG_EXPAND_SZ) == ERROR_SUCCESS)
+        && (key.SetStringValue(L"CategoryMessageFile",
+                               szPath,
+                               REG_EXPAND_SZ) == ERROR_SUCCESS)
+        && (key.SetDWORDValue(L"TypesSupported",
+                              dwData) == ERROR_SUCCESS)
+        && (key.SetDWORDValue(L"CategoryCount",
+                              dwCategoryNum) == ERROR_SUCCESS))
+
     {
-        RegCloseKey(hKey);
-        return;
+        hLog = RegisterEventSourceW(NULL, L"ReactOS Application Manager");
     }
 
-    if (RegSetValueExW(hKey,
-                       L"CategoryMessageFile",
-                       0,
-                       REG_EXPAND_SZ,
-                       (LPBYTE)szPath,
-                       (DWORD)(wcslen(szPath) + 1) * sizeof(WCHAR)) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKey);
-        return;
-    }
-
-    if (RegSetValueExW(hKey,
-                       L"CategoryCount",
-                       0,
-                       REG_DWORD,
-                       (LPBYTE)&dwCategoryNum,
-                       sizeof(DWORD)) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKey);
-        return;
-    }
-
-    RegCloseKey(hKey);
-
-    hLog = RegisterEventSourceW(NULL, L"ReactOS Application Manager");
+    key.Close();
 }
 
 
-VOID
-FreeLogs(VOID)
+VOID FreeLogs()
 {
-    if (hLog) DeregisterEventSource(hLog);
+    if (hLog)
+    {
+        DeregisterEventSource(hLog);
+    }
 }
 
 
-BOOL
-WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg)
+BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
 {
-    if (!SettingsInfo.bLogEnabled) return TRUE;
+    if (!SettingsInfo.bLogEnabled)
+    {
+        return TRUE;
+    }
 
-    if (!ReportEventW(hLog,
-                      wType,
-                      0,
-                      dwEventID,
-                      NULL,
-                      1,
-                      0,
-                      (LPCWSTR*)&lpMsg,
-                      NULL))
+    if (!ReportEventW(hLog, wType, 0, dwEventID,
+                      NULL, 1, 0, &lpMsg, NULL))
     {
         return FALSE;
     }
@@ -399,101 +323,143 @@ WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg)
     return TRUE;
 }
 
-
-LPWSTR GetINIFullPath(LPCWSTR lpFileName)
+BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
+                                 const ATL::CStringW& szRegName,
+                                 BOOL IsUserKey,
+                                 REGSAM keyWow)
 {
-           WCHAR szDir[MAX_PATH];
-    static WCHAR szBuffer[MAX_PATH];
+    BOOL bHasSucceded = FALSE;
+    ATL::CRegKey key;
+    ATL::CStringW szVersion;
+    ATL::CStringW szPath = ATL::CStringW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%ls") + szRegName;
 
-    GetStorageDirectory(szDir, _countof(szDir));
-    StringCbPrintfW(szBuffer, sizeof(szBuffer), L"%ls\\rapps\\%ls", szDir, lpFileName);
+    if (key.Open(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
+                 szPath.GetString(),
+                 keyWow | KEY_READ) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    if (szVersionResult != NULL)
+    {
+        ULONG dwSize = MAX_PATH * sizeof(WCHAR);
+
+        if (key.QueryStringValue(L"DisplayVersion",
+                                 szVersion.GetBuffer(MAX_PATH),
+                                 &dwSize) == ERROR_SUCCESS)
+        {
+            szVersion.ReleaseBuffer();
+            *szVersionResult = szVersion;
+            bHasSucceded = TRUE;
+        }
+        else
+        {
+            szVersion.ReleaseBuffer();
+        }
+    }
+    else
+    {
+        bHasSucceded = TRUE;
+        szVersion.ReleaseBuffer();
+    }
+    key.Close();
+
+    return bHasSucceded;
+}
+
+BOOL GetInstalledVersion(ATL::CStringW *pszVersion, const ATL::CStringW &szRegName)
+{
+    return (!szRegName.IsEmpty()
+            && (GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_32KEY)
+                || GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_32KEY)
+                || GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_64KEY)
+                || GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_64KEY)));
+}
+
+// CConfigParser
+
+CConfigParser::CConfigParser(const ATL::CStringW& FileName) : szConfigPath(GetINIFullPath(FileName))
+{
+    CacheINILocale();
+}
+
+ATL::CStringW CConfigParser::GetINIFullPath(const ATL::CStringW& FileName)
+{
+    ATL::CStringW szDir;
+    ATL::CStringW szBuffer;
+
+    GetStorageDirectory(szDir);
+    szBuffer.Format(L"%ls\\rapps\\%ls", szDir.GetString(), FileName.GetString());
 
     return szBuffer;
 }
 
-
-UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName)
+VOID CConfigParser::CacheINILocale()
 {
-    PWSTR lpFullFileName = GetINIFullPath(lpFileName);
+    // TODO: Set default locale if call fails
+    // find out what is the current system lang code (e.g. "0a") and append it to SectionLocale
+    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
+                    m_szLocaleID.GetBuffer(m_cchLocaleSize), m_cchLocaleSize);
+
+    m_szLocaleID.ReleaseBuffer();
+    m_szCachedINISectionLocale = L"Section." + m_szLocaleID;
+
+    // turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part
+    m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale + m_szLocaleID.Right(2);
+}
+
+UINT CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
+{
     DWORD dwResult;
 
-    /* we don't have cached section strings for the current system language, create them */
-    if(bCachedSectionStatus == FALSE)
+    LPWSTR ResultStringBuffer = ResultString.GetBuffer(MAX_PATH);
+    // 1st - find localized strings (e.g. "Section.0c0a")
+    dwResult = GetPrivateProfileStringW(m_szCachedINISectionLocale.GetString(),
+                                        KeyName.GetString(),
+                                        NULL,
+                                        ResultStringBuffer,
+                                        MAX_PATH,
+                                        szConfigPath.GetString());
+
+    if (!dwResult)
     {
-        WCHAR szLocale[4 + 1];
-        DWORD len;
-
-        /* find out what is the current system lang code (e.g. "0a") and append it to SectionLocale */
-        GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE,
-                       szLocale, _countof(szLocale));
-
-        StringCbCatW(szCachedINISectionLocale, sizeof(szCachedINISectionLocale), szLocale);
-
-        /* copy the locale-dependent string into the buffer of the future neutral one */
-        StringCbCopyW(szCachedINISectionLocaleNeutral,
-                      sizeof(szCachedINISectionLocaleNeutral),
-                      szCachedINISectionLocale);
-
-        /* turn "Section.0c0a" into "Section.0a", keeping just the neutral lang part */
-        len = wcslen(szCachedINISectionLocale);
-
-        memmove((szCachedINISectionLocaleNeutral + len) - 4,
-                (szCachedINISectionLocaleNeutral + len) - 2,
-                (2 * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
-
-        /* finally, mark us as cache-friendly for the next time */
-        bCachedSectionStatus = TRUE;
+        // 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a")
+        dwResult = GetPrivateProfileStringW(m_szCachedINISectionLocaleNeutral.GetString(),
+                                            KeyName.GetString(),
+                                            NULL,
+                                            ResultStringBuffer,
+                                            MAX_PATH,
+                                            szConfigPath.GetString());
+        if (!dwResult)
+        {
+            // 3rd - if they weren't present fallback to standard english strings (just "Section")
+            dwResult = GetPrivateProfileStringW(L"Section",
+                                                KeyName.GetString(),
+                                                NULL,
+                                                ResultStringBuffer,
+                                                MAX_PATH,
+                                                szConfigPath.GetString());
+        }
     }
 
-    /* 1st - find localized strings (e.g. "Section.0c0a") */
-    dwResult = GetPrivateProfileStringW(szCachedINISectionLocale,
-                                        lpKeyName,
-                                        NULL,
-                                        lpReturnedString,
-                                        nSize,
-                                        lpFullFileName);
-
-    if (dwResult != 0)
-        return TRUE;
-
-    /* 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a") */
-    dwResult = GetPrivateProfileStringW(szCachedINISectionLocaleNeutral,
-                                        lpKeyName,
-                                        NULL,
-                                        lpReturnedString,
-                                        nSize,
-                                        lpFullFileName);
-
-    if (dwResult != 0)
-        return TRUE;
-
-    /* 3rd - if they weren't present fallback to standard english strings (just "Section") */
-    dwResult = GetPrivateProfileStringW(L"Section",
-                                        lpKeyName,
-                                        NULL,
-                                        lpReturnedString,
-                                        nSize,
-                                        lpFullFileName);
-
+    ResultString.ReleaseBuffer();
     return (dwResult != 0 ? TRUE : FALSE);
 }
 
-UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName)
+UINT CConfigParser::GetInt(const ATL::CStringW& KeyName)
 {
-    WCHAR Buffer[30];
-    UNICODE_STRING BufferW;
-    ULONG Result;
+    ATL::CStringW Buffer;
 
-    /* grab the text version of our entry */
-    if (!ParserGetString(lpKeyName, Buffer, _countof(Buffer), lpFileName))
+    // grab the text version of our entry
+    if (!GetString(KeyName, Buffer))
         return FALSE;
 
-    if (!Buffer[0])
+    if (Buffer.IsEmpty())
         return FALSE;
 
-    /* convert it to an actual integer */
-    RtlInitUnicodeString(&BufferW, Buffer);
-    RtlUnicodeStringToInteger(&BufferW, 0, &Result);
+    // convert it to an actual integer
+    INT result = StrToIntW(Buffer.GetString());
 
-    return Result;
+    return (UINT) (result <= 0) ? 0 : result;
 }
+// CConfigParser

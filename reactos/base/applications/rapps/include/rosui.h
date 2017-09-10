@@ -1,10 +1,15 @@
-/* PROJECT:     ReactOS UI Layout Engine
- * LICENSE:     GPL - See COPYING in the top level directory
- * AUTHORS:     David Quintana <gigaherz@gmail.com>
+/*
+ * PROJECT:     ReactOS UI Layout Engine
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        base/applications/rapps/include/rosui.h
+ * PURPOSE:     ATL Layout engine for RAPPS
+ * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
  */
 #pragma once
 
-template<class T, int GrowthRate = 10>
+#include <atlwin.h>
+
+template<class T, INT GrowthRate = 10>
 class CPointerArray
 {
 protected:
@@ -22,13 +27,13 @@ public:
     }
 
 private:
-    static int CALLBACK s_OnRemoveItem(void * ptr, void * context)
+    static INT CALLBACK s_OnRemoveItem(PVOID ptr, PVOID context)
     {
         CPointerArray * self = (CPointerArray*) context;
-        return (int) self->OnRemoveItem(reinterpret_cast<T*>(ptr));
+        return (INT) self->OnRemoveItem(reinterpret_cast<T*>(ptr));
     }
 
-    static int CALLBACK s_OnCompareItems(void *p1, void *p2, LPARAM lParam)
+    static INT CALLBACK s_OnCompareItems(PVOID p1, PVOID p2, LPARAM lParam)
     {
         CPointerArray * self = (CPointerArray*) lParam;
         return self->OnCompareItems(reinterpret_cast<T*>(p1), reinterpret_cast<T*>(p2));
@@ -40,9 +45,9 @@ public:
         return TRUE;
     }
 
-    virtual int OnCompareItems(T * p1, T * p2)
+    virtual INT OnCompareItems(T * p1, T * p2)
     {
-        int t = (reinterpret_cast<int>(p2) -reinterpret_cast<int>(p1));
+        INT t = (reinterpret_cast<INT>(p2) - reinterpret_cast<INT>(p1));
         if (t > 0)
             return 1;
         if (t < 0)
@@ -51,45 +56,45 @@ public:
     }
 
 public:
-    int GetCount() const
+    INT GetCount() const
     {
         return DPA_GetPtrCount(m_hDpa);
     }
 
-    T* Get(int i) const
+    T* Get(INT i) const
     {
         return (T*) DPA_GetPtr(m_hDpa, i);
     }
 
-    BOOL Set(int i, T* ptr)
+    BOOL Set(INT i, T* ptr)
     {
         return DPA_SetPtr(m_hDpa, i, ptr);
     }
 
-    int Insert(int at, T* ptr)
+    INT Insert(INT at, T* ptr)
     {
         return DPA_InsertPtr(m_hDpa, at, ptr);
     }
 
-    int Append(T* ptr)
+    INT Append(T* ptr)
     {
         return DPA_InsertPtr(m_hDpa, DA_LAST, ptr);
     }
 
-    int IndexOf(T* ptr) const
+    INT IndexOf(T* ptr) const
     {
         return DPA_GetPtrIndex(m_hDpa, ptr);
     }
 
     BOOL Remove(T* ptr)
     {
-        int i = IndexOf(ptr);
+        INT i = IndexOf(ptr);
         if (i < 0)
             return FALSE;
         return RemoveAt(i);
     }
 
-    BOOL RemoveAt(int i)
+    BOOL RemoveAt(INT i)
     {
         T* ptr = (T*) DPA_GetPtr(m_hDpa, i);
         OnRemoveItem(ptr);
@@ -107,7 +112,7 @@ public:
         return DPA_Sort(m_hDpa, s_OnCompareItems, (LPARAM)this);
     }
 
-    int Search(T* item, int iStart, UINT uFlags)
+    INT Search(T* item, INT iStart, UINT uFlags)
     {
         return DPA_Search(m_hDpa, s_OnCompareItems, (LPARAM)this);
     }
@@ -122,7 +127,7 @@ public:
         left = right = top = bottom = 0;
     }
 
-    CUiRect(int l, int t, int r, int b)
+    CUiRect(INT l, INT t, INT r, INT b)
     {
         left = l;
         right = r;
@@ -139,12 +144,12 @@ public:
     {
     }
 
-    CUiMargin(int all)
+    CUiMargin(INT all)
         : CUiRect(all, all, all, all)
     {
     }
 
-    CUiMargin(int horz, int vert)
+    CUiMargin(INT horz, INT vert)
         : CUiRect(horz, vert, horz, vert)
     {
     }
@@ -163,7 +168,7 @@ public:
 
 private:
     MeasureType m_Type;
-    int m_Value;
+    INT m_Value;
 
 public:
     CUiMeasure()
@@ -172,13 +177,13 @@ public:
         m_Value = 0;
     }
 
-    CUiMeasure(MeasureType type, int value)
+    CUiMeasure(MeasureType type, INT value)
     {
         m_Type = type;
         m_Value = value;
     }
 
-    int ComputeMeasure(int parent, int content)
+    INT ComputeMeasure(INT parent, INT content)
     {
         switch (m_Type)
         {
@@ -206,12 +211,12 @@ public:
         return CUiMeasure(Type_FitParent, 0);
     }
 
-    static CUiMeasure Fixed(int pixels)
+    static CUiMeasure Fixed(INT pixels)
     {
         return CUiMeasure(Type_Fixed, pixels);
     }
 
-    static CUiMeasure Percent(int percent)
+    static CUiMeasure Percent(INT percent)
     {
         return CUiMeasure(Type_Percent, percent);
     }
@@ -240,7 +245,7 @@ protected:
         m_VerticalAlignment = UiAlign_LeftTop;
     }
 
-    virtual void ComputeRect(RECT parentRect, RECT currentRect, RECT* newRect)
+    virtual VOID ComputeRect(RECT parentRect, RECT currentRect, RECT* newRect)
     {
         parentRect.left += m_Margin.left;
         parentRect.right -= m_Margin.right;
@@ -253,8 +258,8 @@ protected:
         if (parentRect.bottom < parentRect.top)
             parentRect.bottom = parentRect.top;
 
-        SIZE szParent = { parentRect.right - parentRect.left, parentRect.bottom - parentRect.top };
-        SIZE szCurrent = { currentRect.right - currentRect.left, currentRect.bottom - currentRect.top };
+        SIZE szParent = {parentRect.right - parentRect.left, parentRect.bottom - parentRect.top};
+        SIZE szCurrent = {currentRect.right - currentRect.left, currentRect.bottom - currentRect.top};
 
         currentRect = parentRect;
 
@@ -295,14 +300,14 @@ protected:
 
 
 public:
-    virtual void ComputeMinimalSize(SIZE* size)
+    virtual VOID ComputeMinimalSize(SIZE* size)
     {
         // Override in subclass
         size->cx = max(size->cx, 0);
         size->cy = min(size->cy, 0);
     };
 
-    virtual void ComputeContentBounds(RECT* rect)
+    virtual VOID ComputeContentBounds(RECT* rect)
     {
         // Override in subclass
     };
@@ -371,9 +376,9 @@ public:
 
     virtual CUiBox * AsBox() { return this; }
 
-    virtual void ComputeMinimalSize(SIZE* size)
+    virtual VOID ComputeMinimalSize(SIZE* size)
     {
-        for (int i = 0; i < m_Children.GetCount(); i++)
+        for (INT i = 0; i < m_Children.GetCount(); i++)
         {
             CUiBox * box = m_Children.Get(i)->AsBox();
             if (box)
@@ -383,9 +388,9 @@ public:
         }
     };
 
-    virtual void ComputeContentBounds(RECT* rect)
+    virtual VOID ComputeContentBounds(RECT* rect)
     {
-        for (int i = 0; i < m_Children.GetCount(); i++)
+        for (INT i = 0; i < m_Children.GetCount(); i++)
         {
             CUiBox * box = m_Children.Get(i)->AsBox();
             if (box)
@@ -397,8 +402,8 @@ public:
 
     virtual DWORD_PTR CountSizableChildren()
     {
-        int count = 0;
-        for (int i = 0; i < m_Children.GetCount(); i++)
+        INT count = 0;
+        for (INT i = 0; i < m_Children.GetCount(); i++)
         {
             CUiBox * box = m_Children.Get(i)->AsBox();
             if (box)
@@ -411,20 +416,20 @@ public:
 
     virtual HDWP OnParentSize(RECT parentRect, HDWP hDwp)
     {
-        RECT rect = { 0 };
+        RECT rect = {0};
 
-        SIZE content = { 0 };
+        SIZE content = {0};
         ComputeMinimalSize(&content);
 
-        int preferredWidth = m_Width.ComputeMeasure(parentRect.right - parentRect.left, content.cx);
-        int preferredHeight = m_Height.ComputeMeasure(parentRect.bottom - parentRect.top, content.cy);
+        INT preferredWidth = m_Width.ComputeMeasure(parentRect.right - parentRect.left, content.cx);
+        INT preferredHeight = m_Height.ComputeMeasure(parentRect.bottom - parentRect.top, content.cy);
 
         rect.right = preferredWidth;
         rect.bottom = preferredHeight;
 
         ComputeRect(parentRect, rect, &rect);
 
-        for (int i = 0; i < m_Children.GetCount(); i++)
+        for (INT i = 0; i < m_Children.GetCount(); i++)
         {
             CUiBox * box = m_Children.Get(i)->AsBox();
             if (box)
@@ -448,13 +453,13 @@ public:
 
     HWND GetWindow() { return T::m_hWnd; }
 
-    virtual void ComputeMinimalSize(SIZE* size)
+    virtual VOID ComputeMinimalSize(SIZE* size)
     {
         // TODO: Maybe use WM_GETMINMAXINFO?
         return CUiBox::ComputeMinimalSize(size);
     };
 
-    virtual void ComputeContentBounds(RECT* rect)
+    virtual VOID ComputeContentBounds(RECT* rect)
     {
         RECT r;
         ::GetWindowRect(T::m_hWnd, &r);
@@ -488,10 +493,16 @@ public:
         }
     };
 
-public:
     virtual ~CUiWindow()
     {
         T::DestroyWindow();
+    }
+
+    VOID GetWindowTextW(ATL::CStringW& szText)
+    {
+        INT length = CWindow::GetWindowTextLengthW() + 1;
+        CWindow::GetWindowTextW(szText.GetBuffer(length), length);
+        szText.ReleaseBuffer();
     }
 };
 
@@ -500,7 +511,7 @@ class CUiSplitPanel :
     public CUiBox,
     public CWindowImpl<CUiSplitPanel>
 {
-    static const int THICKNESS = 4;
+    static const INT THICKNESS = 4;
 
 protected:
 
@@ -514,16 +525,15 @@ protected:
     BOOL m_HasOldRect;
 
 public:
-    int m_Pos;
+    INT m_Pos;
     BOOL m_Horizontal;
     BOOL m_DynamicFirst;
-    int m_MinFirst;
-    int m_MinSecond;
+    INT m_MinFirst;
+    INT m_MinSecond;
 
     CUiMeasure m_Width;
     CUiMeasure m_Height;
 
-public:
     CUiSplitPanel()
     {
         m_Width = CUiMeasure::FitParent();
@@ -544,7 +554,7 @@ public:
     CUiCollection& First() { return m_First.Children(); }
     CUiCollection& Second() { return m_Second.Children(); }
 
-    virtual void ComputeMinimalSize(SIZE* size)
+    virtual VOID ComputeMinimalSize(SIZE* size)
     {
         if (m_Horizontal)
             size->cx = max(size->cx, THICKNESS);
@@ -554,7 +564,7 @@ public:
         m_Second.ComputeMinimalSize(size);
     };
 
-    virtual void ComputeContentBounds(RECT* rect)
+    virtual VOID ComputeContentBounds(RECT* rect)
     {
         RECT r;
 
@@ -571,7 +581,7 @@ public:
 
     virtual DWORD_PTR CountSizableChildren()
     {
-        int count = 1;
+        INT count = 1;
         count += m_First.CountSizableChildren();
         count += m_Second.CountSizableChildren();
         return count;
@@ -579,20 +589,20 @@ public:
 
     virtual HDWP OnParentSize(RECT parentRect, HDWP hDwp)
     {
-        RECT rect = { 0 };
+        RECT rect = {0};
 
-        SIZE content = { 0 };
+        SIZE content = {0};
         ComputeMinimalSize(&content);
 
-        int preferredWidth = m_Width.ComputeMeasure(parentRect.right - parentRect.left, content.cx);
-        int preferredHeight = m_Width.ComputeMeasure(parentRect.bottom - parentRect.top, content.cy);
+        INT preferredWidth = m_Width.ComputeMeasure(parentRect.right - parentRect.left, content.cx);
+        INT preferredHeight = m_Width.ComputeMeasure(parentRect.bottom - parentRect.top, content.cy);
 
         rect.right = preferredWidth;
         rect.bottom = preferredHeight;
 
         ComputeRect(parentRect, rect, &rect);
 
-        SIZE growth = { 0 };
+        SIZE growth = {0};
         if (m_HasOldRect)
         {
             RECT oldRect = m_LastRect;
@@ -613,7 +623,7 @@ public:
             {
                 if (growth.cy > 0)
                 {
-                    m_Pos += min(growth.cy, rect.bottom - (m_Pos+THICKNESS));
+                    m_Pos += min(growth.cy, rect.bottom - (m_Pos + THICKNESS));
                 }
                 else if (growth.cy < 0)
                 {
@@ -662,25 +672,25 @@ public:
 
         m_LastRect = parentRect;
         m_HasOldRect = TRUE;
-        
+
         hDwp = m_First.OnParentSize(first, hDwp);
         hDwp = m_Second.OnParentSize(second, hDwp);
 
         if (hDwp)
         {
             return DeferWindowPos(hDwp, NULL,
-                splitter.left, splitter.top,
-                splitter.right - splitter.left,
-                splitter.bottom - splitter.top,
-                SWP_NOACTIVATE | SWP_NOZORDER);
+                                  splitter.left, splitter.top,
+                                  splitter.right - splitter.left,
+                                  splitter.bottom - splitter.top,
+                                  SWP_NOACTIVATE | SWP_NOZORDER);
         }
         else
         {
             SetWindowPos(NULL,
-                splitter.left, splitter.top,
-                splitter.right - splitter.left,
-                splitter.bottom - splitter.top,
-                SWP_NOACTIVATE | SWP_NOZORDER);
+                         splitter.left, splitter.top,
+                         splitter.right - splitter.left,
+                         splitter.bottom - splitter.top,
+                         SWP_NOACTIVATE | SWP_NOZORDER);
             return NULL;
         }
     };
@@ -729,12 +739,12 @@ private:
     }
 
 public:
-    int GetPos(VOID)
+    INT GetPos()
     {
         return m_Pos;
     }
 
-    void SetPos(int NewPos)
+    VOID SetPos(INT NewPos)
     {
         RECT rcParent;
 
@@ -765,7 +775,7 @@ public:
                 m_Pos = rcParent.right;
         }
 
-        int count = CountSizableChildren();
+        INT count = CountSizableChildren();
 
         HDWP hdwp = NULL;
         hdwp = BeginDeferWindowPos(count);
@@ -787,7 +797,7 @@ public:
         DWORD style = WS_CHILD | WS_VISIBLE;
         DWORD exStyle = WS_EX_TRANSPARENT;
 
-        RECT size = { 205, 180, 465, THICKNESS };
+        RECT size = {205, 180, 465, THICKNESS};
         size.right += size.left;
         size.bottom += size.top;
 

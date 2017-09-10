@@ -22,6 +22,7 @@ IDI_APPS ICON "res/apps.ico"
 IDI_APPUPD ICON "res/appupd.ico"
 IDI_CATEGORY ICON "res/cat.ico"
 IDI_UPDATE_DB ICON "res/updatedb.ico"
+IDI_CHECK_ALL ICON "res/select.ico"
 
 /* Categories */
 IDI_CAT_AUDIO ICON "res/cats/audio.ico"
