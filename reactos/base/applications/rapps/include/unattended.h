@@ -1,5 +1,5 @@
 #pragma once
-
+#include "rapps.h"
 #define CMD_KEY_INSTALL L"/INSTALL"
 #define CMD_KEY_SETUP L"/SETUP"
 
