@@ -3,7 +3,7 @@
 
 #pragma once
 #include "atlbase.h"
-
+#include "atlexcept.h"
 
 struct __POSITION
 {
@@ -531,7 +531,7 @@ typename CAtlList<E, ETraits>::CNode* CAtlList< E, ETraits>::GetFreeNode()
     CAtlPlex* Block = CAtlPlex::Create(m_Blocks, m_BlockSize, sizeof(CNode));
     if (Block == NULL)
     {
-        throw(E_OUTOFMEMORY);
+        AtlThrowImp(E_OUTOFMEMORY);
     }
     
     CNode* Node = (CNode*)Block->GetData();
