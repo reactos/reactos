@@ -46,7 +46,7 @@
 @ stdcall CoGetInstanceFromFile(ptr ptr ptr long long wstr long ptr)
 @ stdcall CoGetInstanceFromIStorage(ptr ptr ptr long ptr long ptr)
 @ stdcall -stub CoGetInterceptor(ptr ptr ptr ptr)
-# CoGetInterceptorFromTypeInfo
+@ stdcall -stub CoGetInterceptorFromTypeInfo(ptr ptr ptr ptr ptr)
 @ stdcall CoGetInterfaceAndReleaseStream(ptr ptr ptr)
 @ stdcall CoGetMalloc(long ptr)
 @ stdcall CoGetMarshalSizeMax(ptr ptr ptr long ptr long)
