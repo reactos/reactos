@@ -188,7 +188,56 @@ TestMmAllocatePagesForMdl(VOID)
     }
 }
 
+static
+VOID
+TestMmBuildMdlForNonPagedPool(VOID)
+{
+    PVOID Page;
+    PMDL Mdl;
+
+    Page = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, 'Test');
+    ok(Page != NULL, "ExAllocatePoolWithTag failed\n");
+    if (skip(Page != NULL, "No buffer\n"))
+        return;
+
+    Mdl = IoAllocateMdl(Page, PAGE_SIZE, FALSE, FALSE, NULL);
+    ok(Mdl != NULL, "IoAllocateMdl failed\n");
+    if (skip(Mdl != NULL, "No MDL\n"))
+        return;
+
+    ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) == 0, "MDL locked\n");
+    ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
+
+    MmBuildMdlForNonPagedPool(Mdl);
+    ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) == 0, "MDL locked\n");
+    ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) != 0, "MDL from paged\n");
+
+    IoFreeMdl(Mdl);
+    ExFreePoolWithTag(Page, 'Test');
+
+    Page = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, 'Test');
+    ok(Page != NULL, "ExAllocatePoolWithTag failed\n");
+    if (skip(Page != NULL, "No buffer\n"))
+        return;
+
+    Mdl = IoAllocateMdl(Page, PAGE_SIZE, FALSE, FALSE, NULL);
+    ok(Mdl != NULL, "IoAllocateMdl failed\n");
+    if (skip(Mdl != NULL, "No MDL\n"))
+        return;
+
+    ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) == 0, "MDL locked\n");
+    ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
+
+    MmBuildMdlForNonPagedPool(Mdl);
+    ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) == 0, "MDL locked\n");
+    ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) != 0, "MDL from paged\n");
+
+    IoFreeMdl(Mdl);
+    ExFreePoolWithTag(Page, 'Test');
+}
+
 START_TEST(MmMdl)
 {
     TestMmAllocatePagesForMdl();
+    TestMmBuildMdlForNonPagedPool();
 }
