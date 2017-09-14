@@ -209,7 +209,8 @@ public:
 class CMainToolbar :
     public CUiWindow< CToolbar<> >
 {
-#define TOOLBAR_HEIGHT 24
+    const INT m_iToolbarHeight;
+    DWORD m_dButtonsWidthMax;
 
     WCHAR szInstallBtn[MAX_STR_LEN];
     WCHAR szUninstallBtn[MAX_STR_LEN];
@@ -223,8 +224,8 @@ class CMainToolbar :
         if (!(hImage = (HICON) LoadImageW(hInst,
                                           MAKEINTRESOURCE(ImageIndex),
                                           IMAGE_ICON,
-                                          TOOLBAR_HEIGHT,
-                                          TOOLBAR_HEIGHT,
+                                          m_iToolbarHeight,
+                                          m_iToolbarHeight,
                                           0)))
         {
             /* TODO: Error message */
@@ -239,8 +240,8 @@ class CMainToolbar :
         HIMAGELIST hImageList;
 
         /* Create the toolbar icon image list */
-        hImageList = ImageList_Create(TOOLBAR_HEIGHT,//GetSystemMetrics(SM_CXSMICON),
-                                      TOOLBAR_HEIGHT,//GetSystemMetrics(SM_CYSMICON),
+        hImageList = ImageList_Create(m_iToolbarHeight,//GetSystemMetrics(SM_CXSMICON),
+                                      m_iToolbarHeight,//GetSystemMetrics(SM_CYSMICON),
                                       ILC_MASK | GetSystemColorDepth(),
                                       1, 1);
         if (!hImageList)
@@ -262,6 +263,10 @@ class CMainToolbar :
     }
 
 public:
+    CMainToolbar() : m_iToolbarHeight(24)
+    {
+    }
+
     VOID OnGetDispInfo(LPTOOLTIPTEXT lpttt)
     {
         UINT idButton = (UINT) lpttt->hdr.idFrom;
@@ -300,21 +305,19 @@ public:
 
     HWND Create(HWND hwndParent)
     {
-        HIMAGELIST hImageList;
-
-        // buttons
-        static TBBUTTON Buttons[] =
+        /* Create buttons */
+        TBBUTTON Buttons[] =
         {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
-            { 0, ID_INSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szInstallBtn },
-            { 1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szUninstallBtn },
-            { 2, ID_MODIFY, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szModifyBtn },
-            { 3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szSelectAll},
-            {-1, 0, TBSTATE_ENABLED, BTNS_SEP, { 0 }, 0, 0 },
-            { 4, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
-            { 5, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
-            {-1, 0, TBSTATE_ENABLED, BTNS_SEP, { 0 }, 0, 0 },
-            { 6, ID_SETTINGS, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
-            { 7, ID_EXIT, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 },
+            {  0, ID_INSTALL,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szInstallBtn      },
+            {  1, ID_UNINSTALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szUninstallBtn    },
+            {  2, ID_MODIFY,    TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szModifyBtn       },
+            {  3, ID_CHECK_ALL, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, (INT_PTR) szSelectAll       },
+            { -1, 0,            TBSTATE_ENABLED, BTNS_SEP,                    { 0 }, 0, 0                           },
+            {  4, ID_REFRESH,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+            {  5, ID_RESETDB,   TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+            { -1, 0,            TBSTATE_ENABLED, BTNS_SEP,                    { 0 }, 0, 0                           },
+            {  6, ID_SETTINGS,  TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
+            {  7, ID_EXIT,      TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0                           },
         };
 
         LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
@@ -337,7 +340,8 @@ public:
         SendMessageW(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS);
         SetButtonStructSize();
 
-        hImageList = InitImageList();
+        /* Set image list */
+        HIMAGELIST hImageList = InitImageList();
 
         if (!hImageList)
         {
@@ -349,7 +353,29 @@ public:
 
         AddButtons(_countof(Buttons), Buttons);
 
+        /* Remember ideal width to use as a max width of buttons */
+        SIZE size;
+        GetIdealSize(FALSE, &size);
+        m_dButtonsWidthMax = size.cx;
+
         return m_hWnd;
+    }
+
+    VOID HideButtonCaption()
+    {
+        DWORD dCurrentExStyle = (DWORD) SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
+        SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
+    }
+
+    VOID ShowButtonCaption()
+    {
+        DWORD dCurrentExStyle = (DWORD) SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
+        SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
+    }
+
+    DWORD GetMaxButtonsWidth() const
+    {
+        return m_dButtonsWidthMax;
     }
 };
 
@@ -616,6 +642,13 @@ class CSearchBar :
     public CWindow
 {
 public:
+    const INT m_Width;
+    const INT m_Height;
+
+    CSearchBar() : m_Width(200), m_Height(22) 
+    {
+    }
+
     VOID SetText(LPCWSTR lpszText)
     {
         SendMessageW(SB_SETTEXT, SBT_NOBORDERS, (LPARAM) lpszText);
@@ -626,7 +659,7 @@ public:
         ATL::CStringW szBuf;
         m_hWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL,
                                  WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL,
-                                 0, 0, 200, 22,
+                                 0, 0, m_Width, m_Height,
                                  hwndParent, (HMENU) NULL,
                                  hInst, 0);
 
@@ -661,6 +694,7 @@ class CMainWindow :
 
     BOOL bSearchEnabled;
     BOOL bUpdating;
+
 public:
     CMainWindow() :
         m_ClientPanel(NULL),
@@ -676,13 +710,13 @@ private:
 
         /* Add columns to ListView */
         szText.LoadStringW(IDS_APP_NAME);
-        m_ListView->AddColumn(0, szText, 200, LVCFMT_LEFT);
+        m_ListView->AddColumn(0, szText, 250, LVCFMT_LEFT);
 
         szText.LoadStringW(IDS_APP_INST_VERSION);
         m_ListView->AddColumn(1, szText, 90, LVCFMT_RIGHT);
 
         szText.LoadStringW(IDS_APP_DESCRIPTION);
-        m_ListView->AddColumn(3, szText, 250, LVCFMT_LEFT);
+        m_ListView->AddColumn(3, szText, 300, LVCFMT_LEFT);
 
         // Unnesesary since the list updates on every TreeView selection
         // UpdateApplicationsList(ENUM_ALL_COMPONENTS);
@@ -797,7 +831,7 @@ private:
         m_HSplitter->m_HorizontalAlignment = UiAlign_Stretch;
         m_HSplitter->m_DynamicFirst = TRUE;
         m_HSplitter->m_Horizontal = TRUE;
-        m_HSplitter->m_Pos = INT_MAX;        //set INT_MAX to use lowest possible position (m_MinSecond)
+        m_HSplitter->m_Pos = INT_MAX; //set INT_MAX to use lowest possible position (m_MinSecond)
         m_HSplitter->m_MinFirst = 10;
         m_HSplitter->m_MinSecond = 140;
         m_VSplitter->Second().Append(m_HSplitter);
@@ -810,7 +844,7 @@ private:
         m_SearchBar = new CUiWindow<CSearchBar>();
         m_SearchBar->m_VerticalAlignment = UiAlign_LeftTop;
         m_SearchBar->m_HorizontalAlignment = UiAlign_RightBtm;
-        m_SearchBar->m_Margin.top = 6;
+        m_SearchBar->m_Margin.top = 4;
         m_SearchBar->m_Margin.right = 6;
 
         return m_SearchBar->Create(m_Toolbar->m_hWnd) != NULL;
@@ -880,11 +914,25 @@ private:
 
     VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
+
         /* Size status bar */
         m_StatusBar->SendMessage(WM_SIZE, 0, 0);
 
         /* Size tool bar */
         m_Toolbar->AutoSize();
+
+        /* Automatically hide captions */
+        DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
+        DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width);
+
+        if (dSearchbarMargin > dToolbarTreshold)
+        {
+            m_Toolbar->ShowButtonCaption();
+        }
+        else if (dSearchbarMargin < dToolbarTreshold)
+        {
+            m_Toolbar->HideButtonCaption();
+        }
 
         RECT r = {0, 0, LOWORD(lParam), HIWORD(lParam)};
         HDWP hdwp = NULL;
@@ -894,10 +942,11 @@ private:
         if (hdwp)
         {
             hdwp = m_ClientPanel->OnParentSize(r, hdwp);
-        }
-        if (hdwp)
-        {
-            EndDeferWindowPos(hdwp);
+            if (hdwp)
+            {
+                EndDeferWindowPos(hdwp);
+            }
+
         }
 
         // TODO: Sub-layouts for children of children
@@ -906,11 +955,12 @@ private:
         if (hdwp)
         {
             hdwp = m_SearchBar->OnParentSize(r, hdwp);
+            if (hdwp)
+            {
+                EndDeferWindowPos(hdwp);
+            }
         }
-        if (hdwp)
-        {
-            EndDeferWindowPos(hdwp);
-        }
+
     }
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
@@ -920,7 +970,7 @@ private:
         {
         case WM_CREATE:
             if (!InitControls())
-                ::PostMessage(hwnd, WM_CLOSE, 0, 0);
+                ::PostMessageW(hwnd, WM_CLOSE, 0, 0);
             break;
 
         case WM_DESTROY:
