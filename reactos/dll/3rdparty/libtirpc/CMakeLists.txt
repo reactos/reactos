@@ -40,8 +40,8 @@ list(APPEND SOURCE
     src/key_call.c
     src/key_prot_xdr.c
     src/libtirpc.def
-    src/makefile
-    src/Makefile.am
+    #src/makefile
+    #src/Makefile.am
     src/mt_misc.c
     src/netname.c
     src/netnamer.c
