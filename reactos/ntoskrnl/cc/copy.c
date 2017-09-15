@@ -176,7 +176,6 @@ CcWriteVirtualAddress (
 
     if (NT_SUCCESS(Status))
     {
-        Mdl->MdlFlags |= MDL_IO_PAGE_READ;
         KeInitializeEvent(&Event, NotificationEvent, FALSE);
         Status = IoSynchronousPageWrite(Vacb->SharedCacheMap->FileObject, Mdl, &Vacb->FileOffset, &Event, &IoStatus);
         if (Status == STATUS_PENDING)
