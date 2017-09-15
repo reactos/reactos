@@ -86,14 +86,29 @@ CcReadVirtualAddress (
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    MmBuildMdlForNonPagedPool(Mdl);
-    Mdl->MdlFlags |= MDL_IO_PAGE_READ;
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Status = IoPageRead(Vacb->SharedCacheMap->FileObject, Mdl, &Vacb->FileOffset, &Event, &IoStatus);
-    if (Status == STATUS_PENDING)
+    Status = STATUS_SUCCESS;
+    _SEH2_TRY
     {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatus.Status;
+        MmProbeAndLockPages(Mdl, KernelMode, IoWriteAccess);
+    }
+    _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        KeBugCheck(CACHE_MANAGER);
+    } _SEH2_END;
+
+    if (NT_SUCCESS(Status))
+    {
+        Mdl->MdlFlags |= MDL_IO_PAGE_READ;
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
+        Status = IoPageRead(Vacb->SharedCacheMap->FileObject, Mdl, &Vacb->FileOffset, &Event, &IoStatus);
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            Status = IoStatus.Status;
+        }
+
+        MmUnlockPages(Mdl);
     }
 
     IoFreeMdl(Mdl);
