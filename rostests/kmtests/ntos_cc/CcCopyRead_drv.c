@@ -289,6 +289,7 @@ TestIrpHandler(
             ok(Mdl != NULL, "Null pointer for MDL!\n");
             ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) != 0, "MDL not locked\n");
             ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
+            ok((Mdl->MdlFlags & MDL_IO_PAGE_READ) != 0, "Non paging IO\n");
             ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
         }
 
