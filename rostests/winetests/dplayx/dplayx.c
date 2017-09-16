@@ -1262,7 +1262,7 @@ static void test_Open(void)
 
     /* Regular operation */
     hr = IDirectPlayX_Open( pDP_server, &dpsd_server, DPOPEN_CREATE );
-    checkHR( DP_OK, hr );
+    todo_wine checkHR( DP_OK, hr );
 
     /* Opening twice */
     hr = IDirectPlayX_Open( pDP_server, &dpsd_server, DPOPEN_CREATE );
@@ -1288,15 +1288,15 @@ static void test_Open(void)
     /* - Checking how strict dplay is with sizes */
     dpsd.dwSize = 0;
     hr = IDirectPlayX_Open( pDP, &dpsd, DPOPEN_JOIN );
-    todo_wine checkHR( DPERR_INVALIDPARAMS, hr );
+    checkHR( DPERR_INVALIDPARAMS, hr );
 
     dpsd.dwSize = sizeof(DPSESSIONDESC2)-1;
     hr = IDirectPlayX_Open( pDP, &dpsd, DPOPEN_JOIN );
-    todo_wine checkHR( DPERR_INVALIDPARAMS, hr );
+    checkHR( DPERR_INVALIDPARAMS, hr );
 
     dpsd.dwSize = sizeof(DPSESSIONDESC2)+1;
     hr = IDirectPlayX_Open( pDP, &dpsd, DPOPEN_JOIN );
-    todo_wine checkHR( DPERR_INVALIDPARAMS, hr );
+    checkHR( DPERR_INVALIDPARAMS, hr );
 
     dpsd.dwSize = sizeof(DPSESSIONDESC2);
     hr = IDirectPlayX_Open( pDP, &dpsd, DPOPEN_JOIN );
@@ -1331,7 +1331,7 @@ static void test_Open(void)
     dpsd_server.dwSize = 0;
 
     hr = IDirectPlayX_Open( pDP_server, &dpsd_server, DPOPEN_CREATE );
-    todo_wine checkHR( DPERR_INVALIDPARAMS, hr );
+    checkHR( DPERR_INVALIDPARAMS, hr );
 
     dpsd_server.dwSize = sizeof(DPSESSIONDESC2);
 
