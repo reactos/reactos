@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <limits.h>
+
 #define COBJMACROS
 #include <d3d.h>
 #include <initguid.h>
@@ -40,9 +42,37 @@ static ULONG get_refcount(IUnknown *object)
     return IUnknown_Release( object );
 }
 
-static BOOL match_float(float a, float b)
+static BOOL compare_float(float f, float g, unsigned int ulps)
 {
-    return (a - b) < 0.000001f;
+    int x = *(int *)&f;
+    int y = *(int *)&g;
+
+    if (x < 0)
+        x = INT_MIN - x;
+    if (y < 0)
+        y = INT_MIN - y;
+
+    if (abs(x - y) > ulps)
+        return FALSE;
+
+    return TRUE;
+}
+
+#define check_vector(a, b, c, d, e) check_vector_(__LINE__, a, b, c, d, e)
+static void check_vector_(unsigned int line, const D3DVECTOR *v, float x, float y, float z, unsigned int ulps)
+{
+    BOOL ret = compare_float(U1(v)->x, x, ulps)
+            && compare_float(U2(v)->y, y, ulps)
+            && compare_float(U3(v)->z, z, ulps);
+
+    ok_(__FILE__, line)(ret, "Got unexpected vector {%.8e, %.8e, %.8e}, expected {%.8e, %.8e, %.8e}.\n",
+            U1(v)->x, U2(v)->y, U3(v)->z, x, y, z);
+}
+
+#define vector_eq(a, b) vector_eq_(__LINE__, a, b)
+static void vector_eq_(unsigned int line, const D3DVECTOR *left, const D3DVECTOR *right)
+{
+    check_vector_(line, left, U1(right)->x, U2(right)->y, U3(right)->z, 0);
 }
 
 static D3DRMMATRIX4D identity = {
@@ -51,6 +81,133 @@ static D3DRMMATRIX4D identity = {
     { 0.0f, 0.0f, 1.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f, 1.0f }
 };
+
+static HWND create_window(void)
+{
+    RECT r = {0, 0, 640, 480};
+
+    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW | WS_VISIBLE, FALSE);
+
+    return CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, NULL, NULL);
+}
+
+#define test_class_name(a, b) test_class_name_(__LINE__, a, b)
+static void test_class_name_(unsigned int line, IDirect3DRMObject *object, const char *name)
+{
+    char cname[64] = {0};
+    DWORD size, size2;
+    HRESULT hr;
+
+    hr = IDirect3DRMObject_GetClassName(object, NULL, cname);
+    ok_(__FILE__, line)(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    hr = IDirect3DRMViewport_GetClassName(object, NULL, NULL);
+    ok_(__FILE__, line)(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+
+    size = 0;
+    hr = IDirect3DRMObject_GetClassName(object, &size, NULL);
+    ok_(__FILE__, line)(hr == D3DRM_OK, "Failed to get classname size, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == strlen(name) + 1, "wrong size: %u\n", size);
+
+    size = size2 = !!*name;
+    hr = IDirect3DRMObject_GetClassName(object, &size, cname);
+    ok_(__FILE__, line)(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == size2, "Got size %u.\n", size);
+
+    size = sizeof(cname);
+    hr = IDirect3DRMObject_GetClassName(object, &size, cname);
+    ok_(__FILE__, line)(hr == D3DRM_OK, "Failed to get classname, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == strlen(name) + 1, "wrong size: %u\n", size);
+    ok_(__FILE__, line)(!strcmp(cname, name), "Expected cname to be \"%s\", but got \"%s\".\n", name, cname);
+
+    size = strlen(name) + 1;
+    hr = IDirect3DRMObject_GetClassName(object, &size, cname);
+    ok_(__FILE__, line)(hr == D3DRM_OK, "Failed to get classname, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == strlen(name) + 1, "wrong size: %u\n", size);
+    ok_(__FILE__, line)(!strcmp(cname, name), "Expected cname to be \"%s\", but got \"%s\".\n", name, cname);
+
+    size = strlen(name);
+    strcpy(cname, "XXX");
+    hr = IDirect3DRMObject_GetClassName(object, &size, cname);
+    ok_(__FILE__, line)(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == strlen(name), "Wrong classname size: %u.\n", size);
+    ok_(__FILE__, line)(!strcmp(cname, "XXX"), "Expected unchanged buffer, but got \"%s\".\n", cname);
+}
+
+#define test_object_name(a) test_object_name_(__LINE__, a)
+static void test_object_name_(unsigned int line, IDirect3DRMObject *object)
+{
+    char name[64] = {0};
+    HRESULT hr;
+    DWORD size;
+
+    hr = IDirect3DRMObject_GetName(object, NULL, NULL);
+    ok_(__FILE__, line)(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+
+    name[0] = 0x1f;
+    hr = IDirect3DRMObject_GetName(object, NULL, name);
+    ok_(__FILE__, line)(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok_(__FILE__, line)(name[0] == 0x1f, "Unexpected buffer contents, %#x.\n", name[0]);
+
+    /* Name is not set yet. */
+    size = 100;
+    hr = IDirect3DRMObject_GetName(object, &size, NULL);
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Failed to get name size, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == 0, "Unexpected size %u.\n", size);
+
+    size = sizeof(name);
+    name[0] = 0x1f;
+    hr = IDirect3DRMObject_GetName(object, &size, name);
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Failed to get name size, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == 0, "Unexpected size %u.\n", size);
+    ok_(__FILE__, line)(name[0] == 0, "Unexpected name \"%s\".\n", name);
+
+    size = 0;
+    name[0] = 0x1f;
+    hr = IDirect3DRMObject_GetName(object, &size, name);
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Failed to get name size, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == 0, "Unexpected size %u.\n", size);
+    ok_(__FILE__, line)(name[0] == 0x1f, "Unexpected name \"%s\".\n", name);
+
+    hr = IDirect3DRMObject_SetName(object, NULL);
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Got unexpected hr %#x.\n", hr);
+
+    hr = IDirect3DRMObject_SetName(object, "name");
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Failed to set a name, hr %#x.\n", hr);
+
+    size = 0;
+    hr = IDirect3DRMObject_GetName(object, &size, NULL);
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Failed to get name size, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == strlen("name") + 1, "Unexpected size %u.\n", size);
+
+    size = strlen("name") + 1;
+    hr = IDirect3DRMObject_GetName(object, &size, name);
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Failed to get name size, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == strlen("name") + 1, "Unexpected size %u.\n", size);
+    ok_(__FILE__, line)(!strcmp(name, "name"), "Unexpected name \"%s\".\n", name);
+
+    size = 2;
+    name[0] = 0x1f;
+    hr = IDirect3DRMObject_GetName(object, &size, name);
+    ok_(__FILE__, line)(hr == E_INVALIDARG, "Failed to get object name, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == 2, "Unexpected size %u.\n", size);
+    ok_(__FILE__, line)(name[0] == 0x1f, "Got unexpected name \"%s\".\n", name);
+
+    hr = IDirect3DRMObject_SetName(object, NULL);
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Failed to set object name, hr %#x.\n", hr);
+
+    size = 1;
+    hr = IDirect3DRMObject_GetName(object, &size, NULL);
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Failed to get name size, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == 0, "Unexpected size %u.\n", size);
+
+    size = 1;
+    name[0] = 0x1f;
+    hr = IDirect3DRMObject_GetName(object, &size, name);
+    ok_(__FILE__, line)(SUCCEEDED(hr), "Failed to get name size, hr %#x.\n", hr);
+    ok_(__FILE__, line)(size == 0, "Unexpected size %u.\n", size);
+    ok_(__FILE__, line)(name[0] == 0, "Got unexpected name \"%s\".\n", name);
+}
 
 static char data_bad_version[] =
 "xof 0302txt 0064\n"
@@ -203,6 +360,7 @@ static void test_MeshBuilder(void)
     HRESULT hr;
     IDirect3DRM *d3drm;
     IDirect3DRMMeshBuilder *pMeshBuilder;
+    IDirect3DRMMeshBuilder3 *meshbuilder3;
     IDirect3DRMMesh *mesh;
     D3DRMLOADMEMORY info;
     int val;
@@ -214,7 +372,7 @@ static void test_MeshBuilder(void)
     char name[10];
     DWORD size;
     D3DCOLOR color;
-    CHAR cname[64] = {0};
+    IUnknown *unk;
 
     hr = Direct3DRMCreate(&d3drm);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x)\n", hr);
@@ -222,18 +380,33 @@ static void test_MeshBuilder(void)
     hr = IDirect3DRM_CreateMeshBuilder(d3drm, &pMeshBuilder);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMMeshBuilder interface (hr = %x)\n", hr);
 
-    hr = IDirect3DRMMeshBuilder_GetClassName(pMeshBuilder, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMMeshBuilder_GetClassName(pMeshBuilder, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = 1;
-    hr = IDirect3DRMMeshBuilder_GetClassName(pMeshBuilder, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = sizeof(cname);
-    hr = IDirect3DRMMeshBuilder_GetClassName(pMeshBuilder, &size, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Builder"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Builder"), "Expected cname to be \"Builder\", but got \"%s\"\n", cname);
+    hr = IDirect3DRMMeshBuilder_QueryInterface(pMeshBuilder, &IID_IDirect3DRMObject, (void **)&unk);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMObject, %#x.\n", hr);
+    ok(unk == (IUnknown *)pMeshBuilder, "Unexpected interface pointer.\n");
+    IUnknown_Release(unk);
+
+    hr = IDirect3DRMMeshBuilder_QueryInterface(pMeshBuilder, &IID_IDirect3DRMVisual, (void **)&unk);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMVisual, %#x.\n", hr);
+    ok(unk == (IUnknown *)pMeshBuilder, "Unexpected interface pointer.\n");
+    IUnknown_Release(unk);
+
+    hr = IDirect3DRMMeshBuilder_QueryInterface(pMeshBuilder, &IID_IDirect3DRMMeshBuilder3, (void **)&meshbuilder3);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMMeshBuilder3, %#x.\n", hr);
+
+    hr = IDirect3DRMMeshBuilder3_QueryInterface(meshbuilder3, &IID_IDirect3DRMObject, (void **)&unk);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMObject, %#x.\n", hr);
+    ok(unk == (IUnknown *)pMeshBuilder, "Unexpected interface pointer.\n");
+    IUnknown_Release(unk);
+
+    hr = IDirect3DRMMeshBuilder3_QueryInterface(meshbuilder3, &IID_IDirect3DRMVisual, (void **)&unk);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMVisual, %#x.\n", hr);
+    ok(unk == (IUnknown *)pMeshBuilder, "Unexpected interface pointer.\n");
+    IUnknown_Release(unk);
+
+    IDirect3DRMMeshBuilder3_Release(meshbuilder3);
+
+    test_class_name((IDirect3DRMObject *)pMeshBuilder, "Builder");
+    test_object_name((IDirect3DRMObject *)pMeshBuilder);
 
     info.lpMemory = data_bad_version;
     info.dSize = strlen(data_bad_version);
@@ -285,18 +458,10 @@ static void test_MeshBuilder(void)
     /* Check that Load method generated default normals */
     hr = IDirect3DRMMeshBuilder_GetVertices(pMeshBuilder, NULL, NULL, &val2, n, NULL, NULL);
     ok(hr == D3DRM_OK, "Cannot get vertices information (hr = %x)\n", hr);
-    ok(match_float(U1(n[0]).x, 0.577350f),  "Wrong component n[0].x = %f (expected %f)\n", U1(n[0]).x, 0.577350f);
-    ok(match_float(U2(n[0]).y, 0.577350f),  "Wrong component n[0].y = %f (expected %f)\n", U2(n[0]).y, 0.577350f);
-    ok(match_float(U3(n[0]).z, 0.577350f),  "Wrong component n[0].z = %f (expected %f)\n", U3(n[0]).z, 0.577350f);
-    ok(match_float(U1(n[1]).x, -0.229416f), "Wrong component n[1].x = %f (expected %f)\n", U1(n[1]).x, -0.229416f);
-    ok(match_float(U2(n[1]).y, 0.688247f),  "Wrong component n[1].y = %f (expected %f)\n", U2(n[1]).y, 0.688247f);
-    ok(match_float(U3(n[1]).z, 0.688247f),  "Wrong component n[1].z = %f (expected %f)\n", U3(n[1]).z, 0.688247f);
-    ok(match_float(U1(n[2]).x, -0.229416f), "Wrong component n[2].x = %f (expected %f)\n", U1(n[2]).x, -0.229416f);
-    ok(match_float(U2(n[2]).y, 0.688247f),  "Wrong component n[2].y = %f (expected %f)\n", U2(n[2]).y, 0.688247f);
-    ok(match_float(U3(n[2]).z, 0.688247f),  "Wrong component n[2].z = %f (expected %f)\n", U3(n[2]).z, 0.688247f);
-    ok(match_float(U1(n[3]).x, -0.577350f), "Wrong component n[3].x = %f (expected %f)\n", U1(n[3]).x, -0.577350f);
-    ok(match_float(U2(n[3]).y, 0.577350f),  "Wrong component n[3].y = %f (expected %f)\n", U2(n[3]).y, 0.577350f);
-    ok(match_float(U3(n[3]).z, 0.577350f),  "Wrong component n[3].z = %f (expected %f)\n", U3(n[3]).z, 0.577350f);
+    check_vector(&n[0],  0.577350f, 0.577350f, 0.577350f, 32);
+    check_vector(&n[1], -0.229416f, 0.688247f, 0.688247f, 32);
+    check_vector(&n[2], -0.229416f, 0.688247f, 0.688247f, 32);
+    check_vector(&n[3], -0.577350f, 0.577350f, 0.577350f, 32);
 
     /* Check that Load method generated default texture coordinates (0.0f, 0.0f) for each vertex */
     valu = 1.23f;
@@ -392,24 +557,12 @@ static void test_MeshBuilder(void)
     ok(val1 == 3, "Wrong number of vertices %d (must be 3)\n", val1);
     ok(val2 == 3, "Wrong number of normals %d (must be 3)\n", val2);
     ok(val3 == 8, "Wrong number of face data bytes %d (must be 8)\n", val3);
-    ok(U1(v[0]).x == 0.1f, "Wrong component v[0].x = %f (expected 0.1)\n", U1(v[0]).x);
-    ok(U2(v[0]).y == 0.2f, "Wrong component v[0].y = %f (expected 0.2)\n", U2(v[0]).y);
-    ok(U3(v[0]).z == 0.3f, "Wrong component v[0].z = %f (expected 0.3)\n", U3(v[0]).z);
-    ok(U1(v[1]).x == 0.4f, "Wrong component v[1].x = %f (expected 0.4)\n", U1(v[1]).x);
-    ok(U2(v[1]).y == 0.5f, "Wrong component v[1].y = %f (expected 0.5)\n", U2(v[1]).y);
-    ok(U3(v[1]).z == 0.6f, "Wrong component v[1].z = %f (expected 0.6)\n", U3(v[1]).z);
-    ok(U1(v[2]).x == 0.7f, "Wrong component v[2].x = %f (expected 0.7)\n", U1(v[2]).x);
-    ok(U2(v[2]).y == 0.8f, "Wrong component v[2].y = %f (expected 0.8)\n", U2(v[2]).y);
-    ok(U3(v[2]).z == 0.9f, "Wrong component v[2].z = %f (expected 0.9)\n", U3(v[2]).z);
-    ok(U1(n[0]).x == 1.1f, "Wrong component n[0].x = %f (expected 1.1)\n", U1(n[0]).x);
-    ok(U2(n[0]).y == 1.2f, "Wrong component n[0].y = %f (expected 1.2)\n", U2(n[0]).y);
-    ok(U3(n[0]).z == 1.3f, "Wrong component n[0].z = %f (expected 1.3)\n", U3(n[0]).z);
-    ok(U1(n[1]).x == 1.4f, "Wrong component n[1].x = %f (expected 1.4)\n", U1(n[1]).x);
-    ok(U2(n[1]).y == 1.5f, "Wrong component n[1].y = %f (expected 1.5)\n", U2(n[1]).y);
-    ok(U3(n[1]).z == 1.6f, "Wrong component n[1].z = %f (expected 1.6)\n", U3(n[1]).z);
-    ok(U1(n[2]).x == 1.7f, "Wrong component n[2].x = %f (expected 1.7)\n", U1(n[2]).x);
-    ok(U2(n[2]).y == 1.8f, "Wrong component n[2].y = %f (expected 1.8)\n", U2(n[2]).y);
-    ok(U3(n[2]).z == 1.9f, "Wrong component n[2].z = %f (expected 1.9)\n", U3(n[2]).z);
+    check_vector(&v[0], 0.1f, 0.2f, 0.3f, 32);
+    check_vector(&v[1], 0.4f, 0.5f, 0.6f, 32);
+    check_vector(&v[2], 0.7f, 0.8f, 0.9f, 32);
+    check_vector(&n[0], 1.1f, 1.2f, 1.3f, 32);
+    check_vector(&n[1], 1.4f, 1.5f, 1.6f, 32);
+    check_vector(&n[2], 1.7f, 1.8f, 1.9f, 32);
     ok(f[0] == 3 , "Wrong component f[0] = %d (expected 3)\n", f[0]);
     ok(f[1] == 0 , "Wrong component f[1] = %d (expected 0)\n", f[1]);
     ok(f[2] == 0 , "Wrong component f[2] = %d (expected 0)\n", f[2]);
@@ -472,25 +625,14 @@ static void test_MeshBuilder(void)
     ok(hr == D3DRM_OK, "Cannot get vertices information (hr = %x)\n", hr);
     ok(val2 == 3, "Wrong number of normals %d (must be 3)\n", val2);
     ok(val1 == 3, "Wrong number of vertices %d (must be 3)\n", val1);
-    ok(U1(v[0]).x == 0.1f*2, "Wrong component v[0].x = %f (expected %f)\n", U1(v[0]).x, 0.1f*2);
-    ok(U2(v[0]).y == 0.2f*3, "Wrong component v[0].y = %f (expected %f)\n", U2(v[0]).y, 0.2f*3);
-    ok(U3(v[0]).z == 0.3f*4, "Wrong component v[0].z = %f (expected %f)\n", U3(v[0]).z, 0.3f*4);
-    ok(U1(v[1]).x == 0.4f*2, "Wrong component v[1].x = %f (expected %f)\n", U1(v[1]).x, 0.4f*2);
-    ok(U2(v[1]).y == 0.5f*3, "Wrong component v[1].y = %f (expected %f)\n", U2(v[1]).y, 0.5f*3);
-    ok(U3(v[1]).z == 0.6f*4, "Wrong component v[1].z = %f (expected %f)\n", U3(v[1]).z, 0.6f*4);
-    ok(U1(v[2]).x == 0.7f*2, "Wrong component v[2].x = %f (expected %f)\n", U1(v[2]).x, 0.7f*2);
-    ok(U2(v[2]).y == 0.8f*3, "Wrong component v[2].y = %f (expected %f)\n", U2(v[2]).y, 0.8f*3);
-    ok(U3(v[2]).z == 0.9f*4, "Wrong component v[2].z = %f (expected %f)\n", U3(v[2]).z, 0.9f*4);
+
+    check_vector(&v[0], 0.1f * 2, 0.2f * 3, 0.3f * 4, 32);
+    check_vector(&v[1], 0.4f * 2, 0.5f * 3, 0.6f * 4, 32);
+    check_vector(&v[2], 0.7f * 2, 0.8f * 3, 0.9f * 4, 32);
     /* Normals are not affected by Scale */
-    ok(U1(n[0]).x == 1.1f, "Wrong component n[0].x = %f (expected %f)\n", U1(n[0]).x, 1.1f);
-    ok(U2(n[0]).y == 1.2f, "Wrong component n[0].y = %f (expected %f)\n", U2(n[0]).y, 1.2f);
-    ok(U3(n[0]).z == 1.3f, "Wrong component n[0].z = %f (expected %f)\n", U3(n[0]).z, 1.3f);
-    ok(U1(n[1]).x == 1.4f, "Wrong component n[1].x = %f (expected %f)\n", U1(n[1]).x, 1.4f);
-    ok(U2(n[1]).y == 1.5f, "Wrong component n[1].y = %f (expected %f)\n", U2(n[1]).y, 1.5f);
-    ok(U3(n[1]).z == 1.6f, "Wrong component n[1].z = %f (expected %f)\n", U3(n[1]).z, 1.6f);
-    ok(U1(n[2]).x == 1.7f, "Wrong component n[2].x = %f (expected %f)\n", U1(n[2]).x, 1.7f);
-    ok(U2(n[2]).y == 1.8f, "Wrong component n[2].y = %f (expected %f)\n", U2(n[2]).y, 1.8f);
-    ok(U3(n[2]).z == 1.9f, "Wrong component n[2].z = %f (expected %f)\n", U3(n[2]).z, 1.9f);
+    check_vector(&n[0], 1.1f, 1.2f, 1.3f, 32);
+    check_vector(&n[1], 1.4f, 1.5f, 1.6f, 32);
+    check_vector(&n[2], 1.7f, 1.8f, 1.9f, 32);
 
     IDirect3DRMMeshBuilder_Release(pMeshBuilder);
 
@@ -507,8 +649,6 @@ static void test_MeshBuilder3(void)
     int val;
     DWORD val1;
     D3DVALUE valu, valv;
-    DWORD size;
-    CHAR cname[64] = {0};
 
     hr = Direct3DRMCreate(&d3drm);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x)\n", hr);
@@ -523,18 +663,8 @@ static void test_MeshBuilder3(void)
     hr = IDirect3DRM3_CreateMeshBuilder(d3drm3, &pMeshBuilder3);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMMeshBuilder3 interface (hr = %x)\n", hr);
 
-    hr = IDirect3DRMMeshBuilder3_GetClassName(pMeshBuilder3, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMMeshBuilder3_GetClassName(pMeshBuilder3, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = 1;
-    hr = IDirect3DRMMeshBuilder3_GetClassName(pMeshBuilder3, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = sizeof(cname);
-    hr = IDirect3DRMMeshBuilder3_GetClassName(pMeshBuilder3, &size, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Builder"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Builder"), "Expected cname to be \"Builder\", but got \"%s\"\n", cname);
+    test_class_name((IDirect3DRMObject *)pMeshBuilder3, "Builder");
+    test_object_name((IDirect3DRMObject *)pMeshBuilder3);
 
     info.lpMemory = data_bad_version;
     info.dSize = strlen(data_bad_version);
@@ -613,8 +743,7 @@ static void test_Mesh(void)
     HRESULT hr;
     IDirect3DRM *d3drm;
     IDirect3DRMMesh *mesh;
-    DWORD size;
-    CHAR cname[64] = {0};
+    IUnknown *unk;
 
     hr = Direct3DRMCreate(&d3drm);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x)\n", hr);
@@ -622,18 +751,16 @@ static void test_Mesh(void)
     hr = IDirect3DRM_CreateMesh(d3drm, &mesh);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMMesh interface (hr = %x)\n", hr);
 
-    hr = IDirect3DRMMesh_GetClassName(mesh, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMMesh_GetClassName(mesh, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = 1;
-    hr = IDirect3DRMMesh_GetClassName(mesh, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = sizeof(cname);
-    hr = IDirect3DRMMesh_GetClassName(mesh, &size, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Mesh"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Mesh"), "Expected cname to be \"Mesh\", but got \"%s\"\n", cname);
+    test_class_name((IDirect3DRMObject *)mesh, "Mesh");
+    test_object_name((IDirect3DRMObject *)mesh);
+
+    hr = IDirect3DRMMesh_QueryInterface(mesh, &IID_IDirect3DRMObject, (void **)&unk);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMObject, %#x.\n", hr);
+    IUnknown_Release(unk);
+
+    hr = IDirect3DRMMesh_QueryInterface(mesh, &IID_IDirect3DRMVisual, (void **)&unk);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMVisual, %#x.\n", hr);
+    IUnknown_Release(unk);
 
     IDirect3DRMMesh_Release(mesh);
 
@@ -649,12 +776,13 @@ static void test_Face(void)
     IDirect3DRMMeshBuilder2 *MeshBuilder2;
     IDirect3DRMMeshBuilder3 *MeshBuilder3;
     IDirect3DRMFace *face1;
+    IDirect3DRMObject *obj;
     IDirect3DRMFace2 *face2;
     IDirect3DRMFaceArray *array1;
     D3DRMLOADMEMORY info;
     D3DVECTOR v1[4], n1[4], v2[4], n2[4];
+    D3DCOLOR color;
     DWORD count;
-    CHAR cname[64] = {0};
     int icount;
 
     hr = Direct3DRMCreate(&d3drm);
@@ -669,18 +797,13 @@ static void test_Face(void)
         return;
     }
 
-    hr = IDirect3DRMFace_GetClassName(face1, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMFace_GetClassName(face1, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    count = 1;
-    hr = IDirect3DRMFace_GetClassName(face1, &count, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    count = sizeof(cname);
-    hr = IDirect3DRMFace_GetClassName(face1, &count, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(count == sizeof("Face"), "wrong size: %u\n", count);
-    ok(!strcmp(cname, "Face"), "Expected cname to be \"Face\", but got \"%s\"\n", cname);
+    hr = IDirect3DRMFace_QueryInterface(face1, &IID_IDirect3DRMObject, (void **)&obj);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMObject, %#x.\n", hr);
+    ok(obj == (IDirect3DRMObject *)face1, "Unexpected interface pointer.\n");
+    IDirect3DRMObject_Release(obj);
+
+    test_class_name((IDirect3DRMObject *)face1, "Face");
+    test_object_name((IDirect3DRMObject *)face1);
 
     icount = IDirect3DRMFace_GetVertexCount(face1);
     ok(!icount, "wrong VertexCount: %i\n", icount);
@@ -751,18 +874,18 @@ static void test_Face(void)
     hr = IDirect3DRMMeshBuilder3_CreateFace(MeshBuilder3, &face2);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMFace2 interface (hr = %x)\n", hr);
 
-    hr = IDirect3DRMFace2_GetClassName(face2, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMFace2_GetClassName(face2, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    count = 1;
-    hr = IDirect3DRMFace2_GetClassName(face2, &count, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    count = sizeof(cname);
-    hr = IDirect3DRMFace2_GetClassName(face2, &count, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(count == sizeof("Face"), "wrong size: %u\n", count);
-    ok(!strcmp(cname, "Face"), "Expected cname to be \"Face\", but got \"%s\"\n", cname);
+    hr = IDirect3DRMFace2_QueryInterface(face2, &IID_IDirect3DRMObject, (void **)&obj);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMObject, %#x.\n", hr);
+
+    hr = IDirect3DRMFace2_QueryInterface(face2, &IID_IDirect3DRMFace, (void **)&face1);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMObject, %#x.\n", hr);
+    ok(obj == (IDirect3DRMObject *)face1, "Unexpected interface pointer.\n");
+
+    IDirect3DRMFace_Release(face1);
+    IDirect3DRMObject_Release(obj);
+
+    test_class_name((IDirect3DRMObject *)face2, "Face");
+    test_object_name((IDirect3DRMObject *)face2);
 
     icount = IDirect3DRMMeshBuilder3_GetFaceCount(MeshBuilder3);
     todo_wine
@@ -828,47 +951,29 @@ static void test_Face(void)
         hr = IDirect3DRMFace_GetVertices(face, &count, v2, n2);
         ok(hr == D3DRM_OK, "Cannot get vertices information (hr = %x)\n", hr);
         ok(count == 3, "Wrong number of vertices %d (must be 3)\n", count);
-        ok(U1(v2[0]).x == U1(v1[0]).x, "Wrong component v2[0].x = %f (expected %f)\n",
-           U1(v2[0]).x, U1(v1[0]).x);
-        ok(U2(v2[0]).y == U2(v1[0]).y, "Wrong component v2[0].y = %f (expected %f)\n",
-           U2(v2[0]).y, U2(v1[0]).y);
-        ok(U3(v2[0]).z == U3(v1[0]).z, "Wrong component v2[0].z = %f (expected %f)\n",
-           U3(v2[0]).z, U3(v1[0]).z);
-        ok(U1(v2[1]).x == U1(v1[1]).x, "Wrong component v2[1].x = %f (expected %f)\n",
-           U1(v2[1]).x, U1(v1[1]).x);
-        ok(U2(v2[1]).y == U2(v1[1]).y, "Wrong component v2[1].y = %f (expected %f)\n",
-           U2(v2[1]).y, U2(v1[1]).y);
-        ok(U3(v2[1]).z == U3(v1[1]).z, "Wrong component v2[1].z = %f (expected %f)\n",
-           U3(v2[1]).z, U3(v1[1]).z);
-        ok(U1(v2[2]).x == U1(v1[2]).x, "Wrong component v2[2].x = %f (expected %f)\n",
-           U1(v2[2]).x, U1(v1[2]).x);
-        ok(U2(v2[2]).y == U2(v1[2]).y, "Wrong component v2[2].y = %f (expected %f)\n",
-           U2(v2[2]).y, U2(v1[2]).y);
-        ok(U3(v2[2]).z == U3(v1[2]).z, "Wrong component v2[2].z = %f (expected %f)\n",
-           U3(v2[2]).z, U3(v1[2]).z);
 
-        ok(U1(n2[0]).x == U1(n1[0]).x, "Wrong component n2[0].x = %f (expected %f)\n",
-           U1(n2[0]).x, U1(n1[0]).x);
-        ok(U2(n2[0]).y == U2(n1[0]).y, "Wrong component n2[0].y = %f (expected %f)\n",
-           U2(n2[0]).y, U2(n1[0]).y);
-        ok(U3(n2[0]).z == U3(n1[0]).z, "Wrong component n2[0].z = %f (expected %f)\n",
-           U3(n2[0]).z, U3(n1[0]).z);
-        ok(U1(n2[1]).x == U1(n1[1]).x, "Wrong component n2[1].x = %f (expected %f)\n",
-           U1(n2[1]).x, U1(n1[1]).x);
-        ok(U2(n2[1]).y == U2(n1[1]).y, "Wrong component n2[1].y = %f (expected %f)\n",
-           U2(n2[1]).y, U2(n1[1]).y);
-        ok(U3(n2[1]).z == U3(n1[1]).z, "Wrong component n2[1].z = %f (expected %f)\n",
-           U3(n2[1]).z, U3(n1[1]).z);
-        ok(U1(n2[2]).x == U1(n1[2]).x, "Wrong component n2[2].x = %f (expected %f)\n",
-           U1(n2[2]).x, U1(n1[2]).x);
-        ok(U2(n2[2]).y == U2(n1[2]).y, "Wrong component n2[2].y = %f (expected %f)\n",
-           U2(n2[2]).y, U2(n1[2]).y);
-        ok(U3(n2[2]).z == U3(n1[2]).z, "Wrong component n2[2].z = %f (expected %f)\n",
-           U3(n2[2]).z, U3(n1[2]).z);
+        vector_eq(&v1[0], &v2[0]);
+        vector_eq(&v1[1], &v2[1]);
+        vector_eq(&v1[2], &v2[2]);
+
+        vector_eq(&n1[0], &n2[0]);
+        vector_eq(&n1[1], &n2[1]);
+        vector_eq(&n1[2], &n2[2]);
 
         IDirect3DRMFace_Release(face);
         IDirect3DRMFaceArray_Release(array1);
     }
+
+    /* Setting face color. */
+    hr = IDirect3DRMFace2_SetColor(face2, 0x1f180587);
+    ok(SUCCEEDED(hr), "Failed to set face color, hr %#x.\n", hr);
+    color = IDirect3DRMFace2_GetColor(face2);
+    ok(color == 0x1f180587, "Unexpected color %8x.\n", color);
+
+    hr = IDirect3DRMFace2_SetColorRGB(face2, 0.5f, 0.5f, 0.5f);
+    ok(SUCCEEDED(hr), "Failed to set color, hr %#x.\n", hr);
+    color = IDirect3DRMFace2_GetColor(face2);
+    ok(color == 0xff7f7f7f, "Unexpected color %8x.\n", color);
 
     IDirect3DRMFace2_Release(face2);
     IDirect3DRMMeshBuilder3_Release(MeshBuilder3);
@@ -894,29 +999,23 @@ static void test_Frame(void)
     IDirect3DRMLight *light1;
     IDirect3DRMLight *light_tmp;
     IDirect3DRMLightArray *light_array;
+    IDirect3DRMFrame3 *frame3;
+    DWORD count, options;
+    ULONG ref, ref2;
     D3DCOLOR color;
-    DWORD count;
-    CHAR cname[64] = {0};
 
     hr = Direct3DRMCreate(&d3drm);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x)\n", hr);
 
+    ref = get_refcount((IUnknown *)d3drm);
     hr = IDirect3DRM_CreateFrame(d3drm, NULL, &pFrameC);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMFrame interface (hr = %x)\n", hr);
     CHECK_REFCOUNT(pFrameC, 1);
+    ref2 = get_refcount((IUnknown *)d3drm);
+    ok(ref2 > ref, "Expected d3drm object to be referenced.\n");
 
-    hr = IDirect3DRMFrame_GetClassName(pFrameC, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMFrame_GetClassName(pFrameC, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    count = 1;
-    hr = IDirect3DRMFrame_GetClassName(pFrameC, &count, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    count = sizeof(cname);
-    hr = IDirect3DRMFrame_GetClassName(pFrameC, &count, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(count == sizeof("Frame"), "wrong size: %u\n", count);
-    ok(!strcmp(cname, "Frame"), "Expected cname to be \"Frame\", but got \"%s\"\n", cname);
+    test_class_name((IDirect3DRMObject *)pFrameC, "Frame");
+    test_object_name((IDirect3DRMObject *)pFrameC);
 
     hr = IDirect3DRMFrame_GetParent(pFrameC, NULL);
     ok(hr == D3DRMERR_BADVALUE, "Should fail and return D3DRM_BADVALUE (hr = %x)\n", hr);
@@ -1229,6 +1328,42 @@ static void test_Frame(void)
     color = IDirect3DRMFrame_GetSceneBackground(pFrameP1);
     ok(color == 0xff7f7f7f, "wrong color (%x)\n", color);
 
+    /* Traversal options. */
+    hr = IDirect3DRMFrame_QueryInterface(pFrameP2, &IID_IDirect3DRMFrame3, (void **)&frame3);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMFrame3 interface, hr %#x.\n", hr);
+
+    hr = IDirect3DRMFrame3_GetTraversalOptions(frame3, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    options = 0;
+    hr = IDirect3DRMFrame3_GetTraversalOptions(frame3, &options);
+    ok(SUCCEEDED(hr), "Failed to get traversal options, hr %#x.\n", hr);
+    ok(options == (D3DRMFRAME_RENDERENABLE | D3DRMFRAME_PICKENABLE), "Unexpected default options %#x.\n", options);
+
+    hr = IDirect3DRMFrame3_SetTraversalOptions(frame3, 0);
+    ok(SUCCEEDED(hr), "Unexpected hr %#x.\n", hr);
+
+    hr = IDirect3DRMFrame3_SetTraversalOptions(frame3, 0xf0000000);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    hr = IDirect3DRMFrame3_SetTraversalOptions(frame3, 0xf0000000 | D3DRMFRAME_PICKENABLE);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    options = 0xf;
+    hr = IDirect3DRMFrame3_GetTraversalOptions(frame3, &options);
+    ok(SUCCEEDED(hr), "Failed to get traversal options, hr %#x.\n", hr);
+    ok(options == 0, "Unexpected traversal options %#x.\n", options);
+
+    hr = IDirect3DRMFrame3_SetTraversalOptions(frame3, D3DRMFRAME_PICKENABLE);
+    ok(SUCCEEDED(hr), "Failed to set traversal options, hr %#x.\n", hr);
+
+    options = 0;
+    hr = IDirect3DRMFrame3_GetTraversalOptions(frame3, &options);
+    ok(SUCCEEDED(hr), "Failed to get traversal options, hr %#x.\n", hr);
+    ok(options == D3DRMFRAME_PICKENABLE, "Unexpected traversal options %#x.\n", options);
+
+    IDirect3DRMFrame3_Release(frame3);
+
     /* Cleanup */
     IDirect3DRMFrame_Release(pFrameP2);
     CHECK_REFCOUNT(pFrameC, 1);
@@ -1369,6 +1504,8 @@ static void test_destroy_callback(unsigned int test_idx, REFCLSID clsid, REFIID 
                 "Expected callback = %p, context = %p. Got callback = %p, context = %p.\n", d3drm_corder[i].callback,
                 d3drm_corder[i].context, corder[i].callback, corder[i].context);
     }
+
+    IDirect3DRM_Release(d3drm);
 }
 
 static void test_object(void)
@@ -1377,19 +1514,34 @@ static void test_object(void)
     {
         REFCLSID clsid;
         REFIID iid;
-        BOOL todo;
+        BOOL takes_d3drm_ref;
     }
     tests[] =
     {
-        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMDevice,       FALSE },
-        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMDevice2,      FALSE },
-        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMDevice3,      FALSE },
-        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMWinDevice,    FALSE },
-        { &CLSID_CDirect3DRMTexture,       &IID_IDirect3DRMTexture,      FALSE },
-        { &CLSID_CDirect3DRMTexture,       &IID_IDirect3DRMTexture2,     FALSE },
-        { &CLSID_CDirect3DRMTexture,       &IID_IDirect3DRMTexture3,     FALSE },
-        { &CLSID_CDirect3DRMViewport,      &IID_IDirect3DRMViewport,     FALSE },
-        { &CLSID_CDirect3DRMViewport,      &IID_IDirect3DRMViewport2,    FALSE },
+        { &CLSID_CDirect3DRMDevice,      &IID_IDirect3DRMDevice },
+        { &CLSID_CDirect3DRMDevice,      &IID_IDirect3DRMDevice2 },
+        { &CLSID_CDirect3DRMDevice,      &IID_IDirect3DRMDevice3 },
+        { &CLSID_CDirect3DRMDevice,      &IID_IDirect3DRMWinDevice },
+        { &CLSID_CDirect3DRMTexture,     &IID_IDirect3DRMTexture },
+        { &CLSID_CDirect3DRMTexture,     &IID_IDirect3DRMTexture2 },
+        { &CLSID_CDirect3DRMTexture,     &IID_IDirect3DRMTexture3 },
+        { &CLSID_CDirect3DRMViewport,    &IID_IDirect3DRMViewport },
+        { &CLSID_CDirect3DRMViewport,    &IID_IDirect3DRMViewport2 },
+        { &CLSID_CDirect3DRMFace,        &IID_IDirect3DRMFace },
+        { &CLSID_CDirect3DRMFace,        &IID_IDirect3DRMFace2 },
+        { &CLSID_CDirect3DRMMeshBuilder, &IID_IDirect3DRMMeshBuilder,  TRUE },
+        { &CLSID_CDirect3DRMMeshBuilder, &IID_IDirect3DRMMeshBuilder2, TRUE },
+        { &CLSID_CDirect3DRMMeshBuilder, &IID_IDirect3DRMMeshBuilder3, TRUE },
+        { &CLSID_CDirect3DRMFrame,       &IID_IDirect3DRMFrame,        TRUE },
+        { &CLSID_CDirect3DRMFrame,       &IID_IDirect3DRMFrame2,       TRUE },
+        { &CLSID_CDirect3DRMFrame,       &IID_IDirect3DRMFrame3,       TRUE },
+        { &CLSID_CDirect3DRMLight,       &IID_IDirect3DRMLight,        TRUE },
+        { &CLSID_CDirect3DRMMaterial,    &IID_IDirect3DRMMaterial,     TRUE },
+        { &CLSID_CDirect3DRMMaterial,    &IID_IDirect3DRMMaterial2,    TRUE },
+        { &CLSID_CDirect3DRMMesh,        &IID_IDirect3DRMMesh,         TRUE },
+        { &CLSID_CDirect3DRMAnimation,   &IID_IDirect3DRMAnimation,    TRUE },
+        { &CLSID_CDirect3DRMAnimation,   &IID_IDirect3DRMAnimation2,   TRUE },
+        { &CLSID_CDirect3DRMWrap,        &IID_IDirect3DRMWrap },
     };
     IDirect3DRM *d3drm1;
     IDirect3DRM2 *d3drm2;
@@ -1425,12 +1577,15 @@ static void test_object(void)
         ok(hr == D3DRMERR_BADVALUE, "Test %u: expected hr == D3DRMERR_BADVALUE, got %#x.\n", i, hr);
 
         hr = IDirect3DRM_CreateObject(d3drm1, tests[i].clsid, NULL, tests[i].iid, (void **)&unknown);
-        todo_wine_if(tests[i].todo)
         ok(SUCCEEDED(hr), "Test %u: expected hr == D3DRM_OK, got %#x.\n", i, hr);
         if (SUCCEEDED(hr))
         {
             ref2 = get_refcount((IUnknown *)d3drm1);
-            ok(ref2 == ref1, "Test %u: expected ref2 == ref1, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+            if (tests[i].takes_d3drm_ref)
+                ok(ref2 > ref1, "Test %u: expected ref2 > ref1, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+            else
+                ok(ref2 == ref1, "Test %u: expected ref2 == ref1, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+
             ref3 = get_refcount((IUnknown *)d3drm2);
             ok(ref3 == ref1, "Test %u: expected ref3 == ref1, got ref1 = %u, ref3 = %u.\n", i, ref1, ref3);
             ref4 = get_refcount((IUnknown *)d3drm3);
@@ -1449,7 +1604,10 @@ static void test_object(void)
             hr = IDirect3DRM2_CreateObject(d3drm2, tests[i].clsid, NULL, tests[i].iid, (void **)&unknown);
             ok(SUCCEEDED(hr), "Test %u: expected hr == D3DRM_OK, got %#x.\n", i, hr);
             ref2 = get_refcount((IUnknown *)d3drm1);
-            ok(ref2 == ref1, "Test %u: expected ref2 == ref1, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+            if (tests[i].takes_d3drm_ref)
+                ok(ref2 > ref1, "Test %u: expected ref2 > ref1, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+            else
+                ok(ref2 == ref1, "Test %u: expected ref2 == ref1, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
             ref3 = get_refcount((IUnknown *)d3drm2);
             ok(ref3 == ref1, "Test %u: expected ref3 == ref1, got ref1 = %u, ref3 = %u.\n", i, ref1, ref3);
             ref4 = get_refcount((IUnknown *)d3drm3);
@@ -1465,7 +1623,10 @@ static void test_object(void)
             hr = IDirect3DRM3_CreateObject(d3drm3, tests[i].clsid, NULL, tests[i].iid, (void **)&unknown);
             ok(SUCCEEDED(hr), "Test %u: expected hr == D3DRM_OK, got %#x.\n", i, hr);
             ref2 = get_refcount((IUnknown *)d3drm1);
-            ok(ref2 == ref1, "Test %u: expected ref2 == ref1, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+            if (tests[i].takes_d3drm_ref)
+                ok(ref2 > ref1, "Test %u: expected ref2 > ref1, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+            else
+                ok(ref2 == ref1, "Test %u: expected ref2 == ref1, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
             ref3 = get_refcount((IUnknown *)d3drm2);
             ok(ref3 == ref1, "Test %u: expected ref3 == ref1, got ref1 = %u, ref3 = %u.\n", i, ref1, ref3);
             ref4 = get_refcount((IUnknown *)d3drm3);
@@ -1505,11 +1666,10 @@ static void test_Viewport(void)
     GUID driver;
     HWND window;
     RECT rc;
-    DWORD size, data, ref1, ref2, ref3, ref4;
+    DWORD data, ref1, ref2, ref3, ref4;
     DWORD initial_ref1, initial_ref2, initial_ref3, device_ref, frame_ref, frame_ref2, viewport_ref;
-    CHAR cname[64] = {0};
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = Direct3DRMCreate(&d3drm1);
@@ -1792,18 +1952,8 @@ static void test_Viewport(void)
     IDirect3DRMObject_Release(obj);
     IDirect3DRMObject_Release(obj2);
 
-    hr = IDirect3DRMViewport_GetClassName(viewport, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMViewport_GetClassName(viewport, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = 1;
-    hr = IDirect3DRMViewport_GetClassName(viewport, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = sizeof(cname);
-    hr = IDirect3DRMViewport_GetClassName(viewport, &size, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Viewport"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Viewport"), "Expected cname to be \"Viewport\", but got \"%s\"\n", cname);
+    test_class_name((IDirect3DRMObject *)viewport, "Viewport");
+    test_object_name((IDirect3DRMObject *)viewport);
 
     /* AppData */
     hr = IDirect3DRMViewport_SetAppData(viewport, 0);
@@ -2013,8 +2163,7 @@ static void test_Viewport(void)
     IDirect3DRMDevice3_Release(device3);
     IDirect3DRMDevice_Release(device1);
     ref4 = get_refcount((IUnknown *)d3drm1);
-    todo_wine ok(ref4 > initial_ref1, "Expected ref4 > initial_ref1, got initial_ref1 = %u, ref4 = %u.\n", initial_ref1,
-            ref4);
+    ok(ref4 > initial_ref1, "Expected ref4 > initial_ref1, got initial_ref1 = %u, ref4 = %u.\n", initial_ref1, ref4);
     ref4 = get_refcount((IUnknown *)d3drm2);
     ok(ref4 == initial_ref2, "Expected ref4 == initial_ref2, got initial_ref2 = %u, ref4 = %u.\n", initial_ref2, ref4);
     ref4 = get_refcount((IUnknown *)d3drm3);
@@ -2026,8 +2175,7 @@ static void test_Viewport(void)
 
     IDirect3DRMFrame3_Release(frame3);
     ref4 = get_refcount((IUnknown *)d3drm1);
-    todo_wine ok(ref4 > initial_ref1, "Expected ref4 > initial_ref1, got initial_ref1 = %u, ref4 = %u.\n", initial_ref1,
-            ref4);
+    ok(ref4 > initial_ref1, "Expected ref4 > initial_ref1, got initial_ref1 = %u, ref4 = %u.\n", initial_ref1, ref4);
     ref4 = get_refcount((IUnknown *)d3drm2);
     ok(ref4 == initial_ref2, "Expected ref4 == initial_ref2, got initial_ref2 = %u, ref4 = %u.\n", initial_ref2, ref4);
     ref4 = get_refcount((IUnknown *)d3drm3);
@@ -2050,13 +2198,12 @@ static void test_Viewport(void)
 
 static void test_Light(void)
 {
+    IDirect3DRMObject *object;
     HRESULT hr;
     IDirect3DRM *d3drm;
     IDirect3DRMLight *light;
     D3DRMLIGHTTYPE type;
     D3DCOLOR color;
-    DWORD size;
-    CHAR cname[64] = {0};
 
     hr = Direct3DRMCreate(&d3drm);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x)\n", hr);
@@ -2064,18 +2211,12 @@ static void test_Light(void)
     hr = IDirect3DRM_CreateLightRGB(d3drm, D3DRMLIGHT_SPOT, 0.5, 0.5, 0.5, &light);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMLight interface (hr = %x)\n", hr);
 
-    hr = IDirect3DRMLight_GetClassName(light, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMLight_GetClassName(light, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = 1;
-    hr = IDirect3DRMLight_GetClassName(light, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = sizeof(cname);
-    hr = IDirect3DRMLight_GetClassName(light, &size, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Light"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Light"), "Expected cname to be \"Light\", but got \"%s\"\n", cname);
+    hr = IDirect3DRMLight_QueryInterface(light, &IID_IDirect3DRMObject, (void **)&object);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMObject, hr %#x.\n", hr);
+    IDirect3DRMObject_Release(object);
+
+    test_class_name((IDirect3DRMObject *)light, "Light");
+    test_object_name((IDirect3DRMObject *)light);
 
     type = IDirect3DRMLight_GetType(light);
     ok(type == D3DRMLIGHT_SPOT, "wrong type (%u)\n", type);
@@ -2110,8 +2251,6 @@ static void test_Material2(void)
     IDirect3DRM3 *d3drm3;
     IDirect3DRMMaterial2 *material2;
     D3DVALUE r, g, b;
-    DWORD size;
-    CHAR cname[64] = {0};
 
     hr = Direct3DRMCreate(&d3drm);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x)\n", hr);
@@ -2126,18 +2265,8 @@ static void test_Material2(void)
     hr = IDirect3DRM3_CreateMaterial(d3drm3, 18.5f, &material2);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMMaterial2 interface (hr = %x)\n", hr);
 
-    hr = IDirect3DRMMaterial2_GetClassName(material2, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMMaterial2_GetClassName(material2, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = 1;
-    hr = IDirect3DRMMaterial2_GetClassName(material2, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = sizeof(cname);
-    hr = IDirect3DRMMaterial2_GetClassName(material2, &size, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Material"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Material"), "Expected cname to be \"Material\", but got \"%s\"\n", cname);
+    test_class_name((IDirect3DRMObject *)material2, "Material");
+    test_object_name((IDirect3DRMObject *)material2);
 
     r = IDirect3DRMMaterial2_GetPower(material2);
     ok(r == 18.5f, "wrong power (%f)\n", r);
@@ -2192,6 +2321,7 @@ static void test_Texture(void)
     IDirect3DRMTexture *texture1;
     IDirect3DRMTexture2 *texture2;
     IDirect3DRMTexture3 *texture3;
+    IDirectDrawSurface *surface;
 
     D3DRMIMAGE initimg =
     {
@@ -2208,8 +2338,6 @@ static void test_Texture(void)
     *d3drm_img = NULL;
 
     DWORD pixel[4] = { 20000, 30000, 10000, 0 };
-    DWORD size;
-    CHAR cname[64] = {0};
     ULONG ref1, ref2, ref3, ref4;
 
     hr = Direct3DRMCreate(&d3drm1);
@@ -2340,55 +2468,24 @@ static void test_Texture(void)
     ref4 = get_refcount((IUnknown *)d3drm3);
     ok(ref4 == ref1, "expected ref4 == ref1, got ref1 = %u , ref4 = %u.\n", ref1, ref4);
 
+    /* Created from image, GetSurface() does not work. */
+    hr = IDirect3DRMTexture3_GetSurface(texture3, 0, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "GetSurface() expected to fail, %#x\n", hr);
+
+    hr = IDirect3DRMTexture3_GetSurface(texture3, 0, &surface);
+    ok(hr == D3DRMERR_NOTCREATEDFROMDDS, "GetSurface() expected to fail, %#x\n", hr);
+
     /* Test all failures together */
-    hr = IDirect3DRMTexture_GetClassName(texture1, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMTexture_GetClassName(texture1, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMTexture2_GetClassName(texture2, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMTexture2_GetClassName(texture2, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMTexture3_GetClassName(texture3, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMTexture3_GetClassName(texture3, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = 1;
-    hr = IDirect3DRMTexture_GetClassName(texture1, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMTexture2_GetClassName(texture2, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMTexture3_GetClassName(texture3, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = sizeof("Texture") - 1;
-    strcpy(cname, "test");
-    hr = IDirect3DRMTexture_GetClassName(texture1, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    ok(size == sizeof("Texture") - 1, "wrong size: %u\n", size);
-    ok(!strcmp(cname, "test"), "Expected cname to be \"test\", but got \"%s\"\n", cname);
-    hr = IDirect3DRMTexture2_GetClassName(texture2, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    ok(size == sizeof("Texture") - 1, "wrong size: %u\n", size);
-    ok(!strcmp(cname, "test"), "Expected cname to be \"test\", but got \"%s\"\n", cname);
-    hr = IDirect3DRMTexture3_GetClassName(texture3, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    ok(size == sizeof("Texture") - 1, "wrong size: %u\n", size);
-    ok(!strcmp(cname, "test"), "Expected cname to be \"test\", but got \"%s\"\n", cname);
+    test_class_name((IDirect3DRMObject *)texture1, "Texture");
+    test_class_name((IDirect3DRMObject *)texture2, "Texture");
+    test_class_name((IDirect3DRMObject *)texture3, "Texture");
+    test_object_name((IDirect3DRMObject *)texture1);
+    test_object_name((IDirect3DRMObject *)texture2);
+    test_object_name((IDirect3DRMObject *)texture3);
 
     d3drm_img = IDirect3DRMTexture_GetImage(texture1);
     ok(!!d3drm_img, "Failed to get image.\n");
     ok(d3drm_img == &initimg, "Expected image returned == %p, got %p.\n", &initimg, d3drm_img);
-
-    size = sizeof(cname);
-    hr = IDirect3DRMTexture_GetClassName(texture1, &size, cname);
-    ok(SUCCEEDED(hr), "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Texture"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Texture"), "Expected cname to be \"Texture\", but got \"%s\"\n", cname);
-    size = sizeof("Texture");
-    hr = IDirect3DRMTexture_GetClassName(texture1, &size, cname);
-    ok(SUCCEEDED(hr), "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Texture"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Texture"), "Expected cname to be \"Texture\", but got \"%s\"\n", cname);
 
     IDirect3DRMTexture_Release(texture1);
     ref2 = get_refcount((IUnknown *)d3drm1);
@@ -2403,17 +2500,6 @@ static void test_Texture(void)
     ok(!!d3drm_img, "Failed to get image.\n");
     ok(d3drm_img == &initimg, "Expected image returned == %p, got %p.\n", &initimg, d3drm_img);
 
-    size = sizeof(cname);
-    hr = IDirect3DRMTexture2_GetClassName(texture2, &size, cname);
-    ok(SUCCEEDED(hr), "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Texture"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Texture"), "Expected cname to be \"Texture\", but got \"%s\"\n", cname);
-    size = sizeof("Texture");
-    hr = IDirect3DRMTexture2_GetClassName(texture2, &size, cname);
-    ok(SUCCEEDED(hr), "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Texture"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Texture"), "Expected cname to be \"Texture\", but got \"%s\"\n", cname);
-
     IDirect3DRMTexture2_Release(texture2);
     ref2 = get_refcount((IUnknown *)d3drm1);
     ok(ref2 - 1 == ref1, "expected (ref2 - 1) == ref1, got ref1 = %u, ref2 = %u.\n", ref1, ref2);
@@ -2426,17 +2512,6 @@ static void test_Texture(void)
     d3drm_img = IDirect3DRMTexture3_GetImage(texture3);
     ok(!!d3drm_img, "Failed to get image.\n");
     ok(d3drm_img == &initimg, "Expected image returned == %p, got %p.\n", &initimg, d3drm_img);
-
-    size = sizeof(cname);
-    hr = IDirect3DRMTexture3_GetClassName(texture3, &size, cname);
-    ok(SUCCEEDED(hr), "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Texture"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Texture"), "Expected cname to be \"Texture\", but got \"%s\"\n", cname);
-    size = sizeof("Texture");
-    hr = IDirect3DRMTexture3_GetClassName(texture3, &size, cname);
-    ok(SUCCEEDED(hr), "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Texture"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Texture"), "Expected cname to be \"Texture\", but got \"%s\"\n", cname);
 
     IDirect3DRMTexture3_Release(texture3);
     ref2 = get_refcount((IUnknown *)d3drm1);
@@ -2595,10 +2670,8 @@ static void test_Device(void)
     GUID driver;
     HWND window;
     RECT rc;
-    DWORD size;
-    CHAR cname[64] = {0};
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = Direct3DRMCreate(&d3drm);
@@ -2614,18 +2687,8 @@ static void test_Device(void)
     hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm, pClipper, &driver, rc.right, rc.bottom, &device);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMDevice interface (hr = %x)\n", hr);
 
-    hr = IDirect3DRMDevice_GetClassName(device, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMDevice_GetClassName(device, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = 1;
-    hr = IDirect3DRMDevice_GetClassName(device, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = sizeof(cname);
-    hr = IDirect3DRMDevice_GetClassName(device, &size, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Device"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Device"), "Expected cname to be \"Device\", but got \"%s\"\n", cname);
+    test_class_name((IDirect3DRMObject *)device, "Device");
+    test_object_name((IDirect3DRMObject *)device);
 
     /* WinDevice */
     if (FAILED(hr = IDirect3DRMDevice_QueryInterface(device, &IID_IDirect3DRMWinDevice, (void **)&win_device)))
@@ -2634,19 +2697,8 @@ static void test_Device(void)
         goto cleanup;
     }
 
-    hr = IDirect3DRMWinDevice_GetClassName(win_device, NULL, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    hr = IDirect3DRMWinDevice_GetClassName(win_device, NULL, NULL);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = 1;
-    hr = IDirect3DRMWinDevice_GetClassName(win_device, &size, cname);
-    ok(hr == E_INVALIDARG, "GetClassName failed with %x\n", hr);
-    size = sizeof(cname);
-    hr = IDirect3DRMWinDevice_GetClassName(win_device, &size, cname);
-    ok(hr == D3DRM_OK, "Cannot get classname (hr = %x)\n", hr);
-    ok(size == sizeof("Device"), "wrong size: %u\n", size);
-    ok(!strcmp(cname, "Device"), "Expected cname to be \"Device\", but got \"%s\"\n", cname);
-
+    test_class_name((IDirect3DRMObject *)win_device, "Device");
+    test_object_name((IDirect3DRMObject *)win_device);
     IDirect3DRMWinDevice_Release(win_device);
 
 cleanup:
@@ -3184,7 +3236,7 @@ static void test_device_qi(void)
     GUID driver;
     RECT rc;
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
     hr = DirectDrawCreateClipper(0, &clipper, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDrawClipper interface (hr = %x)\n", hr);
@@ -3263,7 +3315,7 @@ static void test_create_device_from_clipper1(void)
     ULONG ref1, ref2, cref1, cref2;
     RECT rc;
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 500, 400, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
     hr = DirectDrawCreateClipper(0, &clipper, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDrawClipper interface (hr = %x).\n", hr);
@@ -3434,7 +3486,7 @@ static void test_create_device_from_clipper2(void)
     ULONG ref1, ref2, ref3, cref1, cref2;
     RECT rc;
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 500, 400, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
     hr = DirectDrawCreateClipper(0, &clipper, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDrawClipper interface (hr = %x).\n", hr);
@@ -3612,7 +3664,7 @@ static void test_create_device_from_clipper3(void)
     ULONG ref1, ref2, ref3, cref1, cref2;
     RECT rc;
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 500, 400, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
     hr = DirectDrawCreateClipper(0, &clipper, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDrawClipper interface (hr = %x).\n", hr);
@@ -3790,7 +3842,7 @@ static void test_create_device_from_surface1(void)
     hr = DirectDrawCreate(NULL, &ddraw, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = IDirectDraw_SetCooperativeLevel(ddraw, window, DDSCL_NORMAL);
@@ -3962,7 +4014,7 @@ static void test_create_device_from_surface2(void)
     hr = DirectDrawCreate(NULL, &ddraw, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = IDirectDraw_SetCooperativeLevel(ddraw, window, DDSCL_NORMAL);
@@ -4144,7 +4196,7 @@ static void test_create_device_from_surface3(void)
     hr = DirectDrawCreate(NULL, &ddraw, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = IDirectDraw_SetCooperativeLevel(ddraw, window, DDSCL_NORMAL);
@@ -4441,7 +4493,7 @@ static void test_create_device_from_d3d1(void)
     hr = DirectDrawCreate(NULL, &ddraw1, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirect3D, (void **)&d3d1);
@@ -4778,7 +4830,7 @@ static void test_create_device_from_d3d2(void)
     hr = DirectDrawCreate(NULL, &ddraw1, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirect3D2, (void **)&d3d2);
@@ -5061,7 +5113,7 @@ static void test_create_device_from_d3d3(void)
     hr = DirectDrawCreate(NULL, &ddraw1, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirect3D2, (void **)&d3d2);
@@ -6141,7 +6193,7 @@ static void test_viewport_clear1(void)
     D3DCOLOR ret_color;
     RECT rc;
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 640, 480, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = DirectDrawCreate(NULL, &ddraw, NULL);
@@ -6343,7 +6395,7 @@ static void test_viewport_clear2(void)
     D3DCOLOR ret_color;
     RECT rc;
 
-    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 640, 480, 0, 0, 0, 0);
+    window = create_window();
     GetClientRect(window, &rc);
 
     hr = DirectDrawCreate(NULL, &ddraw1, NULL);
@@ -6535,6 +6587,726 @@ cleanup:
     DestroyWindow(window);
 }
 
+static void test_create_texture_from_surface(void)
+{
+    D3DRMIMAGE testimg =
+    {
+        0, 0, 0, 0, 0,
+        TRUE, 0, (void *)0xcafebabe, NULL,
+        0x000000ff, 0x0000ff00, 0x00ff0000, 0, 0, NULL
+    };
+    IDirectDrawSurface *surface = NULL, *surface2 = NULL, *ds = NULL;
+    IDirect3DRMTexture *texture1;
+    IDirect3DRMTexture2 *texture2;
+    IDirect3DRMTexture3 *texture3;
+    IDirectDraw *ddraw = NULL;
+    IDirect3DRM *d3drm1 = NULL;
+    IDirect3DRM2 *d3drm2 = NULL;
+    IDirect3DRM3 *d3drm3 = NULL;
+    ULONG ref1, ref2, ref3;
+    D3DRMIMAGE *image;
+    DDSURFACEDESC desc;
+    HWND window;
+    HRESULT hr;
+    RECT rc;
+
+    hr = DirectDrawCreate(NULL, &ddraw, NULL);
+    ok(hr == DD_OK, "Cannot get IDirectDraw interface (hr = %x).\n", hr);
+
+    window = create_window();
+    GetClientRect(window, &rc);
+
+    hr = IDirectDraw_SetCooperativeLevel(ddraw, window, DDSCL_NORMAL);
+    ok(SUCCEEDED(hr), "Failed to set cooperative level, hr %#x.\n", hr);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x).\n", hr);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM2 interface (hr = %x).\n", hr);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM3 interface (hr = %x).\n", hr);
+
+    /* Create a surface and use it to create a texture. */
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+    desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+    desc.dwWidth = rc.right;
+    desc.dwHeight = rc.bottom;
+
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+
+    hr = IDirectDraw_CreateSurface(ddraw, &desc, &surface2, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+
+    /* Test NULL params */
+    texture1 = (IDirect3DRMTexture *)0xdeadbeef;
+    hr = IDirect3DRM_CreateTextureFromSurface(d3drm1, NULL, &texture1);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    ok(!texture1, "Expected texture returned == NULL, got %p.\n", texture1);
+
+    hr = IDirect3DRM_CreateTextureFromSurface(d3drm1, NULL, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+
+    texture2 = (IDirect3DRMTexture2 *)0xdeadbeef;
+    hr = IDirect3DRM2_CreateTextureFromSurface(d3drm2, NULL, &texture2);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    ok(!texture2, "Expected texture returned == NULL, got %p.\n", texture2);
+
+    hr = IDirect3DRM2_CreateTextureFromSurface(d3drm2, NULL, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+
+    texture3 = (IDirect3DRMTexture3 *)0xdeadbeef;
+    hr = IDirect3DRM3_CreateTextureFromSurface(d3drm3, NULL, &texture3);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    ok(!texture3, "Expected texture returned == NULL, got %p.\n", texture3);
+
+    hr = IDirect3DRM3_CreateTextureFromSurface(d3drm3, NULL, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+
+    ok(get_refcount((IUnknown *)surface) == 1, "Unexpected surface refcount.\n");
+    hr = IDirect3DRM_CreateTextureFromSurface(d3drm1, surface, &texture1);
+    ok(SUCCEEDED(hr), "Failed to create texture, hr %#x.\n", hr);
+
+    ok(get_refcount((IUnknown *)surface) == 2, "Unexpected surface refcount.\n");
+    image = IDirect3DRMTexture_GetImage(texture1);
+    ok(image == NULL, "Unexpected image, %p.\n", image);
+    hr = IDirect3DRMTexture_InitFromSurface(texture1, NULL);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    IDirect3DRMTexture_Release(texture1);
+
+    ok(get_refcount((IUnknown *)surface) == 1, "Unexpected surface refcount.\n");
+    hr = IDirect3DRM2_CreateTextureFromSurface(d3drm2, surface, &texture2);
+    ok(SUCCEEDED(hr), "Failed to create texture, hr %#x.\n", hr);
+    ok(get_refcount((IUnknown *)surface) == 2, "Unexpected surface refcount.\n");
+    image = IDirect3DRMTexture2_GetImage(texture2);
+    ok(image == NULL, "Unexpected image, %p.\n", image);
+    hr = IDirect3DRMTexture2_InitFromSurface(texture2, NULL);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    IDirect3DRMTexture_Release(texture2);
+
+    ok(get_refcount((IUnknown *)surface) == 1, "Unexpected surface refcount.\n");
+    hr = IDirect3DRM3_CreateTextureFromSurface(d3drm3, surface, &texture3);
+    ok(SUCCEEDED(hr), "Failed to create texture, hr %#x.\n", hr);
+    ok(get_refcount((IUnknown *)surface) == 2, "Unexpected surface refcount.\n");
+    image = IDirect3DRMTexture3_GetImage(texture3);
+    ok(image == NULL, "Unexpected image, %p.\n", image);
+    hr = IDirect3DRMTexture3_InitFromSurface(texture3, NULL);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMTexture3_GetSurface(texture3, 0, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRMTexture3_GetSurface(texture3, 0, &ds);
+    ok(SUCCEEDED(hr), "Failed to get surface, hr %#x.\n", hr);
+    ok(ds == surface, "Expected same surface back.\n");
+    IDirectDrawSurface_Release(ds);
+
+    /* Init already initialized texture with same surface. */
+    hr = IDirect3DRMTexture3_InitFromSurface(texture3, surface);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected a failure, hr %#x.\n", hr);
+
+    /* Init already initialized texture with different surface. */
+    hr = IDirect3DRMTexture3_InitFromSurface(texture3, surface2);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected a failure, hr %#x.\n", hr);
+
+    hr = IDirect3DRMTexture3_GetSurface(texture3, 0, &ds);
+    ok(SUCCEEDED(hr), "Failed to get surface, hr %#x.\n", hr);
+    ok(ds == surface, "Expected same surface back.\n");
+    IDirectDrawSurface_Release(ds);
+
+    ref1 = get_refcount((IUnknown *)d3drm1);
+    ref2 = get_refcount((IUnknown *)d3drm2);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    hr = IDirect3DRMTexture3_InitFromImage(texture3, &testimg);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected a failure, hr %#x.\n", hr);
+    ok(ref1 < get_refcount((IUnknown *)d3drm1), "Expected d3drm1 reference taken.\n");
+    ok(ref2 == get_refcount((IUnknown *)d3drm2), "Expected d3drm2 reference unchanged.\n");
+    ok(ref3 == get_refcount((IUnknown *)d3drm3), "Expected d3drm3 reference unchanged.\n");
+    /* Release leaked reference to d3drm1 */
+    IDirect3DRM_Release(d3drm1);
+
+    IDirect3DRMTexture_Release(texture3);
+
+    /* Create from image, initialize from surface. */
+    hr = IDirect3DRM3_CreateTexture(d3drm3, &testimg, &texture3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMTexture3 interface (hr = %#x)\n", hr);
+
+    ref1 = get_refcount((IUnknown *)d3drm1);
+    ref2 = get_refcount((IUnknown *)d3drm2);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    hr = IDirect3DRMTexture3_InitFromSurface(texture3, surface);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected a failure, hr %#x.\n", hr);
+    ok(ref1 < get_refcount((IUnknown *)d3drm1), "Expected d3drm1 reference taken.\n");
+    ok(ref2 == get_refcount((IUnknown *)d3drm2), "Expected d3drm2 reference unchanged.\n");
+    ok(ref3 == get_refcount((IUnknown *)d3drm3), "Expected d3drm3 reference unchanged.\n");
+    /* Release leaked reference to d3drm1 */
+    IDirect3DRM_Release(d3drm1);
+    IDirect3DRMTexture3_Release(texture3);
+
+    IDirectDrawSurface_Release(surface2);
+    IDirectDrawSurface_Release(surface);
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM2_Release(d3drm2);
+    IDirect3DRM_Release(d3drm1);
+    IDirectDraw_Release(ddraw);
+}
+
+static void test_animation(void)
+{
+    IDirect3DRMAnimation2 *animation2;
+    IDirect3DRMAnimation *animation;
+    D3DRMANIMATIONOPTIONS options;
+    IDirect3DRMObject *obj, *obj2;
+    D3DRMANIMATIONKEY keys[10];
+    IDirect3DRMFrame3 *frame3;
+    IDirect3DRMFrame *frame;
+    D3DRMANIMATIONKEY key;
+    IDirect3DRM *d3drm1;
+    D3DRMQUATERNION q;
+    DWORD count, i;
+    HRESULT hr;
+    D3DVECTOR v;
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(SUCCEEDED(hr), "Failed to create IDirect3DRM instance, hr 0x%08x.\n", hr);
+
+    hr = IDirect3DRM_CreateAnimation(d3drm1, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr 0x%08x.\n", hr);
+
+    CHECK_REFCOUNT(d3drm1, 1);
+    hr = IDirect3DRM_CreateAnimation(d3drm1, &animation);
+    ok(SUCCEEDED(hr), "Failed to create animation hr 0x%08x.\n", hr);
+    CHECK_REFCOUNT(d3drm1, 2);
+
+    test_class_name((IDirect3DRMObject *)animation, "Animation");
+
+    hr = IDirect3DRMAnimation_QueryInterface(animation, &IID_IDirect3DRMAnimation2, (void **)&animation2);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMAnimation2, hr 0x%08x.\n", hr);
+    ok(animation != (void *)animation2, "Expected different interface pointer.\n");
+
+    hr = IDirect3DRMAnimation_QueryInterface(animation, &IID_IDirect3DRMObject, (void **)&obj);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMObject, hr 0x%08x.\n", hr);
+
+    hr = IDirect3DRMAnimation2_QueryInterface(animation2, &IID_IDirect3DRMObject, (void **)&obj2);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMObject, hr 0x%08x.\n", hr);
+
+    ok(obj == obj2 && obj == (IDirect3DRMObject *)animation, "Unexpected object pointer.\n");
+
+    IDirect3DRMObject_Release(obj);
+    IDirect3DRMObject_Release(obj2);
+
+    /* Set animated frame, get it back. */
+    hr = IDirect3DRM_CreateFrame(d3drm1, NULL, &frame);
+    ok(SUCCEEDED(hr), "Failed to create a frame, hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation_SetFrame(animation, NULL);
+    ok(SUCCEEDED(hr), "Failed to reset frame, hr %#x.\n", hr);
+
+    CHECK_REFCOUNT(frame, 1);
+    hr = IDirect3DRMAnimation_SetFrame(animation, frame);
+    ok(SUCCEEDED(hr), "Failed to set a frame, hr %#x.\n", hr);
+    CHECK_REFCOUNT(frame, 1);
+
+    hr = IDirect3DRMAnimation2_GetFrame(animation2, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation2_GetFrame(animation2, &frame3);
+    ok(SUCCEEDED(hr), "Failed to get the frame, %#x.\n", hr);
+    ok(frame3 != (void *)frame, "Unexpected interface pointer.\n");
+    CHECK_REFCOUNT(frame, 2);
+
+    IDirect3DRMFrame3_Release(frame3);
+
+    hr = IDirect3DRMAnimation_SetFrame(animation, NULL);
+    ok(SUCCEEDED(hr), "Failed to reset frame, hr %#x.\n", hr);
+
+    hr = IDirect3DRMFrame_QueryInterface(frame, &IID_IDirect3DRMFrame3, (void **)&frame3);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRMFrame3, hr %#x.\n", hr);
+
+    CHECK_REFCOUNT(frame3, 2);
+    hr = IDirect3DRMAnimation2_SetFrame(animation2, frame3);
+    ok(SUCCEEDED(hr), "Failed to set a frame, hr %#x.\n", hr);
+    CHECK_REFCOUNT(frame3, 2);
+
+    IDirect3DRMFrame3_Release(frame3);
+    IDirect3DRMFrame_Release(frame);
+
+    /* Animation options. */
+    options = IDirect3DRMAnimation_GetOptions(animation);
+    ok(options == (D3DRMANIMATION_CLOSED | D3DRMANIMATION_LINEARPOSITION),
+            "Unexpected default options %#x.\n", options);
+
+    /* Undefined mask value */
+    hr = IDirect3DRMAnimation_SetOptions(animation, 0xf0000000);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    options = IDirect3DRMAnimation_GetOptions(animation);
+    ok(options == (D3DRMANIMATION_CLOSED | D3DRMANIMATION_LINEARPOSITION),
+            "Unexpected default options %#x.\n", options);
+
+    /* Ambiguous mask */
+    hr = IDirect3DRMAnimation_SetOptions(animation, D3DRMANIMATION_OPEN | D3DRMANIMATION_CLOSED);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation_SetOptions(animation, D3DRMANIMATION_LINEARPOSITION | D3DRMANIMATION_SPLINEPOSITION);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation_SetOptions(animation, D3DRMANIMATION_SCALEANDROTATION | D3DRMANIMATION_POSITION);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    options = IDirect3DRMAnimation_GetOptions(animation);
+    ok(options == (D3DRMANIMATION_CLOSED | D3DRMANIMATION_LINEARPOSITION),
+            "Unexpected default options %#x.\n", options);
+
+    /* Mask contains undefined bits together with valid one. */
+    hr = IDirect3DRMAnimation_SetOptions(animation, 0xf0000000 | D3DRMANIMATION_OPEN);
+    ok(SUCCEEDED(hr), "Failed to set animation options, hr %#x.\n", hr);
+
+    options = IDirect3DRMAnimation_GetOptions(animation);
+    ok(options == (0xf0000000 | D3DRMANIMATION_OPEN), "Unexpected animation options %#x.\n", options);
+
+    hr = IDirect3DRMAnimation_SetOptions(animation, D3DRMANIMATION_SCALEANDROTATION);
+    ok(SUCCEEDED(hr), "Failed to set animation options, hr %#x.\n", hr);
+
+    options = IDirect3DRMAnimation_GetOptions(animation);
+    ok(options == D3DRMANIMATION_SCALEANDROTATION, "Unexpected options %#x.\n", options);
+
+    hr = IDirect3DRMAnimation_SetOptions(animation, D3DRMANIMATION_OPEN);
+    ok(SUCCEEDED(hr), "Failed to set animation options, hr %#x.\n", hr);
+
+    options = IDirect3DRMAnimation_GetOptions(animation);
+    ok(options == D3DRMANIMATION_OPEN, "Unexpected options %#x.\n", options);
+
+    hr = IDirect3DRMAnimation_SetOptions(animation, 0);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    options = IDirect3DRMAnimation_GetOptions(animation);
+    ok(options == D3DRMANIMATION_OPEN, "Unexpected options %#x.\n", options);
+
+    /* Key management. */
+    hr = IDirect3DRMAnimation_AddPositionKey(animation, 0.0f, 1.0f, 0.0f, 0.0f);
+    ok(SUCCEEDED(hr), "Failed to add position key, hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation_AddScaleKey(animation, 0.0f, 1.0f, 2.0f, 1.0f);
+    ok(SUCCEEDED(hr), "Failed to add scale key, hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation_AddPositionKey(animation, 0.0f, 2.0f, 0.0f, 0.0f);
+    ok(SUCCEEDED(hr), "Failed to add position key, hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation_AddPositionKey(animation, 99.0f, 3.0f, 1.0f, 0.0f);
+    ok(SUCCEEDED(hr), "Failed to add position key, hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation_AddPositionKey(animation, 80.0f, 4.0f, 1.0f, 0.0f);
+    ok(SUCCEEDED(hr), "Failed to add position key, hr %#x.\n", hr);
+
+    v.x = 1.0f;
+    v.y = 0.0f;
+    v.z = 0.0f;
+    D3DRMQuaternionFromRotation(&q, &v, 1.0f);
+
+    /* NULL quaternion pointer leads to a crash on Windows. */
+    hr = IDirect3DRMAnimation_AddRotateKey(animation, 0.0f, &q);
+    ok(SUCCEEDED(hr), "Failed to add rotation key, hr %#.x\n", hr);
+
+    count = 0;
+    memset(keys, 0, sizeof(keys));
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, 0.0f, 99.0f, &count, keys);
+    ok(SUCCEEDED(hr), "Failed to get animation keys, hr %#x.\n", hr);
+    ok(count == 6, "Unexpected key count %u.\n", count);
+
+    ok(keys[0].dwKeyType == D3DRMANIMATION_ROTATEKEY, "Unexpected key type %u.\n", keys[0].dwKeyType);
+    ok(keys[1].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[1].dwKeyType);
+    ok(keys[2].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[2].dwKeyType);
+    ok(keys[3].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[3].dwKeyType);
+    ok(keys[4].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[4].dwKeyType);
+    ok(keys[5].dwKeyType == D3DRMANIMATION_SCALEKEY, "Unexpected key type %u.\n", keys[5].dwKeyType);
+
+    /* Relative order, keys are returned sorted by time. */
+    ok(keys[1].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[1].dvTime);
+    ok(keys[2].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[2].dvTime);
+    ok(keys[3].dvTime == 80.0f, "Unexpected key time %.8e.\n", keys[3].dvTime);
+    ok(keys[4].dvTime == 99.0f, "Unexpected key time %.8e.\n", keys[4].dvTime);
+
+    /* For keys with same time, order they were added in is kept. */
+    ok(keys[1].dvPositionKey.x == 1.0f, "Unexpected key position x %.8e.\n", keys[1].dvPositionKey.x);
+    ok(keys[2].dvPositionKey.x == 2.0f, "Unexpected key position x %.8e.\n", keys[2].dvPositionKey.x);
+    ok(keys[3].dvPositionKey.x == 4.0f, "Unexpected key position x %.8e.\n", keys[3].dvPositionKey.x);
+    ok(keys[4].dvPositionKey.x == 3.0f, "Unexpected key position x %.8e.\n", keys[4].dvPositionKey.x);
+
+    for (i = 0; i < count; i++)
+    {
+        ok(keys[i].dwSize == sizeof(*keys), "%u: unexpected dwSize value %u.\n", i, keys[i].dwSize);
+
+    todo_wine
+    {
+        switch (keys[i].dwKeyType)
+        {
+        case D3DRMANIMATION_ROTATEKEY:
+            ok((keys[i].dwID & 0xf0000000) == 0x40000000, "%u: unexpected id mask %#x.\n", i, keys[i].dwID);
+            break;
+        case D3DRMANIMATION_POSITIONKEY:
+            ok((keys[i].dwID & 0xf0000000) == 0x80000000, "%u: unexpected id mask %#x.\n", i, keys[i].dwID);
+            break;
+        case D3DRMANIMATION_SCALEKEY:
+            ok((keys[i].dwID & 0xf0000000) == 0xc0000000, "%u: unexpected id mask %#x.\n", i, keys[i].dwID);
+            break;
+        default:
+            ok(0, "%u: unknown key type %d.\n", i, keys[i].dwKeyType);
+        }
+    }
+    }
+
+    /* No keys in this range. */
+    count = 10;
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, 100.0f, 200.0f, &count, NULL);
+    ok(hr == D3DRMERR_NOSUCHKEY, "Unexpected hr %#x.\n", hr);
+    ok(count == 0, "Unexpected key count %u.\n", count);
+
+    count = 10;
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, 100.0f, 200.0f, &count, keys);
+    ok(hr == D3DRMERR_NOSUCHKEY, "Unexpected hr %#x.\n", hr);
+    ok(count == 0, "Unexpected key count %u.\n", count);
+
+    count = 10;
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, 0.0f, 0.0f, &count, NULL);
+    ok(SUCCEEDED(hr), "Failed to get animation keys, hr %#x.\n", hr);
+    ok(count == 4, "Unexpected key count %u.\n", count);
+
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, 0.0f, 100.0f, NULL, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    /* Time is 0-based. */
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, -100.0f, -50.0f, NULL, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Unexpected hr %#x.\n", hr);
+
+    count = 10;
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, -100.0f, -50.0f, &count, NULL);
+    ok(hr == D3DRMERR_NOSUCHKEY, "Unexpected hr %#x.\n", hr);
+    ok(count == 0, "Unexpected key count %u.\n", count);
+
+    count = 10;
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, -100.0f, 100.0f, &count, NULL);
+    ok(SUCCEEDED(hr), "Failed to get animation keys, hr %#x.\n", hr);
+    ok(count == 6, "Unexpected key count %u.\n", count);
+
+    /* AddKey() tests. */
+    hr = IDirect3DRMAnimation2_AddKey(animation2, NULL);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#x.\n", hr);
+
+    memset(&key, 0, sizeof(key));
+    key.dwKeyType = D3DRMANIMATION_POSITIONKEY;
+    hr = IDirect3DRMAnimation2_AddKey(animation2, &key);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#x.\n", hr);
+
+    memset(&key, 0, sizeof(key));
+    key.dwSize = sizeof(key) - 1;
+    key.dwKeyType = D3DRMANIMATION_POSITIONKEY;
+    hr = IDirect3DRMAnimation2_AddKey(animation2, &key);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#x.\n", hr);
+
+    memset(&key, 0, sizeof(key));
+    key.dwSize = sizeof(key) + 1;
+    key.dwKeyType = D3DRMANIMATION_POSITIONKEY;
+    hr = IDirect3DRMAnimation2_AddKey(animation2, &key);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#x.\n", hr);
+
+    memset(&key, 0, sizeof(key));
+    key.dwSize = sizeof(key);
+    key.dwKeyType = D3DRMANIMATION_POSITIONKEY;
+    key.dvPositionKey.x = 8.0f;
+    hr = IDirect3DRMAnimation2_AddKey(animation2, &key);
+    ok(SUCCEEDED(hr), "Failed to add key, hr %#x.\n", hr);
+
+    /* Delete tests. */
+    hr = IDirect3DRMAnimation_AddRotateKey(animation, 0.0f, &q);
+    ok(SUCCEEDED(hr), "Failed to add rotation key, hr %#.x\n", hr);
+
+    hr = IDirect3DRMAnimation_AddScaleKey(animation, 0.0f, 1.0f, 2.0f, 1.0f);
+    ok(SUCCEEDED(hr), "Failed to add scale key, hr %#x.\n", hr);
+
+    count = 0;
+    memset(keys, 0, sizeof(keys));
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, -1000.0f, 1000.0f, &count, keys);
+    ok(SUCCEEDED(hr), "Failed to get key count, hr %#x.\n", hr);
+    ok(count == 9, "Unexpected key count %u.\n", count);
+
+    ok(keys[0].dwKeyType == D3DRMANIMATION_ROTATEKEY, "Unexpected key type %u.\n", keys[0].dwKeyType);
+    ok(keys[1].dwKeyType == D3DRMANIMATION_ROTATEKEY, "Unexpected key type %u.\n", keys[1].dwKeyType);
+    ok(keys[2].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[2].dwKeyType);
+    ok(keys[3].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[3].dwKeyType);
+    ok(keys[4].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[4].dwKeyType);
+    ok(keys[5].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[5].dwKeyType);
+    ok(keys[6].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[6].dwKeyType);
+    ok(keys[7].dwKeyType == D3DRMANIMATION_SCALEKEY, "Unexpected key type %u.\n", keys[7].dwKeyType);
+    ok(keys[8].dwKeyType == D3DRMANIMATION_SCALEKEY, "Unexpected key type %u.\n", keys[8].dwKeyType);
+
+    ok(keys[0].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[0].dvTime);
+    ok(keys[1].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[1].dvTime);
+    ok(keys[2].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[2].dvTime);
+    ok(keys[3].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[3].dvTime);
+    ok(keys[4].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[4].dvTime);
+    ok(keys[5].dvTime == 80.0f, "Unexpected key time %.8e.\n", keys[5].dvTime);
+    ok(keys[6].dvTime == 99.0f, "Unexpected key time %.8e.\n", keys[6].dvTime);
+    ok(keys[7].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[7].dvTime);
+    ok(keys[8].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[8].dvTime);
+
+    hr = IDirect3DRMAnimation_DeleteKey(animation, -100.0f);
+    ok(SUCCEEDED(hr), "Failed to delete keys, hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation_DeleteKey(animation, 100.0f);
+    ok(SUCCEEDED(hr), "Failed to delete keys, hr %#x.\n", hr);
+
+    /* Only first Position keys are not removed. */
+    hr = IDirect3DRMAnimation_DeleteKey(animation, 0.0f);
+    ok(SUCCEEDED(hr), "Failed to delete keys, hr %#x.\n", hr);
+
+    count = 0;
+    memset(keys, 0, sizeof(keys));
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, 0.0f, 100.0f, &count, keys);
+    ok(SUCCEEDED(hr), "Failed to get key count, hr %#x.\n", hr);
+    ok(count == 6, "Unexpected key count %u.\n", count);
+
+    ok(keys[0].dwKeyType == D3DRMANIMATION_ROTATEKEY, "Unexpected key type %u.\n", keys[0].dwKeyType);
+    ok(keys[1].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[1].dwKeyType);
+    ok(keys[2].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[2].dwKeyType);
+    ok(keys[3].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[3].dwKeyType);
+    ok(keys[4].dwKeyType == D3DRMANIMATION_POSITIONKEY, "Unexpected key type %u.\n", keys[4].dwKeyType);
+    ok(keys[5].dwKeyType == D3DRMANIMATION_SCALEKEY, "Unexpected key type %u.\n", keys[5].dwKeyType);
+
+    ok(keys[0].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[0].dvTime);
+    ok(keys[1].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[1].dvTime);
+    ok(keys[2].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[2].dvTime);
+    ok(keys[3].dvTime == 80.0f, "Unexpected key time %.8e.\n", keys[3].dvTime);
+    ok(keys[4].dvTime == 99.0f, "Unexpected key time %.8e.\n", keys[4].dvTime);
+    ok(keys[5].dvTime == 0.0f, "Unexpected key time %.8e.\n", keys[5].dvTime);
+
+    hr = IDirect3DRMAnimation_DeleteKey(animation, 0.0f);
+    ok(SUCCEEDED(hr), "Failed to delete keys, hr %#x.\n", hr);
+
+    count = 0;
+    hr = IDirect3DRMAnimation2_GetKeys(animation2, 0.0f, 100.0f, &count, NULL);
+    ok(SUCCEEDED(hr), "Failed to get key count, hr %#x.\n", hr);
+    ok(count == 3, "Unexpected key count %u.\n", count);
+
+    IDirect3DRMAnimation2_Release(animation2);
+    IDirect3DRMAnimation_Release(animation);
+
+    IDirect3DRM_Release(d3drm1);
+}
+
+static void test_animation_qi(void)
+{
+    static const struct qi_test tests[] =
+    {
+        { &IID_IDirect3DRMAnimation2,      &IID_IUnknown, &IID_IDirect3DRMAnimation2, S_OK                      },
+        { &IID_IDirect3DRMAnimation,       &IID_IUnknown, &IID_IDirect3DRMAnimation,  S_OK                      },
+        { &IID_IDirect3DRM,                NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice,          NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObject,          &IID_IUnknown, &IID_IDirect3DRMAnimation,  S_OK                      },
+        { &IID_IDirect3DRMDevice2,         NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice3,         NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport,        NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport2,       NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM3,               NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM2,               NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisual,          NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMesh,            NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder,     NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder2,    NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder3,    NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace,            NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace2,           NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLight,           NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture,         NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture2,        NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture3,        NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial,        NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial2,       NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet,    NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet2,   NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObjectArray,     NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDeviceArray,     NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewportArray,   NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrameArray,      NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisualArray,     NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLightArray,      NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPickedArray,     NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFaceArray,       NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationArray,  NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMUserVisual,      NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow,          NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow2,         NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMInterpolator,    NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMProgressiveMesh, NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPicked2Array,    NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMClippedVisual,   NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawClipper,         NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface7,        NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface4,        NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface3,        NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface2,        NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface,         NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice7,           NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice3,           NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice2,           NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice,            NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D7,                 NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D3,                 NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D2,                 NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D,                  NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw7,               NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw4,               NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw3,               NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw2,               NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw,                NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DLight,             NULL,          NULL,                       CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IUnknown,                   &IID_IUnknown, NULL,                       S_OK                      },
+    };
+    IDirect3DRMAnimation2 *animation2;
+    IDirect3DRMAnimation *animation;
+    IDirect3DRM3 *d3drm3;
+    IDirect3DRM *d3drm1;
+    IUnknown *unknown;
+    HRESULT hr;
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(SUCCEEDED(hr), "Failed to create d3drm instance, hr %#x.\n", hr);
+
+    hr = IDirect3DRM_CreateAnimation(d3drm1, &animation);
+    ok(SUCCEEDED(hr), "Failed to create animation hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation_QueryInterface(animation, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Failed to get IUnknown from animation, hr %#x.\n", hr);
+    IDirect3DRMAnimation_Release(animation);
+
+    test_qi("animation_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(SUCCEEDED(hr), "Failed to get IDirect3DRM3, hr %#x.\n", hr);
+
+    hr = IDirect3DRM3_CreateAnimation(d3drm3, &animation2);
+    ok(SUCCEEDED(hr), "Failed to create animation hr %#x.\n", hr);
+
+    hr = IDirect3DRMAnimation2_QueryInterface(animation2, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Failed to get IUnknown from animation, hr %#x.\n", hr);
+    IDirect3DRMAnimation2_Release(animation2);
+
+    test_qi("animation2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM_Release(d3drm1);
+}
+
+static void test_wrap(void)
+{
+    IDirect3DRMWrap *wrap;
+    IDirect3DRM *d3drm1;
+    HRESULT hr;
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(SUCCEEDED(hr), "Failed to create IDirect3DRM instance, hr %#x.\n", hr);
+
+    hr = IDirect3DRM_CreateObject(d3drm1, &CLSID_CDirect3DRMWrap, NULL, &IID_IDirect3DRMWrap, (void **)&wrap);
+    ok(SUCCEEDED(hr), "Failed to create wrap instance, hr %#x.\n", hr);
+
+    test_class_name((IDirect3DRMObject *)wrap, "");
+
+    IDirect3DRMWrap_Release(wrap);
+    IDirect3DRM_Release(d3drm1);
+}
+
+static void test_wrap_qi(void)
+{
+    static const struct qi_test tests[] =
+    {
+        { &IID_IDirect3DRMWrap,            &IID_IUnknown, &IID_IDirect3DRMWrap,   S_OK                      },
+        { &IID_IDirect3DRM,                NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice,          NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObject,          &IID_IUnknown, &IID_IDirect3DRMWrap,   S_OK                      },
+        { &IID_IDirect3DRMDevice2,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice3,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport2,       NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM3,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM2,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisual,          NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMesh,            NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder2,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder3,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace,            NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace2,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLight,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture2,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture3,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial2,       NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation,       NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation2,      NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet2,   NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObjectArray,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDeviceArray,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewportArray,   NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrameArray,      NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisualArray,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLightArray,      NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPickedArray,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFaceArray,       NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationArray,  NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMUserVisual,      NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow,          NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow2,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMInterpolator,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMProgressiveMesh, NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPicked2Array,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMClippedVisual,   NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawClipper,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface7,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface4,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface3,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface2,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice7,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice3,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice2,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice,            NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D7,                 NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D3,                 NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D2,                 NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D,                  NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw7,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw4,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw3,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw2,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw,                NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DLight,             NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IUnknown,                   &IID_IUnknown, NULL,                   S_OK                      },
+    };
+    IDirect3DRMWrap *wrap;
+    IDirect3DRM *d3drm1;
+    IUnknown *unknown;
+    HRESULT hr;
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(SUCCEEDED(hr), "Failed to create d3drm instance, hr %#x.\n", hr);
+
+    hr = IDirect3DRM_CreateObject(d3drm1, &CLSID_CDirect3DRMWrap, NULL, &IID_IDirect3DRMWrap, (void **)&wrap);
+    ok(SUCCEEDED(hr), "Failed to create wrap instance, hr %#x.\n", hr);
+
+    hr = IDirect3DRMWrap_QueryInterface(wrap, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Failed to get IUnknown from wrap (hr = %#x)\n", hr);
+    IDirect3DRMWrap_Release(wrap);
+    test_qi("wrap_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    IDirect3DRM_Release(d3drm1);
+}
 START_TEST(d3drm)
 {
     test_MeshBuilder();
@@ -6568,4 +7340,9 @@ START_TEST(d3drm)
     test_viewport_qi();
     test_viewport_clear1();
     test_viewport_clear2();
+    test_create_texture_from_surface();
+    test_animation();
+    test_animation_qi();
+    test_wrap();
+    test_wrap_qi();
 }
