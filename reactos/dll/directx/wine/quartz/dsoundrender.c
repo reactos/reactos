@@ -97,9 +97,9 @@ static REFERENCE_TIME time_from_pos(DSoundRenderImpl *This, DWORD pos) {
 static DWORD pos_from_time(DSoundRenderImpl *This, REFERENCE_TIME time) {
     WAVEFORMATEX *wfx = (WAVEFORMATEX*)This->renderer.pInputPin->pin.mtCurrent.pbFormat;
     REFERENCE_TIME ret = time;
-    ret *= wfx->nSamplesPerSec;
+    ret *= wfx->nAvgBytesPerSec;
     ret /= 10000000;
-    ret *= wfx->nBlockAlign;
+    ret -= ret % wfx->nBlockAlign;
     return ret;
 }
 
@@ -406,7 +406,7 @@ static HRESULT WINAPI DSoundRender_CheckMediaType(BaseRenderer *iface, const AM_
     TRACE("Format = %p\n", format);
     TRACE("wFormatTag = %x %x\n", format->wFormatTag, WAVE_FORMAT_PCM);
     TRACE("nChannels = %d\n", format->nChannels);
-    TRACE("nSamplesPerSec = %d\n", format->nAvgBytesPerSec);
+    TRACE("nSamplesPerSec = %d\n", format->nSamplesPerSec);
     TRACE("nAvgBytesPerSec = %d\n", format->nAvgBytesPerSec);
     TRACE("nBlockAlign = %d\n", format->nBlockAlign);
     TRACE("wBitsPerSample = %d\n", format->wBitsPerSample);

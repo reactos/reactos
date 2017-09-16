@@ -365,7 +365,7 @@ static HRESULT WINAPI VMR9_CheckMediaType(BaseRenderer *iface, const AM_MEDIA_TY
         ERR("Format type %s not supported\n", debugstr_guid(&pmt->formattype));
         return S_FALSE;
     }
-    if (This->bmiheader.biCompression)
+    if (This->bmiheader.biCompression != BI_RGB)
         return S_FALSE;
     return S_OK;
 }

@@ -558,7 +558,7 @@ static HRESULT AVISplitter_ProcessIndex(AVISplitterImpl *This, AVISTDINDEX **ind
     TRACE("bIndexType: %u\n", pIndex->bIndexType);
     TRACE("nEntriesInUse: %u\n", pIndex->nEntriesInUse);
     TRACE("dwChunkId: %.4s\n", (char *)&pIndex->dwChunkId);
-    TRACE("qwBaseOffset: %x%08x\n", (DWORD)(pIndex->qwBaseOffset >> 32), (DWORD)pIndex->qwBaseOffset);
+    TRACE("qwBaseOffset: %s\n", wine_dbgstr_longlong(pIndex->qwBaseOffset));
     TRACE("dwReserved_3: %u\n", pIndex->dwReserved_3);
 
     if (pIndex->bIndexType != AVI_INDEX_OF_CHUNKS
@@ -578,7 +578,7 @@ static HRESULT AVISplitter_ProcessIndex(AVISplitterImpl *This, AVISTDINDEX **ind
     {
         BOOL keyframe = !(pIndex->aIndex[x].dwSize >> 31);
         DWORDLONG offset = pIndex->qwBaseOffset + pIndex->aIndex[x].dwOffset;
-        TRACE("dwOffset: %x%08x\n", (DWORD)(offset >> 32), (DWORD)offset);
+        TRACE("dwOffset: %s\n", wine_dbgstr_longlong(offset));
         TRACE("dwSize: %u\n", (pIndex->aIndex[x].dwSize & ~(1u << 31)));
         TRACE("Frame is a keyframe: %s\n", keyframe ? "yes" : "no");
     }
@@ -629,9 +629,9 @@ static HRESULT AVISplitter_ProcessOldIndex(AVISplitterImpl *This)
                 }
                 else if (temp2 != chunkid)
                 {
-                    ERR("Faulty index or bug in handling: Wanted FCC: %s, Abs FCC: %s (@ %x), Rel FCC: %s (@ %.0x%08x)\n",
+                    ERR("Faulty index or bug in handling: Wanted FCC: %s, Abs FCC: %s (@ %x), Rel FCC: %s (@ %s)\n",
                         debugstr_an((char *)&chunkid, 4), debugstr_an((char *)&temp, 4), offset,
-                        debugstr_an((char *)&temp2, 4), (DWORD)((mov_pos + offset) >> 32), (DWORD)(mov_pos + offset));
+                        debugstr_an((char *)&temp2, 4), wine_dbgstr_longlong(mov_pos + offset));
                     relative = -1;
                 }
                 else
@@ -828,7 +828,7 @@ static HRESULT AVISplitter_ProcessStreamList(AVISplitterImpl * This, const BYTE 
             stream->stdindex = CoTaskMemRealloc(stream->stdindex, sizeof(*stream->stdindex) * stream->entries);
             for (x = 0; x < pIndex->nEntriesInUse; ++x)
             {
-                TRACE("qwOffset: %x%08x\n", (DWORD)(pIndex->aIndex[x].qwOffset >> 32), (DWORD)pIndex->aIndex[x].qwOffset);
+                TRACE("qwOffset: %s\n", wine_dbgstr_longlong(pIndex->aIndex[x].qwOffset));
                 TRACE("dwSize: %u\n", pIndex->aIndex[x].dwSize);
                 TRACE("dwDuration: %u (unreliable)\n", pIndex->aIndex[x].dwDuration);
 
@@ -1117,7 +1117,7 @@ static HRESULT AVISplitter_InputPin_PreConnect(IPin * iface, IPin * pConnectPin,
     pAviSplit->EndOfFile = This->rtStop = MEDIATIME_FROM_BYTES(pos);
     if (pos > total)
     {
-        ERR("File smaller (%x%08x) then EndOfFile (%x%08x)\n", (DWORD)(total >> 32), (DWORD)total, (DWORD)(pAviSplit->EndOfFile >> 32), (DWORD)pAviSplit->EndOfFile);
+        ERR("File smaller (%s) then EndOfFile (%s)\n", wine_dbgstr_longlong(total), wine_dbgstr_longlong(pAviSplit->EndOfFile));
         return E_FAIL;
     }
 

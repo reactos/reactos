@@ -1320,7 +1320,7 @@ static HRESULT WINAPI FileAsyncReader_SyncRead(IAsyncReader * iface, LONGLONG ll
     HRESULT hr = S_OK;
     FileAsyncReader *This = impl_from_IAsyncReader(iface);
 
-    TRACE("(%x%08x, %d, %p)\n", (ULONG)(llPosition >> 32), (ULONG)llPosition, lLength, pBuffer);
+    TRACE("(%s, %d, %p)\n", wine_dbgstr_longlong(llPosition), lLength, pBuffer);
 
     ZeroMemory(&ovl, sizeof(ovl));
 
