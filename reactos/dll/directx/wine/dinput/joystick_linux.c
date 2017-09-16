@@ -233,10 +233,14 @@ static INT find_joystick_devices(void)
                 /* If no axes were configured but there are axes assume a 1-to-1 (wii controller) */
                 if (joydev.axis_count && !found_axes)
                 {
+                    int axes_limit = min(joydev.axis_count, 8); /* generic driver limit */
+
                     ERR("Incoherent joystick data, advertised %d axes, detected 0. Assuming 1-to-1.\n",
-                         joydev.axis_count);
-                    for (j = 0; j < joydev.axis_count; j++)
+                        joydev.axis_count);
+                    for (j = 0; j < axes_limit; j++)
                         joydev.dev_axes_map[j] = j;
+
+                    joydev.axis_count = axes_limit;
                 }
             }
 
