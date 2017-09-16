@@ -147,7 +147,10 @@ LPVOID NS_GetNSAddr( LPVOID lpNSInfo )
    *        in place.
    */
 #if 1
-  return lpCache->first.lpQHFirst->lpNSAddrHdr;
+  if ( lpCache->first.lpQHFirst )
+    return lpCache->first.lpQHFirst->lpNSAddrHdr;
+
+  return NULL;
 #else
   /* FIXME: Should convert over to this */
   return lpCache->bNsIsLocal ? lpCache->lpLocalAddrHdr

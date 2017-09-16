@@ -4466,8 +4466,8 @@ static HRESULT WINAPI IDirectPlay4Impl_EnumConnections( IDirectPlay4 *iface,
         const GUID *application, LPDPENUMCONNECTIONSCALLBACK enumcb, void *context, DWORD flags )
 {
     IDirectPlayImpl *This = impl_from_IDirectPlay4( iface );
-    FIXME( "(%p)->(%p,%p,%p,0x%08x): stub\n", This, application, enumcb, context, flags );
-    return DP_OK;
+    return IDirectPlayX_EnumConnections( &This->IDirectPlay4A_iface, application, enumcb, context,
+            flags );
 }
 
 static HRESULT WINAPI IDirectPlay3AImpl_EnumGroupsInGroup( IDirectPlay3A *iface, DPID group,

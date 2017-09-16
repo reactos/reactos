@@ -815,8 +815,9 @@ static HRESULT WINAPI IDirectPlayLobby3AImpl_EnumAddressTypes( IDirectPlayLobby3
 static HRESULT WINAPI IDirectPlayLobby3Impl_EnumAddressTypes( IDirectPlayLobby3 *iface,
         LPDPLENUMADDRESSTYPESCALLBACK enumaddrtypecb, REFGUID sp, void *context, DWORD flags )
 {
-  FIXME(":stub\n");
-  return DPERR_OUTOFMEMORY;
+    IDirectPlayLobbyImpl *This = impl_from_IDirectPlayLobby3( iface );
+    return IDirectPlayLobby_EnumAddressTypes( &This->IDirectPlayLobby3A_iface, enumaddrtypecb, sp,
+          context, flags );
 }
 
 /********************************************************************
