@@ -228,6 +228,12 @@ static HRESULT WINAPI d3d8_CheckDeviceFormat(IDirect3D8 *iface, UINT adapter, D3
     TRACE("iface %p, adapter %u, device_type %#x, adapter_format %#x, usage %#x, resource_type %#x, format %#x.\n",
             iface, adapter, device_type, adapter_format, usage, resource_type, format);
 
+    if (!adapter_format)
+    {
+        WARN("Invalid adapter format.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
     usage = usage & (WINED3DUSAGE_MASK | WINED3DUSAGE_QUERY_MASK);
     switch (resource_type)
     {
@@ -399,7 +405,7 @@ BOOL d3d8_init(struct d3d8 *d3d8)
     DWORD flags = WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING
             | WINED3D_HANDLE_RESTORE | WINED3D_PIXEL_CENTER_INTEGER
             | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR | WINED3D_NO_PRIMITIVE_RESTART
-            | WINED3D_LEGACY_CUBEMAP_FILTERING;
+            | WINED3D_LEGACY_CUBEMAP_FILTERING | WINED3D_LIMIT_VIEWPORT;
 
     d3d8->IDirect3D8_iface.lpVtbl = &d3d8_vtbl;
     d3d8->refcount = 1;
