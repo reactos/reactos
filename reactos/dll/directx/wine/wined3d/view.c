@@ -906,6 +906,44 @@ void wined3d_unordered_access_view_clear_uint(struct wined3d_unordered_access_vi
     checkGLcall("clear unordered access view");
 }
 
+void wined3d_unordered_access_view_set_counter(struct wined3d_unordered_access_view *view,
+        unsigned int value)
+{
+    const struct wined3d_gl_info *gl_info;
+    struct wined3d_context *context;
+
+    if (!view->counter_bo)
+        return;
+
+    context = context_acquire(view->resource->device, NULL, 0);
+    gl_info = context->gl_info;
+    GL_EXTCALL(glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, view->counter_bo));
+    GL_EXTCALL(glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(value), &value));
+    checkGLcall("set atomic counter");
+    context_release(context);
+}
+
+void wined3d_unordered_access_view_copy_counter(struct wined3d_unordered_access_view *view,
+        struct wined3d_buffer *buffer, unsigned int offset, struct wined3d_context *context)
+{
+    struct wined3d_bo_address dst, src;
+    DWORD dst_location;
+
+    if (!view->counter_bo)
+        return;
+
+    dst_location = wined3d_buffer_get_memory(buffer, &dst, buffer->locations);
+    dst.addr += offset;
+
+    src.buffer_object = view->counter_bo;
+    src.addr = NULL;
+
+    context_copy_bo_address(context, &dst, buffer->buffer_type_hint,
+            &src, GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint));
+
+    wined3d_buffer_invalidate_location(buffer, ~dst_location);
+}
+
 static void wined3d_unordered_access_view_cs_init(void *object)
 {
     struct wined3d_unordered_access_view *view = object;
@@ -923,7 +961,7 @@ static void wined3d_unordered_access_view_cs_init(void *object)
         context = context_acquire(resource->device, NULL, 0);
         gl_info = context->gl_info;
         create_buffer_view(&view->gl_view, context, desc, buffer, view->format);
-        if (desc->flags & WINED3D_VIEW_BUFFER_COUNTER)
+        if (desc->flags & (WINED3D_VIEW_BUFFER_COUNTER | WINED3D_VIEW_BUFFER_APPEND))
         {
             static const GLuint initial_value = 0;
             GL_EXTCALL(glGenBuffers(1, &view->counter_bo));
@@ -967,9 +1005,6 @@ static HRESULT wined3d_unordered_access_view_init(struct wined3d_unordered_acces
     if (!(view->format = validate_resource_view(desc, resource, TRUE)))
         return E_INVALIDARG;
     view->desc = *desc;
-
-    if (desc->flags & WINED3D_VIEW_BUFFER_APPEND)
-        FIXME("Unhandled view flags %#x.\n", desc->flags);
 
     wined3d_resource_incref(view->resource = resource);
 

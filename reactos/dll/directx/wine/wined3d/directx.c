@@ -106,19 +106,24 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_APPLE_ycbcr_422",                  APPLE_YCBCR_422               },
 
     /* ARB */
+    {"GL_ARB_base_instance",                ARB_BASE_INSTANCE             },
     {"GL_ARB_blend_func_extended",          ARB_BLEND_FUNC_EXTENDED       },
     {"GL_ARB_clear_buffer_object",          ARB_CLEAR_BUFFER_OBJECT       },
     {"GL_ARB_clear_texture",                ARB_CLEAR_TEXTURE             },
     {"GL_ARB_clip_control",                 ARB_CLIP_CONTROL              },
     {"GL_ARB_color_buffer_float",           ARB_COLOR_BUFFER_FLOAT        },
     {"GL_ARB_compute_shader",               ARB_COMPUTE_SHADER            },
+    {"GL_ARB_conservative_depth",           ARB_CONSERVATIVE_DEPTH        },
     {"GL_ARB_copy_buffer",                  ARB_COPY_BUFFER               },
+    {"GL_ARB_copy_image",                   ARB_COPY_IMAGE                },
     {"GL_ARB_debug_output",                 ARB_DEBUG_OUTPUT              },
     {"GL_ARB_depth_buffer_float",           ARB_DEPTH_BUFFER_FLOAT        },
+    {"GL_ARB_depth_clamp",                  ARB_DEPTH_CLAMP               },
     {"GL_ARB_depth_texture",                ARB_DEPTH_TEXTURE             },
     {"GL_ARB_derivative_control",           ARB_DERIVATIVE_CONTROL        },
     {"GL_ARB_draw_buffers",                 ARB_DRAW_BUFFERS              },
     {"GL_ARB_draw_elements_base_vertex",    ARB_DRAW_ELEMENTS_BASE_VERTEX },
+    {"GL_ARB_draw_indirect",                ARB_DRAW_INDIRECT             },
     {"GL_ARB_draw_instanced",               ARB_DRAW_INSTANCED            },
     {"GL_ARB_ES2_compatibility",            ARB_ES2_COMPATIBILITY         },
     {"GL_ARB_ES3_compatibility",            ARB_ES3_COMPATIBILITY         },
@@ -1771,7 +1776,7 @@ static DWORD wined3d_parse_gl_version(const char *gl_version)
 }
 
 static enum wined3d_gl_vendor wined3d_guess_gl_vendor(const struct wined3d_gl_info *gl_info,
-        const char *gl_vendor_string, const char *gl_renderer)
+        const char *gl_vendor_string, const char *gl_renderer, const char *gl_version)
 {
     /* MacOS has various specialities in the extensions it advertises. Some have to be loaded from
      * the opengl 1.2+ core, while other extensions are advertised, but software emulated. So try to
@@ -1803,7 +1808,8 @@ static enum wined3d_gl_vendor wined3d_guess_gl_vendor(const struct wined3d_gl_in
             || strstr(gl_vendor_string, "Intel")
             || strstr(gl_renderer, "Mesa")
             || strstr(gl_renderer, "Gallium")
-            || strstr(gl_renderer, "Intel"))
+            || strstr(gl_renderer, "Intel")
+            || strstr(gl_version, "Mesa"))
         return GL_VENDOR_MESA;
 
     FIXME("Received unrecognized GL_VENDOR %s. Returning GL_VENDOR_UNKNOWN.\n",
@@ -1823,6 +1829,8 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
             || strstr(gl_vendor_string, "Advanced Micro Devices, Inc.")
             || strstr(gl_vendor_string, "X.Org R300 Project")
             || strstr(gl_renderer, "AMD")
+            || strstr(gl_renderer, "FirePro")
+            || strstr(gl_renderer, "Radeon")
             || strstr(gl_renderer, "R100")
             || strstr(gl_renderer, "R200")
             || strstr(gl_renderer, "R300")
@@ -2692,6 +2700,9 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     /* GL_APPLE_flush_buffer_range */
     USE_GL_FUNC(glBufferParameteriAPPLE)
     USE_GL_FUNC(glFlushMappedBufferRangeAPPLE)
+    /* GL_ARB_base_instance */
+    USE_GL_FUNC(glDrawArraysInstancedBaseInstance)
+    USE_GL_FUNC(glDrawElementsInstancedBaseVertexBaseInstance)
     /* GL_ARB_blend_func_extended */
     USE_GL_FUNC(glBindFragDataLocationIndexed)
     USE_GL_FUNC(glGetFragDataIndex)
@@ -2710,6 +2721,8 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     USE_GL_FUNC(glDispatchComputeIndirect)
     /* GL_ARB_copy_buffer */
     USE_GL_FUNC(glCopyBufferSubData)
+    /* GL_ARB_copy_image */
+    USE_GL_FUNC(glCopyImageSubData)
     /* GL_ARB_debug_output */
     USE_GL_FUNC(glDebugMessageCallbackARB)
     USE_GL_FUNC(glDebugMessageControlARB)
@@ -2722,6 +2735,9 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     USE_GL_FUNC(glDrawElementsInstancedBaseVertex)
     USE_GL_FUNC(glDrawRangeElementsBaseVertex)
     USE_GL_FUNC(glMultiDrawElementsBaseVertex)
+    /* GL_ARB_draw_indirect */
+    USE_GL_FUNC(glDrawArraysIndirect)
+    USE_GL_FUNC(glDrawElementsIndirect)
     /* GL_ARB_draw_instanced */
     USE_GL_FUNC(glDrawArraysInstancedARB)
     USE_GL_FUNC(glDrawElementsInstancedARB)
@@ -3508,6 +3524,12 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
         gl_info->limits.buffers = gl_max;
         TRACE("Max draw buffers: %u.\n", gl_max);
     }
+    if (gl_info->supported[ARB_BLEND_FUNC_EXTENDED])
+    {
+        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_DUAL_SOURCE_DRAW_BUFFERS, &gl_max);
+        gl_info->limits.dual_buffers = gl_max;
+        TRACE("Max dual source draw buffers: %u.\n", gl_max);
+    }
     if (gl_info->supported[ARB_MULTITEXTURE])
     {
         if (gl_info->supported[WINED3D_GL_LEGACY_CONTEXT])
@@ -3873,6 +3895,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         {ARB_TIMER_QUERY,                  MAKEDWORD_VERSION(3, 3)},
         {ARB_VERTEX_TYPE_2_10_10_10_REV,   MAKEDWORD_VERSION(3, 3)},
 
+        {ARB_DRAW_INDIRECT,                MAKEDWORD_VERSION(4, 0)},
         {ARB_GPU_SHADER5,                  MAKEDWORD_VERSION(4, 0)},
         {ARB_TESSELLATION_SHADER,          MAKEDWORD_VERSION(4, 0)},
         {ARB_TEXTURE_CUBE_MAP_ARRAY,       MAKEDWORD_VERSION(4, 0)},
@@ -3894,6 +3917,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
 
         {ARB_CLEAR_BUFFER_OBJECT,          MAKEDWORD_VERSION(4, 3)},
         {ARB_COMPUTE_SHADER,               MAKEDWORD_VERSION(4, 3)},
+        {ARB_COPY_IMAGE,                   MAKEDWORD_VERSION(4, 3)},
         {ARB_DEBUG_OUTPUT,                 MAKEDWORD_VERSION(4, 3)},
         {ARB_ES3_COMPATIBILITY,            MAKEDWORD_VERSION(4, 3)},
         {ARB_FRAGMENT_LAYER_VIEWPORT,      MAKEDWORD_VERSION(4, 3)},
@@ -3909,6 +3933,8 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
 
         {ARB_CLIP_CONTROL,                 MAKEDWORD_VERSION(4, 5)},
         {ARB_DERIVATIVE_CONTROL,           MAKEDWORD_VERSION(4, 5)},
+
+        {ARB_PIPELINE_STATISTICS_QUERY,    MAKEDWORD_VERSION(4, 6)},
     };
     struct wined3d_driver_info *driver_info = &adapter->driver_info;
     const char *gl_vendor_str, *gl_renderer_str, *gl_version_str;
@@ -4025,8 +4051,6 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         gl_info->supported[WINED3D_GL_VERSION_2_0] = TRUE;
     if (gl_version >= MAKEDWORD_VERSION(3, 2))
         gl_info->supported[WINED3D_GL_VERSION_3_2] = TRUE;
-    if (gl_version >= MAKEDWORD_VERSION(4, 3))
-        gl_info->supported[WINED3D_GL_VERSION_4_3] = TRUE;
 
     /* All the points are actually point sprites in core contexts, the APIs from
      * ARB_point_sprite are not supported anymore. */
@@ -4269,6 +4293,10 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     for (i = 0; i < gl_info->limits.buffers; ++i)
         adapter->d3d_info.valid_rt_mask |= (1u << i);
 
+    adapter->d3d_info.valid_dual_rt_mask = 0;
+    for (i = 0; i < gl_info->limits.dual_buffers; ++i)
+        adapter->d3d_info.valid_dual_rt_mask |= (1u << i);
+
     if (!adapter->d3d_info.shader_color_key)
     {
         /* We do not want to deal with re-creating immutable texture storage for color keying emulation. */
@@ -4364,7 +4392,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         checkGLcall("creating VAO");
     }
 
-    gl_vendor = wined3d_guess_gl_vendor(gl_info, gl_vendor_str, gl_renderer_str);
+    gl_vendor = wined3d_guess_gl_vendor(gl_info, gl_vendor_str, gl_renderer_str, gl_version_str);
     TRACE("Guessed GL vendor %#x.\n", gl_vendor);
 
     if (!(gpu_description = query_gpu_description(gl_info, &vram_bytes)))
@@ -5155,6 +5183,8 @@ static BOOL CheckRenderTargetCapability(const struct wined3d_adapter *adapter,
     /* Filter out non-RT formats */
     if (!(check_format->flags[gl_type] & WINED3DFMT_FLAG_RENDERTARGET))
         return FALSE;
+    if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
+        return TRUE;
     if (wined3d_settings.offscreen_rendering_mode == ORM_BACKBUFFER)
     {
         const struct wined3d_pixel_format *cfgs = adapter->cfgs;
@@ -5183,12 +5213,6 @@ static BOOL CheckRenderTargetCapability(const struct wined3d_adapter *adapter,
                 return TRUE;
             }
         }
-    }
-    else if(wined3d_settings.offscreen_rendering_mode == ORM_FBO)
-    {
-        /* For now return TRUE for FBOs until we have some proper checks.
-         * Note that this function will only be called when the format is around for texturing. */
-        return TRUE;
     }
     return FALSE;
 }
@@ -5255,9 +5279,9 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
     const struct wined3d_format *adapter_format = wined3d_get_format(gl_info, adapter_format_id,
             WINED3DUSAGE_RENDERTARGET);
     const struct wined3d_format *format = wined3d_get_format(gl_info, check_format_id, usage);
+    enum wined3d_gl_resource_type gl_type, gl_type_end;
     DWORD format_flags = 0;
     DWORD allowed_usage;
-    enum wined3d_gl_resource_type gl_type;
 
     TRACE("wined3d %p, adapter_idx %u, device_type %s, adapter_format %s, usage %s, %s, "
             "resource_type %s, check_format %s.\n",
@@ -5270,6 +5294,26 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
 
     switch (resource_type)
     {
+        case WINED3D_RTYPE_NONE:
+            allowed_usage = WINED3DUSAGE_DEPTHSTENCIL
+                    | WINED3DUSAGE_RENDERTARGET;
+            gl_type = WINED3D_GL_RES_TYPE_TEX_1D;
+            gl_type_end = WINED3D_GL_RES_TYPE_TEX_3D;
+            break;
+
+        case WINED3D_RTYPE_TEXTURE_1D:
+            allowed_usage = WINED3DUSAGE_DYNAMIC
+                    | WINED3DUSAGE_SOFTWAREPROCESSING
+                    | WINED3DUSAGE_TEXTURE
+                    | WINED3DUSAGE_QUERY_FILTER
+                    | WINED3DUSAGE_QUERY_POSTPIXELSHADER_BLENDING
+                    | WINED3DUSAGE_QUERY_SRGBREAD
+                    | WINED3DUSAGE_QUERY_SRGBWRITE
+                    | WINED3DUSAGE_QUERY_VERTEXTEXTURE
+                    | WINED3DUSAGE_QUERY_WRAPANDMIP;
+            gl_type = gl_type_end = WINED3D_GL_RES_TYPE_TEX_1D;
+            break;
+
         case WINED3D_RTYPE_TEXTURE_2D:
             allowed_usage = WINED3DUSAGE_DEPTHSTENCIL
                     | WINED3DUSAGE_RENDERTARGET
@@ -5284,7 +5328,7 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
                     return WINED3DERR_NOTAVAILABLE;
                 }
 
-                gl_type = WINED3D_GL_RES_TYPE_RB;
+                gl_type = gl_type_end = WINED3D_GL_RES_TYPE_RB;
                 break;
             }
             allowed_usage |= WINED3DUSAGE_AUTOGENMIPMAP
@@ -5298,11 +5342,11 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
                     | WINED3DUSAGE_QUERY_SRGBWRITE
                     | WINED3DUSAGE_QUERY_VERTEXTEXTURE
                     | WINED3DUSAGE_QUERY_WRAPANDMIP;
-            gl_type = WINED3D_GL_RES_TYPE_TEX_2D;
+            gl_type = gl_type_end = WINED3D_GL_RES_TYPE_TEX_2D;
             if (usage & WINED3DUSAGE_LEGACY_CUBEMAP)
             {
                 allowed_usage &= ~(WINED3DUSAGE_DEPTHSTENCIL | WINED3DUSAGE_QUERY_LEGACYBUMPMAP);
-                gl_type = WINED3D_GL_RES_TYPE_TEX_CUBE;
+                gl_type = gl_type_end = WINED3D_GL_RES_TYPE_TEX_CUBE;
             }
             else if ((usage & WINED3DUSAGE_DEPTHSTENCIL)
                     && (format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & WINED3DFMT_FLAG_SHADOW)
@@ -5323,7 +5367,13 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
                     | WINED3DUSAGE_QUERY_SRGBWRITE
                     | WINED3DUSAGE_QUERY_VERTEXTEXTURE
                     | WINED3DUSAGE_QUERY_WRAPANDMIP;
-            gl_type = WINED3D_GL_RES_TYPE_TEX_3D;
+            gl_type = gl_type_end = WINED3D_GL_RES_TYPE_TEX_3D;
+            break;
+
+        case WINED3D_RTYPE_BUFFER:
+            allowed_usage = WINED3DUSAGE_DYNAMIC
+                    | WINED3DUSAGE_QUERY_VERTEXTEXTURE;
+            gl_type = gl_type_end = WINED3D_GL_RES_TYPE_BUFFER;
             break;
 
         default:
@@ -5353,32 +5403,9 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
     if (usage & WINED3DUSAGE_QUERY_LEGACYBUMPMAP)
         format_flags |= WINED3DFMT_FLAG_BUMPMAP;
 
-    if ((format->flags[gl_type] & format_flags) != format_flags)
-    {
-        TRACE("Requested format flags %#x, but format %s only has %#x.\n",
-                format_flags, debug_d3dformat(check_format_id), format->flags[gl_type]);
-        return WINED3DERR_NOTAVAILABLE;
-    }
-
     if ((format_flags & WINED3DFMT_FLAG_TEXTURE) && (wined3d->flags & WINED3D_NO3D))
     {
         TRACE("Requested texturing support, but wined3d was created with WINED3D_NO3D.\n");
-        return WINED3DERR_NOTAVAILABLE;
-    }
-
-    if ((usage & WINED3DUSAGE_DEPTHSTENCIL)
-            && !CheckDepthStencilCapability(adapter, adapter_format, format, gl_type))
-    {
-        TRACE("Requested WINED3DUSAGE_DEPTHSTENCIL, but format %s is not supported for depth / stencil buffers.\n",
-                debug_d3dformat(check_format_id));
-        return WINED3DERR_NOTAVAILABLE;
-    }
-
-    if ((usage & WINED3DUSAGE_RENDERTARGET)
-            && !CheckRenderTargetCapability(adapter, adapter_format, format, gl_type))
-    {
-        TRACE("Requested WINED3DUSAGE_RENDERTARGET, but format %s is not supported for render targets.\n",
-                debug_d3dformat(check_format_id));
         return WINED3DERR_NOTAVAILABLE;
     }
 
@@ -5386,6 +5413,36 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
     {
         TRACE("No WINED3DUSAGE_AUTOGENMIPMAP support, returning WINED3DOK_NOAUTOGEN.\n");
         return WINED3DOK_NOAUTOGEN;
+    }
+
+    for (; gl_type <= gl_type_end; ++gl_type)
+    {
+        if ((format->flags[gl_type] & format_flags) != format_flags)
+        {
+            TRACE("Requested format flags %#x, but format %s only has %#x.\n",
+                    format_flags, debug_d3dformat(check_format_id), format->flags[gl_type]);
+            return WINED3DERR_NOTAVAILABLE;
+        }
+
+        if ((usage & WINED3DUSAGE_RENDERTARGET)
+                && !CheckRenderTargetCapability(adapter, adapter_format, format, gl_type))
+        {
+            TRACE("Requested WINED3DUSAGE_RENDERTARGET, but format %s is not supported for render targets.\n",
+                    debug_d3dformat(check_format_id));
+            return WINED3DERR_NOTAVAILABLE;
+        }
+
+        /* 3D depth / stencil textures are never supported. */
+        if (usage == WINED3DUSAGE_DEPTHSTENCIL && gl_type == WINED3D_GL_RES_TYPE_TEX_3D)
+            continue;
+
+        if ((usage & WINED3DUSAGE_DEPTHSTENCIL)
+                && !CheckDepthStencilCapability(adapter, adapter_format, format, gl_type))
+        {
+            TRACE("Requested WINED3DUSAGE_DEPTHSTENCIL, but format %s is not supported for depth / stencil buffers.\n",
+                    debug_d3dformat(check_format_id));
+            return WINED3DERR_NOTAVAILABLE;
+        }
     }
 
     return WINED3D_OK;
@@ -5921,7 +5978,10 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
     caps->MaxUserClipPlanes                = vertex_caps.max_user_clip_planes;
     caps->MaxActiveLights                  = vertex_caps.max_active_lights;
     caps->MaxVertexBlendMatrices           = vertex_caps.max_vertex_blend_matrices;
-    caps->MaxVertexBlendMatrixIndex        = vertex_caps.max_vertex_blend_matrix_index;
+    if (device_type == WINED3D_DEVICE_TYPE_HAL)
+        caps->MaxVertexBlendMatrixIndex    = vertex_caps.max_vertex_blend_matrix_index;
+    else
+        caps->MaxVertexBlendMatrixIndex    = 255;
     caps->VertexProcessingCaps             = vertex_caps.vertex_processing_caps;
     caps->FVFCaps                          = vertex_caps.fvf_caps;
     caps->RasterCaps                      |= vertex_caps.raster_caps;
@@ -6490,6 +6550,18 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
     }
 }
 
+static BOOL has_extension(const char *list, const char *ext)
+{
+    size_t len = strlen(ext);
+    while (list)
+    {
+        while (*list == ' ') list++;
+        if (!strncmp(list, ext, len) && (!list[len] || list[len] == ' ')) return TRUE;
+        list = strchr(list, ' ');
+    }
+    return FALSE;
+}
+
 static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal, DWORD wined3d_creation_flags)
 {
     static const DWORD supported_gl_versions[] =
@@ -6499,8 +6571,9 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal, 
     };
     struct wined3d_gl_info *gl_info = &adapter->gl_info;
     struct wined3d_caps_gl_ctx caps_gl_ctx = {0};
-    unsigned int i;
+    DWORD max_gl_version = wined3d_settings.max_gl_version;
     DISPLAY_DEVICEW display_device;
+    unsigned int i;
 
     TRACE("adapter %p, ordinal %u.\n", adapter, ordinal);
 
@@ -6545,15 +6618,25 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal, 
         return FALSE;
     }
 
+    if (wined3d_creation_flags & WINED3D_REQUEST_D3D10)
+    {
+        const char *gl_extensions = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_EXTENSIONS);
+        if (!has_extension(gl_extensions, "GL_ARB_compatibility"))
+        {
+            ERR_(winediag)("GL_ARB_compatibility not supported, requesting context with GL version 3.2.\n");
+            max_gl_version = MAKEDWORD_VERSION(3, 2);
+        }
+    }
+
     for (i = 0; i < ARRAY_SIZE(supported_gl_versions); ++i)
     {
-        if (supported_gl_versions[i] <= wined3d_settings.max_gl_version)
+        if (supported_gl_versions[i] <= max_gl_version)
             break;
     }
     if (i == ARRAY_SIZE(supported_gl_versions))
     {
         ERR_(winediag)("Requested invalid GL version %u.%u.\n",
-                wined3d_settings.max_gl_version >> 16, wined3d_settings.max_gl_version & 0xffff);
+                max_gl_version >> 16, max_gl_version & 0xffff);
         i = ARRAY_SIZE(supported_gl_versions) - 1;
     }
 

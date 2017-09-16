@@ -1078,6 +1078,21 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
             else
                 reg_maps->cb_sizes[reg->idx[0].offset] = reg->idx[1].offset;
         }
+        else if (ins.handler_idx == WINED3DSIH_DCL_GLOBAL_FLAGS)
+        {
+            if (ins.flags & WINED3DSGF_FORCE_EARLY_DEPTH_STENCIL)
+            {
+                if (shader_version.type == WINED3D_SHADER_TYPE_PIXEL)
+                    shader->u.ps.force_early_depth_stencil = TRUE;
+                else
+                    FIXME("Invalid instruction %#x for shader type %#x.\n",
+                            ins.handler_idx, shader_version.type);
+            }
+            else
+            {
+                WARN("Ignoring global flags %#x.\n", ins.flags);
+            }
+        }
         else if (ins.handler_idx == WINED3DSIH_DCL_GS_INSTANCES)
         {
             if (shader_version.type == WINED3D_SHADER_TYPE_GEOMETRY)
@@ -1125,6 +1140,17 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
             else
                 FIXME("Invalid instruction %#x for shader type %#x.\n",
                         ins.handler_idx, shader_version.type);
+        }
+        else if (ins.handler_idx == WINED3DSIH_DCL_OUTPUT)
+        {
+            if (ins.declaration.dst.reg.type == WINED3DSPR_DEPTHOUT_GREATER_EQUAL ||
+                ins.declaration.dst.reg.type == WINED3DSPR_DEPTHOUT_LESS_EQUAL)
+            {
+                if (shader_version.type == WINED3D_SHADER_TYPE_PIXEL)
+                    shader->u.ps.depth_compare = ins.declaration.dst.reg.type;
+                else
+                    FIXME("Invalid instruction depth declaration for shader type %#x.\n", shader_version.type);
+            }
         }
         else if (ins.handler_idx == WINED3DSIH_DCL_OUTPUT_CONTROL_POINT_COUNT)
         {
@@ -1662,14 +1688,22 @@ static HRESULT shader_get_registers_used(struct wined3d_shader *shader, const st
     {
         for (i = 0; i < input_signature->element_count; ++i)
         {
-            reg_maps->input_registers |= 1u << input_signature->elements[i].register_idx;
-            if (shader_version.type == WINED3D_SHADER_TYPE_PIXEL)
+            if (shader_version.type == WINED3D_SHADER_TYPE_VERTEX)
+            {
+                if (input_signature->elements[i].register_idx >= ARRAY_SIZE(shader->u.vs.attributes))
+                {
+                    WARN("Invalid input signature register index %u.\n", input_signature->elements[i].register_idx);
+                    return WINED3DERR_INVALIDCALL;
+                }
+            }
+            else if (shader_version.type == WINED3D_SHADER_TYPE_PIXEL)
             {
                 if (input_signature->elements[i].sysval_semantic == WINED3D_SV_POSITION)
                     reg_maps->vpos = 1;
                 else if (input_signature->elements[i].sysval_semantic == WINED3D_SV_IS_FRONT_FACE)
                     reg_maps->usesfacing = 1;
             }
+            reg_maps->input_registers |= 1u << input_signature->elements[i].register_idx;
         }
     }
     else if (!input_signature->elements && reg_maps->input_registers)
@@ -1749,6 +1783,14 @@ static void shader_dump_global_flags(struct wined3d_string_buffer *buffer, DWORD
     {
         shader_addline(buffer, "refactoringAllowed");
         global_flags &= ~WINED3DSGF_REFACTORING_ALLOWED;
+        if (global_flags)
+            shader_addline(buffer, " | ");
+    }
+
+    if (global_flags & WINED3DSGF_FORCE_EARLY_DEPTH_STENCIL)
+    {
+        shader_addline(buffer, "forceEarlyDepthStencil");
+        global_flags &= ~WINED3DSGF_FORCE_EARLY_DEPTH_STENCIL;
         if (global_flags)
             shader_addline(buffer, " | ");
     }
@@ -2099,6 +2141,14 @@ static void shader_dump_register(struct wined3d_string_buffer *buffer,
 
         case WINED3DSPR_COLOROUT:
             shader_addline(buffer, "oC");
+            break;
+
+        case WINED3DSPR_DEPTHOUT_GREATER_EQUAL:
+            shader_addline(buffer, "oDepth_greater_equal");
+            break;
+
+        case WINED3DSPR_DEPTHOUT_LESS_EQUAL:
+            shader_addline(buffer, "oDepth_less_equal");
             break;
 
         case WINED3DSPR_DEPTHOUT:
@@ -3878,6 +3928,8 @@ void find_ps_compile_args(const struct wined3d_state *state, const struct wined3
 
     args->render_offscreen = shader->reg_maps.vpos && gl_info->supported[ARB_FRAGMENT_COORD_CONVENTIONS]
             ? context->render_offscreen : 0;
+
+    args->dual_source_blend = wined3d_dualblend_enabled(state, gl_info);
 }
 
 static HRESULT pixel_shader_init(struct wined3d_shader *shader, struct wined3d_device *device,

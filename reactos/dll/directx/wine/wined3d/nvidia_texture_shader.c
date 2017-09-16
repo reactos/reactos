@@ -756,21 +756,8 @@ static void nvrc_fragment_free(struct wined3d_device *device) {}
 
 static BOOL nvts_color_fixup_supported(struct color_fixup_desc fixup)
 {
-    if (TRACE_ON(d3d))
-    {
-        TRACE("Checking support for fixup:\n");
-        dump_color_fixup_desc(fixup);
-    }
-
     /* We only support identity conversions. */
-    if (is_identity_fixup(fixup))
-    {
-        TRACE("[OK]\n");
-        return TRUE;
-    }
-
-    TRACE("[FAILED]\n");
-    return FALSE;
+    return is_identity_fixup(fixup);
 }
 
 static const struct StateEntryTemplate nvrc_fragmentstate_template[] =

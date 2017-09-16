@@ -793,63 +793,63 @@ void context_free_occlusion_query(struct wined3d_occlusion_query *query)
 }
 
 /* Context activation is done by the caller. */
-void context_alloc_event_query(struct wined3d_context *context, struct wined3d_event_query *query)
+void context_alloc_fence(struct wined3d_context *context, struct wined3d_fence *fence)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
-    if (context->free_event_query_count)
+    if (context->free_fence_count)
     {
-        query->object = context->free_event_queries[--context->free_event_query_count];
+        fence->object = context->free_fences[--context->free_fence_count];
     }
     else
     {
         if (gl_info->supported[ARB_SYNC])
         {
             /* Using ARB_sync, not much to do here. */
-            query->object.sync = NULL;
-            TRACE("Allocated event query %p in context %p.\n", query->object.sync, context);
+            fence->object.sync = NULL;
+            TRACE("Allocated sync object in context %p.\n", context);
         }
         else if (gl_info->supported[APPLE_FENCE])
         {
-            GL_EXTCALL(glGenFencesAPPLE(1, &query->object.id));
+            GL_EXTCALL(glGenFencesAPPLE(1, &fence->object.id));
             checkGLcall("glGenFencesAPPLE");
 
-            TRACE("Allocated event query %u in context %p.\n", query->object.id, context);
+            TRACE("Allocated fence %u in context %p.\n", fence->object.id, context);
         }
         else if(gl_info->supported[NV_FENCE])
         {
-            GL_EXTCALL(glGenFencesNV(1, &query->object.id));
+            GL_EXTCALL(glGenFencesNV(1, &fence->object.id));
             checkGLcall("glGenFencesNV");
 
-            TRACE("Allocated event query %u in context %p.\n", query->object.id, context);
+            TRACE("Allocated fence %u in context %p.\n", fence->object.id, context);
         }
         else
         {
-            WARN("Event queries not supported, not allocating query id.\n");
-            query->object.id = 0;
+            WARN("Fences not supported, not allocating fence.\n");
+            fence->object.id = 0;
         }
     }
 
-    query->context = context;
-    list_add_head(&context->event_queries, &query->entry);
+    fence->context = context;
+    list_add_head(&context->fences, &fence->entry);
 }
 
-void context_free_event_query(struct wined3d_event_query *query)
+void context_free_fence(struct wined3d_fence *fence)
 {
-    struct wined3d_context *context = query->context;
+    struct wined3d_context *context = fence->context;
 
-    list_remove(&query->entry);
-    query->context = NULL;
+    list_remove(&fence->entry);
+    fence->context = NULL;
 
-    if (!wined3d_array_reserve((void **)&context->free_event_queries,
-            &context->free_event_query_size, context->free_event_query_count + 1,
-            sizeof(*context->free_event_queries)))
+    if (!wined3d_array_reserve((void **)&context->free_fences,
+            &context->free_fence_size, context->free_fence_count + 1,
+            sizeof(*context->free_fences)))
     {
-        ERR("Failed to grow free list, leaking query %u in context %p.\n", query->object.id, context);
+        ERR("Failed to grow free list, leaking fence %u in context %p.\n", fence->object.id, context);
         return;
     }
 
-    context->free_event_queries[context->free_event_query_count++] = query->object;
+    context->free_fences[context->free_fence_count++] = fence->object;
 }
 
 /* Context activation is done by the caller. */
@@ -1093,13 +1093,19 @@ static BOOL context_restore_pixel_format(struct wined3d_context *ctx)
     return ret;
 }
 
-static BOOL context_set_pixel_format(struct wined3d_context *context, HDC dc, BOOL private, int format)
+static BOOL context_set_pixel_format(struct wined3d_context *context)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
+    BOOL private = context->hdc_is_private;
+    int format = context->pixel_format;
+    HDC dc = context->hdc;
     int current;
 
-    if (dc == context->hdc && context->hdc_is_private && context->hdc_has_format)
+    if (private && context->hdc_has_format)
         return TRUE;
+
+    if (!private && WindowFromDC(dc) != context->win_handle)
+        return FALSE;
 
     current = gl_info->gl_ops.wgl.p_wglGetPixelFormat(dc);
     if (current == format) goto success;
@@ -1155,7 +1161,7 @@ static BOOL context_set_pixel_format(struct wined3d_context *context, HDC dc, BO
     return TRUE;
 
 success:
-    if (dc == context->hdc && context->hdc_is_private)
+    if (private)
         context->hdc_has_format = TRUE;
     return TRUE;
 }
@@ -1165,7 +1171,7 @@ static BOOL context_set_gl_context(struct wined3d_context *ctx)
     struct wined3d_swapchain *swapchain = ctx->swapchain;
     BOOL backup = FALSE;
 
-    if (!context_set_pixel_format(ctx, ctx->hdc, ctx->hdc_is_private, ctx->pixel_format))
+    if (!context_set_pixel_format(ctx))
     {
         WARN("Failed to set pixel format %d on device context %p.\n",
                 ctx->pixel_format, ctx->hdc);
@@ -1174,8 +1180,6 @@ static BOOL context_set_gl_context(struct wined3d_context *ctx)
 
     if (backup || !wglMakeCurrent(ctx->hdc, ctx->glCtx))
     {
-        HDC dc;
-
         WARN("Failed to make GL context %p current on device context %p, last error %#x.\n",
                 ctx->glCtx, ctx->hdc, GetLastError());
         ctx->valid = 0;
@@ -1192,24 +1196,27 @@ static BOOL context_set_gl_context(struct wined3d_context *ctx)
             return FALSE;
         }
 
-        if (!(dc = swapchain_get_backup_dc(swapchain)))
+        if (!(ctx->hdc = swapchain_get_backup_dc(swapchain)))
         {
             context_set_current(NULL);
             return FALSE;
         }
 
-        if (!context_set_pixel_format(ctx, dc, TRUE, ctx->pixel_format))
+        ctx->hdc_is_private = TRUE;
+        ctx->hdc_has_format = FALSE;
+
+        if (!context_set_pixel_format(ctx))
         {
             ERR("Failed to set pixel format %d on device context %p.\n",
-                    ctx->pixel_format, dc);
+                    ctx->pixel_format, ctx->hdc);
             context_set_current(NULL);
             return FALSE;
         }
 
-        if (!wglMakeCurrent(dc, ctx->glCtx))
+        if (!wglMakeCurrent(ctx->hdc, ctx->glCtx))
         {
             ERR("Fallback to backup window (dc %p) failed too, last error %#x.\n",
-                    dc, GetLastError());
+                    ctx->hdc, GetLastError());
             context_set_current(NULL);
             return FALSE;
         }
@@ -1259,13 +1266,13 @@ static void context_update_window(struct wined3d_context *context)
 
 static void context_destroy_gl_resources(struct wined3d_context *context)
 {
+    struct wined3d_pipeline_statistics_query *pipeline_statistics_query;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_so_statistics_query *so_statistics_query;
-    struct wined3d_pipeline_statistics_query *pipeline_statistics_query;
     struct wined3d_timestamp_query *timestamp_query;
     struct wined3d_occlusion_query *occlusion_query;
-    struct wined3d_event_query *event_query;
     struct fbo_entry *entry, *entry2;
+    struct wined3d_fence *fence;
     HGLRC restore_ctx;
     HDC restore_dc;
     unsigned int i;
@@ -1308,18 +1315,25 @@ static void context_destroy_gl_resources(struct wined3d_context *context)
         occlusion_query->context = NULL;
     }
 
-    LIST_FOR_EACH_ENTRY(event_query, &context->event_queries, struct wined3d_event_query, entry)
+    LIST_FOR_EACH_ENTRY(fence, &context->fences, struct wined3d_fence, entry)
     {
         if (context->valid)
         {
             if (gl_info->supported[ARB_SYNC])
             {
-                if (event_query->object.sync) GL_EXTCALL(glDeleteSync(event_query->object.sync));
+                if (fence->object.sync)
+                    GL_EXTCALL(glDeleteSync(fence->object.sync));
             }
-            else if (gl_info->supported[APPLE_FENCE]) GL_EXTCALL(glDeleteFencesAPPLE(1, &event_query->object.id));
-            else if (gl_info->supported[NV_FENCE]) GL_EXTCALL(glDeleteFencesNV(1, &event_query->object.id));
+            else if (gl_info->supported[APPLE_FENCE])
+            {
+                GL_EXTCALL(glDeleteFencesAPPLE(1, &fence->object.id));
+            }
+            else if (gl_info->supported[NV_FENCE])
+            {
+                GL_EXTCALL(glDeleteFencesNV(1, &fence->object.id));
+            }
         }
-        event_query->context = NULL;
+        fence->context = NULL;
     }
 
     LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, &context->fbo_destroy_list, struct fbo_entry, entry)
@@ -1367,23 +1381,23 @@ static void context_destroy_gl_resources(struct wined3d_context *context)
 
         if (gl_info->supported[ARB_SYNC])
         {
-            for (i = 0; i < context->free_event_query_count; ++i)
+            for (i = 0; i < context->free_fence_count; ++i)
             {
-                GL_EXTCALL(glDeleteSync(context->free_event_queries[i].sync));
+                GL_EXTCALL(glDeleteSync(context->free_fences[i].sync));
             }
         }
         else if (gl_info->supported[APPLE_FENCE])
         {
-            for (i = 0; i < context->free_event_query_count; ++i)
+            for (i = 0; i < context->free_fence_count; ++i)
             {
-                GL_EXTCALL(glDeleteFencesAPPLE(1, &context->free_event_queries[i].id));
+                GL_EXTCALL(glDeleteFencesAPPLE(1, &context->free_fences[i].id));
             }
         }
         else if (gl_info->supported[NV_FENCE])
         {
-            for (i = 0; i < context->free_event_query_count; ++i)
+            for (i = 0; i < context->free_fence_count; ++i)
             {
-                GL_EXTCALL(glDeleteFencesNV(1, &context->free_event_queries[i].id));
+                GL_EXTCALL(glDeleteFencesNV(1, &context->free_fences[i].id));
             }
         }
 
@@ -1394,7 +1408,7 @@ static void context_destroy_gl_resources(struct wined3d_context *context)
     HeapFree(GetProcessHeap(), 0, context->free_pipeline_statistics_queries);
     HeapFree(GetProcessHeap(), 0, context->free_timestamp_queries);
     HeapFree(GetProcessHeap(), 0, context->free_occlusion_queries);
-    HeapFree(GetProcessHeap(), 0, context->free_event_queries);
+    HeapFree(GetProcessHeap(), 0, context->free_fences);
 
     context_restore_pixel_format(context);
     if (restore_ctx)
@@ -1812,14 +1826,11 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     const struct wined3d_format *color_format;
     struct wined3d_context *ret;
-    BOOL hdc_is_private = FALSE;
     BOOL auxBuffers = FALSE;
     HGLRC ctx, share_ctx;
     DWORD target_usage;
-    int pixel_format;
     unsigned int i;
     DWORD state;
-    HDC hdc = 0;
 
     TRACE("swapchain %p, target %p, window %p.\n", swapchain, target, swapchain->win_handle);
 
@@ -1852,11 +1863,10 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
         goto out;
     list_init(&ret->occlusion_queries);
 
-    ret->free_event_query_size = 4;
-    if (!(ret->free_event_queries = wined3d_calloc(ret->free_event_query_size,
-            sizeof(*ret->free_event_queries))))
+    ret->free_fence_size = 4;
+    if (!(ret->free_fences = wined3d_calloc(ret->free_fence_size, sizeof(*ret->free_fences))))
         goto out;
-    list_init(&ret->event_queries);
+    list_init(&ret->fences);
 
     list_init(&ret->so_statistics_queries);
 
@@ -1914,12 +1924,12 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
             sizeof(*ret->texture_type))))
         goto out;
 
-    if (!(hdc = GetDCEx(swapchain->win_handle, 0, DCX_USESTYLE | DCX_CACHE)))
+    if (!(ret->hdc = GetDCEx(swapchain->win_handle, 0, DCX_USESTYLE | DCX_CACHE)))
     {
         WARN("Failed to retrieve device context, trying swapchain backup.\n");
 
-        if ((hdc = swapchain_get_backup_dc(swapchain)))
-            hdc_is_private = TRUE;
+        if ((ret->hdc = swapchain_get_backup_dc(swapchain)))
+            ret->hdc_is_private = TRUE;
         else
         {
             ERR("Failed to retrieve a device context.\n");
@@ -1966,16 +1976,17 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     }
 
     /* Try to find a pixel format which matches our requirements. */
-    if (!(pixel_format = context_choose_pixel_format(device, hdc, color_format, ds_format, auxBuffers)))
+    if (!(ret->pixel_format = context_choose_pixel_format(device, ret->hdc, color_format, ds_format, auxBuffers)))
         goto out;
 
     ret->gl_info = gl_info;
+    ret->win_handle = swapchain->win_handle;
 
     context_enter(ret);
 
-    if (!context_set_pixel_format(ret, hdc, hdc_is_private, pixel_format))
+    if (!context_set_pixel_format(ret))
     {
-        ERR("Failed to set pixel format %d on device context %p.\n", pixel_format, hdc);
+        ERR("Failed to set pixel format %d on device context %p.\n", ret->pixel_format, ret->hdc);
         context_release(ret);
         goto out;
     }
@@ -1983,12 +1994,12 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     share_ctx = device->context_count ? device->contexts[0]->glCtx : NULL;
     if (gl_info->p_wglCreateContextAttribsARB)
     {
-        if (!(ctx = context_create_wgl_attribs(gl_info, hdc, share_ctx)))
+        if (!(ctx = context_create_wgl_attribs(gl_info, ret->hdc, share_ctx)))
             goto out;
     }
     else
     {
-        if (!(ctx = wglCreateContext(hdc)))
+        if (!(ctx = wglCreateContext(ret->hdc)))
         {
             ERR("Failed to create a WGL context.\n");
             context_release(ret);
@@ -2036,11 +2047,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     ret->valid = 1;
 
     ret->glCtx = ctx;
-    ret->win_handle = swapchain->win_handle;
-    ret->hdc = hdc;
-    ret->hdc_is_private = hdc_is_private;
     ret->hdc_has_format = TRUE;
-    ret->pixel_format = pixel_format;
     ret->needs_set = 1;
 
     /* Set up the context defaults */
@@ -2210,11 +2217,12 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     return ret;
 
 out:
-    if (hdc) wined3d_release_dc(swapchain->win_handle, hdc);
+    if (ret->hdc)
+        wined3d_release_dc(swapchain->win_handle, ret->hdc);
     device->shader_backend->shader_free_context_data(ret);
     device->adapter->fragment_pipe->free_context_data(ret);
     HeapFree(GetProcessHeap(), 0, ret->texture_type);
-    HeapFree(GetProcessHeap(), 0, ret->free_event_queries);
+    HeapFree(GetProcessHeap(), 0, ret->free_fences);
     HeapFree(GetProcessHeap(), 0, ret->free_occlusion_queries);
     HeapFree(GetProcessHeap(), 0, ret->free_timestamp_queries);
     HeapFree(GetProcessHeap(), 0, ret->fbo_key);
@@ -2504,10 +2512,8 @@ static void SetupForBlit(const struct wined3d_device *device, struct wined3d_con
     }
     gl_info->gl_ops.gl.p_glColorMask(GL_TRUE, GL_TRUE,GL_TRUE,GL_TRUE);
     checkGLcall("glColorMask");
-    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE));
-    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE1));
-    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE2));
-    context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE3));
+    for (i = 0; i < MAX_RENDER_TARGETS; ++i)
+        context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITE(i)));
     if (gl_info->supported[EXT_SECONDARY_COLOR])
     {
         gl_info->gl_ops.gl.p_glDisable(GL_COLOR_SUM_EXT);
@@ -2721,7 +2727,6 @@ void *context_map_bo_address(struct wined3d_context *context,
         return data->addr;
 
     gl_info = context->gl_info;
-
     context_bind_bo(context, binding, data->buffer_object);
 
     if (gl_info->supported[ARB_MAP_BUFFER_RANGE])
@@ -2750,11 +2755,58 @@ void context_unmap_bo_address(struct wined3d_context *context,
         return;
 
     gl_info = context->gl_info;
-
     context_bind_bo(context, binding, data->buffer_object);
     GL_EXTCALL(glUnmapBuffer(binding));
     context_bind_bo(context, binding, 0);
     checkGLcall("Unmap buffer object");
+}
+
+void context_copy_bo_address(struct wined3d_context *context,
+        const struct wined3d_bo_address *dst, GLenum dst_binding,
+        const struct wined3d_bo_address *src, GLenum src_binding, size_t size)
+{
+    const struct wined3d_gl_info *gl_info;
+    BYTE *dst_ptr, *src_ptr;
+
+    gl_info = context->gl_info;
+
+    if (dst->buffer_object && src->buffer_object)
+    {
+        if (gl_info->supported[ARB_COPY_BUFFER])
+        {
+            GL_EXTCALL(glBindBuffer(GL_COPY_READ_BUFFER, src->buffer_object));
+            GL_EXTCALL(glBindBuffer(GL_COPY_WRITE_BUFFER, dst->buffer_object));
+            GL_EXTCALL(glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER,
+                    (GLintptr)src->addr, (GLintptr)dst->addr, size));
+            checkGLcall("direct buffer copy");
+        }
+        else
+        {
+            src_ptr = context_map_bo_address(context, src, size, src_binding, WINED3D_MAP_READONLY);
+            dst_ptr = context_map_bo_address(context, dst, size, dst_binding, 0);
+
+            memcpy(dst_ptr, src_ptr, size);
+
+            context_unmap_bo_address(context, dst, dst_binding);
+            context_unmap_bo_address(context, src, src_binding);
+        }
+    }
+    else if (!dst->buffer_object && src->buffer_object)
+    {
+        context_bind_bo(context, src_binding, src->buffer_object);
+        GL_EXTCALL(glGetBufferSubData(src_binding, (GLintptr)src->addr, size, dst->addr));
+        checkGLcall("buffer download");
+    }
+    else if (dst->buffer_object && !src->buffer_object)
+    {
+        context_bind_bo(context, dst_binding, dst->buffer_object);
+        GL_EXTCALL(glBufferSubData(dst_binding, (GLintptr)dst->addr, size, src->addr));
+        checkGLcall("buffer upload");
+    }
+    else
+    {
+        memcpy(dst->addr, src->addr, size);
+    }
 }
 
 static void context_set_render_offscreen(struct wined3d_context *context, BOOL offscreen)
@@ -3034,8 +3086,16 @@ static DWORD find_draw_buffers_mask(const struct wined3d_context *context, const
     else if (!context->render_offscreen)
         return context_generate_rt_mask_from_resource(rts[0]->resource);
 
+    /* If we attach more buffers than supported in dual blend mode, the NVIDIA
+     * driver generates the following error:
+     *      GL_INVALID_OPERATION error generated. State(s) are invalid: blend.
+     * DX11 does not treat this configuration as invalid, so disable the unused ones.
+     */
     rt_mask = ps ? ps->reg_maps.rt_mask : 1;
-    rt_mask &= context->d3d_info->valid_rt_mask;
+    if (wined3d_dualblend_enabled(state, context->gl_info))
+        rt_mask &= context->d3d_info->valid_dual_rt_mask;
+    else
+        rt_mask &= context->d3d_info->valid_rt_mask;
     rt_mask_bits = rt_mask;
     i = 0;
     while (rt_mask_bits)
@@ -3496,7 +3556,7 @@ static void context_update_stream_info(struct wined3d_context *context, const st
     wined3d_stream_info_from_declaration(stream_info, state, gl_info, d3d_info);
 
     stream_info->all_vbo = 1;
-    context->num_buffer_queries = 0;
+    context->buffer_fence_count = 0;
     for (i = 0, map = stream_info->use_map; map; map >>= 1, ++i)
     {
         struct wined3d_stream_info_element *element;
@@ -3537,8 +3597,8 @@ static void context_update_stream_info(struct wined3d_context *context, const st
         if (!element->data.buffer_object)
             stream_info->all_vbo = 0;
 
-        if (buffer->query)
-            context->buffer_queries[context->num_buffer_queries++] = buffer->query;
+        if (buffer->fence)
+            context->buffer_fences[context->buffer_fence_count++] = buffer->fence;
 
         TRACE("Load array %u {%#x:%p}.\n", i, element->data.buffer_object, element->data.addr);
     }

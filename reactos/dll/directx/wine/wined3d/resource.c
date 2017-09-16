@@ -380,6 +380,99 @@ HRESULT CDECL wined3d_resource_unmap(struct wined3d_resource *resource, unsigned
     return wined3d_cs_unmap(resource->device->cs, resource, sub_resource_idx);
 }
 
+UINT CDECL wined3d_resource_update_info(struct wined3d_resource *resource, unsigned int sub_resource_idx,
+        const struct wined3d_box *box, unsigned int row_pitch, unsigned int depth_pitch)
+{
+    unsigned int width, height, depth;
+    struct wined3d_box b;
+    UINT data_size;
+
+    TRACE("resource %p, sub_resource_idx %u, box %s, row_pitch %u, depth_pitch %u.\n",
+            resource, sub_resource_idx, debug_box(box), row_pitch, depth_pitch);
+
+    if (resource->type == WINED3D_RTYPE_BUFFER)
+    {
+        if (sub_resource_idx > 0)
+        {
+            WARN("Invalid sub_resource_idx %u.\n", sub_resource_idx);
+            return 0;
+        }
+
+        width = resource->size;
+        height = 1;
+        depth = 1;
+    }
+    else if (resource->type == WINED3D_RTYPE_TEXTURE_1D ||
+            resource->type == WINED3D_RTYPE_TEXTURE_2D || resource->type == WINED3D_RTYPE_TEXTURE_3D)
+    {
+        struct wined3d_texture *texture = texture_from_resource(resource);
+        unsigned int level;
+
+        if (sub_resource_idx >= texture->level_count * texture->layer_count)
+        {
+            WARN("Invalid sub_resource_idx %u.\n", sub_resource_idx);
+            return 0;
+        }
+
+        level = sub_resource_idx % texture->level_count;
+        width = wined3d_texture_get_level_width(texture, level);
+        height = wined3d_texture_get_level_height(texture, level);
+        depth = wined3d_texture_get_level_depth(texture, level);
+    }
+    else
+    {
+        FIXME("Not implemented for %s resources.\n", debug_d3dresourcetype(resource->type));
+        return 0;
+    }
+
+    if (!box)
+    {
+        wined3d_box_set(&b, 0, 0, width, height, 0, depth);
+        box = &b;
+    }
+    else if (box->left >= box->right || box->right > width
+            || box->top >= box->bottom || box->bottom > height
+            || box->front >= box->back || box->back > depth)
+    {
+        WARN("Invalid box %s specified.\n", debug_box(box));
+        return 0;
+    }
+
+    if (resource->format_flags & WINED3DFMT_FLAG_BLOCKS)
+    {
+        if (resource->type != WINED3D_RTYPE_TEXTURE_2D)
+        {
+            FIXME("Calculation of block formats not implemented for %s resources.\n", debug_d3dresourcetype(resource->type));
+            return 0;
+        }
+
+        height  = (box->bottom - box->top  + resource->format->block_height - 1) / resource->format->block_height;
+        width   = (box->right  - box->left + resource->format->block_width  - 1) / resource->format->block_width;
+        return (height - 1) * row_pitch + width * resource->format->block_byte_count;
+    }
+
+    data_size = 0;
+    switch (resource->type)
+    {
+        case WINED3D_RTYPE_TEXTURE_3D:
+            data_size += (box->back - box->front - 1) * depth_pitch;
+            /* fall-through */
+        case WINED3D_RTYPE_TEXTURE_2D:
+            data_size += (box->bottom - box->top - 1) * row_pitch;
+            /* fall-through */
+        case WINED3D_RTYPE_TEXTURE_1D:
+            data_size += (box->right - box->left) * resource->format->byte_count;
+            break;
+        case WINED3D_RTYPE_BUFFER:
+            data_size = box->right - box->left;
+            break;
+        case WINED3D_RTYPE_NONE:
+            break;
+    }
+
+    return data_size;
+}
+
 void CDECL wined3d_resource_preload(struct wined3d_resource *resource)
 {
     wined3d_cs_emit_preload_resource(resource->device->cs, resource);

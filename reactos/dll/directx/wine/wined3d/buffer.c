@@ -182,10 +182,10 @@ static void buffer_destroy_buffer_object(struct wined3d_buffer *buffer, struct w
     checkGLcall("glDeleteBuffers");
     buffer->buffer_object = 0;
 
-    if (buffer->query)
+    if (buffer->fence)
     {
-        wined3d_event_query_destroy(buffer->query);
-        buffer->query = NULL;
+        wined3d_fence_destroy(buffer->fence);
+        buffer->fence = NULL;
     }
     buffer->flags &= ~WINED3D_BUFFER_APPLESYNC;
 }
@@ -808,9 +808,10 @@ void * CDECL wined3d_buffer_get_parent(const struct wined3d_buffer *buffer)
 }
 
 /* The caller provides a context and binds the buffer */
-static void buffer_sync_apple(struct wined3d_buffer *This, DWORD flags, const struct wined3d_gl_info *gl_info)
+static void buffer_sync_apple(struct wined3d_buffer *buffer, DWORD flags, const struct wined3d_gl_info *gl_info)
 {
-    enum wined3d_event_query_result ret;
+    enum wined3d_fence_result ret;
+    HRESULT hr;
 
     /* No fencing needs to be done if the app promises not to overwrite
      * existing data. */
@@ -819,61 +820,58 @@ static void buffer_sync_apple(struct wined3d_buffer *This, DWORD flags, const st
 
     if (flags & WINED3D_MAP_DISCARD)
     {
-        GL_EXTCALL(glBufferData(This->buffer_type_hint, This->resource.size, NULL, This->buffer_object_usage));
+        GL_EXTCALL(glBufferData(buffer->buffer_type_hint, buffer->resource.size, NULL, buffer->buffer_object_usage));
         checkGLcall("glBufferData");
         return;
     }
 
-    if(!This->query)
+    if (!buffer->fence)
     {
-        TRACE("Creating event query for buffer %p\n", This);
+        TRACE("Creating fence for buffer %p.\n", buffer);
 
-        if (!wined3d_event_query_supported(gl_info))
+        if (FAILED(hr = wined3d_fence_create(buffer->resource.device, &buffer->fence)))
         {
-            FIXME("Event queries not supported, dropping async buffer locks.\n");
-            goto drop_query;
-        }
-
-        This->query = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*This->query));
-        if (!This->query)
-        {
-            ERR("Failed to allocate event query memory, dropping async buffer locks.\n");
-            goto drop_query;
+            if (hr == WINED3DERR_NOTAVAILABLE)
+                FIXME("Fences not supported, dropping async buffer locks.\n");
+            else
+                ERR("Failed to create fence, hr %#x.\n", hr);
+            goto drop_fence;
         }
 
         /* Since we don't know about old draws a glFinish is needed once */
         gl_info->gl_ops.gl.p_glFinish();
         return;
     }
-    TRACE("Synchronizing buffer %p\n", This);
-    ret = wined3d_event_query_finish(This->query, This->resource.device);
-    switch(ret)
+
+    TRACE("Synchronizing buffer %p.\n", buffer);
+    ret = wined3d_fence_wait(buffer->fence, buffer->resource.device);
+    switch (ret)
     {
-        case WINED3D_EVENT_QUERY_NOT_STARTED:
-        case WINED3D_EVENT_QUERY_OK:
+        case WINED3D_FENCE_NOT_STARTED:
+        case WINED3D_FENCE_OK:
             /* All done */
             return;
 
-        case WINED3D_EVENT_QUERY_WRONG_THREAD:
-            WARN("Cannot synchronize buffer lock due to a thread conflict\n");
-            goto drop_query;
+        case WINED3D_FENCE_WRONG_THREAD:
+            WARN("Cannot synchronize buffer lock due to a thread conflict.\n");
+            goto drop_fence;
 
         default:
-            ERR("wined3d_event_query_finish returned %u, dropping async buffer locks\n", ret);
-            goto drop_query;
+            ERR("wined3d_fence_wait() returned %u, dropping async buffer locks.\n", ret);
+            goto drop_fence;
     }
 
-drop_query:
-    if(This->query)
+drop_fence:
+    if (buffer->fence)
     {
-        wined3d_event_query_destroy(This->query);
-        This->query = NULL;
+        wined3d_fence_destroy(buffer->fence);
+        buffer->fence = NULL;
     }
 
     gl_info->gl_ops.gl.p_glFinish();
-    GL_EXTCALL(glBufferParameteriAPPLE(This->buffer_type_hint, GL_BUFFER_SERIALIZED_MODIFY_APPLE, GL_TRUE));
-    checkGLcall("glBufferParameteriAPPLE(This->buffer_type_hint, GL_BUFFER_SERIALIZED_MODIFY_APPLE, GL_TRUE)");
-    This->flags &= ~WINED3D_BUFFER_APPLESYNC;
+    GL_EXTCALL(glBufferParameteriAPPLE(buffer->buffer_type_hint, GL_BUFFER_SERIALIZED_MODIFY_APPLE, GL_TRUE));
+    checkGLcall("glBufferParameteriAPPLE(buffer->buffer_type_hint, GL_BUFFER_SERIALIZED_MODIFY_APPLE, GL_TRUE)");
+    buffer->flags &= ~WINED3D_BUFFER_APPLESYNC;
 }
 
 static void buffer_mark_used(struct wined3d_buffer *buffer)
@@ -1190,23 +1188,15 @@ static void wined3d_buffer_unmap(struct wined3d_buffer *buffer)
     }
 }
 
-HRESULT wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_offset,
+void wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_offset,
         struct wined3d_buffer *src_buffer, unsigned int src_offset, unsigned int size)
 {
-    const struct wined3d_gl_info *gl_info;
     struct wined3d_bo_address dst, src;
     struct wined3d_context *context;
-    struct wined3d_device *device;
-    BYTE *dst_ptr, *src_ptr;
     DWORD dst_location;
 
     buffer_mark_used(dst_buffer);
     buffer_mark_used(src_buffer);
-
-    device = dst_buffer->resource.device;
-
-    context = context_acquire(device, NULL, 0);
-    gl_info = context->gl_info;
 
     dst_location = wined3d_buffer_get_memory(dst_buffer, &dst, dst_buffer->locations);
     dst.addr += dst_offset;
@@ -1214,48 +1204,12 @@ HRESULT wined3d_buffer_copy(struct wined3d_buffer *dst_buffer, unsigned int dst_
     wined3d_buffer_get_memory(src_buffer, &src, src_buffer->locations);
     src.addr += src_offset;
 
-    if (dst.buffer_object && src.buffer_object)
-    {
-        if (gl_info->supported[ARB_COPY_BUFFER])
-        {
-            GL_EXTCALL(glBindBuffer(GL_COPY_READ_BUFFER, src.buffer_object));
-            GL_EXTCALL(glBindBuffer(GL_COPY_WRITE_BUFFER, dst.buffer_object));
-            GL_EXTCALL(glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER,
-                    src_offset, dst_offset, size));
-            checkGLcall("direct buffer copy");
-        }
-        else
-        {
-            src_ptr = context_map_bo_address(context, &src, size, src_buffer->buffer_type_hint, WINED3D_MAP_READONLY);
-            dst_ptr = context_map_bo_address(context, &dst, size, dst_buffer->buffer_type_hint, 0);
-
-            memcpy(dst_ptr, src_ptr, size);
-
-            context_unmap_bo_address(context, &dst, dst_buffer->buffer_type_hint);
-            context_unmap_bo_address(context, &src, src_buffer->buffer_type_hint);
-        }
-    }
-    else if (!dst.buffer_object && src.buffer_object)
-    {
-        buffer_bind(src_buffer, context);
-        GL_EXTCALL(glGetBufferSubData(src_buffer->buffer_type_hint, src_offset, size, dst.addr));
-        checkGLcall("buffer download");
-    }
-    else if (dst.buffer_object && !src.buffer_object)
-    {
-        buffer_bind(dst_buffer, context);
-        GL_EXTCALL(glBufferSubData(dst_buffer->buffer_type_hint, dst_offset, size, src.addr));
-        checkGLcall("buffer upload");
-    }
-    else
-    {
-        memcpy(dst.addr, src.addr, size);
-    }
+    context = context_acquire(dst_buffer->resource.device, NULL, 0);
+    context_copy_bo_address(context, &dst, dst_buffer->buffer_type_hint,
+            &src, src_buffer->buffer_type_hint, size);
+    context_release(context);
 
     wined3d_buffer_invalidate_range(dst_buffer, ~dst_location, dst_offset, size);
-
-    context_release(context);
-    return WINED3D_OK;
 }
 
 HRESULT wined3d_buffer_upload_data(struct wined3d_buffer *buffer,

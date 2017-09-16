@@ -117,6 +117,15 @@ static BOOL declaration_element_valid_ffp(const struct wined3d_vertex_element *e
                     return FALSE;
             }
 
+        case WINED3D_DECL_USAGE_BLEND_INDICES:
+            switch(element->format)
+            {
+                case WINED3DFMT_R8G8B8A8_UINT:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
         case WINED3D_DECL_USAGE_NORMAL:
             switch(element->format)
             {
