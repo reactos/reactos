@@ -40,8 +40,10 @@ static void d3drm_texture_destroy(struct d3drm_texture *texture)
     TRACE("texture %p is being destroyed.\n", texture);
 
     d3drm_object_cleanup((IDirect3DRMObject*)&texture->IDirect3DRMTexture_iface, &texture->obj);
-    if (texture->image)
+    if (texture->image || texture->surface)
         IDirect3DRM_Release(texture->d3drm);
+    if (texture->surface)
+        IDirectDrawSurface_Release(texture->surface);
     HeapFree(GetProcessHeap(), 0, texture);
 }
 
@@ -172,9 +174,11 @@ static HRESULT WINAPI d3drm_texture1_InitFromFile(IDirect3DRMTexture *iface, con
 static HRESULT WINAPI d3drm_texture1_InitFromSurface(IDirect3DRMTexture *iface,
         IDirectDrawSurface *surface)
 {
-    FIXME("iface %p, surface %p stub!\n", iface, surface);
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, surface %p.\n", iface, surface);
+
+    return IDirect3DRMTexture3_InitFromSurface(&texture->IDirect3DRMTexture3_iface, surface);
 }
 
 static HRESULT WINAPI d3drm_texture1_InitFromResource(IDirect3DRMTexture *iface, HRSRC resource)
@@ -472,9 +476,11 @@ static HRESULT WINAPI d3drm_texture2_InitFromFile(IDirect3DRMTexture2 *iface, co
 static HRESULT WINAPI d3drm_texture2_InitFromSurface(IDirect3DRMTexture2 *iface,
         IDirectDrawSurface *surface)
 {
-    FIXME("iface %p, surface %p stub!\n", iface, surface);
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture2(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, surface %p.\n", iface, surface);
+
+    return IDirect3DRMTexture3_InitFromSurface(&texture->IDirect3DRMTexture3_iface, surface);
 }
 
 static HRESULT WINAPI d3drm_texture2_InitFromResource(IDirect3DRMTexture2 *iface, HRSRC resource)
@@ -795,29 +801,29 @@ static DWORD WINAPI d3drm_texture3_GetAppData(IDirect3DRMTexture3 *iface)
 
 static HRESULT WINAPI d3drm_texture3_SetName(IDirect3DRMTexture3 *iface, const char *name)
 {
-    FIXME("iface %p, name %s stub!\n", iface, debugstr_a(name));
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture3(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, name %s.\n", iface, debugstr_a(name));
+
+    return d3drm_object_set_name(&texture->obj, name);
 }
 
 static HRESULT WINAPI d3drm_texture3_GetName(IDirect3DRMTexture3 *iface, DWORD *size, char *name)
 {
-    FIXME("iface %p, size %p, name %p stub!\n", iface, size, name);
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture3(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, size %p, name %p.\n", iface, size, name);
+
+    return d3drm_object_get_name(&texture->obj, size, name);
 }
 
 static HRESULT WINAPI d3drm_texture3_GetClassName(IDirect3DRMTexture3 *iface, DWORD *size, char *name)
 {
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture3(iface);
+
     TRACE("iface %p, size %p, name %p.\n", iface, size, name);
 
-    if (!size || *size < sizeof("Texture") || !name)
-        return E_INVALIDARG;
-
-    strcpy(name, "Texture");
-    *size = sizeof("Texture");
-
-    return D3DRM_OK;
+    return d3drm_object_get_class_name(&texture->obj, size, name);
 }
 
 static HRESULT WINAPI d3drm_texture3_InitFromFile(IDirect3DRMTexture3 *iface, const char *filename)
@@ -830,9 +836,22 @@ static HRESULT WINAPI d3drm_texture3_InitFromFile(IDirect3DRMTexture3 *iface, co
 static HRESULT WINAPI d3drm_texture3_InitFromSurface(IDirect3DRMTexture3 *iface,
         IDirectDrawSurface *surface)
 {
-    FIXME("iface %p, surface %p stub!\n", iface, surface);
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture3(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, surface %p.\n", iface, surface);
+
+    if (!surface)
+        return D3DRMERR_BADOBJECT;
+
+    /* d3drm intentionally leaks a reference to IDirect3DRM here if texture has already been initialized. */
+    IDirect3DRM_AddRef(texture->d3drm);
+
+    if (texture->image || texture->surface)
+        return D3DRMERR_BADOBJECT;
+
+    texture->surface = surface;
+    IDirectDrawSurface_AddRef(texture->surface);
+    return D3DRM_OK;
 }
 
 static HRESULT WINAPI d3drm_texture3_InitFromResource(IDirect3DRMTexture3 *iface, HRSRC resource)
@@ -969,7 +988,7 @@ static HRESULT WINAPI d3drm_texture3_InitFromImage(IDirect3DRMTexture3 *iface, D
     /* d3drm intentionally leaks a reference to IDirect3DRM here if texture has already been initialized. */
     IDirect3DRM_AddRef(texture->d3drm);
 
-    if (texture->image)
+    if (texture->image || texture->surface)
         return D3DRMERR_BADOBJECT;
 
     texture->image = image;
@@ -996,9 +1015,23 @@ static HRESULT WINAPI d3drm_texture3_GenerateMIPMap(IDirect3DRMTexture3 *iface, 
 static HRESULT WINAPI d3drm_texture3_GetSurface(IDirect3DRMTexture3 *iface,
         DWORD flags, IDirectDrawSurface **surface)
 {
-    FIXME("iface %p, flags %#x, surface %p stub!\n", iface, flags, surface);
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture3(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, flags %#x, surface %p.\n", iface, flags, surface);
+
+    if (flags)
+        FIXME("unexpected flags %#x.\n", flags);
+
+    if (!surface)
+        return D3DRMERR_BADVALUE;
+
+    if (texture->image)
+        return D3DRMERR_NOTCREATEDFROMDDS;
+
+    *surface = texture->surface;
+    IDirectDrawSurface_AddRef(*surface);
+
+    return D3DRM_OK;
 }
 
 static HRESULT WINAPI d3drm_texture3_SetCacheOptions(IDirect3DRMTexture3 *iface, LONG importance, DWORD flags)
@@ -1076,6 +1109,7 @@ static const struct IDirect3DRMTexture3Vtbl d3drm_texture3_vtbl =
 
 HRESULT d3drm_texture_create(struct d3drm_texture **texture, IDirect3DRM *d3drm)
 {
+    static const char classname[] = "Texture";
     struct d3drm_texture *object;
 
     TRACE("texture %p.\n", texture);
@@ -1088,7 +1122,7 @@ HRESULT d3drm_texture_create(struct d3drm_texture **texture, IDirect3DRM *d3drm)
     object->IDirect3DRMTexture3_iface.lpVtbl = &d3drm_texture3_vtbl;
     object->d3drm = d3drm;
 
-    d3drm_object_init(&object->obj);
+    d3drm_object_init(&object->obj, classname);
 
     *texture = object;
 

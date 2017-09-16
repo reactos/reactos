@@ -20,13 +20,6 @@
 
 #include "d3drm_private.h"
 
-struct d3drm_face
-{
-    IDirect3DRMFace IDirect3DRMFace_iface;
-    IDirect3DRMFace2 IDirect3DRMFace2_iface;
-    LONG ref;
-};
-
 static inline struct d3drm_face *impl_from_IDirect3DRMFace(IDirect3DRMFace *iface)
 {
     return CONTAINING_RECORD(iface, struct d3drm_face, IDirect3DRMFace_iface);
@@ -43,8 +36,8 @@ static HRESULT WINAPI d3drm_face1_QueryInterface(IDirect3DRMFace *iface, REFIID 
 
     TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-
     if (IsEqualGUID(riid, &IID_IDirect3DRMFace)
+            || IsEqualGUID(riid, &IID_IDirect3DRMObject)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
         *out = &face->IDirect3DRMFace_iface;
@@ -82,7 +75,10 @@ static ULONG WINAPI d3drm_face1_Release(IDirect3DRMFace *iface)
     TRACE("%p decreasing refcount to %u.\n", iface, refcount);
 
     if (!refcount)
+    {
+        d3drm_object_cleanup((IDirect3DRMObject *)iface, &face->obj);
         HeapFree(GetProcessHeap(), 0, face);
+    }
 
     return refcount;
 }
@@ -98,45 +94,95 @@ static HRESULT WINAPI d3drm_face1_Clone(IDirect3DRMFace *iface,
 static HRESULT WINAPI d3drm_face1_AddDestroyCallback(IDirect3DRMFace *iface,
         D3DRMOBJECTCALLBACK cb, void *ctx)
 {
-    FIXME("iface %p, cb %p, ctx %p stub!\n", iface, cb, ctx);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, cb %p, ctx %p.\n", iface, cb, ctx);
+
+    return IDirect3DRMFace2_AddDestroyCallback(&face->IDirect3DRMFace2_iface, cb, ctx);
 }
 
 static HRESULT WINAPI d3drm_face1_DeleteDestroyCallback(IDirect3DRMFace *iface,
         D3DRMOBJECTCALLBACK cb, void *ctx)
 {
-    FIXME("iface %p, cb %p, ctx %p stub!\n", iface, cb, ctx);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, cb %p, ctx %p.\n", iface, cb, ctx);
+
+    return IDirect3DRMFace2_DeleteDestroyCallback(&face->IDirect3DRMFace2_iface, cb, ctx);
+}
+
+static HRESULT WINAPI d3drm_face2_SetAppData(IDirect3DRMFace2 *iface, DWORD data)
+{
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
+
+    TRACE("iface %p, data %#x.\n", iface, data);
+
+    face->obj.appdata = data;
+
+    return D3DRM_OK;
 }
 
 static HRESULT WINAPI d3drm_face1_SetAppData(IDirect3DRMFace *iface, DWORD data)
 {
-    FIXME("iface %p, data %#x stub!\n", iface, data);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, data %#x.\n", iface, data);
+
+    return d3drm_face2_SetAppData(&face->IDirect3DRMFace2_iface, data);
+}
+
+static DWORD WINAPI d3drm_face2_GetAppData(IDirect3DRMFace2 *iface)
+{
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
+
+    TRACE("iface %p.\n", iface);
+
+    return face->obj.appdata;
 }
 
 static DWORD WINAPI d3drm_face1_GetAppData(IDirect3DRMFace *iface)
 {
-    FIXME("iface %p stub!\n", iface);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    return 0;
+    TRACE("iface %p.\n", iface);
+
+    return d3drm_face2_GetAppData(&face->IDirect3DRMFace2_iface);
+}
+
+static HRESULT WINAPI d3drm_face2_SetName(IDirect3DRMFace2 *iface, const char *name)
+{
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
+
+    TRACE("iface %p, name %s.\n", iface, debugstr_a(name));
+
+    return d3drm_object_set_name(&face->obj, name);
 }
 
 static HRESULT WINAPI d3drm_face1_SetName(IDirect3DRMFace *iface, const char *name)
 {
-    FIXME("iface %p, name %s stub!\n", iface, debugstr_a(name));
+    struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, name %s.\n", iface, debugstr_a(name));
+
+    return d3drm_face2_SetName(&face->IDirect3DRMFace2_iface, name);
+}
+
+static HRESULT WINAPI d3drm_face2_GetName(IDirect3DRMFace2 *iface, DWORD *size, char *name)
+{
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
+
+    TRACE("iface %p, size %p, name %p.\n", iface, size, name);
+
+    return d3drm_object_get_name(&face->obj, size, name);
 }
 
 static HRESULT WINAPI d3drm_face1_GetName(IDirect3DRMFace *iface, DWORD *size, char *name)
 {
-    FIXME("iface %p, size %p, name %p stub!\n", iface, size, name);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, size %p, name %p.\n", iface, size, name);
+
+    return d3drm_face2_GetName(&face->IDirect3DRMFace2_iface, size, name);
 }
 
 static HRESULT WINAPI d3drm_face1_GetClassName(IDirect3DRMFace *iface, DWORD *size, char *name)
@@ -163,19 +209,45 @@ static HRESULT WINAPI d3drm_face1_AddVertexAndNormalIndexed(IDirect3DRMFace *ifa
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI d3drm_face1_SetColorRGB(IDirect3DRMFace *iface,
-        D3DVALUE r, D3DVALUE g, D3DVALUE b)
+static HRESULT WINAPI d3drm_face2_SetColorRGB(IDirect3DRMFace2 *iface, D3DVALUE red, D3DVALUE green, D3DVALUE blue)
 {
-    FIXME("iface %p, r %.8e, g %.8e, b %.8e stub!\n", iface, r, g, b);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, red %.8e, green %.8e, blue %.8e.\n", iface, red, green, blue);
+
+    d3drm_set_color(&face->color, red, green, blue, 1.0f);
+
+    return D3DRM_OK;
+}
+
+static HRESULT WINAPI d3drm_face1_SetColorRGB(IDirect3DRMFace *iface,
+        D3DVALUE red, D3DVALUE green, D3DVALUE blue)
+{
+    struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
+
+    TRACE("iface %p, red %.8e, green %.8e, blue %.8e.\n", iface, red, green, blue);
+
+    return d3drm_face2_SetColorRGB(&face->IDirect3DRMFace2_iface, red, green, blue);
+}
+
+static HRESULT WINAPI d3drm_face2_SetColor(IDirect3DRMFace2 *iface, D3DCOLOR color)
+{
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
+
+    TRACE("iface %p, color 0x%08x.\n", iface, color);
+
+    face->color = color;
+
+    return D3DRM_OK;
 }
 
 static HRESULT WINAPI d3drm_face1_SetColor(IDirect3DRMFace *iface, D3DCOLOR color)
 {
-    FIXME("iface %p, color 0x%08x stub!\n", iface, color);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, color 0x%08x.\n", iface, color);
+
+    return d3drm_face2_SetColor(&face->IDirect3DRMFace2_iface, color);
 }
 
 static HRESULT WINAPI d3drm_face1_SetTexture(IDirect3DRMFace *iface, IDirect3DRMTexture *texture)
@@ -281,11 +353,22 @@ static int WINAPI d3drm_face1_GetTextureCoordinateIndex(IDirect3DRMFace *iface, 
     return 0;
 }
 
+static D3DCOLOR WINAPI d3drm_face2_GetColor(IDirect3DRMFace2 *iface)
+{
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
+
+    TRACE("iface %p.\n", iface);
+
+    return face->color;
+}
+
 static D3DCOLOR WINAPI d3drm_face1_GetColor(IDirect3DRMFace *iface)
 {
-    FIXME("iface %p stub!\n", iface);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    return 0;
+    TRACE("iface %p.\n", iface);
+
+    return d3drm_face2_GetColor(&face->IDirect3DRMFace2_iface);
 }
 
 static const struct IDirect3DRMFaceVtbl d3drm_face1_vtbl =
@@ -354,58 +437,30 @@ static HRESULT WINAPI d3drm_face2_Clone(IDirect3DRMFace2 *iface,
 static HRESULT WINAPI d3drm_face2_AddDestroyCallback(IDirect3DRMFace2 *iface,
         D3DRMOBJECTCALLBACK cb, void *ctx)
 {
-    FIXME("iface %p, cb %p, ctx %p stub!\n", iface, cb, ctx);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, cb %p, ctx %p.\n", iface, cb, ctx);
+
+    return d3drm_object_add_destroy_callback(&face->obj, cb, ctx);
 }
 
 static HRESULT WINAPI d3drm_face2_DeleteDestroyCallback(IDirect3DRMFace2 *iface,
         D3DRMOBJECTCALLBACK cb, void *ctx)
 {
-    FIXME("iface %p, cb %p, ctx %p stub!\n", iface, cb, ctx);
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
 
-    return E_NOTIMPL;
-}
+    TRACE("iface %p, cb %p, ctx %p.\n", iface, cb, ctx);
 
-static HRESULT WINAPI d3drm_face2_SetAppData(IDirect3DRMFace2 *iface, DWORD data)
-{
-    FIXME("iface %p, data %#x stub!\n", iface, data);
-
-    return E_NOTIMPL;
-}
-
-static DWORD WINAPI d3drm_face2_GetAppData(IDirect3DRMFace2 *iface)
-{
-    FIXME("iface %p stub!\n", iface);
-
-    return 0;
-}
-
-static HRESULT WINAPI d3drm_face2_SetName(IDirect3DRMFace2 *iface, const char *name)
-{
-    FIXME("iface %p, name %s stub!\n", iface, debugstr_a(name));
-
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI d3drm_face2_GetName(IDirect3DRMFace2 *iface, DWORD *size, char *name)
-{
-    FIXME("iface %p, size %p, name %p stub!\n", iface, size, name);
-
-    return E_NOTIMPL;
+    return d3drm_object_delete_destroy_callback(&face->obj, cb, ctx);
 }
 
 static HRESULT WINAPI d3drm_face2_GetClassName(IDirect3DRMFace2 *iface, DWORD *size, char *name)
 {
+    struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
+
     TRACE("iface %p, size %p, name %p.\n", iface, size, name);
 
-    if (!size || *size < strlen("Face") || !name)
-        return E_INVALIDARG;
-
-    strcpy(name, "Face");
-    *size = sizeof("Face");
-
-    return D3DRM_OK;
+    return d3drm_object_get_class_name(&face->obj, size, name);
 }
 
 static HRESULT WINAPI d3drm_face2_AddVertex(IDirect3DRMFace2 *iface, D3DVALUE x, D3DVALUE y, D3DVALUE z)
@@ -419,20 +474,6 @@ static HRESULT WINAPI d3drm_face2_AddVertexAndNormalIndexed(IDirect3DRMFace2 *if
         DWORD vertex, DWORD normal)
 {
     FIXME("iface %p, vertex %u, normal %u stub!\n", iface, vertex, normal);
-
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI d3drm_face2_SetColorRGB(IDirect3DRMFace2 *iface, D3DVALUE r, D3DVALUE g, D3DVALUE b)
-{
-    FIXME("iface %p, r %.8e, g %.8e, b %.8e stub!\n", iface, r, g, b);
-
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI d3drm_face2_SetColor(IDirect3DRMFace2 *iface, D3DCOLOR color)
-{
-    FIXME("iface %p, color 0x%08x stub!\n", iface, color);
 
     return E_NOTIMPL;
 }
@@ -540,13 +581,6 @@ static int WINAPI d3drm_face2_GetTextureCoordinateIndex(IDirect3DRMFace2 *iface,
     return 0;
 }
 
-static D3DCOLOR WINAPI d3drm_face2_GetColor(IDirect3DRMFace2 *iface)
-{
-    FIXME("iface %p stub!\n", iface);
-
-    return 0;
-}
-
 static const struct IDirect3DRMFace2Vtbl d3drm_face2_vtbl =
 {
     d3drm_face2_QueryInterface,
@@ -581,11 +615,12 @@ static const struct IDirect3DRMFace2Vtbl d3drm_face2_vtbl =
     d3drm_face2_GetColor,
 };
 
-HRESULT Direct3DRMFace_create(REFIID riid, IUnknown **out)
+HRESULT d3drm_face_create(struct d3drm_face **face)
 {
+    static const char classname[] = "Face";
     struct d3drm_face *object;
 
-    TRACE("riid %s, out %p.\n", debugstr_guid(riid), out);
+    TRACE("face %p.\n", face);
 
     if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
         return E_OUTOFMEMORY;
@@ -594,10 +629,9 @@ HRESULT Direct3DRMFace_create(REFIID riid, IUnknown **out)
     object->IDirect3DRMFace2_iface.lpVtbl = &d3drm_face2_vtbl;
     object->ref = 1;
 
-    if (IsEqualGUID(riid, &IID_IDirect3DRMFace2))
-        *out = (IUnknown*)&object->IDirect3DRMFace2_iface;
-    else
-        *out = (IUnknown*)&object->IDirect3DRMFace_iface;
+    d3drm_object_init(&object->obj, classname);
+
+    *face = object;
 
     return S_OK;
 }

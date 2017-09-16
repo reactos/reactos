@@ -35,11 +35,13 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
     return TRUE;
 }
 
-void d3drm_object_init(struct d3drm_object *object)
+void d3drm_object_init(struct d3drm_object *object, const char *classname)
 {
     object->ref = 1;
     object->appdata = 0;
     list_init(&object->destroy_callbacks);
+    object->classname = classname;
+    object->name = NULL;
 }
 
 struct destroy_callback
@@ -87,6 +89,67 @@ HRESULT d3drm_object_delete_destroy_callback(struct d3drm_object *object, D3DRMO
     return D3DRM_OK;
 }
 
+HRESULT d3drm_object_get_class_name(struct d3drm_object *object, DWORD *size, char *name)
+{
+    DWORD req_size;
+
+    if (!size)
+        return E_INVALIDARG;
+
+    req_size = strlen(object->classname) + 1;
+    if (name && *size < req_size)
+        return E_INVALIDARG;
+
+    *size = req_size;
+
+    if (name)
+        memcpy(name, object->classname, req_size);
+
+    return D3DRM_OK;
+}
+
+HRESULT d3drm_object_get_name(struct d3drm_object *object, DWORD *size, char *name)
+{
+    DWORD req_size;
+
+    if (!size)
+        return E_INVALIDARG;
+
+    req_size = object->name ? strlen(object->name) + 1 : 0;
+    if (name && *size < req_size)
+        return E_INVALIDARG;
+
+    if (name)
+    {
+        if (object->name)
+            memcpy(name, object->name, req_size);
+        else if (*size)
+            *name = 0;
+    }
+
+    *size = req_size;
+
+    return D3DRM_OK;
+}
+
+HRESULT d3drm_object_set_name(struct d3drm_object *object, const char *name)
+{
+    DWORD req_size;
+
+    HeapFree(GetProcessHeap(), 0, object->name);
+    object->name = NULL;
+
+    if (name)
+    {
+        req_size = strlen(name) + 1;
+        if (!(object->name = HeapAlloc(GetProcessHeap(), 0, req_size)))
+            return E_OUTOFMEMORY;
+        memcpy(object->name, name, req_size);
+    }
+
+    return D3DRM_OK;
+}
+
 void d3drm_object_cleanup(IDirect3DRMObject *iface, struct d3drm_object *object)
 {
     struct destroy_callback *callback, *callback2;
@@ -97,4 +160,7 @@ void d3drm_object_cleanup(IDirect3DRMObject *iface, struct d3drm_object *object)
         list_remove(&callback->entry);
         HeapFree(GetProcessHeap(), 0, callback);
     }
+
+    HeapFree(GetProcessHeap(), 0, object->name);
+    object->name = NULL;
 }

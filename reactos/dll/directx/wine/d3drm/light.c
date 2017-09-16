@@ -20,20 +20,6 @@
 
 #include "d3drm_private.h"
 
-struct d3drm_light
-{
-    IDirect3DRMLight IDirect3DRMLight_iface;
-    LONG ref;
-    D3DRMLIGHTTYPE type;
-    D3DCOLOR color;
-    D3DVALUE range;
-    D3DVALUE cattenuation;
-    D3DVALUE lattenuation;
-    D3DVALUE qattenuation;
-    D3DVALUE umbra;
-    D3DVALUE penumbra;
-};
-
 static inline struct d3drm_light *impl_from_IDirect3DRMLight(IDirect3DRMLight *iface)
 {
     return CONTAINING_RECORD(iface, struct d3drm_light, IDirect3DRMLight_iface);
@@ -44,6 +30,7 @@ static HRESULT WINAPI d3drm_light_QueryInterface(IDirect3DRMLight *iface, REFIID
     TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
     if (IsEqualGUID(riid, &IID_IDirect3DRMLight)
+            || IsEqualGUID(riid, &IID_IDirect3DRMObject)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
         IDirect3DRMLight_AddRef(iface);
@@ -75,7 +62,11 @@ static ULONG WINAPI d3drm_light_Release(IDirect3DRMLight *iface)
     TRACE("%p decreasing refcount to %u.\n", iface, refcount);
 
     if (!refcount)
+    {
+        d3drm_object_cleanup((IDirect3DRMObject *)iface, &light->obj);
+        IDirect3DRM_Release(light->d3drm);
         HeapFree(GetProcessHeap(), 0, light);
+    }
 
     return refcount;
 }
@@ -91,58 +82,68 @@ static HRESULT WINAPI d3drm_light_Clone(IDirect3DRMLight *iface,
 static HRESULT WINAPI d3drm_light_AddDestroyCallback(IDirect3DRMLight *iface,
         D3DRMOBJECTCALLBACK cb, void *ctx)
 {
-    FIXME("iface %p, cb %p, ctx %p stub!\n", iface, cb, ctx);
+    struct d3drm_light *light = impl_from_IDirect3DRMLight(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, cb %p, ctx %p.\n", iface, cb, ctx);
+
+    return d3drm_object_add_destroy_callback(&light->obj, cb, ctx);
 }
 
 static HRESULT WINAPI d3drm_light_DeleteDestroyCallback(IDirect3DRMLight *iface,
         D3DRMOBJECTCALLBACK cb, void *ctx)
 {
-    FIXME("iface %p, cb %p, ctx %p stub!\n", iface, cb, ctx);
+    struct d3drm_light *light = impl_from_IDirect3DRMLight(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, cb %p, ctx %p.\n", iface, cb, ctx);
+
+    return d3drm_object_delete_destroy_callback(&light->obj, cb, ctx);
 }
 
 static HRESULT WINAPI d3drm_light_SetAppData(IDirect3DRMLight *iface, DWORD data)
 {
-    FIXME("iface %p, data %#x stub!\n", iface, data);
+    struct d3drm_light *light = impl_from_IDirect3DRMLight(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, data %#x.\n", iface, data);
+
+    light->obj.appdata = data;
+
+    return D3DRM_OK;
 }
 
 static DWORD WINAPI d3drm_light_GetAppData(IDirect3DRMLight *iface)
 {
-    FIXME("iface %p stub!\n", iface);
+    struct d3drm_light *light = impl_from_IDirect3DRMLight(iface);
 
-    return 0;
+    TRACE("iface %p.\n", iface);
+
+    return light->obj.appdata;
 }
 
 static HRESULT WINAPI d3drm_light_SetName(IDirect3DRMLight *iface, const char *name)
 {
-    FIXME("iface %p, name %s stub!\n", iface, debugstr_a(name));
+    struct d3drm_light *light = impl_from_IDirect3DRMLight(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, name %s.\n", iface, debugstr_a(name));
+
+    return d3drm_object_set_name(&light->obj, name);
 }
 
 static HRESULT WINAPI d3drm_light_GetName(IDirect3DRMLight *iface, DWORD *size, char *name)
 {
-    FIXME("iface %p, size %p, name %p stub!\n", iface, size, name);
+    struct d3drm_light *light = impl_from_IDirect3DRMLight(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, size %p, name %p.\n", iface, size, name);
+
+    return d3drm_object_get_name(&light->obj, size, name);
 }
 
 static HRESULT WINAPI d3drm_light_GetClassName(IDirect3DRMLight *iface, DWORD *size, char *name)
 {
+    struct d3drm_light *light = impl_from_IDirect3DRMLight(iface);
+
     TRACE("iface %p, size %p, name %p.\n", iface, size, name);
 
-    if (!size || *size < strlen("Light") || !name)
-        return E_INVALIDARG;
-
-    strcpy(name, "Light");
-    *size = sizeof("Light");
-
-    return D3DRM_OK;
+    return d3drm_object_get_class_name(&light->obj, size, name);
 }
 
 static HRESULT WINAPI d3drm_light_SetType(IDirect3DRMLight *iface, D3DRMLIGHTTYPE type)
@@ -365,19 +366,24 @@ static const struct IDirect3DRMLightVtbl d3drm_light_vtbl =
     d3drm_light_GetEnableFrame,
 };
 
-HRESULT Direct3DRMLight_create(IUnknown **out)
+HRESULT d3drm_light_create(struct d3drm_light **light, IDirect3DRM *d3drm)
 {
+    static const char classname[] = "Light";
     struct d3drm_light *object;
 
-    TRACE("out %p.\n", out);
+    TRACE("light %p.\n", light);
 
     if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->IDirect3DRMLight_iface.lpVtbl = &d3drm_light_vtbl;
     object->ref = 1;
+    object->d3drm = d3drm;
+    IDirect3DRM_AddRef(object->d3drm);
 
-    *out = (IUnknown *)&object->IDirect3DRMLight_iface;
+    d3drm_object_init(&object->obj, classname);
+
+    *light = object;
 
     return S_OK;
 }
