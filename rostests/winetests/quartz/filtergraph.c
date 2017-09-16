@@ -581,21 +581,21 @@ static void test_mediacontrol(void)
     pos = 0xdeadbeef;
     hr = IMediaSeeking_ConvertTimeFormat(seeking, &pos, NULL, 0x123456789a, NULL);
     ok(hr == S_OK, "ConvertTimeFormat failed: %08x\n", hr);
-    ok(pos == 0x123456789a, "ConvertTimeFormat: expected 123456789a, got (%x%08x)\n", (DWORD)(pos >> 32), (DWORD)pos);
+    ok(pos == 0x123456789a, "ConvertTimeFormat: expected 123456789a, got (%s)\n", wine_dbgstr_longlong(pos));
 
     pos = 0xdeadbeef;
     hr = IMediaSeeking_ConvertTimeFormat(seeking, &pos, &TIME_FORMAT_MEDIA_TIME, 0x123456789a, NULL);
     ok(hr == S_OK, "ConvertTimeFormat failed: %08x\n", hr);
-    ok(pos == 0x123456789a, "ConvertTimeFormat: expected 123456789a, got (%x%08x)\n", (DWORD)(pos >> 32), (DWORD)pos);
+    ok(pos == 0x123456789a, "ConvertTimeFormat: expected 123456789a, got (%s)\n", wine_dbgstr_longlong(pos));
 
     pos = 0xdeadbeef;
     hr = IMediaSeeking_ConvertTimeFormat(seeking, &pos, NULL, 0x123456789a, &TIME_FORMAT_MEDIA_TIME);
     ok(hr == S_OK, "ConvertTimeFormat failed: %08x\n", hr);
-    ok(pos == 0x123456789a, "ConvertTimeFormat: expected 123456789a, got (%x%08x)\n", (DWORD)(pos >> 32), (DWORD)pos);
+    ok(pos == 0x123456789a, "ConvertTimeFormat: expected 123456789a, got (%s)\n", wine_dbgstr_longlong(pos));
 
     hr = IMediaSeeking_GetCurrentPosition(seeking, &pos);
     ok(hr == S_OK, "GetCurrentPosition failed: %08x\n", hr);
-    ok(pos == 0, "Position != 0 (%x%08x)\n", (DWORD)(pos >> 32), (DWORD)pos);
+    ok(pos == 0, "Position != 0 (%s)\n", wine_dbgstr_longlong(pos));
 
     hr = IMediaSeeking_SetPositions(seeking, NULL, AM_SEEKING_ReturnTime, NULL, AM_SEEKING_NoPositioning);
     ok(hr == S_OK, "SetPositions failed: %08x\n", hr);
@@ -606,7 +606,7 @@ static void test_mediacontrol(void)
     pos = 0xdeadbeef;
     hr = IMediaSeeking_GetCurrentPosition(seeking, &pos);
     ok(hr == S_OK, "GetCurrentPosition failed: %08x\n", hr);
-    ok(pos == 0, "Position != 0 (%x%08x)\n", (DWORD)(pos >> 32), (DWORD)pos);
+    ok(pos == 0, "Position != 0 (%s)\n", wine_dbgstr_longlong(pos));
 
     hr = IMediaControl_GetState(control, 1000, NULL);
     ok(hr == E_POINTER, "GetState expected %08x, got %08x\n", E_POINTER, hr);
