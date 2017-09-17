@@ -196,6 +196,25 @@ interface IBindStatusCallback : IUnknown
 
     typedef enum
     {
+        BINDINFO_OPTIONS_WININETFLAG              = 0x00010000,
+        BINDINFO_OPTIONS_ENABLE_UTF8              = 0x00020000,
+        BINDINFO_OPTIONS_DISABLE_UTF8             = 0x00040000,
+        BINDINFO_OPTIONS_USE_IE_ENCODING          = 0x00080000,
+        BINDINFO_OPTIONS_BINDTOOBJECT             = 0x00100000,
+        BINDINFO_OPTIONS_SECURITYOPTOUT           = 0x00200000,
+        BINDINFO_OPTIONS_IGNOREMIMETEXTPLAIN      = 0x00400000,
+        BINDINFO_OPTIONS_USEBINDSTRINGCREDS       = 0x00800000,
+        BINDINFO_OPTIONS_IGNOREHTTPHTTPSREDIRECTS = 0x01000000,
+        BINDINFO_OPTIONS_IGNORE_SSLERRORS_ONCE    = 0x02000000,
+        BINDINFO_WPC_DOWNLOADBLOCKED              = 0x08000000,
+        BINDINFO_WPC_LOGGING_ENABLED              = 0x10000000,
+        BINDINFO_OPTIONS_ALLOWCONNECTDATA         = 0x20000000,
+        BINDINFO_OPTIONS_DISABLEAUTOREDIRECTS     = 0x40000000,
+        BINDINFO_OPTIONS_SHDOCVW_NAVIGATE    = (int)0x80000000
+    } BINDINFO_OPTIONS;
+
+    typedef enum
+    {
         BSCF_FIRSTDATANOTIFICATION = 0x01,
         BSCF_INTERMEDIATEDATANOTIFICATION = 0x02,
         BSCF_LASTDATANOTIFICATION = 0x04,
@@ -2046,6 +2065,24 @@ interface IGetBindHandle : IUnknown
     HRESULT GetBindHandle(
             [in] BINDHANDLETYPES enumRequestedHandle,
             [out] HANDLE *pRetHandle);
+}
+
+/*****************************************************************************
+ * IBindCallbackRedirect interface
+ */
+[
+    local,
+    object,
+    uuid(11c81bc2-121e-4ed5-b9c4-b430bd54f2c0),
+    pointer_default(unique)
+]
+interface IBindCallbackRedirect : IUnknown
+{
+    typedef [unique] IBindCallbackRedirect *LPBINDCALLBACKREDIRECT;
+
+    HRESULT Redirect(
+        [in] LPCWSTR lpcUrl,
+        [out] VARIANT_BOOL *vbCancel);
 }
 
 cpp_quote("#define CONFIRMSAFETYACTION_LOADOBJECT  0x00000001")
