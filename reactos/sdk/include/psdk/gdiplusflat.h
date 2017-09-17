@@ -263,6 +263,7 @@ GpStatus WINGDIPAPI GdipGetTextContrast(GpGraphics*,UINT*);
 GpStatus WINGDIPAPI GdipGetTextRenderingHint(GpGraphics*,TextRenderingHint*);
 GpStatus WINGDIPAPI GdipGetWorldTransform(GpGraphics*,GpMatrix*);
 GpStatus WINGDIPAPI GdipGraphicsClear(GpGraphics*,ARGB);
+GpStatus WINGDIPAPI GdipGraphicsSetAbort(GpGraphics*,GdiplusAbort*);
 GpStatus WINGDIPAPI GdipGetVisibleClipBounds(GpGraphics*,GpRectF*);
 GpStatus WINGDIPAPI GdipGetVisibleClipBoundsI(GpGraphics*,GpRect*);
 GpStatus WINGDIPAPI GdipInitializePalette(ColorPalette*,PaletteType,INT,BOOL,GpBitmap*);
@@ -495,6 +496,7 @@ GpStatus WINGDIPAPI GdipSetLinePresetBlend(GpLineGradient*,GDIPCONST ARGB*,
 GpStatus WINGDIPAPI GdipGetLinePresetBlend(GpLineGradient*,ARGB*,REAL*,INT);
 GpStatus WINGDIPAPI GdipGetLinePresetBlendCount(GpLineGradient*,INT*);
 GpStatus WINGDIPAPI GdipGetLineTransform(GpLineGradient*,GpMatrix*);
+GpStatus WINGDIPAPI GdipMultiplyLineTransform(GpLineGradient*,GDIPCONST GpMatrix*,GpMatrixOrder);
 GpStatus WINGDIPAPI GdipResetLineTransform(GpLineGradient*);
 GpStatus WINGDIPAPI GdipRotateLineTransform(GpLineGradient*,REAL,GpMatrixOrder);
 GpStatus WINGDIPAPI GdipScaleLineTransform(GpLineGradient*,REAL,REAL,
