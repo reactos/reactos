@@ -193,13 +193,11 @@ IShellBrowser * IShellBrowserImpl_Construct(HWND hwndOwner)
 /***************************************************************************
 *  IShellBrowserImpl_QueryInterface
 */
-static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface,
-                                            REFIID riid,
-                                            LPVOID *ppvObj)
+static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface, REFIID riid, void **ppvObj)
 {
     IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
-    TRACE("(%p)\n\t%s\n", This, debugstr_guid(riid));
+    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppvObj);
 
     *ppvObj = NULL;
 
@@ -219,7 +217,7 @@ static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface,
         return S_OK;
     }
 
-    FIXME("Unknown interface requested\n");
+    FIXME("unsupported interface, %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -250,7 +248,6 @@ static ULONG WINAPI IShellBrowserImpl_Release(IShellBrowser * iface)
     {
       COMDLG32_SHFree(This);
       TRACE("-- destroyed\n");
-      return 0;
     }
     return ref;
 }
