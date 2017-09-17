@@ -34,22 +34,16 @@ static HRESULT PROPVAR_ConvertFILETIME(const FILETIME *ft, PROPVARIANT *ppropvar
     switch (vt)
     {
         case VT_LPSTR:
-        {
-            static const char format[] = "%04d/%02d/%02d:%02d:%02d:%02d.%03d";
-
-            ppropvarDest->u.pszVal = HeapAlloc(GetProcessHeap(), 0,
-                                             sizeof(format));
+            ppropvarDest->u.pszVal = HeapAlloc(GetProcessHeap(), 0, 64);
             if (!ppropvarDest->u.pszVal)
                 return E_OUTOFMEMORY;
 
-            snprintf( ppropvarDest->u.pszVal, sizeof(format),
-                      format,
+            sprintf( ppropvarDest->u.pszVal, "%04d/%02d/%02d:%02d:%02d:%02d.%03d",
                       time.wYear, time.wMonth, time.wDay,
                       time.wHour, time.wMinute, time.wSecond,
                       time.wMilliseconds );
 
             return S_OK;
-        }
 
         default:
             FIXME("Unhandled target type: %d\n", vt);
@@ -102,14 +96,24 @@ static HRESULT PROPVAR_ConvertNumber(REFPROPVARIANT pv, int dest_bits,
         *res = 0;
         break;
     case VT_LPSTR:
-        *res = _strtoi64(pv->u.pszVal, NULL, 0);
+    {
+        char *end;
+        *res = _strtoi64(pv->u.pszVal, &end, 0);
+        if (pv->u.pszVal == end)
+            return DISP_E_TYPEMISMATCH;
         src_signed = *res < 0;
         break;
+    }
     case VT_LPWSTR:
     case VT_BSTR:
-        *res = strtolW(pv->u.pwszVal, NULL, 0);
+    {
+        WCHAR *end;
+        *res = strtolW(pv->u.pwszVal, &end, 0);
+        if (pv->u.pwszVal == end)
+            return DISP_E_TYPEMISMATCH;
         src_signed = *res < 0;
         break;
+    }
     default:
         FIXME("unhandled vt %d\n", pv->vt);
         return E_NOTIMPL;
@@ -240,7 +244,7 @@ HRESULT WINAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret)
         case VT_BSTR:
             if (propvarIn->u.pwszVal)
             {
-                DWORD size = (strlenW(propvarIn->u.pwszVal) + 1) * sizeof(WCHAR);
+                DWORD size = (lstrlenW(propvarIn->u.pwszVal) + 1) * sizeof(WCHAR);
                 res = CoTaskMemAlloc(size);
                 if(!res) return E_OUTOFMEMORY;
                 memcpy(res, propvarIn->u.pwszVal, size);
