@@ -863,10 +863,22 @@ void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
 
 void ME_SetDefaultParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
 {
+    const PARAFORMAT2 *host_fmt;
+    HRESULT hr;
+
     ZeroMemory(pFmt, sizeof(PARAFORMAT2));
     pFmt->cbSize = sizeof(PARAFORMAT2);
     pFmt->dwMask = PFM_ALL2;
-    pFmt->wAlignment = editor->alignStyle;
+    pFmt->wAlignment = PFA_LEFT;
     pFmt->sStyle = -1;
     pFmt->bOutlineLevel = TRUE;
+
+    hr = ITextHost_TxGetParaFormat( editor->texthost, (const PARAFORMAT **)&host_fmt );
+    if (SUCCEEDED(hr))
+    {
+        /* Just use the alignment for now */
+        if (host_fmt->dwMask & PFM_ALIGNMENT)
+            pFmt->wAlignment = host_fmt->wAlignment;
+        ITextHost_OnTxParaFormatChange( editor->texthost, (PARAFORMAT *)pFmt );
+    }
 }

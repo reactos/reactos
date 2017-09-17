@@ -770,7 +770,7 @@ ME_StreamOutRTFCharProps(ME_OutStream *pStream, CHARFORMAT2W *fmt)
   {
       if (fmt->dwEffects & CFE_AUTOBACKCOLOR) i = 0;
       else find_color_in_colortbl( pStream, fmt->crBackColor, &i );
-      sprintf(props + strlen(props), "\\cb%u", i);
+      sprintf(props + strlen(props), "\\highlight%u", i);
   }
   if ((old_fmt->dwEffects ^ fmt->dwEffects) & CFE_AUTOCOLOR ||
       (!(fmt->dwEffects & CFE_AUTOCOLOR) && old_fmt->crTextColor != fmt->crTextColor))

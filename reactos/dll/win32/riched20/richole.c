@@ -244,7 +244,6 @@ typedef struct ITextParaImpl {
 struct IOleClientSiteImpl {
     struct reole_child child;
     IOleClientSite IOleClientSite_iface;
-    IOleWindow IOleWindow_iface;
     IOleInPlaceSite IOleInPlaceSite_iface;
     LONG ref;
 };
@@ -262,11 +261,6 @@ static inline IRichEditOleImpl *impl_from_ITextDocument(ITextDocument *iface)
 static inline IRichEditOleImpl *impl_from_IUnknown(IUnknown *iface)
 {
     return CONTAINING_RECORD(iface, IRichEditOleImpl, IUnknown_inner);
-}
-
-static inline IOleClientSiteImpl *impl_from_IOleWindow(IOleWindow *iface)
-{
-    return CONTAINING_RECORD(iface, IOleClientSiteImpl, IOleWindow_iface);
 }
 
 static inline IOleClientSiteImpl *impl_from_IOleInPlaceSite(IOleInPlaceSite *iface)
@@ -1062,9 +1056,8 @@ IOleClientSite_fnQueryInterface(IOleClientSite *me, REFIID riid, LPVOID *ppvObj)
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IOleClientSite))
         *ppvObj = me;
-    else if (IsEqualGUID(riid, &IID_IOleWindow))
-        *ppvObj = &This->IOleWindow_iface;
-    else if (IsEqualGUID(riid, &IID_IOleInPlaceSite))
+    else if (IsEqualGUID(riid, &IID_IOleWindow) ||
+             IsEqualGUID(riid, &IID_IOleInPlaceSite))
         *ppvObj = &This->IOleInPlaceSite_iface;
     if (*ppvObj)
     {
@@ -1175,56 +1168,6 @@ static const IOleClientSiteVtbl ocst = {
     IOleClientSite_fnRequestNewObjectLayout
 };
 
-/* IOleWindow interface */
-static HRESULT WINAPI IOleWindow_fnQueryInterface(IOleWindow *iface, REFIID riid, void **ppvObj)
-{
-    IOleClientSiteImpl *This = impl_from_IOleWindow(iface);
-    return IOleClientSite_QueryInterface(&This->IOleClientSite_iface, riid, ppvObj);
-}
-
-static ULONG WINAPI IOleWindow_fnAddRef(IOleWindow *iface)
-{
-    IOleClientSiteImpl *This = impl_from_IOleWindow(iface);
-    return IOleClientSite_AddRef(&This->IOleClientSite_iface);
-}
-
-static ULONG WINAPI IOleWindow_fnRelease(IOleWindow *iface)
-{
-    IOleClientSiteImpl *This = impl_from_IOleWindow(iface);
-    return IOleClientSite_Release(&This->IOleClientSite_iface);
-}
-
-static HRESULT WINAPI IOleWindow_fnContextSensitiveHelp(IOleWindow *iface, BOOL fEnterMode)
-{
-    IOleClientSiteImpl *This = impl_from_IOleWindow(iface);
-    FIXME("not implemented: (%p)->(%d)\n", This, fEnterMode);
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI IOleWindow_fnGetWindow(IOleWindow *iface, HWND *phwnd)
-{
-    IOleClientSiteImpl *This = impl_from_IOleWindow(iface);
-
-    TRACE("(%p)->(%p)\n", This, phwnd);
-
-    if (!This->child.reole)
-        return CO_E_RELEASED;
-
-    if (!phwnd)
-        return E_INVALIDARG;
-
-    *phwnd = This->child.reole->editor->hWnd;
-    return S_OK;
-}
-
-static const IOleWindowVtbl olewinvt = {
-    IOleWindow_fnQueryInterface,
-    IOleWindow_fnAddRef,
-    IOleWindow_fnRelease,
-    IOleWindow_fnGetWindow,
-    IOleWindow_fnContextSensitiveHelp
-};
-
 /* IOleInPlaceSite interface */
 static HRESULT STDMETHODCALLTYPE IOleInPlaceSite_fnQueryInterface(IOleInPlaceSite *iface, REFIID riid, void **ppvObj)
 {
@@ -1247,13 +1190,24 @@ static ULONG STDMETHODCALLTYPE IOleInPlaceSite_fnRelease(IOleInPlaceSite *iface)
 static HRESULT STDMETHODCALLTYPE IOleInPlaceSite_fnGetWindow(IOleInPlaceSite *iface, HWND *phwnd)
 {
     IOleClientSiteImpl *This = impl_from_IOleInPlaceSite(iface);
-    return IOleWindow_GetWindow(&This->IOleWindow_iface, phwnd);
+
+    TRACE("(%p)->(%p)\n", This, phwnd);
+
+    if (!This->child.reole)
+        return CO_E_RELEASED;
+
+    if (!phwnd)
+        return E_INVALIDARG;
+
+    *phwnd = This->child.reole->editor->hWnd;
+    return S_OK;
 }
 
 static HRESULT STDMETHODCALLTYPE IOleInPlaceSite_fnContextSensitiveHelp(IOleInPlaceSite *iface, BOOL fEnterMode)
 {
     IOleClientSiteImpl *This = impl_from_IOleInPlaceSite(iface);
-    return IOleWindow_ContextSensitiveHelp(&This->IOleWindow_iface, fEnterMode);
+    FIXME("not implemented: (%p)->(%d)\n", This, fEnterMode);
+    return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE IOleInPlaceSite_fnCanInPlaceActivate(IOleInPlaceSite *iface)
@@ -1355,7 +1309,6 @@ static HRESULT CreateOleClientSite(IRichEditOleImpl *reOle, IOleClientSite **ret
         return E_OUTOFMEMORY;
 
     clientSite->IOleClientSite_iface.lpVtbl = &ocst;
-    clientSite->IOleWindow_iface.lpVtbl = &olewinvt;
     clientSite->IOleInPlaceSite_iface.lpVtbl = &olestvt;
     clientSite->ref = 1;
     clientSite->child.reole = reOle;
