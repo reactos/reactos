@@ -1623,7 +1623,7 @@ static HRESULT WINAPI IPropData_fnSaveChanges(LPPROPDATA iface, ULONG ulFlags)
  *
  * PARAMS
  *  iface    [I] IMAPIProp object to get the property values from
- *  lpTags   [I] Property tage of property values to be retrieved
+ *  lpTags   [I] Property tags of property values to be retrieved
  *  ulFlags  [I] Return 0=Ascii MAPI_UNICODE=Unicode strings for
  *                 unspecified types
  *  lpCount  [O] Destination for number of properties returned
