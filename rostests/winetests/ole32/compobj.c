@@ -1166,12 +1166,35 @@ static const CLSID CLSID_WineTestPSFactoryBuffer =
     {0xa1, 0xa2, 0x5d, 0x5a, 0x36, 0x54, 0xd3, 0xbd}
 }; /* 52011640-8164-4fd0-a1a2-5d5a3654d3bd */
 
+static DWORD CALLBACK register_ps_clsid_thread(void *context)
+{
+    HRESULT hr;
+    CLSID clsid = {0};
+
+    pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    hr = CoGetPSClsid(&IID_IWineTest, &clsid);
+    ok_ole_success(hr, "CoGetPSClsid");
+    ok(IsEqualGUID(&clsid, &CLSID_WineTestPSFactoryBuffer), "expected %s, got %s\n",
+                   wine_dbgstr_guid(&CLSID_WineTestPSFactoryBuffer), wine_dbgstr_guid(&clsid));
+
+    /* test registering a PSClsid in an apartment which is then destroyed */
+    hr = CoRegisterPSClsid(&IID_TestPS, &clsid);
+    ok_ole_success(hr, "CoRegisterPSClsid");
+
+    CoUninitialize();
+
+    return hr;
+}
+
 static void test_CoRegisterPSClsid(void)
 {
     HRESULT hr;
     DWORD dwRegistrationKey;
     IStream *stream;
     CLSID clsid;
+    HANDLE thread;
+    DWORD tid;
 
     hr = CoRegisterPSClsid(&IID_IWineTest, &CLSID_WineTestPSFactoryBuffer);
     ok(hr == CO_E_NOTINITIALIZED, "CoRegisterPSClsid should have returned CO_E_NOTINITIALIZED instead of 0x%08x\n", hr);
@@ -1184,6 +1207,21 @@ static void test_CoRegisterPSClsid(void)
 
     hr = CoRegisterPSClsid(&IID_IWineTest, &CLSID_WineTestPSFactoryBuffer);
     ok_ole_success(hr, "CoRegisterPSClsid");
+
+    hr = CoGetPSClsid(&IID_IWineTest, &clsid);
+    ok_ole_success(hr, "CoGetPSClsid");
+    ok(IsEqualGUID(&clsid, &CLSID_WineTestPSFactoryBuffer), "expected %s, got %s\n",
+                   wine_dbgstr_guid(&CLSID_WineTestPSFactoryBuffer), wine_dbgstr_guid(&clsid));
+
+    thread = CreateThread(NULL, 0, register_ps_clsid_thread, NULL, 0, &tid);
+    ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
+    ok(!WaitForSingleObject(thread, 10000), "wait timed out\n");
+    CloseHandle(thread);
+
+    hr = CoGetPSClsid(&IID_TestPS, &clsid);
+    ok_ole_success(hr, "CoGetPSClsid");
+    ok(IsEqualGUID(&clsid, &CLSID_WineTestPSFactoryBuffer), "expected %s, got %s\n",
+                   wine_dbgstr_guid(&CLSID_WineTestPSFactoryBuffer), wine_dbgstr_guid(&clsid));
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
     ok_ole_success(hr, "CreateStreamOnHGlobal");
@@ -1204,11 +1242,11 @@ static void test_CoRegisterPSClsid(void)
 
     SET_EXPECT(CreateStub);
     hr = CoMarshalInterface(stream, &IID_IEnumOLEVERB, (IUnknown*)&EnumOLEVERB, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
-    ok(hr == S_OK, "CoMarshalInterface should have returned E_NOTIMPL instead of 0x%08x\n", hr);
+    ok(hr == S_OK, "CoMarshalInterface should have returned S_OK instead of 0x%08x\n", hr);
     CHECK_CALLED(CreateStub);
 
     hr = CoMarshalInterface(stream, &IID_IEnumOLEVERB, &Test_Unknown, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
-    ok(hr == S_OK, "CoMarshalInterface should have returned E_NOTIMPL instead of 0x%08x\n", hr);
+    ok(hr == S_OK, "CoMarshalInterface should have returned S_OK instead of 0x%08x\n", hr);
 
     IStream_Release(stream);
     IPSFactoryBuffer_Release(ps_factory_buffer);
@@ -1223,6 +1261,31 @@ static void test_CoRegisterPSClsid(void)
 
     hr = CoGetPSClsid(&IID_IWineTest, &clsid);
     ok(hr == REGDB_E_IIDNOTREG, "CoGetPSClsid should have returned REGDB_E_IIDNOTREG instead of 0x%08x\n", hr);
+
+    hr = CoGetPSClsid(&IID_TestPS, &clsid);
+    ok(hr == REGDB_E_IIDNOTREG, "CoGetPSClsid should have returned REGDB_E_IIDNOTREG instead of 0x%08x\n", hr);
+
+    CoUninitialize();
+
+    pCoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+    hr = CoRegisterPSClsid(&IID_IWineTest, &CLSID_WineTestPSFactoryBuffer);
+    ok_ole_success(hr, "CoRegisterPSClsid");
+
+    hr = CoGetPSClsid(&IID_IWineTest, &clsid);
+    ok_ole_success(hr, "CoGetPSClsid");
+    ok(IsEqualGUID(&clsid, &CLSID_WineTestPSFactoryBuffer), "expected %s, got %s\n",
+                   wine_dbgstr_guid(&CLSID_WineTestPSFactoryBuffer), wine_dbgstr_guid(&clsid));
+
+    thread = CreateThread(NULL, 0, register_ps_clsid_thread, NULL, 0, &tid);
+    ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
+    ok(!WaitForSingleObject(thread, 10000), "wait timed out\n");
+    CloseHandle(thread);
+
+    hr = CoGetPSClsid(&IID_TestPS, &clsid);
+    ok_ole_success(hr, "CoGetPSClsid");
+    ok(IsEqualGUID(&clsid, &CLSID_WineTestPSFactoryBuffer), "expected %s, got %s\n",
+                   wine_dbgstr_guid(&CLSID_WineTestPSFactoryBuffer), wine_dbgstr_guid(&clsid));
 
     CoUninitialize();
 }
@@ -2184,9 +2247,17 @@ static void test_TreatAsClass(void)
         win_skip("CoGetTreatAsClass not present\n");
         return;
     }
+
     hr = pCoGetTreatAsClass(&deadbeef,&out);
     ok (hr == S_FALSE, "expected S_FALSE got %x\n",hr);
     ok (IsEqualGUID(&out,&deadbeef), "expected to get same clsid back\n");
+
+    hr = pCoGetTreatAsClass(NULL, &out);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG got %08x\n", hr);
+    ok(IsEqualGUID(&out, &deadbeef), "expected no change to the clsid\n");
+
+    hr = pCoGetTreatAsClass(&deadbeef, NULL);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG got %08x\n", hr);
 
     lr = RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID", 0, KEY_READ, &clsidkey);
     ok(!lr, "Couldn't open CLSID key, error %d\n", lr);

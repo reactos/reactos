@@ -39,10 +39,13 @@
 
 #include <wine/test.h>
 
+#ifndef __REACTOS__
 #include "initguid.h"
 
 DEFINE_GUID(CLSID_Picture_Metafile,0x315,0,0,0xc0,0,0,0,0,0,0,0x46);
 DEFINE_GUID(CLSID_Picture_Dib,0x316,0,0,0xc0,0,0,0,0,0,0,0x46);
+DEFINE_GUID(CLSID_Picture_EnhMetafile,0x319,0,0,0xc0,0,0,0,0,0,0,0x46);
+#endif
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 
@@ -142,7 +145,7 @@ typedef struct PresentationDataHeader
     DWORD unknown3; /* 4, possibly TYMED_ISTREAM */
     DVASPECT dvAspect;
     DWORD lindex;
-    DWORD tymed;
+    DWORD advf;
     DWORD unknown7; /* 0 */
     DWORD dwObjectExtentX;
     DWORD dwObjectExtentY;
@@ -1180,7 +1183,7 @@ static void test_OleLoad(IStorage *pStorage)
         IStorage *stg;
         IStream *stream;
         IUnknown *obj;
-        DWORD data, i, tymed, data_size;
+        DWORD data, i, data_size;
         PresentationDataHeader header;
         HDC hdc;
         HGDIOBJ hobj;
@@ -1229,12 +1232,10 @@ static void test_OleLoad(IStorage *pStorage)
                 break;
             }
 
-            tymed = 1 << i;
-
             header.unknown3 = 4;
             header.dvAspect = DVASPECT_CONTENT;
             header.lindex = -1;
-            header.tymed = tymed;
+            header.advf = 1 << i;
             header.unknown7 = 0;
             header.dwObjectExtentX = 1;
             header.dwObjectExtentY = 1;
@@ -1254,19 +1255,19 @@ static void test_OleLoad(IStorage *pStorage)
                 IStorage_Release(stg);
                 continue;
             }
-            ok(hr == S_OK, "OleLoad error %#x: cfFormat = %u, tymed = %u\n", hr, fmt, tymed);
+            ok(hr == S_OK, "OleLoad error %#x: cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
 
             hdc = CreateCompatibleDC(0);
             SetRect(&rc, 0, 0, 100, 100);
             hr = OleDraw(obj, DVASPECT_CONTENT, hdc, &rc);
             DeleteDC(hdc);
             if (fmt == CF_METAFILEPICT)
-                ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, tymed = %u\n", hr, fmt, tymed);
+                ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
             else if (fmt == CF_ENHMETAFILE)
 todo_wine
-                ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, tymed = %u\n", hr, fmt, tymed);
+                ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
             else
-                ok(hr == OLE_E_BLANK || hr == OLE_E_NOTRUNNING || hr == E_FAIL, "OleDraw should fail: %#x, cfFormat = %u, tymed = %u\n", hr, fmt, header.tymed);
+                ok(hr == OLE_E_BLANK || hr == OLE_E_NOTRUNNING || hr == E_FAIL, "OleDraw should fail: %#x, cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
 
             IUnknown_Release(obj);
             IStorage_Release(stg);
@@ -1529,7 +1530,7 @@ static const IUnknownVtbl UnknownVtbl =
 
 static IUnknown unknown = { &UnknownVtbl };
 
-static void check_enum_cache(IOleCache2 *cache, STATDATA *expect, int num)
+static void check_enum_cache(IOleCache2 *cache, const STATDATA *expect, int num)
 {
     IEnumSTATDATA *enum_stat;
     STATDATA stat;
@@ -2149,6 +2150,7 @@ static void test_data_cache_bitmap(void)
 
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
     ok( hr == S_OK, "got %08x\n", hr );
+    ok( conn == 2, "got %d\n", conn );
     expect[0].dwConnection = conn;
     expect[1].dwConnection = conn;
 
@@ -2167,6 +2169,7 @@ static void test_data_cache_bitmap(void)
 
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
     ok( hr == S_OK, "got %08x\n", hr );
+    ok( conn == 3, "got %d\n", conn );
     expect[2].dwConnection = conn;
 
     check_enum_cache( cache, expect,  3);
@@ -2177,6 +2180,7 @@ static void test_data_cache_bitmap(void)
 
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
     ok( hr == S_OK, "got %08x\n", hr );
+    ok( conn == 4, "got %d\n", conn );
     expect[3].dwConnection = conn;
 
     check_enum_cache( cache, expect, 4 );
@@ -2256,6 +2260,166 @@ static void test_data_cache_bitmap(void)
     ReleaseStgMedium( &med );
 
     IDataObject_Release( data );
+    IOleCache2_Release( cache );
+}
+
+/* The CLSID_Picture_ classes automatically create appropriate cache entries */
+static void test_data_cache_init(void)
+{
+    HRESULT hr;
+    IOleCache2 *cache;
+    IPersistStorage *persist;
+    int i;
+    CLSID clsid;
+    static const STATDATA enum_expect[] =
+    {
+        {{ CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL }, 0, NULL, 1 },
+        {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 1 },
+        {{ CF_METAFILEPICT, 0, DVASPECT_CONTENT, -1, TYMED_MFPICT },  0, NULL, 1 },
+        {{ CF_ENHMETAFILE,  0, DVASPECT_CONTENT, -1, TYMED_ENHMF },   0, NULL, 1 }
+    };
+    static const struct
+    {
+        const CLSID *clsid;
+        int enum_start, enum_num;
+    } data[] =
+    {
+        { &CLSID_NULL, 0, 0 },
+        { &CLSID_WineTestOld, 0, 0 },
+        { &CLSID_Picture_Dib, 0, 2 },
+        { &CLSID_Picture_Metafile, 2, 1 },
+        { &CLSID_Picture_EnhMetafile, 3, 1 }
+    };
+
+    for (i = 0; i < sizeof(data) / sizeof(data[0]); i++)
+    {
+        hr = CreateDataCache( NULL, data[i].clsid, &IID_IOleCache2, (void **)&cache );
+        ok( hr == S_OK, "got %08x\n", hr );
+
+        check_enum_cache( cache, enum_expect + data[i].enum_start , data[i].enum_num );
+
+        IOleCache2_QueryInterface( cache, &IID_IPersistStorage, (void **) &persist );
+        hr = IPersistStorage_GetClassID( persist, &clsid );
+        ok( hr == S_OK, "got %08x\n", hr );
+        ok( IsEqualCLSID( &clsid, data[i].clsid ), "class id mismatch %s %s\n", wine_dbgstr_guid( &clsid ),
+            wine_dbgstr_guid( data[i].clsid ) );
+
+        IPersistStorage_Release( persist );
+        IOleCache2_Release( cache );
+    }
+}
+
+static void test_data_cache_initnew(void)
+{
+    HRESULT hr;
+    IOleCache2 *cache;
+    IPersistStorage *persist;
+    IStorage *stg_dib, *stg_mf, *stg_wine;
+    CLSID clsid;
+    static const STATDATA initnew_expect[] =
+    {
+        {{ CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL }, 0, NULL, 1 },
+        {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 1 },
+    };
+    static const STATDATA initnew2_expect[] =
+    {
+        {{ CF_METAFILEPICT, 0, DVASPECT_CONTENT, -1, TYMED_MFPICT },  0, NULL, 1 },
+        {{ CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL }, 0, NULL, 2 },
+        {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 2 },
+    };
+    static const STATDATA initnew3_expect[] =
+    {
+        {{ CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL }, 0, NULL, 1 },
+        {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 1 },
+        {{ CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL }, 0, NULL, 2 },
+        {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 2 },
+        {{ CF_METAFILEPICT, 0, DVASPECT_CONTENT, -1, TYMED_MFPICT },  0, NULL, 3 },
+    };
+    static const STATDATA initnew4_expect[] =
+    {
+        {{ CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL }, 0, NULL, 2 },
+        {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 2 },
+        {{ CF_METAFILEPICT, 0, DVASPECT_CONTENT, -1, TYMED_MFPICT },  0, NULL, 3 },
+        {{ CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL }, 0, NULL, 4 },
+        {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 4 },
+    };
+
+    hr = StgCreateDocfile( NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_DELETEONRELEASE, 0, &stg_dib );
+    ok( hr == S_OK, "got %08x\n", hr);
+    hr = IStorage_SetClass( stg_dib, &CLSID_Picture_Dib );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = StgCreateDocfile( NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_DELETEONRELEASE, 0, &stg_mf );
+    ok( hr == S_OK, "got %08x\n", hr);
+    hr = IStorage_SetClass( stg_mf, &CLSID_Picture_Metafile );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = StgCreateDocfile( NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_DELETEONRELEASE, 0, &stg_wine );
+    ok( hr == S_OK, "got %08x\n", hr);
+    hr = IStorage_SetClass( stg_wine, &CLSID_WineTestOld );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = CreateDataCache( NULL, &CLSID_WineTestOld, &IID_IOleCache2, (void **)&cache );
+    ok( hr == S_OK, "got %08x\n", hr );
+    IOleCache2_QueryInterface( cache, &IID_IPersistStorage, (void **) &persist );
+
+    hr = IPersistStorage_InitNew( persist, stg_dib );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = IPersistStorage_GetClassID( persist, &clsid );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( IsEqualCLSID( &clsid, &CLSID_Picture_Dib ), "got %s\n", wine_dbgstr_guid( &clsid ) );
+
+    check_enum_cache( cache, initnew_expect, 2 );
+
+    hr = IPersistStorage_InitNew( persist, stg_mf );
+    ok( hr == CO_E_ALREADYINITIALIZED, "got %08x\n", hr);
+
+    hr = IPersistStorage_HandsOffStorage( persist );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = IPersistStorage_GetClassID( persist, &clsid );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( IsEqualCLSID( &clsid, &CLSID_Picture_Dib ), "got %s\n", wine_dbgstr_guid( &clsid ) );
+
+    hr = IPersistStorage_InitNew( persist, stg_mf );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = IPersistStorage_GetClassID( persist, &clsid );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( IsEqualCLSID( &clsid, &CLSID_Picture_Metafile ), "got %s\n", wine_dbgstr_guid( &clsid ) );
+
+    check_enum_cache( cache, initnew2_expect, 3 );
+
+    hr = IPersistStorage_HandsOffStorage( persist );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = IPersistStorage_InitNew( persist, stg_dib );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = IPersistStorage_GetClassID( persist, &clsid );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( IsEqualCLSID( &clsid, &CLSID_Picture_Dib ), "got %s\n", wine_dbgstr_guid( &clsid ) );
+
+    check_enum_cache( cache, initnew3_expect, 5 );
+
+    hr = IPersistStorage_HandsOffStorage( persist );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = IPersistStorage_InitNew( persist, stg_wine );
+    ok( hr == S_OK, "got %08x\n", hr);
+
+    hr = IPersistStorage_GetClassID( persist, &clsid );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( IsEqualCLSID( &clsid, &CLSID_WineTestOld ), "got %s\n", wine_dbgstr_guid( &clsid ) );
+
+    check_enum_cache( cache, initnew4_expect, 5 );
+
+    IStorage_Release( stg_wine );
+    IStorage_Release( stg_mf );
+    IStorage_Release( stg_dib );
+
+    IPersistStorage_Release( persist );
     IOleCache2_Release( cache );
 }
 
@@ -3012,6 +3176,8 @@ START_TEST(ole2)
     test_data_cache_dib_contents_stream( 0 );
     test_data_cache_dib_contents_stream( 1 );
     test_data_cache_bitmap();
+    test_data_cache_init();
+    test_data_cache_initnew();
     test_default_handler();
     test_runnable();
     test_OleRun();
