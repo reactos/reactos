@@ -3517,11 +3517,11 @@ static BOOL WINAPI CRYPT_AsnEncodeUtcTime(DWORD dwCertEncodingType,
     __TRY
     {
         SYSTEMTIME sysTime;
-        /* sorry, magic number: enough for tag, len, YYMMDDHHMMSSZ\0.  I use a
+        /* sorry, magic number: enough for tag, len, YYMMDDHHMMSSZ.  I use a
          * temporary buffer because the output buffer is not NULL-terminated.
          */
-        char buf[16];
-        static const DWORD bytesNeeded = sizeof(buf) - 1;
+        static const DWORD bytesNeeded = 15;
+        char buf[40];
 
         if (!pbEncoded)
         {
@@ -3574,11 +3574,11 @@ static BOOL CRYPT_AsnEncodeGeneralizedTime(DWORD dwCertEncodingType,
     __TRY
     {
         SYSTEMTIME sysTime;
-        /* sorry, magic number: enough for tag, len, YYYYMMDDHHMMSSZ\0.  I use a
+        /* sorry, magic number: enough for tag, len, YYYYMMDDHHMMSSZ.  I use a
          * temporary buffer because the output buffer is not NULL-terminated.
          */
-        char buf[18];
-        static const DWORD bytesNeeded = sizeof(buf) - 1;
+        static const DWORD bytesNeeded = 17;
+        char buf[40];
 
         if (!pbEncoded)
         {
