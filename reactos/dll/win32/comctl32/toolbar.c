@@ -1867,14 +1867,22 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 	if( bWrap )
 	{
 	    if ( !(btnPtr->fsStyle & BTNS_SEP) )
+#ifdef __REACTOS__
 	        y += cy + infoPtr->szSpacing.cy;
+#else
+	        y += cy;
+#endif
 	    else
 	    {
                if ( !(infoPtr->dwStyle & CCS_VERT))
                     y += cy + ( (btnPtr->cx > 0 ) ?
                                 btnPtr->cx : SEPARATOR_WIDTH) * 2 /3;
 		else
+#ifdef __REACTOS__
 		    y += cy + infoPtr->szSpacing.cy;
+#else
+		    y += cy;
+#endif
 
 		/* nSepRows is used to calculate the extra height following  */
 		/* the last row.					     */
@@ -1888,7 +1896,11 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 		nRows++;
 	}
 	else
+#ifdef __REACTOS__
 	    x += cx + infoPtr->szSpacing.cx;
+#else
+	    x += cx;
+#endif
     }
 
     /* infoPtr->nRows is the number of rows on the toolbar */
@@ -4485,7 +4497,7 @@ TOOLBAR_SetBitmapSize (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     short width = (short)LOWORD(lParam);
     short height = (short)HIWORD(lParam);
 
-    TRACE("hwnd=%p, wParam=%ld, lParam=%ld\n", infoPtr->hwndSelf, wParam, lParam);
+    TRACE("hwnd=%p, wParam=%ld, size %d x %d\n", infoPtr->hwndSelf, wParam, width, height);
 
     if (wParam != 0)
         FIXME("wParam is %ld. Perhaps image list index?\n", wParam);

@@ -2221,9 +2221,8 @@ static void LISTVIEW_ShowFocusRect(const LISTVIEW_INFO *infoPtr, BOOL fShow)
 	SelectObject(hdc, hOldFont);
     }
     else
-    {
-	LISTVIEW_DrawFocusRect(infoPtr, hdc);
-    }
+        LISTVIEW_InvalidateItem(infoPtr, infoPtr->nFocusedItem);
+
 done:
     ReleaseDC(infoPtr->hwndSelf, hdc);
 }
