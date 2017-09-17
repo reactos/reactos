@@ -345,9 +345,9 @@ static HRESULT WINAPI IAssemblyNameImpl_Reserved(IAssemblyName *iface,
                                                  DWORD cbReserved,
                                                  LPVOID *ppReserved)
 {
-    TRACE("(%p, %s, %p, %p, %s, %x%08x, %p, %d, %p)\n", iface,
+    TRACE("(%p, %s, %p, %p, %s, %s, %p, %d, %p)\n", iface,
           debugstr_guid(refIID), pUnkReserved1, pUnkReserved2,
-          debugstr_w(szReserved), (DWORD)(llReserved >> 32), (DWORD)llReserved,
+          debugstr_w(szReserved), wine_dbgstr_longlong(llReserved),
           pvReserved, cbReserved, ppReserved);
 
     return E_NOTIMPL;
