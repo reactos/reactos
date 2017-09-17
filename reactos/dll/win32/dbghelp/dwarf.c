@@ -1790,7 +1790,7 @@ static void dwarf2_parse_subprogram_block(dwarf2_subprogram_t* subpgm,
 
     if (!dwarf2_read_range(subpgm->ctx, di, &low_pc, &high_pc))
     {
-        FIXME("no range\n");
+        WARN("no range\n");
         return;
     }
 
