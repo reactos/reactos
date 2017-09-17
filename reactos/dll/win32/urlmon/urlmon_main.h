@@ -189,11 +189,13 @@ typedef struct {
     LONG ref;
 
     IInternetProtocol *protocol;
+    IWinInetInfo *wininet_info;
+    IWinInetHttpInfo *wininet_http_info;
+
     IInternetBindInfo *bind_info;
     IInternetProtocolSink *protocol_sink;
     IServiceProvider *service_provider;
-    IWinInetInfo *wininet_info;
-    IWinInetHttpInfo *wininet_http_info;
+    IBindCallbackRedirect *redirect_callback;
 
     struct {
         IInternetProtocol IInternetProtocol_iface;

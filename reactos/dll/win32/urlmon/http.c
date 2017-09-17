@@ -475,6 +475,18 @@ static HRESULT HttpProtocol_end_request(Protocol *protocol)
     return S_OK;
 }
 
+static BOOL is_redirect_response(DWORD status_code)
+{
+    switch(status_code) {
+    case HTTP_STATUS_REDIRECT:
+    case HTTP_STATUS_MOVED:
+    case HTTP_STATUS_REDIRECT_KEEP_VERB:
+    case HTTP_STATUS_REDIRECT_METHOD:
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static HRESULT HttpProtocol_start_downloading(Protocol *prot)
 {
     HttpProtocol *This = impl_from_Protocol(prot);
@@ -495,7 +507,21 @@ static HRESULT HttpProtocol_start_downloading(Protocol *prot)
     res = HttpQueryInfoW(This->base.request, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
             &status_code, &len, NULL);
     if(res) {
-        LPWSTR response_headers = query_http_info(This, HTTP_QUERY_RAW_HEADERS_CRLF);
+        WCHAR *response_headers;
+
+        if((This->base.bind_info.dwOptions & BINDINFO_OPTIONS_DISABLEAUTOREDIRECTS) && is_redirect_response(status_code)) {
+            WCHAR *location;
+
+            TRACE("Got redirect with disabled auto redirects\n");
+
+            location = query_http_info(This, HTTP_QUERY_LOCATION);
+            This->base.flags |= FLAG_RESULT_REPORTED | FLAG_LAST_DATA_REPORTED;
+            IInternetProtocolSink_ReportResult(This->base.protocol_sink, INET_E_REDIRECT_FAILED, 0, location);
+            heap_free(location);
+            return INET_E_REDIRECT_FAILED;
+        }
+
+        response_headers = query_http_info(This, HTTP_QUERY_RAW_HEADERS_CRLF);
         if(response_headers) {
             hres = IHttpNegotiate_OnResponse(This->http_negotiate, status_code, response_headers,
                     NULL, NULL);
