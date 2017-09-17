@@ -8537,19 +8537,23 @@ static void test_WM_GETTEXTLENGTH(void)
     DestroyWindow(hwndRichEdit);
 }
 
-static void test_rtf_specials(void)
+static void test_rtf(void)
 {
     const char *specials = "{\\rtf1\\emspace\\enspace\\bullet\\lquote"
         "\\rquote\\ldblquote\\rdblquote\\ltrmark\\rtlmark\\zwj\\zwnj}";
     const WCHAR expect_specials[] = {' ',' ',0x2022,0x2018,0x2019,0x201c,
                                      0x201d,0x200e,0x200f,0x200d,0x200c};
     const char *pard = "{\\rtf1 ABC\\rtlpar\\par DEF\\par HIJ\\pard\\par}";
+    const char *highlight = "{\\rtf1{\\colortbl;\\red0\\green0\\blue0;\\red128\\green128\\blue128;\\red192\\green192\\blue192;}\\cf2\\highlight3 foo\\par}";
+
     HWND edit = new_richeditW( NULL );
     EDITSTREAM es;
     WCHAR buf[80];
     LRESULT result;
     PARAFORMAT2 fmt;
+    CHARFORMAT2W cf;
 
+    /* Test rtf specials */
     es.dwCookie = (DWORD_PTR)&specials;
     es.dwError = 0;
     es.pfnCallback = test_EM_STREAMIN_esCallback;
@@ -8579,6 +8583,18 @@ static void test_rtf_specials(void)
     SendMessageW( edit, EM_GETPARAFORMAT, 0, (LPARAM)&fmt );
     ok( fmt.dwMask & PFM_RTLPARA, "rtl para mask not set\n" );
     ok( !(fmt.wEffects & PFE_RTLPARA), "rtl para set\n" );
+
+    /* Test \highlight */
+    es.dwCookie = (DWORD_PTR)&highlight;
+    result = SendMessageA( edit, EM_STREAMIN, SF_RTF, (LPARAM)&es );
+    ok( result == 3, "got %ld\n", result );
+    SendMessageW( edit, EM_SETSEL, 1, 1 );
+    memset( &cf, 0, sizeof(cf) );
+    cf.cbSize = sizeof(cf);
+    SendMessageW( edit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf );
+    ok( (cf.dwEffects & (CFE_AUTOCOLOR | CFE_AUTOBACKCOLOR)) == 0, "got %08x\n", cf.dwEffects );
+    ok( cf.crTextColor == RGB(128,128,128), "got %08x\n", cf.crTextColor );
+    ok( cf.crBackColor == RGB(192,192,192), "got %08x\n", cf.crBackColor );
 
     DestroyWindow( edit );
 }
@@ -8802,7 +8818,7 @@ START_TEST( editor )
   test_EM_SETREADONLY();
   test_EM_SETFONTSIZE();
   test_alignment_style();
-  test_rtf_specials();
+  test_rtf();
   test_background();
   test_eop_char_fmt();
   test_para_numbering();
