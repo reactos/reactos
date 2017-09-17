@@ -107,7 +107,7 @@ STRINGTABLE
     IDS_WARN_REMOVE_MY "You will no longer be able to decrypt messages with this certificate, or sign messages with it.\nAre you sure you want to remove this certificate?"
     IDS_WARN_REMOVE_PLURAL_MY "You will no longer be able to decrypt messages with these certificates, or sign messages with them.\nAre you sure you want to remove these certificates?"
     IDS_WARN_REMOVE_ADDRESSBOOK "You will no longer be able to encrypt messages with this certificate, or verify messages signed with it.\nAre you sure you want to remove this certificate?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "You will no longer be able to encrypt messages with these certificates, or verify messages signed with it.\nAre you sure you want to remove these certificates?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "You will no longer be able to encrypt messages with these certificates, or verify messages signed with them.\nAre you sure you want to remove these certificates?"
     IDS_WARN_REMOVE_CA "Certificates issued by this certification authority will no longer be trusted.\nAre you sure you want to remove this certificate?"
     IDS_WARN_REMOVE_PLURAL_CA "Certificates issued by these certification authorities will no longer be trusted.\nAre you sure you want to remove these certificates?"
     IDS_WARN_REMOVE_ROOT "Certificates issued by this root certification authority, or any certification authorities it issued, will no longer be trusted.\nAre you sure you want to remove this trusted root certificate?"
@@ -195,7 +195,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Show:", -1, 6,12,40,14
-  COMBOBOX IDC_DETAIL_SELECT, 48,10,100,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  COMBOBOX IDC_DETAIL_SELECT, 48,10,100,60, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
   CONTROL "", IDC_DETAIL_LIST, "SysListView32",
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 6,28,241,100
   CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W", ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
@@ -342,7 +342,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "I&ntended purpose:", -1, 7,9,100,12
-  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,60, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
   CONTROL "", IDC_MGR_STORES, "SysTabControl32", WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
   CONTROL "", IDC_MGR_CERTS, "SysListView32", LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
   PUSHBUTTON "&Import...", IDC_MGR_IMPORT, 7,172,65,14
