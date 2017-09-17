@@ -1,7 +1,10 @@
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
-add_definitions(-DUSE_WINE_TODOS)
+add_definitions(
+    -DUSE_WINE_TODOS
+    -DWINETEST_USE_DBGSTR_LONGLONG)
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
 add_rpc_files(client server.idl)
