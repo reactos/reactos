@@ -954,10 +954,15 @@ static HRESULT WINAPI MimeBody_GetClassID(
                                  CLSID* pClassID)
 {
     MimeBody *This = impl_from_IMimeBody(iface);
-    FIXME("(%p)->(%p) stub\n", This, pClassID);
-    return E_NOTIMPL;
-}
 
+    TRACE("(%p)->(%p)\n", This, pClassID);
+
+    if(!pClassID)
+        return E_INVALIDARG;
+
+    *pClassID = IID_IMimeBody;
+    return S_OK;
+}
 
 static HRESULT WINAPI MimeBody_IsDirty(
                               IMimeBody* iface)
@@ -1738,7 +1743,7 @@ static HRESULT WINAPI MimeBody_SetData(
     }
 
     if(This->data)
-        FIXME("release old data\n");
+        release_data(&This->data_iid, This->data);
 
     This->data_iid = *riid;
     This->data = pvObject;
