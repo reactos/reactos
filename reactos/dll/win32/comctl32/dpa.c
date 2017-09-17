@@ -275,13 +275,13 @@ BOOL WINAPI DPA_Merge (HDPA hdpa1, HDPA hdpa2, DWORD dwFlags,
         return FALSE;
 
     if (!(dwFlags & DPAM_SORTED)) {
-        TRACE("sorting dpa's!\n");
+        TRACE("sorting dpa's.\n");
         if (hdpa1->nItemCount > 0)
         DPA_Sort (hdpa1, pfnCompare, lParam);
-        TRACE ("dpa 1 sorted!\n");
+        TRACE ("dpa 1 sorted.\n");
         if (hdpa2->nItemCount > 0)
         DPA_Sort (hdpa2, pfnCompare, lParam);
-        TRACE ("dpa 2 sorted!\n");
+        TRACE ("dpa 2 sorted.\n");
     }
 
     if (hdpa2->nItemCount < 1)

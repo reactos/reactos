@@ -1698,7 +1698,7 @@ HEADER_LButtonDown (HEADER_INFO *infoPtr, INT x, INT y)
 	HEADER_RefreshItem (infoPtr, nItem);
 	ReleaseDC (infoPtr->hwndSelf, hdc);
 
-	TRACE("Pressed item %d!\n", nItem);
+	TRACE("Pressed item %d.\n", nItem);
     }
     else if ((flags == HHT_ONDIVIDER) || (flags == HHT_ONDIVOPEN)) {
         INT iCurrWidth = infoPtr->items[nItem].cxy;
@@ -1717,7 +1717,7 @@ HEADER_LButtonDown (HEADER_INFO *infoPtr, INT x, INT y)
 		ReleaseDC (infoPtr->hwndSelf, hdc);
 	    }
 
-	    TRACE("Begin tracking item %d!\n", nItem);
+	    TRACE("Begin tracking item %d.\n", nItem);
 	}
     }
 
@@ -1783,14 +1783,14 @@ HEADER_LButtonUp (HEADER_INFO *infoPtr, INT x, INT y)
 		HEADER_SendNotifyWithHDItemT(infoPtr, HDN_ITEMCLICKW, infoPtr->iMoveItem, NULL);
 	}
 
-	TRACE("Released item %d!\n", infoPtr->iMoveItem);
+	TRACE("Released item %d.\n", infoPtr->iMoveItem);
 	infoPtr->bPressed = FALSE;
     }
     else if (infoPtr->bTracking) {
         INT iNewWidth = pt.x - infoPtr->items[infoPtr->iMoveItem].rect.left + infoPtr->xTrackOffset;
         if (iNewWidth < 0)
 	    iNewWidth = 0;
-	TRACE("End tracking item %d!\n", infoPtr->iMoveItem);
+	TRACE("End tracking item %d.\n", infoPtr->iMoveItem);
 	infoPtr->bTracking = FALSE;
 
         HEADER_SendNotifyWithIntFieldT(infoPtr, HDN_ENDTRACKW, infoPtr->iMoveItem, HDI_WIDTH, iNewWidth);
@@ -1920,7 +1920,7 @@ HEADER_MouseMove (HEADER_INFO *infoPtr, LPARAM lParam)
 	        ReleaseDC (infoPtr->hwndSelf, hdc);
             }
 
-	    TRACE("Moving pressed item %d!\n", infoPtr->iMoveItem);
+	    TRACE("Moving pressed item %d.\n", infoPtr->iMoveItem);
 	}
 	else if (infoPtr->bTracking) {
 	    if (infoPtr->dwStyle & HDS_FULLDRAG) {
@@ -1960,7 +1960,7 @@ HEADER_MouseMove (HEADER_INFO *infoPtr, LPARAM lParam)
                 HEADER_SendNotifyWithIntFieldT(infoPtr, HDN_TRACKW, infoPtr->iMoveItem, HDI_WIDTH, iTrackWidth);
 	    }
 
-	    TRACE("Tracking item %d!\n", infoPtr->iMoveItem);
+	    TRACE("Tracking item %d.\n", infoPtr->iMoveItem);
 	}
     }
 

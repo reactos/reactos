@@ -10776,10 +10776,11 @@ static inline LRESULT LISTVIEW_WMPaint(LISTVIEW_INFO *infoPtr, HDC hdc)
  */
 static LRESULT LISTVIEW_PrintClient(LISTVIEW_INFO *infoPtr, HDC hdc, DWORD options)
 {
-    FIXME("Partial Stub: (hdc=%p options=0x%08x)\n", hdc, options);
-
     if ((options & PRF_CHECKVISIBLE) && !IsWindowVisible(infoPtr->hwndSelf))
         return 0;
+
+    if (options & ~(PRF_ERASEBKGND|PRF_CLIENT))
+        FIXME("(hdc=%p options=0x%08x) partial stub\n", hdc, options);
 
     if (options & PRF_ERASEBKGND)
         LISTVIEW_EraseBkgnd(infoPtr, hdc);

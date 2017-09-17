@@ -695,7 +695,7 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
 
     if (!lpszName) 
     {
-	TRACE("Closing avi!\n");
+	TRACE("Closing avi.\n");
         /* installer of thebat! v1.62 requires FALSE here */
 	return (infoPtr->hMMio != 0);
     }
@@ -709,10 +709,10 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
     {
 	if (!ANIMATE_LoadResW(infoPtr, hInstance, lpszName)) 
         {
-	    TRACE("No AVI resource found!\n");
+	    TRACE("No AVI resource found.\n");
 	    if (!ANIMATE_LoadFileW(infoPtr, lpszName)) 
             {
-		WARN("No AVI file found!\n");
+		WARN("No AVI file found.\n");
 		return FALSE;
 	    }
 	}
@@ -721,7 +721,7 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
     {
 	if (!ANIMATE_LoadResW(infoPtr, hInstance, lpszName))
         {
-	    WARN("No AVI resource found!\n");
+	    WARN("No AVI resource found.\n");
 	    return FALSE;
 	}
     }

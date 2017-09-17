@@ -1,7 +1,17 @@
 diff -pudN e:\wine\dlls\comctl32/comctl32.h e:\reactos\dll\win32\comctl32/comctl32.h
---- e:\wine\dlls\comctl32/comctl32.h	2016-11-16 17:28:41 +0100
-+++ e:\reactos\dll\win32\comctl32/comctl32.h	2014-03-05 11:47:40 +0100
-@@ -53,67 +53,6 @@
+--- e:\wine\dlls\comctl32/comctl32.h	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/comctl32.h	2017-06-15 11:36:56 +0100
+@@ -45,83 +45,15 @@
+ #include <uxtheme.h>
+ #include <vssym32.h>
+ 
+-#include <wine/unicode.h>
+ #include <wine/debug.h>
++#include <wine/list.h>
++#include <wine/unicode.h>
+ 
+ #include "resource.h"
+ 
  extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
  extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
  
@@ -66,10 +76,40 @@ diff -pudN e:\wine\dlls\comctl32/comctl32.h e:\reactos\dll\win32\comctl32/comctl
 -#define IDI_TT_WARN_SM                   25
 -#define IDI_TT_ERROR_SM                  28
 -
+-/* Taskdialog strings */
+-#define IDS_BUTTON_YES    3000
+-#define IDS_BUTTON_NO     3001
+-#define IDS_BUTTON_RETRY  3002
+-#define IDS_BUTTON_OK     3003
+-#define IDS_BUTTON_CANCEL 3004
+-#define IDS_BUTTON_CLOSE  3005
+-
  typedef struct
  {
      COLORREF clrBtnHighlight;       /* COLOR_BTNHIGHLIGHT                  */
-@@ -149,8 +88,6 @@ INT  Str_GetPtrAtoW (LPCSTR lpSrc, LPWST
+@@ -145,6 +77,21 @@ typedef struct
+ 
+ extern COMCTL32_SysColor  comctl32_color DECLSPEC_HIDDEN;
+ 
++typedef struct _BUTTON_DATA {
++    LONG state;
++    HFONT font;
++    LONG_PTR image;
++    DWORD ui_state;
++
++    RECT rcTextMargin;
++    BUTTON_IMAGELIST imlData;
++} BUTTON_DATA, *PBUTTON_DATA;
++
++static inline PBUTTON_DATA _GetButtonData(HWND hwnd)
++{
++    return (PBUTTON_DATA)GetWindowLongPtrW( hwnd, 0 );
++}
++
+ /* Internal function */
+ HWND COMCTL32_CreateToolTip (HWND) DECLSPEC_HIDDEN;
+ VOID COMCTL32_RefreshSysColors(void) DECLSPEC_HIDDEN;
+@@ -157,8 +104,6 @@ INT  Str_GetPtrAtoW (LPCSTR lpSrc, LPWST
  BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc) DECLSPEC_HIDDEN;
  BOOL Str_SetPtrWtoA (LPSTR *lppDest, LPCWSTR lpSrc) DECLSPEC_HIDDEN;
  
@@ -78,14 +118,49 @@ diff -pudN e:\wine\dlls\comctl32/comctl32.h e:\reactos\dll\win32\comctl32/comctl
  /* Our internal stack structure of the window procedures to subclass */
  typedef struct _SUBCLASSPROCS {
      SUBCLASSPROC subproc;
+@@ -230,13 +175,18 @@ extern void TREEVIEW_Register(void) DECL
+ extern void TREEVIEW_Unregister(void) DECLSPEC_HIDDEN;
+ extern void UPDOWN_Register(void) DECLSPEC_HIDDEN;
+ extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
+-
++extern void BUTTON_Register();
++extern void BUTTON_Unregister();
++#ifdef __REACTOS__
++extern void TOOLBARv6_Register(void) DECLSPEC_HIDDEN;
++extern void TOOLBARv6_Unregister(void) DECLSPEC_HIDDEN;
++#endif
+ 
+ int MONTHCAL_MonthLength(int month, int year) DECLSPEC_HIDDEN;
+ int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace) DECLSPEC_HIDDEN;
+ LONG MONTHCAL_CompareSystemTime(const SYSTEMTIME *first, const SYSTEMTIME *second) DECLSPEC_HIDDEN;
+ 
+-extern void THEMING_Initialize(void) DECLSPEC_HIDDEN;
++extern void THEMING_Initialize(HANDLE hActCtx5, HANDLE hActCtx6) DECLSPEC_HIDDEN;
+ extern void THEMING_Uninitialize(void) DECLSPEC_HIDDEN;
+ extern LRESULT THEMING_CallOriginalClass(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
+ extern void THEMING_SetSubclassData(HWND, ULONG_PTR) DECLSPEC_HIDDEN;
 diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commctrl.c
---- e:\wine\dlls\comctl32/commctrl.c	2016-11-16 17:28:41 +0100
-+++ e:\reactos\dll\win32\comctl32/commctrl.c	2016-02-26 11:19:35 +0100
-@@ -60,6 +60,19 @@
+--- e:\wine\dlls\comctl32/commctrl.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/commctrl.c	2017-08-17 11:24:56 +0100
+@@ -3,7 +3,7 @@
+  *
+  * Copyright 1997 Dimitrie O. Paun
+  * Copyright 1998,2000 Eric Kohl
+- * Copyright 2014-2015 Michael MÃ¼ller
++ * Copyright 2014-2015 Michael Müller
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+@@ -81,6 +81,259 @@ static const WCHAR strCC32SubclassInfo[]
+     'C','C','3','2','S','u','b','c','l','a','s','s','I','n','f','o',0
+ };
  
- WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
- 
++#ifdef __REACTOS__
++
++#include <strsafe.h>
++
 +#define NAME       L"microsoft.windows.common-controls"
++#define VERSION_V5 L"5.82.2600.2982"
 +#define VERSION    L"6.0.2600.2982"
 +#define PUBLIC_KEY L"6595b64144ccf1df"
 +
@@ -98,24 +173,51 @@ diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commct
 +#endif
 +
 +static const WCHAR manifest_filename[] = ARCH L"_" NAME L"_" PUBLIC_KEY L"_" VERSION L"_none_deadbeef.manifest";
- 
- static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
- 
-@@ -81,6 +94,67 @@ static const WCHAR strCC32SubclassInfo[]
-     'C','C','3','2','S','u','b','c','l','a','s','s','I','n','f','o',0
- };
- 
-+static BOOL create_manifest(BOOL install)
++static const WCHAR manifest_filename_v5[] = ARCH L"_" NAME L"_" PUBLIC_KEY L"_" VERSION_V5 L"_none_deadbeef.manifest";
++
++static WCHAR* GetManifestPath(BOOL create, BOOL bV6)
++{
++    WCHAR *pwszBuf;
++    HRESULT hres;
++
++    pwszBuf = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
++    if (!pwszBuf)
++        return NULL;
++
++    GetWindowsDirectoryW(pwszBuf, MAX_PATH);
++    hres = StringCchCatW(pwszBuf, MAX_PATH, L"\\winsxs");
++    if (FAILED(hres))
++        return NULL;
++    if (create)
++        CreateDirectoryW(pwszBuf, NULL);
++    hres = StringCchCatW(pwszBuf, MAX_PATH, L"\\manifests\\");
++    if (FAILED(hres))
++        return NULL;
++    if (create)
++        CreateDirectoryW(pwszBuf, NULL);
++
++    hres = StringCchCatW(pwszBuf, MAX_PATH, bV6 ? manifest_filename : manifest_filename_v5);
++    if (FAILED(hres))
++        return NULL;
++
++    return pwszBuf;
++}
++
++static BOOL create_manifest(BOOL install, BOOL bV6)
 +{
 +    WCHAR *pwszBuf;
 +    HRSRC hResInfo;
 +    HGLOBAL hResData;
 +    PVOID pManifest;
-+    DWORD cchBuf, cbManifest, cbWritten;
++    DWORD cbManifest, cbWritten;
 +    HANDLE hFile;
 +    BOOL bRet = FALSE;
 +
-+    hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", (LPWSTR)RT_MANIFEST);
++    if (bV6)
++        hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", (LPWSTR)RT_MANIFEST);
++    else
++        hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFESTV5", (LPWSTR)RT_MANIFEST);
++
 +    if (!hResInfo)
 +        return FALSE;
 +
@@ -131,17 +233,10 @@ diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commct
 +    if (!pManifest)
 +        return FALSE;
 +
-+    cchBuf = GetWindowsDirectoryW(NULL, 0) * sizeof(WCHAR) + sizeof(L"\\winsxs\\manifests\\") + sizeof(manifest_filename);
-+    pwszBuf = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, cchBuf * sizeof(WCHAR));
++    pwszBuf = GetManifestPath(TRUE, bV6);
 +    if (!pwszBuf)
 +        return FALSE;
 +
-+    GetWindowsDirectoryW(pwszBuf, cchBuf);
-+    lstrcatW(pwszBuf, L"\\winsxs");
-+    CreateDirectoryW(pwszBuf, NULL);
-+    lstrcatW(pwszBuf, L"\\manifests\\");
-+    CreateDirectoryW(pwszBuf, NULL);
-+    lstrcatW(pwszBuf, manifest_filename);
 +    if (install)
 +    {
 +        hFile = CreateFileW(pwszBuf, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
@@ -166,23 +261,215 @@ diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commct
 +    return bRet;
 +}
 +
++static HANDLE CreateComctl32ActCtx(BOOL bV6)
++{
++    HANDLE ret;
++    WCHAR* pwstrSource;
++    ACTCTXW ActCtx = {sizeof(ACTCTX)};
++
++    pwstrSource = GetManifestPath(FALSE, bV6);
++    if (!pwstrSource)
++    {
++        ERR("GetManifestPath failed! bV6=%d\n", bV6);
++        return INVALID_HANDLE_VALUE;
++    }
++    ActCtx.lpSource = pwstrSource;
++    ret = CreateActCtxW(&ActCtx);
++    HeapFree(GetProcessHeap(), 0, pwstrSource);
++    if (ret == INVALID_HANDLE_VALUE)
++        ERR("CreateActCtxW failed! bV6=%d\n", bV6);
++    return ret;
++}
++
++static void RegisterControls(BOOL bV6)
++{
++    ANIMATE_Register ();
++    COMBOEX_Register ();
++    DATETIME_Register ();
++    FLATSB_Register ();
++    HEADER_Register ();
++    HOTKEY_Register ();
++    IPADDRESS_Register ();
++    LISTVIEW_Register ();
++    MONTHCAL_Register ();
++    NATIVEFONT_Register ();
++    PAGER_Register ();
++    PROGRESS_Register ();
++    REBAR_Register ();
++    STATUS_Register ();
++    SYSLINK_Register ();
++    TAB_Register ();
++    TOOLTIPS_Register ();
++    TRACKBAR_Register ();
++    TREEVIEW_Register ();
++    UPDOWN_Register ();
++
++    if (!bV6)
++    {
++        TOOLBAR_Register ();
++    }
++    else
++    {
++        BUTTON_Register();
++        TOOLBARv6_Register();
++    }
++}
++
++static void UnregisterControls(BOOL bV6)
++{
++    ANIMATE_Unregister ();
++    COMBOEX_Unregister ();
++    DATETIME_Unregister ();
++    FLATSB_Unregister ();
++    HEADER_Unregister ();
++    HOTKEY_Unregister ();
++    IPADDRESS_Unregister ();
++    LISTVIEW_Unregister ();
++    MONTHCAL_Unregister ();
++    NATIVEFONT_Unregister ();
++    PAGER_Unregister ();
++    PROGRESS_Unregister ();
++    REBAR_Unregister ();
++    STATUS_Unregister ();
++    SYSLINK_Unregister ();
++    TAB_Unregister ();
++    TOOLTIPS_Unregister ();
++    TRACKBAR_Unregister ();
++    TREEVIEW_Unregister ();
++    UPDOWN_Unregister ();
++
++    if (!bV6)
++    {
++        TOOLBAR_Unregister ();
++    }
++    else
++    {
++        BUTTON_Unregister();
++        TOOLBARv6_Unregister ();
++    }
++
++}
++
++static void InitializeClasses()
++{
++    HANDLE hActCtx5, hActCtx6;
++    BOOL activated;
++    ULONG_PTR ulCookie;
++
++    /* like comctl32 5.82+ register all the common control classes */
++    /* Register the classes once no matter what */
++    hActCtx5 = CreateComctl32ActCtx(FALSE);
++    activated = (hActCtx5 != INVALID_HANDLE_VALUE ? ActivateActCtx(hActCtx5, &ulCookie) : FALSE);
++    RegisterControls(FALSE);      /* Register the classes pretending to be v5 */
++    if (activated) DeactivateActCtx(0, ulCookie);
++
++    hActCtx6 = CreateComctl32ActCtx(TRUE);
++    if (hActCtx6 != INVALID_HANDLE_VALUE)
++    {
++        activated = ActivateActCtx(hActCtx6, &ulCookie);
++        RegisterControls(TRUE);      /* Register the classes pretending to be v6 */
++        if (activated) DeactivateActCtx(0, ulCookie);
++
++        /* Initialize the themed controls only when the v6 manifest is present */
++        THEMING_Initialize (hActCtx5, hActCtx6);
++    }
++}
++
++static void UninitializeClasses()
++{
++    HANDLE hActCtx5, hActCtx6;
++    BOOL activated;
++    ULONG_PTR ulCookie;
++
++    hActCtx5 = CreateComctl32ActCtx(FALSE);
++    activated = (hActCtx5 != INVALID_HANDLE_VALUE ? ActivateActCtx(hActCtx5, &ulCookie) : FALSE);
++    UnregisterControls(FALSE);
++    if (activated) DeactivateActCtx(0, ulCookie);
++
++    hActCtx6 = CreateComctl32ActCtx(TRUE);
++    if (hActCtx6 != INVALID_HANDLE_VALUE)
++    {
++        activated = ActivateActCtx(hActCtx6, &ulCookie);
++        THEMING_Uninitialize();
++        UnregisterControls(TRUE);
++        if (activated) DeactivateActCtx(0, ulCookie);
++    }
++}
++
++/***********************************************************************
++ * RegisterClassNameW [COMCTL32.@]
++ *
++ * Register window class again while using as SxS module.
++ */
++BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
++{
++    InitializeClasses();
++    return TRUE;
++}
++
++#endif
  
  /***********************************************************************
   * DllMain [Internal]
-@@ -917,6 +991,12 @@ HRESULT WINAPI DllGetVersion (DLLVERSION
+@@ -118,6 +371,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, 
+ 	    /* Get all the colors at DLL load */
+ 	    COMCTL32_RefreshSysColors();
+ 
++#ifndef __REACTOS__
+             /* like comctl32 5.82+ register all the common control classes */
+             ANIMATE_Register ();
+             COMBOEX_Register ();
+@@ -143,10 +397,15 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, 
+ 
+             /* subclass user32 controls */
+             THEMING_Initialize ();
++#else
++            InitializeClasses();
++#endif
++
+             break;
+ 
+ 	case DLL_PROCESS_DETACH:
+             if (lpvReserved) break;
++#ifndef __REACTOS__
+             /* clean up subclassing */
+             THEMING_Uninitialize();
+ 
+@@ -172,7 +431,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, 
+             TRACKBAR_Unregister ();
+             TREEVIEW_Unregister ();
+             UPDOWN_Unregister ();
+-
++#else
++            UninitializeClasses();
++#endif
+             /* delete local pattern brush */
+             DeleteObject (COMCTL32_hPattern55AABrush);
+             DeleteObject (COMCTL32_hPattern55AABitmap);
+@@ -917,6 +1178,22 @@ HRESULT WINAPI DllGetVersion (DLLVERSION
  HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
  {
      TRACE("(%u, %s): stub\n", bInstall, debugstr_w(cmdline));
-+    if (!create_manifest(bInstall))
++
++#ifdef __REACTOS__
++
++    if (!create_manifest(bInstall, TRUE))
 +    {
-+        ERR("create_manifest failed!\n");
++        ERR("Failed to install comctl32 v6 manifest!\n");
 +        return HRESULT_FROM_WIN32(GetLastError());
 +    }
++
++    if (!create_manifest(bInstall, FALSE))
++    {
++        ERR("Failed to install comctl32 v5 manifest!\n");
++        return HRESULT_FROM_WIN32(GetLastError());
++    }
++#endif
 +
      return S_OK;
  }
  
-@@ -1580,33 +1660,114 @@ LRESULT WINAPI SetPathWordBreakProc(HWND
+@@ -1580,33 +1857,113 @@ LRESULT WINAPI SetPathWordBreakProc(HWND
   *
   * Draw text with shadow.
   */
@@ -229,6 +516,7 @@ diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commct
 +    {
 +        ERR("CreateCompatibleDC failed\n");
 +        DeleteObject(hbm);
+
 +        return 0;
 +    }
  
@@ -298,8 +586,7 @@ diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commct
 +    bf.BlendFlags = 0;
 +    bf.SourceConstantAlpha = 255;
 +    bf.AlphaFormat = AC_SRC_ALPHA;
-+    if (!GdiAlphaBlend(hdc, prc->left + ixOffset, prc->top + iyOffset, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, hdcMem, 0, 0, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, bf))
-+        ERR("GdiAlphaBlend failed: %lu\n", GetLastError());
++    GdiAlphaBlend(hdc, prc->left + ixOffset, prc->top + iyOffset, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, hdcMem, 0, 0, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, bf);
 +
 +    /* Delete the helper bitmap */
 +    SelectObject(hdcMem, hbmOld);
@@ -316,25 +603,9 @@ diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commct
  }
  
  /***********************************************************************
-@@ -1695,3 +1856,15 @@ HRESULT WINAPI LoadIconMetric(HINSTANCE 
- 
-     return LoadIconWithScaleDown(hinst, name, cx, cy, icon);
- }
-+
-+/***********************************************************************
-+ * RegisterClassNameW [COMCTL32.@]
-+ *
-+ * Register window class again while using as SxS module.
-+ */
-+BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
-+{
-+    /* FIXME: actually register redirected user32 class,
-+              comctl32 classes are registered by this module anyway */
-+    return TRUE;
-+}
 diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/imagelist.c
---- e:\wine\dlls\comctl32/imagelist.c	2016-11-16 17:28:41 +0100
-+++ e:\reactos\dll\win32\comctl32/imagelist.c	2016-08-15 16:07:59 +0100
+--- e:\wine\dlls\comctl32/imagelist.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/imagelist.c	2017-05-07 14:47:57 +0100
 @@ -33,7 +33,7 @@
   *
   *  TODO:
@@ -344,7 +615,7 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
   *    - Thread-safe locking
   */
  
-@@ -1229,8 +1229,11 @@ ImageList_DrawEx (HIMAGELIST himl, INT i
+@@ -1243,8 +1243,11 @@ ImageList_DrawEx (HIMAGELIST himl, INT i
      return ImageList_DrawIndirect (&imldp);
  }
  
@@ -357,7 +628,7 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
                                 int src_x, int src_y, int cx, int cy, BLENDFUNCTION func,
                                 UINT style, COLORREF blend_col )
  {
-@@ -1255,9 +1258,17 @@ static BOOL alpha_blend_image( HIMAGELIS
+@@ -1269,9 +1272,17 @@ static BOOL alpha_blend_image( HIMAGELIS
      info->bmiHeader.biYPelsPerMeter = 0;
      info->bmiHeader.biClrUsed = 0;
      info->bmiHeader.biClrImportant = 0;
@@ -375,7 +646,7 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
  
      if (blend_col != CLR_NONE)
      {
-@@ -1330,6 +1341,68 @@ done:
+@@ -1344,6 +1355,68 @@ done:
      return ret;
  }
  
@@ -444,7 +715,17 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
  /*************************************************************************
   * ImageList_DrawIndirect [COMCTL32.@]
   *
-@@ -1406,6 +1479,23 @@ ImageList_DrawIndirect (IMAGELISTDRAWPAR
+@@ -1371,6 +1444,9 @@ ImageList_DrawIndirect (IMAGELISTDRAWPAR
+     HBRUSH hOldBrush;
+     POINT pt;
+     BOOL has_alpha;
++#ifdef __REACTOS__
++    HDC hdcSaturated = NULL;
++#endif
+ 
+     if (!pimldp || !(himl = pimldp->himl)) return FALSE;
+     if (!is_valid(himl)) return FALSE;
+@@ -1420,6 +1496,24 @@ ImageList_DrawIndirect (IMAGELISTDRAWPAR
      oldImageFg = SetTextColor( hImageDC, RGB( 0, 0, 0 ) );
      oldImageBk = SetBkColor( hImageDC, RGB( 0xff, 0xff, 0xff ) );
  
@@ -455,9 +736,10 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
 +     */
 +    if (fState & ILS_SATURATE)
 +    {
-+        hImageListDC = saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
++        hdcSaturated = saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
 +                                      pt.x, pt.y, cx, cy, pimldp->rgbFg);
 +
++        hImageListDC = hdcSaturated;
 +        /* shitty way of getting subroutines to blit at the right place (top left corner),
 +           as our modified imagelist only contains a single image for performance reasons */
 +        pt.x = 0;
@@ -468,7 +750,7 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
      has_alpha = (himl->has_alpha && himl->has_alpha[pimldp->i]);
      if (!bMask && (has_alpha || (fState & ILS_ALPHA)))
      {
-@@ -1426,7 +1516,11 @@ ImageList_DrawIndirect (IMAGELISTDRAWPAR
+@@ -1440,7 +1534,11 @@ ImageList_DrawIndirect (IMAGELISTDRAWPAR
  
          if (bIsTransparent)
          {
@@ -480,7 +762,7 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
                                           pt.x, pt.y, cx, cy, func, fStyle, blend_col );
              goto end;
          }
-@@ -1436,7 +1530,11 @@ ImageList_DrawIndirect (IMAGELISTDRAWPAR
+@@ -1450,7 +1548,11 @@ ImageList_DrawIndirect (IMAGELISTDRAWPAR
  
          hOldBrush = SelectObject (hImageDC, CreateSolidBrush (colour));
          PatBlt( hImageDC, 0, 0, cx, cy, PATCOPY );
@@ -492,7 +774,7 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
          DeleteObject (SelectObject (hImageDC, hOldBrush));
          bResult = BitBlt( pimldp->hdcDst, pimldp->x,  pimldp->y, cx, cy, hImageDC, 0, 0, SRCCOPY );
          goto end;
-@@ -1530,7 +1628,9 @@ ImageList_DrawIndirect (IMAGELISTDRAWPAR
+@@ -1544,7 +1646,9 @@ ImageList_DrawIndirect (IMAGELISTDRAWPAR
  	}
      }
  
@@ -502,11 +784,22 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
      if (fState & ILS_GLOW) FIXME("ILS_GLOW: unimplemented!\n");
      if (fState & ILS_SHADOW) FIXME("ILS_SHADOW: unimplemented!\n");
  
+@@ -1572,6 +1676,10 @@ end:
+     SetTextColor(hImageDC, oldImageFg);
+     SelectObject(hImageDC, hOldImageBmp);
+ cleanup:
++#ifdef __REACTOS__
++    if (hdcSaturated)
++        DeleteDC(hdcSaturated);
++#endif
+     DeleteObject(hBlendMaskBmp);
+     DeleteObject(hImageBmp);
+     DeleteDC(hImageDC);
 Common subdirectories: e:\wine\dlls\comctl32/lang and e:\reactos\dll\win32\comctl32/lang
 diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listview.c
---- e:\wine\dlls\comctl32/listview.c	2016-11-16 17:28:41 +0100
-+++ e:\reactos\dll\win32\comctl32/listview.c	2016-08-15 16:09:30 +0100
-@@ -287,6 +287,9 @@ typedef struct tagLISTVIEW_INFO
+--- e:\wine\dlls\comctl32/listview.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/listview.c	2017-08-04 10:38:09 +0100
+@@ -286,6 +286,9 @@ typedef struct tagLISTVIEW_INFO
    COLORREF clrBk;
    COLORREF clrText;
    COLORREF clrTextBk;
@@ -516,7 +809,7 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
  
    /* font */
    HFONT hDefaultFont;
-@@ -1696,8 +1699,24 @@ static inline BOOL LISTVIEW_GetItemW(con
+@@ -1695,8 +1698,24 @@ static inline BOOL LISTVIEW_GetItemW(con
  /* used to handle collapse main item column case */
  static inline BOOL LISTVIEW_DrawFocusRect(const LISTVIEW_INFO *infoPtr, HDC hdc)
  {
@@ -541,7 +834,19 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
  }
  
  /* Listview invalidation functions: use _only_ these functions to invalidate */
-@@ -4688,7 +4707,12 @@ static void LISTVIEW_DrawItemPart(LISTVI
+@@ -2202,8 +2221,9 @@ static void LISTVIEW_ShowFocusRect(const
+ 	SelectObject(hdc, hOldFont);
+     }
+     else
+-        LISTVIEW_InvalidateItem(infoPtr, infoPtr->nFocusedItem);
+-
++    {
++	LISTVIEW_DrawFocusRect(infoPtr, hdc);
++    }
+ done:
+     ReleaseDC(infoPtr->hwndSelf, hdc);
+ }
+@@ -4707,7 +4727,12 @@ static void LISTVIEW_DrawItemPart(LISTVI
      if (infoPtr->uView == LV_VIEW_DETAILS && infoPtr->dwLvExStyle & LVS_EX_GRIDLINES)
          rcLabel.bottom--;
  
@@ -555,7 +860,7 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
  }
  
  /***
-@@ -5232,7 +5256,11 @@ enddraw:
+@@ -5251,7 +5276,11 @@ enddraw:
  
      /* Draw marquee rectangle if appropriate */
      if (infoPtr->bMarqueeSelect)
@@ -567,7 +872,7 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
  
      if (cdmode & CDRF_NOTIFYPOSTPAINT)
  	notify_postpaint(infoPtr, &nmlvcd);
-@@ -8035,6 +8063,9 @@ static BOOL LISTVIEW_SetBkColor(LISTVIEW
+@@ -8056,6 +8085,9 @@ static BOOL LISTVIEW_SetBkColor(LISTVIEW
  {
      TRACE("(color=%x)\n", color);
  
@@ -577,7 +882,7 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
      if(infoPtr->clrBk != color) {
  	if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);
  	infoPtr->clrBk = color;
-@@ -8710,7 +8741,7 @@ static DWORD LISTVIEW_SetIconSpacing(LIS
+@@ -8731,7 +8763,7 @@ static DWORD LISTVIEW_SetIconSpacing(LIS
      return oldspacing;
  }
  
@@ -586,7 +891,7 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
  {
      INT cx, cy;
      
-@@ -8721,8 +8752,8 @@ static inline void set_icon_size(SIZE *s
+@@ -8742,8 +8774,8 @@ static inline void set_icon_size(SIZE *s
      }
      else
      {
@@ -597,7 +902,7 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
      }
  }
  
-@@ -9458,6 +9489,9 @@ static LRESULT LISTVIEW_NCCreate(HWND hw
+@@ -9477,6 +9509,9 @@ static LRESULT LISTVIEW_NCCreate(HWND hw
    infoPtr->clrText = CLR_DEFAULT;
    infoPtr->clrTextBk = CLR_DEFAULT;
    LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
@@ -607,7 +912,23 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
  
    /* set default values */
    infoPtr->nFocusedItem = -1;
-@@ -11741,6 +11775,14 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg
+@@ -10622,8 +10657,15 @@ static BOOL LISTVIEW_NCPaint(const LISTV
+         CombineRgn (cliprgn, cliprgn, region, RGN_AND);
+     OffsetRect(&r, -r.left, -r.top);
+ 
++#ifdef __REACTOS__ /* r73789 */
++    dc = GetWindowDC(infoPtr->hwndSelf);
++    /* Exclude client part */
++    ExcludeClipRect(dc, r.left + cxEdge, r.top + cyEdge,
++        r.right - cxEdge, r.bottom -cyEdge);
++#else
+     dc = GetDCEx(infoPtr->hwndSelf, region, DCX_WINDOW|DCX_INTERSECTRGN);
+     OffsetRect(&r, -r.left, -r.top);
++#endif
+ 
+     if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
+         DrawThemeParentBackground(infoPtr->hwndSelf, dc, &r);
+@@ -11761,6 +11803,14 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg
  
    case WM_SYSCOLORCHANGE:
      COMCTL32_RefreshSysColors();
@@ -623,8 +944,8 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
  
  /*	case WM_TIMER: */
 diff -pudN e:\wine\dlls\comctl32/monthcal.c e:\reactos\dll\win32\comctl32/monthcal.c
---- e:\wine\dlls\comctl32/monthcal.c	2016-11-16 17:28:41 +0100
-+++ e:\reactos\dll\win32\comctl32/monthcal.c	2016-08-17 13:29:31 +0100
+--- e:\wine\dlls\comctl32/monthcal.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/monthcal.c	2017-09-07 13:07:02 +0100
 @@ -43,6 +43,9 @@
  
  WINE_DEFAULT_DEBUG_CHANNEL(monthcal);
@@ -636,9 +957,23 @@ diff -pudN e:\wine\dlls\comctl32/monthcal.c e:\reactos\dll\win32\comctl32/monthc
  #define MC_SEL_LBUTDOWN	    2	/* Left button pressed in calendar */
  #define MC_PREVPRESSED      4   /* Prev month button pressed */
 diff -pudN e:\wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/propsheet.c
---- e:\wine\dlls\comctl32/propsheet.c	2016-11-16 17:28:41 +0100
-+++ e:\reactos\dll\win32\comctl32/propsheet.c	2016-08-15 16:10:02 +0100
-@@ -2355,12 +2355,19 @@ static void PROPSHEET_SetWizButtons(HWND
+--- e:\wine\dlls\comctl32/propsheet.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/propsheet.c	2017-05-21 20:32:06 +0100
+@@ -1176,8 +1176,13 @@ PROPSHEET_WizardSubclassProc(HWND hwnd, 
+       return TRUE;
+ 
+     case WM_CTLCOLORSTATIC:
++#ifdef __REACTOS__
++      SetBkMode((HDC)wParam, TRANSPARENT);
++      return (INT_PTR)GetStockObject(HOLLOW_BRUSH);
++#else
+       SetBkColor((HDC)wParam, GetSysColor(COLOR_WINDOW));
+       return (INT_PTR)GetSysColorBrush(COLOR_WINDOW);
++#endif
+   }
+ 
+   return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+@@ -2440,12 +2445,19 @@ static void PROPSHEET_SetWizButtons(HWND
    HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
    BOOL enable_finish = ((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH);
  
@@ -658,7 +993,7 @@ diff -pudN e:\wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/props
    /* set the default pushbutton to an enabled button */
    if (enable_finish)
      SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
-@@ -2370,6 +2377,7 @@ static void PROPSHEET_SetWizButtons(HWND
+@@ -2455,6 +2467,7 @@ static void PROPSHEET_SetWizButtons(HWND
      SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
    else
      SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
@@ -666,7 +1001,7 @@ diff -pudN e:\wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/props
  
    if (!psInfo->hasFinish)
    {
-@@ -2389,6 +2397,25 @@ static void PROPSHEET_SetWizButtons(HWND
+@@ -2474,6 +2487,25 @@ static void PROPSHEET_SetWizButtons(HWND
        ShowWindow(hwndNext, SW_SHOW);
      }
    }
@@ -692,9 +1027,46 @@ diff -pudN e:\wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/props
  }
  
  /******************************************************************************
+@@ -3282,7 +3314,11 @@ static LRESULT PROPSHEET_Paint(HWND hwnd
+ 
+         hOldFont = SelectObject(hdc, psInfo->hFontBold);
+ 
++#ifdef __REACTOS__
++        if (psInfo->ppshheader.u5.hbmHeader)
++#else
+         if (psInfo->ppshheader.dwFlags & PSH_USEHBMHEADER)
++#endif
+         {
+             hbmp = SelectObject(hdcSrc, psInfo->ppshheader.u5.hbmHeader);
+ 
+@@ -3357,7 +3393,11 @@ static LRESULT PROPSHEET_Paint(HWND hwnd
+ 	if (ppshpage->dwFlags & PSP_USEHEADERSUBTITLE) {
+ 	    SelectObject(hdc, psInfo->hFont);
+ 	    SetRect(&r, 40, 25, rzone.right - 69, rzone.bottom);
++#ifdef __REACTOS__
++            if (!IS_INTRESOURCE(ppshpage->pszHeaderSubTitle))
++#else
+             if (!IS_INTRESOURCE(ppshpage->pszHeaderTitle))
++#endif
+                 DrawTextW(hdc, ppshpage->pszHeaderSubTitle, -1, &r, DT_LEFT | DT_WORDBREAK);
+ 	    else
+ 	    {
+@@ -3379,7 +3419,12 @@ static LRESULT PROPSHEET_Paint(HWND hwnd
+ 
+     if ( (ppshpage && (ppshpage->dwFlags & PSP_HIDEHEADER)) &&
+ 	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)) &&
++#ifdef __REACTOS__
++	 (psInfo->ppshheader.dwFlags & PSH_WATERMARK) &&
++	 (psInfo->ppshheader.u4.hbmWatermark) ) 
++#else
+ 	 (psInfo->ppshheader.dwFlags & PSH_WATERMARK) ) 
++#endif
+     {
+ 	HWND hwndLine = GetDlgItem(hwnd, IDC_SUNKEN_LINE);	    
+ 
 diff -pudN e:\wine\dlls\comctl32/rebar.c e:\reactos\dll\win32\comctl32/rebar.c
---- e:\wine\dlls\comctl32/rebar.c	2016-11-16 17:28:41 +0100
-+++ e:\reactos\dll\win32\comctl32/rebar.c	2016-08-15 16:11:05 +0100
+--- e:\wine\dlls\comctl32/rebar.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/rebar.c	2017-05-07 14:47:57 +0100
 @@ -50,7 +50,6 @@
   *   - WM_QUERYNEWPALETTE
   *   - WM_RBUTTONDOWN
@@ -816,8 +1188,8 @@ diff -pudN e:\wine\dlls\comctl32/rebar.c e:\reactos\dll\win32\comctl32/rebar.c
 +        HBRUSH hbrush = CreateSolidBrush(new);
 +        FillRgn(hdc, hrgn, hbrush);
 +        DeleteObject(hbrush);
-+        DeleteObject(hrgn);
 +    }
++    DeleteObject(hrgn);
 +#endif
      return TRUE;
  }
@@ -907,9 +1279,530 @@ diff -pudN e:\wine\dlls\comctl32/rebar.c e:\reactos\dll\win32\comctl32/rebar.c
              return 0;
  
  /*      case WM_VKEYTOITEM:     supported according to ControlSpy */
+diff -pudN e:\wine\dlls\comctl32/syslink.c e:\reactos\dll\win32\comctl32/syslink.c
+--- e:\wine\dlls\comctl32/syslink.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/syslink.c	2017-05-27 17:00:22 +0100
+@@ -29,8 +29,6 @@
+ 
+ #include "comctl32.h"
+ 
+-#include <wine/list.h>
+-
+ WINE_DEFAULT_DEBUG_CHANNEL(syslink);
+ 
+ typedef struct
+diff -pudN e:\wine\dlls\comctl32/theme_button.c e:\reactos\dll\win32\comctl32/theme_button.c
+--- e:\wine\dlls\comctl32/theme_button.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/theme_button.c	2017-08-11 22:11:08 +0100
+@@ -34,7 +34,30 @@ typedef enum
+ 	STATE_DEFAULTED
+ } ButtonState;
+ 
++#ifdef __REACTOS__ /* r73885 */
++typedef void (*pfThemedPaint)(HTHEME theme, HWND hwnd, HDC hdc, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag);
++#else
+ typedef void (*pfThemedPaint)(HTHEME theme, HWND hwnd, HDC hdc, ButtonState drawState, UINT dtFlags, BOOL focused);
++#endif
++
++#ifdef __REACTOS__ /* r73885 & r73907 */
++static inline LONG get_button_state( HWND hwnd )
++{
++    return _GetButtonData(hwnd)->state;
++}
++
++static inline HFONT get_button_font( HWND hwnd )
++{
++    return (HFONT)_GetButtonData(hwnd)->font;
++}
++
++static inline LONG_PTR get_button_image(HWND hwnd)
++{
++    return _GetButtonData(hwnd)->image;
++}
++
++BOOL BUTTON_DrawIml(HDC hdc, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCalc);
++#endif
+ 
+ static UINT get_drawtext_flags(DWORD style, DWORD ex_style)
+ {
+@@ -87,22 +110,56 @@ static inline WCHAR *get_button_text(HWN
+     return text;
+ }
+ 
++#ifdef __REACTOS__ /* r73885 */
++static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag)
++#else
+ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
++#endif
+ {
+     static const int states[] = { PBS_NORMAL, PBS_DISABLED, PBS_HOT, PBS_PRESSED, PBS_DEFAULTED };
+ 
+     RECT bgRect, textRect;
++#ifdef __REACTOS__ /* r73885 */
++    HFONT font = get_button_font(hwnd);
++#else
+     HFONT font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
++#endif
+     HFONT hPrevFont = font ? SelectObject(hDC, font) : NULL;
+     int state = states[ drawState ];
+     WCHAR *text = get_button_text(hwnd);
++#ifdef __REACTOS__ /* r74012 & r74406 */
++    PBUTTON_DATA pdata = _GetButtonData(hwnd);
++    HWND parent;
++    HBRUSH hBrush;
++#endif
+ 
+     GetClientRect(hwnd, &bgRect);
+     GetThemeBackgroundContentRect(theme, hDC, BP_PUSHBUTTON, state, &bgRect, &textRect);
+ 
++#ifdef __REACTOS__ /* r73885 & r74149 */
++    if (prfFlag == 0)
++    {
++        if (IsThemeBackgroundPartiallyTransparent(theme, BP_PUSHBUTTON, state))
++            DrawThemeParentBackground(hwnd, hDC, NULL);
++    }
++#else
+     if (IsThemeBackgroundPartiallyTransparent(theme, BP_PUSHBUTTON, state))
+         DrawThemeParentBackground(hwnd, hDC, NULL);
++#endif
++
++#ifdef __REACTOS__ /* r74406 */
++    parent = GetParent(hwnd);
++    if (!parent) parent = hwnd;
++    hBrush = (HBRUSH)SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
++    FillRect( hDC, &bgRect, hBrush );
++#endif
++
+     DrawThemeBackground(theme, hDC, BP_PUSHBUTTON, state, &bgRect, NULL);
++
++#ifdef __REACTOS__ /* r74012 */
++    BUTTON_DrawIml(hDC, &pdata->imlData, &textRect, FALSE);
++#endif
++
+     if (text)
+     {
+         DrawThemeText(theme, hDC, BP_PUSHBUTTON, state, text, lstrlenW(text), dtFlags, 0, &textRect);
+@@ -127,7 +184,11 @@ static void PB_draw(HTHEME theme, HWND h
+     if (hPrevFont) SelectObject(hDC, hPrevFont);
+ }
+ 
++#ifdef __REACTOS__ /* r73885 */
++static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag)
++#else
+ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
++#endif
+ {
+     static const int cb_states[3][5] =
+     {
+@@ -145,7 +206,11 @@ static void CB_draw(HTHEME theme, HWND h
+     SIZE sz;
+     RECT bgRect, textRect;
+     HFONT font, hPrevFont = NULL;
++#ifdef __REACTOS__ /* r73885 */
++    LRESULT checkState = get_button_state(hwnd) & 3;
++#else
+     LRESULT checkState = SendMessageW(hwnd, BM_GETCHECK, 0, 0);
++#endif
+     DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
+     int part = ((dwStyle & BUTTON_TYPE) == BS_RADIOBUTTON) || ((dwStyle & BUTTON_TYPE) == BS_AUTORADIOBUTTON)
+              ? BP_RADIOBUTTON
+@@ -156,6 +221,10 @@ static void CB_draw(HTHEME theme, HWND h
+     WCHAR *text = get_button_text(hwnd);
+     LOGFONTW lf;
+     BOOL created_font = FALSE;
++#ifdef __REACTOS__ /* r74406 */
++    HWND parent;
++    HBRUSH hBrush;
++#endif
+ 
+     HRESULT hr = GetThemeFont(theme, hDC, part, state, TMT_FONT, &lf);
+     if (SUCCEEDED(hr)) {
+@@ -168,7 +237,11 @@ static void CB_draw(HTHEME theme, HWND h
+             created_font = TRUE;
+         }
+     } else {
++#ifdef __REACTOS__ /* r73885 */
++        font = get_button_font(hwnd);
++#else
+         font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
++#endif
+         hPrevFont = SelectObject(hDC, font);
+     }
+ 
+@@ -176,6 +249,23 @@ static void CB_draw(HTHEME theme, HWND h
+         sz.cx = sz.cy = 13;
+ 
+     GetClientRect(hwnd, &bgRect);
++
++#ifdef __REACTOS__ /* r73885, r74149 and r74406 */
++    if (prfFlag == 0)
++    {
++        DrawThemeParentBackground(hwnd, hDC, NULL);
++    }
++
++    parent = GetParent(hwnd);
++    if (!parent) parent = hwnd;
++    hBrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORSTATIC,
++                                 (WPARAM)hDC, (LPARAM)hwnd);
++    if (!hBrush) /* did the app forget to call defwindowproc ? */
++        hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
++                                        (WPARAM)hDC, (LPARAM)hwnd );
++    FillRect( hDC, &bgRect, hBrush );
++#endif
++
+     GetThemeBackgroundContentRect(theme, hDC, part, state, &bgRect, &textRect);
+ 
+     if (dtFlags & DT_SINGLELINE) /* Center the checkbox / radio button to the text. */
+@@ -186,7 +276,9 @@ static void CB_draw(HTHEME theme, HWND h
+     bgRect.right = bgRect.left + sz.cx;
+     textRect.left = bgRect.right + 6;
+ 
++#ifndef __REACTOS__ /* r74406 */
+     DrawThemeParentBackground(hwnd, hDC, NULL);
++#endif
+ 
+     DrawThemeBackground(theme, hDC, part, state, &bgRect, NULL);
+     if (text)
+@@ -214,7 +306,11 @@ static void CB_draw(HTHEME theme, HWND h
+     if (hPrevFont) SelectObject(hDC, hPrevFont);
+ }
+ 
++#ifdef __REACTOS__ /* r73885 */
++static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag)
++#else
+ static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
++#endif
+ {
+     static const int states[] = { GBS_NORMAL, GBS_DISABLED, GBS_NORMAL, GBS_NORMAL, GBS_NORMAL };
+ 
+@@ -224,6 +320,11 @@ static void GB_draw(HTHEME theme, HWND h
+     LOGFONTW lf;
+     HFONT font, hPrevFont = NULL;
+     BOOL created_font = FALSE;
++#ifdef __REACTOS__ /* r74406 */
++    HWND parent;
++    HBRUSH hBrush;
++    RECT clientRect;
++#endif
+ 
+     HRESULT hr = GetThemeFont(theme, hDC, BP_GROUPBOX, state, TMT_FONT, &lf);
+     if (SUCCEEDED(hr)) {
+@@ -235,7 +336,11 @@ static void GB_draw(HTHEME theme, HWND h
+             created_font = TRUE;
+         }
+     } else {
++#ifdef __REACTOS__ /* r73885 */
++        font = get_button_font(hwnd);
++#else
+         font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
++#endif
+         hPrevFont = SelectObject(hDC, font);
+     }
+ 
+@@ -257,8 +362,29 @@ static void GB_draw(HTHEME theme, HWND h
+     GetThemeBackgroundContentRect(theme, hDC, BP_GROUPBOX, state, &bgRect, &contentRect);
+     ExcludeClipRect(hDC, contentRect.left, contentRect.top, contentRect.right, contentRect.bottom);
+ 
++#ifdef __REACTOS__ /* r73885 & r74149 */
++    if (prfFlag == 0)
++    {
++        if (IsThemeBackgroundPartiallyTransparent(theme, BP_GROUPBOX, state))
++            DrawThemeParentBackground(hwnd, hDC, NULL);
++    }
++#else
+     if (IsThemeBackgroundPartiallyTransparent(theme, BP_GROUPBOX, state))
+         DrawThemeParentBackground(hwnd, hDC, NULL);
++#endif
++
++#ifdef __REACTOS__ /* r74406 */
++    parent = GetParent(hwnd);
++    if (!parent) parent = hwnd;
++    hBrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORSTATIC,
++                                  (WPARAM)hDC, (LPARAM)hwnd);
++    if (!hBrush) /* did the app forget to call defwindowproc ? */
++        hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
++                                       (WPARAM)hDC, (LPARAM)hwnd );
++    GetClientRect(hwnd, &clientRect);
++    FillRect( hDC, &clientRect, hBrush );
++#endif
++
+     DrawThemeBackground(theme, hDC, BP_GROUPBOX, state, &bgRect, NULL);
+ 
+     SelectClipRgn(hDC, NULL);
+@@ -294,32 +420,84 @@ static const pfThemedPaint btnThemedPain
+     NULL, /* Not defined */
+ };
+ 
++#ifdef __REACTOS__ /* r73873 */
++BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag)
++#else
+ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
++#endif
+ {
++#ifdef __REACTOS__ /* r73873, r73897 and r74120 */
++    DWORD dwStyle;
++    DWORD dwStyleEx;
++    DWORD type;
++    UINT dtFlags;
++    int state;
++#else
+     PAINTSTRUCT ps;
+     HDC hDC;
+     DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
+     DWORD dwStyleEx = GetWindowLongW(hwnd, GWL_EXSTYLE);
+     UINT dtFlags = get_drawtext_flags(dwStyle, dwStyleEx);
+     int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
++#endif
+     ButtonState drawState;
++#ifdef __REACTOS__ /* r73873, r73897, r73907 and r74120 */
++    pfThemedPaint paint;
++
++    dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
++    type = dwStyle & BUTTON_TYPE;
++
++    if (type != BS_PUSHBUTTON && type != BS_DEFPUSHBUTTON && (dwStyle & BS_PUSHLIKE))
++        type = BS_PUSHBUTTON;
++
++    paint = btnThemedPaintFunc[type];
++    if (!paint)
++        return FALSE;
++
++    if (get_button_image(hwnd) != 0)
++        return FALSE;
++
++    dwStyleEx = GetWindowLongW(hwnd, GWL_EXSTYLE);
++    dtFlags = get_drawtext_flags(dwStyle, dwStyleEx);
++    state = get_button_state(hwnd);
++#else
+     pfThemedPaint paint = btnThemedPaintFunc[ dwStyle & BUTTON_TYPE ];
++#endif
+ 
+     if(IsWindowEnabled(hwnd))
+     {
+-        if(state & BST_PUSHED) drawState = STATE_PRESSED;
+-        else if(state & BST_HOT) drawState = STATE_HOT;
+-        else if(state & BST_FOCUS) drawState = STATE_DEFAULTED;
+-        else drawState = STATE_NORMAL;
++        if(state & BST_PUSHED) 
++            drawState = STATE_PRESSED;
++        else if ((dwStyle & BS_PUSHLIKE) && (state & (BST_CHECKED|BST_INDETERMINATE))) 
++            drawState = STATE_PRESSED;
++        else if(state & BST_HOT) 
++            drawState = STATE_HOT;
++        else if(state & BST_FOCUS) 
++            drawState = STATE_DEFAULTED;
++        else 
++            drawState = STATE_NORMAL;
+     }
+-    else drawState = STATE_DISABLED;
++    else 
++        drawState = STATE_DISABLED;
+ 
++#ifndef __REACTOS__ /* r73873 */
+     hDC = hParamDC ? hParamDC : BeginPaint(hwnd, &ps);
+     if (paint) paint(theme, hwnd, hDC, drawState, dtFlags, state & BST_FOCUS);
+     if (!hParamDC) EndPaint(hwnd, &ps);
++#endif
++
++#ifdef __REACTOS__ /* r74074 & r74120 */
++    if (drawState == STATE_NORMAL && type == BS_DEFPUSHBUTTON)
++    {
++        drawState = STATE_DEFAULTED;
++    }
++#endif
++
++    paint(theme, hwnd, hParamDC, drawState, dtFlags, state & BST_FOCUS, prfFlag);
+     return TRUE;
+ }
+ 
++#ifndef __REACTOS__ /* r73873 */
+ /**********************************************************************
+  * The button control subclass window proc.
+  */
+@@ -416,3 +594,4 @@ LRESULT CALLBACK THEMING_ButtonSubclassP
+     }
+     return 0;
+ }
++#endif /* !__REACTOS__ */
+diff -pudN e:\wine\dlls\comctl32/theme_edit.c e:\reactos\dll\win32\comctl32/theme_edit.c
+--- e:\wine\dlls\comctl32/theme_edit.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/theme_edit.c	2017-05-21 20:36:43 +0100
+@@ -52,8 +52,15 @@ static void nc_paint (HTHEME theme, HWND
+             CombineRgn (cliprgn, cliprgn, region, RGN_AND);
+         OffsetRect(&r, -r.left, -r.top);
+     
++#ifdef __REACTOS__ /* r73789 */
++        dc = GetWindowDC(hwnd);
++        /* Exclude client part */
++        ExcludeClipRect(dc, r.left + cxEdge, r.top + cyEdge,
++            r.right - cxEdge, r.bottom -cyEdge);
++#else
+         dc = GetDCEx(hwnd, region, DCX_WINDOW|DCX_INTERSECTRGN);
+         OffsetRect(&r, -r.left, -r.top);
++#endif
+     
+         if (IsThemeBackgroundPartiallyTransparent (theme, part, state))
+             DrawThemeParentBackground(hwnd, dc, &r);
+diff -pudN e:\wine\dlls\comctl32/theme_listbox.c e:\reactos\dll\win32\comctl32/theme_listbox.c
+--- e:\wine\dlls\comctl32/theme_listbox.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/theme_listbox.c	2017-05-21 20:37:26 +0100
+@@ -42,8 +42,15 @@ static void nc_paint (HTHEME theme, HWND
+             CombineRgn (cliprgn, cliprgn, region, RGN_AND);
+         OffsetRect(&r, -r.left, -r.top);
+     
++#ifdef __REACTOS__ /* r73789 */
++        dc = GetWindowDC(hwnd);
++        /* Exclude client part */
++        ExcludeClipRect(dc, r.left + cxEdge, r.top + cyEdge,
++            r.right - cxEdge, r.bottom -cyEdge);
++#else
+         dc = GetDCEx(hwnd, region, DCX_WINDOW|DCX_INTERSECTRGN);
+         OffsetRect(&r, -r.left, -r.top);
++#endif
+     
+         if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
+             DrawThemeParentBackground(hwnd, dc, &r);
+diff -pudN e:\wine\dlls\comctl32/theming.c e:\reactos\dll\win32\comctl32/theming.c
+--- e:\wine\dlls\comctl32/theming.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/theming.c	2017-05-21 20:45:56 +0100
+@@ -26,12 +26,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(theming);
+ typedef LRESULT (CALLBACK* THEMING_SUBCLASSPROC)(HWND, UINT, WPARAM, LPARAM,
+     ULONG_PTR);
+ 
++#ifndef __REACTOS__ /* r73871 */
+ extern LRESULT CALLBACK THEMING_ButtonSubclassProc (HWND, UINT, WPARAM, LPARAM,
+                                                     ULONG_PTR) DECLSPEC_HIDDEN;
++#endif
+ extern LRESULT CALLBACK THEMING_ComboSubclassProc (HWND, UINT, WPARAM, LPARAM,
+                                                    ULONG_PTR) DECLSPEC_HIDDEN;
++#ifndef __REACTOS__ /* r73803 */
+ extern LRESULT CALLBACK THEMING_DialogSubclassProc (HWND, UINT, WPARAM, LPARAM,
+                                                     ULONG_PTR) DECLSPEC_HIDDEN;
++#endif
+ extern LRESULT CALLBACK THEMING_EditSubclassProc (HWND, UINT, WPARAM, LPARAM,
+                                                   ULONG_PTR) DECLSPEC_HIDDEN;
+ extern LRESULT CALLBACK THEMING_ListBoxSubclassProc (HWND, UINT, WPARAM, LPARAM,
+@@ -48,8 +52,10 @@ static const struct ThemingSubclass
+     THEMING_SUBCLASSPROC subclassProc;
+ } subclasses[] = {
+     /* Note: list must be sorted by class name */
++#ifndef __REACTOS__ /* r73803 & r73871 */
+     {dialogClass,          THEMING_DialogSubclassProc},
+     {WC_BUTTONW,           THEMING_ButtonSubclassProc},
++#endif
+     {WC_COMBOBOXW,         THEMING_ComboSubclassProc},
+     {comboLboxClass,       THEMING_ListBoxSubclassProc},
+     {WC_EDITW,             THEMING_EditSubclassProc},
+@@ -89,17 +95,23 @@ MAKE_SUBCLASS_PROC(1)
+ MAKE_SUBCLASS_PROC(2)
+ MAKE_SUBCLASS_PROC(3)
+ MAKE_SUBCLASS_PROC(4)
++#ifndef __REACTOS__ /* r73803 & r73871 */
+ MAKE_SUBCLASS_PROC(5)
+ MAKE_SUBCLASS_PROC(6)
++#endif
+ 
+ static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
+     subclass_proc0,
+     subclass_proc1,
+     subclass_proc2,
+     subclass_proc3,
++#ifdef __REACTOS__ /* r73871 */
++    subclass_proc4
++#else
+     subclass_proc4,
+     subclass_proc5,
+     subclass_proc6
++#endif
+ };
+ 
+ /***********************************************************************
+@@ -108,15 +120,23 @@ static const WNDPROC subclassProcs[NUM_S
+  * Register classes for standard controls that will shadow the system
+  * classes.
+  */
++#ifdef __REACTOS__ /* r73803 */
++void THEMING_Initialize(HANDLE hActCtx5, HANDLE hActCtx6)
++#else
+ void THEMING_Initialize (void)
++#endif
+ {
+     unsigned int i;
+     static const WCHAR subclassPropName[] = 
+         { 'C','C','3','2','T','h','e','m','i','n','g','S','u','b','C','l',0 };
+     static const WCHAR refDataPropName[] = 
+         { 'C','C','3','2','T','h','e','m','i','n','g','D','a','t','a',0 };
+-
++#ifdef __REACTOS__ /* r73803 */
++    ULONG_PTR ulCookie;
++    BOOL ret, bActivated;
++#else
+     if (!IsThemeActive()) return;
++#endif
+ 
+     atSubclassProp = GlobalAddAtomW (subclassPropName);
+     atRefDataProp = GlobalAddAtomW (refDataPropName);
+@@ -126,7 +146,17 @@ void THEMING_Initialize (void)
+         WNDCLASSEXW class;
+ 
+         class.cbSize = sizeof(class);
++
++#ifdef __REACTOS__ /* r73803 */
++        bActivated = ActivateActCtx(hActCtx5, &ulCookie);
++        ret = GetClassInfoExW (NULL, subclasses[i].className, &class);
++        if (bActivated)
++            DeactivateActCtx(0, ulCookie);
++
++        if (!ret)
++#else
+         if (!GetClassInfoExW (NULL, subclasses[i].className, &class))
++#endif
+         {
+             ERR("Could not retrieve information for class %s\n",
+                 debugstr_w (subclasses[i].className));
+@@ -134,6 +164,10 @@ void THEMING_Initialize (void)
+         }
+         originalProcs[i] = class.lpfnWndProc;
+         class.lpfnWndProc = subclassProcs[i];
++#ifdef __REACTOS__ /* r73803 */
++        class.style |= CS_GLOBALCLASS;
++        class.hInstance = COMCTL32_hModule;
++#endif
+         
+         if (!class.lpfnWndProc)
+         {
+@@ -142,9 +176,16 @@ void THEMING_Initialize (void)
+             continue;
+         }
+ 
++#ifdef __REACTOS__ /* r73803 */
++        bActivated = ActivateActCtx(hActCtx6, &ulCookie);
++#endif
+         if (!RegisterClassExW (&class))
+         {
++#ifdef __REACTOS__ /* r73803 */
++            WARN("Could not re-register class %s: %x\n",
++#else
+             ERR("Could not re-register class %s: %x\n",
++#endif
+                 debugstr_w (subclasses[i].className), GetLastError ());
+         }
+         else
+@@ -152,6 +193,11 @@ void THEMING_Initialize (void)
+             TRACE("Re-registered class %s\n", 
+                 debugstr_w (subclasses[i].className));
+         }
++
++#ifdef __REACTOS__ /* r73803 */
++        if (bActivated)
++            DeactivateActCtx(0, ulCookie);
++#endif
+     }
+ }
+ 
 diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar.c
---- e:\wine\dlls\comctl32/toolbar.c	2016-11-16 17:28:41 +0100
-+++ e:\reactos\dll\win32\comctl32/toolbar.c	2016-08-15 16:13:17 +0100
+--- e:\wine\dlls\comctl32/toolbar.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/toolbar.c	2017-08-04 10:44:05 +0100
 @@ -33,11 +33,9 @@
   *     - TBSTYLE_REGISTERDROP
   *     - TBSTYLE_EX_DOUBLEBUFFER
@@ -922,18 +1815,19 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
   *     - WM_WININICHANGE
   *   - Notifications:
   *     - NM_CHAR
-@@ -125,6 +123,10 @@ typedef struct
+@@ -125,6 +123,11 @@ typedef struct
      INT      nOldHit;
      INT      nHotItem;        /* index of the "hot" item */
      SIZE     szPadding;       /* padding values around button */
 +#ifdef __REACTOS__
 +    SIZE     szBarPadding;       /* padding values around the toolbar (NOT USED BUT STORED) */
 +    SIZE     szSpacing;       /* spacing values between buttons */
++    MARGINS  themeMargins;
 +#endif
      INT      iTopMargin;      /* the top margin */
      INT      iListGap;        /* default gap between text and image for toolbar with list style */
      HFONT    hDefaultFont;
-@@ -190,12 +192,24 @@ typedef enum
+@@ -190,12 +193,24 @@ typedef enum
  #define ARROW_HEIGHT       3
  #define INSERTMARK_WIDTH   2
  
@@ -958,20 +1852,54 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  
  /* how wide to treat the bitmap if it isn't present */
  #define NONLIST_NOTEXT_OFFSET 2
-@@ -239,7 +253,12 @@ static LRESULT TOOLBAR_SetButtonInfo(TOO
+@@ -239,6 +254,10 @@ static LRESULT TOOLBAR_SetButtonInfo(TOO
  
  static inline int default_top_margin(const TOOLBAR_INFO *infoPtr)
  {
-+#ifndef __REACTOS__
-     return (infoPtr->dwStyle & TBSTYLE_FLAT ? 0 : TOP_BORDER);
-+#else /* r65766 */
-+    /* This is the behaviour in comctl32 v6 */
-+    return 0;
++#ifdef __REACTOS__
++    if (infoPtr->iVersion == 6)
++        return 0;
 +#endif
+     return (infoPtr->dwStyle & TBSTYLE_FLAT ? 0 : TOP_BORDER);
  }
  
- static inline BOOL TOOLBAR_HasDropDownArrows(DWORD exStyle)
-@@ -723,10 +742,14 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *in
+@@ -598,6 +617,9 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *
+     COLORREF clrOldBk = 0;
+     int oldBkMode = 0;
+     UINT state = tbcd->nmcd.uItemState;
++#ifdef __REACTOS__
++    HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
++#endif
+ 
+     /* draw text */
+     if (lpText && infoPtr->nMaxTextRows > 0) {
+@@ -627,6 +649,25 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *
+ 	    clrOld = SetTextColor (hdc, tbcd->clrText);
+ 	}
+ 
++#ifdef __REACTOS__
++    if (theme)
++    {
++        int partId = TP_BUTTON;
++        int stateId = TS_NORMAL;
++
++        if (state & CDIS_DISABLED)
++            stateId = TS_DISABLED;
++        else if (state & CDIS_SELECTED)
++            stateId = TS_PRESSED;
++        else if (state & CDIS_CHECKED)
++            stateId = (state & CDIS_HOT) ? TS_HOTCHECKED : TS_HOT;
++        else if (state & CDIS_HOT)
++            stateId = TS_HOT;
++
++        DrawThemeText(theme, hdc, partId, stateId, lpText, -1, infoPtr->dwDTFlags, 0, rcText);
++    }
++    else
++#endif
+ 	DrawTextW (hdc, lpText, -1, rcText, infoPtr->dwDTFlags);
+ 	SetTextColor (hdc, clrOld);
+ 	if ((state & CDIS_MARKED) && !(dwItemCDFlag & TBCDRF_NOMARK))
+@@ -723,10 +764,14 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *in
                    const NMTBCUSTOMDRAW *tbcd, DWORD dwItemCDFlag)
  {
      HIMAGELIST himl = NULL;
@@ -987,7 +1915,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  
      if (tbcd->nmcd.uItemState & (CDIS_DISABLED | CDIS_INDETERMINATE))
      {
-@@ -734,7 +757,22 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *in
+@@ -734,7 +779,22 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *in
          if (!himl)
          {
              himl = TOOLBAR_GetImageListForDrawing(infoPtr, btnPtr, IMAGE_LIST_DEFAULT, &index);
@@ -1010,7 +1938,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
          }
      }
      else if (tbcd->nmcd.uItemState & CDIS_CHECKED ||
-@@ -765,9 +803,34 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *in
+@@ -765,9 +825,34 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *in
        index, himl, left, top, offset);
  
      if (draw_masked)
@@ -1045,7 +1973,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  }
  
  /* draws a blank frame for a toolbar button */
-@@ -884,14 +947,15 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *
+@@ -884,14 +969,15 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *
                  InflateRect(&rcsep, -infoPtr->szPadding.cx, -infoPtr->szPadding.cy);
                  TOOLBAR_DrawFlatHorizontalSeparator (&rcsep, hdc, infoPtr);
              }
@@ -1061,6 +1989,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
 +                TOOLBAR_DrawFlatSeparator (&rc, hdc, infoPtr);
 +            }
 +        }
+
 +        else if (btnPtr->fsStyle != BTNS_SEP) {
 +            FIXME("Draw some kind of separator: fsStyle=%x\n",
 +              btnPtr->fsStyle);
@@ -1069,7 +1998,17 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
      }
  
      /* get a pointer to the text */
-@@ -1027,7 +1091,11 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *
+@@ -933,6 +1019,9 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *
+         rcBitmap.left += ((rc.right - rc.left) - infoPtr->nBitmapWidth) / 2;
+ 
+     rcBitmap.top += infoPtr->szPadding.cy / 2;
++#ifdef __REACTOS__
++    rcBitmap.top += infoPtr->themeMargins.cyTopHeight;
++#endif
+ 
+     TRACE("iBitmap=%d, start=(%d,%d) w=%d, h=%d\n",
+       btnPtr->iBitmap, rcBitmap.left, rcBitmap.top,
+@@ -1027,7 +1116,11 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *
          }
      }
  
@@ -1081,7 +2020,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
      {
          int partId = drawSepDropDownArrow ? TP_SPLITBUTTON : TP_BUTTON;
          int stateId = TS_NORMAL;
-@@ -1044,7 +1112,12 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *
+@@ -1044,7 +1137,12 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *
              
          DrawThemeBackground (theme, hdc, partId, stateId, &rc, NULL);
      }
@@ -1094,7 +2033,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
          TOOLBAR_DrawFrame(infoPtr, &tbcd, &rc, dwItemCDFlag);
  
      if (drawSepDropDownArrow)
-@@ -1570,9 +1643,14 @@ static inline SIZE TOOLBAR_MeasureButton
+@@ -1570,9 +1668,14 @@ static inline SIZE TOOLBAR_MeasureButton
          /* ... add on the necessary padding */
          if (bValidImageList)
          {
@@ -1109,7 +2048,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
                  sizeButton.cy += LISTPAD_CY;
          }
          else
-@@ -1589,7 +1667,11 @@ static inline SIZE TOOLBAR_MeasureButton
+@@ -1589,7 +1692,11 @@ static inline SIZE TOOLBAR_MeasureButton
      {
          if (bHasBitmap)
          {
@@ -1121,7 +2060,20 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
              if (sizeString.cy > 0)
                  sizeButton.cy += 1 + sizeString.cy;
              sizeButton.cx = infoPtr->szPadding.cx +
-@@ -1694,7 +1776,14 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *info
+@@ -1603,6 +1710,12 @@ static inline SIZE TOOLBAR_MeasureButton
+                 max(2*GetSystemMetrics(SM_CXEDGE) + sizeString.cx, infoPtr->nBitmapWidth);
+         }
+     }
++
++#ifdef __REACTOS__
++    sizeButton.cx += infoPtr->themeMargins.cxLeftWidth + infoPtr->themeMargins.cxRightWidth;
++    sizeButton.cy += infoPtr->themeMargins.cyTopHeight + infoPtr->themeMargins.cyBottomHeight;
++#endif
++
+     return sizeButton;
+ }
+ 
+@@ -1695,7 +1808,14 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *info
  	{
              if (btnPtr->cx)
                cx = btnPtr->cx;
@@ -1136,25 +2088,33 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
              {
                SIZE sz;
  	      HDC hdc;
-@@ -1953,6 +2042,17 @@ TOOLBAR_RelayEvent (HWND hwndTip, HWND h
-     SendMessageW (hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
- }
+@@ -1747,14 +1867,14 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *info
+ 	if( bWrap )
+ 	{
+ 	    if ( !(btnPtr->fsStyle & BTNS_SEP) )
+-	        y += cy;
++	        y += cy + infoPtr->szSpacing.cy;
+ 	    else
+ 	    {
+                if ( !(infoPtr->dwStyle & CCS_VERT))
+                     y += cy + ( (btnPtr->cx > 0 ) ?
+                                 btnPtr->cx : SEPARATOR_WIDTH) * 2 /3;
+ 		else
+-		    y += cy;
++		    y += cy + infoPtr->szSpacing.cy;
  
-+#ifdef __REACTOS__
-+static LRESULT
-+TOOLBAR_ThemeChanged(HWND hwnd)
-+{
-+    HTHEME theme = GetWindowTheme(hwnd);
-+    CloseThemeData(theme);
-+    OpenThemeData(hwnd, themeClass);
-+    return 0;
-+}
-+#endif
-+
- static void
- TOOLBAR_TooltipAddTool(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *button)
- {
-@@ -3534,6 +3634,36 @@ TOOLBAR_GetMaxSize (const TOOLBAR_INFO *
+ 		/* nSepRows is used to calculate the extra height following  */
+ 		/* the last row.					     */
+@@ -1768,7 +1888,7 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *info
+ 		nRows++;
+ 	}
+ 	else
+-	    x += cx;
++	    x += cx + infoPtr->szSpacing.cx;
+     }
+ 
+     /* infoPtr->nRows is the number of rows on the toolbar */
+@@ -3540,6 +3660,34 @@ TOOLBAR_GetMaxSize (const TOOLBAR_INFO *
      return TRUE;
  }
  
@@ -1162,10 +2122,8 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
 +static LRESULT
 +TOOLBAR_GetMetrics(const TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
 +{
-+    if (pMetrics == NULL)
-+        return FALSE;
-+
-+    /* TODO: check if cbSize is a valid value */
++    if (pMetrics == NULL || pMetrics->cbSize != sizeof(TBMETRICS))
++        return 0;
 +
 +    if (pMetrics->dwMask & TBMF_PAD)
 +    {
@@ -1185,13 +2143,36 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
 +        pMetrics->cyButtonSpacing = infoPtr->szSpacing.cy;
 +    }
 +
-+    return TRUE;
++    return 0;
 +}
 +#endif
  
  /* << TOOLBAR_GetObject >> */
  
-@@ -4789,6 +4919,44 @@ TOOLBAR_SetMaxTextRows (TOOLBAR_INFO *in
+@@ -4337,7 +4485,7 @@ TOOLBAR_SetBitmapSize (TOOLBAR_INFO *inf
+     short width = (short)LOWORD(lParam);
+     short height = (short)HIWORD(lParam);
+ 
+-    TRACE("hwnd=%p, wParam=%ld, size %d x %d\n", infoPtr->hwndSelf, wParam, width, height);
++    TRACE("hwnd=%p, wParam=%ld, lParam=%ld\n", infoPtr->hwndSelf, wParam, lParam);
+ 
+     if (wParam != 0)
+         FIXME("wParam is %ld. Perhaps image list index?\n", wParam);
+@@ -4455,8 +4603,13 @@ TOOLBAR_SetButtonSize (TOOLBAR_INFO *inf
+     if (cx == 0) cx = 24;
+     if (cy == 0) cy = 22;
+ 
++#ifdef __REACTOS__
++    cx = max(cx, infoPtr->szPadding.cx + infoPtr->nBitmapWidth + infoPtr->themeMargins.cxLeftWidth + infoPtr->themeMargins.cxRightWidth);
++    cy = max(cy, infoPtr->szPadding.cy + infoPtr->nBitmapHeight + infoPtr->themeMargins.cyTopHeight + infoPtr->themeMargins.cyBottomHeight);
++#else
+     cx = max(cx, infoPtr->szPadding.cx + infoPtr->nBitmapWidth);
+     cy = max(cy, infoPtr->szPadding.cy + infoPtr->nBitmapHeight);
++#endif
+ 
+     if (cx != infoPtr->nButtonWidth || cy != infoPtr->nButtonHeight ||
+         top != infoPtr->iTopMargin)
+@@ -4794,6 +4947,44 @@ TOOLBAR_SetMaxTextRows (TOOLBAR_INFO *in
      return TRUE;
  }
  
@@ -1199,6 +2180,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
 +static LRESULT
 +TOOLBAR_SetMetrics(TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
 +{
+
 +    BOOL changed = FALSE;
 +
 +    if (!pMetrics)
@@ -1236,27 +2218,101 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  
  /* MSDN gives slightly wrong info on padding.
   * 1. It is not only used on buttons with the BTNS_AUTOSIZE style
-@@ -6029,6 +6197,10 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wPar
+@@ -5083,6 +5274,16 @@ TOOLBAR_SetVersion (TOOLBAR_INFO *infoPt
+ {
+     INT iOldVersion = infoPtr->iVersion;
+ 
++#ifdef __REACTOS__
++    /* The v6 control doesn't support changing its version */
++    if (iOldVersion == 6)
++        return iOldVersion;
++
++    /* And a control that is not v6 can't be set to be a v6 one */
++    if (iVersion >= 6)
++        return -1;
++#endif
++
+     infoPtr->iVersion = iVersion;
+ 
+     if (infoPtr->iVersion >= 5)
+@@ -5269,8 +5470,16 @@ TOOLBAR_Create (HWND hwnd, const CREATES
+ 
+     SystemParametersInfoW (SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
+     infoPtr->hFont = infoPtr->hDefaultFont = CreateFontIndirectW (&logFont);
+-    
++
++#ifdef __REACTOS__
++    {
++        HTHEME theme = OpenThemeData (hwnd, themeClass);
++        if (theme)
++            GetThemeMargins(theme, NULL, TP_BUTTON, TS_NORMAL, TMT_CONTENTMARGINS, NULL, &infoPtr->themeMargins);
++    }
++#else
+     OpenThemeData (hwnd, themeClass);
++#endif
+ 
+     TOOLBAR_CheckStyle (infoPtr);
+ 
+@@ -5993,7 +6202,11 @@ TOOLBAR_NCCalcSize (HWND hwnd, WPARAM wP
+ 
+ 
+ static LRESULT
++#ifdef __REACTOS__
++TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs, int iVersion)
++#else
+ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs)
++#endif
+ {
+     TOOLBAR_INFO *infoPtr;
+     DWORD styleadd = 0;
+@@ -6027,13 +6240,22 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wPar
+     infoPtr->dwDTFlags = (lpcs->style & TBSTYLE_LIST) ? DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS: DT_CENTER | DT_END_ELLIPSIS;
+     infoPtr->bAnchor = FALSE; /* no anchor highlighting */
+     infoPtr->bDragOutSent = FALSE;
++#ifdef __REACTOS__
++    infoPtr->iVersion = iVersion;
++#else
+     infoPtr->iVersion = 0;
++#endif
+     infoPtr->hwndSelf = hwnd;
+     infoPtr->bDoRedraw = TRUE;
+     infoPtr->clrBtnHighlight = CLR_DEFAULT;
      infoPtr->clrBtnShadow = CLR_DEFAULT;
      infoPtr->szPadding.cx = DEFPAD_CX;
      infoPtr->szPadding.cy = DEFPAD_CY;
 +#ifdef __REACTOS__
-+    infoPtr->szSpacing.cx = DEFSPACE_CX;
-+    infoPtr->szSpacing.cy = DEFSPACE_CY;
++    infoPtr->szSpacing.cx = 0;
++    infoPtr->szSpacing.cy = 0;
++    memset(&infoPtr->themeMargins, 0 , sizeof(infoPtr->themeMargins));
 +#endif
      infoPtr->iListGap = DEFLISTGAP;
      infoPtr->iTopMargin = default_top_margin(infoPtr);
      infoPtr->dwStyle = lpcs->style;
-@@ -6438,7 +6610,7 @@ TOOLBAR_SysColorChange (void)
+@@ -6443,8 +6665,22 @@ TOOLBAR_SysColorChange (void)
      return 0;
  }
  
 -
-+#ifndef __REACTOS__
++#ifdef __REACTOS__
  /* update theme after a WM_THEMECHANGED message */
++static LRESULT theme_changed (TOOLBAR_INFO *infoPtr)
++{
++    HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
++    CloseThemeData (theme);
++    OpenThemeData (infoPtr->hwndSelf, themeClass);
++    theme = GetWindowTheme (infoPtr->hwndSelf);
++    if (theme)
++        GetThemeMargins(theme, NULL, TP_BUTTON, TS_NORMAL, TMT_CONTENTMARGINS, NULL, &infoPtr->themeMargins);
++    else
++        memset(&infoPtr->themeMargins, 0 ,sizeof(infoPtr->themeMargins));
++
++    return 0;
++}
++#else
  static LRESULT theme_changed (HWND hwnd)
  {
-@@ -6447,7 +6619,7 @@ static LRESULT theme_changed (HWND hwnd)
+     HTHEME theme = GetWindowTheme (hwnd);
+@@ -6452,7 +6688,7 @@ static LRESULT theme_changed (HWND hwnd)
      OpenThemeData (hwnd, themeClass);
      return 0;
  }
@@ -1265,7 +2321,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  
  static LRESULT WINAPI
  ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-@@ -6552,6 +6724,10 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
+@@ -6557,6 +6793,10 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
  
  	case TB_GETMAXSIZE:
  	    return TOOLBAR_GetMaxSize (infoPtr, (LPSIZE)lParam);
@@ -1276,7 +2332,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  
  /*	case TB_GETOBJECT:			*/ /* 4.71 */
  
-@@ -6693,6 +6869,11 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
+@@ -6698,6 +6938,11 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
  	case TB_SETMAXTEXTROWS:
  	    return TOOLBAR_SetMaxTextRows (infoPtr, wParam);
  
@@ -1288,21 +2344,77 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  	case TB_SETPADDING:
  	    return TOOLBAR_SetPadding (infoPtr, lParam);
  
-@@ -6834,7 +7015,11 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
- 	    return TOOLBAR_SysColorChange ();
-             
-         case WM_THEMECHANGED:
+@@ -6805,7 +7050,11 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
+ 	    return TOOLBAR_NCCalcSize (hwnd, wParam, lParam);
+ 
+ 	case WM_NCCREATE:
 +#ifdef __REACTOS__
-+        return TOOLBAR_ThemeChanged(hwnd);
++	    return TOOLBAR_NCCreate (hwnd, wParam, (CREATESTRUCTW*)lParam, 0);
++#else
+ 	    return TOOLBAR_NCCreate (hwnd, wParam, (CREATESTRUCTW*)lParam);
++#endif
+ 
+ 	case WM_NCPAINT:
+ 	    return TOOLBAR_NCPaint (hwnd, wParam, lParam);
+@@ -6837,9 +7086,12 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg,
+ 
+ 	case WM_SYSCOLORCHANGE:
+ 	    return TOOLBAR_SysColorChange ();
+-            
+-        case WM_THEMECHANGED:
++    case WM_THEMECHANGED:
++#ifdef __REACTOS__
++            return theme_changed (infoPtr);
 +#else
              return theme_changed (hwnd);
 +#endif
  
  /*	case WM_WININICHANGE: */
  
+@@ -6887,6 +7139,40 @@ TOOLBAR_Unregister (void)
+     UnregisterClassW (TOOLBARCLASSNAMEW, NULL);
+ }
+ 
++#ifdef __REACTOS__
++static LRESULT WINAPI
++ToolbarV6WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
++{
++    if (uMsg == WM_NCCREATE)
++        return TOOLBAR_NCCreate (hwnd, wParam, (CREATESTRUCTW*)lParam, 6);
++    else
++        return ToolbarWindowProc(hwnd, uMsg, wParam, lParam);
++}
++
++VOID
++TOOLBARv6_Register (void)
++{
++    WNDCLASSW wndClass;
++
++    ZeroMemory (&wndClass, sizeof(WNDCLASSW));
++    wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS;
++    wndClass.lpfnWndProc   = ToolbarV6WindowProc;
++    wndClass.cbClsExtra    = 0;
++    wndClass.cbWndExtra    = sizeof(TOOLBAR_INFO *);
++    wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
++    wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
++    wndClass.lpszClassName = TOOLBARCLASSNAMEW;
++
++    RegisterClassW (&wndClass);
++}
++
++VOID
++TOOLBARv6_Unregister (void)
++{
++    UnregisterClassW (TOOLBARCLASSNAMEW, NULL);
++}
++#endif
++
+ static HIMAGELIST TOOLBAR_InsertImageList(PIMLENTRY **pies, INT *cies, HIMAGELIST himl, INT id)
+ {
+     HIMAGELIST himlold;
 diff -pudN e:\wine\dlls\comctl32/tooltips.c e:\reactos\dll\win32\comctl32/tooltips.c
---- e:\wine\dlls\comctl32/tooltips.c	2016-11-16 17:28:41 +0100
-+++ e:\reactos\dll\win32\comctl32/tooltips.c	2016-08-15 16:13:43 +0100
+--- e:\wine\dlls\comctl32/tooltips.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/tooltips.c	2017-02-13 10:18:27 +0100
 @@ -2009,7 +2009,36 @@ TOOLTIPS_NCHitTest (const TOOLTIPS_INFO 
  static LRESULT
  TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
@@ -1340,10 +2452,25 @@ diff -pudN e:\wine\dlls\comctl32/tooltips.c e:\reactos\dll\win32\comctl32/toolti
  
      return 0;
  }
+diff -pudN e:\wine\dlls\comctl32/trackbar.c e:\reactos\dll\win32\comctl32/trackbar.c
+--- e:\wine\dlls\comctl32/trackbar.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/trackbar.c	2017-05-07 14:47:57 +0100
+@@ -938,7 +938,11 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr
+         if (GetWindowTheme (infoPtr->hwndSelf)) {
+             DrawThemeParentBackground (infoPtr->hwndSelf, hdc, 0);
+         }
++#ifndef __REACTOS__
+         else {
++#else
++        {
++#endif
+             HBRUSH brush = (HBRUSH)SendMessageW(infoPtr->hwndNotify, WM_CTLCOLORSTATIC,
+                     (WPARAM)hdc, (LPARAM)infoPtr->hwndSelf);
+             FillRect (hdc, &rcClient, brush ? brush : GetSysColorBrush(COLOR_BTNFACE));
 diff -pudN e:\wine\dlls\comctl32/treeview.c e:\reactos\dll\win32\comctl32/treeview.c
---- e:\wine\dlls\comctl32/treeview.c	2016-11-16 17:28:42 +0100
-+++ e:\reactos\dll\win32\comctl32/treeview.c	2016-11-16 18:29:47 +0100
-@@ -2909,7 +2909,14 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr,
+--- e:\wine\dlls\comctl32/treeview.c	2017-09-07 12:58:14 +0100
++++ e:\reactos\dll\win32\comctl32/treeview.c	2017-05-21 20:35:33 +0100
+@@ -2911,7 +2911,14 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr,
  	}
      }
  
@@ -1358,3 +2485,19 @@ diff -pudN e:\wine\dlls\comctl32/treeview.c e:\reactos\dll\win32\comctl32/treevi
  
      if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
  	infoPtr->cdmode =
+@@ -5439,8 +5446,15 @@ static BOOL TREEVIEW_NCPaint (const TREE
+         CombineRgn (cliprgn, cliprgn, region, RGN_AND);
+     OffsetRect(&r, -r.left, -r.top);
+ 
++#ifdef __REACTOS__ /* r73789 */
++    dc = GetWindowDC(infoPtr->hwnd);
++    /* Exclude client part */
++    ExcludeClipRect(dc, r.left + cxEdge, r.top + cyEdge,
++        r.right - cxEdge, r.bottom -cyEdge);
++#else
+     dc = GetDCEx(infoPtr->hwnd, region, DCX_WINDOW|DCX_INTERSECTRGN);
+     OffsetRect(&r, -r.left, -r.top);
++#endif
+ 
+     if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
+         DrawThemeParentBackground(infoPtr->hwnd, dc, &r);
