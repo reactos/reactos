@@ -622,7 +622,7 @@
 622 stdcall GdipBitmapGetHistogramSize(long ptr)
 623 stdcall GdipBitmapConvertFormat(ptr long long long ptr float)
 624 stdcall GdipImageSetAbort(ptr ptr)
-625 stub GdipGraphicsSetAbort
+625 stdcall GdipGraphicsSetAbort(ptr ptr)
 626 stub GdipDrawImageFX
 627 stdcall GdipConvertToEmfPlus(ptr ptr ptr long ptr ptr)
 628 stdcall GdipConvertToEmfPlusToFile(ptr ptr ptr ptr long ptr ptr)

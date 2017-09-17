@@ -49,6 +49,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 #define VERSION_MAGIC  0xdbc01001
 #define VERSION_MAGIC2 0xdbc01002
+#define VALID_MAGIC(x) (((x) & 0xfffff000) == 0xdbc01000)
 #define TENSION_CONST (0.3)
 
 #define GIF_DISPOSE_UNSPECIFIED 0
@@ -86,10 +87,17 @@ extern REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi) DECLSPEC_HIDDEN;
 extern REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi) DECLSPEC_HIDDEN;
 extern REAL units_scale(GpUnit from, GpUnit to, REAL dpi) DECLSPEC_HIDDEN;
 
+#define WineCoordinateSpaceGdiDevice ((GpCoordinateSpace)4)
+
+extern GpStatus gdi_transform_acquire(GpGraphics *graphics);
+extern GpStatus gdi_transform_release(GpGraphics *graphics);
 extern GpStatus get_graphics_transform(GpGraphics *graphics, GpCoordinateSpace dst_space,
         GpCoordinateSpace src_space, GpMatrix *matrix) DECLSPEC_HIDDEN;
+extern GpStatus gdip_transform_points(GpGraphics *graphics, GpCoordinateSpace dst_space,
+        GpCoordinateSpace src_space, GpPointF *points, INT count) DECLSPEC_HIDDEN;
 
 extern GpStatus graphics_from_image(GpImage *image, GpGraphics **graphics) DECLSPEC_HIDDEN;
+extern GpStatus encode_image_png(GpImage *image, IStream* stream, GDIPCONST EncoderParameters* params) DECLSPEC_HIDDEN;
 
 extern GpStatus METAFILE_GetGraphicsContext(GpMetafile* metafile, GpGraphics **result) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_GetDC(GpMetafile* metafile, HDC *hdc) DECLSPEC_HIDDEN;
@@ -99,6 +107,7 @@ extern GpStatus METAFILE_FillRectangles(GpMetafile* metafile, GpBrush* brush,
     GDIPCONST GpRectF* rects, INT count) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_SetClipRect(GpMetafile* metafile,
     REAL x, REAL y, REAL width, REAL height, CombineMode mode) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_SetClipRegion(GpMetafile* metafile, GpRegion* region, CombineMode mode) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_SetPageTransform(GpMetafile* metafile, GpUnit unit, REAL scale) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_SetWorldTransform(GpMetafile* metafile, GDIPCONST GpMatrix* transform) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_ScaleWorldTransform(GpMetafile* metafile, REAL sx, REAL sy, MatrixOrder order) DECLSPEC_HIDDEN;
@@ -113,6 +122,13 @@ extern GpStatus METAFILE_EndContainer(GpMetafile* metafile, DWORD StackIndex) DE
 extern GpStatus METAFILE_SaveGraphics(GpMetafile* metafile, DWORD StackIndex) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_RestoreGraphics(GpMetafile* metafile, DWORD StackIndex) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_GraphicsDeleted(GpMetafile* metafile) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_DrawImagePointsRect(GpMetafile* metafile, GpImage *image,
+     GDIPCONST GpPointF *points, INT count, REAL srcx, REAL srcy, REAL srcwidth,
+     REAL srcheight, GpUnit srcUnit, GDIPCONST GpImageAttributes* imageAttributes,
+     DrawImageAbort callback, VOID *callbackData) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_AddSimpleProperty(GpMetafile *metafile, SHORT prop, SHORT val) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_DrawPath(GpMetafile *metafile, GpPen *pen, GpPath *path) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_FillPath(GpMetafile *metafile, GpBrush *brush, GpPath *path) DECLSPEC_HIDDEN;
 
 extern void calc_curve_bezier(const GpPointF *pts, REAL tension, REAL *x1,
     REAL *y1, REAL *x2, REAL *y2) DECLSPEC_HIDDEN;
@@ -122,6 +138,9 @@ extern void calc_curve_bezier_endp(REAL xend, REAL yend, REAL xadj, REAL yadj,
 extern void free_installed_fonts(void) DECLSPEC_HIDDEN;
 
 extern BOOL lengthen_path(GpPath *path, INT len) DECLSPEC_HIDDEN;
+
+extern DWORD write_region_data(const GpRegion *region, void *data) DECLSPEC_HIDDEN;
+extern DWORD write_path_data(GpPath *path, void *data) DECLSPEC_HIDDEN;
 
 extern GpStatus trace_path(GpGraphics *graphics, GpPath *path) DECLSPEC_HIDDEN;
 
@@ -249,6 +268,8 @@ struct GpGraphics{
     struct list containers;
     GraphicsContainer contid; /* last-issued container ID */
     INT origin_x, origin_y;
+    INT gdi_transform_acquire_count, gdi_transform_save;
+    GpMatrix gdi_transform;
     /* For giving the caller an HDC when we technically can't: */
     HBITMAP temp_hbitmap;
     int temp_hbitmap_width;
@@ -307,6 +328,7 @@ struct GpLineGradient{
     ARGB* pblendcolor; /* preset blend colors */
     REAL* pblendpos; /* preset blend positions */
     INT pblendcount;
+    GpMatrix transform;
 };
 
 struct GpTexture{
@@ -373,6 +395,7 @@ struct GpMetafile{
     IStream *record_stream;
     BOOL auto_frame; /* If true, determine the frame automatically */
     GpPointF auto_frame_min, auto_frame_max;
+    DWORD next_object_id;
 
     /* playback */
     GpGraphics *playback_graphics;

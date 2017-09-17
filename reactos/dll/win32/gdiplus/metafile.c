@@ -18,6 +18,17 @@
 
 #include "gdiplus_private.h"
 
+#include <assert.h>
+#include <ole2.h>
+
+typedef struct EmfPlusARGB
+{
+    BYTE Blue;
+    BYTE Green;
+    BYTE Red;
+    BYTE Alpha;
+} EmfPlusARGB;
+
 typedef struct EmfPlusRecordHeader
 {
     WORD Type;
@@ -132,6 +143,216 @@ typedef struct container
     GpRegion *clip;
 } container;
 
+enum PenDataFlags
+{
+    PenDataTransform        = 0x0001,
+    PenDataStartCap         = 0x0002,
+    PenDataEndCap           = 0x0004,
+    PenDataJoin             = 0x0008,
+    PenDataMiterLimit       = 0x0010,
+    PenDataLineStyle        = 0x0020,
+    PenDataDashedLineCap    = 0x0040,
+    PenDataDashedLineOffset = 0x0080,
+    PenDataDashedLine       = 0x0100,
+    PenDataNonCenter        = 0x0200,
+    PenDataCompoundLine     = 0x0400,
+    PenDataCustomStartCap   = 0x0800,
+    PenDataCustomEndCap     = 0x1000
+};
+
+typedef struct EmfPlusTransformMatrix
+{
+    REAL TransformMatrix[6];
+} EmfPlusTransformMatrix;
+
+enum LineStyle
+{
+    LineStyleSolid,
+    LineStyleDash,
+    LineStyleDot,
+    LineStyleDashDot,
+    LineStyleDashDotDot,
+    LineStyleCustom
+};
+
+typedef struct EmfPlusPenData
+{
+    DWORD PenDataFlags;
+    DWORD PenUnit;
+    REAL PenWidth;
+    BYTE OptionalData[1];
+} EmfPlusPenData;
+
+typedef struct EmfPlusSolidBrushData
+{
+    EmfPlusARGB SolidColor;
+} EmfPlusSolidBrushData;
+
+typedef struct EmfPlusBrush
+{
+    DWORD Version;
+    DWORD Type;
+    union {
+        EmfPlusSolidBrushData solid;
+    } BrushData;
+} EmfPlusBrush;
+
+typedef struct EmfPlusPen
+{
+    DWORD Version;
+    DWORD Type;
+    /* EmfPlusPenData */
+    /* EmfPlusBrush */
+    BYTE data[1];
+} EmfPlusPen;
+
+typedef struct EmfPlusPath
+{
+    DWORD Version;
+    DWORD PathPointCount;
+    DWORD PathPointFlags;
+    /* PathPoints[] */
+    /* PathPointTypes[] */
+    /* AlignmentPadding */
+    BYTE data[1];
+} EmfPlusPath;
+
+typedef struct EmfPlusRegion
+{
+    DWORD Version;
+    DWORD RegionNodeCount;
+    BYTE RegionNode[1];
+} EmfPlusRegion;
+
+typedef enum
+{
+    BitmapDataTypePixel,
+    BitmapDataTypeCompressed,
+} BitmapDataType;
+
+typedef struct EmfPlusBitmap
+{
+    DWORD Width;
+    DWORD Height;
+    DWORD Stride;
+    DWORD PixelFormat;
+    DWORD Type;
+    BYTE BitmapData[1];
+} EmfPlusBitmap;
+
+typedef struct EmfPlusMetafile
+{
+    DWORD Type;
+    DWORD MetafileDataSize;
+    BYTE MetafileData[1];
+} EmfPlusMetafile;
+
+typedef enum ImageDataType
+{
+    ImageDataTypeUnknown,
+    ImageDataTypeBitmap,
+    ImageDataTypeMetafile,
+} ImageDataType;
+
+typedef struct EmfPlusImage
+{
+    DWORD Version;
+    ImageDataType Type;
+    union
+    {
+        EmfPlusBitmap bitmap;
+        EmfPlusMetafile metafile;
+    } ImageData;
+} EmfPlusImage;
+
+typedef struct EmfPlusImageAttributes
+{
+    DWORD Version;
+    DWORD Reserved1;
+    DWORD WrapMode;
+    EmfPlusARGB ClampColor;
+    DWORD ObjectClamp;
+    DWORD Reserved2;
+} EmfPlusImageAttributes;
+
+typedef enum ObjectType
+{
+    ObjectTypeInvalid,
+    ObjectTypeBrush,
+    ObjectTypePen,
+    ObjectTypePath,
+    ObjectTypeRegion,
+    ObjectTypeImage,
+    ObjectTypeFont,
+    ObjectTypeStringFormat,
+    ObjectTypeImageAttributes,
+    ObjectTypeCustomLineCap,
+} ObjectType;
+
+typedef struct EmfPlusObject
+{
+    EmfPlusRecordHeader Header;
+    union
+    {
+        EmfPlusBrush brush;
+        EmfPlusPen pen;
+        EmfPlusPath path;
+        EmfPlusRegion region;
+        EmfPlusImage image;
+        EmfPlusImageAttributes image_attributes;
+    } ObjectData;
+} EmfPlusObject;
+
+typedef struct EmfPlusRectF
+{
+    float X;
+    float Y;
+    float Width;
+    float Height;
+} EmfPlusRectF;
+
+typedef struct EmfPlusPointF
+{
+    float X;
+    float Y;
+} EmfPlusPointF;
+
+typedef struct EmfPlusDrawImagePoints
+{
+    EmfPlusRecordHeader Header;
+    DWORD ImageAttributesID;
+    DWORD SrcUnit;
+    EmfPlusRectF SrcRect;
+    DWORD count;
+    union
+    {
+        /*EmfPlusPointR pointR;
+        EmfPlusPoint point;*/
+        EmfPlusPointF pointF;
+    } PointData[3];
+} EmfPlusDrawImagePoints;
+
+typedef struct EmfPlusDrawPath
+{
+    EmfPlusRecordHeader Header;
+    DWORD PenId;
+} EmfPlusDrawPath;
+
+typedef struct EmfPlusFillPath
+{
+    EmfPlusRecordHeader Header;
+    union
+    {
+        DWORD BrushId;
+        EmfPlusARGB Color;
+    } data;
+} EmfPlusFillPath;
+
+static DWORD METAFILE_AddObjectId(GpMetafile *metafile)
+{
+    return (metafile->next_object_id++) % 64;
+}
+
 static GpStatus METAFILE_AllocateRecord(GpMetafile *metafile, DWORD size, void **result)
 {
     DWORD size_needed;
@@ -178,6 +399,12 @@ static GpStatus METAFILE_AllocateRecord(GpMetafile *metafile, DWORD size, void *
     return Ok;
 }
 
+static void METAFILE_RemoveLastRecord(GpMetafile *metafile, EmfPlusRecordHeader *record)
+{
+    assert(metafile->comment_data + metafile->comment_data_length == (BYTE*)record + record->Size);
+    metafile->comment_data_length -=  record->Size;
+}
+
 static void METAFILE_WriteRecords(GpMetafile *metafile)
 {
     if (metafile->comment_data_length > 4)
@@ -206,7 +433,7 @@ static GpStatus METAFILE_WriteHeader(GpMetafile *metafile, HDC hdc)
         else
             header->Header.Flags = 0;
 
-        header->Version = 0xDBC01002;
+        header->Version = VERSION_MAGIC2;
 
         if (GetDeviceCaps(hdc, TECHNOLOGY) == DT_RASDISPLAY)
             header->EmfPlusFlags = 1;
@@ -603,6 +830,53 @@ GpStatus METAFILE_SetClipRect(GpMetafile* metafile, REAL x, REAL y, REAL width, 
         METAFILE_WriteRecords(metafile);
     }
 
+    return Ok;
+}
+
+static GpStatus METAFILE_AddRegionObject(GpMetafile *metafile, GpRegion *region, DWORD *id)
+{
+    EmfPlusObject *object_record;
+    DWORD size;
+    GpStatus stat;
+
+    *id = -1;
+    if (metafile->metafile_type != MetafileTypeEmfPlusOnly && metafile->metafile_type != MetafileTypeEmfPlusDual)
+        return Ok;
+
+    size = write_region_data(region, NULL);
+    stat = METAFILE_AllocateRecord(metafile,
+            FIELD_OFFSET(EmfPlusObject, ObjectData.region) + size, (void**)&object_record);
+    if (stat != Ok) return stat;
+
+    *id = METAFILE_AddObjectId(metafile);
+    object_record->Header.Type = EmfPlusRecordTypeObject;
+    object_record->Header.Flags = *id | ObjectTypeRegion << 8;
+    write_region_data(region, &object_record->ObjectData.region);
+    return Ok;
+}
+
+GpStatus METAFILE_SetClipRegion(GpMetafile* metafile, GpRegion* region, CombineMode mode)
+{
+    EmfPlusRecordHeader *record;
+    DWORD region_id;
+    GpStatus stat;
+
+    if (metafile->metafile_type == MetafileTypeEmf)
+    {
+        FIXME("stub!\n");
+        return NotImplemented;
+    }
+
+    stat = METAFILE_AddRegionObject(metafile, region, &region_id);
+    if (stat != Ok) return stat;
+
+    stat = METAFILE_AllocateRecord(metafile, sizeof(*record), (void**)&record);
+    if (stat != Ok) return stat;
+
+    record->Type = EmfPlusRecordTypeSetClipRegion;
+    record->Flags = region_id | mode << 8;
+
+    METAFILE_WriteRecords(metafile);
     return Ok;
 }
 
@@ -1127,8 +1401,6 @@ GpStatus WINGDIPAPI GdipPlayMetafileRecord(GDIPCONST GpMetafile *metafile,
         /* regular EMF record */
         if (metafile->playback_dc)
         {
-            ENHMETARECORD *record;
-
             switch (recordType)
             {
             case EMR_SETMAPMODE:
@@ -1173,24 +1445,27 @@ GpStatus WINGDIPAPI GdipPlayMetafileRecord(GDIPCONST GpMetafile *metafile,
                 return Ok;
             }
             default:
+            {
+                ENHMETARECORD *record = heap_alloc_zero(dataSize + 8);
+
+                if (record)
+                {
+                    record->iType = recordType;
+                    record->nSize = dataSize + 8;
+                    memcpy(record->dParm, data, dataSize);
+
+                    if(PlayEnhMetaFileRecord(metafile->playback_dc, metafile->handle_table,
+                            record, metafile->handle_count) == 0)
+                        ERR("PlayEnhMetaFileRecord failed\n");
+
+                    heap_free(record);
+                }
+                else
+                    return OutOfMemory;
+
                 break;
             }
-
-            record = heap_alloc_zero(dataSize + 8);
-
-            if (record)
-            {
-                record->iType = recordType;
-                record->nSize = dataSize + 8;
-                memcpy(record->dParm, data, dataSize);
-
-                PlayEnhMetaFileRecord(metafile->playback_dc, metafile->handle_table,
-                    record, metafile->handle_count);
-
-                heap_free(record);
             }
-            else
-                return OutOfMemory;
         }
     }
     else
@@ -1816,7 +2091,7 @@ GpStatus WINGDIPAPI GdipGetMetafileHeaderFromMetafile(GpMetafile * metafile,
     else
     {
         memset(header, 0, sizeof(*header));
-        header->Version = 0xdbc01002;
+        header->Version = VERSION_MAGIC2;
     }
 
     header->Type = metafile->metafile_type;
@@ -2065,13 +2340,20 @@ GpStatus WINGDIPAPI GdipCreateMetafileFromWmf(HMETAFILE hwmf, BOOL delete,
 GpStatus WINGDIPAPI GdipCreateMetafileFromWmfFile(GDIPCONST WCHAR *file,
     GDIPCONST WmfPlaceableFileHeader * placeable, GpMetafile **metafile)
 {
-    HMETAFILE hmf = GetMetaFileW(file);
+    HMETAFILE hmf;
+    HENHMETAFILE emf;
 
     TRACE("(%s, %p, %p)\n", debugstr_w(file), placeable, metafile);
 
-    if(!hmf) return InvalidParameter;
+    hmf = GetMetaFileW(file);
+    if(hmf)
+        return GdipCreateMetafileFromWmf(hmf, TRUE, placeable, metafile);
 
-    return GdipCreateMetafileFromWmf(hmf, TRUE, placeable, metafile);
+    emf = GetEnhMetaFileW(file);
+    if(emf)
+        return GdipCreateMetafileFromEmf(emf, TRUE, metafile);
+
+    return GenericError;
 }
 
 GpStatus WINGDIPAPI GdipCreateMetafileFromFile(GDIPCONST WCHAR *file,
@@ -2184,4 +2466,586 @@ GpStatus WINGDIPAPI GdipConvertToEmfPlusToFile(const GpGraphics* refGraphics,
 {
     FIXME("stub: %p, %p, %p, %p, %u, %p, %p\n", refGraphics, metafile, conversionSuccess, filename, emfType, description, out_metafile);
     return NotImplemented;
+}
+
+static GpStatus METAFILE_CreateCompressedImageStream(GpImage *image, IStream **stream, DWORD *size)
+{
+    LARGE_INTEGER zero;
+    STATSTG statstg;
+    GpStatus stat;
+    HRESULT hr;
+
+    *size = 0;
+
+    hr = CreateStreamOnHGlobal(NULL, TRUE, stream);
+    if (FAILED(hr)) return hresult_to_status(hr);
+
+    stat = encode_image_png(image, *stream, NULL);
+    if (stat != Ok)
+    {
+        IStream_Release(*stream);
+        return stat;
+    }
+
+    hr = IStream_Stat(*stream, &statstg, 1);
+    if (FAILED(hr))
+    {
+        IStream_Release(*stream);
+        return hresult_to_status(hr);
+    }
+    *size = statstg.cbSize.u.LowPart;
+
+    zero.QuadPart = 0;
+    hr = IStream_Seek(*stream, zero, STREAM_SEEK_SET, NULL);
+    if (FAILED(hr))
+    {
+        IStream_Release(*stream);
+        return hresult_to_status(hr);
+    }
+
+    return Ok;
+}
+
+static GpStatus METAFILE_FillEmfPlusBitmap(EmfPlusBitmap *record, IStream *stream, DWORD size)
+{
+    HRESULT hr;
+
+    record->Width = 0;
+    record->Height = 0;
+    record->Stride = 0;
+    record->PixelFormat = 0;
+    record->Type = BitmapDataTypeCompressed;
+
+    hr = IStream_Read(stream, record->BitmapData, size, NULL);
+    if (FAILED(hr)) return hresult_to_status(hr);
+    return Ok;
+}
+
+static GpStatus METAFILE_AddImageObject(GpMetafile *metafile, GpImage *image, DWORD *id)
+{
+    EmfPlusObject *object_record;
+    GpStatus stat;
+    DWORD size;
+
+    *id = -1;
+
+    if (metafile->metafile_type != MetafileTypeEmfPlusOnly && metafile->metafile_type != MetafileTypeEmfPlusDual)
+        return Ok;
+
+    if (image->type == ImageTypeBitmap)
+    {
+        IStream *stream;
+        DWORD aligned_size;
+
+        stat = METAFILE_CreateCompressedImageStream(image, &stream, &size);
+        if (stat != Ok) return stat;
+        aligned_size = (size + 3) & ~3;
+
+        stat = METAFILE_AllocateRecord(metafile,
+                FIELD_OFFSET(EmfPlusObject, ObjectData.image.ImageData.bitmap.BitmapData[aligned_size]),
+                (void**)&object_record);
+        if (stat != Ok)
+        {
+            IStream_Release(stream);
+            return stat;
+        }
+        memset(object_record->ObjectData.image.ImageData.bitmap.BitmapData + size, 0, aligned_size - size);
+
+        *id = METAFILE_AddObjectId(metafile);
+        object_record->Header.Type = EmfPlusRecordTypeObject;
+        object_record->Header.Flags = *id | ObjectTypeImage << 8;
+        object_record->ObjectData.image.Version = VERSION_MAGIC2;
+        object_record->ObjectData.image.Type = ImageDataTypeBitmap;
+
+        stat = METAFILE_FillEmfPlusBitmap(&object_record->ObjectData.image.ImageData.bitmap, stream, size);
+        IStream_Release(stream);
+        if (stat != Ok) METAFILE_RemoveLastRecord(metafile, &object_record->Header);
+        return stat;
+    }
+    else if (image->type == ImageTypeMetafile)
+    {
+        HENHMETAFILE hemf = ((GpMetafile*)image)->hemf;
+        EmfPlusMetafile *metafile_record;
+
+        if (!hemf) return InvalidParameter;
+
+        size = GetEnhMetaFileBits(hemf, 0, NULL);
+        if (!size) return GenericError;
+
+        stat  = METAFILE_AllocateRecord(metafile,
+                FIELD_OFFSET(EmfPlusObject, ObjectData.image.ImageData.metafile.MetafileData[size]),
+                (void**)&object_record);
+        if (stat != Ok) return stat;
+
+        *id = METAFILE_AddObjectId(metafile);
+        object_record->Header.Type = EmfPlusRecordTypeObject;
+        object_record->Header.Flags = *id | ObjectTypeImage << 8;
+        object_record->ObjectData.image.Version = VERSION_MAGIC2;
+        object_record->ObjectData.image.Type = ImageDataTypeMetafile;
+        metafile_record = &object_record->ObjectData.image.ImageData.metafile;
+        metafile_record->Type = ((GpMetafile*)image)->metafile_type;
+        metafile_record->MetafileDataSize = size;
+        if (GetEnhMetaFileBits(hemf, size, metafile_record->MetafileData) != size)
+        {
+            METAFILE_RemoveLastRecord(metafile, &object_record->Header);
+            return GenericError;
+        }
+        return Ok;
+    }
+    else
+    {
+        FIXME("not supported image type (%d)\n", image->type);
+        return NotImplemented;
+    }
+}
+
+static GpStatus METAFILE_AddImageAttributesObject(GpMetafile *metafile, const GpImageAttributes *attrs, DWORD *id)
+{
+    EmfPlusObject *object_record;
+    EmfPlusImageAttributes *attrs_record;
+    GpStatus stat;
+
+    *id = -1;
+
+    if (metafile->metafile_type != MetafileTypeEmfPlusOnly && metafile->metafile_type != MetafileTypeEmfPlusDual)
+        return Ok;
+
+    if (!attrs)
+        return Ok;
+
+    stat = METAFILE_AllocateRecord(metafile,
+            FIELD_OFFSET(EmfPlusObject, ObjectData.image_attributes) + sizeof(EmfPlusImageAttributes),
+            (void**)&object_record);
+    if (stat != Ok) return stat;
+
+    *id = METAFILE_AddObjectId(metafile);
+    object_record->Header.Type = EmfPlusRecordTypeObject;
+    object_record->Header.Flags = *id | (ObjectTypeImageAttributes << 8);
+    attrs_record = &object_record->ObjectData.image_attributes;
+    attrs_record->Version = VERSION_MAGIC2;
+    attrs_record->Reserved1 = 0;
+    attrs_record->WrapMode = attrs->wrap;
+    attrs_record->ClampColor.Blue = attrs->outside_color & 0xff;
+    attrs_record->ClampColor.Green = (attrs->outside_color >> 8) & 0xff;
+    attrs_record->ClampColor.Red = (attrs->outside_color >> 16) & 0xff;
+    attrs_record->ClampColor.Alpha = attrs->outside_color >> 24;
+    attrs_record->ObjectClamp = attrs->clamp;
+    attrs_record->Reserved2 = 0;
+    return Ok;
+}
+
+GpStatus METAFILE_DrawImagePointsRect(GpMetafile *metafile, GpImage *image,
+     GDIPCONST GpPointF *points, INT count, REAL srcx, REAL srcy, REAL srcwidth,
+     REAL srcheight, GpUnit srcUnit, GDIPCONST GpImageAttributes* imageAttributes,
+     DrawImageAbort callback, VOID *callbackData)
+{
+    EmfPlusDrawImagePoints *draw_image_record;
+    DWORD image_id, attributes_id;
+    GpStatus stat;
+
+    if (count != 3) return InvalidParameter;
+
+    if (metafile->metafile_type == MetafileTypeEmf)
+    {
+        FIXME("MetafileTypeEmf metafiles not supported\n");
+        return NotImplemented;
+    }
+    else
+        FIXME("semi-stub\n");
+
+    if (!imageAttributes)
+    {
+        stat = METAFILE_AddImageObject(metafile, image, &image_id);
+    }
+    else if (image->type == ImageTypeBitmap)
+    {
+        INT width = ((GpBitmap*)image)->width;
+        INT height = ((GpBitmap*)image)->height;
+        GpGraphics *graphics;
+        GpBitmap *bitmap;
+
+        stat = GdipCreateBitmapFromScan0(width, height,
+                0, PixelFormat32bppARGB, NULL, &bitmap);
+        if (stat != Ok) return stat;
+
+        stat = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+        if (stat != Ok)
+        {
+            GdipDisposeImage((GpImage*)bitmap);
+            return stat;
+        }
+
+        stat = GdipDrawImageRectRectI(graphics, image, 0, 0, width, height,
+                0, 0, width, height, UnitPixel, imageAttributes, NULL, NULL);
+        GdipDeleteGraphics(graphics);
+        if (stat != Ok)
+        {
+            GdipDisposeImage((GpImage*)bitmap);
+            return stat;
+        }
+
+        stat = METAFILE_AddImageObject(metafile, (GpImage*)bitmap, &image_id);
+        GdipDisposeImage((GpImage*)bitmap);
+    }
+    else
+    {
+        FIXME("imageAttributes not supported (image type %d)\n", image->type);
+        return NotImplemented;
+    }
+    if (stat != Ok) return stat;
+
+    stat = METAFILE_AddImageAttributesObject(metafile, imageAttributes, &attributes_id);
+    if (stat != Ok) return stat;
+
+    stat = METAFILE_AllocateRecord(metafile, sizeof(EmfPlusDrawImagePoints), (void**)&draw_image_record);
+    if (stat != Ok) return stat;
+    draw_image_record->Header.Type = EmfPlusRecordTypeDrawImagePoints;
+    draw_image_record->Header.Flags = image_id;
+    draw_image_record->ImageAttributesID = attributes_id;
+    draw_image_record->SrcUnit = UnitPixel;
+    draw_image_record->SrcRect.X = units_to_pixels(srcx, srcUnit, metafile->image.xres);
+    draw_image_record->SrcRect.Y = units_to_pixels(srcy, srcUnit, metafile->image.yres);
+    draw_image_record->SrcRect.Width = units_to_pixels(srcwidth, srcUnit, metafile->image.xres);
+    draw_image_record->SrcRect.Height = units_to_pixels(srcheight, srcUnit, metafile->image.yres);
+    draw_image_record->count = 3;
+    draw_image_record->PointData[0].pointF.X = points[0].X;
+    draw_image_record->PointData[0].pointF.Y = points[0].Y;
+    draw_image_record->PointData[1].pointF.X = points[1].X;
+    draw_image_record->PointData[1].pointF.Y = points[1].Y;
+    draw_image_record->PointData[2].pointF.X = points[2].X;
+    draw_image_record->PointData[2].pointF.Y = points[2].Y;
+    METAFILE_WriteRecords(metafile);
+    return Ok;
+}
+
+GpStatus METAFILE_AddSimpleProperty(GpMetafile *metafile, SHORT prop, SHORT val)
+{
+    EmfPlusRecordHeader *record;
+    GpStatus stat;
+
+    if (metafile->metafile_type != MetafileTypeEmfPlusOnly && metafile->metafile_type != MetafileTypeEmfPlusDual)
+        return Ok;
+
+    stat = METAFILE_AllocateRecord(metafile, sizeof(*record), (void**)&record);
+    if (stat != Ok) return stat;
+
+    record->Type = prop;
+    record->Flags = val;
+
+    METAFILE_WriteRecords(metafile);
+    return Ok;
+}
+
+static GpStatus METAFILE_AddPathObject(GpMetafile *metafile, GpPath *path, DWORD *id)
+{
+    EmfPlusObject *object_record;
+    GpStatus stat;
+    DWORD size;
+
+    *id = -1;
+    if (metafile->metafile_type != MetafileTypeEmfPlusOnly && metafile->metafile_type != MetafileTypeEmfPlusDual)
+        return Ok;
+
+    size = write_path_data(path, NULL);
+    stat = METAFILE_AllocateRecord(metafile,
+            FIELD_OFFSET(EmfPlusObject, ObjectData.path) + size,
+            (void**)&object_record);
+    if (stat != Ok) return stat;
+
+    *id = METAFILE_AddObjectId(metafile);
+    object_record->Header.Type = EmfPlusRecordTypeObject;
+    object_record->Header.Flags = *id | ObjectTypePath << 8;
+    write_path_data(path, &object_record->ObjectData.path);
+    return Ok;
+}
+
+static GpStatus METAFILE_PrepareBrushData(GpBrush *brush, DWORD *size)
+{
+    if (brush->bt == BrushTypeSolidColor)
+    {
+        *size = FIELD_OFFSET(EmfPlusBrush, BrushData.solid) + sizeof(EmfPlusSolidBrushData);
+        return Ok;
+    }
+
+    FIXME("unsupported brush type: %d\n", brush->bt);
+    return NotImplemented;
+}
+
+static void METAFILE_FillBrushData(GpBrush *brush, EmfPlusBrush *data)
+{
+    if (brush->bt == BrushTypeSolidColor)
+    {
+        GpSolidFill *solid = (GpSolidFill*)brush;
+
+        data->Version = VERSION_MAGIC2;
+        data->Type = solid->brush.bt;
+        data->BrushData.solid.SolidColor.Blue = solid->color & 0xff;
+        data->BrushData.solid.SolidColor.Green = (solid->color >> 8) & 0xff;
+        data->BrushData.solid.SolidColor.Red = (solid->color >> 16) & 0xff;
+        data->BrushData.solid.SolidColor.Alpha = solid->color >> 24;
+    }
+}
+
+static GpStatus METAFILE_AddPenObject(GpMetafile *metafile, GpPen *pen, DWORD *id)
+{
+    DWORD i, data_flags, pen_data_size, brush_size;
+    EmfPlusObject *object_record;
+    EmfPlusPenData *pen_data;
+    GpStatus stat;
+    BOOL result;
+
+    *id = -1;
+    if (metafile->metafile_type != MetafileTypeEmfPlusOnly && metafile->metafile_type != MetafileTypeEmfPlusDual)
+        return Ok;
+
+    data_flags = 0;
+    pen_data_size = FIELD_OFFSET(EmfPlusPenData, OptionalData);
+
+    GdipIsMatrixIdentity(&pen->transform, &result);
+    if (!result)
+    {
+        data_flags |= PenDataTransform;
+        pen_data_size += sizeof(EmfPlusTransformMatrix);
+    }
+    if (pen->startcap != LineCapFlat)
+    {
+        data_flags |= PenDataStartCap;
+        pen_data_size += sizeof(DWORD);
+    }
+    if (pen->endcap != LineCapFlat)
+    {
+        data_flags |= PenDataEndCap;
+        pen_data_size += sizeof(DWORD);
+    }
+    if (pen->join != LineJoinMiter)
+    {
+        data_flags |= PenDataJoin;
+        pen_data_size += sizeof(DWORD);
+    }
+    if (pen->miterlimit != 10.0)
+    {
+        data_flags |= PenDataMiterLimit;
+        pen_data_size += sizeof(REAL);
+    }
+    if (pen->style != GP_DEFAULT_PENSTYLE)
+    {
+        data_flags |= PenDataLineStyle;
+        pen_data_size += sizeof(DWORD);
+    }
+    if (pen->dashcap != DashCapFlat)
+    {
+        data_flags |= PenDataDashedLineCap;
+        pen_data_size += sizeof(DWORD);
+    }
+    data_flags |= PenDataDashedLineOffset;
+    pen_data_size += sizeof(REAL);
+    if (pen->numdashes)
+    {
+        data_flags |= PenDataDashedLine;
+        pen_data_size += sizeof(DWORD) + pen->numdashes*sizeof(REAL);
+    }
+    if (pen->align != PenAlignmentCenter)
+    {
+        data_flags |= PenDataNonCenter;
+        pen_data_size += sizeof(DWORD);
+    }
+    /* TODO: Add support for PenDataCompoundLine */
+    if (pen->customstart)
+    {
+        FIXME("ignoring custom start cup\n");
+    }
+    if (pen->customend)
+    {
+        FIXME("ignoring custom end cup\n");
+    }
+
+    stat = METAFILE_PrepareBrushData(pen->brush, &brush_size);
+    if (stat != Ok) return stat;
+
+    stat = METAFILE_AllocateRecord(metafile,
+            FIELD_OFFSET(EmfPlusObject, ObjectData.pen.data) + pen_data_size + brush_size,
+            (void**)&object_record);
+    if (stat != Ok) return stat;
+
+    *id = METAFILE_AddObjectId(metafile);
+    object_record->Header.Type = EmfPlusRecordTypeObject;
+    object_record->Header.Flags = *id | ObjectTypePen << 8;
+    object_record->ObjectData.pen.Version = VERSION_MAGIC2;
+    object_record->ObjectData.pen.Type = 0;
+
+    pen_data = (EmfPlusPenData*)object_record->ObjectData.pen.data;
+    pen_data->PenDataFlags = data_flags;
+    pen_data->PenUnit = pen->unit;
+    pen_data->PenWidth = pen->width;
+
+    i = 0;
+    if (data_flags & PenDataTransform)
+    {
+        EmfPlusTransformMatrix *m = (EmfPlusTransformMatrix*)(pen_data->OptionalData + i);
+        memcpy(m, &pen->transform, sizeof(*m));
+        i += sizeof(EmfPlusTransformMatrix);
+    }
+    if (data_flags & PenDataStartCap)
+    {
+        *(DWORD*)(pen_data->OptionalData + i) = pen->startcap;
+        i += sizeof(DWORD);
+    }
+    if (data_flags & PenDataEndCap)
+    {
+        *(DWORD*)(pen_data->OptionalData + i) = pen->endcap;
+        i += sizeof(DWORD);
+    }
+    if (data_flags & PenDataJoin)
+    {
+        *(DWORD*)(pen_data->OptionalData + i) = pen->join;
+        i += sizeof(DWORD);
+    }
+    if (data_flags & PenDataMiterLimit)
+    {
+        *(REAL*)(pen_data->OptionalData + i) = pen->miterlimit;
+        i += sizeof(REAL);
+    }
+    if (data_flags & PenDataLineStyle)
+    {
+        switch (pen->style & PS_STYLE_MASK)
+        {
+        case PS_SOLID: *(DWORD*)(pen_data->OptionalData + i) = LineStyleSolid; break;
+        case PS_DASH: *(DWORD*)(pen_data->OptionalData + i) = LineStyleDash; break;
+        case PS_DOT: *(DWORD*)(pen_data->OptionalData + i) = LineStyleDot; break;
+        case PS_DASHDOT: *(DWORD*)(pen_data->OptionalData + i) = LineStyleDashDot; break;
+        case PS_DASHDOTDOT: *(DWORD*)(pen_data->OptionalData + i) = LineStyleDashDotDot; break;
+        default: *(DWORD*)(pen_data->OptionalData + i) = LineStyleCustom; break;
+        }
+        i += sizeof(DWORD);
+    }
+    if (data_flags & PenDataDashedLineCap)
+    {
+        *(DWORD*)(pen_data->OptionalData + i) = pen->dashcap;
+        i += sizeof(DWORD);
+    }
+    if (data_flags & PenDataDashedLineOffset)
+    {
+        *(REAL*)(pen_data->OptionalData + i) = pen->offset;
+        i += sizeof(REAL);
+    }
+    if (data_flags & PenDataDashedLine)
+    {
+        int j;
+
+        *(DWORD*)(pen_data->OptionalData + i) = pen->numdashes;
+        i += sizeof(DWORD);
+
+        for (j=0; j<pen->numdashes; j++)
+        {
+            *(REAL*)(pen_data->OptionalData + i) = pen->dashes[j];
+            i += sizeof(REAL);
+        }
+    }
+    if (data_flags & PenDataNonCenter)
+    {
+        *(REAL*)(pen_data->OptionalData + i) = pen->align;
+        i += sizeof(DWORD);
+    }
+
+    METAFILE_FillBrushData(pen->brush,
+            (EmfPlusBrush*)(object_record->ObjectData.pen.data + pen_data_size));
+    return Ok;
+}
+
+GpStatus METAFILE_DrawPath(GpMetafile *metafile, GpPen *pen, GpPath *path)
+{
+    EmfPlusDrawPath *draw_path_record;
+    DWORD path_id;
+    DWORD pen_id;
+    GpStatus stat;
+
+    if (metafile->metafile_type == MetafileTypeEmf)
+    {
+        FIXME("stub!\n");
+        return NotImplemented;
+    }
+
+    stat = METAFILE_AddPenObject(metafile, pen, &pen_id);
+    if (stat != Ok) return stat;
+
+    stat = METAFILE_AddPathObject(metafile, path, &path_id);
+    if (stat != Ok) return stat;
+
+    stat = METAFILE_AllocateRecord(metafile, sizeof(EmfPlusDrawPath), (void**)&draw_path_record);
+    if (stat != Ok) return stat;
+    draw_path_record->Header.Type = EmfPlusRecordTypeDrawPath;
+    draw_path_record->Header.Flags = path_id;
+    draw_path_record->PenId = pen_id;
+
+    METAFILE_WriteRecords(metafile);
+    return Ok;
+}
+
+static GpStatus METAFILE_AddBrushObject(GpMetafile *metafile, GpBrush *brush, DWORD *id)
+{
+    EmfPlusObject *object_record;
+    GpStatus stat;
+    DWORD size;
+
+    *id = -1;
+    if (metafile->metafile_type != MetafileTypeEmfPlusOnly && metafile->metafile_type != MetafileTypeEmfPlusDual)
+        return Ok;
+
+    stat = METAFILE_PrepareBrushData(brush, &size);
+    if (stat != Ok) return stat;
+
+    stat = METAFILE_AllocateRecord(metafile,
+        FIELD_OFFSET(EmfPlusObject, ObjectData) + size, (void**)&object_record);
+    if (stat != Ok) return stat;
+
+    *id = METAFILE_AddObjectId(metafile);
+    object_record->Header.Type = EmfPlusRecordTypeObject;
+    object_record->Header.Flags = *id | ObjectTypeBrush << 8;
+    METAFILE_FillBrushData(brush, &object_record->ObjectData.brush);
+    return Ok;
+}
+
+GpStatus METAFILE_FillPath(GpMetafile *metafile, GpBrush *brush, GpPath *path)
+{
+    EmfPlusFillPath *fill_path_record;
+    DWORD brush_id = -1, path_id;
+    BOOL inline_color;
+    GpStatus stat;
+
+    if (metafile->metafile_type == MetafileTypeEmf)
+    {
+        FIXME("stub!\n");
+        return NotImplemented;
+    }
+
+    inline_color = brush->bt == BrushTypeSolidColor;
+    if (!inline_color)
+    {
+        stat = METAFILE_AddBrushObject(metafile, brush, &brush_id);
+        if (stat != Ok) return stat;
+    }
+
+    stat = METAFILE_AddPathObject(metafile, path, &path_id);
+    if (stat != Ok) return stat;
+
+    stat = METAFILE_AllocateRecord(metafile,
+            sizeof(EmfPlusFillPath), (void**)&fill_path_record);
+    if (stat != Ok) return stat;
+    fill_path_record->Header.Type = EmfPlusRecordTypeFillPath;
+    if (inline_color)
+    {
+        fill_path_record->Header.Flags = 0x8000 | path_id;
+        fill_path_record->data.Color.Blue = ((GpSolidFill*)brush)->color & 0xff;
+        fill_path_record->data.Color.Green = (((GpSolidFill*)brush)->color >> 8) & 0xff;
+        fill_path_record->data.Color.Red = (((GpSolidFill*)brush)->color >> 16) & 0xff;
+        fill_path_record->data.Color.Alpha = ((GpSolidFill*)brush)->color >> 24;
+    }
+    else
+    {
+        fill_path_record->Header.Flags = path_id;
+        fill_path_record->data.BrushId = brush_id;
+    }
+
+    METAFILE_WriteRecords(metafile);
+    return Ok;
 }

@@ -184,6 +184,17 @@ GpStatus WINGDIPAPI GdipInvertMatrix(GpMatrix *matrix)
     if(!invertible)
         return InvalidParameter;
 
+    /* optimize inverting simple scaling and translation matrices */
+    if(matrix->matrix[1] == 0 && matrix->matrix[2] == 0)
+    {
+        matrix->matrix[4] = -matrix->matrix[4] / matrix->matrix[0];
+        matrix->matrix[5] = -matrix->matrix[5] / matrix->matrix[3];
+        matrix->matrix[0] = 1 / matrix->matrix[0];
+        matrix->matrix[3] = 1 / matrix->matrix[3];
+
+        return Ok;
+    }
+
     det = matrix_det(matrix);
 
     copy = *matrix;
@@ -205,7 +216,10 @@ GpStatus WINGDIPAPI GdipIsMatrixInvertible(GDIPCONST GpMatrix *matrix, BOOL *res
     if(!matrix || !result)
         return InvalidParameter;
 
-    *result = (fabs(matrix_det(matrix)) >= 1e-5);
+    if(matrix->matrix[1] == 0 && matrix->matrix[2] == 0)
+        *result = matrix->matrix[0] != 0 && matrix->matrix[3] != 0;
+    else
+        *result = (fabs(matrix_det(matrix)) >= 1e-5);
 
     return Ok;
 }

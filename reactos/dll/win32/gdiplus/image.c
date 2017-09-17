@@ -1322,6 +1322,7 @@ GpStatus WINGDIPAPI GdipCloneImage(GpImage *image, GpImage **cloneImage)
         result->unit = metafile->unit;
         result->metafile_type = metafile->metafile_type;
         result->hemf = CopyEnhMetaFileW(metafile->hemf, NULL);
+        list_init(&result->containers);
 
         if (!result->hemf)
         {
@@ -4165,7 +4166,7 @@ static GpStatus decode_image_emf(IStream *stream, GpImage **image)
 }
 
 typedef GpStatus (*encode_image_func)(GpImage *image, IStream* stream,
-    GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params);
+    GDIPCONST EncoderParameters* params);
 
 typedef GpStatus (*decode_image_func)(IStream *stream, GpImage **image);
 
@@ -4541,31 +4542,31 @@ static GpStatus encode_image_wic(GpImage *image, IStream* stream,
 }
 
 static GpStatus encode_image_BMP(GpImage *image, IStream* stream,
-    GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params)
+    GDIPCONST EncoderParameters* params)
 {
     return encode_image_wic(image, stream, &GUID_ContainerFormatBmp, params);
 }
 
 static GpStatus encode_image_tiff(GpImage *image, IStream* stream,
-    GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params)
+    GDIPCONST EncoderParameters* params)
 {
     return encode_image_wic(image, stream, &GUID_ContainerFormatTiff, params);
 }
 
-static GpStatus encode_image_png(GpImage *image, IStream* stream,
-    GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params)
+GpStatus encode_image_png(GpImage *image, IStream* stream,
+    GDIPCONST EncoderParameters* params)
 {
     return encode_image_wic(image, stream, &GUID_ContainerFormatPng, params);
 }
 
 static GpStatus encode_image_jpeg(GpImage *image, IStream* stream,
-    GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params)
+    GDIPCONST EncoderParameters* params)
 {
     return encode_image_wic(image, stream, &GUID_ContainerFormatJpeg, params);
 }
 
 static GpStatus encode_image_gif(GpImage *image, IStream* stream,
-    GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params)
+    GDIPCONST EncoderParameters* params)
 {
     return encode_image_wic(image, stream, &GUID_ContainerFormatGif, params);
 }
@@ -4595,7 +4596,7 @@ GpStatus WINGDIPAPI GdipSaveImageToStream(GpImage *image, IStream* stream,
     if (encode_image == NULL)
         return UnknownImageFormat;
 
-    stat = encode_image(image, stream, clsid, params);
+    stat = encode_image(image, stream, params);
 
     return stat;
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 Google (Evan Stade)
+ * Copyright (C) 2003-2004,2007 Novell, Inc. http://www.novell.com (Ravindra (rkumar@novell.com))
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -162,6 +163,8 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
                 return OutOfMemory;
             }
 
+            dest->transform = src->transform;
+
             memcpy(dest->blendfac, src->blendfac, count * sizeof(REAL));
             memcpy(dest->blendpos, src->blendpos, count * sizeof(REAL));
 
@@ -272,6 +275,41 @@ GpStatus WINGDIPAPI GdipCreateHatchBrush(HatchStyle hatchstyle, ARGB forecol, AR
     return Ok;
 }
 
+static void linegradient_init_transform(GpLineGradient *line)
+{
+    float trans_x = line->rect.X + (line->rect.Width / 2.f);
+    float trans_y = line->rect.Y + (line->rect.Height / 2.f);
+    float dx = line->endpoint.X - line->startpoint.X;
+    float dy = line->endpoint.Y - line->startpoint.Y;
+    float t_cos, t_sin, w_ratio, h_ratio;
+    float h;
+    GpMatrix rot;
+
+    h = sqrtf(dx * dx + dy * dy);
+
+    t_cos = dx / h;
+    t_sin = dy / h;
+
+    w_ratio = (fabs(t_cos) * line->rect.Width + fabs(t_sin) * line->rect.Height) / line->rect.Width;
+    h_ratio = (fabs(t_sin) * line->rect.Width + fabs(t_cos) * line->rect.Height) / line->rect.Height;
+
+    GdipSetMatrixElements(&line->transform, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+
+    GdipSetMatrixElements(&rot, t_cos, t_sin, -1.f * t_sin, t_cos, 0, 0);
+
+    /* center about the origin */
+    GdipTranslateMatrix(&line->transform, -trans_x, -trans_y, MatrixOrderAppend);
+
+    /* scale to normalize gradient along gradient line (?) */
+    GdipScaleMatrix(&line->transform, w_ratio, h_ratio, MatrixOrderAppend);
+
+    /* rotate so the gradient is horizontal */
+    GdipMultiplyMatrix(&line->transform, &rot, MatrixOrderAppend);
+
+    /* restore original offset in new coords */
+    GdipTranslateMatrix(&line->transform, trans_x, trans_y, MatrixOrderAppend);
+}
+
 /******************************************************************************
  * GdipCreateLineBrush [GDIPLUS.@]
  */
@@ -338,6 +376,8 @@ GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF* startpoint,
     (*line)->pblendpos = NULL;
     (*line)->pblendcount = 0;
 
+    linegradient_init_transform(*line);
+
     TRACE("<-- %p\n", *line);
 
     return Ok;
@@ -370,6 +410,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRect(GDIPCONST GpRectF* rect,
 {
     GpPointF start, end;
     GpStatus stat;
+    float far_x, far_y;
 
     TRACE("(%p, %x, %x, %d, %d, %p)\n", rect, startcolor, endcolor, mode,
           wrap, line);
@@ -377,31 +418,34 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRect(GDIPCONST GpRectF* rect,
     if(!line || !rect)
         return InvalidParameter;
 
+    far_x = rect->X + rect->Width;
+    far_y = rect->Y + rect->Height;
+
     switch (mode)
     {
     case LinearGradientModeHorizontal:
-        start.X = rect->X;
+        start.X = min(rect->X, far_x);
         start.Y = rect->Y;
-        end.X = rect->X + rect->Width;
+        end.X = max(rect->X, far_x);
         end.Y = rect->Y;
         break;
     case LinearGradientModeVertical:
         start.X = rect->X;
-        start.Y = rect->Y;
+        start.Y = min(rect->Y, far_y);
         end.X = rect->X;
-        end.Y = rect->Y + rect->Height;
+        end.Y = max(rect->Y, far_y);
         break;
     case LinearGradientModeForwardDiagonal:
-        start.X = rect->X;
-        start.Y = rect->Y;
-        end.X = rect->X + rect->Width;
-        end.Y = rect->Y + rect->Height;
+        start.X = min(rect->X, far_x);
+        start.Y = min(rect->Y, far_y);
+        end.X = max(rect->X, far_x);
+        end.Y = max(rect->Y, far_y);
         break;
     case LinearGradientModeBackwardDiagonal:
-        start.X = rect->X + rect->Width;
-        start.Y = rect->Y;
-        end.X = rect->X;
-        end.Y = rect->Y + rect->Height;
+        start.X = max(rect->X, far_x);
+        start.Y = min(rect->Y, far_y);
+        end.X = min(rect->X, far_x);
+        end.Y = max(rect->Y, far_y);
         break;
     default:
         return InvalidParameter;
@@ -510,6 +554,8 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngle(GDIPCONST GpRectF* rect
             (*line)->startpoint.X = rect->X + exofs;
             (*line)->startpoint.Y = rect->Y + eyofs;
         }
+
+        linegradient_init_transform(*line);
     }
 
     return stat;
@@ -2018,78 +2064,73 @@ GpStatus WINGDIPAPI GdipGetLinePresetBlendCount(GpLineGradient *brush,
 
 GpStatus WINGDIPAPI GdipResetLineTransform(GpLineGradient *brush)
 {
-    static int calls;
-
     TRACE("(%p)\n", brush);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if(!brush)
+        return InvalidParameter;
 
-    return NotImplemented;
+    return GdipSetMatrixElements(&brush->transform, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
 }
 
 GpStatus WINGDIPAPI GdipSetLineTransform(GpLineGradient *brush,
     GDIPCONST GpMatrix *matrix)
 {
-    static int calls;
-
     TRACE("(%p,%p)\n", brush,  matrix);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if(!brush || !matrix)
+        return InvalidParameter;
 
-    return NotImplemented;
+    brush->transform = *matrix;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipGetLineTransform(GpLineGradient *brush, GpMatrix *matrix)
 {
-    static int calls;
-
     TRACE("(%p,%p)\n", brush, matrix);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if(!brush || !matrix)
+        return InvalidParameter;
 
-    return NotImplemented;
+    *matrix = brush->transform;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipScaleLineTransform(GpLineGradient *brush, REAL sx, REAL sy,
     GpMatrixOrder order)
 {
-    static int calls;
-
     TRACE("(%p,%0.2f,%0.2f,%u)\n", brush, sx, sy, order);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if(!brush)
+        return InvalidParameter;
 
-    return NotImplemented;
+    return GdipScaleMatrix(&brush->transform, sx, sy, order);
 }
 
 GpStatus WINGDIPAPI GdipMultiplyLineTransform(GpLineGradient *brush,
     GDIPCONST GpMatrix *matrix, GpMatrixOrder order)
 {
-    static int calls;
-
     TRACE("(%p,%p,%u)\n", brush, matrix, order);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if(!brush)
+        return InvalidParameter;
 
-    return NotImplemented;
+    if(!matrix)
+        return Ok;
+
+    return GdipMultiplyMatrix(&brush->transform, matrix, order);
 }
 
-GpStatus WINGDIPAPI GdipTranslateLineTransform(GpLineGradient* brush,
+GpStatus WINGDIPAPI GdipTranslateLineTransform(GpLineGradient *brush,
         REAL dx, REAL dy, GpMatrixOrder order)
 {
-    static int calls;
-
     TRACE("(%p,%f,%f,%d)\n", brush, dx, dy, order);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if(!brush)
+        return InvalidParameter;
 
-    return Ok;
+    return GdipTranslateMatrix(&brush->transform, dx, dy, order);
 }
 
 /******************************************************************************

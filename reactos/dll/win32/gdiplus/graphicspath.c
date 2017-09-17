@@ -152,6 +152,32 @@ static BOOL flatten_bezier(path_list_node_t *start, REAL x2, REAL y2, REAL x3, R
     return TRUE;
 }
 
+/*******************************************************************************
+ * GdipAddPathArc   [GDIPLUS.1]
+ *
+ * Add an elliptical arc to the given path.
+ *
+ * PARAMS
+ *  path       [I/O] Path that the arc is appended to
+ *  x1         [I]   X coordinate of the boundary box
+ *  y1         [I]   Y coordinate of the boundary box
+ *  x2         [I]   Width of the boundary box
+ *  y2         [I]   Height of the boundary box
+ *  startAngle [I]   Starting angle of the arc, clockwise
+ *  sweepAngle [I]   Angle of the arc, clockwise
+ *
+ * RETURNS
+ *  InvalidParameter If the given path is invalid
+ *  OutOfMemory      If memory allocation fails, i.e. the path cannot be lengthened
+ *  Ok               If everything works out as expected
+ *
+ * NOTES
+ *  This functions takes the newfigure value of the given path into account,
+ *  i.e. the arc is connected to the end of the given path if it was set to
+ *  FALSE, otherwise the arc's first point gets the PathPointTypeStart value.
+ *  In both cases, the value of newfigure of the given path is FALSE
+ *  afterwards.
+ */
 GpStatus WINGDIPAPI GdipAddPathArc(GpPath *path, REAL x1, REAL y1, REAL x2,
     REAL y2, REAL startAngle, REAL sweepAngle)
 {
@@ -186,6 +212,11 @@ GpStatus WINGDIPAPI GdipAddPathArc(GpPath *path, REAL x1, REAL y1, REAL x2,
     return Ok;
 }
 
+/*******************************************************************************
+ * GdipAddPathArcI   [GDUPLUS.2]
+ *
+ * See GdipAddPathArc
+ */
 GpStatus WINGDIPAPI GdipAddPathArcI(GpPath *path, INT x1, INT y1, INT x2,
    INT y2, REAL startAngle, REAL sweepAngle)
 {
@@ -632,6 +663,30 @@ GpStatus WINGDIPAPI GdipAddPathLine2I(GpPath *path, GDIPCONST GpPoint *points, I
     return stat;
 }
 
+/*************************************************************************
+ * GdipAddPathLine   [GDIPLUS.21]
+ *
+ * Add two points to the given path.
+ *
+ * PARAMS
+ *  path [I/O] Path that the line is appended to
+ *  x1   [I]   X coordinate of the first point of the line
+ *  y1   [I]   Y coordinate of the first point of the line
+ *  x2   [I]   X coordinate of the second point of the line
+ *  y2   [I]   Y coordinate of the second point of the line
+ *
+ * RETURNS
+ *  InvalidParameter If the first parameter is not a valid path
+ *  OutOfMemory      If the path cannot be lengthened, i.e. memory allocation fails
+ *  Ok               If everything works out as expected
+ *
+ * NOTES
+ *  This functions takes the newfigure value of the given path into account,
+ *  i.e. the two new points are connected to the end of the given path if it
+ *  was set to FALSE, otherwise the first point is given the PathPointTypeStart
+ *  value. In both cases, the value of newfigure of the given path is FALSE
+ *  afterwards.
+ */
 GpStatus WINGDIPAPI GdipAddPathLine(GpPath *path, REAL x1, REAL y1, REAL x2, REAL y2)
 {
     INT old_count;
@@ -661,6 +716,11 @@ GpStatus WINGDIPAPI GdipAddPathLine(GpPath *path, REAL x1, REAL y1, REAL x2, REA
     return Ok;
 }
 
+/*************************************************************************
+ * GdipAddPathLineI   [GDIPLUS.21]
+ *
+ * See GdipAddPathLine
+ */
 GpStatus WINGDIPAPI GdipAddPathLineI(GpPath *path, INT x1, INT y1, INT x2, INT y2)
 {
     TRACE("(%p, %d, %d, %d, %d)\n", path, x1, y1, x2, y2);
@@ -1044,6 +1104,20 @@ GpStatus WINGDIPAPI GdipAddPathStringI(GpPath* path, GDIPCONST WCHAR* string, IN
     return InvalidParameter;
 }
 
+/*************************************************************************
+ * GdipClonePath   [GDIPLUS.53]
+ *
+ * Duplicate the given path in memory.
+ *
+ * PARAMS
+ *  path  [I] The path to be duplicated
+ *  clone [O] Pointer to the new path
+ *
+ * RETURNS
+ *  InvalidParameter If the input path is invalid
+ *  OutOfMemory      If allocation of needed memory fails
+ *  Ok               If everything works out as expected
+ */
 GpStatus WINGDIPAPI GdipClonePath(GpPath* path, GpPath **clone)
 {
     TRACE("(%p, %p)\n", path, clone);
@@ -1869,6 +1943,27 @@ static void widen_cap(const GpPointF *endpoint, const GpPointF *nextpoint,
         }
         break;
     }
+    case LineCapTriangle:
+    {
+        REAL segment_dy = nextpoint->Y-endpoint->Y;
+        REAL segment_dx = nextpoint->X-endpoint->X;
+        REAL segment_length = sqrtf(segment_dy*segment_dy + segment_dx*segment_dx);
+        REAL distance = pen->width/2.0;
+        REAL dx, dy;
+
+        dx = distance * segment_dx / segment_length;
+        dy = distance * segment_dy / segment_length;
+
+        if (add_first_points) {
+            add_bevel_point(endpoint, nextpoint, pen, 1, last_point);
+
+            *last_point = add_path_list_node(*last_point, endpoint->X - dx,
+                endpoint->Y - dy, PathPointTypeLine);
+        }
+        if (add_last_point)
+            add_bevel_point(endpoint, nextpoint, pen, 0, last_point);
+        break;
+    }
     }
 }
 
@@ -1954,6 +2049,7 @@ static void widen_dashed_figure(GpPath *path, GpPen *pen, int start, int end,
     REAL dash_pos=0.0;
     int dash_index=0;
     const REAL *dash_pattern;
+    REAL *dash_pattern_scaled;
     int dash_count;
     GpPointF *tmp_points;
     REAL segment_dy;
@@ -1992,8 +2088,17 @@ static void widen_dashed_figure(GpPath *path, GpPen *pen, int start, int end,
         break;
     }
 
+    dash_pattern_scaled = heap_alloc(dash_count * sizeof(REAL));
+    if (!dash_pattern_scaled) return;
+
+    for (i = 0; i < dash_count; i++)
+        dash_pattern_scaled[i] = pen->width * dash_pattern[i];
+
     tmp_points = heap_alloc_zero((end - start + 2) * sizeof(GpPoint));
-    if (!tmp_points) return; /* FIXME */
+    if (!tmp_points) {
+        heap_free(dash_pattern_scaled);
+        return; /* FIXME */
+    }
 
     if (!closed)
         draw_start_cap = 1;
@@ -2040,7 +2145,7 @@ static void widen_dashed_figure(GpPath *path, GpPen *pen, int start, int end,
                 }
             }
 
-            if (dash_pattern[dash_index] - dash_pos > segment_length - segment_pos)
+            if (dash_pattern_scaled[dash_index] - dash_pos > segment_length - segment_pos)
             {
                 /* advance to next segment */
                 if ((dash_index % 2) == 0)
@@ -2054,7 +2159,7 @@ static void widen_dashed_figure(GpPath *path, GpPen *pen, int start, int end,
             else
             {
                 /* advance to next dash in pattern */
-                segment_pos += dash_pattern[dash_index] - dash_pos;
+                segment_pos += dash_pattern_scaled[dash_index] - dash_pos;
                 dash_pos = 0.0;
                 if (++dash_index == dash_count)
                     dash_index = 0;
@@ -2066,12 +2171,12 @@ static void widen_dashed_figure(GpPath *path, GpPen *pen, int start, int end,
     if (dash_index % 2 == 0 && num_tmp_points != 0)
     {
         /* last dash overflows last segment */
-        tmp_points[num_tmp_points] = path->pathdata.Points[end];
-        widen_open_figure(tmp_points, pen, 0, num_tmp_points,
+        widen_open_figure(tmp_points, pen, 0, num_tmp_points-1,
             draw_start_cap ? pen->startcap : LineCapFlat, pen->customstart,
             closed ? LineCapFlat : pen->endcap, pen->customend, last_point);
     }
 
+    heap_free(dash_pattern_scaled);
     heap_free(tmp_points);
 }
 
@@ -2104,10 +2209,10 @@ GpStatus WINGDIPAPI GdipWidenPath(GpPath *path, GpPen *pen, GpMatrix *matrix,
     {
         last_point = points;
 
-        if (pen->endcap > LineCapRound)
+        if (pen->endcap > LineCapTriangle)
             FIXME("unimplemented end cap %x\n", pen->endcap);
 
-        if (pen->startcap > LineCapRound)
+        if (pen->startcap > LineCapTriangle)
             FIXME("unimplemented start cap %x\n", pen->startcap);
 
         if (pen->dashcap != DashCapFlat)
@@ -2337,4 +2442,78 @@ GpStatus WINGDIPAPI GdipWindingModeOutline(GpPath *path, GpMatrix *matrix, REAL 
 {
    FIXME("stub: %p, %p, %.2f\n", path, matrix, flatness);
    return NotImplemented;
+}
+
+#define FLAGS_INTPATH 0x4000
+
+struct path_header
+{
+    DWORD version;
+    DWORD count;
+    DWORD flags;
+};
+
+/* Test to see if the path could be stored as an array of shorts */
+static BOOL is_integer_path(const GpPath *path)
+{
+    int i;
+
+    if (!path->pathdata.Count) return FALSE;
+
+    for (i = 0; i < path->pathdata.Count; i++)
+    {
+        short x, y;
+        x = gdip_round(path->pathdata.Points[i].X);
+        y = gdip_round(path->pathdata.Points[i].Y);
+        if (path->pathdata.Points[i].X != (REAL)x || path->pathdata.Points[i].Y != (REAL)y)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+DWORD write_path_data(GpPath *path, void *data)
+{
+    struct path_header *header = data;
+    BOOL integer_path = is_integer_path(path);
+    DWORD i, size;
+    BYTE *types;
+
+    size = sizeof(struct path_header) + path->pathdata.Count;
+    if (integer_path)
+        size += sizeof(short[2]) * path->pathdata.Count;
+    else
+        size += sizeof(float[2]) * path->pathdata.Count;
+    size = (size + 3) & ~3;
+
+    if (!data) return size;
+
+    header->version = VERSION_MAGIC2;
+    header->count = path->pathdata.Count;
+    header->flags = integer_path ? FLAGS_INTPATH : 0;
+
+    if (integer_path)
+    {
+        short *points = (short*)(header + 1);
+        for (i = 0; i < path->pathdata.Count; i++)
+        {
+            points[2*i] = path->pathdata.Points[i].X;
+            points[2*i + 1] = path->pathdata.Points[i].Y;
+        }
+        types = (BYTE*)(points + 2*i);
+    }
+    else
+    {
+        float *points = (float*)(header + 1);
+        for (i = 0; i < path->pathdata.Count; i++)
+        {
+            points[2*i]  = path->pathdata.Points[i].X;
+            points[2*i + 1] = path->pathdata.Points[i].Y;
+        }
+        types = (BYTE*)(points + 2*i);
+    }
+
+    for (i=0; i<path->pathdata.Count; i++)
+        types[i] = path->pathdata.Types[i];
+    memset(types + i, 0, ((path->pathdata.Count + 3) & ~3) - path->pathdata.Count);
+    return size;
 }
