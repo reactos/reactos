@@ -126,7 +126,6 @@ struct apartment
   struct list stubmgrs;    /* stub managers for exported objects (CS cs) */
   BOOL remunk_exported;    /* has the IRemUnknown interface for this apartment been created yet? (CS cs) */
   LONG remoting_started;   /* has the RPC system been started for this apartment? (LOCK) */
-  struct list psclsids;    /* list of registered PS CLSIDs (CS cs) */
   struct list loaded_dlls; /* list of dlls loaded by this apartment (CS cs) */
   DWORD host_apt_tid;      /* thread ID of apartment hosting objects of differing threading model (CS cs) */
   HWND host_apt_hwnd;      /* handle to apartment window of host apartment (CS cs) */

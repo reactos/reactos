@@ -54,6 +54,15 @@ HGLOBAL WINAPI OleGetIconOfClass(REFCLSID rclsid, LPOLESTR lpszLabel, BOOL fUseT
 }
 
 /***********************************************************************
+ *              OleGetIconOfFile        [OLE32.@]
+ */
+HGLOBAL WINAPI OleGetIconOfFile(LPOLESTR path, BOOL use_file_as_label)
+{
+    FIXME("(%s, %d), stub!\n", debugstr_w(path), use_file_as_label);
+    return NULL;
+}
+
+/***********************************************************************
  *           OleRegEnumFormatEtc    [OLE32.@]
  */
 HRESULT WINAPI DECLSPEC_HOTPATCH OleRegEnumFormatEtc (
@@ -73,13 +82,4 @@ HRESULT WINAPI CoGetCallerTID(LPDWORD lpdwTID)
 {
   FIXME("stub!\n");
   return E_NOTIMPL;
-}
-
-/***********************************************************************
- *              OleGetIconOfFile        [OLE32.@]
- */
-HGLOBAL WINAPI OleGetIconOfFile(LPOLESTR path, BOOL use_file_as_label)
-{
-    FIXME("(%p, %d), stub!\n", path, use_file_as_label);
-    return NULL;
 }

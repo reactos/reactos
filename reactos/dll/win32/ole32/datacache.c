@@ -67,7 +67,7 @@ typedef struct PresentationDataHeader
   DWORD unknown3;	/* 4, possibly TYMED_ISTREAM */
   DVASPECT dvAspect;
   DWORD lindex;
-  DWORD tymed;
+  DWORD advf;
   DWORD unknown7;	/* 0 */
   DWORD dwObjectExtentX;
   DWORD dwObjectExtentY;
@@ -145,7 +145,9 @@ struct DataCache
    */
   DWORD        sinkAspects;
   DWORD        sinkAdviseFlag;
-  IAdviseSink* sinkInterface;
+  IAdviseSink *sinkInterface;
+
+  CLSID clsid;
   IStorage *presentationStorage;
 
   /* list of cache entries */
@@ -214,7 +216,7 @@ const char *debugstr_formatetc(const FORMATETC *formatetc)
  *
  * Return the size of the bitmap info structure including color table.
  */
-int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
+static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
 {
     unsigned int colors, size, masks = 0;
 
@@ -305,10 +307,10 @@ static DataCacheEntry *DataCache_GetEntryForFormatEtc(DataCache *This, const FOR
 /* checks that the clipformat and tymed are valid and returns an error if they
 * aren't and CACHE_S_NOTSUPPORTED if they are valid, but can't be rendered by
 * DataCache_Draw */
-static HRESULT check_valid_clipformat_and_tymed(CLIPFORMAT cfFormat, DWORD tymed, BOOL load)
+static HRESULT check_valid_clipformat_and_tymed(CLIPFORMAT cfFormat, DWORD tymed)
 {
     if (!cfFormat || !tymed ||
-        (cfFormat == CF_METAFILEPICT && (tymed == TYMED_MFPICT || load)) ||
+        (cfFormat == CF_METAFILEPICT && tymed == TYMED_MFPICT) ||
         (cfFormat == CF_BITMAP && tymed == TYMED_GDI) ||
         (cfFormat == CF_DIB && tymed == TYMED_HGLOBAL) ||
         (cfFormat == CF_ENHMETAFILE && tymed == TYMED_ENHMF))
@@ -345,30 +347,38 @@ static BOOL init_cache_entry(DataCacheEntry *entry, const FORMATETC *fmt, DWORD 
 }
 
 static HRESULT DataCache_CreateEntry(DataCache *This, const FORMATETC *formatetc, DWORD advf,
-                                     DataCacheEntry **cache_entry, BOOL load)
+                                     BOOL automatic, DataCacheEntry **cache_entry)
 {
     HRESULT hr;
+    DWORD id = automatic ? 1 : This->last_cache_id;
+    DataCacheEntry *entry;
 
-    hr = check_valid_clipformat_and_tymed(formatetc->cfFormat, formatetc->tymed, load);
+    hr = check_valid_clipformat_and_tymed(formatetc->cfFormat, formatetc->tymed);
     if (FAILED(hr))
         return hr;
     if (hr == CACHE_S_FORMATETC_NOTSUPPORTED)
         TRACE("creating unsupported format %d\n", formatetc->cfFormat);
 
-    *cache_entry = HeapAlloc(GetProcessHeap(), 0, sizeof(**cache_entry));
-    if (!*cache_entry)
+    entry = HeapAlloc(GetProcessHeap(), 0, sizeof(*entry));
+    if (!entry)
         return E_OUTOFMEMORY;
 
-    if (!init_cache_entry(*cache_entry, formatetc, advf, This->last_cache_id))
+    if (!init_cache_entry(entry, formatetc, advf, id))
         goto fail;
 
-    list_add_tail(&This->cache_list, &(*cache_entry)->entry);
-    This->last_cache_id++;
+    if (automatic)
+        list_add_head(&This->cache_list, &entry->entry);
+    else
+    {
+        list_add_tail(&This->cache_list, &entry->entry);
+        This->last_cache_id++;
+    }
 
+    if (cache_entry) *cache_entry = entry;
     return hr;
 
 fail:
-    HeapFree(GetProcessHeap(), 0, *cache_entry);
+    HeapFree(GetProcessHeap(), 0, entry);
     return E_OUTOFMEMORY;
 }
 
@@ -783,7 +793,7 @@ static HRESULT DataCacheEntry_Save(DataCacheEntry *cache_entry, IStorage *storag
     header.unknown3 = 4;
     header.dvAspect = cache_entry->fmtetc.dwAspect;
     header.lindex = cache_entry->fmtetc.lindex;
-    header.tymed = cache_entry->stgmedium.tymed;
+    header.advf = cache_entry->advise_flags;
     header.unknown7 = 0;
     header.dwObjectExtentX = 0;
     header.dwObjectExtentY = 0;
@@ -1011,6 +1021,66 @@ static inline void DataCacheEntry_HandsOffStorage(DataCacheEntry *cache_entry)
         IStream_Release(cache_entry->stream);
         cache_entry->stream = NULL;
     }
+}
+
+static inline DWORD tymed_from_cf( DWORD cf )
+{
+    switch( cf )
+    {
+    case CF_BITMAP:       return TYMED_GDI;
+    case CF_METAFILEPICT: return TYMED_MFPICT;
+    case CF_ENHMETAFILE:  return TYMED_ENHMF;
+    case CF_DIB:
+    default:              return TYMED_HGLOBAL;
+    }
+}
+
+/****************************************************************
+ *  create_automatic_entry
+ *
+ * Creates an appropriate cache entry for one of the CLSID_Picture_
+ * classes.  The connection id of the entry is one.  Any pre-existing
+ * automatic entry is re-assigned a new connection id, and moved to
+ * the end of the list.
+ */
+static HRESULT create_automatic_entry(DataCache *cache, const CLSID *clsid)
+{
+    static const struct data
+    {
+        const CLSID *clsid;
+        FORMATETC fmt;
+    } data[] =
+    {
+        { &CLSID_Picture_Dib,         { CF_DIB,          0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL } },
+        { &CLSID_Picture_Metafile,    { CF_METAFILEPICT, 0, DVASPECT_CONTENT, -1, TYMED_MFPICT } },
+        { &CLSID_Picture_EnhMetafile, { CF_ENHMETAFILE,  0, DVASPECT_CONTENT, -1, TYMED_ENHMF } },
+        { NULL }
+    };
+    const struct data *ptr = data;
+    struct list *head;
+    DataCacheEntry *entry;
+
+    if (IsEqualCLSID( &cache->clsid, clsid )) return S_OK;
+
+    /* move and reassign any pre-existing automatic entry */
+    if ((head = list_head( &cache->cache_list )))
+    {
+        entry = LIST_ENTRY( head, DataCacheEntry, entry );
+        if (entry->id == 1)
+        {
+            list_remove( &entry->entry );
+            entry->id = cache->last_cache_id++;
+            list_add_tail( &cache->cache_list, &entry->entry );
+        }
+    }
+
+    while (ptr->clsid)
+    {
+        if (IsEqualCLSID( clsid, ptr->clsid ))
+            return DataCache_CreateEntry( cache, &ptr->fmt, 0, TRUE, NULL );
+        ptr++;
+    }
+    return S_OK;
 }
 
 /*********************************************************
@@ -1334,22 +1404,9 @@ static ULONG WINAPI DataCache_IPersistStorage_Release(
 static HRESULT WINAPI DataCache_GetClassID(IPersistStorage *iface, CLSID *clsid)
 {
     DataCache *This = impl_from_IPersistStorage( iface );
-    HRESULT hr;
-    STATSTG statstg;
 
-    TRACE( "(%p, %p)\n", iface, clsid );
-
-    if (This->presentationStorage)
-    {
-        hr = IStorage_Stat( This->presentationStorage, &statstg, STATFLAG_NONAME );
-        if (SUCCEEDED(hr))
-        {
-            *clsid = statstg.clsid;
-            return S_OK;
-        }
-    }
-
-    *clsid = CLSID_NULL;
+    TRACE( "(%p, %p) returning %s\n", iface, clsid, debugstr_guid(&This->clsid) );
+    *clsid = This->clsid;
 
     return S_OK;
 }
@@ -1386,22 +1443,33 @@ static HRESULT WINAPI DataCache_InitNew(
 	    IStorage*        pStg)
 {
     DataCache *This = impl_from_IPersistStorage(iface);
+    CLSID clsid;
+    HRESULT hr;
 
     TRACE("(%p, %p)\n", iface, pStg);
 
     if (This->presentationStorage != NULL)
-        IStorage_Release(This->presentationStorage);
+        return CO_E_ALREADYINITIALIZED;
 
     This->presentationStorage = pStg;
 
     IStorage_AddRef(This->presentationStorage);
     This->dirty = TRUE;
+    ReadClassStg( pStg, &clsid );
+    hr = create_automatic_entry( This, &clsid );
+    if (FAILED(hr))
+    {
+        IStorage_Release( pStg );
+        This->presentationStorage = NULL;
+        return hr;
+    }
+    This->clsid = clsid;
 
     return S_OK;
 }
 
 
-static HRESULT add_cache_entry( DataCache *This, const FORMATETC *fmt, IStream *stm,
+static HRESULT add_cache_entry( DataCache *This, const FORMATETC *fmt, DWORD advf, IStream *stm,
                                 enum stream_type type )
 {
     DataCacheEntry *cache_entry;
@@ -1411,7 +1479,7 @@ static HRESULT add_cache_entry( DataCache *This, const FORMATETC *fmt, IStream *
 
     cache_entry = DataCache_GetEntryForFormatEtc( This, fmt );
     if (!cache_entry)
-        hr = DataCache_CreateEntry( This, fmt, 0, &cache_entry, TRUE );
+        hr = DataCache_CreateEntry( This, fmt, advf, FALSE, &cache_entry );
     if (SUCCEEDED( hr ))
     {
         DataCacheEntry_DiscardData( cache_entry );
@@ -1457,9 +1525,9 @@ static HRESULT parse_pres_streams( DataCache *This, IStorage *stg )
                     fmtetc.ptd = NULL; /* FIXME */
                     fmtetc.dwAspect = header.dvAspect;
                     fmtetc.lindex = header.lindex;
-                    fmtetc.tymed = header.tymed;
+                    fmtetc.tymed = tymed_from_cf( clipformat );
 
-                    add_cache_entry( This, &fmtetc, stm, pres_stream );
+                    add_cache_entry( This, &fmtetc, header.advf, stm, pres_stream );
                 }
                 IStream_Release( stm );
             }
@@ -1490,7 +1558,7 @@ static HRESULT parse_contents_stream( DataCache *This, IStorage *stg, IStream *s
         return E_FAIL;
     }
 
-    return add_cache_entry( This, fmt, stm, contents_stream );
+    return add_cache_entry( This, fmt, 0, stm, contents_stream );
 }
 
 static const WCHAR CONTENTS[] = {'C','O','N','T','E','N','T','S',0};
@@ -1508,10 +1576,21 @@ static HRESULT WINAPI DataCache_Load( IPersistStorage *iface, IStorage *pStg )
     DataCache *This = impl_from_IPersistStorage(iface);
     HRESULT hr;
     IStream *stm;
+    CLSID clsid;
+    DataCacheEntry *entry, *cursor2;
 
     TRACE("(%p, %p)\n", iface, pStg);
 
     IPersistStorage_HandsOffStorage( iface );
+
+    LIST_FOR_EACH_ENTRY_SAFE( entry, cursor2, &This->cache_list, DataCacheEntry, entry )
+        DataCacheEntry_Destroy( This, entry );
+
+    ReadClassStg( pStg, &clsid );
+    hr = create_automatic_entry( This, &clsid );
+    if (FAILED( hr )) return hr;
+
+    This->clsid = clsid;
 
     hr = IStorage_OpenStream( pStg, CONTENTS, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE,
                               0, &stm );
@@ -2162,7 +2241,7 @@ static HRESULT WINAPI DataCache_Cache(
         return CACHE_S_SAMECACHE;
     }
 
-    hr = DataCache_CreateEntry(This, &fmt_cpy, advf, &cache_entry, FALSE);
+    hr = DataCache_CreateEntry(This, &fmt_cpy, advf, FALSE, &cache_entry);
 
     if (SUCCEEDED(hr))
     {
@@ -2593,11 +2672,15 @@ static DataCache* DataCache_Construct(
   newObject->sinkAspects = 0;
   newObject->sinkAdviseFlag = 0;
   newObject->sinkInterface = 0;
+  newObject->clsid = CLSID_NULL;
   newObject->presentationStorage = NULL;
   list_init(&newObject->cache_list);
-  newObject->last_cache_id = 1;
+  newObject->last_cache_id = 2;
   newObject->dirty = FALSE;
   newObject->running_object = NULL;
+
+  create_automatic_entry( newObject, clsid );
+  newObject->clsid = *clsid;
 
   return newObject;
 }

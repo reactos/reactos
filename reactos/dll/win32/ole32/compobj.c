@@ -146,6 +146,17 @@ struct registered_psclsid
     CLSID clsid;
 };
 
+static struct list registered_psclsid_list = LIST_INIT(registered_psclsid_list);
+
+static CRITICAL_SECTION cs_registered_psclsid_list;
+static CRITICAL_SECTION_DEBUG psclsid_cs_debug =
+{
+    0, 0, &cs_registered_psclsid_list,
+    { &psclsid_cs_debug.ProcessLocksList, &psclsid_cs_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": cs_registered_psclsid_list") }
+};
+static CRITICAL_SECTION cs_registered_psclsid_list = { &psclsid_cs_debug, -1, 0, 0, 0, 0 };
+
 /*
  * This is a marshallable object exposing registered local servers.
  * IServiceProvider is used only because it happens meet requirements
@@ -600,7 +611,6 @@ static APARTMENT *apartment_construct(DWORD model)
 
     list_init(&apt->proxies);
     list_init(&apt->stubmgrs);
-    list_init(&apt->psclsids);
     list_init(&apt->loaded_dlls);
     apt->ipidc = 0;
     apt->refs = 1;
@@ -709,6 +719,21 @@ static void COM_RevokeAllClasses(const struct apartment *apt)
   }
 
   LeaveCriticalSection( &csRegisteredClassList );
+}
+
+static void revoke_registered_psclsids(void)
+{
+    struct registered_psclsid *psclsid, *psclsid2;
+
+    EnterCriticalSection( &cs_registered_psclsid_list );
+
+    LIST_FOR_EACH_ENTRY_SAFE(psclsid, psclsid2, &registered_psclsid_list, struct registered_psclsid, entry)
+    {
+        list_remove(&psclsid->entry);
+        HeapFree(GetProcessHeap(), 0, psclsid);
+    }
+
+    LeaveCriticalSection( &cs_registered_psclsid_list );
 }
 
 /******************************************************************************
@@ -1149,15 +1174,6 @@ DWORD apartment_release(struct apartment *apt)
              * must have a ref on the apartment and so it cannot be destroyed).
              */
             stub_manager_int_release(stubmgr);
-        }
-
-        LIST_FOR_EACH_SAFE(cursor, cursor2, &apt->psclsids)
-        {
-            struct registered_psclsid *registered_psclsid =
-                LIST_ENTRY(cursor, struct registered_psclsid, entry);
-
-            list_remove(&registered_psclsid->entry);
-            HeapFree(GetProcessHeap(), 0, registered_psclsid);
         }
 
         /* if this assert fires, then another thread took a reference to a
@@ -1966,6 +1982,7 @@ void WINAPI DECLSPEC_HOTPATCH CoUninitialize(void)
   {
     TRACE("() - Releasing the COM libraries\n");
 
+    revoke_registered_psclsids();
     RunningObjectTableImpl_UnInitialize();
   }
   else if (lCOMRefCnt<1) {
@@ -2558,17 +2575,17 @@ HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
     if (!pclsid)
         return E_INVALIDARG;
 
-    EnterCriticalSection(&apt->cs);
+    EnterCriticalSection(&cs_registered_psclsid_list);
 
-    LIST_FOR_EACH_ENTRY(registered_psclsid, &apt->psclsids, struct registered_psclsid, entry)
+    LIST_FOR_EACH_ENTRY(registered_psclsid, &registered_psclsid_list, struct registered_psclsid, entry)
         if (IsEqualIID(&registered_psclsid->iid, riid))
         {
             *pclsid = registered_psclsid->clsid;
-            LeaveCriticalSection(&apt->cs);
+            LeaveCriticalSection(&cs_registered_psclsid_list);
             return S_OK;
         }
 
-    LeaveCriticalSection(&apt->cs);
+    LeaveCriticalSection(&cs_registered_psclsid_list);
 
     data.cbSize = sizeof(data);
     if (FindActCtxSectionGuid(0, NULL, ACTIVATION_CONTEXT_SECTION_COM_INTERFACE_REDIRECTION,
@@ -2613,6 +2630,9 @@ HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
  *
  * NOTES
  *
+ * Unlike CoRegisterClassObject(), CLSIDs registered with CoRegisterPSClsid()
+ * will be returned from other apartments in the same process.
+ *
  * This function does not add anything to the registry and the effects are
  * limited to the lifetime of the current process.
  *
@@ -2632,28 +2652,28 @@ HRESULT WINAPI CoRegisterPSClsid(REFIID riid, REFCLSID rclsid)
         return CO_E_NOTINITIALIZED;
     }
 
-    EnterCriticalSection(&apt->cs);
+    EnterCriticalSection(&cs_registered_psclsid_list);
 
-    LIST_FOR_EACH_ENTRY(registered_psclsid, &apt->psclsids, struct registered_psclsid, entry)
+    LIST_FOR_EACH_ENTRY(registered_psclsid, &registered_psclsid_list, struct registered_psclsid, entry)
         if (IsEqualIID(&registered_psclsid->iid, riid))
         {
             registered_psclsid->clsid = *rclsid;
-            LeaveCriticalSection(&apt->cs);
+            LeaveCriticalSection(&cs_registered_psclsid_list);
             return S_OK;
         }
 
     registered_psclsid = HeapAlloc(GetProcessHeap(), 0, sizeof(struct registered_psclsid));
     if (!registered_psclsid)
     {
-        LeaveCriticalSection(&apt->cs);
+        LeaveCriticalSection(&cs_registered_psclsid_list);
         return E_OUTOFMEMORY;
     }
 
     registered_psclsid->iid = *riid;
     registered_psclsid->clsid = *rclsid;
-    list_add_head(&apt->psclsids, &registered_psclsid->entry);
+    list_add_head(&registered_psclsid_list, &registered_psclsid->entry);
 
-    LeaveCriticalSection(&apt->cs);
+    LeaveCriticalSection(&cs_registered_psclsid_list);
 
     return S_OK;
 }
@@ -3803,6 +3823,10 @@ HRESULT WINAPI CoGetTreatAsClass(REFCLSID clsidOld, LPCLSID clsidNew)
     LONG len = sizeof(szClsidNew);
 
     TRACE("(%s,%p)\n", debugstr_guid(clsidOld), clsidNew);
+
+    if (!clsidOld || !clsidNew)
+        return E_INVALIDARG;
+
     *clsidNew = *clsidOld; /* copy over old value */
 
     res = COM_OpenKeyForCLSID(clsidOld, wszTreatAs, KEY_READ, &hkey);
