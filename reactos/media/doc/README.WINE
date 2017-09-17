@@ -181,7 +181,7 @@ reactos/dll/win32/softpub             # Synced to WineStaging-2.9
 reactos/dll/win32/stdole2.tlb         # Synced to WineStaging-2.9
 reactos/dll/win32/stdole32.tlb        # Synced to WineStaging-2.9
 reactos/dll/win32/sti                 # Synced to WineStaging-2.9
-reactos/dll/win32/sxs                 # Synced to WineStaging-2.9
+reactos/dll/win32/sxs                 # Synced to WineStaging-2.16
 reactos/dll/win32/t2embed             # Synced to WineStaging-2.9
 reactos/dll/win32/tapi32              # Synced to WineStaging-2.9
 reactos/dll/win32/traffic             # Synced to WineStaging-2.9
