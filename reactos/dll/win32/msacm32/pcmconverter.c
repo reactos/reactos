@@ -58,13 +58,16 @@ static	DWORD	PCM_drvClose(DWORD dwDevID)
 /* flags for fdwDriver */
 #define PCM_RESAMPLE	1
 
+typedef void (*PCM_CONVERT_KEEP_RATE)(const unsigned char*, int, unsigned char*);
+
+typedef void (*PCM_CONVERT_CHANGE_RATE)(const DWORD, const unsigned char*, DWORD*, const DWORD, unsigned char*, DWORD*);
+
 /* data used while converting */
 typedef struct tagAcmPcmData {
     /* conversion routine, depending if rate conversion is required */
     union {
-	void (*cvtKeepRate)(const unsigned char*, int, unsigned char*);
-	void (*cvtChangeRate)(DWORD, const unsigned char*, LPDWORD,
-			      DWORD, unsigned char*, LPDWORD);
+        PCM_CONVERT_KEEP_RATE cvtKeepRate;
+        PCM_CONVERT_CHANGE_RATE cvtChangeRate;
     } cvt;
 } AcmPcmData;
 
@@ -502,8 +505,6 @@ static	void cvtSS2416K(const unsigned char* src, int ns, unsigned char* dst)
 }
 
 
-typedef void (*PCM_CONVERT_KEEP_RATE)(const unsigned char*, int, unsigned char*);
-
 static const PCM_CONVERT_KEEP_RATE PCM_ConvertKeepRate[] = {
     cvtSS88K,	cvtSM88K,   cvtMS88K,   cvtMM88K,
     cvtSS816K,	cvtSM816K,  cvtMS816K,  cvtMM816K,
@@ -524,397 +525,416 @@ static const PCM_CONVERT_KEEP_RATE PCM_ConvertKeepRate[] = {
  * <M> is the number of bits of output channel (8 or 16)
  *
  */
-static	void cvtSS88C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		      DWORD dstRate, unsigned char* dst, LPDWORD ndst)
-{
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
 
-    while ((*ndst)--) {
-        *dst++ = *src;
-        *dst++ = *src;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 2;
-            (*nsrc)--;
-            if (*nsrc == 0)
+static void cvtSS88C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                     const DWORD dstRate, unsigned char *dst, DWORD *ndst)
+{
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            *dst++ = src[0];
+            *dst++ = src[1];
         }
+        src += 2;
     }
 }
 
-static	void cvtSM88C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		      DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtSM88C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                     const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        *dst++ = M8(src[0], src[1]);
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 2;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            *dst++ = M8(src[0], src[1]);
         }
+        src += 2;
     }
 }
 
-static	void cvtMS88C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		      DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMS88C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                     const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        *dst++ = *src;
-        *dst++ = *src;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src++;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            *dst++ = src[0];
+            *dst++ = src[0];
         }
+        src += 1;
     }
 }
 
-static	void cvtMM88C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		      DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMM88C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                     const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        *dst++ = *src;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src++;
-            (*nsrc)--;
-            if (*nsrc==0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            *dst++ = src[0];
         }
+        src += 1;
     }
 }
 
-static	void cvtSS816C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		       DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtSS816C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                      const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-	W16(dst, C816(src[0]));	dst += 2;
-	W16(dst, C816(src[1]));	dst += 2;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 2;
-            (*nsrc)--;
-            if (*nsrc==0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W16(dst, C816(src[0])); dst += 2;
+            W16(dst, C816(src[1])); dst += 2;
         }
+        src += 2;
     }
 }
 
-static	void cvtSM816C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		       DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtSM816C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                      const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        W16(dst, M16(C816(src[0]), C816(src[1]))); dst += 2;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 2;
-            (*nsrc)--;
-            if (*nsrc==0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W16(dst, M16(C816(src[0]), C816(src[1]))); dst += 2;
         }
+        src += 2;
     }
 }
 
-static	void cvtMS816C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		       DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMS816C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                      const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        W16(dst, C816(*src)); dst += 2;
-        W16(dst, C816(*src)); dst += 2;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src++;
-            (*nsrc)--;
-            if (*nsrc==0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W16(dst, C816(src[0])); dst += 2;
+            W16(dst, C816(src[0])); dst += 2;
         }
+        src += 1;
     }
 }
 
-static	void cvtMM816C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		       DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMM816C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                      const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        W16(dst, C816(*src)); dst += 2;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src++;
-            (*nsrc)--;
-            if (*nsrc==0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W16(dst, C816(src[0])); dst += 2;
         }
+        src += 1;
     }
 }
 
-static	void cvtSS168C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		       DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtSS168C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                      const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        *dst++ = C168(R16(src));
-        *dst++ = C168(R16(src + 2));
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 4;
-            (*nsrc)--;
-            if (*nsrc==0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            *dst++ = C168(R16(src));
+            *dst++ = C168(R16(src + 2));
         }
+        src += 4;
     }
 }
 
-static	void cvtSM168C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		       DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtSM168C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                      const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-	*dst++ = C168(M16(R16(src), R16(src + 2)));
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 4;
-            (*nsrc)--;
-            if (*nsrc==0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            *dst++ = C168(M16(R16(src), R16(src + 2)));
         }
+        src += 4;
     }
 }
 
-static	void cvtMS168C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		       DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMS168C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                      const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        *dst++ = C168(R16(src));
-        *dst++ = C168(R16(src));
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 2;
-            (*nsrc)--;
-            if (*nsrc==0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            *dst++ = C168(R16(src));
+            *dst++ = C168(R16(src));
         }
+        src += 2;
     }
 }
 
-static	void cvtMM168C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-		       DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMM168C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                      const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        *dst++ = C168(R16(src));
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 2;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            *dst++ = C168(R16(src));
         }
+        src += 2;
     }
 }
 
-static	void cvtSS1616C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtSS1616C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                       const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        W16(dst, R16(src)); dst += 2;
-        W16(dst, R16(src)); dst += 2;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 4;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W16(dst, R16(src)); dst += 2;
+            W16(dst, R16(src + 2)); dst += 2;
         }
+        src += 4;
     }
 }
 
-static	void cvtSM1616C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtSM1616C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                       const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        W16(dst, M16(R16(src), R16(src + 2))); dst += 2;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 4;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W16(dst, M16(R16(src), R16(src + 2))); dst += 2;
         }
+        src += 4;
     }
 }
 
-static	void cvtMS1616C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMS1616C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                       const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while((*ndst)--) {
-        W16(dst, R16(src)); dst += 2;
-        W16(dst, R16(src)); dst += 2;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 2;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W16(dst, R16(src)); dst += 2;
+            W16(dst, R16(src)); dst += 2;
         }
+        src += 2;
     }
 }
 
-static	void cvtMM1616C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMM1616C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                       const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        W16(dst, R16(src)); dst += 2;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 2;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W16(dst, R16(src)); dst += 2;
         }
+        src += 2;
     }
 }
 
-static	void cvtSS2424C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtSS2424C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                       const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        W24(dst, R24(src)); dst += 3;
-        W24(dst, R24(src)); dst += 3;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 6;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W24(dst, R24(src)); dst += 3;
+            W24(dst, R24(src + 3)); dst += 3;
         }
+        src += 6;
     }
 }
 
-static	void cvtSM2424C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtSM2424C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                       const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        W24(dst, M24(R24(src), R24(src + 3))); dst += 3;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 6;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W24(dst, M24(R24(src), R24(src + 3))); dst += 3;
         }
+        src += 6;
     }
 }
 
-static	void cvtMS2424C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMS2424C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                       const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while((*ndst)--) {
-        W24(dst, R24(src)); dst += 3;
-        W24(dst, R24(src)); dst += 3;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 3;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W24(dst, R24(src)); dst += 3;
+            W24(dst, R24(src)); dst += 3;
         }
+        src += 3;
     }
 }
 
-static	void cvtMM2424C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
-			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+static void cvtMM2424C(const DWORD srcRate, const unsigned char *src, DWORD *nsrc,
+                       const DWORD dstRate, unsigned char *dst, DWORD *ndst)
 {
-    DWORD error = dstRate / 2;
-    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
-
-    while ((*ndst)--) {
-        W24(dst, R24(src)); dst += 3;
-        error = error + srcRate;
-        while (error > dstRate) {
-            src += 3;
-            (*nsrc)--;
-            if (*nsrc == 0)
+    DWORD error = srcRate / 2;
+    DWORD maxSrc = *nsrc, maxDst = *ndst;
+    *ndst = 0;
+    for (*nsrc = 0; *nsrc < maxSrc; (*nsrc)++) {
+        error += dstRate;
+        while (error > srcRate) {
+            if (*ndst == maxDst)
                 return;
-            error = error - dstRate;
+            (*ndst)++;
+            error -= srcRate;
+
+            W24(dst, R24(src)); dst += 3;
         }
+        src += 3;
     }
 }
-
-typedef void (*PCM_CONVERT_CHANGE_RATE)(DWORD, const unsigned char*, LPDWORD, DWORD, unsigned char*, LPDWORD);
 
 static const PCM_CONVERT_CHANGE_RATE PCM_ConvertChangeRate[] = {
     cvtSS88C,   cvtSM88C,   cvtMS88C,   cvtMM88C,
@@ -1268,12 +1288,8 @@ static LRESULT PCM_StreamConvert(PACMDRVSTREAMINSTANCE adsi, PACMDRVSTREAMHEADER
 
     /* do the job */
     if (adsi->fdwDriver & PCM_RESAMPLE) {
-	DWORD	nsrc2 = nsrc;
-	DWORD	ndst2 = ndst;
-	apd->cvt.cvtChangeRate(adsi->pwfxSrc->nSamplesPerSec, adsh->pbSrc, &nsrc2,
-			       adsi->pwfxDst->nSamplesPerSec, adsh->pbDst, &ndst2);
-	nsrc -= nsrc2;
-	ndst -= ndst2;
+        apd->cvt.cvtChangeRate(adsi->pwfxSrc->nSamplesPerSec, adsh->pbSrc, &nsrc,
+                               adsi->pwfxDst->nSamplesPerSec, adsh->pbDst, &ndst);
     } else {
 	if (nsrc < ndst) ndst = nsrc; else nsrc = ndst;
 
