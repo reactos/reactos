@@ -6,8 +6,8 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "ReactOSセットアップ ウィザードへようこそ。", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "このウィザードでは、ReactOS をコンピュータにインストールします。 ReactOSを正しくセットアップするために、ユーザーとコンピュータに 関する情報を集める必要があります。", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "セットアップを続行するには [次へ] をクリックしてください。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "このウィザードでは、ReactOS をコンピュータにインストールします。ReactOS を正しくセットアップするために、ユーザーとコンピュータに関する情報を集める必要があります。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "セットアップを続行するには [次へ] をクリックして下さい。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
@@ -15,11 +15,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOSの開発者より、下記のオープンソース プロジェクトに感謝の意を表明します。 これらのすべてまたは一部はReactOSの開発に利用されました。", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "ReactOS の開発者より、下記のオープンソース プロジェクトに感謝の意を表明します。これらのすべてまたは一部は ReactOS の開発に利用されました。", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOSはGPLの下にライセンスされており、すべてまたは一部を再利用、 再配布する場合はGPLに従う必要があります。", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "ReactOS は GPL の下にライセンスされており、すべてまたは一部を再利用、 再配布する場合は GPL に従う必要があります。", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "GPLを表示(&V)...", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "セットアップを続行するには [次へ] をクリックしてください。", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "セットアップを続行するには [次へ] をクリックして下さい。", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -28,7 +28,7 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "名前と会社名または組織名を入力してください。", IDC_STATIC, 54, 7, 242, 21
+    LTEXT "名前と会社名または組織名を入力して下さい。", IDC_STATIC, 54, 7, 242, 21
     LTEXT "名前(&M):", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "組織名(&O):", IDC_STATIC, 54, 57, 44, 8
@@ -41,12 +41,12 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "コンピュータ名を半角63文字以内で入力してください。 コンピュータがネットワーク上にある場合は、名前が重複しないようにしてください。", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "コンピュータ名を半角 63 文字以内で入力して下さい。コンピュータがネットワーク上にある場合は、名前が重複しないようにして下さい。", IDC_STATIC, 54, 7, 250, 24
     LTEXT "コンピュータ名(&C):", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Administratorと呼ばれるユーザーアカウントを作成します。 コンピュータにフルアクセスが必要なとき、このアカウントを使用します。", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Administratorのパスワードを半角 127 文字以内で入力してください。", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Administrator と呼ばれるユーザー アカウントを作成します。コンピュータにフルアクセスが必要なとき、このアカウントを使用します。", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Administrator のパスワードを半角 127 文字以内で入力して下さい。", IDC_STATIC, 54, 87, 250, 8
     LTEXT "Administrator のパスワード(&A):", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "パスワードの確認入力(&O):", IDC_STATIC, 54, 123, 105, 8
@@ -59,13 +59,13 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定してください。 ユーザーロケールは、数値、通貨、日付の表示方法を制御します。 ", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定して下さい。ユーザー ロケールは、数値、通貨、日付の表示方法を制御します。", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "システム、ユーザーロケール設定変更には[カスタマイズ]をクリックします。", IDC_STATIC, 53, 50, 166, 25
+    LTEXT "システム、ユーザー ロケール設定変更には [カスタマイズ] をクリックします。", IDC_STATIC, 53, 50, 166, 25
     PUSHBUTTON "カスタマイズ(&C)...", IDC_CUSTOMLOCALE, 220, 52, 80, 14
     LTEXT "キーボード レイアウトは、キーを押したときにどの文字が入力されるかを制御します。", IDC_STATIC, 53, 81, 253, 20
     LTEXT "", IDC_LAYOUTTEXT, 53, 106, 250, 14
-    LTEXT "キーボードレイアウト変更には[カスタマイズ]をクリックします。", IDC_STATIC, 53, 120, 166, 25
+    LTEXT "キーボード レイアウト変更には [カスタマイズ] をクリックします。", IDC_STATIC, 53, 120, 166, 25
     PUSHBUTTON "カスタマイズ(&U)...", IDC_CUSTOMLAYOUT, 220, 122, 80, 14
 END
 
@@ -110,12 +110,12 @@ BEGIN
     LTEXT "ReactOS セットアップ ウィザードの完了", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS セットアップが正常に完了しました。\n\n[完了] をクリックすると、コンピュータを再起動します。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "ドライブにCDがある場合は取り出してください。 再起動するには 完了をクリックしてください。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "ドライブに CD がある場合は取り出して下さい。再起動するには [完了] をクリックして下さい。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "GNU General Public License"
+CAPTION "GNU 一般公衆利用許諾書"
 FONT 9, "MS UI Gothic"
 BEGIN
     EDITTEXT IDC_GPL_TEXT, 7, 7, 319, 190, ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
@@ -124,7 +124,7 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "お待ちください..."
+CAPTION "お待ち下さい..."
 FONT 9, "MS UI Gothic", 400, 0, 1
 BEGIN
     LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
@@ -141,10 +141,10 @@ BEGIN
     IDS_LOCALETITLE "地域の設定"
     IDS_LOCALESUBTITLE "ReactOS を様々な地域と言語にあわせてカスタマイズすることができます。"
     IDS_DATETIMETITLE "日付と時刻"
-    IDS_DATETIMESUBTITLE "コンピュータの日付と時刻を正しく設定してください。"
+    IDS_DATETIMESUBTITLE "コンピュータの日付と時刻を正しく設定して下さい。"
     IDS_PROCESSTITLE "コンポーネントの登録中"
-    IDS_PROCESSSUBTITLE "お待ちください..."
-    IDS_THEMESELECTIONTITLE "アピアランス"
+    IDS_PROCESSSUBTITLE "お待ち下さい..."
+    IDS_THEMESELECTIONTITLE "外観"
     IDS_THEMESELECTIONSUBTITLE "好きなテーマをお選び下さい"
 END
 
@@ -153,10 +153,10 @@ BEGIN
     IDS_REACTOS_SETUP "ReactOS セットアップ"
     IDS_UNKNOWN_ERROR "不明なエラー"
     IDS_REGISTERING_COMPONENTS "コンポーネントを登録しています..."
-    IDS_LOADLIBRARY_FAILED "LoadLibraryに失敗: "
-    IDS_GETPROCADDR_FAILED "GetProcAddrに失敗: "
-    IDS_REGSVR_FAILED "DllRegisterServerに失敗: "
-    IDS_DLLINSTALL_FAILED "DllInstallに失敗: "
+    IDS_LOADLIBRARY_FAILED "LoadLibrary に失敗: "
+    IDS_GETPROCADDR_FAILED "GetProcAddr に失敗: "
+    IDS_REGSVR_FAILED "DllRegisterServer に失敗: "
+    IDS_DLLINSTALL_FAILED "DllInstall に失敗: "
     IDS_TIMEOUT "登録中にタイムアウトしました"
     IDS_REASON_UNKNOWN ""
     /*
@@ -174,10 +174,10 @@ BEGIN
     IDS_WZD_NAME "セットアップはユーザ名が入力されるまで続行できません。"
     IDS_WZD_SETCOMPUTERNAME "コンピュータ名の設定に失敗しました。"
     IDS_WZD_COMPUTERNAME "セットアップはコンピュータ名が入力されるまで続行できません。"
-    IDS_WZD_PASSWORDEMPTY "パスワードを入力してください !"
-    IDS_WZD_PASSWORDMATCH "入力されたパスワードが一致しません。 もう一度望ましいパスワードを入力してください。"
-    IDS_WZD_PASSWORDCHAR "入力されたパスワードには無効な文字が含まれています。 有効なパスワードを入力してください。"
-    IDS_WZD_LOCALTIME "セットアップはローカルタイムを設定できませんでした。"
+    IDS_WZD_PASSWORDEMPTY "パスワードを入力して下さい！"
+    IDS_WZD_PASSWORDMATCH "入力されたパスワードが一致しません。もう一度望ましいパスワードを入力して下さい。"
+    IDS_WZD_PASSWORDCHAR "入力されたパスワードには無効な文字が含まれています。有効なパスワードを入力して下さい。"
+    IDS_WZD_LOCALTIME "セットアップはローカル タイムを設定できませんでした。"
 END
 
 STRINGTABLE
