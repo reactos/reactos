@@ -34,6 +34,22 @@
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 #define expectf(expected, got) ok(fabs(expected - got) < 0.0001, "Expected %.2f, got %.2f\n", expected, got)
 
+static BOOL compare_float(float f, float g, unsigned int ulps)
+{
+    int x = *(int *)&f;
+    int y = *(int *)&g;
+
+    if (x < 0)
+        x = INT_MIN - x;
+    if (y < 0)
+        y = INT_MIN - y;
+
+    if (abs(x - y) > ulps)
+        return FALSE;
+
+    return TRUE;
+}
+
 static void test_constructor_destructor(void)
 {
     GpStatus status;
@@ -135,6 +151,7 @@ static void test_invert(void)
     GpMatrix *matrix = NULL;
     GpMatrix *inverted = NULL;
     BOOL equal = FALSE;
+    REAL elems[6];
 
     /* NULL */
     status = GdipInvertMatrix(NULL);
@@ -153,6 +170,18 @@ static void test_invert(void)
     GdipCreateMatrix2(2.0/16.0, 2.0/16.0, -5.0/16.0, 3.0/16.0, 3.0/16.0, -21.0/16.0, &inverted);
     GdipIsMatrixEqual(matrix, inverted, &equal);
     expect(TRUE, equal);
+
+    GdipCreateMatrix2(0.0006, 0, 0, 0.0006, 400, 400, &matrix);
+    status = GdipInvertMatrix(matrix);
+    expect(Ok, status);
+    status = GdipGetMatrixElements(matrix, elems);
+    expect(Ok, status);
+    ok(compare_float(elems[0], 1666.666504, 1), "elems[0] = %.10g\n", elems[0]);
+    ok(compare_float(elems[1], 0, 0), "elems[1] = %.10g\n", elems[1]);
+    ok(compare_float(elems[2], 0, 0), "elems[2] = %.10g\n", elems[2]);
+    ok(compare_float(elems[3], 1666.666504, 1), "elems[3] = %.10g\n", elems[3]);
+    ok(compare_float(elems[4], -666666.6875, 1), "elems[4] = %.10g\n", elems[4]);
+    ok(compare_float(elems[5], -666666.6875, 1), "elems[5] = %.10g\n", elems[5]);
 
     GdipDeleteMatrix(inverted);
     GdipDeleteMatrix(matrix);
@@ -350,6 +379,13 @@ START_TEST(matrix)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
+    HMODULE hmsvcrt;
+    int (CDECL * _controlfp_s)(unsigned int *cur, unsigned int newval, unsigned int mask);
+
+    /* Enable all FP exceptions except _EM_INEXACT, which gdi32 can trigger */
+    hmsvcrt = LoadLibraryA("msvcrt");
+    _controlfp_s = (void*)GetProcAddress(hmsvcrt, "_controlfp_s");
+    if (_controlfp_s) _controlfp_s(0, 0, 0x0008001e);
 
     gdiplusStartupInput.GdiplusVersion              = 1;
     gdiplusStartupInput.DebugEventCallback          = NULL;
