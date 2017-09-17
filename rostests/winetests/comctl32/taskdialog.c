@@ -28,6 +28,8 @@
 #include "v6util.h"
 
 static HRESULT (WINAPI *pTaskDialogIndirect)(const TASKDIALOGCONFIG *, int *, int *, BOOL *);
+static HRESULT (WINAPI *pTaskDialog)(HWND, HINSTANCE, const WCHAR *, const WCHAR *, const WCHAR *,
+        TASKDIALOG_COMMON_BUTTON_FLAGS, const WCHAR *, int *);
 
 START_TEST(taskdialog)
 {
@@ -49,6 +51,12 @@ START_TEST(taskdialog)
         unload_v6_module(ctx_cookie, hCtx);
         return;
     }
+
+    pTaskDialog = (void *)GetProcAddress(hinst, "TaskDialog");
+
+    ptr_ordinal = GetProcAddress(hinst, (const char *)344);
+    ok(pTaskDialog == ptr_ordinal, "got wrong pointer for ordinal 344, %p expected %p\n",
+                                            ptr_ordinal, pTaskDialog);
 
     ptr_ordinal = GetProcAddress(hinst, (const char *)345);
     ok(pTaskDialogIndirect == ptr_ordinal, "got wrong pointer for ordinal 345, %p expected %p\n",

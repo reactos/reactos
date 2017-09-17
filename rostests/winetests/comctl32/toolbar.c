@@ -490,13 +490,81 @@ static void add_128x15_bitmap(HWND hToolbar, int nCmds)
 
 static void test_add_bitmap(void)
 {
+    TBADDBITMAP stdsmall, std;
     HWND hToolbar = NULL;
     TBADDBITMAP bmp128;
     TBADDBITMAP bmp80;
-    TBADDBITMAP stdsmall;
     TBADDBITMAP addbmp;
     HIMAGELIST himl;
-    INT ret;
+    INT ret, id;
+
+    /* Test default bitmaps range */
+    for (id = IDB_STD_SMALL_COLOR; id < IDB_HIST_LARGE_COLOR; id++)
+    {
+        HIMAGELIST himl;
+        int cx, cy, count;
+
+        rebuild_toolbar(&hToolbar);
+
+        std.hInst = HINST_COMMCTRL;
+        std.nID = id;
+
+        ret = SendMessageA(hToolbar, TB_ADDBITMAP, 0, (LPARAM)&std);
+        ok(ret == 0, "Got %d\n", ret);
+
+        himl = (HIMAGELIST)SendMessageA(hToolbar, TB_GETIMAGELIST, 0, 0);
+        ok(himl != NULL, "Got %p\n", himl);
+
+        ret = ImageList_GetIconSize(himl, &cx, &cy);
+        ok(ret, "Got %d\n", ret);
+        ok(cx == cy, "Got %d x %d\n", cx, cy);
+
+        count = ImageList_GetImageCount(himl);
+
+        /* Image count */
+        switch (id)
+        {
+        case IDB_STD_SMALL_COLOR:
+        case IDB_STD_LARGE_COLOR:
+        case 2:
+        case 3:
+            ok(count == 15, "got count %d\n", count);
+            break;
+        case IDB_VIEW_SMALL_COLOR:
+        case IDB_VIEW_LARGE_COLOR:
+        case 6:
+        case 7:
+            ok(count == 12, "got count %d\n", count);
+            break;
+        case IDB_HIST_SMALL_COLOR:
+        case IDB_HIST_LARGE_COLOR:
+            ok(count == 5, "got count %d\n", count);
+            break;
+        default:
+            ok(0, "id %d, count %d\n", id, count);
+        }
+
+        /* Image sizes */
+        switch (id)
+        {
+        case IDB_STD_SMALL_COLOR:
+        case 2:
+        case IDB_VIEW_SMALL_COLOR:
+        case 6:
+        case IDB_HIST_SMALL_COLOR:
+            ok(cx == 16, "got size %d\n", cx);
+            break;
+        case IDB_STD_LARGE_COLOR:
+        case 3:
+        case IDB_VIEW_LARGE_COLOR:
+        case 7:
+        case IDB_HIST_LARGE_COLOR:
+            ok(cx == 24, "got size %d\n", cx);
+            break;
+        default:
+            ok(0, "id %d, size %d\n", id, cx);
+        }
+    }
 
     /* empty 128x15 bitmap */
     bmp128.hInst = GetModuleHandleA(NULL);
@@ -2409,6 +2477,26 @@ todo_wine
     DestroyWindow(hwnd);
 }
 
+static void test_imagelist(void)
+{
+    HIMAGELIST imagelist;
+    HWND hwnd = NULL;
+    int ret;
+
+    rebuild_toolbar(&hwnd);
+
+    imagelist = (HIMAGELIST)SendMessageA(hwnd, TB_GETIMAGELIST, 0, 0);
+    ok(imagelist == NULL, "got %p\n", imagelist);
+
+    ret = SendMessageA(hwnd, TB_SETBITMAPSIZE, 0, MAKELONG(16, 16));
+    ok(ret, "got %d\n", ret);
+
+    imagelist = (HIMAGELIST)SendMessageA(hwnd, TB_GETIMAGELIST, 0, 0);
+    ok(imagelist == NULL, "got %p\n", imagelist);
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(toolbar)
 {
     WNDCLASSA wc;
@@ -2454,6 +2542,7 @@ START_TEST(toolbar)
     test_noresize();
     test_save();
     test_drawtext_flags();
+    test_imagelist();
 
     PostQuitMessage(0);
     while(GetMessageA(&msg,0,0,0)) {
