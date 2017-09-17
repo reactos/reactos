@@ -6,6 +6,7 @@
  *    Update - niski (bjauy@o2.pl)
  *    Updated by Caemyr (Olaf Siejka), Mar 2011
  *    UTF-8 conversion by Caemyr (May, 2011)
+ *    Updated by Marcin Mikołajczak <me@m4sk.in> (September, 2017)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -26,9 +27,9 @@ CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Zainstaluj ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    LTEXT "Zainstaluj nową kopię ReactOS. Ta opcja nie zachowa plików, ustawień i programów. Możesz dokonać zmian w dyskach i partycjach.", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "Napraw lub zaktualizuj zainstalowany wcześniej ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "Zaktualizuj lub napraw istniejącą kopię systemu ReactOS. Ta opcja zachowa pliki, ustawienia i programy. Jest dostępna, jeżeli ReactOS znajduje się już na tym komputerze.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Naciśnij Dalej, aby zmienić ustawienia sprzętu.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -82,10 +83,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Folder instalacji", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
     EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
-    CONTROL "Instalacja bootloadera", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
-    CONTROL "Wgraj bootloader na dysk twardy (MBR i VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
-    CONTROL "Wgraj bootloader na dysk twardy (tylko VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
-    CONTROL "Pomiń wgrywanie bootloadera", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
+    CONTROL "Instalacja menedżera rozruchu", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
+    CONTROL "Wgraj menedżer rozruchu na dysk twardy (MBR i VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
+    CONTROL "Wgraj menedżer rozruchu na dysk twardy (tylko VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
+    CONTROL "Pomiń wgrywanie menedżera rozruchu", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
     PUSHBUTTON "&OK", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Anuluj", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
 END
@@ -126,9 +127,9 @@ BEGIN
     IDS_DEVICETITLE "Ustawienia podstawowych urządzeń"
     IDS_DEVICESUBTITLE "Zmień ustawienia ekranu i klawiatury."
     IDS_DRIVETITLE "Ustaw partycję instalacji i folder systemowy"
-    IDS_DRIVESUBTITLE "Przygotuj partycje instalacji, folder systemowy i bootloader."
+    IDS_DRIVESUBTITLE "Przygotuj partycje instalacji, folder systemowy i menedżer rozruchu."
     IDS_PROCESSTITLE "Przygotuj partycję, skopiuj pliki i zapisz ustawienia systemu"
-    IDS_PROCESSSUBTITLE "Przygotuj i sformatuj partycję, skopiuj pliki, skopiuj i zainstaluj bootloader"
+    IDS_PROCESSSUBTITLE "Przygotuj i sformatuj partycję, skopiuj pliki, skopiuj i zainstaluj menedżer rozruchu"
     IDS_RESTARTTITLE "Pierwszy etap instalacji zakończony sukcesem"
     IDS_RESTARTSUBTITLE "Pierwszy etap instalacji został zakończony, uruchom ponownie komputer, aby przejść do drugiego etapu"
     IDS_SUMMARYTITLE "Podsumowanie instalacji"
@@ -141,7 +142,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Name"
-    IDS_PARTITION_SIZE "Size"
-    IDS_PARTITION_TYPE "Type"
+    IDS_PARTITION_NAME "Nazwa"
+    IDS_PARTITION_SIZE "Rozmiar"
+    IDS_PARTITION_TYPE "Rodzaj"
 END
