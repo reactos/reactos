@@ -279,14 +279,13 @@ RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection)
   if (!Connection) return RPC_S_OK;
   if (Binding->server) {
     /* don't destroy a connection that is cached in the binding */
-    if (Binding->FromConn == Connection)
-      return RPC_S_OK;
-    return RPCRT4_ReleaseConnection(Connection);
+    if (Binding->FromConn != Connection)
+      RPCRT4_ReleaseConnection(Connection);
   }
   else {
     RpcAssoc_ReleaseIdleConnection(Binding->Assoc, Connection);
-    return RPC_S_OK;
   }
+  return RPC_S_OK;
 }
 
 static LPSTR RPCRT4_strconcatA(LPSTR dst, LPCSTR src)

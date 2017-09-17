@@ -65,6 +65,7 @@ typedef struct _RpcConnection_np
     RpcConnection common;
     HANDLE pipe;
     HANDLE listen_event;
+    char *listen_pipe;
     IO_STATUS_BLOCK io_status;
     HANDLE event_cache;
     BOOL read_closed;
@@ -89,26 +90,26 @@ static void release_np_event(RpcConnection_np *connection, HANDLE event)
         CloseHandle(event);
 }
 
-static RPC_STATUS rpcrt4_conn_create_pipe(RpcConnection *Connection, LPCSTR pname)
+static RPC_STATUS rpcrt4_conn_create_pipe(RpcConnection *conn)
 {
-  RpcConnection_np *npc = (RpcConnection_np *) Connection;
-  TRACE("listening on %s\n", pname);
+    RpcConnection_np *connection = (RpcConnection_np *) conn;
 
-  npc->pipe = CreateNamedPipeA(pname, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
-                               PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE,
-                               PIPE_UNLIMITED_INSTANCES,
-                               RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
-  if (npc->pipe == INVALID_HANDLE_VALUE) {
-    WARN("CreateNamedPipe failed with error %d\n", GetLastError());
-    if (GetLastError() == ERROR_FILE_EXISTS)
-      return RPC_S_DUPLICATE_ENDPOINT;
-    else
-      return RPC_S_CANT_CREATE_ENDPOINT;
-  }
+    TRACE("listening on %s\n", connection->listen_pipe);
 
-  /* Note: we don't call ConnectNamedPipe here because it must be done in the
-   * server thread as the thread must be alertable */
-  return RPC_S_OK;
+    connection->pipe = CreateNamedPipeA(connection->listen_pipe, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+                                        PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE,
+                                        PIPE_UNLIMITED_INSTANCES,
+                                        RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
+    if (connection->pipe == INVALID_HANDLE_VALUE)
+    {
+        WARN("CreateNamedPipe failed with error %d\n", GetLastError());
+        if (GetLastError() == ERROR_FILE_EXISTS)
+            return RPC_S_DUPLICATE_ENDPOINT;
+        else
+            return RPC_S_CANT_CREATE_ENDPOINT;
+    }
+
+    return RPC_S_OK;
 }
 
 static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname, BOOL wait)
@@ -201,7 +202,6 @@ static RPC_STATUS rpcrt4_ncalrpc_open(RpcConnection* Connection)
 static RPC_STATUS rpcrt4_protseq_ncalrpc_open_endpoint(RpcServerProtseq* protseq, const char *endpoint)
 {
   RPC_STATUS r;
-  LPSTR pname;
   RpcConnection *Connection;
   char generated_endpoint[22];
 
@@ -220,9 +220,8 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc_open_endpoint(RpcServerProtseq* protseq
   if (r != RPC_S_OK)
       return r;
 
-  pname = ncalrpc_pipe_name(Connection->Endpoint);
-  r = rpcrt4_conn_create_pipe(Connection, pname);
-  I_RpcFree(pname);
+  ((RpcConnection_np*)Connection)->listen_pipe = ncalrpc_pipe_name(Connection->Endpoint);
+  r = rpcrt4_conn_create_pipe(Connection);
 
   EnterCriticalSection(&protseq->cs);
   list_add_head(&protseq->listeners, &Connection->protseq_entry);
@@ -263,7 +262,6 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
 static RPC_STATUS rpcrt4_protseq_ncacn_np_open_endpoint(RpcServerProtseq *protseq, const char *endpoint)
 {
   RPC_STATUS r;
-  LPSTR pname;
   RpcConnection *Connection;
   char generated_endpoint[26];
 
@@ -282,9 +280,8 @@ static RPC_STATUS rpcrt4_protseq_ncacn_np_open_endpoint(RpcServerProtseq *protse
   if (r != RPC_S_OK)
     return r;
 
-  pname = ncacn_pipe_name(Connection->Endpoint);
-  r = rpcrt4_conn_create_pipe(Connection, pname);
-  I_RpcFree(pname);
+  ((RpcConnection_np*)Connection)->listen_pipe = ncacn_pipe_name(Connection->Endpoint);
+  r = rpcrt4_conn_create_pipe(Connection);
 
   EnterCriticalSection(&protseq->cs);
   list_add_head(&protseq->listeners, &Connection->protseq_entry);
@@ -308,13 +305,9 @@ static RPC_STATUS rpcrt4_ncacn_np_handoff(RpcConnection *old_conn, RpcConnection
 {
   DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
   RPC_STATUS status;
-  LPSTR pname;
 
   rpcrt4_conn_np_handoff((RpcConnection_np *)old_conn, (RpcConnection_np *)new_conn);
-
-  pname = ncacn_pipe_name(old_conn->Endpoint);
-  status = rpcrt4_conn_create_pipe(old_conn, pname);
-  I_RpcFree(pname);
+  status = rpcrt4_conn_create_pipe(old_conn);
 
   /* Store the local computer name as the NetworkAddr for ncacn_np as long as
    * we don't support named pipes over the network. */
@@ -359,15 +352,11 @@ static RPC_STATUS rpcrt4_ncalrpc_handoff(RpcConnection *old_conn, RpcConnection 
 {
   DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
   RPC_STATUS status;
-  LPSTR pname;
 
   TRACE("%s\n", old_conn->Endpoint);
 
   rpcrt4_conn_np_handoff((RpcConnection_np *)old_conn, (RpcConnection_np *)new_conn);
-
-  pname = ncalrpc_pipe_name(old_conn->Endpoint);
-  status = rpcrt4_conn_create_pipe(old_conn, pname);
-  I_RpcFree(pname);
+  status = rpcrt4_conn_create_pipe(old_conn);
 
   /* Store the local computer name as the NetworkAddr for ncalrpc. */
   new_conn->NetworkAddr = HeapAlloc(GetProcessHeap(), 0, len);
@@ -672,6 +661,8 @@ static void *rpcrt4_protseq_np_get_wait_array(RpcServerProtseq *protseq, void *p
     *count = 1;
     LIST_FOR_EACH_ENTRY(conn, &protseq->listeners, RpcConnection_np, common.protseq_entry)
     {
+        if (!conn->pipe && rpcrt4_conn_create_pipe(&conn->common) != RPC_S_OK)
+            continue;
         if (!conn->listen_event)
         {
             NTSTATUS status;
@@ -3372,38 +3363,69 @@ static RpcConnection *rpcrt4_spawn_connection(RpcConnection *old_connection)
     return connection;
 }
 
-RpcConnection *RPCRT4_GrabConnection( RpcConnection *conn )
+void rpcrt4_conn_release_and_wait(RpcConnection *connection)
 {
-    InterlockedIncrement( &conn->ref );
-    return conn;
+    HANDLE event = NULL;
+
+    if (connection->ref > 1)
+        event = connection->wait_release = CreateEventW(NULL, TRUE, FALSE, NULL);
+
+    RPCRT4_ReleaseConnection(connection);
+
+    if(event)
+    {
+        WaitForSingleObject(event, INFINITE);
+        CloseHandle(event);
+    }
 }
 
-RPC_STATUS RPCRT4_ReleaseConnection(RpcConnection* Connection)
+RpcConnection *RPCRT4_GrabConnection(RpcConnection *connection)
 {
-  if (InterlockedDecrement( &Connection->ref ) > 0) return RPC_S_OK;
+    LONG ref = InterlockedIncrement(&connection->ref);
+    TRACE("%p ref=%u\n", connection, ref);
+    return connection;
+}
 
-  TRACE("destroying connection %p\n", Connection);
+void RPCRT4_ReleaseConnection(RpcConnection *connection)
+{
+    LONG ref;
 
-  RPCRT4_CloseConnection(Connection);
-  RPCRT4_strfree(Connection->Endpoint);
-  RPCRT4_strfree(Connection->NetworkAddr);
-  HeapFree(GetProcessHeap(), 0, Connection->NetworkOptions);
-  HeapFree(GetProcessHeap(), 0, Connection->CookieAuth);
-  if (Connection->AuthInfo) RpcAuthInfo_Release(Connection->AuthInfo);
-  if (Connection->QOS) RpcQualityOfService_Release(Connection->QOS);
+    /* protseq stores a list of active connections, but does not own references to them.
+     * It may need to grab a connection from the list, which could lead to a race if
+     * connection is being released, but not yet removed from the list. We handle that
+     * by synchronizing on CS here. */
+    if (connection->protseq)
+    {
+        EnterCriticalSection(&connection->protseq->cs);
+        ref = InterlockedDecrement(&connection->ref);
+        if (!ref)
+            list_remove(&connection->protseq_entry);
+        LeaveCriticalSection(&connection->protseq->cs);
+    }
+    else
+    {
+        ref = InterlockedDecrement(&connection->ref);
+    }
 
-  /* server-only */
-  if (Connection->server_binding) RPCRT4_ReleaseBinding(Connection->server_binding);
+    TRACE("%p ref=%u\n", connection, ref);
 
-  if (Connection->protseq)
-  {
-    EnterCriticalSection(&Connection->protseq->cs);
-    list_remove(&Connection->protseq_entry);
-    LeaveCriticalSection(&Connection->protseq->cs);
-  }
+    if (!ref)
+    {
+        RPCRT4_CloseConnection(connection);
+        RPCRT4_strfree(connection->Endpoint);
+        RPCRT4_strfree(connection->NetworkAddr);
+        HeapFree(GetProcessHeap(), 0, connection->NetworkOptions);
+        HeapFree(GetProcessHeap(), 0, connection->CookieAuth);
+        if (connection->AuthInfo) RpcAuthInfo_Release(connection->AuthInfo);
+        if (connection->QOS) RpcQualityOfService_Release(connection->QOS);
 
-  HeapFree(GetProcessHeap(), 0, Connection);
-  return RPC_S_OK;
+        /* server-only */
+        if (connection->server_binding) RPCRT4_ReleaseBinding(connection->server_binding);
+
+        if (connection->wait_release) SetEvent(connection->wait_release);
+
+        HeapFree(GetProcessHeap(), 0, connection);
+    }
 }
 
 RPC_STATUS RPCRT4_IsServerListening(const char *protseq, const char *endpoint)

@@ -581,8 +581,8 @@ PFORMAT_STRING convert_old_args( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFo
     return (PFORMAT_STRING)args;
 }
 
-LONG_PTR CDECL ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat,
-                                void **stack_top, void **fpu_stack )
+LONG_PTR CDECL DECLSPEC_HIDDEN ndr_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat,
+                                                void **stack_top, void **fpu_stack )
 {
     /* pointer to start of stack where arguments start */
     RPC_MESSAGE rpcMsg;
@@ -1511,7 +1511,8 @@ struct async_call_data
     ULONG_PTR NdrCorrCache[256];
 };
 
-LONG_PTR CDECL ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat, void **stack_top )
+LONG_PTR CDECL DECLSPEC_HIDDEN ndr_async_client_call( PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat,
+                                                      void **stack_top )
 {
     /* pointer to start of stack where arguments start */
     PRPC_MESSAGE pRpcMsg;

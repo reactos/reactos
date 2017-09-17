@@ -160,7 +160,7 @@ reactos/dll/win32/rasapi32            # Synced to WineStaging-2.9
 reactos/dll/win32/resutils            # Synced to WineStaging-2.9
 reactos/dll/win32/riched20            # Synced to WineStaging-2.16
 reactos/dll/win32/riched32            # Synced to WineStaging-2.9
-reactos/dll/win32/rpcrt4              # Synced to WineStaging-2.9
+reactos/dll/win32/rpcrt4              # Synced to WineStaging-2.16
 reactos/dll/win32/rsabase             # Synced to WineStaging-2.9
 reactos/dll/win32/rsaenh              # Synced to WineStaging-2.9
 reactos/dll/win32/sccbase             # Synced to WineStaging-2.9
