@@ -360,16 +360,14 @@ static void test_assembly_name_props_line(IAssemblyName *name,
     DWORD i, size;
     WCHAR expect[MAX_PATH];
     WCHAR str[MAX_PATH];
-    CHAR val[MAX_PATH];
 
     for (i = 0; i < ASM_NAME_MAX_PARAMS; i++)
     {
         to_widechar(expect, vals[i].val);
 
         size = MAX_PATH;
-        ZeroMemory(str, MAX_PATH);
+        memset( str, 0xcc, sizeof(str) );
         hr = IAssemblyName_GetProperty(name, i, str, &size);
-        to_multibyte(val, str);
 
         ok(hr == vals[i].hr ||
            broken(i >= ASM_NAME_CONFIG_MASK && hr == E_INVALIDARG) || /* .NET 1.1 */
@@ -377,11 +375,15 @@ static void test_assembly_name_props_line(IAssemblyName *name,
            "%d: prop %d: Expected %08x, got %08x\n", line, i, vals[i].hr, hr);
         if (hr != E_INVALIDARG)
         {
-            if (i == ASM_NAME_PUBLIC_KEY_TOKEN)
-                ok(!memcmp(vals[i].val, str, size), "Expected a correct ASM_NAME_PUBLIC_KEY_TOKEN\n");
-            else
-                ok(!lstrcmpA(vals[i].val, val), "%d: prop %d: Expected \"%s\", got \"%s\"\n", line, i, vals[i].val, val);
             ok(size == vals[i].size, "%d: prop %d: Expected %d, got %d\n", line, i, vals[i].size, size);
+            if (size && size != MAX_PATH)
+            {
+                if (i != ASM_NAME_NAME && i != ASM_NAME_CULTURE)
+                    ok( !memcmp( vals[i].val, str, size ), "%d: prop %d: wrong value\n", line, i );
+                else
+                    ok( !lstrcmpW( expect, str ), "%d: prop %d: Expected %s, got %s\n",
+                        line, i, wine_dbgstr_w(expect), wine_dbgstr_w(str) );
+            }
         }
     }
 }

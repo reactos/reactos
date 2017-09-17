@@ -225,79 +225,80 @@ static void test_CreateAssemblyEnum(void)
 typedef struct _tagASMNAME
 {
     struct list entry;
-    LPSTR data;
+    char data[1];
 } ASMNAME;
 
-static BOOL enum_gac_assemblies(struct list *assemblies, int depth, LPSTR path)
+static void enum_gac_assembly_dirs(struct list *assemblies, const char *parent, char path[MAX_PATH])
 {
+    static const char format[] = "%s, Version=%s, Culture=%s, PublicKeyToken=%s";
     WIN32_FIND_DATAA ffd;
-    CHAR buf[MAX_PATH];
-    CHAR disp[MAX_PATH];
     ASMNAME *name;
     HANDLE hfind;
-    LPSTR ptr;
+    int len;
+    char *ptr, *end = path + strlen( path );
 
-    static CHAR parent[MAX_PATH];
-
-    sprintf(buf, "%s\\*", path);
-    hfind = FindFirstFileA(buf, &ffd);
-    if (hfind == INVALID_HANDLE_VALUE)
-        return FALSE;
+    lstrcpynA( end, "\\*", path + MAX_PATH - end );
+    hfind = FindFirstFileA(path, &ffd);
+    if (hfind == INVALID_HANDLE_VALUE) return;
+    end++;
 
     do
     {
-        if (!lstrcmpA(ffd.cFileName, ".") || !lstrcmpA(ffd.cFileName, ".."))
-            continue;
+        char culture[MAX_PATH];
 
-        if (depth == 0)
+        if (!strcmp(ffd.cFileName, ".") || !strcmp(ffd.cFileName, "..")) continue;
+
+        *end = 0;
+        /* Directories with no dll or exe will not be enumerated */
+        snprintf(end, path + MAX_PATH - end, "%s\\%s.dll", ffd.cFileName, parent);
+        if (GetFileAttributesA(path) == INVALID_FILE_ATTRIBUTES)
         {
-            lstrcpyA(parent, ffd.cFileName);
-        }
-        else if (depth == 1)
-        {
-            char culture[MAX_PATH];
-            char dll[MAX_PATH], exe[MAX_PATH];
-
-            /* Directories with no dll or exe will not be enumerated */
-            sprintf(dll, "%s\\%s\\%s.dll", path, ffd.cFileName, parent);
-            sprintf(exe, "%s\\%s\\%s.exe", path, ffd.cFileName, parent);
-            if (GetFileAttributesA(dll) == INVALID_FILE_ATTRIBUTES &&
-                GetFileAttributesA(exe) == INVALID_FILE_ATTRIBUTES)
-                continue;
-
-            ptr = strstr(ffd.cFileName, "_");
-            *ptr = '\0';
-            ptr++;
-
-            if (*ptr != '_')
-            {
-                lstrcpyA(culture, ptr);
-                *strstr(culture, "_") = '\0';
-            }
-            else
-                lstrcpyA(culture, "neutral");
-
-            ptr = strchr(ptr, '_');
-            ptr++;
-            sprintf(buf, ", Version=%s, Culture=%s, PublicKeyToken=%s",
-                    ffd.cFileName, culture, ptr);
-            lstrcpyA(disp, parent);
-            lstrcatA(disp, buf);
-
-            name = HeapAlloc(GetProcessHeap(), 0, sizeof(ASMNAME));
-            name->data = HeapAlloc(GetProcessHeap(), 0, lstrlenA(disp) + 1);
-            lstrcpyA(name->data, disp);
-            list_add_tail(assemblies, &name->entry);
-
-            continue;
+            snprintf(end, path + MAX_PATH - end, "%s\\%s.exe", ffd.cFileName, parent);
+            if (GetFileAttributesA(path) == INVALID_FILE_ATTRIBUTES) continue;
         }
 
-        sprintf(buf, "%s\\%s", path, ffd.cFileName);
-        enum_gac_assemblies(assemblies, depth + 1, buf);
+        if (!(ptr = strchr(ffd.cFileName, '_'))) continue;
+        *ptr++ = 0;
+
+        if (*ptr != '_')
+        {
+            lstrcpyA(culture, ptr);
+            *strchr(culture, '_') = 0;
+        }
+        else
+            lstrcpyA(culture, "neutral");
+
+        ptr = strchr(ptr, '_');
+        ptr++;
+        len = sizeof(format) + strlen(parent) + strlen(ffd.cFileName) + strlen(culture) + strlen(ptr);
+
+        name = HeapAlloc(GetProcessHeap(), 0, offsetof( ASMNAME, data[len] ));
+        sprintf( name->data, format, parent, ffd.cFileName, culture, ptr);
+        list_add_tail(assemblies, &name->entry);
     } while (FindNextFileA(hfind, &ffd) != 0);
 
     FindClose(hfind);
-    return TRUE;
+}
+
+static void enum_gac_assemblies(struct list *assemblies, char path[MAX_PATH])
+{
+    WIN32_FIND_DATAA ffd;
+    HANDLE hfind;
+    char *end = path + strlen( path );
+
+    lstrcpynA( end, "\\*", path + MAX_PATH - end );
+    hfind = FindFirstFileA(path, &ffd);
+    if (hfind == INVALID_HANDLE_VALUE) return;
+    end++;
+
+    do
+    {
+        if (!strcmp(ffd.cFileName, ".") || !strcmp(ffd.cFileName, "..")) continue;
+        lstrcpynA( end, ffd.cFileName, path + MAX_PATH - end );
+        enum_gac_assembly_dirs( assemblies, ffd.cFileName, path );
+    } while (FindNextFileA(hfind, &ffd) != 0);
+
+    FindClose(hfind);
 }
 
 static void test_enumerate(void)
@@ -319,18 +320,18 @@ static void test_enumerate(void)
 
     to_multibyte(path, buf);
     lstrcatA(path, "_32");
-    enum_gac_assemblies(&assemblies, 0, path);
+    enum_gac_assemblies(&assemblies, path);
 
     to_multibyte(path, buf);
     lstrcatA(path, "_64");
-    enum_gac_assemblies(&assemblies, 0, path);
+    enum_gac_assemblies(&assemblies, path);
 
     to_multibyte(path, buf);
     lstrcatA(path, "_MSIL");
-    enum_gac_assemblies(&assemblies, 0, path);
+    enum_gac_assemblies(&assemblies, path);
 
     to_multibyte(path, buf);
-    enum_gac_assemblies(&assemblies, 0, path);
+    enum_gac_assemblies(&assemblies, path);
 
     asmenum = NULL;
     hr = pCreateAssemblyEnum(&asmenum, NULL, NULL, ASM_CACHE_GAC, NULL);
@@ -353,7 +354,6 @@ static void test_enumerate(void)
                 found = TRUE;
 
                 list_remove(&asmname->entry);
-                HeapFree(GetProcessHeap(), 0, asmname->data);
                 HeapFree(GetProcessHeap(), 0, asmname);
                 break;
             }
@@ -377,7 +377,6 @@ static void test_enumerate(void)
         ok(FALSE, "Assembly not enumerated: %s\n", asmname->data);
 
         list_remove(&asmname->entry);
-        HeapFree(GetProcessHeap(), 0, asmname->data);
         HeapFree(GetProcessHeap(), 0, asmname);
     }
 
