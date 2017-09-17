@@ -6097,7 +6097,7 @@ static void test_VarCat(void)
 
     SET_EXPECT(dispatch_invoke);
     hres = VarCat(&left, &right, &result);
-    todo_wine ok(hres == S_OK, "got 0x%08x\n", hres);
+    ok(hres == S_OK, "got 0x%08x\n", hres);
     ok(V_VT(&result) == VT_BSTR, "got %d\n", V_VT(&result));
     ok(SysStringLen(V_BSTR(&result)) == 0, "got %d\n", SysStringLen(V_BSTR(&result)));
     CHECK_CALLED(dispatch_invoke);
@@ -6112,7 +6112,7 @@ static void test_VarCat(void)
 
     SET_EXPECT(dispatch_invoke);
     hres = VarCat(&left, &right, &result);
-    todo_wine ok(hres == S_OK, "got 0x%08x\n", hres);
+    ok(hres == S_OK, "got 0x%08x\n", hres);
     ok(V_VT(&result) == VT_BSTR, "got %d\n", V_VT(&result));
     ok(SysStringLen(V_BSTR(&result)) == 0, "got %d\n", SysStringLen(V_BSTR(&result)));
     CHECK_CALLED(dispatch_invoke);
@@ -6144,7 +6144,21 @@ static void test_VarCat(void)
 
     SET_EXPECT(dispatch_invoke);
     hres = VarCat(&left, &right, &result);
-    todo_wine ok(hres == E_OUTOFMEMORY, "got 0x%08x\n", hres);
+    ok(hres == E_OUTOFMEMORY, "got 0x%08x\n", hres);
+    CHECK_CALLED(dispatch_invoke);
+
+    VariantClear(&left);
+    VariantClear(&right);
+    VariantClear(&result);
+
+    init_test_dispatch(VT_NULL, &dispatch);
+    dispatch.result = DISP_E_TYPEMISMATCH;
+    V_VT(&right) = VT_DISPATCH;
+    V_DISPATCH(&right) = &dispatch.IDispatch_iface;
+
+    SET_EXPECT(dispatch_invoke);
+    hres = VarCat(&left, &right, &result);
+    ok(hres == DISP_E_TYPEMISMATCH, "got 0x%08x\n", hres);
     CHECK_CALLED(dispatch_invoke);
 
     VariantClear(&left);

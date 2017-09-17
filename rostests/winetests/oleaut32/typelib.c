@@ -5053,6 +5053,22 @@ static void test_LoadTypeLib(void)
 
     hres = LoadTypeLib(kernel32_dllW, &tl);
     ok(hres == TYPE_E_CANTLOADLIBRARY, "LoadTypeLib returned: %08x, expected TYPE_E_CANTLOADLIBRARY\n", hres);
+
+    hres = LoadTypeLib(NULL, NULL);
+    ok(hres == E_INVALIDARG, "Got %#x.\n", hres);
+
+    tl = (void *)0xdeadbeef;
+    hres = LoadTypeLib(NULL, &tl);
+    ok(hres == E_INVALIDARG, "Got %#x.\n", hres);
+    ok(tl == (void *)0xdeadbeef, "Got %p.\n", tl);
+
+    hres = LoadTypeLibEx(NULL, REGKIND_NONE, NULL);
+    ok(hres == E_INVALIDARG, "Got %#x.\n", hres);
+
+    tl = (void *)0xdeadbeef;
+    hres = LoadTypeLibEx(NULL, REGKIND_NONE, &tl);
+    ok(hres == E_INVALIDARG, "Got %#x.\n", hres);
+    ok(tl == (void *)0xdeadbeef, "Got %p.\n", tl);
 }
 
 static void test_SetVarHelpContext(void)

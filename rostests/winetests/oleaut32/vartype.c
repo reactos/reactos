@@ -57,11 +57,6 @@ DEFINE_GUID(UUID_test_struct, 0x4029f190, 0xca4a, 0x4611, 0xae,0xb9,0x67,0x39,0x
 
 static HMODULE hOleaut32;
 
-/* Get a conversion function ptr, return if function not available */
-#define CHECKPTR(func) p##func = (void*)GetProcAddress(hOleaut32, #func); \
-  if (!p##func) { \
-    win_skip("function " # func " not available, not testing it\n"); return; }
-
 /* Has I8/UI8 data type? */
 static BOOL has_i8;
 /* Has proper locale conversions? */
@@ -89,7 +84,7 @@ static BOOL has_locales;
 #define EXPECT_DBL(x)   \
   ok(hres == S_OK && fabs(out-(x))<=1e-14*(x), "expected %16.16g, got %16.16g; hres=0x%08x\n", (x), out, hres)
 
-#define CONVERT(func, val) in = val; hres = p##func(in, &out)
+#define CONVERT(func, val) in = val; hres = func(in, &out)
 #define CONVERTRANGE(func,start,end) for (i = start; i < end; i+=1) { CONVERT(func, i); EXPECT(i); };
 #define OVERFLOWRANGE(func,start,end) for (i = start; i < end; i+=1) { CONVERT(func, i); EXPECT_OVERFLOW; };
 
@@ -98,11 +93,11 @@ static BOOL has_locales;
 #define DATE_MIN -657434
 #define DATE_MAX 2958465
 
-#define CONVERT_I8(func,hi,lo) in = hi; in = (in << 32) | lo; hres = p##func(in, &out)
+#define CONVERT_I8(func,hi,lo) in = hi; in = (in << 32) | lo; hres = func(in, &out)
 
-#define CONVERT_CY(func,val) in.int64 = (LONGLONG)(val * CY_MULTIPLIER); hres = p##func(in, &out)
+#define CONVERT_CY(func,val) in.int64 = (LONGLONG)(val * CY_MULTIPLIER); hres = func(in, &out)
 
-#define CONVERT_CY64(func,hi,lo) S(in).Hi = hi; S(in).Lo = lo; in.int64 *= CY_MULTIPLIER; hres = p##func(in, &out)
+#define CONVERT_CY64(func,hi,lo) S(in).Hi = hi; S(in).Lo = lo; in.int64 *= CY_MULTIPLIER; hres = func(in, &out)
 
 #define SETDEC(dec, scl, sgn, hi, lo) S(U(dec)).scale = (BYTE)scl; S(U(dec)).sign = (BYTE)sgn; \
   dec.Hi32 = (ULONG)hi; U1(dec).Lo64 = (ULONG64)lo
@@ -110,9 +105,9 @@ static BOOL has_locales;
 #define SETDEC64(dec, scl, sgn, hi, mid, lo) S(U(dec)).scale = (BYTE)scl; S(U(dec)).sign = (BYTE)sgn; \
   dec.Hi32 = (ULONG)hi; S1(U1(dec)).Mid32 = mid; S1(U1(dec)).Lo32 = lo;
 
-#define CONVERT_DEC(func,scl,sgn,hi,lo) SETDEC(in,scl,sgn,hi,lo); hres = p##func(&in, &out)
+#define CONVERT_DEC(func,scl,sgn,hi,lo) SETDEC(in,scl,sgn,hi,lo); hres = func(&in, &out)
 
-#define CONVERT_DEC64(func,scl,sgn,hi,mid,lo) SETDEC64(in,scl,sgn,hi,mid,lo); hres = p##func(&in, &out)
+#define CONVERT_DEC64(func,scl,sgn,hi,mid,lo) SETDEC64(in,scl,sgn,hi,mid,lo); hres = func(&in, &out)
 
 #define CONVERT_BADDEC(func) \
   CONVERT_DEC(func,29,0,0,0);   EXPECT_INVALID; \
@@ -123,7 +118,7 @@ static BOOL has_locales;
 #define CONVERT_STR(func,str,flags) \
   SetLastError(0); \
   if (str) MultiByteToWideChar(CP_ACP,0,str,-1,buff,sizeof(buff)/sizeof(WCHAR)); \
-  hres = p##func(str ? buff : NULL,in,flags,&out)
+  hres = func(str ? buff : NULL,in,flags,&out)
 
 #define COPYTEST(val, vt, srcval, dstval, srcref, dstref, fs) do { \
   HRESULT hres; VARIANTARG vSrc, vDst; CONV_TYPE in = val; \
@@ -283,243 +278,6 @@ static BOOL has_locales;
 
 DEFINE_EXPECT(dispatch_invoke);
 
-/* Early versions of oleaut32 are missing many functions */
-static HRESULT (WINAPI *pVarI1FromUI1)(BYTE,signed char*);
-static HRESULT (WINAPI *pVarI1FromI2)(SHORT,signed char*);
-static HRESULT (WINAPI *pVarI1FromI4)(LONG,signed char*);
-static HRESULT (WINAPI *pVarI1FromR4)(FLOAT,signed char*);
-static HRESULT (WINAPI *pVarI1FromR8)(double,signed char*);
-static HRESULT (WINAPI *pVarI1FromDate)(DATE,signed char*);
-static HRESULT (WINAPI *pVarI1FromCy)(CY,signed char*);
-static HRESULT (WINAPI *pVarI1FromStr)(OLECHAR*,LCID,ULONG,signed char*);
-static HRESULT (WINAPI *pVarI1FromBool)(VARIANT_BOOL,signed char*);
-static HRESULT (WINAPI *pVarI1FromUI2)(USHORT,signed char*);
-static HRESULT (WINAPI *pVarI1FromUI4)(ULONG,signed char*);
-static HRESULT (WINAPI *pVarI1FromDec)(DECIMAL*,signed char*);
-static HRESULT (WINAPI *pVarI1FromI8)(LONG64,signed char*);
-static HRESULT (WINAPI *pVarI1FromUI8)(ULONG64,signed char*);
-static HRESULT (WINAPI *pVarUI1FromI2)(SHORT,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromI4)(LONG,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromR4)(FLOAT,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromR8)(double,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromCy)(CY,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromDate)(DATE,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromStr)(OLECHAR*,LCID,ULONG,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromBool)(VARIANT_BOOL,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromI1)(signed char,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromUI2)(USHORT,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromUI4)(ULONG,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromDec)(DECIMAL*,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromI8)(LONG64,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromUI8)(ULONG64,BYTE*);
-static HRESULT (WINAPI *pVarUI1FromDisp)(IDispatch*,LCID,BYTE*);
-
-static HRESULT (WINAPI *pVarI2FromUI1)(BYTE,SHORT*);
-static HRESULT (WINAPI *pVarI2FromI4)(LONG,SHORT*);
-static HRESULT (WINAPI *pVarI2FromR4)(FLOAT,SHORT*);
-static HRESULT (WINAPI *pVarI2FromR8)(double,SHORT*);
-static HRESULT (WINAPI *pVarI2FromCy)(CY,SHORT*);
-static HRESULT (WINAPI *pVarI2FromDate)(DATE,SHORT*);
-static HRESULT (WINAPI *pVarI2FromStr)(OLECHAR*,LCID,ULONG,SHORT*);
-static HRESULT (WINAPI *pVarI2FromBool)(VARIANT_BOOL,SHORT*);
-static HRESULT (WINAPI *pVarI2FromI1)(signed char,SHORT*);
-static HRESULT (WINAPI *pVarI2FromUI2)(USHORT,SHORT*);
-static HRESULT (WINAPI *pVarI2FromUI4)(ULONG,SHORT*);
-static HRESULT (WINAPI *pVarI2FromDec)(DECIMAL*,SHORT*);
-static HRESULT (WINAPI *pVarI2FromI8)(LONG64,SHORT*);
-static HRESULT (WINAPI *pVarI2FromUI8)(ULONG64,SHORT*);
-static HRESULT (WINAPI *pVarUI2FromUI1)(BYTE,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromI2)(SHORT,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromI4)(LONG,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromR4)(FLOAT,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromR8)(double,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromDate)(DATE,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromCy)(CY,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromStr)(OLECHAR*,LCID,ULONG,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromBool)(VARIANT_BOOL,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromI1)(signed char,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromUI4)(ULONG,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromDec)(DECIMAL*,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromI8)(LONG64,USHORT*);
-static HRESULT (WINAPI *pVarUI2FromUI8)(ULONG64,USHORT*);
-
-static HRESULT (WINAPI *pVarI4FromUI1)(BYTE,LONG*);
-static HRESULT (WINAPI *pVarI4FromI2)(SHORT,LONG*);
-static HRESULT (WINAPI *pVarI4FromR4)(FLOAT,LONG*);
-static HRESULT (WINAPI *pVarI4FromR8)(DOUBLE,LONG*);
-static HRESULT (WINAPI *pVarI4FromCy)(CY,LONG*);
-static HRESULT (WINAPI *pVarI4FromDate)(DATE,LONG*);
-static HRESULT (WINAPI *pVarI4FromStr)(OLECHAR*,LCID,ULONG,LONG*);
-static HRESULT (WINAPI *pVarI4FromBool)(VARIANT_BOOL,LONG*);
-static HRESULT (WINAPI *pVarI4FromI1)(signed char,LONG*);
-static HRESULT (WINAPI *pVarI4FromUI2)(USHORT,LONG*);
-static HRESULT (WINAPI *pVarI4FromUI4)(ULONG,LONG*);
-static HRESULT (WINAPI *pVarI4FromDec)(DECIMAL*,LONG*);
-static HRESULT (WINAPI *pVarI4FromI8)(LONG64,LONG*);
-static HRESULT (WINAPI *pVarI4FromUI8)(ULONG64,LONG*);
-static HRESULT (WINAPI *pVarUI4FromUI1)(BYTE,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromI2)(SHORT,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromI4)(LONG,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromR4)(FLOAT,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromR8)(DOUBLE,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromDate)(DATE,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromCy)(CY,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromStr)(OLECHAR*,LCID,ULONG,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromBool)(VARIANT_BOOL,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromI1)(signed char,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromUI2)(USHORT,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromDec)(DECIMAL*,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromI8)(LONG64,ULONG*);
-static HRESULT (WINAPI *pVarUI4FromUI8)(ULONG64,ULONG*);
-
-static HRESULT (WINAPI *pVarI8FromUI1)(BYTE,LONG64*);
-static HRESULT (WINAPI *pVarI8FromI2)(SHORT,LONG64*);
-static HRESULT (WINAPI *pVarI8FromR4)(FLOAT,LONG64*);
-static HRESULT (WINAPI *pVarI8FromR8)(double,LONG64*);
-static HRESULT (WINAPI *pVarI8FromCy)(CY,LONG64*);
-static HRESULT (WINAPI *pVarI8FromDate)(DATE,LONG64*);
-static HRESULT (WINAPI *pVarI8FromStr)(OLECHAR*,LCID,ULONG,LONG64*);
-static HRESULT (WINAPI *pVarI8FromBool)(VARIANT_BOOL,LONG64*);
-static HRESULT (WINAPI *pVarI8FromI1)(signed char,LONG64*);
-static HRESULT (WINAPI *pVarI8FromUI2)(USHORT,LONG64*);
-static HRESULT (WINAPI *pVarI8FromUI4)(ULONG,LONG64*);
-static HRESULT (WINAPI *pVarI8FromDec)(DECIMAL*,LONG64*);
-static HRESULT (WINAPI *pVarI8FromUI8)(ULONG64,LONG64*);
-static HRESULT (WINAPI *pVarUI8FromI8)(LONG64,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromUI1)(BYTE,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromI2)(SHORT,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromR4)(FLOAT,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromR8)(double,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromCy)(CY,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromDate)(DATE,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromStr)(OLECHAR*,LCID,ULONG,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromBool)(VARIANT_BOOL,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromI1)(signed char,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromUI2)(USHORT,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromUI4)(ULONG,ULONG64*);
-static HRESULT (WINAPI *pVarUI8FromDec)(DECIMAL*,ULONG64*);
-
-static HRESULT (WINAPI *pVarR4FromUI1)(BYTE,float*);
-static HRESULT (WINAPI *pVarR4FromI2)(SHORT,float*);
-static HRESULT (WINAPI *pVarR4FromI4)(LONG,float*);
-static HRESULT (WINAPI *pVarR4FromR8)(double,float*);
-static HRESULT (WINAPI *pVarR4FromCy)(CY,float*);
-static HRESULT (WINAPI *pVarR4FromDate)(DATE,float*);
-static HRESULT (WINAPI *pVarR4FromStr)(OLECHAR*,LCID,ULONG,float*);
-static HRESULT (WINAPI *pVarR4FromBool)(VARIANT_BOOL,float*);
-static HRESULT (WINAPI *pVarR4FromI1)(signed char,float*);
-static HRESULT (WINAPI *pVarR4FromUI2)(USHORT,float*);
-static HRESULT (WINAPI *pVarR4FromUI4)(ULONG,float*);
-static HRESULT (WINAPI *pVarR4FromDec)(DECIMAL*,float*);
-static HRESULT (WINAPI *pVarR4FromI8)(LONG64,float*);
-static HRESULT (WINAPI *pVarR4FromUI8)(ULONG64,float*);
-
-static HRESULT (WINAPI *pVarR8FromUI1)(BYTE,double*);
-static HRESULT (WINAPI *pVarR8FromI2)(SHORT,double*);
-static HRESULT (WINAPI *pVarR8FromI4)(LONG,double*);
-static HRESULT (WINAPI *pVarR8FromR4)(FLOAT,double*);
-static HRESULT (WINAPI *pVarR8FromCy)(CY,double*);
-static HRESULT (WINAPI *pVarR8FromDate)(DATE,double*);
-static HRESULT (WINAPI *pVarR8FromStr)(OLECHAR*,LCID,ULONG,double*);
-static HRESULT (WINAPI *pVarR8FromBool)(VARIANT_BOOL,double*);
-static HRESULT (WINAPI *pVarR8FromI1)(signed char,double*);
-static HRESULT (WINAPI *pVarR8FromUI2)(USHORT,double*);
-static HRESULT (WINAPI *pVarR8FromUI4)(ULONG,double*);
-static HRESULT (WINAPI *pVarR8FromDec)(DECIMAL*,double*);
-static HRESULT (WINAPI *pVarR8FromI8)(LONG64,double*);
-static HRESULT (WINAPI *pVarR8FromUI8)(ULONG64,double*);
-static HRESULT (WINAPI *pVarR8Round)(double,int,double*);
-
-static HRESULT (WINAPI *pVarDateFromUI1)(BYTE,DATE*);
-static HRESULT (WINAPI *pVarDateFromI2)(SHORT,DATE*);
-static HRESULT (WINAPI *pVarDateFromI4)(LONG,DATE*);
-static HRESULT (WINAPI *pVarDateFromR4)(FLOAT,DATE*);
-static HRESULT (WINAPI *pVarDateFromCy)(CY,DATE*);
-static HRESULT (WINAPI *pVarDateFromR8)(double,DATE*);
-static HRESULT (WINAPI *pVarDateFromStr)(OLECHAR*,LCID,ULONG,DATE*);
-static HRESULT (WINAPI *pVarDateFromBool)(VARIANT_BOOL,DATE*);
-static HRESULT (WINAPI *pVarDateFromI1)(signed char,DATE*);
-static HRESULT (WINAPI *pVarDateFromUI2)(USHORT,DATE*);
-static HRESULT (WINAPI *pVarDateFromUI4)(ULONG,DATE*);
-static HRESULT (WINAPI *pVarDateFromDec)(DECIMAL*,DATE*);
-static HRESULT (WINAPI *pVarDateFromI8)(LONG64,DATE*);
-static HRESULT (WINAPI *pVarDateFromUI8)(ULONG64,DATE*);
-
-static HRESULT (WINAPI *pVarCyFromUI1)(BYTE,CY*);
-static HRESULT (WINAPI *pVarCyFromI2)(SHORT,CY*);
-static HRESULT (WINAPI *pVarCyFromI4)(LONG,CY*);
-static HRESULT (WINAPI *pVarCyFromR4)(FLOAT,CY*);
-static HRESULT (WINAPI *pVarCyFromR8)(double,CY*);
-static HRESULT (WINAPI *pVarCyFromDate)(DATE,CY*);
-static HRESULT (WINAPI *pVarCyFromBool)(VARIANT_BOOL,CY*);
-static HRESULT (WINAPI *pVarCyFromI1)(signed char,CY*);
-static HRESULT (WINAPI *pVarCyFromUI2)(USHORT,CY*);
-static HRESULT (WINAPI *pVarCyFromUI4)(ULONG,CY*);
-static HRESULT (WINAPI *pVarCyFromDec)(DECIMAL*,CY*);
-static HRESULT (WINAPI *pVarCyFromI8)(LONG64,CY*);
-static HRESULT (WINAPI *pVarCyFromUI8)(ULONG64,CY*);
-static HRESULT (WINAPI *pVarCyAdd)(const CY,const CY,CY*);
-static HRESULT (WINAPI *pVarCyMul)(const CY,const CY,CY*);
-static HRESULT (WINAPI *pVarCyMulI4)(const CY,LONG,CY*);
-static HRESULT (WINAPI *pVarCySub)(const CY,const CY,CY*);
-static HRESULT (WINAPI *pVarCyAbs)(const CY,CY*);
-static HRESULT (WINAPI *pVarCyFix)(const CY,CY*);
-static HRESULT (WINAPI *pVarCyInt)(const CY,CY*);
-static HRESULT (WINAPI *pVarCyNeg)(const CY,CY*);
-static HRESULT (WINAPI *pVarCyRound)(const CY,int,CY*);
-static HRESULT (WINAPI *pVarCyCmp)(const CY,const CY);
-static HRESULT (WINAPI *pVarCyCmpR8)(const CY,double);
-static HRESULT (WINAPI *pVarCyMulI8)(const CY,LONG64,CY*);
-
-static HRESULT (WINAPI *pVarDecFromUI1)(BYTE,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromI2)(SHORT,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromI4)(LONG,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromI8)(LONG64,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromR4)(FLOAT,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromR8)(DOUBLE,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromDate)(DATE,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromStr)(OLECHAR*,LCID,ULONG,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromBool)(VARIANT_BOOL,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromI1)(signed char,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromUI2)(USHORT,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromUI4)(ULONG,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromUI8)(ULONG64,DECIMAL*);
-static HRESULT (WINAPI *pVarDecFromCy)(CY,DECIMAL*);
-static HRESULT (WINAPI *pVarDecAbs)(const DECIMAL*,DECIMAL*);
-static HRESULT (WINAPI *pVarDecAdd)(const DECIMAL*,const DECIMAL*,DECIMAL*);
-static HRESULT (WINAPI *pVarDecSub)(const DECIMAL*,const DECIMAL*,DECIMAL*);
-static HRESULT (WINAPI *pVarDecMul)(const DECIMAL*,const DECIMAL*,DECIMAL*);
-static HRESULT (WINAPI *pVarDecDiv)(const DECIMAL*,const DECIMAL*,DECIMAL*);
-static HRESULT (WINAPI *pVarDecCmp)(const DECIMAL*,const DECIMAL*);
-static HRESULT (WINAPI *pVarDecCmpR8)(const DECIMAL*,double);
-static HRESULT (WINAPI *pVarDecNeg)(const DECIMAL*,DECIMAL*);
-static HRESULT (WINAPI *pVarDecRound)(const DECIMAL*,int,DECIMAL*);
-
-static HRESULT (WINAPI *pVarBoolFromUI1)(BYTE,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromI2)(SHORT,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromI4)(LONG,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromR4)(FLOAT,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromR8)(DOUBLE,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromDate)(DATE,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromCy)(CY,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromStr)(OLECHAR*,LCID,ULONG,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromI1)(signed char,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromUI2)(USHORT,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromUI4)(ULONG,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromDec)(DECIMAL*,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromI8)(LONG64,VARIANT_BOOL*);
-static HRESULT (WINAPI *pVarBoolFromUI8)(ULONG64,VARIANT_BOOL*);
-
-static HRESULT (WINAPI *pVarBstrFromR4)(FLOAT,LCID,ULONG,BSTR*);
-static HRESULT (WINAPI *pVarBstrFromDate)(DATE,LCID,ULONG,BSTR*);
-static HRESULT (WINAPI *pVarBstrFromCy)(CY,LCID,ULONG,BSTR*);
-static HRESULT (WINAPI *pVarBstrFromDec)(DECIMAL*,LCID,ULONG,BSTR*);
-static HRESULT (WINAPI *pVarBstrCmp)(BSTR,BSTR,LCID,ULONG);
-static HRESULT (WINAPI *pVarBstrCat)(BSTR,BSTR,BSTR*);
-
-static INT (WINAPI *pSystemTimeToVariantTime)(LPSYSTEMTIME,double*);
-static void (WINAPI *pClearCustData)(LPCUSTDATA);
-
 /* Internal representation of a BSTR */
 typedef struct tagINTERNAL_BSTR
 {
@@ -658,7 +416,6 @@ static void test_VarI1FromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarI1FromI2);
   OVERFLOWRANGE(VarI1FromI2, -32768, -128);
   CONVERTRANGE(VarI1FromI2, -128, 128);
   OVERFLOWRANGE(VarI1FromI2, 129, 32768);
@@ -669,7 +426,6 @@ static void test_VarI1FromI4(void)
   CONVVARS(LONG);
   int i;
 
-  CHECKPTR(VarI1FromI4);
   CONVERT(VarI1FromI4, -129); EXPECT_OVERFLOW;
   CONVERTRANGE(VarI1FromI4, -128, 128);
   CONVERT(VarI1FromI4, 128);  EXPECT_OVERFLOW;
@@ -680,7 +436,6 @@ static void test_VarI1FromI8(void)
   CONVVARS(LONG64);
   int i;
 
-  CHECKPTR(VarI1FromI8);
   CONVERT(VarI1FromI8, -129);   EXPECT_OVERFLOW;
   CONVERTRANGE(VarI1FromI8, -127, 128);
   CONVERT(VarI1FromI8, 128);    EXPECT_OVERFLOW;
@@ -691,7 +446,6 @@ static void test_VarI1FromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarI1FromUI1);
   CONVERTRANGE(VarI1FromUI1, 0, 127);
   OVERFLOWRANGE(VarI1FromUI1, 128, 255);
 }
@@ -701,7 +455,6 @@ static void test_VarI1FromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarI1FromUI2);
   CONVERTRANGE(VarI1FromUI2, 0, 127);
   OVERFLOWRANGE(VarI1FromUI2, 128, 32768);
 }
@@ -711,7 +464,6 @@ static void test_VarI1FromUI4(void)
   CONVVARS(ULONG);
   int i;
 
-  CHECKPTR(VarI1FromUI4);
   CONVERTRANGE(VarI1FromUI4, 0, 127);
   CONVERT(VarI1FromUI4, 128); EXPECT_OVERFLOW;
 }
@@ -721,7 +473,6 @@ static void test_VarI1FromUI8(void)
   CONVVARS(ULONG64);
   int i;
 
-  CHECKPTR(VarI1FromUI8);
   CONVERTRANGE(VarI1FromUI8, 0, 127);
   CONVERT(VarI1FromUI8, 128); EXPECT_OVERFLOW;
 }
@@ -731,7 +482,6 @@ static void test_VarI1FromBool(void)
   CONVVARS(VARIANT_BOOL);
   int i;
 
-  CHECKPTR(VarI1FromBool);
   /* Note that conversions from bool wrap around! */
   CONVERT(VarI1FromBool, -129);  EXPECT(127);
   CONVERTRANGE(VarI1FromBool, -128, 128);
@@ -742,7 +492,6 @@ static void test_VarI1FromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarI1FromR4);
   CONVERT(VarI1FromR4, -129.0f); EXPECT_OVERFLOW;
   CONVERT(VarI1FromR4, -128.51f); EXPECT_OVERFLOW;
   CONVERT(VarI1FromR4, -128.5f); EXPECT(-128);
@@ -769,7 +518,6 @@ static void test_VarI1FromR8(void)
 {
   CONVVARS(DOUBLE);
 
-  CHECKPTR(VarI1FromR8);
   CONVERT(VarI1FromR8, -129.0); EXPECT_OVERFLOW;
   CONVERT(VarI1FromR8, -128.51); EXPECT_OVERFLOW;
   CONVERT(VarI1FromR8, -128.5); EXPECT(-128);
@@ -796,7 +544,6 @@ static void test_VarI1FromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarI1FromDate);
   CONVERT(VarI1FromDate, -129.0); EXPECT_OVERFLOW;
   CONVERT(VarI1FromDate, -128.0); EXPECT(-128);
   CONVERT(VarI1FromDate, -1.0);   EXPECT(-1);
@@ -819,7 +566,6 @@ static void test_VarI1FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarI1FromCy);
   CONVERT_CY(VarI1FromCy,-129); EXPECT_OVERFLOW;
   CONVERT_CY(VarI1FromCy,-128); EXPECT(128);
   CONVERT_CY(VarI1FromCy,-1);   EXPECT(-1);
@@ -842,8 +588,6 @@ static void test_VarI1FromDec(void)
 {
   CONVVARS(DECIMAL);
 
-  CHECKPTR(VarI1FromDec);
-
   CONVERT_BADDEC(VarI1FromDec);
 
   CONVERT_DEC(VarI1FromDec,0,0x80,0,129); EXPECT_OVERFLOW;
@@ -864,8 +608,6 @@ static void test_VarI1FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarI1FromStr);
 
   CONVERT_STR(VarI1FromStr,NULL, 0);   EXPECT_MISMATCH;
   CONVERT_STR(VarI1FromStr,"0", 0);    EXPECT(0);
@@ -910,7 +652,6 @@ static void test_VarUI1FromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarUI1FromI1);
   OVERFLOWRANGE(VarUI1FromI1, -128, 0);
   CONVERTRANGE(VarUI1FromI1, 0, 128);
 }
@@ -920,7 +661,6 @@ static void test_VarUI1FromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarUI1FromI2);
   OVERFLOWRANGE(VarUI1FromI2, -32768, 0);
   CONVERTRANGE(VarUI1FromI2, 0, 256);
   OVERFLOWRANGE(VarUI1FromI2, 256, 32768);
@@ -931,7 +671,6 @@ static void test_VarUI1FromI4(void)
   CONVVARS(LONG);
   int i;
 
-  CHECKPTR(VarUI1FromI4);
   CONVERT(VarUI1FromI4, -1);  EXPECT_OVERFLOW;
   CONVERTRANGE(VarUI1FromI4, 0, 256);
   CONVERT(VarUI1FromI4, 256); EXPECT_OVERFLOW;
@@ -942,7 +681,6 @@ static void test_VarUI1FromI8(void)
   CONVVARS(LONG64);
   int i;
 
-  CHECKPTR(VarUI1FromI8);
   CONVERT(VarUI1FromI8, -1);  EXPECT_OVERFLOW;
   CONVERTRANGE(VarUI1FromI8, 0, 256);
   CONVERT(VarUI1FromI8, 256); EXPECT_OVERFLOW;
@@ -953,7 +691,6 @@ static void test_VarUI1FromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarUI1FromUI2);
   CONVERTRANGE(VarUI1FromUI2, 0, 256);
   OVERFLOWRANGE(VarUI1FromUI2, 256, 65536);
 }
@@ -963,7 +700,6 @@ static void test_VarUI1FromUI4(void)
   CONVVARS(ULONG);
   int i;
 
-  CHECKPTR(VarUI1FromUI4);
   CONVERTRANGE(VarUI1FromUI4, 0, 256);
   CONVERT(VarUI1FromUI4, 256); EXPECT_OVERFLOW;
 }
@@ -973,7 +709,6 @@ static void test_VarUI1FromUI8(void)
   CONVVARS(ULONG64);
   int i;
 
-  CHECKPTR(VarUI1FromUI8);
   CONVERTRANGE(VarUI1FromUI8, 0, 256);
   CONVERT(VarUI1FromUI8, 256); EXPECT_OVERFLOW;
 }
@@ -983,7 +718,6 @@ static void test_VarUI1FromBool(void)
   CONVVARS(VARIANT_BOOL);
   int i;
 
-  CHECKPTR(VarUI1FromBool);
   /* Note that conversions from bool overflow! */
   CONVERT(VarUI1FromBool, -1); EXPECT(255);
   CONVERTRANGE(VarUI1FromBool, 0, 256);
@@ -994,7 +728,6 @@ static void test_VarUI1FromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarUI1FromR4);
   CONVERT(VarUI1FromR4, -1.0f);  EXPECT_OVERFLOW;
   CONVERT(VarUI1FromR4, -0.51f);  EXPECT_OVERFLOW;
   CONVERT(VarUI1FromR4, -0.5f);   EXPECT(0);
@@ -1020,7 +753,6 @@ static void test_VarUI1FromR8(void)
 {
   CONVVARS(DOUBLE);
 
-  CHECKPTR(VarUI1FromR8);
   CONVERT(VarUI1FromR8, -1.0);  EXPECT_OVERFLOW;
   CONVERT(VarUI1FromR8, -0.51);  EXPECT_OVERFLOW;
   CONVERT(VarUI1FromR8, -0.5);   EXPECT(0);
@@ -1046,7 +778,6 @@ static void test_VarUI1FromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarUI1FromDate);
   CONVERT(VarUI1FromDate, -1.0);  EXPECT_OVERFLOW;
   CONVERT(VarUI1FromDate, 0.0);   EXPECT(0);
   CONVERT(VarUI1FromDate, 1.0);   EXPECT(1);
@@ -1068,7 +799,6 @@ static void test_VarUI1FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarUI1FromCy);
   CONVERT_CY(VarUI1FromCy,-1);  EXPECT_OVERFLOW;
   CONVERT_CY(VarUI1FromCy,0);   EXPECT(0);
   CONVERT_CY(VarUI1FromCy,1);   EXPECT(1);
@@ -1090,8 +820,6 @@ static void test_VarUI1FromDec(void)
 {
   CONVVARS(DECIMAL);
 
-  CHECKPTR(VarUI1FromDec);
-
   CONVERT_BADDEC(VarUI1FromDec);
 
   CONVERT_DEC(VarUI1FromDec,0,0x80,0,1); EXPECT_OVERFLOW;
@@ -1110,8 +838,6 @@ static void test_VarUI1FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarUI1FromStr);
 
   CONVERT_STR(VarUI1FromStr,NULL, 0);   EXPECT_MISMATCH;
   CONVERT_STR(VarUI1FromStr,"0", 0);    EXPECT(0);
@@ -1136,8 +862,6 @@ static void test_VarUI1FromDisp(void)
   CONVVARS(LCID);
   VARIANTARG vSrc, vDst;
 
-  CHECKPTR(VarUI1FromDisp);
-
   /* FIXME
    * Conversions from IDispatch should get the default 'value' property
    * from the IDispatch pointer and return it. The following tests this.
@@ -1161,7 +885,7 @@ static void test_VarUI1FromDisp(void)
 
   SET_EXPECT(dispatch_invoke);
   out = 10;
-  hres = pVarUI1FromDisp(&dispatch.IDispatch_iface, in, &out);
+  hres = VarUI1FromDisp(&dispatch.IDispatch_iface, in, &out);
   ok(broken(hres == DISP_E_BADVARTYPE) || hres == S_OK, "got 0x%08x\n", hres);
   ok(broken(out == 10) || out == 1, "got %d\n", out);
   CHECK_CALLED(dispatch_invoke);
@@ -1179,7 +903,7 @@ static void test_VarUI1FromDisp(void)
 
   SET_EXPECT(dispatch_invoke);
   out = 10;
-  hres = pVarUI1FromDisp(&dispatch.IDispatch_iface, in, &out);
+  hres = VarUI1FromDisp(&dispatch.IDispatch_iface, in, &out);
   ok(hres == DISP_E_TYPEMISMATCH, "got 0x%08x\n", hres);
   ok(out == 10, "got %d\n", out);
   CHECK_CALLED(dispatch_invoke);
@@ -1222,7 +946,6 @@ static void test_VarI2FromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarI2FromI1);
   CONVERTRANGE(VarI2FromI1, -128, 128);
 }
 
@@ -1231,7 +954,6 @@ static void test_VarI2FromI4(void)
   CONVVARS(LONG);
   int i;
 
-  CHECKPTR(VarI2FromI4);
   CONVERT(VarI2FromI4, -32769); EXPECT_OVERFLOW;
   CONVERTRANGE(VarI2FromI4, -32768, 32768);
   CONVERT(VarI2FromI4, 32768);  EXPECT_OVERFLOW;
@@ -1241,7 +963,6 @@ static void test_VarI2FromI8(void)
 {
   CONVVARS(LONG64);
 
-  CHECKPTR(VarI2FromI8);
   CONVERT(VarI2FromI8, -32769); EXPECT_OVERFLOW;
   CONVERT(VarI2FromI8, -32768); EXPECT(-32768);
   CONVERT(VarI2FromI8, 32767);  EXPECT(32767);
@@ -1253,7 +974,6 @@ static void test_VarI2FromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarI2FromUI1);
   CONVERTRANGE(VarI2FromUI1, 0, 256);
 }
 
@@ -1262,7 +982,6 @@ static void test_VarI2FromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarI2FromUI2);
   CONVERTRANGE(VarI2FromUI2, 0, 32768);
   CONVERT(VarI2FromUI2, 32768); EXPECT_OVERFLOW;
 }
@@ -1272,7 +991,6 @@ static void test_VarI2FromUI4(void)
   CONVVARS(ULONG);
   int i;
 
-  CHECKPTR(VarI2FromUI4);
   CONVERTRANGE(VarI2FromUI4, 0, 32768);
   CONVERT(VarI2FromUI4, 32768); EXPECT_OVERFLOW;
 }
@@ -1282,7 +1000,6 @@ static void test_VarI2FromUI8(void)
   CONVVARS(ULONG64);
   int i;
 
-  CHECKPTR(VarI2FromUI8);
   CONVERTRANGE(VarI2FromUI8, 0, 32768);
   CONVERT(VarI2FromUI8, 32768); EXPECT_OVERFLOW;
 }
@@ -1292,7 +1009,6 @@ static void test_VarI2FromBool(void)
   CONVVARS(VARIANT_BOOL);
   int i;
 
-  CHECKPTR(VarI2FromBool);
   CONVERTRANGE(VarI2FromBool, -32768, 32768);
 }
 
@@ -1300,7 +1016,6 @@ static void test_VarI2FromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarI2FromR4);
   CONVERT(VarI2FromR4, -32769.0f); EXPECT_OVERFLOW;
   CONVERT(VarI2FromR4, -32768.51f); EXPECT_OVERFLOW;
   CONVERT(VarI2FromR4, -32768.5f); EXPECT(-32768);
@@ -1328,7 +1043,6 @@ static void test_VarI2FromR8(void)
 {
   CONVVARS(DOUBLE);
 
-  CHECKPTR(VarI2FromR8);
   CONVERT(VarI2FromR8, -32769.0); EXPECT_OVERFLOW;
   CONVERT(VarI2FromR8, -32768.51); EXPECT_OVERFLOW;
   CONVERT(VarI2FromR8, -32768.5); EXPECT(-32768);
@@ -1356,7 +1070,6 @@ static void test_VarI2FromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarI2FromDate);
   CONVERT(VarI2FromDate, -32769.0); EXPECT_OVERFLOW;
   CONVERT(VarI2FromDate, -32768.0); EXPECT(-32768);
   CONVERT(VarI2FromDate, -1.0);   EXPECT(-1);
@@ -1380,7 +1093,6 @@ static void test_VarI2FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarI2FromCy);
   CONVERT_CY(VarI2FromCy,-32769); EXPECT_OVERFLOW;
   CONVERT_CY(VarI2FromCy,-32768); EXPECT(32768);
   CONVERT_CY(VarI2FromCy,-1);     EXPECT(-1);
@@ -1404,8 +1116,6 @@ static void test_VarI2FromDec(void)
 {
   CONVVARS(DECIMAL);
 
-  CHECKPTR(VarI2FromDec);
-
   CONVERT_BADDEC(VarI2FromDec);
 
   CONVERT_DEC(VarI2FromDec,0,0x80,0,32769); EXPECT_OVERFLOW;
@@ -1427,8 +1137,6 @@ static void test_VarI2FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarI2FromStr);
 
   CONVERT_STR(VarI2FromStr,NULL, 0);     EXPECT_MISMATCH;
   CONVERT_STR(VarI2FromStr,"0", 0);      EXPECT(0);
@@ -1474,7 +1182,6 @@ static void test_VarUI2FromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarUI2FromI1);
   OVERFLOWRANGE(VarUI2FromI1, -128, 0);
   CONVERTRANGE(VarUI2FromI1, 0, 128);
 }
@@ -1484,7 +1191,6 @@ static void test_VarUI2FromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarUI2FromI2);
   OVERFLOWRANGE(VarUI2FromI2, -32768, 0);
   CONVERTRANGE(VarUI2FromI2, 0, 32768);
 }
@@ -1494,7 +1200,6 @@ static void test_VarUI2FromI4(void)
   CONVVARS(LONG);
   int i;
 
-  CHECKPTR(VarUI2FromI4);
   OVERFLOWRANGE(VarUI2FromI4, -32768, 0);
   CONVERT(VarUI2FromI4, 0);     EXPECT(0);
   CONVERT(VarUI2FromI4, 65535); EXPECT(65535);
@@ -1506,7 +1211,6 @@ static void test_VarUI2FromI8(void)
   CONVVARS(LONG64);
   int i;
 
-  CHECKPTR(VarUI2FromI8);
   OVERFLOWRANGE(VarUI2FromI8, -32768, 0);
   CONVERT(VarUI2FromI8, 0);     EXPECT(0);
   CONVERT(VarUI2FromI8, 65535); EXPECT(65535);
@@ -1518,7 +1222,6 @@ static void test_VarUI2FromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarUI2FromUI1);
   CONVERTRANGE(VarUI2FromUI1, 0, 256);
 }
 
@@ -1526,7 +1229,6 @@ static void test_VarUI2FromUI4(void)
 {
   CONVVARS(ULONG);
 
-  CHECKPTR(VarUI2FromUI4);
   CONVERT(VarUI2FromUI4, 0);     EXPECT(0);
   CONVERT(VarUI2FromUI4, 65535); EXPECT(65535);
   CONVERT(VarUI2FromUI4, 65536); EXPECT_OVERFLOW;
@@ -1536,7 +1238,6 @@ static void test_VarUI2FromUI8(void)
 {
   CONVVARS(ULONG64);
 
-  CHECKPTR(VarUI2FromUI8);
   CONVERT(VarUI2FromUI8, 0);     EXPECT(0);
   CONVERT(VarUI2FromUI8, 65535); EXPECT(65535);
   CONVERT(VarUI2FromUI8, 65536); EXPECT_OVERFLOW;
@@ -1547,7 +1248,6 @@ static void test_VarUI2FromBool(void)
   CONVVARS(VARIANT_BOOL);
   int i;
 
-  CHECKPTR(VarUI2FromBool);
   CONVERT(VarUI2FromBool, -1); EXPECT(65535); /* Wraps! */
   CONVERTRANGE(VarUI2FromBool, 0, 32768);
 }
@@ -1556,7 +1256,6 @@ static void test_VarUI2FromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarUI2FromR4);
   CONVERT(VarUI2FromR4, -1.0f);    EXPECT_OVERFLOW;
   CONVERT(VarUI2FromR4, -0.51f);    EXPECT_OVERFLOW;
   CONVERT(VarUI2FromR4, -0.5f);     EXPECT(0);
@@ -1582,7 +1281,6 @@ static void test_VarUI2FromR8(void)
 {
   CONVVARS(DOUBLE);
 
-  CHECKPTR(VarUI2FromR8);
   CONVERT(VarUI2FromR8, -1.0);    EXPECT_OVERFLOW;
   CONVERT(VarUI2FromR8, -0.51);    EXPECT_OVERFLOW;
   CONVERT(VarUI2FromR8, -0.5);     EXPECT(0);
@@ -1608,7 +1306,6 @@ static void test_VarUI2FromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarUI2FromDate);
   CONVERT(VarUI2FromDate, -1.0);    EXPECT_OVERFLOW;
   CONVERT(VarUI2FromDate, 0.0);     EXPECT(0);
   CONVERT(VarUI2FromDate, 1.0);     EXPECT(1);
@@ -1630,7 +1327,6 @@ static void test_VarUI2FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarUI2FromCy);
   CONVERT_CY(VarUI2FromCy,-1);    EXPECT_OVERFLOW;
   CONVERT_CY(VarUI2FromCy,0);     EXPECT(0);
   CONVERT_CY(VarUI2FromCy,1);     EXPECT(1);
@@ -1652,8 +1348,6 @@ static void test_VarUI2FromDec(void)
 {
   CONVVARS(DECIMAL);
 
-  CHECKPTR(VarUI2FromDec);
-
   CONVERT_BADDEC(VarUI2FromDec);
 
   CONVERT_DEC(VarUI2FromDec,0,0x80,0,1);  EXPECT_OVERFLOW;
@@ -1673,8 +1367,6 @@ static void test_VarUI2FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarUI2FromStr);
 
   CONVERT_STR(VarUI2FromStr,NULL, 0);    EXPECT_MISMATCH;
   CONVERT_STR(VarUI2FromStr,"0", 0);     EXPECT(0);
@@ -1723,7 +1415,6 @@ static void test_VarI4FromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarI4FromI1);
   CONVERTRANGE(VarI4FromI1, -128, 128);
 }
 
@@ -1732,16 +1423,12 @@ static void test_VarI4FromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarI4FromI2);
   CONVERTRANGE(VarI4FromI2, -32768, 32768);
 }
 
 static void test_VarI4FromI8(void)
 {
   CONVVARS(LONG64);
-
-  CHECKPTR(VarI4FromI8);
-  CHECKPTR(VarI4FromDec);
 
   CONVERT(VarI4FromI8, -1);                   EXPECT(-1);
   CONVERT(VarI4FromI8, 0);                    EXPECT(0);
@@ -1758,7 +1445,6 @@ static void test_VarI4FromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarI4FromUI1);
   CONVERTRANGE(VarI4FromUI1, 0, 256);
 }
 
@@ -1767,7 +1453,6 @@ static void test_VarI4FromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarI4FromUI2);
   CONVERTRANGE(VarI4FromUI2, 0, 65536);
 }
 
@@ -1775,7 +1460,6 @@ static void test_VarI4FromUI4(void)
 {
   CONVVARS(ULONG);
 
-  CHECKPTR(VarI4FromUI4);
   CONVERT(VarI4FromUI4, 0);            EXPECT(0);
   CONVERT(VarI4FromUI4, 1);            EXPECT(1);
   CONVERT(VarI4FromUI4, 2147483647);   EXPECT(2147483647);
@@ -1786,7 +1470,6 @@ static void test_VarI4FromUI8(void)
 {
   CONVVARS(ULONG64);
 
-  CHECKPTR(VarI4FromUI8);
   CONVERT(VarI4FromUI8, 0);             EXPECT(0);
   CONVERT(VarI4FromUI8, 1);             EXPECT(1);
   CONVERT(VarI4FromUI8, 2147483647);    EXPECT(2147483647);
@@ -1798,15 +1481,12 @@ static void test_VarI4FromBool(void)
   CONVVARS(VARIANT_BOOL);
   int i;
 
-  CHECKPTR(VarI4FromBool);
   CONVERTRANGE(VarI4FromBool, -32768, 32768);
 }
 
 static void test_VarI4FromR4(void)
 {
   CONVVARS(FLOAT);
-
-  CHECKPTR(VarI4FromR4);
 
   /* min/max values are not exactly representable in a float */
   CONVERT(VarI4FromR4, -1.0f); EXPECT(-1);
@@ -1827,7 +1507,6 @@ static void test_VarI4FromR8(void)
 {
   CONVVARS(DOUBLE);
 
-  CHECKPTR(VarI4FromR8);
   CONVERT(VarI4FromR8, -2147483649.0); EXPECT_OVERFLOW;
   CONVERT(VarI4FromR8, -2147483648.51); EXPECT_OVERFLOW;
   CONVERT(VarI4FromR8, -2147483648.5); EXPECT(-2147483647 - 1);
@@ -1854,7 +1533,6 @@ static void test_VarI4FromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarI4FromDate);
   CONVERT(VarI4FromDate, -2147483649.0); EXPECT_OVERFLOW;
   CONVERT(VarI4FromDate, -2147483648.0); EXPECT(-2147483647 - 1);
   CONVERT(VarI4FromDate, -1.0);          EXPECT(-1);
@@ -1877,7 +1555,6 @@ static void test_VarI4FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarI4FromCy);
   CONVERT_CY(VarI4FromCy,-1); EXPECT(-1);
   CONVERT_CY(VarI4FromCy,0);  EXPECT(0);
   CONVERT_CY(VarI4FromCy,1);  EXPECT(1);
@@ -1900,8 +1577,6 @@ static void test_VarI4FromCy(void)
 static void test_VarI4FromDec(void)
 {
   CONVVARS(DECIMAL);
-
-  CHECKPTR(VarI4FromDec);
 
   CONVERT_BADDEC(VarI4FromDec);
 
@@ -1926,8 +1601,6 @@ static void test_VarI4FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarI4FromStr);
 
   CONVERT_STR(VarI4FromStr,NULL,0);          EXPECT_MISMATCH;
   CONVERT_STR(VarI4FromStr,"0",0);           EXPECT(0);
@@ -1975,7 +1648,6 @@ static void test_VarUI4FromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarUI4FromI1);
   OVERFLOWRANGE(VarUI4FromI1, -127, 0);
   CONVERTRANGE(VarUI4FromI1, 0, 128);
 }
@@ -1985,7 +1657,6 @@ static void test_VarUI4FromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarUI4FromI2);
   OVERFLOWRANGE(VarUI4FromI2, -32768, 0);
   CONVERTRANGE(VarUI4FromI2, 0, 32768);
 }
@@ -1995,7 +1666,6 @@ static void test_VarUI4FromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarUI4FromUI2);
   CONVERTRANGE(VarUI4FromUI2, 0, 65536);
 }
 
@@ -2003,7 +1673,6 @@ static void test_VarUI4FromI8(void)
 {
   CONVVARS(LONG64);
 
-  CHECKPTR(VarUI4FromI8);
   CONVERT(VarUI4FromI8, -1);           EXPECT_OVERFLOW;
   CONVERT(VarUI4FromI8, 0);            EXPECT(0);
   CONVERT(VarUI4FromI8, 1);            EXPECT(1);
@@ -2016,7 +1685,6 @@ static void test_VarUI4FromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarUI4FromUI1);
   CONVERTRANGE(VarUI4FromUI1, 0, 256);
 }
 
@@ -2024,7 +1692,6 @@ static void test_VarUI4FromI4(void)
 {
   CONVVARS(int);
 
-  CHECKPTR(VarUI4FromI4);
   CONVERT(VarUI4FromI4, -1);         EXPECT_OVERFLOW;
   CONVERT(VarUI4FromI4, 0);          EXPECT(0);
   CONVERT(VarUI4FromI4, 1);          EXPECT(1);
@@ -2035,7 +1702,6 @@ static void test_VarUI4FromUI8(void)
 {
   CONVVARS(ULONG64);
 
-  CHECKPTR(VarUI4FromUI8);
   CONVERT(VarUI4FromUI8, 0);           EXPECT(0);
   CONVERT(VarUI4FromUI8, 1);           EXPECT(1);
   CONVERT(VarUI4FromI8, 4294967295ul); EXPECT(4294967295ul);
@@ -2047,7 +1713,6 @@ static void test_VarUI4FromBool(void)
   CONVVARS(VARIANT_BOOL);
   int i;
 
-  CHECKPTR(VarUI4FromBool);
   CONVERTRANGE(VarUI4FromBool, -32768, 32768);
 }
 
@@ -2055,7 +1720,6 @@ static void test_VarUI4FromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarUI4FromR4);
   /* We can't test max values as they are not exactly representable in a float */
   CONVERT(VarUI4FromR4, -1.0f); EXPECT_OVERFLOW;
   CONVERT(VarUI4FromR4, -0.51f); EXPECT_OVERFLOW;
@@ -2078,7 +1742,6 @@ static void test_VarUI4FromR8(void)
 {
   CONVVARS(DOUBLE);
 
-  CHECKPTR(VarUI4FromR8);
   CONVERT(VarUI4FromR8, -1.0);         EXPECT_OVERFLOW;
   CONVERT(VarUI4FromR4, -0.51f);       EXPECT_OVERFLOW;
   CONVERT(VarUI4FromR4, -0.5f);        EXPECT(0);
@@ -2103,7 +1766,6 @@ static void test_VarUI4FromDate(void)
 {
   CONVVARS(DOUBLE);
 
-  CHECKPTR(VarUI4FromDate);
   CONVERT(VarUI4FromDate, -1.0);         EXPECT_OVERFLOW;
   CONVERT(VarUI4FromDate, 0.0);          EXPECT(0);
   CONVERT(VarUI4FromDate, 1.0);          EXPECT(1);
@@ -2124,7 +1786,6 @@ static void test_VarUI4FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarUI4FromCy);
   CONVERT_CY(VarUI4FromCy,-1);               EXPECT_OVERFLOW;
   CONVERT_CY(VarUI4FromCy,0);                EXPECT(0);
   CONVERT_CY(VarUI4FromCy,1);                EXPECT(1);
@@ -2145,8 +1806,6 @@ static void test_VarUI4FromDec(void)
 {
   CONVVARS(DECIMAL);
 
-  CHECKPTR(VarUI4FromDec);
-
   CONVERT_BADDEC(VarUI4FromDec);
 
   CONVERT_DEC(VarUI4FromDec,0,0x80,0,1);              EXPECT_OVERFLOW;
@@ -2165,8 +1824,6 @@ static void test_VarUI4FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarUI4FromStr);
 
   CONVERT_STR(VarUI4FromStr,NULL,0);         EXPECT_MISMATCH;
   CONVERT_STR(VarUI4FromStr,"-1",0);         EXPECT_OVERFLOW;
@@ -2227,7 +1884,6 @@ static void test_VarI8FromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarI8FromI1);
   for (i = -128; i < 128; i++)
   {
     CONVERT(VarI8FromI1,i); EXPECTI8(i);
@@ -2239,7 +1895,6 @@ static void test_VarI8FromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarI8FromUI1);
   for (i = 0; i < 256; i++)
   {
     CONVERT(VarI8FromUI1,i); EXPECTI8(i);
@@ -2251,7 +1906,6 @@ static void test_VarI8FromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarI8FromI2);
   for (i = -32768; i < 32768; i++)
   {
     CONVERT(VarI8FromI2,i); EXPECTI8(i);
@@ -2263,7 +1917,6 @@ static void test_VarI8FromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarI8FromUI2);
   for (i = -0; i < 65535; i++)
   {
     CONVERT(VarI8FromUI2,i); EXPECTI8(i);
@@ -2274,7 +1927,6 @@ static void test_VarI8FromUI4(void)
 {
   CONVVARS(ULONG);
 
-  CHECKPTR(VarI8FromUI4);
   CONVERT(VarI8FromUI4, 0);            EXPECTI8(0);
   CONVERT(VarI8FromUI4, 1);            EXPECTI8(1);
   CONVERT(VarI8FromUI4, 4294967295ul); EXPECTI8(4294967295ul);
@@ -2283,8 +1935,6 @@ static void test_VarI8FromUI4(void)
 static void test_VarI8FromR4(void)
 {
   CONVVARS(FLOAT);
-
-  CHECKPTR(VarI8FromR4);
 
   CONVERT(VarI8FromR4, -128.0f); EXPECTI8(-128);
   CONVERT(VarI8FromR4, -1.0f);   EXPECTI8(-1);
@@ -2306,7 +1956,6 @@ static void test_VarI8FromR8(void)
 {
   CONVVARS(DOUBLE);
 
-  CHECKPTR(VarI8FromR8);
   CONVERT(VarI8FromR8, -128.0); EXPECTI8(-128);
   CONVERT(VarI8FromR8, -1.0);   EXPECTI8(-1);
   CONVERT(VarI8FromR8, 0.0);    EXPECTI8(0);
@@ -2327,7 +1976,6 @@ static void test_VarI8FromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarI8FromDate);
   CONVERT(VarI8FromDate, -128.0); EXPECTI8(-128);
   CONVERT(VarI8FromDate, -1.0);   EXPECTI8(-1);
   CONVERT(VarI8FromDate, 0.0);    EXPECTI8(0);
@@ -2349,7 +1997,6 @@ static void test_VarI8FromBool(void)
   CONVVARS(VARIANT_BOOL);
   int i;
 
-  CHECKPTR(VarI8FromBool);
   for (i = -32768; i < 32768; i++)
   {
     CONVERT(VarI8FromBool,i); EXPECTI8(i);
@@ -2360,7 +2007,6 @@ static void test_VarI8FromUI8(void)
 {
   CONVVARS(ULONG64);
 
-  CHECKPTR(VarI8FromUI8);
   CONVERT(VarI8FromUI8, 0); EXPECTI8(0);
   CONVERT(VarI8FromUI8, 1); EXPECTI8(1);
   CONVERT_I8(VarI8FromUI8, 0x7fffffff, 0xffffffff); EXPECTI864(0x7fffffff, 0xffffffff);
@@ -2371,7 +2017,6 @@ static void test_VarI8FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarI8FromCy);
   CONVERT_CY(VarI8FromCy,-128); EXPECTI8(-129);
   CONVERT_CY(VarI8FromCy,-1);   EXPECTI8(-2);
   CONVERT_CY(VarI8FromCy,0);    EXPECTI8(0);
@@ -2392,8 +2037,6 @@ static void test_VarI8FromDec(void)
 {
   CONVVARS(DECIMAL);
 
-  CHECKPTR(VarI8FromDec);
-
   CONVERT_BADDEC(VarI8FromDec);
 
   CONVERT_DEC(VarI8FromDec,0,0x80,0,128); EXPECTI8(-128);
@@ -2412,8 +2055,6 @@ static void test_VarI8FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarI8FromStr);
 
   CONVERT_STR(VarI8FromStr,NULL,0);         EXPECT_MISMATCH;
   CONVERT_STR(VarI8FromStr,"0",0);          EXPECTI8(0);
@@ -2488,7 +2129,6 @@ static void test_VarUI8FromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarUI8FromI1);
   for (i = -128; i < 128; i++)
   {
     CONVERT(VarUI8FromI1,i);
@@ -2504,7 +2144,6 @@ static void test_VarUI8FromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarUI8FromUI1);
   for (i = 0; i < 256; i++)
   {
     CONVERT(VarUI8FromUI1,i); EXPECTI8(i);
@@ -2516,7 +2155,6 @@ static void test_VarUI8FromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarUI8FromI2);
   for (i = -32768; i < 32768; i++)
   {
     CONVERT(VarUI8FromI2,i);
@@ -2532,7 +2170,6 @@ static void test_VarUI8FromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarUI8FromUI2);
   for (i = 0; i < 65535; i++)
   {
     CONVERT(VarUI8FromUI2,i); EXPECTI8(i);
@@ -2543,7 +2180,6 @@ static void test_VarUI8FromUI4(void)
 {
   CONVVARS(ULONG);
 
-  CHECKPTR(VarUI8FromUI4);
   CONVERT(VarUI8FromUI4, 0); EXPECTI8(0);
   CONVERT(VarUI8FromUI4, 0xffffffff); EXPECTI8(0xffffffff);
 }
@@ -2552,7 +2188,6 @@ static void test_VarUI8FromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarUI8FromR4);
   CONVERT(VarUI8FromR4, -1.0f);  EXPECT_OVERFLOW;
   CONVERT(VarUI8FromR4, 0.0f);   EXPECTI8(0);
   CONVERT(VarUI8FromR4, 1.0f);   EXPECTI8(1);
@@ -2572,7 +2207,6 @@ static void test_VarUI8FromR8(void)
 {
   CONVVARS(DOUBLE);
 
-  CHECKPTR(VarUI8FromR8);
   CONVERT(VarUI8FromR8, -1.0);  EXPECT_OVERFLOW;
   CONVERT(VarUI8FromR8, 0.0);   EXPECTI8(0);
   CONVERT(VarUI8FromR8, 1.0);   EXPECTI8(1);
@@ -2592,7 +2226,6 @@ static void test_VarUI8FromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarUI8FromDate);
   CONVERT(VarUI8FromDate, -1.0);  EXPECT_OVERFLOW;
   CONVERT(VarUI8FromDate, 0.0);   EXPECTI8(0);
   CONVERT(VarUI8FromDate, 1.0);   EXPECTI8(1);
@@ -2613,7 +2246,6 @@ static void test_VarUI8FromBool(void)
   CONVVARS(VARIANT_BOOL);
   int i;
 
-  CHECKPTR(VarUI8FromBool);
   for (i = -32768; i < 32768; i++)
   {
     CONVERT(VarUI8FromBool, i); EXPECTI8(i);
@@ -2624,7 +2256,6 @@ static void test_VarUI8FromI8(void)
 {
   CONVVARS(LONG64);
 
-  CHECKPTR(VarUI8FromI8);
   CONVERT(VarUI8FromI8, -1); EXPECT_OVERFLOW;
   CONVERT(VarUI8FromI8, 0);  EXPECTI8(0);
   CONVERT(VarUI8FromI8, 1);  EXPECTI8(1);
@@ -2634,7 +2265,6 @@ static void test_VarUI8FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarUI8FromCy);
   CONVERT_CY(VarUI8FromCy,-1);  EXPECT_OVERFLOW;
   CONVERT_CY(VarUI8FromCy,0);   EXPECTI8(0);
   CONVERT_CY(VarUI8FromCy,1);   EXPECTI8(1);
@@ -2653,8 +2283,6 @@ static void test_VarUI8FromCy(void)
 static void test_VarUI8FromDec(void)
 {
   CONVVARS(DECIMAL);
-
-  CHECKPTR(VarUI8FromDec);
 
   CONVERT_BADDEC(VarUI8FromDec);
 
@@ -2678,8 +2306,6 @@ static void test_VarUI8FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarUI8FromStr);
 
   CONVERT_STR(VarUI8FromStr,NULL,0);                    EXPECT_MISMATCH;
   CONVERT_STR(VarUI8FromStr,"0",0);                     EXPECTI8(0);
@@ -2762,7 +2388,6 @@ static void test_VarR4FromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarR4FromI1);
   CONVERTRANGE(VarR4FromI1, -128, 128);
 }
 
@@ -2771,7 +2396,6 @@ static void test_VarR4FromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarR4FromUI1);
   CONVERTRANGE(VarR4FromUI1, 0, 256);
 }
 
@@ -2780,7 +2404,6 @@ static void test_VarR4FromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarR4FromI2);
   CONVERTRANGE(VarR4FromI2, -32768, 32768);
 }
 
@@ -2789,7 +2412,6 @@ static void test_VarR4FromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarR4FromUI2);
   CONVERTRANGE(VarR4FromUI2, 0, 65536);
 }
 
@@ -2797,7 +2419,6 @@ static void test_VarR4FromI4(void)
 {
   CONVVARS(int);
 
-  CHECKPTR(VarR4FromI4);
   CONVERT(VarR4FromI4, -2147483647-1); EXPECT(-2147483648.0f);
   CONVERT(VarR4FromI4, -1);            EXPECT(-1.0f);
   CONVERT(VarR4FromI4, 0);             EXPECT(0.0f);
@@ -2809,7 +2430,6 @@ static void test_VarR4FromUI4(void)
 {
   CONVVARS(unsigned int);
 
-  CHECKPTR(VarR4FromUI4);
   CONVERT(VarR4FromUI4, 0);          EXPECT(0.0f);
   CONVERT(VarR4FromUI4, 1);          EXPECT(1.0f);
 #if defined(__i386__) && (defined(_MSC_VER) || defined(__GNUC__))
@@ -2821,7 +2441,6 @@ static void test_VarR4FromR8(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarR4FromR8);
   CONVERT(VarR4FromR8, -1.0); EXPECT(-1.0f);
   CONVERT(VarR4FromR8, 0.0); EXPECT(0.0f);
   CONVERT(VarR4FromR8, 1.0); EXPECT(1.0f);
@@ -2834,7 +2453,6 @@ static void test_VarR4FromBool(void)
 {
   CONVVARS(VARIANT_BOOL);
 
-  CHECKPTR(VarR4FromBool);
   CONVERT(VarR4FromBool, VARIANT_TRUE);  EXPECT(VARIANT_TRUE * 1.0f);
   CONVERT(VarR4FromBool, VARIANT_FALSE); EXPECT(VARIANT_FALSE * 1.0f);
 }
@@ -2843,7 +2461,6 @@ static void test_VarR4FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarR4FromCy);
   CONVERT_CY(VarR4FromCy,-32768); EXPECT(-32768.0f);
   CONVERT_CY(VarR4FromCy,-1);     EXPECT(-1.0f);
   CONVERT_CY(VarR4FromCy,0);      EXPECT(0.0f);
@@ -2864,7 +2481,6 @@ static void test_VarR4FromI8(void)
 {
   CONVVARS(LONG64);
 
-  CHECKPTR(VarR4FromI8);
   CONVERT(VarR4FromI8, -1); EXPECT(-1.0f);
   CONVERT(VarR4FromI8, 0);  EXPECT(0.0f);
   CONVERT(VarR4FromI8, 1);  EXPECT(1.0f);
@@ -2874,7 +2490,6 @@ static void test_VarR4FromUI8(void)
 {
   CONVVARS(ULONG64);
 
-  CHECKPTR(VarR4FromUI8);
   CONVERT(VarR4FromUI8, 0); EXPECT(0.0f);
   CONVERT(VarR4FromUI8, 1); EXPECT(1.0f);
 }
@@ -2882,8 +2497,6 @@ static void test_VarR4FromUI8(void)
 static void test_VarR4FromDec(void)
 {
   CONVVARS(DECIMAL);
-
-  CHECKPTR(VarR4FromDec);
 
   CONVERT_BADDEC(VarR4FromDec);
 
@@ -2904,7 +2517,6 @@ static void test_VarR4FromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarR4FromDate);
   CONVERT(VarR4FromDate, -1.0); EXPECT(-1.0f);
   CONVERT(VarR4FromDate, 0.0);  EXPECT(0.0f);
   CONVERT(VarR4FromDate, 1.0);  EXPECT(1.0f);
@@ -2916,8 +2528,6 @@ static void test_VarR4FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarR4FromStr);
 
   CONVERT_STR(VarR4FromStr,NULL,0);    EXPECT_MISMATCH;
   CONVERT_STR(VarR4FromStr,"-1", 0);   EXPECT(-1.0f);
@@ -2965,7 +2575,6 @@ static void test_VarR8FromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarR8FromI1);
   CONVERTRANGE(VarR8FromI1, -128, 128);
 }
 
@@ -2974,7 +2583,6 @@ static void test_VarR8FromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarR8FromUI1);
   CONVERTRANGE(VarR8FromUI1, 0, 256);
 }
 
@@ -2983,7 +2591,6 @@ static void test_VarR8FromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarR8FromI2);
   CONVERTRANGE(VarR8FromI2, -32768, 32768);
 }
 
@@ -2992,7 +2599,6 @@ static void test_VarR8FromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarR8FromUI2);
   CONVERTRANGE(VarR8FromUI2, 0, 65536);
 }
 
@@ -3000,7 +2606,6 @@ static void test_VarR8FromI4(void)
 {
   CONVVARS(int);
 
-  CHECKPTR(VarR8FromI4);
   CONVERT(VarR8FromI4, -2147483647-1); EXPECT(-2147483648.0);
   CONVERT(VarR8FromI4, -1);            EXPECT(-1.0);
   CONVERT(VarR8FromI4, 0);             EXPECT(0.0);
@@ -3012,7 +2617,6 @@ static void test_VarR8FromUI4(void)
 {
   CONVVARS(unsigned int);
 
-  CHECKPTR(VarR8FromUI4);
   CONVERT(VarR8FromUI4, 0);          EXPECT(0.0);
   CONVERT(VarR8FromUI4, 1);          EXPECT(1.0);
   CONVERT(VarR8FromUI4, 0xffffffff); EXPECT(4294967295.0);
@@ -3022,7 +2626,6 @@ static void test_VarR8FromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarR8FromR4);
   CONVERT(VarR8FromR4, -1.0f); EXPECT(-1.0);
   CONVERT(VarR8FromR4, 0.0f);  EXPECT(0.0);
   CONVERT(VarR8FromR4, 1.0f);  EXPECT(1.0);
@@ -3035,7 +2638,6 @@ static void test_VarR8FromBool(void)
 {
   CONVVARS(VARIANT_BOOL);
 
-  CHECKPTR(VarR8FromBool);
   CONVERT(VarR8FromBool, VARIANT_TRUE);  EXPECT(VARIANT_TRUE * 1.0);
   CONVERT(VarR8FromBool, VARIANT_FALSE); EXPECT(VARIANT_FALSE * 1.0);
 }
@@ -3044,7 +2646,6 @@ static void test_VarR8FromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarR8FromCy);
   CONVERT_CY(VarR8FromCy,-32769); EXPECT(-32769.0);
   CONVERT_CY(VarR8FromCy,-32768); EXPECT(-32768.0);
   CONVERT_CY(VarR8FromCy,-1);     EXPECT(-1.0);
@@ -3067,7 +2668,6 @@ static void test_VarR8FromI8(void)
 {
   CONVVARS(LONG64);
 
-  CHECKPTR(VarR8FromI8);
   CONVERT(VarR8FromI8, -1); EXPECT(-1.0);
   CONVERT(VarR8FromI8, 0);  EXPECT(0.0);
   CONVERT(VarR8FromI8, 1);  EXPECT(1.0);
@@ -3080,7 +2680,6 @@ static void test_VarR8FromUI8(void)
 {
   CONVVARS(ULONG64);
 
-  CHECKPTR(VarR8FromUI8);
   CONVERT(VarR8FromUI8, 0); EXPECT(0.0);
   CONVERT(VarR8FromUI8, 1); EXPECT(1.0);
 #if defined(__i386__) && (defined(_MSC_VER) || defined(__GNUC__))
@@ -3091,8 +2690,6 @@ static void test_VarR8FromUI8(void)
 static void test_VarR8FromDec(void)
 {
   CONVVARS(DECIMAL);
-
-  CHECKPTR(VarR8FromDec);
 
   CONVERT_BADDEC(VarR8FromDec);
 
@@ -3112,7 +2709,6 @@ static void test_VarR8FromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarR8FromDate);
   CONVERT(VarR8FromDate, -1.0); EXPECT(-1.0);
   CONVERT(VarR8FromDate, -0.0); EXPECT(0.0);
   CONVERT(VarR8FromDate, 1.0);  EXPECT(1.0);
@@ -3124,8 +2720,6 @@ static void test_VarR8FromStr(void)
   OLECHAR buff[128];
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarR8FromStr);
 
   CONVERT_STR(VarR8FromStr,NULL,0);   EXPECT_MISMATCH;
   CONVERT_STR(VarR8FromStr,"",0);     EXPECT_MISMATCH;
@@ -3163,7 +2757,7 @@ static void test_VarR8ChangeTypeEx(void)
 #endif
 }
 
-#define MATHRND(l, r) left = l; right = r; hres = pVarR8Round(left, right, &out)
+#define MATHRND(l, r) left = l; right = r; hres = VarR8Round(left, right, &out)
 
 static void test_VarR8Round(void)
 {
@@ -3171,7 +2765,6 @@ static void test_VarR8Round(void)
   double left = 0.0, out;
   int right;
 
-  CHECKPTR(VarR8Round);
   MATHRND(0.5432, 5);  EXPECT(0.5432);
   MATHRND(0.5432, 4);  EXPECT(0.5432);
   MATHRND(0.5432, 3);  EXPECT(0.543);
@@ -3208,7 +2801,6 @@ static void test_VarDateFromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarDateFromI1);
   CONVERTRANGE(VarDateFromI1, -128, 128);
 }
 
@@ -3217,7 +2809,6 @@ static void test_VarDateFromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarDateFromUI1);
   CONVERTRANGE(VarDateFromUI1, 0, 256);
 }
 
@@ -3226,7 +2817,6 @@ static void test_VarDateFromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarDateFromI2);
   CONVERTRANGE(VarDateFromI2, -32768, 32768);
 }
 
@@ -3235,7 +2825,6 @@ static void test_VarDateFromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarDateFromUI2);
   CONVERTRANGE(VarDateFromUI2, 0, 65536);
 }
 
@@ -3243,7 +2832,6 @@ static void test_VarDateFromI4(void)
 {
   CONVVARS(int);
 
-  CHECKPTR(VarDateFromI4);
   CONVERT(VarDateFromI4, DATE_MIN-1);
   if (hres != DISP_E_TYPEMISMATCH) /* Early versions return this, incorrectly */
     EXPECT_OVERFLOW;
@@ -3261,7 +2849,6 @@ static void test_VarDateFromUI4(void)
 {
   CONVVARS(unsigned int);
 
-  CHECKPTR(VarDateFromUI4);
   CONVERT(VarDateFromUI4, 0);          EXPECT(0.0);
   CONVERT(VarDateFromUI4, 1);          EXPECT(1.0);
   CONVERT(VarDateFromUI4, DATE_MAX);   EXPECT(DATE_MAX);
@@ -3274,7 +2861,6 @@ static void test_VarDateFromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarDateFromR4);
   CONVERT(VarDateFromR4, -1.0f); EXPECT(-1.0);
   CONVERT(VarDateFromR4, 0.0f);  EXPECT(0.0);
   CONVERT(VarDateFromR4, 1.0f);  EXPECT(1.0);
@@ -3285,7 +2871,6 @@ static void test_VarDateFromR8(void)
 {
   CONVVARS(double);
 
-  CHECKPTR(VarDateFromR8);
   CONVERT(VarDateFromR8, -1.0f); EXPECT(-1.0);
   CONVERT(VarDateFromR8, 0.0f);  EXPECT(0.0);
   CONVERT(VarDateFromR8, 1.0f);  EXPECT(1.0);
@@ -3296,7 +2881,6 @@ static void test_VarDateFromBool(void)
 {
   CONVVARS(VARIANT_BOOL);
 
-  CHECKPTR(VarDateFromBool);
   CONVERT(VarDateFromBool, VARIANT_TRUE);  EXPECT(VARIANT_TRUE * 1.0);
   CONVERT(VarDateFromBool, VARIANT_FALSE); EXPECT(VARIANT_FALSE * 1.0);
 }
@@ -3305,7 +2889,6 @@ static void test_VarDateFromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarDateFromCy);
   CONVERT_CY(VarDateFromCy,-32769); EXPECT(-32769.0);
   CONVERT_CY(VarDateFromCy,-32768); EXPECT(-32768.0);
   CONVERT_CY(VarDateFromCy,-1);     EXPECT(-1.0);
@@ -3328,7 +2911,6 @@ static void test_VarDateFromI8(void)
 {
   CONVVARS(LONG64);
 
-  CHECKPTR(VarDateFromI8);
   CONVERT(VarDateFromI8, DATE_MIN-1); EXPECT_OVERFLOW;
   CONVERT(VarDateFromI8, DATE_MIN);   EXPECT(DATE_MIN);
   CONVERT(VarDateFromI8, -1);         EXPECT(-1.0);
@@ -3342,7 +2924,6 @@ static void test_VarDateFromUI8(void)
 {
   CONVVARS(ULONG64);
 
-  CHECKPTR(VarDateFromUI8);
   CONVERT(VarDateFromUI8, 0);          EXPECT(0.0);
   CONVERT(VarDateFromUI8, 1);          EXPECT(1.0);
   CONVERT(VarDateFromUI8, DATE_MAX);   EXPECT(DATE_MAX);
@@ -3352,8 +2933,6 @@ static void test_VarDateFromUI8(void)
 static void test_VarDateFromDec(void)
 {
   CONVVARS(DECIMAL);
-
-  CHECKPTR(VarDateFromDec);
 
   CONVERT_BADDEC(VarDateFromDec);
 
@@ -3370,10 +2949,10 @@ static void test_VarDateFromDec(void)
 #define DFS(str) \
   buff[0] = '\0'; out = 0.0; \
   if (str) MultiByteToWideChar(CP_ACP,0,str,-1,buff,sizeof(buff)/sizeof(WCHAR)); \
-  hres = pVarDateFromStr(str ? buff : NULL,lcid,LOCALE_NOUSEROVERRIDE,&out)
+  hres = VarDateFromStr(str ? buff : NULL,lcid,LOCALE_NOUSEROVERRIDE,&out)
 
 #define MKRELDATE(day,mth) st.wMonth = mth; st.wDay = day; \
-  pSystemTimeToVariantTime(&st,&relative)
+  SystemTimeToVariantTime(&st,&relative)
 
 static const char * const BadDateStrings[] =
 {
@@ -3419,9 +2998,6 @@ static void test_VarDateFromStr(void)
                                         '1',':','2','0',':','3','4',0 };
 
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-
-  CHECKPTR(VarDateFromStr);
-  CHECKPTR(SystemTimeToVariantTime);
 
   /* Some date formats are relative, so we need to find the current year */
   GetSystemTime(&st);
@@ -3542,7 +3118,7 @@ static void test_VarDateFromStr(void)
 
   /* test a data with ideographic space */
   out = 0.0;
-  hres = pVarDateFromStr(with_ideographic_spaceW, lcid, LOCALE_NOUSEROVERRIDE, &out);
+  hres = VarDateFromStr(with_ideographic_spaceW, lcid, LOCALE_NOUSEROVERRIDE, &out);
   EXPECT_DBL(40724.05594907407);
 
   /* test a non-english data string */
@@ -3638,7 +3214,6 @@ static void test_VarCyFromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarCyFromI1);
   for (i = -128; i < 128; i++)
   {
     CONVERT(VarCyFromI1,i); EXPECTCY(i);
@@ -3650,7 +3225,6 @@ static void test_VarCyFromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarCyFromUI1);
   for (i = 0; i < 256; i++)
   {
     CONVERT(VarCyFromUI1,i); EXPECTCY(i);
@@ -3662,7 +3236,6 @@ static void test_VarCyFromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarCyFromI2);
   for (i = -16384; i < 16384; i++)
   {
     CONVERT(VarCyFromI2,i); EXPECTCY(i);
@@ -3674,7 +3247,6 @@ static void test_VarCyFromUI2(void)
   CONVVARS(int);
   int i;
 
-  CHECKPTR(VarCyFromUI2);
   for (i = 0; i < 32768; i++)
   {
     CONVERT(VarCyFromUI2,i); EXPECTCY(i);
@@ -3685,7 +3257,6 @@ static void test_VarCyFromI4(void)
 {
   CONVVARS(int);
 
-  CHECKPTR(VarCyFromI4);
   CONVERT(VarCyFromI4, -1);         EXPECTCY(-1);
   CONVERT(VarCyFromI4, 0);          EXPECTCY(0);
   CONVERT(VarCyFromI4, 1);          EXPECTCY(1);
@@ -3697,7 +3268,6 @@ static void test_VarCyFromUI4(void)
 {
   CONVVARS(unsigned int);
 
-  CHECKPTR(VarCyFromUI4);
   CONVERT(VarCyFromUI4, 0); EXPECTCY(0);
   CONVERT(VarCyFromUI4, 1); EXPECTCY(1);
   CONVERT(VarCyFromUI4, 0x80000000); EXPECTCY64(5000, 0);
@@ -3707,7 +3277,6 @@ static void test_VarCyFromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarCyFromR4);
   CONVERT(VarCyFromR4, -1.0f); EXPECTCY(-1);
   CONVERT(VarCyFromR4, 0.0f);  EXPECTCY(0);
   CONVERT(VarCyFromR4, 1.0f);  EXPECTCY(1);
@@ -3738,8 +3307,6 @@ static void test_VarCyFromR4(void)
 static void test_VarCyFromR8(void)
 {
   CONVVARS(DOUBLE);
-
-  CHECKPTR(VarCyFromR8);
 
 #if defined(__i386__) && (defined(_MSC_VER) || defined(__GNUC__))
   /* Test our rounding is exactly the same. This fails if the special x86
@@ -3782,7 +3349,6 @@ static void test_VarCyFromBool(void)
   CONVVARS(VARIANT_BOOL);
   int i;
 
-  CHECKPTR(VarCyFromBool);
   for (i = -32768; i < 32768; i++)
   {
     CONVERT(VarCyFromBool, i);  EXPECTCY(i);
@@ -3793,7 +3359,6 @@ static void test_VarCyFromI8(void)
 {
   CONVVARS(LONG64);
 
-  CHECKPTR(VarCyFromI8);
   CONVERT_I8(VarCyFromI8, -214749, 2728163227ul);   EXPECT_OVERFLOW;
   CONVERT_I8(VarCyFromI8, -214749, 2728163228ul);   EXPECTCY64(2147483648ul,15808);
   CONVERT(VarCyFromI8, -1); EXPECTCY(-1);
@@ -3807,7 +3372,6 @@ static void test_VarCyFromUI8(void)
 {
   CONVVARS(ULONG64);
 
-  CHECKPTR(VarCyFromUI8);
   CONVERT(VarCyFromUI8, 0); EXPECTCY(0);
   CONVERT(VarCyFromUI8, 1); EXPECTCY(1);
   CONVERT_I8(VarCyFromUI8, 214748, 1566804068); EXPECTCY64(2147483647ul, 4294951488ul);
@@ -3819,8 +3383,6 @@ static void test_VarCyFromUI8(void)
 static void test_VarCyFromDec(void)
 {
   CONVVARS(DECIMAL);
-
-  CHECKPTR(VarCyFromDec);
 
   CONVERT_BADDEC(VarCyFromDec);
 
@@ -3847,8 +3409,6 @@ static void test_VarCyFromDec(void)
 static void test_VarCyFromDate(void)
 {
   CONVVARS(DATE);
-
-  CHECKPTR(VarCyFromDate);
 
 #if defined(__i386__) && (defined(_MSC_VER) || defined(__GNUC__))
   CONVERT(VarCyFromR8, -461168601842738.7904); EXPECTCY64(0xbfffffff, 0xffffff23);
@@ -3885,16 +3445,15 @@ static void test_VarCyFromDate(void)
 
 #define MATHVARS1 HRESULT hres; double left = 0.0; CY cyLeft, out
 #define MATHVARS2 MATHVARS1; double right = 0.0; CY cyRight
-#define MATH1(func, l) left = (double)l; pVarCyFromR8(left, &cyLeft); hres = p##func(cyLeft, &out)
+#define MATH1(func, l) left = (double)l; VarCyFromR8(left, &cyLeft); hres = func(cyLeft, &out)
 #define MATH2(func, l, r) left = (double)l; right = (double)r; \
-  pVarCyFromR8(left, &cyLeft); pVarCyFromR8(right, &cyRight); \
-  hres = p##func(cyLeft, cyRight, &out)
+  VarCyFromR8(left, &cyLeft); VarCyFromR8(right, &cyRight); \
+  hres = func(cyLeft, cyRight, &out)
 
 static void test_VarCyAdd(void)
 {
   MATHVARS2;
 
-  CHECKPTR(VarCyAdd);
   MATH2(VarCyAdd, 0.5, 0.5);   EXPECTCY(1);
   MATH2(VarCyAdd, 0.5, -0.4);  EXPECTCY(0.1);
   MATH2(VarCyAdd, 0.5, -0.6);  EXPECTCY(-0.1);
@@ -3909,7 +3468,6 @@ static void test_VarCyMul(void)
 {
   MATHVARS2;
 
-  CHECKPTR(VarCyMul);
   MATH2(VarCyMul, 534443.0, 0.0); EXPECTCY(0);
   MATH2(VarCyMul, 0.5, 0.5);      EXPECTCY(0.25);
   MATH2(VarCyMul, 0.5, -0.4);     EXPECTCY(-0.2);
@@ -3922,7 +3480,6 @@ static void test_VarCySub(void)
 {
   MATHVARS2;
 
-  CHECKPTR(VarCySub);
   MATH2(VarCySub, 0.5, 0.5);   EXPECTCY(0);
   MATH2(VarCySub, 0.5, -0.4);  EXPECTCY(0.9);
   MATH2(VarCySub, 0.5, -0.6);  EXPECTCY(1.1);
@@ -3937,7 +3494,6 @@ static void test_VarCyAbs(void)
 {
   MATHVARS1;
 
-  CHECKPTR(VarCyAbs);
   MATH1(VarCyAbs, 0.5);  EXPECTCY(0.5);
   MATH1(VarCyAbs, -0.5); EXPECTCY(0.5);
   MATH1(VarCyAbs, 922337203685476.0);  EXPECTCY64(2147483647ul,4294951488ul);
@@ -3948,22 +3504,20 @@ static void test_VarCyNeg(void)
 {
   MATHVARS1;
 
-  CHECKPTR(VarCyNeg);
   MATH1(VarCyNeg, 0.5); EXPECTCY(-0.5);
   MATH1(VarCyNeg, -0.5); EXPECTCY(0.5);
   MATH1(VarCyNeg, 922337203685476.0);  EXPECTCY64(2147483648ul,15808);
   MATH1(VarCyNeg, -922337203685476.0); EXPECTCY64(2147483647ul,4294951488ul);
 }
 
-#define MATHMULI4(l, r) left = l; right = r; pVarCyFromR8(left, &cyLeft); \
-  hres = pVarCyMulI4(cyLeft, right, &out)
+#define MATHMULI4(l, r) left = l; right = r; VarCyFromR8(left, &cyLeft); \
+  hres = VarCyMulI4(cyLeft, right, &out)
 
 static void test_VarCyMulI4(void)
 {
   MATHVARS1;
   LONG right;
 
-  CHECKPTR(VarCyMulI4);
   MATHMULI4(534443.0, 0); EXPECTCY(0);
   MATHMULI4(0.5, 1);      EXPECTCY(0.5);
   MATHMULI4(0.5, 2);      EXPECTCY(1);
@@ -3971,15 +3525,14 @@ static void test_VarCyMulI4(void)
   MATHMULI4(922337203685476.0, 2); EXPECT_OVERFLOW;
 }
 
-#define MATHMULI8(l, r) left = l; right = r; pVarCyFromR8(left, &cyLeft); \
-  hres = pVarCyMulI8(cyLeft, right, &out)
+#define MATHMULI8(l, r) left = l; right = r; VarCyFromR8(left, &cyLeft); \
+  hres = VarCyMulI8(cyLeft, right, &out)
 
 static void test_VarCyMulI8(void)
 {
   MATHVARS1;
   LONG64 right;
 
-  CHECKPTR(VarCyMulI8);
   MATHMULI8(534443.0, 0); EXPECTCY(0);
   MATHMULI8(0.5, 1);      EXPECTCY(0.5);
   MATHMULI8(0.5, 2);      EXPECTCY(1);
@@ -3987,8 +3540,8 @@ static void test_VarCyMulI8(void)
   MATHMULI8(922337203685476.0, 2); EXPECT_OVERFLOW;
 }
 
-#define MATHCMP(l, r) left = l; right = r; pVarCyFromR8(left, &cyLeft); pVarCyFromR8(right, &cyRight); \
-  hres = pVarCyCmp(cyLeft, cyRight)
+#define MATHCMP(l, r) left = l; right = r; VarCyFromR8(left, &cyLeft); VarCyFromR8(right, &cyRight); \
+  hres = VarCyCmp(cyLeft, cyRight)
 
 static void test_VarCyCmp(void)
 {
@@ -3996,7 +3549,6 @@ static void test_VarCyCmp(void)
   double left = 0.0, right = 0.0;
   CY cyLeft, cyRight;
 
-  CHECKPTR(VarCyCmp);
   MATHCMP(-1.0, -1.0); EXPECT_EQ;
   MATHCMP(-1.0, 0.0);  EXPECT_LT;
   MATHCMP(-1.0, 1.0);  EXPECT_LT;
@@ -4010,8 +3562,8 @@ static void test_VarCyCmp(void)
   MATHCMP(1.0, 2.0);   EXPECT_LT;
 }
 
-#define MATHCMPR8(l, r) left = l; right = r; pVarCyFromR8(left, &cyLeft); \
-  hres = pVarCyCmpR8(cyLeft, right);
+#define MATHCMPR8(l, r) left = l; right = r; VarCyFromR8(left, &cyLeft); \
+  hres = VarCyCmpR8(cyLeft, right);
 
 static void test_VarCyCmpR8(void)
 {
@@ -4020,7 +3572,6 @@ static void test_VarCyCmpR8(void)
   CY cyLeft;
   double right;
 
-  CHECKPTR(VarCyCmpR8);
   MATHCMPR8(-1.0, -1.0); EXPECT_EQ;
   MATHCMPR8(-1.0, 0.0);  EXPECT_LT;
   MATHCMPR8(-1.0, 1.0);  EXPECT_LT;
@@ -4035,15 +3586,14 @@ static void test_VarCyCmpR8(void)
 }
 
 #undef MATHRND
-#define MATHRND(l, r) left = l; right = r; pVarCyFromR8(left, &cyLeft); \
-  hres = pVarCyRound(cyLeft, right, &out)
+#define MATHRND(l, r) left = l; right = r; VarCyFromR8(left, &cyLeft); \
+  hres = VarCyRound(cyLeft, right, &out)
 
 static void test_VarCyRound(void)
 {
   MATHVARS1;
   int right;
 
-  CHECKPTR(VarCyRound);
   MATHRND(0.5432, 5);  EXPECTCY(0.5432);
   MATHRND(0.5432, 4);  EXPECTCY(0.5432);
   MATHRND(0.5432, 3);  EXPECTCY(0.543);
@@ -4068,14 +3618,13 @@ static void test_VarCyRound(void)
   MATHRND(1.5001, 0); EXPECTCY(2);
 }
 
-#define MATHFIX(l) left = l; pVarCyFromR8(left, &cyLeft); \
-  hres = pVarCyFix(cyLeft, &out)
+#define MATHFIX(l) left = l; VarCyFromR8(left, &cyLeft); \
+  hres = VarCyFix(cyLeft, &out)
 
 static void test_VarCyFix(void)
 {
   MATHVARS1;
 
-  CHECKPTR(VarCyFix);
   MATHFIX(-1.0001); EXPECTCY(-1);
   MATHFIX(-1.4999); EXPECTCY(-1);
   MATHFIX(-1.5001); EXPECTCY(-1);
@@ -4094,14 +3643,13 @@ static void test_VarCyFix(void)
   MATHFIX(1.9999);  EXPECTCY(1);
 }
 
-#define MATHINT(l) left = l; pVarCyFromR8(left, &cyLeft); \
-  hres = pVarCyInt(cyLeft, &out)
+#define MATHINT(l) left = l; VarCyFromR8(left, &cyLeft); \
+  hres = VarCyInt(cyLeft, &out)
 
 static void test_VarCyInt(void)
 {
   MATHVARS1;
 
-  CHECKPTR(VarCyInt);
   MATHINT(-1.0001); EXPECTCY(-2);
   MATHINT(-1.4999); EXPECTCY(-2);
   MATHINT(-1.5001); EXPECTCY(-2);
@@ -4155,7 +3703,6 @@ static void test_VarDecFromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarDecFromI1);
   for (i = -128; i < 128; i++)
   {
     CONVERT(VarDecFromI1,i); EXPECTDECI;
@@ -4167,7 +3714,6 @@ static void test_VarDecFromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarDecFromI2);
   for (i = -32768; i < 32768; i++)
   {
     CONVERT(VarDecFromI2,i); EXPECTDECI;
@@ -4179,7 +3725,6 @@ static void test_VarDecFromI4(void)
   CONVVARS(LONG);
   int i;
 
-  CHECKPTR(VarDecFromI4);
   for (i = -32768; i < 32768; i++)
   {
     CONVERT(VarDecFromI4,i); EXPECTDECI;
@@ -4191,7 +3736,6 @@ static void test_VarDecFromI8(void)
   CONVVARS(LONG64);
   int i;
 
-  CHECKPTR(VarDecFromI8);
   for (i = -32768; i < 32768; i++)
   {
     CONVERT(VarDecFromI8,i); EXPECTDECI;
@@ -4203,7 +3747,6 @@ static void test_VarDecFromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarDecFromUI1);
   for (i = 0; i < 256; i++)
   {
     CONVERT(VarDecFromUI1,i); EXPECTDECI;
@@ -4215,7 +3758,6 @@ static void test_VarDecFromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarDecFromUI2);
   for (i = 0; i < 65536; i++)
   {
     CONVERT(VarDecFromUI2,i); EXPECTDECI;
@@ -4227,7 +3769,6 @@ static void test_VarDecFromUI4(void)
   CONVVARS(ULONG);
   int i;
 
-  CHECKPTR(VarDecFromUI4);
   for (i = 0; i < 65536; i++)
   {
     CONVERT(VarDecFromUI4,i); EXPECTDECI;
@@ -4239,7 +3780,6 @@ static void test_VarDecFromUI8(void)
   CONVVARS(ULONG64);
   int i;
 
-  CHECKPTR(VarDecFromUI8);
   for (i = 0; i < 65536; i++)
   {
     CONVERT(VarDecFromUI8,i); EXPECTDECI;
@@ -4251,7 +3791,6 @@ static void test_VarDecFromBool(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarDecFromBool);
   /* Test all possible type values. Note that the result is reduced to 0 or -1 */
   for (i = -32768; i < 0; i++)
   {
@@ -4267,8 +3806,6 @@ static void test_VarDecFromR4(void)
 {
   CONVVARS(float);
 
-  CHECKPTR(VarDecFromR4);
-
   CONVERT(VarDecFromR4,-0.6f); EXPECTDEC(1,0x80,0,6);
   CONVERT(VarDecFromR4,-0.5f); EXPECTDEC(1,0x80,0,5);
   CONVERT(VarDecFromR4,-0.4f); EXPECTDEC(1,0x80,0,4);
@@ -4281,8 +3818,6 @@ static void test_VarDecFromR4(void)
 static void test_VarDecFromR8(void)
 {
   CONVVARS(double);
-
-  CHECKPTR(VarDecFromR8);
 
   CONVERT(VarDecFromR8,-0.6); EXPECTDEC(1,0x80,0,6);
   CONVERT(VarDecFromR8,-0.5); EXPECTDEC(1,0x80,0,5);
@@ -4297,8 +3832,6 @@ static void test_VarDecFromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarDecFromDate);
-
   CONVERT(VarDecFromDate,-0.6); EXPECTDEC(1,0x80,0,6);
   CONVERT(VarDecFromDate,-0.5); EXPECTDEC(1,0x80,0,5);
   CONVERT(VarDecFromDate,-0.4); EXPECTDEC(1,0x80,0,4);
@@ -4312,8 +3845,6 @@ static void test_VarDecFromStr(void)
 {
   CONVVARS(LCID);
   OLECHAR buff[128];
-
-  CHECKPTR(VarDecFromStr);
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
 
@@ -4332,8 +3863,6 @@ static void test_VarDecFromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarDecFromCy);
-
   CONVERT_CY(VarDecFromCy, -1);  EXPECTDEC(4,0x80,0,10000);
   CONVERT_CY(VarDecFromCy, 0);   EXPECTDEC(4,0,0,0);
   CONVERT_CY(VarDecFromCy, 1);   EXPECTDEC(4,0,0,10000);
@@ -4345,17 +3874,16 @@ static void test_VarDecFromCy(void)
 #undef MATHVARS2
 #define MATHVARS2 MATHVARS1; DECIMAL r
 #undef MATH1
-#define MATH1(func) hres = p##func(&l, &out)
+#define MATH1(func) hres = func(&l, &out)
 #undef MATH2
-#define MATH2(func) hres = p##func(&l, &r, &out)
+#define MATH2(func) hres = func(&l, &r, &out)
 #undef MATH3
-#define MATH3(func) hres = p##func(&l, r)
+#define MATH3(func) hres = func(&l, r)
 
 static void test_VarDecAbs(void)
 {
   MATHVARS1;
 
-  CHECKPTR(VarDecAbs);
   SETDEC(l,0,0x80,0,1);  MATH1(VarDecAbs); EXPECTDEC(0,0,0,1);
   SETDEC(l,0,0,0,0);     MATH1(VarDecAbs); EXPECTDEC(0,0,0,0);
   SETDEC(l,0,0x80,0,0);  MATH1(VarDecAbs); EXPECTDEC(0,0,0,0);
@@ -4370,7 +3898,6 @@ static void test_VarDecNeg(void)
 {
   MATHVARS1;
 
-  CHECKPTR(VarDecNeg);
   SETDEC(l,0,0x80,0,1); MATH1(VarDecNeg); EXPECTDEC(0,0,0,1);
   SETDEC(l,0,0,0,0);    MATH1(VarDecNeg); EXPECTDEC(0,0x80,0,0); /* '-0'! */
   SETDEC(l,0,0x80,0,0); MATH1(VarDecNeg); EXPECTDEC(0,0,0,0);
@@ -4386,7 +3913,6 @@ static void test_VarDecAdd(void)
 {
   MATHVARS2;
 
-  CHECKPTR(VarDecAdd);
   SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,0);    MATH2(VarDecAdd); EXPECTDEC(0,0,0,0);
   SETDEC(l,0,0,0,0);    SETDEC(r,0,0x80,0,1); MATH2(VarDecAdd); EXPECTDEC(0,0x80,0,1);
   SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,1);    MATH2(VarDecAdd); EXPECTDEC(0,0,0,1);
@@ -4467,7 +3993,6 @@ static void test_VarDecSub(void)
 {
   MATHVARS2;
 
-  CHECKPTR(VarDecSub);
   SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,0);    MATH2(VarDecSub); EXPECTDECZERO();
   SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,1);    MATH2(VarDecSub); EXPECTDEC(0,0x80,0,1);
   SETDEC(l,0,0,0,1);    SETDEC(r,0,0,0,1);    MATH2(VarDecSub); EXPECTDECZERO();
@@ -4478,7 +4003,6 @@ static void test_VarDecMul(void)
 {
   MATHVARS2;
   
-  CHECKPTR(VarDecMul);
   SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,0);  MATH2(VarDecMul);   EXPECTDEC(0,0,0,0);
   SETDEC(l,0,0,0,1);    SETDEC(r,0,0,0,0);  MATH2(VarDecMul);   EXPECTDEC(0,0,0,0);
   SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,1);  MATH2(VarDecMul);   EXPECTDEC(0,0,0,0);
@@ -4529,7 +4053,6 @@ static void test_VarDecDiv(void)
 {
   MATHVARS2;
   
-  CHECKPTR(VarDecDiv);
   /* identity divisions */
   SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,1);  MATH2(VarDecDiv);   EXPECTDEC(0,0,0,0);
   SETDEC(l,0,0,0,1);    SETDEC(r,0,0,0,1);  MATH2(VarDecDiv);   EXPECTDEC(0,0,0,1);
@@ -4578,8 +4101,6 @@ static void test_VarDecDiv(void)
 static void test_VarDecCmp(void)
 {
   MATHVARS1;
-
-  CHECKPTR(VarDecCmp);
 
   SETDEC(l,0,0,0,1); SETDEC(out,0,0,0,1); MATH1(VarDecCmp); EXPECT_EQ;
   SETDEC(l,0,0,0,1); SETDEC(out,0,0,0,0); MATH1(VarDecCmp); EXPECT_GT;
@@ -4688,8 +4209,6 @@ static void test_VarDecCmpR8(void)
   DECIMAL l;
   double r;
 
-  CHECKPTR(VarDecCmpR8);
-
   SETDEC(l,0,0,0,1); r = 0.0;  MATH3(VarDecCmpR8); EXPECT_GT;
   SETDEC(l,0,0,0,1); r = 0.1;  MATH3(VarDecCmpR8); EXPECT_GT;
   SETDEC(l,0,0,0,1); r = -0.1; MATH3(VarDecCmpR8); EXPECT_GT;
@@ -4719,30 +4238,28 @@ static void test_VarDecRound(void)
     HRESULT hres;
     DECIMAL l, out;
 
-    CHECKPTR(VarDecRound);
+    CLEAR(out); SETDEC(l, 0, 0, 0, 1); hres = VarDecRound(&l, 3, &out); EXPECTDEC(0, 0, 0, 1);
 
-    CLEAR(out); SETDEC(l, 0, 0, 0, 1); hres = pVarDecRound(&l, 3, &out); EXPECTDEC(0, 0, 0, 1);
+    CLEAR(out); SETDEC(l, 0, 0, 0, 1); hres = VarDecRound(&l, 0, &out); EXPECTDEC(0, 0, 0, 1);
+    CLEAR(out); SETDEC(l, 1, 0, 0, 1); hres = VarDecRound(&l, 0, &out); EXPECTDEC(0, 0, 0, 0);
+    CLEAR(out); SETDEC(l, 1, 0, 0, 1); hres = VarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 1);
+    CLEAR(out); SETDEC(l, 2, 0, 0, 11); hres = VarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 1);
+    CLEAR(out); SETDEC(l, 2, 0, 0, 15); hres = VarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 2);
+    CLEAR(out); SETDEC(l, 6, 0, 0, 550001); hres = VarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 6);
 
-    CLEAR(out); SETDEC(l, 0, 0, 0, 1); hres = pVarDecRound(&l, 0, &out); EXPECTDEC(0, 0, 0, 1);
-    CLEAR(out); SETDEC(l, 1, 0, 0, 1); hres = pVarDecRound(&l, 0, &out); EXPECTDEC(0, 0, 0, 0);
-    CLEAR(out); SETDEC(l, 1, 0, 0, 1); hres = pVarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 1);
-    CLEAR(out); SETDEC(l, 2, 0, 0, 11); hres = pVarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 1);
-    CLEAR(out); SETDEC(l, 2, 0, 0, 15); hres = pVarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 2);
-    CLEAR(out); SETDEC(l, 6, 0, 0, 550001); hres = pVarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 6);
+    CLEAR(out); SETDEC(l, 0, DECIMAL_NEG, 0, 1); hres = VarDecRound(&l, 0, &out); EXPECTDEC(0, DECIMAL_NEG, 0, 1);
+    CLEAR(out); SETDEC(l, 1, DECIMAL_NEG, 0, 1); hres = VarDecRound(&l, 0, &out); EXPECTDEC(0, DECIMAL_NEG, 0, 0);
+    CLEAR(out); SETDEC(l, 1, DECIMAL_NEG, 0, 1); hres = VarDecRound(&l, 1, &out); EXPECTDEC(1, DECIMAL_NEG, 0, 1);
+    CLEAR(out); SETDEC(l, 2, DECIMAL_NEG, 0, 11); hres = VarDecRound(&l, 1, &out); EXPECTDEC(1, DECIMAL_NEG, 0, 1);
+    CLEAR(out); SETDEC(l, 2, DECIMAL_NEG, 0, 15); hres = VarDecRound(&l, 1, &out); EXPECTDEC(1, DECIMAL_NEG, 0, 2);
+    CLEAR(out); SETDEC(l, 6, DECIMAL_NEG, 0, 550001); hres = VarDecRound(&l, 1, &out); EXPECTDEC(1, DECIMAL_NEG, 0, 6);
 
-    CLEAR(out); SETDEC(l, 0, DECIMAL_NEG, 0, 1); hres = pVarDecRound(&l, 0, &out); EXPECTDEC(0, DECIMAL_NEG, 0, 1);
-    CLEAR(out); SETDEC(l, 1, DECIMAL_NEG, 0, 1); hres = pVarDecRound(&l, 0, &out); EXPECTDEC(0, DECIMAL_NEG, 0, 0);
-    CLEAR(out); SETDEC(l, 1, DECIMAL_NEG, 0, 1); hres = pVarDecRound(&l, 1, &out); EXPECTDEC(1, DECIMAL_NEG, 0, 1);
-    CLEAR(out); SETDEC(l, 2, DECIMAL_NEG, 0, 11); hres = pVarDecRound(&l, 1, &out); EXPECTDEC(1, DECIMAL_NEG, 0, 1);
-    CLEAR(out); SETDEC(l, 2, DECIMAL_NEG, 0, 15); hres = pVarDecRound(&l, 1, &out); EXPECTDEC(1, DECIMAL_NEG, 0, 2);
-    CLEAR(out); SETDEC(l, 6, DECIMAL_NEG, 0, 550001); hres = pVarDecRound(&l, 1, &out); EXPECTDEC(1, DECIMAL_NEG, 0, 6);
+    CLEAR(out); SETDEC64(l, 0, 0, 0xffffffff, 0xffffffff, 0xffffffff); hres = VarDecRound(&l, 0, &out); EXPECTDEC64(0, 0, 0xffffffff, 0xffffffff, 0xffffffff);
+    CLEAR(out); SETDEC64(l, 28, 0, 0xffffffff, 0xffffffff, 0xffffffff); hres = VarDecRound(&l, 0, &out); EXPECTDEC64(0, 0, 0, 0, 8);
+    CLEAR(out); SETDEC64(l, 0, DECIMAL_NEG, 0xffffffff, 0xffffffff, 0xffffffff); hres = VarDecRound(&l, 0, &out); EXPECTDEC64(0, DECIMAL_NEG, 0xffffffff, 0xffffffff, 0xffffffff);
+    CLEAR(out); SETDEC64(l, 28, DECIMAL_NEG, 0xffffffff, 0xffffffff, 0xffffffff); hres = VarDecRound(&l, 0, &out); EXPECTDEC64(0, DECIMAL_NEG, 0, 0, 8);
 
-    CLEAR(out); SETDEC64(l, 0, 0, 0xffffffff, 0xffffffff, 0xffffffff); hres = pVarDecRound(&l, 0, &out); EXPECTDEC64(0, 0, 0xffffffff, 0xffffffff, 0xffffffff);
-    CLEAR(out); SETDEC64(l, 28, 0, 0xffffffff, 0xffffffff, 0xffffffff); hres = pVarDecRound(&l, 0, &out); EXPECTDEC64(0, 0, 0, 0, 8);
-    CLEAR(out); SETDEC64(l, 0, DECIMAL_NEG, 0xffffffff, 0xffffffff, 0xffffffff); hres = pVarDecRound(&l, 0, &out); EXPECTDEC64(0, DECIMAL_NEG, 0xffffffff, 0xffffffff, 0xffffffff);
-    CLEAR(out); SETDEC64(l, 28, DECIMAL_NEG, 0xffffffff, 0xffffffff, 0xffffffff); hres = pVarDecRound(&l, 0, &out); EXPECTDEC64(0, DECIMAL_NEG, 0, 0, 8);
-
-    CLEAR(out); SETDEC(l, 2, 0, 0, 0); hres = pVarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 0);
+    CLEAR(out); SETDEC(l, 2, 0, 0, 0); hres = VarDecRound(&l, 1, &out); EXPECTDEC(1, 0, 0, 0);
 }
 
 /*
@@ -4762,7 +4279,6 @@ static void test_VarBoolFromI1(void)
   CONVVARS(signed char);
   int i;
 
-  CHECKPTR(VarBoolFromI1);
   CONVERTRANGE(VarBoolFromI1, -128, 128);
 }
 
@@ -4771,7 +4287,6 @@ static void test_VarBoolFromUI1(void)
   CONVVARS(BYTE);
   int i;
 
-  CHECKPTR(VarBoolFromUI1);
   CONVERTRANGE(VarBoolFromUI1, 0, 256);
 }
 
@@ -4780,7 +4295,6 @@ static void test_VarBoolFromI2(void)
   CONVVARS(SHORT);
   int i;
 
-  CHECKPTR(VarBoolFromI2);
   CONVERTRANGE(VarBoolFromI2, -32768, 32768);
 }
 
@@ -4789,7 +4303,6 @@ static void test_VarBoolFromUI2(void)
   CONVVARS(USHORT);
   int i;
 
-  CHECKPTR(VarBoolFromUI2);
   CONVERTRANGE(VarBoolFromUI2, 0, 65536);
 }
 
@@ -4797,7 +4310,6 @@ static void test_VarBoolFromI4(void)
 {
   CONVVARS(int);
 
-  CHECKPTR(VarBoolFromI4);
   CONVERT(VarBoolFromI4, 0x80000000); EXPECT(VARIANT_TRUE);
   CONVERT(VarBoolFromI4, -1);         EXPECT(VARIANT_TRUE);
   CONVERT(VarBoolFromI4, 0);          EXPECT(VARIANT_FALSE);
@@ -4809,7 +4321,6 @@ static void test_VarBoolFromUI4(void)
 {
   CONVVARS(ULONG);
 
-  CHECKPTR(VarBoolFromUI4);
   CONVERT(VarBoolFromI4, 0);          EXPECT(VARIANT_FALSE);
   CONVERT(VarBoolFromI4, 1);          EXPECT(VARIANT_TRUE);
   CONVERT(VarBoolFromI4, 0x80000000); EXPECT(VARIANT_TRUE);
@@ -4819,7 +4330,6 @@ static void test_VarBoolFromR4(void)
 {
   CONVVARS(FLOAT);
 
-  CHECKPTR(VarBoolFromR4);
   CONVERT(VarBoolFromR4, -1.0f); EXPECT(VARIANT_TRUE);
   CONVERT(VarBoolFromR4, 0.0f);  EXPECT(VARIANT_FALSE);
   CONVERT(VarBoolFromR4, 1.0f);  EXPECT(VARIANT_TRUE);
@@ -4843,7 +4353,6 @@ static void test_VarBoolFromR8(void)
   /* Hopefully we made the point with R4 above that rounding is
    * irrelevant, so we'll skip that for R8 and Date
    */
-  CHECKPTR(VarBoolFromR8);
   CONVERT(VarBoolFromR8, -1.0); EXPECT(VARIANT_TRUE);
   CONVERT(VarBoolFromR8, -0.0); EXPECT(VARIANT_FALSE);
   CONVERT(VarBoolFromR8, 1.0);  EXPECT(VARIANT_TRUE);
@@ -4853,7 +4362,6 @@ static void test_VarBoolFromCy(void)
 {
   CONVVARS(CY);
 
-  CHECKPTR(VarBoolFromCy);
   CONVERT_CY(VarBoolFromCy, -32769); EXPECT(VARIANT_TRUE);
   CONVERT_CY(VarBoolFromCy, -32768); EXPECT(VARIANT_TRUE);
   CONVERT_CY(VarBoolFromCy, -1);     EXPECT(VARIANT_TRUE);
@@ -4867,7 +4375,6 @@ static void test_VarBoolFromI8(void)
 {
   CONVVARS(LONG64);
 
-  CHECKPTR(VarBoolFromI8);
   CONVERT(VarBoolFromI8, -1); EXPECT(VARIANT_TRUE);
   CONVERT(VarBoolFromI8, 0);  EXPECT(VARIANT_FALSE);
   CONVERT(VarBoolFromI8, 1);  EXPECT(VARIANT_TRUE);
@@ -4877,7 +4384,6 @@ static void test_VarBoolFromUI8(void)
 {
   CONVVARS(ULONG64);
 
-  CHECKPTR(VarBoolFromUI8);
   CONVERT(VarBoolFromUI8, 0); EXPECT(VARIANT_FALSE);
   CONVERT(VarBoolFromUI8, 1); EXPECT(VARIANT_TRUE);
 }
@@ -4886,7 +4392,6 @@ static void test_VarBoolFromDec(void)
 {
   CONVVARS(DECIMAL);
 
-  CHECKPTR(VarBoolFromDec);
   CONVERT_BADDEC(VarBoolFromDec);
 
   CONVERT_DEC(VarBoolFromDec,29,0,0,0);   EXPECT_INVALID;
@@ -4907,7 +4412,6 @@ static void test_VarBoolFromDate(void)
 {
   CONVVARS(DATE);
 
-  CHECKPTR(VarBoolFromDate);
   CONVERT(VarBoolFromDate, -1.0); EXPECT(VARIANT_TRUE);
   CONVERT(VarBoolFromDate, -0.0); EXPECT(VARIANT_FALSE);
   CONVERT(VarBoolFromDate, 1.0);  EXPECT(VARIANT_TRUE);
@@ -4917,8 +4421,6 @@ static void test_VarBoolFromStr(void)
 {
   CONVVARS(LCID);
   OLECHAR buff[128];
-
-  CHECKPTR(VarBoolFromStr);
 
   in = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
 
@@ -5053,12 +4555,10 @@ static void test_VarBstrFromR4(void)
 
   float f;
 
-  CHECKPTR(VarBstrFromR4);
-
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
   lcid_spanish = MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT);
   f = 654322.23456f;
-  hres = pVarBstrFromR4(f, lcid, 0, &bstr);
+  hres = VarBstrFromR4(f, lcid, 0, &bstr);
   ok(hres == S_OK, "got hres 0x%08x\n", hres);
   if (bstr)
   {
@@ -5073,7 +4573,7 @@ static void test_VarBstrFromR4(void)
   }
 
   f = -0.0;
-  hres = pVarBstrFromR4(f, lcid, 0, &bstr);
+  hres = VarBstrFromR4(f, lcid, 0, &bstr);
   ok(hres == S_OK, "got hres 0x%08x\n", hres);
   if (bstr)
   {
@@ -5086,7 +4586,7 @@ static void test_VarBstrFromR4(void)
   
   /* The following tests that lcid is used for decimal separator even without LOCALE_USE_NLS */
   f = 0.5;
-  hres = pVarBstrFromR4(f, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
+  hres = VarBstrFromR4(f, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
   ok(hres == S_OK, "got hres 0x%08x\n", hres);
   if (bstr)
   {
@@ -5094,7 +4594,7 @@ static void test_VarBstrFromR4(void)
     SysFreeString(bstr);
   }
   f = 0.5;
-  hres = pVarBstrFromR4(f, lcid_spanish, LOCALE_NOUSEROVERRIDE, &bstr);
+  hres = VarBstrFromR4(f, lcid_spanish, LOCALE_NOUSEROVERRIDE, &bstr);
   ok(hres == S_OK, "got hres 0x%08x\n", hres);
   if (bstr)
   {
@@ -5110,7 +4610,7 @@ static void _BSTR_DATE(DATE dt, const char *str, int line)
   BSTR bstr = NULL;
   HRESULT hres;
 
-  hres = pVarBstrFromDate(dt, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
+  hres = VarBstrFromDate(dt, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
   if (bstr)
   {
     WideCharToMultiByte(CP_ACP, 0, bstr, -1, buff, sizeof(buff), 0, 0);
@@ -5125,8 +4625,6 @@ static void _BSTR_DATE(DATE dt, const char *str, int line)
 static void test_VarBstrFromDate(void)
 {
 #define BSTR_DATE(dt,str) _BSTR_DATE(dt,str,__LINE__)
-
-  CHECKPTR(VarBstrFromDate);
 
   BSTR_DATE(0.0, "12:00:00 AM");
   BSTR_DATE(3.34, "1/2/1900 8:09:36 AM");
@@ -5151,7 +4649,7 @@ static void _BSTR_CY(LONG a, LONG b, const char *str, LCID lcid, int line)
 
   S(l).Lo = b;
   S(l).Hi = a;
-  hr = pVarBstrFromCy(l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
+  hr = VarBstrFromCy(l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
   ok(hr == S_OK, "got hr 0x%08x\n", hr);
 
   if(bstr)
@@ -5173,8 +4671,6 @@ static void test_VarBstrFromCy(void)
 #define BSTR_CY(a, b, str, lcid) _BSTR_CY(a, b, str, lcid, __LINE__)
 
   LCID en_us, sp;
-
-  CHECKPTR(VarBstrFromCy);
 
   en_us = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
   sp = MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_DEFAULT), SORT_DEFAULT);
@@ -5204,7 +4700,7 @@ static void _BSTR_DEC(BYTE scale, BYTE sign, ULONG hi, ULONG mid, ULONGLONG lo, 
   DECIMAL dec;
 
   SETDEC64(dec, scale, sign, hi, mid, lo);
-  hr = pVarBstrFromDec(&dec, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
+  hr = VarBstrFromDec(&dec, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
   ok_(__FILE__, line)(hr == S_OK, "got hr 0x%08x\n", hr);
 
   if(bstr)
@@ -5227,8 +4723,6 @@ static void test_VarBstrFromDec(void)
 #define BSTR_DEC64(scale, sign, hi, mid, lo, str, lcid) _BSTR_DEC(scale, sign, hi, mid, lo, str, lcid, __LINE__)
 
   LCID en_us, sp;
-
-  CHECKPTR(VarBstrFromDec);
 
   en_us = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
   sp = MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_DEFAULT), SORT_DEFAULT);
@@ -5280,7 +4774,7 @@ static void test_VarBstrFromDec(void)
 }
 
 #define _VARBSTRCMP(left,right,lcid,flags,result) \
-        hres = pVarBstrCmp(left,right,lcid,flags); \
+        hres = VarBstrCmp(left,right,lcid,flags); \
         ok(hres == result, "VarBstrCmp: expected " #result ", got hres=0x%x\n", hres)
 #define VARBSTRCMP(left,right,flags,result) \
         _VARBSTRCMP(left,right,lcid,flags,result)
@@ -5301,8 +4795,6 @@ static void test_VarBstrCmp(void)
     static const char sbchr00[] = {0,0,0};
     BSTR bstr, bstrempty, bstr2;
 
-    CHECKPTR(VarBstrCmp);
-    
     lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
     bstr = SysAllocString(sz);
     bstrempty = SysAllocString(szempty);
@@ -5711,16 +5203,14 @@ static void test_VarBstrCat(void)
     BSTR str1, str2, res;
     UINT len;
 
-    CHECKPTR(VarBstrCat);
-
 if (0)
 {
     /* Crash */
-    pVarBstrCat(NULL, NULL, NULL);
+    VarBstrCat(NULL, NULL, NULL);
 }
 
     /* Concatenation of two NULL strings works */
-    ret = pVarBstrCat(NULL, NULL, &res);
+    ret = VarBstrCat(NULL, NULL, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == 0, "Expected a 0-length string\n");
@@ -5729,13 +5219,13 @@ if (0)
     str1 = SysAllocString(sz1);
 
     /* Concatenation with one NULL arg */
-    ret = pVarBstrCat(NULL, str1, &res);
+    ret = VarBstrCat(NULL, str1, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == SysStringLen(str1), "Unexpected length\n");
     ok(!memcmp(res, sz1, SysStringLen(str1)), "Unexpected value\n");
     SysFreeString(res);
-    ret = pVarBstrCat(str1, NULL, &res);
+    ret = VarBstrCat(str1, NULL, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == SysStringLen(str1), "Unexpected length\n");
@@ -5744,7 +5234,7 @@ if (0)
 
     /* Concatenation of two zero-terminated strings */
     str2 = SysAllocString(sz2);
-    ret = pVarBstrCat(str1, str2, &res);
+    ret = VarBstrCat(str1, str2, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == sizeof(sz1sz2) / sizeof(WCHAR) - 1,
@@ -5759,7 +5249,7 @@ if (0)
     str1 = SysAllocStringLen(s1, sizeof(s1) / sizeof(WCHAR));
     str2 = SysAllocStringLen(s2, sizeof(s2) / sizeof(WCHAR));
 
-    ret = pVarBstrCat(str1, str2, &res);
+    ret = VarBstrCat(str1, str2, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == sizeof(s1s2) / sizeof(WCHAR),
@@ -5778,7 +5268,7 @@ if (0)
     len = SysStringLen(str2);
     ok(len == (sizeof(str2A)-1)/sizeof(WCHAR), "got length %u\n", len);
 
-    ret = pVarBstrCat(str1, str2, &res);
+    ret = VarBstrCat(str1, str2, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     len = (sizeof(str1A) + sizeof(str2A) - 2)/sizeof(WCHAR);
@@ -5797,7 +5287,7 @@ if (0)
     len = SysStringLen(str2);
     ok(len == 0, "got length %u\n", len);
 
-    ret = pVarBstrCat(str1, str2, &res);
+    ret = VarBstrCat(str1, str2, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == 1, "got %d, expected 1\n", SysStringLen(res));
@@ -6307,13 +5797,11 @@ static void test_ClearCustData(void)
   CUSTDATA ci;
   unsigned i;
 
-  CHECKPTR(ClearCustData);
-
   ci.cCustData = NUM_CUST_ITEMS;
   ci.prgCustData = CoTaskMemAlloc( sizeof(CUSTDATAITEM) * NUM_CUST_ITEMS );
   for (i = 0; i < NUM_CUST_ITEMS; i++)
     VariantInit(&ci.prgCustData[i].varValue);
-  pClearCustData(&ci);
+  ClearCustData(&ci);
   ok(!ci.cCustData && !ci.prgCustData, "ClearCustData didn't clear fields!\n");
 }
 
