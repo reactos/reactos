@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test driver for kernel32 filesystem tests
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Test driver for kernel32 filesystem tests
+ * COPYRIGHT:   Copyright 2013-2017 Thomas Faber <thomas.faber@reactos.org>
  */
 
 #include <kmt_test.h>
@@ -19,7 +19,9 @@ static KMT_IRP_HANDLER TestSetInformation;
 
 static UNICODE_STRING ExpectedExpression = RTL_CONSTANT_STRING(L"<not set>");
 static WCHAR ExpressionBuffer[MAX_PATH];
+static BOOLEAN ExpectingSetAttributes = FALSE;
 static ULONG ExpectedSetAttributes = -1;
+static BOOLEAN ExpectingQueryAttributes = FALSE;
 static ULONG ReturnQueryAttributes = -1;
 
 NTSTATUS
@@ -92,6 +94,7 @@ TestMessageHandler(
                 return STATUS_INVALID_PARAMETER;
 
             ReturnQueryAttributes = *(PULONG)Buffer;
+            ExpectingQueryAttributes = TRUE;
             DPRINT("IOCTL_RETURN_QUERY_ATTRIBUTES: %lu\n", ReturnQueryAttributes);
             break;
         }
@@ -102,6 +105,7 @@ TestMessageHandler(
                 return STATUS_INVALID_PARAMETER;
 
             ExpectedSetAttributes = *(PULONG)Buffer;
+            ExpectingSetAttributes = TRUE;
             DPRINT("IOCTL_EXPECT_SET_ATTRIBUTES: %lu\n", ExpectedSetAttributes);
             break;
         }
@@ -168,7 +172,7 @@ TestQueryInformation(
     ok_eq_ulong(IoStackLocation->Parameters.QueryFile.FileInformationClass, FileBasicInformation);
     if (IoStackLocation->Parameters.QueryFile.FileInformationClass == FileBasicInformation)
     {
-        ok(ReturnQueryAttributes != (ULONG)-1, "Unexpected QUERY_INFORMATION call\n");
+        ok(ExpectingQueryAttributes, "Unexpected QUERY_INFORMATION call\n");
         BasicInfo = Irp->AssociatedIrp.SystemBuffer;
         BasicInfo->CreationTime.QuadPart = 126011664000000000;
         BasicInfo->LastAccessTime.QuadPart = 130899112800000000;
@@ -176,6 +180,7 @@ TestQueryInformation(
         BasicInfo->ChangeTime.QuadPart = 130899112800000000;
         BasicInfo->FileAttributes = ReturnQueryAttributes;
         ReturnQueryAttributes = -1;
+        ExpectingQueryAttributes = FALSE;
         Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = sizeof(*BasicInfo);
     }
@@ -205,7 +210,7 @@ TestSetInformation(
     ok_eq_ulong(IoStackLocation->Parameters.SetFile.FileInformationClass, FileBasicInformation);
     if (IoStackLocation->Parameters.SetFile.FileInformationClass == FileBasicInformation)
     {
-        ok(ExpectedSetAttributes != (ULONG)-1, "Unexpected SET_INFORMATION call\n");
+        ok(ExpectingSetAttributes, "Unexpected SET_INFORMATION call\n");
         BasicInfo = Irp->AssociatedIrp.SystemBuffer;
         ok_eq_longlong(BasicInfo->CreationTime.QuadPart, 0LL);
         ok_eq_longlong(BasicInfo->LastAccessTime.QuadPart, 0LL);
@@ -213,6 +218,7 @@ TestSetInformation(
         ok_eq_longlong(BasicInfo->ChangeTime.QuadPart, 0LL);
         ok_eq_ulong(BasicInfo->FileAttributes, ExpectedSetAttributes);
         ExpectedSetAttributes = -1;
+        ExpectingSetAttributes = FALSE;
         Status = STATUS_SUCCESS;
     }
 
