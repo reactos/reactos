@@ -38,9 +38,194 @@ static BOOL CALLBACK FormatTagEnumProc(HACMDRIVERID hadid,
                                        DWORD_PTR dwInstance,
                                        DWORD fdwSupport)
 {
+    MMRESULT rc;
+    HACMDRIVER had;
+
     if (winetest_interactive)
         trace("   Format 0x%04x: %s\n", paftd->dwFormatTag, paftd->szFormatTag);
 
+    rc = acmDriverOpen(&had, hadid, 0);
+    ok(rc == MMSYSERR_NOERROR || rc == MMSYSERR_NODRIVER,
+       "acmDriverOpen(): rc = %08x, should be %08x\n",
+       rc, MMSYSERR_NOERROR);
+
+    if (rc == MMSYSERR_NOERROR)
+    {
+        ACMFORMATDETAILSA fd = {0};
+        WAVEFORMATEX *pwfx, dst;
+        ACMFORMATTAGDETAILSA aftd_pcm = {0};
+        DWORD dwSize, dwSizeMax;
+        DWORD i;
+
+        fd.cbStruct = sizeof(fd);
+        if (paftd->cbFormatSize < sizeof(WAVEFORMATEX))
+            pwfx = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WAVEFORMATEX));
+        else
+            pwfx = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, paftd->cbFormatSize);
+        fd.pwfx = pwfx;
+        fd.cbwfx = paftd->cbFormatSize;
+        fd.dwFormatTag = paftd->dwFormatTag;
+
+        /* try bad pwfx */
+        fd.pwfx = NULL;
+        rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_FORMAT);
+        ok(rc == MMSYSERR_INVALPARAM,
+           "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+        fd.pwfx = pwfx;
+
+        /* try bad wFormatTag */
+        fd.pwfx->wFormatTag = WAVE_FORMAT_UNKNOWN;
+        rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_FORMAT);
+        ok(rc == MMSYSERR_INVALPARAM,
+           "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+        fd.pwfx->wFormatTag = paftd->dwFormatTag;
+
+        /* try bad fdwSupport */
+        fd.fdwSupport = 0xdeadbeef;
+        rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_FORMAT);
+        ok(rc == MMSYSERR_INVALPARAM,
+           "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+        fd.fdwSupport = 0;
+
+        /* try bad pwfx structure size */
+        fd.cbwfx = sizeof(PCMWAVEFORMAT)-1;
+        rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_FORMAT);
+        ok(rc == MMSYSERR_INVALPARAM,
+           "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+        fd.cbwfx = paftd->cbFormatSize;
+
+        /* test bad parameters (all zero) */
+        rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_FORMAT);
+        ok(rc == ACMERR_NOTPOSSIBLE,
+           "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+           rc, ACMERR_NOTPOSSIBLE);
+
+        /* test acmFormatSuggest */
+
+        /* if we don't specify a format, we must give at least the driver's maximum size for any format */
+        acmMetrics((HACMOBJ)had, ACM_METRIC_MAX_SIZE_FORMAT, &dwSize);
+        rc = acmFormatSuggest(had, pwfx, &dst, dwSize-1, 0);
+        ok(rc == MMSYSERR_INVALPARAM,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+
+        rc = acmFormatSuggest(had, pwfx, &dst, dwSize, 0);
+        ok(rc == ACMERR_NOTPOSSIBLE,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, ACMERR_NOTPOSSIBLE);
+
+        /* if we do specify a format, we must give at least the driver's maximum size for that format */
+        aftd_pcm.cbStruct = sizeof(aftd_pcm);
+        aftd_pcm.dwFormatTag = WAVE_FORMAT_PCM;
+        rc = acmFormatTagDetailsA(had, &aftd_pcm, ACM_FORMATTAGDETAILSF_LARGESTSIZE);
+        ok(rc == MMSYSERR_NOERROR, "returned %08x\n", rc);
+
+        dst.wFormatTag = WAVE_FORMAT_PCM;
+        rc = acmFormatSuggest(had, pwfx, &dst, aftd_pcm.cbFormatSize-1, ACM_FORMATSUGGESTF_WFORMATTAG);
+        ok(rc == MMSYSERR_INVALPARAM,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+
+        rc = acmFormatSuggest(had, pwfx, &dst, aftd_pcm.cbFormatSize, ACM_FORMATSUGGESTF_WFORMATTAG);
+        ok(rc == ACMERR_NOTPOSSIBLE,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, ACMERR_NOTPOSSIBLE);
+
+        /* test nonexistent format */
+        dst.wFormatTag = 0xbeef;
+        rc = acmFormatSuggest(had, pwfx, &dst, 0, ACM_FORMATSUGGESTF_WFORMATTAG);
+        ok(rc == ACMERR_NOTPOSSIBLE || rc == MMSYSERR_INVALPARAM,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, ACMERR_NOTPOSSIBLE);
+
+        /* if the driver is NULL, we must give at least the maximum size for any driver */
+        acmMetrics(NULL, ACM_METRIC_MAX_SIZE_FORMAT, &dwSizeMax);
+        rc = acmFormatSuggest(NULL, pwfx, &dst, dwSizeMax-1, 0);
+        ok(rc == MMSYSERR_INVALPARAM,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+
+        if (paftd->dwFormatTag != WAVE_FORMAT_PCM)
+        {
+            rc = acmFormatSuggest(NULL, pwfx, &dst, dwSizeMax, 0);
+            ok(rc == ACMERR_NOTPOSSIBLE,
+               "acmFormatSuggest(): rc = %08x, should be %08x\n",
+               rc, ACMERR_NOTPOSSIBLE);
+        }
+
+        /* if we specify a dst format, we must give the maximum size for that format */
+        dst.wFormatTag = WAVE_FORMAT_PCM;
+        rc = acmFormatSuggest(NULL, pwfx, &dst, aftd_pcm.cbFormatSize-1, ACM_FORMATSUGGESTF_WFORMATTAG);
+        ok(rc == MMSYSERR_INVALPARAM || broken (rc == ACMERR_NOTPOSSIBLE), /* WinXP */
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+
+        rc = acmFormatSuggest(NULL, pwfx, &dst, aftd_pcm.cbFormatSize, ACM_FORMATSUGGESTF_WFORMATTAG);
+        ok(rc == ACMERR_NOTPOSSIBLE,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, ACMERR_NOTPOSSIBLE);
+
+        dst.wFormatTag = paftd->dwFormatTag;
+        rc = acmFormatSuggest(NULL, pwfx, &dst, paftd->cbFormatSize-1, ACM_FORMATSUGGESTF_WFORMATTAG);
+        ok(rc == MMSYSERR_INVALPARAM || broken (rc == ACMERR_NOTPOSSIBLE), /* WinXP */
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+
+        rc = acmFormatSuggest(NULL, pwfx, &dst, paftd->cbFormatSize, ACM_FORMATSUGGESTF_WFORMATTAG);
+        ok(rc == ACMERR_NOTPOSSIBLE,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, ACMERR_NOTPOSSIBLE);
+
+        /* test nonexistent format */
+        dst.wFormatTag = 0xbeef;
+        rc = acmFormatSuggest(NULL, pwfx, &dst, 0, ACM_FORMATSUGGESTF_WFORMATTAG);
+        ok(rc == ACMERR_NOTPOSSIBLE || rc == MMSYSERR_INVALPARAM,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, ACMERR_NOTPOSSIBLE);
+
+        /* test index */
+        for (i = 0; i < paftd->cStandardFormats; i++)
+        {
+            fd.dwFormatIndex = i;
+
+            fd.fdwSupport = 0;
+            fd.cbwfx = paftd->cbFormatSize;
+            fd.pwfx->cbSize = 0xbeef;
+            rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_INDEX);
+            ok(rc == MMSYSERR_NOERROR,
+               "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_NOERROR);
+
+            /* Windows will write cbSize (and other data) even if the
+             * given cbwfx is not large enough */
+            fd.fdwSupport = 0;
+            fd.cbwfx = sizeof(PCMWAVEFORMAT);
+            fd.pwfx->cbSize = 0xbeef;
+            rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_INDEX);
+            todo_wine_if(rc != MMSYSERR_NOERROR) /* remove when fixed */
+            ok(rc == MMSYSERR_NOERROR,
+               "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_NOERROR);
+            if (paftd->dwFormatTag != WAVE_FORMAT_PCM)
+                todo_wine_if(fd.pwfx->cbSize != paftd->cbFormatSize - sizeof(WAVEFORMATEX)) /* remove when fixed */
+                ok(fd.pwfx->cbSize == paftd->cbFormatSize - sizeof(WAVEFORMATEX),
+                   "got %d\n", fd.pwfx->cbSize);
+        }
+
+        /* one more */
+        fd.dwFormatIndex = paftd->cStandardFormats;
+        fd.fdwSupport = 0;
+        rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_INDEX);
+        ok(rc == MMSYSERR_INVALPARAM,
+           "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_INVALPARAM);
+
+        HeapFree(GetProcessHeap(), 0, pwfx);
+    }
     return TRUE;
 }
 
@@ -49,8 +234,82 @@ static BOOL CALLBACK FormatEnumProc(HACMDRIVERID hadid,
                                     DWORD_PTR dwInstance,
                                     DWORD fd)
 {
+    MMRESULT rc;
+    HACMDRIVER had;
+    WAVEFORMATEX *dst, *dstMax;
+    DWORD dwSize, dwSizeMax;
+    DWORD fdwSupport;
+
+    acmMetrics((HACMOBJ)hadid, ACM_METRIC_DRIVER_SUPPORT, &fdwSupport);
+
     if (winetest_interactive)
         trace("   0x%04x, %s\n", pafd->dwFormatTag, pafd->szFormat);
+
+    acmDriverOpen(&had, hadid, 0);
+    dwSize = pafd->cbwfx;
+    dst = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
+
+    /* test acmFormatSuggest with valid src format */
+    if (pafd->dwFormatTag == WAVE_FORMAT_PCM)
+    {
+        rc = acmFormatSuggest(had, pafd->pwfx, dst, dwSize, 0);
+        /* this fails on some decode-only drivers */
+        ok(rc == MMSYSERR_NOERROR || rc == ACMERR_NOTPOSSIBLE,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_NOERROR);
+        if (rc == MMSYSERR_NOERROR)
+        {
+            if (fdwSupport & ACMDRIVERDETAILS_SUPPORTF_CODEC) /* supports different conversions */
+                ok(dst->wFormatTag != WAVE_FORMAT_PCM, "expected different format\n");
+            else
+                ok(dst->wFormatTag == WAVE_FORMAT_PCM,
+                   "expected %d, got %d\n", WAVE_FORMAT_PCM, dst->wFormatTag);
+        }
+    }
+    else
+    {
+        rc = acmFormatSuggest(had, pafd->pwfx, dst, dwSize, 0);
+        ok(rc == MMSYSERR_NOERROR,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_NOERROR);
+        ok(dst->wFormatTag == WAVE_FORMAT_PCM,
+           "expected %d, got %d\n", WAVE_FORMAT_PCM, dst->wFormatTag);
+        ok(dst->nChannels == pafd->pwfx->nChannels,
+           "expected %d, got %d\n", pafd->pwfx->nChannels, dst->nChannels);
+        if (pafd->dwFormatTag != 0x42) /* codec 0x0042 returns a different sample rate */
+            ok(dst->nSamplesPerSec == pafd->pwfx->nSamplesPerSec,
+               "expected %d, got %d\n", pafd->pwfx->nSamplesPerSec, dst->nSamplesPerSec);
+        ok(dst->wBitsPerSample == 16,
+           "expected %d, got %d\n", 16, dst->wBitsPerSample);
+        ok(dst->nBlockAlign == 2*pafd->pwfx->nChannels,
+           "expected %d, got %d\n", 2*pafd->pwfx->nChannels, dst->nBlockAlign);
+
+        /* test with NULL driver */
+        acmMetrics(NULL, ACM_METRIC_MAX_SIZE_FORMAT, &dwSizeMax);
+        dstMax = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSizeMax);
+        rc = acmFormatSuggest(NULL, pafd->pwfx, dstMax, dwSizeMax, 0);
+        ok(rc == MMSYSERR_NOERROR,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_NOERROR);
+
+        HeapFree(GetProcessHeap(), 0, dstMax);
+    }
+
+    ZeroMemory(dst, dwSize);
+    dst->wFormatTag = pafd->pwfx->wFormatTag;
+    rc = acmFormatSuggest(had, pafd->pwfx, dst, dwSize, ACM_FORMATSUGGESTF_WFORMATTAG);
+    if (fdwSupport & ACMDRIVERDETAILS_SUPPORTF_CONVERTER) /* supports same conversions */
+        ok(rc == MMSYSERR_NOERROR,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, MMSYSERR_NOERROR);
+    else
+        todo_wine_if(rc != ACMERR_NOTPOSSIBLE)
+        ok(rc == ACMERR_NOTPOSSIBLE,
+           "acmFormatSuggest(): rc = %08x, should be %08x\n",
+           rc, ACMERR_NOTPOSSIBLE);
+
+    HeapFree(GetProcessHeap(), 0, dst);
+    acmDriverClose(had, 0);
 
     return TRUE;
 }
@@ -330,18 +589,46 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
                "acmFormatEnumA(): rc = %08x, should be %08x\n",
                rc, MMSYSERR_INVALPARAM);
 
-            if (dwSize < sizeof(WAVEFORMATEX))
-                dwSize = sizeof(WAVEFORMATEX);
-
             pwfx = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
 
-            pwfx->cbSize = LOWORD(dwSize) - sizeof(WAVEFORMATEX);
+            if (dwSize >= sizeof(WAVEFORMATEX))
+                pwfx->cbSize = LOWORD(dwSize) - sizeof(WAVEFORMATEX);
             pwfx->wFormatTag = WAVE_FORMAT_UNKNOWN;
 
             fd.cbStruct = sizeof(fd);
             fd.pwfx = pwfx;
             fd.cbwfx = dwSize;
             fd.dwFormatTag = WAVE_FORMAT_UNKNOWN;
+
+            /* try bad callback */
+            rc = acmFormatEnumA(had, &fd, NULL, 0, 0);
+            ok(rc == MMSYSERR_INVALPARAM,
+               "acmFormatEnumA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_INVALPARAM);
+
+            /* try bad pwfx */
+            fd.pwfx = NULL;
+            rc = acmFormatEnumA(had, &fd, FormatEnumProc, 0, 0);
+            ok(rc == MMSYSERR_INVALPARAM,
+               "acmFormatEnumA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_INVALPARAM);
+            fd.pwfx = pwfx;
+
+            /* fdwSupport must be zero */
+            fd.fdwSupport = 0xdeadbeef;
+            rc = acmFormatEnumA(had, &fd, FormatEnumProc, 0, 0);
+            ok(rc == MMSYSERR_INVALPARAM,
+               "acmFormatEnumA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_INVALPARAM);
+            fd.fdwSupport = 0;
+
+            /* try bad pwfx structure size */
+            fd.cbwfx = dwSize-1;
+            rc = acmFormatEnumA(had, &fd, FormatEnumProc, 0, 0);
+            ok(rc == MMSYSERR_INVALPARAM,
+               "acmFormatEnumA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_INVALPARAM);
+            fd.cbwfx = dwSize;
 
             /* try valid parameters */
             rc = acmFormatEnumA(had, &fd, FormatEnumProc, 0, 0);
@@ -382,6 +669,37 @@ static BOOL CALLBACK DriverEnumProc(HACMDRIVERID hadid,
             ok(rc == MMSYSERR_NOERROR,
                "acmFormatTagEnumA(): rc = %08x, should be %08x\n",
                rc, MMSYSERR_NOERROR);
+
+            /* try bad pointer */
+            rc = acmFormatDetailsA(had, NULL, ACM_FORMATDETAILSF_INDEX);
+            ok(rc == MMSYSERR_INVALPARAM,
+               "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_INVALPARAM);
+
+            /* try bad structure size */
+            ZeroMemory(&fd, sizeof(fd));
+            rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_INDEX);
+            ok(rc == MMSYSERR_INVALPARAM,
+               "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_INVALPARAM);
+
+            fd.cbStruct = sizeof(fd) - 1;
+            rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_INDEX);
+            ok(rc == MMSYSERR_INVALPARAM,
+               "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_INVALPARAM);
+
+            fd.cbStruct = sizeof(fd);
+            fd.pwfx = pwfx;
+            ZeroMemory(fd.pwfx, dwSize);
+            fd.cbwfx = dwSize;
+            fd.dwFormatTag = WAVE_FORMAT_UNKNOWN;
+
+            /* try WAVE_FORMAT_UNKNOWN */
+            rc = acmFormatDetailsA(had, &fd, ACM_FORMATDETAILSF_INDEX);
+            ok(rc == MMSYSERR_INVALPARAM,
+               "acmFormatDetailsA(): rc = %08x, should be %08x\n",
+               rc, MMSYSERR_INVALPARAM);
 
             HeapFree(GetProcessHeap(), 0, pwfx);
 
@@ -724,11 +1042,112 @@ todo_wine
     ok(mr == MMSYSERR_NOERROR, "close failed: 0x%x\n", mr);
 }
 
+static const BYTE input[64] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63};
+
+struct stream_output
+{
+    WAVEFORMATEX src;
+    WAVEFORMATEX dst;
+    BYTE output[256];
+    DWORD dst_used;
+    BOOL todo;
+};
+
+static const struct stream_output expected_output[] = {
+    /* #0: Identical conversion */
+    {{WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63}, 64, FALSE},
+
+    /* #1: 1 -> 2 channels */
+    {{WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {WAVE_FORMAT_PCM, 2, 8000, 16000, 2, 8}, {0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,30,30,31,31,32,32,33,33,34,34,35,35,36,36,37,37,38,38,39,39,40,40,41,41,42,42,43,43,44,44,45,45,46,46,47,47,48,48,49,49,50,50,51,51,52,52,53,53,54,54,55,55,56,56,57,57,58,58,59,59,60,60,61,61,62,62,63,63}, 128, FALSE},
+
+    /* #2: 2 -> 1 channels: all of the audio underflows due to addition */
+    {{WAVE_FORMAT_PCM, 2, 8000, 16000, 2, 8}, {WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 32, FALSE},
+
+    /* #3: 2 -> 2 channels */
+    {{WAVE_FORMAT_PCM, 2, 8000, 16000, 2, 8}, {WAVE_FORMAT_PCM, 2, 8000, 16000, 2, 8}, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63}, 64, FALSE},
+
+    /* #4: 8 -> 16 bits per sample */
+    {{WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {WAVE_FORMAT_PCM, 1, 8000, 16000, 2, 16}, {0,128,0,129,0,130,0,131,0,132,0,133,0,134,0,135,0,136,0,137,0,138,0,139,0,140,0,141,0,142,0,143,0,144,0,145,0,146,0,147,0,148,0,149,0,150,0,151,0,152,0,153,0,154,0,155,0,156,0,157,0,158,0,159,0,160,0,161,0,162,0,163,0,164,0,165,0,166,0,167,0,168,0,169,0,170,0,171,0,172,0,173,0,174,0,175,0,176,0,177,0,178,0,179,0,180,0,181,0,182,0,183,0,184,0,185,0,186,0,187,0,188,0,189,0,190,0,191}, 128, FALSE},
+
+    /* #5: 16 -> 8 bits per sample */
+    {{WAVE_FORMAT_PCM, 1, 8000, 16000, 2, 16}, {WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {129,131,133,135,137,139,141,143,145,147,149,151,153,155,157,159,161,163,165,167,169,171,173,175,177,179,181,183,185,187,189,191}, 32, FALSE},
+
+    /* #6: 16 bits per sample, 2 -> 1 channels */
+    {{WAVE_FORMAT_PCM, 2, 8000, 32000, 4, 16}, {WAVE_FORMAT_PCM, 1, 8000, 16000, 2, 16}, {2,4,10,12,18,20,26,28,34,36,42,44,50,52,58,60,66,68,74,76,82,84,90,92,98,100,106,108,114,116,122,124}, 32, FALSE},
+
+    /* #7: 8000 -> 11025 sample rate */
+    /* FIXME: upsampling is slightly off on wine - the algorithm is wrong whenever error > (srcrate + dstrate) / 2 */
+    {{WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {WAVE_FORMAT_PCM, 1, 11025, 11025, 1, 8}, {0,1,1,2,3,4,4,5,6,7,7,8,9,9,10,11,12,12,13,14,15,15,16,17,17,18,19,20,20,21,22,22,23,24,25,25,26,27,28,28,29,30,30,31,32,33,33,34,35,36,36,37,38,38,39,40,41,41,42,43,44,44,45,46,46,47,48,49,49,50,51,52,52,53,54,54,55,56,57,57,58,59,60,60,61,62,62,63}, 88, TRUE},
+
+    /* #8: 8000 -> 22050 sample rate */
+    {{WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {WAVE_FORMAT_PCM, 1, 22050, 22050, 1, 8}, {0,0,1,1,1,2,2,3,3,3,4,4,4,5,5,5,6,6,7,7,7,8,8,8,9,9,9,10,10,11,11,11,12,12,12,13,13,13,14,14,15,15,15,16,16,16,17,17,17,18,18,19,19,19,20,20,20,21,21,21,22,22,22,23,23,24,24,24,25,25,25,26,26,26,27,27,28,28,28,29,29,29,30,30,30,31,31,32,32,32,33,33,33,34,34,34,35,35,36,36,36,37,37,37,38,38,38,39,39,40,40,40,41,41,41,42,42,42,43,43,44,44,44,45,45,45,46,46,46,47,47,48,48,48,49,49,49,50,50,50,51,51,52,52,52,53,53,53,54,54,54,55,55,56,56,56,57,57,57,58,58,58,59,59,60,60,60,61,61,61,62,62,62,63,63,63}, 176, TRUE},
+
+    /* #9: 11025 -> 22050 sample rate */
+    {{WAVE_FORMAT_PCM, 1, 11025, 11025, 1, 8}, {WAVE_FORMAT_PCM, 1, 22050, 22050, 1, 8}, {0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,30,30,31,31,32,32,33,33,34,34,35,35,36,36,37,37,38,38,39,39,40,40,41,41,42,42,43,43,44,44,45,45,46,46,47,47,48,48,49,49,50,50,51,51,52,52,53,53,54,54,55,55,56,56,57,57,58,58,59,59,60,60,61,61,62,62,63,63}, 128, FALSE},
+
+    /* #10: 22050 -> 11025 sample rate */
+    {{WAVE_FORMAT_PCM, 1, 22050, 22050, 1, 8}, {WAVE_FORMAT_PCM, 1, 11025, 11025, 1, 8}, {1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63}, 32, FALSE},
+
+    /* #11: 11025 -> 8000 sample rate */
+    {{WAVE_FORMAT_PCM, 1, 11025, 11025, 1, 8}, {WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {0,2,3,4,6,7,8,10,11,13,14,15,17,18,19,21,22,24,25,26,28,29,31,32,33,35,36,37,39,40,42,43,44,46,47,48,50,51,53,54,55,57,58,59,61,62}, 46, FALSE},
+
+    /* #12: 22050 -> 8000 sample rate */
+    {{WAVE_FORMAT_PCM, 1, 22050, 22050, 1, 8}, {WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {1,4,6,9,12,15,17,20,23,26,28,31,34,37,39,42,45,48,50,53,56,59,62}, 23, FALSE},
+
+    /* #13: 44100 -> 8000 sample rate */
+    {{WAVE_FORMAT_PCM, 1, 44100, 44100, 1, 8}, {WAVE_FORMAT_PCM, 1, 8000, 8000, 1, 8}, {2,8,13,19,24,30,35,41,46,52,57,63}, 12, FALSE},
+};
+
+static void test_convert(void)
+{
+    HACMSTREAM has;
+    ACMSTREAMHEADER hdr = {0};
+    BYTE output[256];
+    MMRESULT mmr;
+    unsigned i;
+
+    for (i = 0; i < sizeof(expected_output)/sizeof(struct stream_output); i++)
+    {
+        mmr = acmStreamOpen(&has, NULL, (WAVEFORMATEX *)&expected_output[i].src, (WAVEFORMATEX *)&expected_output[i].dst, NULL, 0, 0, 0);
+        ok(mmr == MMSYSERR_NOERROR, "#%d: open failed: 0x%x\n", i, mmr);
+
+        memset(&hdr, 0, sizeof(hdr));
+        hdr.cbStruct = sizeof(hdr);
+        hdr.pbSrc = (BYTE *)input;
+        hdr.cbSrcLength = sizeof(input);
+        hdr.pbDst = output;
+        hdr.cbDstLength = sizeof(output);
+
+        mmr = acmStreamPrepareHeader(has, &hdr, 0);
+        ok(mmr == MMSYSERR_NOERROR, "#%d: prepare failed: 0x%x\n", i, mmr);
+        ok(hdr.fdwStatus == ACMSTREAMHEADER_STATUSF_PREPARED, "#%d: header wasn't prepared: 0x%x\n", i, hdr.fdwStatus);
+
+        memset(&output, 0, sizeof(output));
+        mmr = acmStreamConvert(has, &hdr, ACM_STREAMCONVERTF_BLOCKALIGN);
+        ok(mmr == MMSYSERR_NOERROR, "#%d: convert failed: 0x%x\n", i, mmr);
+        ok(hdr.fdwStatus & ACMSTREAMHEADER_STATUSF_DONE, "#%d: conversion was not done: 0x%x\n", i, hdr.fdwStatus);
+        ok(hdr.cbSrcLengthUsed == hdr.cbSrcLength, "#%d: expected %d, got %d\n", i, hdr.cbSrcLength, hdr.cbSrcLengthUsed);
+        ok(hdr.cbDstLengthUsed == expected_output[i].dst_used, "#%d: expected %d, got %d\n", i, expected_output[i].dst_used, hdr.cbDstLengthUsed);
+todo_wine_if(expected_output[i].todo)
+        ok(!memcmp(expected_output[i].output, output, hdr.cbDstLengthUsed), "#%d: output does not match\n", i);
+
+        mmr = acmStreamUnprepareHeader(has, &hdr, 0);
+        ok(mmr == MMSYSERR_NOERROR, "#%d: unprepare failed: 0x%x\n", i, mmr);
+        ok(hdr.fdwStatus == ACMSTREAMHEADER_STATUSF_DONE, "#%d: header wasn't unprepared: 0x%x\n", i, hdr.fdwStatus);
+
+        mmr = acmStreamClose(has, 0);
+        ok(mmr == MMSYSERR_NOERROR, "#%d: close failed: 0x%x\n", i, mmr);
+    }
+}
+
 static void test_acmFormatSuggest(void)
 {
     WAVEFORMATEX src, dst;
     DWORD suggest;
     MMRESULT rc;
+    DWORD sizeMax;
+
+    acmMetrics(NULL, ACM_METRIC_MAX_SIZE_FORMAT, &sizeMax);
 
     /* Test a valid PCM format */
     src.wFormatTag = WAVE_FORMAT_PCM;
@@ -740,17 +1159,13 @@ static void test_acmFormatSuggest(void)
     src.cbSize = 0;
     suggest = 0;
     memset(&dst, 0, sizeof(dst));
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst), suggest);
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(PCMWAVEFORMAT), suggest);
     ok(rc == MMSYSERR_NOERROR, "failed with error 0x%x\n", rc);
-todo_wine
     ok(src.wFormatTag == dst.wFormatTag, "expected %d, got %d\n", src.wFormatTag, dst.wFormatTag);
     ok(src.nChannels == dst.nChannels, "expected %d, got %d\n", src.nChannels, dst.nChannels);
     ok(src.nSamplesPerSec == dst.nSamplesPerSec, "expected %d, got %d\n", src.nSamplesPerSec, dst.nSamplesPerSec);
-todo_wine
     ok(src.nAvgBytesPerSec == dst.nAvgBytesPerSec, "expected %d, got %d\n", src.nAvgBytesPerSec, dst.nAvgBytesPerSec);
-todo_wine
     ok(src.nBlockAlign == dst.nBlockAlign, "expected %d, got %d\n", src.nBlockAlign, dst.nBlockAlign);
-todo_wine
     ok(src.wBitsPerSample == dst.wBitsPerSample, "expected %d, got %d\n", src.wBitsPerSample, dst.wBitsPerSample);
 
     /* All parameters from destination are valid */
@@ -759,7 +1174,7 @@ todo_wine
             | ACM_FORMATSUGGESTF_WBITSPERSAMPLE
             | ACM_FORMATSUGGESTF_WFORMATTAG;
     dst = src;
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst), suggest);
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(PCMWAVEFORMAT), suggest);
     ok(rc == MMSYSERR_NOERROR, "failed with error 0x%x\n", rc);
     ok(src.wFormatTag == dst.wFormatTag, "expected %d, got %d\n", src.wFormatTag, dst.wFormatTag);
     ok(src.nChannels == dst.nChannels, "expected %d, got %d\n", src.nChannels, dst.nChannels);
@@ -768,51 +1183,43 @@ todo_wine
     ok(src.nBlockAlign == dst.nBlockAlign, "expected %d, got %d\n", src.nBlockAlign, dst.nBlockAlign);
     ok(src.wBitsPerSample == dst.wBitsPerSample, "expected %d, got %d\n", src.wBitsPerSample, dst.wBitsPerSample);
 
-    /* Test for WAVE_FORMAT_MSRT24 used in Monster Truck Madness 2 */
-    src.wFormatTag = WAVE_FORMAT_MSRT24;
-    src.nChannels = 1;
-    src.nSamplesPerSec = 8000;
-    src.nAvgBytesPerSec = 16000;
-    src.nBlockAlign = 2;
-    src.wBitsPerSample = 16;
-    src.cbSize = 0;
-    dst = src;
-    suggest = ACM_FORMATSUGGESTF_NCHANNELS
-            | ACM_FORMATSUGGESTF_NSAMPLESPERSEC
-            | ACM_FORMATSUGGESTF_WBITSPERSAMPLE
-            | ACM_FORMATSUGGESTF_WFORMATTAG;
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst), suggest);
-    ok(rc == ACMERR_NOTPOSSIBLE, "failed with error 0x%x\n", rc);
-    memset(&dst, 0, sizeof(dst));
+    /* Test an invalid PCM format */
+    ZeroMemory(&dst, sizeof(dst));
+    src.nSamplesPerSec = 0xdeadbeef;
     suggest = 0;
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst), suggest);
-todo_wine
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeMax, suggest);
+    todo_wine {
+    ok(rc == MMSYSERR_NOERROR, "failed with error 0x%x\n", rc);
+    ok(dst.wFormatTag == WAVE_FORMAT_PCM, "expected %d, got %d\n", WAVE_FORMAT_PCM, dst.wFormatTag);
+    ok(dst.nSamplesPerSec == 0xdeadbeef, "expected %d, got %d\n", 0xdeadbeef, dst.nSamplesPerSec);
+    }
+    src.nSamplesPerSec = 8000;
+
+    /* Test a nonexistent format */
+    src.wFormatTag = 0xbeef;
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeMax-1, suggest);
     ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
 
-    /* Invalid struct size */
-    src.wFormatTag = WAVE_FORMAT_PCM;
-    rc = acmFormatSuggest(NULL, &src, &dst, 0, suggest);
-todo_wine
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeMax, suggest);
+    todo_wine
+    ok(rc == MMSYSERR_NODRIVER, "failed with error 0x%x\n", rc);
+
+    /* Test converting between two known but incompatible formats */
+    src.wFormatTag = WAVE_FORMAT_ALAW;
+    src.nChannels = 1;
+    src.nSamplesPerSec = 8000;
+    src.nAvgBytesPerSec = 8000;
+    src.nBlockAlign = 1;
+    src.wBitsPerSample = 8;
+    src.cbSize = 0;
+    suggest = ACM_FORMATSUGGESTF_WFORMATTAG;
+    dst.wFormatTag = WAVE_FORMAT_IMA_ADPCM;
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(IMAADPCMWAVEFORMAT)-1, suggest);
     ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) / 2, suggest);
-todo_wine
-    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
-    /* cbSize is the last parameter and not required for PCM */
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - 1, suggest);
-    ok(rc == MMSYSERR_NOERROR, "failed with error 0x%x\n", rc);
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - sizeof(dst.cbSize), suggest);
-    ok(rc == MMSYSERR_NOERROR, "failed with error 0x%x\n", rc);
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - sizeof(dst.cbSize) - 1, suggest);
-todo_wine
-    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
-    /* cbSize is required for others */
-    src.wFormatTag = WAVE_FORMAT_ADPCM;
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - sizeof(dst.cbSize), suggest);
-todo_wine
-    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
-    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(dst) - 1, suggest);
-todo_wine
-    ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
+
+    rc = acmFormatSuggest(NULL, &src, &dst, sizeof(IMAADPCMWAVEFORMAT), suggest);
+    todo_wine
+    ok(rc == MMSYSERR_NODRIVER, "failed with error 0x%x\n", rc);
 
     /* Invalid suggest flags */
     src.wFormatTag = WAVE_FORMAT_PCM;
@@ -830,8 +1237,46 @@ todo_wine
     ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
 }
 
+static void test_acmFormatTagDetails(void)
+{
+    ACMFORMATTAGDETAILSW aftd = {0};
+    MMRESULT rc;
 
-void test_mp3(void)
+    aftd.cbStruct = sizeof(aftd);
+    aftd.dwFormatTag = WAVE_FORMAT_MPEGLAYER3;
+    rc = acmFormatTagDetailsW(NULL, &aftd, ACM_FORMATTAGDETAILSF_FORMATTAG);
+    if (rc == MMSYSERR_NOERROR)
+        ok(aftd.cbFormatSize == sizeof(MPEGLAYER3WAVEFORMAT), "got %d\n", aftd.cbFormatSize);
+}
+
+static void test_acmFormatChoose(void)
+{
+    ACMFORMATCHOOSEW afc = {0};
+    WAVEFORMATEX *pwfx;
+    DWORD sizeMax;
+    MMRESULT rc;
+
+    acmMetrics(NULL, ACM_METRIC_MAX_SIZE_FORMAT, &sizeMax);
+    pwfx = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeMax);
+
+    afc.cbStruct = sizeof(afc);
+    afc.pwfx = pwfx;
+
+    /* test invalid struct size */
+    afc.cbStruct = sizeof(afc)-1;
+    rc = acmFormatChooseW(&afc);
+    ok(rc == MMSYSERR_INVALPARAM, "expected 0xb, got 0x%x\n", rc);
+    afc.cbStruct = sizeof(afc);
+
+    afc.pwfx = NULL;
+    rc = acmFormatChooseW(&afc);
+    ok(rc == MMSYSERR_INVALPARAM, "expected 0xb, got 0x%x\n", rc);
+    afc.pwfx = pwfx;
+
+    HeapFree(GetProcessHeap(), 0, pwfx);
+}
+
+static void test_mp3(void)
 {
     MPEGLAYER3WAVEFORMAT src;
     WAVEFORMATEX dst;
@@ -1067,7 +1512,10 @@ START_TEST(msacm)
 {
     driver_tests();
     test_prepareheader();
+    test_convert();
     test_acmFormatSuggest();
+    test_acmFormatTagDetails();
+    test_acmFormatChoose();
     test_mp3();
     /* Test acmDriverAdd in the end as it may conflict
      * with other tests due to codec lookup order */
