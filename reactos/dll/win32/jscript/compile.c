@@ -1736,7 +1736,7 @@ static HRESULT compile_try_statement(compiler_ctx_t *ctx, try_statement_t *stat)
     if(stat->finally_statement) {
         /*
          * finally block expects two elements on the stack, which may be:
-         * - (true, return_addr) set by OP_pop_except, OP_end_finally jumps back to passed addres
+         * - (true, return_addr) set by OP_pop_except, OP_end_finally jumps back to passed address
          * - (false, exception_value) set when unwinding an exception, which OP_end_finally rethrows
          */
         finally_off = ctx->code_off;
