@@ -256,7 +256,7 @@ USBPORT_OpenInterface(IN PURB Urb,
     PUSBPORT_PIPE_HANDLE PipeHandle;
     PUSB_ENDPOINT_DESCRIPTOR Descriptor;
     PUSBD_PIPE_INFORMATION PipeInfo;
-    ULONG NumInterfaces;
+    ULONG NumEndpoints;
     SIZE_T Length;
     SIZE_T HandleLength;
     BOOLEAN IsAllocated = FALSE;
@@ -273,10 +273,10 @@ USBPORT_OpenInterface(IN PURB Urb,
                                                                InterfaceInfo->AlternateSetting,
                                                                &InterfaceInfo->AlternateSetting);
 
-    NumInterfaces = InterfaceDescriptor->bNumEndpoints;
+    NumEndpoints = InterfaceDescriptor->bNumEndpoints;
 
     Length = sizeof(USBD_INTERFACE_INFORMATION) +
-             (NumInterfaces - 1) * sizeof(USBD_PIPE_INFORMATION);
+             (NumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION);
 
     if (InterfaceInfo->AlternateSetting && IsSetInterface)
     {
@@ -290,7 +290,7 @@ USBPORT_OpenInterface(IN PURB Urb,
     else
     {
         HandleLength = sizeof(USBPORT_INTERFACE_HANDLE) +
-                       (NumInterfaces - 1) * sizeof(USBPORT_PIPE_HANDLE);
+                       (NumEndpoints - 1) * sizeof(USBPORT_PIPE_HANDLE);
 
         InterfaceHandle = ExAllocatePoolWithTag(NonPagedPool,
                                                 HandleLength,
@@ -304,11 +304,11 @@ USBPORT_OpenInterface(IN PURB Urb,
 
         RtlZeroMemory(InterfaceHandle, HandleLength);
 
-        if (NumInterfaces > 0)
+        if (NumEndpoints > 0)
         {
             PipeHandle = &InterfaceHandle->PipeHandle[0];
 
-            for (ix = 0; ix < NumInterfaces; ++ix)
+            for (ix = 0; ix < NumEndpoints; ++ix)
             {
                 PipeHandle->Flags = PIPE_HANDLE_FLAG_CLOSED;
                 PipeHandle->Endpoint = NULL;
@@ -335,11 +335,11 @@ USBPORT_OpenInterface(IN PURB Urb,
     Descriptor = (PUSB_ENDPOINT_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor +
                                             InterfaceDescriptor->bLength);
 
-    if (NumInterfaces)
+    if (NumEndpoints)
     {
         PipeHandle = &InterfaceHandle->PipeHandle[0];
 
-        for (ix = 0; ix < NumInterfaces; ++ix)
+        for (ix = 0; ix < NumEndpoints; ++ix)
         {
             while (Descriptor->bDescriptorType != USB_ENDPOINT_DESCRIPTOR_TYPE)
             {
@@ -387,12 +387,12 @@ USBPORT_OpenInterface(IN PURB Urb,
 
     if (USBD_SUCCESS(USBDStatus))
     {
-        if (NumInterfaces)
+        if (NumEndpoints)
         {
             PipeInfo = &InterfaceInfo->Pipes[0];
             PipeHandle = &InterfaceHandle->PipeHandle[0];
 
-            for (ix = 0; ix < NumInterfaces; ++ix)
+            for (ix = 0; ix < NumEndpoints; ++ix)
             {
                 Status = USBPORT_OpenPipe(FdoDevice,
                                           DeviceHandle,
@@ -424,7 +424,7 @@ Exit:
     {
         if (InterfaceHandle)
         {
-            if (NumInterfaces)
+            if (NumEndpoints)
             {
                 DPRINT1("USBPORT_OpenInterface: USBDStatus - %lx\n", USBDStatus);
             }
