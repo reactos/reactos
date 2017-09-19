@@ -112,12 +112,12 @@ TestMmAllocatePagesForMdl(VOID)
     ok(Mdl != NULL, "MmAllocatePagesForMdl failed for 2 GB\n");
     if (Mdl != NULL)
     {
-        ok(MmGetMdlByteCount(Mdl) != 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
+        ok(MmGetMdlByteCount(Mdl) == 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
         ok(MmGetMdlVirtualAddress(Mdl) == NULL, "Virtual address: %p\n", MmGetMdlVirtualAddress(Mdl));
         ok(!(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
         MdlPages = MmGetMdlPfnArray(Mdl);
         MdlPageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Mdl), MmGetMdlByteCount(Mdl));
-        ok(MdlPageCount < 2UL * 1024 * 1024 * 1024 / PAGE_SIZE, "MdlPageCount = %lu\n", MdlPageCount);
+        ok(MdlPageCount == 2UL * 1024 * 1024 * 1024 / PAGE_SIZE, "MdlPageCount = %lu\n", MdlPageCount);
         for (i = 0; i < MdlPageCount; i++)
         {
             if (MdlPages[i] == 0 ||
@@ -135,7 +135,7 @@ TestMmAllocatePagesForMdl(VOID)
         ok(SystemVa == NULL, "MmMapLockedPagesSpecifyCache succeeded for 2 GB\n");
         if (SystemVa != NULL)
             MmUnmapLockedPages(SystemVa, Mdl);
-        ok(MmGetMdlByteCount(Mdl) != 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
+        ok(MmGetMdlByteCount(Mdl) == 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
         ok(MmGetMdlVirtualAddress(Mdl) == NULL, "Virtual address: %p\n", MmGetMdlVirtualAddress(Mdl));
         ok(!(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdl->MdlFlags);
         MmFreePagesFromMdl(Mdl);
