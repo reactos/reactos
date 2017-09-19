@@ -25,6 +25,7 @@ VfatCleanupFile(
 {
     PVFATFCB pFcb;
     PVFATCCB pCcb;
+    BOOLEAN IsVolume;
     PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
     PFILE_OBJECT FileObject = IrpContext->FileObject;
 
@@ -36,7 +37,8 @@ VfatCleanupFile(
     if (!pFcb)
         return STATUS_SUCCESS;
 
-    if (BooleanFlagOn(pFcb->Flags, FCB_IS_VOLUME))
+    IsVolume = BooleanFlagOn(pFcb->Flags, FCB_IS_VOLUME);
+    if (IsVolume)
     {
         pFcb->OpenHandleCount--;
 
@@ -145,7 +147,7 @@ VfatCleanupFile(
     }
 
 #ifdef ENABLE_SWAPOUT
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_DISMOUNT_PENDING))
+    if (IsVolume && BooleanFlagOn(DeviceExt->Flags, VCB_DISMOUNT_PENDING))
     {
         VfatCheckForDismount(DeviceExt, FALSE);
     }
