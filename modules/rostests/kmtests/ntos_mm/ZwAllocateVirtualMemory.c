@@ -39,8 +39,8 @@ typedef struct _TEST_CONTEXT
         else if (!NT_SUCCESS(Status))                                                                                      \
             ok_eq_pointer(BaseAddress, NULL);                                                                              \
         RegionSize = 0;                                                                                                    \
-        Status = ZwFreeVirtualMemory(ProcessHandle, &BaseAddress, &RegionSize, MEM_RELEASE);                               \
-        if (FreeStatus != IGNORE) ok_eq_hex(Status, FreeStatus);                                                           \
+        Status2 = ZwFreeVirtualMemory(ProcessHandle, &BaseAddress, &RegionSize, MEM_RELEASE);                               \
+        if (FreeStatus != IGNORE) ok_eq_hex(Status2, FreeStatus);                                                           \
         BaseAddress = NULL;                                                                                                \
         RegionSize = DEFAULT_ALLOC_SIZE;                                                                                   \
     } while (0)                                                                                                            \
@@ -98,7 +98,7 @@ static
 VOID
 SimpleErrorChecks(VOID)
 {
-    NTSTATUS Status;
+    NTSTATUS Status, Status2;
     PVOID Base = NULL;
     SIZE_T RegionSize = DEFAULT_ALLOC_SIZE;
 
@@ -109,7 +109,7 @@ SimpleErrorChecks(VOID)
 
     //BASE ADDRESS TESTS
     Base = (PVOID)0x00567A20;
-    ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_CONFLICTING_ADDRESSES, STATUS_UNABLE_TO_DELETE_SECTION);
+    ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_CONFLICTING_ADDRESSES, STATUS_FREE_VM_NOT_AT_BASE);
 
     Base = (PVOID) 0x60000000;
     ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
