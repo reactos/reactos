@@ -9,9 +9,9 @@
 #include "fsutil.h"
 
 /* Add handlers here for commands */
-int DirtyMain(int argc, const TCHAR *argv[]);
-int FsInfoMain(int argc, const TCHAR *argv[]);
-int HardLinkMain(int argc, const TCHAR *argv[]);
+HandlerProc DirtyMain;
+HandlerProc FsInfoMain;
+HandlerProc HardLinkMain;
 static HandlerItem HandlersList[] =
 {
     /* Proc, name, help */

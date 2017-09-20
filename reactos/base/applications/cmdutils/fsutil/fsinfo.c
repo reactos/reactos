@@ -9,9 +9,9 @@
 #include "fsutil.h"
 
 /* Add handlers here for subcommands */
-static int DrivesMain(int argc, const TCHAR *argv[]);
-static int DriveTypeMain(int argc, const TCHAR *argv[]);
-static int VolumeInfoMain(int argc, const TCHAR *argv[]);
+static HandlerProc DrivesMain;
+static HandlerProc DriveTypeMain;
+static HandlerProc VolumeInfoMain;
 static HandlerItem HandlersList[] =
 {
     /* Proc, name, help */

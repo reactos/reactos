@@ -10,8 +10,8 @@
 #include <winioctl.h>
 
 /* Add handlers here for subcommands */
-static int QueryMain(int argc, const TCHAR *argv[]);
-static int SetMain(int argc, const TCHAR *argv[]);
+static HandlerProc QueryMain;
+static HandlerProc SetMain;
 static HandlerItem HandlersList[] =
 {
     /* Proc, name, help */

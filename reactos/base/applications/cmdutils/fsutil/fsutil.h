@@ -5,9 +5,12 @@
 #include <tchar.h>
 #include <stdio.h>
 
+typedef int (HandlerProc)(int argc, const TCHAR *argv[]);
+typedef HandlerProc * pHandlerProc;
+
 typedef struct
 {
-    int (*Handler)(int argc, const TCHAR *argv[]);
+    pHandlerProc Handler;
     const TCHAR * Command;
     const TCHAR * Desc;
 } HandlerItem;

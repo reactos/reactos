@@ -9,7 +9,7 @@
 #include "fsutil.h"
 
 /* Add handlers here for subcommands */
-static int CreateMain(int argc, const TCHAR *argv[]);
+static HandlerProc CreateMain;
 static HandlerItem HandlersList[] =
 {
     /* Proc, name, help */
