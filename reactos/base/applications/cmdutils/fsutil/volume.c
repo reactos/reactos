@@ -10,10 +10,12 @@
 
 /* Add handlers here for subcommands */
 static HandlerProc DismountMain;
+static HandlerProc DiskFreeMain;
 static HandlerItem HandlersList[] =
 {
     /* Proc, name, help */
     { DismountMain, _T("dismount"), _T("Dismounts a volume") },
+    { DiskFreeMain, _T("diskfree"), _T("Prints free space on a volume") },
 };
 
 static int
@@ -76,6 +78,32 @@ DismountMain(int argc, const TCHAR *argv[])
     CloseHandle(Volume);
 
     _ftprintf(stdout, _T("The %s volume has been dismounted\n"), argv[1]);
+
+    return 0;
+}
+
+static int
+DiskFreeMain(int argc, const TCHAR *argv[])
+{
+    ULARGE_INTEGER FreeAvail, TotalNumber, TotalNumberFree;
+
+    /* We need a path */
+    if (argc < 2)
+    {
+        _ftprintf(stderr, _T("Usage: fsutil volume diskfree <volume path>\n"));
+        _ftprintf(stderr, _T("\tFor example: fsutil volume diskfree c:\n"));
+        return 1;
+    }
+
+    if (!GetDiskFreeSpaceEx(argv[1], &FreeAvail, &TotalNumber, &TotalNumberFree))
+    {
+        PrintErrorMessage(GetLastError());
+        return 1;
+    }
+
+    _ftprintf(stdout, _T("Total free bytes\t\t: %I64i\n"), TotalNumberFree.QuadPart);
+    _ftprintf(stdout, _T("Total bytes\t\t\t: %I64i\n"), TotalNumber.QuadPart);
+    _ftprintf(stdout, _T("Total free available bytes\t: %I64i\n"), FreeAvail.QuadPart);
 
     return 0;
 }
