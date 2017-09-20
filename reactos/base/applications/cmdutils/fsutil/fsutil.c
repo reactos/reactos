@@ -12,12 +12,14 @@
 HandlerProc DirtyMain;
 HandlerProc FsInfoMain;
 HandlerProc HardLinkMain;
+HandlerProc VolumeMain;
 static HandlerItem HandlersList[] =
 {
     /* Proc, name, help */
     { DirtyMain, _T("dirty"), _T("Manipulates the dirty bit") },
     { FsInfoMain, _T("fsinfo"), _T("Gathers informations about file systems") },
     { HardLinkMain, _T("hardlink"), _T("Handles hard links") },
+    { VolumeMain, _T("volume"), _T("Manages volumes") },
 };
 
 static void

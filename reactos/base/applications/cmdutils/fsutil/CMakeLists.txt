@@ -4,6 +4,7 @@ list(APPEND SOURCE
     fsinfo.c
     fsutil.c
     hardlink.c
+    volume.c
     fsutil.h)
 add_executable(fsutil ${SOURCE} fsutil.rc)
 set_module_type(fsutil win32cui UNICODE)
