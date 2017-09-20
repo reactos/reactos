@@ -765,33 +765,55 @@ GetFileAttributesExA(LPCSTR lpFileName,
 DWORD WINAPI
 GetFileAttributesA(LPCSTR lpFileName)
 {
-   WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
    PWSTR FileNameW;
-   BOOL ret;
 
    if (!lpFileName || !(FileNameW = FilenameA2W(lpFileName, FALSE)))
       return INVALID_FILE_ATTRIBUTES;
 
-   ret = GetFileAttributesExW(FileNameW, GetFileExInfoStandard, &FileAttributeData);
-
-   return ret ? FileAttributeData.dwFileAttributes : INVALID_FILE_ATTRIBUTES;
+   return GetFileAttributesW(FileNameW);
 }
 
 
 /*
  * @implemented
  */
-DWORD WINAPI
+DWORD
+WINAPI
 GetFileAttributesW(LPCWSTR lpFileName)
 {
-  WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
-  BOOL Result;
+    NTSTATUS Status;
+    UNICODE_STRING FileName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    FILE_BASIC_INFORMATION FileInformation;
 
-  TRACE ("GetFileAttributeW(%S) called\n", lpFileName);
+    /* Get the NT path name */
+    if (!RtlDosPathNameToNtPathName_U(lpFileName, &FileName, NULL, NULL))
+    {
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return INVALID_FILE_ATTRIBUTES;
+    }
 
-  Result = GetFileAttributesExW(lpFileName, GetFileExInfoStandard, &FileAttributeData);
+    /* Prepare for querying attributes */
+    InitializeObjectAttributes(&ObjectAttributes, &FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL, NULL);
+    /* Simply query attributes */
+    Status = NtQueryAttributesFile(&ObjectAttributes, &FileInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        /* It failed? Is it a DOS device? */
+        if (RtlIsDosDeviceName_U(lpFileName))
+        {
+            return FILE_ATTRIBUTE_ARCHIVE;
+        }
 
-  return Result ? FileAttributeData.dwFileAttributes : INVALID_FILE_ATTRIBUTES;
+        /* Set the error otherwise */
+        BaseSetLastNTError(Status);
+        return INVALID_FILE_ATTRIBUTES;
+    }
+
+    /* Return the file attributes */
+    return FileInformation.FileAttributes;
 }
 
 
