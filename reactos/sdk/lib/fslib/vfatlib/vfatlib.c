@@ -402,11 +402,15 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     verify = TRUE;
     salvage_files = TRUE;
 
-    /* Open filesystem */
+    /* Open filesystem and lock it */
     fs_open(DriveRoot, FsCheckFlags & FSCHECK_READ_WRITE);
 
     if (CheckOnlyIfDirty && !fs_isdirty())
     {
+        /* Unlock volume if required */
+        if (FsCheckFlags & FSCHECK_READ_WRITE)
+            fs_lock(FALSE);
+
         /* No need to check FS */
         return (fs_close(FALSE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
     }
