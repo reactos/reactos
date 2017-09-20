@@ -897,81 +897,104 @@ SetFileAttributesA(
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 SetFileAttributesW(LPCWSTR lpFileName,
-		   DWORD dwFileAttributes)
+                   DWORD dwFileAttributes)
 {
-  FILE_BASIC_INFORMATION FileInformation;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  UNICODE_STRING FileName;
-  HANDLE FileHandle;
-  NTSTATUS Status;
+    NTSTATUS Status;
+    PWSTR PathUBuffer;
+    HANDLE FileHandle;
+    UNICODE_STRING NtPathU;
+    IO_STATUS_BLOCK IoStatusBlock;
+    RTL_RELATIVE_NAME_U RelativeName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    FILE_BASIC_INFORMATION FileInformation;
 
-  TRACE ("SetFileAttributeW(%S, 0x%lx) called\n", lpFileName, dwFileAttributes);
-
-  /* Validate and translate the filename */
-  if (!RtlDosPathNameToNtPathName_U (lpFileName,
-				     &FileName,
-				     NULL,
-				     NULL))
+    /* Get relative name */
+    if (!RtlDosPathNameToRelativeNtPathName_U(lpFileName, &NtPathU, NULL, &RelativeName))
     {
-      WARN ("Invalid path\n");
-      SetLastError (ERROR_BAD_PATHNAME);
-      return FALSE;
-    }
-  TRACE ("FileName: \'%wZ\'\n", &FileName);
-
-  /* build the object attributes */
-  InitializeObjectAttributes (&ObjectAttributes,
-			      &FileName,
-			      OBJ_CASE_INSENSITIVE,
-			      NULL,
-			      NULL);
-
-  /* Open the file */
-  Status = NtOpenFile (&FileHandle,
-		       SYNCHRONIZE | FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
-		       &ObjectAttributes,
-		       &IoStatusBlock,
-		       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		       FILE_SYNCHRONOUS_IO_NONALERT);
-  RtlFreeUnicodeString (&FileName);
-  if (!NT_SUCCESS (Status))
-    {
-      WARN ("NtOpenFile() failed (Status %lx)\n", Status);
-      BaseSetLastNTError (Status);
-      return FALSE;
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return FALSE;
     }
 
-  Status = NtQueryInformationFile(FileHandle,
-				  &IoStatusBlock,
-				  &FileInformation,
-				  sizeof(FILE_BASIC_INFORMATION),
-				  FileBasicInformation);
-  if (!NT_SUCCESS(Status))
+    /* Save buffer to allow later freeing */
+    PathUBuffer = NtPathU.Buffer;
+
+    /* If we have relative name (and root dir), use them instead */
+    if (RelativeName.RelativeName.Length != 0)
     {
-      WARN ("SetFileAttributes NtQueryInformationFile failed with status 0x%08x\n", Status);
-      NtClose (FileHandle);
-      BaseSetLastNTError (Status);
-      return FALSE;
+        NtPathU.Length = RelativeName.RelativeName.Length;
+        NtPathU.MaximumLength = RelativeName.RelativeName.MaximumLength;
+        NtPathU.Buffer = RelativeName.RelativeName.Buffer;
+    }
+    else
+    {
+        RelativeName.ContainingDirectory = NULL;
     }
 
-  FileInformation.FileAttributes = dwFileAttributes;
-  Status = NtSetInformationFile(FileHandle,
-				&IoStatusBlock,
-				&FileInformation,
-				sizeof(FILE_BASIC_INFORMATION),
-				FileBasicInformation);
-  NtClose (FileHandle);
-  if (!NT_SUCCESS(Status))
+    /* Prepare the object attribute for opening the file */
+    InitializeObjectAttributes(&ObjectAttributes, &NtPathU,
+                                OBJ_CASE_INSENSITIVE,
+                                RelativeName.ContainingDirectory, NULL);
+
+    /* Attempt to open the file, while supporting reparse point */
+    Status = NtOpenFile(&FileHandle, FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes, &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT);
+    /* If opening failed, check whether it was because of reparse point support */
+    if (!NT_SUCCESS(Status))
     {
-      WARN ("SetFileAttributes NtSetInformationFile failed with status 0x%08x\n", Status);
-      BaseSetLastNTError (Status);
-      return FALSE;
+        /* Nope, just quit */
+        if (Status != STATUS_INVALID_PARAMETER)
+        {
+            RtlReleaseRelativeName(&RelativeName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+            BaseSetLastNTError(Status);
+
+            return FALSE;
+        }
+
+        /* Yes, retry without */
+        Status = NtOpenFile(&FileHandle, FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                            &ObjectAttributes, &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                            FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlReleaseRelativeName(&RelativeName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+            BaseSetLastNTError(Status);
+
+            return FALSE;
+        }
     }
 
-  return TRUE;
+    /* We don't need strings anylonger */
+    RtlReleaseRelativeName(&RelativeName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathUBuffer);
+
+    /* Zero our structure, we'll only set file attributes */
+    ZeroMemory(&FileInformation, sizeof(FileInformation));
+    /* Set the attributes, filtering only allowed attributes, and forcing normal attribute */
+    FileInformation.FileAttributes = (dwFileAttributes & FILE_ATTRIBUTE_VALID_SET_FLAGS) | FILE_ATTRIBUTE_NORMAL;
+
+    /* Finally, set the attributes */
+    Status = NtSetInformationFile(FileHandle, &IoStatusBlock, &FileInformation,
+                                  sizeof(FILE_BASIC_INFORMATION), FileBasicInformation);
+    /* Close the file */
+    NtClose(FileHandle);
+
+    /* If it failed, set the error and fail */
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
