@@ -181,6 +181,12 @@ VfatSetBasicInformation(
 
         if (vfatFCBIsDirectory(FCB))
         {
+            if (BooleanFlagOn(BasicInfo->FileAttributes, FILE_ATTRIBUTE_TEMPORARY))
+            {
+                DPRINT("Setting temporary attribute on a directory!\n");
+                return STATUS_INVALID_PARAMETER;
+            }
+
             Attributes |= FILE_ATTRIBUTE_DIRECTORY;
         }
         else
