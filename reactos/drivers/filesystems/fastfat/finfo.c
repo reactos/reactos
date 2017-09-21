@@ -165,6 +165,36 @@ VfatSetBasicInformation(
     /* Check volume label bit */
     ASSERT(0 == (*FCB->Attributes & _A_VOLID));
 
+    if (BasicInfo->FileAttributes != 0)
+    {
+        UCHAR Attributes;
+
+        Attributes = (BasicInfo->FileAttributes & (FILE_ATTRIBUTE_ARCHIVE |
+                                                   FILE_ATTRIBUTE_SYSTEM |
+                                                   FILE_ATTRIBUTE_HIDDEN |
+                                                   FILE_ATTRIBUTE_DIRECTORY |
+                                                   FILE_ATTRIBUTE_READONLY));
+
+        if (vfatFCBIsDirectory(FCB))
+        {
+            Attributes |= FILE_ATTRIBUTE_DIRECTORY;
+        }
+        else
+        {
+            if (BooleanFlagOn(BasicInfo->FileAttributes, FILE_ATTRIBUTE_DIRECTORY))
+            {
+                DPRINT("Setting directory attribute on a file!\n");
+                return STATUS_INVALID_PARAMETER;
+            }
+        }
+
+        if (Attributes != *FCB->Attributes)
+        {
+            *FCB->Attributes = Attributes;
+            DPRINT("Setting attributes 0x%02x\n", *FCB->Attributes);
+        }
+    }
+
     if (vfatVolumeIsFatX(DeviceExt))
     {
         if (BasicInfo->CreationTime.QuadPart != 0 && BasicInfo->CreationTime.QuadPart != -1)
@@ -216,18 +246,6 @@ VfatSetBasicInformation(
                                        &FCB->entry.Fat.UpdateDate,
                                        &FCB->entry.Fat.UpdateTime);
         }
-    }
-
-    if (BasicInfo->FileAttributes)
-    {
-        *FCB->Attributes = (unsigned char)((*FCB->Attributes &
-                            (FILE_ATTRIBUTE_DIRECTORY | 0x48)) |
-                            (BasicInfo->FileAttributes &
-                             (FILE_ATTRIBUTE_ARCHIVE |
-                              FILE_ATTRIBUTE_SYSTEM |
-                              FILE_ATTRIBUTE_HIDDEN |
-                              FILE_ATTRIBUTE_READONLY)));
-        DPRINT("Setting attributes 0x%02x\n", *FCB->Attributes);
     }
 
     VfatUpdateEntry(FCB, vfatVolumeIsFatX(DeviceExt));
