@@ -156,6 +156,8 @@ VfatSetBasicInformation(
     PDEVICE_EXTENSION DeviceExt,
     PFILE_BASIC_INFORMATION BasicInfo)
 {
+    ULONG NotifyFilter;
+
     DPRINT("VfatSetBasicInformation()\n");
 
     ASSERT(NULL != FileObject);
@@ -164,6 +166,8 @@ VfatSetBasicInformation(
     ASSERT(NULL != BasicInfo);
     /* Check volume label bit */
     ASSERT(0 == (*FCB->Attributes & _A_VOLID));
+
+    NotifyFilter = 0;
 
     if (BasicInfo->FileAttributes != 0)
     {
@@ -192,6 +196,7 @@ VfatSetBasicInformation(
         {
             *FCB->Attributes = Attributes;
             DPRINT("Setting attributes 0x%02x\n", *FCB->Attributes);
+            NotifyFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
         }
     }
 
@@ -203,6 +208,7 @@ VfatSetBasicInformation(
                                        &BasicInfo->CreationTime,
                                        &FCB->entry.FatX.CreationDate,
                                        &FCB->entry.FatX.CreationTime);
+            NotifyFilter |= FILE_NOTIFY_CHANGE_CREATION;
         }
 
         if (BasicInfo->LastAccessTime.QuadPart != 0 && BasicInfo->LastAccessTime.QuadPart != -1)
@@ -211,6 +217,7 @@ VfatSetBasicInformation(
                                        &BasicInfo->LastAccessTime,
                                        &FCB->entry.FatX.AccessDate,
                                        &FCB->entry.FatX.AccessTime);
+            NotifyFilter |= FILE_NOTIFY_CHANGE_LAST_ACCESS;
         }
 
         if (BasicInfo->LastWriteTime.QuadPart != 0 && BasicInfo->LastWriteTime.QuadPart != -1)
@@ -219,6 +226,7 @@ VfatSetBasicInformation(
                                        &BasicInfo->LastWriteTime,
                                        &FCB->entry.FatX.UpdateDate,
                                        &FCB->entry.FatX.UpdateTime);
+            NotifyFilter |= FILE_NOTIFY_CHANGE_LAST_WRITE;
         }
     }
     else
@@ -229,6 +237,7 @@ VfatSetBasicInformation(
                                        &BasicInfo->CreationTime,
                                        &FCB->entry.Fat.CreationDate,
                                        &FCB->entry.Fat.CreationTime);
+            NotifyFilter |= FILE_NOTIFY_CHANGE_CREATION;
         }
 
         if (BasicInfo->LastAccessTime.QuadPart != 0 && BasicInfo->LastAccessTime.QuadPart != -1)
@@ -237,6 +246,7 @@ VfatSetBasicInformation(
                                        &BasicInfo->LastAccessTime,
                                        &FCB->entry.Fat.AccessDate,
                                        NULL);
+            NotifyFilter |= FILE_NOTIFY_CHANGE_LAST_ACCESS;
         }
 
         if (BasicInfo->LastWriteTime.QuadPart != 0 && BasicInfo->LastWriteTime.QuadPart != -1)
@@ -245,10 +255,21 @@ VfatSetBasicInformation(
                                        &BasicInfo->LastWriteTime,
                                        &FCB->entry.Fat.UpdateDate,
                                        &FCB->entry.Fat.UpdateTime);
+            NotifyFilter |= FILE_NOTIFY_CHANGE_LAST_WRITE;
         }
     }
 
     VfatUpdateEntry(FCB, vfatVolumeIsFatX(DeviceExt));
+
+    if (NotifyFilter != 0)
+    {
+        FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                    &(DeviceExt->NotifyList),
+                                    (PSTRING)&FCB->PathNameU,
+                                    FCB->PathNameU.Length - FCB->LongNameU.Length,
+                                    NULL, NULL, NotifyFilter, FILE_ACTION_MODIFIED,
+                                    NULL);
+    }
 
     return STATUS_SUCCESS;
 }
