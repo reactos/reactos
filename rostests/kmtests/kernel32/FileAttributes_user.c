@@ -36,7 +36,7 @@ START_TEST(FileAttributes)
 
     /* Set invalid attributes */
     KmtSendUlongToDriver(IOCTL_EXPECT_SET_ATTRIBUTES, FILE_ATTRIBUTE_VALID_SET_FLAGS);
-    Ret = SetFileAttributesW(FileName, 0xFFFFFFFF);
+    Ret = SetFileAttributesW(FileName, INVALID_FILE_ATTRIBUTES);
     ok(Ret == TRUE, "SetFileAttributesW returned %d, error %lu\n", Ret, GetLastError());
 
     /* Query read-only attribute */
@@ -60,9 +60,9 @@ START_TEST(FileAttributes)
     ok_eq_hex(Attributes, 0);
 
     /* Query invalid attributes */
-    KmtSendUlongToDriver(IOCTL_RETURN_QUERY_ATTRIBUTES, 0xFFFFFFFF);
+    KmtSendUlongToDriver(IOCTL_RETURN_QUERY_ATTRIBUTES, INVALID_FILE_ATTRIBUTES);
     Attributes = GetFileAttributesW(FileName);
-    ok_eq_hex(Attributes, 0xFFFFFFFF);
+    ok_eq_hex(Attributes, INVALID_FILE_ATTRIBUTES);
 
     /** Directory attribute **/
     /* Set read-only and directory attribute */
