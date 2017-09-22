@@ -17,13 +17,13 @@
 @ stub SamIFreeSidAndAttributesList
 @ stub SamIFreeSidArray
 @ stdcall SamIFreeVoid(ptr)
-@ stub SamIFree_SAMPR_ALIAS_INFO_BUFFER
+@ stdcall SamIFree_SAMPR_ALIAS_INFO_BUFFER(ptr long)
 @ stub SamIFree_SAMPR_DISPLAY_INFO_BUFFER
-@ stub SamIFree_SAMPR_DOMAIN_INFO_BUFFER
+@ stdcall SamIFree_SAMPR_DOMAIN_INFO_BUFFER(ptr long)
 @ stdcall SamIFree_SAMPR_ENUMERATION_BUFFER(ptr)
 @ stdcall SamIFree_SAMPR_GET_GROUPS_BUFFER(ptr)
 @ stdcall SamIFree_SAMPR_GET_MEMBERS_BUFFER(ptr)
-@ stub SamIFree_SAMPR_GROUP_INFO_BUFFER
+@ stdcall SamIFree_SAMPR_GROUP_INFO_BUFFER(ptr long)
 @ stdcall SamIFree_SAMPR_PSID_ARRAY(ptr)
 @ stdcall SamIFree_SAMPR_RETURNED_USTRING_ARRAY(ptr)
 @ stdcall SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR(ptr)

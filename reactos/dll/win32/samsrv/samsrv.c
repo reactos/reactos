@@ -151,6 +151,122 @@ SamIFreeVoid(PVOID Ptr)
 
 VOID
 NTAPI
+SamIFree_SAMPR_ALIAS_INFO_BUFFER(
+    PSAMPR_ALIAS_INFO_BUFFER Ptr,
+    ALIAS_INFORMATION_CLASS InformationClass)
+{
+    if (Ptr == NULL)
+        return;
+
+    switch (InformationClass)
+    {
+        case AliasGeneralInformation:
+            if (Ptr->General.Name.Buffer != NULL)
+                MIDL_user_free(Ptr->General.Name.Buffer);
+
+            if (Ptr->General.AdminComment.Buffer != NULL)
+                MIDL_user_free(Ptr->General.AdminComment.Buffer);
+            break;
+
+        case AliasNameInformation:
+            if (Ptr->Name.Name.Buffer != NULL)
+                MIDL_user_free(Ptr->Name.Name.Buffer);
+            break;
+
+        case AliasAdminCommentInformation:
+            if (Ptr->AdminComment.AdminComment.Buffer != NULL)
+                MIDL_user_free(Ptr->AdminComment.AdminComment.Buffer);
+            break;
+
+        default:
+            FIXME("Unsupported information class: %lu\n", InformationClass);
+            break;
+    }
+
+    MIDL_user_free(Ptr);
+}
+
+
+VOID
+NTAPI
+SamIFree_SAMPR_DOMAIN_INFO_BUFFER(
+    PSAMPR_DOMAIN_INFO_BUFFER Ptr,
+    DOMAIN_INFORMATION_CLASS InformationClass)
+{
+    if (Ptr == NULL)
+        return;
+
+    switch (InformationClass)
+    {
+        case DomainPasswordInformation:
+            break;
+
+        case DomainGeneralInformation:
+            if (Ptr->General.OemInformation.Buffer != NULL)
+                MIDL_user_free(Ptr->General.OemInformation.Buffer);
+
+            if (Ptr->General.DomainName.Buffer != NULL)
+                MIDL_user_free(Ptr->General.DomainName.Buffer);
+
+            if (Ptr->General.ReplicaSourceNodeName.Buffer != NULL)
+                MIDL_user_free(Ptr->General.ReplicaSourceNodeName.Buffer);
+            break;
+
+        case DomainLogoffInformation:
+            break;
+
+        case DomainOemInformation:
+            if (Ptr->Oem.OemInformation.Buffer != NULL)
+                MIDL_user_free(Ptr->Oem.OemInformation.Buffer);
+            break;
+
+        case DomainNameInformation:
+            if (Ptr->Name.DomainName.Buffer != NULL)
+                MIDL_user_free(Ptr->Name.DomainName.Buffer);
+            break;
+
+        case DomainReplicationInformation:
+            if (Ptr->Replication.ReplicaSourceNodeName.Buffer != NULL)
+                MIDL_user_free(Ptr->Replication.ReplicaSourceNodeName.Buffer);
+            break;
+
+        case DomainServerRoleInformation:
+            break;
+
+        case DomainModifiedInformation:
+            break;
+
+        case DomainStateInformation:
+            break;
+
+        case DomainGeneralInformation2:
+            if (Ptr->General2.I1.OemInformation.Buffer != NULL)
+                MIDL_user_free(Ptr->General2.I1.OemInformation.Buffer);
+
+            if (Ptr->General2.I1.DomainName.Buffer != NULL)
+                MIDL_user_free(Ptr->General2.I1.DomainName.Buffer);
+
+            if (Ptr->General2.I1.ReplicaSourceNodeName.Buffer != NULL)
+                MIDL_user_free(Ptr->General2.I1.ReplicaSourceNodeName.Buffer);
+            break;
+
+        case DomainLockoutInformation:
+            break;
+
+        case DomainModifiedInformation2:
+            break;
+
+        default:
+            FIXME("Unsupported information class: %lu\n", InformationClass);
+            break;
+    }
+
+    MIDL_user_free(Ptr);
+}
+
+
+VOID
+NTAPI
 SamIFree_SAMPR_ENUMERATION_BUFFER(PSAMPR_ENUMERATION_BUFFER Ptr)
 {
     ULONG i;
@@ -201,6 +317,47 @@ SamIFree_SAMPR_GET_MEMBERS_BUFFER(PSAMPR_GET_MEMBERS_BUFFER Ptr)
 
         MIDL_user_free(Ptr);
     }
+}
+
+
+VOID
+NTAPI
+SamIFree_SAMPR_GROUP_INFO_BUFFER(
+    PSAMPR_GROUP_INFO_BUFFER Ptr,
+    GROUP_INFORMATION_CLASS InformationClass)
+{
+    if (Ptr == NULL)
+        return;
+
+    switch (InformationClass)
+    {
+        case GroupGeneralInformation:
+            if (Ptr->General.Name.Buffer != NULL)
+                MIDL_user_free(Ptr->General.Name.Buffer);
+
+            if (Ptr->General.AdminComment.Buffer != NULL)
+                MIDL_user_free(Ptr->General.AdminComment.Buffer);
+            break;
+
+        case GroupNameInformation:
+            if (Ptr->Name.Name.Buffer != NULL)
+                MIDL_user_free(Ptr->Name.Name.Buffer);
+            break;
+
+        case GroupAttributeInformation:
+            break;
+
+        case GroupAdminCommentInformation:
+            if (Ptr->AdminComment.AdminComment.Buffer != NULL)
+                MIDL_user_free(Ptr->AdminComment.AdminComment.Buffer);
+            break;
+
+        default:
+            FIXME("Unsupported information class: %lu\n", InformationClass);
+            break;
+    }
+
+    MIDL_user_free(Ptr);
 }
 
 
