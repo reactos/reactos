@@ -252,7 +252,50 @@ typedef struct _IDENTIFY_DEVICE_DATA {
 } IDENTIFY_DEVICE_DATA, *PIDENTIFY_DEVICE_DATA;
 #include <poppack.h>
 
-#define IDE_COMMAND_FLUSH_CACHE 0xE7
-#define IDE_COMMAND_IDENTIFY    0xEC
+#define IDE_LBA_MODE                          (1 << 6)
+
+#define IDE_COMMAND_NOP                       0x00
+#define IDE_COMMAND_DATA_SET_MANAGEMENT       0x06
+#define IDE_COMMAND_ATAPI_RESET               0x08
+#define IDE_COMMAND_READ                      0x20
+#define IDE_COMMAND_READ_EXT                  0x24
+#define IDE_COMMAND_READ_DMA_EXT              0x25
+#define IDE_COMMAND_READ_DMA_QUEUED_EXT       0x26
+#define IDE_COMMAND_READ_MULTIPLE_EXT         0x29
+#define IDE_COMMAND_WRITE                     0x30
+#define IDE_COMMAND_WRITE_EXT                 0x34
+#define IDE_COMMAND_WRITE_DMA_EXT             0x35
+#define IDE_COMMAND_WRITE_DMA_QUEUED_EXT      0x36
+#define IDE_COMMAND_WRITE_MULTIPLE_EXT        0x39
+#define IDE_COMMAND_WRITE_DMA_FUA_EXT         0x3D
+#define IDE_COMMAND_WRITE_DMA_QUEUED_FUA_EXT  0x3E
+#define IDE_COMMAND_VERIFY                    0x40
+#define IDE_COMMAND_VERIFY_EXT                0x42
+#define IDE_COMMAND_EXECUTE_DEVICE_DIAGNOSTIC 0x90
+#define IDE_COMMAND_SET_DRIVE_PARAMETERS      0x91
+#define IDE_COMMAND_ATAPI_PACKET              0xA0
+#define IDE_COMMAND_ATAPI_IDENTIFY            0xA1
+#define IDE_COMMAND_SMART                     0xB0
+#define IDE_COMMAND_READ_MULTIPLE             0xC4
+#define IDE_COMMAND_WRITE_MULTIPLE            0xC5
+#define IDE_COMMAND_SET_MULTIPLE              0xC6
+#define IDE_COMMAND_READ_DMA                  0xC8
+#define IDE_COMMAND_WRITE_DMA                 0xCA
+#define IDE_COMMAND_WRITE_DMA_QUEUED          0xCC
+#define IDE_COMMAND_WRITE_MULTIPLE_FUA_EXT    0xCE
+#define IDE_COMMAND_GET_MEDIA_STATUS          0xDA
+#define IDE_COMMAND_DOOR_LOCK                 0xDE
+#define IDE_COMMAND_DOOR_UNLOCK               0xDF
+#define IDE_COMMAND_STANDBY_IMMEDIATE         0xE0
+#define IDE_COMMAND_IDLE_IMMEDIATE            0xE1
+#define IDE_COMMAND_CHECK_POWER               0xE5
+#define IDE_COMMAND_SLEEP                     0xE6
+#define IDE_COMMAND_FLUSH_CACHE               0xE7
+#define IDE_COMMAND_FLUSH_CACHE_EXT           0xEA
+#define IDE_COMMAND_IDENTIFY                  0xEC
+#define IDE_COMMAND_MEDIA_EJECT               0xED
+#define IDE_COMMAND_SET_FEATURE               0xEF
+#define IDE_COMMAND_SECURITY_FREEZE_LOCK      0xF5
+#define IDE_COMMAND_NOT_VALID                 0xFF
 
 #endif
