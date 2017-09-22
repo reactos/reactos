@@ -1392,6 +1392,7 @@ IntGetFontRenderMode(LOGFONTW *logfont)
     switch (logfont->lfQuality)
     {
     case ANTIALIASED_QUALITY:
+        break;
     case NONANTIALIASED_QUALITY:
         return FT_RENDER_MODE_MONO;
     case DRAFT_QUALITY:
@@ -2608,6 +2609,7 @@ ftGdiGlyphCacheGet(
     FT_Face Face,
     INT GlyphIndex,
     INT Height,
+    FT_Render_Mode RenderMode,
     PMATRIX pmx)
 {
     PLIST_ENTRY CurrentEntry;
@@ -2622,6 +2624,7 @@ ftGdiGlyphCacheGet(
         if ((FontEntry->Face == Face) &&
             (FontEntry->GlyphIndex == GlyphIndex) &&
             (FontEntry->Height == Height) &&
+            (FontEntry->RenderMode == RenderMode) &&
             (SameScaleMatrix(&FontEntry->mxWorldToDevice, pmx)))
             break;
         CurrentEntry = CurrentEntry->Flink;
@@ -2737,6 +2740,7 @@ ftGdiGlyphCacheSet(
     NewEntry->Face = Face;
     NewEntry->BitmapGlyph = BitmapGlyph;
     NewEntry->Height = Height;
+    NewEntry->RenderMode = RenderMode;
     NewEntry->mxWorldToDevice = *pmx;
 
     InsertHeadList(&FontCacheListHead, &NewEntry->ListEntry);
@@ -3589,7 +3593,6 @@ TextIntGetTextExtentPoint(PDC dc,
     else
         RenderMode = FT_RENDER_MODE_MONO;
 
-
     /* Get the DC's world-to-device transformation matrix */
     pmxWorldToDevice = DC_pmxWorldToDevice(dc);
     FtSetCoordinateTransform(face, pmxWorldToDevice);
@@ -3607,8 +3610,8 @@ TextIntGetTextExtentPoint(PDC dc,
         if (EmuBold || EmuItalic)
             realglyph = NULL;
         else
-            realglyph = ftGdiGlyphCacheGet(face, glyph_index,
-                                           plf->lfHeight, pmxWorldToDevice);
+            realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
+                                           RenderMode, pmxWorldToDevice);
 
         if (EmuBold || EmuItalic || !realglyph)
         {
@@ -5320,8 +5323,8 @@ GreExtTextOutW(
             if (EmuBold || EmuItalic)
                 realglyph = NULL;
             else
-                realglyph = ftGdiGlyphCacheGet(face, glyph_index,
-                                               plf->lfHeight, pmxWorldToDevice);
+                realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
+                                               RenderMode, pmxWorldToDevice);
             if (!realglyph)
             {
                 error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
@@ -5543,8 +5546,8 @@ GreExtTextOutW(
         if (EmuBold || EmuItalic)
             realglyph = NULL;
         else
-            realglyph = ftGdiGlyphCacheGet(face, glyph_index,
-                                           plf->lfHeight, pmxWorldToDevice);
+            realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
+                                           RenderMode, pmxWorldToDevice);
         if (!realglyph)
         {
             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
