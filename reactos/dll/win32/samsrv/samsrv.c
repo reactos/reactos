@@ -189,6 +189,103 @@ SamIFree_SAMPR_ALIAS_INFO_BUFFER(
 
 VOID
 NTAPI
+SamIFree_SAMPR_DISPLAY_INFO_BUFFER(
+    PSAMPR_DISPLAY_INFO_BUFFER Ptr,
+    DOMAIN_DISPLAY_INFORMATION InformationClass)
+{
+    ULONG i;
+
+    if (Ptr == NULL)
+        return;
+
+    switch (InformationClass)
+    {
+        case DomainDisplayUser:
+            if (Ptr->UserInformation.Buffer != NULL)
+            {
+                for (i = 0; i < Ptr->UserInformation.EntriesRead; i++)
+                {
+                    if (Ptr->UserInformation.Buffer[i].AccountName.Buffer != NULL)
+                        MIDL_user_free(Ptr->UserInformation.Buffer[i].AccountName.Buffer);
+
+                    if (Ptr->UserInformation.Buffer[i].AdminComment.Buffer != NULL)
+                        MIDL_user_free(Ptr->UserInformation.Buffer[i].AdminComment.Buffer);
+
+                    if (Ptr->UserInformation.Buffer[i].FullName.Buffer != NULL)
+                        MIDL_user_free(Ptr->UserInformation.Buffer[i].FullName.Buffer);
+                }
+
+                MIDL_user_free(Ptr->UserInformation.Buffer);
+            }
+            break;
+
+        case DomainDisplayMachine:
+            if (Ptr->MachineInformation.Buffer != NULL)
+            {
+                for (i = 0; i < Ptr->MachineInformation.EntriesRead; i++)
+                {
+                    if (Ptr->MachineInformation.Buffer[i].AccountName.Buffer != NULL)
+                        MIDL_user_free(Ptr->MachineInformation.Buffer[i].AccountName.Buffer);
+
+                    if (Ptr->MachineInformation.Buffer[i].AdminComment.Buffer != NULL)
+                        MIDL_user_free(Ptr->MachineInformation.Buffer[i].AdminComment.Buffer);
+                }
+
+                MIDL_user_free(Ptr->MachineInformation.Buffer);
+            }
+            break;
+
+        case DomainDisplayGroup:
+            if (Ptr->GroupInformation.Buffer != NULL)
+            {
+                for (i = 0; i < Ptr->GroupInformation.EntriesRead; i++)
+                {
+                    if (Ptr->GroupInformation.Buffer[i].AccountName.Buffer != NULL)
+                        MIDL_user_free(Ptr->GroupInformation.Buffer[i].AccountName.Buffer);
+
+                    if (Ptr->GroupInformation.Buffer[i].AdminComment.Buffer != NULL)
+                        MIDL_user_free(Ptr->GroupInformation.Buffer[i].AdminComment.Buffer);
+                }
+
+                MIDL_user_free(Ptr->GroupInformation.Buffer);
+            }
+            break;
+
+        case DomainDisplayOemUser:
+            if (Ptr->OemUserInformation.Buffer != NULL)
+            {
+                for (i = 0; i < Ptr->OemUserInformation.EntriesRead; i++)
+                {
+                    if (Ptr->OemUserInformation.Buffer[i].OemAccountName.Buffer != NULL)
+                        MIDL_user_free(Ptr->OemUserInformation.Buffer[i].OemAccountName.Buffer);
+                }
+
+                MIDL_user_free(Ptr->OemUserInformation.Buffer);
+            }
+            break;
+
+        case DomainDisplayOemGroup:
+            if (Ptr->OemGroupInformation.Buffer != NULL)
+            {
+                for (i = 0; i < Ptr->OemGroupInformation.EntriesRead; i++)
+                {
+                    if (Ptr->OemGroupInformation.Buffer[i].OemAccountName.Buffer != NULL)
+                        MIDL_user_free(Ptr->OemGroupInformation.Buffer[i].OemAccountName.Buffer);
+                }
+
+                MIDL_user_free(Ptr->OemGroupInformation.Buffer);
+            }
+            break;
+
+        default:
+            FIXME("Unsupported information class: %lu\n", InformationClass);
+            break;
+    }
+}
+
+
+VOID
+NTAPI
 SamIFree_SAMPR_DOMAIN_INFO_BUFFER(
     PSAMPR_DOMAIN_INFO_BUFFER Ptr,
     DOMAIN_INFORMATION_CLASS InformationClass)
@@ -271,21 +368,21 @@ SamIFree_SAMPR_ENUMERATION_BUFFER(PSAMPR_ENUMERATION_BUFFER Ptr)
 {
     ULONG i;
 
-    if (Ptr != NULL)
-    {
-        if (Ptr->Buffer != NULL)
-        {
-            for (i = 0; i < Ptr->EntriesRead; i++)
-            {
-                if (Ptr->Buffer[i].Name.Buffer != NULL)
-                    MIDL_user_free(Ptr->Buffer[i].Name.Buffer);
-            }
+    if (Ptr == NULL)
+        return;
 
-            MIDL_user_free(Ptr->Buffer);
+    if (Ptr->Buffer != NULL)
+    {
+        for (i = 0; i < Ptr->EntriesRead; i++)
+        {
+            if (Ptr->Buffer[i].Name.Buffer != NULL)
+                MIDL_user_free(Ptr->Buffer[i].Name.Buffer);
         }
 
-        MIDL_user_free(Ptr);
+        MIDL_user_free(Ptr->Buffer);
     }
+
+    MIDL_user_free(Ptr);
 }
 
 
@@ -293,13 +390,13 @@ VOID
 NTAPI
 SamIFree_SAMPR_GET_GROUPS_BUFFER(PSAMPR_GET_GROUPS_BUFFER Ptr)
 {
-    if (Ptr != NULL)
-    {
-        if (Ptr->Groups != NULL)
-            MIDL_user_free(Ptr->Groups);
+    if (Ptr == NULL)
+        return;
 
-        MIDL_user_free(Ptr);
-    }
+    if (Ptr->Groups != NULL)
+        MIDL_user_free(Ptr->Groups);
+
+    MIDL_user_free(Ptr);
 }
 
 
@@ -307,16 +404,16 @@ VOID
 NTAPI
 SamIFree_SAMPR_GET_MEMBERS_BUFFER(PSAMPR_GET_MEMBERS_BUFFER Ptr)
 {
-    if (Ptr != NULL)
-    {
-        if (Ptr->Members != NULL)
-            MIDL_user_free(Ptr->Members);
+    if (Ptr == NULL)
+        return;
 
-        if (Ptr->Attributes != NULL)
-            MIDL_user_free(Ptr->Attributes);
+    if (Ptr->Members != NULL)
+        MIDL_user_free(Ptr->Members);
 
-        MIDL_user_free(Ptr);
-    }
+    if (Ptr->Attributes != NULL)
+        MIDL_user_free(Ptr->Attributes);
+
+    MIDL_user_free(Ptr);
 }
 
 
@@ -365,12 +462,12 @@ VOID
 NTAPI
 SamIFree_SAMPR_PSID_ARRAY(PSAMPR_PSID_ARRAY Ptr)
 {
-    if (Ptr != NULL)
+    if (Ptr == NULL)
+        return;
+
+    if (Ptr->Sids != NULL)
     {
-        if (Ptr->Sids != NULL)
-        {
-            MIDL_user_free(Ptr->Sids);
-        }
+        MIDL_user_free(Ptr->Sids);
     }
 }
 
@@ -381,20 +478,20 @@ SamIFree_SAMPR_RETURNED_USTRING_ARRAY(PSAMPR_RETURNED_USTRING_ARRAY Ptr)
 {
     ULONG i;
 
-    if (Ptr != NULL)
-    {
-        if (Ptr->Element != NULL)
-        {
-            for (i = 0; i < Ptr->Count; i++)
-            {
-                if (Ptr->Element[i].Buffer != NULL)
-                    MIDL_user_free(Ptr->Element[i].Buffer);
-            }
+    if (Ptr == NULL)
+        return;
 
-            MIDL_user_free(Ptr->Element);
-            Ptr->Element = NULL;
-            Ptr->Count = 0;
+    if (Ptr->Element != NULL)
+    {
+        for (i = 0; i < Ptr->Count; i++)
+        {
+            if (Ptr->Element[i].Buffer != NULL)
+                MIDL_user_free(Ptr->Element[i].Buffer);
         }
+
+        MIDL_user_free(Ptr->Element);
+        Ptr->Element = NULL;
+        Ptr->Count = 0;
     }
 }
 
@@ -403,13 +500,13 @@ VOID
 NTAPI
 SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR(PSAMPR_SR_SECURITY_DESCRIPTOR Ptr)
 {
-    if (Ptr != NULL)
-    {
-        if (Ptr->SecurityDescriptor != NULL)
-            MIDL_user_free(Ptr->SecurityDescriptor);
+    if (Ptr == NULL)
+        return;
 
-        MIDL_user_free(Ptr);
-    }
+    if (Ptr->SecurityDescriptor != NULL)
+        MIDL_user_free(Ptr->SecurityDescriptor);
+
+    MIDL_user_free(Ptr);
 }
 
 
@@ -417,14 +514,14 @@ VOID
 NTAPI
 SamIFree_SAMPR_ULONG_ARRAY(PSAMPR_ULONG_ARRAY Ptr)
 {
-    if (Ptr != NULL)
+    if (Ptr == NULL)
+        return;
+
+    if (Ptr->Element != NULL)
     {
-        if (Ptr->Element != NULL)
-        {
-            MIDL_user_free(Ptr->Element);
-            Ptr->Element = NULL;
-            Ptr->Count = 0;
-        }
+        MIDL_user_free(Ptr->Element);
+        Ptr->Element = NULL;
+        Ptr->Count = 0;
     }
 }
 

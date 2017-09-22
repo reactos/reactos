@@ -18,7 +18,7 @@
 @ stub SamIFreeSidArray
 @ stdcall SamIFreeVoid(ptr)
 @ stdcall SamIFree_SAMPR_ALIAS_INFO_BUFFER(ptr long)
-@ stub SamIFree_SAMPR_DISPLAY_INFO_BUFFER
+@ stdcall SamIFree_SAMPR_DISPLAY_INFO_BUFFER(ptr long)
 @ stdcall SamIFree_SAMPR_DOMAIN_INFO_BUFFER(ptr long)
 @ stdcall SamIFree_SAMPR_ENUMERATION_BUFFER(ptr)
 @ stdcall SamIFree_SAMPR_GET_GROUPS_BUFFER(ptr)
