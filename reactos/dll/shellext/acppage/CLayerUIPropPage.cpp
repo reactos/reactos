@@ -494,7 +494,7 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
 
             while (TRUE)
             {
-                CComBSTR str;
+                CComHeapPtr<OLECHAR> str;
                 HRESULT hr = pList.Next(1, &str, NULL);
                 if (hr != S_OK)
                     break;
