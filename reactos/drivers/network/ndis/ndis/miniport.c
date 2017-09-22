@@ -2293,13 +2293,15 @@ NdisIDeviceIoControl(
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
   NDIS_STATUS Status = STATUS_NOT_SUPPORTED;
+  ULONG ControlCode;
   ULONG Written;
 
   Irp->IoStatus.Information = 0;
 
   ASSERT(Adapter);
 
-  switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+  ControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
+  switch (ControlCode)
   {
     case IOCTL_NDIS_QUERY_GLOBAL_STATS:
       Status = MiniQueryInformation(Adapter,
@@ -2311,7 +2313,7 @@ NdisIDeviceIoControl(
       break;
 
     default:
-      ASSERT(FALSE);
+      NDIS_DbgPrint(MIN_TRACE, ("NdisIDeviceIoControl: unsupported control code 0x%lx\n", ControlCode));
       break;
   }
 
