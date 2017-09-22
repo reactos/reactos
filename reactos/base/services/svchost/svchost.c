@@ -701,10 +701,10 @@ GetServiceDllFunction (
 
     /* Next, get the address being looked up*/
     lpAddress = GetProcAddress(hModule, lpProcName);
-    if (!lpAddress)
+    if (!lpAddress && lpdwError)
     {
         /* We couldn't find it, write the error code and a debug statement */
-        if (lpdwError) *lpdwError = GetLastError();
+        *lpdwError = GetLastError();
         DBG_ERR("GetProcAddress (%s) failed on DLL %ws.  Error %d.\n",
                 lpProcName,
                 pDll->pszDllPath,
