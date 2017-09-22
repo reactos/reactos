@@ -2579,7 +2579,8 @@ NdisGenericIrpHandler(
     if (DeviceObject->DeviceType == FILE_DEVICE_PHYSICAL_NETCARD)
     {
         if ((IrpSp->MajorFunction == IRP_MJ_CREATE) ||
-            (IrpSp->MajorFunction == IRP_MJ_CLOSE))
+            (IrpSp->MajorFunction == IRP_MJ_CLOSE) ||
+            (IrpSp->MajorFunction == IRP_MJ_CLEANUP))
         {
             return NdisICreateClose(DeviceObject, Irp);
         }
