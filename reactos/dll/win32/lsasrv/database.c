@@ -299,21 +299,25 @@ LsapCreateDatabaseObjects(VOID)
     if (!NT_SUCCESS(Status))
         goto done;
 
+    /* Set the Primary Domain Name attribute */
     LsapSetObjectAttribute(PolicyObject,
                            L"PolPrDmN",
                            NULL,
                            0);
 
+    /* Set the Primary Domain SID attribute */
     LsapSetObjectAttribute(PolicyObject,
                            L"PolPrDmS",
                            NULL,
                            0);
 
+    /* Set the Account Domain Name attribute */
     LsapSetObjectAttribute(PolicyObject,
                            L"PolAcDmN",
                            NULL,
                            0);
 
+    /* Set the Account Domain SID attribute */
     LsapSetObjectAttribute(PolicyObject,
                            L"PolAcDmS",
                            AccountDomainSid,
