@@ -425,7 +425,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = SwDispatchDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = SwDispatchSystemControl;
 
-    DPRINT1("SWENUM loaded\n");
+    DPRINT("SWENUM loaded\n");
     return STATUS_SUCCESS;
 }
 

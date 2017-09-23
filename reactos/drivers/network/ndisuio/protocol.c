@@ -88,7 +88,7 @@ NduNetPnPEvent(NDIS_HANDLE ProtocolBindingContext,
             return NDIS_STATUS_SUCCESS;
 
         case NetEventBindsComplete:
-            DPRINT1("NetPnPEvent: BindsComplete\n");
+            DPRINT("NetPnPEvent: BindsComplete\n");
             return NDIS_STATUS_SUCCESS;
 
         case NetEventPnPCapabilities:

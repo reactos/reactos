@@ -507,7 +507,7 @@ ElfpInitExistingFile(
         /* Is it an EVENTLOGEOF record? */
         if (RtlCompareMemory(&EofRec, &EOFRecord, EVENTLOGEOF_SIZE_FIXED) == EVENTLOGEOF_SIZE_FIXED)
         {
-            DPRINT1("Found EOF record at %llx\n", FileOffset.QuadPart);
+            DPRINT("Found EOF record at %llx\n", FileOffset.QuadPart);
 
             /* Got it! Break the loop and continue */
             break;
@@ -695,8 +695,8 @@ ElfpInitExistingFile(
         // LogFile->Header.Flags |= ELF_LOGFILE_HEADER_WRAP;
     // }
 
-    DPRINT1("StartOffset = 0x%x, EndOffset = 0x%x\n",
-            LogFile->Header.StartOffset, LogFile->Header.EndOffset);
+    DPRINT("StartOffset = 0x%x, EndOffset = 0x%x\n",
+           LogFile->Header.StartOffset, LogFile->Header.EndOffset);
 
     /*
      * For non-read-only logs of size < MaxSize, reorganize the events
@@ -816,7 +816,7 @@ Continue:
         if (NextOffset.QuadPart == LogFile->Header.EndOffset)
         {
             /* We have finished enumerating all the event records */
-            DPRINT1("NextOffset.QuadPart == LogFile->Header.EndOffset, break\n");
+            DPRINT("NextOffset.QuadPart == LogFile->Header.EndOffset, break\n");
             break;
         }
 

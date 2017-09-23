@@ -90,7 +90,7 @@ DfsDriverEntry(PDRIVER_OBJECT DriverObject,
     /* We don't support DFS yet, so
      * fail to make sure it remains disabled
      */
-    UNIMPLEMENTED;
+    DPRINT("DfsDriverEntry not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 

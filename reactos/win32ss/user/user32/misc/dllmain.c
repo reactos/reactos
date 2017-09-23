@@ -359,7 +359,7 @@ ClientThreadSetup(VOID)
 
     // FIXME: Disabling this call is a HACK!! See also User32CallClientThreadSetupFromKernel...
     // return ClientThreadSetupHelper(FALSE);
-    UNIMPLEMENTED;
+    TRACE("ClientThreadSetup is not implemented\n");
     return TRUE;
 }
 
