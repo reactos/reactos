@@ -3,8 +3,8 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_DOMAIN_BUILTIN_NAME "Wbudowane"
-    IDS_GROUP_NONE_NAME "None"
-    IDS_GROUP_NONE_COMMENT "Ordinary Users"
+    IDS_GROUP_NONE_NAME "Nikt"
+    IDS_GROUP_NONE_COMMENT "Zwykli Użytkownicy"
     IDS_ALIAS_ADMINISTRATORS_NAME "Administratorzy"
     IDS_ALIAS_ADMINISTRATORS_COMMENT "Administratorzy mają nieograniczony dostęp w obrębie komputera lub domeny."
     IDS_ALIAS_GUESTS_NAME "Goście"

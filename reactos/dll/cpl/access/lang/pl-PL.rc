@@ -6,45 +6,45 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, 246, 228
+IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, 260, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Klawiatura"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Klawisze Trwałe", -1, 6, 11, 234, 62
+    GROUPBOX "Klawisze Trwałe", -1, 6, 11, 248, 62
     LTEXT "Użyj funkcji Klawisze Trwałe jeśli chcesz używać Shift, Ctrl albo Alt naciskając je tylko raz.",
-          -1, 12, 20, 222, 29
+          -1, 12, 20, 238, 29
     AUTOCHECKBOX "&Użyj Klawiszy Trwałych", IDC_STICKY_BOX, 12, 49, 126, 14
-    PUSHBUTTON "U&stawienia", IDC_STICKY_BUTTON, 144, 49, 90, 14
-    GROUPBOX "Klawisze Filtra", -1, 6, 79, 234, 67
+    PUSHBUTTON "U&stawienia", IDC_STICKY_BUTTON, 154, 49, 90, 14
+    GROUPBOX "Klawisze Filtra", -1, 6, 79, 248, 67
     LTEXT "Użyj funkcji Klawisze Filtra, jeśli chcesz, żeby ReactOS ignorował krótkie albo powtarzające się naciskanie klawiszy albo zmniejszał częstość powtarzania.",
-          -1, 12, 89, 222, 29
+          -1, 12, 89, 238, 29
     AUTOCHECKBOX "Klawisze &Filtra", IDC_FILTER_BOX, 12, 121, 126, 14
-    PUSHBUTTON "Us&tawienia", IDC_FILTER_BUTTON, 144, 121, 90, 14
-    GROUPBOX "Klawisze Przełązające", -1, 6, 145, 234, 62
+    PUSHBUTTON "Us&tawienia", IDC_FILTER_BUTTON, 154, 121, 90, 14
+    GROUPBOX "Klawisze Przełączające", -1, 6, 150, 248, 62
     LTEXT "Użyj funkcji Klawisze Przełączające, jeśli chcesz słyszeć dźwięk przy naciskaniu klawiszy Caps Lock, Num Lock albo Scroll Lock.",
-          -1, 12, 161, 222, 29
-    AUTOCHECKBOX "Użyj &Klawiszy Przełączających", IDC_TOGGLE_BOX, 12, 184, 126, 14
-    PUSHBUTTON "Ustawie&nia", IDC_TOGGLE_BUTTON, 144, 184, 90, 14
+          -1, 12, 161, 238, 29
+    AUTOCHECKBOX "Użyj &Klawiszy Przełączających", IDC_TOGGLE_BOX, 12, 189, 126, 14
+    PUSHBUTTON "Ustawie&nia", IDC_TOGGLE_BUTTON, 154, 189, 90, 14
     AUTOCHECKBOX "&Pokaż dodatkową pomoc klawiatury w programach", IDC_KEYBOARD_EXTRA,
-                 6, 212, 234, 14
+                 6, 215, 234, 14
 END
 
-IDD_PROPPAGESOUND DIALOGEX 0, 0, 246, 228
+IDD_PROPPAGESOUND DIALOGEX 0, 0, 260, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Dźwięk"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Wartownik Dźwięku", -1, 6, 11, 234, 98
+    GROUPBOX "Wartownik Dźwięku", -1, 6, 11, 248, 98
     LTEXT "Użyj funkcji Wartownik Dźwięku jeśli chcesz, żeby ReactOS pokazywał wizualne ostrzeżenia w chwili generacji dźwięku.",
-          -1, 12, 20, 222, 29
-    AUTOCHECKBOX "Użyj funkcji &Wartownik Dźwięku", IDC_SENTRY_BOX, 12, 49, 90, 14
+          -1, 12, 20, 238, 29
+    AUTOCHECKBOX "Użyj funkcji &Wartownik Dźwięku", IDC_SENTRY_BOX, 12, 49, 120, 14
     LTEXT "Użyj następującego ostrzeżenia:", IDC_SENTRY_TEXT, 12, 72, 222, 11
-    COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
+    COMBOBOX IDC_SENTRY_COMBO, 12, 83, 230, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "Pokaż Dźwięki", -1, 6, 115, 234, 67
+    GROUPBOX "Pokaż Dźwięki", -1, 6, 115, 248, 67
     LTEXT "Użyj funkcji Pokaż Dźwięki, aby nakazać swoim programom wyświetlanie napisów w chwili generacji dźwięku lub mowy.",
-          -1, 12, 125, 222, 29
+          -1, 12, 125, 238, 29
     AUTOCHECKBOX "Użyj funkcji &Pokaż Dźwięki", IDC_SSHOW_BOX, 12, 148, 222, 14
 END
 
@@ -53,14 +53,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ekran"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Wysoki Kontrast", -1, 6, 11, 234, 62
+    GROUPBOX "Wysoki Kontrast", -1, 6, 11, 248, 62
     LTEXT "Użyj tej funkcji, jeśli chcesz, żeby ReactOS używał kolorów i czcionek zaprojektowanych do łatwego czytania",
-          -1, 12, 20, 222, 29
+          -1, 12, 20, 238, 29
     AUTOCHECKBOX "&Użyj funkcji Wysoki Kontrast", IDC_CONTRAST_BOX, 12, 49, 126, 14
-    PUSHBUTTON "U&stawienia", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
-    GROUPBOX "Ustawienia kursora", -1, 6, 79, 234, 115
+    PUSHBUTTON "U&stawienia", IDC_CONTRAST_BUTTON, 154, 49, 90, 14
+    GROUPBOX "Ustawienia kursora", -1, 6, 79, 248, 115
     LTEXT "Za pomocą suwaków możesz ustawić częstotliwość migotania kursora i jego szerokość.",
-          -1, 12, 88, 222, 20
+          -1, 12, 88, 238, 20
     CTEXT "Częstotliwość migotania:", -1, 12, 115, 222, 11
     LTEXT "Brak", -1, 18, 130, 36, 11
     LTEXT "Szybko", -1, 192, 130, 36, 11
@@ -79,11 +79,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Mysz"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Klawisze Myszy", -1, 6, 11, 234, 62
+    GROUPBOX "Klawisze Myszy", -1, 6, 11, 248, 62
     LTEXT "Użyj tej opcji, jeśli chcesz kontrolować wskaźnik myszy przy pomocy klawiatury numerycznej.",
-          -1, 12, 20, 222, 29
+          -1, 12, 20, 238, 29
     AUTOCHECKBOX "Użyj funkcji Klawisze &Myszy", IDC_MOUSE_BOX, 12, 49, 126, 14
-    PUSHBUTTON "U&stawienia", IDC_MOUSE_BUTTON, 144, 49, 90, 14
+    PUSHBUTTON "U&stawienia", IDC_MOUSE_BUTTON, 154, 49, 90, 14
 END
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
@@ -91,26 +91,26 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Automatyczny reset", -1, 6, 11, 234, 47
-    AUTOCHECKBOX "&Wyłącz funkcje ułatwiające dostęp kiedy komputer nie jest używany przez:",
+    GROUPBOX "Automatyczny reset", -1, 6, 11, 248, 47
+    AUTOCHECKBOX "&Wyłącz funkcje ułatwiające dostęp po czasie bezczynności:",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "Powiadomienia", -1, 6, 63, 234, 47
+    GROUPBOX "Powiadomienia", -1, 6, 63, 248, 47
     AUTOCHECKBOX "Ostrzegaj kiedy funkcja jest włączana", IDC_NOTIFICATION_MESSAGE,
                  12, 72, 222, 14
     AUTOCHECKBOX "Odgrywaj dźwięk, kiedy funkcja jest włączana albo wyłączana", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
-    GROUPBOX "Urządzenia klawiszy szeregowych", -1, 6, 115, 234, 47
+    GROUPBOX "Urządzenia klawiszy szeregowych", -1, 6, 115, 248, 47
     LTEXT "Urządzenia klawiszy szeregowych zapewniają alternatywny dostęp do funkcji klawiatury lub myszy.",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "Wspieraj urządzenia klawi&szy szeregowych", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "&Ustawienia", IDC_SERIAL_BUTTON, 144, 142, 90, 14
-    GROUPBOX "Opcje zarządzania", -1, 6, 169, 234, 47
-    AUTOCHECKBOX "Zastosuj wszystkie ustawienia dla pu&lpitu logowania", IDC_ADMIN_LOGON_BOX,
+    GROUPBOX "Opcje zarządzania", -1, 6, 169, 248, 47
+    AUTOCHECKBOX "Zastosuj wszystkie ustawienia do pu&lpitu logowania", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
-    AUTOCHECKBOX "Zastosuj wszystkie ustawienia dla &domyślnego profilu dla nowych użytkowników", IDC_ADMIN_USERS_BOX,
-                 12, 196, 222, 14
+    AUTOCHECKBOX "Zastosuj wszystkie ustawienia do &domyślnych dla nowych użytkowników", IDC_ADMIN_USERS_BOX,
+                 12, 196, 240, 14
 END
 
 IDD_STICKYKEYSOPTIONS DIALOGEX 0, 0, 246, 228
@@ -126,7 +126,7 @@ BEGIN
     AUTOCHECKBOX "&Naciśnij klawisz modyfikujący dwukrotnie, aby zablokować", IDC_STICKY_LOCK_CHECK,
                  12, 94, 222, 14
     AUTOCHECKBOX "&Wyłącz Klawisze Trwałe gdy dwa klawisze zostaną wciśnięte naraz", IDC_STICKY_UNLOCK_CHECK,
-                 12, 106, 222, 14
+                 12, 106, 225, 14
     GROUPBOX "Powiadomienia", -1, 6, 133, 234, 44
     AUTOCHECKBOX "W&ydaj dźwięk, po naciśnięciu klawisza modyfikującego", IDC_STICKY_SOUND_CHECK,
                  12, 148, 222, 14
@@ -147,11 +147,11 @@ BEGIN
     AUTOCHECKBOX "&Używaj skrótu", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Ustawienia Filtrów", -1, 6, 79, 234, 79
     AUTORADIOBUTTON "Ign&oruj powtarzane naciskanie klawiszy", IDC_FILTER_BOUNCE_RADIO,
-                    12, 91, 120, 11, WS_GROUP | WS_TABSTOP
+                    12, 91, 140, 11, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Ig&noruj szybkie naciskanie klawiszy i spowolnij tempo powtarzania", IDC_FILTER_REPEAT_RADIO,
-                    12, 106, 120, 20, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "U&stawienia", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
-    PUSHBUTTON "Us&tawienia", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
+                    12, 106, 140, 20, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "U&stawienia", IDC_FILTER_BOUNCE_BUTTON, 164, 88, 70, 14, WS_GROUP
+    PUSHBUTTON "Us&tawienia", IDC_FILTER_REPEAT_BUTTON, 164, 106, 70, 14, WS_GROUP
     LTEXT "&Kliknij tutaj i wpisz cokolwiek by przetestować ustawienia:", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
     GROUPBOX "Powiadomienia", -1, 6, 161, 234, 41
@@ -213,12 +213,12 @@ BEGIN
     LTEXT "Wolno", -1, 66, 123, 18, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
-    LTEXT "Szybko", -1, 204, 123, 18, 11
+    LTEXT "Szybko", -1, 204, 123, 22, 11
     AUTOCHECKBOX "P&rzytrzymaj klawisz Ctrl by przyspieszyć i Shift by spowolnić", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
-    LTEXT "Użyj Klawiszy Myszy gdy NumLock jest:", -1, 6, 171, 120, 11
-    AUTORADIOBUTTON "&Włączonyn", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
-    AUTORADIOBUTTON "Wyłą&czony", IDC_MOUSEKEYS_OFF_RADIO, 198, 171, 30, 11
+    LTEXT "Użyj Klawiszy Myszy gdy NumLock jest:", -1, 6, 171, 140, 11
+    AUTORADIOBUTTON "&Włączony", IDC_MOUSEKEYS_ON_RADIO, 142, 171, 50, 11
+    AUTORADIOBUTTON "Wyłą&czony", IDC_MOUSEKEYS_OFF_RADIO, 193, 171, 50, 11
     AUTOCHECKBOX "P&okaż stan Klawiszy Myszy na ekranie", IDC_MOUSEKEYS_STATUS_CHECK,
                  6, 184, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14

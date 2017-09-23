@@ -18,8 +18,8 @@ BEGIN
     GROUPBOX "Ustawienia połączenia", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
     LTEXT "Wpisz adres serwera.", IDC_STATIC, 47, 24, 81, 8
-    LTEXT "Serwer:", IDC_STATIC, 39, 42, 29, 8
-    LTEXT "Nazwa użytkownika:", IDC_STATIC, 39, 57, 42, 18
+    LTEXT "Serwer:", IDC_STATIC, 16, 42, 29, 8
+    LTEXT "Nazwa użytkownika:", IDC_STATIC, 16, 57, 82, 18
     COMBOBOX IDC_SERVERCOMBO, 84, 39, 141, 13, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_NAMEEDIT, 84, 55, 141, 14, WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "Zapisz", IDC_SAVE, 67, 139, 50, 14
@@ -65,7 +65,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 kolorów (15 bit)"
     IDS_HIGHCOLOR16 "65,536 kolorów (16 bit)"
     IDS_HIGHCOLOR24 "16,777,216 kolorów (24 bit)"
-    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
+    IDS_HIGHCOLOR32 "Najwyższa jakość (32 bit)"
     IDS_PIXEL "%lux%lu pikseli"
     IDS_FULLSCREEN "Pełny ekran"
     IDS_BROWSESERVER "<Wybierz inne...>"

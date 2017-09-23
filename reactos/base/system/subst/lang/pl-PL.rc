@@ -13,8 +13,8 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Nieprawidłowa liczba parametrów - %s\n"
     IDS_INVALID_PARAMETER "Nieprawidłowy parametr - %s\n"
     IDS_INVALID_PARAMETER2 "Nieprawidłowe parametry - %s\n"
-    IDS_PATH_NOT_FOUND "Path not found - %s\n"
-    IDS_ACCESS_DENIED "Access denied - %s\n"
+    IDS_PATH_NOT_FOUND "Nie odnaleziono ścieżki - %s\n"
+    IDS_ACCESS_DENIED "Odmowa dostępu - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Na tym dysku już użyto komendy SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "Błąd 0x%x: %s\n"
     IDS_USAGE "Powiązuje ścieżkę z literą napędu.\n\n\

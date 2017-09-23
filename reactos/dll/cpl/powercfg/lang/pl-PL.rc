@@ -81,7 +81,7 @@ BEGIN
     LTEXT "Wybierz, których ustawień oszczędzania energii chcesz używać.", -1, 30, 5, 205, 20
     GROUPBOX "Opcje", -1, 5, 35, 225, 55
     AUTOCHECKBOX "&Zawsze pokazuj ikonę w zasobniku systemowym", IDC_SYSTRAYBATTERYMETER, 15, 45, 200, 10, WS_TABSTOP
-    AUTOCHECKBOX "Zapytaj o &hasło kiedy komputer powraca ze stanu czuwania", IDC_PASSWORDLOGON, 15, 55, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "Zapytaj o &hasło kiedy komputer powraca ze stanu czuwania", IDC_PASSWORDLOGON, 15, 55, 210, 10, WS_TABSTOP
     AUTOCHECKBOX "&Przyciemniaj ekran, kiedy zasilanie z akumulatora", IDC_VIDEODIMDISPLAY, 15, 65, 200, 10, WS_TABSTOP
     GROUPBOX "Przyciski zasilania", -1, 5, 100, 230, 105
     LTEXT "&Kiedy zamykam mój komputer przenośny:", IDC_SLIDCLOSE, 10, 110, 210, 10
@@ -103,9 +103,9 @@ BEGIN
     AUTOCHECKBOX "Włącz &hibernację", IDC_HIBERNATEFILE, 10, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Przestrzeń dyskowa dla hibernacji", -1, 5, 80, 240, 60
     LTEXT "Wolna przestrzeń dyskowa:", -1, 10, 90, 100, 10
-    LTEXT "Nieznana", IDC_FREESPACE, 120, 90, 70, 10
-    LTEXT "Przestrzeń wymagana do hibernacji:", -1, 10, 100, 115, 10
-    LTEXT "Nieznana", IDC_SPACEFORHIBERNATEFILE, 120, 100, 55, 10
+    LTEXT "Nieznana", IDC_FREESPACE, 140, 90, 70, 10
+    LTEXT "Przestrzeń wymagana do hibernacji:", -1, 10, 100, 135, 10
+    LTEXT "Nieznana", IDC_SPACEFORHIBERNATEFILE, 140, 100, 55, 10
     LTEXT "Musisz zwolnić więcej miejsca na dysku przed przejściem w stan hibernacji. ", IDC_TOLESSFREESPACE, 10, 115, 220, 20
 END
 

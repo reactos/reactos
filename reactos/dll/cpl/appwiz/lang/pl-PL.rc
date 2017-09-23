@@ -52,14 +52,14 @@ END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Remove Shortcuts/Folders"
+CAPTION "Usuń Skróty/Foldery"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&To remove an item from the Start menu, select the item and click Remove.", -1, 10, 10, 192, 16
+    LTEXT "&Aby usunąć element z menu Start, wybierz element i kliknij Usuń.", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
-    PUSHBUTTON "&Remove", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "Close", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Usuń", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Zamknij", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95

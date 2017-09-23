@@ -1,0 +1,11 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+STRINGTABLE
+BEGIN
+    IDS_SERVICE_START   "uruchom"
+    IDS_SERVICE_STOP    "zatrzymaj"
+    IDS_SERVICE_PAUSE   "wstrzymaj"
+    IDS_SERVICE_RESUME  "wznów"
+    IDS_SERVICE_RUNNING "Uruchomiono"
+    IDS_SERVICE_STOPPED "Zatrzymano"
+    IDS_SERVICE_PAUSED  "Wstrzymano"
+END

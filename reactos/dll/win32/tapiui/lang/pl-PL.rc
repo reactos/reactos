@@ -307,7 +307,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
     LTEXT "Zanim będziesz mógł dokonać jakichkolwiek połączeń telefonicznych albo modemowych, ReactOS porzebuje następujących informacji o twojej obecnej lokalizacji.", 2000, 95, 2, 188, 25
-    LTEXT "&What country/region are you in now?", -1, 95, 30, 188, 10
+    LTEXT "&W jakim kraju/regionie teraz jesteś?", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Numer &międzymiastowy", -1, 95, 61, 188, 10
     EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL

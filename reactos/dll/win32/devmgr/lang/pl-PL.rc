@@ -183,10 +183,10 @@ BEGIN
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Podpis cyfrowy:", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON "&Szczegóły sterownika...", IDC_DRIVERDETAILS, 7, 106, 75, 15
-    LTEXT "Wyświetla informacje szczegółowe.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "Akt&ualizuj sterownik...", IDC_UPDATEDRIVER, 7, 126, 75, 15
-    LTEXT "Aktualizuje oprogramowanie sterownika.", -1, 91, 130, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Szczegóły sterownika...", IDC_DRIVERDETAILS, 7, 106, 90, 15
+    LTEXT "Wyświetla informacje szczegółowe.", -1, 106, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "Akt&ualizuj sterownik...", IDC_UPDATEDRIVER, 7, 126, 90, 15
+    LTEXT "Aktualizuje oprogramowanie sterownika.", -1, 106, 130, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
@@ -255,78 +255,78 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&File"
+  POPUP "&Plik"
   BEGIN
-    MENUITEM "E&xit",                       IDC_EXIT
+    MENUITEM "Z&akończ",                       IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
-  POPUP "View"
+  MENUITEM "Akcja",                        IDC_ACTIONMENU
+  POPUP "Widok"
   BEGIN
-    MENUITEM "Devices by type",             IDC_DEVBYTYPE
-    MENUITEM "Devices by connection",       IDC_DEVBYCONN
-    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM "Urządzenia według typów",             IDC_DEVBYTYPE
+    MENUITEM "Urządzenia według połączeń",       IDC_DEVBYCONN
+    MENUITEM "Zasoby według typów",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Zasoby według połączeń",     IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Pokaż ukryte urządzenia",         IDC_SHOWHIDDEN
   END
-  POPUP "Help"
+  POPUP "Pomoc"
   BEGIN
-    MENUITEM "About",                       IDC_ABOUT
+    MENUITEM "Informacje",                       IDC_ABOUT
   END
 END
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME               "ReactOS Device Manager"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_APPNAME               "Menedźer urządzeń ReactOS"
+  IDS_CONFIRM_DISABLE       "Wyłączenie tego urządzenia spowoduje, że przestanie ono funkcjonować. Czy na /npewno chcesz je wyłączyć?"
+  IDS_CONFIRM_UNINSTALL     "Ostrzeżenie: Urządzenie to zostanie zaraz odinstalowane z systemu.\r\nCzy chcesz kontynuować?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Update driver software..."
-  IDS_MENU_ENABLE           "Enable"
-  IDS_MENU_DISABLE          "Disable"
-  IDS_MENU_UNINSTALL        "Uninstall"
-  IDS_MENU_SCAN             "Scan for hardware changes"
-  IDS_MENU_ADD              "Add hardware"
-  IDS_MENU_PROPERTIES       "Properties"
+  IDS_MENU_UPDATE           "Aktualizuj sterownik..."
+  IDS_MENU_ENABLE           "Włącz"
+  IDS_MENU_DISABLE          "Wyłącz"
+  IDS_MENU_UNINSTALL        "Odinstaluj"
+  IDS_MENU_SCAN             "Skanuj w poszukiwaniu zmian sprzętu"
+  IDS_MENU_ADD              "Dodaj urządzenie"
+  IDS_MENU_PROPERTIES       "Właściwości"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROPERTIES    "Properties"
-  IDS_TOOLTIP_SCAN          "Scan for hardware changes"
-  IDS_TOOLTIP_ENABLE        "Enable"
-  IDS_TOOLTIP_DISABLE       "Disable"
-  IDS_TOOLTIP_UPDATE        "Update Driver Software"
-  IDS_TOOLTIP_UNINSTALL     "Uninstall"
+  IDS_TOOLTIP_PROPERTIES    "Właściwości"
+  IDS_TOOLTIP_SCAN          "Skanuj w poszukiwaniu zmian sprzętu"
+  IDS_TOOLTIP_ENABLE        "Włącz"
+  IDS_TOOLTIP_DISABLE       "Wyłącz"
+  IDS_TOOLTIP_UPDATE        "Aktualizuj sterownik"
+  IDS_TOOLTIP_UNINSTALL     "Odinstaluj"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
-  IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
-  IDS_HINT_ENABLE       " Enables the selected device."
-  IDS_HINT_DISABLE      " Disables the selected device."
-  IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
-  IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
-  IDS_HINT_ABOUT        " About ReactOS Device Manager."
-  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_PROPERTIES   " Otwiera okno dialogowe właściwiości dla bieżącego zaznaczenia."
+  IDS_HINT_SCAN         " Skanuj w poszukiwaniu zmienionych lub nowych urządzeń Plug and Play."
+  IDS_HINT_ENABLE       " Włącza wybrane urządzenie."
+  IDS_HINT_DISABLE      " Wyłącza wybrane urządzenie."
+  IDS_HINT_UPDATE       " Uruchamia Kreatora aktualizacji sprzętu dla wybranego sterownika."
+  IDS_HINT_UNINSTALL    " Odinstalowuje sterownik dla wybranego urządzenia."
+  IDS_HINT_ADD          " Dodaje starsze (niezgodne ze standardem Plug and Play) urządzenie do komputera." 
+  IDS_HINT_ABOUT        " O menedżerze urządzeń ReactOS."
+  IDS_HINT_EXIT         " Zamyka program."
 
-  IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."
-  IDS_HINT_DEV_BY_CONN  " Displays devices by connection."
-  IDS_HINT_RES_BY_TYPE  " Displays resources by type."
-  IDS_HINT_RES_BY_CONN  " Displays resources by connection type."
-  IDS_HINT_SHOW_HIDDEN  " Displays legacy devices and devices that are no longer installed."
+  IDS_HINT_DEV_BY_TYPE  " Wyświetla urządzenia według typów sprzętu."
+  IDS_HINT_DEV_BY_CONN  " Wyświetla urządzenia według połączeń."
+  IDS_HINT_RES_BY_TYPE  " Wyświetla zasoby według typów."
+  IDS_HINT_RES_BY_CONN  " Wyświetla zasoby według połączeń."
+  IDS_HINT_SHOW_HIDDEN  " Wyświetla starsze urządzenia i urządzenia, które już nie są zainstalowane."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_RESTORE  " Przywraca to okno do normalnych rozmiarów."
+  IDS_HINT_SYS_MOVE     " Przesuwa to okno."
+  IDS_HINT_SYS_SIZE     " Zmienia rozmiar tego okna."
+  IDS_HINT_SYS_MINIMIZE " Minimalizuje to okno do ikony."
+  IDS_HINT_SYS_MAXIMIZE " Maksymalizuje to okno i wypełnia ekran."
+  IDS_HINT_SYS_CLOSE    " Zamyka to okno."
 END

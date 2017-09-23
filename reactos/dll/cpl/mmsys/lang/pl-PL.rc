@@ -44,7 +44,7 @@ BEGIN
     LTEXT "S&chemat dźwiękowy:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Za&pisz jako...", IDC_SAVEAS_BTN, 134, 70, 50, 15
-    PUSHBUTTON "S&kasuj", IDC_DELETE_BTN, 188, 70, 50, 15
+    PUSHBUTTON "U&suń", IDC_DELETE_BTN, 188, 70, 50, 15
     LTEXT "Aby zmienić dźwięk, kliknij na zdarzenie z listy poniżej a następnie wybierz dźwięk. Zmiany możesz zapisać w nowym lub obecnym schemacie dźwiękowym.", -1, 8, 90, 230, 40
     LTEXT "&Zdarzenia:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
@@ -277,6 +277,6 @@ BEGIN
     IDS_REACTOS_LOGOFF "Wylogowanie z ReactOS"
     IDS_REACTOS_LOGON "Logowanie do ReactOS"
     5854 "Eksplorator ReactOS"
-    IDS_BROWSE_FOR_SOUND "Search for new sounds"
-    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
+    IDS_BROWSE_FOR_SOUND "Wyszukaj nowe dźwięki"
+    IDS_WAVE_FILES_FILTER "Pliki Wav (*.wav)|*.wav|"
 END

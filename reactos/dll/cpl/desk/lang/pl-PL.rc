@@ -161,13 +161,13 @@ END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Display Settings"
+CAPTION "Ustawienia monitora"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "Czy chcesz zachować te ustawienia?", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
-    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
-    DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
+    PUSHBUTTON "&Tak", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&Nie", IDNO, 175, 36, 50, 14
 END
 
 IDR_PREVIEW_MENU MENU
@@ -272,5 +272,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "Ustawienia ekranu"
     IDS_APPLY_FAILED "Nie udało się zastosować nowych ustawień..."
     IDS_APPLY_NEEDS_RESTART "Musisz ponownie uruchomić komputer aby zastosować zmiany."
-    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
+    IDS_TIMEOUTTEXT "Powrót do poprzednich ustawień w ciągu %d sekund."
 END

@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zgodność"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Jeżeli masz problemy z uruchamianiem tego programu w ReactOS, wybierz system operacyjny, który ReactOS powinien zgłaszać aplikacji.\nPlease note that this is a work in progress.", -1, 7, 7, 210, 31
+    LTEXT "Jeżeli masz problemy z uruchamianiem tego programu w ReactOS, wybierz system operacyjny, który ReactOS powinien zgłaszać aplikacji.\nProszę pamiętać, że praca nad tą funkcją jest w toku.", -1, 7, 7, 210, 31
     GROUPBOX "Tryb zgodności", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Uruchom ten program w trybie zgodności z:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -35,8 +35,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TABTITLE "Compatibility"
-    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
-    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
-    IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"
+    IDS_TABTITLE "Zgodność"
+    IDS_FAILED_NETWORK "Nie można ustawić trybu zgodnośći dla tego programu, ponieważ znajduje się na dysku sieciowym."
+    IDS_FAILED_PROTECTED "Nie można ustawić trybu zgodnośći dla tego programu, ponieważ jest częścią systemu ReactOS."
+    IDS_YOU_DID_NOT_ADD "Nie dodałeś trybu zgodności, czy chcesz to zrobić teraz?"
 END

@@ -202,10 +202,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPLY_DEFAULT_TITLE "Change default settings"
-    IDS_APPLY_DEFAULT_TEXT "The settings will be applied to the default user account.\n\n\
-These changes apply to the logon screen and new user accounts.\n\
-The computer must be rebooted, in order to apply the changes to some system services."
+    IDS_APPLY_DEFAULT_TITLE "Zmień domyślne ustawienia"
+    IDS_APPLY_DEFAULT_TEXT "Ustawienia zostaną zastosowane dla domyślnego konta użytkownika.\n\n\
+Te zmiany dotyczą ekranu logowania i nowych kont użytkowników.\n\
+Do zastosowania zmian dla niektórych usług systemowych wymagane jest ponowne uruchomienie komputera."
 END
 
 STRINGTABLE

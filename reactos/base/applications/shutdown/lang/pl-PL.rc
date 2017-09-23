@@ -63,7 +63,7 @@ Sposób użycia: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]
             uruchomienia lub zamknięcia.\n\
 			Maksymalna dozwolona liczba znaków wynosi 512.\n\
     /f      Wymusza zamknięcie uruchomionych aplikacji bez uprzedniego\n\
-            powiadamiania użytkowników. If you do not specify any other parameter, this option will also log off.\n\
+            powiadamiania użytkowników. Jeśli nie określisz innego parametru, opcja ta także wyloguje z systemu.\n\
     /d [p|u:]xx:yy  Podaje przyczynę ponownego uruchomienia lub\n\
 			zamknięcia systemu\n\
             Opcja p określa, że zaplanowano zamknięcie lub\n\

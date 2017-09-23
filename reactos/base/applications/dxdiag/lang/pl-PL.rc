@@ -51,7 +51,7 @@ BEGIN
     EDITTEXT IDC_STATIC_MEM, 155, 130, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_SWAP, 155, 140, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_VERSION, 155, 150, 210, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    CHECKBOX "Check for WHQL digital signatures", IDC_WHQL_SIGN_CHECK, 15, 170, 135, 10, WS_DISABLED
+    CHECKBOX "Sprawdź, czy są cyfrowe podpisy WHQL", IDC_WHQL_SIGN_CHECK, 15, 170, 135, 10, WS_DISABLED
 END
 
 IDD_DISPLAY_DIALOG DIALOGEX 0, 0, 462, 220
@@ -146,17 +146,17 @@ IDD_MUSIC_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "General MIDI DLS Collection:", IDC_STATIC, 0, 0, 100, 10
+    RTEXT "Ogólna kolekcja MIDI DLS:", IDC_STATIC, 0, 0, 100, 10
     EDITTEXT IDC_MIDI_DLS_COLLECTION, 105, 0, 250, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Music Ports", IDC_STATIC, 5, 10, 452, 85
-    GROUPBOX "ReactX Features", IDC_STATIC, 5, 97, 452, 70
-    LTEXT "Default Port Acceleration:", IDC_STATIC, 15, 120, 95, 17
+    GROUPBOX "Porty muzyczne ", IDC_STATIC, 5, 10, 452, 85
+    GROUPBOX "Funkcje ReactX", IDC_STATIC, 5, 97, 452, 70
+    LTEXT "Domyślne przyspieszenie portu:", IDC_STATIC, 15, 120, 125, 17
     LTEXT "", IDC_STATIC_DEFAULT_PORT_ACCELERATION, 115, 120, 50, 10
-    PUSHBUTTON "Disable", IDC_BUTTON_DISABLEDMUSIC, 75, 135, 80, 14, WS_DISABLED
-    LTEXT "Test using this port:", IDC_STATIC, 180, 105, 100, 10
-    LISTBOX IDC_DMUSIC_TEST_LIST, 180, 115, 180, 45, LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Test DirectMusic", IDC_BUTTON_TESTDMUSIC, 370, 145, 80, 14, WS_DISABLED
-    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
+    PUSHBUTTON "Wyłącz", IDC_BUTTON_DISABLEDMUSIC, 120, 135, 50, 14, WS_DISABLED
+    LTEXT "Testuj przy użyciu tego portu:", IDC_STATIC, 216, 105, 100, 10
+    LISTBOX IDC_DMUSIC_TEST_LIST, 216, 115, 230, 32, LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Testuj DirectMusic", IDC_BUTTON_TESTDMUSIC, 285, 150, 90, 14, WS_DISABLED
+    GROUPBOX "Uwagi", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_MUSIC_NOTES, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -179,11 +179,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Zarejestrowani dostawcy usług DirectPlay", IDC_STATIC, 5, 0, 452, 75
     CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 15, 12, 432, 55
-    GROUPBOX "Registered Lobbyable DirectPlay Applications", IDC_STATIC, 5, 77, 452, 55
-    GROUPBOX "ReactX Features", IDC_STATIC, 5, 133, 452, 35
-    PUSHBUTTON "DirectPlay Voice Options", IDC_BUTTON_VOICE_OPTIONS, 10, 145, 90, 14, WS_DISABLED
-    PUSHBUTTON "Test DirectPlay", IDC_BUTTON_TESTDPLAY, 130, 145, 80, 14, WS_DISABLED
-    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
+    GROUPBOX "Zarejestrowane aplikacje modułu Lobbyable DirectPlay", IDC_STATIC, 5, 77, 452, 55
+    GROUPBOX "Funkcje ReactX", IDC_STATIC, 5, 133, 452, 35
+    PUSHBUTTON "Opcje programu DirectPlay Voice", IDC_BUTTON_VOICE_OPTIONS, 90, 145, 125, 14, WS_DISABLED
+    PUSHBUTTON "Testuj DirectPlay", IDC_BUTTON_TESTDPLAY, 255, 145, 125, 14, WS_DISABLED
+    GROUPBOX "Uwagi", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_NETWORK_NOTES, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -191,11 +191,11 @@ IDD_HELP_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Still can't find the information you're looking for? Here are some additional things you can do:", IDC_STATIC, 5, 0, 300, 10
-    PUSHBUTTON "System Information", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
-    LTEXT "Displays additional system information", IDC_STATIC, 90, 23, 300, 10
-    PUSHBUTTON "Refresh Rate Override", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
-    LTEXT "Overrides the Refresh Rate for DirectDraw", IDC_STATIC, 90, 43, 300, 10
+    LTEXT "Wciąż nie znalazłeś informacji, których szukałeś? Oto kilka dodatkowych rzeczy, które możesz zrobić:", IDC_STATIC, 5, 0, 300, 10
+    PUSHBUTTON "Informacje o systemie", IDC_BUTTON_SYSINFO, 5, 20, 140, 14, WS_DISABLED
+    LTEXT "Wyświetla dodatkowe informacje o systemie", IDC_STATIC, 150, 23, 300, 10
+    PUSHBUTTON "Wymuszenie Częstotliwości odświeżania", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 140, 14, WS_DISABLED
+    LTEXT "Wymusza daną częstotliwość odświeżania dla DirectDraw", IDC_STATIC, 150, 43, 300, 10
 END
 
 STRINGTABLE
@@ -252,12 +252,12 @@ BEGIN
     IDS_D3DTEST_DESCRIPTION "Uruchomiony zostanie test interfejsu Direct3D. Kontynuować?"
     IDS_D3DTEST_D3Dx "Test obejmie przyspieszany sprzętowo interfejs Direct3D dla %u."
     IDS_OS_VERSION "%s %s (%d.%d, Build %d)"
-    IDS_DMUSIC_DESC "Description"
-    IDS_DMUSIC_TYPE "Type"
-    IDS_DMUSIC_KERNEL "Kernel Mode"
-    IDS_DMUSIC_IO "In/Out"
-    IDS_DMUSIC_DLS "Supports DLS"
-    IDS_DMUSIC_EXT "External"
-    IDS_DMUSIC_PORT "Default Port"
-    IDS_DDDISABLE_MSG "This will disable all hardware acceleration for DirectDraw on all display devices\n.Do you wish to continue?\n"
+    IDS_DMUSIC_DESC "Opis"
+    IDS_DMUSIC_TYPE "Typ"
+    IDS_DMUSIC_KERNEL "Tryb jądra"
+    IDS_DMUSIC_IO "Wejście/Wyjście"
+    IDS_DMUSIC_DLS "Obsługuje próbki DLS"
+    IDS_DMUSIC_EXT "Zewnętrzny"
+    IDS_DMUSIC_PORT "Port domyślny"
+    IDS_DDDISABLE_MSG "Spowoduje to wyłączenie przyspieszania sprzętowego DirectDraw dla wszystkich urządzeń wyświetlających w systemie\n.Czy chcesz kontynuować?\n"
 END

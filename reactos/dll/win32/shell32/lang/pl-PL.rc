@@ -322,7 +322,7 @@ BEGIN
     PUSHBUTTON "Oczyszczanie &dysku", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "Kompresuj dysk, aby zaoszczędzić miejsce na dysku", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Zezwalaj na indeksowanie tego dysku, aby przyśpieszyć wyszukiwanie plików", 14012, 8, 205, 222, 10, WS_DISABLED
+    CHECKBOX "Zezwalaj na indeksowanie tego dysku, aby przyśpieszyć wyszukiwanie plików", 14012, 8, 205, 230, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
@@ -333,15 +333,15 @@ BEGIN
     GROUPBOX "Sprawdzanie błędów", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Ta opcja sprawdzi wolumin w poszukiwaniu błędów.", -1, 40, 25, 160, 20
-    PUSHBUTTON "Sprawdź...", 14000, 130, 45, 90, 15, WS_TABSTOP
+    PUSHBUTTON "Sprawdź...", 14000, 130, 45, 100, 15, WS_TABSTOP
     GROUPBOX "Defragmentacja", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Ta opcja dokona defragmentacji plików woluminu.", -1, 40, 85, 160, 20
-    PUSHBUTTON "Defragmentuj...", 14001, 130, 105, 90, 15, WS_TABSTOP
+    PUSHBUTTON "Defragmentuj...", 14001, 130, 105, 100, 15, WS_TABSTOP
     GROUPBOX "Kopia zapasowa", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Ta opcja wykona kopię zapasową plików tego woluminu.", -1, 40, 150, 160, 20
-    PUSHBUTTON "Wykonaj kopię zapasową...", 14002, 130, 170, 90, 15, WS_TABSTOP
+    PUSHBUTTON "Wykonaj kopię zapasową...", 14002, 130, 170, 100, 15, WS_TABSTOP
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
@@ -378,11 +378,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Ustawienia wybranej lokalizacji", -1, 10, 72, 220, 70
-    RADIOBUTTON "&Własny rozmiar:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "&Maksymalny rozmiar(MB):", -1, 20, 105, 70, 10
+    RADIOBUTTON "&Własny rozmiar", 14001, 20, 90, 80, 10, WS_TABSTOP
+    EDITTEXT 14002, 116, 102, 50, 14, WS_TABSTOP | ES_NUMBER
+    LTEXT "&Maksymalny rozmiar(MB):", -1, 20, 105, 90, 10
     RADIOBUTTON "Nie przenoś plików do &Kosza, tylko od razu usuwaj.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Wyświetl dialog z potwierdzeniem usuwania", 14004, 20, 155, 140, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Wyświetl dialog z potwierdzeniem usuwania", 14004, 20, 155, 160, 10, WS_TABSTOP
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
@@ -416,11 +416,11 @@ BEGIN
     AUTORADIOBUTTON "Otwórz każdy katalog w &osobnym oknie", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 180, 10
     GROUPBOX "Działanie przycisków myszki", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 180, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Podkreś&laj tytuły ikon tak jak w przeglądarce", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 180, 10
-    AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po najechaniu na nie kursorem", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 180, 10
-    AUTORADIOBUTTON "Po&dwójne kliknięcie by otworzyć (pojedyncze kliknięcie by wskazać)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 180, 10
-    PUSHBUTTON "Przywróć &domyślne", 14011, 180, 180, 80, 14, WS_TABSTOP
+    AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po najechaniu na nie kursorem", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    AUTORADIOBUTTON "Po&dwójne kliknięcie by otworzyć (pojedyncze kliknięcie by wskazać)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
+    PUSHBUTTON "Przywróć &domyślne", 14011, 175, 180, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -431,11 +431,11 @@ BEGIN
     GROUPBOX "Podgląd folderów", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Możesz użyć podglądów (takich jak Detale lub Tytuły)\nktóre są ustawione dla tego katalogu, dla pozostałych.", -1, 20, 20, 210, 20
-    PUSHBUTTON "Zastosuj do w&szystkich Katalogów", 14001, 50, 50, 80, 14, WS_TABSTOP
-    PUSHBUTTON "Z&resetuj ustawienia", 14002, 150, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "Zastosuj do w&szystkich Katalogów", 14001, 30, 50, 120, 14, WS_TABSTOP
+    PUSHBUTTON "Z&resetuj ustawienia", 14002, 170, 50, 80, 14, WS_TABSTOP
     LTEXT "Zaawansowane:", -1, 7, 80, 100, 10
     CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
-    PUSHBUTTON "Przywróć &domyślne", 14004, 180, 210, 90, 14, WS_TABSTOP
+    PUSHBUTTON "Przywróć &domyślne", 14004, 160, 220, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -446,11 +446,11 @@ BEGIN
     LTEXT "Zarejestrowane &typy plików:", -1, 7, 10, 196, 10
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "&Nowy", 14001, 120, 110, 60, 14, WS_TABSTOP
-    PUSHBUTTON "&Skasuj", 14002, 180, 110, 60, 14, WS_TABSTOP
+    PUSHBUTTON "&Usuń", 14002, 195, 110, 60, 14, WS_TABSTOP
     GROUPBOX "Szczegóły dla rozszerzenia '%s'", 14003, 7, 130, 249, 70
     LTEXT "Otwiera z:", -1, 12, 140, 40, 10
     //ICON
-    LTEXT "Nazwa Aplikacji", 14005, 100, 140, 80, 10
+    LTEXT "Nazwa Aplikacji", 14005, 50, 140, 80, 10
     PUSHBUTTON "Z&mień", 14006, 190, 140, 60, 14, WS_TABSTOP
     LTEXT "", 14007, 12, 155, 160, 30
     PUSHBUTTON "Zaawa&nsowane", 14008, 190, 175, 60, 14, WS_TABSTOP
@@ -599,7 +599,7 @@ BEGIN
     DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
     GROUPBOX "Opcje sprawdzania dysków", -1, 7, 6, 179, 40
     PUSHBUTTON "Anuluj", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "Automatycznie naprawiaj błędy systemu plików", 14000, 12, 15, 155, 10
+    AUTOCHECKBOX "Automatycznie naprawiaj błędy systemu plików", 14000, 16, 18, 165, 10
     AUTOCHECKBOX "&Szukaj i próbuj odzyskać uszkodzone sektory", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
@@ -610,10 +610,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Zmiana Ikony"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    LTEXT "Szukaj ikon w pliku:", -1, 7, 7, 179, 10
     PUSHBUTTON "Przeglądaj...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
-    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LTEXT "Wybierz ikonę z poniższej listy:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 135, 179, 50, 14
@@ -666,10 +666,10 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS "Narzędzia administracyjne"
 
     /* special folders descriptions */
-    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
-    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
-    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Konfiguruje ustawienia administracyjne dla tego komputeratera."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Dostosowuje wygląd plików i folderów, zmienia skojarzenia plików."
+    IDS_FONTS_DESCRIPTION "Dodaj lub zmień czcionki zainstalowane na tym komputerze oraz zarządzaj nimi."
+    IDS_PRINTERS_DESCRIPTION "Pokazuje zainstalowane drukarki i faks-drukarki oraz pomaga w dodawaniu nowych."
 
     /* context menus */
     IDS_VIEW_LARGE "&Duże Ikony"
@@ -688,8 +688,8 @@ BEGIN
     IDS_RENAME "Zmień nazwę"
     IDS_PASTE "Włóż"
 
-    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
-    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
+    IDS_CREATEFOLDER_DENIED "Nie mogę utworzyć folderu '%1'"
+    IDS_CREATEFOLDER_CAPTION "Nie mogę utworzyć folderu"
     IDS_DELETEITEM_CAPTION "Potwierdź usunięcia pliku"
     IDS_DELETEFOLDER_CAPTION "Potwierdź usunięcie katalogu"
     IDS_DELETEITEM_TEXT "Czy jesteś pewien, że chcesz usunąć '%1'?"
@@ -708,7 +708,7 @@ BEGIN
     IDS_FILEOOP_DELETING "Usuwanie..."
     IDS_FILEOOP_FROM_TO "Z %1 do %2"
     IDS_FILEOOP_FROM "Z %1"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_PREFLIGHT "Przygotowywanie"
 
     /* message box strings */
     IDS_RESTART_TITLE "Uruchom ponownie"
@@ -793,14 +793,14 @@ BEGIN
     IDS_TTF_FILE "Plik czcionki TrueType"
     IDS_OTF_FILE "Plik czcionki OpenType"
     IDS_HLP_FILE "Plik pomocy"
-    IDS_ICO_FILE "Icon"
+    IDS_ICO_FILE "Ikona"
     IDS_INI_FILE "Ustawienia konfiguracji"
     IDS_LNK_FILE "Skrót"
     IDS_PIF_FILE "NT VDM Program Information File"
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Plik systemowy"
     IDS_VXD_FILE "Sterownik urządzenia wirtualnego"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s-plik"
 
     IDS_OPEN_VERB "Otwórz"
     IDS_EXPLORE_VERB "Eksploruj"
@@ -826,33 +826,33 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "%s Plik"
 
     IDS_BYTES_FORMAT "bajtów"
     IDS_UNKNOWN_APP "Nieznana aplikacja"
     IDS_EXE_DESCRIPTION "Opis:"
 
     IDS_MENU_EMPTY "(Puste)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_OBJECTS "%d Objekty"
+    IDS_OBJECTS_SELECTED "%d Wybrane objekty"
 
-    IDS_ADVANCED_FOLDER "Files and Folders"
-    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
-    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
-    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
-    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
-    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
-    IDS_ADVANCED_HIDDEN "Hidden files and folders"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
-    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
-    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
-    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
-    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
-    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
-    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
+    IDS_ADVANCED_FOLDER "Pliki i Foldery"
+    IDS_ADVANCED_NET_CRAWLER "Automatycznie wyszukuj foldery sieciowe i drukarki"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Wyświetl informacje o rozmiarze plików w etykietach folderów"
+    IDS_ADVANCED_FRIENDLY_TREE "Wyświetl listę folderów Eskploratora w prostym widoku folderów"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Wyświetl zawartość folderów systemowych"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Wyświetl pełną ścieżkę na pasku adresu"
+    IDS_ADVANCED_SHOW_FULL_PATH "Wyświetl pełną ścieżkę na pasku tytułu"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Nie buforuj miniatur"
+    IDS_ADVANCED_HIDDEN "Ukryte pliki i foldery"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Nie pokazuj ukrytych plików i folderów"
+    IDS_ADVANCED_SHOW_HIDDEN "Pokaż ukryte pliki i foldery"
+    IDS_ADVANCED_HIDE_FILE_EXT "Ukryj rozszerzenia znanych typów plików"
+    IDS_ADVANCED_SUPER_HIDDEN "Ukryj chronione pliki systemu operacyjnego (zalecane)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Uruchom okna folderów w osobnych procesach"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Zapamiętaj ustawienia wyświetlania każdego folderu"
+    IDS_ADVANCED_PERSIST_BROWSERS "Przywróć poprzednie okna folderów po zalogowaniu"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Pokaż Panel sterowania w oknie Mój komputer"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Pokaż zaszyfrowane lub skompresowane pliki NTFS w kolorze"
+    IDS_ADVANCED_SHOW_INFO_TIP "Pokaż podręczny opis elementów folderów i pulpitu"
 END

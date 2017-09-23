@@ -18,19 +18,19 @@ BEGIN
         MENUITEM "&Zapisz\tCtrl+S", IDM_FILESAVE
         MENUITEM "Z&apisz jako...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "Ze skanera lub aparatu fotograficznego...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "&Podgląd wydruku", IDM_FILEPAGEVIEW
         MENUITEM "&Ustawienia strony...", IDM_FILEPAGESETUP
         MENUITEM "&Drukuj...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "Wyślij...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Ustaw jako &tło (sąsiadująco)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "U&staw jako tło (wyśrodkowane)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Ustaw jako tło (rozciągnięte)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "Ostatnio używany plik", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILEEXIT
     END
@@ -218,7 +218,7 @@ BEGIN
     IDS_TOOLTIP15 "Elipsa"
     IDS_TOOLTIP16 "Zaokrąglony prostokąt"
     IDS_ALLFILES "Wszystkie pliki"
-    IDS_ALLPICTUREFILES "All Picture Files"
+    IDS_ALLPICTUREFILES "Wszystkie pliki graficzne"
     IDS_FILESIZE "%d bajtów"
     IDS_PRINTRES "%d x %d pikseli na metr"
     IDS_INTNUMBERS "Wprowadź liczbę całkowitą."

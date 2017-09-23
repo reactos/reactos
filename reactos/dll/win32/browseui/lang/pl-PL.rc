@@ -97,8 +97,8 @@ END
 
 IDM_BAND_MENU MENUEX
 BEGIN
-	MENUITEM "Sho&w title", IDM_BAND_TITLE
-	MENUITEM "&Close toolbar", IDM_BAND_CLOSE
+	MENUITEM "Pok&aż tytuł", IDM_BAND_TITLE
+	MENUITEM "&Zamknij pasek narzędzi", IDM_BAND_CLOSE
 END
 
 /* Dialogs */
@@ -278,8 +278,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "Back to %s"
-    IDS_FORWARD "Forward to %s"
+    IDS_BACK "Powrót do %s"
+    IDS_FORWARD "Naprzód do %s"
 END
 
 STRINGTABLE

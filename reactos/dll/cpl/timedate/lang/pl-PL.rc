@@ -46,7 +46,7 @@ BEGIN
     AUTOCHECKBOX "Automatycznie synchronizuj czas z internetowym serwerem czasu",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Serwer:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "&Aktualizuj teraz", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    PUSHBUTTON "&Aktualizuj teraz", IDC_UPDATEBUTTON, 186, 22, 62, 14
     LTEXT "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
     LTEXT "Synchronizacja może nastąpić tylko wtedy, gdy komputer jest podłączony do Internetu.", -1, 12, 114, 225, 25
