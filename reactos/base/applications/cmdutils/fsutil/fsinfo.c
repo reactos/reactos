@@ -523,7 +523,7 @@ StatisticsMain(int argc, const TCHAR *argv[])
         }
         else
         {
-            PrintErrorMessage(GetLastError());
+            PrintErrorMessage(Error);
             CloseHandle(Volume);
             return 1;
         }
