@@ -48,7 +48,7 @@ GetLargerTimeZoneEntry(
     Entry = TimeZoneListHead;
     while (Entry != NULL)
     {
-        if (Entry->TimezoneInfo.Bias > Bias)
+        if (Entry->TimezoneInfo.Bias < Bias)
             return Entry;
 
         if (Entry->TimezoneInfo.Bias == Bias)
