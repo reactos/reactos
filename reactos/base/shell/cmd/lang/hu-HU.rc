@@ -47,10 +47,6 @@ CD[..|.]\n\n\
   /D   Megváltoztatja az aktuális mappát és meghajtót is.\n\n\
 Írd be, hogy 'CD meghajtó:' hogy ki írja az aktuális mappát.\n\
 Írd be a CD-t paraméterek nélkül, hogy megjelenítse az aktuális meghajtót és mappát (ugyanaz mint az elõzõ).\n"
-    STRING_CHCP_HELP "Megjeleníti vagy megváltoztatja az aktív kódlapot.\n\n\
-CHCP [nnn]\n\n\
-  nnn   A használni kívánt kódlap száma.\n\n\
-Írd be a  CHCP paraméterek nélkül, hogy megjelenítse az aktív kódlapot.\n"
     STRING_CHOICE_HELP "Vár a felhasználóra, hogy válasszon a felkínált lehetõségek közül.\n\n\
 CHOICE  [/C[:]választási lehetõségek][/N][/S][/T[:]c,nn][szöveg]\n\n\
   /C[:]választási lehetõségek  Megengedett billentyûk. Alapértelmezett: YN. <-- Yes->Igen\n\
@@ -453,8 +449,6 @@ title         new title\n"
     STRING_ALIAS_ERROR "A parancssor túl hosszú az alias kibontásakor!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Hiba a batch állomány megnyitásakor\n"
-    STRING_CHCP_ERROR1 "Aktív kódlap: %u\n"
-    STRING_CHCP_ERROR4 "Érvénytelen kódlap\n"
     STRING_CHOICE_ERROR "Érvénytelen paraméter. Várt formátum: /C[:]választási lehetõségek"
     STRING_CHOICE_ERROR_TXT "Érvénytelen paraméter. Várt formátum: /T[:]v,nn"
     STRING_CHOICE_ERROR_OPTION "Érvénytelen paraméter: %s"

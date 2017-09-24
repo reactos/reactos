@@ -1,0 +1,12 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "現在のコード ページ番号を表示または設定します。\n\n\
+CHCP [nnn]\n\n\
+  nnn   コード ページ番号を指定します。\n\n\
+現在のコード ページ番号を表示するときは、パラメータを指定せずに CHCP と入力してください。\n"
+    STRING_CHCP_ERROR1 "現在のコード ページ: %u\n"
+    STRING_CHCP_ERROR4 "無効なコード ページです\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "無効なパラメータの書式です。 - %s\n"
+END

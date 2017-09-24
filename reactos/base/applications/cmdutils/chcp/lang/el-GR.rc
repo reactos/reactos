@@ -1,0 +1,17 @@
+/*
+ * Αρχική έκδοση - Ημιτελής.
+ * Ελληνική μετάφραση - Απόστολος Αλεξιάδης
+ */
+
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Εμφανίζει ή ορίζει τον αριθμό της ενεργού κωδικοσελίδας.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Καθορίζει έναν αριθμό κωδικοσελίδας.\n\n\
+Πληκτρολογήστε CHCP χωρίς παράμετρο, για να εμφανιστεί ο τρέχων αριθμός κωδικοσελίδας.\n"
+    STRING_CHCP_ERROR1 "Active code page: %u\n"
+    STRING_CHCP_ERROR4 "Invalid code page\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Μη έγκυρο φορμά παραμέτρου - %s\n"
+END

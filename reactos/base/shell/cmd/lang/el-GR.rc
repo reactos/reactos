@@ -52,10 +52,6 @@ CD[..|.]\n\n\
   /D   Αλλαγή της τρέχουσας μονάδας δίσκου πέραν της αλλαγής τρέχοντος καταλόγου για μια μονάδα δίσκου.\n\n\
 Πληκτρολογήστε CD δίσκος:, για να εμφανίσετε τον τρέχοντα κατάλογο στη συγκεκριμένη μονάδα δίσκου.\n\
 Πληκτρολογήστε CD χωρις παράμετρο, για να εμφανίσετε τον τρέχοντα κατάλογο στην τρέχουσα μονάδα δίσκου.\n"
-    STRING_CHCP_HELP "Εμφανίζει ή ορίζει τον αριθμό της ενεργού κωδικοσελίδας.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Καθορίζει έναν αριθμό κωδικοσελίδας.\n\n\
-Πληκτρολογήστε CHCP χωρίς παράμετρο, για να εμφανιστεί ο τρέχων αριθμός κωδικοσελίδας.\n"
     STRING_CHOICE_HELP "Αναμένει από τον χρήστη να επιλέξει μία από σετ επιλογών.\n\n\
 CHOICE  [/C[:]επιλογές][/N][/S][/T[:]c,nn][κείμενο]\n\n\
   /C[:]επιλογές  Προσδιορίζει επιτρεπόμενα κλειδιά. Το προκαθορισμένο είναι το YN.\n\
@@ -473,8 +469,6 @@ title         new title\n"
     STRING_ALIAS_ERROR "Command line too long after alias expansion!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Error opening batch file\n"
-    STRING_CHCP_ERROR1 "Active code page: %u\n"
-    STRING_CHCP_ERROR4 "Invalid code page\n"
     STRING_CHOICE_ERROR "Μη έγκυρη επιλογή. Expected format: /C[:]options"
     STRING_CHOICE_ERROR_TXT "Μη έγκυρη επιλογή. Expected format: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Illegal Option: %s"

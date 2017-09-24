@@ -1,0 +1,14 @@
+/* Russian translation by Andrey Korotaev (unC0Rr@inbox.ru) & Aleksey Bragin (aleksey@reactos.org) & Kudratov Olimjon (olim98@bk.ru)*/
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Вывод или смена текущего номера кодовой страницы.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Номер кодовой страницы.\n\n\
+Команда CHCP без параметра выводит текущий номер кодовой страницы.\n"
+    STRING_CHCP_ERROR1 "Текущая кодовая страница: %u\n"
+    STRING_CHCP_ERROR4 "Неверная кодовая страница\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Неверный формат параметра - %s\n"
+END

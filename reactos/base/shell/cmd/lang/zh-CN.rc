@@ -47,10 +47,6 @@ CD[..|.]\n\n\
   /D   将会改变当前驱动器和当前目录。\n\n\
 执行 CD 驱动器: 显示指定驱动器上的当前目录。\n\
 不带参数执行 CD 显示当前驱动器和目录。\n"
-    STRING_CHCP_HELP "显示或设置活动的代码页。\n\n\
-CHCP [nnn]\n\n\
-  nnn   指定活动的代码页。\n\n\
-不带参数执行 CHCP 将会显示当前活动的代码页。\n"
     STRING_CHOICE_HELP "等待用户在一组选项中做出一个选择。\n\n\
 CHOICE  [/C[:]选项][/N][/S][/T[:]c,nn][文本]\n\n\
   /C[:]选项     指定允许的选项。默认为 YN。\n\
@@ -438,8 +434,6 @@ RESTORE       恢复窗口\n\
     STRING_ALIAS_ERROR "别名展开后的命令行太长！\n"
     STRING_ASSOC_ERROR "扩展名 %s 的文件关联未找到！\n"
     STRING_BATCH_ERROR "打开批处理文件时出错\n"
-    STRING_CHCP_ERROR1 "活动代码页：%u\n"
-    STRING_CHCP_ERROR4 "无效代码页\n"
     STRING_CHOICE_ERROR "无效选项。期望的格式：/C[:]选项"
     STRING_CHOICE_ERROR_TXT "无效选项。期望的格式：/T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "非法选项：%s"

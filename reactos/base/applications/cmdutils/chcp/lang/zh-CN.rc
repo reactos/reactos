@@ -1,0 +1,14 @@
+/* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "显示或设置活动的代码页。\n\n\
+CHCP [nnn]\n\n\
+  nnn   指定活动的代码页。\n\n\
+不带参数执行 CHCP 将会显示当前活动的代码页。\n"
+    STRING_CHCP_ERROR1 "活动代码页：%u\n"
+    STRING_CHCP_ERROR4 "无效代码页\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "无效的参数格式 - %s\n"
+END

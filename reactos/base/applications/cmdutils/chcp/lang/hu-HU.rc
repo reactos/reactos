@@ -1,0 +1,14 @@
+/* Hungarian translation by Robert Horvath (talley at cubeclub.hu) 2005 */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Megjeleníti vagy megváltoztatja az aktív kódlapot.\n\n\
+CHCP [nnn]\n\n\
+  nnn   A használni kívánt kódlap száma.\n\n\
+Írd be a  CHCP paraméterek nélkül, hogy megjelenítse az aktív kódlapot.\n"
+    STRING_CHCP_ERROR1 "Aktív kódlap: %u\n"
+    STRING_CHCP_ERROR4 "Érvénytelen kódlap\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Érvénytelen paraméter megadás - %s\n"
+END

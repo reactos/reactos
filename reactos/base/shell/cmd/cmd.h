@@ -87,10 +87,6 @@ INT cmd_beep (LPTSTR);
 INT cmd_call (LPTSTR);
 
 
-/* Prototypes for CHCP.C */
-INT CommandChcp (LPTSTR);
-
-
 /* Prototypes for CHOICE.C */
 INT CommandChoice (LPTSTR);
 

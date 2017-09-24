@@ -1,0 +1,14 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Etkin kod sayfası numarasını görüntüler ya da ayarlar.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Etkin kod sayfası numarasını belirtir.\n\n\
+Etkin kod sayfası numarasını görüntülemek için bir değişken olmadan CHCP yaz.\n"
+    STRING_CHCP_ERROR1 "Etkin kod sayfası: %u\n"
+    STRING_CHCP_ERROR4 "Geçersiz kod sayfası\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Geçersiz değişken biçimi - %s\n"
+END

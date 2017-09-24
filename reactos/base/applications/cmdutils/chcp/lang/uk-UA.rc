@@ -1,0 +1,20 @@
+/*
+ * PROJECT:     Command-line interface
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/shell/cmd/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for Command-line interface
+ * TRANSLATORS: Artem Reznikov, Igor Paliychuk
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Вивiд або змiна поточного номера кодової сторiнки.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Задає номер кодової сторiнки.\n\n\
+Команда CHCP без параметра виводить поточний номер кодової сторiнки.\n"
+    STRING_CHCP_ERROR1 "Поточна кодова сторiнка: %u\n"
+    STRING_CHCP_ERROR4 "Помилкова кодова сторiнка\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Невiрний формат параметра - %s\n"
+END

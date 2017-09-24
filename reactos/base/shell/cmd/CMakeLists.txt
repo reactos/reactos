@@ -12,7 +12,6 @@ list(APPEND SOURCE
     batch.c
     beep.c
     call.c
-    chcp.c
     choice.c
     cls.c
     cmd.c

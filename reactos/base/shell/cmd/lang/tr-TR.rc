@@ -49,10 +49,6 @@ CD[..|.]\n\n\
   /D   Şimdiki sürücüyü ve şimdiki dizini değiştirecek.\n\n\
 CD sürücü yaz: Belirtilen sürücü üzerinde şimdiki dizini görüntülemek için.\n\
 Şimdiki sürücüyü ve dizini görüntülemek için bir değişken olmadan CD yaz.\n"
-    STRING_CHCP_HELP "Etkin kod sayfası numarasını görüntüler ya da ayarlar.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Etkin kod sayfası numarasını belirtir.\n\n\
-Etkin kod sayfası numarasını görüntülemek için bir değişken olmadan CHCP yaz.\n"
     STRING_CHOICE_HELP "Bir takım seçenekten birini seçmek için kullanıcıyı bekler.\n\n\
 CHOICE  [/C[:]seçenekler][/N][/S][/T[:]c,nn][metin]\n\n\
   /C[:]seçenekler  İzin verilebilir düğmeleri belirtir. Ön tanımlı YN'dir.\n\
@@ -474,8 +470,6 @@ başlık        Yeni başlık\n"
     STRING_ALIAS_ERROR "Başka ad açılımından sonra komut yatacı çok uzun!\n"
     STRING_ASSOC_ERROR "%s uzantısı için kütük ilişkilendirmesi bulunamadı.\n"
     STRING_BATCH_ERROR "Toplu iş kütüğünü açma yanlışlığı\n"
-    STRING_CHCP_ERROR1 "Etkin kod sayfası: %u\n"
-    STRING_CHCP_ERROR4 "Geçersiz kod sayfası\n"
     STRING_CHOICE_ERROR "Geçersiz seçenek. Beklenen biçim: /C[:]seçenekler"
     STRING_CHOICE_ERROR_TXT "Geçersiz seçenek. Beklenen biçim: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Geçersiz seçenek: %s"

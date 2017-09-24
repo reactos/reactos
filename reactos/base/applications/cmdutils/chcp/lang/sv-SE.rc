@@ -1,0 +1,12 @@
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Visar eller väljer aktiv teckentabell.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Anger nummer på teckentabell.\n\n\
+Skriv CHCP utan parametrar för att visa aktiv teckentabellnummer.\n"
+    STRING_CHCP_ERROR1 "Aktiv tegntabell: %u\n"
+    STRING_CHCP_ERROR4 "Ugyldig tegntabell\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Ugyldig parameter format - %s\n"
+END

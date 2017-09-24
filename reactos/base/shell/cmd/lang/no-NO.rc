@@ -47,10 +47,6 @@ CD[..|.]\n\n\
   /D   Vil endre gjeldende stasjon og gjeldende mappe.\n\n\
 Tast CD stasjon: for å vise gjeldende mappe på spesifiserte stasjon.\n\
 Tast CD uten parametere for å vise gjeldende stasjon og mappe.\n"
-    STRING_CHCP_HELP "Viser eller velger aktive tegntabellnummer.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Spesifisere aktive tegntabellnummer.\n\n\
-Skriv CHCP uten parametrer for å vise aktiv tegntabellnummer.\n"
     STRING_CHOICE_HELP "Venter på at bruker skal velge ett av alternativene.\n\n\
 CHOICE  [/C[:]valg][/N][/S][/T[:]c,nn][tekst]\n\n\
   /C[:]Valg  Spesifisere tillatte nøkler. Standard er JN.\n\
@@ -467,8 +463,6 @@ tittel        ny tittel\n"
     STRING_ALIAS_ERROR "Kommando linje for lang etter alias utvidelse!\n"
     STRING_ASSOC_ERROR "Fil association ble ikke funnet for utvidelsen %s\n"
     STRING_BATCH_ERROR "Feil ved åpning av satsvis fil\n"
-    STRING_CHCP_ERROR1 "Aktiv tegntabell: %u\n"
-    STRING_CHCP_ERROR4 "Ugyldig tegntabell\n"
     STRING_CHOICE_ERROR "Ugyldig  valg. Forventet format: /C[:]valg"
     STRING_CHOICE_ERROR_TXT "Ugyldig  valg. Forventet format: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Ulovlig operasjon: %s"

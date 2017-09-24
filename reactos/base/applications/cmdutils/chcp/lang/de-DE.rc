@@ -1,0 +1,14 @@
+/* German language file by Klemens Friedl <frik85> 2005-06-03 */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Zeigt die aktuelle Codepage an oder wechselt diese.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Codepage angeben.\n\n\
+Der Befehl CHCP ohne Parameter zeigt die Nummer der aktuellen Codepage an."
+    STRING_CHCP_ERROR1 "Aktive Codepage: %u\n"
+    STRING_CHCP_ERROR4 "Ungültige Codepage\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Ungültiges Parameterformat - %s\n"
+END

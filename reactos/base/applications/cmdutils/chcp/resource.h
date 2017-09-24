@@ -1,0 +1,10 @@
+#pragma once
+
+#define RC_STRING_MAX_SIZE 3072
+
+#define STRING_ERROR_INVALID_PARAM_FORMAT 107
+
+#define STRING_CHCP_ERROR1         302
+#define STRING_CHCP_ERROR4         305
+
+#define STRING_CHCP_HELP   605

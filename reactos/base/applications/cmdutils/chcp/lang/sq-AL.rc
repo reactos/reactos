@@ -1,0 +1,16 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Shfaq ose cakto kodin dhe numrin e faqes aktive.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Specifikon kodin dhe numrin aktiv te faqes.\n\n\
+Shkruaj CHCP pa anjë parameter për të shfaqur kodin dhe numrin e faqes aktive.\n"
+    STRING_CHCP_ERROR1 "Faqja Active e Kodit: %u\n"
+    STRING_CHCP_ERROR4 "Invalid code page\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Parametrat e formatit invalid - %s\n"
+END

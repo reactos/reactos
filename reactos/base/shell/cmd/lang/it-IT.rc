@@ -46,10 +46,6 @@ CD[..|.]\n\n\
   /D   Cambia il disco e la cartella corrente.\n\n\
 Scrivi CD disco: per visualizzare la cartella corrente del disco indicato.\n\
 Scrivi CD senza parametri per visualizzare il disco e la cartella corrente.\n"
-    STRING_CHCP_HELP "Visualizza o attiva il numero di tabella dei codici.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Indica il numero di tabella dei codici.\n\n\
-Scrivi CHCP senza parametri per visualizzare il numero attuale.\n"
     STRING_CHOICE_HELP "Aspetta che l'utente scelga una delle scelte disponibili.\n\n\
 CHOICE  [/C[:]scelta][/N][/S][/T[:]c,nn][testo]\n\n\
   /C[:]scelta   Indica i tasti ammessi. Sono predefiniti YN.\n\
@@ -479,8 +475,6 @@ titolo        il nuovo titolo\n"
     STRING_ALIAS_ERROR "Linea di comando troppo lunga dopo l'espansione degli alias!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Errore durante l'apertura di un batch\n"
-    STRING_CHCP_ERROR1 "Tabella dei codici attiva: %u\n"
-    STRING_CHCP_ERROR4 "Tabella dei codici non valida\n"
     STRING_CHOICE_ERROR "Opzione non valida. Formato atteso: /C[:]opzioni"
     STRING_CHOICE_ERROR_TXT "Opzione non valida. Formato atteso: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Opzione non valida: %s"

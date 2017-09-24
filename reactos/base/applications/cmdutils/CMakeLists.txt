@@ -1,4 +1,5 @@
 add_subdirectory(at)
+add_subdirectory(chcp)
 add_subdirectory(clip)
 add_subdirectory(comp)
 add_subdirectory(cscript)

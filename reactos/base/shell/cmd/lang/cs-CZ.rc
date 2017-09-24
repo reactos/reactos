@@ -52,10 +52,6 @@ CD[..|.]\n\n\
   /D   Will change current drive and current directory.\n\n\
 Type CD drive: to display the current directory on the specified drive.\n\
 Type CD without a parameter to display the current drive and directory.\n"
-    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Specifies the active code page number.\n\n\
-Type CHCP without a parameter to display the active code page number.\n"
     STRING_CHOICE_HELP "Waits for the user to choose one of a set of choices.\n\n\
 CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
   /C[:]choices  Specifies allowable keys. Default is YN.\n\
@@ -474,8 +470,6 @@ title         new title\n"
     STRING_ALIAS_ERROR "Po rozšíření aliasů je příkaz příliš dlouhý!\n"
     STRING_ASSOC_ERROR "Pro příponu %s nebyly nalezeny žádné asociace\n"
     STRING_BATCH_ERROR "Chyba při otevírání dávkového souboru\n"
-    STRING_CHCP_ERROR1 "Aktivní znaková stránka: %u\n"
-    STRING_CHCP_ERROR4 "Neplatná znaková stránka\n"
     STRING_CHOICE_ERROR "Neplatná volba. Očekávaný formát: /C[:]volby"
     STRING_CHOICE_ERROR_TXT "Neplatná volba. Očekávaný formát: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Neplatná volba: %s"

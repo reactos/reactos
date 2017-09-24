@@ -49,10 +49,6 @@ CD[..|.]\n\n\
 Tastați CD fără argumente pentru a afișa unitatea și directorul curent.\n\
 Tastați CD unitate: pentru a afișa conținutul directorului curent\n\
 al unității specificate.\n"
-    STRING_CHCP_HELP "Afișează sau stabilește numărul codificării curente de pagină.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Numărul codificării de pagină specificat.\n\n\
-Tastați CHCP fără argumente pentru a afișa numărul codificării curente.\n"
     STRING_CHOICE_HELP "Cere utilizatorului să aleagă una din mai multe opțiuni.\n\n\
 CHOICE  [/C[:]opțiuni][/N][/S][/T[:]implicit,nn][text]\n\n\
   /C[:]opțiuni       Specifică tastele permise. Implicit sunt D și N.\n\
@@ -500,8 +496,6 @@ titlu         Noul titlu.\n"
     STRING_ALIAS_ERROR "Linia de comandă devine prea lungă după extinderea alias!\n"
     STRING_ASSOC_ERROR "Nu poate fi găsită nici o aplicație asociată extensiei «%s»\n"
     STRING_BATCH_ERROR "Eroare la deschiderea fișierului de comenzi\n"
-    STRING_CHCP_ERROR1 "Codificarea curentă a paginilor: %u\n"
-    STRING_CHCP_ERROR4 "Codificare de pagină nevalidă\n"
     STRING_CHOICE_ERROR "Opțiune eronată. Vedeți formatul: /C[:]opțiuni"
     STRING_CHOICE_ERROR_TXT "Opțiune eronată. Vedeți formatul: /T[:]implicit,nn"
     STRING_CHOICE_ERROR_OPTION "Opțiune eronată: %s"

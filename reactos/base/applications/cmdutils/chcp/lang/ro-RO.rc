@@ -1,0 +1,13 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Afișează sau stabilește numărul codificării curente de pagină.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Numărul codificării de pagină specificat.\n\n\
+Tastați CHCP fără argumente pentru a afișa numărul codificării curente.\n"
+    STRING_CHCP_ERROR1 "Codificarea curentă a paginilor: %u\n"
+    STRING_CHCP_ERROR4 "Codificare de pagină nevalidă\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Formatul argumentului este eronat - %s\n"
+END

@@ -51,10 +51,6 @@ CD[..|.]\n\n\
   /D   Do të ndryshojë drivin aktual dhe dosjen aktuale.\n\n\
 Shkruaj CD drive: për të shfaqur dosjen aktuale në harddiskun e specifikuar.\n\
 Shkruaj CD  pa asnjë parameter për të shfaque harddikun aktual dhe dosjet e tij.\n"
-    STRING_CHCP_HELP "Shfaq ose cakto kodin dhe numrin e faqes aktive.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Specifikon kodin dhe numrin aktiv te faqes.\n\n\
-Shkruaj CHCP pa anjë parameter për të shfaqur kodin dhe numrin e faqes aktive.\n"
     STRING_CHOICE_HELP "Pret për përdoruesit për të zgjedhur një nga një sërë zgjedhjesh.\n\n\
 CHOICE  [/C[:]zgjedhje][/N][/S][/T[:]c,nn][tekst]\n\n\
   /C[:]zgjedhje Përcakton çelësat e lejueshme. Parazgjedhuri është YN.\n\
@@ -473,8 +469,6 @@ title         titull i ri\n"
     STRING_ALIAS_ERROR "Rreshti i komandës shumë gjatë pas pseudonimit!\n"
     STRING_ASSOC_ERROR "Dokumentit perkates nuk u gjet për zgjatjen %s\n"
     STRING_BATCH_ERROR "Gabim gjatë hapjes së dokumentit batch\n"
-    STRING_CHCP_ERROR1 "Faqja Active e Kodit: %u\n"
-    STRING_CHCP_ERROR4 "Invalid code page\n"
     STRING_CHOICE_ERROR "Opsione invalide. Format i pritshem: /C[:]opsione"
     STRING_CHOICE_ERROR_TXT "Opsione invalide. Format i pritshem: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Illegal Option: %s"

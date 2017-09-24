@@ -1,0 +1,17 @@
+/* FILE:       base/shell/cmd/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2015-04-12
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Specifies the active code page number.\n\n\
+Type CHCP without a parameter to display the active code page number.\n"
+    STRING_CHCP_ERROR1 "Aktivní znaková stránka: %u\n"
+    STRING_CHCP_ERROR4 "Neplatná znaková stránka\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Neplatný formát parametru - %s\n"
+END

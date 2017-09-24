@@ -47,10 +47,6 @@ CD[..|.]\n\n\
   /D   現在のドライブとディレクトリの両方を変更します。\n\n\
 CD ドライブ: と入力すると指定されたドライブの現在のディレクトリが表示されます。\n\
 パラメータを指定しないで CD と入力すると、現在のドライブとディレクトリが表示されます。\n"
-    STRING_CHCP_HELP "現在のコード ページ番号を表示または設定します。\n\n\
-CHCP [nnn]\n\n\
-  nnn   コード ページ番号を指定します。\n\n\
-現在のコード ページ番号を表示するときは、パラメータを指定せずに CHCP と入力してください。\n"
     STRING_CHOICE_HELP "ユーザーが選択肢から一つを選択するのを待ちます。\n\n\
 CHOICE  [/C[:]選択肢][/N][/S][/T[:]c,nn][文字列]\n\n\
   /C[:]選択肢   許されるキー入力を指定します。デフォルトは YN です。\n\
@@ -476,8 +472,6 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_ALIAS_ERROR "エイリアス展開後のコマンド ラインが長すぎます!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "バッチ ファイルを開くときにエラーが発生しました。\n"
-    STRING_CHCP_ERROR1 "現在のコード ページ: %u\n"
-    STRING_CHCP_ERROR4 "無効なコード ページです\n"
     STRING_CHOICE_ERROR "無効なオプションです。期待される書式: /C[:]オプション"
     STRING_CHOICE_ERROR_TXT "無効なオプションです。期待される書式: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "無効なオプションです: %s"

@@ -1,0 +1,14 @@
+/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual e Ismael Ferreras Morezuelas (Swyter) */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Muestra o configura el número de página de código activa.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Especifica el número de página de código activa.\n\n\
+Escribe CHCP sin ningún parámetro para mostrar el código de página activo.\n"
+    STRING_CHCP_ERROR1 "Página codificación activa: %u\n"
+    STRING_CHCP_ERROR4 "Código de página inválido\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Formato de parámetro erróneo - %s\n"
+END

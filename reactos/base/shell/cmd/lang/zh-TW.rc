@@ -47,10 +47,6 @@ CD[..|.]\n\n\
   /D   將會改變當前驅動器和當前目錄。\n\n\
 執行 CD 驅動器: 顯示指定驅動器上的當前目錄。\n\
 不帶參數執行 CD 顯示當前驅動器和目錄。\n"
-    STRING_CHCP_HELP "顯示或設定活動的內碼表。\n\n\
-CHCP [nnn]\n\n\
-  nnn   指定活動的內碼表。\n\n\
-不帶參數執行 CHCP 將會顯示當前活動的內碼表。\n"
     STRING_CHOICE_HELP "等待使用者在一組選項中做出一個選擇。\n\n\
 CHOICE  [/C[:]選項][/N][/S][/T[:]c,nn][文字]\n\n\
   /C[:]選項     指定允許的選項。默認為 YN。\n\
@@ -438,8 +434,6 @@ RESTORE       恢復視窗\n\
     STRING_ALIAS_ERROR "別名展開後的命令列太長！\n"
     STRING_ASSOC_ERROR "副檔名 %s 的檔案關聯未找到！\n"
     STRING_BATCH_ERROR "開啟批處理檔案時出錯\n"
-    STRING_CHCP_ERROR1 "活動內碼表：%u\n"
-    STRING_CHCP_ERROR4 "無效內碼表\n"
     STRING_CHOICE_ERROR "無效選項。期望的格式：/C[:]選項"
     STRING_CHOICE_ERROR_TXT "無效選項。期望的格式：/T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "非法選項：%s"

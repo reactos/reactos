@@ -57,10 +57,6 @@ COMMAND cmds[] =
     {_T("chdir"), CMD_SPECIAL, cmd_chdir},
 #endif
 
-#ifdef INCLUDE_CMD_CHCP
-    {_T("chcp"), 0, CommandChcp},
-#endif
-
 #ifdef INCLUDE_CMD_CHOICE
     {_T("choice"), 0, CommandChoice},
 #endif

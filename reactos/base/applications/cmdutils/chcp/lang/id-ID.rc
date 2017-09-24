@@ -1,0 +1,14 @@
+/* Indonesian language file by Zaenal Mutaqin <ade999 at gmail dot com> 2007-02-15 */
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Menampilkan atau menyetel nomor halaman kode aktif.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Menetapkan nomor halaman kode yang aktif.\n\n\
+Ketik CHCP tanpa parameter untuk menampilkan nomor halaman kode yang aktif.\n"
+    STRING_CHCP_ERROR1 "Halaman kode aktif: %u\n"
+    STRING_CHCP_ERROR4 "Halaman kode tidak benar\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Format parameter tidak benar - %s\n"
+END

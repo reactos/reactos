@@ -49,10 +49,6 @@ CALL [lecteur:][chemin]fichier [paramètre-batch]\n\n\
   /D   Changera le lecteur et le répertoire courant.\n\n\
 Taper CD lecteur: pour afficher le répertoire courant sur le disque indiqué.\n\
 Taper CD sans paramètre pour afficher le répertoire courant du disque actuel.\n"
-    STRING_CHCP_HELP "Affiche ou change la page de codes active.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Indique la page de codes .\n\n\
-Taper CHCP sans paramètre pour afficher la page de codes active."
     STRING_CHOICE_HELP "Demande à l'utilisateur de choisir parmi plusieurs choix.\n\n\
 CHOICE  [/C[:]choix][/N][/S][/T[:]c,nn][texte]\n\n\
   /C[:]choix    Spécifier les touches disponibles. Choix par défaut: ON.\n\
@@ -483,8 +479,6 @@ titre         titre de la fenêtre"
     STRING_ALIAS_ERROR "Ligne de commande trop longue après remplacement de l'alias!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Erreur à l'ouverture du fichier batch\n"
-    STRING_CHCP_ERROR1 "Page de codes actuelle : %u\n"
-    STRING_CHCP_ERROR4 "Page de codes invalide \n"
     STRING_CHOICE_ERROR "Option invalide. Format attendu : /C[:]options"
     STRING_CHOICE_ERROR_TXT "Option invalide. Format attendu : /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Option invalide : %s"

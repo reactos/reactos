@@ -47,10 +47,6 @@ CD[..|.]\n\n\
   /D   Vill ändra aktuell enhet och aktuell mapp.\n\n\
 Skriv CD enhet: för att visa aktuell mapp på specificerad enhet.\n\
 Skriv CD uten parametere för att visa aktuell enhet och mapp.\n"
-    STRING_CHCP_HELP "Visar eller väljer aktiv teckentabell.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Anger nummer på teckentabell.\n\n\
-Skriv CHCP utan parametrar för att visa aktiv teckentabellnummer.\n"
     STRING_CHOICE_HELP "Väntar på att användaren skall ange ett av alternativen.\n\n\
 CHOICE  [/C[:]val][/N][/S][/T[:]c,nn][text]\n\n\
   /C[:]Val      Anger lista med alternativ. Standard är JN.\n\
@@ -467,8 +463,6 @@ tittel        ny tittel\n"
     STRING_ALIAS_ERROR "Kommando linje for lang etter alias utvidelse!\n"
     STRING_ASSOC_ERROR "Fil association ble inte funnet for utvidelsen %s\n"
     STRING_BATCH_ERROR "Feil ved åpning av satsvis fil\n"
-    STRING_CHCP_ERROR1 "Aktiv tegntabell: %u\n"
-    STRING_CHCP_ERROR4 "Ugyldig tegntabell\n"
     STRING_CHOICE_ERROR "Ugyldig  val. Forventet format: /C[:]val"
     STRING_CHOICE_ERROR_TXT "Ugyldig  val. Forventet format: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Ulovlig operasjon: %s"

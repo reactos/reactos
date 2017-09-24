@@ -49,10 +49,6 @@ CD[..|.]\n\n\
 Geben Sie CD Laufwerk: ein, um das aktuelle Verzeichnis auf dem angegebenen\n\
 Laufwerk anzuzeigen.\n\
 Mit CD ohne Parameter wird das aktuelle Laufwerk und Verzeichnis angezeigt."
-    STRING_CHCP_HELP "Zeigt die aktuelle Codepage an oder wechselt diese.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Codepage angeben.\n\n\
-Der Befehl CHCP ohne Parameter zeigt die Nummer der aktuellen Codepage an."
     STRING_CHOICE_HELP "Wartet auf Auswahl einer Option durch den Benutzer.\n\n\
 CHOICE  [/C[:]optionen][/N][/S][/T[:]c,nn][text]\n\n\
   /C[:]optionen  Die erlaubten Tasten festlegen. Standard-Tasten sind Y und N.\n\
@@ -468,8 +464,6 @@ Titel         neuer Titel"
     STRING_ALIAS_ERROR "Die Befehlszeile ist zu lange nach der Alias-Erweiterung!\n"
     STRING_ASSOC_ERROR "Dateizuordnung für Erweiterung %s nicht gefunden\n"
     STRING_BATCH_ERROR "Es trat ein Fehler auf, während die Batchdatei geöffnet wurde.\n"
-    STRING_CHCP_ERROR1 "Aktive Codepage: %u\n"
-    STRING_CHCP_ERROR4 "Ungültige Codepage\n"
     STRING_CHOICE_ERROR "Ungültige Option. Erwartetes Format: /C[:]Optionen"
     STRING_CHOICE_ERROR_TXT "Ungültige Option. Erwartetes Format: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Ungültige Option: %s"

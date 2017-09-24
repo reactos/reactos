@@ -49,10 +49,6 @@ CD[..|.]\n\n\
   /D   Akan mengubah drive dan direktori saat ini.\n\n\
 Ketik CD drive: untuk menampilkan direktori saat ini pada drive tertentu.\n\
 Ketik CD tanpa parameter untuk menampilkan drive dan direktori saat ini.\n"
-    STRING_CHCP_HELP "Menampilkan atau menyetel nomor halaman kode aktif.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Menetapkan nomor halaman kode yang aktif.\n\n\
-Ketik CHCP tanpa parameter untuk menampilkan nomor halaman kode yang aktif.\n"
     STRING_CHOICE_HELP "Menunggu pengguna untuk memilih satu dari set pilihan.\n\n\
 CHOICE  [/C[:]pilihan][/N][/S][/T[:]c,nn][text]\n\n\
   /C[:]pilihan  Menetapkan tombol yang dibolehkan. Standarnya YT.\n\
@@ -468,8 +464,6 @@ title         judul baru\n"
     STRING_ALIAS_ERROR "Baris perintah terlalu panjang setelah ekspansi alias!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Kesalaham membuka file batch\n"
-    STRING_CHCP_ERROR1 "Halaman kode aktif: %u\n"
-    STRING_CHCP_ERROR4 "Halaman kode tidak benar\n"
     STRING_CHOICE_ERROR "Opsi tidak benar. Format diharapkan: /C[:]options"
     STRING_CHOICE_ERROR_TXT "Opsi tidak benar. Format diharapkan: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Opsi tidak benar: %s"

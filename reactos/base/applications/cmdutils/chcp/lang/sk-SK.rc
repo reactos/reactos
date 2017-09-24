@@ -1,0 +1,18 @@
+/* Slovak translation for CMD
+ * TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR: 21-03-2009
+ * LastChange: 10-08-2010
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Specifies the active code page number.\n\n\
+Type CHCP without a parameter to display the active code page number.\n"
+    STRING_CHCP_ERROR1 "Active code page: %u\n"
+    STRING_CHCP_ERROR4 "Invalid code page\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Invalid parameter format - %s\n"
+END

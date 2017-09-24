@@ -56,10 +56,6 @@ CD[..|.]\n\n\
   /D   Umożliwia zmianę napędu.\n\n\
 Wpisz CD [napęd:], by wyświetlić bieżący katalog na danym napędzie.\n\
 Wpisz CD bez żadnych parametrów, by wyświetlić bieżący napęd i katalog.\n"
-    STRING_CHCP_HELP "Wyświetla lub ustawia numer aktywnej strony kodowej.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Numer strony kodowej.\n\n\
-Wpisz CHCP bez parametru, by wyświetlić numer aktywnej strony kodowej.\n"
     STRING_CHOICE_HELP "Wyświetla opcje jakimi dysponuje użytkownik i oczekuje na wybór jednej z nich.\n\n\
 CHOICE  [/C[:]opcje][/N][/S][/T[:]c,nn][tekst]\n\n\
   /C[:]opcje  Wyznacza klawisze wyświetlane jako wybór. Domyślne: TN.\n\
@@ -473,8 +469,6 @@ title         nowy tytuł okna\n"
     STRING_ALIAS_ERROR "Linia poleceń zbyt długa po rozszerzeniu aliasa!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Błąd podczas otwierania pliku wsadowego\n"
-    STRING_CHCP_ERROR1 "Aktywna strona kodowa nr: %u\n"
-    STRING_CHCP_ERROR4 "Niewłaściwy numer strony kodowej\n"
     STRING_CHOICE_ERROR "Parametr niepoprawny. Poprawna forma: /C[:]opcja"
     STRING_CHOICE_ERROR_TXT "Parametr niepoprawny. Poprawna forma: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Zły parametr: %s"

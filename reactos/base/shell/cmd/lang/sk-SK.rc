@@ -53,10 +53,6 @@ CD[..|.]\n\n\
   /D   Will change current drive and current directory.\n\n\
 Type CD drive: to display the current directory on the specified drive.\n\
 Type CD without a parameter to display the current drive and directory.\n"
-    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Specifies the active code page number.\n\n\
-Type CHCP without a parameter to display the active code page number.\n"
     STRING_CHOICE_HELP "Waits for the user to choose one of a set of choices.\n\n\
 CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
   /C[:]choices  Specifies allowable keys. Default is YN.\n\
@@ -475,8 +471,6 @@ title         new title\n"
     STRING_ALIAS_ERROR "Command line too long after alias expansion!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Error opening batch file\n"
-    STRING_CHCP_ERROR1 "Active code page: %u\n"
-    STRING_CHCP_ERROR4 "Invalid code page\n"
     STRING_CHOICE_ERROR "Invalid option. Expected format: /C[:]options"
     STRING_CHOICE_ERROR_TXT "Invalid option. Expected format: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Illegal Option: %s"

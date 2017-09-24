@@ -49,10 +49,6 @@ CD[..|.]\n\n\
   /D   Cambiara la unidad y el directorio actual.\n\n\
 Escribe CD unidad: para mostrar el directorio actual en la unidad especificada.\n\
 Escribe CD sin ningun parámetro para mostrar la unidad y el directorio actual.\n"
-    STRING_CHCP_HELP "Muestra o configura el número de página de código activa.\n\n\
-CHCP [nnn]\n\n\
-  nnn   Especifica el número de página de código activa.\n\n\
-Escribe CHCP sin ningún parámetro para mostrar el código de página activo.\n"
     STRING_CHOICE_HELP "Espera a que el usuario elija entre un número de opciones.\n\n\
 CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
   /C[:]choices  Especifica las teclas admitidas. Por defecto son SN.\n\
@@ -471,8 +467,6 @@ title         Nuevo título\n"
     STRING_ALIAS_ERROR "¡Línea de comandos demasiado larga tras la expansión del alias!\n"
     STRING_ASSOC_ERROR "No se ha encontrado ninguna asociación de archivos para la extensión %s\n"
     STRING_BATCH_ERROR "Error abriendo el archivo por lotes\n"
-    STRING_CHCP_ERROR1 "Página codificación activa: %u\n"
-    STRING_CHCP_ERROR4 "Código de página inválido\n"
     STRING_CHOICE_ERROR "Opción inválida. Se esperaba el formato: /C[:]options"
     STRING_CHOICE_ERROR_TXT "Opción inválida. Se esperaba el formato: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Opción ilegal: %s"
