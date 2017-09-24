@@ -394,7 +394,7 @@ static void test_invalid_output_encoding(IXmlWriter *writer, IUnknown *output)
     ok(hr == MX_E_ENCODING, "Unexpected hr %#x.\n", hr);
 
     /* TODO: WriteSurrogateCharEntity */
-    /* ???TODO: WriteWhitespace */
+    /* ًُُTODO: WriteWhitespace */
 
     hr = IXmlWriter_Flush(writer);
     ok(hr == S_OK, "Failed to flush, hr %#x.\n", hr);
