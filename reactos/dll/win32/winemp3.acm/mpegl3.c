@@ -953,11 +953,11 @@ static	LRESULT MPEG3_StreamSize(PACMDRVSTREAMINSTANCE adsi, PACMDRVSTREAMSIZE ad
              adsi->pwfxDst->wFormatTag == WAVE_FORMAT_MPEG))
         {
             nblocks = adss->cbSrcLength / (adsi->pwfxSrc->nBlockAlign * 1152);
-            if (nblocks == 0)
-                return ACMERR_NOTPOSSIBLE;
             if (adss->cbSrcLength % (DWORD)(adsi->pwfxSrc->nBlockAlign * 1152))
                 /* Round block count up. */
                 nblocks++;
+            if (nblocks == 0)
+                return ACMERR_NOTPOSSIBLE;
             adss->cbDstLength = 3000 + nblocks * (DWORD)(adsi->pwfxDst->nAvgBytesPerSec * 1152 / adsi->pwfxDst->nSamplesPerSec + 0.5);
 	}
         else if ((adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_MPEGLAYER3 ||
@@ -965,11 +965,11 @@ static	LRESULT MPEG3_StreamSize(PACMDRVSTREAMINSTANCE adsi, PACMDRVSTREAMSIZE ad
                  adsi->pwfxDst->wFormatTag == WAVE_FORMAT_PCM)
         {
             nblocks = adss->cbSrcLength / (DWORD)(adsi->pwfxSrc->nAvgBytesPerSec * 1152 / adsi->pwfxSrc->nSamplesPerSec);
-            if (nblocks == 0)
-                return ACMERR_NOTPOSSIBLE;
             if (adss->cbSrcLength % (DWORD)(adsi->pwfxSrc->nAvgBytesPerSec * 1152 / adsi->pwfxSrc->nSamplesPerSec))
                 /* Round block count up. */
                 nblocks++;
+            if (nblocks == 0)
+                return ACMERR_NOTPOSSIBLE;
             adss->cbDstLength = nblocks * 1152 * adsi->pwfxDst->nBlockAlign;
 	}
         else
