@@ -1113,7 +1113,7 @@ static HRESULT WINAPI ComponentFactory_CreateQueryReaderFromBlockReader(IWICComp
     if (!block_reader || !query_reader)
         return E_INVALIDARG;
 
-    return MetadataQueryReader_CreateInstance(block_reader, query_reader);
+    return MetadataQueryReader_CreateInstance(block_reader, NULL, query_reader);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateQueryWriterFromBlockWriter(IWICComponentFactory *iface,

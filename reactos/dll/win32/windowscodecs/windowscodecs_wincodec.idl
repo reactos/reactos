@@ -35,6 +35,13 @@ coclass PSFactoryBuffer { interface IFactoryBuffer; }
 coclass WICImagingFactory { interface IWICImagingFactory; }
 
 [
+    helpstring("WIC Imaging Factory 2"),
+    threading(both),
+    uuid(317d06e8-5f24-433d-bdf7-79ce68d8abc2)
+]
+coclass WICImagingFactory2 { interface IWICImagingFactory2; }
+
+[
     helpstring("WIC BMP Decoder"),
     threading(both),
     uuid(6b462062-7cbf-400d-9fdb-813dd10f2778)

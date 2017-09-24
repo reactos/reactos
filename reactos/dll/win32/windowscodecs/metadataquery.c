@@ -19,12 +19,15 @@
 
 #include "wincodecs_private.h"
 
+#include <propvarutil.h>
+
+static const WCHAR *map_shortname_to_schema(const GUID *format, const WCHAR *name);
+
 typedef struct {
     IWICMetadataQueryReader IWICMetadataQueryReader_iface;
-
     LONG ref;
-
     IWICMetadataBlockReader *block;
+    WCHAR *root;
 } QueryReader;
 
 static inline QueryReader *impl_from_IWICMetadataQueryReader(IWICMetadataQueryReader *iface)
@@ -70,6 +73,7 @@ static ULONG WINAPI mqr_Release(IWICMetadataQueryReader *iface)
     if (!ref)
     {
         IWICMetadataBlockReader_Release(This->block);
+        HeapFree(GetProcessHeap(), 0, This->root);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -84,20 +88,501 @@ static HRESULT WINAPI mqr_GetContainerFormat(IWICMetadataQueryReader *iface, GUI
     return IWICMetadataBlockReader_GetContainerFormat(This->block, format);
 }
 
-static HRESULT WINAPI mqr_GetLocation(IWICMetadataQueryReader *iface,
-        UINT cchMaxLength, WCHAR *wzNamespace, UINT *pcchActualLength)
+static HRESULT WINAPI mqr_GetLocation(IWICMetadataQueryReader *iface, UINT len, WCHAR *location, UINT *ret_len)
 {
+    static const WCHAR rootW[] = { '/',0 };
     QueryReader *This = impl_from_IWICMetadataQueryReader(iface);
-    FIXME("(%p,%u,%p,%p)\n", This, cchMaxLength, wzNamespace, pcchActualLength);
-    return E_NOTIMPL;
+    const WCHAR *root;
+    UINT actual_len;
+
+    TRACE("(%p,%u,%p,%p)\n", This, len, location, ret_len);
+
+    if (!ret_len) return E_INVALIDARG;
+
+    root = This->root ? This->root : rootW;
+    actual_len = lstrlenW(root) + 1;
+
+    if (location)
+    {
+        if (len < actual_len)
+            return WINCODEC_ERR_INSUFFICIENTBUFFER;
+
+        memcpy(location, root, actual_len * sizeof(WCHAR));
+    }
+
+    *ret_len = actual_len;
+
+    return S_OK;
 }
 
-static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface,
-        LPCWSTR wzName, PROPVARIANT *pvarValue)
+struct string_t
+{
+    const WCHAR *str;
+    int len;
+};
+
+static const struct
+{
+    int len;
+    WCHAR str[10];
+    VARTYPE vt;
+} str2vt[] =
+{
+    { 4, {'c','h','a','r'}, VT_I1 },
+    { 5, {'u','c','h','a','r'}, VT_UI1 },
+    { 5, {'s','h','o','r','t'}, VT_I2 },
+    { 6, {'u','s','h','o','r','t'}, VT_UI2 },
+    { 4, {'l','o','n','g'}, VT_I4 },
+    { 5, {'u','l','o','n','g'}, VT_UI4 },
+    { 3, {'i','n','t'}, VT_I4 },
+    { 4, {'u','i','n','t'}, VT_UI4 },
+    { 8, {'l','o','n','g','l','o','n','g'}, VT_I8 },
+    { 9, {'u','l','o','n','g','l','o','n','g'}, VT_UI8 },
+    { 5, {'f','l','o','a','t'}, VT_R4 },
+    { 6, {'d','o','u','b','l','e'}, VT_R8 },
+    { 3, {'s','t','r'}, VT_LPSTR },
+    { 4, {'w','s','t','r'}, VT_LPWSTR },
+    { 4, {'g','u','i','d'}, VT_CLSID },
+    { 4, {'b','o','o','l'}, VT_BOOL }
+};
+
+static VARTYPE map_type(struct string_t *str)
+{
+    UINT i;
+
+    for (i = 0; i < sizeof(str2vt)/sizeof(str2vt[0]); i++)
+    {
+        if (str2vt[i].len == str->len)
+        {
+            if (CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
+                str->str, str->len, str2vt[i].str, str2vt[i].len) == CSTR_EQUAL)
+                return str2vt[i].vt;
+        }
+    }
+
+    WARN("type %s is not recognized\n", wine_dbgstr_wn(str->str, str->len));
+
+    return VT_ILLEGAL;
+}
+
+static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *schema, int *idx)
+{
+    const WCHAR *start, *end, *p;
+    WCHAR *bstr;
+    struct string_t next_elem;
+    HRESULT hr;
+
+    TRACE("%s, len %d\n", wine_dbgstr_wn(elem->str, elem->len), elem->len);
+
+    PropVariantInit(id);
+    PropVariantInit(schema);
+
+    if (!elem->len) return S_OK;
+
+    start = elem->str;
+
+    if (*start == '[')
+    {
+        WCHAR *idx_end;
+
+        if (start[1] < '0' || start[1] > '9') return DISP_E_TYPEMISMATCH;
+
+        *idx = strtolW(start + 1, &idx_end, 10);
+        if (idx_end > elem->str + elem->len) return WINCODEC_ERR_INVALIDQUERYREQUEST;
+        if (*idx_end != ']') return WINCODEC_ERR_INVALIDQUERYREQUEST;
+        if (*idx < 0) return WINCODEC_ERR_INVALIDQUERYREQUEST;
+        end = idx_end + 1;
+
+        next_elem.str = end;
+        next_elem.len = elem->len - (end - start);
+        hr = get_token(&next_elem, id, schema, idx);
+        if (hr != S_OK)
+        {
+            TRACE("get_token error %#x\n", hr);
+            return hr;
+        }
+        elem->len = (end - start) + next_elem.len;
+
+        TRACE("indexed %s [%d]\n", wine_dbgstr_wn(elem->str, elem->len), *idx);
+        return S_OK;
+    }
+    else if (*start == '{')
+    {
+        VARTYPE vt;
+        PROPVARIANT next_token;
+
+        end = memchrW(start + 1, '=', elem->len - 1);
+        if (!end) return WINCODEC_ERR_INVALIDQUERYREQUEST;
+        if (end > elem->str + elem->len) return WINCODEC_ERR_INVALIDQUERYREQUEST;
+
+        next_elem.str = start + 1;
+        next_elem.len = end - start - 1;
+        vt = map_type(&next_elem);
+        TRACE("type %s => %d\n", wine_dbgstr_wn(next_elem.str, next_elem.len), vt);
+        if (vt == VT_ILLEGAL) return WINCODEC_ERR_WRONGSTATE;
+
+        next_token.vt = VT_BSTR;
+        next_token.u.bstrVal = SysAllocStringLen(NULL, elem->len - (end - start) + 1);
+        if (!next_token.u.bstrVal) return E_OUTOFMEMORY;
+
+        bstr = next_token.u.bstrVal;
+
+        end++;
+        p = end;
+        while (*end && *end != '}' && end - start < elem->len)
+        {
+            if (*end == '\\') end++;
+            *bstr++ = *end++;
+        }
+        if (*end != '}')
+        {
+            PropVariantClear(&next_token);
+            return WINCODEC_ERR_INVALIDQUERYREQUEST;
+        }
+        *bstr = 0;
+        TRACE("schema/id %s\n", wine_dbgstr_w(next_token.u.bstrVal));
+
+        if (vt == VT_CLSID)
+        {
+            id->vt = VT_CLSID;
+            id->u.puuid = CoTaskMemAlloc(sizeof(GUID));
+            if (!id->u.puuid)
+            {
+                PropVariantClear(&next_token);
+                return E_OUTOFMEMORY;
+            }
+
+            hr = UuidFromStringW(next_token.u.bstrVal, id->u.puuid);
+        }
+        else
+            hr = PropVariantChangeType(id, &next_token, 0, vt);
+        PropVariantClear(&next_token);
+        if (hr != S_OK)
+        {
+            PropVariantClear(id);
+            PropVariantClear(schema);
+            return hr;
+        }
+
+        end++;
+        if (*end == ':')
+        {
+            PROPVARIANT next_id, next_schema;
+            int next_idx = 0;
+
+            next_elem.str = end + 1;
+            next_elem.len = elem->len - (end - start + 1);
+            hr = get_token(&next_elem, &next_id, &next_schema, &next_idx);
+            if (hr != S_OK)
+            {
+                TRACE("get_token error %#x\n", hr);
+                return hr;
+            }
+            elem->len = (end - start + 1) + next_elem.len;
+
+            TRACE("id %s [%d]\n", wine_dbgstr_wn(elem->str, elem->len), *idx);
+
+            if (next_schema.vt != VT_EMPTY)
+            {
+                PropVariantClear(&next_id);
+                PropVariantClear(&next_schema);
+                return WINCODEC_ERR_WRONGSTATE;
+            }
+
+            *schema = *id;
+            *id = next_id;
+
+            return S_OK;
+        }
+
+        elem->len = end - start;
+        return S_OK;
+    }
+
+    end = memchrW(start, '/', elem->len);
+    if (!end) end = start + elem->len;
+
+    p = memchrW(start, ':', end - start);
+    if (p)
+    {
+        next_elem.str = p + 1;
+        next_elem.len = end - p - 1;
+
+        elem->len = p - start;
+    }
+    else
+        elem->len = end - start;
+
+    id->vt = VT_BSTR;
+    id->u.bstrVal = SysAllocStringLen(NULL, elem->len + 1);
+    if (!id->u.bstrVal) return E_OUTOFMEMORY;
+
+    bstr = id->u.bstrVal;
+    p = elem->str;
+    while (p - elem->str < elem->len)
+    {
+        if (*p == '\\') p++;
+        *bstr++ = *p++;
+    }
+    *bstr = 0;
+    TRACE("%s [%d]\n", wine_dbgstr_variant((VARIANT *)id), *idx);
+
+    if (*p == ':')
+    {
+        PROPVARIANT next_id, next_schema;
+        int next_idx = 0;
+
+        hr = get_token(&next_elem, &next_id, &next_schema, &next_idx);
+        if (hr != S_OK)
+        {
+            TRACE("get_token error %#x\n", hr);
+            PropVariantClear(id);
+            PropVariantClear(schema);
+            return hr;
+        }
+        elem->len += next_elem.len + 1;
+
+        TRACE("id %s [%d]\n", wine_dbgstr_wn(elem->str, elem->len), *idx);
+
+        if (next_schema.vt != VT_EMPTY)
+        {
+            PropVariantClear(&next_id);
+            PropVariantClear(&next_schema);
+            PropVariantClear(id);
+            PropVariantClear(schema);
+            return WINCODEC_ERR_WRONGSTATE;
+        }
+
+        *schema = *id;
+        *id = next_id;
+    }
+
+    return S_OK;
+}
+
+static HRESULT find_reader_from_block(IWICMetadataBlockReader *block_reader, UINT index,
+                                      GUID *guid, IWICMetadataReader **reader)
+{
+    HRESULT hr;
+    GUID format;
+    IWICMetadataReader *new_reader;
+    UINT count, i, matched_index;
+
+    *reader = NULL;
+
+    hr = IWICMetadataBlockReader_GetCount(block_reader, &count);
+    if (hr != S_OK) return hr;
+
+    matched_index = 0;
+
+    for (i = 0; i < count; i++)
+    {
+        hr = IWICMetadataBlockReader_GetReaderByIndex(block_reader, i, &new_reader);
+        if (hr != S_OK) return hr;
+
+        hr = IWICMetadataReader_GetMetadataFormat(new_reader, &format);
+        if (hr == S_OK)
+        {
+            if (IsEqualGUID(&format, guid))
+            {
+                if (matched_index == index)
+                {
+                    *reader = new_reader;
+                    return S_OK;
+                }
+
+                matched_index++;
+            }
+        }
+
+        IWICMetadataReader_Release(new_reader);
+        if (hr != S_OK) return hr;
+    }
+
+    return WINCODEC_ERR_PROPERTYNOTFOUND;
+}
+
+static HRESULT get_next_reader(IWICMetadataReader *reader, UINT index,
+                               GUID *guid, IWICMetadataReader **new_reader)
+{
+    HRESULT hr;
+    PROPVARIANT schema, id, value;
+
+    *new_reader = NULL;
+
+    PropVariantInit(&schema);
+    PropVariantInit(&id);
+    PropVariantInit(&value);
+
+    if (index)
+    {
+        schema.vt = VT_UI2;
+        schema.u.uiVal = index;
+    }
+
+    id.vt = VT_CLSID;
+    id.u.puuid = guid;
+    hr = IWICMetadataReader_GetValue(reader, &schema, &id, &value);
+    if (hr != S_OK) return hr;
+
+    if (value.vt == VT_UNKNOWN)
+        hr = IUnknown_QueryInterface(value.u.punkVal, &IID_IWICMetadataReader, (void **)new_reader);
+    else
+        hr = WINCODEC_ERR_UNEXPECTEDMETADATATYPE;
+
+    PropVariantClear(&value);
+    return hr;
+}
+
+static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCWSTR query, PROPVARIANT *value)
 {
     QueryReader *This = impl_from_IWICMetadataQueryReader(iface);
-    FIXME("(%p,%s,%p)\n", This, wine_dbgstr_w(wzName), pvarValue);
-    return WINCODEC_ERR_PROPERTYNOTFOUND;
+    struct string_t elem;
+    WCHAR *full_query;
+    const WCHAR *p;
+    int index, len;
+    PROPVARIANT tk_id, tk_schema, new_value;
+    GUID guid;
+    IWICMetadataReader *reader;
+    HRESULT hr = S_OK;
+
+    TRACE("(%p,%s,%p)\n", This, wine_dbgstr_w(query), value);
+
+    len = lstrlenW(query) + 1;
+    if (This->root) len += lstrlenW(This->root);
+    full_query = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    full_query[0] = 0;
+    if (This->root)
+        lstrcpyW(full_query, This->root);
+    lstrcatW(full_query, query);
+
+    PropVariantInit(&tk_id);
+    PropVariantInit(&tk_schema);
+    PropVariantInit(&new_value);
+
+    reader = NULL;
+    p = full_query;
+
+    while (*p)
+    {
+        if (*p != '/')
+        {
+            WARN("query should start with '/'\n");
+            hr = WINCODEC_ERR_PROPERTYNOTSUPPORTED;
+            break;
+        }
+
+        p++;
+
+        index = 0;
+        elem.str = p;
+        elem.len = lstrlenW(p);
+        hr = get_token(&elem, &tk_id, &tk_schema, &index);
+        if (hr != S_OK)
+        {
+            WARN("get_token error %#x\n", hr);
+            break;
+        }
+        TRACE("parsed %d characters: %s, index %d\n", elem.len, wine_dbgstr_wn(elem.str, elem.len), index);
+        TRACE("id %s, schema %s\n", wine_dbgstr_variant((VARIANT *)&tk_id), wine_dbgstr_variant((VARIANT *)&tk_schema));
+
+        if (!elem.len) break;
+
+        if (tk_id.vt == VT_CLSID || (tk_id.vt == VT_BSTR && WICMapShortNameToGuid(tk_id.u.bstrVal, &guid) == S_OK))
+        {
+            WCHAR *root;
+
+            if (tk_schema.vt != VT_EMPTY)
+            {
+                FIXME("unsupported schema vt %u\n", tk_schema.vt);
+                PropVariantClear(&tk_schema);
+            }
+
+            if (tk_id.vt == VT_CLSID) guid = *tk_id.u.puuid;
+
+            if (reader)
+            {
+                IWICMetadataReader *new_reader;
+
+                hr = get_next_reader(reader, index, &guid, &new_reader);
+                IWICMetadataReader_Release(reader);
+                reader = new_reader;
+            }
+            else
+                hr = find_reader_from_block(This->block, index, &guid, &reader);
+
+            if (hr != S_OK) break;
+
+            root = SysAllocStringLen(NULL, elem.str + elem.len - full_query + 2);
+            if (!root)
+            {
+                hr = E_OUTOFMEMORY;
+                break;
+            }
+            lstrcpynW(root, full_query, p - full_query + elem.len + 1);
+
+            PropVariantClear(&new_value);
+            new_value.vt = VT_UNKNOWN;
+            hr = MetadataQueryReader_CreateInstance(This->block, root, (IWICMetadataQueryReader **)&new_value.u.punkVal);
+            SysFreeString(root);
+            if (hr != S_OK) break;
+        }
+        else
+        {
+            PROPVARIANT schema, id;
+
+            if (!reader)
+            {
+                hr = WINCODEC_ERR_INVALIDQUERYREQUEST;
+                break;
+            }
+
+            if (tk_schema.vt == VT_BSTR)
+            {
+                hr = IWICMetadataReader_GetMetadataFormat(reader, &guid);
+                if (hr != S_OK) break;
+
+                schema.vt = VT_LPWSTR;
+                schema.u.pwszVal = (LPWSTR)map_shortname_to_schema(&guid, tk_schema.u.bstrVal);
+                if (!schema.u.pwszVal)
+                    schema.u.pwszVal = tk_schema.u.bstrVal;
+            }
+            else
+                schema = tk_schema;
+
+            if (tk_id.vt == VT_BSTR)
+            {
+                id.vt = VT_LPWSTR;
+                id.u.pwszVal = tk_id.u.bstrVal;
+            }
+            else
+                id = tk_id;
+
+            PropVariantClear(&new_value);
+            hr = IWICMetadataReader_GetValue(reader, &schema, &id, &new_value);
+            if (hr != S_OK) break;
+        }
+
+        p += elem.len;
+
+        PropVariantClear(&tk_id);
+        PropVariantClear(&tk_schema);
+    }
+
+    if (reader)
+        IWICMetadataReader_Release(reader);
+
+    PropVariantClear(&tk_id);
+    PropVariantClear(&tk_schema);
+
+    if (hr == S_OK)
+        *value = new_value;
+    else
+        PropVariantClear(&new_value);
+
+    HeapFree(GetProcessHeap(), 0, full_query);
+
+    return hr;
 }
 
 static HRESULT WINAPI mqr_GetEnumerator(IWICMetadataQueryReader *iface,
@@ -118,7 +603,7 @@ static IWICMetadataQueryReaderVtbl mqr_vtbl = {
     mqr_GetEnumerator
 };
 
-HRESULT MetadataQueryReader_CreateInstance(IWICMetadataBlockReader *mbr, IWICMetadataQueryReader **out)
+HRESULT MetadataQueryReader_CreateInstance(IWICMetadataBlockReader *mbr, const WCHAR *root, IWICMetadataQueryReader **out)
 {
     QueryReader *obj;
 
@@ -131,6 +616,8 @@ HRESULT MetadataQueryReader_CreateInstance(IWICMetadataBlockReader *mbr, IWICMet
 
     IWICMetadataBlockReader_AddRef(mbr);
     obj->block = mbr;
+
+    obj->root = root ? heap_strdupW(root) : NULL;
 
     *out = &obj->IWICMetadataQueryReader_iface;
 
@@ -250,14 +737,14 @@ HRESULT WINAPI WICMapGuidToShortName(REFGUID guid, UINT len, WCHAR *name, UINT *
             {
                 if (!len) return E_INVALIDARG;
 
-                len = min(len - 1, strlenW(guid2name[i].name));
+                len = min(len - 1, lstrlenW(guid2name[i].name));
                 memcpy(name, guid2name[i].name, len * sizeof(WCHAR));
                 name[len] = 0;
 
-                if (len < strlenW(guid2name[i].name))
+                if (len < lstrlenW(guid2name[i].name))
                     return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
             }
-            if (ret_len) *ret_len = strlenW(guid2name[i].name) + 1;
+            if (ret_len) *ret_len = lstrlenW(guid2name[i].name) + 1;
             return S_OK;
         }
     }
@@ -265,7 +752,7 @@ HRESULT WINAPI WICMapGuidToShortName(REFGUID guid, UINT len, WCHAR *name, UINT *
     return WINCODEC_ERR_PROPERTYNOTFOUND;
 }
 
-HRESULT WINAPI WICMapShortNameToGuid(const WCHAR *name, GUID *guid)
+HRESULT WINAPI WICMapShortNameToGuid(PCWSTR name, GUID *guid)
 {
     UINT i;
 
@@ -275,7 +762,7 @@ HRESULT WINAPI WICMapShortNameToGuid(const WCHAR *name, GUID *guid)
 
     for (i = 0; i < sizeof(guid2name)/sizeof(guid2name[0]); i++)
     {
-        if (!strcmpiW(name, guid2name[i].name))
+        if (!lstrcmpiW(name, guid2name[i].name))
         {
             *guid = *guid2name[i].guid;
             return S_OK;
@@ -372,7 +859,27 @@ static const struct
     { MPReg, MPReg_scheme }
 };
 
-HRESULT WINAPI WICMapSchemaToName(REFGUID format, const WCHAR *schema, UINT len, WCHAR *name, UINT *ret_len)
+static const WCHAR *map_shortname_to_schema(const GUID *format, const WCHAR *name)
+{
+    UINT i;
+
+    /* It appears that the only metadata formats
+     * that support schemas are xmp and xmpstruct.
+     */
+    if (!IsEqualGUID(format, &GUID_MetadataFormatXMP) &&
+        !IsEqualGUID(format, &GUID_MetadataFormatXMPStruct))
+        return NULL;
+
+    for (i = 0; i < sizeof(name2schema)/sizeof(name2schema[0]); i++)
+    {
+        if (!lstrcmpW(name2schema[i].name, name))
+            return name2schema[i].schema;
+    }
+
+    return NULL;
+}
+
+HRESULT WINAPI WICMapSchemaToName(REFGUID format, LPWSTR schema, UINT len, WCHAR *name, UINT *ret_len)
 {
     UINT i;
 
@@ -390,13 +897,13 @@ HRESULT WINAPI WICMapSchemaToName(REFGUID format, const WCHAR *schema, UINT len,
 
     for (i = 0; i < sizeof(name2schema)/sizeof(name2schema[0]); i++)
     {
-        if (!strcmpW(name2schema[i].schema, schema))
+        if (!lstrcmpW(name2schema[i].schema, schema))
         {
             if (name)
             {
                 if (!len) return E_INVALIDARG;
 
-                len = min(len - 1, strlenW(name2schema[i].name));
+                len = min(len - 1, lstrlenW(name2schema[i].name));
                 memcpy(name, name2schema[i].name, len * sizeof(WCHAR));
                 name[len] = 0;
 
@@ -404,7 +911,7 @@ HRESULT WINAPI WICMapSchemaToName(REFGUID format, const WCHAR *schema, UINT len,
                     return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
             }
 
-            if (ret_len) *ret_len = strlenW(name2schema[i].name) + 1;
+            if (ret_len) *ret_len = lstrlenW(name2schema[i].name) + 1;
             return S_OK;
         }
     }
