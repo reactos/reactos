@@ -38,4 +38,8 @@ STRINGTABLE
     STRING_REG_HELP, "Type ""REG /?"" for help.\n"
     STRING_FUNC_HELP, "Type ""REG %1 /?"" for help.\n"
     STRING_VALUE_NOT_SET, "(value not set)"
+    STRING_IMPORT_USAGE, "REG IMPORT file.reg\n"
+    STRING_FILE_NOT_FOUND, "reg: The file '%1' was not found.\n"
+    STRING_OPEN_KEY_FAILED, "reg: Unable to open the registry key '%1'.\n"
+    STRING_ESCAPE_SEQUENCE, "reg: Unrecognized escape sequence [\\%1!c!]\n"
 }

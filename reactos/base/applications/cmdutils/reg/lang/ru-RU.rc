@@ -33,4 +33,8 @@ STRINGTABLE
     STRING_REG_HELP, "Введите ""REG /?"" для получения справки по использованию..\n"
     STRING_FUNC_HELP, "Введите ""REG %1 /?"" для получения справки по использованию..\n"
     STRING_VALUE_NOT_SET, "(значение не указано)"
+    STRING_IMPORT_USAGE, "REG IMPORT file.reg\n"
+    STRING_FILE_NOT_FOUND, "reg: The file '%1' was not found.\n"
+    STRING_OPEN_KEY_FAILED, "reg: Unable to open the registry key '%1'.\n"
+    STRING_ESCAPE_SEQUENCE, "reg: Unrecognized escape sequence [\\%1!c!]\n"
 }

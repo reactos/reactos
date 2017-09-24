@@ -1,7 +1,5 @@
 /*
- * REG.EXE - Wine-compatible reg program.
- *
- * Copyright 2008 Andrew Riedi
+ * Copyright 2017 Hugh McMaster
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,39 +16,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma once
+#ifndef __REG_H__
+#define __REG_H__
 
-//#include <windef.h>
+#include "resource.h"
 
-/* Translation IDs. */
-#define STRING_USAGE            101
-#define STRING_ADD_USAGE        102
-#define STRING_DELETE_USAGE     103
-#define STRING_QUERY_USAGE      104
-#define STRING_SUCCESS          105
-#define STRING_INVALID_KEY      106
-#define STRING_INVALID_CMDLINE  107
-#define STRING_NO_REMOTE        108
-#define STRING_CANNOT_FIND      109
-#define STRING_UNSUPPORTED_TYPE 110
-#define STRING_MISSING_INTEGER  111
-#define STRING_MISSING_HEXDATA  112
-#define STRING_UNHANDLED_TYPE   113
-#define STRING_OVERWRITE_VALUE  114
-#define STRING_YESNO            115
-#define STRING_YES              116
-#define STRING_NO               117
-#define STRING_CANCELLED        118
-#define STRING_DEFAULT_VALUE    119
-#define STRING_DELETE_VALUE     120
-#define STRING_DELETE_VALUEALL  121
-#define STRING_DELETE_SUBKEY    122
-#define STRING_INVALID_STRING   123
-#define STRING_VALUEALL_FAILED  124
-#define STRING_GENERAL_FAILURE  125
-#define STRING_MATCHES_FOUND    126
-#define STRING_INVALID_SYNTAX   127
-#define STRING_INVALID_OPTION   128
-#define STRING_REG_HELP         129
-#define STRING_FUNC_HELP        130
-#define STRING_VALUE_NOT_SET    131
+#define ARRAY_SIZE(A) (sizeof(A)/sizeof(*A))
+
+/* reg.c */
+void *heap_xalloc(size_t size);
+void *heap_xrealloc(void *buf, size_t size);
+BOOL heap_free(void *buf);
+void __cdecl output_message(unsigned int id, ...);
+HKEY path_get_rootkey(const WCHAR *path);
+
+/* import.c */
+int reg_import(const WCHAR *filename);
+
+#endif /* __REG_H__ */

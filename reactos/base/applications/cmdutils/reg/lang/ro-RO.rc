@@ -39,4 +39,8 @@ STRINGTABLE
     STRING_REG_HELP, "Tastați «REG /?» pentru mai multe informații.\n"
     STRING_FUNC_HELP, "Tastați «REG %1 /?» pentru mai multe informații.\n"
     STRING_VALUE_NOT_SET, "(valoare nealocată)"
+    STRING_IMPORT_USAGE, "REG IMPORT file.reg\n"
+    STRING_FILE_NOT_FOUND, "reg: The file '%1' was not found.\n"
+    STRING_OPEN_KEY_FAILED, "reg: Unable to open the registry key '%1'.\n"
+    STRING_ESCAPE_SEQUENCE, "reg: Unrecognized escape sequence [\\%1!c!]\n"
 }
