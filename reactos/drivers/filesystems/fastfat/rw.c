@@ -722,6 +722,9 @@ VfatRead(
             Length = (ULONG)(ROUND_UP_64(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
         }
 
+        vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReads, 1);
+        vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReadBytes, Length);
+
         Status = VfatReadFileData(IrpContext, Length, ByteOffset, &ReturnedLength);
         if (NT_SUCCESS(Status))
         {
@@ -1002,6 +1005,9 @@ VfatWrite(
         {
             CcZeroData(IrpContext->FileObject, &OldFileSize, &ByteOffset, TRUE);
         }
+
+        vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedWrites, 1);
+        vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedWriteBytes, Length);
 
         Status = VfatWriteFileData(IrpContext, Length, ByteOffset);
         if (NT_SUCCESS(Status))
