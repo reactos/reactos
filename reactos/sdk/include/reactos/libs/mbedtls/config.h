@@ -92,7 +92,7 @@
  *
  * Uncomment if the CPU supports SSE2 (IA-32 specific).
  */
-#define MBEDTLS_HAVE_SSE2 /* swyter: disable this if you want to support platforms < Pentium 4 */
+//#define MBEDTLS_HAVE_SSE2 /* We want to run on older hardware. TODO: This should be checked at runtime. */
 
 /**
  * \def MBEDTLS_HAVE_TIME
