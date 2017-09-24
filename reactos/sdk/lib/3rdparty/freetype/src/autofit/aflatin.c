@@ -1706,9 +1706,11 @@
                 if ( prev_max_on_coord > max_on_coord )
                   max_on_coord = prev_max_on_coord;
 
-                prev_segment->last = point;
-                prev_segment->pos  = (FT_Short)( ( min_pos +
-                                                   max_pos ) >> 1 );
+                prev_segment->last  = point;
+                prev_segment->pos   = (FT_Short)( ( min_pos +
+                                                    max_pos ) >> 1 );
+                prev_segment->delta = (FT_Short)( ( max_pos -
+                                                    min_pos ) >> 1 );
 
                 if ( ( min_flags | max_flags ) & AF_FLAG_CONTROL      &&
                      ( max_on_coord - min_on_coord ) < flat_threshold )
@@ -1736,9 +1738,11 @@
                   if ( max_pos > prev_max_pos )
                     prev_max_pos = max_pos;
 
-                  prev_segment->last = point;
-                  prev_segment->pos  = (FT_Short)( ( prev_min_pos +
-                                                     prev_max_pos ) >> 1 );
+                  prev_segment->last  = point;
+                  prev_segment->pos   = (FT_Short)( ( prev_min_pos +
+                                                      prev_max_pos ) >> 1 );
+                  prev_segment->delta = (FT_Short)( ( prev_max_pos -
+                                                      prev_min_pos ) >> 1 );
                 }
                 else
                 {
@@ -1749,8 +1753,9 @@
                   if ( prev_max_pos > max_pos )
                     max_pos = prev_max_pos;
 
-                  segment->last = point;
-                  segment->pos  = (FT_Short)( ( min_pos + max_pos ) >> 1 );
+                  segment->last  = point;
+                  segment->pos   = (FT_Short)( ( min_pos + max_pos ) >> 1 );
+                  segment->delta = (FT_Short)( ( max_pos - min_pos ) >> 1 );
 
                   if ( ( min_flags | max_flags ) & AF_FLAG_CONTROL      &&
                        ( max_on_coord - min_on_coord ) < flat_threshold )
@@ -3508,13 +3513,7 @@
       goto Exit;
 
     /* analyze glyph outline */
-#ifdef AF_CONFIG_OPTION_USE_WARPER
-    if ( ( metrics->root.scaler.render_mode == FT_RENDER_MODE_LIGHT &&
-           AF_HINTS_DO_WARP( hints )                                ) ||
-         AF_HINTS_DO_HORIZONTAL( hints )                              )
-#else
     if ( AF_HINTS_DO_HORIZONTAL( hints ) )
-#endif
     {
       axis  = &metrics->axis[AF_DIMENSION_HORZ];
       error = af_latin_hints_detect_features( hints,
@@ -3544,9 +3543,9 @@
     for ( dim = 0; dim < AF_DIMENSION_MAX; dim++ )
     {
 #ifdef AF_CONFIG_OPTION_USE_WARPER
-      if ( dim == AF_DIMENSION_HORZ                                 &&
-           metrics->root.scaler.render_mode == FT_RENDER_MODE_LIGHT &&
-           AF_HINTS_DO_WARP( hints )                                )
+      if ( dim == AF_DIMENSION_HORZ                                  &&
+           metrics->root.scaler.render_mode == FT_RENDER_MODE_NORMAL &&
+           AF_HINTS_DO_WARP( hints )                                 )
       {
         AF_WarperRec  warper;
         FT_Fixed      scale;

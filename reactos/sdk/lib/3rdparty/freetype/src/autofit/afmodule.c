@@ -548,6 +548,7 @@
     return error;
 
 #else /* !FT_DEBUG_AUTOFIT */
+
 #ifdef __REACTOS__
     AF_GlyphHintsRec *hints = malloc(sizeof(AF_GlyphHintsRec));
     AF_LoaderRec *loader = malloc(sizeof(AF_LoaderRec));

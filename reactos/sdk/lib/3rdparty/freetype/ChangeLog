@@ -1,3 +1,1106 @@
+2017-09-16  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.8.1 released.
+	=========================
+
+
+	Tag sources with `VER-2-8-1'.
+
+	* docs/VERSION.TXT: Add entry for version 2.8.1.
+	* docs/CHANGES: Updated.
+
+	* README, Jamfile (RefDoc), builds/windows/vc2005/freetype.vcproj,
+	builds/windows/vc2005/index.html,
+	builds/windows/vc2008/freetype.vcproj,
+	builds/windows/vc2008/index.html,
+	builds/windows/vc2010/freetype.vcxproj,
+	builds/windows/vc2010/index.html,
+	builds/windows/visualc/freetype.dsp,
+	builds/windows/visualc/freetype.vcproj,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/freetype.dsp,
+	builds/windows/visualce/freetype.vcproj,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.8/2.8.1/, s/28/281/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 1.
+
+	* builds/unix/configure.raw (version_info): Set to 21:0:15.
+	* CMakeLists.txt (VERSION_PATCH): Set to 1.
+
+2017-09-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[sfnt] lowest gcc for vectors (e1d0249e) is changed to 4.7.
+
+	__builtin_shuffle() was introduced in gcc-4.7.  The lowest
+	gcc to enable vector operation is delayed from 4.6 to 4.7.
+
+	* src/sfnt/pngshim.c (premultiply_data): Fix cpp-macro to
+	enable the vector operation, to change the lowest gcc version
+	from 4.6 to 4.7.
+
+2017-09-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Fix a possible overflow by signed integer comparison.
+
+	Improve the code by 5d3ff05615dda6d1325ed612381a17a0df04c975 ,
+	issues are found by Behdad Esfahbod and Werner Lemberg.
+
+	* src/cache/ftcbasic.c (FTC_ImageCache_Lookup): Replace
+	a subtraction to check higher bit by a bit operation,
+	and cpp-conditionalize for appropriate systems.  Add better
+	documentation to the comment.
+	(FTC_ImageCache_LookupScaler): Ditto.
+	(FTC_SBitCache_Lookup): Ditto.
+	(FTC_SBitCache_LookupScaler): Ditto.
+
+2017-09-13  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Really fix #41334 (#52000).
+
+	* src/autofit/aflatin.c (af_latin_hints_compute_segments): Set
+	`segment->delta' everywhere.
+
+2017-09-12  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[autofit, sfnt] Fix for `make multi'.
+
+	* src/autofit/afshaper.c: Include FT_ADVANCE_H, to use
+	FT_Get_Advance() in it.
+	* src/sfnt/ttcmap.c: Include FT_SERVICE_POSTSCRIPT_CMAPS_H
+	to use PS_Unicodes in it, also include `ttpost.h' to use
+	tt_face_get_ps_name() in it.
+
+2017-09-11  Azzuro  <azzuro@team-mediaportal.com>
+
+	[build] Improve builds with different MS Visual Studio versions.
+
+	* builds/windows/vc2010/freetype.vcxproj: Switch platform toolset
+	according to the Visual Studio version.
+
+2017-09-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttkern.c (tt_face_load_kern): Reject format 2 tables.
+
+	Reported by Behdad.
+
+2017-09-09  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Improve communication with ftgrid.
+
+	* src/autofit/afhints.c (af_glyph_hints_get_segment_offset):
+	Provide values in font units.
+
+2017-09-08  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[base] Remove a check for resource ID in the resource fork driver.
+
+	LastResort.dfont has a marginal resource ID 0xFFFF for sfnt
+	resource.  Inside Macintosh: More Macintosh Toolbox, `Resource IDs'
+	(1-46), tells that some IDs are reserved and should not be used.
+	FreeType2 just uses resource ID to sort the fragmented resource.
+	To accept the marginal fonts, the checking is removed.
+
+	* src/base/ftrfork.c (FT_Raccess_Get_DataOffsets): Remove res_id
+	validity check, fix a trace message format.
+
+2017-09-08  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[sfnt, truetype] Register the tags for marginal fonts.
+
+	The first 32bit of standard TrueType variants is 0x00010000,
+	`OTTO', `ttcf', `true' or `typ1'.  2 marginal dfonts on legacy Mac
+	OS X, Keyboard.dfont and LastResort.dfont, have the sfnt resources
+	starting 0xA5 followed by `kbd' or `lst'.  Considering the following
+	data could be parsed as conventional TrueType fonts, the header
+	checking is updated to allow these tags.  It seems that recent Mac
+	OS X has already switched to normal TTF for these fonts.
+
+	See the discussion at
+	http://u88.n24.queensu.ca/exiftool/forum/index.php?topic=3931.0
+
+	* include/freetype/tttags.h (TTAG_0xA5kbd, TTAG_0xA5lst): New header
+	tags for Keyboard.dfont and LastResort.dfont.
+	* src/sfnt/sfobjs.c (sfnt_open_font): Accept the sfnt resource
+	starts with TTAG_0xA5kbd or TTAG_0xA5lst.
+	* src/truetype/ttobjs.c (tt_face_init): Accept the face with the
+	format tag is TTAG_0xA5kbd or TTAG_0xA5lst.
+
+2017-09-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix multiple calls of `FT_Bitmap_Convert'.
+
+	The documentation of `FT_Bitmap_Convert' says that multiple calls do
+	proper reallocation of the target FT_Bitmap object.  However, this
+	failed for the sequence
+
+	  non-empty bitmap
+	  empty bitmap
+	  non-empty bitmap
+
+	Reason was that `FT_Bitmap_Convert' only reallocated the bitmap
+	buffer if it became too small; it didn't make the buffer smaller.
+	For an empty bitmap following a non-empty one, only the buffer
+	dimension got set to zero, without deallocation.  If the next call
+	was a non-empty buffer again, an assertion in `ft_mem_qrealloc' was
+	triggered.
+
+	* src/base/ftbitmap.c (FT_Bitmap_Convert): Always reallocate target
+	buffer to the correct size.
+
+	* docs/CHANGES: Document it.
+
+2017-09-05  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix size and resolution handling.
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Init): Use `SIZE' values if
+	`POINT_SIZE', `RESOLUTION_X', or `RESOLUTION_Y' properties are
+	missing.
+
+	* docs/CHANGES: Document it.
+
+2017-08-25  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Swap `ALLOC_MULT' arguments (#51833).
+
+	* src/base/ftbitmap.c (ft_bitmap_assure_buffer): Updated.
+	* src/winfonts/winfnt.c (FNT_Load_Glyph): Updated.
+	* src/raster/ftrend1.c (ft_raster1_render): Updated.
+
+2017-08-23  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix clang compilation (#51788).
+
+	* src/sfnt/pngshim.c (premultiply_data): Use vectors instead of
+	scalars.
+	(vector_shuffle): New macro to take care of a different built-in
+	function name on clang.
+
+2017-08-22  Werner Lemberg  <wl@gnu.org>
+
+	[base] Don't zero out allocated memory twice (#51816).
+
+	Patch applied from bug report.
+
+	* src/base/ftutil.c (ft_mem_qrealloc): Use low-level allocation to
+	avoid unnecessary overhead.
+
+2017-08-22  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Integer overflow.
+
+	Changes triggered by
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=3107
+
+	* src/truetype/ttinterp.c (Ins_MDRP, Ins_MIRP, Ins_ALIGNPTS): Use
+	NEG_LONG.
+
+2017-08-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[sfnt] Avoid synthetic unicode for symbol fonts with PUA.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/chromium/issues/detail?id=754574
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Check for FT_ENCODING_MS_SYMBOL.
+
+2017-08-16  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/pngshim.c (premultiply_data): Fix compiler warnings.
+
+2017-08-15  Behdad Esfahbod  <behdad@behdad.org>
+
+	[sfnt] Speed up PNG image loading.
+
+	This reduces the overhead of `premultiply_data' by 60%.
+
+	* src/sfnt/pngshim.c (premultiply_data): Provide code which uses
+	gcc's (and clang's) `vector_byte' attribute to process 4 pixels at a
+	time.
+
+2017-08-11  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt, truetype] Improve handling of missing sbits.
+
+	Requested by Behdad.
+
+	Modern bitmap-only SFNTs like `NotoColorEmoji.ttf' don't contain
+	entries in the bitmap strike(s) for empty glyphs.  Instead, they
+	rely that a space glyph gets created from the font's metrics data.
+	This commit makes FreeType behave accordingly.
+
+	* include/freetype/fterrdef.h (FT_Err_Missing_Bitmap): New error
+	code.
+
+	* src/sfnt/ttsbit.c (tt_sbit_decoder_load_image): Change error codes
+	to make a distinction between a missing bitmap in a composite and a
+	simple missing bitmap.
+
+	* src/truetype/ttgload.c (TT_Load_Glyph): For a missing bitmap (in a
+	bitmap-only font), synthesize an empty bitmap glyph if metrics are
+	available.
+
+2017-08-10  Werner Lemberg  <wl@gnu.org>
+
+	[base] Minor API improvement for default variation axis setting.
+
+	* src/base/ftmm.c (FT_Set_MM_Design_Coordinates,
+	FT_Set_Var_Design_Coordinates, FT_Set_MM_Blend_Coordinates,
+	FT_Set_Var_Blend_Coordinates): Allow coords==NULL if num_coords==0.
+
+	* docs/CHANGES: Updated.
+
+2017-08-08  Werner Lemberg  <wl@gnu.org>
+
+	[psnames] Really fix issue #49949.
+
+	We now use a separate preprocessor macro to handle both definition
+	and declaration of the glyph name arrays.
+
+	* src/psnames/psmodule.c (DEFINE_PS_TABLE_DATA): New macro.
+
+	* src/tools/glnames.py (StringTable::dump,
+	StringTable::dump_sublist): Use `DEFINE_PS_TABLE_DATA'.
+	(dump_encoding): Ditto.
+	(main): Use `wb' mode for writing the output file, which works on
+	Windows also.
+
+	* src/psnames/pstables.h: Regenerated.
+
+2017-08-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Harmony LCD rendering.
+
+	This is a new technology for LCD-optimized rendering. It capitalizes
+	on the fact that each color channel grid is shifted by a third of a
+	pixel.  Therefore it is logical to render 3 separate monochrome
+	bitmaps shifting the outline by 1/3 pixel, and then combine them.
+	Importantly, the resulting output does not require additional LCD
+	filtering.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic)
+	[!FT_CONFIG_OPTION_SUBPIXEL_RENDERING]: Implement new LCD-optimized
+	rendering.
+
+	* include/freetype/ftlcdfil.h, include/freetype/freetype.h,
+	include/freetype/config/ftoption.h, devel/ftoption.h: Updated
+	documentation.
+
+2017-08-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Clean up.
+
+2017-08-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/ttpost.c (format): Use otspec-compliant versions.
+
+2017-08-05  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Integer overflow.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2868
+
+	* src/truetype/ttinterp.c (Ins_ALIGNRP): Use NEG_LONG.
+
+2017-08-05  Werner Lemberg  <wl@gnu.org>
+
+	[base, truetype] New function `FT_Get_Var_Axis_Flags'.
+
+	The reserved `flags' field got a value in OpenType version 1.8.2;
+	unfortunately, the public `FT_Var_Axis' structure misses the
+	corresponding element.  Since we can't add a new field, we add an
+	access function.
+
+	* src/base/ftmm.c (FT_Get_Var_Axis_Flags): New function.
+
+	* include/freetype/ftmm.h (FT_VAR_AXIS_FLAG_HIDDEN): New macro.
+	Updated.
+
+	* src/truetype/ttgxvar.c (TT_Get_MM_Var): Increase allocated memory
+	of `mmvar' to hold axis flags.
+	Fill the axis flags array.
+
+	* docs/CHANGES: Updated.
+
+2017-08-03  Nikolaus Waxweiler  <madigens@gmail.com>
+
+	[truetype] Fix metrics of B/W hinting in v40 mode.
+
+	Phantom points are now saved outside v40 backwards compatibility
+	mode.  This fixes the jumping glyphs when switching between v35 and
+	v40 monochrome mode.
+
+	* src/truetype/ttgload.c (TT_Hint_Glyph): Fix inversed bool logic.
+
+2017-08-03  Nikolaus Waxweiler  <madigens@gmail.com>
+
+	[truetype] Do not set any ClearType flags in v40 monochrome mode.
+
+	This fixes weird behavior of instructions that resulted in rendering
+	differences between v35 and v40 in monochrome mode, e.g., in
+	`timesbi.ttf'.
+
+	* src/truetype/ttinterp.c (Ins_GETINFO)
+	[TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL]: Check
+	`subpixel_hinting_lean'.
+
+2017-08-01  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttgxvar.c (TT_Get_MM_Var): Fix thinko.
+
+2017-08-01  Behdad Esfahbod  <behdad@behdad.org>
+
+	[truetype] Fix loading of named instances.
+
+	* src/truetype/ttgxvar.c (TT_Get_MM_Var): Preserve file position
+	while loading the `avar' table.
+
+2017-08-01  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt, truetype] Minor adjustments for OpenType 1.8.2.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): The units per EM value has now
+	(tighter) limits.
+
+	* src/truetype/ttgload.c (load_truetype_glyph): The new OpenType
+	version explicitly allows all negative values for the number of
+	contours if we have a composite glyph (this is for better backwards
+	compatibility I guess), but it still recommends value -1.
+
+2017-07-26  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Integer overflow.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2738
+
+	* src/cff/cf2hints.c (cf2_glyphpath_computeOffset,
+	cf2_glyphpath_curveTo): Use ADD_INT32.
+
+2017-07-13  Werner Lemberg  <wl@gnu.org>
+
+	[base] Fix memory leak.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/chromium/issues/detail?id=738362
+
+	* src/base/ftglyph.c (FT_Get_Glyph): Do proper deallocation in case
+	of error.
+
+2017-07-12  Werner Lemberg  <wl@gnu.org>
+
+	[base] Integer overflow.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2573
+
+	* src/base/ftobjs.c (ft_glyphslot_grid_fit_metrics): Use
+	FT_PIX_CEIL_LONG and FT_PIX_ROUND_LONG.
+
+2017-07-12  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttpload.c (tt_face_get_location): Off-by-one typo.
+
+	Also improve tracing message.
+
+	Problem reported as
+
+	  https://bugs.chromium.org/p/chromium/issues/detail?id=738919
+
+2017-07-07  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Integer overflow.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2517
+
+	* src/cff/cf2blues.c (cf2_blues_capture): Use SUB_INT32.
+
+2017-07-05  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttcmap.c (tt_cmap_unicode_class_rec): Fix warning.
+
+2017-07-05  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttgxvar.c (FT_Stream_SeekSet): Fix warning (#51395).
+
+2017-07-04  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Prevent address overflow (#51365).
+
+	* src/truetype/ttgxvar.c (FT_Stream_SeekSet): Add guard.
+
+2017-07-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftlcdfil.c (ft_lcd_filter_fir): Improve code.
+
+2017-07-03  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Integer overflow.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2455
+
+	* src/truetype/ttinterp.c (Ins_SCFS): Use SUB_LONG.
+
+2017-07-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Ignore No_Unicode_Glyph_Name.
+
+2017-06-28  Ben Wagner  <bungeman@google.com>
+
+	Avoid Microsoft compiler warnings (#51331).
+
+	While clang's sanitizer recommends a cast to unsigned for safe
+	negation (to handle -INT_MIN), both MSVC and Visualc emit warning
+	C4146 if an unsigned value gets negated.
+
+	* include/freetype/internal/ftcalc.h (NEG_LONG, NEG_INT32),
+	src/base/ftcalc.c (FT_MOVE_SIGN): Replace negation with a
+	subtraction.
+
+2017-06-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffparse.c (do_fixed): Fix typo.
+
+	Spotted by chris <chris@gcjd.org>.
+
+2017-06-27  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2384
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2391
+
+	* src/base/ftcalc.c (FT_MulDiv, FT_MulDiv_No_Round, FT_DivFix): Use
+	NEG_LONG.
+
+	* src/truetype/ttinterp.c (Ins_SxVTL): Use NEG_LONG.
+
+2017-06-24  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2364
+
+	* src/truetype/ttinterp.c (Ins_ISECT): Use NEG_LONG.
+
+2017-06-22  Werner Lemberg  <wl@gnu.org>
+
+	[cff, truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2323
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2328
+
+	* src/cff/cf2blues.c (cf2_blues_capture): Use ADD_INT32 and
+	SUB_INT32.
+
+	* src/truetype/ttinterp.c (Ins_SDPVTL): Use SUB_LONG and NEG_LONG.
+
+2017-06-21  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[sfnt] Synthesize a Unicode charmap if one is missing.
+
+	* src/sfnt/ttcmap.h (tt_cmap_unicode_class_rec): Declare it.
+	* src/sfnt/ttcmap.c (tt_get_glyph_name, tt_cmap_unicode_init,
+	tt_cmap_unicode_done, tt_cmap_unicode_char_index,
+	tt_cmap_unicode_char_next, tt_cmap_unicode_class_rec): Implement
+	synthetic Unicode charmap class.
+	(tt_get_cmap_info): Make sure the callback is available.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face)
+	[FT_CONFIG_OPTION_POSTSCRIPT_NAMES]: If Unicode charmap is missing,
+	synthesize one.
+
+	* include/freetype/config/ftoption.h: Document it.
+	* devel/ftoption.h: Ditto.
+
+2017-06-20  Tony Theodore  <tonyt@logyst.com>
+
+	Fix pkg-config in freetype-config for cross-compiling (#51274).
+
+	* builds/unix/unix-def.in (PKG_CONFIG): New variable.
+	(freetype-config): Use it in sed expression.
+
+	* builds/unix/freetype-config.in: s/pkg-config/%PKG_CONFIG%/.
+
+2017-06-20  Werner Lemberg  <wl@gnu.org>
+
+	[cff, truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2300
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2313
+
+	* src/cff/cf2hints.c (cf2_hintmap_adjustHints): Use ADD_INT32.
+
+	* src/truetype/ttinterp.c (Ins_ABS): Avoid FT_ABS.
+
+2017-06-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base, smooth] LCD filtering cleanups.
+
+	* src/base/ftlcdfil.c (ft_lcd_filter_fir, _ft_lcd_filter_legacy):
+	Clean up, start filtering from the bottom-left origin.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Updated.
+
+2017-06-16  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2270
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2276
+
+	* src/truetype/ttinterp.c (Ins_MDRP, _iup_worker_interpolate): Use
+	ADD_LONG and SUB_LONG.
+
+2017-06-15  Werner Lemberg  <wl@gnu.org>
+
+	[bdf, cff] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2244
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2261
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Init): Replace calls to FT_ABS with
+	direct code to avoid value negation.
+
+	* src/cff/cf2blues.c (cf2_blues_capture): Use SUB_INT32 and
+	ADD_INT32.
+
+2017-06-13  Werner Lemberg  <wl@gnu.org>
+
+	* src/winfonts/winfnt.c (FNT_Face_Init): Don't set active encoding.
+
+	FreeType only sets a default active encoding for Unicode.
+
+2017-06-13  Werner Lemberg  <wl@gnu.org>
+
+	[cff, truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2216
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2218
+
+	* src/cff/cf2fixed.h (cf2_fixedAbs): Use NEG_INT32.
+
+	* src/truetype/ttinterp.c (Ins_IP): Use SUB_LONG.
+
+2017-06-11  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2200
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2210
+
+	* src/cff/cf2hints.c (cf2_hintmap_insertHint): Use SUB_INT32 and
+	ADD_INT32.
+
+	* src/cff/cf2intrp.c (cf2_interpT2CharString) <cf2_cmdVMOVETO>: Use
+	ADD_INT32.
+
+2017-06-10  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix TT_Set_Var_Design.
+
+	Reported by Nikolaus Waxweiler <madigens@gmail.com>.
+
+	* src/truetype/ttgxvar.c (TT_Set_Var_Design): Correctly handle the
+	case where we have less input coordinates than axes.
+
+2017-06-10  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftcalc.c (FT_DivFix): Fix embarrassing typo.
+
+	Bug introduced 2017-05-28.
+
+2017-06-09  Werner Lemberg  <wl@gnu.org>
+
+	[cff, truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2144
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2151
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2153
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2173
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2186
+
+	* src/cff/cf2blues.c (cf2_blues_init): Use SUB_INT32.
+
+	* src/truetype/ttinterp.c (Round_None, Round_To_Grid,
+	Round_To_Half_Grid, Round_Down_To_Grid, Round_Up_To_Grid,
+	Round_To_Double_Grid, Round_Super, Round_Super_45): Use ADD_LONG,
+	SUB_LONG, NEG_LONG, FT_PIX_ROUND_LONG, FT_PIX_CEIL_LONG,
+	FT_PAD_ROUND_LONG
+	(Ins_SxVTL, Ins_MIRP): Use SUB_LONG.
+	(_iup_worker_shift): Use SUB_LONG and ADD_LONG.
+
+2017-06-09  Werner Lemberg  <wl@gnu.org>
+
+	Provide more macros for flooring, ceiling, and rounding.
+
+	These versions don't produce run-time errors due to integer
+	overflow.
+
+	* include/freetype/internal/ftobjs.h: Include FT_INTERNAL_CALC_H.
+	(FT_PAD_ROUND_LONG, FT_PAD_CEIL_LONG, FT_PIX_ROUND_LONG,
+	FT_PIX_CEIL_LONG): New macros.
+	(FT_PAD_ROUND_INT32, FT_PAD_CEIL_INT32, FT_PIX_ROUND_INT32,
+	FT_PIX_CEIL_INT32): New macros.
+
+2017-06-09  Werner Lemberg  <wl@gnu.org>
+
+	Remove unused macros.
+
+	* include/freetype/internal/ftcalc.h (ADD_INT, SUB_INT, MUL_INT,
+	NEG_INT): Deleted.
+
+2017-06-09  Werner Lemberg  <wl@gnu.org>
+
+	*/*: Remove `OVERFLOW_' prefix.
+
+	This increases readability.
+
+2017-06-07  Werner Lemberg  <wl@gnu.org>
+
+	[cff, truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2133
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2137
+
+	* src/cff/cf2hints.c (cf2_hint_init): Use OVERFLOW_SUB_INT32.
+
+	* src/truetype/ttinterp.c (PROJECT, DUALPROJ): Use
+	OVERFLOW_SUB_LONG.
+
+2017-06-06  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2109
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2110
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2122
+
+	* src/cff/cf2blues.c (cf2_blues_init): Use OVERFLOW_SUB_INT32.
+
+	* src/cff/cf2hints.c (cf2_hintmap_map): Synchronize if-else
+	branches.
+
+2017-06-05  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Integer overflow.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2089
+
+	* src/cff/cffload.c (cff_blend_doBlend): User OVERFLOW_ADD_INT32.
+
+2017-06-04  Werner Lemberg  <wl@gnu.org>
+
+	[cff, truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2075
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2088
+
+	* src/cff/cf2font.c (cf2_font_setup): Use OVERFLOW_MUL_INT32.
+
+	* src/truetype/ttinterp.c (Ins_ISECT): Use OVERFLOW_MUL_LONG,
+	OVERFLOW_ADD_LONG, and OVERFLOW_SUB_LONG.
+
+2017-06-03  Werner Lemberg  <wl@gnu.org>
+
+	[base, cff, truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2060
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2062
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2063
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2068
+
+	* src/base/ftobjs.c (ft_glyphslot_grid_fit_metrics): Use
+	OVERFLOW_ADD_LONG and OVERFLOW_SUB_LONG.
+
+	* src/cff/cf2blues.c (cf2_blues_capture), src/cff/cf2hints.c
+	(cf2_hintmap_adjustHints): Use OVERFLOW_SUB_INT32.
+
+	* src/truetype/ttgload.c (compute_glyph_metrics): User
+	OVERFLOW_SUB_LONG.
+
+	* src/truetype/ttinterp.c (Direct_Move, Direct_Move_Orig,
+	Direct_Move_X, Direct_Move_Y, Direct_Move_Orig_X,
+	Direct_Move_Orig_Y, Move_Zp2_Point, Ins_MSIRP): Use
+	OVERFLOW_ADD_LONG and OVERFLOW_SUB_LONG.
+
+2017-06-03  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/freetype-config.in: Fix pkg-config test (#51162).
+
+	Patch directly taken from bug report.
+
+2017-06-03  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Synchronize sanity checks with pcf driver.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2054
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2058
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Init): Check font ascent and descent.
+	Check AVERAGE_WIDTH, POINT_SIZE, PIXEL_SIZE, RESOLUTION_X, and
+	RESOLUTION_Y properties.
+
+2017-06-03  Werner Lemberg  <wl@gnu.org>
+
+	[cff, truetype] Integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2047
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2057
+
+	* src/cff/cf2hints.c (cf2_hintmap_map): Use OVERFLOW_SUB_INT32.
+
+	* src/truetype/ttinterp.c (Ins_ADD): Use OVERFLOW_ADD_LONG.
+	(Ins_SUB): Use OVERFLOW_SUB_LONG.
+	(Ins_NEG): Use NEG_LONG.
+
+2017-06-03  Werner Lemberg  <wl@gnu.org>
+
+	ftcalc.h: Avoid left-shift of negative numbers.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2055
+
+	* include/freetype/internal/ftcalc.h (INT_TO_F26DOT6,
+	INT_TO_F2DOT14, INT_TO_FIXED, F2DOT14_TO_FIXED): Use multiplication.
+
+2017-06-02  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Even more integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2046
+
+	* src/cff/cf2intrp.c (cf2_doStems, cf2_interpT2CharString): Use
+	OVERFLOW_ADD_INT32.
+
+2017-06-02  Werner Lemberg  <wl@gnu.org>
+
+	[cff] More integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2032
+
+	* src/cff/cf2blues.c (cf2_blues_init): Use OVERFLOW_SUB_INT32.
+
+2017-06-02  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Don't left-shift negative numbers.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2031
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Init): Use multiplication.
+
+2017-06-02  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Fix integer scanning routines.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2029
+
+	* src/bdf/bdflib.c (_bdf_atoul, _bdf_atol, _bdf_atous, _bdf_atos):
+	Stop scanning if result would overflow.
+
+2017-06-02  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Fix integer overflows.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2027
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=2028
+
+	* src/cff/cf2hints.c (cf2_hintmap_insertHint), src/cff/cf2intrp.c
+	(cf2_doFlex): Use OVERFLOW_ADD_INT32 and OVERFLOW_SUB_INT32.
+
+2017-06-01  Werner Lemberg  <wl@gnu.org>
+
+	[smooth] Some 32bit integer overflow run-time errors.
+
+	* src/smooth/ftgrays.c [STANDALONE] (OVERFLOW_ADD_LONG,
+	OVERFLOW_SUB_LONG, OVERFLOW_MUL_LONG, NEG_LONG): New macros.
+	[!STANDALONE]: Include FT_INTERNAL_CALC_H.
+	(gray_render_cubic): Use those macros where appropriate.
+
+2017-06-01  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftglyph.c (FT_Get_Glyph): Check `slot->advance'.
+
+2017-06-01  Werner Lemberg  <wl@gnu.org>
+
+	[psaux] 32bit integer overflow tun-time errors (#46149).
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstrings): Use
+	OVERFLOW_ADD_LONG and OVERFLOW_SUB_LONG where appropriate.
+
+2017-06-01  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttinterp.c (TT_RunIns): Adjust loop counter again.
+
+	Problem reported by Marek Kašík <mkasik@redhat.com>.
+
+	The problematic font that exceeds the old limit is Padauk-Bold,
+	version 3.002, containing bytecode generated by a buggy version of
+	ttfautohint.
+
+2017-05-31  Werner Lemberg  <wl@gnu.org>
+
+	[cff] 32bit integer overflow run-time errors 2/2 (#46149).
+
+	This commit handles the new engine.
+
+	* include/freetype/internal/ftcalc.h (OVERFLOW_ADD_INT32,
+	OVERFLOW_SUB_INT32, OVERFLOW_MUL_INT32, NEG_INT, NEG_LONG,
+	NEG_INT32): New macros.
+
+	* src/cff/cf2ft.c (cf2_getScaleAndHintFlag): Use OVERFLOW_ADD_INT32.
+
+	* src/cff/cf2hints.c (cf2_getWindingMomentum, cf2_hint_init,
+	cf2_hintmap_map, cf2_glyphpath_hintPoint,
+	cf2_glyphpath_computeIntersection, cf2_glyphpath_computeOffset,
+	cf2_glyphpath_lineTo, cf2_glyphpath_curveTo): Use
+	OVERFLOW_ADD_INT32, OVERFLOW_SUB_INT32, OVERFLOW_MUL_INT32, and
+	NEG_INT32 where appropriate.
+
+	* src/cff/cf2intrp.c (cf2_doFlex, cf2_doBlend,
+	cf2_interpT2CharString): Ditto.
+	Also add some other code where needed to avoid overflow.
+
+2017-05-30  Werner Lemberg  <wl@gnu.org>
+
+	[cff] 32bit integer overflow run-time errors 1/2 (#46149).
+
+	This commit handles the old engine.
+
+	* src/cff/cffgload.c: Include FT_INTERNAL_CALC_H.
+	(cff_decoder_parse_charstrings): Use OVERFLOW_ADD_LONG and
+	OVERFLOW_SUB_LONG where needed.
+
+	* src/cff/cffparse.c: Include FT_INTERNAL_CALC_H.
+	(power_ten_limits): New static array.
+	(do_fixed): Use it to prevent multiplication overflow.
+	(cff_parser_run): Use OVERFLOW_ADD_LONG.
+
+2017-05-30  Werner Lemberg  <wl@gnu.org>
+
+	[psaux] Correctly handle sequences of multiple number signs.
+
+	* src/psaux/psconv.c (PS_Conv_Strtol, PS_Conv_ToFixed): Return zero
+	if we encounter more than a single sign.
+
+2017-05-29  Werner Lemberg  <wl@gnu.org>
+
+	[pcf] 32bit integer overflow run-time errors (#46149).
+
+	* src/pcf/pcfread.c (pcf_get_accel): Add sanity checks for
+	`fontAscent' and `fontDescent'.
+	(pcf_load_font): Add sanity checks for global height.
+	Add sanity checks for AVERAGE_WIDTH, POINT_SIZE, PIXEL_SIZE,
+	RESOLUTION_X, and RESOLUTION_Y properties.
+
+2017-05-29  Werner Lemberg  <wl@gnu.org>
+
+	Handle some integer overflow run-time errors (#46149, #48979).
+
+	This commit (mainly for 32bit CPUs) is the first of a series of
+	similar commits to handle known integer overflows.  Basically, all
+	of them are harmless, since they affect rendering of glyphs only,
+	not posing security threats.  It is expected that fuzzying will show
+	up more overflows, to be fixed in due course.
+
+	The idea is to mark places where overflows can occur, using macros
+	that simply cast to unsigned integers, because overflow arithmetic
+	is well defined in this case.  Doing so suppresses run-time errors
+	of sanitizers without adding computational overhead.
+
+	* include/freetype/internal/ftcalc.h (OVERFLOW_ADD_INT,
+	OVERFLOW_SUB_INT, OVERFLOW_MUL_INT, OVERFLOW_ADD_LONG,
+	OVERFLOW_SUB_LONG, OVERFLOW_MUL_LONG): New macros.
+
+	* src/base/ftcalc.c (FT_RoundFix, FT_CeilFix, FT_Matrix_Multiply,
+	FT_Matrix_Multiply_Scaled, FT_Vector_Transform_Scaled,
+	ft_corner_orientation): Use new macros.
+
+	* src/base/ftoutln.c (FT_Outline_Get_Orientation): Use new macros.
+
+2017-05-28  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/internal/ftcalc.h (FLOAT_TO_FIXED): Remove.
+
+	This macro is not used.
+
+2017-05-28  Werner Lemberg  <wl@gnu.org>
+
+	[cff] s/cf2_floatToFixed/cf2_doubleToFixed/.
+
+	The new name better describes what the macro actually does;
+	additionally, we don't need a trailing `f' for literals (there was
+	only a single such instance in the code, but this caused a clang
+	warning because the macro itself uses `double' literals).
+
+	* src/cff/cf2blues.c, src/cff/cf2blues.h, src/cff/cf2fixed.h,
+	src/cff/cf2font.c, src/cff/cf2hints.c: Updated.
+
+2017-05-28  Werner Lemberg  <wl@gnu.org>
+
+	Fix negation of INT_MIN and LONG_MIN (#46149).
+
+	* src/base/ftcalc.c (FT_MOVE_SIGN): Add argument to pass unsigned
+	value, to be used as the result.
+	(FT_MulDiv, FT_MulDiv_No_Round, FT_DivFix, FT_MulFix,
+	FT_Vector_NormLen): Updated.
+
+2017-05-27  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix handling of design coordinates (#51127).
+
+	* src/truetype/ttgxvar.c (tt_set_mm_blend): Compute all design
+	coordinates if we have to create the `blends->coord' array.
+	(TT_Get_MM_Blend, TT_Get_Var_Design): Select default instance
+	coordinates if no instance is selected yet.
+
+2017-05-24  Werner Lemberg  <wl@gnu.org>
+
+	[bdf, pcf] Support ISO646.1991-IRV character encoding (aka ASCII).
+
+	Problem reported by Marek Kašík <mkasik@redhat.com>, cf.
+
+	  https://bugzilla.redhat.com/show_bug.cgi?id=1451795
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Init), src/pcf/pcfdrivr.c
+	(PCF_Face_Init): Implement it.
+
+2017-05-20  Nikolaus Waxweiler  <madigens@gmail.com>
+
+	[truetype] Always use interpreter v35 for B/W rendering (#51051).
+
+	* src/truetype/ttgload.c (tt_loader_init)
+	[TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL]: Adjust
+	`subpixel_hinting_lean', `grayscale_cleartype', and
+	`vertical_lcd_lean' accordingly.
+
+	* src/truetype/ttinterp.c (Ins_GETINFO): Updated.
+	(TT_RunIns): Update `backward_compatibility' flag.
+
+2017-05-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[smooth] Implement minimal dynamic padding for LCD filtering.
+
+	Extra bitmap padding for LCD filtering depends on the filter.  The
+	default 5-tap filter needs 2 extra subpixels.  The light 3-tap filter
+	needs only 1 extra subpixel.  This space could be already available
+	due to rounding.  In order to optimize the padding, we now expand
+	CBox for the given filter weights before rounding.
+
+	This change breaks current Skia (and Firefox).
+
+	* include/freetype/internal/ftobjs.h (FT_LibraryRec)
+	[FT_CONFIG_OPTION_SUBPIXEL_RENDERING]: Remove `lcd_extra' field.
+
+	* src/base/ftlcdfil.c (FT_Library_SetLcdFilterWeights,
+	FT_Library_SetLcdFilter): Remove `lcd_extra' initializations.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Implement dymanic
+	LCD padding.
+
+2017-05-15  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Return proper scaling values for SBIX bitmaps.
+
+	Problem reported by Hin-Tak Leung <htl10@users.sourceforge.net>.
+
+	* src/sfnt/ttsbit.c (tt_face_load_strike_metrics): Implement it.
+
+2017-05-15  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix error handling for embedded bitmaps.
+
+	Problem reported by Hin-Tak Leung <htl10@users.sourceforge.net>.
+
+	* src/truetype/ttgload.c (TT_Load_Glyph)
+	[TT_CONFIG_OPTION_EMBEDDED_BITMAPS]: Handle error if font is not
+	scalable.
+
+2017-05-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[autofit] Make autohint warping NORMAL option.
+
+	This moves warping option from LIGHT to NORMAL mode.  This makes LIGHT
+	truly void of hinting in x-direction, with left side bearing never
+	changed and right side bearing only altered by advance rounding.
+	Therefore, LIGHT is now ready to return fractional advance.  As a
+	NORMAL option, warping substitutes normal hinting.
+
+	* src/autofit/afcjk.c (af_cjk_hints_apply): Updated.
+	* src/autofit/aflatin.c (af_latin_hints_apply): Updated.
+	* src/autofit/aflatin2.c (af_latin2_hints_apply): Updated.
+
+	* src/autofit/afloader.c (af_loader_load_glyph): Handle warping
+	phantom points as normal.
+
+2017-05-14  Werner Lemberg  <wl@gnu.org>
+
+	Remove remnants of raster pool.
+
+	* include/freetype/internal/ftobjs.h (FT_LibraryRec): Remove
+	`raster_pool' and `raster_pool_size' fields.
+
+	* src/base/ftobjs.c (FT_New_Library), src/raster/ftrend1.c
+	(ft_raster1_init), src/smooth/ftsmooth.c (ft_smooth_init): Updated.
+
 2017-05-13  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.8 released.
@@ -327,7 +1430,7 @@
 
 	[truetype] Do linear scaling for FT_LOAD_NO_HINTING (#50470).
 
-	* src/truetype/ttobs.h (TT_SizeRec): Add field `hinted_metrics' to
+	* src/truetype/ttobjs.h (TT_SizeRec): Add field `hinted_metrics' to
 	hold hinted metrics.
 	Make `metrics' a pointer so that `tt_glyph_load' can easily switch
 	between metrics.
@@ -1096,7 +2199,7 @@
 
 	* src/sfnt/sfdriver.c (search_name_id): Rename to...
 	(sfnt_get_name_id): ... this.
-	(sfnt_get_ps_name, sfnt_interface): Udpated.
+	(sfnt_get_ps_name, sfnt_interface): Updated.
 
 2017-03-04  Werner Lemberg  <wl@gnu.org>
 
@@ -1522,7 +2625,7 @@
 	* include/freetype/ftsnames.h (FT_SfntLangTag): New structure.
 	(FT_Get_Sfnt_LangTag): New declaration.
 
-	* src/base/ftsnames.c (FT_Get_Sfnt_LangTag): New funtion.
+	* src/base/ftsnames.c (FT_Get_Sfnt_LangTag): New function.
 
 	* docs/CHANGES: Updated.
 
@@ -2521,7 +3624,7 @@
 	[cff] Implement CFF2 support (2/2).
 
 	The font variation code.  All parts dependent on the GX code in the
-	`truetype' module are guarded with TT_CONFIG_OPTION_GX_VAR_SUPPORT. 
+	`truetype' module are guarded with TT_CONFIG_OPTION_GX_VAR_SUPPORT.
 	In other words, you can still compile the `cff' module without
 	defining TT_CONFIG_OPTION_GX_VAR_SUPPORT (which brings you CFF2
 	support without font variation).
@@ -3545,7 +4648,7 @@
 
 	  https://bugzilla.mozilla.org/show_bug.cgi?id=1270288
 
-	* src/cff/cf2interp.c (cf2_interpT2CharString): Initialize `storage'
+	* src/cff/cf2intrp.c (cf2_interpT2CharString): Initialize `storage'
 	array to handle a `get' opcode without a previous `put'.
 
 2016-09-05  Alexei Podtelezhnikov  <apodtele@gmail.com>
