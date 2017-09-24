@@ -544,17 +544,11 @@ static DWORD get_cookie(substr_t host, substr_t path, DWORD flags, cookie_set_t 
     }
 
     for(domain = get_cookie_domain(host, FALSE); domain; domain = domain->parent) {
-        TRACE("Trying %s domain...\n", debugstr_w(domain->domain));
-
         LIST_FOR_EACH_ENTRY(container, &domain->path_list, cookie_container_t, entry) {
             struct list *cursor, *cursor2;
 
-            TRACE("path %s\n", debugstr_wn(container->path.str, container->path.len));
-
             if(!cookie_match_path(container, path))
                 continue;
-
-            TRACE("found domain %p\n", domain->domain);
 
             LIST_FOR_EACH_SAFE(cursor, cursor2, &container->cookie_list) {
                 cookie_t *cookie_iter = LIST_ENTRY(cursor, cookie_t, entry);
@@ -570,7 +564,6 @@ static DWORD get_cookie(substr_t host, substr_t path, DWORD flags, cookie_set_t 
                 if((cookie_iter->flags & INTERNET_COOKIE_HTTPONLY) && !(flags & INTERNET_COOKIE_HTTPONLY))
                     continue;
 
-
                 if(!res->size) {
                     res->cookies = heap_alloc(4*sizeof(*res->cookies));
                     if(!res->cookies)
@@ -583,6 +576,9 @@ static DWORD get_cookie(substr_t host, substr_t path, DWORD flags, cookie_set_t 
                     res->cookies = new_cookies;
                     res->size *= 2;
                 }
+
+                TRACE("%s = %s domain %s path %s\n", debugstr_w(cookie_iter->name), debugstr_w(cookie_iter->data),
+                      debugstr_w(domain->domain), debugstr_wn(container->path.str, container->path.len));
 
                 if(res->cnt)
                     res->string_len += 2; /* '; ' */
