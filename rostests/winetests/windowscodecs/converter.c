@@ -54,6 +54,9 @@ typedef struct BitmapTestSrc {
     const bitmap_data *data;
 } BitmapTestSrc;
 
+extern HRESULT STDMETHODCALLTYPE IWICBitmapFrameEncode_WriteSource_Proxy(IWICBitmapFrameEncode* This,
+    IWICBitmapSource *pIBitmapSource, WICRect *prc);
+
 static BOOL near_equal(float a, float b)
 {
     return fabsf(a - b) < 0.001;
@@ -631,6 +634,12 @@ static const WCHAR wszTiffCompressionMethod[] = {'T','i','f','f','C','o','m','p'
 static const WCHAR wszCompressionQuality[] = {'C','o','m','p','r','e','s','s','i','o','n','Q','u','a','l','i','t','y',0};
 static const WCHAR wszInterlaceOption[] = {'I','n','t','e','r','l','a','c','e','O','p','t','i','o','n',0};
 static const WCHAR wszFilterOption[] = {'F','i','l','t','e','r','O','p','t','i','o','n',0};
+static const WCHAR wszImageQuality[] = {'I','m','a','g','e','Q','u','a','l','i','t','y',0};
+static const WCHAR wszBitmapTransform[] = {'B','i','t','m','a','p','T','r','a','n','s','f','o','r','m',0};
+static const WCHAR wszLuminance[] = {'L','u','m','i','n','a','n','c','e',0};
+static const WCHAR wszChrominance[] = {'C','h','r','o','m','i','n','a','n','c','e',0};
+static const WCHAR wszJpegYCrCbSubsampling[] = {'J','p','e','g','Y','C','r','C','b','S','u','b','s','a','m','p','l','i','n','g',0};
+static const WCHAR wszSuppressApp0[] = {'S','u','p','p','r','e','s','s','A','p','p','0',0};
 
 static const struct property_opt_test_data testdata_tiff_props[] = {
     { wszTiffCompressionMethod, VT_UI1,         VT_UI1,  WICTiffCompressionDontCare },
@@ -641,6 +650,16 @@ static const struct property_opt_test_data testdata_tiff_props[] = {
 static const struct property_opt_test_data testdata_png_props[] = {
     { wszInterlaceOption, VT_BOOL, VT_BOOL, 0 },
     { wszFilterOption,    VT_UI1,  VT_UI1, WICPngFilterUnspecified, 0.0f, TRUE /* not supported on XP/2k3 */},
+    { NULL }
+};
+
+static const struct property_opt_test_data testdata_jpeg_props[] = {
+    { wszImageQuality,         VT_R4,           VT_EMPTY },
+    { wszBitmapTransform,      VT_UI1,          VT_UI1, WICBitmapTransformRotate0 },
+    { wszLuminance,            VT_I4|VT_ARRAY,  VT_EMPTY },
+    { wszChrominance,          VT_I4|VT_ARRAY,  VT_EMPTY },
+    { wszJpegYCrCbSubsampling, VT_UI1,          VT_UI1, WICJpegYCrCbSubsamplingDefault, 0.0f, TRUE }, /* not supported on XP/2k3 */
+    { wszSuppressApp0,         VT_BOOL,         VT_BOOL, FALSE },
     { NULL }
 };
 
@@ -768,6 +787,8 @@ static void test_encoder_properties(const CLSID* clsid_encoder, IPropertyBag2 *o
         test_specific_encoder_properties(options, testdata_tiff_props, all_props, cProperties2);
     else if (IsEqualCLSID(clsid_encoder, &CLSID_WICPngEncoder))
         test_specific_encoder_properties(options, testdata_png_props, all_props, cProperties2);
+    else if (IsEqualCLSID(clsid_encoder, &CLSID_WICJpegEncoder))
+        test_specific_encoder_properties(options, testdata_jpeg_props, all_props, cProperties2);
 
     for (i=0; i < cProperties2; i++)
     {
@@ -1369,6 +1390,13 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
                 i++;
             }
 
+            if (clsid_decoder == NULL)
+            {
+                IStream_Release(stream);
+                IWICBitmapEncoder_Release(encoder);
+                return;
+            }
+
             if (SUCCEEDED(hr))
             {
                 hr = IWICBitmapEncoder_Commit(encoder);
@@ -1868,6 +1896,9 @@ if (!strcmp(winetest_platform, "windows")) /* FIXME: enable once implemented in 
                  &testdata_8bppIndexed, &CLSID_WICTiffDecoder, "TIFF encoder 8bppIndexed");
     test_encoder(&testdata_24bppBGR, &CLSID_WICTiffEncoder,
                  &testdata_24bppBGR, &CLSID_WICTiffDecoder, "TIFF encoder 24bppBGR");
+
+    test_encoder(&testdata_24bppBGR, &CLSID_WICJpegEncoder,
+                 &testdata_24bppBGR, NULL, "JPEG encoder 24bppBGR");
 
     test_multi_encoder(multiple_frames, &CLSID_WICTiffEncoder,
                        multiple_frames, &CLSID_WICTiffDecoder, NULL, NULL, "TIFF encoder multi-frame", NULL);
