@@ -111,6 +111,15 @@ typedef struct
     WCHAR *path;
 } cookie_t;
 
+typedef struct {
+    struct list entry;
+    LONG ref;
+    WCHAR *hostname;
+    INTERNET_PORT port;
+    BOOL secure;
+    struct list connections;
+} hostdata_t;
+
 typedef struct
 {
     object_header_t hdr;
@@ -144,8 +153,12 @@ typedef struct
 
 typedef struct
 {
+    struct list entry;
     int socket;
+    struct sockaddr_storage sockaddr;
     BOOL secure; /* SSL active on connection? */
+    hostdata_t *host;
+    ULONGLONG keep_until;
     CtxtHandle ssl_ctx;
     SecPkgContext_StreamSizes ssl_sizes;
     char *ssl_buf;
@@ -154,7 +167,6 @@ typedef struct
     char *peek_msg;
     char *peek_msg_mem;
     size_t peek_len;
-    DWORD security_flags;
 } netconn_t;
 
 typedef struct
@@ -206,7 +218,8 @@ typedef struct
     LPWSTR raw_headers;
     void *optional;
     DWORD optional_len;
-    netconn_t netconn;
+    netconn_t *netconn;
+    DWORD security_flags;
     int resolve_timeout;
     int connect_timeout;
     int send_timeout;
@@ -295,17 +308,15 @@ void send_callback( object_header_t *, DWORD, LPVOID, DWORD ) DECLSPEC_HIDDEN;
 void close_connection( request_t * ) DECLSPEC_HIDDEN;
 
 BOOL netconn_close( netconn_t * ) DECLSPEC_HIDDEN;
-BOOL netconn_connect( netconn_t *, const struct sockaddr *, unsigned int, int ) DECLSPEC_HIDDEN;
-BOOL netconn_connected( netconn_t * ) DECLSPEC_HIDDEN;
-BOOL netconn_create( netconn_t *, int, int, int ) DECLSPEC_HIDDEN;
-BOOL netconn_init( netconn_t * ) DECLSPEC_HIDDEN;
+netconn_t *netconn_create( hostdata_t *, const struct sockaddr_storage *, int ) DECLSPEC_HIDDEN;
 void netconn_unload( void ) DECLSPEC_HIDDEN;
 ULONG netconn_query_data_available( netconn_t * ) DECLSPEC_HIDDEN;
 BOOL netconn_recv( netconn_t *, void *, size_t, int, int * ) DECLSPEC_HIDDEN;
-BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr *, socklen_t *, int ) DECLSPEC_HIDDEN;
-BOOL netconn_secure_connect( netconn_t *, WCHAR * ) DECLSPEC_HIDDEN;
+BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr_storage *, int ) DECLSPEC_HIDDEN;
+BOOL netconn_secure_connect( netconn_t *, WCHAR *, DWORD ) DECLSPEC_HIDDEN;
 BOOL netconn_send( netconn_t *, const void *, size_t, int * ) DECLSPEC_HIDDEN;
 DWORD netconn_set_timeout( netconn_t *, BOOL, int ) DECLSPEC_HIDDEN;
+BOOL netconn_is_alive( netconn_t * ) DECLSPEC_HIDDEN;
 const void *netconn_get_certificate( netconn_t * ) DECLSPEC_HIDDEN;
 int netconn_get_cipher_strength( netconn_t * ) DECLSPEC_HIDDEN;
 
@@ -315,6 +326,8 @@ BOOL add_request_headers( request_t *, LPCWSTR, DWORD, DWORD ) DECLSPEC_HIDDEN;
 void delete_domain( domain_t * ) DECLSPEC_HIDDEN;
 BOOL set_server_for_hostname( connect_t *, LPCWSTR, INTERNET_PORT ) DECLSPEC_HIDDEN;
 void destroy_authinfo( struct authinfo * ) DECLSPEC_HIDDEN;
+
+void release_host( hostdata_t *host ) DECLSPEC_HIDDEN;
 
 BOOL process_header( request_t *request, LPCWSTR field, LPCWSTR value, DWORD flags, BOOL request_only ) DECLSPEC_HIDDEN;
 
@@ -394,5 +407,7 @@ static inline char *strdupWA_sized( const WCHAR *src, DWORD size )
     }
     return dst;
 }
+
+extern HINSTANCE winhttp_instance DECLSPEC_HIDDEN;
 
 #endif /* _WINE_WINHTTP_PRIVATE_H_ */

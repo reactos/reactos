@@ -21,7 +21,7 @@
 #include <rpcproxy.h>
 #include <httprequest.h>
 
-static HINSTANCE instance;
+HINSTANCE winhttp_instance;
 
 /******************************************************************
  *              DllMain (winhttp.@)
@@ -31,7 +31,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     switch(fdwReason)
     {
     case DLL_PROCESS_ATTACH:
-        instance = hInstDLL;
+        winhttp_instance = hInstDLL;
         DisableThreadLibraryCalls(hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
@@ -158,7 +158,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    return __wine_register_resources( instance );
+    return __wine_register_resources( winhttp_instance );
 }
 
 /***********************************************************************
@@ -166,5 +166,5 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    return __wine_unregister_resources( instance );
+    return __wine_unregister_resources( winhttp_instance );
 }
