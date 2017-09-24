@@ -231,7 +231,7 @@ static void test_ScriptItemize( void )
     static const itemTest t2d2[6] = {{{0,0,0,0,0,0},0,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},3,0,0,0,0,0,FALSE},{{0,0,0,0,0,0},4,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},7,1,1,1,0,arab_tag,FALSE},{{0,0,0,0,0,0},10,0,0,0,0,0,FALSE},{{0,0,0,0,0,0},11,0,0,0,0,-1,FALSE}};
     static const itemTest t2d3[5] = {{{0,0,0,0,0,0},0,0,0,2,0,latn_tag,FALSE},{{0,0,0,0,0,0},3,0,0,2,0,0,FALSE},{{0,0,0,0,0,0},4,0,0,2,0,latn_tag,FALSE},{{0,0,0,0,0,0},7,1,1,1,0,arab_tag,FALSE},{{0,0,0,0,0,0},11,0,0,0,0,-1,FALSE}};
     static const itemTest t2d4[3] = {{{0,0,0,0,0,0},0,0,0,2,0,latn_tag,FALSE},{{0,0,0,0,0,0},7,1,1,1,0,arab_tag,FALSE},{{0,0,0,0,0,0},11,0,0,0,0,-1,FALSE}};
-static const itemTest t2d5[5] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
+    static const itemTest t2d5[5] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
                                 {{0,0,0,0,0,0},3,0,0,0,1,0,FALSE},
                                 {{0,0,0,0,0,0},4,0,0,0,1,latn_tag,FALSE},
                                 {{0,0,0,0,0,0},7,0,0,0,1,arab_tag,FALSE},
@@ -255,11 +255,10 @@ static const itemTest t2d5[5] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     static const int b43[2] = {4,4};
 
     /* Arabic */
-    static const WCHAR test5[]  =
-{0x0627,0x0644,0x0635,0x0651,0x0650,0x062d,0x0629,0x064f,' ',0x062a,0x064e,
-0x0627,0x062c,0x064c,' ',0x0639,0x064e,0x0644,0x0649,' ',
-0x0631,0x064f,0x0624,0x0648,0x0633,0x0650,' ',0x0627,0x0644
-,0x0623,0x0635,0x0650,0x062d,0x0651,0x064e,0x0627,0x0621,0x0650,0};
+    static const WCHAR test5[] = {0x0627,0x0644,0x0635,0x0651,0x0650,0x062d,0x0629,0x064f,' ',0x062a,0x064e,
+                                  0x0627,0x062c,0x064c,' ',0x0639,0x064e,0x0644,0x0649,' ',
+                                  0x0631,0x064f,0x0624,0x0648,0x0633,0x0650,' ',0x0627,0x0644,
+                                  0x0623,0x0635,0x0650,0x062d,0x0651,0x064e,0x0627,0x0621,0x0650,0};
     static const itemTest t51[2] = {{{0,0,0,0,0,0},0,1,1,1,0,arab_tag,FALSE},{{0,0,0,0,0,0},38,0,0,0,0,-1,FALSE}};
     static const itemTest t52[2] = {{{0,0,0,0,0,0},0,0,0,0,1,arab_tag,FALSE},
                                     {{0,0,0,0,0,0},38,0,0,0,0,-1,FALSE}};
@@ -270,7 +269,7 @@ static const itemTest t2d5[5] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     static const itemTest t61[3] = {{{0,0,0,0,0,0},0,1,1,1,0,hebr_tag,TRUE,{-1,0,0,0,-1,-1}},{{0,0,0,0,0,0},4,0,0,0,0,0,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
     static const itemTest t62[3] = {{{0,0,0,0,0,0},0,1,1,1,0,hebr_tag,FALSE},{{0,0,0,0,0,0},4,1,1,1,0,0,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
     static const itemTest t63[2] = {{{0,0,0,0,0,0},0,1,1,1,0,hebr_tag,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
-static const itemTest t64[3] = {{{0,0,0,0,0,0},0,0,0,0,1,hebr_tag,FALSE},
+    static const itemTest t64[3] = {{{0,0,0,0,0,0},0,0,0,0,1,hebr_tag,FALSE},
                                 {{0,0,0,0,0,0},4,0,0,0,1,0,FALSE},
                                 {{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
 
@@ -279,7 +278,7 @@ static const itemTest t64[3] = {{{0,0,0,0,0,0},0,0,0,0,1,hebr_tag,FALSE},
     static const itemTest t71[4] = {{{0,0,0,0,0,0},0,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},9,1,1,1,0,hebr_tag,TRUE,{-1,0,0,0,-1,-1}},{{0,0,0,0,0,0},19,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},29,0,0,0,0,-1,FALSE}};
     static const itemTest t72[4] = {{{0,0,0,0,0,0},0,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},9,1,1,1,0,hebr_tag,FALSE},{{0,0,0,0,0,0},18,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},29,0,0,0,0,-1,FALSE}};
     static const itemTest t73[4] = {{{0,0,0,0,0,0},0,0,0,2,0,latn_tag,FALSE},{{0,0,0,0,0,0},8,1,1,1,0,hebr_tag,FALSE},{{0,0,0,0,0,0},19,0,0,2,0,latn_tag,FALSE},{{0,0,0,0,0,0},29,0,0,0,0,-1,FALSE}};
-static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
+    static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
                                 {{0,0,0,0,0,0},9,0,0,0,1,hebr_tag,FALSE},
                                 {{0,0,0,0,0,0},19,0,0,0,1,latn_tag,FALSE},
                                 {{0,0,0,0,0,0},29,0,0,0,0,-1,FALSE}};
@@ -928,6 +927,47 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     test_items_ok(test56,6,&Control,&State,1,t562,FALSE,0);
     test_items_ok(test57,13,&Control,&State,7,t573,FALSE,0);
     test_items_ok(test58,13,&Control,&State,1,t582,FALSE,0);
+}
+
+static void make_surrogate(DWORD i, WORD out[2])
+{
+    static const DWORD mask = (1 << 10) - 1;
+
+    if (i <= 0xffff)
+    {
+        out[0] = i;
+        out[1] = 0;
+    }
+    else
+    {
+        i -= 0x010000;
+        out[0] = ((i >> 10) & mask) + 0xd800;
+        out[1] = (i & mask) + 0xdc00;
+    }
+}
+
+static void test_ScriptItemize_surrogates(void)
+{
+    HRESULT hr;
+    WCHAR surrogate[2];
+    WORD Script_Surrogates;
+    SCRIPT_ITEM items[2];
+    int num;
+
+    /* Find Script_Surrogates */
+    surrogate[0] = 0xd800;
+    hr = ScriptItemize( surrogate, 1, 2, NULL, NULL, items, &num );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( num == 1, "got %d\n", num );
+    ok( items[0].a.eScript != SCRIPT_UNDEFINED, "got script %x\n", items[0].a.eScript );
+    Script_Surrogates = items[0].a.eScript;
+
+    /* Show that an invalid character has script Script_Surrogates */
+    make_surrogate( 0x01ffff, surrogate );
+    hr = ScriptItemize( surrogate, 2, 2, NULL, NULL, items, &num );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( num == 1, "got %d\n", num );
+    ok( items[0].a.eScript == Script_Surrogates, "got script %x\n", items[0].a.eScript );
 }
 
 static inline void _test_shape_ok(int valid, HDC hdc, LPCWSTR string,
@@ -4006,6 +4046,7 @@ START_TEST(usp10)
     ok(hfont != NULL, "SelectObject failed: %p\n", hfont);
 
     test_ScriptItemize();
+    test_ScriptItemize_surrogates();
     test_ScriptItemIzeShapePlace(hdc,pwOutGlyphs);
     test_ScriptGetCMap(hdc, pwOutGlyphs);
     test_ScriptCacheGetHeight(hdc);
