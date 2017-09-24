@@ -195,7 +195,7 @@ reactos/dll/win32/vbscript            # Synced to WineStaging-2.9
 reactos/dll/win32/version             # Synced to WineStaging-2.9
 reactos/dll/win32/vssapi              # Synced to WineStaging-2.9
 reactos/dll/win32/wbemdisp            # Synced to WineStaging-2.16
-reactos/dll/win32/wbemprox            # Synced to WineStaging-2.9
+reactos/dll/win32/wbemprox            # Synced to WineStaging-2.16
 reactos/dll/win32/windowscodecs       # Synced to WineStaging-2.9
 reactos/dll/win32/windowscodecsext    # Synced to WineStaging-2.9
 reactos/dll/win32/winemp3.acm         # Synced to WineStaging-2.9

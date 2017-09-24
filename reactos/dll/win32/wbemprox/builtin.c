@@ -196,6 +196,8 @@ static const WCHAR prop_flavorW[] =
     {'F','l','a','v','o','r',0};
 static const WCHAR prop_freespaceW[] =
     {'F','r','e','e','S','p','a','c','e',0};
+static const WCHAR prop_freephysicalmemoryW[] =
+    {'F','r','e','e','P','h','y','s','i','c','a','l','M','e','m','o','r','y',0};
 static const WCHAR prop_handleW[] =
     {'H','a','n','d','l','e',0};
 static const WCHAR prop_horizontalresolutionW[] =
@@ -530,6 +532,7 @@ static const struct column col_os[] =
     { prop_systemdirectoryW,        CIM_STRING|COL_FLAG_DYNAMIC },
     { prop_totalvirtualmemorysizeW, CIM_UINT64 },
     { prop_totalvisiblememorysizeW, CIM_UINT64 },
+    { prop_freephysicalmemoryW,     CIM_UINT64 },
     { prop_versionW,                CIM_STRING|COL_FLAG_DYNAMIC }
 };
 static const struct column col_param[] =
@@ -934,6 +937,7 @@ struct record_operatingsystem
     const WCHAR *systemdirectory;
     UINT64       totalvirtualmemorysize;
     UINT64       totalvisiblememorysize;
+    UINT64       freephysicalmemory;
     const WCHAR *version;
 };
 struct record_param
@@ -1305,6 +1309,15 @@ static UINT64 get_total_physical_memory(void)
     status.dwLength = sizeof(status);
     if (!GlobalMemoryStatusEx( &status )) return 1024 * 1024 * 1024;
     return status.ullTotalPhys;
+}
+
+static UINT64 get_available_physical_memory(void)
+{
+    MEMORYSTATUSEX status;
+
+    status.dwLength = sizeof(status);
+    if (!GlobalMemoryStatusEx( &status )) return 1024 * 1024 * 1024;
+    return status.ullAvailPhys;
 }
 
 static WCHAR *get_computername(void)
@@ -2897,6 +2910,7 @@ static enum fill_status fill_os( struct table *table, const struct expr *cond )
     rec->systemdirectory        = get_systemdirectory();
     rec->totalvirtualmemorysize = get_total_physical_memory() / 1024;
     rec->totalvisiblememorysize = rec->totalvirtualmemorysize;
+    rec->freephysicalmemory     = get_available_physical_memory() / 1024;
     rec->version                = get_osversion( &ver );
     if (!match_row( table, row, cond, &status )) free_row_values( table, row );
     else row++;
