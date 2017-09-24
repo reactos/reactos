@@ -30,6 +30,7 @@ DEFINE_GUID(IID_IXmlWriterOutput, 0xc1131708, 0x0f59, 0x477f, 0x93, 0x59, 0x7d, 
 #define ARRAY_SIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 static const WCHAR closeelementW[] = {'<','/'};
+static const WCHAR closetagW[] = {' ','/','>'};
 static const WCHAR closepiW[] = {'?','>'};
 static const WCHAR ltW[] = {'<'};
 static const WCHAR gtW[] = {'>'};
@@ -46,13 +47,14 @@ struct output_buffer
 
 typedef enum
 {
-    XmlWriterState_Initial,      /* output is not set yet */
-    XmlWriterState_Ready,        /* SetOutput() was called, ready to start */
-    XmlWriterState_PIDocStarted, /* document was started with manually added 'xml' PI */
-    XmlWriterState_DocStarted,   /* document was started with WriteStartDocument() */
-    XmlWriterState_ElemStarted,  /* writing element */
-    XmlWriterState_Content,      /* content is accepted at this point */
-    XmlWriterState_DocClosed     /* WriteEndDocument was called */
+    XmlWriterState_Initial,         /* output is not set yet */
+    XmlWriterState_Ready,           /* SetOutput() was called, ready to start */
+    XmlWriterState_InvalidEncoding, /* SetOutput() was called, but output had invalid encoding */
+    XmlWriterState_PIDocStarted,    /* document was started with manually added 'xml' PI */
+    XmlWriterState_DocStarted,      /* document was started with WriteStartDocument() */
+    XmlWriterState_ElemStarted,     /* writing element */
+    XmlWriterState_Content,         /* content is accepted at this point */
+    XmlWriterState_DocClosed        /* WriteEndDocument was called */
 } XmlWriterState;
 
 typedef struct
@@ -197,11 +199,11 @@ static HRESULT init_output_buffer(xmlwriteroutput *output)
 {
     struct output_buffer *buffer = &output->buffer;
     const int initial_len = 0x2000;
+    UINT cp = ~0u;
     HRESULT hr;
-    UINT cp;
 
-    hr = get_code_page(output->encoding, &cp);
-    if (FAILED(hr)) return hr;
+    if (FAILED(hr = get_code_page(output->encoding, &cp)))
+        WARN("Failed to get code page for specified encoding.\n");
 
     buffer->data = writeroutput_alloc(output, initial_len);
     if (!buffer->data) return E_OUTOFMEMORY;
@@ -245,16 +247,8 @@ static HRESULT write_output_buffer(xmlwriteroutput *output, const WCHAR *data, i
     HRESULT hr;
     char *ptr;
 
-    if (buffer->codepage != ~0) {
-        length = WideCharToMultiByte(buffer->codepage, 0, data, len, NULL, 0, NULL, NULL);
-        hr = grow_output_buffer(output, length);
-        if (FAILED(hr)) return hr;
-        ptr = buffer->data + buffer->written;
-        length = WideCharToMultiByte(buffer->codepage, 0, data, len, ptr, length, NULL, NULL);
-        buffer->written += len == -1 ? length-1 : length;
-    }
-    else {
-        /* WCHAR data just copied */
+    if (buffer->codepage == 1200) {
+        /* For UTF-16 encoding just copy. */
         length = len == -1 ? strlenW(data) : len;
         if (length) {
             length *= sizeof(WCHAR);
@@ -269,6 +263,14 @@ static HRESULT write_output_buffer(xmlwriteroutput *output, const WCHAR *data, i
             /* null termination */
             *(WCHAR*)ptr = 0;
         }
+    }
+    else {
+        length = WideCharToMultiByte(buffer->codepage, 0, data, len, NULL, 0, NULL, NULL);
+        hr = grow_output_buffer(output, length);
+        if (FAILED(hr)) return hr;
+        ptr = buffer->data + buffer->written;
+        length = WideCharToMultiByte(buffer->codepage, 0, data, len, ptr, length, NULL, NULL);
+        buffer->written += len == -1 ? length-1 : length;
     }
 
     return S_OK;
@@ -436,7 +438,9 @@ static void write_node_indent(xmlwriter *writer)
     if (!writer->indent)
         return;
 
-    if (writer->output->buffer.written)
+    /* Do state check to prevent newline inserted after BOM. It is assumed that
+       state does not change between writing BOM and inserting indentation. */
+    if (writer->output->buffer.written && writer->state != XmlWriterState_Ready)
         write_output_buffer(writer->output, crlfW, ARRAY_SIZE(crlfW));
     while (indent_level--)
         write_output_buffer(writer->output, dblspaceW, ARRAY_SIZE(dblspaceW));
@@ -533,7 +537,6 @@ static HRESULT WINAPI xmlwriter_SetOutput(IXmlWriter *iface, IUnknown *output)
                 writeroutput, writeroutput->lpVtbl);
             IUnknown_Release(writeroutput);
             return E_FAIL;
-
         }
     }
 
@@ -544,7 +547,10 @@ static HRESULT WINAPI xmlwriter_SetOutput(IXmlWriter *iface, IUnknown *output)
         This->output = impl_from_IXmlWriterOutput(writeroutput);
     }
 
-    This->state = XmlWriterState_Ready;
+    if (This->output->encoding == XmlEncoding_Unknown)
+        This->state = XmlWriterState_InvalidEncoding;
+    else
+        This->state = XmlWriterState_Ready;
     return writeroutput_query_for_stream(This->output);
 }
 
@@ -630,6 +636,8 @@ static HRESULT WINAPI xmlwriter_WriteAttributeString(IXmlWriter *iface, LPCWSTR 
     case XmlWriterState_DocClosed:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         ;
     }
@@ -677,6 +685,8 @@ static HRESULT WINAPI xmlwriter_WriteCData(IXmlWriter *iface, LPCWSTR data)
     case XmlWriterState_DocClosed:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         ;
     }
@@ -718,6 +728,8 @@ static HRESULT WINAPI xmlwriter_WriteCharEntity(IXmlWriter *iface, WCHAR ch)
     {
     case XmlWriterState_Initial:
         return E_UNEXPECTED;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     case XmlWriterState_ElemStarted:
         writer_close_starttag(This);
         break;
@@ -743,6 +755,8 @@ static HRESULT WINAPI xmlwriter_WriteChars(IXmlWriter *iface, const WCHAR *pwch,
     {
     case XmlWriterState_Initial:
         return E_UNEXPECTED;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     case XmlWriterState_DocClosed:
         return WR_E_INVALIDACTION;
     default:
@@ -765,6 +779,8 @@ static HRESULT WINAPI xmlwriter_WriteComment(IXmlWriter *iface, LPCWSTR comment)
     {
     case XmlWriterState_Initial:
         return E_UNEXPECTED;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     case XmlWriterState_ElemStarted:
         writer_close_starttag(This);
         break;
@@ -822,29 +838,33 @@ static HRESULT WINAPI xmlwriter_WriteElementString(IXmlWriter *iface, LPCWSTR pr
     {
     case XmlWriterState_Initial:
         return E_UNEXPECTED;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     case XmlWriterState_ElemStarted:
         writer_close_starttag(This);
         break;
-    case XmlWriterState_Ready:
-    case XmlWriterState_DocStarted:
-    case XmlWriterState_PIDocStarted:
-        break;
-    default:
-        This->state = XmlWriterState_DocClosed;
+    case XmlWriterState_DocClosed:
         return WR_E_INVALIDACTION;
+    default:
+        ;
     }
 
     write_encoding_bom(This);
+    write_node_indent(This);
     write_output_buffer(This->output, ltW, ARRAY_SIZE(ltW));
     write_output_qname(This->output, prefix, local_name);
-    write_output_buffer(This->output, gtW, ARRAY_SIZE(gtW));
 
     if (value)
+    {
+        write_output_buffer(This->output, gtW, ARRAY_SIZE(gtW));
         write_output_buffer(This->output, value, -1);
+        write_output_buffer(This->output, closeelementW, ARRAY_SIZE(closeelementW));
+        write_output_qname(This->output, prefix, local_name);
+        write_output_buffer(This->output, gtW, ARRAY_SIZE(gtW));
+    }
+    else
+        write_output_buffer(This->output, closetagW, ARRAY_SIZE(closetagW));
 
-    write_output_buffer(This->output, closeelementW, ARRAY_SIZE(closeelementW));
-    write_output_qname(This->output, prefix, local_name);
-    write_output_buffer(This->output, gtW, ARRAY_SIZE(gtW));
     This->state = XmlWriterState_Content;
 
     return S_OK;
@@ -864,6 +884,8 @@ static HRESULT WINAPI xmlwriter_WriteEndDocument(IXmlWriter *iface)
     case XmlWriterState_DocClosed:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         ;
     }
@@ -891,6 +913,8 @@ static HRESULT WINAPI xmlwriter_WriteEndElement(IXmlWriter *iface)
     case XmlWriterState_DocClosed:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         ;
     }
@@ -901,8 +925,8 @@ static HRESULT WINAPI xmlwriter_WriteEndElement(IXmlWriter *iface)
 
     writer_dec_indent(This);
 
-    if (This->starttagopen) {
-        static WCHAR closetagW[] = {' ','/','>'};
+    if (This->starttagopen)
+    {
         write_output_buffer(This->output, closetagW, ARRAY_SIZE(closetagW));
         This->starttagopen = FALSE;
     }
@@ -927,6 +951,8 @@ static HRESULT WINAPI xmlwriter_WriteEntityRef(IXmlWriter *iface, LPCWSTR pwszNa
     {
     case XmlWriterState_Initial:
         return E_UNEXPECTED;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     case XmlWriterState_DocClosed:
         return WR_E_INVALIDACTION;
     default:
@@ -951,6 +977,8 @@ static HRESULT WINAPI xmlwriter_WriteFullEndElement(IXmlWriter *iface)
     case XmlWriterState_DocClosed:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         ;
     }
@@ -990,6 +1018,8 @@ static HRESULT WINAPI xmlwriter_WriteName(IXmlWriter *iface, LPCWSTR pwszName)
     case XmlWriterState_DocClosed:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         ;
     }
@@ -1011,6 +1041,8 @@ static HRESULT WINAPI xmlwriter_WriteNmToken(IXmlWriter *iface, LPCWSTR pwszNmTo
     case XmlWriterState_DocClosed:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         ;
     }
@@ -1051,6 +1083,8 @@ static HRESULT WINAPI xmlwriter_WriteProcessingInstruction(IXmlWriter *iface, LP
     {
     case XmlWriterState_Initial:
         return E_UNEXPECTED;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     case XmlWriterState_DocStarted:
         if (!strcmpW(name, xmlW))
             return WR_E_INVALIDACTION;
@@ -1087,6 +1121,8 @@ static HRESULT WINAPI xmlwriter_WriteQualifiedName(IXmlWriter *iface, LPCWSTR pw
     {
     case XmlWriterState_Initial:
         return E_UNEXPECTED;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     case XmlWriterState_DocClosed:
         return WR_E_INVALIDACTION;
     default:
@@ -1115,6 +1151,8 @@ static HRESULT WINAPI xmlwriter_WriteRaw(IXmlWriter *iface, LPCWSTR data)
     case XmlWriterState_DocStarted:
     case XmlWriterState_PIDocStarted:
         break;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
@@ -1134,6 +1172,8 @@ static HRESULT WINAPI xmlwriter_WriteRawChars(IXmlWriter *iface,  const WCHAR *p
     {
     case XmlWriterState_Initial:
         return E_UNEXPECTED;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     case XmlWriterState_DocClosed:
         return WR_E_INVALIDACTION;
     default:
@@ -1158,6 +1198,8 @@ static HRESULT WINAPI xmlwriter_WriteStartDocument(IXmlWriter *iface, XmlStandal
         return S_OK;
     case XmlWriterState_Ready:
         break;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
@@ -1180,6 +1222,8 @@ static HRESULT WINAPI xmlwriter_WriteStartElement(IXmlWriter *iface, LPCWSTR pre
     {
     case XmlWriterState_Initial:
         return E_UNEXPECTED;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     case XmlWriterState_DocClosed:
         return WR_E_INVALIDACTION;
     default:
@@ -1195,12 +1239,13 @@ static HRESULT WINAPI xmlwriter_WriteStartElement(IXmlWriter *iface, LPCWSTR pre
         return E_OUTOFMEMORY;
 
     write_encoding_bom(This);
+    write_node_indent(This);
+
     This->state = XmlWriterState_ElemStarted;
     This->starttagopen = TRUE;
 
     push_element(This, element);
 
-    write_node_indent(This);
     write_output_buffer(This->output, ltW, ARRAY_SIZE(ltW));
     write_output_qname(This->output, prefix, local_name);
     writer_inc_indent(This);
@@ -1255,6 +1300,8 @@ static HRESULT WINAPI xmlwriter_WriteString(IXmlWriter *iface, const WCHAR *stri
     case XmlWriterState_DocClosed:
         This->state = XmlWriterState_DocClosed;
         return WR_E_INVALIDACTION;
+    case XmlWriterState_InvalidEncoding:
+        return MX_E_ENCODING;
     default:
         ;
     }
