@@ -408,7 +408,7 @@ static HRESULT WINAPI propertyset_Item( ISWbemPropertySet *iface, BSTR name,
     HRESULT hr;
     VARIANT var;
 
-    TRACE( "%p, %s, %08x, %p", propertyset, debugstr_w(name), flags, prop );
+    TRACE( "%p, %s, %08x, %p\n", propertyset, debugstr_w(name), flags, prop );
 
     hr = IWbemClassObject_Get( propertyset->object, name, 0, &var, NULL, NULL );
     if (SUCCEEDED(hr))
