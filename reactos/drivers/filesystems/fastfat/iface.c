@@ -91,6 +91,7 @@ DriverEntry(
     RtlZeroMemory (VfatGlobalData, sizeof(VFAT_GLOBAL_DATA));
     VfatGlobalData->DriverObject = DriverObject;
     VfatGlobalData->DeviceObject = DeviceObject;
+    VfatGlobalData->NumberProcessors = KeNumberProcessors;
     /* Enable this to enter the debugger when file system corruption
      * has been detected:
     VfatGlobalData->Flags = VFAT_BREAK_ON_CORRUPTION; */

@@ -289,6 +289,13 @@ typedef struct _VFAT_DISPATCH
     PGET_NEXT_DIR_ENTRY GetNextDirEntry;
 } VFAT_DISPATCH, *PVFAT_DISPATCH;
 
+#define STATISTICS_SIZE_NO_PAD (sizeof(FILESYSTEM_STATISTICS) + sizeof(FAT_STATISTICS))
+typedef struct _STATISTICS {
+    FILESYSTEM_STATISTICS Base;
+    FAT_STATISTICS Fat;
+    UCHAR Pad[((STATISTICS_SIZE_NO_PAD + 0x3f) & ~0x3f) - STATISTICS_SIZE_NO_PAD];
+} STATISTICS, *PSTATISTICS;
+
 typedef struct DEVICE_EXTENSION
 {
     ERESOURCE DirResource;
@@ -308,6 +315,7 @@ typedef struct DEVICE_EXTENSION
     BOOLEAN AvailableClustersValid;
     ULONG Flags;
     struct _VFATFCB *VolumeFcb;
+    PSTATISTICS Statistics;
 
     /* Pointers to functions for manipulating FAT. */
     PGET_NEXT_CLUSTER GetNextCluster;
@@ -383,6 +391,7 @@ typedef struct
     PDRIVER_OBJECT DriverObject;
     PDEVICE_OBJECT DeviceObject;
     ULONG Flags;
+    ULONG NumberProcessors;
     ERESOURCE VolumeListLock;
     LIST_ENTRY VolumeListHead;
     NPAGED_LOOKASIDE_LIST FcbLookasideList;

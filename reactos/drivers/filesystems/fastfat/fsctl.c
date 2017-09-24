@@ -532,6 +532,7 @@ VfatMount(
     UNICODE_STRING VolumeLabelU;
     ULONG HashTableSize;
     ULONG eocMark;
+    ULONG i;
     FATINFO FatInfo;
 
     DPRINT("VfatMount(IrpContext %p)\n", IrpContext);
@@ -669,6 +670,23 @@ VfatMount(
         goto ByeBye;
     }
 
+    DeviceExt->Statistics = ExAllocatePoolWithTag(NonPagedPool,
+                                                  sizeof(STATISTICS) * VfatGlobalData->NumberProcessors,
+                                                  TAG_VFAT);
+    if (DeviceExt->Statistics == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto ByeBye;
+    }
+
+    RtlZeroMemory(DeviceExt->Statistics, sizeof(STATISTICS) * VfatGlobalData->NumberProcessors);
+    for (i = 0; i < VfatGlobalData->NumberProcessors; ++i)
+    {
+        DeviceExt->Statistics[i].Base.FileSystemType = FILESYSTEM_STATISTICS_TYPE_FAT;
+        DeviceExt->Statistics[i].Base.Version = 1;
+        DeviceExt->Statistics[i].Base.SizeOfCompleteStructure = sizeof(STATISTICS);
+    }
+
     DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
     Fcb = vfatNewFCB(DeviceExt, &NameU);
     if (Fcb == NULL)
@@ -776,6 +794,8 @@ ByeBye:
             ObDereferenceObject (DeviceExt->FATFileObject);
         if (DeviceExt && DeviceExt->SpareVPB)
             ExFreePoolWithTag(DeviceExt->SpareVPB, TAG_VFAT);
+        if (DeviceExt && DeviceExt->Statistics)
+            ExFreePoolWithTag(DeviceExt->Statistics, TAG_VFAT);
         if (Fcb)
             vfatDestroyFCB(Fcb);
         if (Ccb)
@@ -1188,6 +1208,46 @@ VfatDismountVolume(
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+VfatGetStatistics(
+    PVFAT_IRP_CONTEXT IrpContext)
+{
+    PVOID Buffer;
+    ULONG Length;
+    NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExt;
+
+    DeviceExt = IrpContext->DeviceExt;
+    Length = IrpContext->Stack->Parameters.FileSystemControl.OutputBufferLength;
+    Buffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
+
+    if (Length < sizeof(FILESYSTEM_STATISTICS))
+    {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    if (Buffer == NULL)
+    {
+        return STATUS_INVALID_USER_BUFFER;
+    }
+
+    if (Length >= sizeof(STATISTICS) * VfatGlobalData->NumberProcessors)
+    {
+        Length = sizeof(STATISTICS) * VfatGlobalData->NumberProcessors;
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = STATUS_BUFFER_OVERFLOW;
+    }
+
+    RtlCopyMemory(Buffer, DeviceExt->Statistics, Length);
+    IrpContext->Irp->IoStatus.Information = Length;
+
+    return Status;
+}
+
 /*
  * FUNCTION: File system control
  */
@@ -1241,6 +1301,10 @@ VfatFileSystemControl(
 
                 case FSCTL_DISMOUNT_VOLUME:
                     Status = VfatDismountVolume(IrpContext);
+                    break;
+
+                case FSCTL_FILESYSTEM_GET_STATISTICS:
+                    Status = VfatGetStatistics(IrpContext);
                     break;
 
                 default:
