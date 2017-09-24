@@ -626,8 +626,12 @@ static LoadedFeature* load_OT_feature(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache
         } while(attempt && !feature);
 
         /* try in the default (latin) table */
-        if (!feature && !script)
-            OpenType_GetFontFeatureTags(psc, MS_MAKE_TAG('l','a','t','n'), MS_MAKE_TAG('d','f','l','t'), FALSE, MS_MAKE_TAG(feat[0],feat[1],feat[2],feat[3]), tableType, 1, &tags, &cTags, &feature);
+        if (!feature)
+        {
+            if (!script)
+                script = MS_MAKE_TAG('l','a','t','n');
+            OpenType_GetFontFeatureTags(psc, script, MS_MAKE_TAG('d','f','l','t'), FALSE, MS_MAKE_TAG(feat[0],feat[1],feat[2],feat[3]), tableType, 1, &tags, &cTags, &feature);
+        }
     }
 
     TRACE("Feature %s located at %p\n",debugstr_an(feat,4),feature);

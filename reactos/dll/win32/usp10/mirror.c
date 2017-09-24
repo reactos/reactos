@@ -1,5 +1,5 @@
 /* Unicode BiDi mirroring */
-/* generated from http://www.unicode.org/Public/9.0.0/ucd/BidiMirroring.txt */
+/* generated from http://www.unicode.org/Public/10.0.0/ucd/BidiMirroring.txt */
 /* DO NOT EDIT!! */
 
 #include <windef.h>
