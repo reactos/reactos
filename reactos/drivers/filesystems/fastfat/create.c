@@ -468,6 +468,8 @@ VfatCreateFile(
             return STATUS_CANNOT_DELETE;
         }
 
+        vfatAddToStat(DeviceExt, Fat.CreateHits, 1);
+
         pFcb = DeviceExt->VolumeFcb;
 
         if (pFcb->OpenHandleCount == 0)
@@ -486,6 +488,7 @@ VfatCreateFile(
                                         FALSE);
             if (!NT_SUCCESS(Status))
             {
+                vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                 return Status;
             }
         }
@@ -493,6 +496,7 @@ VfatCreateFile(
         vfatAttachFCBToFileObject(DeviceExt, pFcb, FileObject);
         DeviceExt->OpenHandleCount++;
         pFcb->OpenHandleCount++;
+        vfatAddToStat(DeviceExt, Fat.SuccessfulCreates, 1);
 
         Irp->IoStatus.Information = FILE_OPENED;
         return STATUS_SUCCESS;
@@ -566,12 +570,16 @@ VfatCreateFile(
     /* Try opening the file. */
     if (!OpenTargetDir)
     {
+        vfatAddToStat(DeviceExt, Fat.CreateHits, 1);
+
         Status = VfatOpenFile(DeviceExt, &PathNameU, FileObject, RequestedDisposition, RequestedOptions, &ParentFcb);
     }
     else
     {
         PVFATFCB TargetFcb;
         LONG idx, FileNameLen;
+
+        vfatAddToStat(DeviceExt, Fat.CreateHits, 1);
 
         ParentFcb = (FileObject->RelatedFileObject != NULL) ? FileObject->RelatedFileObject->FsContext : NULL;
         if (ParentFcb)
@@ -654,6 +662,7 @@ VfatCreateFile(
                 if (!NT_SUCCESS(Status))
                 {
                     VfatCloseFile(DeviceExt, FileObject);
+                    vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                     return Status;
                 }
             }
@@ -670,6 +679,15 @@ VfatCreateFile(
         else if (ParentFcb != NULL)
         {
             vfatReleaseFCB(DeviceExt, ParentFcb);
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            vfatAddToStat(DeviceExt, Fat.SuccessfulCreates, 1);
+        }
+        else
+        {
+            vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
         }
 
         return Status;
@@ -689,12 +707,14 @@ VfatCreateFile(
         {
             vfatReleaseFCB(DeviceExt, ParentFcb);
         }
+        vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
         return Status;
     }
 
     if (!NT_SUCCESS(Status) && ParentFcb == NULL)
     {
         DPRINT1("VfatOpenFile failed for '%wZ', status %x\n", &PathNameU, Status);
+        vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
         return Status;
     }
 
@@ -712,6 +732,7 @@ VfatCreateFile(
                 if (TrailingBackslash)
                 {
                     vfatReleaseFCB(DeviceExt, ParentFcb);
+                    vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                     return STATUS_OBJECT_NAME_INVALID;
                 }
                 Attributes |= FILE_ATTRIBUTE_ARCHIVE;
@@ -726,6 +747,7 @@ VfatCreateFile(
                 if (!NT_SUCCESS(Status))
                 {
                     vfatReleaseFCB(DeviceExt, pFcb);
+                    vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                     return Status;
                 }
 
@@ -745,12 +767,14 @@ VfatCreateFile(
             }
             else
             {
+                vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                 return Status;
             }
         }
         else
         {
             vfatReleaseFCB(DeviceExt, ParentFcb);
+            vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
             return Status;
         }
     }
@@ -769,9 +793,11 @@ VfatCreateFile(
             VfatCloseFile(DeviceExt, FileObject);
             if (TrailingBackslash && !vfatFCBIsDirectory(pFcb))
             {
+                vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                 return STATUS_OBJECT_NAME_INVALID;
             }
             Irp->IoStatus.Information = FILE_EXISTS;
+            vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
             return STATUS_OBJECT_NAME_COLLISION;
         }
 
@@ -785,6 +811,7 @@ VfatCreateFile(
             if (!NT_SUCCESS(Status))
             {
                 VfatCloseFile(DeviceExt, FileObject);
+                vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                 return Status;
             }
         }
@@ -796,17 +823,20 @@ VfatCreateFile(
             vfatFCBIsDirectory(pFcb))
         {
             VfatCloseFile (DeviceExt, FileObject);
+            vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
             return STATUS_FILE_IS_A_DIRECTORY;
         }
         if (BooleanFlagOn(RequestedOptions, FILE_DIRECTORY_FILE) &&
             !vfatFCBIsDirectory(pFcb))
         {
             VfatCloseFile (DeviceExt, FileObject);
+            vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
             return STATUS_NOT_A_DIRECTORY;
         }
         if (TrailingBackslash && !vfatFCBIsDirectory(pFcb))
         {
             VfatCloseFile (DeviceExt, FileObject);
+            vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
             return STATUS_OBJECT_NAME_INVALID;
         }
 #ifndef USE_ROS_CC_AND_FS
@@ -823,6 +853,7 @@ VfatCreateFile(
                     DPRINT1("%d %d %d\n", Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_WRITE_DATA,
                             RequestedDisposition == FILE_OVERWRITE, RequestedDisposition == FILE_OVERWRITE_IF);
                     VfatCloseFile (DeviceExt, FileObject);
+                    vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                     return (BooleanFlagOn(RequestedOptions, FILE_DELETE_ON_CLOSE)) ? STATUS_CANNOT_DELETE
                                                                                    : STATUS_SHARING_VIOLATION;
                 }
@@ -844,6 +875,7 @@ VfatCreateFile(
                 if(!BooleanFlagOn(pFcb->Flags, FCB_IS_PAGE_FILE))
                 {
                     VfatCloseFile(DeviceExt, FileObject);
+                    vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                     return STATUS_INVALID_PARAMETER;
                 }
             }
@@ -857,6 +889,7 @@ VfatCreateFile(
             if (BooleanFlagOn(pFcb->Flags, FCB_IS_PAGE_FILE))
             {
                 VfatCloseFile(DeviceExt, FileObject);
+                vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                 return STATUS_INVALID_PARAMETER;
             }
         }
@@ -881,6 +914,7 @@ VfatCreateFile(
             if (!NT_SUCCESS (Status))
             {
                 VfatCloseFile(DeviceExt, FileObject);
+                vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
                 return Status;
             }
         }
@@ -937,6 +971,15 @@ VfatCreateFile(
     DeviceExt->OpenHandleCount++;
 
     /* FIXME : test write access if requested */
+
+    if (NT_SUCCESS(Status))
+    {
+        vfatAddToStat(DeviceExt, Fat.SuccessfulCreates, 1);
+    }
+    else
+    {
+        vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
+    }
 
     return Status;
 }

@@ -602,6 +602,12 @@ vfatVolumeIsFatX(PDEVICE_EXTENSION DeviceExt)
     return BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX);
 }
 
+#define vfatAddToStat(Vcb, Stat, Inc)                                                                         \
+{                                                                                                             \
+    PSTATISTICS Stats = &(Vcb)->Statistics[KeGetCurrentProcessorNumber() % VfatGlobalData->NumberProcessors]; \
+    Stats->Stat += Inc;                                                                                       \
+}
+
 /* blockdev.c */
 
 NTSTATUS
