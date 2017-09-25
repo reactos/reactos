@@ -7,6 +7,7 @@
  *                  Erik Bos, Alexandre Julliard :
  *                      GetLogicalDriveStringsA,
  *                      GetLogicalDriveStringsW, GetLogicalDrives
+ *                  Pierre Schweitzer (pierre@reactos.org)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -204,9 +205,76 @@ FailNoMem:
   return Result;
 }
 
-#define FS_VOLUME_BUFFER_SIZE (MAX_PATH * sizeof(WCHAR) + sizeof(FILE_FS_VOLUME_INFORMATION))
+/*
+ * @implemented
+ */
+static BOOL
+IsThisARootDirectory(IN HANDLE VolumeHandle,
+                     IN PUNICODE_STRING NtPathName)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    struct
+    {
+        FILE_NAME_INFORMATION;
+        WCHAR Buffer[MAX_PATH];
+    } FileNameInfo;
 
-#define FS_ATTRIBUTE_BUFFER_SIZE (MAX_PATH * sizeof(WCHAR) + sizeof(FILE_FS_ATTRIBUTE_INFORMATION))
+    /* If we have a handle, query the name */
+    if (VolumeHandle)
+    {
+        Status = NtQueryInformationFile(VolumeHandle, &IoStatusBlock, &FileNameInfo, sizeof(FileNameInfo), FileNameInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            return FALSE;
+        }
+
+        /* Check we properly end with a \ */
+        if (FileNameInfo.FileName[FileNameInfo.FileNameLength / sizeof(WCHAR) - 1] != L'\\')
+        {
+            return FALSE;
+        }
+    }
+
+    /* If we have a path */
+    if (NtPathName != NULL)
+    {
+        HANDLE LinkHandle;
+        WCHAR Buffer[512];
+        ULONG ReturnedLength;
+        UNICODE_STRING LinkTarget;
+        OBJECT_ATTRIBUTES ObjectAttributes;
+
+        NtPathName->Length -= sizeof(WCHAR);
+
+        InitializeObjectAttributes(&ObjectAttributes, NtPathName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL, NULL);
+
+        /* Try to see whether that's a symbolic name */
+        Status = NtOpenSymbolicLinkObject(&LinkHandle, SYMBOLIC_LINK_QUERY, &ObjectAttributes);
+        NtPathName->Length += sizeof(WCHAR);
+        if (!NT_SUCCESS(Status))
+        {
+            return FALSE;
+        }
+
+        /* If so, query the target */
+        LinkTarget.Buffer = Buffer;
+        LinkTarget.Length = 0;
+        LinkTarget.MaximumLength = sizeof(Buffer);
+
+        Status = NtQuerySymbolicLinkObject(LinkHandle, &LinkTarget, &ReturnedLength);
+        NtClose(LinkHandle);
+        /* A root directory (NtName) is a symbolic link */
+        if (!NT_SUCCESS(Status))
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
 
 /*
  * @implemented
@@ -222,104 +290,223 @@ GetVolumeInformationW(IN LPCWSTR lpRootPathName,
                       OUT LPWSTR lpFileSystemNameBuffer OPTIONAL,
                       IN DWORD nFileSystemNameSize)
 {
-  PFILE_FS_VOLUME_INFORMATION FileFsVolume;
-  PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
-  IO_STATUS_BLOCK IoStatusBlock;
-  WCHAR RootPathName[MAX_PATH];
-  UCHAR Buffer[max(FS_VOLUME_BUFFER_SIZE, FS_ATTRIBUTE_BUFFER_SIZE)];
+    BOOL Ret;
+    NTSTATUS Status;
+    HANDLE VolumeHandle;
+    LPCWSTR RootPathName;
+    UNICODE_STRING NtPathName;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PFILE_FS_VOLUME_INFORMATION VolumeInfo;
+    PFILE_FS_ATTRIBUTE_INFORMATION VolumeAttr;
+    ULONG OldMode, VolumeInfoSize, VolumeAttrSize;
 
-  HANDLE hFile;
-  NTSTATUS errCode;
-
-  FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
-  FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
-
-  TRACE("FileFsVolume %p\n", FileFsVolume);
-  TRACE("FileFsAttribute %p\n", FileFsAttribute);
-
-  if (!lpRootPathName || !wcscmp(lpRootPathName, L""))
-  {
-      GetCurrentDirectoryW (MAX_PATH, RootPathName);
-  }
-  else
-  {
-      wcsncpy (RootPathName, lpRootPathName, 3);
-  }
-  RootPathName[3] = 0;
-
-  hFile = InternalOpenDirW(RootPathName, FALSE);
-  if (hFile == INVALID_HANDLE_VALUE)
+    /* If no root path provided, default to \ */
+    if (lpRootPathName == NULL)
     {
-      return FALSE;
+        RootPathName = L"\\";
+    }
+    else
+    {
+        RootPathName = lpRootPathName;
     }
 
-  TRACE("hFile: %p\n", hFile);
-  errCode = NtQueryVolumeInformationFile(hFile,
-                                         &IoStatusBlock,
-                                         FileFsVolume,
-                                         FS_VOLUME_BUFFER_SIZE,
-                                         FileFsVolumeInformation);
-  if ( !NT_SUCCESS(errCode) )
+    /* Convert to NT name */
+    if (!RtlDosPathNameToNtPathName_U(RootPathName, &NtPathName, NULL, NULL))
     {
-      WARN("Status: %x\n", errCode);
-      CloseHandle(hFile);
-      BaseSetLastNTError (errCode);
-      return FALSE;
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return FALSE;
     }
 
-  if (lpVolumeSerialNumber)
-    *lpVolumeSerialNumber = FileFsVolume->VolumeSerialNumber;
-
-  if (lpVolumeNameBuffer)
+    /* Check we really end with a backslash */
+    if (NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 1] != L'\\')
     {
-      if (nVolumeNameSize * sizeof(WCHAR) >= FileFsVolume->VolumeLabelLength + sizeof(WCHAR))
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
+        BaseSetLastNTError(STATUS_OBJECT_NAME_INVALID);
+        return FALSE;
+    }
+
+    /* Try to open the received path */
+    InitializeObjectAttributes(&ObjectAttributes, &NtPathName,
+                                OBJ_CASE_INSENSITIVE,
+                                NULL, NULL);
+
+    /* No errors to the user */
+    RtlSetThreadErrorMode(RTL_SEM_FAILCRITICALERRORS, &OldMode);
+    Status = NtOpenFile(&VolumeHandle, SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock, 0, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT);
+    RtlSetThreadErrorMode(OldMode, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* Check whether that's a root directory */
+    if (!IsThisARootDirectory(VolumeHandle, &NtPathName))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
+        NtClose(VolumeHandle);
+        SetLastError(ERROR_DIR_NOT_ROOT);
+        return FALSE;
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
+
+    /* Assume we don't need to query FileFsVolumeInformation */
+    VolumeInfo = NULL;
+    /* If user wants volume name, allocate a buffer to query it */
+    if (lpVolumeNameBuffer != NULL)
+    {
+        VolumeInfoSize = nVolumeNameSize + sizeof(FILE_FS_VOLUME_INFORMATION);
+    }
+    /* If user just wants the serial number, allocate a dummy buffer */
+    else if (lpVolumeSerialNumber != NULL)
+    {
+        VolumeInfoSize = MAX_PATH * sizeof(WCHAR) + sizeof(FILE_FS_VOLUME_INFORMATION);
+    }
+    /* Otherwise, nothing to query */
+    else
+    {
+        VolumeInfoSize = 0;
+    }
+
+    /* If we're to query, allocate a big enough buffer */
+    if (VolumeInfoSize != 0)
+    {
+        VolumeInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, VolumeInfoSize);
+        if (VolumeInfo == NULL)
         {
-	  memcpy(lpVolumeNameBuffer,
-		 FileFsVolume->VolumeLabel,
-		 FileFsVolume->VolumeLabelLength);
-	  lpVolumeNameBuffer[FileFsVolume->VolumeLabelLength / sizeof(WCHAR)] = 0;
-	}
-      else
-        {
-	  CloseHandle(hFile);
-	  SetLastError(ERROR_MORE_DATA);
-	  return FALSE;
-	}
+            NtClose(VolumeHandle);
+            BaseSetLastNTError(STATUS_NO_MEMORY);
+            return FALSE;
+        }
     }
 
-  errCode = NtQueryVolumeInformationFile (hFile,
-	                                  &IoStatusBlock,
-	                                  FileFsAttribute,
-	                                  FS_ATTRIBUTE_BUFFER_SIZE,
-	                                  FileFsAttributeInformation);
-  CloseHandle(hFile);
-  if (!NT_SUCCESS(errCode))
+    /* Assume we don't need to query FileFsAttributeInformation */
+    VolumeAttr = NULL;
+    /* If user wants filesystem name, allocate a buffer to query it */
+    if (lpFileSystemNameBuffer != NULL)
     {
-      WARN("Status: %x\n", errCode);
-      BaseSetLastNTError (errCode);
-      return FALSE;
+        VolumeAttrSize = nFileSystemNameSize + sizeof(FILE_FS_ATTRIBUTE_INFORMATION);
+    }
+    /* If user just wants max compo len or flags, allocate a dummy buffer */
+    else if (lpMaximumComponentLength != NULL || lpFileSystemFlags != NULL)
+    {
+        VolumeAttrSize = MAX_PATH * sizeof(WCHAR) + sizeof(FILE_FS_ATTRIBUTE_INFORMATION);
+    }
+    else
+    {
+        VolumeAttrSize = 0;
     }
 
-  if (lpFileSystemFlags)
-    *lpFileSystemFlags = FileFsAttribute->FileSystemAttributes;
-  if (lpMaximumComponentLength)
-    *lpMaximumComponentLength = FileFsAttribute->MaximumComponentNameLength;
-  if (lpFileSystemNameBuffer)
+    /* If we're to query, allocate a big enough buffer */
+    if (VolumeAttrSize != 0)
     {
-      if (nFileSystemNameSize * sizeof(WCHAR) >= FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
+        VolumeAttr = RtlAllocateHeap(RtlGetProcessHeap(), 0, VolumeAttrSize);
+        if (VolumeAttr == NULL)
         {
-	  memcpy(lpFileSystemNameBuffer,
-		 FileFsAttribute->FileSystemName,
-		 FileFsAttribute->FileSystemNameLength);
-	  lpFileSystemNameBuffer[FileFsAttribute->FileSystemNameLength / sizeof(WCHAR)] = 0;
-	}
-      else
-        {
-	  SetLastError(ERROR_MORE_DATA);
-	  return FALSE;
-	}
+            if (VolumeInfo != NULL)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeInfo);
+            }
+
+            NtClose(VolumeHandle);
+            BaseSetLastNTError(STATUS_NO_MEMORY);
+            return FALSE;
+        }
     }
-  return TRUE;
+
+    /* Assume we'll fail */
+    Ret = FALSE;
+
+    /* If we're to query FileFsVolumeInformation, do it now! */
+    if (VolumeInfo != NULL)
+    {
+        Status = NtQueryVolumeInformationFile(VolumeHandle, &IoStatusBlock, VolumeInfo, VolumeInfoSize, FileFsVolumeInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            BaseSetLastNTError(Status);
+            goto CleanAndQuit;
+        }
+    }
+
+    /* If we're to query FileFsAttributeInformation, do it now! */
+    if (VolumeAttr != NULL)
+    {
+        Status = NtQueryVolumeInformationFile(VolumeHandle, &IoStatusBlock, VolumeAttr, VolumeAttrSize, FileFsAttributeInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            BaseSetLastNTError(Status);
+            goto CleanAndQuit;
+        }
+    }
+
+    /* If user wants volume name */
+    if (lpVolumeNameBuffer != NULL)
+    {
+        /* Check its buffer can hold it (+ 0) */
+        if (VolumeInfo->VolumeLabelLength >= nVolumeNameSize)
+        {
+            SetLastError(ERROR_BAD_LENGTH);
+            goto CleanAndQuit;
+        }
+
+        /* Copy and zero */
+        RtlCopyMemory(lpVolumeNameBuffer, VolumeInfo->VolumeLabel, VolumeInfo->VolumeLabelLength);
+        lpVolumeNameBuffer[VolumeInfo->VolumeLabelLength / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    /* If user wants wants serial number, return it */
+    if (lpVolumeSerialNumber != NULL)
+    {
+        *lpVolumeSerialNumber = VolumeInfo->VolumeSerialNumber;
+    }
+
+    /* If user wants filesystem name */
+    if (lpFileSystemNameBuffer != NULL)
+    {
+        /* Check its buffer can hold it (+ 0) */
+        if (VolumeAttr->FileSystemNameLength >= nFileSystemNameSize)
+        {
+            SetLastError(ERROR_BAD_LENGTH);
+            goto CleanAndQuit;
+        }
+
+        /* Copy and zero */
+        RtlCopyMemory(lpFileSystemNameBuffer, VolumeAttr->FileSystemName, VolumeAttr->FileSystemNameLength);
+        lpFileSystemNameBuffer[VolumeAttr->FileSystemNameLength / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    /* If user wants wants max compo len, return it */
+    if (lpMaximumComponentLength != NULL)
+    {
+        *lpMaximumComponentLength = VolumeAttr->MaximumComponentNameLength;
+    }
+
+    /* If user wants wants FS flags, return them */
+    if (lpFileSystemFlags != NULL)
+    {
+        *lpFileSystemFlags = VolumeAttr->FileSystemAttributes;
+    }
+
+    /* We did it! */
+    Ret = TRUE;
+
+CleanAndQuit:
+    NtClose(VolumeHandle);
+
+    if (VolumeInfo != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeInfo);
+    }
+
+    if (VolumeAttr != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeAttr);
+    }
+
+    return Ret;
 }
 
 /*
