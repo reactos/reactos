@@ -1,0 +1,33 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "ReactOS Timeout Utility\n\
+\n\
+TIMEOUT [/?] [/T] delay [/NOBREAK]\n\
+\n\
+Description:\n\
+    This tool waits until a specified time period (in seconds) has elapsed,\n\
+    or until any key is pressed. A parameter to ignore the key press is also\n\
+    accepted.\n\
+\n\
+Parameters:\n\
+    /?        Display this help screen.\n\
+\n\
+    /T delay  Specify the number of seconds to wait (-1 to 99999).\n\
+              A value of -1 means the program will wait until a key is pressed.\n\
+              Note that the ""/T"" specification is optional, you can just\n\
+              specify the delay value without it.\n\
+\n\
+    /NOBREAK  Ignore all keyboard input except for Ctrl+C.\n\
+"
+    IDS_ERROR_OUT_OF_RANGE "ERROR: The timer value must be within range (-1 to 99999).\n"
+    IDS_ERROR_INVALID_HANDLE_VALUE "ERROR: Unable to get the standard handle for the console (error %lu).\n"
+    IDS_ERROR_READ_INPUT "ERROR: Unable to read the console input (error %lu).\n"
+    IDS_ERROR_NO_TIMER_VALUE "ERROR: The timer value must be specified (-1 to 99999).\n"
+    IDS_ERROR_ONE_TIME "ERROR: Only one timer value is needed.\n"
+    IDS_NOBREAK_INPUT "Press Ctrl+C to quit..."
+    IDS_USER_INPUT "Press any key to continue..."
+    IDS_NOBREAK_INPUT_COUNT "Waiting for %d second(s), press Ctrl+C to quit..."
+    IDS_USER_INPUT_COUNT "Waiting for %d second(s), press any key to continue..."
+END
