@@ -22,7 +22,8 @@ int FindHandler(int argc,
                 void (*UsageHelper)(const TCHAR *));
 
 HANDLE OpenVolume(const TCHAR * Volume,
-                  BOOLEAN AllowRemote);
+                  BOOLEAN AllowRemote,
+                  BOOLEAN NtfsOnly);
 
 void PrintDefaultUsage(const TCHAR * Command,
                        const TCHAR * SubCommand,

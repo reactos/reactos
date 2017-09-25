@@ -12,6 +12,7 @@
 static HandlerProc DrivesMain;
 static HandlerProc DriveTypeMain;
 static HandlerProc VolumeInfoMain;
+static HandlerProc NtfsInfoMain;
 static HandlerProc StatisticsMain;
 static HandlerItem HandlersList[] =
 {
@@ -19,6 +20,7 @@ static HandlerItem HandlersList[] =
     { DrivesMain, _T("drives"), _T("Enumerates the drives") },
     { DriveTypeMain, _T("drivetype"), _T("Provides the type of a drive") },
     { VolumeInfoMain, _T("volumeinfo"), _T("Provides informations about a volume") },
+    { NtfsInfoMain, _T("ntfsinfo"), _T("Displays informations about a NTFS volume") },
     { StatisticsMain, _T("statistics"), _T("Displays volume statistics") },
 };
 
@@ -154,6 +156,68 @@ VolumeInfoMain(int argc, const TCHAR *argv[])
     HANDLE_FLAG(Flags, FILE_DAX_VOLUME, _T("Is a direct access volume\n"));
 
 #undef HANDLE_FLAGS
+
+    return 0;
+}
+
+static int
+NtfsInfoMain(int argc, const TCHAR *argv[])
+{
+    HANDLE Volume;
+    DWORD BytesRead;
+    struct
+    {
+        NTFS_VOLUME_DATA_BUFFER;
+        NTFS_EXTENDED_VOLUME_DATA;
+    } Data;
+
+    /* We need a volume (letter or GUID) */
+    if (argc < 2)
+    {
+        _ftprintf(stderr, _T("Usage: fsutil fsinfo ntfsinfo <volume>\n"));
+        _ftprintf(stderr, _T("\tFor example: fsutil fsinfo ntfsinfo c:\n"));
+        return 1;
+    }
+
+    /* Get a handle for the volume */
+    Volume = OpenVolume(argv[1], FALSE, TRUE);
+    if (Volume == INVALID_HANDLE_VALUE)
+    {
+        return 1;
+    }
+
+    /* And query the NTFS data */
+    if (DeviceIoControl(Volume, FSCTL_GET_NTFS_VOLUME_DATA, NULL, 0, &Data,
+                        sizeof(Data), &BytesRead, NULL) == FALSE)
+    {
+        PrintErrorMessage(GetLastError());
+        CloseHandle(Volume);
+        return 1;
+    }
+
+    /* We no longer need the volume */
+    CloseHandle(Volume);
+
+    /* Dump data */
+    _ftprintf(stdout, _T("NTFS volume serial number:\t\t0x%0.16I64x\n"), Data.VolumeSerialNumber.QuadPart);
+    /* Only print version if extended structure was returned */
+    if (BytesRead > sizeof(NTFS_VOLUME_DATA_BUFFER))
+    {
+        _ftprintf(stdout, _T("Version:\t\t\t\t%u.%u\n"), Data.MajorVersion, Data.MinorVersion);
+    }
+    _ftprintf(stdout, _T("Number of sectors:\t\t\t0x%0.16I64x\n"), Data.NumberSectors.QuadPart);
+    _ftprintf(stdout, _T("Total number of clusters:\t\t0x%0.16I64x\n"), Data.TotalClusters.QuadPart);
+    _ftprintf(stdout, _T("Free clusters:\t\t\t\t0x%0.16I64x\n"), Data.FreeClusters.QuadPart);
+    _ftprintf(stdout, _T("Total number of reserved clusters:\t0x%0.16I64x\n"), Data.TotalReserved.QuadPart);
+    _ftprintf(stdout, _T("Bytes per sector:\t\t\t%d\n"), Data.BytesPerSector);
+    _ftprintf(stdout, _T("Bytes per cluster:\t\t\t%d\n"), Data.BytesPerCluster);
+    _ftprintf(stdout, _T("Bytes per file record segment:\t\t%d\n"), Data.BytesPerFileRecordSegment);
+    _ftprintf(stdout, _T("Clusters per file record segment:\t%d\n"), Data.ClustersPerFileRecordSegment);
+    _ftprintf(stdout, _T("MFT valid data length:\t\t\t0x%0.16I64x\n"), Data.MftValidDataLength.QuadPart);
+    _ftprintf(stdout, _T("MFT start LCN:\t\t\t\t0x%0.16I64x\n"), Data.MftStartLcn.QuadPart);
+    _ftprintf(stdout, _T("MFT2 start LCN:\t\t\t\t0x%0.16I64x\n"), Data.Mft2StartLcn.QuadPart);
+    _ftprintf(stdout, _T("MFT zone start:\t\t\t\t0x%0.16I64x\n"), Data.MftZoneStart.QuadPart);
+    _ftprintf(stdout, _T("MFT zone end:\t\t\t\t0x%0.16I64x\n"), Data.MftZoneEnd.QuadPart);
 
     return 0;
 }
@@ -477,7 +541,7 @@ StatisticsMain(int argc, const TCHAR *argv[])
     }
 
     /* Get a handle for the volume */
-    Volume = OpenVolume(argv[1], FALSE);
+    Volume = OpenVolume(argv[1], FALSE, FALSE);
     if (Volume == INVALID_HANDLE_VALUE)
     {
         return 1;

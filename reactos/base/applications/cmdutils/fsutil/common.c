@@ -47,14 +47,12 @@ int FindHandler(int argc,
 }
 
 HANDLE OpenVolume(const TCHAR * Volume,
-                  BOOLEAN AllowRemote)
+                  BOOLEAN AllowRemote,
+                  BOOLEAN NtfsOnly)
 {
     UINT Type;
     HANDLE hVolume;
     TCHAR VolumeID[PATH_MAX];
-
-    /* Create full name */
-    _stprintf(VolumeID, _T("\\\\.\\%s"), Volume);
 
     /* Get volume type */
     if (!AllowRemote && Volume[1] == L':')
@@ -66,6 +64,28 @@ HANDLE OpenVolume(const TCHAR * Volume,
             return INVALID_HANDLE_VALUE;
         }
     }
+
+    /* Get filesystem type */
+    if (NtfsOnly)
+    {
+        TCHAR FileSystem[MAX_PATH + 1];
+
+        _stprintf(VolumeID, _T("\\\\.\\%s\\"), Volume);
+        if (!GetVolumeInformation(VolumeID, NULL,  0, NULL, NULL, NULL, FileSystem, MAX_PATH + 1))
+        {
+            PrintErrorMessage(GetLastError());
+            return INVALID_HANDLE_VALUE;
+        }
+
+        if (_tcscmp(FileSystem, _T("NTFS")) != 0)
+        {
+            _ftprintf(stderr, _T("FSUTIL needs a NTFS device\n"));
+            return INVALID_HANDLE_VALUE;
+        }
+    }
+
+    /* Create full name */
+    _stprintf(VolumeID, _T("\\\\.\\%s"), Volume);
 
     /* Open the volume */
     hVolume = CreateFile(VolumeID, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,

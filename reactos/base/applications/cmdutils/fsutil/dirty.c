@@ -34,7 +34,7 @@ QueryMain(int argc, const TCHAR *argv[])
     }
 
     /* Get a handle for the volume */
-    Volume = OpenVolume(argv[1], FALSE);
+    Volume = OpenVolume(argv[1], FALSE, FALSE);
     if (Volume == INVALID_HANDLE_VALUE)
     {
         return 1;
@@ -72,7 +72,7 @@ SetMain(int argc, const TCHAR *argv[])
     }
 
     /* Get a handle for the volume */
-    Volume = OpenVolume(argv[1], FALSE);
+    Volume = OpenVolume(argv[1], FALSE, FALSE);
     if (Volume == INVALID_HANDLE_VALUE)
     {
         return 1;
