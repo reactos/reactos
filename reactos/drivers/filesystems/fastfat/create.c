@@ -577,7 +577,7 @@ VfatCreateFile(
     else
     {
         PVFATFCB TargetFcb;
-        LONG idx, FileNameLen;
+        LONG idx;
 
         vfatAddToStat(DeviceExt, Fat.CreateHits, 1);
 
@@ -586,8 +586,8 @@ VfatCreateFile(
         {
             vfatGrabFCB(DeviceExt, ParentFcb);
         }
-        Status = vfatGetFCBForFile(DeviceExt, &ParentFcb, &TargetFcb, &PathNameU);
 
+        Status = vfatGetFCBForFile(DeviceExt, &ParentFcb, &TargetFcb, &PathNameU);
         if (NT_SUCCESS(Status))
         {
             vfatReleaseFCB(DeviceExt, TargetFcb);
@@ -615,14 +615,14 @@ VfatCreateFile(
 
         if (idx > 0 || PathNameU.Buffer[0] == L'\\')
         {
-            /* We don't want to include / in the name */
-            FileNameLen = PathNameU.Length - ((idx + 1) * sizeof(WCHAR));
+            /* Terminate the string at the last backslash */
+            PathNameU.Buffer[idx + 1] = UNICODE_NULL;
+            PathNameU.Length = (idx + 1) * sizeof(WCHAR);
+            PathNameU.MaximumLength = PathNameU.Length + sizeof(WCHAR);
 
-            /* Update FO just to keep file name */
-            /* Skip first slash */
-            ++idx;
-            FileObject->FileName.Length = FileNameLen;
-            RtlMoveMemory(&PathNameU.Buffer[0], &PathNameU.Buffer[idx], FileObject->FileName.Length);
+            /* Update the file object as well */
+            FileObject->FileName.Length = PathNameU.Length;
+            FileObject->FileName.MaximumLength = PathNameU.MaximumLength;
         }
         else
         {
