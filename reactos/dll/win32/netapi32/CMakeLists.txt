@@ -20,7 +20,6 @@ list(APPEND SOURCE
     dssetup.c
     group.c
     local_group.c
-    misc.c
     nbcmdqueue.c
     nbnamecache.c
     nbt.c
@@ -31,6 +30,7 @@ list(APPEND SOURCE
     schedule.c
     srvsvc.c
     user.c
+    utils.c
     wksta.c
     wksta_new.c
     netapi32.h

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         NetAPI DLL
- * FILE:            reactos/dll/win32/netapi32/misc.c
+ * FILE:            reactos/dll/win32/netapi32/utils.c
  * PURPOSE:         Helper functions
  *
  * PROGRAMMERS:     Eric Kohl
