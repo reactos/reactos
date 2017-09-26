@@ -49,6 +49,7 @@ INT InputWait(BOOL bNoBreak, INT timerValue)
     INT Status = EXIT_SUCCESS;
     HANDLE hInput;
     BOOL bUseTimer = (timerValue != -1);
+    HANDLE hTimer = NULL;
     DWORD dwStartTime;
     LONG timeElapsed;
     DWORD dwWaitState;
@@ -67,6 +68,16 @@ INT InputWait(BOOL bNoBreak, INT timerValue)
     }
 
     /* Start a new wait if we use the timer */
+    if (bNoBreak && bUseTimer)
+    {
+        hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+        if (hTimer == NULL)
+        {
+            /* A problem happened, bail out */
+            PrintError(GetLastError());
+            return EXIT_FAILURE;
+        }
+    }
     if (bUseTimer)
         dwStartTime = GetTickCount();
 
@@ -138,8 +149,34 @@ INT InputWait(BOOL bNoBreak, INT timerValue)
         {
             if (bUseTimer)
             {
-                /* We use the timer: wait a little bit before updating it */
-                Sleep(100);
+                LARGE_INTEGER DueTime;
+
+                /* We use the timer: use a passive wait of maximum 1 second */
+                timeElapsed = GetTickCount() - dwStartTime;
+                if (timeElapsed < 1000)
+                {
+                    /*
+                     * For whatever reason, x86 MSVC generates a ntdll!_allmul
+                     * call when using Int32x32To64(), instead of an imul
+                     * instruction. This leads the linker to error that _allmul
+                     * is missing, since we do not link against ntdll.
+                     * Everything is however OK with GCC...
+                     * We therefore use the __emul() intrinsic which does
+                     * the correct job.
+                     */
+                    DueTime.QuadPart = __emul(1000 - timeElapsed, -10000);
+                    SetWaitableTimer(hTimer, &DueTime, 0, NULL, NULL, FALSE);
+                    dwWaitState = WaitForSingleObject(hTimer, INFINITE);
+
+                    /* Check whether the timer has been signaled */
+                    if (dwWaitState != WAIT_OBJECT_0)
+                    {
+                        /* An error happened, bail out */
+                        PrintError(GetLastError());
+                        Status = EXIT_FAILURE;
+                        break;
+                    }
+                }
             }
             else
             {
@@ -170,7 +207,7 @@ INT InputWait(BOOL bNoBreak, INT timerValue)
             else
                 dwWaitState = WAIT_TIMEOUT;
 
-            /* Check whether the input handle has been signaled, or a timeout happened */
+            /* Check whether the input event has been signaled, or a timeout happened */
             if (dwWaitState == WAIT_TIMEOUT)
                 continue;
             if (dwWaitState != WAIT_OBJECT_0)
@@ -234,6 +271,9 @@ Stop:
 Quit:
     if (bNoBreak)
         SetConsoleCtrlHandler(NULL, FALSE);
+
+    if (bNoBreak && bUseTimer)
+        CloseHandle(hTimer);
 
     return Status;
 }
