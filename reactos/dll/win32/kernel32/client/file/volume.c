@@ -85,124 +85,113 @@ GetVolumeInformationA(IN LPCSTR lpRootPathName,
                       OUT LPSTR lpFileSystemNameBuffer OPTIONAL,
                       IN DWORD nFileSystemNameSize)
 {
-  UNICODE_STRING FileSystemNameU;
-  UNICODE_STRING VolumeNameU = { 0, 0, NULL };
-  ANSI_STRING VolumeName;
-  ANSI_STRING FileSystemName;
-  PWCHAR RootPathNameW;
-  BOOL Result;
+    BOOL Ret;
+    NTSTATUS Status;
+    PUNICODE_STRING RootPathNameU;
+    ANSI_STRING VolumeName, FileSystemName;
+    UNICODE_STRING VolumeNameU, FileSystemNameU;
 
-  if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
-     return FALSE;
-
-  if (lpVolumeNameBuffer)
+    /* If no root path provided, default to \ */
+    if (lpRootPathName == NULL)
     {
-      VolumeNameU.MaximumLength = (USHORT)nVolumeNameSize * sizeof(WCHAR);
-      VolumeNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-	                                    0,
-	                                    VolumeNameU.MaximumLength);
-      if (VolumeNameU.Buffer == NULL)
-      {
-          goto FailNoMem;
-      }
+        lpRootPathName = "\\";
     }
 
-  if (lpFileSystemNameBuffer)
+    /* Convert root path to unicode */
+    RootPathNameU = Basep8BitStringToStaticUnicodeString(lpRootPathName);
+    if (RootPathNameU == NULL)
     {
-      FileSystemNameU.Length = 0;
-      FileSystemNameU.MaximumLength = (USHORT)nFileSystemNameSize * sizeof(WCHAR);
-      FileSystemNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-	                                        0,
-	                                        FileSystemNameU.MaximumLength);
-      if (FileSystemNameU.Buffer == NULL)
-      {
-          if (VolumeNameU.Buffer != NULL)
-          {
-              RtlFreeHeap(RtlGetProcessHeap(),
-                          0,
-                          VolumeNameU.Buffer);
-          }
-
-FailNoMem:
-          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-          return FALSE;
-      }
+        return FALSE;
     }
 
-  Result = GetVolumeInformationW (RootPathNameW,
-	                          lpVolumeNameBuffer ? VolumeNameU.Buffer : NULL,
-	                          nVolumeNameSize,
-	                          lpVolumeSerialNumber,
-	                          lpMaximumComponentLength,
-	                          lpFileSystemFlags,
-				  lpFileSystemNameBuffer ? FileSystemNameU.Buffer : NULL,
-	                          nFileSystemNameSize);
+    /* Init all our STRINGS (U/A) */
+    VolumeNameU.Buffer = NULL;
+    VolumeNameU.MaximumLength = 0;
+    FileSystemNameU.Buffer = NULL;
+    FileSystemNameU.MaximumLength = 0;
 
-  if (Result)
+    VolumeName.Buffer = lpVolumeNameBuffer;
+    VolumeName.MaximumLength = nVolumeNameSize + 1;
+    FileSystemName.Buffer = lpFileSystemNameBuffer;
+    FileSystemName.MaximumLength = nFileSystemNameSize + 1;
+
+    /* Assume failure for now */
+    Ret = FALSE;
+
+    /* If caller wants volume name, allocate a buffer to receive it */
+    if (lpVolumeNameBuffer != NULL)
     {
-      if (lpVolumeNameBuffer)
+        VolumeNameU.MaximumLength = sizeof(WCHAR) * (nVolumeNameSize + 1);
+        VolumeNameU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+	                                         VolumeNameU.MaximumLength);
+        if (VolumeNameU.Buffer == NULL)
         {
-          VolumeNameU.Length = wcslen(VolumeNameU.Buffer) * sizeof(WCHAR);
-	  VolumeName.Length = 0;
-	  VolumeName.MaximumLength = (USHORT)nVolumeNameSize;
-	  VolumeName.Buffer = lpVolumeNameBuffer;
-	}
-
-      if (lpFileSystemNameBuffer)
-	{
-	  FileSystemNameU.Length = wcslen(FileSystemNameU.Buffer) * sizeof(WCHAR);
-	  FileSystemName.Length = 0;
-	  FileSystemName.MaximumLength = (USHORT)nFileSystemNameSize;
-	  FileSystemName.Buffer = lpFileSystemNameBuffer;
-	}
-
-      /* convert unicode strings to ansi (or oem) */
-      if (bIsFileApiAnsi)
-        {
-	  if (lpVolumeNameBuffer)
-	    {
-	      RtlUnicodeStringToAnsiString (&VolumeName,
-			                    &VolumeNameU,
-			                    FALSE);
-	    }
-	  if (lpFileSystemNameBuffer)
-	    {
-	      RtlUnicodeStringToAnsiString (&FileSystemName,
-			                    &FileSystemNameU,
-			                    FALSE);
-	    }
-	}
-      else
-        {
-	  if (lpVolumeNameBuffer)
-	    {
-	      RtlUnicodeStringToOemString (&VolumeName,
-			                   &VolumeNameU,
-			                   FALSE);
-	    }
-          if (lpFileSystemNameBuffer)
-	    {
-	      RtlUnicodeStringToOemString (&FileSystemName,
-			                   &FileSystemNameU,
-			                   FALSE);
-	    }
-	}
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto CleanAndQuit;
+        }
     }
 
-  if (lpVolumeNameBuffer)
+    /* If caller wants file system name, allocate a buffer to receive it */
+    if (lpFileSystemNameBuffer != NULL)
     {
-      RtlFreeHeap (RtlGetProcessHeap (),
-	           0,
-	           VolumeNameU.Buffer);
-    }
-  if (lpFileSystemNameBuffer)
-    {
-      RtlFreeHeap (RtlGetProcessHeap (),
-	           0,
-	           FileSystemNameU.Buffer);
+        FileSystemNameU.MaximumLength = sizeof(WCHAR) * (nVolumeNameSize + 1);
+        FileSystemNameU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+	                                             FileSystemNameU.MaximumLength);
+        if (FileSystemNameU.Buffer == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto CleanAndQuit;
+        }
     }
 
-  return Result;
+    /* Call W */
+    Ret = GetVolumeInformationW(RootPathNameU->Buffer,  VolumeNameU.Buffer,
+                                nVolumeNameSize, lpVolumeSerialNumber,
+                                lpMaximumComponentLength, lpFileSystemFlags,
+                                FileSystemNameU.Buffer, nFileSystemNameSize);
+    /* If it succeed, convert back to ANSI */
+    if (Ret)
+    {
+        if (lpVolumeNameBuffer != NULL)
+        {
+            RtlInitUnicodeString(&VolumeNameU, VolumeNameU.Buffer);
+            Status = RtlUnicodeStringToAnsiString(&VolumeName, &VolumeNameU, FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                BaseSetLastNTError(Status);
+                Ret = FALSE;
+
+                goto CleanAndQuit;
+            }
+        }
+
+        if (lpFileSystemNameBuffer != NULL)
+        {
+            RtlInitUnicodeString(&FileSystemNameU, FileSystemNameU.Buffer);
+            Status = RtlUnicodeStringToAnsiString(&FileSystemName, &FileSystemNameU, FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                BaseSetLastNTError(Status);
+                Ret = FALSE;
+
+                goto CleanAndQuit;
+            }
+        }
+    }
+
+    /* Clean and quit */
+CleanAndQuit:
+    if (VolumeNameU.Buffer != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeNameU.Buffer);
+    }
+
+    if (FileSystemNameU.Buffer != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FileSystemNameU.Buffer);
+    }
+
+    return Ret;
 }
 
 /*
