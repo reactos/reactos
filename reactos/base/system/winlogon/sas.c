@@ -558,7 +558,7 @@ LogoffShutdownThread(
 
     uFlags = EWX_CALLER_WINLOGON | (LSData->Flags & 0x0F);
 
-    ERR("In LogoffShutdownThread with uFlags == 0x%x; exit_in_progress == %s\n",
+    TRACE("In LogoffShutdownThread with uFlags == 0x%x; exit_in_progress == %s\n",
         uFlags, ExitReactOSInProgress ? "true" : "false");
 
     ExitReactOSInProgress = TRUE;
@@ -585,7 +585,7 @@ KillComProcesses(
     DWORD ret = 1;
     PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
 
-    ERR("In KillComProcesses\n");
+    TRACE("In KillComProcesses\n");
 
     if (LSData->Session->UserToken != NULL &&
         !ImpersonateLoggedOnUser(LSData->Session->UserToken))
@@ -1446,7 +1446,7 @@ SASWindowProc(
                         }
                     }
 
-                    ERR("In LN_LOGOFF, exit_in_progress == %s\n",
+                    TRACE("In LN_LOGOFF, exit_in_progress == %s\n",
                         ExitReactOSInProgress ? "true" : "false");
 
                     /*

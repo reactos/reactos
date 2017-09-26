@@ -11,6 +11,7 @@
 #include "usersrv.h"
 
 #include <commctrl.h>
+#include <psapi.h>
 
 #include "resource.h"
 
@@ -222,7 +223,7 @@ SendClientShutdown(LPVOID Parameter)
     /* If the shutdown is aborted, just notify the process, there is no need to wait */
     if ((Context->wParam & (MCS_QUERYENDSESSION | MCS_ENDSESSION)) == 0)
     {
-        MY_DPRINT("Called WM_CLIENTSHUTDOWN with wParam == 0 ...\n");
+        DPRINT("Called WM_CLIENTSHUTDOWN with wParam == 0 ...\n");
         SendNotifyMessageW(Context->Wnd, WM_CLIENTSHUTDOWN,
                            Context->wParam, Context->lParam);
         return QUERY_RESULT_CONTINUE;
@@ -255,12 +256,12 @@ SendClientShutdown(LPVOID Parameter)
             Ret = QUERY_RESULT_CONTINUE;
         }
 
-        MY_DPRINT("SendClientShutdown -- Return == %s\n",
+        DPRINT("SendClientShutdown -- Return == %s\n",
                   Ret == QUERY_RESULT_CONTINUE ? "Continue" : "Abort");
         return Ret;
     }
 
-    MY_DPRINT("SendClientShutdown -- Error == %s\n",
+    DPRINT1("SendClientShutdown -- Error == %s\n",
               GetLastError() == 0 ? "Timeout" : "error");
 
     return (GetLastError() == 0 ? QUERY_RESULT_TIMEOUT : QUERY_RESULT_ERROR);
@@ -374,7 +375,7 @@ NotifyTopLevelWindow(HWND Wnd, PNOTIFY_CONTEXT NotifyContext)
         NotifyContext->QueryResult = QUERY_RESULT_TIMEOUT;
     }
 
-    MY_DPRINT("NotifyContext->QueryResult == %d\n", NotifyContext->QueryResult);
+    DPRINT("NotifyContext->QueryResult == %d\n", NotifyContext->QueryResult);
     return (NotifyContext->QueryResult == QUERY_RESULT_CONTINUE);
 }
 
@@ -672,7 +673,7 @@ UserExitReactOS(PCSR_THREAD CsrThread, UINT Flags)
         goto Quit;
     }
 
-    DPRINT1("Caller LUID is: %lx.%lx\n", CallerLuid.HighPart, CallerLuid.LowPart);
+    DPRINT("Caller LUID is: %lx.%lx\n", CallerLuid.HighPart, CallerLuid.LowPart);
 
     /* Shutdown loop */
     while (TRUE)
@@ -681,23 +682,23 @@ UserExitReactOS(PCSR_THREAD CsrThread, UINT Flags)
         Status = NtUserSetInformationThread(CsrThread->ThreadHandle,
                                             UserThreadInitiateShutdown,
                                             &Flags, sizeof(Flags));
-        DPRINT1("Win32k says: %lx\n", Status);
+        DPRINT("Win32k says: %lx\n", Status);
         switch (Status)
         {
             /* We cannot wait here, the caller should start a new thread */
             case STATUS_CANT_WAIT:
-                DPRINT1("STATUS_CANT_WAIT\n");
+                DPRINT1("NtUserSetInformationThread returned STATUS_CANT_WAIT\n");
                 goto Quit;
 
             /* Shutdown is in progress */
             case STATUS_PENDING:
-                DPRINT1("STATUS_PENDING\n");
+                DPRINT1("NtUserSetInformationThread returned STATUS_PENDING\n");
                 goto Quit;
 
             /* Abort */
             case STATUS_RETRY:
             {
-                DPRINT1("STATUS_RETRY\n");
+                DPRINT1("NtUserSetInformationThread returned STATUS_RETRY\n");
                 UNIMPLEMENTED;
                 continue;
             }
@@ -740,7 +741,7 @@ UserExitReactOS(PCSR_THREAD CsrThread, UINT Flags)
                                UserThreadEndShutdown,
                                &Status, sizeof(Status));
 
-    DPRINT1("SrvExitWindowsEx returned 0x%08x\n", Status);
+    DPRINT("SrvExitWindowsEx returned 0x%08x\n", Status);
 
 Quit:
     /* We are done */
@@ -755,9 +756,10 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
                    IN ULONG Flags,
                    IN BOOLEAN FirstPhase)
 {
-    DPRINT1("UserClientShutdown(0x%p, 0x%x, %s) - [0x%x, 0x%x]\n",
+    DPRINT("UserClientShutdown(0x%p, 0x%x, %s) - [0x%x, 0x%x], ShutdownFlags: %lu\n",
             CsrProcess, Flags, FirstPhase ? "FirstPhase" : "LastPhase",
-            CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread);
+            CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread,
+            CsrProcess->ShutdownFlags);
 
     /*
      * Check for process validity
@@ -767,7 +769,7 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
     if ((Flags & EWX_SHUTDOWN) == EWX_LOGOFF &&
         (CsrProcess->ShutdownFlags & (SHUTDOWN_OTHERCONTEXT | SHUTDOWN_SYSTEMCONTEXT)))
     {
-        DPRINT1("Do not kill a system process in a logoff request!\n");
+        DPRINT("Do not kill a system process in a logoff request!\n");
         return CsrShutdownNonCsrProcess;
     }
 
@@ -775,32 +777,35 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
     if (CsrProcess->ClientId.UniqueProcess == NtCurrentProcess() ||
         CsrProcess->ClientId.UniqueProcess == UlongToHandle(LogonProcessId))
     {
-        DPRINT1("Not killing %s; CsrProcess->ShutdownFlags = %lu\n",
+        DPRINT("Not killing %s; CsrProcess->ShutdownFlags = %lu\n",
                 CsrProcess->ClientId.UniqueProcess == NtCurrentProcess() ? "CSRSS" : "Winlogon",
                 CsrProcess->ShutdownFlags);
 
         return CsrShutdownNonCsrProcess;
     }
 
-    if (Flags & EWX_CALLER_SYSTEM)
-        DPRINT1("Killed by a SYSTEM process -- ShutdownFlags = %lu\n", CsrProcess->ShutdownFlags);
-    else
-        DPRINT1("Killing process with ShutdownFlags = %lu\n", CsrProcess->ShutdownFlags);
-
-    if (CsrProcess->ShutdownFlags & SHUTDOWN_OTHERCONTEXT)
-        DPRINT1("This process has SHUTDOWN_OTHERCONTEXT\n");
-
-    if (CsrProcess->ShutdownFlags & SHUTDOWN_SYSTEMCONTEXT)
-        DPRINT1("This process has SHUTDOWN_SYSTEMCONTEXT\n");
-
     /* Notify the process for shutdown if needed */
     if (!NotifyProcessForShutdown(CsrProcess, &ShutdownSettings, Flags))
     {
+        DPRINT1("Process 0x%x aborted shutdown\n", CsrProcess->ClientId.UniqueProcess);
         /* Abort shutdown */
         return CsrShutdownCancelled;
     }
 
     /* Terminate this process */
+#if DBG
+    {
+        WCHAR buffer[MAX_PATH];
+        if (!GetProcessImageFileNameW(CsrProcess->ProcessHandle, buffer, MAX_PATH))
+        {
+            DPRINT1("Terminating process %x\n", CsrProcess->ClientId.UniqueProcess);
+        }
+        else
+        {
+            DPRINT1("Terminating process %x (%S)\n", CsrProcess->ClientId.UniqueProcess, buffer);
+        }
+    }
+#endif
     NtTerminateProcess(CsrProcess->ProcessHandle, 0);
 
     /* We are done */

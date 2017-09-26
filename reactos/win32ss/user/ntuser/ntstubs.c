@@ -722,7 +722,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
         {
             ULONG CapturedFlags = 0;
 
-            ERR("Shutdown initiated\n");
+            TRACE("Shutdown initiated\n");
 
             if (ThreadInformationLength != sizeof(ULONG))
             {
@@ -764,7 +764,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
         {
             NTSTATUS ShutdownStatus;
 
-            ERR("Shutdown ended\n");
+            TRACE("Shutdown ended\n");
 
             if (ThreadInformationLength != sizeof(ShutdownStatus))
             {

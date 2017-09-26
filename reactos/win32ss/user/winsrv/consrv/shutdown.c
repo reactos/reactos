@@ -24,12 +24,12 @@ ConsoleClientShutdown(IN PCSR_PROCESS CsrProcess,
 {
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
 
-    UNIMPLEMENTED;
+    //FIXME: UNIMPLEMENTED!
 
     if ( ProcessData->ConsoleHandle != NULL ||
          ProcessData->HandleTable   != NULL )
     {
-        DPRINT1("ConsoleClientShutdown(0x%p, 0x%x, %s) - Console process [0x%x, 0x%x]\n",
+        DPRINT("ConsoleClientShutdown(0x%p, 0x%x, %s) - Console process [0x%x, 0x%x]\n",
                 CsrProcess, Flags, FirstPhase ? "FirstPhase" : "LastPhase",
                 CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread);
 
@@ -39,7 +39,7 @@ ConsoleClientShutdown(IN PCSR_PROCESS CsrProcess,
     }
     else
     {
-        DPRINT1("ConsoleClientShutdown(0x%p, 0x%x, %s) - Non-console process [0x%x, 0x%x]\n",
+        DPRINT("ConsoleClientShutdown(0x%p, 0x%x, %s) - Non-console process [0x%x, 0x%x]\n",
                 CsrProcess, Flags, FirstPhase ? "FirstPhase" : "LastPhase",
                 CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread);
 
