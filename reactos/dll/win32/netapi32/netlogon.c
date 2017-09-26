@@ -19,8 +19,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
 /* FUNCTIONS *****************************************************************/
 
-handle_t __RPC_USER
-LOGONSRV_HANDLE_bind(LOGONSRV_HANDLE pszSystemName)
+handle_t
+__RPC_USER
+LOGONSRV_HANDLE_bind(
+    LOGONSRV_HANDLE pszSystemName)
 {
     handle_t hBinding = NULL;
     LPWSTR pszStringBinding;
@@ -58,9 +60,11 @@ LOGONSRV_HANDLE_bind(LOGONSRV_HANDLE pszSystemName)
 }
 
 
-void __RPC_USER
-LOGONSRV_HANDLE_unbind(LOGONSRV_HANDLE pszSystemName,
-                       handle_t hBinding)
+void
+__RPC_USER
+LOGONSRV_HANDLE_unbind(
+    LOGONSRV_HANDLE pszSystemName,
+    handle_t hBinding)
 {
     RPC_STATUS status;
 
@@ -73,6 +77,8 @@ LOGONSRV_HANDLE_unbind(LOGONSRV_HANDLE pszSystemName,
     }
 }
 
+
+/* PUBLIC FUNCTIONS **********************************************************/
 
 DWORD
 WINAPI
@@ -643,6 +649,34 @@ NetGetDCName(
           debugstr_w(servername), debugstr_w(domainname), bufptr);
 
     return NERR_DCNotFound;
+}
+
+
+NTSTATUS
+WINAPI
+NetLogonSetServiceBits(
+    _In_ LPWSTR ServerName,
+    _In_ DWORD ServiceBitsOfInterest,
+    _In_ DWORD ServiceBits)
+{
+    NTSTATUS Status;
+
+    TRACE("NetLogonSetServiceBits(%s 0x%lx 0x%lx)\n",
+          debugstr_w(ServerName), ServiceBitsOfInterest, ServiceBits);
+
+    RpcTryExcept
+    {
+        Status = NetrLogonSetServiceBits(ServerName,
+                                         ServiceBitsOfInterest,
+                                         ServiceBits);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 /* EOF */

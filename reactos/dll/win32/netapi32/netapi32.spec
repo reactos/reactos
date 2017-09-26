@@ -174,7 +174,7 @@
 @ stdcall NetLocalGroupSetInfo(wstr wstr long ptr ptr)
 @ stdcall NetLocalGroupSetMembers(wstr wstr long ptr long)
 @ stub NetLogonGetTimeServiceParentDomain
-@ stub NetLogonSetServiceBits
+@ stdcall NetLogonSetServiceBits(wstr long long)
 @ stdcall NetMessageBufferSend(wstr wstr wstr ptr long)
 @ stdcall NetMessageNameAdd(wstr wstr)
 @ stdcall NetMessageNameDel(wstr wstr)
