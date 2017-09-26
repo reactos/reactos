@@ -149,7 +149,7 @@
 @ stdcall NetFileGetInfo(wstr long long ptr)
 @ stdcall NetGetAnyDCName(wstr wstr ptr)
 @ stdcall NetGetDCName(wstr wstr ptr)
-@ stub NetGetDisplayInformationIndex
+@ stdcall NetGetDisplayInformationIndex(wstr long wstr ptr)
 @ stdcall NetGetJoinInformation(wstr ptr ptr)
 @ stdcall NetGetJoinableOUs(wstr wstr wstr wstr ptr ptr)
 @ stdcall NetGroupAdd(wstr long ptr ptr)
