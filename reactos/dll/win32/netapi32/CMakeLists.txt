@@ -20,6 +20,7 @@ list(APPEND SOURCE
     dssetup.c
     group.c
     local_group.c
+    misc.c
     nbcmdqueue.c
     nbnamecache.c
     nbt.c
