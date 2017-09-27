@@ -1944,7 +1944,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
     }
     else if ((Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD)
     {
-         ERR("Cannot create a child window without a parrent!\n");
+         ERR("Cannot create a child window without a parent!\n");
          EngSetLastError(ERROR_TLW_WITH_WSCHILD);
          goto cleanup;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
@@ -1955,6 +1955,12 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
     if (hWndParent && !ParentWindow)
     {
         ERR("Got invalid parent window handle\n");
+        goto cleanup;
+    }
+    else if (hWndOwner && !OwnerWindow)
+    {
+        ERR("Got invalid owner window handle\n");
+        ParentWindow = NULL;
         goto cleanup;
     }
 
