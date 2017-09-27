@@ -2322,6 +2322,10 @@ cleanup:
    }
    if (ParentWindow) UserDerefObjectCo(ParentWindow);
 
+   // See CORE-13717, not setting error on success.
+   if (ret)
+      EngSetLastError(ERROR_SUCCESS);
+
    return ret;
 }
 
