@@ -26,7 +26,53 @@
 DEBUG_CHANNEL(kernel32file);
 
 #define MAX_DOS_DRIVES 26
-HANDLE WINAPI InternalOpenDirW(IN LPCWSTR DirName, IN BOOLEAN Write);
+
+HANDLE
+WINAPI
+InternalOpenDirW(IN LPCWSTR DirName,
+                 IN BOOLEAN Write)
+{
+    UNICODE_STRING NtPathU;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS errCode;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE hFile;
+
+    if (!RtlDosPathNameToNtPathName_U(DirName, &NtPathU, NULL, NULL))
+    {
+        WARN("Invalid path\n");
+        SetLastError(ERROR_BAD_PATHNAME);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtPathU,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    errCode = NtCreateFile(&hFile,
+                           Write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ,
+                           &ObjectAttributes,
+                           &IoStatusBlock,
+                           NULL,
+                           0,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE,
+                           FILE_OPEN,
+                           0,
+                           NULL,
+                           0);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathU.Buffer);
+
+    if (!NT_SUCCESS(errCode))
+    {
+        BaseSetLastNTError(errCode);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    return hFile;
+}
 
 /*
  * @implemented

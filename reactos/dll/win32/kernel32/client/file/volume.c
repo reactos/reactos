@@ -22,54 +22,7 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
-DEBUG_CHANNEL(kernel32file);
 
-HANDLE
-WINAPI
-InternalOpenDirW(IN LPCWSTR DirName,
-                 IN BOOLEAN Write)
-{
-    UNICODE_STRING NtPathU;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS errCode;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE hFile;
-
-    if (!RtlDosPathNameToNtPathName_U(DirName, &NtPathU, NULL, NULL))
-    {
-        WARN("Invalid path\n");
-        SetLastError(ERROR_BAD_PATHNAME);
-        return INVALID_HANDLE_VALUE;
-    }
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &NtPathU,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    errCode = NtCreateFile(&hFile,
-                           Write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ,
-                           &ObjectAttributes,
-                           &IoStatusBlock,
-                           NULL,
-                           0,
-                           FILE_SHARE_READ | FILE_SHARE_WRITE,
-                           FILE_OPEN,
-                           0,
-                           NULL,
-                           0);
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathU.Buffer);
-
-    if (!NT_SUCCESS(errCode))
-    {
-        BaseSetLastNTError(errCode);
-        return INVALID_HANDLE_VALUE;
-    }
-
-    return hFile;
-}
 
 /*
  * @implemented
@@ -506,30 +459,36 @@ WINAPI
 SetVolumeLabelA(IN LPCSTR lpRootPathName,
                 IN LPCSTR lpVolumeName OPTIONAL) /* NULL if deleting label */
 {
-	PWCHAR RootPathNameW;
-   PWCHAR VolumeNameW = NULL;
-	BOOL Result;
+    BOOL Ret;
+    UNICODE_STRING VolumeNameU;
+    PUNICODE_STRING RootPathNameU;
 
-   if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
-      return FALSE;
+    if (lpRootPathName == NULL)
+    {
+        lpRootPathName = "\\";
+    }
 
-   if (lpVolumeName)
-   {
-      if (!(VolumeNameW = FilenameA2W(lpVolumeName, TRUE)))
-         return FALSE;
-   }
+    RootPathNameU = Basep8BitStringToStaticUnicodeString(lpRootPathName);
+    if (RootPathNameU == NULL)
+    {
+        return FALSE;
+    }
 
-   Result = SetVolumeLabelW (RootPathNameW,
-                             VolumeNameW);
+    if (lpVolumeName != NULL)
+    {
+        if (!Basep8BitStringToDynamicUnicodeString(&VolumeNameU, lpVolumeName))
+        {
+            return FALSE;
+        }
+    }
+    else
+    {
+        VolumeNameU.Buffer = NULL;
+    }
 
-   if (VolumeNameW)
-   {
-	   RtlFreeHeap (RtlGetProcessHeap (),
-	                0,
-                   VolumeNameW );
-   }
-
-	return Result;
+    Ret = SetVolumeLabelW(RootPathNameU->Buffer, VolumeNameU.Buffer);
+    RtlFreeUnicodeString(&VolumeNameU);
+    return Ret;
 }
 
 /*
@@ -540,57 +499,153 @@ WINAPI
 SetVolumeLabelW(IN LPCWSTR lpRootPathName,
                 IN LPCWSTR lpVolumeName OPTIONAL) /* NULL if deleting label */
 {
-   PFILE_FS_LABEL_INFORMATION LabelInfo;
-   IO_STATUS_BLOCK IoStatusBlock;
-   ULONG LabelLength;
-   HANDLE hFile;
-   NTSTATUS Status;
+    BOOL Ret;
+    NTSTATUS Status;
+    PWSTR VolumeRoot;
+    HANDLE VolumeHandle;
+    WCHAR VolumeGuid[MAX_PATH];
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PFILE_FS_LABEL_INFORMATION FsLabelInfo;
+    UNICODE_STRING VolumeName, NtVolumeName;
 
-   LabelLength = wcslen(lpVolumeName) * sizeof(WCHAR);
-   LabelInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-			       0,
-			       sizeof(FILE_FS_LABEL_INFORMATION) +
-			       LabelLength);
-   if (LabelInfo == NULL)
-   {
-       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-       return FALSE;
-   }
-   LabelInfo->VolumeLabelLength = LabelLength;
-   memcpy(LabelInfo->VolumeLabel,
-	  lpVolumeName,
-	  LabelLength);
+    /* If no root path provided, default to \ */
+    VolumeRoot = L"\\";
 
-   hFile = InternalOpenDirW(lpRootPathName, TRUE);
-   if (INVALID_HANDLE_VALUE == hFile)
-   {
-        RtlFreeHeap(RtlGetProcessHeap(),
-	            0,
-	            LabelInfo);
+    /* If user wants to set a label, make it a string */
+    if (lpVolumeName != NULL)
+    {
+        RtlInitUnicodeString(&VolumeName, lpVolumeName);
+    }
+    else
+    {
+        VolumeName.Length = 0;
+        VolumeName.MaximumLength = 0;
+        VolumeName.Buffer = NULL;
+    }
+
+    /* If we received a volume, try to get its GUID name */
+    if (lpRootPathName != NULL)
+    {
+        Ret = GetVolumeNameForVolumeMountPointW(lpRootPathName, VolumeGuid, MAX_PATH);
+    }
+    else
+    {
+        Ret = FALSE;
+    }
+
+    /* If we got the GUID name, use it */
+    if (Ret)
+    {
+        VolumeRoot = VolumeGuid;
+    }
+    else
+    {
+        /* Otherwise, use the name provided by the caller */
+        if (lpRootPathName != NULL)
+        {
+            VolumeRoot = (PWSTR)lpRootPathName;
+        }
+    }
+
+    /* Convert to a NT path */
+    if (!RtlDosPathNameToNtPathName_U(VolumeRoot, &NtVolumeName, NULL, NULL))
+    {
+        SetLastError(ERROR_PATH_NOT_FOUND);
         return FALSE;
-   }
+    }
 
-   Status = NtSetVolumeInformationFile(hFile,
-				       &IoStatusBlock,
-				       LabelInfo,
-				       sizeof(FILE_FS_LABEL_INFORMATION) +
-				       LabelLength,
-				       FileFsLabelInformation);
 
-   RtlFreeHeap(RtlGetProcessHeap(),
-	       0,
-	       LabelInfo);
+    /* Check we really end with a backslash */
+    if (NtVolumeName.Buffer[(NtVolumeName.Length / sizeof(WCHAR)) - 1] != L'\\')
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtVolumeName.Buffer);
+        BaseSetLastNTError(STATUS_OBJECT_NAME_INVALID);
+        return FALSE;
+    }
 
-   if (!NT_SUCCESS(Status))
-     {
-	WARN("Status: %x\n", Status);
-	CloseHandle(hFile);
-	BaseSetLastNTError(Status);
-	return FALSE;
-     }
+    /* Try to open the root directory */
+    InitializeObjectAttributes(&ObjectAttributes, &NtVolumeName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-   CloseHandle(hFile);
-   return TRUE;
+    Status = NtOpenFile(&VolumeHandle, SYNCHRONIZE | FILE_WRITE_DATA,
+                        &ObjectAttributes, &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtVolumeName.Buffer);
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* Validate it's really a root path */
+    if (!IsThisARootDirectory(VolumeHandle, NULL))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtVolumeName.Buffer);
+        NtClose(VolumeHandle);
+        SetLastError(ERROR_DIR_NOT_ROOT);
+        return FALSE;
+    }
+
+    /* Done */
+    NtClose(VolumeHandle);
+
+    /* Now, open the volume to perform the label change */
+    NtVolumeName.Length -= sizeof(WCHAR);
+    InitializeObjectAttributes(&ObjectAttributes, &NtVolumeName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+    Status = NtOpenFile(&VolumeHandle, SYNCHRONIZE | FILE_WRITE_DATA,
+                        &ObjectAttributes, &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NtVolumeName.Buffer);
+
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* Assume success */
+    Ret = TRUE;
+
+    /* Allocate a buffer that can hold new label and its size */
+    FsLabelInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(FILE_FS_LABEL_INFORMATION) + VolumeName.Length);
+    if (FsLabelInfo != NULL)
+    {
+        /* Copy name and set its size */
+        RtlCopyMemory(FsLabelInfo->VolumeLabel, VolumeName.Buffer, VolumeName.Length);
+        FsLabelInfo->VolumeLabelLength = VolumeName.Length;
+
+        /* And finally, set new label */
+        Status = NtSetVolumeInformationFile(VolumeHandle, &IoStatusBlock, FsLabelInfo, sizeof(FILE_FS_LABEL_INFORMATION) + VolumeName.Length, FileFsLabelInformation);
+    }
+    else
+    {
+        /* Allocation failed */
+        Status = STATUS_NO_MEMORY;
+    }
+
+    /* In case of failure, set status and mark failure */
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        Ret = FALSE;
+    }
+
+    /* We're done */
+    NtClose(VolumeHandle);
+
+    /* Free buffer if required */
+    if (FsLabelInfo != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FsLabelInfo);
+    }
+
+    return Ret;
 }
 
 /*
@@ -891,7 +946,7 @@ FindNextVolumeW(IN HANDLE handle,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -900,8 +955,103 @@ GetVolumePathNamesForVolumeNameA(IN LPCSTR lpszVolumeName,
                                  IN DWORD cchBufferLength,
                                  OUT PDWORD lpcchReturnLength)
 {
-    STUB;
-    return 0;
+    BOOL Ret;
+    NTSTATUS Status;
+    DWORD cchReturnLength;
+    ANSI_STRING VolumePathName;
+    PUNICODE_STRING VolumeNameU;
+    UNICODE_STRING VolumePathNamesU;
+
+    /* Convert volume name to unicode */
+    VolumeNameU = Basep8BitStringToStaticUnicodeString(lpszVolumeName);
+    if (VolumeNameU == NULL)
+    {
+        return FALSE;
+    }
+
+    /* Initialize the strings we'll use later on */
+    VolumePathName.Length = 0;
+    VolumePathName.MaximumLength = cchBufferLength;
+    VolumePathName.Buffer = lpszVolumePathNames;
+
+    VolumePathNamesU.Length = 0;
+    VolumePathNamesU.MaximumLength = sizeof(WCHAR) * cchBufferLength;
+    /* If caller provided a non 0 sized string, allocate a buffer for our unicode string */
+    if (VolumePathNamesU.MaximumLength != 0)
+    {
+        VolumePathNamesU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, VolumePathNamesU.MaximumLength);
+        if (VolumePathNamesU.Buffer == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+    }
+    else
+    {
+        VolumePathNamesU.Buffer = NULL;
+    }
+
+    /* Call the -W implementation */
+    Ret = GetVolumePathNamesForVolumeNameW(VolumeNameU->Buffer, VolumePathNamesU.Buffer,
+                                           cchBufferLength, &cchReturnLength);
+    /* Call succeed, we'll return the total length */
+    if (Ret)
+    {
+        VolumePathNamesU.Length = sizeof(WCHAR) * cchReturnLength;
+    }
+    else
+    {
+        /* Else, if we fail for anything else than too small buffer, quit */
+        if (GetLastError() != ERROR_MORE_DATA)
+        {
+            if (VolumePathNamesU.Buffer != NULL)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, VolumePathNamesU.Buffer);
+            }
+
+            return FALSE;
+        }
+
+        /* Otherwise, we'll just copy as much as we can */
+        VolumePathNamesU.Length = sizeof(WCHAR) * cchBufferLength;
+    }
+
+    /* Convert our output string back to ANSI */
+    Status = RtlUnicodeStringToAnsiString(&VolumePathName, &VolumePathNamesU, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+
+        if (VolumePathNamesU.Buffer != NULL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, VolumePathNamesU.Buffer);
+        }
+
+        return FALSE;
+    }
+
+    /* If caller wants return length, two cases... */
+    if (lpcchReturnLength != NULL)
+    {
+        /* We succeed: return the copied length */
+        if (Ret)
+        {
+            *lpcchReturnLength = VolumePathName.Length;
+        }
+        /* We failed, return the size we would have loved having! */
+        else
+        {
+            *lpcchReturnLength = sizeof(WCHAR) * cchReturnLength;
+        }
+    }
+
+    /* Release our buffer if allocated */
+    if (VolumePathNamesU.Buffer != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumePathNamesU.Buffer);
+    }
+
+    return Ret;
 }
 
 
