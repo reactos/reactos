@@ -1,31 +1,14 @@
 /*
- * PROJECT:        ReactOS Boot Sector for ISO file system (based on ISOLINUX)
- * LICENSE:        GNU GPLv2 or any later version as published by the Free Software Foundation
- * PROGRAMMERS:    H. Peter Anvin
- *                 Michael K. Ter Louw
- *                 Eric Kohl
- *                 Timo Kreuzer <timo.kreuzer@reactos.org>
- *                 Colin Finck <colin@reactos.org>
- *
- *****************************************************************************
- *
- * isolinux.asm
- *
- * A program to boot Linux kernels off a CD-ROM using the El Torito
- * boot standard in "no emulation" mode, making the entire filesystem
- * available.  It is based on the SYSLINUX boot loader for MS-DOS
- * floppies.
- *
- *  Copyright 1994-2009 H. Peter Anvin - All Rights Reserved
- *  Copyright 2009 Intel Corporation *author: H. Peter Anvin
- *
- * This program is free software *you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, Inc., 53 Temple Place Ste 330,
- * Boston MA 02111-1307, USA *either version 2 of the License, or
- * (at your option) any later version *incorporated herein by reference.
- *
- *****************************************************************************/
+ * PROJECT:     ReactOS Boot Sector for ISO file system (based on ISOLINUX)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Booting ReactOS off a CD-ROM using the El Torito boot standard in "no emulation mode"
+ * COPYRIGHT:   Copyright 1994-2009 H. Peter Anvin
+ *              Copyright 2002 Michael K. Ter Louw
+ *              Copyright 2002 Eric Kohl
+ *              Copyright 2009 Intel Corporation *author: H. Peter Anvin
+ *              Copyright 2011 Timo Kreuzer (timo.kreuzer@reactos.org)
+ *              Copyright 2017 Colin Finck (colin@reactos.org)
+ */
 
 /* INCLUDES ******************************************************************/
 #include <asm.inc>
