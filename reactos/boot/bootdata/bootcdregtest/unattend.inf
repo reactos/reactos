@@ -48,3 +48,10 @@ LocaleID = 409
 ;
 [GuiRunOnce]
 %SystemRoot%\system32\cmd.exe /c "regtest.cmd"
+
+[Display]
+BitsPerPel = 16
+XResolution = 800
+YResolution = 600
+VRefresh = 0
+
