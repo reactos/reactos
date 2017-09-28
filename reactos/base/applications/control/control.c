@@ -1,9 +1,10 @@
 /*
- * PROJECT:         ReactOS System Control Panel
- * FILE:            base/applications/control/control.c
- * PURPOSE:         ReactOS System Control Panel
- * PROGRAMMERS:     Gero Kuehn (reactos.filter@gkware.com)
- *                  Colin Finck (mail@colinfinck.de)
+ * PROJECT:     ReactOS System Control Panel
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     ReactOS System Control Panel
+ * COPYRIGHT:   Copyright 2004 Gero Kuehn (reactos.filter@gkware.com)
+ *              Copyright 2008 Colin Finck (colin@reactos.org)
+ *              Copyright 2014 Hermès Bélusca-Maïto (hermes.belusca-maito@reactos.org)
  */
 
 #include <stdio.h>
