@@ -1,10 +1,9 @@
 /*
-  PROJECT:    ReactOS
-  LICENSE:    GPL v2 or any later version
-  FILE:       include/host/nls.h
-  PURPOSE:    NLS definitions for host tools
-  COPYRIGHT:  Copyright 2007 Colin Finck <mail@colinfinck.de>
-*/
+ * PROJECT:     ReactOS Host Headers
+ * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
+ * PURPOSE:     NLS definitions for host tools
+ * COPYRIGHT:   Copyright 2007-2017 Colin Finck (colin@reactos.org)
+ */
 
 #ifndef _HOST_NLS_H
 #define _HOST_NLS_H

@@ -1,10 +1,10 @@
-#ifndef RC_INVOKED
-#if ( _MSC_VER >= 800 )
-#pragma warning(disable:4103)
-#endif // _MSC_VER
-# if defined(__FreeBSD__) && ( __FreeBSD__ == 5 )
-#  pragma pack(4)
-# else
-#  pragma pack(pop)
-# endif // __FreeBSD__
-#endif // RC_INVOKED
+/*
+ * PROJECT:     ReactOS PSDK Headers
+ * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
+ * PURPOSE:     Restores structure packing alignment
+ * COPYRIGHT:   Copyright 2017 Colin Finck (colin@reactos.org)
+ */
+
+#if !defined(RC_INVOKED)
+#pragma pack(pop)
+#endif

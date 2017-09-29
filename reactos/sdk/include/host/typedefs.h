@@ -1,11 +1,10 @@
 /*
-  PROJECT:    ReactOS
-  LICENSE:    GPL v2 or any later version
-  FILE:       include/host/typedefs.h
-  PURPOSE:    Type definitions and useful macros for host tools
-  COPYRIGHT:  Copyright 2007 Hervé Poussineau
-              Copyright 2007 Colin Finck <mail@colinfinck.de>
-*/
+ * PROJECT:     ReactOS Host Headers
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Type definitions and useful macros for host tools
+ * COPYRIGHT:   Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
+ *              Copyright 2007 Colin Finck (colin@reactos.org)
+ */
 
 #ifndef _TYPEDEFS_HOST_H
 #define _TYPEDEFS_HOST_H
