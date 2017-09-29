@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Local Spooler API Tests Injected DLL
- * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for fpGetPrintProcessorDirectory
- * COPYRIGHT:   Copyright 2016-2017 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2016-2017 Colin Finck (colin@reactos.org)
  */
 
 #include <apitest.h>

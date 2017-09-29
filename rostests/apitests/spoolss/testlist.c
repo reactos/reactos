@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Print Spooler Router API Tests
- * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
+ * PROJECT:     ReactOS Spooler Router API Tests
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test list
- * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
  */
 
 #define __ROS_LONG64__
