@@ -65,7 +65,10 @@ FUNC _DebugService2@12
 
     /* Set up the stack */
     push ebp
+    CFI_ADJUST_CFA_OFFSET 4
+    CFI_REL_OFFSET ebp, 0
     mov ebp, esp
+    CFI_DEF_CFA_REGISTER ebp
 
     /* Call the interrupt */
     mov eax, [ebp+16]
@@ -76,6 +79,8 @@ FUNC _DebugService2@12
 
     /* Return */
     pop ebp
+    CFI_SAME_VALUE ebp
+    CFI_DEF_CFA esp, 12
     ret 12
 
 ENDFUNC
@@ -87,11 +92,16 @@ FUNC _DebugService@20
 
     /* Set up the stack */
     push ebp
+    CFI_ADJUST_CFA_OFFSET 4
+    CFI_REL_OFFSET ebp, 0
     mov ebp, esp
+    CFI_DEF_CFA_REGISTER ebp
 
     /* Save non-volatiles */
     push ebx
+    CFI_REL_OFFSET ebx, -4
     push edi
+    CFI_REL_OFFSET edi, -8
 
     /* Call the Interrupt */
     mov eax, [ebp+8]
@@ -104,10 +114,14 @@ FUNC _DebugService@20
 
     /* Restore non-volatiles */
     pop edi
+    CFI_SAME_VALUE edi
     pop ebx
+    CFI_SAME_VALUE ebx
 
     /* Return */
     pop ebp
+    CFI_SAME_VALUE ebp
+    CFI_DEF_CFA esp, 20
     ret 20
 
 ENDFUNC
