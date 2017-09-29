@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Automatic Testing Utility
- * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Class implementing a generic Test list, needs to be used by a derived class
- * COPYRIGHT:   Copyright 2009 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2009 Colin Finck (colin@reactos.org)
  */
 
 class CTestList

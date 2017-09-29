@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Automatic Testing Utility
- * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
- * PURPOSE:     Class that managed an unidirectional anonymous byte stream pipe
- * COPYRIGHT:   Copyright 2015 Thomas Faber <thomas.faber@reactos.org>
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Class that manages an unidirectional anonymous byte stream pipe
+ * COPYRIGHT:   Copyright 2015 Thomas Faber (thomas.faber@reactos.org)
  */
 
 class CPipe

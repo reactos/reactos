@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS Automatic Testing Utility
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/misc.c
- * PURPOSE:         Misc functions
- * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
+ * PROJECT:     ReactOS Automatic Testing Utility
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Functions for writing to the Event Log
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
  */
 
 #include "precomp.h"

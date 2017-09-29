@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Automatic Testing Utility
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Main header file
+ * COPYRIGHT:   Copyright 2009-2015 Colin Finck (colin@reactos.org)
+ */
+
 #ifndef _ROSAUTOTEST_H_
 #define _ROSAUTOTEST_H_
 

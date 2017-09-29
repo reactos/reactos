@@ -10,8 +10,6 @@ list(APPEND SOURCE
     CPipedProcess.cpp
     CProcess.cpp
     CSimpleException.cpp
-    CTest.cpp
-    CTestInfo.cpp
     CTestList.cpp
     CVirtualTestList.cpp
     CWebService.cpp
