@@ -1,9 +1,8 @@
 /*
  * PROJECT:     ReactOS VGA Font Editor
- * LICENSE:     GNU General Public License Version 2.0 or any later version
- * FILE:        devutils/vgafontedit/main.c
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Main entry point of the application
- * COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
+ * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"

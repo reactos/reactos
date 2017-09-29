@@ -1,10 +1,9 @@
 /*
  * PROJECT:     ReactOS VGA Font Editor
- * LICENSE:     GNU General Public License Version 2.0 only
- * FILE:        devutils/vgafontedit/misc.c
- * PURPOSE:     Some miscellaneous resource functions (copied from "devmgmt") and modified
- * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
- *              Copyright 2008 Colin Finck <mail@colinfinck.de>
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Some miscellaneous resource functions
+ * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller (thomas@reactsoft.com)
+ *              Copyright 2008 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
@@ -14,55 +13,52 @@ LengthOfStrResource(IN UINT uID)
 {
     HRSRC hrSrc;
     HGLOBAL hRes;
-    PWSTR lpName, lpStr;
+    LPWSTR lpName, lpStr;
 
     /* There are always blocks of 16 strings */
-    lpName = (PWSTR) MAKEINTRESOURCEW((uID >> 4) + 1);
+    lpName = (LPWSTR)MAKEINTRESOURCEW((uID >> 4) + 1);
 
     /* Find the string table block */
-    if ((hrSrc = FindResourceW(hInstance, lpName, (PWSTR)RT_STRING)) != 0 &&
-        (hRes = LoadResource(hInstance, hrSrc)) != 0 &&
-        (lpStr = (PWSTR)LockResource(hRes)) != 0)
+    if ((hrSrc = FindResourceW(hInstance, lpName, (LPWSTR)RT_STRING)) &&
+        (hRes = LoadResource(hInstance, hrSrc)) &&
+        (lpStr = LockResource(hRes)))
     {
         UINT x;
 
         /* Find the string we're looking for */
         uID &= 0xF; /* position in the block, same as % 16 */
-
         for (x = 0; x < uID; x++)
+        {
             lpStr += (*lpStr) + 1;
+        }
 
         /* Found the string */
         return (int)(*lpStr);
     }
-
     return -1;
 }
 
-INT
-AllocAndLoadString(OUT PWSTR *lpTarget, IN UINT uID)
+int
+AllocAndLoadString(OUT LPWSTR *lpTarget,
+                   IN UINT uID)
 {
     INT ln;
 
     ln = LengthOfStrResource(uID);
-
     if (ln++ > 0)
     {
-        (*lpTarget) = (PWSTR) HeapAlloc( hProcessHeap, 0, ln * sizeof(WCHAR) );
-
-        if (*lpTarget)
+        (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
+                                         ln * sizeof(WCHAR));
+        if ((*lpTarget) != NULL)
         {
-            INT nRet;
-
-            nRet = LoadStringW(hInstance, uID, *lpTarget, ln);
-
-            if (!nRet)
-                HeapFree(hProcessHeap, 0, *lpTarget);
-
-            return nRet;
+            INT Ret;
+            if (!(Ret = LoadStringW(hInstance, uID, *lpTarget, ln)))
+            {
+                LocalFree((HLOCAL)(*lpTarget));
+            }
+            return Ret;
         }
     }
-
     return 0;
 }
 

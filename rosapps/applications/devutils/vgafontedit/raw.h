@@ -1,9 +1,8 @@
 /*
  * PROJECT:     ReactOS VGA Font Editor
- * LICENSE:     GNU General Public License Version 2.0 or any later version
- * FILE:        devutils/vgafontedit/raw.h
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Raw bitmap fonts
- * COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
+ * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
  */
 
 #ifndef __RAW_H

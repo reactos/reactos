@@ -1,10 +1,9 @@
 /*
  * PROJECT:     ReactOS VGA Font Editor
- * LICENSE:     GNU General Public License Version 2.0 or any later version
- * FILE:        devutils/vgafontedit/lang/en-US.rc
- * PURPOSE:     English resource file
- * COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
- * TRANSLATOR:  Colin Finck
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Norwegian resource file
+ * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
+ * TRANSLATOR:  Lars Martin Hambro
  */
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL

@@ -1,10 +1,9 @@
 /*
  * PROJECT:     ReactOS VGA Font Editor
- * LICENSE:     GNU General Public License Version 2.0 or any later version
- * FILE:        devutils/vgafontedit/lang/zh-CN.rc
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Simplified Chinese resource file
- * COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
- * TRANSLATOR:  BinSys <binsys@163.com>
+ * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
+ * TRANSLATOR:  BinSys (binsys@163.com)
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED

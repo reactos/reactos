@@ -1,11 +1,10 @@
 /*
  * PROJECT:     ReactOS VGA Font Editor
- * LICENSE:     GNU General Public License Version 2.0 or any later version
- * FILE:        devutils/vgafontedit/cpi.h
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CPI (Code Page Information) MS-DOS-compatible Fonts
  *              We support only screen fonts, not printer fonts.
  *              No DR-DOS/Novell-DOS compressed font format support.
- * COPYRIGHT:   Copyright 2014 Hermes Belusca-Maito <hermes.belusca@sfr.fr>
+ * COPYRIGHT:   Copyright 2014 Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #ifndef __CPI_H
