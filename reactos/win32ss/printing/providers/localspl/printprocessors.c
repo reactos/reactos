@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Local Spooler
- * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Print Processors
- * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"

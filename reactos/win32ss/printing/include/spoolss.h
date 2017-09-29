@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Printing Include files
- * LICENSE:     GNU LGPLv2 or any later version as published by the Free Software Foundation
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Undocumented APIs of the Spooler Router "spoolss.dll" and internally shared interfaces
- * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
  */
 
 #ifndef _REACTOS_SPOOLSS_H

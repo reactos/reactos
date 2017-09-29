@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Print Spooler Service
- * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Print Providers
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
