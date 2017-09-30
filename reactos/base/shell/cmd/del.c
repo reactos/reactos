@@ -84,7 +84,7 @@ static BOOLEAN StringsLoaded = FALSE;
 static VOID LoadStrings(VOID)
 {
     LoadString(CMD_ModuleHandle, STRING_DELETE_WIPE, szDeleteWipe, ARRAYSIZE(szDeleteWipe));
-    GetModuleFileName(NULL, CMDPath, MAX_PATH);
+    GetModuleFileName(NULL, CMDPath, ARRAYSIZE(CMDPath));
     StringsLoaded = TRUE;
 }
 

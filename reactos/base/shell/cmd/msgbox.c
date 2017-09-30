@@ -37,7 +37,7 @@ INT CommandMsgbox (LPTSTR param)
     UINT uType = U_TYPE_INIT;
 
     /* set default title to window title */
-    GetConsoleTitle(buff, 128);
+    GetConsoleTitle(buff, ARRAYSIZE(buff));
     title = buff;
 
     if (_tcsncmp (param, _T("/?"), 2) == 0)

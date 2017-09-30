@@ -389,10 +389,10 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                 ptrEnd = Line;
 
                 /* Copy it to the entries list */
-                temp = cmd_alloc((ptrEnd - ptrStart + 1) * sizeof (TCHAR));
+                temp = cmd_alloc((ptrEnd - ptrStart + 1) * sizeof(TCHAR));
                 if (!temp)
                     return FALSE;
-                memcpy(temp, ptrStart, (ptrEnd - ptrStart) * sizeof (TCHAR));
+                memcpy(temp, ptrStart, (ptrEnd - ptrStart) * sizeof(TCHAR));
                 temp[ptrEnd - ptrStart] = _T('\0');
                 StripQuotes(temp);
                 if (!add_entry(entries, params, temp))
@@ -419,7 +419,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                 continue;
             }
             /* Process parameter switch */
-            switch(cCurSwitch)
+            switch (cCurSwitch)
             {
             case _T('A'):   /* Switch parameters for /A (attributes filter) */
                 if (cCurChar == _T('-'))
@@ -583,7 +583,7 @@ PrintDirectoryHeader(LPTSTR szPath, LPDIRSWITCHFLAGS lpFlags)
     if (lpFlags->bBareFormat)
         return TRUE;
 
-    if (GetFullPathName(szPath, sizeof(szFullDir) / sizeof(TCHAR), szFullDir, &pszFilePart) == 0)
+    if (GetFullPathName(szPath, ARRAYSIZE(szFullDir), szFullDir, &pszFilePart) == 0)
     {
         ErrorMessage(GetLastError(), _T("Failed to build full directory path"));
         return FALSE;
@@ -593,7 +593,7 @@ PrintDirectoryHeader(LPTSTR szPath, LPDIRSWITCHFLAGS lpFlags)
     *pszFilePart = _T('\0');
 
     /* get the media ID of the drive */
-    if (!GetVolumePathName(szFullDir, szRootName, sizeof(szRootName) / sizeof(TCHAR)) ||
+    if (!GetVolumePathName(szFullDir, szRootName, ARRAYSIZE(szRootName)) ||
         !GetVolumeInformation(szRootName, szVolName, 80, &dwSerialNr,
                               NULL, NULL, NULL, 0))
     {
@@ -780,7 +780,7 @@ PrintSummary(LPTSTR szPath,
     /* Take this code offline to fix /S does not print double info */
     if (TotalSummary && lpFlags->bRecursive)
     {
-        ConvertULargeInteger(u64Bytes, szBuffer, sizeof(szBuffer), lpFlags->bTSeparator);
+        ConvertULargeInteger(u64Bytes, szBuffer, ARRAYSIZE(szBuffer), lpFlags->bTSeparator);
         LoadString(CMD_ModuleHandle, STRING_DIR_HELP5, szMsg, ARRAYSIZE(szMsg));
         DirPrintf(lpFlags, szMsg, ulFiles, szBuffer);
     }
@@ -798,7 +798,7 @@ PrintSummary(LPTSTR szPath,
     if (!lpFlags->bRecursive || TotalSummary)
     {
         GetUserDiskFreeSpace(szPath, &uliFree);
-        ConvertULargeInteger(uliFree.QuadPart, szBuffer, sizeof(szBuffer), lpFlags->bTSeparator);
+        ConvertULargeInteger(uliFree.QuadPart, szBuffer, ARRAYSIZE(szBuffer), lpFlags->bTSeparator);
         LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, szMsg, ARRAYSIZE(szMsg));
         DirPrintf(lpFlags, szMsg, ulDirs, szBuffer);
     }
@@ -1136,7 +1136,7 @@ DirPrintFiles(PDIRFINDINFO ptrFiles[],      /* [IN] Files' Info */
     /* Condition to print header:
        We are not printing in bare format
        and if we are in recursive mode... we must have results */
-    if (!(lpFlags->bBareFormat ) && !((lpFlags->bRecursive) && (dwCount <= 0)))
+    if (!lpFlags->bBareFormat && !(lpFlags->bRecursive && (dwCount <= 0)))
     {
         LoadString(CMD_ModuleHandle, STRING_DIR_HELP7, szMsg, ARRAYSIZE(szMsg));
         if (DirPrintf(lpFlags, szMsg, szTemp))
@@ -1186,11 +1186,11 @@ CompareFiles(PDIRFINDINFO lpFile1,      /* [IN] A pointer to WIN32_FIND_DATA of 
   long iComp = 0;   /* The comparison result */
 
     /* Calculate criteria by order given from user */
-    for (i = 0;i < lpFlags->stOrderBy.sCriteriaCount;i++)
+    for (i = 0; i < lpFlags->stOrderBy.sCriteriaCount; i++)
     {
 
         /* Calculate criteria */
-        switch(lpFlags->stOrderBy.eCriteria[i])
+        switch (lpFlags->stOrderBy.eCriteria[i])
         {
         case ORDER_SIZE:        /* Order by size /o:s */
             /* concat the 32bit integers to a 64bit */
@@ -1223,7 +1223,7 @@ CompareFiles(PDIRFINDINFO lpFile1,      /* [IN] A pointer to WIN32_FIND_DATA of 
 
         case ORDER_TIME:        /* Order by file's time /o:t */
             /* We compare files based on the time field selected by /t */
-            switch(lpFlags->stTimeField.eTimeField)
+            switch (lpFlags->stTimeField.eTimeField)
             {
             case TF_CREATIONDATE:
                 /* concat the 32bit integers to a 64bit */
@@ -1323,7 +1323,7 @@ static INT
 DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
         LPDIRSWITCHFLAGS lpFlags)   /* [IN] The flags of the listing */
 {
-    BOOL fPoint;                        /* If szPath is a file with extension fPoint will be True*/
+    BOOL fPoint;                        /* If szPath is a file with extension fPoint will be True */
     HANDLE hSearch;                     /* The handle of the search */
     HANDLE hRecSearch;                  /* The handle for searching recursively */
     HANDLE hStreams;                    /* The handle for alternate streams */
@@ -1331,7 +1331,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     PDIRFINDINFO * ptrFileArray;        /* An array of pointers with all the files */
     PDIRFINDLISTNODE ptrStartNode;      /* The pointer to the first node */
     PDIRFINDLISTNODE ptrNextNode;       /* A pointer used for relatives references */
-    TCHAR szFullPath[MAX_PATH];         /* The full path that we are listing with trailing \ */
+    TCHAR szFullPath[MAX_PATH];         /* The full path that we are listing with trailing '\' */
     TCHAR szSubPath[MAX_PATH];
     LPTSTR pszFilePart;
     DWORD dwCount;                      /* A counter of files found in directory */
@@ -1355,7 +1355,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     fPoint= FALSE;
 
     /* Create szFullPath */
-    if (GetFullPathName(szPath, sizeof(szFullPath) / sizeof(TCHAR), szFullPath, &pszFilePart) == 0)
+    if (GetFullPathName(szPath, ARRAYSIZE(szFullPath), szFullPath, &pszFilePart) == 0)
     {
         _tcscpy (szFullPath, szPath);
         pszFilePart = NULL;
@@ -1381,7 +1381,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     ptrStartNode->stInfo.ptrHead = NULL;
     ptrNextNode = ptrStartNode;
 
-    /*Checking ir szPath is a File with/wout extension*/
+    /* Checking if szPath is a File with/wout extension */
     if (szPath[_tcslen(szPath) - 1] == _T('.'))
         fPoint= TRUE;
 
@@ -1391,7 +1391,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     {
         do
         {
-            /*If retrieved FileName has extension,and szPath doesnt have extension then JUMP the retrieved FileName*/
+            /* If retrieved FileName has extension,and szPath doesnt have extension then JUMP the retrieved FileName */
             if (_tcschr(wfdFileInfo.cFileName,_T('.'))&&(fPoint==TRUE))
             {
                 continue;
@@ -1600,15 +1600,16 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     if (CheckCtrlBreak(BREAK_INPUT))
         return 1;
 
-
-    /* Add statistics to recursive statistics*/
+    /* Add statistics to recursive statistics */
     recurse_dir_cnt += dwCountDirs;
     recurse_file_cnt += dwCountFiles;
     recurse_bytes += u64CountBytes;
 
-    /* Do the recursive job if requested
-       the recursive is be done on ALL(independent of their attribs)
-       directories of the current one.*/
+    /*
+     * Do the recursive job if requested.
+     * The recursion is done on ALL (independent of their attributes)
+     * directories of the current one.
+     */
     if (lpFlags->bRecursive)
     {
         /* The new search is involving any *.* file */
@@ -1638,7 +1639,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                         return 1;
                     }
                 }
-            } while(FindNextFile(hRecSearch, &wfdFileInfo));
+            } while (FindNextFile(hRecSearch, &wfdFileInfo));
         }
         FindClose(hRecSearch);
     }
@@ -1718,7 +1719,7 @@ CommandDir(LPTSTR rest)
     if (stFlags.bPause)
         ConOutPrintfPaging(TRUE, _T(""));
 
-    for(loop = 0; loop < (UINT)entries; loop++)
+    for (loop = 0; loop < (UINT)entries; loop++)
     {
         if (CheckCtrlBreak(BREAK_INPUT))
         {
@@ -1757,14 +1758,14 @@ CommandDir(LPTSTR rest)
         ChangedVolume = TRUE;
 
         if (!stFlags.bBareFormat &&
-            GetVolumePathName(params[loop], path, sizeof(path) / sizeof(TCHAR)))
+            GetVolumePathName(params[loop], path, ARRAYSIZE(path)))
         {
             if (!_tcscmp(path, prev_volume))
                 ChangedVolume = FALSE;
             else
                 _tcscpy(prev_volume, path);
         }
-        else if (GetFullPathName(params[loop], sizeof(path) / sizeof(TCHAR), path, &pszFilePart) != 0)
+        else if (GetFullPathName(params[loop], ARRAYSIZE(path), path, &pszFilePart) != 0)
         {
             if (pszFilePart != NULL)
                 *pszFilePart = _T('\0');
@@ -1784,7 +1785,7 @@ CommandDir(LPTSTR rest)
         }
 
         /* do the actual dir */
-        if (DirList (params[loop], &stFlags))
+        if (DirList(params[loop], &stFlags))
         {
             nErrorLevel = 1;
             goto cleanup;
