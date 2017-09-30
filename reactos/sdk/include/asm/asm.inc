@@ -11,9 +11,9 @@
 
 /* Common definitions for FPO macro
    see http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
-#define FRAME_FPO 0
-#define FRAME_TRAP 1
-#define FRAME_TSS 2
+#define FRAME_FPO    0
+#define FRAME_TRAP   1
+#define FRAME_TSS    2
 #define FRAME_NONFPO 3
 
 #ifdef _USE_ML
@@ -193,7 +193,6 @@ resb MACRO name, size
     __absolute__address__ = __absolute__address__ + size
 ENDM
 
-
 /* We need this to distinguish repeat from macros */
 #define ENDR ENDM
 
@@ -201,7 +200,7 @@ ENDM
 #define LF 10
 #define NUL 0
 
-/* For compatibility with gas */
+/* For compatibility with GAS */
 #define CFI_STARTPROC
 #define CFI_ENDPROC
 #define CFI_ADJUST_CFA_OFFSET
@@ -237,7 +236,7 @@ ENDM
 .macro .PROC name
     .func \name
 #ifdef _X86_
-    /* x86 gas expects a label with _ prefix */
+    /* x86 GAS expects a label with _ prefix */
     _\name:
 #endif
     \name:
@@ -381,8 +380,8 @@ code = 1
 #define else .else
 #define elseif .elseif
 
-#define CR "\r"
-#define LF "\n"
+#define CR  "\r"
+#define LF  "\n"
 #define NUL "\0"
 
 /* CFI annotations */
