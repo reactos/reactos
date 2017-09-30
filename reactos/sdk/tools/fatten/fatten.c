@@ -138,7 +138,7 @@ int main(int oargc, char* oargv[])
     // first parameter must be the image file.
     if (argc == 0)
     {
-        fprintf(stderr, "Error: First parameter must be a filename.\n", argv[0]);
+        fprintf(stderr, "Error: First parameter must be a filename.\n");
         PRINT_HELP_AND_QUIT();
     }
 
