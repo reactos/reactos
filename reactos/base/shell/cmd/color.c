@@ -102,7 +102,7 @@ INT CommandColor(LPTSTR rest)
             return 1;
         }
     }
-    /* Color string: advanced choice: two-digits, "Color ON Color" , "Foreground ON Background" */
+    /* Color string: advanced choice: two-digits, "Color ON Color", "Foreground ON Background" */
     else if (StringToColor(&wColor, &rest) == FALSE)
     {
         /* Invalid color string */

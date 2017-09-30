@@ -28,12 +28,11 @@
 
 #ifdef INCLUDE_CMD_BEEP
 
-
-INT cmd_beep (LPTSTR param)
+INT cmd_beep(LPTSTR param)
 {
-    if (_tcsncmp (param, _T("/?"), 2) == 0)
+    if (_tcsncmp(param, _T("/?"), 2) == 0)
     {
-        ConOutResPaging(TRUE,STRING_BEEP_HELP);
+        ConOutResPaging(TRUE, STRING_BEEP_HELP);
         return 0;
     }
 
@@ -46,4 +45,5 @@ INT cmd_beep (LPTSTR param)
 
     return 0;
 }
+
 #endif

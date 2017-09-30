@@ -30,16 +30,16 @@
 
 #ifdef INCLUDE_CMD_CLS
 
-INT cmd_cls (LPTSTR param)
+INT cmd_cls(LPTSTR param)
 {
     HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     COORD coPos;
     DWORD dwWritten;
 
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_CLS_HELP);
+        ConOutResPaging(TRUE, STRING_CLS_HELP);
         return 0;
     }
 
@@ -62,4 +62,5 @@ INT cmd_cls (LPTSTR param)
 
     return 0;
 }
+
 #endif

@@ -145,10 +145,6 @@
 #include <reactos/buildno.h>
 #include <reactos/version.h>
 
-#ifndef NT_SUCCESS
-#define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
-#endif
-
 typedef NTSTATUS (WINAPI *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
                                                           PVOID, ULONG, PULONG);
 typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PULONG);
@@ -167,7 +163,6 @@ BOOL bDelayedExpansion = FALSE;
 BOOL bTitleSet = FALSE;
 DWORD dwChildProcessId = 0;
 HANDLE hIn;
-HANDLE hOut;
 LPTSTR lpOriginalEnvironment;
 HANDLE CMD_ModuleHandle;
 
@@ -379,6 +374,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         return 1;
     }
 
+    /* Save the original console title and build a new one */
     GetConsoleTitle(szWindowTitle, ARRAYSIZE(szWindowTitle));
     bTitleSet = FALSE;
     _stprintf(szNewTitle, _T("%s - %s%s"), szWindowTitle, First, Rest);
@@ -480,6 +476,8 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     /* Get code page if it has been changed */
     InputCodePage= GetConsoleCP();
     OutputCodePage = GetConsoleOutputCP();
+
+    /* Restore the original console title */
     if (!bTitleSet)
         SetConsoleTitle(szWindowTitle);
 
@@ -565,7 +563,7 @@ DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
  * process the command line and execute the appropriate functions
  * full input/output redirection and piping are supported
  */
-INT ParseCommandLine (LPTSTR cmd)
+INT ParseCommandLine(LPTSTR cmd)
 {
     INT Ret = 0;
     PARSED_COMMAND *Cmd = ParseCommand(cmd);
@@ -591,7 +589,7 @@ ExecuteAsync(PARSED_COMMAND *Cmd)
     PROCESS_INFORMATION prci;
 
     /* Get the path to cmd.exe */
-    GetModuleFileName(NULL, CmdPath, MAX_PATH);
+    GetModuleFileName(NULL, CmdPath, ARRAYSIZE(CmdPath));
 
     /* Build the parameter string to pass to cmd.exe */
     ParamsEnd = _stpcpy(CmdParams, _T("/S/D/C\""));
@@ -1414,7 +1412,7 @@ ReadLine(TCHAR *commandline, BOOL bMore)
 }
 
 static VOID
-ProcessInput()
+ProcessInput(VOID)
 {
     PARSED_COMMAND *Cmd;
 
@@ -1487,15 +1485,15 @@ BOOL WINAPI BreakHandler(DWORD dwCtrlType)
 }
 
 
-VOID AddBreakHandler (VOID)
+VOID AddBreakHandler(VOID)
 {
-    SetConsoleCtrlHandler ((PHANDLER_ROUTINE)BreakHandler, TRUE);
+    SetConsoleCtrlHandler(BreakHandler, TRUE);
 }
 
 
-VOID RemoveBreakHandler (VOID)
+VOID RemoveBreakHandler(VOID)
 {
-    SetConsoleCtrlHandler ((PHANDLER_ROUTINE)BreakHandler, FALSE);
+    SetConsoleCtrlHandler(BreakHandler, FALSE);
 }
 
 
@@ -1505,7 +1503,7 @@ VOID RemoveBreakHandler (VOID)
  */
 #if 0
 static VOID
-ShowCommands (VOID)
+ShowCommands(VOID)
 {
     /* print command list */
     ConOutResPuts(STRING_CMD_HELP1);
@@ -1802,6 +1800,8 @@ Initialize(VOID)
     TCHAR ModuleName[_MAX_PATH + 1];
     INT nExitCode;
 
+    HANDLE hOut;
+
     TCHAR *ptr, *cmdLine, option = 0;
     BOOL AlwaysStrip = FALSE;
     BOOL AutoRun = TRUE;
@@ -1993,29 +1993,29 @@ Initialize(VOID)
 
 static VOID Cleanup(VOID)
 {
-    /* run cmdexit.bat */
-    if (IsExistingFile (_T("cmdexit.bat")))
+    /* Run cmdexit.bat */
+    if (IsExistingFile(_T("cmdexit.bat")))
     {
         ConErrResPuts(STRING_CMD_ERROR5);
 
-        ParseCommandLine (_T("cmdexit.bat"));
+        ParseCommandLine(_T("cmdexit.bat"));
     }
-    else if (IsExistingFile (_T("\\cmdexit.bat")))
+    else if (IsExistingFile(_T("\\cmdexit.bat")))
     {
-        ConErrResPuts (STRING_CMD_ERROR5);
-        ParseCommandLine (_T("\\cmdexit.bat"));
+        ConErrResPuts(STRING_CMD_ERROR5);
+        ParseCommandLine(_T("\\cmdexit.bat"));
     }
 
 #ifdef FEATURE_DIRECTORY_STACK
-    /* destroy directory stack */
-    DestroyDirectoryStack ();
+    /* Destroy directory stack */
+    DestroyDirectoryStack();
 #endif
 
 #ifdef FEATURE_HISTORY
     CleanHistory();
 #endif
 
-    /* free GetEnvVar's buffer */
+    /* Free GetEnvVar's buffer */
     GetEnvVar(NULL);
 
     /* Remove ctrl break handler */

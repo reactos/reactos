@@ -52,7 +52,6 @@
 #define BUFF_SIZE 16384
 
 /* Global variables */
-extern HANDLE hOut;
 extern HANDLE hIn;
 extern LPTSTR lpOriginalEnvironment;
 extern WORD   wColor;
@@ -145,7 +144,7 @@ LPCTSTR GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA );
 
 /* Prototypes for COLOR.C */
 BOOL SetScreenColor(WORD wColor, BOOL bNoFill);
-INT CommandColor (LPTSTR);
+INT CommandColor(LPTSTR);
 
 VOID ConInDummy (VOID);
 VOID ConInDisable (VOID);
