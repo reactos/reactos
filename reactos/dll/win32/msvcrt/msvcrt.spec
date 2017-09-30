@@ -587,7 +587,7 @@
 @ cdecl _putw(long ptr)
 @ cdecl _putwch(long)
 @ cdecl _putws(wstr)
-# extern _pwctype
+@ extern _pwctype
 @ cdecl _read(long ptr long)
 @ cdecl _resetstkoflw()
 @ cdecl _rmdir(str)
