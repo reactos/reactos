@@ -1,0 +1,34 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "ReactOS Timeout Utility\n\
+\n\
+TIMEOUT [/?] [/T] tempo [/NOBREAK]\n\
+\n\
+Descrizione :\n\
+    Questa utilità permette di attendere finchè un tempo fissato (in secondi)\n\
+    non è trascorso, oppure fino a quando non viene premuto un tasto. Accetta\n\
+    un parametro per ignorare la pressione dei tasti.\n\
+\n\
+Parametri:\n\
+    /?        Visualizza questo messaggio di aiuto.\n\
+\n\
+    /T tempo  Indica il numero di secondi di attesa (da -1 a 99999).\n\
+              Il valore -1 significa che il programma attenderà infinitamente\n\
+              fino alla pressione di un tasto.\n\
+              Notare che il parametro ""/T"" è opzionale, è possibile\n\
+              specificare il valore del ritardo senza di esso.\n\
+\n\
+    /NOBREAK  Ignora la pressione di qualsiasi tasto, eccetto il Ctrl+C.\n\
+"
+    IDS_ERROR_OUT_OF_RANGE "ERRORE: il tempo di attesa deve essere compreso tra i limiti (-1 e 99999).\n"
+    IDS_ERROR_INVALID_HANDLE_VALUE "ERRORE: Impossibile ottenere l'handle per accedere alla console (errore %lu).\n"
+    IDS_ERROR_READ_INPUT "ERRORE: Impossibile leggere dalla console (errore %lu).\n"
+    IDS_ERROR_NO_TIMER_VALUE "ERRORE: il tempo di attesa non è stato specificato (tra -1 e 99999).\n"
+    IDS_ERROR_ONE_TIME "ERRORE: Deve essere indicato un solo valore temporale.\n"
+    IDS_NOBREAK_INPUT "Premere Ctrl+C per interrompere..."
+    IDS_USER_INPUT "Premere un tasto per continuare..."
+    IDS_NOBREAK_INPUT_COUNT "Attendere %d secondi, premere Ctrl+C per interrompere..."
+    IDS_USER_INPUT_COUNT "Attendere %d secondi, premere un tasto per continuare..."
+END
