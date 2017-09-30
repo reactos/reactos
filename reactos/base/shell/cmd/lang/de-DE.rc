@@ -74,9 +74,9 @@ CMD [/[C|K] Befehl][/P][/Q][/T:bf]\n\n\
                 (kann nicht beendet werden).\n\
   /T:bf         Ändert die Hintergrund- und Vordergrund-Farbe (siehe COLOR Befehl)."
     STRING_COLOR_HELP1 "Legt die Standardhinter- und Vordergrundfarben für die Konsole fest.\n\n\
-COLOR [attr [/F]] \n\n\
+COLOR [attr [/-F]]\n\n\
   attr        Gibt die Farbattribute für die Konsolenausgabe an.\n\
-  /F          Füllt die Konsolenausgabe mit dem Farbattribut\n\n\
+  /-F         Füllt nicht die Konsolenausgabe mit dem Farbattribut.\n\n\
 Es gibt 2 Möglichkeiten, die Farben festzulegen:\n\
 2) Zwei Dezimalzahlen\n\
 3) Zwei Hexadezimalziffern\n\n\
@@ -474,7 +474,6 @@ Titel         neuer Titel"
     STRING_CMD_ERROR5 "Ausführend cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Fehler: Hinter- und Vordergrund können nicht die selben Farben haben!"
     STRING_COLOR_ERROR2 "Fehler in der Farbangabe"
-    STRING_COLOR_ERROR3 "Farbe %02x\n"
     STRING_CONSOLE_ERROR "Unbekannter Fehler: %d\n"
     STRING_COPY_ERROR1 "Fehler: Quelle kann nicht geöffnet werden - %s!\n"
     STRING_COPY_ERROR2 "Fehler: Kann nicht über sich selbst kopiert werden.\n"

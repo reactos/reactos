@@ -73,7 +73,7 @@ CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
               (no puede ser cerrado).\n\
   /T:bf       Configura el color de fondo/primer plano (mirar el comando COLOR).\n"
     STRING_COLOR_HELP1 "Configura el color de primer plano y fondo.\n\n\
-COLOR [attr [/-F]] \n\n\
+COLOR [attr [/-F]]\n\n\
   attr        Especifica el atributo de color de salida de consola.\n\
   /-F         No rellena el espacio en blanco de la consola con el color del atributo.\n\n\
 Hay tres maneras de especificar los colores:\n\
@@ -477,7 +477,6 @@ title         Nuevo título\n"
     STRING_CMD_ERROR5 "Ejecutando cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "¡Mismos colores! (El color de frente y de fondo no pueden ser el mismo)"
     STRING_COLOR_ERROR2 "Error en la especificación del color"
-    STRING_COLOR_ERROR3 "Color %02x\n"
     STRING_CONSOLE_ERROR "Error desconocido: %d\n"
     STRING_COPY_ERROR1 "Error: No se puede abrir el origen - %s!\n"
     STRING_COPY_ERROR2 "Error: ¡No se puede copiar sobre si mismo!\n"

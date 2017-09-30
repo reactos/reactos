@@ -70,7 +70,7 @@ CMD [/[C|K] 命令][/P][/Q][/T:bf]\n\n\
   /P           永久保留 CMD 並運行 autoexec.bat (無法終止)。\n\
   /T:bf        設定前景/背景顏色 (參見 COLOR 命令)。\n"
     STRING_COLOR_HELP1 "設定默認前景和背景顏色。\n\n\
-COLOR [屬性 [/-F]] \n\n\
+COLOR [屬性 [/-F]]\n\n\
   屬性          指定控制檯輸出的顏色屬性。\n\
   /-F           不要使用顏色填充控制檯的空白區域。\n\n\
 有3種方法指定顏色：\n\
@@ -444,7 +444,6 @@ RESTORE       恢復視窗\n\
     STRING_CMD_ERROR5 "正在運行 cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "同樣顏色錯誤！ (背景和前景不能同色)"
     STRING_COLOR_ERROR2 "顏色指定錯誤"
-    STRING_COLOR_ERROR3 "顏色 %02x\n"
     STRING_CONSOLE_ERROR "未知錯誤：%d\n"
     STRING_COPY_ERROR1 "錯誤：無法開啟源 -  %s！\n"
     STRING_COPY_ERROR2 "錯誤：無法複製到自身！\n"

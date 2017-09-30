@@ -73,9 +73,9 @@ CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
               (tidak bisa diakhiri).\n\
   /T:bf       Menyetel warna latar belakang/depan (lihat perintah COLOR).\n"
     STRING_COLOR_HELP1 "Menyetel warna standar latar belakang dan depan.\n\n\
-COLOR [attr [/-F]] \n\n\
-  attr        Menetapkan atribut warna output konsol\n\
-  /-F         Tidak memenuhi ruang kosong konsol dengan atribut warna\n\n\
+COLOR [attr [/-F]]\n\n\
+  attr        Menetapkan atribut warna output konsol.\n\
+  /-F         Tidak memenuhi ruang kosong konsol dengan atribut warna.\n\n\
 Ada tiga cara untuk menetapkan warna:\n\
 1) [bright] nama pada [bright] nama  (hanya tiga huruf pertama yang dipakai)\n\
 2) desimal pada desimal\n\
@@ -474,7 +474,6 @@ title         judul baru\n"
     STRING_CMD_ERROR5 "Menjalankan cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Warna sama salah! (Latar belakang dan latar depan tidak bisa berwarna sama)"
     STRING_COLOR_ERROR2 "Kesalahan dalam spesifikasi warna"
-    STRING_COLOR_ERROR3 "Warna %02x\n"
     STRING_CONSOLE_ERROR "Kesalahan tidak dikenal: %d\n"
     STRING_COPY_ERROR1 "Salah: Tidak dapat membuka sumber - %s!\n"
     STRING_COPY_ERROR2 "Salah: Tidak dapat mengcopy ke dirinya sendiri!\n"

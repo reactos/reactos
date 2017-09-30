@@ -31,8 +31,7 @@
 #define STRING_CMD_ERROR5          313
 #define STRING_COLOR_ERROR1        314
 #define STRING_COLOR_ERROR2        315
-#define STRING_COLOR_ERROR3        316
-#define STRING_CONSOLE_ERROR       317
+#define STRING_CONSOLE_ERROR       316
 #define STRING_COPY_ERROR1         320
 #define STRING_COPY_ERROR2         321
 #define STRING_COPY_ERROR3         322

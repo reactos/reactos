@@ -75,9 +75,9 @@ CMD [/[C|K] komande][/P][/Q][/T:bf]\n\n\
               (nuk mund të ndërpritet).\n\
   /T:bf       Përcakton ngjyrën e sfondit/parasfondin(shih NGJYRAT e komandave).\n"
     STRING_COLOR_HELP1 "Vë parazgjedhjene e ngjyrave të sfondit dhe parasfondit.\n\n\
-COLOR [attr [/-F]] \n\n\
-  attr        Përcakton atributin e ngjyrave të prodhimit nga konsoli\n\
-  /-F         Nuk e mbush hapësirën bosh të konsolit me atribute ngjyrash\n\n\
+COLOR [attr [/-F]]\n\n\
+  attr        Përcakton atributin e ngjyrave të prodhimit nga konsoli.\n\
+  /-F         Nuk e mbush hapësirën bosh të konsolit me atribute ngjyrash.\n\n\
 Ka tre mënyra për të specifikuar ngjyrat:\n\
 1) [e ndritshem] emri [e ndritshem] emri  (vetëm tre letrat e para janë të nevojshme)\n\
 2) decimal në decimal\n\
@@ -478,8 +478,7 @@ title         titull i ri\n"
     STRING_CMD_ERROR4 "Fillo %s...\n"
     STRING_CMD_ERROR5 "Fillo cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Error i njëta ngjyra! (Historiku dhe prioritetit nuk mund të jetë ngjyrë të njëjtë)"
-    STRING_COLOR_ERROR2 "gabim në specifikim ngjyra"
-    STRING_COLOR_ERROR3 "Ngjyra %02x\n"
+    STRING_COLOR_ERROR2 "Gabim në specifikim ngjyra"
     STRING_CONSOLE_ERROR "Error i paditur: %d\n"
     STRING_COPY_ERROR1 "Error: Nuk mund të hapni burim - %s!\n"
     STRING_COPY_ERROR2 "Error: Nuk mund të kopjoni mbi veten!\n"

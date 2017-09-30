@@ -76,9 +76,9 @@ CMD [/[C|K] commande][/P][/Q][/T:ap]\n\n\
   /T:ap        Changer la couleur d'arrière/premier plan\n\
                (voir la commande COLOR.)"
     STRING_COLOR_HELP1 "Change les couleurs de premier et d'arrière plan.\n\n\
-COLOR [attr [/F]] \n\n\
-  attr        Spécifie l'attribut des couleurs de la console\n\
-  /F          remplit la console avec l'attribut de couleur\n\n\
+COLOR [attr [/-F]]\n\n\
+  attr        Spécifie l'attribut de couleur de la console.\n\
+  /-F         Ne remplit pas les espaces blancs avec l'attribut de couleur.\n\n\
 Il y a trois façons de spécifier les couleurs :\n\
 1) [bright] nom on [bright] nom (seules les trois premières lettres \n\
 sont nécessaires)\n\
@@ -489,7 +489,6 @@ titre         titre de la fenêtre"
     STRING_CMD_ERROR5 "Lance cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "L'arrière plan et l'avant plan ne peuvent être de la même couleur"
     STRING_COLOR_ERROR2 "Erreur dans la spécification des couleurs"
-    STRING_COLOR_ERROR3 "Couleur %02x\n"
     STRING_CONSOLE_ERROR "Erreur inconnue : %d\n"
     STRING_COPY_ERROR1 "Erreur : Ne peut ouvrir la source - %s !\n"
     STRING_COPY_ERROR2 "Erreur : Ne peut copier le fichier sur lui-même !\n"

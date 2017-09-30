@@ -80,9 +80,9 @@ CMD [/[C|K] komenda][/P][/Q][/T:bf]\n\n\
               (okno nie może zostać zamknięte).\n\
   /T:bf       Ustawia kolor tła/tekstu (patrz komenda COLOR).\n"
     STRING_COLOR_HELP1 "Ustawia domyślny kolor tła i tekstu.\n\n\
-COLOR [atr [/-F]] \n\n\
-  atr        Ustawienia koloru \n\
-  /-F        Nie uzupełnia kolorem pustych przestrzeni w konsoli\n\n\
+COLOR [atr [/-F]]\n\n\
+  atr        Ustawienia koloru.\n\
+  /-F        Nie uzupełnia kolorem pustych przestrzeni w konsoli.\n\n\
 Ustawienia koloru można wyznaczyć na trzy sposoby:\n\
 1) [jasny] nazwa on [jasny] nazwa  (wystarczą pierwsze trzy litery nazwy)\n\
 2) numer_dec on numer_dec\n\
@@ -479,7 +479,6 @@ title         nowy tytuł okna\n"
     STRING_CMD_ERROR5 "Wykonywanie cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Błąd! Kolor tła i tekstu nie może być taki sam"
     STRING_COLOR_ERROR2 "Błąd w oznaczeniu kolorów."
-    STRING_COLOR_ERROR3 "Kolor %02x\n"
     STRING_CONSOLE_ERROR "Nieznany błąd: %d\n"
     STRING_COPY_ERROR1 "Błąd: Nie można otworzyć źródła - %s!\n"
     STRING_COPY_ERROR2 "Błąd: Nie można przekopiować pliku na niego samego!\n"

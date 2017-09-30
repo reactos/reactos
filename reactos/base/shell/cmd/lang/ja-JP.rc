@@ -72,7 +72,7 @@ CMD [/[C|K] コマンド][/P][/Q][/T:bf]\n\n\
   /T:bf        前景色および背景色を設定します \n\
                (詳細は COLOR /? を参照してください)。\n"
     STRING_COLOR_HELP1 "コンソールのデフォルトの前景色および背景色を設定します。\n\n\
-COLOR [属性 [/-F]] \n\n\
+COLOR [属性 [/-F]]\n\n\
   属性        コンソール出力の色属性を指定します。\n\
   /-F         コンソールの空いている空間には色属性を適用しない。\n\n\
 色は次の 3 種類の方法で指定することができます。\n\
@@ -482,7 +482,6 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_CMD_ERROR5 "cmdexit.bat を実行しています...\n"
     STRING_COLOR_ERROR1 "エラー! 同じ色が指定されました。\n (前景色と背景色を同じ色にすることはできません)"
     STRING_COLOR_ERROR2 "色の指定に問題があります。"
-    STRING_COLOR_ERROR3 "Color %02x\n"
     STRING_CONSOLE_ERROR "不明なエラー: %d\n"
     STRING_COPY_ERROR1 "エラー: 元のファイル %s を開けません!\n"
     STRING_COPY_ERROR2 "エラー: コピー元とコピー先が一緒です!\n"

@@ -74,9 +74,9 @@ CMD [/[C|K] comandă][/P][/Q][/T:culori]\n\n\
   /T:culori   Stabilește culorile pentru text și fundal\n\
               (a se vedea comanda COLOR).\n"
     STRING_COLOR_HELP1 "Stabilește culorile implicite pentru text și fundal.\n\n\
-COLOR [attr [/-F]] \n\n\
-  attr        Atributele de culoare pentru consolă\n\
-  /-F         Omite umplerea spațiului gol al consolei\n\n\
+COLOR [attr [/-F]]\n\n\
+  attr        Atributele de culoare pentru consolă.\n\
+  /-F         Omite umplerea spațiului gol al consolei.\n\n\
 Există trei moduri de formulare a atributelor de culoare:\n\
 1) nume_englez ON nume_englez\n\
    (sunt suficiente doar primele trei litere per cuvânt)\n\
@@ -506,7 +506,6 @@ titlu         Noul titlu.\n"
     STRING_CMD_ERROR5 "«cmdexit.bat» în execuție...\n"
     STRING_COLOR_ERROR1 "Eroare de culoare identică! (Culorile nu trebuie să fie identice)"
     STRING_COLOR_ERROR2 "Eroare la specificarea culorii"
-    STRING_COLOR_ERROR3 "Culoare %02x\n"
     STRING_CONSOLE_ERROR "Eroare necunoscută: %d\n"
     STRING_COPY_ERROR1 "Eroare: Fișierul - «%s» nu a putut fi deschis!\n"
     STRING_COPY_ERROR2 "Eroare: Nu poate fi copiat peste el însuși!\n"

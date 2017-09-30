@@ -76,9 +76,9 @@ CMD [/[C|K] εντολή][/P][/Q][/T:bf]\n\n\
               (δε μπορεί να τερματιστεί).\n\
   /T:bf       Ορίζει το χρώμα φόντου/πρώτου πλάνου (βλέπε την COLOR εντολή).\n"
     STRING_COLOR_HELP1 "Ορίζει τα προεπιλεγμένα χρώματα πρώτου πλάνου και φόντου για την κονσόλα.\n\n\
-COLOR [χαρακτηριστικό [/-F]] \n\n\
-  χαρακτηριστικό  Καθορίζει το χαρακτηριστικό χρώματος για την έξοδο της κονσόλας\n\
-  /-F             Does not fill the console blank space with color attribute\n\n\
+COLOR [χαρακτηριστικό [/-F]]\n\n\
+  χαρακτηριστικό  Καθορίζει το χαρακτηριστικό χρώματος για την έξοδο της κονσόλας.\n\
+  /-F             Does not fill the console blank space with color attribute.\n\n\
 Υπάρχουν 3 τρόποι για να οριστούν τα χρώματα:\n\
 1) [ανοιχτό] όνομα σε [ανοιχτό] όνομα (μόνο τα πρώτα τρία γράμματα απαιτούνται)\n\
 2) δεκαδικό σε δεκαδικό\n\
@@ -478,8 +478,7 @@ title         new title\n"
     STRING_CMD_ERROR4 "Εκτελείται το %s...\n"
     STRING_CMD_ERROR5 "Running cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Same colors error! (Background and foreground can't be the same color)"
-    STRING_COLOR_ERROR2 "error in color specification"
-    STRING_COLOR_ERROR3 "Color %02x\n"
+    STRING_COLOR_ERROR2 "Error in color specification"
     STRING_CONSOLE_ERROR "Άγνωστο σφάλμα: %d\n"
     STRING_COPY_ERROR1 "Σφάλμα: Δεν ήταν δυνατό το άνοιγμα της πηγής - %s!\n"
     STRING_COPY_ERROR2 "Σφάλμα: Can't copy onto itself!\n"

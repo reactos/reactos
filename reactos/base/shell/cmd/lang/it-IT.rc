@@ -71,9 +71,9 @@ CMD [/[C|K] comando][/P][/Q][/T:bf]\n\n\
   /T:bf       Definisce i colori di primo piano e sfondo\n\
               (vedi anche il comando COLOR).\n"
     STRING_COLOR_HELP1 "Definisce i colori predefiniti di primo piano e sfondo.\n\n\
-COLOR [attr [/-F]] \n\n\
-  attr        Indica gli attributi di colore per i messaggi su console\n\
-  /-F         Non riempie lo spazio vuoto della console con gli attributi di colore\n\n\
+COLOR [attr [/-F]]\n\n\
+  attr        Indica gli attributi di colore per i messaggi su console.\n\
+  /-F         Non riempie lo spazio vuoto della console con gli attributi di colore.\n\n\
 Ci sono tre modi per indicare i colori:\n\
 1) [bright] nome su [bright] nome  (sono necessarie solo le prime tre lettere)\n\
 2) decimale su decimale\n\
@@ -484,9 +484,8 @@ titolo        il nuovo titolo\n"
     STRING_CMD_ERROR4 "Esecuzione di %s...\n"
     STRING_CMD_ERROR5 "Esecuzione di cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Il colore di primo piano e sfondo non possono essere uguali"
-    STRING_COLOR_ERROR2 "errore nella indicazione dei colori"
-    STRING_COLOR_ERROR3 "Colore %02x\n"
-    STRING_CONSOLE_ERROR "errore sconosciuto: %d\n"
+    STRING_COLOR_ERROR2 "Errore nella indicazione dei colori"
+    STRING_CONSOLE_ERROR "Errore sconosciuto: %d\n"
     STRING_COPY_ERROR1 "Errore: Impossibile aprire il file sorgente - %s!\n"
     STRING_COPY_ERROR2 "Errore: Impossibile copiare un file su se stesso!\n"
     STRING_COPY_ERROR3 "Errore durante la scrittura della destinazione!\n"

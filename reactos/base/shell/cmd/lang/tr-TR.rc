@@ -73,7 +73,7 @@ CMD [/[C|K] komut][/P][/Q][/T:aö]\n\n\
               (sonlandırılamaz).\n\
   /T:aö       Arka plan/ön plan rengini ayarlar (COLOR komutuna bakınız).\n"
     STRING_COLOR_HELP1 "Ön tanımlı ön plan ve arka plan renklerini ayarlar.\n\n\
-COLOR [öznt [/-F]] \n\n\
+COLOR [öznt [/-F]]\n\n\
   öznt        Konsol çıktısının renk öz niteliğini belirtir.\n\
   /-F         Konsol boş alanı renk öz niteliğiyle doldurma.\n\n\
 Renkleri belirtmek için üç yol var:\n\
@@ -480,7 +480,6 @@ başlık        Yeni başlık\n"
     STRING_CMD_ERROR5 "cmdexit.bat çalıştırılıyor...\n"
     STRING_COLOR_ERROR1 "Aynı renk yanlışlığı! (Arka plan ve ön plan aynı renk olamaz.)"
     STRING_COLOR_ERROR2 "Renk belirtmede yanlışlık"
-    STRING_COLOR_ERROR3 "Renk %02x\n"
     STRING_CONSOLE_ERROR "Bilinmeyen yanlışlık: %d\n"
     STRING_COPY_ERROR1 "Yanlışlık: %s kaynağı açılamıyor!\n"
     STRING_COPY_ERROR2 "Yanlışlık: Kendisinin üstüne çoğaltılamıyor!\n"

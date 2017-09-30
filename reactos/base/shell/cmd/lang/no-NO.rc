@@ -71,9 +71,9 @@ CMD [/[C|K] kommando][/P][/Q][/T:bf]\n\n\
               (kan ikke avsluttes).\n\
   /T:bf       Velg bakgrunn/forgrunn farge (se COLOR kommando).\n"
     STRING_COLOR_HELP1 "Velg standard forgrunns- og bakgrunnsfarger.\n\n\
-COLOR [attr [/-F]] \n\n\
-  attr        Spesifisere fargeattributter for konsollteksten\n\
-  /-F         Fyller ikke blank plass med fargeattributter\n\n\
+COLOR [attr [/-F]]\n\n\
+  attr        Spesifisere fargeattributter for konsollteksten.\n\
+  /-F         Fyller ikke blank plass med fargeattributter.\n\n\
 Det er tre nåter å spesifisere fargene:\n\
 1) [bright] navn på [bright] navn  (bare de tre første bokstaver er krevet)\n\
 2) desimal på desimal\n\
@@ -472,8 +472,7 @@ tittel        ny tittel\n"
     STRING_CMD_ERROR4 "Kjører %s...\n"
     STRING_CMD_ERROR5 "Kjører cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Samme farge feil! (Bakgrunn og forgrunn kan ikke ha samme farge)"
-    STRING_COLOR_ERROR2 "feil i farge spesifikasjon"
-    STRING_COLOR_ERROR3 "Farge %02x\n"
+    STRING_COLOR_ERROR2 "Feil i farge spesifikasjon"
     STRING_CONSOLE_ERROR "Ukjent feil: %d\n"
     STRING_COPY_ERROR1 "Feil: kan ikke åpne kilden - %s!\n"
     STRING_COPY_ERROR2 "Feil: kan ikke kopiere til seg selv!\n"

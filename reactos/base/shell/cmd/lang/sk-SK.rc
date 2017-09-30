@@ -77,9 +77,9 @@ CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
               (cannot be terminated).\n\
   /T:bf       Sets the background/foreground color (see COLOR command).\n"
     STRING_COLOR_HELP1 "Sets the default foreground and background colors.\n\n\
-COLOR [attr [/-F]] \n\n\
-  attr        Specifies color attribute of console output\n\
-  /-F         Does not fill the console blank space with color attribute\n\n\
+COLOR [attr [/-F]]\n\n\
+  attr        Specifies color attribute of console output.\n\
+  /-F         Does not fill the console blank space with color attribute.\n\n\
 There are three ways to specify the colors:\n\
 1) [bright] name on [bright] name  (only the first three letters are required)\n\
 2) decimal on decimal\n\
@@ -480,8 +480,7 @@ title         new title\n"
     STRING_CMD_ERROR4 "Running %s...\n"
     STRING_CMD_ERROR5 "Running cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Same colors error! (Background and foreground can't be the same color)"
-    STRING_COLOR_ERROR2 "error in color specification"
-    STRING_COLOR_ERROR3 "Color %02x\n"
+    STRING_COLOR_ERROR2 "Error in color specification"
     STRING_CONSOLE_ERROR "Neznáma chyba: %d\n"
     STRING_COPY_ERROR1 "Chyba: Cannot open source - %s!\n"
     STRING_COPY_ERROR2 "Chyba: Can't copy onto itself!\n"

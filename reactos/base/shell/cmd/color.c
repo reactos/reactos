@@ -73,7 +73,7 @@ INT CommandColor(LPTSTR rest)
     /* Let's prepare %ERRORLEVEL% */
     nErrorLevel = 0;
 
-    /* No parameter. Set the default colors */
+    /* No parameter: Set the default colors */
     if (rest[0] == _T('\0'))
     {
         SetScreenColor(wDefColor, FALSE);
@@ -111,11 +111,7 @@ INT CommandColor(LPTSTR rest)
         return 1;
     }
 
-    /* Print the chosen color if we are in echo mode (NOTE: Not Windows-compliant) */
-    if ((bc && bc->bEcho) || !bc)
-    {
-        ConErrResPrintf(STRING_COLOR_ERROR3, wColor);
-    }
+    TRACE("Color %02x\n", wColor);
 
     /*
      * Set the chosen color. Use also the following advanced flag:

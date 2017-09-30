@@ -70,9 +70,9 @@ CMD [/[C|K] parancs][/P][/Q][/T:eh]\n\n\
   /P          Értelmezi az autoexec.bat állományt és a memóriában marad.\n\
   /T:eh       COLOR parancs használata.\n"
     STRING_COLOR_HELP1 "A konzol elõ- és háttérszínét állítja be.\n\n\
-COLOR [eh [/-F]] \n\n\
+COLOR [eh [/-F]]\n\n\
   eh          A konzol elõ- és háttérszínét állítja be.\n\
-  /-F         Nem frissíti az egész képernyõt\n\n\
+  /-F         Nem frissíti az egész képernyõt.\n\n\
 A színt két hexadecimális számjeggyel lehet beállítani\n\n\
 Az elérhetõ színek:\n\
 hex  név             hex  név\n\
@@ -459,7 +459,6 @@ title         new title\n"
     STRING_CMD_ERROR5 "cmdexit.bat futtatása...\n"
     STRING_COLOR_ERROR1 "Ugyanaz a szín nem lehet! (Az elõ- és háttérszín nem lehet ugyanolyan)"
     STRING_COLOR_ERROR2 "Hibás szín megadás"
-    STRING_COLOR_ERROR3 "Szín %02x\n"
     STRING_CONSOLE_ERROR "Ismeretlen hiba: %d\n"
     STRING_COPY_ERROR1 "Hiba: a forrás nem nyitható meg - %s!\n"
     STRING_COPY_ERROR2 "Hiba: nem másolhatod önmagára az állományt!\n"
