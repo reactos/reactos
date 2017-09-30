@@ -139,7 +139,7 @@ VOID ConInString(LPTSTR lpInput, DWORD dwLength)
 
 /******************** Console STREAM OUT utility functions ********************/
 
-static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
+static VOID ConWrite(DWORD nStdHandle, TCHAR *str, DWORD len)
 {
     DWORD dwNumBytes = 0;
     HANDLE hOutput = GetStdHandle(nStdHandle);
@@ -260,26 +260,26 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
     }
 }
 
-VOID ConOutChar(TCHAR c)
+VOID ConPuts(DWORD nStdHandle, LPTSTR szText)
 {
-    ConWrite(&c, 1, STD_OUTPUT_HANDLE);
+    ConWrite(nStdHandle, szText, (DWORD)_tcslen(szText));
 }
 
-VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
-{
-    ConWrite(szText, (DWORD)_tcslen(szText), nStdHandle);
-}
-
-VOID ConOutResPuts(UINT resID)
+VOID ConResPuts(DWORD nStdHandle, UINT resID)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
     LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
-    ConPuts(szMsg, STD_OUTPUT_HANDLE);
+    ConPuts(nStdHandle, szMsg);
 }
 
-VOID ConOutPuts(LPTSTR szText)
+VOID ConOutChar(TCHAR c)
 {
-    ConPuts(szText, STD_OUTPUT_HANDLE);
+    ConWrite(STD_OUTPUT_HANDLE, &c, 1);
+}
+
+VOID ConErrChar(TCHAR c)
+{
+    ConWrite(STD_ERROR_HANDLE, &c, 1);
 }
 
 VOID ConPrintfV(DWORD nStdHandle, LPTSTR szFormat, va_list arg_ptr)
@@ -288,12 +288,31 @@ VOID ConPrintfV(DWORD nStdHandle, LPTSTR szFormat, va_list arg_ptr)
     DWORD len;
 
     len = (DWORD)_vstprintf(szOut, szFormat, arg_ptr);
-    ConWrite(szOut, len, nStdHandle);
+    ConWrite(nStdHandle, szOut, len);
 }
 
-VOID ConErrFormatMessage(DWORD MessageId, ...)
+VOID ConPrintf(DWORD nStdHandle, LPTSTR szFormat, ...)
+{
+    va_list arg_ptr;
+
+    va_start(arg_ptr, szFormat);
+    ConPrintfV(nStdHandle, szFormat, arg_ptr);
+    va_end(arg_ptr);
+}
+
+VOID ConResPrintf(DWORD nStdHandle, UINT resID, ...)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
+    va_list arg_ptr;
+
+    va_start(arg_ptr, resID);
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
+    ConPrintfV(nStdHandle, szMsg, arg_ptr);
+    va_end(arg_ptr);
+}
+
+VOID ConFormatMessage(DWORD nStdHandle, DWORD MessageId, ...)
+{
     DWORD ret;
     LPTSTR text;
     va_list arg_ptr;
@@ -303,107 +322,20 @@ VOID ConErrFormatMessage(DWORD MessageId, ...)
                         NULL,
                         MessageId,
                         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                        (LPTSTR) &text,
+                        (LPTSTR)&text,
                         0,
                         &arg_ptr);
-
     va_end(arg_ptr);
+
     if (ret > 0)
     {
-        ConErrPuts(text);
+        ConPuts(nStdHandle, text);
         LocalFree(text);
     }
     else
     {
-        LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, ARRAYSIZE(szMsg));
-        ConErrPrintf(szMsg);
+        ConResPrintf(nStdHandle, STRING_CONSOLE_ERROR, MessageId);
     }
-}
-
-VOID ConOutFormatMessage(DWORD MessageId, ...)
-{
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
-    DWORD ret;
-    LPTSTR text;
-    va_list arg_ptr;
-
-    va_start(arg_ptr, MessageId);
-    ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                        NULL,
-                        MessageId,
-                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                        (LPTSTR) &text,
-                        0,
-                        &arg_ptr);
-
-    va_end(arg_ptr);
-    if (ret > 0)
-    {
-        ConErrPuts(text);
-        LocalFree(text);
-    }
-    else
-    {
-        LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, ARRAYSIZE(szMsg));
-        ConErrPrintf(szMsg);
-    }
-}
-
-VOID ConOutResPrintf(UINT resID, ...)
-{
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
-    va_list arg_ptr;
-
-    va_start(arg_ptr, resID);
-    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
-    ConPrintfV(STD_OUTPUT_HANDLE, szMsg, arg_ptr);
-    va_end(arg_ptr);
-}
-
-VOID ConOutPrintf(LPTSTR szFormat, ...)
-{
-    va_list arg_ptr;
-
-    va_start(arg_ptr, szFormat);
-    ConPrintfV(STD_OUTPUT_HANDLE, szFormat, arg_ptr);
-    va_end(arg_ptr);
-}
-
-VOID ConErrChar(TCHAR c)
-{
-    ConWrite(&c, 1, STD_ERROR_HANDLE);
-}
-
-VOID ConErrResPuts(UINT resID)
-{
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
-    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
-    ConPuts(szMsg, STD_ERROR_HANDLE);
-}
-
-VOID ConErrPuts(LPTSTR szText)
-{
-    ConPuts(szText, STD_ERROR_HANDLE);
-}
-
-VOID ConErrResPrintf(UINT resID, ...)
-{
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
-    va_list arg_ptr;
-
-    va_start(arg_ptr, resID);
-    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
-    ConPrintfV(STD_ERROR_HANDLE, szMsg, arg_ptr);
-    va_end(arg_ptr);
-}
-
-VOID ConErrPrintf(LPTSTR szFormat, ...)
-{
-    va_list arg_ptr;
-
-    va_start(arg_ptr, szFormat);
-    ConPrintfV(STD_ERROR_HANDLE, szFormat, arg_ptr);
-    va_end(arg_ptr);
 }
 
 

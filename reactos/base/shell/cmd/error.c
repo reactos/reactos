@@ -53,6 +53,7 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
     }
 
     /* Fall back just in case the error is not defined */
+    LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, ARRAYSIZE(szMsg));
     if (szFormat)
         ConErrPrintf(_T("%s -- %s\n"), szMsg, szMessage);
     else
