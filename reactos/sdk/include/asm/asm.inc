@@ -201,16 +201,26 @@ ENDM
 #define NUL 0
 
 /* For compatibility with GAS */
-#define CFI_STARTPROC
-#define CFI_ENDPROC
-#define CFI_ADJUST_CFA_OFFSET
-#define CFI_OFFSET
-#define CFI_REGISTER
-#define CFI_DEF_CFA_REGISTER
-#define CFI_DEF_CFA
-#define CFI_REL_OFFSET
-#define CFI_SAME_VALUE
-#define CFI_DEF_CFA_OFFSET
+CFI_STARTPROC MACRO start
+ENDM
+CFI_ENDPROC MACRO
+ENDM
+CFI_DEF_CFA MACRO reg:REQ, offset:REQ
+ENDM
+CFI_DEF_CFA_OFFSET MACRO offset:REQ
+ENDM
+CFI_DEF_CFA_REGISTER MACRO reg:REQ
+ENDM
+CFI_ADJUST_CFA_OFFSET MACRO offset:REQ
+ENDM
+CFI_OFFSET MACRO reg:REQ, offset:REQ
+ENDM
+CFI_REGISTER MACRO reg1:REQ, reg2:REQ
+ENDM
+CFI_REL_OFFSET MACRO reg:REQ, offset:REQ
+ENDM
+CFI_SAME_VALUE MACRO reg:REQ
+ENDM
 
 #else /***********************************************************************/
 
@@ -387,14 +397,14 @@ code = 1
 /* CFI annotations */
 #define CFI_STARTPROC .cfi_startproc
 #define CFI_ENDPROC .cfi_endproc
+#define CFI_DEF_CFA .cfi_def_cfa
+#define CFI_DEF_CFA_OFFSET .cfi_def_cfa_offset
+#define CFI_DEF_CFA_REGISTER .cfi_def_cfa_register
 #define CFI_ADJUST_CFA_OFFSET .cfi_adjust_cfa_offset
 #define CFI_OFFSET .cfi_offset
 #define CFI_REGISTER .cfi_register
-#define CFI_DEF_CFA_REGISTER .cfi_def_cfa_register
-#define CFI_DEF_CFA .cfi_def_cfa
 #define CFI_REL_OFFSET .cfi_rel_offset
 #define CFI_SAME_VALUE .cfi_same_value
-#define CFI_DEF_CFA_OFFSET .cfi_def_cfa_offset
 
 #endif
 
