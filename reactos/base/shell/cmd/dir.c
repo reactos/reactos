@@ -550,18 +550,18 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
 }
 
 /* Print either with or without paging, depending on /P switch */
-static INT
+static BOOL
 DirPrintf(LPDIRSWITCHFLAGS lpFlags, LPTSTR szFormat, ...)
 {
-    INT iReturn = 0;
+    BOOL Done = TRUE;
     va_list arg_ptr;
     va_start(arg_ptr, szFormat);
     if (lpFlags->bPause)
-        iReturn = ConPrintfVPaging(STD_OUTPUT_HANDLE, FALSE, szFormat, arg_ptr);
+        Done = ConPrintfVPaging(STD_OUTPUT_HANDLE, FALSE, szFormat, arg_ptr);
     else
         ConPrintfV(STD_OUTPUT_HANDLE, szFormat, arg_ptr);
     va_end(arg_ptr);
-    return iReturn;
+    return Done;
 }
 
 
@@ -1139,7 +1139,7 @@ DirPrintFiles(PDIRFINDINFO ptrFiles[],      /* [IN] Files' Info */
     if (!lpFlags->bBareFormat && !(lpFlags->bRecursive && (dwCount <= 0)))
     {
         LoadString(CMD_ModuleHandle, STRING_DIR_HELP7, szMsg, ARRAYSIZE(szMsg));
-        if (DirPrintf(lpFlags, szMsg, szTemp))
+        if (!DirPrintf(lpFlags, szMsg, szTemp))
             return;
     }
 

@@ -21,7 +21,7 @@
 
 #define OUTPUT_BUFFER_SIZE  4096
 
-
+/* Cache codepage for text streams */
 UINT InputCodePage;
 UINT OutputCodePage;
 
@@ -342,7 +342,7 @@ VOID ConFormatMessage(DWORD nStdHandle, DWORD MessageId, ...)
 
 /************************** Console PAGER functions ***************************/
 
-INT ConPrintfVPaging(DWORD nStdHandle, BOOL NewPage, LPTSTR szFormat, va_list arg_ptr)
+BOOL ConPrintfVPaging(DWORD nStdHandle, BOOL NewPage, LPTSTR szFormat, va_list arg_ptr)
 {
     INT len;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -366,14 +366,14 @@ INT ConPrintfVPaging(DWORD nStdHandle, BOOL NewPage, LPTSTR szFormat, va_list ar
 
     /* Reset LineCount and return if no string has been given */
     if (szFormat == NULL)
-        return 0;
+        return TRUE;
 
     /* Get the size of the visual screen that can be printed to */
     if (!IsConsoleHandle(hOutput) || !GetConsoleScreenBufferInfo(hOutput, &csbi))
     {
         /* We assume it's a file handle */
         ConPrintfV(nStdHandle, szFormat, arg_ptr);
-        return 0;
+        return TRUE;
     }
 
     /*
@@ -387,7 +387,7 @@ INT ConPrintfVPaging(DWORD nStdHandle, BOOL NewPage, LPTSTR szFormat, va_list ar
     if (ScreenLines < 4)
     {
         ConPrintfV(nStdHandle, szFormat, arg_ptr);
-        return 0;
+        return TRUE;
     }
 
     len = _vstprintf(szOut, szFormat, arg_ptr);
@@ -408,9 +408,7 @@ INT ConPrintfVPaging(DWORD nStdHandle, BOOL NewPage, LPTSTR szFormat, va_list ar
 
             /* Prompt the user */
             if (PagePrompt() != PROMPT_YES)
-            {
-                return 1;
-            }
+                return FALSE;
 
             // TODO: Recalculate 'ScreenLines' in case the user redimensions
             // the window during the prompt.
@@ -422,18 +420,18 @@ INT ConPrintfVPaging(DWORD nStdHandle, BOOL NewPage, LPTSTR szFormat, va_list ar
 
     WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
 
-    return 0;
+    return TRUE;
 }
 
-INT ConOutPrintfPaging(BOOL NewPage, LPTSTR szFormat, ...)
+BOOL ConOutPrintfPaging(BOOL NewPage, LPTSTR szFormat, ...)
 {
-    INT iReturn;
+    BOOL bRet;
     va_list arg_ptr;
 
     va_start(arg_ptr, szFormat);
-    iReturn = ConPrintfVPaging(STD_OUTPUT_HANDLE, NewPage, szFormat, arg_ptr);
+    bRet = ConPrintfVPaging(STD_OUTPUT_HANDLE, NewPage, szFormat, arg_ptr);
     va_end(arg_ptr);
-    return iReturn;
+    return bRet;
 }
 
 VOID ConOutResPaging(BOOL NewPage, UINT resID)
@@ -557,9 +555,8 @@ VOID ConClearScreen(HANDLE hOutput)
 #endif
 
 #ifdef INCLUDE_CMD_COLOR
-BOOL ConSetScreenColor(WORD wColor, BOOL bFill)
+BOOL ConSetScreenColor(HANDLE hOutput, WORD wColor, BOOL bFill)
 {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD dwWritten;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     COORD coPos;
@@ -571,11 +568,11 @@ BOOL ConSetScreenColor(WORD wColor, BOOL bFill)
     /* Fill the whole background if needed */
     if (bFill)
     {
-        GetConsoleScreenBufferInfo(hConsole, &csbi);
+        GetConsoleScreenBufferInfo(hOutput, &csbi);
 
         coPos.X = 0;
         coPos.Y = 0;
-        FillConsoleOutputAttribute(hConsole,
+        FillConsoleOutputAttribute(hOutput,
                                    wColor & 0x00FF,
                                    csbi.dwSize.X * csbi.dwSize.Y,
                                    coPos,
@@ -583,7 +580,7 @@ BOOL ConSetScreenColor(WORD wColor, BOOL bFill)
     }
 
     /* Set the text attribute */
-    SetConsoleTextAttribute(hConsole, wColor & 0x00FF);
+    SetConsoleTextAttribute(hOutput, wColor & 0x00FF);
     return TRUE;
 }
 #endif

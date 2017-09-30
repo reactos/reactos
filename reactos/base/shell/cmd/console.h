@@ -59,8 +59,8 @@ VOID ConFormatMessage(DWORD nStdHandle, DWORD MessageId, ...);
     ConFormatMessage(STD_ERROR_HANDLE, (MessageId), ##__VA_ARGS__)
 
 
-INT ConPrintfVPaging(DWORD nStdHandle, BOOL, LPTSTR, va_list);
-INT ConOutPrintfPaging (BOOL NewPage, LPTSTR, ...);
+BOOL ConPrintfVPaging(DWORD nStdHandle, BOOL, LPTSTR, va_list);
+BOOL ConOutPrintfPaging (BOOL NewPage, LPTSTR, ...);
 VOID ConOutResPaging(BOOL NewPage, UINT resID);
 
 SHORT GetCursorX  (VOID);
@@ -83,7 +83,7 @@ VOID ConClearScreen(HANDLE hOutput);
 #endif
 
 #ifdef INCLUDE_CMD_COLOR
-BOOL ConSetScreenColor(WORD wColor, BOOL bFill);
+BOOL ConSetScreenColor(HANDLE hOutput, WORD wColor, BOOL bFill);
 #endif
 
 // TCHAR  cgetchar (VOID);

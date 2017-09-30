@@ -107,7 +107,7 @@ INT cmd_type(LPTSTR param)
         {
             while (FileGetString(hFile, buff, ARRAYSIZE(buff)))
             {
-                if (ConOutPrintfPaging(bFirstTime, _T("%s"), buff) == 1)
+                if (!ConOutPrintfPaging(bFirstTime, _T("%s"), buff))
                 {
                     bCtrlBreak = FALSE;
                     CloseHandle(hFile);
