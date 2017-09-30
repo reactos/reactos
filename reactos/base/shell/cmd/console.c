@@ -566,4 +566,79 @@ VOID GetScreenSize(PSHORT maxx, PSHORT maxy)
     if (maxy) *maxy = csbi.dwSize.Y;
 }
 
+
+
+#ifdef INCLUDE_CMD_BEEP
+VOID ConRingBell(HANDLE hOutput)
+{
+#if 0
+    /* Emit an error beep sound */
+    if (IsConsoleHandle(hOutput))
+        Beep(800, 200);
+    else if (IsTTYHandle(hOutput))
+        ConOutPuts(_T("\a")); // BEL character 0x07
+    else
+#endif
+        MessageBeep(-1);
+}
+#endif
+
+#ifdef INCLUDE_CMD_CLS
+VOID ConClearScreen(HANDLE hOutput)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD coPos;
+    DWORD dwWritten;
+
+    if (GetConsoleScreenBufferInfo(hOutput, &csbi))
+    {
+        coPos.X = 0;
+        coPos.Y = 0;
+        FillConsoleOutputAttribute(hOutput, csbi.wAttributes,
+                                   csbi.dwSize.X * csbi.dwSize.Y,
+                                   coPos, &dwWritten);
+        FillConsoleOutputCharacter(hOutput, _T(' '),
+                                   csbi.dwSize.X * csbi.dwSize.Y,
+                                   coPos, &dwWritten);
+        SetConsoleCursorPosition(hOutput, coPos);
+    }
+    else
+    {
+        ConOutChar(_T('\f'));
+    }
+}
+#endif
+
+#ifdef INCLUDE_CMD_COLOR
+BOOL ConSetScreenColor(WORD wColor, BOOL bFill)
+{
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD dwWritten;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD coPos;
+
+    /* Foreground and Background colors can't be the same */
+    if ((wColor & 0x0F) == (wColor & 0xF0) >> 4)
+        return FALSE;
+
+    /* Fill the whole background if needed */
+    if (bFill)
+    {
+        GetConsoleScreenBufferInfo(hConsole, &csbi);
+
+        coPos.X = 0;
+        coPos.Y = 0;
+        FillConsoleOutputAttribute(hConsole,
+                                   wColor & 0x00FF,
+                                   csbi.dwSize.X * csbi.dwSize.Y,
+                                   coPos,
+                                   &dwWritten);
+    }
+
+    /* Set the text attribute */
+    SetConsoleTextAttribute(hConsole, wColor & 0x00FF);
+    return TRUE;
+}
+#endif
+
 /* EOF */

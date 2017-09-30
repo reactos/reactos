@@ -1956,7 +1956,7 @@ Initialize(VOID)
     }
 
     if (wDefColor != 0)
-        SetScreenColor(wDefColor, FALSE);
+        ConSetScreenColor(wDefColor, TRUE);
 #endif
 
     if (!*ptr)

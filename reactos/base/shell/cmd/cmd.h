@@ -143,7 +143,6 @@ VOID PrintCommandList (VOID);
 LPCTSTR GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA );
 
 /* Prototypes for COLOR.C */
-BOOL SetScreenColor(WORD wColor, BOOL bNoFill);
 INT CommandColor(LPTSTR);
 
 VOID ConInDummy (VOID);
@@ -178,6 +177,19 @@ VOID ConErrResPuts (UINT resID);
 VOID ConOutResPrintf (UINT resID, ...);
 VOID ConErrResPrintf (UINT resID, ...);
 VOID ConOutResPaging(BOOL NewPage, UINT resID);
+
+#ifdef INCLUDE_CMD_BEEP
+VOID ConRingBell(HANDLE hOutput);
+#endif
+
+#ifdef INCLUDE_CMD_CLS
+VOID ConClearScreen(HANDLE hOutput);
+#endif
+
+#ifdef INCLUDE_CMD_COLOR
+BOOL ConSetScreenColor(WORD wColor, BOOL bFill);
+#endif
+
 
 /* Prototypes for COPY.C */
 INT cmd_copy (LPTSTR);

@@ -41,8 +41,8 @@ INT cmd_beep(LPTSTR param)
     if (bc == NULL)
         return 1;
 #endif
-    MessageBeep (-1);
 
+    ConRingBell(GetStdHandle(STD_OUTPUT_HANDLE));
     return 0;
 }
 
