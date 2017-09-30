@@ -1538,12 +1538,12 @@ LoadRegistrySettings(HKEY hKeyRoot)
 {
     LONG lRet;
     HKEY hKey;
+    DWORD dwType, len;
     /*
      * Buffer big enough to hold the string L"4294967295",
      * corresponding to the literal 0xFFFFFFFF (MAX_ULONG) in decimal.
      */
     DWORD Buffer[6];
-    DWORD dwType, len;
 
     lRet = RegOpenKeyEx(hKeyRoot,
                         _T("Software\\Microsoft\\Command Processor"),
@@ -1685,28 +1685,33 @@ LoadRegistrySettings(HKEY hKeyRoot)
 static VOID
 ExecuteAutoRunFile(HKEY hKeyRoot)
 {
-    TCHAR autorun[2048];
-    DWORD len = sizeof autorun;
-    HKEY hkey;
+    LONG lRet;
+    HKEY hKey;
+    DWORD dwType, len;
+    TCHAR AutoRun[2048];
 
-    if (RegOpenKeyEx(hKeyRoot,
-                     _T("SOFTWARE\\Microsoft\\Command Processor"),
-                     0,
-                     KEY_READ,
-                     &hkey) == ERROR_SUCCESS)
-    {
-        if (RegQueryValueEx(hkey,
+    lRet = RegOpenKeyEx(hKeyRoot,
+                        _T("Software\\Microsoft\\Command Processor"),
+                        0,
+                        KEY_QUERY_VALUE,
+                        &hKey);
+    if (lRet != ERROR_SUCCESS)
+        return;
+
+    len = sizeof(AutoRun);
+    lRet = RegQueryValueEx(hKey,
                            _T("AutoRun"),
-                           0,
-                           0,
-                           (LPBYTE)autorun,
-                           &len) == ERROR_SUCCESS)
-        {
-            if (*autorun)
-                ParseCommandLine(autorun);
-        }
-        RegCloseKey(hkey);
+                           NULL,
+                           &dwType,
+                           (LPBYTE)&AutoRun,
+                           &len);
+    if ((lRet == ERROR_SUCCESS) && (dwType == REG_EXPAND_SZ || dwType == REG_SZ))
+    {
+        if (*AutoRun)
+            ParseCommandLine(AutoRun);
     }
+
+    RegCloseKey(hKey);
 }
 
 /* Get the command that comes after a /C or /K switch */
