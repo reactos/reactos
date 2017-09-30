@@ -15,7 +15,7 @@
 
 extern BOOL bTitleSet;
 
-INT cmd_title (LPTSTR param)
+INT cmd_title(LPTSTR param)
 {
     /* Do nothing if no args */
     if (*param == _T('\0'))
@@ -24,14 +24,14 @@ INT cmd_title (LPTSTR param)
     /* Asking help? */
     if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_TITLE_HELP);
+        ConOutResPaging(TRUE, STRING_TITLE_HELP);
         return 0;
     }
 
     bTitleSet = TRUE;
-    return SetConsoleTitle (param);
+    return ConSetTitle(param);
 }
 
-#endif /* def INCLUDE_CMD_TITLE */
+#endif /* INCLUDE_CMD_TITLE */
 
 /* EOF */

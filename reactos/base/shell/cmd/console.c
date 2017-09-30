@@ -568,6 +568,12 @@ VOID GetScreenSize(PSHORT maxx, PSHORT maxy)
 
 
 
+BOOL ConSetTitle(IN LPCTSTR lpConsoleTitle)
+{
+    /* Now really set the console title */
+    return SetConsoleTitle(lpConsoleTitle);
+}
+
 #ifdef INCLUDE_CMD_BEEP
 VOID ConRingBell(HANDLE hOutput)
 {

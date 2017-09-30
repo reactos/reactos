@@ -378,7 +378,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     GetConsoleTitle(szWindowTitle, ARRAYSIZE(szWindowTitle));
     bTitleSet = FALSE;
     _stprintf(szNewTitle, _T("%s - %s%s"), szWindowTitle, First, Rest);
-    SetConsoleTitle(szNewTitle);
+    ConSetTitle(szNewTitle);
 
     /* check if this is a .BAT or .CMD file */
     dot = _tcsrchr (szFullName, _T('.'));
@@ -479,7 +479,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 
     /* Restore the original console title */
     if (!bTitleSet)
-        SetConsoleTitle(szWindowTitle);
+        ConSetTitle(szWindowTitle);
 
     return dwExitCode;
 }

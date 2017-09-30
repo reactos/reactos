@@ -178,6 +178,9 @@ VOID ConOutResPrintf (UINT resID, ...);
 VOID ConErrResPrintf (UINT resID, ...);
 VOID ConOutResPaging(BOOL NewPage, UINT resID);
 
+
+BOOL ConSetTitle(IN LPCTSTR lpConsoleTitle);
+
 #ifdef INCLUDE_CMD_BEEP
 VOID ConRingBell(HANDLE hOutput);
 #endif
