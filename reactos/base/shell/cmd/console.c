@@ -50,6 +50,10 @@ BOOL IsConsoleHandle(HANDLE hHandle)
     return GetConsoleMode(hHandle, &dwMode);
 }
 
+
+
+/********************* Console STREAM IN utility functions ********************/
+
 VOID ConInDisable(VOID)
 {
     HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
@@ -59,7 +63,6 @@ VOID ConInDisable(VOID)
     dwMode &= ~ENABLE_PROCESSED_INPUT;
     SetConsoleMode(hInput, dwMode);
 }
-
 
 VOID ConInEnable(VOID)
 {
@@ -71,12 +74,10 @@ VOID ConInEnable(VOID)
     SetConsoleMode(hInput, dwMode);
 }
 
-
-VOID ConInFlush (VOID)
+VOID ConInFlush(VOID)
 {
     FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 }
-
 
 VOID ConInKey(PINPUT_RECORD lpBuffer)
 {
@@ -95,7 +96,6 @@ VOID ConInKey(PINPUT_RECORD lpBuffer)
     }
     while (TRUE);
 }
-
 
 VOID ConInString(LPTSTR lpInput, DWORD dwLength)
 {
@@ -134,6 +134,10 @@ VOID ConInString(LPTSTR lpInput, DWORD dwLength)
 
     SetConsoleMode(hFile, dwOldMode);
 }
+
+
+
+/******************** Console STREAM OUT utility functions ********************/
 
 static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
 {
@@ -266,13 +270,6 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
     ConWrite(szText, (DWORD)_tcslen(szText), nStdHandle);
 }
 
-VOID ConOutResPaging(BOOL NewPage, UINT resID)
-{
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
-    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
-    ConOutPrintfPaging(NewPage, szMsg);
-}
-
 VOID ConOutResPuts(UINT resID)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -285,97 +282,13 @@ VOID ConOutPuts(LPTSTR szText)
     ConPuts(szText, STD_OUTPUT_HANDLE);
 }
 
-
-VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
+VOID ConPrintfV(DWORD nStdHandle, LPTSTR szFormat, va_list arg_ptr)
 {
     TCHAR szOut[OUTPUT_BUFFER_SIZE];
     DWORD len;
 
     len = (DWORD)_vstprintf(szOut, szFormat, arg_ptr);
     ConWrite(szOut, len, nStdHandle);
-}
-
-INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
-{
-    INT len;
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    TCHAR szOut[OUTPUT_BUFFER_SIZE];
-    DWORD dwWritten;
-    HANDLE hOutput = GetStdHandle(nStdHandle);
-
-    /* Used to count number of lines since last pause */
-    static int LineCount = 0;
-
-    /* Used to see how big the screen is */
-    int ScreenLines = 0;
-
-    /* Chars since start of line */
-    int CharSL;
-
-    int from = 0, i = 0;
-
-    if (NewPage == TRUE)
-        LineCount = 0;
-
-    /* Reset LineCount and return if no string has been given */
-    if (szFormat == NULL)
-        return 0;
-
-    /* Get the size of the visual screen that can be printed to */
-    if (!IsConsoleHandle(hOutput) || !GetConsoleScreenBufferInfo(hOutput, &csbi))
-    {
-        /* We assume it's a file handle */
-        ConPrintf(szFormat, arg_ptr, nStdHandle);
-        return 0;
-    }
-
-    /*
-     * Get the number of lines currently displayed on screen, minus 1
-     * to account for the "press any key..." prompt from PagePrompt().
-     */
-    ScreenLines = (csbi.srWindow.Bottom - csbi.srWindow.Top);
-    CharSL = csbi.dwCursorPosition.X;
-
-    /* Make sure the user doesn't have the screen too small */
-    if (ScreenLines < 4)
-    {
-        ConPrintf(szFormat, arg_ptr, nStdHandle);
-        return 0;
-    }
-
-    len = _vstprintf(szOut, szFormat, arg_ptr);
-
-    while (i < len)
-    {
-        /* Search until the end of a line is reached */
-        if (szOut[i++] != _T('\n') && ++CharSL < csbi.dwSize.X)
-            continue;
-
-        LineCount++;
-        CharSL=0;
-
-        if (LineCount >= ScreenLines)
-        {
-            WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
-            from = i;
-
-            /* Prompt the user */
-            if (PagePrompt() != PROMPT_YES)
-            {
-                return 1;
-            }
-
-            // TODO: Recalculate 'ScreenLines' in case the user redimensions
-            // the window during the prompt.
-
-            /* Reset the number of lines being printed */
-            LineCount = 0;
-        }
-    }
-
-    WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
-
-    return 0;
 }
 
 VOID ConErrFormatMessage(DWORD MessageId, ...)
@@ -443,7 +356,7 @@ VOID ConOutResPrintf(UINT resID, ...)
 
     va_start(arg_ptr, resID);
     LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
-    ConPrintf(szMsg, arg_ptr, STD_OUTPUT_HANDLE);
+    ConPrintfV(STD_OUTPUT_HANDLE, szMsg, arg_ptr);
     va_end(arg_ptr);
 }
 
@@ -452,26 +365,14 @@ VOID ConOutPrintf(LPTSTR szFormat, ...)
     va_list arg_ptr;
 
     va_start(arg_ptr, szFormat);
-    ConPrintf(szFormat, arg_ptr, STD_OUTPUT_HANDLE);
+    ConPrintfV(STD_OUTPUT_HANDLE, szFormat, arg_ptr);
     va_end(arg_ptr);
-}
-
-INT ConOutPrintfPaging(BOOL NewPage, LPTSTR szFormat, ...)
-{
-    INT iReturn;
-    va_list arg_ptr;
-
-    va_start(arg_ptr, szFormat);
-    iReturn = ConPrintfPaging(NewPage, szFormat, arg_ptr, STD_OUTPUT_HANDLE);
-    va_end(arg_ptr);
-    return iReturn;
 }
 
 VOID ConErrChar(TCHAR c)
 {
     ConWrite(&c, 1, STD_ERROR_HANDLE);
 }
-
 
 VOID ConErrResPuts(UINT resID)
 {
@@ -485,7 +386,6 @@ VOID ConErrPuts(LPTSTR szText)
     ConPuts(szText, STD_ERROR_HANDLE);
 }
 
-
 VOID ConErrResPrintf(UINT resID, ...)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -493,7 +393,7 @@ VOID ConErrResPrintf(UINT resID, ...)
 
     va_start(arg_ptr, resID);
     LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
-    ConPrintf(szMsg, arg_ptr, STD_ERROR_HANDLE);
+    ConPrintfV(STD_ERROR_HANDLE, szMsg, arg_ptr);
     va_end(arg_ptr);
 }
 
@@ -502,10 +402,118 @@ VOID ConErrPrintf(LPTSTR szFormat, ...)
     va_list arg_ptr;
 
     va_start(arg_ptr, szFormat);
-    ConPrintf(szFormat, arg_ptr, STD_ERROR_HANDLE);
+    ConPrintfV(STD_ERROR_HANDLE, szFormat, arg_ptr);
     va_end(arg_ptr);
 }
 
+
+
+/************************** Console PAGER functions ***************************/
+
+INT ConPrintfVPaging(DWORD nStdHandle, BOOL NewPage, LPTSTR szFormat, va_list arg_ptr)
+{
+    INT len;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    TCHAR szOut[OUTPUT_BUFFER_SIZE];
+    DWORD dwWritten;
+    HANDLE hOutput = GetStdHandle(nStdHandle);
+
+    /* Used to count number of lines since last pause */
+    static int LineCount = 0;
+
+    /* Used to see how big the screen is */
+    int ScreenLines = 0;
+
+    /* Chars since start of line */
+    int CharSL;
+
+    int from = 0, i = 0;
+
+    if (NewPage == TRUE)
+        LineCount = 0;
+
+    /* Reset LineCount and return if no string has been given */
+    if (szFormat == NULL)
+        return 0;
+
+    /* Get the size of the visual screen that can be printed to */
+    if (!IsConsoleHandle(hOutput) || !GetConsoleScreenBufferInfo(hOutput, &csbi))
+    {
+        /* We assume it's a file handle */
+        ConPrintfV(nStdHandle, szFormat, arg_ptr);
+        return 0;
+    }
+
+    /*
+     * Get the number of lines currently displayed on screen, minus 1
+     * to account for the "press any key..." prompt from PagePrompt().
+     */
+    ScreenLines = (csbi.srWindow.Bottom - csbi.srWindow.Top);
+    CharSL = csbi.dwCursorPosition.X;
+
+    /* Make sure the user doesn't have the screen too small */
+    if (ScreenLines < 4)
+    {
+        ConPrintfV(nStdHandle, szFormat, arg_ptr);
+        return 0;
+    }
+
+    len = _vstprintf(szOut, szFormat, arg_ptr);
+
+    while (i < len)
+    {
+        /* Search until the end of a line is reached */
+        if (szOut[i++] != _T('\n') && ++CharSL < csbi.dwSize.X)
+            continue;
+
+        LineCount++;
+        CharSL=0;
+
+        if (LineCount >= ScreenLines)
+        {
+            WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
+            from = i;
+
+            /* Prompt the user */
+            if (PagePrompt() != PROMPT_YES)
+            {
+                return 1;
+            }
+
+            // TODO: Recalculate 'ScreenLines' in case the user redimensions
+            // the window during the prompt.
+
+            /* Reset the number of lines being printed */
+            LineCount = 0;
+        }
+    }
+
+    WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
+
+    return 0;
+}
+
+INT ConOutPrintfPaging(BOOL NewPage, LPTSTR szFormat, ...)
+{
+    INT iReturn;
+    va_list arg_ptr;
+
+    va_start(arg_ptr, szFormat);
+    iReturn = ConPrintfVPaging(STD_OUTPUT_HANDLE, NewPage, szFormat, arg_ptr);
+    va_end(arg_ptr);
+    return iReturn;
+}
+
+VOID ConOutResPaging(BOOL NewPage, UINT resID)
+{
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
+    ConOutPrintfPaging(NewPage, szMsg);
+}
+
+
+
+/************************** Console SCREEN functions **************************/
 
 VOID SetCursorXY(SHORT x, SHORT y)
 {
@@ -565,6 +573,7 @@ VOID GetScreenSize(PSHORT maxx, PSHORT maxy)
     if (maxx) *maxx = csbi.dwSize.X;
     if (maxy) *maxy = csbi.dwSize.Y;
 }
+
 
 
 
