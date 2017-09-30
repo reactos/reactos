@@ -103,8 +103,8 @@ int is_command(const char* parg)
 
 #define NEED_PARAMS(_min_, _max_) \
     do {\
-        if (nargs < _min_) { printf("Too few args for command %s.\n" , argv[-1]); PRINT_HELP_AND_QUIT(); } \
-        if (nargs > _max_) { printf("Too many args for command %s.\n", argv[-1]); PRINT_HELP_AND_QUIT(); } \
+        if (nargs < _min_) { fprintf(stderr, "Error: Too few args for command %s.\n" , argv[-1]); PRINT_HELP_AND_QUIT(); } \
+        if (nargs > _max_) { fprintf(stderr, "Error: Too many args for command %s.\n", argv[-1]); PRINT_HELP_AND_QUIT(); } \
     } while(0)
 
 int need_mount(void)
@@ -125,7 +125,7 @@ int need_mount(void)
 #define NEED_MOUNT() \
     do { ret = need_mount(); if(ret) \
     {\
-        printf("Error: could not mount disk (%d).\n", ret); \
+        fprintf(stderr, "Error: Could not mount disk (%d).\n", ret); \
         goto exit; \
     } } while(0)
 
@@ -138,18 +138,19 @@ int main(int oargc, char* oargv[])
     // first parameter must be the image file.
     if (argc == 0)
     {
+        fprintf(stderr, "Error: First parameter must be a filename.\n", argv[0]);
         PRINT_HELP_AND_QUIT();
     }
 
     if (is_command(argv[0]))
     {
-        printf("Error: first parameter must be a filename, found '%s' instead.\n", argv[0]);
+        fprintf(stderr, "Error: First parameter must be a filename, found '%s' instead.\n", argv[0]);
         PRINT_HELP_AND_QUIT();
     }
 
     if (disk_openimage(0, argv[0]))
     {
-        printf("Error: could not open image file '%s'.\n", argv[0]);
+        fprintf(stderr, "Error: Could not open image file '%s'.\n", argv[0]);
         ret = 1;
         goto exit;
     }
@@ -165,7 +166,7 @@ int main(int oargc, char* oargv[])
 
         if (!is_command(parg))
         {
-            printf("Error: Expected a command, found '%s' instead.\n", parg);
+            fprintf(stderr, "Error: Expected a command, found '%s' instead.\n", parg);
             PRINT_HELP_AND_QUIT();
         }
 
@@ -189,19 +190,24 @@ int main(int oargc, char* oargv[])
 
             if (sectors <= 0)
             {
-                printf("Error: Sectors must be > 0\n");
+                fprintf(stderr, "Error: Sectors must be > 0\n");
                 ret = 1;
                 goto exit;
             }
 
-            disk_ioctl(0, SET_SECTOR_COUNT, &sectors);
+            if (disk_ioctl(0, SET_SECTOR_COUNT, &sectors))
+            {
+                fprintf(stderr, "Error: Failed to set sector count to %d.\n", sectors);
+                ret = 1;
+                goto exit;
+            }
 
             NEED_MOUNT();
 
             ret = f_mkfs("0:", 1, sectors < 4096 ? 1 : 8);
             if (ret)
             {
-                printf("ERROR: Formatting drive: %d.\n", ret);
+                fprintf(stderr, "Error: Formatting drive: %d.\n", ret);
                 goto exit;
             }
 
@@ -248,14 +254,14 @@ int main(int oargc, char* oargv[])
 
                 if (invalid)
                 {
-                    printf("Error: header label is limited to 11 printable uppercase ASCII symbols.");
+                    fprintf(stderr, "Error: Header label is limited to 11 printable uppercase ASCII symbols.");
                     ret = 1;
                     goto exit;
                 }
 
                 if (disk_read(0, buff, 0, 1))
                 {
-                    printf("Error: unable to read existing boot sector from image.");
+                    fprintf(stderr, "Error: Unable to read existing boot sector from image.");
                     ret = 1;
                     goto exit;
                 }
@@ -271,7 +277,7 @@ int main(int oargc, char* oargv[])
 
                 if (disk_write(0, buff, 0, 1))
                 {
-                    printf("Error: unable to write new boot sector to image.");
+                    fprintf(stderr, "Error: Unable to write new boot sector to image.");
                     ret = 1;
                     goto exit;
                 }
@@ -279,7 +285,12 @@ int main(int oargc, char* oargv[])
                 // Set also the directory volume label
                 memcpy(vol_label, "0:", 2);
                 vol_label[2 + FAT_VOL_LABEL_LEN] = '\0';
-                f_setlabel(vol_label);
+                if (f_setlabel(vol_label))
+                {
+                    fprintf(stderr, "Error: Unable to set the volume label.");
+                    ret = 1;
+                    goto exit;
+                }
             }
         }
         else if (strcmp(parg, "boot") == 0)
@@ -294,14 +305,14 @@ int main(int oargc, char* oargv[])
             fe = fopen(argv[0], "rb");
             if (!fe)
             {
-                printf("Error: unable to open external file '%s' for reading.", argv[0]);
+                fprintf(stderr, "Error: Unable to open external file '%s' for reading.", argv[0]);
                 ret = 1;
                 goto exit;
             }
 
             if (!fread(buff, 512, 1, fe))
             {
-                printf("Error: unable to read boot sector from file '%s'.", argv[0]);
+                fprintf(stderr, "Error: Unable to read boot sector from file '%s'.", argv[0]);
                 fclose(fe);
                 ret = 1;
                 goto exit;
@@ -313,14 +324,14 @@ int main(int oargc, char* oargv[])
 
             if (disk_read(0, temp, 0, 1))
             {
-                printf("Error: unable to read existing boot sector from image.");
+                fprintf(stderr, "Error: Unable to read existing boot sector from image.");
                 ret = 1;
                 goto exit;
             }
 
             if (g_Filesystem.fs_type == FS_FAT32)
             {
-                printf("TODO: writing boot sectors for FAT32 images not yet supported.");
+                printf("TODO: Writing boot sectors for FAT32 images not yet supported.");
                 ret = 1;
                 goto exit;
             }
@@ -334,7 +345,7 @@ int main(int oargc, char* oargv[])
 
             if (disk_write(0, buff, 0, 1))
             {
-                printf("Error: unable to write new boot sector to image.");
+                fprintf(stderr, "Error: Unable to write new boot sector to image.");
                 ret = 1;
                 goto exit;
             }
@@ -356,14 +367,14 @@ int main(int oargc, char* oargv[])
             fe = fopen(argv[0], "rb");
             if (!fe)
             {
-                printf("Error: unable to open external file '%s' for reading.", argv[0]);
+                fprintf(stderr, "Error: Unable to open external file '%s' for reading.", argv[0]);
                 ret = 1;
                 goto exit;
             }
 
             if (f_open(&fv, argv[1], FA_WRITE | FA_CREATE_ALWAYS))
             {
-                printf("Error: unable to open file '%s' for writing.", argv[1]);
+                fprintf(stderr, "Error: Unable to open file '%s' for writing.", argv[1]);
                 fclose(fe);
                 ret = 1;
                 goto exit;
@@ -371,7 +382,12 @@ int main(int oargc, char* oargv[])
 
             while ((rdlen = fread(buff, 1, sizeof(buff), fe)) > 0)
             {
-                f_write(&fv, buff, rdlen, &wrlen);
+                if (f_write(&fv, buff, rdlen, &wrlen) || wrlen < rdlen)
+                {
+                    fprintf(stderr, "Error: Unable to write '%d' bytes to disk.", wrlen);
+                    ret = 1;
+                    goto exit;
+                }
             }
 
             fclose(fe);
@@ -393,7 +409,7 @@ int main(int oargc, char* oargv[])
 
             if (f_open(&fe, argv[0], FA_READ))
             {
-                printf("Error: unable to open file '%s' for reading.", argv[0]);
+                fprintf(stderr, "Error: Unable to open file '%s' for reading.", argv[0]);
                 ret = 1;
                 goto exit;
             }
@@ -401,7 +417,7 @@ int main(int oargc, char* oargv[])
             fv = fopen(argv[1], "wb");
             if (!fv)
             {
-                printf("Error: unable to open external file '%s' for writing.", argv[1]);
+                fprintf(stderr, "Error: Unable to open external file '%s' for writing.", argv[1]);
                 f_close(&fe);
                 ret = 1;
                 goto exit;
@@ -409,7 +425,12 @@ int main(int oargc, char* oargv[])
 
             while ((f_read(&fe, buff, sizeof(buff), &rdlen) == 0) && (rdlen > 0))
             {
-                fwrite(buff, 1, rdlen, fv);
+                if (fwrite(buff, 1, rdlen, fv) < rdlen)
+                {
+                    fprintf(stderr, "Error: Unable to write '%d' bytes to file.", rdlen);
+                    ret = 1;
+                    goto exit;
+                }
             }
 
             f_close(&fe);
@@ -424,7 +445,11 @@ int main(int oargc, char* oargv[])
             // Arg 2: new path & filename
 
             if (f_rename(argv[0], argv[1]))
-                printf("Error moving/renaming '%s' to '%s'", argv[0], argv[1]);
+            {
+                fprintf(stderr, "Error: Unable to move/rename '%s' to '%s'", argv[0], argv[1]);
+                ret = 1;
+                goto exit;
+            }
         }
         else if (strcmp(parg, "copy") == 0)
         {
@@ -441,13 +466,13 @@ int main(int oargc, char* oargv[])
 
             if (f_open(&fe, argv[0], FA_READ))
             {
-                printf("Error: unable to open file '%s' for reading.", argv[0]);
+                fprintf(stderr, "Error: Unable to open file '%s' for reading.", argv[0]);
                 ret = 1;
                 goto exit;
             }
             if (f_open(&fv, argv[1], FA_WRITE | FA_CREATE_ALWAYS))
             {
-                printf("Error: unable to open file '%s' for writing.", argv[1]);
+                fprintf(stderr, "Error: Unable to open file '%s' for writing.", argv[1]);
                 f_close(&fe);
                 ret = 1;
                 goto exit;
@@ -455,7 +480,12 @@ int main(int oargc, char* oargv[])
 
             while ((f_read(&fe, buff, sizeof(buff), &rdlen) == 0) && (rdlen > 0))
             {
-                f_write(&fv, buff, rdlen, &wrlen);
+                if (f_write(&fv, buff, rdlen, &wrlen) || wrlen < rdlen)
+                {
+                    fprintf(stderr, "Error: Unable to write '%d' bytes to disk.", wrlen);
+                    ret = 1;
+                    goto exit;
+                }
             }
 
             f_close(&fe);
@@ -468,7 +498,12 @@ int main(int oargc, char* oargv[])
             NEED_MOUNT();
 
             // Arg 1: folder path
-            f_mkdir(argv[0]);
+            if (f_mkdir(argv[0]))
+            {
+                fprintf(stderr, "Error: Unable to create directory.");
+                ret = 1;
+                goto exit;
+            }
         }
         else if (strcmp(parg, "delete") == 0)
         {
@@ -477,7 +512,12 @@ int main(int oargc, char* oargv[])
             NEED_MOUNT();
 
             // Arg 1: file/folder path (cannot delete non-empty folders)
-            f_unlink(argv[0]);
+            if (f_unlink(argv[0]))
+            {
+                fprintf(stderr, "Error: Unable to delete file or directory.");
+                ret = 1;
+                goto exit;
+            }
         }
         else if (strcmp(parg, "list") == 0)
         {
@@ -497,7 +537,7 @@ int main(int oargc, char* oargv[])
 
             if (f_opendir(&dir, root))
             {
-                printf("Error opening directory '%s'.\n", root);
+                fprintf(stderr, "Error: Unable to opening directory '%s' for listing.\n", root);
                 ret = 1;
                 goto exit;
             }
@@ -516,7 +556,7 @@ int main(int oargc, char* oargv[])
         }
         else
         {
-            printf("Error: Unknown or invalid command: %s\n", argv[-1]);
+            fprintf(stderr, "Error: Unknown or invalid command: %s\n", argv[-1]);
             PRINT_HELP_AND_QUIT();
         }
         argv += nargs;
