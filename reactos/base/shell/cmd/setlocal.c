@@ -12,6 +12,7 @@
 typedef struct _SETLOCAL
 {
     struct _SETLOCAL *Prev;
+    BOOL EnableExtensions;
     BOOL DelayedExpansion;
     LPTSTR Environment;
 } SETLOCAL;
@@ -52,6 +53,7 @@ INT cmd_setlocal(LPTSTR param)
         return 1;
     }
     Saved->Prev = bc->setlocal;
+    Saved->EnableExtensions = bEnableExtensions;
     Saved->DelayedExpansion = bDelayedExpansion;
     Saved->Environment = DuplicateEnvironment();
     if (!Saved->Environment)
@@ -68,9 +70,11 @@ INT cmd_setlocal(LPTSTR param)
     for (i = 0; i < argc; i++)
     {
         if (!_tcsicmp(arg[i], _T("enableextensions")))
-            /* not implemented, ignore */;
+            /* FIXME: not implemented! */
+            bEnableExtensions = TRUE;
         else if (!_tcsicmp(arg[i], _T("disableextensions")))
-            /* not implemented, ignore */;
+            /* FIXME: not implemented! */
+            bEnableExtensions = FALSE;
         else if (!_tcsicmp(arg[i], _T("enabledelayedexpansion")))
             bDelayedExpansion = TRUE;
         else if (!_tcsicmp(arg[i], _T("disabledelayedexpansion")))
@@ -97,6 +101,7 @@ INT cmd_endlocal(LPTSTR param)
         return 0;
     bc->setlocal = Saved->Prev;
 
+    bEnableExtensions = Saved->EnableExtensions;
     bDelayedExpansion = Saved->DelayedExpansion;
 
     /* First, clear out the environment. Since making any changes to the

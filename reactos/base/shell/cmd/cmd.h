@@ -51,7 +51,7 @@
 /* 16k = max buffer size */
 #define BUFF_SIZE 16384
 
-/* global variables */
+/* Global variables */
 extern HANDLE hOut;
 extern HANDLE hIn;
 extern LPTSTR lpOriginalEnvironment;
@@ -61,6 +61,7 @@ extern BOOL   bCtrlBreak;
 extern BOOL   bIgnoreEcho;
 extern BOOL   bExit;
 extern BOOL   bDisableBatchEcho;
+extern BOOL   bEnableExtensions;
 extern BOOL   bDelayedExpansion;
 extern INT    nErrorLevel;
 extern SHORT  maxx;
@@ -115,6 +116,12 @@ extern HANDLE CMD_ModuleHandle;
 
 /* Prototypes for CMDINPUT.C */
 BOOL ReadCommand (LPTSTR, INT);
+
+extern TCHAR AutoCompletionChar;
+extern TCHAR PathCompletionChar;
+
+#define IS_COMPLETION_DISABLED(CompletionCtrl)  \
+    ((CompletionCtrl) == 0x00 || (CompletionCtrl) == 0x0D || (CompletionCtrl) >= 0x20)
 
 
 /* Prototypes for CMDTABLE.C */

@@ -162,6 +162,7 @@ INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 CRITICAL_SECTION ChildProcessRunningLock;
 BOOL bUnicodeOutput = FALSE;
 BOOL bDisableBatchEcho = FALSE;
+BOOL bEnableExtensions = TRUE;
 BOOL bDelayedExpansion = FALSE;
 BOOL bTitleSet = FALSE;
 DWORD dwChildProcessId = 0;
@@ -174,7 +175,7 @@ static NtQueryInformationProcessProc NtQueryInformationProcessPtr = NULL;
 static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr = NULL;
 
 #ifdef INCLUDE_CMD_COLOR
-WORD wDefColor;           /* default color */
+WORD wDefColor = 0;     /* Default color */
 #endif
 
 /*
@@ -1532,14 +1533,164 @@ ShowCommands (VOID)
 }
 #endif
 
+
 static VOID
-ExecuteAutoRunFile(HKEY hkeyRoot)
+LoadRegistrySettings(HKEY hKeyRoot)
+{
+    LONG lRet;
+    HKEY hKey;
+    /*
+     * Buffer big enough to hold the string L"4294967295",
+     * corresponding to the literal 0xFFFFFFFF (MAX_ULONG) in decimal.
+     */
+    DWORD Buffer[6];
+    DWORD dwType, len;
+
+    lRet = RegOpenKeyEx(hKeyRoot,
+                        _T("Software\\Microsoft\\Command Processor"),
+                        0,
+                        KEY_QUERY_VALUE,
+                        &hKey);
+    if (lRet != ERROR_SUCCESS)
+        return;
+
+#ifdef INCLUDE_CMD_COLOR
+    len = sizeof(Buffer);
+    lRet = RegQueryValueEx(hKey,
+                           _T("DefaultColor"),
+                           NULL,
+                           &dwType,
+                           (LPBYTE)&Buffer,
+                           &len);
+    if (lRet == ERROR_SUCCESS)
+    {
+        /* Overwrite the default attributes */
+        if (dwType == REG_DWORD)
+            wDefColor = (WORD)*(PDWORD)Buffer;
+        else if (dwType == REG_SZ)
+            wDefColor = (WORD)_tcstol((PTSTR)Buffer, NULL, 0);
+    }
+    // else, use the default attributes retrieved before.
+#endif
+
+#if 0
+    len = sizeof(Buffer);
+    lRet = RegQueryValueEx(hKey,
+                           _T("DisableUNCCheck"),
+                           NULL,
+                           &dwType,
+                           (LPBYTE)&Buffer,
+                           &len);
+    if (lRet == ERROR_SUCCESS)
+    {
+        /* Overwrite the default setting */
+        if (dwType == REG_DWORD)
+            bDisableUNCCheck = !!*(PDWORD)Buffer;
+        else if (dwType == REG_SZ)
+            bDisableUNCCheck = (_ttol((PTSTR)Buffer) == 1);
+    }
+    // else, use the default setting set globally.
+#endif
+
+    len = sizeof(Buffer);
+    lRet = RegQueryValueEx(hKey,
+                           _T("DelayedExpansion"),
+                           NULL,
+                           &dwType,
+                           (LPBYTE)&Buffer,
+                           &len);
+    if (lRet == ERROR_SUCCESS)
+    {
+        /* Overwrite the default setting */
+        if (dwType == REG_DWORD)
+            bDelayedExpansion = !!*(PDWORD)Buffer;
+        else if (dwType == REG_SZ)
+            bDelayedExpansion = (_ttol((PTSTR)Buffer) == 1);
+    }
+    // else, use the default setting set globally.
+
+    len = sizeof(Buffer);
+    lRet = RegQueryValueEx(hKey,
+                           _T("EnableExtensions"),
+                           NULL,
+                           &dwType,
+                           (LPBYTE)&Buffer,
+                           &len);
+    if (lRet == ERROR_SUCCESS)
+    {
+        /* Overwrite the default setting */
+        if (dwType == REG_DWORD)
+            bEnableExtensions = !!*(PDWORD)Buffer;
+        else if (dwType == REG_SZ)
+            bEnableExtensions = (_ttol((PTSTR)Buffer) == 1);
+    }
+    // else, use the default setting set globally.
+
+    len = sizeof(Buffer);
+    lRet = RegQueryValueEx(hKey,
+                           _T("CompletionChar"),
+                           NULL,
+                           &dwType,
+                           (LPBYTE)&Buffer,
+                           &len);
+    if (lRet == ERROR_SUCCESS)
+    {
+        /* Overwrite the default setting */
+        if (dwType == REG_DWORD)
+            AutoCompletionChar = (TCHAR)*(PDWORD)Buffer;
+        else if (dwType == REG_SZ)
+            AutoCompletionChar = (TCHAR)_tcstol((PTSTR)Buffer, NULL, 0);
+    }
+    // else, use the default setting set globally.
+
+    /* Validity check */
+    if (IS_COMPLETION_DISABLED(AutoCompletionChar))
+    {
+        /* Disable autocompletion */
+        AutoCompletionChar = 0x20;
+    }
+
+    len = sizeof(Buffer);
+    lRet = RegQueryValueEx(hKey,
+                           _T("PathCompletionChar"),
+                           NULL,
+                           &dwType,
+                           (LPBYTE)&Buffer,
+                           &len);
+    if (lRet == ERROR_SUCCESS)
+    {
+        /* Overwrite the default setting */
+        if (dwType == REG_DWORD)
+            PathCompletionChar = (TCHAR)*(PDWORD)Buffer;
+        else if (dwType == REG_SZ)
+            PathCompletionChar = (TCHAR)_tcstol((PTSTR)Buffer, NULL, 0);
+    }
+    // else, use the default setting set globally.
+
+    /* Validity check */
+    if (IS_COMPLETION_DISABLED(PathCompletionChar))
+    {
+        /* Disable autocompletion */
+        PathCompletionChar = 0x20;
+    }
+
+    /* Adjust completion chars */
+    if (PathCompletionChar >= 0x20 && AutoCompletionChar < 0x20)
+        PathCompletionChar = AutoCompletionChar;
+    else if (AutoCompletionChar >= 0x20 && PathCompletionChar < 0x20)
+        AutoCompletionChar = PathCompletionChar;
+
+    RegCloseKey(hKey);
+}
+
+static VOID
+ExecuteAutoRunFile(HKEY hKeyRoot)
 {
     TCHAR autorun[2048];
     DWORD len = sizeof autorun;
     HKEY hkey;
 
-    if (RegOpenKeyEx(hkeyRoot,
+    if (RegOpenKeyEx(hKeyRoot,
                      _T("SOFTWARE\\Microsoft\\Command Processor"),
                      0,
                      KEY_READ,
@@ -1612,18 +1763,45 @@ GetCmdLineCommand(TCHAR *commandline, TCHAR *ptr, BOOL AlwaysStrip)
     _tcscpy(commandline, ptr);
 }
 
+
+#ifdef INCLUDE_CMD_COLOR
+
+BOOL ConGetDefaultAttributes(PWORD pwDefAttr)
+{
+    BOOL Success;
+    HANDLE hConsole;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    /* Do not modify *pwDefAttr if we fail, in which case use default attributes */
+
+    hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE,
+                          FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
+                          OPEN_EXISTING, 0, NULL);
+    if (hConsole == INVALID_HANDLE_VALUE)
+        return FALSE; // No default console
+
+    Success = GetConsoleScreenBufferInfo(hConsole, &csbi);
+    if (Success)
+        *pwDefAttr = csbi.wAttributes;
+
+    CloseHandle(hConsole);
+    return Success;
+}
+
+#endif
+
+
 /*
- * set up global initializations and process parameters
+ * Set up global initializations and process parameters
  */
 static VOID
-Initialize()
+Initialize(VOID)
 {
     HMODULE NtDllModule;
     TCHAR commandline[CMDLINE_LENGTH];
     TCHAR ModuleName[_MAX_PATH + 1];
     INT nExitCode;
 
-    //INT len;
     TCHAR *ptr, *cmdLine, option = 0;
     BOOL AlwaysStrip = FALSE;
     BOOL AutoRun = TRUE;
@@ -1641,9 +1819,14 @@ Initialize()
         NtReadVirtualMemoryPtr = (NtReadVirtualMemoryProc)GetProcAddress(NtDllModule, "NtReadVirtualMemory");
     }
 
+    /* Load the registry settings */
+    LoadRegistrySettings(HKEY_LOCAL_MACHINE);
+    LoadRegistrySettings(HKEY_CURRENT_USER);
+
+    /* Initialize our locale */
     InitLocale();
 
-    /* get default input and output console handles */
+    /* Get default input and output console handles */
     hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     hIn  = GetStdHandle(STD_INPUT_HANDLE);
 
@@ -1651,17 +1834,17 @@ Initialize()
     InitPrompt();
 
 #ifdef FEATURE_DIR_STACK
-    /* initialize directory stack */
+    /* Initialize directory stack */
     InitDirectoryStack();
 #endif
 
 #ifdef FEATURE_HISTORY
-    /*initialize history*/
+    /* Initialize history */
     InitHistory();
 #endif
 
     /* Set COMSPEC environment variable */
-    if (0 != GetModuleFileName (NULL, ModuleName, _MAX_PATH + 1))
+    if (GetModuleFileName(NULL, ModuleName, ARRAYSIZE(ModuleName)) != 0)
     {
         ModuleName[_MAX_PATH] = _T('\0');
         SetEnvironmentVariable (_T("COMSPEC"), ModuleName);
@@ -1731,9 +1914,8 @@ Initialize()
 #ifdef INCLUDE_CMD_COLOR
             else if (!_tcsnicmp(ptr, _T("/T:"), 3))
             {
-                /* process /T (color) argument */
+                /* Process /T (color) argument; overwrite any previous settings */
                 wDefColor = (WORD)_tcstoul(&ptr[3], &ptr, 16);
-                SetScreenColor(wDefColor, FALSE);
             }
 #endif
             else if (option == _T('U'))
@@ -1742,10 +1924,40 @@ Initialize()
             }
             else if (option == _T('V'))
             {
+                // FIXME: Check validity of the parameter given to V !
                 bDelayedExpansion = _tcsnicmp(&ptr[2], _T(":OFF"), 4);
+            }
+            else if (option == _T('E'))
+            {
+                // FIXME: Check validity of the parameter given to E !
+                bEnableExtensions = _tcsnicmp(&ptr[2], _T(":OFF"), 4);
+            }
+            else if (option == _T('X'))
+            {
+                /* '/X' is identical to '/E:ON' */
+                bEnableExtensions = TRUE;
+            }
+            else if (option == _T('Y'))
+            {
+                /* '/Y' is identical to '/E:OFF' */
+                bEnableExtensions = FALSE;
             }
         }
     }
+
+#ifdef INCLUDE_CMD_COLOR
+    if (wDefColor == 0)
+    {
+        /*
+         * If we still do not have the console colour attribute set,
+         * retrieve the default one.
+         */
+        ConGetDefaultAttributes(&wDefColor);
+    }
+
+    if (wDefColor != 0)
+        SetScreenColor(wDefColor, FALSE);
+#endif
 
     if (!*ptr)
     {
@@ -1779,7 +1991,7 @@ Initialize()
 }
 
 
-static VOID Cleanup()
+static VOID Cleanup(VOID)
 {
     /* run cmdexit.bat */
     if (IsExistingFile (_T("cmdexit.bat")))
@@ -1823,52 +2035,33 @@ static VOID Cleanup()
  */
 int _tmain(int argc, const TCHAR *argv[])
 {
-    HANDLE hConsole;
     TCHAR startPath[MAX_PATH];
-    CONSOLE_SCREEN_BUFFER_INFO Info;
 
     InitializeCriticalSection(&ChildProcessRunningLock);
     lpOriginalEnvironment = DuplicateEnvironment();
 
-    GetCurrentDirectory(MAX_PATH,startPath);
+    GetCurrentDirectory(ARRAYSIZE(startPath), startPath);
     _tchdir(startPath);
 
     SetFileApisToOEM();
-    InputCodePage = 0;
-    OutputCodePage = 0;
-
-    hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE,
-                          FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
-                          OPEN_EXISTING, 0, NULL);
-    if (hConsole != INVALID_HANDLE_VALUE)
-    {
-        if (!GetConsoleScreenBufferInfo(hConsole, &Info))
-        {
-            ConErrFormatMessage(GetLastError());
-            CloseHandle(hConsole);
-            return(1);
-        }
-        wDefColor = Info.wAttributes;
-        CloseHandle(hConsole);
-    }
-
     InputCodePage = GetConsoleCP();
     OutputCodePage = GetConsoleOutputCP();
+
     CMD_ModuleHandle = GetModuleHandle(NULL);
 
-    /* check switches on command-line */
+    /* Perform general initialization, parse switches on command-line */
     Initialize();
 
-    /* call prompt routine */
+    /* Call prompt routine */
     ProcessInput();
 
-    /* do the cleanup */
+    /* Do the cleanup */
     Cleanup();
 
     cmd_free(lpOriginalEnvironment);
 
     cmd_exit(nErrorLevel);
-    return(nErrorLevel);
+    return nErrorLevel;
 }
 
 /* EOF */
