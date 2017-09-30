@@ -311,10 +311,11 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 {
     TCHAR szFullName[MAX_PATH];
     TCHAR *first, *rest, *dot;
-    TCHAR szWindowTitle[MAX_PATH], szNewTitle[MAX_PATH*2];
+    TCHAR szWindowTitle[MAX_PATH];
+    TCHAR szNewTitle[MAX_PATH*2];
     DWORD dwExitCode = 0;
     TCHAR *FirstEnd;
-    TCHAR szFullCmdLine [CMDLINE_LENGTH];
+    TCHAR szFullCmdLine[CMDLINE_LENGTH];
 
     TRACE ("Execute: \'%s\' \'%s\'\n", debugstr_aw(First), debugstr_aw(Rest));
 
@@ -1762,33 +1763,6 @@ GetCmdLineCommand(TCHAR *commandline, TCHAR *ptr, BOOL AlwaysStrip)
 }
 
 
-#ifdef INCLUDE_CMD_COLOR
-
-BOOL ConGetDefaultAttributes(PWORD pwDefAttr)
-{
-    BOOL Success;
-    HANDLE hConsole;
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-    /* Do not modify *pwDefAttr if we fail, in which case use default attributes */
-
-    hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE,
-                          FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
-                          OPEN_EXISTING, 0, NULL);
-    if (hConsole == INVALID_HANDLE_VALUE)
-        return FALSE; // No default console
-
-    Success = GetConsoleScreenBufferInfo(hConsole, &csbi);
-    if (Success)
-        *pwDefAttr = csbi.wAttributes;
-
-    CloseHandle(hConsole);
-    return Success;
-}
-
-#endif
-
-
 /*
  * Set up global initializations and process parameters
  */
@@ -1997,7 +1971,6 @@ static VOID Cleanup(VOID)
     if (IsExistingFile(_T("cmdexit.bat")))
     {
         ConErrResPuts(STRING_CMD_ERROR5);
-
         ParseCommandLine(_T("cmdexit.bat"));
     }
     else if (IsExistingFile(_T("\\cmdexit.bat")))

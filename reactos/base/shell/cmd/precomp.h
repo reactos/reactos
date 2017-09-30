@@ -7,15 +7,20 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #endif /*_MSC_VER */
 
+#include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <malloc.h>
+#include <tchar.h>
 
 #define WIN32_NO_STATUS
-#include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <winuser.h>
+#include <wincon.h>
 #include <shellapi.h>
-#include <stdio.h>
 
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>

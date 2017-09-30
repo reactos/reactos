@@ -1052,7 +1052,7 @@ DirPrintOldList(PDIRFINDINFO ptrFiles[],        /* [IN] Files' Info */
         /* Calculate size */
         if (ptrFiles[i]->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            /* Directory, no size it's a directory*/
+            /* Directory, no size it's a directory */
             iSizeFormat = -17;
             _tcscpy(szSize, _T("<DIR>"));
         }

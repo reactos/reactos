@@ -25,12 +25,6 @@
 
 #include <config.h>
 
-#include <winnls.h>
-#include <winreg.h>
-#include <winuser.h>
-#include <wincon.h>
-#include <tchar.h>
-
 #include "cmdver.h"
 #include "cmddbg.h"
 
@@ -43,7 +37,6 @@
 #define D_ON         _T("on")
 #define D_OFF        _T("off")
 
-
 /* command line buffer length */
 #define CMDLINE_LENGTH  8192
 
@@ -51,7 +44,6 @@
 #define BUFF_SIZE 16384
 
 /* Global variables */
-extern HANDLE hIn;
 extern LPTSTR lpOriginalEnvironment;
 extern WORD   wColor;
 extern WORD   wDefColor;
@@ -62,8 +54,6 @@ extern BOOL   bDisableBatchEcho;
 extern BOOL   bEnableExtensions;
 extern BOOL   bDelayedExpansion;
 extern INT    nErrorLevel;
-extern SHORT  maxx;
-extern SHORT  maxy;
 extern BOOL bUnicodeOutput;
 
 

@@ -507,6 +507,33 @@ VOID GetScreenSize(PSHORT maxx, PSHORT maxy)
 
 
 
+#ifdef INCLUDE_CMD_COLOR
+
+BOOL ConGetDefaultAttributes(PWORD pwDefAttr)
+{
+    BOOL Success;
+    HANDLE hConsole;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    /* Do not modify *pwDefAttr if we fail, in which case use default attributes */
+
+    hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE,
+                          FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
+                          OPEN_EXISTING, 0, NULL);
+    if (hConsole == INVALID_HANDLE_VALUE)
+        return FALSE; // No default console
+
+    Success = GetConsoleScreenBufferInfo(hConsole, &csbi);
+    if (Success)
+        *pwDefAttr = csbi.wAttributes;
+
+    CloseHandle(hConsole);
+    return Success;
+}
+
+#endif
+
+
 BOOL ConSetTitle(IN LPCTSTR lpConsoleTitle)
 {
     /* Now really set the console title */

@@ -72,6 +72,11 @@ VOID GetScreenSize (PSHORT, PSHORT);
 VOID SetCursorType (BOOL, BOOL);
 
 
+#ifdef INCLUDE_CMD_COLOR
+BOOL ConGetDefaultAttributes(PWORD pwDefAttr);
+#endif
+
+
 BOOL ConSetTitle(IN LPCTSTR lpConsoleTitle);
 
 #ifdef INCLUDE_CMD_BEEP
