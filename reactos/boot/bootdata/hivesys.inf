@@ -1576,13 +1576,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Start",0x00010001,0x
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\wkssvc.dll"
 
-; MPU-401 MIDI driver
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ImagePath",0x00020000,"system32\drivers\mpu401.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Type",0x00010001,0x00000001
-
 ; Multiple UNC provider driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
