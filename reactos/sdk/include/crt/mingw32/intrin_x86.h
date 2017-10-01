@@ -70,8 +70,8 @@ extern "C" {
 #endif
 
 /*** memcopy must be memmove ***/
-void* memmove(void* dest, const void* source, size_t num);
-__INTRIN_INLINE void* memcpy(void* dest, const void* source, size_t num)
+void* __cdecl memmove(void* dest, const void* source, size_t num);
+__INTRIN_INLINE void* __cdecl memcpy(void* dest, const void* source, size_t num)
 {
     return memmove(dest, source, num);
 }
@@ -142,7 +142,7 @@ __INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * Destination
 
 #ifndef __clang__
 
-__INTRIN_INLINE long _InterlockedCompareExchange(volatile long * Destination, long Exchange, long Comperand)
+__INTRIN_INLINE long __cdecl _InterlockedCompareExchange(volatile long * Destination, long Exchange, long Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
@@ -170,7 +170,7 @@ __INTRIN_INLINE short _InterlockedExchange16(volatile short * Target, short Valu
 
 #ifndef __clang__
 
-__INTRIN_INLINE long _InterlockedExchange(volatile long * Target, long Value)
+__INTRIN_INLINE long __cdecl _InterlockedExchange(volatile long * Target, long Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
 	__sync_synchronize();
@@ -206,7 +206,7 @@ __INTRIN_INLINE short _InterlockedExchangeAdd16(volatile short * Addend, short V
 }
 
 #ifndef __clang__
-__INTRIN_INLINE long _InterlockedExchangeAdd(volatile long * Addend, long Value)
+__INTRIN_INLINE long __cdecl _InterlockedExchangeAdd(volatile long * Addend, long Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
@@ -286,12 +286,12 @@ __INTRIN_INLINE long long _InterlockedXor64(volatile long long * value, long lon
 #endif
 
 #ifndef __clang__
-__INTRIN_INLINE long _InterlockedDecrement(volatile long * lpAddend)
+__INTRIN_INLINE long __cdecl _InterlockedDecrement(volatile long * lpAddend)
 {
 	return __sync_sub_and_fetch(lpAddend, 1);
 }
 
-__INTRIN_INLINE long _InterlockedIncrement(volatile long * lpAddend)
+__INTRIN_INLINE long __cdecl _InterlockedIncrement(volatile long * lpAddend)
 {
 	return __sync_add_and_fetch(lpAddend, 1);
 }
@@ -1058,21 +1058,21 @@ __INTRIN_INLINE unsigned char _bittestandcomplement64(long long * a, long long b
 
 #endif
 
-__INTRIN_INLINE unsigned char _rotl8(unsigned char value, unsigned char shift)
+__INTRIN_INLINE unsigned char __cdecl _rotl8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
 	__asm__("rolb %b[shift], %b[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-__INTRIN_INLINE unsigned short _rotl16(unsigned short value, unsigned char shift)
+__INTRIN_INLINE unsigned short __cdecl _rotl16(unsigned short value, unsigned char shift)
 {
 	unsigned short retval;
 	__asm__("rolw %b[shift], %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-__INTRIN_INLINE unsigned int _rotl(unsigned int value, int shift)
+__INTRIN_INLINE unsigned int __cdecl _rotl(unsigned int value, int shift)
 {
 	unsigned int retval;
 	__asm__("roll %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
@@ -1087,28 +1087,28 @@ __INTRIN_INLINE unsigned long long _rotl64(unsigned long long value, int shift)
 	return retval;
 }
 #else
-__INTRIN_INLINE unsigned long long _rotl64(unsigned long long value, int shift)
+__INTRIN_INLINE unsigned long long __cdecl _rotl64(unsigned long long value, int shift)
 {
     /* FIXME: this is probably not optimal */
     return (value << shift) | (value >> (64 - shift));
 }
 #endif
 
-__INTRIN_INLINE unsigned int _rotr(unsigned int value, int shift)
+__INTRIN_INLINE unsigned int __cdecl _rotr(unsigned int value, int shift)
 {
 	unsigned int retval;
 	__asm__("rorl %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-__INTRIN_INLINE unsigned char _rotr8(unsigned char value, unsigned char shift)
+__INTRIN_INLINE unsigned char __cdecl _rotr8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
 	__asm__("rorb %b[shift], %b[retval]" : [retval] "=qm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-__INTRIN_INLINE unsigned short _rotr16(unsigned short value, unsigned char shift)
+__INTRIN_INLINE unsigned short __cdecl _rotr16(unsigned short value, unsigned char shift)
 {
 	unsigned short retval;
 	__asm__("rorw %b[shift], %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
@@ -1123,7 +1123,7 @@ __INTRIN_INLINE unsigned long long _rotr64(unsigned long long value, int shift)
 	return retval;
 }
 #else
-__INTRIN_INLINE unsigned long long _rotr64(unsigned long long value, int shift)
+__INTRIN_INLINE unsigned long long __cdecl _rotr64(unsigned long long value, int shift)
 {
     /* FIXME: this is probably not optimal */
     return (value >> shift) | (value << (64 - shift));
@@ -1193,14 +1193,14 @@ __INTRIN_INLINE unsigned long long __ull_rshift(unsigned long long Mask, int Bit
 	return retval;
 }
 
-__INTRIN_INLINE unsigned short _byteswap_ushort(unsigned short value)
+__INTRIN_INLINE unsigned short __cdecl _byteswap_ushort(unsigned short value)
 {
 	unsigned short retval;
 	__asm__("rorw $8, %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value));
 	return retval;
 }
 
-__INTRIN_INLINE unsigned long _byteswap_ulong(unsigned long value)
+__INTRIN_INLINE unsigned long __cdecl _byteswap_ulong(unsigned long value)
 {
 	unsigned long retval;
 	__asm__("bswapl %[retval]" : [retval] "=r" (retval) : "[retval]" (value));
@@ -1215,7 +1215,7 @@ __INTRIN_INLINE unsigned long long _byteswap_uint64(unsigned long long value)
 	return retval;
 }
 #else
-__INTRIN_INLINE unsigned long long _byteswap_uint64(unsigned long long value)
+__INTRIN_INLINE unsigned long long __cdecl _byteswap_uint64(unsigned long long value)
 {
 	union {
 		unsigned long long int64part;
@@ -1389,34 +1389,34 @@ __INTRIN_INLINE void __outdwordstring(unsigned short Port, unsigned long * Buffe
 	__asm__ __volatile__("rep; outsl" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
 }
 
-__INTRIN_INLINE int _inp(unsigned short Port)
+__INTRIN_INLINE int __cdecl _inp(unsigned short Port)
 {
 	return __inbyte(Port);
 }
 
-__INTRIN_INLINE unsigned short _inpw(unsigned short Port)
+__INTRIN_INLINE unsigned short __cdecl _inpw(unsigned short Port)
 {
 	return __inword(Port);
 }
 
-__INTRIN_INLINE unsigned long _inpd(unsigned short Port)
+__INTRIN_INLINE unsigned long __cdecl _inpd(unsigned short Port)
 {
 	return __indword(Port);
 }
 
-__INTRIN_INLINE int _outp(unsigned short Port, int databyte)
+__INTRIN_INLINE int __cdecl _outp(unsigned short Port, int databyte)
 {
 	__outbyte(Port, (unsigned char)databyte);
 	return databyte;
 }
 
-__INTRIN_INLINE unsigned short _outpw(unsigned short Port, unsigned short dataword)
+__INTRIN_INLINE unsigned short __cdecl _outpw(unsigned short Port, unsigned short dataword)
 {
 	__outword(Port, dataword);
 	return dataword;
 }
 
-__INTRIN_INLINE unsigned long _outpd(unsigned short Port, unsigned long dataword)
+__INTRIN_INLINE unsigned long __cdecl _outpd(unsigned short Port, unsigned long dataword)
 {
 	__outdword(Port, dataword);
 	return dataword;
@@ -1465,7 +1465,7 @@ __INTRIN_INLINE uintptr_t __readeflags(void)
 #ifdef __clang__
 #define __debugbreak() __asm__("int $3")
 #else
-__INTRIN_INLINE void __debugbreak(void)
+__INTRIN_INLINE void __cdecl __debugbreak(void)
 {
 	__asm__("int $3");
 }
@@ -1481,12 +1481,12 @@ __INTRIN_INLINE void __int2c(void)
 	__asm__("int $0x2c");
 }
 
-__INTRIN_INLINE void _disable(void)
+__INTRIN_INLINE void __cdecl _disable(void)
 {
 	__asm__("cli" : : : "memory");
 }
 
-__INTRIN_INLINE void _enable(void)
+__INTRIN_INLINE void __cdecl _enable(void)
 {
 	__asm__("sti" : : : "memory");
 }

@@ -77,13 +77,13 @@ unsigned char _interlockedbittestandset(long volatile *, long);
 _Check_return_ unsigned long __cdecl _lrotl(_In_ unsigned long, _In_ int);
 _Check_return_ unsigned long __cdecl _lrotr(_In_ unsigned long, _In_ int);
 _Check_return_ unsigned int __cdecl _rotl(_In_ unsigned int _Value, _In_ int _Shift);
-unsigned short _rotl16(unsigned short _Value, unsigned char _Shift);
+_Check_return_ unsigned short __cdecl _rotl16(_In_ unsigned short _Value, _In_ unsigned char _Shift);
 _Check_return_ unsigned __int64 __cdecl _rotl64(_In_ unsigned __int64 _Value, _In_ int _Shift);
-unsigned char _rotl8(unsigned char _Value, unsigned char _Shift);
+_Check_return_ unsigned char __cdecl _rotl8(_In_ unsigned char _Value, _In_ unsigned char _Shift);
 _Check_return_ unsigned int __cdecl _rotr(_In_ unsigned int _Value, _In_ int _Shift);
-unsigned short _rotr16(unsigned short _Value, unsigned char _Shift);
+_Check_return_ unsigned short __cdecl _rotr16(_In_ unsigned short _Value, _In_ unsigned char _Shift);
 _Check_return_ unsigned __int64 __cdecl _rotr64(_In_ unsigned __int64 _Value, _In_ int _Shift);
-unsigned char _rotr8(unsigned char _Value, unsigned char _Shift);
+_Check_return_ unsigned char __cdecl _rotr8(_In_ unsigned char _Value, _In_ unsigned char _Shift);
 
 #if defined(_M_IX86) || defined(_M_X64)
 
