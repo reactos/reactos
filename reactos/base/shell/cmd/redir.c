@@ -29,15 +29,18 @@
 
 #ifdef FEATURE_REDIRECTION
 
-
-/* cmd allows redirection of handles numbered 3-9 even though these don't
- * correspond to any STD_ constant. */
-static HANDLE ExtraHandles[10 - 3];
+/*
+ * CMD allows redirection of handles numbered 3-9 even though
+ * these don't correspond to any STD_ constant.
+ */
+static const PCON_STREAM StdStreams[] = { StdIn, StdOut, StdErr };
+static HANDLE ExtraHandles[10 - 3]; // 3 == ARRAYSIZE(StdStreams)
 
 static HANDLE GetHandle(UINT Number)
 {
     if (Number < 3)
-        return GetStdHandle(STD_INPUT_HANDLE - Number);
+        return ConStreamGetOSHandle(StdStreams[Number]);
+        // return GetStdHandle(STD_INPUT_HANDLE - Number);
     else
         return ExtraHandles[Number - 3];
 }
@@ -45,9 +48,15 @@ static HANDLE GetHandle(UINT Number)
 static VOID SetHandle(UINT Number, HANDLE Handle)
 {
     if (Number < 3)
+    {
+        ConStreamSetOSHandle(StdStreams[Number], Handle);
+        /* Synchronize the associated Win32 handle */
         SetStdHandle(STD_INPUT_HANDLE - Number, Handle);
+    }
     else
+    {
         ExtraHandles[Number - 3] = Handle;
+    }
 }
 
 BOOL

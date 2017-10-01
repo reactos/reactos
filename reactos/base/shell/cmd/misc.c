@@ -534,7 +534,8 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
     return TRUE;
 }
 
-INT PagePrompt(VOID)
+// See r874
+BOOL __stdcall PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
 {
     SHORT iScreenWidth, iCursorY;
     INPUT_RECORD ir;
@@ -574,10 +575,10 @@ INT PagePrompt(VOID)
         ConOutChar(_T('\n'));
 
         bCtrlBreak = TRUE;
-        return PROMPT_BREAK;
+        return FALSE;
     }
 
-    return PROMPT_YES;
+    return TRUE;
 }
 
 

@@ -42,7 +42,7 @@ INT cmd_beep(LPTSTR param)
         return 1;
 #endif
 
-    ConRingBell(GetStdHandle(STD_OUTPUT_HANDLE));
+    ConRingBell(ConStreamGetOSHandle(StdOut));
     return 0;
 }
 

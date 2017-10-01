@@ -54,7 +54,6 @@ extern BOOL   bDisableBatchEcho;
 extern BOOL   bEnableExtensions;
 extern BOOL   bDelayedExpansion;
 extern INT    nErrorLevel;
-extern BOOL bUnicodeOutput;
 
 
 /* Prototypes for ALIAS.C */
@@ -282,7 +281,7 @@ VOID   GetPathCase(TCHAR *, TCHAR *);
 #define PROMPT_ALL   2
 #define PROMPT_BREAK 3
 
-INT PagePrompt (VOID);
+BOOL __stdcall PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total);
 INT FilePromptYN (UINT);
 INT FilePromptYNA (UINT);
 

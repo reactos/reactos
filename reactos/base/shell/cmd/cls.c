@@ -38,7 +38,7 @@ INT cmd_cls(LPTSTR param)
         return 0;
     }
 
-    ConClearScreen(GetStdHandle(STD_OUTPUT_HANDLE));
+    ConClearScreen(&StdOutScreen);
     return 0;
 }
 

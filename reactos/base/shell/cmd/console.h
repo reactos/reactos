@@ -1,9 +1,13 @@
 
 #pragma once
 
-/* Cache codepage */
+/* Cache codepage for text streams */
 extern UINT InputCodePage;
 extern UINT OutputCodePage;
+
+/* Global console Screen and Pager */
+extern CON_SCREEN StdOutScreen;
+extern CON_PAGER  StdOutPager;
 
 // /* Global variables */
 // extern BOOL   bCtrlBreak;
@@ -18,50 +22,45 @@ VOID ConInKey (PINPUT_RECORD);
 VOID ConInString (LPTSTR, DWORD);
 
 
-VOID ConOutChar (TCHAR);
-VOID ConErrChar (TCHAR);
-VOID ConPrintfV(DWORD, LPTSTR, va_list);
+VOID ConOutChar(TCHAR);
+VOID ConErrChar(TCHAR);
 
-VOID ConPuts(DWORD nStdHandle, LPTSTR szText);
-VOID ConPrintf(DWORD nStdHandle, LPTSTR szFormat, ...);
-VOID ConResPuts(DWORD nStdHandle, UINT resID);
-VOID ConResPrintf(DWORD nStdHandle, UINT resID, ...);
-VOID ConFormatMessage(DWORD nStdHandle, DWORD MessageId, ...);
+VOID __cdecl ConFormatMessage(PCON_STREAM Stream, DWORD MessageId, ...);
 
 #define ConOutPuts(szStr) \
-    ConPuts(STD_OUTPUT_HANDLE, (szStr))
+    ConPuts(StdOut, (szStr))
 
 #define ConErrPuts(szStr) \
-    ConPuts(STD_ERROR_HANDLE, (szStr))
+    ConPuts(StdErr, (szStr))
 
 #define ConOutResPuts(uID) \
-    ConResPuts(STD_OUTPUT_HANDLE, (uID))
+    ConResPuts(StdOut, (uID))
 
 #define ConErrResPuts(uID) \
-    ConResPuts(STD_ERROR_HANDLE, (uID))
+    ConResPuts(StdErr, (uID))
 
 #define ConOutPrintf(szStr, ...) \
-    ConPrintf(STD_OUTPUT_HANDLE, (szStr), ##__VA_ARGS__)
+    ConPrintf(StdOut, (szStr), ##__VA_ARGS__)
 
 #define ConErrPrintf(szStr, ...) \
-    ConPrintf(STD_ERROR_HANDLE, (szStr), ##__VA_ARGS__)
+    ConPrintf(StdErr, (szStr), ##__VA_ARGS__)
 
 #define ConOutResPrintf(uID, ...) \
-    ConResPrintf(STD_OUTPUT_HANDLE, (uID), ##__VA_ARGS__)
+    ConResPrintf(StdOut, (uID), ##__VA_ARGS__)
 
 #define ConErrResPrintf(uID, ...) \
-    ConResPrintf(STD_ERROR_HANDLE, (uID), ##__VA_ARGS__)
+    ConResPrintf(StdErr, (uID), ##__VA_ARGS__)
 
 #define ConOutFormatMessage(MessageId, ...) \
-    ConFormatMessage(STD_OUTPUT_HANDLE, (MessageId), ##__VA_ARGS__)
+    ConFormatMessage(StdOut, (MessageId), ##__VA_ARGS__)
 
 #define ConErrFormatMessage(MessageId, ...) \
-    ConFormatMessage(STD_ERROR_HANDLE, (MessageId), ##__VA_ARGS__)
+    ConFormatMessage(StdErr, (MessageId), ##__VA_ARGS__)
 
 
-BOOL ConPrintfVPaging(DWORD nStdHandle, BOOL, LPTSTR, va_list);
-BOOL ConOutPrintfPaging (BOOL NewPage, LPTSTR, ...);
-VOID ConOutResPaging(BOOL NewPage, UINT resID);
+BOOL ConPrintfVPaging(PCON_PAGER Pager, BOOL StartPaging, LPTSTR szFormat, va_list arg_ptr);
+BOOL __cdecl ConOutPrintfPaging(BOOL StartPaging, LPTSTR szFormat, ...);
+VOID ConOutResPaging(BOOL StartPaging, UINT resID);
 
 SHORT GetCursorX  (VOID);
 SHORT GetCursorY  (VOID);
@@ -83,10 +82,6 @@ BOOL ConSetTitle(IN LPCTSTR lpConsoleTitle);
 VOID ConRingBell(HANDLE hOutput);
 #endif
 
-#ifdef INCLUDE_CMD_CLS
-VOID ConClearScreen(HANDLE hOutput);
-#endif
-
 #ifdef INCLUDE_CMD_COLOR
 BOOL ConSetScreenColor(HANDLE hOutput, WORD wColor, BOOL bFill);
 #endif
@@ -99,6 +94,5 @@ BOOL ConSetScreenColor(HANDLE hOutput, WORD wColor, BOOL bFill);
 // #define PROMPT_ALL   2
 // #define PROMPT_BREAK 3
 
-// INT PagePrompt (VOID);
 // INT FilePromptYN (UINT);
 // INT FilePromptYNA (UINT);

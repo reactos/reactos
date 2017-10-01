@@ -304,9 +304,26 @@ INT cmd_start (LPTSTR Rest)
         }
         CloseHandle (prci.hProcess);
 
-        /* Get New code page if it has change */
-        InputCodePage= GetConsoleCP();
-        OutputCodePage = GetConsoleOutputCP();
+        /* Update our local codepage cache */
+        {
+            UINT uNewInputCodePage  = GetConsoleCP();
+            UINT uNewOutputCodePage = GetConsoleOutputCP();
+
+            if ((InputCodePage  != uNewInputCodePage) ||
+                (OutputCodePage != uNewOutputCodePage))
+            {
+                /* Update the locale as well */
+                InitLocale();
+            }
+
+            InputCodePage  = uNewInputCodePage;
+            OutputCodePage = uNewOutputCodePage;
+
+            /* Update the streams codepage cache as well */
+            ConStreamSetCacheCodePage(StdIn , InputCodePage );
+            ConStreamSetCacheCodePage(StdOut, OutputCodePage);
+            ConStreamSetCacheCodePage(StdErr, OutputCodePage);
+        }
     }
     else
     {

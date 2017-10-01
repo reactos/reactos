@@ -4,6 +4,7 @@ add_definitions(
     -D_DEBUG_MEM)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 
 list(APPEND SOURCE
     alias.c
@@ -68,8 +69,9 @@ list(APPEND SOURCE
 
 add_rc_deps(cmd.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/terminal.ico)
 add_executable(cmd ${SOURCE} cmd.rc)
-target_link_libraries(cmd wine)
-set_module_type(cmd win32cui UNICODE)
-add_importlibs(cmd advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(cmd precomp.h SOURCE)
+set_module_type(cmd win32cui UNICODE)
+target_link_libraries(cmd wine)
+target_link_libraries(cmd conutils ${PSEH_LIB})
+add_importlibs(cmd advapi32 user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET cmd DESTINATION reactos/system32 FOR all)

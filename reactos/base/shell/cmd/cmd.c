@@ -156,18 +156,22 @@ BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executi
 static BOOL bWaitForCommand = FALSE; /* When we are executing something passed on the commandline after /c or /k */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 CRITICAL_SECTION ChildProcessRunningLock;
-BOOL bUnicodeOutput = FALSE;
 BOOL bDisableBatchEcho = FALSE;
 BOOL bEnableExtensions = TRUE;
 BOOL bDelayedExpansion = FALSE;
 BOOL bTitleSet = FALSE;
 DWORD dwChildProcessId = 0;
-HANDLE hIn;
 LPTSTR lpOriginalEnvironment;
 HANDLE CMD_ModuleHandle;
 
 static NtQueryInformationProcessProc NtQueryInformationProcessPtr = NULL;
 static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr = NULL;
+
+/*
+ * Default output file stream translation mode is UTF8, but CMD switches
+ * allow to change it to either UTF16 (/U) or ANSI (/A).
+ */
+CON_STREAM_MODE OutputStreamMode = UTF8Text; // AnsiText;
 
 #ifdef INCLUDE_CMD_COLOR
 WORD wDefColor = 0;     /* Default color */
@@ -417,7 +421,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         stui.wShowWindow = SW_SHOWDEFAULT;
 
         /* Set the console to standard mode */
-        SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),
+        SetConsoleMode(ConStreamGetOSHandle(StdIn),
                        ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
         if (CreateProcess(szFullName,
@@ -468,15 +472,32 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         }
 
         /* Restore our default console mode */
-        SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),
+        SetConsoleMode(ConStreamGetOSHandle(StdIn),
                        ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
-        SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE),
+        SetConsoleMode(ConStreamGetOSHandle(StdOut),
                        ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
     }
 
-    /* Get code page if it has been changed */
-    InputCodePage= GetConsoleCP();
-    OutputCodePage = GetConsoleOutputCP();
+    /* Update our local codepage cache */
+    {
+        UINT uNewInputCodePage  = GetConsoleCP();
+        UINT uNewOutputCodePage = GetConsoleOutputCP();
+
+        if ((InputCodePage  != uNewInputCodePage) ||
+            (OutputCodePage != uNewOutputCodePage))
+        {
+            /* Update the locale as well */
+            InitLocale();
+        }
+
+        InputCodePage  = uNewInputCodePage;
+        OutputCodePage = uNewOutputCodePage;
+
+        /* Update the streams codepage cache as well */
+        ConStreamSetCacheCodePage(StdIn , InputCodePage );
+        ConStreamSetCacheCodePage(StdOut, OutputCodePage);
+        ConStreamSetCacheCodePage(StdErr, OutputCodePage);
+    }
 
     /* Restore the original console title */
     if (!bTitleSet)
@@ -1472,7 +1493,7 @@ BOOL WINAPI BreakHandler(DWORD dwCtrlType)
     rec.Event.KeyEvent.uChar.UnicodeChar = _T('C');
     rec.Event.KeyEvent.dwControlKeyState = RIGHT_CTRL_PRESSED;
 
-    WriteConsoleInput(hIn,
+    WriteConsoleInput(ConStreamGetOSHandle(StdIn),
                       &rec,
                       1,
                       &dwWritten);
@@ -1779,7 +1800,7 @@ Initialize(VOID)
     TCHAR ModuleName[_MAX_PATH + 1];
     INT nExitCode;
 
-    HANDLE hOut;
+    HANDLE hIn, hOut;
 
     TCHAR *ptr, *cmdLine, option = 0;
     BOOL AlwaysStrip = FALSE;
@@ -1805,10 +1826,6 @@ Initialize(VOID)
     /* Initialize our locale */
     InitLocale();
 
-    /* Get default input and output console handles */
-    hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    hIn  = GetStdHandle(STD_INPUT_HANDLE);
-
     /* Initialize prompt support */
     InitPrompt();
 
@@ -1833,6 +1850,8 @@ Initialize(VOID)
     AddBreakHandler();
 
     /* Set our default console mode */
+    hOut = ConStreamGetOSHandle(StdOut);
+    hIn  = ConStreamGetOSHandle(StdIn);
     SetConsoleMode(hOut, 0); // Reinitialize the console output mode
     SetConsoleMode(hOut, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
     SetConsoleMode(hIn , ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
@@ -1871,7 +1890,7 @@ Initialize(VOID)
             }
             else if (option == _T('A'))
             {
-                bUnicodeOutput = FALSE;
+                OutputStreamMode = AnsiText;
             }
             else if (option == _T('C') || option == _T('K') || option == _T('R'))
             {
@@ -1899,7 +1918,7 @@ Initialize(VOID)
 #endif
             else if (option == _T('U'))
             {
-                bUnicodeOutput = TRUE;
+                OutputStreamMode = UTF16Text;
             }
             else if (option == _T('V'))
             {
@@ -1935,8 +1954,13 @@ Initialize(VOID)
     }
 
     if (wDefColor != 0)
-        ConSetScreenColor(GetStdHandle(STD_OUTPUT_HANDLE), wDefColor, TRUE);
+        ConSetScreenColor(ConStreamGetOSHandle(StdOut), wDefColor, TRUE);
 #endif
+
+    /* Reset the output Standard Streams translation modes and codepage caches */
+    // ConStreamSetMode(StdIn , OutputStreamMode, InputCodePage );
+    ConStreamSetMode(StdOut, OutputStreamMode, OutputCodePage);
+    ConStreamSetMode(StdErr, OutputStreamMode, OutputCodePage);
 
     if (!*ptr)
     {
@@ -2000,9 +2024,9 @@ static VOID Cleanup(VOID)
     RemoveBreakHandler();
 
     /* Restore the default console mode */
-    SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),
+    SetConsoleMode(ConStreamGetOSHandle(StdIn),
                    ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
-    SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE),
+    SetConsoleMode(ConStreamGetOSHandle(StdOut),
                    ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
 
     DeleteCriticalSection(&ChildProcessRunningLock);
@@ -2022,8 +2046,13 @@ int _tmain(int argc, const TCHAR *argv[])
     _tchdir(startPath);
 
     SetFileApisToOEM();
-    InputCodePage = GetConsoleCP();
+    InputCodePage  = GetConsoleCP();
     OutputCodePage = GetConsoleOutputCP();
+
+    /* Initialize the Console Standard Streams */
+    ConStreamInit(StdIn , GetStdHandle(STD_INPUT_HANDLE) , /*OutputStreamMode*/ AnsiText, InputCodePage);
+    ConStreamInit(StdOut, GetStdHandle(STD_OUTPUT_HANDLE), OutputStreamMode, OutputCodePage);
+    ConStreamInit(StdErr, GetStdHandle(STD_ERROR_HANDLE) , OutputStreamMode, OutputCodePage);
 
     CMD_ModuleHandle = GetModuleHandle(NULL);
 

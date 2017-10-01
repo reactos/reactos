@@ -87,8 +87,6 @@ INT CommandHistory (LPTSTR param)
                 break;
 
             case _T('R'):/*read history from standard in*/
-                //hIn=GetStdHandle (STD_INPUT_HANDLE);
-
                 for(;;)
                 {
                     ConInString(szBuffer,sizeof(szBuffer)/sizeof(TCHAR));

@@ -557,9 +557,9 @@ DirPrintf(LPDIRSWITCHFLAGS lpFlags, LPTSTR szFormat, ...)
     va_list arg_ptr;
     va_start(arg_ptr, szFormat);
     if (lpFlags->bPause)
-        Done = ConPrintfVPaging(STD_OUTPUT_HANDLE, FALSE, szFormat, arg_ptr);
+        Done = ConPrintfVPaging(&StdOutPager, FALSE, szFormat, arg_ptr);
     else
-        ConPrintfV(STD_OUTPUT_HANDLE, szFormat, arg_ptr);
+        ConPrintfV(StdOut, szFormat, arg_ptr);
     va_end(arg_ptr);
     return Done;
 }
