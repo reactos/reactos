@@ -202,7 +202,8 @@ FASTCALL
 DeleteRegion( HRGN );
 
 BOOL
-GdiIsHandleValid(HGDIOBJ hGdiObj);
+WINAPI
+GdiValidateHandle(HGDIOBJ);
 
 BOOL
 GdiGetHandleUserData(

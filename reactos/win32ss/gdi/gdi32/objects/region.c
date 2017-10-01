@@ -186,7 +186,7 @@ MirrorRgnDC(
     _In_ HRGN hrgn,
     _In_ HRGN *phrn)
 {
-    if (!GdiIsHandleValid((HGDIOBJ) hdc) ||
+    if (!GdiValidateHandle((HGDIOBJ) hdc) ||
         (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC))
         return 0;
 

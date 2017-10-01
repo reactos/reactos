@@ -745,24 +745,6 @@ GdiQueryTable(VOID)
     return (PVOID)GdiHandleTable;
 }
 
-BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
-{
-    PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-// We are only looking for TYPE not the rest here, and why is FullUnique filled up with CRAP!?
-// DPRINT1("FullUnique -> %x\n", Entry->FullUnique);
-    if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
-            ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) ==
-            GDI_HANDLE_GET_TYPE(hGdiObj))
-    {
-        HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-        if(pid == NULL || pid == CurrentProcessId)
-        {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
 {
     PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);

@@ -363,7 +363,7 @@ GetDIBits(
     UINT cjBmpScanSize;
     UINT cjInfoSize;
 
-    if (!hDC || !GdiIsHandleValid((HGDIOBJ) hDC) || !lpbmi)
+    if (!hDC || !GdiValidateHandle((HGDIOBJ) hDC) || !lpbmi)
     {
         GdiSetLastError(ERROR_INVALID_PARAMETER);
         return 0;

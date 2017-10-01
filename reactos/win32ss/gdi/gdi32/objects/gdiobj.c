@@ -23,7 +23,7 @@ GetStockObject(
     {
         hobj = NtGdiGetStockObject(fnObject);
 
-        if (!GdiIsHandleValid(hobj))
+        if (!GdiValidateHandle(hobj))
         {
             return NULL;
         }
@@ -45,7 +45,7 @@ GetObjectType(
 {
     DWORD Ret = 0;
 
-    if (GdiIsHandleValid(h))
+    if (GdiValidateHandle(h))
     {
         LONG Type = GDI_HANDLE_GET_TYPE(h);
         switch(Type)
@@ -249,7 +249,7 @@ GetObjectW(
     /* Handle error */
     if (cbResult == 0)
     {
-        if (!GdiIsHandleValid(hGdiObj))
+        if (!GdiValidateHandle(hGdiObj))
         {
             if ((dwType == GDI_OBJECT_TYPE_PEN) ||
                 (dwType == GDI_OBJECT_TYPE_EXTPEN) ||
@@ -316,7 +316,7 @@ DeleteObject(HGDIOBJ hObject)
 {
     /* Check if the handle is valid (FIXME: we need some special
        sauce for the stock object flag) */
-    if (!GdiIsHandleValid(hObject))
+    if (!GdiValidateHandle(hObject))
         return FALSE;
 
     /* Check if this is a stock object */

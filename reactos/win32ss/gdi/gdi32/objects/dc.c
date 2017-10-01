@@ -1500,7 +1500,7 @@ SelectObject(
 {
     /* Fix up 16 bit handles */
     hobj = GdiFixUpHandle(hobj);
-    if (!GdiIsHandleValid(hobj))
+    if (!GdiValidateHandle(hobj))
     {
         return NULL;
     }

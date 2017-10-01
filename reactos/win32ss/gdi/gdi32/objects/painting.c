@@ -128,7 +128,7 @@ GetPixel(
     _In_ INT y)
 {
     if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) return CLR_INVALID;
-    if (!GdiIsHandleValid((HGDIOBJ) hdc)) return CLR_INVALID;
+    if (!GdiValidateHandle((HGDIOBJ) hdc)) return CLR_INVALID;
     return NtGdiGetPixel(hdc, x, y);
 }
 
@@ -479,7 +479,7 @@ PolyPatBlt(
     if ((GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) ||
         (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_ALTDC_TYPE))
     {
-        if (!GdiIsHandleValid(hdc))
+        if (!GdiValidateHandle(hdc))
         {
             return FALSE;
         }
