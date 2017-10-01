@@ -2,7 +2,6 @@
 list(APPEND SOURCE
     enable.c
     debug.c
-    enable.c
     palette.c
     screen.c)
 
