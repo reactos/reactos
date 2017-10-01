@@ -297,7 +297,7 @@ VOID
 DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 {
     PUCHAR BufPtr = (PUCHAR)Buffer;
-    ULONG  Idx, Idx2;
+    ULONG Offset, Count, i;
 
     /* Mask out unwanted debug messages */
     if (!(DbgChannels[Mask] & TRACE_LEVEL))
@@ -306,50 +306,20 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
     DebugStartOfLine = FALSE; // We don't want line headers
     DbgPrint("Dumping buffer at %p with length of %lu bytes:\n", Buffer, Length);
 
-    for (Idx = 0; Idx < Length; )
+    Offset = 0;
+    while (Offset < Length)
     {
-        DebugStartOfLine = FALSE; // We don't want line headers
+        /* We don't want line headers */
+        DebugStartOfLine = FALSE;
 
-        if (Idx < 0x0010)
-            DbgPrint("000%x:\t", Idx);
-        else if (Idx < 0x0100)
-            DbgPrint("00%x:\t", Idx);
-        else if (Idx < 0x1000)
-            DbgPrint("0%x:\t", Idx);
-        else
-            DbgPrint("%x:\t", Idx);
+        /* Print the offset */
+        DbgPrint("%04x:\t", Offset);
 
-        for (Idx2 = 0; Idx2 < 16; Idx2++, Idx++)
+        /* Print either 16 or the remaining number of bytes */
+        Count = min(Length - Offset, 16);
+        for (i = 0; i < Count; i++, Offset++)
         {
-            if (BufPtr[Idx] < 0x10)
-            {
-                DbgPrint("0");
-            }
-            DbgPrint("%x", BufPtr[Idx]);
-
-            if (Idx2 == 7)
-            {
-                DbgPrint("-");
-            }
-            else
-            {
-                DbgPrint(" ");
-            }
-        }
-
-        Idx -= 16;
-        DbgPrint(" ");
-
-        for (Idx2 = 0; Idx2 < 16; Idx2++, Idx++)
-        {
-            if ((BufPtr[Idx] > 20) && (BufPtr[Idx] < 0x80))
-            {
-                DbgPrint("%c", BufPtr[Idx]);
-            }
-            else
-            {
-                DbgPrint(".");
-            }
+            DbgPrint("%02x%c", BufPtr[Offset], (i == 7) ? '-' : ' ');
         }
 
         DbgPrint("\n");
