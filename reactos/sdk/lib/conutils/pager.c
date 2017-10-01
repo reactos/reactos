@@ -131,18 +131,30 @@ ConPutsPaging(
 }
 
 BOOL
+ConResPagingEx(
+    IN PCON_PAGER Pager,
+    IN PAGE_PROMPT PagePrompt,
+    IN BOOL StartPaging,
+    IN HINSTANCE hInstance OPTIONAL,
+    IN UINT uID)
+{
+    INT Len;
+    PWCHAR szStr = NULL;
+
+    Len = K32LoadStringW(hInstance, uID, (PWSTR)&szStr, 0);
+    if (szStr && Len)
+        return ConWritePaging(Pager, PagePrompt, StartPaging, szStr, Len);
+    else
+        return TRUE;
+}
+
+BOOL
 ConResPaging(
     IN PCON_PAGER Pager,
     IN PAGE_PROMPT PagePrompt,
     IN BOOL StartPaging,
     IN UINT uID)
 {
-    INT Len;
-    PWCHAR szStr = NULL;
-
-    Len = K32LoadStringW(GetModuleHandleW(NULL), uID, (PWSTR)&szStr, 0);
-    if (szStr && Len)
-        return ConWritePaging(Pager, PagePrompt, StartPaging, szStr, Len);
-    else
-        return TRUE;
+    return ConResPagingEx(Pager, PagePrompt, StartPaging,
+                          NULL /*GetModuleHandleW(NULL)*/, uID);
 }

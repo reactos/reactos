@@ -30,6 +30,14 @@ typedef struct _CON_PAGER
     DWORD LineCount;
 } CON_PAGER, *PCON_PAGER;
 
+#define INIT_CON_PAGER(pScreen)     {(pScreen), 0}
+
+#define InitializeConPager(pPager, pScreen) \
+do { \
+    (pPager)->Screen = (pScreen);   \
+    (pPager)->LineCount = 0;        \
+} while (0)
+
                                       // Pager,         Done,     Total
 typedef BOOL (__stdcall *PAGE_PROMPT)(IN PCON_PAGER, IN DWORD, IN DWORD);
 
@@ -47,6 +55,14 @@ ConPutsPaging(
     IN PAGE_PROMPT PagePrompt,
     IN BOOL StartPaging,
     IN LPTSTR szStr);
+
+BOOL
+ConResPagingEx(
+    IN PCON_PAGER Pager,
+    IN PAGE_PROMPT PagePrompt,
+    IN BOOL StartPaging,
+    IN HINSTANCE hInstance OPTIONAL,
+    IN UINT uID);
 
 BOOL
 ConResPaging(

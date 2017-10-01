@@ -35,6 +35,15 @@ typedef struct _CON_SCREEN
     CONSOLE_CURSOR_INFO cci;
 } CON_SCREEN, *PCON_SCREEN;
 
+#define INIT_CON_SCREEN(pStream)    {(pStream)} /* {(pStream), {{}}, {{}}} */
+
+#define InitializeConScreen(pScreen, pStream)   \
+do { \
+    (pScreen)->Stream = (pStream);  \
+    RtlZeroMemory(&(pScreen)->csbi, sizeof((pScreen)->csbi));   \
+    RtlZeroMemory(&(pScreen)->cci , sizeof((pScreen)->cci ));   \
+} while (0)
+
 BOOL
 ConGetScreenInfo(
     IN PCON_SCREEN Screen,

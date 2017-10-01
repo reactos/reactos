@@ -184,15 +184,36 @@ ConPrintf(
     ...);
 
 INT
+ConResPutsEx(
+    IN PCON_STREAM Stream,
+    IN HINSTANCE hInstance OPTIONAL,
+    IN UINT uID);
+
+INT
 ConResPuts(
     IN PCON_STREAM Stream,
     IN UINT uID);
+
+INT
+ConResPrintfExV(
+    IN PCON_STREAM Stream,
+    IN HINSTANCE hInstance OPTIONAL,
+    IN UINT    uID,
+    IN va_list args); // arg_ptr
 
 INT
 ConResPrintfV(
     IN PCON_STREAM Stream,
     IN UINT    uID,
     IN va_list args); // arg_ptr
+
+INT
+__cdecl
+ConResPrintfEx(
+    IN PCON_STREAM Stream,
+    IN HINSTANCE hInstance OPTIONAL,
+    IN UINT uID,
+    ...);
 
 INT
 __cdecl

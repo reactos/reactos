@@ -483,7 +483,9 @@ ConWrite(
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;
         }
-        len = WideCharToMultiByte(Stream->CodePage, 0, szStr, len, buffer, len * MB_LEN_MAX, NULL, NULL);
+        len = WideCharToMultiByte(Stream->CodePage, 0,
+                                  szStr, len, buffer, len * MB_LEN_MAX,
+                                  NULL, NULL);
         szStr = (PVOID)buffer;
 #else
         /*
@@ -705,14 +707,15 @@ ConPrintf(
 }
 
 INT
-ConResPuts(
+ConResPutsEx(
     IN PCON_STREAM Stream,
+    IN HINSTANCE hInstance OPTIONAL,
     IN UINT uID)
 {
     INT Len;
     PWCHAR szStr = NULL;
 
-    Len = K32LoadStringW(GetModuleHandleW(NULL), uID, (PWSTR)&szStr, 0);
+    Len = K32LoadStringW(hInstance, uID, (PWSTR)&szStr, 0);
     if (szStr && Len)
         // Len = ConPuts(Stream, szStr);
         CON_STREAM_WRITE2(Stream, szStr, Len, Len);
@@ -725,8 +728,17 @@ ConResPuts(
 }
 
 INT
-ConResPrintfV(
+ConResPuts(
     IN PCON_STREAM Stream,
+    IN UINT uID)
+{
+    return ConResPutsEx(Stream, NULL /*GetModuleHandleW(NULL)*/, uID);
+}
+
+INT
+ConResPrintfExV(
+    IN PCON_STREAM Stream,
+    IN HINSTANCE hInstance OPTIONAL,
     IN UINT    uID,
     IN va_list args) // arg_ptr
 {
@@ -734,9 +746,36 @@ ConResPrintfV(
     WCHAR bufSrc[CON_RC_STRING_MAX_SIZE];
 
     // NOTE: We may use the special behaviour where nBufMaxSize == 0
-    Len = K32LoadStringW(GetModuleHandleW(NULL), uID, bufSrc, ARRAYSIZE(bufSrc));
+    Len = K32LoadStringW(hInstance, uID, bufSrc, ARRAYSIZE(bufSrc));
     if (Len)
         Len = ConPrintfV(Stream, bufSrc, args);
+
+    return Len;
+}
+
+INT
+ConResPrintfV(
+    IN PCON_STREAM Stream,
+    IN UINT    uID,
+    IN va_list args) // arg_ptr
+{
+    return ConResPrintfExV(Stream, NULL /*GetModuleHandleW(NULL)*/, uID, args);
+}
+
+INT
+__cdecl
+ConResPrintfEx(
+    IN PCON_STREAM Stream,
+    IN HINSTANCE hInstance OPTIONAL,
+    IN UINT uID,
+    ...)
+{
+    INT Len;
+    va_list args;
+
+    va_start(args, uID);
+    Len = ConResPrintfExV(Stream, hInstance, uID, args);
+    va_end(args);
 
     return Len;
 }
