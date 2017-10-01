@@ -22,10 +22,10 @@
 #include <wincon.h>
 #include <shellapi.h>
 
-#include <conutils.h>
-
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
+
+#include <conutils.h>
 
 #include "resource.h"
 
