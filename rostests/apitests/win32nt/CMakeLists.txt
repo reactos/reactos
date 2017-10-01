@@ -68,7 +68,7 @@ add_executable(win32knt_apitest ${SOURCE})
 target_link_libraries(win32knt_apitest ${PSEH_LIB} gditools)
 set_module_type(win32knt_apitest win32cui)
 add_importlibs(win32knt_apitest
-    win32kdll # win32kdll_2ksp4 win32kdll_xpsp2 win32kdll_2k3sp2 win32kdll_vista
+    win32u # win32u_2ksp4 win32u_xpsp2 win32u_2k3sp2 win32u_vista
     gdi32
     user32
     shell32
