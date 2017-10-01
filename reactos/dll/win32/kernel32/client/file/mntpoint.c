@@ -121,12 +121,12 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
     MountPoint->DeviceNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
     MountPoint->DeviceNameLength = NtPathName.Length;
     RtlCopyMemory((PVOID)((ULONG_PTR)MountPoint + sizeof(MOUNTMGR_MOUNT_POINT)), NtPathName.Buffer, NtPathName.Length);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
 
     /* Allocate a dummy output buffer to probe for size */
     MountPoints = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(MOUNTMGR_MOUNT_POINTS));
     if (MountPoints == NULL)
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
         RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoint);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
@@ -139,6 +139,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
                                  INVALID_HANDLE_VALUE);
     if (MountMgrHandle == INVALID_HANDLE_VALUE)
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
         RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoints);
         RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoint);
         return FALSE;
@@ -162,6 +163,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
         if (MountPoints == NULL)
         {
             CloseHandle(MountMgrHandle);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
             RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoint);
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
@@ -181,6 +183,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
     /* If the mount manager failed, just quit */
     if (!Ret)
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
         RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoints);
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -218,6 +221,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
     /* We couldn't find anything matching, return an error */
     if (CurrentMntPt == MountPoints->NumberOfMountPoints)
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
         RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoints);
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -226,6 +230,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
     /* We found a matching volume, have we enough memory to return it? */
     if (cchBufferLength * sizeof(WCHAR) < FoundVolumeLen + 2 * sizeof(WCHAR))
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
         RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoints);
         SetLastError(ERROR_FILENAME_EXCED_RANGE);
         return FALSE;
@@ -240,6 +245,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
     lpszVolumeName[FoundVolumeLen / sizeof(WCHAR) + 1] = UNICODE_NULL;
 
     /* We're done! */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
     RtlFreeHeap(RtlGetProcessHeap(), 0, MountPoints);
     return TRUE;
 }
