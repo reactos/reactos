@@ -114,6 +114,7 @@ GetFileInformationByHandleEx(HANDLE hFile, FILE_INFO_BY_HANDLE_CLASS FileInforma
 #endif
 #endif
 
+#ifndef __REACTOS__
 typedef struct _REPARSE_DATA_BUFFER {
     ULONG ReparseTag;
     USHORT ReparseDataLength;
@@ -144,6 +145,7 @@ typedef struct _REPARSE_DATA_BUFFER {
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 
 #define SYMLINK_FLAG_RELATIVE 1
+#endif
 
 #ifndef FILE_SUPPORTS_BLOCK_REFCOUNTING
 
