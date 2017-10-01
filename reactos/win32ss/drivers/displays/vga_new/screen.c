@@ -114,7 +114,7 @@ GDIINFO gaulCap = {
 \**************************************************************************/
 
 // Values for the internal, EGA-compatible palette.
-
+#if 0
 static WORD PaletteBuffer[] = {
 
         16, // 16 entries
@@ -156,6 +156,7 @@ static BYTE ColorBuffer[] = {
                 0x00, 0x3F, 0x3F, 0x00, // bright ScanLinesan
                 0x3F, 0x3F, 0x3F, 0x00  // bright white
 };
+#endif
 // eVb: 2.3 [END]
 /******************************Public*Routine******************************\
 * bInitSURF
@@ -330,8 +331,10 @@ DEVINFO *pDevInfo)
 {
     ULONG cModes;
     PVIDEO_MODE_INFORMATION pVideoBuffer, pVideoModeSelected, pVideoTemp;
+#if 0
     VIDEO_COLOR_CAPABILITIES colorCapabilities;
     ULONG ulTemp;
+#endif
     BOOL bSelectDefault;
     ULONG cbModeSize;
 

@@ -288,7 +288,7 @@ BOOL bInit256ColorPalette(PPDEV ppdev)
 *
 \**************************************************************************/
 
-BOOL DrvSetPalette(
+BOOL APIENTRY DrvSetPalette(
 DHPDEV  dhpdev,
 PALOBJ* ppalo,
 FLONG   fl,

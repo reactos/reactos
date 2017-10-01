@@ -48,7 +48,7 @@ static DRVFN gadrvfn[] =
 *
 \**************************************************************************/
 
-BOOL DrvEnableDriver(
+BOOL APIENTRY DrvEnableDriver(
 ULONG iEngineVersion,
 ULONG cj,
 PDRVENABLEDATA pded)
@@ -88,7 +88,7 @@ PDRVENABLEDATA pded)
 *
 \**************************************************************************/
 
-DHPDEV DrvEnablePDEV(
+DHPDEV APIENTRY DrvEnablePDEV(
 DEVMODEW   *pDevmode,       // Pointer to DEVMODE
 PWSTR       pwszLogAddress, // Logical address
 ULONG       cPatterns,      // number of patterns
@@ -176,7 +176,7 @@ error_free:
 *
 \**************************************************************************/
 
-VOID DrvCompletePDEV(
+VOID APIENTRY DrvCompletePDEV(
 DHPDEV dhpdev,
 HDEV  hdev)
 {
@@ -191,7 +191,7 @@ HDEV  hdev)
 *
 \**************************************************************************/
 
-VOID DrvDisablePDEV(
+VOID APIENTRY DrvDisablePDEV(
 DHPDEV dhpdev)
 {
     vDisablePalette((PPDEV) dhpdev);
@@ -207,14 +207,17 @@ DHPDEV dhpdev)
 *
 \**************************************************************************/
 
-HSURF DrvEnableSurface(
+HSURF APIENTRY DrvEnableSurface(
 DHPDEV dhpdev)
 {
     PPDEV ppdev;
     HSURF hsurf;
     SIZEL sizl;
     ULONG ulBitmapType;
+#if 0
     FLONG flHooks;
+#endif
+    HSURF hSurfBitmap;
 
     // Create engine bitmap around frame buffer.
 
@@ -290,7 +293,6 @@ DHPDEV dhpdev)
 // eVb: 1.5 [END]
     ppdev->hsurfEng = hsurf;
 // eVb: 1.4 [VGARISC Change] - Allocate 4BPP DIB that will store GDI drawing
-    HSURF hSurfBitmap;
     hSurfBitmap = (HSURF)EngCreateBitmap(sizl, 0, ulBitmapType, 0, NULL);
     if (hSurfBitmap == (HSURF) 0)
     {
@@ -328,7 +330,7 @@ DHPDEV dhpdev)
 *
 \**************************************************************************/
 
-VOID DrvDisableSurface(
+VOID APIENTRY DrvDisableSurface(
 DHPDEV dhpdev)
 {
     EngDeleteSurface(((PPDEV) dhpdev)->hsurfEng);
@@ -343,7 +345,7 @@ DHPDEV dhpdev)
 *
 \**************************************************************************/
 
-BOOL DrvAssertMode(
+BOOL APIENTRY DrvAssertMode(
 DHPDEV dhpdev,
 BOOL bEnable)
 {
@@ -415,7 +417,7 @@ BOOL bEnable)
 *
 \**************************************************************************/
 
-ULONG DrvGetModes(
+ULONG APIENTRY DrvGetModes(
 HANDLE hDriver,
 ULONG cjSize,
 DEVMODEW *pdm)
