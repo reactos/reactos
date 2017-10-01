@@ -1056,7 +1056,7 @@ GetVolumePathNamesForVolumeNameA(IN LPCSTR lpszVolumeName,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1065,8 +1065,198 @@ GetVolumePathNamesForVolumeNameW(IN LPCWSTR lpszVolumeName,
                                  IN DWORD cchBufferLength,
                                  OUT PDWORD lpcchReturnLength)
 {
-    STUB;
-    return 0;
+    BOOL Ret;
+    PWSTR MultiSz;
+    DWORD BytesReturned;
+    HANDLE MountMgrHandle;
+    UNICODE_STRING VolumeName;
+    PMOUNTMGR_TARGET_NAME TargetName;
+    PMOUNTMGR_VOLUME_PATHS VolumePaths;
+    ULONG BufferSize, CharsInMgr, CharsInOutput, Paths;
+
+    /* First look that our volume name looks somehow correct */
+    RtlInitUnicodeString(&VolumeName, lpszVolumeName);
+    if (VolumeName.Buffer[(VolumeName.Length / sizeof(WCHAR)) - 1] != L'\\')
+    {
+        BaseSetLastNTError(STATUS_OBJECT_NAME_INVALID);
+        return FALSE;
+    }
+
+    /* Validate it's a DOS volume name finishing with a backslash */
+    if (!MOUNTMGR_IS_DOS_VOLUME_NAME_WB(&VolumeName))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Allocate an input MOUNTMGR_TARGET_NAME */
+    TargetName = RtlAllocateHeap(RtlGetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) + sizeof(USHORT));
+    if (TargetName == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    /* And fill it */
+    RtlZeroMemory(TargetName, MAX_PATH * sizeof(WCHAR) + sizeof(USHORT));
+    TargetName->DeviceNameLength = VolumeName.Length - sizeof(WCHAR);
+    RtlCopyMemory(TargetName->DeviceName, VolumeName.Buffer, TargetName->DeviceNameLength);
+    TargetName->DeviceName[1] = L'?';
+    
+    /* Open the mount manager */
+    MountMgrHandle = CreateFileW(MOUNTMGR_DOS_DEVICE_NAME, 0,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                                 INVALID_HANDLE_VALUE);
+    if (MountMgrHandle == INVALID_HANDLE_VALUE)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TargetName);
+        return FALSE;
+    }
+
+    /* Allocate an initial output buffer, just to get length */
+    VolumePaths = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(MOUNTMGR_VOLUME_PATHS));
+    if (VolumePaths == NULL)
+    {
+        CloseHandle(MountMgrHandle);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TargetName);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    /* Query the paths */
+    Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATHS,
+                          TargetName, MAX_PATH * sizeof(WCHAR) + sizeof(USHORT),
+                          VolumePaths, sizeof(MOUNTMGR_VOLUME_PATHS), &BytesReturned,
+                          NULL);
+    /* Loop until we can query everything */
+    while (!Ret)
+    {
+        /* If failed for another reason than too small buffer, fail */
+        if (GetLastError() != ERROR_MORE_DATA)
+        {
+            CloseHandle(MountMgrHandle);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TargetName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, VolumePaths);
+            return FALSE;
+        }
+
+        /* Get the required length */
+        BufferSize = VolumePaths->MultiSzLength + sizeof(MOUNTMGR_VOLUME_PATHS);
+
+        /* And reallocate our output buffer (big enough this time) */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumePaths);
+        VolumePaths = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+        if (VolumePaths == NULL)
+        {
+            CloseHandle(MountMgrHandle);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TargetName);
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Query again the mount mgr */
+        Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATHS,
+                              TargetName, MAX_PATH * sizeof(WCHAR) + sizeof(USHORT),
+                              VolumePaths, BufferSize, &BytesReturned, NULL);
+    }
+
+    /* We're done, no need for input nor mount mgr any longer */
+    CloseHandle(MountMgrHandle);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, TargetName);
+
+    /* Initialize:
+     - Number of paths we saw (useful to count extra \)
+     - Progress in mount mgr output
+     - Progress in output buffer
+     - Direct buffer to returned MultiSz
+    */
+    Paths = 0;
+    CharsInMgr = 0;
+    CharsInOutput = 0;
+    MultiSz = VolumePaths->MultiSz;
+
+    /* If we have an output buffer */
+    if (cchBufferLength != 0)
+    {
+        /* Loop on the output to recopy it back to the caller
+         * Note that we loop until -1 not to handle last 0 (will be done later on)
+         */
+        for (; (CharsInMgr < VolumePaths->MultiSzLength / sizeof(WCHAR) - 1) && (CharsInOutput < cchBufferLength);
+             ++CharsInMgr, ++CharsInOutput)
+        {
+            /* When we reach the end of a path */
+            if (MultiSz[CharsInMgr] == UNICODE_NULL)
+            {
+                /* On path done (count), add an extra \ at the end */
+                ++Paths;
+                lpszVolumePathNames[CharsInOutput] = L'\\';
+                ++CharsInOutput;
+                /* Make sure we don't overflow */
+                if (CharsInOutput == cchBufferLength)
+                {
+                    break;
+                }
+            }
+
+            /* Copy the char to the caller
+             * So, in case we're in the end of a path, we wrote two chars to
+             * the output buffer: \\ and \0
+             */
+            lpszVolumePathNames[CharsInOutput] = MultiSz[CharsInMgr];
+        }
+    }
+
+    /* If output buffer was too small (ie, we couldn't parse all the input buffer) */
+    if (CharsInMgr < VolumePaths->MultiSzLength / sizeof(WCHAR) - 1)
+    {
+        /* Keep looping on it, to count the number of extra \ that will be required
+         * So that on the next call, caller can allocate enough space
+         */
+        for (; CharsInMgr < VolumePaths->MultiSzLength / sizeof(WCHAR) - 1; ++CharsInMgr)
+        {
+            if (MultiSz[CharsInMgr] == UNICODE_NULL)
+            {
+                ++Paths;
+            }
+        }
+    }
+
+    /* If we couldn't write as much as we wanted to the output buffer
+     * This handles the case where we could write everything excepted the 
+     * terminating \0 for multi SZ
+     */
+    if (CharsInOutput >= cchBufferLength)
+    {
+        /* Fail and set appropriate error code */
+        Ret = FALSE;
+        SetLastError(ERROR_MORE_DATA);
+        /* If caller wants to know how many chars to allocate, return it */
+        if (lpcchReturnLength != NULL)
+        {
+            /* It's amount of extra \ + number of chars in MultiSz (including double \0) */
+            *lpcchReturnLength = Paths + (VolumePaths->MultiSzLength / sizeof(WCHAR));
+        }
+    }
+    else
+    {
+        /* It succeed so terminate the multi SZ (second \0) */
+        lpszVolumePathNames[CharsInOutput] = UNICODE_NULL;
+        Ret = TRUE;
+
+        /* If caller wants the amount of chars written, return it */
+        if (lpcchReturnLength != NULL)
+        {
+            /* Including the terminating \0 we just added */
+            *lpcchReturnLength = CharsInOutput + 1;
+        }
+    }
+
+    /* Free last bits */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, VolumePaths);
+
+    /* And return */
+    return Ret;
 }
 
 /* EOF */
