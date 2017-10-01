@@ -2393,7 +2393,7 @@ done:
     SampRegCloseKey(&NamesKeyHandle);
     SampRegCloseKey(&GroupsKeyHandle);
 
-    if ((Status == STATUS_SUCCESS) && (MoreEntries == TRUE))
+    if ((Status == STATUS_SUCCESS) && (MoreEntries != FALSE))
         Status = STATUS_MORE_ENTRIES;
 
     RtlReleaseResource(&SampResource);
@@ -3004,7 +3004,7 @@ done:
     SampRegCloseKey(&NamesKeyHandle);
     SampRegCloseKey(&UsersKeyHandle);
 
-    if ((Status == STATUS_SUCCESS) && (MoreEntries == TRUE))
+    if ((Status == STATUS_SUCCESS) && (MoreEntries != FALSE))
         Status = STATUS_MORE_ENTRIES;
 
     RtlReleaseResource(&SampResource);
@@ -3385,7 +3385,7 @@ done:
     SampRegCloseKey(&NamesKeyHandle);
     SampRegCloseKey(&AliasesKeyHandle);
 
-    if ((Status == STATUS_SUCCESS) && (MoreEntries == TRUE))
+    if ((Status == STATUS_SUCCESS) && (MoreEntries != FALSE))
         Status = STATUS_MORE_ENTRIES;
 
     RtlReleaseResource(&SampResource);
@@ -7976,7 +7976,7 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
                                         Buffer->All.SecurityDescriptor.Length);
     }
 
-    if (WriteFixedData == TRUE)
+    if (WriteFixedData != FALSE)
     {
         Status = SampSetObjectAttribute(UserObject,
                                         L"F",

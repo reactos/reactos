@@ -189,7 +189,7 @@ ClasspPowerUpCompletion(
             // request unless we can ignore failed locks
             //
 
-            if((context->Options.LockQueue == TRUE) &&
+            if ((context->Options.LockQueue != FALSE) &&
                (!NT_SUCCESS(Irp->IoStatus.Status))) {
 
                 DebugPrint((1, "(%p)\tIrp status was %lx\n",
@@ -359,7 +359,7 @@ ClasspPowerUpCompletion(
                             &status,
                             &context->RetryInterval);
 
-                if((retry == TRUE) && (context->RetryCount-- != 0)) {
+                if ((retry != FALSE) && (context->RetryCount-- != 0)) {
 
                     DebugPrint((1, "(%p)\tRetrying failed request\n", Irp));
 
@@ -554,7 +554,7 @@ ClasspPowerDownCompletion(
 
             DebugPrint((1, "(%p)\tPreviously sent power lock\n", Irp));
 
-            if((context->Options.LockQueue == TRUE) &&
+            if ((context->Options.LockQueue != FALSE) &&
                (!NT_SUCCESS(Irp->IoStatus.Status))) {
 
                 DebugPrint((1, "(%p)\tIrp status was %lx\n",
@@ -703,7 +703,7 @@ ClasspPowerDownCompletion(
                             &status,
                             &context->RetryInterval);
 
-                if((retry == TRUE) && (context->RetryCount-- != 0)) {
+                if ((retry != FALSE) && (context->RetryCount-- != 0)) {
 
                         DebugPrint((1, "(%p)\tRetrying failed request\n", Irp));
 
@@ -808,7 +808,7 @@ ClasspPowerDownCompletion(
                             &status,
                             &context->RetryInterval);
 
-                if((retry == TRUE) && (context->RetryCount-- != 0)) {
+                if ((retry != FALSE) && (context->RetryCount-- != 0)) {
 
                         DebugPrint((1, "(%p)\tRetrying failed request\n", Irp));
 

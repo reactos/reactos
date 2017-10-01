@@ -412,8 +412,8 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceType(LPDIRECT3D9 iface, UINT Ada
         return D3DERR_INVALIDCALL;
     }
 
-    if (BackBufferFormat == D3DFMT_UNKNOWN &&
-        Windowed == TRUE)
+    if ((BackBufferFormat == D3DFMT_UNKNOWN) &&
+        (Windowed != FALSE))
     {
         BackBufferFormat = DisplayFormat;
     }
@@ -595,7 +595,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormat(LPDIRECT3D9 iface, UINT A
     }
 
     pDriverCaps = &This->DisplayAdapters[Adapter].DriverCaps;
-    if ((Usage & D3DUSAGE_DYNAMIC) != 0 && bIsTextureRType == TRUE)
+    if (((Usage & D3DUSAGE_DYNAMIC) != 0) && (bIsTextureRType != FALSE))
     {
         if ((pDriverCaps->DriverCaps9.Caps2 & D3DCAPS2_DYNAMICTEXTURES) == 0)
         {

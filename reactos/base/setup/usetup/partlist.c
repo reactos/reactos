@@ -673,7 +673,7 @@ AddPartitionToDisk(
 
     PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartitionIndex];
     if (PartitionInfo->PartitionType == 0 ||
-        (LogicalPartition == TRUE && IsContainerPartition(PartitionInfo->PartitionType)))
+        ((LogicalPartition != FALSE) && IsContainerPartition(PartitionInfo->PartitionType)))
         return;
 
     PartEntry = RtlAllocateHeap(ProcessHeap,
@@ -1665,11 +1665,11 @@ PrintPartitionData(
     {
         /* Determine partition type */
         PartTypeString[0] = '\0';
-        if (PartEntry->New == TRUE)
+        if (PartEntry->New != FALSE)
         {
             PartType = MUIGetString(STRING_UNFORMATTED);
         }
-        else if (PartEntry->IsPartitioned == TRUE)
+        else if (PartEntry->IsPartitioned != FALSE)
         {
            GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
                                               PartTypeString,
@@ -2224,7 +2224,7 @@ ScrollDownPartitionList(
         {
             /* Primary or extended partition */
 
-            if (List->CurrentPartition->IsPartitioned == TRUE &&
+            if ((List->CurrentPartition->IsPartitioned != FALSE) &&
                 IsContainerPartition(List->CurrentPartition->PartitionType))
             {
                 /* First logical partition */
@@ -2318,7 +2318,7 @@ ScrollUpPartitionList(
             {
                 PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-                if (PartEntry->IsPartitioned == TRUE &&
+                if ((PartEntry->IsPartitioned != FALSE) &&
                     IsContainerPartition(PartEntry->PartitionType))
                 {
                     PartListEntry = List->CurrentDisk->LogicalPartListHead.Blink;
@@ -2343,7 +2343,7 @@ ScrollUpPartitionList(
         {
             PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-            if (PartEntry->IsPartitioned == TRUE &&
+            if ((PartEntry->IsPartitioned != FALSE) &&
                 IsContainerPartition(PartEntry->PartitionType))
             {
                 PartListEntry = DiskEntry->LogicalPartListHead.Blink;
@@ -2526,7 +2526,7 @@ UpdateDiskLayout(
     {
         PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
 
-        if (PartEntry->IsPartitioned == TRUE)
+        if (PartEntry->IsPartitioned != FALSE)
         {
             PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index];
 
@@ -2727,7 +2727,7 @@ CreatePrimaryPartition(
     if (List == NULL ||
         List->CurrentDisk == NULL ||
         List->CurrentPartition == NULL ||
-        List->CurrentPartition->IsPartitioned == TRUE)
+        List->CurrentPartition->IsPartitioned != FALSE)
     {
         return;
     }
@@ -2737,8 +2737,8 @@ CreatePrimaryPartition(
 
     DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
 
-    if (AutoCreate == TRUE ||
-        AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) - PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart)
+    if ((AutoCreate != FALSE) ||
+        (AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) - PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart))
     {
         DPRINT1("Convert existing partition entry\n");
 
@@ -2845,7 +2845,7 @@ CreateExtendedPartition(
     if (List == NULL ||
         List->CurrentDisk == NULL ||
         List->CurrentPartition == NULL ||
-        List->CurrentPartition->IsPartitioned == TRUE)
+        (List->CurrentPartition->IsPartitioned != FALSE))
     {
         return;
     }
@@ -2955,7 +2955,7 @@ CreateLogicalPartition(
     if (List == NULL ||
         List->CurrentDisk == NULL ||
         List->CurrentPartition == NULL ||
-        List->CurrentPartition->IsPartitioned == TRUE)
+        List->CurrentPartition->IsPartitioned != FALSE)
     {
         return;
     }
@@ -3475,7 +3475,7 @@ WritePartitionsToDisk(
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
-        if (DiskEntry->Dirty == TRUE)
+        if (DiskEntry->Dirty != FALSE)
         {
             WritePartitions(List, DiskEntry);
             DiskEntry->Dirty = FALSE;
@@ -3548,7 +3548,7 @@ PrimaryPartitionCreationChecks(
     PartEntry = List->CurrentPartition;
 
     /* Fail if partition is already in use */
-    if (PartEntry->IsPartitioned == TRUE)
+    if (PartEntry->IsPartitioned != FALSE)
         return ERROR_NEW_PARTITION;
 
     /* Fail if there are already 4 primary partitions in the list */
@@ -3570,7 +3570,7 @@ ExtendedPartitionCreationChecks(
     PartEntry = List->CurrentPartition;
 
     /* Fail if partition is already in use */
-    if (PartEntry->IsPartitioned == TRUE)
+    if (PartEntry->IsPartitioned != FALSE)
         return ERROR_NEW_PARTITION;
 
     /* Fail if there are already 4 primary partitions in the list */
@@ -3596,7 +3596,7 @@ LogicalPartitionCreationChecks(
     PartEntry = List->CurrentPartition;
 
     /* Fail if partition is already in use */
-    if (PartEntry->IsPartitioned == TRUE)
+    if (PartEntry->IsPartitioned != FALSE)
         return ERROR_NEW_PARTITION;
 
     return ERROR_SUCCESS;

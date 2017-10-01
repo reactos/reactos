@@ -750,7 +750,7 @@ ClasspSetMediaChangeStateEx(
                                   Executive,
                                   KernelMode,
                                   FALSE,
-                                  ((Wait == TRUE) ? NULL : &zero));
+                                  ((Wait != FALSE) ? NULL : &zero));
 
     if(status == STATUS_TIMEOUT) {
 
@@ -1757,7 +1757,7 @@ ClasspInitializeGesn(
     adapterDescriptor = FdoExtension->AdapterDescriptor;
     atapiResets = 0;
     retryImmediately = TRUE;
-    for (i = 0; i < 16 && retryImmediately == TRUE; i++) {
+    for (i = 0; (i < 16) && (retryImmediately != FALSE); i++) {
     
         irp = ClasspPrepareMcnIrp(FdoExtension, Info, TRUE);
         if (irp == NULL) {

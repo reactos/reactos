@@ -1225,7 +1225,7 @@ GetExitCodeProcess(IN HANDLE hProcess,
     if (!NT_SUCCESS(Status))
     {
         /* We failed, was this because this is a VDM process? */
-        if (BaseCheckForVDM(hProcess, lpExitCode) == TRUE) return TRUE;
+        if (BaseCheckForVDM(hProcess, lpExitCode) != FALSE) return TRUE;
 
         /* Not a VDM process, fail the call */
         BaseSetLastNTError(Status);

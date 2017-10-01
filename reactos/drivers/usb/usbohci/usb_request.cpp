@@ -1509,7 +1509,7 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         // setup pid direction
         //
-        DataDescriptor->Flags |= InternalGetPidDirection() == TRUE ? OHCI_TD_DIRECTION_PID_IN : OHCI_TD_DIRECTION_PID_OUT;
+        DataDescriptor->Flags |= (InternalGetPidDirection() != FALSE) ? OHCI_TD_DIRECTION_PID_IN : OHCI_TD_DIRECTION_PID_OUT;
 
         //
         // use short packets
@@ -1525,7 +1525,7 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         // flip status pid direction
         //
-        StatusDescriptor->Flags |= InternalGetPidDirection() == TRUE ? OHCI_TD_DIRECTION_PID_OUT : OHCI_TD_DIRECTION_PID_IN;
+        StatusDescriptor->Flags |= (InternalGetPidDirection() != FALSE) ? OHCI_TD_DIRECTION_PID_OUT : OHCI_TD_DIRECTION_PID_IN;
 
          //
          // link setup descriptor to data descriptor

@@ -53,7 +53,7 @@ KspForwardIrpSynchronousCompletion(
     IN PIRP  Irp,
     IN PVOID  Context)
 {
-    if (Irp->PendingReturned == TRUE)
+    if (Irp->PendingReturned != FALSE)
     {
         KeSetEvent ((PKEVENT) Context, IO_NO_INCREMENT, FALSE);
     }

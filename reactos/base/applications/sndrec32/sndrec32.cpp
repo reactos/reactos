@@ -540,7 +540,7 @@ WndProc(HWND hWnd,
 
         case WM_COMMAND:
             wmId = LOWORD(wParam);
-            if ((wmId >= 0) && (wmId < 5) && (butdisabled[wmId] == TRUE))
+            if ((wmId >= 0) && (wmId < 5) && (butdisabled[wmId] != FALSE))
                 break;
 
             switch (wmId)

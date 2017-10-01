@@ -219,7 +219,7 @@ DllMain(HANDLE hDll,
 
         case DLL_PROCESS_DETACH:
         {
-            if (DllInitialized == TRUE)
+            if (DllInitialized != FALSE)
             {
                 /* Uninitialize console support */
                 ConDllInitialize(dwReason, NULL);

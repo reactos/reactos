@@ -91,7 +91,7 @@ done:
     if (hDeviceKey)
         RegCloseKey(hDeviceKey);
 
-    if (ret == TRUE)
+    if (ret != FALSE)
         *ppResourceList = (PCM_RESOURCE_LIST)lpBuffer;
 
     return ret;

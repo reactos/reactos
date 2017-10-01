@@ -762,7 +762,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
         goto done;
 
     /* Create the server SD */
-    if (bBuiltinDomain == TRUE)
+    if (bBuiltinDomain != FALSE)
         Status = SampCreateBuiltinDomainSD(&Sd,
                                            &SdSize);
     else

@@ -89,7 +89,7 @@ SetSystemPowerState(IN BOOL fSuspend,
 
     Status = NtInitiatePowerAction((fSuspend != FALSE) ? PowerActionSleep     : PowerActionHibernate,
                                    (fSuspend != FALSE) ? PowerSystemSleeping1 : PowerSystemHibernate,
-                                   fForce != TRUE,
+                                   (fForce == FALSE),
                                    FALSE);
     if (!NT_SUCCESS(Status))
     {

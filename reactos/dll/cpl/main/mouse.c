@@ -1717,7 +1717,7 @@ ShowDialogWheelControls(HWND hwndDlg, UINT uWheelScrollLines, BOOL bInit)
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
 
         /* Set the default scroll lines value */
-        if (bInit == TRUE)
+        if (bInit != FALSE)
             SetDlgItemInt(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES, DEFAULT_WHEEL_SCROLL_LINES, FALSE);
     }
 }

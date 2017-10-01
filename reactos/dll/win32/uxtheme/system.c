@@ -192,7 +192,7 @@ void UXTHEME_LoadTheme(BOOL bLoad)
     WCHAR szCurrentSize[64];
     BOOL bThemeActive = FALSE;
 
-    if(bLoad == TRUE && g_bThemeHooksActive) 
+    if ((bLoad != FALSE) && g_bThemeHooksActive) 
     {
         /* Get current theme configuration */
         if(!RegOpenKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey)) {

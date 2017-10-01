@@ -91,7 +91,7 @@ VOID ConInKey(PINPUT_RECORD lpBuffer)
     {
         ReadConsoleInput(hInput, lpBuffer, 1, &dwRead);
         if ((lpBuffer->EventType == KEY_EVENT) &&
-            (lpBuffer->Event.KeyEvent.bKeyDown == TRUE))
+            (lpBuffer->Event.KeyEvent.bKeyDown != FALSE))
             break;
     }
     while (TRUE);
@@ -361,7 +361,7 @@ BOOL ConPrintfVPaging(DWORD nStdHandle, BOOL NewPage, LPTSTR szFormat, va_list a
 
     int from = 0, i = 0;
 
-    if (NewPage == TRUE)
+    if (NewPage != FALSE)
         LineCount = 0;
 
     /* Reset LineCount and return if no string has been given */

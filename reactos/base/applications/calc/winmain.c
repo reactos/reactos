@@ -1144,7 +1144,7 @@ static void run_sqr(calc_number_t *number)
 
 static void run_fe(calc_number_t *number)
 {
-    calc.sci_out = ((calc.sci_out == TRUE) ? FALSE : TRUE);
+    calc.sci_out = ((calc.sci_out != FALSE) ? FALSE : TRUE);
 }
 
 static void handle_context_menu(HWND hWnd, WPARAM wp, LPARAM lp)

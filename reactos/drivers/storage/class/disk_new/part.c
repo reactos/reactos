@@ -93,7 +93,7 @@ Return Value:
     // If the cached partition table is present then return a copy of it.
     //
 
-    if(diskData->CachedPartitionTableValid == TRUE) {
+    if (diskData->CachedPartitionTableValid != FALSE) {
 
         ULONG partitionNumber;
         PDRIVE_LAYOUT_INFORMATION_EX layout = diskData->CachedPartitionTable;

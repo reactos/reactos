@@ -39,7 +39,7 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
             width = 1 + mpfr_get_si(t, MPFR_DEFAULT_RND);
             mpfr_clear(t);
         }
-        if (calc.sci_out == TRUE || width > max_ld_width || width < -max_ld_width)
+        if ((calc.sci_out != FALSE) || (width > max_ld_width) || (width < -max_ld_width))
             ptr = temp + gmp_sprintf(temp, "%*.*#Fe", 1, max_ld_width, ff);
         else {
             ptr = temp + gmp_sprintf(temp, "%#*.*Ff", width, ((max_ld_width-width-1)>=0) ? max_ld_width-width-1 : 0, ff);

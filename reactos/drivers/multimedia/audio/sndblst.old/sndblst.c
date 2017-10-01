@@ -387,7 +387,7 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
     }
   else if (BeepParam->Duration == (DWORD)-1)
     {
-      if (DeviceExtension->BeepOn == TRUE)
+      if (DeviceExtension->BeepOn != FALSE)
 	{
 	  HalMakeBeep(0);
 	  DeviceExtension->BeepOn = FALSE;

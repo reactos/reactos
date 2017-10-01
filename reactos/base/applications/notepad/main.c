@@ -393,7 +393,7 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_SIZE:
     {
-        if (Globals.bShowStatusBar == TRUE && Globals.bWrapLongLines == FALSE)
+        if ((Globals.bShowStatusBar != FALSE) && (Globals.bWrapLongLines == FALSE))
         {
             RECT rcStatusBar;
             HDWP hdwp;

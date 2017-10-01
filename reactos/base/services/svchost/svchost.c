@@ -666,7 +666,7 @@ GetServiceDllFunction (
     ULONG_PTR ulCookie = 0;
 
     /* Activate the context */
-    if (ActivateActCtx(pDll->hActCtx, &ulCookie) != TRUE)
+    if (ActivateActCtx(pDll->hActCtx, &ulCookie) == FALSE)
     {
         /* We couldn't, bail out */
         if (lpdwError) *lpdwError = GetLastError();
@@ -1211,7 +1211,7 @@ CallPerInstanceInitFunctions (
                                      pOptions->AuthenticationLevel,
                                      pOptions->ImpersonationLevel,
                                      pOptions->AuthenticationCapabilities);
-        if (bResult != TRUE) return FALSE;
+        if (bResult == FALSE) return FALSE;
     }
 
     /* Do we have a custom RPC stack size? */

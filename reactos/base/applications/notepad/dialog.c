@@ -849,7 +849,7 @@ VOID DoCreateStatusBar(VOID)
     }
 
     /* Set status bar visiblity according to the settings. */
-    if (Globals.bWrapLongLines == TRUE || Globals.bShowStatusBar == FALSE)
+    if ((Globals.bWrapLongLines != FALSE) || (Globals.bShowStatusBar == FALSE))
     {
         bStatusBarVisible = FALSE;
         ShowWindow(Globals.hStatusBar, SW_HIDE);

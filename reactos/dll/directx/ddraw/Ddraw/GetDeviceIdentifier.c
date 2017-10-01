@@ -112,7 +112,7 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDDRAWI_DIRECTDRAW_INT This,
                 }
             }
 
-            if (found == TRUE)
+            if (found != FALSE)
             {
                 /* we found our driver now we start setup it */
                 if (!_strnicmp(DisplayDeviceA.DeviceKey,"\\REGISTRY\\Machine\\",18))

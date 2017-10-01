@@ -317,7 +317,7 @@ ClassInitialize(
         DriverObject->DriverStartIo = ClasspStartIo;
     }
 
-    if ((InitializationData->ClassUnload) && (ClassPnpAllowUnload == TRUE)) {
+    if ((InitializationData->ClassUnload) && (ClassPnpAllowUnload != FALSE)) {
         DriverObject->DriverUnload = ClassUnload;
     } else {
         DriverObject->DriverUnload = NULL;
@@ -1061,7 +1061,7 @@ ClassDispatchPnp(
                             // cleanup the changes done above
                             //
 
-                            if (setPagable == TRUE) {
+                            if (setPagable != FALSE) {
                                 DebugPrint((2, "ClassDispatchPnp (%p,%p): Unsetting "
                                             "PAGABLE bit due to irp failure\n",
                                             DeviceObject, Irp));

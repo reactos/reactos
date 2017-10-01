@@ -33,8 +33,8 @@ IDirectSound8_fnQueryInterface(
     LPOLESTR pStr;
     LPCDirectSoundImpl This = (LPCDirectSoundImpl)CONTAINING_RECORD(iface, CDirectSoundImpl, lpVtbl);
 
-    if ((IsEqualIID(riid, &IID_IDirectSound) && This->bDirectSound8 == FALSE) || 
-        (IsEqualIID(riid, &IID_IDirectSound8) && This->bDirectSound8 == TRUE) ||
+    if ((IsEqualIID(riid, &IID_IDirectSound) && This->bDirectSound8 == FALSE) ||
+        (IsEqualIID(riid, &IID_IDirectSound8) && This->bDirectSound8 != FALSE) ||
         (IsEqualIID(riid, &IID_IUnknown)))
     {
         *ppobj = (LPVOID)&This->lpVtbl;

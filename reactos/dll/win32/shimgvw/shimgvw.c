@@ -142,7 +142,7 @@ static void pSaveImageAs(HWND hwnd)
         c++;
         sizeRemain -= sizeof(*c);
 
-        if (IsEqualGUID(&rawFormat, &codecInfo[j].FormatID) == TRUE)
+        if (IsEqualGUID(&rawFormat, &codecInfo[j].FormatID) != FALSE)
         {
             sfn.nFilterIndex = j + 1;
         }

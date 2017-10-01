@@ -1642,8 +1642,8 @@ NTSTATUS WINAPI LsarRemovePrivilegesFromAccount(
           AccountHandle, AllPrivileges, Privileges);
 
     /* */
-    if ((AllPrivileges == FALSE && Privileges == NULL) ||
-        (AllPrivileges == TRUE && Privileges != NULL))
+    if (((AllPrivileges == FALSE) && (Privileges == NULL)) ||
+        ((AllPrivileges != FALSE) && (Privileges != NULL)))
             return STATUS_INVALID_PARAMETER;
 
     /* Validate the AccountHandle */
@@ -1657,7 +1657,7 @@ NTSTATUS WINAPI LsarRemovePrivilegesFromAccount(
         return Status;
     }
 
-    if (AllPrivileges == TRUE)
+    if (AllPrivileges != FALSE)
     {
         /* Delete the Privilgs attribute */
         Status = LsapDeleteObjectAttribute(AccountObject,

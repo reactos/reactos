@@ -945,7 +945,7 @@ static void DSOUND_PerformMix(DirectSoundDevice *device)
 		}
 
 		/* if device was stopping, its for sure stopped when all buffers have stopped */
-		else if((all_stopped == TRUE) && (device->state == STATE_STOPPING)){
+		else if((all_stopped != FALSE) && (device->state == STATE_STOPPING)){
 			TRACE("All buffers have stopped. Stopping primary buffer\n");
 			device->state = STATE_STOPPED;
 

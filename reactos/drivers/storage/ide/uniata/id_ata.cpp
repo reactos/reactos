@@ -8712,7 +8712,7 @@ invalid_cdb:
             statusByte = WaitOnBaseBusy(chan);
 
             //SelectDrive(chan, DeviceNumber);
-            if (cdb->MEDIA_REMOVAL.Prevent == TRUE) {
+            if (cdb->MEDIA_REMOVAL.Prevent != FALSE) {
                 //AtapiWritePort1(chan, IDX_IO1_o_Command,IDE_COMMAND_DOOR_LOCK);
                 statusByte = AtaCommand(deviceExtension, DeviceNumber, lChannel, IDE_COMMAND_DOOR_LOCK, 0, 0, 0, 0, 0, ATA_IMMEDIATE);
             } else {
@@ -9002,7 +9002,7 @@ IdeMediaStatus(
     chan = &(deviceExtension->chan[lChannel]);
     SelectDrive(chan, DeviceNumber);
 
-    if (EnableMSN == TRUE){
+    if (EnableMSN != FALSE){
 
         // If supported enable Media Status Notification support
         if ((chan->lun[DeviceNumber]->DeviceFlags & DFLAGS_REMOVABLE_DRIVE)) {
@@ -9028,7 +9028,7 @@ IdeMediaStatus(
             }
 
         }
-    } else { // end if EnableMSN == TRUE
+    } else { // end if EnableMSN != FALSE
 
         // disable if previously enabled
         if ((chan->lun[DeviceNumber]->DeviceFlags & DFLAGS_MEDIA_STATUS_ENABLED)) {

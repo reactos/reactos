@@ -2824,7 +2824,7 @@ Return Value:
         }
     }
 
-    if (*Again == TRUE) {
+    if (*Again != FALSE) {
 
         for (channel = 0; channel < 2; channel++) {
 
@@ -5675,7 +5675,7 @@ HwDeviceExtension - ATAPI driver storage.
     UCHAR statusByte,errorByte;
 
 
-    if (EnableMSN == TRUE){
+    if (EnableMSN != FALSE){
 
         //
         // If supported enable Media Status Notification support
@@ -5710,7 +5710,7 @@ HwDeviceExtension - ATAPI driver storage.
             }
 
         }
-    } else { // end if EnableMSN == TRUE
+    } else { // end if EnableMSN != FALSE
 
         //
         // disable if previously enabled

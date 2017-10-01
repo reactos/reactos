@@ -214,7 +214,7 @@ ImpersonateLoggedOnUser(HANDLE hToken)
                                     &NewToken,
                                     sizeof(HANDLE));
 
-    if (Duplicated == TRUE)
+    if (Duplicated != FALSE)
     {
         NtClose(NewToken);
     }

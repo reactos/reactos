@@ -996,7 +996,7 @@ SoundsDlgProc(HWND hwndDlg,
                     ofn.lpstrInitialDir = NULL;
                     ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
-                    if (GetOpenFileNameW(&ofn) == TRUE)
+                    if (GetOpenFileNameW(&ofn) != FALSE)
                     {
                         // FIXME search if list already contains that sound
 

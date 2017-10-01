@@ -257,7 +257,7 @@ PopupError(PCCH Text,
         if (Length > MaxLength)
             MaxLength = Length;
 
-        if (LastLine == TRUE)
+        if (LastLine != FALSE)
             break;
 
         pnext = p + 1;
@@ -323,7 +323,7 @@ PopupError(PCCH Text,
                                          &Written);
         }
 
-        if (LastLine == TRUE)
+        if (LastLine != FALSE)
             break;
 
         coPos.Y++;
@@ -708,7 +708,7 @@ LanguagePage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
             else
                 RedrawGenericList(LanguageList);
@@ -980,7 +980,7 @@ IntroPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
@@ -1110,7 +1110,7 @@ InstallIntroPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
@@ -1147,7 +1147,7 @@ ScsiControllerPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
@@ -1285,7 +1285,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
@@ -1349,7 +1349,7 @@ HandleGenericList(PGENERIC_LIST GenericList,
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             continue;
@@ -1637,7 +1637,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
             {
                 DestroyPartitionList(PartitionList);
                 PartitionList = NULL;
@@ -1721,7 +1721,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'L')  /* L */
         {
-            if (PartitionList->CurrentPartition->LogicalPartition == TRUE)
+            if (PartitionList->CurrentPartition->LogicalPartition != FALSE)
             {
                 Error = LogicalPartitionCreationChecks(PartitionList);
                 if (Error != NOT_AN_ERROR)
@@ -1977,14 +1977,14 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
                                   MaxSize, InputBuffer, &Quit, &Cancel);
 
-        if (Quit == TRUE)
+        if (Quit != FALSE)
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
         }
-        else if (Cancel == TRUE)
+        else if (Cancel != FALSE)
         {
             return SELECT_PARTITION_PAGE;
         }
@@ -2134,14 +2134,14 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
         ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
                                   MaxSize, InputBuffer, &Quit, &Cancel);
 
-        if (Quit == TRUE)
+        if (Quit != FALSE)
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
         }
-        else if (Cancel == TRUE)
+        else if (Cancel != FALSE)
         {
             return SELECT_PARTITION_PAGE;
         }
@@ -2290,14 +2290,14 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
         ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
                                   MaxSize, InputBuffer, &Quit, &Cancel);
 
-        if (Quit == TRUE)
+        if (Quit != FALSE)
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
         }
-        else if (Cancel == TRUE)
+        else if (Cancel != FALSE)
         {
             return SELECT_PARTITION_PAGE;
         }
@@ -2514,7 +2514,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
@@ -2705,7 +2705,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                                        PartTypeString,
                                        ARRAYSIZE(PartTypeString));
 
-    if (PartEntry->AutoCreate == TRUE)
+    if (PartEntry->AutoCreate != FALSE)
     {
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NEWPARTITION));
 
@@ -2731,7 +2731,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
         PartEntry->AutoCreate = FALSE;
     }
-    else if (PartEntry->New == TRUE)
+    else if (PartEntry->New != FALSE)
     {
         switch (PartitionList->FormatState)
         {
@@ -2828,7 +2828,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
@@ -2924,7 +2924,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
@@ -3312,7 +3312,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
@@ -4225,7 +4225,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
         InstallOnFloppy = TRUE;
     }
 
-    if (InstallOnFloppy == TRUE)
+    if (InstallOnFloppy != FALSE)
     {
         return BOOT_LOADER_FLOPPY_PAGE;
     }
@@ -4274,7 +4274,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;
@@ -4335,7 +4335,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
-            if (ConfirmQuit(Ir) == TRUE)
+            if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
 
             break;

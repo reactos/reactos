@@ -114,7 +114,7 @@ InterpretScript(LPWSTR input_line)
         }
         else
         {
-            if ((bWhiteSpace == TRUE) && (args_count < MAX_ARGS_COUNT))
+            if ((bWhiteSpace != FALSE) && (args_count < MAX_ARGS_COUNT))
             {
                 args_vector[args_count] = ptr;
                 args_count++;
@@ -147,7 +147,7 @@ InterpretMain(VOID)
     BOOL bRun = TRUE;
     LPWSTR ptr;
 
-    while (bRun == TRUE)
+    while (bRun != FALSE)
     {
         args_count = 0;
         memset(args_vector, 0, sizeof(args_vector));
@@ -168,7 +168,7 @@ InterpretMain(VOID)
             }
             else
             {
-                if ((bWhiteSpace == TRUE) && (args_count < MAX_ARGS_COUNT))
+                if ((bWhiteSpace != FALSE) && (args_count < MAX_ARGS_COUNT))
                 {
                     args_vector[args_count] = ptr;
                     args_count++;

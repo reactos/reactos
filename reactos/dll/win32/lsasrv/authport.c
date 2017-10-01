@@ -97,7 +97,7 @@ LsapHandlePortConnection(PLSA_API_MSG RequestMsg)
 
     TRACE("Logon Process Name: %s\n", RequestMsg->ConnectInfo.LogonProcessNameBuffer);
 
-    if (RequestMsg->ConnectInfo.CreateContext == TRUE)
+    if (RequestMsg->ConnectInfo.CreateContext != FALSE)
     {
         Status = LsapCheckLogonProcess(RequestMsg,
                                        &LogonContext);
@@ -129,7 +129,7 @@ LsapHandlePortConnection(PLSA_API_MSG RequestMsg)
         return Status;
     }
 
-    if (Accept == TRUE)
+    if (Accept != FALSE)
     {
         if (LogonContext != NULL)
         {

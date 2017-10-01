@@ -73,7 +73,7 @@ IsShimInfrastructureDisabled(VOID)
             if ((NT_SUCCESS(Status)) &&
                  (KeyInfo.Type == REG_DWORD) &&
                  (KeyInfo.DataLength == sizeof(ULONG)) &&
-                 (KeyInfo.Data[0] == TRUE))
+                 (KeyInfo.Data[0] != FALSE))
             {
                 /* It is, so disable shims! */
                 DisableShims = TRUE;

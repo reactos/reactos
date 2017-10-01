@@ -379,7 +379,7 @@ Bus_CompletionRoutine(
     // set the event because we won't be waiting on it.
     // This optimization avoids grabbing the dispatcher lock and improves perf.
     //
-    if (Irp->PendingReturned == TRUE) {
+    if (Irp->PendingReturned != FALSE) {
 
         KeSetEvent ((PKEVENT) Context, IO_NO_INCREMENT, FALSE);
     }

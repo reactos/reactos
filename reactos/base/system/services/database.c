@@ -817,7 +817,7 @@ ScmDeleteMarkedServices(VOID)
 
         ServiceEntry = ServiceEntry->Flink;
 
-        if (CurrentService->bDeleted == TRUE)
+        if (CurrentService->bDeleted != FALSE)
         {
             dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                                     L"System\\CurrentControlSet\\Services",

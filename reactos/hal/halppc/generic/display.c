@@ -257,7 +257,7 @@ HalReleaseDisplayOwnership(VOID)
   if (HalResetDisplayParameters == NULL)
     return;
 
-  if (HalOwnsDisplay == TRUE)
+  if (HalOwnsDisplay != FALSE)
     return;
 
   HalOwnsDisplay = TRUE;

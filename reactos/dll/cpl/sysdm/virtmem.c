@@ -599,7 +599,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 static VOID
 OnOk(PVIRTMEM pVirtMem)
 {
-    if (pVirtMem->bModified == TRUE)
+    if (pVirtMem->bModified != FALSE)
     {
         ResourceMessageBox(hApplet,
                            NULL,

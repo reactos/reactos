@@ -91,7 +91,7 @@ extern void LoadSettings(void)
 
         RegQueryValueEx(hKey, _T("Advanced"), NULL, &type, (LPBYTE)&dwAdvancedChecked, &size);
 
-        if(dwAdvancedChecked == TRUE)
+        if(dwAdvancedChecked != FALSE)
             SendDlgItemMessage(hCharmapDlg, IDC_CHECK_ADVANCED, BM_CLICK, MF_CHECKED, 0);
 
     RegCloseKey(hKey);

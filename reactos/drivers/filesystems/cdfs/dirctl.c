@@ -189,7 +189,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         IsRoot = TRUE;
     }
 
-    if (IsRoot == TRUE)
+    if (IsRoot != FALSE)
     {
         StreamOffset.QuadPart = (LONGLONG)DeviceExt->CdInfo.RootStart * (LONGLONG)BLOCKSIZE;
         DirSize = DeviceExt->CdInfo.RootSize;

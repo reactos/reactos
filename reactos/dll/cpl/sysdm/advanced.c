@@ -68,7 +68,7 @@ OnInitSysSettingsDialog(HWND hwndDlg)
                             (LPBYTE)&dwVal,
                             &cbData) == ERROR_SUCCESS)
         {
-            if (dwVal == TRUE)
+            if (dwVal != FALSE)
             {
                 // set the check box
                 SendDlgItemMessageW(hwndDlg,

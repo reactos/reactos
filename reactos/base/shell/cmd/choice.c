@@ -56,7 +56,7 @@ GetCharacterTimeout (LPTCH ch, DWORD dwMilliseconds)
 
     //if the event is a key pressed
     if ((lpBuffer.EventType == KEY_EVENT) &&
-        (lpBuffer.Event.KeyEvent.bKeyDown == TRUE))
+        (lpBuffer.Event.KeyEvent.bKeyDown != FALSE))
     {
         //read the key
 #ifdef _UNICODE

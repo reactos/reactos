@@ -1279,7 +1279,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
         {
         }
     }
-    else if (EditBin == TRUE || type == REG_NONE || type == REG_BINARY)
+    else if ((EditBin != FALSE) || (type == REG_NONE) || (type == REG_BINARY))
     {
         if(valueDataLen > 0)
         {

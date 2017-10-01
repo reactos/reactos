@@ -69,7 +69,7 @@ CONSOLE_ConInKey(
         ReadConsoleInput(StdInput, Buffer, 1, &Read);
 
         if ((Buffer->EventType == KEY_EVENT)
-         && (Buffer->Event.KeyEvent.bKeyDown == TRUE))
+         && (Buffer->Event.KeyEvent.bKeyDown != FALSE))
             break;
     }
 }

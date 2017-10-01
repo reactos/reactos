@@ -2482,7 +2482,7 @@ NetUserEnum(LPCWSTR servername,
 
         if (EnumContext->Index >= EnumContext->Count)
         {
-//            if (EnumContext->BuiltinDone == TRUE)
+//            if (EnumContext->BuiltinDone != FALSE)
 //            {
 //                ApiStatus = NERR_Success;
 //                goto done;

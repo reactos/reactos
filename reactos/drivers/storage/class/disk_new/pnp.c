@@ -1314,7 +1314,7 @@ Return Value:
 
     if (NT_SUCCESS(status))
     {
-        if (cacheInfo.WriteCacheEnabled == TRUE)
+        if (cacheInfo.WriteCacheEnabled != FALSE)
         {
             if (writeCacheOverride == DiskWriteCacheDisable)
             {

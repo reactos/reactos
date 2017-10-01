@@ -440,7 +440,7 @@ ScStartService(PACTIVE_SERVICE lpService,
     lpService->hServiceStatus = ControlPacket->hServiceStatus;
 
     /* Build the arguments vector */
-    if (lpService->bUnicode == TRUE)
+    if (lpService->bUnicode != FALSE)
     {
         ThreadParamsW = HeapAlloc(GetProcessHeap(), 0, sizeof(*ThreadParamsW));
         if (ThreadParamsW == NULL)

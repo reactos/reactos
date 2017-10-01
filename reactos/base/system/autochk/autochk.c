@@ -235,7 +235,7 @@ ChkdskCallback(
 
     case DONE:
         Status = (PBOOLEAN)Argument;
-        if (*Status == TRUE)
+        if (*Status != FALSE)
         {
             PrintString("Autochk was unable to complete successfully.\r\n\r\n");
             // Error = TRUE;

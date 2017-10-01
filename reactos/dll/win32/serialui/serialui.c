@@ -309,7 +309,7 @@ LRESULT CommDlgProc(HWND hDlg,
 			{
 				SendMessageW(hBox, CB_INSERTSTRING, 1, (LPARAM)wstr);
 				if(lpDlgInfo->lpCC->dcb.fRtsControl == RTS_CONTROL_HANDSHAKE
-					|| lpDlgInfo->lpCC->dcb.fOutxCtsFlow == TRUE)
+					|| lpDlgInfo->lpCC->dcb.fOutxCtsFlow != FALSE)
 				{
 					SendMessageW(hBox, CB_SETCURSEL, 1, 0);
 					lpDlgInfo->InitialFlowIndex = 1;

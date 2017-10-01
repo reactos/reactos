@@ -215,7 +215,7 @@ ScmGetDriverStatus(PSERVICE lpService,
         return RtlNtStatusToDosError(Status);
     }
 
-    if ((bFound == TRUE) &&
+    if ((bFound != FALSE) &&
         (lpService->Status.dwCurrentState != SERVICE_STOP_PENDING))
     {
         if (lpService->Status.dwCurrentState == SERVICE_STOPPED)

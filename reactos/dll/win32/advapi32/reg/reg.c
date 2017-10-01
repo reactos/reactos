@@ -3203,7 +3203,7 @@ RegNotifyChangeKeyValue(HKEY hKey,
         return ERROR_INVALID_HANDLE;
     }
 
-    if (fAsynchronous == TRUE && hEvent == NULL)
+    if ((fAsynchronous != FALSE) && (hEvent == NULL))
     {
         return ERROR_INVALID_PARAMETER;
     }

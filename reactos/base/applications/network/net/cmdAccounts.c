@@ -151,7 +151,7 @@ cmdAccounts(
         }
     }
 
-    if (Modified == TRUE)
+    if (Modified != FALSE)
     {
         Status = NetUserModalsSet(NULL, 0, (LPBYTE)Info0, &ParamErr);
         if (Status != NERR_Success)

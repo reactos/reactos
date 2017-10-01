@@ -731,7 +731,7 @@ GetUserDiskFreeSpace(LPCTSTR lpRoot,
 #endif
         if (pGetFreeDiskSpaceEx != NULL)
         {
-            if (pGetFreeDiskSpaceEx(lpRoot, lpFreeSpace, &TotalNumberOfBytes, &TotalNumberOfFreeBytes) == TRUE)
+            if (pGetFreeDiskSpaceEx(lpRoot, lpFreeSpace, &TotalNumberOfBytes, &TotalNumberOfFreeBytes) != FALSE)
                 return;
         }
     }
@@ -1392,7 +1392,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
         do
         {
             /* If retrieved FileName has extension,and szPath doesnt have extension then JUMP the retrieved FileName */
-            if (_tcschr(wfdFileInfo.cFileName,_T('.'))&&(fPoint==TRUE))
+            if (_tcschr(wfdFileInfo.cFileName,_T('.')) && (fPoint != FALSE))
             {
                 continue;
             /* Here we filter all the specified attributes */

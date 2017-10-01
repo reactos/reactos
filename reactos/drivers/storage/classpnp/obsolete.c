@@ -813,7 +813,7 @@ Return Value:
     // current position then insert this entry into the current sweep.
     //
 
-    if((LowPriority != TRUE) && (BlockNumber > List->BlockNumber)) {
+    if ((LowPriority == FALSE) && (BlockNumber > List->BlockNumber)) {
         ClasspInsertCScanList(&(List->CurrentSweep), entry);
     } else {
         ClasspInsertCScanList(&(List->NextSweep), entry);

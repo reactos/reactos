@@ -1643,7 +1643,7 @@ BOOL WINAPI PathIsRootW(LPCWSTR lpszPath)
  *  Although this function is prototyped as returning a BOOL, it returns
  *  FILE_ATTRIBUTE_DIRECTORY for success. This means that code such as:
  *
- *|  if (PathIsDirectoryA("c:\\windows\\") == TRUE)
+ *|  if (PathIsDirectoryA("c:\\windows\\") != FALSE)
  *|    ...
  *
  *  will always fail.

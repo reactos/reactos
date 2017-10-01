@@ -235,11 +235,11 @@ int OnPostWinPosChanged(HWND hWnd, WINDOWPOS* pWinPos)
         return 0;
 
     /* We don't touch the shape of the window if the application sets it on its own */
-    if (pwndData->HasAppDefinedRgn == TRUE)
+    if (pwndData->HasAppDefinedRgn != FALSE)
         return 0;
 
     /* Calling SetWindowRgn will call SetWindowPos again so we need to avoid this recursion */
-    if (pwndData->UpdatingRgn == TRUE)
+    if (pwndData->UpdatingRgn != FALSE)
         return 0;
 
     if(!IsAppThemed() || !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))

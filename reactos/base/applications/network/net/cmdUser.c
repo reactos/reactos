@@ -617,7 +617,7 @@ cmdUser(
     }
 
 done:
-    if (bPasswordAllocated == TRUE && lpPassword != NULL)
+    if ((bPasswordAllocated != FALSE) && (lpPassword != NULL))
         HeapFree(GetProcessHeap(), 0, lpPassword);
 
     if (!bAdd && !bDelete && pUserInfo != NULL)

@@ -366,7 +366,7 @@ EnumConnectionsCallback(
               SetDlgItemTextW(PrefContext->MixerWindow->hWnd, wID, Line->szName);
 
               /* query controls */
-              if (SndMixerQueryControls(Mixer, &ControlCount, Line, &Control) == TRUE)
+              if (SndMixerQueryControls(Mixer, &ControlCount, Line, &Control) != FALSE)
               {
                   /* now go through all controls and update their states */
                   for(Index = 0; Index < ControlCount; Index++)

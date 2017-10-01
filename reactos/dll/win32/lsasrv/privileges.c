@@ -332,7 +332,7 @@ done:
         }
     }
 
-    if ((Status == STATUS_SUCCESS) && (MoreEntries == TRUE))
+    if ((Status == STATUS_SUCCESS) && (MoreEntries != FALSE))
         Status = STATUS_MORE_ENTRIES;
 
     return Status;

@@ -48,7 +48,7 @@ cgetchar (VOID)
     {
         ReadConsoleInput (hInput, &irBuffer, 1, &dwRead);
         if ((irBuffer.EventType == KEY_EVENT) &&
-            (irBuffer.Event.KeyEvent.bKeyDown == TRUE))
+            (irBuffer.Event.KeyEvent.bKeyDown != FALSE))
         {
             if (irBuffer.Event.KeyEvent.dwControlKeyState &
                  (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))

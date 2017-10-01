@@ -158,7 +158,7 @@ BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier)
 
     AdapterIndex = 0;
     FoundDisplayDevice = FALSE;
-    while (EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) == TRUE)
+    while (EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) != FALSE)
     {
         if (_stricmp(lpszDeviceName, DisplayDevice.DeviceName) == 0)
         {
@@ -176,7 +176,7 @@ BOOL GetAdapterInfo(LPCSTR lpszDeviceName, D3DADAPTER_IDENTIFIER9* pIdentifier)
     lstrcpynA(pIdentifier->Description, DisplayDevice.DeviceString, MAX_DEVICE_IDENTIFIER_STRING);
     lstrcpynA(pIdentifier->DeviceName, DisplayDevice.DeviceName, CCHDEVICENAME);
 
-    if (GetDriverName(&DisplayDevice, pIdentifier) == TRUE)
+    if (GetDriverName(&DisplayDevice, pIdentifier) != FALSE)
         GetDriverVersion(&DisplayDevice, pIdentifier);
 
     GetDeviceId(DisplayDevice.DeviceID, pIdentifier);

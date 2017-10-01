@@ -286,7 +286,7 @@ INT cmd_rename (LPTSTR param)
         }
         *r = 0;
         //Well we have splitted the Paths,so now we have to paste them again(if needed),thanks bPath.
-        if (bPath == TRUE)
+        if (bPath != FALSE)
         {
             _tcscpy(srcFinal,srcPath);
             _tcscat(srcFinal,f.cFileName);

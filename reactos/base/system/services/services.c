@@ -436,7 +436,7 @@ done:
     ScmShutdownSecurity();
 
     /* Delete our communication named pipe's critical section */
-    if (bCanDeleteNamedPipeCriticalSection == TRUE)
+    if (bCanDeleteNamedPipeCriticalSection != FALSE)
         ScmDeleteNamedPipeCriticalSection();
 
     /* Close the shutdown event */

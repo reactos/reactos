@@ -646,7 +646,7 @@ CPortPinWaveCyclic::GeneratePositionEvents(
         // get event entry context
         Context = (PLOOPEDSTREAMING_EVENT_CONTEXT)(EventEntry + 1);
 
-        if (Context->bLoopedStreaming == TRUE)
+        if (Context->bLoopedStreaming != FALSE)
         {
             if (NewOffset > OldOffset)
             {

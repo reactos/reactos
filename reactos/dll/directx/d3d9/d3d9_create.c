@@ -190,7 +190,7 @@ static BOOL GetDisplayDeviceInfo(IN OUT LPDIRECT3D9_INT pDirect3D9)
     D3D9_PrimaryDeviceName[0] = '\0';
 
     AdapterIndex = 0;
-    while (EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) == TRUE &&
+    while ((EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) != FALSE) &&
            pDirect3D9->NumDisplayAdapters < D3D9_INT_MAX_NUM_ADAPTERS)
     {
         if ((DisplayDevice.StateFlags & (DISPLAY_DEVICE_DISCONNECT | DISPLAY_DEVICE_MIRRORING_DRIVER)) == 0 &&
@@ -209,7 +209,7 @@ static BOOL GetDisplayDeviceInfo(IN OUT LPDIRECT3D9_INT pDirect3D9)
     }
 
     AdapterIndex = 0;
-    while (EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) == TRUE &&
+    while ((EnumDisplayDevicesA(NULL, AdapterIndex, &DisplayDevice, 0) != FALSE) &&
            pDirect3D9->NumDisplayAdapters < D3D9_INT_MAX_NUM_ADAPTERS)
     {
         if ((DisplayDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0 &&

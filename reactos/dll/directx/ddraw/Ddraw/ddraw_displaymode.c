@@ -42,7 +42,7 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
 
             DevMode.dmSize = sizeof(DEVMODE);
 
-            while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
+            while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) != FALSE)
             {
                 DDSURFACEDESC SurfaceDesc;
 
@@ -140,7 +140,7 @@ Main_DirectDraw_EnumDisplayModes4(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
 
             DevMode.dmSize = sizeof(DEVMODE);
 
-            while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
+            while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) != FALSE)
             {
                 DDSURFACEDESC2 SurfaceDesc;
 

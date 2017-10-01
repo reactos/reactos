@@ -399,27 +399,27 @@ SendRequest(
     IN DWORD RequestSize,
     IN DWORD IOCTL)
 {
-    BOOLEAN Status;
+    BOOLEAN Success;
     HANDLE TcpCC;
     DWORD BytesReturned;
 
     if (openTcpFile(&TcpCC, FILE_READ_DATA | FILE_WRITE_DATA) != STATUS_SUCCESS)
         return WSAEINVAL;
 
-    Status = DeviceIoControl(TcpCC,
-                             IOCTL,
-                             Request,
-                             RequestSize,
-                             NULL,
-                             0,
-                             &BytesReturned,
-                             NULL);
+    Success = DeviceIoControl(TcpCC,
+                              IOCTL,
+                              Request,
+                              RequestSize,
+                              NULL,
+                              0,
+                              &BytesReturned,
+                              NULL);
 
     closeTcpFile(TcpCC);
 
-    DPRINT("DeviceIoControl: %ld\n", ((Status == TRUE) ? 0 : GetLastError()));
+    DPRINT("DeviceIoControl: %ld\n", ((Success != FALSE) ? 0 : GetLastError()));
 
-    if (!Status)
+    if (!Success)
         return WSAEINVAL;
 
     return NO_ERROR;

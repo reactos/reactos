@@ -1223,7 +1223,7 @@ done:
 
     if (!NT_SUCCESS(Status))
     {
-        if (SessionCreated == TRUE)
+        if (SessionCreated != FALSE)
             DispatchTable.DeleteLogonSession(LogonId);
 
         if (*ProfileBuffer != NULL)

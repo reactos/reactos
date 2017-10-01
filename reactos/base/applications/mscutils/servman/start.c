@@ -43,7 +43,7 @@ DoStartService(LPWSTR ServiceName,
             }
             else
             {
-                if (bWhiteSpace == TRUE)
+                if (bWhiteSpace != FALSE)
                 {
                     dwArgsCount++;
                     bWhiteSpace = FALSE;
@@ -74,7 +74,7 @@ DoStartService(LPWSTR ServiceName,
             }
             else
             {
-                if (bWhiteSpace == TRUE)
+                if (bWhiteSpace != FALSE)
                 {
                     lpArgsVector[dwArgsCount] = lpChar;
                     dwArgsCount++;

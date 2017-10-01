@@ -669,7 +669,7 @@ OnBrowseButton(HWND hwndDlg, PDATA pData)
     if (success)
     {
         /* Check if there is already a entry that holds this filename */
-        if (CheckListViewFilenameExists(hwndBackgroundList, ofn.lpstrFileTitle) == TRUE)
+        if (CheckListViewFilenameExists(hwndBackgroundList, ofn.lpstrFileTitle) != FALSE)
             return;
 
         if (pData->listViewItemCount > (MAX_BACKGROUNDS - 1))
@@ -729,7 +729,7 @@ ListViewItemChanged(HWND hwndDlg, PDATA pData, int itemIndex)
         pData->pWallpaperBitmap = NULL;
     }
 
-    if (backgroundItem->bWallpaper == TRUE)
+    if (backgroundItem->bWallpaper != FALSE)
     {
         pData->pWallpaperBitmap = DibLoadImage(backgroundItem->szFilename);
 
@@ -937,7 +937,7 @@ SetWallpaper(PDATA pData)
         RegSetValueEx(regKey, TEXT("WallpaperStyle"), 0, REG_SZ, (LPBYTE)TEXT("2"), sizeof(TCHAR) * 2);
     }
 
-    if (pData->backgroundItems[pData->backgroundSelection].bWallpaper == TRUE)
+    if (pData->backgroundItems[pData->backgroundSelection].bWallpaper != FALSE)
     {
         GdipLoadImageFromFile(pData->backgroundItems[pData->backgroundSelection].szFilename, &image);
         if (!image)
