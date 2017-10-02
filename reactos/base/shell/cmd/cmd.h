@@ -72,7 +72,6 @@ INT cmd_beep (LPTSTR);
 /* Prototypes for CALL.C */
 INT cmd_call (LPTSTR);
 
-
 /* Prototypes for CHOICE.C */
 INT CommandChoice (LPTSTR);
 
@@ -123,8 +122,12 @@ extern COMMAND cmds[];  /* The internal command table */
 
 VOID PrintCommandList (VOID);
 
-
 LPCTSTR GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA );
+
+/* Prototypes for CTTY.C */
+#ifdef INCLUDE_CMD_CTTY
+INT cmd_ctty(LPTSTR);
+#endif
 
 /* Prototypes for COLOR.C */
 INT CommandColor(LPTSTR);
@@ -337,6 +340,9 @@ VOID PrintPrompt (VOID);
 INT  cmd_prompt (LPTSTR);
 
 /* Prototypes for REDIR.C */
+HANDLE GetHandle(UINT Number);
+VOID SetHandle(UINT Number, HANDLE Handle);
+
 typedef enum _REDIR_MODE
 {
     REDIR_READ   = 0,

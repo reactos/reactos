@@ -103,6 +103,14 @@ COPY [/V][/Y|/-Y][/A|/B] kilde [/A|/B]\n\
                eksisterende destinasjonsfil.\n\n\
 Bryteren /Y kan eksistere i COPYCMD miljøvariabel.\n\
 ...\n"
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nSkriv inn ny dato (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "\nSkriv inn ny dato (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nSkriv inn ny dato (yyyy%cmm%cdd): "
@@ -134,10 +142,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributer]] fil ...\n\n\
     STRING_DEL_HELP2 "Alle filer i mappen vil bli slettet!\nEr du sikker (J/N)?"
     STRING_DEL_HELP3 "    %lu fil slettet\n"
     STRING_DEL_HELP4 "    %lu filer slettet\n"
-    STRING_DELAY_HELP "pause i n sekunder eller mikrosekunder\n\
+    STRING_DELAY_HELP "Pause i n sekunder eller mikrosekunder.\n\
 DELAY [/m]n\n\n\
-  /m          spesifiserer at n er mikrosekunder\n\
-              ellers er n sekunder\n"
+  /m          Spesifiserer at n er mikrosekunder\n\
+              ellers er n sekunder.\n"
     STRING_DIR_HELP1 "DIR [stasjon:][mappe][filnavn] [/A[[:]attributter]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]sortering]] [/P] [/Q] [/R] [/S] [/T[[:]tidsfelt]] [/W] [/X] [/4]\n\n\
   [stasjon:][mappe][filnavn]\n\

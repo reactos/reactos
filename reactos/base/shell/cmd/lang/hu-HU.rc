@@ -96,6 +96,14 @@ COPY [/V][/Y|/-Y][/A|/B] forrás [/A|/B]\n\
   /Y           Igennel válaszol kérdésnél.\n\
   /-Y          Nemmel válaszol kérdésnél.\n\n\
 Az /Y kapcsolót a COPYCMD környezeti változóban is használható.\n"
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nÚj dátum (hh%cnn%céééé): "
     STRING_DATE_HELP2 "\nÚj dátum (nn%chh%céééé): "
     STRING_DATE_HELP3 "\nÚj dátum (éééé%chh%cnn): "
@@ -127,10 +135,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attribútumok]] állomány ...\n\n\
     STRING_DEL_HELP2 "Minden állomány törölve lesz a mappában!\nBiztosan ezt akarod (I/N)?"
     STRING_DEL_HELP3 "    %lu állomány törölve\n"
     STRING_DEL_HELP4 "    %lu állomány törölve\n"
-    STRING_DELAY_HELP "pause for n seconds or milliseconds\n\
+    STRING_DELAY_HELP "Pause for n seconds or milliseconds.\n\
 DELAY [/m]n\n\n\
-  /m          specifiy than n are milliseconds\n\
-              otherwise n are seconds\n"
+  /m          Specify that n are in milliseconds,\n\
+              otherwise n are in seconds.\n"
     STRING_DIR_HELP1 "DIR [meghajtó:][elérési_út][állománynév] [/A[[:]attribútumok]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]rendezési_feltétel]] [/P] [/Q] [/R] [/S] [/T[[:]idõ]] [/W] [/X] [/4]\n\n\
   [meghajtó:][elérési_út][állományname]\n\

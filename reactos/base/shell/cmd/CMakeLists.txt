@@ -22,6 +22,7 @@ list(APPEND SOURCE
     color.c
     console.c
     copy.c
+    ctty.c
     date.c
     del.c
     delay.c

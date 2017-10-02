@@ -105,6 +105,14 @@ COPY [/V][/Y|/-Y][/A|/B] sumber [/A|/B]\n\
                file tujuan yang sudah ada.\n\n\
 Saklar /Y mungkin ada dalam variabel lingkungan COPYCMD.\n\
 ...\n"
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nMasukkan tanggal baru (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "\nMasukkan tanggal baru (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nMasukkan tanggal baru (yyyy%cmm%cdd): "
@@ -136,10 +144,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
     STRING_DEL_HELP2 "Semua file dalam direktori akan dihapus!\nAnda yakin (Y/T)?"
     STRING_DEL_HELP3 "    %lu file dihapus\n"
     STRING_DEL_HELP4 "    %lu file dihapus\n"
-    STRING_DELAY_HELP "menunda n detik atau milidetik\n\
+    STRING_DELAY_HELP "Menunda n detik atau milidetik.\n\
 DELAY [/m]n\n\n\
-  /m          menetapkan bahwa n adalah milidetik\n\
-              sebaliknya n adalah detik\n"
+  /m          Menetapkan bahwa n adalah milidetik\n\
+              sebaliknya n adalah detik.\n"
     STRING_DIR_HELP1 "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]sortorder]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
   [drive:][path][filename]\n\

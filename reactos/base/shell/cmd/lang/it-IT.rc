@@ -103,6 +103,14 @@ COPY [/V][/Y|/-Y][/A|/B] sorgente [/A|/B]\n\
                di un file di destinazione già esistente.\n\n\
 La selezione  /Y può trovarsi nella variabile di ambiente  COPYCMD .\n\
 ...\n"
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nScrivi la nuova data (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "\nScrivi la nuova data (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nnScrivi la nuova data (yyyy%cmm%cdd): "
@@ -134,10 +142,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\n\
     STRING_DEL_HELP2 "Tutti i file nella cartella saranno cancellati!\nSei sicuro (S/N)?"
     STRING_DEL_HELP3 "    %lu file cancellato\n"
     STRING_DEL_HELP4 "    %lu file cancellati\n"
-    STRING_DELAY_HELP "aspetta per il tempo indicato in secondi o millisecondi\n\
+    STRING_DELAY_HELP "Aspetta per il tempo indicato in secondi o millisecondi.\n\
 DELAY [/m]n\n\n\
-  /m          precisa che n è in millisecondi\n\
-              altrimenti n è in secondi\n"
+  /m          Precisa che n è in millisecondi\n\
+              altrimenti n è in secondi.\n"
     STRING_DIR_HELP1 "DIR [disco:][percorso][nomefilen] [/A[[:]attributi]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]orderinamento]] [/P] [/Q] [/R] [/S] [/T[[:]tempo]] [/W] [/X] [/4]\n\n\
   [disco:][percorso][nomefilen]\n\

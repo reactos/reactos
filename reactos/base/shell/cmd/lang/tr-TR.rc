@@ -105,6 +105,14 @@ COPY [/V][/Y|/-Y][/A|/B] kaynak [/A|/B]\n\
                onaylamak için sormaya neden olur.\n\n\
 /Y seçeneği COPYCMD ortam değişkeninin içinde olabilir.\n\
 ...\n"
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nYeni târihi giriniz (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "\nYeni târihi giriniz (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nYeni târihi giriniz (yyyy%cmm%cdd): "
@@ -137,10 +145,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]öz nitelikler]] kütük ...\n\n\
     STRING_DEL_HELP2 "Dizindeki tüm kütükler silinecek!\nEmin misiniz (Y/N)?"
     STRING_DEL_HELP3 "    %lu kütük silindi\n"
     STRING_DEL_HELP4 "    %lu kütük silindi\n"
-    STRING_DELAY_HELP "n sâniye ya da milisâniye duraklat\n\
+    STRING_DELAY_HELP "n sâniye ya da milisâniye duraklat.\n\
 DELAY [/m]n\n\n\
   /m          n milisâniye olarak belirtir\n\
-              yoksa n sâniyedir\n"
+              yoksa n sâniyedir.\n"
     STRING_DIR_HELP1 "DIR [sürücü:][yol][kütük adı] [/A[[:]öz nitelikler]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]dizme düzeni]] [/P] [/Q] [/R] [/S] [/T[[:]zaman aralığı]] [/W] [/X] [/4]\n\n\
   [sürücü:][yol][kütük adı]\n\

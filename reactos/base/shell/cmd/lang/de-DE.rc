@@ -110,6 +110,14 @@ COPY [/V][/Y|/-Y][/A|/B] \n\
                Bestätigen auf.\n\n\
 Die Option /Y ist möglicherweise in der Umgebungsvariablen COPYCMD definiert.\n\
 ..."
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nGeben Sie das neue Datum ein (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "\nGeben Sie das neue Datum ein (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nGeben Sie das neue Datum ein (yyyy%cmm%cdd): "
@@ -133,9 +141,9 @@ ERASE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\n\
     STRING_DEL_HELP2 "Alle Dateien in diesem Verzeichnis werden gelöscht!\nSind Sie sich sicher (J/N)?"
     STRING_DEL_HELP3 "    %lu Datei(en) gelöscht\n"
     STRING_DEL_HELP4 "    %lu Datei(en) gelöscht\n"
-    STRING_DELAY_HELP "Pause für n Sekunden oder Millisekunden\n\
+    STRING_DELAY_HELP "Pause für n Sekunden oder Millisekunden.\n\
 DELAY [/m]n\n\n\
-  /m          Millisekunden, ansonsten Sekunden\n"
+  /m          Millisekunden, ansonsten Sekunden.\n"
     STRING_DIR_HELP1 "Listet die Dateien und Unterverzeichnisse eines Verzeichnisses auf.\n\n\
 DIR [Laufwerk:][Pfad][Dateiname] [/A[[:]Attribute]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]Reihenfolge]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\

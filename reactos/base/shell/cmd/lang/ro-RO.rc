@@ -116,6 +116,14 @@ COPY [/V][/Y|/-Y][/A|/B] sursă [/A|/B]\n\
   /Y           Suprimă cererile de confimare a spurascrierilor.\n\
   /-Y          Emite cereri de confirmare pentru suprascrieri.\n\n\
 Argumentul /Y poate fi prezent în variabila de mediu COPYCMD.\n"
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nIntroduceți o nouă dată (ll%czz%caaaa): "
     STRING_DATE_HELP2 "\nIntroduceți o nouă dată (zz%cll%caaaa): "
     STRING_DATE_HELP3 "\nIntroduceți o nouă dată (aaaa%cll%czz): "

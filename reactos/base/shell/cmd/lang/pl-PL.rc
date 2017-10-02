@@ -112,6 +112,14 @@ COPY [/V][/Y|/-Y][/A|/B] źródło [/A|/B]\n\
                istniejącego pliku.\n\n\
 Opcja /Y może znaleźć się wśród zmiennych środowiskowych COPYCMD.\n\
 ...\n"
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nPodaj nową datę (mm%cdd%crrrr): "
     STRING_DATE_HELP2 "\nPodaj nową datę (dd%cmm%crrrr): "
     STRING_DATE_HELP3 "\nPodaj nową datę (rrrr%cmm%cdd): "
@@ -142,10 +150,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributy]] plik ...\n\n\
     STRING_DEL_HELP2 "Wszystkie pliki w tym katalogu zostaną skasowane!\nCzy jesteś pewien (T/N)?"
     STRING_DEL_HELP3 "    %lu plik skasowany\n"
     STRING_DEL_HELP4 "    %lu pliki(-ów) skasowane(-ych)\n"
-    STRING_DELAY_HELP "Pauzuje na n sekund lub milisekund\n\
+    STRING_DELAY_HELP "Pauzuje na n sekund lub milisekund.\n\
 DELAY [/m]n\n\n\
-  /m          wymusza traktowanie n jako milisekund,\n\
-              w innym wypadku będzie traktowane jako sekundy\n"
+  /m          Wymusza traktowanie n jako milisekund,\n\
+              w innym wypadku będzie traktowane jako sekundy.\n"
     STRING_DIR_HELP1 "DIR [napęd:][ścieżka][pliki] [/A[[:]atrybuty]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]porządek]] [/P] [/Q] [/R] [/S] [/T[[:]czas]] [/W] [/X] [/4]\n\n\
   [napęd:][ścieżka][nazwa_pliku]\n\

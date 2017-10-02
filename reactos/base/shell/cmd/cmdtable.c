@@ -73,6 +73,10 @@ COMMAND cmds[] =
     {_T("copy"),     0, cmd_copy},
 #endif
 
+#ifdef INCLUDE_CMD_CTTY
+    {_T("ctty"),     0, cmd_ctty},
+#endif
+
 #ifdef INCLUDE_CMD_DATE
     {_T("date"),     0, cmd_date},
 #endif
@@ -168,6 +172,7 @@ COMMAND cmds[] =
 
 #ifdef INCLUDE_CMD_RMDIR
     {_T("rd"), CMD_SPECIAL, cmd_rmdir},
+    {_T("rmdir"), CMD_SPECIAL, cmd_rmdir},
 #endif
 
 #ifdef INCLUDE_CMD_REM
@@ -181,10 +186,6 @@ COMMAND cmds[] =
 
 #ifdef INCLUDE_CMD_REPLACE
     {_T("replace"), 0, cmd_replace},
-#endif
-
-#ifdef INCLUDE_CMD_RMDIR
-    {_T("rmdir"), CMD_SPECIAL, cmd_rmdir},
 #endif
 
 #ifdef INCLUDE_CMD_SCREEN

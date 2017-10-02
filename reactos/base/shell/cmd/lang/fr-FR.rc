@@ -109,6 +109,15 @@ COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n\
   /-Y          Affiche un invite de confirmation en cas d'écrasement\n\
                d'un fichier destination existant.\n\n\
 Le switch /Y peut être présent dans la variable d'environnement COPYCMD.\n"
+    STRING_CTTY_HELP "Change le terminal d'I/O standard vers un périphérique\n\
+auxiliaire.\n\n\
+CTTY périph\n\n\
+  périph    Le nouveau terminal d'I/O standard que vous voulez utiliser.\n\
+            Ce nom doit référer vers un périphérique caractère valide:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON est habituellement le périphérique d'I/O standard par défaut.\n\n\
+Pour restaurer le contrôle vers la console standard, entrez: CTTY CON sur\n\
+le périphérique auxiliaire."
     STRING_DATE_HELP1 "\nEntrer la nouvelle date (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "\nEntrer la nouvelle date (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nEntrer la nouvelle date (yyyy%cmm%cdd): "
@@ -142,10 +151,10 @@ ERASE [/N /P /T /Q /W /Y /Z] fichier ...\n\n\
 Etes vous sûr(e) (O/N) ?"
     STRING_DEL_HELP3 "    %lu fichier effacé\n"
     STRING_DEL_HELP4 "    %lu fichiers effacés\n"
-    STRING_DELAY_HELP "Attend pendant n secondes ou millisecondes\n\
+    STRING_DELAY_HELP "Attend pendant n secondes ou millisecondes.\n\
 DELAY [/m]n\n\n\
-  /m          spécifie que n est en millisecondes\n\
-              sinon n est en secondes"
+  /m          Spécifie que n est en millisecondes,\n\
+              sinon n est en secondes."
     STRING_DIR_HELP1 "DIR [lecteur:][chemin][fichier] [/A[[:]attributs]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]ordredetri]] [/P] [/Q] [/R] [/S] [/T[[:]heure]] [/W] [/X] [/4]\n\n\
   [lecteur:][chemin][fichier]\n\

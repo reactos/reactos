@@ -107,6 +107,14 @@ COPY [/V][/Y|/-Y][/A|/B] burimi [/A|/B]\n\
                destinacion dokumenti ekzistues.\n\n\
 Parametri /Y mund të jetë prezent në variabëlat e mjedisit COPYCMD.\n\
 ...\n"
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nShkruani datën e re (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "\nShkruani datën e re (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nShkruani datën e re (yyyy%cmm%cdd): "
@@ -138,10 +146,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
     STRING_DEL_HELP2 "Të gjitha dokumentet në skedare do të fshihen!\nJeni i sigurtë (P/J)?"
     STRING_DEL_HELP3 "    %lu u fshi\n"
     STRING_DEL_HELP4 "    %lu u fshinë\n"
-    STRING_DELAY_HELP "pauzë për sekonda ose milisekonda\n\
+    STRING_DELAY_HELP "Pauzë për sekonda ose milisekonda.\n\
 DELAY [/m]n\n\n\
-  /m          specifikoni se n janë millisekonda\n\
-              ndryshe n janë sekonda\n"
+  /m          Specifikoni se n janë millisekonda\n\
+              ndryshe n janë sekonda.\n"
     STRING_DIR_HELP1 "DIR [drive:][rrugë][emer] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]radhitje]] [/P] [/Q] [/R] [/S] [/T[[:]koha]] [/W] [/X] [/4]\n\n\
   [drive:][rrugë][emer]\n\

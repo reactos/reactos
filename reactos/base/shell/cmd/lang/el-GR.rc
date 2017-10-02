@@ -108,6 +108,14 @@ COPY [/V][/Y|/-Y][/A|/B] προέλευση [/A|/B]\n\
                ενός υπάρχοντος αρχείου προορισμού.\n\n\
 Ο διακόπτης /Y μπορεί να οριστεί από πριν στη μεταβλητή περιβάλλοντος COPYCMD.\n\
 ...\n"
+    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+CTTY device\n\n\
+  device    The terminal device you want to use as the new standard I/O device.\n\
+            This name must refer to a valid character device:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is usually the default standard I/O device.\n\n\
+To return control to the standard console, type: CTTY CON on the auxiliary\n\
+device."
     STRING_DATE_HELP1 "\nΕισάγετε νέα ημερομηνία (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "\nΕισάγετε νέα ημερομηνία (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nΕισάγετε νέα ημερομηνία (yyyy%cmm%cdd): "
@@ -138,10 +146,10 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]χαρακτηριστικά]] ονόματ
     STRING_DEL_HELP2 "Όλα τα αρχεία στον κατάλογο θα διαγραφούν!\nΕίστε σίγουροι (Y/N)?"
     STRING_DEL_HELP3 "    %lu αρχείο διαγράφηκε\n"
     STRING_DEL_HELP4 "    %lu αρχεία διαγράφηκαν\n"
-    STRING_DELAY_HELP "παύση για n δευτερόλεπτα ή μιλιδευτερόλεπτα\n\
+    STRING_DELAY_HELP "Παύση για n δευτερόλεπτα ή μιλιδευτερόλεπτα.\n\
 DELAY [/m]n\n\n\
-  /m          specifiy than n are milliseconds\n\
-              otherwise n are seconds\n"
+  /m          Specify that n are in milliseconds,\n\
+              otherwise n are in seconds.\n"
     STRING_DIR_HELP1 "DIR [δίσκος:][μονοπάτι][αρχείο] [/A[[:]χαρακτηριστικά]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]sortorder]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
   [δίσκος:][μονοπάτι][αρχείο]\n\
@@ -405,7 +413,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   OFF         set stopwatch OFF\n\
   /S          Split time. Return stopwatch split\n\
               time without changing its value\n\
-  /n          Specifiy the stopwatch number.\n\
+  /n          Specify the stopwatch number.\n\
               Stopwatches available are 0 to 9\n\
               If it is not specified default is 1\n\
   /Fn         Format for output\n\
