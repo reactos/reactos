@@ -6,7 +6,7 @@ Current version: __0.4.6__
 ## Quick Links
 - [Website](https://reactos.org)
 - [Wiki](https://reactos.org/wiki)
-- [JIRA Bug tracker](https://jira.reactos.org/issues)
+- [JIRA Bug Tracker](https://jira.reactos.org/issues)
 - [ReactOS Git mirror](https://git.reactos.org)
 
 ## What is ReactOS?
@@ -27,22 +27,16 @@ To build the system it is strongly advised to use the _ReactOS Build Environment
 (RosBE)._ Up-to-date versions for Windows and for Unix/GNU-Linux are available
 from our download page at: http://www.reactos.org/wiki/Build_Environment/
 
-Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+, together
-with separate installations of CMake and the Ninja build utility.
+Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: https://www.reactos.org/wiki/Building_with_MSVC
 
 #### Binaries
 
-To build ReactOS run `ninja`, or alternatively run
-`make` if you are using the Make utility, from the top directory.
-
-__NOTE:__ In the other examples listed in the following, similar modification
-holds if you are using the Make utility instead of Ninja.
-If you are using RosBE, follow on-screen instructions.
+To build ReactOS you must use run `configure` script in the directory you want to have builds. Choose `configure.cmd` or `configure.sh` depending on your system. Then run `ninja <modulename>` to build a module you want or just `ninja` to build all modules.
 
 #### Bootable images
 
 To build a bootable CD image run `ninja bootcd` from the
-top directory. This will create a CD image with a filename, `ReactOS.iso`, in
+build directory. This will create a CD image with a filename, `bootcd.iso`, in
 the top directory.
 
 See more at http://www.reactos.org/wiki/Building_ReactOS
