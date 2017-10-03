@@ -8,6 +8,7 @@ Current version: __0.4.6__
 - [Wiki](https://reactos.org/wiki)
 - [JIRA Bug Tracker](https://jira.reactos.org/issues)
 - [ReactOS Git mirror](https://git.reactos.org)
+- [Testman](https://reactos.org/testman/)
 
 ## What is ReactOS?
 
@@ -21,7 +22,7 @@ Windows Vista and future Windows NT releases.
 
 The code of ReactOS is licensed under [GNU GPL 2.0+](https://spdx.org/licenses/GPL-2.0+.html).
 
-## Building ReactOS
+## Building
 
 To build the system it is strongly advised to use the _ReactOS Build Environment
 (RosBE)._ Up-to-date versions for Windows and for Unix/GNU-Linux are available
@@ -41,6 +42,19 @@ the top directory.
 
 See more at http://www.reactos.org/wiki/Building_ReactOS
 
+## Installing
+
+ReactOS can only be installed on a machine that has a FAT16 or FAT32 partition
+as the active (bootable) partition. The partition on which ReactOS is to be
+installed (which may or may not be the bootable partition) must also be
+formatted as FAT16 or FAT32. ReactOS Setup can format the partitions if
+needed.
+
+To install ReactOS from the bootable CD distribution, extract the archive
+contents. Then burn the CD image, boot from it, and follow instructions.
+
+Check [INSTALL](INSTALL) for more details.
+
 ## More information
 
 ReactOS is a Free and Open Source operating system based on the Windows architecture, 
@@ -48,7 +62,7 @@ providing support for existing applications and drivers, and an alternative to t
 
 It is not another wrapper built on Linux, like WINE. It does not attempt or plan to compete with WINE; in fact, the user-mode part of ReactOS is almost entirely WINE-based and our two teams have cooperated closely in the past. 
 
-ReactOS is also not "yet another OS". It does not attempt to be a third player, like SkyOS or any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
+ReactOS is also not "yet another OS". It does not attempt to be a third player like any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
 
 More information is available at: https://www.reactos.org.
 
@@ -56,17 +70,9 @@ Also see the [media\doc](/media/doc/) subdirectory for some sparse notes.
 
 ## Who is responsible
 
-See the [CREDITS](CREDITS) file.
+Active devs are listed as members of [GitHub organization](https://github.com/orgs/reactos/people). 
+Also see the [CREDITS](CREDITS) file for others.
 
-## ReactOS SVN and GIT mirrors
+## Code mirrors
 
-The main development is done here on Github. However, read-only mirrors exist.
-
-* SVN mirror: https://svn.reactos.org/svn/reactos?view=revision
-* Git mirror: https://git.reactos.org/?p=reactos.git;a=summary
- 
-## Disclaimer
-
-_ReactOS® is a registered trademark of the ReactOS Foundation._
-
-_Windows® NT™ is a registered trademark of Microsoft Corporation._
+The main development is done on [GitHub](https://github.com/reactos/reactos). We have an [alternative mirror](https://git.reactos.org/?p=reactos.git;a=summary) it case GitHub is down. There is also an obsolete [SVN repository](https://svn.reactos.org/svn/reactos?view=revision) that is kept for historical purposes.
