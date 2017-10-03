@@ -440,6 +440,14 @@ BasepCopyFileExW(
     OUT LPHANDLE lpNewHandle
 );
 
+BOOL
+BasepGetVolumeNameForVolumeMountPoint(
+    IN LPCWSTR lpszMountPoint,
+    OUT LPWSTR lpszVolumeName,
+    IN DWORD cchBufferLength,
+    OUT LPBOOL IsAMountPoint
+);
+
 /* FIXME: This is EXPORTED! It should go in an external kernel32.h header */
 VOID
 WINAPI

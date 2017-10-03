@@ -748,22 +748,59 @@ GetVolumePathNameA(IN LPCSTR lpszFileName,
                    IN LPSTR lpszVolumePathName,
                    IN DWORD cchBufferLength)
 {
-    PWCHAR FileNameW = NULL;
-    WCHAR VolumePathName[MAX_PATH];
-    BOOL Result;
+    BOOL Ret;
+    PUNICODE_STRING FileNameU;
+    ANSI_STRING VolumePathName;
+    UNICODE_STRING VolumePathNameU;
 
-    if (lpszFileName)
+    /* Convert file name to unicode */
+    FileNameU = Basep8BitStringToStaticUnicodeString(lpszFileName);
+    if (FileNameU == NULL)
     {
-        if (!(FileNameW = FilenameA2W(lpszFileName, FALSE)))
-            return FALSE;
+        return FALSE;
     }
 
-    Result = GetVolumePathNameW(FileNameW, VolumePathName, cchBufferLength);
+    /* Initialize all the strings we'll need */
+    VolumePathName.Buffer = lpszVolumePathName;
+    VolumePathName.Length = 0;
+    VolumePathName.MaximumLength = cchBufferLength - 1;
 
-    if (Result)
-        FilenameW2A_N(lpszVolumePathName, MAX_PATH, VolumePathName, -1);
+    VolumePathNameU.Length = 0;
+    VolumePathNameU.MaximumLength = (cchBufferLength - 1) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+    /* Allocate a buffer for calling the -W */
+    VolumePathNameU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, VolumePathNameU.MaximumLength);
+    if (VolumePathNameU.Buffer == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
-    return Result;
+    /* Call the -W implementation */
+    Ret = GetVolumePathNameW(FileNameU->Buffer, VolumePathNameU.Buffer, cchBufferLength);
+    /* If it succeed */
+    if (Ret)
+    {
+        NTSTATUS Status;
+
+        /* Convert back to ANSI */
+        RtlInitUnicodeString(&VolumePathNameU, VolumePathNameU.Buffer);
+        Status = RtlUnicodeStringToAnsiString(&VolumePathName, &VolumePathNameU, FALSE);
+        /* If conversion failed, just set error code and fail the rest */
+        if (!NT_SUCCESS(Status))
+        {
+            BaseSetLastNTError(Status);
+            Ret = FALSE;
+        }
+        /* Otherwise, null terminate the string (it's OK, we computed -1) */
+        else
+        {
+            VolumePathName.Buffer[VolumePathName.Length] = ANSI_NULL;
+        }
+    }
+
+    /* Free the buffer allocated for -W call */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, VolumePathNameU.Buffer);
+    return Ret;
 }
 
 /*
@@ -775,112 +812,235 @@ GetVolumePathNameW(IN LPCWSTR lpszFileName,
                    IN LPWSTR lpszVolumePathName,
                    IN DWORD cchBufferLength)
 {
-    DWORD PathLength;
-    UNICODE_STRING UnicodeFilePath;
-    LPWSTR FilePart;
-    PWSTR FullFilePath, FilePathName;
-    ULONG PathSize;
-    WCHAR VolumeName[MAX_PATH];
-    DWORD ErrorCode;
-    BOOL Result = FALSE;
+    BOOL MountPoint;
+    DWORD FullPathLen;
+    WCHAR OldFilePart;
+    UNICODE_STRING FullPath;
+    PWSTR FullPathBuf, FilePart, VolumeNameBuf;
 
-    if (!lpszFileName || !lpszVolumePathName || !cchBufferLength)
+    /* Probe for full path len */
+    FullPathLen = GetFullPathNameW(lpszFileName, 0, NULL, NULL);
+    if (FullPathLen == 0)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    
-    if (!(PathLength = GetFullPathNameW(lpszFileName, 0, NULL, NULL)))
+
+    /* Allocate a big enough buffer to receive it */
+    FullPathBuf = RtlAllocateHeap(RtlGetProcessHeap(), 0, (FullPathLen + 10) * sizeof(WCHAR));
+    if (FullPathBuf == NULL)
     {
-        return Result;
-    }
-    else
-    {
-        PathLength = PathLength + 10;
-        PathSize = PathLength * sizeof(WCHAR);
-
-        if (!(FullFilePath = RtlAllocateHeap(RtlGetProcessHeap(), 0, PathSize)))
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return Result;
-        }
-
-        if (!GetFullPathNameW(lpszFileName, PathLength, FullFilePath, &FilePart))
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, FullFilePath);
-            return Result;
-        }
-
-        RtlInitUnicodeString(&UnicodeFilePath, FullFilePath);
-
-        if (UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR) - 1] != '\\')
-        {
-            UnicodeFilePath.Length += sizeof(WCHAR);
-            UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR) - 1] = '\\';
-            UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
-        }
-
-        if (!(FilePathName = RtlAllocateHeap(RtlGetProcessHeap(), 0, PathSize)))
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, FullFilePath);
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return Result;
-        }
-
-        while (!GetVolumeNameForVolumeMountPointW(UnicodeFilePath.Buffer,
-                                                  VolumeName,
-                                                  MAX_PATH))
-        {
-            if (((UnicodeFilePath.Length == 4) && (UnicodeFilePath.Buffer[0] == '\\') &&
-                (UnicodeFilePath.Buffer[1] == '\\')) || ((UnicodeFilePath.Length == 6) &&
-                (UnicodeFilePath.Buffer[1] == ':')))
-            {
-                break;
-            }
-
-            UnicodeFilePath.Length -= sizeof(WCHAR);
-            UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
-
-            memcpy(FilePathName, UnicodeFilePath.Buffer, UnicodeFilePath.Length);
-            FilePathName[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
-
-            if (!GetFullPathNameW(FilePathName, PathLength, FullFilePath, &FilePart))
-            {
-                goto Cleanup2;
-            }
-
-            if (!FilePart)
-            {
-                RtlInitUnicodeString(&UnicodeFilePath, FullFilePath);
-                UnicodeFilePath.Length += sizeof(WCHAR);
-                UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR) - 1] = '\\';
-                UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
-                break;
-            }
-
-            FilePart[0] = '\0';
-            RtlInitUnicodeString(&UnicodeFilePath, FullFilePath);
-        }
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
     }
 
-    if (UnicodeFilePath.Length > (cchBufferLength * sizeof(WCHAR)) - sizeof(WCHAR))
+    /* And get full path name */
+    if (GetFullPathNameW(lpszFileName, FullPathLen + 10, FullPathBuf, &FilePart) == 0)
     {
-        ErrorCode = ERROR_FILENAME_EXCED_RANGE;
-        goto Cleanup1;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FullPathBuf);
+        return FALSE;
     }
 
-    memcpy(lpszVolumePathName, UnicodeFilePath.Buffer, UnicodeFilePath.Length);
-    lpszVolumePathName[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+    /* Make a string out of it */
+    RtlInitUnicodeString(&FullPath, FullPathBuf);
+    /* We will finish our string with '\', for ease of the parsing after */
+    if (FullPath.Buffer[(FullPath.Length / sizeof(WCHAR)) - 1] != L'\\')
+    {
+        FullPath.Length += sizeof(WCHAR);
+        FullPath.Buffer[(FullPath.Length / sizeof(WCHAR)) - 1] = L'\\';
+        FullPath.Buffer[FullPath.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
 
-    Result = TRUE;
-    goto Cleanup2;
+    /* Allocate a buffer big enough to receive our volume name */
+    VolumeNameBuf = RtlAllocateHeap(RtlGetProcessHeap(), 0, 0x2000 * sizeof(WCHAR));
+    if (VolumeNameBuf == NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FullPathBuf);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
-Cleanup1:
-    SetLastError(ErrorCode);
-Cleanup2:
-    RtlFreeHeap(RtlGetProcessHeap(), 0, FullFilePath);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, FilePathName);
-    return Result;
+    /* We don't care about file part: we added an extra backslash, so there's no
+     * file, we're back at the dir level.
+     * We'll recompute file part afterwards
+     */
+    FilePart = NULL;
+    /* Keep track of the letter we could drop to shorten the string */
+    OldFilePart = UNICODE_NULL;
+    /* As long as querying volume name fails, keep looping */
+    while (!BasepGetVolumeNameForVolumeMountPoint(FullPath.Buffer, VolumeNameBuf, 0x2000u, &MountPoint))
+    {
+        USHORT LastSlash;
+
+        /* Not a mount point, but opening returning access denied? Assume it's one, just not
+         * a reparse backed one (classic mount point, a device)!
+         */
+        if (!MountPoint && GetLastError() == ERROR_ACCESS_DENIED)
+        {
+            MountPoint = TRUE;
+        }
+
+        /* BasepGetVolumeNameForVolumeMountPoint failed, but returned a volume name.
+         * This can happen when we are given a reparse point where MountMgr could find associated
+         * volume name which is not a valid DOS volume
+         * A valid DOS name always starts with \\
+         */
+        if (VolumeNameBuf[0] != UNICODE_NULL && (FullPath.Buffer[0] != L'\\' || FullPath.Buffer[1] != L'\\'))
+        {
+            CHAR RootPathName[4];
+
+            /* Construct a simple <letter>:\ string to get drive type */
+            RootPathName[0] = FullPath.Buffer[0];
+            RootPathName[1] = ':';
+            RootPathName[2] = '\\';
+            RootPathName[3] = ANSI_NULL;
+
+            /* If we weren't given a drive letter actually, or if that's not a remote drive
+             * Note: in this code path, we're recursive and stop fail loop
+             */
+            if (FullPath.Buffer[1] != L':' || GetDriveTypeA(RootPathName) != DRIVE_REMOTE)
+            {
+                BOOL Ret;
+
+                /* We won't need the full path, we'll now work with the returned volume name */
+                RtlFreeHeap(RtlGetProcessHeap(), 0, FullPathBuf);
+                /* If it wasn't an NT name which was returned */
+                if ((VolumeNameBuf[0] != L'\\') || (VolumeNameBuf[1] != L'?') ||
+                    (VolumeNameBuf[2] != L'?') || (VolumeNameBuf[3] != L'\\'))
+                {
+                    PWSTR GlobalPath;
+                    UNICODE_STRING GlobalRoot;
+
+                    /* Create a new name in the NT namespace (from Win32) */
+                    RtlInitUnicodeString(&FullPath, VolumeNameBuf);
+                    RtlInitUnicodeString(&GlobalRoot, L"\\\\?\\GLOBALROOT");
+
+                    /* We allocate a buffer than can contain both the namespace and the volume name */
+                    GlobalPath = RtlAllocateHeap(RtlGetProcessHeap(), 0, FullPath.Length + GlobalRoot.Length);
+                    if (GlobalPath == NULL)
+                    {
+                        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeNameBuf);
+                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        return FALSE;
+                    }
+
+                    /* Fill in the new query name */
+                    RtlCopyMemory(GlobalPath, GlobalRoot.Buffer, GlobalRoot.Length);
+                    RtlCopyMemory((PVOID)((ULONG_PTR)GlobalPath + GlobalRoot.Length), FullPath.Buffer, FullPath.Length);
+                    GlobalPath[(FullPath.Length + GlobalRoot.Length) / sizeof(WCHAR)] = UNICODE_NULL;
+
+                    /* Give it another try */
+                    Ret = GetVolumePathNameW(GlobalPath, lpszVolumePathName, cchBufferLength);
+
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, GlobalPath);
+                }
+                else
+                {
+                    /* If we don't have a drive letter in the Win32 name space \\.\<letter>: */
+                    if ((VolumeNameBuf[4] != UNICODE_NULL) && (VolumeNameBuf[5] != L':'))
+                    {
+                        /* Shit our starting \\ */
+                        RtlInitUnicodeString(&FullPath, VolumeNameBuf);
+                        RtlMoveMemory(VolumeNameBuf, (PVOID)((ULONG_PTR)VolumeNameBuf + (2 * sizeof(WCHAR))), FullPath.Length - (3 * sizeof(WCHAR)));
+                    }
+                    /* Otherwise, just make sure we're double \ at the being to query again with the
+                     * proper namespace
+                     */
+                    else
+                    {
+                        VolumeNameBuf[1] = L'\\';
+                    }
+
+                    /* Give it another try */
+                    Ret = GetVolumePathNameW(VolumeNameBuf, lpszVolumePathName, cchBufferLength);
+                }
+
+                /* And done! */
+                RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeNameBuf);
+                return Ret;
+            }
+        }
+
+        /* No mount point but with a file part? Restore filepart and exit */
+        if (!MountPoint && FilePart != NULL)
+        {
+            FilePart[0] = OldFilePart;
+            RtlInitUnicodeString(&FullPath, FullPathBuf);
+            break;
+        }
+
+        /* We cannot go down the path any longer, too small */
+        if (FullPath.Length <= sizeof(WCHAR))
+        {
+            break;
+        }
+
+        /* Prepare the next split */
+        LastSlash = (FullPath.Length / sizeof(WCHAR)) - 2;
+        if (FullPath.Length / sizeof(WCHAR) != 2)
+        {
+            do
+            {
+                if (FullPath.Buffer[LastSlash] == L'\\')
+                {
+                    break;
+                }
+
+                --LastSlash;
+            } while (LastSlash != 0);
+        }
+
+        /* We couldn't split path, quit */
+        if (LastSlash == 0)
+        {
+            break;
+        }
+
+        /* If that's a mount point, keep track of the directory name */
+        if (MountPoint)
+        {
+            FilePart = &FullPath.Buffer[LastSlash + 1];
+            OldFilePart = FilePart[0];
+            /* And null terminate the string */
+            FilePart[0] = UNICODE_NULL;
+        }
+        /* Otherwise, just null terminate the string */
+        else
+        {
+            FullPath.Buffer[LastSlash + 1] = UNICODE_NULL;
+        }
+
+        /* We went down a bit in the path, fix the string and retry */
+        RtlInitUnicodeString(&FullPath, FullPathBuf);
+    }
+
+    /* Once here, we'll return something from the full path buffer, so release
+     * output buffer
+     */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeNameBuf);
+
+    /* Not a mount point, bail out */
+    if (!MountPoint && FilePart == NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FullPathBuf);
+        return FALSE;
+    }
+
+    /* Make sure we have enough room to copy our volume */
+    if ((cchBufferLength * sizeof(WCHAR)) < FullPath.Length + sizeof(UNICODE_NULL))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FullPathBuf);
+        SetLastError(ERROR_FILENAME_EXCED_RANGE);
+        return FALSE;
+    }
+
+    /* Copy and null terminate */
+    RtlCopyMemory(lpszVolumePathName, FullPath.Buffer, FullPath.Length);
+    lpszVolumePathName[FullPath.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FullPathBuf);
+
+    /* Done! */
+    return TRUE;
 }
 
 /*
