@@ -4068,7 +4068,7 @@ Return Value:
         RtlZeroMemory(name, sizeof(MOUNTDEV_NAME));
         name->NameLength = deviceExtension->DeviceName.Length;
 
-        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(USHORT) + name->NameLength) {
+        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < FIELD_OFFSET(MOUNTDEV_NAME, Name) + name->NameLength) {
 
             Irp->IoStatus.Information = sizeof(MOUNTDEV_NAME);
             Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
@@ -4081,7 +4081,7 @@ Return Value:
                       name->NameLength);
         status = STATUS_SUCCESS;
         Irp->IoStatus.Status = STATUS_SUCCESS;
-        Irp->IoStatus.Information = sizeof(USHORT) + name->NameLength;
+        Irp->IoStatus.Information = FIELD_OFFSET(MOUNTDEV_NAME, Name) + name->NameLength;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         goto SetStatusAndReturn;
     }
