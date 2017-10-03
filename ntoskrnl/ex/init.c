@@ -1428,15 +1428,12 @@ Phase1InitializationDiscard(IN PVOID Context)
     if (CmCSDVersionString.Length)
     {
         /* Print the version string */
-        /* ReactOS specific: Append also the revision number */
         Status = RtlStringCbPrintfExA(StringBuffer,
                                       Remaining,
                                       &EndBuffer,
                                       &Remaining,
                                       0,
-                                      " r%u"
                                       ": %wZ",
-                                      KERNEL_VERSION_BUILD_HEX,
                                       &CmCSDVersionString);
         if (!NT_SUCCESS(Status))
         {
@@ -1471,9 +1468,12 @@ Phase1InitializationDiscard(IN PVOID Context)
     if (NT_SUCCESS(MsgStatus))
     {
         /* Create the banner message */
+        /* ReactOS specific: Report ReactOS version, NtBuildLab information and reported NT kernel version */
         Status = RtlStringCbPrintfA(EndBuffer,
                                     Remaining,
                                     (PCHAR)MsgEntry->Text,
+                                    KERNEL_VERSION_STR,
+                                    NtBuildLab,
                                     StringBuffer,
                                     NtBuildNumber & 0xFFFF,
                                     BeginBuffer);

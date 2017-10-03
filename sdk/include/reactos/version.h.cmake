@@ -22,11 +22,6 @@
 
 #define COPYRIGHT_YEAR "@COPYRIGHT_YEAR@"
 
-/* KERNEL_VERSION_BUILD_TYPE is "SVN" or "" (for the release) */
-#define KERNEL_VERSION_BUILD_TYPE   "@KERNEL_VERSION_BUILD_TYPE@"
-/* KERNEL_VERSION_RELEASE_TYPE is "RC1", "RC2" or "" (for the final one) */
-#define KERNEL_VERSION_RELEASE_TYPE "@KERNEL_VERSION_RELEASE_TYPE@"
-
 #endif
 
 /* EOF */

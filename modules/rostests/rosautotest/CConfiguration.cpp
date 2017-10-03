@@ -119,7 +119,7 @@ CConfiguration::GetSystemInformation()
 
     /* Get the build from the define */
     ss << "&revision=";
-    ss << KERNEL_VERSION_BUILD_HEX;
+    ss << KERNEL_VERSION_COMMIT_HASH;
 
     ss << "&platform=";
 
