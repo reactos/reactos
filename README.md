@@ -18,9 +18,30 @@ The code of ReactOS is licensed under [GNU GPL 2.0+](https://spdx.org/licenses/G
 It is not another wrapper built on Linux, like WINE. It does not attempt or plan to compete with WINE; in fact, the user-mode part of ReactOS is almost entirely WINE-based and our two teams have cooperated closely in the past. ReactOS is also not "yet another OS". It does not attempt to be a third player, like SkyOS or any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
 
 ## Building ReactOS
-...
 
-See the INSTALL file for more details.
+### Prerequisites
+To build the system it is strongly advised to use the ReactOS Build Environment
+(RosBE). Up-to-date versions for Windows and for Unix/GNU-Linux are available
+from our download page at: http://www.reactos.org/wiki/Build_Environment/
+
+Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+, together
+with separate installations of CMake and the Ninja build utility.
+
+### Building binaries
+
+To build ReactOS run 'ninja' (without the quotes), or alternatively run
+'make' if you are using the Make utility, from the top directory.
+NOTE: In the other examples listed in the following, similar modification
+holds if you are using the Make utility instead of Ninja.
+If you are using RosBE, follow on-screen instructions.
+
+### Building bootable images
+
+To build a bootable CD image run 'ninja bootcd' (without the quotes) from the
+top directory. This will create a CD image with a filename, ReactOS.iso, in
+the top directory.
+
+See more at http://www.reactos.org/wiki/Building_ReactOS
 
 ## More information
 
@@ -33,6 +54,7 @@ compatibility, is always keeping an eye toward compatibility with
 Windows Vista and future Windows NT releases.
 
 More information is available at: https://www.reactos.org
+Also see the [media\doc](/media/doc/) subdirectory for some sparse notes.
 
 ## Who is responsible
 
@@ -42,10 +64,8 @@ See the CREDITS file.
 
 The main development is done here on Github. However, read-only mirrors exist.
 
-* SVN: https://svn.reactos.org/svn/reactos?view=revision
-
-* Git: https://git.reactos.org/?p=reactos.git;a=summary
-  (check it out via `git://git.reactos.org/reactos.git` )
+* SVN mirror: https://svn.reactos.org/svn/reactos?view=revision
+* Git mirror: https://git.reactos.org/?p=reactos.git;a=summary
  
 ## Disclaimer
 
