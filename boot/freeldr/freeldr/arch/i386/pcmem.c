@@ -27,6 +27,12 @@
 
 DBG_DEFAULT_CHANNEL(MEMORY);
 
+#define ULONGLONG_ALIGN_DOWN_BY(size, align) \
+    ((ULONGLONG)(size) & ~((ULONGLONG)(align) - 1))
+
+#define ULONGLONG_ALIGN_UP_BY(size, align) \
+    (ULONGLONG_ALIGN_DOWN_BY(((ULONGLONG)(size) + align - 1), align))
+
 #define MAX_BIOS_DESCRIPTORS 80
 
 BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
@@ -295,13 +301,14 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             MemoryType = LoaderFree;
 
             /* Align up base of memory range */
-            RealBaseAddress = ALIGN_UP_BY(PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
-                                          PAGE_SIZE);
+            RealBaseAddress = ULONGLONG_ALIGN_UP_BY(
+                                PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
+                                PAGE_SIZE);
 
             /* Calculate aligned EndAddress */
             EndAddress = PcBiosMemoryMap[PcBiosMapCount].BaseAddress +
                          PcBiosMemoryMap[PcBiosMapCount].Length;
-            EndAddress = ALIGN_DOWN_BY(EndAddress, PAGE_SIZE);
+            EndAddress = ULONGLONG_ALIGN_DOWN_BY(EndAddress, PAGE_SIZE);
 
             /* Check if there is anything left */
             if (EndAddress <= RealBaseAddress)
@@ -325,13 +332,14 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
                 MemoryType = LoaderSpecialMemory;
 
             /* Align down base of memory area */
-            RealBaseAddress = ALIGN_DOWN_BY(PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
-                                            PAGE_SIZE);
+            RealBaseAddress = ULONGLONG_ALIGN_DOWN_BY(
+                                PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
+                                PAGE_SIZE);
 
             /* Calculate the length after aligning the base */
             RealSize = PcBiosMemoryMap[PcBiosMapCount].BaseAddress +
                        PcBiosMemoryMap[PcBiosMapCount].Length - RealBaseAddress;
-            RealSize = ALIGN_UP_BY(RealSize, PAGE_SIZE);
+            RealSize = ULONGLONG_ALIGN_UP_BY(RealSize, PAGE_SIZE);
         }
 
         /* Check if we can add this descriptor */
@@ -359,6 +367,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
 
         PcBiosMapCount++;
 
+nextRange:
         /* If the continuation value is zero,
          * then this was the last entry, so we're done. */
         if (Regs.x.ebx == 0x00000000)
