@@ -28,101 +28,6 @@ PVOID g_pfnSE_ProcessDying;
 
 /* FUNCTIONS *****************************************************************/
 
-/* NOTE: Remove this one once our actctx support becomes better */
-NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fullname )
-{
-    static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s','\\'};
-    static const WCHAR dotManifestW[] = {'.','m','a','n','i','f','e','s','t',0};
-
-    ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION *info;
-    ACTCTX_SECTION_KEYED_DATA data;
-    UNICODE_STRING nameW;
-    NTSTATUS status;
-    SIZE_T needed, size = 1024;
-    WCHAR *p;
-
-    RtlInitUnicodeString( &nameW, libname );
-    data.cbSize = sizeof(data);
-    status = RtlFindActivationContextSectionString( FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX, NULL,
-                                                    ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION,
-                                                    &nameW, &data );
-    if (status != STATUS_SUCCESS) return status;
-
-    for (;;)
-    {
-        if (!(info = RtlAllocateHeap( RtlGetProcessHeap(), 0, size )))
-        {
-            status = STATUS_NO_MEMORY;
-            goto done;
-        }
-        status = RtlQueryInformationActivationContext( 0, data.hActCtx, &data.ulAssemblyRosterIndex,
-                                                       AssemblyDetailedInformationInActivationContext,
-                                                       info, size, &needed );
-        if (status == STATUS_SUCCESS) break;
-        if (status != STATUS_BUFFER_TOO_SMALL) goto done;
-        RtlFreeHeap( RtlGetProcessHeap(), 0, info );
-        size = needed;
-    }
-
-    DPRINT("manifestpath === %S\n", info->lpAssemblyManifestPath);
-    DPRINT("DirectoryName === %S\n", info->lpAssemblyDirectoryName);
-    if (!info->lpAssemblyManifestPath || !info->lpAssemblyDirectoryName)
-    {
-        status = STATUS_SXS_KEY_NOT_FOUND;
-        goto done;
-    }
-
-    if ((p = wcsrchr( info->lpAssemblyManifestPath, '\\' )))
-    {
-        DWORD dirlen = info->ulAssemblyDirectoryNameLength / sizeof(WCHAR);
-
-        p++;
-        if (_wcsnicmp( p, info->lpAssemblyDirectoryName, dirlen ) || wcsicmp( p + dirlen, dotManifestW ))
-        {
-            /* manifest name does not match directory name, so it's not a global
-             * windows/winsxs manifest; use the manifest directory name instead */
-            dirlen = p - info->lpAssemblyManifestPath;
-            needed = (dirlen + 1) * sizeof(WCHAR) + nameW.Length;
-
-            p = fullname;
-            /*if (!(*fullname = p = RtlAllocateHeap( GetProcessHeap(), 0, needed )))
-            {
-                status = STATUS_NO_MEMORY;
-                goto done;
-            }*/
-            memcpy( p, info->lpAssemblyManifestPath, dirlen * sizeof(WCHAR) );
-            p += dirlen;
-            wcscpy( p, libname );
-            goto done;
-        }
-    }
-
-    needed = (wcslen(SharedUserData->NtSystemRoot) * sizeof(WCHAR) +
-              sizeof(winsxsW) + info->ulAssemblyDirectoryNameLength + nameW.Length + 2*sizeof(WCHAR));
-
-    p = fullname;
-    //if (!(*fullname = p = RtlAllocateHeap( GetProcessHeap(), 0, needed )))
-    //{
-        //status = STATUS_NO_MEMORY;
-        //goto done;
-    //}
-    wcscpy( p, SharedUserData->NtSystemRoot );
-    p += wcslen(p);
-    memcpy( p, winsxsW, sizeof(winsxsW) );
-    p += sizeof(winsxsW) / sizeof(WCHAR);
-    memcpy( p, info->lpAssemblyDirectoryName, info->ulAssemblyDirectoryNameLength );
-    p += info->ulAssemblyDirectoryNameLength / sizeof(WCHAR);
-    *p++ = '\\';
-    wcscpy( p, libname );
-
-done:
-    RtlFreeHeap( RtlGetProcessHeap(), 0, info );
-    RtlReleaseActivationContext( data.hActCtx );
-    DPRINT("%S\n", fullname);
-    return status;
-}
-
-
 NTSTATUS
 NTAPI
 LdrpAllocateUnicodeString(IN OUT PUNICODE_STRING StringOut,
@@ -214,19 +119,30 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     PIMAGE_IMPORT_DESCRIPTOR ImportEntry;
     PIMAGE_THUNK_DATA FirstThunk;
     PLDR_DATA_TABLE_ENTRY Entry;
-    PUNICODE_STRING ImportNameUnic;
+    PUNICODE_STRING ImportNameUnic, RedirectedImportName;
     ANSI_STRING ImportNameAnsi;
     LPSTR ImportName;
     ULONG ImportSize;
     NTSTATUS Status;
     ULONG i;
+    BOOLEAN RedirectedDll;
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
+
+    /* Set up the Act Ctx */
+    ActCtx.Size = sizeof(ActCtx);
+    ActCtx.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
+    RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
+
+    /* Activate the ActCtx */
+    RtlActivateActivationContextUnsafeFast(&ActCtx,
+                                           LdrEntry->EntryPointActivationContext);
 
     /* Check the action we need to perform */
     if ((Flags == LDRP_UPDATE_REFCOUNT) || (Flags == LDRP_UPDATE_PIN))
     {
         /* Make sure entry is not being loaded already */
         if (LdrEntry->Flags & LDRP_LOAD_IN_PROGRESS)
-            return;
+            goto done;
 
         LdrEntry->Flags |= LDRP_LOAD_IN_PROGRESS;
     }
@@ -234,7 +150,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     {
         /* Make sure the entry is not being unloaded already */
         if (LdrEntry->Flags & LDRP_UNLOAD_IN_PROGRESS)
-            return;
+            goto done;
 
         LdrEntry->Flags |= LDRP_UNLOAD_IN_PROGRESS;
     }
@@ -267,54 +183,38 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 
             if (NT_SUCCESS(Status))
             {
-                if (LdrpCheckForLoadedDll(NULL,
-                                          ImportNameUnic,
-                                          TRUE,
-                                          FALSE,
-                                          &Entry))
-                {
-                    if (Entry->LoadCount != 0xFFFF)
-                    {
-                        /* Perform the required action */
-                        switch (Flags)
-                        {
-                        case LDRP_UPDATE_REFCOUNT:
-                            Entry->LoadCount++;
-                            break;
-                        case LDRP_UPDATE_DEREFCOUNT:
-                            Entry->LoadCount--;
-                            break;
-                        case LDRP_UPDATE_PIN:
-                            Entry->LoadCount = 0xFFFF;
-                            break;
-                        }
+                RedirectedDll = FALSE;
+                RedirectedImportName = ImportNameUnic;
 
-                        /* Show snaps */
-                        if (ShowSnaps)
-                        {
-                            DPRINT1("LDR: Flags %lu  %wZ (%lx)\n", Flags, ImportNameUnic, Entry->LoadCount);
-                        }
-                    }
+                /* Check if the SxS Assemblies specify another file */
+                Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
+                                                                  ImportNameUnic,
+                                                                  &LdrApiDefaultExtension,
+                                                                  UpdateString,
+                                                                  NULL,
+                                                                  &RedirectedImportName,
+                                                                  NULL,
+                                                                  NULL,
+                                                                  NULL);
 
-                    /* Recurse into this entry */
-                    LdrpUpdateLoadCount3(Entry, Flags, UpdateString);
-                }
-            }
-
-            /* Go through forwarders */
-            NewImportForwarder = (PIMAGE_BOUND_FORWARDER_REF)(BoundEntry + 1);
-            for (i = 0; i < BoundEntry->NumberOfModuleForwarderRefs; i++)
-            {
-                ImportName = (LPSTR)FirstEntry + NewImportForwarder->OffsetModuleName;
-
-                RtlInitAnsiString(&ImportNameAnsi, ImportName);
-                Status = RtlAnsiStringToUnicodeString(ImportNameUnic, &ImportNameAnsi, FALSE);
+                /* Check success */
                 if (NT_SUCCESS(Status))
                 {
+                    /* Let Ldrp know */
+                    if (ShowSnaps)
+                    {
+                        DPRINT1("LDR: %Z got redirected to %wZ\n", &ImportNameAnsi, RedirectedImportName);
+                    }
+
+                    RedirectedDll = TRUE;
+                }
+
+                if (RedirectedDll || Status == STATUS_SXS_KEY_NOT_FOUND)
+                {
                     if (LdrpCheckForLoadedDll(NULL,
-                                              ImportNameUnic,
+                                              RedirectedImportName,
                                               TRUE,
-                                              FALSE,
+                                              RedirectedDll,
                                               &Entry))
                     {
                         if (Entry->LoadCount != 0xFFFF)
@@ -336,13 +236,105 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                             /* Show snaps */
                             if (ShowSnaps)
                             {
-                                DPRINT1("LDR: Flags %lu  %wZ (%lx)\n", Flags, ImportNameUnic, Entry->LoadCount);
+                                DPRINT1("LDR: Flags %lu  %wZ (%lx)\n", Flags, RedirectedImportName, Entry->LoadCount);
                             }
                         }
 
                         /* Recurse into this entry */
                         LdrpUpdateLoadCount3(Entry, Flags, UpdateString);
                     }
+                    else if (RedirectedDll)
+                    {
+                        DPRINT1("LDR: LdrpCheckForLoadedDll failed for redirected dll %wZ\n", RedirectedImportName);
+                    }
+                }
+                else
+                {
+                    /* Unrecoverable SxS failure */
+                    DPRINT1("LDR: RtlDosApplyFileIsolationRedirection_Ustr failed with status %x for dll %wZ\n", Status, ImportNameUnic);
+                }
+
+            }
+
+            /* Go through forwarders */
+            NewImportForwarder = (PIMAGE_BOUND_FORWARDER_REF)(BoundEntry + 1);
+            for (i = 0; i < BoundEntry->NumberOfModuleForwarderRefs; i++)
+            {
+                ImportName = (LPSTR)FirstEntry + NewImportForwarder->OffsetModuleName;
+
+                RtlInitAnsiString(&ImportNameAnsi, ImportName);
+                Status = RtlAnsiStringToUnicodeString(ImportNameUnic, &ImportNameAnsi, FALSE);
+                if (NT_SUCCESS(Status))
+                {
+                    RedirectedDll = FALSE;
+                    RedirectedImportName = ImportNameUnic;
+
+                    /* Check if the SxS Assemblies specify another file */
+                    Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
+                                                                      ImportNameUnic,
+                                                                      &LdrApiDefaultExtension,
+                                                                      UpdateString,
+                                                                      NULL,
+                                                                      &RedirectedImportName,
+                                                                      NULL,
+                                                                      NULL,
+                                                                      NULL);
+                    /* Check success */
+                    if (NT_SUCCESS(Status))
+                    {
+                        if (ShowSnaps)
+                        {
+                            DPRINT1("LDR: %Z got redirected to %wZ\n", &ImportNameAnsi, RedirectedImportName);
+                        }
+                        /* Let Ldrp know */
+                        RedirectedDll = TRUE;
+                    }
+
+                    if (RedirectedDll || Status == STATUS_SXS_KEY_NOT_FOUND)
+                    {
+                        if (LdrpCheckForLoadedDll(NULL,
+                                                  RedirectedImportName,
+                                                  TRUE,
+                                                  RedirectedDll,
+                                                  &Entry))
+                        {
+                            if (Entry->LoadCount != 0xFFFF)
+                            {
+                                /* Perform the required action */
+                                switch (Flags)
+                                {
+                                case LDRP_UPDATE_REFCOUNT:
+                                    Entry->LoadCount++;
+                                    break;
+                                case LDRP_UPDATE_DEREFCOUNT:
+                                    Entry->LoadCount--;
+                                    break;
+                                case LDRP_UPDATE_PIN:
+                                    Entry->LoadCount = 0xFFFF;
+                                    break;
+                                }
+
+                                /* Show snaps */
+                                if (ShowSnaps)
+                                {
+                                    DPRINT1("LDR: Flags %lu  %wZ (%lx)\n", Flags, RedirectedImportName, Entry->LoadCount);
+                                }
+                            }
+
+                            /* Recurse into this entry */
+                            LdrpUpdateLoadCount3(Entry, Flags, UpdateString);
+                        }
+                        else if (RedirectedDll)
+                        {
+                            DPRINT1("LDR: LdrpCheckForLoadedDll failed with status %x for redirected dll %wZ\n", Status, RedirectedImportName);
+                        }
+                    }
+                    else
+                    {
+                        /* Unrecoverable SxS failure */
+                        DPRINT1("LDR: RtlDosApplyFileIsolationRedirection_Ustr failed  with status %x for dll %wZ\n", Status, ImportNameUnic);
+                    }
+
                 }
 
                 NewImportForwarder++;
@@ -352,7 +344,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
         }
 
         /* We're done */
-        return;
+        goto done;
     }
 
     /* Check oldstyle import descriptor */
@@ -380,44 +372,87 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
             Status = RtlAnsiStringToUnicodeString(ImportNameUnic, &ImportNameAnsi, FALSE);
             if (NT_SUCCESS(Status))
             {
-                if (LdrpCheckForLoadedDll(NULL,
-                                          ImportNameUnic,
-                                          TRUE,
-                                          FALSE,
-                                          &Entry))
-                {
-                    if (Entry->LoadCount != 0xFFFF)
-                    {
-                        /* Perform the required action */
-                        switch (Flags)
-                        {
-                        case LDRP_UPDATE_REFCOUNT:
-                            Entry->LoadCount++;
-                            break;
-                        case LDRP_UPDATE_DEREFCOUNT:
-                            Entry->LoadCount--;
-                            break;
-                        case LDRP_UPDATE_PIN:
-                            Entry->LoadCount = 0xFFFF;
-                            break;
-                        }
+                RedirectedDll = FALSE;
+                RedirectedImportName = ImportNameUnic;
 
-                        /* Show snaps */
-                        if (ShowSnaps)
-                        {
-                            DPRINT1("LDR: Flags %lu  %wZ (%lx)\n", Flags, ImportNameUnic, Entry->LoadCount);
-                        }
+                /* Check if the SxS Assemblies specify another file */
+                Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
+                                                                  ImportNameUnic,
+                                                                  &LdrApiDefaultExtension,
+                                                                  UpdateString,
+                                                                  NULL,
+                                                                  &RedirectedImportName,
+                                                                  NULL,
+                                                                  NULL,
+                                                                  NULL);
+                /* Check success */
+                if (NT_SUCCESS(Status))
+                {
+                    if (ShowSnaps)
+                    {
+                        DPRINT1("LDR: %Z got redirected to %wZ\n", &ImportNameAnsi, RedirectedImportName);
                     }
 
-                    /* Recurse */
-                    LdrpUpdateLoadCount3(Entry, Flags, UpdateString);
+                    /* Let Ldrp know */
+                    RedirectedDll = TRUE;
                 }
+
+                if (RedirectedDll || Status == STATUS_SXS_KEY_NOT_FOUND)
+                {
+                    if (LdrpCheckForLoadedDll(NULL,
+                                              RedirectedImportName,
+                                              TRUE,
+                                              RedirectedDll,
+                                              &Entry))
+                    {
+                        if (Entry->LoadCount != 0xFFFF)
+                        {
+                            /* Perform the required action */
+                            switch (Flags)
+                            {
+                            case LDRP_UPDATE_REFCOUNT:
+                                Entry->LoadCount++;
+                                break;
+                            case LDRP_UPDATE_DEREFCOUNT:
+                                Entry->LoadCount--;
+                                break;
+                            case LDRP_UPDATE_PIN:
+                                Entry->LoadCount = 0xFFFF;
+                                break;
+                            }
+
+                            /* Show snaps */
+                            if (ShowSnaps)
+                            {
+                                DPRINT1("LDR: Flags %lu  %wZ (%lx)\n", Flags, RedirectedImportName, Entry->LoadCount);
+                            }
+                        }
+
+                        /* Recurse */
+                        LdrpUpdateLoadCount3(Entry, Flags, UpdateString);
+                    }
+                    else if (RedirectedDll)
+                    {
+                        DPRINT1("LDR: LdrpCheckForLoadedDll failed for redirected dll %wZ\n", RedirectedImportName);
+                    }
+
+                }
+                else
+                {
+                    /* Unrecoverable SxS failure */
+                    DPRINT1("LDR: RtlDosApplyFileIsolationRedirection_Ustr failed for dll %wZ\n", ImportNameUnic);
+                }
+
             }
 
             /* Go to the next entry */
             ImportEntry++;
         }
     }
+
+done:
+    /* Release the context */
+    RtlDeactivateActivationContextUnsafeFast(&ActCtx);    
 }
 
 VOID
@@ -665,7 +700,6 @@ LdrpResolveDllName(PWSTR DllPath,
     PWCHAR NameBuffer, p1, p2 = 0;
     ULONG Length;
     ULONG BufSize = 500;
-    NTSTATUS Status;
 
     /* Allocate space for full DLL name */
     FullDllName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufSize + sizeof(UNICODE_NULL));
@@ -680,25 +714,14 @@ LdrpResolveDllName(PWSTR DllPath,
 
     if (!Length || Length > BufSize)
     {
-        /* HACK: Try to find active context dll */
-        Status = find_actctx_dll(DllName, FullDllName->Buffer);
-        if(Status == STATUS_SUCCESS)
+        if (ShowSnaps)
         {
-            Length = wcslen(FullDllName->Buffer) * sizeof(WCHAR);
-            DPRINT1("found %S for %S\n", FullDllName->Buffer, DllName);
+            DPRINT1("LDR: LdrResolveDllName - Unable to find ");
+            DPRINT1("%ws from %ws\n", DllName, DllPath ? DllPath : LdrpDefaultPath.Buffer);
         }
-        else
-        {
-            /* NOTE: This code should remain after removing the hack */
-            if (ShowSnaps)
-            {
-                DPRINT1("LDR: LdrResolveDllName - Unable to find ");
-                DPRINT1("%ws from %ws\n", DllName, DllPath ? DllPath : LdrpDefaultPath.Buffer);
-            }
 
-            RtlFreeUnicodeString(FullDllName);
-            return FALSE;
-        }
+        RtlFreeUnicodeString(FullDllName);
+        return FALSE;
     }
 
     /* Construct full DLL name */
@@ -1038,7 +1061,7 @@ LdrpMapDll(IN PWSTR SearchPath OPTIONAL,
     }
 
     /* Check if we have a known dll directory */
-    if (LdrpKnownDllObjectDirectory)
+    if (LdrpKnownDllObjectDirectory && Redirect == FALSE)
     {
         /* Check if the path is full */
         while (*p1)
@@ -1977,8 +2000,10 @@ LdrpCheckForLoadedDll(IN PWSTR DllPath,
 
     /* Look in the hash table if flag was set */
 lookinhash:
-    if (Flag)
+    if (Flag  /* the second check is a hack */ && !RedirectedDll)
     {
+        /* FIXME: if we get redirected dll it means that we also get a full path so we need to find its filename for the hash lookup */
+
         /* Get hash index */
         HashIndex = LDR_GET_HASH_ENTRY(DllName->Buffer[0]);
 
@@ -2006,58 +2031,54 @@ lookinhash:
         return FALSE;
     }
 
-    /* Check if there is a full path in this DLL */
-    wc = DllName->Buffer;
-    while (*wc)
+    /* Check if this is a redirected DLL */
+    if (RedirectedDll)
     {
-        /* Check for a slash in the current position*/
-        if ((*wc == L'\\') || (*wc == L'/'))
+        /* Redirected dlls already have a full path */
+        FullPath = TRUE;
+        FullDllName = *DllName;
+    }
+    else
+    {
+        /* Check if there is a full path in this DLL */
+        wc = DllName->Buffer;
+        while (*wc)
         {
-            /* Found the slash, so dll name contains path */
-            FullPath = TRUE;
-
-            /* Setup full dll name string */
-            FullDllName.Buffer = NameBuf;
-
-            /* FIXME: This is from the Windows 2000 loader, not XP/2003, we should call LdrpSearchPath */
-            Length = RtlDosSearchPath_U(DllPath ? DllPath : LdrpDefaultPath.Buffer,
-                                        DllName->Buffer,
-                                        NULL,
-                                        sizeof(NameBuf) - sizeof(UNICODE_NULL),
-                                        FullDllName.Buffer,
-                                        NULL);
-
-            /* Check if that was successful */
-            if (!(Length) || (Length > (sizeof(NameBuf) - sizeof(UNICODE_NULL))))
+            /* Check for a slash in the current position*/
+            if ((*wc == L'\\') || (*wc == L'/'))
             {
-                /* HACK: Try to find active context dll */
-                Status = find_actctx_dll(DllName->Buffer, FullDllName.Buffer);
-                if(Status == STATUS_SUCCESS)
-                {
-                    Length = wcslen(FullDllName.Buffer) * sizeof(WCHAR);
-                    DPRINT1("found %S for %S\n", FullDllName.Buffer, DllName->Buffer);
-                }
-                else
-                {
+                /* Found the slash, so dll name contains path */
+                FullPath = TRUE;
 
-                if (ShowSnaps)
+                /* Setup full dll name string */
+                FullDllName.Buffer = NameBuf;
+
+                /* FIXME: This is from the Windows 2000 loader, not XP/2003, we should call LdrpSearchPath */
+                Length = RtlDosSearchPath_U(DllPath ? DllPath : LdrpDefaultPath.Buffer,
+                                            DllName->Buffer,
+                                            NULL,
+                                            sizeof(NameBuf) - sizeof(UNICODE_NULL),
+                                            FullDllName.Buffer,
+                                            NULL);
+
+                /* Check if that was successful */
+                if (!(Length) || (Length > (sizeof(NameBuf) - sizeof(UNICODE_NULL))))
                 {
-                    DPRINT1("LDR: LdrpCheckForLoadedDll - Unable To Locate %wZ: 0x%08x\n",
-                        &DllName, Length);
+                    if (ShowSnaps)
+                    {
+                        DPRINT1("LDR: LdrpCheckForLoadedDll - Unable To Locate %wZ: 0x%08x\n",
+                            &DllName, Length);
+                    }
                 }
 
-                /* Return failure */
-                return FALSE;
-                }
+                /* Full dll name is found */
+                FullDllName.Length = Length;
+                FullDllName.MaximumLength = FullDllName.Length + sizeof(UNICODE_NULL);
+                break;
             }
 
-            /* Full dll name is found */
-            FullDllName.Length = Length;
-            FullDllName.MaximumLength = FullDllName.Length + sizeof(UNICODE_NULL);
-            break;
+            wc++;
         }
-
-        wc++;
     }
 
     /* Go check the hash table */
