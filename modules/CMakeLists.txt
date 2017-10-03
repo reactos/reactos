@@ -1,13 +1,13 @@
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/rostests/)
+if(ENABLE_ROSTESTS)
     add_subdirectory(rostests)
 endif()
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/rosapps/)
+if(ENABLE_ROSAPPS)
     add_subdirectory(rosapps)
 endif()
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/wallpapers/)
+if(ENABLE_WALLPAPERS)
     add_subdirectory(wallpapers)
 endif()
 
