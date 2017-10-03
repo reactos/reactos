@@ -30,7 +30,7 @@ from our download page at: http://www.reactos.org/wiki/Build_Environment/
 Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+, together
 with separate installations of CMake and the Ninja build utility.
 
-### Building binaries
+#### Binaries
 
 To build ReactOS run `ninja`, or alternatively run
 `make` if you are using the Make utility, from the top directory.
@@ -38,7 +38,7 @@ __NOTE:__ In the other examples listed in the following, similar modification
 holds if you are using the Make utility instead of Ninja.
 If you are using RosBE, follow on-screen instructions.
 
-### Building bootable images
+#### Bootable images
 
 To build a bootable CD image run `ninja bootcd` from the
 top directory. This will create a CD image with a filename, `ReactOS.iso`, in
