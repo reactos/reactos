@@ -4041,14 +4041,48 @@ Return Value:
         goto SetStatusAndReturn;
     }
 
-    if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_DEVICE_NAME || 
-        irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_UNIQUE_ID ||
+    if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_UNIQUE_ID ||
         irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME) {
+
         UNIMPLEMENTED;
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         status = STATUS_NOT_IMPLEMENTED;
+        goto SetStatusAndReturn;
+    }
+
+    if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_DEVICE_NAME) {
+
+        PMOUNTDEV_NAME name = Irp->AssociatedIrp.SystemBuffer;
+
+        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUNTDEV_NAME)) {
+
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            status = STATUS_BUFFER_TOO_SMALL;
+            goto SetStatusAndReturn;
+        }
+
+        RtlZeroMemory(name, sizeof(MOUNTDEV_NAME));
+        name->NameLength = deviceExtension->DeviceName.Length;
+
+        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(USHORT) + name->NameLength) {
+
+            Irp->IoStatus.Information = sizeof(MOUNTDEV_NAME);
+            Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            status = STATUS_BUFFER_OVERFLOW;
+            goto SetStatusAndReturn;
+        }
+
+        RtlCopyMemory(name->Name, deviceExtension->DeviceName.Buffer,
+                      name->NameLength);
+        status = STATUS_SUCCESS;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = sizeof(USHORT) + name->NameLength;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         goto SetStatusAndReturn;
     }
 
@@ -4691,19 +4725,13 @@ Return Value:
         } else {
             deviceExtension->PhysicalDevice = deviceObject;
         }
+
+        deviceExtension->DeviceName = ntUnicodeString;
     }
 
     deviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
     *DeviceObject = deviceObject;
-
-    RtlFreeUnicodeString(&ntUnicodeString);
-
-    //
-    // Indicate the ntUnicodeString is free.
-    //
-
-    ntUnicodeString.Buffer = NULL;
 
     return status;
 }

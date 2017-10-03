@@ -132,6 +132,7 @@ typedef struct _DEVICE_EXTENSION
   HANDLE MediaChangeEventHandle;
   BOOLEAN MediaChangeNoMedia;
   ULONG MediaChangeCount;
+  UNICODE_STRING DeviceName;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 
