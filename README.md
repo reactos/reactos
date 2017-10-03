@@ -6,6 +6,7 @@ Current version: __0.4.6__
 ## Quick Links
 - [Website](https://reactos.org)
 - [Wiki](https://reactos.org/wiki)
+- [Forum](https://reactos.org/forum)
 - [JIRA Bug Tracker](https://jira.reactos.org/issues)
 - [ReactOS Git mirror](https://git.reactos.org)
 - [Testman](https://reactos.org/testman/)
@@ -30,17 +31,17 @@ from our download page at: http://www.reactos.org/wiki/Build_Environment/
 
 Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: https://www.reactos.org/wiki/Building_with_MSVC
 
-#### Binaries
+### Binaries
 
 To build ReactOS you must use run `configure` script in the directory you want to have builds. Choose `configure.cmd` or `configure.sh` depending on your system. Then run `ninja <modulename>` to build a module you want or just `ninja` to build all modules.
 
-#### Bootable images
+### Bootable images
 
 To build a bootable CD image run `ninja bootcd` from the
 build directory. This will create a CD image with a filename, `bootcd.iso`, in
 the top directory.
 
-See more at http://www.reactos.org/wiki/Building_ReactOS
+See ["Building ReactOS"](http://www.reactos.org/wiki/Building_ReactOS) for more details.
 
 ## Installing
 
@@ -53,7 +54,15 @@ needed.
 To install ReactOS from the bootable CD distribution, extract the archive
 contents. Then burn the CD image, boot from it, and follow instructions.
 
-Check [INSTALL](INSTALL) for more details.
+See ["Installing ReactOS"](https://www.reactos.org/wiki/Installing_ReactOS) Wiki page or [INSTALL](INSTALL) for more details.
+
+## Testing
+
+If you discover a bug in ReactOS search on JIRA first - it might be reported already. If not report the bug providing logs and as many information as possible. 
+
+See ["File Bugs"](https://www.reactos.org/wiki/File_Bugs) for a guide.
+
+__NOTE:__ The bug tracker is _not_ for discussions. Please use `#reactos` Freenode IRC channel or our [forum](https://reactos.org/forum).
 
 ## More information
 
@@ -75,4 +84,6 @@ Also see the [CREDITS](CREDITS) file for others.
 
 ## Code mirrors
 
-The main development is done on [GitHub](https://github.com/reactos/reactos). We have an [alternative mirror](https://git.reactos.org/?p=reactos.git;a=summary) it case GitHub is down. There is also an obsolete [SVN repository](https://svn.reactos.org/svn/reactos?view=revision) that is kept for historical purposes.
+The main development is done on [GitHub](https://github.com/reactos/reactos). We have an [alternative mirror](https://git.reactos.org/) it case GitHub is down. 
+
+There is also an obsolete [SVN archive repository](https://svn.reactos.org/svn/reactos?view=revision) that is kept for historical purposes.
