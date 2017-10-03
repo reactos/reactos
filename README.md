@@ -34,6 +34,7 @@ with separate installations of CMake and the Ninja build utility.
 
 To build ReactOS run `ninja`, or alternatively run
 `make` if you are using the Make utility, from the top directory.
+
 __NOTE:__ In the other examples listed in the following, similar modification
 holds if you are using the Make utility instead of Ninja.
 If you are using RosBE, follow on-screen instructions.
@@ -51,7 +52,9 @@ See more at http://www.reactos.org/wiki/Building_ReactOS
 ReactOS is a Free and Open Source operating system based on the Windows architecture, 
 providing support for existing applications and drivers, and an alternative to the current dominant consumer operating system.
 
-It is not another wrapper built on Linux, like WINE. It does not attempt or plan to compete with WINE; in fact, the user-mode part of ReactOS is almost entirely WINE-based and our two teams have cooperated closely in the past. ReactOS is also not "yet another OS". It does not attempt to be a third player, like SkyOS or any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
+It is not another wrapper built on Linux, like WINE. It does not attempt or plan to compete with WINE; in fact, the user-mode part of ReactOS is almost entirely WINE-based and our two teams have cooperated closely in the past. 
+
+ReactOS is also not "yet another OS". It does not attempt to be a third player, like SkyOS or any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
 
 More information is available at: https://www.reactos.org.
 
