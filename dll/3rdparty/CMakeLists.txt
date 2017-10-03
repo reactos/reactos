@@ -1,7 +1,7 @@
 
-if(NSWPAT)
-    add_subdirectory(dxtn)
-endif()
+
+add_subdirectory(dxtn)
+
 
 add_subdirectory(libjpeg)
 add_subdirectory(libpng)
