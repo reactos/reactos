@@ -61,7 +61,7 @@ Also see the [media\doc](/media/doc/) subdirectory for some sparse notes.
 
 ## Who is responsible
 
-See the [CREDITS] file.
+See the [CREDITS](CREDITS) file.
 
 ## ReactOS SVN and GIT mirrors
 
