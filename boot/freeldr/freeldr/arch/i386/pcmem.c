@@ -129,7 +129,7 @@ GetExtendedMemoryConfiguration(ULONG* pMemoryAtOneMB /* in KB */, ULONG* pMemory
     *pMemoryAtOneMB = (*pMemoryAtOneMB << 8);
 
     TRACE("Int15h Failed\n");
-    TRACE("CMOS reports: 0x%x\n", *pMemoryAtOneMB);
+    TRACE("CMOS reports: 0x%lx\n", *pMemoryAtOneMB);
 
     if (*pMemoryAtOneMB != 0)
     {
@@ -144,7 +144,7 @@ PcMemGetConventionalMemorySize(VOID)
 {
     REGS Regs;
 
-    TRACE("GetConventionalMemorySize()\n");
+    TRACE("PcMemGetConventionalMemorySize()\n");
 
     /* Int 12h
      * BIOS - GET MEMORY SIZE
@@ -204,9 +204,10 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
     ULONGLONG RealBaseAddress, EndAddress, RealSize;
     TYPE_OF_MEMORY MemoryType;
     ULONG Size, RequiredSize;
+
     ASSERT(PcBiosMapCount == 0);
 
-    TRACE("GetBiosMemoryMap()\n");
+    TRACE("PcMemGetBiosMemoryMap()\n");
 
     /* Make sure the usable memory is large enough. To do this we check the 16
        bit value at address 0x413 inside the BDA, which gives us the usable size
@@ -219,8 +220,8 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             MEMORY_INIT_FAILURE,
             __FILE__,
             __LINE__,
-            "The BIOS reported a usable memory range up to 0x%x, which is too small!\n"
-            "Required size is 0x%x\n\n"
+            "The BIOS reported a usable memory range up to 0x%lx, which is too small!\n"
+            "Required size is 0x%lx\n\n"
             "If you see this, please report to the ReactOS team!",
             Size, RequiredSize);
     }
@@ -256,17 +257,26 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         Regs.w.di = BIOSCALLBUFOFFSET;
         Int386(0x15, &Regs, &Regs);
 
-        TRACE("Memory Map Entry %d\n", PcBiosMapCount);
+        TRACE("Memory Map Entry %lu\n", PcBiosMapCount);
         TRACE("Int15h AX=E820h\n");
-        TRACE("EAX = 0x%x\n", Regs.x.eax);
-        TRACE("EBX = 0x%x\n", Regs.x.ebx);
-        TRACE("ECX = 0x%x\n", Regs.x.ecx);
+        TRACE("EAX = 0x%lx\n", Regs.x.eax);
+        TRACE("EBX = 0x%lx\n", Regs.x.ebx);
+        TRACE("ECX = 0x%lx\n", Regs.x.ecx);
         TRACE("CF set = %s\n", (Regs.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
 
         /* If the BIOS didn't return 'SMAP' in EAX then
-         * it doesn't support this call. If CF is set, we're done */
-        if (Regs.x.eax != 0x534D4150 || !INT386_SUCCESS(Regs))
+         * it doesn't support this call. */
+        if (Regs.x.eax != 0x534D4150)
         {
+            WARN("BIOS doesn't support Int15h AX=E820h!\n\n");
+            break;
+        }
+
+        /* If the carry flag is set,
+         * then this call was past the last entry, so we're done. */
+        if (!INT386_SUCCESS(Regs))
+        {
+            TRACE("End of System Memory Map! (Past last)\n\n");
             break;
         }
 
@@ -297,6 +307,10 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             if (EndAddress <= RealBaseAddress)
             {
                 /* This doesn't span any page, so continue with next range */
+                TRACE("Skipping aligned range < PAGE_SIZE. (PcBiosMapCount = %lu, BaseAddress = %lu, Length = %lu)\n",
+                      PcBiosMapCount,
+                      PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
+                      PcBiosMemoryMap[PcBiosMapCount].Length);
                 continue;
             }
 
@@ -321,7 +335,19 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         }
 
         /* Check if we can add this descriptor */
-        if ((RealSize >= MM_PAGE_SIZE) && (PcMapCount < MaxMemoryMapSize))
+        if (RealSize < MM_PAGE_SIZE)
+        {
+            TRACE("Skipping aligned range < MM_PAGE_SIZE. (PcBiosMapCount = %lu, BaseAddress = %lu, Length = %lu)\n",
+                  PcBiosMapCount,
+                  PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
+                  PcBiosMemoryMap[PcBiosMapCount].Length);
+        }
+        else if (PcMapCount >= MaxMemoryMapSize)
+        {
+            ERR("PcMemoryMap is already full! (PcBiosMapCount = %lu, PcMapCount = %lu (>= %lu))\n",
+                PcBiosMapCount, PcMapCount, MaxMemoryMapSize);
+        }
+        else
         {
             /* Add the descriptor */
             PcMapCount = AddMemoryDescriptor(PcMemoryMap,
@@ -333,17 +359,16 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
 
         PcBiosMapCount++;
 
-        /* If the continuation value is zero or the
-         * carry flag is set then this was
-         * the last entry so we're done */
+        /* If the continuation value is zero,
+         * then this was the last entry, so we're done. */
         if (Regs.x.ebx == 0x00000000)
         {
-            TRACE("End Of System Memory Map!\n\n");
+            TRACE("End of System Memory Map! (Reset)\n\n");
             break;
         }
     }
 
-    TRACE("GetBiosMemoryMap end, PcBiosMapCount = %ld\n", PcBiosMapCount);
+    TRACE("PcMemGetBiosMemoryMap end: PcBiosMapCount = %lu\n", PcBiosMapCount);
     return PcBiosMapCount;
 }
 
@@ -415,6 +440,7 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
     ULONG ExtendedMemorySizeAtOneMB;
     ULONG ExtendedMemorySizeAtSixteenMB;
     ULONG EbdaBase, EbdaSize;
+
     TRACE("PcMemGetMemoryMap()\n");
 
     EntryCount = PcMemGetBiosMemoryMap(PcMemoryMap, MAX_BIOS_DESCRIPTORS);
