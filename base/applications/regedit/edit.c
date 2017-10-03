@@ -1279,6 +1279,36 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
         {
         }
     }
+    else if (EditBin == FALSE && type == REG_FULL_RESOURCE_DESCRIPTOR)
+    {
+        if (valueDataLen > 0)
+        {
+            resourceValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen + sizeof(ULONG));
+            if (resourceValueData == NULL)
+            {
+                error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+                goto done;
+            }
+
+            lRet = RegQueryValueExW(hKey, valueName, 0, 0, (LPBYTE)&resourceValueData->List[0], &valueDataLen);
+            if (lRet != ERROR_SUCCESS)
+            {
+                error(hwnd, IDS_BAD_VALUE, valueName);
+                goto done;
+            }
+
+            resourceValueData->Count = 1;
+            fullResourceIndex = 0;
+        }
+        else
+        {
+            resourceValueData = NULL;
+        }
+
+        if (DialogBoxW(0, MAKEINTRESOURCEW(IDD_EDIT_RESOURCE), hwnd, modify_resource_dlgproc) == IDOK)
+        {
+        }
+    }
     else if ((EditBin != FALSE) || (type == REG_NONE) || (type == REG_BINARY))
     {
         if(valueDataLen > 0)
