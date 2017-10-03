@@ -38,8 +38,7 @@ To build ReactOS you must use run `configure` script in the directory you want t
 ### Bootable images
 
 To build a bootable CD image run `ninja bootcd` from the
-build directory. This will create a CD image with a filename, `bootcd.iso`, in
-the top directory.
+build directory. This will create a CD image with a filename `bootcd.iso`.
 
 See ["Building ReactOS"](http://www.reactos.org/wiki/Building_ReactOS) for more details.
 
