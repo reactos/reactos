@@ -8,6 +8,7 @@
 
 #include <ntddk.h>
 #include <ntdddisk.h>
+#include <mountdev.h>
 #include <scsi.h>
 #include <include/class2.h>
 #include <stdio.h>
@@ -4037,6 +4038,17 @@ Return Value:
         Irp->IoStatus.Status = STATUS_SUCCESS;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         status = STATUS_SUCCESS;
+        goto SetStatusAndReturn;
+    }
+
+    if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_DEVICE_NAME || 
+        irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_UNIQUE_ID ||
+        irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME) {
+        UNIMPLEMENTED;
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        status = STATUS_NOT_IMPLEMENTED;
         goto SetStatusAndReturn;
     }
 
