@@ -270,7 +270,7 @@ public:
         bool isEmpty1 = (rest1->mkid.cb == 0);
         bool isEmpty2 = (rest2->mkid.cb == 0);
 
-        if (isEmpty1 || isEmpty1)
+        if (isEmpty1 || isEmpty2)
             return MAKE_COMPARE_HRESULT(isEmpty2 - isEmpty1);
 
         LPCITEMIDLIST first1 = ILCloneFirst(pidl1);
