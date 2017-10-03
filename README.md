@@ -23,10 +23,8 @@ The code of ReactOS is licensed under [GNU GPL 2.0+](https://spdx.org/licenses/G
 
 ## Building ReactOS
 
-### Prerequisites
-
-To build the system it is strongly advised to use the ReactOS Build Environment
-(RosBE). Up-to-date versions for Windows and for Unix/GNU-Linux are available
+To build the system it is strongly advised to use the _ReactOS Build Environment
+(RosBE)._ Up-to-date versions for Windows and for Unix/GNU-Linux are available
 from our download page at: http://www.reactos.org/wiki/Build_Environment/
 
 Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+, together
@@ -34,16 +32,16 @@ with separate installations of CMake and the Ninja build utility.
 
 ### Building binaries
 
-To build ReactOS run 'ninja' (without the quotes), or alternatively run
-'make' if you are using the Make utility, from the top directory.
-NOTE: In the other examples listed in the following, similar modification
+To build ReactOS run `ninja`, or alternatively run
+`make` if you are using the Make utility, from the top directory.
+__NOTE:__ In the other examples listed in the following, similar modification
 holds if you are using the Make utility instead of Ninja.
 If you are using RosBE, follow on-screen instructions.
 
 ### Building bootable images
 
-To build a bootable CD image run 'ninja bootcd' (without the quotes) from the
-top directory. This will create a CD image with a filename, ReactOS.iso, in
+To build a bootable CD image run `ninja bootcd` from the
+top directory. This will create a CD image with a filename, `ReactOS.iso`, in
 the top directory.
 
 See more at http://www.reactos.org/wiki/Building_ReactOS
