@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity type="win32" name="ntdll_apitest" version="1.0.0.0"/>
+    <dependency>
+         <dependentAssembly>
+            <assemblyIdentity type="win32" name="Microsoft.Windows.GdiPlus" version="1.0.100.0" language="*" processorArchitecture="x86" publicKeyToken="6595b64144ccf1df"/>
+         </dependentAssembly>
+    </dependency>
+    <dependency>
+         <dependentAssembly>
+            <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="5.82.0.0" language="*" processorArchitecture="x86" publicKeyToken="6595b64144ccf1df"/>
+         </dependentAssembly>
+    </dependency>
+    <file name="deptest.dll"/>
+    <file name="adllfile.dll"/>
+</assembly>
