@@ -27,7 +27,7 @@ The code of ReactOS is licensed under [GNU GPL 2.0+](https://spdx.org/licenses/G
 
 To build the system it is strongly advised to use the _ReactOS Build Environment
 (RosBE)._ Up-to-date versions for Windows and for Unix/GNU-Linux are available
-from our download page at: http://www.reactos.org/wiki/Build_Environment/
+from our download page at: http://www.reactos.org/wiki/Build_Environment
 
 Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: https://www.reactos.org/wiki/Building_with_MSVC
 
