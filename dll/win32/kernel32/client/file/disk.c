@@ -383,103 +383,117 @@ GetDiskFreeSpaceExW(IN LPCWSTR lpDirectoryName OPTIONAL,
                     OUT PULARGE_INTEGER lpTotalNumberOfBytes,
                     OUT PULARGE_INTEGER lpTotalNumberOfFreeBytes)
 {
-    union
-    {
-        FILE_FS_SIZE_INFORMATION FsSize;
-        FILE_FS_FULL_SIZE_INFORMATION FsFullSize;
-    } FsInfo;
-    IO_STATUS_BLOCK IoStatusBlock;
-    ULARGE_INTEGER BytesPerCluster;
-    HANDLE hFile;
+    PCWSTR RootPath;
     NTSTATUS Status;
+    HANDLE RootHandle;
+    UNICODE_STRING FileName;
+    DWORD BytesPerAllocationUnit;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    FILE_FS_SIZE_INFORMATION FileFsSize;
 
+    /* If no path provided, get root path */
+    RootPath = lpDirectoryName;
     if (lpDirectoryName == NULL)
-        lpDirectoryName = L"\\";
-
-    hFile = InternalOpenDirW(lpDirectoryName, FALSE);
-    if (INVALID_HANDLE_VALUE == hFile)
     {
+        RootPath = L"\\";
+    }
+
+    /* Convert the path to NT path */
+    if (!RtlDosPathNameToNtPathName_U(RootPath, &FileName, NULL, NULL))
+    {
+        SetLastError(ERROR_PATH_NOT_FOUND);
         return FALSE;
     }
 
-    if (lpFreeBytesAvailableToCaller != NULL || lpTotalNumberOfBytes != NULL)
+    /* Open it for disk space query! */
+    InitializeObjectAttributes(&ObjectAttributes, &FileName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenFile(&RootHandle, SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_FREE_SPACE_QUERY);
+    if (!NT_SUCCESS(Status))
     {
-        /* To get the free space available to the user associated with the
-           current thread, try FileFsFullSizeInformation. If this is not
-           supported by the file system, fall back to FileFsSize */
+        BaseSetLastNTError(Status);
+        /* If error conversion lead to file not found, override to use path not found
+         * which is more accurate
+         */
+        if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            SetLastError(ERROR_PATH_NOT_FOUND);
+        }
 
-        Status = NtQueryVolumeInformationFile(hFile,
-                                              &IoStatusBlock,
-                                              &FsInfo.FsFullSize,
-                                              sizeof(FsInfo.FsFullSize),
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+
+        return FALSE;
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+
+    /* If user asks for lpTotalNumberOfFreeBytes, try to use full size information */
+    if (lpTotalNumberOfFreeBytes != NULL)
+    {
+        FILE_FS_FULL_SIZE_INFORMATION FileFsFullSize;
+
+        /* Issue the full fs size request */
+        Status = NtQueryVolumeInformationFile(RootHandle, &IoStatusBlock, &FileFsFullSize,
+                                              sizeof(FILE_FS_FULL_SIZE_INFORMATION),
                                               FileFsFullSizeInformation);
-
+        /* If it succeed, complete out buffers */
         if (NT_SUCCESS(Status))
         {
-            /* Close the handle before returning data
-               to avoid a handle leak in case of a fault! */
-            CloseHandle(hFile);
+            /* We can close here, we'll return */
+            NtClose(RootHandle);
 
-            BytesPerCluster.QuadPart =
-                FsInfo.FsFullSize.BytesPerSector * FsInfo.FsFullSize.SectorsPerAllocationUnit;
+            /* Compute the size of an AU */
+            BytesPerAllocationUnit = FileFsFullSize.SectorsPerAllocationUnit * FileFsFullSize.BytesPerSector;
 
+            /* And then return what was asked */
             if (lpFreeBytesAvailableToCaller != NULL)
             {
-                lpFreeBytesAvailableToCaller->QuadPart =
-                    BytesPerCluster.QuadPart * FsInfo.FsFullSize.CallerAvailableAllocationUnits.QuadPart;
+                lpFreeBytesAvailableToCaller->QuadPart = FileFsFullSize.CallerAvailableAllocationUnits.QuadPart * BytesPerAllocationUnit;
             }
 
             if (lpTotalNumberOfBytes != NULL)
             {
-                lpTotalNumberOfBytes->QuadPart =
-                    BytesPerCluster.QuadPart * FsInfo.FsFullSize.TotalAllocationUnits.QuadPart;
+                lpTotalNumberOfBytes->QuadPart = FileFsFullSize.TotalAllocationUnits.QuadPart * BytesPerAllocationUnit;
             }
 
-            if (lpTotalNumberOfFreeBytes != NULL)
-            {
-                lpTotalNumberOfFreeBytes->QuadPart =
-                    BytesPerCluster.QuadPart * FsInfo.FsFullSize.ActualAvailableAllocationUnits.QuadPart;
-            }
+            /* No need to check for nullness ;-) */
+            lpTotalNumberOfFreeBytes->QuadPart = FileFsFullSize.ActualAvailableAllocationUnits.QuadPart * BytesPerAllocationUnit;
 
             return TRUE;
         }
     }
 
-    Status = NtQueryVolumeInformationFile(hFile,
-                                          &IoStatusBlock,
-                                          &FsInfo.FsSize,
-                                          sizeof(FsInfo.FsSize),
+    /* Otherwise, fallback to normal size information */
+    Status = NtQueryVolumeInformationFile(RootHandle, &IoStatusBlock,
+                                          &FileFsSize, sizeof(FILE_FS_SIZE_INFORMATION),
                                           FileFsSizeInformation);
-
-    /* Close the handle before returning data
-       to avoid a handle leak in case of a fault! */
-    CloseHandle(hFile);
-
+    NtClose(RootHandle);
     if (!NT_SUCCESS(Status))
     {
-        BaseSetLastNTError (Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
-    BytesPerCluster.QuadPart =
-        FsInfo.FsSize.BytesPerSector * FsInfo.FsSize.SectorsPerAllocationUnit;
+    /* Compute the size of an AU */
+    BytesPerAllocationUnit = FileFsSize.SectorsPerAllocationUnit * FileFsSize.BytesPerSector;
 
-    if (lpFreeBytesAvailableToCaller)
+    /* And then return what was asked, available is free, the same! */
+    if (lpFreeBytesAvailableToCaller != NULL)
     {
-        lpFreeBytesAvailableToCaller->QuadPart =
-            BytesPerCluster.QuadPart * FsInfo.FsSize.AvailableAllocationUnits.QuadPart;
+        lpFreeBytesAvailableToCaller->QuadPart = FileFsSize.AvailableAllocationUnits.QuadPart * BytesPerAllocationUnit;
     }
 
-    if (lpTotalNumberOfBytes)
+    if (lpTotalNumberOfBytes != NULL)
     {
-        lpTotalNumberOfBytes->QuadPart =
-            BytesPerCluster.QuadPart * FsInfo.FsSize.TotalAllocationUnits.QuadPart;
+        lpTotalNumberOfBytes->QuadPart = FileFsSize.TotalAllocationUnits.QuadPart * BytesPerAllocationUnit;
     }
 
-    if (lpTotalNumberOfFreeBytes)
+    if (lpTotalNumberOfFreeBytes != NULL)
     {
-        lpTotalNumberOfFreeBytes->QuadPart =
-            BytesPerCluster.QuadPart * FsInfo.FsSize.AvailableAllocationUnits.QuadPart;
+        lpTotalNumberOfFreeBytes->QuadPart = FileFsSize.AvailableAllocationUnits.QuadPart * BytesPerAllocationUnit;
     }
 
     return TRUE;
