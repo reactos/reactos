@@ -29,6 +29,7 @@
 @ stdcall RasGetAutodialEnableW(long ptr)
 @ stdcall RasGetAutodialParamA(long ptr ptr)
 @ stdcall RasGetAutodialParamW(long ptr ptr)
+@ stdcall RasGetConnectionStatistics(ptr ptr)
 @ stub RasGetConnectResponse
 @ stdcall RasGetConnectStatusA(ptr ptr)
 @ stdcall RasGetConnectStatusW(ptr ptr)
