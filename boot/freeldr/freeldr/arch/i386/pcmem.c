@@ -318,7 +318,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
                       PcBiosMapCount,
                       PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
                       PcBiosMemoryMap[PcBiosMapCount].Length);
-                continue;
+                goto nextRange;
             }
 
             /* Calculate the length of the aligned range */
