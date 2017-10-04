@@ -215,50 +215,131 @@ GetDiskFreeSpaceW(IN LPCWSTR lpRootPathName,
                   OUT LPDWORD lpNumberOfFreeClusters,
                   OUT LPDWORD lpTotalNumberOfClusters)
 {
-    FILE_FS_SIZE_INFORMATION FileFsSize;
+    BOOL Below2GB;
+    PCWSTR RootPath;
+    NTSTATUS Status;
+    HANDLE RootHandle;
+    UNICODE_STRING FileName;
     IO_STATUS_BLOCK IoStatusBlock;
-    WCHAR RootPathName[MAX_PATH];
-    HANDLE hFile;
-    NTSTATUS errCode;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    FILE_FS_SIZE_INFORMATION FileFsSize;
 
-    if (lpRootPathName)
+    /* If no path provided, get root path */
+    RootPath = lpRootPathName;
+    if (lpRootPathName == NULL)
     {
-        wcsncpy (RootPathName, lpRootPathName, 3);
+        RootPath = L"\\";
     }
-    else
-    {
-        GetCurrentDirectoryW (MAX_PATH, RootPathName);
-    }
-    RootPathName[3] = 0;
 
-    hFile = InternalOpenDirW(RootPathName, FALSE);
-    if (INVALID_HANDLE_VALUE == hFile)
+    /* Convert the path to NT path */
+    if (!RtlDosPathNameToNtPathName_U(RootPath, &FileName, NULL, NULL))
     {
         SetLastError(ERROR_PATH_NOT_FOUND);
         return FALSE;
     }
 
-    errCode = NtQueryVolumeInformationFile(hFile,
-                                           &IoStatusBlock,
-                                           &FileFsSize,
-                                           sizeof(FILE_FS_SIZE_INFORMATION),
-                                           FileFsSizeInformation);
-    if (!NT_SUCCESS(errCode))
+    /* Open it for disk space query! */
+    InitializeObjectAttributes(&ObjectAttributes, &FileName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenFile(&RootHandle, SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_FREE_SPACE_QUERY);
+    if (!NT_SUCCESS(Status))
     {
-        CloseHandle(hFile);
-        BaseSetLastNTError (errCode);
+        BaseSetLastNTError(Status);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+        if (lpBytesPerSector != NULL)
+        {
+            *lpBytesPerSector = 0;
+        }
+
         return FALSE;
     }
 
-    if (lpSectorsPerCluster)
+    /* We don't need the name any longer */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+
+    /* Query disk space! */
+    Status = NtQueryVolumeInformationFile(RootHandle, &IoStatusBlock, &FileFsSize,
+                                          sizeof(FILE_FS_SIZE_INFORMATION),
+                                          FileFsSizeInformation);
+    NtClose(RootHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* Are we in some compatibility mode where size must be below 2GB? */
+    Below2GB = ((NtCurrentPeb()->AppCompatFlags.LowPart & GetDiskFreeSpace2GB) == GetDiskFreeSpace2GB);
+
+    /* If we're to overflow output, make sure we return the maximum */
+    if (FileFsSize.TotalAllocationUnits.HighPart != 0)
+    {
+        FileFsSize.TotalAllocationUnits.LowPart = -1;
+    }
+
+    if (FileFsSize.AvailableAllocationUnits.HighPart != 0)
+    {
+        FileFsSize.AvailableAllocationUnits.LowPart = -1;
+    }
+
+    /* Return what user asked for */
+    if (lpSectorsPerCluster != NULL)
+    {
         *lpSectorsPerCluster = FileFsSize.SectorsPerAllocationUnit;
-    if (lpBytesPerSector)
+    }
+
+    if (lpBytesPerSector != NULL)
+    {
         *lpBytesPerSector = FileFsSize.BytesPerSector;
-    if (lpNumberOfFreeClusters)
-        *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.u.LowPart;
-    if (lpTotalNumberOfClusters)
-        *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.u.LowPart;
-    CloseHandle(hFile);
+    }
+
+    if (lpNumberOfFreeClusters != NULL)
+    {
+        if (!Below2GB)
+        {
+            *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.LowPart;
+        }
+        /* If we have to remain below 2GB... */
+        else
+        {
+            DWORD FreeClusters;
+
+            /* Compute how many clusters there are in less than 2GB: 2 * 1024 * 1024 * 1024- 1 */
+            FreeClusters = 0x7FFFFFFF / (FileFsSize.SectorsPerAllocationUnit * FileFsSize.BytesPerSector);
+            /* If that's higher than what was queried, then return the queried value, it's OK! */
+            if (FreeClusters > FileFsSize.AvailableAllocationUnits.LowPart)
+            {
+                FreeClusters = FileFsSize.AvailableAllocationUnits.LowPart;
+            }
+
+            *lpNumberOfFreeClusters = FreeClusters;
+        }
+    }
+
+    if (lpTotalNumberOfClusters != NULL)
+    {
+        if (!Below2GB)
+        {
+            *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.LowPart;
+        }
+        /* If we have to remain below 2GB... */
+        else
+        {
+            DWORD TotalClusters;
+
+            /* Compute how many clusters there are in less than 2GB: 2 * 1024 * 1024 * 1024- 1 */
+            TotalClusters = 0x7FFFFFFF / (FileFsSize.SectorsPerAllocationUnit * FileFsSize.BytesPerSector);
+            /* If that's higher than what was queried, then return the queried value, it's OK! */
+            if (TotalClusters > FileFsSize.TotalAllocationUnits.LowPart)
+            {
+                TotalClusters = FileFsSize.TotalAllocationUnits.LowPart;
+            }
+
+            *lpTotalNumberOfClusters = TotalClusters;
+        }
+    }
 
     return TRUE;
 }
