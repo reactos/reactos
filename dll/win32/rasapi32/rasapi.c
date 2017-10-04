@@ -549,3 +549,9 @@ DWORD WINAPI RasGetLinkStatistics(HRASCONN connection, DWORD entry, RAS_STATS *s
     FIXME("(%p,%u,%p), stub!\n", connection, entry, statistics);
     return 0;
 }
+
+DWORD WINAPI RasGetConnectionStatistics(HRASCONN connection, RAS_STATS *statistics)
+{
+    FIXME("(%p,%p), stub!\n", connection, statistics);
+    return ERROR_UNKNOWN;
+}
