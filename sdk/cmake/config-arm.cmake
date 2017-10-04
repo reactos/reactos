@@ -38,11 +38,11 @@ set(_ELF_ FALSE CACHE BOOL
 "Whether to compile support for ELF files.
 Do not enable unless you know what you're doing.")
 
-set(NSWPAT FALSE CACHE BOOL
-"Whether to compile apps/libs with features covered software patents or not.
-If you live in a country where software patents are valid/apply, don't
-enable this (except they/you purchased a license from the patent owner).
-This settings is disabled (0) by default.")
+
+
+
+
+
 
 set(BUILD_MP TRUE CACHE BOOL
 "Whether to compile the multi processor versions for ntoskrnl and hal.")
