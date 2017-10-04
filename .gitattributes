@@ -48,6 +48,7 @@
 *.rgs text eol=crlf
 *.sif text eol=crlf
 *.vbs text eol=crlf
+*.vcxproj text eol=crlf
 
 # Files with these extensions are accepted binary files inside the ReactOS
 # tree. Git must not tamper with them at all!
