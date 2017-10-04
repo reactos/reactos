@@ -38,12 +38,6 @@ set(_ELF_ FALSE CACHE BOOL
 "Whether to compile support for ELF files.
 Do not enable unless you know what you're doing.")
 
-
-
-
-
-
-
 set(BUILD_MP TRUE CACHE BOOL
 "Whether to compile the multi processor versions for ntoskrnl and hal.")
 
