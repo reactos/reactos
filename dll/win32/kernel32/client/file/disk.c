@@ -359,18 +359,23 @@ GetDiskFreeSpaceExA(IN LPCSTR lpDirectoryName OPTIONAL,
                     OUT PULARGE_INTEGER lpTotalNumberOfBytes,
                     OUT PULARGE_INTEGER lpTotalNumberOfFreeBytes)
 {
-    PWCHAR DirectoryNameW=NULL;
+    PCSTR RootPath;
+    PUNICODE_STRING RootPathU;
 
-    if (lpDirectoryName)
+    RootPath = lpDirectoryName;
+    if (RootPath == NULL)
     {
-        if (!(DirectoryNameW = FilenameA2W(lpDirectoryName, FALSE)))
-            return FALSE;
+        RootPath = "\\";
     }
 
-    return GetDiskFreeSpaceExW (DirectoryNameW ,
-                                lpFreeBytesAvailableToCaller,
-                                lpTotalNumberOfBytes,
-                                lpTotalNumberOfFreeBytes);
+    RootPathU = Basep8BitStringToStaticUnicodeString(RootPath);
+    if (RootPathU == NULL)
+    {
+        return FALSE;
+    }
+
+    return GetDiskFreeSpaceExW(RootPathU->Buffer, lpFreeBytesAvailableToCaller,
+                              lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes);
 }
 
 /*
