@@ -1,0 +1,3 @@
+# These files are distributed with ReactOS.
+ms-nfs41-idmap.conf text eol=crlf
+netconfig text eol=crlf

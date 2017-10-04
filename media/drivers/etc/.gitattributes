@@ -1,0 +1,6 @@
+# These files are distributed with ReactOS.
+hosts text eol=crlf
+KDBinit text eol=crlf
+networks text eol=crlf
+protocol text eol=crlf
+services text eol=crlf
