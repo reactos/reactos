@@ -189,19 +189,24 @@ GetDiskFreeSpaceA(IN LPCSTR lpRootPathName,
                   OUT LPDWORD lpNumberOfFreeClusters,
                   OUT LPDWORD lpTotalNumberOfClusters)
 {
-    PWCHAR RootPathNameW=NULL;
+    PCSTR RootPath;
+    PUNICODE_STRING RootPathU;
 
-    if (lpRootPathName)
+    RootPath = lpRootPathName;
+    if (RootPath == NULL)
     {
-        if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
-            return FALSE;
+        RootPath = "\\";
     }
 
-    return GetDiskFreeSpaceW (RootPathNameW,
-                              lpSectorsPerCluster,
-                              lpBytesPerSector,
-                              lpNumberOfFreeClusters,
-                              lpTotalNumberOfClusters);
+    RootPathU = Basep8BitStringToStaticUnicodeString(RootPath);
+    if (RootPathU == NULL)
+    {
+        return FALSE;
+    }
+
+    return GetDiskFreeSpaceW(RootPathU->Buffer, lpSectorsPerCluster,
+                             lpBytesPerSector, lpNumberOfFreeClusters,
+                             lpTotalNumberOfClusters);
 }
 
 /*
