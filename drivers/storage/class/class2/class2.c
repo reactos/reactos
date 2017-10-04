@@ -4059,9 +4059,9 @@ Return Value:
         if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUNTDEV_NAME)) {
 
             Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+            Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            status = STATUS_BUFFER_TOO_SMALL;
+            status = STATUS_INVALID_PARAMETER;
             goto SetStatusAndReturn;
         }
 
