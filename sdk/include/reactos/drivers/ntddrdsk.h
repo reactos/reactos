@@ -33,21 +33,22 @@ DEFINE_GUID(GUID_BUS_TYPE_RAMDISK, 0x9d6d66a6, 0x0b0c, 0x4563, 0x90, 0x77, 0xa0,
 // Note:  For devices that support multiple units, it should be suffixed
 //        with the Ascii representation of the unit number.
 //
-#define DD_RAMDISK_DEVICE_NAME            "\\Device\\Ramdisk"
+#define DD_RAMDISK_DEVICE_NAME              "\\Device\\Ramdisk"
+#define DD_RAMDISK_DEVICE_NAME_U           L"\\Device\\Ramdisk"
 
 //
 // IoControlCode values for ramdisk devices.
 //
-#define IOCTL_RAMDISK_BASE                FILE_DEVICE_VIRTUAL_DISK
-#define FSCTL_CREATE_RAM_DISK             CTL_CODE(FILE_DEVICE_VIRTUAL_DISK, 0x0000, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_RAMDISK_BASE                  FILE_DEVICE_VIRTUAL_DISK
+#define FSCTL_CREATE_RAM_DISK               CTL_CODE(FILE_DEVICE_VIRTUAL_DISK, 0x0000, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 //
 // Disk Types
 //
-#define RAMDISK_REGISTRY_DISK             1 // Loaded from the registry
-#define RAMDISK_MEMORY_MAPPED_DISK        2 // Loaded from the registry
-#define RAMDISK_BOOT_DISK                 3 // Used as a boot device
-#define RAMDISK_WIM_DISK                  4 // Used as an installation device
+#define RAMDISK_REGISTRY_DISK               1 // Loaded from the registry
+#define RAMDISK_MEMORY_MAPPED_DISK          2 // Loaded from a file and mapped in memory
+#define RAMDISK_BOOT_DISK                   3 // Used as a boot device "ramdisk(0)"
+#define RAMDISK_WIM_DISK                    4 // Used as an installation device
 
 //
 // Options when creating a ramdisk
