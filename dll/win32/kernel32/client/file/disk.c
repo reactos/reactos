@@ -23,7 +23,6 @@
 
 #define NDEBUG
 #include <debug.h>
-DEBUG_CHANNEL(kernel32file);
 
 #define MAX_DOS_DRIVES 26
 
@@ -482,127 +481,228 @@ UINT
 WINAPI
 GetDriveTypeW(IN LPCWSTR lpRootPathName)
 {
-    FILE_FS_DEVICE_INFORMATION FileFsDevice;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING PathName;
-    HANDLE FileHandle;
+    BOOL RetryOpen;
+    PCWSTR RootPath;
     NTSTATUS Status;
-    PWSTR CurrentDir = NULL;
-    PCWSTR lpRootPath;
+    WCHAR DriveLetter;
+    HANDLE RootHandle;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING PathName, VolumeString;
+    FILE_FS_DEVICE_INFORMATION FileFsDevice;
+    WCHAR Buffer[MAX_PATH], VolumeName[MAX_PATH];
 
-    if (!lpRootPathName)
+    /* If no path, get one */
+    if (lpRootPathName == NULL)
     {
-        /* If NULL is passed, use current directory path */
-        DWORD BufferSize = GetCurrentDirectoryW(0, NULL);
-        CurrentDir = HeapAlloc(GetProcessHeap(), 0, BufferSize * sizeof(WCHAR));
-        if (!CurrentDir)
-            return DRIVE_UNKNOWN;
-        if (!GetCurrentDirectoryW(BufferSize, CurrentDir))
+        RootPath = Buffer;
+        /* This will be current drive (<letter>:\ - drop the rest)*/
+        if (RtlGetCurrentDirectory_U(sizeof(Buffer), Buffer) > 3 * sizeof(WCHAR))
         {
-            HeapFree(GetProcessHeap(), 0, CurrentDir);
-            return DRIVE_UNKNOWN;
+            Buffer[3] = UNICODE_NULL;
         }
-
-        if (wcslen(CurrentDir) > 3)
-            CurrentDir[3] = 0;
-
-        lpRootPath = CurrentDir;
     }
     else
     {
-        size_t Length = wcslen(lpRootPathName);
-
-        TRACE("lpRootPathName: %S\n", lpRootPathName);
-
-        lpRootPath = lpRootPathName;
-        if (Length == 2)
+        /* Handle broken value */
+        if (lpRootPathName == (PVOID)-1)
         {
-            WCHAR DriveLetter = RtlUpcaseUnicodeChar(lpRootPathName[0]);
+            return DRIVE_UNKNOWN;
+        }
 
+        RootPath = lpRootPathName;
+        /* If provided path is 2-len, it might be a drive letter... */
+        if (wcslen(lpRootPathName) == 2)
+        {
+            /* Check it! */
+            DriveLetter = RtlUpcaseUnicodeChar(lpRootPathName[0]);
+            /* That's a drive letter! */
             if (DriveLetter >= L'A' && DriveLetter <= L'Z' && lpRootPathName[1] == L':')
             {
-                Length = (Length + 2) * sizeof(WCHAR);
-
-                CurrentDir = HeapAlloc(GetProcessHeap(), 0, Length);
-                if (!CurrentDir)
-                    return DRIVE_UNKNOWN;
-
-                StringCbPrintfW(CurrentDir, Length, L"%s\\", lpRootPathName);
-
-                lpRootPath = CurrentDir;
+                /* Make it a volume */
+                Buffer[0] = DriveLetter;
+                Buffer[1] = L':';
+                Buffer[2] = L'\\';
+                Buffer[3] = UNICODE_NULL;
+                RootPath = Buffer;
             }
         }
     }
 
-    TRACE("lpRootPath: %S\n", lpRootPath);
-
-    if (!RtlDosPathNameToNtPathName_U(lpRootPath, &PathName, NULL, NULL))
+    /* If the provided looks like a DOS device... Like <letter>:\<0> */
+    DriveLetter = RtlUpcaseUnicodeChar(RootPath[0]);
+    /* We'll take the quick path!
+     * We'll find the device type looking at the device map (and types ;-))
+     * associated with the current process
+     */
+    if (DriveLetter >= L'A' && DriveLetter <= L'Z' && RootPath[1] == L':' &&
+        RootPath[2] == L'\\' && RootPath[3] == UNICODE_NULL)
     {
-        if (CurrentDir != NULL)
-            HeapFree(GetProcessHeap(), 0, CurrentDir);
+        USHORT Index;
+        PROCESS_DEVICEMAP_INFORMATION DeviceMap;
 
+        /* Query the device map */
+        Status = NtQueryInformationProcess(NtCurrentProcess(), ProcessDeviceMap,
+                                           &DeviceMap,
+                                           sizeof(PROCESS_DEVICEMAP_INFORMATION),
+                                           NULL);
+        /* Zero output if we failed */
+        if (!NT_SUCCESS(Status))
+        {
+            RtlZeroMemory(&DeviceMap, sizeof(PROCESS_DEVICEMAP_INFORMATION));
+        }
+
+        /* Get our index in the device map */
+        Index = DriveLetter - L'A';
+        /* Check we're in the device map (bit set) */
+        if (((1 << Index) & DeviceMap.Query.DriveMap) != 0)
+        {
+            /* Validate device type and return it */
+            if (DeviceMap.Query.DriveType[Index] >= DRIVE_REMOVABLE &&
+                DeviceMap.Query.DriveType[Index] <= DRIVE_RAMDISK)
+            {
+                return DeviceMap.Query.DriveType[Index];
+            }
+            /* Otherwise, return we don't know the type */
+            else
+            {
+                return DRIVE_UNKNOWN;
+            }
+        }
+
+        /* We couldn't find ourselves, do it the slow way */
+    }
+
+    /* No path provided, use root */
+    if (lpRootPathName == NULL)
+    {
+        RootPath = L"\\";
+    }
+
+    /* Convert to NT path */
+    if (!RtlDosPathNameToNtPathName_U(RootPath, &PathName, NULL, NULL))
+    {
         return DRIVE_NO_ROOT_DIR;
     }
 
-    TRACE("PathName: %S\n", PathName.Buffer);
-
-    if (CurrentDir != NULL)
-        HeapFree(GetProcessHeap(), 0, CurrentDir);
-
-    if (PathName.Buffer[(PathName.Length >> 1) - 1] != L'\\')
+    /* If not a directory, fail, we need a volume */
+    if (PathName.Buffer[(PathName.Length / sizeof(WCHAR)) - 1] != L'\\')
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathName.Buffer);
         return DRIVE_NO_ROOT_DIR;
     }
 
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &PathName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        FILE_READ_ATTRIBUTES | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
+    /* Let's probe for it, by forcing open failure! */
+    RetryOpen = TRUE;
+    InitializeObjectAttributes(&ObjectAttributes, &PathName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+                        &ObjectAttributes, &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+    /* It properly failed! */
+    if (Status == STATUS_FILE_IS_A_DIRECTORY)
+    {
+        /* It might be a mount point, then, query for target */
+        if (BasepGetVolumeNameFromReparsePoint(lpRootPathName, VolumeName, MAX_PATH, NULL))
+        {
+            /* We'll reopen the target */
+            RtlInitUnicodeString(&VolumeString, VolumeName);
+            VolumeName[1] = L'?';
+            VolumeString.Length -= sizeof(WCHAR);
+            InitializeObjectAttributes(&ObjectAttributes, &VolumeString,
+                                       OBJ_CASE_INSENSITIVE, NULL, NULL);
+        }
+    }
+    else
+    {
+        /* heh. It worked? Or failed for whatever other reason?
+         * Check we have a directory if we get farther in path
+         */
+        PathName.Length += sizeof(WCHAR);
+        if (IsThisARootDirectory(0, &PathName))
+        {
+            /* Yes? Heh, then it's fine, keep our current handle */
+            RetryOpen = FALSE;
+        }
+        else
+        {
+            /* Then, retry to open without forcing non directory type */
+            PathName.Length -= sizeof(WCHAR);
+            if (NT_SUCCESS(Status))
+            {
+                NtClose(RootHandle);
+            }
+        }
+    }
 
+    /* Now, we retry without forcing file type - should work now */
+    if (RetryOpen)
+    {
+        Status = NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+                            &ObjectAttributes, &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            FILE_SYNCHRONOUS_IO_NONALERT);
+    }
+
+    /* We don't need path any longer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, PathName.Buffer);
     if (!NT_SUCCESS(Status))
-        return DRIVE_NO_ROOT_DIR; /* According to WINE regression tests */
+    {
+        return DRIVE_NO_ROOT_DIR;
+    }
 
-    Status = NtQueryVolumeInformationFile(FileHandle,
+    /* Query the device for its type */
+    Status = NtQueryVolumeInformationFile(RootHandle,
                                           &IoStatusBlock,
                                           &FileFsDevice,
                                           sizeof(FILE_FS_DEVICE_INFORMATION),
                                           FileFsDeviceInformation);
-    NtClose(FileHandle);
+    /* No longer required */
+    NtClose(RootHandle);
     if (!NT_SUCCESS(Status))
     {
-        return 0;
+        return DRIVE_UNKNOWN;
     }
 
+    /* Do we have a remote device? Return so! */
+    if ((FileFsDevice.Characteristics & FILE_REMOTE_DEVICE) == FILE_REMOTE_DEVICE)
+    {
+        return DRIVE_REMOTE;
+    }
+
+    /* Check the device type */
     switch (FileFsDevice.DeviceType)
     {
+        /* CDROM, easy */
         case FILE_DEVICE_CD_ROM:
         case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
             return DRIVE_CDROM;
-        case FILE_DEVICE_VIRTUAL_DISK:
-            return DRIVE_RAMDISK;
-        case FILE_DEVICE_NETWORK_FILE_SYSTEM:
-            return DRIVE_REMOTE;
+
+        /* Disk... */
         case FILE_DEVICE_DISK:
         case FILE_DEVICE_DISK_FILE_SYSTEM:
-            if (FileFsDevice.Characteristics & FILE_REMOTE_DEVICE)
-                return DRIVE_REMOTE;
-            if (FileFsDevice.Characteristics & FILE_REMOVABLE_MEDIA)
+            /* Removable media? Floppy is one */
+            if ((FileFsDevice.Characteristics & FILE_REMOVABLE_MEDIA) == FILE_REMOVABLE_MEDIA ||
+                (FileFsDevice.Characteristics & FILE_FLOPPY_DISKETTE) == FILE_FLOPPY_DISKETTE)
+            {
                 return DRIVE_REMOVABLE;
-        return DRIVE_FIXED;
+            }
+            else
+            {
+                return DRIVE_FIXED;
+            }
+
+        /* Easy cases */
+        case FILE_DEVICE_NETWORK:
+        case FILE_DEVICE_NETWORK_FILE_SYSTEM:
+            return DRIVE_REMOTE;
+
+        case FILE_DEVICE_VIRTUAL_DISK:
+            return DRIVE_RAMDISK;
     }
 
-    ERR("Returning DRIVE_UNKNOWN for device type %lu\n", FileFsDevice.DeviceType);
-
+    /* Nothing matching, just fail */
     return DRIVE_UNKNOWN;
 }
 
