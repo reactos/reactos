@@ -12,19 +12,21 @@
 #pragma once
 #endif
 
-#ifdef __cplusplus1
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 //
-// This guid identifies a RAM disk volume
+// This guid identifies a RAM disk volume (RamdiskBootDiskGuid)
+// {D9B257FC-684E-4DCB-AB79-03CFA2F6B750}
 //
-DEFINE_GUID(RAMDISK_BOOTDISK_GUID, 0xd9b257fc, 0x684e, 0x4dcb, 0x79, 0xab, 0xf6, 0xa2, 0xcf, 0x03, 0x50, 0xb7);
+DEFINE_GUID(RAMDISK_BOOTDISK_GUID, 0xD9B257FC, 0x684E, 0x4DCB, 0xAB, 0x79, 0x03, 0xCF, 0xA2, 0xF6, 0xB7, 0x50);
 
 //
 // This guid identifies a RAM disk bus
+// {9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}
 //
-DEFINE_GUID(GUID_BUS_TYPE_RAMDISK, 0x9d6d66a6, 0x0b0c, 0x4563, 0x90, 0x77, 0xa0, 0xe9, 0xa7, 0x95, 0x5a, 0xe4);
+DEFINE_GUID(GUID_BUS_TYPE_RAMDISK, 0x9D6D66A6, 0x0B0C, 0x4563, 0x90, 0x77, 0xA0, 0xE9, 0xA7, 0x95, 0x5A, 0xE4);
 
 //
 // Device Name - this string is the name of the device.  It is the name
