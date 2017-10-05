@@ -463,15 +463,26 @@ UINT
 WINAPI
 GetDriveTypeA(IN LPCSTR lpRootPathName)
 {
-    PWCHAR RootPathNameW;
+    PWSTR RootPathU;
 
-    if (!lpRootPathName)
-        return GetDriveTypeW(NULL);
+    if (lpRootPathName != NULL)
+    {
+        PUNICODE_STRING RootPathUStr;
 
-    if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
-        return DRIVE_UNKNOWN;
+        RootPathUStr = Basep8BitStringToStaticUnicodeString(lpRootPathName);
+        if (RootPathUStr == NULL)
+        {
+            return DRIVE_NO_ROOT_DIR;
+        }
 
-    return GetDriveTypeW(RootPathNameW);
+        RootPathU = RootPathUStr->Buffer;
+    }
+    else
+    {
+        RootPathU = NULL;
+    }
+
+    return GetDriveTypeW(RootPathU);
 }
 
 /*
