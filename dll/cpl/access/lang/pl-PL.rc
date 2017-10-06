@@ -104,8 +104,8 @@ BEGIN
     GROUPBOX "Urządzenia klawiszy szeregowych", -1, 6, 115, 248, 47
     LTEXT "Urządzenia klawiszy szeregowych zapewniają alternatywny dostęp do funkcji klawiatury lub myszy.",
           -1, 12, 124, 222, 20
-    AUTOCHECKBOX "Wspieraj urządzenia klawi&szy szeregowych", IDC_SERIAL_BOX, 12, 142, 126, 14
-    PUSHBUTTON "&Ustawienia", IDC_SERIAL_BUTTON, 144, 142, 90, 14
+    AUTOCHECKBOX "Wspieraj urządzenia klawi&szy szeregowych", IDC_SERIAL_BOX, 12, 142, 156, 14
+    PUSHBUTTON "&Ustawienia", IDC_SERIAL_BUTTON, 174, 142, 70, 14
     GROUPBOX "Opcje zarządzania", -1, 6, 169, 248, 47
     AUTOCHECKBOX "Zastosuj wszystkie ustawienia do pu&lpitu logowania", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
