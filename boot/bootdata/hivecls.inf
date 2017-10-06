@@ -778,6 +778,25 @@ TEST="Prova"
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
 CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
+CHMFILE="Skompilowany plik Pomocy w formacie HTML"
+XMLFILE="Dokument XML"
+XSLFILE="Arkusz stylów XSL"
+MSIPACK="Pakiet Instalatora ReactOS"
+MSSTYLESFILE="Plik stylu wizualnego"
+THEMEFILE="Plik motywu"
+WAVFILE="Dźwięk typu wave"
+MIDFILE="Sekwencja MIDI"
+CDAFILE="Ścieżka CD audio"
+AVIFILE="Arkusz stylu kaskadowego"
+OCXFILE="Kontrolka OLE"
+SCFFILE="Polecenie Eksploratora ReactOS"
+WMZFILE="Skompresowany metaplik"
+MERGE="Scal"
+CONFIGURE="Konfiguruj"
+INSTALL="Zainstaluj"
+UNINSTALL="Odinstaluj"
+REPAIR="Napraw"
+TEST="Testuj"
 
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
