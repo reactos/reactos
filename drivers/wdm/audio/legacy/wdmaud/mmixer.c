@@ -480,7 +480,7 @@ WdmAudControlCloseMixer(
     IN  ULONG Index)
 {
     /* Remove event associated to this client */
-    if (MMixerClose(&MixerContext, DeviceInfo->DeviceIndex, ClientInfo, EventCallback))
+    if (MMixerClose(&MixerContext, DeviceInfo->DeviceIndex, ClientInfo, EventCallback) != MM_STATUS_SUCCESS)
     {
         DPRINT1("Failed to close mixer\n");
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, sizeof(WDMAUD_DEVICE_INFO));
@@ -511,9 +511,9 @@ WdmAudCloseAllMixers(
     /* Close every mixer attached to the device */
     for (DeviceIndex = 0; DeviceIndex < DeviceCount; DeviceIndex++)
     {
-        if (MMixerClose(&MixerContext, DeviceIndex, ClientInfo, EventCallback))
+        if (MMixerClose(&MixerContext, DeviceIndex, ClientInfo, EventCallback) != MM_STATUS_SUCCESS)
         {
-            DPRINT1("Failed to close mixer !\n");
+            DPRINT1("Failed to close mixer for device %lu\n", DeviceIndex);
         }
     }
     
