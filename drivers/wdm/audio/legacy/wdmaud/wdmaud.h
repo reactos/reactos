@@ -136,6 +136,12 @@ WdmAudControlCloseMixer(
     IN  PWDMAUD_CLIENT ClientInfo,
     IN  ULONG Index);
 
+VOID
+WdmAudCloseAllMixers(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PWDMAUD_CLIENT ClientInfo,
+    IN ULONG Index);
+
 NTSTATUS
 WdmAudControlOpenWave(
     IN  PDEVICE_OBJECT DeviceObject,

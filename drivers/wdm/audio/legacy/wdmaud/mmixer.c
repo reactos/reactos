@@ -497,6 +497,34 @@ WdmAudControlCloseMixer(
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
 }
 
+VOID
+WdmAudCloseAllMixers(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PWDMAUD_CLIENT ClientInfo,
+    IN ULONG Index)
+{
+    ULONG DeviceCount, DeviceIndex;
+
+    /* Get all mixers */
+    DeviceCount = GetSysAudioDeviceCount(DeviceObject);
+
+    /* Close every mixer attached to the device */
+    for (DeviceIndex = 0; DeviceIndex < DeviceCount; DeviceIndex++)
+    {
+        if (MMixerClose(&MixerContext, DeviceIndex, ClientInfo, EventCallback))
+        {
+            DPRINT1("Failed to close mixer !\n");
+        }
+    }
+    
+    /* Dereference event */
+    if (ClientInfo->hPins[Index].NotifyEvent)
+    {
+        ObDereferenceObject(ClientInfo->hPins[Index].NotifyEvent);
+        ClientInfo->hPins[Index].NotifyEvent = NULL;
+    }
+}
+
 NTSTATUS
 NTAPI
 WdmAudGetControlDetails(

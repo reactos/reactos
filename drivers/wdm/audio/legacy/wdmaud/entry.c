@@ -326,6 +326,7 @@ WdmAudCleanup(
            /* found an still open audio pin */
            ZwClose(pClient->hPins[Index].Handle);
        }
+       WdmAudCloseAllMixers(DeviceObject, pClient, Index);
     }
 
     /* free pin array */
