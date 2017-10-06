@@ -1035,12 +1035,14 @@ MSPAINT_TITLE=MSPaint
 MSPAINT_DESC=Uruchom Paint
 CHARMAP_TITLE=Tablica znaków
 CHARMAP_DESC=Tablica znaków
-CLIPBRD_TITLE=Clipboard Viewer
-CLIPBRD_DESC=Clipboard Viewer
+CLIPBRD_TITLE=Podgląd Wieloschowka
+CLIPBRD_DESC=Podgląd Wieloschowka
 KBSWITCH_TITLE=Zmiana układu klawiatury
 KBSWITCH_DESC=Zmiana układu klawiatury
 REGEDIT_TITLE=Edytor rejestru
 REGEDIT_DESC=Uruchom Edytor rejestru
+TASKMGR_TITLE=Menedżer zadań
+TASKMGR_DESC=Uruchom Menedżer zadań
 DXDIAG_TITLE=Program diagnostyczny ReactX
 DXDIAG_DESC=Uruchom program diagnostyczny ReactX
 MAGNIFY_TITLE=Lupa
@@ -1052,13 +1054,13 @@ MPLAY_DESC=Uruchom Odtwarzacz multimedialny
 SNDVOL_TITLE=Regulacja głośności
 SNDVOL_DESC=Uruchom regulację głośności
 SNDREC32_TITLE=Rejestrator dźwięku
-SNDREC32_DESC=Launch Sound Recorder
+SNDREC32_DESC=Uruchom Rejestrator dźwięku
 SOL_TITLE=Pasjans
 SOL_DESC=Pasjans
 WINMINE_TITLE=Saper
 WINMINE_DESC=Saper
-SPIDER_TITLE=Spider Solitaire
-SPIDER_DESC=Spider Solitaire
+SPIDER_TITLE=Pasjans Pająk
+SPIDER_DESC=Pasjans Pająk
 
 ; Portuguese - Brazil
 [Strings.0416]
