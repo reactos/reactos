@@ -9,6 +9,7 @@
 #include <strsafe.h>
 #include <winioctl.h>
 #include <mountmgr.h>
+#include <mountdev.h>
 
 WCHAR Letter;
 HANDLE Device;
@@ -110,6 +111,42 @@ QueryDeviceName(VOID)
     HeapFree(GetProcessHeap(), 0, AllocatedMDN);
 }
 
+static
+VOID
+QueryUniqueId(VOID)
+{
+    UINT Ret;
+    DWORD Size, Error;
+    MOUNTDEV_UNIQUE_ID MUI, *AllocatedMUI;
+
+    Ret = DeviceIoControl(Device, IOCTL_MOUNTDEV_QUERY_UNIQUE_ID, NULL, 0, &MUI, sizeof(MUI) - 1, &Size, NULL);
+    ok(Ret == 0, "DeviceIoControl succeed\n");
+    Error = GetLastError();
+    ok(Error == ERROR_INVALID_PARAMETER, "Expecting ERROR_INVALID_PARAMETER, got %ld\n", Error);
+    ok(Size == 48 /* ?! */, "Invalid output size: %ld\n", Size);
+
+    Ret = DeviceIoControl(Device, IOCTL_MOUNTDEV_QUERY_UNIQUE_ID, NULL, 0, &MUI, sizeof(MUI), &Size, NULL);
+    ok(Ret == 0, "DeviceIoControl succeed\n");
+    Error = GetLastError();
+    ok(Error == ERROR_MORE_DATA, "Expecting ERROR_MORE_DATA, got %ld\n", Error);
+    ok(Size == sizeof(MOUNTDEV_UNIQUE_ID), "Invalid output size: %ld\n", Size);
+
+    AllocatedMUI = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + MUI.UniqueIdLength + sizeof(UNICODE_NULL));
+    if (AllocatedMUI == NULL)
+    {
+        skip("Memory allocation failure\n");
+        return;
+    }
+
+    Size = 0;
+    Ret = DeviceIoControl(Device, IOCTL_MOUNTDEV_QUERY_UNIQUE_ID, NULL, 0, AllocatedMUI, FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + MUI.UniqueIdLength, &Size, NULL);
+    ok(Ret != 0, "DeviceIoControl failed: %ld\n", GetLastError());
+    ok(Size == FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + MUI.UniqueIdLength, "Invalid output size: %ld\n", Size);
+    ok(AllocatedMUI->UniqueIdLength == MUI.UniqueIdLength, "Mismatching sizes: %d %d\n", AllocatedMUI->UniqueIdLength, MUI.UniqueIdLength);
+
+    HeapFree(GetProcessHeap(), 0, AllocatedMUI);
+}
+
 START_TEST(DeviceIoControl)
 {
     UINT Ret;
@@ -137,6 +174,7 @@ START_TEST(DeviceIoControl)
 
     GetDiskGeometry();
     QueryDeviceName();
+    QueryUniqueId();
 
     CloseHandle(Device);
 }
