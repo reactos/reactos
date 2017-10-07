@@ -253,7 +253,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
 /*
  * @implemented
  */
-static BOOL
+BOOL
 BasepGetVolumeNameFromReparsePoint(IN LPCWSTR lpszMountPoint,
                                    OUT LPWSTR lpszVolumeName,
                                    IN DWORD cchBufferLength,

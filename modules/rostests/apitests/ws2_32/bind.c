@@ -23,6 +23,11 @@ static
 VOID
 TestBind(IN_ADDR Address)
 {
+    const UCHAR b1 = Address.S_un.S_un_b.s_b1;
+    const UCHAR b2 = Address.S_un.S_un_b.s_b2;
+    const UCHAR b3 = Address.S_un.S_un_b.s_b3;
+    const UCHAR b4 = Address.S_un.S_un_b.s_b4;
+
     int Error;
     struct
     {
@@ -36,19 +41,19 @@ TestBind(IN_ADDR Address)
     {
         { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, {{{ 0x7f, 0x00, 0x00, 0x01 }}} }, 0, 0, { AF_INET, PORT, {{{ 0x7f, 0x00, 0x00, 0x01 }}} } },
         { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, {{{ 0x00, 0x00, 0x00, 0x00 }}} }, 0, 0, { AF_INET, PORT, {{{ 0x00, 0x00, 0x00, 0x00 }}} } },
-        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, Address }, 0, 0, { AF_INET, PORT, Address } },
+        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, {{{ b1, b2, b3, b4 }}} }, 0, 0, { AF_INET, PORT, {{{ b1, b2, b3, b4 }}} } },
         { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, {{{ 0xff, 0xff, 0xff, 0xff }}} }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
         { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, {{{ 0x7f, 0x00, 0x00, 0x01 }}} }, 0, 0, { AF_INET, 0, {{{ 0x7f, 0x00, 0x00, 0x01 }}} } },
         { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, {{{ 0x00, 0x00, 0x00, 0x00 }}} } },
-        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, Address }, 0, 0, { AF_INET, 0, Address } },
+        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, {{{ b1, b2, b3, b4 }}} }, 0, 0, { AF_INET, 0, {{{ b1, b2, b3, b4 }}} } },
         { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, {{{ 0xff, 0xff, 0xff, 0xff }}} }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
         { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, {{{ 0x7f, 0x00, 0x00, 0x01 }}} }, 0, 0, { AF_INET, PORT, {{{ 0x7f, 0x00, 0x00, 0x01 }}} } },
         { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, {{{ 0x00, 0x00, 0x00, 0x00 }}} }, 0, 0, { AF_INET, PORT, {{{ 0x00, 0x00, 0x00, 0x00 }}} } },
-        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, Address }, 0, 0, { AF_INET, PORT, Address } },
+        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, {{{ b1, b2, b3, b4 }}} }, 0, 0, { AF_INET, PORT, {{{ b1, b2, b3, b4 }}} } },
         { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, {{{ 0xff, 0xff, 0xff, 0xff }}} }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
         { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, {{{ 0x7f, 0x00, 0x00, 0x01 }}} }, 0, 0, { AF_INET, 0, {{{ 0x7f, 0x00, 0x00, 0x01 }}} } },
         { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, {{{ 0x00, 0x00, 0x00, 0x00 }}} } },
-        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, Address }, 0, 0,{ AF_INET, 0, Address } },
+        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, {{{ b1, b2, b3, b4 }}} }, 0, 0,{ AF_INET, 0, {{{ b1, b2, b3, b4 }}} } },
         { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, {{{ 0xff, 0xff, 0xff, 0xff }}} }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
     };
     const INT TestCount = _countof(Tests);

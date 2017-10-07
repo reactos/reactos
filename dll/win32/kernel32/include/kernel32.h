@@ -448,6 +448,20 @@ BasepGetVolumeNameForVolumeMountPoint(
     OUT LPBOOL IsAMountPoint
 );
 
+BOOL
+BasepGetVolumeNameFromReparsePoint(
+    IN LPCWSTR lpszMountPoint,
+    OUT LPWSTR lpszVolumeName,
+    IN DWORD cchBufferLength,
+    OUT LPBOOL IsAMountPoint
+);
+
+BOOL
+IsThisARootDirectory(
+    IN HANDLE VolumeHandle,
+    IN PUNICODE_STRING NtPathName
+);
+
 /* FIXME: This is EXPORTED! It should go in an external kernel32.h header */
 VOID
 WINAPI
