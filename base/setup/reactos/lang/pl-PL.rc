@@ -84,9 +84,9 @@ BEGIN
     CONTROL "Folder instalacji", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
     EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
     CONTROL "Instalacja menedżera rozruchu", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
-    CONTROL "Wgraj menedżer rozruchu na dysk twardy (MBR i VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
-    CONTROL "Wgraj menedżer rozruchu na dysk twardy (tylko VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
-    CONTROL "Pomiń wgrywanie menedżera rozruchu", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
+    CONTROL "Instaluj menedżer rozruchu na dysku twardym (MBR i VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
+    CONTROL "Instaluj menedżer rozruchu na dysku twardym (tylko VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
+    CONTROL "Pomiń instalację menedżera rozruchu", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
     PUSHBUTTON "&OK", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Anuluj", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
 END

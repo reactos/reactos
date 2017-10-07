@@ -44,12 +44,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_BUTTON_YES    "&Yes"
-    IDS_BUTTON_NO     "&No"
-    IDS_BUTTON_RETRY  "&Retry"
+    IDS_BUTTON_YES    "&Tak"
+    IDS_BUTTON_NO     "&Nie"
+    IDS_BUTTON_RETRY  "&Ponów"
     IDS_BUTTON_OK     "OK"
-    IDS_BUTTON_CANCEL "Cancel"
-    IDS_BUTTON_CLOSE  "&Close"
+    IDS_BUTTON_CANCEL "Anuluj"
+    IDS_BUTTON_CLOSE  "&Zamknij"
 }
 
 IDD_PROPSHEET DIALOGEX 0, 0, 220, 140

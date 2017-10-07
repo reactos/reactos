@@ -32,7 +32,7 @@ BEGIN
     IDS_PROMPTDISK   "Plik '%1' na %2 jest wymagany"
     IDS_UNKNOWN      "Nieznane"
     IDS_COPYFROM     "Kopiuj pliki z:"
-    IDS_INFO         "Wpisz ścieżkę, w której plik się znajduje, a nastpępnie kliknij OK."
+    IDS_INFO         "Wpisz ścieżkę, w której plik się znajduje, a następnie kliknij OK."
 END
 
 STRINGTABLE

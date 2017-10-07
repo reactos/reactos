@@ -1576,6 +1576,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Start",0x00010001,0x
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\wkssvc.dll"
 
+; MPU-401 MIDI driver
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ImagePath",0x00020000,"system32\drivers\mpu401.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Type",0x00010001,0x00000001
+
 ; Multiple UNC provider driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
@@ -2263,6 +2270,142 @@ US_DVORAK_RIGHT = "US Dvorak for right hand"
 US_INTERNATIONAL = "US International"
 UZBEK_CYRILLIC = "Uzbek (Cyrillic)"
 VIETNAMESE = "Vietnamese"
+
+
+; LANG_POLISH SUBLANG_NEUTRAL
+[Strings.0015]
+
+; Services names and descriptions
+AUDIO_SERVICE="Usługa Audio"
+AUDIO_SERVICE_DESCRIPTION="Zapewnia aplikacjom dostęp do urządzeń audio"
+
+BITS_SERVICE="Usługa inteligentnego transferu w tle"
+BITS_SERVICE_DESCRIPTION="Przenosi dane pomiędzy klientami a serwerami w tle."
+
+EVENTLOG_SERVICE="Dziennik zdarzeń"
+EVENTLOG_SERVICE_DESCRIPTION="Zapisuje zdarzenia lub wiadomości wysyłane przez system operacyjny do bazy danych dostępnej za pomocą podglądu zdarzeń."
+
+MSISERVER_SERVICE="Instalator ReactOS"
+MSISERVER_SERVICE_DESCRIPTION="Dodaje, modyfikuje i usuwa aplikacje dostarczane jako pakiet MSI (Windows Installer)."
+
+NETLOGON_SERVICE="Logowanie do sieci"
+NETLOGON_SERVICE_DESCRIPTION="Obsługuje uwierzytelnienie przekazjące zdarzeż logowania na konta w komputerach domeny."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Wykrywa zmiany w sprzęcie i instaluje potrzebne oprogramowanie, jeśli to możliwe."
+
+RPCSS_SERVICE="Zdalne wykonywanie procedur"
+RPCSS_SERVICE_DESCRIPTION="Podsystem RPC, który jest odpowiedzialny za zdalne wykonywanie procedur na tym komputerze."
+
+SCHEDULE_SERVICE="Usługa Harmonogram"
+SCHEDULE_SERVICE_DESCRIPTION="Umożliwia uruchamianie programów w określonym czasie."
+
+SERVER_SERVICE="Serwer"
+SERVER_SERVICE_DESCRIPTION="Oferuje udostępnianie w sieci plików, drukarek i potoków dla tego komputera."
+
+SPOOLER_SERVICE="Bufor wydruku"
+SPOOLER_SERVICE_DESCRIPTION="Ładuje pliki do pamięci w celu późniejszego wydrukowania."
+
+TCPSVCS_SERVICE="Podstawowe usługi TCP/IP"
+TCPSVCS_SERVICE_DECRIPTION="Oferuje następujące usługi TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="Usługa ReactOS Telnet"
+TELNETD_SERVICE_DESCRIPTION="Usługa ReactOS Telnet"
+
+THEMES_SERVICE="Motywy"
+THEMES_SERVICE_DESCRIPTION="Oferuje wsparcie dla motywów"
+
+WINMGMT_SERVICE="Infrastruktura zarządzania ReactOS"
+WINMGMT_SERVICE_DESCRIPTION="Dostarcza interfejs w celu uzyskiwania dostępu do informacji zarządzania o systemie operacyjnym, urządzeniach, aplikacjach i usługach."
+
+WLANSVC_SERVICE="Usługa WLAN"
+WLANSVC_SERVICE_DESCRIPTION="Usługa WLAN"
+
+WORKSTATION_SERVICE="Stacja robocza"
+WORKSTATION_SERVICE_DESCRIPTION="Tworzy i zachowuje połączenia sieciowe klientów z serwerami."
+
+; Keyboard layouts
+ALBANIAN = "Albański"
+ARABIC_101 = "Arabski (101)"
+ARABIC_102 = "Arabski (102)"
+ARABIC_102_AZERTY = "Arabski (102, AZERTY)"
+ARMENIAN_EASTERN = "Armeński wschodni"
+ARMENIAN_WESTERN = "Armeński zachodni"
+ASSAMESE = "ASSAMESE - INSCRIPT"
+AZERI_CYRILLIC = "Azerski (Cyrylica)"
+AZERI_LATIN = "Azerski (Latin)"
+BELARUSIAN = "Białoruski"
+BELGIAN_DUTCH = "Belgijski (Period)"
+BELGIAN_FRENCH = "Belgijski Francuski"
+BENGALI = "Bengalski"
+BULGARIAN_BDS = "Bułgarski BDS 5237-1978"
+BULGARIAN_PHONETIC = "Bułgarski (Fonetyczny)"
+BULGARIAN_PHONETIC_BDS = "Bułgarski (Fonetyczny, BDS)"
+BURMESE = "Burmański"
+CANADIAN_FRENCH = "Kanadyjski francuski (Legacy)"
+CANADIAN_MULTILINGUAL = "Kanadyjski wielojęzykowy"
+CROATIAN = "Chorwacki"
+CZECH = "Czeski"
+CZECH_QWERTY = "Czeski (QWERTY)"
+DANISH = "Duński"
+DEVANAGARI = "Devanagari - INSCRIPT"
+DUTCH = "Holenderski"
+ESTONIAN = "Estoński"
+GERMAN_ERGO = "Niemiecki (de_ergo)"
+GERMAN_NEO = "Niemiecki (NEO-1.1)"
+GERMAN_RISTOME = "Niemiecki (RISTOME)"
+GERMAN = "Niemiecki"
+GREEK = "Grecki"
+GUJARATI = "Gujarati"
+IRISH = "Irlandzki"
+FINNISH = "Fiński"
+FRENCH = "Francuski"
+GEORGIAN = "Gruziński"
+HEBREW = "Hebrajski"
+HUNGARIAN = "Węgierski"
+ICELANDIC = "Islandzki"
+ITALIAN = "Włoski"
+JAPANESE = "Japoński"
+KAZAKH = "Kazachski"
+KOREAN = "Koreański"
+LATIN_AMERICAN = "Latynoamerykański"
+LATVIAN = "Łotewski"
+LITHUANIAN = "Litewski"
+MACEDONIAN = "Macedoński (FYRO)"
+MALAYALAM = "Malajalam"
+NORWEGIAN = "Norweski"
+POLISH_214 = "Polski (214)"
+POLISH_PROGRAMMERS = "Polski (Programisty)"
+PORTUGESE = "Portugalski"
+PORTUGESE_BRAZILIAN% = "Portugalski (Brazylijski ABNT2)"
+ROMANIAN = "Rumuński"
+RUSSIAN = "Rosyjski"
+RUSSIAN_TYPEWRITER = "Rosyjski (Maszynisty)"
+SERBIAN_CYRILLIC = "Serbski (Cyrylica)"
+SERBIAN_LATIN = "Serbski (Latin)"
+SLOVAK = "Słowacki"
+SLOVAK_QWERTY = "Słowacki (QWERTY)"
+SPANISH = "Hiszpański"
+SWEDISH = "Szwedzki"
+SWISS_GERMAN = "Szwajcarski Niemiecki"
+TATAR = "Tatarski"
+THAI_KEDMANEE = "Tajski Kedmanee"
+THAI_KEDMANEE_NON_SHIFTLOCK = "Tajski (Kedmanee, bez ShiftLock)"
+THAI_PATTACHOTE = "Tajski Pattachote"
+THAI_PATTACHOTE_NON_SHIFTLOCK = "Tajski (Pattachote bez ShiftLock)"
+TURKISH_Q = "Turecki Q"
+TURKISH_F = "Turecki F"
+UK = "Angielski (Wielka Brytania)"
+UKRAINIAN = "Ukraiński"
+UKRAINIAN_STUDENT = "Ukraiński (Student)"
+US = "Angielski (USA)"
+US_ARABIC = "Tablica Angielska (US) dla Arabskiego (IBM 238_L)"
+US_DVORAK = "Angielski (US-Dvorak)"
+US_DVORAK_LEFT = "Angielski (Dvoraka dla leworęcznych)"
+US_DVORAK_RIGHT = "Angielski (Dvoraka dla praworęcznych)"
+US_INTERNATIONAL = "Międzynarodowy (USA)"
+UZBEK_CYRILLIC = "Uzbecki (Cyrylica)"
+VIETNAMESE = "Wietnamski"
 
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL

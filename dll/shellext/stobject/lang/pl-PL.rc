@@ -39,7 +39,7 @@ BEGIN
 
     //Volume related strings
     IDS_VOL_VOLUME "Dźwięk"
-    IDS_VOL_ADJUST "&Ustawienia dźwięku"
+    IDS_VOL_ADJUST "&Właściwości dźwięku"
     IDS_VOL_OPEN "&Otwórz regulację głośności"
     IDS_VOL_RUN "SNDVOL32.EXE"
     IDS_VOL_MUTED "Głośność (wyciszona)"

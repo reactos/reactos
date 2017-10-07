@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Resources for Common Dialogs
  *
  * Copyright 1999 Bertho Stultiens
@@ -34,7 +34,7 @@ Czy chcesz go zastąpić?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Katalog nie istnieje"
     IDS_FILENOTEXISTING     "Plik nie istnieje"
-    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+    IDS_INVALID_FOLDERNAME  "Wybór nie zawiera folderu"
 }
 
 STRINGTABLE
@@ -138,7 +138,7 @@ STRINGTABLE
     IDS_SAVE_AS     "Zapisz jako"
     IDS_OPEN_FILE   "Otwórz plik"
     IDS_SELECT_FOLDER "Wybierz folder"
-    IDS_FONT_SIZE_INPUT "Font size has to be a number."
+    IDS_FONT_SIZE_INPUT "Rozmiar czcionki musi być liczbą."
 }
 
 /*
@@ -314,8 +314,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "Uwzględniaj tylko całe wyrazy", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Uwzględniaj wielkość liter", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Kierunek", grp1, 147, 21, 58, 38
- CONTROL "Przesuń w &górę", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "Przesuń w &dół", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ CONTROL "W &górę", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
+ CONTROL "W &dół", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
 
  DEFPUSHBUTTON "&Znajdź następny", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Anuluj", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
