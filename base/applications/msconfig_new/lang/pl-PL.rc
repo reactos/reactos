@@ -130,7 +130,7 @@ END
 
 IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Rozwiń pliki z źródła instalacji"
+CAPTION "Rozwiń pliki ze źródła instalacji"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Określ pliki, które chcesz przywrócić, lokalizację źródła zawierającą pliki instalacyjne i lokalizację docelową plików.", IDC_STATIC, 7, 7, 339, 17
