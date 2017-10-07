@@ -62,11 +62,12 @@ QueryDeviceName(VOID)
     DWORD Size, Error;
     MOUNTDEV_NAME MDN, *AllocatedMDN;
 
+    Size = 0;
     Ret = DeviceIoControl(Device, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &MDN, sizeof(MDN) - 1, &Size, NULL);
     ok(Ret == 0, "DeviceIoControl succeed\n");
     Error = GetLastError();
     ok(Error == ERROR_INVALID_PARAMETER, "Expecting ERROR_INVALID_PARAMETER, got %ld\n", Error);
-    ok(Size == 40 /* ?! */, "Invalid output size: %ld\n", Size);
+    ok(Size == 0, "Invalid output size: %ld\n", Size);
 
     Ret = DeviceIoControl(Device, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &MDN, sizeof(MDN), &Size, NULL);
     ok(Ret == 0, "DeviceIoControl succeed\n");
@@ -119,11 +120,12 @@ QueryUniqueId(VOID)
     DWORD Size, Error;
     MOUNTDEV_UNIQUE_ID MUI, *AllocatedMUI;
 
+    Size = 0;
     Ret = DeviceIoControl(Device, IOCTL_MOUNTDEV_QUERY_UNIQUE_ID, NULL, 0, &MUI, sizeof(MUI) - 1, &Size, NULL);
     ok(Ret == 0, "DeviceIoControl succeed\n");
     Error = GetLastError();
     ok(Error == ERROR_INVALID_PARAMETER, "Expecting ERROR_INVALID_PARAMETER, got %ld\n", Error);
-    ok(Size == 48 /* ?! */, "Invalid output size: %ld\n", Size);
+    ok(Size == 0, "Invalid output size: %ld\n", Size);
 
     Ret = DeviceIoControl(Device, IOCTL_MOUNTDEV_QUERY_UNIQUE_ID, NULL, 0, &MUI, sizeof(MUI), &Size, NULL);
     ok(Ret == 0, "DeviceIoControl succeed\n");
