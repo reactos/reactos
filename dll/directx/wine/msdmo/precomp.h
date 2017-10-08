@@ -11,6 +11,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <wingdi.h>
 #include <objbase.h>
 
 #include <wine/debug.h>
