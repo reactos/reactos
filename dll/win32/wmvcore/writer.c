@@ -369,3 +369,8 @@ HRESULT WINAPI WMCreateWriter(IUnknown *reserved, IWMWriter **writer)
     *writer = &ret->IWMWriter_iface;
     return S_OK;
 }
+
+HRESULT WINAPI WMCreateWriterPriv(IWMWriter **writer)
+{
+    return WMCreateWriter(NULL, writer);
+}
