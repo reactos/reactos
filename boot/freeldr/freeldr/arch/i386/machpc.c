@@ -19,7 +19,6 @@
 #include <freeldr.h>
 #include <cportlib/cportlib.h>
 
-#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(HWDETECT);

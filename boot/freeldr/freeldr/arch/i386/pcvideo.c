@@ -19,7 +19,6 @@
 #include <freeldr.h>
 #include <suppress.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define VIDEOPORT_PALETTE_READ        0x03C7
