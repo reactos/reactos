@@ -183,6 +183,42 @@ QueryUniqueId(VOID)
     HeapFree(GetProcessHeap(), 0, AllocatedMUI);
 }
 
+static
+VOID
+QuerySuggestedLinkName(VOID)
+{
+    UINT Ret;
+    DWORD Size, Error;
+    MOUNTDEV_SUGGESTED_LINK_NAME MSLN;
+
+    Size = 0;
+    Ret = DeviceIoControl(Device, IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME, NULL, 0, &MSLN, sizeof(MSLN) - 1, &Size, NULL);
+    ok_type(Ret == 0, "DeviceIoControl succeed\n");
+    Error = GetLastError();
+    if (DriveType == DRIVE_FIXED)
+    {
+        ok_type(Error == ERROR_INVALID_PARAMETER, "Expecting ERROR_INVALID_PARAMETER, got %ld\n", Error);
+    }
+    else
+    {
+        ok_type(Error == ERROR_INSUFFICIENT_BUFFER, "Expecting ERROR_INSUFFICIENT_BUFFER, got %ld\n", Error);
+    }
+    ok_type(Size == 0, "Invalid output size: %ld\n", Size);
+
+    Ret = DeviceIoControl(Device, IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME, NULL, 0, &MSLN, sizeof(MSLN), &Size, NULL);
+    ok_type(Ret == 0, "DeviceIoControl succeed\n");
+    Error = GetLastError();
+    if (DriveType == DRIVE_FIXED)
+    {
+        ok_type(Error == ERROR_NOT_FOUND, "Expecting ERROR_NOT_FOUND, got %ld\n", Error);
+    }
+    else
+    {
+        ok_type(Error == ERROR_FILE_NOT_FOUND, "Expecting ERROR_FILE_NOT_FOUND, got %ld\n", Error);
+    }
+    ok_type(Size == 0, "Invalid output size: %ld\n", Size);
+}
+
 START_TEST(DeviceIoControl)
 {
     UINT Ret;
@@ -221,6 +257,7 @@ START_TEST(DeviceIoControl)
                 {
                     QueryDeviceName();
                     QueryUniqueId();
+                    QuerySuggestedLinkName();
                 }
 
                 CloseHandle(Device);
