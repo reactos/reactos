@@ -1,5 +1,5 @@
 
-add_definitions(-D__WINESRC__ -Dcopysignf=_copysignf)
+add_definitions(-D__WINESRC__ -Dcopysignf=_copysignf -D_D3DX9_VER=36)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(d3dx9_36.dll d3dx9_36.spec ADD_IMPORTLIB)
 
@@ -12,6 +12,7 @@ list(APPEND SOURCE
     line.c
     math.c
     mesh.c
+    preshader.c
     render.c
     shader.c
     skin.c

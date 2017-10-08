@@ -85,6 +85,7 @@ static const struct pixel_format_desc formats[] =
     {D3DFMT_G32R32F,       { 0, 32, 32,  0}, { 0,  0, 32,  0},  8, 1, 1,  8, FORMAT_ARGBF,   NULL,         NULL      },
     {D3DFMT_A32B32G32R32F, {32, 32, 32, 32}, {96,  0, 32, 64}, 16, 1, 1, 16, FORMAT_ARGBF,   NULL,         NULL      },
     {D3DFMT_P8,            { 8,  8,  8,  8}, { 0,  0,  0,  0},  1, 1, 1,  1, FORMAT_INDEX,   NULL,         index_to_rgba},
+    {D3DFMT_X8L8V8U8,      { 0,  8,  8,  8}, { 0,  0,  8, 16},  4, 1, 1,  4, FORMAT_ARGB,    NULL,         NULL      },
     /* marks last element */
     {D3DFMT_UNKNOWN,       { 0,  0,  0,  0}, { 0,  0,  0,  0},  0, 1, 1,  0, FORMAT_UNKNOWN, NULL,         NULL      },
 };
@@ -286,90 +287,20 @@ const char *debug_d3dxparameter_registerset(D3DXREGISTER_SET r)
 
 #undef WINE_D3DX_TO_STR
 
-/* parameter type conversion helpers */
-static BOOL get_bool(D3DXPARAMETER_TYPE type, const void *data)
+/***********************************************************************
+ * D3DXDebugMute
+ * Returns always FALSE for us.
+ */
+BOOL WINAPI D3DXDebugMute(BOOL mute)
 {
-    switch (type)
-    {
-        case D3DXPT_FLOAT:
-        case D3DXPT_INT:
-        case D3DXPT_BOOL:
-            return *(DWORD *)data != 0;
-
-        case D3DXPT_VOID:
-            return *(BOOL *)data;
-
-        default:
-            FIXME("Unhandled type %s.\n", debug_d3dxparameter_type(type));
-            return FALSE;
-    }
+    return FALSE;
 }
 
-static INT get_int(D3DXPARAMETER_TYPE type, const void *data)
+/***********************************************************************
+ * D3DXGetDriverLevel.
+ * Returns always 900 (DX 9) for us
+ */
+UINT WINAPI D3DXGetDriverLevel(struct IDirect3DDevice9 *device)
 {
-    switch (type)
-    {
-        case D3DXPT_FLOAT:
-            return (INT)(*(FLOAT *)data);
-
-        case D3DXPT_INT:
-        case D3DXPT_VOID:
-            return *(INT *)data;
-
-        case D3DXPT_BOOL:
-            return get_bool(type, data);
-
-        default:
-            FIXME("Unhandled type %s.\n", debug_d3dxparameter_type(type));
-            return 0;
-    }
-}
-
-static FLOAT get_float(D3DXPARAMETER_TYPE type, const void *data)
-{
-    switch (type)
-    {
-        case D3DXPT_FLOAT:
-        case D3DXPT_VOID:
-            return *(FLOAT *)data;
-
-        case D3DXPT_INT:
-            return (FLOAT)(*(INT *)data);
-
-        case D3DXPT_BOOL:
-            return (FLOAT)get_bool(type, data);
-
-        default:
-            FIXME("Unhandled type %s.\n", debug_d3dxparameter_type(type));
-            return 0.0f;
-    }
-}
-
-void set_number(void *outdata, D3DXPARAMETER_TYPE outtype, const void *indata, D3DXPARAMETER_TYPE intype)
-{
-    if (outtype == intype)
-    {
-        *(DWORD *)outdata = *(DWORD *)indata;
-        return;
-    }
-
-    switch (outtype)
-    {
-        case D3DXPT_FLOAT:
-            *(FLOAT *)outdata = get_float(intype, indata);
-            break;
-
-        case D3DXPT_BOOL:
-            *(BOOL *)outdata = get_bool(intype, indata);
-            break;
-
-        case D3DXPT_INT:
-            *(INT *)outdata = get_int(intype, indata);
-            break;
-
-        default:
-            FIXME("Unhandled type %s.\n", debug_d3dxparameter_type(outtype));
-            *(DWORD *)outdata = 0;
-            break;
-    }
+    return 900;
 }

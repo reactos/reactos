@@ -35,6 +35,7 @@
 #include "dxfile.h"
 #include "rmxfguid.h"
 #include "rmxftmpl.h"
+
 #include "wine/list.h"
 
 struct d3dx9_mesh
@@ -2366,12 +2367,15 @@ BOOL WINAPI D3DXIntersectTri(const D3DXVECTOR3 *p0, const D3DXVECTOR3 *p1, const
     D3DXMATRIX m;
     D3DXVECTOR4 vec;
 
+    TRACE("p0 %p, p1 %p, p2 %p, praypos %p, praydir %p, pu %p, pv %p, pdist %p.\n",
+            p0, p1, p2, praypos, praydir, pu, pv, pdist);
+
     m.u.m[0][0] = p1->x - p0->x;
     m.u.m[1][0] = p2->x - p0->x;
     m.u.m[2][0] = -praydir->x;
     m.u.m[3][0] = 0.0f;
-    m.u.m[0][1] = p1->y - p0->z;
-    m.u.m[1][1] = p2->y - p0->z;
+    m.u.m[0][1] = p1->y - p0->y;
+    m.u.m[1][1] = p2->y - p0->y;
     m.u.m[2][1] = -praydir->y;
     m.u.m[3][1] = 0.0f;
     m.u.m[0][2] = p1->z - p0->z;
@@ -5663,7 +5667,6 @@ static HRESULT create_outline(struct glyphinfo *glyph, void *raw_outline, int da
                         pt->corner = POINTTYPE_CURVE_END;
                 }
                 outline->count--;
-                lastpt = &outline->items[outline->count - 1];
             } else {
                 /* outline closed with a line from end to start point */
                 attempt_line_merge(outline, outline->count - 1, &pt->pos, FALSE, cos_table);
@@ -7186,6 +7189,33 @@ cleanup:
     return hr;
 }
 
+
+/*************************************************************************
+ * D3DXOptimizeVertices    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXOptimizeVertices(const void *indices, UINT num_faces,
+        UINT num_vertices, BOOL indices_are_32bit, DWORD *vertex_remap)
+{
+    UINT i;
+
+    FIXME("indices %p, num_faces %u, num_vertices %u, indices_are_32bit %#x, vertex_remap %p semi-stub.\n",
+            indices, num_faces, num_vertices, indices_are_32bit, vertex_remap);
+
+    if (!vertex_remap)
+    {
+        WARN("vertex remap pointer is NULL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    for (i = 0; i < num_vertices; i++)
+    {
+        vertex_remap[i] = i;
+    }
+
+    return D3D_OK;
+}
+
+
 /*************************************************************************
  * D3DXOptimizeFaces    (D3DX9_36.@)
  *
@@ -7507,6 +7537,24 @@ done:
     HeapFree(GetProcessHeap(), 0, point_reps);
 
     return hr;
+}
+
+/*************************************************************************
+ * D3DXComputeTangent    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXComputeTangent(ID3DXMesh *mesh, DWORD stage_idx, DWORD tangent_idx,
+        DWORD binorm_idx, DWORD wrap, const DWORD *adjacency)
+{
+    TRACE("mesh %p, stage_idx %d, tangent_idx %d, binorm_idx %d, wrap %d, adjacency %p.\n",
+           mesh, stage_idx, tangent_idx, binorm_idx, wrap, adjacency);
+
+    return D3DXComputeTangentFrameEx( mesh, D3DDECLUSAGE_TEXCOORD, stage_idx,
+            ( binorm_idx == D3DX_DEFAULT ) ? D3DX_DEFAULT : D3DDECLUSAGE_BINORMAL,
+            binorm_idx,
+            ( tangent_idx == D3DX_DEFAULT ) ? D3DX_DEFAULT : D3DDECLUSAGE_TANGENT,
+            tangent_idx, D3DX_DEFAULT, 0,
+            ( wrap ? D3DXTANGENT_WRAP_UV : 0 ) | D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_ORTHOGONALIZE_FROM_U,
+            adjacency, -1.01f, -0.01f, -1.01f, NULL, NULL);
 }
 
 /*************************************************************************
