@@ -1,0 +1,81 @@
+/*
+ * Copyright 2017 Alistair Leslie-Hughes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "mfobjects.idl";
+import "mfidl.idl";
+
+typedef struct _DRM_MINIMUM_OUTPUT_PROTECTION_LEVELS
+{
+    WORD wCompressedDigitalVideo;
+    WORD wUncompressedDigitalVideo;
+    WORD wAnalogVideo;
+    WORD wCompressedDigitalAudio;
+    WORD wUncompressedDigitalAudio;
+} DRM_MINIMUM_OUTPUT_PROTECTION_LEVELS;
+
+typedef struct _DRM_VIDEO_OUTPUT_PROTECTION
+{
+    GUID guidId;
+    BYTE bConfigData;
+} DRM_VIDEO_OUTPUT_PROTECTION;
+
+typedef struct _DRM_VIDEO_OUTPUT_PROTECTION_IDS
+{
+    WORD                        cEntries;
+    DRM_VIDEO_OUTPUT_PROTECTION *rgVop;
+} DRM_VIDEO_OUTPUT_PROTECTION_IDS;
+
+typedef struct _DRM_OPL_OUTPUT_IDS
+{
+    WORD cIds;
+    GUID *rgIds;
+} DRM_OPL_OUTPUT_IDS;
+
+typedef struct __tagDRM_COPY_OPL
+{
+    WORD               wMinimumCopyLevel;
+    DRM_OPL_OUTPUT_IDS oplIdIncludes;
+    DRM_OPL_OUTPUT_IDS oplIdExcludes;
+} DRM_COPY_OPL;
+
+typedef struct __tagDRM_PLAY_OPL
+{
+    DRM_MINIMUM_OUTPUT_PROTECTION_LEVELS minOPL;
+    DRM_OPL_OUTPUT_IDS                   oplIdReserved;
+    DRM_VIDEO_OUTPUT_PROTECTION_IDS      vopi;
+} DRM_PLAY_OPL;
+
+
+[
+    uuid(82435be0-f7c1-4df9-8103-eeabebf3d6e1),
+    version(1.0)
+]
+library WMDRMContentEnablerLib
+{
+    importlib("stdole2.tlb");
+
+    [
+        uuid(82435bdf-f7c1-4df9-8103-eeabebf3d6e1)
+    ]
+    coclass WMDRMContentEnablerActivate
+    {
+        [default] interface IPersistStream;
+    };
+};

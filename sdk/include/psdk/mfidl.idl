@@ -1,0 +1,169 @@
+/*
+ * Copyright 2016 Michael Müller
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "mfobjects.idl";
+import "mftransform.idl";
+
+typedef unsigned __int64 TOPOID;
+typedef LONGLONG  MFTIME;
+
+typedef enum MF_TOPOLOGY_TYPE
+{
+    MF_TOPOLOGY_OUTPUT_NODE,
+    MF_TOPOLOGY_SOURCESTREAM_NODE,
+    MF_TOPOLOGY_TRANSFORM_NODE,
+    MF_TOPOLOGY_TEE_NODE,
+    MF_TOPOLOGY_MAX = 0xffffffff
+} MF_TOPOLOGY_TYPE;
+
+typedef enum _MFCLOCK_STATE
+{
+    MFCLOCK_STATE_INVALID,
+    MFCLOCK_STATE_RUNNING,
+    MFCLOCK_STATE_STOPPED,
+    MFCLOCK_STATE_PAUSED
+} MFCLOCK_STATE;
+
+typedef enum MF_OBJECT_TYPE
+{
+    MF_OBJECT_MEDIASOURCE,
+    MF_OBJECT_BYTESTREAM,
+    MF_OBJECT_INVALID
+} MF_OBJECT_TYPE;
+
+typedef struct _MFCLOCK_PROPERTIES
+{
+    unsigned __int64 qwCorrelationRate;
+    GUID             guidClockId;
+    DWORD            dwClockFlags;
+    unsigned __int64 qwClockFrequency;
+    DWORD            dwClockTolerance;
+    DWORD            dwClockJitter;
+} MFCLOCK_PROPERTIES;
+
+[
+    object,
+    uuid(2eb1e945-18b8-4139-9b1a-d5d584818530),
+]
+interface IMFClock : IUnknown
+{
+    HRESULT GetClockCharacteristics([out] DWORD *characteristics);
+    HRESULT GetCorrelatedTime([in] DWORD reserved, [out] LONGLONG *clock_time, [out] MFTIME *system_time);
+    HRESULT GetContinuityKey([out] DWORD *key);
+    HRESULT GetState([in] DWORD reserved, [out] MFCLOCK_STATE *state);
+    HRESULT GetProperties([out] MFCLOCK_PROPERTIES *props);
+}
+
+[
+    object,
+    uuid(83cf873a-f6da-4bc8-823f-bacfd55dc430),
+]
+interface IMFTopologyNode : IMFAttributes
+{
+    HRESULT SetObject([in] IUnknown *object);
+    HRESULT GetObject([out] IUnknown **object);
+    HRESULT GetNodeType([out] MF_TOPOLOGY_TYPE *type);
+    HRESULT GetTopoNodeID([out] TOPOID *id);
+    HRESULT SetTopoNodeID([in] TOPOID id);
+    HRESULT GetInputCount([out] DWORD *count);
+    HRESULT GetOutputCount([out] DWORD *count);
+    [local] HRESULT ConnectOutput([in] DWORD output_index, [in] IMFTopologyNode *node, [in] DWORD input_index);
+    [local] HRESULT DisconnectOutput([in] DWORD index);
+    HRESULT GetInput([in] DWORD input_index, [out] IMFTopologyNode **node, [out] DWORD *output_index);
+    HRESULT GetOutput([in] DWORD output_index, [out] IMFTopologyNode **node, [out] DWORD *input_index);
+    [local] HRESULT SetOutputPrefType([in] DWORD index, [in] IMFMediaType *type);
+    [local] HRESULT GetOutputPrefType([in] DWORD output_index, [out] IMFMediaType **type);
+    [call_as(GetOutputPrefType)] HRESULT RemoteGetOutputPrefType([in] DWORD index, [out] DWORD *length,
+                                                                 [out, size_is(, *length)] BYTE **data);
+    [local] HRESULT SetInputPrefType([in] DWORD index, [in] IMFMediaType *type);
+    [local] HRESULT GetInputPrefType([in] DWORD index, [out] IMFMediaType **type);
+    [call_as(GetInputPrefType)] HRESULT RemoteGetInputPrefType([in] DWORD index, [out] DWORD *length,
+                                                               [out, size_is(, *length)] BYTE **data);
+    HRESULT CloneFrom([in] IMFTopologyNode *node);
+}
+
+[
+    object,
+    uuid(83cf873a-f6da-4bc8-823f-bacfd55dc433),
+]
+interface IMFTopology : IMFAttributes
+{
+    HRESULT GetTopologyID([out] TOPOID *id);
+    [local] HRESULT AddNode([in] IMFTopologyNode *node);
+    [local] HRESULT RemoveNode([in] IMFTopologyNode *node);
+    HRESULT GetNodeCount([out] WORD *nodes);
+    HRESULT GetNode([in] WORD index, [out] IMFTopologyNode **node);
+    [local] HRESULT Clear();
+    HRESULT CloneFrom([in] IMFTopology *topology);
+    HRESULT GetNodeByID([in] TOPOID id, [out] IMFTopologyNode **node);
+    HRESULT GetSourceNodeCollection([out] IMFCollection **collection);
+    HRESULT GetOutputNodeCollection([out] IMFCollection **collection);
+}
+
+[
+    object,
+    uuid(90377834-21d0-4dee-8214-ba2e3e6c1127),
+]
+interface IMFMediaSession : IMFMediaEventGenerator
+{
+    HRESULT SetTopology([in] DWORD flags, [in] IMFTopology *topology);
+    HRESULT ClearTopologies();
+    HRESULT Start([in, unique] const GUID *format, [in, unique] const PROPVARIANT *start);
+    HRESULT Pause();
+    HRESULT Stop();
+    HRESULT Close();
+    HRESULT Shutdown();
+    HRESULT GetClock([out] IMFClock **clock);
+    HRESULT GetSessionCapabilities([out] DWORD *caps);
+    HRESULT GetFullTopology([in] DWORD flags, [in] TOPOID id, [out] IMFTopology **topology);
+}
+
+[
+    object,
+    uuid(fbe5a32d-a497-4b61-bb85-97b1a848a6e3)
+]
+interface IMFSourceResolver : IUnknown
+{
+    [local] HRESULT CreateObjectFromURL([in] const WCHAR *url, [in] DWORD flags, [in] IPropertyStore *props,
+            [out] MF_OBJECT_TYPE *obj_type, [out] IUnknown **object);
+    [local] HRESULT CreateObjectFromByteStream([in] IMFByteStream *stream, [in] const WCHAR *url, [in] DWORD flags,
+            [in] IPropertyStore *props, [out] MF_OBJECT_TYPE *obj_type, [out] IUnknown **object);
+    [local] HRESULT BeginCreateObjectFromURL([in] const WCHAR *url, [in] DWORD flags, [in] IPropertyStore *props,
+            [out] IUnknown **cancel_cookie, [in] IMFAsyncCallback *callback, [in] IUnknown *unk_state);
+    [call_as(BeginCreateObjectFromURL)] HRESULT RemoteBeginCreateObjectFromURL([in, string] const WCHAR *url,
+            [in] DWORD flags, [in] IPropertyStore *props, [in] IMFRemoteAsyncCallback *callback);
+    [local] HRESULT EndCreateObjectFromURL([in] IMFAsyncResult *result, [out] MF_OBJECT_TYPE *obj_type,
+            [out] IUnknown **object);
+    [call_as(EndCreateObjectFromURL)] HRESULT RemoteEndCreateObjectFromURL([in] IUnknown *result,
+            [out] MF_OBJECT_TYPE *obj_type, [out] IUnknown **object);
+    [local] HRESULT BeginCreateObjectFromByteStream([in] IMFByteStream *stream, [in] const WCHAR *url,
+            [in] DWORD flags, [in] IPropertyStore *props, [out] IUnknown **cancel_cookie,
+            [in] IMFAsyncCallback *callback, [in] IUnknown *unk_state);
+    [call_as(BeginCreateObjectFromByteStream)] HRESULT RemoteBeginCreateObjectFromByteStream([in] IMFByteStream *stream,
+            [in, unique] const WCHAR *url, [in] DWORD flags, [in, unique] IPropertyStore *props,
+            [in] IMFRemoteAsyncCallback *callback);
+    [local] HRESULT EndCreateObjectFromByteStream([in] IMFAsyncResult *result, [out] MF_OBJECT_TYPE *obj_type,
+            [out] IUnknown **object);
+    [call_as(EndCreateObjectFromByteStream)] HRESULT RemoteEndCreateObjectFromByteStream([in] IUnknown *result,
+            [out] MF_OBJECT_TYPE *obj_type, [out] IUnknown **object);
+    [local] HRESULT CanceObjectCreation([in] IUnknown *cancel_cookie);
+}
+
+cpp_quote("HRESULT WINAPI MFCreateMediaSession(IMFAttributes *config, IMFMediaSession **session);")
+cpp_quote("HRESULT WINAPI MFCreateSourceResolver(IMFSourceResolver **resolver);")
+cpp_quote("HRESULT WINAPI MFCreateTopology(IMFTopology **topology);")

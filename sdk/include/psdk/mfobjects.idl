@@ -1,0 +1,585 @@
+/*
+ * Copyright 2015 Jacek Caban for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "unknwn.idl";
+import "propsys.idl";
+import "mediaobj.idl";
+
+cpp_quote("#include <mmreg.h>")
+#include <mmreg.h>
+
+typedef ULONGLONG QWORD;
+
+typedef enum _MF_ATTRIBUTE_TYPE {
+    MF_ATTRIBUTE_UINT32     = VT_UI4,
+    MF_ATTRIBUTE_UINT64     = VT_UI8,
+    MF_ATTRIBUTE_DOUBLE     = VT_R8,
+    MF_ATTRIBUTE_GUID       = VT_CLSID,
+    MF_ATTRIBUTE_STRING     = VT_LPWSTR,
+    MF_ATTRIBUTE_BLOB       = VT_VECTOR | VT_UI1,
+    MF_ATTRIBUTE_IUNKNOWN   = VT_UNKNOWN
+} MF_ATTRIBUTE_TYPE;
+
+typedef enum _MF_ATTRIBUTES_MATCH_TYPE {
+    MF_ATTRIBUTES_MATCH_OUR_ITEMS      = 0,
+    MF_ATTRIBUTES_MATCH_THEIR_ITEMS    = 1,
+    MF_ATTRIBUTES_MATCH_ALL_ITEMS      = 2,
+    MF_ATTRIBUTES_MATCH_INTERSECTION   = 3,
+    MF_ATTRIBUTES_MATCH_SMALLER        = 4
+} MF_ATTRIBUTES_MATCH_TYPE;
+
+[
+    object,
+    uuid(2cd2d921-c447-44a7-a13c-4adabfc247e3)
+]
+interface IMFAttributes : IUnknown
+{
+    HRESULT GetItem(REFGUID guidKey, [in, out, ptr] PROPVARIANT *pValue);
+    HRESULT GetItemType(REFGUID guidKey, [out] MF_ATTRIBUTE_TYPE *pType);
+    HRESULT CompareItem(REFGUID guidKey, REFPROPVARIANT Value, [out] BOOL *pbResult);
+    HRESULT Compare(IMFAttributes *pTheirs, MF_ATTRIBUTES_MATCH_TYPE MatchType, [out] BOOL *pbResult);
+    HRESULT GetUINT32(REFGUID guidKey, [out] UINT32 *punValue);
+    HRESULT GetUINT64(REFGUID guidKey, [out] UINT64 *punValue);
+    HRESULT GetDouble(REFGUID guidKey, [out] double *pfValue);
+    HRESULT GetGUID(REFGUID guidKey, [out] GUID *pguidValue);
+    HRESULT GetStringLength(REFGUID guidKey, [out] UINT32 *pcchLength);
+    HRESULT GetString(REFGUID guidKey, [out, size_is(cchBufSize)] LPWSTR pwszValue, UINT32 cchBufSize,
+            [in, out, ptr] UINT32 *pcchLength);
+    HRESULT GetAllocatedString(REFGUID guidKey, [out, size_is(,*pcchLength+1)] LPWSTR *ppwszValue,
+            [out] UINT32 *pcchLength);
+    HRESULT GetBlobSize(REFGUID guidKey, [out] UINT32 *pcbBlobSize);
+    HRESULT GetBlob(REFGUID guidKey, [out, size_is(cbBufSize)] UINT8 *pBuf, UINT32 cbBufSize,
+            [in, out, ptr] UINT32 *pcbBlobSize);
+    HRESULT GetAllocatedBlob(REFGUID guidKey, [out, size_is(,*pcbSize)] UINT8 **ppBuf, [out] UINT32 *pcbSize);
+    HRESULT GetUnknown(REFGUID guidKey, REFIID riid, [out, iid_is(riid)] LPVOID *ppv);
+    HRESULT SetItem(REFGUID guidKey, REFPROPVARIANT Value);
+    HRESULT DeleteItem(REFGUID guidKey);
+    HRESULT DeleteAllItems();
+    HRESULT SetUINT32(REFGUID guidKey, UINT32  unValue);
+    HRESULT SetUINT64(REFGUID guidKey, UINT64  unValue);
+    HRESULT SetDouble(REFGUID guidKey, double fValue);
+    HRESULT SetGUID(REFGUID guidKey, REFGUID guidValue);
+    HRESULT SetString(REFGUID guidKey, [in, string] LPCWSTR wszValue);
+    HRESULT SetBlob(REFGUID guidKey, [in, size_is(cbBufSize)] const UINT8* pBuf, UINT32 cbBufSize);
+    HRESULT SetUnknown(REFGUID guidKey, [in] IUnknown *pUnknown);
+    HRESULT LockStore();
+    HRESULT UnlockStore();
+    HRESULT GetCount([out] UINT32 *pcItems);
+    HRESULT GetItemByIndex(UINT32 unIndex, [out] GUID *pguidKey, [in, out, ptr] PROPVARIANT *pValue);
+    HRESULT CopyAllItems([in] IMFAttributes *pDest);
+}
+
+enum MF_ATTRIBUTE_SERIALIZE_OPTIONS {
+    MF_ATTRIBUTE_SERIALIZE_UNKNOWN_BYREF = 0x00000001
+};
+
+[
+    object,
+    uuid(045fa593-8799-42b8-bc8d-8968c6453507),
+    local
+]
+interface IMFMediaBuffer : IUnknown
+{
+    HRESULT Lock([out] BYTE **ppbBuffer, [out] DWORD *pcbMaxLength, [out] DWORD *pcbCurrentLength);
+    HRESULT Unlock();
+    HRESULT GetCurrentLength([out] DWORD *pcbCurrentLength);
+    HRESULT SetCurrentLength([in] DWORD cbCurrentLength);
+    HRESULT GetMaxLength([out] DWORD *pcbMaxLength);
+}
+
+[
+    object,
+    uuid(c40a00f2-b93a-4d80-ae8c-5a1c634f58e4),
+    local
+]
+interface IMFSample : IMFAttributes
+{
+    HRESULT GetSampleFlags([out] DWORD *pdwSampleFlags);
+    HRESULT SetSampleFlags([in] DWORD dwSampleFlags);
+    HRESULT GetSampleTime([out] LONGLONG *phnsSampleTime);
+    HRESULT SetSampleTime([in] LONGLONG hnsSampleTime);
+    HRESULT GetSampleDuration([out] LONGLONG *phnsSampleDuration);
+    HRESULT SetSampleDuration([in] LONGLONG hnsSampleDuration);
+    HRESULT GetBufferCount([out] DWORD *pdwBufferCount);
+    HRESULT GetBufferByIndex([in] DWORD dwIndex, [out] IMFMediaBuffer **ppBuffer);
+    HRESULT ConvertToContiguousBuffer([out] IMFMediaBuffer **ppBuffer);
+    HRESULT AddBuffer([in] IMFMediaBuffer *pBuffer);
+    HRESULT RemoveBufferByIndex([in] DWORD dwIndex);
+    HRESULT RemoveAllBuffers();
+    HRESULT GetTotalLength([out] DWORD *pcbTotalLength);
+    HRESULT CopyToBuffer([in] IMFMediaBuffer *pBuffer);
+}
+
+[
+    object,
+    uuid(7dc9d5f9-9ed9-44ec-9bbf-0600bb589fbb),
+    local
+]
+interface IMF2DBuffer : IUnknown
+{
+    HRESULT Lock2D([out] BYTE **pbScanline0, [out] LONG *plPitch);
+    HRESULT Unlock2D();
+    HRESULT GetScanline0AndPitch([out] BYTE **pbScanline0, [out] LONG *plPitch);
+    HRESULT IsContiguousFormat([out] BOOL *pfIsContiguous);
+    HRESULT GetContiguousLength([out] DWORD *pcbLength);
+    HRESULT ContiguousCopyTo([out, size_is(cbDestBuffer)] BYTE *pbDestBuffer, [in] DWORD cbDestBuffer);
+    HRESULT ContiguousCopyFrom([in, size_is(cbSrcBuffer)] const BYTE *pbSrcBuffer, [in] DWORD cbSrcBuffer);
+}
+
+[
+    object,
+    uuid(44ae0fa8-ea31-4109-8d2e-4cae4997c555),
+    local
+]
+interface IMFMediaType : IMFAttributes
+{
+    HRESULT GetMajorType([out] GUID *pguidMajorType);
+    HRESULT IsCompressedFormat([out] BOOL *pfCompressed);
+    HRESULT IsEqual([in] IMFMediaType *pIMediaType, [out] DWORD *pdwFlags);
+    HRESULT GetRepresentation([in] GUID guidRepresentation, [out] LPVOID *ppvRepresentation);
+    HRESULT FreeRepresentation([in] GUID guidRepresentation, [in] LPVOID pvRepresentation);
+}
+
+cpp_quote("#define MF_MEDIATYPE_EQUAL_MAJOR_TYPES          0x00000001")
+cpp_quote("#define MF_MEDIATYPE_EQUAL_FORMAT_TYPES         0x00000002")
+cpp_quote("#define MF_MEDIATYPE_EQUAL_FORMAT_DATA          0x00000004")
+cpp_quote("#define MF_MEDIATYPE_EQUAL_FORMAT_USER_DATA     0x00000008")
+
+[
+    object,
+    uuid(26a0adc3-ce26-4672-9304-69552edd3faf),
+    local
+]
+interface IMFAudioMediaType : IMFMediaType
+{
+    const WAVEFORMATEX *GetAudioFormat();
+}
+
+typedef struct {
+    GUID guidMajorType;
+    GUID guidSubtype;
+} MFT_REGISTER_TYPE_INFO;
+
+typedef enum _MFVideoFlags {
+    MFVideoFlag_PAD_TO_Mask             = 0x00000003,
+    MFVideoFlag_PAD_TO_None             = 0,
+    MFVideoFlag_PAD_TO_4x3              = 0x00000001,
+    MFVideoFlag_PAD_TO_16x9             = 0x00000002,
+    MFVideoFlag_SrcContentHintMask      = 0x0000001c,
+    MFVideoFlag_SrcContentHintNone      = 0,
+    MFVideoFlag_SrcContentHint16x9      = 0x00000004,
+    MFVideoFlag_SrcContentHint235_1     = 0x00000008,
+    MFVideoFlag_AnalogProtected         = 0x00000020,
+    MFVideoFlag_DigitallyProtected      = 0x00000040,
+    MFVideoFlag_ProgressiveContent      = 0x00000080,
+    MFVideoFlag_FieldRepeatCountMask    = 0x00000700,
+    MFVideoFlag_FieldRepeatCountShift   = 8,
+    MFVideoFlag_ProgressiveSeqReset     = 0x00000800,
+    MFVideoFlag_PanScanEnabled          = 0x00020000,
+    MFVideoFlag_LowerFieldFirst         = 0x00040000,
+    MFVideoFlag_BottomUpLinearRep       = 0x00080000,
+    MFVideoFlags_DXVASurface            = 0x00100000,
+    MFVideoFlags_RenderTargetSurface    = 0x00400000,
+    MFVideoFlags_ForceQWORD             = 0x7fffffff
+} MFVideoFlags;
+
+typedef struct _MFRatio {
+    DWORD Numerator;
+    DWORD Denominator;
+} MFRatio;
+
+typedef struct _MFOffset {
+    WORD  fract;
+    short value;
+} MFOffset;
+
+typedef struct _MFVideoArea {
+    MFOffset OffsetX;
+    MFOffset OffsetY;
+    SIZE     Area;
+} MFVideoArea;
+
+typedef enum _MFVideoChromaSubsampling {
+    MFVideoChromaSubsampling_Unknown                        = 0,
+    MFVideoChromaSubsampling_ProgressiveChroma              = 0x8,
+    MFVideoChromaSubsampling_Horizontally_Cosited           = 0x4,
+    MFVideoChromaSubsampling_Vertically_Cosited             = 0x2,
+    MFVideoChromaSubsampling_Vertically_AlignedChromaPlanes = 0x1,
+    MFVideoChromaSubsampling_MPEG2
+        = MFVideoChromaSubsampling_Horizontally_Cosited
+        | MFVideoChromaSubsampling_Vertically_AlignedChromaPlanes,
+    MFVideoChromaSubsampling_MPEG1
+        = MFVideoChromaSubsampling_Vertically_AlignedChromaPlanes,
+    MFVideoChromaSubsampling_DV_PAL
+        = MFVideoChromaSubsampling_Horizontally_Cosited
+        | MFVideoChromaSubsampling_Vertically_Cosited,
+    MFVideoChromaSubsampling_Cosited
+        = MFVideoChromaSubsampling_Horizontally_Cosited
+        | MFVideoChromaSubsampling_Vertically_Cosited
+        | MFVideoChromaSubsampling_Vertically_AlignedChromaPlanes,
+    MFVideoChromaSubsampling_Last        = MFVideoChromaSubsampling_Cosited + 1,
+    MFVideoChromaSubsampling_ForceDWORD  = 0x7fffffff
+} MFVideoChromaSubsampling;
+
+typedef enum _MFVideoInterlaceMode {
+    MFVideoInterlace_Unknown                     = 0,
+    MFVideoInterlace_Progressive                 = 2,
+    MFVideoInterlace_FieldInterleavedUpperFirst  = 3,
+    MFVideoInterlace_FieldInterleavedLowerFirst  = 4,
+    MFVideoInterlace_FieldSingleUpper            = 5,
+    MFVideoInterlace_FieldSingleLower            = 6,
+    MFVideoInterlace_MixedInterlaceOrProgressive = 7,
+    MFVideoInterlace_Last,
+    MFVideoInterlace_ForceDWORD                  = 0x7fffffff
+} MFVideoInterlaceMode;
+
+typedef enum _MFVideoTransferFunction {
+    MFVideoTransFunc_Unknown      = 0,
+    MFVideoTransFunc_10           = 1,
+    MFVideoTransFunc_18           = 2,
+    MFVideoTransFunc_20           = 3,
+    MFVideoTransFunc_22           = 4,
+    MFVideoTransFunc_709          = 5,
+    MFVideoTransFunc_240M         = 6,
+    MFVideoTransFunc_sRGB         = 7,
+    MFVideoTransFunc_28           = 8,
+    MFVideoTransFunc_Log_100      = 9,
+    MFVideoTransFunc_Log_316      = 10,
+    MFVideoTransFunc_709_sym      = 11,
+    MFVideoTransFunc_Last,
+    MFVideoTransFunc_ForceDWORD   = 0x7fffffff
+} MFVideoTransferFunction;
+
+typedef enum _MFVideoTransferMatrix {
+    MFVideoTransferMatrix_Unknown      = 0,
+    MFVideoTransferMatrix_BT709        = 1,
+    MFVideoTransferMatrix_BT601        = 2,
+    MFVideoTransferMatrix_SMPTE240M    = 3,
+    MFVideoTransferMatrix_Last,
+    MFVideoTransferMatrix_ForceDWORD   = 0x7fffffff
+} MFVideoTransferMatrix;
+
+typedef enum _MFVideoPrimaries {
+    MFVideoPrimaries_Unknown         = 0,
+    MFVideoPrimaries_reserved        = 1,
+    MFVideoPrimaries_BT709           = 2,
+    MFVideoPrimaries_BT470_2_SysM    = 3,
+    MFVideoPrimaries_BT470_2_SysBG   = 4,
+    MFVideoPrimaries_SMPTE170M       = 5,
+    MFVideoPrimaries_SMPTE240M       = 6,
+    MFVideoPrimaries_EBU3213         = 7,
+    MFVideoPrimaries_SMPTE_C         = 8,
+    MFVideoPrimaries_Last,
+    MFVideoPrimaries_ForceDWORD      = 0x7fffffff
+} MFVideoPrimaries;
+
+typedef enum _MFVideoLighting {
+  MFVideoLighting_Unknown      = 0,
+  MFVideoLighting_bright       = 1,
+  MFVideoLighting_office       = 2,
+  MFVideoLighting_dim          = 3,
+  MFVideoLighting_dark         = 4,
+  MFVideoLighting_Last,
+  MFVideoLighting_ForceDWORD   = 0x7fffffff
+} MFVideoLighting;
+
+typedef enum _MFNominalRange {
+    MFNominalRange_Unknown   = 0,
+    MFNominalRange_Normal    = 1,
+    MFNominalRange_Wide      = 2,
+    MFNominalRange_0_255     = 1,
+    MFNominalRange_16_235    = 2,
+    MFNominalRange_48_208    = 3,
+    MFNominalRange_64_127    = 4
+} MFNominalRange;
+
+typedef struct _MFVideoInfo {
+    DWORD                    dwWidth;
+    DWORD                    dwHeight;
+    MFRatio                  PixelAspectRatio;
+    MFVideoChromaSubsampling SourceChromaSubsampling;
+    MFVideoInterlaceMode     InterlaceMode;
+    MFVideoTransferFunction  TransferFunction;
+    MFVideoPrimaries         ColorPrimaries;
+    MFVideoTransferMatrix    TransferMatrix;
+    MFVideoLighting          SourceLighting;
+    MFRatio                  FramesPerSecond;
+    MFNominalRange           NominalRange;
+    MFVideoArea              GeometricAperture;
+    MFVideoArea              MinimumDisplayAperture;
+    MFVideoArea              PanScanAperture;
+    unsigned __int64         VideoFlags;
+} MFVideoInfo;
+
+typedef struct _MFVideoCompressedInfo {
+    LONGLONG AvgBitrate;
+    LONGLONG AvgBitErrorRate;
+    DWORD    MaxKeyFrameSpacing;
+} MFVideoCompressedInfo;
+
+typedef struct _MFARGB {
+    BYTE rgbBlue;
+    BYTE rgbGreen;
+    BYTE rgbRed;
+    BYTE rgbAlpha;
+} MFARGB;
+
+typedef struct __MFAYUVSample {
+    BYTE bCrValue;
+    BYTE bCbValue;
+    BYTE bYValue;
+    BYTE bSampleAlpha8;
+} MFAYUVSample;
+
+typedef union _MFPaletteEntry {
+    MFARGB       ARGB;
+    MFAYUVSample AYCbCr;
+} MFPaletteEntry;
+
+typedef struct _MFVideoSurfaceInfo {
+    DWORD          Format;
+    DWORD          PaletteEntries;
+    MFPaletteEntry Palette[];
+} MFVideoSurfaceInfo;
+
+typedef struct _MFVIDEOFORMAT {
+    DWORD                 dwSize;
+    MFVideoInfo           videoInfo;
+    GUID                  guidFormat;
+    MFVideoCompressedInfo compressedInfo;
+    MFVideoSurfaceInfo    surfaceInfo;
+} MFVIDEOFORMAT;
+
+typedef enum _MFStandardVideoFormat {
+  MFStdVideoFormat_reserved       = 0,
+  MFStdVideoFormat_NTSC,
+  MFStdVideoFormat_PAL,
+  MFStdVideoFormat_DVD_NTSC,
+  MFStdVideoFormat_DVD_PAL,
+  MFStdVideoFormat_DV_PAL,
+  MFStdVideoFormat_DV_NTSC,
+  MFStdVideoFormat_ATSC_SD480i,
+  MFStdVideoFormat_ATSC_HD1080i,
+  MFStdVideoFormat_ATSC_HD720p
+} MFStandardVideoFormat;
+
+[
+    object,
+    uuid(b99f381f-a8f9-47a2-a5af-ca3a225a3890),
+    local
+]
+interface IMFVideoMediaType : IMFMediaType
+{
+    const MFVIDEOFORMAT *GetVideoFormat();
+
+    HRESULT GetVideoRepresentation([in] GUID guidRepresentation, [out] LPVOID *ppvRepresentation,
+            [in] LONG lStride);
+}
+
+[
+    object,
+    uuid(ac6b7889-0740-4d51-8619-905994a55cc6)
+]
+interface IMFAsyncResult : IUnknown
+{
+    HRESULT GetState([out] IUnknown **ppunkState);
+    HRESULT GetStatus();
+    HRESULT SetStatus([in] HRESULT hrStatus);
+    HRESULT GetObject([out] IUnknown **ppObject);
+    [local] IUnknown *GetStateNoAddRef();
+}
+
+[
+    object,
+    uuid(a27003cf-2354-4f2a-8d6a-ab7cff15437e),
+]
+interface IMFAsyncCallback : IUnknown
+{
+    HRESULT GetParameters([out] DWORD *pdwFlags, [out] DWORD *pdwQueue);
+    HRESULT Invoke([in] IMFAsyncResult *pAsyncResult);
+}
+
+[
+    object,
+    uuid(a27003d0-2354-4f2a-8d6a-ab7cff15437e),
+]
+interface IMFRemoteAsyncCallback : IUnknown
+{
+    HRESULT Invoke([in] HRESULT hr, [in] IUnknown *pRemoteResult);
+}
+
+cpp_quote("#define MFASYNC_FAST_IO_PROCESSING_CALLBACK  0x0001")
+cpp_quote("#define MFASYNC_SIGNAL_CALLBACK              0x0002" )
+
+cpp_quote("#define MFASYNC_CALLBACK_QUEUE_UNDEFINED      0x00000000")
+cpp_quote("#define MFASYNC_CALLBACK_QUEUE_STANDARD       0x00000001")
+cpp_quote("#define MFASYNC_CALLBACK_QUEUE_RT             0x00000002")
+cpp_quote("#define MFASYNC_CALLBACK_QUEUE_IO             0x00000003")
+cpp_quote("#define MFASYNC_CALLBACK_QUEUE_TIMER          0x00000004")
+cpp_quote("#define MFASYNC_CALLBACK_QUEUE_LONG_FUNCTION  0x00000007")
+cpp_quote("#define MFASYNC_CALLBACK_QUEUE_PRIVATE_MASK   0xffff0000")
+cpp_quote("#define MFASYNC_CALLBACK_QUEUE_ALL            0xffffffff")
+
+typedef DWORD MediaEventType;
+
+[
+    object,
+    uuid(df598932-f10c-4e39-bba2-c308f101daa3)
+]
+interface IMFMediaEvent : IMFAttributes
+{
+    HRESULT GetType([out] MediaEventType *pmet);
+    HRESULT GetExtendedType([out] GUID *pguidExtendedType);
+    HRESULT GetStatus([out] HRESULT *phrStatus);
+    HRESULT GetValue([out] PROPVARIANT *pvValue);
+}
+
+[
+    object,
+    uuid(2cd0bd52-bcd5-4b89-b62c-eadc0c031e7d)
+]
+interface IMFMediaEventGenerator : IUnknown
+{
+    HRESULT GetEvent([in] DWORD dwFlags, [out] IMFMediaEvent **ppEvent);
+
+    [local] HRESULT BeginGetEvent([in] IMFAsyncCallback *pCallback, [in] IUnknown *punkState);
+    [call_as(BeginGetEvent)] HRESULT RemoteBeginGetEvent([in] IMFRemoteAsyncCallback *pCallback);
+
+    [local] HRESULT EndGetEvent([in] IMFAsyncResult *pResult, [out] IMFMediaEvent **ppEvent);
+    [call_as(EndGetEvent)] HRESULT RemoteEndGetEvent([in] IUnknown *pResult, [out] DWORD *pcbEvent,
+                                   [out, size_is(,*pcbEvent)] BYTE **ppbEvent);
+
+    HRESULT QueueEvent([in] MediaEventType met, [in] REFGUID guidExtendedType, [in] HRESULT hrStatus,
+            [in, unique] const PROPVARIANT *pvValue);
+}
+
+typedef enum _MFBYTESTREAM_SEEK_ORIGIN {
+    msoBegin,
+    msoCurrent
+} MFBYTESTREAM_SEEK_ORIGIN;
+
+[
+    object,
+    uuid(ad4c1b00-4bf7-422f-9175-756693d9130d),
+]
+interface IMFByteStream : IUnknown
+{
+    HRESULT GetCapabilities([out] DWORD *pdwCapabilities);
+    HRESULT GetLength([out] QWORD *pqwLength);
+    HRESULT SetLength([in] QWORD qwLength);
+    HRESULT GetCurrentPosition([out] QWORD *pqwPosition);
+    HRESULT SetCurrentPosition([in] QWORD qwPosition);
+    HRESULT IsEndOfStream([out] BOOL *pfEndOfStream);
+
+    [local] HRESULT Read([in] BYTE* pb, [in] ULONG cb, [out] ULONG *pcbRead);
+    [local] HRESULT BeginRead([in] BYTE *pb, [in] ULONG cb, [in] IMFAsyncCallback *pCallback, [in] IUnknown *punkState);
+    [local] HRESULT EndRead([in] IMFAsyncResult *pResult, [out] ULONG *pcbRead);
+    [local] HRESULT Write([in] const BYTE *pb, [in] ULONG cb, [out] ULONG *pcbWritten);
+    [local] HRESULT BeginWrite([in] const BYTE *pb, [in] ULONG cb, [in] IMFAsyncCallback *pCallback, [in] IUnknown *punkState);
+    [local] HRESULT EndWrite([in] IMFAsyncResult *pResult, [out] ULONG *pcbWritten);
+    [local] HRESULT Seek([in] MFBYTESTREAM_SEEK_ORIGIN SeekOrigin, [in] LONGLONG llSeekOffset, [in] DWORD dwSeekFlags,
+                    [out] QWORD *pqwCurrentPosition);
+
+    HRESULT Flush();
+    HRESULT Close();
+}
+
+cpp_quote("#define MFBYTESTREAM_IS_READABLE                0x00000001")
+cpp_quote("#define MFBYTESTREAM_IS_WRITABLE                0x00000002")
+cpp_quote("#define MFBYTESTREAM_IS_SEEKABLE                0x00000004")
+cpp_quote("#define MFBYTESTREAM_IS_REMOTE                  0x00000008")
+cpp_quote("#define MFBYTESTREAM_IS_DIRECTORY               0x00000080")
+cpp_quote("#define MFBYTESTREAM_HAS_SLOW_SEEK              0x00000100")
+cpp_quote("#define MFBYTESTREAM_IS_PARTIALLY_DOWNLOADED    0x00000200")
+cpp_quote("#define MFBYTESTREAM_SHARE_WRITE                0x00000400")
+
+cpp_quote("#define MFBYTESTREAM_SEEK_FLAG_CANCEL_PENDING_IO  0x00000001")
+
+cpp_quote("EXTERN_GUID(MF_BYTESTREAM_ORIGIN_NAME,        0xfc358288,0x3cb6,0x460c,0xa4,0x24,0xb6,0x68,0x12,0x60,0x37,0x5a);")
+cpp_quote("EXTERN_GUID(MF_BYTESTREAM_CONTENT_TYPE,       0xfc358289,0x3cb6,0x460c,0xa4,0x24,0xb6,0x68,0x12,0x60,0x37,0x5a);")
+cpp_quote("EXTERN_GUID(MF_BYTESTREAM_DURATION,           0xfc35828a,0x3cb6,0x460c,0xa4,0x24,0xb6,0x68,0x12,0x60,0x37,0x5a);")
+cpp_quote("EXTERN_GUID(MF_BYTESTREAM_LAST_MODIFIED_TIME, 0xfc35828b,0x3cb6,0x460c,0xa4,0x24,0xb6,0x68,0x12,0x60,0x37,0x5a);")
+cpp_quote("EXTERN_GUID(MF_BYTESTREAM_IFO_FILE_URI,       0xfc35828c,0x3cb6,0x460c,0xa4,0x24,0xb6,0x68,0x12,0x60,0x37,0x5a);")
+cpp_quote("EXTERN_GUID(MF_BYTESTREAM_DLNA_PROFILE_ID,    0xfc35828d,0x3cb6,0x460c,0xa4,0x24,0xb6,0x68,0x12,0x60,0x37,0x5a);")
+
+typedef enum MF_FILE_ACCESSMODE {
+    MF_ACCESSMODE_READ      = 1,
+    MF_ACCESSMODE_WRITE     = 2,
+    MF_ACCESSMODE_READWRITE = 3
+} MF_FILE_ACCESSMODE;
+
+typedef enum  {
+    MF_OPENMODE_FAIL_IF_NOT_EXIST   = 0,
+    MF_OPENMODE_FAIL_IF_EXIST       = 1,
+    MF_OPENMODE_RESET_IF_EXIST      = 2,
+    MF_OPENMODE_APPEND_IF_EXIST     = 3,
+    MF_OPENMODE_DELETE_IF_EXIST     = 4
+} MF_FILE_OPENMODE;
+
+typedef enum  {
+    MF_FILEFLAGS_NONE                  = 0x00000000,
+    MF_FILEFLAGS_NOBUFFERING           = 0x00000001,
+    MF_FILEFLAGS_ALLOW_WRITE_SHARING   = 0x00000002
+} MF_FILE_FLAGS;
+
+[
+    object,
+    uuid(5bc8a76b-869a-46a3-9b03-fa218a66aebe)
+]
+interface IMFCollection : IUnknown
+{
+    HRESULT GetElementCount([out] DWORD *pcElements);
+    HRESULT GetElement([in] DWORD dwElementIndex, [out] IUnknown **ppUnkElement);
+    HRESULT AddElement([in] IUnknown *pUnkElement);
+    HRESULT RemoveElement([in] DWORD dwElementIndex, [out] IUnknown **ppUnkElement);
+    HRESULT InsertElementAt([in] DWORD dwIndex, [in] IUnknown *pUnknown);
+    HRESULT RemoveAllElements();
+}
+
+[
+    object,
+    uuid(7fee9e9a-4a89-47a6-899c-b6a53a70fb67),
+    pointer_default(unique)
+]
+interface IMFActivate : IMFAttributes
+{
+    HRESULT ActivateObject([in] REFIID riid, [out, iid_is(riid), retval] void **ppv);
+    HRESULT ShutdownObject();
+    HRESULT DetachObject();
+}
+
+typedef enum _MF_Plugin_Type {
+    MF_Plugin_Type_MFT           = 0,
+    MF_Plugin_Type_MediaSource   = 1
+} MF_Plugin_Type;
+
+[
+    object,
+    local,
+    uuid(5c6c44bf-1db6-435b-9249-e8cd10fdec96),
+    pointer_default(unique)
+]
+interface IMFPluginControl : IUnknown
+{
+   HRESULT GetPreferredClsid(DWORD pluginType, LPCWSTR selector, CLSID *clsid);
+   HRESULT GetPreferredClsidByIndex(DWORD pluginType, DWORD index, LPWSTR *selector, CLSID *clsid);
+   HRESULT SetPreferredClsid(DWORD pluginType, LPCWSTR selector, const CLSID *clsid);
+   HRESULT IsDisabled(DWORD pluginType, REFCLSID clsid);
+   HRESULT GetDisabledByIndex(DWORD pluginType, DWORD index, CLSID *clsid);
+   HRESULT SetDisabled(DWORD pluginType, REFCLSID clsid, BOOL disabled);
+}
