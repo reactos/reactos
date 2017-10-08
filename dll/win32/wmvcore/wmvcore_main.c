@@ -19,7 +19,7 @@
 #include "wmvcore.h"
 
 #include "initguid.h"
-#include "wmsdkidl.h"
+#include "wmsdk.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wmvcore);
@@ -47,6 +47,13 @@ HRESULT WINAPI DllRegisterServer(void)
     return S_OK;
 }
 
+HRESULT WINAPI WMCheckURLScheme(const WCHAR *scheme)
+{
+    FIXME("(%s): stub\n", wine_dbgstr_w(scheme));
+
+    return NS_E_INVALID_NAME;
+}
+
 HRESULT WINAPI WMCreateEditor(IWMMetadataEditor **editor)
 {
     FIXME("(%p): stub\n", editor);
@@ -59,6 +66,17 @@ HRESULT WINAPI WMCreateEditor(IWMMetadataEditor **editor)
 typedef struct {
     IWMReader IWMReader_iface;
     IWMReaderAdvanced6 IWMReaderAdvanced6_iface;
+    IWMReaderAccelerator IWMReaderAccelerator_iface;
+    IWMReaderNetworkConfig2 IWMReaderNetworkConfig2_iface;
+    IWMReaderStreamClock IWMReaderStreamClock_iface;
+    IWMReaderTypeNegotiation IWMReaderTypeNegotiation_iface;
+    IWMReaderTimecode IWMReaderTimecode_iface;
+    IWMReaderPlaylistBurn IWMReaderPlaylistBurn_iface;
+    IWMHeaderInfo3 IWMHeaderInfo3_iface;
+    IWMLanguageList IWMLanguageList_iface;
+    IReferenceClock IReferenceClock_iface;
+    IWMProfile3 IWMProfile3_iface;
+    IWMPacketSize2 IWMPacketSize2_iface;
     LONG ref;
 } WMReader;
 
@@ -95,6 +113,57 @@ static HRESULT WINAPI WMReader_QueryInterface(IWMReader *iface, REFIID riid, voi
     }else if(IsEqualGUID(riid, &IID_IWMReaderAdvanced6)) {
         TRACE("(%p)->(IID_IWMReaderAdvanced6 %p)\n", This, ppv);
         *ppv = &This->IWMReaderAdvanced6_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMReaderAccelerator)) {
+        TRACE("(%p)->(IID_IWMReaderAccelerator %p)\n", This, ppv);
+        *ppv = &This->IWMReaderAccelerator_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMReaderNetworkConfig)) {
+        TRACE("(%p)->(IWMReaderNetworkConfig %p)\n", This, ppv);
+        *ppv = &This->IWMReaderNetworkConfig2_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMReaderNetworkConfig2)) {
+        TRACE("(%p)->(IWMReaderNetworkConfig2 %p)\n", This, ppv);
+        *ppv = &This->IWMReaderNetworkConfig2_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMReaderStreamClock)) {
+        TRACE("(%p)->(IWMReaderStreamClock %p)\n", This, ppv);
+        *ppv = &This->IWMReaderStreamClock_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMReaderTypeNegotiation)) {
+        TRACE("(%p)->(IWMReaderTypeNegotiation %p)\n", This, ppv);
+        *ppv = &This->IWMReaderTypeNegotiation_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMReaderTimecode)) {
+        TRACE("(%p)->(IWMReaderTimecode %p)\n", This, ppv);
+        *ppv = &This->IWMReaderTimecode_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMReaderPlaylistBurn)) {
+        TRACE("(%p)->(IWMReaderPlaylistBurn %p)\n", This, ppv);
+        *ppv = &This->IWMReaderPlaylistBurn_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMHeaderInfo)) {
+        TRACE("(%p)->(IWMHeaderInfo %p)\n", This, ppv);
+        *ppv = &This->IWMHeaderInfo3_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMHeaderInfo2)) {
+        TRACE("(%p)->(IWMHeaderInfo2 %p)\n", This, ppv);
+        *ppv = &This->IWMHeaderInfo3_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMHeaderInfo3)) {
+        TRACE("(%p)->(IWMHeaderInfo3 %p)\n", This, ppv);
+        *ppv = &This->IWMHeaderInfo3_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMLanguageList)) {
+        TRACE("(%p)->(IWMLanguageList %p)\n", This, ppv);
+        *ppv = &This->IWMLanguageList_iface;
+    }else if(IsEqualGUID(riid, &IID_IReferenceClock)) {
+        TRACE("(%p)->(IWMLanguageList %p)\n", This, ppv);
+        *ppv = &This->IReferenceClock_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMProfile)) {
+        TRACE("(%p)->(IWMProfile %p)\n", This, ppv);
+        *ppv = &This->IWMProfile3_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMProfile2)) {
+        TRACE("(%p)->(IWMProfile2 %p)\n", This, ppv);
+        *ppv = &This->IWMProfile3_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMProfile3)) {
+        TRACE("(%p)->(IWMProfile3 %p)\n", This, ppv);
+        *ppv = &This->IWMProfile3_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMPacketSize)) {
+        TRACE("(%p)->(IWMPacketSize %p)\n", This, ppv);
+        *ppv = &This->IWMPacketSize2_iface;
+    }else if(IsEqualGUID(riid, &IID_IWMPacketSize2)) {
+        TRACE("(%p)->(IWMPacketSize2 %p)\n", This, ppv);
+        *ppv = &This->IWMPacketSize2_iface;
     }else {
         *ppv = NULL;
         FIXME("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
@@ -649,6 +718,1356 @@ static const IWMReaderAdvanced6Vtbl WMReaderAdvanced6Vtbl = {
     WMReaderAdvanced6_SetProtextStreamSamples
 };
 
+static inline WMReader *impl_from_IWMReaderAccelerator(IWMReaderAccelerator *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMReaderAccelerator_iface);
+}
+
+static HRESULT WINAPI reader_accl_QueryInterface(IWMReaderAccelerator *iface, REFIID riid, void **object)
+{
+    WMReader *This = impl_from_IWMReaderAccelerator(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, object);
+}
+
+static ULONG WINAPI reader_accl_AddRef(IWMReaderAccelerator *iface)
+{
+    WMReader *This = impl_from_IWMReaderAccelerator(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI reader_accl_Release(IWMReaderAccelerator *iface)
+{
+    WMReader *This = impl_from_IWMReaderAccelerator(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI reader_accl_GetCodecInterface(IWMReaderAccelerator *iface, DWORD output, REFIID riid, void **codec)
+{
+    WMReader *This = impl_from_IWMReaderAccelerator(iface);
+
+    FIXME("%p, %d, %s, %p\n", This, output, debugstr_guid(riid), codec);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI reader_accl_Notify(IWMReaderAccelerator *iface, DWORD output, WM_MEDIA_TYPE *subtype)
+{
+    WMReader *This = impl_from_IWMReaderAccelerator(iface);
+
+    FIXME("%p, %d, %p\n", This, output, subtype);
+
+    return E_NOTIMPL;
+}
+
+static const IWMReaderAcceleratorVtbl WMReaderAcceleratorVtbl = {
+    reader_accl_QueryInterface,
+    reader_accl_AddRef,
+    reader_accl_Release,
+    reader_accl_GetCodecInterface,
+    reader_accl_Notify
+};
+
+static inline WMReader *impl_from_IWMReaderNetworkConfig2(IWMReaderNetworkConfig2 *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMReaderNetworkConfig2_iface);
+}
+
+static HRESULT WINAPI networkconfig_QueryInterface(IWMReaderNetworkConfig2 *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI networkconfig_AddRef(IWMReaderNetworkConfig2 *iface)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI networkconfig_Release(IWMReaderNetworkConfig2 *iface)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI networkconfig_GetBufferingTime(IWMReaderNetworkConfig2 *iface, QWORD *buffering_time)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, buffering_time);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetBufferingTime(IWMReaderNetworkConfig2 *iface, QWORD buffering_time)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s\n", This, wine_dbgstr_longlong(buffering_time));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetUDPPortRanges(IWMReaderNetworkConfig2 *iface, WM_PORT_NUMBER_RANGE *array,
+        DWORD *ranges)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p, %p\n", This, array, ranges);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetUDPPortRanges(IWMReaderNetworkConfig2 *iface, WM_PORT_NUMBER_RANGE *array,
+        DWORD ranges)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p, %u\n", This, array, ranges);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetProxySettings(IWMReaderNetworkConfig2 *iface, const WCHAR *protocol,
+        WMT_PROXY_SETTINGS *proxy)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %p\n", This, debugstr_w(protocol), proxy);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetProxySettings(IWMReaderNetworkConfig2 *iface, LPCWSTR protocol,
+        WMT_PROXY_SETTINGS proxy)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %d\n", This, debugstr_w(protocol), proxy);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetProxyHostName(IWMReaderNetworkConfig2 *iface, const WCHAR *protocol,
+        WCHAR *hostname, DWORD *size)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %p, %p\n", This, debugstr_w(protocol), hostname, size);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetProxyHostName(IWMReaderNetworkConfig2 *iface, const WCHAR *protocol,
+        const WCHAR *hostname)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %s\n", This, debugstr_w(protocol), debugstr_w(hostname));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetProxyPort(IWMReaderNetworkConfig2 *iface, const WCHAR *protocol,
+        DWORD *port)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %p\n", This, debugstr_w(protocol), port);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetProxyPort(IWMReaderNetworkConfig2 *iface, const WCHAR *protocol,
+        DWORD port)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %u\n", This, debugstr_w(protocol), port);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetProxyExceptionList(IWMReaderNetworkConfig2 *iface, const WCHAR *protocol,
+        WCHAR *exceptions, DWORD *count)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %p, %p\n", This, debugstr_w(protocol), exceptions, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetProxyExceptionList(IWMReaderNetworkConfig2 *iface, const WCHAR *protocol,
+        const WCHAR *exceptions)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %s\n", This, debugstr_w(protocol), debugstr_w(exceptions));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetProxyBypassForLocal(IWMReaderNetworkConfig2 *iface, const WCHAR *protocol,
+        BOOL *bypass)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %p\n", This, debugstr_w(protocol), bypass);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetProxyBypassForLocal(IWMReaderNetworkConfig2 *iface, const WCHAR *protocol,
+        BOOL bypass)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s, %d\n", This, debugstr_w(protocol), bypass);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetForceRerunAutoProxyDetection(IWMReaderNetworkConfig2 *iface,
+        BOOL *detection)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, detection);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetForceRerunAutoProxyDetection(IWMReaderNetworkConfig2 *iface,
+        BOOL detection)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %d\n", This, detection);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetEnableMulticast(IWMReaderNetworkConfig2 *iface, BOOL *multicast)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, multicast);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetEnableMulticast(IWMReaderNetworkConfig2 *iface, BOOL multicast)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %d\n", This, multicast);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetEnableHTTP(IWMReaderNetworkConfig2 *iface, BOOL *enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetEnableHTTP(IWMReaderNetworkConfig2 *iface, BOOL enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %d\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetEnableUDP(IWMReaderNetworkConfig2 *iface, BOOL *enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetEnableUDP(IWMReaderNetworkConfig2 *iface, BOOL enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %d\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetEnableTCP(IWMReaderNetworkConfig2 *iface, BOOL *enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetEnableTCP(IWMReaderNetworkConfig2 *iface, BOOL enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %d\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_ResetProtocolRollover(IWMReaderNetworkConfig2 *iface)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetConnectionBandwidth(IWMReaderNetworkConfig2 *iface, DWORD *bandwidth)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, bandwidth);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetConnectionBandwidth(IWMReaderNetworkConfig2 *iface, DWORD bandwidth)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %u\n", This, bandwidth);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetNumProtocolsSupported(IWMReaderNetworkConfig2 *iface, DWORD *protocols)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, protocols);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetSupportedProtocolName(IWMReaderNetworkConfig2 *iface, DWORD protocol_num,
+        WCHAR *protocol, DWORD *size)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %u, %p %p\n", This, protocol_num, protocol, size);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_AddLoggingUrl(IWMReaderNetworkConfig2 *iface, const WCHAR *url)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s\n", This, debugstr_w(url));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetLoggingUrl(IWMReaderNetworkConfig2 *iface, DWORD index, WCHAR *url,
+        DWORD *size)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %u, %p, %p\n", This, index, url, size);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetLoggingUrlCount(IWMReaderNetworkConfig2 *iface, DWORD *count)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_ResetLoggingUrlList(IWMReaderNetworkConfig2 *iface)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetEnableContentCaching(IWMReaderNetworkConfig2 *iface, BOOL *enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetEnableContentCaching(IWMReaderNetworkConfig2 *iface, BOOL enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %d\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetEnableFastCache(IWMReaderNetworkConfig2 *iface, BOOL *enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetEnableFastCache(IWMReaderNetworkConfig2 *iface, BOOL enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %d\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetAcceleratedStreamingDuration(IWMReaderNetworkConfig2 *iface,
+        QWORD *duration)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, duration);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetAcceleratedStreamingDuration(IWMReaderNetworkConfig2 *iface,
+        QWORD duration)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %s\n", This, wine_dbgstr_longlong(duration));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetAutoReconnectLimit(IWMReaderNetworkConfig2 *iface, DWORD *limit)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, limit);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetAutoReconnectLimit(IWMReaderNetworkConfig2 *iface, DWORD limit)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %u\n", This, limit);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetEnableResends(IWMReaderNetworkConfig2 *iface, BOOL *enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetEnableResends(IWMReaderNetworkConfig2 *iface, BOOL enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %u\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetEnableThinning(IWMReaderNetworkConfig2 *iface, BOOL *enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_SetEnableThinning(IWMReaderNetworkConfig2 *iface, BOOL enable)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %u\n", This, enable);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI networkconfig_GetMaxNetPacketSize(IWMReaderNetworkConfig2 *iface, DWORD *packet_size)
+{
+    WMReader *This = impl_from_IWMReaderNetworkConfig2(iface);
+    FIXME("%p, %p\n", This, packet_size);
+    return E_NOTIMPL;
+}
+
+static const IWMReaderNetworkConfig2Vtbl WMReaderNetworkConfig2Vtbl =
+{
+    networkconfig_QueryInterface,
+    networkconfig_AddRef,
+    networkconfig_Release,
+    networkconfig_GetBufferingTime,
+    networkconfig_SetBufferingTime,
+    networkconfig_GetUDPPortRanges,
+    networkconfig_SetUDPPortRanges,
+    networkconfig_GetProxySettings,
+    networkconfig_SetProxySettings,
+    networkconfig_GetProxyHostName,
+    networkconfig_SetProxyHostName,
+    networkconfig_GetProxyPort,
+    networkconfig_SetProxyPort,
+    networkconfig_GetProxyExceptionList,
+    networkconfig_SetProxyExceptionList,
+    networkconfig_GetProxyBypassForLocal,
+    networkconfig_SetProxyBypassForLocal,
+    networkconfig_GetForceRerunAutoProxyDetection,
+    networkconfig_SetForceRerunAutoProxyDetection,
+    networkconfig_GetEnableMulticast,
+    networkconfig_SetEnableMulticast,
+    networkconfig_GetEnableHTTP,
+    networkconfig_SetEnableHTTP,
+    networkconfig_GetEnableUDP,
+    networkconfig_SetEnableUDP,
+    networkconfig_GetEnableTCP,
+    networkconfig_SetEnableTCP,
+    networkconfig_ResetProtocolRollover,
+    networkconfig_GetConnectionBandwidth,
+    networkconfig_SetConnectionBandwidth,
+    networkconfig_GetNumProtocolsSupported,
+    networkconfig_GetSupportedProtocolName,
+    networkconfig_AddLoggingUrl,
+    networkconfig_GetLoggingUrl,
+    networkconfig_GetLoggingUrlCount,
+    networkconfig_ResetLoggingUrlList,
+    networkconfig_GetEnableContentCaching,
+    networkconfig_SetEnableContentCaching,
+    networkconfig_GetEnableFastCache,
+    networkconfig_SetEnableFastCache,
+    networkconfig_GetAcceleratedStreamingDuration,
+    networkconfig_SetAcceleratedStreamingDuration,
+    networkconfig_GetAutoReconnectLimit,
+    networkconfig_SetAutoReconnectLimit,
+    networkconfig_GetEnableResends,
+    networkconfig_SetEnableResends,
+    networkconfig_GetEnableThinning,
+    networkconfig_SetEnableThinning,
+    networkconfig_GetMaxNetPacketSize
+};
+
+static inline WMReader *impl_from_IWMReaderStreamClock(IWMReaderStreamClock *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMReaderStreamClock_iface);
+}
+
+static HRESULT WINAPI readclock_QueryInterface(IWMReaderStreamClock *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IWMReaderStreamClock(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI readclock_AddRef(IWMReaderStreamClock *iface)
+{
+    WMReader *This = impl_from_IWMReaderStreamClock(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI readclock_Release(IWMReaderStreamClock *iface)
+{
+    WMReader *This = impl_from_IWMReaderStreamClock(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI readclock_GetTime(IWMReaderStreamClock *iface, QWORD *now)
+{
+    WMReader *This = impl_from_IWMReaderStreamClock(iface);
+    FIXME("%p, %p\n", This, now);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI readclock_SetTimer(IWMReaderStreamClock *iface, QWORD when, void *param, DWORD *id)
+{
+    WMReader *This = impl_from_IWMReaderStreamClock(iface);
+    FIXME("%p, %s, %p, %p\n", This, wine_dbgstr_longlong(when), param, id);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI readclock_KillTimer(IWMReaderStreamClock *iface, DWORD id)
+{
+    WMReader *This = impl_from_IWMReaderStreamClock(iface);
+    FIXME("%p, %d\n", This, id);
+    return E_NOTIMPL;
+}
+
+static const IWMReaderStreamClockVtbl WMReaderStreamClockVtbl =
+{
+    readclock_QueryInterface,
+    readclock_AddRef,
+    readclock_Release,
+    readclock_GetTime,
+    readclock_SetTimer,
+    readclock_KillTimer
+};
+
+static inline WMReader *impl_from_IWMReaderTypeNegotiation(IWMReaderTypeNegotiation *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMReaderTypeNegotiation_iface);
+}
+
+static HRESULT WINAPI negotiation_QueryInterface(IWMReaderTypeNegotiation *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IWMReaderTypeNegotiation(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI negotiation_AddRef(IWMReaderTypeNegotiation *iface)
+{
+    WMReader *This = impl_from_IWMReaderTypeNegotiation(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI negotiation_Release(IWMReaderTypeNegotiation *iface)
+{
+    WMReader *This = impl_from_IWMReaderTypeNegotiation(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI negotiation_TryOutputProps(IWMReaderTypeNegotiation *iface, DWORD output, IWMOutputMediaProps *props)
+{
+    WMReader *This = impl_from_IWMReaderTypeNegotiation(iface);
+    FIXME("%p, %d, %p\n", This, output, props);
+    return E_NOTIMPL;
+}
+
+static const IWMReaderTypeNegotiationVtbl WMReaderTypeNegotiationVtbl =
+{
+    negotiation_QueryInterface,
+    negotiation_AddRef,
+    negotiation_Release,
+    negotiation_TryOutputProps
+};
+
+static inline WMReader *impl_from_IWMReaderTimecode(IWMReaderTimecode *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMReaderTimecode_iface);
+}
+
+static HRESULT WINAPI timecode_QueryInterface(IWMReaderTimecode *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IWMReaderTimecode(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI timecode_AddRef(IWMReaderTimecode *iface)
+{
+    WMReader *This = impl_from_IWMReaderTimecode(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI timecode_Release(IWMReaderTimecode *iface)
+{
+    WMReader *This = impl_from_IWMReaderTimecode(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI timecode_GetTimecodeRangeCount(IWMReaderTimecode *iface, WORD num, WORD *count)
+{
+    WMReader *This = impl_from_IWMReaderTimecode(iface);
+    FIXME("%p, %d, %p\n", This, num, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timecode_GetTimecodeRangeBounds(IWMReaderTimecode *iface, WORD stream, WORD range,
+        DWORD *start_timecode, DWORD *end_timecode)
+{
+    WMReader *This = impl_from_IWMReaderTimecode(iface);
+    FIXME("%p, %d, %d, %p, %p\n", This, stream, range, start_timecode, end_timecode);
+    return E_NOTIMPL;
+}
+
+static const IWMReaderTimecodeVtbl WMReaderTimecodeVtbl =
+{
+    timecode_QueryInterface,
+    timecode_AddRef,
+    timecode_Release,
+    timecode_GetTimecodeRangeCount,
+    timecode_GetTimecodeRangeBounds
+};
+
+
+static inline WMReader *impl_from_IWMReaderPlaylistBurn(IWMReaderPlaylistBurn *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMReaderPlaylistBurn_iface);
+}
+
+static HRESULT WINAPI playlist_QueryInterface(IWMReaderPlaylistBurn *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IWMReaderPlaylistBurn(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI playlist_AddRef(IWMReaderPlaylistBurn *iface)
+{
+    WMReader *This = impl_from_IWMReaderPlaylistBurn(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI playlist_Release(IWMReaderPlaylistBurn *iface)
+{
+    WMReader *This = impl_from_IWMReaderPlaylistBurn(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI playlist_InitPlaylistBurn(IWMReaderPlaylistBurn *iface, DWORD count,
+        LPCWSTR_WMSDK_TYPE_SAFE *filenames, IWMStatusCallback *callback, void *context)
+{
+    WMReader *This = impl_from_IWMReaderPlaylistBurn(iface);
+    FIXME("%p, %d, %p, %p, %p\n", This, count, filenames, callback, context);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI playlist_GetInitResults(IWMReaderPlaylistBurn *iface, DWORD count, HRESULT *stat)
+{
+    WMReader *This = impl_from_IWMReaderPlaylistBurn(iface);
+    FIXME("%p, %d, %p\n", This, count, stat);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI playlist_Cancel(IWMReaderPlaylistBurn *iface)
+{
+    WMReader *This = impl_from_IWMReaderPlaylistBurn(iface);
+    FIXME("%p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI playlist_EndPlaylistBurn(IWMReaderPlaylistBurn *iface, HRESULT result)
+{
+    WMReader *This = impl_from_IWMReaderPlaylistBurn(iface);
+    FIXME("%p, 0x%08x\n", This, result);
+    return E_NOTIMPL;
+}
+
+static const IWMReaderPlaylistBurnVtbl WMReaderPlaylistBurnVtbl =
+{
+    playlist_QueryInterface,
+    playlist_AddRef,
+    playlist_Release,
+    playlist_InitPlaylistBurn,
+    playlist_GetInitResults,
+    playlist_Cancel,
+    playlist_EndPlaylistBurn
+};
+
+static inline WMReader *impl_from_IWMHeaderInfo3(IWMHeaderInfo3 *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMHeaderInfo3_iface);
+}
+
+static HRESULT WINAPI headerinfo_QueryInterface(IWMHeaderInfo3 *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI headerinfo_AddRef(IWMHeaderInfo3 *iface)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI headerinfo_Release(IWMHeaderInfo3 *iface)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI headerinfo_GetAttributeCount(IWMHeaderInfo3 *iface, WORD stream_num, WORD *attributes)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %p\n", This, stream_num, attributes);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetAttributeByIndex(IWMHeaderInfo3 *iface, WORD index, WORD *stream_num,
+        WCHAR *name, WORD *name_len, WMT_ATTR_DATATYPE *type, BYTE *value, WORD *length)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %p, %p, %p, %p, %p, %p\n", This, index, stream_num, name, name_len, type,
+            value, length);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetAttributeByName(IWMHeaderInfo3 *iface, WORD *stream_num, LPCWSTR name,
+        WMT_ATTR_DATATYPE *type, BYTE *value, WORD *length)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %p, %s, %p, %p, %p\n", This, stream_num, debugstr_w(name), type, value, length);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_SetAttribute(IWMHeaderInfo3 *iface, WORD stream_num, LPCWSTR name,
+        WMT_ATTR_DATATYPE type, const BYTE *value, WORD length)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %s, %d, %p, %d\n", This, stream_num, debugstr_w(name), type, value, length);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetMarkerCount(IWMHeaderInfo3 *iface, WORD *markers)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %p\n", This, markers);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetMarker(IWMHeaderInfo3 *iface, WORD index, WCHAR *marker_name,
+        WORD *marker_len, QWORD *marker_time)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %p, %p, %p\n", This, index, marker_name, marker_len, marker_time);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_AddMarker(IWMHeaderInfo3 *iface, LPCWSTR_WMSDK_TYPE_SAFE marker_name,
+        QWORD marker_time)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %p, %s\n", This, marker_name, wine_dbgstr_longlong(marker_time));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_RemoveMarker(IWMHeaderInfo3 *iface, WORD index)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d\n", This, index);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetScriptCount(IWMHeaderInfo3 *iface, WORD *scripts)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %p\n", This, scripts);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetScript(IWMHeaderInfo3 *iface, WORD index, WCHAR *type,
+        WORD *type_len, WCHAR *command, WORD *command_len, QWORD *script_time)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %p, %p, %p, %p, %p\n", This, index, type, type_len, command, command_len, script_time);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_AddScript(IWMHeaderInfo3 *iface, LPCWSTR_WMSDK_TYPE_SAFE type,
+        LPCWSTR_WMSDK_TYPE_SAFE command, QWORD script_time)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %s, %p, %s\n", This, debugstr_w(type), debugstr_w(command), wine_dbgstr_longlong(script_time));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_RemoveScript(IWMHeaderInfo3 *iface, WORD index)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d\n", This, index);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetCodecInfoCount(IWMHeaderInfo3 *iface, DWORD *codec_infos)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %p\n", This, codec_infos);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetCodecInfo(IWMHeaderInfo3 *iface, DWORD index, WORD *name_len,
+        WCHAR *name, WORD *description_len, WCHAR *description, WMT_CODEC_INFO_TYPE *codec_type,
+        WORD *codec_info_cnt, BYTE *codec_info)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %p, %p, %p, %p, %p, %p, %p\n", This, index, name_len, name, description_len,
+            description, codec_type, codec_info_cnt, codec_info);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetAttributeCountEx(IWMHeaderInfo3 *iface, WORD stream_num, WORD *attributes)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %p\n", This, stream_num, attributes);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetAttributeIndices(IWMHeaderInfo3 *iface, WORD stream_num, LPCWSTR name,
+        WORD *lang_index, WORD *indices, WORD *count)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %s, %p, %p, %p\n", This, stream_num, debugstr_w(name), lang_index, indices, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_GetAttributeByIndexEx(IWMHeaderInfo3 *iface, WORD stream_num,
+        WORD index, LPWSTR name, WORD *name_len, WMT_ATTR_DATATYPE *type, WORD *lang_index,
+        BYTE *value, DWORD *data_len)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %d, %s, %p, %p, %p, %p, %p\n", This, stream_num, index, debugstr_w(name), name_len,
+            type, lang_index, value, data_len);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_ModifyAttribute(IWMHeaderInfo3 *iface, WORD stream_num,
+        WORD index, WMT_ATTR_DATATYPE type, WORD lang_index, const BYTE *value, DWORD length)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %d, %d, %d, %p, %d\n", This, stream_num, index, type, lang_index, value, length);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_AddAttribute(IWMHeaderInfo3 *iface, WORD stream_num, LPCWSTR name,
+        WORD *index, WMT_ATTR_DATATYPE type, WORD lang_index, const BYTE *value, DWORD length)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %s, %p, %d, %d, %p, %d\n", This, stream_num, debugstr_w(name), index,
+            type, lang_index, value, length);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_DeleteAttribute(IWMHeaderInfo3 *iface, WORD stream_num, WORD index)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %d, %d\n", This, stream_num, index);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI headerinfo_AddCodecInfo(IWMHeaderInfo3 *iface, LPCWSTR_WMSDK_TYPE_SAFE name,
+        LPCWSTR_WMSDK_TYPE_SAFE description, WMT_CODEC_INFO_TYPE codec_type, WORD codec_info_cnt,
+        BYTE *codec_info)
+{
+    WMReader *This = impl_from_IWMHeaderInfo3(iface);
+    FIXME("%p, %p, %p, %d, %d, %p\n", This, name, description, codec_type, codec_info_cnt,
+            codec_info);
+    return E_NOTIMPL;
+}
+
+static const IWMHeaderInfo3Vtbl WMHeaderInfo3Vtbl =
+{
+    headerinfo_QueryInterface,
+    headerinfo_AddRef,
+    headerinfo_Release,
+    headerinfo_GetAttributeCount,
+    headerinfo_GetAttributeByIndex,
+    headerinfo_GetAttributeByName,
+    headerinfo_SetAttribute,
+    headerinfo_GetMarkerCount,
+    headerinfo_GetMarker,
+    headerinfo_AddMarker,
+    headerinfo_RemoveMarker,
+    headerinfo_GetScriptCount,
+    headerinfo_GetScript,
+    headerinfo_AddScript,
+    headerinfo_RemoveScript,
+    headerinfo_GetCodecInfoCount,
+    headerinfo_GetCodecInfo,
+    headerinfo_GetAttributeCountEx,
+    headerinfo_GetAttributeIndices,
+    headerinfo_GetAttributeByIndexEx,
+    headerinfo_ModifyAttribute,
+    headerinfo_AddAttribute,
+    headerinfo_DeleteAttribute,
+    headerinfo_AddCodecInfo
+};
+
+
+static inline WMReader *impl_from_IWMLanguageList(IWMLanguageList *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMLanguageList_iface);
+}
+
+static HRESULT WINAPI langlist_QueryInterface(IWMLanguageList *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IWMLanguageList(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI langlist_AddRef(IWMLanguageList *iface)
+{
+    WMReader *This = impl_from_IWMLanguageList(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI langlist_Release(IWMLanguageList *iface)
+{
+    WMReader *This = impl_from_IWMLanguageList(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI langlist_GetLanguageCount(IWMLanguageList *iface, WORD *count)
+{
+    WMReader *This = impl_from_IWMLanguageList(iface);
+    FIXME("%p, %p\n", This, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI langlist_GetLanguageDetails(IWMLanguageList *iface, WORD index,
+        WCHAR *language, WORD *length)
+{
+    WMReader *This = impl_from_IWMLanguageList(iface);
+    FIXME("%p, %d, %p, %p\n", This, index, language, length);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI langlist_AddLanguageByRFC1766String(IWMLanguageList *iface, LPCWSTR_WMSDK_TYPE_SAFE language,
+        WORD *index)
+{
+    WMReader *This = impl_from_IWMLanguageList(iface);
+    FIXME("%p, %p, %p\n", This, language, index);
+    return E_NOTIMPL;
+}
+
+static const IWMLanguageListVtbl WMLanguageListVtbl =
+{
+    langlist_QueryInterface,
+    langlist_AddRef,
+    langlist_Release,
+    langlist_GetLanguageCount,
+    langlist_GetLanguageDetails,
+    langlist_AddLanguageByRFC1766String
+};
+
+static inline WMReader *impl_from_IReferenceClock(IReferenceClock *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IReferenceClock_iface);
+}
+
+static HRESULT WINAPI refclock_QueryInterface(IReferenceClock *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IReferenceClock(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI refclock_AddRef(IReferenceClock *iface)
+{
+    WMReader *This = impl_from_IReferenceClock(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI refclock_Release(IReferenceClock *iface)
+{
+    WMReader *This = impl_from_IReferenceClock(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI refclock_GetTime(IReferenceClock *iface, REFERENCE_TIME *time)
+{
+    WMReader *This = impl_from_IReferenceClock(iface);
+    FIXME("%p, %p\n", This, time);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI refclock_AdviseTime(IReferenceClock *iface, REFERENCE_TIME basetime,
+        REFERENCE_TIME streamtime, HEVENT event, DWORD_PTR *cookie)
+{
+    WMReader *This = impl_from_IReferenceClock(iface);
+    FIXME("%p, %s, %s, %lu, %p\n", This, wine_dbgstr_longlong(basetime),
+            wine_dbgstr_longlong(streamtime), event, cookie);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI refclock_AdvisePeriodic(IReferenceClock *iface, REFERENCE_TIME starttime,
+        REFERENCE_TIME period, HSEMAPHORE semaphore, DWORD_PTR *cookie)
+{
+    WMReader *This = impl_from_IReferenceClock(iface);
+    FIXME("%p, %s, %s, %lu, %p\n", This, wine_dbgstr_longlong(starttime),
+            wine_dbgstr_longlong(period), semaphore, cookie);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI refclock_Unadvise(IReferenceClock *iface, DWORD_PTR cookie)
+{
+    WMReader *This = impl_from_IReferenceClock(iface);
+    FIXME("%p, %lu\n", This, cookie);
+    return E_NOTIMPL;
+}
+
+static const IReferenceClockVtbl ReferenceClockVtbl =
+{
+    refclock_QueryInterface,
+    refclock_AddRef,
+    refclock_Release,
+    refclock_GetTime,
+    refclock_AdviseTime,
+    refclock_AdvisePeriodic,
+    refclock_Unadvise
+};
+
+static inline WMReader *impl_from_IWMProfile3(IWMProfile3 *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMProfile3_iface);
+}
+
+static HRESULT WINAPI profile3_QueryInterface(IWMProfile3 *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI profile3_AddRef(IWMProfile3 *iface)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI profile3_Release(IWMProfile3 *iface)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI profile3_GetVersion(IWMProfile3 *iface, WMT_VERSION *version)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, version);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetName(IWMProfile3 *iface, WCHAR *name, DWORD *length)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p, %p\n", This, name, length);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_SetName(IWMProfile3 *iface, const WCHAR *name)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %s\n", This, debugstr_w(name));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetDescription(IWMProfile3 *iface, WCHAR *description, DWORD *length)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p, %p\n", This, description, length);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_SetDescription(IWMProfile3 *iface, const WCHAR *description)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %s\n", This, debugstr_w(description));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetStreamCount(IWMProfile3 *iface, DWORD *count)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetStream(IWMProfile3 *iface, DWORD index, IWMStreamConfig **config)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %d, %p\n", This, index, config);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetStreamByNumber(IWMProfile3 *iface, WORD stream, IWMStreamConfig **config)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %d, %p\n", This, stream, config);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_RemoveStream(IWMProfile3 *iface, IWMStreamConfig *config)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, config);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_RemoveStreamByNumber(IWMProfile3 *iface, WORD stream)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %d\n", This, stream);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_AddStream(IWMProfile3 *iface, IWMStreamConfig *config)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, config);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_ReconfigStream(IWMProfile3 *iface, IWMStreamConfig *config)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, config);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_CreateNewStream(IWMProfile3 *iface, REFGUID type, IWMStreamConfig **config)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %s, %p\n", This, debugstr_guid(type), config);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetMutualExclusionCount(IWMProfile3 *iface, DWORD *count)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetMutualExclusion(IWMProfile3 *iface, DWORD index, IWMMutualExclusion **mutual)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %d, %p\n", This, index, mutual);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_RemoveMutualExclusion(IWMProfile3 *iface, IWMMutualExclusion *mutual)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, mutual);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_AddMutualExclusion(IWMProfile3 *iface, IWMMutualExclusion *mutual)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, mutual);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_CreateNewMutualExclusion(IWMProfile3 *iface, IWMMutualExclusion **mutual)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, mutual);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetProfileID(IWMProfile3 *iface, GUID *guid)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, guid);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetStorageFormat(IWMProfile3 *iface, WMT_STORAGE_FORMAT *storage)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, storage);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_SetStorageFormat(IWMProfile3 *iface, WMT_STORAGE_FORMAT storage)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %d\n", This, storage);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetBandwidthSharingCount(IWMProfile3 *iface, DWORD *count)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetBandwidthSharing(IWMProfile3 *iface, DWORD index, IWMBandwidthSharing **bandwidth)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %d, %p\n", This, index, bandwidth);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_RemoveBandwidthSharing( IWMProfile3 *iface, IWMBandwidthSharing *bandwidth)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, bandwidth);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_AddBandwidthSharing(IWMProfile3 *iface, IWMBandwidthSharing *bandwidth)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, bandwidth);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_CreateNewBandwidthSharing( IWMProfile3 *iface, IWMBandwidthSharing **bandwidth)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, bandwidth);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetStreamPrioritization(IWMProfile3 *iface, IWMStreamPrioritization **stream)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, stream);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_SetStreamPrioritization(IWMProfile3 *iface, IWMStreamPrioritization *stream)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, stream);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_RemoveStreamPrioritization(IWMProfile3 *iface)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_CreateNewStreamPrioritization(IWMProfile3 *iface, IWMStreamPrioritization **stream)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %p\n", This, stream);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI profile3_GetExpectedPacketCount(IWMProfile3 *iface, QWORD duration, QWORD *packets)
+{
+    WMReader *This = impl_from_IWMProfile3(iface);
+    FIXME("%p, %s, %p\n", This, wine_dbgstr_longlong(duration), packets);
+    return E_NOTIMPL;
+}
+
+static const IWMProfile3Vtbl WMProfile3Vtbl =
+{
+    profile3_QueryInterface,
+    profile3_AddRef,
+    profile3_Release,
+    profile3_GetVersion,
+    profile3_GetName,
+    profile3_SetName,
+    profile3_GetDescription,
+    profile3_SetDescription,
+    profile3_GetStreamCount,
+    profile3_GetStream,
+    profile3_GetStreamByNumber,
+    profile3_RemoveStream,
+    profile3_RemoveStreamByNumber,
+    profile3_AddStream,
+    profile3_ReconfigStream,
+    profile3_CreateNewStream,
+    profile3_GetMutualExclusionCount,
+    profile3_GetMutualExclusion,
+    profile3_RemoveMutualExclusion,
+    profile3_AddMutualExclusion,
+    profile3_CreateNewMutualExclusion,
+    profile3_GetProfileID,
+    profile3_GetStorageFormat,
+    profile3_SetStorageFormat,
+    profile3_GetBandwidthSharingCount,
+    profile3_GetBandwidthSharing,
+    profile3_RemoveBandwidthSharing,
+    profile3_AddBandwidthSharing,
+    profile3_CreateNewBandwidthSharing,
+    profile3_GetStreamPrioritization,
+    profile3_SetStreamPrioritization,
+    profile3_RemoveStreamPrioritization,
+    profile3_CreateNewStreamPrioritization,
+    profile3_GetExpectedPacketCount
+};
+
+static inline WMReader *impl_from_IWMPacketSize2(IWMPacketSize2 *iface)
+{
+    return CONTAINING_RECORD(iface, WMReader, IWMPacketSize2_iface);
+}
+
+static HRESULT WINAPI packetsize_QueryInterface(IWMPacketSize2 *iface, REFIID riid, void **ppv)
+{
+    WMReader *This = impl_from_IWMPacketSize2(iface);
+    return IWMReader_QueryInterface(&This->IWMReader_iface, riid, ppv);
+}
+
+static ULONG WINAPI packetsize_AddRef(IWMPacketSize2 *iface)
+{
+    WMReader *This = impl_from_IWMPacketSize2(iface);
+    return IWMReader_AddRef(&This->IWMReader_iface);
+}
+
+static ULONG WINAPI packetsize_Release(IWMPacketSize2 *iface)
+{
+    WMReader *This = impl_from_IWMPacketSize2(iface);
+    return IWMReader_Release(&This->IWMReader_iface);
+}
+
+static HRESULT WINAPI packetsize_GetMaxPacketSize(IWMPacketSize2 *iface, DWORD *size)
+{
+    WMReader *This = impl_from_IWMPacketSize2(iface);
+    FIXME("%p, %p\n", This, size);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI packetsize_SetMaxPacketSize(IWMPacketSize2 *iface, DWORD size)
+{
+    WMReader *This = impl_from_IWMPacketSize2(iface);
+    FIXME("%p, %d\n", This, size);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI packetsize_GetMinPacketSize(IWMPacketSize2 *iface, DWORD *size)
+{
+    WMReader *This = impl_from_IWMPacketSize2(iface);
+    FIXME("%p, %p\n", This, size);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI packetsize_SetMinPacketSize(IWMPacketSize2 *iface, DWORD size)
+{
+    WMReader *This = impl_from_IWMPacketSize2(iface);
+    FIXME("%p, %d\n", This, size);
+    return E_NOTIMPL;
+}
+
+static const IWMPacketSize2Vtbl WMPacketSize2Vtbl =
+{
+    packetsize_QueryInterface,
+    packetsize_AddRef,
+    packetsize_Release,
+    packetsize_GetMaxPacketSize,
+    packetsize_SetMaxPacketSize,
+    packetsize_GetMinPacketSize,
+    packetsize_SetMinPacketSize
+};
+
 HRESULT WINAPI WMCreateReader(IUnknown *reserved, DWORD rights, IWMReader **ret_reader)
 {
     WMReader *reader;
@@ -661,6 +2080,17 @@ HRESULT WINAPI WMCreateReader(IUnknown *reserved, DWORD rights, IWMReader **ret_
 
     reader->IWMReader_iface.lpVtbl = &WMReaderVtbl;
     reader->IWMReaderAdvanced6_iface.lpVtbl = &WMReaderAdvanced6Vtbl;
+    reader->IWMReaderAccelerator_iface.lpVtbl = &WMReaderAcceleratorVtbl;
+    reader->IWMReaderNetworkConfig2_iface.lpVtbl = &WMReaderNetworkConfig2Vtbl;
+    reader->IWMReaderStreamClock_iface.lpVtbl = &WMReaderStreamClockVtbl;
+    reader->IWMReaderTypeNegotiation_iface.lpVtbl = &WMReaderTypeNegotiationVtbl;
+    reader->IWMReaderTimecode_iface.lpVtbl = &WMReaderTimecodeVtbl;
+    reader->IWMReaderPlaylistBurn_iface.lpVtbl = &WMReaderPlaylistBurnVtbl;
+    reader->IWMHeaderInfo3_iface.lpVtbl = &WMHeaderInfo3Vtbl;
+    reader->IWMLanguageList_iface.lpVtbl = &WMLanguageListVtbl;
+    reader->IReferenceClock_iface.lpVtbl = &ReferenceClockVtbl;
+    reader->IWMProfile3_iface.lpVtbl = &WMProfile3Vtbl;
+    reader->IWMPacketSize2_iface.lpVtbl = &WMPacketSize2Vtbl;
     reader->ref = 1;
 
     *ret_reader = &reader->IWMReader_iface;
