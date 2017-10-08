@@ -1,6 +1,9 @@
 /*
  *  FreeLoader
  *
+ * Copyright ... ... (See below.)
+ * Copyright 2017 Serge Gautherie
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -145,7 +148,8 @@ GetExtendedMemoryConfiguration(ULONG* pMemoryAtOneMB /* in KB */, ULONG* pMemory
     return FALSE;
 }
 
-static ULONG
+static
+ULONG
 PcMemGetConventionalMemorySize(VOID)
 {
     REGS Regs;
@@ -203,17 +207,10 @@ GetEbdaLocation(
 }
 
 static
-ULONG
-PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSize)
+VOID
+PcMemCheckUsableMemorySize(VOID)
 {
-    REGS Regs;
-    ULONGLONG RealBaseAddress, EndAddress, RealSize;
-    TYPE_OF_MEMORY MemoryType;
     ULONG Size, RequiredSize;
-
-    ASSERT(PcBiosMapCount == 0);
-
-    TRACE("PcMemGetBiosMemoryMap()\n");
 
     /* Make sure the usable memory is large enough. To do this we check the 16
        bit value at address 0x413 inside the BDA, which gives us the usable size
@@ -231,6 +228,19 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             "If you see this, please report to the ReactOS team!",
             Size, RequiredSize);
     }
+}
+
+static
+ULONG
+PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSize)
+{
+    REGS Regs;
+    ULONGLONG RealBaseAddress, EndAddress, RealSize;
+    TYPE_OF_MEMORY MemoryType;
+
+    ASSERT(PcBiosMapCount == 0);
+
+    TRACE("PcMemGetBiosMemoryMap()\n");
 
     /* Int 15h AX=E820h
      * Newer BIOSes - GET SYSTEM MEMORY MAP
@@ -267,7 +277,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         TRACE("Int15h AX=E820h\n");
         TRACE("EAX = 0x%lx\n", Regs.x.eax);
         TRACE("EBX = 0x%lx\n", Regs.x.ebx);
-        TRACE("ECX = 0x%lx\n", Regs.x.ecx);
+        TRACE("ECX = %lu\n", Regs.x.ecx);
         TRACE("CF set = %s\n", (Regs.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
 
         /* If the BIOS didn't return 'SMAP' in EAX then
@@ -323,7 +333,6 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         TRACE("Length: 0x%llx\n", PcBiosMemoryMap[PcBiosMapCount].Length);
         TRACE("Type: 0x%lx\n", PcBiosMemoryMap[PcBiosMapCount].Type);
         TRACE("Reserved: 0x%lx\n", PcBiosMemoryMap[PcBiosMapCount].Reserved);
-        TRACE("\n");
 
         if (PcBiosMemoryMap[PcBiosMapCount].Length == 0)
         {
@@ -364,9 +373,13 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         else
         {
             if (PcBiosMemoryMap[PcBiosMapCount].Type == BiosMemoryReserved)
+            {
                 MemoryType = LoaderFirmwarePermanent;
+            }
             else
+            {
                 MemoryType = LoaderSpecialMemory;
+            }
 
             /* Align down base of memory area */
             RealBaseAddress = ULONGLONG_ALIGN_DOWN_BY(
@@ -411,6 +424,8 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         PcBiosMapCount++;
 
 nextRange:
+        TRACE("\n");
+
         /* If the continuation value is zero,
          * then this was the last entry, so we're done. */
         if (Regs.x.ebx == 0x00000000)
@@ -422,9 +437,9 @@ nextRange:
     /* Check whether there would be more entries to process. */
     if (PcBiosMapCount >= MAX_BIOS_DESCRIPTORS && Regs.x.ebx != 0x00000000)
     {
-        ERR("PcBiosMapCount is already full! (PcBiosMapCount = %lu (>= %lu), PcMapCount = %lu)\n",
+        ERR("PcBiosMemoryMap is already full! (PcBiosMapCount = %lu (>= %lu), PcMapCount = %lu)\n",
             PcBiosMapCount, MAX_BIOS_DESCRIPTORS, PcMapCount);
-        // NotWantedForPublicBuilds: ASSERTMSG("PcBiosMapCount is already full!", FALSE);
+        // NotWantedForPublicBuilds: ASSERTMSG("PcBiosMemoryMap is already full!", FALSE);
         /* We keep retrieved entries, but ignore next entries.
          * We assume these entries are good to use as is. If they are not, we are in trouble...
          *
@@ -506,6 +521,8 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
     ULONG EbdaBase, EbdaSize;
 
     TRACE("PcMemGetMemoryMap()\n");
+
+    PcMemCheckUsableMemorySize();
 
     EntryCount = PcMemGetBiosMemoryMap(PcMemoryMap, MAX_BIOS_DESCRIPTORS);
 
