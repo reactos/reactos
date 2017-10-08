@@ -122,6 +122,7 @@ static PARTITION_TYPE PartitionTypes[] =
     { 0x87, "HPFS or NTFS mirrored" },
     { 0x8E, "Linux LVM" },
     { 0x93, "Hidden Linux" },
+    { 0x96, "CDFS/ISO-9660" },
     { 0x9F, "BSD/OS" },
     { 0xA0, "Laptop hibernation" },
     { 0xA1, "Laptop hibernation" },
