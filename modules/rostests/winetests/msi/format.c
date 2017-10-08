@@ -494,6 +494,15 @@ static void test_formatrecord(void)
     ok( sz == 7, "size wrong\n");
     ok( 0 == strcmp(buffer,"boo hoo"), "wrong output\n");
 
+    /* self-referential format field */
+    r = MsiRecordSetStringA(hrec, 0, "[1] test [0]");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+    sz = sizeof buffer;
+    r = MsiFormatRecordA(0, hrec, buffer, &sz);
+    ok( r == ERROR_SUCCESS, "format failed\n");
+    ok( sz == 21, "size wrong\n");
+    ok( 0 == strcmp(buffer,"boo test [1] test [0]"), "wrong output\n");
+
     /* empty string */
     r = MsiRecordSetStringA(hrec, 0, "");
     ok( r == ERROR_SUCCESS, "set string failed\n");
@@ -502,6 +511,18 @@ static void test_formatrecord(void)
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 30, "size wrong %i\n",sz);
     ok( 0 == strcmp(buffer,"1: boo 2: hoo 3:  4:  5:  6:  "), 
+                    "wrong output(%s)\n",buffer);
+
+    /* empty string with numbers */
+    r = MsiRecordSetStringA(hrec, 1, "123");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+    r = MsiRecordSetInteger(hrec, 2, 4567);
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+    sz = sizeof buffer;
+    r = MsiFormatRecordA(0, hrec, buffer, &sz);
+    ok( r == ERROR_SUCCESS, "format failed\n");
+    ok( sz == 31, "size wrong %i\n",sz);
+    ok( 0 == strcmp(buffer,"1: 123 2: 4567 3:  4:  5:  6:  "),
                     "wrong output(%s)\n",buffer);
 
     /* play games with recursive lookups */
@@ -2575,6 +2596,12 @@ static void test_formatrecord_tables(void)
     ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
     ok( !lstrcmpA( buf, "1: ringer " ), "Expected '1: ringer ', got %s\n", buf );
 
+    size = MAX_PATH;
+    MsiRecordSetStringA( hrec, 0, "1: [1] " );
+    r = MsiFormatRecordA( hpkg, hrec, buf, &size );
+    ok( r == ERROR_SUCCESS, "format record failed: %d\n", r);
+    ok( !lstrcmpA( buf, "1: ringer " ), "Expected '1: ringer ', got %s\n", buf );
+
     /* environment variable doesn't exist */
     size = MAX_PATH;
     MsiRecordSetStringA( hrec, 1, "[%idontexist]" );
@@ -2776,6 +2803,42 @@ static void test_processmessage(void)
 
     r = MsiProcessMessage(package, INSTALLMESSAGE_ACTIONSTART, hrec);
     ok( r == IDOK, "expected IDOK, got %i\n", r);
+
+    r = MsiProcessMessage(package, INSTALLMESSAGE_PROGRESS, hrec);
+    ok( r == IDOK, "expected IDOK, got %i\n", r);
+
+    r = MsiProcessMessage(package, INSTALLMESSAGE_INFO, hrec);
+    ok( r == 0, "expected 0, got %i\n", r);
+
+    r = MsiProcessMessage(package, INSTALLMESSAGE_INITIALIZE, hrec);
+    ok( r == -1, "expected -1, got %i\n", r);
+
+    r = MsiRecordSetInteger(hrec, 1, 2);
+    ok( r == ERROR_SUCCESS, "set integer failed\n");
+    r = MsiRecordSetInteger(hrec, 2, 1);
+    ok( r == ERROR_SUCCESS, "set integer failed\n");
+    r = MsiProcessMessage(package, INSTALLMESSAGE_COMMONDATA, hrec);
+    todo_wine
+    ok( r == IDOK, "expected IDOK, got %i\n", r);
+
+    r = MsiRecordSetInteger(hrec, 2, 2);
+    ok( r == ERROR_SUCCESS, "set integer failed\n");
+    r = MsiProcessMessage(package, INSTALLMESSAGE_COMMONDATA, hrec);
+    todo_wine
+    ok( r == IDOK, "expected IDOK, got %i\n", r);
+
+    r = MsiRecordSetInteger(hrec, 1, 1);
+    ok( r == ERROR_SUCCESS, "set integer failed\n");
+    r = MsiProcessMessage(package, INSTALLMESSAGE_COMMONDATA, hrec);
+    ok( r == -1, "expected -1, got %i\n", r);
+
+    MsiCloseHandle(package);
+
+    MsiSetInternalUI(INSTALLUILEVEL_BASIC|INSTALLUILEVEL_PROGRESSONLY, NULL);
+    helper_createpackage(msifile, &package);
+
+    r = MsiProcessMessage(package, INSTALLMESSAGE_ERROR, hrec);
+    ok( r == 0, "expected 0, got %i\n", r);
 
     MsiCloseHandle(hrec);
     MsiCloseHandle(package);
