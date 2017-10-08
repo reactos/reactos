@@ -6,30 +6,30 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDM_EVENTVWR MENU
 BEGIN
-    POPUP "&Logi"
+    POPUP "&Dzienniki"
     BEGIN
-        MENUITEM "&Open...", IDM_OPEN_EVENTLOG
-        MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG
-        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
+        MENUITEM "&Otwórz...", IDM_OPEN_EVENTLOG
+        MENUITEM "Zapisz dziennik zdarzeń jako...", IDM_SAVE_EVENTLOG
+        MENUITEM "&Zamknij", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "W&yczyść wszystkie zdarzenia", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "&Zmień nazwę\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Wł&aściwości dziennika...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "&Wyjście", IDM_EXIT
     END
     POPUP "&Podgląd"
     BEGIN
-        MENUITEM "&Newest first", IDM_LIST_NEWEST
-        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM "&Najnowsze pierwsze", IDM_LIST_NEWEST
+        MENUITEM "N&ajstarsze pierwsze", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
-        MENUITEM "&Details...\tEnter", IDM_EVENT_DETAILS
+        MENUITEM "&Szczegóły...\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
         MENUITEM "&Odśwież\tF5", IDM_REFRESH
     END
     POPUP "Op&cje"
     BEGIN
-        MENUITEM "&Show event details view", IDM_SHOW_EVENT_DETAILS_VIEW
+        MENUITEM "&Pokaż szczegóły zdarzenia ", IDM_SHOW_EVENT_DETAILS_VIEW
     END
     POPUP "Po&moc"
     BEGIN
@@ -94,40 +94,40 @@ END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Display name:", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "&Nazwa wyświetlana:", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "&Log name:", IDC_STATIC, 7, 25, 60, 8
+    LTEXT "Nazwa dzi&ennika:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "Plik &dziennika:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "Rozmiar:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "Utworzony:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Modified:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Zmodyfikowany:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Accessed:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "Ostatnio używany:", IDC_STATIC, 7, 93, 80, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Log size", IDC_STATIC, 7, 106, 238, 99
-    LTEXT "&Maximum log size:", IDC_STATIC, 17, 122, 58, 8
+    GROUPBOX "Rozmiar dziennika", IDC_STATIC, 7, 106, 238, 99
+    LTEXT "&Maksymalny rozmiar dziennika:", IDC_STATIC, 17, 122, 58, 8
     EDITTEXT IDC_EDIT_MAXLOGSIZE, 80, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
-    LTEXT "When maximum log size is reached:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    LTEXT "Po osiągnięciu maksymalnego rozmiaru pliku dziennika:", IDC_STATIC, 17, 140, 219, 8
+    CONTROL "&Zastąp zdarzenia w razie potrzeby", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
+    CONTROL "Z&astąp zdarzenia starsze niż", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
-    LTEXT "days", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
-    PUSHBUTTON "&Restore Defaults", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
-    AUTOCHECKBOX "Using a lo&w-speed connection", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
-    PUSHBUTTON "&Clear Log", ID_CLEARLOG, 195, 213, 50, 14
+    LTEXT "dni", IDC_STATIC, 162, 168, 20, 8
+    CONTROL "&Nie zastępuj zdarzeń\n(ręczne czyszczenie dziennika)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
+    PUSHBUTTON "&Przywróć domyślne", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    AUTOCHECKBOX "&Użyj połączenia o małej szybkości", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    PUSHBUTTON "&Wyczyść dziennik", ID_CLEARLOG, 175, 213, 70, 14
 END
 
 STRINGTABLE
@@ -137,10 +137,10 @@ BEGIN
     IDS_APP_TITLE_EX "%s - %s Log na \\\\"
     IDS_STATUS_MSG "%s posiada %lu zdarzeń (listed: %lu)"
     IDS_LOADING_WAIT "Ładowanie logów zdarzeń. Proszę czekać..."
-    IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
-    IDS_EVENTLOG_SYSTEM "System Logs"
-    IDS_EVENTLOG_APP "Application Logs"
-    IDS_EVENTLOG_USER "User Logs"
+    IDS_NO_ITEMS "Brak elementów do wyświetlenia w tym widoku." // "No events in this log."
+    IDS_EVENTLOG_SYSTEM "Dzienniki systemu"
+    IDS_EVENTLOG_APP "Dzienniki aplikacji"
+    IDS_EVENTLOG_USER "Dzienniki użytkownika"
     IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID ( %lu ) nie został odnaleziony w źródle ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego.\n\nThe following information is part of the event:\n\n"
     IDS_CLEAREVENTS_MSG "Czy chcesz zapisać dziennik zdarzeń przed czyszczeniem?"
     IDS_SAVE_FILTER "Dziennik zdarzeń (*.evt)\0*.evt\0"

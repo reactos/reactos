@@ -26,7 +26,7 @@ BEGIN
     LTEXT "Mała", -1, 62, 66, 30, 17
     LTEXT "Duża", -1, 195, 66, 30, 17
     AUTOCHECKBOX "&Wycisz", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    AUTOCHECKBOX "Umieść &ikonę głośności w zasobniku systemowym", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
+    AUTOCHECKBOX "Umieść &ikonę głośności w zasobniku systemowym", IDC_ICON_IN_TASKBAR, 50, 92, 180, 10
     PUSHBUTTON "&Zaawansowane...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Ustawienia głośników", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
