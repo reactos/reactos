@@ -34,6 +34,7 @@ typedef struct msi_control_tag msi_control;
 typedef UINT (*msi_handler)( msi_dialog *, msi_control *, WPARAM );
 typedef void (*msi_update)( msi_dialog *, msi_control * );
 typedef UINT (*control_event_handler)( msi_dialog *, const WCHAR *, const WCHAR * );
+typedef UINT (*event_handler)( msi_dialog *, const WCHAR * );
 
 struct msi_control_tag
 {
@@ -79,6 +80,9 @@ struct msi_dialog_tag
     HWND hWndFocus;
     LPWSTR control_default;
     LPWSTR control_cancel;
+    event_handler pending_event;
+    LPWSTR pending_argument;
+    INT retval;
     WCHAR name[1];
 };
 
@@ -972,6 +976,16 @@ static UINT msi_dialog_button_handler( msi_dialog *dialog, msi_control *control,
     }
     r = MSI_IterateRecords( view, 0, msi_dialog_control_event, dialog );
     msiobj_release( &view->hdr );
+
+    /* dialog control events must be processed last regardless of ordering */
+    if (dialog->pending_event)
+    {
+        r = dialog->pending_event( dialog, dialog->pending_argument );
+
+        msi_free( dialog->pending_argument );
+        dialog->pending_event = NULL;
+        dialog->pending_argument = NULL;
+    }
     return r;
 }
 
@@ -3884,6 +3898,8 @@ static BOOL dialog_register_class( void )
 static msi_dialog *dialog_create( MSIPACKAGE *package, const WCHAR *name, msi_dialog *parent,
                                   control_event_handler event_handler )
 {
+    static const WCHAR szDialogCreated[] =
+        {'D','i','a','l','o','g',' ','c','r','e','a','t','e','d',0};
     MSIRECORD *rec = NULL;
     msi_dialog *dialog;
 
@@ -3897,7 +3913,6 @@ static msi_dialog *dialog_create( MSIPACKAGE *package, const WCHAR *name, msi_di
         return NULL;
     strcpyW( dialog->name, name );
     dialog->parent = parent;
-    msiobj_addref( &package->hdr );
     dialog->package = package;
     dialog->event_handler = event_handler;
     dialog->finished = 0;
@@ -3908,7 +3923,6 @@ static msi_dialog *dialog_create( MSIPACKAGE *package, const WCHAR *name, msi_di
     rec = msi_get_dialog_record( dialog );
     if( !rec )
     {
-        msiobj_release( &package->hdr );
         msi_free( dialog );
         return NULL;
     }
@@ -3916,6 +3930,13 @@ static msi_dialog *dialog_create( MSIPACKAGE *package, const WCHAR *name, msi_di
     dialog->control_default = strdupW( MSI_RecordGetString( rec, 9 ) );
     dialog->control_cancel = strdupW( MSI_RecordGetString( rec, 10 ) );
     msiobj_release( &rec->hdr );
+
+    rec = MSI_CreateRecord(2);
+    if (!rec) return NULL;
+    MSI_RecordSetStringW(rec, 1, name);
+    MSI_RecordSetStringW(rec, 2, szDialogCreated);
+    MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONSTART, rec);
+    msiobj_release(&rec->hdr);
 
     return dialog;
 }
@@ -4035,7 +4056,6 @@ void msi_dialog_destroy( msi_dialog *dialog )
 
     msi_free( dialog->control_default );
     msi_free( dialog->control_cancel );
-    msiobj_release( &dialog->package->hdr );
     dialog->package = NULL;
     msi_free( dialog );
 }
@@ -4059,109 +4079,6 @@ void msi_event_cleanup_all_subscriptions( MSIPACKAGE *package )
         list_remove( &sub->entry );
         free_subscriber( sub );
     }
-}
-
-static UINT error_dialog_handler( msi_dialog *dialog, const WCHAR *event, const WCHAR *argument )
-{
-    static const WCHAR end_dialog[] = {'E','n','d','D','i','a','l','o','g',0};
-    static const WCHAR error_abort[] = {'E','r','r','o','r','A','b','o','r','t',0};
-    static const WCHAR error_cancel[] = {'E','r','r','o','r','C','a','n','c','e','l',0};
-    static const WCHAR error_no[] = {'E','r','r','o','r','N','o',0};
-    static const WCHAR result_prop[] = {
-        'M','S','I','E','r','r','o','r','D','i','a','l','o','g','R','e','s','u','l','t',0
-    };
-
-    if ( strcmpW( event, end_dialog ) )
-        return ERROR_SUCCESS;
-
-    if ( !strcmpW( argument, error_abort ) || !strcmpW( argument, error_cancel ) ||
-         !strcmpW( argument, error_no ) )
-    {
-         msi_set_property( dialog->package->db, result_prop, error_abort, -1 );
-    }
-
-    msi_event_cleanup_all_subscriptions( dialog->package );
-    msi_dialog_end_dialog( dialog );
-
-    return ERROR_SUCCESS;
-}
-
-static UINT msi_error_dialog_set_error( MSIPACKAGE *package, LPWSTR error_dialog, LPWSTR error )
-{
-    MSIRECORD * row;
-
-    static const WCHAR update[] = 
-        {'U','P','D','A','T','E',' ','`','C','o','n','t','r','o','l','`',' ',
-         'S','E','T',' ','`','T','e','x','t','`',' ','=',' ','\'','%','s','\'',' ',
-         'W','H','E','R','E', ' ','`','D','i','a','l','o','g','_','`',' ','=',' ','\'','%','s','\'',' ',
-         'A','N','D',' ','`','C','o','n','t','r','o','l','`',' ','=',' ',
-         '\'','E','r','r','o','r','T','e','x','t','\'',0};
-
-    row = MSI_QueryGetRecord( package->db, update, error, error_dialog );
-    if (!row)
-        return ERROR_FUNCTION_FAILED;
-
-    msiobj_release(&row->hdr);
-    return ERROR_SUCCESS;
-}
-
-UINT msi_spawn_error_dialog( MSIPACKAGE *package, LPWSTR error_dialog, LPWSTR error )
-{
-    msi_dialog *dialog;
-    WCHAR result[MAX_PATH];
-    UINT r = ERROR_SUCCESS;
-    DWORD size = MAX_PATH;
-    int res;
-
-    static const WCHAR pn_prop[] = {'P','r','o','d','u','c','t','N','a','m','e',0};
-    static const WCHAR title_fmt[] = {'%','s',' ','W','a','r','n','i','n','g',0};
-    static const WCHAR error_abort[] = {'E','r','r','o','r','A','b','o','r','t',0};
-    static const WCHAR result_prop[] = {
-        'M','S','I','E','r','r','o','r','D','i','a','l','o','g','R','e','s','u','l','t',0
-    };
-
-    if ((package->ui_level & INSTALLUILEVEL_MASK) == INSTALLUILEVEL_NONE) return ERROR_SUCCESS;
-
-    if ( !error_dialog )
-    {
-        LPWSTR product_name = msi_dup_property( package->db, pn_prop );
-        WCHAR title[MAX_PATH];
-
-        sprintfW( title, title_fmt, product_name );
-        res = MessageBoxW( NULL, error, title, MB_OKCANCEL | MB_ICONWARNING );
-
-        msi_free( product_name );
-
-        if ( res == IDOK )
-            return ERROR_SUCCESS;
-        else
-            return ERROR_FUNCTION_FAILED;
-    }
-
-    r = msi_error_dialog_set_error( package, error_dialog, error );
-    if ( r != ERROR_SUCCESS )
-        return r;
-
-    dialog = dialog_create( package, error_dialog, package->dialog, error_dialog_handler );
-    if ( !dialog )
-        return ERROR_FUNCTION_FAILED;
-
-    dialog->finished = FALSE;
-    r = dialog_run_message_loop( dialog );
-    if ( r != ERROR_SUCCESS )
-        goto done;
-
-    r = msi_get_property( package->db, result_prop, result, &size );
-    if ( r != ERROR_SUCCESS)
-        r = ERROR_SUCCESS;
-
-    if ( !strcmpW( result, error_abort ) )
-        r = ERROR_FUNCTION_FAILED;
-
-done:
-    msi_dialog_destroy( dialog );
-
-    return r;
 }
 
 static void MSI_ClosePreview( MSIOBJECTHDR *arg )
@@ -4299,8 +4216,6 @@ UINT WINAPI MsiPreviewBillboardA( MSIHANDLE hPreview, LPCSTR szControlName, LPCS
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
-typedef UINT (*event_handler)( msi_dialog *, const WCHAR * );
-
 struct control_event
 {
     const WCHAR  *event;
@@ -4310,10 +4225,11 @@ struct control_event
 static UINT dialog_event_handler( msi_dialog *, const WCHAR *, const WCHAR * );
 
 /* create a dialog box and run it if it's modal */
-static UINT event_do_dialog( MSIPACKAGE *package, const WCHAR *name, msi_dialog *parent, BOOL destroy_modeless )
+static INT event_do_dialog( MSIPACKAGE *package, const WCHAR *name, msi_dialog *parent, BOOL destroy_modeless )
 {
     msi_dialog *dialog;
     UINT r;
+    INT retval;
 
     /* create a new dialog */
     dialog = dialog_create( package, name, parent, dialog_event_handler );
@@ -4329,12 +4245,18 @@ static UINT event_do_dialog( MSIPACKAGE *package, const WCHAR *name, msi_dialog 
         /* modeless dialogs return an error message */
         r = dialog_run_message_loop( dialog );
         if (r == ERROR_SUCCESS)
+        {
+            retval = dialog->retval;
             msi_dialog_destroy( dialog );
+            return retval;
+        }
         else
+        {
             package->dialog = dialog;
+            return IDOK;
+        }
     }
-    else r = ERROR_FUNCTION_FAILED;
-    return r;
+    else return 0;
 }
 
 /* end a modal dialog box */
@@ -4346,25 +4268,28 @@ static UINT event_end_dialog( msi_dialog *dialog, const WCHAR *argument )
     static const WCHAR returnW[] = {'R','e','t','u','r','n',0};
 
     if (!strcmpW( argument, exitW ))
-        dialog->package->CurrentInstallState = ERROR_INSTALL_USEREXIT;
+        dialog->retval = IDCANCEL;
     else if (!strcmpW( argument, retryW ))
-        dialog->package->CurrentInstallState = ERROR_INSTALL_SUSPEND;
+        dialog->retval = IDRETRY;
     else if (!strcmpW( argument, ignoreW ))
-        dialog->package->CurrentInstallState = ERROR_SUCCESS;
+        dialog->retval = IDOK;
     else if (!strcmpW( argument, returnW ))
-    {
-        msi_dialog *parent = dialog->parent;
-        msi_free( dialog->package->next_dialog );
-        dialog->package->next_dialog = (parent) ? strdupW( parent->name ) : NULL;
-        dialog->package->CurrentInstallState = ERROR_SUCCESS;
-    }
+        dialog->retval = 0;
     else
     {
         ERR("Unknown argument string %s\n", debugstr_w(argument));
-        dialog->package->CurrentInstallState = ERROR_FUNCTION_FAILED;
+        dialog->retval = IDABORT;
     }
     event_cleanup_subscriptions( dialog->package, dialog->name );
     msi_dialog_end_dialog( dialog );
+    return ERROR_SUCCESS;
+}
+
+static UINT pending_event_end_dialog( msi_dialog *dialog, const WCHAR *argument )
+{
+    dialog->pending_event = event_end_dialog;
+    if (dialog->pending_argument) msi_free( dialog->pending_argument );
+    dialog->pending_argument = strdupW( argument );
     return ERROR_SUCCESS;
 }
 
@@ -4378,16 +4303,36 @@ static UINT event_new_dialog( msi_dialog *dialog, const WCHAR *argument )
     return ERROR_SUCCESS;
 }
 
+static UINT pending_event_new_dialog( msi_dialog *dialog, const WCHAR *argument )
+{
+    dialog->pending_event = event_new_dialog;
+    if (dialog->pending_argument) msi_free( dialog->pending_argument );
+    dialog->pending_argument = strdupW( argument );
+    return ERROR_SUCCESS;
+}
+
 /* create a new child dialog of an existing modal dialog */
 static UINT event_spawn_dialog( msi_dialog *dialog, const WCHAR *argument )
 {
+    INT r;
     /* don't destroy a modeless dialogs that might be our parent */
-    event_do_dialog( dialog->package, argument, dialog, FALSE );
-    if (dialog->package->CurrentInstallState != ERROR_SUCCESS)
+    r = event_do_dialog( dialog->package, argument, dialog, FALSE );
+    if (r != 0)
+    {
+        dialog->retval = r;
         msi_dialog_end_dialog( dialog );
+    }
     else
         msi_dialog_update_all_controls(dialog);
 
+    return ERROR_SUCCESS;
+}
+
+static UINT pending_event_spawn_dialog( msi_dialog *dialog, const WCHAR *argument )
+{
+    dialog->pending_event = event_spawn_dialog;
+    if (dialog->pending_argument) msi_free( dialog->pending_argument );
+    dialog->pending_argument = strdupW( argument );
     return ERROR_SUCCESS;
 }
 
@@ -4489,26 +4434,49 @@ static UINT event_reset( msi_dialog *dialog, const WCHAR *argument )
     return ERROR_SUCCESS;
 }
 
-/* Return ERROR_SUCCESS if dialog is process and ERROR_FUNCTION_FAILED
- * if the given parameter is not a dialog box
- */
-UINT ACTION_DialogBox( MSIPACKAGE *package, const WCHAR *dialog )
+INT ACTION_ShowDialog( MSIPACKAGE *package, const WCHAR *dialog )
 {
-    UINT r;
+    static const WCHAR szDialog[] = {'D','i','a','l','o','g',0};
+    MSIRECORD *row;
+    INT rc;
+
+    if (!TABLE_Exists(package->db, szDialog)) return 0;
+
+    row = MSI_CreateRecord(0);
+    if (!row) return -1;
+    MSI_RecordSetStringW(row, 0, dialog);
+    rc = MSI_ProcessMessage(package, INSTALLMESSAGE_SHOWDIALOG, row);
+    msiobj_release(&row->hdr);
+
+    if (rc == -2) rc = 0;
+
+    if (!rc)
+    {
+        MSIRECORD *row = MSI_CreateRecord(2);
+        if (!row) return -1;
+        MSI_RecordSetInteger(row, 1, 2726);
+        MSI_RecordSetStringW(row, 2, dialog);
+        MSI_ProcessMessage(package, INSTALLMESSAGE_INFO, row);
+
+        msiobj_release(&row->hdr);
+    }
+    return rc;
+}
+
+INT ACTION_DialogBox( MSIPACKAGE *package, const WCHAR *dialog )
+{
+    INT r;
 
     if (package->next_dialog) ERR("Already got next dialog... ignoring it\n");
     package->next_dialog = NULL;
 
-    /* Dialogs are chained by filling in the next_dialog member
-     * of the package structure, then terminating the current dialog.
-     * The code below sees the next_dialog member set, and runs the
-     * next dialog.
-     * We fall out of the loop below if we come across a modeless
-     * dialog, as it returns ERROR_IO_PENDING when we try to run
-     * its message loop.
+    /* Dialogs are chained through NewDialog, which sets the next_dialog member.
+     * We fall out of the loop if we reach a modeless dialog, which immediately
+     * returns IDOK, or an EndDialog event, which returns the value corresponding
+     * to its argument.
      */
     r = event_do_dialog( package, dialog, NULL, TRUE );
-    while (r == ERROR_SUCCESS && package->next_dialog)
+    while (package->next_dialog)
     {
         WCHAR *name = package->next_dialog;
 
@@ -4516,7 +4484,6 @@ UINT ACTION_DialogBox( MSIPACKAGE *package, const WCHAR *dialog )
         r = event_do_dialog( package, name, NULL, TRUE );
         msi_free( name );
     }
-    if (r == ERROR_IO_PENDING) r = ERROR_SUCCESS;
     return r;
 }
 
@@ -4567,9 +4534,9 @@ static const WCHAR validate_product_idW[] = {'V','a','l','i','d','a','t','e','P'
 
 static const struct control_event control_events[] =
 {
-    { end_dialogW, event_end_dialog },
-    { new_dialogW, event_new_dialog },
-    { spawn_dialogW, event_spawn_dialog },
+    { end_dialogW, pending_event_end_dialog },
+    { new_dialogW, pending_event_new_dialog },
+    { spawn_dialogW, pending_event_spawn_dialog },
     { spawn_wait_dialogW, event_spawn_wait_dialog },
     { do_actionW, event_do_action },
     { add_localW, event_add_local },

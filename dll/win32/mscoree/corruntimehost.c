@@ -919,7 +919,7 @@ static void CDECL ReallyFixupVTable(struct dll_fixup *fixup)
     }
 
     if (info != NULL)
-        ICLRRuntimeHost_Release(info);
+        ICLRRuntimeInfo_Release(info);
 
     HeapFree(GetProcessHeap(), 0, filenameA);
 

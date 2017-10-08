@@ -20,7 +20,14 @@
 import "wtypes.idl";
 #endif
 
-/* Interfaces */
+cpp_quote("#ifdef __WINESRC__")
+cpp_quote("#define WIDL_C_INLINE_WRAPPERS")
+cpp_quote("#endif")
+
+cpp_quote("#ifdef WIDL_C_INLINE_WRAPPERS")
+cpp_quote("#define SAVE_WIDL_C_INLINE_WRAPPERS")
+cpp_quote("#undef WIDL_C_INLINE_WRAPPERS")
+cpp_quote("#endif")
 
 [
   local,
@@ -38,6 +45,20 @@ interface IUnknown
   ULONG AddRef();
   ULONG Release();
 }
+
+cpp_quote("HRESULT STDMETHODCALLTYPE IUnknown_QueryInterface_Proxy(IUnknown* This, REFIID riid, void **ppvObject);")
+cpp_quote("void __RPC_STUB IUnknown_QueryInterface_Stub(IRpcStubBuffer* This, IRpcChannelBuffer* pRpcChannelBuffer,")
+cpp_quote("     PRPC_MESSAGE pRpcMessage, DWORD* pdwStubPhase);")
+cpp_quote("ULONG STDMETHODCALLTYPE IUnknown_AddRef_Proxy(IUnknown* This);")
+cpp_quote("void __RPC_STUB IUnknown_AddRef_Stub(IRpcStubBuffer* This, IRpcChannelBuffer* pRpcChannelBuffer,")
+cpp_quote("     PRPC_MESSAGE pRpcMessage, DWORD* pdwStubPhase);")
+cpp_quote("ULONG STDMETHODCALLTYPE IUnknown_Release_Proxy(IUnknown* This);")
+cpp_quote("void __RPC_STUB IUnknown_Release_Stub(IRpcStubBuffer* This, IRpcChannelBuffer* pRpcChannelBuffer,")
+cpp_quote("     PRPC_MESSAGE pRpcMessage, DWORD* pdwStubPhase);")
+
+cpp_quote("#ifdef SAVE_WIDL_C_INLINE_WRAPPERS")
+cpp_quote("#define WIDL_C_INLINE_WRAPPERS")
+cpp_quote("#endif")
 
 [
   object,

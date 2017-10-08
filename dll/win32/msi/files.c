@@ -44,7 +44,7 @@ static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f, const WCHAR *ac
     MSI_RecordSetStringW( uirow, 1, f->FileName );
     MSI_RecordSetStringW( uirow, 9, f->Component->Directory );
     MSI_RecordSetInteger( uirow, 6, f->FileSize );
-    msi_ui_actiondata( package, action, uirow );
+    MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
     msi_ui_progress( package, 2, f->FileSize, 0, 0 );
 }
@@ -966,7 +966,7 @@ done:
     MSI_RecordSetStringW( uirow, 1, MSI_RecordGetString(rec, 1) );
     MSI_RecordSetInteger( uirow, 6, 1 ); /* FIXME */
     MSI_RecordSetStringW( uirow, 9, destdir );
-    msi_ui_actiondata( package, szMoveFiles, uirow );
+    MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
 
     msi_free(sourcedir);
@@ -1103,7 +1103,7 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
     MSI_RecordSetStringW( uirow, 1, MSI_RecordGetString( row, 1 ) );
     MSI_RecordSetInteger( uirow, 6, file->FileSize );
     MSI_RecordSetStringW( uirow, 9, MSI_RecordGetString( row, 5 ) );
-    msi_ui_actiondata( package, szDuplicateFiles, uirow );
+    MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
 
     msi_free(dest);
@@ -1179,7 +1179,7 @@ static UINT ITERATE_RemoveDuplicateFiles( MSIRECORD *row, LPVOID param )
     uirow = MSI_CreateRecord( 9 );
     MSI_RecordSetStringW( uirow, 1, MSI_RecordGetString( row, 1 ) );
     MSI_RecordSetStringW( uirow, 9, MSI_RecordGetString( row, 5 ) );
-    msi_ui_actiondata( package, szRemoveDuplicateFiles, uirow );
+    MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
 
     msi_free(dest);
@@ -1301,7 +1301,7 @@ done:
     uirow = MSI_CreateRecord( 9 );
     MSI_RecordSetStringW( uirow, 1, MSI_RecordGetString(row, 1) );
     MSI_RecordSetStringW( uirow, 9, dir );
-    msi_ui_actiondata( package, szRemoveFiles, uirow );
+    MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
 
     msi_free(filename);
@@ -1391,7 +1391,7 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         uirow = MSI_CreateRecord( 9 );
         MSI_RecordSetStringW( uirow, 1, file->FileName );
         MSI_RecordSetStringW( uirow, 9, comp->Directory );
-        msi_ui_actiondata( package, szRemoveFiles, uirow );
+        MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
         msiobj_release( &uirow->hdr );
     }
 

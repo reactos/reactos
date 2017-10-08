@@ -14,24 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* TYPES *********************************************************************/
-
-/* extended PATHDATA */
-typedef struct _EXTPATHDATA
-{
-    PATHDATA pd;
-    struct _EXTPATHDATA *ppdNext;
-} EXTPATHDATA, *PEXTPATHDATA;
-
-/* extended PATHOBJ */
-typedef struct _EXTPATHOBJ
-{
-    PATHOBJ po;
-    PEXTPATHDATA ppdFirst;
-    PEXTPATHDATA ppdLast;
-    PEXTPATHDATA ppdCurrent;
-} EXTPATHOBJ, *PEXTPATHOBJ;
-
 /* FUNCTIONS *****************************************************************/
 
 /* FIXME: set last error */
@@ -44,16 +26,27 @@ PATHOBJ*
 APIENTRY
 EngCreatePath(VOID)
 {
-    PEXTPATHOBJ pPathObj;
-    const ULONG size = sizeof(EXTPATHOBJ);
+    PEPATHOBJ pPathObj;
+    const ULONG size = sizeof(EPATHOBJ);
+
+    PPATH pPath = PATH_AllocPathWithHandle();
+    if (pPath == NULL)
+    {
+        return NULL;
+    }
 
     pPathObj = ExAllocatePoolWithTag(PagedPool, size, GDITAG_PATHOBJ);
     if (pPathObj == NULL)
     {
         return NULL;
     }
-
     RtlZeroMemory(pPathObj, size);
+
+    pPathObj->pPath = pPath;
+
+    pPath->flType = PATHTYPE_KEEPME;
+    pPath->epo = pPathObj;
+
     return &pPathObj->po;
 }
 
@@ -64,19 +57,23 @@ VOID
 APIENTRY
 EngDeletePath(IN PATHOBJ *ppo)
 {
-    PEXTPATHOBJ pPathObj;
+    PEPATHOBJ pPathObj;
     PEXTPATHDATA ppd, ppdNext;
+    PPATH pPath;
 
-    pPathObj = (PEXTPATHOBJ)ppo;
-    if (pPathObj == NULL)
+    pPathObj = (PEPATHOBJ)ppo;
+    if (pPathObj == NULL || pPathObj->pPath == NULL)
         return;
 
-    for (ppd = pPathObj->ppdFirst; ppd; ppd = ppdNext)
+    pPath = pPathObj->pPath;
+
+    for (ppd = pPath->ppdFirst; ppd; ppd = ppdNext)
     {
         ppdNext = ppd->ppdNext;
         ExFreePoolWithTag(ppd, GDITAG_PATHOBJ);
     }
     ExFreePoolWithTag(pPathObj, GDITAG_PATHOBJ);
+    GDIOBJ_vDeleteObject(&pPath->BaseObject);
 }
 
 /*
@@ -87,11 +84,11 @@ APIENTRY
 PATHOBJ_bCloseFigure(IN PATHOBJ *ppo)
 {
     PEXTPATHDATA ppd;
-    PEXTPATHOBJ pPathObj = (PEXTPATHOBJ)ppo;
-    if (pPathObj == NULL)
+    PEPATHOBJ pPathObj = (PEPATHOBJ)ppo;
+    if (pPathObj == NULL || pPathObj->pPath == NULL)
         return FALSE;
 
-    ppd = pPathObj->ppdLast;
+    ppd = pPathObj->pPath->ppdLast;
     if (ppd == NULL)
         return FALSE;
 
@@ -106,11 +103,11 @@ VOID
 APIENTRY
 PATHOBJ_vEnumStart(IN PATHOBJ *ppo)
 {
-    PEXTPATHOBJ pPathObj = (PEXTPATHOBJ)ppo;
-    if (pPathObj == NULL)
+    PEPATHOBJ pPathObj = (PEPATHOBJ)ppo;
+    if (pPathObj == NULL || pPathObj->pPath == NULL)
         return;
 
-    pPathObj->ppdCurrent = pPathObj->ppdFirst;
+    pPathObj->pPath->ppdCurrent = pPathObj->pPath->ppdFirst;
 }
 
 /*
@@ -122,14 +119,14 @@ PATHOBJ_bEnum(
     IN  PATHOBJ   *ppo,
     OUT PATHDATA  *ppd)
 {
-    PEXTPATHOBJ pPathObj = (PEXTPATHOBJ)ppo;
-    if (pPathObj == NULL || pPathObj->ppdCurrent == NULL)
+    PEPATHOBJ pPathObj = (PEPATHOBJ)ppo;
+    if (pPathObj == NULL|| pPathObj->pPath == NULL || pPathObj->pPath->ppdCurrent == NULL)
         return FALSE;
 
-    *ppd = pPathObj->ppdCurrent->pd;
+    *ppd = pPathObj->pPath->ppdCurrent->pd;
 
-    pPathObj->ppdCurrent = pPathObj->ppdCurrent->ppdNext;
-    return (pPathObj->ppdCurrent != NULL);
+    pPathObj->pPath->ppdCurrent = pPathObj->pPath->ppdCurrent->ppdNext;
+    return (pPathObj->pPath->ppdCurrent != NULL);
 }
 
 /*
@@ -141,11 +138,11 @@ PATHOBJ_bMoveTo(
     IN PATHOBJ  *ppo,
     IN POINTFIX  ptfx)
 {
-    PEXTPATHOBJ pPathObj;
+    PEPATHOBJ pPathObj;
     PEXTPATHDATA ppd, ppdLast;
 
-    pPathObj = (PEXTPATHOBJ)ppo;
-    if (pPathObj == NULL)
+    pPathObj = (PEPATHOBJ)ppo;
+    if (pPathObj == NULL || pPathObj->pPath == NULL)
         return FALSE;
 
     /* allocate a subpath data */
@@ -166,7 +163,7 @@ PATHOBJ_bMoveTo(
     }
     ppd->pd.pptfx[0] = ptfx;
 
-    ppdLast = pPathObj->ppdLast;
+    ppdLast = pPathObj->pPath->ppdLast;
     if (ppdLast)
     {
         /* end the last subpath */
@@ -174,12 +171,12 @@ PATHOBJ_bMoveTo(
 
         /* add the subpath to the last */
         ppdLast->ppdNext = ppd;
-        pPathObj->ppdLast = ppd;
+        pPathObj->pPath->ppdLast = ppd;
     }
     else
     {
         /* add the subpath */
-        pPathObj->ppdLast = pPathObj->ppdFirst = ppd;
+        pPathObj->pPath->ppdLast = pPathObj->pPath->ppdFirst = ppd;
     }
 
     pPathObj->po.cCurves++;
@@ -197,16 +194,16 @@ PATHOBJ_bPolyLineTo(
     IN POINTFIX  *pptfx,
     IN ULONG  cptfx)
 {
-    PEXTPATHOBJ pPathObj;
+    PEPATHOBJ pPathObj;
     PEXTPATHDATA ppd, ppdLast;
     PPOINTFIX pptfxNew, pptfxOld;
     ULONG size;
 
-    pPathObj = (PEXTPATHOBJ)ppo;
-    if (pPathObj == NULL || pptfx == NULL || cptfx == 0)
+    pPathObj = (PEPATHOBJ)ppo;
+    if (pPathObj == NULL || pPathObj->pPath == NULL || pptfx == NULL || cptfx == 0)
         return FALSE;
 
-    ppdLast = pPathObj->ppdLast;
+    ppdLast = pPathObj->pPath->ppdLast;
     if (ppdLast == NULL)
     {
         /* allocate a subpath data */
@@ -230,7 +227,7 @@ PATHOBJ_bPolyLineTo(
         ppd->pd.count = cptfx;
 
         /* set the subpath */
-        pPathObj->ppdLast = pPathObj->ppdFirst = ppd;
+        pPathObj->pPath->ppdLast = pPathObj->pPath->ppdFirst = ppd;
 
         pPathObj->po.cCurves++;
     }
@@ -258,7 +255,7 @@ PATHOBJ_bPolyLineTo(
 
         /* add to last */
         ppdLast->ppdNext = ppd;
-        pPathObj->ppdLast = ppd;
+        pPathObj->pPath->ppdLast = ppd;
 
         pPathObj->po.cCurves++;
     }
@@ -294,16 +291,16 @@ PATHOBJ_bPolyBezierTo(
     IN POINTFIX  *pptfx,
     IN ULONG  cptfx)
 {
-    PEXTPATHOBJ pPathObj;
+    PEPATHOBJ pPathObj;
     PEXTPATHDATA ppd, ppdLast;
     PPOINTFIX pptfxNew, pptfxOld;
     ULONG size;
 
-    pPathObj = (PEXTPATHOBJ)ppo;
-    if (pPathObj == NULL || pptfx == NULL || cptfx == 0)
+    pPathObj = (PEPATHOBJ)ppo;
+    if (pPathObj == NULL || pPathObj->pPath == NULL || pptfx == NULL || cptfx == 0)
         return FALSE;
 
-    ppdLast = pPathObj->ppdLast;
+    ppdLast = pPathObj->pPath->ppdLast;
     if (ppdLast == NULL)
     {
         /* allocate a subpath data */
@@ -327,7 +324,7 @@ PATHOBJ_bPolyBezierTo(
         ppd->pd.count = cptfx;
 
         /* set the subpath */
-        pPathObj->ppdLast = pPathObj->ppdFirst = ppd;
+        pPathObj->pPath->ppdLast = pPathObj->pPath->ppdFirst = ppd;
 
         pPathObj->po.cCurves++;
     }
@@ -355,7 +352,7 @@ PATHOBJ_bPolyBezierTo(
 
         /* add to last */
         ppdLast->ppdNext = ppd;
-        pPathObj->ppdLast = ppd;
+        pPathObj->pPath->ppdLast = ppd;
 
         pPathObj->po.cCurves++;
     }
@@ -415,18 +412,18 @@ PATHOBJ_vGetBounds(
     OUT PRECTFX  prectfx)
 {
     FIX xLeft, yTop, xRight, yBottom;
-    PEXTPATHOBJ pPathObj;
+    PEPATHOBJ pPathObj;
     PEXTPATHDATA ppd, ppdNext;
     ULONG i;
 
-    pPathObj = (PEXTPATHOBJ)ppo;
-    if (pPathObj == NULL || prectfx == NULL)
+    pPathObj = (PEPATHOBJ)ppo;
+    if (pPathObj == NULL || pPathObj->pPath == NULL || prectfx == NULL)
         return;
 
     yTop = xLeft = MAXLONG;
     yBottom = xRight = MINLONG;
 
-    for (ppd = pPathObj->ppdFirst; ppd; ppd = ppdNext)
+    for (ppd = pPathObj->pPath->ppdFirst; ppd; ppd = ppdNext)
     {
         ppdNext = ppd->ppdNext;
         for (i = 0; i < ppd->pd.count; ++i)

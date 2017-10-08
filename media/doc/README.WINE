@@ -16,7 +16,7 @@ wine-patches@winehq.com and ros-dev@reactos.org
 The following build tools are shared with Wine.
 
 reactos/sdk/tools/unicode               # Synced to WineStaging-2.9
-reactos/sdk/tools/widl                  # Synced to WineStaging-2.9
+reactos/sdk/tools/widl                  # Synced to WineStaging-2.16
 reactos/sdk/tools/wpp                   # Synced to WineStaging-2.9
 
 The following libraries are shared with Wine.
@@ -26,7 +26,7 @@ reactos/dll/directx/wine/d3d8           # Synced to WineStaging-2.16
 reactos/dll/directx/wine/d3d9           # Synced to WineStaging-2.16
 reactos/dll/directx/wine/d3dcompiler_43 # Synced to WineStaging-2.16
 reactos/dll/directx/wine/d3drm          # Synced to WineStaging-2.16
-reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-1.9.4
+reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-2.16
 reactos/dll/directx/wine/d3dxof         # Synced to WineStaging-2.9
 reactos/dll/directx/wine/ddraw          # Synced to WineStaging-2.16
 reactos/dll/directx/wine/devenum        # Synced to WineStaging-2.9
@@ -112,7 +112,7 @@ reactos/dll/win32/msg711.acm          # Synced to WineStaging-2.9
 reactos/dll/win32/msgsm32.acm         # Synced to WineStaging-2.9
 reactos/dll/win32/mshtml              # Synced to WineStaging-1.7.55
 reactos/dll/win32/mshtml.tlb          # Synced to WineStaging-1.7.55
-reactos/dll/win32/msi                 # Synced to WineStaging-2.9
+reactos/dll/win32/msi                 # Synced to WineStaging-2.16
 reactos/dll/win32/msimg32             # Synced to WineStaging-2.16
 reactos/dll/win32/msimtf              # Synced to WineStaging-2.9
 reactos/dll/win32/msisip              # Synced to WineStaging-2.9
@@ -174,7 +174,7 @@ reactos/dll/win32/shdoclc             # Synced to WineStaging-2.9
 reactos/dll/win32/shdocvw             # Synced to WineStaging-2.9
 reactos/dll/win32/shell32             # Forked at Wine-20071011
 reactos/dll/win32/shfolder            # Synced to WineStaging-2.9
-reactos/dll/win32/shlwapi             # Synced to WineStaging-2.9
+reactos/dll/win32/shlwapi             # Synced to WineStaging-2.16
 reactos/dll/win32/slbcsp              # Synced to WineStaging-2.9
 reactos/dll/win32/snmpapi             # Synced to WineStaging-2.9
 reactos/dll/win32/softpub             # Synced to WineStaging-2.9
@@ -210,7 +210,7 @@ reactos/dll/win32/wintrust            # Synced to WineStaging-2.16
 reactos/dll/win32/wldap32             # Synced to WineStaging-2.9
 reactos/dll/win32/wmi                 # Synced to WineStaging-2.9
 reactos/dll/win32/wmiutils            # Synced to WineStaging-2.9
-reactos/dll/win32/wmvcore             # Synced to WineStaging-2.9
+reactos/dll/win32/wmvcore             # Synced to WineStaging-2.16
 reactos/dll/win32/wshom.ocx           # Synced to WineStaging-2.9
 reactos/dll/win32/wtsapi32            # Synced to WineStaging-2.9
 reactos/dll/win32/wuapi               # Synced to WineStaging-2.9
@@ -243,7 +243,7 @@ reactos/base/applications/wordpad           # Synced to WineStaging-1.9.16
 reactos/base/applications/write             # Synced to WineStaging-2.9
 reactos/base/services/rpcss                 # Synced to WineStaging-1.9.16
 reactos/base/system/expand                  # Synced to WineStaging-2.9
-reactos/base/system/msiexec                 # Synced to WineStaging-2.9
+reactos/base/system/msiexec                 # Synced to WineStaging-2.16
 reactos/modules/rosapps/winfile             # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported

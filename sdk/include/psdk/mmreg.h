@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __WIDL__
+
 #ifndef __WINE_MMREG_H
 #define __WINE_MMREG_H
 
@@ -537,3 +539,37 @@ typedef struct tagEXBMINFOHEADER {
 #endif
 
 #endif /* __WINE_MMREG_H */
+
+#else /* __WIDL__ */
+
+cpp_quote("#if 0")
+#pragma pack(push, 1)
+
+typedef struct tWAVEFORMATEX {
+    WORD wFormatTag;
+    WORD nChannels;
+    DWORD nSamplesPerSec;
+    DWORD nAvgBytesPerSec;
+    WORD nBlockAlign;
+    WORD wBitsPerSample;
+    WORD cbSize;
+    [size_is(cbSize)] BYTE pExtraBytes[];
+} WAVEFORMATEX, *PWAVEFORMATEX, *NPWAVEFORMATEX, *LPWAVEFORMATEX;
+
+typedef struct {
+    WORD wFormatTag;
+    WORD nChannels;
+    DWORD nSamplesPerSec;
+    DWORD nAvgBytesPerSec;
+    WORD nBlockAlign;
+    WORD wBitsPerSample;
+    WORD cbSize;
+    WORD wValidBitsPerSample;
+    DWORD dwChannelMask;
+    GUID SubFormat;
+} WAVEFORMATEXTENSIBLE, *PWAVEFORMATEXTENSIBLE;
+
+#pragma pack(pop)
+cpp_quote("#endif")
+
+#endif /* __WIDL__ */

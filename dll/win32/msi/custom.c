@@ -1203,7 +1203,7 @@ UINT ACTION_CustomAction( MSIPACKAGE *package, LPCWSTR action, UINT script )
 
     row = MSI_QueryGetRecord( package->db, query, action );
     if (!row)
-        return ERROR_CALL_NOT_IMPLEMENTED;
+        return ERROR_FUNCTION_NOT_CALLED;
 
     type = MSI_RecordGetInteger(row,2);
     source = MSI_RecordGetString(row,3);

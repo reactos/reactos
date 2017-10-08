@@ -212,14 +212,6 @@ static DWORD msi_atou(LPCWSTR str)
 	return ret;
 }
 
-static LPWSTR msi_strdup(LPCWSTR str)
-{
-	DWORD len = lstrlenW(str)+1;
-	LPWSTR ret = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
-	lstrcpyW(ret, str);
-	return ret;
-}
-
 /* str1 is the same as str2, ignoring case */
 static BOOL msi_strequal(LPCWSTR str1, LPCSTR str2)
 {
@@ -409,90 +401,103 @@ static INT DoEmbedding( LPWSTR key )
 
 enum chomp_state
 {
-	cs_whitespace,
-	cs_token,
-	cs_quote
+    CS_WHITESPACE,
+    CS_TOKEN,
+    CS_QUOTE
 };
 
-static int chomp( WCHAR *str )
+static int chomp( const WCHAR *in, WCHAR *out )
 {
-	enum chomp_state state = cs_token;
-	WCHAR *p, *out;
-        int count = 1;
-        BOOL ignore;
+    enum chomp_state state = CS_TOKEN;
+    const WCHAR *p;
+    int count = 1;
+    BOOL ignore;
 
-	for( p = str, out = str; *p; p++ )
-	{
-                ignore = TRUE;
-		switch( state )
-		{
-		case cs_whitespace:
-			switch( *p )
-			{
-			case ' ':
-				break;
-			case '"':
-				state = cs_quote;
-				count++;
-				break;
-			default:
-				count++;
-                                ignore = FALSE;
-				state = cs_token;
-			}
-			break;
+    for (p = in; *p; p++)
+    {
+        ignore = TRUE;
+        switch (state)
+        {
+        case CS_WHITESPACE:
+            switch (*p)
+            {
+            case ' ':
+                break;
+            case '"':
+                state = CS_QUOTE;
+                count++;
+                break;
+            default:
+                count++;
+                ignore = FALSE;
+                state = CS_TOKEN;
+            }
+            break;
 
-		case cs_token:
-			switch( *p )
-			{
-			case '"':
-				state = cs_quote;
-				break;
-			case ' ':
-				state = cs_whitespace;
-				*out++ = 0;
-				break;
-			default:
-                                ignore = FALSE;
-			}
-			break;
+        case CS_TOKEN:
+            switch (*p)
+            {
+            case '"':
+                state = CS_QUOTE;
+                break;
+            case ' ':
+                state = CS_WHITESPACE;
+                if (out) *out++ = 0;
+                break;
+            default:
+                if (p > in && p[-1] == '"')
+                {
+                    if (out) *out++ = 0;
+                    count++;
+                }
+                ignore = FALSE;
+            }
+            break;
 
-		case cs_quote:
-			switch( *p )
-			{
-			case '"':
-				state = cs_token;
-				break;
-			default:
-                                ignore = FALSE;
-			}
-			break;
-		}
-		if( !ignore )
-			*out++ = *p;
-	}
-
-	*out = 0;
-
-	return count;
+        case CS_QUOTE:
+            switch (*p)
+            {
+            case '"':
+                state = CS_TOKEN;
+                break;
+            default:
+                ignore = FALSE;
+            }
+            break;
+        }
+        if (!ignore && out) *out++ = *p;
+    }
+    if (out) *out = 0;
+    return count;
 }
 
 static void process_args( WCHAR *cmdline, int *pargc, WCHAR ***pargv )
 {
-	WCHAR **argv, *p = msi_strdup(cmdline);
-	int i, n;
+    WCHAR **argv, *p;
+    int i, count;
 
-	n = chomp( p );
-	argv = HeapAlloc(GetProcessHeap(), 0, sizeof (WCHAR*)*(n+1));
-	for( i=0; i<n; i++ )
-	{
-		argv[i] = p;
-		p += lstrlenW(p) + 1;
-	}
-	argv[i] = NULL;
+    *pargc = 0;
+    *pargv = NULL;
 
-	*pargc = n;
-	*pargv = argv;
+    count = chomp( cmdline, NULL );
+    if (!(p = HeapAlloc( GetProcessHeap(), 0, (lstrlenW(cmdline) + count + 1) * sizeof(WCHAR) )))
+        return;
+
+    count = chomp( cmdline, p );
+    if (!(argv = HeapAlloc( GetProcessHeap(), 0, (count + 1) * sizeof(WCHAR *) )))
+    {
+        HeapFree( GetProcessHeap(), 0, p );
+        return;
+    }
+    for (i = 0; i < count; i++)
+    {
+        argv[i] = p;
+        p += lstrlenW( p ) + 1;
+    }
+    argv[i] = NULL;
+
+    *pargc = count;
+    *pargv = argv;
 }
 
 static BOOL process_args_from_reg( const WCHAR *ident, int *pargc, WCHAR ***pargv )

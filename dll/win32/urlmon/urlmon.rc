@@ -55,7 +55,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 2 WINE_REGISTRY "urlmon_urlmon.rgs"
 
 /* @makedep: urlmon.inf */
-REGINST REGINST urlmon.inf
+REGINST REGINST urlmon_utf16.inf
 
 #define WINE_FILENAME_STR "urlmon.dll"
 #define WINE_FILEVERSION 6,0,2800,1485

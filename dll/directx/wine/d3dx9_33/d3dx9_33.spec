@@ -74,18 +74,18 @@
 @ stdcall D3DXCreateMeshFVF(long long long long ptr ptr) d3dx9_36.D3DXCreateMeshFVF
 @ stdcall D3DXCreateNPatchMesh(ptr ptr) d3dx9_36.D3DXCreateNPatchMesh
 @ stdcall D3DXCreatePMeshFromStream(ptr long ptr ptr ptr ptr ptr) d3dx9_36.D3DXCreatePMeshFromStream
-@ stdcall D3DXCreatePatchMesh(ptr long long long ptr ptr ptr) d3dx9_36.D3DXCreatePatchMesh
-@ stdcall D3DXCreatePolygon(ptr float long ptr ptr) d3dx9_36.D3DXCreatePolygon
 @ stdcall D3DXCreatePRTBuffer(long long long ptr) d3dx9_36.D3DXCreatePRTBuffer
 @ stdcall D3DXCreatePRTBufferTex(long long long long ptr) d3dx9_36.D3DXCreatePRTBufferTex
 @ stdcall D3DXCreatePRTCompBuffer(long long long ptr ptr ptr ptr) d3dx9_36.D3DXCreatePRTCompBuffer
 @ stdcall D3DXCreatePRTEngine(ptr ptr long ptr ptr) d3dx9_36.D3DXCreatePRTEngine
+@ stdcall D3DXCreatePatchMesh(ptr long long long ptr ptr ptr) d3dx9_36.D3DXCreatePatchMesh
+@ stdcall D3DXCreatePolygon(ptr float long ptr ptr) d3dx9_36.D3DXCreatePolygon
 @ stdcall D3DXCreateRenderToEnvMap(ptr long long long long long ptr) d3dx9_36.D3DXCreateRenderToEnvMap
 @ stdcall D3DXCreateRenderToSurface(ptr long long long long long ptr) d3dx9_36.D3DXCreateRenderToSurface
 @ stdcall D3DXCreateSPMesh(ptr ptr ptr ptr ptr) d3dx9_36.D3DXCreateSPMesh
 @ stdcall D3DXCreateSkinInfo(long ptr long ptr) d3dx9_36.D3DXCreateSkinInfo
-@ stdcall D3DXCreateSkinInfoFromBlendedMesh(ptr long ptr ptr) d3dx9_36.D3DXCreateSkinInfoFromBlendedMesh
 @ stdcall D3DXCreateSkinInfoFVF(long long long ptr) d3dx9_36.D3DXCreateSkinInfoFVF
+@ stdcall D3DXCreateSkinInfoFromBlendedMesh(ptr long ptr ptr) d3dx9_36.D3DXCreateSkinInfoFromBlendedMesh
 @ stdcall D3DXCreateSphere(ptr float long long ptr ptr) d3dx9_36.D3DXCreateSphere
 @ stdcall D3DXCreateSprite(ptr ptr) d3dx9_36.D3DXCreateSprite
 @ stdcall D3DXCreateTeapot(ptr ptr ptr) d3dx9_36.D3DXCreateTeapot
@@ -120,6 +120,7 @@
 @ stdcall D3DXDeclaratorFromFVF(long ptr) d3dx9_36.D3DXDeclaratorFromFVF
 @ stdcall D3DXDisassembleEffect(ptr long ptr) d3dx9_36.D3DXDisassembleEffect
 @ stdcall D3DXDisassembleShader(ptr long str ptr) d3dx9_36.D3DXDisassembleShader
+@ stdcall D3DXFVFFromDeclarator(ptr ptr) d3dx9_36.D3DXFVFFromDeclarator
 @ stdcall D3DXFileCreate(ptr) d3dx9_36.D3DXFileCreate
 @ stdcall D3DXFillCubeTexture(ptr ptr ptr) d3dx9_36.D3DXFillCubeTexture
 @ stdcall D3DXFillCubeTextureTX(ptr ptr) d3dx9_36.D3DXFillCubeTextureTX
@@ -138,7 +139,6 @@
 @ stdcall D3DXFrameNumNamedMatrices(ptr) d3dx9_36.D3DXFrameNumNamedMatrices
 @ stdcall D3DXFrameRegisterNamedMatrices(ptr ptr) d3dx9_36.D3DXFrameRegisterNamedMatrices
 @ stdcall D3DXFresnelTerm(float float) d3dx9_36.D3DXFresnelTerm
-@ stdcall D3DXFVFFromDeclarator(ptr ptr) d3dx9_36.D3DXFVFFromDeclarator
 @ stdcall D3DXGatherFragments(ptr long ptr ptr long ptr ptr) d3dx9_36.D3DXGatherFragments
 @ stdcall D3DXGatherFragmentsFromFileA(ptr ptr ptr long ptr ptr) d3dx9_36.D3DXGatherFragmentsFromFileA
 @ stdcall D3DXGatherFragmentsFromFileW(ptr ptr ptr long ptr ptr) d3dx9_36.D3DXGatherFragmentsFromFileW
@@ -174,11 +174,11 @@
 @ stdcall D3DXLoadMeshHierarchyFromXA(str long ptr ptr ptr ptr ptr) d3dx9_36.D3DXLoadMeshHierarchyFromXA
 @ stdcall D3DXLoadMeshHierarchyFromXInMemory(ptr long long ptr ptr ptr ptr ptr) d3dx9_36.D3DXLoadMeshHierarchyFromXInMemory
 @ stdcall D3DXLoadMeshHierarchyFromXW(wstr long ptr ptr ptr ptr ptr) d3dx9_36.D3DXLoadMeshHierarchyFromXW
-@ stdcall D3DXLoadPatchMeshFromXof(ptr long ptr ptr ptr long ptr) d3dx9_36.D3DXLoadPatchMeshFromXof
 @ stdcall D3DXLoadPRTBufferFromFileA(ptr ptr) d3dx9_36.D3DXLoadPRTBufferFromFileA
 @ stdcall D3DXLoadPRTBufferFromFileW(ptr ptr) d3dx9_36.D3DXLoadPRTBufferFromFileW
 @ stdcall D3DXLoadPRTCompBufferFromFileA(ptr ptr) d3dx9_36.D3DXLoadPRTCompBufferFromFileA
 @ stdcall D3DXLoadPRTCompBufferFromFileW(ptr ptr) d3dx9_36.D3DXLoadPRTCompBufferFromFileW
+@ stdcall D3DXLoadPatchMeshFromXof(ptr long ptr ptr ptr long ptr) d3dx9_36.D3DXLoadPatchMeshFromXof
 @ stdcall D3DXLoadSkinMeshFromXof(ptr long ptr ptr ptr ptr ptr ptr ptr) d3dx9_36.D3DXLoadSkinMeshFromXof
 @ stdcall D3DXLoadSurfaceFromFileA(ptr ptr ptr str ptr long long ptr) d3dx9_36.D3DXLoadSurfaceFromFileA
 @ stdcall D3DXLoadSurfaceFromFileInMemory(ptr ptr ptr ptr long ptr long long ptr) d3dx9_36.D3DXLoadSurfaceFromFileInMemory
@@ -253,6 +253,24 @@
 @ stdcall D3DXQuaternionSquadSetup(ptr ptr ptr ptr ptr ptr ptr) d3dx9_36.D3DXQuaternionSquadSetup
 @ stdcall D3DXQuaternionToAxisAngle(ptr ptr ptr) d3dx9_36.D3DXQuaternionToAxisAngle
 @ stdcall D3DXRectPatchSize(ptr ptr ptr) d3dx9_36.D3DXRectPatchSize
+@ stdcall D3DXSHAdd(ptr long ptr ptr) d3dx9_36.D3DXSHAdd
+@ stdcall D3DXSHDot(long ptr ptr) d3dx9_36.D3DXSHDot
+@ stdcall D3DXSHEvalConeLight(long ptr float float float float ptr ptr ptr) d3dx9_36.D3DXSHEvalConeLight
+@ stdcall D3DXSHEvalDirection(ptr long ptr) d3dx9_36.D3DXSHEvalDirection
+@ stdcall D3DXSHEvalDirectionalLight(long ptr float float float ptr ptr ptr) d3dx9_36.D3DXSHEvalDirectionalLight
+@ stdcall D3DXSHEvalHemisphereLight(long ptr int128 int128 ptr ptr ptr) d3dx9_36.D3DXSHEvalHemisphereLight
+@ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr) d3dx9_36.D3DXSHEvalSphericalLight
+@ stdcall D3DXSHMultiply2(ptr ptr ptr) d3dx9_36.D3DXSHMultiply2
+@ stdcall D3DXSHMultiply3(ptr ptr ptr) d3dx9_36.D3DXSHMultiply3
+@ stdcall D3DXSHMultiply4(ptr ptr ptr) d3dx9_36.D3DXSHMultiply4
+@ stdcall D3DXSHMultiply5(ptr ptr ptr) d3dx9_36.D3DXSHMultiply5
+@ stdcall D3DXSHMultiply6(ptr ptr ptr) d3dx9_36.D3DXSHMultiply6
+@ stdcall D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr) d3dx9_36.D3DXSHPRTCompSplitMeshSC
+@ stdcall D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr) d3dx9_36.D3DXSHPRTCompSuperCluster
+@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr) d3dx9_36.D3DXSHProjectCubeMap
+@ stdcall D3DXSHRotate(ptr long ptr ptr) d3dx9_36.D3DXSHRotate
+@ stdcall D3DXSHRotateZ(ptr long float ptr) d3dx9_36.D3DXSHRotateZ
+@ stdcall D3DXSHScale(ptr long ptr float) d3dx9_36.D3DXSHScale
 @ stdcall D3DXSaveMeshHierarchyToFileA(ptr long ptr ptr ptr) d3dx9_36.D3DXSaveMeshHierarchyToFileA
 @ stdcall D3DXSaveMeshHierarchyToFileW(ptr long ptr ptr ptr) d3dx9_36.D3DXSaveMeshHierarchyToFileW
 @ stdcall D3DXSaveMeshToXA(ptr ptr ptr ptr ptr long long) d3dx9_36.D3DXSaveMeshToXA
@@ -270,24 +288,6 @@
 @ stdcall D3DXSaveVolumeToFileA(ptr long ptr ptr ptr) d3dx9_36.D3DXSaveVolumeToFileA
 @ stdcall D3DXSaveVolumeToFileInMemory(ptr long ptr ptr ptr) d3dx9_36.D3DXSaveVolumeToFileInMemory
 @ stdcall D3DXSaveVolumeToFileW(ptr long ptr ptr ptr) d3dx9_36.D3DXSaveVolumeToFileW
-@ stdcall D3DXSHAdd(ptr long ptr ptr) d3dx9_36.D3DXSHAdd
-@ stdcall D3DXSHDot(long ptr ptr) d3dx9_36.D3DXSHDot
-@ stdcall D3DXSHEvalConeLight(long ptr float float float float ptr ptr ptr) d3dx9_36.D3DXSHEvalConeLight
-@ stdcall D3DXSHEvalDirection(ptr long ptr) d3dx9_36.D3DXSHEvalDirection
-@ stdcall D3DXSHEvalDirectionalLight(long ptr float float float ptr ptr ptr) d3dx9_36.D3DXSHEvalDirectionalLight
-@ stdcall D3DXSHEvalHemisphereLight(long ptr int128 int128 ptr ptr ptr) d3dx9_36.D3DXSHEvalHemisphereLight
-@ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr) d3dx9_36.D3DXSHEvalSphericalLight
-@ stdcall D3DXSHMultiply2(ptr ptr ptr) d3dx9_36.D3DXSHMultiply2
-@ stdcall D3DXSHMultiply3(ptr ptr ptr) d3dx9_36.D3DXSHMultiply3
-@ stdcall D3DXSHMultiply4(ptr ptr ptr) d3dx9_36.D3DXSHMultiply4
-@ stdcall D3DXSHMultiply5(ptr ptr ptr) d3dx9_36.D3DXSHMultiply5
-@ stdcall D3DXSHMultiply6(ptr ptr ptr) d3dx9_36.D3DXSHMultiply6
-@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr) d3dx9_36.D3DXSHProjectCubeMap
-@ stdcall D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr) d3dx9_36.D3DXSHPRTCompSplitMeshSC
-@ stdcall D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr) d3dx9_36.D3DXSHPRTCompSuperCluster
-@ stdcall D3DXSHRotate(ptr long ptr ptr) d3dx9_36.D3DXSHRotate
-@ stdcall D3DXSHRotateZ(ptr long float ptr) d3dx9_36.D3DXSHRotateZ
-@ stdcall D3DXSHScale(ptr long ptr float) d3dx9_36.D3DXSHScale
 @ stdcall D3DXSimplifyMesh(ptr ptr ptr ptr long long ptr) d3dx9_36.D3DXSimplifyMesh
 @ stdcall D3DXSphereBoundProbe(ptr float ptr ptr) d3dx9_36.D3DXSphereBoundProbe
 @ stdcall D3DXSplitMesh(ptr ptr long long ptr ptr ptr ptr ptr) d3dx9_36.D3DXSplitMesh

@@ -11,6 +11,16 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(urlmon.dll urlmon.spec ADD_IMPORTLIB)
 add_rpcproxy_files(urlmon_urlmon.idl)
 
+set(_source_file ${CMAKE_CURRENT_SOURCE_DIR}/urlmon.inf)
+set(_converted_file ${CMAKE_CURRENT_BINARY_DIR}/urlmon_utf16.inf)
+add_custom_command(
+    OUTPUT "${_converted_file}"
+    COMMAND native-utf16le "${_source_file}" "${_converted_file}"
+    DEPENDS native-utf16le "${_source_file}")
+
+set_source_files_properties(${_converted_file} PROPERTIES GENERATED TRUE)
+set_source_files_properties(urlmon.rc PROPERTIES OBJECT_DEPENDS "${_converted_file}")
+
 list(APPEND SOURCE
     axinstall.c
     bindctx.c

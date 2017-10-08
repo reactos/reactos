@@ -14348,6 +14348,23 @@ static INT CALLBACK handler_record(LPVOID context, UINT type, MSIHANDLE record)
     return IDOK;
 }
 
+static void test_MsiSetInternalUI(void)
+{
+    INSTALLUILEVEL level;
+
+    level = MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
+    ok(level == INSTALLUILEVEL_DEFAULT, "expected INSTALLUILEVEL_DEFAULT, got %d\n", level);
+
+    level = MsiSetInternalUI(INSTALLUILEVEL_DEFAULT, NULL);
+    ok(level == INSTALLUILEVEL_FULL, "expected INSTALLUILEVEL_FULL, got %d\n", level);
+
+    level = MsiSetInternalUI(INSTALLUILEVEL_NOCHANGE, NULL);
+    ok(level == INSTALLUILEVEL_DEFAULT, "expected INSTALLUILEVEL_DEFAULT, got %d\n", level);
+
+    level = MsiSetInternalUI(0xdeadbeef, NULL);
+    ok(level == INSTALLUILEVEL_NOCHANGE, "expected INSTALLUILEVEL_NOCHANGE, got %d\n", level);
+}
+
 static void test_MsiSetExternalUI(void)
 {
     INSTALLUI_HANDLERA ret_a;
@@ -14892,6 +14909,7 @@ START_TEST(msi)
     test_null();
     test_getcomponentpath();
     test_MsiGetFileHash();
+    test_MsiSetInternalUI();
 
     if (!pConvertSidToStringSidA)
         win_skip("ConvertSidToStringSidA not implemented\n");

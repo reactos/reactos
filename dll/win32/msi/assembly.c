@@ -698,7 +698,7 @@ UINT ACTION_MsiPublishAssemblies( MSIPACKAGE *package )
 
         uirow = MSI_CreateRecord( 2 );
         MSI_RecordSetStringW( uirow, 2, assembly->display_name );
-        msi_ui_actiondata( package, szMsiPublishAssemblies, uirow );
+        MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
         msiobj_release( &uirow->hdr );
     }
     return ERROR_SUCCESS;
@@ -747,7 +747,7 @@ UINT ACTION_MsiUnpublishAssemblies( MSIPACKAGE *package )
 
         uirow = MSI_CreateRecord( 2 );
         MSI_RecordSetStringW( uirow, 2, assembly->display_name );
-        msi_ui_actiondata( package, szMsiPublishAssemblies, uirow );
+        MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
         msiobj_release( &uirow->hdr );
     }
     return ERROR_SUCCESS;

@@ -1,0 +1,81 @@
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_BG_BG
+    #include "lang/msi_Bg.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "lang/msi_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/msi_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/msi_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/msi_Es.rc"
+#endif
+#ifdef LANGUAGE_FI_FI
+    #include "lang/msi_Fi.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/msi_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/msi_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/msi_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/msi_It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/msi_Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/msi_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/msi_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/msi_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/msi_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/msi_Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/msi_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/msi_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/msi_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "lang/msi_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/msi_Sq.rc"
+#endif
+#ifdef LANGUAGE_SR_SP
+    #include "lang/msi_Sr.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/msi_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/msi_Tr.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/msi_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/msi_Zh.rc"
+#endif

@@ -2393,25 +2393,6 @@ static MSIRECORD *msi_get_transform_record( const MSITABLEVIEW *tv, const string
     return rec;
 }
 
-static void dump_record( MSIRECORD *rec )
-{
-    UINT i, n;
-
-    n = MSI_RecordGetFieldCount( rec );
-    for( i=1; i<=n; i++ )
-    {
-        int len;
-        const WCHAR *sval;
-
-        if( MSI_RecordIsNull( rec, i ) )
-            TRACE("row -> []\n");
-        else if( (sval = msi_record_get_string( rec, i, &len )) )
-            TRACE("row -> [%s]\n", debugstr_wn(sval, len));
-        else
-            TRACE("row -> [0x%08x]\n", MSI_RecordGetInteger( rec, i ) );
-    }
-}
-
 static void dump_table( const string_table *st, const USHORT *rawdata, UINT rawsize )
 {
     UINT i;

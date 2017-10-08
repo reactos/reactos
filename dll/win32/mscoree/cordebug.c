@@ -67,7 +67,7 @@ static HRESULT WINAPI cordebugprocess_QueryInterface(ICorDebugProcess *iface,
         return E_NOINTERFACE;
     }
 
-    ICorDebug_AddRef(iface);
+    ICorDebugProcess_AddRef(iface);
 
     return S_OK;
 }
@@ -413,7 +413,7 @@ static HRESULT CorDebugProcess_Create(CorDebug *cordebug, IUnknown** ppUnk, LPPR
     if(This->cordebug)
         ICorDebug_AddRef(&This->cordebug->ICorDebug_iface);
 
-    *ppUnk = (IUnknown*)This;
+    *ppUnk = (IUnknown*)&This->ICorDebugProcess_iface;
 
     return S_OK;
 }
@@ -437,7 +437,7 @@ static HRESULT WINAPI process_enum_QueryInterface(ICorDebugProcessEnum *iface, R
         return E_NOINTERFACE;
     }
 
-    ICorDebug_AddRef(iface);
+    ICorDebugProcessEnum_AddRef(iface);
 
     return S_OK;
 }
@@ -759,7 +759,7 @@ HRESULT CorDebug_Create(ICLRRuntimeHost *runtimehost, IUnknown** ppUnk)
     if(This->runtimehost)
         ICLRRuntimeHost_AddRef(This->runtimehost);
 
-    *ppUnk = (IUnknown*)This;
+    *ppUnk = (IUnknown*)&This->ICorDebug_iface;
 
     return S_OK;
 }

@@ -1209,11 +1209,7 @@ static void test_start_trace(void)
     ret = StartTraceA(&handle, sessionname, properties);
     todo_wine
     ok(ret == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", ret);
-#ifndef __REACTOS__
-    properties->Wnode.Guid = (GUID){0};
-#else
     memset(&properties->Wnode.Guid, 0, sizeof(properties->Wnode.Guid));
-#endif
 
     properties->LogFileNameOffset = 0;
     ret = StartTraceA(&handle, sessionname, properties);

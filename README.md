@@ -83,6 +83,6 @@ Also see the [CREDITS](CREDITS) file for others.
 
 ## Code mirrors
 
-The main development is done on [GitHub](https://github.com/reactos/reactos). We have an [alternative mirror](https://git.reactos.org/) it case GitHub is down. 
+The main development is done on [GitHub](https://github.com/reactos/reactos). We have an [alternative mirror](https://git.reactos.org/) in case GitHub is down. 
 
 There is also an obsolete [SVN archive repository](https://svn.reactos.org/svn/reactos?view=revision) that is kept for historical purposes.
