@@ -20,46 +20,7 @@
 
 #include <windef.h>
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
-
-STRINGTABLE
-{
-	4 "The specified installation package could not be opened. Please check the file path and try again."
-	5 "path %s not found"
-	9 "insert disk %s"
-	10 "Windows Installer %s\n\n\
-Usage:\n\
-msiexec command {required parameter} [optional parameter]\n\n\
-Install a product:\n\
-\t/i {package|product_code} [property]\n\
-\t/package {package|product_code} [property]\n\
-\t/a package [property]\n\
-Repair an installation:\n\
-\t/f[p|o|e|d|c|a|u|m|s|v] {package|product_code}\n\
-Uninstall a product:\n\
-\t/uninstall {package|product_code} [property]\n\
-\t/x {package|product_code} [property]\n\
-Advertise a product:\n\
-\t/j[u|m] package [/t transform] [/g languageid]\n\
-Apply a patch:\n\
-\t/p patch_package [property]\n\
-\t/p patch_package /a package [property]\n\
-Log and user interface modifiers for the above commands:\n\
-\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] log_file\n\
-\t/q{|n|b|r|f|n+|b+|b-}\n\
-Register the MSI Service:\n\
-\t/y\n\
-Unregister the MSI Service:\n\
-\t/z\n\
-Display this help:\n\
-\t/help\n\
-\t/?\n"
-	11 "enter which folder contains %s"
-	12 "install source for feature missing"
-	13 "network drive for feature missing"
-	14 "feature from:"
-	15 "choose which folder contains %s"
-}
+#include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -90,3 +51,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION_STR "4.5.6001.22308"
 
 #include <wine/wine_common_ver.rc>
+
+#include "rsrc.rc"

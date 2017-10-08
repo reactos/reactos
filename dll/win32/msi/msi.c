@@ -2293,7 +2293,16 @@ INSTALLUILEVEL WINAPI MsiSetInternalUI(INSTALLUILEVEL dwUILevel, HWND *phWnd)
 
     TRACE("%08x %p\n", dwUILevel, phWnd);
 
-    gUILevel = dwUILevel;
+    if (dwUILevel & ~(INSTALLUILEVEL_MASK|INSTALLUILEVEL_HIDECANCEL|INSTALLUILEVEL_PROGRESSONLY|
+                      INSTALLUILEVEL_ENDDIALOG|INSTALLUILEVEL_SOURCERESONLY))
+    {
+        FIXME("Unrecognized flags %08x\n", dwUILevel);
+        return INSTALLUILEVEL_NOCHANGE;
+    }
+
+    if (dwUILevel != INSTALLUILEVEL_NOCHANGE)
+        gUILevel = dwUILevel;
+
     if (phWnd)
     {
         gUIhwnd = *phWnd;
@@ -4198,8 +4207,8 @@ UINT WINAPI MsiSetExternalUIRecord( INSTALLUI_HANDLER_RECORD handler,
         *prev = gUIHandlerRecord;
 
     gUIHandlerRecord = handler;
-    gUIFilter        = filter;
-    gUIContext       = context;
+    gUIFilterRecord  = filter;
+    gUIContextRecord = context;
 
     return ERROR_SUCCESS;
 }
