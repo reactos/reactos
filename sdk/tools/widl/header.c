@@ -1043,13 +1043,62 @@ static void write_cpp_method_def(FILE *header, const type_t *iface)
     const var_t *func = stmt->u.var;
     if (!is_callas(func->attrs)) {
       const char *callconv = get_attrp(func->type->attrs, ATTR_CALLCONV);
+      const var_list_t *args = type_get_function_args(func->type);
+      const var_t *arg;
+
       if (!callconv) callconv = "STDMETHODCALLTYPE";
+
+      if (is_aggregate_return(func)) {
+        fprintf(header, "#ifdef WIDL_EXPLICIT_AGGREGATE_RETURNS\n");
+
+        indent(header, 0);
+        fprintf(header, "virtual ");
+        write_type_decl_left(header, type_function_get_rettype(func->type));
+        fprintf(header, "* %s %s(\n", callconv, get_name(func));
+        ++indentation;
+        indent(header, 0);
+        write_type_decl_left(header, type_function_get_rettype(func->type));
+        fprintf(header, " *__ret");
+        --indentation;
+        if (args) {
+          fprintf(header, ",\n");
+          write_args(header, args, iface->name, 2, TRUE);
+        }
+        fprintf(header, ") = 0;\n");
+
+        indent(header, 0);
+        write_type_decl_left(header, type_function_get_rettype(func->type));
+        fprintf(header, " %s %s(\n", callconv, get_name(func));
+        write_args(header, args, iface->name, 2, TRUE);
+        fprintf(header, ")\n");
+        indent(header, 0);
+        fprintf(header, "{\n");
+        ++indentation;
+        indent(header, 0);
+        write_type_decl_left(header, type_function_get_rettype(func->type));
+        fprintf(header, " __ret;\n");
+        indent(header, 0);
+        fprintf(header, "return *%s(&__ret", get_name(func));
+        if (args)
+            LIST_FOR_EACH_ENTRY(arg, args, const var_t, entry)
+                fprintf(header, ", %s", arg->name);
+        fprintf(header, ");\n");
+        --indentation;
+        indent(header, 0);
+        fprintf(header, "}\n");
+
+        fprintf(header, "#else\n");
+      }
+
       indent(header, 0);
       fprintf(header, "virtual ");
       write_type_decl_left(header, type_function_get_rettype(func->type));
       fprintf(header, " %s %s(\n", callconv, get_name(func));
-      write_args(header, type_get_function_args(func->type), iface->name, 2, TRUE);
+      write_args(header, args, iface->name, 2, TRUE);
       fprintf(header, ") = 0;\n");
+
+      if (is_aggregate_return(func))
+        fprintf(header, "#endif\n");
       fprintf(header, "\n");
     }
   }
@@ -1181,7 +1230,7 @@ static void write_method_proto(FILE *header, const type_t *iface)
   {
     const var_t *func = stmt->u.var;
 
-    if (!is_local(func->attrs)) {
+    if (is_callas(func->attrs)) {
       const char *callconv = get_attrp(func->type->attrs, ATTR_CALLCONV);
       if (!callconv) callconv = "STDMETHODCALLTYPE";
       /* proxy prototype */
