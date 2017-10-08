@@ -43,6 +43,7 @@ list(APPEND SOURCE
     docobj.idl
     docobjectservice.idl
     downloadmgr.idl
+    drmexternals.idl
 #   dyngraph.idl
     endpointvolume.idl
     exdisp.idl
@@ -58,7 +59,11 @@ list(APPEND SOURCE
     indexsrv.idl
     inputscope.idl
     inseng.idl
+    mediaobj.idl
     metahost.idl
+    mfidl.idl
+    mfobjects.idl
+    mftransform.idl
     mimeinfo.idl
     mimeole.idl
     mlang.idl
@@ -124,6 +129,7 @@ list(APPEND SOURCE
     wincodec.idl
     wincodecsdk.idl
     winsxs.idl
+    wmdrmsdk.idl
     wmiutils.idl
     wmsbuffer.idl
     wmsdkidl.idl

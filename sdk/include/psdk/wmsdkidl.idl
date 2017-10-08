@@ -18,7 +18,7 @@
 
 import "oaidl.idl";
 import "wmsbuffer.idl";
-/* import "drmexternals.idl"; */
+import "drmexternals.idl";
 
 typedef unsigned __int64 QWORD;
 
@@ -183,6 +183,42 @@ typedef enum tagWMT_OFFSET_FORMAT
     WMT_OFFSET_FORMAT_100NS_APPROXIMATE
 } WMT_OFFSET_FORMAT;
 
+typedef enum WMT_CODEC_INFO_TYPE
+{
+    WMT_CODECINFO_AUDIO   = 0,
+    WMT_CODECINFO_VIDEO   = 1,
+    WMT_CODECINFO_UNKNOWN = 0xFFFFFFFF,
+} WMT_CODEC_INFO_TYPE;
+
+typedef enum WMT_PROXY_SETTINGS
+{
+    WMT_PROXY_SETTING_NONE     = 0,
+    WMT_PROXY_SETTING_MANUAL   = 1,
+    WMT_PROXY_SETTING_AUTO     = 2,
+    WMT_PROXY_SETTING_BROWSER  = 3,
+    WMT_PROXY_SETTING_MAX
+} WMT_PROXY_SETTINGS;
+
+typedef enum tagWMT_STORAGE_FORMAT
+{
+    WMT_Storage_Format_MP3  = 0,
+    WMT_Storage_Format_V1   = 1
+} WMT_STORAGE_FORMAT;
+
+#include <pshpack2.h>
+typedef struct _WMStreamPrioritizationRecord
+{
+    WORD wStreamNumber;
+    BOOL fMandatory;
+} WM_STREAM_PRIORITY_RECORD;
+#include <poppack.h>
+
+typedef struct _WM_PORT_NUMBER_RANGE
+{
+    WORD wPortBegin;
+    WORD wPortEnd;
+} WM_PORT_NUMBER_RANGE;
+
 typedef LPCWSTR LPCWSTR_WMSDK_TYPE_SAFE;
 
 [
@@ -244,6 +280,43 @@ interface IWMMutualExclusion : IWMStreamList
 {
     HRESULT GetType([out] GUID *pguidType);
     HRESULT SetType([in] REFGUID guidType);
+}
+
+[
+    object,
+    uuid(ad694af1-f8d9-42f8-bc47-70311b0c4f9e),
+    pointer_default(unique),
+    local
+]
+interface IWMBandwidthSharing : IWMStreamList
+{
+    HRESULT GetType([out] GUID *guid);
+    HRESULT SetType([in] REFGUID guid);
+
+    HRESULT GetBandwidth(
+        [out] DWORD *bitrate,
+        [out] DWORD *buffer);
+
+    HRESULT SetBandwidth(
+        [in] DWORD bitrate,
+        [in] DWORD buffer);
+};
+
+[
+    object,
+    uuid(8c1c6090-f9a8-4748-8ec3-dd1108ba1e77),
+    pointer_default(unique),
+    local
+]
+interface IWMStreamPrioritization : IUnknown
+{
+    HRESULT GetPriorityRecords(
+        [out] WM_STREAM_PRIORITY_RECORD *array,
+        [in, out] WORD *records);
+
+    HRESULT SetPriorityRecords(
+        [in] WM_STREAM_PRIORITY_RECORD *array,
+        [in] WORD records);
 }
 
 [
@@ -343,6 +416,53 @@ interface IWMProfile : IUnknown
     HRESULT CreateNewMutualExclusion(
         [out] IWMMutualExclusion **ppME);
 }
+
+[
+    object,
+    uuid(07e72d33-d94e-4be7-8843-60ae5ff7e5f5),
+    pointer_default(unique),
+    local
+]
+interface IWMProfile2 : IWMProfile
+{
+    HRESULT GetProfileID([out] GUID *guid);
+}
+
+[
+    object,
+    uuid(00ef96cc-a461-4546-8bcd-c9a28f0e06f5),
+    pointer_default(unique),
+    local
+]
+interface IWMProfile3 : IWMProfile2
+{
+    HRESULT GetStorageFormat([out] WMT_STORAGE_FORMAT *storage);
+    HRESULT SetStorageFormat([in] WMT_STORAGE_FORMAT storage);
+
+    HRESULT GetBandwidthSharingCount([out] DWORD *count);
+
+    HRESULT GetBandwidthSharing(
+        [in] DWORD index,
+        [out] IWMBandwidthSharing **bandwidth);
+
+    HRESULT RemoveBandwidthSharing([in] IWMBandwidthSharing *bandwidth);
+
+    HRESULT AddBandwidthSharing([in] IWMBandwidthSharing *bandwidth);
+
+    HRESULT CreateNewBandwidthSharing([out] IWMBandwidthSharing **bandwidth);
+
+    HRESULT GetStreamPrioritization([out] IWMStreamPrioritization **stream);
+
+    HRESULT SetStreamPrioritization([in] IWMStreamPrioritization *stream);
+
+    HRESULT RemoveStreamPrioritization();
+
+    HRESULT CreateNewStreamPrioritization([out] IWMStreamPrioritization **stream);
+
+    HRESULT GetExpectedPacketCount(
+        [in] QWORD duration,
+        [out] QWORD *packets);
+};
 
 [
     object,
@@ -549,7 +669,7 @@ interface IWMReaderAdvanced : IUnknown
         [in] BOOL fAllocate);
 
     HRESULT GetAllocateForStream(
-        [in] WORD dwSreamNum,
+        [in] WORD dwStreamNum,
         [out] BOOL *pfAllocate);
 
     HRESULT GetStatistics(
@@ -1015,6 +1135,488 @@ interface IWMWriterAdvanced3 : IWMWriterAdvanced2
 
     HRESULT SetNonBlocking();
 }
+
+[
+    object,
+    uuid(96406bda-2b2b-11d3-b36b-00c04f6108ff),
+    pointer_default(unique),
+    local
+]
+interface IWMHeaderInfo : IUnknown
+{
+    HRESULT GetAttributeCount(
+        [in] WORD stream_num,
+        [out] WORD *attributes );
+
+    HRESULT GetAttributeByIndex(
+        [in] WORD index,
+        [in, out] WORD *stream_num,
+        [out, size_is( *name_len )] WCHAR *name,
+        [in, out] WORD *name_len,
+        [out] WMT_ATTR_DATATYPE *type,
+        [out, size_is( *length )] BYTE *value,
+        [in, out] WORD *length );
+
+    HRESULT GetAttributeByName(
+        [in, out] WORD *stream_num,
+        [in] LPCWSTR name,
+        [out] WMT_ATTR_DATATYPE *type,
+        [out, size_is( *length )] BYTE *value,
+        [in, out] WORD *length );
+
+    HRESULT SetAttribute(
+        [in] WORD stream_num,
+        [in] LPCWSTR name,
+        [in] WMT_ATTR_DATATYPE type,
+        [in, size_is( length )] const BYTE *value,
+        [in] WORD length );
+
+    HRESULT GetMarkerCount(
+        [out] WORD *markers );
+
+    HRESULT GetMarker(
+        [in] WORD index,
+        [out, size_is( *marker_len )] WCHAR *marker_name,
+        [in, out] WORD *marker_len,
+        [out] QWORD *marker_time );
+
+    HRESULT AddMarker(
+        [in] LPCWSTR_WMSDK_TYPE_SAFE marker_name,
+        [in] QWORD marker_time );
+
+    HRESULT RemoveMarker(
+        [in] WORD index );
+
+    HRESULT GetScriptCount(
+        [out] WORD *scripts );
+
+    HRESULT GetScript(
+        [in] WORD index,
+        [out, size_is( *type_len )] WCHAR *type,
+        [in, out] WORD *type_len,
+        [out, size_is( *command_len )] WCHAR *command,
+        [in, out] WORD *command_len,
+        [out] QWORD *script_time );
+
+    HRESULT AddScript(
+        [in] LPCWSTR_WMSDK_TYPE_SAFE type,
+        [in] LPCWSTR_WMSDK_TYPE_SAFE command,
+        [in] QWORD script_time );
+
+    HRESULT RemoveScript(
+        [in] WORD index );
+};
+
+[
+    object,
+    uuid(15cf9781-454e-482e-b393-85fae487a810),
+    pointer_default(unique),
+    local
+]
+interface IWMHeaderInfo2 : IWMHeaderInfo
+{
+    HRESULT GetCodecInfoCount(
+        [out] DWORD *codec_infos );
+
+    HRESULT GetCodecInfo(
+        [in] DWORD   index,
+        [in, out] WORD *name_len,
+        [out, size_is( *name_len )] WCHAR *name,
+        [in, out] WORD *description_len,
+        [out, size_is( *description_len )] WCHAR *description,
+        [out] WMT_CODEC_INFO_TYPE *codec_type,
+        [in, out] WORD *codec_info_cnt,
+        [out, size_is( *codec_info_cnt )] BYTE *codec_info );
+};
+
+[
+    object,
+    uuid(15cc68e3-27cc-4ecd-b222-3f5d02d80bd5),
+    pointer_default(unique),
+    local
+]
+interface IWMHeaderInfo3 : IWMHeaderInfo2
+{
+    HRESULT GetAttributeCountEx(
+        [in] WORD stream_num,
+        [out] WORD *attributes );
+
+    HRESULT GetAttributeIndices(
+        [in] WORD stream_num,
+        [in] LPCWSTR name,
+        [in] WORD *lang_index,
+        [out, size_is( *count )] WORD *indices,
+        [in, out] WORD *count );
+
+   HRESULT GetAttributeByIndexEx(
+        [in] WORD stream_num,
+        [in] WORD index,
+        [out, size_is( *name_len )] LPWSTR name,
+        [in, out] WORD *name_len,
+        [out] WMT_ATTR_DATATYPE *type,
+        [out] WORD *lang_index,
+        [out, size_is( *data_len )] BYTE *value,
+        [in, out] DWORD *data_len );
+
+    HRESULT ModifyAttribute(
+        [in] WORD stream_num,
+        [in] WORD index,
+        [in] WMT_ATTR_DATATYPE type,
+        [in] WORD lang_index,
+        [in, size_is( length )] const BYTE *value,
+        [in] DWORD length );
+
+    HRESULT AddAttribute(
+        [in] WORD stream_num,
+        [in] LPCWSTR name,
+        [out] WORD *index,
+        [in] WMT_ATTR_DATATYPE type,
+        [in] WORD lang_index,
+        [in, size_is( length )] const BYTE *value,
+        [in] DWORD length );
+
+    HRESULT DeleteAttribute(
+        [in] WORD stream_num,
+        [in] WORD index );
+
+    HRESULT AddCodecInfo(
+        [in] LPCWSTR_WMSDK_TYPE_SAFE name,
+        [in] LPCWSTR_WMSDK_TYPE_SAFE description,
+        [in] WMT_CODEC_INFO_TYPE codec_type,
+        [in] WORD codec_info_cnt,
+        [in, size_is( codec_info_cnt )] BYTE *codec_info );
+};
+
+[
+    object,
+    uuid(96406bec-2b2b-11d3-b36b-00c04f6108ff),
+    pointer_default(unique),
+    local
+]
+interface IWMReaderNetworkConfig : IUnknown
+{
+    HRESULT GetBufferingTime([out] QWORD *buffering_time);
+    HRESULT SetBufferingTime([in] QWORD buffering_time);
+
+    HRESULT GetUDPPortRanges(
+        [out, size_is( *ranges )] WM_PORT_NUMBER_RANGE *array,
+        [in, out] DWORD *ranges);
+
+    HRESULT SetUDPPortRanges(
+        [in, size_is( ranges )] WM_PORT_NUMBER_RANGE *array,
+        [in] DWORD ranges);
+
+    HRESULT GetProxySettings(
+        [in] const WCHAR *protocol,
+        [out] WMT_PROXY_SETTINGS *proxy);
+
+    HRESULT SetProxySettings(
+        [in] LPCWSTR protocol,
+        [in] WMT_PROXY_SETTINGS proxy);
+
+    HRESULT GetProxyHostName(
+        [in] const WCHAR *protocol,
+        [out, size_is( *size )] WCHAR *hostname,
+        [in, out] DWORD *size);
+
+    HRESULT SetProxyHostName(
+        [in] const WCHAR *protocol,
+        [in] const WCHAR *hostname);
+
+    HRESULT GetProxyPort(
+        [in] const WCHAR *protocol,
+        [out] DWORD *port);
+
+    HRESULT SetProxyPort(
+        [in] const WCHAR *protocol,
+        [in] DWORD port);
+
+    HRESULT GetProxyExceptionList(
+        [in] const WCHAR *protocol,
+        [out, size_is( *count )] WCHAR *exceptions,
+        [in, out] DWORD *count);
+
+    HRESULT SetProxyExceptionList(
+        [in] const WCHAR *protocol,
+        [in] const WCHAR *exceptions);
+
+    HRESULT GetProxyBypassForLocal(
+        [in] const WCHAR *protocol,
+        [out] BOOL *bypass);
+
+    HRESULT SetProxyBypassForLocal(
+        [in] const WCHAR *protocol,
+        [in] BOOL bypass);
+
+    HRESULT GetForceRerunAutoProxyDetection([out] BOOL *detection);
+    HRESULT SetForceRerunAutoProxyDetection([in] BOOL detection);
+
+    HRESULT GetEnableMulticast([out] BOOL *multicast);
+    HRESULT SetEnableMulticast([in] BOOL multicast);
+
+    HRESULT GetEnableHTTP([out] BOOL *enable);
+    HRESULT SetEnableHTTP([in] BOOL enable);
+
+    HRESULT GetEnableUDP([out] BOOL *enable);
+    HRESULT SetEnableUDP([in] BOOL enable);
+
+    HRESULT GetEnableTCP([out] BOOL *enable);
+    HRESULT SetEnableTCP([in] BOOL enable);
+
+    HRESULT ResetProtocolRollover();
+
+    HRESULT GetConnectionBandwidth([out] DWORD *bandwidth);
+    HRESULT SetConnectionBandwidth([in] DWORD bandwidth);
+
+    HRESULT GetNumProtocolsSupported([out] DWORD *protocols);
+
+    HRESULT GetSupportedProtocolName(
+        [in]  DWORD protocol_num,
+        [out, size_is( *size )] WCHAR *protocol,
+        [in, out] DWORD *size);
+
+    HRESULT AddLoggingUrl([in] const WCHAR *url);
+
+    HRESULT GetLoggingUrl(
+        [in] DWORD index,
+        [out, size_is( *size )] WCHAR *url,
+        [in, out] DWORD *size);
+
+    HRESULT GetLoggingUrlCount([out] DWORD *count);
+
+    HRESULT ResetLoggingUrlList();
+}
+
+[
+    object,
+    uuid(d979a853-042b-4050-8387-c939db22013f),
+    pointer_default(unique),
+    local
+]
+interface IWMReaderNetworkConfig2 : IWMReaderNetworkConfig
+{
+    HRESULT GetEnableContentCaching([out] BOOL *enable);
+    HRESULT SetEnableContentCaching([in] BOOL enable);
+
+    HRESULT GetEnableFastCache([out] BOOL *enable);
+    HRESULT SetEnableFastCache([in] BOOL enable);
+
+    HRESULT GetAcceleratedStreamingDuration([out] QWORD *duration);
+    HRESULT SetAcceleratedStreamingDuration([in] QWORD duration);
+
+    HRESULT GetAutoReconnectLimit([out] DWORD *limit);
+    HRESULT SetAutoReconnectLimit([in] DWORD limit);
+
+    HRESULT GetEnableResends([out] BOOL *enable);
+    HRESULT SetEnableResends([in] BOOL enable);
+
+    HRESULT GetEnableThinning([out] BOOL *enable);
+    HRESULT SetEnableThinning([in] BOOL enable);
+
+    HRESULT GetMaxNetPacketSize([out] DWORD *packet_size);
+}
+
+[
+    object,
+    uuid(96406bed-2b2b-11d3-b36b-00c04f6108ff),
+    pointer_default(unique),
+    local
+]
+
+interface IWMReaderStreamClock : IUnknown
+{
+    HRESULT GetTime([in] QWORD *now);
+
+    HRESULT SetTimer([in] QWORD when,
+                     [in] void *param,
+                     [out] DWORD *id);
+
+    HRESULT KillTimer([in] DWORD id);
+}
+
+[
+    object,
+    uuid(cdfb97ab-188f-40b3-b643-5b7903975c59),
+    pointer_default(unique),
+    local
+]
+interface IWMPacketSize : IUnknown
+{
+    HRESULT GetMaxPacketSize([out] DWORD *size);
+    HRESULT SetMaxPacketSize([in] DWORD size);
+};
+
+[
+    object,
+    uuid(8bfc2b9e-b646-4233-a877-1c6a079669dc),
+    pointer_default(unique),
+    local
+]
+interface IWMPacketSize2 : IWMPacketSize
+{
+    HRESULT GetMinPacketSize([out] DWORD *size);
+    HRESULT SetMinPacketSize([in] DWORD size);
+};
+
+[
+    object,
+    uuid(d2827540-3ee7-432c-b14c-dc17f085d3b3),
+    pointer_default(unique),
+    local
+]
+interface IWMDRMReader : IUnknown
+{
+    HRESULT AcquireLicense([in] DWORD flags);
+    HRESULT CancelLicenseAcquisition();
+
+    HRESULT Individualize([in] DWORD flags);
+    HRESULT CancelIndividualization();
+
+    HRESULT MonitorLicenseAcquisition();
+    HRESULT CancelMonitorLicenseAcquisition();
+
+    HRESULT SetDRMProperty(
+        [in] const WCHAR *name,
+        [in] WMT_ATTR_DATATYPE type,
+        [in, size_is( length )] const BYTE *value,
+        [in] WORD length);
+
+    HRESULT GetDRMProperty(
+        [in] const WCHAR *name,
+        [out] WMT_ATTR_DATATYPE *type,
+        [out, size_is( *length )] BYTE *value,
+        [in, out] WORD *length);
+};
+
+[
+    object,
+    uuid(befe7a75-9f1d-4075-b9d9-a3c37bda49a0),
+    pointer_default(unique),
+    local
+]
+interface IWMDRMReader2 : IWMDRMReader
+{
+    HRESULT SetEvaluateOutputLevelLicenses([in] BOOL evaluate);
+    HRESULT GetPlayOutputLevels(
+        [out, size_is( *length )] DRM_PLAY_OPL *play,
+        [in, out] DWORD *length,
+        [out] DWORD *level);
+
+    HRESULT GetCopyOutputLevels(
+        [out, size_is( *length )] DRM_COPY_OPL *copy,
+        [in, out] DWORD *length,
+        [out] DWORD *level);
+
+    HRESULT TryNextLicense();
+};
+
+[
+    object,
+    uuid(e08672de-f1e7-4ff4-a0a3-fc4b08e4caf8),
+    pointer_default(unique),
+    local
+]
+interface IWMDRMReader3 : IWMDRMReader2
+{
+    HRESULT GetInclusionList(
+        [out] GUID **guids,
+        [out] DWORD *count);
+};
+
+[
+    object,
+    uuid(bddc4d08-944d-4d52-a612-46c3fda07dd4),
+    pointer_default( unique ),
+    local
+]
+interface IWMReaderAccelerator : IUnknown
+{
+    HRESULT GetCodecInterface(
+        [in] DWORD output,
+        [in] REFIID riid,
+        [out] void **codec);
+
+    HRESULT Notify(
+        [in] DWORD output,
+        [in] WM_MEDIA_TYPE *subtype);
+};
+
+[
+    object,
+    uuid(f369e2f0-e081-4fe6-8450-b810b2f410d1),
+    pointer_default(unique),
+    local
+]
+interface IWMReaderTimecode : IUnknown
+{
+    HRESULT GetTimecodeRangeCount(
+        [in] WORD num,
+        [out] WORD *count);
+
+    HRESULT GetTimecodeRangeBounds(
+        [in] WORD stream,
+        [in] WORD range,
+        [out] DWORD *start_timecode,
+        [out] DWORD *end_timecode);
+};
+
+[
+    object,
+    uuid(fdbe5592-81a1-41ea-93bd-735cad1adc05),
+    pointer_default(unique),
+    local
+]
+interface IWMReaderTypeNegotiation : IUnknown
+{
+    HRESULT TryOutputProps(
+        [in] DWORD output,
+        [in] IWMOutputMediaProps *props);
+};
+
+[
+    object,
+    uuid(df683f00-2d49-4d8e-92b7-fb19f6a0dc57),
+    pointer_default(unique),
+    local
+]
+interface IWMLanguageList : IUnknown
+{
+    HRESULT GetLanguageCount(
+        [out] WORD *count);
+
+    HRESULT GetLanguageDetails(
+        [in] WORD index,
+        [out, size_is( *length )] WCHAR *language,
+        [in, out] WORD *length);
+
+    HRESULT AddLanguageByRFC1766String(
+        [in] LPCWSTR_WMSDK_TYPE_SAFE language,
+        [out] WORD *index);
+};
+
+[
+    object,
+    uuid(f28c0300-9baa-4477-a846-1744d9cbf533),
+    pointer_default(unique),
+    local
+]
+interface IWMReaderPlaylistBurn : IUnknown
+{
+    HRESULT InitPlaylistBurn(
+        [in] DWORD count,
+        [in] LPCWSTR_WMSDK_TYPE_SAFE *filenames,
+        [in] IWMStatusCallback *callback,
+        [in] void *context);
+
+    HRESULT GetInitResults(
+        [in] DWORD count,
+        [out] HRESULT *stat);
+
+    HRESULT Cancel();
+
+    HRESULT EndPlaylistBurn([in] HRESULT result);
+};
+
 
 cpp_quote("HRESULT WINAPI WMCreateWriter(IUnknown*,IWMWriter**);")
 cpp_quote("HRESULT WINAPI WMCreateReader(IUnknown*,DWORD,IWMReader**);")
