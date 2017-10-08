@@ -243,7 +243,7 @@ reactos/base/applications/wordpad           # Synced to WineStaging-1.9.16
 reactos/base/applications/write             # Synced to WineStaging-2.9
 reactos/base/services/rpcss                 # Synced to WineStaging-1.9.16
 reactos/base/system/expand                  # Synced to WineStaging-2.9
-reactos/base/system/msiexec                 # Synced to WineStaging-2.9
+reactos/base/system/msiexec                 # Synced to WineStaging-2.16
 reactos/modules/rosapps/winfile             # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported
