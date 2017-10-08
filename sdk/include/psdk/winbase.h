@@ -1689,6 +1689,20 @@ CreateProcessAsUserA(
 
 BOOL WINAPI CreateProcessAsUserW(HANDLE,LPCWSTR,LPWSTR,LPSECURITY_ATTRIBUTES,LPSECURITY_ATTRIBUTES,BOOL,DWORD,PVOID,LPCWSTR,LPSTARTUPINFOW,LPPROCESS_INFORMATION);
 HANDLE WINAPI CreateRemoteThread(HANDLE,LPSECURITY_ATTRIBUTES,DWORD,LPTHREAD_START_ROUTINE,LPVOID,DWORD,LPDWORD);
+
+BOOL
+WINAPI
+CreateRestrictedToken(
+  _In_ HANDLE ExistingTokenHandle,
+  _In_ DWORD Flags,
+  _In_ DWORD DisableSidCount,
+  _In_reads_opt_(DisableSidCount) PSID_AND_ATTRIBUTES SidsToDisable,
+  _In_ DWORD DeletePrivilegeCount,
+  _In_reads_opt_(DeletePrivilegeCount) PLUID_AND_ATTRIBUTES PrivilegesToDelete,
+  _In_ DWORD RestrictedSidCount,
+  _In_reads_opt_(RestrictedSidCount) PSID_AND_ATTRIBUTES SidsToRestrict,
+  _Outptr_ PHANDLE NewTokenHandle);
+
 _Ret_maybenull_ HANDLE WINAPI CreateSemaphoreA(_In_opt_ LPSECURITY_ATTRIBUTES, _In_ LONG, _In_ LONG, _In_opt_ LPCSTR);
 _Ret_maybenull_ HANDLE WINAPI CreateSemaphoreW(_In_opt_ LPSECURITY_ATTRIBUTES, _In_ LONG, _In_ LONG, _In_opt_ LPCWSTR);
 #if (_WIN32_WINNT >= 0x0600)
