@@ -163,6 +163,13 @@ PspCreateProcess(
     IN BOOLEAN InJob
 );
 
+NTSTATUS
+NTAPI
+PspAssignProcessToJob(
+    IN PEPROCESS Process,
+    IN PEJOB Job
+);
+
 //
 // Security Routines
 //
@@ -360,9 +367,20 @@ PspInitializeJobStructures(
 
 VOID
 NTAPI
+PspCloseJob(
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID ObjectBody,
+    IN ACCESS_MASK GrantedAccess,
+    IN ULONG HandleCount,
+    IN ULONG SystemHandleCount
+);
+
+VOID
+NTAPI
 PspDeleteJob(
     IN PVOID ObjectBody
 );
+
 
 //
 // State routines

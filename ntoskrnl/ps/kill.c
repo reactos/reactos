@@ -256,6 +256,7 @@ NTAPI
 PspDeleteProcess(IN PVOID ObjectBody)
 {
     PEPROCESS Process = (PEPROCESS)ObjectBody;
+    PEJOB Job;
     KAPC_STATE ApcState;
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG, "ObjectBody: %p\n", ObjectBody);
@@ -282,14 +283,14 @@ PspDeleteProcess(IN PVOID ObjectBody)
     }
 
     /* Check if we have a job */
-    if (Process->Job)
+    Job = Process->Job;
+    if (Job)
     {
         /* Remove the process from the job */
-        PspRemoveProcessFromJob(Process, Process->Job);
+        PspRemoveProcessFromJob(Process, Job);
 
         /* Dereference it */
-        ObDereferenceObject(Process->Job);
-        Process->Job = NULL;
+        ObDereferenceObject(Job);
     }
 
     /* Increase the stack count */
