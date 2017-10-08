@@ -46,6 +46,8 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
+#define ULONG64_MAX (~(ULONG64)0)
+
 #define ARRAY_SIZE(array) (sizeof(array)/sizeof(*array))
 
 struct vec4
@@ -82,6 +84,22 @@ struct pixel_format_desc {
     void (*from_rgba)(const struct vec4 *src, struct vec4 *dst);
     void (*to_rgba)(const struct vec4 *src, struct vec4 *dst, const PALETTEENTRY *palette);
 };
+
+static inline BOOL is_conversion_from_supported(const struct pixel_format_desc *format)
+{
+    if (format->type == FORMAT_ARGB || format->type == FORMAT_ARGBF16
+            || format->type == FORMAT_ARGBF)
+        return TRUE;
+    return !!format->to_rgba;
+}
+
+static inline BOOL is_conversion_to_supported(const struct pixel_format_desc *format)
+{
+    if (format->type == FORMAT_ARGB || format->type == FORMAT_ARGBF16
+            || format->type == FORMAT_ARGBF)
+        return TRUE;
+    return !!format->from_rgba;
+}
 
 HRESULT map_view_of_file(const WCHAR *filename, void **buffer, DWORD *length) DECLSPEC_HIDDEN;
 HRESULT load_resource_into_memory(HMODULE module, HRSRC resinfo, void **buffer, DWORD *length) DECLSPEC_HIDDEN;
@@ -125,8 +143,268 @@ const char *debug_d3dxparameter_type(D3DXPARAMETER_TYPE t) DECLSPEC_HIDDEN;
 const char *debug_d3dxparameter_registerset(D3DXREGISTER_SET r) DECLSPEC_HIDDEN;
 
 /* parameter type conversion helpers */
-void set_number(void *outdata, D3DXPARAMETER_TYPE outtype,
-        const void *indata, D3DXPARAMETER_TYPE intype) DECLSPEC_HIDDEN;
+static inline BOOL get_bool(D3DXPARAMETER_TYPE type, const void *data)
+{
+    switch (type)
+    {
+        case D3DXPT_FLOAT:
+        case D3DXPT_INT:
+        case D3DXPT_BOOL:
+            return !!*(DWORD *)data;
+
+        case D3DXPT_VOID:
+            return *(BOOL *)data;
+
+        default:
+            return FALSE;
+    }
+}
+
+static inline int get_int(D3DXPARAMETER_TYPE type, const void *data)
+{
+    switch (type)
+    {
+        case D3DXPT_FLOAT:
+            return (int)(*(float *)data);
+
+        case D3DXPT_INT:
+        case D3DXPT_VOID:
+            return *(int *)data;
+
+        case D3DXPT_BOOL:
+            return get_bool(type, data);
+
+        default:
+            return 0;
+    }
+}
+
+static inline float get_float(D3DXPARAMETER_TYPE type, const void *data)
+{
+    switch (type)
+    {
+        case D3DXPT_FLOAT:
+        case D3DXPT_VOID:
+            return *(float *)data;
+
+        case D3DXPT_INT:
+            return (float)(*(int *)data);
+
+        case D3DXPT_BOOL:
+            return (float)get_bool(type, data);
+
+        default:
+            return 0.0f;
+    }
+}
+
+static inline void set_number(void *outdata, D3DXPARAMETER_TYPE outtype, const void *indata, D3DXPARAMETER_TYPE intype)
+{
+    if (outtype == intype)
+    {
+        *(DWORD *)outdata = *(DWORD *)indata;
+        return;
+    }
+
+    switch (outtype)
+    {
+        case D3DXPT_FLOAT:
+            *(float *)outdata = get_float(intype, indata);
+            break;
+
+        case D3DXPT_BOOL:
+            *(BOOL *)outdata = get_bool(intype, indata);
+            break;
+
+        case D3DXPT_INT:
+            *(int *)outdata = get_int(intype, indata);
+            break;
+
+        default:
+            *(DWORD *)outdata = 0;
+            break;
+    }
+}
+
+static inline BOOL is_param_type_sampler(D3DXPARAMETER_TYPE type)
+{
+    return type == D3DXPT_SAMPLER
+            || type == D3DXPT_SAMPLER1D || type == D3DXPT_SAMPLER2D
+            || type == D3DXPT_SAMPLER3D || type == D3DXPT_SAMPLERCUBE;
+}
+
+struct d3dx_parameter;
+
+enum pres_reg_tables
+{
+    PRES_REGTAB_IMMED,
+    PRES_REGTAB_CONST,
+    PRES_REGTAB_OCONST,
+    PRES_REGTAB_OBCONST,
+    PRES_REGTAB_OICONST,
+    PRES_REGTAB_TEMP,
+    PRES_REGTAB_COUNT,
+    PRES_REGTAB_FIRST_SHADER = PRES_REGTAB_CONST,
+};
+
+struct d3dx_const_param_eval_output
+{
+    struct d3dx_parameter *param;
+    enum pres_reg_tables table;
+    enum D3DXPARAMETER_CLASS constant_class;
+    unsigned int register_index;
+    unsigned int register_count;
+    BOOL direct_copy;
+    unsigned int element_count;
+};
+
+struct d3dx_const_tab
+{
+    unsigned int input_count;
+    D3DXCONSTANT_DESC *inputs;
+    struct d3dx_parameter **inputs_param;
+    unsigned int const_set_count;
+    unsigned int const_set_size;
+    struct d3dx_const_param_eval_output *const_set;
+    const enum pres_reg_tables *regset2table;
+    ULONG64 update_version;
+};
+
+struct d3dx_regstore
+{
+    void *tables[PRES_REGTAB_COUNT];
+    unsigned int table_sizes[PRES_REGTAB_COUNT]; /* registers count */
+};
+
+struct d3dx_pres_ins;
+
+struct d3dx_preshader
+{
+    struct d3dx_regstore regs;
+
+    unsigned int ins_count;
+    struct d3dx_pres_ins *ins;
+
+    struct d3dx_const_tab inputs;
+};
+
+struct d3dx_param_eval
+{
+    D3DXPARAMETER_TYPE param_type;
+
+    struct d3dx_preshader pres;
+    struct d3dx_const_tab shader_inputs;
+
+    ULONG64 *version_counter;
+};
+
+struct d3dx_shared_data;
+struct d3dx_top_level_parameter;
+
+struct d3dx_parameter
+{
+    char magic_string[4];
+    struct d3dx_top_level_parameter *top_level_param;
+    struct d3dx_param_eval *param_eval;
+    char *name;
+    void *data;
+    D3DXPARAMETER_CLASS class;
+    D3DXPARAMETER_TYPE  type;
+    UINT rows;
+    UINT columns;
+    UINT element_count;
+    UINT member_count;
+    DWORD flags;
+    UINT bytes;
+    DWORD object_id;
+
+    struct d3dx_parameter *members;
+    char *semantic;
+};
+
+struct d3dx_top_level_parameter
+{
+    struct d3dx_parameter param;
+    UINT annotation_count;
+    struct d3dx_parameter *annotations;
+    ULONG64 update_version;
+    ULONG64 *version_counter;
+    struct d3dx_shared_data *shared_data;
+};
+
+struct d3dx_shared_data
+{
+    void *data;
+    struct d3dx_top_level_parameter **parameters;
+    unsigned int size, count;
+    ULONG64 update_version;
+};
+
+struct d3dx9_base_effect;
+
+static inline BOOL is_top_level_parameter(struct d3dx_parameter *param)
+{
+    return &param->top_level_param->param == param;
+}
+
+static inline struct d3dx_top_level_parameter
+        *top_level_parameter_from_parameter(struct d3dx_parameter *param)
+{
+    return CONTAINING_RECORD(param, struct d3dx_top_level_parameter, param);
+}
+
+static inline ULONG64 next_update_version(ULONG64 *version_counter)
+{
+    return ++*version_counter;
+}
+
+static inline BOOL is_top_level_param_dirty(struct d3dx_top_level_parameter *param, ULONG64 update_version)
+{
+    struct d3dx_shared_data *shared_data;
+
+    if ((shared_data = param->shared_data))
+        return update_version < shared_data->update_version;
+    else
+        return update_version < param->update_version;
+}
+
+static inline BOOL is_param_dirty(struct d3dx_parameter *param, ULONG64 update_version)
+{
+    return is_top_level_param_dirty(param->top_level_param, update_version);
+}
+
+struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
+        struct d3dx_parameter *parameter, const char *name) DECLSPEC_HIDDEN;
+
+#ifdef __REACTOS__
+#define SET_D3D_STATE_(_manager, _device, _method, ...) ((_manager) ? (_manager)->lpVtbl->_method((_manager), __VA_ARGS__) \
+        : (_device)->lpVtbl->_method((_device), __VA_ARGS__))
+#define SET_D3D_STATE(_base_effect, _method, ...) SET_D3D_STATE_((_base_effect)->manager, (_base_effect)->device, _method, __VA_ARGS__)
+#else
+#define SET_D3D_STATE_(manager, device, method, args...) (manager ? manager->lpVtbl->method(manager, args) \
+        : device->lpVtbl->method(device, args))
+#define SET_D3D_STATE(base_effect, args...) SET_D3D_STATE_(base_effect->manager, base_effect->device, args)
+#endif
+
+HRESULT d3dx_create_param_eval(struct d3dx9_base_effect *base_effect, void *byte_code,
+        unsigned int byte_code_size, D3DXPARAMETER_TYPE type,
+        struct d3dx_param_eval **peval, ULONG64 *version_counter,
+        const char **skip_constants, unsigned int skip_constants_count) DECLSPEC_HIDDEN;
+void d3dx_free_param_eval(struct d3dx_param_eval *peval) DECLSPEC_HIDDEN;
+HRESULT d3dx_evaluate_parameter(struct d3dx_param_eval *peval,
+        const struct d3dx_parameter *param, void *param_value) DECLSPEC_HIDDEN;
+HRESULT d3dx_param_eval_set_shader_constants(ID3DXEffectStateManager *manager, struct IDirect3DDevice9 *device,
+        struct d3dx_param_eval *peval, BOOL update_all) DECLSPEC_HIDDEN;
+BOOL is_param_eval_input_dirty(struct d3dx_param_eval *peval, ULONG64 update_version) DECLSPEC_HIDDEN;
+
+struct ctab_constant {
+    D3DXCONSTANT_DESC desc;
+    WORD constantinfo_reserved;
+    struct ctab_constant *constants;
+};
+
+const struct ctab_constant *d3dx_shader_get_ctab_constant(ID3DXConstantTable *iface,
+        D3DXHANDLE constant) DECLSPEC_HIDDEN;
 
 HRESULT create_dummy_skin(ID3DXSkinInfo **iface) DECLSPEC_HIDDEN;
 
