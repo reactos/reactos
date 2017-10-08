@@ -3523,40 +3523,76 @@ static void test_RegNotifyChangeKeyValue(void)
     CloseHandle(event);
 }
 
+static const char *dbgstr_longlong(ULONGLONG ll)
+{
+    static char buf[16][64];
+    static int idx;
+
+    idx &= 0x0f;
+
+    if (sizeof(ll) > sizeof(unsigned long) && ll >> 32)
+        sprintf(buf[idx], "0x%lx%08lx", (unsigned long)(ll >> 32), (unsigned long)ll);
+    else
+        sprintf(buf[idx], "0x%08lx", (unsigned long)ll);
+
+    return buf[idx++];
+}
+
+#define cmp_li(a, b, c) cmp_li_real(a, b, c, __LINE__)
+static void cmp_li_real(LARGE_INTEGER *l1, LARGE_INTEGER *l2, LONGLONG slack, int line)
+{
+    LONGLONG diff = l2->QuadPart - l1->QuadPart;
+    if (diff < 0) diff = -diff;
+    ok_(__FILE__, line)(diff <= slack, "values don't match: %s/%s\n",
+        dbgstr_longlong(l1->QuadPart), dbgstr_longlong(l2->QuadPart));
+}
+
 static void test_RegQueryValueExPerformanceData(void)
 {
-    DWORD cbData, len;
+    static const WCHAR globalW[] = { 'G','l','o','b','a','l',0 };
+    static const WCHAR dummyW[5] = { 'd','u','m','m','y' };
+    static const char * const names[] = { NULL, "", "Global", "2" "invalid counter name" };
+    DWORD cbData, len, i, type;
     BYTE *value;
     DWORD dwret;
     LONG limit = 6;
     PERF_DATA_BLOCK *pdb;
+    HKEY hkey;
+    BYTE buf[256 + sizeof(PERF_DATA_BLOCK)];
 
     /* Test with data == NULL */
     dwret = RegQueryValueExA( HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, NULL, &cbData );
-    todo_wine ok( dwret == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %d\n", dwret );
+    ok( dwret == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %d\n", dwret );
+
+    dwret = RegQueryValueExW( HKEY_PERFORMANCE_DATA, globalW, NULL, NULL, NULL, &cbData );
+    ok( dwret == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %d\n", dwret );
 
     /* Test ERROR_MORE_DATA, start with small buffer */
     len = 10;
     value = HeapAlloc(GetProcessHeap(), 0, len);
     cbData = len;
-    dwret = RegQueryValueExA( HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, value, &cbData );
-    todo_wine ok( dwret == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %d\n", dwret );
+    type = 0xdeadbeef;
+    dwret = RegQueryValueExA( HKEY_PERFORMANCE_DATA, "Global", NULL, &type, value, &cbData );
+    ok( dwret == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %d\n", dwret );
+    ok(type == REG_BINARY, "got %u\n", type);
     while( dwret == ERROR_MORE_DATA && limit)
     {
         len = len * 10;
         value = HeapReAlloc( GetProcessHeap(), 0, value, len );
         cbData = len;
-        dwret = RegQueryValueExA( HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, value, &cbData );
+        type = 0xdeadbeef;
+        dwret = RegQueryValueExA( HKEY_PERFORMANCE_DATA, "Global", NULL, &type, value, &cbData );
         limit--;
     }
     ok(limit > 0, "too many times ERROR_MORE_DATA returned\n");
 
-    todo_wine ok(dwret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", dwret);
+    ok(dwret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", dwret);
+    ok(type == REG_BINARY, "got %u\n", type);
 
     /* Check returned data */
     if (dwret == ERROR_SUCCESS)
     {
-        todo_wine ok(len >= sizeof(PERF_DATA_BLOCK), "got size %d\n", len);
+        ok(len >= sizeof(PERF_DATA_BLOCK), "got size %d\n", len);
         if (len >= sizeof(PERF_DATA_BLOCK)) {
             pdb = (PERF_DATA_BLOCK*) value;
             ok(pdb->Signature[0] == 'P', "expected Signature[0] = 'P', got 0x%x\n", pdb->Signature[0]);
@@ -3568,8 +3604,155 @@ static void test_RegQueryValueExPerformanceData(void)
     }
 
     HeapFree(GetProcessHeap(), 0, value);
-}
 
+    for (i = 0; i < sizeof(names)/sizeof(names[0]); i++)
+    {
+        cbData = 0xdeadbeef;
+        dwret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, names[i], NULL, NULL, NULL, &cbData);
+        ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
+        ok(cbData == 0, "got %u\n", cbData);
+
+        cbData = 0;
+        dwret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, names[i], NULL, NULL, NULL, &cbData);
+        ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
+        ok(cbData == 0, "got %u\n", cbData);
+
+        cbData = 0xdeadbeef;
+        dwret = RegQueryValueExA(HKEY_PERFORMANCE_TEXT, names[i], NULL, NULL, NULL, &cbData);
+todo_wine
+        ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
+        ok(cbData == 0, "got %u\n", cbData);
+
+        cbData = 0;
+        dwret = RegQueryValueExA(HKEY_PERFORMANCE_TEXT, names[i], NULL, NULL, NULL, &cbData);
+todo_wine
+        ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
+        ok(cbData == 0, "got %u\n", cbData);
+
+        cbData = 0xdeadbeef;
+        dwret = RegQueryValueExA(HKEY_PERFORMANCE_NLSTEXT, names[i], NULL, NULL, NULL, &cbData);
+todo_wine
+        ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
+        ok(cbData == 0, "got %u\n", cbData);
+
+        cbData = 0;
+        dwret = RegQueryValueExA(HKEY_PERFORMANCE_NLSTEXT, names[i], NULL, NULL, NULL, &cbData);
+todo_wine
+        ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
+        ok(cbData == 0, "got %u\n", cbData);
+    }
+
+    memset(buf, 0x77, sizeof(buf));
+    type = 0xdeadbeef;
+    cbData = sizeof(buf);
+    dwret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "invalid counter name", NULL, &type, buf, &cbData);
+    ok(dwret == ERROR_SUCCESS, "got %u\n", dwret);
+    ok(type == REG_BINARY, "got %u\n", type);
+    if (dwret == ERROR_SUCCESS)
+    {
+        SYSTEMTIME st;
+        WCHAR sysname[MAX_COMPUTERNAME_LENGTH + 1];
+        DWORD sysname_len;
+        LARGE_INTEGER counter, freq, ftime;
+
+        GetSystemTime(&st);
+        GetSystemTimeAsFileTime((FILETIME *)&ftime);
+        QueryPerformanceCounter(&counter);
+        QueryPerformanceFrequency(&freq);
+
+        sysname_len = MAX_COMPUTERNAME_LENGTH + 1;
+        GetComputerNameW(sysname, &sysname_len);
+
+        pdb = (PERF_DATA_BLOCK *)buf;
+        ok(pdb->Signature[0] == 'P', "got '%c'\n", pdb->Signature[0]);
+        ok(pdb->Signature[1] == 'E', "got '%c'\n", pdb->Signature[1]);
+        ok(pdb->Signature[2] == 'R', "got '%c'\n", pdb->Signature[2]);
+        ok(pdb->Signature[3] == 'F', "got '%c'\n", pdb->Signature[3]);
+
+        ok(pdb->LittleEndian == 1, "got %u\n", pdb->LittleEndian);
+        ok(pdb->Version == 1, "got %u\n", pdb->Version);
+        ok(pdb->Revision == 1, "got %u\n", pdb->Revision);
+        len = (sizeof(*pdb) + pdb->SystemNameLength + 7) & ~7;
+        ok(pdb->TotalByteLength == len, "got %u vs %u\n", pdb->TotalByteLength, len);
+        ok(pdb->HeaderLength == pdb->TotalByteLength, "got %u\n", pdb->HeaderLength);
+        ok(pdb->NumObjectTypes == 0, "got %u\n", pdb->NumObjectTypes);
+todo_wine
+        ok(pdb->DefaultObject != 0, "got %u\n", pdb->DefaultObject);
+        ok(pdb->SystemTime.wYear == st.wYear, "got %u\n", pdb->SystemTime.wYear);
+        ok(pdb->SystemTime.wMonth == st.wMonth, "got %u\n", pdb->SystemTime.wMonth);
+        ok(pdb->SystemTime.wDayOfWeek == st.wDayOfWeek, "got %u\n", pdb->SystemTime.wDayOfWeek);
+        ok(pdb->SystemTime.wDay == st.wDay, "got %u\n", pdb->SystemTime.wDay);
+        if (U(pdb->PerfTime).LowPart != 0x77777777) /* TestBot is broken */
+            cmp_li(&pdb->PerfTime, &counter, freq.QuadPart);
+        if (U(pdb->PerfFreq).LowPart != 0x77777777) /* TestBot is broken */
+            cmp_li(&pdb->PerfFreq, &freq, 0);
+        cmp_li(&pdb->PerfTime100nSec, &ftime, 200000); /* TestBot needs huge slack value */
+        ok(pdb->SystemNameLength == (sysname_len + 1) * sizeof(WCHAR), "expected %u, got %u\n",
+           (sysname_len + 1) * sizeof(WCHAR), pdb->SystemNameLength);
+        ok(pdb->SystemNameOffset == sizeof(*pdb), "got %u\n", pdb->SystemNameOffset);
+        ok(!lstrcmpW(sysname, (LPCWSTR)(pdb + 1)), "%s != %s\n",
+           wine_dbgstr_w(sysname), wine_dbgstr_w((LPCWSTR)(pdb + 1)));
+
+        len = pdb->TotalByteLength - (sizeof(*pdb) + pdb->SystemNameLength);
+        if (len)
+        {
+            BYTE remainder[8], *p;
+
+            memset(remainder, 0x77, sizeof(remainder));
+            p = buf + sizeof(*pdb) + pdb->SystemNameLength;
+            ok(!memcmp(p, remainder, len), "remainder: %02x,%02x...\n", p[0], p[1]);
+        }
+    }
+
+    dwret = RegOpenKeyA(HKEY_PERFORMANCE_DATA, NULL, &hkey);
+todo_wine
+    ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
+
+    dwret = RegOpenKeyA(HKEY_PERFORMANCE_DATA, "Global", &hkey);
+todo_wine
+    ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
+
+    dwret = RegOpenKeyExA(HKEY_PERFORMANCE_DATA, "Global", 0, KEY_READ, &hkey);
+todo_wine
+    ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
+
+    dwret = RegQueryValueA(HKEY_PERFORMANCE_DATA, "Global", NULL, (LONG *)&cbData);
+todo_wine
+    ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
+
+    dwret = RegSetValueA(HKEY_PERFORMANCE_DATA, "Global", REG_SZ, "dummy", 4);
+todo_wine
+    ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
+
+    dwret = RegSetValueExA(HKEY_PERFORMANCE_DATA, "Global", 0, REG_SZ, (const BYTE *)"dummy", 40);
+todo_wine
+    ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
+
+    cbData = sizeof(buf);
+    dwret = RegEnumKeyA(HKEY_PERFORMANCE_DATA, 0, (LPSTR)buf, cbData);
+todo_wine
+    ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
+
+    cbData = sizeof(buf);
+    dwret = RegEnumValueA(HKEY_PERFORMANCE_DATA, 0, (LPSTR)buf, &cbData, NULL, NULL, NULL, NULL);
+todo_wine
+    ok(dwret == ERROR_MORE_DATA, "got %u\n", dwret);
+todo_wine
+    ok(cbData == sizeof(buf), "got %u\n", cbData);
+
+    dwret = RegEnumValueA(HKEY_PERFORMANCE_DATA, 0, NULL, &cbData, NULL, NULL, NULL, NULL);
+    ok(dwret == ERROR_INVALID_PARAMETER, "got %u\n", dwret);
+
+    if (pRegSetKeyValueW)
+    {
+        dwret = pRegSetKeyValueW(HKEY_PERFORMANCE_DATA, NULL, globalW, REG_SZ, dummyW, sizeof(dummyW));
+todo_wine
+        ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
+    }
+
+    dwret = RegCloseKey(HKEY_PERFORMANCE_DATA);
+    ok(dwret == ERROR_SUCCESS, "got %u\n", dwret);
+}
 
 START_TEST(registry)
 {
