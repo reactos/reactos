@@ -327,22 +327,42 @@ static void read_msft_importlib(importlib_t *importlib, int fd)
     free(typeinfo_offs);
 }
 
+static int open_typelib(const char *name)
+{
+    char *file_name;
+    int fd;
+
+    file_name = wpp_find_include(name, NULL);
+    if(!file_name)
+        return open(name, O_RDONLY | O_BINARY );
+
+    fd = open(file_name, O_RDONLY | O_BINARY );
+    free(file_name);
+    return fd;
+}
+
 static void read_importlib(importlib_t *importlib)
 {
     int fd;
     INT magic;
-    char *file_name;
 
-    file_name = wpp_find_include(importlib->name, NULL);
-    if(file_name) {
-        fd = open(file_name, O_RDONLY | O_BINARY );
-        free(file_name);
-    }else {
-        fd = open(importlib->name, O_RDONLY | O_BINARY );
+    fd = open_typelib(importlib->name);
+
+    /* widl extension: if importlib name has no .tlb extension, try using .tlb */
+    if(fd < 0) {
+        const char *p = strrchr(importlib->name, '.');
+        size_t len = p ? p - importlib->name : strlen(importlib->name);
+        if(strcmp(importlib->name + len, ".tlb")) {
+            char *tlb_name = xmalloc(len + 5);
+            memcpy(tlb_name, importlib->name, len);
+            strcpy(tlb_name + len, ".tlb");
+            fd = open_typelib(tlb_name);
+            free(tlb_name);
+        }
     }
 
     if(fd < 0)
-        error("Could not open importlib %s.\n", importlib->name);
+        error("Could not find importlib %s.\n", importlib->name);
 
     tlb_read(fd, &magic, sizeof(magic));
 
