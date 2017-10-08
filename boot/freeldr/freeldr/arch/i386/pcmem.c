@@ -264,6 +264,10 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
 
     while (PcBiosMapCount < MAX_BIOS_DESCRIPTORS)
     {
+        /* ACPI 3.0/4.0: Set Extended Attributes to enabled/valid by default, in case entry has no E.A.. */
+        ((PBIOS_MEMORY_MAP)BIOSCALLBUFFER)->ExtendedAttributesAsULONG = 0;
+        ((PBIOS_MEMORY_MAP)BIOSCALLBUFFER)->ExtendedAttributes.Enabled_Reserved = 1;
+
         /* Setup the registers for the BIOS call */
         Regs.x.eax = 0x0000E820;
         Regs.x.edx = 0x534D4150; /* ('SMAP') */
@@ -326,8 +330,18 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             break;
         }
 
+        if (((PBIOS_MEMORY_MAP)BIOSCALLBUFFER)->ExtendedAttributes.Enabled_Reserved == 0)
+        {
+            WARN("Discard disabled/invalid entry. (would-be-PcBiosMapCount = %lu)\n",
+                 PcBiosMapCount);
+            /* This unlikely case was correct between ACPI 3.0 and 4.0, so assume all is fine.
+             * Unless we would be ready to drop ACPI 3.0 compatibility.
+             */
+            goto nextRange;
+        }
+
         /* Copy data to global buffer */
-        RtlCopyMemory(&PcBiosMemoryMap[PcBiosMapCount], (PVOID)BIOSCALLBUFFER, Regs.x.ecx);
+        RtlCopyMemory(&PcBiosMemoryMap[PcBiosMapCount], (PVOID)BIOSCALLBUFFER, sizeof(BIOS_MEMORY_MAP));
 
         TRACE("BaseAddress: 0x%llx\n", PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
         TRACE("Length: 0x%llx\n", PcBiosMemoryMap[PcBiosMapCount].Length);
