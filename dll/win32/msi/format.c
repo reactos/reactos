@@ -323,29 +323,28 @@ static WCHAR *deformat_literal( FORMAT *format, FORMSTR *str, BOOL *propfound,
     return replaced;
 }
 
-static LPWSTR build_default_format(const MSIRECORD* record)
+static WCHAR *build_default_format( const MSIRECORD *record )
 {
-    int i;  
-    int count;
-    WCHAR *rc, buf[26];
     static const WCHAR fmt[] = {'%','i',':',' ','[','%','i',']',' ',0};
-    DWORD size;
+    int i, count = MSI_RecordGetFieldCount( record );
+    WCHAR *ret, *tmp, buf[26];
+    DWORD size = 1;
 
-    count = MSI_RecordGetFieldCount(record);
-
-    rc = msi_alloc(1);
-    rc[0] = 0;
-    size = 1;
+    if (!(ret = msi_alloc( sizeof(*ret) ))) return NULL;
+    ret[0] = 0;
 
     for (i = 1; i <= count; i++)
     {
-        sprintfW(buf, fmt, i, i);
-        size += lstrlenW(buf);
-        rc = msi_realloc(rc, size * sizeof(WCHAR));
-        lstrcatW(rc, buf);
+        size += sprintfW( buf, fmt, i, i );
+        if (!(tmp = msi_realloc( ret, size * sizeof(*ret) )))
+        {
+            msi_free( ret );
+            return NULL;
+        }
+        ret = tmp;
+        strcatW( ret, buf );
     }
-
-    return rc;
+    return ret;
 }
 
 static BOOL format_is_number(WCHAR x)
