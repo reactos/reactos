@@ -1104,7 +1104,7 @@ static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
     uirow = MSI_CreateRecord( 2 );
     MSI_RecordSetStringW( uirow, 1, propName );
     MSI_RecordSetStringW( uirow, 2, sigName );
-    msi_ui_actiondata( package, szAppSearch, uirow );
+    MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
 
     return r;

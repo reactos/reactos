@@ -260,7 +260,7 @@ static WCHAR *deformat_environment( FORMAT *format, FORMSTR *str, int *ret_len )
 }
 
 static WCHAR *deformat_literal( FORMAT *format, FORMSTR *str, BOOL *propfound,
-                                BOOL *nonprop, int *type, int *len )
+                                int *type, int *len )
 {
     LPCWSTR data = get_formstr_data(format, str);
     WCHAR *replaced = NULL;
@@ -327,58 +327,24 @@ static LPWSTR build_default_format(const MSIRECORD* record)
 {
     int i;  
     int count;
-    LPWSTR rc, buf;
-    static const WCHAR fmt[] = {'%','i',':',' ','%','s',' ',0};
-    static const WCHAR fmt_null[] = {'%','i',':',' ',' ',0};
-    static const WCHAR fmt_index[] = {'%','i',0};
-    LPCWSTR str;
-    WCHAR index[10];
-    DWORD size, max_len, len;
+    WCHAR *rc, buf[26];
+    static const WCHAR fmt[] = {'%','i',':',' ','[','%','i',']',' ',0};
+    DWORD size;
 
     count = MSI_RecordGetFieldCount(record);
 
-    max_len = MAX_PATH;
-    buf = msi_alloc((max_len + 1) * sizeof(WCHAR));
-
-    rc = NULL;
+    rc = msi_alloc(1);
+    rc[0] = 0;
     size = 1;
+
     for (i = 1; i <= count; i++)
     {
-        sprintfW(index, fmt_index, i);
-        str = MSI_RecordGetString(record, i);
-        len = (str) ? lstrlenW(str) : 0;
-        len += (sizeof(fmt_null)/sizeof(fmt_null[0]) - 3) + lstrlenW(index);
-        size += len;
-
-        if (len > max_len)
-        {
-            max_len = len;
-            buf = msi_realloc(buf, (max_len + 1) * sizeof(WCHAR));
-            if (!buf)
-            {
-                msi_free(rc);
-                return NULL;
-            }
-        }
-
-        if (str)
-            sprintfW(buf, fmt, i, str);
-        else
-            sprintfW(buf, fmt_null, i);
-
-        if (!rc)
-        {
-            rc = msi_alloc(size * sizeof(WCHAR));
-            lstrcpyW(rc, buf);
-        }
-        else
-        {
-            rc = msi_realloc(rc, size * sizeof(WCHAR));
-            lstrcatW(rc, buf);
-        }
+        sprintfW(buf, fmt, i, i);
+        size += lstrlenW(buf);
+        rc = msi_realloc(rc, size * sizeof(WCHAR));
+        lstrcatW(rc, buf);
     }
 
-    msi_free(buf);
     return rc;
 }
 
@@ -669,7 +635,7 @@ static WCHAR *replace_stack_prop( FORMAT *format, STACK *values,
     content->len = *oldsize - 2;
     content->type = *type;
 
-    if (*type == FORMAT_NUMBER)
+    if (*type == FORMAT_NUMBER && format->record)
     {
         replaced = deformat_index( format, content, len );
         if (replaced)
@@ -683,7 +649,7 @@ static WCHAR *replace_stack_prop( FORMAT *format, STACK *values,
     }
     else if (format->package)
     {
-        replaced = deformat_literal( format, content, propfound, nonprop, type, len );
+        replaced = deformat_literal( format, content, propfound, type, len );
     }
     else
     {
@@ -775,7 +741,7 @@ static BOOL verify_format(LPWSTR data)
 
 static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr, 
                                       WCHAR** data, DWORD *len,
-                                      MSIRECORD* record, INT* failcount)
+                                      MSIRECORD* record)
 {
     FORMAT format;
     FORMSTR *str = NULL;
@@ -858,18 +824,37 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
 UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
                         LPDWORD size )
 {
-    WCHAR *format, *deformated;
+    WCHAR *format, *deformated = NULL;
     UINT rc = ERROR_INVALID_PARAMETER;
     DWORD len;
+    MSIRECORD *record_deformated;
+    int field_count, i;
 
     TRACE("%p %p %p %p\n", package, record, buffer, size);
+    dump_record(record);
 
     if (!(format = msi_dup_record_field( record, 0 )))
         format = build_default_format( record );
 
-    TRACE("%s\n", debugstr_w(format));
+    field_count = MSI_RecordGetFieldCount(record);
+    record_deformated = MSI_CloneRecord(record);
+    if (!record_deformated)
+    {
+        rc = ERROR_OUTOFMEMORY;
+        goto end;
+    }
+    MSI_RecordSetStringW(record_deformated, 0, format);
+    for (i = 1; i <= field_count; i++)
+    {
+        if (MSI_RecordGetString(record, i))
+        {
+            deformat_string_internal(package, MSI_RecordGetString(record, i), &deformated, &len, NULL);
+            MSI_RecordSetStringW(record_deformated, i, deformated);
+            msi_free(deformated);
+        }
+    }
 
-    deformat_string_internal( package, format, &deformated, &len, record, NULL );
+    deformat_string_internal(package, format, &deformated, &len, record_deformated);
     if (buffer)
     {
         if (*size>len)
@@ -891,6 +876,8 @@ UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
     else rc = ERROR_SUCCESS;
 
     *size = len;
+    msiobj_release(&record_deformated->hdr);
+end:
     msi_free( format );
     msi_free( deformated );
     return rc;

@@ -67,44 +67,22 @@ static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
 
 static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
 {
-    LPWSTR error, error_dialog;
+    MSIRECORD *record;
     LPWSTR source_dir;
-    UINT r = ERROR_SUCCESS;
+    UINT r = IDRETRY;
 
-    static const WCHAR error_prop[] = {'E','r','r','o','r','D','i','a','l','o','g',0};
-
-    if ((package->ui_level & INSTALLUILEVEL_MASK) == INSTALLUILEVEL_NONE &&
-        !gUIHandlerA && !gUIHandlerW && !gUIHandlerRecord) return ERROR_SUCCESS;
-
-    error = msi_build_error_string(package, 1302, 1, mi->disk_prompt);
-    error_dialog = msi_dup_property(package->db, error_prop);
     source_dir = msi_dup_property(package->db, szSourceDir);
+    record = MSI_CreateRecord(2);
 
-    while (r == ERROR_SUCCESS && !source_matches_volume(mi, source_dir))
+    while (r == IDRETRY && !source_matches_volume(mi, source_dir))
     {
-        r = msi_spawn_error_dialog(package, error_dialog, error);
-
-        if (gUIHandlerW)
-        {
-            gUIHandlerW(gUIContext, MB_RETRYCANCEL | INSTALLMESSAGE_ERROR, error);
-        }
-        else if (gUIHandlerA)
-        {
-            char *msg = strdupWtoA(error);
-            gUIHandlerA(gUIContext, MB_RETRYCANCEL | INSTALLMESSAGE_ERROR, msg);
-            msi_free(msg);
-        }
-        else if (gUIHandlerRecord)
-        {
-            MSIHANDLE rec = MsiCreateRecord(1);
-            MsiRecordSetStringW(rec, 0, error);
-            gUIHandlerRecord(gUIContext, MB_RETRYCANCEL | INSTALLMESSAGE_ERROR, rec);
-            MsiCloseHandle(rec);
-        }
+        MSI_RecordSetStringW(record, 0, NULL);
+        MSI_RecordSetInteger(record, 1, MSIERR_CABNOTFOUND);
+        MSI_RecordSetStringW(record, 2, mi->disk_prompt);
+        r = MSI_ProcessMessage(package, INSTALLMESSAGE_ERROR | MB_RETRYCANCEL, record);
     }
 
-    msi_free(error);
-    msi_free(error_dialog);
+    msiobj_release(&record->hdr);
     msi_free(source_dir);
 
     return r;
