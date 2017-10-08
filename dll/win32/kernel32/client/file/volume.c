@@ -150,7 +150,7 @@ CleanAndQuit:
 /*
  * @implemented
  */
-static BOOL
+BOOL
 IsThisARootDirectory(IN HANDLE VolumeHandle,
                      IN PUNICODE_STRING NtPathName)
 {

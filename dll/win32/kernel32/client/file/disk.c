@@ -23,56 +23,8 @@
 
 #define NDEBUG
 #include <debug.h>
-DEBUG_CHANNEL(kernel32file);
 
 #define MAX_DOS_DRIVES 26
-
-HANDLE
-WINAPI
-InternalOpenDirW(IN LPCWSTR DirName,
-                 IN BOOLEAN Write)
-{
-    UNICODE_STRING NtPathU;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS errCode;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE hFile;
-
-    if (!RtlDosPathNameToNtPathName_U(DirName, &NtPathU, NULL, NULL))
-    {
-        WARN("Invalid path\n");
-        SetLastError(ERROR_BAD_PATHNAME);
-        return INVALID_HANDLE_VALUE;
-    }
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &NtPathU,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    errCode = NtCreateFile(&hFile,
-                           Write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ,
-                           &ObjectAttributes,
-                           &IoStatusBlock,
-                           NULL,
-                           0,
-                           FILE_SHARE_READ | FILE_SHARE_WRITE,
-                           FILE_OPEN,
-                           0,
-                           NULL,
-                           0);
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathU.Buffer);
-
-    if (!NT_SUCCESS(errCode))
-    {
-        BaseSetLastNTError(errCode);
-        return INVALID_HANDLE_VALUE;
-    }
-
-    return hFile;
-}
 
 /*
  * @implemented
@@ -189,19 +141,24 @@ GetDiskFreeSpaceA(IN LPCSTR lpRootPathName,
                   OUT LPDWORD lpNumberOfFreeClusters,
                   OUT LPDWORD lpTotalNumberOfClusters)
 {
-    PWCHAR RootPathNameW=NULL;
+    PCSTR RootPath;
+    PUNICODE_STRING RootPathU;
 
-    if (lpRootPathName)
+    RootPath = lpRootPathName;
+    if (RootPath == NULL)
     {
-        if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
-            return FALSE;
+        RootPath = "\\";
     }
 
-    return GetDiskFreeSpaceW (RootPathNameW,
-                              lpSectorsPerCluster,
-                              lpBytesPerSector,
-                              lpNumberOfFreeClusters,
-                              lpTotalNumberOfClusters);
+    RootPathU = Basep8BitStringToStaticUnicodeString(RootPath);
+    if (RootPathU == NULL)
+    {
+        return FALSE;
+    }
+
+    return GetDiskFreeSpaceW(RootPathU->Buffer, lpSectorsPerCluster,
+                             lpBytesPerSector, lpNumberOfFreeClusters,
+                             lpTotalNumberOfClusters);
 }
 
 /*
@@ -215,50 +172,131 @@ GetDiskFreeSpaceW(IN LPCWSTR lpRootPathName,
                   OUT LPDWORD lpNumberOfFreeClusters,
                   OUT LPDWORD lpTotalNumberOfClusters)
 {
-    FILE_FS_SIZE_INFORMATION FileFsSize;
+    BOOL Below2GB;
+    PCWSTR RootPath;
+    NTSTATUS Status;
+    HANDLE RootHandle;
+    UNICODE_STRING FileName;
     IO_STATUS_BLOCK IoStatusBlock;
-    WCHAR RootPathName[MAX_PATH];
-    HANDLE hFile;
-    NTSTATUS errCode;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    FILE_FS_SIZE_INFORMATION FileFsSize;
 
-    if (lpRootPathName)
+    /* If no path provided, get root path */
+    RootPath = lpRootPathName;
+    if (lpRootPathName == NULL)
     {
-        wcsncpy (RootPathName, lpRootPathName, 3);
+        RootPath = L"\\";
     }
-    else
-    {
-        GetCurrentDirectoryW (MAX_PATH, RootPathName);
-    }
-    RootPathName[3] = 0;
 
-    hFile = InternalOpenDirW(RootPathName, FALSE);
-    if (INVALID_HANDLE_VALUE == hFile)
+    /* Convert the path to NT path */
+    if (!RtlDosPathNameToNtPathName_U(RootPath, &FileName, NULL, NULL))
     {
         SetLastError(ERROR_PATH_NOT_FOUND);
         return FALSE;
     }
 
-    errCode = NtQueryVolumeInformationFile(hFile,
-                                           &IoStatusBlock,
-                                           &FileFsSize,
-                                           sizeof(FILE_FS_SIZE_INFORMATION),
-                                           FileFsSizeInformation);
-    if (!NT_SUCCESS(errCode))
+    /* Open it for disk space query! */
+    InitializeObjectAttributes(&ObjectAttributes, &FileName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenFile(&RootHandle, SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_FREE_SPACE_QUERY);
+    if (!NT_SUCCESS(Status))
     {
-        CloseHandle(hFile);
-        BaseSetLastNTError (errCode);
+        BaseSetLastNTError(Status);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+        if (lpBytesPerSector != NULL)
+        {
+            *lpBytesPerSector = 0;
+        }
+
         return FALSE;
     }
 
-    if (lpSectorsPerCluster)
+    /* We don't need the name any longer */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+
+    /* Query disk space! */
+    Status = NtQueryVolumeInformationFile(RootHandle, &IoStatusBlock, &FileFsSize,
+                                          sizeof(FILE_FS_SIZE_INFORMATION),
+                                          FileFsSizeInformation);
+    NtClose(RootHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* Are we in some compatibility mode where size must be below 2GB? */
+    Below2GB = ((NtCurrentPeb()->AppCompatFlags.LowPart & GetDiskFreeSpace2GB) == GetDiskFreeSpace2GB);
+
+    /* If we're to overflow output, make sure we return the maximum */
+    if (FileFsSize.TotalAllocationUnits.HighPart != 0)
+    {
+        FileFsSize.TotalAllocationUnits.LowPart = -1;
+    }
+
+    if (FileFsSize.AvailableAllocationUnits.HighPart != 0)
+    {
+        FileFsSize.AvailableAllocationUnits.LowPart = -1;
+    }
+
+    /* Return what user asked for */
+    if (lpSectorsPerCluster != NULL)
+    {
         *lpSectorsPerCluster = FileFsSize.SectorsPerAllocationUnit;
-    if (lpBytesPerSector)
+    }
+
+    if (lpBytesPerSector != NULL)
+    {
         *lpBytesPerSector = FileFsSize.BytesPerSector;
-    if (lpNumberOfFreeClusters)
-        *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.u.LowPart;
-    if (lpTotalNumberOfClusters)
-        *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.u.LowPart;
-    CloseHandle(hFile);
+    }
+
+    if (lpNumberOfFreeClusters != NULL)
+    {
+        if (!Below2GB)
+        {
+            *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.LowPart;
+        }
+        /* If we have to remain below 2GB... */
+        else
+        {
+            DWORD FreeClusters;
+
+            /* Compute how many clusters there are in less than 2GB: 2 * 1024 * 1024 * 1024- 1 */
+            FreeClusters = 0x7FFFFFFF / (FileFsSize.SectorsPerAllocationUnit * FileFsSize.BytesPerSector);
+            /* If that's higher than what was queried, then return the queried value, it's OK! */
+            if (FreeClusters > FileFsSize.AvailableAllocationUnits.LowPart)
+            {
+                FreeClusters = FileFsSize.AvailableAllocationUnits.LowPart;
+            }
+
+            *lpNumberOfFreeClusters = FreeClusters;
+        }
+    }
+
+    if (lpTotalNumberOfClusters != NULL)
+    {
+        if (!Below2GB)
+        {
+            *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.LowPart;
+        }
+        /* If we have to remain below 2GB... */
+        else
+        {
+            DWORD TotalClusters;
+
+            /* Compute how many clusters there are in less than 2GB: 2 * 1024 * 1024 * 1024- 1 */
+            TotalClusters = 0x7FFFFFFF / (FileFsSize.SectorsPerAllocationUnit * FileFsSize.BytesPerSector);
+            /* If that's higher than what was queried, then return the queried value, it's OK! */
+            if (TotalClusters > FileFsSize.TotalAllocationUnits.LowPart)
+            {
+                TotalClusters = FileFsSize.TotalAllocationUnits.LowPart;
+            }
+
+            *lpTotalNumberOfClusters = TotalClusters;
+        }
+    }
 
     return TRUE;
 }
@@ -273,18 +311,23 @@ GetDiskFreeSpaceExA(IN LPCSTR lpDirectoryName OPTIONAL,
                     OUT PULARGE_INTEGER lpTotalNumberOfBytes,
                     OUT PULARGE_INTEGER lpTotalNumberOfFreeBytes)
 {
-    PWCHAR DirectoryNameW=NULL;
+    PCSTR RootPath;
+    PUNICODE_STRING RootPathU;
 
-    if (lpDirectoryName)
+    RootPath = lpDirectoryName;
+    if (RootPath == NULL)
     {
-        if (!(DirectoryNameW = FilenameA2W(lpDirectoryName, FALSE)))
-            return FALSE;
+        RootPath = "\\";
     }
 
-    return GetDiskFreeSpaceExW (DirectoryNameW ,
-                                lpFreeBytesAvailableToCaller,
-                                lpTotalNumberOfBytes,
-                                lpTotalNumberOfFreeBytes);
+    RootPathU = Basep8BitStringToStaticUnicodeString(RootPath);
+    if (RootPathU == NULL)
+    {
+        return FALSE;
+    }
+
+    return GetDiskFreeSpaceExW(RootPathU->Buffer, lpFreeBytesAvailableToCaller,
+                              lpTotalNumberOfBytes, lpTotalNumberOfFreeBytes);
 }
 
 /*
@@ -297,103 +340,117 @@ GetDiskFreeSpaceExW(IN LPCWSTR lpDirectoryName OPTIONAL,
                     OUT PULARGE_INTEGER lpTotalNumberOfBytes,
                     OUT PULARGE_INTEGER lpTotalNumberOfFreeBytes)
 {
-    union
-    {
-        FILE_FS_SIZE_INFORMATION FsSize;
-        FILE_FS_FULL_SIZE_INFORMATION FsFullSize;
-    } FsInfo;
-    IO_STATUS_BLOCK IoStatusBlock;
-    ULARGE_INTEGER BytesPerCluster;
-    HANDLE hFile;
+    PCWSTR RootPath;
     NTSTATUS Status;
+    HANDLE RootHandle;
+    UNICODE_STRING FileName;
+    DWORD BytesPerAllocationUnit;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    FILE_FS_SIZE_INFORMATION FileFsSize;
 
+    /* If no path provided, get root path */
+    RootPath = lpDirectoryName;
     if (lpDirectoryName == NULL)
-        lpDirectoryName = L"\\";
-
-    hFile = InternalOpenDirW(lpDirectoryName, FALSE);
-    if (INVALID_HANDLE_VALUE == hFile)
     {
+        RootPath = L"\\";
+    }
+
+    /* Convert the path to NT path */
+    if (!RtlDosPathNameToNtPathName_U(RootPath, &FileName, NULL, NULL))
+    {
+        SetLastError(ERROR_PATH_NOT_FOUND);
         return FALSE;
     }
 
-    if (lpFreeBytesAvailableToCaller != NULL || lpTotalNumberOfBytes != NULL)
+    /* Open it for disk space query! */
+    InitializeObjectAttributes(&ObjectAttributes, &FileName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenFile(&RootHandle, SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_FREE_SPACE_QUERY);
+    if (!NT_SUCCESS(Status))
     {
-        /* To get the free space available to the user associated with the
-           current thread, try FileFsFullSizeInformation. If this is not
-           supported by the file system, fall back to FileFsSize */
+        BaseSetLastNTError(Status);
+        /* If error conversion lead to file not found, override to use path not found
+         * which is more accurate
+         */
+        if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            SetLastError(ERROR_PATH_NOT_FOUND);
+        }
 
-        Status = NtQueryVolumeInformationFile(hFile,
-                                              &IoStatusBlock,
-                                              &FsInfo.FsFullSize,
-                                              sizeof(FsInfo.FsFullSize),
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+
+        return FALSE;
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
+
+    /* If user asks for lpTotalNumberOfFreeBytes, try to use full size information */
+    if (lpTotalNumberOfFreeBytes != NULL)
+    {
+        FILE_FS_FULL_SIZE_INFORMATION FileFsFullSize;
+
+        /* Issue the full fs size request */
+        Status = NtQueryVolumeInformationFile(RootHandle, &IoStatusBlock, &FileFsFullSize,
+                                              sizeof(FILE_FS_FULL_SIZE_INFORMATION),
                                               FileFsFullSizeInformation);
-
+        /* If it succeed, complete out buffers */
         if (NT_SUCCESS(Status))
         {
-            /* Close the handle before returning data
-               to avoid a handle leak in case of a fault! */
-            CloseHandle(hFile);
+            /* We can close here, we'll return */
+            NtClose(RootHandle);
 
-            BytesPerCluster.QuadPart =
-                FsInfo.FsFullSize.BytesPerSector * FsInfo.FsFullSize.SectorsPerAllocationUnit;
+            /* Compute the size of an AU */
+            BytesPerAllocationUnit = FileFsFullSize.SectorsPerAllocationUnit * FileFsFullSize.BytesPerSector;
 
+            /* And then return what was asked */
             if (lpFreeBytesAvailableToCaller != NULL)
             {
-                lpFreeBytesAvailableToCaller->QuadPart =
-                    BytesPerCluster.QuadPart * FsInfo.FsFullSize.CallerAvailableAllocationUnits.QuadPart;
+                lpFreeBytesAvailableToCaller->QuadPart = FileFsFullSize.CallerAvailableAllocationUnits.QuadPart * BytesPerAllocationUnit;
             }
 
             if (lpTotalNumberOfBytes != NULL)
             {
-                lpTotalNumberOfBytes->QuadPart =
-                    BytesPerCluster.QuadPart * FsInfo.FsFullSize.TotalAllocationUnits.QuadPart;
+                lpTotalNumberOfBytes->QuadPart = FileFsFullSize.TotalAllocationUnits.QuadPart * BytesPerAllocationUnit;
             }
 
-            if (lpTotalNumberOfFreeBytes != NULL)
-            {
-                lpTotalNumberOfFreeBytes->QuadPart =
-                    BytesPerCluster.QuadPart * FsInfo.FsFullSize.ActualAvailableAllocationUnits.QuadPart;
-            }
+            /* No need to check for nullness ;-) */
+            lpTotalNumberOfFreeBytes->QuadPart = FileFsFullSize.ActualAvailableAllocationUnits.QuadPart * BytesPerAllocationUnit;
 
             return TRUE;
         }
     }
 
-    Status = NtQueryVolumeInformationFile(hFile,
-                                          &IoStatusBlock,
-                                          &FsInfo.FsSize,
-                                          sizeof(FsInfo.FsSize),
+    /* Otherwise, fallback to normal size information */
+    Status = NtQueryVolumeInformationFile(RootHandle, &IoStatusBlock,
+                                          &FileFsSize, sizeof(FILE_FS_SIZE_INFORMATION),
                                           FileFsSizeInformation);
-
-    /* Close the handle before returning data
-       to avoid a handle leak in case of a fault! */
-    CloseHandle(hFile);
-
+    NtClose(RootHandle);
     if (!NT_SUCCESS(Status))
     {
-        BaseSetLastNTError (Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
-    BytesPerCluster.QuadPart =
-        FsInfo.FsSize.BytesPerSector * FsInfo.FsSize.SectorsPerAllocationUnit;
+    /* Compute the size of an AU */
+    BytesPerAllocationUnit = FileFsSize.SectorsPerAllocationUnit * FileFsSize.BytesPerSector;
 
-    if (lpFreeBytesAvailableToCaller)
+    /* And then return what was asked, available is free, the same! */
+    if (lpFreeBytesAvailableToCaller != NULL)
     {
-        lpFreeBytesAvailableToCaller->QuadPart =
-            BytesPerCluster.QuadPart * FsInfo.FsSize.AvailableAllocationUnits.QuadPart;
+        lpFreeBytesAvailableToCaller->QuadPart = FileFsSize.AvailableAllocationUnits.QuadPart * BytesPerAllocationUnit;
     }
 
-    if (lpTotalNumberOfBytes)
+    if (lpTotalNumberOfBytes != NULL)
     {
-        lpTotalNumberOfBytes->QuadPart =
-            BytesPerCluster.QuadPart * FsInfo.FsSize.TotalAllocationUnits.QuadPart;
+        lpTotalNumberOfBytes->QuadPart = FileFsSize.TotalAllocationUnits.QuadPart * BytesPerAllocationUnit;
     }
 
-    if (lpTotalNumberOfFreeBytes)
+    if (lpTotalNumberOfFreeBytes != NULL)
     {
-        lpTotalNumberOfFreeBytes->QuadPart =
-            BytesPerCluster.QuadPart * FsInfo.FsSize.AvailableAllocationUnits.QuadPart;
+        lpTotalNumberOfFreeBytes->QuadPart = FileFsSize.AvailableAllocationUnits.QuadPart * BytesPerAllocationUnit;
     }
 
     return TRUE;
@@ -406,15 +463,26 @@ UINT
 WINAPI
 GetDriveTypeA(IN LPCSTR lpRootPathName)
 {
-    PWCHAR RootPathNameW;
+    PWSTR RootPathU;
 
-    if (!lpRootPathName)
-        return GetDriveTypeW(NULL);
+    if (lpRootPathName != NULL)
+    {
+        PUNICODE_STRING RootPathUStr;
 
-    if (!(RootPathNameW = FilenameA2W(lpRootPathName, FALSE)))
-        return DRIVE_UNKNOWN;
+        RootPathUStr = Basep8BitStringToStaticUnicodeString(lpRootPathName);
+        if (RootPathUStr == NULL)
+        {
+            return DRIVE_NO_ROOT_DIR;
+        }
 
-    return GetDriveTypeW(RootPathNameW);
+        RootPathU = RootPathUStr->Buffer;
+    }
+    else
+    {
+        RootPathU = NULL;
+    }
+
+    return GetDriveTypeW(RootPathU);
 }
 
 /*
@@ -424,127 +492,228 @@ UINT
 WINAPI
 GetDriveTypeW(IN LPCWSTR lpRootPathName)
 {
-    FILE_FS_DEVICE_INFORMATION FileFsDevice;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING PathName;
-    HANDLE FileHandle;
+    BOOL RetryOpen;
+    PCWSTR RootPath;
     NTSTATUS Status;
-    PWSTR CurrentDir = NULL;
-    PCWSTR lpRootPath;
+    WCHAR DriveLetter;
+    HANDLE RootHandle;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING PathName, VolumeString;
+    FILE_FS_DEVICE_INFORMATION FileFsDevice;
+    WCHAR Buffer[MAX_PATH], VolumeName[MAX_PATH];
 
-    if (!lpRootPathName)
+    /* If no path, get one */
+    if (lpRootPathName == NULL)
     {
-        /* If NULL is passed, use current directory path */
-        DWORD BufferSize = GetCurrentDirectoryW(0, NULL);
-        CurrentDir = HeapAlloc(GetProcessHeap(), 0, BufferSize * sizeof(WCHAR));
-        if (!CurrentDir)
-            return DRIVE_UNKNOWN;
-        if (!GetCurrentDirectoryW(BufferSize, CurrentDir))
+        RootPath = Buffer;
+        /* This will be current drive (<letter>:\ - drop the rest)*/
+        if (RtlGetCurrentDirectory_U(sizeof(Buffer), Buffer) > 3 * sizeof(WCHAR))
         {
-            HeapFree(GetProcessHeap(), 0, CurrentDir);
-            return DRIVE_UNKNOWN;
+            Buffer[3] = UNICODE_NULL;
         }
-
-        if (wcslen(CurrentDir) > 3)
-            CurrentDir[3] = 0;
-
-        lpRootPath = CurrentDir;
     }
     else
     {
-        size_t Length = wcslen(lpRootPathName);
-
-        TRACE("lpRootPathName: %S\n", lpRootPathName);
-
-        lpRootPath = lpRootPathName;
-        if (Length == 2)
+        /* Handle broken value */
+        if (lpRootPathName == (PVOID)-1)
         {
-            WCHAR DriveLetter = RtlUpcaseUnicodeChar(lpRootPathName[0]);
+            return DRIVE_UNKNOWN;
+        }
 
+        RootPath = lpRootPathName;
+        /* If provided path is 2-len, it might be a drive letter... */
+        if (wcslen(lpRootPathName) == 2)
+        {
+            /* Check it! */
+            DriveLetter = RtlUpcaseUnicodeChar(lpRootPathName[0]);
+            /* That's a drive letter! */
             if (DriveLetter >= L'A' && DriveLetter <= L'Z' && lpRootPathName[1] == L':')
             {
-                Length = (Length + 2) * sizeof(WCHAR);
-
-                CurrentDir = HeapAlloc(GetProcessHeap(), 0, Length);
-                if (!CurrentDir)
-                    return DRIVE_UNKNOWN;
-
-                StringCbPrintfW(CurrentDir, Length, L"%s\\", lpRootPathName);
-
-                lpRootPath = CurrentDir;
+                /* Make it a volume */
+                Buffer[0] = DriveLetter;
+                Buffer[1] = L':';
+                Buffer[2] = L'\\';
+                Buffer[3] = UNICODE_NULL;
+                RootPath = Buffer;
             }
         }
     }
 
-    TRACE("lpRootPath: %S\n", lpRootPath);
-
-    if (!RtlDosPathNameToNtPathName_U(lpRootPath, &PathName, NULL, NULL))
+    /* If the provided looks like a DOS device... Like <letter>:\<0> */
+    DriveLetter = RtlUpcaseUnicodeChar(RootPath[0]);
+    /* We'll take the quick path!
+     * We'll find the device type looking at the device map (and types ;-))
+     * associated with the current process
+     */
+    if (DriveLetter >= L'A' && DriveLetter <= L'Z' && RootPath[1] == L':' &&
+        RootPath[2] == L'\\' && RootPath[3] == UNICODE_NULL)
     {
-        if (CurrentDir != NULL)
-            HeapFree(GetProcessHeap(), 0, CurrentDir);
+        USHORT Index;
+        PROCESS_DEVICEMAP_INFORMATION DeviceMap;
 
+        /* Query the device map */
+        Status = NtQueryInformationProcess(NtCurrentProcess(), ProcessDeviceMap,
+                                           &DeviceMap,
+                                           sizeof(PROCESS_DEVICEMAP_INFORMATION),
+                                           NULL);
+        /* Zero output if we failed */
+        if (!NT_SUCCESS(Status))
+        {
+            RtlZeroMemory(&DeviceMap, sizeof(PROCESS_DEVICEMAP_INFORMATION));
+        }
+
+        /* Get our index in the device map */
+        Index = DriveLetter - L'A';
+        /* Check we're in the device map (bit set) */
+        if (((1 << Index) & DeviceMap.Query.DriveMap) != 0)
+        {
+            /* Validate device type and return it */
+            if (DeviceMap.Query.DriveType[Index] >= DRIVE_REMOVABLE &&
+                DeviceMap.Query.DriveType[Index] <= DRIVE_RAMDISK)
+            {
+                return DeviceMap.Query.DriveType[Index];
+            }
+            /* Otherwise, return we don't know the type */
+            else
+            {
+                return DRIVE_UNKNOWN;
+            }
+        }
+
+        /* We couldn't find ourselves, do it the slow way */
+    }
+
+    /* No path provided, use root */
+    if (lpRootPathName == NULL)
+    {
+        RootPath = L"\\";
+    }
+
+    /* Convert to NT path */
+    if (!RtlDosPathNameToNtPathName_U(RootPath, &PathName, NULL, NULL))
+    {
         return DRIVE_NO_ROOT_DIR;
     }
 
-    TRACE("PathName: %S\n", PathName.Buffer);
-
-    if (CurrentDir != NULL)
-        HeapFree(GetProcessHeap(), 0, CurrentDir);
-
-    if (PathName.Buffer[(PathName.Length >> 1) - 1] != L'\\')
+    /* If not a directory, fail, we need a volume */
+    if (PathName.Buffer[(PathName.Length / sizeof(WCHAR)) - 1] != L'\\')
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathName.Buffer);
         return DRIVE_NO_ROOT_DIR;
     }
 
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &PathName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        FILE_READ_ATTRIBUTES | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
+    /* Let's probe for it, by forcing open failure! */
+    RetryOpen = TRUE;
+    InitializeObjectAttributes(&ObjectAttributes, &PathName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+                        &ObjectAttributes, &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+    /* It properly failed! */
+    if (Status == STATUS_FILE_IS_A_DIRECTORY)
+    {
+        /* It might be a mount point, then, query for target */
+        if (BasepGetVolumeNameFromReparsePoint(lpRootPathName, VolumeName, MAX_PATH, NULL))
+        {
+            /* We'll reopen the target */
+            RtlInitUnicodeString(&VolumeString, VolumeName);
+            VolumeName[1] = L'?';
+            VolumeString.Length -= sizeof(WCHAR);
+            InitializeObjectAttributes(&ObjectAttributes, &VolumeString,
+                                       OBJ_CASE_INSENSITIVE, NULL, NULL);
+        }
+    }
+    else
+    {
+        /* heh. It worked? Or failed for whatever other reason?
+         * Check we have a directory if we get farther in path
+         */
+        PathName.Length += sizeof(WCHAR);
+        if (IsThisARootDirectory(0, &PathName))
+        {
+            /* Yes? Heh, then it's fine, keep our current handle */
+            RetryOpen = FALSE;
+        }
+        else
+        {
+            /* Then, retry to open without forcing non directory type */
+            PathName.Length -= sizeof(WCHAR);
+            if (NT_SUCCESS(Status))
+            {
+                NtClose(RootHandle);
+            }
+        }
+    }
 
+    /* Now, we retry without forcing file type - should work now */
+    if (RetryOpen)
+    {
+        Status = NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+                            &ObjectAttributes, &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            FILE_SYNCHRONOUS_IO_NONALERT);
+    }
+
+    /* We don't need path any longer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, PathName.Buffer);
     if (!NT_SUCCESS(Status))
-        return DRIVE_NO_ROOT_DIR; /* According to WINE regression tests */
+    {
+        return DRIVE_NO_ROOT_DIR;
+    }
 
-    Status = NtQueryVolumeInformationFile(FileHandle,
+    /* Query the device for its type */
+    Status = NtQueryVolumeInformationFile(RootHandle,
                                           &IoStatusBlock,
                                           &FileFsDevice,
                                           sizeof(FILE_FS_DEVICE_INFORMATION),
                                           FileFsDeviceInformation);
-    NtClose(FileHandle);
+    /* No longer required */
+    NtClose(RootHandle);
     if (!NT_SUCCESS(Status))
     {
-        return 0;
+        return DRIVE_UNKNOWN;
     }
 
+    /* Do we have a remote device? Return so! */
+    if ((FileFsDevice.Characteristics & FILE_REMOTE_DEVICE) == FILE_REMOTE_DEVICE)
+    {
+        return DRIVE_REMOTE;
+    }
+
+    /* Check the device type */
     switch (FileFsDevice.DeviceType)
     {
+        /* CDROM, easy */
         case FILE_DEVICE_CD_ROM:
         case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
             return DRIVE_CDROM;
-        case FILE_DEVICE_VIRTUAL_DISK:
-            return DRIVE_RAMDISK;
-        case FILE_DEVICE_NETWORK_FILE_SYSTEM:
-            return DRIVE_REMOTE;
+
+        /* Disk... */
         case FILE_DEVICE_DISK:
         case FILE_DEVICE_DISK_FILE_SYSTEM:
-            if (FileFsDevice.Characteristics & FILE_REMOTE_DEVICE)
-                return DRIVE_REMOTE;
-            if (FileFsDevice.Characteristics & FILE_REMOVABLE_MEDIA)
+            /* Removable media? Floppy is one */
+            if ((FileFsDevice.Characteristics & FILE_REMOVABLE_MEDIA) == FILE_REMOVABLE_MEDIA ||
+                (FileFsDevice.Characteristics & FILE_FLOPPY_DISKETTE) == FILE_FLOPPY_DISKETTE)
+            {
                 return DRIVE_REMOVABLE;
-        return DRIVE_FIXED;
+            }
+            else
+            {
+                return DRIVE_FIXED;
+            }
+
+        /* Easy cases */
+        case FILE_DEVICE_NETWORK:
+        case FILE_DEVICE_NETWORK_FILE_SYSTEM:
+            return DRIVE_REMOTE;
+
+        case FILE_DEVICE_VIRTUAL_DISK:
+            return DRIVE_RAMDISK;
     }
 
-    ERR("Returning DRIVE_UNKNOWN for device type %lu\n", FileFsDevice.DeviceType);
-
+    /* Nothing matching, just fail */
     return DRIVE_UNKNOWN;
 }
 

@@ -932,6 +932,7 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
     PWND DesktopObject = 0;
     HDC DesktopHDC = 0;
 
+    /* This can be called from GDI/DX, so acquire the USER lock */
     UserEnterExclusive();
 
     if (DcType == DC_TYPE_DIRECT)

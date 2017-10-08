@@ -24,6 +24,13 @@ typedef enum tagGdiPathState
 #define PATHTYPE_KEEPME 1
 #define PATHTYPE_STACK  2
 
+/* extended PATHDATA */
+typedef struct _EXTPATHDATA
+{
+    PATHDATA pd;
+    struct _EXTPATHDATA *ppdNext;
+} EXTPATHDATA, *PEXTPATHDATA;
+
 typedef struct _PATH
 {
   BASEOBJECT   BaseObject;
@@ -31,13 +38,15 @@ typedef struct _PATH
   RECTFX       rcfxBoundBox;
   POINTFX      ptfxSubPathStart;
   FLONG        flType;
-  //PEXTPATHDATA ppdFirst;
-  //PEXTPATHDATA ppdLast;
+  PEXTPATHDATA ppdFirst;
+  PEXTPATHDATA ppdLast;
   FLONG        flags;   // PATHDATA flags.
-  //PEXTPATHDATA ppdCurrent;
+  PEXTPATHDATA ppdCurrent;
   // PATHOBJ;
   FLONG        fl;      // Saved flags.
   ULONG        cCurves; // Saved number of lines and Bezier.
+
+  struct _EPATHOBJ *epo;
 
   // Wine/ReactOS Things to convert from:
   FLONG        state;
