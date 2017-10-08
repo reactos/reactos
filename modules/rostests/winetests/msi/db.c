@@ -2369,6 +2369,12 @@ static void test_msiimport(void)
     r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_CREATE, &hdb);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
+    r = MsiDatabaseImportA(hdb, CURR_DIR, NULL);
+    ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+
+    r = MsiDatabaseImportA(hdb, CURR_DIR, "nonexistent");
+    ok(r == ERROR_FUNCTION_FAILED, "Expected ERROR_FUNCTION_FAILED, got %d\n", r);
+
     r = add_table_to_db(hdb, test_data);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
