@@ -34,7 +34,7 @@ typedef struct
     // ACPI 3.0.
     union
     {
-        ULONG   Reserved;
+        ULONG   ExtendedAttributesAsULONG;
 
         struct
         {
@@ -53,7 +53,7 @@ typedef struct
 } BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
 
 /* Int 15h AX=E820h Entry minimal size. */
-C_ASSERT(FIELD_OFFSET(BIOS_MEMORY_MAP, Reserved) == 20);
+C_ASSERT(FIELD_OFFSET(BIOS_MEMORY_MAP, ExtendedAttributes) == 20);
 /* Int 15h AX=E820h Entry maximal size. */
 C_ASSERT(sizeof(BIOS_MEMORY_MAP) == 24);
 

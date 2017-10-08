@@ -332,7 +332,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         TRACE("BaseAddress: 0x%llx\n", PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
         TRACE("Length: 0x%llx\n", PcBiosMemoryMap[PcBiosMapCount].Length);
         TRACE("Type: 0x%lx\n", PcBiosMemoryMap[PcBiosMapCount].Type);
-        TRACE("Reserved: 0x%lx\n", PcBiosMemoryMap[PcBiosMapCount].Reserved);
+        TRACE("ExtendedAttributesAsULONG: 0x%08lx\n", PcBiosMemoryMap[PcBiosMapCount].ExtendedAttributesAsULONG);
 
         if (PcBiosMemoryMap[PcBiosMapCount].Length == 0)
         {
