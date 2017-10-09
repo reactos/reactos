@@ -4,7 +4,7 @@
 <img src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
 </p>
 
-[![license.badge]][license.link] [![ghcontrib.badge]]() [![ghstats.badge]]() [![commits.badge]]() [![coverity.badge]][coverity.link] 
+[![license.badge]][license.link] [![ghcontrib.badge]][ghcontrib.link] [![ghstats.badge]][ghstats.link] [![commits.badge]][commits.link] [![coverity.badge]][coverity.link] 
 
 ## Quick Links
 
@@ -98,6 +98,7 @@ There is also an obsolete [SVN archive repository](https://svn.reactos.org/svn/r
 [travis.link]:      https://travis-ci.org/reactos/reactos
 [appveyor.link]:    https://ci.appveyor.com/project/AmineKhaldi/reactos
 [coverity.link]:    https://scan.coverity.com/projects/205
+[commits.link]:     https://github.com/reactos/reactos/commits/master
 [release.link]:     https://sourceforge.net/projects/reactos/files/ReactOS/0.4.6
 [license.link]:     https://spdx.org/licenses/GPL-2.0+.html
 [sfstats.link]:     https://sourceforge.net/projects/reactos
