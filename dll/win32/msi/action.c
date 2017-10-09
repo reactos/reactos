@@ -4774,10 +4774,17 @@ static UINT ACTION_RemoveIniValues( MSIPACKAGE *package )
 
 static void register_dll( const WCHAR *dll, BOOL unregister )
 {
+#ifdef __REACTOS__
+    static const WCHAR regW[] =
+        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','s',' ','\"','%','s','\"',0};
+    static const WCHAR unregW[] =
+        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','s',' ','/','u',' ','\"','%','s','\"',0};
+#else /* __REACTOS__ */
     static const WCHAR regW[] =
         {'r','e','g','s','v','r','3','2','.','e','x','e',' ','\"','%','s','\"',0};
     static const WCHAR unregW[] =
         {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','u',' ','\"','%','s','\"',0};
+#endif /* __REACTOS__ */
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
     WCHAR *cmd;
