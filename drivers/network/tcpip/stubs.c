@@ -19,7 +19,7 @@ IPAddInterface(
     ULONG   Unknown3,
     ULONG   Unknown4)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -28,7 +28,7 @@ NTAPI
 IPDelInterface(
     ULONG   Unknown0)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -38,5 +38,5 @@ LookupRoute(
     ULONG   Unknown0,
     ULONG   Unknown1)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }

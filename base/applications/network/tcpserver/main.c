@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <WinSock2.h>
+#include <winsock2.h>
 
 #define backlog 4
 #define LENGTH 256

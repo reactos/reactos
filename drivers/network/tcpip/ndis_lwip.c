@@ -154,7 +154,7 @@ ProtocolCloseAdapterComplete(
     _In_  NDIS_HANDLE ProtocolBindingContext,
     _In_  NDIS_STATUS Status)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 static
@@ -164,7 +164,7 @@ ProtocolResetComplete(
     _In_  NDIS_HANDLE ProtocolBindingContext,
     _In_  NDIS_STATUS Status)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 static
@@ -175,7 +175,7 @@ ProtocolRequestComplete(
     _In_  PNDIS_REQUEST NdisRequest,
     _In_  NDIS_STATUS Status)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 static
@@ -200,7 +200,7 @@ NTAPI
 ProtocolReceiveComplete(
     _In_  NDIS_HANDLE ProtocolBindingContext)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 static
@@ -209,7 +209,7 @@ NTAPI
 ProtocolStatusComplete(
     _In_  NDIS_HANDLE ProtocolBindingContext)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 static
@@ -219,7 +219,7 @@ ProtocolReceivePacket(
     _In_  NDIS_HANDLE ProtocolBindingContext,
     _In_  PNDIS_PACKET Packet)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -418,7 +418,7 @@ ProtocolUnbindAdapter(
   _In_   NDIS_HANDLE ProtocolBindingContext,
   _In_   NDIS_HANDLE UnbindContext)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 NTSTATUS
