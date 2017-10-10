@@ -33,7 +33,7 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 #define ULONGLONG_ALIGN_UP_BY(size, align) \
     (ULONGLONG_ALIGN_DOWN_BY(((ULONGLONG)(size) + align - 1), align))
 
-#define MAX_BIOS_DESCRIPTORS 80
+#define MAX_BIOS_DESCRIPTORS 80ul
 
 BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
 ULONG PcBiosMapCount;
@@ -368,6 +368,12 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         {
             ERR("PcMemoryMap is already full! (PcBiosMapCount = %lu, PcMapCount = %lu (>= %lu))\n",
                 PcBiosMapCount, PcMapCount, MaxMemoryMapSize);
+            // NotWantedForPublicBuilds: ASSERTMSG("PcMemoryMap is already full!", FALSE);
+            /* We keep previous entries, and half-retrieve current/next entries.
+             * We assume all these entries are good to use as is. If they are not, we are in trouble...
+             *
+             * FIXME: Safer = revert (half-)retrieved entries, Safest = increase MaxMemoryMapSize.
+             */
         }
         else
         {
@@ -389,6 +395,18 @@ nextRange:
             TRACE("End of System Memory Map! (Reset)\n\n");
             break;
         }
+    }
+    /* Check whether there would be more entries to process. */
+    if (PcBiosMapCount >= MAX_BIOS_DESCRIPTORS && Regs.x.ebx != 0x00000000)
+    {
+        ERR("PcBiosMapCount is already full! (PcBiosMapCount = %lu (>= %lu), PcMapCount = %lu)\n",
+            PcBiosMapCount, MAX_BIOS_DESCRIPTORS, PcMapCount);
+        // NotWantedForPublicBuilds: ASSERTMSG("PcBiosMapCount is already full!", FALSE);
+        /* We keep retrieved entries, but ignore next entries.
+         * We assume these entries are good to use as is. If they are not, we are in trouble...
+         *
+         * FIXME: Safer = revert retrieved entries, Safest = increase MAX_BIOS_DESCRIPTORS.
+         */
     }
 
     TRACE("PcMemGetBiosMemoryMap end: PcBiosMapCount = %lu\n", PcBiosMapCount);
