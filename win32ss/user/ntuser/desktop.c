@@ -1216,16 +1216,70 @@ IntPaintDesktop(HDC hDC)
         {
             SIZE sz;
             int x, y;
+            int scaledWidth, scaledHeight;
+            int wallpaperX, wallpaperY, wallpaperWidth, wallpaperHeight;
             HDC hWallpaperDC;
 
             sz.cx = WndDesktop->rcWindow.right - WndDesktop->rcWindow.left;
             sz.cy = WndDesktop->rcWindow.bottom - WndDesktop->rcWindow.top;
 
+            if (gspv.WallpaperMode == wmFit ||
+                gspv.WallpaperMode == wmFill)
+            {
+                int scaleNum, scaleDen;
+
+                // Precision improvement over ((sz.cx / gspv.cxWallpaper) > (sz.cy / gspv.cyWallpaper))
+                if ((sz.cx * gspv.cyWallpaper) > (sz.cy * gspv.cxWallpaper))
+                {
+                    if (gspv.WallpaperMode == wmFit)
+                    {
+                        scaleNum = sz.cy;
+                        scaleDen = gspv.cyWallpaper;
+                    }
+                    else
+                    {
+                        scaleNum = sz.cx;
+                        scaleDen = gspv.cxWallpaper;
+                    }
+                }
+                else
+                {
+                    if (gspv.WallpaperMode == wmFit)
+                    {
+                        scaleNum = sz.cx;
+                        scaleDen = gspv.cxWallpaper;
+                    }
+                    else
+                    {
+                        scaleNum = sz.cy;
+                        scaleDen = gspv.cyWallpaper;
+                    }
+                }
+
+                scaledWidth = EngMulDiv(gspv.cxWallpaper, scaleNum, scaleDen);
+                scaledHeight = EngMulDiv(gspv.cyWallpaper, scaleNum, scaleDen);
+
+                if (gspv.WallpaperMode == wmFill)
+                {
+                    wallpaperX = (((scaledWidth - sz.cx) * gspv.cxWallpaper) / (2 * scaledWidth));
+                    wallpaperY = (((scaledHeight - sz.cy) * gspv.cyWallpaper) / (2 * scaledHeight));
+
+                    wallpaperWidth = (sz.cx * gspv.cxWallpaper) / scaledWidth;
+                    wallpaperHeight = (sz.cy * gspv.cyWallpaper) / scaledHeight;
+                }
+            }
+
             if (gspv.WallpaperMode == wmStretch ||
-                gspv.WallpaperMode == wmTile)
+                gspv.WallpaperMode == wmTile ||
+                gspv.WallpaperMode == wmFill)
             {
                 x = 0;
                 y = 0;
+            }
+            else if (gspv.WallpaperMode == wmFit)
+            {
+                x = (sz.cx - scaledWidth) / 2;
+                y = (sz.cy - scaledHeight) / 2;
             }
             else
             {
@@ -1290,6 +1344,42 @@ IntPaintDesktop(HDC hDC)
                                         0,
                                         0);
                         }
+                    }
+                }
+                else if (gspv.WallpaperMode == wmFit)
+                {
+                    if (Rect.right && Rect.bottom)
+                    {
+                        NtGdiStretchBlt(hDC,
+                                        x,
+                                        y,
+                                        scaledWidth,
+                                        scaledHeight,
+                                        hWallpaperDC,
+                                        0,
+                                        0,
+                                        gspv.cxWallpaper,
+                                        gspv.cyWallpaper,
+                                        SRCCOPY,
+                                        0);
+                    }
+                }
+                else if (gspv.WallpaperMode == wmFill)
+                {
+                    if (Rect.right && Rect.bottom)
+                    {
+                        NtGdiStretchBlt(hDC,
+                                        x,
+                                        y,
+                                        sz.cx,
+                                        sz.cy,
+                                        hWallpaperDC,
+                                        wallpaperX,
+                                        wallpaperY,
+                                        wallpaperWidth,
+                                        wallpaperHeight,
+                                        SRCCOPY,
+                                        0);
                     }
                 }
                 else

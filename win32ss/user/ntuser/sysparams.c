@@ -694,9 +694,20 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         {
             gspv.WallpaperMode = wmTile;
         }
-        else if(!ulTile && ulStyle == 2)
+        else if (!ulTile && ulStyle)
         {
-            gspv.WallpaperMode = wmStretch;
+            if (ulStyle == 2)
+            {
+                gspv.WallpaperMode = wmStretch;
+            }
+            else if (ulStyle == 6)
+            {
+                gspv.WallpaperMode = wmFit;
+            }
+            else if (ulStyle == 10)
+            {
+                gspv.WallpaperMode = wmFill;
+            }
         }
     }
     else
