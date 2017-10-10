@@ -15,11 +15,27 @@
 
 #define MAX_BACKGROUNDS     100
 
-#define PLACEMENT_CENTER    0
-#define PLACEMENT_STRETCH   1
-#define PLACEMENT_TILE      2
-#define PLACEMENT_FIT       3
-#define PLACEMENT_FILL      4
+typedef enum
+{
+    PLACEMENT_CENTER = 0,
+    PLACEMENT_STRETCH,
+    PLACEMENT_TILE,
+    PLACEMENT_FIT,
+    PLACEMENT_FILL
+} PLACEMENT;
+
+/* The tile placement is stored in different registry
+ * key, but due to a condition in win32k it needs to be
+ * zero when stored in the same key as others.
+ */
+typedef enum
+{
+    PLACEMENT_VALUE_CENTER    = 0,
+    PLACEMENT_VALUE_STRETCH   = 2,
+    PLACEMENT_VALUE_TILE      = 0,
+    PLACEMENT_VALUE_FIT       = 6,
+    PLACEMENT_VALUE_FILL      = 10
+} PLACEMENT_VALUE;
 
 /* The values in these macros are dependent on the
  * layout of the monitor image and they must be adjusted
@@ -483,25 +499,25 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
 
     if (RegQueryValueEx(regKey, TEXT("WallpaperStyle"), 0, NULL, (LPBYTE)szBuffer, &bufferSize) == ERROR_SUCCESS)
     {
-        if (_ttoi(szBuffer) == 0)
+        if (_ttoi(szBuffer) == PLACEMENT_VALUE_CENTER)
         {
             SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_CENTER, 0);
             pData->placementSelection = PLACEMENT_CENTER;
         }
 
-        if (_ttoi(szBuffer) == 2)
+        if (_ttoi(szBuffer) == PLACEMENT_VALUE_STRETCH)
         {
             SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_STRETCH, 0);
             pData->placementSelection = PLACEMENT_STRETCH;
         }
 
-        if (_ttoi(szBuffer) == 6)
+        if (_ttoi(szBuffer) == PLACEMENT_VALUE_FIT)
         {
             SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_FIT, 0);
             pData->placementSelection = PLACEMENT_FIT;
         }
 
-        if (_ttoi(szBuffer) == 10)
+        if (_ttoi(szBuffer) == PLACEMENT_VALUE_FILL)
         {
             SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_FILL, 0);
             pData->placementSelection = PLACEMENT_FILL;
