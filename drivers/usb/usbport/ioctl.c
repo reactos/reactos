@@ -276,6 +276,7 @@ USBPORT_GetUnicodeName(IN PDEVICE_OBJECT FdoDevice,
 
     if (ControllerName->Header.UsbUserStatusCode != UsbUserSuccess)
     {
+        ExFreePoolWithTag(ControllerName, USB_PORT_TAG);
         return STATUS_UNSUCCESSFUL;
     }
 
