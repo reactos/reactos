@@ -151,7 +151,7 @@ BEGIN
     IDS_PROCESSTITLE "Registrácia súčastí"
     IDS_PROCESSSUBTITLE "Počkajte, prosím ..."
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE

@@ -145,7 +145,7 @@ BEGIN
     IDS_PROCESSTITLE "Komponentide registreerimine"
     IDS_PROCESSSUBTITLE "Palun oota..."
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE

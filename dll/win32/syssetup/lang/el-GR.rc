@@ -145,7 +145,7 @@ BEGIN
     IDS_PROCESSTITLE "Τίτλος"
     IDS_PROCESSSUBTITLE "Υπότιτλος"
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE

@@ -153,7 +153,7 @@ BEGIN
     IDS_PROCESSTITLE "Реєстрація компонентів"
     IDS_PROCESSSUBTITLE "Зачекайте, будь ласка..."
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE

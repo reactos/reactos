@@ -145,7 +145,7 @@ BEGIN
     IDS_PROCESSTITLE "Bearbeid side tittel"
     IDS_PROCESSSUBTITLE "Bearbeider side undertittel"
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE
