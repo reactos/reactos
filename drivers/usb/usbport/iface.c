@@ -682,7 +682,7 @@ USBDI_QueryBusInformation(IN PVOID BusContext,
 
     DPRINT("USBDI_QueryBusInformation: Level - %p\n", Level);
 
-    if ((Level != 0) || (Level != 1))
+    if ((Level != 0) && (Level != 1))
     {
         DPRINT1("USBDI_QueryBusInformation: Level should be 0 or 1\n");
         return STATUS_NOT_SUPPORTED;
