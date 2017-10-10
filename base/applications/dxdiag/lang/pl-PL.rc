@@ -191,10 +191,10 @@ IDD_HELP_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wciąż nie znalazłeś informacji, których szukałeś? Oto kilka dodatkowych rzeczy, które możesz zrobić:", IDC_STATIC, 5, 0, 300, 10
+    LTEXT "Wciąż nie znalazłeś informacji, których szukałeś? Oto kilka dodatkowych rzeczy, które możesz zrobić:", IDC_STATIC, 5, 0, 340, 10
     PUSHBUTTON "Informacje o systemie", IDC_BUTTON_SYSINFO, 5, 20, 140, 14, WS_DISABLED
     LTEXT "Wyświetla dodatkowe informacje o systemie", IDC_STATIC, 150, 23, 300, 10
-    PUSHBUTTON "Wymuszenie Częstotliwości odświeżania", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 140, 14, WS_DISABLED
+    PUSHBUTTON "Wymuszenie częstotliwości odświeżania", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 140, 14, WS_DISABLED
     LTEXT "Wymusza daną częstotliwość odświeżania dla DirectDraw", IDC_STATIC, 150, 43, 300, 10
 END
 

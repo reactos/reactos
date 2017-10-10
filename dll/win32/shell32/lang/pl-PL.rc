@@ -190,9 +190,9 @@ BEGIN
     COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "K&omentarz:", 14018, 8, 154, 68, 10
     EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Znajdź element docelowy", 14020, 9, 172, 70, 14, ES_LEFT
-    PUSHBUTTON "Zmień &ikonę", 14021, 84, 172, 70, 14, ES_LEFT
-    PUSHBUTTON "Z&aawansowane", 14022, 159, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "&Znajdź element docelowy", 14020, 8, 172, 90, 14, ES_LEFT
+    PUSHBUTTON "Zmień &ikonę", 14021, 104, 172, 60, 14, ES_LEFT
+    PUSHBUTTON "Z&aawansowane", 14022, 169, 172, 60, 14, ES_LEFT
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
@@ -322,7 +322,7 @@ BEGIN
     PUSHBUTTON "Oczyszczanie &dysku", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "Kompresuj dysk, aby zaoszczędzić miejsce na dysku", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "Zezwalaj na indeksowanie tego dysku, aby przyśpieszyć wyszukiwanie plików", 14012, 8, 205, 230, 10, WS_DISABLED
+    CHECKBOX "Zezwalaj na indeksowanie tego dysku, aby przyspieszyć \nwyszukiwanie plików", 14012, 8, 205, 230, 17, WS_DISABLED | BS_MULTILINE
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
@@ -419,7 +419,7 @@ BEGIN
     AUTORADIOBUTTON "&Pojedyncze kliknięcie by otworzyć cel (najechanie by wskazać)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Podkreś&laj tytuły ikon tak jak w przeglądarce", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 180, 10
     AUTORADIOBUTTON "Podkreślaj &tytuły ikon tylko po najechaniu na nie kursorem", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    AUTORADIOBUTTON "Po&dwójne kliknięcie by otworzyć (pojedyncze kliknięcie by wskazać)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
+    AUTORADIOBUTTON "Po&dwójne kliknięcie by otworzyć (pojedyncze by wskazać)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     PUSHBUTTON "Przywróć &domyślne", 14011, 175, 180, 80, 14, WS_TABSTOP
 END
 
