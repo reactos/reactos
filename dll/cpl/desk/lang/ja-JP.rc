@@ -207,6 +207,8 @@ BEGIN
     IDS_CENTER "中央に表示"
     IDS_STRETCH "拡大して表示"
     IDS_TILE "並べて表示"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

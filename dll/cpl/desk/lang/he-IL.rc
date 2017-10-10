@@ -207,6 +207,8 @@ BEGIN
     IDS_CENTER "מרכז"
     IDS_STRETCH "מתח"
     IDS_TILE "פרוש"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

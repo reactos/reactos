@@ -209,6 +209,8 @@ BEGIN
     IDS_CENTER "Centre"
     IDS_STRETCH "Étirer"
     IDS_TILE "Mosaïque"
+    IDS_FIT "Ajuster"
+    IDS_FILL "Remplir"
 END
 
 STRINGTABLE

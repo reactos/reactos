@@ -48,6 +48,8 @@
 #define IDS_CENTER  2003
 #define IDS_STRETCH 2004
 #define IDS_TILE    2005
+#define IDS_FIT     2006
+#define IDS_FILL    2007
 
 #define IDC_SETTINGS_DEVICE          201
 #define IDC_SETTINGS_BPP             202

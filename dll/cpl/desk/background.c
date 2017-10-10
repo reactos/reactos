@@ -18,6 +18,8 @@
 #define PLACEMENT_CENTER    0
 #define PLACEMENT_STRETCH   1
 #define PLACEMENT_TILE      2
+#define PLACEMENT_FIT       3
+#define PLACEMENT_FILL      4
 
 /* The values in these macros are dependent on the
  * layout of the monitor image and they must be adjusted
@@ -440,7 +442,7 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
 {
     TCHAR szString[256];
     HKEY regKey;
-    TCHAR szBuffer[2];
+    TCHAR szBuffer[3];
     DWORD bufferSize = sizeof(szBuffer);
     BITMAP bitmap;
 
@@ -454,6 +456,12 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
 
     LoadString(hApplet, IDS_TILE, szString, sizeof(szString) / sizeof(TCHAR));
     SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_INSERTSTRING, PLACEMENT_TILE, (LPARAM)szString);
+
+    LoadString(hApplet, IDS_FIT, szString, sizeof(szString) / sizeof(TCHAR));
+    SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_INSERTSTRING, PLACEMENT_FIT, (LPARAM)szString);
+
+    LoadString(hApplet, IDS_FILL, szString, sizeof(szString) / sizeof(TCHAR));
+    SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_INSERTSTRING, PLACEMENT_FILL, (LPARAM)szString);
 
     SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_CENTER, 0);
     pData->placementSelection = PLACEMENT_CENTER;
@@ -485,6 +493,18 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
         {
             SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_STRETCH, 0);
             pData->placementSelection = PLACEMENT_STRETCH;
+        }
+
+        if (_ttoi(szBuffer) == 6)
+        {
+            SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_FIT, 0);
+            pData->placementSelection = PLACEMENT_FIT;
+        }
+
+        if (_ttoi(szBuffer) == 10)
+        {
+            SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_FILL, 0);
+            pData->placementSelection = PLACEMENT_FILL;
         }
     }
 
@@ -758,6 +778,8 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PDATA pData)
     int scaledHeight;
     int posX, desX;
     int posY, desY;
+    int fitFillScaleNum, fitFillScaleDen;
+    int fitFillWidth, fitFillHeight;
     HBRUSH hBrush;
     int x;
     int y;
@@ -875,6 +897,72 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PDATA pData)
                 }
 
                 break;
+
+            case PLACEMENT_FIT:
+                if ((MONITOR_WIDTH * scaledHeight) <= (MONITOR_HEIGHT * scaledWidth))
+                {
+                    fitFillScaleNum = MONITOR_WIDTH;
+                    fitFillScaleDen = scaledWidth;
+                }
+                else
+                {
+                    fitFillScaleNum = MONITOR_HEIGHT;
+                    fitFillScaleDen = scaledHeight;
+                }
+
+                fitFillWidth = MulDiv(scaledWidth, fitFillScaleNum, fitFillScaleDen);
+                fitFillHeight = MulDiv(scaledHeight, fitFillScaleNum, fitFillScaleDen);
+
+                posX = (MONITOR_WIDTH - fitFillWidth) / 2;
+                posY = (MONITOR_HEIGHT - fitFillHeight) / 2;
+
+                StretchDIBits(hDC,
+                              MONITOR_LEFT + posX,
+                              MONITOR_TOP + posY,
+                              fitFillWidth,
+                              fitFillHeight,
+                              0,
+                              0,
+                              pData->pWallpaperBitmap->width,
+                              pData->pWallpaperBitmap->height,
+                              pData->pWallpaperBitmap->bits,
+                              pData->pWallpaperBitmap->info,
+                              DIB_RGB_COLORS,
+                              SRCCOPY);
+                break;
+
+            case PLACEMENT_FILL:
+                if ((MONITOR_WIDTH * scaledHeight) > (MONITOR_HEIGHT * scaledWidth))
+                {
+                    fitFillScaleNum = MONITOR_WIDTH;
+                    fitFillScaleDen = scaledWidth;
+                }
+                else
+                {
+                    fitFillScaleNum = MONITOR_HEIGHT;
+                    fitFillScaleDen = scaledHeight;
+                }
+
+                fitFillWidth = MulDiv(scaledWidth, fitFillScaleNum, fitFillScaleDen);
+                fitFillHeight = MulDiv(scaledHeight, fitFillScaleNum, fitFillScaleDen);
+
+                desX = (((fitFillWidth - MONITOR_WIDTH) * pData->pWallpaperBitmap->width) / (2 * fitFillWidth));
+                desY = (((fitFillHeight - MONITOR_HEIGHT) * pData->pWallpaperBitmap->height) / (2 * fitFillHeight));
+
+                StretchDIBits(hDC,
+                              MONITOR_LEFT,
+                              MONITOR_TOP,
+                              MONITOR_WIDTH,
+                              MONITOR_HEIGHT,
+                              desX,
+                              desY,
+                              (MONITOR_WIDTH * pData->pWallpaperBitmap->width) / fitFillWidth,
+                              (MONITOR_HEIGHT * pData->pWallpaperBitmap->height) / fitFillHeight,
+                              pData->pWallpaperBitmap->bits,
+                              pData->pWallpaperBitmap->info,
+                              DIB_RGB_COLORS,
+                              SRCCOPY);
+                break;
         }
     }
 
@@ -935,6 +1023,18 @@ SetWallpaper(PDATA pData)
     {
         RegSetValueEx(regKey, TEXT("TileWallpaper"), 0, REG_SZ, (LPBYTE)TEXT("0"), sizeof(TCHAR) * 2);
         RegSetValueEx(regKey, TEXT("WallpaperStyle"), 0, REG_SZ, (LPBYTE)TEXT("2"), sizeof(TCHAR) * 2);
+    }
+
+    if (pData->placementSelection == PLACEMENT_FIT)
+    {
+        RegSetValueEx(regKey, TEXT("TileWallpaper"), 0, REG_SZ, (LPBYTE)TEXT("0"), sizeof(TCHAR) * 2);
+        RegSetValueEx(regKey, TEXT("WallpaperStyle"), 0, REG_SZ, (LPBYTE)TEXT("6"), sizeof(TCHAR) * 2);
+    }
+
+    if (pData->placementSelection == PLACEMENT_FILL)
+    {
+        RegSetValueEx(regKey, TEXT("TileWallpaper"), 0, REG_SZ, (LPBYTE)TEXT("0"), sizeof(TCHAR) * 2);
+        RegSetValueEx(regKey, TEXT("WallpaperStyle"), 0, REG_SZ, (LPBYTE)TEXT("10"), sizeof(TCHAR) * 3);
     }
 
     if (pData->backgroundItems[pData->backgroundSelection].bWallpaper != FALSE)

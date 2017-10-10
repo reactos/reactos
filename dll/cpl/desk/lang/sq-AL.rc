@@ -211,6 +211,8 @@ BEGIN
     IDS_CENTER "Qender"
     IDS_STRETCH "Streq"
     IDS_TILE "Tile"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

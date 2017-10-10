@@ -216,6 +216,8 @@ BEGIN
     IDS_CENTER "Do środka"
     IDS_STRETCH "Rozciągnięcie"
     IDS_TILE "Sąsiadująco"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

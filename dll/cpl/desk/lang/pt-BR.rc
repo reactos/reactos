@@ -207,6 +207,8 @@ BEGIN
     IDS_CENTER "Centralizar"
     IDS_STRETCH "Estender"
     IDS_TILE "Lado a lado"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

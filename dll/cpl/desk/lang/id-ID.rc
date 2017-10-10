@@ -207,6 +207,8 @@ BEGIN
     IDS_CENTER "Tengah"
     IDS_STRETCH "Tarik"
     IDS_TILE "Tile"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

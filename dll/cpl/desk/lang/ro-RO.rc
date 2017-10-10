@@ -212,6 +212,8 @@ BEGIN
     IDS_CENTER "Centrat"
     IDS_STRETCH "Extins"
     IDS_TILE "Tapițat"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

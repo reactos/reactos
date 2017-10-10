@@ -215,6 +215,8 @@ BEGIN
     IDS_CENTER "По центру"
     IDS_STRETCH "Розтягнути"
     IDS_TILE "Плиткою"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

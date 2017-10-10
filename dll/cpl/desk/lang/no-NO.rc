@@ -207,6 +207,8 @@ BEGIN
     IDS_CENTER "Midtstill"
     IDS_STRETCH "Side ved side"
     IDS_TILE "Stukket"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

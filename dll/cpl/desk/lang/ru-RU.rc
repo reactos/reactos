@@ -207,6 +207,8 @@ BEGIN
     IDS_CENTER "по центру"
     IDS_STRETCH "растянуть"
     IDS_TILE "замостить"
+    IDS_FIT "вписать"
+    IDS_FILL "заполнить"
 END
 
 STRINGTABLE

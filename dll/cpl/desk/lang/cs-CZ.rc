@@ -213,6 +213,8 @@ BEGIN
     IDS_CENTER "Na střed"
     IDS_STRETCH "Roztáhnout"
     IDS_TILE "Dlaždice"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE
