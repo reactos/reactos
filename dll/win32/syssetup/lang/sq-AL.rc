@@ -164,7 +164,7 @@ BEGIN
     IDS_PROCESSTITLE "Regjistrimi Komponenteve"
     IDS_PROCESSSUBTITLE "Ju Lutem prisni..."
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE

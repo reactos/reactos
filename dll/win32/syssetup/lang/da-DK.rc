@@ -164,7 +164,7 @@ BEGIN
     IDS_PROCESSTITLE "Registering Components"
     IDS_PROCESSSUBTITLE "Please wait..."
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE

@@ -145,7 +145,7 @@ BEGIN
     IDS_PROCESSTITLE "Judul halaman proses"
     IDS_PROCESSSUBTITLE "Subjudul halaman proses"
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE

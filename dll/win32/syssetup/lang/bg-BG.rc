@@ -145,7 +145,7 @@ BEGIN
     IDS_PROCESSTITLE "Вписване на съставните"
     IDS_PROCESSSUBTITLE "Почакайте..."
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE

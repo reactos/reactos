@@ -145,7 +145,7 @@ BEGIN
     IDS_PROCESSTITLE "正在安装"
     IDS_PROCESSSUBTITLE "正在完成 ReactOS 最后的安装"
     IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer"
+    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
 
 STRINGTABLE
