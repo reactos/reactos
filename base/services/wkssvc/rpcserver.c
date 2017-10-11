@@ -268,7 +268,7 @@ NetrWorkstationStatisticsGet(
     LPSTAT_WORKSTATION_0 *Buffer)
 {
     UNIMPLEMENTED;
-    return 0;
+    return NERR_InternalError;
 }
 
 
