@@ -211,8 +211,8 @@ USBHI_QueryDeviceInformation(IN PVOID BusContext,
         }
     }
 
-    ActualLength = sizeof(USB_DEVICE_INFORMATION_0) + 
-                   (NumberOfOpenPipes - 1) * sizeof(USB_PIPE_INFORMATION_0);
+    ActualLength = FIELD_OFFSET(USB_DEVICE_INFORMATION_0, PipeList) + 
+                   NumberOfOpenPipes * sizeof(USB_PIPE_INFORMATION_0);
 
     if (DeviceInfoBufferLen < ActualLength)
     {
