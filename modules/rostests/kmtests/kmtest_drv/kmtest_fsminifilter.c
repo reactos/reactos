@@ -311,7 +311,7 @@ FilterInstanceSetup(
     UNREFERENCED_PARAMETER(Flags);
 
     RtlInitUnicodeString(&VolumeName, NULL);
-#if 0
+#if 0 // FltGetVolumeProperties is not yet implemented
     /* Get the properties of this volume */
     Status = FltGetVolumeProperties(Volume,
                                     VolumeProperties,
