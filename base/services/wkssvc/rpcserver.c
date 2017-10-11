@@ -267,8 +267,28 @@ NetrWorkstationStatisticsGet(
     unsigned long Options,
     LPSTAT_WORKSTATION_0 *Buffer)
 {
-    UNIMPLEMENTED;
-    return 0;
+    PSTAT_WORKSTATION_0 pStatBuffer;
+
+    TRACE("NetrWorkstationStatisticsGet(%p %p %lu 0x%lx %p)\n",
+          ServerName, ServiceName, Level, Options, Buffer);
+
+    if (Level != 0)
+        return ERROR_INVALID_LEVEL;
+
+    if (Options != 0)
+        return ERROR_INVALID_PARAMETER;
+
+    pStatBuffer = midl_user_allocate(sizeof(STAT_WORKSTATION_0));
+    if (pStatBuffer == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    ZeroMemory(pStatBuffer, sizeof(STAT_WORKSTATION_0));
+
+    // FIXME: Return the actual statistcs data!
+
+    *Buffer = pStatBuffer;
+
+    return NERR_Success;
 }
 
 
