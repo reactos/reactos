@@ -1056,10 +1056,7 @@ USBPORT_HandleSubmitURB(IN PDEVICE_OBJECT PdoDevice,
         ExFreePoolWithTag(Transfer, USB_PORT_TAG);
     }
 
-    if (DeviceHandle)
-    {
-        InterlockedDecrement(&DeviceHandle->DeviceHandleLock);
-    }
+    InterlockedDecrement(&DeviceHandle->DeviceHandleLock);
 
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
