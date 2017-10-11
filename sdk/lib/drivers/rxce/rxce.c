@@ -6834,6 +6834,9 @@ RxpUndoScavengerFinalizationMarking(
             --Scavenger->SrvOpensToBeFinalized;
             ListEntry = &((PSRV_OPEN)Instance)->ScavengerFinalizationList;
             break;
+
+        default:
+            return;
     }
 
     /* Also, remove the extra ref from the scavenger */
