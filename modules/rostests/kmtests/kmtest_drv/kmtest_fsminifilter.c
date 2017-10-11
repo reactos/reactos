@@ -141,6 +141,8 @@ DriverEntry(
     //__debugbreak();
     DPRINT("DriverEntry\n");
 
+    RtlZeroMemory(&FilterData, sizeof(FILTER_DATA));
+
     Prcb = KeGetCurrentPrcb();
     KmtIsCheckedBuild = (Prcb->BuildType & PRCB_BUILD_DEBUG) != 0;
     KmtIsMultiProcessorBuild = (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR) == 0;
