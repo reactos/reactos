@@ -601,7 +601,7 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
                                 OUT PULONG_PTR Base,
                                 OUT PMMADDRESS_NODE *Parent)
 {
-    PMMADDRESS_NODE Node, OldNode, Child;
+    PMMADDRESS_NODE Node, OldNode = NULL, Child;
     ULONG_PTR LowVpn, HighVpn, AlignmentVpn;
     PFN_NUMBER PageCount;
 
@@ -670,8 +670,14 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
             }
             else
             {
-                /* Node has a right child, the node we had before is the most
-                   left grandchild of that right child, use it as parent. */
+                /* Node has a right child. This means we must have already
+                   moved one node left from the right-most node we started
+                   with, thus we already have an OldNode! */
+                ASSERT(OldNode != NULL);
+
+                /* The node we had before is the most left grandchild of 
+                   that right child, use it as parent. */
+                ASSERT(RtlLeftChildAvl(OldNode) == NULL);
                 *Parent = OldNode;
                 return TableInsertAsLeft;
             }
