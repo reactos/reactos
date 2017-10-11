@@ -25,6 +25,9 @@
 #include <ndk/obfuncs.h>
 #include <ndk/sefuncs.h>
 #include <ntstrsafe.h>
+#if defined KMT_FILTER_DRIVER
+#include <fltkernel.h>
+#endif
 
 #elif defined KMT_USER_MODE
 #define WIN32_NO_STATUS

@@ -125,7 +125,7 @@ FltCreateCommunicationPort(_In_ PFLT_FILTER Filter,
         FltObjectDereference(Filter);
     }
 
-    return STATUS_NOT_IMPLEMENTED;
+    return Status;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

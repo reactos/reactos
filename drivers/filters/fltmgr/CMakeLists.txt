@@ -5,6 +5,7 @@ list(APPEND SOURCE
     Interface.c
     Lib.c
     Messaging.c
+    Misc.c
     Object.c
     ${CMAKE_CURRENT_BINARY_DIR}/fltmgr.def
     fltmgr.h)

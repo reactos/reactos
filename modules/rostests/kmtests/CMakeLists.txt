@@ -5,6 +5,7 @@ include_directories(include)
 # subdirectories containing special-purpose drivers
 #
 add_subdirectory(example)
+add_subdirectory(fltmgr)
 add_subdirectory(hidparse)
 add_subdirectory(kernel32)
 add_subdirectory(ntos_cc)
