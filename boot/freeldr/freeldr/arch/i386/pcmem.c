@@ -286,6 +286,13 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             break;
         }
 
+        if (Regs.x.ecx == 0)
+        {
+            TRACE("Discard empty entry. (would-be-PcBiosMapCount = %lu)\n",
+                  PcBiosMapCount);
+            goto nextRange;
+        }
+
         /* Copy data to global buffer */
         RtlCopyMemory(&PcBiosMemoryMap[PcBiosMapCount], (PVOID)BIOSCALLBUFFER, Regs.x.ecx);
 
@@ -294,6 +301,13 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         TRACE("Type: 0x%lx\n", PcBiosMemoryMap[PcBiosMapCount].Type);
         TRACE("Reserved: 0x%lx\n", PcBiosMemoryMap[PcBiosMapCount].Reserved);
         TRACE("\n");
+
+        if (PcBiosMemoryMap[PcBiosMapCount].Length == 0)
+        {
+            TRACE("Discard empty range. (would-be-PcBiosMapCount = %lu, BaseAddress = %lu, Length = 0)\n",
+                  PcBiosMapCount, PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
+            goto nextRange;
+        }
 
         /* Check if this is free memory */
         if (PcBiosMemoryMap[PcBiosMapCount].Type == BiosMemoryUsable)
@@ -314,7 +328,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             if (EndAddress <= RealBaseAddress)
             {
                 /* This doesn't span any page, so continue with next range */
-                TRACE("Skipping aligned range < PAGE_SIZE. (PcBiosMapCount = %lu, BaseAddress = %lu, Length = %lu)\n",
+                TRACE("Skipping aligned range < PAGE_SIZE. (would-be-PcBiosMapCount = %lu, BaseAddress = %lu, Length = %lu)\n",
                       PcBiosMapCount,
                       PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
                       PcBiosMemoryMap[PcBiosMapCount].Length);
