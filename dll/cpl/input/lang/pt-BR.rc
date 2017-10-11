@@ -22,7 +22,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Configurações de sistema", -1, 7, 7, 240, 70
     AUTOCHECKBOX "&Desabilitar serviços de texto avançado", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Marque esta caixa de seleção para desabilitar os serviços de texto avançado em todos os programas. Isto não é recomendado para usuários do Leste Asiático por que isto irá fechar a barra de idiomas.", -1, 14, 40, 230, 35
+    LTEXT "Marque esta caixa de seleção para desabilitar os serviços de texto avançado em todos os programas. Isto não é recomendado para usuários do Leste Asiático por que irá fechar a barra de idiomas.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
