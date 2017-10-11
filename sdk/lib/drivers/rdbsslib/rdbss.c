@@ -4946,7 +4946,7 @@ RxCreateFromNetRoot(
         if (Context->pFobx != NULL)
         {
             /* If so, reflect this in the FOBX */
-            if (NodeType(FileObject->FsContext2) == DFS_OPEN_CONTEXT)
+            if (FileObject->FsContext2 == UIntToPtr(DFS_OPEN_CONTEXT))
             {
                 SetFlag(Context->pFobx->Flags, FOBX_FLAG_DFS_OPEN);
             }
