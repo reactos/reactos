@@ -1052,6 +1052,9 @@ RxCancelNotifyChangeDirectoryRequestsForVNetRoot(
     /* Lock our list lock */
     KeAcquireSpinLock(&RxStrucSupSpinLock, &OldIrql);
 
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+
     /* Now, browse all the active contexts, to find the associated ones */
     Entry = RxActiveContexts.Flink;
     while (Entry != &RxActiveContexts)
