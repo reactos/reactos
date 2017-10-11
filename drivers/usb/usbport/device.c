@@ -275,8 +275,8 @@ USBPORT_OpenInterface(IN PURB Urb,
 
     NumEndpoints = InterfaceDescriptor->bNumEndpoints;
 
-    Length = sizeof(USBD_INTERFACE_INFORMATION) +
-             (NumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION);
+    Length = FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes) +
+             NumEndpoints * sizeof(USBD_PIPE_INFORMATION);
 
     if (InterfaceInfo->AlternateSetting && IsSetInterface)
     {
@@ -289,8 +289,8 @@ USBPORT_OpenInterface(IN PURB Urb,
     }
     else
     {
-        HandleLength = sizeof(USBPORT_INTERFACE_HANDLE) +
-                       (NumEndpoints - 1) * sizeof(USBPORT_PIPE_HANDLE);
+        HandleLength = FIELD_OFFSET(USBPORT_INTERFACE_HANDLE, PipeHandle) +
+                       NumEndpoints * sizeof(USBPORT_PIPE_HANDLE);
 
         InterfaceHandle = ExAllocatePoolWithTag(NonPagedPool,
                                                 HandleLength,
@@ -500,8 +500,8 @@ USBPORT_InitInterfaceInfo(IN PUSBD_INTERFACE_INFORMATION InterfaceInfo,
     {
         NumberOfPipes = Descriptor->bNumEndpoints;
 
-        Length = sizeof(USBD_INTERFACE_INFORMATION) +
-                 (NumberOfPipes - 1) * sizeof(USBD_PIPE_INFORMATION);
+        Length = FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes) +
+                 NumberOfPipes * sizeof(USBD_PIPE_INFORMATION);
 
         if (InterfaceInfo->Length >= Length)
         {
