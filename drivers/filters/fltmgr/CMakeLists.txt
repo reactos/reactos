@@ -7,6 +7,7 @@ list(APPEND SOURCE
     Messaging.c
     Misc.c
     Object.c
+    Volume.c
     ${CMAKE_CURRENT_BINARY_DIR}/fltmgr.def
     fltmgr.h)
 

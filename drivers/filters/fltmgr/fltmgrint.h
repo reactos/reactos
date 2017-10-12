@@ -201,6 +201,114 @@ typedef struct _FLT_PORT_OBJECT
 } FLT_PORT_OBJECT, *PFLT_PORT_OBJECT;
 
 
+typedef enum _FLT_VOLUME_FLAGS
+{
+    VOLFL_NETWORK_FILESYSTEM = 0x1,
+    VOLFL_PENDING_MOUNT_SETUP_NOTIFIES = 0x2,
+    VOLFL_MOUNT_SETUP_NOTIFIES_CALLED = 0x4,
+    VOLFL_MOUNTING = 0x8,
+    VOLFL_SENT_SHUTDOWN_IRP = 0x10,
+    VOLFL_ENABLE_NAME_CACHING = 0x20,
+    VOLFL_FILTER_EVER_ATTACHED = 0x40,
+    VOLFL_STANDARD_LINK_NOT_SUPPORTED = 0x80
+
+} FLT_VOLUME_FLAGS, *PFLT_VOLUME_FLAGS;
+
+
+typedef enum _CALLBACK_NODE_FLAGS
+{
+    CBNFL_SKIP_PAGING_IO = 0x1,
+    CBNFL_SKIP_CACHED_IO = 0x2,
+    CBNFL_USE_NAME_CALLBACK_EX = 0x4,
+    CBNFL_SKIP_NON_DASD_IO = 0x8
+
+} CALLBACK_NODE_FLAGS, *PCALLBACK_NODE_FLAGS;
+
+
+typedef struct _CALLBACK_CTRL
+{
+    LIST_ENTRY OperationLists[50];
+    CALLBACK_NODE_FLAGS OperationFlags[50];
+
+} CALLBACK_CTRL, *PCALLBACK_CTRL;
+
+typedef struct _TREE_ROOT
+{
+    RTL_SPLAY_LINKS *Tree;
+
+} TREE_ROOT, *PTREE_ROOT;
+
+
+typedef struct _CONTEXT_LIST_CTRL
+{
+    TREE_ROOT List;
+
+} CONTEXT_LIST_CTRL, *PCONTEXT_LIST_CTRL;
+
+typedef struct _NAME_CACHE_LIST_CTRL_STATS
+{
+    ULONG Searches;
+    ULONG Hits;
+    ULONG Created;
+    ULONG Temporary;
+    ULONG Duplicate;
+    ULONG Removed;
+    ULONG RemovedDueToCase;
+
+} NAME_CACHE_LIST_CTRL_STATS, *PNAME_CACHE_LIST_CTRL_STATS;
+
+
+typedef struct _NAME_CACHE_VOLUME_CTRL_STATS
+{
+    ULONG AllContextsTemporary;
+    ULONG PurgeNameCache;
+    NAME_CACHE_LIST_CTRL_STATS NormalizedNames;
+    NAME_CACHE_LIST_CTRL_STATS OpenedNames;
+    NAME_CACHE_LIST_CTRL_STATS ShortNames;
+    ULONG AncestorLookup;
+    ULONG ParentHit;
+    ULONG NonParentHit;
+
+} NAME_CACHE_VOLUME_CTRL_STATS, *PNAME_CACHE_VOLUME_CTRL_STATS;
+
+
+typedef struct _NAME_CACHE_VOLUME_CTRL
+{
+    FAST_MUTEX Lock;
+    ULONG AllContextsTemporary;
+    LARGE_INTEGER LastRenameCompleted;
+    NAME_CACHE_VOLUME_CTRL_STATS Stats;
+
+} NAME_CACHE_VOLUME_CTRL, *PNAME_CACHE_VOLUME_CTRL;
+
+
+typedef struct _FLT_VOLUME
+{
+    FLT_OBJECT Base;
+    FLT_VOLUME_FLAGS Flags;
+    FLT_FILESYSTEM_TYPE FileSystemType;
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT DiskDeviceObject;
+    PFLT_VOLUME FrameZeroVolume;
+    PFLT_VOLUME VolumeInNextFrame;
+    PFLTP_FRAME Frame;
+    UNICODE_STRING DeviceName;
+    UNICODE_STRING GuidName;
+    UNICODE_STRING CDODeviceName;
+    UNICODE_STRING CDODriverName;
+    FLT_RESOURCE_LIST_HEAD InstanceList;
+    CALLBACK_CTRL Callbacks;
+    EX_PUSH_LOCK ContextLock;
+    CONTEXT_LIST_CTRL VolumeContexts;
+    FLT_RESOURCE_LIST_HEAD StreamListCtrls;
+    FLT_RESOURCE_LIST_HEAD FileListCtrls;
+    NAME_CACHE_VOLUME_CTRL NameCacheCtrl;
+    ERESOURCE MountNotifyLock;
+    ULONG TargetedOpenActiveCount;
+    EX_PUSH_LOCK TxVolContextListLock;
+    TREE_ROOT TxVolContexts;
+
+} FLT_VOLUME, *PFLT_VOLUME;
 
 
 
