@@ -11,7 +11,11 @@
 #include <wdm.h>
 #include <ntddk.h>
 #include <stdio.h>
+
+/* Declare STORPORT_API functions as exports rather than imports */
+#define _STORPORT_
 #include <storport.h>
+
 #include <ntddscsi.h>
 #include <ntdddisk.h>
 #include <mountdev.h>
