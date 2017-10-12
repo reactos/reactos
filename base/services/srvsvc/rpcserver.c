@@ -395,8 +395,28 @@ NetrServerStatisticsGet(
     DWORD Options,
     LPSTAT_SERVER_0 *InfoStruct)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PSTAT_SERVER_0 pStatBuffer;
+
+    TRACE("NetrServerStatisticsGet(%p %p %lu 0x%lx %p)\n",
+          ServerName, Service, Level, Options, InfoStruct);
+
+    if (Level != 0)
+        return ERROR_INVALID_LEVEL;
+
+    if (Options != 0)
+        return ERROR_INVALID_PARAMETER;
+
+    pStatBuffer = midl_user_allocate(sizeof(STAT_SERVER_0));
+    if (pStatBuffer == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    ZeroMemory(pStatBuffer, sizeof(STAT_SERVER_0));
+
+    // FIXME: Return the actual statistcs data!
+
+    *InfoStruct = pStatBuffer;
+
+    return NERR_Success;
 }
 
 
