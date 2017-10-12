@@ -7,4 +7,5 @@
  @ stdcall FltBuildDefaultSecurityDescriptor(ptr long)
  @ stdcall FltFreeSecurityDescriptor(ptr)
  @ stdcall FltGetDiskDeviceObject(ptr ptr)
+ @ stdcall FltGetVolumeProperties(ptr ptr long ptr)
 
