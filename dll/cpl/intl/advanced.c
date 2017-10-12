@@ -403,9 +403,13 @@ ListViewCustomDraw(
 
         case CDDS_ITEMPREPAINT:
             if (((PCPAGE)lplvcd->nmcd.lItemlParam)->Flags & CODEPAGE_NOT_REMOVEABLE)
+            {
                 lplvcd->clrText = GetSysColor(COLOR_GRAYTEXT);
+            }
             else
+            {
                 lplvcd->clrText = GetSysColor(COLOR_WINDOWTEXT);
+            }
             lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
             return CDRF_NEWFONT;
     }
