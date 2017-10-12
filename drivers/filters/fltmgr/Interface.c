@@ -17,6 +17,18 @@
 
 /* DATA *********************************************************************/
 
+#define VALID_FAST_IO_DISPATCH_HANDLER(_FastIoDispatchPtr, _FieldName) \
+    (((_FastIoDispatchPtr) != NULL) && \
+     (((_FastIoDispatchPtr)->SizeOfFastIoDispatch) >= \
+            (FIELD_OFFSET(FAST_IO_DISPATCH, _FieldName) + sizeof(void *))) && \
+     ((_FastIoDispatchPtr)->_FieldName != NULL))
+
+#define IS_MY_DEVICE_OBJECT(_devObj) \
+    (((_devObj) != NULL) && \
+    ((_devObj)->DriverObject == Dispatcher::DriverObject) && \
+      ((_devObj)->DeviceExtension != NULL))
+
+
 DRIVER_INITIALIZE DriverEntry;
 NTSTATUS
 NTAPI

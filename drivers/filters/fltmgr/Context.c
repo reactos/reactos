@@ -27,7 +27,7 @@ static
 NTSTATUS
 SetupContextHeader(
     _In_ PFLT_FILTER Filter,
-    _In_ PFLT_CONTEXT_REGISTRATION ContextPtr,
+    _In_ PCFLT_CONTEXT_REGISTRATION ContextPtr,
     _Out_ PALLOCATE_CONTEXT_HEADER ContextHeader
 );
 
@@ -43,9 +43,102 @@ NTSTATUS
 FltpRegisterContexts(_In_ PFLT_FILTER Filter,
                      _In_ const FLT_CONTEXT_REGISTRATION *Context)
 {
-    UNREFERENCED_PARAMETER(Filter);
-    UNREFERENCED_PARAMETER(Context);
-    return STATUS_NOT_IMPLEMENTED;
+    PCFLT_CONTEXT_REGISTRATION ContextPtr;
+    PALLOCATE_CONTEXT_HEADER ContextHeader, Prev;
+    PVOID Buffer;
+    ULONG BufferSize = 0;
+    USHORT i;
+    NTSTATUS Status;
+
+    /* Loop through all entries in the context registration array */
+    ContextPtr = Context;
+    while (ContextPtr)
+    {
+        /* Bail if we found the terminator */
+        if (ContextPtr->ContextType == FLT_CONTEXT_END)
+            break;
+
+        /* Make sure we have a valid context  */
+        if (IsContextTypeValid(ContextPtr->ContextType))
+        {
+            /* Each context is backed by a crtl struct. Reserve space for it */
+            BufferSize += sizeof(STREAM_LIST_CTRL);
+        }
+
+        /* Move to the next entry */
+        ContextPtr++;
+    }
+
+    /* Bail if we found no valid registration requests */
+    if (BufferSize == 0)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Allocate the pool that'll hold the context crtl structs */
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, BufferSize, FM_TAG_CONTEXT_REGISTA);
+    if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlZeroMemory(Buffer, BufferSize);
+
+    /* Setup our loop data */
+    ContextHeader = Buffer;
+    Prev = NULL;
+    Status = STATUS_SUCCESS;
+
+    for (i = 0; i < MAX_CONTEXT_TYPES; i++)
+    {
+        ContextPtr = (PFLT_CONTEXT_REGISTRATION)Context;
+        while (ContextPtr)
+        {
+            /* We don't support variable sized contents yet */
+            FLT_ASSERT(ContextPtr->Size != FLT_VARIABLE_SIZED_CONTEXTS);
+
+            /* Bail if we found the terminator */
+            if (ContextPtr->ContextType == FLT_CONTEXT_END)
+                break;
+
+            /* Size and pooltag are only checked when ContextAllocateCallback is null */
+            if (ContextPtr->ContextAllocateCallback == FALSE && ContextPtr->PoolTag == FALSE)
+            {
+                Status = STATUS_FLT_INVALID_CONTEXT_REGISTRATION;
+                goto Quit;
+            }
+
+            /* Make sure we have a valid context  */
+            if (IsContextTypeValid(ContextPtr->ContextType))
+            {
+                Status = SetupContextHeader(Filter, ContextPtr, ContextHeader);
+                if (NT_SUCCESS(Status))
+                {
+                    if (Prev)
+                    {
+                        Prev->Next = ContextHeader;
+                    }
+
+                    Filter->SupportedContexts[i] = ContextHeader;
+                }
+            }
+
+            Prev = ContextHeader;
+
+            /* Move to the next entry */
+            ContextPtr++;
+        }
+    }
+
+Quit:
+    if (NT_SUCCESS(Status))
+    {
+        Filter->SupportedContextsListHead = Buffer;
+    }
+    else
+    {
+        ExFreePoolWithTag(Buffer, FM_TAG_CONTEXT_REGISTA);
+        //FIXME: Cleanup anything that SetupContextHeader may have allocated
+    }
+
+    return Status;
 }
 
 
@@ -72,7 +165,7 @@ IsContextTypeValid(_In_ FLT_CONTEXT_TYPE ContextType)
 static
 NTSTATUS
 SetupContextHeader(_In_ PFLT_FILTER Filter,
-                   _In_ PFLT_CONTEXT_REGISTRATION ContextPtr,
+                   _In_ PCFLT_CONTEXT_REGISTRATION ContextPtr,
                    _Out_ PALLOCATE_CONTEXT_HEADER ContextHeader)
 {
     return 0;
