@@ -252,10 +252,12 @@ FilterUnload(
     if (FilterData.ServerPort)
     {
         FltCloseCommunicationPort(FilterData.ServerPort);
+        FilterData.ServerPort = NULL;
     }
     if (FilterData.Filter)
     {
         FltUnregisterFilter(FilterData.Filter);
+        FilterData.Filter = NULL;
     }
 
     if (Callbacks)

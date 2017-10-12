@@ -27,7 +27,7 @@ static
 NTSTATUS
 SetupContextHeader(
     _In_ PFLT_FILTER Filter,
-    _In_ PFLT_CONTEXT_REGISTRATION ContextPtr,
+    _In_ PCFLT_CONTEXT_REGISTRATION ContextPtr,
     _Out_ PALLOCATE_CONTEXT_HEADER ContextHeader
 );
 
@@ -43,7 +43,7 @@ NTSTATUS
 FltpRegisterContexts(_In_ PFLT_FILTER Filter,
                      _In_ const FLT_CONTEXT_REGISTRATION *Context)
 {
-    PFLT_CONTEXT_REGISTRATION ContextPtr;
+    PCFLT_CONTEXT_REGISTRATION ContextPtr;
     PALLOCATE_CONTEXT_HEADER ContextHeader, Prev;
     PVOID Buffer;
     ULONG BufferSize = 0;
@@ -51,7 +51,7 @@ FltpRegisterContexts(_In_ PFLT_FILTER Filter,
     NTSTATUS Status;
 
     /* Loop through all entries in the context registration array */
-    ContextPtr = (PFLT_CONTEXT_REGISTRATION)Context;
+    ContextPtr = Context;
     while (ContextPtr)
     {
         /* Bail if we found the terminator */
@@ -127,16 +127,16 @@ FltpRegisterContexts(_In_ PFLT_FILTER Filter,
         }
     }
 
+Quit:
     if (NT_SUCCESS(Status))
     {
         Filter->SupportedContextsListHead = Buffer;
     }
     else
     {
-
+        ExFreePoolWithTag(Buffer, FM_TAG_CONTEXT_REGISTA);
+        //FIXME: Cleanup anything that SetupContextHeader may have allocated
     }
-
-Quit:
 
     return Status;
 }
@@ -165,7 +165,7 @@ IsContextTypeValid(_In_ FLT_CONTEXT_TYPE ContextType)
 static
 NTSTATUS
 SetupContextHeader(_In_ PFLT_FILTER Filter,
-                   _In_ PFLT_CONTEXT_REGISTRATION ContextPtr,
+                   _In_ PCFLT_CONTEXT_REGISTRATION ContextPtr,
                    _Out_ PALLOCATE_CONTEXT_HEADER ContextHeader)
 {
     return 0;
