@@ -10,3 +10,7 @@ before_script:
 
 script:
   - ./RosBEBinFull/RosBE.sh < tmp_file
+
+cache:
+  directories:
+  - Build
