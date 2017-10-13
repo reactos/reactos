@@ -312,6 +312,8 @@ typedef struct _FLT_VOLUME
 
 
 
+
+
 VOID
 FltpExInitializeRundownProtection(
     _Out_ PEX_RUNDOWN_REF RundownRef
@@ -373,8 +375,6 @@ FltpFreeUnicodeString(
     _In_ PUNICODE_STRING String
 );
 
-
-
 NTSTATUS
 FltpDeviceControlHandler(
     _In_ PDEVICE_OBJECT DeviceObject,
@@ -383,6 +383,18 @@ FltpDeviceControlHandler(
 
 NTSTATUS
 FltpDispatchHandler(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+);
+
+NTSTATUS
+FltpMsgCreate(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+);
+
+NTSTATUS
+FltpMsgDispatch(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp
 );
