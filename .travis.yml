@@ -15,4 +15,4 @@ script:
 cache:
   timeout: 1800   # 30 minutes
   directories:
-  - Build
+  - Build/reactos
