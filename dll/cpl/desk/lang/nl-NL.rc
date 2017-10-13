@@ -207,6 +207,8 @@ BEGIN
     IDS_CENTER "Center"
     IDS_STRETCH "Stretch"
     IDS_TILE "Tile"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

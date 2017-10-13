@@ -209,6 +209,8 @@ BEGIN
     IDS_CENTER "Centrada"
     IDS_STRETCH "Expandida"
     IDS_TILE "En mosaico"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

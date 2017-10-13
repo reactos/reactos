@@ -209,6 +209,8 @@ BEGIN
     IDS_CENTER "Ortala"
     IDS_STRETCH "Uzat"
     IDS_TILE "Döşe"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

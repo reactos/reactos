@@ -209,6 +209,8 @@ BEGIN
     IDS_CENTER "Középen"
     IDS_STRETCH "Széthúzva"
     IDS_TILE "Mozaikszerűen"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

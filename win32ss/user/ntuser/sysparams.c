@@ -625,13 +625,21 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
 
     /* Capture UNICODE_STRING */
     bResult = SpiMemCopy(&ustr, pvParam, sizeof(ustr), fl & SPIF_PROTECT);
-    if (!bResult) return 0;
-    if (ustr.Length > MAX_PATH * sizeof(WCHAR))
+    if (!bResult)
+    {
         return 0;
+    }
+    if (ustr.Length > MAX_PATH * sizeof(WCHAR))
+    {
+        return 0;
+    }
 
     /* Copy the string buffer name */
     bResult = SpiMemCopy(gspv.awcWallpaper, ustr.Buffer, ustr.Length, fl & SPIF_PROTECT);
-    if (!bResult) return 0;
+    if (!bResult)
+    {
+        return 0;
+    }
 
     /* Update the UNICODE_STRING */
     gspv.ustrWallpaper.Buffer = gspv.awcWallpaper;
@@ -669,7 +677,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         }
 
         /* Try to get the size of the wallpaper */
-        if(!(psurfBmp = SURFACE_ShareLockSurface(hbmp)))
+        if (!(psurfBmp = SURFACE_ShareLockSurface(hbmp)))
         {
             GreDeleteObject(hbmp);
             return 0;
@@ -690,13 +698,24 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         TRACE("SpiSetWallpaper: ulTile=%lu, ulStyle=%lu\n", ulTile, ulStyle);
 
         /* Check the values we found in the registry */
-        if(ulTile && !ulStyle)
+        if (ulTile && !ulStyle)
         {
             gspv.WallpaperMode = wmTile;
         }
-        else if(!ulTile && ulStyle == 2)
+        else if (!ulTile && ulStyle)
         {
-            gspv.WallpaperMode = wmStretch;
+            if (ulStyle == 2)
+            {
+                gspv.WallpaperMode = wmStretch;
+            }
+            else if (ulStyle == 6)
+            {
+                gspv.WallpaperMode = wmFit;
+            }
+            else if (ulStyle == 10)
+            {
+                gspv.WallpaperMode = wmFill;
+            }
         }
     }
     else

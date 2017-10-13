@@ -209,6 +209,8 @@ BEGIN
     IDS_CENTER "V strede"
     IDS_STRETCH "Roztiahnuť"
     IDS_TILE "Dlaždice"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

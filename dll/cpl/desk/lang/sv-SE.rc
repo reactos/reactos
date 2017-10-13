@@ -209,6 +209,8 @@ BEGIN
     IDS_CENTER "Centrera"
     IDS_STRETCH "Sträck ut"
     IDS_TILE "Stapla"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

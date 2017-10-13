@@ -207,6 +207,8 @@ BEGIN
     IDS_CENTER "Κέντρο"
     IDS_STRETCH "Παραμόρφωση"
     IDS_TILE "Σε παράθεση"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

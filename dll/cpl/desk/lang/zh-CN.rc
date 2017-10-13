@@ -214,6 +214,8 @@ BEGIN
     IDS_CENTER "居中"
     IDS_STRETCH "拉伸"
     IDS_TILE "平铺"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

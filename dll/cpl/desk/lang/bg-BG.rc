@@ -207,6 +207,8 @@ BEGIN
     IDS_CENTER "В средата"
     IDS_STRETCH "Разтегнато"
     IDS_TILE "Настелено"
+    IDS_FIT "Fit"
+    IDS_FILL "Fill"
 END
 
 STRINGTABLE

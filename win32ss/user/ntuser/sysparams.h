@@ -40,7 +40,9 @@ typedef enum
 {
     wmCenter = 0,
     wmTile,
-    wmStretch
+    wmStretch,
+    wmFit,
+    wmFill
 } WALLPAPER_MODE;
 
 typedef struct _SPIVALUES
