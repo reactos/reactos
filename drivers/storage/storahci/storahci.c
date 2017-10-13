@@ -19,10 +19,12 @@
  * Return true if intialization was successful
  */
 BOOLEAN
+NTAPI
 AhciPortInitialize (
-    __in PAHCI_PORT_EXTENSION PortExtension
+    __in PVOID DeviceExtension
     )
 {
+    PAHCI_PORT_EXTENSION PortExtension;
     AHCI_PORT_CMD cmd;
     PAHCI_MEMORY_REGISTERS abar;
     ULONG mappedLength, portNumber, ticks;
@@ -31,6 +33,7 @@ AhciPortInitialize (
 
     AhciDebugPrint("AhciPortInitialize()\n");
 
+    PortExtension = (PAHCI_PORT_EXTENSION)DeviceExtension;
     adapterExtension = PortExtension->AdapterExtension;
     abar = adapterExtension->ABAR_Address;
     portNumber = PortExtension->PortNumber;
@@ -95,8 +98,8 @@ AhciPortInitialize (
     }
 
     // 10.1.2 For each implemented port, system software shall allocate memory for and program:
-    //  PxCLB and PxCLBU (if CAP.S64A is set to ‘1’)
-    //  PxFB and PxFBU (if CAP.S64A is set to ‘1’)
+    // ? PxCLB and PxCLBU (if CAP.S64A is set to ‘1’)
+    // ? PxFB and PxFBU (if CAP.S64A is set to ‘1’)
     // Note: Assuming 32bit support only
     StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->CLB, commandListPhysical.LowPart);
     if (IsAdapterCAPS64(adapterExtension->CAP))
@@ -417,8 +420,8 @@ AhciStartPort (
 VOID
 AhciCommandCompletionDpcRoutine (
     __in PSTOR_DPC Dpc,
-    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
-    __in PAHCI_PORT_EXTENSION PortExtension,
+    __in PVOID HwDeviceExtension,
+    __in PVOID SystemArgument1,
     __in PVOID SystemArgument2
   )
 {
@@ -426,11 +429,16 @@ AhciCommandCompletionDpcRoutine (
     PAHCI_SRB_EXTENSION SrbExtension;
     STOR_LOCK_HANDLE lockhandle = {0};
     PAHCI_COMPLETION_ROUTINE CompletionRoutine;
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
+    PAHCI_PORT_EXTENSION PortExtension;
 
     UNREFERENCED_PARAMETER(Dpc);
     UNREFERENCED_PARAMETER(SystemArgument2);
 
     AhciDebugPrint("AhciCommandCompletionDpcRoutine()\n");
+
+    AdapterExtension = (PAHCI_ADAPTER_EXTENSION)HwDeviceExtension;
+    PortExtension = (PAHCI_PORT_EXTENSION)SystemArgument1;
 
     StorPortAcquireSpinLock(AdapterExtension, InterruptLock, NULL, &lockhandle);
     Srb = RemoveQueue(&PortExtension->CompletionQueue);
@@ -473,13 +481,16 @@ AhciCommandCompletionDpcRoutine (
  */
 BOOLEAN
 AhciHwPassiveInitialize (
-    __in PAHCI_ADAPTER_EXTENSION AdapterExtension
+    __in PVOID DeviceExtension
     )
 {
     ULONG index;
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
     PAHCI_PORT_EXTENSION PortExtension;
 
     AhciDebugPrint("AhciHwPassiveInitialize()\n");
+
+    AdapterExtension = (PAHCI_ADAPTER_EXTENSION)DeviceExtension;
 
     for (index = 0; index < AdapterExtension->PortCount; index++)
     {
@@ -506,14 +517,17 @@ AhciHwPassiveInitialize (
  * return TRUE if intialization was successful
  */
 BOOLEAN
+NTAPI
 AhciHwInitialize (
-    __in PAHCI_ADAPTER_EXTENSION AdapterExtension
+    __in PVOID DeviceExtension
     )
 {
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
     AHCI_GHC ghc;
 
     AhciDebugPrint("AhciHwInitialize()\n");
 
+    AdapterExtension = (PAHCI_ADAPTER_EXTENSION)DeviceExtension;
     AdapterExtension->StateFlags.MessagePerPort = FALSE;
 
     // First check what type of interrupt/synchronization device is using
@@ -701,11 +715,15 @@ AhciInterruptHandler (
  * return FALSE Indicates the interrupt was not ours.
  */
 BOOLEAN
+NTAPI
 AhciHwInterrupt (
-    __in PAHCI_ADAPTER_EXTENSION AdapterExtension
+    __in PVOID DeviceExtension
     )
 {
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
     ULONG portPending, nextPort, i, portCount;
+
+    AdapterExtension = (PAHCI_ADAPTER_EXTENSION)DeviceExtension;
 
     if (AdapterExtension->StateFlags.Removed)
     {
@@ -765,12 +783,17 @@ AhciHwInterrupt (
  * return FALSE if the request must be submitted later
  */
 BOOLEAN
+NTAPI
 AhciHwStartIo (
-    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PVOID DeviceExtension,
     __in PSCSI_REQUEST_BLOCK Srb
     )
 {
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
+
     AhciDebugPrint("AhciHwStartIo()\n");
+
+    AdapterExtension = (PAHCI_ADAPTER_EXTENSION)DeviceExtension;
 
     if (!IsPortValid(AdapterExtension, Srb->PathId))
     {
@@ -903,17 +926,18 @@ AhciHwStartIo (
  * return TRUE if bus was successfully reset
  */
 BOOLEAN
+NTAPI
 AhciHwResetBus (
     __in PVOID AdapterExtension,
     __in ULONG PathId
     )
 {
     STOR_LOCK_HANDLE lockhandle = {0};
-    PAHCI_ADAPTER_EXTENSION adapterExtension;
+//    PAHCI_ADAPTER_EXTENSION adapterExtension;
 
     AhciDebugPrint("AhciHwResetBus()\n");
 
-    adapterExtension = AdapterExtension;
+//    adapterExtension = AdapterExtension;
 
     if (IsPortValid(AdapterExtension, PathId))
     {
@@ -962,11 +986,12 @@ AhciHwResetBus (
  * @remarks Called by Storport.
  */
 ULONG
+NTAPI
 AhciHwFindAdapter (
-    __in PVOID AdapterExtension,
+    __in PVOID DeviceExtension,
     __in PVOID HwContext,
     __in PVOID BusInformation,
-    __in PVOID ArgumentString,
+    __in PCHAR ArgumentString,
     __inout PPORT_CONFIGURATION_INFORMATION ConfigInfo,
     __in PBOOLEAN Reserved3
     )
@@ -987,7 +1012,7 @@ AhciHwFindAdapter (
     UNREFERENCED_PARAMETER(ArgumentString);
     UNREFERENCED_PARAMETER(Reserved3);
 
-    adapterExtension = AdapterExtension;
+    adapterExtension = DeviceExtension;
     adapterExtension->SlotNumber = ConfigInfo->SlotNumber;
     adapterExtension->SystemIoBusNumber = ConfigInfo->SystemIoBusNumber;
 
@@ -1013,9 +1038,10 @@ AhciHwFindAdapter (
     // The last PCI base address register (BAR[5], header offset 0x24) points to the AHCI base memory, it’s called ABAR (AHCI Base Memory Register).
     adapterExtension->AhciBaseAddress = pciConfigData->u.type0.BaseAddresses[5] & (0xFFFFFFF0);
 
-    AhciDebugPrint("\tVendorID:%d  DeviceID:%d  RevisionID:%d\n", adapterExtension->VendorID,
-                                                              adapterExtension->DeviceID,
-                                                              adapterExtension->RevisionID);
+    AhciDebugPrint("\tVendorID: %04x  DeviceID: %04x  RevisionID: %02x\n",
+                   adapterExtension->VendorID,
+                   adapterExtension->DeviceID,
+                   adapterExtension->RevisionID);
 
     // 2.1.11
     abar = NULL;
@@ -1133,6 +1159,7 @@ AhciHwFindAdapter (
  * NT_STATUS in case of driver loaded successfully.
  */
 ULONG
+NTAPI
 DriverEntry (
     __in PVOID DriverObject,
     __in PVOID RegistryPath
@@ -1599,14 +1626,19 @@ AhciProcessIO (
  */
 VOID
 AtapiInquiryCompletion (
-    __in PAHCI_PORT_EXTENSION PortExtension,
-    __in PSCSI_REQUEST_BLOCK Srb
+    __in PVOID _Extension,
+    __in PVOID _Srb
     )
 {
-    BOOLEAN status;
+    PAHCI_PORT_EXTENSION PortExtension;
     PAHCI_ADAPTER_EXTENSION AdapterExtension;
+    PSCSI_REQUEST_BLOCK Srb;
+    BOOLEAN status;
 
     AhciDebugPrint("AtapiInquiryCompletion()\n");
+
+    PortExtension = (PAHCI_PORT_EXTENSION)_Extension;
+    Srb = (PSCSI_REQUEST_BLOCK)_Srb;
 
     NT_ASSERT(Srb != NULL);
     NT_ASSERT(PortExtension != NULL);
@@ -1637,11 +1669,14 @@ AtapiInquiryCompletion (
  */
 VOID
 InquiryCompletion (
-    __in PAHCI_PORT_EXTENSION PortExtension,
-    __in PSCSI_REQUEST_BLOCK Srb
+    __in PVOID _Extension,
+    __in PVOID _Srb
     )
 {
-    PCDB cdb;
+    PAHCI_PORT_EXTENSION PortExtension;
+    PSCSI_REQUEST_BLOCK Srb;
+
+//    PCDB cdb;
     BOOLEAN status;
     PINQUIRYDATA InquiryData;
     PAHCI_SRB_EXTENSION SrbExtension;
@@ -1650,10 +1685,13 @@ InquiryCompletion (
 
     AhciDebugPrint("InquiryCompletion()\n");
 
+    PortExtension = (PAHCI_PORT_EXTENSION)_Extension;
+    Srb = (PSCSI_REQUEST_BLOCK)_Srb;
+
     NT_ASSERT(Srb != NULL);
     NT_ASSERT(PortExtension != NULL);
 
-    cdb = (PCDB)&Srb->Cdb;
+//    cdb = (PCDB)&Srb->Cdb;
     InquiryData = Srb->DataBuffer;
     SrbExtension = GetSrbExtension(Srb);
     AdapterExtension = PortExtension->AdapterExtension;

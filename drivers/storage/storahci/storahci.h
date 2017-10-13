@@ -9,9 +9,14 @@
 #include <ata.h>
 #include <storport.h>
 
+#define NDEBUG
+#include <debug.h>
+
 #define DEBUG 1
+#if defined(_MSC_VER)
 #pragma warning(disable:4214) // bit field types other than int
 #pragma warning(disable:4201) // nameless struct/union
+#endif
 
 #define MAXIMUM_AHCI_PORT_COUNT             32
 #define MAXIMUM_AHCI_PRDT_ENTRIES           32
@@ -76,7 +81,8 @@
 #define AHCI_Global_Port_CAP_NCS(x)         (((x) & 0xF00) >> 8)
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-#define AhciDebugPrint(format, ...) StorPortDebugPrint(0, format, __VA_ARGS__)
+//#define AhciDebugPrint(format, ...) StorPortDebugPrint(0, format, __VA_ARGS__)
+#define AhciDebugPrint(format, ...) DbgPrint("(%s:%d) " format, __RELFILE__, __LINE__, ##__VA_ARGS__)
 
 typedef
 VOID
