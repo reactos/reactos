@@ -206,7 +206,7 @@ BEGIN
     IDS_CPLNAME "Affichage"
     IDS_CPLDESCRIPTION "Personalise l'affichage du bureau et de l'écran de veille."
     IDS_NONE "(Aucun)"
-    IDS_CENTER "Centre"
+    IDS_CENTER "Centrer"
     IDS_STRETCH "Étirer"
     IDS_TILE "Mosaïque"
     IDS_FIT "Ajuster"
