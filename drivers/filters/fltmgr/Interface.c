@@ -28,6 +28,8 @@
     ((_devObj)->DriverObject == Dispatcher::DriverObject) && \
       ((_devObj)->DeviceExtension != NULL))
 
+extern PDEVICE_OBJECT CommsDeviceObject;
+
 
 DRIVER_INITIALIZE DriverEntry;
 NTSTATUS
@@ -454,6 +456,13 @@ FltpDispatch(_In_ PDEVICE_OBJECT DeviceObject,
         return Status;
     }
 
+    /* Check if this is a request for a the messaging device */
+    if (DeviceObject == CommsDeviceObject)
+    {
+        /* Hand off to our internal routine */
+        return FltpMsgDispatch(DeviceObject, Irp);
+    }
+
     FLT_ASSERT(DeviceExtension &&
                DeviceExtension->AttachedToDeviceObject);
 
@@ -492,6 +501,13 @@ FltpCreate(_In_ PDEVICE_OBJECT DeviceObject,
         Irp->IoStatus.Information = 0;
         IofCompleteRequest(Irp, 0);
         return STATUS_SUCCESS;
+    }
+
+    /* Check if this is a request for a the new comms connection */
+    if (DeviceObject == CommsDeviceObject)
+    {
+        /* Hand off to our internal routine */
+        return FltpMsgCreate(DeviceObject, Irp);
     }
 
     FLT_ASSERT(DeviceExtension &&
