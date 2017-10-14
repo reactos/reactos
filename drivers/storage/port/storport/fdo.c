@@ -17,17 +17,88 @@
 
 static
 NTSTATUS
+PortFdoStartMiniport(
+    _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
+{
+    PHW_INITIALIZATION_DATA InitData;
+    INTERFACE_TYPE InterfaceType;
+    NTSTATUS Status;
+
+    DPRINT1("PortFdoStartDevice(%p)\n", DeviceExtension);
+
+    /* Get the interface type of the lower device */
+    InterfaceType = GetBusInterface(DeviceExtension->LowerDevice);
+    if (InterfaceType == InterfaceTypeUndefined)
+        return STATUS_NO_SUCH_DEVICE;
+
+    /* Get the driver init data for the given interface type */
+    InitData = PortGetDriverInitData(DeviceExtension->DriverExtension,
+                                     InterfaceType);
+    if (InitData == NULL)
+        return STATUS_NO_SUCH_DEVICE;
+
+    /* Initialize the miniport */
+    MiniportInitialize(&DeviceExtension->Miniport,
+                       DeviceExtension,
+                       InitData);
+
+    /* Call the miniports FindAdapter function */
+    Status = MiniportFindAdapter(&DeviceExtension->Miniport);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MiniportFindAdapter() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Call the miniports HwInitialize function */
+    Status = MiniportHwInitialize(&DeviceExtension->Miniport);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MiniportHwInitialize() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
 NTAPI
 PortFdoStartDevice(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension,
     _In_ PIRP Irp)
 {
+    NTSTATUS Status;
+
     DPRINT1("PortFdoStartDevice(%p %p)\n",
             DeviceExtension, Irp);
 
     ASSERT(DeviceExtension->ExtensionType == FdoExtension);
 
-    return STATUS_SUCCESS;
+    /* Start the lower device if the FDO is in 'stopped' state */
+    if (DeviceExtension->PnpState == dsStopped)
+    {
+        Status = ForwardIrpAndWait(DeviceExtension->LowerDevice, Irp);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ForwardIrpAndWait() failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+    }
+
+    /* Change to the 'started' state */
+    DeviceExtension->PnpState = dsStarted;
+
+    /* Start the miniport (FindAdapter & Initialize) */
+    Status = PortFdoStartMiniport(DeviceExtension);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("FdoStartMiniport() failed (Status 0x%08lx)\n", Status);
+        DeviceExtension->PnpState = dsStopped;
+    }
+
+    return Status;
 }
 
 
@@ -72,12 +143,7 @@ PortFdoPnp(
     {
         case IRP_MN_START_DEVICE: /* 0x00 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
-            /* Call lower driver */
-            Status = ForwardIrpAndWait(DeviceExtension->LowerDevice, Irp);
-            if (NT_SUCCESS(Status))
-            {
-                Status = PortFdoStartDevice(DeviceExtension, Irp);
-            }
+            Status = PortFdoStartDevice(DeviceExtension, Irp);
             break;
 
         case IRP_MN_QUERY_REMOVE_DEVICE: /* 0x01 */

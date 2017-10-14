@@ -11,6 +11,7 @@
 #include <wdm.h>
 #include <ntddk.h>
 #include <stdio.h>
+#include <memory.h>
 
 /* Declare STORPORT_API functions as exports rather than imports */
 #define _STORPORT_
@@ -19,6 +20,11 @@
 #include <ntddscsi.h>
 #include <ntdddisk.h>
 #include <mountdev.h>
+#include <wdmguid.h>
+
+/* Memory Tags */
+#define TAG_GLOBAL_DATA 'DGtS'
+#define TAG_INIT_DATA   'DItS'
 
 typedef enum
 {
@@ -37,17 +43,29 @@ typedef enum
     PdoExtension
 } EXTENSION_TYPE;
 
+typedef struct _DRIVER_INIT_DATA
+{
+    LIST_ENTRY Entry;
+    HW_INITIALIZATION_DATA HwInitData;
+} DRIVER_INIT_DATA, *PDRIVER_INIT_DATA;
+
 typedef struct _DRIVER_OBJECT_EXTENSION
 {
     EXTENSION_TYPE ExtensionType;
-
     PDRIVER_OBJECT DriverObject;
 
     KSPIN_LOCK AdapterListLock;
     LIST_ENTRY AdapterListHead;
     ULONG AdapterCount;
 
+    LIST_ENTRY InitDataListHead;
 } DRIVER_OBJECT_EXTENSION, *PDRIVER_OBJECT_EXTENSION;
+
+typedef struct _MINIPORT
+{
+    struct _FDO_DEVICE_EXTENSION *DeviceExtension;
+    PHW_INITIALIZATION_DATA InitData;
+} MINIPORT, *PMINIPORT;
 
 typedef struct _FDO_DEVICE_EXTENSION
 {
@@ -57,9 +75,13 @@ typedef struct _FDO_DEVICE_EXTENSION
     PDEVICE_OBJECT LowerDevice;
     PDEVICE_OBJECT PhysicalDevice;
 
-    DEVICE_STATE PnpState;
+    PDRIVER_OBJECT_EXTENSION DriverExtension;
 
+    DEVICE_STATE PnpState;
     LIST_ENTRY AdapterListEntry;
+
+    MINIPORT Miniport;
+
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 
@@ -83,6 +105,23 @@ PortFdoPnp(
     _In_ PIRP Irp);
 
 
+/* miniport.c */
+
+VOID
+MiniportInitialize(
+    _In_ PMINIPORT Miniport,
+    _In_ PFDO_DEVICE_EXTENSION DeviceExtension,
+    _In_ PHW_INITIALIZATION_DATA HwInitializationData);
+
+NTSTATUS
+MiniportFindAdapter(
+    _In_ PMINIPORT Miniport);
+
+NTSTATUS
+MiniportHwInitialize(
+    _In_ PMINIPORT Miniport);
+
+
 /* misc.c */
 
 NTSTATUS
@@ -96,6 +135,9 @@ ForwardIrpAndForget(
     _In_ PDEVICE_OBJECT LowerDevice,
     _In_ PIRP Irp);
 
+INTERFACE_TYPE
+GetBusInterface(
+    PDEVICE_OBJECT DeviceObject);
 
 /* pdo.c */
 
@@ -107,6 +149,11 @@ PortPdoPnp(
 
 
 /* storport.c */
+
+PHW_INITIALIZATION_DATA
+PortGetDriverInitData(
+    PDRIVER_OBJECT_EXTENSION DriverExtension,
+    INTERFACE_TYPE InterfaceType);
 
 NTSTATUS
 NTAPI

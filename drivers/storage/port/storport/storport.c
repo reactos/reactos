@@ -22,6 +22,86 @@ ULONG PortNumber = 0;
 
 static
 NTSTATUS
+PortAddDriverInitData(
+    PDRIVER_OBJECT_EXTENSION DriverExtension,
+    PHW_INITIALIZATION_DATA HwInitializationData)
+{
+    PDRIVER_INIT_DATA InitData;
+
+    DPRINT1("PortAddDriverInitData()\n");
+
+    InitData = ExAllocatePoolWithTag(NonPagedPool,
+                                     sizeof(DRIVER_INIT_DATA),
+                                     TAG_INIT_DATA);
+    if (InitData == NULL)
+        return STATUS_NO_MEMORY;
+
+    RtlCopyMemory(&InitData->HwInitData,
+                  HwInitializationData,
+                  sizeof(HW_INITIALIZATION_DATA));
+
+    InsertHeadList(&DriverExtension->InitDataListHead,
+                   &InitData->Entry);
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+VOID
+PortDeleteDriverInitData(
+    PDRIVER_OBJECT_EXTENSION DriverExtension)
+{
+    PDRIVER_INIT_DATA InitData;
+    PLIST_ENTRY ListEntry;
+
+    DPRINT1("PortDeleteDriverInitData()\n");
+
+    ListEntry = DriverExtension->InitDataListHead.Flink;
+    while (ListEntry != &DriverExtension->InitDataListHead)
+    {
+        InitData = CONTAINING_RECORD(ListEntry,
+                                     DRIVER_INIT_DATA,
+                                     Entry);
+
+        RemoveEntryList(&InitData->Entry);
+
+        ExFreePoolWithTag(InitData,
+                          TAG_INIT_DATA);
+
+        ListEntry = DriverExtension->InitDataListHead.Flink;
+    }
+}
+
+
+PHW_INITIALIZATION_DATA
+PortGetDriverInitData(
+    PDRIVER_OBJECT_EXTENSION DriverExtension,
+    INTERFACE_TYPE InterfaceType)
+{
+    PDRIVER_INIT_DATA InitData;
+    PLIST_ENTRY ListEntry;
+
+    DPRINT1("PortGetDriverInitData()\n");
+
+    ListEntry = DriverExtension->InitDataListHead.Flink;
+    while (ListEntry != &DriverExtension->InitDataListHead)
+    {
+        InitData = CONTAINING_RECORD(ListEntry,
+                                     DRIVER_INIT_DATA,
+                                     Entry);
+        if (InitData->HwInitData.AdapterInterfaceType == InterfaceType)
+            return &InitData->HwInitData;
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    return NULL;
+}
+
+
+static
+NTSTATUS
 NTAPI
 PortAddDevice(
     _In_ PDRIVER_OBJECT DriverObject,
@@ -96,6 +176,8 @@ PortAddDevice(
                                                        (PVOID)DriverEntry);
     ASSERT(DriverObjectExtension->ExtensionType == DriverExtension);
 
+    DeviceExtension->DriverExtension = DriverObjectExtension;
+
     KeAcquireInStackQueuedSpinLock(&DriverObjectExtension->AdapterListLock,
                                    &LockHandle);
 
@@ -120,8 +202,17 @@ NTAPI
 PortUnload(
     _In_ PDRIVER_OBJECT DriverObject)
 {
+    PDRIVER_OBJECT_EXTENSION DriverExtension;
+
     DPRINT1("PortUnload(%p)\n",
             DriverObject);
+
+    DriverExtension = IoGetDriverObjectExtension(DriverObject,
+                                                 (PVOID)DriverEntry);
+    if (DriverExtension != NULL)
+    {
+        PortDeleteDriverInitData(DriverExtension);
+    }
 }
 
 
@@ -138,7 +229,7 @@ PortDispatchCreate(
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = FILE_OPENED;
 
-    IoCompleteRequest( Irp, IO_NO_INCREMENT );
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_SUCCESS;
 }
@@ -690,6 +781,7 @@ StorPortInitialize(
         InitializeListHead(&DriverObjectExtension->AdapterListHead);
         KeInitializeSpinLock(&DriverObjectExtension->AdapterListLock);
 
+        InitializeListHead(&DriverObjectExtension->InitDataListHead);
 
         /* Set handlers */
         DriverObject->DriverExtension->AddDevice = PortAddDevice;
@@ -703,6 +795,10 @@ StorPortInitialize(
         DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = PortDispatchSystemControl;
         DriverObject->MajorFunction[IRP_MJ_PNP] = PortDispatchPnp;
     }
+
+    /* Add the initialzation data to the driver extension */
+    Status = PortAddDriverInitData(DriverObjectExtension,
+                                   HwInitializationData);
 
     DPRINT1("StorPortInitialize() done (Status 0x%08lx)\n", Status);
 

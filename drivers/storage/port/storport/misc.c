@@ -68,4 +68,31 @@ ForwardIrpAndForget(
     return IoCallDriver(LowerDevice, Irp);
 }
 
+
+INTERFACE_TYPE
+GetBusInterface(
+    PDEVICE_OBJECT DeviceObject)
+{
+    GUID Guid;
+    ULONG Length;
+    NTSTATUS Status;
+
+    Status = IoGetDeviceProperty(DeviceObject,
+                                 DevicePropertyBusTypeGuid,
+                                 sizeof(Guid),
+                                 &Guid,
+                                 &Length);
+    if (!NT_SUCCESS(Status))
+        return InterfaceTypeUndefined;
+
+    if (RtlCompareMemory(&Guid, &GUID_BUS_TYPE_PCMCIA, sizeof(GUID)) == sizeof(GUID))
+        return PCMCIABus;
+    else if (RtlCompareMemory(&Guid, &GUID_BUS_TYPE_PCI, sizeof(GUID)) == sizeof(GUID))
+        return PCIBus;
+    else if (RtlCompareMemory(&Guid, &GUID_BUS_TYPE_ISAPNP, sizeof(GUID)) == sizeof(GUID))
+        return PNPISABus;
+
+    return InterfaceTypeUndefined;
+}
+
 /* EOF */

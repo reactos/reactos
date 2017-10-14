@@ -3,6 +3,7 @@ spec2def(storport.sys storport.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     fdo.c
+    miniport.c
     misc.c
     pdo.c
     storport.c
@@ -11,6 +12,7 @@ list(APPEND SOURCE
 
 add_library(storport SHARED
     ${SOURCE}
+    guid.c
     storport.rc
     ${CMAKE_CURRENT_BINARY_DIR}/storport.def)
 
