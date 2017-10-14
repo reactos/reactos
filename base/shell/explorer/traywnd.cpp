@@ -1532,13 +1532,6 @@ ChangePos:
 
         Horizontal = IsPosHorizontal();
 
-        IUnknown_Exec(m_TrayBandSite,
-                      IID_IDeskBand,
-                      DBID_BANDINFOCHANGED,
-                      0,
-                      NULL,
-                      NULL);
-
         /* We're about to resize/move the start button, the rebar control and
            the tray notification control */
         dwp = BeginDeferWindowPos(3);
