@@ -15,14 +15,38 @@
 
 /* FUNCTIONS ******************************************************************/
 
-VOID
+NTSTATUS
 MiniportInitialize(
     _In_ PMINIPORT Miniport,
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension,
     _In_ PHW_INITIALIZATION_DATA InitData)
 {
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+    ULONG Size;
+
+    DPRINT1("MiniportInitialize(%p %p %p)\n",
+            Miniport, DeviceExtension, InitData);
+
     Miniport->DeviceExtension = DeviceExtension;
     Miniport->InitData = InitData;
+
+    /* Calculate the miniport device extension size */
+    Size = sizeof(MINIPORT_DEVICE_EXTENSION) +
+           Miniport->InitData->DeviceExtensionSize;
+
+    /* Allocate and initialize the miniport device extension */
+    MiniportExtension = ExAllocatePoolWithTag(NonPagedPool,
+                                              Size,
+                                              TAG_MINIPORT_DATA);
+    if (MiniportExtension == NULL)
+        return STATUS_NO_MEMORY;
+
+    RtlZeroMemory(MiniportExtension, Size);
+
+    MiniportExtension->Miniport = Miniport;
+    Miniport->MiniportExtension = MiniportExtension;
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -36,7 +60,8 @@ MiniportFindAdapter(
 
     DPRINT1("MiniportFindAdapter(%p)\n", Miniport);
 
-    Result = Miniport->InitData->HwFindAdapter(NULL,
+    /* Call the miniport HwFindAdapter routine */
+    Result = Miniport->InitData->HwFindAdapter(&Miniport->MiniportExtension->HwDeviceExtension,
                                                NULL,
                                                NULL,
                                                NULL,
@@ -84,7 +109,8 @@ MiniportHwInitialize(
 
     DPRINT1("MiniportHwInitialize(%p)\n", Miniport);
 
-    Status = Miniport->InitData->HwInitialize(NULL);
+    /* Call the miniport HwInitialize routine */
+    Status = Miniport->InitData->HwInitialize(&Miniport->MiniportExtension->HwDeviceExtension);
     DPRINT1("HwInitialize() returned 0x%08lx\n", Status);
 
     return Status;

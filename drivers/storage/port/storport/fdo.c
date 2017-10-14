@@ -38,9 +38,14 @@ PortFdoStartMiniport(
         return STATUS_NO_SUCH_DEVICE;
 
     /* Initialize the miniport */
-    MiniportInitialize(&DeviceExtension->Miniport,
-                       DeviceExtension,
-                       InitData);
+    Status = MiniportInitialize(&DeviceExtension->Miniport,
+                                DeviceExtension,
+                                InitData);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MiniportInitialize() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
 
     /* Call the miniports FindAdapter function */
     Status = MiniportFindAdapter(&DeviceExtension->Miniport);

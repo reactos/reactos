@@ -23,8 +23,9 @@
 #include <wdmguid.h>
 
 /* Memory Tags */
-#define TAG_GLOBAL_DATA 'DGtS'
-#define TAG_INIT_DATA   'DItS'
+#define TAG_GLOBAL_DATA    'DGtS'
+#define TAG_INIT_DATA      'DItS'
+#define TAG_MINIPORT_DATA  'DMtS'
 
 typedef enum
 {
@@ -61,10 +62,17 @@ typedef struct _DRIVER_OBJECT_EXTENSION
     LIST_ENTRY InitDataListHead;
 } DRIVER_OBJECT_EXTENSION, *PDRIVER_OBJECT_EXTENSION;
 
+typedef struct _MINIPORT_DEVICE_EXTENSION
+{
+    struct _MINIPORT *Miniport;
+    UCHAR HwDeviceExtension[0];
+} MINIPORT_DEVICE_EXTENSION, *PMINIPORT_DEVICE_EXTENSION;
+
 typedef struct _MINIPORT
 {
     struct _FDO_DEVICE_EXTENSION *DeviceExtension;
     PHW_INITIALIZATION_DATA InitData;
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension;
 } MINIPORT, *PMINIPORT;
 
 typedef struct _FDO_DEVICE_EXTENSION
@@ -107,7 +115,7 @@ PortFdoPnp(
 
 /* miniport.c */
 
-VOID
+NTSTATUS
 MiniportInitialize(
     _In_ PMINIPORT Miniport,
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension,
