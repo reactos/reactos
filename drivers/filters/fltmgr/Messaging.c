@@ -29,6 +29,20 @@ FltpDisconnectPort(
     _In_ PFLT_PORT_OBJECT PortObject
 );
 
+static
+NTSTATUS
+FltpOpenClientPort(
+    _In_ PFILE_OBJECT FileObject,
+    _Inout_ PIRP Irp
+);
+
+static
+NTSTATUS
+FltpCloseCommunicationPort(
+    _In_ PFILE_OBJECT FileObject,
+    _Inout_ PIRP Irp
+);
+
 
 
 /* EXPORTED FUNCTIONS ******************************************************/
@@ -190,6 +204,72 @@ FltSendMessage(_In_ PFLT_FILTER Filter,
 }
 
 /* INTERNAL FUNCTIONS ******************************************************/
+
+
+NTSTATUS
+FltpMsgCreate(_In_ PDEVICE_OBJECT DeviceObject,
+              _Inout_ PIRP Irp)
+{
+    PIO_STACK_LOCATION StackPtr;
+    NTSTATUS Status;
+
+    /* Get the stack location */
+    StackPtr = IoGetCurrentIrpStackLocation(Irp);
+
+    FLT_ASSERT(StackPtr->MajorFunction == IRP_MJ_CREATE);
+
+    /* Check if this is a caller wanting to connect */
+    if (StackPtr->MajorFunction == IRP_MJ_CREATE)
+    {
+        /* Create the client port for this connection and exit */
+        Status = FltpOpenClientPort(StackPtr->FileObject, Irp);
+    }
+    else
+    {
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, 0);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+FltpMsgDispatch(_In_ PDEVICE_OBJECT DeviceObject,
+                _Inout_ PIRP Irp)
+{
+    PIO_STACK_LOCATION StackPtr;
+    NTSTATUS Status;
+
+    /* Get the stack location */
+    StackPtr = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Check if this is a caller wanting to connect */
+    if (StackPtr->MajorFunction == IRP_MJ_CLOSE)
+    {
+        /* Create the client port for this connection and exit */
+        Status = FltpCloseCommunicationPort(StackPtr->FileObject, Irp);
+    }
+    else
+    {
+        // We don't support anything else yet
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, 0);
+    }
+
+    return Status;
+}
 
 VOID
 NTAPI
@@ -371,3 +451,18 @@ Quit:
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
+static
+NTSTATUS
+FltpOpenClientPort(_In_ PFILE_OBJECT FileObject,
+                   _Inout_ PIRP Irp)
+{
+    return 0;
+}
+
+static
+NTSTATUS
+FltpCloseCommunicationPort(_In_ PFILE_OBJECT FileObject,
+                           _Inout_ PIRP Irp)
+{
+    return 0;
+}
