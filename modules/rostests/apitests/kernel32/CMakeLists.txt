@@ -13,6 +13,7 @@ list(APPEND SOURCE
     GetCurrentDirectory.c
     GetDriveType.c
     GetModuleFileName.c
+    GetVolumeInformation.c
     interlck.c
     IsDBCSLeadByteEx.c
     LoadLibraryExW.c
