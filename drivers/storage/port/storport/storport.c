@@ -548,7 +548,7 @@ StorPortFreeRegistryBuffer(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 STORPORT_API
 ULONG
@@ -561,9 +561,32 @@ StorPortGetBusData(
     _Out_ _When_(Length != 0, _Out_writes_bytes_(Length)) PVOID Buffer,
     _In_ ULONG Length)
 {
-    DPRINT1("StorPortGetBusData()\n");
-    UNIMPLEMENTED;
-    return 0;
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+    PBUS_INTERFACE_STANDARD Interface;
+    ULONG ReturnLength;
+
+    DPRINT1("StorPortGetBusData(%p %lu %lu %lu %p %lu)\n",
+            DeviceExtension, BusDataType, SystemIoBusNumber, SlotNumber, Buffer, Length);
+
+    MiniportExtension = CONTAINING_RECORD(DeviceExtension,
+                                          MINIPORT_DEVICE_EXTENSION,
+                                          HwDeviceExtension);
+    DPRINT1("DeviceExtension %p  MiniportExtension %p\n",
+            DeviceExtension, MiniportExtension);
+
+    Interface = &MiniportExtension->Miniport->DeviceExtension->BusInterface;
+
+    if (BusDataType == 4)
+        BusDataType = 0;
+
+    ReturnLength = Interface->GetBusData(Interface->Context,
+                                         BusDataType,
+                                         Buffer,
+                                         0,
+                                         Length);
+    DPRINT1("ReturnLength: %lu\n", ReturnLength);
+
+    return ReturnLength;
 }
 
 

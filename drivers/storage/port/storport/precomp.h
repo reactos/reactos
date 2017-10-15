@@ -93,6 +93,8 @@ typedef struct _FDO_DEVICE_EXTENSION
     ULONG SlotNumber;
     PCM_RESOURCE_LIST AllocatedResources;
     PCM_RESOURCE_LIST TranslatedResources;
+    BUS_INTERFACE_STANDARD BusInterface;
+    BOOLEAN BusInitialized;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 
@@ -154,6 +156,15 @@ PCM_RESOURCE_LIST
 CopyResourceList(
     POOL_TYPE PoolType,
     PCM_RESOURCE_LIST Source);
+
+NTSTATUS
+QueryBusInterface(
+    PDEVICE_OBJECT DeviceObject,
+    PGUID Guid,
+    USHORT Size,
+    USHORT Version,
+    PBUS_INTERFACE_STANDARD Interface,
+    PVOID InterfaceSpecificData);
 
 
 /* pdo.c */

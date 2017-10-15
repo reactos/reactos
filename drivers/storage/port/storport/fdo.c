@@ -114,6 +114,20 @@ PortFdoStartDevice(
             return STATUS_NO_MEMORY;
     }
 
+    /* Get the bus interface of the lower (bus) device */
+    Status = QueryBusInterface(DeviceExtension->LowerDevice,
+                               (PGUID)&GUID_BUS_INTERFACE_STANDARD,
+                               sizeof(BUS_INTERFACE_STANDARD),
+                               1,
+                               &DeviceExtension->BusInterface,
+                               NULL);
+    DPRINT1("Status: 0x%08lx\n", Status);
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT1("Context: %p\n", DeviceExtension->BusInterface.Context);
+        DeviceExtension->BusInitialized = TRUE;
+    }
+
     /* Start the miniport (FindAdapter & Initialize) */
     Status = PortFdoStartMiniport(DeviceExtension);
     if (!NT_SUCCESS(Status))
