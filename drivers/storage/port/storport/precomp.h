@@ -27,6 +27,7 @@
 #define TAG_INIT_DATA      'DItS'
 #define TAG_MINIPORT_DATA  'DMtS'
 #define TAG_ACCRESS_RANGE  'RAtS'
+#define TAG_RESOURCE_LIST  'LRtS'
 
 typedef enum
 {
@@ -90,6 +91,8 @@ typedef struct _FDO_DEVICE_EXTENSION
     MINIPORT Miniport;
     ULONG BusNumber;
     ULONG SlotNumber;
+    PCM_RESOURCE_LIST AllocatedResources;
+    PCM_RESOURCE_LIST TranslatedResources;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 
@@ -146,6 +149,12 @@ ForwardIrpAndForget(
 INTERFACE_TYPE
 GetBusInterface(
     PDEVICE_OBJECT DeviceObject);
+
+PCM_RESOURCE_LIST
+CopyResourceList(
+    POOL_TYPE PoolType,
+    PCM_RESOURCE_LIST Source);
+
 
 /* pdo.c */
 

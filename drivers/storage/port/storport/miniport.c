@@ -89,6 +89,147 @@ InitializeConfiguration(
 }
 
 
+static
+VOID
+AssignResourcesToConfiguration(
+    _In_ PPORT_CONFIGURATION_INFORMATION PortConfiguration,
+    _In_ PCM_RESOURCE_LIST ResourceList,
+    _In_ ULONG NumberOfAccessRanges)
+{
+    PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PACCESS_RANGE AccessRange;
+    INT i, j;
+    ULONG RangeNumber = 0, Interrupt = 0, Dma = 0;
+
+    DPRINT1("AssignResourceToConfiguration(%p %p %lu)\n",
+            PortConfiguration, ResourceList, NumberOfAccessRanges);
+
+    FullDescriptor = &ResourceList->List[0];
+    for (i = 0; i < ResourceList->Count; i++)
+    {
+        PartialResourceList = &FullDescriptor->PartialResourceList;
+
+        for (j = 0; j < PartialResourceList->Count; j++)
+        {
+            PartialDescriptor = &PartialResourceList->PartialDescriptors[j];
+
+            switch (PartialDescriptor->Type)
+            {
+                case CmResourceTypePort:
+                    DPRINT1("Port: 0x%I64x (0x%lx)\n",
+                            PartialDescriptor->u.Port.Start.QuadPart,
+                            PartialDescriptor->u.Port.Length);
+                    if (RangeNumber < NumberOfAccessRanges)
+                    {
+                        AccessRange = &((*(PortConfiguration->AccessRanges))[RangeNumber]);
+                        AccessRange->RangeStart = PartialDescriptor->u.Port.Start;
+                        AccessRange->RangeLength = PartialDescriptor->u.Port.Length;
+                        AccessRange->RangeInMemory = FALSE;
+                        RangeNumber++;
+                    }
+                    break;
+
+                case CmResourceTypeMemory:
+                    DPRINT1("Memory: 0x%I64x (0x%lx)\n",
+                            PartialDescriptor->u.Memory.Start.QuadPart,
+                            PartialDescriptor->u.Memory.Length);
+                    if (RangeNumber < NumberOfAccessRanges)
+                    {
+                        AccessRange = &((*(PortConfiguration->AccessRanges))[RangeNumber]);
+                        AccessRange->RangeStart = PartialDescriptor->u.Memory.Start;
+                        AccessRange->RangeLength = PartialDescriptor->u.Memory.Length;
+                        AccessRange->RangeInMemory = TRUE;
+                        RangeNumber++;
+                    }
+                    break;
+
+                case CmResourceTypeInterrupt:
+                    DPRINT1("Interrupt: Level %lu  Vector %lu\n",
+                            PartialDescriptor->u.Interrupt.Level,
+                            PartialDescriptor->u.Interrupt.Vector);
+                    if (Interrupt == 0)
+                    {
+                        /* Copy interrupt data */
+                        PortConfiguration->BusInterruptLevel = PartialDescriptor->u.Interrupt.Level;
+                        PortConfiguration->BusInterruptVector = PartialDescriptor->u.Interrupt.Vector;
+
+                        /* Set interrupt mode accordingly to the resource */
+                        if (PartialDescriptor->Flags == CM_RESOURCE_INTERRUPT_LATCHED)
+                        {
+                            PortConfiguration->InterruptMode = Latched;
+                        }
+                        else if (PartialDescriptor->Flags == CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE)
+                        {
+                            PortConfiguration->InterruptMode = LevelSensitive;
+                        }
+                    }
+                    else if (Interrupt == 1)
+                    {
+                        /* Copy interrupt data */
+                        PortConfiguration->BusInterruptLevel2 = PartialDescriptor->u.Interrupt.Level;
+                        PortConfiguration->BusInterruptVector2 = PartialDescriptor->u.Interrupt.Vector;
+
+                        /* Set interrupt mode accordingly to the resource */
+                        if (PartialDescriptor->Flags == CM_RESOURCE_INTERRUPT_LATCHED)
+                        {
+                            PortConfiguration->InterruptMode2 = Latched;
+                        }
+                        else if (PartialDescriptor->Flags == CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE)
+                        {
+                            PortConfiguration->InterruptMode2 = LevelSensitive;
+                        }
+                    }
+                    Interrupt++;
+                    break;
+
+                case CmResourceTypeDma:
+                    DPRINT1("Dma: Channel: %lu  Port: %lu\n",
+                            PartialDescriptor->u.Dma.Channel,
+                            PartialDescriptor->u.Dma.Port);
+                    if (Dma == 0)
+                    {
+                        PortConfiguration->DmaChannel = PartialDescriptor->u.Dma.Channel;
+                        PortConfiguration->DmaPort = PartialDescriptor->u.Dma.Port;
+
+                        if (PartialDescriptor->Flags & CM_RESOURCE_DMA_8)
+                            PortConfiguration->DmaWidth = Width8Bits;
+                        else if ((PartialDescriptor->Flags & CM_RESOURCE_DMA_16) ||
+                                 (PartialDescriptor->Flags & CM_RESOURCE_DMA_8_AND_16))
+                            PortConfiguration->DmaWidth = Width16Bits;
+                        else if (PartialDescriptor->Flags & CM_RESOURCE_DMA_32)
+                            PortConfiguration->DmaWidth = Width32Bits;
+                    }
+                    else if (Dma == 1)
+                    {
+                        PortConfiguration->DmaChannel2 = PartialDescriptor->u.Dma.Channel;
+                        PortConfiguration->DmaPort2 = PartialDescriptor->u.Dma.Port;
+
+                        if (PartialDescriptor->Flags & CM_RESOURCE_DMA_8)
+                            PortConfiguration->DmaWidth2 = Width8Bits;
+                        else if ((PartialDescriptor->Flags & CM_RESOURCE_DMA_16) ||
+                                 (PartialDescriptor->Flags & CM_RESOURCE_DMA_8_AND_16))
+                            PortConfiguration->DmaWidth2 = Width16Bits;
+                        else if (PartialDescriptor->Flags & CM_RESOURCE_DMA_32)
+                            PortConfiguration->DmaWidth2 = Width32Bits;
+                    }
+                    Dma++;
+                    break;
+
+                default:
+                    DPRINT1("Other: %u\n", PartialDescriptor->Type);
+                    break;
+            }
+        }
+
+        /* Advance to next CM_FULL_RESOURCE_DESCRIPTOR block in memory. */
+        FullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptor->PartialResourceList.PartialDescriptors + 
+                                                        FullDescriptor->PartialResourceList.Count);
+    }
+}
+
+
 NTSTATUS
 MiniportInitialize(
     _In_ PMINIPORT Miniport,
@@ -126,8 +267,15 @@ MiniportInitialize(
                                      InitData,
                                      DeviceExtension->BusNumber,
                                      DeviceExtension->SlotNumber);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    return Status;
+    /* Assign the resources to the port configuration */
+    AssignResourcesToConfiguration(&Miniport->PortConfig,
+                                   DeviceExtension->AllocatedResources,
+                                   InitData->NumberOfAccessRanges);
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -150,6 +298,7 @@ MiniportFindAdapter(
                                                &Reserved);
     DPRINT1("HwFindAdapter() returned %lu\n", Result);
 
+    /* Convert the result to a status code */
     switch (Result)
     {
         case SP_RETURN_NOT_FOUND:

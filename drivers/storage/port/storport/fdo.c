@@ -74,12 +74,16 @@ PortFdoStartDevice(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension,
     _In_ PIRP Irp)
 {
+    PIO_STACK_LOCATION Stack;
     NTSTATUS Status;
 
     DPRINT1("PortFdoStartDevice(%p %p)\n",
             DeviceExtension, Irp);
 
     ASSERT(DeviceExtension->ExtensionType == FdoExtension);
+
+    /* Get the current stack location */
+    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Start the lower device if the FDO is in 'stopped' state */
     if (DeviceExtension->PnpState == dsStopped)
@@ -94,6 +98,21 @@ PortFdoStartDevice(
 
     /* Change to the 'started' state */
     DeviceExtension->PnpState = dsStarted;
+
+    /* Copy the raw and translated resource lists into the device extension */
+    if (Stack->Parameters.StartDevice.AllocatedResources != NULL &&
+        Stack->Parameters.StartDevice.AllocatedResourcesTranslated != NULL)
+    {
+        DeviceExtension->AllocatedResources = CopyResourceList(NonPagedPool,
+                                                               Stack->Parameters.StartDevice.AllocatedResources);
+        if (DeviceExtension->AllocatedResources == NULL)
+            return STATUS_NO_MEMORY;
+
+        DeviceExtension->TranslatedResources = CopyResourceList(NonPagedPool,
+                                                                Stack->Parameters.StartDevice.AllocatedResourcesTranslated);
+        if (DeviceExtension->TranslatedResources == NULL)
+            return STATUS_NO_MEMORY;
+    }
 
     /* Start the miniport (FindAdapter & Initialize) */
     Status = PortFdoStartMiniport(DeviceExtension);
