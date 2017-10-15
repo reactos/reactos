@@ -253,6 +253,10 @@ GetVolumeInformationW(IN LPCWSTR lpRootPathName,
         RootPathName = lpRootPathName;
     }
 
+    /* Convert length to bytes */
+    nVolumeNameSize *= sizeof(WCHAR);
+    nFileSystemNameSize *= sizeof(WCHAR);
+
     /* Convert to NT name */
     if (!RtlDosPathNameToNtPathName_U(RootPathName, &NtPathName, NULL, NULL))
     {
