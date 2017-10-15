@@ -124,6 +124,28 @@ PortFdoQueryBusRelations(
 }
 
 
+static
+NTSTATUS
+PortFdoFilterRequirements(
+    PFDO_DEVICE_EXTENSION DeviceExtension,
+    PIRP Irp)
+{
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+
+    DPRINT1("PortFdoFilterRequirements(%p %p)\n", DeviceExtension, Irp);
+
+    /* Get the bus number and the slot number */
+    RequirementsList =(PIO_RESOURCE_REQUIREMENTS_LIST)Irp->IoStatus.Information;
+    if (RequirementsList != NULL)
+    {
+        DeviceExtension->BusNumber = RequirementsList->BusNumber;
+        DeviceExtension->SlotNumber = RequirementsList->SlotNumber;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 NTAPI
 PortFdoPnp(
@@ -197,6 +219,7 @@ PortFdoPnp(
 
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* 0x0d */
             DPRINT1("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+            PortFdoFilterRequirements(DeviceExtension, Irp);
             return ForwardIrpAndForget(DeviceExtension->LowerDevice, Irp);
 
         case IRP_MN_QUERY_PNP_DEVICE_STATE: /* 0x14 */

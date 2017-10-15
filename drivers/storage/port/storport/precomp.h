@@ -26,6 +26,7 @@
 #define TAG_GLOBAL_DATA    'DGtS'
 #define TAG_INIT_DATA      'DItS'
 #define TAG_MINIPORT_DATA  'DMtS'
+#define TAG_ACCRESS_RANGE  'RAtS'
 
 typedef enum
 {
@@ -72,6 +73,7 @@ typedef struct _MINIPORT
 {
     struct _FDO_DEVICE_EXTENSION *DeviceExtension;
     PHW_INITIALIZATION_DATA InitData;
+    PORT_CONFIGURATION_INFORMATION PortConfig;
     PMINIPORT_DEVICE_EXTENSION MiniportExtension;
 } MINIPORT, *PMINIPORT;
 
@@ -82,14 +84,12 @@ typedef struct _FDO_DEVICE_EXTENSION
     PDEVICE_OBJECT Device;
     PDEVICE_OBJECT LowerDevice;
     PDEVICE_OBJECT PhysicalDevice;
-
     PDRIVER_OBJECT_EXTENSION DriverExtension;
-
     DEVICE_STATE PnpState;
     LIST_ENTRY AdapterListEntry;
-
     MINIPORT Miniport;
-
+    ULONG BusNumber;
+    ULONG SlotNumber;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 

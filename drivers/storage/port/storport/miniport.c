@@ -15,6 +15,80 @@
 
 /* FUNCTIONS ******************************************************************/
 
+static
+NTSTATUS
+InitializeConfiguration(
+    _In_ PPORT_CONFIGURATION_INFORMATION PortConfig,
+    _In_ PHW_INITIALIZATION_DATA InitData,
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber)
+{
+    PCONFIGURATION_INFORMATION ConfigInfo;
+    ULONG i;
+
+    DPRINT1("InitializeConfiguration(%p %p %lu %lu)\n",
+            PortConfig, InitData, BusNumber, SlotNumber);
+
+    /* Get the configurration information */
+    ConfigInfo = IoGetConfigurationInformation();
+
+    /* Initialize the port configuration */
+    RtlZeroMemory(PortConfig,
+                  sizeof(PORT_CONFIGURATION_INFORMATION));
+
+    PortConfig->Length = sizeof(PORT_CONFIGURATION_INFORMATION);
+    PortConfig->SystemIoBusNumber = BusNumber;
+    PortConfig->SlotNumber = SlotNumber;
+    PortConfig->AdapterInterfaceType = InitData->AdapterInterfaceType;
+
+    PortConfig->MaximumTransferLength = -1; //SP_UNINITIALIZED_VALUE;
+    PortConfig->DmaChannel = -1; //SP_UNINITIALIZED_VALUE;
+    PortConfig->DmaPort = -1; //SP_UNINITIALIZED_VALUE;
+
+    PortConfig->InterruptMode = LevelSensitive;
+
+    PortConfig->Master = TRUE;
+    PortConfig->AtdiskPrimaryClaimed = ConfigInfo->AtDiskPrimaryAddressClaimed;
+    PortConfig->AtdiskSecondaryClaimed = ConfigInfo->AtDiskSecondaryAddressClaimed;
+    PortConfig->Dma32BitAddresses = TRUE;
+    PortConfig->DemandMode = FALSE;
+    PortConfig->MapBuffers = InitData->MapBuffers;
+
+    PortConfig->NeedPhysicalAddresses = TRUE;
+    PortConfig->TaggedQueuing = TRUE;
+    PortConfig->AutoRequestSense = TRUE;
+    PortConfig->MultipleRequestPerLu = TRUE;
+    PortConfig->ReceiveEvent = InitData->ReceiveEvent;
+    PortConfig->RealModeInitialized = FALSE;
+    PortConfig->BufferAccessScsiPortControlled = TRUE;
+    PortConfig->MaximumNumberOfTargets = 128;
+
+    PortConfig->SpecificLuExtensionSize = InitData->SpecificLuExtensionSize;
+    PortConfig->SrbExtensionSize = InitData->SrbExtensionSize;
+    PortConfig->MaximumNumberOfLogicalUnits = 1;
+    PortConfig->WmiDataProvider = TRUE;
+
+    PortConfig->NumberOfAccessRanges = InitData->NumberOfAccessRanges;
+    DPRINT1("NumberOfAccessRanges: %lu\n", PortConfig->NumberOfAccessRanges);
+    if (PortConfig->NumberOfAccessRanges != 0)
+    {
+        PortConfig->AccessRanges = ExAllocatePoolWithTag(NonPagedPool,
+                                                         PortConfig->NumberOfAccessRanges * sizeof(ACCESS_RANGE),
+                                                         TAG_ACCRESS_RANGE);
+        if (PortConfig->AccessRanges == NULL)
+            return STATUS_NO_MEMORY;
+
+        RtlZeroMemory(PortConfig->AccessRanges,
+                      PortConfig->NumberOfAccessRanges * sizeof(ACCESS_RANGE));
+    }
+
+    for (i = 0; i < 7; i++)
+        PortConfig->InitiatorBusId[i] = 0xff;
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 MiniportInitialize(
     _In_ PMINIPORT Miniport,
@@ -23,6 +97,7 @@ MiniportInitialize(
 {
     PMINIPORT_DEVICE_EXTENSION MiniportExtension;
     ULONG Size;
+    NTSTATUS Status;
 
     DPRINT1("MiniportInitialize(%p %p %p)\n",
             Miniport, DeviceExtension, InitData);
@@ -46,7 +121,13 @@ MiniportInitialize(
     MiniportExtension->Miniport = Miniport;
     Miniport->MiniportExtension = MiniportExtension;
 
-    return STATUS_SUCCESS;
+    /* Initialize the port configuration */
+    Status = InitializeConfiguration(&Miniport->PortConfig,
+                                     InitData,
+                                     DeviceExtension->BusNumber,
+                                     DeviceExtension->SlotNumber);
+
+    return Status;
 }
 
 
@@ -65,7 +146,7 @@ MiniportFindAdapter(
                                                NULL,
                                                NULL,
                                                NULL,
-                                               NULL,
+                                               &Miniport->PortConfig,
                                                &Reserved);
     DPRINT1("HwFindAdapter() returned %lu\n", Result);
 
