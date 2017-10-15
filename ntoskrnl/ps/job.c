@@ -133,6 +133,8 @@ PspAssignProcessToJob(PEPROCESS Process,
     NTSTATUS Status = STATUS_SUCCESS;
     DPRINT("PspAssignProcessToJob(%p,%p)\n", Process, Job);
 
+    ASSERT(Process->Job == NULL);
+
     /* Grab a reference for the lifetime of the process, released in ps/kill.c */
     ObReferenceObject(Job);
 
@@ -160,7 +162,7 @@ PspAssignProcessToJob(PEPROCESS Process,
         /* notify the job object of the new proccess */
         Status = IoSetIoCompletion(Job->CompletionPort,
                                    Job->CompletionKey,
-                                   (PVOID)Process->UniqueProcessId,
+                                   Process->UniqueProcessId,
                                    STATUS_SUCCESS,
                                    JOB_OBJECT_MSG_NEW_PROCESS,
                                    FALSE);
