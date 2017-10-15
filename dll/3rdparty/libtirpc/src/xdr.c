@@ -44,8 +44,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __REACTOS__ // CVE-2017-8779
+#include <rpc/rpc.h>
+#endif
 #include <rpc/types.h>
 #include <rpc/xdr.h>
+#ifdef __REACTOS__ // CVE-2017-8779
+#include <rpc/rpc_com.h>
+#endif
 
 typedef quad_t          longlong_t;     /* ANSI long long type */
 typedef u_quad_t        u_longlong_t;   /* ANSI unsigned long long type */
@@ -55,7 +61,9 @@ typedef u_quad_t        u_longlong_t;   /* ANSI unsigned long long type */
  */
 #define XDR_FALSE	((long) 0)
 #define XDR_TRUE	((long) 1)
+#ifndef __REACTOS__ // CVE-2017-8779
 #define LASTUNSIGNED	((u_int) 0-1)
+#endif
 
 /*
  * for unit alignment
@@ -533,6 +541,9 @@ xdr_bytes(xdrs, cpp, sizep, maxsize)
 {
 	char *sp = *cpp;  /* sp is the actual string pointer */
 	u_int nodesize;
+#ifdef __REACTOS__ // CVE-2017-8779
+	bool_t ret, allocated = FALSE;
+#endif
 
 	/*
 	 * first deal with the length since xdr bytes are counted
@@ -556,6 +567,9 @@ xdr_bytes(xdrs, cpp, sizep, maxsize)
 		}
 		if (sp == NULL) {
 			*cpp = sp = mem_alloc(nodesize);
+#ifdef __REACTOS__ // CVE-2017-8779
+			allocated = TRUE;
+#endif
 		}
 		if (sp == NULL) {
 			//warnx("xdr_bytes: out of memory");
@@ -564,7 +578,18 @@ xdr_bytes(xdrs, cpp, sizep, maxsize)
 		/* FALLTHROUGH */
 
 	case XDR_ENCODE:
+#ifndef __REACTOS__ // CVE-2017-8779
 		return (xdr_opaque(xdrs, sp, nodesize));
+#else
+		ret = xdr_opaque(xdrs, sp, nodesize);
+		if ((xdrs->x_op == XDR_DECODE) && (ret == FALSE)) {
+			if (allocated == TRUE) {
+				free(sp);
+				*cpp = NULL;
+			}
+		}
+		return (ret);
+#endif
 
 	case XDR_FREE:
 		if (sp != NULL) {
@@ -658,6 +683,9 @@ xdr_string(xdrs, cpp, maxsize)
 	char *sp = *cpp;  /* sp is the actual string pointer */
 	u_int size;
 	u_int nodesize;
+#ifdef __REACTOS__ // CVE-2017-8779
+	bool_t ret, allocated = FALSE;
+#endif
 
 	/*
 	 * first deal with the length since xdr strings are counted-strings
@@ -697,8 +725,15 @@ xdr_string(xdrs, cpp, maxsize)
 	switch (xdrs->x_op) {
 
 	case XDR_DECODE:
+#ifndef __REACTOS__ // CVE-2017-8779
 		if (sp == NULL)
 			*cpp = sp = mem_alloc(nodesize);
+#else
+		if (sp == NULL) {
+			*cpp = sp = mem_alloc(nodesize);
+			allocated = TRUE;
+		}
+#endif
 		if (sp == NULL) {
 			//warnx("xdr_string: out of memory");
 			return (FALSE);
@@ -707,7 +742,18 @@ xdr_string(xdrs, cpp, maxsize)
 		/* FALLTHROUGH */
 
 	case XDR_ENCODE:
+#ifndef __REACTOS__ // CVE-2017-8779
 		return (xdr_opaque(xdrs, sp, size));
+#else
+		ret = xdr_opaque(xdrs, sp, size);
+		if ((xdrs->x_op == XDR_DECODE) && (ret == FALSE)) {
+			if (allocated == TRUE) {
+				free(sp);
+				*cpp = NULL;
+			}
+		}
+		return (ret);
+#endif
 
 	case XDR_FREE:
 		mem_free(sp, nodesize);
@@ -727,7 +773,11 @@ xdr_wrapstring(xdrs, cpp)
 	XDR *xdrs;
 	char **cpp;
 {
+#ifdef __REACTOS__ // CVE-2017-8779
+	return xdr_string(xdrs, cpp, RPC_MAXDATASIZE);
+#else
 	return xdr_string(xdrs, cpp, LASTUNSIGNED);
+#endif
 }
 
 /*
