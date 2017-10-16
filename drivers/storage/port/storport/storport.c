@@ -1005,7 +1005,7 @@ StorPortResumeDevice(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 STORPORT_API
 ULONG
@@ -1019,9 +1019,29 @@ StorPortSetBusDataByOffset(
     _In_ ULONG Offset,
     _In_ ULONG Length)
 {
-    DPRINT1("StorPortSetBusDataByOffset()\n");
-    UNIMPLEMENTED;
-    return 0;
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+    PBUS_INTERFACE_STANDARD Interface;
+    ULONG ReturnLength;
+
+    DPRINT1("StorPortSetBusData(%p %lu %lu %lu %p %lu %lu)\n",
+            DeviceExtension, BusDataType, SystemIoBusNumber, SlotNumber, Buffer, Offset, Length);
+
+    MiniportExtension = CONTAINING_RECORD(DeviceExtension,
+                                          MINIPORT_DEVICE_EXTENSION,
+                                          HwDeviceExtension);
+    DPRINT1("DeviceExtension %p  MiniportExtension %p\n",
+            DeviceExtension, MiniportExtension);
+
+    Interface = &MiniportExtension->Miniport->DeviceExtension->BusInterface;
+
+    ReturnLength = Interface->SetBusData(Interface->Context,
+                                         BusDataType,
+                                         Buffer,
+                                         Offset,
+                                         Length);
+    DPRINT1("ReturnLength: %lu\n", ReturnLength);
+
+    return ReturnLength;
 }
 
 
