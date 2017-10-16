@@ -2386,6 +2386,39 @@ DECLARE_INTERFACE_(IDockingWindowSite, IOleWindow)
 
 typedef void (CALLBACK *PFNASYNCICONTASKBALLBACK)(LPCITEMIDLIST pidl, LPVOID pvData, LPVOID pvHint, INT iIconIndex, INT iOpenIconIndex);
 
+#include <pshpack8.h>
+
+typedef struct {
+    DWORD       dwMask;
+    DWORD       dwStateMask;
+    DWORD       dwState;
+    COLORREF    crBkgnd;
+    COLORREF    crBtnLt;
+    COLORREF    crBtnDk;
+    WORD        wViewMode;
+    WORD        wAlign;
+    IShellFolder * psf;
+    PIDLIST_ABSOLUTE pidl;
+} BANDINFOSFB, *PBANDINFOSFB;
+
+#include <poppack.h>
+
+#undef INTERFACE
+#define INTERFACE IShellFolderBand
+
+DECLARE_INTERFACE_(IShellFolderBand, IUnknown)
+{
+    // *** IUnknown methods ***
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+
+    // *** IShellFolderBand Methods ***
+    STDMETHOD(InitializeSFB)(THIS_ IShellFolder *psf, PCIDLIST_ABSOLUTE pidl) PURE;
+    STDMETHOD(SetBandInfoSFB)(THIS_ PBANDINFOSFB pbi) PURE;
+    STDMETHOD(GetBandInfoSFB)(THIS_ PBANDINFOSFB pbi) PURE;
+};
+
 /*****************************************************************************
  * Control Panel functions
  */

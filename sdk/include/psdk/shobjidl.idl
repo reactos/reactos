@@ -4458,3 +4458,20 @@ interface IShellTaskScheduler : IUnknown
         [in] DWORD dwReleaseStatus, 
         [in] DWORD dwThreadTimeout);
 }
+
+
+[
+    uuid(47c01f95-e185-412c-b5c5-4f27df965aea),
+    object,
+    pointer_default(unique)
+]
+interface IFolderBandPriv : IUnknown
+{
+    HRESULT SetCascade([in] BOOL fCascade);
+
+    HRESULT SetAccelerators([in] BOOL fAccelerators);
+
+    HRESULT SetNoIcons([in] BOOL fNoIcons);
+
+    HRESULT SetNoText([in] BOOL fNoText);
+}
