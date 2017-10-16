@@ -1,0 +1,19 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDM_POPUPMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN      
+        POPUP "&View", IDM_VIEW_MENU
+        BEGIN
+            MENUITEM "&Large Icons", IDM_LARGE_ICONS
+            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+        END
+        MENUITEM "&Show Text", IDM_SHOW_TEXT
+    END    
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BROWSEINFO_TITLE "Choose a folder"    
+END
