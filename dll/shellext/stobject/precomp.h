@@ -69,19 +69,16 @@ extern HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
-extern VOID Volume_OnTimer(HWND hWnd);
 
 extern HRESULT STDMETHODCALLTYPE Hotplug_Init(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Hotplug_Shutdown(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Hotplug_Update(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
-extern VOID Hotplug_OnTimer(HWND hWnd);
 
 extern HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Power_Shutdown(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Power_Update(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
-extern VOID Power_OnTimer(HWND hWnd);
 
 #define POWER_TIMER_ID   2
 #define VOLUME_TIMER_ID  3

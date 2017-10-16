@@ -113,7 +113,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     return S_OK;
 }
 
-HRESULT Volume_IsMute(VOID)
+HRESULT Volume_IsMute()
 {
 #if 0
     MIXERCONTROLDETAILS mixerControlDetails;
@@ -217,10 +217,10 @@ HRESULT Volume_OnDeviceChange(_In_ CSysTray * pSysTray, WPARAM wParam, LPARAM lP
     return Volume_FindMixerControl(pSysTray);
 }
 
-static void _RunVolume(BOOL bSmall)
+static void _RunVolume()
 {
     // FIXME: ensure we are loading the right one
-    ShellExecuteW(NULL, NULL, L"sndvol32.exe", bSmall ? L"/t" : NULL, NULL, SW_SHOWNORMAL);
+    ShellExecuteW(NULL, NULL, L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL);
 }
 
 static void _RunMMCpl()
@@ -238,14 +238,14 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     HMENU hPopup = CreatePopupMenu();
     AppendMenuW(hPopup, MF_STRING, IDS_VOL_OPEN, strOpen);
     AppendMenuW(hPopup, MF_STRING, IDS_VOL_ADJUST, strAdjust);
-    SetMenuDefaultItem(hPopup, IDS_VOL_OPEN, FALSE);
 
     DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
-    DWORD msgPos = GetMessagePos();
-
+    POINT pt;
     SetForegroundWindow(pSysTray->GetHWnd());
+    GetCursorPos(&pt);
+
     DWORD id = TrackPopupMenuEx(hPopup, flags,
-        GET_X_LPARAM(msgPos), GET_Y_LPARAM(msgPos),
+        pt.x, pt.y,
         pSysTray->GetHWnd(), NULL);
 
     DestroyMenu(hPopup);
@@ -253,7 +253,7 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     switch (id)
     {
     case IDS_VOL_OPEN:
-        _RunVolume(FALSE);
+        _RunVolume();
         break;
     case IDS_VOL_ADJUST:
         _RunMMCpl();
@@ -296,15 +296,14 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
             switch (lParam)
             {
                 case WM_LBUTTONDOWN:
-                    SetTimer(pSysTray->GetHWnd(), VOLUME_TIMER_ID, 500, NULL);
                     break;
 
                 case WM_LBUTTONUP:
+                    TRACE("TODO: display volume slider\n");
                     break;
 
                 case WM_LBUTTONDBLCLK:
-                    KillTimer(pSysTray->GetHWnd(), VOLUME_TIMER_ID);
-                    _RunVolume(FALSE);
+                    _RunVolume();
                     break;
 
                 case WM_RBUTTONDOWN:
@@ -328,12 +327,4 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
     }
 
     return S_FALSE;
-}
-
-VOID
-Volume_OnTimer(HWND hWnd)
-{
-    TRACE("Volume_OnTimer\n!");
-    KillTimer(hWnd, VOLUME_TIMER_ID);
-    _RunVolume(TRUE);
 }

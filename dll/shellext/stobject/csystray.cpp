@@ -4,6 +4,7 @@
 * FILE:        dll/shellext/stobject/csystray.cpp
 * PURPOSE:     Systray shell service object implementation
 * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
+*              Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
 */
 
 #include "precomp.h"
@@ -97,7 +98,27 @@ HRESULT CSysTray::ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LR
     return S_FALSE;
 }
 
-HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip)
+/*++
+* @name NotifyIcon
+*
+* Basically a Shell_NotifyIcon wrapper.
+* Based on the parameters provided, it changes the current state of the notification icon.
+*
+* @param code
+*        Determines whether to add, delete or modify the notification icon (represented by uId).
+* @param uId
+*        Represents the particular notification icon.
+* @param hIcon
+*        A handle to an icon for the notification object.
+* @param szTip
+*        A string for the tooltip of the notification.
+* @param dwstate
+*        Determines whether to show or hide the notification icon.
+*
+* @return The error code.
+*
+*--*/
+HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip, DWORD dwstate)
 {
     NOTIFYICONDATA nim = { 0 };
 
@@ -108,8 +129,8 @@ HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip)
     nim.hIcon = hIcon;
     nim.uID = uId;
     nim.uCallbackMessage = uId;
-    nim.dwState = 0;
-    nim.dwStateMask = 0;
+    nim.dwState = dwstate;
+    nim.dwStateMask = NIS_HIDDEN;
     nim.hWnd = m_hWnd;
     nim.uVersion = NOTIFYICON_VERSION;
     if (szTip)
@@ -219,30 +240,8 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         return TRUE;
 
     case WM_TIMER:
-        switch (wParam)
-        {
-            case 1:
-                UpdateIcons();
-                return TRUE;
-
-            case POWER_TIMER_ID:
-                Power_OnTimer(hWnd);
-                break;
-
-            case VOLUME_TIMER_ID:
-                Volume_OnTimer(hWnd);
-                break;
-
-            case HOTPLUG_TIMER_ID:
-                Hotplug_OnTimer(hWnd);
-                break;
-        }
-        break;
-
-    case WM_DEVICECHANGE:
-        ERR("WM_DEVICECHANGE\n");
-        break;
-
+        UpdateIcons();
+        return TRUE;
     case WM_DESTROY:
         KillTimer(1);
         ShutdownIcons();
