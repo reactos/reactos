@@ -7,11 +7,10 @@
  */
 #pragma once
 
-// COM class for cisfband
 class CISFBand :
     public CWindow,
-    public CComCoClass<CISFBand>,
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,    
+    public CComCoClass<CBandSiteMenu, &CLSID_ISFBand>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IObjectWithSite,
     public IDeskBand,    
     public IPersistStream,
@@ -174,6 +173,7 @@ public:
     
 //*****************************************************************************************************   
 
+    DECLARE_REGISTRY_RESOURCEID(IDR_ISFBAND)
     DECLARE_NOT_AGGREGATABLE(CISFBand)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 

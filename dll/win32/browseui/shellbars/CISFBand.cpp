@@ -6,13 +6,12 @@
  * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
 
-#include "precomp.h"
+#include "shellbars.h"
 #include <commoncontrols.h>
+#include <strsafe.h>
 
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
-
-WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 
 // ***Extras***
 /*++
@@ -26,7 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 * @return True if PIDL is of Desktop, otherwise false.
 *
 *--*/
-BOOL WINAPI _ILIsDesktop(LPCITEMIDLIST pidl)
+static BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
 {
     return (pidl == NULL || pidl->mkid.cb == 0);
 }
@@ -99,7 +98,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
          hr = m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &stret); 
          if (FAILED_UNEXPECTEDLY(hr))
          {
-             strcpyW(sz, L"<Unknown-Name>");
+             StringCchCopyW(sz, MAX_PATH, L"<Unknown-Name>");
          }
          else 
              StrRetToBuf(&stret, pidl, sz, _countof(sz));            
@@ -277,9 +276,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 // *** IPersistStream *** 
     STDMETHODIMP CISFBand::GetClassID(OUT CLSID *pClassID)
     {        
-        TRACE("CISFBand::GetClassID(0x%p)\n", pClassID);
-        /* We're going to return the (internal!) CLSID of the quick launch band */
-         *pClassID = CLSID_QuickLaunchBand;        
+        *pClassID = CLSID_ISFBand;
 
         return S_OK;
     }
@@ -555,7 +552,8 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
     STDMETHODIMP CISFBand::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {        
-        HMENU qMenu = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDM_POPUPMENU));        
+        HMENU qMenu = LoadMenu(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCE(IDM_POPUPMENU));
+
         if(m_textFlag) 
             CheckMenuItem(qMenu, IDM_SHOW_TEXT, MF_CHECKED);
         else 

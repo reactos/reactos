@@ -30,6 +30,7 @@
 
 #include "CBandSite.h"
 #include "CBandSiteMenu.h"
+#include "CISFBand.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 
