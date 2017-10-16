@@ -23,11 +23,12 @@
 #include <wdmguid.h>
 
 /* Memory Tags */
-#define TAG_GLOBAL_DATA    'DGtS'
-#define TAG_INIT_DATA      'DItS'
-#define TAG_MINIPORT_DATA  'DMtS'
-#define TAG_ACCRESS_RANGE  'RAtS'
-#define TAG_RESOURCE_LIST  'LRtS'
+#define TAG_GLOBAL_DATA     'DGtS'
+#define TAG_INIT_DATA       'DItS'
+#define TAG_MINIPORT_DATA   'DMtS'
+#define TAG_ACCRESS_RANGE   'RAtS'
+#define TAG_RESOURCE_LIST   'LRtS'
+#define TAG_ADDRESS_MAPPING 'MAtS'
 
 typedef enum
 {
@@ -95,6 +96,7 @@ typedef struct _FDO_DEVICE_EXTENSION
     PCM_RESOURCE_LIST TranslatedResources;
     BUS_INTERFACE_STANDARD BusInterface;
     BOOLEAN BusInitialized;
+    PMAPPED_ADDRESS MappedAddressList;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 
@@ -166,6 +168,23 @@ QueryBusInterface(
     PBUS_INTERFACE_STANDARD Interface,
     PVOID InterfaceSpecificData);
 
+BOOLEAN
+TranslateResourceListAddress(
+    PFDO_DEVICE_EXTENSION DeviceExtension,
+    INTERFACE_TYPE BusType,
+    ULONG SystemIoBusNumber,
+    STOR_PHYSICAL_ADDRESS IoAddress,
+    ULONG NumberOfBytes,
+    BOOLEAN InIoSpace,
+    PPHYSICAL_ADDRESS TranslatedAddress);
+
+NTSTATUS
+AllocateAddressMapping(
+    PMAPPED_ADDRESS *MappedAddressList,
+    STOR_PHYSICAL_ADDRESS IoAddress,
+    PVOID MappedAddress,
+    ULONG NumberOfBytes,
+    ULONG BusNumber);
 
 /* pdo.c */
 

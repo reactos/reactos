@@ -217,4 +217,108 @@ QueryBusInterface(
     return Status;
 }
 
+
+BOOLEAN
+TranslateResourceListAddress(
+    PFDO_DEVICE_EXTENSION DeviceExtension,
+    INTERFACE_TYPE BusType,
+    ULONG SystemIoBusNumber,
+    STOR_PHYSICAL_ADDRESS IoAddress,
+    ULONG NumberOfBytes,
+    BOOLEAN InIoSpace,
+    PPHYSICAL_ADDRESS TranslatedAddress)
+{
+    PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptorA, FullDescriptorT;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptorA, PartialDescriptorT;
+    INT i, j;
+
+    DPRINT1("TranslateResourceListAddress(%p)\n", DeviceExtension);
+
+    FullDescriptorA = DeviceExtension->AllocatedResources->List;
+    FullDescriptorT = DeviceExtension->TranslatedResources->List;
+    for (i = 0; i < DeviceExtension->AllocatedResources->Count; i++)
+    {
+        for (j = 0; j < FullDescriptorA->PartialResourceList.Count; j++)
+        {
+            PartialDescriptorA = FullDescriptorA->PartialResourceList.PartialDescriptors + j;
+            PartialDescriptorT = FullDescriptorT->PartialResourceList.PartialDescriptors + j;
+
+            switch (PartialDescriptorA->Type)
+            {
+                case CmResourceTypePort:
+                    DPRINT1("Port: 0x%I64x (0x%lx)\n",
+                            PartialDescriptorA->u.Port.Start.QuadPart,
+                            PartialDescriptorA->u.Port.Length);
+                    if (InIoSpace &&
+                        IoAddress.QuadPart >= PartialDescriptorA->u.Port.Start.QuadPart &&
+                        IoAddress.QuadPart + NumberOfBytes <= PartialDescriptorA->u.Port.Start.QuadPart + PartialDescriptorA->u.Port.Length)
+                    {
+                        TranslatedAddress->QuadPart = PartialDescriptorT->u.Port.Start.QuadPart + 
+                                                      (IoAddress.QuadPart - PartialDescriptorA->u.Port.Start.QuadPart);
+                        return TRUE;
+                    }
+                    break;
+
+                case CmResourceTypeMemory:
+                    DPRINT1("Memory: 0x%I64x (0x%lx)\n",
+                            PartialDescriptorA->u.Memory.Start.QuadPart,
+                            PartialDescriptorA->u.Memory.Length);
+                    if (!InIoSpace &&
+                        IoAddress.QuadPart >= PartialDescriptorA->u.Memory.Start.QuadPart &&
+                        IoAddress.QuadPart + NumberOfBytes <= PartialDescriptorA->u.Memory.Start.QuadPart + PartialDescriptorA->u.Memory.Length)
+                    {
+                        TranslatedAddress->QuadPart = PartialDescriptorT->u.Memory.Start.QuadPart + 
+                                                      (IoAddress.QuadPart - PartialDescriptorA->u.Memory.Start.QuadPart);
+                        return TRUE;
+                    }
+                    break;
+            }
+        }
+
+        /* Advance to next CM_FULL_RESOURCE_DESCRIPTOR block in memory. */
+        FullDescriptorA = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptorA->PartialResourceList.PartialDescriptors + 
+                                                         FullDescriptorA->PartialResourceList.Count);
+
+        FullDescriptorT = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptorT->PartialResourceList.PartialDescriptors + 
+                                                         FullDescriptorT->PartialResourceList.Count);
+    }
+
+    return FALSE;
+}
+
+
+NTSTATUS
+AllocateAddressMapping(
+    PMAPPED_ADDRESS *MappedAddressList,
+    STOR_PHYSICAL_ADDRESS IoAddress,
+    PVOID MappedAddress,
+    ULONG NumberOfBytes,
+    ULONG BusNumber)
+{
+    PMAPPED_ADDRESS Mapping;
+
+    DPRINT1("AllocateAddressMapping()\n");
+
+    Mapping = ExAllocatePoolWithTag(NonPagedPool,
+                                    sizeof(MAPPED_ADDRESS),
+                                    TAG_ADDRESS_MAPPING);
+    if (Mapping == NULL)
+    {
+        DPRINT1("No memory!\n");
+        return STATUS_NO_MEMORY;
+    }
+
+    RtlZeroMemory(Mapping, sizeof(MAPPED_ADDRESS));
+
+    Mapping->NextMappedAddress = *MappedAddressList;
+    *MappedAddressList = Mapping;
+
+    Mapping->IoAddress = IoAddress;
+    Mapping->MappedAddress = MappedAddress;
+    Mapping->NumberOfBytes = NumberOfBytes;
+    Mapping->BusNumber = BusNumber;
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

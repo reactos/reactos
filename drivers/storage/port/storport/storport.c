@@ -528,7 +528,8 @@ StorPortFreeDeviceBase(
     _In_ PVOID HwDeviceExtension,
     _In_ PVOID MappedAddress)
 {
-    DPRINT1("StorPortFreeDeviceBase()\n");
+    DPRINT1("StorPortFreeDeviceBase(%p %p)\n",
+            HwDeviceExtension, MappedAddress);
 }
 
 
@@ -568,6 +569,7 @@ StorPortGetBusData(
     DPRINT1("StorPortGetBusData(%p %lu %lu %lu %p %lu)\n",
             DeviceExtension, BusDataType, SystemIoBusNumber, SlotNumber, Buffer, Length);
 
+    /* Get the miniport extension */
     MiniportExtension = CONTAINING_RECORD(DeviceExtension,
                                           MINIPORT_DEVICE_EXTENSION,
                                           HwDeviceExtension);
@@ -591,7 +593,7 @@ StorPortGetBusData(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 STORPORT_API
 PVOID
@@ -604,9 +606,62 @@ StorPortGetDeviceBase(
     _In_ ULONG NumberOfBytes,
     _In_ BOOLEAN InIoSpace)
 {
-    DPRINT1("StorPortGetDeviceBase()\n");
-    UNIMPLEMENTED;
-    return NULL;
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+
+    PHYSICAL_ADDRESS TranslatedAddress;
+    PVOID MappedAddress;
+    NTSTATUS Status;
+
+    DPRINT1("StorPortGetDeviceBase(%p %lu %lu 0x%I64x %lu %u)\n",
+            HwDeviceExtension, BusType, SystemIoBusNumber, IoAddress.QuadPart, NumberOfBytes, InIoSpace);
+
+    /* Get the miniport extension */
+    MiniportExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                          MINIPORT_DEVICE_EXTENSION,
+                                          HwDeviceExtension);
+    DPRINT1("HwDeviceExtension %p  MiniportExtension %p\n",
+            HwDeviceExtension, MiniportExtension);
+
+    if (!TranslateResourceListAddress(MiniportExtension->Miniport->DeviceExtension,
+                                      BusType,
+                                      SystemIoBusNumber,
+                                      IoAddress,
+                                      NumberOfBytes,
+                                      InIoSpace,
+                                      &TranslatedAddress))
+    {
+        DPRINT1("Checkpoint!\n");
+        return NULL;
+    }
+
+    DPRINT1("Translated Address: 0x%I64x\n", TranslatedAddress.QuadPart);
+
+    /* In I/O space */
+    if (InIoSpace)
+    {
+        DPRINT1("Translated Address: %p\n", (PVOID)(ULONG_PTR)TranslatedAddress.QuadPart);
+        return (PVOID)(ULONG_PTR)TranslatedAddress.QuadPart;
+    }
+
+    /* In memory space */
+    MappedAddress = MmMapIoSpace(TranslatedAddress,
+                                 NumberOfBytes,
+                                 FALSE);
+    DPRINT1("Mapped Address: %p\n", MappedAddress);
+
+    Status = AllocateAddressMapping(&MiniportExtension->Miniport->DeviceExtension->MappedAddressList,
+                                    IoAddress,
+                                    MappedAddress,
+                                    NumberOfBytes,
+                                    SystemIoBusNumber);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Checkpoint!\n");
+        MappedAddress = NULL;
+    }
+
+    DPRINT1("Mapped Address: %p\n", MappedAddress);
+    return MappedAddress;
 }
 
 
