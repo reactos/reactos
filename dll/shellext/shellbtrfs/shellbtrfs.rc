@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.K.) resources
+// English (United Kingdom) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -27,18 +25,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE
+2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -56,14 +54,15 @@ END
 // remains consistent on all systems.
 IDI_ICON1               ICON                    "subvol.ico"
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,0,1,0
+ PRODUCTVERSION 1,0,1,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -79,12 +78,12 @@ BEGIN
         BLOCK "080904b0"
         BEGIN
             VALUE "FileDescription", "WinBtrfs shell extension"
-            VALUE "FileVersion", "1.0"
+            VALUE "FileVersion", "1.0.1"
             VALUE "InternalName", "btrfs"
             VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016-17"
             VALUE "OriginalFilename", "shellbtrfs.dll"
             VALUE "ProductName", "WinBtrfs"
-            VALUE "ProductVersion", "1.0"
+            VALUE "ProductVersion", "1.0.1"
         END
     END
     BLOCK "VarFileInfo"
@@ -484,6 +483,7 @@ END
 
 2                       RT_MANIFEST             "shellbtrfs.manifest"
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
@@ -575,9 +575,9 @@ BEGIN
     IDS_DEVLIST_READONLY_NO "No"
     IDS_DEVLIST_ALLOC       "Allocated"
     IDS_DEVLIST_ALLOC_PC    "%"
-    IDS_BALANCE_RUNNING_REMOVAL
+    IDS_BALANCE_RUNNING_REMOVAL 
                             "Currently removing device %llu (%llu out of %llu chunks processed, %1.1f%%)"
-    IDS_BALANCE_PAUSED_REMOVAL
+    IDS_BALANCE_PAUSED_REMOVAL 
                             "Removal of device %llu paused (%llu out of %llu chunks processed, %1.1f%%)"
     IDS_BALANCE_CANCELLED_REMOVAL "Device removal cancelled."
     IDS_BALANCE_COMPLETE_REMOVAL "Device removal completed successfully."
@@ -588,12 +588,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_CANNOT_REMOVE_RAID  "The current RAID levels do not allow this device to be removed. You must do a conversion balance before you will be able to proceed."
-    IDS_REMOVE_DEVICE_CONFIRMATION
+    IDS_REMOVE_DEVICE_CONFIRMATION 
                             "Are you sure that you want to remove device %s, %s?"
     IDS_CONFIRMATION_TITLE  "Confirmation"
-    IDS_ADD_DEVICE_CONFIRMATION
+    IDS_ADD_DEVICE_CONFIRMATION 
                             "Are you sure that you want to add this device?"
-    IDS_ADD_DEVICE_CONFIRMATION_FS
+    IDS_ADD_DEVICE_CONFIRMATION_FS 
                             "Are you sure that you want to add this device? It already appears to contain a filesystem (%s)."
     IDS_BALANCE_FAILED      "Balance failed (error %08x, %s)"
     IDS_BALANCE_FAILED_REMOVAL "Device removal failed (error %08x, %s)"
@@ -604,32 +604,32 @@ BEGIN
     IDS_SCRUB_FINISHED      "Scrub finished."
     IDS_SCRUB_PAUSED        "Scrub paused (%llu out of %llu chunks processed, %1.1f%%)"
     IDS_SCRUB_MSG_STARTED   "Scrub started at %s %s."
-    IDS_SCRUB_MSG_RECOVERABLE_DATA
+    IDS_SCRUB_MSG_RECOVERABLE_DATA 
                             "Recovered from data checksum error at %llx on device %llx."
-    IDS_SCRUB_MSG_RECOVERABLE_METADATA
+    IDS_SCRUB_MSG_RECOVERABLE_METADATA 
                             "Recovered from metadata checksum error at %llx on device %llx."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SCRUB_MSG_UNRECOVERABLE_DATA
+    IDS_SCRUB_MSG_UNRECOVERABLE_DATA 
                             "Unrecoverable data checksum error at %llx on device %llx (%.*s, offset %llx)"
-    IDS_SCRUB_MSG_UNRECOVERABLE_DATA_SUBVOL
+    IDS_SCRUB_MSG_UNRECOVERABLE_DATA_SUBVOL 
                             "Unrecoverable data checksum error at %llx on device %llx (subvol %llx, %.*s, offset %llx)"
-    IDS_SCRUB_MSG_UNRECOVERABLE_METADATA
+    IDS_SCRUB_MSG_UNRECOVERABLE_METADATA 
                             "Unrecoverable metadata checksum error at %llx on device %llx (root %llx, level %x)"
-    IDS_SCRUB_MSG_UNRECOVERABLE_METADATA_FIRSTITEM
+    IDS_SCRUB_MSG_UNRECOVERABLE_METADATA_FIRSTITEM 
                             "Unrecoverable metadata checksum error at %llx on device %llx (root %llx, level %x, first item %llx,%x,%llx)"
     IDS_SCRUB_MSG_FINISHED  "Scrub finished at %s %s."
     IDS_SCRUB_MSG_SUMMARY   "Scrubbed %s in %llu seconds (%s/s)."
     IDS_BALANCE_SCRUB_RUNNING "Cannot start balance while scrub running."
     IDS_SCRUB_BALANCE_RUNNING "Cannot start scrub while balance running."
     IDS_SCRUB_MSG_SUMMARY_ERRORS_RECOVERABLE "Recovered from %llu error(s)."
-    IDS_SCRUB_MSG_SUMMARY_ERRORS_UNRECOVERABLE
+    IDS_SCRUB_MSG_SUMMARY_ERRORS_UNRECOVERABLE 
                             "%llu unrecoverable error(s) found."
     IDS_SCRUB_FAILED        "Scrub failed with error %08x."
     IDS_LOCK_FAILED         "Unable to lock volume: error %08x. Make sure that there are no files open, and that you have closed any Explorer windows."
-    IDS_SCRUB_MSG_RECOVERABLE_PARITY
+    IDS_SCRUB_MSG_RECOVERABLE_PARITY 
                             "Recovered from parity error at %llx on device %llx."
     IDS_COMPRESS_ANY        "(any)"
     IDS_COMPRESS_ZLIB       "Zlib"
@@ -649,12 +649,12 @@ BEGIN
     IDS_RECV_UNKNOWN_COMMAND "Unrecognized command %u encountered."
     IDS_RECV_CANT_OPEN_PATH "Couldn't open path %s (error %u, %s)."
     IDS_RECV_RTLUTF8TOUNICODEN_FAILED "RtlUTF8ToUnicodeN returned %08x (%s)."
-    IDS_RECV_CREATE_SUBVOL_FAILED
+    IDS_RECV_CREATE_SUBVOL_FAILED 
                             "FSCTL_BTRFS_CREATE_SUBVOL returned %08x (%s)."
     IDS_RECV_MISSING_PARAM  "%S: could not find %s parameter."
     IDS_RECV_SHORT_PARAM    "%S: length of parameter %s was %u, expected %u."
     IDS_RECV_MKNOD_FAILED   "FSCTL_BTRFS_MKNOD returned %08x (%s)."
-    IDS_RECV_SET_REPARSE_POINT_FAILED
+    IDS_RECV_SET_REPARSE_POINT_FAILED 
                             "FSCTL_SET_REPARSE_POINT returned %08x (%s)."
 END
 
@@ -663,19 +663,19 @@ BEGIN
     IDS_RECV_MOVEFILE_FAILED "MoveFile (%s -> %s) failed (error %u, %s)."
     IDS_RECV_SETFILEPOINTER_FAILED "SetFilePointer failed (error %u, %s)."
     IDS_RECV_WRITEFILE_FAILED "WriteFile failed (error %u, %s)."
-    IDS_RECV_CREATEHARDLINK_FAILED
+    IDS_RECV_CREATEHARDLINK_FAILED 
                             "CreateHardLink (%s -> %s) failed (error %u, %s)."
     IDS_RECV_SETENDOFFILE_FAILED "SetEndOfFile failed (error %u, %s)."
     IDS_RECV_CANT_CREATE_FILE "Couldn't create %s (error %u, %s)."
-    IDS_RECV_SETFILEINFO_FAILED
+    IDS_RECV_SETFILEINFO_FAILED 
                             "SetFileInformationByHandle failed (error %u, %s)."
-    IDS_RECV_SETINODEINFO_FAILED
+    IDS_RECV_SETINODEINFO_FAILED 
                             "FSCTL_BTRFS_SET_INODE_INFO returned %08x (%s)."
     IDS_RECV_SUCCESS        "Received 1 subvolume successfully."
     IDS_RECV_BUTTON_OK      "OK"
-    IDS_RECV_SETFILEATTRIBUTES_FAILED
+    IDS_RECV_SETFILEATTRIBUTES_FAILED 
                             "SetFileAttributes failed (error %u, %s)."
-    IDS_RECV_GETFILEATTRIBUTES_FAILED
+    IDS_RECV_GETFILEATTRIBUTES_FAILED 
                             "GetFileAttributes failed (error %u, %s)."
     IDS_RECV_CSUM_ERROR     "Checksum error."
     IDS_RECV_NOT_A_SEND_STREAM "File was not a send stream."
@@ -685,28 +685,28 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_RECV_RECEIVED_SUBVOL_FAILED
+    IDS_RECV_RECEIVED_SUBVOL_FAILED 
                             "FSCTL_BTRFS_RECEIVED_SUBVOL returned %08x (%s)."
-    IDS_RECV_SETSECURITYOBJECT_FAILED
+    IDS_RECV_SETSECURITYOBJECT_FAILED 
                             "NtSetSecurityObject returned %08x (%s)."
     IDS_RECV_SETXATTR_FAILED "FSCTL_BTRFS_SET_XATTR returned %08x (%s)."
     IDS_RECV_CREATETHREAD_FAILED "CreateThread failed (error %u, %s)."
     IDS_RECV_FILE_TRUNCATED "File was truncated."
-    IDS_RECV_RESERVE_SUBVOL_FAILED
+    IDS_RECV_RESERVE_SUBVOL_FAILED 
                             "FSCTL_BTRFS_RESERVE_SUBVOL returned %08x (%s)."
     IDS_RECV_CANCELLED      "Receiving cancelled."
     IDS_RECV_CANT_FIND_PARENT_SUBVOL "Could not find parent subvolume."
     IDS_RECV_FIND_SUBVOL_FAILED "FSCTL_BTRFS_FIND_SUBVOL returned %08x (%s)."
-    IDS_RECV_CREATE_SNAPSHOT_FAILED
+    IDS_RECV_CREATE_SNAPSHOT_FAILED 
                             "FSCTL_BTRFS_CREATE_SNAPSHOT returned %08x (%s)."
-    IDS_RECV_GETVOLUMEPATHNAME_FAILED
+    IDS_RECV_GETVOLUMEPATHNAME_FAILED 
                             "GetVolumePathName failed (error %u, %s)."
     IDS_RECV_DELETEFILE_FAILED "DeleteFile failed for %s (error %u, %s)."
-    IDS_RECV_REMOVEDIRECTORY_FAILED
+    IDS_RECV_REMOVEDIRECTORY_FAILED 
                             "RemoveDirectory failed for %s (error %u, %s)."
     IDS_RECV_CANT_FIND_CLONE_SUBVOL "Could not find clone subvolume."
     IDS_RECV_GETFILESIZEEX_FAILED "GetFileSizeEx failed (error %u, %s)."
-    IDS_RECV_DUPLICATE_EXTENTS_FAILED
+    IDS_RECV_DUPLICATE_EXTENTS_FAILED 
                             "FSCTL_DUPLICATE_EXTENTS_TO_FILE returned %08x (%s)."
 END
 
@@ -717,13 +717,13 @@ BEGIN
     IDS_SEND_SUBVOL_HELP    "Exports a subvolume so that it can be recreated on another volume."
     IDS_SEND_CANT_OPEN_FILE "Error opening file %s (error %u, %s)."
     IDS_SEND_CANT_OPEN_DIR  "Error opening directory %s (error %u, %s)."
-    IDS_SEND_FSCTL_BTRFS_SEND_SUBVOL_FAILED
+    IDS_SEND_FSCTL_BTRFS_SEND_SUBVOL_FAILED 
                             "FSCTL_BTRFS_SEND_SUBVOL returned error %08x (%s)."
-    IDS_SEND_FSCTL_BTRFS_READ_SEND_BUFFER_FAILED
+    IDS_SEND_FSCTL_BTRFS_READ_SEND_BUFFER_FAILED 
                             "FSCTL_BTRFS_READ_SEND_BUFFER returned error %08x (%s)."
     IDS_SEND_SUCCESS        "Stream written successfully."
     IDS_SEND_WRITEFILE_FAILED "Writing to file failed (error %u, %s)."
-    IDS_SEND_GET_FILE_INFO_FAILED
+    IDS_SEND_GET_FILE_INFO_FAILED 
                             "GetFileInformationByHandle failed (error %u, %s)."
     IDS_SEND_NOT_READONLY   "Subvolume not readonly."
     IDS_NOT_SUBVOL          "Directory was not a subvolume."
@@ -739,16 +739,16 @@ BEGIN
     IDS_SEND_WRITING        "Writing..."
     IDS_MISSING             "(missing)"
     IDS_RESIZE_SUCCESSFUL   "Device %llx successfully resized to %s."
-    IDS_BALANCE_RUNNING_SHRINK
+    IDS_BALANCE_RUNNING_SHRINK 
                             "Currently shrinking device %llu (%llu out of %llu chunks processed, %1.1f%%)"
-    IDS_BALANCE_PAUSED_SHRINK
+    IDS_BALANCE_PAUSED_SHRINK 
                             "Shrinking of device %llu paused (%llu out of %llu chunks processed, %1.1f%%)"
     IDS_BALANCE_CANCELLED_SHRINK "Device shrinking cancelled."
     IDS_BALANCE_COMPLETE_SHRINK "Device successfully shrunk."
     IDS_BALANCE_FAILED_SHRINK "Device shrinking failed (error %08x, %s)"
 END
 
-#endif    // English (U.K.) resources
+#endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
