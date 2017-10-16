@@ -54,6 +54,7 @@ extern void func_RtlMemoryStream(void);
 extern void func_RtlNtPathNameToDosPathName(void);
 extern void func_RtlpEnsureBufferSize(void);
 extern void func_RtlReAllocateHeap(void);
+extern void func_RtlUnicodeStringToAnsiString(void);
 extern void func_RtlUpcaseUnicodeStringToCountedOemString(void);
 extern void func_StackOverflow(void);
 extern void func_TimerResolution(void);
@@ -111,6 +112,7 @@ const struct test winetest_testlist[] =
     { "RtlNtPathNameToDosPathName",     func_RtlNtPathNameToDosPathName },
     { "RtlpEnsureBufferSize",           func_RtlpEnsureBufferSize },
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
+    { "RtlUnicodeStringToAnsiString",   func_RtlUnicodeStringToAnsiString },
     { "RtlUpcaseUnicodeStringToCountedOemString", func_RtlUpcaseUnicodeStringToCountedOemString },
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },

@@ -50,6 +50,7 @@ list(APPEND SOURCE
     RtlNtPathNameToDosPathName.c
     RtlpEnsureBufferSize.c
     RtlReAllocateHeap.c
+    RtlUnicodeStringToAnsiString.c
     RtlUpcaseUnicodeStringToCountedOemString.c
     StackOverflow.c
     SystemInfo.c
