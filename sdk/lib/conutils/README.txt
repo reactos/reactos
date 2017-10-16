@@ -1,7 +1,9 @@
-The ReactOS Console Utilities Library v0.1
+The ReactOS Console Utilities Library v0.2
 ==========================================
 
-COPYRIGHT:  Under GPLv2, see COPYING in the top level directory.
+LICENSE:    GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+COPYRIGHT:  Copyright 2017-2018 ReactOS Team
+            Copyright 2017-2018 Hermes Belusca-Maito
 CREDITS:    Thanks to the many people who originally wrote the code that finally
             ended up inside this library, with more or less refactoring, or
             whose code served as a basis for some functions of the library.
@@ -21,23 +23,22 @@ together with printf-like functionality.
 CONTENTS
 ~-~-~-~-
 
-0. 'conutils_base' (utils.c and utils.h): Base set of functions for loading
+-- Main ConUtils Library --
+
+0. "BASE" (utils.c and utils.h): Base set of functions for loading
    string resources and message strings, and handle type identification.
 
-1. 'conutils_stream' (stream.c and stream.h): Console Stream API (CON_STREAM):
+1. "STREAM" (stream.c and stream.h, instream.c and instream.h, outstream.c
+   and outstream.h): Console Stream API (CON_STREAM):
    Stream initialization, basic ConStreamRead/Write. Stream utility functions:
-   ConPuts/Printf, ConResPuts/Printf, ConMsgPuts/Printf.
-   Depends on 'conutils_base'.
+   ConPuts/Printf, ConResPuts/Printf, ConMsgPuts/Printf. Depends on "BASE".
 
-2. 'conutils_screen' (screen.c and screen.h): Console Screen API (CON_SCREEN):
+2. "SCREEN" (screen.c and screen.h): Console Screen API (CON_SCREEN):
    Introduces the notion of console/terminal screen around the streams. Manages
    console/terminal screen metrics for Win32 consoles and TTYs (serial...).
    Additional Screen utility functions.
-   Depends on 'conutils_stream', and indirectly on 'conutils_base'.
+   Depends on "STREAM", and indirectly on "BASE".
 
-3. 'conutils_pager' (pager.c and pager.h): Console Pager API (CON_PAGER):
+3. "PAGER" (pager.c and pager.h): Console Pager API (CON_PAGER):
    Implements core console/terminal paging functionality around console screens.
-   Depends on 'conutils_screen'  and indirectly on 'conutils_stream' and
-   'conutils_base'.
-
-4. More to come!
+   Depends on "SCREEN", and indirectly on "STREAM" and "BASE".

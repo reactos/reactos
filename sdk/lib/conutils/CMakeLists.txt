@@ -1,5 +1,7 @@
 
 list(APPEND SOURCE
+    # instream.c
+    outstream.c
     pager.c
     screen.c
     stream.c

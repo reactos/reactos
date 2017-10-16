@@ -1,12 +1,10 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Utilities Library
- * FILE:            sdk/lib/conutils/utils.c
- * PURPOSE:         Base set of functions for loading string resources
- *                  and message strings, and handle type identification.
- * PROGRAMMERS:     - Hermes Belusca-Maito (for the library);
- *                  - All programmers who wrote the different console applications
- *                    from which I took those functions and improved them.
+ * PROJECT:     ReactOS Console Utilities Library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Base set of functions for loading string resources
+ *              and message strings, and handle type identification.
+ * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
+ *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
 /* FIXME: Temporary HACK before we cleanly support UNICODE functions */
@@ -232,3 +230,5 @@ IsConsoleHandle(IN HANDLE hHandle)
      */
     return GetConsoleMode(hHandle, &dwMode);
 }
+
+/* EOF */

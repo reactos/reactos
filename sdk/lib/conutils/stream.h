@@ -1,17 +1,17 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Utilities Library
- * FILE:            sdk/lib/conutils/stream.h
- * PURPOSE:         Provides basic abstraction wrappers around CRT streams or
- *                  Win32 console API I/O functions, to deal with i18n + Unicode
- *                  related problems.
- * PROGRAMMERS:     - Hermes Belusca-Maito (for the library);
- *                  - All programmers who wrote the different console applications
- *                    from which I took those functions and improved them.
+ * PROJECT:     ReactOS Console Utilities Library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Provides basic abstraction wrappers around CRT streams or
+ *              Win32 console API I/O functions, to deal with i18n + Unicode
+ *              related problems.
+ * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
+ *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
 #ifndef __STREAM_H__
 #define __STREAM_H__
+
+#pragma once
 
 /*
  * Enable this define if you want to only use CRT functions to output
@@ -152,124 +152,10 @@ ConStreamSetOSHandle(
     IN HANDLE Handle);
 
 
-/*
- * Console I/O utility API
- * (for the moment, only Output)
- */
-
-INT
-__stdcall
-ConWrite(
-    IN PCON_STREAM Stream,
-    IN PTCHAR szStr,
-    IN DWORD len);
-
-INT
-ConStreamWrite(
-    IN PCON_STREAM Stream,
-    IN PTCHAR szStr,
-    IN DWORD len);
-
-INT
-ConPuts(
-    IN PCON_STREAM Stream,
-    IN LPWSTR szStr);
-
-INT
-ConPrintfV(
-    IN PCON_STREAM Stream,
-    IN LPWSTR  szStr,
-    IN va_list args); // arg_ptr
-
-INT
-__cdecl
-ConPrintf(
-    IN PCON_STREAM Stream,
-    IN LPWSTR szStr,
-    ...);
-
-INT
-ConResPutsEx(
-    IN PCON_STREAM Stream,
-    IN HINSTANCE hInstance OPTIONAL,
-    IN UINT uID);
-
-INT
-ConResPuts(
-    IN PCON_STREAM Stream,
-    IN UINT uID);
-
-INT
-ConResPrintfExV(
-    IN PCON_STREAM Stream,
-    IN HINSTANCE hInstance OPTIONAL,
-    IN UINT    uID,
-    IN va_list args); // arg_ptr
-
-INT
-ConResPrintfV(
-    IN PCON_STREAM Stream,
-    IN UINT    uID,
-    IN va_list args); // arg_ptr
-
-INT
-__cdecl
-ConResPrintfEx(
-    IN PCON_STREAM Stream,
-    IN HINSTANCE hInstance OPTIONAL,
-    IN UINT uID,
-    ...);
-
-INT
-__cdecl
-ConResPrintf(
-    IN PCON_STREAM Stream,
-    IN UINT uID,
-    ...);
-
-INT
-ConMsgPuts(
-    IN PCON_STREAM Stream,
-    IN DWORD   dwFlags,
-    IN LPCVOID lpSource OPTIONAL,
-    IN DWORD   dwMessageId,
-    IN DWORD   dwLanguageId);
-
-INT
-ConMsgPrintf2V(
-    IN PCON_STREAM Stream,
-    IN DWORD   dwFlags,
-    IN LPCVOID lpSource OPTIONAL,
-    IN DWORD   dwMessageId,
-    IN DWORD   dwLanguageId,
-    IN va_list args); // arg_ptr
-
-INT
-ConMsgPrintfV(
-    IN PCON_STREAM Stream,
-    IN DWORD   dwFlags,
-    IN LPCVOID lpSource OPTIONAL,
-    IN DWORD   dwMessageId,
-    IN DWORD   dwLanguageId,
-    IN va_list args); // arg_ptr
-
-INT
-__cdecl
-ConMsgPrintf(
-    IN PCON_STREAM Stream,
-    IN DWORD   dwFlags,
-    IN LPCVOID lpSource OPTIONAL,
-    IN DWORD   dwMessageId,
-    IN DWORD   dwLanguageId,
-    ...);
-
-
-
-VOID
-ConClearLine(IN PCON_STREAM Stream);
-
-
 #ifdef __cplusplus
 }
 #endif
+
 #endif  /* __STREAM_H__ */
+
+/* EOF */
