@@ -382,7 +382,7 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Display separator + ReactOS version at start of the debug log */
         DPRINT1("-----------------------------------------------------\n");
-        DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+        DPRINT1("ReactOS " KERNEL_VERSION_STR " (Build " KERNEL_VERSION_BUILD_STR ") (Commit " KERNEL_VERSION_COMMIT_HASH "\n");
         MemSizeMBs = KdpGetMemorySizeInMBs(KeLoaderBlock);
         DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
         DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
