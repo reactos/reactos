@@ -8,10 +8,10 @@
  *              David Quintana <gigaherz@gmail.com>
  */
 
-#include <Windows.h>
-#include <SetupAPI.h>
+#include <windows.h>
+#include <setupapi.h>
 #include <devguid.h>
-#include <BatClass.h> 
+#include <batclass.h> 
 
 #include "precomp.h"
 #include "powrprof.h"
