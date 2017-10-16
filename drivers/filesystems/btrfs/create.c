@@ -1418,6 +1418,13 @@ NTSTATUS open_fileref(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusiv
             return STATUS_OBJECT_PATH_NOT_FOUND;
         }
 
+        // if path starts with two backslashes, ignore one of them
+        if (fnus2.Length >= 2 * sizeof(WCHAR) && fnus2.Buffer[1] == '\\') {
+            fnus2.Buffer++;
+            fnus2.Length -= sizeof(WCHAR);
+            fnus2.MaximumLength -= sizeof(WCHAR);
+        }
+
         if (fnus2.Length == sizeof(WCHAR)) {
             if (Vcb->root_fileref->open_count == 0 && !(Vcb->Vpb->Flags & VPB_MOUNTED)) // don't allow root to be opened on unmounted FS
                 return STATUS_DEVICE_NOT_READY;
@@ -1487,8 +1494,19 @@ NTSTATUS open_fileref(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusiv
         name_bit* nb = CONTAINING_RECORD(le, name_bit, list_entry);
         BOOL lastpart = le->Flink == &parts || (has_stream && le->Flink->Flink == &parts);
         BOOL streampart = has_stream && le->Flink == &parts;
+#ifdef DEBUG_STATS
+        LARGE_INTEGER time1, time2;
+#endif
 
+#ifdef DEBUG_STATS
+        time1 = KeQueryPerformanceCounter(NULL);
+#endif
         Status = open_fileref_child(Vcb, sf, &nb->us, case_sensitive, lastpart, streampart, pooltype, &sf2, Irp);
+#ifdef DEBUG_STATS
+        time2 = KeQueryPerformanceCounter(NULL);
+        Vcb->stats.open_fileref_child_calls++;
+        Vcb->stats.open_fileref_child_time += time2.QuadPart - time1.QuadPart;
+#endif
         if (!NT_SUCCESS(Status)) {
             if (Status == STATUS_OBJECT_PATH_NOT_FOUND || Status == STATUS_OBJECT_NAME_NOT_FOUND)
                 TRACE("open_fileref_child returned %08x\n", Status);
@@ -1655,6 +1673,9 @@ static NTSTATUS file_create2(_In_ PIRP Irp, _Requires_exclusive_lock_held_(_Curr
     if (parfileref->fcb == Vcb->dummy_fcb)
         return STATUS_ACCESS_DENIED;
 
+    if (options & FILE_DIRECTORY_FILE && IrpSp->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_TEMPORARY)
+        return STATUS_INVALID_PARAMETER;
+
     Status = RtlUnicodeToUTF8N(NULL, 0, &utf8len, fpus->Buffer, fpus->Length);
     if (!NT_SUCCESS(Status)) {
         ERR("RtlUnicodeToUTF8N returned %08x\n", Status);
@@ -1701,9 +1722,7 @@ static NTSTATUS file_create2(_In_ PIRP Irp, _Requires_exclusive_lock_held_(_Curr
 
     TRACE("requested attributes = %x\n", IrpSp->Parameters.Create.FileAttributes);
 
-    IrpSp->Parameters.Create.FileAttributes |= FILE_ATTRIBUTE_ARCHIVE;
-
-    defda = FILE_ATTRIBUTE_ARCHIVE;
+    defda = 0;
 
     if (utf8[0] == '.')
         defda |= FILE_ATTRIBUTE_HIDDEN;
@@ -1713,6 +1732,11 @@ static NTSTATUS file_create2(_In_ PIRP Irp, _Requires_exclusive_lock_held_(_Curr
         IrpSp->Parameters.Create.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
     } else
         IrpSp->Parameters.Create.FileAttributes &= ~FILE_ATTRIBUTE_DIRECTORY;
+
+    if (!(IrpSp->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+        IrpSp->Parameters.Create.FileAttributes |= FILE_ATTRIBUTE_ARCHIVE;
+        defda |= FILE_ATTRIBUTE_ARCHIVE;
+    }
 
     TRACE("defda = %x\n", defda);
 
@@ -2235,7 +2259,7 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
 
     *pfileref = fileref;
 
-    send_notification_fileref(parfileref, options & FILE_DIRECTORY_FILE ? FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME, FILE_ACTION_ADDED, &fileref->dc->name);
+    send_notification_fileref(parfileref, FILE_NOTIFY_CHANGE_STREAM_NAME, FILE_ACTION_ADDED_STREAM, &fileref->dc->name);
 
     return STATUS_SUCCESS;
 }
@@ -2278,6 +2302,9 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
 
     if (Vcb->readonly)
         return STATUS_MEDIA_WRITE_PROTECTED;
+
+    if (options & FILE_DELETE_ON_CLOSE && IrpSp->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_READONLY)
+        return STATUS_CANNOT_DELETE;
 
     dsus.Buffer = datasuf;
     dsus.Length = dsus.MaximumLength = (USHORT)wcslen(datasuf) * sizeof(WCHAR);
@@ -2836,7 +2863,7 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
         goto exit;
     }
 
-    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    acquire_fcb_lock_exclusive(Vcb);
 
     if (options & FILE_OPEN_BY_FILE_ID) {
         if (fn.Length == sizeof(UINT64) && related && RequestedDisposition == FILE_OPEN) {
@@ -2857,13 +2884,13 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
         } else {
             WARN("FILE_OPEN_BY_FILE_ID only supported for inodes\n");
             Status = STATUS_NOT_IMPLEMENTED;
-            ExReleaseResourceLite(&Vcb->fcb_lock);
+            release_fcb_lock(Vcb);
             goto exit;
         }
     } else {
         if (related && fn.Length != 0 && fn.Buffer[0] == '\\') {
-            Status = STATUS_OBJECT_NAME_INVALID;
-            ExReleaseResourceLite(&Vcb->fcb_lock);
+            Status = STATUS_INVALID_PARAMETER;
+            release_fcb_lock(Vcb);
             goto exit;
         }
 
@@ -2922,7 +2949,7 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
             Irp->Tail.Overlay.AuxiliaryBuffer = (void*)data;
 
             free_fileref(Vcb, fileref);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
+            release_fcb_lock(Vcb);
 
             goto exit;
         }
@@ -2937,23 +2964,23 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
             Status = STATUS_OBJECT_NAME_COLLISION;
 
             free_fileref(Vcb, fileref);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
+            release_fcb_lock(Vcb);
 
             goto exit;
         }
     } else if (Status == STATUS_OBJECT_NAME_NOT_FOUND) {
         if (RequestedDisposition == FILE_OPEN || RequestedDisposition == FILE_OVERWRITE) {
             TRACE("file doesn't exist, returning STATUS_OBJECT_NAME_NOT_FOUND\n");
-            ExReleaseResourceLite(&Vcb->fcb_lock);
+            release_fcb_lock(Vcb);
             goto exit;
         }
     } else if (Status == STATUS_OBJECT_PATH_NOT_FOUND) {
         TRACE("open_fileref returned %08x\n", Status);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
+        release_fcb_lock(Vcb);
         goto exit;
     } else {
         ERR("open_fileref returned %08x\n", Status);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
+        release_fcb_lock(Vcb);
         goto exit;
     }
 
@@ -2961,7 +2988,7 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
         file_ref* sf;
         BOOL readonly;
 
-        ExReleaseResourceLite(&Vcb->fcb_lock);
+        release_fcb_lock(Vcb);
 
         if (RequestedDisposition == FILE_SUPERSEDE || RequestedDisposition == FILE_OVERWRITE || RequestedDisposition == FILE_OVERWRITE_IF) {
             LARGE_INTEGER zero;
@@ -2972,9 +2999,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
             if (fileref->fcb->type == BTRFS_TYPE_DIRECTORY || is_subvol_readonly(fileref->fcb->subvol, Irp)) {
                 Status = STATUS_ACCESS_DENIED;
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
@@ -2982,9 +3009,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
             if (Vcb->readonly) {
                 Status = STATUS_MEDIA_WRITE_PROTECTED;
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
@@ -2993,9 +3020,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
             if (!MmCanFileBeTruncated(&fileref->fcb->nonpaged->segment_object, &zero)) {
                 Status = STATUS_USER_MAPPED_FILE;
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
@@ -3012,9 +3039,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
                 SeUnlockSubjectContext(&IrpSp->Parameters.Create.SecurityContext->AccessState->SubjectSecurityContext);
                 TRACE("SeAccessCheck failed, returning %08x\n", Status);
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
@@ -3031,9 +3058,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
                 TRACE("could not open as deletion pending\n");
                 Status = STATUS_DELETE_PENDING;
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
@@ -3042,6 +3069,16 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
         readonly = (!fileref->fcb->ads && fileref->fcb->atts & FILE_ATTRIBUTE_READONLY) || (fileref->fcb->ads && fileref->parent->fcb->atts & FILE_ATTRIBUTE_READONLY) ||
                    is_subvol_readonly(fileref->fcb->subvol, Irp) || fileref->fcb == Vcb->dummy_fcb || Vcb->readonly;
+
+        if (options & FILE_DELETE_ON_CLOSE && (fileref == Vcb->root_fileref || readonly)) {
+            Status = STATUS_CANNOT_DELETE;
+
+            acquire_fcb_lock_exclusive(Vcb);
+            free_fileref(Vcb, fileref);
+            release_fcb_lock(Vcb);
+
+            goto exit;
+        }
 
         if (readonly) {
             ACCESS_MASK allowed;
@@ -3070,23 +3107,12 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
             } else if (granted_access & ~allowed) {
                 Status = Vcb->readonly ? STATUS_MEDIA_WRITE_PROTECTED : STATUS_ACCESS_DENIED;
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
-        }
-
-        if (options & FILE_DELETE_ON_CLOSE && (fileref == Vcb->root_fileref || Vcb->readonly ||
-            is_subvol_readonly(fileref->fcb->subvol, Irp) || readonly)) {
-            Status = STATUS_CANNOT_DELETE;
-
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
-            free_fileref(Vcb, fileref);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
-
-            goto exit;
         }
 
         if ((fileref->fcb->type == BTRFS_TYPE_SYMLINK || fileref->fcb->atts & FILE_ATTRIBUTE_REPARSE_POINT) && !(options & FILE_OPEN_REPARSE_POINT))  {
@@ -3112,9 +3138,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
                 Irp->Tail.Overlay.AuxiliaryBuffer = (void*)data;
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
@@ -3124,9 +3150,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
             if (options & FILE_NON_DIRECTORY_FILE && !(fileref->fcb->atts & FILE_ATTRIBUTE_REPARSE_POINT)) {
                 Status = STATUS_FILE_IS_A_DIRECTORY;
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
@@ -3134,9 +3160,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
             TRACE("returning STATUS_NOT_A_DIRECTORY (type = %u, %S)\n", fileref->fcb->type, file_desc_fileref(fileref));
             Status = STATUS_NOT_A_DIRECTORY;
 
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+            acquire_fcb_lock_exclusive(Vcb);
             free_fileref(Vcb, fileref);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
+            release_fcb_lock(Vcb);
 
             goto exit;
         }
@@ -3150,9 +3176,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
                 else
                     WARN("IoCheckShareAccess failed, returning %08x\n", Status);
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
@@ -3167,9 +3193,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
                 IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
                 goto exit;
             }
@@ -3186,10 +3212,21 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
                 IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
 
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
 
+                goto exit;
+            }
+
+            if (!fileref->fcb->ads && (IrpSp->Parameters.Create.FileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) != ((fileref->fcb->atts & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN)))) {
+                IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
+
+                acquire_fcb_lock_exclusive(Vcb);
+                free_fileref(Vcb, fileref);
+                release_fcb_lock(Vcb);
+
+                Status = STATUS_ACCESS_DENIED;
                 goto exit;
             }
 
@@ -3200,9 +3237,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
                     IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
 
-                    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                    acquire_fcb_lock_exclusive(Vcb);
                     free_fileref(Vcb, fileref);
-                    ExReleaseResourceLite(&Vcb->fcb_lock);
+                    release_fcb_lock(Vcb);
 
                     goto exit;
                 }
@@ -3213,9 +3250,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
                     IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
 
-                    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                    acquire_fcb_lock_exclusive(Vcb);
                     free_fileref(Vcb, fileref);
-                    ExReleaseResourceLite(&Vcb->fcb_lock);
+                    release_fcb_lock(Vcb);
 
                     goto exit;
                 }
@@ -3229,15 +3266,17 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
                     IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
 
-                    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                    acquire_fcb_lock_exclusive(Vcb);
                     free_fileref(Vcb, fileref);
-                    ExReleaseResourceLite(&Vcb->fcb_lock);
+                    release_fcb_lock(Vcb);
 
                     goto exit;
                 }
             }
 
             if (!fileref->fcb->ads) {
+                LIST_ENTRY* le;
+
                 if (Irp->AssociatedIrp.SystemBuffer && IrpSp->Parameters.Create.EaLength > 0) {
                     ULONG offset;
                     FILE_FULL_EA_INFORMATION* eainfo;
@@ -3248,9 +3287,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
                         IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
 
-                        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                        acquire_fcb_lock_exclusive(Vcb);
                         free_fileref(Vcb, fileref);
-                        ExReleaseResourceLite(&Vcb->fcb_lock);
+                        release_fcb_lock(Vcb);
 
                         goto exit;
                     }
@@ -3285,9 +3324,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
                         IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
 
-                        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                        acquire_fcb_lock_exclusive(Vcb);
                         free_fileref(Vcb, fileref);
-                        ExReleaseResourceLite(&Vcb->fcb_lock);
+                        release_fcb_lock(Vcb);
 
                         goto exit;
                     }
@@ -3303,6 +3342,41 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
                         fileref->fcb->ea_changed = TRUE;
                         fileref->fcb->ealen = 0;
                     }
+                }
+
+                // remove streams and send notifications
+                le = fileref->fcb->dir_children_index.Flink;
+                while (le != &fileref->fcb->dir_children_index) {
+                    dir_child* dc = CONTAINING_RECORD(le, dir_child, list_entry_index);
+                    LIST_ENTRY* le2 = le->Flink;
+
+                    if (dc->index == 0) {
+                        if (!dc->fileref) {
+                            file_ref* fr2;
+
+                            Status = open_fileref_child(Vcb, fileref, &dc->name, TRUE, TRUE, TRUE, PagedPool, &fr2, NULL);
+                            if (!NT_SUCCESS(Status))
+                                WARN("open_fileref_child returned %08x\n", Status);
+                        }
+
+                        if (dc->fileref) {
+                            send_notification_fcb(fileref, FILE_NOTIFY_CHANGE_STREAM_NAME, FILE_ACTION_REMOVED_STREAM, &dc->name);
+
+                            Status = delete_fileref(dc->fileref, NULL, NULL, rollback);
+                            if (!NT_SUCCESS(Status)) {
+                                ERR("delete_fileref returned %08x\n", Status);
+
+                                acquire_fcb_lock_exclusive(Vcb);
+                                free_fileref(Vcb, fileref);
+                                release_fcb_lock(Vcb);
+
+                                goto exit;
+                            }
+                        }
+                    } else
+                        break;
+
+                    le = le2;
                 }
             }
 
@@ -3355,9 +3429,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
                         IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
 
-                        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                        acquire_fcb_lock_exclusive(Vcb);
                         free_fileref(Vcb, fileref);
-                        ExReleaseResourceLite(&Vcb->fcb_lock);
+                        release_fcb_lock(Vcb);
 
                         goto exit;
                     }
@@ -3379,9 +3453,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
             IoRemoveShareAccess(FileObject, &fileref->fcb->share_access);
 
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+            acquire_fcb_lock_exclusive(Vcb);
             free_fileref(Vcb, fileref);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
+            release_fcb_lock(Vcb);
 
             goto exit;
         }
@@ -3467,8 +3541,8 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 #ifdef DEBUG_STATS
         open_type = 2;
 #endif
-        Status = file_create(Irp, DeviceObject->DeviceExtension, FileObject, related, loaded_related, &fn, RequestedDisposition, options, rollback);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
+        Status = file_create(Irp, Vcb, FileObject, related, loaded_related, &fn, RequestedDisposition, options, rollback);
+        release_fcb_lock(Vcb);
 
         Irp->IoStatus.Information = NT_SUCCESS(Status) ? FILE_CREATED : 0;
     }
@@ -3478,9 +3552,9 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
 
 exit:
     if (loaded_related) {
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+        acquire_fcb_lock_exclusive(Vcb);
         free_fileref(Vcb, related);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
+        release_fcb_lock(Vcb);
     }
 
     if (Status == STATUS_SUCCESS) {

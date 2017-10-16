@@ -4335,6 +4335,11 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
             Status = _SEH2_GetExceptionCode();
         } _SEH2_END;
 
+        if (changed_length) {
+            send_notification_fcb(fcb->ads ? fileref->parent : fileref, fcb->ads ? FILE_NOTIFY_CHANGE_STREAM_SIZE : FILE_NOTIFY_CHANGE_SIZE,
+                                  fcb->ads ? FILE_ACTION_MODIFIED_STREAM : FILE_ACTION_MODIFIED, fcb->ads && fileref->dc ? &fileref->dc->name : NULL);
+        }
+
         goto end;
     }
 
@@ -4553,7 +4558,9 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
             fileref->parent->fcb->inode_item_changed = TRUE;
 
             if (changed_length)
-                filter |= FILE_NOTIFY_CHANGE_SIZE;
+                filter |= FILE_NOTIFY_CHANGE_STREAM_SIZE;
+
+            filter |= FILE_NOTIFY_CHANGE_STREAM_WRITE;
         }
 
         if (!ccb->user_set_write_time) {
@@ -4585,7 +4592,8 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
     Status = STATUS_SUCCESS;
 
     if (filter != 0)
-        send_notification_fcb(fcb->ads ? fileref->parent : fileref, filter, FILE_ACTION_MODIFIED, fcb->ads && fileref->dc ? &fileref->dc->name : NULL);
+        send_notification_fcb(fcb->ads ? fileref->parent : fileref, filter, fcb->ads ? FILE_ACTION_MODIFIED_STREAM : FILE_ACTION_MODIFIED,
+                              fcb->ads && fileref->dc ? &fileref->dc->name : NULL);
 
 end:
     if (NT_SUCCESS(Status) && FileObject->Flags & FO_SYNCHRONOUS_IO && !paging_io) {

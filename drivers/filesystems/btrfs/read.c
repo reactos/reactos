@@ -3209,17 +3209,6 @@ NTSTATUS do_read(PIRP Irp, BOOLEAN wait, ULONG* bytes_read) {
             return STATUS_PENDING;
         }
 
-        if (!(Irp->Flags & IRP_PAGING_IO) && FileObject->SectionObjectPointer->DataSectionObject) {
-            IO_STATUS_BLOCK iosb;
-
-            CcFlushCache(FileObject->SectionObjectPointer, &IrpSp->Parameters.Read.ByteOffset, length, &iosb);
-
-            if (!NT_SUCCESS(iosb.Status)) {
-                ERR("CcFlushCache returned %08x\n", iosb.Status);
-                return iosb.Status;
-            }
-        }
-
         if (fcb->ads)
             Status = read_stream(fcb, data, start, length, bytes_read);
         else
@@ -3324,6 +3313,16 @@ NTSTATUS drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     // deadlocks in CcCopyRead.
     if (Irp->Flags & IRP_PAGING_IO)
         wait = TRUE;
+
+    if (!(Irp->Flags & IRP_PAGING_IO) && FileObject->SectionObjectPointer->DataSectionObject) {
+        IO_STATUS_BLOCK iosb;
+
+        CcFlushCache(FileObject->SectionObjectPointer, &IrpSp->Parameters.Read.ByteOffset, IrpSp->Parameters.Read.Length, &iosb);
+        if (!NT_SUCCESS(iosb.Status)) {
+            ERR("CcFlushCache returned %08x\n", iosb.Status);
+            return iosb.Status;
+        }
+    }
 
     if (!ExIsResourceAcquiredSharedLite(fcb->Header.Resource)) {
         if (!ExAcquireResourceSharedLite(fcb->Header.Resource, wait)) {

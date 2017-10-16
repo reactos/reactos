@@ -983,9 +983,9 @@ static BOOL allow_degraded_mount(BTRFS_UUID* uuid) {
 
     ZwClose(h);
 
+end:
     ExFreePool(kvfi);
 
-end:
     ExFreePool(path.Buffer);
 
     return degraded;

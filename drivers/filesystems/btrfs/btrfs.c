@@ -1352,7 +1352,7 @@ void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_
         return;
     }
 
-    ExAcquireResourceExclusiveLite(&fcb->Vcb->fcb_lock, TRUE);
+    acquire_fcb_lock_exclusive(fcb->Vcb);
 
     le = fcb->hardlinks.Flink;
     while (le != &fcb->hardlinks) {
@@ -1419,7 +1419,7 @@ void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_
         le = le->Flink;
     }
 
-    ExReleaseResourceLite(&fcb->Vcb->fcb_lock);
+    release_fcb_lock(fcb->Vcb);
 }
 
 void mark_fcb_dirty(_In_ fcb* fcb) {
@@ -1698,14 +1698,14 @@ static NTSTATUS close_file(_In_ PFILE_OBJECT FileObject, _In_ PIRP Irp) {
 
     Vcb = fcb->Vcb;
 
-    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    acquire_fcb_lock_exclusive(Vcb);
 
     if (fileref)
         free_fileref(fcb->Vcb, fileref);
     else
         free_fcb(Vcb, fcb);
 
-    ExReleaseResourceLite(&Vcb->fcb_lock);
+    release_fcb_lock(Vcb);
 
     return STATUS_SUCCESS;
 }
@@ -1804,10 +1804,10 @@ void uninit(_In_ device_extension* Vcb, _In_ BOOL flush) {
     KeSetTimer(&Vcb->flush_thread_timer, time, NULL); // trigger the timer early
     KeWaitForSingleObject(&Vcb->flush_thread_finished, Executive, KernelMode, FALSE, NULL);
 
-    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    acquire_fcb_lock_exclusive(Vcb);
     free_fcb(Vcb, Vcb->volume_fcb);
     free_fcb(Vcb, Vcb->dummy_fcb);
-    ExReleaseResourceLite(&Vcb->fcb_lock);
+    release_fcb_lock(Vcb);
 
     if (Vcb->root_file)
         ObDereferenceObject(Vcb->root_file);
@@ -1817,9 +1817,9 @@ void uninit(_In_ device_extension* Vcb, _In_ BOOL flush) {
         chunk* c = CONTAINING_RECORD(le, chunk, list_entry);
 
         if (c->cache) {
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+            acquire_fcb_lock_exclusive(Vcb);
             free_fcb(Vcb, c->cache);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
+            release_fcb_lock(Vcb);
             c->cache = NULL;
         }
 
@@ -1855,9 +1855,9 @@ void uninit(_In_ device_extension* Vcb, _In_ BOOL flush) {
             ExFreePool(c->devices);
 
         if (c->cache) {
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+            acquire_fcb_lock_exclusive(Vcb);
             free_fcb(Vcb, c->cache);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
+            release_fcb_lock(Vcb);
         }
 
         ExDeleteResourceLite(&c->range_locks_lock);
@@ -1915,7 +1915,7 @@ void uninit(_In_ device_extension* Vcb, _In_ BOOL flush) {
     ZwClose(Vcb->flush_thread_handle);
 }
 
-NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_ PFILE_OBJECT FileObject, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback) {
+NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback) {
     LARGE_INTEGER newlength, time;
     BTRFS_TIME now;
     NTSTATUS Status;
@@ -1995,6 +1995,18 @@ NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_ PFILE_OBJECT FileObject, _I
                 }
 
                 fileref->fcb->deleted = TRUE;
+
+                le = fileref->children.Flink;
+                while (le != &fileref->children) {
+                    file_ref* fr2 = CONTAINING_RECORD(le, file_ref, list_entry);
+
+                    if (fr2->fcb->ads) {
+                        fr2->fcb->deleted = TRUE;
+                        mark_fcb_dirty(fr2->fcb);
+                    }
+
+                    le = le->Flink;
+                }
             }
 
             if (fileref->dc) {
@@ -2024,11 +2036,25 @@ NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_ PFILE_OBJECT FileObject, _I
 
                 mark_fcb_dirty(fileref->fcb); // so ROOT_ITEM gets updated
             } else {
+                LIST_ENTRY* le;
+
                 // FIXME - we need a lock here
 
                 RemoveEntryList(&fileref->fcb->subvol->list_entry);
 
                 InsertTailList(&fileref->fcb->Vcb->drop_roots, &fileref->fcb->subvol->list_entry);
+
+                le = fileref->children.Flink;
+                while (le != &fileref->children) {
+                    file_ref* fr2 = CONTAINING_RECORD(le, file_ref, list_entry);
+
+                    if (fr2->fcb->ads) {
+                        fr2->fcb->deleted = TRUE;
+                        mark_fcb_dirty(fr2->fcb);
+                    }
+
+                    le = le->Flink;
+                }
             }
         }
     } else {
@@ -2209,18 +2235,18 @@ static NTSTATUS drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
                     locked = FALSE;
 
                     // fcb_lock needs to be acquired before fcb->Header.Resource
-                    ExAcquireResourceExclusiveLite(&fcb->Vcb->fcb_lock, TRUE);
+                    acquire_fcb_lock_exclusive(fcb->Vcb);
 
                     Status = delete_fileref(fileref, FileObject, Irp, &rollback);
                     if (!NT_SUCCESS(Status)) {
                         ERR("delete_fileref returned %08x\n", Status);
                         do_rollback(fcb->Vcb, &rollback);
-                        ExReleaseResourceLite(&fcb->Vcb->fcb_lock);
+                        release_fcb_lock(fcb->Vcb);
                         ExReleaseResourceLite(&fcb->Vcb->tree_lock);
                         goto exit;
                     }
 
-                    ExReleaseResourceLite(&fcb->Vcb->fcb_lock);
+                    release_fcb_lock(fcb->Vcb);
 
                     locked = FALSE;
 
@@ -4522,19 +4548,19 @@ exit2:
             if (Vcb->root_file)
                 ObDereferenceObject(Vcb->root_file);
             else if (Vcb->root_fileref) {
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fileref(Vcb, Vcb->root_fileref);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
             } else if (root_fcb) {
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fcb(Vcb, root_fcb);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
             }
 
             if (Vcb->volume_fcb) {
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+                acquire_fcb_lock_exclusive(Vcb);
                 free_fcb(Vcb, Vcb->volume_fcb);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
+                release_fcb_lock(Vcb);
             }
 
             ExDeleteResourceLite(&Vcb->tree_lock);

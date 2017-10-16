@@ -289,6 +289,10 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         return STATUS_INVALID_PARAMETER;
     }
 
+    // IFSTest insists on this, for some reason...
+    if (Irp->UserBuffer)
+        return STATUS_INVALID_PARAMETER;
+
     fcb = FileObject->FsContext;
     ccb = FileObject->FsContext2;
 
@@ -297,9 +301,7 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         return STATUS_INVALID_PARAMETER;
     }
 
-    // It isn't documented what permissions FSCTL_SET_REPARSE_POINT needs, but CreateSymbolicLinkW
-    // creates a file with FILE_WRITE_ATTRIBUTES | DELETE | SYNCHRONIZE.
-    if (Irp->RequestorMode == UserMode && !(ccb->access & FILE_WRITE_ATTRIBUTES)) {
+    if (Irp->RequestorMode == UserMode && !(ccb->access & (FILE_WRITE_ATTRIBUTES | FILE_WRITE_DATA))) {
         WARN("insufficient privileges\n");
         return STATUS_ACCESS_DENIED;
     }
@@ -333,7 +335,13 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
     if (buflen < sizeof(ULONG)) {
         WARN("buffer was not long enough to hold tag\n");
-        Status = STATUS_INVALID_PARAMETER;
+        Status = STATUS_INVALID_BUFFER_SIZE;
+        goto end;
+    }
+
+    Status = FsRtlValidateReparsePointBuffer(buflen, rdb);
+    if (!NT_SUCCESS(Status)) {
+        ERR("FsRtlValidateReparsePointBuffer returned %08x\n", Status);
         goto end;
     }
 

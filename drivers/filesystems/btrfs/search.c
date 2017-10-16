@@ -913,8 +913,7 @@ void mountmgr_thread(_In_ void* context) {
 
         if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
             ERR("IOCTL_MOUNTMGR_QUERY_POINTS 1 returned %08x\n", Status);
-
-        if (mmps.Size > 0) {
+        else if (mmps.Size > 0) {
             MOUNTMGR_MOUNT_POINTS* mmps2;
 
             mmps2 = ExAllocatePoolWithTag(NonPagedPool, mmps.Size, ALLOC_TAG);

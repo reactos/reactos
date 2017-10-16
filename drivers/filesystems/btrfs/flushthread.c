@@ -7289,6 +7289,8 @@ NTSTATUS do_write(device_extension* Vcb, PIRP Irp) {
 
 #ifdef DEBUG_STATS
 static void print_stats(device_extension* Vcb) {
+    LARGE_INTEGER freq;
+
     ERR("READ STATS:\n");
     ERR("number of reads: %llu\n", Vcb->stats.num_reads);
     ERR("data read: %llu bytes\n", Vcb->stats.data_read);
@@ -7297,7 +7299,9 @@ static void print_stats(device_extension* Vcb) {
     ERR("disk time taken: %llu\n", Vcb->stats.read_disk_time);
     ERR("other time taken: %llu\n", Vcb->stats.read_total_time - Vcb->stats.read_csum_time - Vcb->stats.read_disk_time);
 
-    ERR("OPEN STATS:\n");
+    KeQueryPerformanceCounter(&freq);
+
+    ERR("OPEN STATS (freq = %llu):\n", freq.QuadPart);
     ERR("number of opens: %llu\n", Vcb->stats.num_opens);
     ERR("total time taken: %llu\n", Vcb->stats.open_total_time);
     ERR("number of overwrites: %llu\n", Vcb->stats.num_overwrites);
@@ -7305,6 +7309,9 @@ static void print_stats(device_extension* Vcb) {
     ERR("number of creates: %llu\n", Vcb->stats.num_creates);
     ERR("calls to open_fcb: %llu\n", Vcb->stats.open_fcb_calls);
     ERR("time spent in open_fcb: %llu\n", Vcb->stats.open_fcb_time);
+    ERR("calls to open_fileref_child: %llu\n", Vcb->stats.open_fileref_child_calls);
+    ERR("time spent in open_fileref_child: %llu\n", Vcb->stats.open_fileref_child_time);
+    ERR("time spent waiting for fcb_lock: %llu\n", Vcb->stats.fcb_lock_time);
     ERR("total time taken: %llu\n", Vcb->stats.create_total_time);
 
     RtlZeroMemory(&Vcb->stats, sizeof(debug_stats));

@@ -170,6 +170,9 @@ typedef struct _FSCTL_SET_INTEGRITY_INFORMATION_BUFFER {
 #define _Create_lock_level_(a)
 #define _Lock_level_order_(a,b)
 #define _Has_lock_level_(a)
+#define _Requires_lock_not_held_(a)
+#define _Acquires_exclusive_lock_(a)
+#define _Acquires_shared_lock_(a)
 #endif
 #endif
 
@@ -634,6 +637,9 @@ typedef struct {
     UINT64 create_total_time;
     UINT64 open_fcb_calls;
     UINT64 open_fcb_time;
+    UINT64 open_fileref_child_calls;
+    UINT64 open_fileref_child_time;
+    UINT64 fcb_lock_time;
 } debug_stats;
 #endif
 
@@ -890,6 +896,52 @@ typedef struct {
     LIST_ENTRY list_entry;
 } name_bit;
 
+_Requires_lock_not_held_(Vcb->fcb_lock)
+_Acquires_shared_lock_(Vcb->fcb_lock)
+static __inline void acquire_fcb_lock_shared(device_extension* Vcb) {
+#ifdef DEBUG_STATS
+    LARGE_INTEGER time1, time2;
+
+    if (ExAcquireResourceSharedLite(&Vcb->fcb_lock, FALSE))
+        return;
+
+    time1 = KeQueryPerformanceCounter(NULL);
+#endif
+
+    ExAcquireResourceSharedLite(&Vcb->fcb_lock, TRUE);
+
+#ifdef DEBUG_STATS
+    time2 = KeQueryPerformanceCounter(NULL);
+    Vcb->stats.fcb_lock_time += time2.QuadPart - time1.QuadPart;
+#endif
+}
+
+_Requires_lock_not_held_(Vcb->fcb_lock)
+_Acquires_exclusive_lock_(Vcb->fcb_lock)
+static __inline void acquire_fcb_lock_exclusive(device_extension* Vcb) {
+#ifdef DEBUG_STATS
+    LARGE_INTEGER time1, time2;
+
+    if (ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, FALSE))
+        return;
+
+    time1 = KeQueryPerformanceCounter(NULL);
+#endif
+
+    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+
+#ifdef DEBUG_STATS
+    time2 = KeQueryPerformanceCounter(NULL);
+    Vcb->stats.fcb_lock_time += time2.QuadPart - time1.QuadPart;
+#endif
+}
+
+_Requires_lock_held_(Vcb->fcb_lock)
+_Releases_lock_(Vcb->fcb_lock)
+static __inline void release_fcb_lock(device_extension* Vcb) {
+    ExReleaseResourceLite(&Vcb->fcb_lock);
+}
+
 static __inline void* map_user_buffer(PIRP Irp, ULONG priority) {
     if (!Irp->MdlAddress) {
         return Irp->UserBuffer;
@@ -1043,7 +1095,7 @@ WCHAR* file_desc(_In_ PFILE_OBJECT FileObject);
 WCHAR* file_desc_fileref(_In_ file_ref* fileref);
 void mark_fcb_dirty(_In_ fcb* fcb);
 void mark_fileref_dirty(_In_ file_ref* fileref);
-NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_ PFILE_OBJECT FileObject, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback);
+NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback);
 void chunk_lock_range(_In_ device_extension* Vcb, _In_ chunk* c, _In_ UINT64 start, _In_ UINT64 length);
 void chunk_unlock_range(_In_ device_extension* Vcb, _In_ chunk* c, _In_ UINT64 start, _In_ UINT64 length);
 void init_device(_In_ device_extension* Vcb, _Inout_ device* dev, _In_ BOOL get_nums);
