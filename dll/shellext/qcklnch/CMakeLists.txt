@@ -8,6 +8,9 @@ if(NOT MSVC)
     add_compile_flags_language("-std=c++11" "CXX")
 endif()
 
+add_definitions(
+    -D_ATL_NO_EXCEPTIONS)
+
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     ${REACTOS_SOURCE_DIR})
