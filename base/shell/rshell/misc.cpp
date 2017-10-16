@@ -50,6 +50,8 @@
 
 #include <shellutils.h>
 
+#include <CQuickLaunchBand.h>
+
 #include <wine/debug.h>
 
 extern "C"
@@ -177,24 +179,32 @@ DllCanUnloadNow(void)
 STDAPI
 DllRegisterServer(void)
 {
+#if 0
     RegisterComponent(CLSID_StartMenu, L"Shell Start Menu");
     RegisterComponent(CLSID_MenuDeskBar, L"Shell Menu Desk Bar");
     RegisterComponent(CLSID_MenuBand, L"Shell Menu Band");
     RegisterComponent(CLSID_MenuBandSite, L"Shell Menu Band Site");
     RegisterComponent(CLSID_MergedFolder, L"Merged Shell Folder");
     RegisterComponent(CLSID_RebarBandSite, L"Shell Rebar Band Site");
+#endif
+    RegisterComponent(CLSID_QuickLaunchBand, L"Quick Launch");
+    RegisterComCat();
     return S_OK;
 }
 
 STDAPI
 DllUnregisterServer(void)
 {
+#if 0
     UnregisterComponent(CLSID_StartMenu);
     UnregisterComponent(CLSID_MenuDeskBar);
     UnregisterComponent(CLSID_MenuBand);
     UnregisterComponent(CLSID_MenuBandSite);
     UnregisterComponent(CLSID_MergedFolder);
     UnregisterComponent(CLSID_RebarBandSite);
+#endif
+    UnregisterComponent(CLSID_QuickLaunchBand);
+    UnregisterComCat();
     return S_OK;
 }
 
@@ -234,6 +244,9 @@ public:
 
         if (IsEqualCLSID(m_Clsid, CLSID_MergedFolder))
             return RSHELL_CMergedFolder_CreateInstance(riid, ppvObject);
+
+        if (IsEqualCLSID(m_Clsid, CLSID_QuickLaunchBand))
+            return ShellObjectCreator<CQuickLaunchBand>(riid, ppvObject);
 
         return E_NOINTERFACE;
     }

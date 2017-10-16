@@ -8,6 +8,7 @@ include_directories(
 spec2def(rshell.dll rshell.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    CQuickLaunchBand.cpp
     misc.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/rshell.def)
 

@@ -42,6 +42,7 @@
 #include "bandproxy.h"
 #include "shellbars/CBandSite.h"
 #include "shellbars/CBandSiteMenu.h"
+#include "shellbars/CISFBand.h"
 #include "brandband.h"
 #include "internettoolbar.h"
 #include "commonbrowser.h"

@@ -156,7 +156,6 @@ class CQuickLaunchBand :
 
 //*****************************************************************************************************
 
-    DECLARE_REGISTRY_RESOURCEID(IDR_QCKLNCH)
     DECLARE_NOT_AGGREGATABLE(CQuickLaunchBand)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 

@@ -45,6 +45,7 @@ IDR_EXPLORERBAND REGISTRY "res/explorerband.rgs"
 IDR_PROGRESSDIALOG REGISTRY "res/progressdialog.rgs"
 IDR_AUTOCOMPLETE REGISTRY "res/autocomplete.rgs"
 IDR_ACLISTISF REGISTRY "res/shellautocomplete.rgs"
+IDR_ISFBAND REGISTRY "res/isfband.rgs"
 
 #include <reactos/manifest_dll.rc>
 

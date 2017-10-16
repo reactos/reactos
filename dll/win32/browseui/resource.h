@@ -64,6 +64,12 @@
 #define IDM_BAND_TITLE                   0xA200
 #define IDM_BAND_CLOSE                   0xA201
 
+#define IDM_POPUPMENU        2001
+#define IDM_LARGE_ICONS      2002
+#define IDM_SMALL_ICONS      2003
+#define IDM_SHOW_TEXT        2004
+#define IDM_VIEW_MENU        2005
+
 /* Random id for band close button, feel free to change it */
 #define IDM_BASEBAR_CLOSE                0xA200
 
@@ -95,6 +101,7 @@
 #define IDR_PROGRESSDIALOG       140
 #define IDR_AUTOCOMPLETE         141
 #define IDR_ACLISTISF            142
+#define IDR_ISFBAND              143
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302

@@ -6,9 +6,35 @@
  * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
 
-#include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <wincon.h>
+#include <shellapi.h>
+#include <shlobj.h>
+#include <shlobj_undoc.h>
+#include <shlwapi.h>
+#include <shlguid_undoc.h>
+#include <atlbase.h>
+#include <atlcom.h>
+#include <atlwin.h>
+
+#include <undocshell.h>
+#include <shellutils.h>
+
+#include "CQuickLaunchBand.h"
+
+extern "C"
+HRESULT WINAPI CISFBand_CreateInstance(REFIID riid, void** ppv);
 
 // {260CB95D-4544-44F6-A079-575BAA60B72F}
 const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0x57, 0x5b, 0xaa, 0x60, 0xb7, 0x2f } };
@@ -64,8 +90,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
             SHGetSpecialFolderLocation(hwnd, nCSIDL, &pidlRoot);
         }        
 
-        CString biTitle((LPCSTR)IDS_BROWSEINFO_TITLE);
-        BROWSEINFO bi = { hwnd, pidlRoot, path, biTitle, 0, NULL, 0, 0 };
+        BROWSEINFO bi = { hwnd, pidlRoot, path, L"Choose a folder", 0, NULL, 0, 0 };
         LPITEMIDLIST pidlSelected = SHBrowseForFolder(&bi);        
 
         return pidlSelected;
@@ -114,8 +139,6 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
 // IObjectWithSite
     STDMETHODIMP CQuickLaunchBand::SetSite(IUnknown *pUnkSite)
     { 
-        TRACE("CQuickLaunchBand::SetSite(0x%p)\n", pUnkSite);
-
         // Internal CISFBand Calls
         CComPtr<IObjectWithSite> pIOWS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pIOWS));
@@ -127,9 +150,6 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
 
     STDMETHODIMP CQuickLaunchBand::GetSite(IN REFIID riid, OUT VOID **ppvSite)
     {        
-        TRACE("CQuickLaunchBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
-
-        // Internal CISFBand Calls
         CComPtr<IObjectWithSite> pIOWS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pIOWS));
         if (FAILED(hr))
@@ -197,8 +217,6 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
 
     STDMETHODIMP CQuickLaunchBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMode, IN OUT DESKBANDINFO *pdbi)
     {        
-        TRACE("CQuickLaunchBand::GetBandInfo(0x%x,0x%x,0x%p)\n", dwBandID, dwViewMode, pdbi);
-
         // Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IDeskBand, &pIDB));
@@ -211,9 +229,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
 /*****************************************************************************/
 // IPersistStream
     STDMETHODIMP CQuickLaunchBand::GetClassID(OUT CLSID *pClassID)
-    {        
-        TRACE("CQuickLaunchBand::GetClassID(0x%p)\n", pClassID);
-        
+    {     
         // Internal CISFBand Calls
         CComPtr<IPersistStream> pIPS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IPersistStream, &pIPS));
@@ -236,9 +252,6 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
 
     STDMETHODIMP CQuickLaunchBand::Load(IN IStream *pStm)
     {
-        TRACE("CQuickLaunchBand::Load called\n");
-        
-        // Internal CISFBand Calls
         CComPtr<IPersistStream> pIPS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IPersistStream, &pIPS));
         if (FAILED(hr))
@@ -260,9 +273,6 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
 
     STDMETHODIMP CQuickLaunchBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
     {
-        TRACE("CQuickLaunchBand::GetSizeMax called\n");        
-       
-        // Internal CISFBand Calls
         CComPtr<IPersistStream> pIPS;
         HRESULT hr = m_punkISFB->QueryInterface(IID_PPV_ARG(IPersistStream, &pIPS));
         if (FAILED(hr))

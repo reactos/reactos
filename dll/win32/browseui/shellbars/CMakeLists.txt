@@ -10,6 +10,7 @@ list(APPEND SOURCE
     CBandSite.cpp
     CBandSiteMenu.cpp
     CBaseBar.cpp
+    CISFBand.cpp
     CSHEnumClassesOfCategories.cpp)
 
 add_library(shellbars ${SOURCE})
