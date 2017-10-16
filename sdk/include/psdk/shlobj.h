@@ -2418,6 +2418,8 @@ DECLARE_INTERFACE_(IShellFolderBand, IUnknown)
     STDMETHOD(SetBandInfoSFB)(THIS_ PBANDINFOSFB pbi) PURE;
     STDMETHOD(GetBandInfoSFB)(THIS_ PBANDINFOSFB pbi) PURE;
 };
+#undef INTERFACE
+
 
 /*****************************************************************************
  * Control Panel functions
