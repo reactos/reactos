@@ -465,7 +465,7 @@ InitializeDefaultUserLocale(
 
         /* Misc */
         {LOCALE_SCOUNTRY, L"sCountry"},
-        {LOCALE_SLANGUAGE, L"sLanguage"},
+        {LOCALE_SABBREVLANGNAME, L"sLanguage"},
         {LOCALE_ICOUNTRY, L"iCountry"},
         {0, NULL}};
 
