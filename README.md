@@ -59,6 +59,10 @@ See ["File Bugs"](https://www.reactos.org/wiki/File_Bugs) for a guide.
 
 __NOTE:__ The bug tracker is _not_ for discussions. Please use `#reactos` Freenode IRC channel or our [forum](https://reactos.org/forum).
 
+## Contributing
+
+We are always looking for developers! Check [how to contribute](CONTRIBUTING.md) if you are willing to participate.
+
 ## More information
 
 ReactOS is a Free and Open Source operating system based on the Windows architecture, 
