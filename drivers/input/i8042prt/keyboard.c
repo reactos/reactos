@@ -344,8 +344,10 @@ i8042KbdDpcRoutine(
 	}
 
 	i8042PacketDpc(PortDeviceExtension);
+
 	if (!DeviceExtension->KeyComplete)
 		return;
+
 	/* We got the interrupt as it was being enabled, too bad */
 	if (!PortDeviceExtension->HighestDIRQLInterrupt)
 		return;
@@ -363,14 +365,20 @@ i8042KbdDpcRoutine(
 		return;
 
 	INFO_(I8042PRT, "Sending %lu key(s)\n", KeysInBufferCopy);
+
 	(*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->KeyboardData.ClassService)(
 		DeviceExtension->KeyboardData.ClassDeviceObject,
 		DeviceExtension->KeyboardBuffer,
 		DeviceExtension->KeyboardBuffer + KeysInBufferCopy,
 		&KeysTransferred);
 
+	/* Validate that the callback didn't change the Irql. */
+	ASSERT(KeGetCurrentIrql() == Irql);
+
 	Irql = KeAcquireInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt);
+
 	DeviceExtension->KeysInBuffer -= KeysTransferred;
+
 	KeReleaseInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt, Irql);
 }
 
