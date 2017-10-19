@@ -2266,6 +2266,18 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
 
 // LXSS programs can be distinguished by the fact they have a NULL PEB.
 #ifdef _AMD64_
+#ifdef __REACTOS__
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryInformationProcess (
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _Out_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength,
+    _Out_opt_ PULONG ReturnLength
+);
+#endif
 static __inline BOOL called_from_lxss() {
     NTSTATUS Status;
     PROCESS_BASIC_INFORMATION pbi;

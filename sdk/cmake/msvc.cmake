@@ -407,7 +407,9 @@ set(PSEH_LIB "pseh")
 # Use a full path for the x86 version of ml when using x64 VS.
 # It's not a problem when using the DDK/WDK because, in x64 mode,
 # both the x86 and x64 versions of ml are available.
-if((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCINSTALLDIR}))
+if((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCToolsInstallDir}))
+    set(CMAKE_ASM16_COMPILER $ENV{VCToolsInstallDir}/bin/HostX86/x86/ml.exe)
+elseif((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCINSTALLDIR}))
     set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
 elseif(ARCH STREQUAL "arm")
     set(CMAKE_ASM16_COMPILER armasm.exe)

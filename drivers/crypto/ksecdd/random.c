@@ -96,7 +96,7 @@ KsecGatherEntropyData(
     PTEB Teb;
     PPEB Peb;
     PWSTR String;
-    SIZE_T ReturnLength;
+    ULONG ReturnLength;
     NTSTATUS Status;
 
     /* Query some generic values */
