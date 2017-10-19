@@ -28,18 +28,6 @@
 static int (WINAPI *pSHQueryRecycleBinA)(LPCSTR,LPSHQUERYRBINFO);
 static int (WINAPI *pSHFileOperationA)(LPSHFILEOPSTRUCTA);
 
-static char int64_buffer[65];
-/* Note: This function uses a single buffer for the return value.*/
-static const char* str_from_int64(__int64 ll)
-{
-
-    if (sizeof(ll) > sizeof(unsigned long) && ll >> 32)
-        sprintf(int64_buffer,"%lx%08lx",(unsigned long)(ll >> 32),(unsigned long)ll);
-    else
-        sprintf(int64_buffer,"%lx",(unsigned long)ll);
-    return int64_buffer;
-}
-
 static void setup_pointers(void)
 {
     HMODULE hshell32 = GetModuleHandleA("shell32.dll");
@@ -88,8 +76,8 @@ static void test_query_recyclebin(void)
     ok(!pSHFileOperationA(&shfo), "Deletion was not successful\n");
     hr = pSHQueryRecycleBinA(buf,&info2);
     ok(hr == S_OK, "SHQueryRecycleBinA failed with error 0x%x\n", hr);
-    ok(info2.i64Size==info1.i64Size+written,"Expected recycle bin to have 0x%s bytes\n",str_from_int64(info1.i64Size+written));
-    ok(info2.i64NumItems==info1.i64NumItems+1,"Expected recycle bin to have 0x%s items\n",str_from_int64(info1.i64NumItems+1));
+    ok(info2.i64Size==info1.i64Size+written,"Expected recycle bin to have 0x%s bytes\n",wine_dbgstr_longlong(info1.i64Size+written));
+    ok(info2.i64NumItems==info1.i64NumItems+1,"Expected recycle bin to have 0x%s items\n",wine_dbgstr_longlong(info1.i64NumItems+1));
 }
 
 

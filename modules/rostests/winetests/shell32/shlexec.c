@@ -1827,7 +1827,7 @@ static fileurl_tests_t fileurl_tests[]=
     {"file:///", "%%TMPDIR%%\\test file.shlexec", 0, 0},
 
     /* Test shortcuts vs. URLs */
-    {"file://///", "%s\\test_shortcut_shlexec.lnk", 0, 0x1d},
+    {"file://///", "%s\\test_shortcut_shlexec.lnk", 0, 0x1c},
 
     /* Confuse things by mixing protocols */
     {"file://", "shlproto://foo/bar", USE_COLON, 0},
@@ -1973,11 +1973,11 @@ static void test_urls(void)
     }
 
     /* A .lnk ending does not turn a URL into a shortcut */
-    todo_wait rc = shell_execute(NULL, "shlproto://foo/bar.lnk", NULL, NULL);
+    rc = shell_execute(NULL, "shlproto://foo/bar.lnk", NULL, NULL);
     ok(rc > 32, "%s failed: rc=%lu\n", shell_call, rc);
     okChildInt("argcA", 5);
-    todo_wine okChildString("argvA3", "URL");
-    todo_wine okChildString("argvA4", "shlproto://foo/bar.lnk");
+    okChildString("argvA3", "URL");
+    okChildString("argvA4", "shlproto://foo/bar.lnk");
 
     /* Neither does a .exe extension */
     rc = shell_execute(NULL, "shlproto://foo/bar.exe", NULL, NULL);
@@ -2180,13 +2180,13 @@ static void test_lnks(void)
         get_long_path_name(params, filename, sizeof(filename));
         okChildPath("argvA4", filename);
 
-        todo_wait rc=shell_execute_ex(SEE_MASK_NOZONECHECKS|SEE_MASK_DOENVSUBST, NULL, "%TMPDIR%\\test_shortcut_shlexec.lnk", NULL, NULL, NULL);
+        rc=shell_execute_ex(SEE_MASK_NOZONECHECKS|SEE_MASK_DOENVSUBST, NULL, "%TMPDIR%\\test_shortcut_shlexec.lnk", NULL, NULL, NULL);
         okShell(rc > 32, "failed: rc=%lu err=%u\n", rc, GetLastError());
         okChildInt("argcA", 5);
-        todo_wine okChildString("argvA3", "Open");
+        okChildString("argvA3", "Open");
         sprintf(params, "%s\\test file.shlexec", tmpdir);
         get_long_path_name(params, filename, sizeof(filename));
-        todo_wine okChildPath("argvA4", filename);
+        okChildPath("argvA4", filename);
     }
 
     /* Should just run our executable */
