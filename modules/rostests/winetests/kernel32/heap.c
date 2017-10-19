@@ -89,6 +89,12 @@ static void test_heap(void)
     HGLOBAL hsecond;
     SIZE_T  size, size2;
     const SIZE_T max_size = 1024, init_size = 10;
+    /* use function pointers to avoid warnings for invalid parameter tests */
+    LPVOID (WINAPI *pHeapAlloc)(HANDLE,DWORD,SIZE_T);
+    LPVOID (WINAPI *pHeapReAlloc)(HANDLE,DWORD,LPVOID,SIZE_T);
+
+    pHeapAlloc = (void *)GetProcAddress( GetModuleHandleA("kernel32"), "HeapAlloc" );
+    pHeapReAlloc = (void *)GetProcAddress( GetModuleHandleA("kernel32"), "HeapReAlloc" );
 
     /* Heap*() functions */
     mem = HeapAlloc(GetProcessHeap(), 0, 0);
@@ -111,12 +117,12 @@ static void test_heap(void)
     /* test some border cases of HeapAlloc and HeapReAlloc */
     mem = HeapAlloc(GetProcessHeap(), 0, 0);
     ok(mem != NULL, "memory not allocated for size 0\n");
-    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~(SIZE_T)0 - 7);
+    msecond = pHeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~(SIZE_T)0 - 7);
     ok(msecond == NULL, "HeapReAlloc(~0 - 7) should have failed\n");
-    msecond = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~(SIZE_T)0);
+    msecond = pHeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, ~(SIZE_T)0);
     ok(msecond == NULL, "HeapReAlloc(~0) should have failed\n");
     HeapFree(GetProcessHeap(), 0, mem);
-    mem = HeapAlloc(GetProcessHeap(), 0, ~(SIZE_T)0);
+    mem = pHeapAlloc(GetProcessHeap(), 0, ~(SIZE_T)0);
     ok(mem == NULL, "memory allocated for size ~0\n");
     mem = HeapAlloc(GetProcessHeap(), 0, 17);
     msecond = HeapReAlloc(GetProcessHeap(), 0, mem, 0);

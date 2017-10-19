@@ -548,6 +548,7 @@ static void test_Loader(void)
     };
     int i;
     DWORD file_size;
+    HANDLE h;
     HMODULE hlib, hlib_as_data_file;
     char temp_path[MAX_PATH];
     char dll_name[MAX_PATH];
@@ -731,8 +732,36 @@ static void test_Loader(void)
             ok(!hlib, "GetModuleHandle should fail\n");
 
             SetLastError(0xdeadbeef);
+            h = CreateFileA( dll_name, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
+            ok( h != INVALID_HANDLE_VALUE, "open failed err %u\n", GetLastError() );
+            CloseHandle( h );
+
+            SetLastError(0xdeadbeef);
             ret = FreeLibrary(hlib_as_data_file);
             ok(ret, "FreeLibrary error %d\n", GetLastError());
+
+            SetLastError(0xdeadbeef);
+            hlib_as_data_file = LoadLibraryExA(dll_name, 0, LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE);
+            if (!((ULONG_PTR)hlib_as_data_file & 1) ||  /* winxp */
+                (!hlib_as_data_file && GetLastError() == ERROR_INVALID_PARAMETER))  /* w2k3 */
+            {
+                win_skip( "LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE not supported\n" );
+                FreeLibrary(hlib_as_data_file);
+            }
+            else
+            {
+                ok(hlib_as_data_file != 0, "LoadLibraryEx error %u\n", GetLastError());
+
+                SetLastError(0xdeadbeef);
+                h = CreateFileA( dll_name, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
+                todo_wine ok( h == INVALID_HANDLE_VALUE, "open succeeded\n" );
+                todo_wine ok( GetLastError() == ERROR_SHARING_VIOLATION, "wrong error %u\n", GetLastError() );
+                CloseHandle( h );
+
+                SetLastError(0xdeadbeef);
+                ret = FreeLibrary(hlib_as_data_file);
+                ok(ret, "FreeLibrary error %d\n", GetLastError());
+            }
 
             SetLastError(0xdeadbeef);
             ret = DeleteFileA(dll_name);
@@ -869,7 +898,7 @@ static void test_Loader(void)
 
 static void test_FakeDLL(void)
 {
-#ifdef __i386__
+#if defined(__i386__) || defined(__x86_64__)
     NTSTATUS (WINAPI *pNtSetEvent)(HANDLE, ULONG *) = NULL;
     IMAGE_EXPORT_DIRECTORY *dir;
     HMODULE module = GetModuleHandleA("ntdll.dll");
@@ -911,8 +940,13 @@ static void test_FakeDLL(void)
 
         dll_func = (BYTE *)GetProcAddress(module, func_name);
         ok(dll_func != NULL, "%s: GetProcAddress returned NULL\n", func_name);
+#if defined(__i386__)
         if (dll_func[0] == 0x90 && dll_func[1] == 0x90 &&
             dll_func[2] == 0x90 && dll_func[3] == 0x90)
+#elif defined(__x86_64__)
+        if (dll_func[0] == 0x48 && dll_func[1] == 0x83 &&
+            dll_func[2] == 0xec && dll_func[3] == 0x08)
+#endif
         {
             todo_wine ok(0, "%s: Export is a stub-function, skipping\n", func_name);
             continue;
@@ -2321,9 +2355,9 @@ static void child_process(const char *dll_name, DWORD target_offset)
     }
     else
     {
-        ret = WaitForSingleObject(attached_thread[0], 1000);
+        ret = WaitForSingleObject(attached_thread[0], 2000);
         ok(ret == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %#x\n", ret);
-        ret = WaitForSingleObject(attached_thread[1], 1000);
+        ret = WaitForSingleObject(attached_thread[1], 2000);
         ok(ret == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %#x\n", ret);
     }
 
