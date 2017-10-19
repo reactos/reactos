@@ -1,7 +1,7 @@
 language: bash
 
 git:
-  depth: 1
+  depth: 5
 
 before_script:
   - wget https://svn.reactos.org/amine/RosBEBinFull.tar.gz -O RosBE.tar.gz
