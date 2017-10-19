@@ -1,6 +1,6 @@
 Here is a brief explanation on how to synchronize Mesa/GLU in ReactOS.
 
-Current included Mesa/GLU version is 9.0.0.
+Current included Mesa/GLU version is 9.0.0+.
 
 
 0) Mesa/GLU:
@@ -73,3 +73,13 @@ src\libutil\mipmap.c has also
 +GLAPI GLint GLAPIENTRY
  gluScaleImage(...)
 }}
+
+
+2) Updating ReactOS included code against upstream Git master/HEAD:
+
+2-1) Applying unreleased fixes since 9.0.0:
+
+https://jira.reactos.org/browse/CORE-12595 (Serge Gautherie):
+Update to 0bf42e41c8b63fc2488dd8d41f696310b5a5a6a7 (2016-06-10).
+
+Upstream last checked on 2017-10-19.
