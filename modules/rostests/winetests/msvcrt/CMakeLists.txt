@@ -1,5 +1,6 @@
 
 add_definitions(
+    -DWINETEST_USE_DBGSTR_LONGLONG
     -D_CRT_NONSTDC_NO_DEPRECATE
     -D__msvcrt_ulong=ULONG)
 
