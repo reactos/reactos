@@ -68,6 +68,7 @@ typedef unsigned __int64 HANDLE_PTR;
 typedef unsigned int UHALF_PTR, *PUHALF_PTR;
 typedef int HALF_PTR, *PHALF_PTR;
 #define ADDRESS_TAG_BIT 0x40000000000UI64
+#define Handle32ToHandle( h ) ((HANDLE)(LONG_PTR)(LONG)(h))
 #else /*  !_WIN64 */
 #define __int3264   __int32
 #define ADDRESS_TAG_BIT 0x80000000UL
