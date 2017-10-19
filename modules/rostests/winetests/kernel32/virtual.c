@@ -403,6 +403,23 @@ static void test_VirtualAlloc(void)
     ok(status == STATUS_CONFLICTING_ADDRESSES, "NtAllocateVirtualMemory returned %08x\n", status);
     if (status == STATUS_SUCCESS) ok(VirtualFree(addr2, 0, MEM_RELEASE), "VirtualFree failed\n");
 
+    /* 21 zero bits is valid */
+    size = 0x1000;
+    addr2 = NULL;
+    status = pNtAllocateVirtualMemory(GetCurrentProcess(), &addr2, 21, &size,
+                                      MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    ok(status == STATUS_SUCCESS || status == STATUS_NO_MEMORY,
+       "NtAllocateVirtualMemory returned %08x\n", status);
+    if (status == STATUS_SUCCESS) ok(VirtualFree(addr2, 0, MEM_RELEASE), "VirtualFree failed\n");
+
+    /* 22 zero bits is invalid */
+    size = 0x1000;
+    addr2 = NULL;
+    status = pNtAllocateVirtualMemory(GetCurrentProcess(), &addr2, 22, &size,
+                                      MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    ok(status == STATUS_INVALID_PARAMETER_3, "NtAllocateVirtualMemory returned %08x\n", status);
+    if (status == STATUS_SUCCESS) ok(VirtualFree(addr2, 0, MEM_RELEASE), "VirtualFree failed\n");
+
     /* AT_ROUND_TO_PAGE flag is not supported for VirtualAlloc */
     SetLastError(0xdeadbeef);
     addr2 = VirtualAlloc(addr1, 0x1000, MEM_RESERVE | MEM_COMMIT | AT_ROUND_TO_PAGE, PAGE_EXECUTE_READWRITE);
@@ -1157,6 +1174,17 @@ static void test_NtMapViewOfSection(void)
     status = pNtMapViewOfSection( mapping, hProcess, &ptr2, 16, 0, &offset, &size, 1, 0, PAGE_READWRITE );
     todo_wine
     ok( status == STATUS_NO_MEMORY, "NtMapViewOfSection returned %x\n", status );
+    if (status == STATUS_SUCCESS)
+    {
+        status = pNtUnmapViewOfSection( hProcess, ptr2 );
+        ok( !status, "NtUnmapViewOfSection failed status %x\n", status );
+    }
+
+    /* 22 zero bits isn't acceptable */
+    ptr2 = NULL;
+    size = 0;
+    status = pNtMapViewOfSection( mapping, hProcess, &ptr2, 22, 0, &offset, &size, 1, 0, PAGE_READWRITE );
+    ok( status == STATUS_INVALID_PARAMETER_4, "NtMapViewOfSection returned %x\n", status );
     if (status == STATUS_SUCCESS)
     {
         status = pNtUnmapViewOfSection( hProcess, ptr2 );

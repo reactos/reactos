@@ -72,6 +72,7 @@ static BOOL  (WINAPI *pNeedCurrentDirectoryForExePathW)(LPCWSTR);
 
 static DWORD (WINAPI *pSearchPathA)(LPCSTR,LPCSTR,LPCSTR,DWORD,LPSTR,LPSTR*);
 static DWORD (WINAPI *pSearchPathW)(LPCWSTR,LPCWSTR,LPCWSTR,DWORD,LPWSTR,LPWSTR*);
+static BOOL  (WINAPI *pSetSearchPathMode)(DWORD);
 
 static BOOL   (WINAPI *pActivateActCtx)(HANDLE,ULONG_PTR*);
 static HANDLE (WINAPI *pCreateActCtxW)(PCACTCTXW);
@@ -2158,6 +2159,7 @@ static void init_pointers(void)
     MAKEFUNC(NeedCurrentDirectoryForExePathW);
     MAKEFUNC(SearchPathA);
     MAKEFUNC(SearchPathW);
+    MAKEFUNC(SetSearchPathMode);
     MAKEFUNC(ActivateActCtx);
     MAKEFUNC(CreateActCtxW);
     MAKEFUNC(DeactivateActCtx);
@@ -2315,6 +2317,112 @@ static void test_CheckNameLegalDOS8Dot3(void)
     }
 }
 
+static void test_SetSearchPathMode(void)
+{
+    BOOL ret;
+    char orig[MAX_PATH], buf[MAX_PATH], dir[MAX_PATH], expect[MAX_PATH];
+    HANDLE handle;
+
+    if (!pSetSearchPathMode)
+    {
+        win_skip( "SetSearchPathMode isn't available\n" );
+        return;
+    }
+    GetCurrentDirectoryA( MAX_PATH, orig );
+    GetTempPathA( MAX_PATH, buf );
+    GetTempFileNameA( buf, "path", 0, dir );
+    DeleteFileA( dir );
+    CreateDirectoryA( dir, NULL );
+    ret = SetCurrentDirectoryA( dir );
+    ok( ret, "failed to switch to %s\n", dir );
+    if (!ret)
+    {
+        RemoveDirectoryA( dir );
+        return;
+    }
+
+    handle = CreateFileA( "kernel32.dll", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
+    CloseHandle( handle );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( 0 );
+    ok( !ret, "SetSearchPathMode succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( 0x80 );
+    ok( !ret, "SetSearchPathMode succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( BASE_SEARCH_PATH_PERMANENT );
+    ok( !ret, "SetSearchPathMode succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = SearchPathA( NULL, "kernel32.dll", NULL, MAX_PATH, buf, NULL );
+    ok( ret, "SearchPathA failed err %u\n", GetLastError() );
+    GetCurrentDirectoryA( MAX_PATH, expect );
+    strcat( expect, "\\kernel32.dll" );
+    ok( !lstrcmpiA( buf, expect ), "found %s expected %s\n", buf, expect );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE );
+    ok( ret, "SetSearchPathMode failed err %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = SearchPathA( NULL, "kernel32.dll", NULL, MAX_PATH, buf, NULL );
+    ok( ret, "SearchPathA failed err %u\n", GetLastError() );
+    GetSystemDirectoryA( expect, MAX_PATH );
+    strcat( expect, "\\kernel32.dll" );
+    ok( !lstrcmpiA( buf, expect ), "found %s expected %s\n", buf, expect );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE );
+    ok( ret, "SetSearchPathMode failed err %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = SearchPathA( NULL, "kernel32.dll", NULL, MAX_PATH, buf, NULL );
+    ok( ret, "SearchPathA failed err %u\n", GetLastError() );
+    GetCurrentDirectoryA( MAX_PATH, expect );
+    strcat( expect, "\\kernel32.dll" );
+    ok( !lstrcmpiA( buf, expect ), "found %s expected %s\n", buf, expect );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT );
+    ok( !ret, "SetSearchPathMode succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT );
+    ok( ret, "SetSearchPathMode failed err %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE );
+    ok( !ret, "SetSearchPathMode succeeded\n" );
+    ok( GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE );
+    ok( !ret, "SetSearchPathMode succeeded\n" );
+    ok( GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = pSetSearchPathMode( BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT );
+    ok( ret, "SetSearchPathMode failed err %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = SearchPathA( NULL, "kernel32.dll", NULL, MAX_PATH, buf, NULL );
+    ok( ret, "SearchPathA failed err %u\n", GetLastError() );
+    GetSystemDirectoryA( expect, MAX_PATH );
+    strcat( expect, "\\kernel32.dll" );
+    ok( !lstrcmpiA( buf, expect ), "found %s expected %s\n", buf, expect );
+
+    DeleteFileA( "kernel32.dll" );
+    SetCurrentDirectoryA( orig );
+    RemoveDirectoryA( dir );
+}
+
 START_TEST(path)
 {
     CHAR origdir[MAX_PATH],curdir[MAX_PATH], curDrive, otherDrive;
@@ -2348,4 +2456,5 @@ START_TEST(path)
     test_GetFullPathNameA();
     test_GetFullPathNameW();
     test_CheckNameLegalDOS8Dot3();
+    test_SetSearchPathMode();
 }

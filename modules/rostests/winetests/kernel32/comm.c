@@ -1506,6 +1506,8 @@ static void test_WaitCts(void)
 	args[1] = CLRRTS;
 
     CloseHandle(hcom);
+    ok( !WaitForSingleObject( alarmThread, 10000 ), "thread still running\n" );
+    CloseHandle( alarmThread );
 }
 
 /* Change the  Comm Mask while a Wait is going on
@@ -1588,6 +1590,8 @@ static void test_AbortWaitCts(void)
                   "Unexpected time %d, expected around %d\n", diff, TIMEOUT>>1);
 
     CloseHandle(hcom);
+    ok( !WaitForSingleObject( alarmThread, 10000 ), "thread still running\n" );
+    CloseHandle( alarmThread );
 }
 
 /*
@@ -1668,6 +1672,8 @@ static void test_WaitDsr(void)
 	args[1] = CLRDTR;
 
     CloseHandle(hcom);
+    ok( !WaitForSingleObject( alarmThread, 10000 ), "thread still running\n" );
+    CloseHandle( alarmThread );
 }
 
 /*
@@ -1754,6 +1760,8 @@ static void test_WaitRing(void)
 	args[1] = CLRDTR;
 
     CloseHandle(hcom);
+    ok( !WaitForSingleObject( alarmThread, 10000 ), "thread still running\n" );
+    CloseHandle( alarmThread );
 }
 /*
  * Wait for a change in DCD
@@ -1833,6 +1841,8 @@ static void test_WaitDcd(void)
 	args[1] = CLRDTR;
 
     CloseHandle(hcom);
+    ok( !WaitForSingleObject( alarmThread, 10000 ), "thread still running\n" );
+    CloseHandle( alarmThread );
 }
 
 /* 
@@ -1914,6 +1924,8 @@ static void test_WaitBreak(void)
     ok(ClearCommBreak(hcom), "ClearCommBreak failed\n");
 
     CloseHandle(hcom);
+    ok( !WaitForSingleObject( alarmThread, 10000 ), "thread still running\n" );
+    CloseHandle( alarmThread );
 }
 
 static void test_stdio(void)
