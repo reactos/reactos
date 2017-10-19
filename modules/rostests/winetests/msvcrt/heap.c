@@ -443,11 +443,11 @@ static void test_sbheap(void)
 
     mem = malloc(1);
     ok(mem != NULL, "malloc failed\n");
-    ok(!((UINT_PTR)mem & 0xf), "incorrect alignement (%p)\n", mem);
+    ok(!((UINT_PTR)mem & 0xf), "incorrect alignment (%p)\n", mem);
 
     mem = realloc(mem, 10);
     ok(mem != NULL, "realloc failed\n");
-    ok(!((UINT_PTR)mem & 0xf), "incorrect alignement (%p)\n", mem);
+    ok(!((UINT_PTR)mem & 0xf), "incorrect alignment (%p)\n", mem);
 
     ok(_set_sbh_threshold(0), "_set_sbh_threshold failed\n");
     threshold = _get_sbh_threshold();

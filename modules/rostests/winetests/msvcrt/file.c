@@ -184,11 +184,11 @@ static void test_fileops( void )
 
         rewind(file);
         ok(fgetpos(file,&pos) == 0, "fgetpos failed unexpected for bufmode=%x\n", bufmodes[bufmode]);
-        ok(pos == 0, "Unexpected result of fgetpos %x%08x for bufmode=%x\n", (DWORD)(pos >> 32), (DWORD)pos, bufmodes[bufmode]);
+        ok(pos == 0, "Unexpected result of fgetpos %s for bufmode=%x\n", wine_dbgstr_longlong(pos), bufmodes[bufmode]);
         pos = sizeof (outbuffer);
         ok(fsetpos(file, &pos) == 0, "fsetpos failed unexpected for bufmode=%x\n", bufmodes[bufmode]);
         ok(fgetpos(file,&pos) == 0, "fgetpos failed unexpected for bufmode=%x\n", bufmodes[bufmode]);
-        ok(pos == sizeof (outbuffer), "Unexpected result of fgetpos %x%08x for bufmode=%x\n", (DWORD)(pos >> 32), (DWORD)pos, bufmodes[bufmode]);
+        ok(pos == sizeof (outbuffer), "Unexpected result of fgetpos %s for bufmode=%x\n", wine_dbgstr_longlong(pos), bufmodes[bufmode]);
 
         fclose (file);
     }

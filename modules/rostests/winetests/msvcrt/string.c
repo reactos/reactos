@@ -56,6 +56,7 @@ static void* (__cdecl *pmemcpy)(void *, const void *, size_t n);
 static int (__cdecl *p_memcpy_s)(void *, size_t, const void *, size_t);
 static int (__cdecl *p_memmove_s)(void *, size_t, const void *, size_t);
 static int* (__cdecl *pmemcmp)(void *, const void *, size_t n);
+static int (__cdecl *p_strcpy)(char *dst, const char *src);
 static int (__cdecl *pstrcpy_s)(char *dst, size_t len, const char *src);
 static int (__cdecl *pstrcat_s)(char *dst, size_t len, const char *src);
 static int (__cdecl *p_mbscat_s)(unsigned char *dst, size_t size, const unsigned char *src);
@@ -493,8 +494,8 @@ static void test_strdup(void)
 static void test_strcpy_s(void)
 {
     char dest[8];
-    const char *small = "small";
-    const char *big = "atoolongstringforthislittledestination";
+    const char small[] = "small";
+    const char big[] = "atoolongstringforthislittledestination";
     int ret;
 
     if(!pstrcpy_s)
@@ -543,6 +544,15 @@ static void test_strcpy_s(void)
 
     ret = pstrcpy_s(NULL, sizeof(dest), small);
     ok(ret == EINVAL, "Copying a big string a NULL dest returned %d, expected EINVAL\n", ret);
+
+    /* strcpy overlapping buffers test */
+    memset(dest, 'X', sizeof(dest));
+    memcpy(dest+1, small, sizeof(small));
+    p_strcpy(dest, dest+1);
+    ok(dest[0] == 's' && dest[1] == 'm' && dest[2] == 'a' && dest[3] == 'l' &&
+            dest[4] == 'l' && dest[5] == '\0' && dest[6] == '\0' && dest[7] == 'X',
+            "Unexpected return data from strcpy: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+            dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
 }
 
 #define NUMELMS(array) (sizeof(array)/sizeof((array)[0]))
@@ -1833,8 +1843,10 @@ static void test_mbstowcs(void)
 {
     static const wchar_t wSimple[] = { 't','e','x','t',0 };
     static const wchar_t wHiragana[] = { 0x3042,0x3043,0 };
+    static const wchar_t wEmpty[] = { 0 };
     static const char mSimple[] = "text";
     static const char mHiragana[] = { 0x82,0xa0,0x82,0xa1,0 };
+    static const char mEmpty[] = { 0 };
 
     const wchar_t *pwstr;
     wchar_t wOut[6];
@@ -1863,6 +1875,13 @@ static void test_mbstowcs(void)
     ok(!memcmp(wOut, wSimple, 4*sizeof(wchar_t)), "wOut = %s\n", wine_dbgstr_w(wOut));
     ok(wOut[4] == '!', "wOut[4] != \'!\'\n");
 
+    ret = mbstowcs(NULL, mEmpty, 1);
+    ok(ret == 0, "mbstowcs did not return 0, got %d\n", (int)ret);
+
+    ret = mbstowcs(wOut, mEmpty, 1);
+    ok(ret == 0, "mbstowcs did not return 0, got %d\n", (int)ret);
+    ok(!memcmp(wOut, wEmpty, sizeof(wEmpty)), "wOut = %s\n", wine_dbgstr_w(wOut));
+
     ret = wcstombs(NULL, wSimple, 0);
     ok(ret == 4, "wcstombs did not return 4\n");
 
@@ -1874,6 +1893,13 @@ static void test_mbstowcs(void)
     ok(ret == 2, "wcstombs did not return 2\n");
     ok(!memcmp(mOut, mSimple, 5*sizeof(char)), "mOut = %s\n", mOut);
 
+    ret = wcstombs(NULL, wEmpty, 1);
+    ok(ret == 0, "wcstombs did not return 0, got %d\n", (int)ret);
+
+    ret = wcstombs(mOut, wEmpty, 1);
+    ok(ret == 0, "wcstombs did not return 0, got %d\n", (int)ret);
+    ok(!memcmp(mOut, mEmpty, sizeof(mEmpty)), "mOut = %s\n", mOut);
+
     if(!setlocale(LC_ALL, "Japanese_Japan.932")) {
         win_skip("Japanese_Japan.932 locale not available\n");
         return;
@@ -1883,9 +1909,17 @@ static void test_mbstowcs(void)
     ok(ret == 2, "mbstowcs did not return 2\n");
     ok(!memcmp(wOut, wHiragana, sizeof(wHiragana)), "wOut = %s\n", wine_dbgstr_w(wOut));
 
+    ret = mbstowcs(wOut, mEmpty, 6);
+    ok(ret == 0, "mbstowcs did not return 0, got %d\n", (int)ret);
+    ok(!memcmp(wOut, wEmpty, sizeof(wEmpty)), "wOut = %s\n", wine_dbgstr_w(wOut));
+
     ret = wcstombs(mOut, wHiragana, 6);
     ok(ret == 4, "wcstombs did not return 4\n");
     ok(!memcmp(mOut, mHiragana, sizeof(mHiragana)), "mOut = %s\n", mOut);
+
+    ret = wcstombs(mOut, wEmpty, 6);
+    ok(ret == 0, "wcstombs did not return 0, got %d\n", (int)ret);
+    ok(!memcmp(mOut, mEmpty, sizeof(mEmpty)), "mOut = %s\n", mOut);
 
     if(!pmbstowcs_s || !pwcstombs_s) {
         setlocale(LC_ALL, "C");
@@ -1903,6 +1937,11 @@ static void test_mbstowcs(void)
     ok(ret == 3, "mbstowcs_s did not return 3\n");
     ok(!memcmp(wOut, wHiragana, sizeof(wHiragana)), "wOut = %s\n", wine_dbgstr_w(wOut));
 
+    err = pmbstowcs_s(&ret, wOut, 6, mEmpty, _TRUNCATE);
+    ok(err == 0, "err = %d\n", err);
+    ok(ret == 1, "mbstowcs_s did not return 1, got %d\n", (int)ret);
+    ok(!memcmp(wOut, wEmpty, sizeof(wEmpty)), "wOut = %s\n", wine_dbgstr_w(wOut));
+
     err = pmbstowcs_s(&ret, NULL, 0, mHiragana, 1);
     ok(err == 0, "err = %d\n", err);
     ok(ret == 3, "mbstowcs_s did not return 3\n");
@@ -1916,6 +1955,11 @@ static void test_mbstowcs(void)
     ok(err == 0, "err = %d\n", err);
     ok(ret == 5, "wcstombs_s did not return 5\n");
     ok(!memcmp(mOut, mHiragana, sizeof(mHiragana)), "mOut = %s\n", mOut);
+
+    err = pwcstombs_s(&ret, mOut, 6, wEmpty, _TRUNCATE);
+    ok(err == 0, "err = %d\n", err);
+    ok(ret == 1, "wcstombs_s did not return 1, got %d\n", (int)ret);
+    ok(!memcmp(mOut, mEmpty, sizeof(mEmpty)), "mOut = %s\n", mOut);
 
     err = pwcstombs_s(&ret, NULL, 0, wHiragana, 1);
     ok(err == 0, "err = %d\n", err);
@@ -3149,6 +3193,29 @@ static void test__mbscmp(void)
     ok(ret == 1, "got %d\n", ret);
 }
 
+static void test__ismbclx(void)
+{
+    int cp, ret;
+
+    ret = _ismbcl0(0);
+    ok(!ret, "got %d\n", ret);
+
+    cp = _setmbcp(1252);
+
+    ret = _ismbcl0(0x8140);
+    ok(!ret, "got %d\n", ret);
+
+    _setmbcp(932);
+
+    ret = _ismbcl0(0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = _ismbcl0(0x8140);
+    ok(ret, "got %d\n", ret);
+
+    _setmbcp(cp);
+}
+
 START_TEST(string)
 {
     char mem[100];
@@ -3165,6 +3232,7 @@ START_TEST(string)
     SET(pmemcmp,"memcmp");
     SET(p_mbctype,"_mbctype");
     SET(p__mb_cur_max,"__mb_cur_max");
+    SET(p_strcpy, "strcpy");
     pstrcpy_s = (void *)GetProcAddress( hMsvcrt,"strcpy_s" );
     pstrcat_s = (void *)GetProcAddress( hMsvcrt,"strcat_s" );
     p_mbscat_s = (void*)GetProcAddress( hMsvcrt, "_mbscat_s" );
@@ -3263,4 +3331,5 @@ START_TEST(string)
     test__strnset_s();
     test__wcsset_s();
     test__mbscmp();
+    test__ismbclx();
 }
