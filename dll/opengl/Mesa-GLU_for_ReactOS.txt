@@ -1,0 +1,75 @@
+Here is a brief explanation on how to synchronize Mesa/GLU in ReactOS.
+
+Current included Mesa/GLU version is 9.0.0.
+
+
+0) Mesa/GLU:
+
+
+0-1)  Mesa/GLU repository:
+
+https://cgit.freedesktop.org/mesa/glu/
+
+
+0-2) Inclusion in ReactOS code:
+
+Mesa/GLU 9.0.0 code was added in
+reactos/dll/opengl/glu32/
+by
+https://svn.reactos.org/svn/reactos?view=revision&revision=57621 (jgardou)
+
+
+1) Checking ReactOS included code against Mesa/GLU upstream code:
+
+
+1-1) Checking Mesa/GLU upstream feeds themselves:
+
+Diff of
+git clone https://anongit.freedesktop.org/git/mesa/glu.git
+git reset --hard glu-9.0.0
+and
+ftp://ftp.freedesktop.org/pub/mesa/glu/glu-9.0.0.tar.bz2
+
+Identical files aside.
+There are 11 left-only/right-only files at root.
+And the archive file is missing 2 documentation files in src\libtess: alg-outline and README.
+
+
+1-2) Checking ReactOS included code against both Mesa/GLU upstream feeds:
+
+
+1-2-1) Checking ReactOS included code against upstream archive file:
+
+Different files aside.
+There are 16 left-only/right-only files at root.
+And the archive file is missing 2 documentation files in src\libtess: alg-outline and README.
+
+
+1-2-2) Checking ReactOS included code against upstream Git:
+
+Different files aside.
+There are 7 left-only/right-only files at root.
+
+
+1-3) Diff'ing ReactOS included code against upstream Git:
+
+Upstream has LF end-of-lines, ReactOS has CRLF ones.
+
+Left-only/right-only files at root aside.
+
+133 files are different.
+All have some #include commented out.
+
+src\include\gluos.h has also
+{{
++#define WIN32_NO_STATUS
+
++#include <string.h>
+}}
+
+src\libutil\mipmap.c has also
+{{
+-GLint GLAPIENTRY
++GLAPI GLint GLAPIENTRY
+ gluScaleImage(...)
+}}
