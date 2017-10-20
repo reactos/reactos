@@ -694,12 +694,32 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
         
         return S_OK;
     }
-        
-    if (hWnd == fRebarWindow)
+    else if (uMsg == WM_COMMAND && lParam)
     {
-        /* FIXME: Just send the message? */
-        *plrResult = SendMessageW(hWnd, uMsg, wParam, lParam);
-        return S_OK;
+        hWnd = reinterpret_cast<HWND>(lParam);
+    }
+    else if (uMsg == WM_NOTIFY)
+    {
+        NMHDR* pnmhdr = reinterpret_cast<NMHDR*>(lParam);
+        if (pnmhdr->hwndFrom != fRebarWindow)
+        {
+            hWnd = pnmhdr->hwndFrom;
+        }
+        else
+        {
+            for (int i = 0; i < fBandsAllocated; i++)
+            {
+                if (fBands[i].WndEvtHandler && fBands[i].OleWindow)
+                {
+                    HWND hwndBand;
+                    if (SUCCEEDED(fBands[i].OleWindow->GetWindow(&hwndBand)))
+                    {
+                        fBands[i].WndEvtHandler->OnWinEvent(hwndBand, uMsg, wParam, lParam, plrResult);
+                    }
+                }
+            }
+            return S_OK;
+        }
     }
 
     Band = GetBandFromHwnd(hWnd);
