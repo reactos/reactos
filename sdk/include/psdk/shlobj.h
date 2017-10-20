@@ -2405,6 +2405,12 @@ DECLARE_INTERFACE_(IDockingWindowSite, IOleWindow)
 
 typedef void (CALLBACK *PFNASYNCICONTASKBALLBACK)(LPCITEMIDLIST pidl, LPVOID pvData, LPVOID pvHint, INT iIconIndex, INT iOpenIconIndex);
 
+#define ISFB_MASK_STATE       0x00000001
+#define ISFB_MASK_IDLIST      0x00000010
+
+#define ISFB_STATE_QLINKSMODE 0x00000020
+#define ISFB_STATE_NOSHOWTEXT 0x00000004
+
 #include <pshpack8.h>
 
 typedef struct {
