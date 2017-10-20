@@ -29,14 +29,24 @@ class CBandSiteMenu :
     public IShellService
 {
     CComPtr<IBandSite> m_BandSite;
-    HDSA m_menuDsa;
+    HDSA m_comcatDsa;
     HMENU m_hmenu;
+    LPITEMIDLIST m_DesktopPidl;
+    LPITEMIDLIST m_QLaunchPidl;
 
-    HRESULT CreateMenuPart();
+    HRESULT _CreateMenuPart();
+    HRESULT _CreateNewISFBand(HWND hwnd, REFIID riid, void** ppv);
+    HRESULT _CreateBuiltInISFBand(UINT uID, REFIID riid, void** ppv);
+    HRESULT _AddISFBandToMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, IUnknown* pBand, DWORD dwBandID, UINT *newMenuId);
+    UINT _GetMenuIdFromISFBand(IUnknown *pBand);
+    UINT _GetMenuIdFromBand(CLSID *BandCLSID);
+    UINT _GetBandIdFromClsid(CLSID* pclsid);
+    UINT _GetBandIdForBuiltinISFBand(UINT uID);
 
 public:
     CBandSiteMenu();
     ~CBandSiteMenu();
+    HRESULT WINAPI FinalConstruct();
 
     // *** IShellService methods ***
     virtual HRESULT STDMETHODCALLTYPE SetOwner(IUnknown *);
