@@ -25,11 +25,12 @@ class CISFBand :
 
     // Toolbar     
     CComPtr<IShellFolder> m_pISF;     
-    PCIDLIST_ABSOLUTE m_pidl;   
+    PIDLIST_ABSOLUTE m_pidl;
 
     // Menu      
     BOOL m_textFlag;
     BOOL m_iconFlag;
+    BOOL m_QLaunch;
     
 public:
 

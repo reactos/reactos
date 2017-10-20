@@ -37,7 +37,8 @@ CISFBand::CISFBand() :
     m_BandID(0),    
     m_pidl(NULL),
     m_textFlag(true),
-    m_iconFlag(true)
+    m_iconFlag(true),
+    m_QLaunch(false)
 {
 }
 
@@ -84,7 +85,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     CComPtr<IEnumIDList> pEndl;    
     LPITEMIDLIST pidl;
     STRRET stret;     
-    hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS, &pEndl);
+    hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS, &pEndl);
     if (FAILED_UNEXPECTEDLY(hr)) 
     {
         DestroyWindow();
@@ -258,7 +259,12 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
                 pdbi->ptActual = actualSize;
             }
             if (pdbi->dwMask & DBIM_TITLE)
-                wcscpy(pdbi->wszTitle, L"Quick Launch");                
+            {
+                if (!ILGetDisplayNameEx(NULL, m_pidl, pdbi->wszTitle, ILGDN_INFOLDER))
+                {
+                    pdbi->dwMask &= ~DBIM_TITLE;
+                }
+            }
             if (pdbi->dwMask & DBIM_MODEFLAGS)
             {
                 pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT | DBIMF_USECHEVRON | DBIMF_NOMARGINS | DBIMF_BKCOLOR | DBIMF_ADDTOFRONT;
@@ -437,20 +443,60 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 // *** IShellFolderBand ***
     STDMETHODIMP CISFBand::GetBandInfoSFB(PBANDINFOSFB pbi)
     {
+        if (pbi->dwMask == ISFB_MASK_IDLIST)
+        {
+            pbi->pidl = ILClone(m_pidl);
+            if (!pbi->pidl)
+                return E_OUTOFMEMORY;
+            return S_OK;
+        }
+
         return E_NOTIMPL;
     }
 
     STDMETHODIMP CISFBand::InitializeSFB(IShellFolder *psf, PCIDLIST_ABSOLUTE pidl)
     {
-        if (_ILIsDesktop(pidl))
+        HRESULT hr;
+
+        if (!psf && !pidl)
+            return E_INVALIDARG;
+
+        if (psf && pidl)
+            return E_INVALIDARG;
+
+        if (pidl != NULL)
         {
-            m_pISF = psf;
+            CComPtr<IShellFolder> psfDesktop;
+            hr = SHGetDesktopFolder(&psfDesktop);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (_ILIsDesktop(pidl))
+            {
+                m_pISF = psfDesktop;
+            }
+            else
+            {
+                hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &m_pISF));
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
+            }
+
             m_pidl = ILClone(pidl);
         }
-        else 
+
+        if (psf != NULL)
         {
-            psf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &m_pISF));
-            m_pidl = ILClone(pidl);
+            CComPtr<IPersistFolder2> ppf2;
+            hr = psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            hr = ppf2->GetCurFolder(&m_pidl);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            m_pISF = psf;
         }
                
         return S_OK;
@@ -458,6 +504,13 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
     STDMETHODIMP CISFBand::SetBandInfoSFB( PBANDINFOSFB pbi)
     {
+        if ((pbi->dwMask & ISFB_MASK_STATE) && 
+            (pbi->dwState & ISFB_STATE_QLINKSMODE) &&
+            (pbi->dwStateMask & ISFB_STATE_QLINKSMODE))
+        {
+            m_QLaunch = true;
+        }
+
         return E_NOTIMPL;
     }
 
