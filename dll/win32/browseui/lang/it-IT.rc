@@ -80,10 +80,10 @@ IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
 	POPUP "&Barre strumenti", -1, MFT_STRING, MFS_ENABLED, 0
 	BEGIN
-		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
-		MENUITEM "&Avvio veloce", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+		MENUITEM "&Avvio veloce", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-		MENUITEM "&Nuova barra strumenti...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Nuova barra strumenti...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
 	END
 END
 
@@ -290,4 +290,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|Indietro|Avanti|Livello superiore|Cerca|Cartelle|Sposta in|Copia in|Elimina|Annulla|Visualizza|Ferma|Aggiorna|Pagina iniziale|Mappa disco|Disconnette|Preferiti|Cronologia|Schermo intero|Proprietà|Taglia|Copia|Incolla|Opzioni cartella||"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
 END

@@ -82,10 +82,10 @@ IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
 	POPUP "&Панели инструментов", -1, MFT_STRING, MFS_ENABLED, 0
 	BEGIN
-		MENUITEM "&Рабочий стол", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
-		MENUITEM "&Быстрый запуск", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Рабочий стол", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+		MENUITEM "&Быстрый запуск", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-		MENUITEM "&Создать панель инструментов...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Создать панель инструментов...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
 	END
 END
 
@@ -292,4 +292,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|Назад|Вперед|Вверх|Поиск|Папки|Переместить в|Копировать в|Удалить|Отменить|Вид|Остановить|Обновить|Домой|Подключить диск|Отключить|Избранное|Журнал|Во весь экран|Свойства|Вырезать|Копировать|Вставить|Свойства папки||"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
 END
