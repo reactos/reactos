@@ -37,4 +37,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
+#define USE_SYSTEM_ISFBAND 0
+
+#if USE_SYSTEM_ISFBAND
+#define CISFBand_CreateInstance(riid, ppv) (CoCreateInstance(CLSID_ISFBand, NULL, CLSCTX_INPROC_SERVER,riid, ppv))
+#else
+#define CISFBand_CreateInstance RSHELL_CISFBand_CreateInstance
+#endif
+
 #endif /* _BROWSEUI_PCH_ */

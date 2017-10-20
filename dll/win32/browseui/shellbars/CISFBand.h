@@ -191,6 +191,4 @@ public:
     END_COM_MAP()    
 };
 
-// C Constructor
-extern "C"
-HRESULT WINAPI CISFBand_CreateInstance(REFIID riid, void** ppv);
+extern "C" HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv);
