@@ -70,7 +70,7 @@ int wexpand(wchar_t* name, int expand_wildcards)
    WIN32_FIND_DATAW fd;
    HANDLE hFile;
    BOOLEAN first = TRUE;
-   wchar_t buffer[256];
+   wchar_t buffer[MAX_PATH];
    uintptr_t pos;
 
    if (expand_wildcards && (s = wcspbrk(name, L"*?")))
@@ -135,7 +135,7 @@ int aexpand(char* name, int expand_wildcards)
    WIN32_FIND_DATAA fd;
    HANDLE hFile;
    BOOLEAN first = TRUE;
-   char buffer[256];
+   char buffer[MAX_PATH];
    uintptr_t pos;
 
    if (expand_wildcards && (s = strpbrk(name, "*?")))
