@@ -44,6 +44,9 @@ inline LONG_PTR GetWindowLongPtr(HWND hWnd, int nIndex)
 }
 #endif
 
+#pragma push_macro("SubclassWindow")
+#undef SubclassWindow
+
 namespace ATL
 {
 
@@ -1276,20 +1279,177 @@ public:
 
 __declspec(selectany) RECT CWindow::rcDefault = { CW_USEDEFAULT, CW_USEDEFAULT, 0, 0 };
 
-template <class TBase = CWindow, class TWinTraits = CControlWinTraits>
-class CWindowImplBaseT : public TBase, public CMessageMap
+template <class TBase = CWindow>
+class CWindowImplRoot : public TBase, public CMessageMap
 {
 public:
     enum { WINSTATE_DESTROYED = 0x00000001 };
-    DWORD m_dwState;
-    const _ATL_MSG *m_pCurrentMsg;
+
+public:
     CWndProcThunk m_thunk;
+    const _ATL_MSG *m_pCurrentMsg;
+    DWORD m_dwState;
+
+    CWindowImplRoot()
+        : m_pCurrentMsg(NULL)
+        , m_dwState(0)
+    {
+    }
+
+    virtual ~CWindowImplRoot()
+    {
+    }
+};
+
+
+template <class TBase = CWindow>
+class CDialogImplBaseT : public CWindowImplRoot<TBase>
+{
+public:
+    // + Hacks for gcc
+    using CWindowImplRoot<TBase>::WINSTATE_DESTROYED;
+    // - Hacks for gcc
+
+    virtual ~CDialogImplBaseT()
+    {
+    }
+    virtual DLGPROC GetDialogProc()
+    {
+        return DialogProc;
+    }
+
+    static INT_PTR CALLBACK StartDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    {
+        CDialogImplBaseT<TBase> *pThis;
+        DLGPROC newDlgProc;
+        DLGPROC GCCU(pOldProc);
+
+        pThis = reinterpret_cast<CDialogImplBaseT<TBase>*>(_AtlWinModule.ExtractCreateWndData());
+        ATLASSERT(pThis != NULL);
+        if (pThis == NULL)
+            return 0;
+        pThis->m_thunk.Init((WNDPROC)pThis->GetDialogProc(), pThis);
+        newDlgProc = reinterpret_cast<DLGPROC>(pThis->m_thunk.GetWNDPROC());
+        pOldProc = reinterpret_cast<DLGPROC>(::SetWindowLongPtr(hWnd, DWLP_DLGPROC, reinterpret_cast<LONG_PTR>(newDlgProc)));
+        Unused(pOldProc); // TODO: should generate trace message if overwriting another subclass
+        pThis->m_hWnd = hWnd;
+        return newDlgProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    static INT_PTR CALLBACK DialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    {
+        CDialogImplBaseT<TBase> *pThis = reinterpret_cast<CDialogImplBaseT<TBase>*>(hWnd);
+        _ATL_MSG msg(pThis->m_hWnd, uMsg, wParam, lParam);
+        LRESULT lResult = 0;
+        const _ATL_MSG *previousMessage;
+        BOOL handled;
+
+        hWnd = pThis->m_hWnd;
+        previousMessage = pThis->m_pCurrentMsg;
+        pThis->m_pCurrentMsg = &msg;
+
+        handled = pThis->ProcessWindowMessage(hWnd, uMsg, wParam, lParam, lResult, 0);
+        ATLASSERT(pThis->m_pCurrentMsg == &msg);
+
+        if (handled)
+        {
+            if ((pThis->m_dwState & WINSTATE_DESTROYED) == 0)
+            {
+                ::SetWindowLongPtr(pThis->m_hWnd, DWLP_MSGRESULT, lResult);
+            }
+        }
+        else
+        {
+            if (uMsg == WM_NCDESTROY)
+            {
+                pThis->m_dwState |= WINSTATE_DESTROYED;
+            }
+        }
+
+        ATLASSERT(pThis->m_pCurrentMsg == &msg);
+        pThis->m_pCurrentMsg = previousMessage;
+
+        if (previousMessage == NULL && (pThis->m_dwState & WINSTATE_DESTROYED) != 0)
+        {
+            pThis->m_dwState &= ~WINSTATE_DESTROYED;
+            pThis->m_hWnd = NULL;
+            pThis->OnFinalMessage(hWnd);
+        }
+        return lResult;
+    }
+
+    virtual void OnFinalMessage(HWND)
+    {
+    }
+};
+
+
+template <class T, class TBase = CWindow>
+class CDialogImpl : public CDialogImplBaseT< TBase >
+{
+public:
+    // + Hacks for gcc
+    using CWindowImplRoot<TBase>::m_thunk;
+    using CWindowImplRoot<TBase>::m_hWnd;
+    // - Hacks for gcc
+
+    HWND Create(HWND hWndParent, LPARAM dwInitParam = NULL)
+    {
+        BOOL result;
+        HWND hWnd;
+        T* pImpl;
+
+        result = m_thunk.Init(NULL, NULL);
+        if (result == FALSE)
+            return NULL;
+
+        _AtlWinModule.AddCreateWndData(&m_thunk.cd, this);
+
+        pImpl = static_cast<T*>(this);
+        hWnd = ::CreateDialogParam(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(pImpl->IDD), hWndParent, T::StartDialogProc, dwInitParam);
+        return hWnd;
+    }
+
+    INT_PTR DoModal(HWND hWndParent = ::GetActiveWindow(), LPARAM dwInitParam = NULL)
+    {
+        BOOL result;
+        T* pImpl;
+
+        result = m_thunk.Init(NULL, NULL);
+        if (result == FALSE)
+            return -1;
+
+        _AtlWinModule.AddCreateWndData(&m_thunk.cd, this);
+
+        pImpl = static_cast<T*>(this);
+        return ::DialogBoxParam(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(pImpl->IDD), hWndParent, T::StartDialogProc, dwInitParam);
+    }
+
+    BOOL EndDialog(_In_ int nRetCode)
+    {
+        return ::EndDialog(m_hWnd, nRetCode);
+    }
+
+    BOOL DestroyWindow()
+    {
+        return ::DestroyWindow(m_hWnd);
+    }
+};
+
+template <class TBase = CWindow, class TWinTraits = CControlWinTraits>
+class CWindowImplBaseT : public CWindowImplRoot<TBase>
+{
+public:
+    // + Hacks for gcc
+    using CWindowImplRoot<TBase>::WINSTATE_DESTROYED;
+    using CWindowImplRoot<TBase>::m_thunk;
+    // - Hacks for gcc
+
     WNDPROC m_pfnSuperWindowProc;
+
 public:
     CWindowImplBaseT()
     {
-        m_dwState = 0;
-        m_pCurrentMsg = NULL;
         m_pfnSuperWindowProc = ::DefWindowProc;
     }
 
@@ -1435,6 +1595,7 @@ public:
         return hWnd;
     }
 };
+
 
 template <class T, class TBase = CWindow, class TWinTraits = CControlWinTraits>
 class CWindowImpl : public CWindowImplBaseT<TBase, TWinTraits>
@@ -1693,9 +1854,20 @@ struct _ATL_WNDCLASSINFOW
         if (m_wc.hInstance == NULL)
             m_wc.hInstance = _AtlBaseModule.GetModuleInstance();
         if (m_atom == 0)
+        {
+            if (m_bSystemCursor)
+                m_wc.hCursor = ::LoadCursor(NULL, m_lpszCursorID);
+            else
+                m_wc.hCursor = ::LoadCursor(_AtlBaseModule.GetResourceInstance(), m_lpszCursorID);
+
             m_atom = RegisterClassEx(&m_wc);
+        }
+
         return m_atom;
     }
 };
 
 }; // namespace ATL
+
+#pragma pop_macro("SubclassWindow")
+
