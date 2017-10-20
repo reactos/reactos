@@ -119,7 +119,6 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
     CComPtr<IPersist> pBand;
     CLSID BandCLSID;
     DWORD dwBandID;
-    UINT uBand = 0;
 
     TRACE("CBandSiteMenu::QueryContextMenu(%p, %p, %u, %u, %u, 0x%x)\n", this, hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
@@ -129,7 +128,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
     HMENU hmenuToolbars = GetSubMenu(hmenu, indexMenu);
 
     /* Enumerate all present bands and mark them as checked in the menu */
-    while (SUCCEEDED(m_BandSite->EnumBands(uBand, &dwBandID)))
+    for (UINT uBand = 0; SUCCEEDED(m_BandSite->EnumBands(uBand, &dwBandID)); uBand++)
     {
         if (FAILED(m_BandSite->GetBandObject(dwBandID, IID_PPV_ARG(IPersist, &pBand))))
             continue;
@@ -148,8 +147,6 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
                 CheckMenuItem(hmenuToolbars, i, MF_CHECKED | MF_BYPOSITION);
             }
         }
-
-        uBand++;
     }
 
     return S_OK;
@@ -171,8 +168,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpi
     CComPtr<IPersist> pBand;
     CLSID BandCLSID;
     DWORD dwBandID;
-    UINT uBand = 0;
-    while (SUCCEEDED(m_BandSite->EnumBands(uBand, &dwBandID)))
+    for (UINT uBand = 0; SUCCEEDED(m_BandSite->EnumBands(uBand, &dwBandID)); uBand++)
     {
         if (FAILED(m_BandSite->GetBandObject(dwBandID, IID_PPV_ARG(IPersist, &pBand))))
             continue;
@@ -186,8 +182,6 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpi
             m_BandSite->RemoveBand(dwBandID);
             return S_OK;
         }
-
-        uBand++;
     }
 
     /* It is not present. Add it. */
