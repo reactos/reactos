@@ -2289,7 +2289,7 @@ static MSIRECORD *msi_get_property_row( MSIDATABASE *db, LPCWSTR name )
         if (!length)
             return NULL;
         buffer = msi_alloc(length * sizeof(WCHAR));
-        GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, buffer, sizeof(WCHAR));
+        GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, buffer, length);
 
         row = MSI_CreateRecord(1);
         if (!row)
@@ -2304,7 +2304,7 @@ static MSIRECORD *msi_get_property_row( MSIDATABASE *db, LPCWSTR name )
         if (!length)
             return NULL;
         buffer = msi_alloc(length * sizeof(WCHAR));
-        GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOTIMEMARKER, NULL, NULL, buffer, sizeof(WCHAR));
+        GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOTIMEMARKER, NULL, NULL, buffer, length);
 
         row = MSI_CreateRecord(1);
         if (!row)
