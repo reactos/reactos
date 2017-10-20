@@ -578,7 +578,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 /*****************************************************************************/
 // C Constructor
     extern "C"
-    HRESULT WINAPI CISFBand_CreateInstance(REFIID riid, void** ppv)
+    HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv)
     {
         return ShellObjectCreator<CISFBand>(riid, ppv);
     }

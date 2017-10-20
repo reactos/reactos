@@ -34,7 +34,7 @@
 #include "CQuickLaunchBand.h"
 
 extern "C"
-HRESULT WINAPI CISFBand_CreateInstance(REFIID riid, void** ppv);
+HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv);
 
 // {260CB95D-4544-44F6-A079-575BAA60B72F}
 const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0x57, 0x5b, 0xaa, 0x60, 0xb7, 0x2f } };
@@ -114,7 +114,7 @@ const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0
 *--*/
     HRESULT CQuickLaunchBand::FinalConstruct()
     {
-        HRESULT hr = CISFBand_CreateInstance(IID_PPV_ARG(IUnknown, &m_punkISFB));
+        HRESULT hr = RSHELL_CISFBand_CreateInstance(IID_PPV_ARG(IUnknown, &m_punkISFB));
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
