@@ -98,10 +98,10 @@ IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
 	POPUP "&Symbolleisten", -1, MFT_STRING, MFS_ENABLED, 0
 	BEGIN
-		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
-		MENUITEM "Schnellstartleiste", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+		MENUITEM "Schnellstartleiste", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-		MENUITEM "&Neue Symbolleiste...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Neue Symbolleiste...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
 	END
 END
 
@@ -309,4 +309,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|Zurück|Vorwärts|Übergeordneter Ordner|Suchen|Ordner|Verschieben nach|Kopieren nach|Löschen|Rückgängig|Ansicht|Stop|Aktualisieren|Startseite|Netzlaufwerk verbinden|Netzlaufwerk trennen|Favoriten|Verlauf|Vollbild|Eigenschaften|Ausschneiden|Kopieren|Einfügen|Ordneroptionen||"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
 END
