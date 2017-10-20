@@ -184,6 +184,13 @@ HRESULT CBandSiteMenu::_CreateBuiltInISFBand(UINT uID, REFIID riid, void** ppv)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    /* HACK! We shouldn't pass ISFB_STATE_QLINKSMODE and CISFBand shouldn't handle it! */
+    if (uID == IDM_TASKBAR_TOOLBARS_QUICKLAUNCH)
+    {
+        BANDINFOSFB bisfb = {ISFB_MASK_STATE, ISFB_STATE_QLINKSMODE, ISFB_STATE_QLINKSMODE};
+        pISFB->SetBandInfoSFB(&bisfb);
+    }
+
     return pISFB->QueryInterface(riid, ppv);
 }
 

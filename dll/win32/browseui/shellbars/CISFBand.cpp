@@ -71,6 +71,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     if (m_hWnd == NULL)
         return E_FAIL;      
 
+    if (!m_textFlag)
+        SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+
     // Set the image list.
     HIMAGELIST* piml;
     HRESULT hr = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)&piml); 
@@ -243,7 +246,10 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
             if (pdbi->dwMask & DBIM_MINSIZE)
             {
-                pdbi->ptMinSize.x = -1;
+                if (m_QLaunch)
+                    pdbi->ptMinSize.x = idealSize.x;
+                else
+                    pdbi->ptMinSize.x = -1;
                 pdbi->ptMinSize.y = idealSize.y;
             }
             if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -260,14 +266,18 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
             }
             if (pdbi->dwMask & DBIM_TITLE)
             {
-                if (!ILGetDisplayNameEx(NULL, m_pidl, pdbi->wszTitle, ILGDN_INFOLDER))
+                if (m_QLaunch || !ILGetDisplayNameEx(NULL, m_pidl, pdbi->wszTitle, ILGDN_INFOLDER))
                 {
                     pdbi->dwMask &= ~DBIM_TITLE;
                 }
             }
             if (pdbi->dwMask & DBIM_MODEFLAGS)
             {
-                pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT | DBIMF_USECHEVRON | DBIMF_NOMARGINS | DBIMF_BKCOLOR | DBIMF_ADDTOFRONT;
+                pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT | DBIMF_USECHEVRON | DBIMF_NOMARGINS | DBIMF_BKCOLOR;
+                if (m_QLaunch)
+                {
+                    pdbi->dwModeFlags |= DBIMF_ADDTOFRONT;
+                }
             }
             if (pdbi->dwMask & DBIM_BKCOLOR)
                 pdbi->dwMask &= ~DBIM_BKCOLOR;
@@ -509,6 +519,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
             (pbi->dwStateMask & ISFB_STATE_QLINKSMODE))
         {
             m_QLaunch = true;
+            m_textFlag = false;
+            if (m_hWnd)
+                SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);    
         }
 
         return E_NOTIMPL;
