@@ -22,7 +22,9 @@
 #include <winnls.h>
 #include <stdio.h>
 
+static NTSTATUS (WINAPI * pRtlDowncaseUnicodeString)(UNICODE_STRING *, const UNICODE_STRING *, BOOLEAN);
 static NTSTATUS (WINAPI * pNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG);
+static NTSTATUS (WINAPI * pNtQuerySystemInformationEx)(SYSTEM_INFORMATION_CLASS, void*, ULONG, void*, ULONG, ULONG*);
 static NTSTATUS (WINAPI * pNtPowerInformation)(POWER_INFORMATION_LEVEL, PVOID, ULONG, PVOID, ULONG);
 static NTSTATUS (WINAPI * pNtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
 static NTSTATUS (WINAPI * pNtQueryInformationThread)(HANDLE, THREADINFOCLASS, PVOID, ULONG, PULONG);
@@ -36,6 +38,7 @@ static NTSTATUS (WINAPI * pNtUnmapViewOfSection)(HANDLE,PVOID);
 static NTSTATUS (WINAPI * pNtClose)(HANDLE);
 static ULONG    (WINAPI * pNtGetCurrentProcessorNumber)(void);
 static BOOL     (WINAPI * pIsWow64Process)(HANDLE, PBOOL);
+static BOOL     (WINAPI * pGetLogicalProcessorInformationEx)(LOGICAL_PROCESSOR_RELATIONSHIP,SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*,DWORD*);
 
 static BOOL is_wow64;
 
@@ -56,12 +59,15 @@ static BOOL InitFunctionPtrs(void)
 {
     /* All needed functions are NT based, so using GetModuleHandle is a good check */
     HMODULE hntdll = GetModuleHandleA("ntdll");
+    HMODULE hkernel32 = GetModuleHandleA("kernel32");
+
     if (!hntdll)
     {
         win_skip("Not running on NT\n");
         return FALSE;
     }
 
+    NTDLL_GET_PROC(RtlDowncaseUnicodeString);
     NTDLL_GET_PROC(NtQuerySystemInformation);
     NTDLL_GET_PROC(NtPowerInformation);
     NTDLL_GET_PROC(NtQueryInformationProcess);
@@ -78,8 +84,16 @@ static BOOL InitFunctionPtrs(void)
     /* not present before XP */
     pNtGetCurrentProcessorNumber = (void *) GetProcAddress(hntdll, "NtGetCurrentProcessorNumber");
 
-    pIsWow64Process = (void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsWow64Process");
+    pIsWow64Process = (void *)GetProcAddress(hkernel32, "IsWow64Process");
     if (!pIsWow64Process || !pIsWow64Process( GetCurrentProcess(), &is_wow64 )) is_wow64 = FALSE;
+
+    /* starting with Win7 */
+    pNtQuerySystemInformationEx = (void *) GetProcAddress(hntdll, "NtQuerySystemInformationEx");
+    if (!pNtQuerySystemInformationEx)
+        win_skip("NtQuerySystemInformationEx() is not supported, some tests will be skipped.\n");
+
+    pGetLogicalProcessorInformationEx = (void *) GetProcAddress(hkernel32, "GetLogicalProcessorInformationEx");
+
     return TRUE;
 }
 
@@ -288,7 +302,7 @@ static void test_query_process(void)
     /* test ReturnLength */
     ReturnLength = 0;
     status = pNtQuerySystemInformation(SystemProcessInformation, NULL, 0, &ReturnLength);
-    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_LENGTH_MISMATCH got %08x\n", status);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH got %08x\n", status);
     ok( ReturnLength > 0 || broken(ReturnLength == 0) /* NT4, Win2K */,
         "Expected a ReturnLength to show the needed length\n");
 
@@ -474,13 +488,15 @@ static void test_query_module(void)
 static void test_query_handle(void)
 {
     NTSTATUS status;
-    ULONG ReturnLength;
+    ULONG ExpectedLength, ReturnLength;
     ULONG SystemInformationLength = sizeof(SYSTEM_HANDLE_INFORMATION);
     SYSTEM_HANDLE_INFORMATION* shi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength);
-    HANDLE event_handle;
+    HANDLE EventHandle;
+    BOOL found;
+    INT i;
 
-    event_handle = CreateEventA(NULL, FALSE, FALSE, NULL);
-    ok( event_handle != NULL, "CreateEventA failed %u\n", GetLastError() );
+    EventHandle = CreateEventA(NULL, FALSE, FALSE, NULL);
+    ok( EventHandle != NULL, "CreateEventA failed %u\n", GetLastError() );
 
     /* Request the needed length : a SystemInformationLength greater than one struct sets ReturnLength */
     ReturnLength = 0xdeadbeef;
@@ -490,34 +506,116 @@ static void test_query_handle(void)
 
     SystemInformationLength = ReturnLength;
     shi = HeapReAlloc(GetProcessHeap(), 0, shi , SystemInformationLength);
+    memset(shi, 0x55, SystemInformationLength);
 
     ReturnLength = 0xdeadbeef;
     status = pNtQuerySystemInformation(SystemHandleInformation, shi, SystemInformationLength, &ReturnLength);
-    if (status != STATUS_INFO_LENGTH_MISMATCH) /* vista */
+    while (status == STATUS_INFO_LENGTH_MISMATCH) /* Vista / 2008 */
     {
-        ULONG ExpectedLength = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION, Handle[shi->Count]);
-        unsigned int i;
-        BOOL found = FALSE;
-
-        ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
-        ok( ReturnLength == ExpectedLength, "Expected length %u, got %u\n", ExpectedLength, ReturnLength );
-        ok( shi->Count > 1, "Expected more than 1 handles, got %u\n", shi->Count );
-        for (i = 0; i < shi->Count; i++)
-        {
-            if (shi->Handle[i].OwnerPid == GetCurrentProcessId() &&
-                (HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue == event_handle)
-            {
-                found = TRUE;
-                break;
-            }
-        }
-        ok( found, "Expected to find event handle in handle list\n" );
+        SystemInformationLength *= 2;
+        shi = HeapReAlloc(GetProcessHeap(), 0, shi, SystemInformationLength);
+        memset(shi, 0x55, SystemInformationLength);
+        status = pNtQuerySystemInformation(SystemHandleInformation, shi, SystemInformationLength, &ReturnLength);
     }
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
+    ExpectedLength = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION, Handle[shi->Count]);
+    ok( ReturnLength == ExpectedLength || broken(ReturnLength == ExpectedLength - sizeof(DWORD)), /* Vista / 2008 */
+        "Expected length %u, got %u\n", ExpectedLength, ReturnLength );
+    ok( shi->Count > 1, "Expected more than 1 handle, got %u\n", shi->Count );
+    ok( shi->Handle[1].HandleValue != 0x5555 || broken( shi->Handle[1].HandleValue == 0x5555 ), /* Vista / 2008 */
+        "Uninitialized second handle\n" );
+    if (shi->Handle[1].HandleValue == 0x5555)
+    {
+        win_skip("Skipping broken SYSTEM_HANDLE_INFORMATION\n");
+        CloseHandle(EventHandle);
+        goto done;
+    }
+
+    for (i = 0, found = FALSE; i < shi->Count && !found; i++)
+        found = (shi->Handle[i].OwnerPid == GetCurrentProcessId()) &&
+                ((HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue == EventHandle);
+    ok( found, "Expected to find event handle %p (pid %x) in handle list\n", EventHandle, GetCurrentProcessId() );
+
+    if (!found)
+        for (i = 0; i < shi->Count; i++)
+            trace( "%d: handle %x pid %x\n", i, shi->Handle[i].HandleValue, shi->Handle[i].OwnerPid );
+
+    CloseHandle(EventHandle);
+
+    ReturnLength = 0xdeadbeef;
+    status = pNtQuerySystemInformation(SystemHandleInformation, shi, SystemInformationLength, &ReturnLength);
+    while (status == STATUS_INFO_LENGTH_MISMATCH) /* Vista / 2008 */
+    {
+        SystemInformationLength *= 2;
+        shi = HeapReAlloc(GetProcessHeap(), 0, shi, SystemInformationLength);
+        status = pNtQuerySystemInformation(SystemHandleInformation, shi, SystemInformationLength, &ReturnLength);
+    }
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
+    for (i = 0, found = FALSE; i < shi->Count && !found; i++)
+        found = (shi->Handle[i].OwnerPid == GetCurrentProcessId()) &&
+                ((HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue == EventHandle);
+    ok( !found, "Unexpectedly found event handle in handle list\n" );
 
     status = pNtQuerySystemInformation(SystemHandleInformation, NULL, SystemInformationLength, &ReturnLength);
     ok( status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got %08x\n", status );
 
-    CloseHandle(event_handle);
+done:
+    HeapFree( GetProcessHeap(), 0, shi);
+}
+
+static void test_query_handle_ex(void)
+{
+    NTSTATUS status;
+    ULONG ExpectedLength, ReturnLength;
+    ULONG SystemInformationLength = sizeof(SYSTEM_HANDLE_INFORMATION_EX);
+    SYSTEM_HANDLE_INFORMATION_EX* shi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength);
+    HANDLE EventHandle;
+    BOOL found;
+    INT i;
+
+    EventHandle = CreateEventA(NULL, FALSE, FALSE, NULL);
+    ok( EventHandle != NULL, "CreateEventA failed %u\n", GetLastError() );
+
+    ReturnLength = 0xdeadbeef;
+    status = pNtQuerySystemInformation(SystemExtendedHandleInformation, shi, SystemInformationLength, &ReturnLength);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+    ok( ReturnLength != 0xdeadbeef, "Expected valid ReturnLength\n" );
+
+    SystemInformationLength = ReturnLength;
+    shi = HeapReAlloc(GetProcessHeap(), 0, shi , SystemInformationLength);
+    memset(shi, 0x55, SystemInformationLength);
+
+    ReturnLength = 0xdeadbeef;
+    status = pNtQuerySystemInformation(SystemExtendedHandleInformation, shi, SystemInformationLength, &ReturnLength);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
+    ExpectedLength = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handle[shi->Count]);
+    ok( ReturnLength == ExpectedLength, "Expected length %u, got %u\n", ExpectedLength, ReturnLength );
+    ok( shi->Count > 1, "Expected more than 1 handle, got %u\n", (DWORD)shi->Count );
+
+    for (i = 0, found = FALSE; i < shi->Count && !found; i++)
+        found = (shi->Handle[i].UniqueProcessId == GetCurrentProcessId()) &&
+                ((HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue == EventHandle);
+    ok( found, "Expected to find event handle %p (pid %x) in handle list\n", EventHandle, GetCurrentProcessId() );
+
+    if (!found)
+    {
+        for (i = 0; i < shi->Count; i++)
+            trace( "%d: handle %x pid %x\n", i, (DWORD)shi->Handle[i].HandleValue, (DWORD)shi->Handle[i].UniqueProcessId );
+    }
+
+    CloseHandle(EventHandle);
+
+    ReturnLength = 0xdeadbeef;
+    status = pNtQuerySystemInformation(SystemExtendedHandleInformation, shi, SystemInformationLength, &ReturnLength);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
+    for (i = 0, found = FALSE; i < shi->Count && !found; i++)
+        found = (shi->Handle[i].UniqueProcessId == GetCurrentProcessId()) &&
+                ((HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue == EventHandle);
+    ok( !found, "Unexpectedly found event handle in handle list\n" );
+
+    status = pNtQuerySystemInformation(SystemExtendedHandleInformation, NULL, SystemInformationLength, &ReturnLength);
+    ok( status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got %08x\n", status );
+
     HeapFree( GetProcessHeap(), 0, shi);
 }
 
@@ -682,6 +780,110 @@ static void test_query_logicalproc(void)
                 proc_no, si.dwNumberOfProcessors);
 
     HeapFree(GetProcessHeap(), 0, slpi);
+}
+
+static void test_query_logicalprocex(void)
+{
+    SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *infoex, *infoex2;
+    DWORD relationship, len2, len;
+    NTSTATUS status;
+    BOOL ret;
+
+    if (!pNtQuerySystemInformationEx)
+        return;
+
+    len = 0;
+    relationship = RelationProcessorCore;
+    status = pNtQuerySystemInformationEx(SystemLogicalProcessorInformationEx, &relationship, sizeof(relationship), NULL, 0, &len);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH, "got 0x%08x\n", status);
+    ok(len > 0, "got %u\n", len);
+
+    len = 0;
+    relationship = RelationAll;
+    status = pNtQuerySystemInformationEx(SystemLogicalProcessorInformationEx, &relationship, sizeof(relationship), NULL, 0, &len);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH, "got 0x%08x\n", status);
+    ok(len > 0, "got %u\n", len);
+
+    len2 = 0;
+    ret = pGetLogicalProcessorInformationEx(RelationAll, NULL, &len2);
+    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "got %d, error %d\n", ret, GetLastError());
+    ok(len == len2, "got %u, expected %u\n", len2, len);
+
+    if (len && len == len2) {
+        int j, i;
+
+        infoex = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+        infoex2 = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+
+        status = pNtQuerySystemInformationEx(SystemLogicalProcessorInformationEx, &relationship, sizeof(relationship), infoex, len, &len);
+        ok(status == STATUS_SUCCESS, "got 0x%08x\n", status);
+
+        ret = pGetLogicalProcessorInformationEx(RelationAll, infoex2, &len2);
+        ok(ret, "got %d, error %d\n", ret, GetLastError());
+        ok(!memcmp(infoex, infoex2, len), "returned info data mismatch\n");
+
+        for(i = 0; status == STATUS_SUCCESS && i < len; ){
+            SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *ex = (void*)(((char *)infoex) + i);
+
+            ok(ex->Relationship >= RelationProcessorCore && ex->Relationship <= RelationGroup,
+                    "Got invalid relationship value: 0x%x\n", ex->Relationship);
+            if (!ex->Size)
+            {
+                ok(0, "got infoex[%u].Size=0\n", i);
+                break;
+            }
+
+            trace("infoex[%u].Size: %u\n", i, ex->Size);
+            switch(ex->Relationship){
+            case RelationProcessorCore:
+            case RelationProcessorPackage:
+                trace("infoex[%u].Relationship: 0x%x (Core == 0x0 or Package == 0x3)\n", i, ex->Relationship);
+                trace("infoex[%u].Processor.Flags: 0x%x\n", i, ex->Processor.Flags);
+#ifndef __REACTOS__
+                trace("infoex[%u].Processor.EfficiencyClass: 0x%x\n", i, ex->Processor.EfficiencyClass);
+#endif
+                trace("infoex[%u].Processor.GroupCount: 0x%x\n", i, ex->Processor.GroupCount);
+                for(j = 0; j < ex->Processor.GroupCount; ++j){
+                    trace("infoex[%u].Processor.GroupMask[%u].Mask: 0x%lx\n", i, j, ex->Processor.GroupMask[j].Mask);
+                    trace("infoex[%u].Processor.GroupMask[%u].Group: 0x%x\n", i, j, ex->Processor.GroupMask[j].Group);
+                }
+                break;
+            case RelationNumaNode:
+                trace("infoex[%u].Relationship: 0x%x (NumaNode)\n", i, ex->Relationship);
+                trace("infoex[%u].NumaNode.NodeNumber: 0x%x\n", i, ex->NumaNode.NodeNumber);
+                trace("infoex[%u].NumaNode.GroupMask.Mask: 0x%lx\n", i, ex->NumaNode.GroupMask.Mask);
+                trace("infoex[%u].NumaNode.GroupMask.Group: 0x%x\n", i, ex->NumaNode.GroupMask.Group);
+                break;
+            case RelationCache:
+                trace("infoex[%u].Relationship: 0x%x (Cache)\n", i, ex->Relationship);
+                trace("infoex[%u].Cache.Level: 0x%x\n", i, ex->Cache.Level);
+                trace("infoex[%u].Cache.Associativity: 0x%x\n", i, ex->Cache.Associativity);
+                trace("infoex[%u].Cache.LineSize: 0x%x\n", i, ex->Cache.LineSize);
+                trace("infoex[%u].Cache.CacheSize: 0x%x\n", i, ex->Cache.CacheSize);
+                trace("infoex[%u].Cache.Type: 0x%x\n", i, ex->Cache.Type);
+                trace("infoex[%u].Cache.GroupMask.Mask: 0x%lx\n", i, ex->Cache.GroupMask.Mask);
+                trace("infoex[%u].Cache.GroupMask.Group: 0x%x\n", i, ex->Cache.GroupMask.Group);
+                break;
+            case RelationGroup:
+                trace("infoex[%u].Relationship: 0x%x (Group)\n", i, ex->Relationship);
+                trace("infoex[%u].Group.MaximumGroupCount: 0x%x\n", i, ex->Group.MaximumGroupCount);
+                trace("infoex[%u].Group.ActiveGroupCount: 0x%x\n", i, ex->Group.ActiveGroupCount);
+                for(j = 0; j < ex->Group.ActiveGroupCount; ++j){
+                    trace("infoex[%u].Group.GroupInfo[%u].MaximumProcessorCount: 0x%x\n", i, j, ex->Group.GroupInfo[j].MaximumProcessorCount);
+                    trace("infoex[%u].Group.GroupInfo[%u].ActiveProcessorCount: 0x%x\n", i, j, ex->Group.GroupInfo[j].ActiveProcessorCount);
+                    trace("infoex[%u].Group.GroupInfo[%u].ActiveProcessorMask: 0x%lx\n", i, j, ex->Group.GroupInfo[j].ActiveProcessorMask);
+                }
+                break;
+            default:
+                break;
+            }
+
+            i += ex->Size;
+        }
+
+        HeapFree(GetProcessHeap(), 0, infoex);
+        HeapFree(GetProcessHeap(), 0, infoex2);
+    }
 }
 
 static void test_query_processor_power_info(void)
@@ -904,12 +1106,32 @@ static void test_query_process_basic(void)
     ok( pbi.UniqueProcessId > 0, "Expected a ProcessID > 0, got 0\n");
 }
 
+static void dump_vm_counters(const char *header, const VM_COUNTERS *pvi)
+{
+    trace("%s:\n", header);
+    trace("PeakVirtualSize           : %lu\n", pvi->PeakVirtualSize);
+    trace("VirtualSize               : %lu\n", pvi->VirtualSize);
+    trace("PageFaultCount            : %u\n",  pvi->PageFaultCount);
+    trace("PeakWorkingSetSize        : %lu\n", pvi->PeakWorkingSetSize);
+    trace("WorkingSetSize            : %lu\n", pvi->WorkingSetSize);
+    trace("QuotaPeakPagedPoolUsage   : %lu\n", pvi->QuotaPeakPagedPoolUsage);
+    trace("QuotaPagedPoolUsage       : %lu\n", pvi->QuotaPagedPoolUsage);
+    trace("QuotaPeakNonPagePoolUsage : %lu\n", pvi->QuotaPeakNonPagedPoolUsage);
+    trace("QuotaNonPagePoolUsage     : %lu\n", pvi->QuotaNonPagedPoolUsage);
+    trace("PagefileUsage             : %lu\n", pvi->PagefileUsage);
+    trace("PeakPagefileUsage         : %lu\n", pvi->PeakPagefileUsage);
+}
+
 static void test_query_process_vm(void)
 {
     NTSTATUS status;
     ULONG ReturnLength;
     VM_COUNTERS pvi;
     ULONG old_size = FIELD_OFFSET(VM_COUNTERS,PrivatePageCount);
+    HANDLE process;
+    SIZE_T prev_size;
+    const SIZE_T alloc_size = 16 * 1024 * 1024;
+    void *ptr;
 
     status = pNtQueryInformationProcess(NULL, ProcessVmCounters, NULL, sizeof(pvi), NULL);
     ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_HANDLE,
@@ -935,11 +1157,72 @@ static void test_query_process_vm(void)
     ok( ReturnLength == old_size || ReturnLength == sizeof(pvi), "Inconsistent length %d\n", ReturnLength);
 
     /* Check if we have some return values */
-    trace("WorkingSetSize : %ld\n", pvi.WorkingSetSize);
-    todo_wine
-    {
-        ok( pvi.WorkingSetSize > 0, "Expected a WorkingSetSize > 0\n");
-    }
+    dump_vm_counters("VM counters for GetCurrentProcess", &pvi);
+    ok( pvi.WorkingSetSize > 0, "Expected a WorkingSetSize > 0\n");
+    ok( pvi.PagefileUsage > 0, "Expected a PagefileUsage > 0\n");
+
+    process = OpenProcess(PROCESS_VM_READ, FALSE, GetCurrentProcessId());
+    status = pNtQueryInformationProcess(process, ProcessVmCounters, &pvi, sizeof(pvi), NULL);
+    ok( status == STATUS_ACCESS_DENIED, "Expected STATUS_ACCESS_DENIED, got %08x\n", status);
+    CloseHandle(process);
+
+    process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, GetCurrentProcessId());
+    status = pNtQueryInformationProcess(process, ProcessVmCounters, &pvi, sizeof(pvi), NULL);
+    ok( status == STATUS_SUCCESS || broken(!process) /* XP */, "Expected STATUS_SUCCESS, got %08x\n", status);
+    CloseHandle(process);
+
+    memset(&pvi, 0, sizeof(pvi));
+    process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
+    status = pNtQueryInformationProcess(process, ProcessVmCounters, &pvi, sizeof(pvi), NULL);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+
+    /* Check if we have some return values */
+    dump_vm_counters("VM counters for GetCurrentProcessId", &pvi);
+    ok( pvi.WorkingSetSize > 0, "Expected a WorkingSetSize > 0\n");
+    ok( pvi.PagefileUsage > 0, "Expected a PagefileUsage > 0\n");
+
+    CloseHandle(process);
+
+    /* Check if we have real counters */
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessVmCounters, &pvi, sizeof(pvi), NULL);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    prev_size = pvi.VirtualSize;
+    if (winetest_debug > 1)
+        dump_vm_counters("VM counters before VirtualAlloc", &pvi);
+    ptr = VirtualAlloc(NULL, alloc_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    ok( ptr != NULL, "VirtualAlloc failed, err %u\n", GetLastError());
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessVmCounters, &pvi, sizeof(pvi), NULL);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    if (winetest_debug > 1)
+        dump_vm_counters("VM counters after VirtualAlloc", &pvi);
+    todo_wine ok( pvi.VirtualSize >= prev_size + alloc_size,
+        "Expected to be greater than %lu, got %lu\n", prev_size + alloc_size, pvi.VirtualSize);
+    VirtualFree( ptr, 0, MEM_RELEASE);
+
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessVmCounters, &pvi, sizeof(pvi), NULL);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    prev_size = pvi.VirtualSize;
+    if (winetest_debug > 1)
+        dump_vm_counters("VM counters before VirtualAlloc", &pvi);
+    ptr = VirtualAlloc(NULL, alloc_size, MEM_RESERVE, PAGE_READWRITE);
+    ok( ptr != NULL, "VirtualAlloc failed, err %u\n", GetLastError());
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessVmCounters, &pvi, sizeof(pvi), NULL);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    if (winetest_debug > 1)
+        dump_vm_counters("VM counters after VirtualAlloc(MEM_RESERVE)", &pvi);
+    todo_wine ok( pvi.VirtualSize >= prev_size + alloc_size,
+        "Expected to be greater than %lu, got %lu\n", prev_size + alloc_size, pvi.VirtualSize);
+    prev_size = pvi.VirtualSize;
+
+    ptr = VirtualAlloc(ptr, alloc_size, MEM_COMMIT, PAGE_READWRITE);
+    ok( ptr != NULL, "VirtualAlloc failed, err %u\n", GetLastError());
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessVmCounters, &pvi, sizeof(pvi), NULL);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    if (winetest_debug > 1)
+        dump_vm_counters("VM counters after VirtualAlloc(MEM_COMMIT)", &pvi);
+    ok( pvi.VirtualSize == prev_size,
+        "Expected to equal to %lu, got %lu\n", prev_size, pvi.VirtualSize);
+    VirtualFree( ptr, 0, MEM_RELEASE);
 }
 
 static void test_query_process_io(void)
@@ -975,7 +1258,7 @@ static void test_query_process_io(void)
     ok( sizeof(pii) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
 
     /* Check if we have some return values */
-    trace("OtherOperationCount : 0x%x%08x\n", (DWORD)(pii.OtherOperationCount >> 32), (DWORD)pii.OtherOperationCount);
+    trace("OtherOperationCount : 0x%s\n", wine_dbgstr_longlong(pii.OtherOperationCount));
     todo_wine
     {
         ok( pii.OtherOperationCount > 0, "Expected an OtherOperationCount > 0\n");
@@ -1070,7 +1353,7 @@ static void test_query_process_debug_port(int argc, char **argv)
 
     status = pNtQueryInformationProcess(NULL, ProcessDebugPort,
             &debug_port, sizeof(debug_port), NULL);
-    ok(status == STATUS_INVALID_HANDLE, "Expected STATUS_ACCESS_VIOLATION, got %#x.\n", status);
+    ok(status == STATUS_INVALID_HANDLE, "Expected STATUS_INVALID_HANDLE, got %#x.\n", status);
 
     status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessDebugPort,
             &debug_port, sizeof(debug_port) - 1, NULL);
@@ -1109,6 +1392,40 @@ static void test_query_process_debug_port(int argc, char **argv)
     ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
     ret = CloseHandle(pi.hProcess);
     ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
+}
+
+static void test_query_process_priority(void)
+{
+    PROCESS_PRIORITY_CLASS priority[2];
+    ULONG ReturnLength;
+    DWORD orig_priority;
+    NTSTATUS status;
+    BOOL ret;
+
+    status = pNtQueryInformationProcess(NULL, ProcessPriorityClass, NULL, sizeof(priority[0]), NULL);
+    ok(status == STATUS_ACCESS_VIOLATION || broken(status == STATUS_INVALID_HANDLE) /* w2k3 */,
+       "Expected STATUS_ACCESS_VIOLATION, got %08x\n", status);
+
+    status = pNtQueryInformationProcess(NULL, ProcessPriorityClass, &priority, sizeof(priority[0]), NULL);
+    ok(status == STATUS_INVALID_HANDLE, "Expected STATUS_INVALID_HANDLE, got %08x\n", status);
+
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessPriorityClass, &priority, 1, &ReturnLength);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessPriorityClass, &priority, sizeof(priority), &ReturnLength);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+
+    orig_priority = GetPriorityClass(GetCurrentProcess());
+    ret = SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
+    ok(ret, "Failed to set priority class: %u\n", GetLastError());
+
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessPriorityClass, &priority, sizeof(priority[0]), &ReturnLength);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    ok(priority[0].PriorityClass == PROCESS_PRIOCLASS_BELOW_NORMAL,
+       "Expected PROCESS_PRIOCLASS_BELOW_NORMAL, got %u\n", priority[0].PriorityClass);
+
+    ret = SetPriorityClass(GetCurrentProcess(), orig_priority);
+    ok(ret, "Failed to reset priority class: %u\n", GetLastError());
 }
 
 static void test_query_process_handlecount(void)
@@ -1293,27 +1610,27 @@ static void test_query_process_debug_object_handle(int argc, char **argv)
 
 static void test_query_process_debug_flags(int argc, char **argv)
 {
+    static const DWORD test_flags[] = { DEBUG_PROCESS,
+                                        DEBUG_ONLY_THIS_PROCESS,
+                                        DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS,
+                                        CREATE_SUSPENDED };
     DWORD debug_flags = 0xdeadbeef;
     char cmdline[MAX_PATH];
     PROCESS_INFORMATION pi;
     STARTUPINFOA si = { 0 };
     NTSTATUS status;
+    DEBUG_EVENT ev;
+    DWORD result;
     BOOL ret;
+    int i, j;
 
-    sprintf(cmdline, "%s %s %s", argv[0], argv[1], "debuggee");
+    /* test invalid arguments */
+    status = pNtQueryInformationProcess(NULL, ProcessDebugFlags, NULL, 0, NULL);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH || broken(status == STATUS_INVALID_INFO_CLASS) /* WOW64 */,
+            "Expected STATUS_INFO_LENGTH_MISMATCH, got %#x.\n", status);
 
-    si.cb = sizeof(si);
-    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS, NULL, NULL, &si, &pi);
-    ok(ret, "CreateProcess failed, last error %#x.\n", GetLastError());
-    if (!ret) return;
-
-    status = pNtQueryInformationProcess(NULL, ProcessDebugFlags,
-            NULL, 0, NULL);
-    ok(status == STATUS_INFO_LENGTH_MISMATCH || broken(status == STATUS_INVALID_INFO_CLASS) /* NT4 */, "Expected STATUS_INFO_LENGTH_MISMATCH, got %#x.\n", status);
-
-    status = pNtQueryInformationProcess(NULL, ProcessDebugFlags,
-            NULL, sizeof(debug_flags), NULL);
-    ok(status == STATUS_INVALID_HANDLE || status == STATUS_ACCESS_VIOLATION || broken(status == STATUS_INVALID_INFO_CLASS) /* W7PROX64 (32-bit) */,
+    status = pNtQueryInformationProcess(NULL, ProcessDebugFlags, NULL, sizeof(debug_flags), NULL);
+    ok(status == STATUS_INVALID_HANDLE || status == STATUS_ACCESS_VIOLATION || broken(status == STATUS_INVALID_INFO_CLASS) /* WOW64 */,
             "Expected STATUS_INVALID_HANDLE, got %#x.\n", status);
 
     status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessDebugFlags,
@@ -1322,45 +1639,123 @@ static void test_query_process_debug_flags(int argc, char **argv)
 
     status = pNtQueryInformationProcess(NULL, ProcessDebugFlags,
             &debug_flags, sizeof(debug_flags), NULL);
-    ok(status == STATUS_INVALID_HANDLE || broken(status == STATUS_INVALID_INFO_CLASS) /* NT4 */, "Expected STATUS_ACCESS_VIOLATION, got %#x.\n", status);
+    ok(status == STATUS_INVALID_HANDLE || broken(status == STATUS_INVALID_INFO_CLASS) /* WOW64 */,
+            "Expected STATUS_INVALID_HANDLE, got %#x.\n", status);
 
     status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessDebugFlags,
             &debug_flags, sizeof(debug_flags) - 1, NULL);
-    ok(status == STATUS_INFO_LENGTH_MISMATCH || broken(status == STATUS_INVALID_INFO_CLASS) /* NT4 */, "Expected STATUS_INFO_LENGTH_MISMATCH, got %#x.\n", status);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %#x.\n", status);
 
     status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessDebugFlags,
             &debug_flags, sizeof(debug_flags) + 1, NULL);
-    ok(status == STATUS_INFO_LENGTH_MISMATCH || broken(status == STATUS_INVALID_INFO_CLASS) /* NT4 */, "Expected STATUS_INFO_LENGTH_MISMATCH, got %#x.\n", status);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %#x.\n", status);
 
+    /* test ProcessDebugFlags of current process */
     status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessDebugFlags,
             &debug_flags, sizeof(debug_flags), NULL);
-    ok(!status || broken(status == STATUS_INVALID_INFO_CLASS) /* NT4 */, "NtQueryInformationProcess failed, status %#x.\n", status);
-    ok(debug_flags == TRUE|| broken(status == STATUS_INVALID_INFO_CLASS) /* NT4 */, "Expected flag TRUE, got %x.\n", debug_flags);
+    ok(!status, "NtQueryInformationProcess failed, status %#x.\n", status);
+    ok(debug_flags == TRUE, "Expected flag TRUE, got %x.\n", debug_flags);
 
-    status = pNtQueryInformationProcess(pi.hProcess, ProcessDebugFlags,
-            &debug_flags, sizeof(debug_flags), NULL);
-    ok(!status || broken(status == STATUS_INVALID_INFO_CLASS) /* NT4 */, "NtQueryInformationProcess failed, status %#x.\n", status);
-    ok(debug_flags == FALSE || broken(status == STATUS_INVALID_INFO_CLASS) /* NT4 */, "Expected flag FALSE, got %x.\n", debug_flags);
-
-    for (;;)
+    for (i = 0; i < sizeof(test_flags)/sizeof(test_flags[0]); i++)
     {
-        DEBUG_EVENT ev;
+        DWORD expected_flags = !(test_flags[i] & DEBUG_ONLY_THIS_PROCESS);
+        sprintf(cmdline, "%s %s %s", argv[0], argv[1], "debuggee");
 
-        ret = WaitForDebugEvent(&ev, INFINITE);
-        ok(ret, "WaitForDebugEvent failed, last error %#x.\n", GetLastError());
-        if (!ret) break;
+        si.cb = sizeof(si);
+        ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, test_flags[i], NULL, NULL, &si, &pi);
+        ok(ret, "CreateProcess failed, last error %#x.\n", GetLastError());
 
-        if (ev.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT) break;
+        if (!(test_flags[i] & (DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS)))
+        {
+            /* test ProcessDebugFlags before attaching with debugger */
+            status = pNtQueryInformationProcess(pi.hProcess, ProcessDebugFlags,
+                    &debug_flags, sizeof(debug_flags), NULL);
+            ok(!status, "NtQueryInformationProcess failed, status %#x.\n", status);
+            ok(debug_flags == TRUE, "Expected flag TRUE, got %x.\n", debug_flags);
 
-        ret = ContinueDebugEvent(ev.dwProcessId, ev.dwThreadId, DBG_CONTINUE);
-        ok(ret, "ContinueDebugEvent failed, last error %#x.\n", GetLastError());
-        if (!ret) break;
+            ret = DebugActiveProcess(pi.dwProcessId);
+            ok(ret, "DebugActiveProcess failed, last error %#x.\n", GetLastError());
+            expected_flags = FALSE;
+        }
+
+        /* test ProcessDebugFlags after attaching with debugger */
+        status = pNtQueryInformationProcess(pi.hProcess, ProcessDebugFlags,
+                &debug_flags, sizeof(debug_flags), NULL);
+        ok(!status, "NtQueryInformationProcess failed, status %#x.\n", status);
+        ok(debug_flags == expected_flags, "Expected flag %x, got %x.\n", expected_flags, debug_flags);
+
+        if (!(test_flags[i] & CREATE_SUSPENDED))
+        {
+            /* Continue a couple of times to make sure the process is fully initialized,
+             * otherwise Windows XP deadlocks in the following DebugActiveProcess(). */
+            for (;;)
+            {
+                ret = WaitForDebugEvent(&ev, 1000);
+                ok(ret, "WaitForDebugEvent failed, last error %#x.\n", GetLastError());
+                if (!ret) break;
+
+                if (ev.dwDebugEventCode == LOAD_DLL_DEBUG_EVENT) break;
+
+                ret = ContinueDebugEvent(ev.dwProcessId, ev.dwThreadId, DBG_CONTINUE);
+                ok(ret, "ContinueDebugEvent failed, last error %#x.\n", GetLastError());
+                if (!ret) break;
+            }
+
+            result = SuspendThread(pi.hThread);
+            ok(result == 0, "Expected 0, got %u.\n", result);
+        }
+
+        ret = DebugActiveProcessStop(pi.dwProcessId);
+        ok(ret, "DebugActiveProcessStop failed, last error %#x.\n", GetLastError());
+
+        /* test ProcessDebugFlags after detaching debugger */
+        status = pNtQueryInformationProcess(pi.hProcess, ProcessDebugFlags,
+                &debug_flags, sizeof(debug_flags), NULL);
+        ok(!status, "NtQueryInformationProcess failed, status %#x.\n", status);
+        ok(debug_flags == expected_flags, "Expected flag %x, got %x.\n", expected_flags, debug_flags);
+
+        ret = DebugActiveProcess(pi.dwProcessId);
+        ok(ret, "DebugActiveProcess failed, last error %#x.\n", GetLastError());
+
+        /* test ProcessDebugFlags after re-attaching debugger */
+        status = pNtQueryInformationProcess(pi.hProcess, ProcessDebugFlags,
+                &debug_flags, sizeof(debug_flags), NULL);
+        ok(!status, "NtQueryInformationProcess failed, status %#x.\n", status);
+        ok(debug_flags == FALSE, "Expected flag FALSE, got %x.\n", debug_flags);
+
+        result = ResumeThread(pi.hThread);
+        todo_wine ok(result == 2, "Expected 2, got %u.\n", result);
+
+        /* Wait until the process is terminated. On Windows XP the process randomly
+         * gets stuck in a non-continuable exception, so stop after 100 iterations.
+         * On Windows 2003, the debugged process disappears (or stops?) without
+         * any EXIT_PROCESS_DEBUG_EVENT after a couple of events. */
+        for (j = 0; j < 100; j++)
+        {
+            ret = WaitForDebugEvent(&ev, 1000);
+            ok(ret || broken(GetLastError() == ERROR_SEM_TIMEOUT),
+                "WaitForDebugEvent failed, last error %#x.\n", GetLastError());
+            if (!ret) break;
+
+            if (ev.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT) break;
+
+            ret = ContinueDebugEvent(ev.dwProcessId, ev.dwThreadId, DBG_CONTINUE);
+            ok(ret, "ContinueDebugEvent failed, last error %#x.\n", GetLastError());
+            if (!ret) break;
+        }
+        ok(j < 100 || broken(j >= 100) /* Win XP */, "Expected less than 100 debug events.\n");
+
+        /* test ProcessDebugFlags after process has terminated */
+        status = pNtQueryInformationProcess(pi.hProcess, ProcessDebugFlags,
+                &debug_flags, sizeof(debug_flags), NULL);
+        ok(!status, "NtQueryInformationProcess failed, status %#x.\n", status);
+        ok(debug_flags == FALSE, "Expected flag FALSE, got %x.\n", debug_flags);
+
+        ret = CloseHandle(pi.hThread);
+        ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
+        ret = CloseHandle(pi.hProcess);
+        ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
     }
-
-    ret = CloseHandle(pi.hThread);
-    ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
-    ret = CloseHandle(pi.hProcess);
-    ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
 }
 
 static void test_readvirtualmemory(void)
@@ -1439,7 +1834,7 @@ static void test_mapprotection(void)
     status = pNtSetInformationProcess( GetCurrentProcess(), ProcessExecuteFlags, &flags, sizeof(flags) );
     ok( (status == STATUS_SUCCESS) || (status == STATUS_INVALID_INFO_CLASS), "Expected STATUS_SUCCESS, got %08x\n", status);
 
-    size.u.LowPart  = 0x1000;
+    size.u.LowPart  = 0x2000;
     size.u.HighPart = 0;
     status = pNtCreateSection ( &h,
         STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ | SECTION_MAP_WRITE | SECTION_MAP_EXECUTE,
@@ -1453,7 +1848,7 @@ static void test_mapprotection(void)
 
     offset.u.LowPart  = 0;
     offset.u.HighPart = 0;
-    count = 0x1000;
+    count = 0x2000;
     addr = NULL;
     status = pNtMapViewOfSection ( h, GetCurrentProcess(), &addr, 0, 0, &offset, &count, ViewShare, 0, PAGE_READWRITE);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
@@ -1476,7 +1871,7 @@ static void test_mapprotection(void)
     ok( retlen == sizeof(info), "Expected STATUS_SUCCESS, got %08x\n", status);
     ok((info.Protect & ~PAGE_NOCACHE) == PAGE_READWRITE, "addr.Protect is not PAGE_READWRITE, but 0x%x\n", info.Protect);
 
-    status = pNtUnmapViewOfSection (GetCurrentProcess(), addr);
+    status = pNtUnmapViewOfSection( GetCurrentProcess(), (char *)addr + 0x1050 );
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     pNtClose (h);
 
@@ -1488,12 +1883,17 @@ static void test_queryvirtualmemory(void)
 {
     NTSTATUS status;
     SIZE_T readcount;
+    static const WCHAR windowsW[] = {'w','i','n','d','o','w','s'};
     static const char teststring[] = "test string";
     static char datatestbuf[42] = "abc";
     static char rwtestbuf[42];
     MEMORY_BASIC_INFORMATION mbi;
     char stackbuf[42];
     HMODULE module;
+    char buffer_name[sizeof(MEMORY_SECTION_NAME) + MAX_PATH * sizeof(WCHAR)];
+    MEMORY_SECTION_NAME *msn = (MEMORY_SECTION_NAME *)buffer_name;
+    BOOL found;
+    int i;
 
     module = GetModuleHandleA( "ntdll.dll" );
     trace("Check flags of the PE header of NTDLL.DLL at %p\n", module);
@@ -1567,6 +1967,43 @@ static void test_queryvirtualmemory(void)
             "mbi.Protect is 0x%x\n", mbi.Protect);
     }
     else skip( "bss is outside of module\n" );  /* this can happen on Mac OS */
+
+    trace("Check section name of NTDLL.DLL with invalid size\n");
+    module = GetModuleHandleA( "ntdll.dll" );
+    memset(msn, 0, sizeof(*msn));
+    readcount = 0;
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(*msn), &readcount);
+    ok( status == STATUS_BUFFER_OVERFLOW, "Expected STATUS_BUFFER_OVERFLOW, got %08x\n", status);
+    ok( readcount > 0, "Expected readcount to be > 0\n");
+
+    trace("Check section name of NTDLL.DLL with invalid size\n");
+    module = GetModuleHandleA( "ntdll.dll" );
+    memset(msn, 0, sizeof(*msn));
+    readcount = 0;
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(*msn) - 1, &readcount);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+    ok( readcount > 0, "Expected readcount to be > 0\n");
+
+    trace("Check section name of NTDLL.DLL\n");
+    module = GetModuleHandleA( "ntdll.dll" );
+    memset(msn, 0x55, sizeof(*msn));
+    memset(buffer_name, 0x77, sizeof(buffer_name));
+    readcount = 0;
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(buffer_name), &readcount);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    ok( readcount > 0, "Expected readcount to be > 0\n");
+    trace ("Section Name: %s\n", wine_dbgstr_w(msn->SectionFileName.Buffer));
+    pRtlDowncaseUnicodeString( &msn->SectionFileName, &msn->SectionFileName, FALSE );
+    for (found = FALSE, i = (msn->SectionFileName.Length - sizeof(windowsW)) / sizeof(WCHAR); i >= 0; i--)
+        found |= !memcmp( &msn->SectionFileName.Buffer[i], windowsW, sizeof(windowsW) );
+    ok( found, "Section name does not contain \"Windows\"\n");
+
+    trace("Check section name of non mapped memory\n");
+    memset(msn, 0, sizeof(*msn));
+    readcount = 0;
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), &buffer_name, MemorySectionName, msn, sizeof(buffer_name), &readcount);
+    ok( status == STATUS_INVALID_ADDRESS, "Expected STATUS_INVALID_ADDRESS, got %08x\n", status);
+    ok( readcount == 0 || broken(readcount != 0) /* wow64 */, "Expected readcount to be 0\n");
 }
 
 static void test_affinity(void)
@@ -1780,6 +2217,39 @@ static void test_thread_start_address(void)
     CloseHandle(thread);
 }
 
+static void test_query_data_alignment(void)
+{
+    ULONG ReturnLength;
+    NTSTATUS status;
+    DWORD value;
+
+    value = 0xdeadbeef;
+    status = pNtQuerySystemInformation(SystemRecommendedSharedDataAlignment, &value, sizeof(value), &ReturnLength);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    ok(sizeof(value) == ReturnLength, "Inconsistent length %u\n", ReturnLength);
+    ok(value == 64, "Expected 64, got %u\n", value);
+}
+
+static void test_working_set_limit(void)
+{
+    DWORD_PTR lower = 0, upper = ~(DWORD_PTR)0;
+    MEMORY_BASIC_INFORMATION mbi;
+    SIZE_T readcount;
+    NTSTATUS status;
+
+    while (lower != upper)
+    {
+        DWORD_PTR check = (lower >> 1) + (upper >> 1) + (lower & upper & 1);
+        status = pNtQueryVirtualMemory(NtCurrentProcess(), (void *)check, MemoryBasicInformation,
+                                       &mbi, sizeof(MEMORY_BASIC_INFORMATION), &readcount);
+        if (status == STATUS_INVALID_PARAMETER) upper = check;
+        else lower = check + 1;
+    }
+
+    trace("working set limit is %p\n", (void *)upper);
+    ok(upper != ~(DWORD_PTR)0, "expected != ~(DWORD_PTR)0\n");
+}
+
 START_TEST(info)
 {
     char **argv;
@@ -1825,6 +2295,10 @@ START_TEST(info)
     trace("Starting test_query_handle()\n");
     test_query_handle();
 
+    /* 0x40 SystemHandleInformation */
+    trace("Starting test_query_handle_ex()\n");
+    test_query_handle_ex();
+
     /* 0x15 SystemCacheInformation */
     trace("Starting test_query_cache()\n");
     test_query_cache();
@@ -1844,6 +2318,7 @@ START_TEST(info)
     /* 0x49 SystemLogicalProcessorInformation */
     trace("Starting test_query_logicalproc()\n");
     test_query_logicalproc();
+    test_query_logicalprocex();
 
     /* NtPowerInformation */
 
@@ -1872,6 +2347,10 @@ START_TEST(info)
     /* 0x7 ProcessDebugPort */
     trace("Starting test_process_debug_port()\n");
     test_query_process_debug_port(argc, argv);
+
+    /* 0x12 ProcessPriorityClass */
+    trace("Starting test_query_process_priority()\n");
+    test_query_process_priority();
 
     /* 0x14 ProcessHandleCount */
     trace("Starting test_query_process_handlecount()\n");
@@ -1911,4 +2390,10 @@ START_TEST(info)
 
     trace("Starting test_thread_start_address()\n");
     test_thread_start_address();
+
+    trace("Starting test_query_data_alignment()\n");
+    test_query_data_alignment();
+
+    trace("Starting test_working_set_limit()\n");
+    test_working_set_limit();
 }

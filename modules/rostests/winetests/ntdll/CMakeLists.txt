@@ -1,7 +1,7 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
-add_definitions(-D__WINESRC__)
+add_definitions(-D__WINESRC__ -DWINETEST_USE_DBGSTR_LONGLONG)
 
 list(APPEND SOURCE
     atom.c
@@ -17,6 +17,7 @@ list(APPEND SOURCE
     path.c
     pipe.c
     port.c
+    process.c
     reg.c
     rtl.c
     rtlbitmap.c
