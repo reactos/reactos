@@ -4,9 +4,11 @@
 #include <wine/test.h>
 
 extern void func_mediadet(void);
+extern void func_timeline(void);
 
 const struct test winetest_testlist[] =
 {
     { "mediadet", func_mediadet },
+    { "timeline", func_timeline },
     { 0, 0 }
 };
