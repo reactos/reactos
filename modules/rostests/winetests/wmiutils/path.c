@@ -443,7 +443,7 @@ static void test_IWbemPath_SetClassName(void)
     ok( flags == (WBEMPATH_INFO_ANON_LOCAL_MACHINE | WBEMPATH_INFO_IS_CLASS_REF |
                   WBEMPATH_INFO_HAS_SUBSCOPES | WBEMPATH_INFO_V2_COMPLIANT |
                   WBEMPATH_INFO_CIM_COMPLIANT),
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     IWbemPath_Release( path );
 }
@@ -514,7 +514,7 @@ static void test_IWbemPath_GetInfo(void)
     hr = IWbemPath_GetInfo( path, 0, &resp );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( resp == (WBEMPATH_INFO_ANON_LOCAL_MACHINE | WBEMPATH_INFO_SERVER_NAMESPACE_ONLY),
-        "got %lx%08lx\n", (unsigned long)(resp >> 32), (unsigned long)resp );
+        "got %s\n", wine_dbgstr_longlong(resp) );
 
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, path17 );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -531,7 +531,7 @@ static void test_IWbemPath_GetInfo(void)
     ok( resp == (WBEMPATH_INFO_ANON_LOCAL_MACHINE | WBEMPATH_INFO_IS_INST_REF |
                  WBEMPATH_INFO_HAS_SUBSCOPES | WBEMPATH_INFO_V2_COMPLIANT |
                  WBEMPATH_INFO_CIM_COMPLIANT | WBEMPATH_INFO_PATH_HAD_SERVER),
-        "got %lx%08lx\n", (unsigned long)(resp >> 32), (unsigned long)resp );
+        "got %s\n", wine_dbgstr_longlong(resp) );
 
     IWbemPath_Release( path );
     if (!(path = create_path())) return;
@@ -545,7 +545,7 @@ static void test_IWbemPath_GetInfo(void)
     ok( resp == (WBEMPATH_INFO_ANON_LOCAL_MACHINE | WBEMPATH_INFO_IS_CLASS_REF |
                  WBEMPATH_INFO_HAS_SUBSCOPES | WBEMPATH_INFO_V2_COMPLIANT |
                  WBEMPATH_INFO_CIM_COMPLIANT),
-        "got %lx%08lx\n", (unsigned long)(resp >> 32), (unsigned long)resp );
+        "got %s\n", wine_dbgstr_longlong(resp) );
 
     hr = IWbemPath_SetText( path, WBEMPATH_CREATE_ACCEPT_ALL, path1 );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -554,7 +554,7 @@ static void test_IWbemPath_GetInfo(void)
     hr = IWbemPath_GetInfo( path, 0, &resp );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( resp == (WBEMPATH_INFO_ANON_LOCAL_MACHINE | WBEMPATH_INFO_SERVER_NAMESPACE_ONLY),
-        "got %lx%08lx\n", (unsigned long)(resp >> 32), (unsigned long)resp );
+        "got %s\n", wine_dbgstr_longlong(resp) );
 
     IWbemPath_Release( path );
 }
@@ -596,7 +596,7 @@ static void test_IWbemPath_SetServer(void)
     ok( flags == (WBEMPATH_INFO_HAS_MACHINE_NAME | WBEMPATH_INFO_V1_COMPLIANT |
                   WBEMPATH_INFO_V2_COMPLIANT | WBEMPATH_INFO_CIM_COMPLIANT |
                   WBEMPATH_INFO_SERVER_NAMESPACE_ONLY | WBEMPATH_INFO_PATH_HAD_SERVER),
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     hr = IWbemPath_SetServer( path, NULL );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -609,7 +609,7 @@ static void test_IWbemPath_SetServer(void)
     hr = IWbemPath_GetInfo( path, 0, &flags );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( flags == (WBEMPATH_INFO_ANON_LOCAL_MACHINE | WBEMPATH_INFO_SERVER_NAMESPACE_ONLY),
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     IWbemPath_Release( path );
 }
@@ -694,7 +694,7 @@ static void test_IWbemPath_RemoveAllNamespaces(void)
     hr = IWbemPath_GetInfo( path, 0, &flags );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( flags == expected_flags,
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     hr = IWbemPath_RemoveAllNamespaces( path );
     ok( hr == S_OK, "got %08x\n", hr );
@@ -703,7 +703,7 @@ static void test_IWbemPath_RemoveAllNamespaces(void)
     hr = IWbemPath_GetInfo( path, 0, &flags );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( flags == expected_flags,
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     buf[0] = 0;
     len = sizeof(buf) / sizeof(buf[0]);
@@ -738,7 +738,7 @@ static void test_IWbemPath_RemoveNamespaceAt(void)
     hr = IWbemPath_GetInfo( path, 0, &flags );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( flags == expected_flags,
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     count = 0xdeadbeef;
     hr = IWbemPath_GetNamespaceCount( path, &count );
@@ -752,7 +752,7 @@ static void test_IWbemPath_RemoveNamespaceAt(void)
     hr = IWbemPath_GetInfo( path, 0, &flags );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( flags == expected_flags,
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     count = 0xdeadbeef;
     hr = IWbemPath_GetNamespaceCount( path, &count );
@@ -773,7 +773,7 @@ static void test_IWbemPath_RemoveNamespaceAt(void)
     hr = IWbemPath_GetInfo( path, 0, &flags );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( flags == expected_flags,
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     count = 0xdeadbeef;
     hr = IWbemPath_GetNamespaceCount( path, &count );
@@ -822,7 +822,7 @@ static void test_IWbemPath_SetNamespaceAt(void)
     hr = IWbemPath_GetInfo( path, 0, &flags );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( flags == expected_flags,
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     buf[0] = 0;
     len = sizeof(buf) / sizeof(buf[0]);
@@ -838,7 +838,7 @@ static void test_IWbemPath_SetNamespaceAt(void)
     hr = IWbemPath_GetInfo( path, 0, &flags );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( flags == expected_flags,
-        "got %lx%08lx\n", (unsigned long)(flags >> 32), (unsigned long)flags );
+        "got %s\n", wine_dbgstr_longlong(flags) );
 
     count = 0xdeadbeef;
     hr = IWbemPath_GetNamespaceCount( path, &count );
