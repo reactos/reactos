@@ -242,6 +242,118 @@ static void test_pbuffers(HDC hdc)
     else skip("Pbuffer test for offscreen pixelformat skipped as no offscreen-only format with pbuffer capabilities has been found\n");
 }
 
+static int test_pfd(const PIXELFORMATDESCRIPTOR *pfd, PIXELFORMATDESCRIPTOR *fmt)
+{
+    int pf;
+    HDC hdc;
+    HWND hwnd;
+
+    hwnd = CreateWindowA("static", "Title", WS_OVERLAPPEDWINDOW, 10, 10, 200, 200, NULL, NULL,
+            NULL, NULL);
+    if (!hwnd)
+        return 0;
+
+    hdc = GetDC( hwnd );
+    pf = ChoosePixelFormat( hdc, pfd );
+    if (pf && fmt)
+    {
+        memset(fmt, 0, sizeof(*fmt));
+        ok(DescribePixelFormat( hdc, pf, sizeof(*fmt), fmt ),
+           "DescribePixelFormat failed with error: %u\n", GetLastError());
+    }
+    ReleaseDC( hwnd, hdc );
+    DestroyWindow( hwnd );
+
+    return pf;
+}
+
+static void test_choosepixelformat(void)
+{
+    PIXELFORMATDESCRIPTOR pfd = {
+        sizeof(PIXELFORMATDESCRIPTOR),
+        1,                     /* version */
+        PFD_DRAW_TO_WINDOW |
+        PFD_SUPPORT_OPENGL |
+        PFD_TYPE_RGBA,
+        0,                     /* color depth */
+        0, 0, 0, 0, 0, 0,      /* color bits */
+        0,                     /* alpha buffer */
+        0,                     /* shift bit */
+        0,                     /* accumulation buffer */
+        0, 0, 0, 0,            /* accum bits */
+        0,                     /* z-buffer */
+        0,                     /* stencil buffer */
+        0,                     /* auxiliary buffer */
+        PFD_MAIN_PLANE,        /* main layer */
+        0,                     /* reserved */
+        0, 0, 0                /* layer masks */
+    };
+    PIXELFORMATDESCRIPTOR ret_fmt;
+
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
+    pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    pfd.dwFlags |= PFD_STEREO_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
+    pfd.iPixelType = 32;
+    ok( test_pfd(&pfd, &ret_fmt), "Invalid pixel format 32 failed\n" );
+    ok( ret_fmt.iPixelType == PFD_TYPE_RGBA, "Expected pixel type PFD_TYPE_RGBA, got %d\n", ret_fmt.iPixelType );
+    pfd.iPixelType = 33;
+    ok( test_pfd(&pfd, &ret_fmt), "Invalid pixel format 33 failed\n" );
+    ok( ret_fmt.iPixelType == PFD_TYPE_RGBA, "Expected pixel type PFD_TYPE_RGBA, got %d\n", ret_fmt.iPixelType );
+    pfd.iPixelType = 15;
+    ok( test_pfd(&pfd, &ret_fmt), "Invalid pixel format 15 failed\n" );
+    ok( ret_fmt.iPixelType == PFD_TYPE_RGBA, "Expected pixel type PFD_TYPE_RGBA, got %d\n", ret_fmt.iPixelType );
+    pfd.iPixelType = PFD_TYPE_RGBA;
+
+    pfd.cColorBits = 32;
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
+    pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    pfd.dwFlags |= PFD_STEREO_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
+    pfd.cColorBits = 0;
+
+    pfd.cAlphaBits = 8;
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
+    pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    pfd.dwFlags |= PFD_STEREO_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
+    pfd.cAlphaBits = 0;
+
+    pfd.cStencilBits = 8;
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
+    pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    pfd.dwFlags |= PFD_STEREO_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
+    pfd.cStencilBits = 0;
+
+    pfd.cAuxBuffers = 1;
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
+    pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    pfd.dwFlags |= PFD_STEREO_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
+    pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
+    pfd.cAuxBuffers = 0;
+}
+
 static void WINAPI gl_debug_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
                                              GLsizei length, const GLchar *message, const void *userParam)
 {
@@ -345,6 +457,30 @@ static void test_setpixelformat(HDC winhdc)
         ok( i == pf, "GetPixelFormat returned wrong format %d/%d\n", i, pf );
         ReleaseDC( hwnd, hdc );
         DestroyWindow( hwnd );
+        /* check various calls with invalid hdc */
+        SetLastError( 0xdeadbeef );
+        i = GetPixelFormat( hdc );
+        ok( i == 0, "GetPixelFormat succeeded\n" );
+        ok( GetLastError() == ERROR_INVALID_PIXEL_FORMAT, "wrong error %u\n", GetLastError() );
+        SetLastError( 0xdeadbeef );
+        res = SetPixelFormat( hdc, pf, &pfd );
+        ok( i == 0, "SetPixelFormat succeeded\n" );
+        ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+        SetLastError( 0xdeadbeef );
+        res = DescribePixelFormat( hdc, 0, 0, NULL );
+        ok( !res, "DescribePixelFormat succeeded\n" );
+        ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+        SetLastError( 0xdeadbeef );
+        pf = ChoosePixelFormat( hdc, &pfd );
+        ok( !pf, "ChoosePixelFormat succeeded\n" );
+        ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+        SetLastError( 0xdeadbeef );
+        res = SwapBuffers( hdc );
+        ok( !res, "SwapBuffers succeeded\n" );
+        ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+        SetLastError( 0xdeadbeef );
+        ok( !wglCreateContext( hdc ), "CreateContext succeeded\n" );
+        ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
     }
 
     hwnd = CreateWindowA("static", "Title", WS_OVERLAPPEDWINDOW, 10, 10, 200, 200, NULL, NULL,
@@ -934,7 +1070,8 @@ static void test_opengl3(HDC hdc)
         gl3Ctx = pwglCreateContextAttribsARB((HDC)0xdeadbeef, 0, 0);
         ok(gl3Ctx == 0, "pwglCreateContextAttribsARB using an invalid HDC passed\n");
         error = GetLastError();
-        ok(error == ERROR_DC_NOT_FOUND ||
+        ok(error == ERROR_DC_NOT_FOUND || error == ERROR_INVALID_HANDLE ||
+           broken(error == ERROR_DS_GENERIC_ERROR) ||
            broken(error == NVIDIA_HRESULT_FROM_WIN32(ERROR_INVALID_DATA)), /* Nvidia Vista + Win7 */
            "Expected ERROR_DC_NOT_FOUND, got error=%x\n", error);
         wglDeleteContext(gl3Ctx);
@@ -949,7 +1086,7 @@ static void test_opengl3(HDC hdc)
         ok(gl3Ctx == 0, "pwglCreateContextAttribsARB using an invalid shareList passed\n");
         error = GetLastError();
         /* The Nvidia implementation seems to return hresults instead of win32 error codes */
-        ok(error == ERROR_INVALID_OPERATION ||
+        ok(error == ERROR_INVALID_OPERATION || error == ERROR_INVALID_DATA ||
            error == NVIDIA_HRESULT_FROM_WIN32(ERROR_INVALID_OPERATION), "Expected ERROR_INVALID_OPERATION, got error=%x\n", error);
         wglDeleteContext(gl3Ctx);
     }
@@ -1732,6 +1869,7 @@ START_TEST(opengl)
             return;
         }
 
+        test_choosepixelformat();
         test_debug_message_callback();
         test_setpixelformat(hdc);
         test_destroy(hdc);
