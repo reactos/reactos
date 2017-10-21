@@ -530,7 +530,7 @@ if (0)  /* Crashes on XP. */
     ok(cnt == 0, "SQLRemoveDriver failed %d\n", cnt);
 }
 
-void test_SQLInstallTranslatorEx(void)
+static void test_SQLInstallTranslatorEx(void)
 {
     char path[MAX_PATH];
     char syspath[MAX_PATH];
