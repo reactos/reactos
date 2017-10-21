@@ -1,0 +1,510 @@
+/*
+ * PROJECT:     ReactOS MMC idl
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Define MMC interfaces
+ * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ */
+
+
+import "objidl.idl";
+
+interface IComponent;
+interface IComponentData;
+
+interface IConsole;
+interface IConsole2;
+interface IConsoleNameSpace;
+interface IConsoleNameSpace2;
+interface IHeaderCtrl;
+interface IToolbar;
+interface IImageList;
+interface IConsoleVerb;
+
+
+typedef IComponent *LPCOMPONENT;
+typedef IComponentData *LPCOMPONENTDATA;
+
+typedef IConsole *LPCONSOLE;
+typedef IConsole2 *LPCONSOLE2;
+typedef IConsoleNameSpace *LPCONSOLENAMESPACE;
+typedef IConsoleNameSpace2 *LPCONSOLENAMESPACE2;
+typedef IHeaderCtrl *LPHEADERCTRL;
+typedef IToolbar *LPTOOLBAR;
+typedef IImageList *LPIMAGELIST;
+typedef IConsoleVerb *LPCONSOLEVERB;
+
+
+typedef enum _MMC_NOTIFY_TYPE { 
+    MMCN_ACTIVATE            = 0x8001,
+    MMCN_ADD_IMAGES          = 0x8002,
+    MMCN_BTN_CLICK           = 0x8003,
+    MMCN_CLICK               = 0x8004,
+    MMCN_COLUMN_CLICK        = 0x8005,
+    MMCN_CONTEXTMENU         = 0x8006,
+    MMCN_CUTORMOVE           = 0x8007,
+    MMCN_DBLCLICK            = 0x8008,
+    MMCN_DELETE              = 0x8009,
+    MMCN_DESELECT_ALL        = 0x800A,
+    MMCN_EXPAND              = 0x800B,
+    MMCN_HELP                = 0x800C,
+    MMCN_MENU_BTNCLICK       = 0x800D,
+    MMCN_MINIMIZED           = 0x800E,
+    MMCN_PASTE               = 0x800F,
+    MMCN_PROPERTY_CHANGE     = 0x8010,
+    MMCN_QUERY_PASTE         = 0x8011,
+    MMCN_REFRESH             = 0x8012,
+    MMCN_REMOVE_CHILDREN     = 0x8013,
+    MMCN_RENAME              = 0x8014,
+    MMCN_SELECT              = 0x8015,
+    MMCN_SHOW                = 0x8016,
+    MMCN_VIEW_CHANGE         = 0x8017,
+    MMCN_SNAPINHELP          = 0x8018,
+    MMCN_CONTEXTHELP         = 0x8019,
+    MMCN_INITOCX             = 0x801A,
+    MMCN_FILTER_CHANGE       = 0x801B,
+    MMCN_FILTERBTN_CLICK     = 0x801C,
+    MMCN_RESTORE_VIEW        = 0x801D,
+    MMCN_PRINT               = 0x801E,
+    MMCN_PRELOAD             = 0x801F,
+    MMCN_LISTPAD             = 0x8020,
+    MMCN_EXPANDSYNC          = 0x8021,
+    MMCN_COLUMNS_CHANGED     = 0x8022,
+    MMCN_CANPASTE_OUTOFPROC  = 0x8023
+} MMC_NOTIFY_TYPE;
+
+
+typedef enum _DATA_OBJECT_TYPES { 
+    CCT_SCOPE           = 0x8000,
+    CCT_RESULT          = 0x8001,
+    CCT_SNAPIN_MANAGER  = 0x8002,
+    CCT_UNINITIALIZED   = 0xFFFF
+} DATA_OBJECT_TYPES;
+
+typedef enum _MMC_BUTTON_STATE { 
+    ENABLED        = 0x1,
+    CHECKED        = 0x2,
+    HIDDEN         = 0x4,
+    INDETERMINATE  = 0x8,
+    BUTTONPRESSED  = 0x10
+} MMC_BUTTON_STATE;
+
+typedef enum _MMC_CONSOLE_VERB { 
+    MMC_VERB_NONE        = 0x0000,
+    MMC_VERB_OPEN        = 0x8000,
+    MMC_VERB_COPY        = 0x8001,
+    MMC_VERB_PASTE       = 0x8002,
+    MMC_VERB_DELETE      = 0x8003,
+    MMC_VERB_PROPERTIES  = 0x8004,
+    MMC_VERB_RENAME      = 0x8005,
+    MMC_VERB_REFRESH     = 0x8006,
+    MMC_VERB_PRINT       = 0x8007,
+    MMC_VERB_CUT         = 0x8008
+} MMC_CONSOLE_VERB;
+
+typedef LONG_PTR HSCOPEITEM;
+typedef LONG_PTR HRESULTITEM;
+
+cpp_quote("#define SDI_PARENT      (0x00000000)")
+cpp_quote("#define SDI_STR         (0x00000002)")
+cpp_quote("#define SDI_IMAGE       (0x00000004)")
+cpp_quote("#define SDI_OPENIMAGE   (0x00000008)")
+cpp_quote("#define SDI_STATE       (0x00000010)")
+cpp_quote("#define SDI_PARAM       (0x00000020)")
+cpp_quote("#define SDI_CHILDREN    (0x00000040)")
+cpp_quote("#define SDI_PREVIOUS    (0x10000000)")
+cpp_quote("#define SDI_NEXT        (0x20000000)")
+cpp_quote("#define SDI_FIRST       (0x08000000)")
+
+
+typedef struct _SCOPEDATAITEM {
+    DWORD      mask;
+    LPOLESTR   displayname;
+    int        nImage;
+    int        nOpenImage;
+    UINT       nState;
+    int        cChildren;
+    LPARAM     lParam;
+    HSCOPEITEM relativeID;
+    HSCOPEITEM ID;
+} SCOPEDATAITEM, *LPSCOPEDATAITEM;
+
+
+typedef struct _RESULTDATAITEM {
+    DWORD       mask;
+    BOOL        bScopeItem;
+    HRESULTITEM itemID;
+    int         nIndex;
+    int         nCol;
+    LPOLESTR    str;
+    int         nImage;
+    UINT        nState;
+    LPARAM      lParam;
+    int         iIndent;
+} RESULTDATAITEM, *LPRESULTDATAITEM;
+
+
+#include <pshpack8.h>
+typedef struct _MMCBUTTON {
+  int      nBitmap;
+  int      idCommand;
+  BYTE     fsState;
+  BYTE     fsType;
+  LPOLESTR lpButtonText;
+  LPOLESTR lpTooltipText;
+} MMCBUTTON, *LPMMCBUTTON;
+#include <poppack.h>
+
+
+
+[
+    object,
+    uuid(955ab28a-5218-11d0-a985-00c04fd8d565)
+]
+interface IComponentData : IUnknown
+{
+    HRESULT Initialize(
+        [in] LPUNKNOWN pUnknown
+    );
+
+    HRESULT CreateComponent(
+        [out] LPCOMPONENT *ppComponent
+    );
+
+    HRESULT Notify(
+        [in] LPDATAOBJECT    lpDataObject,
+        [in] MMC_NOTIFY_TYPE event,
+        [in] LPARAM          arg,
+        [in] LPARAM          param
+    );
+
+    HRESULT Destroy();
+
+    HRESULT QueryDataObject(
+        [in]  long              cookie,
+        [in]  DATA_OBJECT_TYPES type,
+        [out] LPDATAOBJECT      *ppDataObject
+    );
+
+    HRESULT GetDisplayInfo(
+        [in, out] SCOPEDATAITEM *pScopeDataItem
+    );
+
+    HRESULT CompareObjects(
+        [in] LPDATAOBJECT lpDataObjectA,
+        [in] LPDATAOBJECT lpDataObjectB
+    );
+}
+
+[
+    object,
+    uuid(43136eb2-d36c-11cf-adbc-00aa00a80033)
+]
+interface IComponent : IUnknown
+{
+    HRESULT Initialize(
+        [in] LPCONSOLE lpConsole
+    );
+
+    HRESULT Notify(
+        [in] LPDATAOBJECT    lpDataObject,
+        [in] MMC_NOTIFY_TYPE event,
+             LPARAM          arg,
+             LPARAM          param
+    );
+
+    HRESULT Destroy(
+        LONG cookie
+    );
+
+    HRESULT QueryDataObject(
+        [in]  long              cookie,
+        [in]  DATA_OBJECT_TYPES type,
+        [out] LPDATAOBJECT      *ppDataObject
+    );
+
+    HRESULT GetResultViewType(
+        [in]  long     cookie,
+        [out] LPOLESTR *ppViewType,
+        [out] long     *pViewOptions
+    );
+
+    HRESULT GetDisplayInfo(
+    [in, out] RESULTDATAITEM *pResultDataItem
+    );
+
+    HRESULT CompareObjects(
+        [in] LPDATAOBJECT lpDataObjectA,
+        [in] LPDATAOBJECT lpDataObjectB
+    );
+}
+
+
+[
+    object,
+    uuid(43136eb1-d36c-11cf-adbc-00aa00a80033)
+]
+interface IConsole : IUnknown
+{
+    HRESULT SetHeader(
+        [in] LPHEADERCTRL pHeader
+    );
+
+    HRESULT SetToolbar(
+        [in] LPTOOLBAR pToolbar
+    );
+
+    HRESULT QueryResultView(
+        [out] LPUNKNOWN *pUnknown
+    );
+
+    HRESULT QueryScopeImageList(
+        [out] LPIMAGELIST *ppImageList
+    );
+
+    HRESULT QueryResultImageList(
+        [out] LPIMAGELIST *ppImageList
+    );
+
+    HRESULT UpdateAllViews(
+        [in] LPDATAOBJECT lpDataObject,
+        [in] LPARAM       data,
+        [in] LONG_PTR     hint
+    );
+
+    HRESULT MessageBox(
+        [in]  LPCWSTR lpszText,
+        [in]  LPCWSTR lpszTitle,
+        [in]  UINT    fuStyle,
+        [out] int     *piRetval
+    );
+     
+    HRESULT QueryConsoleVerb(
+        [out] LPCONSOLEVERB *ppConsoleVerb
+    );
+
+    HRESULT SelectScopeItem(
+        [in] HSCOPEITEM hScopeItem
+    );
+
+    HRESULT GetMainWindow(
+        [out] HWND *phwnd
+    );
+
+    HRESULT NewWindow(
+        [in] HSCOPEITEM    hScopeItem,
+        [in] unsigned long lOptions
+    );
+}
+
+
+[
+    object,
+    uuid(103d842a-aa63-11d1-a7e1-00c04fd8d565)
+]
+interface IConsole2 : IConsole
+{
+    HRESULT Expand(
+        [in] HSCOPEITEM hItem,
+        [in] BOOL       bExpand
+    );
+
+    HRESULT IsTaskpadViewPreferred();
+        
+    HRESULT SetStatusText(
+        [in] LPOLESTR pszStatusText
+    );
+}
+
+
+[
+    object,
+    uuid(bedeb620-f24d-11cf-8afc-00aa003ca9f6)
+]
+interface IConsoleNameSpace : IUnknown
+{
+    HRESULT InsertItem(
+        [in, out] LPSCOPEDATAITEM item
+    );
+
+    HRESULT DeleteItem(
+        [in] HSCOPEITEM hItem,
+        [in] long       fDeleteThis
+    );
+
+    HRESULT SetItem(
+        [in] LPSCOPEDATAITEM item
+    );
+
+    HRESULT GetItem(
+        [in, out] LPSCOPEDATAITEM item
+    );
+
+    HRESULT GetChildItem(
+        [in]  HSCOPEITEM item,
+        [out] HSCOPEITEM *pItemChild,
+        [out] long       *plCookie
+    );
+
+    HRESULT GetNextItem(
+        [in]  HSCOPEITEM item,
+        [out] HSCOPEITEM *pItemNext,
+        [out] long       *plCookie
+    );
+
+    HRESULT GetParentItem(
+        [in]  HSCOPEITEM item,
+        [out] HSCOPEITEM *pItemParent,
+        [out] long       *plCookie
+    );
+}
+
+
+[
+    object,
+    uuid(255f18cc-65db-11d1-a7dc-00c04fd8d565)
+]
+interface IConsoleNameSpace2 : IConsoleNameSpace
+{
+    HRESULT Expand(
+        [in] HSCOPEITEM hItem
+    );
+
+    HRESULT AddExtension(
+        [in] HSCOPEITEM hItem,
+        [in] LPCLSID    lpClsid
+    );
+}
+
+
+[
+    object,
+    uuid(43136eb3-d36c-11cf-adbc-00aa00a80033)
+]
+interface IHeaderCtrl : IUnknown
+{
+    HRESULT InsertColumn(
+        [in] int     nCol,
+        [in] LPCWSTR title,
+        [in] int     nFormat,
+        [in] int     nWidth
+    );
+
+    HRESULT DeleteColumn(
+        [in] int nCol
+    );
+
+    HRESULT SetColumnText(
+        [in] int     nCol,
+        [in] LPCWSTR title
+    );
+
+    HRESULT GetColumnText(
+        [in]  int      nCol,
+        [out] LPOLESTR *pText
+    );
+
+    HRESULT SetColumnWidth(
+        [in] int nCol,
+        [in] int nWidth
+    );
+
+    HRESULT GetColumnWidth(
+        [in]  int nCol,
+        [out] int *pWidth
+    );
+}
+
+
+[
+    object,
+    uuid(43136eb9-d36c-11cf-adbc-00aa00a80033)
+]
+interface IToolbar : IUnknown
+{
+    HRESULT AddBitmap(
+        [in] int      nImages,
+        [in] HBITMAP  hbmp,
+        [in] int      cxSize,
+        [in] int      cySize,
+        [in] COLORREF crMask
+    );
+
+    HRESULT AddButtons(
+        [in] int         nButtons,
+        [in] LPMMCBUTTON lpButtons
+    );
+
+    HRESULT InsertButton(
+        [in] int         nIndex,
+        [in] LPMMCBUTTON lpButton
+    );
+
+    HRESULT DeleteButton(
+        [in] int nIndex
+    );
+
+    HRESULT GetButtonState(
+        [in]  int              idCommand,
+        [in]  MMC_BUTTON_STATE nState,
+        [out] BOOL             *pState
+    );
+
+    HRESULT SetButtonState(
+        [in] int              idCommand,
+        [in] MMC_BUTTON_STATE nState,
+        [in] BOOL             bState
+    );
+}
+
+
+[
+    object,
+    uuid(43136eb8-d36c-11cf-adbc-00aa00a80033)
+]
+interface IImageList : IUnknown
+{
+    HRESULT ImageListSetIcon(
+        [in] LONG_PTR *Icon,
+        [in] long     nLoc
+    );
+
+    HRESULT ImageListSetStrip(
+        [in] LONG_PTR *BMapSm,
+        [in] LONG_PTR *BMapLg,
+        [in] long     nStartLoc,
+        [in] COLORREF cMask
+    );
+}
+
+
+[
+    object,
+    uuid(e49f7a60-74af-11d0-a286-00c04fd8fe93)
+]
+interface IConsoleVerb : IUnknown
+{
+    HRESULT GetVerbState(
+        [in]  MMC_CONSOLE_VERB eCmdID,
+        [in]  MMC_BUTTON_STATE nState,
+        [out] BOOL             *pState
+    );
+
+    HRESULT SetVerbState(
+        [in] MMC_CONSOLE_VERB eCmdID,
+        [in] MMC_BUTTON_STATE nState,
+        [in] BOOL             bState
+    );
+
+    HRESULT SetDefaultVerb(
+        [in] MMC_CONSOLE_VERB eCmID
+    );
+
+    HRESULT GetDefaultVerb(
+        [out] MMC_CONSOLE_VERB *peCmID
+    );
+}
+
+
+
+
+
