@@ -691,7 +691,7 @@ todo_wine
     hr = pGetBufferedPaintBits(NULL, &bits, &row);
     ok(hr == E_FAIL, "Unexpected return code %#x\n", hr);
     ok(row == 10, "Unexpected row count %d\n", row);
-    ok(bits == (void *)0xdeadbeef, "Unepexpected data pointer %p\n", bits);
+    ok(bits == (void *)0xdeadbeef, "Unexpected data pointer %p\n", bits);
 
     hr = pGetBufferedPaintBits(NULL, NULL, NULL);
     ok(hr == E_POINTER, "Unexpected return code %#x\n", hr);
