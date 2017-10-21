@@ -440,9 +440,8 @@ static const CHAR szOpenSeqXML4[] = "<test><x/><x/><y/><z/><z/><v/></test>";
 #define _expect64(expr, str, base, TYPE, CONV) { \
     TYPE v1 = expr; \
     TYPE v2 = CONV(str, NULL, base); \
-    ok(v1 == v2, #expr "returned 0x%08x%08x, expected 0x%08x%08x\n", \
-                  (ULONG)((ULONG64)v1 >> 32), (ULONG)((ULONG64)v2 & (ULONG64)0xffffffff), \
-                  (ULONG)((ULONG64)v1 >> 32), (ULONG)((ULONG64)v2 & (ULONG64)0xffffffff)); \
+    ok(v1 == v2, #expr "returned %s, expected %s\n", \
+                  wine_dbgstr_longlong(v1), wine_dbgstr_longlong(v2)); \
 }
 
 #define expect_int64(expr, x, base) _expect64(expr, #x, base, LONG64, _strtoi64)
