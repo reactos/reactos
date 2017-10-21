@@ -607,7 +607,6 @@ StorPortGetDeviceBase(
     _In_ BOOLEAN InIoSpace)
 {
     PMINIPORT_DEVICE_EXTENSION MiniportExtension;
-
     PHYSICAL_ADDRESS TranslatedAddress;
     PVOID MappedAddress;
     NTSTATUS Status;
@@ -743,7 +742,7 @@ StorPortGetSrb(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 STORPORT_API
 PVOID
@@ -753,10 +752,43 @@ StorPortGetUncachedExtension(
     _In_ PPORT_CONFIGURATION_INFORMATION ConfigInfo,
     _In_ ULONG NumberOfBytes)
 {
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+    PHYSICAL_ADDRESS LowestAddress, HighestAddress, Alignment;
+
     DPRINT1("StorPortGetUncachedExtension(%p %p %lu)\n",
             HwDeviceExtension, ConfigInfo, NumberOfBytes);
-    UNIMPLEMENTED;
-    return NULL;
+
+    /* Get the miniport extension */
+    MiniportExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                          MINIPORT_DEVICE_EXTENSION,
+                                          HwDeviceExtension);
+    DPRINT1("HwDeviceExtension %p  MiniportExtension %p\n",
+            HwDeviceExtension, MiniportExtension);
+
+    DeviceExtension = MiniportExtension->Miniport->DeviceExtension;
+
+    /* Return the uncached extension base address if we already have one */
+    if (DeviceExtension->UncachedExtensionBase != NULL)
+        return DeviceExtension->UncachedExtensionBase;
+
+    // FIXME: Set DMA stuff here?
+
+    /* Allocate the uncached extension */
+    Alignment.QuadPart = 0;
+    LowestAddress.QuadPart = 0;
+    HighestAddress.QuadPart = 0x00000000FFFFFFFF;
+    DeviceExtension->UncachedExtensionBase = MmAllocateContiguousMemorySpecifyCache(NumberOfBytes,
+                                                                                    LowestAddress,
+                                                                                    HighestAddress,
+                                                                                    Alignment,
+                                                                                    MmCached);
+    if (DeviceExtension->UncachedExtensionBase == NULL)
+        return NULL;
+
+    DeviceExtension->UncachedExtensionSize = NumberOfBytes;
+
+    return DeviceExtension->UncachedExtensionBase;
 }
 
 
