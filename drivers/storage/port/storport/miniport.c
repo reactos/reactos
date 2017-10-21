@@ -335,15 +335,15 @@ NTSTATUS
 MiniportHwInitialize(
     _In_ PMINIPORT Miniport)
 {
-    NTSTATUS Status;
+    BOOLEAN Result;
 
     DPRINT1("MiniportHwInitialize(%p)\n", Miniport);
 
     /* Call the miniport HwInitialize routine */
-    Status = Miniport->InitData->HwInitialize(&Miniport->MiniportExtension->HwDeviceExtension);
-    DPRINT1("HwInitialize() returned 0x%08lx\n", Status);
+    Result = Miniport->InitData->HwInitialize(&Miniport->MiniportExtension->HwDeviceExtension);
+    DPRINT1("HwInitialize() returned %u\n", Result);
 
-    return Status;
+    return Result ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 /* EOF */
