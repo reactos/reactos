@@ -185,10 +185,10 @@ static void test_GetProgress_PreTransfer(void)
 
     hres = IBackgroundCopyFile_GetProgress(test_file, &progress);
     ok(hres == S_OK, "GetProgress failed: %08x\n", hres);
-    ok(progress.BytesTotal == BG_SIZE_UNKNOWN, "Got incorrect total size: %x%08x\n",
-       (DWORD)(progress.BytesTotal >> 32), (DWORD)progress.BytesTotal);
-    ok(progress.BytesTransferred == 0, "Got incorrect number of transferred bytes: %x%08x\n",
-       (DWORD)(progress.BytesTransferred >> 32), (DWORD)progress.BytesTransferred);
+    ok(progress.BytesTotal == BG_SIZE_UNKNOWN, "Got incorrect total size: %s\n",
+       wine_dbgstr_longlong(progress.BytesTotal));
+    ok(progress.BytesTransferred == 0, "Got incorrect number of transferred bytes: %s\n",
+       wine_dbgstr_longlong(progress.BytesTransferred));
     ok(progress.Completed == FALSE, "Got incorrect completion status\n");
 }
 

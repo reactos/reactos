@@ -1,4 +1,6 @@
 
+add_definitions(-DWINETEST_USE_DBGSTR_LONGLONG)
+
 list(APPEND SOURCE
     enum_files.c
     enum_jobs.c
