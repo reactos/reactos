@@ -1,5 +1,7 @@
 
-add_definitions(-DUSE_WINE_TODOS)
+add_definitions(
+    -DUSE_WINE_TODOS
+    -DWINETEST_USE_DBGSTR_LONGLONG)
 
 list(APPEND SOURCE
     assoc.c
