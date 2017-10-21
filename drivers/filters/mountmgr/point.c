@@ -322,7 +322,7 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     {
         if (DeviceEntry == &(DeviceExtension->DeviceListHead))
         {
-            if (DeviceName.Buffer)
+            if (SymbolicName)
             {
                 FreePool(DeviceName.Buffer);
             }
