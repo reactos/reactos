@@ -297,6 +297,7 @@ BOOL CAvailableApps::UpdateAppsDB()
     hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
     if (hFind != INVALID_HANDLE_VALUE)
     {
+        FindClose(hFind);
         return TRUE;
     }
 
