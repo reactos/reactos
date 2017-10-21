@@ -72,7 +72,7 @@ if(DBG)
     add_compile_flags_language("-Wdeclaration-after-statement" "C")
 endif()
 
-add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
+add_compile_flags_language("-fno-rtti -fno-exceptions -fno-threadsafe-statics" "CXX")
 
 #bug
 #file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)
