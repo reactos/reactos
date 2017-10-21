@@ -267,7 +267,7 @@ static void test_RtlGetFullPathName_U(void)
             { "c:/test/  ....   ..   ",      "c:\\test\\",       NULL},
             { "c:/test/..",                  "c:\\",             NULL},
             { "c:/test/.. ",                 "c:\\test\\",       NULL},
-            { "c:/TEST",                     "c:\\test",         "test"},
+            { "c:/TEST",                     "c:\\TEST",         "TEST"},
             { "c:/test/file",                "c:\\test\\file",   "file"},
             { "c:/test./file",               "c:\\test\\file",   "file"},
             { "c:/test.. /file",             "c:\\test.. \\file","file"},
@@ -281,6 +281,7 @@ static void test_RtlGetFullPathName_U(void)
             { "c:///test\\..\\file\\..\\//", "c:\\",             NULL},
             { "c:/test../file",              "c:\\test.\\file",  "file",
                                              "c:\\test..\\file", "file"},  /* vista */
+            { "c:\\test",                    "c:\\test",         "test"},
             { NULL, NULL, NULL}
         };
 
@@ -327,14 +328,14 @@ static void test_RtlGetFullPathName_U(void)
             "Wrong result %d/%d for \"%s\"\n", ret, len, test->path );
         ok(pRtlUnicodeToMultiByteN(rbufferA,MAX_PATH,&reslen,rbufferW,(lstrlenW(rbufferW) + 1) * sizeof(WCHAR)) == STATUS_SUCCESS,
            "RtlUnicodeToMultiByteN failed\n");
-        ok(!lstrcmpiA(rbufferA,test->rname) || (test->alt_rname && !lstrcmpiA(rbufferA,test->alt_rname)),
+        ok(!lstrcmpA(rbufferA,test->rname) || (test->alt_rname && !lstrcmpA(rbufferA,test->alt_rname)),
            "Got \"%s\" expected \"%s\"\n",rbufferA,test->rname);
         if (file_part)
         {
             ok(pRtlUnicodeToMultiByteN(rfileA,MAX_PATH,&reslen,file_part,(lstrlenW(file_part) + 1) * sizeof(WCHAR)) == STATUS_SUCCESS,
                "RtlUnicodeToMultiByteN failed\n");
-            ok((test->rfile && !lstrcmpiA(rfileA,test->rfile)) ||
-               (test->alt_rfile && !lstrcmpiA(rfileA,test->alt_rfile)),
+            ok((test->rfile && !lstrcmpA(rfileA,test->rfile)) ||
+               (test->alt_rfile && !lstrcmpA(rfileA,test->alt_rfile)),
                "Got \"%s\" expected \"%s\"\n",rfileA,test->rfile);
         }
         else

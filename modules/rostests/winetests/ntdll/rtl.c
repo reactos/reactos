@@ -86,7 +86,6 @@ static RTL_HANDLE * (WINAPI * pRtlAllocateHandle)(RTL_HANDLE_TABLE *, ULONG *);
 static BOOLEAN   (WINAPI * pRtlFreeHandle)(RTL_HANDLE_TABLE *, RTL_HANDLE *);
 static NTSTATUS  (WINAPI *pRtlAllocateAndInitializeSid)(PSID_IDENTIFIER_AUTHORITY,BYTE,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,PSID*);
 static NTSTATUS  (WINAPI *pRtlFreeSid)(PSID);
-static struct _TEB * (WINAPI *pNtCurrentTeb)(void);
 static DWORD     (WINAPI *pRtlGetThreadErrorMode)(void);
 static NTSTATUS  (WINAPI *pRtlSetThreadErrorMode)(DWORD, LPDWORD);
 static IMAGE_BASE_RELOCATION *(WINAPI *pLdrProcessRelocationBlock)(void*,UINT,USHORT*,INT_PTR);
@@ -111,7 +110,10 @@ static NTSTATUS  (WINAPI *pRtlCompressBuffer)(USHORT, const UCHAR*, ULONG, PUCHA
 static BOOL      (WINAPI *pRtlIsCriticalSectionLocked)(CRITICAL_SECTION *);
 static BOOL      (WINAPI *pRtlIsCriticalSectionLockedByThread)(CRITICAL_SECTION *);
 static NTSTATUS  (WINAPI *pRtlInitializeCriticalSectionEx)(CRITICAL_SECTION *, ULONG, ULONG);
+static NTSTATUS  (WINAPI *pLdrEnumerateLoadedModules)(void *, void *, void *);
 static NTSTATUS  (WINAPI *pRtlQueryPackageIdentity)(HANDLE, WCHAR*, SIZE_T*, WCHAR*, SIZE_T*, BOOLEAN*);
+static NTSTATUS  (WINAPI *pLdrRegisterDllNotification)(ULONG, PLDR_DLL_NOTIFICATION_FUNCTION, void *, void **);
+static NTSTATUS  (WINAPI *pLdrUnregisterDllNotification)(void *);
 
 static HMODULE hkernel32 = 0;
 static BOOL      (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
@@ -119,6 +121,9 @@ static BOOL      (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
 #define LEN 16
 static const char* src_src = "This is a test!"; /* 16 bytes long, incl NUL */
+static WCHAR ws2_32dllW[] = {'w','s','2','_','3','2','.','d','l','l',0};
+static WCHAR wintrustdllW[] = {'w','i','n','t','r','u','s','t','.','d','l','l',0};
+static WCHAR crypt32dllW[] = {'c','r','y','p','t','3','2','.','d','l','l',0};
 static ULONG src_aligned_block[4];
 static ULONG dest_aligned_block[32];
 static const char *src = (const char*)src_aligned_block;
@@ -149,7 +154,6 @@ static void InitFunctionPtrs(void)
 	pRtlFreeHandle = (void *)GetProcAddress(hntdll, "RtlFreeHandle");
         pRtlAllocateAndInitializeSid = (void *)GetProcAddress(hntdll, "RtlAllocateAndInitializeSid");
         pRtlFreeSid = (void *)GetProcAddress(hntdll, "RtlFreeSid");
-        pNtCurrentTeb = (void *)GetProcAddress(hntdll, "NtCurrentTeb");
         pRtlGetThreadErrorMode = (void *)GetProcAddress(hntdll, "RtlGetThreadErrorMode");
         pRtlSetThreadErrorMode = (void *)GetProcAddress(hntdll, "RtlSetThreadErrorMode");
         pLdrProcessRelocationBlock  = (void *)GetProcAddress(hntdll, "LdrProcessRelocationBlock");
@@ -174,7 +178,10 @@ static void InitFunctionPtrs(void)
         pRtlIsCriticalSectionLocked = (void *)GetProcAddress(hntdll, "RtlIsCriticalSectionLocked");
         pRtlIsCriticalSectionLockedByThread = (void *)GetProcAddress(hntdll, "RtlIsCriticalSectionLockedByThread");
         pRtlInitializeCriticalSectionEx = (void *)GetProcAddress(hntdll, "RtlInitializeCriticalSectionEx");
+        pLdrEnumerateLoadedModules = (void *)GetProcAddress(hntdll, "LdrEnumerateLoadedModules");
         pRtlQueryPackageIdentity = (void *)GetProcAddress(hntdll, "RtlQueryPackageIdentity");
+        pLdrRegisterDllNotification = (void *)GetProcAddress(hntdll, "LdrRegisterDllNotification");
+        pLdrUnregisterDllNotification = (void *)GetProcAddress(hntdll, "LdrUnregisterDllNotification");
     }
     hkernel32 = LoadLibraryA("kernel32.dll");
     ok(hkernel32 != 0, "LoadLibrary failed\n");
@@ -382,8 +389,8 @@ static void test_RtlUlonglongByteSwap(void)
 
     result = pRtlUlonglongByteSwap( ((ULONGLONG)0x76543210 << 32) | 0x87654321 );
     ok( (((ULONGLONG)0x21436587 << 32) | 0x10325476) == result,
-       "RtlUlonglongByteSwap(0x7654321087654321) returns 0x%x%08x, expected 0x2143658710325476\n",
-       (DWORD)(result >> 32), (DWORD)result);
+       "RtlUlonglongByteSwap(0x7654321087654321) returns 0x%s, expected 0x2143658710325476\n",
+       wine_dbgstr_longlong(result));
 }
 
 
@@ -624,11 +631,11 @@ static void test_RtlUniform(void)
         seed_bak = seed;
         result = pRtlUniform(&seed);
         ok(result == expected,
-                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) returns %x, expected %x\n",
-                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, expected);
+                "test: 0x%s RtlUniform(&seed (seed == %x)) returns %x, expected %x\n",
+                wine_dbgstr_longlong(num), seed_bak, result, expected);
         ok(seed == expected,
-                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) sets seed to %x, expected %x\n",
-                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, expected);
+                "test: 0x%s RtlUniform(&seed (seed == %x)) sets seed to %x, expected %x\n",
+                wine_dbgstr_longlong(num), seed_bak, result, expected);
     } /* for */
 /*
  * Further investigation shows: In the different regions the highest bit
@@ -671,11 +678,11 @@ static void test_RtlUniform(void)
         seed_bak = seed;
         result = pRtlUniform(&seed);
         ok(result == expected,
-                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) returns %x, expected %x\n",
-                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, expected);
+                "test: 0x%s RtlUniform(&seed (seed == %x)) returns %x, expected %x\n",
+                wine_dbgstr_longlong(num), seed_bak, result, expected);
         ok(seed == expected,
-                "test: 0x%x%08x RtlUniform(&seed (seed == %x)) sets seed to %x, expected %x\n",
-                (DWORD)(num >> 32), (DWORD)num, seed_bak, result, expected);
+                "test: 0x%s RtlUniform(&seed (seed == %x)) sets seed to %x, expected %x\n",
+                wine_dbgstr_longlong(num), seed_bak, result, expected);
     } /* for */
 /*
  * More tests show that RtlUniform does not return 0x7ffffffd for seed values
@@ -919,10 +926,12 @@ static void test_RtlThreadErrorMode(void)
        mode, oldmode);
     ok(pRtlGetThreadErrorMode() == 0x70,
        "RtlGetThreadErrorMode returned 0x%x, expected 0x%x\n", mode, 0x70);
-    if (!is_wow64 && pNtCurrentTeb)
-        ok(pNtCurrentTeb()->HardErrorDisabled == 0x70,
+    if (!is_wow64)
+    {
+        ok(NtCurrentTeb()->HardErrorDisabled == 0x70,
            "The TEB contains 0x%x, expected 0x%x\n",
-           pNtCurrentTeb()->HardErrorDisabled, 0x70);
+           NtCurrentTeb()->HardErrorDisabled, 0x70);
+    }
 
     status = pRtlSetThreadErrorMode(0, &mode);
     ok(status == STATUS_SUCCESS ||
@@ -933,10 +942,12 @@ static void test_RtlThreadErrorMode(void)
        mode, 0x70);
     ok(pRtlGetThreadErrorMode() == 0,
        "RtlGetThreadErrorMode returned 0x%x, expected 0x%x\n", mode, 0);
-    if (!is_wow64 && pNtCurrentTeb)
-        ok(pNtCurrentTeb()->HardErrorDisabled == 0,
+    if (!is_wow64)
+    {
+        ok(NtCurrentTeb()->HardErrorDisabled == 0,
            "The TEB contains 0x%x, expected 0x%x\n",
-           pNtCurrentTeb()->HardErrorDisabled, 0);
+           NtCurrentTeb()->HardErrorDisabled, 0);
+    }
 
     for (mode = 1; mode; mode <<= 1)
     {
@@ -3158,6 +3169,119 @@ static void test_RtlInitializeCriticalSectionEx(void)
     RtlDeleteCriticalSection((PRTL_CRITICAL_SECTION)&cs);
 }
 
+static void test_RtlLeaveCriticalSection(void)
+{
+    RTL_CRITICAL_SECTION cs;
+    NTSTATUS status;
+
+    if (!pRtlInitializeCriticalSectionEx)
+        return; /* Skip winxp */
+
+    status = RtlInitializeCriticalSection(&cs);
+    ok(!status, "RtlInitializeCriticalSection failed: %x\n", status);
+
+    status = RtlEnterCriticalSection(&cs);
+    ok(!status, "RtlEnterCriticalSection failed: %x\n", status);
+    todo_wine
+    ok(cs.LockCount == -2, "expected LockCount == -2, got %d\n", cs.LockCount);
+    ok(cs.RecursionCount == 1, "expected RecursionCount == 1, got %d\n", cs.RecursionCount);
+    ok(cs.OwningThread == ULongToHandle(GetCurrentThreadId()), "unexpected OwningThread\n");
+
+    status = RtlLeaveCriticalSection(&cs);
+    ok(!status, "RtlLeaveCriticalSection failed: %x\n", status);
+    ok(cs.LockCount == -1, "expected LockCount == -1, got %d\n", cs.LockCount);
+    ok(cs.RecursionCount == 0, "expected RecursionCount == 0, got %d\n", cs.RecursionCount);
+    ok(!cs.OwningThread, "unexpected OwningThread %p\n", cs.OwningThread);
+
+    /*
+     * Trying to leave a section that wasn't acquired modifies RecursionCount to an invalid value,
+     * but doesn't modify LockCount so that an attempt to enter the section later will work.
+     */
+    status = RtlLeaveCriticalSection(&cs);
+    ok(!status, "RtlLeaveCriticalSection failed: %x\n", status);
+    ok(cs.LockCount == -1, "expected LockCount == -1, got %d\n", cs.LockCount);
+    ok(cs.RecursionCount == -1, "expected RecursionCount == -1, got %d\n", cs.RecursionCount);
+    ok(!cs.OwningThread, "unexpected OwningThread %p\n", cs.OwningThread);
+
+    /* and again */
+    status = RtlLeaveCriticalSection(&cs);
+    ok(!status, "RtlLeaveCriticalSection failed: %x\n", status);
+    ok(cs.LockCount == -1, "expected LockCount == -1, got %d\n", cs.LockCount);
+    ok(cs.RecursionCount == -2, "expected RecursionCount == -2, got %d\n", cs.RecursionCount);
+    ok(!cs.OwningThread, "unexpected OwningThread %p\n", cs.OwningThread);
+
+    /* entering section fixes RecursionCount */
+    status = RtlEnterCriticalSection(&cs);
+    ok(!status, "RtlEnterCriticalSection failed: %x\n", status);
+    todo_wine
+    ok(cs.LockCount == -2, "expected LockCount == -2, got %d\n", cs.LockCount);
+    ok(cs.RecursionCount == 1, "expected RecursionCount == 1, got %d\n", cs.RecursionCount);
+    ok(cs.OwningThread == ULongToHandle(GetCurrentThreadId()), "unexpected OwningThread\n");
+
+    status = RtlLeaveCriticalSection(&cs);
+    ok(!status, "RtlLeaveCriticalSection failed: %x\n", status);
+    ok(cs.LockCount == -1, "expected LockCount == -1, got %d\n", cs.LockCount);
+    ok(cs.RecursionCount == 0, "expected RecursionCount == 0, got %d\n", cs.RecursionCount);
+    ok(!cs.OwningThread, "unexpected OwningThread %p\n", cs.OwningThread);
+
+    status = RtlDeleteCriticalSection(&cs);
+    ok(!status, "RtlDeleteCriticalSection failed: %x\n", status);
+}
+
+struct ldr_enum_context
+{
+    BOOL abort;
+    BOOL found;
+    int  count;
+};
+
+static void WINAPI ldr_enum_callback(LDR_MODULE *module, void *context, BOOLEAN *stop)
+{
+    static const WCHAR ntdllW[] = {'n','t','d','l','l','.','d','l','l',0};
+    struct ldr_enum_context *ctx = context;
+
+    if (!lstrcmpiW(module->BaseDllName.Buffer, ntdllW))
+        ctx->found = TRUE;
+
+    ctx->count++;
+    *stop = ctx->abort;
+}
+
+static void test_LdrEnumerateLoadedModules(void)
+{
+    struct ldr_enum_context ctx;
+    NTSTATUS status;
+
+    if (!pLdrEnumerateLoadedModules)
+    {
+        win_skip("LdrEnumerateLoadedModules not available\n");
+        return;
+    }
+
+    ctx.abort = FALSE;
+    ctx.found = FALSE;
+    ctx.count = 0;
+    status = pLdrEnumerateLoadedModules(NULL, ldr_enum_callback, &ctx);
+    ok(status == STATUS_SUCCESS, "LdrEnumerateLoadedModules failed with %08x\n", status);
+    ok(ctx.count > 1, "Expected more than one module, got %d\n", ctx.count);
+    ok(ctx.found, "Could not find ntdll in list of modules\n");
+
+    ctx.abort = TRUE;
+    ctx.count = 0;
+    status = pLdrEnumerateLoadedModules(NULL, ldr_enum_callback, &ctx);
+    ok(status == STATUS_SUCCESS, "LdrEnumerateLoadedModules failed with %08x\n", status);
+    ok(ctx.count == 1, "Expected exactly one module, got %d\n", ctx.count);
+
+    status = pLdrEnumerateLoadedModules((void *)0x1, ldr_enum_callback, (void *)0xdeadbeef);
+    ok(status == STATUS_INVALID_PARAMETER, "expected STATUS_INVALID_PARAMETER, got 0x%08x\n", status);
+
+    status = pLdrEnumerateLoadedModules((void *)0xdeadbeef, ldr_enum_callback, (void *)0xdeadbeef);
+    ok(status == STATUS_INVALID_PARAMETER, "expected STATUS_INVALID_PARAMETER, got 0x%08x\n", status);
+
+    status = pLdrEnumerateLoadedModules(NULL, NULL, (void *)0xdeadbeef);
+    ok(status == STATUS_INVALID_PARAMETER, "expected STATUS_INVALID_PARAMETER, got 0x%08x\n", status);
+}
+
 static void test_RtlQueryPackageIdentity(void)
 {
     const WCHAR programW[] = {'M','i','c','r','o','s','o','f','t','.','W','i','n','d','o','w','s','.',
@@ -3228,6 +3352,248 @@ done:
     CoUninitialize();
 }
 
+static DWORD (CALLBACK *orig_entry)(HMODULE,DWORD,LPVOID);
+static DWORD *dll_main_data;
+
+static inline void *get_rva( HMODULE module, DWORD va )
+{
+    return (void *)((char *)module + va);
+}
+
+static void CALLBACK ldr_notify_callback1(ULONG reason, LDR_DLL_NOTIFICATION_DATA *data, void *context)
+{
+    const IMAGE_IMPORT_DESCRIPTOR *imports;
+    const IMAGE_THUNK_DATA *import_list;
+    IMAGE_THUNK_DATA *thunk_list;
+    DWORD *calls = context;
+    LIST_ENTRY *mark;
+    LDR_MODULE *mod;
+    ULONG size;
+    int i, j;
+
+    *calls <<= 4;
+    *calls |= reason;
+
+    ok(data->Loaded.Flags == 0, "Expected flags 0, got %x\n", data->Loaded.Flags);
+    ok(!lstrcmpiW(data->Loaded.BaseDllName->Buffer, ws2_32dllW), "Expected ws2_32.dll, got %s\n",
+       wine_dbgstr_w(data->Loaded.BaseDllName->Buffer));
+    ok(!!data->Loaded.DllBase, "Expected non zero base address\n");
+    ok(data->Loaded.SizeOfImage, "Expected non zero image size\n");
+
+    /* expect module to be last module listed in LdrData load order list */
+    mark = &NtCurrentTeb()->Peb->LdrData->InMemoryOrderModuleList;
+    mod = CONTAINING_RECORD(mark->Blink, LDR_MODULE, InMemoryOrderModuleList);
+    ok(mod->BaseAddress == data->Loaded.DllBase, "Expected base address %p, got %p\n",
+       data->Loaded.DllBase, mod->BaseAddress);
+    ok(!lstrcmpiW(mod->BaseDllName.Buffer, ws2_32dllW), "Expected ws2_32.dll, got %s\n",
+       wine_dbgstr_w(mod->BaseDllName.Buffer));
+
+    /* show that imports have already been resolved */
+    imports = RtlImageDirectoryEntryToData(data->Loaded.DllBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
+    ok(!!imports, "Expected dll to have imports\n");
+
+    for (i = 0; imports[i].Name; i++)
+    {
+        thunk_list = get_rva(data->Loaded.DllBase, (DWORD)imports[i].FirstThunk);
+        if (imports[i].OriginalFirstThunk)
+            import_list = get_rva(data->Loaded.DllBase, (DWORD)imports[i].OriginalFirstThunk);
+        else
+            import_list = thunk_list;
+
+        for (j = 0; import_list[j].u1.Ordinal; j++)
+        {
+            ok(thunk_list[j].u1.AddressOfData > data->Loaded.SizeOfImage,
+               "Import has not been resolved: %p\n", (void*)thunk_list[j].u1.Function);
+        }
+    }
+}
+
+static void CALLBACK ldr_notify_callback2(ULONG reason, LDR_DLL_NOTIFICATION_DATA *data, void *context)
+{
+    DWORD *calls = context;
+    *calls <<= 4;
+    *calls |= reason + 2;
+}
+
+static BOOL WINAPI fake_dll_main(HINSTANCE instance, DWORD reason, void* reserved)
+{
+    if (reason == DLL_PROCESS_ATTACH)
+    {
+        *dll_main_data <<= 4;
+        *dll_main_data |= 3;
+    }
+    else if (reason == DLL_PROCESS_DETACH)
+    {
+        *dll_main_data <<= 4;
+        *dll_main_data |= 4;
+    }
+    return orig_entry(instance, reason, reserved);
+}
+
+static void CALLBACK ldr_notify_callback_dll_main(ULONG reason, LDR_DLL_NOTIFICATION_DATA *data, void *context)
+{
+    DWORD *calls = context;
+    LIST_ENTRY *mark;
+    LDR_MODULE *mod;
+
+    *calls <<= 4;
+    *calls |= reason;
+
+    if (reason != LDR_DLL_NOTIFICATION_REASON_LOADED)
+        return;
+
+    mark = &NtCurrentTeb()->Peb->LdrData->InMemoryOrderModuleList;
+    mod = CONTAINING_RECORD(mark->Blink, LDR_MODULE, InMemoryOrderModuleList);
+    ok(mod->BaseAddress == data->Loaded.DllBase, "Expected base address %p, got %p\n",
+       data->Loaded.DllBase, mod->BaseAddress);
+    if (mod->BaseAddress != data->Loaded.DllBase)
+       return;
+
+    orig_entry = mod->EntryPoint;
+    mod->EntryPoint = fake_dll_main;
+    dll_main_data = calls;
+}
+
+static BOOL WINAPI fake_dll_main_fail(HINSTANCE instance, DWORD reason, void* reserved)
+{
+    if (reason == DLL_PROCESS_ATTACH)
+    {
+        *dll_main_data <<= 4;
+        *dll_main_data |= 3;
+    }
+    else if (reason == DLL_PROCESS_DETACH)
+    {
+        *dll_main_data <<= 4;
+        *dll_main_data |= 4;
+    }
+    return FALSE;
+}
+
+static void CALLBACK ldr_notify_callback_fail(ULONG reason, LDR_DLL_NOTIFICATION_DATA *data, void *context)
+{
+    DWORD *calls = context;
+    LIST_ENTRY *mark;
+    LDR_MODULE *mod;
+
+    *calls <<= 4;
+    *calls |= reason;
+
+    if (reason != LDR_DLL_NOTIFICATION_REASON_LOADED)
+        return;
+
+    mark = &NtCurrentTeb()->Peb->LdrData->InMemoryOrderModuleList;
+    mod = CONTAINING_RECORD(mark->Blink, LDR_MODULE, InMemoryOrderModuleList);
+    ok(mod->BaseAddress == data->Loaded.DllBase, "Expected base address %p, got %p\n",
+       data->Loaded.DllBase, mod->BaseAddress);
+    if (mod->BaseAddress != data->Loaded.DllBase)
+       return;
+
+    orig_entry = mod->EntryPoint;
+    mod->EntryPoint = fake_dll_main_fail;
+    dll_main_data = calls;
+}
+
+static void CALLBACK ldr_notify_callback_imports(ULONG reason, LDR_DLL_NOTIFICATION_DATA *data, void *context)
+{
+    DWORD *calls = context;
+
+    if (reason != LDR_DLL_NOTIFICATION_REASON_LOADED)
+        return;
+
+    if (!lstrcmpiW(data->Loaded.BaseDllName->Buffer, crypt32dllW))
+    {
+        *calls <<= 4;
+        *calls |= 1;
+    }
+
+    if (!lstrcmpiW(data->Loaded.BaseDllName->Buffer, wintrustdllW))
+    {
+        *calls <<= 4;
+        *calls |= 2;
+    }
+}
+
+static void test_LdrRegisterDllNotification(void)
+{
+    void *cookie, *cookie2;
+    NTSTATUS status;
+    HMODULE mod;
+    DWORD calls;
+
+    if (!pLdrRegisterDllNotification || !pLdrUnregisterDllNotification)
+    {
+        win_skip("Ldr(Un)RegisterDllNotification not available\n");
+        return;
+    }
+
+    /* generic test */
+    status = pLdrRegisterDllNotification(0, ldr_notify_callback1, &calls, &cookie);
+    ok(!status, "Expected STATUS_SUCCESS, got %08x\n", status);
+
+    calls = 0;
+    mod = LoadLibraryW(ws2_32dllW);
+    ok(!!mod, "Failed to load library: %d\n", GetLastError());
+    ok(calls == LDR_DLL_NOTIFICATION_REASON_LOADED, "Expected LDR_DLL_NOTIFICATION_REASON_LOADED, got %x\n", calls);
+
+    calls = 0;
+    FreeLibrary(mod);
+    ok(calls == LDR_DLL_NOTIFICATION_REASON_UNLOADED, "Expected LDR_DLL_NOTIFICATION_REASON_UNLOADED, got %x\n", calls);
+
+    /* test order of callbacks */
+    status = pLdrRegisterDllNotification(0, ldr_notify_callback2, &calls, &cookie2);
+    ok(!status, "Expected STATUS_SUCCESS, got %08x\n", status);
+
+    calls = 0;
+    mod = LoadLibraryW(ws2_32dllW);
+    ok(!!mod, "Failed to load library: %d\n", GetLastError());
+    ok(calls == 0x13, "Expected order 0x13, got %x\n", calls);
+
+    calls = 0;
+    FreeLibrary(mod);
+    ok(calls == 0x24, "Expected order 0x24, got %x\n", calls);
+
+    pLdrUnregisterDllNotification(cookie2);
+    pLdrUnregisterDllNotification(cookie);
+
+    /* test dll main order */
+    status = pLdrRegisterDllNotification(0, ldr_notify_callback_dll_main, &calls, &cookie);
+    ok(!status, "Expected STATUS_SUCCESS, got %08x\n", status);
+
+    calls = 0;
+    mod = LoadLibraryW(ws2_32dllW);
+    ok(!!mod, "Failed to load library: %d\n", GetLastError());
+    ok(calls == 0x13, "Expected order 0x13, got %x\n", calls);
+
+    calls = 0;
+    FreeLibrary(mod);
+    ok(calls == 0x42, "Expected order 0x42, got %x\n", calls);
+
+    pLdrUnregisterDllNotification(cookie);
+
+    /* test dll main order */
+    status = pLdrRegisterDllNotification(0, ldr_notify_callback_fail, &calls, &cookie);
+    ok(!status, "Expected STATUS_SUCCESS, got %08x\n", status);
+
+    calls = 0;
+    mod = LoadLibraryW(ws2_32dllW);
+    ok(!mod, "Expected library to fail loading\n");
+    ok(calls == 0x1342, "Expected order 0x1342, got %x\n", calls);
+
+    pLdrUnregisterDllNotification(cookie);
+
+    /* test dll with dependencies */
+    status = pLdrRegisterDllNotification(0, ldr_notify_callback_imports, &calls, &cookie);
+    ok(!status, "Expected STATUS_SUCCESS, got %08x\n", status);
+
+    calls = 0;
+    mod = LoadLibraryW(wintrustdllW);
+    ok(!!mod, "Failed to load library: %d\n", GetLastError());
+    ok(calls == 0x12, "Expected order 0x12, got %x\n", calls);
+
+    FreeLibrary(mod);
+    pLdrUnregisterDllNotification(cookie);
+}
+
 START_TEST(rtl)
 {
     InitFunctionPtrs();
@@ -3264,5 +3630,8 @@ START_TEST(rtl)
     test_RtlDecompressBuffer();
     test_RtlIsCriticalSectionLocked();
     test_RtlInitializeCriticalSectionEx();
+    test_RtlLeaveCriticalSection();
+    test_LdrEnumerateLoadedModules();
     test_RtlQueryPackageIdentity();
+    test_LdrRegisterDllNotification();
 }

@@ -600,22 +600,21 @@ static void one_i64toa_test(int test_num, const ulonglong2str_t *ulonglong2str)
     dest_str[LARGE_STRI_BUFFER_LENGTH] = '\0';
     result = p_i64toa(ulonglong2str->value, dest_str, ulonglong2str->base);
     ok(result == dest_str,
-       "(test %d): _i64toa(%08x%08x, [out], %d) has result %p, expected: %p\n",
-       test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
-       ulonglong2str->base, result, dest_str);
+       "(test %d): _i64toa(%s, [out], %d) has result %p, expected: %p\n",
+       test_num, wine_dbgstr_longlong(ulonglong2str->value), ulonglong2str->base, result, dest_str);
     if (ulonglong2str->mask & 0x04) {
 	if (memcmp(dest_str, ulonglong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) != 0) {
 	    if (memcmp(dest_str, ulonglong2str[1].Buffer, LARGE_STRI_BUFFER_LENGTH) != 0) {
 		ok(memcmp(dest_str, ulonglong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) == 0,
-		   "(test %d): _i64toa(%08x%08x, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
-		   test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+		   "(test %d): _i64toa(%s, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+		   test_num, wine_dbgstr_longlong(ulonglong2str->value),
                    ulonglong2str->base, dest_str, ulonglong2str->Buffer);
 	    } /* if */
 	} /* if */
     } else {
 	ok(memcmp(dest_str, ulonglong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) == 0,
-	   "(test %d): _i64toa(%08x%08x, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
-	   test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+	   "(test %d): _i64toa(%s, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+	   test_num, wine_dbgstr_longlong(ulonglong2str->value),
            ulonglong2str->base, dest_str, ulonglong2str->Buffer);
     } /* if */
 }
@@ -630,12 +629,11 @@ static void one_ui64toa_test(int test_num, const ulonglong2str_t *ulonglong2str)
     dest_str[LARGE_STRI_BUFFER_LENGTH] = '\0';
     result = p_ui64toa(ulonglong2str->value, dest_str, ulonglong2str->base);
     ok(result == dest_str,
-       "(test %d): _ui64toa(%08x%08x, [out], %d) has result %p, expected: %p\n",
-       test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
-       ulonglong2str->base, result, dest_str);
+       "(test %d): _ui64toa(%s, [out], %d) has result %p, expected: %p\n",
+       test_num, wine_dbgstr_longlong(ulonglong2str->value), ulonglong2str->base, result, dest_str);
     ok(memcmp(dest_str, ulonglong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) == 0,
-       "(test %d): _ui64toa(%08x%08x, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
-       test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+       "(test %d): _ui64toa(%s, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+       test_num, wine_dbgstr_longlong(ulonglong2str->value),
        ulonglong2str->base, dest_str, ulonglong2str->Buffer);
 }
 
@@ -682,9 +680,8 @@ static void one_i64tow_test(int test_num, const ulonglong2str_t *ulonglong2str)
     result = p_i64tow(ulonglong2str->value, dest_wstr, ulonglong2str->base);
     pRtlUnicodeStringToAnsiString(&ansi_str, &unicode_string, 1);
     ok(result == dest_wstr,
-       "(test %d): _i64tow(0x%x%08x, [out], %d) has result %p, expected: %p\n",
-       test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
-       ulonglong2str->base, result, dest_wstr);
+       "(test %d): _i64tow(0x%s, [out], %d) has result %p, expected: %p\n",
+       test_num, wine_dbgstr_longlong(ulonglong2str->value), ulonglong2str->base, result, dest_wstr);
     if (ulonglong2str->mask & 0x04) {
 	if (memcmp(dest_wstr, expected_wstr, LARGE_STRI_BUFFER_LENGTH * sizeof(WCHAR)) != 0) {
 	    for (pos = 0; pos < LARGE_STRI_BUFFER_LENGTH; pos++) {
@@ -693,15 +690,15 @@ static void one_i64tow_test(int test_num, const ulonglong2str_t *ulonglong2str)
 	    expected_wstr[LARGE_STRI_BUFFER_LENGTH] = '\0';
 	    if (memcmp(dest_wstr, expected_wstr, LARGE_STRI_BUFFER_LENGTH * sizeof(WCHAR)) != 0) {
 		ok(memcmp(dest_wstr, expected_wstr, LARGE_STRI_BUFFER_LENGTH * sizeof(WCHAR)) == 0,
-                   "(test %d): _i64tow(0x%x%08x, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
-		   test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+                   "(test %d): _i64tow(0x%s, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+		   test_num, wine_dbgstr_longlong(ulonglong2str->value),
 		   ulonglong2str->base, ansi_str.Buffer, ulonglong2str->Buffer);
 	    } /* if */
 	} /* if */
     } else {
 	ok(memcmp(dest_wstr, expected_wstr, LARGE_STRI_BUFFER_LENGTH * sizeof(WCHAR)) == 0,
-           "(test %d): _i64tow(0x%x%08x, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
-	   test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+           "(test %d): _i64tow(0x%s, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+	   test_num, wine_dbgstr_longlong(ulonglong2str->value),
 	   ulonglong2str->base, ansi_str.Buffer, ulonglong2str->Buffer);
     } /* if */
     pRtlFreeAnsiString(&ansi_str);
@@ -733,12 +730,12 @@ static void one_ui64tow_test(int test_num, const ulonglong2str_t *ulonglong2str)
     result = p_ui64tow(ulonglong2str->value, dest_wstr, ulonglong2str->base);
     pRtlUnicodeStringToAnsiString(&ansi_str, &unicode_string, 1);
     ok(result == dest_wstr,
-       "(test %d): _ui64tow(0x%x%08x, [out], %d) has result %p, expected: %p\n",
-       test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+       "(test %d): _ui64tow(0x%s, [out], %d) has result %p, expected: %p\n",
+       test_num, wine_dbgstr_longlong(ulonglong2str->value),
        ulonglong2str->base, result, dest_wstr);
     ok(memcmp(dest_wstr, expected_wstr, LARGE_STRI_BUFFER_LENGTH * sizeof(WCHAR)) == 0,
-       "(test %d): _ui64tow(0x%x%08x, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
-       test_num, (DWORD)(ulonglong2str->value >> 32), (DWORD)ulonglong2str->value,
+       "(test %d): _ui64tow(0x%s, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+       test_num, wine_dbgstr_longlong(ulonglong2str->value),
        ulonglong2str->base, ansi_str.Buffer, ulonglong2str->Buffer);
     pRtlFreeAnsiString(&ansi_str);
 }
@@ -764,8 +761,8 @@ static void test_ulonglongtow(void)
         /* Crashes on XP and W2K3 */
         result = p_i64tow(ulonglong2str[0].value, NULL, 10);
         ok(result == NULL,
-           "(test d): _i64tow(0x%x%08x, NULL, 10) has result %p, expected: NULL\n",
-           (DWORD)(ulonglong2str[0].value >> 32), (DWORD)ulonglong2str[0].value, result);
+           "(test d): _i64tow(0x%s, NULL, 10) has result %p, expected: NULL\n",
+           wine_dbgstr_longlong(ulonglong2str[0].value), result);
     }
 
     if (p_ui64tow) {
@@ -773,8 +770,8 @@ static void test_ulonglongtow(void)
             /* Crashes on XP and W2K3 */
 	    result = p_ui64tow(ulonglong2str[0].value, NULL, 10);
 	    ok(result == NULL,
-               "(test e): _ui64tow(0x%x%08x, NULL, 10) has result %p, expected: NULL\n",
-	       (DWORD)(ulonglong2str[0].value >> 32), (DWORD)ulonglong2str[0].value, result);
+               "(test e): _ui64tow(0x%s, NULL, 10) has result %p, expected: NULL\n",
+	       wine_dbgstr_longlong(ulonglong2str[0].value), result);
         }
     } /* if */
 }
@@ -1085,14 +1082,14 @@ static void test_atoi64(void)
             ok(result == str2longlong[test_num].value ||
                (result == ((str2longlong[test_num].overflow == -1) ?
                 ULL(0x80000000,0x00000000) : ULL(0x7fffffff,0xffffffff))),
-               "(test %d): call failed: _atoi64(\"%s\") has result 0x%x%08x, expected: 0x%x%08x\n",
-               test_num, str2longlong[test_num].str, (DWORD)(result >> 32), (DWORD)result,
-               (DWORD)(str2longlong[test_num].value >> 32), (DWORD)str2longlong[test_num].value);
+               "(test %d): call failed: _atoi64(\"%s\") has result 0x%s, expected: 0x%s\n",
+               test_num, str2longlong[test_num].str, wine_dbgstr_longlong(result),
+               wine_dbgstr_longlong(str2longlong[test_num].value));
         else
             ok(result == str2longlong[test_num].value,
-               "(test %d): call failed: _atoi64(\"%s\") has result 0x%x%08x, expected: 0x%x%08x\n",
-               test_num, str2longlong[test_num].str, (DWORD)(result >> 32), (DWORD)result,
-               (DWORD)(str2longlong[test_num].value >> 32), (DWORD)str2longlong[test_num].value);
+               "(test %d): call failed: _atoi64(\"%s\") has result 0x%s, expected: 0x%s\n",
+               test_num, str2longlong[test_num].str, wine_dbgstr_longlong(result),
+               wine_dbgstr_longlong(str2longlong[test_num].value));
     }
 }
 
@@ -1110,14 +1107,14 @@ static void test_wtoi64(void)
             ok(result == str2longlong[test_num].value ||
                (result == ((str2longlong[test_num].overflow == -1) ?
                 ULL(0x80000000,0x00000000) : ULL(0x7fffffff,0xffffffff))),
-               "(test %d): call failed: _atoi64(\"%s\") has result 0x%x%08x, expected: 0x%x%08x\n",
-               test_num, str2longlong[test_num].str, (DWORD)(result >> 32), (DWORD)result,
-               (DWORD)(str2longlong[test_num].value >> 32), (DWORD)str2longlong[test_num].value);
+               "(test %d): call failed: _atoi64(\"%s\") has result 0x%s, expected: 0x%s\n",
+               test_num, str2longlong[test_num].str, wine_dbgstr_longlong(result),
+               wine_dbgstr_longlong(str2longlong[test_num].value));
         else
             ok(result == str2longlong[test_num].value,
-               "(test %d): call failed: _atoi64(\"%s\") has result 0x%x%08x, expected: 0x%x%08x\n",
-               test_num, str2longlong[test_num].str, (DWORD)(result >> 32), (DWORD)result,
-               (DWORD)(str2longlong[test_num].value >> 32), (DWORD)str2longlong[test_num].value);
+               "(test %d): call failed: _atoi64(\"%s\") has result 0x%s, expected: 0x%s\n",
+               test_num, str2longlong[test_num].str, wine_dbgstr_longlong(result),
+               wine_dbgstr_longlong(str2longlong[test_num].value));
 	pRtlFreeUnicodeString(&uni);
     }
 }

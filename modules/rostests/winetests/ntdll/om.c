@@ -33,12 +33,25 @@ static NTSTATUS (WINAPI *pNtCreateEvent) ( PHANDLE, ACCESS_MASK, const POBJECT_A
 static NTSTATUS (WINAPI *pNtOpenEvent)   ( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES);
 static NTSTATUS (WINAPI *pNtPulseEvent)  ( HANDLE, PULONG );
 static NTSTATUS (WINAPI *pNtQueryEvent)  ( HANDLE, EVENT_INFORMATION_CLASS, PVOID, ULONG, PULONG );
+static NTSTATUS (WINAPI *pNtCreateJobObject)( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES );
+static NTSTATUS (WINAPI *pNtOpenJobObject)( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES );
+static NTSTATUS (WINAPI *pNtCreateKey)( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, ULONG,
+                                        const UNICODE_STRING *, ULONG, PULONG );
+static NTSTATUS (WINAPI *pNtOpenKey)( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES );
+static NTSTATUS (WINAPI *pNtDeleteKey)( HANDLE );
+static NTSTATUS (WINAPI *pNtCreateMailslotFile)( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK,
+                                                 ULONG, ULONG, ULONG, PLARGE_INTEGER );
 static NTSTATUS (WINAPI *pNtCreateMutant)( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES, BOOLEAN );
 static NTSTATUS (WINAPI *pNtOpenMutant)  ( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES );
+static NTSTATUS (WINAPI *pNtQueryMutant) ( HANDLE, MUTANT_INFORMATION_CLASS, PVOID, ULONG, PULONG );
+static NTSTATUS (WINAPI *pNtReleaseMutant)( HANDLE, PLONG );
 static NTSTATUS (WINAPI *pNtCreateSemaphore)( PHANDLE, ACCESS_MASK,const POBJECT_ATTRIBUTES,LONG,LONG );
+static NTSTATUS (WINAPI *pNtOpenSemaphore)( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES );
 static NTSTATUS (WINAPI *pNtCreateTimer) ( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES, TIMER_TYPE );
+static NTSTATUS (WINAPI *pNtOpenTimer)( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES );
 static NTSTATUS (WINAPI *pNtCreateSection)( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES, const PLARGE_INTEGER,
                                             ULONG, ULONG, HANDLE );
+static NTSTATUS (WINAPI *pNtOpenSection)( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES );
 static NTSTATUS (WINAPI *pNtOpenFile)    ( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK, ULONG, ULONG );
 static NTSTATUS (WINAPI *pNtClose)       ( HANDLE );
 static NTSTATUS (WINAPI *pNtCreateNamedPipeFile)( PHANDLE, ULONG, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK,
@@ -55,10 +68,27 @@ static NTSTATUS (WINAPI *pNtOpenKeyedEvent)( HANDLE *, ACCESS_MASK, const OBJECT
 static NTSTATUS (WINAPI *pNtWaitForKeyedEvent)( HANDLE, const void *, BOOLEAN, const LARGE_INTEGER * );
 static NTSTATUS (WINAPI *pNtReleaseKeyedEvent)( HANDLE, const void *, BOOLEAN, const LARGE_INTEGER * );
 static NTSTATUS (WINAPI *pNtCreateIoCompletion)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, ULONG);
+static NTSTATUS (WINAPI *pNtOpenIoCompletion)( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES );
+static NTSTATUS (WINAPI *pNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG);
 
 #define KEYEDEVENT_WAIT       0x0001
 #define KEYEDEVENT_WAKE       0x0002
 #define KEYEDEVENT_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x0003)
+
+#define ROUND_UP(value, alignment) (((value) + ((alignment) - 1)) & ~((alignment)-1))
+
+static LPCSTR wine_dbgstr_us( const UNICODE_STRING *us )
+{
+    if (!us) return "(null)";
+    return wine_dbgstr_wn(us->Buffer, us->Length / sizeof(WCHAR));
+}
+
+static inline int strncmpW( const WCHAR *str1, const WCHAR *str2, int n )
+{
+    if (n <= 0) return 0;
+    while ((--n > 0) && *str1 && (*str1 == *str2)) { str1++; str2++; }
+    return *str1 - *str2;
+}
 
 static void test_case_sensitive (void)
 {
@@ -165,33 +195,34 @@ static void test_namespace_pipe(void)
        status == STATUS_OBJECT_NAME_INVALID, /* vista */
         "NtOpenFile should have failed with STATUS_OBJECT_NAME_NOT_FOUND got(%08x)\n", status);
 
+    str.Length -= 4 * sizeof(WCHAR);
+    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, 0);
+    ok(status == STATUS_SUCCESS, "NtOpenFile should have succeeded got %08x\n", status);
+    pNtClose( h );
+
+    str.Length -= sizeof(WCHAR);
+    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, 0);
+    ok(status == STATUS_SUCCESS, "NtOpenFile should have succeeded got %08x\n", status);
+    pNtClose( h );
+
     pNtClose(pipe);
 }
 
 #define DIRECTORY_QUERY (0x0001)
 #define SYMBOLIC_LINK_QUERY 0x0001
 
-#define DIR_TEST_CREATE_FAILURE(h,e) \
-    status = pNtCreateDirectoryObject(h, DIRECTORY_QUERY, &attr);\
-    ok(status == e,"NtCreateDirectoryObject should have failed with %s got(%08x)\n", #e, status);
-#define DIR_TEST_OPEN_FAILURE(h,e) \
-    status = pNtOpenDirectoryObject(h, DIRECTORY_QUERY, &attr);\
-    ok(status == e,"NtOpenDirectoryObject should have failed with %s got(%08x)\n", #e, status);
-#define DIR_TEST_CREATE_OPEN_FAILURE(h,n,e) \
-    pRtlCreateUnicodeStringFromAsciiz(&str, n);\
-    DIR_TEST_CREATE_FAILURE(h,e) DIR_TEST_OPEN_FAILURE(h,e)\
-    pRtlFreeUnicodeString(&str);
-
-#define DIR_TEST_CREATE_SUCCESS(h) \
-    status = pNtCreateDirectoryObject(h, DIRECTORY_QUERY, &attr); \
-    ok(status == STATUS_SUCCESS, "Failed to create Directory(%08x)\n", status);
-#define DIR_TEST_OPEN_SUCCESS(h) \
-    status = pNtOpenDirectoryObject(h, DIRECTORY_QUERY, &attr); \
-    ok(status == STATUS_SUCCESS, "Failed to open Directory(%08x)\n", status);
-#define DIR_TEST_CREATE_OPEN_SUCCESS(h,n) \
-    pRtlCreateUnicodeStringFromAsciiz(&str, n);\
-    DIR_TEST_CREATE_SUCCESS(&h) pNtClose(h); DIR_TEST_OPEN_SUCCESS(&h) pNtClose(h); \
-    pRtlFreeUnicodeString(&str);
+#define DIR_TEST_CREATE_OPEN(n,e) \
+    do { \
+        HANDLE h; \
+        pRtlCreateUnicodeStringFromAsciiz(&str, n); \
+        status = pNtCreateDirectoryObject( &h, DIRECTORY_QUERY, &attr ); \
+        ok( status == e, "NtCreateDirectoryObject(%s) got %08x\n", n, status ); \
+        if (!status) pNtClose( h ); \
+        status = pNtOpenDirectoryObject( &h, DIRECTORY_QUERY, &attr ); \
+        ok( status == e, "NtOpenDirectoryObject(%s) got %08x\n", n, status ); \
+        if (!status) pNtClose( h ); \
+        pRtlFreeUnicodeString(&str); \
+    } while(0)
 
 static BOOL is_correct_dir( HANDLE dir, const char *name )
 {
@@ -216,13 +247,14 @@ static HANDLE get_base_dir(void)
     UNICODE_STRING str;
     OBJECT_ATTRIBUTES attr;
     HANDLE dir, h;
-    unsigned int i;
+    char name[40];
 
     h = CreateMutexA(NULL, FALSE, objname);
     ok(h != 0, "CreateMutexA failed got ret=%p (%d)\n", h, GetLastError());
     InitializeObjectAttributes(&attr, &str, OBJ_OPENIF, 0, NULL);
 
-    pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Local");
+    sprintf( name, "\\BaseNamedObjects\\Session\\%u", NtCurrentTeb()->Peb->SessionId );
+    pRtlCreateUnicodeStringFromAsciiz(&str, name );
     status = pNtOpenDirectoryObject(&dir, DIRECTORY_QUERY, &attr);
     pRtlFreeUnicodeString(&str);
     if (!status && is_correct_dir( dir, objname )) goto done;
@@ -234,16 +266,6 @@ static HANDLE get_base_dir(void)
     if (!status && is_correct_dir( dir, objname )) goto done;
     if (!status) pNtClose( dir );
 
-    for (i = 0; i < 20; i++)
-    {
-        char name[40];
-        sprintf( name, "\\BaseNamedObjects\\Session\\%u", i );
-        pRtlCreateUnicodeStringFromAsciiz(&str, name );
-        status = pNtOpenDirectoryObject(&dir, DIRECTORY_QUERY, &attr);
-        pRtlFreeUnicodeString(&str);
-        if (!status && is_correct_dir( dir, objname )) goto done;
-        if (!status) pNtClose( dir );
-    }
     dir = 0;
 
 done:
@@ -262,10 +284,12 @@ static void test_name_collisions(void)
 
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\");
-    DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_NAME_COLLISION)
+    status = pNtCreateDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_OBJECT_NAME_COLLISION, "NtCreateDirectoryObject got %08x\n", status );
     InitializeObjectAttributes(&attr, &str, OBJ_OPENIF, 0, NULL);
 
-    DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_NAME_EXISTS)
+    status = pNtCreateDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_OBJECT_NAME_EXISTS, "NtCreateDirectoryObject got %08x\n", status );
     pNtClose(h);
     status = pNtCreateMutant(&h, GENERIC_ALL, &attr, FALSE);
     ok(status == STATUS_OBJECT_TYPE_MISMATCH,
@@ -356,12 +380,529 @@ static void test_name_collisions(void)
     pNtClose(dir);
 }
 
+static void test_all_kernel_objects( UINT line, OBJECT_ATTRIBUTES *attr,
+                                     NTSTATUS create_expect, NTSTATUS open_expect )
+{
+    UNICODE_STRING target;
+    LARGE_INTEGER size;
+    NTSTATUS status, status2;
+    HANDLE ret, ret2;
+
+    pRtlCreateUnicodeStringFromAsciiz( &target, "\\DosDevices" );
+    size.QuadPart = 4096;
+
+    status = pNtCreateMutant( &ret, GENERIC_ALL, attr, FALSE );
+    ok( status == create_expect, "%u: NtCreateMutant failed %x\n", line, status );
+    status2 = pNtOpenMutant( &ret2, GENERIC_ALL, attr );
+    ok( status2 == open_expect, "%u: NtOpenMutant failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    status = pNtCreateSemaphore( &ret, GENERIC_ALL, attr, 1, 2 );
+    ok( status == create_expect, "%u: NtCreateSemaphore failed %x\n", line, status );
+    status2 = pNtOpenSemaphore( &ret2, GENERIC_ALL, attr );
+    ok( status2 == open_expect, "%u: NtOpenSemaphore failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    status = pNtCreateEvent( &ret, GENERIC_ALL, attr, 1, 0 );
+    ok( status == create_expect, "%u: NtCreateEvent failed %x\n", line, status );
+    status2 = pNtOpenEvent( &ret2, GENERIC_ALL, attr );
+    ok( status2 == open_expect, "%u: NtOpenEvent failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    status = pNtCreateKeyedEvent( &ret, GENERIC_ALL, attr, 0 );
+    ok( status == create_expect, "%u: NtCreateKeyedEvent failed %x\n", line, status );
+    status2 = pNtOpenKeyedEvent( &ret2, GENERIC_ALL, attr );
+    ok( status2 == open_expect, "%u: NtOpenKeyedEvent failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    status = pNtCreateTimer( &ret, GENERIC_ALL, attr, NotificationTimer );
+    ok( status == create_expect, "%u: NtCreateTimer failed %x\n", line, status );
+    status2 = pNtOpenTimer( &ret2, GENERIC_ALL, attr );
+    ok( status2 == open_expect, "%u: NtOpenTimer failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    status = pNtCreateIoCompletion( &ret, GENERIC_ALL, attr, 0 );
+    ok( status == create_expect, "%u: NtCreateCompletion failed %x\n", line, status );
+    status2 = pNtOpenIoCompletion( &ret2, GENERIC_ALL, attr );
+    ok( status2 == open_expect, "%u: NtOpenCompletion failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    status = pNtCreateJobObject( &ret, GENERIC_ALL, attr );
+    ok( status == create_expect, "%u: NtCreateJobObject failed %x\n", line, status );
+    status2 = pNtOpenJobObject( &ret2, GENERIC_ALL, attr );
+    ok( status2 == open_expect, "%u: NtOpenJobObject failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    status = pNtCreateDirectoryObject( &ret, GENERIC_ALL, attr );
+    ok( status == create_expect, "%u: NtCreateDirectoryObject failed %x\n", line, status );
+    status2 = pNtOpenDirectoryObject( &ret2, GENERIC_ALL, attr );
+    ok( status2 == open_expect, "%u: NtOpenDirectoryObject failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    status = pNtCreateSymbolicLinkObject( &ret, GENERIC_ALL, attr, &target );
+    ok( status == create_expect, "%u: NtCreateSymbolicLinkObject failed %x\n", line, status );
+    status2 = pNtOpenSymbolicLinkObject( &ret2, GENERIC_ALL, attr );
+    ok( status2 == open_expect, "%u: NtOpenSymbolicLinkObject failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    status = pNtCreateSection( &ret, SECTION_MAP_WRITE, attr, &size, PAGE_READWRITE, SEC_COMMIT, 0 );
+    ok( status == create_expect, "%u: NtCreateSection failed %x\n", line, status );
+    status2 = pNtOpenSection( &ret2, SECTION_MAP_WRITE, attr );
+    ok( status2 == open_expect, "%u: NtOpenSection failed %x\n", line, status2 );
+    if (!status) pNtClose( ret );
+    if (!status2) pNtClose( ret2 );
+    pRtlFreeUnicodeString( &target );
+}
+
+static void test_name_limits(void)
+{
+    static const WCHAR localW[]    = {'\\','B','a','s','e','N','a','m','e','d','O','b','j','e','c','t','s','\\','L','o','c','a','l',0};
+    static const WCHAR pipeW[]     = {'\\','D','e','v','i','c','e','\\','N','a','m','e','d','P','i','p','e','\\'};
+    static const WCHAR mailslotW[] = {'\\','D','e','v','i','c','e','\\','M','a','i','l','S','l','o','t','\\'};
+    static const WCHAR registryW[] = {'\\','R','E','G','I','S','T','R','Y','\\','M','a','c','h','i','n','e','\\','S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t','\\'};
+    OBJECT_ATTRIBUTES attr, attr2, attr3;
+    IO_STATUS_BLOCK iosb;
+    LARGE_INTEGER size, timeout;
+    UNICODE_STRING str, str2, target;
+    NTSTATUS status;
+    HANDLE ret, ret2;
+    DWORD i;
+
+    InitializeObjectAttributes( &attr, &str, 0, 0, NULL );
+    InitializeObjectAttributes( &attr2, &str, 0, (HANDLE)0xdeadbeef, NULL );
+    InitializeObjectAttributes( &attr3, &str, 0, 0, NULL );
+    str.Buffer = HeapAlloc( GetProcessHeap(), 0, 65536 + sizeof(registryW));
+    str.MaximumLength = 65534;
+    for (i = 0; i < 65536 / sizeof(WCHAR); i++) str.Buffer[i] = 'a';
+    size.QuadPart = 4096;
+    pRtlCreateUnicodeStringFromAsciiz( &target, "\\DosDevices" );
+
+    if (!(attr.RootDirectory = get_base_dir()))
+    {
+        win_skip( "couldn't find the BaseNamedObjects dir\n" );
+        return;
+    }
+
+    str.Length = 0;
+    status = pNtCreateMutant( &ret, GENERIC_ALL, &attr2, FALSE );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateMutant failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenMutant( &ret2, GENERIC_ALL, &attr );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenMutant failed %x\n", str.Length, status );
+    status = pNtOpenMutant( &ret2, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || status == STATUS_INVALID_HANDLE,
+        "%u: NtOpenMutant failed %x\n", str.Length, status );
+    pNtClose( ret );
+    status = pNtCreateSemaphore( &ret, GENERIC_ALL, &attr2, 1, 2 );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateSemaphore failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenSemaphore( &ret2, GENERIC_ALL, &attr );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenSemaphore failed %x\n", str.Length, status );
+    status = pNtOpenSemaphore( &ret2, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || status == STATUS_INVALID_HANDLE,
+        "%u: NtOpenSemaphore failed %x\n", str.Length, status );
+    pNtClose( ret );
+    status = pNtCreateEvent( &ret, GENERIC_ALL, &attr2, 1, 0 );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateEvent failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenEvent( &ret2, GENERIC_ALL, &attr );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenEvent failed %x\n", str.Length, status );
+    status = pNtOpenEvent( &ret2, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || status == STATUS_INVALID_HANDLE,
+        "%u: NtOpenEvent failed %x\n", str.Length, status );
+    pNtClose( ret );
+    status = pNtCreateKeyedEvent( &ret, GENERIC_ALL, &attr2, 0 );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateKeyedEvent failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenKeyedEvent( &ret2, GENERIC_ALL, &attr );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenKeyedEvent failed %x\n", str.Length, status );
+    status = pNtOpenKeyedEvent( &ret2, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || status == STATUS_INVALID_HANDLE,
+        "%u: NtOpenKeyedEvent failed %x\n", str.Length, status );
+    pNtClose( ret );
+    status = pNtCreateTimer( &ret, GENERIC_ALL, &attr2, NotificationTimer );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateTimer failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenTimer( &ret2, GENERIC_ALL, &attr );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenTimer failed %x\n", str.Length, status );
+    status = pNtOpenTimer( &ret2, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || status == STATUS_INVALID_HANDLE,
+        "%u: NtOpenTimer failed %x\n", str.Length, status );
+    pNtClose( ret );
+    status = pNtCreateIoCompletion( &ret, GENERIC_ALL, &attr2, 0 );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateCompletion failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenIoCompletion( &ret2, GENERIC_ALL, &attr );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenCompletion failed %x\n", str.Length, status );
+    status = pNtOpenIoCompletion( &ret2, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || status == STATUS_INVALID_HANDLE,
+        "%u: NtOpenCompletion failed %x\n", str.Length, status );
+    pNtClose( ret );
+    status = pNtCreateJobObject( &ret, GENERIC_ALL, &attr2 );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateJobObject failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenJobObject( &ret2, GENERIC_ALL, &attr );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenJobObject failed %x\n", str.Length, status );
+    status = pNtOpenJobObject( &ret2, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || status == STATUS_INVALID_HANDLE,
+        "%u: NtOpenJobObject failed %x\n", str.Length, status );
+    pNtClose( ret );
+    status = pNtCreateDirectoryObject( &ret, GENERIC_ALL, &attr2 );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateDirectoryObject failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenDirectoryObject( &ret2, GENERIC_ALL, &attr );
+    ok( status == STATUS_SUCCESS || broken(status == STATUS_ACCESS_DENIED), /* winxp */
+        "%u: NtOpenDirectoryObject failed %x\n", str.Length, status );
+    if (!status) pNtClose( ret2 );
+    status = pNtOpenDirectoryObject( &ret2, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_SUCCESS, "%u: NtOpenDirectoryObject failed %x\n", str.Length, status );
+    pNtClose( ret2 );
+    pNtClose( ret );
+    status = pNtCreateSymbolicLinkObject( &ret, GENERIC_ALL, &attr2, &target );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateSymbolicLinkObject failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenSymbolicLinkObject( &ret2, GENERIC_ALL, &attr );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenSymbolicLinkObject failed %x\n", str.Length, status );
+    status = pNtOpenSymbolicLinkObject( &ret2, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_SUCCESS, "%u: NtOpenSymbolicLinkObject failed %x\n", str.Length, status );
+    pNtClose( ret2 );
+    pNtClose( ret );
+    status = pNtCreateSection( &ret, SECTION_MAP_WRITE, &attr2, &size, PAGE_READWRITE, SEC_COMMIT, 0 );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateSection failed %x\n", str.Length, status );
+    attr3.RootDirectory = ret;
+    status = pNtOpenSection( &ret2, SECTION_MAP_WRITE, &attr );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenSection failed %x\n", str.Length, status );
+    status = pNtOpenSection( &ret2, SECTION_MAP_WRITE, &attr3 );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || status == STATUS_INVALID_HANDLE,
+        "%u: NtOpenSection failed %x\n", str.Length, status );
+    pNtClose( ret );
+
+    str.Length = 67;
+    test_all_kernel_objects( __LINE__, &attr2, STATUS_OBJECT_NAME_INVALID, STATUS_OBJECT_NAME_INVALID );
+
+    str.Length = 65532;
+    test_all_kernel_objects( __LINE__, &attr, STATUS_SUCCESS, STATUS_SUCCESS );
+
+    str.Length = 65534;
+    test_all_kernel_objects( __LINE__, &attr, STATUS_OBJECT_NAME_INVALID, STATUS_OBJECT_NAME_INVALID );
+
+    str.Length = 128;
+    for (attr.Length = 0; attr.Length <= 2 * sizeof(attr); attr.Length++)
+    {
+        if (attr.Length == sizeof(attr))
+            test_all_kernel_objects( __LINE__, &attr, STATUS_SUCCESS, STATUS_SUCCESS );
+        else
+            test_all_kernel_objects( __LINE__, &attr, STATUS_INVALID_PARAMETER, STATUS_INVALID_PARAMETER );
+    }
+    attr.Length = sizeof(attr);
+
+    /* null attributes or ObjectName, with or without RootDirectory */
+    attr3.RootDirectory = 0;
+    attr2.ObjectName = attr3.ObjectName = NULL;
+    test_all_kernel_objects( __LINE__, &attr2, STATUS_OBJECT_NAME_INVALID, STATUS_OBJECT_NAME_INVALID );
+    test_all_kernel_objects( __LINE__, &attr3, STATUS_SUCCESS, STATUS_OBJECT_PATH_SYNTAX_BAD );
+
+    attr3.ObjectName = &str2;
+    pRtlInitUnicodeString( &str2, localW );
+    status = pNtOpenSymbolicLinkObject( &ret, SYMBOLIC_LINK_QUERY, &attr3 );
+    ok( status == STATUS_SUCCESS, "can't open BaseNamedObjects\\Local %x\n", status );
+    attr3.ObjectName = &str;
+    attr3.RootDirectory = ret;
+    test_all_kernel_objects( __LINE__, &attr3, STATUS_OBJECT_TYPE_MISMATCH, STATUS_OBJECT_TYPE_MISMATCH );
+    pNtClose( attr3.RootDirectory );
+
+    status = pNtCreateMutant( &ret, GENERIC_ALL, NULL, FALSE );
+    ok( status == STATUS_SUCCESS, "NULL: NtCreateMutant failed %x\n", status );
+    pNtClose( ret );
+    status = pNtOpenMutant( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenMutant failed %x\n", status );
+    status = pNtCreateSemaphore( &ret, GENERIC_ALL, NULL, 1, 2 );
+    ok( status == STATUS_SUCCESS, "NULL: NtCreateSemaphore failed %x\n", status );
+    pNtClose( ret );
+    status = pNtOpenSemaphore( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenSemaphore failed %x\n", status );
+    status = pNtCreateEvent( &ret, GENERIC_ALL, NULL, 1, 0 );
+    ok( status == STATUS_SUCCESS, "NULL: NtCreateEvent failed %x\n", status );
+    pNtClose( ret );
+    status = pNtOpenEvent( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenEvent failed %x\n", status );
+    status = pNtCreateKeyedEvent( &ret, GENERIC_ALL, NULL, 0 );
+    ok( status == STATUS_SUCCESS, "NULL: NtCreateKeyedEvent failed %x\n", status );
+    pNtClose( ret );
+    status = pNtOpenKeyedEvent( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenKeyedEvent failed %x\n", status );
+    status = pNtCreateTimer( &ret, GENERIC_ALL, NULL, NotificationTimer );
+    ok( status == STATUS_SUCCESS, "NULL: NtCreateTimer failed %x\n", status );
+    pNtClose( ret );
+    status = pNtOpenTimer( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenTimer failed %x\n", status );
+    status = pNtCreateIoCompletion( &ret, GENERIC_ALL, NULL, 0 );
+    ok( status == STATUS_SUCCESS, "NULL: NtCreateCompletion failed %x\n", status );
+    pNtClose( ret );
+    status = pNtOpenIoCompletion( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenCompletion failed %x\n", status );
+    status = pNtCreateJobObject( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_SUCCESS, "NULL: NtCreateJobObject failed %x\n", status );
+    pNtClose( ret );
+    status = pNtOpenJobObject( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenJobObject failed %x\n", status );
+    status = pNtCreateDirectoryObject( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_SUCCESS, "NULL: NtCreateDirectoryObject failed %x\n", status );
+    pNtClose( ret );
+    status = pNtOpenDirectoryObject( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenDirectoryObject failed %x\n", status );
+    status = pNtCreateSymbolicLinkObject( &ret, GENERIC_ALL, NULL, &target );
+    ok( status == STATUS_ACCESS_VIOLATION || broken( status == STATUS_SUCCESS), /* winxp */
+        "NULL: NtCreateSymbolicLinkObject failed %x\n", status );
+    if (!status) pNtClose( ret );
+    status = pNtOpenSymbolicLinkObject( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenSymbolicLinkObject failed %x\n", status );
+    status = pNtCreateSection( &ret, SECTION_MAP_WRITE, NULL, &size, PAGE_READWRITE, SEC_COMMIT, 0 );
+    ok( status == STATUS_SUCCESS, "NULL: NtCreateSection failed %x\n", status );
+    pNtClose( ret );
+    status = pNtOpenSection( &ret, SECTION_MAP_WRITE, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtOpenSection failed %x\n", status );
+    attr2.ObjectName = attr3.ObjectName = &str;
+
+    /* named pipes */
+    memcpy( str.Buffer, pipeW, sizeof(pipeW) );
+    for (i = 0; i < 65536 / sizeof(WCHAR); i++) str.Buffer[i + sizeof(pipeW)/sizeof(WCHAR)] = 'a';
+    str.Length = 0;
+    attr.RootDirectory = 0;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    timeout.QuadPart = -10000;
+    status = pNtCreateNamedPipeFile( &ret, GENERIC_ALL, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                                     FILE_CREATE, FILE_PIPE_FULL_DUPLEX, 0, 0, 0, 1, 256, 256, &timeout );
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "%u: NtCreateNamedPipeFile failed %x\n", str.Length, status );
+    status = pNtCreateNamedPipeFile( &ret, GENERIC_ALL, &attr2, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                                     FILE_CREATE, FILE_PIPE_FULL_DUPLEX, 0, 0, 0, 1, 256, 256, &timeout );
+    ok( status == STATUS_INVALID_HANDLE, "%u: NtCreateNamedPipeFile failed %x\n", str.Length, status );
+    str.Length = 67;
+    status = pNtCreateNamedPipeFile( &ret, GENERIC_ALL, &attr2, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                                     FILE_CREATE, FILE_PIPE_FULL_DUPLEX, 0, 0, 0, 1, 256, 256, &timeout );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "%u: NtCreateNamedPipeFile failed %x\n", str.Length, status );
+    str.Length = 128;
+    for (attr.Length = 0; attr.Length <= 2 * sizeof(attr); attr.Length++)
+    {
+        status = pNtCreateNamedPipeFile( &ret, GENERIC_ALL, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                                      FILE_CREATE, FILE_PIPE_FULL_DUPLEX, 0, 0, 0, 1, 256, 256, &timeout );
+        if (attr.Length == sizeof(attr))
+        {
+            ok( status == STATUS_SUCCESS, "%u: NtCreateNamedPipeFile failed %x\n", str.Length, status );
+            pNtClose( ret );
+        }
+        else ok( status == STATUS_INVALID_PARAMETER,
+                 "%u: NtCreateNamedPipeFile failed %x\n", str.Length, status );
+    }
+    attr.Length = sizeof(attr);
+    str.Length = 65532;
+    status = pNtCreateNamedPipeFile( &ret, GENERIC_ALL, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                                     FILE_CREATE, FILE_PIPE_FULL_DUPLEX, 0, 0, 0, 1, 256, 256, &timeout );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateNamedPipeFile failed %x\n", str.Length, status );
+    pNtClose( ret );
+    str.Length = 65534;
+    status = pNtCreateNamedPipeFile( &ret, GENERIC_ALL, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                                     FILE_CREATE, FILE_PIPE_FULL_DUPLEX, 0, 0, 0, 1, 256, 256, &timeout );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "%u: NtCreateNamedPipeFile failed %x\n", str.Length, status );
+    attr3.RootDirectory = 0;
+    attr2.ObjectName = attr3.ObjectName = NULL;
+    status = pNtCreateNamedPipeFile( &ret, GENERIC_ALL, &attr2, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                                     FILE_CREATE, FILE_PIPE_FULL_DUPLEX, 0, 0, 0, 1, 256, 256, &timeout );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "NULL: NtCreateNamedPipeFile failed %x\n", status );
+    status = pNtCreateNamedPipeFile( &ret, GENERIC_ALL, &attr3, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                                     FILE_CREATE, FILE_PIPE_FULL_DUPLEX, 0, 0, 0, 1, 256, 256, &timeout );
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "NULL: NtCreateNamedPipeFile failed %x\n", status );
+    status = pNtCreateNamedPipeFile( &ret, GENERIC_ALL, NULL, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                                     FILE_CREATE, FILE_PIPE_FULL_DUPLEX, 0, 0, 0, 1, 256, 256, &timeout );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtCreateNamedPipeFile failed %x\n", status );
+    attr2.ObjectName = attr3.ObjectName = &str;
+
+    /* mailslots */
+    memcpy( str.Buffer, mailslotW, sizeof(mailslotW) );
+    for (i = 0; i < 65536 / sizeof(WCHAR); i++) str.Buffer[i + sizeof(mailslotW)/sizeof(WCHAR)] = 'a';
+    str.Length = 0;
+    status = pNtCreateMailslotFile( &ret, GENERIC_ALL, &attr, &iosb, 0, 0, 0, NULL );
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "%u: NtCreateMailslotFile failed %x\n", str.Length, status );
+    status = pNtCreateMailslotFile( &ret, GENERIC_ALL, &attr2, &iosb, 0, 0, 0, NULL );
+    ok( status == STATUS_INVALID_HANDLE, "%u: NtCreateMailslotFile failed %x\n", str.Length, status );
+    str.Length = 67;
+    status = pNtCreateMailslotFile( &ret, GENERIC_ALL, &attr2, &iosb, 0, 0, 0, NULL );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "%u: NtCreateMailslotFile failed %x\n", str.Length, status );
+    str.Length = 128;
+    for (attr.Length = 0; attr.Length <= 2 * sizeof(attr); attr.Length++)
+    {
+        status = pNtCreateMailslotFile( &ret, GENERIC_ALL, &attr, &iosb, 0, 0, 0, NULL );
+        if (attr.Length == sizeof(attr))
+        {
+            ok( status == STATUS_SUCCESS, "%u: NtCreateMailslotFile failed %x\n", str.Length, status );
+            pNtClose( ret );
+        }
+        else ok( status == STATUS_INVALID_PARAMETER,
+                 "%u: NtCreateMailslotFile failed %x\n", str.Length, status );
+    }
+    attr.Length = sizeof(attr);
+    str.Length = 65532;
+    status = pNtCreateMailslotFile( &ret, GENERIC_ALL, &attr, &iosb, 0, 0, 0, NULL );
+    ok( status == STATUS_SUCCESS, "%u: NtCreateMailslotFile failed %x\n", str.Length, status );
+    pNtClose( ret );
+    str.Length = 65534;
+    status = pNtCreateMailslotFile( &ret, GENERIC_ALL, &attr, &iosb, 0, 0, 0, NULL );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "%u: NtCreateMailslotFile failed %x\n", str.Length, status );
+    attr3.RootDirectory = 0;
+    attr2.ObjectName = attr3.ObjectName = NULL;
+    status = pNtCreateMailslotFile( &ret, GENERIC_ALL, &attr2, &iosb, 0, 0, 0, NULL );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "NULL: NtCreateMailslotFile failed %x\n", status );
+    status = pNtCreateMailslotFile( &ret, GENERIC_ALL, &attr3, &iosb, 0, 0, 0, NULL );
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "NULL: NtCreateMailslotFile failed %x\n", status );
+    status = pNtCreateMailslotFile( &ret, GENERIC_ALL, NULL, &iosb, 0, 0, 0, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "NULL: NtCreateMailslotFile failed %x\n", status );
+    attr2.ObjectName = attr3.ObjectName = &str;
+
+    /* registry keys */
+    memcpy( str.Buffer, registryW, sizeof(registryW) );
+    for (i = 0; i < 65536 / sizeof(WCHAR); i++) str.Buffer[i + sizeof(registryW)/sizeof(WCHAR)] = 'a';
+    str.Length = 0;
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+    todo_wine
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "%u: NtCreateKey failed %x\n", str.Length, status );
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr2, 0, NULL, 0, NULL );
+    ok( status == STATUS_INVALID_HANDLE, "%u: NtCreateKey failed %x\n", str.Length, status );
+    status = pNtOpenKey( &ret, GENERIC_ALL, &attr2 );
+    ok( status == STATUS_INVALID_HANDLE, "%u: NtOpenKey failed %x\n", str.Length, status );
+    str.Length = sizeof(registryW) + 250 * sizeof(WCHAR) + 1;
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+    ok( status == STATUS_OBJECT_NAME_INVALID ||
+        status == STATUS_INVALID_PARAMETER ||
+        broken( status == STATUS_SUCCESS ), /* wow64 */
+        "%u: NtCreateKey failed %x\n", str.Length, status );
+    if (!status)
+    {
+        pNtDeleteKey( ret );
+        pNtClose( ret );
+    }
+    str.Length = sizeof(registryW) + 256 * sizeof(WCHAR);
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+    ok( status == STATUS_SUCCESS || status == STATUS_ACCESS_DENIED,
+        "%u: NtCreateKey failed %x\n", str.Length, status );
+    if (!status)
+    {
+        status = pNtOpenKey( &ret2, KEY_READ, &attr );
+        ok( status == STATUS_SUCCESS, "%u: NtOpenKey failed %x\n", str.Length, status );
+        pNtClose( ret2 );
+        attr3.RootDirectory = ret;
+        str.Length = 0;
+        status = pNtOpenKey( &ret2, KEY_READ, &attr3 );
+        ok( status == STATUS_SUCCESS, "%u: NtOpenKey failed %x\n", str.Length, status );
+        pNtClose( ret2 );
+        pNtDeleteKey( ret );
+        pNtClose( ret );
+
+        str.Length = sizeof(registryW) + 256 * sizeof(WCHAR);
+        for (attr.Length = 0; attr.Length <= 2 * sizeof(attr); attr.Length++)
+        {
+            if (attr.Length == sizeof(attr))
+            {
+                status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+                ok( status == STATUS_SUCCESS, "%u: NtCreateKey failed %x\n", str.Length, status );
+                status = pNtOpenKey( &ret2, KEY_READ, &attr );
+                ok( status == STATUS_SUCCESS, "%u: NtOpenKey failed %x\n", str.Length, status );
+                pNtClose( ret2 );
+                pNtDeleteKey( ret );
+                pNtClose( ret );
+            }
+            else
+            {
+                status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+                ok( status == STATUS_INVALID_PARAMETER, "%u: NtCreateKey failed %x\n", str.Length, status );
+                status = pNtOpenKey( &ret2, KEY_READ, &attr );
+                ok( status == STATUS_INVALID_PARAMETER, "%u: NtOpenKey failed %x\n", str.Length, status );
+            }
+        }
+        attr.Length = sizeof(attr);
+    }
+    str.Length = sizeof(registryW) + 256 * sizeof(WCHAR) + 1;
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+    ok( status == STATUS_OBJECT_NAME_INVALID ||
+        status == STATUS_INVALID_PARAMETER ||
+        broken( status == STATUS_SUCCESS ), /* win7 */
+        "%u: NtCreateKey failed %x\n", str.Length, status );
+    if (!status)
+    {
+        pNtDeleteKey( ret );
+        pNtClose( ret );
+    }
+    status = pNtOpenKey( &ret, GENERIC_ALL, &attr );
+    ok( status == STATUS_OBJECT_NAME_INVALID ||
+        status == STATUS_INVALID_PARAMETER ||
+        broken( status == STATUS_OBJECT_NAME_NOT_FOUND ), /* wow64 */
+        "%u: NtOpenKey failed %x\n", str.Length, status );
+    str.Length++;
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "%u: NtCreateKey failed %x\n", str.Length, status );
+    status = pNtOpenKey( &ret, GENERIC_ALL, &attr );
+    todo_wine
+    ok( status == STATUS_INVALID_PARAMETER, "%u: NtOpenKey failed %x\n", str.Length, status );
+    str.Length = 2000;
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+    ok( status == STATUS_INVALID_PARAMETER, "%u: NtCreateKey failed %x\n", str.Length, status );
+    status = pNtOpenKey( &ret, GENERIC_ALL, &attr );
+    todo_wine
+    ok( status == STATUS_INVALID_PARAMETER, "%u: NtOpenKey failed %x\n", str.Length, status );
+    /* some Windows versions change the error past 2050 chars, others past 4066 chars, some don't */
+    str.Length = 5000;
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+    ok( status == STATUS_BUFFER_OVERFLOW ||
+        status == STATUS_BUFFER_TOO_SMALL ||
+        status == STATUS_INVALID_PARAMETER,
+        "%u: NtCreateKey failed %x\n", str.Length, status );
+    status = pNtOpenKey( &ret, GENERIC_ALL, &attr );
+    todo_wine
+    ok( status == STATUS_BUFFER_OVERFLOW ||
+        status == STATUS_BUFFER_TOO_SMALL ||
+        status == STATUS_INVALID_PARAMETER,
+         "%u: NtOpenKey failed %x\n", str.Length, status );
+    str.Length = 65534;
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr, 0, NULL, 0, NULL );
+    ok( status == STATUS_OBJECT_NAME_INVALID ||
+        status == STATUS_BUFFER_OVERFLOW ||
+        status == STATUS_BUFFER_TOO_SMALL,
+        "%u: NtCreateKey failed %x\n", str.Length, status );
+    status = pNtOpenKey( &ret, GENERIC_ALL, &attr );
+    todo_wine
+    ok( status == STATUS_OBJECT_NAME_INVALID ||
+        status == STATUS_BUFFER_OVERFLOW ||
+        status == STATUS_BUFFER_TOO_SMALL,
+         "%u: NtOpenKey failed %x\n", str.Length, status );
+    attr3.RootDirectory = 0;
+    attr2.ObjectName = attr3.ObjectName = NULL;
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr2, 0, NULL, 0, NULL );
+    todo_wine
+    ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_HANDLE,
+        "NULL: NtCreateKey failed %x\n", status );
+    status = pNtCreateKey( &ret, GENERIC_ALL, &attr3, 0, NULL, 0, NULL );
+    todo_wine
+    ok( status == STATUS_ACCESS_VIOLATION, "NULL: NtCreateKey failed %x\n", status );
+    status = pNtCreateKey( &ret, GENERIC_ALL, NULL, 0, NULL, 0, NULL );
+    ok( status == STATUS_ACCESS_VIOLATION, "NULL: NtCreateKey failed %x\n", status );
+    status = pNtOpenKey( &ret, GENERIC_ALL, &attr2 );
+    ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_HANDLE,
+        "NULL: NtOpenKey failed %x\n", status );
+    status = pNtOpenKey( &ret, GENERIC_ALL, &attr3 );
+    ok( status == STATUS_ACCESS_VIOLATION, "NULL: NtOpenKey failed %x\n", status );
+    status = pNtOpenKey( &ret, GENERIC_ALL, NULL );
+    ok( status == STATUS_ACCESS_VIOLATION, "NULL: NtOpenKey failed %x\n", status );
+    attr2.ObjectName = attr3.ObjectName = &str;
+
+    pRtlFreeUnicodeString( &str );
+    pRtlFreeUnicodeString( &target );
+}
+
 static void test_directory(void)
 {
     NTSTATUS status;
     UNICODE_STRING str;
     OBJECT_ATTRIBUTES attr;
-    HANDLE dir, dir1, h;
+    HANDLE dir, dir1, h, h2;
     BOOL is_nt4;
 
     /* No name and/or no attributes */
@@ -380,28 +921,34 @@ static void test_directory(void)
         "NtOpenDirectoryObject should have failed with STATUS_INVALID_PARAMETER got(%08x)\n", status);
 
     InitializeObjectAttributes(&attr, NULL, 0, 0, NULL);
-    DIR_TEST_CREATE_SUCCESS(&dir)
-    DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
+    status = pNtCreateDirectoryObject( &dir, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
+    status = pNtOpenDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "NtOpenDirectoryObject got %08x\n", status );
 
     /* Bad name */
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "");
-    DIR_TEST_CREATE_SUCCESS(&h)
+    status = pNtCreateDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
     pNtClose(h);
-    DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
+    status = pNtOpenDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "NtOpenDirectoryObject got %08x\n", status );
     pRtlFreeUnicodeString(&str);
     pNtClose(dir);
 
-    DIR_TEST_CREATE_OPEN_FAILURE(&h, "BaseNamedObjects", STATUS_OBJECT_PATH_SYNTAX_BAD)
-    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\", STATUS_OBJECT_NAME_INVALID)
-    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\\\BaseNamedObjects", STATUS_OBJECT_NAME_INVALID)
-    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\\\om.c-test", STATUS_OBJECT_NAME_INVALID)
-    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\om.c-test\\", STATUS_OBJECT_PATH_NOT_FOUND)
+    DIR_TEST_CREATE_OPEN( "BaseNamedObjects", STATUS_OBJECT_PATH_SYNTAX_BAD );
+    DIR_TEST_CREATE_OPEN( "\\BaseNamedObjects\\", STATUS_OBJECT_NAME_INVALID );
+    DIR_TEST_CREATE_OPEN( "\\\\BaseNamedObjects", STATUS_OBJECT_NAME_INVALID );
+    DIR_TEST_CREATE_OPEN( "\\BaseNamedObjects\\\\om.c-test", STATUS_OBJECT_NAME_INVALID );
+    DIR_TEST_CREATE_OPEN( "\\BaseNamedObjects\\om.c-test\\", STATUS_OBJECT_PATH_NOT_FOUND );
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\om.c-test");
-    DIR_TEST_CREATE_SUCCESS(&h)
-    DIR_TEST_OPEN_SUCCESS(&dir1)
+    status = pNtCreateDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
+    status = pNtOpenDirectoryObject( &dir1, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to open directory %08x\n", status );
     pRtlFreeUnicodeString(&str);
     pNtClose(h);
     pNtClose(dir1);
@@ -423,8 +970,42 @@ static void test_directory(void)
         pRtlFreeUnicodeString(&str);
         InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
         pRtlCreateUnicodeStringFromAsciiz(&str, "one more level");
-        DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_TYPE_MISMATCH)
+        status = pNtCreateDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+        ok( status == STATUS_OBJECT_TYPE_MISMATCH, "NtCreateDirectoryObject got %08x\n", status );
         pRtlFreeUnicodeString(&str);
+
+        pRtlCreateUnicodeStringFromAsciiz( &str, "\\BaseNamedObjects\\Local\\om.c-test" );
+        InitializeObjectAttributes( &attr, &str, 0, 0, NULL );
+        status = pNtCreateDirectoryObject( &dir1, DIRECTORY_QUERY, &attr );
+        ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
+        pRtlFreeUnicodeString( &str );
+        pRtlCreateUnicodeStringFromAsciiz( &str, "om.c-test" );
+        InitializeObjectAttributes( &attr, &str, 0, dir, NULL );
+        status = pNtOpenDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+        ok( status == STATUS_OBJECT_TYPE_MISMATCH, "Failed to open directory %08x\n", status );
+        if (!status) pNtClose(h);
+        pRtlFreeUnicodeString( &str );
+
+        pRtlCreateUnicodeStringFromAsciiz( &str, "om.c-event" );
+        InitializeObjectAttributes( &attr, &str, 0, dir1, NULL );
+        status = pNtCreateEvent( &h, GENERIC_ALL, &attr, 1, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateEvent failed %x\n", status );
+        status = pNtOpenEvent( &h2, GENERIC_ALL, &attr );
+        ok( status == STATUS_SUCCESS, "NtOpenEvent failed %x\n", status );
+        pNtClose( h2 );
+        pRtlFreeUnicodeString( &str );
+        pRtlCreateUnicodeStringFromAsciiz( &str, "om.c-test\\om.c-event" );
+        InitializeObjectAttributes( &attr, &str, 0, dir, NULL );
+        status = pNtOpenEvent( &h2, GENERIC_ALL, &attr );
+        ok( status == STATUS_OBJECT_TYPE_MISMATCH, "NtOpenEvent failed %x\n", status );
+        pRtlFreeUnicodeString( &str );
+        pRtlCreateUnicodeStringFromAsciiz( &str, "\\BasedNamedObjects\\Local\\om.c-test\\om.c-event" );
+        InitializeObjectAttributes( &attr, &str, 0, 0, NULL );
+        status = pNtOpenEvent( &h2, GENERIC_ALL, &attr );
+        ok( status == STATUS_OBJECT_PATH_NOT_FOUND, "NtOpenEvent failed %x\n", status );
+        pRtlFreeUnicodeString( &str );
+        pNtClose( h );
+        pNtClose( dir1 );
 
         str.Buffer = buffer;
         str.MaximumLength = sizeof(buffer);
@@ -463,22 +1044,26 @@ error:
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects");
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
-    DIR_TEST_OPEN_SUCCESS(&dir)
+    status = pNtOpenDirectoryObject( &dir, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to open directory %08x\n", status );
     pRtlFreeUnicodeString(&str);
 
     InitializeObjectAttributes(&attr, NULL, 0, dir, NULL);
-    DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_NAME_INVALID)
+    status = pNtOpenDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "NtOpenDirectoryObject got %08x\n", status );
 
     InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
-    DIR_TEST_CREATE_OPEN_SUCCESS(h, "")
-    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\", STATUS_OBJECT_PATH_SYNTAX_BAD)
-    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\om.c-test", STATUS_OBJECT_PATH_SYNTAX_BAD)
-    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\om.c-test\\", STATUS_OBJECT_PATH_SYNTAX_BAD)
-    DIR_TEST_CREATE_OPEN_FAILURE(&h, "om.c-test\\", STATUS_OBJECT_PATH_NOT_FOUND)
+    DIR_TEST_CREATE_OPEN( "", STATUS_SUCCESS );
+    DIR_TEST_CREATE_OPEN( "\\", STATUS_OBJECT_PATH_SYNTAX_BAD );
+    DIR_TEST_CREATE_OPEN( "\\om.c-test", STATUS_OBJECT_PATH_SYNTAX_BAD );
+    DIR_TEST_CREATE_OPEN( "\\om.c-test\\", STATUS_OBJECT_PATH_SYNTAX_BAD );
+    DIR_TEST_CREATE_OPEN( "om.c-test\\", STATUS_OBJECT_PATH_NOT_FOUND );
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "om.c-test");
-    DIR_TEST_CREATE_SUCCESS(&dir1)
-    DIR_TEST_OPEN_SUCCESS(&h)
+    status = pNtCreateDirectoryObject( &dir1, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
+    status = pNtOpenDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to open directory %08x\n", status );
     pRtlFreeUnicodeString(&str);
 
     pNtClose(h);
@@ -488,23 +1073,28 @@ error:
     /* Nested directories */
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\");
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
-    DIR_TEST_OPEN_SUCCESS(&dir)
+    status = pNtOpenDirectoryObject( &dir, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to open directory %08x\n", status );
     InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
-    DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
+    status = pNtOpenDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "NtOpenDirectoryObject got %08x\n", status );
     pRtlFreeUnicodeString(&str);
     pNtClose(dir);
 
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\om.c-test");
-    DIR_TEST_CREATE_SUCCESS(&dir)
+    status = pNtCreateDirectoryObject( &dir, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
     pRtlFreeUnicodeString(&str);
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\om.c-test\\one more level");
-    DIR_TEST_CREATE_SUCCESS(&h)
+    status = pNtCreateDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
     pRtlFreeUnicodeString(&str);
     pNtClose(h);
     InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
     pRtlCreateUnicodeStringFromAsciiz(&str, "one more level");
-    DIR_TEST_CREATE_SUCCESS(&h)
+    status = pNtCreateDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
     pRtlFreeUnicodeString(&str);
     pNtClose(h);
 
@@ -514,15 +1104,18 @@ error:
     {
         InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
         pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Global\\om.c-test");
-        DIR_TEST_CREATE_SUCCESS(&dir)
+        status = pNtCreateDirectoryObject( &dir, DIRECTORY_QUERY, &attr );
+        ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
         pRtlFreeUnicodeString(&str);
         pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Local\\om.c-test\\one more level");
-        DIR_TEST_CREATE_SUCCESS(&h)
+        status = pNtCreateDirectoryObject( &h, DIRECTORY_QUERY, &attr );
+        ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
         pRtlFreeUnicodeString(&str);
         pNtClose(h);
         InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
         pRtlCreateUnicodeStringFromAsciiz(&str, "one more level");
-        DIR_TEST_CREATE_SUCCESS(&dir)
+        status = pNtCreateDirectoryObject( &dir, DIRECTORY_QUERY, &attr );
+        ok( status == STATUS_SUCCESS, "Failed to create directory %08x\n", status );
         pRtlFreeUnicodeString(&str);
         pNtClose(h);
         pNtClose(dir);
@@ -532,7 +1125,8 @@ error:
 
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects");
-    DIR_TEST_OPEN_SUCCESS(&dir)
+    status = pNtOpenDirectoryObject( &dir, DIRECTORY_QUERY, &attr );
+    ok( status == STATUS_SUCCESS, "Failed to open directory %08x\n", status );
     pRtlFreeUnicodeString(&str);
     InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
 
@@ -563,20 +1157,6 @@ error:
     pNtClose(dir);
 }
 
-#define SYMLNK_TEST_CREATE_OPEN_FAILURE2(h,n,t,e,e2) \
-    pRtlCreateUnicodeStringFromAsciiz(&str, n);\
-    pRtlCreateUnicodeStringFromAsciiz(&target, t);\
-    status = pNtCreateSymbolicLinkObject(h, SYMBOLIC_LINK_QUERY, &attr, &target);\
-    ok(status == e || status == e2, \
-       "NtCreateSymbolicLinkObject should have failed with %s or %s got(%08x)\n", #e, #e2, status);\
-    status = pNtOpenSymbolicLinkObject(h, SYMBOLIC_LINK_QUERY, &attr);\
-    ok(status == e || status == e2, \
-       "NtOpenSymbolicLinkObject should have failed with %s or %s got(%08x)\n", #e, #e2, status);\
-    pRtlFreeUnicodeString(&target);\
-    pRtlFreeUnicodeString(&str);
-
-#define SYMLNK_TEST_CREATE_OPEN_FAILURE(h,n,t,e) SYMLNK_TEST_CREATE_OPEN_FAILURE2(h,n,t,e,e)
-
 static void test_symboliclink(void)
 {
     NTSTATUS status;
@@ -587,7 +1167,13 @@ static void test_symboliclink(void)
 
     /* No name and/or no attributes */
     InitializeObjectAttributes(&attr, NULL, 0, 0, NULL);
-    SYMLNK_TEST_CREATE_OPEN_FAILURE2(NULL, "", "", STATUS_ACCESS_VIOLATION, STATUS_INVALID_PARAMETER)
+    pRtlCreateUnicodeStringFromAsciiz(&target, "\\DosDevices");
+    status = pNtCreateSymbolicLinkObject( NULL, SYMBOLIC_LINK_QUERY, &attr, &target );
+    ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_PARAMETER,
+       "NtCreateSymbolicLinkObject got %08x\n", status );
+    status = pNtOpenSymbolicLinkObject( NULL, SYMBOLIC_LINK_QUERY, &attr );
+    ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_PARAMETER,
+       "NtOpenSymbolicLinkObject got %08x\n", status );
 
     status = pNtCreateSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, NULL, NULL);
     ok(status == STATUS_ACCESS_VIOLATION,
@@ -597,7 +1183,6 @@ static void test_symboliclink(void)
         "NtOpenSymbolicLinkObject should have failed with STATUS_INVALID_PARAMETER got(%08x)\n", status);
 
     /* No attributes */
-    pRtlCreateUnicodeStringFromAsciiz(&target, "\\DosDevices");
     status = pNtCreateSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, NULL, &target);
     ok(status == STATUS_SUCCESS || status == STATUS_ACCESS_VIOLATION, /* nt4 */
        "NtCreateSymbolicLinkObject failed(%08x)\n", status);
@@ -634,13 +1219,45 @@ static void test_symboliclink(void)
     pRtlFreeUnicodeString(&str);
     pRtlFreeUnicodeString(&target);
 
-    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "BaseNamedObjects", "->Somewhere", STATUS_OBJECT_PATH_SYNTAX_BAD)
-    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
-    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\\\BaseNamedObjects", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
-    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\\\om.c-test", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
-    SYMLNK_TEST_CREATE_OPEN_FAILURE2(&h, "\\BaseNamedObjects\\om.c-test\\", "->Somewhere",
-                                     STATUS_OBJECT_NAME_INVALID, STATUS_OBJECT_PATH_NOT_FOUND)
+    pRtlCreateUnicodeStringFromAsciiz( &target, "->Somewhere");
 
+    pRtlCreateUnicodeStringFromAsciiz( &str, "BaseNamedObjects" );
+    status = pNtCreateSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr, &target );
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "NtCreateSymbolicLinkObject got %08x\n", status );
+    status = pNtOpenSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr );
+    ok( status == STATUS_OBJECT_PATH_SYNTAX_BAD, "NtOpenSymbolicLinkObject got %08x\n", status );
+    pRtlFreeUnicodeString( &str );
+
+    pRtlCreateUnicodeStringFromAsciiz( &str, "\\BaseNamedObjects\\" );
+    status = pNtCreateSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr, &target );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "NtCreateSymbolicLinkObject got %08x\n", status );
+    status = pNtOpenSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "NtOpenSymbolicLinkObject got %08x\n", status );
+    pRtlFreeUnicodeString( &str );
+
+    pRtlCreateUnicodeStringFromAsciiz( &str, "\\\\BaseNamedObjects" );
+    status = pNtCreateSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr, &target );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "NtCreateSymbolicLinkObject got %08x\n", status );
+    status = pNtOpenSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "NtOpenSymbolicLinkObject got %08x\n", status );
+    pRtlFreeUnicodeString( &str );
+
+    pRtlCreateUnicodeStringFromAsciiz( &str, "\\BaseNamedObjects\\\\om.c-test" );
+    status = pNtCreateSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr, &target );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "NtCreateSymbolicLinkObject got %08x\n", status );
+    status = pNtOpenSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr );
+    ok( status == STATUS_OBJECT_NAME_INVALID, "NtOpenSymbolicLinkObject got %08x\n", status );
+    pRtlFreeUnicodeString( &str );
+
+    pRtlCreateUnicodeStringFromAsciiz( &str, "\\BaseNamedObjects\\om.c-test\\" );
+    status = pNtCreateSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr, &target );
+    ok( status == STATUS_OBJECT_NAME_INVALID || status == STATUS_OBJECT_PATH_NOT_FOUND,
+        "NtCreateSymbolicLinkObject got %08x\n", status );
+    status = pNtOpenSymbolicLinkObject( &h, SYMBOLIC_LINK_QUERY, &attr );
+    ok( status == STATUS_OBJECT_NAME_INVALID || status == STATUS_OBJECT_PATH_NOT_FOUND,
+        "NtOpenSymbolicLinkObject got %08x\n", status );
+    pRtlFreeUnicodeString( &str );
+    pRtlFreeUnicodeString(&target);
 
     /* Compound test */
     if (!(dir = get_base_dir()))
@@ -682,9 +1299,14 @@ static void test_query_object(void)
     char buffer[1024];
     NTSTATUS status;
     ULONG len, expected_len;
-    UNICODE_STRING *str;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING path, session, *str;
     char dir[MAX_PATH], tmp_path[MAX_PATH], file1[MAX_PATH + 16];
     LARGE_INTEGER size;
+
+    sprintf( tmp_path, "\\Sessions\\%u", NtCurrentTeb()->Peb->SessionId );
+    pRtlCreateUnicodeStringFromAsciiz( &session, tmp_path );
+    InitializeObjectAttributes( &attr, &path, 0, 0, 0 );
 
     handle = CreateEventA( NULL, FALSE, FALSE, "test_event" );
 
@@ -715,9 +1337,15 @@ static void test_query_object(void)
     str = (UNICODE_STRING *)buffer;
     ok( sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR) == len, "unexpected len %u\n", len );
     ok( str->Length >= sizeof(name), "unexpected len %u\n", str->Length );
-    /* there can be a \\Sessions prefix in the name */
-    ok( !memcmp( str->Buffer + (str->Length - sizeof(name)) / sizeof(WCHAR), name, sizeof(name) ),
+    ok( len > sizeof(UNICODE_STRING) + sizeof("\\test_event") * sizeof(WCHAR),
+        "name too short %s\n", wine_dbgstr_w(str->Buffer) );
+    /* check for \\Sessions prefix in the name */
+    ok( (str->Length > session.Length &&
+         !memcmp( str->Buffer, session.Buffer, session.Length ) &&
+         !memcmp( str->Buffer + session.Length / sizeof(WCHAR), name, sizeof(name) )) ||
+        broken( !memcmp( str->Buffer, name, sizeof(name) )), /* winxp */
         "wrong name %s\n", wine_dbgstr_w(str->Buffer) );
+    trace( "got %s len %u\n", wine_dbgstr_w(str->Buffer), len );
 
     len -= sizeof(WCHAR);
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, len, &len );
@@ -851,6 +1479,167 @@ static void test_query_object(void)
     ok( str->Buffer && !memcmp( str->Buffer, type_section, sizeof(type_section) ),
                   "wrong/bad type name %s (%p)\n", wine_dbgstr_w(str->Buffer), str->Buffer );
     pNtClose( handle );
+
+    handle = CreateMailslotA( "\\\\.\\mailslot\\test_mailslot", 100, 1000, NULL );
+    ok( handle != INVALID_HANDLE_VALUE, "CreateMailslot failed err %u\n", GetLastError() );
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS , "NtQueryObject returned %x\n", status );
+    str = (UNICODE_STRING *)buffer;
+    ok( len > sizeof(UNICODE_STRING), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    expected_len = sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR);
+    ok( len == expected_len || broken(len == expected_len - sizeof(WCHAR)), /* NT4 */
+        "unexpected len %u\n", len );
+    ok( len > sizeof(UNICODE_STRING) + sizeof("\\test_mailslot") * sizeof(WCHAR),
+        "name too short %s\n", wine_dbgstr_w(str->Buffer) );
+    trace( "got %s len %u\n", wine_dbgstr_w(str->Buffer), len );
+    pNtClose( handle );
+
+    handle = CreateNamedPipeA( "\\\\.\\pipe\\test_pipe", PIPE_ACCESS_DUPLEX, PIPE_READMODE_BYTE,
+                               1, 1000, 1000, 1000, NULL );
+    ok( handle != INVALID_HANDLE_VALUE, "CreateNamedPipe failed err %u\n", GetLastError() );
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS , "NtQueryObject returned %x\n", status );
+    str = (UNICODE_STRING *)buffer;
+    ok( len > sizeof(UNICODE_STRING), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    expected_len = sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR);
+    ok( len == expected_len || broken(len == expected_len - sizeof(WCHAR)), /* NT4 */
+        "unexpected len %u\n", len );
+    ok( len > sizeof(UNICODE_STRING) + sizeof("\\test_pipe") * sizeof(WCHAR),
+        "name too short %s\n", wine_dbgstr_w(str->Buffer) );
+    trace( "got %s len %u\n", wine_dbgstr_w(str->Buffer), len );
+    pNtClose( handle );
+
+    pRtlCreateUnicodeStringFromAsciiz( &path, "\\REGISTRY\\Machine\\Software\\Classes" );
+    status = pNtCreateKey( &handle, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS || status == STATUS_ACCESS_DENIED,
+        "NtCreateKey failed status %x\n", status );
+    pRtlFreeUnicodeString( &path );
+    if (status == STATUS_SUCCESS)
+    {
+        len = 0;
+        status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
+        ok( status == STATUS_SUCCESS , "NtQueryObject returned %x\n", status );
+        str = (UNICODE_STRING *)buffer;
+        todo_wine
+        ok( len > sizeof(UNICODE_STRING), "unexpected len %u\n", len );
+        str = (UNICODE_STRING *)buffer;
+        expected_len = sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR);
+        todo_wine
+        ok( len == expected_len || broken(len == expected_len - sizeof(WCHAR)), /* NT4 */
+            "unexpected len %u\n", len );
+        todo_wine
+        ok( len > sizeof(UNICODE_STRING) + sizeof("\\Classes") * sizeof(WCHAR),
+            "name too short %s\n", wine_dbgstr_w(str->Buffer) );
+        trace( "got %s len %u\n", wine_dbgstr_w(str->Buffer), len );
+        pNtClose( handle );
+    }
+    pRtlFreeUnicodeString( &session );
+}
+
+static BOOL winver_equal_or_newer(WORD major, WORD minor)
+{
+    OSVERSIONINFOEXW info = {sizeof(info)};
+    ULONGLONG mask = 0;
+
+    info.dwMajorVersion = major;
+    info.dwMinorVersion = minor;
+
+    VER_SET_CONDITION(mask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+    VER_SET_CONDITION(mask, VER_MINORVERSION, VER_GREATER_EQUAL);
+
+    return VerifyVersionInfoW(&info, VER_MAJORVERSION | VER_MINORVERSION, mask);
+}
+
+static void test_query_object_types(void)
+{
+    static const WCHAR typeW[] = {'T','y','p','e'};
+    static const WCHAR eventW[] = {'E','v','e','n','t'};
+    SYSTEM_HANDLE_INFORMATION_EX *shi;
+    OBJECT_TYPES_INFORMATION *buffer;
+    OBJECT_TYPE_INFORMATION *type;
+    NTSTATUS status;
+    HANDLE handle;
+    BOOL found;
+    ULONG len, i, event_type_index = 0;
+
+    buffer = HeapAlloc( GetProcessHeap(), 0, sizeof(OBJECT_TYPES_INFORMATION) );
+    ok( buffer != NULL, "Failed to allocate memory\n" );
+
+    status = pNtQueryObject( NULL, ObjectTypesInformation, buffer, sizeof(OBJECT_TYPES_INFORMATION), &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    ok( len, "len is zero\n");
+
+    buffer = HeapReAlloc( GetProcessHeap(), 0, buffer, len );
+    ok( buffer != NULL, "Failed to allocate memory\n" );
+
+    memset( buffer, 0, len );
+    status = pNtQueryObject( NULL, ObjectTypesInformation, buffer, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( buffer->NumberOfTypes, "NumberOfTypes is zero\n" );
+
+    type = (OBJECT_TYPE_INFORMATION *)(buffer + 1);
+    for (i = 0; i < buffer->NumberOfTypes; i++)
+    {
+        USHORT length = type->TypeName.MaximumLength;
+        trace( "Type %u: %s\n", i, wine_dbgstr_us(&type->TypeName) );
+
+        if (i == 0)
+        {
+            ok( type->TypeName.Length == sizeof(typeW) && !strncmpW(typeW, type->TypeName.Buffer, 4),
+                "Expected 'Type' as first type, got %s\n", wine_dbgstr_us(&type->TypeName) );
+        }
+        if (type->TypeName.Length == sizeof(eventW) && !strncmpW(eventW, type->TypeName.Buffer, 5))
+        {
+            if (winver_equal_or_newer( 6, 2 ))
+                event_type_index = type->TypeIndex;
+            else
+                event_type_index = winver_equal_or_newer( 6, 1 ) ? i + 2 : i + 1;
+        }
+
+        type = (OBJECT_TYPE_INFORMATION *)ROUND_UP( (DWORD_PTR)(type + 1) + length, sizeof(DWORD_PTR) );
+    }
+
+    HeapFree( GetProcessHeap(), 0, buffer );
+
+    ok( event_type_index, "Could not find object type for events\n" );
+
+    handle = CreateEventA( NULL, FALSE, FALSE, NULL );
+    ok( handle != NULL, "Failed to create event\n" );
+
+    shi = HeapAlloc( GetProcessHeap(), 0, sizeof(*shi) );
+    ok( shi != NULL, "Failed to allocate memory\n" );
+
+    status = pNtQuerySystemInformation( SystemExtendedHandleInformation, shi, sizeof(*shi), &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status );
+
+    shi = HeapReAlloc( GetProcessHeap(), 0, shi, len );
+    ok( shi != NULL, "Failed to allocate memory\n" );
+
+    status = pNtQuerySystemInformation( SystemExtendedHandleInformation, shi, len, &len );
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
+
+    found = FALSE;
+    for (i = 0; i < shi->Count; i++)
+    {
+        if (shi->Handle[i].UniqueProcessId != GetCurrentProcessId())
+            continue;
+        if ((HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue != handle)
+            continue;
+
+        ok( shi->Handle[i].ObjectTypeIndex == event_type_index, "Event type does not match: %u vs %u\n",
+            shi->Handle[i].ObjectTypeIndex, event_type_index );
+
+        found = TRUE;
+        break;
+    }
+    ok( found, "Expected to find event handle %p (pid %x) in handle list\n", handle, GetCurrentProcessId() );
+
+    HeapFree( GetProcessHeap(), 0, shi );
+    CloseHandle( handle );
 }
 
 static void test_type_mismatch(void)
@@ -1190,6 +1979,121 @@ static void test_null_device(void)
     CloseHandle(ov.hEvent);
 }
 
+static DWORD WINAPI mutant_thread( void *arg )
+{
+    MUTANT_BASIC_INFORMATION info;
+    NTSTATUS status;
+    HANDLE mutant;
+    DWORD ret;
+
+    mutant = arg;
+    ret = WaitForSingleObject( mutant, 1000 );
+    ok( ret == WAIT_OBJECT_0, "WaitForSingleObject failed %08x\n", ret );
+
+    memset(&info, 0xcc, sizeof(info));
+    status = pNtQueryMutant(mutant, MutantBasicInformation, &info, sizeof(info), NULL);
+    ok( status == STATUS_SUCCESS, "NtQueryMutant failed %08x\n", status );
+    ok( info.CurrentCount == 0, "expected 0, got %d\n", info.CurrentCount );
+    ok( info.OwnedByCaller == TRUE, "expected TRUE, got %d\n", info.OwnedByCaller );
+    ok( info.AbandonedState == FALSE, "expected FALSE, got %d\n", info.AbandonedState );
+    /* abandon mutant */
+
+    return 0;
+}
+
+static void test_mutant(void)
+{
+    static const WCHAR name[] = {'\\','B','a','s','e','N','a','m','e','d','O','b','j','e','c','t','s',
+                                 '\\','t','e','s','t','_','m','u','t','a','n','t',0};
+    MUTANT_BASIC_INFORMATION info;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING str;
+    NTSTATUS status;
+    HANDLE mutant;
+    HANDLE thread;
+    DWORD ret;
+    ULONG len;
+    LONG prev;
+
+    pRtlInitUnicodeString(&str, name);
+    InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
+    status = pNtCreateMutant(&mutant, GENERIC_ALL, &attr, TRUE);
+    ok( status == STATUS_SUCCESS, "Failed to create Mutant(%08x)\n", status );
+
+    /* bogus */
+    status = pNtQueryMutant(mutant, MutantBasicInformation, &info, 0, NULL);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH,
+        "Failed to NtQueryMutant, expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status );
+    status = pNtQueryMutant(mutant, 0x42, &info, sizeof(info), NULL);
+    ok( status == STATUS_INVALID_INFO_CLASS || broken(status == STATUS_NOT_IMPLEMENTED), /* 32-bit on Vista/2k8 */
+        "Failed to NtQueryMutant, expected STATUS_INVALID_INFO_CLASS, got %08x\n", status );
+    status = pNtQueryMutant((HANDLE)0xdeadbeef, MutantBasicInformation, &info, sizeof(info), NULL);
+    ok( status == STATUS_INVALID_HANDLE,
+        "Failed to NtQueryMutant, expected STATUS_INVALID_HANDLE, got %08x\n", status );
+
+    /* new */
+    len = -1;
+    memset(&info, 0xcc, sizeof(info));
+    status = pNtQueryMutant(mutant, MutantBasicInformation, &info, sizeof(info), &len);
+    ok( status == STATUS_SUCCESS, "NtQueryMutant failed %08x\n", status );
+    ok( info.CurrentCount == 0, "expected 0, got %d\n", info.CurrentCount );
+    ok( info.OwnedByCaller == TRUE, "expected TRUE, got %d\n", info.OwnedByCaller );
+    ok( info.AbandonedState == FALSE, "expected FALSE, got %d\n", info.AbandonedState );
+    ok( len == sizeof(info), "got %u\n", len );
+
+    ret = WaitForSingleObject( mutant, 1000 );
+    ok( ret == WAIT_OBJECT_0, "WaitForSingleObject failed %08x\n", ret );
+
+    memset(&info, 0xcc, sizeof(info));
+    status = pNtQueryMutant(mutant, MutantBasicInformation, &info, sizeof(info), NULL);
+    ok( status == STATUS_SUCCESS, "NtQueryMutant failed %08x\n", status );
+    ok( info.CurrentCount == -1, "expected -1, got %d\n", info.CurrentCount );
+    ok( info.OwnedByCaller == TRUE, "expected TRUE, got %d\n", info.OwnedByCaller );
+    ok( info.AbandonedState == FALSE, "expected FALSE, got %d\n", info.AbandonedState );
+
+    prev = 0xdeadbeef;
+    status = pNtReleaseMutant(mutant, &prev);
+    ok( status == STATUS_SUCCESS, "NtQueryRelease failed %08x\n", status );
+    ok( prev == -1, "NtQueryRelease failed, expected -1, got %d\n", prev );
+
+    prev = 0xdeadbeef;
+    status = pNtReleaseMutant(mutant, &prev);
+    ok( status == STATUS_SUCCESS, "NtQueryRelease failed %08x\n", status );
+    ok( prev == 0, "NtQueryRelease failed, expected 0, got %d\n", prev );
+
+    memset(&info, 0xcc, sizeof(info));
+    status = pNtQueryMutant(mutant, MutantBasicInformation, &info, sizeof(info), NULL);
+    ok( status == STATUS_SUCCESS, "NtQueryMutant failed %08x\n", status );
+    ok( info.CurrentCount == 1, "expected 1, got %d\n", info.CurrentCount );
+    ok( info.OwnedByCaller == FALSE, "expected FALSE, got %d\n", info.OwnedByCaller );
+    ok( info.AbandonedState == FALSE, "expected FALSE, got %d\n", info.AbandonedState );
+
+    /* abandoned */
+    thread = CreateThread( NULL, 0, mutant_thread, mutant, 0, NULL );
+    ret = WaitForSingleObject( thread, 1000 );
+    ok( ret == WAIT_OBJECT_0, "WaitForSingleObject failed %08x\n", ret );
+    CloseHandle( thread );
+
+    memset(&info, 0xcc, sizeof(info));
+    status = pNtQueryMutant(mutant, MutantBasicInformation, &info, sizeof(info), NULL);
+    ok( status == STATUS_SUCCESS, "NtQueryMutant failed %08x\n", status );
+    ok( info.CurrentCount == 1, "expected 0, got %d\n", info.CurrentCount );
+    ok( info.OwnedByCaller == FALSE, "expected FALSE, got %d\n", info.OwnedByCaller );
+    ok( info.AbandonedState == TRUE, "expected TRUE, got %d\n", info.AbandonedState );
+
+    ret = WaitForSingleObject( mutant, 1000 );
+    ok( ret == WAIT_ABANDONED_0, "WaitForSingleObject failed %08x\n", ret );
+
+    memset(&info, 0xcc, sizeof(info));
+    status = pNtQueryMutant(mutant, MutantBasicInformation, &info, sizeof(info), NULL);
+    ok( status == STATUS_SUCCESS, "NtQueryMutant failed %08x\n", status );
+    ok( info.CurrentCount == 0, "expected 0, got %d\n", info.CurrentCount );
+    ok( info.OwnedByCaller == TRUE, "expected TRUE, got %d\n", info.OwnedByCaller );
+    ok( info.AbandonedState == FALSE, "expected FALSE, got %d\n", info.AbandonedState );
+
+    NtClose( mutant );
+}
+
 START_TEST(om)
 {
     HMODULE hntdll = GetModuleHandleA("ntdll.dll");
@@ -1206,11 +2110,19 @@ START_TEST(om)
     pRtlCreateUnicodeStringFromAsciiz = (void *)GetProcAddress(hntdll, "RtlCreateUnicodeStringFromAsciiz");
     pRtlFreeUnicodeString   = (void *)GetProcAddress(hntdll, "RtlFreeUnicodeString");
     pNtCreateEvent          = (void *)GetProcAddress(hntdll, "NtCreateEvent");
+    pNtCreateJobObject      = (void *)GetProcAddress(hntdll, "NtCreateJobObject");
+    pNtOpenJobObject        = (void *)GetProcAddress(hntdll, "NtOpenJobObject");
+    pNtCreateKey            = (void *)GetProcAddress(hntdll, "NtCreateKey");
+    pNtOpenKey              = (void *)GetProcAddress(hntdll, "NtOpenKey");
+    pNtDeleteKey            = (void *)GetProcAddress(hntdll, "NtDeleteKey");
+    pNtCreateMailslotFile   = (void *)GetProcAddress(hntdll, "NtCreateMailslotFile");
     pNtCreateMutant         = (void *)GetProcAddress(hntdll, "NtCreateMutant");
     pNtOpenEvent            = (void *)GetProcAddress(hntdll, "NtOpenEvent");
     pNtQueryEvent           = (void *)GetProcAddress(hntdll, "NtQueryEvent");
     pNtPulseEvent           = (void *)GetProcAddress(hntdll, "NtPulseEvent");
     pNtOpenMutant           = (void *)GetProcAddress(hntdll, "NtOpenMutant");
+    pNtQueryMutant          = (void *)GetProcAddress(hntdll, "NtQueryMutant");
+    pNtReleaseMutant        = (void *)GetProcAddress(hntdll, "NtReleaseMutant");
     pNtOpenFile             = (void *)GetProcAddress(hntdll, "NtOpenFile");
     pNtClose                = (void *)GetProcAddress(hntdll, "NtClose");
     pRtlInitUnicodeString   = (void *)GetProcAddress(hntdll, "RtlInitUnicodeString");
@@ -1221,8 +2133,11 @@ START_TEST(om)
     pNtCreateSymbolicLinkObject = (void *)GetProcAddress(hntdll, "NtCreateSymbolicLinkObject");
     pNtQuerySymbolicLinkObject  = (void *)GetProcAddress(hntdll, "NtQuerySymbolicLinkObject");
     pNtCreateSemaphore      =  (void *)GetProcAddress(hntdll, "NtCreateSemaphore");
+    pNtOpenSemaphore        =  (void *)GetProcAddress(hntdll, "NtOpenSemaphore");
     pNtCreateTimer          =  (void *)GetProcAddress(hntdll, "NtCreateTimer");
+    pNtOpenTimer            =  (void *)GetProcAddress(hntdll, "NtOpenTimer");
     pNtCreateSection        =  (void *)GetProcAddress(hntdll, "NtCreateSection");
+    pNtOpenSection          =  (void *)GetProcAddress(hntdll, "NtOpenSection");
     pNtQueryObject          =  (void *)GetProcAddress(hntdll, "NtQueryObject");
     pNtReleaseSemaphore     =  (void *)GetProcAddress(hntdll, "NtReleaseSemaphore");
     pNtCreateKeyedEvent     =  (void *)GetProcAddress(hntdll, "NtCreateKeyedEvent");
@@ -1230,15 +2145,20 @@ START_TEST(om)
     pNtWaitForKeyedEvent    =  (void *)GetProcAddress(hntdll, "NtWaitForKeyedEvent");
     pNtReleaseKeyedEvent    =  (void *)GetProcAddress(hntdll, "NtReleaseKeyedEvent");
     pNtCreateIoCompletion   =  (void *)GetProcAddress(hntdll, "NtCreateIoCompletion");
+    pNtOpenIoCompletion     =  (void *)GetProcAddress(hntdll, "NtOpenIoCompletion");
+    pNtQuerySystemInformation = (void *)GetProcAddress(hntdll, "NtQuerySystemInformation");
 
     test_case_sensitive();
     test_namespace_pipe();
     test_name_collisions();
+    test_name_limits();
     test_directory();
     test_symboliclink();
     test_query_object();
+    test_query_object_types();
     test_type_mismatch();
     test_event();
+    test_mutant();
     test_keyed_events();
     test_null_device();
 }
