@@ -100,7 +100,7 @@ typedef struct _FDO_DEVICE_EXTENSION
     PVOID UncachedExtensionVirtualBase;
     PHYSICAL_ADDRESS UncachedExtensionPhysicalBase;
     ULONG UncachedExtensionSize;
-
+    PHW_PASSIVE_INITIALIZE_ROUTINE HwPassiveInitRoutine;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 

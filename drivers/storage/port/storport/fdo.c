@@ -63,6 +63,17 @@ PortFdoStartMiniport(
         return Status;
     }
 
+    /* Call the HwPassiveInitRoutine function, if available */
+    if (DeviceExtension->HwPassiveInitRoutine != NULL)
+    {
+        DPRINT1("Calling HwPassiveInitRoutine()\n");
+        if (!DeviceExtension->HwPassiveInitRoutine(&DeviceExtension->Miniport.MiniportExtension->HwDeviceExtension))
+        {
+            DPRINT1("HwPassiveInitRoutine() failed\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+
     return STATUS_SUCCESS;
 }
 

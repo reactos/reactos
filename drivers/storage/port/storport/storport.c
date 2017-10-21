@@ -992,7 +992,53 @@ StorPortNotification(
     _In_ PVOID HwDeviceExtension,
     ...)
 {
-    DPRINT1("StorPortNotification()\n");
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension = NULL;
+    PFDO_DEVICE_EXTENSION DeviceExtension = NULL;
+    PHW_PASSIVE_INITIALIZE_ROUTINE HwPassiveInitRoutine;
+    PBOOLEAN Result;
+    va_list ap;
+
+    DPRINT1("StorPortNotification(%x %p)\n",
+            NotificationType, HwDeviceExtension);
+
+    /* Get the miniport extension */
+    if (HwDeviceExtension != NULL)
+    {
+        MiniportExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                              MINIPORT_DEVICE_EXTENSION,
+                                              HwDeviceExtension);
+        DPRINT1("HwDeviceExtension %p  MiniportExtension %p\n",
+                HwDeviceExtension, MiniportExtension);
+
+        DeviceExtension = MiniportExtension->Miniport->DeviceExtension;
+    }
+
+    va_start(ap, HwDeviceExtension);
+
+    switch (NotificationType)
+    {
+        case EnablePassiveInitialization:
+            DPRINT1("EnablePassiveInitialization\n");
+            HwPassiveInitRoutine = (PHW_PASSIVE_INITIALIZE_ROUTINE)va_arg(ap, PHW_PASSIVE_INITIALIZE_ROUTINE);
+            DPRINT1("HwPassiveInitRoutine %p\n", HwPassiveInitRoutine);
+            Result = (PBOOLEAN)va_arg(ap, PBOOLEAN);
+
+            *Result = FALSE;
+
+            if ((DeviceExtension != NULL) &&
+                (DeviceExtension->HwPassiveInitRoutine == NULL))
+            {
+                DeviceExtension->HwPassiveInitRoutine = HwPassiveInitRoutine;
+                *Result = TRUE;
+            }
+            break;
+
+        default:
+            DPRINT1("Unsupported Notification %lx\n", NotificationType);
+            break;
+    }
+
+    va_end(ap);
 }
 
 
