@@ -335,8 +335,8 @@ static void test_audioclient(void)
           (UINT)(t2/10000), (UINT)(t2 % 10000));
     ok(t2 >= t1 || broken(t2 >= t1/2 && pwfx->nSamplesPerSec > 48000) ||
             broken(t2 == 0) /* (!) win10 */,
-       "Latency < default period, delta %dus (%x%08x vs %x%08x)\n",
-       (LONG)((t2-t1)/10), (DWORD)(t2 >> 32), (DWORD)t2, (DWORD)(t1 >> 32), (DWORD)t1);
+       "Latency < default period, delta %dus (%s vs %s)\n",
+       (LONG)((t2-t1)/10), wine_dbgstr_longlong(t2), wine_dbgstr_longlong(t1));
     /* Native appears to add the engine period to the HW latency in shared mode */
     if(t2 == 0)
         win10 = TRUE;
