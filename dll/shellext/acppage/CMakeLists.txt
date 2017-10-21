@@ -12,8 +12,42 @@ add_definitions(
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     ${REACTOS_SOURCE_DIR}/dll/appcompat/apphelp
-    ${REACTOS_SOURCE_DIR})
+    ${REACTOS_SOURCE_DIR}
+    ${REACTOS_BINARY_DIR})
+
 spec2def(acppage.dll acppage.spec ADD_IMPORTLIB)
+
+# The 'parent' RC file where all resources will be included
+add_translatable_rc(ACPPage.rc)
+
+add_translations(TEMPLATE template TRANSLATIONS 
+    cs-CZ
+    de-DE
+    en-US
+    es-ES
+    eu-ES
+    fr-FR
+    hu-HU
+    id-ID
+    it-IT
+    nl-NL
+    no-NO
+    pl-PL
+    ro-RO
+    ru-RU
+    sk-SK
+    sq-AL
+    sv-SE
+    tr-TR
+    uk-UA
+    zh-CN
+    zh-TW)
+
+# bg-BG and he-IL are included like before, since they have different dimensions / options.
+# If we add support to automatically add RTL options to the dialog, we could include he-IL in the po files as well.
+# If there are multiple languages that need a changed themplate, we can just repeat the 'add_translations' command with a different template.
+# add_translations(TEMPLATE template_rtl TRANSLATIONS he-IL)
+
 
 list(APPEND SOURCE
     ACPPage.cpp
