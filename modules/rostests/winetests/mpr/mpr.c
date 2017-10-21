@@ -125,8 +125,7 @@ static void test_WNetGetRemoteName(void)
         ret = WNetGetUniversalNameA(driveA, REMOTE_NAME_INFO_LEVEL,
                 NULL, &info_size);
 
-        if(((GetVersion() & 0x8000ffff) == 0x00000004) || /* NT40 */
-           (drive_type == DRIVE_REMOTE))
+        if(drive_type == DRIVE_REMOTE)
             todo_wine
             ok(ret == WN_BAD_POINTER, "WNetGetUniversalNameA failed: %08x\n", ret);
         else
