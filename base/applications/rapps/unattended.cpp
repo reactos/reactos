@@ -64,7 +64,7 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
     apps.UpdateAppsDB();
     apps.Enum(ENUM_ALL_AVAILABLE, NULL);
 
-    ATL::CSimpleArray<CAvailableApplicationInfo*> arrAppInfo = apps.FindInfoList(arrNames);
+    ATL::CSimpleArray<CAvailableApplicationInfo> arrAppInfo = apps.FindInfoList(arrNames);
     if (arrAppInfo.GetSize() > 0)
     {
         CDownloadManager::DownloadListOfApplications(arrAppInfo, TRUE);

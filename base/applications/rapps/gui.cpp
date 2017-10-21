@@ -554,20 +554,20 @@ public:
         }
     }
 
-    ATL::CSimpleArray<CAvailableApplicationInfo*> GetCheckedItems()
+    ATL::CSimpleArray<CAvailableApplicationInfo> GetCheckedItems()
     {
         if (!bHasCheckboxes)
         {
-            return ATL::CSimpleArray<CAvailableApplicationInfo*>();
+            return ATL::CSimpleArray<CAvailableApplicationInfo>();
         }
 
-        ATL::CSimpleArray<CAvailableApplicationInfo*> list;
+        ATL::CSimpleArray<CAvailableApplicationInfo> list;
         for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
         {
             if (GetCheckState(i) != FALSE)
             {
                 CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(i);
-                list.Add(pAppInfo);
+                list.Add(*pAppInfo);
             }
         }
         return list;

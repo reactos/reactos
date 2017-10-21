@@ -830,20 +830,15 @@ end:
     return 0;
 }
 
-BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo*>& AppsList, BOOL bIsModal)
+BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal)
 {
     if (AppsList.GetSize() == 0)
-    {
         return FALSE;
-    }
 
     // Initialize shared variables
     for (INT i = 0; i < AppsList.GetSize(); ++i)
     {
-        if (AppsList[i])
-        {
-            AppsToInstallList.Add(*(AppsList[i]));
-        }
+        AppsToInstallList.Add(AppsList[i]); // implicit conversion to DownloadInfo
     }
 
     // Create a dialog and issue a download process

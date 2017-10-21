@@ -45,6 +45,7 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szSHA1;
     ATL::CStringW m_szInstalledVersion;
 
+    // Create an object from file
     CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam);
 
     // Load all info from the file
@@ -100,7 +101,7 @@ public:
     BOOL Enum(INT EnumType, AVAILENUMPROC lpEnumProc);
 
     CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName) const;
-    ATL::CSimpleArray<CAvailableApplicationInfo*> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
+    ATL::CSimpleArray<CAvailableApplicationInfo> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
 
     const ATL::CStringW& GetFolderPath() const;
     const ATL::CStringW& GetAppPath() const;

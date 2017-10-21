@@ -411,15 +411,15 @@ CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppNa
     return NULL;
 }
 
-ATL::CSimpleArray<CAvailableApplicationInfo*> CAvailableApps::FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const
+ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const
 {
-    ATL::CSimpleArray<CAvailableApplicationInfo*> result;
+    ATL::CSimpleArray<CAvailableApplicationInfo> result;
     for (INT i = 0; i < arrAppsNames.GetSize(); ++i)
     {
         CAvailableApplicationInfo* Info = FindInfo(arrAppsNames[i]);
         if (Info)
         {
-            result.Add(Info);
+            result.Add(*Info);
         }
     }
     return result;
