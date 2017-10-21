@@ -722,6 +722,39 @@ function(get_defines OUTPUT_VAR)
     set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
 endfunction()
 
+function(add_translatable_rc main_rc)
+    set(_CURRENT_TRANSLATION_MODULE ${main_rc} PARENT_SCOPE)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lang)
+endfunction()
+
+
+function(add_translations)
+    cmake_parse_arguments(__TRANSLATE "" "TEMPLATE" "TRANSLATIONS" ${ARGN})
+    set(__TRANSLATE_TEMPLATE_NAME ${__TRANSLATE_TEMPLATE})
+    set(__TRANSLATE_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/lang/${__TRANSLATE_TEMPLATE}.rc)
+    foreach(target_lang ${__TRANSLATE_TRANSLATIONS})
+        set(_TARGET_FILE ${CMAKE_CURRENT_BINARY_DIR}/lang/${target_lang}.rc)
+        set(_POFILE ${CMAKE_CURRENT_SOURCE_DIR}/pot/${target_lang}.po)
+        add_custom_command(OUTPUT ${_TARGET_FILE}
+                           COMMAND native-po2rc -t ${__TRANSLATE_TEMPLATE} -p ${_POFILE} -o ${_TARGET_FILE} -l ${target_lang}
+                           DEPENDS native-po2rc ${__TRANSLATE_TEMPLATE} ${_POFILE})
+        list(APPEND _ALL_LANGUAGE_RC ${_TARGET_FILE})
+    endforeach()
+    add_custom_target(${_CURRENT_TRANSLATION_MODULE}_LANG_${__TRANSLATE_TEMPLATE_NAME} DEPENDS ${_ALL_LANGUAGE_RC})
+
+    # add_rc_deps does not really add rc deps, it replaces them.
+    # So we first have to query the current dependencies, and append the new ones
+    get_source_file_property(_deps ${_CURRENT_TRANSLATION_MODULE} OBJECT_DEPENDS)
+    if (_deps)
+        set(_deps ${_deps} ${_CURRENT_TRANSLATION_MODULE}_LANG_${__TRANSLATE_TEMPLATE_NAME})
+    else ()
+        set(_deps ${_CURRENT_TRANSLATION_MODULE}_LANG_${__TRANSLATE_TEMPLATE_NAME})
+    endif ()
+
+    add_rc_deps(${_CURRENT_TRANSLATION_MODULE} ${_deps})
+endfunction()
+
+
 if(NOT MSVC)
     function(add_object_library _target)
         add_library(${_target} OBJECT ${ARGN})
