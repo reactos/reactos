@@ -683,7 +683,7 @@ StorPortGetLogicalUnit(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 STORPORT_API
 STOR_PHYSICAL_ADDRESS
@@ -694,10 +694,37 @@ StorPortGetPhysicalAddress(
     _In_ PVOID VirtualAddress,
     _Out_ ULONG *Length)
 {
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+    PFDO_DEVICE_EXTENSION DeviceExtension;
     STOR_PHYSICAL_ADDRESS PhysicalAddress;
+    ULONG_PTR Offset;
 
     DPRINT1("StorPortGetPhysicalAddress(%p %p %p %p)\n",
             HwDeviceExtension, Srb, VirtualAddress, Length);
+
+    /* Get the miniport extension */
+    MiniportExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                          MINIPORT_DEVICE_EXTENSION,
+                                          HwDeviceExtension);
+    DPRINT1("HwDeviceExtension %p  MiniportExtension %p\n",
+            HwDeviceExtension, MiniportExtension);
+
+    DeviceExtension = MiniportExtension->Miniport->DeviceExtension;
+
+    /* Inside of the uncached extension? */
+    if (((ULONG_PTR)VirtualAddress >= (ULONG_PTR)DeviceExtension->UncachedExtensionVirtualBase) &&
+        ((ULONG_PTR)VirtualAddress <= (ULONG_PTR)DeviceExtension->UncachedExtensionVirtualBase + DeviceExtension->UncachedExtensionSize))
+    {
+        Offset = (ULONG_PTR)VirtualAddress - (ULONG_PTR)DeviceExtension->UncachedExtensionVirtualBase;
+
+        PhysicalAddress.QuadPart = DeviceExtension->UncachedExtensionPhysicalBase.QuadPart + Offset;
+        *Length = DeviceExtension->UncachedExtensionSize - Offset;
+
+        return PhysicalAddress;
+    }
+
+    // FIXME
+
     UNIMPLEMENTED;
 
     *Length = 0;
@@ -769,8 +796,8 @@ StorPortGetUncachedExtension(
     DeviceExtension = MiniportExtension->Miniport->DeviceExtension;
 
     /* Return the uncached extension base address if we already have one */
-    if (DeviceExtension->UncachedExtensionBase != NULL)
-        return DeviceExtension->UncachedExtensionBase;
+    if (DeviceExtension->UncachedExtensionVirtualBase != NULL)
+        return DeviceExtension->UncachedExtensionVirtualBase;
 
     // FIXME: Set DMA stuff here?
 
@@ -778,17 +805,18 @@ StorPortGetUncachedExtension(
     Alignment.QuadPart = 0;
     LowestAddress.QuadPart = 0;
     HighestAddress.QuadPart = 0x00000000FFFFFFFF;
-    DeviceExtension->UncachedExtensionBase = MmAllocateContiguousMemorySpecifyCache(NumberOfBytes,
-                                                                                    LowestAddress,
-                                                                                    HighestAddress,
-                                                                                    Alignment,
-                                                                                    MmCached);
-    if (DeviceExtension->UncachedExtensionBase == NULL)
+    DeviceExtension->UncachedExtensionVirtualBase = MmAllocateContiguousMemorySpecifyCache(NumberOfBytes,
+                                                                                           LowestAddress,
+                                                                                           HighestAddress,
+                                                                                           Alignment,
+                                                                                           MmCached);
+    if (DeviceExtension->UncachedExtensionVirtualBase == NULL)
         return NULL;
 
+    DeviceExtension->UncachedExtensionPhysicalBase = MmGetPhysicalAddress(DeviceExtension->UncachedExtensionVirtualBase);
     DeviceExtension->UncachedExtensionSize = NumberOfBytes;
 
-    return DeviceExtension->UncachedExtensionBase;
+    return DeviceExtension->UncachedExtensionVirtualBase;
 }
 
 

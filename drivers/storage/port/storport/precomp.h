@@ -97,8 +97,8 @@ typedef struct _FDO_DEVICE_EXTENSION
     BUS_INTERFACE_STANDARD BusInterface;
     BOOLEAN BusInitialized;
     PMAPPED_ADDRESS MappedAddressList;
-
-    PVOID UncachedExtensionBase;
+    PVOID UncachedExtensionVirtualBase;
+    PHYSICAL_ADDRESS UncachedExtensionPhysicalBase;
     ULONG UncachedExtensionSize;
 
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
