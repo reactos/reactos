@@ -64,7 +64,7 @@ private:
     BOOL m_IsInstalled;
     BOOL m_HasLanguageInfo;
     BOOL m_HasInstalledVersion;
-    CConfigParser m_Parser;
+    CConfigParser* m_Parser;
 
     inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString);
 

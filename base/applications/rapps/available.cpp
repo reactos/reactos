@@ -19,7 +19,7 @@
 
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
-    : m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE), m_Parser(sFileNameParam)
+    : m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
 {
     m_LicenseType = LICENSE_NONE;
 
@@ -39,11 +39,14 @@ VOID CAvailableApplicationInfo::RefreshAppInfo()
 // Lazily load general info from the file
 VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
 {
-    m_Category = m_Parser.GetInt(L"Category");
+    m_Parser = new CConfigParser(m_sFileName);
+
+    m_Category = m_Parser->GetInt(L"Category");
 
     if (!GetString(L"Name", m_szName)
         || !GetString(L"URLDownload", m_szUrlDownload))
     {
+        delete m_Parser;
         return;
     }
 
@@ -64,6 +67,8 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
     {
         RetrieveInstalledVersion();
     }
+
+    delete m_Parser;
 }
 
 VOID CAvailableApplicationInfo::RetrieveInstalledStatus()
@@ -87,7 +92,7 @@ VOID CAvailableApplicationInfo::RetrieveLanguages()
     ATL::CStringW szBuffer;
 
     // TODO: Get multiline parameter
-    if (!m_Parser.GetString(L"Languages", szBuffer))
+    if (!m_Parser->GetString(L"Languages", szBuffer))
     {
         m_HasLanguageInfo = FALSE;
         return;
@@ -126,7 +131,7 @@ VOID CAvailableApplicationInfo::RetrieveLanguages()
 
 VOID CAvailableApplicationInfo::RetrieveLicenseType()
 {
-    INT IntBuffer = m_Parser.GetInt(L"LicenseType");
+    INT IntBuffer = m_Parser->GetInt(L"LicenseType");
 
     if (IsLicenseType(IntBuffer))
     {
@@ -195,7 +200,7 @@ VOID CAvailableApplicationInfo::SetLastWriteTime(FILETIME* ftTime)
 
 inline BOOL CAvailableApplicationInfo::GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString)
 {
-    if (!m_Parser.GetString(lpKeyName, ReturnedString))
+    if (!m_Parser->GetString(lpKeyName, ReturnedString))
     {
         ReturnedString.Empty();
         return FALSE;
