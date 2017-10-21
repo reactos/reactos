@@ -266,7 +266,7 @@ RWDetermineMediaType(PDRIVE_INFO DriveInfo, BOOLEAN OneShot)
         DriveInfo->BytesPerSectorCode = HW_512_BYTES_PER_SECTOR;
         return STATUS_SUCCESS;
     }
-    while(FALSE);
+    while(TRUE);
 
     TRACE_(FLOPPY, "RWDetermineMediaType(): failed to find media\n");
     return STATUS_UNRECOGNIZED_MEDIA;
