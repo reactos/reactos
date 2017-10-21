@@ -7492,7 +7492,7 @@ RxPrefixClaim(
         RxContext->PrefixClaim.SuppliedPathName.MaximumLength = QueryRequest->PathNameLength;
 
         /* Zero the create parameters */
-        RtlZeroMemory(&RxContext->Create.NtCreateParameters,
+        RtlZeroMemory(&RxContext->Create,
                       FIELD_OFFSET(RX_CONTEXT, AlsoCanonicalNameBuffer) - FIELD_OFFSET(RX_CONTEXT, Create.NtCreateParameters));
         RxContext->Create.ThisIsATreeConnectOpen = TRUE;
         RxContext->Create.NtCreateParameters.SecurityContext = QueryRequest->SecurityContext;
