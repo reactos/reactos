@@ -314,7 +314,7 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
     {
-        UNIMPLEMENTED;
+        //UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
