@@ -246,6 +246,10 @@ RfsdReadWriteBlocks(
 
             if (!Irp) {
                 Status = STATUS_INSUFFICIENT_RESOURCES;
+#ifdef __REACTOS__
+                ExFreePool(pContext);
+                pContext = NULL;
+#endif
                 _SEH2_LEAVE;
             }
 
@@ -258,6 +262,10 @@ RfsdReadWriteBlocks(
 
             if (!Mdl)  {
                 Status = STATUS_INSUFFICIENT_RESOURCES;
+#ifdef __REACTOS__
+                ExFreePool(pContext);
+                pContext = NULL;
+#endif
                 _SEH2_LEAVE;
             }
             
