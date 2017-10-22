@@ -26,6 +26,8 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     USHORT Offset, Position, BackTrackingPosition, OldBackTrackingPosition;
     USHORT BackTrackingBuffer[16], OldBackTrackingBuffer[16] = {0};
     PUSHORT BackTrackingSwap, BackTracking = BackTrackingBuffer, OldBackTracking = OldBackTrackingBuffer;
+    ULONG BackTrackingBufferSize = RTL_NUMBER_OF(BackTrackingBuffer);
+    PVOID AllocatedBuffer = NULL;
     UNICODE_STRING IntExpression;
     USHORT ExpressionPosition, NamePosition = 0, MatchingChars = 1;
     BOOLEAN EndOfName = FALSE;
@@ -133,22 +135,40 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 }
 
                 /* If buffer too small */
-                if (BackTrackingPosition > RTL_NUMBER_OF(BackTrackingBuffer) - 1)
+                if (BackTrackingPosition > BackTrackingBufferSize - 2)
                 {
-                    /* Allocate memory for BackTracking */
-                    BackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                                         (Expression->Length + sizeof(WCHAR)) * sizeof(USHORT),
-                                                         'nrSF');
-                    /* Copy old buffer content */
+                    /* We should only ever get here once! */
+                    ASSERT(AllocatedBuffer == NULL);
+                    ASSERT((BackTracking == BackTrackingBuffer) || (BackTracking == OldBackTrackingBuffer));
+                    ASSERT((OldBackTracking == BackTrackingBuffer) || (OldBackTracking == OldBackTrackingBuffer));
+
+                    /* Calculate buffer size */
+                    BackTrackingBufferSize = (Expression->Length + 1) * 2;
+
+                    /* Allocate memory for both back-tracking buffers */
+                    AllocatedBuffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                            2 * BackTrackingBufferSize * sizeof(USHORT),
+                                                            'nrSF');
+                    if (AllocatedBuffer == NULL)
+                    {
+                        DPRINT1("Failed to allocate BackTracking buffer. BackTrackingBufferSize = =x%lx\n",
+                                BackTrackingBufferSize);
+                        Result = FALSE;
+                        goto Exit;
+                    }
+
+                    /* Backtracking is at the start of the buffer */
+                    BackTracking = AllocatedBuffer;
+
+                    /* Copy BackTrackingBuffer content */
                     RtlCopyMemory(BackTracking,
                                   BackTrackingBuffer,
                                   RTL_NUMBER_OF(BackTrackingBuffer) * sizeof(USHORT));
 
-                    /* Allocate memory for OldBackTracking */
-                    OldBackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                                            (Expression->Length + sizeof(WCHAR)) * sizeof(USHORT),
-                                                            'nrSF');
-                    /* Copy old buffer content */
+                    /* OldBackTracking is after BackTracking */
+                    OldBackTracking = &BackTracking[BackTrackingBufferSize];
+
+                    /* Copy OldBackTrackingBuffer content */
                     RtlCopyMemory(OldBackTracking,
                                   OldBackTrackingBuffer,
                                   RTL_NUMBER_OF(OldBackTrackingBuffer) * sizeof(USHORT));
@@ -235,11 +255,13 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     /* Store result value */
     Result = MatchingChars > 0 && (OldBackTracking[MatchingChars - 1] == (Expression->Length * 2));
 
+Exit:
+
     /* Frees the memory if necessary */
-    if (BackTracking != BackTrackingBuffer && BackTracking != OldBackTrackingBuffer)
-        ExFreePoolWithTag(BackTracking, 'nrSF');
-    if (OldBackTracking != BackTrackingBuffer && OldBackTracking != OldBackTrackingBuffer)
-        ExFreePoolWithTag(OldBackTracking, 'nrSF');
+    if (AllocatedBuffer != NULL)
+    {
+        ExFreePoolWithTag(AllocatedBuffer, 'nrSF');
+    }
 
     return Result;
 }
