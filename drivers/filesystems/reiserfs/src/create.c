@@ -542,6 +542,9 @@ Dissecting:
                 }
 				
 				if(!RfsdLoadInode(Vcb, &(ParentMcb->Key), pTmpInode)) {
+#ifdef __REACTOS__
+                    ExFreePool(pTmpInode);
+#endif
                     Status = STATUS_OBJECT_PATH_NOT_FOUND;
                     _SEH2_LEAVE;
                 }
