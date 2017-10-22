@@ -173,16 +173,6 @@ DWORD KmtSendStringToDriver(IN DWORD ControlCode, IN PCSTR String);
 DWORD KmtSendWStringToDriver(IN DWORD ControlCode, IN PCWSTR String);
 DWORD KmtSendUlongToDriver(IN DWORD ControlCode, IN DWORD Value);
 DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, IN DWORD InLength, IN OUT PDWORD OutLength);
-
-DWORD KmtFltLoadDriver(_In_z_ PCWSTR ServiceName, _In_ BOOLEAN RestartIfRunning, _In_ BOOLEAN ConnectComms, _Out_ HANDLE *hPort);
-DWORD KmtFltUnloadDriver(_In_ HANDLE *hPort, _In_ BOOLEAN DisonnectComms);
-DWORD KmtFltRunKernelTest(_In_ HANDLE hPort, _In_z_ PCSTR TestName);
-DWORD KmtFltSendToDriver(_In_ HANDLE hPort, _In_ DWORD Message);
-DWORD KmtFltSendStringToDriver(_In_ HANDLE hPort, _In_ DWORD Message, _In_ PCSTR String);
-DWORD KmtFltSendWStringToDriver(_In_ HANDLE hPort, _In_ DWORD Message, _In_ PCWSTR String);
-DWORD KmtFltSendUlongToDriver(_In_ HANDLE hPort, _In_ DWORD Message, _In_ DWORD Value);
-DWORD KmtFltSendBufferToDriver(_In_ HANDLE hPort, _In_ DWORD Message, _In_reads_bytes_(BufferSize) LPVOID Buffer, _In_ DWORD BufferSize, _Out_writes_bytes_to_opt_(dwOutBufferSize, *lpBytesReturned) LPVOID lpOutBuffer, _In_ DWORD dwOutBufferSize, _Out_opt_ LPDWORD lpBytesReturned);
-
 #else /* if !defined KMT_KERNEL_MODE && !defined KMT_USER_MODE */
 #error either KMT_KERNEL_MODE or KMT_USER_MODE must be defined
 #endif /* !defined KMT_KERNEL_MODE && !defined KMT_USER_MODE */

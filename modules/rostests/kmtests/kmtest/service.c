@@ -12,19 +12,6 @@
 
 #define SERVICE_ACCESS (SERVICE_START | SERVICE_STOP | DELETE)
 
-/*
- * This is an internal function not meant for use by the kmtests app,
- * so we declare it here instead of kmtest.h
- */
-DWORD
-KmtpCreateService(
-    IN PCWSTR ServiceName,
-    IN PCWSTR ServicePath,
-    IN PCWSTR DisplayName OPTIONAL,
-    IN DWORD ServiceType,
-    OUT SC_HANDLE *ServiceHandle);
-
-
 static SC_HANDLE ScmHandle;
 
 /**
@@ -93,11 +80,35 @@ KmtCreateService(
     IN PCWSTR DisplayName OPTIONAL,
     OUT SC_HANDLE *ServiceHandle)
 {
-    return KmtpCreateService(ServiceName,
-                             ServicePath,
-                             DisplayName,
-                             SERVICE_KERNEL_DRIVER,
-                             ServiceHandle);
+    DWORD Error = ERROR_SUCCESS;
+    WCHAR DriverPath[MAX_PATH];
+    HRESULT result = S_OK;
+
+    assert(ServiceHandle);
+    assert(ServiceName && ServicePath);
+
+    if (!GetModuleFileName(NULL, DriverPath, sizeof DriverPath / sizeof DriverPath[0]))
+        error_goto(Error, cleanup);
+
+    assert(wcsrchr(DriverPath, L'\\') != NULL);
+    wcsrchr(DriverPath, L'\\')[1] = L'\0';
+
+    result = StringCbCat(DriverPath, sizeof DriverPath, ServicePath);
+    if (FAILED(result))
+        error_value_goto(Error, result, cleanup);
+
+    if (GetFileAttributes(DriverPath) == INVALID_FILE_ATTRIBUTES)
+        error_goto(Error, cleanup);
+
+    *ServiceHandle = CreateService(ScmHandle, ServiceName, DisplayName,
+                            SERVICE_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START,
+                            SERVICE_ERROR_NORMAL, DriverPath, NULL, NULL, NULL, NULL, NULL);
+
+    if (!*ServiceHandle)
+        error_goto(Error, cleanup);
+
+cleanup:
+    return Error;
 }
 
 /**
@@ -292,50 +303,6 @@ DWORD KmtCloseService(
         error_goto(Error, cleanup);
 
     *ServiceHandle = NULL;
-
-cleanup:
-    return Error;
-}
-
-
-/*
- * Private function, not meant for use in kmtests
- * See KmtCreateService & KmtFltCreateService
- */
-DWORD
-KmtpCreateService(
-    IN PCWSTR ServiceName,
-    IN PCWSTR ServicePath,
-    IN PCWSTR DisplayName OPTIONAL,
-    IN DWORD ServiceType,
-    OUT SC_HANDLE *ServiceHandle)
-{
-    DWORD Error = ERROR_SUCCESS;
-    WCHAR DriverPath[MAX_PATH];
-    HRESULT result = S_OK;
-
-    assert(ServiceHandle);
-    assert(ServiceName && ServicePath);
-
-    if (!GetModuleFileName(NULL, DriverPath, sizeof DriverPath / sizeof DriverPath[0]))
-        error_goto(Error, cleanup);
-
-    assert(wcsrchr(DriverPath, L'\\') != NULL);
-    wcsrchr(DriverPath, L'\\')[1] = L'\0';
-
-    result = StringCbCat(DriverPath, sizeof DriverPath, ServicePath);
-    if (FAILED(result))
-        error_value_goto(Error, result, cleanup);
-
-    if (GetFileAttributes(DriverPath) == INVALID_FILE_ATTRIBUTES)
-        error_goto(Error, cleanup);
-
-    *ServiceHandle = CreateService(ScmHandle, ServiceName, DisplayName,
-                                   SERVICE_ACCESS, ServiceType, SERVICE_DEMAND_START,
-                                   SERVICE_ERROR_NORMAL, DriverPath, NULL, NULL, NULL, NULL, NULL);
-
-    if (!*ServiceHandle)
-        error_goto(Error, cleanup);
 
 cleanup:
     return Error;
