@@ -42,6 +42,7 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/mmfuncs.h>
 #include <strsafe.h>
+#include <fltuser.h>
 
 #ifdef KMT_EMULATE_KERNEL
 #define ok_irql(i)

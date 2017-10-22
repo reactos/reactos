@@ -119,6 +119,8 @@ add_target_include_directories(kmtest_printf ${REACTOS_SOURCE_DIR}/sdk/lib/crt/i
 #
 
 list(APPEND KMTEST_SOURCE
+    kmtest/filter.c
+    kmtest/fltsupport.c
     kmtest/kmtest.c
     kmtest/service.c
     kmtest/support.c
@@ -143,8 +145,8 @@ list(APPEND KMTEST_SOURCE
 add_executable(kmtest ${KMTEST_SOURCE})
 set_module_type(kmtest win32cui)
 target_link_libraries(kmtest ${PSEH_LIB})
-add_importlibs(kmtest advapi32 ws2_32 msvcrt kernel32 ntdll)
-add_target_compile_definitions(kmtest KMT_USER_MODE)
+add_importlibs(kmtest fltlib advapi32 ws2_32 msvcrt kernel32 ntdll)
+add_target_compile_definitions(kmtest KMT_USER_MODE NTDDI_VERSION=NTDDI_WS03SP1)
 #add_pch(kmtest include/kmt_test.h)
 set_target_properties(kmtest PROPERTIES OUTPUT_NAME "kmtest_")
 #add_rostests_file(TARGET kmtest)
