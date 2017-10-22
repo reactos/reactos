@@ -3,6 +3,7 @@ PROJECT(SHELL)
 set_cpp(WITH_RUNTIME)
 
 add_definitions(-DUNICODE -D_UNICODE)
+add_definitions(-D_ATL_NO_EXCEPTIONS)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
@@ -15,6 +16,8 @@ list(APPEND SOURCE
 
 add_library(shellbars ${SOURCE})
 add_dependencies(shellbars xdk)
+
+target_link_libraries(shellbars atlnew)
 
 if(NOT MSVC)
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")

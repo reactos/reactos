@@ -21,6 +21,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
+#include <atlsimpcoll.h>
 #include <undocuser.h>
 #include <perhist.h>
 #include <exdispid.h>
