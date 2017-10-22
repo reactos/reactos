@@ -996,6 +996,8 @@ StorPortNotification(
     PFDO_DEVICE_EXTENSION DeviceExtension = NULL;
     PHW_PASSIVE_INITIALIZE_ROUTINE HwPassiveInitRoutine;
     PBOOLEAN Result;
+    PSTOR_DPC Dpc;
+    PHW_DPC_ROUTINE HwDpcRoutine;
     va_list ap;
 
     DPRINT1("StorPortNotification(%x %p)\n",
@@ -1031,6 +1033,19 @@ StorPortNotification(
                 DeviceExtension->HwPassiveInitRoutine = HwPassiveInitRoutine;
                 *Result = TRUE;
             }
+            break;
+
+        case InitializeDpc:
+            DPRINT1("InitializeDpc\n");
+            Dpc = (PSTOR_DPC)va_arg(ap, PSTOR_DPC);
+            DPRINT1("Dpc %p\n", Dpc);
+            HwDpcRoutine = (PHW_DPC_ROUTINE)va_arg(ap, PHW_DPC_ROUTINE);
+            DPRINT1("HwDpcRoutine %p\n", HwDpcRoutine);
+
+            KeInitializeDpc((PRKDPC)&Dpc->Dpc,
+                            (PKDEFERRED_ROUTINE)HwDpcRoutine,
+                            (PVOID)DeviceExtension);
+            KeInitializeSpinLock(&Dpc->Lock);
             break;
 
         default:
