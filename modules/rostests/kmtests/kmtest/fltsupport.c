@@ -71,16 +71,9 @@ KmtFltLoadDriver(
 }
 
 /**
- * @name KmtFltUnloadDriver
+ * @name KmtUnloadDriver
  *
  * Unload the specified filter driver
- *
- * @param hPort
- *        Handle to the filter's comms port
- * @param ConnectComms
- *        TRUE to disconnect the comms connection before unloading
- *
- * @return Win32 error code
  */
 DWORD
 KmtFltUnloadDriver(
@@ -112,12 +105,10 @@ KmtFltUnloadDriver(
 
 
 /**
-* @name KmtFltRunKernelTest
+* @name KmtRunKernelTest
 *
 * Run the specified filter test part
 *
-* @param hPort
-*        Handle to the filter's comms port
 * @param TestName
 *        Name of the test to run
 *
@@ -137,9 +128,8 @@ KmtFltRunKernelTest(
 * Send an I/O control message with no arguments to the driver opened with KmtOpenDriver
 *
 * @param hPort
-*        Handle to the filter's comms port
+         Handle to the filter's comms port
 * @param Message
-*        The message to send to the filter
 *
 * @return Win32 error code as returned by DeviceIoControl
 */
@@ -157,13 +147,8 @@ KmtFltSendToDriver(
  *
  * Send an I/O control message with a string argument to the driver opened with KmtOpenDriver
  *
- *
- * @param hPort
- *        Handle to the filter's comms port
  * @param Message
- *        The message associated with the string
  * @param String
- *        An ANSI string to send to the filter
  *
  * @return Win32 error code as returned by DeviceIoControl
  */
@@ -179,16 +164,12 @@ KmtFltSendStringToDriver(
 }
 
 /**
- * @name KmtFltSendWStringToDriver
+ * @name KmtSendWStringToDriver
  *
  * Send an I/O control message with a wide string argument to the driver opened with KmtOpenDriver
  *
- * @param hPort
- *        Handle to the filter's comms port
  * @param Message
- *        The message associated with the string
  * @param String
- *        An wide string to send to the filter
  *
  * @return Win32 error code as returned by DeviceIoControl
  */
@@ -202,16 +183,12 @@ KmtFltSendWStringToDriver(
 }
 
 /**
- * @name KmtFltSendUlongToDriver
+ * @name KmtSendUlongToDriver
  *
  * Send an I/O control message with an integer argument to the driver opened with KmtOpenDriver
  *
- * @param hPort
- *        Handle to the filter's comms port
  * @param Message
- *        The message associated with the value
  * @param Value
- *        An 32bit valueng to send to the filter
  *
  * @return Win32 error code as returned by DeviceIoControl
  */
@@ -229,20 +206,10 @@ KmtFltSendUlongToDriver(
  *
  * Send an I/O control message with the specified arguments to the driver opened with KmtOpenDriver
  *
- * @param hPort
- *        Handle to the filter's comms port
- * @param Message
- *        The message associated with the value
- * @param InBuffer
- *        Pointer to a buffer to send to the filter
- * @param BufferSize
- *        Size of the buffer pointed to by InBuffer
- * @param OutBuffer
- *        Pointer to a buffer to receive a response from the filter
- * @param OutBufferSize
- *        Size of the buffer pointed to by OutBuffer
- * @param BytesReturned
- *        Number of bytes written in the reply buffer
+ * @param ControlCode
+ * @param Buffer
+ * @param InLength
+ * @param OutLength
  *
  * @return Win32 error code as returned by DeviceIoControl
  */
@@ -250,11 +217,11 @@ DWORD
 KmtFltSendBufferToDriver(
     _In_ HANDLE hPort,
     _In_ DWORD Message,
-    _In_reads_bytes_(BufferSize) LPVOID InBuffer,
+    _In_reads_bytes_(BufferSize) LPVOID Buffer,
     _In_ DWORD BufferSize,
-    _Out_writes_bytes_to_opt_(OutBufferSize, *BytesReturned) LPVOID OutBuffer,
-    _In_ DWORD OutBufferSize,
-    _Out_opt_ LPDWORD BytesReturned)
+    _Out_writes_bytes_to_opt_(dwOutBufferSize, *lpBytesReturned) LPVOID lpOutBuffer,
+    _In_ DWORD dwOutBufferSize,
+    _Out_opt_ LPDWORD lpBytesReturned)
 {
     PKMTFLT_MESSAGE_HEADER Ptr;
     KMTFLT_MESSAGE_HEADER Header;
@@ -266,7 +233,7 @@ KmtFltSendBufferToDriver(
 
     if (BufferSize)
     {
-        assert(InBuffer);
+        assert(Buffer);
 
         InBufferSize = sizeof(KMTFLT_MESSAGE_HEADER) + BufferSize;
         Ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, InBufferSize);
@@ -286,11 +253,11 @@ KmtFltSendBufferToDriver(
     if (BufferSize)
     {
         Ptr->Buffer = (Ptr + 1);
-        StringCbCopy(Ptr->Buffer, BufferSize, InBuffer);
+        StringCbCopy(Ptr->Buffer, BufferSize, Buffer);
         Ptr->BufferSize = BufferSize;
     }
 
-    Error = KmtFltSendMessage(hPort, Ptr, InBufferSize, OutBuffer, OutBufferSize, BytesReturned);
+    Error = KmtFltSendMessage(hPort, Ptr, InBufferSize, lpOutBuffer, dwOutBufferSize, lpBytesReturned);
 
     if (FreeMemory)
     {
