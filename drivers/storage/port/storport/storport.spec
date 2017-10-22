@@ -24,7 +24,8 @@
 @ stdcall StorPortLogError(ptr ptr long long long long long)
 @ stdcall StorPortMoveMemory(ptr ptr long)
 @ cdecl StorPortNotification()
-@ stdcall StorPortQuerySystemTime(ptr) NTOSKRNL.KeQuerySystemTime
+@ stdcall -arch=i386 StorPortQuerySystemTime(ptr) NTOSKRNL.KeQuerySystemTime
+@ stdcall -arch=amd64 StorPortQuerySystemTime(ptr)
 @ stdcall StorPortPause(ptr long)
 @ stdcall StorPortPauseDevice(ptr long long long long)
 @ stdcall StorPortReadPortBufferUchar(ptr ptr ptr long)
