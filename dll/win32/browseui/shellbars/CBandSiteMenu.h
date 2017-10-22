@@ -29,10 +29,10 @@ class CBandSiteMenu :
     public IShellService
 {
     CComPtr<IBandSite> m_BandSite;
-    HDSA m_comcatDsa;
+    CSimpleArray<GUID> m_ComCatGuids;
     HMENU m_hmenu;
-    LPITEMIDLIST m_DesktopPidl;
-    LPITEMIDLIST m_QLaunchPidl;
+    CComHeapPtr<ITEMIDLIST> m_DesktopPidl;
+    CComHeapPtr<ITEMIDLIST> m_QLaunchPidl;
 
     HRESULT _CreateMenuPart();
     HRESULT _CreateNewISFBand(HWND hwnd, REFIID riid, void** ppv);

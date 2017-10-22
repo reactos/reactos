@@ -32,7 +32,6 @@
 #define FIRST_COMCAT_MENU_ID 0x5
 
 CBandSiteMenu::CBandSiteMenu():
-    m_comcatDsa(NULL),
     m_hmenu(NULL),
     m_DesktopPidl(NULL),
     m_QLaunchPidl(NULL)
@@ -43,15 +42,6 @@ CBandSiteMenu::~CBandSiteMenu()
 {
     if (m_hmenu)
         DestroyMenu(m_hmenu);
-
-    if (m_comcatDsa)
-        DSA_Destroy(m_comcatDsa);
-
-    if (m_DesktopPidl)
-        ILFree(m_DesktopPidl);
-
-    if (m_QLaunchPidl)
-        ILFree(m_QLaunchPidl);
 
     m_BandSite = NULL;
 }
@@ -67,7 +57,7 @@ HRESULT WINAPI CBandSiteMenu::FinalConstruct()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    m_QLaunchPidl = ILCreateFromPathW(buffer);
+    m_QLaunchPidl.Attach(ILCreateFromPathW(buffer));
     if (m_QLaunchPidl == NULL)
         return E_FAIL;
 
@@ -90,17 +80,10 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
     if (m_hmenu)
         DestroyMenu(m_hmenu);
 
-    if (m_comcatDsa)
-        DSA_Destroy(m_comcatDsa);
-
     /* Load the template we will fill in */
     m_hmenu = LoadMenuW(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCEW(IDM_TASKBAR_TOOLBARS));
     if (!m_hmenu)
         return HRESULT_FROM_WIN32(GetLastError());
-
-    m_comcatDsa = DSA_Create(sizeof(GUID), 5);
-    if (!m_comcatDsa)
-        return E_OUTOFMEMORY;
 
     /* Get the handle of the submenu where the available items will be shown */
     hmenuToolbars = GetSubMenu(m_hmenu, 0);
@@ -109,6 +92,8 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
     hr = SHEnumClassesOfCategories(1, &category, 0, NULL, &pEnumGUID);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    m_ComCatGuids.RemoveAll();
 
     /* Enumerate the classes in the  CATID_DeskBand category */
     cBands = 0;
@@ -128,8 +113,8 @@ HRESULT CBandSiteMenu::_CreateMenuPart()
         SHGetValue(HKEY_CLASSES_ROOT, wRegKey, NULL, NULL, wszBandName, &dwDataSize);
 
         /* Insert it */
-        InsertMenu(hmenuToolbars, cBands, MF_BYPOSITION, DSA_GetItemCount(m_comcatDsa) + FIRST_COMCAT_MENU_ID, wszBandName);
-        DSA_AppendItem(m_comcatDsa, &iter);
+        InsertMenu(hmenuToolbars, cBands, MF_BYPOSITION, m_ComCatGuids.GetSize() + FIRST_COMCAT_MENU_ID, wszBandName);
+        m_ComCatGuids.Add(iter);
         cBands++;
     }
     while (dwRead > 0);
@@ -148,24 +133,21 @@ HRESULT CBandSiteMenu::_CreateNewISFBand(HWND hwnd, REFIID riid, void** ppv)
     else
         bi.lpszTitle = L"Choose a folder";
 
-    LPITEMIDLIST pidlSelected = SHBrowseForFolderW(&bi);
+    CComHeapPtr<ITEMIDLIST> pidlSelected;
+    pidlSelected.Attach(SHBrowseForFolderW(&bi));
     if (pidlSelected == NULL)
         return S_FALSE;
 
     CComPtr<IShellFolderBand> pISFB;
     HRESULT hr = CISFBand_CreateInstance(IID_IShellFolderBand, (PVOID*)&pISFB);
     if (FAILED_UNEXPECTEDLY(hr))
-        goto done;
+        return hr;
 
     hr = pISFB->InitializeSFB(NULL, pidlSelected);
     if (FAILED_UNEXPECTEDLY(hr))
-        goto done;
+        return hr;
 
-    hr = pISFB->QueryInterface(riid, ppv);
-
-done:
-    ILFree(pidlSelected);
-    return hr;
+    return pISFB->QueryInterface(riid, ppv);
 }
 
 HRESULT CBandSiteMenu::_CreateBuiltInISFBand(UINT uID, REFIID riid, void** ppv)
@@ -206,15 +188,19 @@ HRESULT CBandSiteMenu::_AddISFBandToMenu(HMENU hmenu, UINT indexMenu, UINT idCmd
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (!bi.pidl)
+    CComHeapPtr<ITEMIDLIST> pidl(bi.pidl);
+    if (!pidl)
+    {
+        ERR("Failed to get the pidl of the CISFBand\n");
         return E_OUTOFMEMORY;
+    }
 
     WCHAR buffer[MAX_PATH];
-    hr = ILGetDisplayNameEx(NULL, bi.pidl, buffer, ILGDN_INFOLDER) ? S_OK : E_FAIL;
+    hr = ILGetDisplayNameEx(NULL, pidl, buffer, ILGDN_INFOLDER) ? S_OK : E_FAIL;
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    UINT id = idCmdFirst + DSA_GetItemCount(m_comcatDsa) + FIRST_COMCAT_MENU_ID + dwBandID;
+    UINT id = idCmdFirst + m_ComCatGuids.GetSize() + FIRST_COMCAT_MENU_ID + dwBandID;
     if (id >= idCmdLast)
         return E_FAIL;
 
@@ -225,60 +211,39 @@ HRESULT CBandSiteMenu::_AddISFBandToMenu(HMENU hmenu, UINT indexMenu, UINT idCmd
 
 UINT CBandSiteMenu::_GetMenuIdFromISFBand(IUnknown *pBand)
 {
-    UINT ret = UINT_MAX;
-
     CComPtr<IShellFolderBand> psfb;
     HRESULT hr = pBand->QueryInterface(IID_PPV_ARG(IShellFolderBand, &psfb));
     if (FAILED_UNEXPECTEDLY(hr))
-        return ret;
+        return UINT_MAX;
 
     BANDINFOSFB bi = {ISFB_MASK_IDLIST};
     hr = psfb->GetBandInfoSFB(&bi);
     if (FAILED_UNEXPECTEDLY(hr))
-        return ret;
+        return UINT_MAX;
 
-    CComPtr<IShellFolder> psfDesktop;
-    LPITEMIDLIST pidl = bi.pidl;
+    CComHeapPtr<ITEMIDLIST> pidl(bi.pidl);
     if (!pidl)
-        return ret;
+    {
+        ERR("Failed to get the pidl of the CISFBand\n");
+        return UINT_MAX;
+    }
 
     if (pidl->mkid.cb == 0)
     {
-        ret = IDM_TASKBAR_TOOLBARS_DESKTOP;
-        goto done;
+        return IDM_TASKBAR_TOOLBARS_DESKTOP;
     }
 
+    CComPtr<IShellFolder> psfDesktop;
     hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED_UNEXPECTEDLY(hr))
-        goto done;
+        return UINT_MAX;
 
     hr = psfDesktop->CompareIDs(0, pidl, m_QLaunchPidl);
     if (FAILED_UNEXPECTEDLY(hr))
-        goto done;
+        return UINT_MAX;
 
     if (HRESULT_CODE(hr) == 0)
-        ret = IDM_TASKBAR_TOOLBARS_QUICKLAUNCH;
-
-done:
-    if (pidl)
-        ILFree(pidl);
-
-    return ret;
-}
-
-UINT CBandSiteMenu::_GetMenuIdFromBand(CLSID *BandCLSID)
-{
-    /* Try to find the clsid of the band in the dsa */
-    UINT count = DSA_GetItemCount(m_comcatDsa);
-    for (UINT i = 0; i < count; i++)
-    {
-        GUID* pdsaGUID = (GUID*)DSA_GetItemPtr(m_comcatDsa, i);
-        if (IsEqualGUID(*pdsaGUID, *BandCLSID))
-        {
-            /* The index in the dsa is also the index in the menu */
-            return i + FIRST_COMCAT_MENU_ID;
-        }
-    }
+        return IDM_TASKBAR_TOOLBARS_QUICKLAUNCH;
 
     return UINT_MAX;
 }
@@ -294,7 +259,7 @@ UINT CBandSiteMenu::_GetBandIdFromClsid(CLSID* pclsid)
         if (FAILED(m_BandSite->GetBandObject(dwBandID, IID_PPV_ARG(IPersist, &pBand))))
             continue;
 
-        if (FAILED(pBand->GetClassID(&BandCLSID)))
+        if (FAILED_UNEXPECTEDLY(pBand->GetClassID(&BandCLSID)))
             continue;
 
         if (IsEqualGUID(*pclsid, BandCLSID))
@@ -315,7 +280,7 @@ UINT CBandSiteMenu::_GetBandIdForBuiltinISFBand(UINT uID)
         if (FAILED(m_BandSite->GetBandObject(dwBandID, IID_PPV_ARG(IPersist, &pBand))))
             continue;
 
-        if (FAILED(pBand->GetClassID(&BandCLSID)))
+        if (FAILED_UNEXPECTEDLY(pBand->GetClassID(&BandCLSID)))
             continue;
 
         if (!IsEqualGUID(BandCLSID, CLSID_ISFBand))
@@ -360,7 +325,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
         if (FAILED(m_BandSite->GetBandObject(dwBandID, IID_PPV_ARG(IPersist, &pBand))))
             continue;
 
-        if (FAILED(pBand->GetClassID(&BandCLSID)))
+        if (FAILED_UNEXPECTEDLY(pBand->GetClassID(&BandCLSID)))
             continue;
 
         UINT menuID;
@@ -378,7 +343,8 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
         }
         else
         {
-            menuID = _GetMenuIdFromBand(&BandCLSID);
+            int i = m_ComCatGuids.Find(BandCLSID);
+            menuID = (i == -1 ? UINT_MAX : i + FIRST_COMCAT_MENU_ID);
         }
 
         if (menuID != UINT_MAX)
@@ -411,9 +377,9 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpi
 
         return S_OK;
     }
-    else if (uID > (UINT)DSA_GetItemCount(m_comcatDsa) + FIRST_COMCAT_MENU_ID )
+    else if (uID > (UINT) m_ComCatGuids.GetSize() + FIRST_COMCAT_MENU_ID )
     {
-        dwBandID = uID - (DSA_GetItemCount(m_comcatDsa) + FIRST_COMCAT_MENU_ID );
+        dwBandID = uID - (m_ComCatGuids.GetSize() + FIRST_COMCAT_MENU_ID );
 
         m_BandSite->RemoveBand(dwBandID);
 
@@ -441,7 +407,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpi
     }
 
     /* Get the GUID of the item that was clicked */
-    GUID *pguidToolbar = (GUID *)DSA_GetItemPtr(m_comcatDsa, uID - FIRST_COMCAT_MENU_ID);
+    GUID *pguidToolbar = &m_ComCatGuids[uID - FIRST_COMCAT_MENU_ID];
     if (!pguidToolbar)
         return E_FAIL;
 

@@ -18,6 +18,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
+#include <atlsimpcoll.h>
 #include <undocuser.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
