@@ -190,15 +190,18 @@ struct _ATL_REGMAP_ENTRY
     LPCOLESTR szData;
 };
 
-HRESULT __stdcall AtlWinModuleInit(_ATL_WIN_MODULE *pWinModule);
-HRESULT __stdcall AtlWinModuleTerm(_ATL_WIN_MODULE *pWinModule, HINSTANCE hInst);
-HRESULT __stdcall AtlInternalQueryInterface(void *pThis, const _ATL_INTMAP_ENTRY *pEntries, REFIID iid, void **ppvObject);
-void __stdcall AtlWinModuleAddCreateWndData(_ATL_WIN_MODULE *pWinModule, _AtlCreateWndData *pData, void *pObject);
-void *__stdcall AtlWinModuleExtractCreateWndData(_ATL_WIN_MODULE *pWinModule);
-HRESULT __stdcall AtlComModuleGetClassObject(_ATL_COM_MODULE *pComModule, REFCLSID rclsid, REFIID riid, LPVOID *ppv);
+HRESULT WINAPI AtlWinModuleInit(_ATL_WIN_MODULE *pWinModule);
+HRESULT WINAPI AtlWinModuleTerm(_ATL_WIN_MODULE *pWinModule, HINSTANCE hInst);
+HRESULT WINAPI AtlInternalQueryInterface(void *pThis, const _ATL_INTMAP_ENTRY *pEntries, REFIID iid, void **ppvObject);
+void WINAPI AtlWinModuleAddCreateWndData(_ATL_WIN_MODULE *pWinModule, _AtlCreateWndData *pData, void *pObject);
+void *WINAPI AtlWinModuleExtractCreateWndData(_ATL_WIN_MODULE *pWinModule);
+HRESULT WINAPI AtlComModuleGetClassObject(_ATL_COM_MODULE *pComModule, REFCLSID rclsid, REFIID riid, LPVOID *ppv);
 
-HRESULT __stdcall AtlComModuleRegisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeLib, const CLSID *clsid);
-HRESULT __stdcall AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeLib, const CLSID *clsid);
+HRESULT WINAPI AtlComModuleRegisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeLib, const CLSID *clsid);
+HRESULT WINAPI AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeLib, const CLSID *clsid);
+
+HRESULT WINAPI AtlComModuleRegisterClassObjects(_ATL_COM_MODULE *module, DWORD context, DWORD flags);
+HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module);
 
 
 template<class TLock>
@@ -661,6 +664,127 @@ public:
         return AtlComModuleGetClassObject(&_AtlComModule, rclsid, riid, ppv);
     }
 };
+
+
+template <class T>
+class CAtlExeModuleT : public CAtlModuleT<T>
+{
+public:
+    DWORD m_dwMainThreadID;
+    //DWORD m_dwTimeOut;
+    //DWORD m_dwPause;
+    //bool m_bDelayShutdown;
+
+    CAtlExeModuleT()
+        :m_dwMainThreadID(::GetCurrentThreadId())
+    {
+    }
+
+    ~CAtlExeModuleT()
+    {
+    }
+
+    int WinMain(int nShowCmd)
+    {
+        HRESULT hr = T::InitializeCom();
+        if (FAILED(hr))
+            return hr;
+
+        T* pThis = static_cast<T*>(this);
+
+        LPCTSTR lpCommandLine = GetCommandLine();
+        if (pThis->ParseCommandLine(lpCommandLine, &hr))
+        {
+            hr = pThis->Run(nShowCmd);
+        }
+
+        T::UninitializeCom();
+        return hr;
+    }
+
+
+    HRESULT Run(int nShowCmd = SW_HIDE)
+    {
+        HRESULT hr = S_OK;
+
+        T* pThis = static_cast<T*>(this);
+        hr = pThis->PreMessageLoop(nShowCmd);
+
+        if (hr == S_OK)
+        {
+            pThis->RunMessageLoop();
+            hr = pThis->PostMessageLoop();
+        }
+
+        return hr;
+    }
+
+    LONG Lock()
+    {
+        return CoAddRefServerProcess();
+    }
+
+    LONG Unlock()
+    {
+        LONG lRet = CoReleaseServerProcess();
+        if (lRet == 0)
+        {
+            ::PostThreadMessage(m_dwMainThreadID, WM_QUIT, 0, 0);
+        }
+        return lRet;
+    }
+
+    bool ParseCommandLine(LPCTSTR lpCmdLine, HRESULT* pnRetCode)
+    {
+        // unimplemented!
+        return true;
+    }
+
+    HRESULT PreMessageLoop(int nShowCmd)
+    {
+        T* pThis = static_cast<T*>(this);
+        return pThis->RegisterClassObjects(CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE);
+    }
+
+    void RunMessageLoop()
+    {
+        MSG msg;
+        while (GetMessage(&msg, 0, 0, 0) > 0)
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    HRESULT PostMessageLoop()
+    {
+        T* pThis = static_cast<T*>(this);
+        return pThis->RevokeClassObjects();
+    }
+
+    HRESULT RegisterClassObjects(DWORD dwClsContext, DWORD dwFlags)
+    {
+        return AtlComModuleRegisterClassObjects(&_AtlComModule, dwClsContext, dwFlags);
+    }
+
+    HRESULT RevokeClassObjects()
+    {
+        return AtlComModuleRevokeClassObjects(&_AtlComModule);
+    }
+
+    static HRESULT InitializeCom()
+    {
+        return ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    }
+
+    static void UninitializeCom()
+    {
+        ::CoUninitialize();
+    }
+
+};
+
+
 
 class CComModule : public CAtlModuleT<CComModule>
 {
@@ -1682,6 +1806,55 @@ inline HRESULT WINAPI AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bU
     }
 
     return hResult;
+}
+
+
+// Adapted from dll/win32/atl/atl.c
+inline HRESULT WINAPI AtlComModuleRegisterClassObjects(_ATL_COM_MODULE *module, DWORD context, DWORD flags)
+{
+    _ATL_OBJMAP_ENTRY **iter;
+    IUnknown* unk = NULL;
+    HRESULT hr;
+
+    if (!module)
+        return E_INVALIDARG;
+
+    for (iter = module->m_ppAutoObjMapFirst; iter < module->m_ppAutoObjMapLast; iter++)
+    {
+        if (!(*iter)->pfnGetClassObject)
+            continue;
+
+        hr = (*iter)->pfnGetClassObject((void*)(*iter)->pfnCreateInstance, IID_IUnknown, (void**)&unk);
+        if (FAILED(hr))
+            return hr;
+
+        hr = CoRegisterClassObject(*(*iter)->pclsid, unk, context, flags, &(*iter)->dwRegister);
+        unk->Release();
+        if (FAILED(hr))
+            return hr;
+    }
+
+    return S_OK;
+}
+
+
+// Adapted from dll/win32/atl/atl.c
+inline HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module)
+{
+    _ATL_OBJMAP_ENTRY **iter;
+    HRESULT hr;
+
+    if (!module)
+        return E_INVALIDARG;
+
+    for (iter = module->m_ppAutoObjMapFirst; iter < module->m_ppAutoObjMapLast; iter++)
+    {
+        hr = CoRevokeClassObject((*iter)->dwRegister);
+        if (FAILED(hr))
+            return hr;
+    }
+
+    return S_OK;
 }
 
 
