@@ -457,8 +457,11 @@ NtWaitForKeyedEvent(
     /* Do the wait */
     Status = ExpWaitForKeyedEvent(KeyedEvent, Key, Alertable, Timeout);
 
-    /* Dereference the keyed event */
-    ObDereferenceObject(KeyedEvent);
+    if (Handle != NULL)
+    {
+        /* Dereference the keyed event */
+        ObDereferenceObject(KeyedEvent);
+    }
 
     /* Return the status */
     return Status;
@@ -523,8 +526,11 @@ NtReleaseKeyedEvent(
     /* Do the wait */
     Status = ExpReleaseKeyedEvent(KeyedEvent, Key, Alertable, Timeout);
 
-    /* Dereference the keyed event */
-    ObDereferenceObject(KeyedEvent);
+    if (Handle != NULL)
+    {
+        /* Dereference the keyed event */
+        ObDereferenceObject(KeyedEvent);
+    }
 
     /* Return the status */
     return Status;
