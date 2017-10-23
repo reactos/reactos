@@ -346,4 +346,20 @@ MiniportHwInitialize(
     return Result ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
+
+BOOLEAN
+MiniportHwInterrupt(
+    _In_ PMINIPORT Miniport)
+{
+    BOOLEAN Result;
+
+    DPRINT1("MiniportHwInterrupt(%p)\n",
+            Miniport);
+
+    Result = Miniport->InitData->HwInterrupt(&Miniport->MiniportExtension->HwDeviceExtension);
+    DPRINT1("HwInterrupt() returned %u\n", Result);
+
+    return Result;
+}
+
 /* EOF */

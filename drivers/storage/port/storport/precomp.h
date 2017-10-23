@@ -101,6 +101,8 @@ typedef struct _FDO_DEVICE_EXTENSION
     PHYSICAL_ADDRESS UncachedExtensionPhysicalBase;
     ULONG UncachedExtensionSize;
     PHW_PASSIVE_INITIALIZE_ROUTINE HwPassiveInitRoutine;
+    PKINTERRUPT Interrupt;
+    ULONG InterruptIrql;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 
@@ -140,6 +142,9 @@ NTSTATUS
 MiniportHwInitialize(
     _In_ PMINIPORT Miniport);
 
+BOOLEAN
+MiniportHwInterrupt(
+    _In_ PMINIPORT Miniport);
 
 /* misc.c */
 
@@ -181,6 +186,15 @@ TranslateResourceListAddress(
     ULONG NumberOfBytes,
     BOOLEAN InIoSpace,
     PPHYSICAL_ADDRESS TranslatedAddress);
+
+NTSTATUS
+GetResourceListInterrupt(
+    PFDO_DEVICE_EXTENSION DeviceExtension,
+    PULONG Vector,
+    PKIRQL Irql,
+    KINTERRUPT_MODE *InterruptMode,
+    PBOOLEAN ShareVector,
+    PKAFFINITY Affinity);
 
 NTSTATUS
 AllocateAddressMapping(

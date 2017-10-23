@@ -288,6 +288,55 @@ TranslateResourceListAddress(
 
 
 NTSTATUS
+GetResourceListInterrupt(
+    PFDO_DEVICE_EXTENSION DeviceExtension,
+    PULONG Vector,
+    PKIRQL Irql,
+    KINTERRUPT_MODE *InterruptMode,
+    PBOOLEAN ShareVector,
+    PKAFFINITY Affinity)
+{
+    PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    INT i, j;
+
+    DPRINT1("GetResourceListInterrupt(%p)\n",
+            DeviceExtension);
+
+    FullDescriptor = DeviceExtension->TranslatedResources->List;
+    for (i = 0; i < DeviceExtension->TranslatedResources->Count; i++)
+    {
+        for (j = 0; j < FullDescriptor->PartialResourceList.Count; j++)
+        {
+            PartialDescriptor = FullDescriptor->PartialResourceList.PartialDescriptors + j;
+
+            switch (PartialDescriptor->Type)
+            {
+                case CmResourceTypeInterrupt:
+                    DPRINT1("Interrupt: Level %lu  Vector %lu\n",
+                            PartialDescriptor->u.Interrupt.Level,
+                            PartialDescriptor->u.Interrupt.Vector);
+
+                    *Vector = PartialDescriptor->u.Interrupt.Vector;
+                    *Irql = (KIRQL)PartialDescriptor->u.Interrupt.Level;
+                    *InterruptMode = (PartialDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED) ? Latched : LevelSensitive;
+                    *ShareVector = (PartialDescriptor->ShareDisposition == CmResourceShareShared) ? TRUE : FALSE;
+                    *Affinity = PartialDescriptor->u.Interrupt.Affinity;
+
+                    return STATUS_SUCCESS;
+            }
+        }
+
+        /* Advance to next CM_FULL_RESOURCE_DESCRIPTOR block in memory. */
+        FullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptor->PartialResourceList.PartialDescriptors + 
+                                                        FullDescriptor->PartialResourceList.Count);
+    }
+
+    return STATUS_NOT_FOUND;
+}
+
+
+NTSTATUS
 AllocateAddressMapping(
     PMAPPED_ADDRESS *MappedAddressList,
     STOR_PHYSICAL_ADDRESS IoAddress,

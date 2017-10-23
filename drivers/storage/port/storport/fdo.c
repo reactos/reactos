@@ -16,6 +16,90 @@
 /* FUNCTIONS ******************************************************************/
 
 static
+BOOLEAN
+NTAPI
+PortFdoInterruptRoutine(
+    _In_ PKINTERRUPT Interrupt,
+    _In_ PVOID ServiceContext)
+{
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+
+    DPRINT1("PortFdoInterruptRoutine(%p %p)\n",
+            Interrupt, ServiceContext);
+
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)ServiceContext;
+
+    return MiniportHwInterrupt(&DeviceExtension->Miniport);
+}
+
+
+static
+NTSTATUS
+PortFdoConnectInterrupt(
+    _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
+{
+    ULONG Vector;
+    KIRQL Irql;
+    KINTERRUPT_MODE InterruptMode;
+    BOOLEAN ShareVector;
+    KAFFINITY Affinity;
+    NTSTATUS Status;
+
+    DPRINT1("PortFdoConnectInterrupt(%p)\n",
+            DeviceExtension);
+
+    /* No resources, no interrupt. Done! */
+    if (DeviceExtension->AllocatedResources == NULL ||
+        DeviceExtension->TranslatedResources == NULL)
+    {
+        DPRINT1("Checkpoint\n");
+        return STATUS_SUCCESS;
+    }
+
+    /* Get the interrupt data from the resource list */
+    Status = GetResourceListInterrupt(DeviceExtension,
+                                      &Vector,
+                                      &Irql,
+                                      &InterruptMode,
+                                      &ShareVector,
+                                      &Affinity);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("GetResourceListInterrupt() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    DPRINT1("Vector: %lu\n", Vector);
+    DPRINT1("Irql: %lu\n", Irql);
+
+    DPRINT1("Affinity: 0x%08lx\n", Affinity);
+
+    /* Connect the interrupt */
+    Status = IoConnectInterrupt(&DeviceExtension->Interrupt,
+                                PortFdoInterruptRoutine,
+                                DeviceExtension,
+                                NULL,
+                                Vector,
+                                Irql,
+                                Irql,
+                                InterruptMode,
+                                ShareVector,
+                                Affinity,
+                                FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        DeviceExtension->InterruptIrql = Irql;
+    }
+    else
+    {
+        DPRINT1("IoConnectInterrupt() failed (Status 0x%08lx)\n", Status);
+    }
+
+    return Status;
+}
+
+
+static
 NTSTATUS
 PortFdoStartMiniport(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
@@ -54,6 +138,10 @@ PortFdoStartMiniport(
         DPRINT1("MiniportFindAdapter() failed (Status 0x%08lx)\n", Status);
         return Status;
     }
+
+
+    Status = PortFdoConnectInterrupt(DeviceExtension);
+
 
     /* Call the miniports HwInitialize function */
     Status = MiniportHwInitialize(&DeviceExtension->Miniport);
