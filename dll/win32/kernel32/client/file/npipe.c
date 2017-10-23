@@ -20,6 +20,20 @@ LONG ProcessPipeId;
 
 /* FUNCTIONS ******************************************************************/
 
+static
+BOOL
+NpGetUserNamep(HANDLE hNamedPipe,
+               LPWSTR lpUserName,
+               DWORD nMaxUserNameSize)
+{
+    /* FIXME - open the thread token, call ImpersonateNamedPipeClient() and
+               retrieve the user name with GetUserName(), revert the impersonation
+               and finally restore the thread token */
+    UNIMPLEMENTED;
+    return TRUE;
+}
+
+
 /*
  * @implemented
  */
@@ -935,18 +949,28 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
             *lpMaxCollectionCount = RemoteInfo.MaximumCollectionCount;
         }
 
-        if(lpCollectDataTimeout != NULL)
+        if (lpCollectDataTimeout != NULL)
         {
-            /* FIXME */
-           *lpCollectDataTimeout = 0;
+            LARGE_INTEGER CollectDataTime;
+
+            /* Convert time and return it */
+            RemoteInfo.CollectDataTime.QuadPart *= -1;
+            CollectDataTime = RtlExtendedLargeIntegerDivide(RemoteInfo.CollectDataTime, 10000, NULL);
+            /* In case of overflow, just return MAX - 1 */
+            if (CollectDataTime.HighPart != 0)
+            {
+                *lpCollectDataTimeout = -2;
+            }
+            else
+            {
+                *lpCollectDataTimeout = CollectDataTime.LowPart;
+            }
         }
     }
 
     if (lpUserName != NULL)
     {
-      /* FIXME - open the thread token, call ImpersonateNamedPipeClient() and
-                 retrieve the user name with GetUserName(), revert the impersonation
-                 and finally restore the thread token */
+        return NpGetUserNamep(hNamedPipe, lpUserName, nMaxUserNameSize);
     }
 
     return TRUE;
