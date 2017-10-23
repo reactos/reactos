@@ -20,17 +20,92 @@ LONG ProcessPipeId;
 
 /* FUNCTIONS ******************************************************************/
 
+/*
+ * @implemented
+ */
 static
 BOOL
 NpGetUserNamep(HANDLE hNamedPipe,
                LPWSTR lpUserName,
                DWORD nMaxUserNameSize)
 {
-    /* FIXME - open the thread token, call ImpersonateNamedPipeClient() and
-               retrieve the user name with GetUserName(), revert the impersonation
-               and finally restore the thread token */
-    UNIMPLEMENTED;
-    return TRUE;
+    BOOL Ret;
+    HANDLE hToken;
+    HMODULE hAdvapi;
+    NTSTATUS Status;
+    BOOL (WINAPI *pRevertToSelf)(void);
+    BOOL (WINAPI *pGetUserNameW)(LPWSTR lpBuffer, LPDWORD lpnSize);
+    BOOL (WINAPI *pImpersonateNamedPipeClient)(HANDLE hNamedPipe);
+
+    /* Open advapi, we'll funcs from it */
+    hAdvapi = LoadLibraryW(L"advapi32.dll");
+    if (hAdvapi == NULL)
+    {
+        return FALSE;
+    }
+
+    /* Import the three required functions */
+    pRevertToSelf = GetProcAddress(hAdvapi, "RevertToSelf");
+    pGetUserNameW = GetProcAddress(hAdvapi, "GetUserNameW");
+    pImpersonateNamedPipeClient = GetProcAddress(hAdvapi, "ImpersonateNamedPipeClient");
+    /* If any couldn't be found, fail */
+    if (pRevertToSelf == NULL || pGetUserNameW == NULL || pImpersonateNamedPipeClient == NULL)
+    {
+        FreeLibrary(hAdvapi);
+        return FALSE;
+    }
+
+    /* Now, open the thread token for impersonation */
+    Status = NtOpenThreadToken(NtCurrentThread(), TOKEN_IMPERSONATE, TRUE, &hToken);
+    /* Try to impersonate the pipe client */
+    if (pImpersonateNamedPipeClient(hNamedPipe))
+    {
+        DWORD lpnSize;
+
+        /* It worked, get the user name */
+        lpnSize = nMaxUserNameSize;
+        Ret = pGetUserNameW(lpUserName, &lpnSize);
+        /* Failed to get the thread token? Revert to self */
+        if (!NT_SUCCESS(Status))
+        {
+            pRevertToSelf();
+
+            FreeLibrary(hAdvapi);
+            return Ret;
+        }
+
+        /* Restore the thread token */
+        Status = NtSetInformationThread(NtCurrentThread(), ThreadImpersonationToken,
+                                        &hToken, sizeof(HANDLE));
+        /* We cannot fail closing the thread token! */
+        if (!CloseHandle(hToken))
+        {
+            ASSERT(FALSE);
+        }
+
+        /* Set last error if it failed */
+        if (!NT_SUCCESS(Status))
+        {
+            BaseSetLastNTError(Status);
+        }
+    }
+    else
+    {
+        /* If opening the thread token succeed, close it */
+        if (NT_SUCCESS(Status))
+        {
+            /* We cannot fail closing it! */
+            if (!CloseHandle(hToken))
+            {
+                ASSERT(FALSE);
+            }
+        }
+
+        Ret = FALSE;
+    }
+
+    FreeLibrary(hAdvapi);
+    return Ret;
 }
 
 
