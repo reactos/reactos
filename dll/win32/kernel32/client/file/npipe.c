@@ -344,17 +344,18 @@ WINAPI
 WaitNamedPipeA(LPCSTR lpNamedPipeName,
                DWORD nTimeOut)
 {
-    BOOL r;
+    BOOL r = FALSE;
     UNICODE_STRING NameU;
 
     /* Convert the name to Unicode */
-    Basep8BitStringToDynamicUnicodeString(&NameU, lpNamedPipeName);
+    if (Basep8BitStringToDynamicUnicodeString(&NameU, lpNamedPipeName))
+    {
+        /* Call the Unicode API */
+        r = WaitNamedPipeW(NameU.Buffer, nTimeOut);
 
-    /* Call the Unicode API */
-    r = WaitNamedPipeW(NameU.Buffer, nTimeOut);
-
-    /* Free the Unicode string */
-    RtlFreeUnicodeString(&NameU);
+        /* Free the Unicode string */
+        RtlFreeUnicodeString(&NameU);
+    }
 
     /* Return result */
     return r;
