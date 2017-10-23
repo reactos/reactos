@@ -369,7 +369,10 @@ i8042KbdDpcRoutine(
 		DeviceExtension->KeyboardBuffer + KeysInBufferCopy,
 		&KeysTransferred);
 
-	KeAcquireInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt);
+	/* Validate that the callback didn't change the Irql. */
+	ASSERT(KeGetCurrentIrql() == Irql);
+
+	Irql = KeAcquireInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt);
 	DeviceExtension->KeysInBuffer -= KeysTransferred;
 	KeReleaseInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt, Irql);
 }
