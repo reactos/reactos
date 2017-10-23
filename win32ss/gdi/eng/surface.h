@@ -90,6 +90,13 @@ enum _SURFACEFLAGS
 /* NOTE: Use shared locks! */
 #define  SURFACE_ShareLockSurface(hBMObj) \
   ((PSURFACE) GDIOBJ_ShareLockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
+FORCEINLINE
+VOID
+SURFACE_ShareLockByPointer(PSURFACE psurf)
+{
+    GDIOBJ_vReferenceObjectByPointer(&psurf->BaseObject);
+}
+
 #define  SURFACE_UnlockSurface(pBMObj)  \
   GDIOBJ_vUnlockObject ((POBJ)pBMObj)
 #define  SURFACE_ShareUnlockSurface(pBMObj)  \
