@@ -183,6 +183,9 @@ FFSLoadDiskLabel(
                 Vcb->FSOffset[0] = 0;
                 Vcb->PartitionNumber = 0;
 				Vcb->ffs_super_block = FFSSb;
+#ifdef __REACTOS__
+                ExFreePoolWithTag(Disklabel, FFS_POOL_TAG);
+#endif
 				Status = STATUS_SUCCESS;
                 return Status;
 			}
@@ -202,12 +205,18 @@ FFSLoadDiskLabel(
                 Vcb->FSOffset[0] = 0;
                 Vcb->PartitionNumber = 0;
 				Vcb->ffs_super_block = FFSSb;
+#ifdef __REACTOS__
+                ExFreePoolWithTag(Disklabel, FFS_POOL_TAG);
+#endif
 				Status = STATUS_SUCCESS;
                 return Status;
 			}
             else
             {
                 KdPrint(("FFSLoadDiskLabel() No BSD file system was found on the \"normal\" partition.\n"));
+#ifdef __REACTOS__
+                ExFreePoolWithTag(Disklabel, FFS_POOL_TAG);
+#endif
                 Status = STATUS_UNRECOGNIZED_VOLUME;
                 return Status;
             }
@@ -217,6 +226,9 @@ FFSLoadDiskLabel(
 	if (!NT_SUCCESS(Status))
 	{
 		KdPrint(("FFSLoadDiskLabel() Slice info failed, Status %u\n", Status));
+#ifdef __REACTOS__
+        ExFreePoolWithTag(Disklabel, FFS_POOL_TAG);
+#endif
 		return Status;
 	}
 
@@ -302,6 +314,10 @@ FFSLoadDiskLabel(
 
 	if (Vcb->ffs_super_block == NULL)
 		Status = STATUS_UNRECOGNIZED_VOLUME;
+
+#ifdef __REACTOS__
+    ExFreePoolWithTag(Disklabel, FFS_POOL_TAG);
+#endif
 
 	return Status;
 }
