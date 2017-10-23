@@ -325,70 +325,90 @@ SetFilePointer(HANDLE hFile,
 BOOL
 WINAPI
 SetFilePointerEx(HANDLE hFile,
-		 LARGE_INTEGER liDistanceToMove,
-		 PLARGE_INTEGER lpNewFilePointer,
-		 DWORD dwMoveMethod)
+                 LARGE_INTEGER liDistanceToMove,
+                 PLARGE_INTEGER lpNewFilePointer,
+                 DWORD dwMoveMethod)
 {
-   FILE_POSITION_INFORMATION FilePosition;
-   FILE_STANDARD_INFORMATION FileStandard;
-   NTSTATUS errCode;
-   IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_POSITION_INFORMATION FilePosition;
+    FILE_STANDARD_INFORMATION FileStandard;
 
-   if(IsConsoleHandle(hFile))
-   {
-     SetLastError(ERROR_INVALID_HANDLE);
-     return FALSE;
-   }
+    if (IsConsoleHandle(hFile))
+    {
+        BaseSetLastNTError(STATUS_INVALID_HANDLE);
+        return FALSE;
+    }
 
-   switch(dwMoveMethod)
-   {
-     case FILE_CURRENT:
-	NtQueryInformationFile(hFile,
-			       &IoStatusBlock,
-			       &FilePosition,
-			       sizeof(FILE_POSITION_INFORMATION),
-			       FilePositionInformation);
-	FilePosition.CurrentByteOffset.QuadPart += liDistanceToMove.QuadPart;
-	break;
-     case FILE_END:
-	NtQueryInformationFile(hFile,
-                               &IoStatusBlock,
-                               &FileStandard,
-                               sizeof(FILE_STANDARD_INFORMATION),
-                               FileStandardInformation);
-        FilePosition.CurrentByteOffset.QuadPart =
-                  FileStandard.EndOfFile.QuadPart + liDistanceToMove.QuadPart;
-	break;
-     case FILE_BEGIN:
-        FilePosition.CurrentByteOffset.QuadPart = liDistanceToMove.QuadPart;
-	break;
-     default:
-        SetLastError(ERROR_INVALID_PARAMETER);
-	return FALSE;
-   }
+    switch (dwMoveMethod)
+    {
+        case FILE_CURRENT:
+        {
+            Status = NtQueryInformationFile(hFile, &IoStatusBlock,
+			                                &FilePosition,
+			                                sizeof(FILE_POSITION_INFORMATION),
+			                                FilePositionInformation);
+            if (!NT_SUCCESS(Status))
+            {
+                BaseSetLastNTError(Status);
+                return FALSE;
+            }
 
-   if(FilePosition.CurrentByteOffset.QuadPart < 0)
-   {
-     SetLastError(ERROR_NEGATIVE_SEEK);
-     return FALSE;
-   }
+	        FilePosition.CurrentByteOffset.QuadPart += liDistanceToMove.QuadPart;
+            break;
+        }
 
-   errCode = NtSetInformationFile(hFile,
-				  &IoStatusBlock,
-				  &FilePosition,
-				  sizeof(FILE_POSITION_INFORMATION),
-				  FilePositionInformation);
-   if (!NT_SUCCESS(errCode))
-     {
-	BaseSetLastNTError(errCode);
-	return FALSE;
-     }
+        case FILE_END:
+        {
+            Status = NtQueryInformationFile(hFile, &IoStatusBlock,
+                                            &FileStandard,
+                                            sizeof(FILE_STANDARD_INFORMATION),
+                                            FileStandardInformation);
+            if (!NT_SUCCESS(Status))
+            {
+                BaseSetLastNTError(Status);
+                return FALSE;
+            }
 
-   if (lpNewFilePointer)
-     {
+            FilePosition.CurrentByteOffset.QuadPart = FileStandard.EndOfFile.QuadPart +
+                                                      liDistanceToMove.QuadPart;
+            break;
+        }
+
+        case FILE_BEGIN:
+        {
+            FilePosition.CurrentByteOffset.QuadPart = liDistanceToMove.QuadPart;
+            break;
+        }
+
+        default:
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+    }
+
+    if (FilePosition.CurrentByteOffset.QuadPart < 0)
+    {
+        SetLastError(ERROR_NEGATIVE_SEEK);
+        return FALSE;
+    }
+
+    Status = NtSetInformationFile(hFile, &IoStatusBlock, &FilePosition,
+                                  sizeof(FILE_POSITION_INFORMATION),
+                                  FilePositionInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    if (lpNewFilePointer != NULL)
+    {
        *lpNewFilePointer = FilePosition.CurrentByteOffset;
-     }
-   return TRUE;
+    }
+
+    return TRUE;
 }
 
 
