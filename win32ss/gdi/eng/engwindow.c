@@ -152,35 +152,30 @@ EngCreateWnd(
     EWNDOBJ *Clip = NULL;
     WNDOBJ *WndObjUser = NULL;
     PWND Window;
-    BOOL calledFromUser;
-    DECLARE_RETURN(WNDOBJ*);
 
     TRACE("EngCreateWnd: pso = 0x%p, hwnd = 0x%p, pfn = 0x%p, fl = 0x%lx, pixfmt = %d\n",
             pso, hWnd, pfn, fl, iPixelFormat);
+
+    UserEnterExclusive();
 
     if (fl & (WO_RGN_WINDOW | WO_RGN_DESKTOP_COORD | WO_RGN_UPDATE_ALL))
     {
         FIXME("Unsupported flags: 0x%lx\n", fl & ~(WO_RGN_CLIENT_DELTA | WO_RGN_CLIENT | WO_RGN_SURFACE_DELTA | WO_RGN_SURFACE));
     }
 
-    calledFromUser = UserIsEntered();
-    if (!calledFromUser) {
-        UserEnterShared();
-    }
-
     /* Get window object */
     Window = UserGetWindowObject(hWnd);
     if (Window == NULL)
     {
-        RETURN( NULL);
+        goto Exit;
     }
 
     /* Create WNDOBJ */
-    Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof (EWNDOBJ), GDITAG_WNDOBJ);
+    Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(EWNDOBJ), GDITAG_WNDOBJ);
     if (Clip == NULL)
     {
         ERR("Failed to allocate memory for a WND structure!\n");
-        RETURN( NULL);
+        goto Exit;
     }
     IntEngInitClipObj((XCLIPOBJ*)Clip);
 
@@ -188,7 +183,7 @@ EngCreateWnd(
     if (!IntEngWndUpdateClipObj(Clip, Window))
     {
         EngFreeMem(Clip);
-        RETURN( NULL);
+        goto Exit;
     }
 
     /* Fill user object */
@@ -213,15 +208,9 @@ EngCreateWnd(
 
     TRACE("EngCreateWnd: SUCCESS: %p!\n", WndObjUser);
 
-    RETURN( WndObjUser);
-
-CLEANUP:
-
-    if (!calledFromUser) {
-        UserLeave();
-    }
-
-    END_CLEANUP;
+Exit:
+    UserLeave();
+    return WndObjUser;
 }
 
 
@@ -235,14 +224,10 @@ EngDeleteWnd(
 {
     EWNDOBJ* Clip = (EWNDOBJ *)pwo;//CONTAINING_RECORD(pwo, XCLIPOBJ, WndObj);
     PWND Window;
-    BOOL calledFromUser;
 
     TRACE("EngDeleteWnd: pwo = 0x%p\n", pwo);
 
-    calledFromUser = UserIsEntered();
-    if (!calledFromUser) {
-        UserEnterExclusive();
-    }
+    UserEnterExclusive();
 
     /* Get window object */
     Window = UserGetWindowObject(Clip->Hwnd);
@@ -257,9 +242,7 @@ EngDeleteWnd(
     }
     --gcountPWO;
 
-    if (!calledFromUser) {
-        UserLeave();
-    }
+    UserLeave();
 
     /* Free resources */
     IntEngFreeClipResources((XCLIPOBJ*)Clip);
