@@ -16,6 +16,8 @@
 #include <atlcom.h>
 #include <atlsimpcoll.h>
 #include <atlstr.h>
+#include <atlwin.h>
+#include <rosdlgs.h>
 
 ULONG DbgPrint(PCH Format,...);
 #include <apphelp.h>
