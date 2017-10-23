@@ -255,6 +255,10 @@ FFSReadWriteBlocks(
 					(CCHAR)(Vcb->TargetDeviceObject->StackSize + 1));
 			if (!Irp)
 			{
+#ifdef __REACTOS__
+                ExFreePoolWithTag(pContext, FFS_POOL_TAG);
+                pContext = NULL;
+#endif
 				Status = STATUS_INSUFFICIENT_RESOURCES;
 				_SEH2_LEAVE;
 			}
@@ -268,6 +272,10 @@ FFSReadWriteBlocks(
 
 			if (!Mdl)
 			{
+#ifdef __REACTOS__
+                ExFreePoolWithTag(pContext, FFS_POOL_TAG);
+                pContext = NULL;
+#endif
 				Status = STATUS_INSUFFICIENT_RESOURCES;
 				_SEH2_LEAVE;
 			}
