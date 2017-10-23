@@ -201,4 +201,11 @@ PDEVOBJ_pdmMatchDevMode(
     PPDEVOBJ ppdev,
     PDEVMODEW pdm);
 
+FORCEINLINE
+VOID
+PDEVOBJ_vReference(PPDEVOBJ ppdev)
+{
+    InterlockedIncrement(&ppdev->cPdevRefs);
+}
+
 #endif /* !__WIN32K_PDEVOBJ_H */

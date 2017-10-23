@@ -77,43 +77,6 @@ NtGdiEscape(HDC  hDC,
 
 INT
 APIENTRY
-IntGdiExtEscape(
-   PDC    dc,
-   INT    Escape,
-   INT    InSize,
-   LPCSTR InData,
-   INT    OutSize,
-   LPSTR  OutData)
-{
-   SURFACE *psurf;
-   INT Result;
-
-   if ((dc->ppdev->DriverFunctions.Escape == NULL) ||
-       (dc->dclevel.pSurface == NULL))
-   {
-      Result = 0;
-   }
-   else
-   {
-      DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
-      psurf = dc->dclevel.pSurface;
-
-      Result = dc->ppdev->DriverFunctions.Escape(
-         &psurf->SurfObj,
-         Escape,
-         InSize,
-         (PVOID)InData,
-         OutSize,
-         (PVOID)OutData );
-
-      DC_vFinishBlit(dc, NULL);
-   }
-
-   return Result;
-}
-
-INT
-APIENTRY
 NtGdiExtEscape(
    HDC    hDC,
    IN OPTIONAL PWCHAR pDriver,
@@ -124,22 +87,73 @@ NtGdiExtEscape(
    INT    OutSize,
    OPTIONAL LPSTR  UnsafeOutData)
 {
-   PDC      pDC;
    LPVOID   SafeInData = NULL;
    LPVOID   SafeOutData = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
    INT      Result;
+   PPDEVOBJ ppdev;
+   PSURFACE psurf;
 
-   if (hDC == 0)
+   if (hDC == NULL)
    {
-       hDC = UserGetWindowDC(NULL);
+      if (pDriver)
+      {
+         /* FIXME : Get the pdev from its name */
+         UNIMPLEMENTED;
+         return -1;
+      }
+
+      ppdev = EngpGetPDEV(NULL);
+      if (!ppdev)
+      {
+         EngSetLastError(ERROR_BAD_DEVICE);
+         return -1;
+      }
+
+      /* We're using the primary surface of the pdev. Lock it */
+      EngAcquireSemaphore(ppdev->hsemDevLock);
+
+      psurf = ppdev->pSurface;
+      if (!psurf)
+      {
+         EngReleaseSemaphore(ppdev->hsemDevLock);
+         PDEVOBJ_vRelease(ppdev);
+         return 0;
+      }
+      SURFACE_ShareLockByPointer(psurf);
+   }
+   else
+   {
+      PDC pDC = DC_LockDc(hDC);
+      if ( pDC == NULL )
+      {
+         EngSetLastError(ERROR_INVALID_HANDLE);
+         return -1;
+      }
+
+      /* Get the PDEV from the DC */
+      ppdev = pDC->ppdev;
+      PDEVOBJ_vReference(ppdev);
+
+      /* Check if we have a surface */
+      psurf = pDC->dclevel.pSurface;
+      if (!psurf)
+      {
+         DC_UnlockDc(pDC);
+         PDEVOBJ_vRelease(ppdev);
+         return 0;
+      }
+      SURFACE_ShareLockByPointer(psurf);
+
+      /* We're done with the DC */
+      DC_UnlockDc(pDC);
    }
 
-   pDC = DC_LockDc(hDC);
-   if ( pDC == NULL )
+   /* See if we actually have a driver function to call */
+   if (ppdev->DriverFunctions.Escape == NULL)
    {
-      EngSetLastError(ERROR_INVALID_HANDLE);
-      return -1;
+      Result = 0;
+      goto Exit;
    }
 
    if ( InSize && UnsafeInData )
@@ -158,17 +172,16 @@ NtGdiExtEscape(
 
       if (!NT_SUCCESS(Status))
       {
-        DC_UnlockDc(pDC);
-        SetLastNtError(Status);
-        return -1;
+         Result = -1;
+         goto Exit;
       }
 
       SafeInData = ExAllocatePoolWithTag ( PagedPool, InSize, GDITAG_TEMP );
       if ( !SafeInData )
       {
-         DC_UnlockDc(pDC);
          EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-         return -1;
+         Result = -1;
+         goto Exit;
       }
 
       _SEH2_TRY
@@ -186,10 +199,9 @@ NtGdiExtEscape(
 
       if ( !NT_SUCCESS(Status) )
       {
-         ExFreePoolWithTag ( SafeInData, GDITAG_TEMP );
-         DC_UnlockDc(pDC);
          SetLastNtError(Status);
-         return -1;
+         Result = -1;
+         goto Exit;
       }
    }
 
@@ -209,50 +221,65 @@ NtGdiExtEscape(
 
       if (!NT_SUCCESS(Status))
       {
-        SetLastNtError(Status);
-        goto freeout;
+         SetLastNtError(Status);
+         Result = -1;
+         goto Exit;
       }
 
       SafeOutData = ExAllocatePoolWithTag ( PagedPool, OutSize, GDITAG_TEMP );
       if ( !SafeOutData )
       {
          EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-freeout:
-         if ( SafeInData )
-            ExFreePoolWithTag ( SafeInData, GDITAG_TEMP );
-         DC_UnlockDc(pDC);
-         return -1;
+         Result = -1;
+         goto Exit;
       }
    }
 
-   Result = IntGdiExtEscape ( pDC, Escape, InSize, SafeInData, OutSize, SafeOutData );
+   /* Finally call the driver */
+   Result = ppdev->DriverFunctions.Escape(
+         &psurf->SurfObj,
+         Escape,
+         InSize,
+         SafeInData,
+         OutSize,
+         SafeOutData );
 
-   DC_UnlockDc(pDC);
+Exit:
+   if (hDC == NULL)
+   {
+      EngReleaseSemaphore(ppdev->hsemDevLock);
+   }
+   SURFACE_ShareUnlockSurface(psurf);
+   PDEVOBJ_vRelease(ppdev);
 
    if ( SafeInData )
+   {
       ExFreePoolWithTag ( SafeInData ,GDITAG_TEMP );
+   }
 
    if ( SafeOutData )
    {
-      _SEH2_TRY
+      if (Result > 0)
       {
-        /* Pointers were already probed! */
-        RtlCopyMemory(UnsafeOutData,
-                      SafeOutData,
-                      OutSize);
+         _SEH2_TRY
+         {
+            /* Pointers were already probed! */
+            RtlCopyMemory(UnsafeOutData, SafeOutData, OutSize);
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+            Status = _SEH2_GetExceptionCode();
+         }
+         _SEH2_END;
+
+         if ( !NT_SUCCESS(Status) )
+         {
+            SetLastNtError(Status);
+            Result = -1;
+         }
       }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-        Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
 
       ExFreePoolWithTag ( SafeOutData, GDITAG_TEMP );
-      if ( !NT_SUCCESS(Status) )
-      {
-         SetLastNtError(Status);
-         return -1;
-      }
    }
 
    return Result;
