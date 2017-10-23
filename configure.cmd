@@ -109,6 +109,11 @@ REM Parse command line parameters
             set CMAKE_GENERATOR="NMake Makefiles"
         ) else if /I "%1" == "VSSolution" (
             set VS_SOLUTION=1
+            REM explicitly set VS version for project generator
+            if /I "%2" == "-VS_VER" (
+                set VS_VERSION=%3
+                echo Visual Studio Environment set to !BUILD_ENVIRONMENT!!VS_VERSION!-!ARCH!
+            )
             if "!VS_VERSION!" == "9" (
                 if "!ARCH!" == "amd64" (
                     set CMAKE_GENERATOR="Visual Studio 9 2008 Win64"
