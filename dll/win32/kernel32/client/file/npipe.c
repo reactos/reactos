@@ -45,9 +45,9 @@ NpGetUserNamep(HANDLE hNamedPipe,
     }
 
     /* Import the three required functions */
-    pRevertToSelf = GetProcAddress(hAdvapi, "RevertToSelf");
-    pGetUserNameW = GetProcAddress(hAdvapi, "GetUserNameW");
-    pImpersonateNamedPipeClient = GetProcAddress(hAdvapi, "ImpersonateNamedPipeClient");
+    pRevertToSelf = (BOOL (WINAPI *)(void))GetProcAddress(hAdvapi, "RevertToSelf");
+    pGetUserNameW = (BOOL (WINAPI *)(LPWSTR, LPDWORD))GetProcAddress(hAdvapi, "GetUserNameW");
+    pImpersonateNamedPipeClient = (BOOL (WINAPI *)(HANDLE))GetProcAddress(hAdvapi, "ImpersonateNamedPipeClient");
     /* If any couldn't be found, fail */
     if (pRevertToSelf == NULL || pGetUserNameW == NULL || pImpersonateNamedPipeClient == NULL)
     {
