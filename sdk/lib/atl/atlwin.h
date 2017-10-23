@@ -1827,6 +1827,12 @@ public:                                                                         
             return TRUE;                                                                        \
     }
 
+#define CHAIN_MSG_MAP(theChainClass) \
+    { \
+        if (theChainClass::ProcessWindowMessage(hWnd, uMsg, wParam, lParam, lResult)) \
+            return TRUE; \
+    }
+
 #define DECLARE_WND_CLASS_EX(WndClassName, style, bkgnd)                                        \
 static ATL::CWndClassInfo& GetWndClassInfo()                                                    \
 {                                                                                                \
