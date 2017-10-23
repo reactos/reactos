@@ -33,7 +33,9 @@ FFSShutDown(
 {
 	NTSTATUS                Status;
 
+#ifndef __REACTOS__
 	PKEVENT                 Event;
+#endif
 
 	PIRP                    Irp;
 	PIO_STACK_LOCATION      IrpSp;
@@ -70,8 +72,10 @@ FFSShutDown(
 
 		GlobalResourceAcquired = TRUE;
 
+#ifndef __REACTOS__
 		Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), FFS_POOL_TAG);
 		KeInitializeEvent(Event, NotificationEvent, FALSE);
+#endif
 
 		for (ListEntry = FFSGlobal->VcbList.Flink;
 				ListEntry != &(FFSGlobal->VcbList);
