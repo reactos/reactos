@@ -637,6 +637,7 @@ IsThereAValidBootSector(PWSTR RootPath)
      * non-zero. If both these tests pass, then the bootsector is valid; otherwise
      * it is invalid and certainly needs to be overwritten.
      */
+
     BOOLEAN IsValid = FALSE;
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -645,7 +646,6 @@ IsThereAValidBootSector(PWSTR RootPath)
     HANDLE FileHandle;
     LARGE_INTEGER FileOffset;
     PUCHAR BootSector;
-    ULONG Instruction;
 
     /* Allocate buffer for bootsector */
     BootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
@@ -670,6 +670,7 @@ IsThereAValidBootSector(PWSTR RootPath)
     if (!NT_SUCCESS(Status))
         goto Quit;
 
+    /* Default safety, in (unlikely) case less than SECTORSIZE bytes are read. */
     RtlZeroMemory(BootSector, SECTORSIZE);
 
     FileOffset.QuadPart = 0ULL;
@@ -686,12 +687,12 @@ IsThereAValidBootSector(PWSTR RootPath)
     if (!NT_SUCCESS(Status))
         goto Quit;
 
-    /* Check the instruction; we use a ULONG to read three bytes */
-    Instruction = (*(PULONG)BootSector) & 0x00FFFFFF;
-    IsValid = (Instruction != 0x00000000);
+    /* Check the bootsector signature. */
+    if (*(PUSHORT)(BootSector + 0x01FE) != 0xAA55)
+        goto Quit;
 
-    /* Check the bootsector signature */
-    IsValid &= (*(PUSHORT)(BootSector + 0x1fe) == 0xaa55);
+    /* Check the instruction; we use a ULONG to read three bytes. */
+    IsValid = ((*(PULONG)BootSector & 0x00FFFFFF) != 0x00000000);
 
 Quit:
     /* Free the boot sector */
