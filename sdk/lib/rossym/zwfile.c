@@ -19,11 +19,11 @@ RosSymZwReadFile(PVOID FileContext, PVOID Buffer, ULONG Size)
   IO_STATUS_BLOCK IoStatusBlock;
 
   Status = ZwReadFile(*((HANDLE *) FileContext),
-                      0, 0, 0,
+                      NULL, NULL, NULL,
                       &IoStatusBlock,
                       Buffer,
                       Size,
-                      0, 0);
+                      NULL, NULL);
 
   return NT_SUCCESS(Status) && IoStatusBlock.Information == Size;
 }
