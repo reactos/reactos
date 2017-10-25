@@ -60,5 +60,76 @@ KmtDeleteService(
 
 DWORD KmtCloseService(
     IN OUT SC_HANDLE *ServiceHandle);
+	
+
+/* FS Filter management functions */	
+
+DWORD
+KmtFltCreateService(
+    _In_z_ PCWSTR ServiceName,
+    _In_z_ PCWSTR ServicePath,
+    _In_z_ PCWSTR DisplayName OPTIONAL,
+    _Out_ SC_HANDLE *ServiceHandle);
+
+DWORD
+KmtFltLoad(
+    _In_z_ PCWSTR ServiceName);
+
+DWORD
+KmtFltCreateAndStartService(
+    _In_z_ PCWSTR ServiceName,
+    _In_z_ PCWSTR ServicePath,
+    _In_z_ PCWSTR DisplayName OPTIONAL,
+    _Out_ SC_HANDLE *ServiceHandle,
+    _In_ BOOLEAN RestartIfRunning);
+
+DWORD
+KmtFltConnect(
+    _In_z_ PCWSTR ServiceName,
+    _Out_ HANDLE *hPort);
+
+DWORD
+KmtFltDisconnect(
+    _Out_ HANDLE *hPort);
+
+DWORD
+KmtFltSendMessage(
+    _In_ HANDLE hPort,
+    _In_reads_bytes_(dwInBufferSize) LPVOID lpInBuffer,
+    _In_ DWORD dwInBufferSize,
+    _Out_writes_bytes_to_opt_(dwOutBufferSize, *lpBytesReturned) LPVOID lpOutBuffer,
+    _In_ DWORD dwOutBufferSize,
+    _Out_opt_ LPDWORD lpBytesReturned);
+
+DWORD
+KmtFltGetMessage(
+    _In_ HANDLE hPort,
+    _Out_writes_bytes_(dwMessageBufferSize) PFILTER_MESSAGE_HEADER lpMessageBuffer,
+    _In_ DWORD dwMessageBufferSize,
+    _In_opt_ LPOVERLAPPED Overlapped);
+
+DWORD
+KmtFltReplyMessage(
+    _In_ HANDLE hPort,
+    _In_reads_bytes_(dwReplyBufferSize) PFILTER_REPLY_HEADER lpReplyBuffer,
+    _In_ DWORD dwReplyBufferSize);
+
+DWORD
+KmtFltGetMessageResult(
+    _In_ HANDLE hPort,
+    _In_ LPOVERLAPPED Overlapped,
+    _Out_ LPDWORD BytesTransferred);
+
+DWORD
+KmtFltUnload(
+    _In_z_ PCWSTR ServiceName);
+
+DWORD
+KmtFltDeleteService(
+    _In_z_ PCWSTR ServiceName OPTIONAL,
+    _Inout_ SC_HANDLE *ServiceHandle);
+
+DWORD KmtFltCloseService(
+    _Inout_ SC_HANDLE *ServiceHandle);
 
 #endif /* !defined _KMTESTS_H_ */
