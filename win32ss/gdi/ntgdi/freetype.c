@@ -3570,6 +3570,7 @@ TextIntGetTextExtentPoint(PDC dc,
     PMATRIX pmxWorldToDevice;
     LOGFONTW *plf;
     BOOL EmuBold, EmuItalic;
+    LONG ascender, descender;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -3676,13 +3677,12 @@ TextIntGetTextExtentPoint(PDC dc,
         previous = glyph_index;
         String++;
     }
+    ascender = (face->size->metrics.ascender + 32) >> 6; /* Units above baseline */
+    descender = (32 - face->size->metrics.descender) >> 6; /* Units below baseline */
     IntUnLockFreeType;
 
     Size->cx = (TotalWidth + 32) >> 6;
-    Size->cy = (plf->lfHeight == 0 ?
-                dc->ppdev->devinfo.lfDefaultFont.lfHeight :
-                abs(plf->lfHeight));
-    Size->cy = EngMulDiv(Size->cy, dc->ppdev->gdiinfo.ulLogPixelsY, 72);
+    Size->cy = ascender + descender;
 
     return TRUE;
 }
