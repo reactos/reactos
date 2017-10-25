@@ -3622,7 +3622,7 @@ KdbpCliInit(VOID)
     }
 
     /* Load file into memory */
-    Status = ZwReadFile(hFile, 0, 0, 0, &Iosb, FileBuffer, FileSize, 0, 0);
+    Status = ZwReadFile(hFile, NULL, NULL, NULL, &Iosb, FileBuffer, FileSize, NULL, NULL);
     ZwClose(hFile);
 
     if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
