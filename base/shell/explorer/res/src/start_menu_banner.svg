@@ -16,7 +16,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="Logo.svg"
+   sodipodi:docname="start_menu_banner.svg"
    inkscape:export-filename="F:\reactos\Logo.png"
    inkscape:export-xdpi="72"
    inkscape:export-ydpi="72">
@@ -117,7 +117,7 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.4967109"
-     inkscape:cx="-34.214085"
+     inkscape:cx="-99.099451"
      inkscape:cy="142.13217"
      inkscape:document-units="px"
      inkscape:current-layer="svg2"
@@ -136,7 +136,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -171,7 +171,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20.00007629px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start"
          id="tspan4213">ReactOS</tspan><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.50006676px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start"
-         id="tspan4209">  0.5 - SVN</tspan></tspan></text>
+         id="tspan4209">  0.4.8-dev</tspan></tspan></text>
   <g
      style="fill:#ffffff;fill-opacity:1"
      id="layer1-2"
