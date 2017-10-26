@@ -214,6 +214,7 @@ DisplayUser(LPWSTR lpUserName)
     PrintPaddedResourceString(IDS_USER_PW_LAST_SET, nPaddedLength);
     dwLastSet = GetTimeInSeconds() - pUserInfo->usri4_password_age;
     PrintDateTime(dwLastSet);
+    ConPuts(StdOut, L"\n");
 
     PrintPaddedResourceString(IDS_USER_PW_EXPIRES, nPaddedLength);
     if ((pUserInfo->usri4_flags & UF_DONT_EXPIRE_PASSWD) || pUserModals->usrmod0_max_passwd_age == TIMEQ_FOREVER)
@@ -224,6 +225,7 @@ DisplayUser(LPWSTR lpUserName)
 
     PrintPaddedResourceString(IDS_USER_PW_CHANGEABLE, nPaddedLength);
     PrintDateTime(dwLastSet + pUserModals->usrmod0_min_passwd_age);
+    ConPuts(StdOut, L"\n");
 
     PrintPaddedResourceString(IDS_USER_PW_REQUIRED, nPaddedLength);
     ConResPuts(StdOut, (pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? IDS_GENERIC_NO : IDS_GENERIC_YES);
