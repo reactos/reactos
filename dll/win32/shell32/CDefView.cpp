@@ -2161,6 +2161,12 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
         m_hAccel = NULL;
     }
 
+    if (m_hMenuArrangeModes)
+    {
+        DestroyMenu(m_hMenuArrangeModes);
+        m_hMenuArrangeModes = NULL;
+    }
+
     if (m_hMenuViewModes)
     {
         DestroyMenu(m_hMenuViewModes);
