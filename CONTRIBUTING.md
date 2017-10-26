@@ -6,6 +6,11 @@ There are several ways to contribute to the development of ReactOS. The most oft
 - [How To Contribute?](#how-to-contribute?)
 - [Where To Start?](#where-to-start?)
 
+**Legal notice:** If you have seen Microsoft Windows source code, your contribution won't be accepted because of potential copyright violation. Before contributing, you must affirm that the following is true:
+>I hereby swear that I have not used nor seen the source code to any version of the Windows operating system 
+>nor any Microsoft product that may be related to the proposed project that is under a license incompatible 
+>with contribution to ReactOS, including but not limited to the leaked Windows 2000 source code and the Windows Research Kernel.
+
 ## What To Do?
 
 ### Fix bugs
