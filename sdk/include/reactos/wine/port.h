@@ -351,7 +351,7 @@ extern int spawnvp(int mode, const char *cmdname, const char * const argv[]);
 
 #endif  /* __i386___ && __GNUC__ */
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 __forceinline
 int
 ffs(int mask)
