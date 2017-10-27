@@ -88,11 +88,13 @@ list(APPEND SOURCE
 
 add_library(ext2fs SHARED ${SOURCE} ext2fs.rc)
 
+if(USE_CLANG_CL)
+    set_property(SOURCE src/create.c src/fileinfo.c src/memory.c src/read.c APPEND_STRING PROPERTY COMPILE_FLAGS " /fallback")
+endif()
+
 if(NOT MSVC)
     add_target_compile_flags(ext2fs "-Wno-pointer-sign -Wno-unused-function")
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_target_compile_flags(ext2fs "-Wno-unused-but-set-variable -Wno-unused-variable -Wno-missing-braces")
-    endif()
+    add_target_compile_flags(ext2fs "-Wno-unused-but-set-variable -Wno-unused-variable -Wno-missing-braces")
 else()
     #disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
     replace_compile_flags("/we\"4189\"" " ")
@@ -103,5 +105,10 @@ target_link_libraries(ext2fs memcmp ${PSEH_LIB})
 add_definitions(-D__KERNEL__)
 set_module_type(ext2fs kernelmodedriver)
 add_importlibs(ext2fs ntoskrnl hal)
-add_pch(ext2fs inc/ext2fs.h SOURCE)
+
+if(NOT USE_CLANG_CL)
+    # The fallback we have above prevents cl and clang-cl from using the same PCH
+    add_pch(ext2fs inc/ext2fs.h SOURCE)
+endif()
+
 add_cd_file(TARGET ext2fs DESTINATION reactos/system32/drivers NO_CAB FOR all)

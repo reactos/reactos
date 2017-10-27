@@ -23,6 +23,11 @@ foreach(_host_tool ${host_tools_list})
     add_dependencies(native-${_host_tool} host-tools)
 endforeach()
 
+if(USE_CLANG_CL)
+    # FIXME: Fix host tools build with clang
+    #set(USE_CLANG_CL_ARG "-DCMAKE_C_COMPILER=clang-cl;-DCMAKE_CXX_COMPILER=clang-cl")
+endif()
+
 include(ExternalProject)
 
 ExternalProject_Add(host-tools
@@ -32,6 +37,6 @@ ExternalProject_Add(host-tools
     BUILD_ALWAYS 1
     PREFIX host-tools
     EXCLUDE_FROM_ALL 1
-    CMAKE_ARGS "-DNEW_STYLE_BUILD=1;-DARCH:STRING=${ARCH}"
+    CMAKE_ARGS "-DNEW_STYLE_BUILD=1;-DARCH:STRING=${ARCH};${USE_CLANG_CL_ARG}"
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS ${tools_binaries})

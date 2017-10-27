@@ -97,7 +97,10 @@ if(NOT CMAKE_CROSSCOMPILING)
         if(MSVC_VERSION GREATER 1699)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)
         endif()
-        add_definitions(/Dinline=__inline)
+        if(NOT USE_CLANG_CL)
+            # FIXME: Inspect
+            add_definitions(/Dinline=__inline)
+        endif()
     endif()
 
     include_directories(sdk/include/host)
@@ -182,7 +185,10 @@ else()
 
     # Arch Options
     if(ARCH STREQUAL "i386")
-        add_definitions(-D_M_IX86 -D_X86_ -D__i386__ -Di386)
+        if(NOT USE_CLANG_CL)
+            add_definitions(-D_M_IX86)
+        endif()
+        add_definitions(-D_X86_ -D__i386__ -Di386)
     elseif(ARCH STREQUAL "amd64")
         add_definitions(-D_M_AMD64 -D_AMD64_ -D__x86_64__ -D_WIN64)
     elseif(ARCH STREQUAL "arm")

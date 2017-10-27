@@ -14,13 +14,21 @@ set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_SYSTEM_PROCESSOR i686)
 
 # which compilers to use for C and C++
-set(CMAKE_C_COMPILER cl)
+if(USE_CLANG_CL)
+    set(CMAKE_C_COMPILER clang-cl)
+else()
+    set(CMAKE_C_COMPILER cl)
+endif()
 
 if(ARCH STREQUAL "arm")
     include(CMakeForceCompiler)
     CMAKE_FORCE_CXX_COMPILER(cl MSVC)
 else()
-set(CMAKE_CXX_COMPILER cl)
+    if(USE_CLANG_CL)
+        set(CMAKE_CXX_COMPILER clang-cl)
+    else()
+        set(CMAKE_CXX_COMPILER cl)
+    endif()
 endif()
 
 set(CMAKE_MC_COMPILER mc)
