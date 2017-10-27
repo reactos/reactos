@@ -885,6 +885,76 @@ USBPORT_AbortTransfers(IN PDEVICE_OBJECT FdoDevice,
     }
 }
 
+PUSB2_TT_EXTENSION
+NTAPI
+USBPORT_GetTt(IN PDEVICE_OBJECT FdoDevice,
+              IN PUSBPORT_DEVICE_HANDLE HubDeviceHandle,
+              OUT PUSHORT OutPort,
+              OUT PUSBPORT_DEVICE_HANDLE * OutHubDeviceHandle)
+{
+    PUSBPORT_DEVICE_HANDLE DeviceHandle = HubDeviceHandle;
+    ULONG TtCount;
+    PLIST_ENTRY Entry;
+    PUSB2_TT_EXTENSION TtExtension = NULL;
+
+    DPRINT("USBPORT_GetTt: HubDeviceHandle - %p\n", HubDeviceHandle);
+
+    *OutHubDeviceHandle = NULL;
+
+    while (DeviceHandle->DeviceSpeed != UsbHighSpeed)
+    {
+        DPRINT("USBPORT_GetTt: DeviceHandle - %p, DeviceHandle->PortNumber - %X\n",
+               DeviceHandle,
+               DeviceHandle->PortNumber);
+
+        *OutPort = DeviceHandle->PortNumber;
+
+        DeviceHandle = DeviceHandle->HubDeviceHandle;
+
+        if (!DeviceHandle)
+            return NULL;
+    }
+
+    TtCount = DeviceHandle->TtCount;
+
+    if (!TtCount)
+        return NULL;
+
+    Entry = DeviceHandle->TtList.Flink;
+
+    if (Entry != &DeviceHandle->TtList)
+    {
+        if (TtCount > 1)
+        {
+            while (Entry)
+            {
+                if (Entry == &DeviceHandle->TtList)
+                    break;
+
+                TtExtension = CONTAINING_RECORD(Entry,
+                                                USB2_TT_EXTENSION,
+                                                Link);
+
+                if (TtExtension->TtNumber == *OutPort)
+                    break;
+
+                Entry = Entry->Flink;
+                TtExtension = NULL;
+            }
+        }
+        else
+        {
+            TtExtension = CONTAINING_RECORD(Entry,
+                                            USB2_TT_EXTENSION,
+                                            Link);
+        }
+
+        *OutHubDeviceHandle = DeviceHandle;
+    }
+
+    return TtExtension;
+}
+
 NTSTATUS
 NTAPI
 USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
@@ -893,6 +963,9 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
                      IN USHORT PortStatus,
                      IN USHORT Port)
 {
+    PUSBPORT_DEVICE_HANDLE TtDeviceHandle = NULL;
+    PUSB2_TT_EXTENSION TtExtension = NULL;
+    USHORT port;
     PUSBPORT_DEVICE_HANDLE DeviceHandle;
     PUSBPORT_PIPE_HANDLE PipeHandle;
     BOOL IsOpenedPipe;
@@ -902,7 +975,6 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
     SIZE_T DescriptorMinSize;
     UCHAR MaxPacketSize;
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
-
     NTSTATUS Status;
 
     DPRINT("USBPORT_CreateDevice: PortStatus - %p, Port - %x\n",
@@ -928,11 +1000,19 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
+    port = Port;
+
     if (FdoExtension->MiniPortInterface->Packet.MiniPortFlags & USB_MINIPORT_FLAGS_USB2 &&
         !(PortStatus & USB_PORT_STATUS_HIGH_SPEED))
     {
         DPRINT1("USBPORT_CreateDevice: USB1 device connected to USB2 port. FIXME: Transaction Translator.\n");
-        DbgBreakPoint();
+        TtExtension = USBPORT_GetTt(FdoDevice,
+                                    HubDeviceHandle,
+                                    &port,
+                                    &TtDeviceHandle);
+        DPRINT("USBPORT_CreateDevice: TtDeviceHandle - %p, port - %x\n",
+               TtDeviceHandle,
+               port);
     }
 
     KeReleaseSemaphore(&FdoExtension->DeviceSemaphore,
@@ -954,6 +1034,7 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
 
     *pUsbdDeviceHandle = NULL;
 
+    DeviceHandle->TtExtension = TtExtension;
     DeviceHandle->PortNumber = Port;
     DeviceHandle->HubDeviceHandle = HubDeviceHandle;
 
@@ -993,6 +1074,7 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
     }
 
     InitializeListHead(&DeviceHandle->PipeHandleList);
+    InitializeListHead(&DeviceHandle->TtList);
 
     Status = USBPORT_OpenPipe(FdoDevice,
                               DeviceHandle,
@@ -1089,7 +1171,36 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
 
 ErrorExit:
 
-    // FIXME: if Transaction Translator
+    if (TtExtension && TtDeviceHandle)
+    {
+        SetupPacket.bmRequestType.Recipient = BMREQUEST_TO_OTHER;
+        SetupPacket.bmRequestType.Reserved = 0;
+        SetupPacket.bmRequestType.Type = BMREQUEST_CLASS;
+        SetupPacket.bmRequestType.Dir = BMREQUEST_HOST_TO_DEVICE;
+
+        /* Table 11-15.  Hub Class Requests */
+        if (TtDeviceHandle == HubDeviceHandle)
+        {
+            SetupPacket.bRequest = USB_REQUEST_RESET_TT;
+        }
+        else
+        {
+            SetupPacket.bRequest = USB_REQUEST_CLEAR_TT_BUFFER;
+        }
+
+        SetupPacket.wValue.LowByte = 0;
+        SetupPacket.wValue.HiByte = 0;
+        SetupPacket.wIndex.W = port;
+        SetupPacket.wLength = 0;
+
+        USBPORT_SendSetupPacket(TtDeviceHandle,
+                                FdoDevice,
+                                &SetupPacket,
+                                NULL,
+                                0,
+                                NULL,
+                                NULL);
+    }
 
     Status = STATUS_DEVICE_DATA_ERROR;
 
@@ -1262,6 +1373,12 @@ USBPORT_InitializeDevice(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
                (MaxPacketSize == 16) ||
                (MaxPacketSize == 32) ||
                (MaxPacketSize == 64));
+
+        if (DeviceHandle->DeviceSpeed == UsbHighSpeed &&
+            DeviceHandle->DeviceDescriptor.bDeviceClass == USB_DEVICE_CLASS_HUB)
+        {
+            DeviceHandle->Flags |= DEVICE_HANDLE_FLAG_USB2HUB;
+        }
     }
     else
     {
@@ -1443,6 +1560,9 @@ USBPORT_RemoveDevice(IN PDEVICE_OBJECT FdoDevice,
                      IN ULONG Flags)
 {
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
+    PUSB2_TT_EXTENSION TtExtension;
+    ULONG ix;
+    KIRQL OldIrql;
 
     DPRINT("USBPORT_RemoveDevice: DeviceHandle - %p, Flags - %x\n",
            DeviceHandle,
@@ -1500,6 +1620,40 @@ USBPORT_RemoveDevice(IN PDEVICE_OBJECT FdoDevice,
     if (DeviceHandle->DeviceAddress)
     {
         USBPORT_FreeUsbAddress(FdoDevice, DeviceHandle->DeviceAddress);
+    }
+
+    if (!IsListEmpty(&DeviceHandle->TtList))
+    {
+        DPRINT1("USBPORT_RemoveDevice: DeviceHandle->TtList.Flink - %p\n", DeviceHandle->TtList.Flink);
+
+        do
+        {
+            TtExtension = CONTAINING_RECORD(DeviceHandle->TtList.Flink,
+                                            USB2_TT_EXTENSION,
+                                            Link);
+
+            RemoveHeadList(&DeviceHandle->TtList);
+
+            DPRINT("USBPORT_RemoveDevice: TtExtension - %p\n", TtExtension);
+
+            KeAcquireSpinLock(&FdoExtension->TtSpinLock, &OldIrql);
+
+            TtExtension->Flags |= USB2_TT_EXTENSION_FLAG_DELETED;
+
+            if (IsListEmpty(&TtExtension->TtList))
+            {
+                USBPORT_UpdateAllocatedBwTt(TtExtension);
+
+                for (ix = 0; ix < USB2_FRAMES; ix++)
+                {
+                    FdoExtension->Bandwidth[ix] += TtExtension->MaxBandwidth;
+                }
+
+                ExFreePool(TtExtension);
+            }
+            KeReleaseSpinLock(&FdoExtension->TtSpinLock, OldIrql);
+        }
+        while (!IsListEmpty(&DeviceHandle->TtList));
     }
 
     KeReleaseSemaphore(&FdoExtension->DeviceSemaphore,
@@ -1650,6 +1804,10 @@ USBPORT_RestoreDevice(IN PDEVICE_OBJECT FdoDevice,
         {
             DPRINT1("USBPORT_RestoreDevice: FIXME Transaction Translator\n");
             NewDeviceHandle->TtCount = OldDeviceHandle->TtCount;
+
+#ifndef NDEBUG
+            DbgBreakPoint();
+#endif
         }
 
         while (!IsListEmpty(&OldDeviceHandle->PipeHandleList))
@@ -1770,7 +1928,55 @@ USBPORT_InitializeTT(IN PDEVICE_OBJECT FdoDevice,
                      IN PUSBPORT_DEVICE_HANDLE HubDeviceHandle,
                      IN ULONG TtNumber)
 {
-    DPRINT1("USBPORT_InitializeTT: UNIMPLEMENTED. FIXME. \n");
+    PUSBPORT_DEVICE_EXTENSION FdoExtension;
+    PUSB2_TT_EXTENSION TtExtension;
+    ULONG ix;
+
+    DPRINT("USBPORT_InitializeTT: HubDeviceHandle - %p, TtNumber - %X\n",
+           HubDeviceHandle,
+           TtNumber);
+
+    FdoExtension = FdoDevice->DeviceExtension;
+
+    TtExtension = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(USB2_TT_EXTENSION),
+                                        USB_PORT_TAG);
+
+    if (!TtExtension)
+    {
+        DPRINT1("USBPORT_InitializeTT: ExAllocatePoolWithTag return NULL\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    DPRINT("USBPORT_InitializeTT: TtExtension - %p\n", TtExtension);
+
+    RtlZeroMemory(TtExtension, sizeof(USB2_TT_EXTENSION));
+
+    TtExtension->DeviceAddress = HubDeviceHandle->DeviceAddress;
+    TtExtension->TtNumber = TtNumber;
+    TtExtension->RootHubPdo = FdoExtension->RootHubPdo;
+    TtExtension->BusBandwidth = TOTAL_USB11_BUS_BANDWIDTH;
+
+    InitializeListHead(&TtExtension->TtList);
+
+    /* 90% maximum allowed for periodic endpoints */
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        TtExtension->Bandwidth[ix] = TtExtension->BusBandwidth -
+                                     TtExtension->BusBandwidth / 10;
+    }
+
+    USBPORT_UpdateAllocatedBwTt(TtExtension);
+
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        FdoExtension->Bandwidth[ix] -= TtExtension->MaxBandwidth;
+    }
+
+    USB2_InitTT(FdoExtension->Usb2Extension, &TtExtension->Tt);
+
+    InsertTailList(&HubDeviceHandle->TtList, &TtExtension->Link);
+
     return STATUS_SUCCESS;
 }
 
@@ -1783,7 +1989,7 @@ USBPORT_Initialize20Hub(IN PDEVICE_OBJECT FdoDevice,
     NTSTATUS Status;
     ULONG ix;
 
-    DPRINT("USBPORT_Initialize20Hub \n");
+    DPRINT("USBPORT_Initialize20Hub: TtCount - %X\n", TtCount);
 
     if (!HubDeviceHandle)
     {

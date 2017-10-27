@@ -153,6 +153,11 @@ typedef struct _USBPORT_COMMON_BUFFER_HEADER {
 
 typedef struct _USBPORT_ENDPOINT *PUSBPORT_ENDPOINT;
 
+typedef struct _USB2_HC_EXTENSION *PUSB2_HC_EXTENSION;
+typedef struct _USB2_TT_EXTENSION *PUSB2_TT_EXTENSION;
+typedef struct _USB2_TT *PUSB2_TT;
+typedef struct _USB2_TT_ENDPOINT *PUSB2_TT_ENDPOINT;
+
 typedef struct _USBPORT_PIPE_HANDLE {
   ULONG Flags;
   ULONG PipeFlags;
@@ -191,6 +196,8 @@ typedef struct _USBPORT_DEVICE_HANDLE {
   LIST_ENTRY DeviceHandleLink;
   LONG DeviceHandleLock;
   ULONG TtCount;
+  PUSB2_TT_EXTENSION TtExtension; // Transaction Translator
+  LIST_ENTRY TtList;
 } USBPORT_DEVICE_HANDLE, *PUSBPORT_DEVICE_HANDLE;
 
 typedef struct _USBPORT_ENDPOINT {
@@ -198,6 +205,8 @@ typedef struct _USBPORT_ENDPOINT {
   PDEVICE_OBJECT FdoDevice;
   PUSBPORT_COMMON_BUFFER_HEADER HeaderBuffer;
   PUSBPORT_DEVICE_HANDLE DeviceHandle;
+  PUSB2_TT_EXTENSION TtExtension; // Transaction Translator
+  PUSB2_TT_ENDPOINT TtEndpoint;
   USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
   ULONG EndpointWorker;
   ULONG FrameNumber;
@@ -226,6 +235,8 @@ typedef struct _USBPORT_ENDPOINT {
   LIST_ENTRY FlushLink;
   LIST_ENTRY FlushControllerLink;
   LIST_ENTRY FlushAbortLink;
+  LIST_ENTRY TtLink;
+  LIST_ENTRY RebalanceLink;
 } USBPORT_ENDPOINT, *PUSBPORT_ENDPOINT;
 
 typedef struct _USBPORT_ISO_BLOCK *PUSBPORT_ISO_BLOCK;
@@ -374,10 +385,14 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
   KSPIN_LOCK SetPowerD0SpinLock;
   KDPC WorkerRequestDpc;
   KDPC HcWakeDpc;
+  /* Usb 2.0 HC Extension */
+  PUSB2_HC_EXTENSION Usb2Extension;
+  ULONG Bandwidth[32];
+  KSPIN_LOCK TtSpinLock;
 
   /* Miniport extension should be aligned on 0x100 */
 #if !defined(_M_X64)
-  ULONG Padded[34];
+  ULONG Padded[64];
 #else
   ULONG Padded[0];
 #endif
@@ -385,7 +400,7 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
 } USBPORT_DEVICE_EXTENSION, *PUSBPORT_DEVICE_EXTENSION;
 
 #if !defined(_M_X64)
-C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x400);
+C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x500);
 #else
 C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x600);
 #endif
@@ -437,6 +452,14 @@ typedef struct _TIMER_WORK_QUEUE_ITEM {
 #define USB2_MICROFRAMES      8
 #define USB2_MAX_MICROFRAMES  (USB2_FRAMES * USB2_MICROFRAMES)
 
+#define USB2_MAX_MICROFRAME_ALLOCATION         7000 // bytes
+#define USB2_CONTROLLER_DELAY                  100
+#define USB2_FS_MAX_PERIODIC_ALLOCATION        1157 // ((12000 / 8 bits) * 0.9) / (7/6) - 90% max, and bits stuffing
+#define USB2_FS_SOF_TIME                       6
+#define USB2_HUB_DELAY                         30
+#define USB2_MAX_FS_LS_TRANSACTIONS_IN_UFRAME  16
+#define USB2_FS_RAW_BYTES_IN_MICROFRAME        188  // (12000 / 8 bits / USB2_MICROFRAMES) = 187,5. But we use "best case budget"
+
 /* Overheads */
 #define USB2_LS_INTERRUPT_OVERHEAD             117 // FS-bytes
 #define USB2_FS_INTERRUPT_OVERHEAD             13
@@ -445,6 +468,89 @@ typedef struct _TIMER_WORK_QUEUE_ITEM {
 #define USB2_FS_ISOCHRONOUS_OVERHEAD           9
 #define USB2_HS_ISOCHRONOUS_OUT_OVERHEAD       38
 #define USB2_HS_ISOCHRONOUS_IN_OVERHEAD        18
+
+typedef union _USB2_TT_ENDPOINT_PARAMS {
+  struct {
+    ULONG TransferType           : 4;
+    ULONG Direction              : 1;
+    USB_DEVICE_SPEED DeviceSpeed : 2;
+    ULONG EndpointMoved          : 1;
+    ULONG Reserved               : 24;
+  };
+  USHORT AsULONG;
+} USB2_TT_ENDPOINT_PARAMS;
+
+C_ASSERT(sizeof(USB2_TT_ENDPOINT_PARAMS) == 4);
+
+typedef union _USB2_TT_ENDPOINT_NUMS {
+  struct {
+    ULONG NumStarts     : 4;
+    ULONG NumCompletes  : 4;
+    ULONG Reserved      : 24;
+  };
+  USHORT AsULONG;
+} USB2_TT_ENDPOINT_NUMS;
+
+C_ASSERT(sizeof(USB2_TT_ENDPOINT_NUMS) == 4);
+
+typedef struct _USB2_TT_ENDPOINT {
+  PUSB2_TT Tt;
+  PUSBPORT_ENDPOINT Endpoint;
+  struct _USB2_TT_ENDPOINT * NextTtEndpoint;
+  USB2_TT_ENDPOINT_PARAMS TtEndpointParams;
+  USB2_TT_ENDPOINT_NUMS Nums;
+  USHORT MaxPacketSize;
+  USHORT PreviosPeriod;
+  USHORT Period;
+  USHORT ActualPeriod;
+  USHORT CalcBusTime;
+  USHORT StartTime;
+  USHORT Reserved2;
+  UCHAR StartFrame;
+  UCHAR StartMicroframe;
+} USB2_TT_ENDPOINT, *PUSB2_TT_ENDPOINT;
+
+typedef struct _USB2_FRAME_BUDGET {
+  PUSB2_TT_ENDPOINT IsoEndpoint;
+  PUSB2_TT_ENDPOINT IntEndpoint;
+  PUSB2_TT_ENDPOINT AltEndpoint;
+  USHORT TimeUsed;
+  USHORT Reserved2;
+} USB2_FRAME_BUDGET, *PUSB2_FRAME_BUDGET;
+
+typedef struct _USB2_TT {
+  PUSB2_HC_EXTENSION HcExtension;
+  ULONG DelayTime;
+  ULONG MaxTime;
+  USB2_TT_ENDPOINT IntEndpoint[USB2_FRAMES];
+  USB2_TT_ENDPOINT IsoEndpoint[USB2_FRAMES];
+  USB2_FRAME_BUDGET FrameBudget[USB2_FRAMES];
+  ULONG NumStartSplits[USB2_FRAMES][USB2_MICROFRAMES];
+  ULONG TimeCS[USB2_FRAMES][USB2_MICROFRAMES];
+} USB2_TT, *PUSB2_TT;
+
+#define USB2_TT_EXTENSION_FLAG_DELETED  1
+
+typedef struct _USB2_TT_EXTENSION {
+  PDEVICE_OBJECT RootHubPdo;
+  ULONG Flags;
+  ULONG BusBandwidth;
+  ULONG Bandwidth[USB2_FRAMES];
+  ULONG MaxBandwidth;
+  ULONG MinBandwidth;
+  USHORT DeviceAddress;
+  USHORT TtNumber;
+  LIST_ENTRY TtList;
+  LIST_ENTRY Link;
+  USB2_TT Tt;
+} USB2_TT_EXTENSION, *PUSB2_TT_EXTENSION;
+
+typedef struct _USB2_HC_EXTENSION {
+  ULONG MaxHsBusAllocation;
+  ULONG HcDelayTime;
+  ULONG TimeUsed[USB2_FRAMES][USB2_MICROFRAMES];
+  USB2_TT HcTt;
+} USB2_HC_EXTENSION, *PUSB2_HC_EXTENSION;
 
 /* usbport.c */
 NTSTATUS
@@ -833,7 +939,7 @@ USBPORT_SetEndpointState(
   IN PUSBPORT_ENDPOINT Endpoint,
   IN ULONG State);
 
-ULONG 
+ULONG
 NTAPI
 USBPORT_GetEndpointState(
   IN PUSBPORT_ENDPOINT Endpoint);
@@ -1199,5 +1305,21 @@ NTAPI
 USBPORT_FreeBandwidthUSB2(
   IN PDEVICE_OBJECT FdoDevice,
   IN PUSBPORT_ENDPOINT Endpoint);
+
+VOID
+NTAPI
+USBPORT_UpdateAllocatedBwTt(
+  IN PUSB2_TT_EXTENSION TtExtension);
+
+VOID
+NTAPI
+USB2_InitTT(
+  IN PUSB2_HC_EXTENSION HcExtension,
+  IN PUSB2_TT Tt);
+
+VOID
+NTAPI
+USB2_InitController(
+  IN PUSB2_HC_EXTENSION HcExtension);
 
 #endif /* USBPORT_H__ */
