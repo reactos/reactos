@@ -3524,7 +3524,7 @@ BOOLEAN SockCreateOrReferenceAsyncThread(VOID)
     /* Create the Async Thread */
     hAsyncThread = CreateThread(NULL,
                                 0,
-                                (LPTHREAD_START_ROUTINE)SockAsyncThread,
+                                SockAsyncThread,
                                 NULL,
                                 0,
                                 &AsyncThreadId);
@@ -3537,7 +3537,9 @@ BOOLEAN SockCreateOrReferenceAsyncThread(VOID)
     return TRUE;
 }
 
-int SockAsyncThread(PVOID ThreadParam)
+ULONG
+NTAPI
+SockAsyncThread(PVOID ThreadParam)
 {
     PVOID AsyncContext;
     PASYNC_COMPLETION_ROUTINE AsyncCompletionRoutine;

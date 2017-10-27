@@ -454,7 +454,9 @@ int CreateContext(
 	PSOCKET_INFORMATION Socket
 );
 
-int SockAsyncThread(
+ULONG
+NTAPI
+SockAsyncThread(
 	PVOID ThreadParam
 );
 
