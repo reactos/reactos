@@ -104,7 +104,7 @@
 /* Device handle Flags (USBPORT_DEVICE_HANDLE) */
 #define DEVICE_HANDLE_FLAG_ROOTHUB     0x00000002
 #define DEVICE_HANDLE_FLAG_REMOVED     0x00000008
-#define DEVICE_HANDLE_FLAG_INITIALIZED 0x00000010
+#define DEVICE_HANDLE_FLAG_USB2HUB     0x00000010
 
 /* Endpoint Flags (USBPORT_ENDPOINT) */
 #define ENDPOINT_FLAG_DMA_TYPE      0x00000001
@@ -429,6 +429,22 @@ typedef struct _TIMER_WORK_QUEUE_ITEM {
   PDEVICE_OBJECT FdoDevice;
   ULONG Context;
 } TIMER_WORK_QUEUE_ITEM, *PTIMER_WORK_QUEUE_ITEM;
+
+/* Transaction Translator */
+/* See Chapter 5 - USB Data Flow Model and Chapter 11 - Hub Specification */
+
+#define USB2_FRAMES           32
+#define USB2_MICROFRAMES      8
+#define USB2_MAX_MICROFRAMES  (USB2_FRAMES * USB2_MICROFRAMES)
+
+/* Overheads */
+#define USB2_LS_INTERRUPT_OVERHEAD             117 // FS-bytes
+#define USB2_FS_INTERRUPT_OVERHEAD             13
+#define USB2_HS_INTERRUPT_OUT_OVERHEAD         45
+#define USB2_HS_INTERRUPT_IN_OVERHEAD          25
+#define USB2_FS_ISOCHRONOUS_OVERHEAD           9
+#define USB2_HS_ISOCHRONOUS_OUT_OVERHEAD       38
+#define USB2_HS_ISOCHRONOUS_IN_OVERHEAD        18
 
 /* usbport.c */
 NTSTATUS

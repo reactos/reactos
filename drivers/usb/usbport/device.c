@@ -1450,8 +1450,8 @@ USBPORT_RemoveDevice(IN PDEVICE_OBJECT FdoDevice,
 
     FdoExtension = FdoDevice->DeviceExtension;
 
-    if ((Flags & USBD_KEEP_DEVICE_DATA) ||
-        (Flags & USBD_MARK_DEVICE_BUSY))
+    if ((Flags & USBD_KEEP_DEVICE_DATA) != 0 ||
+        (Flags & USBD_MARK_DEVICE_BUSY) != 0)
     {
         return STATUS_SUCCESS;
     }
@@ -1646,7 +1646,7 @@ USBPORT_RestoreDevice(IN PDEVICE_OBJECT FdoDevice,
             }
         }
 
-        if (NewDeviceHandle->Flags & DEVICE_HANDLE_FLAG_INITIALIZED)
+        if ((NewDeviceHandle->Flags & DEVICE_HANDLE_FLAG_USB2HUB) != 0)
         {
             DPRINT1("USBPORT_RestoreDevice: FIXME Transaction Translator\n");
             NewDeviceHandle->TtCount = OldDeviceHandle->TtCount;
@@ -1790,7 +1790,7 @@ USBPORT_Initialize20Hub(IN PDEVICE_OBJECT FdoDevice,
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (HubDeviceHandle->Flags & DEVICE_HANDLE_FLAG_ROOTHUB)
+    if ((HubDeviceHandle->Flags & DEVICE_HANDLE_FLAG_ROOTHUB) != 0)
     {
         return STATUS_SUCCESS;
     }

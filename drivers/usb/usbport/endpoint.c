@@ -20,7 +20,7 @@ USBPORT_CalculateUsbBandwidth(IN PDEVICE_OBJECT FdoDevice,
 {
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG Bandwidth;
-    ULONG Additional;
+    ULONG Overhead;
 
     DPRINT("USBPORT_CalculateUsbBandwidth ... \n");
 
@@ -29,25 +29,25 @@ USBPORT_CalculateUsbBandwidth(IN PDEVICE_OBJECT FdoDevice,
     switch (EndpointProperties->TransferType)
     {
         case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
-            Additional = 9;
+            Overhead = USB2_FS_ISOCHRONOUS_OVERHEAD;
             break;
 
         case USBPORT_TRANSFER_TYPE_INTERRUPT:
-            Additional = 13;
+            Overhead = USB2_FS_INTERRUPT_OVERHEAD;
             break;
 
         default: //USBPORT_TRANSFER_TYPE_CONTROL or USBPORT_TRANSFER_TYPE_BULK
-            Additional = 0;
+            Overhead = 0;
             break;
     }
 
-    if (Additional == 0)
+    if (Overhead == 0)
     {
         Bandwidth = 0;
     }
     else
     {
-        Bandwidth = (EndpointProperties->TotalMaxPacketSize + Additional) * 8 * 7 / 6;
+        Bandwidth = (EndpointProperties->TotalMaxPacketSize + Overhead) * 8 * 7 / 6;
     }
 
     if (EndpointProperties->DeviceSpeed == UsbLowSpeed)
@@ -78,7 +78,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
     if (TransferType == USBPORT_TRANSFER_TYPE_BULK || 
         TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
-        Endpoint->Flags & ENDPOINT_FLAG_ROOTHUB_EP0)
+        (Endpoint->Flags & ENDPOINT_FLAG_ROOTHUB_EP0) != 0)
     {
         EndpointProperties->ScheduleOffset = 0;
         return TRUE;
@@ -471,6 +471,7 @@ USBPORT_ClosePipe(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     PUSBPORT_RHDEVICE_EXTENSION PdoExtension;
     PUSBPORT_ENDPOINT Endpoint;
+    PUSBPORT_REGISTRATION_PACKET Packet;
     BOOLEAN IsReady;
     KIRQL OldIrql;
 
@@ -543,8 +544,9 @@ USBPORT_ClosePipe(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
     }
 
     Endpoint->DeviceHandle = NULL;
+    Packet = &FdoExtension->MiniPortInterface->Packet;
 
-    if (FdoExtension->MiniPortInterface->Packet.MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
+    if ((Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2) != 0)
     {
         DPRINT("USBPORT_ClosePipe: FIXME USBPORT_FreeBandwidthUSB20\n");
         //USBPORT_FreeBandwidthUSB20();
@@ -640,7 +642,7 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
 
     EndpointSize = sizeof(USBPORT_ENDPOINT) + Packet->MiniPortEndpointSize;
 
-    if (Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
+    if ((Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2) != 0)
     {
         DPRINT1("USBPORT_OpenPipe: FIXME USB2 EndpointSize\n");
     }
@@ -739,14 +741,14 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
             Interval = EndpointDescriptor->bInterval;
         }
 
-        EndpointProperties->Period = 32;
+        EndpointProperties->Period = ENDPOINT_INTERRUPT_32ms;
 
-        if (Interval && (Interval < 32))
+        if (Interval && (Interval < USB2_FRAMES))
         {
             if ((EndpointProperties->DeviceSpeed != UsbLowSpeed) ||
-                (Interval >= 8))
+                (Interval >= ENDPOINT_INTERRUPT_8ms))
             {
-                if (!(Interval & 0x20))
+                if (!(Interval & ENDPOINT_INTERRUPT_32ms))
                 {
                     Period = EndpointProperties->Period;
 
@@ -761,7 +763,7 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
             }
             else
             {
-                EndpointProperties->Period = 8;
+                EndpointProperties->Period = ENDPOINT_INTERRUPT_8ms;
             }
         }
     }
@@ -770,16 +772,16 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
     {
         if (EndpointProperties->DeviceSpeed == UsbHighSpeed)
         {
-            EndpointProperties->Period = 
+            EndpointProperties->Period =
                 USBPORT_NormalizeHsInterval(EndpointDescriptor->bInterval);
         }
         else
         {
-            EndpointProperties->Period = 1;
+            EndpointProperties->Period = ENDPOINT_INTERRUPT_1ms;
         }
     }
 
-    if (Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
+    if ((Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2) != 0)
     {
         IsAllocatedBandwidth = USBPORT_AllocateBandwidthUSB2(FdoDevice, Endpoint);
     }
