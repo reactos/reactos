@@ -387,7 +387,7 @@ skip_if_cached:
         Info->RefreshAppInfo();
 
         if (lpEnumProc)
-            lpEnumProc(static_cast<CAvailableApplicationInfo*>(Info), m_szAppsPath.GetString());
+            lpEnumProc(Info, m_szAppsPath.GetString());
 
     } while (FindNextFileW(hFind, &FindFileData) != 0);
 
