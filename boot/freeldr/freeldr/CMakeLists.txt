@@ -198,6 +198,11 @@ add_library(freeldr_common ${FREELDR_BOOTLIB_COMMON_SOURCE} ${FREELDR_ARC_COMMON
 add_pch(freeldr_common include/freeldr.h FREELDR_COMMON_SOURCE)
 add_dependencies(freeldr_common bugcodes asm xdk)
 
+if(USE_CLANG_CL)
+    # We need to reduce the binary size
+    set_property(SOURCE ${FREELDR_BOOTLIB_COMMON_SOURCE} ${FREELDR_ARC_COMMON_SOURCE} APPEND_STRING PROPERTY COMPILE_FLAGS " /Os")
+endif()
+
 if(ARCH STREQUAL "i386" AND NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
     target_link_libraries(freeldr_common mini_hal)

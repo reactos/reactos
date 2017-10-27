@@ -426,12 +426,3 @@ else() # _WINKD_
     endif()
 
 endif()
-
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    #FIXME: http://llvm.org/bugs/show_bug.cgi?id=19027
-    set_property(SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/cpu.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/kiinit.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/traphdlr.c
-        APPEND_STRING PROPERTY COMPILE_FLAGS " -no-integrated-as")
-endif()

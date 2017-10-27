@@ -36,7 +36,7 @@ else()
 "Whether to compile for debugging.")
 endif()
 
-if(MSVC)
+if(MSVC AND (NOT USE_CLANG_CL))
     set(KDBG FALSE CACHE BOOL
 "Whether to compile in the integrated kernel debugger.")
     if(CMAKE_BUILD_TYPE STREQUAL "Release")

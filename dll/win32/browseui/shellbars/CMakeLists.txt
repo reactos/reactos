@@ -20,7 +20,5 @@ add_dependencies(shellbars xdk)
 target_link_libraries(shellbars atlnew)
 
 if(NOT MSVC)
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_target_compile_flags(shellbars "-Wno-unused-but-set-variable")
-    endif()
+    add_target_compile_flags(shellbars "-Wno-unused-but-set-variable")
 endif()

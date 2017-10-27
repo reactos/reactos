@@ -34,11 +34,6 @@ list(APPEND SOURCE
     settings.c
     usetup.h)
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    #FIXME: Investigate Clang "illegal character encoding in string literal" warning
-    set_property(SOURCE mui.c APPEND_STRING PROPERTY COMPILE_FLAGS " -Wno-invalid-source-encoding")
-endif()
-
 add_executable(usetup ${SOURCE} usetup.rc)
 target_link_libraries(usetup zlib inflib ext2lib vfatlib)
 set_module_type(usetup nativecui)
