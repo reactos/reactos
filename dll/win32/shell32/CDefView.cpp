@@ -698,7 +698,7 @@ BOOL CDefView::_Sort()
     HWND hHeader;
     HDITEM hColumn;
 
-    if ((m_ListView.GetWindowLongPtr(GWL_STYLE) & ~LVS_NOSORTHEADER) == 0)
+    if (m_ListView.GetWindowLongPtr(GWL_STYLE) & LVS_NOSORTHEADER)
         return TRUE;
 
     hHeader = (HWND)m_ListView.SendMessage(LVM_GETHEADER, 0, 0);
