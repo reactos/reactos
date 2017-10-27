@@ -49,7 +49,7 @@ ListView_SortEx(HWND hListView,
     BOOL bSortAsc;
     Sort sort;
 
-    if ((GetWindowLongPtr(hListView, GWL_STYLE) & ~LVS_NOSORTHEADER) == 0)
+    if (GetWindowLongPtr(hListView, GWL_STYLE) & LVS_NOSORTHEADER)
         return TRUE;
 
     hHeader = ListView_GetHeader(hListView);

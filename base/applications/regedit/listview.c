@@ -478,7 +478,7 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
 
 static BOOL ListView_Sort(HWND hListView, int iSortingColumn, int iSortedColumn)
 {
-    if ( (GetWindowLongPtr(hListView, GWL_STYLE) & ~LVS_NOSORTHEADER) &&
+    if (!(GetWindowLongPtr(hListView, GWL_STYLE) & LVS_NOSORTHEADER) &&
          (iSortingColumn >= 0) )
     {
         BOOL bSortAscending;
