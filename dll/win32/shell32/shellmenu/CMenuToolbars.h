@@ -32,7 +32,6 @@ class CMenuToolbarBase :
 private:
     HFONT   m_marlett;
     BOOL    m_useFlatMenus;
-    WNDPROC m_SubclassOld;
     BOOL    m_disableMouseTrack;
     BOOL    m_timerEnabled;
 

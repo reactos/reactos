@@ -365,6 +365,8 @@ HRESULT WINAPI SHGetDesktopFolder(IShellFolder **psf)
  *  When the CreateInstance of the cf is called the callback is executed.
  */
 
+#ifndef __REACTOS__
+
 typedef struct
 {
     IClassFactory               IClassFactory_iface;
@@ -379,8 +381,6 @@ static inline IDefClFImpl *impl_from_IClassFactory(IClassFactory *iface)
 {
 	return CONTAINING_RECORD(iface, IDefClFImpl, IClassFactory_iface);
 }
-
-#ifndef __REACTOS__
 
 static const IClassFactoryVtbl dclfvt;
 
