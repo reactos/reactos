@@ -20,17 +20,17 @@ HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
     return S_OK;
 }
 
-HRESULT WINAPI DllRegisterServer()
+HRESULT WINAPI DllRegisterServer(VOID)
 {
     return S_OK;
 }
 
-HRESULT WINAPI DllUnregisterServer()
+HRESULT WINAPI DllUnregisterServer(VOID)
 {
     return S_OK;
 }
 
-HRESULT WINAPI DllCanUnloadNow()
+HRESULT WINAPI DllCanUnloadNow(VOID)
 {
     return S_OK;
 }

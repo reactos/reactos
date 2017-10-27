@@ -28,13 +28,13 @@ static WCHAR ServiceName[] = L"Themes";
 HANDLE hThemeStartWaitObject, hThemeStopWaitObject, hThemeServiceWaitObject;
 HANDLE hStartEvent, hStopEvent, hServiceProcess;
 
-BOOL WINAPI ThemeWatchForStart();
+BOOL WINAPI ThemeWatchForStart(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
 static 
 HANDLE
-GetThemeServiceProcessHandle()
+GetThemeServiceProcessHandle(VOID)
 {
     SC_HANDLE scm, service;
     SERVICE_STATUS_PROCESS status;
@@ -112,7 +112,7 @@ ThemeStartCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 
 BOOL
 WINAPI
-ThemeWatchForStart()
+ThemeWatchForStart(VOID)
 {
     hStartEvent = CreateEventW(NULL, TRUE, FALSE, L"Global\\ThemeStartEvent");
     hStopEvent = CreateEventW(NULL, TRUE, FALSE, L"Global\\ThemeStopEvent");
