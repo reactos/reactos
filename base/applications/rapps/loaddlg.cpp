@@ -393,6 +393,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
     case WM_INITDIALOG:
     {
         HICON hIconSm, hIconBg;
+        ATL::CStringW szTempCaption;
 
         hIconBg = (HICON) GetClassLongW(hMainWnd, GCLP_HICON);
         hIconSm = (HICON) GetClassLongW(hMainWnd, GCLP_HICONSM);
@@ -423,10 +424,15 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         }
         DownloadsListView.LoadList(AppsToInstallList);
 
-        ShowWindow(Dlg, SW_SHOW);
-
         // Get a dlg string for later use
         GetWindowTextW(Dlg, szCaption, MAX_PATH);
+
+        // Hide a placeholder from displaying
+        szTempCaption = szCaption;
+        szTempCaption.Replace(L"%ls", L"");
+        SetWindowText(Dlg, szTempCaption.GetString());
+
+        ShowWindow(Dlg, SW_SHOW);
 
         // Start download process
         DownloadParam *param = new DownloadParam(Dlg, AppsToInstallList, szCaption);
@@ -580,6 +586,25 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
     for (iAppId = 0; iAppId < InfoArray.GetSize(); ++iAppId)
     {
+        // Reset progress bar
+        Item = GetDlgItem(hDlg, IDC_DOWNLOAD_PROGRESS);
+        if (Item)
+        {
+            SendMessageW(Item, PBM_SETPOS, 0, 0);
+        }
+
+        // Change caption to show the currently downloaded app
+        if (!bCab)
+        {
+            szNewCaption.Format(szCaption, InfoArray[iAppId].szName.GetString());
+        }
+        else
+        {
+            szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_DOWNLOAD_DISP);
+        }
+
+        SetWindowTextW(hDlg, szNewCaption.GetString());
+
         // build the path for the download
         p = wcsrchr(InfoArray[iAppId].szUrl.GetString(), L'/');
         q = wcsrchr(InfoArray[iAppId].szUrl.GetString(), L'?');
@@ -625,25 +650,6 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             if (VerifyInteg(InfoArray[iAppId].szSHA1.GetString(), Path))
                 goto run;
         }
-
-        // Reset progress bar
-        Item = GetDlgItem(hDlg, IDC_DOWNLOAD_PROGRESS);
-        if (Item)
-        {
-            SendMessageW(Item, PBM_SETPOS, 0, 0);
-        }
-
-        // Change caption to show the currently downloaded app
-        if (!bCab)
-        {
-            szNewCaption.Format(szCaption, InfoArray[iAppId].szName.GetString());
-        }
-        else
-        {
-            szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_DOWNLOAD_DISP);
-        }
-
-        SetWindowTextW(hDlg, szNewCaption.GetString());
 
         // Add the download URL
         SetDlgItemTextW(hDlg, IDC_DOWNLOAD_STATUS, InfoArray[iAppId].szUrl.GetString());
