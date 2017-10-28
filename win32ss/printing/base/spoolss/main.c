@@ -240,7 +240,7 @@ SplIsUpgrade()
 }
 
 BOOL WINAPI
-SpoolerInit()
+SpoolerInit(VOID)
 {
     // Nothing to do here yet
     SetLastError(ERROR_SUCCESS);

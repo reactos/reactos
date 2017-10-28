@@ -147,7 +147,7 @@ VOID NTAPI
 LdrpFreeUnicodeString(PUNICODE_STRING String);
 
 VOID NTAPI
-LdrpGetShimEngineInterface();
+LdrpGetShimEngineInterface(VOID);
 
 VOID
 NTAPI
@@ -156,7 +156,7 @@ LdrpLoadShimEngine(IN PWSTR ImageName,
                    IN PVOID pShimData);
 
 VOID NTAPI
-LdrpUnloadShimEngine();
+LdrpUnloadShimEngine(VOID);
 
 
 /* FIXME: Cleanup this mess */

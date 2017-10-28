@@ -113,7 +113,7 @@ InitUserImpl(VOID)
 
 NTSTATUS
 NTAPI
-InitVideo();
+InitVideo(VOID);
 
 NTSTATUS
 NTAPI

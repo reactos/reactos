@@ -84,7 +84,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 }
 
 BOOL WINAPI
-SpoolerInit()
+SpoolerInit(VOID)
 {
     BOOL bReturnValue = FALSE;
     DWORD dwErrorCode;
