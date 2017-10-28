@@ -210,7 +210,7 @@ MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER 
     {
         const LARGE_INTEGER dummy =
         {
-            0
+            {0}
         };
         return dummy;
     }
