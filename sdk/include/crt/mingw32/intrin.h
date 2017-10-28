@@ -31,12 +31,11 @@
 #ifndef RC_INVOKED
 
 #ifdef __clang__
-#define __ATTRIBUTE_ARTIFICIAL
+#define __INTRIN_INLINE __forceinline
 #else
 #define __ATTRIBUTE_ARTIFICIAL __attribute__((artificial))
-#endif
-
 #define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__)) __ATTRIBUTE_ARTIFICIAL
+#endif
 
 #ifndef _SIZE_T_DEFINED
 #define _SIZE_T_DEFINED
