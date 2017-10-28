@@ -70,7 +70,7 @@ AddRemoteDatabaseEntry(IN HANDLE Database,
     /* Get size to append data */
     Size.QuadPart = GetRemoteDatabaseSize(Database);
 
-    return ZwWriteFile(Database, 0, NULL, NULL,
+    return ZwWriteFile(Database, NULL, NULL, NULL,
                        &IoStatusBlock, Entry,
                        Entry->EntrySize, &Size, NULL);
 }
