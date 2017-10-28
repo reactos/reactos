@@ -103,8 +103,8 @@ CmpFileWrite(IN PHHIVE RegistryHive,
     NTSTATUS Status;
 
     _FileOffset.QuadPart = *FileOffset;
-    Status = ZwWriteFile(HiveHandle, 0, 0, 0, &IoStatusBlock,
-                       Buffer, (ULONG)BufferLength, &_FileOffset, 0);
+    Status = ZwWriteFile(HiveHandle, NULL, NULL, NULL, &IoStatusBlock,
+                         Buffer, (ULONG)BufferLength, &_FileOffset, NULL);
     return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
