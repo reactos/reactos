@@ -38,7 +38,7 @@ unsigned int _rotr( unsigned int value, int shift )
 	if ( shift < 0 )
 		return _rotl(value,-shift);
 
-	if ( shift > max_bits<<3 )
+	if ( shift > max_bits )
 		shift = shift % max_bits;
 	return (value >> shift) | (value <<  (max_bits-shift));
 }
