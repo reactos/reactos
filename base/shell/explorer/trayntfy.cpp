@@ -510,6 +510,8 @@ public:
             parentHWND = ::GetParent(parentHWND);
             ::GetClientRect(parentHWND, &windowRect);
 
+            int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
+
             data = (PSYS_PAGER_COPY_DATA) cpData->lpData;
             iconData = &data->nicon_data;
 
@@ -530,11 +532,10 @@ public:
                 return FALSE;
             }
 
-            SendMessage(parentHWND,
-                WM_SIZE,
-                0,
-                MAKELONG(windowRect.right - windowRect.left,
-                         windowRect.bottom - windowRect.top));
+            if (VisibleButtonCount != Toolbar.GetVisibleButtonCount())
+            {
+                SendMessage(parentHWND, WM_SIZE, 0, 0);
+            }
 
             return ret;
         }
