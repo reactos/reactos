@@ -24,7 +24,7 @@ UDFDissectName(
 
     USHORT  i;
 
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 
     PWCHAR retval;
 

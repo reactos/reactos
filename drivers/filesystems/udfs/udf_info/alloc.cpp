@@ -50,7 +50,7 @@ UDFPhysLbaToPart(
     )
 {
     PUDFPartMap pm = Vcb->Partitions;
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined (_X86_) && defined (_MSC_VER) && !defined(__clang__)
     uint32 retval;
     __asm {
         push ebx
@@ -1280,7 +1280,7 @@ UDFSetBits__(
     IN uint32 bc
     )
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
     __asm {
         push eax
         push ebx
@@ -1388,7 +1388,7 @@ UDFClrBits__(
     IN uint32 bc
     )
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
     __asm {
         push eax
         push ebx

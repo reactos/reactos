@@ -324,7 +324,7 @@ UDFCommonWrite(
                 // flush system cache
                 UDFFlushLogicalVolume(NULL, NULL, Vcb, 0);
             }
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 /* FIXME */
             if(PagingIo) {
                 CollectStatistics(Vcb, MetaDataWrites);
@@ -444,7 +444,7 @@ UDFCommonWrite(
             TruncatedLength = WriteLength;
         }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 /* FIXME */
         if(PagingIo) {
             CollectStatistics(Vcb, UserFileWrites);
@@ -906,7 +906,7 @@ UDFCommonWrite(
 
             UDFUnlockCallersBuffer(PtrIrpContext, Irp, SystemBuffer);
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 /* FIXME */
             if(PagingIo) {
                 CollectStatistics(Vcb, UserDiskWrites);

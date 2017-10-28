@@ -242,7 +242,7 @@ UDFDirIndexTrunc(
 /*
     This routine returns pointer to DirIndex item with index i.
  */
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 __declspec (naked)
 #endif
 PDIR_INDEX_ITEM
@@ -252,7 +252,7 @@ UDFDirIndex(
     IN uint32 i                // EDX
     )
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
     __asm {
         push ebx
         push ecx

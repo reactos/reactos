@@ -4280,7 +4280,7 @@ UDFCompareFileInfo(
 #pragma warning(disable:4035)               // re-enable below
 #endif
 
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 __declspec (naked)
 #endif // _X86_
 uint32 
@@ -4290,7 +4290,7 @@ crc32(
     IN uint32 len // EDX
     )
 {
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 //    uint32 _Size = len;
 
     __asm {
@@ -4346,7 +4346,7 @@ EO_CRC:
     The polynomial used is: x^16 + x^12 + x^15 + 1
 */
 
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 __declspec (naked)
 #endif // _X86_
 uint16 
@@ -4356,7 +4356,7 @@ UDFUnicodeCksum(
     uint32 n  // EDX
     )
 {
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 //    uint32 _Size = n;
 
     __asm {
@@ -4412,7 +4412,7 @@ EO_uCRC:
 #endif // _X86_
 } // end UDFUnicodeCksum()
 
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 __declspec (naked)
 #endif // _X86_
 uint16 
@@ -4422,7 +4422,7 @@ UDFUnicodeCksum150(
     uint32 n  // EDX
     )
 {
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 //    uint32 _Size = n;
 
     __asm {
@@ -4517,7 +4517,7 @@ use16_2:
     The OSTA-UDF(tm) 1.50 standard states that using CRCs is mandatory.
     The polynomial used is: x^16 + x^12 + x^15 + 1
 */
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 __declspec (naked)
 #endif // _X86_
 uint16 
@@ -4527,7 +4527,7 @@ UDFCrc(
     IN uint32 Size  // EDX
     )
 {
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 //    uint32 _Size = Size;
 
     __asm {

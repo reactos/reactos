@@ -806,7 +806,7 @@ MyAppendUnicodeToString_(
   #define UDF_UNC_STR_TAG "AppStr"
 #endif 
 
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 
     __asm push  ebx
     __asm push  esi
@@ -868,7 +868,7 @@ MyInitUnicodeString(
 
     USHORT i;
 
-#if defined (_X86_) && defined (_MSC_VER)
+#if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 
     __asm push  ebx
     __asm push  esi
