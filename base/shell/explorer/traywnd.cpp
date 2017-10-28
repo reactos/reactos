@@ -1090,13 +1090,6 @@ GetPrimaryScreenRect:
             szTray.cy = rcPos.bottom - rcPos.top;
 
             GetTrayRectFromScreenRect(Pos, &rcScreen, &szTray, pRect);
-            if (AutoHide)
-            {
-                pRect->left += m_AutoHideOffset.cx;
-                pRect->right += m_AutoHideOffset.cx;
-                pRect->top += m_AutoHideOffset.cy;
-                pRect->bottom += m_AutoHideOffset.cy;
-            }
             hMon = hMonNew;
         }
         else
@@ -1104,13 +1097,6 @@ GetPrimaryScreenRect:
             /* The user is dragging the tray window on the same monitor. We don't need
                to recalculate the rectangle */
             *pRect = rcPos;
-            if (AutoHide)
-            {
-                pRect->left += m_AutoHideOffset.cx;
-                pRect->right += m_AutoHideOffset.cx;
-                pRect->top += m_AutoHideOffset.cy;
-                pRect->bottom += m_AutoHideOffset.cy;
-            }
         }
 
         *phMonitor = hMon;
@@ -1146,13 +1132,6 @@ GetPrimaryScreenRect:
             rcTray.top = pwp->y;
             rcTray.right = rcTray.left + pwp->cx;
             rcTray.bottom = rcTray.top + pwp->cy;
-            if (AutoHide)
-            {
-                rcTray.left -= m_AutoHideOffset.cx;
-                rcTray.right -= m_AutoHideOffset.cx;
-                rcTray.top -= m_AutoHideOffset.cy;
-                rcTray.bottom -= m_AutoHideOffset.cy;
-            }
 
             if (!EqualRect(&rcTray,
                 &m_TrayRects[m_DraggingPosition]))
@@ -1204,13 +1183,6 @@ GetPrimaryScreenRect:
                     MakeTrayRectWithSize(m_Position, &szWnd, &rcTray);
                 }
 
-                if (AutoHide)
-                {
-                    rcTray.left -= m_AutoHideOffset.cx;
-                    rcTray.right -= m_AutoHideOffset.cx;
-                    rcTray.top -= m_AutoHideOffset.cy;
-                    rcTray.bottom -= m_AutoHideOffset.cy;
-                }
                 m_TrayRects[m_Position] = rcTray;
             }
             else
@@ -1219,19 +1191,20 @@ GetPrimaryScreenRect:
                    new size or position is valid. this is to prevent changes to the window
                    without user interaction. */
                 rcTray = m_TrayRects[m_Position];
+
+                if (AutoHide)
+                {
+                    rcTray.left += m_AutoHideOffset.cx;
+                    rcTray.right += m_AutoHideOffset.cx;
+                    rcTray.top += m_AutoHideOffset.cy;
+                    rcTray.bottom += m_AutoHideOffset.cy;
+                }
+
             }
 
 ChangePos:
             m_TraySize.cx = rcTray.right - rcTray.left;
             m_TraySize.cy = rcTray.bottom - rcTray.top;
-
-            if (AutoHide)
-            {
-                rcTray.left += m_AutoHideOffset.cx;
-                rcTray.right += m_AutoHideOffset.cx;
-                rcTray.top += m_AutoHideOffset.cy;
-                rcTray.bottom += m_AutoHideOffset.cy;
-            }
 
             pwp->flags &= ~(SWP_NOMOVE | SWP_NOSIZE);
             pwp->x = rcTray.left;
@@ -1332,18 +1305,7 @@ ChangePos:
 
     VOID CheckTrayWndPosition()
     {
-        RECT rcTray;
-
-        rcTray = m_TrayRects[m_Position];
-
-        if (AutoHide)
-        {
-            rcTray.left += m_AutoHideOffset.cx;
-            rcTray.right += m_AutoHideOffset.cx;
-            rcTray.top += m_AutoHideOffset.cy;
-            rcTray.bottom += m_AutoHideOffset.cy;
-        }
-
+        /* Force the rebar bands to resize */
         IUnknown_Exec(m_TrayBandSite,
                       IID_IDeskBand,
                       DBID_BANDINFOCHANGED,
@@ -1351,19 +1313,14 @@ ChangePos:
                       NULL,
                       NULL);
 
-        FitToRebar(&rcTray);
-        m_TrayRects[m_Position] = rcTray;
+        /* Calculate the size of the taskbar based on the rebar */
+        FitToRebar(&m_TrayRects[m_Position]);
 
         /* Move the tray window */
-        SetWindowPos(NULL,
-                     rcTray.left,
-                     rcTray.top,
-                     rcTray.right - rcTray.left,
-                     rcTray.bottom - rcTray.top,
-                     SWP_NOZORDER | SWP_NOACTIVATE);
-
+        /* The handler of WM_WINDOWPOSCHANGING will override whatever size 
+           *and position we use here with m_TrayRects */
+        SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE);
         ResizeWorkArea();
-
         ApplyClipping(TRUE);
     }
 
@@ -1788,11 +1745,8 @@ ChangePos:
 
     void ProcessAutoHide()
     {
-        RECT rc = m_TrayRects[m_Position];
         INT w = m_TraySize.cx - GetSystemMetrics(SM_CXBORDER) * 2 - 1;
         INT h = m_TraySize.cy - GetSystemMetrics(SM_CYBORDER) * 2 - 1;
-
-        TRACE("AutoHide Timer received for %u, rc=(%d, %d, %d, %d), w=%d, h=%d.\n", m_AutoHideState, rc.left, rc.top, rc.right, rc.bottom, w, h);
 
         switch (m_AutoHideState)
         {
@@ -1899,13 +1853,7 @@ ChangePos:
             break;
         }
 
-        rc.left += m_AutoHideOffset.cx;
-        rc.right += m_AutoHideOffset.cx;
-        rc.top += m_AutoHideOffset.cy;
-        rc.bottom += m_AutoHideOffset.cy;
-
-        TRACE("AutoHide Changing position to (%d, %d, %d, %d) and state=%u.\n", rc.left, rc.top, rc.right, rc.bottom, m_AutoHideState);
-        SetWindowPos(NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOACTIVATE | SWP_NOZORDER);
+        SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER);
     }
 
 
@@ -2367,14 +2315,6 @@ ChangePos:
         else
         {
             *pRect = m_TrayRects[m_Position];
-
-            if (AutoHide)
-            {
-                pRect->left += m_AutoHideOffset.cx;
-                pRect->right += m_AutoHideOffset.cx;
-                pRect->top += m_AutoHideOffset.cy;
-                pRect->bottom += m_AutoHideOffset.cy;
-            }
         }
         return TRUE;
     }
@@ -2390,19 +2330,11 @@ ChangePos:
         else
         {
             *pRect = m_TrayRects[m_Position];
-
-            if (AutoHide)
-            {
-                pRect->left += m_AutoHideOffset.cx;
-                pRect->right += m_AutoHideOffset.cx;
-                pRect->top += m_AutoHideOffset.cy;
-                pRect->bottom += m_AutoHideOffset.cy;
-            }
         }
         return TRUE;
     }
 
-    LRESULT OnWindowPosChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    LRESULT OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         ChangingWinPos((LPWINDOWPOS) lParam);
         return TRUE;
@@ -2925,7 +2857,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_CTLCOLORBTN, OnCtlColorBtn)
         MESSAGE_HANDLER(WM_MOVING, OnMoving)
         MESSAGE_HANDLER(WM_SIZING, OnSizing)
-        MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, OnWindowPosChange)
+        MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, OnWindowPosChanging)
         MESSAGE_HANDLER(WM_ENTERSIZEMOVE, OnEnterSizeMove)
         MESSAGE_HANDLER(WM_EXITSIZEMOVE, OnExitSizeMove)
         MESSAGE_HANDLER(WM_NCLBUTTONDOWN, OnNcLButtonDown)
