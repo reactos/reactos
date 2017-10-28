@@ -33,15 +33,10 @@ class CProxyDesktop :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl < CProxyDesktop, CWindow, CFrameWinTraits >
 {
-    IEThreadParamBlock * m_Parameters;
-
-    LPITEMIDLIST m_rootPidl;
 
 public:
-    CProxyDesktop(IEThreadParamBlock * parameters) :
-        m_Parameters(parameters)
+    CProxyDesktop(IEThreadParamBlock * parameters)
     {
-
     }
 
     virtual ~CProxyDesktop()

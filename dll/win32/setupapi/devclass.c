@@ -27,13 +27,11 @@
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
-static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
 static const WCHAR InterfaceInstall32[]  = {'I','n','t','e','r','f','a','c','e','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR SetupapiDll[]  = {'s','e','t','u','p','a','p','i','.','d','l','l',0};
-static const WCHAR Version[]  = {'V','e','r','s','i','o','n',0};
 
 typedef BOOL
 (WINAPI* PROPERTY_PAGE_PROVIDER) (

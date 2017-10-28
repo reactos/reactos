@@ -31,6 +31,8 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+#if 0
+/* FIXME: Are we going to use this somewhere? */
 static BYTE Yield[] =
 {
     0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
@@ -38,6 +40,7 @@ static BYTE Yield[] =
     BOP(BOP_UNSIMULATE),                        // UnSimulate16 BOP
 };
 C_ASSERT(sizeof(Yield) == 16 * sizeof(BYTE));
+#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

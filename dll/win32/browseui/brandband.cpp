@@ -43,7 +43,7 @@ inline void FillSolidRect(HDC dc, const RECT *bounds, COLORREF clr)
     ::ExtTextOut(dc, 0, 0, ETO_OPAQUE, bounds, NULL, 0, NULL);
 }
 
-static const int                            gSmallImageSize = 22;
+//static const int                            gSmallImageSize = 22;
 static const int                            gMediumImageSize = 26;
 static const int                            gLargeImageSize = 38;
 

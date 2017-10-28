@@ -38,8 +38,6 @@ class CToolsBand :
 {
 private:
     CComPtr<IDockingWindowSite> fDockSite;
-    GUID                        fExecCommandCategory;
-    CComPtr<IOleCommandTarget>  fExecCommandTarget;
     HIMAGELIST m_himlNormal;
     HIMAGELIST m_himlHot;
 public:
@@ -163,7 +161,7 @@ static const int cutImageIndex = 5;
 static const int copyImageIndex = 6;
 static const int pasteImageIndex = 7;
 static const int undoImageIndex = 8;
-static const int redoImageIndex = 9;
+//static const int redoImageIndex = 9;
 static const int deleteImageIndex = 10;
 // 11
 // 12
@@ -186,13 +184,13 @@ static const int upImageIndex = 28;
 static const int mapDriveImageIndex = 29;
 static const int disconnectImageIndex = 30;
 // 31
-static const int viewsAltImageIndex = 32;       // same image as viewsImageIndex
+//static const int viewsAltImageIndex = 32;       // same image as viewsImageIndex
 // 33
 // 34
 // 35
 // 36
 // 37
-static const int viewsAlt2ImageIndex = 38;      // same image as viewsAltImageIndex & viewsImageIndex
+//static const int viewsAlt2ImageIndex = 38;      // same image as viewsAltImageIndex & viewsImageIndex
 // 39
 // 40
 // 41

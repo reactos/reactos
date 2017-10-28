@@ -15,7 +15,6 @@ class CDeviceManager
     HWND m_hStatusBar;
     HWND m_hToolBar;
     HMENU m_hMenu;
-    HMENU m_hActionMenu;
     int m_CmdShow;
     BOOL m_RefreshPending;
 

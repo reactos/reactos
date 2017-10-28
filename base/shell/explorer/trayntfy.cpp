@@ -1309,7 +1309,6 @@ class CTrayNotifyWnd :
     SIZE szTrayClockMin;
     SIZE szTrayNotify;
     MARGINS ContentMargin;
-    HFONT hFontClock;
     union
     {
         DWORD dwFlags;
@@ -1326,7 +1325,6 @@ public:
         m_pager(NULL),
         m_clock(NULL),
         TrayTheme(NULL),
-        hFontClock(NULL),
         dwFlags(0)
     {
         ZeroMemory(&szTrayClockMin, sizeof(szTrayClockMin));

@@ -14,7 +14,6 @@ class CNtObjectFolderExtractIcon :
     public IExtractIconW
 {
     PCWSTR m_NtPath;
-    PCIDLIST_ABSOLUTE m_pcidlFolder;
     PCITEMID_CHILD    m_pcidlChild;
 
 public:

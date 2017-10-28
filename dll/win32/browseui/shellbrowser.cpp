@@ -167,7 +167,7 @@ HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder)
 }
 
 static const TCHAR szCabinetWndClass[] = TEXT("CabinetWClass");
-static const TCHAR szExploreWndClass[] = TEXT("ExploreWClass");
+//static const TCHAR szExploreWndClass[] = TEXT("ExploreWClass");
 
 class CDockManager;
 class CShellBrowser;
