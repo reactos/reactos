@@ -8,21 +8,21 @@
 #include "precomp.h"
 
 DWORD
-_RpcClientFindFirstPrinterChangeNotification()
+_RpcClientFindFirstPrinterChangeNotification(VOID)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;
 }
 
 DWORD
-_RpcFindClosePrinterChangeNotification()
+_RpcFindClosePrinterChangeNotification(VOID)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;
 }
 
 DWORD
-_RpcFindNextPrinterChangeNotification()
+_RpcFindNextPrinterChangeNotification(VOID)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;
@@ -57,7 +57,7 @@ _RpcReplyOpenPrinter(WINSPOOL_HANDLE pMachine, WINSPOOL_PRINTER_HANDLE* phPrinte
 }
 
 DWORD
-_RpcRouterFindFirstPrinterChangeNotificationOld()
+_RpcRouterFindFirstPrinterChangeNotificationOld(VOID)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;

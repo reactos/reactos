@@ -8,7 +8,7 @@
 #include "precomp.h"
 
 DWORD
-_RpcSpoolerInit()
+_RpcSpoolerInit(VOID)
 {
     DWORD dwErrorCode;
 

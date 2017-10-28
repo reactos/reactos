@@ -332,14 +332,14 @@ _RpcResetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pDatatype, WINSPOOL_DE
 }
 
 DWORD
-_RpcResetPrinterEx()
+_RpcResetPrinterEx(VOID)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;
 }
 
 DWORD
-_RpcSeekPrinter()
+_RpcSeekPrinter(VOID)
 {
     UNIMPLEMENTED;
     return ERROR_INVALID_FUNCTION;
