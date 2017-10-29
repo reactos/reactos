@@ -185,8 +185,7 @@ RtlReadMemoryStream(
 
     Stream->Current = (PUCHAR)Stream->Current + CopyLength;
 
-    if (BytesRead)
-        *BytesRead = CopyLength;
+    *BytesRead = CopyLength;
 
     return S_OK;
 }
