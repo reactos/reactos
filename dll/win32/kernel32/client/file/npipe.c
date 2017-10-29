@@ -468,6 +468,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     HANDLE FileHandle;
     IO_STATUS_BLOCK IoStatusBlock;
     ULONG WaitPipeInfoSize;
+    PVOID DevicePathBuffer;
     PFILE_PIPE_WAIT_FOR_BUFFER WaitPipeInfo;
 
     /* Start by making a unicode string of the name */
@@ -485,6 +486,8 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         /* Check and convert */
         if (NamedPipeName.Buffer[i] == L'/') NamedPipeName.Buffer[i] = L'\\';
     }
+
+    DevicePathBuffer = NULL;
 
     /* Find the path type of the name we were given */
     NewName = NamedPipeName;
@@ -515,6 +518,8 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     }
     else if (Type == RtlPathTypeUncAbsolute)
     {
+        PWSTR PipeName;
+
         /* The path is \\server\\pipe\name; find the pipename itself */
         p = &NewName.Buffer[2];
 
@@ -543,7 +548,34 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
             return FALSE;
         }
 
-        /* FIXME: Open \DosDevices\Unc\Server\Pipe\Name */
+        /* Skip first backslash */
+        NewName.Buffer++;
+        /* And skip pipe for copying name */
+        PipeName = p + ((sizeof(L"pipe\\") - sizeof(UNICODE_NULL)) / sizeof(WCHAR));
+        /* Update the string */
+        NewName.Length = (USHORT)((ULONG_PTR)PipeName - (ULONG_PTR)NewName.Buffer);
+        NewName.MaximumLength = (USHORT)((ULONG_PTR)PipeName - (ULONG_PTR)NewName.Buffer);
+
+        /* DevicePath will contain the pipename + the DosDevice prefix */
+        DevicePath.MaximumLength = (USHORT)((ULONG_PTR)PipeName - (ULONG_PTR)NewName.Buffer) + sizeof(L"\\DosDevices\\UNC\\");
+
+        /* Allocate the buffer for DevicePath */
+        DevicePathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, DevicePath.MaximumLength);
+        if (DevicePathBuffer == NULL)
+        {
+            RtlFreeUnicodeString(&NamedPipeName);
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Copy the prefix first */
+        DevicePath.Buffer = DevicePathBuffer;
+        RtlCopyMemory(DevicePathBuffer, L"\\DosDevices\\UNC\\", sizeof(L"\\DosDevices\\UNC\\") - sizeof(UNICODE_NULL));
+        DevicePath.Length = sizeof(L"\\DosDevices\\UNC\\") - sizeof(UNICODE_NULL);
+        /* And append the rest */
+        RtlAppendUnicodeStringToString(&DevicePath, &NewName);
+        /* And fix pipe name without its prefix */
+        RtlInitUnicodeString(&NewName, PipeName + 1);
     }
     else
     {
@@ -559,6 +591,11 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     WaitPipeInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, WaitPipeInfoSize);
     if (WaitPipeInfo == NULL)
     {
+        if (DevicePathBuffer != NULL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, DevicePathBuffer);
+        }
+
         RtlFreeUnicodeString(&NamedPipeName);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
@@ -579,6 +616,12 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
                         &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
+
+    if (DevicePathBuffer != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DevicePathBuffer);
+    }
+
     if (!NT_SUCCESS(Status))
     {
         /* Fail; couldn't open */
