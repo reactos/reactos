@@ -4392,7 +4392,10 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
        {
           PWND pwndM = ValidateHwndNoErr( menu->hWnd );
           if (pwndM) // wine hack around this with their destroy function.
-             co_UserDestroyWindow( pwndM ); // Fix wrong error return.
+          {
+             if (!(pWnd->state & WNDS_DESTROYED))
+                co_UserDestroyWindow( pwndM ); // Fix wrong error return.
+          }
           menu->hWnd = 0;
 
           if (!(wFlags & TPM_NONOTIFY))
