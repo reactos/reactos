@@ -127,6 +127,11 @@ GetLogicalDrives(VOID)
         return 0;
     }
 
+    if (ProcessDeviceMapInfo.Query.DriveMap == 0)
+    {
+        SetLastError(ERROR_SUCCESS);
+    }
+
     return ProcessDeviceMapInfo.Query.DriveMap;
 }
 
