@@ -22,7 +22,7 @@ NmiClearFlag(VOID)
     ((PCHAR)&KiBugCheckData[4])[0] -= (NmiBegin[3] | NmiBegin[7]);
     ((PCHAR)&KiBugCheckData[4])[3] |= 1;
 #ifdef _M_IX86
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
     __asm
     {
         rcr KiBugCheckData[4], 8
