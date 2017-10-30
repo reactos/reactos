@@ -82,7 +82,10 @@ DWORD WINAPI drvGetDefaultCommConfigA(LPCSTR lpszDevice,
  *
  ************************************/
 
-LRESULT CommDlgProc(HWND hDlg,
+INT_PTR
+CALLBACK
+CommDlgProc(
+	HWND hDlg,
 	UINT Msg,
 	WPARAM wParam,
 	LPARAM lParam);
