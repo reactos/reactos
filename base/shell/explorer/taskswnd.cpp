@@ -1735,6 +1735,18 @@ public:
         return TRUE;
     }
 
+    LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
+        if (newSettings->bGroupButtons != g_TaskbarSettings.bGroupButtons)
+        {
+            /* TODO: Toggle grouping */
+            g_TaskbarSettings.bGroupButtons = newSettings->bGroupButtons;
+        }
+
+        return 0;
+    }
+
     LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         LRESULT Ret = 0;
@@ -1828,6 +1840,7 @@ public:
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(TSWM_ENABLEGROUPING, OnEnableGrouping)
         MESSAGE_HANDLER(TSWM_UPDATETASKBARPOS, OnUpdateTaskbarPos)
+        MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)

@@ -916,7 +916,7 @@ public:
             if (ClockWndFormats[i].IsTime)
             {
                 iRet = GetTimeFormat(LOCALE_USER_DEFAULT,
-                    TaskBarSettings.bShowSeconds ? ClockWndFormats[i].dwFormatFlags : TIME_NOSECONDS,
+                    g_TaskbarSettings.bShowSeconds ? ClockWndFormats[i].dwFormatFlags : TIME_NOSECONDS,
                     &LocalTime,
                     ClockWndFormats[i].lpFormat,
                     szLines[i],
@@ -988,7 +988,7 @@ public:
         /* Calculate the due time */
         GetLocalTime(&LocalTime);
         uiDueTime = 1000 - (UINT) LocalTime.wMilliseconds;
-        if (TaskBarSettings.bShowSeconds)
+        if (g_TaskbarSettings.bShowSeconds)
             uiDueTime += (UINT) LocalTime.wSecond * 100;
         else
             uiDueTime += (59 - (UINT) LocalTime.wSecond) * 1000;
@@ -1046,7 +1046,7 @@ public:
 
         uiDueTime = CalculateDueTime();
 
-        if (TaskBarSettings.bShowSeconds)
+        if (g_TaskbarSettings.bShowSeconds)
         {
             uiWait1 = 1000 - 200;
             uiWait2 = 1000;
@@ -1310,15 +1310,7 @@ class CTrayNotifyWnd :
     SIZE szTrayClockMin;
     SIZE szTrayNotify;
     MARGINS ContentMargin;
-    union
-    {
-        DWORD dwFlags;
-        struct
-        {
-            DWORD HideClock : 1;
-            DWORD IsHorizontal : 1;
-        };
-    };
+    BOOL IsHorizontal;
 
 public:
     CTrayNotifyWnd() :
@@ -1326,7 +1318,7 @@ public:
         m_pager(NULL),
         m_clock(NULL),
         TrayTheme(NULL),
-        dwFlags(0)
+        IsHorizontal(FALSE)
     {
         ZeroMemory(&szTrayClockMin, sizeof(szTrayClockMin));
         ZeroMemory(&szTrayNotify, sizeof(szTrayNotify));
@@ -1377,10 +1369,10 @@ public:
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         m_clock = new CTrayClockWnd();
-        m_clock->_Init(m_hWnd, !HideClock);
+        m_clock->_Init(m_hWnd, !g_TaskbarSettings.sr.HideClock);
 
         m_pager = new CSysPagerWnd();
-        m_pager->_Init(m_hWnd, !HideClock);
+        m_pager->_Init(m_hWnd, !g_TaskbarSettings.sr.HideClock);
 
         return TRUE;
     }
@@ -1390,7 +1382,7 @@ public:
         SIZE szClock = { 0, 0 };
         SIZE szTray = { 0, 0 };
 
-        if (!HideClock)
+        if (!g_TaskbarSettings.sr.HideClock)
         {
             if (IsHorizontal)
             {
@@ -1430,7 +1422,7 @@ public:
         {
             pSize->cx = 2 * TRAY_NOTIFY_WND_SPACING_X;
 
-            if (!HideClock)
+            if (!g_TaskbarSettings.sr.HideClock)
                 pSize->cx += TRAY_NOTIFY_WND_SPACING_X + szTrayClockMin.cx;
 
             pSize->cx += szTray.cx;
@@ -1439,7 +1431,7 @@ public:
         {
             pSize->cy = 2 * TRAY_NOTIFY_WND_SPACING_Y;
 
-            if (!HideClock)
+            if (!g_TaskbarSettings.sr.HideClock)
                 pSize->cy += TRAY_NOTIFY_WND_SPACING_Y + szTrayClockMin.cy;
 
             pSize->cy += szTray.cy;
@@ -1453,7 +1445,7 @@ public:
 
     VOID Size(IN const SIZE *pszClient)
     {
-        if (!HideClock)
+        if (!g_TaskbarSettings.sr.HideClock)
         {
             POINT ptClock;
             SIZE szClock;
@@ -1600,15 +1592,33 @@ public:
 
     LRESULT OnShowClock(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        BOOL PrevHidden = HideClock;
-        HideClock = (wParam == 0);
+        BOOL PrevHidden = g_TaskbarSettings.sr.HideClock;
+        g_TaskbarSettings.sr.HideClock = (wParam == 0);
 
-        if (m_clock != NULL && PrevHidden != HideClock)
+        if (m_clock != NULL && PrevHidden != g_TaskbarSettings.sr.HideClock)
         {
-            m_clock->ShowWindow(HideClock ? SW_HIDE : SW_SHOW);
+            m_clock->ShowWindow(g_TaskbarSettings.sr.HideClock ? SW_HIDE : SW_SHOW);
         }
 
         return (LRESULT) (!PrevHidden);
+    }
+
+    LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
+        if (newSettings->bShowSeconds != g_TaskbarSettings.bShowSeconds)
+        {
+            g_TaskbarSettings.bShowSeconds = newSettings->bShowSeconds;
+            /* TODO: Toggle showing seconds */
+        }
+
+        if (newSettings->sr.HideClock != g_TaskbarSettings.sr.HideClock)
+        {
+            g_TaskbarSettings.sr.HideClock = newSettings->sr.HideClock;
+            /* TODO: Toggle hiding the clock */
+        }
+
+        return 0;
     }
 
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1665,9 +1675,10 @@ public:
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
         MESSAGE_HANDLER(TNWM_UPDATETIME, OnUpdateTime)
         MESSAGE_HANDLER(TNWM_SHOWCLOCK, OnShowClock)
+        MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
     END_MSG_MAP()
 
-    HWND _Init(IN OUT ITrayWindow *TrayWindow, IN BOOL bHideClock)
+    HWND _Init(IN OUT ITrayWindow *TrayWindow)
     {
         HWND hWndTrayWindow;
 
@@ -1676,7 +1687,6 @@ public:
             return NULL;
 
         this->TrayWindow = TrayWindow;
-        this->HideClock = bHideClock;
         this->hWndNotify = hWndTrayWindow;
 
         DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
@@ -1684,13 +1694,13 @@ public:
     }
 };
 
-HWND CreateTrayNotifyWnd(IN OUT ITrayWindow *Tray, BOOL bHideClock, CTrayNotifyWnd** ppinstance)
+HWND CreateTrayNotifyWnd(IN OUT ITrayWindow *Tray, CTrayNotifyWnd** ppinstance)
 {
     CTrayNotifyWnd * pTrayNotify = new CTrayNotifyWnd();
     // TODO: Destroy after the window is destroyed
     *ppinstance = pTrayNotify;
 
-    return pTrayNotify->_Init(Tray, bHideClock);
+    return pTrayNotify->_Init(Tray);
 }
 
 BOOL

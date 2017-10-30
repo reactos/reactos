@@ -21,441 +21,254 @@
 
 #include "precomp.h"
 
-typedef struct _PROPSHEET_INFO
+static void SetBitmap(HWND hwnd, HBITMAP* hbmp, UINT uImageId)
 {
-    HWND hTaskbarWnd;
-    HWND hStartWnd;
+    if (*hbmp)
+        DeleteObject(*hbmp);
 
-    HBITMAP hTaskbarBitmap;
-    HBITMAP hTrayBitmap;
-    HBITMAP hStartBitmap;
-} PROPSHEET_INFO, *PPROPSHEET_INFO;
+    *hbmp = (HBITMAP)LoadImageW(hExplorerInstance,
+                                MAKEINTRESOURCEW(uImageId),
+                                IMAGE_BITMAP,
+                                0,
+                                0,
+                                LR_DEFAULTCOLOR);
 
-
-static BOOL
-UpdateBitmaps(PPROPSHEET_INFO pPropInfo)
-{
-    HWND hwndLock, hwndHide, hwndGroup, hwndShowQL, hwndClock, hwndSeconds, hwndHideInactive, hwndModernStart, hwndClassicStart;
-    HWND hwndTaskbarBitmap, hwndTrayBitmap, hwndStartBitmap;
-    HWND hwndCustomizeNotifyButton, hwndCustomizeClassicStartButton, hwndCustomizeModernStartButton;
-    BOOL bLock, bHide, bGroup, bShowQL, bShowClock, bShowSeconds, bHideInactive;
-    LPTSTR lpTaskBarImageName = NULL, lpTrayImageName = NULL, lpStartImageName = NULL;
-    BOOL bRet = FALSE;
-
-    hwndLock = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_LOCK);
-    hwndHide = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_HIDE);
-    hwndGroup = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_GROUP);
-    hwndShowQL = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_SHOWQL);
-    
-    hwndClock = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_CLOCK);
-    hwndSeconds = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_SECONDS);
-    hwndHideInactive = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_HIDEICONS);
-    
-    hwndCustomizeNotifyButton = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_ICONCUST);
-    
-    hwndModernStart = GetDlgItem(pPropInfo->hStartWnd, IDC_TASKBARPROP_STARTMENU);
-    hwndClassicStart = GetDlgItem(pPropInfo->hStartWnd, IDC_TASKBARPROP_STARTMENUCLASSIC);
-    
-    hwndCustomizeClassicStartButton = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_STARTMENUCLASSICCUST);
-    hwndCustomizeModernStartButton = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_STARTMENUCUST);
-    
-    
-
-    if (hwndLock && hwndHide && hwndGroup && hwndShowQL && hwndClock && hwndSeconds && hwndHideInactive)
+    if (*hbmp && hwnd)
     {
-        bLock = (SendMessage(hwndLock, BM_GETCHECK, 0, 0) == BST_CHECKED);
-        bHide = (SendMessage(hwndHide, BM_GETCHECK, 0, 0) == BST_CHECKED);
-        bGroup = (SendMessage(hwndGroup, BM_GETCHECK, 0, 0) == BST_CHECKED);
-        bShowQL = (SendMessage(hwndShowQL, BM_GETCHECK, 0, 0) == BST_CHECKED);
-        
-        bShowClock = (SendMessage(hwndClock, BM_GETCHECK, 0, 0) == BST_CHECKED);
-        bShowSeconds = (SendMessage(hwndSeconds, BM_GETCHECK, 0, 0) == BST_CHECKED);
-        bHideInactive = (SendMessage(hwndHideInactive, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        BITMAP bm;
+        GetObject(*hbmp, sizeof(bm), &bm);
+        ::SetWindowPos(hwnd, NULL, 0, 0, bm.bmWidth + 2, bm.bmHeight + 2,
+                       SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+        SendMessage(hwnd, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)*hbmp);
+    }
+
+}
+
+class CTaskBarSettingsPage : public CPropertyPageImpl<CTaskBarSettingsPage>
+{
+private: 
+    HBITMAP m_hbmpTaskbar;
+    HBITMAP m_hbmpTray;
+    HWND m_hwndTaskbar;
+
+    void UpdateDialog()
+    {
+        BOOL bLock = IsDlgButtonChecked(IDC_TASKBARPROP_LOCK);
+        BOOL bHide = IsDlgButtonChecked(IDC_TASKBARPROP_HIDE);
+        BOOL bGroup = IsDlgButtonChecked(IDC_TASKBARPROP_GROUP);
+        BOOL bShowQL = IsDlgButtonChecked(IDC_TASKBARPROP_SHOWQL);
+        BOOL bShowClock = IsDlgButtonChecked(IDC_TASKBARPROP_CLOCK);
+        BOOL bShowSeconds = IsDlgButtonChecked(IDC_TASKBARPROP_SECONDS);
+        BOOL bHideInactive = IsDlgButtonChecked(IDC_TASKBARPROP_HIDEICONS);
+        UINT uImageId;
+
+        HWND hwndCustomizeNotifyButton = GetDlgItem(IDC_TASKBARPROP_ICONCUST);
+        HWND hwndSeconds = GetDlgItem(IDC_TASKBARPROP_SECONDS);
+        HWND hwndTaskbarBitmap = GetDlgItem(IDC_TASKBARPROP_TASKBARBITMAP);
+        HWND hwndTrayBitmap = GetDlgItem(IDC_TASKBARPROP_NOTIFICATIONBITMAP);
 
         if (bHide)
-            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_AUTOHIDE);
+            uImageId = IDB_TASKBARPROP_AUTOHIDE;
         else if (bLock  && bGroup  && bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_LOCK_GROUP_QL);
+            uImageId = IDB_TASKBARPROP_LOCK_GROUP_QL;
         else if (bLock  && !bGroup && !bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_LOCK_NOGROUP_NOQL);
+            uImageId = IDB_TASKBARPROP_LOCK_NOGROUP_NOQL;
         else if (bLock  && bGroup  && !bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_LOCK_GROUP_NOQL);
+            uImageId = IDB_TASKBARPROP_LOCK_GROUP_NOQL;
         else if (bLock  && !bGroup && bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_LOCK_NOGROUP_QL);
+            uImageId = IDB_TASKBARPROP_LOCK_NOGROUP_QL;
         else if (!bLock && !bGroup && !bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL);
+            uImageId = IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL;
         else if (!bLock && bGroup  && !bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_NOLOCK_GROUP_NOQL);
+            uImageId = IDB_TASKBARPROP_NOLOCK_GROUP_NOQL;
         else if (!bLock && !bGroup && bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_NOLOCK_NOGROUP_QL);
+            uImageId = IDB_TASKBARPROP_NOLOCK_NOGROUP_QL;
         else if (!bLock && bGroup  && bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_NOLOCK_GROUP_QL);
+            uImageId = IDB_TASKBARPROP_NOLOCK_GROUP_QL;
+        else 
+            ASSERT(FALSE);
 
-        
-        if (lpTaskBarImageName)
-        {
-            if (pPropInfo->hTaskbarBitmap)
-            {
-                DeleteObject(pPropInfo->hTaskbarBitmap);
-            }
+        SetBitmap(hwndTaskbarBitmap, &m_hbmpTaskbar, uImageId);
 
-            pPropInfo->hTaskbarBitmap = (HBITMAP)LoadImageW(hExplorerInstance,
-                                                  lpTaskBarImageName,
-                                                  IMAGE_BITMAP,
-                                                  0,
-                                                  0,
-                                                  LR_DEFAULTCOLOR);
-            if (pPropInfo->hTaskbarBitmap)
-            {
-                hwndTaskbarBitmap = GetDlgItem(pPropInfo->hTaskbarWnd,
-                                        IDC_TASKBARPROP_TASKBARBITMAP);
-                if (hwndTaskbarBitmap)
-                {
-                    BITMAP bm;
-                    GetObject(pPropInfo->hTaskbarBitmap, sizeof(bm), &bm);
-                    SetWindowPos(hwndTaskbarBitmap, NULL, 0, 0, bm.bmWidth + 2, bm.bmHeight + 2,
-                                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
-                    SendMessage(hwndTaskbarBitmap,
-                                STM_SETIMAGE,
-                                IMAGE_BITMAP,
-                                (LPARAM)pPropInfo->hTaskbarBitmap);
-                }
-            }
-        }
-        
-        if (bHideInactive)
-        {
-            EnableWindow(hwndCustomizeNotifyButton, TRUE);
-            if (bShowClock)
-            {
-                EnableWindow(hwndSeconds, TRUE);
-                if (bShowSeconds)
-                    lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_HIDE_SECONDS);
-                else
-                    lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_HIDE_CLOCK);
-            }
-            else
-            {
-                SendMessage(hwndSeconds, BM_SETCHECK, BST_UNCHECKED, 0);
-                EnableWindow(hwndSeconds, FALSE);
-                lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_HIDE_NOCLOCK);
-            }
-        }
-        else
-        {
-            EnableWindow(hwndCustomizeNotifyButton, FALSE);
-            if (bShowClock)
-            {
-                EnableWindow(hwndSeconds, TRUE);
-                if (bShowSeconds)
-                    lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_SHOW_SECONDS);
-                else
-                    lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_SHOW_CLOCK);
-            }
-            else
-            {
-                SendMessage(hwndSeconds, BM_SETCHECK, BST_UNCHECKED, 0);
-                EnableWindow(hwndSeconds, FALSE);
-                lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_SHOW_NOCLOCK);
-            }
-        }
-        
-        if (lpTrayImageName)
-        {
-            if (pPropInfo->hTrayBitmap)
-            {
-                DeleteObject(pPropInfo->hTrayBitmap);
-            }
+        ::EnableWindow(hwndCustomizeNotifyButton, bHideInactive);
+        ::EnableWindow(hwndSeconds, bShowClock);
+        if (!bShowSeconds)
+            CheckDlgButton(IDC_TASKBARPROP_SECONDS, BST_UNCHECKED);
 
-            pPropInfo->hTrayBitmap = (HBITMAP)LoadImageW(hExplorerInstance,
-                                                  lpTrayImageName,
-                                                  IMAGE_BITMAP,
-                                                  0,
-                                                  0,
-                                                  LR_DEFAULTCOLOR);
-            if (pPropInfo->hTrayBitmap)
-            {
-                hwndTrayBitmap = GetDlgItem(pPropInfo->hTaskbarWnd,
-                                        IDC_TASKBARPROP_NOTIFICATIONBITMAP);
-                if (hwndTrayBitmap)
-                {
-                    BITMAP bm;
-                    GetObject(pPropInfo->hTrayBitmap, sizeof(bm), &bm);
-                    SetWindowPos(hwndTrayBitmap, NULL, 0, 0, bm.bmWidth + 2, bm.bmHeight + 2,
-                                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
-                    SendMessage(hwndTrayBitmap,
-                                STM_SETIMAGE,
-                                IMAGE_BITMAP,
-                                (LPARAM)pPropInfo->hTrayBitmap);
-                }
-            }
-        }
+        if (bHideInactive && bShowClock && bShowSeconds)
+            uImageId = IDB_SYSTRAYPROP_HIDE_SECONDS;
+        else if (bHideInactive && bShowClock && !bShowSeconds)
+            uImageId = IDB_SYSTRAYPROP_HIDE_CLOCK;
+        else if (bHideInactive && !bShowClock)
+            uImageId = IDB_SYSTRAYPROP_HIDE_NOCLOCK;
+        else if (!bHideInactive && bShowClock && bShowSeconds)
+            uImageId = IDB_SYSTRAYPROP_SHOW_SECONDS;
+        else if (!bHideInactive && bShowClock && !bShowSeconds)
+            uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK;
+        else if (!bHideInactive && !bShowClock)
+            uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK;
+        else 
+            ASSERT(FALSE);
+
+        SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
+    }
+
+public:
+    enum { IDD = IDD_TASKBARPROP_TASKBAR };
+
+    BEGIN_MSG_MAP(CTaskBarSettingsPage)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        COMMAND_ID_HANDLER(IDC_TASKBARPROP_ICONCUST, OnCustomizeTrayIcons)
+        COMMAND_RANGE_HANDLER(IDC_TASKBARPROP_FIRST_CMD, IDC_TASKBARPROP_LAST_CMD, OnCtrlCommand)
+        CHAIN_MSG_MAP(CPropertyPageImpl<CTaskBarSettingsPage>)
+    END_MSG_MAP()
+
+    CTaskBarSettingsPage(HWND hwnd):
+        m_hbmpTaskbar(NULL),
+        m_hbmpTray(NULL),
+        m_hwndTaskbar(hwnd)
+    {
     }
     
-    if(hwndClassicStart && hwndModernStart)
+    ~CTaskBarSettingsPage()
     {
-        if(SendMessage(hwndModernStart, BM_GETCHECK, 0, 0) == BST_CHECKED)
-        {
-            EnableWindow(hwndCustomizeModernStartButton, TRUE);
-            EnableWindow(hwndCustomizeClassicStartButton, FALSE);
-            lpStartImageName = MAKEINTRESOURCEW(IDB_STARTPREVIEW);
-        }
-        else
-        {
-            EnableWindow(hwndCustomizeModernStartButton, FALSE);
-            EnableWindow(hwndCustomizeClassicStartButton, TRUE);
-            lpStartImageName = MAKEINTRESOURCEW(IDB_STARTPREVIEW_CLASSIC);
-        }
-        
-         if (lpStartImageName)
-        {
-            if (pPropInfo->hStartBitmap)
-            {
-                DeleteObject(pPropInfo->hStartBitmap);
-            }
-
-            pPropInfo->hStartBitmap = (HBITMAP)LoadImageW(hExplorerInstance,
-                                                  lpStartImageName,
-                                                  IMAGE_BITMAP,
-                                                  0,
-                                                  0,
-                                                  LR_DEFAULTCOLOR);
-            if (pPropInfo->hStartBitmap)
-            {
-                hwndStartBitmap = GetDlgItem(pPropInfo->hStartWnd,
-                                        IDC_TASKBARPROP_STARTMENU_BITMAP);
-                if (hwndStartBitmap)
-                {
-                    BITMAP bm;
-                    GetObject(pPropInfo->hStartBitmap, sizeof(bm), &bm);
-                    SetWindowPos(hwndStartBitmap, NULL, 0, 0, bm.bmWidth + 2, bm.bmHeight + 2,
-                                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
-                    SendMessage(hwndStartBitmap,
-                                STM_SETIMAGE,
-                                IMAGE_BITMAP,
-                                (LPARAM)pPropInfo->hStartBitmap);
-                }
-            }
-        }
+        if (m_hbmpTaskbar)
+            DeleteObject(m_hbmpTaskbar);
+        if (m_hbmpTray)
+            DeleteObject(m_hbmpTray);
     }
 
-    return bRet;
-}
-
-static VOID
-OnCreateTaskbarPage(HWND hwnd,
-                    PPROPSHEET_INFO pPropInfo)
-{
-    SetWindowLongPtr(hwnd,
-                     GWLP_USERDATA,
-                     (LONG_PTR)pPropInfo);
-
-    pPropInfo->hTaskbarWnd = hwnd;
-
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_LOCK, TaskBarSettings.bLock ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_HIDE, TaskBarSettings.bAutoHide ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_ONTOP, TaskBarSettings.bAlwaysOnTop ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_GROUP, TaskBarSettings.bGroupButtons ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_SHOWQL, TaskBarSettings.bShowQuickLaunch ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_CLOCK, TaskBarSettings.bShowClock ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, TaskBarSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_HIDEICONS, TaskBarSettings.bHideInactiveIcons ? BST_CHECKED : BST_UNCHECKED);
-
-    UpdateBitmaps(pPropInfo);
-}
-
-static VOID
-OnCreateStartPage(HWND hwnd,
-                    PPROPSHEET_INFO pPropInfo)
-{
-    pPropInfo->hStartWnd = hwnd;
-
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_STARTMENUCLASSIC, 1);    // HACK: This has to be read from registry!
-    
-    UpdateBitmaps(pPropInfo);
-}
-
-INT_PTR CALLBACK
-TaskbarPageProc(HWND hwndDlg,
-                UINT uMsg,
-                WPARAM wParam,
-                LPARAM lParam)
-{
-    PPROPSHEET_INFO pPropInfo;
-
-    /* Get the window context */
-    pPropInfo = (PPROPSHEET_INFO)GetWindowLongPtrW(hwndDlg,
-                                                   GWLP_USERDATA);
-    if (pPropInfo == NULL && uMsg != WM_INITDIALOG)
+    LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        goto HandleDefaultMessage;
+        CheckDlgButton(IDC_TASKBARPROP_LOCK, g_TaskbarSettings.bLock ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(IDC_TASKBARPROP_HIDE, g_TaskbarSettings.sr.AutoHide ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(IDC_TASKBARPROP_ONTOP, g_TaskbarSettings.sr.AlwaysOnTop ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(IDC_TASKBARPROP_GROUP, g_TaskbarSettings.bGroupButtons ? BST_CHECKED : BST_UNCHECKED);
+        //CheckDlgButton(IDC_TASKBARPROP_SHOWQL, g_TaskbarSettings.bShowQuickLaunch ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(IDC_TASKBARPROP_CLOCK, (!g_TaskbarSettings.sr.HideClock) ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(IDC_TASKBARPROP_SECONDS, g_TaskbarSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(IDC_TASKBARPROP_HIDEICONS, g_TaskbarSettings.bHideInactiveIcons ? BST_CHECKED : BST_UNCHECKED);
+
+        UpdateDialog();
+        return TRUE;
     }
 
-    switch (uMsg)
+    LRESULT OnCustomizeTrayIcons(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
     {
-        case WM_INITDIALOG:
-            OnCreateTaskbarPage(hwndDlg, (PPROPSHEET_INFO)((LPPROPSHEETPAGE)lParam)->lParam);
-            break;
-
-        case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case IDC_TASKBARPROP_LOCK:
-                case IDC_TASKBARPROP_HIDE:
-                case IDC_TASKBARPROP_GROUP:
-                case IDC_TASKBARPROP_SHOWQL:
-                case IDC_TASKBARPROP_HIDEICONS:
-                case IDC_TASKBARPROP_CLOCK:
-                case IDC_TASKBARPROP_SECONDS:
-                    if (HIWORD(wParam) == BN_CLICKED)
-                    {
-                        UpdateBitmaps(pPropInfo);
-
-                        /* Enable the 'Apply' button */
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
-                    break;
-                case IDC_TASKBARPROP_ICONCUST:
-                    ShowCustomizeNotifyIcons(hExplorerInstance, hwndDlg);
-                    break;
-            }
-            break;
-
-        case WM_NOTIFY:
-        {
-            LPNMHDR pnmh = (LPNMHDR)lParam;
-
-            switch (pnmh->code)
-            {
-                case PSN_SETACTIVE:
-                    break;
-
-                case PSN_APPLY:
-                    TaskBarSettings.bLock = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_LOCK);
-                    TaskBarSettings.bAutoHide = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_HIDE);
-                    TaskBarSettings.bAlwaysOnTop = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_ONTOP);
-                    TaskBarSettings.bGroupButtons = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_GROUP);
-                    TaskBarSettings.bShowQuickLaunch = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SHOWQL);
-                    TaskBarSettings.bShowClock = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_CLOCK);
-                    TaskBarSettings.bShowSeconds = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SECONDS);
-                    TaskBarSettings.bHideInactiveIcons = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_HIDEICONS);
-                    SaveTaskBarSettings();
-                    break;
-            }
-
-            break;
-        }
-
-        case WM_DESTROY:
-            if (pPropInfo->hTaskbarBitmap)
-            {
-                DeleteObject(pPropInfo->hTaskbarBitmap);
-            }
-            if (pPropInfo->hTrayBitmap)
-            {
-                DeleteObject(pPropInfo->hTrayBitmap);
-            }
-            break;
-
-HandleDefaultMessage:
-        default:
-            return FALSE;
+        ShowCustomizeNotifyIcons(hExplorerInstance, m_hWnd);
+        return 0;
     }
 
-    return FALSE;
-}
-
-static INT_PTR CALLBACK
-StartMenuPageProc(HWND hwndDlg,
-                  UINT uMsg,
-                  WPARAM wParam,
-                  LPARAM lParam)
-{
-    switch (uMsg)
+    LRESULT OnCtrlCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
     {
-        case WM_INITDIALOG:
-            OnCreateStartPage(hwndDlg, (PPROPSHEET_INFO)((LPPROPSHEETPAGE)lParam)->lParam);
-            break;
-            
-        case WM_COMMAND:
-        {
-            switch (LOWORD(wParam))
-            {
-                case IDC_TASKBARPROP_STARTMENUCLASSICCUST:
-                    ShowCustomizeClassic(hExplorerInstance, hwndDlg);
-                    break;
-            }
-            break;
-        }
-
-        case WM_DESTROY:
-            break;
-
-        case WM_NOTIFY:
-        {
-            LPNMHDR pnmh = (LPNMHDR)lParam;
-
-            switch (pnmh->code)
-            {
-                case PSN_SETACTIVE:
-                    break;
-
-                case PSN_APPLY:
-                    break;
-            }
-
-            break;
-        }
+        UpdateDialog();
+        SetModified(TRUE);
+        return 0;
     }
 
-    return FALSE;
-}
+    int OnApply()
+    {
+        TaskbarSettings newSettings;
+        memcpy(&newSettings, &g_TaskbarSettings, sizeof(TaskbarSettings));
 
-static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp,
-                  WORD idDlg,
-                  DLGPROC DlgProc,
-                  LPARAM lParam)
+        newSettings.bLock = IsDlgButtonChecked(IDC_TASKBARPROP_LOCK);
+        newSettings.sr.AutoHide = IsDlgButtonChecked(IDC_TASKBARPROP_HIDE);
+        newSettings.sr.AlwaysOnTop = IsDlgButtonChecked(IDC_TASKBARPROP_ONTOP);
+        newSettings.bGroupButtons = IsDlgButtonChecked(IDC_TASKBARPROP_GROUP);
+        //newSettings.bShowQuickLaunch = IsDlgButtonChecked(IDC_TASKBARPROP_SHOWQL);
+        newSettings.sr.HideClock = !IsDlgButtonChecked(IDC_TASKBARPROP_CLOCK);
+        newSettings.bShowSeconds = IsDlgButtonChecked(IDC_TASKBARPROP_SECONDS);
+        newSettings.bHideInactiveIcons = IsDlgButtonChecked(IDC_TASKBARPROP_HIDEICONS);
+
+        SendMessage(m_hwndTaskbar, TWM_SETTINGSCHANGED, 0, (LPARAM)&newSettings);
+
+        return PSNRET_NOERROR;
+    }
+};
+
+class CStartMenuSettingsPage : public CPropertyPageImpl<CStartMenuSettingsPage>
 {
-    ZeroMemory(psp, sizeof(*psp));
-    psp->dwSize = sizeof(*psp);
-    psp->dwFlags = PSP_DEFAULT;
-    psp->hInstance = hExplorerInstance;
-    psp->pszTemplate = MAKEINTRESOURCEW(idDlg);
-    psp->lParam = lParam;
-    psp->pfnDlgProc = DlgProc;
-}
+private: 
+    HBITMAP m_hbmpStartBitmap;
 
+    void UpdateDialog()
+    {
+        HWND hwndCustomizeClassic = GetDlgItem(IDC_TASKBARPROP_STARTMENUCLASSICCUST);
+        HWND hwndCustomizeModern = GetDlgItem(IDC_TASKBARPROP_STARTMENUCUST);
+        HWND hwndStartBitmap = GetDlgItem(IDC_TASKBARPROP_STARTMENU_BITMAP);
+
+        BOOL bModern = IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU);
+        ::EnableWindow(hwndCustomizeModern, bModern);
+        ::EnableWindow(hwndCustomizeClassic, !bModern);
+
+        UINT uImageId = bModern ? IDB_STARTPREVIEW : IDB_STARTPREVIEW_CLASSIC;
+        SetBitmap(hwndStartBitmap, &m_hbmpStartBitmap, uImageId);
+    }
+
+public:
+    enum { IDD = IDD_TASKBARPROP_STARTMENU };
+
+    BEGIN_MSG_MAP(CTaskBarSettingsPage)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        COMMAND_ID_HANDLER(IDC_TASKBARPROP_STARTMENUCLASSICCUST, OnStartMenuCustomize)
+        CHAIN_MSG_MAP(CPropertyPageImpl<CStartMenuSettingsPage>)
+    END_MSG_MAP()
+
+    CStartMenuSettingsPage():
+        m_hbmpStartBitmap(NULL)
+    {
+    }
+
+    ~CStartMenuSettingsPage()
+    {
+        if (m_hbmpStartBitmap)
+            DeleteObject(m_hbmpStartBitmap);
+    }
+
+    LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+    {
+        CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);    // HACK: This has to be read from registry!
+        UpdateDialog();
+        return TRUE;
+    }
+
+    LRESULT OnStartMenuCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+    {
+        ShowCustomizeClassic(hExplorerInstance, m_hWnd);
+        return 0;
+    }
+
+    int OnApply()
+    {
+        //TODO
+        return PSNRET_NOERROR;
+    }
+};
 
 VOID
-DisplayTrayProperties(IN HWND hwndOwner)
+DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
 {
-    PROPSHEET_INFO propInfo = {0};
     PROPSHEETHEADER psh;
-    PROPSHEETPAGE psp[2];
-    WCHAR szCaption[256];
-
-    if (!LoadStringW(hExplorerInstance,
-                     IDS_TASKBAR_STARTMENU_PROP_CAPTION,
-                     szCaption,
-                     _countof(szCaption)))
-    {
-        return;
-    }
+    HPROPSHEETPAGE hpsp[2];
+    CTaskBarSettingsPage tbSettingsPage(hwndTaskbar);
+    CStartMenuSettingsPage smSettingsPage;
+    CStringW caption;
+    
+    caption.LoadStringW(IDS_TASKBAR_STARTMENU_PROP_CAPTION);
+    
+    hpsp[0] = tbSettingsPage.Create();
+    hpsp[1] = smSettingsPage.Create();
 
     ZeroMemory(&psh, sizeof(psh));
     psh.dwSize = sizeof(psh);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPTITLE;
     psh.hwndParent = hwndOwner;
     psh.hInstance = hExplorerInstance;
     psh.hIcon = NULL;
-    psh.pszCaption = szCaption;
-    psh.nPages = _countof(psp);
+    psh.pszCaption = caption.GetString();
+    psh.nPages = _countof(hpsp);
     psh.nStartPage = 0;
-    psh.ppsp = psp;
-
-    InitPropSheetPage(&psp[0], IDD_TASKBARPROP_TASKBAR, TaskbarPageProc, (LPARAM)&propInfo);
-    InitPropSheetPage(&psp[1], IDD_TASKBARPROP_STARTMENU, StartMenuPageProc, (LPARAM)&propInfo);
+    psh.phpage = hpsp;
 
     PropertySheet(&psh);
 }

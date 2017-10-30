@@ -237,12 +237,6 @@ public:
         DWORD Flags;
         struct
         {
-            DWORD AutoHide : 1;
-            DWORD AlwaysOnTop : 1;
-            DWORD SmSmallIcons : 1;
-            DWORD HideClock : 1;
-            DWORD Locked : 1;
-
             /* UI Status */
             DWORD InSizeMove : 1;
             DWORD IsDragging : 1;
@@ -411,7 +405,7 @@ public:
 
         m_TrayPropertiesOwner = hwnd;
 
-        DisplayTrayProperties(hwnd);
+        DisplayTrayProperties(hwnd, m_hWnd);
 
         m_TrayPropertiesOwner = NULL;
         ::DestroyWindow(hwnd);
@@ -494,7 +488,7 @@ public:
         case ID_LOCKTASKBAR:
             if (SHRestricted(REST_CLASSICSHELL) == 0)
             {
-                Lock(!Locked);
+                Lock(!g_TaskbarSettings.bLock);
             }
             break;
 
@@ -1192,7 +1186,7 @@ GetPrimaryScreenRect:
                    without user interaction. */
                 rcTray = m_TrayRects[m_Position];
 
-                if (AutoHide)
+                if (g_TaskbarSettings.sr.AutoHide)
                 {
                     rcTray.left += m_AutoHideOffset.cx;
                     rcTray.right += m_AutoHideOffset.cx;
@@ -1273,7 +1267,7 @@ ChangePos:
 
         /* If AutoHide is false then change the workarea to exclude
            the area that the taskbar covers. */
-        if (!AutoHide)
+        if (!g_TaskbarSettings.sr.AutoHide)
         {
             switch (m_Position)
             {
@@ -1324,23 +1318,11 @@ ChangePos:
         ApplyClipping(TRUE);
     }
 
-    typedef struct _TW_STUCKRECTS2
-    {
-        DWORD cbSize;
-        LONG Unknown;
-        DWORD dwFlags;
-        DWORD Position;
-        SIZE Size;
-        RECT Rect;
-    } TW_STRUCKRECTS2, *PTW_STUCKRECTS2;
-
     VOID RegLoadSettings()
     {
         DWORD Pos;
-        TW_STRUCKRECTS2 sr;
         RECT rcScreen;
         SIZE WndSize, EdgeSize, DlgFrameSize;
-        DWORD cbSize = sizeof(sr);
         SIZE StartBtnSize = m_StartButton.GetSize();
 
         EdgeSize.cx = GetSystemMetrics(SM_CXEDGE);
@@ -1348,44 +1330,12 @@ ChangePos:
         DlgFrameSize.cx = GetSystemMetrics(SM_CXDLGFRAME);
         DlgFrameSize.cy = GetSystemMetrics(SM_CYDLGFRAME);
 
-        if (SHGetValue(hkExplorer,
-            TEXT("StuckRects2"),
-            TEXT("Settings"),
-            NULL,
-            &sr,
-            &cbSize) == ERROR_SUCCESS &&
-            sr.cbSize == sizeof(sr))
+        m_Position = g_TaskbarSettings.sr.Position;
+        rcScreen = g_TaskbarSettings.sr.Rect;
+        GetScreenRectFromRect(&rcScreen, MONITOR_DEFAULTTONEAREST);
+
+        if (!g_TaskbarSettings.sr.Size.cx || !g_TaskbarSettings.sr.Size.cy)
         {
-            AutoHide = (sr.dwFlags & ABS_AUTOHIDE) != 0;
-            AlwaysOnTop = (sr.dwFlags & ABS_ALWAYSONTOP) != 0;
-            SmSmallIcons = (sr.dwFlags & 0x4) != 0;
-            HideClock = (sr.dwFlags & 0x8) != 0;
-
-            /* FIXME: Are there more flags? */
-
-#if WIN7_DEBUG_MODE
-            m_Position = ABE_LEFT;
-#else
-            if (sr.Position > ABE_BOTTOM)
-                m_Position = ABE_BOTTOM;
-            else
-                m_Position = sr.Position;
-#endif
-
-            /* Try to find out which monitor the tray window was located on last.
-               Here we're only interested in the monitor screen that we think
-               is the last one used. We're going to determine on which monitor
-               we really are after calculating the docked position. */
-            rcScreen = sr.Rect;
-            GetScreenRectFromRect(
-                &rcScreen,
-                MONITOR_DEFAULTTONEAREST);
-        }
-        else
-        {
-            m_Position = ABE_BOTTOM;
-            AlwaysOnTop = TRUE;
-
             /* Use the minimum size of the taskbar, we'll use the start
                button as a minimum for now. Make sure we calculate the
                entire window size, not just the client size. However, we
@@ -1393,36 +1343,17 @@ ChangePos:
                the start button and bands are not stuck to the screen border. */
             if(!m_Theme)
             {
-                sr.Size.cx = StartBtnSize.cx + (2 * (EdgeSize.cx + DlgFrameSize.cx));
-                sr.Size.cy = StartBtnSize.cy + (2 * (EdgeSize.cy + DlgFrameSize.cy));
+                g_TaskbarSettings.sr.Size.cx = StartBtnSize.cx + (2 * (EdgeSize.cx + DlgFrameSize.cx));
+                g_TaskbarSettings.sr.Size.cy = StartBtnSize.cy + (2 * (EdgeSize.cy + DlgFrameSize.cy));
             }
             else
             {
-                sr.Size.cx = StartBtnSize.cx - EdgeSize.cx;
-                sr.Size.cy = StartBtnSize.cy - EdgeSize.cy;
-                if(!Locked)
-                    sr.Size.cy += GetSystemMetrics(SM_CYSIZEFRAME);
+                g_TaskbarSettings.sr.Size.cx = StartBtnSize.cx - EdgeSize.cx;
+                g_TaskbarSettings.sr.Size.cy = StartBtnSize.cy - EdgeSize.cy;
+                if(!g_TaskbarSettings.bLock)
+                    g_TaskbarSettings.sr.Size.cy += GetSystemMetrics(SM_CYSIZEFRAME);
             }
-
-            /* Use the primary screen by default */
-            rcScreen.left = 0;
-            rcScreen.top = 0;
-            rcScreen.right = GetSystemMetrics(SM_CXSCREEN);
-            rcScreen.bottom = GetSystemMetrics(SM_CYSCREEN);
-            GetScreenRectFromRect(
-                &rcScreen,
-                MONITOR_DEFAULTTOPRIMARY);
         }
-
-        if (m_hWnd != NULL)
-            SetWindowPos(
-            AlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
-            0,
-            0,
-            0,
-            0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-
         /* Determine a minimum tray window rectangle. The "client" height is
            zero here since we cannot determine an optimal minimum width when
            loaded as a vertical tray window. We just need to make sure the values
@@ -1440,10 +1371,10 @@ ChangePos:
             WndSize.cy = StartBtnSize.cy - EdgeSize.cx;
         }
 
-        if (WndSize.cx < sr.Size.cx)
-            WndSize.cx = sr.Size.cx;
-        if (WndSize.cy < sr.Size.cy)
-            WndSize.cy = sr.Size.cy;
+        if (WndSize.cx < g_TaskbarSettings.sr.Size.cx)
+            WndSize.cx = g_TaskbarSettings.sr.Size.cx;
+        if (WndSize.cy < g_TaskbarSettings.sr.Size.cy)
+            WndSize.cy = g_TaskbarSettings.sr.Size.cy;
 
         /* Save the calculated size */
         m_TraySize = WndSize;
@@ -1940,7 +1871,7 @@ ChangePos:
         }
 
         DWORD dwExStyle = WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE;
-        if (AlwaysOnTop)
+        if (g_TaskbarSettings.sr.AlwaysOnTop)
             dwExStyle |= WS_EX_TOPMOST;
 
         DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
@@ -1996,18 +1927,18 @@ ChangePos:
 
     BOOL STDMETHODCALLTYPE Lock(IN BOOL bLock)
     {
-        BOOL bPrevLock = Locked;
+        BOOL bPrevLock = g_TaskbarSettings.bLock;
 
-        if (Locked != bLock)
+        if (g_TaskbarSettings.bLock != bLock)
         {
-            Locked = bLock;
+            g_TaskbarSettings.bLock = bLock;
 
             if (m_TrayBandSite != NULL)
             {
                 if (!SUCCEEDED(m_TrayBandSite->Lock(bLock)))
                 {
                     /* Reset?? */
-                    Locked = bPrevLock;
+                    g_TaskbarSettings.bLock = bPrevLock;
                     return bPrevLock;
                 }
             }
@@ -2020,7 +1951,7 @@ ChangePos:
                     RECT rcGripper = {0};
                     AdjustSizerRect(&rcGripper, Pos);
 
-                    if(Locked)
+                    if(g_TaskbarSettings.bLock)
                     {
                         m_TrayRects[Pos].top += rcGripper.top;
                         m_TrayRects[Pos].left += rcGripper.left;
@@ -2130,13 +2061,13 @@ ChangePos:
         SetWindowTheme(m_Rebar, L"TaskBar", NULL);
 
         /* Create the tray notification window */
-        m_TrayNotify = CreateTrayNotifyWnd(this, HideClock, &m_TrayNotifyInstance);
+        m_TrayNotify = CreateTrayNotifyWnd(this, &m_TrayNotifyInstance);
 
         UpdateFonts();
 
         InitShellServices(&m_ShellServices);
 
-        if (AutoHide)
+        if (g_TaskbarSettings.sr.AutoHide)
         {
             m_AutoHideState = AUTOHIDE_HIDING;
             SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
@@ -2248,7 +2179,7 @@ ChangePos:
         RECT rcClient;
         POINT pt;
 
-        if (Locked)
+        if (g_TaskbarSettings.bLock)
         {
             /* The user may not be able to resize the tray window.
             Pretend like the window is not sizeable when the user
@@ -2307,7 +2238,7 @@ ChangePos:
         need to be able to move the window in case the user wants to
         drag the tray window to another position or in case the user
         wants to resize the tray window. */
-        if (!Locked && GetCursorPos(&ptCursor))
+        if (!g_TaskbarSettings.bLock && GetCursorPos(&ptCursor))
         {
             IsDragging = TRUE;
             m_DraggingPosition = GetDraggingRectFromPt(ptCursor, pRect, &m_DraggingMonitor);
@@ -2323,7 +2254,7 @@ ChangePos:
     {
         PRECT pRect = (PRECT) lParam;
 
-        if (!Locked)
+        if (!g_TaskbarSettings.bLock)
         {
             FitToRebar(pRect);
         }
@@ -2370,7 +2301,7 @@ ChangePos:
     {
         InSizeMove = TRUE;
         IsDragging = FALSE;
-        if (!Locked)
+        if (!g_TaskbarSettings.bLock)
         {
             /* Remove the clipping on multi monitor systems while dragging around */
             ApplyClipping(FALSE);
@@ -2381,7 +2312,7 @@ ChangePos:
     LRESULT OnExitSizeMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         InSizeMove = FALSE;
-        if (!Locked)
+        if (!g_TaskbarSettings.bLock)
         {
             FitToRebar(&m_TrayRects[m_Position]);
 
@@ -2714,7 +2645,7 @@ HandleTrayContextMenu:
 
     LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (AutoHide)
+        if (g_TaskbarSettings.sr.AutoHide)
         {
             SetTimer(TIMER_ID_MOUSETRACK, MOUSETRACK_INTERVAL, NULL);
         }
@@ -2741,7 +2672,7 @@ HandleTrayContextMenu:
     {
         RECT *rc = NULL;
         /* Ignore WM_NCCALCSIZE if we are not themed or locked */
-        if(!m_Theme || Locked)
+        if(!m_Theme || g_TaskbarSettings.bLock)
         {
             bHandled = FALSE;
             return 0;
@@ -2817,6 +2748,41 @@ HandleTrayContextMenu:
         return 0;
     }
 
+    LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
+
+        /* Propagate the new settings to the children */
+        ::SendMessageW(m_TaskSwitch, uMsg, wParam, lParam);
+        ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
+
+        /* Toggle autohide */
+        if (newSettings->sr.AutoHide != g_TaskbarSettings.sr.AutoHide)
+        {
+            g_TaskbarSettings.sr.AutoHide = newSettings->sr.AutoHide;
+            memset(&m_AutoHideOffset, 0, sizeof(m_AutoHideOffset));
+            m_AutoHideState = AUTOHIDE_SHOWN;
+            if (!newSettings->sr.AutoHide)
+                SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOZORDER);
+            else
+                SetTimer(TIMER_ID_MOUSETRACK, MOUSETRACK_INTERVAL, NULL);
+        }
+
+        /* Toggle lock state */
+        Lock(newSettings->bLock);
+
+        /* Toggle OnTop state */
+        if (newSettings->sr.AlwaysOnTop != g_TaskbarSettings.sr.AlwaysOnTop)
+        {
+            g_TaskbarSettings.sr.AlwaysOnTop = newSettings->sr.AlwaysOnTop;
+            HWND hWndInsertAfter = newSettings->sr.AlwaysOnTop ? HWND_TOPMOST : HWND_BOTTOM;
+            SetWindowPos(hWndInsertAfter, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        }
+
+        g_TaskbarSettings.Save();
+        return 0;
+    }
+
     DECLARE_WND_CLASS_EX(szTrayWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTrayWindow)
@@ -2872,6 +2838,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_CLOSE, OnDoExitWindows)
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
+        MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
@@ -3032,7 +2999,7 @@ public:
 
         CheckMenuItem(hPopup,
                       ID_LOCKTASKBAR,
-                      MF_BYCOMMAND | (TrayWnd->Locked ? MF_CHECKED : MF_UNCHECKED));
+                      MF_BYCOMMAND | (g_TaskbarSettings.bLock ? MF_CHECKED : MF_UNCHECKED));
 
         UINT idCmdNext;
         idCmdNext = Shell_MergeMenus(hPopup, menubase, indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS | MM_ADDSEPARATOR);
