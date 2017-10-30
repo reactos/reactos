@@ -82,7 +82,7 @@ Cleanup:
 }
 
 DWORD
-GetLPTTransmissionRetryTimeout()
+GetLPTTransmissionRetryTimeout(VOID)
 {
     DWORD cbBuffer;
     DWORD dwReturnValue = 90;       // Use 90 seconds as default if we fail to read from registry.

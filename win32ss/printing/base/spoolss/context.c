@@ -61,7 +61,7 @@ Cleanup:
  * return to the SYSTEM context for specific tasks.
  */
 HANDLE WINAPI
-RevertToPrinterSelf()
+RevertToPrinterSelf(VOID)
 {
     DWORD dwErrorCode;
     HANDLE hReturnValue = NULL;

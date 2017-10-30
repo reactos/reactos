@@ -98,7 +98,7 @@ BOOL WINAPI LocalmonWritePort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuf, PDWORD p
 
 // tools.c
 BOOL DoesPortExist(PCWSTR pwszPortName);
-DWORD GetLPTTransmissionRetryTimeout();
+DWORD GetLPTTransmissionRetryTimeout(VOID);
 DWORD GetPortNameWithoutColon(PCWSTR pwszPortName, PWSTR* ppwszPortNameWithoutColon);
 
 // xcv.c

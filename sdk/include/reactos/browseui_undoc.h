@@ -126,7 +126,7 @@ HRESULT WINAPI SHGetNavigateTarget(long param8, long paramC, long param10, long 
 HRESULT WINAPI GetInfoTip(IUnknown *param8, long paramC, LPTSTR *param10, long cchMax);
 HRESULT WINAPI SHEnumClassesOfCategories(ULONG cImplemented, CATID *pImplemented, ULONG cRequired, CATID *pRequired, IEnumGUID **out);
 HRESULT WINAPI SHWriteClassesOfCategories(long param8, long paramC, long param10, long param14, long param18, long param1C, long param20);
-BOOL WINAPI SHIsExplorerBrowser();
+BOOL WINAPI SHIsExplorerBrowser(void);
 HRESULT WINAPI SHOpenNewFrame(LPITEMIDLIST pidl, IUnknown *paramC, long param10, DWORD dwFlags);
 
 #ifdef __cplusplus

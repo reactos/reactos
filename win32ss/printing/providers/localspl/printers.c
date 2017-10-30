@@ -104,7 +104,7 @@ _PrinterListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
  * During this process, the job queues are also initialized.
  */
 BOOL
-InitializePrinterList()
+InitializePrinterList(VOID)
 {
     DWORD cbData;
     DWORD cchPrinterName;

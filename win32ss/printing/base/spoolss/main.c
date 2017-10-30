@@ -70,7 +70,7 @@ Cleanup:
 }
 
 static BOOL
-_InitializePrintProviderList()
+_InitializePrintProviderList(VOID)
 {
     DWORD cbFileName;
     DWORD cchMaxSubKey;
@@ -234,7 +234,7 @@ SplInitializeWinSpoolDrv(PVOID* pTable)
 }
 
 BOOL WINAPI
-SplIsUpgrade()
+SplIsUpgrade(VOID)
 {
 	return FALSE;
 }
