@@ -89,6 +89,7 @@ __INTRIN_INLINE void* __cdecl memcpy(void* dest, const void* source, size_t num)
 
 /*** Memory barriers ***/
 
+#ifndef __clang__
 __INTRIN_INLINE void _ReadWriteBarrier(void)
 {
 	__asm__ __volatile__("" : : : "memory");
@@ -116,6 +117,7 @@ __INTRIN_INLINE void _mm_sfence(void)
 	__asm__ __volatile__("sfence");
 	_WriteBarrier();
 }
+#endif /* !__clang__ */
 
 #ifdef __x86_64__
 __INTRIN_INLINE void __faststorefence(void)
@@ -320,6 +322,8 @@ __INTRIN_INLINE long long _InterlockedIncrement64(volatile long long * lpAddend)
 #endif
 
 #else /* (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 */
+
+#ifndef __clang__
 
 __INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * Destination, char Exchange, char Comperand)
 {
@@ -571,6 +575,8 @@ __INTRIN_INLINE short _InterlockedIncrement16(volatile short * lpAddend)
 	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
 }
 
+#endif /* !__clang__ */
+
 #if defined(__x86_64__)
 __INTRIN_INLINE long long _InterlockedDecrement64(volatile long long * lpAddend)
 {
@@ -594,6 +600,7 @@ __INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Des
 
 #else
 
+#ifndef __clang__
 __INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Destination, long long Exchange, long long Comperand)
 {
 	long long retval = Comperand;
@@ -610,6 +617,7 @@ __INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Des
 
 	return retval;
 }
+#endif /* !__clang__ */
 
 #endif
 
@@ -647,12 +655,14 @@ __INTRIN_INLINE unsigned char _interlockedbittestandreset64(volatile long long *
 }
 #endif
 
+#ifndef __clang__
 __INTRIN_INLINE unsigned char _interlockedbittestandset(volatile long * a, long b)
 {
 	unsigned char retval;
 	__asm__("lock; btsl %[b], %[a]; setc %b[retval]" : [retval] "=q" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
 	return retval;
 }
+#endif /* !__clang__ */
 
 #if defined(__x86_64__)
 __INTRIN_INLINE unsigned char _interlockedbittestandset64(volatile long long * a, long long b)
@@ -665,6 +675,7 @@ __INTRIN_INLINE unsigned char _interlockedbittestandset64(volatile long long * a
 
 /*** String operations ***/
 
+#ifndef __clang__
 /* NOTE: we don't set a memory clobber in the __stosX functions because Visual C++ doesn't */
 __INTRIN_INLINE void __stosb(unsigned char * Dest, unsigned char Data, size_t Count)
 {
@@ -675,6 +686,7 @@ __INTRIN_INLINE void __stosb(unsigned char * Dest, unsigned char Data, size_t Co
 		"[Dest]" (Dest), "a" (Data), "[Count]" (Count)
 	);
 }
+#endif
 
 __INTRIN_INLINE void __stosw(unsigned short * Dest, unsigned short Data, size_t Count)
 {
@@ -861,6 +873,8 @@ __INTRIN_INLINE void __writefsdword(unsigned long Offset, unsigned long Data)
 	__asm__ __volatile__("movl %k[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "ir" (Data) : "memory");
 }
 
+#ifndef __clang__
+
 __INTRIN_INLINE unsigned char __readfsbyte(unsigned long Offset)
 {
 	unsigned char value;
@@ -881,6 +895,8 @@ __INTRIN_INLINE unsigned long __readfsdword(unsigned long Offset)
 	__asm__ __volatile__("movl %%fs:%a[Offset], %k[value]" : [value] "=r" (value) : [Offset] "ir" (Offset));
 	return value;
 }
+
+#endif /* !__clang__ */
 
 __INTRIN_INLINE void __incfsbyte(unsigned long Offset)
 {
@@ -927,6 +943,8 @@ __INTRIN_INLINE void __addfsdword(unsigned long Offset, unsigned long Data)
 
 /*** Bit manipulation ***/
 
+#ifndef __clang__
+
 __INTRIN_INLINE unsigned char _BitScanForward(unsigned long * Index, unsigned long Mask)
 {
 	__asm__("bsfl %[Mask], %[Index]" : [Index] "=r" (*Index) : [Mask] "mr" (Mask));
@@ -938,6 +956,8 @@ __INTRIN_INLINE unsigned char _BitScanReverse(unsigned long * Index, unsigned lo
 	__asm__("bsrl %[Mask], %[Index]" : [Index] "=r" (*Index) : [Mask] "mr" (Mask));
 	return Mask ? 1 : 0;
 }
+
+#endif /* !__clang__ */
 
 /* NOTE: again, the bizarre implementation follows Visual C++ */
 __INTRIN_INLINE unsigned char _bittest(const long * a, long b)
@@ -1058,6 +1078,8 @@ __INTRIN_INLINE unsigned char _bittestandcomplement64(long long * a, long long b
 
 #endif
 
+#ifndef __clang__
+
 __INTRIN_INLINE unsigned char __cdecl _rotl8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
@@ -1079,6 +1101,8 @@ __INTRIN_INLINE unsigned int __cdecl _rotl(unsigned int value, int shift)
 	return retval;
 }
 
+#endif /* !__clang__ */
+
 #ifdef __x86_64__
 __INTRIN_INLINE unsigned long long _rotl64(unsigned long long value, int shift)
 {
@@ -1086,13 +1110,17 @@ __INTRIN_INLINE unsigned long long _rotl64(unsigned long long value, int shift)
 	__asm__("rolq %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
-#else
+#else /* __x86_64__ */
+#ifndef __clang__
 __INTRIN_INLINE unsigned long long __cdecl _rotl64(unsigned long long value, int shift)
 {
     /* FIXME: this is probably not optimal */
     return (value << shift) | (value >> (64 - shift));
 }
-#endif
+#endif /* !__clang__ */
+#endif /* __x86_64__ */
+
+#ifndef __clang__
 
 __INTRIN_INLINE unsigned int __cdecl _rotr(unsigned int value, int shift)
 {
@@ -1115,6 +1143,8 @@ __INTRIN_INLINE unsigned short __cdecl _rotr16(unsigned short value, unsigned ch
 	return retval;
 }
 
+#endif /* !__clang__ */
+
 #ifdef __x86_64__
 __INTRIN_INLINE unsigned long long _rotr64(unsigned long long value, int shift)
 {
@@ -1122,13 +1152,17 @@ __INTRIN_INLINE unsigned long long _rotr64(unsigned long long value, int shift)
 	__asm__("rorq %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
-#else
+#else /* __x86_64__ */
+#ifndef __clang__
 __INTRIN_INLINE unsigned long long __cdecl _rotr64(unsigned long long value, int shift)
 {
     /* FIXME: this is probably not optimal */
     return (value >> shift) | (value << (64 - shift));
 }
-#endif
+#endif /* !__clang__ */
+#endif /* __x86_64__ */
+
+#ifndef __clang__
 
 __INTRIN_INLINE unsigned long __cdecl _lrotl(unsigned long value, int shift)
 {
@@ -1143,6 +1177,8 @@ __INTRIN_INLINE unsigned long __cdecl _lrotr(unsigned long value, int shift)
 	__asm__("rorl %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
+
+#endif /* !__clang__ */
 
 /*
 	NOTE: in __ll_lshift, __ll_rshift and __ull_rshift we use the "A"
@@ -1242,6 +1278,8 @@ __INTRIN_INLINE unsigned short __lzcnt16(unsigned short value)
 	return __builtin_clz(value);
 }
 
+#ifndef __clang__
+
 __INTRIN_INLINE unsigned int __popcnt(unsigned int value)
 {
 	return __builtin_popcount(value);
@@ -1251,6 +1289,8 @@ __INTRIN_INLINE unsigned short __popcnt16(unsigned short value)
 {
 	return __builtin_popcount(value);
 }
+
+#endif /* !__clang__ */
 
 #ifdef __x86_64__
 __INTRIN_INLINE unsigned long long __lzcnt64(unsigned long long value)
@@ -1266,6 +1306,8 @@ __INTRIN_INLINE unsigned long long __popcnt64(unsigned long long value)
 
 /*** 64-bit math ***/
 
+#ifndef __clang__
+
 __INTRIN_INLINE long long __emul(int a, int b)
 {
 	long long retval;
@@ -1279,6 +1321,8 @@ __INTRIN_INLINE unsigned long long __emulu(unsigned int a, unsigned int b)
 	__asm__("mull %[b]" : "=A" (retval) : [a] "a" (a), [b] "rm" (b));
 	return retval;
 }
+
+#endif /* !__clang__ */
 
 __INTRIN_INLINE long long __cdecl _abs64(long long value)
 {
@@ -1435,6 +1479,7 @@ __INTRIN_INLINE void __cpuidex(int CPUInfo[4], int InfoType, int ECXValue)
 	__asm__ __volatile__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType), "c" (ECXValue));
 }
 
+#ifndef __clang__
 __INTRIN_INLINE unsigned long long __rdtsc(void)
 {
 #ifdef __x86_64__
@@ -1447,6 +1492,7 @@ __INTRIN_INLINE unsigned long long __rdtsc(void)
 	return retval;
 #endif
 }
+#endif /* !__clang__ */
 
 __INTRIN_INLINE void __writeeflags(uintptr_t Value)
 {
@@ -1462,14 +1508,12 @@ __INTRIN_INLINE uintptr_t __readeflags(void)
 
 /*** Interrupts ***/
 
-#ifdef __clang__
-#define __debugbreak() __asm__("int $3")
-#else
+#ifndef __clang__
+
 __INTRIN_INLINE void __cdecl __debugbreak(void)
 {
 	__asm__("int $3");
 }
-#endif
 
 __INTRIN_INLINE void __ud2(void)
 {
@@ -1480,6 +1524,8 @@ __INTRIN_INLINE void __int2c(void)
 {
 	__asm__("int $0x2c");
 }
+
+#endif /* !__clang__ */
 
 __INTRIN_INLINE void __cdecl _disable(void)
 {
@@ -1496,12 +1542,14 @@ __INTRIN_INLINE void __halt(void)
 	__asm__("hlt" : : : "memory");
 }
 
+#ifndef __clang__
 __declspec(noreturn)
 __INTRIN_INLINE void __fastfail(unsigned int Code)
 {
 	__asm__("int $0x29" : : "c"(Code) : "memory");
 	__builtin_unreachable();
 }
+#endif
 
 /*** Protected memory management ***/
 
@@ -1579,10 +1627,12 @@ __INTRIN_INLINE void __writecr4(unsigned int Data)
 	__asm__("mov %[Data], %%cr4" : : [Data] "r" (Data) : "memory");
 }
 
+#ifndef __clang__
 __INTRIN_INLINE void __writecr8(unsigned int Data)
 {
 	__asm__("mov %[Data], %%cr8" : : [Data] "r" (Data) : "memory");
 }
+#endif
 
 __INTRIN_INLINE unsigned long __readcr0(void)
 {
@@ -1612,12 +1662,14 @@ __INTRIN_INLINE unsigned long __readcr4(void)
 	return value;
 }
 
+#ifndef __clang__
 __INTRIN_INLINE unsigned long __readcr8(void)
 {
 	unsigned long value;
 	__asm__ __volatile__("mov %%cr8, %[value]" : [value] "=r" (value));
 	return value;
 }
+#endif
 
 #endif /* __x86_64__ */
 
@@ -1822,10 +1874,12 @@ __INTRIN_INLINE void _sgdt(void *Destination)
 
 /*** Misc operations ***/
 
+#ifndef __clang__
 __INTRIN_INLINE void _mm_pause(void)
 {
 	__asm__ __volatile__("pause" : : : "memory");
 }
+#endif
 
 __INTRIN_INLINE void __nop(void)
 {
