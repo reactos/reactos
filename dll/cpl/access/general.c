@@ -257,7 +257,7 @@ GeneralPageProc(HWND hwndDlg,
                     if (DialogBoxParam(hApplet,
                                        MAKEINTRESOURCE(IDD_SERIALKEYSOPTIONS),
                                        hwndDlg,
-                                       (DLGPROC)SerialKeysDlgProc,
+                                       SerialKeysDlgProc,
                                        (LPARAM)pGlobalData))
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;

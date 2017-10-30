@@ -928,9 +928,9 @@ UserProperties(HWND hwndDlg)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_USER_GENERAL, (DLGPROC)UserGeneralPageProc, szUserName);
-    InitPropSheetPage(&psp[1], IDD_USER_MEMBERSHIP, (DLGPROC)UserMembershipPageProc, szUserName);
-    InitPropSheetPage(&psp[2], IDD_USER_PROFILE, (DLGPROC)UserProfilePageProc, szUserName);
+    InitPropSheetPage(&psp[0], IDD_USER_GENERAL, UserGeneralPageProc, szUserName);
+    InitPropSheetPage(&psp[1], IDD_USER_MEMBERSHIP, UserMembershipPageProc, szUserName);
+    InitPropSheetPage(&psp[2], IDD_USER_PROFILE, UserProfilePageProc, szUserName);
 
     return (PropertySheet(&psh) == IDOK);
 }

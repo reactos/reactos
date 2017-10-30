@@ -163,7 +163,7 @@ CopyHardwareProfile(
     if (DialogBoxParam(hApplet,
                        MAKEINTRESOURCE(IDD_COPYPROFILE),
                        hwndDlg,
-                       (DLGPROC)CopyProfileDlgProc,
+                       CopyProfileDlgProc,
                        (LPARAM)&ProfileNames) != IDOK)
         return;
 
@@ -280,7 +280,7 @@ RenameHardwareProfile(
     if (DialogBoxParam(hApplet,
                        MAKEINTRESOURCE(IDD_RENAMEPROFILE),
                        hwndDlg,
-                       (DLGPROC)RenameProfileDlgProc,
+                       RenameProfileDlgProc,
                        (LPARAM)&ProfileNames) != IDOK)
         return;
 
