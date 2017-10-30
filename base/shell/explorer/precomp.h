@@ -27,6 +27,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
+#include <atlstr.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
@@ -40,6 +41,7 @@
 #include <undocshell.h>
 
 #include <rosctrls.h>
+#include <rosdlgs.h>
 #include <shellutils.h>
 
 #include "tmschema.h"
@@ -125,6 +127,7 @@ HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void 
  */
 
 #define TWM_OPENSTARTMENU (WM_USER + 260)
+#define TWM_SETTINGSCHANGED (WM_USER + 300)
 
 extern const GUID IID_IShellDesktopTray;
 
@@ -181,35 +184,39 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray);
  * settings.c
  */
 
-/* Structure to hold non-default options*/
-typedef struct _TASKBAR_SETTINGS
+typedef struct _TW_STUCKRECTS2
+{
+    DWORD cbSize;
+    LONG Unknown;
+    union
+    {
+        DWORD dwFlags;
+        struct
+        {
+            DWORD AutoHide : 1;
+            DWORD AlwaysOnTop : 1;
+            DWORD SmallIcons : 1;
+            DWORD HideClock : 1;
+        };
+    };
+    DWORD Position;
+    SIZE Size;
+    RECT Rect;
+} TW_STRUCKRECTS2, *PTW_STUCKRECTS2;
+
+struct TaskbarSettings
 {
     BOOL bLock;
-    BOOL bAutoHide;
-    BOOL bAlwaysOnTop;
     BOOL bGroupButtons;
-    BOOL bShowQuickLaunch;
-    BOOL bShowClock;
     BOOL bShowSeconds;
     BOOL bHideInactiveIcons;
-} TASKBAR_SETTINGS, *PTASKBAR_SETTINGS;
+    TW_STRUCKRECTS2 sr;
 
-extern TASKBAR_SETTINGS TaskBarSettings;
+    BOOL Load();
+    BOOL Save();
+};
 
-VOID
-LoadTaskBarSettings(VOID);
-
-VOID
-SaveTaskBarSettings(VOID);
-
-BOOL
-LoadSettingDword(IN LPCWSTR pszKeyName,
-                 IN LPCWSTR pszValueName,
-                 OUT DWORD &dwValue);
-BOOL
-SaveSettingDword(IN LPCWSTR pszKeyName,
-                 IN LPCWSTR pszValueName,
-                 IN DWORD dwValue);
+extern TaskbarSettings g_TaskbarSettings;
 
 /*
  * shellservice.cpp
@@ -229,7 +236,7 @@ ProcessStartupItems(VOID);
  */
 
 VOID
-DisplayTrayProperties(IN HWND hwndOwner);
+DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar);
 
 /*
  * desktop.cpp
@@ -344,7 +351,7 @@ VOID
 UnregisterTrayNotifyWndClass(VOID);
 
 HWND
-CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow, IN BOOL bHideClock, CTrayNotifyWnd** ppTrayNotify);
+CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow, CTrayNotifyWnd** ppTrayNotify);
 
 BOOL
 TrayNotify_NotifyIconCmd(CTrayNotifyWnd* pTrayNotify, IN WPARAM wParam, IN LPARAM lParam);

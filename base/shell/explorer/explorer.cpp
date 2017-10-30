@@ -127,7 +127,8 @@ StartWithDesktop(IN HINSTANCE hInstance)
     hExplorerInstance = hInstance;
     hProcessHeap = GetProcessHeap();
 
-    LoadTaskBarSettings();
+    g_TaskbarSettings.Load();
+
     InitCommonControls();
     OleInitialize(NULL);
 
