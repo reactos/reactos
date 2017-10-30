@@ -197,9 +197,9 @@
 #define inline __inline
 
 /* ReactOS hacks */
-void __stdcall DbgBreakPoint(void);
+void __cdecl __debugbreak(void);
 unsigned long __cdecl DbgPrint(const char *Format, ...);
-#define exit(n) DbgBreakPoint()
+#define exit(n) __debugbreak()
 #define printf DbgPrint
 
 # ifdef _MSC_VER
