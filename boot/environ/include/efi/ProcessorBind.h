@@ -147,7 +147,7 @@ typedef char                CHAR8;
 ///
 /// 1-byte signed value.
 ///
-typedef char                INT8;
+typedef signed char         INT8;
 #else  
 ///
 /// 8-byte unsigned value.
