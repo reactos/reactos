@@ -4790,6 +4790,134 @@ RxCompleteMdl(
  * @implemented
  */
 VOID
+RxConjureOriginalName(
+    PFCB Fcb,
+    PFOBX Fobx,
+    PULONG ActualNameLength,
+    PWCHAR OriginalName,
+    PLONG LengthRemaining,
+    RX_NAME_CONJURING_METHODS NameConjuringMethod)
+{
+    PWSTR Prefix, Name;
+    PV_NET_ROOT VNetRoot;
+    USHORT PrefixLength, NameLength, ToCopy;
+
+    PAGED_CODE();
+
+    VNetRoot = Fcb->VNetRoot;
+    /* We will use the prefix contained in NET_ROOT, if we don't have
+     * a V_NET_ROOT, or if it wasn't null deviced or if we already have
+     * a UNC path */
+    if (VNetRoot == NULL || VNetRoot->PrefixEntry.Prefix.Buffer[1] != L';' ||
+        BooleanFlagOn(Fobx->Flags, FOBX_FLAG_UNC_NAME))
+    {
+        Prefix = ((PNET_ROOT)Fcb->pNetRoot)->PrefixEntry.Prefix.Buffer;
+        PrefixLength = ((PNET_ROOT)Fcb->pNetRoot)->PrefixEntry.Prefix.Length;
+        NameLength = 0;
+
+        /* In that case, keep track that we will have a prefix as buffer */
+        NameConjuringMethod = VNetRoot_As_Prefix;
+    }
+    else
+    {
+        ASSERT(NodeType(VNetRoot) == RDBSS_NTC_V_NETROOT);
+
+        /* Otherwise, return the prefix from our V_NET_ROOT */
+        Prefix = VNetRoot->PrefixEntry.Prefix.Buffer;
+        PrefixLength = VNetRoot->PrefixEntry.Prefix.Length;
+        NameLength = VNetRoot->NamePrefix.Length;
+
+        /* If we want a UNC path, skip potential device */
+        if (NameConjuringMethod == VNetRoot_As_UNC_Name)
+        {
+            do
+            {
+                ++Prefix;
+                PrefixLength -= sizeof(WCHAR);
+            } while (PrefixLength > 0 && Prefix[0] != L'\\');
+        }
+    }
+
+    /* If we added an extra backslash, skip it */
+    if (BooleanFlagOn(Fcb->FcbState, FCB_STATE_ADDEDBACKSLASH))
+    {
+        NameLength += sizeof(WCHAR);
+    }
+
+    /* If we're asked for a drive letter, skip the prefix */
+    if (NameConjuringMethod == VNetRoot_As_DriveLetter)
+    {
+        PrefixLength = 0;
+
+        /* And make sure we arrive at a backslash */
+        if (Fcb->FcbTableEntry.Path.Length > NameLength &&
+            Fcb->FcbTableEntry.Path.Buffer[NameLength / sizeof(WCHAR)] != L'\\')
+        {
+            NameLength -= sizeof(WCHAR);
+        }
+    }
+    else
+    {
+        /* Prepare to copy the prefix, make sure not to overflow */
+        if (*LengthRemaining >= PrefixLength)
+        {
+            /* Copy everything */
+            ToCopy = PrefixLength;
+            *LengthRemaining = *LengthRemaining - PrefixLength;
+        }
+        else
+        {
+            /* Copy as much as we can */
+            ToCopy = *LengthRemaining;
+            /* And return failure */
+            *LengthRemaining = -1;
+        }
+
+        /* Copy the prefix */
+        RtlCopyMemory(OriginalName, Prefix, ToCopy);
+    }
+
+    /* Do we have a name to copy now? */
+    if (Fcb->FcbTableEntry.Path.Length > NameLength)
+    {
+        ToCopy = Fcb->FcbTableEntry.Path.Length - NameLength;
+        Name = Fcb->FcbTableEntry.Path.Buffer;
+    }
+    else
+    {
+        /* Just use slash for now */
+        ToCopy = sizeof(WCHAR);
+        NameLength = 0;
+        Name = L"\\";
+    }
+
+    /* Total length we will have in the output buffer (if everything is alright) */
+    *ActualNameLength = ToCopy + PrefixLength;
+    /* If we still have room to write data */
+    if (*LengthRemaining != -1)
+    {
+        /* If we can copy everything, it's fine! */
+        if (*LengthRemaining > ToCopy)
+        {
+            *LengthRemaining = *LengthRemaining - ToCopy;
+        }
+        /* Otherwise, copy as much as possible, and return failure */
+        else
+        {
+            ToCopy = *LengthRemaining;
+            *LengthRemaining = -1;
+        }
+
+        /* Copy name after the prefix */
+        RtlCopyMemory(Add2Ptr(OriginalName, PrefixLength),
+                      Add2Ptr(Name, NameLength), ToCopy);
+    }
+}
+
+/*
+ * @implemented
+ */
+VOID
 RxCopyCreateParameters(
     IN PRX_CONTEXT RxContext)
 {
@@ -8012,13 +8140,46 @@ RxQueryInternalInfo(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 RxQueryNameInfo(
     PRX_CONTEXT RxContext,
     PFILE_NAME_INFORMATION NameInfo)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PFCB Fcb;
+    PFOBX Fobx;
+    PAGED_CODE();
+
+    DPRINT("RxQueryNameInfo(%p, %p)\n", RxContext, NameInfo);
+
+    /* Check we can at least copy name size */
+    if (RxContext->Info.LengthRemaining < FIELD_OFFSET(FILE_NAME_INFORMATION, FileName))
+    {
+        DPRINT1("Buffer too small: %d\n", RxContext->Info.LengthRemaining);
+        RxContext->Info.Length = 0;
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    Fcb = (PFCB)RxContext->pFcb;
+    Fobx = (PFOBX)RxContext->pFobx;
+    /* Get the UNC name */
+    RxConjureOriginalName(Fcb, Fobx, &NameInfo->FileNameLength, &NameInfo->FileName[0],
+                          &RxContext->Info.Length, VNetRoot_As_UNC_Name);
+
+    /* If RxConjureOriginalName returned a negative len (-1) then output buffer
+     * was too small, return the appropriate length & status.
+     */
+    if (RxContext->Info.LengthRemaining < 0)
+    {
+        DPRINT1("Buffer too small!\n");
+        RxContext->Info.Length = 0;
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* All correct */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

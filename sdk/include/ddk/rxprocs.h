@@ -75,6 +75,22 @@ RxFindOrCreateConnections(
     _In_ PRX_CONNECTION_ID RxConnectionId);
 #endif
 
+typedef enum _RX_NAME_CONJURING_METHODS
+{
+    VNetRoot_As_Prefix,
+    VNetRoot_As_UNC_Name,
+    VNetRoot_As_DriveLetter
+} RX_NAME_CONJURING_METHODS;
+
+VOID
+RxConjureOriginalName(
+    _Inout_ PFCB Fcb,
+    _Inout_ PFOBX Fobx,
+    _Out_ PULONG ActualNameLength,
+    _Out_writes_bytes_( *LengthRemaining) PWCHAR OriginalName,
+    _Inout_ PLONG LengthRemaining,
+    _In_ RX_NAME_CONJURING_METHODS NameConjuringMethod);
+
 #if (_WIN32_WINNT >= 0x0600)
 NTSTATUS
 RxCompleteMdl(
