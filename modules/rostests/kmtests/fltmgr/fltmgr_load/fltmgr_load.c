@@ -89,7 +89,7 @@ TestEntry(
     ok_irql(PASSIVE_LEVEL);
     TestDriverObject = DriverObject;
 
-    *DeviceName = L"fltmgr_load";
+    *DeviceName = L"FltMgrLoad";
 
     trace("Hi, this is the filter manager load test driver\n");
 

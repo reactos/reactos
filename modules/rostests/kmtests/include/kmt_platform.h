@@ -44,6 +44,7 @@
 #include <strsafe.h>
 #include <fltuser.h>
 
+
 #ifdef KMT_EMULATE_KERNEL
 #define ok_irql(i)
 #define KIRQL int

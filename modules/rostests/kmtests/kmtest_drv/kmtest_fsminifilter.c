@@ -138,7 +138,7 @@ DriverEntry(
     PKPRCB Prcb;
 
     PAGED_CODE();
-    //__debugbreak();
+    __debugbreak();
     DPRINT("DriverEntry\n");
 
     RtlZeroMemory(&FilterData, sizeof(FILTER_DATA));
@@ -243,6 +243,7 @@ FilterUnload(
 {
     PAGED_CODE();
     UNREFERENCED_PARAMETER(Flags);
+    __debugbreak();
 
     DPRINT("DriverUnload\n");
 

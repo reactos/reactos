@@ -127,6 +127,9 @@ list(APPEND KMTEST_SOURCE
     kmtest/testlist.c
 
     example/Example_user.c
+
+    fltmgr/fltmgr_load/fltmgr_user.c
+
     hidparse/HidP_user.c
     kernel32/FileAttributes_user.c
     kernel32/FindFile_user.c
