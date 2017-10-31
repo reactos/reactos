@@ -3200,7 +3200,7 @@ RtlCheckBit(
 #define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 # define __assert_annotationA(msg) __annotation(L"Debug", L"AssertFail", L ## msg)
 # define __assert_annotationW(msg) __annotation(L"Debug", L"AssertFail", msg)
 #else

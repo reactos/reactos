@@ -150,7 +150,7 @@ $define(USHORT=USHORT)
 #define __IMPORTSYMBOL(_Name) "__imp_"#_Name
 #define __IMPORTNAME(_Name) __imp_##_Name
 #endif
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 #define __CREATE_NTOS_DATA_IMPORT_ALIAS(_Name) \
     __pragma(comment(linker, "/alternatename:"__SYMBOL(_Name) "=" __IMPORTSYMBOL(_Name)))
 #else /* !_MSC_VER */
@@ -251,6 +251,7 @@ $include (obtypes.h)
 $include (pstypes.h)
 $include (wmitypes.h)
 
+$include (kdfuncs.h)
 $include (kefuncs.h)
 $include (rtlfuncs.h)
 $include (mmfuncs.h)
@@ -262,7 +263,6 @@ $include (exfuncs.h)
 $include (obfuncs.h)
 $include (psfuncs.h)
 $include (wmifuncs.h)
-$include (kdfuncs.h)
 $include (halfuncs.h)
 $include (nttmapi.h)
 $include (zwfuncs.h)
