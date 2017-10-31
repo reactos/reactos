@@ -44,6 +44,7 @@ USBPORT_UpdateAllocatedBwTt(IN PUSB2_TT_EXTENSION TtExtension)
     DPRINT("USBPORT_UpdateAllocatedBwTt: TtExtension - %p\n", TtExtension);
 
     BusBandwidth = TtExtension->BusBandwidth;
+    MinBusBandwidth = BusBandwidth;
 
     for (ix = 0; ix < USB2_FRAMES; ix++)
     {
@@ -51,19 +52,12 @@ USBPORT_UpdateAllocatedBwTt(IN PUSB2_TT_EXTENSION TtExtension)
 
         if (NewBusBandwidth > MaxBusBandwidth)
             MaxBusBandwidth = NewBusBandwidth;
-    }
-
-    TtExtension->MaxBandwidth = MaxBusBandwidth;
-
-    MinBusBandwidth = BusBandwidth;
-
-    for (ix = 0; ix < USB2_FRAMES; ix++)
-    {
-        NewBusBandwidth = BusBandwidth - TtExtension->Bandwidth[ix];
 
         if (NewBusBandwidth < MinBusBandwidth)
             MinBusBandwidth = NewBusBandwidth;
     }
+
+    TtExtension->MaxBandwidth = MaxBusBandwidth;
 
     if (MinBusBandwidth == BusBandwidth)
         TtExtension->MinBandwidth = 0;
