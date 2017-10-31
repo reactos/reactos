@@ -108,7 +108,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
         for (ix = 0; *Bandwidth >= EndpointBandwidth; ix++)
         {
-            if (MinBandwidth > *Bandwidth )
+            if (MinBandwidth > *Bandwidth)
             {
                 MinBandwidth = *Bandwidth;
             }
@@ -117,7 +117,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
             if (Factor <= (ix + 1))
             {
-                if (MinBandwidth > MaxBandwidth )
+                if (MinBandwidth > MaxBandwidth)
                 {
                     MaxBandwidth = MinBandwidth;
                     ScheduleOffset = Offset;
@@ -133,7 +133,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
     DPRINT("USBPORT_AllocateBandwidth: ScheduleOffset - %X\n", ScheduleOffset);
 
-    if (ScheduleOffset != -1 )
+    if (ScheduleOffset != -1)
     {
         EndpointProperties->ScheduleOffset = ScheduleOffset;
 
