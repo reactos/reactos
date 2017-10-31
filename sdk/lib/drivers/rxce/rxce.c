@@ -174,13 +174,15 @@ BOOLEAN DumpDispatchRoutine = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 RxAcquireExclusiveFcbResourceInMRx(
     _Inout_ PMRX_FCB Fcb)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return RxAcquireExclusiveFcb(NULL, (PFCB)Fcb);
 }
 
 /*
