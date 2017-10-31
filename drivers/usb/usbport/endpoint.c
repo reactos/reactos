@@ -126,7 +126,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
                            ScheduleOffset);
                 }
 
-                continue;
+                break;
             }
         }
     }
