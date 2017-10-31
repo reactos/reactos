@@ -158,36 +158,37 @@ SerialSetLineControl(
 	return Status;
 }
 
-static BOOLEAN
-SerialClearPerfStats(
-	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)
+static
+BOOLEAN
+NTAPI
+SerialClearPerfStats(IN PVOID SynchronizeContext)
 {
-	ASSERT(DeviceExtension);
-
-	RtlZeroMemory(&DeviceExtension->SerialPerfStats, sizeof(SERIALPERF_STATS));
-	DeviceExtension->BreakInterruptErrorCount = 0;
-	return TRUE;
+    PSERIAL_DEVICE_EXTENSION DeviceExtension = SynchronizeContext;
+    ASSERT(DeviceExtension);
+    RtlZeroMemory(&DeviceExtension->SerialPerfStats, sizeof(SERIALPERF_STATS));
+    DeviceExtension->BreakInterruptErrorCount = 0;
+    return TRUE;
 }
 
-static BOOLEAN
-SerialGetPerfStats(IN PIRP pIrp)
+static
+BOOLEAN
+NTAPI
+SerialGetPerfStats(IN PVOID SynchronizeContext)
 {
-	PSERIAL_DEVICE_EXTENSION pDeviceExtension;
+    PIRP pIrp = SynchronizeContext;
+    PSERIAL_DEVICE_EXTENSION pDeviceExtension;
 
-	ASSERT(pIrp);
-	pDeviceExtension = (PSERIAL_DEVICE_EXTENSION)
-		IoGetCurrentIrpStackLocation(pIrp)->DeviceObject->DeviceExtension;
+    ASSERT(pIrp);
+    pDeviceExtension = IoGetCurrentIrpStackLocation(pIrp)->DeviceObject->DeviceExtension;
 
-	/*
-	 * we assume buffer is big enough to hold SerialPerfStats structure
-	 * caller must verify this
-	 */
-	RtlCopyMemory(
-		pIrp->AssociatedIrp.SystemBuffer,
-		&pDeviceExtension->SerialPerfStats,
-		sizeof(SERIALPERF_STATS)
-	);
-	return TRUE;
+    /*
+    * we assume buffer is big enough to hold SerialPerfStats structure
+    * caller must verify this
+    */
+    RtlCopyMemory(pIrp->AssociatedIrp.SystemBuffer,
+                  &pDeviceExtension->SerialPerfStats,
+                  sizeof(SERIALPERF_STATS));
+    return TRUE;
 }
 
 static NTSTATUS
@@ -309,7 +310,7 @@ SerialDeviceControl(
 			TRACE_(SERIAL, "IOCTL_SERIAL_CLEAR_STATS\n");
 			KeSynchronizeExecution(
 				DeviceExtension->Interrupt,
-				(PKSYNCHRONIZE_ROUTINE)SerialClearPerfStats,
+				SerialClearPerfStats,
 				DeviceExtension);
 			Status = STATUS_SUCCESS;
 			break;
@@ -519,7 +520,7 @@ SerialDeviceControl(
 			else
 			{
 				KeSynchronizeExecution(DeviceExtension->Interrupt,
-					(PKSYNCHRONIZE_ROUTINE)SerialGetPerfStats, Irp);
+					SerialGetPerfStats, Irp);
 				Information = sizeof(SERIALPERF_STATS);
 				Status = STATUS_SUCCESS;
 			}
