@@ -920,16 +920,15 @@ USBPORT_GetTt(IN PDEVICE_OBJECT FdoDevice,
     if (!TtCount)
         return NULL;
 
-    Entry = DeviceHandle->TtList.Flink;
-
-    if (Entry != &DeviceHandle->TtList)
+    if (!IsListEmpty(&DeviceHandle->TtList))
     {
+        Entry = DeviceHandle->TtList.Flink;
+
         if (TtCount > 1)
         {
-            while (Entry)
+            while (Entry != &DeviceHandle->TtList)
             {
-                if (Entry == &DeviceHandle->TtList)
-                    break;
+                ASSERT(Entry != NULL);
 
                 TtExtension = CONTAINING_RECORD(Entry,
                                                 USB2_TT_EXTENSION,
