@@ -34,9 +34,9 @@ DWORD        dwThreadId = 0;                                // Thread id of RS23
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK    ConnectionDialogProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK    CaptureDialogProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    ConnectionDialogProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    CaptureDialogProc(HWND, UINT, WPARAM, LPARAM);
 VOID                EnableFileMenuItemByID(UINT Id, BOOL Enable);
 VOID                CheckLocalEchoMenuItem(BOOL Checked);
 VOID __cdecl        Rs232Thread(VOID* Parameter);
@@ -212,7 +212,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         switch (wmId)
         {
         case IDM_ABOUT:
-           DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
+           DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, About);
            break;
         case IDM_EXIT:
            DestroyWindow(hWnd);
@@ -227,7 +227,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             else
             {
-                if (DialogBox(hInst, (LPCTSTR)IDD_CONNECTION, hWnd, (DLGPROC)ConnectionDialogProc) == IDOK)
+                if (DialogBox(hInst, (LPCTSTR)IDD_CONNECTION, hWnd, ConnectionDialogProc) == IDOK)
                 {
                     bConnected = TRUE;
                     EnableFileMenuItemByID(IDM_FILE_DISCONNECT, TRUE);
@@ -249,7 +249,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             break;
         case IDM_FILE_STARTCAPTURE:
-            if (DialogBox(hInst, (LPCTSTR)IDD_CAPTURE, hWnd, (DLGPROC)CaptureDialogProc) == IDOK)
+            if (DialogBox(hInst, (LPCTSTR)IDD_CAPTURE, hWnd, CaptureDialogProc) == IDOK)
             {
                 bCapturing = TRUE;
                 EnableFileMenuItemByID(IDM_FILE_STOPCAPTURE, TRUE);
@@ -305,7 +305,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
    return 0;
 }
 
-LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND    hLicenseEditWnd;
     TCHAR    strLicense[0x1000];
@@ -335,7 +335,7 @@ LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-LRESULT CALLBACK ConnectionDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ConnectionDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
 
@@ -365,7 +365,7 @@ LRESULT CALLBACK ConnectionDialogProc(HWND hDlg, UINT message, WPARAM wParam, LP
     return FALSE;
 }
 
-LRESULT CALLBACK CaptureDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK CaptureDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     OPENFILENAME    ofn;
 

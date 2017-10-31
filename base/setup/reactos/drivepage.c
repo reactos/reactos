@@ -218,14 +218,14 @@ DriveDlgProc(
                     DialogBoxParam(pSetupData->hInstance,
                                    MAKEINTRESOURCE(IDD_BOOTOPTIONS),
                                    hwndDlg,
-                                   (DLGPROC)MoreOptDlgProc,
+                                   MoreOptDlgProc,
                                    (LPARAM)pSetupData);
                     break;
                 case IDC_PARTCREATE:
                     DialogBox(pSetupData->hInstance,
                               MAKEINTRESOURCE(IDD_PARTITION),
                               hwndDlg,
-                              (DLGPROC) PartitionDlgProc);
+                              PartitionDlgProc);
                     break;
                 case IDC_PARTDELETE:
                     break;
