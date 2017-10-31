@@ -1622,38 +1622,34 @@ USBPORT_RemoveDevice(IN PDEVICE_OBJECT FdoDevice,
         USBPORT_FreeUsbAddress(FdoDevice, DeviceHandle->DeviceAddress);
     }
 
-    if (!IsListEmpty(&DeviceHandle->TtList))
+    DPRINT("USBPORT_RemoveDevice: DeviceHandle->TtList.Flink - %p\n", DeviceHandle->TtList.Flink);
+
+    while (!IsListEmpty(&DeviceHandle->TtList))
     {
-        DPRINT1("USBPORT_RemoveDevice: DeviceHandle->TtList.Flink - %p\n", DeviceHandle->TtList.Flink);
+        TtExtension = CONTAINING_RECORD(DeviceHandle->TtList.Flink,
+                                        USB2_TT_EXTENSION,
+                                        Link);
 
-        do
+        RemoveHeadList(&DeviceHandle->TtList);
+
+        DPRINT("USBPORT_RemoveDevice: TtExtension - %p\n", TtExtension);
+
+        KeAcquireSpinLock(&FdoExtension->TtSpinLock, &OldIrql);
+
+        TtExtension->Flags |= USB2_TT_EXTENSION_FLAG_DELETED;
+
+        if (IsListEmpty(&TtExtension->TtList))
         {
-            TtExtension = CONTAINING_RECORD(DeviceHandle->TtList.Flink,
-                                            USB2_TT_EXTENSION,
-                                            Link);
+            USBPORT_UpdateAllocatedBwTt(TtExtension);
 
-            RemoveHeadList(&DeviceHandle->TtList);
-
-            DPRINT("USBPORT_RemoveDevice: TtExtension - %p\n", TtExtension);
-
-            KeAcquireSpinLock(&FdoExtension->TtSpinLock, &OldIrql);
-
-            TtExtension->Flags |= USB2_TT_EXTENSION_FLAG_DELETED;
-
-            if (IsListEmpty(&TtExtension->TtList))
+            for (ix = 0; ix < USB2_FRAMES; ix++)
             {
-                USBPORT_UpdateAllocatedBwTt(TtExtension);
-
-                for (ix = 0; ix < USB2_FRAMES; ix++)
-                {
-                    FdoExtension->Bandwidth[ix] += TtExtension->MaxBandwidth;
-                }
-
-                ExFreePool(TtExtension);
+                FdoExtension->Bandwidth[ix] += TtExtension->MaxBandwidth;
             }
-            KeReleaseSpinLock(&FdoExtension->TtSpinLock, OldIrql);
+
+            ExFreePool(TtExtension);
         }
-        while (!IsListEmpty(&DeviceHandle->TtList));
+        KeReleaseSpinLock(&FdoExtension->TtSpinLock, OldIrql);
     }
 
     KeReleaseSemaphore(&FdoExtension->DeviceSemaphore,
