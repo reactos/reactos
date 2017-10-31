@@ -104,7 +104,7 @@
 #endif
 
 /* Returns the byte offset of the specified structure's member */
-#ifndef __GNUC__
+#if !defined(__GNUC__) && !defined(__clang__)
  #define FIELD_OFFSET(Type, Field) ((LONG)(LONG_PTR)&(((Type*) 0)->Field))
 #else
  #define FIELD_OFFSET(Type, Field) ((LONG)__builtin_offsetof(Type, Field))
