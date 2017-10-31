@@ -145,6 +145,10 @@ FltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject,
     InitializeListHead(&Filter->ActiveOpens.mList);
     Filter->ActiveOpens.mCount = 0;
 
+    ExInitializeFastMutex(&Filter->ConnectionList.mLock);
+    InitializeListHead(&Filter->ConnectionList.mList);
+    Filter->ConnectionList.mCount = 0;
+
     /* Initialize the usermode port list */
     ExInitializeFastMutex(&Filter->PortList.mLock);
     InitializeListHead(&Filter->PortList.mList);
@@ -206,8 +210,16 @@ FltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject,
     //
 
 Quit:
-    if (!NT_SUCCESS(Status))
+
+    if (NT_SUCCESS(Status))
     {
+        DPRINT1("Loaded FS mini-filter %wZ\n", &DriverObject->DriverExtension->ServiceKeyName);
+        *RetFilter = Filter;
+    }
+    else
+    {
+        DPRINT1("Failed to load FS mini-filter %wZ : 0x%X\n", &DriverObject->DriverExtension->ServiceKeyName, Status);
+
         // Add cleanup for context resources
 
         ExDeleteResourceLite(&Filter->InstanceList.rLock);
