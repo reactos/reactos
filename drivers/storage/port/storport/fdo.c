@@ -139,9 +139,13 @@ PortFdoStartMiniport(
         return Status;
     }
 
-
+    /* Connect the configured interrupt */
     Status = PortFdoConnectInterrupt(DeviceExtension);
-
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("PortFdoConnectInterrupt() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
 
     /* Call the miniports HwInitialize function */
     Status = MiniportHwInitialize(&DeviceExtension->Miniport);
