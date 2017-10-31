@@ -186,6 +186,17 @@ typedef struct _FLT_SERVER_PORT_OBJECT
 } FLT_SERVER_PORT_OBJECT, *PFLT_SERVER_PORT_OBJECT;
 
 
+typedef struct _FLT_MESSAGE_WAITER_QUEUE
+{
+    IO_CSQ Csq;
+    FLT_MUTEX_LIST_HEAD WaiterQ;
+    ULONG MinimumWaiterLength;
+    KSEMAPHORE Semaphore;
+    KEVENT Event;
+
+} FLT_MESSAGE_WAITER_QUEUE, *PFLT_MESSAGE_WAITER_QUEUE;
+
+
 typedef struct _FLT_PORT_OBJECT
 {
     LIST_ENTRY FilterLink;
@@ -193,7 +204,7 @@ typedef struct _FLT_PORT_OBJECT
     PVOID Cookie;
     EX_RUNDOWN_REF MsgNotifRundownRef;
     FAST_MUTEX Lock;
-    PVOID MsgQ; // FLT_MESSAGE_WAITER_QUEUE MsgQ;
+    FLT_MESSAGE_WAITER_QUEUE MsgQ;
     ULONGLONG MessageId;
     KEVENT DisconnectEvent;
     BOOLEAN Disconnected;
@@ -311,6 +322,58 @@ typedef struct _FLT_VOLUME
 } FLT_VOLUME, *PFLT_VOLUME;
 
 
+typedef struct _MANAGER_CCB
+{
+    PFLTP_FRAME Frame;
+    unsigned int Iterator;
+
+} MANAGER_CCB, *PMANAGER_CCB;
+
+typedef struct _FILTER_CCB
+{
+    PFLT_FILTER Filter;
+    unsigned int Iterator;
+
+} FILTER_CCB, *PFILTER_CCB;
+
+typedef struct _INSTANCE_CCB
+{
+    PFLT_INSTANCE Instance;
+
+} INSTANCE_CCB, *PINSTANCE_CCB;
+
+typedef struct _VOLUME_CCB
+{
+    UNICODE_STRING Volume;
+    unsigned int Iterator;
+
+} VOLUME_CCB, *PVOLUME_CCB;
+
+typedef struct _PORT_CCB
+{
+    PFLT_PORT_OBJECT Port;
+    FLT_MUTEX_LIST_HEAD ReplyWaiterList;
+
+} PORT_CCB, *PPORT_CCB;
+
+
+typedef union _CCB_TYPE
+{
+    MANAGER_CCB Manager;
+    FILTER_CCB Filter;
+    INSTANCE_CCB Instance;
+    VOLUME_CCB Volume;
+    PORT_CCB Port;
+
+} CCB_TYPE, *PCCB_TYPE;
+
+
+typedef struct _FLT_CCB
+{
+    FLT_TYPE Type;
+    CCB_TYPE Data;
+
+} FLT_CCB, *PFLT_CCB;
 
 VOID
 FltpExInitializeRundownProtection(
@@ -387,6 +450,21 @@ FltpDispatchHandler(
     _Inout_ PIRP Irp
 );
 
+NTSTATUS
+FltpMsgCreate(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+);
 
+NTSTATUS
+FltpMsgDispatch(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+);
+
+NTSTATUS
+FltpSetupCommunicationObjects(
+    _In_ PDRIVER_OBJECT DriverObject
+);
 
 #endif /* _FLTMGR_INTERNAL_H */

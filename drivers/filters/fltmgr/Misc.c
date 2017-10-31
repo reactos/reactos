@@ -29,8 +29,8 @@ FltBuildDefaultSecurityDescriptor(
     _In_ ACCESS_MASK DesiredAccess
 )
 {
-    UNREFERENCED_PARAMETER(SecurityDescriptor);
     UNREFERENCED_PARAMETER(DesiredAccess);
+    *SecurityDescriptor = NULL;
     return 0;
 }
 
