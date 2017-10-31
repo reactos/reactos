@@ -11,6 +11,7 @@ KMT_TESTFUNC Test_CcCopyRead;
 KMT_TESTFUNC Test_Example;
 KMT_TESTFUNC Test_FileAttributes;
 KMT_TESTFUNC Test_FindFile;
+KMT_TESTFUNC Test_FltMgrLoad;
 KMT_TESTFUNC Test_HidPDescription;
 KMT_TESTFUNC Test_IoCreateFile;
 KMT_TESTFUNC Test_IoDeviceObject;
@@ -37,6 +38,7 @@ const KMT_TEST TestList[] =
     { "-Example",                     Test_Example },
     { "FileAttributes",               Test_FileAttributes },
     { "FindFile",                     Test_FindFile },
+    { "FltMgrLoad",                   Test_FltMgrLoad },
     { "HidPDescription",              Test_HidPDescription },
     { "IoCreateFile",                 Test_IoCreateFile },
     { "IoDeviceObject",               Test_IoDeviceObject },

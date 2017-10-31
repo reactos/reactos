@@ -174,8 +174,13 @@ DWORD KmtSendWStringToDriver(IN DWORD ControlCode, IN PCWSTR String);
 DWORD KmtSendUlongToDriver(IN DWORD ControlCode, IN DWORD Value);
 DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, IN DWORD InLength, IN OUT PDWORD OutLength);
 
-DWORD KmtFltLoadDriver(_In_z_ PCWSTR ServiceName, _In_ BOOLEAN RestartIfRunning, _In_ BOOLEAN ConnectComms, _Out_ HANDLE *hPort);
+
+DWORD KmtFltCreateService(_In_z_ PCWSTR ServiceName, _In_z_ PCWSTR DisplayName, _Out_ SC_HANDLE *ServiceHandle);
+DWORD KmtFltDeleteService(_In_opt_z_ PCWSTR ServiceName, _Inout_ SC_HANDLE *ServiceHandle);
+DWORD KmtFltLoadDriver(_In_ BOOLEAN EnableDriverLoadPrivlege, _In_ BOOLEAN RestartIfRunning, _In_ BOOLEAN ConnectComms, _Out_ HANDLE *hPort);
 DWORD KmtFltUnloadDriver(_In_ HANDLE *hPort, _In_ BOOLEAN DisonnectComms);
+DWORD KmtFltConnectComms(_Out_ HANDLE *hPort);
+DWORD KmtFltDisconnectComms(_In_ HANDLE hPort);
 DWORD KmtFltRunKernelTest(_In_ HANDLE hPort, _In_z_ PCSTR TestName);
 DWORD KmtFltSendToDriver(_In_ HANDLE hPort, _In_ DWORD Message);
 DWORD KmtFltSendStringToDriver(_In_ HANDLE hPort, _In_ DWORD Message, _In_ PCSTR String);

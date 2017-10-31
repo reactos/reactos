@@ -14,49 +14,7 @@
 
 #define SERVICE_ACCESS (SERVICE_START | SERVICE_STOP | DELETE)
 
-/*
- * We need to call the internal function in the service.c file
- */
-DWORD
-KmtpCreateService(
-    IN PCWSTR ServiceName,
-    IN PCWSTR ServicePath,
-    IN PCWSTR DisplayName OPTIONAL,
-    IN DWORD ServiceType,
-    OUT SC_HANDLE *ServiceHandle);
 
-static SC_HANDLE ScmHandle;
-
-
-/**
- * @name KmtFltCreateService
- *
- * Create the specified driver service and return a handle to it
- *
- * @param ServiceName
- *        Name of the service to create
- * @param ServicePath
- *        File name of the driver, relative to the current directory
- * @param DisplayName
- *        Service display name
- * @param ServiceHandle
- *        Pointer to a variable to receive the handle to the service
- *
- * @return Win32 error code
- */
-DWORD
-KmtFltCreateService(
-    _In_z_ PCWSTR ServiceName,
-    _In_z_ PCWSTR ServicePath,
-    _In_z_ PCWSTR DisplayName OPTIONAL,
-    _Out_ SC_HANDLE *ServiceHandle)
-{
-    return KmtpCreateService(ServiceName,
-                             ServicePath,
-                             DisplayName,
-                             SERVICE_FILE_SYSTEM_DRIVER,
-                             ServiceHandle);
-}
 
 /**
  * @name KmtFltLoad
@@ -82,7 +40,7 @@ KmtFltLoad(
 
     return Error;
 }
-
+#if 0
 /**
  * @name KmtFltCreateAndStartService
  *
@@ -143,7 +101,7 @@ cleanup:
     assert(Error);
     return Error;
 }
-
+#endif
 
 /**
  * @name KmtFltConnect
@@ -163,7 +121,7 @@ KmtFltConnect(
     _Out_ HANDLE *hPort)
 {
     HRESULT hResult;
-    DWORD Error = ERROR_SUCCESS;
+    DWORD Error;
 
     assert(ServiceName);
     assert(hPort);
@@ -191,7 +149,7 @@ KmtFltConnect(
  */
 DWORD
 KmtFltDisconnect(
-    _Out_ HANDLE *hPort)
+    _In_ HANDLE hPort)
 {
     DWORD Error = ERROR_SUCCESS;
 
@@ -387,42 +345,4 @@ KmtFltUnload(
     Error = SCODE_CODE(hResult);
 
     return Error;
-}
-
-/**
- * @name KmtFltDeleteService
- *
- * Delete the specified filter driver
- *
- * @param ServiceName
- *        If *ServiceHandle is NULL, name of the service to delete
- * @param ServiceHandle
- *        Pointer to a variable containing the service handle.
- *        Will be set to NULL on success
- *
- * @return Win32 error code
- */
-DWORD
-KmtFltDeleteService(
-    _In_z_ PCWSTR ServiceName OPTIONAL,
-    _Inout_ SC_HANDLE *ServiceHandle)
-{
-    return KmtDeleteService(ServiceName, ServiceHandle);
-}
-
-/**
- * @name KmtFltCloseService
- *
- * Close the specified driver service handle
- *
- * @param ServiceHandle
- *        Pointer to a variable containing the service handle.
- *        Will be set to NULL on success
- *
- * @return Win32 error code
- */
-DWORD KmtFltCloseService(
-    _Inout_ SC_HANDLE *ServiceHandle)
-{
-    return KmtCloseService(ServiceHandle);
 }

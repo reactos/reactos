@@ -60,16 +60,9 @@ KmtDeleteService(
 
 DWORD KmtCloseService(
     IN OUT SC_HANDLE *ServiceHandle);
-	
 
-/* FS Filter management functions */	
 
-DWORD
-KmtFltCreateService(
-    _In_z_ PCWSTR ServiceName,
-    _In_z_ PCWSTR ServicePath,
-    _In_z_ PCWSTR DisplayName OPTIONAL,
-    _Out_ SC_HANDLE *ServiceHandle);
+#ifdef KMT_FLT_USER_MODE
 
 DWORD
 KmtFltLoad(
@@ -131,5 +124,7 @@ KmtFltDeleteService(
 
 DWORD KmtFltCloseService(
     _Inout_ SC_HANDLE *ServiceHandle);
+
+#endif /* KMT_FILTER_DRIVER */
 
 #endif /* !defined _KMTESTS_H_ */
