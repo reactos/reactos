@@ -14,6 +14,9 @@ CDPath = none
 Description = Privat und Small-Business Finanzbuchhaltungssoftware, unter der GNU GPL lizenziert und frei für GNU / Linux, BSD, Solaris, Mac OS X und Microsoft Windows verfügbar.
 Size = 97,7 MiB
 
+[Section.0415]
+Description = Oprogramowanie do księgowości dla użytkowników domowych i małych firm, swobodnie licencjonowane na GNU GPL i dostępne dla systemów GNU/Linux, BSD, Solaris, Mac OS X i Microsoft Windows.
+
 [Section.0418]
 Description = Program de contabilitate financiară pentru uz personal și întreprinderi mici, oferit sub licența gratuită GNU GPL. Este disponibil pentru GNU/Linux, BSD, Solaris, Mac OS X și Windows.
 Size = 97,7 Mio

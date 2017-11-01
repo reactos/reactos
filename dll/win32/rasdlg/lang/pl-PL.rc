@@ -2115,7 +2115,7 @@ BEGIN
     499 "Wybór serwera VPN\0"
     500 "Nie można włączyć wybierania na żądanie.\0"
     501 "Jaka jest nazwa albo adres serwera VPN?\0"
-    502 "Nie można wyłączyć wybierania na żądanie0"
+    502 "Nie można wyłączyć wybierania na żądanie.\0"
     503 "Sieć publiczna\0"
     504 "ReactOS może upewnić się, że najpierw połączono się z siecią publiczną.\0"
     505 "VPN1\0"

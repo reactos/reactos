@@ -85,8 +85,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Wybierz, czy mają zostać użyte ustawienia standardowe czy niestandardowe:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Ustawienia standardowe", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Ustawienia niestandardowe", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Ustawienia standardowe", IDC_NETWORK_TYPICAL, 53, 27, 253, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Ustawienia niestandardowe", IDC_NETWORK_CUSTOM, 53, 72, 253, 10, WS_TABSTOP
     LTEXT "Tworzy połączenia sieciowe, używając protokołu Klient sieci ReactOS Networks, Udostępniania plików i drukarek w sieciach ReactOS Networks i protokołu transportowego TCP/IP z automatycznym adresowaniem.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Pozwala na ręczne konfigurowanie składników sieciowych.", IDC_STATIC, 65, 90, 243, 20
 END
@@ -113,8 +113,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Czy chcesz, aby ten komputer był członkiem domeny?\n\
 (Może zajść potrzeba uzyskania tej informacji od administratora sieci.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "Nie, ten komputer będzie członkiem grupy roboczej.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Tak, ten komputer będzie członkiem domeny.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Nie, ten komputer będzie członkiem grupy roboczej.", IDC_SELECT_WORKGROUP, 33, 32, 253, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Tak, ten komputer będzie członkiem domeny.", IDC_SELECT_DOMAIN, 33, 47, 253, 10, WS_TABSTOP
     LTEXT "Nazwa grupy roboczej lub domeny:", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "UWAGA: Jeśli ten komputer nie będzie uczestniczyć w sieci, nie masz wystarczających uprawnień, aby dolączyć do domeny, lub nie wiesz, co należy wpisać, to na razie wybierz grupę roboczą. Te opcje można zmienić pózniej.", IDC_STATIC, 33, 107, 263, 50

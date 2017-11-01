@@ -17,6 +17,9 @@ Description = Un editor de texto plano de código abierto. Se diseñó para ser 
 Description = Kleiner, schneller und quelloffener Text Editor.
 Size = 1,2 MiB
 
+[Section.0415]
+Description = Szybki i lekki otwartoźródłowy edytor tekstu.
+
 [Section.0418]
 Description = Editor simplu de text, cu surse deschise, conceput pentru a fi mic și rapid.
 Size = 1,2 Mio

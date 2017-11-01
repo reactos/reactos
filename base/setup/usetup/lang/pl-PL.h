@@ -1079,7 +1079,7 @@ static MUI_ENTRY plPLBootLoaderEntries[] =
     {
         8,
         13,
-        "Instaluj rozruchu na dysku twardym (tylko VBR).",
+        "Instaluj mened¾er rozruchu na dysku twardym (tylko VBR).",
         TEXT_STYLE_NORMAL
     },
     {

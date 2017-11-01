@@ -20,6 +20,9 @@ Description = Una versión en desarrollo de Dev-C++. Viene con el compilador de 
 [Section.0410]
 Description = Una versione sostenuta di Dev-C++. Contiene il compilatore a 64bit TDM-GCC.
 
+[Section.0415]
+Description = Wspierana wersja Dev-C++. Zawiera 64 bitowy kompilator TDM-GCC.
+
 [Section.0418]
 Description = Versiune menținută a Dev-C++. Conține compilatorul TDM-GCC pe 64 biți.
 Size = 48,1 Mio

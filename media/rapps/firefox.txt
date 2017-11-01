@@ -59,7 +59,7 @@ URLDownload = http://ftp.mozilla.org/pub/firefox/releases/45.0.1/win32/nb-NO/Fir
 SHA1 = 6f05682646327a186e17247a9e85468be609e2c1
 
 [Section.0415]
-Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
+Description = Popularna i jedna z najlepszych darmowych przeglądarek internetowych.
 Size = 42.2 MiB
 URLSite = http://www.mozilla.org/pl/
 URLDownload = http://ftp.mozilla.org/pub/firefox/releases/45.0.1/win32/pl/Firefox%20Setup%2045.0.1.exe

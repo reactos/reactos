@@ -25,6 +25,9 @@ Size = 172.5 MiB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/L10N/FoxitReader736.321_L10N.exe
 SHA1 = 6295bb977a12460a3aee8d3d1209d453832e4095
 
+[Section.0415]
+Description = Alternatywny czytnik PDF, konkurujący funkcjonalnością z Adobe Reader.
+
 [Section.0418]
 License = Gratuită
 Description = Lector PDF, rivalizând în funcționalitate cu Adobe Reader.
