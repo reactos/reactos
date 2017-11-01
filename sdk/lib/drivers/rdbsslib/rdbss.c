@@ -6771,14 +6771,6 @@ RxIndicateChangeOfBufferingStateForSrvOpen(
     UNIMPLEMENTED;
 }
 
-VOID
-NTAPI
-RxInitializeDebugSupport(
-    VOID)
-{
-    UNIMPLEMENTED;
-}
-
 /*
  * @implemented
  */

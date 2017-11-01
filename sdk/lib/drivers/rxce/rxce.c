@@ -4612,6 +4612,17 @@ RxInitializeContext(
 /*
  * @implemented
  */
+VOID
+NTAPI
+RxInitializeDebugSupport(
+    VOID)
+{
+    /* Nothing to do */
+}
+
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 RxInitializeDispatcher(
