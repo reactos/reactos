@@ -982,7 +982,7 @@ Ext2ReadDisk( PEXT2_FILESYS  Ext2Sys,
         Address.QuadPart = Offset;
 
         Status = NtReadFile(  Ext2Sys->MediaHandle,
-                              0,
+                              NULL,
                               NULL,
                               NULL,
                               &IoStatus,
@@ -1009,7 +1009,7 @@ Ext2ReadDisk( PEXT2_FILESYS  Ext2Sys,
         }
 
         Status = NtReadFile( Ext2Sys->MediaHandle,
-                             0,
+                             NULL,
                              NULL,
                              NULL,
                              &IoStatus,
@@ -1106,7 +1106,7 @@ Ext2WriteDisk( PEXT2_FILESYS  Ext2Sys,
         if ((AlignedLength != Length) || (Address.QuadPart != (LONGLONG)Offset))
         {
             Status = NtReadFile( Ext2Sys->MediaHandle,
-                                 0,
+                                 NULL,
                                  NULL,
                                  NULL,
                                  &IoStatus,

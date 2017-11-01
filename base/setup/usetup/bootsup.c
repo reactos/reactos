@@ -1001,7 +1001,6 @@ InstallFat32BootCodeToFile(
         return Status;
     }
 
-    FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
                         NULL,

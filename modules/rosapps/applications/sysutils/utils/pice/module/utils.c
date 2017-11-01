@@ -2233,9 +2233,9 @@ long PICE_read(HANDLE hFile, LPVOID lpBuffer, long lBytes)
 	ASSERT( lpBuffer );
 
 	if (!NT_SUCCESS(NtReadFile(
-		(HANDLE) hFile,
+		hFile,
 		NULL, NULL, NULL, &iosb,
-		(LPVOID) lpBuffer,
+		lpBuffer,
 		(DWORD) lBytes,
 		NULL,
 		NULL

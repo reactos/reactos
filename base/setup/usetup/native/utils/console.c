@@ -170,7 +170,7 @@ FlushConsoleInputBuffer(
                             &InputData,
                             sizeof(KEYBOARD_INPUT_DATA),
                             &Offset,
-                            0);
+                            NULL);
         if (Status == STATUS_PENDING)
         {
             Timeout.QuadPart = -100;
@@ -208,7 +208,7 @@ ReadConsoleInput(
                         &InputData,
                         sizeof(KEYBOARD_INPUT_DATA),
                         &Offset,
-                        0);
+                        NULL);
     if (Status == STATUS_PENDING)
     {
         Status = NtWaitForSingleObject(hConsoleInput, FALSE, NULL);
