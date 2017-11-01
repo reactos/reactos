@@ -772,6 +772,7 @@ RxAddToWorkque(
     ULONG Queued;
     KIRQL OldIrql;
     WORK_QUEUE_TYPE Queue;
+
     RxCaptureParamBlock;
 
     RxContext->PostRequest = FALSE;
@@ -1240,6 +1241,9 @@ RxCanonicalizeNameAndObtainNetRoot(
     NET_ROOT_TYPE NetRootType;
     UNICODE_STRING CanonicalName;
 
+    RxCaptureParamBlock;
+    RxCaptureFileObject;
+
     PAGED_CODE();
 
     NetRootType = NET_ROOT_WILD;
@@ -1248,7 +1252,7 @@ RxCanonicalizeNameAndObtainNetRoot(
     RtlInitEmptyUnicodeString(&CanonicalName, NULL, 0);
 
     /* if not relative opening, just handle the passed name */
-    if (RxContext->CurrentIrpSp->FileObject->RelatedFileObject == NULL)
+    if (capFileObject->RelatedFileObject == NULL)
     {
         Status = RxFirstCanonicalize(RxContext, FileName, &CanonicalName, &NetRootType);
         if (!NT_SUCCESS(Status))
@@ -1261,9 +1265,8 @@ RxCanonicalizeNameAndObtainNetRoot(
         PFCB Fcb;
 
         /* Make sure we have a valid FCB and a FOBX */
-        Fcb = RxContext->CurrentIrpSp->FileObject->RelatedFileObject->FsContext;
-        if (Fcb == NULL ||
-            RxContext->CurrentIrpSp->FileObject->RelatedFileObject->FsContext2 == NULL)
+        Fcb = capFileObject->RelatedFileObject->FsContext;
+        if (Fcb == NULL || capFileObject->RelatedFileObject->FsContext2 == NULL)
         {
             return STATUS_INVALID_PARAMETER;
         }
@@ -1612,26 +1615,25 @@ NTSTATUS
 RxCollapseOrCreateSrvOpen(
     PRX_CONTEXT RxContext)
 {
-    PFCB Fcb;
     NTSTATUS Status;
     ULONG Disposition;
     PSRV_OPEN SrvOpen;
     USHORT ShareAccess;
-    PIO_STACK_LOCATION Stack;
     ACCESS_MASK DesiredAccess;
     RX_BLOCK_CONDITION FcbCondition;
+
+    RxCaptureFcb;
+    RxCaptureParamBlock;
 
     PAGED_CODE();
 
     DPRINT("RxCollapseOrCreateSrvOpen(%p)\n", RxContext);
 
-    Fcb = (PFCB)RxContext->pFcb;
-    ASSERT(RxIsFcbAcquiredExclusive(Fcb));
-    ++Fcb->UncleanCount;
+    ASSERT(RxIsFcbAcquiredExclusive(capFcb));
+    ++capFcb->UncleanCount;
 
-    Stack = RxContext->CurrentIrpSp;
-    DesiredAccess = Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_ALL_ACCESS;
-    ShareAccess = Stack->Parameters.Create.ShareAccess & FILE_SHARE_VALID_FLAGS;
+    DesiredAccess = capPARAMS->Parameters.Create.SecurityContext->DesiredAccess & FILE_ALL_ACCESS;
+    ShareAccess = capPARAMS->Parameters.Create.ShareAccess & FILE_SHARE_VALID_FLAGS;
 
     Disposition = RxContext->Create.NtCreateParameters.Disposition;
 
@@ -1640,7 +1642,7 @@ RxCollapseOrCreateSrvOpen(
     if (Status == STATUS_NOT_FOUND)
     {
         /* If none found, create one */
-        SrvOpen = RxCreateSrvOpen((PV_NET_ROOT)RxContext->Create.pVNetRoot, Fcb);
+        SrvOpen = RxCreateSrvOpen((PV_NET_ROOT)RxContext->Create.pVNetRoot, capFcb);
         if (SrvOpen == NULL)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1665,7 +1667,7 @@ RxCollapseOrCreateSrvOpen(
             /* Cookie to check the mini-rdr doesn't mess with RX_CONTEXT */
             RxContext->CurrentIrp->IoStatus.Information = 0xABCDEF;
             /* Inform the mini-rdr we're handling a create */
-            MINIRDR_CALL(Status, RxContext, Fcb->MRxDispatch, MRxCreate, (RxContext));
+            MINIRDR_CALL(Status, RxContext, capFcb->MRxDispatch, MRxCreate, (RxContext));
             ASSERT(RxContext->CurrentIrp->IoStatus.Information == 0xABCDEF);
 
             DPRINT("MRxCreate returned: %x\n", Status);
@@ -1674,23 +1676,23 @@ RxCollapseOrCreateSrvOpen(
                 /* In case of overwrite, reset file size */
                 if (Disposition == FILE_OVERWRITE || Disposition == FILE_OVERWRITE_IF)
                 {
-                    RxAcquirePagingIoResource(RxContext, Fcb);
-                    Fcb->Header.AllocationSize.QuadPart = 0LL;
-                    Fcb->Header.FileSize.QuadPart = 0LL;
-                    Fcb->Header.ValidDataLength.QuadPart = 0LL;
-                    RxContext->CurrentIrpSp->FileObject->SectionObjectPointer = &Fcb->NonPaged->SectionObjectPointers;
-                    CcSetFileSizes(RxContext->CurrentIrpSp->FileObject, (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
-                    RxReleasePagingIoResource(RxContext, Fcb);
+                    RxAcquirePagingIoResource(RxContext, capFcb);
+                    capFcb->Header.AllocationSize.QuadPart = 0LL;
+                    capFcb->Header.FileSize.QuadPart = 0LL;
+                    capFcb->Header.ValidDataLength.QuadPart = 0LL;
+                    RxContext->CurrentIrpSp->FileObject->SectionObjectPointer = &capFcb->NonPaged->SectionObjectPointers;
+                    CcSetFileSizes(RxContext->CurrentIrpSp->FileObject, (PCC_FILE_SIZES)&capFcb->Header.AllocationSize);
+                    RxReleasePagingIoResource(RxContext, capFcb);
                 }
                 else
                 {
                     /* Otherwise, adjust sizes */
-                    RxContext->CurrentIrpSp->FileObject->SectionObjectPointer = &Fcb->NonPaged->SectionObjectPointers;
+                    RxContext->CurrentIrpSp->FileObject->SectionObjectPointer = &capFcb->NonPaged->SectionObjectPointers;
                     if (CcIsFileCached(RxContext->CurrentIrpSp->FileObject))
                     {
-                        RxAdjustAllocationSizeforCC(Fcb);
+                        RxAdjustAllocationSizeforCC(capFcb);
                     }
-                    CcSetFileSizes(RxContext->CurrentIrpSp->FileObject, (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
+                    CcSetFileSizes(RxContext->CurrentIrpSp->FileObject, (PCC_FILE_SIZES)&capFcb->Header.AllocationSize);
                 }
             }
 
@@ -1701,15 +1703,15 @@ RxCollapseOrCreateSrvOpen(
             /* Set SRV_OPEN state - good or bad - depending on whether create succeed */
             RxTransitionSrvOpen(SrvOpen, (Status == STATUS_SUCCESS ? Condition_Good : Condition_Bad));
 
-            ASSERT(RxIsFcbAcquiredExclusive(Fcb));
+            ASSERT(RxIsFcbAcquiredExclusive(capFcb));
 
             RxCompleteSrvOpenKeyAssociation(SrvOpen);
 
             if (Status == STATUS_SUCCESS)
             {
-                if (BooleanFlagOn(Stack->Parameters.Create.Options, FILE_DELETE_ON_CLOSE))
+                if (BooleanFlagOn(capPARAMS->Parameters.Create.Options, FILE_DELETE_ON_CLOSE))
                 {
-                    ClearFlag(Fcb->FcbState, FCB_STATE_COLLAPSING_ENABLED);
+                    ClearFlag(capFcb->FcbState, FCB_STATE_COLLAPSING_ENABLED);
                 }
                 SrvOpen->CreateOptions = RxContext->Create.NtCreateParameters.CreateOptions;
                 FcbCondition = Condition_Good;
@@ -1729,8 +1731,8 @@ RxCollapseOrCreateSrvOpen(
         }
 
         /* Set FCB state -  good or bad - depending on whether create succeed */
-        DPRINT("Transitioning FCB %p to condition %lx\n", Fcb, Fcb->Condition);
-        RxTransitionNetFcb(Fcb, FcbCondition);
+        DPRINT("Transitioning FCB %p to condition %lx\n", capFcb, capFcb->Condition);
+        RxTransitionNetFcb(capFcb, FcbCondition);
     }
     else if (Status == STATUS_SUCCESS)
     {
@@ -1750,12 +1752,12 @@ RxCollapseOrCreateSrvOpen(
             ++SrvOpen->OpenCount;
             ExtraOpen = TRUE;
 
-            RxReleaseFcb(RxContext, Fcb);
+            RxReleaseFcb(RxContext, capFcb);
             RxContext->Create.FcbAcquired = FALSE;
 
             RxWaitForStableSrvOpen(SrvOpen, RxContext);
 
-            if (NT_SUCCESS(RxAcquireExclusiveFcb(RxContext, Fcb)))
+            if (NT_SUCCESS(RxAcquireExclusiveFcb(RxContext, capFcb)))
             {
                 RxContext->Create.FcbAcquired = TRUE;
             }
@@ -1766,9 +1768,9 @@ RxCollapseOrCreateSrvOpen(
         /* Inform the mini-rdr we do an opening with a reused SRV_OPEN */
         if (IsGood)
         {
-            MINIRDR_CALL(Status, RxContext, Fcb->MRxDispatch, MRxCollapseOpen, (RxContext));
+            MINIRDR_CALL(Status, RxContext, capFcb->MRxDispatch, MRxCollapseOpen, (RxContext));
 
-            ASSERT(RxIsFcbAcquiredExclusive(Fcb));
+            ASSERT(RxIsFcbAcquiredExclusive(capFcb));
         }
         else
         {
@@ -1782,7 +1784,7 @@ RxCollapseOrCreateSrvOpen(
         }
     }
 
-    --Fcb->UncleanCount;
+    --capFcb->UncleanCount;
 
     DPRINT("Status: %x\n", Status);
     return Status;
