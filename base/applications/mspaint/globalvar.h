@@ -6,19 +6,7 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-/* TYPES ************************************************************/
-
-typedef struct tagSTRETCHSKEW {
-    POINT percentage;
-    POINT angle;
-} STRETCHSKEW;
-
-/* VARIABLES declared in main.c *************************************/
-
-extern int widthSetInDlg;
-extern int heightSetInDlg;
-
-extern STRETCHSKEW stretchSkew;
+/* VARIABLES declared in main.cpp ***********************************/
 
 class RegistrySettings;
 extern RegistrySettings registrySettings;
@@ -103,7 +91,17 @@ extern CSizeboxWindow sizeboxCenterBottom;
 extern CSizeboxWindow sizeboxRightBottom;
 extern CTextEditWindow textEditWindow;
 
-/* VARIABLES declared in mouse.c ************************************/
+/* VARIABLES declared in dialogs.cpp ********************************/
+
+class CMirrorRotateDialog;
+class CAttributesDialog;
+class CStretchSkewDialog;
+
+extern CMirrorRotateDialog mirrorRotateDialog;
+extern CAttributesDialog attributesDialog;
+extern CStretchSkewDialog stretchSkewDialog;
+
+/* VARIABLES declared in mouse.cpp **********************************/
 
 extern POINT pointStack[256];
 extern short pointSP;

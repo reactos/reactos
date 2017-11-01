@@ -605,7 +605,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             imageArea.Invalidate(FALSE);
             break;
         case IDM_IMAGEROTATEMIRROR:
-            switch (mirrorRotateDlg())
+            switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))
             {
                 case 1: /* flip horizontally */
                     if (selectionWindow.IsWindowVisible())
@@ -633,18 +633,18 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_IMAGEATTRIBUTES:
         {
-            if (attributesDlg())
+            if (attributesDialog.DoModal(mainWindow.m_hWnd))
             {
-                imageModel.Crop(widthSetInDlg, heightSetInDlg, 0, 0);
+                imageModel.Crop(attributesDialog.newWidth, attributesDialog.newHeight, 0, 0);
             }
             break;
         }
         case IDM_IMAGESTRETCHSKEW:
         {
-            if (changeSizeDlg())
+            if (stretchSkewDialog.DoModal(mainWindow.m_hWnd))
             {
-                imageModel.StretchSkew(stretchSkew.percentage.x, stretchSkew.percentage.y,
-                                       stretchSkew.angle.x, stretchSkew.angle.y);
+                imageModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
+                                       stretchSkewDialog.angle.x, stretchSkewDialog.angle.y);
             }
             break;
         }
