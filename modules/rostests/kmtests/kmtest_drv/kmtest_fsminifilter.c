@@ -313,50 +313,54 @@ FilterInstanceSetup(
     UNREFERENCED_PARAMETER(FltObjects);
     UNREFERENCED_PARAMETER(Flags);
 
-    RtlInitUnicodeString(&VolumeName, NULL);
+    if (!(Flags & TESTENTRY_NO_INSTANCE_SETUP))
+    {
+        RtlInitUnicodeString(&VolumeName, NULL);
+
 #if 0 // FltGetVolumeProperties is not yet implemented
     /* Get the properties of this volume */
-    Status = FltGetVolumeProperties(Volume,
-                                    VolumeProperties,
-                                    sizeof(VolPropBuffer),
-                                    &LengthReturned);
-    if (NT_SUCCESS(Status))
-    {
-        FLT_ASSERT((VolumeProperties->SectorSize == 0) || (VolumeProperties->SectorSize >= MIN_SECTOR_SIZE));
-        SectorSize = max(VolumeProperties->SectorSize, MIN_SECTOR_SIZE);
-        ReportedSectorSize = VolumeProperties->SectorSize;
-    }
-    else
-    {
-        DPRINT1("Failed to get the volume properties : 0x%X", Status);
-        return Status;
-    }
-#endif
-    /*  Get the storage device object we want a name for */
-    Status = FltGetDiskDeviceObject(FltObjects->Volume, &DeviceObject);
-    if (NT_SUCCESS(Status))
-    {
-        /* Get the dos device name */
-        Status = IoVolumeDeviceToDosName(DeviceObject, &VolumeName);
+        Status = FltGetVolumeProperties(Volume,
+                                        VolumeProperties,
+                                        sizeof(VolPropBuffer),
+                                        &LengthReturned);
         if (NT_SUCCESS(Status))
         {
-            DPRINT("VolumeDeviceType %lu, VolumeFilesystemType %lu, Real SectSize=0x%04x, Reported SectSize=0x%04x, Name=\"%wZ\"",
-                   VolumeDeviceType,
-                   VolumeFilesystemType,
-                   SectorSize,
-                   ReportedSectorSize,
-                   &VolumeName);
+            FLT_ASSERT((VolumeProperties->SectorSize == 0) || (VolumeProperties->SectorSize >= MIN_SECTOR_SIZE));
+            SectorSize = max(VolumeProperties->SectorSize, MIN_SECTOR_SIZE);
+            ReportedSectorSize = VolumeProperties->SectorSize;
+        }
+        else
+        {
+            DPRINT1("Failed to get the volume properties : 0x%X", Status);
+            return Status;
+        }
+#endif
+        /*  Get the storage device object we want a name for */
+        Status = FltGetDiskDeviceObject(FltObjects->Volume, &DeviceObject);
+        if (NT_SUCCESS(Status))
+        {
+            /* Get the dos device name */
+            Status = IoVolumeDeviceToDosName(DeviceObject, &VolumeName);
+            if (NT_SUCCESS(Status))
+            {
+                DPRINT("VolumeDeviceType %lu, VolumeFilesystemType %lu, Real SectSize=0x%04x, Reported SectSize=0x%04x, Name=\"%wZ\"",
+                       VolumeDeviceType,
+                       VolumeFilesystemType,
+                       SectorSize,
+                       ReportedSectorSize,
+                       &VolumeName);
 
-            Status = TestInstanceSetup(FltObjects,
-                                       Flags,
-                                       VolumeDeviceType,
-                                       VolumeFilesystemType,
-                                       &VolumeName,
-                                       SectorSize,
-                                       ReportedSectorSize);
+                Status = TestInstanceSetup(FltObjects,
+                                           Flags,
+                                           VolumeDeviceType,
+                                           VolumeFilesystemType,
+                                           &VolumeName,
+                                           SectorSize,
+                                           ReportedSectorSize);
 
-            /* The buffer was allocated by the IoMgr */
-            ExFreePool(VolumeName.Buffer);
+                /* The buffer was allocated by the IoMgr */
+                ExFreePool(VolumeName.Buffer);
+            }
         }
     }
 
@@ -385,7 +389,10 @@ FilterQueryTeardown(
 {
     PAGED_CODE();
 
-    TestQueryTeardown(FltObjects, Flags);
+    if (!(Flags & TESTENTRY_NO_QUERY_TEARDOWN))
+    {
+        TestQueryTeardown(FltObjects, Flags);
+    }
 
     /* We always allow a volume to detach */
     return STATUS_SUCCESS;
