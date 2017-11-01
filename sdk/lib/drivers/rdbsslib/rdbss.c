@@ -643,6 +643,8 @@ VOID
 CheckForLoudOperations(
     PRX_CONTEXT RxContext)
 {
+    RxCaptureFcb;
+
     PAGED_CODE();
 
 #define ALLSCR_LENGTH (sizeof(L"all.scr") - sizeof(UNICODE_NULL))
@@ -650,11 +652,9 @@ CheckForLoudOperations(
     /* Are loud operations enabled? */
     if (RxLoudLowIoOpsEnabled)
     {
-        PFCB Fcb;
-
         /* If so, the operation will be loud only if filename ends with all.scr */
-        Fcb = (PFCB)RxContext->pFcb;
-        if (RtlCompareMemory(Add2Ptr(Fcb->PrivateAlreadyPrefixedName.Buffer, (Fcb->PrivateAlreadyPrefixedName.Length - ALLSCR_LENGTH)),
+        if (RtlCompareMemory(Add2Ptr(capFcb->PrivateAlreadyPrefixedName.Buffer,
+                             (capFcb->PrivateAlreadyPrefixedName.Length - ALLSCR_LENGTH)),
                              L"all.scr", ALLSCR_LENGTH) == ALLSCR_LENGTH)
         {
             SetFlag(RxContext->LowIoContext.Flags, LOWIO_CONTEXT_FLAG_LOUDOPS);
@@ -701,14 +701,12 @@ __RxWriteReleaseResources(
     PCSTR FileName,
     ULONG SerialNumber)
 {
-    PFCB Fcb;
+    RxCaptureFcb;
 
     PAGED_CODE();
 
     ASSERT(RxContext != NULL);
-
-    Fcb = (PFCB)RxContext->pFcb;
-    ASSERT(Fcb != NULL);
+    ASSERT(capFcb != NULL);
 
     /* If FCB resource was acquired, release it */
     if (RxContext->FcbResourceAcquired)
@@ -716,11 +714,11 @@ __RxWriteReleaseResources(
         /* Taking care of owner */
         if (ResourceOwnerSet)
         {
-            RxReleaseFcbForThread(RxContext, Fcb, RxContext->LowIoContext.ResourceThreadId);
+            RxReleaseFcbForThread(RxContext, capFcb, RxContext->LowIoContext.ResourceThreadId);
         }
         else
         {
-            RxReleaseFcb(RxContext, Fcb);
+            RxReleaseFcb(RxContext, capFcb);
         }
 
         RxContext->FcbResourceAcquired = FALSE;
@@ -732,11 +730,11 @@ __RxWriteReleaseResources(
         /* Taking care of owner */
         if (ResourceOwnerSet)
         {
-            RxReleasePagingIoResourceForThread(RxContext, Fcb, RxContext->LowIoContext.ResourceThreadId);
+            RxReleasePagingIoResourceForThread(RxContext, capFcb, RxContext->LowIoContext.ResourceThreadId);
         }
         else
         {
-            RxReleasePagingIoResource(RxContext, Fcb);
+            RxReleasePagingIoResource(RxContext, capFcb);
         }
 
         /* No need to release boolean here, RxReleasePagingIoResource() takes care of it */
@@ -774,14 +772,13 @@ RxAddToWorkque(
     ULONG Queued;
     KIRQL OldIrql;
     WORK_QUEUE_TYPE Queue;
-    PIO_STACK_LOCATION Stack;
+    RxCaptureParamBlock;
 
-    Stack = RxContext->CurrentIrpSp;
     RxContext->PostRequest = FALSE;
 
     /* First of all, select the appropriate queue - delayed for prefix claim, critical for the rest */
     if (RxContext->MajorFunction == IRP_MJ_DEVICE_CONTROL &&
-        Stack->Parameters.DeviceIoControl.IoControlCode == IOCTL_REDIR_QUERY_PATH)
+        capPARAMS->Parameters.DeviceIoControl.IoControlCode == IOCTL_REDIR_QUERY_PATH)
     {
         Queue = DelayedWorkQueue;
         SetFlag(RxContext->Flags, RX_CONTEXT_FLAG_FSP_DELAYED_OVERFLOW_QUEUE);
@@ -793,7 +790,7 @@ RxAddToWorkque(
     }
 
     /* Check for overflow */
-    if (Stack->FileObject != NULL)
+    if (capPARAMS->FileObject != NULL)
     {
         KeAcquireSpinLock(&RxFileSystemDeviceObject->OverflowQueueSpinLock, &OldIrql);
 
@@ -821,22 +818,23 @@ RxAddToWorkque(
  */
 VOID
 RxAdjustFileTimesAndSize(
-    PRX_CONTEXT Context)
+    PRX_CONTEXT RxContext)
 {
-    PFCB Fcb;
-    PFOBX Fobx;
     NTSTATUS Status;
-    PFILE_OBJECT FileObject;
     LARGE_INTEGER CurrentTime;
     FILE_BASIC_INFORMATION FileBasicInfo;
     FILE_END_OF_FILE_INFORMATION FileEOFInfo;
     BOOLEAN FileModified, SetLastChange, SetLastAccess, SetLastWrite, NeedUpdate;
 
+    RxCaptureFcb;
+    RxCaptureFobx;
+    RxCaptureParamBlock;
+    RxCaptureFileObject;
+
     PAGED_CODE();
 
-    FileObject = Context->CurrentIrpSp->FileObject;
     /* If Cc isn't initialized, the file was not read nor written, nothing to do */
-    if (FileObject->PrivateCacheMap == NULL)
+    if (capFileObject->PrivateCacheMap == NULL)
     {
         return;
     }
@@ -844,17 +842,16 @@ RxAdjustFileTimesAndSize(
     /* Get now */
     KeQuerySystemTime(&CurrentTime);
 
-    Fobx = (PFOBX)Context->pFobx;
     /* Was the file modified? */
-    FileModified = BooleanFlagOn(FileObject->Flags, FO_FILE_MODIFIED);
+    FileModified = BooleanFlagOn(capFileObject->Flags, FO_FILE_MODIFIED);
     /* We'll set last write if it was modified and user didn't update yet */
-    SetLastWrite = FileModified && !BooleanFlagOn(Fobx->Flags, FOBX_FLAG_USER_SET_LAST_WRITE);
+    SetLastWrite = FileModified && !BooleanFlagOn(capFobx->Flags, FOBX_FLAG_USER_SET_LAST_WRITE);
     /* File was accessed if: written or read (fastio), we'll update last access if user didn't */
     SetLastAccess = SetLastWrite ||
-                    (BooleanFlagOn(FileObject->Flags, FO_FILE_FAST_IO_READ) &&
-                     !BooleanFlagOn(Fobx->Flags, FOBX_FLAG_USER_SET_LAST_ACCESS));
+                    (BooleanFlagOn(capFileObject->Flags, FO_FILE_FAST_IO_READ) &&
+                     !BooleanFlagOn(capFobx->Flags, FOBX_FLAG_USER_SET_LAST_ACCESS));
     /* We'll set last change if it was modified and user didn't update yet */
-    SetLastChange = FileModified && !BooleanFlagOn(Fobx->Flags, FOBX_FLAG_USER_SET_LAST_CHANGE);
+    SetLastChange = FileModified && !BooleanFlagOn(capFobx->Flags, FOBX_FLAG_USER_SET_LAST_CHANGE);
 
     /* Nothing to update? Job done */
     if (!FileModified && !SetLastWrite && !SetLastAccess && !SetLastChange)
@@ -862,7 +859,6 @@ RxAdjustFileTimesAndSize(
         return;
     }
 
-    Fcb = (PFCB)Context->pFcb;
     /* By default, we won't issue any MRxSetFileInfoAtCleanup call */
     NeedUpdate = FALSE;
     RtlZeroMemory(&FileBasicInfo, sizeof(FileBasicInfo));
@@ -871,7 +867,7 @@ RxAdjustFileTimesAndSize(
     if (SetLastWrite)
     {
         NeedUpdate = TRUE;
-        Fcb->LastWriteTime.QuadPart = CurrentTime.QuadPart;
+        capFcb->LastWriteTime.QuadPart = CurrentTime.QuadPart;
         FileBasicInfo.LastWriteTime.QuadPart = CurrentTime.QuadPart;
     }
 
@@ -879,7 +875,7 @@ RxAdjustFileTimesAndSize(
     if (SetLastAccess)
     {
         NeedUpdate = TRUE;
-        Fcb->LastAccessTime.QuadPart = CurrentTime.QuadPart;
+        capFcb->LastAccessTime.QuadPart = CurrentTime.QuadPart;
         FileBasicInfo.LastAccessTime.QuadPart = CurrentTime.QuadPart;
     }
 
@@ -887,31 +883,31 @@ RxAdjustFileTimesAndSize(
     if (SetLastChange)
     {
         NeedUpdate = TRUE;
-        Fcb->LastChangeTime.QuadPart = CurrentTime.QuadPart;
+        capFcb->LastChangeTime.QuadPart = CurrentTime.QuadPart;
         FileBasicInfo.ChangeTime.QuadPart = CurrentTime.QuadPart;
     }
 
     /* If one of the date was modified, issue a call to mini-rdr */
     if (NeedUpdate)
     {
-        Context->Info.FileInformationClass = FileBasicInformation;
-        Context->Info.Buffer = &FileBasicInfo;
-        Context->Info.Length = sizeof(FileBasicInfo);
+        RxContext->Info.FileInformationClass = FileBasicInformation;
+        RxContext->Info.Buffer = &FileBasicInfo;
+        RxContext->Info.Length = sizeof(FileBasicInfo);
 
-        MINIRDR_CALL(Status, Context, Fcb->MRxDispatch, MRxSetFileInfoAtCleanup, (Context));
+        MINIRDR_CALL(Status, RxContext, capFcb->MRxDispatch, MRxSetFileInfoAtCleanup, (RxContext));
         (void)Status;
     }
 
     /* If the file was modified, update its EOF */
     if (FileModified)
     {
-        FileEOFInfo.EndOfFile.QuadPart = Fcb->Header.FileSize.QuadPart;
+        FileEOFInfo.EndOfFile.QuadPart = capFcb->Header.FileSize.QuadPart;
 
-        Context->Info.FileInformationClass = FileEndOfFileInformation;
-        Context->Info.Buffer = &FileEOFInfo;
-        Context->Info.Length = sizeof(FileEOFInfo);
+        RxContext->Info.FileInformationClass = FileEndOfFileInformation;
+        RxContext->Info.Buffer = &FileEOFInfo;
+        RxContext->Info.Length = sizeof(FileEOFInfo);
 
-        MINIRDR_CALL(Status, Context, Fcb->MRxDispatch, MRxSetFileInfoAtCleanup, (Context));
+        MINIRDR_CALL(Status, RxContext, capFcb->MRxDispatch, MRxSetFileInfoAtCleanup, (RxContext));
         (void)Status;
     }
 }

@@ -6,6 +6,22 @@
 #define INVALID_HANDLE_VALUE ((HANDLE)-1)
 #endif
 
+#ifndef MINIRDR__NAME
+#define RxCaptureFcb PFCB __C_Fcb = (PFCB)(RxContext->pFcb)
+#define RxCaptureFobx PFOBX __C_Fobx = (PFOBX)(RxContext->pFobx)
+#else
+#define RxCaptureFcb PMRX_FCB __C_Fcb = (RxContext->pFcb)
+#define RxCaptureFobx PMRX_FOBX __C_Fobx = (RxContext->pFobx)
+#endif
+
+#define RxCaptureParamBlock PIO_STACK_LOCATION __C_IrpSp = RxContext->CurrentIrpSp
+#define RxCaptureFileObject PFILE_OBJECT __C_FileObject = __C_IrpSp-> FileObject
+
+#define capFcb __C_Fcb
+#define capFobx __C_Fobx
+#define capPARAMS __C_IrpSp
+#define capFileObject __C_FileObject
+
 #define RxAllocatePoolWithTag ExAllocatePoolWithTag
 #define RxFreePool ExFreePool
 
