@@ -36,6 +36,7 @@ class CBandSiteMenu :
 
     HRESULT _CreateMenuPart();
     HRESULT _CreateNewISFBand(HWND hwnd, REFIID riid, void** ppv);
+    LPITEMIDLIST _GetQLaunchPidl(BOOL refresh);
     HRESULT _CreateBuiltInISFBand(UINT uID, REFIID riid, void** ppv);
     HRESULT _AddISFBandToMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, IUnknown* pBand, DWORD dwBandID, UINT *newMenuId);
     UINT _GetMenuIdFromISFBand(IUnknown *pBand);
