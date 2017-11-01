@@ -275,7 +275,7 @@ KmtFltRunKernelTest(
 * @param Message
 *        The message to send to the filter
 *
-* @return Win32 error code as returned by DeviceIoControl
+* @return Win32 error code
 */
 DWORD
 KmtFltSendToDriver(
@@ -299,7 +299,7 @@ KmtFltSendToDriver(
  * @param String
  *        An ANSI string to send to the filter
  *
- * @return Win32 error code as returned by DeviceIoControl
+ * @return Win32 error code
  */
 DWORD
 KmtFltSendStringToDriver(
@@ -324,7 +324,7 @@ KmtFltSendStringToDriver(
  * @param String
  *        An wide string to send to the filter
  *
- * @return Win32 error code as returned by DeviceIoControl
+ * @return Win32 error code
  */
 DWORD
 KmtFltSendWStringToDriver(
@@ -347,7 +347,7 @@ KmtFltSendWStringToDriver(
  * @param Value
  *        An 32bit valueng to send to the filter
  *
- * @return Win32 error code as returned by DeviceIoControl
+ * @return Win32 error code
  */
 DWORD
 KmtFltSendUlongToDriver(
@@ -378,7 +378,7 @@ KmtFltSendUlongToDriver(
  * @param BytesReturned
  *        Number of bytes written in the reply buffer
  *
- * @return Win32 error code as returned by DeviceIoControl
+ * @return Win32 error code
  */
 DWORD
 KmtFltSendBufferToDriver(
@@ -434,14 +434,96 @@ KmtFltSendBufferToDriver(
     return Error;
 }
 
+/**
+* @name KmtFltAddAltitude
+*
+* Sets up the mini-filter altitude data in the registry
+*
+* @param hPort
+*        The altitude string to set
+*
+* @return Win32 error code
+*/
+DWORD
+KmtFltAddAltitude(
+    _In_z_ LPWSTR Altitude)
+{
+    WCHAR DefaultInstance[128];
+    WCHAR KeyPath[256];
+    HKEY hKey = NULL;
+    HKEY hSubKey = NULL;
+    DWORD Zero = 0;
+    LONG Error;
 
+    StringCbCopy(KeyPath, sizeof KeyPath, L"SYSTEM\\CurrentControlSet\\Services\\");
+    StringCbCat(KeyPath, sizeof KeyPath, TestServiceName);
+    StringCbCat(KeyPath, sizeof KeyPath, L"\\Instances\\");
 
+    Error = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                           KeyPath,
+                           0,
+                           NULL,
+                           REG_OPTION_NON_VOLATILE,
+                           KEY_CREATE_SUB_KEY | KEY_SET_VALUE,
+                           NULL,
+                           &hKey,
+                           NULL);
+    if (Error != ERROR_SUCCESS)
+    {
+        return Error;
+    }
 
+    StringCbCopy(DefaultInstance, sizeof DefaultInstance, TestServiceName);
+    StringCbCat(DefaultInstance, sizeof DefaultInstance, L" Instance");
 
+    Error = RegSetValueExW(hKey,
+                           L"DefaultInstance",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)DefaultInstance,
+                           (wcslen(DefaultInstance) + 1) * sizeof(WCHAR));
+    if (Error != ERROR_SUCCESS)
+    {
+        goto Quit;
+    }
 
+    Error = RegCreateKeyW(hKey, DefaultInstance, &hSubKey);
+    if (Error != ERROR_SUCCESS)
+    {
+        goto Quit;
+    }
 
+    Error = RegSetValueExW(hSubKey,
+                           L"Altitude",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)Altitude,
+                           (wcslen(Altitude) + 1) * sizeof(WCHAR));
+    if (Error != ERROR_SUCCESS)
+    {
+        goto Quit;
+    }
 
+    Error = RegSetValueExW(hSubKey,
+                           L"Flags",
+                           0,
+                           REG_DWORD,
+                           (LPBYTE)&Zero,
+                           sizeof(DWORD));
 
+Quit:
+    if (hSubKey)
+    {
+        RegCloseKey(hSubKey);
+    }
+    if (hKey)
+    {
+        RegCloseKey(hKey);
+    }
+
+    return Error;
+
+}
 
 /*
 * Private functions, not meant for use in kmtests
