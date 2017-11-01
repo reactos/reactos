@@ -12,11 +12,6 @@
 
 /* FUNCTIONS ********************************************************/
 
-int widthSetInDlg;
-int heightSetInDlg;
-
-STRETCHSKEW stretchSkew;
-
 POINT start;
 POINT last;
 
