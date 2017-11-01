@@ -422,6 +422,25 @@ static void IntSendDestroyMsg(HWND hWnd)
       {
          co_IntDestroyCaret(ti);
       }
+
+      /* If the window being destroyed is currently tracked... */
+      if (ti->rpdesk->spwndTrack == Window)
+      {
+          PDESKTOP pDesk = ti->rpdesk;
+          /* Generate a leave message */
+          if (pDesk->dwDTFlags & DF_TME_LEAVE)
+          {
+              UINT uMsg = (pDesk->htEx != HTCLIENT) ? WM_NCMOUSELEAVE : WM_MOUSELEAVE;
+              UserPostMessage(UserHMGetHandle(pDesk->spwndTrack), uMsg, 0, 0);
+          }
+          /* Kill the timer */
+          if (pDesk->dwDTFlags & DF_TME_HOVER)
+              IntKillTimer(pDesk->spwndTrack, ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
+
+          /* Reset state */
+          pDesk->dwDTFlags &= ~(DF_TME_LEAVE|DF_TME_HOVER);
+          pDesk->spwndTrack = NULL;
+      }
    }
 
    /* If the window being destroyed is the current clipboard owner... */
