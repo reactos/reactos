@@ -1323,12 +1323,15 @@ RxCanonicalizeNameAndObtainNetRoot(
     return Status;
 }
 
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 RxCheckFcbStructuresForAlignment(
     VOID)
 {
-    UNIMPLEMENTED;
+    PAGED_CODE();
 }
 
 #if DBG
