@@ -2,7 +2,8 @@
  * PROJECT:         ReactOS kernel-mode tests - Filter Manager
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         FS Mini-filter wrapper to host the filter manager tests
- * PROGRAMMER:      Ged Murphy <ged.murphy@reactos.org>
+ * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ *                  Ged Murphy <ged.murphy@reactos.org>
  */
 
 #include <ntifs.h>
@@ -35,6 +36,8 @@ DRIVER_INITIALIZE DriverEntry;
 
 /* Globals */
 static PDRIVER_OBJECT TestDriverObject;
+static PDEVICE_OBJECT TestDeviceObject;
+static PDEVICE_OBJECT KmtestDeviceObject;
 static FILTER_DATA FilterData;
 static PFLT_OPERATION_REGISTRATION Callbacks = NULL;
 static PFLT_CONTEXT_REGISTRATION Contexts = NULL;
@@ -133,12 +136,15 @@ DriverEntry(
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     UNICODE_STRING DeviceName;
     WCHAR DeviceNameBuffer[128] = L"\\Device\\Kmtest-";
+    UNICODE_STRING KmtestDeviceName;
+    PFILE_OBJECT KmtestFileObject;
+    PKMT_DEVICE_EXTENSION KmtestDeviceExtension;
     PCWSTR DeviceNameSuffix;
     INT Flags = 0;
     PKPRCB Prcb;
 
     PAGED_CODE();
-    __debugbreak();
+    //__debugbreak();
     DPRINT("DriverEntry\n");
 
     RtlZeroMemory(&FilterData, sizeof(FILTER_DATA));
@@ -147,6 +153,32 @@ DriverEntry(
     KmtIsCheckedBuild = (Prcb->BuildType & PRCB_BUILD_DEBUG) != 0;
     KmtIsMultiProcessorBuild = (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR) == 0;
     TestDriverObject = DriverObject;
+
+    /* get the Kmtest device, so that we get a ResultBuffer pointer */
+    RtlInitUnicodeString(&KmtestDeviceName, KMTEST_DEVICE_DRIVER_PATH);
+    Status = IoGetDeviceObjectPointer(&KmtestDeviceName, FILE_ALL_ACCESS, &KmtestFileObject, &KmtestDeviceObject);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get Kmtest device object pointer\n");
+        goto cleanup;
+    }
+
+    Status = ObReferenceObjectByPointer(KmtestDeviceObject, FILE_ALL_ACCESS, NULL, KernelMode);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to reference Kmtest device object\n");
+        goto cleanup;
+    }
+
+    ObDereferenceObject(KmtestFileObject);
+    KmtestFileObject = NULL;
+    KmtestDeviceExtension = KmtestDeviceObject->DeviceExtension;
+    ResultBuffer = KmtestDeviceExtension->ResultBuffer;
+    DPRINT("KmtestDeviceObject: %p\n", (PVOID)KmtestDeviceObject);
+    DPRINT("KmtestDeviceExtension: %p\n", (PVOID)KmtestDeviceExtension);
+    DPRINT("Setting ResultBuffer: %p\n", (PVOID)ResultBuffer);
 
 
     /* call TestEntry */
