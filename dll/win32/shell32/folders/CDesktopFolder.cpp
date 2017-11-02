@@ -858,6 +858,9 @@ HRESULT WINAPI CDesktopFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IData
         return S_OK;
     }
 
+    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
+        return S_OK;
+
     PIDLIST_ABSOLUTE pidlFolder;
     PUITEMID_CHILD *apidl;
     UINT cidl;
