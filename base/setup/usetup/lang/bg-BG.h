@@ -1,14 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS bgBGLayouts[] =
-{
-    { L"0402", L"00000402" },
-    { L"0402", L"00020402" },
-    { L"0402", L"00030402" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY bgBGLanguagePageEntries[] =
 {
     {
@@ -90,7 +81,7 @@ static MUI_ENTRY bgBGWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Натиснете R за поправка на РеактОС.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -418,7 +409,7 @@ static MUI_ENTRY bgBGDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY bgBGRepairPageEntries[] =
+static MUI_ENTRY bgBGUpgradePageEntries[] =
 {
     {
         4,
@@ -429,50 +420,56 @@ static MUI_ENTRY bgBGRepairPageEntries[] =
     {
         6,
         8,
-        "Настройвачът на РеактОС е в ранна степен на разработка. Все още",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "няма всички възможности на напълно използваемо настройващо приложение.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Възможността за поправка още не е готова.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  натиснете U за обновяване на операционната система.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Натиснете R за възстановяваща среда (конзола).",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  натсинете ESC за връщане към главната страница.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Натиснете ENTER за презапуск на компютъра.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ESC = Главна страница  ENTER = Презапуск",
-        TEXT_TYPE_STATUS
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1623,7 +1620,7 @@ MUI_PAGE bgBGPages[] =
         bgBGLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         bgBGWelcomePageEntries
     },
     {
@@ -1639,8 +1636,8 @@ MUI_PAGE bgBGPages[] =
         bgBGDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        bgBGRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        bgBGUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1774,7 +1771,7 @@ MUI_STRING bgBGStrings[] =
     "   Осъвременяване на регистърните роеве..."},
     {STRING_IMPORTFILE,
     "   Внасяне на %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Осъвременяване регистровите настройки на екрана..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Осъвременяване на местните настройки..."},
@@ -1802,28 +1799,28 @@ MUI_STRING bgBGStrings[] =
     " Форматиране на дяла като %S файлова уредба "},
     {STRING_KEEPFORMAT,
     " Запазване на файловата уредба (без промени) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  вид 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ."},
-    {STRING_HDDINFOUNK3,
-    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  вид 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "на твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "на твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sвид %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Бе създаден нов дял на"},
     {STRING_UNPSPACE,

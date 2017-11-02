@@ -1,12 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS itITLayouts[] =
-{
-    { L"0410", L"00000410" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY itITLanguagePageEntries[] =
 {
     {
@@ -56,7 +49,7 @@ static MUI_ENTRY itITLanguagePageEntries[] =
 static MUI_ENTRY itITWelcomePageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -88,11 +81,11 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Premere R per riparare ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Premere L per vedere i termini e condizioni della licenza.",
         TEXT_STYLE_NORMAL
@@ -104,14 +97,14 @@ static MUI_ENTRY itITWelcomePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         23,
         "Per maggiori informazioni riguardo ReactOS, visitate il sito:",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
-        24, 
+        6,
+        24,
         "http://www.reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
@@ -132,38 +125,38 @@ static MUI_ENTRY itITWelcomePageEntries[] =
 static MUI_ENTRY itITIntroPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
-        6, 
-        8, 
+        6,
+        8,
         "Il setup di ReactOS Š ancora in una fase preliminare.",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "Non ha ancora tutte le funzioni di installazione.",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "Si applicano le seguenti limitazioni:",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
-        13, 
+        8,
+        13,
         "- Il setup supporta solamente il sistema FAT.",
         TEXT_STYLE_NORMAL
     },
@@ -174,20 +167,20 @@ static MUI_ENTRY itITIntroPageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
-        23, 
+        8,
+        23,
         "\x07  Premere INVIO per installare ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
-        25, 
+        8,
+        25,
         "\x07  Premere F3 per uscire senza installare ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
-        0, 
+        0,
         "   INVIO = Continua   F3 = Termina",
         TEXT_TYPE_STATUS
     },
@@ -202,7 +195,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
 static MUI_ENTRY itITLicensePageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -279,43 +272,43 @@ static MUI_ENTRY itITLicensePageEntries[] =
         "della licenza GNU GPL con ReactOS, visiti il sito:",
         TEXT_STYLE_NORMAL
     },
-    {           
+    {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
         TEXT_STYLE_HIGHLIGHT
     },
-    {           
+    {
         8,
         22,
         "Garanzia:",
         TEXT_STYLE_HIGHLIGHT
     },
-    {           
+    {
         8,
         24,
         "Questo software Š libero; vedere il codice per le condizioni di copia.",
         TEXT_STYLE_NORMAL
     },
-    {           
+    {
         8,
         25,
         "NON esiste garanzia; n‚ di COMMERCIABILIT·",
         TEXT_STYLE_NORMAL
     },
-    {           
+    {
         8,
         26,
         "o adeguatezza ad un uso particolare",
         TEXT_STYLE_NORMAL
     },
-    {           
+    {
         0,
         0,
         "   INVIO = Ritorna",
         TEXT_TYPE_STATUS
     },
-    {           
+    {
         0,
         0,
         NULL,
@@ -326,13 +319,13 @@ static MUI_ENTRY itITLicensePageEntries[] =
 static MUI_ENTRY itITDevicePageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
-        6, 
+        6,
         8,
         "L'elenco che segue mostra le impostazioni correnti delle periferiche.",
         TEXT_STYLE_NORMAL
@@ -368,7 +361,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        25, 
+        25,
         16, "Accettare queste impostazioni",
         TEXT_STYLE_NORMAL
     },
@@ -379,25 +372,25 @@ static MUI_ENTRY itITDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
-        20, 
+        6,
+        20,
         "e modificarlo premendo INVIO per selezionare un valore alternativo.",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         21,
         " ",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
-        23, 
+        6,
+        23,
         "Quando le impostazioni saranno corrette, selezionare",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         24,
         "\"Accettare queste impostazioni\" e premere INVIO.",
         TEXT_STYLE_NORMAL
@@ -416,61 +409,67 @@ static MUI_ENTRY itITDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY itITRepairPageEntries[] =
+static MUI_ENTRY itITUpgradePageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
-        6, 
+        6,
         8,
-        "Il setup di ReactOS Š ancora in una fase preliminare.",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         9,
-        "Non ha ancora tutte le funzioni di installazione.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
         12,
-        "Le funzioni di ripristino non sono state ancora implementate.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
-        8, 
+        8,
         15,
-        "\x07  Premere U per aggiornare il SO.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         17,
-        "\x07  Premere R per la console di ripristino.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         19,
-        "\x07  Premere ESC tornare al men— principale.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         21,
-        "\x07  Premere INVIO per riavviare il computer.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
-        0, 
         0,
-        "ESC = Men— iniziale INVIO = Riavvio",
-        TEXT_TYPE_STATUS
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -483,7 +482,7 @@ static MUI_ENTRY itITRepairPageEntries[] =
 static MUI_ENTRY itITComputerPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -499,7 +498,7 @@ static MUI_ENTRY itITComputerPageEntries[] =
         10,
         "\x07  Premere i tasti SU e GIë per scegliere il tipo.",
         TEXT_STYLE_NORMAL
-    },    
+    },
     {
         8,
         11,
@@ -535,7 +534,7 @@ static MUI_ENTRY itITComputerPageEntries[] =
 static MUI_ENTRY itITFlushPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -575,7 +574,7 @@ static MUI_ENTRY itITFlushPageEntries[] =
 static MUI_ENTRY itITQuitPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -621,7 +620,7 @@ static MUI_ENTRY itITQuitPageEntries[] =
 static MUI_ENTRY itITDisplayPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -672,7 +671,7 @@ static MUI_ENTRY itITDisplayPageEntries[] =
 static MUI_ENTRY itITSuccessPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -718,7 +717,7 @@ static MUI_ENTRY itITSuccessPageEntries[] =
 static MUI_ENTRY itITBootPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -765,7 +764,7 @@ static MUI_ENTRY itITBootPageEntries[] =
 static MUI_ENTRY itITSelectPartitionEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -835,7 +834,7 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
 static MUI_ENTRY itITConfirmDeleteSystemPartitionEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -929,7 +928,7 @@ static MUI_ENTRY itITConfirmDeleteSystemPartitionEntries[] =
 static MUI_ENTRY itITFormatPartitionEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -963,7 +962,7 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
 static MUI_ENTRY itITInstallDirectoryEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1015,7 +1014,7 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
 static MUI_ENTRY itITFileCopyEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1055,7 +1054,7 @@ static MUI_ENTRY itITFileCopyEntries[] =
 static MUI_ENTRY itITBootLoaderEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1107,7 +1106,7 @@ static MUI_ENTRY itITBootLoaderEntries[] =
 static MUI_ENTRY itITKeyboardSettingsEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1159,7 +1158,7 @@ static MUI_ENTRY itITKeyboardSettingsEntries[] =
 static MUI_ENTRY itITLayoutSettingsEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1212,7 +1211,7 @@ static MUI_ENTRY itITLayoutSettingsEntries[] =
 static MUI_ENTRY itITPrepareCopyEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1241,7 +1240,7 @@ static MUI_ENTRY itITPrepareCopyEntries[] =
 static MUI_ENTRY itITSelectFSEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1288,7 +1287,7 @@ static MUI_ENTRY itITSelectFSEntries[] =
 static MUI_ENTRY itITDeletePartitionEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1617,7 +1616,7 @@ MUI_PAGE itITPages[] =
         itITLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         itITWelcomePageEntries
     },
     {
@@ -1633,8 +1632,8 @@ MUI_PAGE itITPages[] =
         itITDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        itITRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        itITUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1766,7 +1765,7 @@ MUI_STRING itITStrings[] =
     "   Aggiornamento degli hives del registro..."},
     {STRING_IMPORTFILE,
     "   Importazione di %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Aggiornamento delle impostazioni dello schermo nel registro..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Aggiornamento delle impostazioni di regionalizzazione..."},
@@ -1794,28 +1793,28 @@ MUI_STRING itITStrings[] =
     " Formatta la partizione con file system %S "},
     {STRING_KEEPFORMAT,
     " Mantieni il file system attuale (nessuna modifica) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "su %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %wZ."},
-    {STRING_HDDINFOUNK3,
-    "su %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "su %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "su %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "su Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "su Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTipo %-3u%s                       %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup ha creato una nuova partizione su"},
     {STRING_UNPSPACE,

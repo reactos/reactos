@@ -8,14 +8,6 @@
 
 #pragma once
 
-MUI_LAYOUTS nlNLLayouts[] =
-{
-    { L"0413", L"00020409" },
-    { L"0413", L"00000413" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY nlNLLanguagePageEntries[] =
 {
     {
@@ -44,7 +36,7 @@ static MUI_ENTRY nlNLLanguagePageEntries[] =
     },
     {
         8,
-        13,    
+        13,
         "\x07  Deze taal wordt later als standaard taal door het systeem gebruikt.",
         TEXT_STYLE_NORMAL
     },
@@ -97,7 +89,7 @@ static MUI_ENTRY nlNLWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Druk op R om ReactOS te repareren of bij te werken.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -431,7 +423,7 @@ static MUI_ENTRY nlNLDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY nlNLRepairPageEntries[] =
+static MUI_ENTRY nlNLUpgradePageEntries[] =
 {
     {
         4,
@@ -442,55 +434,55 @@ static MUI_ENTRY nlNLRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup is nog in een vroege ontwikkelingsfase",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "Het ondersteunt nog niet alle functies van een volledig",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "setup programma.",
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "De herstelfuncties zijn nog niet ge\x8Bmplementeerd.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Druk op U om ReactOS bij te werken.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Druk op R voor de Herstelconsole.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Druk op ESC om terug naar het hoofdscherm te gaan.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Druk op ENTER om de computer opnieuw op te starten.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Hoofdscherm   U = Bijwerken   R = Herstelconsole   ENTER = Reboot",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1481,7 +1473,7 @@ MUI_ERROR nlNLErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE, 
+        //ERROR_DELETE_SPACE,
         "U kunt ongebruikte schijfruimte voor partities niet verwijderen!\n"
         "\n"
         "  * Druk op een willekeurige toets om door te gaan.",
@@ -1650,7 +1642,7 @@ MUI_PAGE nlNLPages[] =
         nlNLLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         nlNLWelcomePageEntries
     },
     {
@@ -1666,8 +1658,8 @@ MUI_PAGE nlNLPages[] =
         nlNLDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        nlNLRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        nlNLUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1801,7 +1793,7 @@ MUI_STRING nlNLStrings[] =
     "   Bijwerken registerbestanden..."},
     {STRING_IMPORTFILE,
     "   Importeren %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Bijwerken beeldscherminstellingen..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Bijwerken systeemtaalinstellingen..."},
@@ -1829,28 +1821,28 @@ MUI_STRING nlNLStrings[] =
     " Formatteer partitie als %S bestandssysteem "},
     {STRING_KEEPFORMAT,
     " Behoud huidig bestandssysteem (geen wijzigingen) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "op %I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ."},
-    {STRING_HDDINFOUNK3,
-    "op %I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "op %I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "op %I64u %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "op Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "op Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup heeft een nieuwe partitie aangemaakt op"},
     {STRING_UNPSPACE,

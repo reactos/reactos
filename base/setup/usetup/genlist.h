@@ -26,99 +26,66 @@
 
 #pragma once
 
-struct _GENERIC_LIST_ENTRY;
-typedef struct _GENERIC_LIST_ENTRY *PGENERIC_LIST_ENTRY;
-struct _GENERIC_LIST;
-typedef struct _GENERIC_LIST *PGENERIC_LIST;
+// #include "../lib/utils/genlist.h"
 
-PGENERIC_LIST
-CreateGenericList(VOID);
+typedef struct _GENERIC_LIST_UI
+{
+    PGENERIC_LIST List;
+
+    PLIST_ENTRY FirstShown;
+    PLIST_ENTRY LastShown;
+
+    SHORT Left;
+    SHORT Top;
+    SHORT Right;
+    SHORT Bottom;
+    BOOL Redraw;
+
+    CHAR CurrentItemText[256];
+
+} GENERIC_LIST_UI, *PGENERIC_LIST_UI;
 
 VOID
-DestroyGenericList(
-    PGENERIC_LIST List,
-    BOOLEAN FreeUserData);
-
-BOOLEAN
-AppendGenericListEntry(
-    PGENERIC_LIST List,
-    PCHAR Text,
-    PVOID UserData,
-    BOOLEAN Current);
+InitGenericListUi(
+    IN OUT PGENERIC_LIST_UI ListUi,
+    IN PGENERIC_LIST List);
 
 VOID
 DrawGenericList(
-    PGENERIC_LIST List,
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom);
+    IN PGENERIC_LIST_UI ListUi,
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom);
 
 VOID
 ScrollDownGenericList(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST_UI ListUi);
 
 VOID
 ScrollUpGenericList(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST_UI ListUi);
 
 VOID
 ScrollPageDownGenericList(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST_UI ListUi);
 
 VOID
 ScrollPageUpGenericList(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST_UI ListUi);
 
 VOID
 ScrollToPositionGenericList(
-    PGENERIC_LIST List,
-    ULONG uIndex);
+    IN PGENERIC_LIST_UI ListUi,
+    IN ULONG uIndex);
 
 VOID
 RedrawGenericList(
-    PGENERIC_LIST List);
-
-VOID
-SetCurrentListEntry(
-    PGENERIC_LIST List,
-    PGENERIC_LIST_ENTRY Entry);
-
-PGENERIC_LIST_ENTRY
-GetCurrentListEntry(
-    PGENERIC_LIST List);
-
-PGENERIC_LIST_ENTRY
-GetFirstListEntry(
-    PGENERIC_LIST List);
-
-PGENERIC_LIST_ENTRY
-GetNextListEntry(
-    PGENERIC_LIST_ENTRY Entry);
-
-PVOID
-GetListEntryUserData(
-    PGENERIC_LIST_ENTRY List);
-
-LPCSTR
-GetListEntryText(
-    PGENERIC_LIST_ENTRY List);
-
-VOID
-SaveGenericListState(
-    PGENERIC_LIST List);
-
-VOID
-RestoreGenericListState(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST_UI ListUi);
 
 VOID
 GenericListKeyPress(
-    PGENERIC_LIST List,
-    CHAR AsciChar);
-
-BOOL
-GenericListHasSingleEntry(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST_UI ListUi,
+    IN CHAR AsciiChar);
 
 /* EOF */

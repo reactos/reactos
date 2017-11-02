@@ -1,12 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS elGRLayouts[] =
-{
-    { L"0408", L"00000408" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY elGRLanguagePageEntries[] =
 {
     {
@@ -88,7 +81,7 @@ static MUI_ENTRY elGRWelcomePageEntries[] =
     {
         7,
         17,
-        "\x07  ПШлуйлЬ R ЪаШ дШ ЬзаЫажиЯщйЬлЬ лж ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -410,7 +403,7 @@ static MUI_ENTRY elGRDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY elGRRepairPageEntries[] =
+static MUI_ENTRY elGRUpgradePageEntries[] =
 {
     {
         4,
@@ -421,50 +414,56 @@ static MUI_ENTRY elGRRepairPageEntries[] =
     {
         6,
         8,
-        "Ж ЬЪбШлсйлШйЮ лжм ReactOS ЩихйбЬлШа йЬ зищагж йлсЫаж ШдсзлмеЮк бШа",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "ЫЬд мзжйлЮихЭЬа ШбцгШ цвЬк лак ЫмдШлцлЮлЬк гаШк звуижмк ЬЪбШлсйлШйЮк.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Оа вЬалжмиЪхЬк ЬзаЫациЯрйЮк ЫЬд тожмд мвжзжаЮЯЬх ШбцгШ.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  ПШлуйлЬ U ЪаШ ШдШдтрйЮ лжм вЬалижмиЪабжч.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  ПШлуйлЬ R ЪаШ дШ ЬблЬвтйЬлЬ лЮд бждйцвШ ЬзаЫациЯрйЮк.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  ПШлуйлЬ ESC ЪаШ дШ ЬзайлитпЬлЬ йлЮд бчиаШ йЬвхЫШ.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  ПШлуйлЬ ENTER ЪаШ дШ ЬзШдЬббадуйЬлЬ лжд мзжвжЪайлу.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ESC = ЙчиаШ йЬвхЫШ  ENTER = ДзШдЬббхдЮйЮ",
-        TEXT_TYPE_STATUS
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1627,7 +1626,7 @@ MUI_PAGE elGRPages[] =
         elGRLanguagePageEntries
     },
     {
-       START_PAGE,
+       WELCOME_PAGE,
        elGRWelcomePageEntries
     },
     {
@@ -1643,8 +1642,8 @@ MUI_PAGE elGRPages[] =
         elGRDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        elGRRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        elGRUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1778,7 +1777,7 @@ MUI_STRING elGRStrings[] =
     "   ВхдЬлШа ШдШдтрйЮ лрд registry hives..."},
     {STRING_IMPORTFILE,
     "   ВхдЬлШа ЬайШЪрЪу лжм %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   ВхдЬлШа ШдШдтрйЮ лрд имЯгхйЬрд ЬгнсдайЮк лжм гЮлищжм..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   ВхдЬлШа ШдШдтрйЮ лрд имЯгхйЬрд ЪвщййШк..."},
@@ -1806,28 +1805,28 @@ MUI_STRING elGRStrings[] =
     " ГаШгцинрйЮ лжм partition рк %S йчйлЮгШ ШиоЬхрд "},
     {STRING_KEEPFORMAT,
     " МШ зШиШгЬхдЬа лж йчйлЮгШ ШиоЬхрд рк тоЬа (бШгхШ ШввШЪу) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "СбвЮицк Ыхйбжк %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "СбвЮицк Ыхйбжк %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "йлж йбвЮиц Ыхйбж %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "йлж йбвЮиц Ыхйбж %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Ж ЬЪбШлсйлШйЮ ЫЮгажчиЪЮйЬ тдШ дтж partition йлж"},
     {STRING_UNPSPACE,

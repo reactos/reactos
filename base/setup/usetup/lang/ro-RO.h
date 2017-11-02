@@ -1,13 +1,6 @@
 /* ªtefan Fulea (stefan dot fulea at mail dot md) */
 #pragma once
 
-MUI_LAYOUTS roROLayouts[] =
-{
-    { L"0418", L"00000418" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY roROLanguagePageEntries[] =
 {
     {
@@ -95,15 +88,15 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         8,
         18,
-        "\x07  Tastaþi R pentru a reface un sistem deteriorat sau pentru",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
-    {
-        8,
-        19,
-        "   a actualiza ReactOS.",
-        TEXT_STYLE_NORMAL
-    },
+    // {
+        // 8,
+        // 19,
+        // "   a actualiza ReactOS.",
+        // TEXT_STYLE_NORMAL
+    // },
     {
         8,
         21,
@@ -466,7 +459,7 @@ static MUI_ENTRY roRODevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY roRORepairPageEntries[] =
+static MUI_ENTRY roROUpgradePageEntries[] =
 {
     {
         4,
@@ -477,49 +470,55 @@ static MUI_ENTRY roRORepairPageEntries[] =
     {
         6,
         8,
-        "Programul de instalare ReactOS este încã într-o fazã incipientã de",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "dezvoltare ºi nu posedã o funcþionalitate completã.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Funcþionalitatea de refacere încã nu este implementatã.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Tastaþi U pentru actualizarea sistemului.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tastaþi R pentru consola de Recuperare.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Apãsaþi ESC pentru a reveni la pagina principalã.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Apãsaþi ENTER pentru a reporni calculatorul.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Revenire  U = Actualizare  R = Recuperare  ENTER = Repornire",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1682,7 +1681,7 @@ MUI_PAGE roROPages[] =
         roROLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         roROWelcomePageEntries
     },
     {
@@ -1698,8 +1697,8 @@ MUI_PAGE roROPages[] =
         roRODevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        roRORepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        roROUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1831,7 +1830,7 @@ MUI_STRING roROStrings[] =
     "   Registru în curs de actualizare..."},
     {STRING_IMPORTFILE,
     "   În curs de importare din %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Registru de configuraþie graficã în actualizare..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Particularitãþi locale în actualizare..."},
@@ -1859,28 +1858,28 @@ MUI_STRING roROStrings[] =
     " Formateazã partiþia ca sistem de fiºiere %S "},
     {STRING_KEEPFORMAT,
     " Pãstreazã sistemul de fiºiere actual (fãrã schimbãri) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Tip 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "de pe %I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ."},
-    {STRING_HDDINFOUNK3,
-    "de pe %I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "de pe %I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "de pe %I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Tip 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "de pe Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "de pe Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTip %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "O nouã partiþie a fost creatã în"},
     {STRING_UNPSPACE,

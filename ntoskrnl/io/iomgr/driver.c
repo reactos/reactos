@@ -322,6 +322,7 @@ IopLoadServiceModule(
     if (ExpInTextModeSetup)
     {
         /* We have no registry, but luckily we know where all the drivers are */
+        DPRINT1("IopLoadServiceModule(%wZ, 0x%p) called in ExpInTextModeSetup mode...\n", ServiceName, ModuleObject);
 
         /* ServiceStart < 4 is all that matters */
         ServiceStart = 0;
@@ -1044,8 +1045,13 @@ IopInitializeBootDrivers(VOID)
                                           NULL,
                                           &BootEntry->RegistryPath,
                                           KEY_READ);
+            DPRINT1("IopOpenRegistryKeyEx(%wZ) returned 0x%08lx\n", &BootEntry->RegistryPath, Status);
+#if 0
+            if (NT_SUCCESS(Status))
+#else // Hack still needed...
             if ((NT_SUCCESS(Status)) || /* ReactOS HACK for SETUPLDR */
                 ((KeLoaderBlock->SetupLdrBlock) && ((KeyHandle = (PVOID)1)))) // yes, it's an assignment!
+#endif
             {
                 /* Save the handle */
                 DriverInfo->ServiceHandle = KeyHandle;
@@ -1122,7 +1128,7 @@ IopInitializeSystemDrivers(VOID)
     PUNICODE_STRING *DriverList, *SavedList;
 
     /* No system drivers on the boot cd */
-    if (KeLoaderBlock->SetupLdrBlock) return;
+    if (KeLoaderBlock->SetupLdrBlock) return; // ExpInTextModeSetup
 
     /* Get the driver list */
     SavedList = DriverList = CmGetSystemDriverList();

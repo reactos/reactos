@@ -57,6 +57,90 @@ typedef struct _FILEQUEUEHEADER
 
 /* FUNCTIONS ****************************************************************/
 
+#ifdef __REACTOS__
+static BOOLEAN HasCurrentCabinet = FALSE;
+static WCHAR CurrentCabinetName[MAX_PATH];
+static CAB_SEARCH Search;
+
+NTSTATUS
+SetupExtractFile(
+    PWCHAR CabinetFileName,
+    PWCHAR SourceFileName,
+    PWCHAR DestinationPathName)
+{
+    ULONG CabStatus;
+
+    DPRINT("SetupExtractFile(CabinetFileName %S, SourceFileName %S, DestinationPathName %S)\n",
+           CabinetFileName, SourceFileName, DestinationPathName);
+
+    if (HasCurrentCabinet)
+    {
+        DPRINT("CurrentCabinetName: %S\n", CurrentCabinetName);
+    }
+
+    if ((HasCurrentCabinet) && (wcscmp(CabinetFileName, CurrentCabinetName) == 0))
+    {
+        DPRINT("Using same cabinet as last time\n");
+
+        /* Use our last location because the files should be sequential */
+        CabStatus = CabinetFindNextFileSequential(SourceFileName, &Search);
+        if (CabStatus != CAB_STATUS_SUCCESS)
+        {
+            DPRINT("Sequential miss on file: %S\n", SourceFileName);
+
+            /* Looks like we got unlucky */
+            CabStatus = CabinetFindFirst(SourceFileName, &Search);
+        }
+    }
+    else
+    {
+        DPRINT("Using new cabinet\n");
+
+        if (HasCurrentCabinet)
+        {
+            CabinetCleanup();
+        }
+
+        wcscpy(CurrentCabinetName, CabinetFileName);
+
+        CabinetInitialize();
+        CabinetSetEventHandlers(NULL, NULL, NULL);
+        CabinetSetCabinetName(CabinetFileName);
+
+        CabStatus = CabinetOpen();
+        if (CabStatus == CAB_STATUS_SUCCESS)
+        {
+            DPRINT("Opened cabinet %S\n", CabinetGetCabinetName());
+            HasCurrentCabinet = TRUE;
+        }
+        else
+        {
+            DPRINT("Cannot open cabinet (%d)\n", CabStatus);
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        /* We have to start at the beginning here */
+        CabStatus = CabinetFindFirst(SourceFileName, &Search);
+    }
+
+    if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+        DPRINT1("Unable to find '%S' in cabinet '%S'\n", SourceFileName, CabinetGetCabinetName());
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    CabinetSetDestinationPath(DestinationPathName);
+    CabStatus = CabinetExtractFile(&Search);
+    if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+        DPRINT("Cannot extract file %S (%d)\n", SourceFileName, CabStatus);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    return STATUS_SUCCESS;
+}
+#endif
+
 HSPFILEQ
 WINAPI
 SetupOpenFileQueue(VOID)
@@ -157,7 +241,9 @@ SetupQueueCopy(
         SourceRootPath == NULL ||
         SourceFilename == NULL ||
         TargetDirectory == NULL)
+    {
         return FALSE;
+    }
 
     QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
 
@@ -185,7 +271,7 @@ SetupQueueCopy(
         }
 
         wcsncpy(Entry->SourceCabinet, SourceCabinet, Length);
-        Entry->SourceCabinet[Length] = (WCHAR)0;
+        Entry->SourceCabinet[Length] = UNICODE_NULL;
     }
     else
     {
@@ -209,7 +295,7 @@ SetupQueueCopy(
     }
 
     wcsncpy(Entry->SourceRootPath, SourceRootPath, Length);
-    Entry->SourceRootPath[Length] = (WCHAR)0;
+    Entry->SourceRootPath[Length] = UNICODE_NULL;
 
     /* Copy source path */
     if (SourcePath != NULL)
@@ -233,7 +319,7 @@ SetupQueueCopy(
         }
 
         wcsncpy(Entry->SourcePath, SourcePath, Length);
-        Entry->SourcePath[Length] = (WCHAR)0;
+        Entry->SourcePath[Length] = UNICODE_NULL;
     }
 
     /* Copy source file name */
@@ -255,7 +341,7 @@ SetupQueueCopy(
     }
 
     wcsncpy(Entry->SourceFilename, SourceFilename, Length);
-    Entry->SourceFilename[Length] = (WCHAR)0;
+    Entry->SourceFilename[Length] = UNICODE_NULL;
 
     /* Copy target directory */
     Length = wcslen(TargetDirectory);
@@ -279,7 +365,7 @@ SetupQueueCopy(
     }
 
     wcsncpy(Entry->TargetDirectory, TargetDirectory, Length);
-    Entry->TargetDirectory[Length] = (WCHAR)0;
+    Entry->TargetDirectory[Length] = UNICODE_NULL;
 
     /* Copy optional target filename */
     if (TargetFilename != NULL)
@@ -304,7 +390,7 @@ SetupQueueCopy(
         }
 
         wcsncpy(Entry->TargetFilename, TargetFilename, Length);
-        Entry->TargetFilename[Length] = (WCHAR)0;
+        Entry->TargetFilename[Length] = UNICODE_NULL;
     }
 
     /* Append queue entry */
@@ -369,46 +455,32 @@ SetupCommitFileQueueW(
     while (Entry != NULL)
     {
         /* Build the full source path */
-        wcscpy(FileSrcPath, Entry->SourceRootPath);
-        if (Entry->SourcePath != NULL)
-            wcscat(FileSrcPath, Entry->SourcePath);
-        wcscat(FileSrcPath, L"\\");
-        wcscat(FileSrcPath, Entry->SourceFilename);
+        CombinePaths(FileSrcPath, ARRAYSIZE(FileSrcPath), 3,
+                     Entry->SourceRootPath, Entry->SourcePath,
+                     Entry->SourceFilename);
 
         /* Build the full target path */
         wcscpy(FileDstPath, TargetRootPath);
-        if (Entry->TargetDirectory[0] == 0)
+        if (Entry->TargetDirectory[0] == UNICODE_NULL)
         {
             /* Installation path */
 
             /* Add the installation path */
-            if (TargetPath != NULL)
-            {
-                if (TargetPath[0] != L'\\')
-                    wcscat(FileDstPath, L"\\");
-                wcscat(FileDstPath, TargetPath);
-            }
+            ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, TargetPath);
         }
         else if (Entry->TargetDirectory[0] == L'\\')
         {
             /* Absolute path */
-            if (Entry->TargetDirectory[1] != 0)
-                wcscat(FileDstPath, Entry->TargetDirectory);
+            if (Entry->TargetDirectory[1] != UNICODE_NULL)
+                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetDirectory);
         }
         else // if (Entry->TargetDirectory[0] != L'\\')
         {
             /* Path relative to the installation path */
 
             /* Add the installation path */
-            if (TargetPath != NULL)
-            {
-                if (TargetPath[0] != L'\\')
-                    wcscat(FileDstPath, L"\\");
-                wcscat(FileDstPath, TargetPath);
-            }
-
-            wcscat(FileDstPath, L"\\");
-            wcscat(FileDstPath, Entry->TargetDirectory);
+            ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 2,
+                        TargetPath, Entry->TargetDirectory);
         }
 
         /*
@@ -417,11 +489,10 @@ SetupCommitFileQueueW(
          */
         if (Entry->SourceCabinet == NULL)
         {
-            wcscat(FileDstPath, L"\\");
             if (Entry->TargetFilename != NULL)
-                wcscat(FileDstPath, Entry->TargetFilename);
+                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetFilename);
             else
-                wcscat(FileDstPath, Entry->SourceFilename);
+                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->SourceFilename);
         }
 
         /* FIXME: Do it! */
@@ -435,17 +506,15 @@ SetupCommitFileQueueW(
         if (Entry->SourceCabinet != NULL)
         {
             /* Extract the file */
-            wcscpy(CabinetName, Entry->SourceRootPath);
-            if (Entry->SourcePath != NULL)
-                wcscat(CabinetName, Entry->SourcePath);
-            wcscat(CabinetName, L"\\");
-            wcscat(CabinetName, Entry->SourceCabinet);
+            CombinePaths(CabinetName, ARRAYSIZE(CabinetName), 3,
+                         Entry->SourceRootPath, Entry->SourcePath,
+                         Entry->SourceCabinet);
             Status = SetupExtractFile(CabinetName, Entry->SourceFilename, FileDstPath);
         }
         else
         {
             /* Copy the file */
-            Status = SetupCopyFile(FileSrcPath, FileDstPath);
+            Status = SetupCopyFile(FileSrcPath, FileDstPath, FALSE);
         }
 
         if (!NT_SUCCESS(Status))

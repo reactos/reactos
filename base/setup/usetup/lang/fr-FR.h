@@ -1,12 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS frFRLayouts[] =
-{
-    { L"040C", L"0000040C" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY frFRLanguagePageEntries[] =
 {
     {
@@ -88,7 +81,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Appuyer sur R pour rÇparer ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -416,7 +409,7 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY frFRRepairPageEntries[] =
+static MUI_ENTRY frFRUpgradePageEntries[] =
 {
     {
         4,
@@ -427,55 +420,55 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         6,
         8,
-        "L'installation de ReactOS est en phase de dÇveloppement.",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "Elle ne supporte pas encore toutes les fonctions d'une application",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "d'installation entiärement utilisable.",
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Les fonctions de rÇparation ne sont pas implÇmentÇes pour l'instant.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Appuyer sur U pour mettre Ö jour l'OS.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Appuyer sur R pour la Console de RÇparation.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Appuyer sur êCHAP pour retourner Ö la page principale.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Appuyer sur ENTRêE pour redÇmarrer votre ordinateur.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "êCHAP = Page principale  ENTRêE = RedÇmarrer",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1635,7 +1628,7 @@ MUI_PAGE frFRPages[] =
         frFRLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         frFRWelcomePageEntries
     },
     {
@@ -1651,8 +1644,8 @@ MUI_PAGE frFRPages[] =
         frFRDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        frFRRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        frFRUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1784,7 +1777,7 @@ MUI_STRING frFRStrings[] =
     "   Mise Ö jour de la base de registre..."},
     {STRING_IMPORTFILE,
     "   Importe %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Mise Ö jour des paramätres du registre pour l'Çcran..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Mise Ö jour des paramätres rÇgionaux..."},
@@ -1807,33 +1800,33 @@ MUI_STRING frFRStrings[] =
     {STRING_CHECKINGDISK,
     "Setup vÇrifie votre disque"},
     {STRING_FORMATDISK1,
-    " Formater la partition comme systäme de fichiers %S(formatage rapide) "},
+    " Formater la partition comme systäme de fichiers %S (formatage rapide) "},
     {STRING_FORMATDISK2,
     " Formater la partition comme systäme de fichiers %S "},
     {STRING_KEEPFORMAT,
-    " Garder le systäme de fichiers courant(pas de changements) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    " Garder le systäme de fichiers courant (pas de changements) "},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "sur %I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ."},
-    {STRING_HDDINFOUNK3,
-    "sur %I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "sur %I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "sur %I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "sur Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "sur Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup a crÇÇ une nouvelle partition sur"},
     {STRING_UNPSPACE,

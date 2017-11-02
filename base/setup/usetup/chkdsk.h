@@ -28,6 +28,7 @@
 NTSTATUS
 ChkdskPartition(
     IN PUNICODE_STRING DriveRoot,
-    IN PFILE_SYSTEM_ITEM FileSystem);
+    /*IN PFILE_SYSTEM_ITEM FileSystemItem*/
+    IN PFILE_SYSTEM FileSystem);
 
 /* EOF */

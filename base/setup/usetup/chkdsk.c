@@ -56,11 +56,13 @@ ChkdskCallback(
 NTSTATUS
 ChkdskPartition(
     IN PUNICODE_STRING DriveRoot,
-    IN PFILE_SYSTEM_ITEM FileSystem)
+    /*IN PFILE_SYSTEM_ITEM FileSystemItem*/
+    IN PFILE_SYSTEM FileSystem)
 {
     NTSTATUS Status;
+    // PFILE_SYSTEM FileSystem = FileSystemItem->FileSystem;
 
-    if (!FileSystem->ChkdskFunc)
+    if (!FileSystem || !FileSystem->ChkdskFunc)
         return STATUS_NOT_SUPPORTED;
 
     ChkdskProgressBar = CreateProgressBar(6,

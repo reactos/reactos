@@ -25,14 +25,7 @@
 
 #pragma once
 
-typedef enum _FORMATSTATE
-{
-    Unformatted,
-    UnformattedOrDamaged,
-    UnknownFormat,
-    Preformatted,
-    Formatted
-} FORMATSTATE, *PFORMATSTATE;
+// #include "../lib/utils/partlist.h"
 
 typedef enum _FORMATMACHINESTATE
 {
@@ -47,100 +40,13 @@ typedef enum _FORMATMACHINESTATE
     CheckDone
 } FORMATMACHINESTATE, *PFORMATMACHINESTATE;
 
-typedef struct _PARTENTRY
+typedef struct _PARTLIST_UI
 {
-    LIST_ENTRY ListEntry;
+    PPARTLIST List;
 
-    struct _DISKENTRY *DiskEntry;
+    // PLIST_ENTRY FirstShown;
+    // PLIST_ENTRY LastShown;
 
-    ULARGE_INTEGER StartSector;
-    ULARGE_INTEGER SectorCount;
-
-    BOOLEAN BootIndicator;
-    UCHAR PartitionType;
-    ULONG HiddenSectors;
-    ULONG PartitionNumber;
-    ULONG PartitionIndex;
-
-    CHAR DriveLetter;
-    CHAR VolumeLabel[17];
-    CHAR FileSystemName[9];
-
-    BOOLEAN LogicalPartition;
-
-    /* Partition is partitioned disk space */
-    BOOLEAN IsPartitioned;
-
-    /* Partition is new, table does not exist on disk yet */
-    BOOLEAN New;
-
-    /* Partition was created automatically */
-    BOOLEAN AutoCreate;
-
-    FORMATSTATE FormatState;
-
-    /* Partition must be checked */
-    BOOLEAN NeedsCheck;
-
-    struct _FILE_SYSTEM_ITEM *FileSystem;
-} PARTENTRY, *PPARTENTRY;
-
-
-typedef struct _BIOSDISKENTRY
-{
-    LIST_ENTRY ListEntry;
-    ULONG DiskNumber;
-    ULONG Signature;
-    ULONG Checksum;
-    BOOLEAN Recognized;
-    CM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
-    CM_INT13_DRIVE_PARAMETER Int13DiskData;
-} BIOSDISKENTRY, *PBIOSDISKENTRY;
-
-
-typedef struct _DISKENTRY
-{
-    LIST_ENTRY ListEntry;
-
-    ULONGLONG Cylinders;
-    ULONG TracksPerCylinder;
-    ULONG SectorsPerTrack;
-    ULONG BytesPerSector;
-
-    ULARGE_INTEGER SectorCount;
-    ULONG SectorAlignment;
-    ULONG CylinderAlignment;
-
-    BOOLEAN BiosFound;
-    ULONG BiosDiskNumber;
-//    ULONG Signature;
-//    ULONG Checksum;
-
-    ULONG DiskNumber;
-    USHORT Port;
-    USHORT Bus;
-    USHORT Id;
-
-    /* Has the partition list been modified? */
-    BOOLEAN Dirty;
-
-    BOOLEAN NewDisk;
-    BOOLEAN NoMbr; /* MBR is absent */
-
-    UNICODE_STRING DriverName;
-
-    PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
-
-    PPARTENTRY ExtendedPartition;
-
-    LIST_ENTRY PrimaryPartListHead;
-    LIST_ENTRY LogicalPartListHead;
-
-} DISKENTRY, *PDISKENTRY;
-
-
-typedef struct _PARTLIST
-{
     SHORT Left;
     SHORT Top;
     SHORT Right;
@@ -149,159 +55,35 @@ typedef struct _PARTLIST
     SHORT Line;
     SHORT Offset;
 
-    PDISKENTRY CurrentDisk;
-    PPARTENTRY CurrentPartition;
+    // BOOL Redraw;
+} PARTLIST_UI, *PPARTLIST_UI;
 
-    /* The system disk and partition where the boot manager resides */
-    PDISKENTRY SystemDisk;
-    PPARTENTRY SystemPartition;
-    /*
-     * The original system disk and partition in case we are redefining them
-     * because we do not have write support on them.
-     * Please not that this is partly a HACK and MUST NEVER happen on
-     * architectures where real system partitions are mandatory (because then
-     * they are formatted in FAT FS and we support write operation on them).
-     */
-    PDISKENTRY OriginalSystemDisk;
-    PPARTENTRY OriginalSystemPartition;
-
-    PDISKENTRY TempDisk;
-    PPARTENTRY TempPartition;
-    FORMATMACHINESTATE FormatState;
-
-    LIST_ENTRY DiskListHead;
-    LIST_ENTRY BiosDiskListHead;
-
-} PARTLIST, *PPARTLIST;
-
-#define  PARTITION_TBL_SIZE 4
-
-#include <pshpack1.h>
-
-typedef struct _PARTITION
-{
-    unsigned char   BootFlags;        /* bootable?  0=no, 128=yes  */
-    unsigned char   StartingHead;     /* beginning head number */
-    unsigned char   StartingSector;   /* beginning sector number */
-    unsigned char   StartingCylinder; /* 10 bit nmbr, with high 2 bits put in begsect */
-    unsigned char   PartitionType;    /* Operating System type indicator code */
-    unsigned char   EndingHead;       /* ending head number */
-    unsigned char   EndingSector;     /* ending sector number */
-    unsigned char   EndingCylinder;   /* also a 10 bit nmbr, with same high 2 bit trick */
-    unsigned int  StartingBlock;      /* first sector relative to start of disk */
-    unsigned int  SectorCount;        /* number of sectors in partition */
-} PARTITION, *PPARTITION;
-
-typedef struct _PARTITION_SECTOR
-{
-    UCHAR BootCode[440];                     /* 0x000 */
-    ULONG Signature;                         /* 0x1B8 */
-    UCHAR Reserved[2];                       /* 0x1BC */
-    PARTITION Partition[PARTITION_TBL_SIZE]; /* 0x1BE */
-    USHORT Magic;                            /* 0x1FE */
-} PARTITION_SECTOR, *PPARTITION_SECTOR;
-
-#include <poppack.h>
-
-typedef struct
-{
-    LIST_ENTRY ListEntry;
-    ULONG DiskNumber;
-    ULONG Identifier;
-    ULONG Signature;
-} BIOS_DISK, *PBIOS_DISK;
-
-PPARTLIST
-CreatePartitionList(
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom);
-
-VOID
-DestroyPartitionList(
-    PPARTLIST List);
-
-VOID
-DrawPartitionList(
-    PPARTLIST List);
-
-DWORD
-SelectPartition(
-    PPARTLIST List,
-    ULONG DiskNumber,
-    ULONG PartitionNumber);
-
-BOOL
-SetMountedDeviceValues(
-    PPARTLIST List);
-
-BOOL
-ScrollDownPartitionList(
-    PPARTLIST List);
-
-BOOL
-ScrollUpPartitionList(
-    PPARTLIST List);
-
-VOID
-CreatePrimaryPartition(
-    PPARTLIST List,
-    ULONGLONG SectorCount,
-    BOOLEAN AutoCreate);
-
-VOID
-CreateExtendedPartition(
-    PPARTLIST List,
-    ULONGLONG SectorCount);
-
-VOID
-CreateLogicalPartition(
-    PPARTLIST List,
-    ULONGLONG SectorCount,
-    BOOLEAN AutoCreate);
-
-VOID
-DeleteCurrentPartition(
-    PPARTLIST List);
-
-VOID
-CheckActiveSystemPartition(
-    IN PPARTLIST List,
-    IN PFILE_SYSTEM_LIST FileSystemList);
-
-BOOLEAN
-WritePartitionsToDisk(
-    PPARTLIST List);
-
-ULONG
-PrimaryPartitionCreationChecks(
-    IN PPARTLIST List);
-
-ULONG
-ExtendedPartitionCreationChecks(
-    IN PPARTLIST List);
-
-ULONG
-LogicalPartitionCreationChecks(
-    IN PPARTLIST List);
-
-BOOL
-GetNextUnformattedPartition(
-    IN PPARTLIST List,
-    OUT PDISKENTRY *pDiskEntry,
-    OUT PPARTENTRY *pPartEntry);
-
-BOOL
-GetNextUncheckedPartition(
-    IN PPARTLIST List,
-    OUT PDISKENTRY *pDiskEntry,
-    OUT PPARTENTRY *pPartEntry);
 
 VOID
 GetPartTypeStringFromPartitionType(
-    UCHAR partitionType,
-    PCHAR strPartType,
-    DWORD cchPartType);
+    IN UCHAR partitionType,
+    OUT PCHAR strPartType,
+    IN ULONG cchPartType);
+
+VOID
+InitPartitionListUi(
+    IN OUT PPARTLIST_UI ListUi,
+    IN PPARTLIST List,
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom);
+
+VOID
+ScrollDownPartitionList(
+    IN PPARTLIST_UI ListUi);
+
+VOID
+ScrollUpPartitionList(
+    IN PPARTLIST_UI ListUi);
+
+VOID
+DrawPartitionList(
+    IN PPARTLIST_UI ListUi);
 
 /* EOF */

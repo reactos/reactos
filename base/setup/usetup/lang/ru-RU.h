@@ -1,12 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS ruRULayouts[] =
-{
-    { L"0419", L"00000419" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY ruRULanguagePageEntries[] =
 {
     {
@@ -88,7 +81,7 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Нажмите R для восстановления ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -410,7 +403,7 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY ruRURepairPageEntries[] =
+static MUI_ENTRY ruRUUpgradePageEntries[] =
 {
     {
         4,
@@ -421,49 +414,55 @@ static MUI_ENTRY ruRURepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS находится в ранней стадии разработки и не поддерживает все",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "функции для полной совместимости с устанавливаемыми приложениями.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Функция восстановления в данным момент отсутствует.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Нажмите U для обновления ОС.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Нажмите R для запуска консоли восстановления.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Нажмите ESC для возврата на главную страницу.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Нажмите ENTER для перезагрузки компьютера.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = На главную  U = Обновление  R = Восстановление  ENTER = Перезагрузка",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1611,7 +1610,7 @@ MUI_PAGE ruRUPages[] =
         ruRULanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ruRUWelcomePageEntries
     },
     {
@@ -1627,8 +1626,8 @@ MUI_PAGE ruRUPages[] =
         ruRUDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        ruRURepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        ruRUUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1760,7 +1759,7 @@ MUI_STRING ruRUStrings[] =
     "   Обновление кустов реестра..."},
     {STRING_IMPORTFILE,
     "   Импортирование %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Обновление параметров экрана в реестре..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Обновление параметров языка..."},
@@ -1788,28 +1787,28 @@ MUI_STRING ruRUStrings[] =
     " Форматирование раздела в файловой системе %S "},
     {STRING_KEEPFORMAT,
     " Оставить существующую файловую систему (без изменений) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Запись 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "на %I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ."},
-    {STRING_HDDINFOUNK3,
-    "на %I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Жесткий диск %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "на %I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "на %I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Жесткий диск %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Запись 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "на жестком диске %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "на жестком диске %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sЗапись %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Программа установки создала новый раздел на:"},
     {STRING_UNPSPACE,

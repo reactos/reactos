@@ -262,8 +262,9 @@ CmpCmdInit(IN BOOLEAN SetupBoot)
     /* Testing: Force Lazy Flushing */
     CmpHoldLazyFlush = FALSE;
 
-    /* Setup the hive list */
-    CmpInitializeHiveList(SetupBoot);
+    /* Setup the hive list if this is not a Setup boot*/
+    if (!SetupBoot)
+        CmpInitializeHiveList();
 }
 
 NTSTATUS

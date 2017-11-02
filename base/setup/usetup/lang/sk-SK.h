@@ -6,14 +6,6 @@
 
 #pragma once
 
-MUI_LAYOUTS skSKLayouts[] =
-{
-    { L"041B", L"0000041B" },
-    { L"041B", L"0001041B" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY skSKLanguagePageEntries[] =
 {
     {
@@ -95,7 +87,7 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  StlaŸte R pre opravu alebo aktualiz ciu syst‚mu ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -417,7 +409,7 @@ static MUI_ENTRY skSKDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY skSKRepairPageEntries[] =
+static MUI_ENTRY skSKUpgradePageEntries[] =
 {
     {
         4,
@@ -428,49 +420,55 @@ static MUI_ENTRY skSKRepairPageEntries[] =
     {
         6,
         8,
-        "Inçtal tor syst‚mu ReactOS je v zaŸiatoŸnom çt diu vìvoja. Zatia–",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "nepodporuje vçetky funkcie plne vyu§¡vaj£ce program Inçtal tor.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Funkcie na opravu syst‚mu zatia– nie s£ implementovan‚.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  StlaŸte U pre aktualiz ciu OS.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  StlaŸte R pre z chrann£ konzolu.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  StlaŸte ESC pre n vrat na hlavn£ str nku.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  StlaŸte ENTER pre reçtart poŸ¡taŸa.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Hlavn  str nka  U = Aktualizovaœ  R = Z chrana  ENTER = Reçtart",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1622,7 +1620,7 @@ MUI_PAGE skSKPages[] =
         skSKLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         skSKWelcomePageEntries
     },
     {
@@ -1638,8 +1636,8 @@ MUI_PAGE skSKPages[] =
         skSKDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        skSKRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        skSKUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1773,7 +1771,7 @@ MUI_STRING skSKStrings[] =
     "   Aktualizujem polo§ky registrov..."},
     {STRING_IMPORTFILE,
     "   Importujem %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Aktualizujem nastavenia obrazovky v registrov..."}, //display registry settings
     {STRING_LOCALESETTINGSUPDATE,
     "   Aktualizujem miestne nastavenia..."},
@@ -1801,28 +1799,28 @@ MUI_STRING skSKStrings[] =
     " Naform tovaœ oblasœ ako syst‚m s£borov %S "},
     {STRING_KEEPFORMAT,
     " Ponechaœ s£Ÿasnì syst‚m s£borov (bez zmeny) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK3,
-    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "pevnì disk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "pevnì disk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "na pevnom disku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "na pevnom disku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %styp %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Inçtal tor vytvoril nov£ oblasœ na"},
     {STRING_UNPSPACE,

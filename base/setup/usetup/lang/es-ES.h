@@ -2,13 +2,6 @@
 
 #pragma once
 
-MUI_LAYOUTS esESLayouts[] =
-{
-    { L"040A", L"0000040A" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY esESLanguagePageEntries[] =
 {
     {
@@ -90,7 +83,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Presione R para reparar ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -418,7 +411,7 @@ static MUI_ENTRY esESDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY esESRepairPageEntries[] =
+static MUI_ENTRY esESUpgradePageEntries[] =
 {
     {
         4,
@@ -429,49 +422,55 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         6,
         8,
-        "El instalador de ReactOS se encuentra en una etapa preliminar.",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "A£n no posee todas las funciones de un instalador.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Las funciones de reparaci¢n no han sido a£n implementadas.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Presione U para actualizar el sistema operativo.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Presione R para la consola de recuperaci¢n.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Presione ESC para volver al men£ principal.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Presione INTRO para reiniciar su equipo.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Men£ inicial  U = Actualizar  R = Recuperar  INTRO = Reiniciar",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1620,7 +1619,7 @@ MUI_PAGE esESPages[] =
         esESLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         esESWelcomePageEntries
     },
     {
@@ -1636,8 +1635,8 @@ MUI_PAGE esESPages[] =
         esESDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        esESRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        esESUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1769,7 +1768,7 @@ MUI_STRING esESStrings[] =
     "   Actualizando el  rbol del registro..."},
     {STRING_IMPORTFILE,
     "   Importando %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Actualizando configuraci¢n del tipo de pantalla..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Actualizando configuraci¢n regional..."},
@@ -1797,28 +1796,28 @@ MUI_STRING esESStrings[] =
     " Formatear la partici¢n con sistema de archivos %S "},
     {STRING_KEEPFORMAT,
     " Mantener el sistema de archivos actual (sin cambios) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "en %I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ."},
-    {STRING_HDDINFOUNK3,
-    "en %I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Disco duro %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "en %I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "en %I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Disco duro %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "en Disco duro %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "en Disco duro %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTipo %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "El instalador ha creado una nueva partici¢n en"},
     {STRING_UNPSPACE,

@@ -1,11 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS daDKLayouts[] =
-{
-    { L"0406", L"00000406" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY daDKLanguagePageEntries[] =
 {
     {
@@ -87,7 +81,7 @@ static MUI_ENTRY daDKWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Tryk p† R reparere eller opdatere ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -148,7 +142,7 @@ static MUI_ENTRY daDKIntroPageEntries[] =
         "underst›tter den ikke alle funtionerne i et fult brugbart",
         TEXT_STYLE_NORMAL
     },
-	{
+    {
         6,
         10,
         "installationsprogram.",
@@ -415,7 +409,7 @@ static MUI_ENTRY daDKDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY daDKRepairPageEntries[] =
+static MUI_ENTRY daDKUpgradePageEntries[] =
 {
     {
         4,
@@ -426,55 +420,55 @@ static MUI_ENTRY daDKRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS installationen er i en tilelig udviklingsfase. Derfor",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "underst›tter den ikke alle funtionerne i et fult brugbart",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
         TEXT_STYLE_NORMAL
     },
-	{
+    {
         6,
         10,
-        "installationsprogram.",
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Funktionerne til reperation er endnu ikke blevet implementeret.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Tryk p† U for opdatere OS'et.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryk p† R for at starte gendannelskonsollen.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tryk p† ESC for at vende tilbage til hovedsk‘rmen.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryk p† ENTER for at genstart din computer.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Hovedsk‘rm  U = Opdater  R = Gendan  ENTER = Genstart",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -484,6 +478,7 @@ static MUI_ENTRY daDKRepairPageEntries[] =
         0
     }
 };
+
 static MUI_ENTRY daDKComputerPageEntries[] =
 {
     {
@@ -930,7 +925,6 @@ static MUI_ENTRY daDKConfirmDeleteSystemPartitionEntries[] =
         0
     }
 };
-
 
 static MUI_ENTRY daDKFormatPartitionEntries[] =
 {
@@ -1630,7 +1624,7 @@ MUI_PAGE daDKPages[] =
         daDKLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         daDKWelcomePageEntries
     },
     {
@@ -1646,8 +1640,8 @@ MUI_PAGE daDKPages[] =
         daDKDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        daDKRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        daDKUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1779,7 +1773,7 @@ MUI_STRING daDKStrings[] =
     "   Opdatere registreringsdatabasen..."},
     {STRING_IMPORTFILE,
     "   Importere %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Opdatere indstillinger for registrering af sk‘rm..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Opdatere indstillinger for sprog..."},
@@ -1807,28 +1801,28 @@ MUI_STRING daDKStrings[] =
     " Formater partitionen som %S-filesystemet "},
     {STRING_KEEPFORMAT,
     " Behold nuv‘rende filsystem (ingen ‘ndringer) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ."},
-    {STRING_HDDINFOUNK3,
-    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "p† harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "p† harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %stype %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Installationen har lavet en ny partition p†"},
     {STRING_UNPSPACE,

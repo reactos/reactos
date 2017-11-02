@@ -1,17 +1,10 @@
 /*
  * PROJECT:         ReactOS Setup
- * FILE:            base/setup/usetup/lang/sv-SE.h  
+ * FILE:            base/setup/usetup/lang/sv-SE.h
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly plus perhaps GreatLord if blame and translate.reactos.se is consulted.
  */
 #pragma once
-
-MUI_LAYOUTS svSELayouts[] =
-{
-    { L"041D", L"0000041D" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
 
 static MUI_ENTRY svSELanguagePageEntries[] =
 {
@@ -94,7 +87,7 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Tryck pÜ R fîr att reparera ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -416,7 +409,7 @@ static MUI_ENTRY svSEDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY svSERepairPageEntries[] =
+static MUI_ENTRY svSEUpgradePageEntries[] =
 {
     {
         4,
@@ -427,50 +420,56 @@ static MUI_ENTRY svSERepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup Ñr i en tidig utvecklingsfas och saknar dÑrfîr ett antal",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "funktioner som kan fîrvÑntas av ett fullt anvÑndbart setup-program.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Reparations- och uppdateringsfunktionerna fungerar ej.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Tryck pÜ U fîr att uppdatera ReactOS.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryck pÜ R fîr èterstÑllningskonsolen.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tryck pÜ ESC fîr att ÜtervÑnda till fîregÜende sida.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryck pÜ ENTER fîr att starta om datorn.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ESC = GÜ till fîregÜende sida  ENTER = Starta om datorn",
-        TEXT_TYPE_STATUS
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1618,7 +1617,7 @@ MUI_PAGE svSEPages[] =
         svSELanguagePageEntries
     },
     {
-       START_PAGE,
+       WELCOME_PAGE,
        svSEWelcomePageEntries
     },
     {
@@ -1634,8 +1633,8 @@ MUI_PAGE svSEPages[] =
         svSEDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        svSERepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        svSEUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1769,7 +1768,7 @@ MUI_STRING svSEStrings[] =
     "   Uppdaterar registerdatafiler..."},
     {STRING_IMPORTFILE,
     "   Importerar %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Uppdaterar skÑrmregisterinstÑllningar..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Uppdaterar lokala instÑllningar..."},
@@ -1797,28 +1796,28 @@ MUI_STRING svSEStrings[] =
     " Formaterar partition som %S filsystem "},
     {STRING_KEEPFORMAT,
     " BehÜll nuvarande filsystem (inga fîrÑndringar) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÜ %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÜ %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÜ %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "HÜrddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÜ %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "HÜrddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "pÜ HÜrddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "pÜ HÜrddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTyp %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÜ %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pÜ %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  HÜrddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup skapade en ny partition pÜ"},
     {STRING_UNPSPACE,

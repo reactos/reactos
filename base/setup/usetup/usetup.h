@@ -52,22 +52,19 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 
-/* Filesystem headers */
+
+/* Setup library headers */
 #include <reactos/rosioctl.h>
-#include <fslib/vfatlib.h>
-#include <fslib/ext2lib.h>
-// #include <fslib/ntfslib.h>
+#include <../lib/setuplib.h>
+// #include "errorcode.h"
 
 /* Internal Headers */
-#include "interface/consup.h"
+#include "consup.h"
 #include "inffile.h"
-#include "inicache.h"
 #include "progress.h"
 #ifdef __REACTOS__
-#include "infros.h"
 #include "filequeue.h"
 #endif
-#include "registry.h"
 #include "fslist.h"
 #include "partlist.h"
 #include "cabinet.h"
@@ -75,56 +72,24 @@
 #include "genlist.h"
 #include "host.h"
 #include "mui.h"
-#include "errorcode.h"
+
 
 extern HANDLE ProcessHeap;
-extern UNICODE_STRING SourceRootPath;
-extern UNICODE_STRING SourceRootDir;
-extern UNICODE_STRING SourcePath;
 extern BOOLEAN IsUnattendedSetup;
 extern PWCHAR SelectedLanguageId;
 
-#ifdef __REACTOS__
-
-extern VOID InfSetHeap(PVOID Heap);
-extern VOID InfCloseFile(HINF InfHandle);
-extern BOOLEAN InfFindNextLine(PINFCONTEXT ContextIn,
-                               PINFCONTEXT ContextOut);
-extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PUCHAR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
-extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
-                                  ULONG FieldIndex,
-                                  PWSTR ReturnBuffer,
-                                  ULONG ReturnBufferSize,
-                                  PULONG RequiredSize);
-extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PWSTR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
-
-#define SetupCloseInfFile InfCloseFile
-#define SetupFindNextLine InfFindNextLine
-#define SetupGetBinaryField InfGetBinaryField
-#define SetupGetMultiSzFieldW InfGetMultiSzField
-#define SetupGetStringFieldW InfGetStringField
-
-#endif /* __REACTOS__ */
-
-#ifndef _PAGE_NUMBER_DEFINED
-#define _PAGE_NUMBER_DEFINED
 typedef enum _PAGE_NUMBER
 {
-    START_PAGE,
     LANGUAGE_PAGE,
-    INTRO_PAGE,
+    WELCOME_PAGE,
     LICENSE_PAGE,
     INSTALL_INTRO_PAGE,
 
 //    SCSI_CONTROLLER_PAGE,
+//    OEM_DRIVER_PAGE,
+
+//    REPAIR_INTRO_PAGE,
+    UPGRADE_REPAIR_PAGE,
 
     DEVICE_SETTINGS_PAGE,
     COMPUTER_SETTINGS_PAGE,
@@ -152,36 +117,21 @@ typedef enum _PAGE_NUMBER
     BOOT_LOADER_HARDDISK_MBR_PAGE,
     BOOT_LOADER_HARDDISK_VBR_PAGE,
 
-    REPAIR_INTRO_PAGE,
-
     SUCCESS_PAGE,
     QUIT_PAGE,
     FLUSH_PAGE,
-    REBOOT_PAGE,		/* virtual page */
-    RECOVERY_PAGE,		/* virtual page */
+    REBOOT_PAGE,    /* Virtual page */
+    RECOVERY_PAGE,  /* Virtual page */
 } PAGE_NUMBER, *PPAGE_NUMBER;
-#endif
 
 #define POPUP_WAIT_NONE    0
 #define POPUP_WAIT_ANY_KEY 1
 #define POPUP_WAIT_ENTER   2
 
-#define InsertAscendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
+VOID
+PopupError(IN PCCH Text,
+           IN PCCH Status,
+           IN PINPUT_RECORD Ir,
+           IN ULONG WaitEvent);
 
 #endif /* _USETUP_PCH_ */

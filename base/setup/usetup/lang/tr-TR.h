@@ -2,14 +2,6 @@
 
 #pragma once
 
-MUI_LAYOUTS trTRLayouts[] =
-{
-    { L"041F", L"0000041F" },
-    { L"041F", L"0001041f" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY trTRLanguagePageEntries[] =
 {
     {
@@ -91,7 +83,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  ReactOS'u onarmak veyÉ yÅkseltmek iáin R'ye basçnçz.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -408,7 +400,7 @@ static MUI_ENTRY trTRDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY trTRRepairPageEntries[] =
+static MUI_ENTRY trTRUpgradePageEntries[] =
 {
     {
         4,
@@ -419,49 +411,55 @@ static MUI_ENTRY trTRRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Kur, bir în geliüme evresindedir. Daha tÅmÅyle kullançülç",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "bir kurulum uygulamasçnçn tÅm iülevlerini desteklemez.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Onarma iülevleri daha bitirilmemiütir.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  òületim dizgesini yÅkseltmek iáin U'ya basçnçz.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Kurtarma Konsolu iáin R'ye basçnçz.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Ana sayfaya geri dînmek iáin Äçkçü'a basçnçz.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Bilgisayarçnçzç yeniden baülatmak iáin Giriü'e basçnçz.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Äçkçü = Ana Sayfa  U = YÅkselt  R = Kurtarma  Giriü = Yeniden Baülat",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1409,7 +1407,7 @@ MUI_ERROR trTRErrorEntries[] =
         //ERROR_WARN_PARTITION,
         "Kur, dÅzgÅn yînetilemeyen bir uyumsuz bîlÅm tablosu iáeren en az\n"
         "bir sÉbit disk buldu!\n"
-        "\n"         
+        "\n"
         "BîlÅmleri oluüturmak veyÉ silmek bîlÅm tablosunu yok edebilir.\n"
         "\n"
         "  \x07  Kur'dan áçkmak iáin F3'e basçnçz.\n"
@@ -1591,7 +1589,7 @@ MUI_PAGE trTRPages[] =
         trTRLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         trTRWelcomePageEntries
     },
     {
@@ -1607,8 +1605,8 @@ MUI_PAGE trTRPages[] =
         trTRDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        trTRRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        trTRUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1740,7 +1738,7 @@ MUI_STRING trTRStrings[] =
     "   Deßer yçßçnlarç üimdikileütiriliyor..."},
     {STRING_IMPORTFILE,
     "   Alçnçyor: %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   GîrÅntÅ ayarlarç deßerleri üimdikileütiriliyor..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Yerli ayarlar üimdikileütiriliyor..."},
@@ -1768,28 +1766,28 @@ MUI_STRING trTRStrings[] =
     " BîlÅmÅ %S kÅtÅk dizgesiyle biáimlendir. "},
     {STRING_KEEPFORMAT,
     " ûimdiki kÅtÅk dizgesini koru. (Deßiüiklik yok.) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  TÅr  0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde."},
-    {STRING_HDDINFOUNK3,
-    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  TÅr  0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "özerinde: SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "özerinde: SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTÅr  %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %S Åzerinde"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Kur, Åzerinde bir yeni bîlÅm oluüturdu:"},
     {STRING_UNPSPACE,

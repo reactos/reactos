@@ -529,6 +529,11 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000048F = kbdeo.dll
 
 [HiveInfs.Install]
-AddReg=registry.inf,AddReg
+; Called "HiveInfs.Fresh" on Windows
+AddReg = registry.inf,AddReg
+
+[HiveInfs.Upgrade]
+DelReg = registry.inf,DelReg
+AddReg = registry.inf,AddReg
 
 ; EOF

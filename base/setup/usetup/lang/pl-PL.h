@@ -9,14 +9,6 @@
 
 #pragma once
 
-MUI_LAYOUTS plPLLayouts[] =
-{
-    { L"0415", L"00000415" },
-    { L"0415", L"00010415" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY plPLLanguagePageEntries[] =
 {
     {
@@ -98,7 +90,7 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Naci˜nij R, aby naprawi† zainstalowany system ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -420,7 +412,7 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY plPLRepairPageEntries[] =
+static MUI_ENTRY plPLUpgradePageEntries[] =
 {
     {
         4,
@@ -431,49 +423,55 @@ static MUI_ENTRY plPLRepairPageEntries[] =
     {
         6,
         8,
-        "Instalator ReactOS wci¥¾ jest we wczesnej fazie rozwoju. Nadal nie",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "obsˆuguje wszystkich funkcji, niezb©dnych dla programu instalacyjnego.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Naprawa istniej¥cej instalacji systemu nie jest jeszcze mo¾liwa.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Naci˜nij U ¾eby uaktualni† system.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Naci˜nij R, by uruchomi† Konsol© Odtwarzania.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Naci˜nij ESC, by powr¢ci† do gˆ¢wnego menu.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Naci˜nij ENTER, by zrestartowa† komputer.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Menu gˆ¢wne  ENTER = Restart",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1621,7 +1619,7 @@ MUI_PAGE plPLPages[] =
         plPLLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         plPLWelcomePageEntries
     },
     {
@@ -1637,8 +1635,8 @@ MUI_PAGE plPLPages[] =
         plPLDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        plPLRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        plPLUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1770,7 +1768,7 @@ MUI_STRING plPLStrings[] =
     "   Uaktualnianie..."},
     {STRING_IMPORTFILE,
     "   Importowanie %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Zmiana ustawieä ekranu w rejestrze..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Zmiana wersji j©zykowej..."},
@@ -1798,28 +1796,28 @@ MUI_STRING plPLStrings[] =
     " Sformatuj partycj© z systemem plik¢w %S "},
     {STRING_KEEPFORMAT,
     " Zachowaj obecny system plik¢w (bez zmian) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Dysku Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Dysk 02 Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Dysku Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Dysk 02 Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  03Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "na %I64u %s  Dysku Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK3,
-    "na %I64u %s  Dysku 05 Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Dysk Twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "na %I64u %s  Dysku Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "na %I64u %s  Dysku 05 Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Dysk Twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  07Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "na Dysku Twardym %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "na Dysku Twardym %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %s09Typ %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Dysk Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Dysk11 Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Dysk Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Dysk11 Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Instalator utworzyˆ now¥ partycj©"},
     {STRING_UNPSPACE,

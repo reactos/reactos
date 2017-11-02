@@ -859,7 +859,7 @@ CmpInitHiveFromFile(
 VOID
 NTAPI
 CmpInitializeHiveList(
-    IN USHORT Flag
+    VOID
 );
 
 //

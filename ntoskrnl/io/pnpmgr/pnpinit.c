@@ -56,17 +56,6 @@ PiInitCacheGroupInformation(VOID)
         RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet"
                             L"\\Control\\ServiceGroupOrder");
 
-    /* ReactOS HACK for SETUPLDR */
-    if (KeLoaderBlock->SetupLdrBlock)
-    {
-        DPRINT1("WARNING!! In PiInitCacheGroupInformation, using ReactOS HACK for SETUPLDR!!\n");
-
-        /* Bogus data */
-        PiInitGroupOrderTableCount = 0;
-        PiInitGroupOrderTable = (PVOID)0xBABEB00B;
-        return STATUS_SUCCESS;
-    }
-
     /* Open the registry key */
     Status = IopOpenRegistryKeyEx(&KeyHandle,
                                   NULL,

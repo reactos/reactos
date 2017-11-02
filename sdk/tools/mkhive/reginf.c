@@ -172,7 +172,7 @@ append_multi_sz_value(
 
     if (Total != Size)
     {
-        DPRINT("setting value %S to %S\n", ValueName, Buffer);
+        DPRINT("setting value '%S' to '%S'\n", ValueName, Buffer);
         RegSetValueExW(KeyHandle,
                        ValueName,
                        0,
@@ -290,6 +290,7 @@ do_reg_operation(
                 if (Str == NULL)
                     return TRUE;
 
+                DPRINT("append_multi_sz_value(ValueName = '%S')\n", ValueName);
                 append_multi_sz_value(KeyHandle,
                                       ValueName,
                                       Str,
@@ -319,7 +320,7 @@ do_reg_operation(
         {
             ULONG dw = Str ? strtoulW(Str, NULL, 0) : 0;
 
-            DPRINT("setting dword %S to %x\n", ValueName, dw);
+            DPRINT("setting dword '%S' to %x\n", ValueName, dw);
 
             RegSetValueExW(KeyHandle,
                            ValueName,
@@ -330,7 +331,7 @@ do_reg_operation(
         }
         else
         {
-            DPRINT("setting value %S to %S\n", ValueName, Str);
+            DPRINT("setting value '%S' to '%S'\n", ValueName, Str);
 
             if (Str)
             {
@@ -366,7 +367,7 @@ do_reg_operation(
             if (Data == NULL)
                 return FALSE;
 
-            DPRINT("setting binary data %S len %d\n", ValueName, Size);
+            DPRINT("setting binary data '%S' len %d\n", ValueName, Size);
             InfHostGetBinaryField(Context, 5, Data, Size, NULL);
         }
 
@@ -399,7 +400,6 @@ registry_callback(HINF hInf, PWCHAR Section, BOOL Delete)
     PINFCONTEXT Context = NULL;
     HKEY KeyHandle;
     BOOL Ok;
-
 
     Ok = InfHostFindFirstLine(hInf, Section, NULL, &Context) == 0;
     if (!Ok)
@@ -501,7 +501,6 @@ ImportRegistryFile(PCHAR FileName)
     }
 
     InfHostCloseFile(hInf);
-
     return TRUE;
 }
 

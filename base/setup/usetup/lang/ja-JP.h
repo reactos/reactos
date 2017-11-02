@@ -1,12 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS jaJPLayouts[] =
-{
-//    { L"0411", L"e0010411" },
-    { L"0411", L"00000411" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY jaJPLanguagePageEntries[] =
 {
     {
@@ -88,7 +81,7 @@ static MUI_ENTRY jaJPWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  ReactOS ¦ ¼­³Ì¸ Ó¼¸Ê º³¼Ý ½ÙÆÊ R ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -410,7 +403,7 @@ static MUI_ENTRY jaJPDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY jaJPRepairPageEntries[] =
+static MUI_ENTRY jaJPUpgradePageEntries[] =
 {
     {
         4,
@@ -421,49 +414,55 @@ static MUI_ENTRY jaJPRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS ¾¯Ä±¯ÌßÊ ¼®·¶²ÊÂ ÀÞÝ¶²Æ ±ØÏ½¡ ¿ÉÀÒ¤ ÏÀÞ",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "¼Þ­³ÌÞÝÆ ØÖ³ ÃÞ·Ù ¾¯Ä±¯Ìß ±ÌßØ¹°¼®ÝÉ ½ÍÞÃÉ ·É³Ê »Îß°Ä »ÚÏ¾Ý¡",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "¼­³Ì¸·É³Ê ÏÀÞ ¼Þ¯¿³ »ÚÃ ²Ï¾Ý¡",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  OS ¦ º³¼Ý ½ÙÆÊ U ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  ¶²Ì¸ ºÝ¿°Ù¦ Ë×¸ÆÊ R ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Ò²ÝÍß°¼ÞÆ ÓÄÞÙÆÊ ESC ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  ºÝËß­°À¦ »²·ÄÞ³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Ò²ÝÍß°¼Þ  U = º³¼Ý  R = ¶²Ì¸  ENTER = »²·ÄÞ³",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1612,7 +1611,7 @@ MUI_PAGE jaJPPages[] =
         jaJPLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         jaJPWelcomePageEntries
     },
     {
@@ -1628,8 +1627,8 @@ MUI_PAGE jaJPPages[] =
         jaJPDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        jaJPRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        jaJPUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1763,7 +1762,7 @@ MUI_STRING jaJPStrings[] =
     "   Ú¼Þ½ÄØ Ê²ÌÞÉ º³¼Ý Á­³..."},
     {STRING_IMPORTFILE,
     "   %S ¦ ²ÝÎß°Ä Á­³..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   ÃÞ¨½ÌßÚ² Ú¼Þ½ÄØ ¾¯Ã²¦ º³¼Ý Á­³..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Á²· ¾¯Ã²É º³¼Ý Á­³..."},
@@ -1791,28 +1790,28 @@ MUI_STRING jaJPStrings[] =
     " Êß°Ã¨¼®Ý¦ %S Ì§²Ù ¼½ÃÑ ÃÞÌ«°Ï¯Ä "},
     {STRING_KEEPFORMAT,
     " ¹ÞÝ»Þ²É Ì§²Ù ¼½ÃÑÉ ÏÏ (ÍÝº³ ¼Å²) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  ¼­Ù² 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  ¼­Ù² 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "on Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "on Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %s¼­Ù² %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "¾¯Ä±¯ÌßÊ ±À×¼² Êß°Ã¨¼®Ý¦ Â·ÞÆ »¸¾²¼Ï¼À:"},
     {STRING_UNPSPACE,

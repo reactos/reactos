@@ -23,7 +23,6 @@ RTL_AVL_TABLE PpDeviceReferenceTable;
 
 extern ERESOURCE IopDriverLoadResource;
 extern ULONG ExpInitializationPhase;
-extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 
 /* DATA **********************************************************************/
@@ -94,7 +93,7 @@ IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
     PWCHAR IdBuffer, OriginalIdBuffer;
 
     /* Open the device instance key */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceKey);
     if (Status != STATUS_SUCCESS)
         return;
 
@@ -796,7 +795,7 @@ IopStartDevice(
    IopStartAndEnumerateDevice(DeviceNode);
 
    /* FIX: Should be done in new device instance code */
-   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceHandle);
+   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceHandle);
    if (!NT_SUCCESS(Status))
        goto ByeBye;
 
@@ -808,7 +807,13 @@ IopStartDevice(
                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               InstanceHandle,
                               NULL);
-   Status = ZwCreateKey(&ControlHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+   Status = ZwCreateKey(&ControlHandle,
+                        KEY_SET_VALUE,
+                        &ObjectAttributes,
+                        0,
+                        NULL,
+                        REG_OPTION_VOLATILE,
+                        NULL);
    if (!NT_SUCCESS(Status))
        goto ByeBye;
 
@@ -869,7 +874,7 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
    else
        DeviceNode->UserFlags &= ~DNUF_DONT_SHOW_IN_UI;
 
-   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceKey);
    if (NT_SUCCESS(Status))
    {
       /* Set 'Capabilities' value */
@@ -1447,10 +1452,6 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
     /* Assume failure */
     *Handle = NULL;
 
-    /* Create a volatile device tree in 1st stage so we have a clean slate
-     * for enumeration using the correct HAL (chosen in 1st stage setup) */
-    if (ExpInTextModeSetup) CreateOptions |= REG_OPTION_VOLATILE;
-
     /* Open root key for device instances */
     Status = IopOpenRegistryKeyEx(&hParent, NULL, &EnumU, KEY_CREATE_SUB_KEY);
     if (!NT_SUCCESS(Status))
@@ -1545,6 +1546,8 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                         &ObjectAttributes,
                         0,
                         NULL,
+                        // FIXME? In r53694 it was silently turned from non-volatile into this,
+                        // without any extra warning. Is this still needed??
                         REG_OPTION_VOLATILE,
                         NULL);
    if (NT_SUCCESS(Status))
@@ -1608,8 +1611,13 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               InstanceKey,
                               NULL);
-   Status = ZwCreateKey(&ControlHandle, 0, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
-
+   Status = ZwCreateKey(&ControlHandle,
+                        KEY_ALL_ACCESS,
+                        &ObjectAttributes,
+                        0,
+                        NULL,
+                        REG_OPTION_VOLATILE,
+                        NULL);
    if (NT_SUCCESS(Status))
        ZwClose(ControlHandle);
 
@@ -2127,7 +2135,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
     /*
      * Create registry key for the instance id, if it doesn't exist yet
      */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceKey);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
@@ -3112,7 +3120,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0,
+         REG_OPTION_NON_VOLATILE,
          NULL);
       if (!NT_SUCCESS(Status))
       {
@@ -3128,7 +3136,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0,
+         REG_OPTION_NON_VOLATILE,
          NULL);
       ZwClose(hLevel1Key);
       if (!NT_SUCCESS(Status))
@@ -3306,7 +3314,7 @@ IopUpdateRootKey(VOID)
    NTSTATUS Status;
 
    InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
-   Status = ZwCreateKey(&hEnum, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+   Status = ZwCreateKey(&hEnum, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("ZwCreateKey() failed with status 0x%08lx\n", Status);
@@ -3314,7 +3322,7 @@ IopUpdateRootKey(VOID)
    }
 
    InitializeObjectAttributes(&ObjectAttributes, &RootPathU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hEnum, NULL);
-   Status = ZwCreateKey(&hRoot, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+   Status = ZwCreateKey(&hRoot, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
    ZwClose(hEnum);
    if (!NT_SUCCESS(Status))
    {
@@ -4382,8 +4390,13 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               *DevInstRegKey,
                               NULL);
-   Status = ZwCreateKey(DevInstRegKey, DesiredAccess, &ObjectAttributes,
-                        0, NULL, ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0, NULL);
+   Status = ZwCreateKey(DevInstRegKey,
+                        DesiredAccess,
+                        &ObjectAttributes,
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        NULL);
    ZwClose(ObjectAttributes.RootDirectory);
 
    return Status;
