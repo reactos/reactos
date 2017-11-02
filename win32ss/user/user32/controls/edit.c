@@ -3628,7 +3628,6 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
  */
 static LRESULT EDIT_WM_KillFocus(EDITSTATE *es)
 {
-#if 0 // See CORE-10266.
 	HWND hCombo;
 	LONG lStyles;
 
@@ -3649,15 +3648,7 @@ static LRESULT EDIT_WM_KillFocus(EDITSTATE *es)
 		if ((lStyles & CBS_DROPDOWN) || (lStyles & CBS_SIMPLE))
 			SendMessage(hCombo, WM_CBLOSTTEXTFOCUS, 0, 0);
 	}
-#else
-	es->flags &= ~EF_FOCUSED;
-	DestroyCaret();
-	if(!(es->style & ES_NOHIDESEL))
-		EDIT_InvalidateText(es, es->selection_start, es->selection_end);
-	EDIT_NOTIFY_PARENT(es, EN_KILLFOCUS);
-	/* throw away left over scroll when we lose focus */
-	es->wheelDeltaRemainder = 0;
-#endif
+
 	return 0;
 }
 

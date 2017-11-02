@@ -2261,16 +2261,14 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPAR
         }
         break;
 
-        case WM_CBLOSTTEXTFOCUS: /* undocumented message - deselects the text when focus is lost */
+    case WM_CBLOSTTEXTFOCUS: /* undocumented message - deselects the text when focus is lost */
+        if (lphc->hWndEdit != NULL)
         {
-           if (lphc->hWndEdit != NULL)
-           {
-               SendMessage(lphc->self, WM_LBUTTONUP, 0, 0xFFFFFFFF);
-               SendMessage(lphc->hWndEdit, EM_SETSEL, 0, 0);
-               lphc->wState &= ~CBF_FOCUSED;   
-               CB_NOTIFY(lphc, CBN_KILLFOCUS);
-           } 
-        }
+            SendMessage(lphc->self, WM_LBUTTONUP, 0, 0xFFFFFFFF);
+            SendMessage(lphc->hWndEdit, EM_SETSEL, 0, 0);
+            lphc->wState &= ~(CBF_FOCUSED | CBF_BEENFOCUSED);
+            CB_NOTIFY(lphc, CBN_KILLFOCUS);
+        } 
         return TRUE;
 
 #endif
