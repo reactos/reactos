@@ -1176,13 +1176,8 @@ PROPSHEET_WizardSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
       return TRUE;
 
     case WM_CTLCOLORSTATIC:
-#ifdef __REACTOS__
-      SetBkMode((HDC)wParam, TRANSPARENT);
-      return (INT_PTR)GetStockObject(HOLLOW_BRUSH);
-#else
       SetBkColor((HDC)wParam, GetSysColor(COLOR_WINDOW));
       return (INT_PTR)GetSysColorBrush(COLOR_WINDOW);
-#endif
   }
 
   return DefSubclassProc(hwnd, uMsg, wParam, lParam);
