@@ -27,6 +27,15 @@
         ERR ("ASSERTION %s AT %s:%d FAILED!\n", #cond, __FILE__, __LINE__)
 #endif
 
+
+/*
+TODO:
+    ** Fix tasks band gripper not appearing when quick launch is added
+    ** Fix hiding grippers in locked mode
+    ** The context menu should include the menu of both the site and the band
+    ** The chevron should be shown only when needed
+*/
+
 CBandSiteBase::CBandSiteBase()
 {
     fBandsCount = 0;

@@ -13,6 +13,16 @@
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
+/*
+TODO:
+    ** drag and drop support
+    ** tooltips
+    ** handle change notifications
+    ** Fix position of the items context menu
+    ** Implement responding to theme change
+*/
+
+
 // ***Extras***
 /*++
 * @name _ILIsDesktop
