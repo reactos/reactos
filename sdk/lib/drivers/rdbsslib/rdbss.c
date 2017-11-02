@@ -8155,6 +8155,8 @@ RxQueryNameInfo(
         return STATUS_BUFFER_OVERFLOW;
     }
 
+    RxContext->Info.LengthRemaining -= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+
     Fcb = (PFCB)RxContext->pFcb;
     Fobx = (PFOBX)RxContext->pFobx;
     /* Get the UNC name */
