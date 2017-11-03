@@ -214,6 +214,54 @@ typedef enum {
 	SymDeferred,
 	SymSym
 } SYM_TYPE;
+#ifdef _NO_CVCONST_H
+enum SymTagEnum
+{
+    SymTagNull,
+    SymTagExe,
+    SymTagCompiland,
+    SymTagCompilandDetails,
+    SymTagCompilandEnv,
+    SymTagFunction,
+    SymTagBlock,
+    SymTagData,
+    SymTagAnnotation,
+    SymTagLabel,
+    SymTagPublicSymbol,
+    SymTagUDT,
+    SymTagEnum,
+    SymTagFunctionType,
+    SymTagPointerType,
+    SymTagArrayType,
+    SymTagBaseType,
+    SymTagTypedef,
+    SymTagBaseClass,
+    SymTagFriend,
+    SymTagFunctionArgType,
+    SymTagFuncDebugStart,
+    SymTagFuncDebugEnd,
+    SymTagUsingNamespace,
+    SymTagVTableShape,
+    SymTagVTable,
+    SymTagCustom,
+    SymTagThunk,
+    SymTagCustomType,
+    SymTagManagedType,
+    SymTagDimension,
+    SymTagCallSite,
+    SymTagInlineSite,
+    SymTagBaseInterface,
+    SymTagVectorType,
+    SymTagMatrixType,
+    SymTagHLSLType,
+    SymTagCaller,
+    SymTagCallee,
+    SymTagExport,
+    SymTagHeapAllocationSite,
+    SymTagCoffGroup,
+    SymTagMax
+};
+#endif // _NO_CVCONST_H
 typedef struct _IMAGEHLP_SYMBOL {
 	DWORD SizeOfStruct;
 	DWORD Address;
