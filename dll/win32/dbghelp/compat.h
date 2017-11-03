@@ -115,7 +115,7 @@ INT __WideCharToMultiByte( UINT page, DWORD flags, LPCWSTR src, INT srclen, LPST
 // winnt.h
 #define IMAGE_FILE_MACHINE_ARMNT      0x1c4
 #define IMAGE_FILE_MACHINE_POWERPC    0x1f0
-#define IMAGE_FILE_MACHINE_ARM64      0x1c5
+#define IMAGE_FILE_MACHINE_ARM64      0xaa64
 #define DLL_PROCESS_DETACH	0
 #define DLL_PROCESS_ATTACH	1
 #define DLL_THREAD_ATTACH	2
