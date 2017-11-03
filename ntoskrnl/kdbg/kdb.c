@@ -137,42 +137,15 @@ KdbpTrapFrameToKdbTrapFrame(
     PKTRAP_FRAME TrapFrame,
     PKDB_KTRAP_FRAME KdbTrapFrame)
 {
-    ULONG TrapCr0, TrapCr2, TrapCr3, TrapCr4;
-
     /* Copy the TrapFrame only up to Eflags and zero the rest*/
     RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
     RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, HardwareEsp)),
                   sizeof(KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
 
-#ifndef _MSC_VER
-   asm volatile(
-      "movl %%cr0, %0"    "\n\t"
-      "movl %%cr2, %1"    "\n\t"
-      "movl %%cr3, %2"    "\n\t"
-      "movl %%cr4, %3"    "\n\t"
-      : "=r"(TrapCr0), "=r"(TrapCr2),
-        "=r"(TrapCr3), "=r"(TrapCr4));
-#else
-   __asm
-   {
-       mov eax, cr0;
-       mov TrapCr0, eax;
-
-       mov eax, cr2;
-       mov TrapCr2, eax;
-
-       mov eax, cr3;
-       mov TrapCr3, eax;
-/* FIXME: What's the problem with cr4? */
-       //mov eax, cr4;
-       //mov TrapCr4, eax;
-   }
-#endif
-
-    KdbTrapFrame->Cr0 = TrapCr0;
-    KdbTrapFrame->Cr2 = TrapCr2;
-    KdbTrapFrame->Cr3 = TrapCr3;
-    KdbTrapFrame->Cr4 = TrapCr4;
+    KdbTrapFrame->Cr0 = __readcr0();
+    KdbTrapFrame->Cr2 = __readcr2();
+    KdbTrapFrame->Cr3 = __readcr3();
+    KdbTrapFrame->Cr4 = __readcr4();
 
     KdbTrapFrame->Tf.HardwareEsp = KiEspFromTrapFrame(TrapFrame);
     KdbTrapFrame->Tf.HardwareSegSs = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
