@@ -736,7 +736,7 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     IShellFolder *desktop, *cur;
 #ifdef __REACTOS__
     WCHAR wszNewFolder[25];
-    WCHAR path[25];
+    WCHAR path[MAX_PATH];
 #else
     ISFHelper *sfhelper;
 #endif
@@ -767,7 +767,7 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(FAILED(hr))
         return hr;
 
-    len = strlenW(name);
+    len = strlenW(path);
     if(len<MAX_PATH)
         len++;
         
