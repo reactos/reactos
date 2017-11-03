@@ -941,7 +941,6 @@ InstallFat16BootCodeToFile(
         return Status;
     }
 
-    FileOffset.QuadPart = 0ULL;
     Status = NtWriteFile(FileHandle,
                          NULL,
                          NULL,
@@ -1102,7 +1101,6 @@ InstallFat32BootCodeToFile(
         return Status;
     }
 
-    FileOffset.QuadPart = 0ULL;
     Status = NtWriteFile(FileHandle,
                          NULL,
                          NULL,
