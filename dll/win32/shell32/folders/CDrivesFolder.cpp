@@ -96,14 +96,16 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
         {
             nStringID = IDS_CANTLOCKVOLUME; /* Unable to lock volume */
             dwError = GetLastError();
-            break;
+            if (dwError != ERROR_INVALID_FUNCTION)  /* temporary hack */
+                break;
         }
         bResult = DeviceIoControl(hDrive, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
         if (!bResult)
         {
             nStringID = IDS_CANTDISMOUNTVOLUME; /* Unable to dismount volume */
             dwError = GetLastError();
-            break;
+            if (dwError != ERROR_INVALID_FUNCTION)  /* temporary hack */
+                break;
         }
         removal.PreventMediaRemoval = FALSE;
         bResult = DeviceIoControl(hDrive, IOCTL_STORAGE_MEDIA_REMOVAL, &removal, sizeof(removal), NULL,
