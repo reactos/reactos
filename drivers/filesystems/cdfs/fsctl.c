@@ -419,7 +419,7 @@ CdfsMountVolume(
     DeviceExt->StreamFileObject->FsContext2 = Ccb;
     DeviceExt->StreamFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
     DeviceExt->StreamFileObject->PrivateCacheMap = NULL;
-    DeviceExt->StreamFileObject->Vpb = DeviceExt->Vpb;
+    DeviceExt->StreamFileObject->Vpb = DeviceToMount->Vpb;
     Ccb->PtrFileObject = DeviceExt->StreamFileObject;
     Fcb->FileObject = DeviceExt->StreamFileObject;
     Fcb->DevExt = (PDEVICE_EXTENSION)DeviceExt->StorageDevice;

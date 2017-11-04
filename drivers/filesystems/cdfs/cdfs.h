@@ -161,7 +161,6 @@ typedef struct
   KSPIN_LOCK FcbListLock;
   LIST_ENTRY FcbListHead;
 
-  PVPB Vpb;
   PDEVICE_OBJECT VolumeDevice;
   PDEVICE_OBJECT StorageDevice;
   PFILE_OBJECT StreamFileObject;
