@@ -23,6 +23,7 @@
 * PURPOSE:          CDROM (ISO 9660) filesystem driver
 * PROGRAMMER:       Art Yerkes
 *                   Eric Kohl
+*                   Pierre Schweitzer
 */
 
 /* INCLUDES *****************************************************************/
@@ -549,6 +550,64 @@ CdfsVerifyVolume(
 }
 
 
+static
+NTSTATUS
+CdfsLockOrUnlockVolume(
+    IN PCDFS_IRP_CONTEXT IrpContext,
+    IN BOOLEAN LockVolume)
+{
+    PFCB Fcb;
+    PVPB Vpb;
+    PFILE_OBJECT FileObject;
+    PDEVICE_EXTENSION DeviceExt;
+
+    FileObject = IrpContext->FileObject;
+    Fcb = FileObject->FsContext;
+    DeviceExt = IrpContext->DeviceObject->DeviceExtension;
+    Vpb = DeviceExt->StreamFileObject->Vpb;
+
+    /* Only allow locking with the volume open */
+    if (!BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME_STREAM))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Bail out if it's already in the demanded state */
+    if ((BooleanFlagOn(DeviceExt->Flags, VCB_VOLUME_LOCKED) && LockVolume) ||
+        (!BooleanFlagOn(DeviceExt->Flags, VCB_VOLUME_LOCKED) && !LockVolume))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Bail out if it's already in the demanded state */
+    if ((BooleanFlagOn(Vpb->Flags, VPB_LOCKED) && LockVolume) ||
+        (!BooleanFlagOn(Vpb->Flags, VPB_LOCKED) && !LockVolume))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Deny locking if we're not alone */
+    if (LockVolume && DeviceExt->OpenHandleCount != 1)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Finally, proceed */
+    if (LockVolume)
+    {
+        DeviceExt->Flags |= VCB_VOLUME_LOCKED;
+        Vpb->Flags |= VPB_LOCKED;
+    }
+    else
+    {
+        DeviceExt->Flags &= ~VCB_VOLUME_LOCKED;
+        Vpb->Flags &= ~VPB_LOCKED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 NTAPI
 CdfsSetCompression(
@@ -602,6 +661,16 @@ CdfsFileSystemControl(
                 case FSCTL_SET_COMPRESSION:
                     DPRINT("CDFS: IRP_MN_USER_FS_REQUEST / FSCTL_SET_COMPRESSION\n");
                     Status = CdfsSetCompression(DeviceObject, Irp);
+                    break;
+
+                case FSCTL_LOCK_VOLUME:
+                    DPRINT("CDFS: IRP_MN_USER_FS_REQUEST / FSCTL_LOCK_VOLUME\n");
+                    Status = CdfsLockOrUnlockVolume(IrpContext, TRUE);
+                    break;
+
+                case FSCTL_UNLOCK_VOLUME:
+                    DPRINT("CDFS: IRP_MN_USER_FS_REQUEST / FSCTL_UNLOCK_VOLUME\n");
+                    Status = CdfsLockOrUnlockVolume(IrpContext, FALSE);
                     break;
 
                 default:
