@@ -79,11 +79,9 @@ static BOOL TryToLockDrive(HANDLE hDrive, DWORD dwRetryCount, DWORD dwSleep)
 // NOTE: See also https://support.microsoft.com/en-us/help/165721/how-to-ejecting-removable-media-in-windows-nt-windows-2000-windows-xp
 static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
 {
-    DWORD dwAccessMode, dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-    if (nDriveType == DRIVE_REMOVABLE)
-        dwAccessMode = GENERIC_READ | GENERIC_WRITE;
-    else if (nDriveType == DRIVE_CDROM)
-        dwAccessMode = GENERIC_READ;
+    /* GENERIC_WRITE isn't needed for umount */
+    DWORD dwAccessMode = GENERIC_READ;
+    DWORD dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 
     HANDLE hDrive = CreateFile(physical, dwAccessMode, dwShareMode, 0, OPEN_EXISTING, 0, NULL);
     if (hDrive == INVALID_HANDLE_VALUE)
