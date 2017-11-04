@@ -67,6 +67,9 @@ static BOOL TryToLockDrive(HANDLE hDrive, DWORD dwRetryCount, DWORD dwSleep)
             return TRUE;
 
         dwError = GetLastError();
+        if (dwError == ERROR_INVALID_FUNCTION)
+            break; /* don't sleep if function is not implemented */
+
         Sleep(dwSleep);
     }
     SetLastError(dwError);
