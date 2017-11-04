@@ -222,6 +222,11 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
         return STATUS_ACCESS_DENIED;
     }
 
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_VOLUME_LOCKED))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
     Status = CdfsOpenFile(DeviceExt,
         FileObject,
         &FileObject->FileName);
@@ -241,6 +246,8 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
             CdfsCloseFile (DeviceExt, FileObject);
             return STATUS_NOT_A_DIRECTORY;
         }
+
+        DeviceExt->OpenHandleCount++;
     }
 
     /*
@@ -266,15 +273,15 @@ CdfsCreate(
     ASSERT(IrpContext);
 
     DeviceObject = IrpContext->DeviceObject;
+    DeviceExt = DeviceObject->DeviceExtension;
     if (DeviceObject == CdfsGlobalData->CdFsDeviceObject || DeviceObject == CdfsGlobalData->HddFsDeviceObject)
     {
         /* DeviceObject represents FileSystem instead of logical volume */
         DPRINT("Opening file system\n");
         IrpContext->Irp->IoStatus.Information = FILE_OPENED;
+        DeviceExt->OpenHandleCount++;
         return STATUS_SUCCESS;
     }
-
-    DeviceExt = DeviceObject->DeviceExtension;
 
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,

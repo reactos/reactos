@@ -153,6 +153,8 @@ typedef struct _CDINFO
 } CDINFO, *PCDINFO;
 
 
+#define VCB_VOLUME_LOCKED 0x0001
+
 typedef struct
 {
   ERESOURCE VcbResource;
@@ -161,16 +163,20 @@ typedef struct
   KSPIN_LOCK FcbListLock;
   LIST_ENTRY FcbListHead;
 
-  PVPB Vpb;
   PDEVICE_OBJECT VolumeDevice;
   PDEVICE_OBJECT StorageDevice;
   PFILE_OBJECT StreamFileObject;
+
+  ULONG Flags;
 
   CDINFO CdInfo;
 
   /* Notifications */
   LIST_ENTRY NotifyList;
   PNOTIFY_SYNC NotifySync;
+
+  /* Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLEANUP */
+  ULONG OpenHandleCount;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
 

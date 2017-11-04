@@ -164,6 +164,129 @@ GetRegistryPropertyType(
 }
 
 
+static
+VOID
+SplitDeviceInstanceId(
+    _In_ PWSTR pszDeviceInstanceId,
+    _Out_ PWSTR pszDeviceId,
+    _Out_ PWSTR pszInstanceId)
+{
+    PWCHAR ptr;
+
+    wcscpy(pszDeviceId, pszDeviceInstanceId);
+
+    ptr = wcschr(pszDeviceId, L'\\');
+    if (ptr != NULL)
+    {
+        *ptr = UNICODE_NULL;
+        ptr++;
+
+        wcscpy(pszInstanceId, ptr);
+    }
+    else
+    {
+        *pszInstanceId = UNICODE_NULL;
+    }
+}
+
+
+static
+CONFIGRET
+GetDeviceInstanceKeyPath(
+    _In_ RPC_BINDING_HANDLE BindingHandle,
+    _In_ PWSTR pszDeviceInst,
+    _Out_ PWSTR pszKeyPath,
+    _Out_ PWSTR pszInstancePath,
+    _In_ ULONG ulHardwareProfile,
+    _In_ ULONG ulFlags)
+{
+    PWSTR pszBuffer = NULL;
+    ULONG ulType = 0;
+    ULONG ulTransferLength, ulLength;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("GetDeviceInstanceKeyPath()\n");
+
+    if (ulFlags & CM_REGISTRY_SOFTWARE)
+    {
+        /* Software Key Path */
+        ret = CR_CALL_NOT_IMPLEMENTED;
+    }
+    else
+    {
+        /* Hardware Key Path */
+
+        ulTransferLength = 300 * sizeof(WCHAR);
+        ulLength = 300 * sizeof(WCHAR);
+
+        pszBuffer = MyMalloc(ulTransferLength);
+        if (pszBuffer == NULL)
+        {
+            ERR("MyMalloc() failed\n");
+            ret = CR_OUT_OF_MEMORY;
+            goto done;
+        }
+
+        ret = PNP_GetDeviceRegProp(BindingHandle,
+                                   pszDeviceInst,
+                                   CM_DRP_DRIVER,
+                                   &ulType,
+                                   (PVOID)pszBuffer,
+                                   &ulTransferLength,
+                                   &ulLength,
+                                   0);
+        if (ret != CR_SUCCESS)
+        {
+            ERR("PNP_GetDeviceRegProp() failed (Error %lu)\n", ret);
+            goto done;
+        }
+
+        TRACE("szBuffer: %S\n", pszBuffer);
+
+        SplitDeviceInstanceId(pszBuffer,
+                              pszBuffer,
+                              pszInstancePath);
+
+        TRACE("szBuffer: %S\n", pszBuffer);
+
+        if (ulFlags & CM_REGISTRY_CONFIG)
+        {
+            if (ulHardwareProfile == 0)
+            {
+                wsprintfW(pszKeyPath,
+                          L"%s\\%s\\%s\\%s",
+                          L"System\\CurrentControlSet\\Hardware Profiles",
+                          L"Current",
+                          L"System\\CurrentControlSet\\Control\\Class",
+                          pszBuffer);
+            }
+            else
+            {
+                wsprintfW(pszKeyPath,
+                          L"%s\\%04lu\\%s\\%s",
+                          L"System\\CurrentControlSet\\Hardware Profiles",
+                          ulHardwareProfile,
+                          L"System\\CurrentControlSet\\Control\\Class",
+                          pszBuffer);
+            }
+        }
+        else
+        {
+            wsprintfW(pszKeyPath,
+                      L"%s\\%s",
+                      L"System\\CurrentControlSet\\Control\\Class",
+                      pszBuffer);
+        }
+    }
+
+done:
+    if (pszBuffer != NULL)
+        MyFree(pszBuffer);
+
+    return ret;
+}
+
+
 /***********************************************************************
  * CMP_GetBlockedDriverInfo [SETUPAPI.@]
  */
@@ -4317,10 +4440,13 @@ CM_Invert_Range_List(
 /***********************************************************************
  * CM_Is_Dock_Station_Present [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Is_Dock_Station_Present(
-    PBOOL pbPresent)
+CONFIGRET
+WINAPI
+CM_Is_Dock_Station_Present(
+    _Out_ PBOOL pbPresent)
 {
-    TRACE("%p\n", pbPresent);
+    TRACE("CM_Is_Dock_Station_Present(%p)\n",
+          pbPresent);
     return CM_Is_Dock_Station_Present_Ex(pbPresent, NULL);
 }
 
@@ -4328,13 +4454,17 @@ CONFIGRET WINAPI CM_Is_Dock_Station_Present(
 /***********************************************************************
  * CM_Is_Dock_Station_Present_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Is_Dock_Station_Present_Ex(
-    PBOOL pbPresent, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Is_Dock_Station_Present_Ex(
+    _Out_ PBOOL pbPresent,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    TRACE("%p %lx\n", pbPresent, hMachine);
+    TRACE("CM_Is_Dock_Station_Present_Ex(%p %lx)\n",
+          pbPresent, hMachine);
 
     if (pbPresent == NULL)
         return CR_INVALID_POINTER;
@@ -4371,10 +4501,13 @@ CONFIGRET WINAPI CM_Is_Dock_Station_Present_Ex(
 /***********************************************************************
  * CM_Is_Version_Available_Ex [SETUPAPI.@]
  */
-BOOL WINAPI CM_Is_Version_Available(
-     WORD wVersion)
+BOOL
+WINAPI
+CM_Is_Version_Available(
+     _In_ WORD wVersion)
 {
-    TRACE("%hu\n", wVersion);
+    TRACE("CM_Is_Version_Available(%hu)\n",
+          wVersion);
     return CM_Is_Version_Available_Ex(wVersion, NULL);
 }
 
@@ -4382,14 +4515,18 @@ BOOL WINAPI CM_Is_Version_Available(
 /***********************************************************************
  * CM_Is_Version_Available_Ex [SETUPAPI.@]
  */
-BOOL WINAPI CM_Is_Version_Available_Ex(
-    WORD wVersion, HMACHINE hMachine)
+BOOL
+WINAPI
+CM_Is_Version_Available_Ex(
+    _In_ WORD wVersion,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     WORD wServerVersion;
     CONFIGRET ret;
 
-    TRACE("%hu %lx\n", wVersion, hMachine);
+    TRACE("CM_Is_Version_Available_Ex(%hu %lx)\n",
+          wVersion, hMachine);
 
     if (wVersion <= 0x400)
         return TRUE;
@@ -4426,10 +4563,15 @@ BOOL WINAPI CM_Is_Version_Available_Ex(
 /***********************************************************************
  * CM_Locate_DevNodeA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Locate_DevNodeA(
-    PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Locate_DevNodeA(
+    _Out_ PDEVINST pdnDevInst,
+    _In_opt_ DEVINSTID_A pDeviceID,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %lu\n", pdnDevInst, pDeviceID, ulFlags);
+    TRACE("CM_Locate_DevNodeA(%p %s %lu)\n",
+          pdnDevInst, pDeviceID, ulFlags);
     return CM_Locate_DevNode_ExA(pdnDevInst, pDeviceID, ulFlags, NULL);
 }
 
@@ -4437,10 +4579,15 @@ CONFIGRET WINAPI CM_Locate_DevNodeA(
 /***********************************************************************
  * CM_Locate_DevNodeW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Locate_DevNodeW(
-    PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Locate_DevNodeW(
+    _Out_ PDEVINST pdnDevInst,
+    _In_opt_ DEVINSTID_W pDeviceID,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %lu\n", pdnDevInst, debugstr_w(pDeviceID), ulFlags);
+    TRACE("CM_Locate_DevNodeW(%p %s %lu)\n",
+          pdnDevInst, debugstr_w(pDeviceID), ulFlags);
     return CM_Locate_DevNode_ExW(pdnDevInst, pDeviceID, ulFlags, NULL);
 }
 
@@ -4448,13 +4595,19 @@ CONFIGRET WINAPI CM_Locate_DevNodeW(
 /***********************************************************************
  * CM_Locate_DevNode_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Locate_DevNode_ExA(
-    PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Locate_DevNode_ExA(
+    _Out_ PDEVINST pdnDevInst,
+    _In_opt_ DEVINSTID_A pDeviceID,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     DEVINSTID_W pDevIdW = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%p %s %lu %lx\n", pdnDevInst, pDeviceID, ulFlags, hMachine);
+    TRACE("CM_Locate_DevNode_ExA(%p %s %lu %lx)\n",
+          pdnDevInst, pDeviceID, ulFlags, hMachine);
 
     if (pDeviceID != NULL)
     {
@@ -4474,15 +4627,21 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExA(
 /***********************************************************************
  * CM_Locate_DevNode_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Locate_DevNode_ExW(
-    PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Locate_DevNode_ExW(
+    _Out_ PDEVINST pdnDevInst,
+    _In_opt_ DEVINSTID_W pDeviceID,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     WCHAR DeviceIdBuffer[MAX_DEVICE_ID_LEN];
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%p %s %lu %lx\n", pdnDevInst, debugstr_w(pDeviceID), ulFlags, hMachine);
+    TRACE("CM_Locate_DevNode_ExW(%p %s %lu %lx)\n",
+          pdnDevInst, debugstr_w(pDeviceID), ulFlags, hMachine);
 
     if (pdnDevInst == NULL)
         return CR_INVALID_POINTER;
@@ -4574,11 +4733,18 @@ CM_Merge_Range_List(
 /***********************************************************************
  * CM_Modify_Res_Des [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Modify_Res_Des(
-    PRES_DES prdResDes, RES_DES rdResDes, RESOURCEID ResourceID,
-    PCVOID ResourceData, ULONG ResourceLen, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Modify_Res_Des(
+    _Out_ PRES_DES prdResDes,
+    _In_ RES_DES rdResDes,
+    _In_ RESOURCEID ResourceID,
+    _In_ PCVOID ResourceData,
+    _In_ ULONG ResourceLen,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %lx %p %lu %lx", prdResDes, rdResDes, ResourceID, ResourceData,
+    TRACE("CM_Modify_Res_Des(%p %p %lx %p %lu %lx)\n",
+          prdResDes, rdResDes, ResourceID, ResourceData,
           ResourceLen, ulFlags);
     return CM_Modify_Res_Des_Ex(prdResDes, rdResDes, ResourceID, ResourceData,
                                 ResourceLen, ulFlags, NULL);
@@ -4588,11 +4754,19 @@ CONFIGRET WINAPI CM_Modify_Res_Des(
 /***********************************************************************
  * CM_Modify_Res_Des_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Modify_Res_Des_Ex(
-    PRES_DES prdResDes, RES_DES rdResDes, RESOURCEID ResourceID, PCVOID ResourceData,
-    ULONG ResourceLen, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Modify_Res_Des_Ex(
+    _Out_ PRES_DES prdResDes,
+    _In_ RES_DES rdResDes,
+    _In_ RESOURCEID ResourceID,
+    _In_ PCVOID ResourceData,
+    _In_ ULONG ResourceLen,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
-    FIXME("%p %p %lx %p %lu %lx %lx", prdResDes, rdResDes, ResourceID, ResourceData,
+    FIXME("CM_Modify_Res_Des_Ex(%p %p %lx %p %lu %lx %lx)\n",
+          prdResDes, rdResDes, ResourceID, ResourceData,
           ResourceLen, ulFlags, hMachine);
     return CR_CALL_NOT_IMPLEMENTED;
 }
@@ -4601,10 +4775,15 @@ CONFIGRET WINAPI CM_Modify_Res_Des_Ex(
 /***********************************************************************
  * CM_Move_DevNode [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Move_DevNode(
-    DEVINST dnFromDevInst, DEVINST dnToDevInst, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Move_DevNode(
+    _In_ DEVINST dnFromDevInst,
+    _In_ DEVINST dnToDevInst,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %lx %lx\n", dnFromDevInst, dnToDevInst, ulFlags);
+    TRACE("CM_Move_DevNode(%lx %lx %lx)\n",
+          dnFromDevInst, dnToDevInst, ulFlags);
     return CM_Move_DevNode_Ex(dnFromDevInst, dnToDevInst, ulFlags, NULL);
 }
 
@@ -4612,9 +4791,13 @@ CONFIGRET WINAPI CM_Move_DevNode(
 /***********************************************************************
  * CM_Move_DevNode_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Move_DevNode_Ex(
-    DEVINST dnFromDevInst, DEVINST dnToDevInst, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Move_DevNode_Ex(
+    _In_ DEVINST dnFromDevInst,
+    _In_ DEVINST dnToDevInst,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
@@ -4622,7 +4805,7 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
     LPWSTR lpToDevInst;
     CONFIGRET ret;
 
-    FIXME("%lx %lx %lx %lx\n",
+    FIXME("CM_Move_DevNode_Ex(%lx %lx %lx %lx)\n",
           dnFromDevInst, dnToDevInst, ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())
@@ -4696,11 +4879,17 @@ CM_Next_Range(
 /***********************************************************************
  * CM_Open_Class_KeyA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Open_Class_KeyA(
-    LPGUID pClassGuid, LPCSTR pszClassName, REGSAM samDesired,
-    REGDISPOSITION Disposition, PHKEY phkClass, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Open_Class_KeyA(
+    _In_opt_ LPGUID pClassGuid,
+    _In_opt_ LPCSTR pszClassName,
+    _In_ REGSAM samDesired,
+    _In_ REGDISPOSITION Disposition,
+    _Out_ PHKEY phkClass,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %lx %lx %p %lx\n",
+    TRACE("CM_Open_Class_KeyA(%p %s %lx %lx %p %lx)\n",
           debugstr_guid(pClassGuid), pszClassName,
           samDesired, Disposition, phkClass, ulFlags);
 
@@ -4712,11 +4901,17 @@ CONFIGRET WINAPI CM_Open_Class_KeyA(
 /***********************************************************************
  * CM_Open_Class_KeyW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Open_Class_KeyW(
-    LPGUID pClassGuid, LPCWSTR pszClassName, REGSAM samDesired,
-    REGDISPOSITION Disposition, PHKEY phkClass, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Open_Class_KeyW(
+    _In_opt_ LPGUID pClassGuid,
+    _In_opt_ LPCWSTR pszClassName,
+    _In_ REGSAM samDesired,
+    _In_ REGDISPOSITION Disposition,
+    _Out_ PHKEY phkClass,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %lx %lx %p %lx\n",
+    TRACE("CM_Open_Class_KeyW%p %s %lx %lx %p %lx)\n",
           debugstr_guid(pClassGuid), debugstr_w(pszClassName),
           samDesired, Disposition, phkClass, ulFlags);
 
@@ -4728,15 +4923,21 @@ CONFIGRET WINAPI CM_Open_Class_KeyW(
 /***********************************************************************
  * CM_Open_Class_Key_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Open_Class_Key_ExA(
-    LPGUID pClassGuid, LPCSTR pszClassName, REGSAM samDesired,
-    REGDISPOSITION Disposition, PHKEY phkClass, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Open_Class_Key_ExA(
+    _In_opt_ LPGUID pClassGuid,
+    _In_opt_ LPCSTR pszClassName,
+    _In_ REGSAM samDesired,
+    _In_ REGDISPOSITION Disposition,
+    _Out_ PHKEY phkClass,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     LPWSTR pszClassNameW = NULL;
     CONFIGRET ret;
 
-    TRACE("%p %s %lx %lx %p %lx %lx\n",
+    TRACE("CM_Open_Class_Key_ExA(%p %s %lx %lx %p %lx %lx)\n",
           debugstr_guid(pClassGuid), pszClassName,
           samDesired, Disposition, phkClass, ulFlags, hMachine);
 
@@ -4759,10 +4960,16 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExA(
 /***********************************************************************
  * CM_Open_Class_Key_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Open_Class_Key_ExW(
-    LPGUID pClassGuid, LPCWSTR pszClassName, REGSAM samDesired,
-    REGDISPOSITION Disposition, PHKEY phkClass, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Open_Class_Key_ExW(
+    _In_opt_ LPGUID pClassGuid,
+    _In_opt_ LPCWSTR pszClassName,
+    _In_ REGSAM samDesired,
+    _In_ REGDISPOSITION Disposition,
+    _Out_ PHKEY phkClass,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     WCHAR szKeyName[MAX_PATH];
     LPWSTR lpGuidString;
@@ -4770,7 +4977,7 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExW(
     DWORD dwError;
     HKEY hKey;
 
-    TRACE("%p %s %lx %lx %p %lx %lx\n",
+    TRACE("CM_Open_Class_Key_ExW(%p %s %lx %lx %p %lx %lx)\n",
           debugstr_guid(pClassGuid), debugstr_w(pszClassName),
           samDesired, Disposition, phkClass, ulFlags, hMachine);
 
@@ -4795,9 +5002,10 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExW(
     }
     else
     {
-       if (RegConnectRegistryW(((PMACHINE_INFO)hMachine)->szMachineName,
-                               HKEY_LOCAL_MACHINE, &hKey))
-           return CR_REGISTRY_ERROR;
+        if (RegConnectRegistryW(((PMACHINE_INFO)hMachine)->szMachineName,
+                                HKEY_LOCAL_MACHINE,
+                                &hKey))
+            return CR_REGISTRY_ERROR;
     }
 
     if (ulFlags & CM_OPEN_CLASS_KEY_INTERFACE)
@@ -4855,12 +5063,18 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExW(
 /***********************************************************************
  * CM_Open_DevNode_Key [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Open_DevNode_Key(
-    DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile,
-    REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Open_DevNode_Key(
+    _In_ DEVINST dnDevNode,
+    _In_ REGSAM samDesired,
+    _In_ ULONG ulHardwareProfile,
+    _In_ REGDISPOSITION Disposition,
+    _Out_ PHKEY phkDevice,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %lx %lu %lx %p %lx\n", dnDevNode, samDesired,
-          ulHardwareProfile, Disposition, phkDevice, ulFlags);
+    TRACE("CM_Open_DevNode_Key(%lx %lx %lu %lx %p %lx)\n",
+          dnDevNode, samDesired, ulHardwareProfile, Disposition, phkDevice, ulFlags);
     return CM_Open_DevNode_Key_Ex(dnDevNode, samDesired, ulHardwareProfile,
                                   Disposition, phkDevice, ulFlags, NULL);
 }
@@ -4869,15 +5083,148 @@ CONFIGRET WINAPI CM_Open_DevNode_Key(
 /***********************************************************************
  * CM_Open_DevNode_Key_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Open_DevNode_Key_Ex(
-    DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile,
-    REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Open_DevNode_Key_Ex(
+    _In_ DEVINST dnDevNode,
+    _In_ REGSAM samDesired,
+    _In_ ULONG ulHardwareProfile,
+    _In_ REGDISPOSITION Disposition,
+    _Out_ PHKEY phkDevice,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
-    FIXME("%lx %lx %lu %lx %p %lx %lx\n", dnDevNode, samDesired,
-          ulHardwareProfile, Disposition, phkDevice, ulFlags, hMachine);
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR pszDevInst, pszKeyPath = NULL, pszInstancePath = NULL;
+    LONG lError;
+    DWORD dwDisposition;
+    HKEY hRootKey = NULL;
+    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    FIXME("CM_Open_DevNode_Key_Ex(%lx %lx %lu %lx %p %lx %lx)\n",
+          dnDevNode, samDesired, ulHardwareProfile, Disposition, phkDevice, ulFlags, hMachine);
+
+    if (phkDevice == NULL)
+        return CR_INVALID_POINTER;
+
+    *phkDevice = NULL;
+
+    if (dnDevNode == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags & ~CM_REGISTRY_BITS)
+        return CR_INVALID_FLAG;
+
+    if (Disposition & ~RegDisposition_Bits)
+        return CR_INVALID_DATA;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    pszDevInst = pSetupStringTableStringFromId(StringTable, dnDevNode);
+    if (pszDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    TRACE("pszDevInst: %S\n", pszDevInst);
+
+    pszKeyPath = MyMalloc(512 * sizeof(WCHAR));
+    if (pszKeyPath == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    pszInstancePath = MyMalloc(512 * sizeof(WCHAR));
+    if (pszInstancePath == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    ret = GetDeviceInstanceKeyPath(BindingHandle,
+                                   pszDevInst,
+                                   pszKeyPath,
+                                   pszInstancePath,
+                                   ulHardwareProfile,
+                                   ulFlags);
+    if (ret != CR_SUCCESS)
+        goto done;
+
+    TRACE("pszKeyPath: %S\n", pszKeyPath);
+    TRACE("pszInstancePath: %S\n", pszInstancePath);
+
+    wcscat(pszKeyPath, L"\\");
+    wcscat(pszKeyPath, pszInstancePath);
+
+    TRACE("pszKeyPath: %S\n", pszKeyPath);
+
+    if (hMachine == NULL)
+    {
+        hRootKey = HKEY_LOCAL_MACHINE;
+    }
+    else
+    {
+        if (RegConnectRegistryW(((PMACHINE_INFO)hMachine)->szMachineName,
+                                HKEY_LOCAL_MACHINE,
+                                &hRootKey))
+        {
+            ret = CR_REGISTRY_ERROR;
+            goto done;
+        }
+    }
+
+    if (Disposition == RegDisposition_OpenAlways)
+    {
+        lError = RegCreateKeyExW(hRootKey,
+                                 pszKeyPath,
+                                 0,
+                                 NULL,
+                                 0,
+                                 samDesired,
+                                 NULL,
+                                 phkDevice,
+                                 &dwDisposition);
+    }
+    else
+    {
+        lError = RegOpenKeyExW(hRootKey,
+                               pszKeyPath,
+                               0,
+                               samDesired,
+                               phkDevice);
+    }
+
+    if (lError != ERROR_SUCCESS)
+    {
+        *phkDevice = NULL;
+        ret = CR_NO_SUCH_REGISTRY_KEY;
+    }
+
+done:
+    if ((hRootKey != NULL) && (hRootKey != HKEY_LOCAL_MACHINE))
+        RegCloseKey(hRootKey);
+
+    if (pszInstancePath != NULL)
+        MyFree(pszInstancePath);
+
+    if (pszKeyPath != NULL)
+        MyFree(pszKeyPath);
+
+    return ret;
 }
 
 
