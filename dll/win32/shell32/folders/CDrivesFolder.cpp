@@ -73,7 +73,8 @@ static BOOL TryToLockDrive(HANDLE hDrive, DWORD dwRetryCount, DWORD dwSleep)
     return FALSE;
 }
 
-static BOOL DoEject(const WCHAR *physical, UINT nDriveType, INT& nStringID)
+// NOTE: See also https://support.microsoft.com/en-us/help/165721/how-to-ejecting-removable-media-in-windows-nt-windows-2000-windows-xp
+static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
 {
     DWORD dwAccessMode, dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
     if (nDriveType == DRIVE_REMOVABLE)
@@ -89,6 +90,7 @@ static BOOL DoEject(const WCHAR *physical, UINT nDriveType, INT& nStringID)
     DWORD dwBytesReturned, dwError = NO_ERROR;
     do
     {
+        PREVENT_MEDIA_REMOVAL removal;
         bResult = TryToLockDrive(hDrive, 3, 250);
         if (!bResult)
         {
@@ -100,6 +102,15 @@ static BOOL DoEject(const WCHAR *physical, UINT nDriveType, INT& nStringID)
         if (!bResult)
         {
             nStringID = IDS_CANTDISMOUNTVOLUME; /* Unable to dismount volume */
+            dwError = GetLastError();
+            break;
+        }
+        removal.PreventMediaRemoval = FALSE;
+        bResult = DeviceIoControl(hDrive, IOCTL_STORAGE_MEDIA_REMOVAL, &removal, sizeof(removal), NULL,
+                                  0, &dwBytesReturned, NULL);
+        if (!bResult)
+        {
+            nStringID = IDS_CANTEJECTMEDIA; /* Unable to eject media */
             dwError = GetLastError();
             break;
         }
@@ -117,7 +128,6 @@ static BOOL DoEject(const WCHAR *physical, UINT nDriveType, INT& nStringID)
     return bResult;
 }
 
-// NOTE: See also https://support.microsoft.com/en-us/help/165721/how-to-ejecting-removable-media-in-windows-nt-windows-2000-windows-xp
 HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                                            HWND         hwnd,
                                            IDataObject  *pdtobj,
@@ -212,7 +222,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
             wsprintfW(physical, _T("\\\\.\\%c:"), szDrive[0]);
 
             INT nStringID;
-            if (DoEject(physical, nDriveType, nStringID))
+            if (DoEjectDrive(physical, nDriveType, nStringID))
             {
                 SHChangeNotify(SHCNE_MEDIAREMOVED, SHCNF_PATHW | SHCNF_FLUSHNOWAIT, wszBuf, NULL);
             }
