@@ -683,6 +683,7 @@ BEGIN
     IDS_FORMATDRIVE "Formatar..."
     IDS_RENAME "Renomear"
     IDS_PASTE "Inserir"
+    IDS_EJECT "Eject"
 
     IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Unable to create folder"
@@ -775,6 +776,10 @@ BEGIN
     IDS_PICK_ICON_TITLE "Escolhe Ícone"
     IDS_PICK_ICON_FILTER "Arquivos de Ícone (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Arquivos Executáveis (*.exe)\0*.exe\0Todos os arquivos (*.*)\0*.*\0"
+
+    IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
+    IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
 
     IDS_DIRECTORY "Pasta"
     IDS_BAT_FILE "ReactOS Batch File"

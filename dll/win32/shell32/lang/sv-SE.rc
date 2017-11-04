@@ -683,6 +683,7 @@ BEGIN
     IDS_FORMATDRIVE "Formatera..."
     IDS_RENAME "Byt namn"
     IDS_PASTE "Klistra in"
+    IDS_EJECT "Eject"
 
     IDS_CREATEFOLDER_DENIED "Kunde inte skapa mappen '%1'"
     IDS_CREATEFOLDER_CAPTION "Kunde inte skapa mapp"
@@ -775,6 +776,10 @@ BEGIN
     IDS_PICK_ICON_TITLE "Välj ikon"
     IDS_PICK_ICON_FILTER "Ikoner (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Alla filer (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Körbara filer (*.exe)\0*.exe\0Alla filer (*.*)\0*.*\0"
+
+    IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
+    IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
 
     IDS_DIRECTORY "Mapp"
     IDS_BAT_FILE "ReactOS Batch-fil"

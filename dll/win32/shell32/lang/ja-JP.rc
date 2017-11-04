@@ -680,6 +680,7 @@ BEGIN
     IDS_FORMATDRIVE "フォーマット..."
     IDS_RENAME "名前の変更"
     IDS_PASTE "挿入"
+    IDS_EJECT "取り出し"
 
     IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
     IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"
@@ -772,6 +773,10 @@ BEGIN
     IDS_PICK_ICON_TITLE "アイコンの選択"
     IDS_PICK_ICON_FILTER "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "実行可能 ファイル (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
+    IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
+    IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
 
     IDS_DIRECTORY "フォルダ"
     IDS_BAT_FILE "ReactOS バッチ ファイル"
