@@ -522,14 +522,14 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     // Reserve system PTEs for zeroing PTEs and clear them
     //
-    MiFirstReservedZeroingPte = MiReserveSystemPtes(MI_ZERO_PTES,
+    MiFirstReservedZeroingPte = MiReserveSystemPtes(MI_ZERO_PTES + 1,
                                                     SystemPteSpace);
-    RtlZeroMemory(MiFirstReservedZeroingPte, MI_ZERO_PTES * sizeof(MMPTE));
+    RtlZeroMemory(MiFirstReservedZeroingPte, (MI_ZERO_PTES + 1) * sizeof(MMPTE));
 
     //
     // Set the counter to maximum to boot with
     //
-    MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
+    MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES;
 
     /* Lock PFN database */
     OldIrql = MiAcquirePfnLock();

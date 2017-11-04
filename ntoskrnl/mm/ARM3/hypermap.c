@@ -122,7 +122,7 @@ MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
     //
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT(NumberOfPages != 0);
-    ASSERT(NumberOfPages <= (MI_ZERO_PTES - 1));
+    ASSERT(NumberOfPages <= MI_ZERO_PTES);
 
     //
     // Pick the first zeroing PTE
@@ -138,7 +138,7 @@ MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
         //
         // Reset the PTEs
         //
-        Offset = MI_ZERO_PTES - 1;
+        Offset = MI_ZERO_PTES;
         PointerPte->u.Hard.PageFrameNumber = Offset;
         KeFlushProcessTb();
     }
@@ -192,7 +192,7 @@ MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
     //
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT (NumberOfPages != 0);
-    ASSERT (NumberOfPages <= (MI_ZERO_PTES - 1));
+    ASSERT(NumberOfPages <= MI_ZERO_PTES);
 
     //
     // Get the first PTE for the mapped zero VA

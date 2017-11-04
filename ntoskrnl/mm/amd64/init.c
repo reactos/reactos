@@ -382,11 +382,12 @@ MiBuildSystemPteSpace(VOID)
     MiInitializeSystemPtes(PointerPte, MmNumberOfSystemPtes, SystemPteSpace);
 
     /* Reserve system PTEs for zeroing PTEs and clear them */
-    MiFirstReservedZeroingPte = MiReserveSystemPtes(MI_ZERO_PTES, SystemPteSpace);
-    RtlZeroMemory(MiFirstReservedZeroingPte, MI_ZERO_PTES * sizeof(MMPTE));
+    MiFirstReservedZeroingPte = MiReserveSystemPtes(MI_ZERO_PTES + 1,
+                                                    SystemPteSpace);
+    RtlZeroMemory(MiFirstReservedZeroingPte, (MI_ZERO_PTES + 1) * sizeof(MMPTE));
 
     /* Set the counter to maximum */
-    MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
+    MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES;
 }
 
 static
