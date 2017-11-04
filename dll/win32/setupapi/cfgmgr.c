@@ -5002,9 +5002,10 @@ CM_Open_Class_Key_ExW(
     }
     else
     {
-       if (RegConnectRegistryW(((PMACHINE_INFO)hMachine)->szMachineName,
-                               HKEY_LOCAL_MACHINE, &hKey))
-           return CR_REGISTRY_ERROR;
+        if (RegConnectRegistryW(((PMACHINE_INFO)hMachine)->szMachineName,
+                                HKEY_LOCAL_MACHINE,
+                                &hKey))
+            return CR_REGISTRY_ERROR;
     }
 
     if (ulFlags & CM_OPEN_CLASS_KEY_INTERFACE)
@@ -5097,6 +5098,8 @@ CM_Open_DevNode_Key_Ex(
     HSTRING_TABLE StringTable = NULL;
     LPWSTR pszDevInst, pszKeyPath = NULL, pszInstancePath = NULL;
     LONG lError;
+    DWORD dwDisposition;
+    HKEY hRootKey = NULL;
     CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
 
     FIXME("CM_Open_DevNode_Key_Ex(%lx %lx %lu %lx %p %lx %lx)\n",
@@ -5138,14 +5141,14 @@ CM_Open_DevNode_Key_Ex(
 
     TRACE("pszDevInst: %S\n", pszDevInst);
 
-    pszKeyPath = MyMalloc(1024);
+    pszKeyPath = MyMalloc(512 * sizeof(WCHAR));
     if (pszKeyPath == NULL)
     {
         ret = CR_OUT_OF_MEMORY;
         goto done;
     }
 
-    pszInstancePath = MyMalloc(1024);
+    pszInstancePath = MyMalloc(512 * sizeof(WCHAR));
     if (pszInstancePath == NULL)
     {
         ret = CR_OUT_OF_MEMORY;
@@ -5169,14 +5172,42 @@ CM_Open_DevNode_Key_Ex(
 
     TRACE("pszKeyPath: %S\n", pszKeyPath);
 
-    // FIXME: Disposition
-    // FIXME: hMachine
+    if (hMachine == NULL)
+    {
+        hRootKey = HKEY_LOCAL_MACHINE;
+    }
+    else
+    {
+        if (RegConnectRegistryW(((PMACHINE_INFO)hMachine)->szMachineName,
+                                HKEY_LOCAL_MACHINE,
+                                &hRootKey))
+        {
+            ret = CR_REGISTRY_ERROR;
+            goto done;
+        }
+    }
 
-    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                           pszKeyPath,
-                           0,
-                           samDesired,
-                           phkDevice);
+    if (Disposition == RegDisposition_OpenAlways)
+    {
+        lError = RegCreateKeyExW(hRootKey,
+                                 pszKeyPath,
+                                 0,
+                                 NULL,
+                                 0,
+                                 samDesired,
+                                 NULL,
+                                 phkDevice,
+                                 &dwDisposition);
+    }
+    else
+    {
+        lError = RegOpenKeyExW(hRootKey,
+                               pszKeyPath,
+                               0,
+                               samDesired,
+                               phkDevice);
+    }
+
     if (lError != ERROR_SUCCESS)
     {
         *phkDevice = NULL;
@@ -5184,6 +5215,9 @@ CM_Open_DevNode_Key_Ex(
     }
 
 done:
+    if ((hRootKey != NULL) && (hRootKey != HKEY_LOCAL_MACHINE))
+        RegCloseKey(hRootKey);
+
     if (pszInstancePath != NULL)
         MyFree(pszInstancePath);
 
