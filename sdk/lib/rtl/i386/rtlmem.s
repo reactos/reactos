@@ -14,6 +14,7 @@ PUBLIC _RtlCompareMemory@12
 PUBLIC _RtlCompareMemoryUlong@12
 PUBLIC _RtlFillMemory@12
 PUBLIC _RtlFillMemoryUlong@12
+PUBLIC _RtlFillMemoryUlonglong@16
 PUBLIC _RtlMoveMemory@12
 PUBLIC _RtlZeroMemory@8
 
