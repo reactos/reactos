@@ -381,6 +381,12 @@ DWORD FASTCALL IntGetWindowContextHelpId( PWND pWnd )
    return HelpId;
 }
 
+
+VOID
+FASTCALL
+IntRemoveTrackMouseEvent(
+    PDESKTOP pDesk);
+
 /***********************************************************************
  *           IntSendDestroyMsg
  */
@@ -421,6 +427,12 @@ static void IntSendDestroyMsg(HWND hWnd)
       if (ti->MessageQueue->CaretInfo.hWnd == UserHMGetHandle(Window))
       {
          co_IntDestroyCaret(ti);
+      }
+
+      /* If the window being destroyed is currently tracked... */
+      if (ti->rpdesk->spwndTrack == Window)
+      {
+          IntRemoveTrackMouseEvent(ti->rpdesk);
       }
    }
 
