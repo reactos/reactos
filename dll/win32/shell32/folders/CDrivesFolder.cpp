@@ -58,6 +58,66 @@ static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
 *   IShellFolder implementation
 */
 
+static BOOL TryToLockDrive(HANDLE hDrive, DWORD dwRetryCount, DWORD dwSleep)
+{
+    DWORD dwError, dwBytesReturned;
+    for (DWORD i = 0; i < dwRetryCount; ++i)
+    {
+        if (DeviceIoControl(hDrive, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &dwBytesReturned, NULL))
+            return TRUE;
+
+        dwError = GetLastError();
+        Sleep(dwSleep);
+    }
+    SetLastError(dwError);
+    return FALSE;
+}
+
+static BOOL DoEject(const WCHAR *physical, UINT nDriveType, INT& nStringID)
+{
+    DWORD dwAccessMode, dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    if (nDriveType == DRIVE_REMOVABLE)
+        dwAccessMode = GENERIC_READ | GENERIC_WRITE;
+    else if (nDriveType == DRIVE_CDROM)
+        dwAccessMode = GENERIC_READ;
+
+    HANDLE hDrive = CreateFile(physical, dwAccessMode, dwShareMode, 0, OPEN_EXISTING, 0, NULL);
+    if (hDrive == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    BOOL bResult;
+    DWORD dwBytesReturned, dwError = NO_ERROR;
+    do
+    {
+        bResult = TryToLockDrive(hDrive, 3, 250);
+        if (!bResult)
+        {
+            nStringID = IDS_CANTLOCKVOLUME; /* Unable to lock volume */
+            dwError = GetLastError();
+            break;
+        }
+        bResult = DeviceIoControl(hDrive, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
+        if (!bResult)
+        {
+            nStringID = IDS_CANTDISMOUNTVOLUME; /* Unable to dismount volume */
+            dwError = GetLastError();
+            break;
+        }
+        bResult = DeviceIoControl(hDrive, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
+        if (!bResult)
+        {
+            nStringID = IDS_CANTEJECTMEDIA; /* Unable to eject media */
+            dwError = GetLastError();
+            break;
+        }
+    } while (0);
+    CloseHandle(hDrive);
+
+    SetLastError(dwError);
+    return bResult;
+}
+
+// NOTE: See also https://support.microsoft.com/en-us/help/165721/how-to-ejecting-removable-media-in-windows-nt-windows-2000-windows-xp
 HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                                            HWND         hwnd,
                                            IDataObject  *pdtobj,
@@ -72,6 +132,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
     PUITEMID_CHILD *apidl;
     UINT cidl;
     UINT nDriveType;
+    DWORD dwFlags;
     HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -85,26 +146,41 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         return E_FAIL;
     }
     nDriveType = GetDriveTypeA(szDrive);
+    GetVolumeInformationA(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
+
+    static UINT s_idCmdFormat = 0x7FFF;
+    static UINT s_idCmdEject = 0x7FFF;
+    static UINT s_idCmdDisconnect = 0x7FFF;
 
     if (uMsg == DFM_MERGECONTEXTMENU)
     {
         QCMINFO *pqcminfo = (QCMINFO *)lParam;
-        DWORD dwFlags;
 
-        if (GetVolumeInformationA(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0))
+        s_idCmdFormat = 0x7FFF;
+        s_idCmdEject = 0x7FFF;
+        s_idCmdDisconnect = 0x7FFF;
+
+        UINT idCmdFirst = pqcminfo->idCmdFirst;
+        if (!(dwFlags & FILE_READ_ONLY_VOLUME) && nDriveType != DRIVE_REMOTE)
         {
-            if (!(dwFlags & FILE_READ_ONLY_VOLUME) && nDriveType != DRIVE_REMOTE)
-            {
-                /* add separator and Format */
-                _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-                _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
-            }
-            if (nDriveType == DRIVE_CDROM || nDriveType == DRIVE_REMOTE)
-            {
-                /* add separator and Eject */
-                _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-                _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_EJECT), MFS_ENABLED);
-            }
+            /* add separator and Format */
+            s_idCmdFormat = pqcminfo->idCmdFirst - idCmdFirst;
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
+        }
+        if (nDriveType == DRIVE_REMOVABLE || nDriveType == DRIVE_CDROM)
+        {
+            /* add separator and Eject */
+            s_idCmdEject = pqcminfo->idCmdFirst - idCmdFirst;
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_EJECT), MFS_ENABLED);
+        }
+        if (nDriveType == DRIVE_REMOTE)
+        {
+            /* add separator and Disconnect */
+            s_idCmdDisconnect = pqcminfo->idCmdFirst - idCmdFirst;
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_DISCONNECT), MFS_ENABLED);
         }
     }
     else if (uMsg == DFM_INVOKECOMMAND)
@@ -118,64 +194,44 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
             if (!SH_ShowDriveProperties(wszBuf, pidlFolder, apidl))
                 hr = E_FAIL;
         }
-        else
+        else if (wParam == s_idCmdFormat && s_idCmdFormat != 0x7FFF)
         {
-            if (nDriveType == DRIVE_CDROM || nDriveType == DRIVE_REMOTE)
+            /* do format */
+            DWORD dwRet = SHFormatDrive(hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
+            switch (dwRet)
             {
-                /* Do eject */
-                WCHAR physical[10];
-                wsprintfW(physical, _T("\\\\.\\%c:"), szDrive[0]);
-                HANDLE hDrive = CreateFile(physical, GENERIC_READ | GENERIC_WRITE,
-                                           FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, NULL);
-                if (hDrive != INVALID_HANDLE_VALUE)
-                {
-                    BOOL bResult;
-                    INT nStrID = 0;
-                    DWORD dwError = NO_ERROR;
-                    do
-                    {
-                        bResult = DeviceIoControl(hDrive, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, NULL, NULL);
-                        if (!bResult)
-                        {
-                            nStrID = IDS_CANTLOCKVOLUME; /* Unable to lock volume */
-                            dwError = GetLastError();
-                            break;
-                        }
-                        bResult = DeviceIoControl(hDrive, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, NULL, NULL);
-                        if (!bResult)
-                        {
-                            nStrID = IDS_CANTDISMOUNTVOLUME; /* Unable to dismount volume */
-                            dwError = GetLastError();
-                            break;
-                        }
-                        bResult = DeviceIoControl(hDrive, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, NULL, NULL);
-                        if (!bResult)
-                        {
-                            nStrID = IDS_CANTEJECTMEDIA; /* Unable to eject media */
-                            dwError = GetLastError();
-                            break;
-                        }
-                    } while (0);
-                    CloseHandle(hDrive);
+            case SHFMT_ERROR: case SHFMT_CANCEL: case SHFMT_NOFORMAT:
+                hr = E_FAIL;
+                break;
+            }
+        }
+        else if (wParam == s_idCmdEject && s_idCmdEject != 0x7FFF)
+        {
+            /* do eject */
+            WCHAR physical[10];
+            wsprintfW(physical, _T("\\\\.\\%c:"), szDrive[0]);
 
-                    if (bResult)
-                    {
-                        SHChangeNotify(SHCNE_MEDIAREMOVED, SHCNF_PATHW | SHCNF_FLUSHNOWAIT, wszBuf, NULL);
-                    }
-                    else
-                    {
-                        WCHAR szFormat[128], szMessage[128];
-                        LoadStringW(shell32_hInstance, nStrID, szFormat, _countof(szFormat));
-                        wsprintfW(szMessage, szFormat, dwError);
-                        MessageBoxW(hwnd, szMessage, NULL, MB_ICONERROR);
-                    }
-                }
+            INT nStringID;
+            if (DoEject(physical, nDriveType, nStringID))
+            {
+                SHChangeNotify(SHCNE_MEDIAREMOVED, SHCNF_PATHW | SHCNF_FLUSHNOWAIT, wszBuf, NULL);
             }
             else
             {
-                /* do format */
-                SHFormatDrive(hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
+                DWORD dwError = GetLastError();
+
+                /* show error message */
+                WCHAR szFormat[128], szMessage[128];
+                LoadStringW(shell32_hInstance, nStringID, szFormat, _countof(szFormat));
+                wsprintfW(szMessage, szFormat, dwError);
+                MessageBoxW(hwnd, szMessage, NULL, MB_ICONERROR);
             }
+        }
+        else if (wParam == s_idCmdDisconnect && s_idCmdDisconnect != 0x7FFF)
+        {
+            /* do disconnect */
+            WNetCancelConnection2W(wszBuf, 0, FALSE);
+            SHChangeNotify(SHCNE_DRIVEREMOVED, SHCNF_PATHW | SHCNF_FLUSHNOWAIT, wszBuf, NULL);
         }
     }
 

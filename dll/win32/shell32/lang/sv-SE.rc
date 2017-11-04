@@ -684,6 +684,7 @@ BEGIN
     IDS_RENAME "Byt namn"
     IDS_PASTE "Klistra in"
     IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED "Kunde inte skapa mappen '%1'"
     IDS_CREATEFOLDER_CAPTION "Kunde inte skapa mapp"

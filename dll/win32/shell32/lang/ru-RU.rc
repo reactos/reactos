@@ -686,6 +686,7 @@ BEGIN
     IDS_RENAME "Переименовать"
     IDS_PASTE "Вставить"
     IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED "Невозможно создать папку '%1'"
     IDS_CREATEFOLDER_CAPTION "Невозможно создать папку"

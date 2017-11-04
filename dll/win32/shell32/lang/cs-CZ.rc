@@ -690,6 +690,7 @@ BEGIN
     IDS_RENAME "Přejmenovat"
     IDS_PASTE "Vložit"
     IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED "Složku '%1' nebylo možné vytvořit"
     IDS_CREATEFOLDER_CAPTION "Složku nebylo možné vytvořit"

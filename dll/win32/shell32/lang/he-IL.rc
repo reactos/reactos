@@ -684,6 +684,7 @@ BEGIN
     IDS_RENAME "שנה שם"
     IDS_PASTE "הכנס"
     IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Unable to create folder"

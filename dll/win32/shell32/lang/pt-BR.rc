@@ -684,6 +684,7 @@ BEGIN
     IDS_RENAME "Renomear"
     IDS_PASTE "Inserir"
     IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Unable to create folder"

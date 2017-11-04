@@ -210,6 +210,7 @@
 #define IDS_FILEOOP_PREFLIGHT    338
 
 #define IDS_EJECT                339
+#define IDS_DISCONNECT           340
 
 #define IDS_MENU_EMPTY           34561
 

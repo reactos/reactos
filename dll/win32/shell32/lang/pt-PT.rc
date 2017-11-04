@@ -684,6 +684,7 @@ BEGIN
     IDS_RENAME "Renaomear"
     IDS_PASTE "Inserir"
     IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED "Impossivel de Criar Pasta '%1'"
     IDS_CREATEFOLDER_CAPTION "Impossivel de Criar Pasta"

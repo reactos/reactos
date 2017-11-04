@@ -686,6 +686,7 @@ BEGIN
     IDS_RENAME "Rede&numește"
     IDS_PASTE "&Lipește"
     IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED "Nu poate fi creat un dosar cu numele „%1”"
     IDS_CREATEFOLDER_CAPTION "Nu poate fi creat dosar"

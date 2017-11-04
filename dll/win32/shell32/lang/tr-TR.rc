@@ -686,6 +686,7 @@ BEGIN
     IDS_RENAME "Yeniden Adlandır"
     IDS_PASTE "Yapıştır"
     IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED """%1"" dizini oluşturulamıyor."
     IDS_CREATEFOLDER_CAPTION "Dizin Oluşturulamıyor"
