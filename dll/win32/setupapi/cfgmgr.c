@@ -164,6 +164,129 @@ GetRegistryPropertyType(
 }
 
 
+static
+VOID
+SplitDeviceInstanceId(
+    _In_ PWSTR pszDeviceInstanceId,
+    _Out_ PWSTR pszDeviceId,
+    _Out_ PWSTR pszInstanceId)
+{
+    PWCHAR ptr;
+
+    wcscpy(pszDeviceId, pszDeviceInstanceId);
+
+    ptr = wcschr(pszDeviceId, L'\\');
+    if (ptr != NULL)
+    {
+        *ptr = UNICODE_NULL;
+        ptr++;
+
+        wcscpy(pszInstanceId, ptr);
+    }
+    else
+    {
+        *pszInstanceId = UNICODE_NULL;
+    }
+}
+
+
+static
+CONFIGRET
+GetDeviceInstanceKeyPath(
+    _In_ RPC_BINDING_HANDLE BindingHandle,
+    _In_ PWSTR pszDeviceInst,
+    _Out_ PWSTR pszKeyPath,
+    _Out_ PWSTR pszInstancePath,
+    _In_ ULONG ulHardwareProfile,
+    _In_ ULONG ulFlags)
+{
+    PWSTR pszBuffer = NULL;
+    ULONG ulType = 0;
+    ULONG ulTransferLength, ulLength;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("GetDeviceInstanceKeyPath()\n");
+
+    if (ulFlags & CM_REGISTRY_SOFTWARE)
+    {
+        /* Software Key Path */
+        ret = CR_CALL_NOT_IMPLEMENTED;
+    }
+    else
+    {
+        /* Hardware Key Path */
+
+        ulTransferLength = 300 * sizeof(WCHAR);
+        ulLength = 300 * sizeof(WCHAR);
+
+        pszBuffer = MyMalloc(ulTransferLength);
+        if (pszBuffer == NULL)
+        {
+            ERR("MyMalloc() failed\n");
+            ret = CR_OUT_OF_MEMORY;
+            goto done;
+        }
+
+        ret = PNP_GetDeviceRegProp(BindingHandle,
+                                   pszDeviceInst,
+                                   CM_DRP_DRIVER,
+                                   &ulType,
+                                   (PVOID)pszBuffer,
+                                   &ulTransferLength,
+                                   &ulLength,
+                                   0);
+        if (ret != CR_SUCCESS)
+        {
+            ERR("PNP_GetDeviceRegProp() failed (Error %lu)\n", ret);
+            goto done;
+        }
+
+        TRACE("szBuffer: %S\n", pszBuffer);
+
+        SplitDeviceInstanceId(pszBuffer,
+                              pszBuffer,
+                              pszInstancePath);
+
+        TRACE("szBuffer: %S\n", pszBuffer);
+
+        if (ulFlags & CM_REGISTRY_CONFIG)
+        {
+            if (ulHardwareProfile == 0)
+            {
+                wsprintfW(pszKeyPath,
+                          L"%s\\%s\\%s\\%s",
+                          L"System\\CurrentControlSet\\Hardware Profiles",
+                          L"Current",
+                          L"System\\CurrentControlSet\\Control\\Class",
+                          pszBuffer);
+            }
+            else
+            {
+                wsprintfW(pszKeyPath,
+                          L"%s\\%04lu\\%s\\%s",
+                          L"System\\CurrentControlSet\\Hardware Profiles",
+                          ulHardwareProfile,
+                          L"System\\CurrentControlSet\\Control\\Class",
+                          pszBuffer);
+            }
+        }
+        else
+        {
+            wsprintfW(pszKeyPath,
+                      L"%s\\%s",
+                      L"System\\CurrentControlSet\\Control\\Class",
+                      pszBuffer);
+        }
+    }
+
+done:
+    if (pszBuffer != NULL)
+        MyFree(pszBuffer);
+
+    return ret;
+}
+
+
 /***********************************************************************
  * CMP_GetBlockedDriverInfo [SETUPAPI.@]
  */
@@ -4855,12 +4978,18 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExW(
 /***********************************************************************
  * CM_Open_DevNode_Key [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Open_DevNode_Key(
-    DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile,
-    REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Open_DevNode_Key(
+    _In_ DEVINST dnDevNode,
+    _In_ REGSAM samDesired,
+    _In_ ULONG ulHardwareProfile,
+    _In_ REGDISPOSITION Disposition,
+    _Out_ PHKEY phkDevice,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %lx %lu %lx %p %lx\n", dnDevNode, samDesired,
-          ulHardwareProfile, Disposition, phkDevice, ulFlags);
+    TRACE("CM_Open_DevNode_Key(%lx %lx %lu %lx %p %lx)\n",
+          dnDevNode, samDesired, ulHardwareProfile, Disposition, phkDevice, ulFlags);
     return CM_Open_DevNode_Key_Ex(dnDevNode, samDesired, ulHardwareProfile,
                                   Disposition, phkDevice, ulFlags, NULL);
 }
@@ -4869,15 +4998,115 @@ CONFIGRET WINAPI CM_Open_DevNode_Key(
 /***********************************************************************
  * CM_Open_DevNode_Key_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Open_DevNode_Key_Ex(
-    DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile,
-    REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Open_DevNode_Key_Ex(
+    _In_ DEVINST dnDevNode,
+    _In_ REGSAM samDesired,
+    _In_ ULONG ulHardwareProfile,
+    _In_ REGDISPOSITION Disposition,
+    _Out_ PHKEY phkDevice,
+    _In_ ULONG ulFlags,
+    _In_ HMACHINE hMachine)
 {
-    FIXME("%lx %lx %lu %lx %p %lx %lx\n", dnDevNode, samDesired,
-          ulHardwareProfile, Disposition, phkDevice, ulFlags, hMachine);
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR pszDevInst, pszKeyPath = NULL, pszInstancePath = NULL;
+    LONG lError;
+    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    FIXME("CM_Open_DevNode_Key_Ex(%lx %lx %lu %lx %p %lx %lx)\n",
+          dnDevNode, samDesired, ulHardwareProfile, Disposition, phkDevice, ulFlags, hMachine);
+
+    if (phkDevice == NULL)
+        return CR_INVALID_POINTER;
+
+    *phkDevice = NULL;
+
+    if (dnDevNode == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags & ~CM_REGISTRY_BITS)
+        return CR_INVALID_FLAG;
+
+    if (Disposition & ~RegDisposition_Bits)
+        return CR_INVALID_DATA;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    pszDevInst = pSetupStringTableStringFromId(StringTable, dnDevNode);
+    if (pszDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    TRACE("pszDevInst: %S\n", pszDevInst);
+
+    pszKeyPath = MyMalloc(1024);
+    if (pszKeyPath == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    pszInstancePath = MyMalloc(1024);
+    if (pszInstancePath == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    ret = GetDeviceInstanceKeyPath(BindingHandle,
+                                   pszDevInst,
+                                   pszKeyPath,
+                                   pszInstancePath,
+                                   ulHardwareProfile,
+                                   ulFlags);
+    if (ret != CR_SUCCESS)
+        goto done;
+
+    TRACE("pszKeyPath: %S\n", pszKeyPath);
+    TRACE("pszInstancePath: %S\n", pszInstancePath);
+
+    wcscat(pszKeyPath, L"\\");
+    wcscat(pszKeyPath, pszInstancePath);
+
+    TRACE("pszKeyPath: %S\n", pszKeyPath);
+
+    // FIXME: Disposition
+    // FIXME: hMachine
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           pszKeyPath,
+                           0,
+                           samDesired,
+                           phkDevice);
+    if (lError != ERROR_SUCCESS)
+    {
+        *phkDevice = NULL;
+        ret = CR_NO_SUCH_REGISTRY_KEY;
+    }
+
+done:
+    if (pszInstancePath != NULL)
+        MyFree(pszInstancePath);
+
+    if (pszKeyPath != NULL)
+        MyFree(pszKeyPath);
+
+    return ret;
 }
 
 
