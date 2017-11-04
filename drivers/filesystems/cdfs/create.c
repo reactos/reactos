@@ -241,6 +241,8 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
             CdfsCloseFile (DeviceExt, FileObject);
             return STATUS_NOT_A_DIRECTORY;
         }
+
+        DeviceExt->OpenHandleCount++;
     }
 
     /*
@@ -271,6 +273,7 @@ CdfsCreate(
         /* DeviceObject represents FileSystem instead of logical volume */
         DPRINT("Opening file system\n");
         IrpContext->Irp->IoStatus.Information = FILE_OPENED;
+        DeviceExt->OpenHandleCount++;
         return STATUS_SUCCESS;
     }
 

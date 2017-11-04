@@ -55,6 +55,8 @@ CdfsCleanupFile(PCDFS_IRP_CONTEXT IrpContext,
         return STATUS_SUCCESS;
     }
 
+    DeviceExt->OpenHandleCount--;
+
     /* Notify about the cleanup */
     FsRtlNotifyCleanup(DeviceExt->NotifySync,
                        &(DeviceExt->NotifyList),
