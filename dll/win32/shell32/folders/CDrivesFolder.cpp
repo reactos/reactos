@@ -125,7 +125,8 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                 /* Do eject */
                 WCHAR physical[10];
                 wsprintfW(physical, _T("\\\\.\\%c:"), szDrive[0]);
-                HANDLE hDrive = CreateFile(physical, GENERIC_READ, FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+                HANDLE hDrive = CreateFile(physical, GENERIC_READ | GENERIC_WRITE,
+                                           FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, NULL);
                 if (hDrive != INVALID_HANDLE_VALUE)
                 {
                     BOOL bResult;
