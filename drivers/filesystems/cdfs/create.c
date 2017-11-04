@@ -268,6 +268,7 @@ CdfsCreate(
     ASSERT(IrpContext);
 
     DeviceObject = IrpContext->DeviceObject;
+    DeviceExt = DeviceObject->DeviceExtension;
     if (DeviceObject == CdfsGlobalData->CdFsDeviceObject || DeviceObject == CdfsGlobalData->HddFsDeviceObject)
     {
         /* DeviceObject represents FileSystem instead of logical volume */
@@ -276,8 +277,6 @@ CdfsCreate(
         DeviceExt->OpenHandleCount++;
         return STATUS_SUCCESS;
     }
-
-    DeviceExt = DeviceObject->DeviceExtension;
 
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,
