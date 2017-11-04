@@ -158,40 +158,39 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
     nDriveType = GetDriveTypeA(szDrive);
     GetVolumeInformationA(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
 
-    static UINT s_idCmdFormat = 0x7FFF;
-    static UINT s_idCmdEject = 0x7FFF;
-    static UINT s_idCmdDisconnect = 0x7FFF;
+// custom command IDs
+#define CMDID_FORMAT        1
+#define CMDID_EJECT         2
+#define CMDID_DISCONNECT    3
 
     if (uMsg == DFM_MERGECONTEXTMENU)
     {
         QCMINFO *pqcminfo = (QCMINFO *)lParam;
 
-        s_idCmdFormat = 0x7FFF;
-        s_idCmdEject = 0x7FFF;
-        s_idCmdDisconnect = 0x7FFF;
-
         UINT idCmdFirst = pqcminfo->idCmdFirst;
         if (!(dwFlags & FILE_READ_ONLY_VOLUME) && nDriveType != DRIVE_REMOTE)
         {
             /* add separator and Format */
-            s_idCmdFormat = pqcminfo->idCmdFirst - idCmdFirst;
+            UINT idCmd = idCmdFirst + CMDID_FORMAT;
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, idCmd, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
         }
         if (nDriveType == DRIVE_REMOVABLE || nDriveType == DRIVE_CDROM)
         {
             /* add separator and Eject */
-            s_idCmdEject = pqcminfo->idCmdFirst - idCmdFirst;
+            UINT idCmd = idCmdFirst + CMDID_EJECT;
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_EJECT), MFS_ENABLED);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, idCmd, MFT_STRING, MAKEINTRESOURCEW(IDS_EJECT), MFS_ENABLED);
         }
         if (nDriveType == DRIVE_REMOTE)
         {
             /* add separator and Disconnect */
-            s_idCmdDisconnect = pqcminfo->idCmdFirst - idCmdFirst;
+            UINT idCmd = idCmdFirst + CMDID_DISCONNECT;
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_DISCONNECT), MFS_ENABLED);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, idCmd, MFT_STRING, MAKEINTRESOURCEW(IDS_DISCONNECT), MFS_ENABLED);
         }
+
+        pqcminfo->idCmdFirst += 3;
     }
     else if (uMsg == DFM_INVOKECOMMAND)
     {
@@ -204,7 +203,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
             if (!SH_ShowDriveProperties(wszBuf, pidlFolder, apidl))
                 hr = E_FAIL;
         }
-        else if (wParam == s_idCmdFormat && s_idCmdFormat != 0x7FFF)
+        else if (wParam == CMDID_FORMAT)
         {
             /* do format */
             DWORD dwRet = SHFormatDrive(hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
@@ -215,7 +214,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                 break;
             }
         }
-        else if (wParam == s_idCmdEject && s_idCmdEject != 0x7FFF)
+        else if (wParam == CMDID_EJECT)
         {
             /* do eject */
             WCHAR physical[10];
@@ -237,7 +236,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                 MessageBoxW(hwnd, szMessage, NULL, MB_ICONERROR);
             }
         }
-        else if (wParam == s_idCmdDisconnect && s_idCmdDisconnect != 0x7FFF)
+        else if (wParam == CMDID_DISCONNECT)
         {
             /* do disconnect */
             WNetCancelConnection2W(wszBuf, 0, FALSE);
