@@ -137,6 +137,8 @@
 #define IDS_CANTLOCKVOLUME        156
 #define IDS_CANTDISMOUNTVOLUME    157
 #define IDS_CANTEJECTMEDIA        158
+#define IDS_CANTSHOWPROPERTIES    159
+#define IDS_CANTDISCONNECT        160
 
 /* Friendly File Type Names */
 #define IDS_DIRECTORY             200
