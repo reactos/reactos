@@ -80,7 +80,7 @@ static BOOL TryToLockOrUnlockDrive(HANDLE hDrive, BOOL bLock)
 }
 
 // NOTE: See also https://support.microsoft.com/en-us/help/165721/how-to-ejecting-removable-media-in-windows-nt-windows-2000-windows-xp
-static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
+static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT *pnStringID)
 {
     /* GENERIC_WRITE isn't needed for umount */
     DWORD dwAccessMode = GENERIC_READ;
@@ -99,14 +99,14 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
         if (!bResult)
         {
             dwError = GetLastError();
-            nStringID = IDS_CANTLOCKVOLUME; /* Unable to lock volume */
+            *pnStringID = IDS_CANTLOCKVOLUME; /* Unable to lock volume */
             break;
         }
         bResult = DeviceIoControl(hDrive, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
         if (!bResult)
         {
             dwError = GetLastError();
-            nStringID = IDS_CANTDISMOUNTVOLUME; /* Unable to dismount volume */
+            *pnStringID = IDS_CANTDISMOUNTVOLUME; /* Unable to dismount volume */
             bNeedUnlock = TRUE;
             break;
         }
@@ -115,7 +115,7 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
                                   0, &dwBytesReturned, NULL);
         if (!bResult)
         {
-            nStringID = IDS_CANTEJECTMEDIA; /* Unable to eject media */
+            *pnStringID = IDS_CANTEJECTMEDIA; /* Unable to eject media */
             dwError = GetLastError();
             bNeedUnlock = TRUE;
             break;
@@ -123,7 +123,7 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
         bResult = DeviceIoControl(hDrive, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
         if (!bResult)
         {
-            nStringID = IDS_CANTEJECTMEDIA; /* Unable to eject media */
+            *pnStringID = IDS_CANTEJECTMEDIA; /* Unable to eject media */
             dwError = GetLastError();
             bNeedUnlock = TRUE;
             break;
@@ -215,44 +215,59 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
             if (!SH_ShowDriveProperties(wszBuf, pidlFolder, apidl))
                 hr = E_FAIL;
         }
-        else if (wParam == CMDID_FORMAT)
+        else
         {
-            /* do format */
-            DWORD dwRet = SHFormatDrive(hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
-            switch (dwRet)
-            {
-            case SHFMT_ERROR: case SHFMT_CANCEL: case SHFMT_NOFORMAT:
-                hr = E_FAIL;
-                break;
-            }
-        }
-        else if (wParam == CMDID_EJECT)
-        {
-            /* do eject */
-            WCHAR physical[10];
-            wsprintfW(physical, _T("\\\\.\\%c:"), szDrive[0]);
+            INT nStringID = 0;
+            DWORD dwError = NO_ERROR;
 
-            INT nStringID;
-            if (DoEjectDrive(physical, nDriveType, nStringID))
+            if (wParam == CMDID_FORMAT)
             {
-                SHChangeNotify(SHCNE_MEDIAREMOVED, SHCNF_PATHW | SHCNF_FLUSHNOWAIT, wszBuf, NULL);
+                /* do format */
+                DWORD dwRet = SHFormatDrive(hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
+                switch (dwRet)
+                {
+                case SHFMT_ERROR: case SHFMT_CANCEL: case SHFMT_NOFORMAT:
+                    hr = E_FAIL;
+                    break;
+                }
             }
-            else
+            else if (wParam == CMDID_EJECT)
             {
-                DWORD dwError = GetLastError();
+                /* do eject */
+                WCHAR physical[10];
+                wsprintfW(physical, _T("\\\\.\\%c:"), szDrive[0]);
 
+                if (DoEjectDrive(physical, nDriveType, &nStringID))
+                {
+                    SHChangeNotify(SHCNE_MEDIAREMOVED, SHCNF_PATHW | SHCNF_FLUSHNOWAIT, wszBuf, NULL);
+                }
+                else
+                {
+                    dwError = GetLastError();
+                }
+            }
+            else if (wParam == CMDID_DISCONNECT)
+            {
+                /* do disconnect */
+                dwError = WNetCancelConnection2W(wszBuf, 0, FALSE);
+                if (dwError == NO_ERROR)
+                {
+                    SHChangeNotify(SHCNE_DRIVEREMOVED, SHCNF_PATHW | SHCNF_FLUSHNOWAIT, wszBuf, NULL);
+                }
+                else
+                {
+                    nStringID = IDS_CANTDISCONNECT;
+                }
+            }
+
+            if (nStringID != 0)
+            {
                 /* show error message */
                 WCHAR szFormat[128], szMessage[128];
                 LoadStringW(shell32_hInstance, nStringID, szFormat, _countof(szFormat));
                 wsprintfW(szMessage, szFormat, dwError);
                 MessageBoxW(hwnd, szMessage, NULL, MB_ICONERROR);
             }
-        }
-        else if (wParam == CMDID_DISCONNECT)
-        {
-            /* do disconnect */
-            WNetCancelConnection2W(wszBuf, 0, FALSE);
-            SHChangeNotify(SHCNE_DRIVEREMOVED, SHCNF_PATHW | SHCNF_FLUSHNOWAIT, wszBuf, NULL);
         }
     }
 
