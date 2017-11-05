@@ -77,6 +77,9 @@ CdfsCleanupFile(PCDFS_IRP_CONTEXT IrpContext,
         CcUninitializeCacheMap (FileObject, NULL, NULL);
     }
 
+    /* Inform cleanup is complete */
+    FileObject->Flags |= FO_CLEANUP_COMPLETE;
+
     return STATUS_SUCCESS;
 }
 
