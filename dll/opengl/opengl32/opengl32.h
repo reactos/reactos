@@ -121,11 +121,22 @@ struct Opengl32_ThreadData
 };
 C_ASSERT(FIELD_OFFSET(struct Opengl32_ThreadData, glDispatchTable) == 0);
 
+/* dllmain.c */
+BOOL init_tls_data(void);
+
 static inline
 void
 IntMakeCurrent(HGLRC hglrc, HDC hdc, struct wgl_dc_data* dc_data)
 {
     struct Opengl32_ThreadData* thread_data = TlsGetValue(OglTlsIndex);
+    if (!thread_data)
+    {
+        OutputDebugStringA("Calling init_tls_data from IntMakeCurrent\n");
+        if (!init_tls_data())
+            OutputDebugStringA("init_tls_data failed, brace for impact...\n");
+
+        thread_data = TlsGetValue(OglTlsIndex);
+    }
 
     thread_data->hglrc = hglrc;
     thread_data->hdc = hdc;
