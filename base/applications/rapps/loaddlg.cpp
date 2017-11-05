@@ -804,7 +804,13 @@ run:
 
             if (ShellExecuteExW(&shExInfo))
             {
+                //reflect installation progress in the titlebar
+                //TODO: make a separate string with a placeholder to include app name?
+                ATL::CStringW szMsgText = LoadStatusString(DLSTATUS_INSTALLING);
+                SetWindowTextW(hDlg, szMsgText.GetString());
+
                 DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_INSTALLING);
+
                 //TODO: issue an install operation separately so that the apps could be downloaded in the background
                 WaitForSingleObject(shExInfo.hProcess, INFINITE);
                 CloseHandle(shExInfo.hProcess);
