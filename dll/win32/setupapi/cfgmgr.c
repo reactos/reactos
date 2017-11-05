@@ -5242,7 +5242,7 @@ CM_Open_DevNode_Key_Ex(
     HKEY hRootKey = NULL;
     CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
 
-    FIXME("CM_Open_DevNode_Key_Ex(%lx %lx %lu %lx %p %lx %lx)\n",
+    TRACE("CM_Open_DevNode_Key_Ex(%lx %lx %lu %lx %p %lx %lx)\n",
           dnDevNode, samDesired, ulHardwareProfile, Disposition, phkDevice, ulFlags, hMachine);
 
     if (phkDevice == NULL)
@@ -5304,13 +5304,13 @@ CM_Open_DevNode_Key_Ex(
     if (ret != CR_SUCCESS)
         goto done;
 
-    ERR("pszKeyPath: %S\n", pszKeyPath);
-    ERR("pszInstancePath: %S\n", pszInstancePath);
+    TRACE("pszKeyPath: %S\n", pszKeyPath);
+    TRACE("pszInstancePath: %S\n", pszInstancePath);
 
     wcscat(pszKeyPath, L"\\");
     wcscat(pszKeyPath, pszInstancePath);
 
-    ERR("pszKeyPath: %S\n", pszKeyPath);
+    TRACE("pszKeyPath: %S\n", pszKeyPath);
 
     if (hMachine == NULL)
     {
