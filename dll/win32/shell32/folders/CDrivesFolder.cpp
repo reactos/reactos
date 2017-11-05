@@ -218,6 +218,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
             if (!SH_ShowDriveProperties(wszBuf, pidlFolder, apidl))
             {
                 hr = E_FAIL;
+                dwError = ERROR_CAN_NOT_COMPLETE;
                 nStringID = IDS_CANTSHOWPROPERTIES;
             }
         }

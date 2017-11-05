@@ -781,7 +781,7 @@ BEGIN
     IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
     IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
     IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
-    IDS_CANTSHOWPROPERTIES "Unable to show properties."
+    IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
 
     IDS_DIRECTORY "Mappe"
