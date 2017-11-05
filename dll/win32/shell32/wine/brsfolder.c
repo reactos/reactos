@@ -748,6 +748,38 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     HRESULT hr;
     int len;
 
+#ifdef __REACTOS__
+    hr = SHGetDesktopFolder(&desktop);
+    if(FAILED(hr))
+        return hr;
+
+    if (info->pidlRet)
+    {
+        hr = IShellFolder_BindToObject(desktop, info->pidlRet, 0, &IID_IShellFolder, (void**)&cur);
+        IShellFolder_Release(desktop);
+        if(FAILED(hr))
+            return hr;
+
+        hr = SHGetPathFromIDListW(info->pidlRet, path);
+    }
+    else
+    {
+        cur = desktop;
+        hr = SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, path);
+    }
+    if(FAILED(hr))
+        return hr;
+
+    if (!LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder, _countof(wszNewFolder)))
+        return E_FAIL;
+
+    if (!PathYetAnotherMakeUniqueName(name, path, NULL, wszNewFolder))
+        return E_FAIL;
+
+    len = strlenW(path);
+    if(len<MAX_PATH && name[len] == L'\\')
+        len++;
+#else
     if(!info->pidlRet) {
         ERR("Make new folder button should be disabled\n");
         return E_FAIL;
@@ -757,26 +789,11 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     hr = SHGetDesktopFolder(&desktop);
     if(FAILED(hr))
         return hr;
+
     hr = IShellFolder_BindToObject(desktop, info->pidlRet, 0, &IID_IShellFolder, (void**)&cur);
     IShellFolder_Release(desktop);
     if(FAILED(hr))
         return hr;
-
-#ifdef __REACTOS__
-    hr = SHGetPathFromIDListW(info->pidlRet, path);
-    if(FAILED(hr))
-        return hr;
-
-    len = strlenW(path);
-    if(len<MAX_PATH)
-        len++;
-        
-    if (!LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder, _countof(wszNewFolder)))
-        return E_FAIL;
-
-    if (!PathYetAnotherMakeUniqueName(name, path, NULL, wszNewFolder))
-        return E_FAIL;
-#else
 
     hr = IShellFolder_QueryInterface(cur, &IID_ISFHelper, (void**)&sfhelper);
     if(FAILED(hr))
