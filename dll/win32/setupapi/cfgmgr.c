@@ -85,7 +85,11 @@ typedef struct _INTERNAL_RANGE_LIST
 #define RANGE_LIST_MAGIC 0x33445566
 
 
-static BOOL GuidToString(LPGUID Guid, LPWSTR String)
+static
+BOOL
+GuidToString(
+    _In_ LPGUID Guid,
+    _Out_ LPWSTR String)
 {
     LPWSTR lpString;
 
@@ -104,8 +108,10 @@ static BOOL GuidToString(LPGUID Guid, LPWSTR String)
 }
 
 
-static CONFIGRET
-RpcStatusToCmStatus(RPC_STATUS Status)
+static
+CONFIGRET
+RpcStatusToCmStatus(
+    _In_ RPC_STATUS Status)
 {
     return CR_FAILURE;
 }
@@ -114,7 +120,7 @@ RpcStatusToCmStatus(RPC_STATUS Status)
 static
 ULONG
 GetRegistryPropertyType(
-    ULONG ulProperty)
+    _In_ ULONG ulProperty)
 {
     switch (ulProperty)
     {
@@ -683,11 +689,16 @@ CMP_WaitServicesAvailable(
 /***********************************************************************
  * CM_Add_Empty_Log_Conf [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Add_Empty_Log_Conf(
-    PLOG_CONF plcLogConf, DEVINST dnDevInst, PRIORITY Priority,
-    ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Add_Empty_Log_Conf(
+    _Out_ PLOG_CONF plcLogConf,
+    _In_ DEVINST dnDevInst,
+    _In_ PRIORITY Priority,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %lu %lx\n", plcLogConf, dnDevInst, Priority, ulFlags);
+    TRACE("CM_Add_Empty_Log_Conf(%p %p %lu %lx)\n",
+          plcLogConf, dnDevInst, Priority, ulFlags);
     return CM_Add_Empty_Log_Conf_Ex(plcLogConf, dnDevInst, Priority,
                                     ulFlags, NULL);
 }
@@ -696,9 +707,13 @@ CONFIGRET WINAPI CM_Add_Empty_Log_Conf(
 /***********************************************************************
  * CM_Add_Empty_Log_Conf_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Add_Empty_Log_Conf_Ex(
-    PLOG_CONF plcLogConf, DEVINST dnDevInst, PRIORITY Priority,
-    ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI CM_Add_Empty_Log_Conf_Ex(
+    _Out_ PLOG_CONF plcLogConf,
+    _In_ DEVINST dnDevInst,
+    _In_ PRIORITY Priority,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
@@ -707,7 +722,7 @@ CONFIGRET WINAPI CM_Add_Empty_Log_Conf_Ex(
     PLOG_CONF_INFO pLogConfInfo;
     CONFIGRET ret = CR_SUCCESS;
 
-    FIXME("%p %p %lu %lx %p\n",
+    FIXME("CM_Add_Empty_Log_Conf_Ex(%p %p %lu %lx %p)\n",
           plcLogConf, dnDevInst, Priority, ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())
@@ -783,10 +798,15 @@ CONFIGRET WINAPI CM_Add_Empty_Log_Conf_Ex(
 /***********************************************************************
  * CM_Add_IDA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Add_IDA(
-    DEVINST dnDevInst, PSTR pszID, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Add_IDA(
+    _In_ DEVINST dnDevInst,
+    _In_ PSTR pszID,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %lx\n", dnDevInst, pszID, ulFlags);
+    TRACE("CM_Add_IDA(%p %s %lx)\n",
+          dnDevInst, pszID, ulFlags);
     return CM_Add_ID_ExA(dnDevInst, pszID, ulFlags, NULL);
 }
 
@@ -794,10 +814,15 @@ CONFIGRET WINAPI CM_Add_IDA(
 /***********************************************************************
  * CM_Add_IDW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Add_IDW(
-    DEVINST dnDevInst, PWSTR pszID, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Add_IDW(
+    _In_ DEVINST dnDevInst,
+    _In_ PWSTR pszID,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %lx\n", dnDevInst, debugstr_w(pszID), ulFlags);
+    TRACE("CM_Add_IDW(%p %s %lx)\n",
+          dnDevInst, debugstr_w(pszID), ulFlags);
     return CM_Add_ID_ExW(dnDevInst, pszID, ulFlags, NULL);
 }
 
@@ -805,13 +830,19 @@ CONFIGRET WINAPI CM_Add_IDW(
 /***********************************************************************
  * CM_Add_ID_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Add_ID_ExA(
-    DEVINST dnDevInst, PSTR pszID, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Add_ID_ExA(
+    _In_ DEVINST dnDevInst,
+    _In_ PSTR pszID,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     PWSTR pszIDW;
     CONFIGRET ret;
 
-    TRACE("%p %s %lx %p\n", dnDevInst, pszID, ulFlags, hMachine);
+    TRACE("CM_Add_ID_ExA(%p %s %lx %p)\n",
+          dnDevInst, pszID, ulFlags, hMachine);
 
     if (pSetupCaptureAndConvertAnsiArg(pszID, &pszIDW))
         return CR_INVALID_DATA;
@@ -827,15 +858,21 @@ CONFIGRET WINAPI CM_Add_ID_ExA(
 /***********************************************************************
  * CM_Add_ID_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Add_ID_ExW(
-    DEVINST dnDevInst, PWSTR pszID, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Add_ID_ExW(
+    _In_ DEVINST dnDevInst,
+    _In_ PWSTR pszID,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("%p %s %lx %p\n", dnDevInst, debugstr_w(pszID), ulFlags, hMachine);
+    TRACE("CM_Add_ID_ExW(%p %s %lx %p)\n",
+          dnDevInst, debugstr_w(pszID), ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
@@ -906,12 +943,18 @@ CM_Add_Range(
 /***********************************************************************
  * CM_Add_Res_Des [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Add_Res_Des(
-    PRES_DES prdResDes, LOG_CONF lcLogConf, RESOURCEID ResourceID,
-    PCVOID ResourceData, ULONG ResourceLen, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Add_Res_Des(
+    _Out_opt_ PRES_DES prdResDes,
+    _In_ LOG_CONF lcLogConf,
+    _In_ RESOURCEID ResourceID,
+    _In_ PCVOID ResourceData,
+    _In_ ULONG ResourceLen,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %lu %p %lu %lx\n", prdResDes, lcLogConf, ResourceID,
-          ResourceData, ResourceLen, ulFlags);
+    TRACE("CM_Add_Res_Des(%p %p %lu %p %lu %lx)\n",
+          prdResDes, lcLogConf, ResourceID, ResourceData, ResourceLen, ulFlags);
     return CM_Add_Res_Des_Ex(prdResDes, lcLogConf, ResourceID, ResourceData,
                              ResourceLen, ulFlags, NULL);
 }
@@ -920,11 +963,19 @@ CONFIGRET WINAPI CM_Add_Res_Des(
 /***********************************************************************
  * CM_Add_Res_Des_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Add_Res_Des_Ex(
-    PRES_DES prdResDes, LOG_CONF lcLogConf, RESOURCEID ResourceID,
-    PCVOID ResourceData, ULONG ResourceLen, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Add_Res_Des_Ex(
+    _Out_opt_ PRES_DES prdResDes,
+    _In_ LOG_CONF lcLogConf,
+    _In_ RESOURCEID ResourceID,
+    _In_ PCVOID ResourceData,
+    _In_ ULONG ResourceLen,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
-    FIXME("%p %p %lu %p %lu %lx %p\n", prdResDes, lcLogConf, ResourceID,
+    FIXME("CM_Add_Res_Des_Ex(%p %p %lu %p %lu %lx %p)\n",
+          prdResDes, lcLogConf, ResourceID,
           ResourceData, ResourceLen, ulFlags, hMachine);
 
     return CR_CALL_NOT_IMPLEMENTED;
@@ -934,13 +985,17 @@ CONFIGRET WINAPI CM_Add_Res_Des_Ex(
 /***********************************************************************
  * CM_Connect_MachineA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Connect_MachineA(
-    PCSTR UNCServerName, PHMACHINE phMachine)
+CONFIGRET
+WINAPI
+CM_Connect_MachineA(
+    _In_opt_ PCSTR UNCServerName,
+    _Out_ PHMACHINE phMachine)
 {
     PWSTR pServerNameW;
     CONFIGRET ret;
 
-    TRACE("%s %p\n", UNCServerName, phMachine);
+    TRACE("CM_Connect_MachineA(%s %p)\n",
+          UNCServerName, phMachine);
 
     if (UNCServerName == NULL || *UNCServerName == 0)
         return CM_Connect_MachineW(NULL, phMachine);
@@ -959,12 +1014,16 @@ CONFIGRET WINAPI CM_Connect_MachineA(
 /***********************************************************************
  * CM_Connect_MachineW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Connect_MachineW(
-    PCWSTR UNCServerName, PHMACHINE phMachine)
+CONFIGRET
+WINAPI
+CM_Connect_MachineW(
+    _In_opt_ PCWSTR UNCServerName,
+    _Out_ PHMACHINE phMachine)
 {
     PMACHINE_INFO pMachine;
 
-    TRACE("%s %p\n", debugstr_w(UNCServerName), phMachine);
+    TRACE("CM_Connect_MachineW(%s %p)\n",
+          debugstr_w(UNCServerName), phMachine);
 
     if (phMachine == NULL)
         return CR_INVALID_POINTER;
@@ -1024,11 +1083,15 @@ CONFIGRET WINAPI CM_Connect_MachineW(
 /***********************************************************************
  * CM_Create_DevNodeA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Create_DevNodeA(
-    PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, DEVINST dnParent,
-    ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Create_DevNodeA(
+    _Out_ PDEVINST pdnDevInst,
+    _In_ DEVINSTID_A pDeviceID,
+    _In_ DEVINST dnParent,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %p %lx\n",
+    TRACE("CM_Create_DevNodeA(%p %s %p %lx)\n",
           pdnDevInst, debugstr_a(pDeviceID), dnParent, ulFlags);
     return CM_Create_DevNode_ExA(pdnDevInst, pDeviceID, dnParent,
                                  ulFlags, NULL);
@@ -1038,11 +1101,15 @@ CONFIGRET WINAPI CM_Create_DevNodeA(
 /***********************************************************************
  * CM_Create_DevNodeW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Create_DevNodeW(
-    PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, DEVINST dnParent,
-    ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Create_DevNodeW(
+    _Out_ PDEVINST pdnDevInst,
+    _In_ DEVINSTID_W pDeviceID,
+    _In_ DEVINST dnParent,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %p %lx\n",
+    TRACE("CM_Create_DevNodeW(%p %s %p %lx)\n",
           pdnDevInst, debugstr_w(pDeviceID), dnParent, ulFlags);
     return CM_Create_DevNode_ExW(pdnDevInst, pDeviceID, dnParent,
                                  ulFlags, NULL);
@@ -1052,14 +1119,19 @@ CONFIGRET WINAPI CM_Create_DevNodeW(
 /***********************************************************************
  * CM_Create_DevNode_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Create_DevNode_ExA(
-    PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, DEVINST dnParent,
-    ULONG ulFlags, HANDLE hMachine)
+CONFIGRET
+WINAPI
+CM_Create_DevNode_ExA(
+    _Out_ PDEVINST pdnDevInst,
+    _In_ DEVINSTID_A pDeviceID,
+    _In_ DEVINST dnParent,
+    _In_ ULONG ulFlags,
+    _In_opt_ HANDLE hMachine)
 {
     DEVINSTID_W pDeviceIDW;
     CONFIGRET ret;
 
-    TRACE("%p %s %p %lx %p\n",
+    TRACE("CM_Create_DevNode_ExA(%p %s %p %lx %p)\n",
           pdnDevInst, debugstr_a(pDeviceID), dnParent, ulFlags, hMachine);
 
     if (pSetupCaptureAndConvertAnsiArg(pDeviceID, &pDeviceIDW))
@@ -1077,9 +1149,14 @@ CONFIGRET WINAPI CM_Create_DevNode_ExA(
 /***********************************************************************
  * CM_Create_DevNode_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Create_DevNode_ExW(
-    PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, DEVINST dnParent,
-    ULONG ulFlags, HANDLE hMachine)
+CONFIGRET
+WINAPI
+CM_Create_DevNode_ExW(
+    _Out_ PDEVINST pdnDevInst,
+    _In_ DEVINSTID_W pDeviceID,
+    _In_ DEVINST dnParent,
+    _In_ ULONG ulFlags,
+    _In_opt_ HANDLE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
@@ -1087,7 +1164,7 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
     CONFIGRET ret = CR_SUCCESS;
     WCHAR szLocalDeviceID[MAX_DEVICE_ID_LEN];
 
-    TRACE("%p %s %p %lx %p\n",
+    TRACE("CM_Create_DevNode_ExW(%p %s %p %lx %p)\n",
           pdnDevInst, debugstr_w(pDeviceID), dnParent, ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())
@@ -1190,10 +1267,14 @@ CM_Create_Range_List(
 /***********************************************************************
  * CM_Delete_Class_Key [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Delete_Class_Key(
-    LPGUID ClassGuid, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Delete_Class_Key(
+    _In_ LPGUID ClassGuid,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lx\n", ClassGuid, ulFlags);
+    TRACE("CM_Delete_Class_Key(%p %lx)\n",
+          ClassGuid, ulFlags);
     return CM_Delete_Class_Key_Ex(ClassGuid, ulFlags, NULL);
 }
 
@@ -1201,14 +1282,19 @@ CONFIGRET WINAPI CM_Delete_Class_Key(
 /***********************************************************************
  * CM_Delete_Class_Key_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Delete_Class_Key_Ex(
-    LPGUID ClassGuid, ULONG ulFlags, HANDLE hMachine)
+CONFIGRET
+WINAPI
+CM_Delete_Class_Key_Ex(
+    _In_ LPGUID ClassGuid,
+    _In_ ULONG ulFlags,
+    _In_opt_ HANDLE hMachine)
 {
     WCHAR szGuidString[MAX_GUID_STRING_LEN];
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    TRACE("%p %lx %lx\n", ClassGuid, ulFlags, hMachine);
+    TRACE("CM_Delete_Class_Key_Ex(%p %lx %lx)\n",
+          ClassGuid, ulFlags, hMachine);
 
     if (ClassGuid == NULL)
         return CR_INVALID_POINTER;
@@ -1250,10 +1336,15 @@ CONFIGRET WINAPI CM_Delete_Class_Key_Ex(
 /***********************************************************************
  * CM_Delete_DevNode_Key [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Delete_DevNode_Key(
-    DEVNODE dnDevNode, ULONG ulHardwareProfile, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Delete_DevNode_Key(
+    _In_ DEVNODE dnDevNode,
+    _In_ ULONG ulHardwareProfile,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lu %lx\n", dnDevNode, ulHardwareProfile, ulFlags);
+    TRACE("CM_Delete_DevNode_Key(%p %lu %lx)\n",
+          dnDevNode, ulHardwareProfile, ulFlags);
     return CM_Delete_DevNode_Key_Ex(dnDevNode, ulHardwareProfile, ulFlags,
                                     NULL);
 }
@@ -1262,11 +1353,15 @@ CONFIGRET WINAPI CM_Delete_DevNode_Key(
 /***********************************************************************
  * CM_Delete_DevNode_Key_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Delete_DevNode_Key_Ex(
-    DEVNODE dnDevNode, ULONG ulHardwareProfile, ULONG ulFlags,
-    HANDLE hMachine)
+CONFIGRET
+WINAPI
+CM_Delete_DevNode_Key_Ex(
+    _In_ DEVNODE dnDevNode,
+    _In_ ULONG ulHardwareProfile,
+    _In_ ULONG ulFlags,
+    _In_opt_ HANDLE hMachine)
 {
-    FIXME("%p %lu %lx %p\n",
+    FIXME("CM_Delete_DevNode_Key_Ex(%p %lu %lx %p)\n",
           dnDevNode, ulHardwareProfile, ulFlags, hMachine);
 
     return CR_CALL_NOT_IMPLEMENTED;
