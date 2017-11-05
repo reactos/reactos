@@ -210,16 +210,19 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         WCHAR wszBuf[4] = L"A:\\";
         wszBuf[0] = (WCHAR)szDrive[0];
 
+        INT nStringID = 0;
+        DWORD dwError = NO_ERROR;
+
         if (wParam == DFM_CMD_PROPERTIES)
         {
             if (!SH_ShowDriveProperties(wszBuf, pidlFolder, apidl))
+            {
                 hr = E_FAIL;
+                nStringID = IDS_CANTSHOWPROPERTIES;
+            }
         }
         else
         {
-            INT nStringID = 0;
-            DWORD dwError = NO_ERROR;
-
             if (wParam == CMDID_FORMAT)
             {
                 /* do format */
@@ -259,15 +262,15 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                     nStringID = IDS_CANTDISCONNECT;
                 }
             }
+        }
 
-            if (nStringID != 0)
-            {
-                /* show error message */
-                WCHAR szFormat[128], szMessage[128];
-                LoadStringW(shell32_hInstance, nStringID, szFormat, _countof(szFormat));
-                wsprintfW(szMessage, szFormat, dwError);
-                MessageBoxW(hwnd, szMessage, NULL, MB_ICONERROR);
-            }
+        if (nStringID != 0)
+        {
+            /* show error message */
+            WCHAR szFormat[128], szMessage[128];
+            LoadStringW(shell32_hInstance, nStringID, szFormat, _countof(szFormat));
+            wsprintfW(szMessage, szFormat, dwError);
+            MessageBoxW(hwnd, szMessage, NULL, MB_ICONERROR);
         }
     }
 
