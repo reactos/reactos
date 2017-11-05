@@ -154,7 +154,7 @@ HDC
 IntGetCurrentDC(void)
 {
     struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->hdc;
+    return data ? data->hdc : NULL;
 }
 
 static inline
