@@ -58,10 +58,12 @@ static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
 *   IShellFolder implementation
 */
 
-static BOOL TryToLockDrive(HANDLE hDrive, DWORD dwRetryCount, DWORD dwSleep)
+#define RETRY_COUNT 3
+#define RETRY_SLEEP 250
+static BOOL TryToLockDrive(HANDLE hDrive)
 {
     DWORD dwError, dwBytesReturned;
-    for (DWORD i = 0; i < dwRetryCount; ++i)
+    for (DWORD i = 0; i < RETRY_COUNT; ++i)
     {
         if (DeviceIoControl(hDrive, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &dwBytesReturned, NULL))
             return TRUE;
@@ -70,7 +72,7 @@ static BOOL TryToLockDrive(HANDLE hDrive, DWORD dwRetryCount, DWORD dwSleep)
         if (dwError == ERROR_INVALID_FUNCTION)
             break; /* don't sleep if function is not implemented */
 
-        Sleep(dwSleep);
+        Sleep(RETRY_SLEEP);
     }
     SetLastError(dwError);
     return FALSE;
@@ -92,7 +94,7 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
     do
     {
         PREVENT_MEDIA_REMOVAL removal;
-        bResult = TryToLockDrive(hDrive, 3, 250);
+        bResult = TryToLockDrive(hDrive);
         if (!bResult)
         {
             dwError = GetLastError();
