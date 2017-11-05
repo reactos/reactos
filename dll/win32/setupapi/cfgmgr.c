@@ -213,6 +213,14 @@ GetDeviceInstanceKeyPath(
 
     TRACE("GetDeviceInstanceKeyPath()\n");
 
+    /* Allocate a buffer for the device id */
+    pszBuffer = MyMalloc(300 * sizeof(WCHAR));
+    if (pszBuffer == NULL)
+    {
+        ERR("MyMalloc() failed\n");
+        return CR_OUT_OF_MEMORY;
+    }
+
     if (ulFlags & CM_REGISTRY_SOFTWARE)
     {
         /* Software Key Path */
@@ -229,7 +237,7 @@ GetDeviceInstanceKeyPath(
                           L"%s\\%s\\%s\\%s",
                           L"System\\CurrentControlSet\\Hardware Profiles",
                           L"Current",
-                          L"System\\CurrentControlSet\\Control\\Enum",
+                          L"System\\CurrentControlSet\\Enum",
                           pszBuffer);
             }
             else
@@ -238,13 +246,30 @@ GetDeviceInstanceKeyPath(
                           L"%s\\%04lu\\%s\\%s",
                           L"System\\CurrentControlSet\\Hardware Profiles",
                           ulHardwareProfile,
-                          L"System\\CurrentControlSet\\Control\\Enum",
+                          L"System\\CurrentControlSet\\Enum",
                           pszBuffer);
             }
         }
+        else if (ulFlags & CM_REGISTRY_USER)
+        {
+            wsprintfW(pszKeyPath,
+                      L"%s\\%s",
+                      L"System\\CurrentControlSet\\Enum",
+                      pszDeviceInst);
+
+            wcscpy(pszInstancePath,
+                   L"Device Parameters");
+        }
         else
         {
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            SplitDeviceInstanceId(pszDeviceInst,
+                                  pszBuffer,
+                                  pszInstancePath);
+
+            wsprintfW(pszKeyPath,
+                      L"%s\\%s",
+                      L"System\\CurrentControlSet\\Enum",
+                      pszBuffer);
         }
     }
     else
@@ -253,15 +278,6 @@ GetDeviceInstanceKeyPath(
 
         ulTransferLength = 300 * sizeof(WCHAR);
         ulLength = 300 * sizeof(WCHAR);
-
-        pszBuffer = MyMalloc(ulTransferLength);
-        if (pszBuffer == NULL)
-        {
-            ERR("MyMalloc() failed\n");
-            ret = CR_OUT_OF_MEMORY;
-            goto done;
-        }
-
         ret = PNP_GetDeviceRegProp(BindingHandle,
                                    pszDeviceInst,
                                    CM_DRP_DRIVER,
@@ -5288,13 +5304,13 @@ CM_Open_DevNode_Key_Ex(
     if (ret != CR_SUCCESS)
         goto done;
 
-    TRACE("pszKeyPath: %S\n", pszKeyPath);
-    TRACE("pszInstancePath: %S\n", pszInstancePath);
+    ERR("pszKeyPath: %S\n", pszKeyPath);
+    ERR("pszInstancePath: %S\n", pszInstancePath);
 
     wcscat(pszKeyPath, L"\\");
     wcscat(pszKeyPath, pszInstancePath);
 
-    TRACE("pszKeyPath: %S\n", pszKeyPath);
+    ERR("pszKeyPath: %S\n", pszKeyPath);
 
     if (hMachine == NULL)
     {
