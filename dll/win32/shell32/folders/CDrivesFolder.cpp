@@ -90,11 +90,11 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
     if (hDrive == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    BOOL bResult;
+    BOOL bResult, bNeedUnlock = FALSE;
     DWORD dwBytesReturned, dwError = NO_ERROR;
+    PREVENT_MEDIA_REMOVAL removal;
     do
     {
-        PREVENT_MEDIA_REMOVAL removal;
         bResult = TryToLockOrUnlockDrive(hDrive, TRUE);
         if (!bResult)
         {
@@ -107,6 +107,7 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
         {
             dwError = GetLastError();
             nStringID = IDS_CANTDISMOUNTVOLUME; /* Unable to dismount volume */
+            bNeedUnlock = TRUE;
             break;
         }
         removal.PreventMediaRemoval = FALSE;
@@ -116,6 +117,7 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
         {
             nStringID = IDS_CANTEJECTMEDIA; /* Unable to eject media */
             dwError = GetLastError();
+            bNeedUnlock = TRUE;
             break;
         }
         bResult = DeviceIoControl(hDrive, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
@@ -123,9 +125,16 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT& nStringID)
         {
             nStringID = IDS_CANTEJECTMEDIA; /* Unable to eject media */
             dwError = GetLastError();
+            bNeedUnlock = TRUE;
             break;
         }
     } while (0);
+
+    if (bNeedUnlock)
+    {
+        TryToLockOrUnlockDrive(hDrive, FALSE);
+    }
+
     CloseHandle(hDrive);
 
     SetLastError(dwError);
