@@ -783,7 +783,7 @@ BEGIN
     IDS_CANTDISMOUNTVOLUME "Ausbinden des Volumes nicht möglich (Fehlercode: %lu)."
     IDS_CANTEJECTMEDIA "Auswerfen des Mediums nicht möglich (Fehlercode: %lu)."
     IDS_CANTSHOWPROPERTIES "Unable to show properties."
-    IDS_CANTDISCONNECT "Unable to disconnect."
+    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
 
     IDS_DIRECTORY "Dateiordner"
     IDS_BAT_FILE "ReactOS-Stapelverarbeitungsdatei"

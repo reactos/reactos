@@ -784,7 +784,7 @@ BEGIN
     IDS_CANTDISMOUNTVOLUME "Не удалось размонтировать том (код ошибки: %lu)."
     IDS_CANTEJECTMEDIA "Не удалось извлечь носитель (код ошибки: %lu)."
     IDS_CANTSHOWPROPERTIES "Unable to show properties."
-    IDS_CANTDISCONNECT "Unable to disconnect."
+    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
 
     IDS_DIRECTORY "Папка с файлами"
     IDS_BAT_FILE "Пакетный файл ReactOS"
