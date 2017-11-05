@@ -9,6 +9,22 @@
 
 #ifdef OPENGL32_USE_TLS
 DWORD OglTlsIndex = 0xFFFFFFFF;
+
+BOOL init_tls_data(void)
+{
+    struct Opengl32_ThreadData* ThreadData;
+
+    ThreadData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ThreadData));
+    if(!ThreadData)
+        return FALSE;
+    TlsSetValue(OglTlsIndex, ThreadData);
+    ThreadData->glDispatchTable = &StubTable.glDispatchTable;
+    ThreadData->hglrc = NULL;
+    ThreadData->hdc = NULL;
+    ThreadData->dc_data = NULL;
+    return TRUE;
+}
+
 #endif
 
 BOOL WINAPI
@@ -30,14 +46,8 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
             /* no break */
         case DLL_THREAD_ATTACH:
 #ifdef OPENGL32_USE_TLS
-            ThreadData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ThreadData));
-            if(!ThreadData)
+            if (!init_tls_data())
                 return FALSE;
-            TlsSetValue(OglTlsIndex, ThreadData);
-            ThreadData->glDispatchTable = &StubTable.glDispatchTable;
-            ThreadData->hglrc = NULL;
-            ThreadData->hdc = NULL;
-            ThreadData->dc_data = NULL;
 #else
             NtCurrentTeb()->glTable = &StubTable.glDispatchTable;
 #endif // defined(OPENGL32_USE_TLS)
