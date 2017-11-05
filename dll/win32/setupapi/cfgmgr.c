@@ -210,7 +210,36 @@ GetDeviceInstanceKeyPath(
     if (ulFlags & CM_REGISTRY_SOFTWARE)
     {
         /* Software Key Path */
-        ret = CR_CALL_NOT_IMPLEMENTED;
+
+        if (ulFlags & CM_REGISTRY_CONFIG)
+        {
+            SplitDeviceInstanceId(pszDeviceInst,
+                                  pszBuffer,
+                                  pszInstancePath);
+
+            if (ulHardwareProfile == 0)
+            {
+                wsprintfW(pszKeyPath,
+                          L"%s\\%s\\%s\\%s",
+                          L"System\\CurrentControlSet\\Hardware Profiles",
+                          L"Current",
+                          L"System\\CurrentControlSet\\Control\\Enum",
+                          pszBuffer);
+            }
+            else
+            {
+                wsprintfW(pszKeyPath,
+                          L"%s\\%04lu\\%s\\%s",
+                          L"System\\CurrentControlSet\\Hardware Profiles",
+                          ulHardwareProfile,
+                          L"System\\CurrentControlSet\\Control\\Enum",
+                          pszBuffer);
+            }
+        }
+        else
+        {
+            ret = CR_CALL_NOT_IMPLEMENTED;
+        }
     }
     else
     {
