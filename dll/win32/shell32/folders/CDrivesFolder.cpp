@@ -207,8 +207,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
     }
     else if (uMsg == DFM_INVOKECOMMAND)
     {
-        WCHAR wszBuf[4];
-        wcscpy(wszBuf, L"A:\\");
+        WCHAR wszBuf[4] = L"A:\\";
         wszBuf[0] = (WCHAR)szDrive[0];
 
         if (wParam == DFM_CMD_PROPERTIES)
