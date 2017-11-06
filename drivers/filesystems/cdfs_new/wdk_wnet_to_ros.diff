@@ -844,6 +844,26 @@ Index: drivers/filesystems/cdfs_new/cleanup.c
  
      //
      //  If appropriate, try to spark teardown by purging the volume.  Should
+Index: drivers/filesystems/cdfs_new/devctrl.c
+===================================================================
+--- drivers/filesystems/cdfs_new/devctrl.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/devctrl.c	(working copy)
+@@ -27,6 +27,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdDevCtrlCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -171,6 +172,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdDevCtrlCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
 Index: drivers/filesystems/cdfs_new/strucsup.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/strucsup.c	(revision 34615)
