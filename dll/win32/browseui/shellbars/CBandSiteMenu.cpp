@@ -386,6 +386,21 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(idMax - idCmdFirst +1)); 
 }
 
+HRESULT CBandSiteMenu::_ShowToolbarError(HRESULT hRet)
+{
+    WCHAR szText[260];
+    WCHAR szTitle[256];
+
+    if (!LoadStringW(GetModuleHandleW(L"browseui.dll"), IDS_TOOLBAR_ERR_TEXT, szText, _countof(szText)))
+        StringCchCopyW(szText, _countof(szText), L"Cannot create toolbar.");
+
+    if (!LoadStringW(GetModuleHandleW(L"browseui.dll"), IDS_TOOLBAR_ERR_TITLE, szTitle, _countof(szTitle)))
+        StringCchCopyW(szTitle, _countof(szTitle), L"Toolbar");
+
+    MessageBoxW(NULL, szText, szTitle, MB_OK | MB_ICONSTOP | MB_SETFOREGROUND);
+    return hRet;
+}
+
 HRESULT STDMETHODCALLTYPE CBandSiteMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
     HRESULT hRet;
@@ -429,11 +444,11 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpi
             CComPtr<IDeskBand> pDeskBand;
             hRet = _CreateBuiltInISFBand(uID, IID_PPV_ARG(IDeskBand, &pDeskBand));
             if (FAILED_UNEXPECTEDLY(hRet))
-                return hRet;
+                return _ShowToolbarError(hRet);
 
             hRet = m_BandSite->AddBand(pDeskBand);
             if (FAILED_UNEXPECTEDLY(hRet))
-                return hRet;
+                return _ShowToolbarError(hRet);
         }
         return S_OK;
     }
