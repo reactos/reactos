@@ -1889,8 +1889,8 @@ CdCommonPnp (                               //  Implemented in Pnp.c
 #define GetExceptionCode() 0
 #define AbnormalTermination() 0
 
-#define try_return(S) { goto try_exit; }
-#define try_leave(S) { leave; }
+#define try_return(S) { S; goto try_exit; }
+#define try_leave(S) { S; leave; }
 
 
 //
