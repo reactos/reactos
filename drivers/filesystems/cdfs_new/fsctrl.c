@@ -225,16 +225,6 @@ Return Value:
     CdReleaseVcb( IrpContext, Vcb );
 
     Status = CcWaitForCurrentLazyWriterActivity();
-#ifdef __REACTOS__
-    if (Status == STATUS_NOT_IMPLEMENTED)
-    {
-        Status = STATUS_SUCCESS;
-    }
-    else
-    {
-        DbgPrint("CcWaitForCurrentLazyWriterActivity got implemented! Remove hack in %s:%s\n", __FILE__, __LINE__);
-    }
-#endif
 
     //
     //  This is intentional. If we were able to get the Vcb before, just
