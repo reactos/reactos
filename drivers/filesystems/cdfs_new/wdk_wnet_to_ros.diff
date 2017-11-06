@@ -269,28 +269,6 @@ Index: drivers/filesystems/cdfs_new/volinfo.c
          //
          //  Set the information field to the number of bytes actually filled in
          //
-Index: drivers/filesystems/cdfs_new/cdfs.rbuild
-===================================================================
---- drivers/filesystems/cdfs_new/cdfs.rbuild	(revision 34615)
-+++ drivers/filesystems/cdfs_new/cdfs.rbuild	(working copy)
-@@ -1,8 +1,8 @@
- <?xml version="1.0"?>
- <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
--<module name="cdfs_new" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs_new.sys">
-+<module name="cdfs" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs.sys">
- 	<bootstrap installbase="$(CDOUTPUT)" />
--	<include base="cdfs_new">.</include>
-+	<include base="cdfs">.</include>
- 	<library>ntoskrnl</library>
- 	<library>hal</library>
-     <file>allocsup.c</file>
-@@ -32,6 +32,5 @@
-     <file>volinfo.c</file>
-     <file>workque.c</file>
- 	<file>cdfs.rc</file>
--    <compilerflag>-fms-extensions</compilerflag>
- 	<pch>cdprocs.h</pch>
- </module>
 Index: drivers/filesystems/cdfs_new/cddata.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/cddata.c	(revision 34615)
