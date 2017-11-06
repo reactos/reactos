@@ -973,6 +973,26 @@ Index: drivers/filesystems/cdfs_new/fsctrl.c
                                      VOLUME_ID_LENGTH,
                                      (PCHAR) Vcb->Vpb->VolumeLabel );
  
+Index: drivers/filesystems/cdfs_new/pnp.c
+===================================================================
+--- drivers/filesystems/cdfs_new/pnp.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/pnp.c	(working copy)
+@@ -51,6 +51,7 @@
+     );
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdPnpCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -774,6 +775,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdPnpCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
 Index: drivers/filesystems/cdfs_new/workque.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/workque.c	(revision 34615)
