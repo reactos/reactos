@@ -44,30 +44,28 @@ Abstract:
 //  Here are the different pool tags.
 //
 
-/* ReactOS Change: GCC doesn't understand this, use TAG macro */
-#include <reactos/helper.h>
-#define TAG_CCB                 TAG('c','c','d','C')      //  Ccb
-#define TAG_CDROM_TOC           TAG('c','t','d','C')      //  TOC
-#define TAG_DIRENT_NAME         TAG('n','d','d','C')      //  CdName in dirent
-#define TAG_ENUM_EXPRESSION     TAG('e','e','d','C')      //  Search expression for enumeration
-#define TAG_FCB_DATA            TAG('d','f','d','C')      //  Data Fcb
-#define TAG_FCB_INDEX           TAG('i','f','d','C')      //  Index Fcb
-#define TAG_FCB_NONPAGED        TAG('n','f','d','C')      //  Nonpaged Fcb
-#define TAG_FCB_TABLE           TAG('t','f','d','C')      //  Fcb Table entry
-#define TAG_FILE_NAME           TAG('n','F','d','C')      //  Filename buffer
-#define TAG_GEN_SHORT_NAME      TAG('s','g','d','C')      //  Generated short name
-#define TAG_IO_BUFFER           TAG('f','b','d','C')      //  Temporary IO buffer
-#define TAG_IO_CONTEXT          TAG('o','i','d','C')      //  Io context for async reads
-#define TAG_IRP_CONTEXT         TAG('c','i','d','C')      //  Irp Context
-#define TAG_IRP_CONTEXT_LITE    TAG('l','i','d','C')      //  Irp Context lite
-#define TAG_MCB_ARRAY           TAG('a','m','d','C')      //  Mcb array
-#define TAG_PATH_ENTRY_NAME     TAG('n','P','d','C')      //  CdName in path entry
-#define TAG_PREFIX_ENTRY        TAG('e','p','d','C')      //  Prefix Entry
-#define TAG_PREFIX_NAME         TAG('n','p','d','C')      //  Prefix Entry name
-#define TAG_SPANNING_PATH_TABLE TAG('p','s','d','C')      //  Buffer for spanning path table
-#define TAG_UPCASE_NAME         TAG('n','u','d','C')      //  Buffer for upcased name
-#define TAG_VOL_DESC            TAG('d','v','d','C')      //  Buffer for volume descriptor
-#define TAG_VPB                 TAG('p','v','d','C')      //  Vpb allocated in filesystem
+#define TAG_CCB                 'ccdC'      //  Ccb
+#define TAG_CDROM_TOC           'ctdC'      //  TOC
+#define TAG_DIRENT_NAME         'nddC'      //  CdName in dirent
+#define TAG_ENUM_EXPRESSION     'eedC'      //  Search expression for enumeration
+#define TAG_FCB_DATA            'dfdC'      //  Data Fcb
+#define TAG_FCB_INDEX           'ifdC'      //  Index Fcb
+#define TAG_FCB_NONPAGED        'nfdC'      //  Nonpaged Fcb
+#define TAG_FCB_TABLE           'tfdC'      //  Fcb Table entry
+#define TAG_FILE_NAME           'nFdC'      //  Filename buffer
+#define TAG_GEN_SHORT_NAME      'sgdC'      //  Generated short name
+#define TAG_IO_BUFFER           'fbdC'      //  Temporary IO buffer
+#define TAG_IO_CONTEXT          'oidC'      //  Io context for async reads
+#define TAG_IRP_CONTEXT         'cidC'      //  Irp Context
+#define TAG_IRP_CONTEXT_LITE    'lidC'      //  Irp Context lite
+#define TAG_MCB_ARRAY           'amdC'      //  Mcb array
+#define TAG_PATH_ENTRY_NAME     'nPdC'      //  CdName in path entry
+#define TAG_PREFIX_ENTRY        'epdC'      //  Prefix Entry
+#define TAG_PREFIX_NAME         'npdC'      //  Prefix Entry name
+#define TAG_SPANNING_PATH_TABLE 'psdC'      //  Buffer for spanning path table
+#define TAG_UPCASE_NAME         'nudC'      //  Buffer for upcased name
+#define TAG_VOL_DESC            'dvdC'      //  Buffer for volume descriptor
+#define TAG_VPB                 'pvdC'      //  Vpb allocated in filesystem
 
 //
 //  Tag all of our allocations if tagging is turned on
