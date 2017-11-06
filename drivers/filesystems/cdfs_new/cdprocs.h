@@ -28,9 +28,9 @@ Abstract:
 #endif
 
 #include "nodetype.h"
-#include "Cd.h"
-#include "CdStruc.h"
-#include "CdData.h"
+#include "cd.h"
+#include "cdstruc.h"
+#include "cddata.h"
 
 
 //**** x86 compiler bug ****

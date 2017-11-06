@@ -17,7 +17,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 #ifdef CD_SANITY
 BOOLEAN CdTestTopLevel = TRUE;
