@@ -885,19 +885,6 @@ Index: drivers/filesystems/cdfs_new/fileinfo.c
  CdFastQueryNetworkInfo (
      IN PFILE_OBJECT FileObject,
      IN BOOLEAN Wait,
-Index: drivers/filesystems/cdfs_new/nodetype.h
-===================================================================
---- drivers/filesystems/cdfs_new/nodetype.h	(revision 34615)
-+++ drivers/filesystems/cdfs_new/nodetype.h	(working copy)
-@@ -97,6 +97,8 @@
- #define CDFS_BUG_CHECK_VOLINFO           (0x001b0000)
- #define CDFS_BUG_CHECK_WORKQUE           (0x001c0000)
- 
-+/* ReactOS Change: Need to add to reactos.mc */
-+#define CDFS_FILE_SYSTEM                 ((ULONG)0x00000026L)
- #define CdBugCheck(A,B,C) { KeBugCheckEx(CDFS_FILE_SYSTEM, BugCheckFileId | __LINE__, A, B, C ); }
- 
- #endif // _NODETYPE_
 Index: drivers/filesystems/cdfs_new/fsctrl.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/fsctrl.c	(revision 34615)
