@@ -935,12 +935,9 @@ Index: drivers/filesystems/cdfs_new/fsctrl.c
  CdIsVolumeDirty (
      IN PIRP_CONTEXT IrpContext,
      IN PIRP Irp
-@@ -2294,9 +2295,9 @@
- 
-     Status = ObReferenceObjectByHandle( Handle,
+@@ -2296,9 +2297,9 @@
                                          0,
--                                        *IoFileObjectType,
-+                                        IoFileObjectType, /* ReactOS Change: GCC/LD Incompatibility with exported kernel data */
+                                         *IoFileObjectType,
                                          KernelMode,
 -                                        &FileToMarkBad,
 +                                        (PVOID*)&FileToMarkBad, /* ReactOS Change: GCC "passing argument 5 of 'ObReferenceObjectByHandle' from incompatible pointer type" */
