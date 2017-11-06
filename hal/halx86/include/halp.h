@@ -49,6 +49,10 @@ VOID
 #define HAL_APC_REQUEST         0
 #define HAL_DPC_REQUEST         1
 
+/* HAL profiling offsets in KeGetPcr()->HalReserved[] */
+#define HAL_PROFILING_INTERVAL      0
+#define HAL_PROFILING_MULTIPLIER    1
+
 /* CMOS Registers and Ports */
 #define CMOS_CONTROL_PORT       (PUCHAR)0x70
 #define CMOS_DATA_PORT          (PUCHAR)0x71
