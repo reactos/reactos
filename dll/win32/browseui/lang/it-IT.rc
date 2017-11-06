@@ -295,4 +295,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_BROWSEFORNEWTOOLAR "Choose a folder"
+    IDS_TOOLBAR_ERR_TITLE "Toolbar"
+    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
 END

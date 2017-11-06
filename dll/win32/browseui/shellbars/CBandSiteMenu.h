@@ -43,6 +43,7 @@ class CBandSiteMenu :
     UINT _GetMenuIdFromBand(CLSID *BandCLSID);
     UINT _GetBandIdFromClsid(CLSID* pclsid);
     UINT _GetBandIdForBuiltinISFBand(UINT uID);
+    HRESULT _ShowToolbarError(HRESULT hRet);
 
 public:
     CBandSiteMenu();
