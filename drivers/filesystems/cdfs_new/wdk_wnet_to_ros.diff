@@ -895,6 +895,23 @@ Index: drivers/filesystems/cdfs_new/fsctrl.c
  CdIsVolumeDirty (
      IN PIRP_CONTEXT IrpContext,
      IN PIRP Irp
+@@ -225,6 +225,16 @@
+     CdReleaseVcb( IrpContext, Vcb );
+ 
+     Status = CcWaitForCurrentLazyWriterActivity();
++#ifdef __REACTOS__
++    if (Status == STATUS_NOT_IMPLEMENTED)
++    {
++        Status = STATUS_SUCCESS;
++    }
++    else
++    {
++        DbgPrint("CcWaitForCurrentLazyWriterActivity got implemented! Remove hack in %s:%s\n", __FILE__, __LINE__);
++    }
++#endif
+ 
+     //
+     //  This is intentional. If we were able to get the Vcb before, just
 @@ -918,7 +919,7 @@
  
          if (CdIsRemount( IrpContext, Vcb, &OldVcb )) {
