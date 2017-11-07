@@ -6,7 +6,7 @@ Description = Viewer for all kinds of graphics/audio files/video files.
 Size = 2.1 MiB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://www.tucows.com/download/windows/files/iview444_setup.exe
+URLDownload = https://web.archive.org/web/20170418115956/http://www.tucows.com/download/windows/files/iview444_setup.exe
 SHA1 = d9675c2c4fce810134718b74b0c598957c8ebcf4
 CDPath = none
 
