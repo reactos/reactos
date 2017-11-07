@@ -147,6 +147,14 @@ Index: drivers/filesystems/cdfs_new/devctrl.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/devctrl.c	(revision 34615)
 +++ drivers/filesystems/cdfs_new/devctrl.c	(working copy)
+@@ -27,6 +27,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdDevCtrlCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
 @@ -64,7 +64,7 @@
      PIO_STACK_LOCATION IrpSp;
      PIO_STACK_LOCATION NextIrpSp;
@@ -156,6 +164,14 @@ Index: drivers/filesystems/cdfs_new/devctrl.c
  
      PAGED_CODE();
  
+@@ -171,6 +172,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdDevCtrlCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
 Index: drivers/filesystems/cdfs_new/close.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/close.c	(revision 34615)
@@ -820,26 +836,6 @@ Index: drivers/filesystems/cdfs_new/cleanup.c
  
      //
      //  If appropriate, try to spark teardown by purging the volume.  Should
-Index: drivers/filesystems/cdfs_new/devctrl.c
-===================================================================
---- drivers/filesystems/cdfs_new/devctrl.c	(revision 34615)
-+++ drivers/filesystems/cdfs_new/devctrl.c	(working copy)
-@@ -27,6 +27,7 @@
- //
- 
- NTSTATUS
-+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
- CdDevCtrlCompletionRoutine (
-     IN PDEVICE_OBJECT DeviceObject,
-     IN PIRP Irp,
-@@ -171,6 +172,7 @@
- //
- 
- NTSTATUS
-+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
- CdDevCtrlCompletionRoutine (
-     IN PDEVICE_OBJECT DeviceObject,
-     IN PIRP Irp,
 Index: drivers/filesystems/cdfs_new/strucsup.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/strucsup.c	(revision 34615)
