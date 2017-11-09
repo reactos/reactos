@@ -28,6 +28,7 @@
 #define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
 #define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */
 #define X86_FEATURE_PGE         0x00002000 /* Page Global Enable */
+#define X86_FEATURE_NX          0x00100000 /* NX support present */
 #define X86_FEATURE_MMX         0x00800000 /* MMX extension present */
 #define X86_FEATURE_FXSR        0x01000000 /* FXSAVE/FXRSTOR instructions present */
 #define X86_FEATURE_SSE         0x02000000 /* SSE extension present */
@@ -47,12 +48,12 @@
 #define X86_MSR_CSTAR           0xC0000083
 #define X86_MSR_SFMASK          0xC0000084
 
-#define EFER_SCE 0x01
-#define EFER_LME 0x10
-#define EFER_LMA 0x40
-#define EFER_NXE 0x80
-#define EFER_SVME 0x100
-#define EFER_FFXSR 0x400
+#define EFER_SCE    0x0001
+#define EFER_LME    0x0100
+#define EFER_LMA    0x0400
+#define EFER_NXE    0x0800
+#define EFER_SVME   0x1000
+#define EFER_FFXSR  0x4000
 
 #define AMD64_TSS 9
 
