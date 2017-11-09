@@ -16,6 +16,8 @@
 extern ULONG_PTR MainSSDT[];
 extern UCHAR MainSSPT[];
 
+extern BOOLEAN RtlpUse16ByteSLists;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -152,6 +154,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Set boot-level flags */
     KeFeatureBits = Prcb->FeatureBits;
+
+    /* Initialize 8/16 bit SList support */
+    RtlpUse16ByteSLists = (KeFeatureBits & KF_CMPXCHG16B) ? TRUE : FALSE;
 
     /* Set the current MP Master KPRCB to the Boot PRCB */
     Prcb->MultiThreadSetMaster = Prcb;
