@@ -19,8 +19,6 @@
 
 /* GLOBALS *******************************************************************/
 
-extern BOOLEAN RtlpUse16ByteSLists;
-
 /* Function pointer for early debug prints */
 ULONG (*FrLdrDbgPrint)(const char *Format, ...);
 
@@ -84,8 +82,6 @@ KiInitMachineDependent(VOID)
 //            KeBugCheckEx(NO_PAGES_AVAILABLE, 2, PAGE_SIZE * 2, 0, 0);
 //        }
 
-    /* Initialize 8/16 bit SList support */
-    RtlpUse16ByteSLists = (KeFeatureBits & KF_CMPXCHG16B) ? TRUE: FALSE;
 }
 
 VOID
