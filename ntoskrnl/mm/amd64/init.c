@@ -190,6 +190,7 @@ MiInitializePageTable(VOID)
     ULONG64 PxePhysicalAddress;
     MMPTE TmplPte, *PointerPxe;
     PFN_NUMBER PxePfn;
+    ULONG FeatureBits;
 
     /* Get current directory base */
     PxePfn = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber;
@@ -204,7 +205,10 @@ MiInitializePageTable(VOID)
     ASSERT(__readcr4() & CR4_PGE);
 
     /* Enable no execute */
-    __writemsr(X86_MSR_EFER, __readmsr(X86_MSR_EFER) | EFER_NXE);
+    FeatureBits = KiGetFeatureBits();
+    if ((FeatureBits & KF_NX_BIT) == KF_NX_BIT)
+        /* but only if it's supported */
+        __writemsr(X86_MSR_EFER, __readmsr(X86_MSR_EFER) | EFER_NXE);
 
     /* Loop the user mode PXEs */
     for (PointerPxe = MiAddressToPxe(0);
