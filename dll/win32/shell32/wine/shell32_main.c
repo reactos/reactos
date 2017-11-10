@@ -3,6 +3,7 @@
  *
  * Copyright 1998 Marcus Meissner
  * Copyright 1998 Juergen Schmied (jsch)  *  <juergen.schmied@metronet.de>
+ * Copyright 2017 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -429,11 +430,11 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         return FALSE;
 
     /* windows initializes these values regardless of the flags */
-    if (psfi != NULL)
+    if (psfi)
     {
         psfi->szDisplayName[0] = '\0';
         psfi->szTypeName[0] = '\0';
-        psfi->iIcon = 0;
+        psfi->hIcon = NULL;
     }
 
     if (!(flags & SHGFI_PIDL))
@@ -449,13 +450,19 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
             lstrcpynW(szFullPath, path, MAX_PATH);
         }
     }
+    else
+    {
+        SHGetPathFromIDListW((LPITEMIDLIST)path, szFullPath);
+    }
 
     if (flags & SHGFI_EXETYPE)
     {
-        if (flags != SHGFI_EXETYPE)
-            return 0;
-        return shgfi_get_exe_type(szFullPath);
-    }
+        if (!(flags & SHGFI_SYSICONINDEX) &&
+            GetFileAttributesW(szFullPath) != INVALID_FILE_ATTRIBUTES)
+        {
+            return shgfi_get_exe_type(szFullPath);
+        }
+   }
 
     /*
      * psfi is NULL normally to query EXE type. If it is NULL, none of the
@@ -488,6 +495,8 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                                 (LPCITEMIDLIST*)&pidlLast );
             if (SUCCEEDED(hr))
                 pidlLast = ILClone(pidlLast);
+            else
+                hr = S_OK;
             ILFree(pidl);
         }
         else
@@ -516,7 +525,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         {
             lstrcpyW (psfi->szDisplayName, PathFindFileNameW(szFullPath));
         }
-        else
+        else if (psfParent)
         {
             STRRET str;
             hr = IShellFolder_GetDisplayNameOf( psfParent, pidlLast,
@@ -566,8 +575,8 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
     if (flags & SHGFI_LINKOVERLAY)
         uGilFlags |= GIL_FORSHORTCUT;
-    else if ((flags&SHGFI_ADDOVERLAYS) ||
-             (flags&(SHGFI_ICON|SHGFI_SMALLICON))==SHGFI_ICON)
+    else if ((flags & SHGFI_ADDOVERLAYS) ||
+             (flags & (SHGFI_ICON|SHGFI_SMALLICON)) == SHGFI_ICON)
     {
         if (SHELL_IsShortcut(pidlLast))
             uGilFlags |= GIL_FORSHORTCUT;
@@ -618,7 +627,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                     ret = FALSE;
             }
         }
-        else
+        else if (psfParent)
         {
             hr = IShellFolder_GetUIObjectOf(psfParent, 0, 1,
                 (LPCITEMIDLIST*)&pidlLast, &IID_IExtractIconW,
@@ -694,7 +703,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 }
             }
         }
-        else
+        else if (psfParent)
         {
             if (!(PidlToSicIndex(psfParent, pidlLast, !(flags & SHGFI_SMALLICON),
                 uGilFlags, &(psfi->iIcon))))
@@ -769,33 +778,27 @@ DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
         pathW = temppath;
     }
 
-    if (psfi && (flags & SHGFI_ATTR_SPECIFIED))
-        temppsfi.dwAttributes=psfi->dwAttributes;
-
-    if (psfi == NULL)
-        ret = SHGetFileInfoW(pathW, dwFileAttributes, NULL, 0, flags);
-    else
-        ret = SHGetFileInfoW(pathW, dwFileAttributes, &temppsfi, sizeof(temppsfi), flags);
-
     if (psfi)
     {
-        if(flags & SHGFI_ICON)
-            psfi->hIcon=temppsfi.hIcon;
-        if(flags & (SHGFI_SYSICONINDEX|SHGFI_ICON|SHGFI_ICONLOCATION))
-            psfi->iIcon=temppsfi.iIcon;
-        if(flags & SHGFI_ATTRIBUTES)
-            psfi->dwAttributes=temppsfi.dwAttributes;
-        if(flags & (SHGFI_DISPLAYNAME|SHGFI_ICONLOCATION))
-        {
-            WideCharToMultiByte(CP_ACP, 0, temppsfi.szDisplayName, -1,
-                  psfi->szDisplayName, sizeof(psfi->szDisplayName), NULL, NULL);
-        }
-        if(flags & SHGFI_TYPENAME)
-        {
-            WideCharToMultiByte(CP_ACP, 0, temppsfi.szTypeName, -1,
-                  psfi->szTypeName, sizeof(psfi->szTypeName), NULL, NULL);
-        }
+        temppsfi.hIcon = psfi->hIcon;
+        temppsfi.iIcon = psfi->iIcon;
+        temppsfi.dwAttributes = psfi->dwAttributes;
+
+        ret = SHGetFileInfoW(pathW, dwFileAttributes, &temppsfi, sizeof(temppsfi), flags);
+        psfi->hIcon = temppsfi.hIcon;
+        psfi->iIcon = temppsfi.iIcon;
+        psfi->dwAttributes = temppsfi.dwAttributes;
+
+        len = lstrlenW(temppsfi.szDisplayName);
+        WideCharToMultiByte(CP_ACP, 0, temppsfi.szDisplayName, len + 1,
+              psfi->szDisplayName, len + 1, NULL, NULL);
+
+        len = lstrlenW(temppsfi.szTypeName);
+        WideCharToMultiByte(CP_ACP, 0, temppsfi.szTypeName, len + 1,
+              psfi->szTypeName, sizeof(psfi->szTypeName), NULL, NULL);
     }
+    else
+        ret = SHGetFileInfoW(pathW, dwFileAttributes, NULL, sizeof(temppsfi), flags);
 
     HeapFree(GetProcessHeap(), 0, temppath);
 
