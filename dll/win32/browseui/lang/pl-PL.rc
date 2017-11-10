@@ -105,13 +105,13 @@ IDM_POPUPMENU MENUEX DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", IDM_VIEW_MENU
+        POPUP "&Widok", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "&Duże ikony", IDM_LARGE_ICONS
+            MENUITEM "&Małe ikony", IDM_SMALL_ICONS
         END
-        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "&Otwórz folder", IDM_OPEN_FOLDER
+        MENUITEM "Pokaż &tekst", IDM_SHOW_TEXT
     END    
 END
 
@@ -303,7 +303,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
-    IDS_TOOLBAR_ERR_TITLE "Toolbar"
-    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
+    IDS_BROWSEFORNEWTOOLAR "Wybierz folder"
+    IDS_TOOLBAR_ERR_TITLE "Pasek narzędzi"
+    IDS_TOOLBAR_ERR_TEXT "Nie można utworzyć paska narzędzi."
 END
