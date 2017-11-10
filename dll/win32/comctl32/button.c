@@ -420,15 +420,20 @@ BOOL BUTTON_DrawIml(HDC hDC, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCa
     }
     else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
     {
-        left = prc->left + (prc->right - prc->left - ImageSize.cy) / 2;
+        left = prc->left + (prc->right - prc->left - ImageSize.cx) / 2;
         top = prc->top + pimlData->margin.top;
         prc->top = top + ImageSize.cy + pimlData->margin.bottom;
     }
     else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
     {
-        left = prc->left + (prc->right - prc->left - ImageSize.cy) / 2;
+        left = prc->left + (prc->right - prc->left - ImageSize.cx) / 2;
         top = prc->bottom - pimlData->margin.bottom - ImageSize.cy;
         prc->bottom = top - pimlData->margin.top;
+    }
+    else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_CENTER)
+    {
+        left = prc->left + (prc->right - prc->left - ImageSize.cx) / 2;
+        top = prc->top + (prc->bottom - prc->top - ImageSize.cy) / 2;
     }
 
     if (!bOnlyCalc)
