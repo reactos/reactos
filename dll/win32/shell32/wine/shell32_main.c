@@ -520,8 +520,18 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
             psfi->dwAttributes = 0xffffffff;
         }
         if (psfParent)
-            IShellFolder_GetAttributesOf( psfParent, 1, (LPCITEMIDLIST*)&pidlLast,
-                                      &(psfi->dwAttributes) );
+        {
+            IShellFolder_GetAttributesOf(psfParent, 1, (LPCITEMIDLIST*)&pidlLast,
+                                         &(psfi->dwAttributes));
+        }
+    }
+
+    if (flags & SHGFI_USEFILEATTRIBUTES)
+    {
+        if (flags & SHGFI_ICON)
+        {
+            psfi->dwAttributes = 0;
+        }
     }
 
     /* get the displayname */
