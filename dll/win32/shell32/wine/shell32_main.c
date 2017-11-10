@@ -812,7 +812,7 @@ DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
               psfi->szTypeName, sizeof(psfi->szTypeName), NULL, NULL);
     }
     else
-        ret = SHGetFileInfoW(pathW, dwFileAttributes, NULL, sizeof(temppsfi), flags);
+        ret = SHGetFileInfoW(pathW, dwFileAttributes, NULL, 0, flags);
 
     HeapFree(GetProcessHeap(), 0, temppath);
 
