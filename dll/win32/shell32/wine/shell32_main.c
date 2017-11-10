@@ -457,12 +457,18 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
     if (flags & SHGFI_EXETYPE)
     {
-        if (!(flags & SHGFI_SYSICONINDEX) &&
-            GetFileAttributesW(szFullPath) != INVALID_FILE_ATTRIBUTES)
+        if (!(flags & SHGFI_SYSICONINDEX))
         {
-            return shgfi_get_exe_type(szFullPath);
+            if (flags & SHGFI_USEFILEATTRIBUTES)
+            {
+                return 1;
+            }
+            else if (GetFileAttributesW(szFullPath) != INVALID_FILE_ATTRIBUTES)
+            {
+                return shgfi_get_exe_type(szFullPath);
+            }
         }
-   }
+    }
 
     /*
      * psfi is NULL normally to query EXE type. If it is NULL, none of the
