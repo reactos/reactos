@@ -190,7 +190,6 @@ MiInitializePageTable(VOID)
     ULONG64 PxePhysicalAddress;
     MMPTE TmplPte, *PointerPxe;
     PFN_NUMBER PxePfn;
-    ULONG FeatureBits;
 
     /* Get current directory base */
     PxePfn = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber;
