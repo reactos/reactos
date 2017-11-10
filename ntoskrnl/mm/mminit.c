@@ -45,7 +45,7 @@ extern NTSTATUS MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed);
 VOID
 INIT_FUNCTION
 NTAPI
-MiCreateArm3StaticMemoryArea(PVOID BaseAddress, ULONG Size, BOOLEAN Executable)
+MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable)
 {
     const ULONG Protection = Executable ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE;
     PVOID pBaseAddress = BaseAddress;
