@@ -1190,17 +1190,16 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
    PBUTTON_DATA pdata = _GetButtonData(hwnd);
 #endif
 
+#ifndef _USER32_
+    BOOL bHasIml = BUTTON_DrawIml(hdc, &pdata->imlData, &r, TRUE);
+#endif
+
    /* Calculate label rectangle according to label type */
    switch (style & (BS_ICON|BS_BITMAP))
    {
       case BS_TEXT:
       {
           HFONT hFont, hPrevFont = 0;
-#ifdef __REACTOS__
-          BOOL bHasIml;
-
-          bHasIml = BUTTON_DrawIml(hdc, &pdata->imlData, &r, TRUE);
-#endif
 
           if (!(text = get_button_text( hwnd ))) goto empty_rect;
           if (!text[0])
@@ -1216,18 +1215,6 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
 #ifdef __REACTOS__
           if (get_ui_state(hwnd) & UISF_HIDEACCEL)
               dtStyle |= DT_HIDEPREFIX;
-
-          if (bHasIml)
-          {
-            if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT)
-                r.left = pdata->imlData.margin.left;
-            else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
-                r.right = pdata->imlData.margin.right;
-            else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
-                r.top = pdata->imlData.margin.top;
-            else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
-                r.bottom = pdata->imlData.margin.bottom;
-          }
 #endif
           break;
       }
@@ -1263,10 +1250,28 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
 
       default:
       empty_rect:
+#ifndef _USER32_
+         if (bHasIml)
+             break;
+#endif
          rc->right = r.left;
          rc->bottom = r.top;
          return (UINT)-1;
    }
+
+#ifndef _USER32_
+   if (bHasIml)
+   {
+     if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT)
+         r.left = pdata->imlData.margin.left;
+     else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
+         r.right = pdata->imlData.margin.right;
+     else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
+         r.top = pdata->imlData.margin.top;
+     else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
+         r.bottom = pdata->imlData.margin.bottom;
+   }
+#endif
 
    /* Position label inside bounding rectangle according to
     * alignment flags. (calculated rect is always left-top aligned).
@@ -1309,28 +1314,11 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
  */
 static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int cx, int cy)
 {
-#ifdef _USER32_
    RECT rc;
 
    SetRect(&rc, 0, 0, cx, cy);
    DrawTextW(hdc, (LPCWSTR)lp, -1, &rc, (UINT)wp);
    return TRUE;
-#else
-    HWND hwnd = (HWND)lp;
-    RECT rc;
-    PBUTTON_DATA pdata = _GetButtonData(hwnd);
-    WCHAR *text = NULL;
-
-    if (!(text = get_button_text( hwnd ))) return TRUE;
-
-    SetRect(&rc, 0, 0, cx, cy);
-
-    BUTTON_DrawIml(hdc, &pdata->imlData, &rc, FALSE);
-
-    DrawTextW(hdc, text, -1, &rc, (UINT)wp);
-    HeapFree(GetProcessHeap(), 0, text);
-    return TRUE;
-#endif
 }
 
 
@@ -1339,7 +1327,11 @@ static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int 
  *
  *   Common function for drawing button label.
  */
+ #if defined(_USER32_)
 static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
+#else
+static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
+#endif
 {
    DRAWSTATEPROC lpOutputProc = NULL;
    LPARAM lp;
@@ -1355,6 +1347,11 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
     * I don't have Win31 on hand to verify that, so I leave it as is.
     */
 
+#ifndef _USER32_
+    PBUTTON_DATA pdata = _GetButtonData(hwnd);
+    BUTTON_DrawIml(hdc, &pdata->imlData, rc, FALSE);
+#endif
+
    if ((style & BS_PUSHLIKE) && (state & BST_INDETERMINATE))
    {
       hbr = GetSysColorBrush(COLOR_GRAYTEXT);
@@ -1366,13 +1363,8 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
       case BS_TEXT:
          /* DST_COMPLEX -- is 0 */
          lpOutputProc = BUTTON_DrawTextCallback;
-#ifdef _USER32_
          if (!(text = get_button_text( hwnd ))) return;
          lp = (LPARAM)text;
-#else
-         lp = (LPARAM)hwnd;
-#endif
-
          wp = (WPARAM)dtFlags;
 
 #ifdef __REACTOS__
