@@ -789,12 +789,10 @@ DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
         psfi->iIcon = temppsfi.iIcon;
         psfi->dwAttributes = temppsfi.dwAttributes;
 
-        len = lstrlenW(temppsfi.szDisplayName);
-        WideCharToMultiByte(CP_ACP, 0, temppsfi.szDisplayName, len + 1,
-              psfi->szDisplayName, len + 1, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, temppsfi.szDisplayName, -1,
+              psfi->szDisplayName, sizeof(psfi->szDisplayName), NULL, NULL);
 
-        len = lstrlenW(temppsfi.szTypeName);
-        WideCharToMultiByte(CP_ACP, 0, temppsfi.szTypeName, len + 1,
+        WideCharToMultiByte(CP_ACP, 0, temppsfi.szTypeName, -1,
               psfi->szTypeName, sizeof(psfi->szTypeName), NULL, NULL);
     }
     else
