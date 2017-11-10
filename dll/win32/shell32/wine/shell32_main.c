@@ -430,7 +430,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         return FALSE;
 
     /* windows initializes these values regardless of the flags */
-    if (psfi)
+    if (psfi != NULL)
     {
         psfi->szDisplayName[0] = '\0';
         psfi->szTypeName[0] = '\0';
