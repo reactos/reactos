@@ -6,7 +6,7 @@ Description = An up-to-date implementation of TeX/LaTeX and related programs for
 Size = 179.0 MiB
 Category = 6
 URLSite = http://www.miktex.org/
-URLDownload = http://ftp.gwdg.de/pub/ctan/systems/win32/miktex/setup/basic-miktex.exe
+URLDownload = https://ftp.rrze.uni-erlangen.de/ctan/systems/win32/miktex/setup/basic-miktex-2.9.6361.exe
 SHA1 = 365b71cf9f23552b99f8d8c69637e6bec6853979
 CDPath = none
 
