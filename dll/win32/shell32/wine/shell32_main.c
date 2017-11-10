@@ -591,8 +591,8 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
     if (flags & SHGFI_LINKOVERLAY)
         uGilFlags |= GIL_FORSHORTCUT;
-    else if ((flags & SHGFI_ADDOVERLAYS) ||
-             (flags & (SHGFI_ICON|SHGFI_SMALLICON)) == SHGFI_ICON)
+    else if ((flags&SHGFI_ADDOVERLAYS) ||
+             (flags&(SHGFI_ICON|SHGFI_SMALLICON))==SHGFI_ICON)
     {
         if (SHELL_IsShortcut(pidlLast))
             uGilFlags |= GIL_FORSHORTCUT;
