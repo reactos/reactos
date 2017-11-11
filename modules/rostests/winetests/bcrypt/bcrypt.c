@@ -760,6 +760,17 @@ START_TEST(bcrypt)
 {
     HMODULE module;
 
+#ifdef __REACTOS__
+    // bcrypt is available on WVista (and ReactOS), not on WS03.
+    if (!LoadLibraryW(L"bcrypt.dll"))
+    {
+       win_skip("LoadLibrary(\"bcrypt.dll\") failed. This is expected on WS03\n");
+       return;
+    }
+
+    // ToDo: Use __HrLoadAllImportsForDll("bcrypt.dll") after CORE-10957 is fixed.
+#endif
+
     module = GetModuleHandleA( "bcrypt.dll" );
 
     test_BCryptGenRandom();

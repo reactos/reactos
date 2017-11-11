@@ -220,6 +220,15 @@ static void WlanGetInterfaceCapability_test(void)
 
 START_TEST(wlanapi)
 {
+    // wlanapi is available on WXPsp3 and WVista (and ReactOS), but not on WS03.
+    if (!LoadLibraryW(L"wlanapi.dll"))
+    {
+        win_skip("LoadLibrary(\"wlanapi.dll\") failed. This is expected on WS03\n");
+        return;
+    }
+
+    // ToDo: Use __HrLoadAllImportsForDll("wlanapi.dll") after CORE-10957 is fixed.
+
     WlanOpenHandle_test();
     WlanCloseHandle_test();
     WlanConnect_test();
