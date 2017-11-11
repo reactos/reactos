@@ -600,6 +600,23 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
                     if (FAILED_UNEXPECTEDLY(hr)) return hr;
                     break;
                 }
+                case IDM_OPEN_FOLDER:
+                {
+                    SHELLEXECUTEINFO shexinfo;
+
+                    memset(&shexinfo, 0x0, sizeof(shexinfo));
+
+                    shexinfo.cbSize = sizeof(shexinfo);
+                    shexinfo.fMask = SEE_MASK_IDLIST;
+                    shexinfo.lpVerb = _T("open");
+                    shexinfo.lpIDList = m_pidl;
+                    shexinfo.nShow = SW_SHOW;
+
+                    if (!ShellExecuteEx(&shexinfo))
+                        return E_FAIL;
+
+                    break;
+                }
                 case IDM_SHOW_TEXT:
                 {                    
                     if (m_textFlag)
@@ -645,6 +662,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
             CheckMenuItem(qMenu, IDM_LARGE_ICONS, MF_CHECKED);
             CheckMenuItem(qMenu, IDM_SMALL_ICONS, MF_UNCHECKED);
         }
+
+        if (_ILIsDesktop(m_pidl))
+            DeleteMenu(qMenu, IDM_OPEN_FOLDER, MF_BYCOMMAND);
 
         UINT idMax = Shell_MergeMenus(hmenu, GetSubMenu(qMenu, 0), indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS);
         DestroyMenu(qMenu);
