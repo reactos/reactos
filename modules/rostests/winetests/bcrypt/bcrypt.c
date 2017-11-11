@@ -26,6 +26,10 @@
 
 #include "wine/test.h"
 
+#ifdef __REACTOS__
+static LSTATUS (WINAPI *pRegGetValueW)(HKEY, LPCWSTR, LPCWSTR, DWORD, LPDWORD, PVOID, LPDWORD);
+#endif
+
 static NTSTATUS (WINAPI *pBCryptHash)( BCRYPT_ALG_HANDLE algorithm, UCHAR *secret, ULONG secretlen,
                                      UCHAR *input, ULONG inputlen, UCHAR *output, ULONG outputlen );
 
@@ -761,6 +765,8 @@ START_TEST(bcrypt)
     HMODULE module;
 
 #ifdef __REACTOS__
+    HMODULE hAdvapi32Dll;
+
     // bcrypt is available on WVista (and ReactOS), not on WS03.
     if (!LoadLibraryW(L"bcrypt.dll"))
     {
@@ -769,12 +775,30 @@ START_TEST(bcrypt)
     }
 
     // ToDo: Use __HrLoadAllImportsForDll("bcrypt.dll") after CORE-10957 is fixed.
+
+    // advapi32/RegGetValueW() is available on WXP-Pro-x64 and WS03sp1, not on WXP.
+    hAdvapi32Dll = LoadLibraryW(L"advapi32.dll");
+    pRegGetValueW = hAdvapi32Dll ? (PVOID)GetProcAddress(hAdvapi32Dll, "RegGetValueW") : NULL;
 #endif
 
     module = GetModuleHandleA( "bcrypt.dll" );
 
     test_BCryptGenRandom();
+
+#ifdef __REACTOS__
+    if (!pRegGetValueW)
+    {
+        win_skip("RegGetValueW (NT >= 5.2sp1 API) not available. Skipping test_BCryptGetFipsAlgorithmMode()\n");
+    }
+    else
+    {
+        // Relying on delay load, not actually using pRegGetValueW.
+#endif
     test_BCryptGetFipsAlgorithmMode();
+#ifdef __REACTOS__
+    }
+#endif
+
     test_sha1();
     test_sha256();
     test_sha384();
