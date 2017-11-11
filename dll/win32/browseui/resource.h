@@ -69,6 +69,7 @@
 #define IDM_SMALL_ICONS      2003
 #define IDM_SHOW_TEXT        2004
 #define IDM_VIEW_MENU        2005
+#define IDM_OPEN_FOLDER      2006
 
 /* Random id for band close button, feel free to change it */
 #define IDM_BASEBAR_CLOSE                0xA200
