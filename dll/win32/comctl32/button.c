@@ -441,6 +441,35 @@ BOOL BUTTON_DrawIml(HDC hDC, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCa
 
     return TRUE;
 }
+
+DWORD BUTTON_SendCustomDraw(HWND hwnd, HDC hDC, DWORD dwDrawStage, RECT* prc)
+{
+    NMCUSTOMDRAW nmcs;
+    LONG state = get_button_state( hwnd );
+
+    nmcs.hdr.hwndFrom = hwnd;
+    nmcs.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
+    nmcs.hdr.code     = NM_CUSTOMDRAW ;
+    nmcs.dwDrawStage  = dwDrawStage;
+    nmcs.hdc          = hDC;
+    nmcs.rc           = *prc;
+    nmcs.dwItemSpec   = 0;
+    nmcs.uItemState   = 0;
+    nmcs.lItemlParam  = 0;
+    if(!IsWindowEnabled(hwnd))
+        nmcs.uItemState |= CDIS_DISABLED;
+    if (state & (BST_CHECKED | BST_INDETERMINATE))
+        nmcs.uItemState |= CDIS_CHECKED;
+    if (state & BST_FOCUS)
+        nmcs.uItemState |= CDIS_FOCUS;
+    if (state & BST_PUSHED)
+        nmcs.uItemState |= CDIS_SELECTED;
+    if (!(get_ui_state(hwnd) & UISF_HIDEACCEL))
+        nmcs.uItemState |= CDIS_SHOWKEYBOARDCUES;
+
+    return SendMessageW(GetParent(hwnd), WM_NOTIFY, nmcs.hdr.idFrom, (LPARAM)&nmcs);
+}
+
 #endif
 
 
@@ -1417,6 +1446,9 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     BOOL pushedState = (state & BST_PUSHED);
     HWND parent;
     HRGN hrgn;
+#ifndef _USER32_
+    DWORD cdrf;
+#endif
 
     GetClientRect( hwnd, &rc );
 
@@ -1440,15 +1472,21 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     hOldBrush = SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
     oldBkMode = SetBkMode(hDC, TRANSPARENT);
 
+    /* completely skip the drawing if only focus has changed */
+    if (action == ODA_FOCUS) goto draw_focus;
+
+#ifndef _USER32_
+    cdrf = BUTTON_SendCustomDraw(hwnd, hDC, CDDS_PREERASE, &rc);
+    if (cdrf == CDRF_SKIPDEFAULT)
+        goto cleanup;
+#endif
+
     if (get_button_type(style) == BS_DEFPUSHBUTTON)
     {
         if (action != ODA_FOCUS)
             Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
 	InflateRect( &rc, -1, -1 );
     }
-
-    /* completely skip the drawing if only focus has changed */
-    if (action == ODA_FOCUS) goto draw_focus;
 
     uState = DFCS_BUTTONPUSH;
 
@@ -1467,6 +1505,15 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     DrawFrameControl( hDC, &rc, DFC_BUTTON, uState );
 
+#ifndef _USER32_
+    if (cdrf == CDRF_NOTIFYPOSTERASE)
+        BUTTON_SendCustomDraw(hwnd, hDC, CDDS_POSTERASE, &rc);
+
+    cdrf = BUTTON_SendCustomDraw(hwnd, hDC, CDDS_PREPAINT, &rc);
+    if (cdrf == CDRF_SKIPDEFAULT)
+        goto cleanup;
+#endif
+
     /* draw button label */
     r = rc;
     dtFlags = BUTTON_CalcLabelRect(hwnd, hDC, &r);
@@ -1482,6 +1529,11 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     BUTTON_DrawLabel(hwnd, hDC, dtFlags, &r);
 
     SetTextColor( hDC, oldTxtColor );
+
+#ifndef _USER32_
+    if (cdrf == CDRF_NOTIFYPOSTPAINT)
+        BUTTON_SendCustomDraw(hwnd, hDC, CDDS_POSTPAINT, &rc);
+#endif
 
 draw_focus:
     if (action == ODA_FOCUS || (state & BST_FOCUS))

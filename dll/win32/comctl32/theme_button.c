@@ -57,6 +57,7 @@ static inline LONG_PTR get_button_image(HWND hwnd)
 }
 
 BOOL BUTTON_DrawIml(HDC hdc, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCalc);
+DWORD BUTTON_SendCustomDraw(HWND hwnd, HDC hDC, DWORD dwDrawStage, RECT* prc);
 #endif
 
 static UINT get_drawtext_flags(DWORD style, DWORD ex_style)
@@ -110,56 +111,48 @@ static inline WCHAR *get_button_text(HWND hwnd)
     return text;
 }
 
-#ifdef __REACTOS__ /* r73885 */
 static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag)
-#else
-static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
-#endif
 {
     static const int states[] = { PBS_NORMAL, PBS_DISABLED, PBS_HOT, PBS_PRESSED, PBS_DEFAULTED };
 
     RECT bgRect, textRect;
-#ifdef __REACTOS__ /* r73885 */
     HFONT font = get_button_font(hwnd);
-#else
-    HFONT font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-#endif
     HFONT hPrevFont = font ? SelectObject(hDC, font) : NULL;
     int state = states[ drawState ];
-    WCHAR *text = get_button_text(hwnd);
-#ifdef __REACTOS__ /* r74012 & r74406 */
+    WCHAR *text;
     PBUTTON_DATA pdata = _GetButtonData(hwnd);
     HWND parent;
-    HBRUSH hBrush;
-#endif
+    DWORD cdrf;
 
     GetClientRect(hwnd, &bgRect);
     GetThemeBackgroundContentRect(theme, hDC, BP_PUSHBUTTON, state, &bgRect, &textRect);
 
-#ifdef __REACTOS__ /* r73885 & r74149 */
     if (prfFlag == 0)
     {
         if (IsThemeBackgroundPartiallyTransparent(theme, BP_PUSHBUTTON, state))
             DrawThemeParentBackground(hwnd, hDC, NULL);
     }
-#else
-    if (IsThemeBackgroundPartiallyTransparent(theme, BP_PUSHBUTTON, state))
-        DrawThemeParentBackground(hwnd, hDC, NULL);
-#endif
 
-#ifdef __REACTOS__ /* r74406 */
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
-    hBrush = (HBRUSH)SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
-    FillRect( hDC, &bgRect, hBrush );
-#endif
+    SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
+
+    cdrf = BUTTON_SendCustomDraw(hwnd, hDC, CDDS_PREERASE, &bgRect);
+    if (cdrf == CDRF_SKIPDEFAULT)
+        goto cleanup;
 
     DrawThemeBackground(theme, hDC, BP_PUSHBUTTON, state, &bgRect, NULL);
 
-#ifdef __REACTOS__ /* r74012 */
-    BUTTON_DrawIml(hDC, &pdata->imlData, &textRect, FALSE);
-#endif
+    if (cdrf == CDRF_NOTIFYPOSTERASE)
+        BUTTON_SendCustomDraw(hwnd, hDC, CDDS_POSTERASE, &bgRect);
 
+    cdrf = BUTTON_SendCustomDraw(hwnd, hDC, CDDS_PREPAINT, &bgRect);
+    if (cdrf == CDRF_SKIPDEFAULT)
+        goto cleanup;
+
+    BUTTON_DrawIml(hDC, &pdata->imlData, &textRect, FALSE);
+
+    text = get_button_text(hwnd);
     if (text)
     {
         DrawThemeText(theme, hDC, BP_PUSHBUTTON, state, text, lstrlenW(text), dtFlags, 0, &textRect);
@@ -181,14 +174,14 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         DrawFocusRect( hDC, &focusRect );
     }
 
+    if (cdrf == CDRF_NOTIFYPOSTPAINT)
+        BUTTON_SendCustomDraw(hwnd, hDC, CDDS_POSTPAINT, &bgRect);
+
+cleanup:
     if (hPrevFont) SelectObject(hDC, hPrevFont);
 }
 
-#ifdef __REACTOS__ /* r73885 */
 static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag)
-#else
-static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
-#endif
 {
     static const int cb_states[3][5] =
     {
@@ -206,11 +199,7 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     SIZE sz;
     RECT bgRect, textRect;
     HFONT font, hPrevFont = NULL;
-#ifdef __REACTOS__ /* r73885 */
     LRESULT checkState = get_button_state(hwnd) & 3;
-#else
-    LRESULT checkState = SendMessageW(hwnd, BM_GETCHECK, 0, 0);
-#endif
     DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
     int part = ((dwStyle & BUTTON_TYPE) == BS_RADIOBUTTON) || ((dwStyle & BUTTON_TYPE) == BS_AUTORADIOBUTTON)
              ? BP_RADIOBUTTON
@@ -218,13 +207,12 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     int state = (part == BP_CHECKBOX)
               ? cb_states[ checkState ][ drawState ]
               : rb_states[ checkState ][ drawState ];
-    WCHAR *text = get_button_text(hwnd);
+    WCHAR *text;
     LOGFONTW lf;
     BOOL created_font = FALSE;
-#ifdef __REACTOS__ /* r74406 */
     HWND parent;
     HBRUSH hBrush;
-#endif
+    DWORD cdrf;
 
     HRESULT hr = GetThemeFont(theme, hDC, part, state, TMT_FONT, &lf);
     if (SUCCEEDED(hr)) {
@@ -237,11 +225,7 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
             created_font = TRUE;
         }
     } else {
-#ifdef __REACTOS__ /* r73885 */
         font = get_button_font(hwnd);
-#else
-        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-#endif
         hPrevFont = SelectObject(hDC, font);
     }
 
@@ -250,7 +234,6 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
 
     GetClientRect(hwnd, &bgRect);
 
-#ifdef __REACTOS__ /* r73885, r74149 and r74406 */
     if (prfFlag == 0)
     {
         DrawThemeParentBackground(hwnd, hDC, NULL);
@@ -264,7 +247,10 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
                                         (WPARAM)hDC, (LPARAM)hwnd );
     FillRect( hDC, &bgRect, hBrush );
-#endif
+
+    cdrf = BUTTON_SendCustomDraw(hwnd, hDC, CDDS_PREERASE, &bgRect);
+    if (cdrf == CDRF_SKIPDEFAULT)
+        goto cleanup;
 
     GetThemeBackgroundContentRect(theme, hDC, part, state, &bgRect, &textRect);
 
@@ -276,11 +262,16 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     bgRect.right = bgRect.left + sz.cx;
     textRect.left = bgRect.right + 6;
 
-#ifndef __REACTOS__ /* r74406 */
-    DrawThemeParentBackground(hwnd, hDC, NULL);
-#endif
-
     DrawThemeBackground(theme, hDC, part, state, &bgRect, NULL);
+
+    if (cdrf == CDRF_NOTIFYPOSTERASE)
+        BUTTON_SendCustomDraw(hwnd, hDC, CDDS_POSTERASE, &bgRect);
+
+    cdrf = BUTTON_SendCustomDraw(hwnd, hDC, CDDS_PREPAINT, &bgRect);
+    if (cdrf == CDRF_SKIPDEFAULT)
+        goto cleanup;
+
+    text = get_button_text(hwnd);
     if (text)
     {
         DrawThemeText(theme, hDC, part, state, text, lstrlenW(text), dtFlags, 0, &textRect);
@@ -302,6 +293,10 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         HeapFree(GetProcessHeap(), 0, text);
     }
 
+    if (cdrf == CDRF_NOTIFYPOSTPAINT)
+        BUTTON_SendCustomDraw(hwnd, hDC, CDDS_POSTPAINT, &bgRect);
+
+cleanup:
     if (created_font) DeleteObject(font);
     if (hPrevFont) SelectObject(hDC, hPrevFont);
 }
