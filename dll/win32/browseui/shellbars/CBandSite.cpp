@@ -508,6 +508,43 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
         uBand = 0xffffffff;
         if (SUCCEEDED(_UpdateBand(NewBand)))
         {
+            /* FIXME: this is a hack! */
+            CComPtr<IShellFolderBand> psfb;
+            // query IShellFolderBand (CISFBand)
+            if (NewBand->DeskBand->QueryInterface(IID_PPV_ARG(IShellFolderBand, &psfb)) == S_OK)
+            {
+                // obtain IDLIST
+                BANDINFOSFB bi = {ISFB_MASK_IDLIST};
+                if (psfb->GetBandInfoSFB(&bi) == S_OK)
+                {
+                    // sanity checks: pidl is okay and not related to Desktop
+                    CComHeapPtr<ITEMIDLIST> pidl(bi.pidl);
+                    if (pidl && pidl->mkid.cb != 0)
+                    {
+                        // generate pidl for Quick Launch
+                        WCHAR buffer[MAX_PATH];
+                        if (SHGetFolderPathAndSubDirW(0, CSIDL_APPDATA, NULL, 0, L"Microsoft\\Internet Explorer\\Quick Launch", buffer) == S_OK)
+                        {
+                            LPITEMIDLIST pidlPath = ILCreateFromPathW(buffer);
+                            CComPtr<IShellFolder> psfDesktop;
+                            // compare pidls
+                            if (SHGetDesktopFolder(&psfDesktop) == S_OK)
+                            {
+                                HRESULT hrql = psfDesktop->CompareIDs(0, pidl, pidlPath);
+                                if (HRESULT_CODE(hrql) == 0)
+                                {
+                                    // this is Quick Launch band
+                                    // its title is hidden by default
+                                    NewBand->bHiddenTitle = true;
+                                }
+                            }
+                            ILFree(pidlPath);
+                        }
+                    }
+                }
+            }
+            /* end of hack */
+
             if (NewBand->dbi.dwMask & DBIM_MODEFLAGS)
             {
                 if (NewBand->dbi.dwModeFlags & DBIMF_ADDTOFRONT)

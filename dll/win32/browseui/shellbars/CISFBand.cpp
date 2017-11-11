@@ -258,7 +258,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
             }
             if (pdbi->dwMask & DBIM_TITLE)
             {
-                if (m_QLaunch || !ILGetDisplayNameEx(NULL, m_pidl, pdbi->wszTitle, ILGDN_INFOLDER))
+                if (!ILGetDisplayNameEx(NULL, m_pidl, pdbi->wszTitle, ILGDN_INFOLDER))
                 {
                     pdbi->dwMask &= ~DBIM_TITLE;
                 }
