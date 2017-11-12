@@ -3511,21 +3511,6 @@ NtWriteFile(IN HANDLE FileHandle,
     {
         _SEH2_TRY
         {
-            /*
-             * Check if the handle has either FILE_WRITE_DATA or
-             * FILE_APPEND_DATA granted. However, if this is a named pipe,
-             * make sure we don't ask for FILE_APPEND_DATA as it interferes
-             * with the FILE_CREATE_PIPE_INSTANCE access right!
-             */
-            if (!(ObjectHandleInfo.GrantedAccess &
-                 ((!(FileObject->Flags & FO_NAMED_PIPE) ?
-                   FILE_APPEND_DATA : 0) | FILE_WRITE_DATA)))
-            {
-                /* We failed */
-                ObDereferenceObject(FileObject);
-                _SEH2_YIELD(return STATUS_ACCESS_DENIED);
-            }
-
             /* Probe the status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
 
