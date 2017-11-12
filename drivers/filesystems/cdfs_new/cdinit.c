@@ -241,10 +241,16 @@ Return Value:
 
 --*/
 {
-    IoUnregisterFileSystem (DeviceObject);
-    IoDeleteDevice (CdData.FileSystemDeviceObject);
 #ifdef __REACTOS__
-    IoDeleteDevice (CdData.HddFileSystemDeviceObject);
+    ASSERT(DeviceObject == CdData.FileSystemDeviceObject ||
+           DeviceObject == CdData.HddFileSystemDeviceObject);
+#endif
+
+    IoUnregisterFileSystem (DeviceObject);
+#ifndef __REACTOS__
+    IoDeleteDevice (CdData.FileSystemDeviceObject);
+#else
+    IoDeleteDevice (DeviceObject);
 #endif
 
     CdCompleteRequest( NULL, Irp, STATUS_SUCCESS );
