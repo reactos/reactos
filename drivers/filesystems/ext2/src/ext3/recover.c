@@ -108,9 +108,12 @@ Ext2RecoverJournal(
     journal_t *             journal = NULL;
     struct ext3_super_block *esb;
 
+    ExAcquireResourceExclusiveLite(&Vcb->MainResource, TRUE);
+
     /* check journal inode number */
     if (!Ext2CheckJournal(Vcb, &jNo)) {
-        return -1;
+        rc = -1;
+        goto errorout;
     }
 
     /* allocate journal Mcb */
@@ -167,6 +170,8 @@ errorout:
     if (jcb) {
         Ext2FreeMcb(Vcb, jcb);
     }
+
+    ExReleaseResourceLite(&Vcb->MainResource);
 
     return rc;
 }

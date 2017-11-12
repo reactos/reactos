@@ -188,7 +188,7 @@ Ext2QueryVolumeInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 (PFILE_FS_ATTRIBUTE_INFORMATION) Buffer;
             FsAttrInfo->FileSystemAttributes = FILE_SUPPORTS_HARD_LINKS |
                 FILE_CASE_SENSITIVE_SEARCH | FILE_CASE_PRESERVED_NAMES |
-                FILE_SUPPORTS_REPARSE_POINTS;
+                FILE_SUPPORTS_REPARSE_POINTS | FILE_SUPPORTS_EXTENDED_ATTRIBUTES;
             if (IsVcbReadOnly(Vcb)) {
                 FsAttrInfo->FileSystemAttributes |= FILE_READ_ONLY_VOLUME;
             }

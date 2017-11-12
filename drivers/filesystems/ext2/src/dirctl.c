@@ -1085,6 +1085,12 @@ Ext2NotifyChangeDirectory (
         ASSERT((Ccb->Identifier.Type == EXT2CCB) &&
                (Ccb->Identifier.Size == sizeof(EXT2_CCB)));
 
+        /* do nothing if target fie was deleted */
+        if (FlagOn(Fcb->Flags, FCB_DELETE_PENDING)) {
+            Status = STATUS_FILE_DELETED;
+            _SEH2_LEAVE;
+        }
+
         if (!IsDirectory(Fcb)) {
             DbgBreak();
             Status = STATUS_INVALID_PARAMETER;
