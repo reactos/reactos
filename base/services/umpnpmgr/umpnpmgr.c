@@ -169,14 +169,25 @@ NtStatusToCrError(NTSTATUS Status)
 {
     switch (Status)
     {
-        case STATUS_NO_SUCH_DEVICE:
-            return CR_NO_SUCH_DEVINST;
         case STATUS_NOT_IMPLEMENTED:
             return CR_CALL_NOT_IMPLEMENTED;
 
+        case STATUS_INVALID_PARAMETER:
+            return CR_INVALID_DATA;
+
+        case STATUS_NO_SUCH_DEVICE:
+            return CR_NO_SUCH_DEVINST;
+
+        case STATUS_ACCESS_DENIED:
+            return CR_ACCESS_DENIED;
+
+        case STATUS_BUFFER_TOO_SMALL:
+            return CR_BUFFER_SMALL;
+
+        case STATUS_OBJECT_NAME_NOT_FOUND:
+            return CR_NO_SUCH_VALUE;
+
         default:
-            /* FIXME: add more mappings */
-            DPRINT1("Unable to map status 0x%08lx\n", Status);
             return CR_FAILURE;
     }
 }
