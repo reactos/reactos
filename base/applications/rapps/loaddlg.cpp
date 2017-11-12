@@ -146,25 +146,44 @@ public:
         LONG r;
 
         Item = GetDlgItem(m_hDialog, IDC_DOWNLOAD_PROGRESS);
-        if (Item && ulProgressMax)
+        if (Item)
         {
             WCHAR szProgress[100];
-            WCHAR szProgressMax[100];
-            UINT uiPercentage = ((ULONGLONG) ulProgress * 100) / ulProgressMax;
-
-            /* send the current progress to the progress bar */
-            SendMessageW(Item, PBM_SETPOS, uiPercentage, 0);
 
             /* format the bits and bytes into pretty and accessible units... */
             StrFormatByteSizeW(ulProgress, szProgress, _countof(szProgress));
-            StrFormatByteSizeW(ulProgressMax, szProgressMax, _countof(szProgressMax));
 
-            /* ...and post all of it to our subclassed progress bar text subroutine */
+            /* use our subclassed progress bar text subroutine */
             ATL::CStringW m_ProgressText;
-            m_ProgressText.Format(L"%u%% \x2014 %ls / %ls",
-                                  uiPercentage,
-                                  szProgress,
-                                  szProgressMax);
+
+            if (ulProgressMax)
+            {
+                /* total size is known */
+                WCHAR szProgressMax[100];
+                UINT uiPercentage = ((ULONGLONG) ulProgress * 100) / ulProgressMax;
+
+                /* send the current progress to the progress bar */
+                SendMessageW(Item, PBM_SETPOS, uiPercentage, 0);
+
+                /* format total download size */
+                StrFormatByteSizeW(ulProgressMax, szProgressMax, _countof(szProgressMax));
+
+                /* generate the text on progress bar */
+                m_ProgressText.Format(L"%u%% \x2014 %ls / %ls",
+                                      uiPercentage,
+                                      szProgress,
+                                      szProgressMax);
+            }
+            else
+            {
+                /* send the current progress to the progress bar */
+                SendMessageW(Item, PBM_SETPOS, 0, 0);
+
+                /* total size is not known, display only current size */
+                m_ProgressText.Format(L"%ls...",
+                                      szProgress);
+            }
+            /* and finally display it */
             SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) m_ProgressText.GetString());
         }
 
@@ -547,6 +566,21 @@ LRESULT CALLBACK CDownloadManager::DownloadProgressProc(HWND hWnd,
     }
 }
 
+VOID CDownloadManager::SetProgressMarquee(HWND Item, BOOL Enable)
+{
+    if (!Item)
+        return;
+
+    DWORD style = GetWindowLongPtr(Item, GWL_STYLE);
+    if (!style)
+        return;
+
+    if (!SetWindowLongPtr(Item, GWL_STYLE, (Enable ? style | PBS_MARQUEE : style & ~PBS_MARQUEE)))
+        return;
+
+    SendMessageW(Item, PBM_SETMARQUEE, Enable, 0);
+}
+
 DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 {
     CComPtr<IBindStatusCallback> dl;
@@ -590,6 +624,8 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         Item = GetDlgItem(hDlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {
+            SetProgressMarquee(Item, FALSE);
+            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) L"");
             SendMessageW(Item, PBM_SETPOS, 0, 0);
         }
 
@@ -714,11 +750,19 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (!InternetCrackUrlW(InfoArray[iAppId].szUrl, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
             goto end;
 
+        dwContentLen = 0;
+
         if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
             HttpQueryInfoW(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwStatus, 0);
 
         if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
             dwContentLen = FtpGetFileSize(hFile, &dwStatus);
+
+        if (!dwContentLen)
+        {
+            // content-length is not known, enable marquee mode
+            SetProgressMarquee(Item, TRUE);
+        }
 
 #ifdef USE_CERT_PINNING
         // are we using HTTPS to download the RAPPS update package? check if the certificate is original
@@ -763,6 +807,15 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (bCancelled)
             goto end;
+
+        if (!dwContentLen)
+        {
+            // set progress bar to 100%
+            SetProgressMarquee(Item, FALSE);
+
+            dwContentLen = dwCurrentBytesRead;
+            dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
+        }
 
         /* if this thing isn't a RAPPS update and it has a SHA-1 checksum
         verify its integrity by using the native advapi32.A_SHA1 functions */

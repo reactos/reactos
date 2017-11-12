@@ -15,6 +15,7 @@ class CDownloadManager
     static CDowloadingAppsListView DownloadsListView;
 
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
+    static VOID SetProgressMarquee(HWND Item, BOOL Enable);
 
 public:
     static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
