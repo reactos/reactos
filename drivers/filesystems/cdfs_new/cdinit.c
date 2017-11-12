@@ -58,29 +58,6 @@ CdShutdown (
 #pragma alloc_text(INIT, CdInitializeGlobalData)
 #endif
 
-#ifdef __REACTOS__
-
-//
-// Stub for CcWrite, this is a hack
-//
-BOOLEAN
-NTAPI
-CdFastIoWrite (
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN ULONG Length,
-    IN BOOLEAN Wait,
-    IN ULONG LockKey,
-    IN PVOID Buffer,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject)
-{
-    ASSERT(FALSE);
-    return FALSE;
-}
-
-#endif
-
 
 //
 //  Local support routine
@@ -365,19 +342,6 @@ Return Value:
     CdFastIoDispatch.SizeOfFastIoDispatch =    sizeof(FAST_IO_DISPATCH);
     CdFastIoDispatch.FastIoCheckIfPossible =   CdFastIoCheckIfPossible;  //  CheckForFastIo
     CdFastIoDispatch.FastIoRead =              FsRtlCopyRead;            //  Read
-#ifdef __REACTOS__
-
-    //
-    // Add a stub for CdFastIoWrite. This is a hack required because
-    // our current implementation of NtWriteFile won't validate
-    // access granted to files opened. And some applications may attempt
-    // to write to a file. In case it is cached, the kernel will null-dereference
-    // the fastIO routine, trying to call it.
-    // FIXME: remove once NtWriteFile got fixed!
-    //
-
-    CdFastIoDispatch.FastIoWrite =             CdFastIoWrite;            // Write
-#endif
     CdFastIoDispatch.FastIoQueryBasicInfo =    CdFastQueryBasicInfo;     //  QueryBasicInfo
     CdFastIoDispatch.FastIoQueryStandardInfo = CdFastQueryStdInfo;       //  QueryStandardInfo
     CdFastIoDispatch.FastIoLock =              CdFastLock;               //  Lock
