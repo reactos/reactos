@@ -596,6 +596,10 @@ Return Value:
     ULONG TocDiskFlags = 0;
     ULONG MediaChangeCount = 0;
 
+#ifdef __REACTOS__
+    DEVICE_TYPE FilesystemDeviceType;
+#endif
+
     PAGED_CODE();
 
     //
@@ -603,7 +607,16 @@ Return Value:
     //  always be waitable.
     //
 
+#ifdef __REACTOS__
+    if (IrpSp->DeviceObject == CdData.HddFileSystemDeviceObject) {
+        FilesystemDeviceType = FILE_DEVICE_DISK_FILE_SYSTEM;
+    } else {
+#endif
     ASSERT( Vpb->RealDevice->DeviceType == FILE_DEVICE_CD_ROM );
+#ifdef __REACTOS__
+        FilesystemDeviceType = FILE_DEVICE_CD_ROM_FILE_SYSTEM;
+    }
+#endif
     ASSERT( FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT ));
 
     //
@@ -630,7 +643,11 @@ Return Value:
     //
 
     Status = CdPerformDevIoCtrl( IrpContext,
+#ifndef __REACTOS__
                                  IOCTL_CDROM_CHECK_VERIFY,
+#else
+                                 (FilesystemDeviceType == FILE_DEVICE_DISK_FILE_SYSTEM ? IOCTL_DISK_CHECK_VERIFY : IOCTL_CDROM_CHECK_VERIFY),
+#endif
                                  DeviceObjectWeTalkTo,
                                  &MediaChangeCount,
                                  sizeof(ULONG),
@@ -659,7 +676,11 @@ Return Value:
     //
 
     Status = CdPerformDevIoCtrl( IrpContext,
+#ifndef __REACTOS__
                                  IOCTL_CDROM_GET_DRIVE_GEOMETRY,
+#else
+                                 (FilesystemDeviceType == FILE_DEVICE_DISK_FILE_SYSTEM ? IOCTL_DISK_GET_DRIVE_GEOMETRY : IOCTL_CDROM_GET_DRIVE_GEOMETRY),
+#endif
                                  DeviceObjectWeTalkTo,
                                  &DiskGeometry,
                                  sizeof( DISK_GEOMETRY ),
@@ -727,7 +748,11 @@ Return Value:
         Status = IoCreateDevice( CdData.DriverObject,
                                  sizeof( VOLUME_DEVICE_OBJECT ) - sizeof( DEVICE_OBJECT ),
                                  NULL,
+#ifndef __REACTOS__
                                  FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+#else
+                                 FilesystemDeviceType,
+#endif
                                  0,
                                  FALSE,
                                  (PDEVICE_OBJECT *) &VolDo );
@@ -780,7 +805,21 @@ Return Value:
 
         if (Status != STATUS_SUCCESS)  { 
 
+#ifdef __REACTOS__
+
+            //
+            // Don't bail out if that was a disk based ISO image, it is legit
+            //
+
+            if (FilesystemDeviceType == FILE_DEVICE_DISK_FILE_SYSTEM) {
+                CdFreePool( &CdromToc );
+                Status = STATUS_SUCCESS;
+            } else {
+#endif
             try_leave( Status ); 
+#ifdef __REACTOS__
+            }
+#endif
         }
 
         //
@@ -2247,7 +2286,12 @@ Return Value:
     //  We only allow the invalidate call to come in on our file system devices.
     //
     
+#ifndef __REACTOS__
     if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject)  {
+#else
+    if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject &&
+        IrpSp->DeviceObject != CdData.HddFileSystemDeviceObject)  {
+#endif
 
         CdCompleteRequest( IrpContext, Irp, STATUS_INVALID_DEVICE_REQUEST );
 
