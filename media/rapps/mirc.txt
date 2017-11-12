@@ -6,7 +6,7 @@ Description = The most popular client for the Internet Relay Chat (IRC).
 Size = 2.6 MiB
 Category = 5
 URLSite = http://www.mirc.com/
-URLDownload = http://download.mirc.com/19/mirc749.exe
+URLDownload = https://web.archive.org/web/20170628091903/http://download.mirc.com/19/mirc749.exe
 SHA1 = 741b6c69852c50252ec6b7b3f90ffdefb02b5ffd
 CDPath = none
 
