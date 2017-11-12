@@ -1297,9 +1297,12 @@ CmpLoadHiveThread(IN PVOID StartContext)
                                      &CmpMachineHiveList[i].Allocate,
                                      0);
         if (!(NT_SUCCESS(Status)) ||
-            (!(CmHive->FileHandles[HFILE_TYPE_LOG]) && !(CmpMiniNTBoot))) // HACK
+            (!(CmpShareSystemHives) && !(CmHive->FileHandles[HFILE_TYPE_LOG])))
         {
-            /* We failed or couldn't get a log file, raise a hard error */
+            /*
+             * We failed, or could not get a log file (unless
+             * the hive is shared), raise a hard error.
+             */
             ErrorParameters = &FileName;
             NtRaiseHardError(STATUS_CANNOT_LOAD_REGISTRY_FILE,
                              1,
