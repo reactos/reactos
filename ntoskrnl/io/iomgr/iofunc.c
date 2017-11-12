@@ -3499,19 +3499,11 @@ NtWriteFile(IN HANDLE FileHandle,
     CapturedByteOffset.QuadPart = 0;
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
-    /* Get File Object
-     * FIXME: We should call ObReferenceFileObjectForWrite() instead to
-     * check whether write access was actually granted. If not it will
-     * fail and we will return.
-     * That would allow avoiding ASSERT on FastIO later on if the FSD
-     * is read-only
-     */
-    Status = ObReferenceObjectByHandle(FileHandle,
-                                       0,
-                                       IoFileObjectType,
-                                       PreviousMode,
-                                       (PVOID*)&FileObject,
-                                       &ObjectHandleInfo);
+    /* Get File Object for write */
+    Status = ObReferenceFileObjectForWrite(FileHandle,
+                                           PreviousMode,
+                                           &FileObject,
+                                           &ObjectHandleInfo);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Validate User-Mode Buffers */
