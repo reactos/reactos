@@ -900,7 +900,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* We imported, no need to create a new hive */
         Allocate = FALSE;
 
-        /* Manually set the hive as volatile, if in Live CD mode */
+        /* Manually set the hive as volatile, if in LiveCD mode */
         if (CmpShareSystemHives) SystemHive->Hive.HiveFlags = HIVE_VOLATILE;
     }
     else
@@ -1433,8 +1433,12 @@ CmpInitializeHiveList(IN USHORT Flag)
     /* Loop every hive we care about */
     for (i = 0; i < CM_NUMBER_OF_MACHINE_HIVES; i++)
     {
-        /* Make sure the list is setup */
+        /* Make sure the list is set up */
         ASSERT(CmpMachineHiveList[i].Name != NULL);
+
+        /* Load the hive as volatile, if in LiveCD mode */
+        if (CmpShareSystemHives)
+            CmpMachineHiveList[i].HHiveFlags |= HIVE_VOLATILE;
 
         /* Create a thread to handle this hive */
         Status = PsCreateSystemThread(&Thread,
