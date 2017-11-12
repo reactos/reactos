@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -2295,7 +2295,7 @@ Return Value:
 
     Status = ObReferenceObjectByHandle( Handle,
                                         0,
-                                        IoFileObjectType, /* ReactOS Change: GCC/LD Incompatibility with exported kernel data */
+                                        *IoFileObjectType,
                                         KernelMode,
                                         (PVOID*)&FileToMarkBad, /* ReactOS Change: GCC "passing argument 5 of 'ObReferenceObjectByHandle' from incompatible pointer type" */
                                         NULL );

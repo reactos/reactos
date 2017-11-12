@@ -23,6 +23,9 @@ License = Ücretsiz
 Description = PC'nizi temizleme için çok iyi araç.
 Size = 6,6 MiB
 
+[Section.0415]
+Description = Przyzwoite narzędzie do czyszczenia tymczasowych plików i ogólnej konserwacji komputera.
+
 [Section.0418]
 License = Gratuită
 Description = Utilitar pentru mentenanța ordinii în configurația sistemului.

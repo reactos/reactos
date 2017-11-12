@@ -18,6 +18,9 @@ Size = 6,0 MiB
 Name = Emulador Agat
 Description = Emulador de Apple ][ y Agat 7/9 para Win32.
 
+[Section.0415]
+Description = Emulator Apple ][ i Agat 7/9 dla Win32.
+
 [Section.0418]
 Description = Eimulator de Apple ][ și Agat 7/9 pentru Win32.
 Size = 6,0 Mio

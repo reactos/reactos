@@ -14,6 +14,9 @@ CDPath = none
 Description = Quelloffener, konsolenbasierter Dateimanager mit zwei nebeneinander liegenden Panels.
 Size = 10,2 MiB
 
+[Section.0415]
+Description = Otwartoźródłowy, tekstowy menedżer plików z dwoma panelami obok siebie.
+
 [Section.0418]
 Description = Gestionar (cu surse deschise) de fișiere de tip consolă textuală, după modelul paneluri-alăturate.
 Size = 10,2 Mio

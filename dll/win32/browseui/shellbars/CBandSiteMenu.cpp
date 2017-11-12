@@ -48,19 +48,6 @@ CBandSiteMenu::~CBandSiteMenu()
 
 HRESULT WINAPI CBandSiteMenu::FinalConstruct()
 {
-    HRESULT hr = SHGetFolderLocation(0, CSIDL_DESKTOP, NULL, 0, &m_DesktopPidl);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    WCHAR buffer[MAX_PATH];
-    hr = SHGetFolderPathAndSubDirW(0, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, L"Microsoft\\Internet Explorer\\Quick Launch", buffer);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    m_QLaunchPidl.Attach(ILCreateFromPathW(buffer));
-    if (m_QLaunchPidl == NULL)
-        return E_FAIL;
-
     return S_OK;
 }
 
@@ -150,12 +137,53 @@ HRESULT CBandSiteMenu::_CreateNewISFBand(HWND hwnd, REFIID riid, void** ppv)
     return pISFB->QueryInterface(riid, ppv);
 }
 
+LPITEMIDLIST CBandSiteMenu::_GetQLaunchPidl(BOOL refresh)
+{
+    if (m_QLaunchPidl != NULL)
+    {
+        if (refresh)
+            m_QLaunchPidl.Free();
+        else
+            return m_QLaunchPidl;
+    }
+
+    WCHAR buffer[MAX_PATH];
+    HRESULT hr = SHGetFolderPathAndSubDirW(0, CSIDL_APPDATA, NULL, 0, L"Microsoft\\Internet Explorer\\Quick Launch", buffer);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return NULL;
+
+    m_QLaunchPidl.Attach(ILCreateFromPathW(buffer));
+    return m_QLaunchPidl;
+}
+
 HRESULT CBandSiteMenu::_CreateBuiltInISFBand(UINT uID, REFIID riid, void** ppv)
 {
     LPITEMIDLIST pidl;
     HRESULT hr;
 
-    pidl = (uID == IDM_TASKBAR_TOOLBARS_DESKTOP) ? m_DesktopPidl : m_QLaunchPidl;
+    switch (uID)
+    {
+        case IDM_TASKBAR_TOOLBARS_DESKTOP:
+        {
+            if (m_DesktopPidl != NULL)
+                m_DesktopPidl.Free();
+
+            hr = SHGetFolderLocation(0, CSIDL_DESKTOP, NULL, 0, &m_DesktopPidl);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            pidl = m_DesktopPidl;
+            break;
+        }
+        case IDM_TASKBAR_TOOLBARS_QUICKLAUNCH:
+        {
+            pidl = _GetQLaunchPidl(true);
+            break;
+        }
+    }
+
+    if (pidl == NULL)
+        return E_FAIL;
 
     CComPtr<IShellFolderBand> pISFB;
     hr = CISFBand_CreateInstance(IID_IShellFolderBand, (PVOID*)&pISFB);
@@ -238,7 +266,11 @@ UINT CBandSiteMenu::_GetMenuIdFromISFBand(IUnknown *pBand)
     if (FAILED_UNEXPECTEDLY(hr))
         return UINT_MAX;
 
-    hr = psfDesktop->CompareIDs(0, pidl, m_QLaunchPidl);
+    LPITEMIDLIST _QLaunchPidl = _GetQLaunchPidl(false);
+    if (_QLaunchPidl == NULL)
+        return UINT_MAX;
+
+    hr = psfDesktop->CompareIDs(0, pidl, _QLaunchPidl);
     if (FAILED_UNEXPECTEDLY(hr))
         return UINT_MAX;
 

@@ -14,6 +14,9 @@ CDPath = none
 Description = Ein HEX-Editor für Windows.
 Size = 146,3 KiB
 
+[Section.0415]
+Description = Edytor heksadecymalny dla Windows.
+
 [Section.0418]
 License = Gratuită
 Description = Editor hexazecimal de fișiere pentru Windows.

@@ -420,15 +420,20 @@ BOOL BUTTON_DrawIml(HDC hDC, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCa
     }
     else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
     {
-        left = prc->left + (prc->right - prc->left - ImageSize.cy) / 2;
+        left = prc->left + (prc->right - prc->left - ImageSize.cx) / 2;
         top = prc->top + pimlData->margin.top;
         prc->top = top + ImageSize.cy + pimlData->margin.bottom;
     }
     else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
     {
-        left = prc->left + (prc->right - prc->left - ImageSize.cy) / 2;
+        left = prc->left + (prc->right - prc->left - ImageSize.cx) / 2;
         top = prc->bottom - pimlData->margin.bottom - ImageSize.cy;
         prc->bottom = top - pimlData->margin.top;
+    }
+    else if (pimlData->uAlign == BUTTON_IMAGELIST_ALIGN_CENTER)
+    {
+        left = prc->left + (prc->right - prc->left - ImageSize.cx) / 2;
+        top = prc->top + (prc->bottom - prc->top - ImageSize.cy) / 2;
     }
 
     if (!bOnlyCalc)
@@ -436,6 +441,35 @@ BOOL BUTTON_DrawIml(HDC hDC, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCa
 
     return TRUE;
 }
+
+DWORD BUTTON_SendCustomDraw(HWND hwnd, HDC hDC, DWORD dwDrawStage, RECT* prc)
+{
+    NMCUSTOMDRAW nmcs;
+    LONG state = get_button_state( hwnd );
+
+    nmcs.hdr.hwndFrom = hwnd;
+    nmcs.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
+    nmcs.hdr.code     = NM_CUSTOMDRAW ;
+    nmcs.dwDrawStage  = dwDrawStage;
+    nmcs.hdc          = hDC;
+    nmcs.rc           = *prc;
+    nmcs.dwItemSpec   = 0;
+    nmcs.uItemState   = 0;
+    nmcs.lItemlParam  = 0;
+    if(!IsWindowEnabled(hwnd))
+        nmcs.uItemState |= CDIS_DISABLED;
+    if (state & (BST_CHECKED | BST_INDETERMINATE))
+        nmcs.uItemState |= CDIS_CHECKED;
+    if (state & BST_FOCUS)
+        nmcs.uItemState |= CDIS_FOCUS;
+    if (state & BST_PUSHED)
+        nmcs.uItemState |= CDIS_SELECTED;
+    if (!(get_ui_state(hwnd) & UISF_HIDEACCEL))
+        nmcs.uItemState |= CDIS_SHOWKEYBOARDCUES;
+
+    return SendMessageW(GetParent(hwnd), WM_NOTIFY, nmcs.hdr.idFrom, (LPARAM)&nmcs);
+}
+
 #endif
 
 
@@ -1185,17 +1219,16 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
    PBUTTON_DATA pdata = _GetButtonData(hwnd);
 #endif
 
+#ifndef _USER32_
+    BOOL bHasIml = BUTTON_DrawIml(hdc, &pdata->imlData, &r, TRUE);
+#endif
+
    /* Calculate label rectangle according to label type */
    switch (style & (BS_ICON|BS_BITMAP))
    {
       case BS_TEXT:
       {
           HFONT hFont, hPrevFont = 0;
-#ifdef __REACTOS__
-          BOOL bHasIml;
-
-          bHasIml = BUTTON_DrawIml(hdc, &pdata->imlData, &r, TRUE);
-#endif
 
           if (!(text = get_button_text( hwnd ))) goto empty_rect;
           if (!text[0])
@@ -1211,18 +1244,6 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
 #ifdef __REACTOS__
           if (get_ui_state(hwnd) & UISF_HIDEACCEL)
               dtStyle |= DT_HIDEPREFIX;
-
-          if (bHasIml)
-          {
-            if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT)
-                r.left = pdata->imlData.margin.left;
-            else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
-                r.right = pdata->imlData.margin.right;
-            else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
-                r.top = pdata->imlData.margin.top;
-            else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
-                r.bottom = pdata->imlData.margin.bottom;
-          }
 #endif
           break;
       }
@@ -1258,10 +1279,28 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
 
       default:
       empty_rect:
+#ifndef _USER32_
+         if (bHasIml)
+             break;
+#endif
          rc->right = r.left;
          rc->bottom = r.top;
          return (UINT)-1;
    }
+
+#ifndef _USER32_
+   if (bHasIml)
+   {
+     if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT)
+         r.left = pdata->imlData.margin.left;
+     else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_RIGHT)
+         r.right = pdata->imlData.margin.right;
+     else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_TOP)
+         r.top = pdata->imlData.margin.top;
+     else if (pdata->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_BOTTOM)
+         r.bottom = pdata->imlData.margin.bottom;
+   }
+#endif
 
    /* Position label inside bounding rectangle according to
     * alignment flags. (calculated rect is always left-top aligned).
@@ -1304,28 +1343,11 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
  */
 static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int cx, int cy)
 {
-#ifdef _USER32_
    RECT rc;
 
    SetRect(&rc, 0, 0, cx, cy);
    DrawTextW(hdc, (LPCWSTR)lp, -1, &rc, (UINT)wp);
    return TRUE;
-#else
-    HWND hwnd = (HWND)lp;
-    RECT rc;
-    PBUTTON_DATA pdata = _GetButtonData(hwnd);
-    WCHAR *text = NULL;
-
-    if (!(text = get_button_text( hwnd ))) return TRUE;
-
-    SetRect(&rc, 0, 0, cx, cy);
-
-    BUTTON_DrawIml(hdc, &pdata->imlData, &rc, FALSE);
-
-    DrawTextW(hdc, text, -1, &rc, (UINT)wp);
-    HeapFree(GetProcessHeap(), 0, text);
-    return TRUE;
-#endif
 }
 
 
@@ -1334,7 +1356,11 @@ static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int 
  *
  *   Common function for drawing button label.
  */
+ #if defined(_USER32_)
 static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
+#else
+static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
+#endif
 {
    DRAWSTATEPROC lpOutputProc = NULL;
    LPARAM lp;
@@ -1350,6 +1376,11 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
     * I don't have Win31 on hand to verify that, so I leave it as is.
     */
 
+#ifndef _USER32_
+    PBUTTON_DATA pdata = _GetButtonData(hwnd);
+    BUTTON_DrawIml(hdc, &pdata->imlData, rc, FALSE);
+#endif
+
    if ((style & BS_PUSHLIKE) && (state & BST_INDETERMINATE))
    {
       hbr = GetSysColorBrush(COLOR_GRAYTEXT);
@@ -1361,13 +1392,8 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
       case BS_TEXT:
          /* DST_COMPLEX -- is 0 */
          lpOutputProc = BUTTON_DrawTextCallback;
-#ifdef _USER32_
          if (!(text = get_button_text( hwnd ))) return;
          lp = (LPARAM)text;
-#else
-         lp = (LPARAM)hwnd;
-#endif
-
          wp = (WPARAM)dtFlags;
 
 #ifdef __REACTOS__
@@ -1420,6 +1446,9 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     BOOL pushedState = (state & BST_PUSHED);
     HWND parent;
     HRGN hrgn;
+#ifndef _USER32_
+    DWORD cdrf;
+#endif
 
     GetClientRect( hwnd, &rc );
 
@@ -1443,15 +1472,21 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     hOldBrush = SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
     oldBkMode = SetBkMode(hDC, TRANSPARENT);
 
+    /* completely skip the drawing if only focus has changed */
+    if (action == ODA_FOCUS) goto draw_focus;
+
+#ifndef _USER32_
+    cdrf = BUTTON_SendCustomDraw(hwnd, hDC, CDDS_PREERASE, &rc);
+    if (cdrf == CDRF_SKIPDEFAULT)
+        goto cleanup;
+#endif
+
     if (get_button_type(style) == BS_DEFPUSHBUTTON)
     {
         if (action != ODA_FOCUS)
             Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
 	InflateRect( &rc, -1, -1 );
     }
-
-    /* completely skip the drawing if only focus has changed */
-    if (action == ODA_FOCUS) goto draw_focus;
 
     uState = DFCS_BUTTONPUSH;
 
@@ -1470,6 +1505,15 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     DrawFrameControl( hDC, &rc, DFC_BUTTON, uState );
 
+#ifndef _USER32_
+    if (cdrf == CDRF_NOTIFYPOSTERASE)
+        BUTTON_SendCustomDraw(hwnd, hDC, CDDS_POSTERASE, &rc);
+
+    cdrf = BUTTON_SendCustomDraw(hwnd, hDC, CDDS_PREPAINT, &rc);
+    if (cdrf == CDRF_SKIPDEFAULT)
+        goto cleanup;
+#endif
+
     /* draw button label */
     r = rc;
     dtFlags = BUTTON_CalcLabelRect(hwnd, hDC, &r);
@@ -1485,6 +1529,11 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     BUTTON_DrawLabel(hwnd, hDC, dtFlags, &r);
 
     SetTextColor( hDC, oldTxtColor );
+
+#ifndef _USER32_
+    if (cdrf == CDRF_NOTIFYPOSTPAINT)
+        BUTTON_SendCustomDraw(hwnd, hDC, CDDS_POSTPAINT, &rc);
+#endif
 
 draw_focus:
     if (action == ODA_FOCUS || (state & BST_FOCUS))

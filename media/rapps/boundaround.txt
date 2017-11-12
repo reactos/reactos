@@ -20,6 +20,9 @@ Description = Un juego similar a Frozen Fruits.
 Name = Bound Around (Versione di prova)
 Description = Un gioco simile a Frozen Fruits.
 
+[Section.0415]
+Description = Gra podobna do Frozen Fruits.
+
 [Section.0418]
 License = Versiune de evaluare
 Description = Joc similar cu „Frozen Fruits”.

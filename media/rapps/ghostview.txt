@@ -17,6 +17,9 @@ Size = 1,9 MiB
 [Section.0a]
 Description = Una interfaz gráfica para Ghostscript.
 
+[Section.0415]
+Description = Interfejs graficzny dla Ghostscript.
+
 [Section.0418]
 License = Licență publică gratuită „Aladdin”
 Description = Interfață grafică pentru GhostScript.

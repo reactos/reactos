@@ -14,6 +14,9 @@ CDPath = none
 Description = Kostenloser Windows Tracker zur Erstellung von Musik für NES und Famicom Systeme.
 Size = 1,5 MiB
 
+[Section.0415]
+Description = Darmowy program do tworzenia muzyki dla systemów NES i Famicom.
+
 [Section.0418]
 License = Gratuită
 Description = Program de producție de muzică pentru sisteme NES și Famicom.

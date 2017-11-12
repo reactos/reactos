@@ -17,6 +17,9 @@ Description = Buscador de archivos compatible con ReactOS.
 Description = ReactOS kompatibles Dateisuchprogramm.
 Size = 944,4 KiB
 
+[Section.0415]
+Description = Narzędzie do wyszukiwania plików zgodne z ReactOS.
+
 [Section.0418]
 License = Gratuită
 Description = Program de căutare a fișierelor, compatibil cu ReactOS.

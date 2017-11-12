@@ -14,6 +14,9 @@ SHA1 = d8360785c749bd37fb246016bdc5a76761e0a2cd
 Description = Mithilfe der Adobe AIR-Laufzeit können Entwickler den gleichen Code in native Anwendungen und Spiele einbinden.
 Size = 17,8 MiB
 
+[Section.0415]
+Description = Środowisko wykonawcze Adobe AIR umożliwia programistom integrację tego samego kodu w natywnych aplikacjach i grach.
+
 [Section.0418]
 License = Acord de licențiere Adobe Software
 Description = Adobe AIR oferă programatorilor posibilitatea de a încorpora în același pachet aplicații native și jocuri.

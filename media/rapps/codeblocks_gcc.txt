@@ -20,6 +20,9 @@ Description = Un IDE potente, de código abierto y multiplataforma. Viene con el
 [Section.0410]
 Description = Un IDE potente, open source, multipiattaforma. Contiene il compilatore TDM-GCC (versione 4.9.2, 32 bit).
 
+[Section.0415]
+Description = Otwartoźródłowe, wieloplatformowe, potężne środowisko programistyczne (IDE). Zawiera kompilator TDM-GCC (wersja 4.9.2, 32 bit).
+
 [Section.0418]
 Name = Code::Blocks TDM-GCC (versiunea 4.9.2 pe 32 biți)
 Description = Mediu de dezvoltare integrat (IDE) puternic, multiplatformă, cu surse deschise. Conține compilatorul TDM-GCC (versiunea 4.9.2 pe 32 biți).

@@ -147,6 +147,14 @@ Index: drivers/filesystems/cdfs_new/devctrl.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/devctrl.c	(revision 34615)
 +++ drivers/filesystems/cdfs_new/devctrl.c	(working copy)
+@@ -27,6 +27,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdDevCtrlCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
 @@ -64,7 +64,7 @@
      PIO_STACK_LOCATION IrpSp;
      PIO_STACK_LOCATION NextIrpSp;
@@ -156,6 +164,14 @@ Index: drivers/filesystems/cdfs_new/devctrl.c
  
      PAGED_CODE();
  
+@@ -171,6 +172,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdDevCtrlCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
 Index: drivers/filesystems/cdfs_new/close.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/close.c	(revision 34615)
@@ -269,28 +285,6 @@ Index: drivers/filesystems/cdfs_new/volinfo.c
          //
          //  Set the information field to the number of bytes actually filled in
          //
-Index: drivers/filesystems/cdfs_new/cdfs.rbuild
-===================================================================
---- drivers/filesystems/cdfs_new/cdfs.rbuild	(revision 34615)
-+++ drivers/filesystems/cdfs_new/cdfs.rbuild	(working copy)
-@@ -1,8 +1,8 @@
- <?xml version="1.0"?>
- <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
--<module name="cdfs_new" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs_new.sys">
-+<module name="cdfs" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs.sys">
- 	<bootstrap installbase="$(CDOUTPUT)" />
--	<include base="cdfs_new">.</include>
-+	<include base="cdfs">.</include>
- 	<library>ntoskrnl</library>
- 	<library>hal</library>
-     <file>allocsup.c</file>
-@@ -32,6 +32,5 @@
-     <file>volinfo.c</file>
-     <file>workque.c</file>
- 	<file>cdfs.rc</file>
--    <compilerflag>-fms-extensions</compilerflag>
- 	<pch>cdprocs.h</pch>
- </module>
 Index: drivers/filesystems/cdfs_new/cddata.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/cddata.c	(revision 34615)
@@ -403,59 +397,6 @@ Index: drivers/filesystems/cdfs_new/cdprocs.h
 ===================================================================
 --- drivers/filesystems/cdfs_new/cdprocs.h	(revision 34615)
 +++ drivers/filesystems/cdfs_new/cdprocs.h	(working copy)
-@@ -44,28 +44,30 @@
- //  Here are the different pool tags.
- //
- 
--#define TAG_CCB                 'ccdC'      //  Ccb
--#define TAG_CDROM_TOC           'ctdC'      //  TOC
--#define TAG_DIRENT_NAME         'nddC'      //  CdName in dirent
--#define TAG_ENUM_EXPRESSION     'eedC'      //  Search expression for enumeration
--#define TAG_FCB_DATA            'dfdC'      //  Data Fcb
--#define TAG_FCB_INDEX           'ifdC'      //  Index Fcb
--#define TAG_FCB_NONPAGED        'nfdC'      //  Nonpaged Fcb
--#define TAG_FCB_TABLE           'tfdC'      //  Fcb Table entry
--#define TAG_FILE_NAME           'nFdC'      //  Filename buffer
--#define TAG_GEN_SHORT_NAME      'sgdC'      //  Generated short name
--#define TAG_IO_BUFFER           'fbdC'      //  Temporary IO buffer
--#define TAG_IO_CONTEXT          'oidC'      //  Io context for async reads
--#define TAG_IRP_CONTEXT         'cidC'      //  Irp Context
--#define TAG_IRP_CONTEXT_LITE    'lidC'      //  Irp Context lite
--#define TAG_MCB_ARRAY           'amdC'      //  Mcb array
--#define TAG_PATH_ENTRY_NAME     'nPdC'      //  CdName in path entry
--#define TAG_PREFIX_ENTRY        'epdC'      //  Prefix Entry
--#define TAG_PREFIX_NAME         'npdC'      //  Prefix Entry name
--#define TAG_SPANNING_PATH_TABLE 'psdC'      //  Buffer for spanning path table
--#define TAG_UPCASE_NAME         'nudC'      //  Buffer for upcased name
--#define TAG_VOL_DESC            'dvdC'      //  Buffer for volume descriptor
--#define TAG_VPB                 'pvdC'      //  Vpb allocated in filesystem
-+/* ReactOS Change: GCC doesn't understand this, use TAG macro */
-+#include <reactos/helper.h>
-+#define TAG_CCB                 TAG('c','c','d','C')      //  Ccb
-+#define TAG_CDROM_TOC           TAG('c','t','d','C')      //  TOC
-+#define TAG_DIRENT_NAME         TAG('n','d','d','C')      //  CdName in dirent
-+#define TAG_ENUM_EXPRESSION     TAG('e','e','d','C')      //  Search expression for enumeration
-+#define TAG_FCB_DATA            TAG('d','f','d','C')      //  Data Fcb
-+#define TAG_FCB_INDEX           TAG('i','f','d','C')      //  Index Fcb
-+#define TAG_FCB_NONPAGED        TAG('n','f','d','C')      //  Nonpaged Fcb
-+#define TAG_FCB_TABLE           TAG('t','f','d','C')      //  Fcb Table entry
-+#define TAG_FILE_NAME           TAG('n','F','d','C')      //  Filename buffer
-+#define TAG_GEN_SHORT_NAME      TAG('s','g','d','C')      //  Generated short name
-+#define TAG_IO_BUFFER           TAG('f','b','d','C')      //  Temporary IO buffer
-+#define TAG_IO_CONTEXT          TAG('o','i','d','C')      //  Io context for async reads
-+#define TAG_IRP_CONTEXT         TAG('c','i','d','C')      //  Irp Context
-+#define TAG_IRP_CONTEXT_LITE    TAG('l','i','d','C')      //  Irp Context lite
-+#define TAG_MCB_ARRAY           TAG('a','m','d','C')      //  Mcb array
-+#define TAG_PATH_ENTRY_NAME     TAG('n','P','d','C')      //  CdName in path entry
-+#define TAG_PREFIX_ENTRY        TAG('e','p','d','C')      //  Prefix Entry
-+#define TAG_PREFIX_NAME         TAG('n','p','d','C')      //  Prefix Entry name
-+#define TAG_SPANNING_PATH_TABLE TAG('p','s','d','C')      //  Buffer for spanning path table
-+#define TAG_UPCASE_NAME         TAG('n','u','d','C')      //  Buffer for upcased name
-+#define TAG_VOL_DESC            TAG('d','v','d','C')      //  Buffer for volume descriptor
-+#define TAG_VPB                 TAG('p','v','d','C')      //  Vpb allocated in filesystem
- 
- //
- //  Tag all of our allocations if tagging is turned on
 @@ -902,33 +904,39 @@
  }
  
@@ -617,10 +558,8 @@ Index: drivers/filesystems/cdfs_new/cdprocs.h
 +#define GetExceptionCode() 0
 +#define AbnormalTermination() 0
  
--#define try_return(S) { S; goto try_exit; }
--#define try_leave(S) { S; leave; }
-+#define try_return(S) { goto try_exit; }
-+#define try_leave(S) { leave; }
+ #define try_return(S) { S; goto try_exit; }
+ #define try_leave(S) { S; leave; }
  
 +
  //
@@ -938,19 +877,6 @@ Index: drivers/filesystems/cdfs_new/fileinfo.c
  CdFastQueryNetworkInfo (
      IN PFILE_OBJECT FileObject,
      IN BOOLEAN Wait,
-Index: drivers/filesystems/cdfs_new/nodetype.h
-===================================================================
---- drivers/filesystems/cdfs_new/nodetype.h	(revision 34615)
-+++ drivers/filesystems/cdfs_new/nodetype.h	(working copy)
-@@ -97,6 +97,8 @@
- #define CDFS_BUG_CHECK_VOLINFO           (0x001b0000)
- #define CDFS_BUG_CHECK_WORKQUE           (0x001c0000)
- 
-+/* ReactOS Change: Need to add to reactos.mc */
-+#define CDFS_FILE_SYSTEM                 ((ULONG)0x00000026L)
- #define CdBugCheck(A,B,C) { KeBugCheckEx(CDFS_FILE_SYSTEM, BugCheckFileId | __LINE__, A, B, C ); }
- 
- #endif // _NODETYPE_
 Index: drivers/filesystems/cdfs_new/fsctrl.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/fsctrl.c	(revision 34615)
@@ -1001,12 +927,9 @@ Index: drivers/filesystems/cdfs_new/fsctrl.c
  CdIsVolumeDirty (
      IN PIRP_CONTEXT IrpContext,
      IN PIRP Irp
-@@ -2294,9 +2295,9 @@
- 
-     Status = ObReferenceObjectByHandle( Handle,
+@@ -2296,9 +2297,9 @@
                                          0,
--                                        *IoFileObjectType,
-+                                        IoFileObjectType, /* ReactOS Change: GCC/LD Incompatibility with exported kernel data */
+                                         *IoFileObjectType,
                                          KernelMode,
 -                                        &FileToMarkBad,
 +                                        (PVOID*)&FileToMarkBad, /* ReactOS Change: GCC "passing argument 5 of 'ObReferenceObjectByHandle' from incompatible pointer type" */
@@ -1042,6 +965,26 @@ Index: drivers/filesystems/cdfs_new/fsctrl.c
                                      VOLUME_ID_LENGTH,
                                      (PCHAR) Vcb->Vpb->VolumeLabel );
  
+Index: drivers/filesystems/cdfs_new/pnp.c
+===================================================================
+--- drivers/filesystems/cdfs_new/pnp.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/pnp.c	(working copy)
+@@ -51,6 +51,7 @@
+     );
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdPnpCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -774,6 +775,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdPnpCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
 Index: drivers/filesystems/cdfs_new/workque.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/workque.c	(revision 34615)

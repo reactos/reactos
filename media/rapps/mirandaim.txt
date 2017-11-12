@@ -1,25 +1,25 @@
 [Section]
 Name = Miranda IM
-Version = 0.10.48
+Version = 0.10.21
 License = GPL
 Description = Open source multiprotocol instant messaging application. May not work completely.
-Size = 7.6 MiB
+Size = 2.8 MiB
 Category = 5
 URLSite = http://www.miranda-im.org/
-URLDownload = http://download.sourceforge.net/project/miranda/miranda-im/0.10.48.0/miranda-im-v0.10.48-unicode.exe?nowrap
-SHA1 = 318b9283adf73d1ec92990c72296bb3882110c0c
+URLDownload = https://web.archive.org/web/20140327190905/http://files.miranda-im.org/stable/0.10.21.0/miranda-im-v0.10.21-unicode.exe
+SHA1 = 8b76ecba6e54abe99cc52b2f7c3c27726befaf0c
 CDPath = none
 
 [Section.0407]
 Description = Quelloffene Multiprotokoll Instant Messaging Anwendung. Funktioniert möglicherweise nicht vollständig.
-Size = 7,6 MiB
+Size = 2,8 MiB
 
 [Section.0a]
 Description = Aplicación de mensajería instantánea multiprotocolo de código abierto. Puede que no funcione del todo bien.
 
 [Section.040c]
 Description = Application de messagerie instantannée multi-protocoles open source - pourrait ne pas fonctionner complètement.
-Size = 7,6 Mio
+Size = 2,8 Mio
 
 [Section.0410]
 Description = Multi-protocollo open source per applicazioni di messaggistica istantanea - potrebbe non funzionare del tutto.
@@ -32,15 +32,15 @@ Description = Otwarty komunikator internetowy, obsługujący wiele różnych pro
 
 [Section.0418]
 Description = Aplicație de mesagerie instant multiprotocol (cu surse deschise). Este posibil să întâmpinați limitări de funcționalitate.
-Size = 7,6 Mio
+Size = 2,8 Mio
 
 [Section.0419]
 Description = Мультипротокольное приложение для обмена мгновенными сообщениями с открытым исходным кодом.
-Size = 7,6 МиБ
+Size = 2,8 МиБ
 
 [Section.041f]
 Description = Açık kaynak, çoklu iletişim kâideli, evgin iletileşme uygulaması. Eksiksiz olarak çalışmayabilir.
-Size = 7,6 MiB
+Size = 2,8 MiB
 
 [Section.0422]
 Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.

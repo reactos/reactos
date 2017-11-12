@@ -59,7 +59,7 @@ URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/28.0/win32
 SHA1 = 43eb9fbdd29539d41e4e175008e2d37ae5c933b6
 
 [Section.0415]
-Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
+Description = Popularna i jedna z najlepszych darmowych przeglądarek internetowych.
 Size = 24.8 MiB
 URLSite = http://www.mozilla.org/pl/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/28.0/win32/pl/Firefox%20Setup%2028.0.exe

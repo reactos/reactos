@@ -222,11 +222,6 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
         return STATUS_ACCESS_DENIED;
     }
 
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_VOLUME_LOCKED))
-    {
-        return STATUS_ACCESS_DENIED;
-    }
-
     Status = CdfsOpenFile(DeviceExt,
         FileObject,
         &FileObject->FileName);
@@ -274,6 +269,11 @@ CdfsCreate(
 
     DeviceObject = IrpContext->DeviceObject;
     DeviceExt = DeviceObject->DeviceExtension;
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_VOLUME_LOCKED))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
     if (DeviceObject == CdfsGlobalData->CdFsDeviceObject || DeviceObject == CdfsGlobalData->HddFsDeviceObject)
     {
         /* DeviceObject represents FileSystem instead of logical volume */
