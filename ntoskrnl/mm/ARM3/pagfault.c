@@ -597,6 +597,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     BOOLEAN NeedZero = FALSE, HaveLock = FALSE;
     ULONG Color;
     PMMPFN Pfn1;
+    PMMPTE PtePte;
     DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
             Address,
             Process);
@@ -727,7 +728,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
 
     /* Write it */
     /* HACK: mark it as writeable before wiring to it */
-    PMMPTE PtePte = MiAddressToPte(PointerPte);
+    PtePte = MiAddressToPte(PointerPte);
     PtePte->u.Hard.Write = 1;
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
@@ -1664,6 +1665,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     ULONG Color;
     BOOLEAN IsSessionAddress;
     PMMPFN Pfn1;
+    PMMPTE PtePte;
     DPRINT("ARM3 FAULT AT: %p\n", Address);
 
     /* Check for page fault on high IRQL */
@@ -2112,7 +2114,7 @@ UserFault:
 
         /* Write a demand-zero PDE */
         /* HACK: make it writeable before writing */
-        PMMPTE PtePte = MiAddressToPte(PointerPde);
+        PtePte = MiAddressToPte(PointerPde);
         PtePte->u.Hard.Write = 1;
         MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
 
