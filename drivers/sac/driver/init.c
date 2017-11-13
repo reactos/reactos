@@ -18,7 +18,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
     HEADLESS_RSP_QUERY_INFO HeadlessInformation;
-    ULONG InfoSize = sizeof(HeadlessInformation);
+    SIZE_T InfoSize = sizeof(HeadlessInformation);
     NTSTATUS Status;
     UNICODE_STRING DriverName;
     PDEVICE_OBJECT DeviceObject;
