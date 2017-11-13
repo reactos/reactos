@@ -71,7 +71,7 @@ FsRtlpIsDfsEnabled(VOID)
         return TRUE;
     }
 
-    return ((ULONG)KeyQueryOutput.KeyInfo.Data != 1);
+    return ((*(PULONG)KeyQueryOutput.KeyInfo.Data) != 1);
 }
 
 NTSTATUS
