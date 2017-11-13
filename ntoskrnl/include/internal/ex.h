@@ -68,25 +68,29 @@ VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
 #define HANDLE_LOW_BITS (PAGE_SHIFT - 3)
 #define HANDLE_HIGH_BITS (PAGE_SHIFT - 2)
 #endif
-#define KERNEL_FLAG_BITS (sizeof(PVOID)*8 - 31)
+#define HANDLE_TAG_BITS (2)
+#define HANDLE_INDEX_BITS (HANDLE_LOW_BITS + 2*HANDLE_HIGH_BITS)
+#define KERNEL_FLAG_BITS (sizeof(PVOID)*8 - HANDLE_INDEX_BITS - HANDLE_TAG_BITS)
 
 typedef union _EXHANDLE
 {
      struct
      {
-         ULONG_PTR TagBits:2;
-         ULONG_PTR Index:29;
+         ULONG_PTR TagBits:     HANDLE_TAG_BITS;
+         ULONG_PTR Index:       HANDLE_INDEX_BITS;
+         ULONG_PTR KernelFlag : KERNEL_FLAG_BITS;
      };
      struct
      {
-         ULONG_PTR TagBits2:2;
-         ULONG_PTR LowIndex:HANDLE_LOW_BITS;
-         ULONG_PTR MidIndex:HANDLE_HIGH_BITS;
-         ULONG_PTR HighIndex:HANDLE_HIGH_BITS;
-         ULONG_PTR KernelFlag:KERNEL_FLAG_BITS;
+         ULONG_PTR TagBits2:    HANDLE_TAG_BITS;
+         ULONG_PTR LowIndex:    HANDLE_LOW_BITS;
+         ULONG_PTR MidIndex:    HANDLE_HIGH_BITS;
+         ULONG_PTR HighIndex:   HANDLE_HIGH_BITS;
+         ULONG_PTR KernelFlag2: KERNEL_FLAG_BITS;
      };
      HANDLE GenericHandleOverlay;
      ULONG_PTR Value;
+     ULONG AsULONG;
 } EXHANDLE, *PEXHANDLE;
 
 typedef struct _ETIMER
