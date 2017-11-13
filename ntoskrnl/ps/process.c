@@ -1416,8 +1416,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
             "Parent: %p Attributes: %p\n", ParentProcess, ObjectAttributes);
 
     /* Set new-style flags */
-    if ((ULONG)SectionHandle & 1) Flags |= PROCESS_CREATE_FLAGS_BREAKAWAY;
-    if ((ULONG)DebugPort & 1) Flags |= PROCESS_CREATE_FLAGS_NO_DEBUG_INHERIT;
+    if ((ULONG_PTR)SectionHandle & 1) Flags |= PROCESS_CREATE_FLAGS_BREAKAWAY;
+    if ((ULONG_PTR)DebugPort & 1) Flags |= PROCESS_CREATE_FLAGS_NO_DEBUG_INHERIT;
     if (InheritObjectTable) Flags |= PROCESS_CREATE_FLAGS_INHERIT_HANDLES;
 
     /* Call the new API */

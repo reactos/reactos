@@ -316,7 +316,7 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
     UNICODE_STRING DllString1, DllString2;
     BOOLEAN RedirectedDll = FALSE;
     NTSTATUS Status;
-    ULONG Cookie;
+    ULONG_PTR Cookie;
     PUNICODE_STRING OldTldDll;
     PTEB Teb = NtCurrentTeb();
 
@@ -1117,7 +1117,7 @@ LdrEnumerateLoadedModules(IN BOOLEAN ReservedFlag,
     PLIST_ENTRY ListHead, ListEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     NTSTATUS Status;
-    ULONG Cookie;
+    ULONG_PTR Cookie;
     BOOLEAN Stop = FALSE;
 
     /* Check parameters */
@@ -1232,7 +1232,7 @@ LdrAddRefDll(IN ULONG Flags,
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG Cookie;
+    ULONG_PTR Cookie;
     BOOLEAN Locked = FALSE;
 
     /* Check for invalid flags */

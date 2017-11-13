@@ -610,7 +610,7 @@ GetModuleFileNameW(HINSTANCE hModule,
     PLIST_ENTRY ModuleListHead, Entry;
     PLDR_DATA_TABLE_ENTRY Module;
     ULONG Length = 0;
-    ULONG Cookie;
+    ULONG_PTR Cookie;
     PPEB Peb;
 
     hModule = BasepMapModuleHandle(hModule, FALSE);
@@ -721,7 +721,7 @@ BOOLEAN
 WINAPI
 BasepGetModuleHandleExW(BOOLEAN NoLock, DWORD dwPublicFlags, LPCWSTR lpwModuleName, HMODULE *phModule)
 {
-    DWORD Cookie;
+    ULONG_PTR Cookie;
     NTSTATUS Status = STATUS_SUCCESS, Status2;
     HANDLE hModule = NULL;
     UNICODE_STRING ModuleNameU;
