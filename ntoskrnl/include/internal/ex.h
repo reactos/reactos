@@ -68,14 +68,16 @@ VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
 #define HANDLE_LOW_BITS (PAGE_SHIFT - 3)
 #define HANDLE_HIGH_BITS (PAGE_SHIFT - 2)
 #endif
-#define KERNEL_FLAG_BITS (sizeof(PVOID)*8 - 31)
+#define HANDLE_MEANINGFUL_BITS (HANDLE_LOW_BITS + 2*HANDLE_HIGH_BITS + 2)
+#define KERNEL_FLAG_BITS (sizeof(PVOID)*8 - HANDLE_MEANINGFUL_BITS)
 
 typedef union _EXHANDLE
 {
      struct
      {
          ULONG_PTR TagBits:2;
-         ULONG_PTR Index:29;
+         ULONG_PTR Index: HANDLE_MEANINGFUL_BITS;
+         ULONG_PTR KernelFlag : KERNEL_FLAG_BITS;
      };
      struct
      {
@@ -83,7 +85,7 @@ typedef union _EXHANDLE
          ULONG_PTR LowIndex:HANDLE_LOW_BITS;
          ULONG_PTR MidIndex:HANDLE_HIGH_BITS;
          ULONG_PTR HighIndex:HANDLE_HIGH_BITS;
-         ULONG_PTR KernelFlag:KERNEL_FLAG_BITS;
+         ULONG_PTR KernelFlag2:KERNEL_FLAG_BITS;
      };
      HANDLE GenericHandleOverlay;
      ULONG_PTR Value;

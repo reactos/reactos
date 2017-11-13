@@ -18,6 +18,8 @@
 LIST_ENTRY HandleTableListHead;
 EX_PUSH_LOCK HandleTableListLock;
 #define SizeOfHandle(x) (sizeof(HANDLE) * (x))
+#define MAKE_HANDLE(x) ((x) << 2)
+#define CLEAR_HANDLE(x) MAKE_HANDLE(x.Index)
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -67,12 +69,14 @@ ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
             /* Get the mid level pointer array */
             PointerArray = PointerArray[Handle.HighIndex];
+            ASSERT(PointerArray == NULL);
 
             /* Fall through */
         case 1:
 
             /* Get the handle array */
             HandleArray = PointerArray[Handle.MidIndex];
+            ASSERT(HandleArray == NULL);
 
             /* Fall through */
         case 0:
@@ -267,13 +271,13 @@ ExpFreeHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     InterlockedDecrement(&HandleTable->HandleCount);
 
     /* Mark the handle as free */
-    NewValue = (ULONG)Handle.Value & ~(SizeOfHandle(1) - 1);
+    NewValue = (ULONG)CLEAR_HANDLE(Handle);
 
     /* Check if we're FIFO */
     if (!HandleTable->StrictFIFO)
     {
         /* Select a lock index */
-        i = (NewValue >> 2) % 4;
+        i = Handle.Index % 4;
 
         /* Select which entry to use */
         Free = (HandleTable->HandleTableLock[i].Locked) ?
@@ -354,7 +358,7 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
         {
             /* Set up the free data */
             HandleEntry->Value = 0;
-            HandleEntry->NextFreeTableEntry = (i + 1) * SizeOfHandle(1);
+            HandleEntry->NextFreeTableEntry = MAKE_HANDLE(i + 1);
 
             /* Move to the next entry */
             HandleEntry++;
@@ -363,11 +367,11 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
         /* Terminate the last entry */
         HandleEntry->Value = 0;
         HandleEntry->NextFreeTableEntry = 0;
-        HandleTable->FirstFree = SizeOfHandle(1);
+        HandleTable->FirstFree = MAKE_HANDLE(1);
     }
 
     /* Set the next handle needing pool after our allocated page from above */
-    HandleTable->NextHandleNeedingPool = LOW_LEVEL_ENTRIES * SizeOfHandle(1);
+    HandleTable->NextHandleNeedingPool = MAKE_HANDLE(LOW_LEVEL_ENTRIES);
 
     /* Setup the rest of the handle table data */
     HandleTable->QuotaProcess = Process;
@@ -409,12 +413,12 @@ ExpAllocateLowLevelTable(IN PHANDLE_TABLE HandleTable,
     {
         /* Go to the next entry and the base entry */
         HandleEntry++;
-        Base = HandleTable->NextHandleNeedingPool + SizeOfHandle(2);
+        Base = HandleTable->NextHandleNeedingPool + MAKE_HANDLE(2);
 
         /* Loop each entry */
         for (i = Base;
-             i < Base + SizeOfHandle(LOW_LEVEL_ENTRIES - 2);
-             i += SizeOfHandle(1))
+             i < Base + MAKE_HANDLE(LOW_LEVEL_ENTRIES - 2);
+             i += MAKE_HANDLE(1))
         {
             /* Free this entry and move on to the next one */
             HandleEntry->NextFreeTableEntry = i;
@@ -494,7 +498,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
 
         /* Get if the next index can fit in the table */
         i = HandleTable->NextHandleNeedingPool /
-            SizeOfHandle(LOW_LEVEL_ENTRIES);
+            MAKE_HANDLE(LOW_LEVEL_ENTRIES);
         if (i < MID_LEVEL_ENTRIES)
         {
             /* We need to allocate a new table */
@@ -539,7 +543,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
         ThirdLevel = (PVOID)TableBase;
 
         /* Get the index and check if it can fit */
-        i = HandleTable->NextHandleNeedingPool / SizeOfHandle(MAX_MID_INDEX);
+        i = HandleTable->NextHandleNeedingPool / MAKE_HANDLE(MAX_MID_INDEX);
         if (i >= HIGH_LEVEL_ENTRIES) return FALSE;
 
         /* Check if there's no mid-level table */
@@ -556,8 +560,8 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
         else
         {
             /* We have one, check at which index we should insert our entry */
-            Index  = (HandleTable->NextHandleNeedingPool / SizeOfHandle(1)) -
-                      i * MAX_MID_INDEX;
+            Index = (HandleTable->NextHandleNeedingPool / MAKE_HANDLE(1)) -
+                     i * MAX_MID_INDEX;
             j = Index / LOW_LEVEL_ENTRIES;
 
             /* Allocate a new low level */
@@ -577,13 +581,13 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
 
     /* Update the index of the next handle */
     Index = InterlockedExchangeAdd((PLONG) &HandleTable->NextHandleNeedingPool,
-                                   SizeOfHandle(LOW_LEVEL_ENTRIES));
+                                   MAKE_HANDLE(LOW_LEVEL_ENTRIES));
 
     /* Check if need to initialize the table */
     if (DoInit)
     {
         /* Create a new index number */
-        Index += SizeOfHandle(1);
+        Index += MAKE_HANDLE(1);
 
         /* Start free index change loop */
         for (;;)
@@ -646,7 +650,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 {
     ULONG OldValue, NewValue, NewValue1;
     PHANDLE_TABLE_ENTRY Entry;
-    EXHANDLE Handle;
+    EXHANDLE Handle, OldHandle;
     BOOLEAN Result;
     ULONG i;
 
@@ -709,7 +713,8 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         Entry = ExpLookupHandleTableEntry(HandleTable, Handle);
 
         /* Get an available lock and acquire it */
-        i = ((OldValue & FREE_HANDLE_MASK) >> 2) % 4;
+        OldHandle.Value = OldValue;
+        i = OldHandle.Index % 4;
         KeEnterCriticalRegion();
         ExAcquirePushLockShared(&HandleTable->HandleTableLock[i]);
 
@@ -1063,7 +1068,7 @@ ExDupHandleTable(IN PEPROCESS Process,
     NewTable->FirstFree = 0;
 
     /* Setup the first handle value  */
-    Handle.Value = SizeOfHandle(1);
+    Handle.Value = MAKE_HANDLE(1);
 
     /* Enter a critical region and lookup the new entry */
     KeEnterCriticalRegion();
@@ -1125,13 +1130,13 @@ ExDupHandleTable(IN PEPROCESS Process,
             }
 
             /* Increase the handle value and move to the next entry */
-            Handle.Value += SizeOfHandle(1);
+            Handle.Value += MAKE_HANDLE(1);
             NewEntry++;
             HandleTableEntry++;
-        } while (Handle.Value % SizeOfHandle(LOW_LEVEL_ENTRIES));
+        } while (Handle.Value % MAKE_HANDLE(LOW_LEVEL_ENTRIES));
 
         /* We're done, skip the last entry */
-        Handle.Value += SizeOfHandle(1);
+        Handle.Value += MAKE_HANDLE(1);
     }
 
     /* Acquire the table lock and insert this new table into the list */
@@ -1198,7 +1203,7 @@ ExSweepHandleTable(IN PHANDLE_TABLE HandleTable,
     PAGED_CODE();
 
     /* Set the initial value and loop the entries */
-    Handle.Value = SizeOfHandle(1);
+    Handle.Value = MAKE_HANDLE(1);
     while ((HandleTableEntry = ExpLookupHandleTableEntry(HandleTable, Handle)))
     {
         /* Loop each handle */
@@ -1214,12 +1219,12 @@ ExSweepHandleTable(IN PHANDLE_TABLE HandleTable,
             }
 
             /* Go to the next handle and entry */
-            Handle.Value += SizeOfHandle(1);
+            Handle.Value += MAKE_HANDLE(1);
             HandleTableEntry++;
-        } while (Handle.Value % SizeOfHandle(LOW_LEVEL_ENTRIES));
+        } while (Handle.Value % MAKE_HANDLE(LOW_LEVEL_ENTRIES));
 
         /* Skip past the last entry */
-        Handle.Value += SizeOfHandle(1);
+        Handle.Value += MAKE_HANDLE(1);
     }
 }
 
@@ -1271,7 +1276,7 @@ ExEnumHandleTable(IN PHANDLE_TABLE HandleTable,
         }
 
         /* Go to the next entry */
-        Handle.Value += SizeOfHandle(1);
+        Handle.Value += MAKE_HANDLE(1);
     }
 
     /* Leave the critical region and return callback result */
