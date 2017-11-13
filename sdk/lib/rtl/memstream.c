@@ -205,6 +205,7 @@ RtlReadOutOfProcessMemoryStream(
     ULONG CopyLength;
     PRTL_MEMORY_STREAM Stream = IStream_To_RTL_MEMORY_STREAM(This);
     SIZE_T Available = (PUCHAR)Stream->End - (PUCHAR)Stream->Current;
+    SIZE_T nBytesRead = 0;
 
     if (BytesRead)
         *BytesRead = 0;
@@ -218,7 +219,9 @@ RtlReadOutOfProcessMemoryStream(
                                  Stream->Current,
                                  Buffer,
                                  CopyLength,
-                                 BytesRead);
+                                 &nBytesRead);
+
+    *BytesRead = (ULONG)nBytesRead;
 
     if (NT_SUCCESS(Status))
         Stream->Current = (PUCHAR)Stream->Current + *BytesRead;

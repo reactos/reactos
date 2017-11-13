@@ -115,7 +115,7 @@ FsRtlWorkerThread(IN PVOID StartContext)
     KIRQL Irql;
     PLIST_ENTRY Entry;
     PWORK_QUEUE_ITEM WorkItem;
-    ULONG QueueId = (ULONG)StartContext;
+    ULONG_PTR QueueId = (ULONG_PTR)StartContext;
 
     /* Set our priority according to the queue we're dealing with */
     KeSetPriorityThread(&PsGetCurrentThread()->Tcb, LOW_REALTIME_PRIORITY + QueueId);
@@ -149,7 +149,7 @@ NTAPI
 INIT_FUNCTION
 FsRtlInitializeWorkerThread(VOID)
 {
-    ULONG i;
+    ULONG_PTR i;
     NTSTATUS Status;
     HANDLE ThreadHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;

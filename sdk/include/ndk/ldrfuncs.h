@@ -109,7 +109,7 @@ NTAPI
 LdrLockLoaderLock(
     _In_ ULONG Flags,
     _Out_opt_ PULONG Disposition,
-    _Out_opt_ PULONG Cookie
+    _Out_opt_ PULONG_PTR Cookie
 );
 
 NTSTATUS
