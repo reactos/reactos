@@ -425,7 +425,7 @@ IoReportTargetDeviceChange(IN PDEVICE_OBJECT PhysicalDeviceObject,
     /* Check for valid PDO */
     if (!IopIsValidPhysicalDeviceObject(PhysicalDeviceObject))
     {
-        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG)PhysicalDeviceObject, 0, 0);
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG_PTR)PhysicalDeviceObject, 0, 0);
     }
 
     /* FileObject must be null. PnP will fill in it */
@@ -476,7 +476,7 @@ IoReportTargetDeviceChangeAsynchronous(IN PDEVICE_OBJECT PhysicalDeviceObject,
     /* Check for valid PDO */
     if (!IopIsValidPhysicalDeviceObject(PhysicalDeviceObject))
     {
-        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG)PhysicalDeviceObject, 0, 0);
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG_PTR)PhysicalDeviceObject, 0, 0);
     }
 
     /* FileObject must be null. PnP will fill in it */

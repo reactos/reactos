@@ -27,10 +27,10 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #endif
 
 #define ROUND_DOWN(n, align) \
-    (((ULONG)(n)) & ~((align) - 1l))
+    (((ULONG_PTR)(n)) & ~((align) - 1l))
 
 #define ROUND_UP(n, align) \
-    ROUND_DOWN(((ULONG)(n)) + (align) - 1, (align))
+    ROUND_DOWN(((ULONG_PTR)(n)) + (align) - 1, (align))
 
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
