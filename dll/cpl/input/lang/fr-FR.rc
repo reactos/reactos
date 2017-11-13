@@ -106,6 +106,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Maj"
     IDS_LEFT_ALT_SHIFT "Alt Gauche+Maj"
     IDS_SWITCH_BET_INLANG "Changer les langues de saisie"
+    IDS_REBOOT_NOW, "Reboot now?"
 END
 
 /* FIXME : À améliorer/compléter */
