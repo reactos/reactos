@@ -106,6 +106,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT       "Ляв Alt+Shift"
     IDS_SWITCH_BET_INLANG    "Превключване на езиците за въвеждане"
+    IDS_REBOOT_NOW, "Reboot now?"
 END
 
 STRINGTABLE

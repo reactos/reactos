@@ -57,6 +57,7 @@
 #define IDS_LEFT_ALT_SHIFT       15
 #define IDS_SWITCH_BET_INLANG    16
 #define IDC_TURNOFFTEXTSVCS_CB   17
+#define IDS_REBOOT_NOW           18
 
 /* Layouts */
 #define IDS_US_LAYOUT                                  5000
