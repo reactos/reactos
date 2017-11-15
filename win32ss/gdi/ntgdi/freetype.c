@@ -4037,28 +4037,30 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             Byte = SYMBOL_CHARSET;
         }
     }
-
-    if (Byte != TM->tmCharSet)
+    if (Byte == DEFAULT_CHARSET)
     {
-        if (Byte != DEFAULT_CHARSET && Byte != ANSI_CHARSET)
+        if (UserCharSet != TM->tmCharSet && ANSI_CHARSET != TM->tmCharSet)
         {
             /* CharSet Penalty 65000 */
             /* Requested charset does not match the candidate's. */
             Penalty += 65000;
         }
-        else
+        if (UserCharSet != TM->tmCharSet)
         {
-            if (UserCharSet != TM->tmCharSet)
-            {
-                /* UNDOCUMENTED */
-                Penalty += 100;
-                if (ANSI_CHARSET != TM->tmCharSet)
-                {
-                    /* UNDOCUMENTED */
-                    Penalty += 100;
-                }
-            }
+            /* UNDOCUMENTED */
+            Penalty += 100;
         }
+        if (ANSI_CHARSET != TM->tmCharSet)
+        {
+            /* UNDOCUMENTED */
+            Penalty += 50;
+        }
+    }
+    if (Byte != DEFAULT_CHARSET && Byte != TM->tmCharSet)
+    {
+        /* CharSet Penalty 65000 */
+        /* Requested charset does not match the candidate's. */
+        Penalty += 65000;
     }
 
     Byte = LogFont->lfOutPrecision;
