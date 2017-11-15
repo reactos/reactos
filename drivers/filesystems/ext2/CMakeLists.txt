@@ -11,6 +11,7 @@ list(APPEND SOURCE
     src/ext4/ext4_bh.c
     src/ext4/ext4_extents.c
     src/ext4/ext4_jbd2.c
+    src/ext4/ext4_xattr.c
     src/ext4/extents.c
     src/jbd/recovery.c
     src/jbd/replay.c
@@ -66,6 +67,7 @@ list(APPEND SOURCE
     src/devctl.c
     src/dirctl.c
     src/dispatch.c
+    src/ea.c
     src/except.c
     src/fastio.c
     src/fileinfo.c

@@ -864,6 +864,8 @@ struct buffer_head *extents_bread(struct super_block *sb, sector_t block);
 struct buffer_head *extents_bwrite(struct super_block *sb, sector_t block);
 void extents_mark_buffer_dirty(struct buffer_head *bh);
 void extents_brelse(struct buffer_head *bh);
+void extents_bforget(struct buffer_head *bh);
+void buffer_head_remove(struct block_device *bdev, struct buffer_head *bh);
 
 extern int buffer_heads_over_limit;
 

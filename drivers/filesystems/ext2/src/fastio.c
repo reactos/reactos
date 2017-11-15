@@ -93,6 +93,11 @@ Ext2FastIoCheckIfPossible (
             ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
                    (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
 
+            /* do nothing if target fie was deleted */
+            if (FlagOn(Fcb->Flags, FCB_DELETE_PENDING)) {
+                _SEH2_LEAVE;
+            }
+
             if (IsDirectory(Fcb)) {
                 _SEH2_LEAVE;
             }

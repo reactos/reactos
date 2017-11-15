@@ -19,6 +19,33 @@ NTAPI
 RtlpGetStackLimits(PULONG_PTR StackBase,
                    PULONG_PTR StackLimit);
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+NTSTATUS
+NTAPI
+IoComputeDesiredAccessFileObject(IN PFILE_OBJECT FileObject,
+                                 IN PACCESS_MASK DesiredAccess)
+{
+    /* Assume failure */
+    *DesiredAccess = 0;
+
+    /* First check we really have a FileObject */
+    if (OBJECT_TO_OBJECT_HEADER(FileObject)->Type != IoFileObjectType)
+    {
+        return STATUS_OBJECT_TYPE_MISMATCH;
+    }
+
+    /* Then compute desired access:
+     * Check if the handle has either FILE_WRITE_DATA or FILE_APPEND_DATA was
+     * granted. However, if this is a named pipe, make sure we don't ask for
+     * FILE_APPEND_DATA as it interferes with the FILE_CREATE_PIPE_INSTANCE
+     * access right!
+     */
+    *DesiredAccess = ((!(FileObject->Flags & FO_NAMED_PIPE) ? FILE_APPEND_DATA : 0) | FILE_WRITE_DATA);
+
+    return STATUS_SUCCESS;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*

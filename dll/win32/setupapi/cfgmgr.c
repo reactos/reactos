@@ -69,17 +69,18 @@ typedef struct _NOTIFY_DATA
 #define NOTIFY_MAGIC 0x44556677
 
 
-typedef struct _INTERNAL_RANGE_ELEMENT
+typedef struct _INTERNAL_RANGE
 {
-    struct _INTERNAL_RANGE_ELEMENT *Next;
-    ULONG ulDummy;
-} INTERNAL_RANGE_ELEMENT, *PINTERNAL_RANGE_ELEMENT;
+    LIST_ENTRY ListEntry;
+    DWORDLONG ullStart;
+    DWORDLONG ullEnd;
+} INTERNAL_RANGE, *PINTERNAL_RANGE;
 
 typedef struct _INTERNAL_RANGE_LIST
 {
     ULONG ulMagic;
-    PINTERNAL_RANGE_ELEMENT Current;
-    PINTERNAL_RANGE_ELEMENT First;
+    HANDLE hMutex;
+    LIST_ENTRY ListHead;
 } INTERNAL_RANGE_LIST, *PINTERNAL_RANGE_LIST;
 
 #define RANGE_LIST_MAGIC 0x33445566
@@ -335,6 +336,30 @@ done:
         MyFree(pszBuffer);
 
     return ret;
+}
+
+
+BOOL
+IsValidRangeList(
+    _In_ PINTERNAL_RANGE_LIST pRangeList)
+{
+    BOOL bValid = TRUE;
+
+    if (pRangeList == NULL)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        if (pRangeList->ulMagic != RANGE_LIST_MAGIC)
+            bValid = FALSE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bValid = FALSE;
+    }
+    _SEH2_END;
+
+    return bValid;
 }
 
 
@@ -950,9 +975,53 @@ CM_Add_Range(
     _In_ RANGE_LIST rlh,
     _In_ ULONG ulFlags)
 {
+    PINTERNAL_RANGE_LIST pRangeList;
+    PINTERNAL_RANGE pRange;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("CM_Add_Range(%I64u %I64u %p %lx)\n",
           ullStartValue, ullEndValue, rlh, ulFlags);
-    return CR_CALL_NOT_IMPLEMENTED;
+
+    pRangeList = (PINTERNAL_RANGE_LIST)rlh;
+
+    if (!IsValidRangeList(pRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (ulFlags & ~CM_ADD_RANGE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (ullEndValue < ullStartValue)
+        return CR_INVALID_RANGE;
+
+    /* Lock the range list */
+    WaitForSingleObject(pRangeList->hMutex, INFINITE);
+
+    /* Allocate the new range */
+    pRange = HeapAlloc(GetProcessHeap(), 0, sizeof(INTERNAL_RANGE));
+    if (pRange == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    pRange->ullStart = ullStartValue;
+    pRange->ullEnd = ullEndValue;
+
+    /* Insert the range */
+    if (IsListEmpty(&pRangeList->ListHead))
+    {
+        InsertTailList(&pRangeList->ListHead, &pRange->ListEntry);
+    }
+    else
+    {
+
+    }
+
+done:
+    /* Unlock the range list */
+    ReleaseMutex(pRangeList->hMutex);
+
+    return ret;
 }
 
 
@@ -1266,13 +1335,23 @@ CM_Create_Range_List(
     if (prlh == NULL)
         return CR_INVALID_POINTER;
 
+    /* Allocate the range list */
     pRangeList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(INTERNAL_RANGE_LIST));
     if (pRangeList == NULL)
         return CR_OUT_OF_MEMORY;
 
+    /* Set the magic value */
     pRangeList->ulMagic = RANGE_LIST_MAGIC;
 
-    // TODO: More initialization
+    /* Initialize the mutex for synchonized access */
+    pRangeList->hMutex = CreateMutex(NULL, FALSE, NULL);
+    if (pRangeList->hMutex == NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, pRangeList);
+        return CR_FAILURE;
+    }
+
+    InitializeListHead(&pRangeList->ListHead);
 
     *prlh = (RANGE_LIST)pRangeList;
 
@@ -1814,9 +1893,49 @@ CM_First_Range(
     _Out_ PRANGE_ELEMENT preElement,
     _In_ ULONG ulFlags)
 {
+    PINTERNAL_RANGE_LIST pRangeList;
+    PINTERNAL_RANGE pRange;
+    PLIST_ENTRY ListEntry;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("CM_First_Range(%p %p %p %p %lx)\n",
           rlh, pullStart, pullEnd, preElement, ulFlags);
-    return CR_CALL_NOT_IMPLEMENTED;
+
+    pRangeList = (PINTERNAL_RANGE_LIST)rlh;
+
+    if (!IsValidRangeList(pRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (pullStart == NULL || pullEnd == NULL || preElement == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    /* Lock the range list */
+    WaitForSingleObject(pRangeList->hMutex, INFINITE);
+
+    /* Fail, if the list is empty */
+    if (IsListEmpty(&pRangeList->ListHead))
+    {
+        ret = CR_FAILURE;
+        goto done;
+    }
+
+    /* Get the first range */
+    ListEntry = pRangeList->ListHead.Flink;
+    pRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+
+    /* Return the range data */
+    *pullStart = pRange->ullStart;
+    *pullEnd = pRange->ullEnd;
+    *preElement = (RANGE_ELEMENT)pRange;
+
+done:
+    /* Unlock the range list */
+    ReleaseMutex(pRangeList->hMutex);
+
+    return ret;
 }
 
 
@@ -1920,19 +2039,38 @@ CM_Free_Range_List(
     _In_ ULONG ulFlags)
 {
     PINTERNAL_RANGE_LIST pRangeList;
+    PINTERNAL_RANGE pRange;
+    PLIST_ENTRY ListEntry;
 
-    FIXME("CM_Free_Range_List(%p %lx)\n", RangeList, ulFlags);
+    FIXME("CM_Free_Range_List(%p %lx)\n",
+          RangeList, ulFlags);
 
     pRangeList = (PINTERNAL_RANGE_LIST)RangeList;
 
-    if (pRangeList == NULL || pRangeList->ulMagic != RANGE_LIST_MAGIC)
+    if (!IsValidRangeList(pRangeList))
         return CR_INVALID_RANGE_LIST;
 
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
 
-    // TODO: Free the list of ranges
+    /* Lock the range list */
+    WaitForSingleObject(pRangeList->hMutex, INFINITE);
 
+    /* Free the list of ranges */
+    while (!IsListEmpty(&pRangeList->ListHead))
+    {
+        ListEntry = RemoveHeadList(&pRangeList->ListHead);
+        pRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+        HeapFree(GetProcessHeap(), 0, pRange);
+    }
+
+    /* Unlock the range list */
+    ReleaseMutex(pRangeList->hMutex);
+
+    /* Close the mutex */
+    CloseHandle(pRangeList->hMutex);
+
+    /* Free the range list */
     HeapFree(GetProcessHeap(), 0, pRangeList);
 
     return CR_SUCCESS;

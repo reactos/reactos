@@ -75,25 +75,6 @@ struct super_block {
     void               *s_fs_info;
 };
 
-struct xattr_entry {
-    char            xe_name_index;
-    char           *xe_name;
-    char            xe_name_len;
-    char           *xe_value;
-    int            xe_value_size;
-    int            xe_value_buf_size;
-    struct rb_node xe_node;
-};
-
-#define XATTR_FLAG_DIRTY  0x1
-#define XATTR_FLAG_LOADED 0x2
-
-struct xattr_handle {
-    int            xh_flags;
-    int            xh_total_size;
-    struct rb_root xh_root;  
-};
-
 struct inode {
     __u32               i_ino;              /* inode number */
     loff_t			    i_size;             /* size */

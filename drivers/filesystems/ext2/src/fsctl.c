@@ -2130,6 +2130,11 @@ Ext2MountVolume (IN PEXT2_IRP_CONTEXT IrpContext)
         }
         INC_MEM_COUNT(PS_VCB, VolumeDeviceObject, sizeof(EXT2_VCB));
 
+#ifdef _PNP_POWER_
+        /* don't care about power management requests */
+        VolumeDeviceObject->DeviceObjectExtension->PowerControlNeeded = FALSE;
+#endif
+
         VolumeDeviceObject->StackSize = (CCHAR)(TargetDeviceObject->StackSize + 1);
         ClearFlag(VolumeDeviceObject->Flags, DO_DEVICE_INITIALIZING);
 

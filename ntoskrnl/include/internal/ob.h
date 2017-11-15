@@ -384,6 +384,15 @@ ObpDeleteObjectType(
     IN PVOID Object
 );
 
+NTSTATUS
+NTAPI
+ObReferenceFileObjectForWrite(
+    IN HANDLE Handle,
+    IN KPROCESSOR_MODE AccessMode,
+    OUT PFILE_OBJECT *FileObject,
+    OUT POBJECT_HANDLE_INFORMATION HandleInformation
+);
+
 //
 // DOS Devices Functions
 //

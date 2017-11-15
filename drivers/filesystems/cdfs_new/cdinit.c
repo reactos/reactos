@@ -38,6 +38,10 @@ NTSTATUS
 CdInitializeGlobalData (
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT FileSystemDeviceObject
+#ifdef __REACTOS__
+    ,
+    IN PDEVICE_OBJECT HddFileSystemDeviceObject
+#endif
     );
 
 NTSTATUS
@@ -89,6 +93,9 @@ Return Value:
     NTSTATUS Status;
     UNICODE_STRING UnicodeString;
     PDEVICE_OBJECT CdfsFileSystemDeviceObject;
+#ifdef __REACTOS__
+    PDEVICE_OBJECT HddFileSystemDeviceObject;
+#endif
 
     //
     // Create the device object.
@@ -107,6 +114,27 @@ Return Value:
     if (!NT_SUCCESS( Status )) {
         return Status;
     }
+
+#ifdef __REACTOS__
+    //
+    // Create the HDD device object.
+    //
+
+    RtlInitUnicodeString( &UnicodeString, L"\\CdfsHdd" );
+
+    Status = IoCreateDevice( DriverObject,
+                             0,
+                             &UnicodeString,
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0,
+                             FALSE,
+                             &HddFileSystemDeviceObject );
+
+    if (!NT_SUCCESS( Status )) {
+        IoDeleteDevice (CdfsFileSystemDeviceObject);
+        return Status;
+    }
+#endif
     DriverObject->DriverUnload = CdUnload;
     //
     //  Note that because of the way data caching is done, we set neither
@@ -141,6 +169,9 @@ Return Value:
     Status = IoRegisterShutdownNotification (CdfsFileSystemDeviceObject);
     if (!NT_SUCCESS (Status)) {
         IoDeleteDevice (CdfsFileSystemDeviceObject);
+#ifdef __REACTOS__
+        IoDeleteDevice (HddFileSystemDeviceObject);
+#endif
         return Status;
     }
 
@@ -148,9 +179,16 @@ Return Value:
     //  Initialize the global data structures
     //
 
+#ifndef __REACTOS__
     Status = CdInitializeGlobalData( DriverObject, CdfsFileSystemDeviceObject );
+#else
+    Status = CdInitializeGlobalData( DriverObject, CdfsFileSystemDeviceObject, HddFileSystemDeviceObject );
+#endif
     if (!NT_SUCCESS (Status)) {
         IoDeleteDevice (CdfsFileSystemDeviceObject);
+#ifdef __REACTOS__
+        IoDeleteDevice (HddFileSystemDeviceObject);
+#endif
         return Status;
     }
 
@@ -161,9 +199,16 @@ Return Value:
     //
 
     CdfsFileSystemDeviceObject->Flags |= DO_LOW_PRIORITY_FILESYSTEM;
+#ifdef __REACTOS__
+    HddFileSystemDeviceObject->Flags |= DO_LOW_PRIORITY_FILESYSTEM;
+#endif
 
     IoRegisterFileSystem( CdfsFileSystemDeviceObject );
     ObReferenceObject (CdfsFileSystemDeviceObject);
+#ifdef __REACTOS__
+    IoRegisterFileSystem( HddFileSystemDeviceObject );
+    ObReferenceObject (HddFileSystemDeviceObject);
+#endif
 
     //
     //  And return to our caller
@@ -196,8 +241,17 @@ Return Value:
 
 --*/
 {
+#ifdef __REACTOS__
+    ASSERT(DeviceObject == CdData.FileSystemDeviceObject ||
+           DeviceObject == CdData.HddFileSystemDeviceObject);
+#endif
+
     IoUnregisterFileSystem (DeviceObject);
+#ifndef __REACTOS__
     IoDeleteDevice (CdData.FileSystemDeviceObject);
+#else
+    IoDeleteDevice (DeviceObject);
+#endif
 
     CdCompleteRequest( NULL, Irp, STATUS_SUCCESS );
     return STATUS_SUCCESS;
@@ -241,6 +295,9 @@ Return Value:
     IoFreeWorkItem (CdData.CloseItem);
     ExDeleteResourceLite( &CdData.DataResource );
     ObDereferenceObject (CdData.FileSystemDeviceObject);
+#ifdef __REACTOS__
+    ObDereferenceObject (CdData.HddFileSystemDeviceObject);
+#endif
 }
 
 //
@@ -251,6 +308,10 @@ NTSTATUS
 CdInitializeGlobalData (
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT FileSystemDeviceObject
+#ifdef __REACTOS__
+    ,
+    IN PDEVICE_OBJECT HddFileSystemDeviceObject
+#endif
     )
 
 /*++
@@ -307,6 +368,9 @@ Return Value:
 
     CdData.DriverObject = DriverObject;
     CdData.FileSystemDeviceObject = FileSystemDeviceObject;
+#ifdef __REACTOS__
+    CdData.HddFileSystemDeviceObject = HddFileSystemDeviceObject;
+#endif
 
     InitializeListHead( &CdData.VcbQueue );
 

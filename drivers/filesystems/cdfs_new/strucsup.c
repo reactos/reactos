@@ -1570,7 +1570,12 @@ Return Value:
     //  occur in the context of fileobjects (i.e., mount).
     //
 
+#ifndef __REACTOS__
     if (IrpSp->DeviceObject == CdData.FileSystemDeviceObject) {
+#else
+    if (IrpSp->DeviceObject == CdData.FileSystemDeviceObject ||
+        IrpSp->DeviceObject == CdData.HddFileSystemDeviceObject) {
+#endif
 
         if (IrpSp->FileObject != NULL &&
             IrpSp->MajorFunction != IRP_MJ_CREATE &&
@@ -1648,7 +1653,12 @@ Return Value:
     //  the Vcb field.
     //
 
+#ifndef __REACTOS__
     if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject) {
+#else
+    if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject &&
+        IrpSp->DeviceObject != CdData.HddFileSystemDeviceObject) {
+#endif
 
         NewIrpContext->Vcb =  &((PVOLUME_DEVICE_OBJECT) IrpSp->DeviceObject)->Vcb;
     

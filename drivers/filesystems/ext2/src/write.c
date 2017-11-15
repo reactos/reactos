@@ -78,23 +78,24 @@ Ext2FloppyFlush(IN PVOID Parameter)
 
     if (FileObject) {
         ASSERT(Fcb == (PEXT2_FCB)FileObject->FsContext);
-
+        ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
         ExAcquireSharedStarveExclusive(&Fcb->PagingIoResource, TRUE);
         ExReleaseResourceLite(&Fcb->PagingIoResource);
 
         CcFlushCache(&(Fcb->SectionObject), NULL, 0, NULL);
+        ExReleaseResourceLite(&Fcb->MainResource);
 
         ObDereferenceObject(FileObject);
     }
 
     if (Vcb) {
+        ExAcquireResourceExclusiveLite(&Vcb->MainResource, TRUE);
+
         ExAcquireSharedStarveExclusive(&Vcb->PagingIoResource, TRUE);
         ExReleaseResourceLite(&Vcb->PagingIoResource);
 
-        ExAcquireResourceExclusiveLite(&Vcb->sbi.s_gd_lock, TRUE);
-        Ext2DropBH(Vcb);
-        CcFlushCache(&(Vcb->SectionObject), NULL, 0, NULL);
-        ExReleaseResourceLite(&Vcb->sbi.s_gd_lock);
+        Ext2FlushVcb(Vcb);
+        ExReleaseResourceLite(&Vcb->MainResource);
     }
 
     IoSetTopLevelIrp(NULL);
@@ -490,7 +491,7 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                     }
 
                     Extent->Irp = NULL;
-                    Extent->Lba = DirtyLba;
+                    Extent->Lba = DirtyStart;
                     Extent->Offset = (ULONG)( DirtyStart + Length -
                                               RemainLength - DirtyLba );
                     ASSERT(Extent->Offset <= Length);
@@ -503,14 +504,17 @@ Ext2WriteVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                         RemainLength = 0;
                     } else {
                         Extent->Length = (ULONG)(DirtyLength + DirtyLba - DirtyStart);
+                        RemainLength = RemainLength - Extent->Length;
+/*
                         RemainLength =  (DirtyStart + RemainLength) -
                                         (DirtyLba + DirtyLength);
+*/
                         ASSERT(RemainLength <= (LONGLONG)Length);
                         ASSERT(Extent->Length <= Length);
                     }
 
                     ASSERT(Extent->Length >= SECTOR_SIZE);
-                    DirtyLba = DirtyStart + DirtyLength;
+                    DirtyLba = DirtyStart + Extent->Length;
 
                     if (List) {
                         List->Next = Extent;
