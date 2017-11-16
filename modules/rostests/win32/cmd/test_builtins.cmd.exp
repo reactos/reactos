@@ -1,0 +1,27 @@
+------------ Testing for1 ------------
+--- plain FOR with multiple lines
+A
+B
+C
+------------ Testing for2 ------------
+--- plain FOR with lines and spaces
+D
+E
+F
+------------ Testing for3 ------------
+--- plain FOR with multiple lines and commas
+G
+H
+I
+------------ Testing for4 ------------
+--- plain FOR with multiple lines and %I
+%I
+%I
+%I
+------------ Testing for5 ------------
+--- plain FOR with multiple lines and %j
+%j
+%j
+%j
+------------ End of Testing ------------
+--- Testing ends here

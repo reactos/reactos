@@ -1,0 +1,1 @@
+Cloned from Wine's cmd_winetest code.
