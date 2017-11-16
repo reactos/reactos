@@ -1840,7 +1840,7 @@ void BUTTON_Register()
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(PBUTTON_DATA);
     wndClass.hCursor       = LoadCursorW(0, (LPCWSTR)IDC_ARROW);
-    wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wndClass.hbrBackground = 0;
     wndClass.lpszClassName = WC_BUTTONW;
 
     RegisterClassW(&wndClass);
