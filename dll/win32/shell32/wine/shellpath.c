@@ -645,7 +645,8 @@ typedef enum _CSIDL_Type {
     CSIDL_Type_SystemX86Path,
 } CSIDL_Type;
 
-#if WIN32_WINNT >= 0x0600
+/* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
+#ifndef __REACTOS__
 #define CSIDL_CONTACTS         0x0043
 #define CSIDL_DOWNLOADS        0x0047
 #define CSIDL_LINKS            0x004d
@@ -1042,7 +1043,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         NULL,
         NULL
     },
-#if WIN32_WINNT >= 0x0600
+/* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
+#ifndef __REACTOS__
     { /* 0x3f */
         &FOLDERID_AddNewPrograms,
         CSIDL_Type_Disallowed,
@@ -2271,7 +2273,8 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
      CSIDL_MYPICTURES,
      CSIDL_FONTS,
      CSIDL_ADMINTOOLS,
-#if WIN32_WINNT >= 0x0600
+/* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
+#ifndef __REACTOS__
      CSIDL_CONTACTS,
      CSIDL_DOWNLOADS,
      CSIDL_LINKS,
