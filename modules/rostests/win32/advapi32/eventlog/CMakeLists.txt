@@ -8,10 +8,10 @@ add_library(MyEventProvider_dll SHARED ${CMAKE_CURRENT_BINARY_DIR}/MyEventProvid
 add_dependencies(MyEventProvider_dll MyEventProvider)
 set_module_type(MyEventProvider_dll module UNICODE)
 set_target_properties(MyEventProvider_dll PROPERTIES OUTPUT_NAME "MyEventProvider")
-add_rostests_file(TARGET MyEventProvider_dll)
+add_rostests_file(TARGET MyEventProvider_dll SUBDIR suppl)
 
 add_executable(evtlogtest EvtLogTest.c)
 set_module_type(evtlogtest win32cui UNICODE)
 add_dependencies(evtlogtest MyEventProvider MyEventProvider_dll)
 add_importlibs(evtlogtest advapi32 msvcrt kernel32)
-add_rostests_file(TARGET evtlogtest)
+add_rostests_file(TARGET evtlogtest SUBDIR suppl)
