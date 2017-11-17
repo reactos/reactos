@@ -395,10 +395,10 @@ cleanup:
     return ret;
 }
 
-BOOL BUTTON_DrawIml(HDC hDC, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCalc)
+BOOL BUTTON_DrawIml(HDC hDC, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCalc, int index)
 {
     SIZE ImageSize;
-    int left, top;
+    int left, top, count;
 
     if (!pimlData->himl)
         return FALSE;
@@ -436,8 +436,17 @@ BOOL BUTTON_DrawIml(HDC hDC, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCa
         top = prc->top + (prc->bottom - prc->top - ImageSize.cy) / 2;
     }
 
-    if (!bOnlyCalc)
-        ImageList_Draw(pimlData->himl, 0, hDC, left, top, 0);
+    if (bOnlyCalc)
+        return TRUE;
+
+    count = ImageList_GetImageCount(pimlData->himl);
+    
+    if (count == 1)
+        index = 0;
+    else if (index >= count)
+        return TRUE;
+
+    ImageList_Draw(pimlData->himl, index, hDC, left, top, 0);
 
     return TRUE;
 }
@@ -1220,7 +1229,7 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
 #endif
 
 #ifndef _USER32_
-    BOOL bHasIml = BUTTON_DrawIml(hdc, &pdata->imlData, &r, TRUE);
+    BOOL bHasIml = BUTTON_DrawIml(hdc, &pdata->imlData, &r, TRUE, 0);
 #endif
 
    /* Calculate label rectangle according to label type */
@@ -1378,7 +1387,7 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
 
 #ifndef _USER32_
     PBUTTON_DATA pdata = _GetButtonData(hwnd);
-    BUTTON_DrawIml(hdc, &pdata->imlData, rc, FALSE);
+    BUTTON_DrawIml(hdc, &pdata->imlData, rc, FALSE, 0);
 #endif
 
    if ((style & BS_PUSHLIKE) && (state & BST_INDETERMINATE))

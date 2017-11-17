@@ -28,9 +28,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(theme_button);
 typedef enum
 {
 	STATE_NORMAL,
-	STATE_DISABLED,
 	STATE_HOT,
 	STATE_PRESSED,
+	STATE_DISABLED,
 	STATE_DEFAULTED
 } ButtonState;
 
@@ -56,7 +56,7 @@ static inline LONG_PTR get_button_image(HWND hwnd)
     return _GetButtonData(hwnd)->image;
 }
 
-BOOL BUTTON_DrawIml(HDC hdc, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCalc);
+BOOL BUTTON_DrawIml(HDC hdc, BUTTON_IMAGELIST *pimlData, RECT *prc, BOOL bOnlyCalc, int index);
 DWORD BUTTON_SendCustomDraw(HWND hwnd, HDC hDC, DWORD dwDrawStage, RECT* prc);
 #endif
 
@@ -113,7 +113,7 @@ static inline WCHAR *get_button_text(HWND hwnd)
 
 static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag)
 {
-    static const int states[] = { PBS_NORMAL, PBS_DISABLED, PBS_HOT, PBS_PRESSED, PBS_DEFAULTED };
+    static const int states[] = { PBS_NORMAL, PBS_HOT, PBS_PRESSED, PBS_DISABLED, PBS_DEFAULTED };
 
     RECT bgRect, textRect;
     HFONT font = get_button_font(hwnd);
@@ -150,7 +150,7 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     if (cdrf == CDRF_SKIPDEFAULT)
         goto cleanup;
 
-    BUTTON_DrawIml(hDC, &pdata->imlData, &textRect, FALSE);
+    BUTTON_DrawIml(hDC, &pdata->imlData, &textRect, FALSE, drawState);
 
     text = get_button_text(hwnd);
     if (text)
@@ -185,15 +185,15 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
 {
     static const int cb_states[3][5] =
     {
-        { CBS_UNCHECKEDNORMAL, CBS_UNCHECKEDDISABLED, CBS_UNCHECKEDHOT, CBS_UNCHECKEDPRESSED, CBS_UNCHECKEDNORMAL },
-        { CBS_CHECKEDNORMAL, CBS_CHECKEDDISABLED, CBS_CHECKEDHOT, CBS_CHECKEDPRESSED, CBS_CHECKEDNORMAL },
-        { CBS_MIXEDNORMAL, CBS_MIXEDDISABLED, CBS_MIXEDHOT, CBS_MIXEDPRESSED, CBS_MIXEDNORMAL }
+        { CBS_UNCHECKEDNORMAL, CBS_UNCHECKEDHOT, CBS_UNCHECKEDPRESSED, CBS_UNCHECKEDDISABLED, CBS_UNCHECKEDNORMAL },
+        { CBS_CHECKEDNORMAL, CBS_CHECKEDHOT, CBS_CHECKEDPRESSED, CBS_CHECKEDDISABLED, CBS_CHECKEDNORMAL },
+        { CBS_MIXEDNORMAL, CBS_MIXEDHOT, CBS_MIXEDPRESSED, CBS_MIXEDDISABLED, CBS_MIXEDNORMAL }
     };
 
     static const int rb_states[2][5] =
     {
-        { RBS_UNCHECKEDNORMAL, RBS_UNCHECKEDDISABLED, RBS_UNCHECKEDHOT, RBS_UNCHECKEDPRESSED, RBS_UNCHECKEDNORMAL },
-        { RBS_CHECKEDNORMAL, RBS_CHECKEDDISABLED, RBS_CHECKEDHOT, RBS_CHECKEDPRESSED, RBS_CHECKEDNORMAL }
+        { RBS_UNCHECKEDNORMAL, RBS_UNCHECKEDHOT, RBS_UNCHECKEDPRESSED, RBS_UNCHECKEDDISABLED, RBS_UNCHECKEDNORMAL },
+        { RBS_CHECKEDNORMAL, RBS_CHECKEDHOT, RBS_CHECKEDPRESSED, RBS_CHECKEDDISABLED, RBS_CHECKEDNORMAL }
     };
 
     SIZE sz;
@@ -307,7 +307,7 @@ static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
 static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
 #endif
 {
-    static const int states[] = { GBS_NORMAL, GBS_DISABLED, GBS_NORMAL, GBS_NORMAL, GBS_NORMAL };
+    static const int states[] = { GBS_NORMAL, GBS_NORMAL, GBS_NORMAL, GBS_DISABLED, GBS_NORMAL };
 
     RECT bgRect, textRect, contentRect;
     int state = states[ drawState ];
@@ -415,29 +415,19 @@ static const pfThemedPaint btnThemedPaintFunc[BUTTON_TYPE + 1] =
     NULL, /* Not defined */
 };
 
-#ifdef __REACTOS__ /* r73873 */
 BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag)
-#else
-static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
-#endif
 {
-#ifdef __REACTOS__ /* r73873, r73897 and r74120 */
     DWORD dwStyle;
     DWORD dwStyleEx;
     DWORD type;
     UINT dtFlags;
     int state;
-#else
-    PAINTSTRUCT ps;
-    HDC hDC;
-    DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
-    DWORD dwStyleEx = GetWindowLongW(hwnd, GWL_EXSTYLE);
-    UINT dtFlags = get_drawtext_flags(dwStyle, dwStyleEx);
-    int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
-#endif
     ButtonState drawState;
-#ifdef __REACTOS__ /* r73873, r73897, r73907 and r74120 */
     pfThemedPaint paint;
+
+    /* Don't draw with themes on a button with BS_ICON or BS_BITMAP */
+    if (get_button_image(hwnd) != 0)
+        return FALSE;
 
     dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
     type = dwStyle & BUTTON_TYPE;
@@ -449,144 +439,23 @@ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
     if (!paint)
         return FALSE;
 
-    if (get_button_image(hwnd) != 0)
-        return FALSE;
-
     dwStyleEx = GetWindowLongW(hwnd, GWL_EXSTYLE);
     dtFlags = get_drawtext_flags(dwStyle, dwStyleEx);
     state = get_button_state(hwnd);
-#else
-    pfThemedPaint paint = btnThemedPaintFunc[ dwStyle & BUTTON_TYPE ];
-#endif
 
-    if(IsWindowEnabled(hwnd))
-    {
-        if(state & BST_PUSHED) 
-            drawState = STATE_PRESSED;
-        else if ((dwStyle & BS_PUSHLIKE) && (state & (BST_CHECKED|BST_INDETERMINATE))) 
-            drawState = STATE_PRESSED;
-        else if(state & BST_HOT) 
-            drawState = STATE_HOT;
-        else if(state & BST_FOCUS) 
-            drawState = STATE_DEFAULTED;
-        else 
-            drawState = STATE_NORMAL;
-    }
-    else 
+    if(dwStyle & WS_DISABLED)
         drawState = STATE_DISABLED;
-
-#ifndef __REACTOS__ /* r73873 */
-    hDC = hParamDC ? hParamDC : BeginPaint(hwnd, &ps);
-    if (paint) paint(theme, hwnd, hDC, drawState, dtFlags, state & BST_FOCUS);
-    if (!hParamDC) EndPaint(hwnd, &ps);
-#endif
-
-#ifdef __REACTOS__ /* r74074 & r74120 */
-    if (drawState == STATE_NORMAL && type == BS_DEFPUSHBUTTON)
-    {
+    else if(state & BST_PUSHED) 
+        drawState = STATE_PRESSED;
+    else if ((dwStyle & BS_PUSHLIKE) && (state & (BST_CHECKED|BST_INDETERMINATE))) 
+        drawState = STATE_PRESSED;
+    else if(state & BST_HOT) 
+        drawState = STATE_HOT;
+    else if((state & BST_FOCUS) || (dwStyle & BS_DEFPUSHBUTTON))
         drawState = STATE_DEFAULTED;
-    }
-#endif
+    else
+        drawState = STATE_NORMAL;
 
     paint(theme, hwnd, hParamDC, drawState, dtFlags, state & BST_FOCUS, prfFlag);
     return TRUE;
 }
-
-#ifndef __REACTOS__ /* r73873 */
-/**********************************************************************
- * The button control subclass window proc.
- */
-LRESULT CALLBACK THEMING_ButtonSubclassProc(HWND hwnd, UINT msg,
-                                            WPARAM wParam, LPARAM lParam,
-                                            ULONG_PTR dwRefData)
-{
-    const WCHAR* themeClass = WC_BUTTONW;
-    HTHEME theme;
-    LRESULT result;
-
-    switch (msg)
-    {
-    case WM_CREATE:
-        result = THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-        OpenThemeData(hwnd, themeClass);
-        return result;
-
-    case WM_DESTROY:
-        theme = GetWindowTheme(hwnd);
-        CloseThemeData (theme);
-        return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-
-    case WM_THEMECHANGED:
-        theme = GetWindowTheme(hwnd);
-        CloseThemeData (theme);
-        OpenThemeData(hwnd, themeClass);
-        break;
-
-    case WM_SYSCOLORCHANGE:
-        theme = GetWindowTheme(hwnd);
-	if (!theme) return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-        /* Do nothing. When themed, a WM_THEMECHANGED will be received, too,
-	 * which will do the repaint. */
-        break;
-
-    case WM_PAINT:
-        theme = GetWindowTheme(hwnd);
-        if (theme && BUTTON_Paint(theme, hwnd, (HDC)wParam))
-            return 0;
-        else
-            return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-
-    case WM_ENABLE:
-        theme = GetWindowTheme(hwnd);
-        if (theme) {
-            RedrawWindow(hwnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW);
-            return 0;
-        } else
-            return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-
-    case WM_MOUSEMOVE:
-    {
-        TRACKMOUSEEVENT mouse_event;
-        mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
-        mouse_event.dwFlags = TME_QUERY;
-        if(!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags&(TME_HOVER|TME_LEAVE)))
-        {
-            mouse_event.dwFlags = TME_HOVER|TME_LEAVE;
-            mouse_event.hwndTrack = hwnd;
-            mouse_event.dwHoverTime = 1;
-            TrackMouseEvent(&mouse_event);
-        }
-        break;
-    }
-
-    case WM_MOUSEHOVER:
-    {
-        int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
-        SetWindowLongW(hwnd, 0, state|BST_HOT);
-        InvalidateRect(hwnd, NULL, FALSE);
-        break;
-    }
-
-    case WM_MOUSELEAVE:
-    {
-        int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
-        SetWindowLongW(hwnd, 0, state&(~BST_HOT));
-        InvalidateRect(hwnd, NULL, FALSE);
-        break;
-    }
-
-    case BM_SETCHECK:
-    case BM_SETSTATE:
-        theme = GetWindowTheme(hwnd);
-        if (theme) {
-            InvalidateRect(hwnd, NULL, FALSE);
-        }
-        return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-
-    default:
-	/* Call old proc */
-	return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-    }
-    return 0;
-}
-#endif /* !__REACTOS__ */
