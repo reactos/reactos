@@ -22,6 +22,9 @@ Abstract:
 #include <ntddcdrm.h>
 #include <ntdddisk.h>
 #include <ntddscsi.h>
+#ifdef __REACTOS__
+#include <pseh/pseh2.h>
+#endif
 
 #ifndef INLINE
 #define INLINE __inline
@@ -1881,16 +1884,14 @@ CdCommonPnp (                               //  Implemented in Pnp.c
 //
 //      #define try_return(S)  { S; goto try_exit; }
 //
-/* ReactOS Change: Remove SEH */
-#define try
-#define leave goto exitLabel;
-#define finally  if (0) goto exitLabel; exitLabel:
-#define except(x) while (0)
-#define GetExceptionCode() 0
-#define AbnormalTermination() 0
 
+#ifndef __REACTOS__
 #define try_return(S) { S; goto try_exit; }
 #define try_leave(S) { S; leave; }
+#else
+#define try_return(S) { S; goto try_exit; }
+#define try_leave(S) { S; _SEH2_LEAVE; }
+#endif
 
 
 //

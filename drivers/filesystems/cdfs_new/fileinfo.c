@@ -165,7 +165,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We only support query on file and directory handles.
@@ -325,7 +325,7 @@ Return Value:
 
         Irp->IoStatus.Information = IrpSp->Parameters.QueryFile.Length - Length;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the file.
@@ -335,7 +335,7 @@ Return Value:
 
             CdReleaseFile( IrpContext, Fcb );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request if we didn't raise.
@@ -406,7 +406,7 @@ Return Value:
 
     CdAcquireFileShared( IrpContext, Fcb );
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Make sure the Fcb is in a usable condition.  This
@@ -445,10 +445,10 @@ Return Value:
         Status = STATUS_SUCCESS;
 
     try_exit: NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         CdReleaseFile( IrpContext, Fcb );
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request if there was no raise.
@@ -536,7 +536,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Only deal with 'good' Fcb's.
@@ -566,12 +566,12 @@ Return Value:
             Result = TRUE;
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         ExReleaseResourceLite( Fcb->Resource );
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Result;
 }
@@ -654,7 +654,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Only deal with 'good' Fcb's.
@@ -694,12 +694,12 @@ Return Value:
             Result = TRUE;
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         ExReleaseResourceLite( Fcb->Resource );
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Result;
 }
@@ -782,7 +782,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Only deal with 'good' Fcb's.
@@ -827,12 +827,12 @@ Return Value:
             Result = TRUE;
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         ExReleaseResourceLite( Fcb->Resource );
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Result;
 }
@@ -1278,7 +1278,7 @@ Return Value:
     //  Use a try-finally to cleanup the structures.
     //
 
-    try {
+    _SEH2_TRY {
 
         ParentFcb = Fcb->ParentFcb;
         CdAcquireFileShared( IrpContext, ParentFcb );
@@ -1396,7 +1396,7 @@ Return Value:
         RtlCopyMemory( Buffer->FileName, ShortNameBuffer, Buffer->FileNameLength );
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         if (CleanupFileLookup) {
 
@@ -1413,7 +1413,7 @@ Return Value:
 
             CdReleaseFile( IrpContext, ParentFcb );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Reduce the available bytes by the amount stored into this buffer.

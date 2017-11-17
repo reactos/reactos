@@ -159,7 +159,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    //try { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
+    _SEH2_TRY {
     
         //
         //  Case on the type of open that we are trying to cleanup.
@@ -279,7 +279,7 @@ Return Value:
 
         IoRemoveShareAccess( FileObject, &Fcb->ShareAccess );
 
-    //} finally { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
+    } _SEH2_FINALLY {
 
         CdReleaseFcb( IrpContext, Fcb );
         
@@ -287,7 +287,7 @@ Return Value:
             
             FsRtlNotifyVolumeEvent( FileObject, FSRTL_VOLUME_UNLOCK );
         }
-    //} /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
+    } _SEH2_END;
 
     //
     //  If appropriate, try to spark teardown by purging the volume.  Should
@@ -305,19 +305,19 @@ Return Value:
         
         CdAcquireCdData( IrpContext);
 
-        try {
+        _SEH2_TRY {
             
             CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
             VcbAcquired = TRUE;
             
             CdPurgeVolume( IrpContext, Vcb, FALSE );
 
-        } finally {
+        } _SEH2_FINALLY {
 
             if (VcbAcquired) { CdReleaseVcb( IrpContext, Vcb ); }
             
             CdReleaseCdData( IrpContext);
-        }
+        } _SEH2_END;
     }
 
     //

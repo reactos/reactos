@@ -805,37 +805,6 @@ Index: drivers/filesystems/cdfs_new/lockctrl.c
  CdFastUnlockAllByKey (
      IN PFILE_OBJECT FileObject,
      PVOID ProcessId,
-Index: drivers/filesystems/cdfs_new/cleanup.c
-===================================================================
---- drivers/filesystems/cdfs_new/cleanup.c	(revision 34615)
-+++ drivers/filesystems/cdfs_new/cleanup.c	(working copy)
-@@ -159,7 +159,7 @@
-     //  Use a try-finally to facilitate cleanup.
-     //
- 
--    try {
-+    //try { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
-     
-         //
-         //  Case on the type of open that we are trying to cleanup.
-@@ -279,7 +279,7 @@
- 
-         IoRemoveShareAccess( FileObject, &Fcb->ShareAccess );
- 
--    } finally {
-+    //} finally { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
- 
-         CdReleaseFcb( IrpContext, Fcb );
-         
-@@ -287,7 +287,7 @@
-             
-             FsRtlNotifyVolumeEvent( FileObject, FSRTL_VOLUME_UNLOCK );
-         }
--    }
-+    //} /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
- 
-     //
-     //  If appropriate, try to spark teardown by purging the volume.  Should
 Index: drivers/filesystems/cdfs_new/strucsup.c
 ===================================================================
 --- drivers/filesystems/cdfs_new/strucsup.c	(revision 34615)

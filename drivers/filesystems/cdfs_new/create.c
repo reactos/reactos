@@ -357,7 +357,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify that the Vcb is not in an unusable condition.  This routine
@@ -901,7 +901,7 @@ Return Value:
                                                         RelatedCcb ));
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Cleanup the PathEntry if initialized.
@@ -926,7 +926,7 @@ Return Value:
         //  condition.
         //
 
-        if (AbnormalTermination()) {
+        if (_SEH2_AbnormalTermination()) {
 
 
             //
@@ -985,7 +985,7 @@ Return Value:
         //
 
         CdCompleteRequest( IrpContext, Irp, Status );
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -1512,7 +1512,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Go ahead and figure out the TypeOfOpen and NodeType.  We can
@@ -1905,7 +1905,7 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         if (UnlockVcb) {
 
@@ -1921,7 +1921,7 @@ Return Value:
 
             CdCleanupCompoundPathEntry( IrpContext, &CompoundPathEntry );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -2126,7 +2126,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Check the related Ccb to see if this was an OpenByFileId.
@@ -2281,7 +2281,7 @@ Return Value:
                                         IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Unlock the Vcb if held.
@@ -2300,7 +2300,7 @@ Return Value:
 
             CdReleaseFcb( IrpContext, ParentFcb );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -2399,7 +2399,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Check if a version number was used to open this file.
@@ -2569,7 +2569,7 @@ Return Value:
                                     CcbFlags,
                                     IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Unlock the Vcb if held.
@@ -2588,7 +2588,7 @@ Return Value:
 
             CdReleaseFcb( IrpContext, ParentFcb );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }

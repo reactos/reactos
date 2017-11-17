@@ -355,7 +355,7 @@ Return Value:
     //  Use a try-finally to perform the final cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Loop while there are more bytes to transfer.
@@ -518,7 +518,7 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Perform final cleanup on the IoRuns if necessary.
@@ -528,7 +528,7 @@ Return Value:
 
             CdFinishBuffers( IrpContext, IoRuns, CleanupRunCount, TRUE, FALSE );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -624,7 +624,7 @@ Return Value:
     //  Use a try-finally to perform the final cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  If the initial offset lies within the RIFF header then copy the
@@ -960,7 +960,7 @@ Return Value:
         KeFlushIoBuffers( IrpContext->Irp->MdlAddress, TRUE, FALSE );
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Perform final cleanup on the IoRuns if necessary.
@@ -970,7 +970,7 @@ Return Value:
 
             CdFinishBuffers( IrpContext, IoRuns, CleanupRunCount, TRUE, FALSE );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -1176,15 +1176,15 @@ Return Value:
         //  deallocate the Mdl and return the appropriate "expected" status.
         //
 
-        try {
+        _SEH2_TRY {
 
             MmProbeAndLockPages( Mdl, IrpContext->Irp->RequestorMode, IoWriteAccess );
 
             Status = STATUS_SUCCESS;
 
-        } except(EXCEPTION_EXECUTE_HANDLER) {
+        } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 
-            Status = GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
 
             IoFreeMdl( Mdl );
             IrpContext->Irp->MdlAddress = NULL;
@@ -1193,7 +1193,7 @@ Return Value:
 
                 Status = STATUS_INVALID_USER_BUFFER;
             }
-        }
+        } _SEH2_END;
     }
 
     //

@@ -298,19 +298,19 @@ Return Value:
     //  uninitialize the notify structures before returning.
     //
     
-    try  {
+    _SEH2_TRY  {
 
         Vcb->SwapVpb = FsRtlAllocatePoolWithTag( NonPagedPool,
                                                  sizeof( VPB ),
                                                  TAG_VPB );
     }
-    finally {
+    _SEH2_FINALLY {
 
-        if (AbnormalTermination())  {
+        if (_SEH2_AbnormalTermination())  {
         
             FsRtlNotifyUninitializeSync( &Vcb->NotifySync );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Nothing beyond this point should raise.
@@ -456,7 +456,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Copy the block size and compute the various block masks.
@@ -843,10 +843,10 @@ Return Value:
             SetFlag( Vcb->VcbState, VCB_STATE_ISO );
         }
         
-    } finally {
+    } _SEH2_FINALLY {
 
         if (UnlockVcb) { CdUnlockVcb( IrpContext, Vcb ); }
-    }
+    } _SEH2_END;
 }
 
 
@@ -1238,7 +1238,7 @@ Return Value:
 
     CdLockFcb( IrpContext, Fcb );
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Initialize the common header in the Fcb.  The node type is already
@@ -1361,10 +1361,10 @@ Return Value:
         CdInsertFcbTable( IrpContext, Fcb );
         SetFlag( Fcb->FcbState, FCB_STATE_IN_FCB_TABLE );
 
-    } finally {
+    } _SEH2_FINALLY {
 
         CdUnlockFcb( IrpContext, Fcb );
-    }
+    } _SEH2_END;
 
     return;
 }
@@ -1937,7 +1937,7 @@ Return Value:
     //  Use a try-finally to safely clear the top-level field.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Loop until we find an Fcb we can't remove.
@@ -2041,7 +2041,7 @@ Return Value:
 
         } while (CurrentFcb != NULL);
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the current Fcb if we have acquired it.
@@ -2057,7 +2057,7 @@ Return Value:
         //
 
         ClearFlag( IrpContext->TopLevel->Flags, IRP_CONTEXT_FLAG_IN_TEARDOWN );
-    }
+    } _SEH2_END;
 
     *RemovedStartingFcb = (CurrentFcb != StartingFcb);
     return;

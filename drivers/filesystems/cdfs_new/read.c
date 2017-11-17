@@ -35,11 +35,11 @@ Abstract:
 //
 
 #define SafeZeroMemory(IC,AT,BYTE_COUNT) {                  \
-    try {                                                   \
+    _SEH2_TRY {                                             \
         RtlZeroMemory( (AT), (BYTE_COUNT) );                \
-    } except( EXCEPTION_EXECUTE_HANDLER ) {                 \
+    } _SEH2_EXCEPT( EXCEPTION_EXECUTE_HANDLER ) {           \
          CdRaiseStatus( IC, STATUS_INVALID_USER_BUFFER );   \
-    }                                                       \
+    } _SEH2_END;                                            \
 }
 
 //
@@ -180,7 +180,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Fcb.  Allow reads if this is a DASD handle that is 
@@ -515,7 +515,7 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the Fcb.
@@ -525,7 +525,7 @@ Return Value:
 
             CdReleaseFile( IrpContext, Fcb );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Post the request if we got CANT_WAIT.

@@ -224,7 +224,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
@@ -275,10 +275,10 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Results;
 }
@@ -366,7 +366,7 @@ Return Value:
 
     FsRtlEnterFileSystem();
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
@@ -416,10 +416,10 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Results;
 }
@@ -498,7 +498,7 @@ Return Value:
 
     FsRtlEnterFileSystem();
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
@@ -539,10 +539,10 @@ Return Value:
         CdUnlockFcb( IrpContext, Fcb );
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Results;
 }
@@ -624,7 +624,7 @@ Return Value:
 
     FsRtlEnterFileSystem();
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
@@ -666,10 +666,10 @@ Return Value:
         CdUnlockFcb( IrpContext, Fcb );
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Results;
 }

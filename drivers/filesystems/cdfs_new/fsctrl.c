@@ -723,7 +723,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Allocate a buffer to query the TOC.
@@ -1058,7 +1058,7 @@ Return Value:
 
         Status = STATUS_SUCCESS;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Free the TOC buffer if not in the Vcb.
@@ -1082,7 +1082,7 @@ Return Value:
         //  If we are not mounting the device,  then set the verify bit again.
         //
         
-        if ((AbnormalTermination() || (Status != STATUS_SUCCESS)) && 
+        if ((_SEH2_AbnormalTermination() || (Status != STATUS_SUCCESS)) && 
             SetDoVerifyOnFail)  {
 
             CdMarkRealDevForVerify( IrpContext->RealDevice);
@@ -1119,7 +1119,7 @@ Return Value:
         //
 
         CdReleaseCdData( IrpContext );
-    }
+    } _SEH2_END;
 
     //
     //  Now send mount notification.
@@ -1221,7 +1221,7 @@ Return Value:
 
     CdAcquireCdData( IrpContext );
 
-    try {
+    _SEH2_TRY {
 
         CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
         ReleaseVcb = TRUE;
@@ -1545,7 +1545,7 @@ Return Value:
             }
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Free the TOC buffer if allocated.
@@ -1567,7 +1567,7 @@ Return Value:
         }
 
         CdReleaseCdData( IrpContext );
-    }
+    } _SEH2_END;
 
     //
     //  Now send mount notification.
@@ -1692,7 +1692,7 @@ Return Value:
     //  Use a try finally to free the Fcb.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Fcb.
@@ -1722,14 +1722,14 @@ Return Value:
 
         Irp = NULL;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release all of our resources
         //
 
         CdReleaseFcb( IrpContext, Fcb );
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request if there was no exception.
@@ -1804,7 +1804,7 @@ Return Value:
     Vcb = Fcb->Vcb;
     CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Vcb.
@@ -1814,7 +1814,7 @@ Return Value:
 
         Status = CdLockVolumeInternal( IrpContext, Vcb, IrpSp->FileObject );
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the Vcb.
@@ -1822,11 +1822,11 @@ Return Value:
 
         CdReleaseVcb( IrpContext, Vcb );
         
-        if (AbnormalTermination() || !NT_SUCCESS( Status )) {
+        if (_SEH2_AbnormalTermination() || !NT_SUCCESS( Status )) {
 
             FsRtlNotifyVolumeEvent( IrpSp->FileObject, FSRTL_VOLUME_LOCK_FAILED );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request if there haven't been any exceptions.
@@ -2635,7 +2635,7 @@ Return Value:
             //  Check for whether this device supports XA and multi-session.
             //
 
-            try {
+            _SEH2_TRY {
 
                 //
                 //  Allocate a buffer for the last session information.
@@ -2713,10 +2713,10 @@ Return Value:
                     ThisPass += 1;
                 }
 
-            } finally {
+            } _SEH2_FINALLY {
 
                 if (CdromToc != NULL) { CdFreePool( &CdromToc ); }
-            }
+            } _SEH2_END;
         }
 
         //

@@ -259,7 +259,7 @@ Return Value:
         //  Use a try-except to handle the exception cases.
         //
 
-        try {
+        _SEH2_TRY {
 
             //
             //  If the IrpContext is NULL then this is the first pass through
@@ -398,10 +398,10 @@ Return Value:
                 CdCompleteRequest( IrpContext, Irp, Status );
             }
 
-        } except( CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
+        } _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() )) {
 
-            Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
-        }
+            Status = CdProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
+        } _SEH2_END;
 
     } while (Status == STATUS_CANT_WAIT);
 
@@ -653,7 +653,7 @@ Return Value:
     //  Note that (children of) CdFsdPostRequest can raise (Mdl allocation).
     //
 
-    try {
+    _SEH2_TRY {
     
         if (ExceptionCode == STATUS_CANT_WAIT) {
 
@@ -670,10 +670,10 @@ Return Value:
             }
         }
     }
-    except( CdExceptionFilter( IrpContext, GetExceptionInformation() ))  {
+    _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() ))  {
     
-        ExceptionCode = GetExceptionCode();        
-    }
+        ExceptionCode = _SEH2_GetExceptionCode();        
+    } _SEH2_END;
     
     //
     //  If we posted the request or our caller will retry then just return here.
