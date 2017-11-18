@@ -514,25 +514,38 @@ INT CommandExit(LPTSTR param)
     if (!_tcsncmp(param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE, STRING_EXIT_HELP);
-        /* Just make sure */
+
+        /* Just make sure we don't exit */
         bExit = FALSE;
-        /* Don't exit */
         return 0;
     }
 
-    if (bc != NULL && _tcsnicmp(param, _T("/b"), 2) == 0)
+    if (_tcsnicmp(param, _T("/b"), 2) == 0)
     {
         param += 2;
-        while (_istspace(*param))
-            param++;
-        if (_istdigit(*param))
-            nErrorLevel = _ttoi(param);
-        ExitBatch();
+
+        /*
+         * If a current batch file is running, exit it,
+         * otherwise exit this command interpreter instance.
+         */
+        if (bc)
+            ExitBatch();
+        else
+            bExit = TRUE;
     }
     else
     {
+        /* Exit this command interpreter instance */
         bExit = TRUE;
     }
+
+    /* Search for an optional exit code */
+    while (_istspace(*param))
+        param++;
+
+    /* Set the errorlevel to the exit code */
+    if (_istdigit(*param))
+        nErrorLevel = _ttoi(param);
 
     return 0;
 }
