@@ -379,7 +379,7 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     struct wgl_context* context;
     DHGLRC dhglrc;
     
-    TRACE("Creating context for %p, format %i\n", hdc);
+    TRACE("Creating context for %p.\n", hdc);
     
     if(!dc_data)
     {
