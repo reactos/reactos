@@ -1800,7 +1800,7 @@ Initialize(VOID)
     HMODULE NtDllModule;
     TCHAR commandline[CMDLINE_LENGTH];
     TCHAR ModuleName[_MAX_PATH + 1];
-    INT nExitCode;
+    // INT nExitCode;
 
     HANDLE hIn, hOut;
 
@@ -1985,11 +1985,11 @@ Initialize(VOID)
         /* Do the /C or /K command */
         GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
         bWaitForCommand = TRUE;
-        nExitCode = ParseCommandLine(commandline);
+        /* nExitCode = */ ParseCommandLine(commandline);
         bWaitForCommand = FALSE;
         if (option != _T('K'))
         {
-            nErrorLevel = nExitCode;
+            // nErrorLevel = nExitCode;
             bExit = TRUE;
         }
     }
