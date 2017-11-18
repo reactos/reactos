@@ -48,9 +48,8 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 #ifdef OPENGL32_USE_TLS
             if (!init_tls_data())
                 return FALSE;
-#else
-            NtCurrentTeb()->glTable = &StubTable.glDispatchTable;
 #endif // defined(OPENGL32_USE_TLS)
+            IntSetCurrentDispatchTable(&StubTable.glDispatchTable);
             break;
 
         case DLL_THREAD_DETACH:

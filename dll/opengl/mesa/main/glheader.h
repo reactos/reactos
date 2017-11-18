@@ -48,6 +48,7 @@
 #  endif /* _STATIC_MESA support */
 #endif /* WIN32 / CYGWIN bracket */
 
+#define WIN32_NO_STATUS
 
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
