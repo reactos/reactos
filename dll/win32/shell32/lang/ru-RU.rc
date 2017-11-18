@@ -685,6 +685,8 @@ BEGIN
     IDS_FORMATDRIVE "Форматировать..."
     IDS_RENAME "Переименовать"
     IDS_PASTE "Вставить"
+    IDS_EJECT "Извлечь"
+    IDS_DISCONNECT "Отсоединить"
 
     IDS_CREATEFOLDER_DENIED "Невозможно создать папку '%1'"
     IDS_CREATEFOLDER_CAPTION "Невозможно создать папку"
@@ -777,6 +779,12 @@ BEGIN
     IDS_PICK_ICON_TITLE "Выбрать значок"
     IDS_PICK_ICON_FILTER "Файлы значков (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Все файлы (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Исполняемые файлы (*.exe)\0*.exe\0Все файлы (*.*)\0*.*\0"
+
+    IDS_CANTLOCKVOLUME "Не удалось заблокировать том (код ошибки: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Не удалось размонтировать том (код ошибки: %lu)."
+    IDS_CANTEJECTMEDIA "Не удалось извлечь носитель (код ошибки: %lu)."
+    IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
+    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
 
     IDS_DIRECTORY "Папка с файлами"
     IDS_BAT_FILE "Пакетный файл ReactOS"

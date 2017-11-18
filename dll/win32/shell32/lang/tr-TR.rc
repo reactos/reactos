@@ -685,6 +685,8 @@ BEGIN
     IDS_FORMATDRIVE "Biçimlendir..."
     IDS_RENAME "Yeniden Adlandır"
     IDS_PASTE "Yapıştır"
+    IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED """%1"" dizini oluşturulamıyor."
     IDS_CREATEFOLDER_CAPTION "Dizin Oluşturulamıyor"
@@ -777,6 +779,12 @@ BEGIN
     IDS_PICK_ICON_TITLE "Simge Seç"
     IDS_PICK_ICON_FILTER "Simge Kütükleri (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Tüm Kütükler (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Çalıştırılabilir Kütükler (*.exe)\0*.exe\0Tüm Kütükler (*.*)\0*.*\0"
+
+    IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
+    IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
+    IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
+    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
 
     IDS_DIRECTORY "Dizin"
     IDS_BAT_FILE "ReactOS Toplu İş Kütüğü"
