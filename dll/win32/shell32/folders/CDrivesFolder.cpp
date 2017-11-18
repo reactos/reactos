@@ -253,6 +253,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
             else if (wParam == CMDID_DISCONNECT)
             {
                 /* do disconnect */
+                wszBuf[2] = UNICODE_NULL;
                 dwError = WNetCancelConnection2W(wszBuf, 0, FALSE);
                 if (dwError == NO_ERROR)
                 {
