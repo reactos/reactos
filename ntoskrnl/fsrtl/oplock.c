@@ -63,7 +63,7 @@ FsRtlNotifyCompletion(IN PVOID Context,
     DPRINT("FsRtlNotifyCompletion(%p, %p)\n", Context, Irp);
 
     /* Just complete the IRP */
-    return IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 }
 
 VOID
