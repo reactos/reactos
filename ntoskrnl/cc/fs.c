@@ -143,6 +143,7 @@ CcPurgeCacheSection (
     PLIST_ENTRY ListEntry;
     PROS_VACB Vacb;
     LONGLONG ViewEnd;
+    BOOLEAN Success;
 
     CCTRACE(CC_API_DEBUG, "SectionObjectPointer=%p\n FileOffset=%p Length=%lu UninitializeCacheMaps=%d",
         SectionObjectPointer, FileOffset, Length, UninitializeCacheMaps);
@@ -169,6 +170,9 @@ CcPurgeCacheSection (
 
     InitializeListHead(&FreeList);
 
+    /* Assume success */
+    Success = TRUE;
+
     KeAcquireGuardedMutex(&ViewLock);
     KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
     ListEntry = SharedCacheMap->CacheMapVacbListHead.Flink;
@@ -189,8 +193,12 @@ CcPurgeCacheSection (
             break;
         }
 
-        ASSERT((Vacb->ReferenceCount == 0) ||
-               (Vacb->ReferenceCount == 1 && Vacb->Dirty));
+        /* Still in use, it cannot be purged, fail */
+        if (Vacb->ReferenceCount != 0 && !Vacb->Dirty)
+        {
+            Success = FALSE;
+            break;
+        }
 
         /* This VACB is in range, so unlink it and mark for free */
         RemoveEntryList(&Vacb->VacbLruListEntry);
@@ -213,7 +221,7 @@ CcPurgeCacheSection (
         CcRosInternalFreeVacb(Vacb);
     }
 
-    return TRUE;
+    return Success;
 }
 
 
