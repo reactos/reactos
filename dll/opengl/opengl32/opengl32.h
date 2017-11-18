@@ -17,6 +17,10 @@
 #include <winddi.h>
 #include <GL/gl.h>
 
+#ifndef OPENGL32_USE_TLS
+#include <pstypes.h>
+#endif
+
 #include <wine/debug.h>
 
 #include "icd.h"
@@ -124,7 +128,7 @@ C_ASSERT(FIELD_OFFSET(struct Opengl32_ThreadData, glDispatchTable) == 0);
 /* dllmain.c */
 BOOL init_tls_data(void);
 
-static inline
+FORCEINLINE
 void
 IntMakeCurrent(HGLRC hglrc, HDC hdc, struct wgl_dc_data* dc_data)
 {
@@ -143,7 +147,7 @@ IntMakeCurrent(HGLRC hglrc, HDC hdc, struct wgl_dc_data* dc_data)
     thread_data->dc_data = dc_data;
 }
 
-static inline
+FORCEINLINE
 HGLRC
 IntGetCurrentRC(void)
 {
@@ -151,16 +155,7 @@ IntGetCurrentRC(void)
     return data ? data->hglrc : NULL;
 }
 
-static inline
-DHGLRC
-IntGetCurrentDHGLRC(void)
-{
-    struct wgl_context* ctx = (struct wgl_context*)IntGetCurrentRC();
-    if(!ctx) return NULL;
-    return ctx->dhglrc;
-}
-
-static inline
+FORCEINLINE
 HDC
 IntGetCurrentDC(void)
 {
@@ -168,7 +163,7 @@ IntGetCurrentDC(void)
     return data ? data->hdc : NULL;
 }
 
-static inline
+FORCEINLINE
 struct wgl_dc_data*
 IntGetCurrentDcData(void)
 {
@@ -176,7 +171,7 @@ IntGetCurrentDcData(void)
     return data->dc_data;
 }
 
-static inline
+FORCEINLINE
 const GLDISPATCHTABLE *
 IntGetCurrentDispatchTable(void)
 {
@@ -184,7 +179,7 @@ IntGetCurrentDispatchTable(void)
     return data->glDispatchTable;
 }
 
-static inline
+FORCEINLINE
 void
 IntSetCurrentDispatchTable(const GLDISPATCHTABLE* table)
 {
@@ -192,7 +187,7 @@ IntSetCurrentDispatchTable(const GLDISPATCHTABLE* table)
     data->glDispatchTable = table;
 }
 
-static inline
+FORCEINLINE
 void
 IntSetCurrentICDPrivate(void* value)
 {
@@ -200,7 +195,7 @@ IntSetCurrentICDPrivate(void* value)
     data->icdData = value;
 }
 
-static inline
+FORCEINLINE
 void*
 IntGetCurrentICDPrivate(void)
 {
@@ -210,13 +205,76 @@ IntGetCurrentICDPrivate(void)
 
 
 #else
-static inline
+FORCEINLINE
 const GLDISPATCHTABLE*
 IntGetCurrentDispatchTable(void)
 {
     return (GLDISPATCHTABLE*)NtCurrentTeb()->glTable;
 }
+
+FORCEINLINE
+void
+IntSetCurrentDispatchTable(const GLDISPATCHTABLE* table)
+{
+    NtCurrentTeb()->glTable = (void*)table;
+}
+
+FORCEINLINE
+void
+IntMakeCurrent(HGLRC hglrc, HDC hdc, struct wgl_dc_data* dc_data)
+{
+    TEB* CurrentTeb = NtCurrentTeb();
+
+    CurrentTeb->glCurrentRC = hglrc;
+    CurrentTeb->glReserved2 = hdc;
+    CurrentTeb->glContext = dc_data;
+}
+
+FORCEINLINE
+HGLRC
+IntGetCurrentRC(void)
+{
+    return NtCurrentTeb()->glCurrentRC;
+}
+
+FORCEINLINE
+HDC
+IntGetCurrentDC(void)
+{
+    return NtCurrentTeb()->glReserved2;
+}
+
+static inline
+struct wgl_dc_data*
+IntGetCurrentDcData(void)
+{
+    return NtCurrentTeb()->glContext;
+}
+
+FORCEINLINE
+void
+IntSetCurrentICDPrivate(void* value)
+{
+    NtCurrentTeb()->glReserved1[0] = (ULONG_PTR)value;
+}
+
+FORCEINLINE
+void*
+IntGetCurrentICDPrivate(void)
+{
+    return (void*)NtCurrentTeb()->glReserved1[0];
+}
+
 #endif // defined(OPENGL32_USE_TLS)
+
+FORCEINLINE
+DHGLRC
+IntGetCurrentDHGLRC(void)
+{
+    struct wgl_context* ctx = (struct wgl_context*)IntGetCurrentRC();
+    if(!ctx) return NULL;
+    return ctx->dhglrc;
+}
 
 /* Software implementation functions */
 INT sw_DescribePixelFormat(HDC hdc, INT format, UINT size, PIXELFORMATDESCRIPTOR* descr);
