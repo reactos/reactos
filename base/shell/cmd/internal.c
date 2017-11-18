@@ -282,7 +282,7 @@ INT cmd_chdir (LPTSTR param)
 #ifdef INCLUDE_CMD_MKDIR
 
 /* Helper function for mkdir to make directories in a path.
-Dont use the api to decrease depence on libs */
+Don't use the api to decrease dependence on libs */
 BOOL
 MakeFullPath(TCHAR * DirPath)
 {
@@ -509,21 +509,21 @@ INT cmd_rmdir (LPTSTR param)
 /*
  * set the exitflag to true
  */
-INT CommandExit (LPTSTR param)
+INT CommandExit(LPTSTR param)
 {
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_EXIT_HELP);
+        ConOutResPaging(TRUE, STRING_EXIT_HELP);
         /* Just make sure */
         bExit = FALSE;
-        /* Dont exit */
+        /* Don't exit */
         return 0;
     }
 
-    if (bc != NULL && _tcsnicmp(param,_T("/b"),2) == 0)
+    if (bc != NULL && _tcsnicmp(param, _T("/b"), 2) == 0)
     {
         param += 2;
-        while (_istspace (*param))
+        while (_istspace(*param))
             param++;
         if (_istdigit(*param))
             nErrorLevel = _ttoi(param);
