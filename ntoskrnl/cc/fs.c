@@ -213,7 +213,7 @@ CcPurgeCacheSection (
         CcRosInternalFreeVacb(Vacb);
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 
