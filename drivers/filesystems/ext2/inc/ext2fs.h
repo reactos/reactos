@@ -2495,7 +2495,8 @@ struct buffer_head *ext3_bread(struct ext2_icb *icb, struct inode *inode,
 int add_dirent_to_buf(struct ext2_icb *icb, struct dentry *dentry,
                       struct inode *inode, struct ext3_dir_entry_2 *de,
                       struct buffer_head *bh);
-#if !defined(__REACTOS__) || defined(_MSC_VER)
+#if !defined(__REACTOS__) || (defined(_MSC_VER) && !defined(__clang__))
+/* FIXME: Inspect the clang-cl code path */
 struct ext3_dir_entry_2 *
             do_split(struct ext2_icb *icb, struct inode *dir,
                      struct buffer_head **bh,struct dx_frame *frame,
