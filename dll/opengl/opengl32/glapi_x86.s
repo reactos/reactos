@@ -9,38 +9,48 @@
 #include <asm.inc>
 #include <ks386.inc>
 
+.data
+ASSUME nothing
+
+.align 16
+
 .code
 
 #ifdef OPENG32_USE_TLS
 EXTERN _OglTlsIndex:DWORD
 EXTERN _TlsGetValue@4:PROC
+#endif
 
 MACRO(USE_GL_FUNC, name, offset, stack)
 PUBLIC _gl&name&@&stack
 .PROC _gl&name&@&stack
+
+FPO 0, 0, 0, 0, 0, FRAME_FPO
+
+#ifdef OPENG32_USE_TLS
     push _OglTlsIndex
     call _TlsGetValue@4
+    /* If we don't have a thread data, this is a nop */
+    test eax, eax
+    jz name&_fast_ret
+    /* Get the GL table */
     mov eax, [eax]
-    jmp dword ptr [eax+4*VAL(offset)]
-.ENDP
-ENDM
 #else
-MACRO(USE_GL_FUNC, name, offset, stack)
-EXTERN _nop_&name@&stack:PROC
-PUBLIC _gl&name&@&stack
-.PROC _gl&name&@&stack
     /* Get the TEB */
-    mov eax, fs:[TEB_SELF] 
+    mov eax, fs:[TEB_SELF]
     /* Get the GL table */
     mov eax, [eax + TEB_GL_TABLE]
-    /* If we don't have a dispatch table, call the nop */
+#endif
+
+    /* If we don't have a dispatch table, this is a nop */
     test eax, eax
-    jz _nop_&name&@&stack
+    jz name&_fast_ret
     /* Jump into the ICD */
     jmp dword ptr [eax+4*VAL(offset)]
+name&_fast_ret:
+    ret VAL(stack)
 .ENDP
 ENDM
-#endif
 
 USE_GL_FUNC Accum, 213, 8
 USE_GL_FUNC AlphaFunc, 240, 8
