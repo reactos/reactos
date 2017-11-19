@@ -49,7 +49,6 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
             if (!init_tls_data())
                 return FALSE;
 #endif // defined(OPENGL32_USE_TLS)
-            IntSetCurrentDispatchTable(&StubTable.glDispatchTable);
             break;
 
         case DLL_THREAD_DETACH:
