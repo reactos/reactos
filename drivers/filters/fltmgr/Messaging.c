@@ -700,7 +700,7 @@ CreateClientPort(_In_ PFILE_OBJECT FileObject,
     }
 
     /* Now insert the new client port into the object manager*/
-    Status = ObInsertObject(ClientPortObject, 0, FLT_PORT_ALL_ACCESS, 1, 0, &PortHandle);
+    Status = ObInsertObject(ClientPortObject, 0, FLT_PORT_ALL_ACCESS, 1, 0, (PHANDLE)&PortHandle);
     if (!NT_SUCCESS(Status))
     {
         goto Quit;
