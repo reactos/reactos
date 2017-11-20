@@ -16,31 +16,16 @@ ASSUME nothing
 
 .code
 
-#ifdef OPENG32_USE_TLS
-EXTERN _OglTlsIndex:DWORD
-EXTERN _TlsGetValue@4:PROC
-#endif
-
 MACRO(USE_GL_FUNC, name, offset, stack)
 PUBLIC _gl&name&@&stack
 .PROC _gl&name&@&stack
 
-FPO 0, 0, 0, 0, 0, FRAME_FPO
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
 
-#ifdef OPENG32_USE_TLS
-    push _OglTlsIndex
-    call _TlsGetValue@4
-    /* If we don't have a thread data, this is a nop */
-    test eax, eax
-    jz name&_fast_ret
-    /* Get the GL table */
-    mov eax, [eax]
-#else
     /* Get the TEB */
     mov eax, fs:[TEB_SELF]
     /* Get the GL table */
     mov eax, [eax + TEB_GL_TABLE]
-#endif
 
     /* If we don't have a dispatch table, this is a nop */
     test eax, eax

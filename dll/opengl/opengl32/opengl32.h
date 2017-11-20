@@ -112,99 +112,6 @@ struct wgl_dc_data
 void IntDeleteAllContexts(void);
 void IntDeleteAllICDs(void);
 
-#ifdef OPENGL32_USE_TLS
-extern DWORD OglTlsIndex;
-
-struct Opengl32_ThreadData
-{
-    const GLDISPATCHTABLE* glDispatchTable;
-    HGLRC hglrc;
-    HDC hdc;
-    struct wgl_dc_data* dc_data;
-    PVOID* icdData;
-};
-C_ASSERT(FIELD_OFFSET(struct Opengl32_ThreadData, glDispatchTable) == 0);
-
-/* dllmain.c */
-BOOL init_tls_data(void);
-
-FORCEINLINE
-void
-IntMakeCurrent(HGLRC hglrc, HDC hdc, struct wgl_dc_data* dc_data)
-{
-    struct Opengl32_ThreadData* thread_data = TlsGetValue(OglTlsIndex);
-    if (!thread_data)
-    {
-        OutputDebugStringA("Calling init_tls_data from IntMakeCurrent\n");
-        if (!init_tls_data())
-            OutputDebugStringA("init_tls_data failed, brace for impact...\n");
-
-        thread_data = TlsGetValue(OglTlsIndex);
-    }
-
-    thread_data->hglrc = hglrc;
-    thread_data->hdc = hdc;
-    thread_data->dc_data = dc_data;
-}
-
-FORCEINLINE
-HGLRC
-IntGetCurrentRC(void)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data ? data->hglrc : NULL;
-}
-
-FORCEINLINE
-HDC
-IntGetCurrentDC(void)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data ? data->hdc : NULL;
-}
-
-FORCEINLINE
-struct wgl_dc_data*
-IntGetCurrentDcData(void)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->dc_data;
-}
-
-FORCEINLINE
-const GLDISPATCHTABLE *
-IntGetCurrentDispatchTable(void)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->glDispatchTable;
-}
-
-FORCEINLINE
-void
-IntSetCurrentDispatchTable(const GLDISPATCHTABLE* table)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    data->glDispatchTable = table;
-}
-
-FORCEINLINE
-void
-IntSetCurrentICDPrivate(void* value)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    data->icdData = value;
-}
-
-FORCEINLINE
-void*
-IntGetCurrentICDPrivate(void)
-{
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->icdData;
-}
-
-
-#else
 FORCEINLINE
 const GLDISPATCHTABLE*
 IntGetCurrentDispatchTable(void)
@@ -264,8 +171,6 @@ IntGetCurrentICDPrivate(void)
 {
     return (void*)NtCurrentTeb()->glReserved1[0];
 }
-
-#endif // defined(OPENGL32_USE_TLS)
 
 FORCEINLINE
 DHGLRC
