@@ -456,6 +456,36 @@ BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag
     else
         drawState = STATE_NORMAL;
 
+    if (paint == PB_draw || paint == CB_draw)
+    {
+        HDC hdc;
+        HBITMAP hbmp;
+        RECT rc;
+
+        GetClientRect(hwnd, &rc);
+        hdc = CreateCompatibleDC(hParamDC);
+        hbmp = CreateCompatibleBitmap(hParamDC, rc.right, rc.bottom);
+        if (hdc && hbmp)
+        {
+            SelectObject(hdc, hbmp);
+
+            paint(theme, hwnd, hdc, drawState, dtFlags, state & BST_FOCUS, prfFlag);
+
+            BitBlt(hParamDC, 0, 0, rc.right, rc.bottom, hdc, 0, 0, SRCCOPY);
+            DeleteObject(hbmp);
+            DeleteDC(hdc);
+            return TRUE;
+        }
+        else
+        {
+            ERR("Failed to create DC and bitmap for double buffering\n");
+            if (hbmp)
+                DeleteObject(hbmp);
+            if (hdc)
+                DeleteDC(hdc);
+        }
+    }
+
     paint(theme, hwnd, hParamDC, drawState, dtFlags, state & BST_FOCUS, prfFlag);
     return TRUE;
 }
