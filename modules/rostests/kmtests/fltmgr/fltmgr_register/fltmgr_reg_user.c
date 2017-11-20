@@ -17,7 +17,7 @@ START_TEST(FltMgrReg)
     ok(KmtFltCreateService(FilterName, L"FltMgrLoad test driver", &hService) == ERROR_SUCCESS, "Failed to create the reg entry\n");
     ok(KmtFltAddAltitude(L"123456") == ERROR_SUCCESS, "\n");
     ok(KmtFltLoadDriver(TRUE, FALSE, FALSE, &hPort) == ERROR_SUCCESS, "Failed to load the driver\n");
-    __debugbreak();
+    //__debugbreak();
     ok(KmtFltUnloadDriver(hPort, FALSE) == ERROR_SUCCESS, "Failed to unload the driver\n");
     ok(KmtFltDeleteService(NULL, &hService) == ERROR_SUCCESS, "Failed to delete the driver\n");
 }

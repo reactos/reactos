@@ -156,7 +156,7 @@ FLTAPI
 TestRegFilterUnload(
     _In_ FLT_FILTER_UNLOAD_FLAGS Flags)
 {
-    __debugbreak();
+    //__debugbreak();
 
     ok_irql(PASSIVE_LEVEL);
     ok(TestFilter != NULL, "Buffer is NULL\n");
