@@ -51,8 +51,6 @@ TestFltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject)
     PFLT_FILTER Temp = NULL;
     NTSTATUS Status;
 
-    __debugbreak();
-
     RESET_REGISTRATION(FALSE);
 #if 0
     KmtStartSeh()
@@ -117,7 +115,7 @@ TestFltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject)
 
     /* And the altitude is corect */
     RtlInitUnicodeString(&Altitude, L"123456");
-    ok_eq_long(RtlCompareUnicodeString(&Filter->DefaultAltitude, &Name, FALSE), 0);
+    ok_eq_long(RtlCompareUnicodeString(&Filter->DefaultAltitude, &Altitude, FALSE), 0);
 
     //
     // FIXME: More checks
@@ -126,18 +124,28 @@ TestFltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject)
     /* Cleanup the valid registration */
     FltUnregisterFilter(Filter);
 
-
     /*
      * The last thing we'll do before we exit is to properly register with the filter manager 
      * and set an unload routine. This'll let us test the FltUnregisterFilter routine
      */
     RESET_REGISTRATION(TRUE);
+
+    /* Set a fake unload routine we'll use to test */
+    DriverObject->DriverUnload = (PDRIVER_UNLOAD)0x1234FFFF;
+
     FilterRegistration.FilterUnloadCallback = TestRegFilterUnload;
     Status = FltRegisterFilter(DriverObject, &FilterRegistration, &TestFilter);
     ok_eq_hex(Status, STATUS_SUCCESS);
     
-    ok_eq_pointer(FilterRegistration.FilterUnloadCallback, TestRegFilterUnload);
-    ok_eq_pointer(DriverObject->DriverUnload, KmtGetSystemRoutineAddress(L"FltpMiniFilterDriverUnload"));
+    /* Test all the unlod routines */
+    ok_eq_pointer(TestFilter->FilterUnload, TestRegFilterUnload);
+    ok_eq_pointer(TestFilter->OldDriverUnload, (PFLT_FILTER_UNLOAD_CALLBACK)0x1234FFFF);
+
+    // This should equal the fltmgr's private unload routine, but there's no easy way of testing it...
+    //ok_eq_pointer(DriverObject->DriverUnload, FltpMiniFilterDriverUnload);
+
+    /* Make sure our test address is never actually called */
+    TestFilter->OldDriverUnload = (PFLT_FILTER_UNLOAD_CALLBACK)NULL;
 
     return TRUE;
 }
