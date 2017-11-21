@@ -18,6 +18,8 @@
 #define FM_TAG_UNICODE_STRING   'suMF'
 #define FM_TAG_FILTER           'lfMF'
 #define FM_TAG_CONTEXT_REGISTA  'rcMF'
+#define FM_TAG_CCB              'bcMF'
+#define FM_TAG_TEMP_REGISTRY    'rtMF'
 
 #define MAX_DEVNAME_LENGTH  64
 
@@ -100,6 +102,9 @@ FltpReallocateUnicodeString(_In_ PUNICODE_STRING String,
 
 VOID
 FltpFreeUnicodeString(_In_ PUNICODE_STRING String);
+
+
+
 ////////////////////////////////////////////////
 
 
@@ -252,7 +257,7 @@ FltGetUpperInstance
 FltGetVolumeContext
 FltGetVolumeFromDeviceObject
 FltGetVolumeFromFileObject
-FltGetVolumeFromInstance
+FltLoadFilter
 FltGetVolumeFromName
 FltGetVolumeGuidName
 FltGetVolumeInstanceFromName

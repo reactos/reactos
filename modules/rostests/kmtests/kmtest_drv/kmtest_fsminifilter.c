@@ -2,7 +2,8 @@
  * PROJECT:         ReactOS kernel-mode tests - Filter Manager
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         FS Mini-filter wrapper to host the filter manager tests
- * PROGRAMMER:      Ged Murphy <ged.murphy@reactos.org>
+ * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ *                  Ged Murphy <ged.murphy@reactos.org>
  */
 
 #include <ntifs.h>
@@ -35,6 +36,7 @@ DRIVER_INITIALIZE DriverEntry;
 
 /* Globals */
 static PDRIVER_OBJECT TestDriverObject;
+static PDEVICE_OBJECT KmtestDeviceObject;
 static FILTER_DATA FilterData;
 static PFLT_OPERATION_REGISTRATION Callbacks = NULL;
 static PFLT_CONTEXT_REGISTRATION Contexts = NULL;
@@ -133,6 +135,9 @@ DriverEntry(
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     UNICODE_STRING DeviceName;
     WCHAR DeviceNameBuffer[128] = L"\\Device\\Kmtest-";
+    UNICODE_STRING KmtestDeviceName;
+    PFILE_OBJECT KmtestFileObject;
+    PKMT_DEVICE_EXTENSION KmtestDeviceExtension;
     PCWSTR DeviceNameSuffix;
     INT Flags = 0;
     PKPRCB Prcb;
@@ -147,6 +152,32 @@ DriverEntry(
     KmtIsCheckedBuild = (Prcb->BuildType & PRCB_BUILD_DEBUG) != 0;
     KmtIsMultiProcessorBuild = (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR) == 0;
     TestDriverObject = DriverObject;
+
+    /* get the Kmtest device, so that we get a ResultBuffer pointer */
+    RtlInitUnicodeString(&KmtestDeviceName, KMTEST_DEVICE_DRIVER_PATH);
+    Status = IoGetDeviceObjectPointer(&KmtestDeviceName, FILE_ALL_ACCESS, &KmtestFileObject, &KmtestDeviceObject);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get Kmtest device object pointer\n");
+        goto cleanup;
+    }
+
+    Status = ObReferenceObjectByPointer(KmtestDeviceObject, FILE_ALL_ACCESS, NULL, KernelMode);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to reference Kmtest device object\n");
+        goto cleanup;
+    }
+
+    ObDereferenceObject(KmtestFileObject);
+    KmtestFileObject = NULL;
+    KmtestDeviceExtension = KmtestDeviceObject->DeviceExtension;
+    ResultBuffer = KmtestDeviceExtension->ResultBuffer;
+    DPRINT("KmtestDeviceObject: %p\n", (PVOID)KmtestDeviceObject);
+    DPRINT("KmtestDeviceExtension: %p\n", (PVOID)KmtestDeviceExtension);
+    DPRINT("Setting ResultBuffer: %p\n", (PVOID)ResultBuffer);
 
 
     /* call TestEntry */
@@ -243,6 +274,7 @@ FilterUnload(
 {
     PAGED_CODE();
     UNREFERENCED_PARAMETER(Flags);
+    //__debugbreak();
 
     DPRINT("DriverUnload\n");
 
@@ -312,50 +344,54 @@ FilterInstanceSetup(
     UNREFERENCED_PARAMETER(FltObjects);
     UNREFERENCED_PARAMETER(Flags);
 
-    RtlInitUnicodeString(&VolumeName, NULL);
+    if (!(Flags & TESTENTRY_NO_INSTANCE_SETUP))
+    {
+        RtlInitUnicodeString(&VolumeName, NULL);
+
 #if 0 // FltGetVolumeProperties is not yet implemented
     /* Get the properties of this volume */
-    Status = FltGetVolumeProperties(Volume,
-                                    VolumeProperties,
-                                    sizeof(VolPropBuffer),
-                                    &LengthReturned);
-    if (NT_SUCCESS(Status))
-    {
-        FLT_ASSERT((VolumeProperties->SectorSize == 0) || (VolumeProperties->SectorSize >= MIN_SECTOR_SIZE));
-        SectorSize = max(VolumeProperties->SectorSize, MIN_SECTOR_SIZE);
-        ReportedSectorSize = VolumeProperties->SectorSize;
-    }
-    else
-    {
-        DPRINT1("Failed to get the volume properties : 0x%X", Status);
-        return Status;
-    }
-#endif
-    /*  Get the storage device object we want a name for */
-    Status = FltGetDiskDeviceObject(FltObjects->Volume, &DeviceObject);
-    if (NT_SUCCESS(Status))
-    {
-        /* Get the dos device name */
-        Status = IoVolumeDeviceToDosName(DeviceObject, &VolumeName);
+        Status = FltGetVolumeProperties(Volume,
+                                        VolumeProperties,
+                                        sizeof(VolPropBuffer),
+                                        &LengthReturned);
         if (NT_SUCCESS(Status))
         {
-            DPRINT("VolumeDeviceType %lu, VolumeFilesystemType %lu, Real SectSize=0x%04x, Reported SectSize=0x%04x, Name=\"%wZ\"",
-                   VolumeDeviceType,
-                   VolumeFilesystemType,
-                   SectorSize,
-                   ReportedSectorSize,
-                   &VolumeName);
+            FLT_ASSERT((VolumeProperties->SectorSize == 0) || (VolumeProperties->SectorSize >= MIN_SECTOR_SIZE));
+            SectorSize = max(VolumeProperties->SectorSize, MIN_SECTOR_SIZE);
+            ReportedSectorSize = VolumeProperties->SectorSize;
+        }
+        else
+        {
+            DPRINT1("Failed to get the volume properties : 0x%X", Status);
+            return Status;
+        }
+#endif
+        /*  Get the storage device object we want a name for */
+        Status = FltGetDiskDeviceObject(FltObjects->Volume, &DeviceObject);
+        if (NT_SUCCESS(Status))
+        {
+            /* Get the dos device name */
+            Status = IoVolumeDeviceToDosName(DeviceObject, &VolumeName);
+            if (NT_SUCCESS(Status))
+            {
+                DPRINT("VolumeDeviceType %lu, VolumeFilesystemType %lu, Real SectSize=0x%04x, Reported SectSize=0x%04x, Name=\"%wZ\"",
+                       VolumeDeviceType,
+                       VolumeFilesystemType,
+                       SectorSize,
+                       ReportedSectorSize,
+                       &VolumeName);
 
-            Status = TestInstanceSetup(FltObjects,
-                                       Flags,
-                                       VolumeDeviceType,
-                                       VolumeFilesystemType,
-                                       &VolumeName,
-                                       SectorSize,
-                                       ReportedSectorSize);
+                Status = TestInstanceSetup(FltObjects,
+                                           Flags,
+                                           VolumeDeviceType,
+                                           VolumeFilesystemType,
+                                           &VolumeName,
+                                           SectorSize,
+                                           ReportedSectorSize);
 
-            /* The buffer was allocated by the IoMgr */
-            ExFreePool(VolumeName.Buffer);
+                /* The buffer was allocated by the IoMgr */
+                ExFreePool(VolumeName.Buffer);
+            }
         }
     }
 
@@ -384,7 +420,10 @@ FilterQueryTeardown(
 {
     PAGED_CODE();
 
-    TestQueryTeardown(FltObjects, Flags);
+    if (!(Flags & TESTENTRY_NO_QUERY_TEARDOWN))
+    {
+        TestQueryTeardown(FltObjects, Flags);
+    }
 
     /* We always allow a volume to detach */
     return STATUS_SUCCESS;

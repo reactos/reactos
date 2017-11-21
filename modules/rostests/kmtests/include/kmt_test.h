@@ -126,9 +126,12 @@ NTSTATUS KmtFilterRegisterCallbacks(_In_ CONST FLT_OPERATION_REGISTRATION *Opera
 
 typedef enum
 {
-    TESTENTRY_NO_REGISTER_FILTER = 1,
-    TESTENTRY_NO_CREATE_COMMS_PORT = 2,
-    TESTENTRY_NO_START_FILTERING = 4,
+    TESTENTRY_NO_REGISTER_FILTER    = 0x01,
+    TESTENTRY_NO_CREATE_COMMS_PORT  = 0x02,
+    TESTENTRY_NO_START_FILTERING    = 0x04,
+    TESTENTRY_NO_INSTANCE_SETUP     = 0x08,
+    TESTENTRY_NO_QUERY_TEARDOWN     = 0x10,
+    TESTENTRY_NO_ALL                = 0xFF
 } KMT_MINIFILTER_FLAGS;
 
 VOID TestFilterUnload(_In_ ULONG Flags);
@@ -174,8 +177,14 @@ DWORD KmtSendWStringToDriver(IN DWORD ControlCode, IN PCWSTR String);
 DWORD KmtSendUlongToDriver(IN DWORD ControlCode, IN DWORD Value);
 DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, IN DWORD InLength, IN OUT PDWORD OutLength);
 
-DWORD KmtFltLoadDriver(_In_z_ PCWSTR ServiceName, _In_ BOOLEAN RestartIfRunning, _In_ BOOLEAN ConnectComms, _Out_ HANDLE *hPort);
+
+DWORD KmtFltCreateService(_In_z_ PCWSTR ServiceName, _In_z_ PCWSTR DisplayName, _Out_ SC_HANDLE *ServiceHandle);
+DWORD KmtFltDeleteService(_In_opt_z_ PCWSTR ServiceName, _Inout_ SC_HANDLE *ServiceHandle);
+DWORD KmtFltAddAltitude(_In_z_ LPWSTR Altitude);
+DWORD KmtFltLoadDriver(_In_ BOOLEAN EnableDriverLoadPrivlege, _In_ BOOLEAN RestartIfRunning, _In_ BOOLEAN ConnectComms, _Out_ HANDLE *hPort);
 DWORD KmtFltUnloadDriver(_In_ HANDLE *hPort, _In_ BOOLEAN DisonnectComms);
+DWORD KmtFltConnectComms(_Out_ HANDLE *hPort);
+DWORD KmtFltDisconnectComms(_In_ HANDLE hPort);
 DWORD KmtFltRunKernelTest(_In_ HANDLE hPort, _In_z_ PCSTR TestName);
 DWORD KmtFltSendToDriver(_In_ HANDLE hPort, _In_ DWORD Message);
 DWORD KmtFltSendStringToDriver(_In_ HANDLE hPort, _In_ DWORD Message, _In_ PCSTR String);

@@ -58,10 +58,45 @@ typedef struct _FLT_MUTEX_LIST_HEAD
 
 } FLT_MUTEX_LIST_HEAD, *PFLT_MUTEX_LIST_HEAD;
 
+typedef struct _FLT_TYPE
+{
+    USHORT Signature;
+    USHORT Size;
+
+} FLT_TYPE, *PFLT_TYPE;
+
+// http://fsfilters.blogspot.co.uk/2010/02/filter-manager-concepts-part-1.html
+typedef struct _FLTP_FRAME
+{
+    FLT_TYPE Type;
+    LIST_ENTRY Links;
+    unsigned int FrameID;
+    ERESOURCE AltitudeLock;
+    UNICODE_STRING AltitudeIntervalLow;
+    UNICODE_STRING AltitudeIntervalHigh;
+    char LargeIrpCtrlStackSize;
+    char SmallIrpCtrlStackSize;
+    FLT_RESOURCE_LIST_HEAD RegisteredFilters;
+    FLT_RESOURCE_LIST_HEAD AttachedVolumes;
+    LIST_ENTRY MountingVolumes;
+    FLT_MUTEX_LIST_HEAD AttachedFileSystems;
+    FLT_MUTEX_LIST_HEAD ZombiedFltObjectContexts;
+    ERESOURCE FilterUnloadLock;
+    FAST_MUTEX DeviceObjectAttachLock;
+    //FLT_PRCB *Prcb;
+    void *PrcbPoolToFree;
+    void *LookasidePoolToFree;
+    //FLTP_IRPCTRL_STACK_PROFILER IrpCtrlStackProfiler;
+    NPAGED_LOOKASIDE_LIST SmallIrpCtrlLookasideList;
+    NPAGED_LOOKASIDE_LIST LargeIrpCtrlLookasideList;
+    //STATIC_IRP_CONTROL GlobalSIC;
+
+} FLTP_FRAME, *PFLTP_FRAME;
+
 typedef struct _FLT_FILTER   // size = 0x120
 {
     FLT_OBJECT Base;
-    PVOID Frame;  //FLTP_FRAME
+    PFLTP_FRAME Frame;
     UNICODE_STRING Name;
     UNICODE_STRING DefaultAltitude;
     FLT_FILTER_FLAGS Flags;
@@ -97,12 +132,7 @@ typedef enum _FLT_yINSTANCE_FLAGS
 
 } FLT_INSTANCE_FLAGS, *PFLT_INSTANCE_FLAGS;
 
-typedef struct _FLT_TYPE
-{
-    USHORT Signature;
-    USHORT Size;
 
-} FLT_TYPE, *PFLT_TYPE;
 
 typedef struct _FLT_INSTANCE   // size = 0x144 (324)
 {
@@ -121,34 +151,18 @@ typedef struct _FLT_INSTANCE   // size = 0x144 (324)
 
 } FLT_INSTANCE, *PFLT_INSTANCE;
 
-// http://fsfilters.blogspot.co.uk/2010/02/filter-manager-concepts-part-1.html
-typedef struct _FLTP_FRAME
+
+typedef struct _TREE_ROOT
 {
-    FLT_TYPE Type;
-    LIST_ENTRY Links;
-    unsigned int FrameID;
-    ERESOURCE AltitudeLock;
-    UNICODE_STRING AltitudeIntervalLow;
-    UNICODE_STRING AltitudeIntervalHigh;
-    char LargeIrpCtrlStackSize;
-    char SmallIrpCtrlStackSize;
-    FLT_RESOURCE_LIST_HEAD RegisteredFilters;
-    FLT_RESOURCE_LIST_HEAD AttachedVolumes;
-    LIST_ENTRY MountingVolumes;
-    FLT_MUTEX_LIST_HEAD AttachedFileSystems;
-    FLT_MUTEX_LIST_HEAD ZombiedFltObjectContexts;
-    ERESOURCE FilterUnloadLock;
-    FAST_MUTEX DeviceObjectAttachLock;
-    //FLT_PRCB *Prcb;
-    void *PrcbPoolToFree;
-    void *LookasidePoolToFree;
-    //FLTP_IRPCTRL_STACK_PROFILER IrpCtrlStackProfiler;
-    NPAGED_LOOKASIDE_LIST SmallIrpCtrlLookasideList;
-    NPAGED_LOOKASIDE_LIST LargeIrpCtrlLookasideList;
-    //STATIC_IRP_CONTROL GlobalSIC;
+    RTL_SPLAY_LINKS *Tree;
 
-} FLTP_FRAME, *PFLTP_FRAME;
+} TREE_ROOT, *PTREE_ROOT;
 
+typedef struct _CONTEXT_LIST_CTRL
+{
+    TREE_ROOT List;
+
+} CONTEXT_LIST_CTRL, *PCONTEXT_LIST_CTRL;
 
 // http://fsfilters.blogspot.co.uk/2010/02/filter-manager-concepts-part-6.html
 typedef struct _STREAM_LIST_CTRL // size = 0xC8 (200)
@@ -156,16 +170,16 @@ typedef struct _STREAM_LIST_CTRL // size = 0xC8 (200)
     FLT_TYPE Type;
     FSRTL_PER_STREAM_CONTEXT ContextCtrl;
     LIST_ENTRY VolumeLink;
-    //STREAM_LIST_CTRL_FLAGS Flags;
+    ULONG Flags; //STREAM_LIST_CTRL_FLAGS Flags;
     int UseCount;
     ERESOURCE ContextLock;
-    //CONTEXT_LIST_CTRL StreamContexts;
-    //CONTEXT_LIST_CTRL StreamHandleContexts;
+    CONTEXT_LIST_CTRL StreamContexts;
+    CONTEXT_LIST_CTRL StreamHandleContexts;
     ERESOURCE NameCacheLock;
     LARGE_INTEGER LastRenameCompleted;
-    //NAME_CACHE_LIST_CTRL NormalizedNameCache;
-   // NAME_CACHE_LIST_CTRL ShortNameCache;
-   // NAME_CACHE_LIST_CTRL OpenedNameCache;
+    ULONG NormalizedNameCache; //NAME_CACHE_LIST_CTRL NormalizedNameCache;
+    ULONG ShortNameCache; // NAME_CACHE_LIST_CTRL ShortNameCache;
+    ULONG OpenedNameCache; // NAME_CACHE_LIST_CTRL OpenedNameCache;
     int AllNameContextsTemporary;
 
 } STREAM_LIST_CTRL, *PSTREAM_LIST_CTRL;
@@ -186,6 +200,17 @@ typedef struct _FLT_SERVER_PORT_OBJECT
 } FLT_SERVER_PORT_OBJECT, *PFLT_SERVER_PORT_OBJECT;
 
 
+typedef struct _FLT_MESSAGE_WAITER_QUEUE
+{
+    IO_CSQ Csq;
+    FLT_MUTEX_LIST_HEAD WaiterQ;
+    ULONG MinimumWaiterLength;
+    KSEMAPHORE Semaphore;
+    KEVENT Event;
+
+} FLT_MESSAGE_WAITER_QUEUE, *PFLT_MESSAGE_WAITER_QUEUE;
+
+
 typedef struct _FLT_PORT_OBJECT
 {
     LIST_ENTRY FilterLink;
@@ -193,7 +218,7 @@ typedef struct _FLT_PORT_OBJECT
     PVOID Cookie;
     EX_RUNDOWN_REF MsgNotifRundownRef;
     FAST_MUTEX Lock;
-    PVOID MsgQ; // FLT_MESSAGE_WAITER_QUEUE MsgQ;
+    FLT_MESSAGE_WAITER_QUEUE MsgQ;
     ULONGLONG MessageId;
     KEVENT DisconnectEvent;
     BOOLEAN Disconnected;
@@ -232,18 +257,6 @@ typedef struct _CALLBACK_CTRL
 
 } CALLBACK_CTRL, *PCALLBACK_CTRL;
 
-typedef struct _TREE_ROOT
-{
-    RTL_SPLAY_LINKS *Tree;
-
-} TREE_ROOT, *PTREE_ROOT;
-
-
-typedef struct _CONTEXT_LIST_CTRL
-{
-    TREE_ROOT List;
-
-} CONTEXT_LIST_CTRL, *PCONTEXT_LIST_CTRL;
 
 typedef struct _NAME_CACHE_LIST_CTRL_STATS
 {
@@ -311,6 +324,58 @@ typedef struct _FLT_VOLUME
 } FLT_VOLUME, *PFLT_VOLUME;
 
 
+typedef struct _MANAGER_CCB
+{
+    PFLTP_FRAME Frame;
+    unsigned int Iterator;
+
+} MANAGER_CCB, *PMANAGER_CCB;
+
+typedef struct _FILTER_CCB
+{
+    PFLT_FILTER Filter;
+    unsigned int Iterator;
+
+} FILTER_CCB, *PFILTER_CCB;
+
+typedef struct _INSTANCE_CCB
+{
+    PFLT_INSTANCE Instance;
+
+} INSTANCE_CCB, *PINSTANCE_CCB;
+
+typedef struct _VOLUME_CCB
+{
+    UNICODE_STRING Volume;
+    unsigned int Iterator;
+
+} VOLUME_CCB, *PVOLUME_CCB;
+
+typedef struct _PORT_CCB
+{
+    PFLT_PORT_OBJECT Port;
+    FLT_MUTEX_LIST_HEAD ReplyWaiterList;
+
+} PORT_CCB, *PPORT_CCB;
+
+
+typedef union _CCB_TYPE
+{
+    MANAGER_CCB Manager;
+    FILTER_CCB Filter;
+    INSTANCE_CCB Instance;
+    VOLUME_CCB Volume;
+    PORT_CCB Port;
+
+} CCB_TYPE, *PCCB_TYPE;
+
+
+typedef struct _FLT_CCB
+{
+    FLT_TYPE Type;
+    CCB_TYPE Data;
+
+} FLT_CCB, *PFLT_CCB;
 
 VOID
 FltpExInitializeRundownProtection(
@@ -387,6 +452,21 @@ FltpDispatchHandler(
     _Inout_ PIRP Irp
 );
 
+NTSTATUS
+FltpMsgCreate(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+);
 
+NTSTATUS
+FltpMsgDispatch(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+);
+
+NTSTATUS
+FltpSetupCommunicationObjects(
+    _In_ PDRIVER_OBJECT DriverObject
+);
 
 #endif /* _FLTMGR_INTERNAL_H */
