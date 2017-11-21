@@ -807,7 +807,7 @@ BEGIN
     IDS_ANY_FILE "%s-file"	
 
     IDS_OPEN_VERB "Ouvrir"
-    IDS_EXPLORE_VERB "Explore"
+    IDS_EXPLORE_VERB "Explorer"
     IDS_RUNAS_VERB "Exécuter en tant que..."
     IDS_EDIT_VERB "Éditer"
     IDS_FIND_VERB "Chercher"
