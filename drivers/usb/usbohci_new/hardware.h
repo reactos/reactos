@@ -110,8 +110,8 @@ typedef union _OHCI_ENDPOINT_CONTROL {
 /* Bit flags for HeadPointer member of the EP descriptor */
 #define OHCI_ED_HEAD_POINTER_HALT        0x00000001 // hardware stopped bit
 #define OHCI_ED_HEAD_POINTER_CARRY       0x00000002 // hardware toggle carry bit
-#define	OHCI_ED_HEAD_POINTER_MASK        0XFFFFFFF0 // mask physical pointer
-#define	OHCI_ED_HEAD_POINTER_FLAGS_MASK  0X0000000F // mask bit flags
+#define OHCI_ED_HEAD_POINTER_MASK        0XFFFFFFF0 // mask physical pointer
+#define OHCI_ED_HEAD_POINTER_FLAGS_MASK  0X0000000F // mask bit flags
 
 typedef struct _OHCI_ENDPOINT_DESCRIPTOR { // must be aligned to a 16-byte boundary
   OHCI_ENDPOINT_CONTROL EndpointControl;
