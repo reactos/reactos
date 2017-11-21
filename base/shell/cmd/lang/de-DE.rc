@@ -209,12 +209,25 @@ ECHO ohne Parameter zeigt die aktuelle Einstellung der Befehlsanzeige an."
     STRING_ECHO_HELP5 "ECHO ist %s\n"
     STRING_EXIT_HELP "Beendet den Befehlsinterpreter CMD.EXE oder die aktuelle Batchdatei.\n\nEXIT"
     STRING_FOR_HELP1 "Führt einen Befehl für jede einzelne Datei für einen Satz von Dateien aus.\n\n\
-FOR %Variable IN (Satz) DO Befehl [Parameter]\n\n\
-  %variable  Ein ersetzbarer Parameter bestehend aus einem einzelnen\n\
-              Buchstaben.\n\
+FOR %Variable IN (Satz) DO Befehl [Parameter]\n\
+FOR /L %Variable IN (start,step,end) DO Befehl [Parameter]\n\
+FOR /D %Variable IN (Satz) DO Befehl [Parameter]\n\
+FOR /R [[drive:]path] IN (Satz) DO Befehl [Parameter]\n\
+FOR /F [""options""] IN (Satz) DO Befehl [Parameter]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %Variable  Ein ersetzbarer Parameter bestehend aus einem einzelnen\n\
+             Buchstaben.\n\
   (Satz)     Ein Satz von mindestens einer Datei. Platzhalter sind zulässig.\n\
-  Befehl    Befehl, der für jede Datei ausgeführt werden soll.\n\
-  Parameter Parameter und Optionen für den angegebenen Befehl.\n\n\
+  Befehl     Befehl, der für jede Datei ausgeführt werden soll.\n\
+  Parameter  Parameter und Optionen für den angegebenen Befehl.\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 Um den FOR-Befehl in einem Batchprogramm zu verwenden, geben Sie %%Variable\n\
 statt %Variable an."
     STRING_FREE_HELP1 "\nVolume in Laufwerk %s ist %-11s\n\

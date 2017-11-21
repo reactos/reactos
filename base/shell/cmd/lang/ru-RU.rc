@@ -212,13 +212,26 @@ ECHO без параметра выводит текущий режим отоб
   /B            Завершает текущий пакетный файл.  \n\
                 Если выполняется вне пакетного файла, то будет завершена программа CMD.EXE\n\
   ExitCode      Это значение будет присвоено ERRORLEVEL после выхода\n"
-    STRING_FOR_HELP1 "Запускает указанную команду для каждого файла из набора файлов\n\n\
-FOR %переменная IN (набор) DO команда [параметры]\n\n\
+    STRING_FOR_HELP1 "Запускает указанную команду для каждого файла из набора файлов.\n\n\
+FOR %переменная IN (набор) DO команда [параметры]\n\
+FOR /L %переменная IN (start,step,end) DO команда [параметры]\n\
+FOR /D %переменная IN (набор) DO команда [параметры]\n\
+FOR /R [[drive:]path] IN (набор) DO команда [параметры]\n\
+FOR /F [""options""] IN (набор) DO команда [параметры]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
   %переменная  Подставляемый параметр.\n\
   (набор)      Набор из одного или нескольких файлов.\n\
                Допускается использование подстановочных знаков.\n\
   команда      Команда, которую следует выполнить для каждого файла.\n\
-  параметры    Параметры и ключи для указанной команды.\n\n\
+  параметры    Параметры и ключи для указанной команды.\n\
+  options      Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 В пакетных файлах для команды FOR используется запись\n\
 %%переменная вместо %переменная.\n"
     STRING_FREE_HELP1 "\nТом диска %s: %-11s\n\

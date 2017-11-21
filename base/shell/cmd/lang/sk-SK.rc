@@ -217,12 +217,25 @@ Type ECHO without a parameter to display the current ECHO setting."
   /B            Exits a batch file only.  \n\
                 If run outside of a batch file it will exit cmd.exe\n\
   ExitCode      This value will be assigned to ERRORLEVEL on exit\n"
-    STRING_FOR_HELP1 "Runs a specified command for each file in a set of files\n\n\
-FOR %variable IN (set) DO command [parameters]\n\n\
+    STRING_FOR_HELP1 "Runs a specified command for each file in a set of files.\n\n\
+FOR %variable IN (set) DO command [parameters]\n\
+FOR /L %variable IN (start,step,end) DO command [parameters]\n\
+FOR /D %variable IN (set) DO command [parameters]\n\
+FOR /R [[drive:]path] IN (set) DO command [parameters]\n\
+FOR /F [""options""] IN (set) DO command [parameters]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
   %variable  Specifies a replaceable parameter.\n\
   (set)      Specifies a set of one or more files. Wildcards may be used.\n\
   command    Specifies the command to carry out for each file.\n\
-  parameters Specifies parameters or switches for the specified command.\n\n\
+  parameters Specifies parameters or switches for the specified command.\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 To use the FOR command in a batch program, specify %%variable instead of\n\
 %variable.\n"
     STRING_FREE_HELP1 "\nVolume in drive %s is %-11s\n\

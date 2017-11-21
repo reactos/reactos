@@ -202,11 +202,24 @@ PUSHD [路徑 | ..]\n\n\
                 如果在一個批處理檔案之外運行，將會使 cmd.exe 退出。\n\
   退出程式碼      這個值將會在退出時賦給 ERRORLEVEL。\n"
     STRING_FOR_HELP1 "在一組檔案中為每個檔案運行指定的命令。\n\n\
-FOR %變數 IN (集合) DO 命令 [參數]\n\n\
-  %變數        指定一個可被替換的參數。\n\
-  (集合)       指定一個含有一個或多個檔案的集合。可以使用通配符。\n\
-  命令         指定要為每個檔案執行的命令。\n\
-  參數         為指定的命令指定參數或開關。\n\n\
+FOR %變數 IN (集合) DO 命令 [參數]\n\
+FOR /L %變數 IN (start,step,end) DO 命令 [參數]\n\
+FOR /D %變數 IN (集合) DO 命令 [參數]\n\
+FOR /R [[drive:]path] IN (集合) DO 命令 [參數]\n\
+FOR /F [""options""] IN (集合) DO 命令 [參數]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %變數       指定一個可被替換的參數。\n\
+  (集合)      指定一個含有一個或多個檔案的集合。可以使用通配符。\n\
+  命令        指定要為每個檔案執行的命令。\n\
+  參數        為指定的命令指定參數或開關。\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 在批處理檔案中使用 FOR 命令時，使用 %%變數 而不是 %變數。\n"
     STRING_FREE_HELP1 "\n驅動器 %s 中的卷是 %-11s\n\
  序列號為 %s\n\

@@ -215,14 +215,27 @@ Shkruaj ECHO pa parametra qe shfaqin konfigurimin aktual te ECHO."
   /B            Dalje nga batch vetëm.  \n\
                 Nëse drejtuar jashtë nga një skedar batch do të dalë nga cmd.exe\n\
   ExitCode      Kjo vlerë do të caktohet për ERRORLEVEL në dalje\n"
-    STRING_FOR_HELP1 "Ekzekuto një komandë të specifikuar për secilën dokument në një grupim dokumentesh\n\n\
-FOR %variable IN (set) DO command [parameters]\n\n\
+    STRING_FOR_HELP1 "Ekzekuto një komandë të specifikuar për secilën dokument në një grupim dokumentesh.\n\n\
+FOR %variable IN (set) DO command [parameters]\n\
+FOR /L %variable IN (start,step,end) DO command [parameters]\n\
+FOR /D %variable IN (set) DO command [parameters]\n\
+FOR /R [[drive:]path] IN (set) DO command [parameters]\n\
+FOR /F [""options""] IN (set) DO command [parameters]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
   %variable  Specifikon një parametër zëvndësueshme.\n\
   (set)      Përcakton një grup të një ose më shumë dosjeve. Jokeri mund të përdoret.\n\
   command    Përcakton komandën për ta rrealizuar për çdo skedar.\n\
-  parameters Përcakton parametrat apo çelsin për komandën e specifikuar.\n\n\
-Për të përdorur komanden FOR në një program batch, specifiko %%variablet në vënd të\n\
-%variable.\n"
+  parameters Përcakton parametrat apo çelsin për komandën e specifikuar.\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
+Për të përdorur komanden FOR në një program batch, specifiko %%variablet në vënd\n\
+të %variable.\n"
     STRING_FREE_HELP1 "\nVolume në drive %s is %-11s\n\
  Nummeri Serial është %s\n\
   %16s bytes total në disk\n\

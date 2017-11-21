@@ -218,12 +218,25 @@ PUSHD [yol | ..]\n\n\
                 Bir toplu iş kütüğünün dışında çalışırsa cmd.exe'den çıkacaktır.\n\
   çıkış kodu    Bu değer çıkışta ERRORLEVEL'e atanacaktır.\n"
     STRING_FOR_HELP1 "Bir takım kütükte tüm kütükler için belirtilen bir komut çalıştırır.\n\n\
-FOR %%değişken IN (takım) DO komut [değişkenler]\n\n\
-  %%değişken  Yerine geçebilir bir değişken belirtir.\n\
-  (takım)     Bir ya da daha çok kütük takımını belirtir. Umûmî arama damgaları kullanılabilir.\n\
+FOR %değişken IN (takım) DO komut [değişkenler]\n\
+FOR /L %değişken IN (start,step,end) DO komut [değişkenler]\n\
+FOR /D %değişken IN (takım) DO komut [değişkenler]\n\
+FOR /R [[drive:]path] IN (takım) DO komut [değişkenler]\n\
+FOR /F [""options""] IN (takım) DO komut [değişkenler]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %değişken   Yerine geçebilir bir değişken belirtir.\n\
+  (takım)     Bir ya da daha çok kütük takımını belirtir. Umûmî arama damgaları\n\
+              kullanılabilir.\n\
   komut       Tüm kütükler için yürütülecek komutu belirtir.\n\
   değişkenler Belirtilen komut için değişkenleri ya da seçenekleri belirtir.\n\n\
-FOR komutunu bir toplu iş kütüğünde kullanmak için %%değişken yerine %%%%değişken\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
+FOR komutunu bir toplu iş kütüğünde kullanmak için %değişken yerine %%değişken\n\
 belirtiniz.\n"
     STRING_FREE_HELP1 "\n%s sürücüsünde birim %-11s\n\
  Dizilik numarası %s\n\

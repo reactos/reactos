@@ -198,12 +198,25 @@ PUSHD [elérési_út | ..]\n\n\
 Paraméter nélkül megjeleníti a visszang állapotát."
     STRING_ECHO_HELP5 "Az ECHO %s\n"
     STRING_EXIT_HELP "Kilép a parancssor értelmezõbõl.\n\nEXIT\n"
-    STRING_FOR_HELP1 "Végrehajt egy parancsot az összes fájlban a megadott mappákban\n\n\
-FOR %változó IN (csoport) DO parancs [paraméterek]\n\n\
+    STRING_FOR_HELP1 "Végrehajt egy parancsot az összes fájlban a megadott mappákban.\n\n\
+FOR %változó IN (csoport) DO parancs [paraméterek]\n\
+FOR /L %változó IN (start,step,end) DO parancs [paraméterek]\n\
+FOR /D %változó IN (csoport) DO parancs [paraméterek]\n\
+FOR /R [[drive:]path] IN (csoport) DO parancs [paraméterek]\n\
+FOR /F [""options""] IN (csoport) DO parancs [paraméterek]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
   %változó    A cserélhetõ paraméter.\n\
-  (csoport)   Állományok csoportja. Joker-karakterek megengedettek EZT KURVÁRA ÁTKELL FORDÍTANI :)) wildcardok helyett?.\n\
+  (csoport)   Állományok csoportja. Joker-karakterek megengedettek.\n\
   parancs     Ezt a parancsot hajtja végre minden egyes állománnyal.\n\
-  paraméterek Ezeket a paramétereket adja meg a parancsnak.\n\n\
+  paraméterek Ezeket a paramétereket adja meg a parancsnak.\n\
+  options     Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 A batch állományban való haszálathoz %%változó kell a %változó helyett.\n"
     STRING_FREE_HELP1 "\nA (%s) meghajtóban lévõ kötet címkéje %-11s\n\
  Sorozatszám: %s\n\

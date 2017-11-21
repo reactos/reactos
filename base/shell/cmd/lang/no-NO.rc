@@ -211,12 +211,25 @@ Skriv ECHO uten parameter for å vise gjeldende ECHO innstillinger."
   /B            Avslutt bare en batch fil.  \n\
                 Hvis det kjøres en batch fil på utsiden vil den avslutte cmd.exe\n\
   ExitCode      Denne verdien vil bli utpekt til ERRORLEVEL ved avslutting\n"
-    STRING_FOR_HELP1 "Kjør en spesifisert kommando for hver fil i en gruppe med filer\n\n\
-FOR %variabel IN (gruppe) DO kommando [parametere]\n\n\
-  %variable   Angir en erstattelig parameter.\n\
+    STRING_FOR_HELP1 "Kjør en spesifisert kommando for hver fil i en gruppe med filer.\n\n\
+FOR %variabel IN (gruppe) DO kommando [parametere]\n\
+FOR /L %variabel IN (start,step,end) DO kommando [parametere]\n\
+FOR /D %variabel IN (gruppe) DO kommando [parametere]\n\
+FOR /R [[drive:]path] IN (gruppe) DO kommando [parametere]\n\
+FOR /F [""options""] IN (gruppe) DO kommando [parametere]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %variabel   Angir en erstattelig parameter.\n\
   (sett)      Angir en gruppe med en eller flere filer. Jokertegn kan bli brukt.\n\
   kommando    Angir kommandoen som skal brukes for hver enkelt fil.\n\
-  parametere  Angir parameterne eller bryterne for angitte kommando.\n\n\
+  parametere  Angir parameterne eller bryterne for angitte kommando.\n\
+  options     Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 For å bruke FOR kommando i en satsvis fil, spesifisere %%variabel isteden for\n\
 %variabel.\n"
     STRING_FREE_HELP1 "\nVolum i stasjon %s er %-11s\n\

@@ -217,11 +217,24 @@ PUSHD [パス | ..]\n\n\
     STRING_ECHO_HELP5 "ECHO は %s です。\n"
     STRING_EXIT_HELP "コマンド インタープリタを終了します。\n\nEXIT\n"
     STRING_FOR_HELP1 "指定されたコマンドをファイル セットの各ファイルに対して実行します。\n\n\
-FOR %%変数 IN (セット) DO コマンド [パラメータ]\n\n\
-  %%変数       単一文字の置き換え可能なパラメータを指定します。\n\
+FOR %変数 IN (セット) DO コマンド [パラメータ]\n\
+FOR /L %変数 IN (start,step,end) DO コマンド [パラメータ]\n\
+FOR /D %変数 IN (セット) DO コマンド [パラメータ]\n\
+FOR /R [[drive:]path] IN (セット) DO コマンド [パラメータ]\n\
+FOR /F [""options""] IN (セット) DO コマンド [パラメータ]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %変数      単一文字の置き換え可能なパラメータを指定します。\n\
   (セット)    ファイル セットを指定します。ワイルドカードを使用できます。\n\
-  コマンド    各ファイルごとに実行するコマンドを指定します。\n\
-  パラメータ  指定されたコマンドのパラメータまたはスイッチを指定します。\n\n\
+  コマンド     各ファイルごとに実行するコマンドを指定します。\n\
+  パラメータ    指定されたコマンドのパラメータまたはスイッチを指定します。\n\
+  options  Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 バッチ プログラムで FOR コマンドを使用するときは、%%変数の代わりに、\n\
 %%%%変数を使用してください。\n"
     STRING_FREE_HELP1 "\nドライブ %c のボリューム ラベルは %-11s です\n\

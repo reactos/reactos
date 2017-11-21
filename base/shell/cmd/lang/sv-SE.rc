@@ -211,13 +211,26 @@ Skriv ECHO utan parametar för att visa aktuell ECHO inställning."
   /B            Avslutt bara en batchfil.  \n\
                 Om det körs utan en batch filkommer det avslutta cmd.exe\n\
   ExitCode      Detta värdet kommer att skickas till ERRORLEVEL vid avslutning\n"
-    STRING_FOR_HELP1 "Kör ett angivet kommando för varje fil i en grupp med filer\n\n\
-FOR %variabel IN (grupp) DO kommando [parametrar]\n\n\
-  %variable   Anger en utbytbar parameter (en enda bokstav).\n\
+    STRING_FOR_HELP1 "Kör ett angivet kommando för varje fil i en grupp med filer.\n\n\
+FOR %variabel IN (grupp) DO kommando [parametrar]\n\
+FOR /L %variabel IN (start,step,end) DO kommando [parametrar]\n\
+FOR /D %variabel IN (grupp) DO kommando [parametrar]\n\
+FOR /R [[drive:]path] IN (grupp) DO kommando [parametrar]\n\
+FOR /F [""options""] IN (grupp) DO kommando [parametrar]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %variabel   Anger en utbytbar parameter (en enda bokstav).\n\
   (grupp)     Anger en grupp med en eller flera filer. Jokertecken kan användas.\n\
   kommando    Anger kommandot som skall användas för varje enskild fil.\n\
-  parametrar  Anger parametrarna eller växlarna för angivet kommando.\n\n\
-för att bruke FOR kommando i en batchfil, ange %%variabel istället för\n\
+  parametrar  Anger parametrarna eller växlarna för angivet kommando.\n\
+  options     Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
+För att bruke FOR kommando i en batchfil, ange %%variabel istället för\n\
 %variabel.\n"
     STRING_FREE_HELP1 "\nVolum i enhet %s är %-11s\n\
  Serienummret är %s\n\

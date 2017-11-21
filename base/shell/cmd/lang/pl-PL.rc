@@ -219,12 +219,25 @@ Wpisz ECHO bez żadnych parametrów, by wyświetlić obecne ustawienie."
   /B            Zamyka jedynie plik wsadowy.  \n\
                 Jeśli użyty będzie poza plikiem wsadowym, zamknie cmd.exe\n\
   kod           Ta wartość zostanie przypisana do ERRORLEVEL przy wyjściu.\n"
-    STRING_FOR_HELP1 "Uruchamia wyznaczoną komendę dla każdego pliku w zestawie\n\n\
-FOR %zmienna IN (zestaw) DO komenda [parametery]\n\n\
-  %zmienna    Wyznacza zamienny parametr.\n\
-  (zestaw)    Definiuje zestaw plików. Można stosować wieloznaczniki (np. *.*)\n\
-  komenda     Wyznacza komendę do wykonania na zestawie plików.\n\
-  parametry   Wyznacza parametry dla podanej komendy.\n\n\
+    STRING_FOR_HELP1 "Uruchamia wyznaczoną komendę dla każdego pliku w zestawie.\n\n\
+FOR %zmienna IN (zestaw) DO komenda [parametery]\n\
+FOR /L %zmienna IN (start,step,end) DO komenda [parametery]\n\
+FOR /D %zmienna IN (zestaw) DO komenda [parametery]\n\
+FOR /R [[drive:]path] IN (zestaw) DO komenda [parametery]\n\
+FOR /F [""options""] IN (zestaw) DO komenda [parametery]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %zmienna   Wyznacza zamienny parametr.\n\
+  (zestaw)   Definiuje zestaw plików. Można stosować wieloznaczniki (np. *.*)\n\
+  komenda    Wyznacza komendę do wykonania na zestawie plików.\n\
+  parametry  Wyznacza parametry dla podanej komendy.\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 By użyć FOR w pliku wsadowym, oznacz zmienną jako %%zmienna zamiast\n\
 %zmienna.\n"
     STRING_FREE_HELP1 "\nWolumin w napędzie %s ma etykietę: %-11s\n\
