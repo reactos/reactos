@@ -433,7 +433,6 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     PMMPFN Pfn1;
     PVOID BaseVa, BaseVaStart;
     PMMFREE_POOL_ENTRY FreeEntry;
-    PKSPIN_LOCK_QUEUE LockQueue;
 
     //
     // Figure out how big the allocation is in pages
@@ -844,8 +843,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     //
     // Lock the PFN database too
     //
-    LockQueue = &KeGetCurrentPrcb()->LockQueue[LockQueuePfnLock];
-    KeAcquireQueuedSpinLockAtDpcLevel(LockQueue);
+    MiAcquirePfnLockAtDpcLevel();
 
     //
     // Loop the pages
@@ -889,7 +887,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     //
     // Release the PFN and nonpaged pool lock
     //
-    KeReleaseQueuedSpinLockFromDpcLevel(LockQueue);
+    MiReleasePfnLockFromDpcLevel();
     KeReleaseQueuedSpinLock(LockQueueMmNonPagedPoolLock, OldIrql);
 
     //
