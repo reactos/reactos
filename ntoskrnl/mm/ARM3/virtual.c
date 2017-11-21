@@ -267,7 +267,7 @@ MiMakeSystemAddressValidPfn(IN PVOID VirtualAddress,
     while (!MmIsAddressValid(VirtualAddress))
     {
         /* Release the PFN database */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
 
         /* Fault it in */
         Status = MmAccessFault(FALSE, VirtualAddress, KernelMode, NULL);
@@ -285,7 +285,7 @@ MiMakeSystemAddressValidPfn(IN PVOID VirtualAddress,
         LockChange = TRUE;
 
         /* Lock the PFN database */
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
     }
 
     /* Let caller know what the lock state is */
@@ -337,7 +337,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 Pfn2 = MiGetPfnEntry(PageTableIndex);
 
                 /* Lock the PFN database */
-                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                OldIrql = MiAcquirePfnLock();
 
                 /* Delete it the page */
                 MI_SET_PFN_DELETED(Pfn1);
@@ -347,7 +347,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 MiDecrementShareCount(Pfn2, PageTableIndex);
 
                 /* Release the PFN database */
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                MiReleasePfnLock(OldIrql);
 
                 /* Destroy the PTE */
                 MI_ERASE_PTE(PointerPte);
@@ -399,7 +399,7 @@ MiDeletePte(IN PMMPTE PointerPte,
     PMMPDE PointerPde;
 
     /* PFN lock must be held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     /* Capture the PTE */
     TempPte = *PointerPte;
@@ -626,7 +626,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         }
 
         /* Lock the PFN Database while we delete the PTEs */
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
         do
         {
             /* Capture the PDE and make sure it exists */
@@ -708,7 +708,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         }
 
         /* Release the lock and get out if we're done */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
         if (Va > EndingAddress) return;
 
         /* Otherwise, we exited because we hit a new PDE boundary, so start over */
@@ -1379,7 +1379,7 @@ MiGetPageProtection(IN PMMPTE PointerPte)
         {
             /* The PTE is valid, so we might need to get the protection from
                the PFN. Lock the PFN database */
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            OldIrql = MiAcquirePfnLock();
 
             /* Check if the PDE is still valid */
             if (MiAddressToPte(PointerPte)->u.Hard.Valid == 0)
@@ -1407,7 +1407,7 @@ MiGetPageProtection(IN PMMPTE PointerPte)
             }
 
             /* Release the PFN database */
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            MiReleasePfnLock(OldIrql);
         }
 
         /* Lock the working set again */
@@ -2301,7 +2301,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                 if ((NewAccessProtection & PAGE_NOACCESS) ||
                     (NewAccessProtection & PAGE_GUARD))
                 {
-                    KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                    KIRQL OldIrql = MiAcquirePfnLock();
 
                     /* Mark the PTE as transition and change its protection */
                     PteContents.u.Hard.Valid = 0;
@@ -2318,7 +2318,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                     KeInvalidateTlbEntry(MiPteToAddress(PointerPte));
 
                     /* We are done for this PTE */
-                    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                    MiReleasePfnLock(OldIrql);
                 }
                 else
                 {
@@ -2459,7 +2459,7 @@ MiProcessValidPteList(IN PMMPTE *ValidPteList,
     //
     // Acquire the PFN lock and loop all the PTEs in the list
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
     for (i = 0; i != Count; i++)
     {
         //
@@ -2494,7 +2494,7 @@ MiProcessValidPteList(IN PMMPTE *ValidPteList,
     // and then release the PFN lock
     //
     KeFlushCurrentTb();
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 }
 
 ULONG

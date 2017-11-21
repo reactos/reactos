@@ -67,7 +67,7 @@ MmZeroPageThread(VOID)
                                  FALSE,
                                  NULL,
                                  NULL);
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
         MmZeroingPageThreadActive = TRUE;
 
         while (TRUE)
@@ -75,7 +75,7 @@ MmZeroPageThread(VOID)
             if (!MmFreePageListHead.Total)
             {
                 MmZeroingPageThreadActive = FALSE;
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                MiReleasePfnLock(OldIrql);
                 break;
             }
 
@@ -97,14 +97,14 @@ MmZeroPageThread(VOID)
             }
 
             Pfn1->u1.Flink = LIST_HEAD;
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            MiReleasePfnLock(OldIrql);
 
             ZeroAddress = MiMapPagesInZeroSpace(Pfn1, 1);
             ASSERT(ZeroAddress);
             RtlZeroMemory(ZeroAddress, PAGE_SIZE);
             MiUnmapPagesInZeroSpace(ZeroAddress, 1);
 
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            OldIrql = MiAcquirePfnLock();
 
             MiInsertPageInList(&MmZeroedPageListHead, PageIndex);
         }

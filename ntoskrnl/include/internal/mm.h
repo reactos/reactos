@@ -869,6 +869,23 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page);
 /* freelist.c **********************************************************/
 
 FORCEINLINE
+KIRQL
+MiAcquirePfnLock(VOID)
+{
+    return KeAcquireQueuedSpinLock(LockQueuePfnLock);
+}
+
+FORCEINLINE
+VOID
+MiReleasePfnLock(
+    _In_ KIRQL OldIrql)
+{
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+}
+
+#define MI_ASSERT_PFN_LOCK_HELD() ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL)
+
+FORCEINLINE
 PMMPFN
 MiGetPfnEntry(IN PFN_NUMBER Pfn)
 {

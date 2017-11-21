@@ -536,7 +536,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             //
             // Lock the PFN database and loop pages
             //
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            OldIrql = MiAcquirePfnLock();
             do
             {
                 //
@@ -577,7 +577,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             //
             // Release the PFN database lock
             //
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            MiReleasePfnLock(OldIrql);
 
             //
             // These pages are now available, clear their availablity bits

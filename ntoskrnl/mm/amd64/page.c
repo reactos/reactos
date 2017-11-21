@@ -165,7 +165,7 @@ MiGetPteForProcess(
         TmplPte.u.Flush.Owner = (Address < MmHighestUserAddress) ? 1 : 0;
 
         /* Lock the PFN database */
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
 
         /* Get the PXE */
         Pte = MiAddressToPxe(Address);
@@ -192,7 +192,7 @@ MiGetPteForProcess(
         }
 
         /* Unlock PFN database */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
     }
     else
     {
@@ -610,7 +610,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     KeInitializeSpinLock(&Process->HyperSpaceLock);
 
     /* Lock PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Get a page for the table base and one for hyper space. The PFNs for
        these pages will be initialized in MmInitializeProcessAddressSpace,
@@ -622,7 +622,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     WorkingSetPfn = MiRemoveAnyPage(MI_GET_NEXT_PROCESS_COLOR(Process));
 
     /* Release PFN lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     /* Zero pages */ /// FIXME:
     MiZeroPhysicalPage(HyperPfn);

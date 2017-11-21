@@ -203,7 +203,7 @@ MmDeleteKernelStack(IN PVOID StackBase,
                                 MmLargeStackSize : KERNEL_STACK_SIZE);
 
     /* Acquire the PFN lock */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     //
     // Loop them
@@ -245,7 +245,7 @@ MmDeleteKernelStack(IN PVOID StackBase,
     ASSERT(PointerPte->u.Hard.Valid == 0);
 
     /* Release the PFN lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     //
     // Release the PTEs
@@ -330,7 +330,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     //
     // Acquire the PFN DB lock
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     //
     // Loop each stack page
@@ -359,7 +359,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     //
     // Release the PFN lock
     //
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     //
     // Return the stack address
@@ -421,7 +421,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     //
     // Acquire the PFN DB lock
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     //
     // Loop each stack page
@@ -447,7 +447,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     //
     // Release the PFN lock
     //
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     //
     // Set the new limit
@@ -918,7 +918,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
 
     /* Lock PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Setup the PFN for the PDE base of this process */
 #ifdef _M_AMD64
@@ -957,7 +957,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     ASSERT(Process->PhysicalVadRoot == NULL);
 
     /* Release PFN lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     /* Check if there's a Section Object */
     if (SectionObject)
@@ -1087,7 +1087,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     KeInitializeSpinLock(&Process->HyperSpaceLock);
 
     /* Lock PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Get a zero page for the PDE, if possible */
     Color = MI_GET_NEXT_PROCESS_COLOR(Process);
@@ -1099,9 +1099,9 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
         PdeIndex = MiRemoveAnyPage(Color);
 
         /* Zero it outside the PFN lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
         MiZeroPhysicalPage(PdeIndex);
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
     }
 
     /* Get a zero page for hyperspace, if possible */
@@ -1114,9 +1114,9 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
         HyperIndex = MiRemoveAnyPage(Color);
 
         /* Zero it outside the PFN lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
         MiZeroPhysicalPage(HyperIndex);
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
     }
 
     /* Get a zero page for the woring set list, if possible */
@@ -1129,13 +1129,13 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
         WsListIndex = MiRemoveAnyPage(Color);
 
         /* Zero it outside the PFN lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
         MiZeroPhysicalPage(WsListIndex);
     }
     else
     {
         /* Release the PFN lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
     }
 
     /* Switch to phase 1 initialization */
@@ -1334,7 +1334,7 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
     //ASSERT(Process->CommitCharge == 0);
 
     /* Acquire the PFN lock */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Check for fully initialized process */
     if (Process->AddressSpaceInitialized == 2)
@@ -1378,7 +1378,7 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
     }
 
     /* Release the PFN lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     /* Drop a reference on the session */
     if (Process->Session) MiReleaseProcessReferenceToSessionDataPage(Process->Session);

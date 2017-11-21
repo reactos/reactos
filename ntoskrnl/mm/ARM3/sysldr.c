@@ -176,7 +176,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     DPRINT1("Loading: %wZ at %p with %lx pages\n", FileName, DriverBase, PteCount);
 
     /* Lock the PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Loop the new driver PTEs */
     TempPte = ValidKernelPte;
@@ -213,7 +213,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     }
 
     /* Release the PFN lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     /* Copy the image */
     RtlCopyMemory(DriverBase, Base, PteCount << PAGE_SHIFT);

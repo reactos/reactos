@@ -246,7 +246,7 @@ MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
     }
 
     /* Loop every data page and drop a reference count */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
     for (i = 0; i < MiSessionDataPages; i++)
     {
         /* Sanity check that the page is correct, then decrement it */
@@ -257,7 +257,7 @@ MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
     }
 
     /* Done playing with pages, release the lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     /* Decrement the number of data pages */
     InterlockedDecrement(&MmSessionDataPages);
@@ -505,7 +505,7 @@ MiSessionInitializeWorkingSetList(VOID)
     /* Initialize the working set lock, and lock the PFN database */
     ExInitializePushLock(&SessionGlobal->Vm.WorkingSetMutex);
     //MmLockPageableSectionByHandle(ExPageLockHandle);
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Check if we need a page table */
     if (AllocatedPageTable != FALSE)
@@ -520,9 +520,9 @@ MiSessionInitializeWorkingSetList(VOID)
             PageFrameIndex = MiRemoveAnyPage(Color);
 
             /* Zero it outside the PFN lock */
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            MiReleasePfnLock(OldIrql);
             MiZeroPhysicalPage(PageFrameIndex);
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            OldIrql = MiAcquirePfnLock();
         }
 
         /* Write a valid PDE for it */
@@ -552,9 +552,9 @@ MiSessionInitializeWorkingSetList(VOID)
         PageFrameIndex = MiRemoveAnyPage(Color);
 
         /* Zero it outside the PFN lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
         MiZeroPhysicalPage(PageFrameIndex);
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
     }
 
     /* Write a valid PTE for it */
@@ -566,7 +566,7 @@ MiSessionInitializeWorkingSetList(VOID)
     MiInitializePfnAndMakePteValid(PageFrameIndex, PointerPte, TempPte);
 
     /* Now we can release the PFN database lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     /* Fill out the working set structure */
     MmSessionSpace->Vm.Flags.SessionSpace = 1;
@@ -674,7 +674,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     ASSERT(SessionPte != NULL);
 
     /* Acquire the PFN lock while we set everything up */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Loop the global PTEs */
     TempPte = ValidKernelPte;
@@ -690,9 +690,9 @@ MiSessionCreateInternal(OUT PULONG SessionId)
             DataPage[i] = MiRemoveAnyPage(Color);
 
             /* Zero it outside the PFN lock */
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            MiReleasePfnLock(OldIrql);
             MiZeroPhysicalPage(DataPage[i]);
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            OldIrql = MiAcquirePfnLock();
         }
 
         /* Fill the PTE out */
@@ -713,9 +713,9 @@ MiSessionCreateInternal(OUT PULONG SessionId)
         SessionPageDirIndex = MiRemoveAnyPage(Color);
 
         /* Zero it outside the PFN lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
         MiZeroPhysicalPage(SessionPageDirIndex);
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
     }
 
     /* Fill the PTE out */
@@ -755,9 +755,9 @@ MiSessionCreateInternal(OUT PULONG SessionId)
             TagPage[i] = MiRemoveAnyPage(Color);
 
             /* Zero it outside the PFN lock */
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            MiReleasePfnLock(OldIrql);
             MiZeroPhysicalPage(TagPage[i]);
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            OldIrql = MiAcquirePfnLock();
         }
 
         /* Fill the PTE out */
@@ -768,7 +768,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     }
 
     /* PTEs have been setup, release the PFN lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     /* Fill out the session space structure now */
     MmSessionSpace->GlobalVirtualAddress = SessionGlobal;

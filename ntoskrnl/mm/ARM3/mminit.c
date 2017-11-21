@@ -949,7 +949,7 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 Pfn1 = MiGetPfnEntry(PageFrameIndex);
 
                 /* Lock the PFN Database */
-                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                OldIrql = MiAcquirePfnLock();
                 while (PageCount--)
                 {
                     /* If the page really has no references, mark it as free */
@@ -966,7 +966,7 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 }
 
                 /* Release PFN database */
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                MiReleasePfnLock(OldIrql);
 
                 /* Done with this block */
                 break;
@@ -1138,7 +1138,7 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Acquire the PFN lock */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Loop the runs */
     LoaderPages = 0;
@@ -1180,7 +1180,7 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Release the PFN lock and flush the TLB */
     DPRINT("Loader pages freed: %lx\n", LoaderPages);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
     KeFlushCurrentTb();
 
     /* Free our run structure */
@@ -1829,7 +1829,7 @@ MiBuildPagedPool(VOID)
     //
     // Lock the PFN database
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
 #if (_MI_PAGING_LEVELS >= 3)
     /* On these systems, there's no double-mapping, so instead, the PPEs
@@ -1890,7 +1890,7 @@ MiBuildPagedPool(VOID)
     //
     // Release the PFN database lock
     //
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     //
     // We only have one PDE mapped for now... at fault time, additional PDEs
