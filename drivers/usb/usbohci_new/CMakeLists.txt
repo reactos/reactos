@@ -10,6 +10,6 @@ add_library(usbohci SHARED
     usbohci.rc)
 
 set_module_type(usbohci kernelmodedriver)
-add_importlibs(usbohci usbport ntoskrnl hal usbd)
+add_importlibs(usbohci usbport usbd hal ntoskrnl)
 add_pch(usbohci usbohci.h SOURCE)
 add_cd_file(TARGET usbohci DESTINATION reactos/system32/drivers NO_CAB FOR all)
