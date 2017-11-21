@@ -37,7 +37,6 @@ DRIVER_INITIALIZE DriverEntry;
 /* Globals */
 static PDRIVER_OBJECT TestDriverObject;
 static PDEVICE_OBJECT KmtestDeviceObject;
-
 static FILTER_DATA FilterData;
 static PFLT_OPERATION_REGISTRATION Callbacks = NULL;
 static PFLT_CONTEXT_REGISTRATION Contexts = NULL;
