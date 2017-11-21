@@ -92,8 +92,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 VOID NTAPI
 SignalMediaChanged(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-VOID NTAPI
-WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo);
+NTSTATUS NTAPI
+WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo, PLARGE_INTEGER Timeout);
 
 NTSTATUS NTAPI
 ResetChangeFlag(PDRIVE_INFO DriveInfo);
