@@ -123,6 +123,8 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
            Port,
            PortStatus->AsUlong32);
 
+    ASSERT(Port > 0);
+
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
@@ -195,6 +197,8 @@ OHCI_RH_SetFeaturePortReset(IN PVOID ohciExtension,
            OhciExtension,
            Port);
 
+    ASSERT(Port > 0);
+
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
@@ -221,6 +225,8 @@ OHCI_RH_SetFeaturePortPower(IN PVOID ohciExtension,
     DPRINT("OHCI_RH_SetFeaturePortPower: OhciExtension - %p, Port - %x\n",
            OhciExtension,
            Port);
+
+    ASSERT(Port > 0);
 
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
@@ -249,6 +255,8 @@ OHCI_RH_SetFeaturePortEnable(IN PVOID ohciExtension,
            OhciExtension,
            Port);
 
+    ASSERT(Port > 0);
+
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
@@ -275,6 +283,8 @@ OHCI_RH_SetFeaturePortSuspend(IN PVOID ohciExtension,
     DPRINT("OHCI_RH_SetFeaturePortSuspend: OhciExtension - %p, Port - %x\n",
            OhciExtension,
            Port);
+
+    ASSERT(Port > 0);
 
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
@@ -303,6 +313,8 @@ OHCI_RH_ClearFeaturePortEnable(IN PVOID ohciExtension,
            OhciExtension,
            Port);
 
+    ASSERT(Port > 0);
+
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
@@ -329,6 +341,8 @@ OHCI_RH_ClearFeaturePortPower(IN PVOID ohciExtension,
     DPRINT("OHCI_RH_ClearFeaturePortPower: OhciExtension - %p, Port - %x\n",
            OhciExtension,
            Port);
+
+    ASSERT(Port > 0);
 
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
@@ -357,6 +371,8 @@ OHCI_RH_ClearFeaturePortSuspend(IN PVOID ohciExtension,
            OhciExtension,
            Port);
 
+    ASSERT(Port > 0);
+
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
@@ -383,6 +399,8 @@ OHCI_RH_ClearFeaturePortEnableChange(IN PVOID ohciExtension,
     DPRINT("OHCI_RH_ClearFeaturePortEnableChange: ohciExtension - %p, Port - %x\n",
            ohciExtension,
            Port);
+
+    ASSERT(Port > 0);
 
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
@@ -411,6 +429,8 @@ OHCI_RH_ClearFeaturePortConnectChange(IN PVOID ohciExtension,
            OhciExtension,
            Port);
 
+    ASSERT(Port > 0);
+
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
@@ -437,6 +457,8 @@ OHCI_RH_ClearFeaturePortResetChange(IN PVOID ohciExtension,
     DPRINT("OHCI_RH_ClearFeaturePortResetChange: OhciExtension - %p, Port - %x\n",
            OhciExtension,
            Port);
+
+    ASSERT(Port > 0);
 
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
@@ -465,6 +487,8 @@ OHCI_RH_ClearFeaturePortSuspendChange(IN PVOID ohciExtension,
            OhciExtension,
            Port);
 
+    ASSERT(Port > 0);
+
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
@@ -491,6 +515,8 @@ OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
     DPRINT("OHCI_RH_ClearFeaturePortOvercurrentChange: OhciExtension - %p, Port - %x\n",
            OhciExtension,
            Port);
+
+    ASSERT(Port > 0);
 
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
