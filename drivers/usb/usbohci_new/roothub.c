@@ -516,18 +516,20 @@ OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
            OhciExtension,
            Port);
 
-    ASSERT(Port > 0);
+    ASSERT(Port >= 0);
 
     OperationalRegs = OhciExtension->OperationalRegs;
     PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
     if (Port)
     {
+        /* USBPORT_RECIPIENT_PORT */
         PortStatus.AsULONG = 0;
         PortStatus.PortOverCurrentIndicatorChange = 1;
     }
     else
     {
+        /* USBPORT_RECIPIENT_HUB */
         PortStatus.AsULONG = 0;
         PortStatus.PortEnableStatusChange = 1;
     }
