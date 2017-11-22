@@ -113,7 +113,7 @@ OHCI_InsertEndpointInSchedule(IN POHCI_ENDPOINT OhciEndpoint)
     {
         InsertHeadList(HeadLink, &ED->HcdEDLink);
 
-        if (HeadED->Type == OHCI_STATIC_ED_TYPE_CONTROLL ||
+        if (HeadED->Type == OHCI_STATIC_ED_TYPE_CONTROL ||
             HeadED->Type == OHCI_STATIC_ED_TYPE_BULK)
         {
             ED->HwED.NextED = READ_REGISTER_ULONG(HeadED->pNextED);
@@ -273,7 +273,7 @@ OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
                                             OhciEndpoint->FirstTD,
                                             EndpointProperties->BufferPA);
 
-    OhciEndpoint->HcdED->Flags = OHCI_HCD_ED_FLAG_CONTROLL |
+    OhciEndpoint->HcdED->Flags = OHCI_HCD_ED_FLAG_CONTROL |
                                  OHCI_HCD_ED_FLAG_RESET_ON_HALT;
 
     OHCI_InsertEndpointInSchedule(OhciEndpoint);
@@ -753,7 +753,7 @@ OHCI_StartController(IN PVOID ohciExtension,
     InitializeListHead(&OhciExtension->ControlStaticED.Link);
 
     OhciExtension->ControlStaticED.HeadIndex = ED_EOF;
-    OhciExtension->ControlStaticED.Type = OHCI_STATIC_ED_TYPE_CONTROLL;
+    OhciExtension->ControlStaticED.Type = OHCI_STATIC_ED_TYPE_CONTROL;
     OhciExtension->ControlStaticED.pNextED = &OperationalRegs->HcControlHeadED;
 
     InitializeListHead(&OhciExtension->BulkStaticED.Link);
@@ -1464,7 +1464,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     TD->HwTD.gTD.CurrentBuffer = NULL;
     TD->HwTD.gTD.BufferEnd = NULL;
 
-    TD->Flags |= OHCI_HCD_TD_FLAG_CONTROLL_STATUS;
+    TD->Flags |= OHCI_HCD_TD_FLAG_CONTROL_STATUS;
     TD->TransferLen = 0;
 
     TD->HwTD.gTD.Control.AsULONG = 0;
@@ -1967,7 +1967,7 @@ OHCI_RemoveEndpointFromSchedule(IN POHCI_ENDPOINT OhciEndpoint)
 
     if (&HeadED->Link == ED->HcdEDLink.Blink)
     {
-        if (HeadED->Type == OHCI_STATIC_ED_TYPE_CONTROLL ||
+        if (HeadED->Type == OHCI_STATIC_ED_TYPE_CONTROL ||
             HeadED->Type == OHCI_STATIC_ED_TYPE_BULK)
         {
             WRITE_REGISTER_ULONG(HeadED->pNextED, ED->HwED.NextED);
@@ -2049,7 +2049,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
     POHCI_TRANSFER OhciTransfer;
     POHCI_HCD_TD ControlStatusTD;
     ULONG_PTR PhysicalAddress;
-    ULONG TransferNumer;
+    ULONG TransferNumber;
     POHCI_TRANSFER transfer;
     UCHAR ConditionCode;
     BOOLEAN IsResetOnHalt = FALSE;
@@ -2122,7 +2122,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
 
                     ControlStatusTD = OhciTransfer->ControlStatusTD;
 
-                    if ((TD->Flags & OHCI_HCD_TD_FLAG_CONTROLL_STATUS) == 0 &&
+                    if ((TD->Flags & OHCI_HCD_TD_FLAG_CONTROL_STATUS) == 0 &&
                         ControlStatusTD)
                     {
                         PhysicalAddress = ControlStatusTD->PhysicalAddress;
@@ -2140,7 +2140,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
 
                         if (TransferParameters->IsTransferSplited)
                         {
-                            TransferNumer = TransferParameters->TransferCounter;
+                            TransferNumber = TransferParameters->TransferCounter;
                             transfer = OhciTransfer;
 
                             do
@@ -2148,7 +2148,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
                                 transfer = transfer->NextTD->OhciTransfer;
                                 NextTD = transfer->NextTD;
                             }
-                            while (transfer && TransferNumer ==
+                            while (transfer && TransferNumber ==
                                    transfer->TransferParameters->TransferCounter);
 
                             PhysicalAddress = NextTD->PhysicalAddress;
