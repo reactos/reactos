@@ -222,6 +222,8 @@ OHCI_InitializeTDs(IN POHCI_ENDPOINT OhciEndpoint,
     ULONG TdCount;
     ULONG ix;
 
+    ASSERT(EndpointProperties->BufferLength > sizeof(OHCI_HCD_ED));
+
     TdCount = (EndpointProperties->BufferLength - sizeof(OHCI_HCD_ED)) / 
               sizeof(OHCI_HCD_TD);
 
