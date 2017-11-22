@@ -112,7 +112,7 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
     PULONG PortStatusReg;
-    OHCI_REG_RH_PORT_STATUS portStatus;
+    OHCI_REG_RH_PORT_STATUS OhciPortStatus;
     ULONG ix;
     ULONG Reserved;
 
@@ -128,23 +128,23 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
 
     for (ix = 0; ix < 10; ix++)
     {
-        portStatus.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+        OhciPortStatus.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
 
-        Reserved = portStatus.Reserved1r |
-                   portStatus.Reserved2r |
-                   portStatus.Reserved3;
+        Reserved = OhciPortStatus.Reserved1r |
+                   OhciPortStatus.Reserved2r |
+                   OhciPortStatus.Reserved3;
 
-        if (portStatus.AsULONG && !Reserved)
+        if (OhciPortStatus.AsULONG && !Reserved)
         {
             break;
         }
 
-        DPRINT("OHCI_RH_GetPortStatus: portStatus - %X\n", portStatus.AsULONG);
+        DPRINT("OHCI_RH_GetPortStatus: OhciPortStatus - %X\n", OhciPortStatus.AsULONG);
 
         KeStallExecutionProcessor(5);
     }
 
-    PortStatus->AsUlong32 = portStatus.AsULONG;
+    PortStatus->AsUlong32 = OhciPortStatus.AsULONG;
 
     return MP_STATUS_SUCCESS;
 }
