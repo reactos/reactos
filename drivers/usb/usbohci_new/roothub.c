@@ -99,7 +99,7 @@ OHCI_RH_GetStatus(IN PVOID ohciExtension,
                   IN PUSHORT Status)
 {
     DPRINT("OHCI_RH_GetStatus: \n");
-    *Status = 1;
+    *Status = OHCI_RH_STATUS_GOOD;
     return MP_STATUS_SUCCESS;
 }
 
