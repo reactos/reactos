@@ -14,6 +14,8 @@ BOOL nulldrv_AbortPath( PHYSDEV dev );
 BOOL nulldrv_CloseFigure( PHYSDEV dev );
 BOOL nulldrv_SelectClipPath( PHYSDEV dev, INT mode );
 BOOL nulldrv_FillPath( PHYSDEV dev );
+BOOL nulldrv_ModifyWorldTransform( PHYSDEV dev, const XFORM* xform, DWORD mode ) { return TRUE; }
+BOOL nulldrv_SetWorldTransform( PHYSDEV dev, const XFORM* xform ) { return TRUE; }
 BOOL nulldrv_StrokeAndFillPath( PHYSDEV dev );
 BOOL nulldrv_StrokePath( PHYSDEV dev );
 BOOL nulldrv_FlattenPath( PHYSDEV dev );
@@ -108,7 +110,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     NULL_IntersectClipRect, //INT      (*pIntersectClipRect)(PHYSDEV,INT,INT,INT,INT);
     (PVOID)NULL_Unused, //BOOL     (*pInvertRgn)(PHYSDEV,HRGN);
     (PVOID)NULL_Unused, //BOOL     (*pLineTo)(PHYSDEV,INT,INT);
-    (PVOID)NULL_Unused, //BOOL     (*pModifyWorldTransform)(PHYSDEV,const XFORM*,DWORD);
+    nulldrv_ModifyWorldTransform, //BOOL     (*pModifyWorldTransform)(PHYSDEV,const XFORM*,DWORD);
     (PVOID)NULL_Unused, //BOOL     (*pMoveTo)(PHYSDEV,INT,INT);
     NULL_OffsetClipRgn, //INT      (*pOffsetClipRgn)(PHYSDEV,INT,INT);
     (PVOID)NULL_Unused, //BOOL     (*pOffsetViewportOrgEx)(PHYSDEV,INT,INT,POINT*);
@@ -165,7 +167,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     NULL_SetViewportOrgEx, //BOOL     (*pSetViewportOrgEx)(PHYSDEV,INT,INT,POINT*);
     NULL_SetWindowExtEx, //BOOL     (*pSetWindowExtEx)(PHYSDEV,INT,INT,SIZE*);
     NULL_SetWindowOrgEx, //BOOL     (*pSetWindowOrgEx)(PHYSDEV,INT,INT,POINT*);
-    (PVOID)NULL_Unused, //BOOL     (*pSetWorldTransform)(PHYSDEV,const XFORM*);
+    nulldrv_SetWorldTransform, //BOOL     (*pSetWorldTransform)(PHYSDEV,const XFORM*);
     (PVOID)NULL_Unused, //INT      (*pStartDoc)(PHYSDEV,const DOCINFOW*);
     (PVOID)NULL_Unused, //INT      (*pStartPage)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pStretchBlt)(PHYSDEV,struct bitblt_coords*,PHYSDEV,struct bitblt_coords*,DWORD);
