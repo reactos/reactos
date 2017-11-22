@@ -315,26 +315,25 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
                            IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                            IN POHCI_ENDPOINT OhciEndpoint)
 {
-    UCHAR Index[8];
     UCHAR Period;
     ULONG PeriodIdx = 0;
     POHCI_HCD_ED ED;
     ULONG ScheduleOffset;
+    const UCHAR Index[8] = {
+        ENDPOINT_INTERRUPT_1ms - 1,
+        ENDPOINT_INTERRUPT_2ms - 1,
+        ENDPOINT_INTERRUPT_4ms - 1,
+        ENDPOINT_INTERRUPT_8ms - 1,
+        ENDPOINT_INTERRUPT_16ms - 1,
+        ENDPOINT_INTERRUPT_32ms - 1,
+        ENDPOINT_INTERRUPT_32ms - 1,
+        ENDPOINT_INTERRUPT_32ms - 1};
 
     DPRINT_OHCI("OHCI_OpenInterruptEndpoint: ... \n");
 
     ED = (POHCI_HCD_ED)EndpointProperties->BufferVA;
 
     OhciEndpoint->FirstTD = (POHCI_HCD_TD)((ULONG_PTR)ED + sizeof(OHCI_HCD_ED));
-
-    Index[0] = ENDPOINT_INTERRUPT_1ms - 1;
-    Index[1] = ENDPOINT_INTERRUPT_2ms - 1;
-    Index[2] = ENDPOINT_INTERRUPT_4ms - 1;
-    Index[3] = ENDPOINT_INTERRUPT_8ms - 1;
-    Index[4] = ENDPOINT_INTERRUPT_16ms - 1;
-    Index[5] = ENDPOINT_INTERRUPT_32ms - 1;
-    Index[6] = ENDPOINT_INTERRUPT_32ms - 1;
-    Index[7] = ENDPOINT_INTERRUPT_32ms - 1;
 
     Period = EndpointProperties->Period;
 
