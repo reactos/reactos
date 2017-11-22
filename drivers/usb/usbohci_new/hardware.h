@@ -66,9 +66,9 @@ C_ASSERT(sizeof(OHCI_TRANSFER_CONTROL) == sizeof(ULONG));
 
 typedef struct _OHCI_TRANSFER_DESCRIPTOR { // must be aligned to a 16-byte boundary
   OHCI_TRANSFER_CONTROL Control;
-  PVOID CurrentBuffer; // physical address of the next memory location
-  ULONG_PTR * NextTD; // pointer to the next TD on the list of TDs
-  PVOID BufferEnd; // physical address of the last byte
+  ULONG CurrentBuffer; // physical address of the next memory location
+  ULONG NextTD; // pointer to the next TD on the list of TDs
+  ULONG BufferEnd; // physical address of the last byte
 } OHCI_TRANSFER_DESCRIPTOR, *POHCI_TRANSFER_DESCRIPTOR;
 
 C_ASSERT(sizeof(OHCI_TRANSFER_DESCRIPTOR) == 16);
@@ -89,9 +89,9 @@ C_ASSERT(sizeof(OHCI_ISO_TRANSFER_CONTROL) == sizeof(ULONG));
 
 typedef struct _OHCI_ISO_TRANSFER_DESCRIPTOR { // must be aligned to a 32-byte boundary
   OHCI_ISO_TRANSFER_CONTROL Control;
-  PVOID BufferPage0; // physical page number of the 1 byte of the data buffer
-  ULONG_PTR * NextTD; // pointer to the next Isochronous TD on the queue of Isochronous TDs
-  PVOID BufferEnd; // physical address of the last byte in the buffer
+  ULONG BufferPage0; // physical page number of the 1 byte of the data buffer
+  ULONG NextTD; // pointer to the next Isochronous TD on the queue of Isochronous TDs
+  ULONG BufferEnd; // physical address of the last byte in the buffer
   USHORT Offset[8]; // for determine size and start addr. iso packet | PacketStatusWord - completion code
 } OHCI_ISO_TRANSFER_DESCRIPTOR, *POHCI_ISO_TRANSFER_DESCRIPTOR;
 
@@ -121,15 +121,15 @@ C_ASSERT(sizeof(OHCI_ENDPOINT_CONTROL) == sizeof(ULONG));
 
 typedef struct _OHCI_ENDPOINT_DESCRIPTOR { // must be aligned to a 16-byte boundary
   OHCI_ENDPOINT_CONTROL EndpointControl;
-  ULONG_PTR TailPointer; // if TailP and HeadP are different, then the list contains a TD to be processed
-  ULONG_PTR HeadPointer; // physical pointer to the next TD to be processed for this endpoint
-  ULONG_PTR NextED; // entry points to the next ED on the list
+  ULONG TailPointer; // if TailP and HeadP are different, then the list contains a TD to be processed
+  ULONG HeadPointer; // physical pointer to the next TD to be processed for this endpoint
+  ULONG NextED; // entry points to the next ED on the list
 } OHCI_ENDPOINT_DESCRIPTOR, *POHCI_ENDPOINT_DESCRIPTOR;
 
 C_ASSERT(sizeof(OHCI_ENDPOINT_DESCRIPTOR) == 16);
 
 typedef struct _OHCI_HCCA { // must be located on a 256-byte boundary
-  POHCI_ENDPOINT_DESCRIPTOR InterrruptTable[OHCI_NUMBER_OF_INTERRUPTS];
+  ULONG InterrruptTable[OHCI_NUMBER_OF_INTERRUPTS];
   USHORT FrameNumber;
   USHORT Pad1;
   ULONG DoneHead;

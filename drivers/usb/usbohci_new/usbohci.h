@@ -54,10 +54,10 @@ typedef struct _OHCI_HCD_TD {
   // Hardware part
   OHCI_HW_TRANSFER_DESCRIPTOR HwTD; // must be aligned to a 32-byte boundary
   // Software part
-  ULONG_PTR PhysicalAddress;
+  ULONG PhysicalAddress;
   ULONG Flags;
-  POHCI_TRANSFER OhciTransfer;
-  struct _OHCI_HCD_TD * NextHcdTD;
+  ULONG OhciTransfer;
+  ULONG NextHcdTD;
   ULONG TransferLen;
   LIST_ENTRY DoneLink;
   ULONG Pad[1];
@@ -69,7 +69,7 @@ typedef struct _OHCI_HCD_ED {
   // Hardware part
   OHCI_ENDPOINT_DESCRIPTOR HwED; // must be aligned to a 16-byte boundary
   // Software part
-  ULONG_PTR PhysicalAddress;
+  ULONG PhysicalAddress;
   ULONG Flags;
   LIST_ENTRY HcdEDLink;
   ULONG Pad[8];
@@ -84,7 +84,7 @@ C_ASSERT(sizeof(OHCI_HCD_ED) == 0x40);
 typedef struct _OHCI_STATIC_ED {
   // Software only part
   POHCI_ENDPOINT_DESCRIPTOR HwED;
-  ULONG_PTR PhysicalAddress;
+  ULONG PhysicalAddress;
   UCHAR HeadIndex;
   UCHAR Reserved[3];
   LIST_ENTRY Link;
