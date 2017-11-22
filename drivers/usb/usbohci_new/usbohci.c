@@ -1059,7 +1059,6 @@ OHCI_InterruptService(IN PVOID ohciExtension)
     if (IntStatus.UnrecoverableError)
     {
         DPRINT1("OHCI_InterruptService: IntStatus.UnrecoverableError\n");
-        //DbgBreakPoint();
     }
 
     if (IntStatus.FrameNumberOverflow)
@@ -1142,13 +1141,11 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
     if (IntStatus.ResumeDetected)
     {
         DPRINT1("OHCI_IntDpc: ResumeDetected\n");
-        //ASSERT(FALSE);
     }
 
     if (IntStatus.UnrecoverableError)
     {
         DPRINT1("OHCI_IntDpc: UnrecoverableError\n");
-        //ASSERT(FALSE);
     }
 
     WRITE_REGISTER_ULONG(InterruptStatusReg, IntStatus.AsULONG);
@@ -1790,7 +1787,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
 
     ED = OhciEndpoint->HcdED;
 
-    NextTdPA = ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_MASK; // physical pointer to the next TD
+    NextTdPA = ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_MASK;
 
     NextTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)NextTdPA,
                                                        OhciExtension,

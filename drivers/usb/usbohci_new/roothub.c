@@ -23,7 +23,7 @@ OHCI_ReadRhDescriptorA(IN POHCI_EXTENSION OhciExtension)
 
         if (DescriptorA.AsULONG != 0 &&
             DescriptorA.Reserved == 0 &&
-            DescriptorA.NumberDownstreamPorts <= OHCI_MAX_PORT_COUNT) // Reserved bits
+            DescriptorA.NumberDownstreamPorts <= OHCI_MAX_PORT_COUNT)
         {
             break;
         }
@@ -408,7 +408,7 @@ OHCI_RH_ClearFeaturePortEnableChange(IN PVOID ohciExtension,
     PortStatus.AsULONG = 0;
     PortStatus.PortEnableStatusChange = 1;
 
-    WRITE_REGISTER_ULONG(PortStatusReg, PortStatus.AsULONG);//0x20000
+    WRITE_REGISTER_ULONG(PortStatusReg, PortStatus.AsULONG);
 
     return MP_STATUS_SUCCESS;
 }

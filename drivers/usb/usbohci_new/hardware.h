@@ -185,7 +185,7 @@ typedef union _OHCI_REG_INTERRUPT_STATUS {
     ULONG RootHubStatusChange : 1;
     ULONG Reserved1           : 23;
     ULONG OwnershipChange     : 1;
-    ULONG Reserved2           : 1; //NULL
+    ULONG Reserved2           : 1;
   };
   ULONG AsULONG;
 } OHCI_REG_INTERRUPT_STATUS, *POHCI_REG_INTERRUPT_STATUS;
