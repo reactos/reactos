@@ -508,7 +508,9 @@ OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
     PULONG PortStatusReg;
+    PULONG RhStatusReg;
     OHCI_REG_RH_PORT_STATUS PortStatus;
+    OHCI_REG_RH_STATUS RhStatus;
 
     OhciExtension = ohciExtension;
 
@@ -519,22 +521,25 @@ OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
     ASSERT(Port >= 0);
 
     OperationalRegs = OhciExtension->OperationalRegs;
-    PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
     if (Port)
     {
         /* USBPORT_RECIPIENT_PORT */
         PortStatus.AsULONG = 0;
         PortStatus.PortOverCurrentIndicatorChange = 1;
+
+        PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
+        WRITE_REGISTER_ULONG(PortStatusReg, PortStatus.AsULONG);
     }
     else
     {
         /* USBPORT_RECIPIENT_HUB */
-        PortStatus.AsULONG = 0;
-        PortStatus.PortEnableStatusChange = 1;
-    }
+        RhStatus.AsULONG = 0;
+        RhStatus.OverCurrentIndicatorChangeW = 1;
 
-    WRITE_REGISTER_ULONG(PortStatusReg, PortStatus.AsULONG);
+        RhStatusReg = (PULONG)&OperationalRegs->HcRhStatus;
+        WRITE_REGISTER_ULONG(RhStatusReg, RhStatus.AsULONG);
+    }
 
     return MP_STATUS_SUCCESS;
 }
