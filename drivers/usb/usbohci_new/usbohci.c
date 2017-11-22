@@ -382,19 +382,18 @@ OHCI_OpenIsoEndpoint(IN POHCI_EXTENSION OhciExtension,
 MPSTATUS
 NTAPI
 OHCI_OpenEndpoint(IN PVOID ohciExtension,
-                  IN PVOID endpointParameters,
+                  IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                   IN PVOID ohciEndpoint)
 {
     POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     ULONG TransferType;
     MPSTATUS MPStatus;
 
     DPRINT_OHCI("OHCI_OpenEndpoint: ... \n");
 
     RtlCopyMemory(&OhciEndpoint->EndpointProperties,
-                  endpointParameters,
+                  EndpointProperties,
                   sizeof(USBPORT_ENDPOINT_PROPERTIES));
 
     InitializeListHead(&OhciEndpoint->TDList);
@@ -438,11 +437,10 @@ OHCI_OpenEndpoint(IN PVOID ohciExtension,
 MPSTATUS
 NTAPI
 OHCI_ReopenEndpoint(IN PVOID ohciExtension,
-                    IN PVOID endpointParameters,
+                    IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                     IN PVOID ohciEndpoint)
 {
     POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     POHCI_HCD_ED ED;
 
     DPRINT_OHCI("OHCI_ReopenEndpoint: ... \n");
@@ -465,10 +463,9 @@ OHCI_ReopenEndpoint(IN PVOID ohciExtension,
 VOID
 NTAPI
 OHCI_QueryEndpointRequirements(IN PVOID ohciExtension,
-                               IN PVOID endpointParameters,
+                               IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                                IN PULONG EndpointRequirements)
 {
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     ULONG TransferType;
 
     DPRINT_OHCI("OHCI_QueryEndpointRequirements: ... \n");
