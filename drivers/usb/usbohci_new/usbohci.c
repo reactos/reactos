@@ -218,7 +218,7 @@ OHCI_InitializeTDs(IN POHCI_ENDPOINT OhciEndpoint,
                    IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties)
 {
     POHCI_HCD_TD TdVA;
-    POHCI_HCD_TD TdPA;
+    ULONG TdPA;
     ULONG TdCount;
     ULONG ix;
 
@@ -235,21 +235,20 @@ OHCI_InitializeTDs(IN POHCI_ENDPOINT OhciEndpoint,
 
     TdVA = OhciEndpoint->FirstTD;
 
-    TdPA = (POHCI_HCD_TD)
-           ((ULONG_PTR)EndpointProperties->BufferPA + sizeof(OHCI_HCD_ED));
+    TdPA = (ULONG)EndpointProperties->BufferPA + sizeof(OHCI_HCD_ED);
 
     for (ix = 0; ix < TdCount; ix++)
     {
-        DPRINT_OHCI("OHCI_InitializeTDs: TdVA - %p, TdPA - %p\n", TdVA, TdPA);
+        DPRINT_OHCI("OHCI_InitializeTDs: TdVA - %p, TdPA - %08X\n", TdVA, TdPA);
 
         RtlZeroMemory(TdVA, sizeof(OHCI_HCD_TD));
 
-        TdVA->PhysicalAddress = (ULONG_PTR)TdPA;
+        TdVA->PhysicalAddress = TdPA;
         TdVA->Flags = 0;
         TdVA->OhciTransfer = 0;
 
         TdVA++;
-        TdPA++;
+        TdPA += sizeof(OHCI_HCD_TD);
     }
 }
 
