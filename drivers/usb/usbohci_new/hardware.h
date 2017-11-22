@@ -264,37 +264,30 @@ C_ASSERT(sizeof(OHCI_REG_RH_STATUS) == sizeof(ULONG));
 
 typedef union _OHCI_REG_RH_PORT_STATUS {
   struct {
-    union  { // 0 byte
+    union  {
       struct { // read
-        UCHAR  CurrentConnectStatus     : 1;
-        UCHAR  PortEnableStatus         : 1;
-        UCHAR  PortSuspendStatus        : 1;
-        UCHAR  PortOverCurrentIndicator : 1;
-        UCHAR  PortResetStatus          : 1;
-        UCHAR  Reserved1r               : 3;
+        USHORT  CurrentConnectStatus     : 1;
+        USHORT  PortEnableStatus         : 1;
+        USHORT  PortSuspendStatus        : 1;
+        USHORT  PortOverCurrentIndicator : 1;
+        USHORT  PortResetStatus          : 1;
+        USHORT  Reserved1r               : 3;
+        USHORT  PortPowerStatus          : 1;
+        USHORT  LowSpeedDeviceAttached   : 1;
+        USHORT  Reserved2r               : 6;
       };
       struct { // write
-        UCHAR  ClearPortEnable    : 1;
-        UCHAR  SetPortEnable      : 1;
-        UCHAR  SetPortSuspend     : 1;
-        UCHAR  ClearSuspendStatus : 1;
-        UCHAR  SetPortReset       : 1;
-        UCHAR  Reserved1w         : 3;
+        USHORT  ClearPortEnable    : 1;
+        USHORT  SetPortEnable      : 1;
+        USHORT  SetPortSuspend     : 1;
+        USHORT  ClearSuspendStatus : 1;
+        USHORT  SetPortReset       : 1;
+        USHORT  Reserved1w         : 3;
+        USHORT  SetPortPower       : 1;
+        USHORT  ClearPortPower     : 1;
+        USHORT  Reserved2w         : 6;
       };
     };
-    union  { // 1 byte
-      struct { // read
-        UCHAR  PortPowerStatus        : 1;
-        UCHAR  LowSpeedDeviceAttached : 1;
-        UCHAR  Reserved2r             : 6;
-      };
-      struct { // write
-        UCHAR  SetPortPower           : 1;
-        UCHAR  ClearPortPower         : 1;
-        UCHAR  Reserved2w             : 6;
-      };
-    };
-    // 2,3 byte
     USHORT ConnectStatusChange            : 1;
     USHORT PortEnableStatusChange         : 1;
     USHORT PortSuspendStatusChange        : 1;
