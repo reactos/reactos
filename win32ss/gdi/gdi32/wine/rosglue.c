@@ -1044,9 +1044,9 @@ DRIVER_Dispatch(
                                                    _va_arg_n(argptr, INT, 0), // X
                                                    _va_arg_n(argptr, INT, 1), // Y
                                                    _va_arg_n(argptr, LPPOINT, 2)); // lpPoint
-        case DCFUNC_SerWorldTransform:
+        case DCFUNC_SetWorldTransform:
             return physdev->funcs->pSetWorldTransform(physdev,
-                                                      _va_arg(argptr, const XFORM*));
+                                                      va_arg(argptr, const XFORM*));
 
         case DCFUNC_StretchBlt:
             return DRIVER_StretchBlt(physdev,
