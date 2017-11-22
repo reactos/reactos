@@ -633,6 +633,7 @@ typedef enum _DCFUNC
     DCFUNC_SetViewportOrgEx,
     DCFUNC_SetWindowExtEx,
     DCFUNC_SetWindowOrgEx,
+    DCFUNC_SetWorldTransform,
     DCFUNC_StretchBlt,
     DCFUNC_StrokeAndFillPath,
     DCFUNC_StrokePath,
