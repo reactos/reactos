@@ -302,6 +302,8 @@ SetWorldTransform(
     _In_ HDC hdc,
     _Out_ CONST XFORM *pxform)
 {
+    HANDLE_METADC(BOOL, SetWorldTransform, FALSE, hdc, pxform);
+   
     /* FIXME  shall we add undoc #define MWT_SETXFORM 4 ?? */
     return ModifyWorldTransform(hdc, pxform, MWT_MAX+1);
 }
