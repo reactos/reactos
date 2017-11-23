@@ -513,6 +513,7 @@ ThemeDlgPostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_
                     HackFillStaticBg(hwndTarget, hdc, phbrush);
             }
 #endif
+            SetBkMode( hdc, TRANSPARENT );
             break;
         }
     }
