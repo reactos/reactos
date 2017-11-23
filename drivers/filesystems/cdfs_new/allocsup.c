@@ -44,7 +44,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -58,18 +58,18 @@ Abstract:
 
 ULONG
 CdFindMcbEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG FileOffset
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG FileOffset
     );
 
 VOID
 CdDiskOffsetFromMcbEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCD_MCB_ENTRY McbEntry,
-    IN LONGLONG FileOffset,
-    IN PLONGLONG DiskOffset,
-    IN PULONG ByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCD_MCB_ENTRY McbEntry,
+    _In_ LONGLONG FileOffset,
+    _Out_ PLONGLONG DiskOffset,
+    _Out_ PULONG ByteCount
     );
 
 #ifdef ALLOC_PRAGMA
@@ -84,13 +84,16 @@ CdDiskOffsetFromMcbEntry (
 #endif
 
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
+// PREFast currently has no way to express the Fcb==Fcb->Vcb->VolumeDasdFcb early return
+#pragma warning(suppress: 6001 6101) 
 CdLookupAllocation (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG FileOffset,
-    OUT PLONGLONG DiskOffset,
-    OUT PULONG ByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG FileOffset,
+    _Out_ PLONGLONG DiskOffset,
+    _Out_ PULONG ByteCount
     )
 
 /*++
@@ -128,7 +131,7 @@ Return Value:
 {
     BOOLEAN FirstPass = TRUE;
     ULONG McbEntryOffset;
-    PFCB ParentFcb = NULL; /* ReactOS Change: GCC uninitialized variable bug */
+    PFCB ParentFcb = NULL;
     BOOLEAN CleanupParent = FALSE;
 
     BOOLEAN UnlockFcb = FALSE;
@@ -137,8 +140,8 @@ Return Value:
     ULONG CurrentMcbOffset;
     PCD_MCB_ENTRY CurrentMcbEntry;
 
-    DIRENT_ENUM_CONTEXT DirContext;
-    DIRENT Dirent;
+    DIRENT_ENUM_CONTEXT DirContext = {0};
+    DIRENT Dirent = {0};
 
     PAGED_CODE();
 
@@ -146,10 +149,22 @@ Return Value:
     ASSERT_FCB( Fcb );
 
     //
+    //  For DASD IO we already have clamped the read to the volume limits.
+    //  We'll allow reading beyond those limits for extended DASD IO, so
+    //  no MCB lookup here.
+    //
+
+    if (Fcb == Fcb->Vcb->VolumeDasdFcb) {
+
+        *DiskOffset = FileOffset;
+        return;
+    }
+
+    //
     //  Use a try finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  We use a loop to perform the lookup.  If we don't find the mapping in the
@@ -215,10 +230,7 @@ Return Value:
             //  Do an unsafe test to see if we need to create a file object.
             //
 
-            if (ParentFcb->FileObject == NULL) {
-
-                CdCreateInternalStream( IrpContext, ParentFcb->Vcb, ParentFcb );
-            }
+            CdVerifyOrCreateDirStreamFile( IrpContext, ParentFcb);
 
             //
             //  Initialize the local variables to indicate the first dirent
@@ -296,7 +308,7 @@ Return Value:
             FirstPass = FALSE;
         }
 
-    } _SEH2_FINALLY {
+    } finally {
 
         if (CleanupParent) {
 
@@ -311,7 +323,7 @@ Return Value:
         }
 
         if (UnlockFcb) { CdUnlockFcb( IrpContext, Fcb ); }
-    } _SEH2_END;
+    }
 
     return;
 }
@@ -319,11 +331,11 @@ Return Value:
 
 VOID
 CdAddAllocationFromDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG McbEntryOffset,
-    IN LONGLONG StartingFileOffset,
-    IN PDIRENT Dirent
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ ULONG McbEntryOffset,
+    _In_ LONGLONG StartingFileOffset,
+    _In_ PDIRENT Dirent
     )
 
 /*++
@@ -357,6 +369,8 @@ Return Value:
     PCD_MCB_ENTRY McbEntry;
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_FCB( Fcb );
@@ -466,10 +480,10 @@ Return Value:
 
 VOID
 CdAddInitialAllocation (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG StartingBlock,
-    IN LONGLONG DataLength
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ ULONG StartingBlock,
+    _In_ LONGLONG DataLength
     )
 
 /*++
@@ -505,11 +519,13 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_FCB( Fcb );
     ASSERT_LOCKED_FCB( Fcb );
-    ASSERT( 0 == Fcb->Mcb.CurrentEntryCount);
-    ASSERT( CDFS_NTC_FCB_DATA != Fcb->NodeTypeCode);
+    NT_ASSERT( 0 == Fcb->Mcb.CurrentEntryCount);
+    NT_ASSERT( CDFS_NTC_FCB_DATA != Fcb->NodeTypeCode);
 
     //
     //  Update the new entry with the input data.
@@ -555,9 +571,9 @@ Return Value:
 
 VOID
 CdTruncateAllocation (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG StartingFileOffset
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ LONGLONG StartingFileOffset
     )
 
 /*++
@@ -591,7 +607,7 @@ Return Value:
     ASSERT_LOCKED_FCB( Fcb );
 
     //
-    //  Find the entry containing this starting offset.
+    //  Find the entry containg this starting offset.
     //
 
     McbEntryOffset = CdFindMcbEntry( IrpContext, Fcb, StartingFileOffset );
@@ -606,10 +622,11 @@ Return Value:
 }
 
 
+_At_(Fcb->NodeByteSize, _In_range_(>=, FIELD_OFFSET( FCB, FcbType )))
 VOID
 CdInitializeMcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_updates_bytes_(Fcb->NodeByteSize) PFCB Fcb
     )
 
 /*++
@@ -635,6 +652,8 @@ Return Value:
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_FCB( Fcb );
 
@@ -652,10 +671,14 @@ Return Value:
 }
 
 
+_At_(Fcb->NodeByteSize, _In_range_(>=, FIELD_OFFSET( FCB, FcbType )))
+_When_(Fcb->NodeTypeCode == CDFS_NTC_FCB_PATH_TABLE, _At_(Fcb->NodeByteSize, _In_range_(==, SIZEOF_FCB_INDEX)))
+_When_(Fcb->NodeTypeCode == CDFS_NTC_FCB_INDEX, _At_(Fcb->NodeByteSize, _In_range_(==, SIZEOF_FCB_INDEX)))
+_When_(Fcb->NodeTypeCode == CDFS_NTC_FCB_DATA, _At_(Fcb->NodeByteSize, _In_range_(==, SIZEOF_FCB_DATA)))
 VOID
 CdUninitializeMcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_updates_bytes_(Fcb->NodeByteSize) PFCB Fcb
     )
 
 /*++
@@ -681,6 +704,8 @@ Return Value:
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_FCB( Fcb );
 
@@ -698,14 +723,14 @@ Return Value:
 
 
 //
-//  Local support routine
+//  Local suupport routine
 //
 
 ULONG
 CdFindMcbEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG FileOffset
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG FileOffset
     )
 
 /*++
@@ -736,6 +761,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_FCB( Fcb );
     ASSERT_LOCKED_FCB( Fcb );
@@ -781,11 +808,11 @@ Return Value:
 
 VOID
 CdDiskOffsetFromMcbEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCD_MCB_ENTRY McbEntry,
-    IN LONGLONG FileOffset,
-    IN PLONGLONG DiskOffset,
-    IN PULONG ByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCD_MCB_ENTRY McbEntry,
+    _In_ LONGLONG FileOffset,
+    _Out_ PLONGLONG DiskOffset,
+    _Out_ PULONG ByteCount
     )
 
 /*++
@@ -827,6 +854,9 @@ Return Value:
     LONGLONG LocalByteCount;
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     ASSERT_IRP_CONTEXT( IrpContext );
 
     //

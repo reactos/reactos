@@ -17,7 +17,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 #ifdef CD_SANITY
 BOOLEAN CdTestTopLevel = TRUE;
@@ -178,16 +178,42 @@ LONG CdXAFileHeader[] = {
     -44                                 // <CD-XA Raw Sectors>          ADJUST
 };
 
+#ifdef CDFS_TELEMETRY_DATA
+
+//
+// Telemetry Data for reporting
+//
+
+CDFS_TELEMETRY_DATA_CONTEXT CdTelemetryData;
+
+#endif // CDFS_TELEMETRY_DATA
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, CdFastIoCheckIfPossible)
 #pragma alloc_text(PAGE, CdSerial32)
+#pragma alloc_text(PAGE, CdSetThreadContext)
 #endif
 
-
+_IRQL_requires_max_(APC_LEVEL)
+__drv_dispatchType(DRIVER_DISPATCH)
+__drv_dispatchType(IRP_MJ_CREATE)
+__drv_dispatchType(IRP_MJ_CLOSE)
+__drv_dispatchType(IRP_MJ_READ)
+__drv_dispatchType(IRP_MJ_WRITE)
+__drv_dispatchType(IRP_MJ_QUERY_INFORMATION)
+__drv_dispatchType(IRP_MJ_SET_INFORMATION)
+__drv_dispatchType(IRP_MJ_QUERY_VOLUME_INFORMATION)
+__drv_dispatchType(IRP_MJ_DIRECTORY_CONTROL)
+__drv_dispatchType(IRP_MJ_FILE_SYSTEM_CONTROL)
+__drv_dispatchType(IRP_MJ_DEVICE_CONTROL)
+__drv_dispatchType(IRP_MJ_LOCK_CONTROL)
+__drv_dispatchType(IRP_MJ_CLEANUP)
+__drv_dispatchType(IRP_MJ_PNP)
+__drv_dispatchType(IRP_MJ_SHUTDOWN)
 NTSTATUS
 CdFsdDispatch (
-    IN PVOLUME_DEVICE_OBJECT VolumeDeviceObject,
-    IN PIRP Irp
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -214,7 +240,7 @@ Routine Description:
 
 Arguments:
 
-    VolumeDeviceObject - Supplies the volume device object for this request
+    DeviceObject - Supplies the volume device object for this request
 
     Irp - Supplies the Irp being processed
 
@@ -225,7 +251,7 @@ Return Value:
 --*/
 
 {
-    THREAD_CONTEXT ThreadContext;
+    THREAD_CONTEXT ThreadContext = {0};
     PIRP_CONTEXT IrpContext = NULL;
     BOOLEAN Wait;
 
@@ -243,6 +269,8 @@ Return Value:
 
     ASSERT_OPTIONAL_IRP( Irp );
 
+    UNREFERENCED_PARAMETER( DeviceObject );
+
     FsRtlEnterFileSystem();
 
 #ifdef CD_SANITY
@@ -259,7 +287,7 @@ Return Value:
         //  Use a try-except to handle the exception cases.
         //
 
-        _SEH2_TRY {
+        try {
 
             //
             //  If the IrpContext is NULL then this is the first pass through
@@ -293,7 +321,7 @@ Return Value:
                 CdSetThreadContext( IrpContext, &ThreadContext );
 
 #ifdef CD_SANITY
-                ASSERT( !CdTestTopLevel ||
+                NT_ASSERT( !CdTestTopLevel ||
                         SafeNodeType( IrpContext->TopLevel ) == CDFS_NTC_IRP_CONTEXT );
 #endif
 
@@ -347,6 +375,11 @@ Return Value:
 
                 break;
 
+            case IRP_MJ_WRITE :
+
+                Status = CdCommonWrite( IrpContext, Irp );
+                break;
+
             case IRP_MJ_QUERY_INFORMATION :
 
                 Status = CdCommonQueryInfo( IrpContext, Irp );
@@ -392,40 +425,46 @@ Return Value:
                 Status = CdCommonPnp( IrpContext, Irp );
                 break;
 
+            case IRP_MJ_SHUTDOWN :
+            
+                Status = CdCommonShutdown( IrpContext, Irp );
+                break;
+
             default :
 
                 Status = STATUS_INVALID_DEVICE_REQUEST;
                 CdCompleteRequest( IrpContext, Irp, Status );
             }
 
-        } _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() )) {
+        } except( CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
 
-            Status = CdProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
-        } _SEH2_END;
+            Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
+        }
 
     } while (Status == STATUS_CANT_WAIT);
 
 #ifdef CD_SANITY
-    ASSERT( !CdTestTopLevel ||
+    NT_ASSERT( !CdTestTopLevel ||
             (PreviousTopLevel == IoGetTopLevelIrp()) );
 #endif
 
     FsRtlExitFileSystem();
 
-    ASSERT( SaveIrql == KeGetCurrentIrql( ));
+    NT_ASSERT( SaveIrql == KeGetCurrentIrql( ));
 
     return Status;
 }
 
+
 #ifdef CD_SANITY
 
 VOID
-CdRaiseStatusEx(
-    IN PIRP_CONTEXT IrpContext,
-    IN NTSTATUS Status,
-    IN BOOLEAN NormalizeStatus,
-    IN OPTIONAL ULONG FileId,
-    IN OPTIONAL ULONG Line
+CdRaiseStatusEx (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ NTSTATUS Status,
+    _In_ BOOLEAN NormalizeStatus,
+    _In_opt_ ULONG FileId,
+    _In_opt_ ULONG Line
     )
 {
     BOOLEAN BreakIn = FALSE;
@@ -461,7 +500,7 @@ CdRaiseStatusEx(
         DbgPrint( "CDFS: Contact CDFS.SYS component owner for triage.\n");
         DbgPrint( "CDFS: 'eb %p 0;eb %p 0' to disable this alert.\n", &CdTestRaisedStatus, &CdBreakOnAnyRaise);
 
-        DbgBreakPoint();
+        NT_ASSERT(FALSE);
     }
     
     if (NormalizeStatus)  {
@@ -480,10 +519,11 @@ CdRaiseStatusEx(
 
 #endif
 
+
 LONG
 CdExceptionFilter (
-    IN PIRP_CONTEXT IrpContext,
-    IN PEXCEPTION_POINTERS ExceptionPointer
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _In_ PEXCEPTION_POINTERS ExceptionPointer
     )
 
 /*++
@@ -557,6 +597,7 @@ Return Value:
 
     if (TestStatus && !FsRtlIsNtstatusExpected( ExceptionCode )) {
 
+#pragma prefast( suppress: __WARNING_USE_OTHER_FUNCTION, "We're corrupted." )    
         CdBugCheck( (ULONG_PTR) ExceptionPointer->ExceptionRecord,
                     (ULONG_PTR) ExceptionPointer->ContextRecord,
                     (ULONG_PTR) ExceptionPointer->ExceptionRecord->ExceptionAddress );
@@ -567,11 +608,13 @@ Return Value:
 }
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdProcessException (
-    IN PIRP_CONTEXT IrpContext OPTIONAL,
-    IN PIRP Irp,
-    IN NTSTATUS ExceptionCode
+    _In_opt_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ NTSTATUS ExceptionCode
     )
 
 /*++
@@ -601,7 +644,7 @@ Return Value:
 --*/
 
 {
-    PDEVICE_OBJECT Device;
+    PDEVICE_OBJECT Device = NULL;
     PVPB Vpb;
     PETHREAD Thread;
 
@@ -626,17 +669,6 @@ Return Value:
     ExceptionCode = IrpContext->ExceptionStatus;
 
     //
-    //  If we are not a top level request then we just complete the request
-    //  with the current status code.
-    //
-
-    if (!FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL )) {
-
-        CdCompleteRequest( IrpContext, Irp, ExceptionCode );
-        return ExceptionCode;
-    }
-
-    //
     //  Check if we are posting this request.  One of the following must be true
     //  if we are to post a request.
     //
@@ -644,7 +676,8 @@ Return Value:
     //          or we are forcing this to be posted.
     //
     //      - Status code is STATUS_VERIFY_REQUIRED and we are at APC level
-    //          or higher.  Can't wait for IO in the verify path in this case.
+    //          or higher, or within a guarded region.  Can't wait for IO in 
+    //          the verify path in this case.
     //
     //  Set the MORE_PROCESSING flag in the IrpContext to keep if from being
     //  deleted if this is a retryable condition.
@@ -653,27 +686,26 @@ Return Value:
     //  Note that (children of) CdFsdPostRequest can raise (Mdl allocation).
     //
 
-    _SEH2_TRY {
-    
+    try {
+
         if (ExceptionCode == STATUS_CANT_WAIT) {
 
             if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_FORCE_POST )) {
 
                 ExceptionCode = CdFsdPostRequest( IrpContext, Irp );
             }
-
-        } else if (ExceptionCode == STATUS_VERIFY_REQUIRED) {
-
-            if (KeGetCurrentIrql() >= APC_LEVEL) {
-
-                ExceptionCode = CdFsdPostRequest( IrpContext, Irp );
-            }
+        } 
+        else if ((ExceptionCode == STATUS_VERIFY_REQUIRED) &&
+                 FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL ) &&
+                 KeAreAllApcsDisabled()) {
+                 
+            ExceptionCode = CdFsdPostRequest( IrpContext, Irp );
         }
     }
-    _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() ))  {
+    except( CdExceptionFilter( IrpContext, GetExceptionInformation() ))  {
     
-        ExceptionCode = _SEH2_GetExceptionCode();        
-    } _SEH2_END;
+        ExceptionCode = GetExceptionCode();        
+    }
     
     //
     //  If we posted the request or our caller will retry then just return here.
@@ -686,6 +718,17 @@ Return Value:
     }
 
     ClearFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_MORE_PROCESSING );
+
+    //
+    //  If we are not a top level request then we just complete the request
+    //  with the current status code.
+    //
+
+    if (!FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL )) {
+
+        CdCompleteRequest( IrpContext, Irp, ExceptionCode );
+        return ExceptionCode;
+    }
 
     //
     //  Store this error into the Irp for posting back to the Io system.
@@ -722,20 +765,34 @@ Return Value:
                 Device = IoGetDeviceToVerify( PsGetCurrentThread() );
                 IoSetDeviceToVerify( PsGetCurrentThread(), NULL );
 
-                ASSERT( Device != NULL );
+                NT_ASSERT( Device != NULL );
 
-                //
-                //  Let's not BugCheck just because the driver messes up.
-                //
+            }
 
-                if (Device == NULL) {
+            //
+            //  It turns out some storage drivers really do set invalid non-NULL device 
+            //  objects to verify.
+            //
+            //  To work around this, completely ignore the device to verify in the thread, 
+            //  and just use our real device object instead.
+            //
 
-                    ExceptionCode = STATUS_DRIVER_INTERNAL_ERROR;
+            if (IrpContext->Vcb) {
 
-                    CdCompleteRequest( IrpContext, Irp, ExceptionCode );
+                Device = IrpContext->Vcb->Vpb->RealDevice;
+            }
 
-                    return ExceptionCode;
-                }
+            //
+            //  Let's not BugCheck just because the device to verify is somehow still NULL.
+            //
+
+            if (Device == NULL) {
+
+                ExceptionCode = STATUS_DRIVER_INTERNAL_ERROR;
+
+                CdCompleteRequest( IrpContext, Irp, ExceptionCode );
+
+                return ExceptionCode;
             }
 
             //
@@ -773,6 +830,7 @@ Return Value:
                 Vpb = NULL;
             }
 
+
             //
             //  The device to verify is either in my thread local storage
             //  or that of the thread that owns the Irp.
@@ -786,18 +844,31 @@ Return Value:
                 Thread = PsGetCurrentThread();
                 Device = IoGetDeviceToVerify( Thread );
 
-                ASSERT( Device != NULL );
+                NT_ASSERT( Device != NULL );
+            }
 
-                //
-                //  Let's not BugCheck just because the driver messes up.
-                //
+            //
+            //  It turns out some storage drivers really do set invalid non-NULL device 
+            //  objects to verify.
+            //
+            //  To work around this, completely ignore the device to verify in the thread, 
+            //  and just use our real device object instead.
+            //
 
-                if (Device == NULL) {
+            if (IrpContext->Vcb) {
 
-                    CdCompleteRequest( IrpContext, Irp, ExceptionCode );
+                Device = IrpContext->Vcb->Vpb->RealDevice;
+            }
 
-                    return ExceptionCode;
-                }
+            //
+            //  Let's not BugCheck just because the device to verify is somehow still NULL.
+            //
+
+            if (Device == NULL) {
+
+                CdCompleteRequest( IrpContext, Irp, ExceptionCode );
+
+                return ExceptionCode;
             }
 
             //
@@ -839,9 +910,9 @@ Return Value:
 
 VOID
 CdCompleteRequest (
-    IN PIRP_CONTEXT IrpContext OPTIONAL,
-    IN PIRP Irp OPTIONAL,
-    IN NTSTATUS Status
+    _Inout_opt_ PIRP_CONTEXT IrpContext,
+    _Inout_opt_ PIRP Irp,
+    _In_ NTSTATUS Status
     )
 
 /*++
@@ -906,8 +977,8 @@ Return Value:
 
 VOID
 CdSetThreadContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN PTHREAD_CONTEXT ThreadContext
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _In_ PTHREAD_CONTEXT ThreadContext
     )
 
 /*++
@@ -938,8 +1009,6 @@ Return Value:
 
 {
     PTHREAD_CONTEXT CurrentThreadContext;
-    ULONG_PTR StackTop;
-    ULONG_PTR StackBottom;
 
     PAGED_CODE();
 
@@ -971,12 +1040,9 @@ Return Value:
     //  If this is not a valid Cdfs context then use the input thread
     //  context and store it in the top level context.
     //
-
-    IoGetStackLimits( &StackTop, &StackBottom);
-
+#pragma warning(suppress: 6011) // Bug in PREFast around bitflag operations
     if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL ) ||
-        (((ULONG_PTR) CurrentThreadContext > StackBottom - sizeof( THREAD_CONTEXT )) ||
-         ((ULONG_PTR) CurrentThreadContext <= StackTop) ||
+        (!IoWithinStackLimits( (ULONG_PTR)CurrentThreadContext, sizeof( THREAD_CONTEXT ) ) ||
          FlagOn( (ULONG_PTR) CurrentThreadContext, 0x3 ) ||
          (CurrentThreadContext->Cdfs != 0x53464443))) {
 
@@ -1002,18 +1068,23 @@ Return Value:
     return;
 }
 
-
+
+_Function_class_(FAST_IO_CHECK_IF_POSSIBLE)
+_IRQL_requires_same_
+_Success_(return != FALSE)
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastIoCheckIfPossible (
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN ULONG Length,
-    IN BOOLEAN Wait,
-    IN ULONG LockKey,
-    IN BOOLEAN CheckForReadOperation,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _In_ BOOLEAN CheckForReadOperation,
+    _Pre_notnull_
+    _When_(return != FALSE, _Post_equal_to_(_Old_(IoStatus)))
+    _When_(return == FALSE, _Post_valid_)
+    PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
     )
 
 /*++
@@ -1054,6 +1125,9 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( Wait );
+    UNREFERENCED_PARAMETER( DeviceObject );
+
     //
     //  Decode the type of file object we're being asked to process and
     //  make sure that is is only a user file open.
@@ -1090,8 +1164,8 @@ Return Value:
 
 ULONG
 CdSerial32 (
-    IN PCHAR Buffer,
-    IN ULONG ByteCount
+    _In_reads_bytes_(ByteCount) PCHAR Buffer,
+    _In_ ULONG ByteCount
     )
 /*++
 

@@ -42,7 +42,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -54,36 +54,40 @@ Abstract:
 //  Local support routines
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 CdCommonClosePrivate (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFCB Fcb,
-    IN ULONG UserReference,
-    IN BOOLEAN FromFsd
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ PFCB Fcb,
+    _In_ ULONG UserReference,
+    _In_ BOOLEAN FromFsd
     );
 
 VOID
 CdQueueClose (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG UserReference,
-    IN BOOLEAN DelayedClose
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ ULONG UserReference,
+    _In_ BOOLEAN DelayedClose
     );
 
 PIRP_CONTEXT
 CdRemoveClose (
-    IN PVCB Vcb OPTIONAL
+    _In_opt_ PVCB Vcb
     );
 
+//  Tell prefast this is a workitem routine
+IO_WORKITEM_ROUTINE CdCloseWorker;
+
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdCloseWorker (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID Context
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_opt_ PVOID Context
     );
 
 #ifdef ALLOC_PRAGMA
+#pragma alloc_text(PAGE, CdFspClose)
 #pragma alloc_text(PAGE, CdCommonClose)
 #pragma alloc_text(PAGE, CdCommonClosePrivate)
 #pragma alloc_text(PAGE, CdQueueClose)
@@ -94,7 +98,7 @@ CdCloseWorker (
 
 VOID
 CdFspClose (
-    IN PVCB Vcb OPTIONAL
+    _In_opt_ PVCB Vcb
     )
 
 /*++
@@ -120,7 +124,7 @@ Return Value:
     PIRP_CONTEXT IrpContext;
     IRP_CONTEXT StackIrpContext;
 
-    THREAD_CONTEXT ThreadContext;
+    THREAD_CONTEXT ThreadContext = {0};
 
     PFCB Fcb;
     ULONG UserReference;
@@ -137,8 +141,8 @@ Return Value:
     //
     //  Continue processing until there are no more closes to process.
     //
-    /* ReactOS Change: "GCC suggest parentheses around assignment used as truth value" */
-    while ((IrpContext = CdRemoveClose( Vcb ))) {
+
+    while ((IrpContext = CdRemoveClose( Vcb )) != NULL) {
 
         //
         //  If we don't have an IrpContext then use the one on the stack.
@@ -166,7 +170,7 @@ Return Value:
             //  Free the IrpContextLite.
             //
 
-            CdFreeIrpContextLite( IrpContext ); /* ReactOS Change: GCC "error: invalid lvalue in unary '&'" */
+            CdFreeIrpContextLite( (PIRP_CONTEXT_LITE) IrpContext );
 
             //
             //  Remember we have the IrpContext from the stack.
@@ -190,6 +194,8 @@ Return Value:
             UserReference = (ULONG) IrpContext->ExceptionStatus;
             IrpContext->ExceptionStatus = STATUS_SUCCESS;
         }
+
+        _Analysis_assume_(Fcb != NULL && Fcb->Vcb != NULL);
 
         //
         //  We have an IrpContext.  Now we need to set the top level thread
@@ -261,6 +267,9 @@ Return Value:
             }
 
             CurrentVcb = Fcb->Vcb;
+
+            _Analysis_assume_( CurrentVcb != NULL );
+            
             CdAcquireVcbShared( IrpContext, CurrentVcb, FALSE );
 
             VcbHoldCount = 0;
@@ -309,14 +318,15 @@ Return Value:
 
     }
 
+#pragma prefast(suppress:26165, "Esp:1153")
     FsRtlExitFileSystem();
 }
 
-
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonClose (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -349,7 +359,6 @@ Return Value:
     ULONG UserReference = 0;
 
     BOOLEAN PotentialVcbTeardown = FALSE;
-    BOOLEAN ForceDismount = FALSE;
 
     PAGED_CODE();
 
@@ -398,13 +407,6 @@ Return Value:
         UserReference = 1;
 
         //
-        //  Was a FSCTL_DISMOUNT issued on this handle?  If so,  we need to
-        //  force a dismount of the volume now.
-        //
-        
-        ForceDismount = BooleanFlagOn( Ccb->Flags, CCB_FLAG_DISMOUNT_ON_CLOSE);
-
-        //
         //  We can always deallocate the Ccb if present.
         //
 
@@ -431,7 +433,8 @@ Return Value:
     //  if we can't acquire all of the resources.
     //
 
-    } else {
+    } 
+    else {
 
         //
         //  If we may be dismounting this volume then acquire the CdData
@@ -439,7 +442,7 @@ Return Value:
         //
         //  Since we now must make volumes go away as soon as reasonable after
         //  the last user handles closes, key off of the cleanup count.  It is
-        //  OK to do this more than necessary.  Since this Fcb could be holding
+        //  OK to do this more than neccesary.  Since this Fcb could be holding
         //  a number of other Fcbs (and thus their references), a simple check
         //  on reference count is not appropriate.
         //
@@ -447,33 +450,17 @@ Return Value:
         //  common case.
         //
 
-        if (((Vcb->VcbCleanup == 0) || ForceDismount) &&
+        if ((Vcb->VcbCleanup == 0) &&
             (Vcb->VcbCondition != VcbMounted))  {
 
             //
-            //  Possible.  Acquire CdData to synchronise with the remount path,  and
-            //  then repeat the tests.
-            //
-            //  Note that we must send the notification outside of any locks,  since 
-            //  the worker that processes the notify could also be calling into our 
-            //  pnp path which wants both CdData and VcbResource.  For a force dismount
-            //  the volume will be marked invalid (no going back),  so we will definitely
-            //  go ahead and dismount below.
+            //  Possible dismount.  Acquire CdData to synchronise with the remount path
+            //  before looking at the vcb condition again.
             //
 
-            if (ForceDismount)  {
-            
-                //
-                //  Send notification.
-                //
-                
-                FsRtlNotifyVolumeEvent( IoGetCurrentIrpStackLocation( Irp )->FileObject, 
-                                        FSRTL_VOLUME_DISMOUNT );
-            }
-            
             CdAcquireCdData( IrpContext );
 
-            if (((Vcb->VcbCleanup == 0) || ForceDismount) &&
+            if ((Vcb->VcbCleanup == 0) &&
                 (Vcb->VcbCondition != VcbMounted) &&
                 (Vcb->VcbCondition != VcbMountInProgress) &&
                 FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL_CDFS ))  {
@@ -486,21 +473,16 @@ Return Value:
                 //  We can't dismount this volume now,  there are other references or
                 //  it's just been remounted.
                 //
-
-                CdReleaseCdData( IrpContext);
             }
-        }
 
-        if (ForceDismount)  {
-        
             //
-            //  Physically disconnect this Vcb from the device so a new mount can
-            //  occur.  Vcb deletion cannot happen at this time since there is
-            //  a handle on it associated with this very request,  but we'll call
-            //  check for dismount again later anyway.
+            //  Drop the global lock if we don't need it anymore.
             //
 
-            CdCheckForDismount( IrpContext, Vcb, TRUE );
+            if (!PotentialVcbTeardown) {
+
+                CdReleaseCdData( IrpContext );
+            }
         }
         
         //
@@ -522,7 +504,8 @@ Return Value:
         //  the request.
         //
 
-        } else if (PotentialVcbTeardown) {
+        } 
+        else if (PotentialVcbTeardown) {
 
             CdCheckForDismount( IrpContext, Vcb, FALSE );
         }
@@ -551,13 +534,14 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 CdCommonClosePrivate (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFCB Fcb,
-    IN ULONG UserReference,
-    IN BOOLEAN FromFsd
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ PFCB Fcb,
+    _In_ ULONG UserReference,
+    _In_ BOOLEAN FromFsd
     )
 
 /*++
@@ -651,6 +635,9 @@ Return Value:
 
         CdReleaseFcb( IrpContext, Fcb );
     }
+    else {
+        _Analysis_assume_lock_not_held_(Fcb->FcbNonpaged->FcbResource);
+    }
 
     //
     //  Release the Vcb and return to our caller.  Let him know we completed
@@ -663,10 +650,9 @@ Return Value:
 }
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdCloseWorker (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID Context
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_opt_ PVOID Context
     )
 /*++
 
@@ -687,16 +673,21 @@ Return Value:
 --*/
 
 {
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( DeviceObject );
+    UNREFERENCED_PARAMETER( Context );
+
     CdFspClose (NULL);
 }
 
 
 VOID
 CdQueueClose (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG UserReference,
-    IN BOOLEAN DelayedClose
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ ULONG UserReference,
+    _In_ BOOLEAN DelayedClose
     )
 
 /*++
@@ -880,7 +871,7 @@ Return Value:
 
 PIRP_CONTEXT
 CdRemoveClose (
-    IN PVCB Vcb OPTIONAL
+    _In_opt_ PVCB Vcb
     )
 
 /*++

@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -28,67 +28,68 @@ Abstract:
 
 VOID
 CdQueryBasicInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_BASIC_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_BASIC_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 VOID
 CdQueryStandardInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_STANDARD_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_STANDARD_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 VOID
 CdQueryInternalInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_INTERNAL_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_INTERNAL_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 VOID
 CdQueryEaInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_EA_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_EA_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 VOID
 CdQueryPositionInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_OBJECT FileObject,
-    IN OUT PFILE_POSITION_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFILE_OBJECT FileObject,
+    _Out_ PFILE_POSITION_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 NTSTATUS
 CdQueryNameInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_OBJECT FileObject,
-    IN OUT PFILE_NAME_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFILE_OBJECT FileObject,
+    _Out_ PFILE_NAME_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdQueryAlternateNameInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCCB Ccb,
-    IN OUT PFILE_NAME_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PCCB Ccb,
+    _Out_ PFILE_NAME_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 VOID
 CdQueryNetworkInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_NETWORK_OPEN_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_NETWORK_OPEN_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 #ifdef ALLOC_PRAGMA
@@ -108,10 +109,11 @@ CdQueryNetworkInfo (
 #endif
 
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonQueryInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -165,7 +167,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  We only support query on file and directory handles.
@@ -191,8 +193,8 @@ Return Value:
 
             if (!FlagOn( Fcb->FcbState, FCB_STATE_INITIALIZED )) {
 
-                ASSERT( TypeOfOpen == UserDirectoryOpen );
-                CdCreateInternalStream( IrpContext, Fcb->Vcb, Fcb );
+                NT_ASSERT( TypeOfOpen == UserDirectoryOpen );
+                CdVerifyOrCreateDirStreamFile( IrpContext, Fcb);
             }
 
             //
@@ -325,7 +327,7 @@ Return Value:
 
         Irp->IoStatus.Information = IrpSp->Parameters.QueryFile.Length - Length;
 
-    } _SEH2_FINALLY {
+    } finally {
 
         //
         //  Release the file.
@@ -335,7 +337,7 @@ Return Value:
 
             CdReleaseFile( IrpContext, Fcb );
         }
-    } _SEH2_END;
+    }
 
     //
     //  Complete the request if we didn't raise.
@@ -347,10 +349,11 @@ Return Value:
 }
 
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonSetInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -406,7 +409,7 @@ Return Value:
 
     CdAcquireFileShared( IrpContext, Fcb );
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Make sure the Fcb is in a usable condition.  This
@@ -445,10 +448,10 @@ Return Value:
         Status = STATUS_SUCCESS;
 
     try_exit: NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         CdReleaseFile( IrpContext, Fcb );
-    } _SEH2_END;
+    }
 
     //
     //  Complete the request if there was no raise.
@@ -458,15 +461,17 @@ Return Value:
     return Status;
 }
 
-
+
+_Function_class_(FAST_IO_QUERY_BASIC_INFO)
+_IRQL_requires_same_
+_Success_(return != FALSE)
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryBasicInfo (
-    IN PFILE_OBJECT FileObject,
-    IN BOOLEAN Wait,
-    IN OUT PFILE_BASIC_INFORMATION Buffer,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN Wait,
+    _Out_ PFILE_BASIC_INFORMATION Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
     )
 
 /*++
@@ -499,6 +504,8 @@ Return Value:
     PFCB Fcb;
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( DeviceObject );
 
     ASSERT_FILE_OBJECT( FileObject );
 
@@ -536,7 +543,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Only deal with 'good' Fcb's.
@@ -566,25 +573,27 @@ Return Value:
             Result = TRUE;
         }
 
-    } _SEH2_FINALLY {
+    } finally {
 
         ExReleaseResourceLite( Fcb->Resource );
 
         FsRtlExitFileSystem();
-    } _SEH2_END;
+    }
 
     return Result;
 }
 
-
+
+_Function_class_(FAST_IO_QUERY_STANDARD_INFO)
+_IRQL_requires_same_
+_Success_(return != FALSE)
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryStdInfo (
-    IN PFILE_OBJECT FileObject,
-    IN BOOLEAN Wait,
-    IN OUT PFILE_STANDARD_INFORMATION Buffer,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN Wait,
+    _Out_ PFILE_STANDARD_INFORMATION Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
     )
 
 /*++
@@ -617,6 +626,8 @@ Return Value:
     PFCB Fcb;
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( DeviceObject );
 
     ASSERT_FILE_OBJECT( FileObject );
 
@@ -654,7 +665,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Only deal with 'good' Fcb's.
@@ -694,25 +705,27 @@ Return Value:
             Result = TRUE;
         }
 
-    } _SEH2_FINALLY {
+    } finally {
 
         ExReleaseResourceLite( Fcb->Resource );
 
         FsRtlExitFileSystem();
-    } _SEH2_END;
+    }
 
     return Result;
 }
 
-
+
+_Function_class_(FAST_IO_QUERY_NETWORK_OPEN_INFO)
+_IRQL_requires_same_
+_Success_(return != FALSE)
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryNetworkInfo (
-    IN PFILE_OBJECT FileObject,
-    IN BOOLEAN Wait,
-    OUT PFILE_NETWORK_OPEN_INFORMATION Buffer,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN Wait,
+    _Out_ PFILE_NETWORK_OPEN_INFORMATION Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
     )
 
 /*++
@@ -745,6 +758,8 @@ Return Value:
     PFCB Fcb;
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( DeviceObject );
 
     ASSERT_FILE_OBJECT( FileObject );
 
@@ -782,7 +797,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Only deal with 'good' Fcb's.
@@ -827,12 +842,12 @@ Return Value:
             Result = TRUE;
         }
 
-    } _SEH2_FINALLY {
+    } finally {
 
         ExReleaseResourceLite( Fcb->Resource );
 
         FsRtlExitFileSystem();
-    } _SEH2_END;
+    }
 
     return Result;
 }
@@ -844,10 +859,10 @@ Return Value:
 
 VOID
 CdQueryBasicInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_BASIC_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_BASIC_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -874,6 +889,8 @@ Return Value:
 
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     //
     //  We only support creation, last modify and last write times on Cdfs.
@@ -903,10 +920,10 @@ Return Value:
 
 VOID
 CdQueryStandardInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_STANDARD_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_STANDARD_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 /*++
 
@@ -932,6 +949,8 @@ Return Value:
 
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     //
     //  There is only one link and delete is never pending on a Cdrom file.
@@ -976,10 +995,10 @@ Return Value:
 
 VOID
 CdQueryInternalInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_INTERNAL_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_INTERNAL_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -1007,6 +1026,8 @@ Return Value:
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+
     //
     //  Index number is the file Id number in the Fcb.
     //
@@ -1024,10 +1045,10 @@ Return Value:
 
 VOID
 CdQueryEaInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_EA_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_EA_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -1055,6 +1076,9 @@ Return Value:
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    UNREFERENCED_PARAMETER( Fcb );
+
     //
     //  No Ea's on Cdfs volumes.
     //
@@ -1072,10 +1096,10 @@ Return Value:
 
 VOID
 CdQueryPositionInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_OBJECT FileObject,
-    IN OUT PFILE_POSITION_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFILE_OBJECT FileObject,
+    _Out_ PFILE_POSITION_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -1103,6 +1127,8 @@ Return Value:
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+
     //
     //  Get the current position found in the file object.
     //
@@ -1125,10 +1151,10 @@ Return Value:
 
 NTSTATUS
 CdQueryNameInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_OBJECT FileObject,
-    IN OUT PFILE_NAME_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFILE_OBJECT FileObject,
+    _Out_ PFILE_NAME_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -1159,7 +1185,9 @@ Return Value:
 
     PAGED_CODE();
 
-    ASSERT(*Length >= sizeof(ULONG));
+    UNREFERENCED_PARAMETER( IrpContext );
+
+    NT_ASSERT(*Length >= sizeof(ULONG));
     
     //
     //  Simply copy the name in the file object to the user's buffer.
@@ -1197,13 +1225,14 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdQueryAlternateNameInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCCB Ccb,
-    IN OUT PFILE_NAME_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PCCB Ccb,
+    _Out_ PFILE_NAME_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -1237,16 +1266,16 @@ Return Value:
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DIRENT_ENUM_CONTEXT DirContext;
-    DIRENT Dirent;
+    DIRENT_ENUM_CONTEXT DirContext = {0};
+    DIRENT Dirent = {0};
 
     PUNICODE_STRING NameToUse;
     ULONG DirentOffset;
 
-    COMPOUND_PATH_ENTRY CompoundPathEntry;
+    COMPOUND_PATH_ENTRY CompoundPathEntry = {0};
     FILE_ENUM_CONTEXT FileContext;
 
-    PFCB ParentFcb;
+    PFCB ParentFcb = NULL;
     BOOLEAN ReleaseParentFcb = FALSE;
 
     BOOLEAN CleanupFileLookup = FALSE;
@@ -1278,20 +1307,13 @@ Return Value:
     //  Use a try-finally to cleanup the structures.
     //
 
-    _SEH2_TRY {
+    try {
 
         ParentFcb = Fcb->ParentFcb;
         CdAcquireFileShared( IrpContext, ParentFcb );
         ReleaseParentFcb = TRUE;
     
-        //
-        //  Do an unsafe test to see if we need to create a file object.
-        //
-
-        if (ParentFcb->FileObject == NULL) {
-
-            CdCreateInternalStream( IrpContext, ParentFcb->Vcb, ParentFcb );
-        }
+        CdVerifyOrCreateDirStreamFile( IrpContext, ParentFcb);
 
         if (CdFidIsDirectory( Fcb->FileId)) {
 
@@ -1396,7 +1418,7 @@ Return Value:
         RtlCopyMemory( Buffer->FileName, ShortNameBuffer, Buffer->FileNameLength );
 
     try_exit:  NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         if (CleanupFileLookup) {
 
@@ -1413,7 +1435,7 @@ Return Value:
 
             CdReleaseFile( IrpContext, ParentFcb );
         }
-    } _SEH2_END;
+    }
 
     //
     //  Reduce the available bytes by the amount stored into this buffer.
@@ -1434,10 +1456,10 @@ Return Value:
 
 VOID
 CdQueryNetworkInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_NETWORK_OPEN_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Out_ PFILE_NETWORK_OPEN_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -1464,6 +1486,8 @@ Return Value:
 
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     //
     //  We only support creation, last modify and last write times on Cdfs.

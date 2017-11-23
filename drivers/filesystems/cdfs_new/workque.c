@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -35,8 +35,8 @@ Abstract:
 
 VOID
 CdAddToWorkque (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
 #ifdef ALLOC_PRAGMA
@@ -46,10 +46,11 @@ CdAddToWorkque (
 #endif
 
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdFsdPostRequest (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -96,18 +97,19 @@ Return Value:
 }
 
 
+    
+_Requires_lock_held_(_Global_critical_region_)
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPrePostIrp (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
 
 Routine Description:
 
-    This routine performs any necessary work before STATUS_PENDING is
+    This routine performs any neccessary work before STATUS_PENDING is
     returned with the Fsd thread.  This routine is called within the
     filesystem and by the oplock package.
 
@@ -155,6 +157,7 @@ Return Value:
 
             if (!RemovedFcb) {
 
+                _Analysis_assume_lock_held_((*IrpContext->TeardownFcb)->FcbNonpaged->FcbResource);
                 CdReleaseFcb( IrpContext, *(IrpContext->TeardownFcb) );
             }
 
@@ -165,7 +168,7 @@ Return Value:
         break;
 
     //
-    //  We need to lock the user's buffer, unless this is an MDL-read,
+    //  We need to lock the user's buffer, unless this is an MDL read/write,
     //  in which case there is no user buffer.
     //
 
@@ -173,7 +176,16 @@ Return Value:
 
         if (!FlagOn( IrpContext->MinorFunction, IRP_MN_MDL )) {
 
-            CdLockUserBuffer( IrpContext, IrpSp->Parameters.Read.Length );
+            CdLockUserBuffer( IrpContext, IrpSp->Parameters.Read.Length, IoWriteAccess );
+        }
+
+        break;
+
+    case IRP_MJ_WRITE :
+
+        if (!FlagOn( IrpContext->MinorFunction, IRP_MN_MDL )) {
+
+            CdLockUserBuffer( IrpContext, IrpSp->Parameters.Read.Length, IoReadAccess );
         }
 
         break;
@@ -186,7 +198,7 @@ Return Value:
 
         if (IrpContext->MinorFunction == IRP_MN_QUERY_DIRECTORY) {
 
-            CdLockUserBuffer( IrpContext, IrpSp->Parameters.QueryDirectory.Length );
+            CdLockUserBuffer( IrpContext, IrpSp->Parameters.QueryDirectory.Length, IoWriteAccess );
         }
 
         break;
@@ -209,11 +221,12 @@ Return Value:
 }
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdOplockComplete (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -272,6 +285,7 @@ Return Value:
 
                 if (!RemovedFcb) {
 
+                    _Analysis_assume_lock_held_((*IrpContext->TeardownFcb)->FcbNonpaged->FcbResource);
                     CdReleaseFcb( IrpContext, *(IrpContext->TeardownFcb) );
                 }
 
@@ -307,15 +321,15 @@ Return Value:
 
 VOID
 CdAddToWorkque (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
 
 Routine Description:
 
-    This routine is called to actually store the posted Irp to the Fsp
+    This routine is called to acually store the posted Irp to the Fsp
     workque.
 
 Arguments:
@@ -387,10 +401,12 @@ Return Value:
     //  Send it off.....
     //
 
+#pragma prefast(suppress:28155, "the function prototype is correct")
     ExInitializeWorkItem( &IrpContext->WorkQueueItem,
-                          (PVOID)CdFspDispatch,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                          CdFspDispatch,
                           IrpContext );
 
+#pragma prefast(suppress: 28159, "prefast believes this routine is obsolete, but it is ok for CDFS to continue using it")
     ExQueueWorkItem( &IrpContext->WorkQueueItem, CriticalWorkQueue );
 
     return;

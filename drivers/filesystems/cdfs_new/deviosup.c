@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -99,110 +99,104 @@ typedef IO_RUN *PIO_RUN;
 //  Local support routines
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 CdPrepareBuffers (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PFCB Fcb,
-    IN PVOID UserBuffer,
-    IN ULONG UserBufferOffset,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount,
-    IN PIO_RUN IoRuns,
-    IN PULONG RunCount,
-    IN PULONG ThisByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIRP Irp,
+    _In_ PFCB Fcb,
+    _In_reads_bytes_(ByteCount) PVOID UserBuffer,
+    _In_ ULONG UserBufferOffset,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount,
+    _Out_ PIO_RUN IoRuns,
+    _Out_ PULONG RunCount,
+    _Out_ PULONG ThisByteCount
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdPrepareXABuffers (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PFCB Fcb,
-    IN PVOID UserBuffer,
-    IN ULONG UserBufferOffset,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount,
-    IN PIO_RUN IoRuns,
-    IN PULONG RunCount,
-    IN PULONG ThisByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIRP Irp,
+    _In_ PFCB Fcb,
+    _In_reads_bytes_(ByteCount) PVOID UserBuffer,
+    _In_ ULONG UserBufferOffset,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount,
+    _Out_ PIO_RUN IoRuns,
+    _Out_ PULONG RunCount,
+    _Out_ PULONG ThisByteCount
     );
 
 BOOLEAN
 CdFinishBuffers (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_RUN IoRuns,
-    IN ULONG RunCount,
-    IN BOOLEAN FinalCleanup,
-    IN BOOLEAN SaveXABuffer
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIO_RUN IoRuns,
+    _In_ ULONG RunCount,
+    _In_ BOOLEAN FinalCleanup,
+    _In_ BOOLEAN SaveXABuffer
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdMultipleAsync (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG RunCount,
-    IN PIO_RUN IoRuns
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ ULONG RunCount,
+    _Inout_ PIO_RUN IoRuns
     );
 
 VOID
 CdMultipleXAAsync (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG RunCount,
-    IN PIO_RUN IoRuns,
-    IN PRAW_READ_INFO RawReads,
-    IN TRACK_MODE_TYPE TrackMode
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG RunCount,
+    _Inout_ PIO_RUN IoRuns,
+    _In_ PRAW_READ_INFO RawReads,
+    _In_ TRACK_MODE_TYPE TrackMode
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdSingleAsync (
-    IN PIRP_CONTEXT IrpContext,
-    IN LONGLONG ByteOffset,
-    IN ULONG ByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_RUN Run,
+    _In_ PFCB Fcb
     );
 
 VOID
 CdWaitSync (
-    IN PIRP_CONTEXT IrpContext
+    _In_ PIRP_CONTEXT IrpContext
     );
 
-NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdMultiSyncCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
-    );
+//  Tell prefast this is a completion routine.
+IO_COMPLETION_ROUTINE CdMultiSyncCompletionRoutine;
 
-NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdMultiAsyncCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
-    );
+//  Tell prefast this is a completion routine
+IO_COMPLETION_ROUTINE CdMultiAsyncCompletionRoutine;
 
-NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdSingleSyncCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
-    );
+//  Tell prefast this is a completion routine
+IO_COMPLETION_ROUTINE CdSingleSyncCompletionRoutine;
 
-NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdSingleAsyncCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
-    );
+//  Tell prefast this is a completion routine
+IO_COMPLETION_ROUTINE CdSingleAsyncCompletionRoutine;
 
+_When_(SafeNodeType(Fcb) != CDFS_NTC_FCB_PATH_TABLE && StartingOffset == 0, _At_(ByteCount, _In_range_(>=, CdAudioDirentSize + sizeof(RAW_DIRENT))))
+_When_(SafeNodeType(Fcb) != CDFS_NTC_FCB_PATH_TABLE && StartingOffset != 0, _At_(ByteCount, _In_range_(>=, CdAudioDirentSize + SECTOR_SIZE)))
 VOID
 CdReadAudioSystemFile (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount,
-    IN PVOID SystemBuffer
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ _In_range_(>=, CdAudioDirentSize) ULONG ByteCount,
+    _Out_writes_bytes_(ByteCount) PVOID SystemBuffer
+    );
+
+_Requires_lock_held_(_Global_critical_region_)
+BOOLEAN
+CdReadDirDataThroughCache (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_RUN Run
     );
 
 #ifdef ALLOC_PRAGMA
@@ -211,20 +205,58 @@ CdReadAudioSystemFile (
 #pragma alloc_text(PAGE, CdMultipleXAAsync)
 #pragma alloc_text(PAGE, CdNonCachedRead)
 #pragma alloc_text(PAGE, CdNonCachedXARead)
+#pragma alloc_text(PAGE, CdVolumeDasdWrite)
 #pragma alloc_text(PAGE, CdFinishBuffers)
 #pragma alloc_text(PAGE, CdPerformDevIoCtrl)
+#pragma alloc_text(PAGE, CdPerformDevIoCtrlEx)
 #pragma alloc_text(PAGE, CdPrepareBuffers)
+#pragma alloc_text(PAGE, CdPrepareXABuffers)
 #pragma alloc_text(PAGE, CdReadAudioSystemFile)
 #pragma alloc_text(PAGE, CdReadSectors)
 #pragma alloc_text(PAGE, CdSingleAsync)
 #pragma alloc_text(PAGE, CdWaitSync)
+#pragma alloc_text(PAGE, CdReadDirDataThroughCache)
+#pragma alloc_text(PAGE, CdFreeDirCache)
+#pragma alloc_text(PAGE, CdLbnToMmSsFf)
+#pragma alloc_text(PAGE, CdHijackIrpAndFlushDevice)
 #endif
 
-
+
+VOID
+CdLbnToMmSsFf (
+    _In_ ULONG Blocks,
+    _Out_writes_(3) PUCHAR Msf
+    )
+
+/*++
+
+Routine Description:
+
+    Convert Lbn to MSF format.
+
+Arguments:
+
+    Msf - on output, set to 0xMmSsFf representation of blocks.
+    
+--*/
+
+{
+    PAGED_CODE();
+
+    Blocks += 150;                  // Lbn 0 == 00:02:00, 1sec == 75 frames.
+    
+    Msf[0] = (UCHAR)(Blocks % 75);  // Frames
+    Blocks /= 75;                   // -> Seconds
+    Msf[1] = (UCHAR)(Blocks % 60);  // Seconds 
+    Blocks /= 60;                   // -> Minutes
+    Msf[2] = (UCHAR)Blocks;         // Minutes
+}
+
+
 __inline
 TRACK_MODE_TYPE
 CdFileTrackMode (
-    IN PFCB Fcb
+    _In_ PFCB Fcb
     )
 
 /*++
@@ -244,7 +276,7 @@ Return Value:
 
 --*/
 {
-    ASSERT( FlagOn( Fcb->FcbState, FCB_STATE_MODE2FORM2_FILE |
+    NT_ASSERT( FlagOn( Fcb->FcbState, FCB_STATE_MODE2FORM2_FILE |
                                    FCB_STATE_MODE2_FILE |
                                    FCB_STATE_DA_FILE ));
 
@@ -266,12 +298,13 @@ Return Value:
 }
 
 
+_Requires_lock_held_(_Global_critical_region_)    
 NTSTATUS
 CdNonCachedRead (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount
     )
 
 /*++
@@ -329,7 +362,7 @@ Return Value:
 
     if (IrpContext->Irp->MdlAddress == NULL) {
 
-        CdCreateUserMdl( IrpContext, ByteCount, TRUE );
+        CdCreateUserMdl( IrpContext, ByteCount, TRUE, IoWriteAccess );
     }
 
     CdMapUserBuffer( IrpContext, &UserBuffer);
@@ -352,10 +385,29 @@ Return Value:
     }
 
     //
+    //  If we're going to use the sector cache for this request, then
+    //  mark the request waitable.
+    //
+    
+    if ((SafeNodeType( Fcb) == CDFS_NTC_FCB_INDEX) &&
+        (NULL != Fcb->Vcb->SectorCacheBuffer) &&
+        (VcbMounted == IrpContext->Vcb->VcbCondition)) {
+
+        if (!FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)) {
+
+            KeInitializeEvent( &IrpContext->IoContext->SyncEvent,
+                               NotificationEvent,
+                               FALSE );
+
+            SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT);
+        }
+    }
+
+    //
     //  Use a try-finally to perform the final cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Loop while there are more bytes to transfer.
@@ -405,9 +457,7 @@ Return Value:
 
             if ((RunCount == 1) && !Unaligned && FirstPass) {
 
-                CdSingleAsync( IrpContext,
-                               IoRuns[0].DiskOffset,
-                               IoRuns[0].DiskByteCount );
+                CdSingleAsync( IrpContext,&IoRuns[0], Fcb );
 
                 //
                 //  No cleanup needed for the IoRuns array here.
@@ -443,7 +493,7 @@ Return Value:
             //  Otherwise we will perform multiple Io to read in the data.
             //
 
-            CdMultipleAsync( IrpContext, RunCount, IoRuns );
+            CdMultipleAsync( IrpContext, Fcb, RunCount, IoRuns );
 
             //
             //  If this is a synchronous request then perform any necessary
@@ -518,7 +568,7 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         //
         //  Perform final cleanup on the IoRuns if necessary.
@@ -528,18 +578,20 @@ Return Value:
 
             CdFinishBuffers( IrpContext, IoRuns, CleanupRunCount, TRUE, FALSE );
         }
-    } _SEH2_END;
+    }
 
     return Status;
 }
 
 
+    
+_Requires_lock_held_(_Global_critical_region_)    
 NTSTATUS
 CdNonCachedXARead (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount
     )
 
 /*++
@@ -590,7 +642,8 @@ Return Value:
     ULONG UserBufferOffset = 0;
     LONGLONG CurrentOffset = StartingOffset;
     ULONG RemainingByteCount = ByteCount;
-    ULONG ThisByteCount;
+    ULONG ThisByteCount = 0;
+    ULONG Address = 0;
 
     BOOLEAN TryingYellowbookMode2 = FALSE;
 
@@ -604,7 +657,7 @@ Return Value:
 
     if (IrpContext->Irp->MdlAddress == NULL) {
 
-        CdCreateUserMdl( IrpContext, ByteCount, TRUE );
+        CdCreateUserMdl( IrpContext, ByteCount, TRUE, IoWriteAccess );
     }
 
     //
@@ -624,7 +677,7 @@ Return Value:
     //  Use a try-finally to perform the final cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  If the initial offset lies within the RIFF header then copy the
@@ -647,7 +700,6 @@ Return Value:
 
                     PAUDIO_PLAY_HEADER AudioPlayHeader;
                     PTRACK_DATA TrackData;
-                    ULONG SectorCount;
 
                     AudioPlayHeader = (PAUDIO_PLAY_HEADER) &LocalRiffHeader;
                     TrackData = &Fcb->Vcb->CdromToc->TrackData[Fcb->XAFileNumber];
@@ -669,31 +721,20 @@ Return Value:
                     AudioPlayHeader->TrackNumber = TrackData->TrackNumber;
 
                     //
-                    //  TOC contains MSF (Minute/Second/Frame) addresses.  This is very
-                    //  arcane, and we wind up having to bias around by the size of the
-                    //  leadins and other such silliness to find real live sector addrs.
-                    //
                     //  One frame == One sector.
                     //  One second == 75 frames (winds up being a 44.1khz sample)
                     //
-
+                    //  Note: LBN 0 == 0:2:0 (MSF)
                     //
-                    //  Fill in the address and length fields.
+                    
                     //
-
-                    AudioPlayHeader->TrackAddress[2] = TrackData->Address[1];
-                    AudioPlayHeader->TrackAddress[1] = TrackData->Address[2];
-                    AudioPlayHeader->TrackAddress[0] = TrackData->Address[3];
-
-                    AudioPlayHeader->StartingSector = TrackData->Address[3];
-                    AudioPlayHeader->StartingSector += (TrackData->Address[2] * 75);
-                    AudioPlayHeader->StartingSector += (TrackData->Address[1] * 60 * 75);
-
+                    //  Fill in the address (both MSF and Lbn format) and length fields.
                     //
-                    //  Subtract 2 seconds for the block number.
-                    //
-
-                    AudioPlayHeader->StartingSector -= 150;
+                    
+                    SwapCopyUchar4( &Address, TrackData->Address);
+                    CdLbnToMmSsFf( Address, AudioPlayHeader->TrackAddress);
+                    
+                    SwapCopyUchar4( &AudioPlayHeader->StartingSector, TrackData->Address);
 
                     //
                     //  Go to the next track and find the starting point.
@@ -701,23 +742,7 @@ Return Value:
 
                     TrackData = &Fcb->Vcb->CdromToc->TrackData[Fcb->XAFileNumber + 1];
 
-                    AudioPlayHeader->SectorCount = TrackData->Address[3];
-                    AudioPlayHeader->SectorCount += (TrackData->Address[2] * 75);
-                    AudioPlayHeader->SectorCount += (TrackData->Address[1] * 60 * 75);
-
-                    //
-                    //  Bias the sector count by 2 seconds.
-                    //  Check that the offset is at least two seconds.
-                    //
-
-                    if (AudioPlayHeader->SectorCount < 150) {
-
-                        AudioPlayHeader->SectorCount = 0;
-
-                    } else {
-
-                        AudioPlayHeader->SectorCount -= 150;
-                    }
+                    SwapCopyUchar4( &AudioPlayHeader->SectorCount, TrackData->Address);
 
                     //
                     //  Now compute the difference.  If there is an error then use
@@ -734,18 +759,12 @@ Return Value:
                     }
 
                     //
-                    //  Use the sector count to determine the MSF length.
+                    //  Use the sector count to determine the MSF length. Bias by 150 to make
+                    //  it an "lbn" since the conversion routine corrects for Lbn 0 == 0:2:0;
                     //
 
-                    SectorCount = AudioPlayHeader->SectorCount;
-
-                    AudioPlayHeader->TrackLength[0] = (UCHAR) (SectorCount % 75);
-                    SectorCount /= 75;
-
-                    AudioPlayHeader->TrackLength[1] = (UCHAR) (SectorCount % 60);
-                    SectorCount /= 60;
-
-                    AudioPlayHeader->TrackLength[2] = (UCHAR) (SectorCount % 60);
+                    Address = AudioPlayHeader->SectorCount - 150;
+                    CdLbnToMmSsFf( Address, AudioPlayHeader->TrackLength);
 
                     ThisByteCount = sizeof( RIFF_HEADER ) - (ULONG) CurrentOffset;
 
@@ -793,7 +812,7 @@ Return Value:
             
             } else { 
     
-                ASSERT( FlagOn( Fcb->FcbState, FCB_STATE_MODE2_FILE | FCB_STATE_MODE2FORM2_FILE ));
+                NT_ASSERT( FlagOn( Fcb->FcbState, FCB_STATE_MODE2_FILE | FCB_STATE_MODE2FORM2_FILE ));
 
                 RiffHeader = &LocalRiffHeader;
 
@@ -925,7 +944,7 @@ Return Value:
                 if (TryingYellowbookMode2) {
 
                     //
-                    //  We successfully got data when we tried switching the trackmode,
+                    //  We succesfully got data when we tried switching the trackmode,
                     //  so change the state of the FCB to remember that.
                     //
 
@@ -960,7 +979,7 @@ Return Value:
         KeFlushIoBuffers( IrpContext->Irp->MdlAddress, TRUE, FALSE );
 
     try_exit:  NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         //
         //  Perform final cleanup on the IoRuns if necessary.
@@ -970,20 +989,101 @@ Return Value:
 
             CdFinishBuffers( IrpContext, IoRuns, CleanupRunCount, TRUE, FALSE );
         }
-    } _SEH2_END;
+    }
 
     return Status;
 }
 
+_Requires_lock_held_(_Global_critical_region_)
+NTSTATUS
+CdVolumeDasdWrite (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount
+    )
+
+/*++
+
+Routine Description:
+
+    This routine performs the non-cached writes to 'cooked' sectors (2048 bytes
+    per sector).  This is done by filling the IoRun for the desired request 
+    and send it down to the device.
+
+Arguments:
+
+    Fcb - Fcb representing the file to read.
+
+    StartingOffset - Logical offset in the file to read from.
+
+    ByteCount - Number of bytes to read.
+
+Return Value:
+
+    NTSTATUS - Status indicating the result of the operation.
+
+--*/
+
+{
+    NTSTATUS Status;
+    IO_RUN IoRun;
+
+    PAGED_CODE();
+
+    //
+    //  We want to make sure the user's buffer is locked in all cases.
+    //
+
+    CdLockUserBuffer( IrpContext, ByteCount, IoReadAccess );
+
+    //
+    //  The entire Io can be contained in a single run, just pass
+    //  the Io down to the driver.  Send the driver down
+    //  and wait on the result if this is synchronous.
+    //
+
+    RtlZeroMemory( &IoRun, sizeof( IoRun ) );
+
+    IoRun.DiskOffset = StartingOffset;
+    IoRun.DiskByteCount = ByteCount;
+
+    CdSingleAsync( IrpContext, &IoRun, Fcb );
+
+    //
+    //  Wait if we are synchronous, otherwise return
+    //
+
+    if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT )) {
+
+        CdWaitSync( IrpContext );
+
+        Status = IrpContext->Irp->IoStatus.Status;
+
+    //
+    //  Our completion routine will free the Io context but
+    //  we do want to return STATUS_PENDING.
+    //
+
+    } else {
+
+        ClearFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_ALLOC_IO );
+        Status = STATUS_PENDING;
+    }
+
+    return Status;
+}
+
+
 
 BOOLEAN
 CdReadSectors (
-    IN PIRP_CONTEXT IrpContext,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount,
-    IN BOOLEAN ReturnError,
-    IN OUT PVOID Buffer,
-    IN PDEVICE_OBJECT TargetDeviceObject
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount,
+    _In_ BOOLEAN ReturnError,
+    _Out_writes_bytes_(ByteCount) PVOID Buffer,
+    _In_ PDEVICE_OBJECT TargetDeviceObject
     )
 
 /*++
@@ -1119,9 +1219,10 @@ Return Value:
 
 NTSTATUS
 CdCreateUserMdl (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG BufferLength,
-    IN BOOLEAN RaiseOnError
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG BufferLength,
+    _In_ BOOLEAN RaiseOnError,
+    _In_ LOCK_OPERATION Operation
     )
 
 /*++
@@ -1142,6 +1243,8 @@ Arguments:
     RaiseOnError - Indicates if our caller wants this routine to raise on
         an error condition.
 
+    Operation - IoWriteAccess or IoReadAccess
+
 Return Value:
 
     NTSTATUS - Status from this routine.  Error status only returned if
@@ -1155,9 +1258,12 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( Operation );
+    UNREFERENCED_PARAMETER( IrpContext );
+
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_IRP( IrpContext->Irp );
-    ASSERT( IrpContext->Irp->MdlAddress == NULL );
+    NT_ASSERT( IrpContext->Irp->MdlAddress == NULL );
 
     //
     // Allocate the Mdl, and Raise if we fail.
@@ -1176,15 +1282,16 @@ Return Value:
         //  deallocate the Mdl and return the appropriate "expected" status.
         //
 
-        _SEH2_TRY {
+        try {
 
             MmProbeAndLockPages( Mdl, IrpContext->Irp->RequestorMode, IoWriteAccess );
 
             Status = STATUS_SUCCESS;
 
-        } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+#pragma warning(suppress: 6320)
+        } except(EXCEPTION_EXECUTE_HANDLER) {
 
-            Status = _SEH2_GetExceptionCode();
+            Status = GetExceptionCode();
 
             IoFreeMdl( Mdl );
             IrpContext->Irp->MdlAddress = NULL;
@@ -1193,7 +1300,7 @@ Return Value:
 
                 Status = STATUS_INVALID_USER_BUFFER;
             }
-        } _SEH2_END;
+        }
     }
 
     //
@@ -1217,15 +1324,17 @@ Return Value:
 
 
 NTSTATUS
-CdPerformDevIoCtrl (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG IoControlCode,
-    IN PDEVICE_OBJECT Device,
-    OUT PVOID OutputBuffer OPTIONAL,
-    IN ULONG OutputBufferLength,
-    IN BOOLEAN InternalDeviceIoControl,
-    IN BOOLEAN OverrideVerify,
-    OUT PIO_STATUS_BLOCK Iosb OPTIONAL
+CdPerformDevIoCtrlEx (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG IoControlCode,
+    _In_ PDEVICE_OBJECT Device,
+    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _In_ BOOLEAN InternalDeviceIoControl,
+    _In_ BOOLEAN OverrideVerify,
+    _Out_opt_ PIO_STATUS_BLOCK Iosb
     )
 
 /*++
@@ -1269,6 +1378,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+
     //
     //  Check if the user gave us an Iosb.
     //
@@ -1285,8 +1396,8 @@ Return Value:
 
     Irp = IoBuildDeviceIoControlRequest( IoControlCode,
                                          Device,
-                                         NULL,
-                                         0,
+                                         InputBuffer,
+                                         InputBufferLength,
                                          OutputBuffer,
                                          OutputBufferLength,
                                          InternalDeviceIoControl,
@@ -1322,28 +1433,58 @@ Return Value:
         Status = IosbToUse->Status;
     }
 
-    ASSERT( !(OverrideVerify && (STATUS_VERIFY_REQUIRED == Status)));
+    NT_ASSERT( !(OverrideVerify && (STATUS_VERIFY_REQUIRED == Status)));
 
     return Status;
 }
+
+
+NTSTATUS
+FASTCALL
+CdPerformDevIoCtrl (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG IoControlCode,
+    _In_ PDEVICE_OBJECT Device,
+    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _In_ BOOLEAN InternalDeviceIoControl,
+    _In_ BOOLEAN OverrideVerify,
+    _Out_opt_ PIO_STATUS_BLOCK Iosb
+    )
+{
+    PAGED_CODE();
+
+    return CdPerformDevIoCtrlEx( IrpContext, 
+                                 IoControlCode, 
+                                 Device, 
+                                 NULL, 
+                                 0, 
+                                 OutputBuffer, 
+                                 OutputBufferLength, 
+                                 InternalDeviceIoControl,
+                                 OverrideVerify,
+                                 Iosb);
+}
+
 
 
 //
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 CdPrepareBuffers (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PFCB Fcb,
-    IN PVOID UserBuffer,
-    IN ULONG UserBufferOffset,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount,
-    IN PIO_RUN IoRuns,
-    IN PULONG RunCount,
-    IN PULONG ThisByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIRP Irp,
+    _In_ PFCB Fcb,
+    _In_reads_bytes_(ByteCount) PVOID UserBuffer,
+    _In_ ULONG UserBufferOffset,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount,
+    _Out_ PIO_RUN IoRuns,
+    _Out_ PULONG RunCount,
+    _Out_ PULONG ThisByteCount
     )
 
 /*++
@@ -1414,16 +1555,13 @@ Return Value:
     PVOID CurrentUserBuffer = UserBuffer;
     ULONG CurrentUserBufferOffset = UserBufferOffset;
 
-    PVOID ScratchUserBuffer = UserBuffer;
-    ULONG ScratchUserBufferOffset = UserBufferOffset;
-
     //
     //  The following is the next contiguous bytes on the disk to
     //  transfer.  Read from the allocation package.
     //
 
-    LONGLONG DiskOffset;
-    ULONG CurrentByteCount;
+    LONGLONG DiskOffset = 0;
+    ULONG CurrentByteCount = RemainingByteCount;
 
     PAGED_CODE();
 
@@ -1478,18 +1616,17 @@ Return Value:
         //
         //      Byte count is a multiple of 2048 (Length of transfer)
         //
-        //      Current buffer offset is also on a 2048 byte boundary.
-        //
         //  If the ByteCount is at least one sector then do the
         //  unaligned transfer only for the tail.  We can use the
         //  user's buffer for the aligned portion.
         //
 
         if (FlagOn( (ULONG) DiskOffset, SECTOR_MASK ) ||
-            FlagOn( CurrentUserBufferOffset, SECTOR_MASK ) ||
             (FlagOn( (ULONG) CurrentByteCount, SECTOR_MASK ) &&
              (CurrentByteCount < SECTOR_SIZE))) {
 
+            NT_ASSERT( SafeNodeType(Fcb) != CDFS_NTC_FCB_INDEX);
+            
             //
             //  If we can't wait then raise.
             //
@@ -1515,92 +1652,49 @@ Return Value:
             ThisIoRun->DiskOffset = LlSectorTruncate( DiskOffset );
 
             //
-            //  Check if we can use a free portion of the user's buffer.
-            //  If we can copy the bytes to an earlier portion of the
-            //  buffer then read into that location and slide the bytes
-            //  up.
-            //
-            //  We can use the user's buffer if:
-            //
-            //      The temporary location in the buffer is before the
-            //      final destination.
-            //
-            //      There is at least one sector of data to read.
+            //  We need to allocate an auxilary buffer for the next sector.
+            //  Read up to a page containing the partial data.
             //
 
-            if ((ScratchUserBufferOffset + ThisIoRun->TransferBufferOffset < CurrentUserBufferOffset) &&
-                (ThisIoRun->TransferBufferOffset + CurrentByteCount >= SECTOR_SIZE)) {
+            ThisIoRun->DiskByteCount = SectorAlign( ThisIoRun->TransferBufferOffset + CurrentByteCount );
 
-                ThisIoRun->DiskByteCount = SectorTruncate( ThisIoRun->TransferBufferOffset + CurrentByteCount );
-                CurrentByteCount = ThisIoRun->DiskByteCount - ThisIoRun->TransferBufferOffset;
-                ThisIoRun->TransferByteCount = CurrentByteCount;
+            if (ThisIoRun->DiskByteCount > PAGE_SIZE) {
 
-                //
-                //  Point to the user's buffer and Mdl for this transfer.
-                //
-
-                ThisIoRun->TransferBuffer = ScratchUserBuffer;
-                ThisIoRun->TransferMdl = Irp->MdlAddress;
-                ThisIoRun->TransferVirtualAddress = Add2Ptr( Irp->UserBuffer,
-                                                             ScratchUserBufferOffset,
-                                                             PVOID );
-
-                ScratchUserBuffer = Add2Ptr( ScratchUserBuffer,
-                                             ThisIoRun->DiskByteCount,
-                                             PVOID );
-
-                ScratchUserBufferOffset += ThisIoRun->DiskByteCount;
-
-            //
-            //  Otherwise we need to allocate an auxiliary buffer for the next sector.
-            //
-
-            } else {
-
-                //
-                //  Read up to a page containing the partial data
-                //
-
-                ThisIoRun->DiskByteCount = SectorAlign( ThisIoRun->TransferBufferOffset + CurrentByteCount );
-
-                if (ThisIoRun->DiskByteCount > PAGE_SIZE) {
-
-                    ThisIoRun->DiskByteCount = PAGE_SIZE;
-                }
-
-                if (ThisIoRun->TransferBufferOffset + CurrentByteCount > ThisIoRun->DiskByteCount) {
-
-                    CurrentByteCount = ThisIoRun->DiskByteCount - ThisIoRun->TransferBufferOffset;
-                }
-
-                ThisIoRun->TransferByteCount = CurrentByteCount;
-
-                //
-                //  Allocate a buffer for the non-aligned transfer.
-                //
-
-                ThisIoRun->TransferBuffer = FsRtlAllocatePoolWithTag( CdNonPagedPool, PAGE_SIZE, TAG_IO_BUFFER );
-
-                //
-                //  Allocate and build the Mdl to describe this buffer.
-                //
-
-                ThisIoRun->TransferMdl = IoAllocateMdl( ThisIoRun->TransferBuffer,
-                                                        PAGE_SIZE,
-                                                        FALSE,
-                                                        FALSE,
-                                                        NULL );
-
-                ThisIoRun->TransferVirtualAddress = ThisIoRun->TransferBuffer;
-
-                if (ThisIoRun->TransferMdl == NULL) {
-
-                    IrpContext->Irp->IoStatus.Information = 0;
-                    CdRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES );
-                }
-
-                MmBuildMdlForNonPagedPool( ThisIoRun->TransferMdl );
+                ThisIoRun->DiskByteCount = PAGE_SIZE;
             }
+
+            if (ThisIoRun->TransferBufferOffset + CurrentByteCount > ThisIoRun->DiskByteCount) {
+
+                CurrentByteCount = ThisIoRun->DiskByteCount - ThisIoRun->TransferBufferOffset;
+            }
+
+            ThisIoRun->TransferByteCount = CurrentByteCount;
+
+            //
+            //  Allocate a buffer for the non-aligned transfer.
+            //
+
+            ThisIoRun->TransferBuffer = FsRtlAllocatePoolWithTag( CdNonPagedPool, PAGE_SIZE, TAG_IO_BUFFER );
+
+            //
+            //  Allocate and build the Mdl to describe this buffer.
+            //
+
+            ThisIoRun->TransferMdl = IoAllocateMdl( ThisIoRun->TransferBuffer,
+                                                    PAGE_SIZE,
+                                                    FALSE,
+                                                    FALSE,
+                                                    NULL );
+
+            ThisIoRun->TransferVirtualAddress = ThisIoRun->TransferBuffer;
+
+            if (ThisIoRun->TransferMdl == NULL) {
+
+                IrpContext->Irp->IoStatus.Information = 0;
+                CdRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES );
+            }
+
+            MmBuildMdlForNonPagedPool( ThisIoRun->TransferMdl );
 
             //
             //  Remember we found an unaligned transfer.
@@ -1639,12 +1733,6 @@ Return Value:
             ThisIoRun->TransferVirtualAddress = Add2Ptr( Irp->UserBuffer,
                                                          CurrentUserBufferOffset,
                                                          PVOID );
-
-            ScratchUserBuffer = Add2Ptr( CurrentUserBuffer,
-                                         CurrentByteCount,
-                                         PVOID );
-
-            ScratchUserBufferOffset += CurrentByteCount;
         }
 
         //
@@ -1684,18 +1772,19 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdPrepareXABuffers (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PFCB Fcb,
-    IN PVOID UserBuffer,
-    IN ULONG UserBufferOffset,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount,
-    IN PIO_RUN IoRuns,
-    IN PULONG RunCount,
-    IN PULONG ThisByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIRP Irp,
+    _In_ PFCB Fcb,
+    _In_reads_bytes_(ByteCount) PVOID UserBuffer,
+    _In_ ULONG UserBufferOffset,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount,
+    _Out_ PIO_RUN IoRuns,
+    _Out_ PULONG RunCount,
+    _Out_ PULONG ThisByteCount
     )
 
 /*++
@@ -1771,18 +1860,14 @@ Return Value:
     PVOID CurrentUserBuffer = UserBuffer;
     ULONG CurrentUserBufferOffset = UserBufferOffset;
 
-    PVOID ScratchUserBuffer = UserBuffer;
-    ULONG ScratchUserBufferOffset = UserBufferOffset;
-    BOOLEAN RoundScratchBuffer = TRUE;
-
     //
     //  The following is the next contiguous bytes on the disk to
     //  transfer.  These are represented by cooked byte offset and length.
     //  We also compute the number of raw bytes in the current transfer.
     //
 
-    LONGLONG DiskOffset;
-    ULONG CurrentCookedByteCount;
+    LONGLONG DiskOffset = 0;
+    ULONG CurrentCookedByteCount = 0;
     ULONG CurrentRawByteCount;
 
     PAGED_CODE();
@@ -1805,6 +1890,7 @@ Return Value:
 
         CurrentRawOffset = (LONGLONG) ((ULONG) CurrentRawOffset / RAW_SECTOR_SIZE);
 
+#pragma prefast( suppress: __WARNING_RESULTOFSHIFTCASTTOLARGERSIZE, "This is fine beacuse raw sector size > sector shift" )        
         CurrentCookedOffset = (LONGLONG) ((ULONG) CurrentRawOffset << SECTOR_SHIFT );
 
         CurrentRawOffset = (LONGLONG) ((ULONG) CurrentRawOffset * RAW_SECTOR_SIZE);
@@ -1848,26 +1934,6 @@ Return Value:
 
         PerformedCopy = FALSE;
         *RunCount += 1;
-
-        //
-        //  Round the scratch buffer up to a sector boundary for alignment.
-        //
-
-        if (RoundScratchBuffer) {
-
-            if (SectorOffset( ScratchUserBuffer ) != 0) {
-
-                CurrentRawByteCount = SECTOR_SIZE - SectorOffset( ScratchUserBuffer );
-
-                ScratchUserBuffer = Add2Ptr( ScratchUserBuffer,
-                                             CurrentRawByteCount,
-                                             PVOID );
-
-                ScratchUserBufferOffset += CurrentRawByteCount;
-            }
-
-            RoundScratchBuffer = FALSE;
-        }
 
         //
         //  Initialize the current position in the IoRuns array.  Find the 
@@ -1933,26 +1999,12 @@ Return Value:
                 ThisIoRun -= 1;
 
                 //
-                //  Remember that we performed a copy operation and update
-                //  the next available position in the scratch buffer.
+                //  Remember that we performed a copy operation.
                 //
 
                 PerformedCopy = TRUE;
 
-                ScratchUserBuffer = Add2Ptr( ScratchUserBuffer,
-                                             CurrentRawByteCount,
-                                             PVOID );
-
-                ScratchUserBufferOffset += CurrentRawByteCount;
-
                 CurrentCookedByteCount = SECTOR_SIZE;
-
-                //
-                //  Set the flag indicating we want to round the scratch buffer
-                //  to a sector boundary.
-                //
-                
-                RoundScratchBuffer = TRUE;
 
             } else {
 
@@ -2001,8 +2053,7 @@ Return Value:
             //
 
             if ((RawSectorOffset == 0) &&
-                (ScratchUserBufferOffset <= CurrentUserBufferOffset) &&
-                (CurrentUserBufferOffset - ScratchUserBufferOffset + RemainingRawByteCount >= RAW_SECTOR_SIZE)) {
+                (RemainingRawByteCount >= RAW_SECTOR_SIZE)) {
 
                 //
                 //  We can use the scratch buffer.  We must ensure we don't send down reads
@@ -2024,7 +2075,7 @@ Return Value:
                 //  Now make sure we are within the page transfer limit.
                 //
 
-                while (ADDRESS_AND_SIZE_TO_SPAN_PAGES(ScratchUserBuffer, RawSectorAlign( CurrentRawByteCount)) > 
+                while (ADDRESS_AND_SIZE_TO_SPAN_PAGES(CurrentUserBuffer, RawSectorAlign( CurrentRawByteCount)) > 
                        Fcb->Vcb->MaximumPhysicalPages )  {
 
                     CurrentRawByteCount -= RAW_SECTOR_SIZE;
@@ -2036,8 +2087,7 @@ Return Value:
                 //  account of the fact that we must read in whole raw sector multiples.
                 //
 
-                while ( RawSectorAlign( CurrentRawByteCount) > 
-                        (CurrentUserBufferOffset - ScratchUserBufferOffset + RemainingRawByteCount) )  {
+                while (RawSectorAlign( CurrentRawByteCount) > RemainingRawByteCount)  {
 
                     CurrentRawByteCount -= RAW_SECTOR_SIZE;
                     CurrentCookedByteCount -= SECTOR_SIZE;
@@ -2060,39 +2110,14 @@ Return Value:
                 ThisIoRun->DiskByteCount = SectorAlign( CurrentCookedByteCount);
 
                 //
-                //  Store the number of bytes which we actually care about from this transfer
-                //
-                
-                ThisIoRun->TransferByteCount = CurrentRawByteCount;
-
-                //
                 //  Point to the user's buffer and Mdl for this transfer.
                 //
 
-                ThisIoRun->TransferBuffer = ScratchUserBuffer;
+                ThisIoRun->TransferBuffer = CurrentUserBuffer;
                 ThisIoRun->TransferMdl = Irp->MdlAddress;
                 ThisIoRun->TransferVirtualAddress = Add2Ptr( Irp->UserBuffer, 
-                                                             ScratchUserBufferOffset,
+                                                             CurrentUserBufferOffset,
                                                              PVOID);
-                //
-                //  Update the scratch buffer pointer.  Note that since the underlying
-                //  driver stack will always transfer in multiples of raw sectors,
-                //  we must round up here rather than simply advancing by the length of the
-                //  of the data which we actually care about.
-                //
-
-                ScratchUserBuffer = Add2Ptr( ScratchUserBuffer,
-                                             RawSectorAlign( CurrentRawByteCount),
-                                             PVOID );
-                                             
-                ScratchUserBufferOffset += RawSectorAlign( CurrentRawByteCount);
-
-                //
-                //  Set the flag indicating we want to round the scratch buffer
-                //  to a cooked sector boundary.
-                //
-
-                RoundScratchBuffer = TRUE;
 
             } else {
 
@@ -2188,11 +2213,11 @@ Return Value:
 
 BOOLEAN
 CdFinishBuffers (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_RUN IoRuns,
-    IN ULONG RunCount,
-    IN BOOLEAN FinalCleanup,
-    IN BOOLEAN SaveXABuffer
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIO_RUN IoRuns,
+    _In_ ULONG RunCount,
+    _In_ BOOLEAN FinalCleanup,
+    _In_ BOOLEAN SaveXABuffer
     )
 
 /*++
@@ -2260,27 +2285,11 @@ Return Value:
 
             if (!FinalCleanup) {
 
-                //
-                //  If we are shifting in the user's buffer then use
-                //  MoveMemory.
-                //
-
-                if (ThisIoRun->TransferMdl == IrpContext->Irp->MdlAddress) {
-
-                    RtlMoveMemory( ThisIoRun->UserBuffer,
-                                   Add2Ptr( ThisIoRun->TransferBuffer,
-                                            ThisIoRun->TransferBufferOffset,
-                                            PVOID ),
-                                   ThisIoRun->TransferByteCount );
-
-                } else {
-
-                    RtlCopyMemory( ThisIoRun->UserBuffer,
-                                   Add2Ptr( ThisIoRun->TransferBuffer,
-                                            ThisIoRun->TransferBufferOffset,
-                                            PVOID ),
-                                   ThisIoRun->TransferByteCount );
-                }
+                RtlCopyMemory( ThisIoRun->UserBuffer,
+                               Add2Ptr( ThisIoRun->TransferBuffer,
+                                        ThisIoRun->TransferBufferOffset,
+                                        PVOID ),
+                               ThisIoRun->TransferByteCount );
 
                 FlushIoBuffers = TRUE;
             }
@@ -2371,16 +2380,384 @@ Return Value:
     return FlushIoBuffers;
 }
 
-
+//  Tell prefast this is a completion routine.
+IO_COMPLETION_ROUTINE CdSyncCompletionRoutine;
+
+NTSTATUS
+CdSyncCompletionRoutine (
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PVOID Contxt
+    )
+
+/*++
+
+Routine Description:
+
+    Completion routine for synchronizing back to dispatch.
+
+Arguments:
+
+    Contxt - pointer to KEVENT.
+
+Return Value:
+
+    STATUS_MORE_PROCESSING_REQUIRED
+
+--*/
+
+{
+    PKEVENT Event = (PKEVENT)Contxt;
+    _Analysis_assume_(Contxt != NULL);
+
+    UNREFERENCED_PARAMETER( Irp );
+    UNREFERENCED_PARAMETER( DeviceObject );
+
+    KeSetEvent( Event, 0, FALSE );
+
+    //
+    //  We don't want IO to get our IRP and free it.
+    //
+    
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+
+_Requires_lock_held_(_Global_critical_region_)
+VOID
+CdFreeDirCache (
+    _In_ PIRP_CONTEXT IrpContext
+    )
+
+/*++
+
+Routine Description:
+
+    Safely frees the sector cache buffer.
+
+Arguments:
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    PAGED_CODE();
+
+    if (NULL != IrpContext->Vcb->SectorCacheBuffer) {
+        
+        CdAcquireCacheForUpdate( IrpContext);
+        CdFreePool( &IrpContext->Vcb->SectorCacheBuffer);
+        CdReleaseCache( IrpContext);
+    }
+}
+
+_Requires_lock_held_(_Global_critical_region_)
+BOOLEAN
+CdReadDirDataThroughCache (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_RUN Run
+    )
+    
+/*++
+
+Routine Description:
+
+    Reads blocks through the sector cache. If the data is present, then it
+    is copied from memory.  If not present, one of the cache chunks will be
+    replaced with a chunk containing the requested region, and the data
+    copied from there.
+
+    Only intended for reading *directory* blocks, for the purpose of pre-caching
+    directory information, by reading a chunk of blocks which hopefully contains
+    other directory blocks, rather than just the (usually) single block requested.
+
+Arguments:
+
+    Run - description of extent required, and buffer to read into.
+
+Return Value:
+
+    None. Raises on error.
+
+--*/
+
+{
+    PVCB Vcb          = IrpContext->Vcb;
+    ULONG Lbn         = SectorsFromLlBytes( Run->DiskOffset);
+    ULONG Remaining   = SectorsFromBytes( Run->DiskByteCount);
+    PUCHAR UserBuffer = Run->TransferBuffer;
+
+    NTSTATUS Status;
+    ULONG Found;
+    ULONG BufferSectorOffset;
+    ULONG StartBlock;
+    ULONG EndBlock;
+    ULONG Blocks;
+
+    PIO_STACK_LOCATION IrpSp;
+    IO_STATUS_BLOCK Iosb;
+
+    PTRACK_DATA TrackData;
+
+#if DBG
+    BOOLEAN JustRead = FALSE;
+#endif
+
+    ULONG Index;
+    PCD_SECTOR_CACHE_CHUNK Buffer;
+    BOOLEAN Result = FALSE;
+
+    PAGED_CODE();
+
+    CdAcquireCacheForRead( IrpContext);
+
+    try {
+        
+        //
+        //  Check the cache hasn't gone away due to volume verify failure (which
+        //  is the *only* reason it'll go away).  If this is the case we raise 
+        //  the same error any I/O would return if the cache weren't here.
+        //
+        
+        if (NULL == Vcb->SectorCacheBuffer) {
+        
+            CdRaiseStatus( IrpContext, STATUS_VERIFY_REQUIRED);
+        }
+        
+        while (Remaining) {
+
+            Buffer = NULL;
+
+            //
+            //  Look to see if any portion is currently cached.
+            //
+            
+            for (Index = 0; Index < CD_SEC_CACHE_CHUNKS; Index++) {
+
+                if ((Vcb->SecCacheChunks[ Index].BaseLbn != -1) &&
+                    (Vcb->SecCacheChunks[ Index].BaseLbn <= Lbn) &&
+                    ((Vcb->SecCacheChunks[ Index].BaseLbn + CD_SEC_CHUNK_BLOCKS) > Lbn)) {
+
+                    Buffer = &Vcb->SecCacheChunks[ Index];
+                    break;
+                }
+            }
+
+            //
+            //  If we found any, copy it out and continue.
+            //
+
+            if (NULL != Buffer) {
+
+                BufferSectorOffset = Lbn - Buffer->BaseLbn;
+                Found = Min( CD_SEC_CHUNK_BLOCKS - BufferSectorOffset, Remaining);
+
+                RtlCopyMemory( UserBuffer, 
+                               Buffer->Buffer + BytesFromSectors( BufferSectorOffset), 
+                               BytesFromSectors( Found));
+
+                Remaining -= Found;
+                UserBuffer += BytesFromSectors( Found);
+                Lbn += Found;
+#if DBG
+                //
+                //  Update stats.  Don't count a hit if we've just read the data in.
+                //
+                
+                if (!JustRead) {
+                    
+                    InterlockedIncrement( (LONG*)&Vcb->SecCacheHits);
+                }
+                
+                JustRead = FALSE;
+#endif                
+                continue;
+            }
+
+            //
+            //  Missed the cache, so we need to read a new chunk.  Take the cache
+            //  resource exclusive while we do so.
+            //
+
+            CdReleaseCache( IrpContext);
+            CdAcquireCacheForUpdate( IrpContext);
+#if DBG            
+            Vcb->SecCacheMisses += 1;
+#endif
+            //
+            //  Select the chunk to replace and calculate the start block of the 
+            //  chunk to cache.  We cache blocks which start on Lbns aligned on 
+            //  multiples of chunk size, treating block 16 (VRS start) as block
+            //  zero.
+            //
+
+            Buffer = &Vcb->SecCacheChunks[ Vcb->SecCacheLRUChunkIndex];
+            
+            StartBlock = Lbn - ((Lbn - 16) % CD_SEC_CHUNK_BLOCKS);
+
+            //
+            //  Make sure we don't try and read past end of the last track.
+            //
+
+            TrackData = &Vcb->CdromToc->TrackData[(Vcb->CdromToc->LastTrack - Vcb->CdromToc->FirstTrack + 1)];
+
+            SwapCopyUchar4( &EndBlock, &TrackData->Address );
+
+            Blocks = EndBlock - StartBlock;
+
+            if (Blocks > CD_SEC_CHUNK_BLOCKS) {
+
+                Blocks = CD_SEC_CHUNK_BLOCKS;
+            }
+
+            if ((0 == Blocks) || (Lbn < 16)) {
+
+                CdRaiseStatus( IrpContext, STATUS_INVALID_PARAMETER);
+            }
+
+            //
+            //  Now build / send the read request.
+            //
+            
+            IoReuseIrp( Vcb->SectorCacheIrp, STATUS_SUCCESS);
+
+            KeClearEvent( &Vcb->SectorCacheEvent);
+            Vcb->SectorCacheIrp->Tail.Overlay.Thread = PsGetCurrentThread();
+            
+            //
+            // Get a pointer to the stack location of the first driver which will be
+            // invoked.  This is where the function codes and the parameters are set.
+            //
+            
+            IrpSp = IoGetNextIrpStackLocation( Vcb->SectorCacheIrp);
+            IrpSp->MajorFunction = (UCHAR) IRP_MJ_READ;
+
+            //
+            //  Build an MDL to describe the buffer.
+            //
+            
+            IoAllocateMdl( Buffer->Buffer,
+                           BytesFromSectors( Blocks), 
+                           FALSE, 
+                           FALSE, 
+                           Vcb->SectorCacheIrp);
+            
+            if (NULL == Vcb->SectorCacheIrp->MdlAddress)  {
+            
+                IrpContext->Irp->IoStatus.Information = 0;
+                CdRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES);
+            }
+            
+            //
+            //  We're reading/writing into the block cache (paged pool).  Lock the
+            //  pages and update the MDL with physical page information.
+            //
+        
+            try {
+            
+                MmProbeAndLockPages( Vcb->SectorCacheIrp->MdlAddress,
+                                     KernelMode,
+                                     (LOCK_OPERATION) IoWriteAccess );
+            } 
+#pragma warning(suppress: 6320)
+            except(EXCEPTION_EXECUTE_HANDLER) {
+        
+                IoFreeMdl( Vcb->SectorCacheIrp->MdlAddress );
+                Vcb->SectorCacheIrp->MdlAddress = NULL;
+            }
+        
+            if (NULL == Vcb->SectorCacheIrp->MdlAddress) {
+        
+                CdRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES );
+            }
+
+            //
+            //  Reset the BaseLbn as we can't trust this Buffer's data until the request
+            //  is successfully completed.
+            //
+
+            Buffer->BaseLbn = (ULONG)-1;
+
+            IrpSp->Parameters.Read.Length = BytesFromSectors( Blocks);
+            IrpSp->Parameters.Read.ByteOffset.QuadPart = LlBytesFromSectors( StartBlock);
+
+            IoSetCompletionRoutine( Vcb->SectorCacheIrp,
+                                    CdSyncCompletionRoutine,
+                                    &Vcb->SectorCacheEvent,
+                                    TRUE,
+                                    TRUE,
+                                    TRUE );
+            
+            Vcb->SectorCacheIrp->UserIosb = &Iosb;
+
+            Status = IoCallDriver( Vcb->TargetDeviceObject, Vcb->SectorCacheIrp );
+            
+            if (STATUS_PENDING == Status)  {
+
+
+                (VOID)KeWaitForSingleObject( &Vcb->SectorCacheEvent,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       NULL );
+            
+                Status = Vcb->SectorCacheIrp->IoStatus.Status;
+            }
+
+            Vcb->SectorCacheIrp->UserIosb = NULL;
+
+            //
+            //  Unlock the pages and free the MDL.
+            //
+
+            MmUnlockPages( Vcb->SectorCacheIrp->MdlAddress );
+            IoFreeMdl( Vcb->SectorCacheIrp->MdlAddress );
+            Vcb->SectorCacheIrp->MdlAddress = NULL;
+
+            if (!NT_SUCCESS( Status )) {
+
+                try_leave( Status );
+            }
+
+            //
+            //  Update the buffer information, and drop the cache resource to shared
+            //  to allow in reads.
+            //
+
+            Buffer->BaseLbn = StartBlock;
+            Vcb->SecCacheLRUChunkIndex = (Vcb->SecCacheLRUChunkIndex + 1) % CD_SEC_CACHE_CHUNKS;
+            
+            CdConvertCacheToShared( IrpContext);        
+#if DBG
+            JustRead = TRUE;
+#endif
+        }
+
+        Result = TRUE;
+    }
+    finally {
+
+        CdReleaseCache( IrpContext);
+    }
+
+    return Result;
+}
+
+
 //
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdMultipleAsync (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG RunCount,
-    IN PIO_RUN IoRuns
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ ULONG RunCount,
+    _Inout_ PIO_RUN IoRuns
     )
 
 /*++
@@ -2430,6 +2807,7 @@ Return Value:
     PIRP Irp;
     PIRP MasterIrp;
     ULONG UnwindRunCount;
+    BOOLEAN UseSectorCache;
 
     PAGED_CODE();
 
@@ -2445,19 +2823,49 @@ Return Value:
     }
 
     //
+    //  For directories, use the sector cache.
+    //
+    
+    if ((SafeNodeType( Fcb) == CDFS_NTC_FCB_INDEX) &&
+        (NULL != Fcb->Vcb->SectorCacheBuffer) &&
+        (VcbMounted == IrpContext->Vcb->VcbCondition)) {
+
+        UseSectorCache = TRUE;
+    }
+    else {
+
+        UseSectorCache = FALSE;
+    }
+
+    //
     //  Initialize some local variables.
     //
 
     MasterIrp = IrpContext->Irp;
 
     //
-    //  Iterate through the runs, doing everything that can fail.
+    //  Itterate through the runs, doing everything that can fail.
     //  We let the cleanup in CdFinishBuffers clean up on error.
     //
 
     for (UnwindRunCount = 0;
          UnwindRunCount < RunCount;
          UnwindRunCount += 1) {
+
+        if (UseSectorCache) {
+
+            if (!CdReadDirDataThroughCache( IrpContext, &IoRuns[ UnwindRunCount])) {
+
+                //
+                //  Turn off using directory cache and restart all over again.
+                //
+
+                UseSectorCache = FALSE;
+                UnwindRunCount = 0;
+            }
+
+            continue;
+        }
 
         //
         //  Create an associated IRP, making sure there is one stack entry for
@@ -2537,6 +2945,21 @@ Return Value:
     }
 
     //
+    //  If we used the cache, we're done.
+    //
+
+    if (UseSectorCache) {
+
+        if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)) {
+
+            IrpContext->Irp->IoStatus.Status = STATUS_SUCCESS;
+            KeSetEvent( &IrpContext->IoContext->SyncEvent, 0, FALSE );
+        }
+
+        return;
+    }
+    
+    //
     //  We only need to set the associated IRP count in the master irp to
     //  make it a master IRP.  But we set the count to one more than our
     //  caller requested, because we do not want the I/O system to complete
@@ -2556,6 +2979,23 @@ Return Value:
     MasterIrp->AssociatedIrp.IrpCount = 1;
 
     //
+    //  If we (FS) acquired locks, transition the lock owners to an object, since
+    //  when we return this thread could go away before request completion, and
+    //  the resource package may otherwise try to boost priority, etc.
+    //
+
+    if (!FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT ) &&
+        FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL )) {
+
+        NT_ASSERT( IrpContext->IoContext->ResourceThreadId == (ERESOURCE_THREAD)PsGetCurrentThread() );
+
+        IrpContext->IoContext->ResourceThreadId = ((ULONG_PTR)IrpContext->IoContext) | 3;
+
+        ExSetResourceOwnerPointer( IrpContext->IoContext->Resource,
+                                   (PVOID)IrpContext->IoContext->ResourceThreadId );
+    }
+
+    //
     //  Now that all the dangerous work is done, issue the Io requests
     //
 
@@ -2566,16 +3006,17 @@ Return Value:
         Irp = IoRuns[UnwindRunCount].SavedIrp;
         IoRuns[UnwindRunCount].SavedIrp = NULL;
 
-        //
-        //  If IoCallDriver returns an error, it has completed the Irp
-        //  and the error will be caught by our completion routines
-        //  and dealt with as a normal IO error.
-        //
+        if (NULL != Irp) {
+            
+            //
+            //  If IoCallDriver returns an error, it has completed the Irp
+            //  and the error will be caught by our completion routines
+            //  and dealt with as a normal IO error.
+            //
 
-        (VOID) IoCallDriver( IrpContext->Vcb->TargetDeviceObject, Irp );
+            (VOID) IoCallDriver( IrpContext->Vcb->TargetDeviceObject, Irp );
+        }
     }
-
-    return;
 }
 
 
@@ -2585,11 +3026,11 @@ Return Value:
 
 VOID
 CdMultipleXAAsync (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG RunCount,
-    IN PIO_RUN IoRuns,
-    IN PRAW_READ_INFO RawReads,
-    IN TRACK_MODE_TYPE TrackMode
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG RunCount,
+    _Inout_ PIO_RUN IoRuns,
+    _In_ PRAW_READ_INFO RawReads,
+    _In_ TRACK_MODE_TYPE TrackMode
     )
 
 /*++
@@ -2656,7 +3097,7 @@ Return Value:
     MasterIrp = IrpContext->Irp;
 
     //
-    //  Iterate through the runs, doing everything that can fail.
+    //  Itterate through the runs, doing everything that can fail.
     //  We let the cleanup in CdFinishBuffers clean up on error.
     //
 
@@ -2683,7 +3124,7 @@ Return Value:
         //  must be a multiple of sector size
         //
         
-        ASSERT( ThisIoRun->DiskByteCount && !SectorOffset(ThisIoRun->DiskByteCount));
+        NT_ASSERT( ThisIoRun->DiskByteCount && !SectorOffset(ThisIoRun->DiskByteCount));
 
         RawByteCount = SectorsFromBytes( ThisIoRun->DiskByteCount) * RAW_SECTOR_SIZE;
 
@@ -2809,11 +3250,12 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdSingleAsync (
-    IN PIRP_CONTEXT IrpContext,
-    IN LONGLONG ByteOffset,
-    IN ULONG ByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_RUN Run,
+    _In_ PFCB Fcb
     )
 
 /*++
@@ -2845,6 +3287,26 @@ Return Value:
     PAGED_CODE();
 
     //
+    //  For directories, look in the sector cache,
+    //
+    
+    if ((SafeNodeType( Fcb) == CDFS_NTC_FCB_INDEX) &&
+        (NULL != Fcb->Vcb->SectorCacheBuffer) &&
+        (VcbMounted == IrpContext->Vcb->VcbCondition)) {
+
+        if (CdReadDirDataThroughCache( IrpContext, Run )) {
+
+            if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)) {
+                
+                IrpContext->Irp->IoStatus.Status = STATUS_SUCCESS;
+                KeSetEvent( &IrpContext->IoContext->SyncEvent, 0, FALSE );
+            }
+
+            return;
+        }
+    }
+
+    //
     //  Set up things according to whether this is truely async.
     //
 
@@ -2855,6 +3317,22 @@ Return Value:
     } else {
 
         CompletionRoutine = CdSingleAsyncCompletionRoutine;
+
+        //
+        //  If we (FS) acquired locks, transition the lock owners to an object, since
+        //  when we return this thread could go away before request completion, and
+        //  the resource package may otherwise try to boost priority, etc.
+        //
+
+        if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL )) {
+        
+            NT_ASSERT( IrpContext->IoContext->ResourceThreadId == (ERESOURCE_THREAD)PsGetCurrentThread() );
+        
+            IrpContext->IoContext->ResourceThreadId = ((ULONG_PTR)IrpContext->IoContext) | 3;
+        
+            ExSetResourceOwnerPointer( IrpContext->IoContext->Resource,
+                                       (PVOID)IrpContext->IoContext->ResourceThreadId );
+        }
     }
 
     //
@@ -2879,9 +3357,9 @@ Return Value:
     //  Setup the Stack location to do a read from the disk driver.
     //
 
-    IrpSp->MajorFunction = IRP_MJ_READ;
-    IrpSp->Parameters.Read.Length = ByteCount;
-    IrpSp->Parameters.Read.ByteOffset.QuadPart = ByteOffset;
+    IrpSp->MajorFunction = IrpContext->MajorFunction;
+    IrpSp->Parameters.Read.Length = Run->DiskByteCount;
+    IrpSp->Parameters.Read.ByteOffset.QuadPart = Run->DiskOffset;
 
     //
     //  Issue the Io request
@@ -2894,12 +3372,6 @@ Return Value:
     //
 
     (VOID)IoCallDriver( IrpContext->Vcb->TargetDeviceObject, IrpContext->Irp );
-
-    //
-    //  And return to our caller
-    //
-
-    return;
 }
 
 
@@ -2909,7 +3381,7 @@ Return Value:
 
 VOID
 CdWaitSync (
-    IN PIRP_CONTEXT IrpContext
+    _In_ PIRP_CONTEXT IrpContext
     )
 
 /*++
@@ -2930,15 +3402,14 @@ Return Value:
 {
     PAGED_CODE();
 
-    KeWaitForSingleObject( &IrpContext->IoContext->SyncEvent,
+
+    (VOID)KeWaitForSingleObject( &IrpContext->IoContext->SyncEvent,
                            Executive,
                            KernelMode,
                            FALSE,
                            NULL );
 
     KeClearEvent( &IrpContext->IoContext->SyncEvent );
-
-    return;
 }
 
 
@@ -2947,11 +3418,10 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdMultiSyncCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PVOID Context
     )
 
 /*++
@@ -2992,6 +3462,7 @@ Return Value:
 
 {
     PCD_IO_CONTEXT IoContext = Context;
+    _Analysis_assume_(Context != NULL);
 
     AssertVerifyDeviceIrp( Irp );
 
@@ -3034,11 +3505,10 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdMultiAsyncCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PVOID Context
     )
 
 /*++
@@ -3072,11 +3542,11 @@ Return Value:
 
 {
     PCD_IO_CONTEXT IoContext = Context;
-    /* ReactOS Change: GCC Unused Variable */
-    //PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
-
+    _Analysis_assume_(Context != NULL);
     AssertVerifyDeviceIrp( Irp );
-    
+
+    UNREFERENCED_PARAMETER( DeviceObject );
+
     //
     //  If we got an error (or verify required), remember it in the Irp
     //
@@ -3119,8 +3589,8 @@ Return Value:
         //  Now release the resource
         //
 
-        ExReleaseResourceForThreadLite( IoContext->Resource,
-                                    IoContext->ResourceThreadId );
+        _Analysis_assume_lock_held_(*IoContext->Resource);
+        ExReleaseResourceForThreadLite( IoContext->Resource, IoContext->ResourceThreadId );
 
         //
         //  and finally, free the context record.
@@ -3146,7 +3616,6 @@ Return Value:
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
 
-    UNREFERENCED_PARAMETER( DeviceObject );
 }
 
 
@@ -3155,11 +3624,10 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdSingleSyncCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PVOID Context
     )
 
 /*++
@@ -3193,6 +3661,10 @@ Return Value:
 --*/
 
 {
+    _Analysis_assume_(Context != NULL);
+
+    UNREFERENCED_PARAMETER( DeviceObject );
+    
     AssertVerifyDeviceIrp( Irp );
     
     //
@@ -3215,11 +3687,10 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdSingleAsyncCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PVOID Context
     )
 
 /*++
@@ -3246,6 +3717,11 @@ Return Value:
 --*/
 
 {
+    PCD_IO_CONTEXT IoContext = Context;
+
+    UNREFERENCED_PARAMETER( DeviceObject );
+
+    _Analysis_assume_(IoContext != NULL);
     AssertVerifyDeviceIrp( Irp );
     
     //
@@ -3256,7 +3732,7 @@ Return Value:
 
     if (NT_SUCCESS( Irp->IoStatus.Status )) {
 
-        Irp->IoStatus.Information = ((PCD_IO_CONTEXT) Context)->RequestedByteCount;
+        Irp->IoStatus.Information = IoContext->RequestedByteCount;
     }
 
     //
@@ -3269,17 +3745,16 @@ Return Value:
     //  Now release the resource
     //
 
-    ExReleaseResourceForThreadLite( ((PCD_IO_CONTEXT) Context)->Resource,
-                                ((PCD_IO_CONTEXT) Context)->ResourceThreadId );
+    _Analysis_assume_lock_held_(*IoContext->Resource);
+    ExReleaseResourceForThreadLite( IoContext->Resource, IoContext->ResourceThreadId );
 
     //
     //  and finally, free the context record.
     //
 
-    CdFreeIoContext(  Context ); /* ReactOS Change: GCC "error: invalid lvalue in unary '&'" */
+    CdFreeIoContext( IoContext );
     return STATUS_SUCCESS;
 
-    UNREFERENCED_PARAMETER( DeviceObject );
 }
 
 
@@ -3287,13 +3762,15 @@ Return Value:
 //  Local support routine
 //
 
+_When_(SafeNodeType(Fcb) != CDFS_NTC_FCB_PATH_TABLE && StartingOffset == 0, _At_(ByteCount, _In_range_(>=, CdAudioDirentSize + sizeof(RAW_DIRENT))))
+_When_(SafeNodeType(Fcb) != CDFS_NTC_FCB_PATH_TABLE && StartingOffset != 0, _At_(ByteCount, _In_range_(>=, CdAudioDirentSize + SECTOR_SIZE)))
 VOID
 CdReadAudioSystemFile (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount,
-    IN PVOID SystemBuffer
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ _In_range_(>=, CdAudioDirentSize) ULONG ByteCount,
+    _Out_writes_bytes_(ByteCount) PVOID SystemBuffer
     )
 
 /*++
@@ -3354,7 +3831,7 @@ Return Value:
         //  Sanity check that the offset is zero.
         //
 
-        ASSERT( StartingOffset == 0 );
+        NT_ASSERT( StartingOffset == 0 );
 
         //
         //  Store a pseudo path entry in our local buffer.
@@ -3543,19 +4020,12 @@ Return Value:
                                CdAudioFileNameLength );
 
                 //
-                //  Set the time stamp to be Jan 1, 1995
+                //  Set the time stamp to be Jan 1, 1995 00:00
                 //
 
                 RawDirent->RecordTime[0] = 95;
                 RawDirent->RecordTime[1] = 1;
                 RawDirent->RecordTime[2] = 1;
-
-                //
-                //  Now bias by the values in the TOC.
-                //
-
-                RawDirent->RecordTime[4] = ThisTrack->Address[1] % 60;
-                RawDirent->RecordTime[5] = ThisTrack->Address[2] % 60;
 
                 //
                 //  Put the track number into the file name.
@@ -3609,4 +4079,97 @@ Return Value:
 
     return;
 }
+
+
+NTSTATUS
+CdHijackIrpAndFlushDevice (
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ PDEVICE_OBJECT TargetDeviceObject
+    )
+
+/*++
+
+Routine Description:
+
+    This routine is called when we need to send a flush to a device but
+    we don't have a flush Irp.  What this routine does is make a copy
+    of its current Irp stack location, but changes the Irp Major code
+    to a IRP_MJ_FLUSH_BUFFERS amd then send it down, but cut it off at
+    the knees in the completion routine, fix it up and return to the
+    user as if nothing had happened.
+
+Arguments:
+
+    Irp - The Irp to hijack
+
+    TargetDeviceObject - The device to send the request to.
+
+Return Value:
+
+    NTSTATUS - The Status from the flush in case anybody cares.
+
+--*/
+
+{
+    KEVENT Event;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION NextIrpSp;
+
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
+    
+    //
+    //  Get the next stack location, and copy over the stack location
+    //
+
+    NextIrpSp = IoGetNextIrpStackLocation( Irp );
+
+    *NextIrpSp = *IoGetCurrentIrpStackLocation( Irp );
+
+    NextIrpSp->MajorFunction = IRP_MJ_FLUSH_BUFFERS;
+    NextIrpSp->MinorFunction = 0;
+
+    //
+    //  Set up the completion routine
+    //
+
+    KeInitializeEvent( &Event, NotificationEvent, FALSE );
+
+    IoSetCompletionRoutine( Irp,
+                            CdSyncCompletionRoutine,
+                            &Event,
+                            TRUE,
+                            TRUE,
+                            TRUE );
+
+    //
+    //  Send the request.
+    //
+
+    Status = IoCallDriver( TargetDeviceObject, Irp );
+
+    if (Status == STATUS_PENDING) {
+
+        (VOID)KeWaitForSingleObject( &Event, Executive, KernelMode, FALSE, NULL );
+
+        Status = Irp->IoStatus.Status;
+    }
+
+    //
+    //  If the driver doesn't support flushes, return SUCCESS.
+    //
+
+    if (Status == STATUS_INVALID_DEVICE_REQUEST) {
+
+        Status = STATUS_SUCCESS;
+    }
+
+    Irp->IoStatus.Status = 0;
+    Irp->IoStatus.Information = 0;
+
+    return Status;
+}
+
 

@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -26,12 +26,12 @@ Abstract:
 #pragma alloc_text(PAGE, CdVerifyVcb)
 #endif
 
-
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdPerformVerify (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PDEVICE_OBJECT DeviceToVerify
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ PDEVICE_OBJECT DeviceToVerify
     )
 
 /*++
@@ -92,7 +92,7 @@ Return Value:
     Vcb = &CONTAINING_RECORD( IrpSp->DeviceObject,
                               VOLUME_DEVICE_OBJECT,
                               DeviceObject )->Vcb;
-    _SEH2_TRY {
+    try {
 
         //
         //  Send down the verify FSCTL.  Note that this is sent to the
@@ -206,26 +206,28 @@ Return Value:
             Status = CdFsdPostRequest( IrpContext, Irp );
         }
 
-    } _SEH2_EXCEPT(CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() )) {
+    } except(CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
 
         //
         //  We had some trouble trying to perform the verify or raised
         //  an error ourselves.  So we'll abort the I/O request with
-        //  the error status that we get back from the exception code.
+        //  the error status that we get back from the execption code.
         //
 
-        Status = CdProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
-    } _SEH2_END;
+        Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
+    }
 
     return Status;
 }
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 CdCheckForDismount (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN BOOLEAN Force
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb,
+    _In_ BOOLEAN Force
     )
 
 /*++
@@ -345,14 +347,17 @@ Return Value:
 
         CdReleaseVcb( IrpContext, Vcb );
     }
+    else {
+        _Analysis_assume_lock_not_held_(Vcb->VcbResource);
+    }
 
     return VcbPresent;
 }
 
 
 BOOLEAN
-CdMarkDevForVerifyIfVcbMounted(
-    IN PVCB Vcb
+CdMarkDevForVerifyIfVcbMounted (
+    _Inout_ PVCB Vcb
     )
 
 /*++
@@ -378,7 +383,8 @@ Return Value:
     KIRQL SavedIrql;
 
     IoAcquireVpbSpinLock( &SavedIrql );
-    
+
+#pragma prefast(suppress: 28175, "this is a filesystem driver, touching the vpb is allowed")
     if (Vcb->Vpb->RealDevice->Vpb == Vcb->Vpb)  {
 
         CdMarkRealDevForVerify( Vcb->Vpb->RealDevice);
@@ -401,8 +407,8 @@ Return Value:
 
 VOID
 CdVerifyVcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb
     )
 
 /*++
@@ -431,7 +437,6 @@ Return Value:
     ULONG MediaChangeCount = 0;
     BOOLEAN ForceVerify = FALSE;
     BOOLEAN DevMarkedForVerify;
-    //KIRQL SavedIrql; /* ReactOS Change: GCC Unused variable */
 
     PAGED_CODE();
 
@@ -444,17 +449,24 @@ Return Value:
         ((Vcb->VcbCondition == VcbDismountInProgress) && 
          (IrpContext->MajorFunction != IRP_MJ_CREATE))) {
 
-        CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
+        if (FlagOn( Vcb->VcbState, VCB_STATE_DISMOUNTED )) {
+
+            CdRaiseStatus( IrpContext, STATUS_VOLUME_DISMOUNTED );
+
+        } else {
+
+            CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
+        }
     }
     
-    if (FlagOn( Vcb->VcbState, VCB_STATE_REMOVABLE_MEDIA ))  {
+    //
+    //  Capture the real device verify state.
+    //
+    
+    DevMarkedForVerify = CdRealDevNeedsVerify( Vcb->Vpb->RealDevice);
+    
+    if (FlagOn( Vcb->VcbState, VCB_STATE_REMOVABLE_MEDIA ) && !DevMarkedForVerify) {
         
-        //
-        //  Capture the real device verify state.
-        //
-        
-        DevMarkedForVerify = CdRealDevNeedsVerify( Vcb->Vpb->RealDevice);
-
         //
         //  If the media is removable and the verify volume flag in the
         //  device object is not set then we want to ping the device
@@ -534,7 +546,7 @@ Return Value:
         //  since they were directed at the 'drive',  not our volume.
         //
 
-        if (NT_SUCCESS( Status) && !ForceVerify && 
+        if (NT_SUCCESS( Status) && !ForceVerify && !DevMarkedForVerify &&
             (IrpContext->MajorFunction == IRP_MJ_CREATE))  {
 
             PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( IrpContext->Irp);
@@ -548,18 +560,20 @@ Return Value:
             //  it would have been caught and set by the first set of checks.
             //
         }
+    }
 
-        //
-        //  Raise the verify / error if necessary.
-        //
-        
-        if (ForceVerify || !NT_SUCCESS( Status)) {
-
-            IoSetHardErrorOrVerifyDevice( IrpContext->Irp,
-                                          Vcb->Vpb->RealDevice );
-           
-            CdRaiseStatus( IrpContext, ForceVerify ? STATUS_VERIFY_REQUIRED : Status);
-        }
+    //
+    //  Raise the verify / error if neccessary.
+    //
+    
+    if (ForceVerify || DevMarkedForVerify || !NT_SUCCESS( Status)) {
+    
+        IoSetHardErrorOrVerifyDevice( IrpContext->Irp,
+                                      Vcb->Vpb->RealDevice );
+       
+        CdRaiseStatus( IrpContext, (ForceVerify || DevMarkedForVerify) 
+                                   ? STATUS_VERIFY_REQUIRED 
+                                   : Status);
     }
 
     //
@@ -577,21 +591,25 @@ Return Value:
         break;
 
     case VcbInvalid:
-    case VcbDismountInProgress :
+    case VcbDismountInProgress:
 
-        CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
+        if (FlagOn( Vcb->VcbState, VCB_STATE_DISMOUNTED )) {
+
+            CdRaiseStatus( IrpContext, STATUS_VOLUME_DISMOUNTED );
+
+        } else {
+
+            CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
+        }
         break;
-        
-    /* ReactOS Change: GCC "enumeration value not handled in switch" */
-    default: break;
     }
 }
 
 
 BOOLEAN
 CdVerifyFcbOperation (
-    IN PIRP_CONTEXT IrpContext OPTIONAL,
-    IN PFCB Fcb
+    _In_opt_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb
     )
 
 /*++
@@ -616,7 +634,6 @@ Return Value:
 --*/
 
 {
-    //NTSTATUS Status = STATUS_SUCCESS; /* ReactOS Change: GCC Unused variable */
     PVCB Vcb = Fcb->Vcb;
     PDEVICE_OBJECT RealDevice = Vcb->Vpb->RealDevice;
     PIRP Irp;
@@ -668,7 +685,14 @@ Return Value:
 
         if (ARGUMENT_PRESENT( IrpContext )) {
 
-            CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
+            if (FlagOn( Vcb->VcbState, VCB_STATE_DISMOUNTED )) {
+
+                CdRaiseStatus( IrpContext, STATUS_VOLUME_DISMOUNTED );
+
+            } else {
+            
+                CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
+            }
         }
 
         return FALSE;
@@ -715,23 +739,22 @@ Return Value:
 
     } else if (Vcb->VcbCondition == VcbNotMounted) {
 
-        if (ARGUMENT_PRESENT( IrpContext )) {
+        IoSetHardErrorOrVerifyDevice( IrpContext->Irp, RealDevice );
+        CdRaiseStatus( IrpContext, STATUS_WRONG_VOLUME );
 
-            IoSetHardErrorOrVerifyDevice( IrpContext->Irp, RealDevice );
-            CdRaiseStatus( IrpContext, STATUS_WRONG_VOLUME );
-        }
-
-        return FALSE;
+//        return FALSE; // unreachable code
     }
 
     return TRUE;
 }
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 CdDismountVcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb
     )
 
 /*++
@@ -772,7 +795,7 @@ Return Value:
     //  We should only take this path once.
     //
 
-    ASSERT( Vcb->VcbCondition != VcbDismountInProgress );
+    NT_ASSERT( Vcb->VcbCondition != VcbDismountInProgress );
 
     //
     //  Mark the Vcb as DismountInProgress.
@@ -858,6 +881,7 @@ Return Value:
     //  mount request.
     //
 
+#pragma prefast(suppress: 28175, "this is a filesystem driver, touching the vpb is allowed")
     if (OldVpb->RealDevice->Vpb == OldVpb) {
 
         //
@@ -868,13 +892,16 @@ Return Value:
 
         if (!FinalReference) {
 
-            ASSERT( Vcb->SwapVpb != NULL );
+            NT_ASSERT( Vcb->SwapVpb != NULL );
 
             Vcb->SwapVpb->Type = IO_TYPE_VPB;
             Vcb->SwapVpb->Size = sizeof( VPB );
-            Vcb->SwapVpb->RealDevice = OldVpb->RealDevice;
 
+#pragma prefast(push)
+#pragma prefast(disable: 28175, "this is a filesystem driver, touching the vpb is allowed")
+            Vcb->SwapVpb->RealDevice = OldVpb->RealDevice;
             Vcb->SwapVpb->RealDevice->Vpb = Vcb->SwapVpb;
+#pragma prefast(pop)
 
             Vcb->SwapVpb->Flags = FlagOn( OldVpb->Flags, VPB_REMOVE_PENDING );
 

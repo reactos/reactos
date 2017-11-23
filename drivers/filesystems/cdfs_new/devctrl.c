@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -26,12 +26,14 @@ Abstract:
 //  Local support routines
 //
 
+//  Tell prefast this is a completion routine
+IO_COMPLETION_ROUTINE CdDevCtrlCompletionRoutine;
+
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDevCtrlCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Contxt
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_reads_opt_(_Inexpressible_("varies")) PVOID Contxt
     );
 
 #ifdef ALLOC_PRAGMA
@@ -41,8 +43,8 @@ CdDevCtrlCompletionRoutine (
 
 NTSTATUS
 CdCommonDevControl (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -64,8 +66,6 @@ Return Value:
 
     PIO_STACK_LOCATION IrpSp;
     PIO_STACK_LOCATION NextIrpSp;
-
-//    PVOID TargetBuffer = NULL; /* ReactOS Change: GCC unused variable */
 
     PAGED_CODE();
 
@@ -172,11 +172,10 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDevCtrlCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Contxt
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_reads_opt_(_Inexpressible_("varies")) PVOID Contxt
     )
 
 {

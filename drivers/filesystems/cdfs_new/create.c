@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -26,73 +26,84 @@ Abstract:
 //  Local support routines
 //
 
+_When_(RelatedTypeOfOpen != UnopenedFileObject, _At_(RelatedCcb, _In_))
+_When_(RelatedTypeOfOpen == UnopenedFileObject, _At_(RelatedCcb, _In_opt_))
+_When_(RelatedTypeOfOpen != UnopenedFileObject, _At_(RelatedFileName, _In_))
+_When_(RelatedTypeOfOpen == UnopenedFileObject, _At_(RelatedFileName, _In_opt_))
 NTSTATUS
 CdNormalizeFileNames (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN BOOLEAN OpenByFileId,
-    IN BOOLEAN IgnoreCase,
-    IN TYPE_OF_OPEN RelatedTypeOfOpen,
-    IN PCCB RelatedCcb OPTIONAL,
-    IN PUNICODE_STRING RelatedFileName OPTIONAL,
-    IN OUT PUNICODE_STRING FileName,
-    IN OUT PCD_NAME RemainingName
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ BOOLEAN OpenByFileId,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ TYPE_OF_OPEN RelatedTypeOfOpen,
+    PCCB RelatedCcb,
+    PUNICODE_STRING RelatedFileName,
+    _Inout_ PUNICODE_STRING FileName,
+    _Inout_ PCD_NAME RemainingName
     );
 
+_Requires_lock_held_(_Global_critical_region_)
+_Acquires_exclusive_lock_((*CurrentFcb)->FcbNonpaged->FcbResource)
 NTSTATUS
 CdOpenByFileId (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PVCB Vcb,
-    IN OUT PFCB *CurrentFcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB *CurrentFcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdOpenExistingFcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN OUT PFCB *CurrentFcb,
-    IN TYPE_OF_OPEN TypeOfOpen,
-    IN BOOLEAN IgnoreCase,
-    IN PCCB RelatedCcb OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _Inout_ PFCB *CurrentFcb,
+    _In_ TYPE_OF_OPEN TypeOfOpen,
+    _In_ BOOLEAN IgnoreCase,
+    _In_opt_ PCCB RelatedCcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
+_Acquires_lock_((*CurrentFcb)->FcbNonpaged->FcbResource)
 NTSTATUS
 CdOpenDirectoryFromPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PVCB Vcb,
-    IN OUT PFCB *CurrentFcb,
-    IN PCD_NAME DirName,
-    IN BOOLEAN IgnoreCase,
-    IN BOOLEAN ShortNameMatch,
-    IN PPATH_ENTRY PathEntry,
-    IN BOOLEAN PerformUserOpen,
-    IN PCCB RelatedCcb OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB *CurrentFcb,
+    _In_ PCD_NAME DirName,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ BOOLEAN ShortNameMatch,
+    _In_ PPATH_ENTRY PathEntry,
+    _In_ BOOLEAN PerformUserOpen,
+    _In_opt_ PCCB RelatedCcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdOpenFileFromFileContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PVCB Vcb,
-    IN OUT PFCB *CurrentFcb,
-    IN PCD_NAME FileName,
-    IN BOOLEAN IgnoreCase,
-    IN BOOLEAN ShortNameMatch,
-    IN PFILE_ENUM_CONTEXT FileContext,
-    IN PCCB RelatedCcb OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB *CurrentFcb,
+    _In_ PCD_NAME FileName,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ BOOLEAN ShortNameMatch,
+    _In_ PFILE_ENUM_CONTEXT FileContext,
+    _In_opt_ PCCB RelatedCcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCompleteFcbOpen (
-    IN PIRP_CONTEXT IrpContext,
-    PIO_STACK_LOCATION IrpSp,
-    IN PVCB Vcb,
-    IN OUT PFCB *CurrentFcb,
-    IN TYPE_OF_OPEN TypeOfOpen,
-    IN ULONG UserCcbFlags,
-    IN ACCESS_MASK DesiredAccess
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB *CurrentFcb,
+    _In_ TYPE_OF_OPEN TypeOfOpen,
+    _In_ ULONG UserCcbFlags,
+    _In_ ACCESS_MASK DesiredAccess
     );
 
 #ifdef ALLOC_PRAGMA
@@ -106,10 +117,12 @@ CdCompleteFcbOpen (
 #endif
 
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
+#pragma prefast(suppress:26165, "Esp:1153")
 CdCommonCreate (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -155,10 +168,10 @@ Return Value:
 
     PFILE_OBJECT FileObject;
 
-    COMPOUND_PATH_ENTRY CompoundPathEntry;
+    COMPOUND_PATH_ENTRY CompoundPathEntry = {0};
     BOOLEAN CleanupCompoundPathEntry = FALSE;
 
-    FILE_ENUM_CONTEXT FileContext;
+    FILE_ENUM_CONTEXT FileContext = {0};
     BOOLEAN CleanupFileContext = FALSE;
     BOOLEAN FoundEntry;
 
@@ -216,9 +229,9 @@ Return Value:
     PUNICODE_STRING FileName;
     PUNICODE_STRING RelatedFileName = NULL;
 
-    CD_NAME RemainingName;
+    CD_NAME RemainingName = {0};
     CD_NAME FinalName;
-    PCD_NAME MatchingName;
+    PCD_NAME MatchingName = NULL;
 
     PAGED_CODE();
 
@@ -258,6 +271,18 @@ Return Value:
         CdCompleteRequest( IrpContext, Irp, STATUS_ACCESS_DENIED );
         return STATUS_ACCESS_DENIED;
     }
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    //
+    //  CDFS does not support FILE_OPEN_REQUIRING_OPLOCK
+    //
+
+    if (FlagOn( IrpSp->Parameters.Create.Options, FILE_OPEN_REQUIRING_OPLOCK )) {
+
+        CdCompleteRequest( IrpContext, Irp, STATUS_INVALID_PARAMETER );
+        return STATUS_INVALID_PARAMETER;
+    }
+#endif
 
     //
     //  Copy the Vcb to a local.  Assume the starting directory is the root.
@@ -357,7 +382,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Verify that the Vcb is not in an unusable condition.  This routine
@@ -901,7 +926,7 @@ Return Value:
                                                         RelatedCcb ));
 
     try_exit:  NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         //
         //  Cleanup the PathEntry if initialized.
@@ -926,15 +951,16 @@ Return Value:
         //  condition.
         //
 
-        if (_SEH2_AbnormalTermination()) {
+        if (AbnormalTermination()) {
 
 
             //
             //  In the error path we start by calling our teardown routine if we
-            //  have a CurrentFcb.
+            //  have a CurrentFcb and its not the volume Dasd Fcb.
             //
 
-            if (CurrentFcb != NULL) {
+            if ((CurrentFcb != NULL) &&
+                (CurrentFcb != Vcb->VolumeDasdFcb)) {
 
                 BOOLEAN RemovedFcb;
 
@@ -969,7 +995,7 @@ Return Value:
         //
 
         if (CurrentFcb != NULL) {
-
+            _Analysis_assume_lock_held_(CurrentFcb->FcbNonpaged->FcbResource);
             CdReleaseFcb( IrpContext, CurrentFcb );
         }
 
@@ -985,7 +1011,7 @@ Return Value:
         //
 
         CdCompleteRequest( IrpContext, Irp, Status );
-    } _SEH2_END;
+    }
 
     return Status;
 }
@@ -994,18 +1020,21 @@ Return Value:
 //
 //  Local support routine
 //
-
+_When_(RelatedTypeOfOpen != UnopenedFileObject, _At_(RelatedCcb, _In_))
+_When_(RelatedTypeOfOpen == UnopenedFileObject, _At_(RelatedCcb, _In_opt_))
+_When_(RelatedTypeOfOpen != UnopenedFileObject, _At_(RelatedFileName, _In_))
+_When_(RelatedTypeOfOpen == UnopenedFileObject, _At_(RelatedFileName, _In_opt_))
 NTSTATUS
 CdNormalizeFileNames (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN BOOLEAN OpenByFileId,
-    IN BOOLEAN IgnoreCase,
-    IN TYPE_OF_OPEN RelatedTypeOfOpen,
-    IN PCCB RelatedCcb OPTIONAL,
-    IN PUNICODE_STRING RelatedFileName OPTIONAL,
-    IN OUT PUNICODE_STRING FileName,
-    IN OUT PCD_NAME RemainingName
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ BOOLEAN OpenByFileId,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ TYPE_OF_OPEN RelatedTypeOfOpen,
+    PCCB RelatedCcb,
+    PUNICODE_STRING RelatedFileName,
+    _Inout_ PUNICODE_STRING FileName,
+    _Inout_ PCD_NAME RemainingName
     )
 
 /*++
@@ -1048,7 +1077,7 @@ Return Value:
 --*/
 
 {
-    ULONG RemainingNameLength;
+    ULONG RemainingNameLength = 0;
     ULONG RelatedNameLength = 0;
     ULONG SeparatorLength = 0;
 
@@ -1319,8 +1348,10 @@ Return Value:
             //
             //  Do a quick check to make sure there are no wildcards.
             //
-
+#pragma prefast(push)
+#pragma prefast(suppress:26000, "RemainingName->FileName.Buffer = FileName.Buffer + (RelatedNameLength + SeparatorLength); FileName.MaximumLength < (RelatedNameLength + SeparatorLength + RemainingNameLength).")
             if (FsRtlDoesNameContainWildCards( &RemainingName->FileName )) {
+#pragma prefast(pop)
 
                 return STATUS_OBJECT_NAME_INVALID;
             }
@@ -1422,7 +1453,10 @@ Return Value:
         }
     }
 
+#pragma prefast(push)
+#pragma prefast(suppress:26030, "RemainingName->FileName.Buffer = FileName.Buffer + (RelatedNameLength + SeparatorLength); FileName.MaximumLength < (RelatedNameLength + SeparatorLength + RemainingNameLength).")
     return STATUS_SUCCESS;
+#pragma prefast(pop)
 }
 
 
@@ -1430,12 +1464,14 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
+_Acquires_exclusive_lock_((*CurrentFcb)->FcbNonpaged->FcbResource)
 NTSTATUS
 CdOpenByFileId (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PVCB Vcb,
-    IN OUT PFCB *CurrentFcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB *CurrentFcb
     )
 
 /*++
@@ -1492,7 +1528,7 @@ Return Value:
     FILE_ENUM_CONTEXT FileContext;
     BOOLEAN CleanupFileContext = FALSE;
 
-    COMPOUND_PATH_ENTRY CompoundPathEntry;
+    COMPOUND_PATH_ENTRY CompoundPathEntry = {0};
     BOOLEAN CleanupCompoundPathEntry = FALSE;
 
     FILE_ID FileId;
@@ -1512,7 +1548,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Go ahead and figure out the TypeOfOpen and NodeType.  We can
@@ -1722,10 +1758,7 @@ Return Value:
                 //  the Fcb with the size from the self entry.
                 //
 
-                if (NextFcb->FileObject == NULL) {
-
-                    CdCreateInternalStream( IrpContext, Vcb, NextFcb );
-                }
+                CdVerifyOrCreateDirStreamFile( IrpContext, NextFcb);
 
                 //
                 //  If our offset is beyond the end of the directory then the
@@ -1883,6 +1916,9 @@ Return Value:
 
         *CurrentFcb = NextFcb;
 
+        // Lock object is acquired using internal state
+        _Analysis_suppress_lock_checking_(NextFcb->FcbNonpaged->FcbResource);
+
         //
         //  Check the requested access on this Fcb.
         //
@@ -1902,10 +1938,11 @@ Return Value:
                                         TypeOfOpen,
                                         CCB_FLAG_OPEN_BY_ID,
                                         IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
+
         }
 
     try_exit:  NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         if (UnlockVcb) {
 
@@ -1921,7 +1958,7 @@ Return Value:
 
             CdCleanupCompoundPathEntry( IrpContext, &CompoundPathEntry );
         }
-    } _SEH2_END;
+    }
 
     return Status;
 }
@@ -1931,14 +1968,15 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdOpenExistingFcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN OUT PFCB *CurrentFcb,
-    IN TYPE_OF_OPEN TypeOfOpen,
-    IN BOOLEAN IgnoreCase,
-    IN PCCB RelatedCcb OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _Inout_ PFCB *CurrentFcb,
+    _In_ TYPE_OF_OPEN TypeOfOpen,
+    _In_ BOOLEAN IgnoreCase,
+    _In_opt_ PCCB RelatedCcb
     )
 
 /*++
@@ -2032,18 +2070,20 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
+_Acquires_lock_((*CurrentFcb)->FcbNonpaged->FcbResource)
 NTSTATUS
 CdOpenDirectoryFromPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PVCB Vcb,
-    IN OUT PFCB *CurrentFcb,
-    IN PCD_NAME DirName,
-    IN BOOLEAN IgnoreCase,
-    IN BOOLEAN ShortNameMatch,
-    IN PPATH_ENTRY PathEntry,
-    IN BOOLEAN PerformUserOpen,
-    IN PCCB RelatedCcb OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB *CurrentFcb,
+    _In_ PCD_NAME DirName,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ BOOLEAN ShortNameMatch,
+    _In_ PPATH_ENTRY PathEntry,
+    _In_ BOOLEAN PerformUserOpen,
+    _In_opt_ PCCB RelatedCcb
     )
 
 /*++
@@ -2106,7 +2146,7 @@ Return Value:
     PFCB NextFcb;
     PFCB ParentFcb = NULL;
 
-    NTSTATUS Status = STATUS_SUCCESS; /* ReactOS Change: GCC uninitialized variable */
+    NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
 
@@ -2126,7 +2166,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Check the related Ccb to see if this was an OpenByFileId.
@@ -2207,6 +2247,9 @@ Return Value:
 
         ParentFcb = *CurrentFcb;
         *CurrentFcb = NextFcb;
+        
+        // Lock object is acquired using internal state
+        _Analysis_suppress_lock_checking_(NextFcb->FcbNonpaged->FcbResource);
 
         //
         //  Store this name into the prefix table for the parent.
@@ -2281,7 +2324,7 @@ Return Value:
                                         IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
         }
 
-    } _SEH2_FINALLY {
+    } finally {
 
         //
         //  Unlock the Vcb if held.
@@ -2300,7 +2343,7 @@ Return Value:
 
             CdReleaseFcb( IrpContext, ParentFcb );
         }
-    } _SEH2_END;
+    }
 
     return Status;
 }
@@ -2310,17 +2353,18 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdOpenFileFromFileContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PVCB Vcb,
-    IN OUT PFCB *CurrentFcb,
-    IN PCD_NAME FileName,
-    IN BOOLEAN IgnoreCase,
-    IN BOOLEAN ShortNameMatch,
-    IN PFILE_ENUM_CONTEXT FileContext,
-    IN PCCB RelatedCcb OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB *CurrentFcb,
+    _In_ PCD_NAME FileName,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ BOOLEAN ShortNameMatch,
+    _In_ PFILE_ENUM_CONTEXT FileContext,
+    _In_opt_ PCCB RelatedCcb
     )
 
 /*++
@@ -2380,7 +2424,7 @@ Return Value:
     PFCB NextFcb;
     PFCB ParentFcb = NULL;
 
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
 
@@ -2399,7 +2443,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Check if a version number was used to open this file.
@@ -2554,6 +2598,7 @@ Return Value:
         //  Release the parent Fcb at this point.
         //
 
+        _Analysis_assume_same_lock_(ParentFcb->FcbNonpaged->FcbResource, NextFcb->FcbNonpaged->FcbResource);
         CdReleaseFcb( IrpContext, ParentFcb );
         ParentFcb = NULL;
 
@@ -2569,7 +2614,7 @@ Return Value:
                                     CcbFlags,
                                     IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
 
-    } _SEH2_FINALLY {
+    } finally {
 
         //
         //  Unlock the Vcb if held.
@@ -2588,7 +2633,7 @@ Return Value:
 
             CdReleaseFcb( IrpContext, ParentFcb );
         }
-    } _SEH2_END;
+    }
 
     return Status;
 }
@@ -2598,15 +2643,16 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCompleteFcbOpen (
-    IN PIRP_CONTEXT IrpContext,
-    PIO_STACK_LOCATION IrpSp,
-    IN PVCB Vcb,
-    IN OUT PFCB *CurrentFcb,
-    IN TYPE_OF_OPEN TypeOfOpen,
-    IN ULONG UserCcbFlags,
-    IN ACCESS_MASK DesiredAccess
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB *CurrentFcb,
+    _In_ TYPE_OF_OPEN TypeOfOpen,
+    _In_ ULONG UserCcbFlags,
+    _In_ ACCESS_MASK DesiredAccess
     )
 
 /*++
@@ -2745,7 +2791,7 @@ Return Value:
 
             IrpContext->TeardownFcb = CurrentFcb;
 
-            if (FsRtlCurrentBatchOplock( &Fcb->Oplock )) {
+            if (FsRtlCurrentBatchOplock( CdGetFcbOplock(Fcb) )) {
 
                 //
                 //  We remember if a batch oplock break is underway for the
@@ -2754,11 +2800,11 @@ Return Value:
 
                 Information = FILE_OPBATCH_BREAK_UNDERWAY;
 
-                OplockStatus = FsRtlCheckOplock( &Fcb->Oplock,
+                OplockStatus = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                                  IrpContext->Irp,
                                                  IrpContext,
-                                                 (PVOID)CdOplockComplete,   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
-                                                 (PVOID)CdPrePostIrp );   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                                 CdOplockComplete,
+                                                 CdPrePostIrp );
 
                 if (OplockStatus == STATUS_PENDING) {
 
@@ -2786,11 +2832,11 @@ Return Value:
             //  file.
             //
 
-            OplockStatus = FsRtlCheckOplock( &Fcb->Oplock,
+            OplockStatus = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                              IrpContext->Irp,
                                              IrpContext,
-                                             (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
-                                             (PVOID)CdPrePostIrp );/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                             CdOplockComplete,
+                                             CdPrePostIrp );
 
             if (OplockStatus == STATUS_PENDING) {
 

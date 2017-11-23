@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -26,36 +26,45 @@ Abstract:
 //  Local support routines
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdQueryFsVolumeInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_FS_VOLUME_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_VOLUME_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 NTSTATUS
 CdQueryFsSizeInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_FS_SIZE_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_SIZE_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 NTSTATUS
 CdQueryFsDeviceInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_FS_DEVICE_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_DEVICE_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 NTSTATUS
 CdQueryFsAttributeInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    );
+
+NTSTATUS
+CdQueryFsSectorSizeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_writes_bytes_(*Length) PFILE_FS_SECTOR_SIZE_INFORMATION Buffer,
+    _Inout_ PULONG Length
     );
 
 #ifdef ALLOC_PRAGMA
@@ -64,13 +73,15 @@ CdQueryFsAttributeInfo (
 #pragma alloc_text(PAGE, CdQueryFsDeviceInfo)
 #pragma alloc_text(PAGE, CdQueryFsSizeInfo)
 #pragma alloc_text(PAGE, CdQueryFsVolumeInfo)
+#pragma alloc_text(PAGE, CdQueryFsSectorSizeInfo)
 #endif
 
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonQueryVolInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -130,7 +141,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Verify the Vcb.
@@ -166,25 +177,29 @@ Return Value:
 
             Status = CdQueryFsAttributeInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
             break;
-                
-        /* ReactOS Change: GCC "enumeration value not handled in switch" */
-        default: break;
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+        case FileFsSectorSizeInformation:
+
+            Status = CdQueryFsSectorSizeInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
+            break;
+#endif
         }
-        
+
         //
         //  Set the information field to the number of bytes actually filled in
         //
 
         Irp->IoStatus.Information = IrpSp->Parameters.QueryVolume.Length - Length;
 
-    } _SEH2_FINALLY {
+    } finally {
 
         //
         //  Release the Vcb.
         //
 
         CdReleaseVcb( IrpContext, Fcb->Vcb );
-    } _SEH2_END;
+    }
 
     //
     //  Complete the request if we didn't raise.
@@ -200,12 +215,13 @@ Return Value:
 //  Local support routine
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdQueryFsVolumeInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_FS_VOLUME_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_VOLUME_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -222,7 +238,7 @@ Arguments:
         is to be returned
 
     Length - Supplies the length of the buffer in byte.  This variable
-        upon return receives the remaining bytes free in the buffer
+        upon return recieves the remaining bytes free in the buffer
 
 Return Value:
 
@@ -236,6 +252,8 @@ Return Value:
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     //
     //  Fill in the data from the Vcb.
@@ -292,10 +310,10 @@ Return Value:
 
 NTSTATUS
 CdQueryFsSizeInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_FS_SIZE_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_SIZE_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -312,7 +330,7 @@ Arguments:
         is to be returned
 
     Length - Supplies the length of the buffer in byte.  This variable
-        upon return receives the remaining bytes free in the buffer
+        upon return recieves the remaining bytes free in the buffer
 
 Return Value:
 
@@ -322,6 +340,8 @@ Return Value:
 
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     //
     //  Fill in the output buffer.
@@ -353,10 +373,10 @@ Return Value:
 
 NTSTATUS
 CdQueryFsDeviceInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_FS_DEVICE_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_DEVICE_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -373,7 +393,7 @@ Arguments:
         is to be returned
 
     Length - Supplies the length of the buffer in byte.  This variable
-        upon return receives the remaining bytes free in the buffer
+        upon return recieves the remaining bytes free in the buffer
 
 Return Value:
 
@@ -383,6 +403,8 @@ Return Value:
 
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     //
     //  Update the output buffer.
@@ -411,10 +433,10 @@ Return Value:
 
 NTSTATUS
 CdQueryFsAttributeInfo (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
-    IN OUT PULONG Length
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_ PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
+    _Inout_ PULONG Length
     )
 
 /*++
@@ -431,7 +453,7 @@ Arguments:
         is to be returned
 
     Length - Supplies the length of the buffer in byte.  This variable
-        upon return receives the remaining bytes free in the buffer
+        upon return recieves the remaining bytes free in the buffer
 
 Return Value:
 
@@ -446,12 +468,15 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( Vcb );
+
     //
     //  Fill out the fixed portion of the buffer.
     //
 
     Buffer->FileSystemAttributes = FILE_CASE_SENSITIVE_SEARCH |
-				   FILE_READ_ONLY_VOLUME;
+                                   FILE_READ_ONLY_VOLUME |
+                                   FILE_SUPPORTS_OPEN_BY_FILE_ID;
 
     if (FlagOn( IrpContext->Vcb->VcbState, VCB_STATE_JOLIET )) {
 
@@ -502,4 +527,72 @@ Return Value:
 
     return Status;
 }
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+
+NTSTATUS
+CdQueryFsSectorSizeInfo (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Out_writes_bytes_(*Length) PFILE_FS_SECTOR_SIZE_INFORMATION Buffer,
+    _Inout_ PULONG Length
+    )
+
+/*++
+
+Routine Description:
+
+    This routine implements the query sector size information call
+    This operation will work on any handle and requires no privilege.
+
+Arguments:
+
+    Vcb - Supplies the Vcb being queried
+
+    Buffer - Supplies a pointer to the output buffer where the information
+        is to be returned
+
+    Length - Supplies the length of the buffer in byte.  This variable
+        upon return receives the remaining bytes free in the buffer
+
+Return Value:
+
+    NTSTATUS - Returns the status for the query
+
+--*/
+
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+    UNREFERENCED_PARAMETER( IrpContext );
+
+    //
+    //  Sufficient buffer size is guaranteed by the I/O manager or the
+    //  originating kernel mode driver.
+    //
+
+    ASSERT( *Length >= sizeof( FILE_FS_SECTOR_SIZE_INFORMATION ));
+    _Analysis_assume_( *Length >= sizeof( FILE_FS_SECTOR_SIZE_INFORMATION ));
+
+    //
+    //  Retrieve the sector size information
+    //
+
+    Status = FsRtlGetSectorSizeInformation( Vcb->Vpb->RealDevice,
+                                            Buffer );
+
+    //
+    //  Adjust the length variable
+    //
+
+    if (NT_SUCCESS( Status )) {
+
+        *Length -= sizeof( FILE_FS_SECTOR_SIZE_INFORMATION );
+    }
+
+    return Status;
+}
+
+#endif
 

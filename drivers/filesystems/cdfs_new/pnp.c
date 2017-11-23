@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -22,40 +22,50 @@ Abstract:
 
 #define BugCheckFileId                   (CDFS_BUG_CHECK_PNP)
 
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_nonreentrant_lock_(CdData.DataResource)
 NTSTATUS
 CdPnpQueryRemove (
-    PIRP_CONTEXT IrpContext,
-    PIRP Irp,
-    PVCB Vcb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _Inout_ PVCB Vcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_nonreentrant_lock_(CdData.DataResource)
 NTSTATUS
 CdPnpRemove (
-    PIRP_CONTEXT IrpContext,
-    PIRP Irp,
-    PVCB Vcb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _Inout_ PVCB Vcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_nonreentrant_lock_(CdData.DataResource)
 NTSTATUS
 CdPnpSurpriseRemove (
-    PIRP_CONTEXT IrpContext,
-    PIRP Irp,
-    PVCB Vcb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _Inout_ PVCB Vcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_nonreentrant_lock_(CdData.DataResource)
 NTSTATUS
 CdPnpCancelRemove (
-    PIRP_CONTEXT IrpContext,
-    PIRP Irp,
-    PVCB Vcb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _Inout_ PVCB Vcb
     );
 
+//  Tell prefast this is a completion routine.
+IO_COMPLETION_ROUTINE CdPnpCompletionRoutine;
+
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPnpCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Contxt
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_reads_opt_(_Inexpressible_("varies")) PVOID Contxt
     );
 
 #ifdef ALLOC_PRAGMA
@@ -66,11 +76,11 @@ CdPnpCompletionRoutine (
 #pragma alloc_text(PAGE, CdPnpSurpriseRemove)
 #endif
 
-
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonPnp (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -91,13 +101,18 @@ Return Value:
 --*/
 
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN PassThrough = FALSE;
     
     PIO_STACK_LOCATION IrpSp;
 
     PVOLUME_DEVICE_OBJECT OurDeviceObject;
     PVCB Vcb;
+
+    PAGED_CODE();
+
+    // Global lock object is acquired based on internal book-keeping
+    _Analysis_suppress_lock_checking_(CdData.DataResource);
 
     //
     //  Get the current Irp stack location.
@@ -126,7 +141,8 @@ Return Value:
     //  object.  If it isn't, we need to get out before we try to reference some
     //  field that takes us past the end of an ordinary device object.    
     //
-    
+
+#pragma prefast(suppress: 28175, "this is a filesystem driver, touching the size member is allowed")
     if (OurDeviceObject->DeviceObject.Size != sizeof(VOLUME_DEVICE_OBJECT) ||
         NodeType( &OurDeviceObject->Vcb ) != CDFS_NTC_VCB) {
         
@@ -215,12 +231,13 @@ Return Value:
     return Status;
 }
 
-
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_nonreentrant_lock_(CdData.DataResource)
 NTSTATUS
 CdPnpQueryRemove (
-    PIRP_CONTEXT IrpContext,
-    PIRP Irp,
-    PVCB Vcb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _Inout_ PVCB Vcb
     )
 
 /*++
@@ -250,6 +267,8 @@ Return Value:
     NTSTATUS Status;
     KEVENT Event;
     BOOLEAN VcbPresent = TRUE;
+
+    PAGED_CODE();
 
     ASSERT_EXCLUSIVE_CDDATA;
 
@@ -326,7 +345,7 @@ Return Value:
 
         if (Status == STATUS_PENDING) {
 
-            KeWaitForSingleObject( &Event,
+            (VOID)KeWaitForSingleObject( &Event,
                                    Executive,
                                    KernelMode,
                                    FALSE,
@@ -343,7 +362,7 @@ Return Value:
         //  Since we were able to lock the volume, we are guaranteed to
         //  move this volume into dismount state and disconnect it from
         //  the underlying storage stack.  The force on our part is actually
-        //  unnecessary, though complete.
+        //  unnecesary, though complete.
         //
         //  What is not strictly guaranteed, though, is that the closes
         //  for the metadata streams take effect synchronously underneath
@@ -355,7 +374,7 @@ Return Value:
             
             VcbPresent = CdCheckForDismount( IrpContext, Vcb, TRUE );
     
-            ASSERT( !VcbPresent || Vcb->VcbCondition == VcbDismountInProgress );
+            NT_ASSERT( !VcbPresent || Vcb->VcbCondition == VcbDismountInProgress );
         }
 
         //
@@ -372,7 +391,7 @@ Return Value:
         //
         //  The reason this is the case is that handles/fileobjects place a reference
         //  on the device objects they overly.  In the filesystem case, these references
-        //  are on our target devices.  PnP correctly thinks that if references remain
+        //  are on our target devices.  PnP correcly thinks that if references remain
         //  on the device objects in the stack that someone has a handle, and that this
         //  counts as a reason to not succeed the query - even though every interrogated
         //  driver thinks that it is OK.
@@ -392,11 +411,14 @@ Return Value:
 
         CdReleaseVcb( IrpContext, Vcb );
     }
+    else {
+        _Analysis_assume_lock_not_held_(Vcb->VcbResource);
+    }
 
     CdReleaseCdData( IrpContext );
     
     //
-    //  Cleanup our IrpContext and complete the IRP if necessary.
+    //  Cleanup our IrpContext and complete the IRP if neccesary.
     //
 
     CdCompleteRequest( IrpContext, Irp, Status );
@@ -404,12 +426,13 @@ Return Value:
     return Status;
 }
 
-
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_nonreentrant_lock_(CdData.DataResource)
 NTSTATUS
 CdPnpRemove (
-    PIRP_CONTEXT IrpContext,
-    PIRP Irp,
-    PVCB Vcb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _Inout_ PVCB Vcb
     )
 
 /*++
@@ -438,6 +461,8 @@ Return Value:
     KEVENT Event;
     BOOLEAN VcbPresent = TRUE;
 
+    PAGED_CODE();
+
     ASSERT_EXCLUSIVE_CDDATA;
 
     //
@@ -447,7 +472,7 @@ Return Value:
     //  (the only case in which this will be the first warning).
     //
     //  Note that it is entirely unlikely that we will be around
-    //  for a REMOVE in the first two cases, as we try to initiate
+    //  for a REMOVE in the first two cases, as we try to intiate
     //  dismount.
     //
     
@@ -516,7 +541,7 @@ Return Value:
 
     if (Status == STATUS_PENDING) {
 
-        KeWaitForSingleObject( &Event,
+        (VOID)KeWaitForSingleObject( &Event,
                                Executive,
                                KernelMode,
                                FALSE,
@@ -528,7 +553,7 @@ Return Value:
     //
     //  Now make our dismount happen.  This may not vaporize the
     //  Vcb, of course, since there could be any number of handles
-    //  outstanding if we were not preceded by a QUERY.
+    //  outstanding if we were not preceeded by a QUERY.
     //
     //  PnP will take care of disconnecting this stack if we
     //  couldn't get off of it immediately.
@@ -545,6 +570,9 @@ Return Value:
 
         CdReleaseVcb( IrpContext, Vcb );
     }
+    else {
+        _Analysis_assume_lock_not_held_(Vcb->VcbResource);
+    }
 
     CdReleaseCdData( IrpContext );
     
@@ -557,12 +585,13 @@ Return Value:
     return Status;
 }
 
-
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_nonreentrant_lock_(CdData.DataResource)
 NTSTATUS
 CdPnpSurpriseRemove (
-    PIRP_CONTEXT IrpContext,
-    PIRP Irp,
-    PVCB Vcb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _Inout_ PVCB Vcb
     )
 
 /*++
@@ -596,6 +625,8 @@ Return Value:
     NTSTATUS Status;
     KEVENT Event;
     BOOLEAN VcbPresent = TRUE;
+
+    PAGED_CODE();
 
     ASSERT_EXCLUSIVE_CDDATA;
     
@@ -654,7 +685,7 @@ Return Value:
 
     if (Status == STATUS_PENDING) {
 
-        KeWaitForSingleObject( &Event,
+        (VOID)KeWaitForSingleObject( &Event,
                                Executive,
                                KernelMode,
                                FALSE,
@@ -680,6 +711,9 @@ Return Value:
 
         CdReleaseVcb( IrpContext, Vcb );
     }
+    else {
+        _Analysis_assume_lock_not_held_(Vcb->VcbResource);
+    }
 
     CdReleaseCdData( IrpContext );
     
@@ -692,12 +726,13 @@ Return Value:
     return Status;
 }
 
-
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_nonreentrant_lock_(CdData.DataResource)
 NTSTATUS
 CdPnpCancelRemove (
-    PIRP_CONTEXT IrpContext,
-    PIRP Irp,
-    PVCB Vcb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _Inout_ PVCB Vcb
     )
 
 /*++
@@ -723,6 +758,8 @@ Return Value:
 
 {
     NTSTATUS Status;
+
+    PAGED_CODE();
 
     ASSERT_EXCLUSIVE_CDDATA;
 
@@ -775,20 +812,21 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPnpCompletionRoutine (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Contxt
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_reads_opt_(_Inexpressible_("varies")) PVOID Contxt
     )
 {
     PKEVENT Event = (PKEVENT) Contxt;
+    _Analysis_assume_(Contxt != NULL);
 
     KeSetEvent( Event, 0, FALSE );
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 
     UNREFERENCED_PARAMETER( DeviceObject );
+    UNREFERENCED_PARAMETER( Irp );
     UNREFERENCED_PARAMETER( Contxt );
 }
 

@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -33,8 +33,8 @@ Abstract:
 
 NTSTATUS
 CdCommonLockControl (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -86,10 +86,10 @@ Return Value:
     //  This call might post the irp for us.
     //
 
-    Status = FsRtlCheckOplock( &Fcb->Oplock,
+    Status = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                Irp,
                                IrpContext,
-                               (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                               CdOplockComplete,
                                NULL );
 
     //
@@ -138,17 +138,16 @@ Return Value:
 
 
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastLock (
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN PLARGE_INTEGER Length,
-    PEPROCESS ProcessId,
-    ULONG Key,
-    BOOLEAN FailImmediately,
-    BOOLEAN ExclusiveLock,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ PLARGE_INTEGER Length,
+    _In_ PEPROCESS ProcessId,
+    _In_ ULONG Key,
+    _In_ BOOLEAN FailImmediately,
+    _In_ BOOLEAN ExclusiveLock,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
     )
 
 /*++
@@ -192,6 +191,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( DeviceObject );
+
     ASSERT_FILE_OBJECT( FileObject );
 
     IoStatus->Information = 0;
@@ -224,13 +225,13 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
         //
 
-        if ((Fcb->Oplock != NULL) && !FsRtlOplockIsFastIoPossible( &Fcb->Oplock )) {
+        if (!FsRtlOplockIsFastIoPossible( CdGetFcbOplock(Fcb) )) {
 
             try_return( NOTHING );
         }
@@ -247,18 +248,19 @@ Return Value:
         //
         //  Now call the FsRtl routine to perform the lock request.
         //
-        /* ReactOS Change: GCC "suggest parentheses around assignment used as truth value" */
+
+#pragma prefast(suppress: 28159, "prefast thinks this is an obsolete routine, but it is ok for CDFS to use it")
         if ((Results = FsRtlFastLock( Fcb->FileLock,
-                                     FileObject,
-                                     FileOffset,
-                                     Length,
-                                     ProcessId,
-                                     Key,
-                                     FailImmediately,
-                                     ExclusiveLock,
-                                     IoStatus,
-                                     NULL,
-                                     FALSE ))) {
+                                      FileObject,
+                                      FileOffset,
+                                      Length,
+                                      ProcessId,
+                                      Key,
+                                      FailImmediately,
+                                      ExclusiveLock,
+                                      IoStatus,
+                                      NULL,
+                                      FALSE )) != FALSE) {
 
             //
             //  Set the flag indicating if Fast I/O is questionable.  We
@@ -275,25 +277,24 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         FsRtlExitFileSystem();
-    } _SEH2_END;
+    }
 
     return Results;
 }
 
 
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockSingle (
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN PLARGE_INTEGER Length,
-    PEPROCESS ProcessId,
-    ULONG Key,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ PLARGE_INTEGER Length,
+    _In_ PEPROCESS ProcessId,
+    _In_ ULONG Key,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
     )
 
 /*++
@@ -330,6 +331,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( DeviceObject );
+    
     IoStatus->Information = 0;
 
     //
@@ -366,13 +369,13 @@ Return Value:
 
     FsRtlEnterFileSystem();
 
-    _SEH2_TRY {
+    try {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
         //
 
-        if ((Fcb->Oplock != NULL) && !FsRtlOplockIsFastIoPossible( &Fcb->Oplock )) {
+        if (!FsRtlOplockIsFastIoPossible( CdGetFcbOplock(Fcb) )) {
 
             try_return( NOTHING );
         }
@@ -416,22 +419,21 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         FsRtlExitFileSystem();
-    } _SEH2_END;
+    }
 
     return Results;
 }
 
 
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAll (
-    IN PFILE_OBJECT FileObject,
-    PEPROCESS ProcessId,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PEPROCESS ProcessId,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
     )
 
 /*++
@@ -462,6 +464,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( DeviceObject );
+    
     IoStatus->Information = 0;
 
     //
@@ -498,13 +502,13 @@ Return Value:
 
     FsRtlEnterFileSystem();
 
-    _SEH2_TRY {
+    try {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
         //
 
-        if ((Fcb->Oplock != NULL) && !FsRtlOplockIsFastIoPossible( &Fcb->Oplock )) {
+        if (!FsRtlOplockIsFastIoPossible( CdGetFcbOplock(Fcb) )) {
 
             try_return( NOTHING );
         }
@@ -539,23 +543,22 @@ Return Value:
         CdUnlockFcb( IrpContext, Fcb );
 
     try_exit:  NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         FsRtlExitFileSystem();
-    } _SEH2_END;
+    }
 
     return Results;
 }
 
 
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAllByKey (
-    IN PFILE_OBJECT FileObject,
-    PVOID ProcessId,
-    ULONG Key,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PVOID ProcessId,
+    _In_ ULONG Key,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject
     )
 
 /*++
@@ -588,6 +591,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( DeviceObject );
+    
     IoStatus->Information = 0;
 
     //
@@ -624,13 +629,13 @@ Return Value:
 
     FsRtlEnterFileSystem();
 
-    _SEH2_TRY {
+    try {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
         //
 
-        if ((Fcb->Oplock != NULL) && !FsRtlOplockIsFastIoPossible( &Fcb->Oplock )) {
+        if (!FsRtlOplockIsFastIoPossible( CdGetFcbOplock(Fcb) )) {
 
             try_return( NOTHING );
         }
@@ -666,10 +671,10 @@ Return Value:
         CdUnlockFcb( IrpContext, Fcb );
 
     try_exit:  NOTHING;
-    } _SEH2_FINALLY {
+    } finally {
 
         FsRtlExitFileSystem();
-    } _SEH2_END;
+    }
 
     return Results;
 }
