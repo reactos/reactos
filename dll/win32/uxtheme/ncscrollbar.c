@@ -215,16 +215,18 @@ static void SCROLL_DrawInterior( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
         return;
     }
 
+    /* Some themes have different bitmaps for the upper and lower tracks  
+       It seems that windows use the bitmap for the lower track in the upper track */
     if (vertical)
     { 
         rcPart = r;
         rcPart.bottom = thumbPos;
-        SCROLL_ThemeDrawPart(pcontext, SBP_UPPERTRACKVERT, BUTTON_NORMAL, psbi, SCROLL_TOP_RECT, htDown, htHot, &rcPart);
+        SCROLL_ThemeDrawPart(pcontext, SBP_LOWERTRACKVERT, BUTTON_NORMAL, psbi, SCROLL_TOP_RECT, htDown, htHot, &rcPart);
         r.top = rcPart.bottom;
 
         rcPart = r;
         rcPart.top += psbi->xyThumbBottom - psbi->xyThumbTop;
-        SCROLL_ThemeDrawPart(pcontext, SBP_LOWERTRACKVERT, BUTTON_NORMAL, psbi, SCROLL_BOTTOM_RECT, htDown, htHot, &rcPart); 
+        SCROLL_ThemeDrawPart(pcontext, SBP_UPPERTRACKVERT, BUTTON_NORMAL, psbi, SCROLL_BOTTOM_RECT, htDown, htHot, &rcPart); 
         r.bottom = rcPart.top;
 
         SCROLL_ThemeDrawPart(pcontext, SBP_THUMBBTNVERT, BUTTON_NORMAL, psbi, SCROLL_THUMB, htDown, htHot, &r); 
@@ -234,12 +236,12 @@ static void SCROLL_DrawInterior( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
     {
         rcPart = r;
         rcPart.right = thumbPos;
-        SCROLL_ThemeDrawPart(pcontext, SBP_UPPERTRACKHORZ, BUTTON_NORMAL, psbi, SCROLL_TOP_RECT, htDown, htHot, &rcPart);
+        SCROLL_ThemeDrawPart(pcontext, SBP_LOWERTRACKHORZ, BUTTON_NORMAL, psbi, SCROLL_TOP_RECT, htDown, htHot, &rcPart);
         r.left = rcPart.right;
 
         rcPart = r;
         rcPart.left += psbi->xyThumbBottom - psbi->xyThumbTop;
-        SCROLL_ThemeDrawPart(pcontext, SBP_LOWERTRACKHORZ, BUTTON_NORMAL, psbi, SCROLL_BOTTOM_RECT, htDown, htHot, &rcPart);
+        SCROLL_ThemeDrawPart(pcontext, SBP_UPPERTRACKHORZ, BUTTON_NORMAL, psbi, SCROLL_BOTTOM_RECT, htDown, htHot, &rcPart);
         r.right = rcPart.left;
 
         SCROLL_ThemeDrawPart(pcontext, SBP_THUMBBTNHORZ, BUTTON_NORMAL, psbi, SCROLL_THUMB, htDown, htHot, &r);
