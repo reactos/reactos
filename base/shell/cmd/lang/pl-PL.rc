@@ -147,7 +147,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributy]] plik ...\n\n\
          A     Archiwa\n\
          H     Ukryte\n\
          -     przedrostek NIE\n"
-    STRING_DEL_HELP2 "Wszystkie pliki w tym katalogu zostaną skasowane!\nCzy jesteś pewien (T/N)?"
+    STRING_DEL_HELP2 "Wszystkie pliki w tym katalogu zostaną skasowane!\nCzy jesteś pewien (T/N)? "
     STRING_DEL_HELP3 "    %lu plik skasowany\n"
     STRING_DEL_HELP4 "    %lu pliki(-ów) skasowane(-ych)\n"
     STRING_DELAY_HELP "Pauzuje na n sekund lub milisekund.\n\
@@ -383,8 +383,8 @@ REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] 
     STRING_REPLACE_HELP6 "Zamieniony %s\n"
     STRING_REPLACE_HELP7 "Nie dodano nowych plików\n"
     STRING_REPLACE_HELP8 "Dodano %lu plik(i/ów)\n"
-    STRING_REPLACE_HELP9 "Czy dodać %s (T/N) "
-    STRING_REPLACE_HELP10 "Czy zamienić %s (T/N) "
+    STRING_REPLACE_HELP9 "Czy dodać %s (T/N)? "
+    STRING_REPLACE_HELP10 "Czy zamienić %s (T/N)? "
     STRING_REPLACE_HELP11 "Dodawanie %s\n"
     STRING_SHIFT_HELP "Zmienia pozycję parametru w pliku wsadowym.\n\n\
 SHIFT [DOWN]"
@@ -507,7 +507,7 @@ title         nowy tytuł okna\n"
     STRING_COPY_ERROR4 "Błąd: Nie zaimplementowano!\n"
     STRING_DATE_ERROR "Data nieprawidłowa."
     STRING_DEL_ERROR5 "Plik %s zostanie skasowany! "
-    STRING_DEL_ERROR6 "Czy jesteś pewien (T/N)?"
+    STRING_DEL_ERROR6 "Czy jesteś pewien (T/N)? "
     STRING_DEL_ERROR7 "Kasowanie: %s\n"
     STRING_ERROR_ERROR1 "Nieznany błąd! Kod błędu: 0x%lx\n"
     STRING_ERROR_ERROR2 "Błąd składni"

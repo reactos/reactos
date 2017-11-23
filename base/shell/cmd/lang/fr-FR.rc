@@ -147,8 +147,7 @@ ERASE [/N /P /T /Q /W /Y /Z] fichier ...\n\n\
         A     Fichiers archivables\n\
         H     Fichiers cachés\n\
         -     préfixe signifiant ne pas\n"
-    STRING_DEL_HELP2 "Tous les fichiers du répertoire seront effacés!\n\
-Etes vous sûr(e) (O/N) ?"
+    STRING_DEL_HELP2 "Tous les fichiers du répertoire seront effacés!\n\Etes vous sûr(e) (O/N) ? "
     STRING_DEL_HELP3 "    %lu fichier effacé\n"
     STRING_DEL_HELP4 "    %lu fichiers effacés\n"
     STRING_DELAY_HELP "Attend pendant n secondes ou millisecondes.\n\
@@ -395,8 +394,8 @@ REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/P] [/R] [/S] [/W
     STRING_REPLACE_HELP6 "Remplace %s\n"
     STRING_REPLACE_HELP7 "Aucun fichier ajouté\n"
     STRING_REPLACE_HELP8 "%lu fichier(s) ajouté(s)\n"
-    STRING_REPLACE_HELP9 "Ajouter %s (Y/N) "
-    STRING_REPLACE_HELP10 "Remplacer %s (Y/N) "
+    STRING_REPLACE_HELP9 "Ajouter %s (O/N) ? "
+    STRING_REPLACE_HELP10 "Remplacer %s (O/N) ? "
     STRING_REPLACE_HELP11 "Ajoute %s\n"
     STRING_SHIFT_HELP "Change la position de paramètres remplaçables dans un fichier batch.\n\n\
 SHIFT [DOWN]"
@@ -520,7 +519,7 @@ titre         titre de la fenêtre"
     STRING_COPY_ERROR4 "Erreur : Non implémenté actuellement !\n"
     STRING_DATE_ERROR "Date invalide."
     STRING_DEL_ERROR5 "Le fichier %s va être effacé ! "
-    STRING_DEL_ERROR6 "Etes vous sûr (O/N) ?"
+    STRING_DEL_ERROR6 "Etes vous sûr (O/N) ? "
     STRING_DEL_ERROR7 "Efface : %s\n"
     STRING_ERROR_ERROR1 "Erreur inconnue! Code d'erreur : 0x%lx\n"
     STRING_ERROR_ERROR2 "Erreur de syntaxe"

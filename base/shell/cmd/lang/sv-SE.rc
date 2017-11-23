@@ -139,7 +139,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attribut]] fil ...\n\n\
         A     Arkiv filer\n\
         H     Dolda filer\n\
         -     prefiks som betyder INTE. (f.eks -R)\n"
-    STRING_DEL_HELP2 "Alla filer i mappen kommer att bli raderade!\nÄr du säker (J/N)?"
+    STRING_DEL_HELP2 "Alla filer i mappen kommer att bli raderade!\nÄr du säker (J/N)? "
     STRING_DEL_HELP3 "    %lu fil raderade\n"
     STRING_DEL_HELP4 "    %lu filer raderade\n"
     STRING_DELAY_HELP "Paus i n sekunder eller mikrosekunder.\n\
@@ -377,8 +377,8 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP6 "Replace %s\n"
     STRING_REPLACE_HELP7 "No files added\n"
     STRING_REPLACE_HELP8 "%lu file(s) added\n"
-    STRING_REPLACE_HELP9 "Add %s (Y/N) "
-    STRING_REPLACE_HELP10 "Replace %s (Y/N) "
+    STRING_REPLACE_HELP9 "Add %s (Y/N)? "
+    STRING_REPLACE_HELP10 "Replace %s (Y/N)? "
     STRING_REPLACE_HELP11 "Adding %s\n"
     STRING_SHIFT_HELP "Ändra posisjon for erstattelig parameter i et satsvis fil.\n\n\
 SHIFT [NED]"
@@ -501,7 +501,7 @@ tittel        ny tittel\n"
     STRING_COPY_ERROR4 "Feil: Inte implementert enda!\n"
     STRING_DATE_ERROR "Ugyldig dato."
     STRING_DEL_ERROR5 "Filen %s vil bli slettet! "
-    STRING_DEL_ERROR6 "Er du sikker (J/N)?"
+    STRING_DEL_ERROR6 "Er du sikker (J/N)? "
     STRING_DEL_ERROR7 "Sletter: %s\n"
     STRING_ERROR_ERROR1 "Ukjent feil! Feilkode: 0x%lx\n"
     STRING_ERROR_ERROR2 "Syntaks feil"

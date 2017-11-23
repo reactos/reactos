@@ -143,7 +143,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
         A     Arkivat\n\
         H     Të fshehur\n\
         -     kuptimi parashtesë nuk\n"
-    STRING_DEL_HELP2 "Të gjitha dokumentet në skedare do të fshihen!\nJeni i sigurtë (P/J)?"
+    STRING_DEL_HELP2 "Të gjitha dokumentet në skedare do të fshihen!\nJeni i sigurtë (P/J)? "
     STRING_DEL_HELP3 "    %lu u fshi\n"
     STRING_DEL_HELP4 "    %lu u fshinë\n"
     STRING_DELAY_HELP "Pauzë për sekonda ose milisekonda.\n\
@@ -382,8 +382,8 @@ REPLACE [drive1:][rrugë1]emri [drive2:][rrugë2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP6 "Zëvendësoh %s\n"
     STRING_REPLACE_HELP7 "S'ka dokumentat te shtuar\n"
     STRING_REPLACE_HELP8 "%lu dokumenta(t) u shtuan\n"
-    STRING_REPLACE_HELP9 "Shto %s (P/J) "
-    STRING_REPLACE_HELP10 "Zëvendëso %s (P/J) "
+    STRING_REPLACE_HELP9 "Shto %s (P/J)? "
+    STRING_REPLACE_HELP10 "Zëvendëso %s (P/J)? "
     STRING_REPLACE_HELP11 "Shtim %s\n"
     STRING_SHIFT_HELP "Ndryshon pozitën e parametrave në një dokument batch.\n\n\
 SHIFT [DOWN]"
@@ -507,7 +507,7 @@ title         titull i ri\n"
     STRING_COPY_ERROR4 "Error: Akoma nuk është implementuar!\n"
     STRING_DATE_ERROR "Date Invalid."
     STRING_DEL_ERROR5 "Dokumenti %s do të fshihet! "
-    STRING_DEL_ERROR6 "Jeni të sigurtë (P/J))?"
+    STRING_DEL_ERROR6 "Jeni të sigurtë (P/J)? "
     STRING_DEL_ERROR7 "Fshini: %s\n"
     STRING_ERROR_ERROR1 "Error i paditur! Kodi error: 0x%lx\n"
     STRING_ERROR_ERROR2 "Error sintaksi"

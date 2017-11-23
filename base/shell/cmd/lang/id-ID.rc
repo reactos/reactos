@@ -141,7 +141,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
         A     File Bisa Diarsipkan\n\
         H     File Tersembunyi\n\
         -     prefiks berarti tidak\n"
-    STRING_DEL_HELP2 "Semua file dalam direktori akan dihapus!\nAnda yakin (Y/T)?"
+    STRING_DEL_HELP2 "Semua file dalam direktori akan dihapus!\nAnda yakin (Y/T)? "
     STRING_DEL_HELP3 "    %lu file dihapus\n"
     STRING_DEL_HELP4 "    %lu file dihapus\n"
     STRING_DELAY_HELP "Menunda n detik atau milidetik.\n\
@@ -379,8 +379,8 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP6 "Replace %s\n"
     STRING_REPLACE_HELP7 "No files added\n"
     STRING_REPLACE_HELP8 "%lu file(s) added\n"
-    STRING_REPLACE_HELP9 "Add %s (Y/N) "
-    STRING_REPLACE_HELP10 "Replace %s (Y/N) "
+    STRING_REPLACE_HELP9 "Add %s (Y/N)? "
+    STRING_REPLACE_HELP10 "Replace %s (Y/N)? "
     STRING_REPLACE_HELP11 "Adding %s\n"
     STRING_SHIFT_HELP "Mengubah posisi parameter yang bisa diganti dalam file batch.\n\n\
 SHIFT [DOWN]"
@@ -502,7 +502,7 @@ title         judul baru\n"
     STRING_COPY_ERROR4 "Salah: Belum diimplementasikan!\n"
     STRING_DATE_ERROR "Tanggal tidak benar."
     STRING_DEL_ERROR5 "File %s akan dihapus! "
-    STRING_DEL_ERROR6 "Anda yakin (Y/N)?"
+    STRING_DEL_ERROR6 "Anda yakin (Y/N)? "
     STRING_DEL_ERROR7 "Menghapus: %s\n"
     STRING_ERROR_ERROR1 "Kesalahan tidak dikenal! Kode kesalahan: 0x%lx\n"
     STRING_ERROR_ERROR2 "Sintaks salah"

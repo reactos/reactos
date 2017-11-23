@@ -150,7 +150,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]атрибути]] iмена_файлiв ..
         A     Файли для архiвування\n\
         H     Прихованi файли\n\
         Префiкс ""-"" означає НЕ\n"
-    STRING_DEL_HELP2 "Всi файли в каталозi будуть видалннi!\nВи впевненi (Y/N)?"
+    STRING_DEL_HELP2 "Всi файли в каталозi будуть видалннi!\nВи впевненi (Y/N)? "
     STRING_DEL_HELP3 "    %lu файл видалено\n"
     STRING_DEL_HELP4 "    %lu файлiв видалено\n"
     STRING_DELAY_HELP "Пауза на n секунд чи мiлiсекунд.\n\
@@ -388,8 +388,8 @@ REPLACE [диск1:][шлях1]iм'я_файлу [диск2:][шлях2] [/P] [/
     STRING_REPLACE_HELP6 "Замiнити %s\n"
     STRING_REPLACE_HELP7 "Не додано жодних файлiв\n"
     STRING_REPLACE_HELP8 "%lu файл(iв) додано\n"
-    STRING_REPLACE_HELP9 "Додати %s (Y/N) "
-    STRING_REPLACE_HELP10 "Замiнити %s (Y/N) "
+    STRING_REPLACE_HELP9 "Додати %s (Y/N)? "
+    STRING_REPLACE_HELP10 "Замiнити %s (Y/N)? "
     STRING_REPLACE_HELP11 "Додавання %s\n"
     STRING_SHIFT_HELP "Змiна позицiї пiдставлюваних параметрiв для пакетного файлу.\n\n\
 SHIFT [DOWN]"
@@ -513,7 +513,7 @@ title         новий заголовок\n"
     STRING_COPY_ERROR4 "Помилка: Ще не реалiзовано!\n"
     STRING_DATE_ERROR "Невiрна дата."
     STRING_DEL_ERROR5 "Файл %s буде видалений! "
-    STRING_DEL_ERROR6 "Ви впевненi (Y/N)?"
+    STRING_DEL_ERROR6 "Ви впевненi (Y/N)? "
     STRING_DEL_ERROR7 "Видалення: %s\n"
     STRING_ERROR_ERROR1 "Невiдома помилка! Код помилки: 0x%lx\n"
     STRING_ERROR_ERROR2 "Синтаксична помилка"

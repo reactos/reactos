@@ -138,7 +138,7 @@ ERASE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\n\
   /W          Sicheres Löschen. Dateien werden mit Zufallszahlen überschrieben, bevor sie gelöscht werden.\n\
   /Y          Löscht alles (*.*) ohne Vorwarnung.\n\
   /Z          Löscht versteckte, schreibgeschützte und Systemdateien.\n"
-    STRING_DEL_HELP2 "Alle Dateien in diesem Verzeichnis werden gelöscht!\nSind Sie sich sicher (J/N)?"
+    STRING_DEL_HELP2 "Alle Dateien in diesem Verzeichnis werden gelöscht!\nSind Sie sich sicher (J/N) ?"
     STRING_DEL_HELP3 "    %lu Datei(en) gelöscht\n"
     STRING_DEL_HELP4 "    %lu Datei(en) gelöscht\n"
     STRING_DELAY_HELP "Pause für n Sekunden oder Millisekunden.\n\
@@ -375,8 +375,8 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
     STRING_REPLACE_HELP6 "Ersetze %s\n"
     STRING_REPLACE_HELP7 "Keine Dateien hinzugefügt\n"
     STRING_REPLACE_HELP8 "%lu Datei(en) hinzugefügt\n"
-    STRING_REPLACE_HELP9 "Füge %s hinzu (J/N) "
-    STRING_REPLACE_HELP10 "Ersetze %s (J/N) "
+    STRING_REPLACE_HELP9 "Füge %s hinzu (J/N)? "
+    STRING_REPLACE_HELP10 "Ersetze %s (J/N)? "
     STRING_REPLACE_HELP11 "Füge %s hinzu\n"
     STRING_SHIFT_HELP "Verändert die Position ersetzbarer Parameter in einem Batchprogramm.\n\n\
 SHIFT [DOWN]"
@@ -502,7 +502,7 @@ Titel         neuer Titel"
     STRING_COPY_ERROR4 "Fehler: Noch nicht implementiert!\n"
     STRING_DATE_ERROR "Ungültiges Datum."
     STRING_DEL_ERROR5 "Die Datei %s wird gelöscht! "
-    STRING_DEL_ERROR6 "Sind Sie sicher (J/N)?"
+    STRING_DEL_ERROR6 "Sind Sie sicher (J/N)? "
     STRING_DEL_ERROR7 "Löschen: %s\n"
     STRING_ERROR_ERROR1 "Unbekannter Fehler! Fehlernummer: 0x%lx\n"
     STRING_ERROR_ERROR2 "Syntax-Fehler"

@@ -142,7 +142,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]öz nitelikler]] kütük ...\n\n\
         A     Belgeliklenebilir kütükler\n\
         H     Gizli kütükler\n\
         -     değil anlamına gelen ön ek\n"
-    STRING_DEL_HELP2 "Dizindeki tüm kütükler silinecek!\nEmin misiniz (Y/N)?"
+    STRING_DEL_HELP2 "Dizindeki tüm kütükler silinecek!\nEmin misiniz (Y/N)? "
     STRING_DEL_HELP3 "    %lu kütük silindi\n"
     STRING_DEL_HELP4 "    %lu kütük silindi\n"
     STRING_DELAY_HELP "n sâniye ya da milisâniye duraklat.\n\
@@ -384,8 +384,8 @@ REPLACE [sürücü1:][yol1]kütük adı [sürücü2:][yol2] [/P] [/R] [/S] [/W] 
     STRING_REPLACE_HELP6 "%s değiştir\n"
     STRING_REPLACE_HELP7 "Bir kütük eklenmedi\n"
     STRING_REPLACE_HELP8 "%lu kütük eklendi\n"
-    STRING_REPLACE_HELP9 "Ekle %s (E/H) "
-    STRING_REPLACE_HELP10 "Değiştir %s (E/H) "
+    STRING_REPLACE_HELP9 "Ekle %s (E/H)? "
+    STRING_REPLACE_HELP10 "Değiştir %s (E/H)? "
     STRING_REPLACE_HELP11 "%s ekleniyor\n"
     STRING_SHIFT_HELP "Bir toplu iş kütüğünde yerleri değiştirilebilir değişkenlerin konumunu değiştirir.\n\n\
 SHIFT [DOWN]"
@@ -508,7 +508,7 @@ başlık        Yeni başlık\n"
     STRING_COPY_ERROR4 "Yanlışlık: Daha bitirilmedi!\n"
     STRING_DATE_ERROR "Geçersiz târih."
     STRING_DEL_ERROR5 "%s kütüğü silinecek! "
-    STRING_DEL_ERROR6 "Emin misiniz (E/H)?"
+    STRING_DEL_ERROR6 "Emin misiniz (E/H)? "
     STRING_DEL_ERROR7 "Siliniyor: %s\n"
     STRING_ERROR_ERROR1 "Bilinmeyen yanlışlık! Yanlışlık kodu: 0x%lx\n"
     STRING_ERROR_ERROR2 "Yazım yanlışlığı"

@@ -141,7 +141,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]atributos]] archivo ...\n\n\
         A     Archivos listos para archivar\n\
         H     Archivos ocultos\n\
         -     Prefijo que signifca sin\n"
-    STRING_DEL_HELP2 "¡Todos los archivos del directorio van a ser borrados!\n¿Estás seguro? (S/N)?"
+    STRING_DEL_HELP2 "¡Todos los archivos del directorio van a ser borrados!\n¿Estás seguro (S/N)? "
     STRING_DEL_HELP3 "    Archivo %lu borrado\n"
     STRING_DEL_HELP4 "    Archivos %lu borrados\n"
     STRING_DELAY_HELP "Espera por n segundos o milisegundos.\n\
@@ -381,8 +381,8 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP6 "Reemplazar %s\n"
     STRING_REPLACE_HELP7 "No files added\n"
     STRING_REPLACE_HELP8 "%lu archivo(s) añadidos\n"
-    STRING_REPLACE_HELP9 "Añadir %s (S/N) "
-    STRING_REPLACE_HELP10 "Reemplazar %s (S/N) "
+    STRING_REPLACE_HELP9 "Añadir %s (S/N)? "
+    STRING_REPLACE_HELP10 "Reemplazar %s (S/N)? "
     STRING_REPLACE_HELP11 "Añadiendo %s\n"
     STRING_SHIFT_HELP "Cambia la posición de los parámetros remplazables en un \n\
 archivo por lotes.\n\n\
@@ -507,7 +507,7 @@ title         Nuevo título\n"
     STRING_COPY_ERROR4 "Error: ¡No implementado aún!\n"
     STRING_DATE_ERROR "Fecha incorrecta."
     STRING_DEL_ERROR5 "¡El archivo %s va a ser borrado!"
-    STRING_DEL_ERROR6 "¿Estás seguro (S/N)?"
+    STRING_DEL_ERROR6 "¿Estás seguro (S/N)? "
     STRING_DEL_ERROR7 "Borrando: %s\n"
     STRING_ERROR_ERROR1 "¡Error desconocido! Códige de error: 0x%lx\n"
     STRING_ERROR_ERROR2 "Error de sintaxsis"
