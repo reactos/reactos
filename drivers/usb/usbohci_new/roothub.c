@@ -518,8 +518,6 @@ OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
            OhciExtension,
            Port);
 
-    ASSERT(Port >= 0);
-
     OperationalRegs = OhciExtension->OperationalRegs;
 
     if (Port)
