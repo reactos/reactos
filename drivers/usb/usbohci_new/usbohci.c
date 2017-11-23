@@ -1175,7 +1175,6 @@ OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
 
     DPRINT_OHCI("OHCI_MapTransferToTD: TransferedLen - %x\n", TransferedLen);
 
-
     for (SgIdx = 0; SgIdx < SGList->SgElementCount; SgIdx++)
     {
         SgElement = &SGList->SgElement[SgIdx];
@@ -1598,13 +1597,12 @@ MPSTATUS
 NTAPI
 OHCI_SubmitTransfer(IN PVOID ohciExtension,
                     IN PVOID ohciEndpoint,
-                    IN PVOID transferParameters,
+                    IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
                     IN PVOID ohciTransfer,
                     IN PVOID sgList)
 {
     POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
-    PUSBPORT_TRANSFER_PARAMETERS TransferParameters = transferParameters;
     POHCI_TRANSFER OhciTransfer = ohciTransfer;
     PUSBPORT_SCATTER_GATHER_LIST SGList = sgList;
     ULONG TransferType;
@@ -1644,7 +1642,7 @@ MPSTATUS
 NTAPI
 OHCI_SubmitIsoTransfer(IN PVOID ohciExtension,
                        IN PVOID ohciEndpoint,
-                       IN PVOID transferParameters,
+                       IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
                        IN PVOID ohciTransfer,
                        IN PVOID isoParameters)
 {
