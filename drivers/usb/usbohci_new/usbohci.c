@@ -1599,12 +1599,11 @@ OHCI_SubmitTransfer(IN PVOID ohciExtension,
                     IN PVOID ohciEndpoint,
                     IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
                     IN PVOID ohciTransfer,
-                    IN PVOID sgList)
+                    IN PUSBPORT_SCATTER_GATHER_LIST SGList)
 {
     POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
     POHCI_TRANSFER OhciTransfer = ohciTransfer;
-    PUSBPORT_SCATTER_GATHER_LIST SGList = sgList;
     ULONG TransferType;
 
     DPRINT_OHCI("OHCI_SubmitTransfer: ... \n");
