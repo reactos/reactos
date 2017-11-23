@@ -1006,7 +1006,7 @@ OHCI_HardwarePresent(IN POHCI_EXTENSION OhciExtension,
     OperationalRegs = OhciExtension->OperationalRegs;
     CommandStatusReg = (PULONG)&OperationalRegs->HcCommandStatus;
 
-    if (READ_REGISTER_ULONG(CommandStatusReg) != -1)
+    if (READ_REGISTER_ULONG(CommandStatusReg) != 0xFFFFFFFF)
     {
         return TRUE;
     }
