@@ -731,7 +731,7 @@ OHCI_StartController(IN PVOID ohciExtension,
          ix < OHCI_NUMBER_OF_INTERRUPTS;
          ix++, jx++)
     {
-        static UCHAR Balance[OHCI_NUMBER_OF_INTERRUPTS] =
+        static const UCHAR Balance[OHCI_NUMBER_OF_INTERRUPTS] =
         {0, 16, 8, 24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30, 
          1, 17, 9, 25, 5, 21, 13, 29, 3, 19, 11, 27, 7, 23, 15, 31};
 
