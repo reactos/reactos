@@ -170,7 +170,7 @@ USBPORT_RootHubClassCommand(IN PDEVICE_OBJECT FdoDevice,
         case USB_REQUEST_CLEAR_FEATURE:
             Feature = SetupPacket->wValue.W;
 
-            if ((SetupPacket->bmRequestType.Recipient) != USBPORT_RECIPIENT_ROOT_PORT)
+            if ((SetupPacket->bmRequestType.Recipient) != USBPORT_RECIPIENT_PORT)
             {
                 if (Feature == FEATURE_C_HUB_LOCAL_POWER)
                 {
@@ -242,7 +242,7 @@ USBPORT_RootHubClassCommand(IN PDEVICE_OBJECT FdoDevice,
             break;
 
         case USB_REQUEST_SET_FEATURE:
-            if (SetupPacket->bmRequestType.Recipient != USBPORT_RECIPIENT_ROOT_PORT)
+            if (SetupPacket->bmRequestType.Recipient != USBPORT_RECIPIENT_PORT)
             {
                 return RHStatus;
             }

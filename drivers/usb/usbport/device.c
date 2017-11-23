@@ -1524,7 +1524,7 @@ USBPORT_RestoreDevice(IN PDEVICE_OBJECT FdoDevice,
     PUSBPORT_DEVICE_EXTENSION  FdoExtension;
     PLIST_ENTRY iHandleList;
     PUSBPORT_ENDPOINT Endpoint;
-    ULONG EndpointRequirements[2] = {0};
+    USBPORT_ENDPOINT_REQUIREMENTS EndpointRequirements = {0};
     USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
     NTSTATUS Status = STATUS_SUCCESS;
     USBD_STATUS USBDStatus;
@@ -1707,7 +1707,7 @@ USBPORT_RestoreDevice(IN PDEVICE_OBJECT FdoDevice,
 
                         Packet->QueryEndpointRequirements(FdoExtension->MiniPortExt,
                                                           &Endpoint->EndpointProperties,
-                                                          EndpointRequirements);
+                                                          &EndpointRequirements);
 
                         KeReleaseSpinLock(&FdoExtension->MiniportSpinLock,
                                           OldIrql);

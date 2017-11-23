@@ -64,6 +64,70 @@ typedef struct _USBPORT_RESOURCES {
 
 C_ASSERT(sizeof(USBPORT_RESOURCES) == 24 + 7 * sizeof(PVOID));
 
+typedef struct _USBPORT_ENDPOINT_PROPERTIES {
+  USHORT DeviceAddress;
+  USHORT EndpointAddress;
+  USHORT TotalMaxPacketSize; // TransactionPerMicroframe * MaxPacketSize
+  UCHAR Period;
+  UCHAR Reserved1;
+  USB_DEVICE_SPEED DeviceSpeed;
+  ULONG UsbBandwidth;
+  ULONG ScheduleOffset;
+  ULONG TransferType;
+  ULONG Direction;
+  ULONG_PTR BufferVA;
+  ULONG_PTR BufferPA;
+  ULONG BufferLength;
+  ULONG Reserved3;
+  ULONG MaxTransferSize;
+  USHORT HubAddr;
+  USHORT PortNumber;
+  UCHAR InterruptScheduleMask;
+  UCHAR SplitCompletionMask;
+  UCHAR TransactionPerMicroframe; // 1 + additional transactions. Total: from 1 to 3)
+  UCHAR Reserved4;
+  ULONG MaxPacketSize;
+  ULONG Reserved6;
+} USBPORT_ENDPOINT_PROPERTIES, *PUSBPORT_ENDPOINT_PROPERTIES;
+
+C_ASSERT(sizeof(USBPORT_ENDPOINT_PROPERTIES) == 48 + 4 * sizeof(PVOID));
+
+typedef struct _USBPORT_TRANSFER_PARAMETERS {
+  ULONG TransferFlags;
+  ULONG TransferBufferLength;
+  ULONG TransferCounter;
+  BOOL IsTransferSplited;
+  ULONG Reserved2;
+  USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
+} USBPORT_TRANSFER_PARAMETERS, *PUSBPORT_TRANSFER_PARAMETERS;
+
+C_ASSERT(sizeof(USBPORT_TRANSFER_PARAMETERS) == 28);
+
+typedef struct _USBPORT_SCATTER_GATHER_ELEMENT {
+  PHYSICAL_ADDRESS SgPhysicalAddress;
+  ULONG Reserved1;
+  ULONG SgTransferLength;
+  ULONG SgOffset;
+  ULONG Reserved2;
+} USBPORT_SCATTER_GATHER_ELEMENT, *PUSBPORT_SCATTER_GATHER_ELEMENT;
+
+C_ASSERT(sizeof(USBPORT_SCATTER_GATHER_ELEMENT) == 24);
+
+typedef struct _USBPORT_SCATTER_GATHER_LIST {
+  ULONG Flags;
+  ULONG_PTR CurrentVa;
+  PVOID MappedSystemVa;
+  ULONG SgElementCount;
+  USBPORT_SCATTER_GATHER_ELEMENT SgElement[2];
+} USBPORT_SCATTER_GATHER_LIST, *PUSBPORT_SCATTER_GATHER_LIST;
+
+C_ASSERT(sizeof(USBPORT_SCATTER_GATHER_LIST) == 48 + 4 * sizeof(PVOID));
+
+typedef struct _USBPORT_ENDPOINT_REQUIREMENTS {
+  ULONG HeaderBufferSize;
+  ULONG MaxTransferSize;
+} USBPORT_ENDPOINT_REQUIREMENTS, *PUSBPORT_ENDPOINT_REQUIREMENTS;
+
 typedef ULONG MPSTATUS; // Miniport status
 typedef ULONG RHSTATUS; // Roothub status
 
@@ -88,20 +152,20 @@ typedef ULONG RHSTATUS; // Roothub status
 typedef MPSTATUS
 (NTAPI *PHCI_OPEN_ENDPOINT)(
   PVOID,
-  PVOID,
+  PUSBPORT_ENDPOINT_PROPERTIES,
   PVOID);
 
 typedef MPSTATUS
 (NTAPI *PHCI_REOPEN_ENDPOINT)(
   PVOID,
-  PVOID,
+  PUSBPORT_ENDPOINT_PROPERTIES,
   PVOID);
 
 typedef VOID
 (NTAPI *PHCI_QUERY_ENDPOINT_REQUIREMENTS)(
   PVOID,
-  PVOID,
-  PULONG);
+  PUSBPORT_ENDPOINT_PROPERTIES,
+  PUSBPORT_ENDPOINT_REQUIREMENTS);
 
 typedef VOID
 (NTAPI *PHCI_CLOSE_ENDPOINT)(
@@ -137,15 +201,15 @@ typedef MPSTATUS
 (NTAPI *PHCI_SUBMIT_TRANSFER)(
   PVOID,
   PVOID,
+  PUSBPORT_TRANSFER_PARAMETERS,
   PVOID,
-  PVOID,
-  PVOID);
+  PUSBPORT_SCATTER_GATHER_LIST);
 
 typedef MPSTATUS
 (NTAPI *PHCI_SUBMIT_ISO_TRANSFER)(
   PVOID,
   PVOID,
-  PVOID,
+  PUSBPORT_TRANSFER_PARAMETERS,
   PVOID,
   PVOID);
 
@@ -443,7 +507,7 @@ typedef ULONG
 typedef VOID
 (NTAPI *PHCI_REBALANCE_ENDPOINT)(
   PVOID,
-  PVOID,
+  PUSBPORT_ENDPOINT_PROPERTIES,
   PVOID);
 
 typedef VOID
@@ -582,65 +646,6 @@ C_ASSERT(sizeof(USBPORT_MINIPORT_INTERFACE) == 32 + 76 * sizeof(PVOID));
 
 #define USBPORT_TRANSFER_DIRECTION_OUT  1 // From host to device
 #define USBPORT_MAX_DEVICE_ADDRESS      127
-
-typedef struct _USBPORT_ENDPOINT_PROPERTIES {
-  USHORT DeviceAddress;
-  USHORT EndpointAddress;
-  USHORT TotalMaxPacketSize; // TransactionPerMicroframe * MaxPacketSize
-  UCHAR Period;
-  UCHAR Reserved1;
-  USB_DEVICE_SPEED DeviceSpeed;
-  ULONG UsbBandwidth;
-  ULONG ScheduleOffset;
-  ULONG TransferType;
-  ULONG Direction;
-  ULONG_PTR BufferVA;
-  ULONG_PTR BufferPA;
-  ULONG BufferLength;
-  ULONG Reserved3;
-  ULONG MaxTransferSize;
-  USHORT HubAddr;
-  USHORT PortNumber;
-  UCHAR InterruptScheduleMask;
-  UCHAR SplitCompletionMask;
-  UCHAR TransactionPerMicroframe; // 1 + additional transactions. Total: from 1 to 3)
-  UCHAR Reserved4;
-  ULONG MaxPacketSize;
-  ULONG Reserved6;
-} USBPORT_ENDPOINT_PROPERTIES, *PUSBPORT_ENDPOINT_PROPERTIES;
-
-C_ASSERT(sizeof(USBPORT_ENDPOINT_PROPERTIES) == 48 + 4 * sizeof(PVOID));
-
-typedef struct _USBPORT_SCATTER_GATHER_ELEMENT {
-  PHYSICAL_ADDRESS SgPhysicalAddress;
-  ULONG Reserved1;
-  ULONG SgTransferLength;
-  ULONG SgOffset;
-  ULONG Reserved2;
-} USBPORT_SCATTER_GATHER_ELEMENT, *PUSBPORT_SCATTER_GATHER_ELEMENT;
-
-C_ASSERT(sizeof(USBPORT_SCATTER_GATHER_ELEMENT) == 24);
-
-typedef struct _USBPORT_SCATTER_GATHER_LIST {
-  ULONG Flags;
-  ULONG_PTR CurrentVa;
-  PVOID MappedSystemVa;
-  ULONG SgElementCount;
-  USBPORT_SCATTER_GATHER_ELEMENT SgElement[2];
-} USBPORT_SCATTER_GATHER_LIST, *PUSBPORT_SCATTER_GATHER_LIST;
-
-C_ASSERT(sizeof(USBPORT_SCATTER_GATHER_LIST) == 48 + 4 * sizeof(PVOID));
-
-typedef struct _USBPORT_TRANSFER_PARAMETERS {
-  ULONG TransferFlags;
-  ULONG TransferBufferLength;
-  ULONG TransferCounter;
-  BOOL IsTransferSplited;
-  ULONG Reserved2;
-  USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
-} USBPORT_TRANSFER_PARAMETERS, *PUSBPORT_TRANSFER_PARAMETERS;
-
-C_ASSERT(sizeof(USBPORT_TRANSFER_PARAMETERS) == 28);
 
 /* For USB1.1 or USB3 Hub Descriptors */
 typedef union _USBPORT_HUB_11_CHARACTERISTICS {
