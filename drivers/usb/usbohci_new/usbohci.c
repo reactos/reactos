@@ -1175,17 +1175,16 @@ OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
 
     DPRINT_OHCI("OHCI_MapTransferToTD: TransferedLen - %x\n", TransferedLen);
 
-    SgElement = &SGList->SgElement[0];
 
     for (SgIdx = 0; SgIdx < SGList->SgElementCount; SgIdx++)
     {
+        SgElement = &SGList->SgElement[SgIdx];
+
         if (TransferedLen >= SgElement->SgOffset &&
             TransferedLen < SgElement->SgOffset + SgElement->SgTransferLength)
         {
             break;
         }
-
-        SgElement += 1;
     }
 
     DPRINT_OHCI("OHCI_MapTransferToTD: SgIdx - %x, SgCount - %x\n",
