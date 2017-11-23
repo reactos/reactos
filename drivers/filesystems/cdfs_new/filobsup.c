@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -109,8 +109,10 @@ Return Value:
     FileObject->FsContext = Fcb;
     FileObject->FsContext2 = Ccb;
 
+#ifdef _MSC_VER
 #pragma warning( suppress: 4213 )
-    SetFlag( ((ULONG_PTR) FileObject->FsContext2), TypeOfOpen );
+#endif
+    SetFlag( (*(PULONG_PTR)&FileObject->FsContext2), TypeOfOpen ); /* ReactOS Change: GCC "invalid lvalue in assignment" */
 
     //
     //  Set the Vpb field in the file object.
@@ -186,8 +188,10 @@ Return Value:
         *Fcb = FileObject->FsContext;
         *Ccb = FileObject->FsContext2;
         
+#ifdef _MSC_VER
 #pragma warning( suppress: 4213 )
-        ClearFlag( (ULONG_PTR) *Ccb, TYPE_OF_OPEN_MASK );
+#endif
+        ClearFlag( (*(PULONG_PTR)Ccb), TYPE_OF_OPEN_MASK ); /* ReactOS Change: GCC "invalid lvalue in assignment" */
     }
 
     //

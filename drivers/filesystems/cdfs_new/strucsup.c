@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -167,6 +167,7 @@ CdDeleteFcbNonpaged (
 RTL_GENERIC_COMPARE_ROUTINE CdFcbTableCompare;
 
 RTL_GENERIC_COMPARE_RESULTS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFcbTableCompare (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ PVOID Fid1,
@@ -177,6 +178,7 @@ CdFcbTableCompare (
 RTL_GENERIC_ALLOCATE_ROUTINE CdAllocateFcbTable;
 
 PVOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAllocateFcbTable (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ CLONG ByteSize
@@ -186,6 +188,7 @@ CdAllocateFcbTable (
 RTL_GENERIC_FREE_ROUTINE CdDeallocateFcbTable;
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDeallocateFcbTable (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer
@@ -318,19 +321,19 @@ Return Value:
     //  uninitialize the notify structures before returning.
     //
     
-    try  {
+    _SEH2_TRY  {
 
         Vcb->SwapVpb = FsRtlAllocatePoolWithTag( CdNonPagedPool,
                                                  sizeof( VPB ),
                                                  TAG_VPB );
     }
-    finally {
+    _SEH2_FINALLY {
 
-        if (AbnormalTermination())  {
+        if (_SEH2_AbnormalTermination())  {
         
             FsRtlNotifyUninitializeSync( &Vcb->NotifySync );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Nothing beyond this point should raise.
@@ -475,7 +478,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Copy the block size and compute the various block masks.
@@ -862,10 +865,10 @@ Return Value:
             SetFlag( Vcb->VcbState, VCB_STATE_ISO );
         }
         
-    } finally {
+    } _SEH2_FINALLY {
 
         if (UnlockVcb) { CdUnlockVcb( IrpContext, Vcb ); }
-    }
+    } _SEH2_END;
 }
 
 
@@ -968,7 +971,9 @@ Return Value:
     //
     //  Now delete the volume device object.
     //
+#ifdef _MSC_VER
 #pragma prefast( suppress: __WARNING_BUFFER_UNDERFLOW, "This is ok, the Vcb is embedded in our volume device object, and that is what we are really deleting." )
+#endif
     IoDeleteDevice( (PDEVICE_OBJECT) CONTAINING_RECORD( Vcb,
                                                         VOLUME_DEVICE_OBJECT,
                                                         Vcb ));
@@ -1069,7 +1074,9 @@ Return Value:
 
         default:
 
+#ifdef _MSC_VER
 #pragma prefast( suppress: __WARNING_USE_OTHER_FUNCTION, "This is a bug." )   
+#endif
             CdBugCheck( 0, 0, 0 );
         }
 
@@ -1262,7 +1269,7 @@ Return Value:
 
     CdLockFcb( IrpContext, Fcb );
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Initialize the common header in the Fcb.  The node type is already
@@ -1385,10 +1392,10 @@ Return Value:
         CdInsertFcbTable( IrpContext, Fcb );
         SetFlag( Fcb->FcbState, FCB_STATE_IN_FCB_TABLE );
 
-    } finally {
+    } _SEH2_FINALLY {
 
         CdUnlockFcb( IrpContext, Fcb );
-    }
+    } _SEH2_END;
 
     return;
 }
@@ -1600,7 +1607,12 @@ Return Value:
     //  occur in the context of fileobjects (i.e., mount).
     //
 
+#ifndef __REACTOS__
     if (IrpSp->DeviceObject == CdData.FileSystemDeviceObject) {
+#else
+    if (IrpSp->DeviceObject == CdData.FileSystemDeviceObject ||
+        IrpSp->DeviceObject == CdData.HddFileSystemDeviceObject) {
+#endif
 
         if (IrpSp->FileObject != NULL &&
             IrpSp->MajorFunction != IRP_MJ_CREATE &&
@@ -1678,7 +1690,12 @@ Return Value:
     //  the Vcb field.
     //
 
+#ifndef __REACTOS__
     if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject) {
+#else
+    if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject &&
+        IrpSp->DeviceObject != CdData.HddFileSystemDeviceObject) {
+#endif
 
         NewIrpContext->Vcb =  &((PVOLUME_DEVICE_OBJECT) IrpSp->DeviceObject)->Vcb;
     
@@ -1959,7 +1976,7 @@ Return Value:
     //  Use a try-finally to safely clear the top-level field.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Loop until we find an Fcb we can't remove.
@@ -2063,7 +2080,7 @@ Return Value:
 
         } while (CurrentFcb != NULL);
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the current Fcb if we have acquired it.
@@ -2079,7 +2096,7 @@ Return Value:
         //
 
         ClearFlag( IrpContext->TopLevel->Flags, IRP_CONTEXT_FLAG_IN_TEARDOWN );
-    }
+    } _SEH2_END;
 
     *RemovedStartingFcb = (CurrentFcb != StartingFcb);
     return;
@@ -2493,7 +2510,7 @@ Return Value:
             Vcb->PathTableFcb = NULL;
         }
 
-        CdDeallocateFcbIndex( IrpContext, Fcb );
+        CdDeallocateFcbIndex( IrpContext, *(PVOID*)&Fcb );/* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
         break;
 
     case CDFS_NTC_FCB_DATA :
@@ -2511,7 +2528,7 @@ Return Value:
             Vcb->VolumeDasdFcb = NULL;
         }
 
-        CdDeallocateFcbData( IrpContext, Fcb );
+        CdDeallocateFcbData( IrpContext, *(PVOID*)&Fcb );/* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
     }
 
     //
@@ -2615,7 +2632,7 @@ Return Value:
     
     ExDeleteResourceLite( &FcbNonpaged->FcbResource );
 
-    CdDeallocateFcbNonpaged( IrpContext, FcbNonpaged );
+    CdDeallocateFcbNonpaged( IrpContext, *(PVOID*)&FcbNonpaged );/* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
 
     return;
 }
@@ -2626,6 +2643,7 @@ Return Value:
 //
 
 RTL_GENERIC_COMPARE_RESULTS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFcbTableCompare (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ PVOID Fid1,
@@ -2683,6 +2701,7 @@ Return Value:
 //
 
 PVOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAllocateFcbTable (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ CLONG ByteSize
@@ -2719,6 +2738,7 @@ Return Value:
 //  Local support routine
 //
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDeallocateFcbTable (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer

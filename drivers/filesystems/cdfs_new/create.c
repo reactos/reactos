@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -119,7 +119,9 @@ CdCompleteFcbOpen (
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
+#ifdef _MSC_VER
 #pragma prefast(suppress:26165, "Esp:1153")
+#endif
 CdCommonCreate (
     _Inout_ PIRP_CONTEXT IrpContext,
     _Inout_ PIRP Irp
@@ -168,7 +170,7 @@ Return Value:
 
     PFILE_OBJECT FileObject;
 
-    COMPOUND_PATH_ENTRY CompoundPathEntry = {0};
+    COMPOUND_PATH_ENTRY CompoundPathEntry = {{0}};/* ReactOS Change: GCC "missing braces around initializer" */
     BOOLEAN CleanupCompoundPathEntry = FALSE;
 
     FILE_ENUM_CONTEXT FileContext = {0};
@@ -229,7 +231,7 @@ Return Value:
     PUNICODE_STRING FileName;
     PUNICODE_STRING RelatedFileName = NULL;
 
-    CD_NAME RemainingName = {0};
+    CD_NAME RemainingName = {{0}};/* ReactOS Change: GCC "missing braces around initializer" */
     CD_NAME FinalName;
     PCD_NAME MatchingName = NULL;
 
@@ -382,7 +384,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify that the Vcb is not in an unusable condition.  This routine
@@ -926,7 +928,7 @@ Return Value:
                                                         RelatedCcb ));
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Cleanup the PathEntry if initialized.
@@ -951,7 +953,7 @@ Return Value:
         //  condition.
         //
 
-        if (AbnormalTermination()) {
+        if (_SEH2_AbnormalTermination()) {
 
 
             //
@@ -1011,7 +1013,7 @@ Return Value:
         //
 
         CdCompleteRequest( IrpContext, Irp, Status );
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -1348,10 +1350,14 @@ Return Value:
             //
             //  Do a quick check to make sure there are no wildcards.
             //
+#ifdef _MSC_VER
 #pragma prefast(push)
 #pragma prefast(suppress:26000, "RemainingName->FileName.Buffer = FileName.Buffer + (RelatedNameLength + SeparatorLength); FileName.MaximumLength < (RelatedNameLength + SeparatorLength + RemainingNameLength).")
+#endif
             if (FsRtlDoesNameContainWildCards( &RemainingName->FileName )) {
+#ifdef _MSC_VER
 #pragma prefast(pop)
+#endif
 
                 return STATUS_OBJECT_NAME_INVALID;
             }
@@ -1453,10 +1459,14 @@ Return Value:
         }
     }
 
+#ifdef _MSC_VER
 #pragma prefast(push)
 #pragma prefast(suppress:26030, "RemainingName->FileName.Buffer = FileName.Buffer + (RelatedNameLength + SeparatorLength); FileName.MaximumLength < (RelatedNameLength + SeparatorLength + RemainingNameLength).")
+#endif
     return STATUS_SUCCESS;
+#ifdef _MSC_VER
 #pragma prefast(pop)
+#endif
 }
 
 
@@ -1528,7 +1538,7 @@ Return Value:
     FILE_ENUM_CONTEXT FileContext;
     BOOLEAN CleanupFileContext = FALSE;
 
-    COMPOUND_PATH_ENTRY CompoundPathEntry = {0};
+    COMPOUND_PATH_ENTRY CompoundPathEntry = {{0}};/* ReactOS Change: GCC "missing braces around initializer" */
     BOOLEAN CleanupCompoundPathEntry = FALSE;
 
     FILE_ID FileId;
@@ -1548,7 +1558,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Go ahead and figure out the TypeOfOpen and NodeType.  We can
@@ -1942,7 +1952,7 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         if (UnlockVcb) {
 
@@ -1958,7 +1968,7 @@ Return Value:
 
             CdCleanupCompoundPathEntry( IrpContext, &CompoundPathEntry );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -2166,7 +2176,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Check the related Ccb to see if this was an OpenByFileId.
@@ -2324,7 +2334,7 @@ Return Value:
                                         IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Unlock the Vcb if held.
@@ -2343,7 +2353,7 @@ Return Value:
 
             CdReleaseFcb( IrpContext, ParentFcb );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -2443,7 +2453,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Check if a version number was used to open this file.
@@ -2614,7 +2624,7 @@ Return Value:
                                     CcbFlags,
                                     IrpSp->Parameters.Create.SecurityContext->DesiredAccess );
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Unlock the Vcb if held.
@@ -2633,7 +2643,7 @@ Return Value:
 
             CdReleaseFcb( IrpContext, ParentFcb );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -2803,8 +2813,8 @@ Return Value:
                 OplockStatus = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                                  IrpContext->Irp,
                                                  IrpContext,
-                                                 CdOplockComplete,
-                                                 CdPrePostIrp );
+                                                 (PVOID)CdOplockComplete,   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                                 (PVOID)CdPrePostIrp );   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
 
                 if (OplockStatus == STATUS_PENDING) {
 
@@ -2835,8 +2845,8 @@ Return Value:
             OplockStatus = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                              IrpContext->Irp,
                                              IrpContext,
-                                             CdOplockComplete,
-                                             CdPrePostIrp );
+                                             (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                             (PVOID)CdPrePostIrp );/* ReactOS Change: GCC "assignment from incompatible pointer type" */
 
             if (OplockStatus == STATUS_PENDING) {
 

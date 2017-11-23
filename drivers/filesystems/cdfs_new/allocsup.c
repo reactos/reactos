@@ -44,7 +44,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -86,8 +86,10 @@ CdDiskOffsetFromMcbEntry (
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
+#ifdef _MSC_VER
 // PREFast currently has no way to express the Fcb==Fcb->Vcb->VolumeDasdFcb early return
 #pragma warning(suppress: 6001 6101) 
+#endif
 CdLookupAllocation (
     _In_ PIRP_CONTEXT IrpContext,
     _In_ PFCB Fcb,
@@ -164,7 +166,7 @@ Return Value:
     //  Use a try finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We use a loop to perform the lookup.  If we don't find the mapping in the
@@ -308,7 +310,7 @@ Return Value:
             FirstPass = FALSE;
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         if (CleanupParent) {
 
@@ -323,7 +325,7 @@ Return Value:
         }
 
         if (UnlockFcb) { CdUnlockFcb( IrpContext, Fcb ); }
-    }
+    } _SEH2_END;
 
     return;
 }

@@ -17,26 +17,31 @@ Abstract:
 #ifndef _CDPROCS_
 #define _CDPROCS_
 
+#ifdef _MSC_VER
 #pragma warning( disable: 4127 ) // conditional expression is constant
 
 #pragma warning( push )
 #pragma warning( disable: 4201 ) // nonstandard extension used : nameless struct/union
 #pragma warning( disable: 4214 ) // nonstandard extension used : bit field types
+#endif
 
 #include <ntifs.h>
 
 #include <ntddcdrm.h>
 #include <ntdddisk.h>
 #include <ntddscsi.h>
+#ifdef __REACTOS__
+#include <pseh/pseh2.h>
+#endif
 
 #ifndef INLINE
 #define INLINE __inline
 #endif
 
 #include "nodetype.h"
-#include "Cd.h"
-#include "CdStruc.h"
-#include "CdData.h"
+#include "cd.h"
+#include "cdstruc.h"
+#include "cddata.h"
 
 #ifdef CDFS_TELEMETRY_DATA
 
@@ -46,7 +51,9 @@ Abstract:
 
 #endif // CDFS_TELEMETRY_DATA
 
+#ifdef _MSC_VER
 #pragma warning( pop )
+#endif
 
 //**** x86 compiler bug ****
 
@@ -221,8 +228,9 @@ CdPurgeVolume (
     _In_ BOOLEAN DismountUnderway
     );
 
+static /* ReactOS Change: GCC "multiple definition" */
+INLINE /* GCC only accepts __inline as the first modifier */
 VOID
-INLINE
 CdVerifyOrCreateDirStreamFile (
     _In_ PIRP_CONTEXT IrpContext,
     _In_ PFCB Fcb
@@ -364,6 +372,7 @@ CdHijackIrpAndFlushDevice (
 //      );
 //
 
+#ifndef __REACTOS__
 #define CdMapUserBuffer(IC, UB) {                                               \
             *(UB) = (PVOID) ( ((IC)->Irp->MdlAddress == NULL) ?                 \
                     (IC)->Irp->UserBuffer :                                     \
@@ -373,6 +382,18 @@ CdHijackIrpAndFlushDevice (
             }                                                                   \
         }                                                                       
         
+#else
+#define CdMapUserBuffer(IC, UB) {                                               \
+            *(UB) = (PVOID) ( ((IC)->Irp->MdlAddress == NULL) ?                 \
+                    (IC)->Irp->UserBuffer :                                     \
+                    (MmGetSystemAddressForMdlSafe( (IC)->Irp->MdlAddress, NormalPagePriority)));   \
+            if (NULL == *(UB))  {                         \
+                CdRaiseStatus( (IC), STATUS_INSUFFICIENT_RESOURCES);            \
+            }                                                                   \
+        }                                                                       
+        
+#endif
+
 
 #define CdLockUserBuffer(IC,BL,OP) {                        \
     if ((IC)->Irp->MdlAddress == NULL) {                    \
@@ -1071,12 +1092,14 @@ BOOLEAN DummyRestoreIrql(_Inout_ PFAST_MUTEX FastMutex);
 #endif
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopAcquire (
     _In_ PVOID Fcb,
     _In_ BOOLEAN Wait
     );
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopRelease (
     _In_ PVOID Fcb
     );
@@ -1084,6 +1107,7 @@ CdNoopRelease (
 _Requires_lock_held_(_Global_critical_region_)
 _When_(return!=0, _Acquires_shared_lock_(*Fcb->Resource))
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAcquireForCache (
     _Inout_ PFCB Fcb,
     _In_ BOOLEAN Wait
@@ -1092,12 +1116,14 @@ CdAcquireForCache (
 _Requires_lock_held_(_Global_critical_region_)
 _Releases_lock_(*Fcb->Resource)
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseFromCache (
     _Inout_ PFCB Fcb
     );
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFilterCallbackAcquireForCreateSection (
     _In_ PFS_FILTER_CALLBACK_DATA CallbackData,
     _Unreferenced_parameter_ PVOID *CompletionContext
@@ -1106,6 +1132,7 @@ CdFilterCallbackAcquireForCreateSection (
 _Function_class_(FAST_IO_RELEASE_FILE)
 _Requires_lock_held_(_Global_critical_region_)
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseForCreateSection (
     _In_ PFILE_OBJECT FileObject
     );
@@ -1324,7 +1351,7 @@ CdTeardownStructures (
                               sizeof( CD_IO_CONTEXT ),  \
                               TAG_IO_CONTEXT )
 
-#define CdFreeIoContext(IO)     CdFreePool( &(IO) )
+#define CdFreeIoContext(IO)     CdFreePool( (PVOID) &(IO) ) /* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
 
 PFCB
 CdLookupFcbTable (
@@ -1356,15 +1383,20 @@ CdProcessToc (
 //
 
 #define CdPagedPool                 PagedPool
+#ifndef __REACTOS__
 #define CdNonPagedPool              NonPagedPoolNx
 #define CdNonPagedPoolCacheAligned  NonPagedPoolNxCacheAligned
+#else
+#define CdNonPagedPool              NonPagedPool
+#define CdNonPagedPoolCacheAligned  NonPagedPoolCacheAligned
+#endif
 
 
 //
 //  Verification support routines.  Contained in verfysup.c
 //
 
-
+static /* ReactOS Change: GCC "multiple definition" */
 INLINE
 BOOLEAN
 CdOperationIsDasdOpen (
@@ -1461,6 +1493,7 @@ CdFsdPostRequest (
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPrePostIrp (
     _Inout_ PIRP_CONTEXT IrpContext,
     _Inout_ PIRP Irp
@@ -1468,6 +1501,7 @@ CdPrePostIrp (
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdOplockComplete (
     _Inout_ PIRP_CONTEXT IrpContext,
     _Inout_ PIRP Irp
@@ -1483,6 +1517,7 @@ CdOplockComplete (
 //  otherwise
 //
 
+/* GCC complains about multi-line comments.
 //#ifndef BooleanFlagOn
 //#define BooleanFlagOn(F,SF) (    \
 //    (BOOLEAN)(((F) & (SF)) != 0) \
@@ -1500,6 +1535,7 @@ CdOplockComplete (
 //    (Flags) &= ~(SingleFlag);         \
 //}
 //#endif
+*/
 
 //
 //      CAST
@@ -1575,6 +1611,7 @@ CdOplockComplete (
     ((ULONG) (L)) >> SECTOR_SHIFT                                       \
 )
 
+static /* ReactOS Change: GCC "multiple definition" */
 INLINE
 ULONG
 SectorsFromLlBytes( 
@@ -2144,16 +2181,24 @@ CdCommonShutdown (                         //  Implemented in Shutdown.c
 //      #define try_return(S)  { S; goto try_exit; }
 //
 
+#ifndef __REACTOS__
 #define try_return(S) { S; goto try_exit; }
 #define try_leave(S) { S; leave; }
+#else
+#define try_return(S) { S; goto try_exit; }
+#define try_leave(S) { S; _SEH2_LEAVE; }
+#endif
 
 //
 //  Encapsulate safe pool freeing
 //
+/* ReactOS Change: GCC "passing argument 1 of CdFreePool from incompatible pointer type" */
+#define CdFreePool(x) _CdFreePool((PVOID*)(x))
 
+static /* ReactOS Change: GCC "multiple definition" */
 INLINE
 VOID
-CdFreePool(
+_CdFreePool(
     _Inout_ _At_(*Pool, __drv_freesMem(Mem) _Post_null_) PVOID *Pool
     )
 {

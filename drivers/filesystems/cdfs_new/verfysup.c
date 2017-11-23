@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -92,7 +92,7 @@ Return Value:
     Vcb = &CONTAINING_RECORD( IrpSp->DeviceObject,
                               VOLUME_DEVICE_OBJECT,
                               DeviceObject )->Vcb;
-    try {
+    _SEH2_TRY {
 
         //
         //  Send down the verify FSCTL.  Note that this is sent to the
@@ -206,7 +206,7 @@ Return Value:
             Status = CdFsdPostRequest( IrpContext, Irp );
         }
 
-    } except(CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
+    } _SEH2_EXCEPT(CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() )) {
 
         //
         //  We had some trouble trying to perform the verify or raised
@@ -214,8 +214,8 @@ Return Value:
         //  the error status that we get back from the execption code.
         //
 
-        Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
-    }
+        Status = CdProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
+    } _SEH2_END;
 
     return Status;
 }
@@ -384,7 +384,9 @@ Return Value:
 
     IoAcquireVpbSpinLock( &SavedIrql );
 
+#ifdef _MSC_VER
 #pragma prefast(suppress: 28175, "this is a filesystem driver, touching the vpb is allowed")
+#endif
     if (Vcb->Vpb->RealDevice->Vpb == Vcb->Vpb)  {
 
         CdMarkRealDevForVerify( Vcb->Vpb->RealDevice);
@@ -602,6 +604,9 @@ Return Value:
             CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
         }
         break;
+        
+    /* ReactOS Change: GCC "enumeration value not handled in switch" */
+    default: break;
     }
 }
 
@@ -881,7 +886,9 @@ Return Value:
     //  mount request.
     //
 
+#ifdef _MSC_VER
 #pragma prefast(suppress: 28175, "this is a filesystem driver, touching the vpb is allowed")
+#endif
     if (OldVpb->RealDevice->Vpb == OldVpb) {
 
         //
@@ -897,11 +904,15 @@ Return Value:
             Vcb->SwapVpb->Type = IO_TYPE_VPB;
             Vcb->SwapVpb->Size = sizeof( VPB );
 
+#ifdef _MSC_VER
 #pragma prefast(push)
 #pragma prefast(disable: 28175, "this is a filesystem driver, touching the vpb is allowed")
+#endif
             Vcb->SwapVpb->RealDevice = OldVpb->RealDevice;
             Vcb->SwapVpb->RealDevice->Vpb = Vcb->SwapVpb;
+#ifdef _MSC_VER
 #pragma prefast(pop)
+#endif
 
             Vcb->SwapVpb->Flags = FlagOn( OldVpb->Flags, VPB_REMOVE_PENDING );
 

@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -62,6 +62,7 @@ CdPnpCancelRemove (
 IO_COMPLETION_ROUTINE CdPnpCompletionRoutine;
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPnpCompletionRoutine (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
@@ -142,7 +143,9 @@ Return Value:
     //  field that takes us past the end of an ordinary device object.    
     //
 
+#ifdef _MSC_VER
 #pragma prefast(suppress: 28175, "this is a filesystem driver, touching the size member is allowed")
+#endif
     if (OurDeviceObject->DeviceObject.Size != sizeof(VOLUME_DEVICE_OBJECT) ||
         NodeType( &OurDeviceObject->Vcb ) != CDFS_NTC_VCB) {
         
@@ -812,6 +815,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPnpCompletionRoutine (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,

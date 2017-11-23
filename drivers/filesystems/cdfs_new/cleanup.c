@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -190,7 +190,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
     
         //
         //  Case on the type of open that we are trying to cleanup.
@@ -258,7 +258,9 @@ Return Value:
 
         default :
 
+#ifdef _MSC_VER
 #pragma prefast( suppress:__WARNING_USE_OTHER_FUNCTION, "argument bogus" )        
+#endif
             CdBugCheck( TypeOfOpen, 0, 0 );
         }
 
@@ -311,15 +313,15 @@ Return Value:
 
         IoRemoveShareAccess( FileObject, &Fcb->ShareAccess );
 
-    } finally {
+    } _SEH2_FINALLY {
 
-       CdReleaseFcb( IrpContext, Fcb );
+        CdReleaseFcb( IrpContext, Fcb );
         
         if (SendUnlockNotification) {
             
             FsRtlNotifyVolumeEvent( FileObject, FSRTL_VOLUME_UNLOCK );
         }
-    }
+    } _SEH2_END;
 
     //
     //  If appropriate, try to spark teardown by purging the volume.  Should
@@ -337,19 +339,19 @@ Return Value:
         
         CdAcquireCdData( IrpContext);
 
-        try {
+        _SEH2_TRY {
             
             CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
             VcbAcquired = TRUE;
             
             CdPurgeVolume( IrpContext, Vcb, FALSE );
 
-        } finally {
+        } _SEH2_FINALLY {
 
             if (VcbAcquired) { CdReleaseVcb( IrpContext, Vcb ); }
             
             CdReleaseCdData( IrpContext);
-        }
+        } _SEH2_END;
     }
 
     //

@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -532,7 +532,9 @@ CdReMountOldVcb (
 
     IoAcquireVpbSpinLock( &SavedIrql );
 
+#ifdef _MSC_VER
 #pragma prefast(suppress: 28175, "this is a filesystem driver, touching the vpb is allowed")
+#endif
     NewVcb->Vpb->RealDevice->Vpb = OldVcb->Vpb;
     
     OldVcb->Vpb->RealDevice = NewVcb->Vpb->RealDevice;
@@ -639,6 +641,10 @@ Return Value:
     ULONG TocDiskFlags = 0;
     ULONG MediaChangeCount = 0;
 
+#ifdef __REACTOS__
+    DEVICE_TYPE FilesystemDeviceType;
+#endif
+
 #ifdef CDFS_TELEMETRY_DATA
     GUID VolumeGuid;
     GUID VolumeCorrelationId = { 0 };
@@ -651,7 +657,16 @@ Return Value:
     //  always be waitable.
     //
 
+#ifdef __REACTOS__
+    if (IrpSp->DeviceObject == CdData.HddFileSystemDeviceObject) {
+        FilesystemDeviceType = FILE_DEVICE_DISK_FILE_SYSTEM;
+    } else {
+#endif
     NT_ASSERT( Vpb->RealDevice->DeviceType == FILE_DEVICE_CD_ROM );
+#ifdef __REACTOS__
+        FilesystemDeviceType = FILE_DEVICE_CD_ROM_FILE_SYSTEM;
+    }
+#endif
     NT_ASSERT( FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT ));
 
 #ifdef CDFS_TELEMETRY_DATA
@@ -697,7 +712,11 @@ Return Value:
     //
 
     Status = CdPerformDevIoCtrl( IrpContext,
+#ifndef __REACTOS__
                                  IOCTL_CDROM_CHECK_VERIFY,
+#else
+                                 (FilesystemDeviceType == FILE_DEVICE_DISK_FILE_SYSTEM ? IOCTL_DISK_CHECK_VERIFY : IOCTL_CDROM_CHECK_VERIFY),
+#endif
                                  DeviceObjectWeTalkTo,
                                  &MediaChangeCount,
                                  sizeof(ULONG),
@@ -726,7 +745,11 @@ Return Value:
     //
 
     Status = CdPerformDevIoCtrl( IrpContext,
+#ifndef __REACTOS__
                                  IOCTL_CDROM_GET_DRIVE_GEOMETRY,
+#else
+                                 (FilesystemDeviceType == FILE_DEVICE_DISK_FILE_SYSTEM ? IOCTL_DISK_GET_DRIVE_GEOMETRY : IOCTL_CDROM_GET_DRIVE_GEOMETRY),
+#endif
                                  DeviceObjectWeTalkTo,
                                  &DiskGeometry,
                                  sizeof( DISK_GEOMETRY ),
@@ -769,7 +792,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Allocate a buffer to query the TOC.
@@ -794,7 +817,11 @@ Return Value:
         Status = IoCreateDevice( CdData.DriverObject,
                                  sizeof( VOLUME_DEVICE_OBJECT ) - sizeof( DEVICE_OBJECT ),
                                  NULL,
+#ifndef __REACTOS__
                                  FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+#else
+                                 FilesystemDeviceType,
+#endif
                                  0,
                                  FALSE,
                                  (PDEVICE_OBJECT *) &VolDo );
@@ -848,7 +875,21 @@ Return Value:
 
         if (Status != STATUS_SUCCESS)  { 
 
+#ifdef __REACTOS__
+
+            //
+            // Don't bail out if that was a disk based ISO image, it is legit
+            //
+
+            if (FilesystemDeviceType == FILE_DEVICE_DISK_FILE_SYSTEM) {
+                CdFreePool( &CdromToc );
+                Status = STATUS_SUCCESS;
+            } else {
+#endif
             try_leave( Status ); 
+#ifdef __REACTOS__
+            }
+#endif
         }
 
         //
@@ -1164,7 +1205,7 @@ Return Value:
 
         Status = STATUS_SUCCESS;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Free the TOC buffer if not in the Vcb.
@@ -1188,7 +1229,7 @@ Return Value:
         //  If we are not mounting the device,  then set the verify bit again.
         //
         
-        if ((AbnormalTermination() || (Status != STATUS_SUCCESS)) && 
+        if ((_SEH2_AbnormalTermination() || (Status != STATUS_SUCCESS)) && 
             SetDoVerifyOnFail)  {
 
             CdMarkRealDevForVerify( IrpContext->RealDevice);
@@ -1225,7 +1266,7 @@ Return Value:
         //
 
         CdReleaseCdData( IrpContext );
-    }
+    } _SEH2_END;
 
     //
     //  Now send mount notification.
@@ -1338,7 +1379,7 @@ Return Value:
 
     CdAcquireCdData( IrpContext );
 
-    try {
+    _SEH2_TRY {
 
         CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
         ReleaseVcb = TRUE;
@@ -1682,8 +1723,7 @@ Return Value:
             }
         }
 
-    } 
-    finally {
+    } _SEH2_FINALLY {
 
         //
         //  Free the TOC buffer if allocated.
@@ -1708,7 +1748,7 @@ Return Value:
         }
 
         CdReleaseCdData( IrpContext );
-    }
+    } _SEH2_END;
 
     //
     //  Now send mount notification.
@@ -1838,7 +1878,7 @@ Return Value:
     //  Use a try finally to free the Fcb.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Fcb.
@@ -1868,14 +1908,14 @@ Return Value:
 
         Irp = NULL;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release all of our resources
         //
 
         CdReleaseFcb( IrpContext, Fcb );
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request if there was no exception.
@@ -1951,7 +1991,7 @@ Return Value:
     Vcb = Fcb->Vcb;
     CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Vcb.
@@ -1961,7 +2001,7 @@ Return Value:
 
         Status = CdLockVolumeInternal( IrpContext, Vcb, IrpSp->FileObject );
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the Vcb.
@@ -1969,11 +2009,11 @@ Return Value:
 
         CdReleaseVcb( IrpContext, Vcb );
         
-        if (AbnormalTermination() || !NT_SUCCESS( Status )) {
+        if (_SEH2_AbnormalTermination() || !NT_SUCCESS( Status )) {
 
             FsRtlNotifyVolumeEvent( IrpSp->FileObject, FSRTL_VOLUME_LOCK_FAILED );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request if there haven't been any exceptions.
@@ -2454,7 +2494,12 @@ Return Value:
     //  We only allow the invalidate call to come in on our file system devices.
     //
     
+#ifndef __REACTOS__
     if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject)  {
+#else
+    if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject &&
+        IrpSp->DeviceObject != CdData.HddFileSystemDeviceObject)  {
+#endif
 
         CdCompleteRequest( IrpContext, Irp, STATUS_INVALID_DEVICE_REQUEST );
 
@@ -2507,7 +2552,7 @@ Return Value:
                                         0,
                                         *IoFileObjectType,
                                         KernelMode,
-                                        &FileToMarkBad,
+                                        (PVOID*)&FileToMarkBad, /* ReactOS Change: GCC "passing argument 5 of 'ObReferenceObjectByHandle' from incompatible pointer type" */
                                         NULL );
 
     if (!NT_SUCCESS(Status)) {
@@ -2578,7 +2623,9 @@ Return Value:
             
             IoAcquireVpbSpinLock( &SavedIrql );
 
+#ifdef _MSC_VER
 #pragma prefast(suppress: 28175, "this is a filesystem driver, touching the vpb is allowed")
+#endif
             if (DeviceToMarkBad->Vpb == Vcb->Vpb)  {
             
                 PVPB NewVpb = Vcb->SwapVpb;
@@ -2592,11 +2639,15 @@ Return Value:
                 NewVpb->Size = sizeof( VPB );
                 NewVpb->RealDevice = DeviceToMarkBad;
 
+#ifdef _MSC_VER
 #pragma prefast(push)
 #pragma prefast(disable: 28175, "this is a filesystem driver, touching the vpb is allowed")
+#endif
                 NewVpb->Flags = FlagOn( DeviceToMarkBad->Vpb->Flags, VPB_REMOVE_PENDING );
                 DeviceToMarkBad->Vpb = NewVpb;
+#ifdef _MSC_VER
 #pragma prefast(pop)
+#endif
 
                 Vcb->SwapVpb = NULL;
             }
@@ -2871,7 +2922,7 @@ Return Value:
             //  Check for whether this device supports XA and multi-session.
             //
 
-            try {
+            _SEH2_TRY {
 
                 //
                 //  Allocate a buffer for the last session information.
@@ -2949,10 +3000,10 @@ Return Value:
                     ThisPass += 1;
                 }
 
-            } finally {
+            } _SEH2_FINALLY {
 
                 if (CdromToc != NULL) { CdFreePool( &CdromToc ); }
-            }
+            } _SEH2_END;
         }
 
         //

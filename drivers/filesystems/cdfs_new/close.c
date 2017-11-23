@@ -42,7 +42,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -81,6 +81,7 @@ CdRemoveClose (
 IO_WORKITEM_ROUTINE CdCloseWorker;
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdCloseWorker (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_opt_ PVOID Context
@@ -170,7 +171,7 @@ Return Value:
             //  Free the IrpContextLite.
             //
 
-            CdFreeIrpContextLite( (PIRP_CONTEXT_LITE) IrpContext );
+            CdFreeIrpContextLite( *(PVOID*)&IrpContext ); /* ReactOS Change: GCC "error: invalid lvalue in unary '&'" */
 
             //
             //  Remember we have the IrpContext from the stack.
@@ -318,7 +319,9 @@ Return Value:
 
     }
 
+#ifdef _MSC_VER
 #pragma prefast(suppress:26165, "Esp:1153")
+#endif
     FsRtlExitFileSystem();
 }
 
@@ -650,6 +653,7 @@ Return Value:
 }
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdCloseWorker (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_opt_ PVOID Context

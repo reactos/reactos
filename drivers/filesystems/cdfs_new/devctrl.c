@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -30,6 +30,7 @@ Abstract:
 IO_COMPLETION_ROUTINE CdDevCtrlCompletionRoutine;
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDevCtrlCompletionRoutine (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
@@ -172,6 +173,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDevCtrlCompletionRoutine (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,

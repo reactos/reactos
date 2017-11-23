@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -167,7 +167,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We only support query on file and directory handles.
@@ -327,7 +327,7 @@ Return Value:
 
         Irp->IoStatus.Information = IrpSp->Parameters.QueryFile.Length - Length;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the file.
@@ -337,7 +337,7 @@ Return Value:
 
             CdReleaseFile( IrpContext, Fcb );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request if we didn't raise.
@@ -409,7 +409,7 @@ Return Value:
 
     CdAcquireFileShared( IrpContext, Fcb );
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Make sure the Fcb is in a usable condition.  This
@@ -448,10 +448,10 @@ Return Value:
         Status = STATUS_SUCCESS;
 
     try_exit: NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         CdReleaseFile( IrpContext, Fcb );
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request if there was no raise.
@@ -466,6 +466,7 @@ _Function_class_(FAST_IO_QUERY_BASIC_INFO)
 _IRQL_requires_same_
 _Success_(return != FALSE)
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryBasicInfo (
     _In_ PFILE_OBJECT FileObject,
     _In_ BOOLEAN Wait,
@@ -543,7 +544,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Only deal with 'good' Fcb's.
@@ -573,12 +574,12 @@ Return Value:
             Result = TRUE;
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         ExReleaseResourceLite( Fcb->Resource );
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Result;
 }
@@ -588,6 +589,7 @@ _Function_class_(FAST_IO_QUERY_STANDARD_INFO)
 _IRQL_requires_same_
 _Success_(return != FALSE)
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryStdInfo (
     _In_ PFILE_OBJECT FileObject,
     _In_ BOOLEAN Wait,
@@ -665,7 +667,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Only deal with 'good' Fcb's.
@@ -705,12 +707,12 @@ Return Value:
             Result = TRUE;
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         ExReleaseResourceLite( Fcb->Resource );
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Result;
 }
@@ -720,6 +722,7 @@ _Function_class_(FAST_IO_QUERY_NETWORK_OPEN_INFO)
 _IRQL_requires_same_
 _Success_(return != FALSE)
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryNetworkInfo (
     _In_ PFILE_OBJECT FileObject,
     _In_ BOOLEAN Wait,
@@ -797,7 +800,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Only deal with 'good' Fcb's.
@@ -842,12 +845,12 @@ Return Value:
             Result = TRUE;
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         ExReleaseResourceLite( Fcb->Resource );
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Result;
 }
@@ -1272,7 +1275,7 @@ Return Value:
     PUNICODE_STRING NameToUse;
     ULONG DirentOffset;
 
-    COMPOUND_PATH_ENTRY CompoundPathEntry = {0};
+    COMPOUND_PATH_ENTRY CompoundPathEntry = {{0}};/* ReactOS Change: GCC "missing braces around initializer" */
     FILE_ENUM_CONTEXT FileContext;
 
     PFCB ParentFcb = NULL;
@@ -1307,7 +1310,7 @@ Return Value:
     //  Use a try-finally to cleanup the structures.
     //
 
-    try {
+    _SEH2_TRY {
 
         ParentFcb = Fcb->ParentFcb;
         CdAcquireFileShared( IrpContext, ParentFcb );
@@ -1418,12 +1421,12 @@ Return Value:
         RtlCopyMemory( Buffer->FileName, ShortNameBuffer, Buffer->FileNameLength );
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         if (CleanupFileLookup) {
 
             CdCleanupDirContext( IrpContext, &DirContext );
-            CdCleanupDirent( IrpContext, &Dirent );
+            CdCleanupDirent( IrpContext, &Dirent );/* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
 
         } else if (CleanupDirectoryLookup) {
 
@@ -1435,7 +1438,7 @@ Return Value:
 
             CdReleaseFile( IrpContext, ParentFcb );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Reduce the available bytes by the amount stored into this buffer.

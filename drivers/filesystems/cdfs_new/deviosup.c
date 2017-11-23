@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -407,7 +407,7 @@ Return Value:
     //  Use a try-finally to perform the final cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Loop while there are more bytes to transfer.
@@ -568,7 +568,7 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Perform final cleanup on the IoRuns if necessary.
@@ -578,7 +578,7 @@ Return Value:
 
             CdFinishBuffers( IrpContext, IoRuns, CleanupRunCount, TRUE, FALSE );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -677,7 +677,7 @@ Return Value:
     //  Use a try-finally to perform the final cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  If the initial offset lies within the RIFF header then copy the
@@ -979,7 +979,7 @@ Return Value:
         KeFlushIoBuffers( IrpContext->Irp->MdlAddress, TRUE, FALSE );
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Perform final cleanup on the IoRuns if necessary.
@@ -989,7 +989,7 @@ Return Value:
 
             CdFinishBuffers( IrpContext, IoRuns, CleanupRunCount, TRUE, FALSE );
         }
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -1282,16 +1282,18 @@ Return Value:
         //  deallocate the Mdl and return the appropriate "expected" status.
         //
 
-        try {
+        _SEH2_TRY {
 
             MmProbeAndLockPages( Mdl, IrpContext->Irp->RequestorMode, IoWriteAccess );
 
             Status = STATUS_SUCCESS;
 
+#ifdef _MSC_VER
 #pragma warning(suppress: 6320)
-        } except(EXCEPTION_EXECUTE_HANDLER) {
+#endif
+        } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 
-            Status = GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
 
             IoFreeMdl( Mdl );
             IrpContext->Irp->MdlAddress = NULL;
@@ -1300,7 +1302,7 @@ Return Value:
 
                 Status = STATUS_INVALID_USER_BUFFER;
             }
-        }
+        } _SEH2_END;
     }
 
     //
@@ -1890,7 +1892,9 @@ Return Value:
 
         CurrentRawOffset = (LONGLONG) ((ULONG) CurrentRawOffset / RAW_SECTOR_SIZE);
 
+#ifdef _MSC_VER
 #pragma prefast( suppress: __WARNING_RESULTOFSHIFTCASTTOLARGERSIZE, "This is fine beacuse raw sector size > sector shift" )        
+#endif
         CurrentCookedOffset = (LONGLONG) ((ULONG) CurrentRawOffset << SECTOR_SHIFT );
 
         CurrentRawOffset = (LONGLONG) ((ULONG) CurrentRawOffset * RAW_SECTOR_SIZE);
@@ -2384,6 +2388,7 @@ Return Value:
 IO_COMPLETION_ROUTINE CdSyncCompletionRoutine;
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdSyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -2514,7 +2519,7 @@ Return Value:
 
     CdAcquireCacheForRead( IrpContext);
 
-    try {
+    _SEH2_TRY {
         
         //
         //  Check the cache hasn't gone away due to volume verify failure (which
@@ -2656,18 +2661,20 @@ Return Value:
             //  pages and update the MDL with physical page information.
             //
         
-            try {
+            _SEH2_TRY {
             
                 MmProbeAndLockPages( Vcb->SectorCacheIrp->MdlAddress,
                                      KernelMode,
                                      (LOCK_OPERATION) IoWriteAccess );
             } 
+#ifdef _MSC_VER
 #pragma warning(suppress: 6320)
-            except(EXCEPTION_EXECUTE_HANDLER) {
+#endif
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         
                 IoFreeMdl( Vcb->SectorCacheIrp->MdlAddress );
                 Vcb->SectorCacheIrp->MdlAddress = NULL;
-            }
+            } _SEH2_END;
         
             if (NULL == Vcb->SectorCacheIrp->MdlAddress) {
         
@@ -2738,10 +2745,10 @@ Return Value:
 
         Result = TRUE;
     }
-    finally {
+    _SEH2_FINALLY {
 
         CdReleaseCache( IrpContext);
-    }
+    } _SEH2_END;
 
     return Result;
 }
@@ -3418,6 +3425,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdMultiSyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -3505,6 +3513,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdMultiAsyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -3624,6 +3633,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdSingleSyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -3687,6 +3697,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdSingleAsyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,

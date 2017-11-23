@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -171,10 +171,14 @@ Return Value:
 
     while (RemainingByteCount != 0) {
 
+#ifdef _MSC_VER
 #pragma prefast(push)
 #pragma prefast(suppress:26014, "RemainingByteCount is even")
+#endif
         *Destination = *Source;
+#ifdef _MSC_VER
 #pragma prefast(pop)
+#endif
 
         Source += 2;
         Destination += 2;
@@ -251,7 +255,9 @@ Return Value:
             //  copy the data.
             //
 
+#ifdef _MSC_VER
 #pragma prefast( suppress:26015, "CD_NAME structures have two UNICODE_STRING structures pointing to the same allocation. there is no way to tell prefast this is the case and that the allocation is always big enough.");
+#endif
             *(UpcaseName->VersionString.Buffer) = L';';
 
             UpcaseName->VersionString.Buffer += 1;
@@ -759,10 +765,14 @@ Return Value:
         // may use 2 bytes as DBCS characters.
         //
 
+#ifdef _MSC_VER
 #pragma prefast(push)
 #pragma prefast(suppress:26014, "OemNameOffset <= BaseNameOffset throughout this loop; OemName buffer previously allocated based on ShortName's length.")
+#endif
         if (FsRtlIsLeadDbcsCharacter(OemName.Buffer[OemNameOffset])) {
+#ifdef _MSC_VER
 #pragma prefast(pop)
+#endif
 
             OemNameOffset += 2;
 
@@ -796,11 +806,15 @@ Return Value:
     //  Now copy the dirent string into the biased name buffer.
     //
 
+#ifdef _MSC_VER
 #pragma prefast(push)
+#endif
     RtlCopyMemory( NextWchar,
                    BiasedShortName.Buffer,
                    BiasedShortName.Length );
+#ifdef _MSC_VER
 #pragma prefast(pop)
+#endif
 
     Length += BiasedShortName.Length;
     NextWchar += (BiasedShortName.Length / sizeof( WCHAR ));
