@@ -2461,20 +2461,16 @@ OHCI_SetEndpointStatus(IN PVOID ohciExtension,
                 OhciEndpoint,
                 EndpointStatus);
 
-    if (EndpointStatus)
+    if (EndpointStatus == USBPORT_ENDPOINT_RUN)
     {
-        if (EndpointStatus == USBPORT_ENDPOINT_HALT)
-        {
-            ASSERT(FALSE);
-        }
-    }
-    else
-    {
-        /* EndpointStatus == USBPORT_ENDPOINT_RUN */
         ED = OhciEndpoint->HcdED;
         ED->HwED.HeadPointer &= ~OHCI_ED_HEAD_POINTER_HALT;
 
         OHCI_EnableList(OhciExtension, OhciEndpoint);
+    }
+    else if (EndpointStatus == USBPORT_ENDPOINT_HALT)
+    {
+        ASSERT(FALSE);
     }
 }
 
