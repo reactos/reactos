@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -100,6 +100,7 @@ Return Value:
     
 _Requires_lock_held_(_Global_critical_region_)
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPrePostIrp (
     _Inout_ PIRP_CONTEXT IrpContext,
     _Inout_ PIRP Irp
@@ -224,6 +225,7 @@ Return Value:
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdOplockComplete (
     _Inout_ PIRP_CONTEXT IrpContext,
     _Inout_ PIRP Irp
@@ -401,12 +403,16 @@ Return Value:
     //  Send it off.....
     //
 
+#ifdef _MSC_VER
 #pragma prefast(suppress:28155, "the function prototype is correct")
+#endif
     ExInitializeWorkItem( &IrpContext->WorkQueueItem,
-                          CdFspDispatch,
+                          (PVOID)CdFspDispatch,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
                           IrpContext );
 
+#ifdef _MSC_VER
 #pragma prefast(suppress: 28159, "prefast believes this routine is obsolete, but it is ok for CDFS to continue using it")
+#endif
     ExQueueWorkItem( &IrpContext->WorkQueueItem, CriticalWorkQueue );
 
     return;

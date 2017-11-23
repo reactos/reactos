@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -89,7 +89,7 @@ Return Value:
     Status = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                Irp,
                                IrpContext,
-                               CdOplockComplete,
+                               (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
                                NULL );
 
     //
@@ -138,6 +138,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastLock (
     _In_ PFILE_OBJECT FileObject,
     _In_ PLARGE_INTEGER FileOffset,
@@ -225,7 +226,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
@@ -249,7 +250,9 @@ Return Value:
         //  Now call the FsRtl routine to perform the lock request.
         //
 
+#ifdef _MSC_VER
 #pragma prefast(suppress: 28159, "prefast thinks this is an obsolete routine, but it is ok for CDFS to use it")
+#endif
         if ((Results = FsRtlFastLock( Fcb->FileLock,
                                       FileObject,
                                       FileOffset,
@@ -277,16 +280,17 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Results;
 }
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockSingle (
     _In_ PFILE_OBJECT FileObject,
     _In_ PLARGE_INTEGER FileOffset,
@@ -369,7 +373,7 @@ Return Value:
 
     FsRtlEnterFileSystem();
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
@@ -419,16 +423,17 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Results;
 }
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAll (
     _In_ PFILE_OBJECT FileObject,
     _In_ PEPROCESS ProcessId,
@@ -502,7 +507,7 @@ Return Value:
 
     FsRtlEnterFileSystem();
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
@@ -543,16 +548,17 @@ Return Value:
         CdUnlockFcb( IrpContext, Fcb );
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Results;
 }
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAllByKey (
     _In_ PFILE_OBJECT FileObject,
     _In_ PVOID ProcessId,
@@ -629,7 +635,7 @@ Return Value:
 
     FsRtlEnterFileSystem();
 
-    try {
+    _SEH2_TRY {
 
         //
         //  We check whether we can proceed based on the state of the file oplocks.
@@ -671,10 +677,10 @@ Return Value:
         CdUnlockFcb( IrpContext, Fcb );
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         FsRtlExitFileSystem();
-    }
+    } _SEH2_END;
 
     return Results;
 }

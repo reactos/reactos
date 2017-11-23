@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -24,6 +24,7 @@ Abstract:
 
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFspDispatch (
     _In_ PVOID Context
     )
@@ -95,7 +96,7 @@ Return Value:
 
         while (TRUE) {
 
-            try {
+            _SEH2_TRY {
 
                 //
                 //  Reinitialize for the next try at completing this
@@ -185,10 +186,10 @@ Return Value:
                     CdCompleteRequest( IrpContext, Irp, Status );
                 }
 
-            } except( CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
+            } _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() )) {
 
-                Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
-            }
+                Status = CdProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
+            } _SEH2_END;
 
             //
             //  Break out of the loop if we didn't get CANT_WAIT.

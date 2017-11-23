@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -96,7 +96,9 @@ Return Value:
     switch (Type) {
         case AcquireExclusive:
 
+#ifdef _MSC_VER
 #pragma prefast( suppress:28137, "prefast believes Wait should be a constant, but this is ok for CDFS" )
+#endif
             Acquired = ExAcquireResourceExclusiveLite( Resource, Wait );
             break;
 
@@ -133,6 +135,7 @@ Return Value:
 _Requires_lock_held_(_Global_critical_region_)
 _When_(return!=0, _Acquires_shared_lock_(*Fcb->Resource))
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAcquireForCache (
     _Inout_ PFCB Fcb,
     _In_ BOOLEAN Wait
@@ -171,6 +174,7 @@ Return Value:
 _Requires_lock_held_(_Global_critical_region_)
 _Releases_lock_(*Fcb->Resource)
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseFromCache (
     _Inout_ PFCB Fcb
     )
@@ -205,6 +209,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopAcquire (
     _In_ PVOID Fcb,
     _In_ BOOLEAN Wait
@@ -240,6 +245,7 @@ Return Value:
 
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopRelease (
     _In_ PVOID Fcb
     )
@@ -267,10 +273,10 @@ Return Value:
     UNREFERENCED_PARAMETER( Fcb );
 }
 
-
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFilterCallbackAcquireForCreateSection (
     _In_ PFS_FILTER_CALLBACK_DATA CallbackData,
     _Unreferenced_parameter_ PVOID *CompletionContext
@@ -355,6 +361,7 @@ Return Value:
 _Function_class_(FAST_IO_RELEASE_FILE)
 _Requires_lock_held_(_Global_critical_region_)
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseForCreateSection (
     _In_ PFILE_OBJECT FileObject
     )

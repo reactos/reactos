@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -95,7 +95,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Create the internal stream.  The Vpb should be pointing at our volume
@@ -281,7 +281,7 @@ Return Value:
             }
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Cleanup any dirent structures we may have used.
@@ -323,7 +323,7 @@ Return Value:
         }
 
         CdUnlockFcb( IrpContext, Fcb );
-    }
+    } _SEH2_END;
 
     return;
 }

@@ -170,6 +170,12 @@ typedef PVOID PBCB;     //**** Bcb's are now part of the cache module
 
 #define BYTE_COUNT_EMBEDDED_NAME        (32)
 
+#ifdef __REACTOS__
+#define __volatile
+#define _Unreferenced_parameter_
+#define __field_range(a,b)
+#define __analysis_assert(x)
+#endif
 
 //
 //  The CD_MCB is used to store the mapping of logical file offset to
@@ -348,6 +354,10 @@ typedef struct _CD_DATA {
     //
 
     PDEVICE_OBJECT FileSystemDeviceObject;
+
+#ifdef __REACTOS__
+    PDEVICE_OBJECT HddFileSystemDeviceObject;
+#endif
 
     //
     //  Following are used to manage the async and delayed close queue.
@@ -545,8 +555,8 @@ typedef struct _VCB {
     //
 
     ULONG VcbCleanup;
-    __volatile ULONG VcbReference;
-    __volatile ULONG VcbUserReference;
+    __volatile LONG VcbReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
+    __volatile LONG VcbUserReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
 
     //
     //  Fcb for the Volume Dasd file, root directory and the Path Table.
@@ -732,7 +742,7 @@ typedef struct _VOLUME_DEVICE_OBJECT {
     //  executed later.
     //
 
-    __volatile ULONG PostedRequestCount;
+    __volatile LONG PostedRequestCount; /* ReactOS Change: GCC "pointer targets in passing argument 1 of 'InterlockedDecrement' differ in signedness" */
 
     //
     //  The following field indicates the number of IRP's waiting
@@ -957,7 +967,7 @@ typedef struct _FCB {
     //
 
     ULONG FcbCleanup;
-    __volatile ULONG FcbReference;
+    __volatile LONG FcbReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
     ULONG FcbUserReference;
 
     //

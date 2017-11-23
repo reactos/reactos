@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 //
 //  The Bug check file id for this module
@@ -58,6 +58,10 @@ CdQueryFsAttributeInfo (
     _Out_ PFILE_FS_ATTRIBUTE_INFORMATION Buffer,
     _Inout_ PULONG Length
     );
+
+#ifdef __REACTOS__
+#define PFILE_FS_SECTOR_SIZE_INFORMATION PVOID
+#endif
 
 NTSTATUS
 CdQueryFsSectorSizeInfo (
@@ -141,7 +145,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Vcb.
@@ -184,6 +188,9 @@ Return Value:
             Status = CdQueryFsSectorSizeInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
             break;
 #endif
+
+        /* ReactOS Change: GCC "enumeration value not handled in switch" */
+        default: break;
         }
 
         //
@@ -192,14 +199,14 @@ Return Value:
 
         Irp->IoStatus.Information = IrpSp->Parameters.QueryVolume.Length - Length;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the Vcb.
         //
 
         CdReleaseVcb( IrpContext, Fcb->Vcb );
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request if we didn't raise.

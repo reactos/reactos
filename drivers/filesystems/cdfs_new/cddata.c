@@ -17,7 +17,7 @@ Abstract:
 
 --*/
 
-#include "CdProcs.h"
+#include "cdprocs.h"
 
 #ifdef CD_SANITY
 BOOLEAN CdTestTopLevel = TRUE;
@@ -287,7 +287,7 @@ Return Value:
         //  Use a try-except to handle the exception cases.
         //
 
-        try {
+        _SEH2_TRY {
 
             //
             //  If the IrpContext is NULL then this is the first pass through
@@ -436,10 +436,10 @@ Return Value:
                 CdCompleteRequest( IrpContext, Irp, Status );
             }
 
-        } except( CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
+        } _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() )) {
 
-            Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
-        }
+            Status = CdProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
+        } _SEH2_END;
 
     } while (Status == STATUS_CANT_WAIT);
 
@@ -597,7 +597,9 @@ Return Value:
 
     if (TestStatus && !FsRtlIsNtstatusExpected( ExceptionCode )) {
 
-#pragma prefast( suppress: __WARNING_USE_OTHER_FUNCTION, "We're corrupted." )    
+#ifdef _MSC_VER
+#pragma prefast( suppress: __WARNING_USE_OTHER_FUNCTION, "We're corrupted." )
+#endif
         CdBugCheck( (ULONG_PTR) ExceptionPointer->ExceptionRecord,
                     (ULONG_PTR) ExceptionPointer->ContextRecord,
                     (ULONG_PTR) ExceptionPointer->ExceptionRecord->ExceptionAddress );
@@ -686,7 +688,7 @@ Return Value:
     //  Note that (children of) CdFsdPostRequest can raise (Mdl allocation).
     //
 
-    try {
+    _SEH2_TRY {
 
         if (ExceptionCode == STATUS_CANT_WAIT) {
 
@@ -702,11 +704,10 @@ Return Value:
             ExceptionCode = CdFsdPostRequest( IrpContext, Irp );
         }
     }
-    except( CdExceptionFilter( IrpContext, GetExceptionInformation() ))  {
+    _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() ))  {
     
-        ExceptionCode = GetExceptionCode();        
-    }
-    
+        ExceptionCode = _SEH2_GetExceptionCode();        
+    } _SEH2_END;
     //
     //  If we posted the request or our caller will retry then just return here.
     //
@@ -1009,6 +1010,10 @@ Return Value:
 
 {
     PTHREAD_CONTEXT CurrentThreadContext;
+#ifdef __REACTOS__
+    ULONG_PTR StackTop;
+    ULONG_PTR StackBottom;
+#endif
 
     PAGED_CODE();
 
@@ -1040,9 +1045,21 @@ Return Value:
     //  If this is not a valid Cdfs context then use the input thread
     //  context and store it in the top level context.
     //
+
+#ifdef __REACTOS__
+    IoGetStackLimits( &StackTop, &StackBottom);
+#endif
+
+#ifdef _MSC_VER
 #pragma warning(suppress: 6011) // Bug in PREFast around bitflag operations
+#endif
     if (FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL ) ||
+#ifndef __REACTOS__
         (!IoWithinStackLimits( (ULONG_PTR)CurrentThreadContext, sizeof( THREAD_CONTEXT ) ) ||
+#else
+        (((ULONG_PTR) CurrentThreadContext > StackBottom - sizeof( THREAD_CONTEXT )) ||
+         ((ULONG_PTR) CurrentThreadContext <= StackTop) ||
+#endif
          FlagOn( (ULONG_PTR) CurrentThreadContext, 0x3 ) ||
          (CurrentThreadContext->Cdfs != 0x53464443))) {
 
@@ -1073,6 +1090,7 @@ _Function_class_(FAST_IO_CHECK_IF_POSSIBLE)
 _IRQL_requires_same_
 _Success_(return != FALSE)
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastIoCheckIfPossible (
     _In_ PFILE_OBJECT FileObject,
     _In_ PLARGE_INTEGER FileOffset,
