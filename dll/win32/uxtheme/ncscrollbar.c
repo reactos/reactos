@@ -126,6 +126,9 @@ static enum SCROLL_HITTEST SCROLL_HitTest( HWND hwnd, SCROLLBARINFO* psbi, BOOL 
 
 static void SCROLL_ThemeDrawPart(PDRAW_CONTEXT pcontext, int iPartId,int iStateId,  SCROLLBARINFO* psbi, int htCurrent, int htDown, int htHot, RECT* r)
 {
+    if (r->right <= r->left || r->bottom <= r->top)
+        return;
+
     if(psbi->rgstate[htCurrent] & STATE_SYSTEM_UNAVAILABLE)
         iStateId += BUTTON_DISABLED - BUTTON_NORMAL;
     else if (htHot == htCurrent)
@@ -187,16 +190,21 @@ static void SCROLL_DrawInterior( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
     r = psbi->rcScrollBar;
     if (vertical)
     {
-        thumbPos += pcontext->wi.rcClient.top - pcontext->wi.rcWindow.top;
+        if (thumbPos)
+            thumbPos += pcontext->wi.rcClient.top - pcontext->wi.rcWindow.top;
         r.top    += psbi->dxyLineButton;
         r.bottom -= (psbi->dxyLineButton);
     }
     else
     {
-        thumbPos += pcontext->wi.rcClient.left - pcontext->wi.rcWindow.left;
+        if (thumbPos)
+            thumbPos += pcontext->wi.rcClient.left - pcontext->wi.rcWindow.left;
         r.left  += psbi->dxyLineButton;
         r.right -= psbi->dxyLineButton;
     }
+
+    if (r.right <= r.left || r.bottom <= r.top)
+        return;
 
     /* Draw the scroll rectangles and thumb */
 
