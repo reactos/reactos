@@ -1032,18 +1032,16 @@ OHCI_InterruptService(IN PVOID ohciExtension)
     OHCI_REG_INTERRUPT_STATUS IntStatus;
     OHCI_REG_INTERRUPT_ENABLE_DISABLE IntEnable;
     OHCI_REG_INTERRUPT_ENABLE_DISABLE IntDisable;
-    BOOLEAN Result = FALSE;
+    BOOLEAN HardwarePresent = FALSE;
 
     DPRINT_OHCI("OHCI_Interrupt: Ext %p\n", OhciExtension);
 
     OperationalRegs = OhciExtension->OperationalRegs;
 
-    Result = OHCI_HardwarePresent(OhciExtension, FALSE);
+    HardwarePresent = OHCI_HardwarePresent(OhciExtension, FALSE);
 
-    if (!Result)
-    {
+    if (!HardwarePresent)
         return FALSE;
-    }
 
     IntEnable.AsULONG = READ_REGISTER_ULONG((PULONG)&OperationalRegs->HcInterruptEnable);
     IntStatus.AsULONG = READ_REGISTER_ULONG((PULONG)&OperationalRegs->HcInterruptStatus) & IntEnable.AsULONG;
