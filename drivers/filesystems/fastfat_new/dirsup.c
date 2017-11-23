@@ -1991,7 +1991,11 @@ Return Value:
     ULONG ByteOffset;
     PDIRENT Dirent;
 
+#ifndef __REACTOS__
     BOOLEAN IsDirectoryEmpty;
+#else
+    BOOLEAN IsDirectoryEmpty = FALSE;
+#endif
 
     NTSTATUS Status;
 

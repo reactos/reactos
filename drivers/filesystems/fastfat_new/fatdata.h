@@ -243,7 +243,7 @@ extern LONG FatDebugTraceIndent;
 }
 
 #define DebugUnwind(X) {                                                      \
-    if (AbnormalTermination()) {                                             \
+    if (_SEH2_AbnormalTermination()) {                                        \
         DebugTrace(0, DEBUG_TRACE_UNWIND, #X ", Abnormal termination.\n", 0); \
     }                                                                         \
 }

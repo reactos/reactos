@@ -22,6 +22,10 @@ Abstract:
 
 #define BugCheckFileId                   (FAT_BUG_CHECK_PNP)
 
+#ifdef __REACTOS__
+#define Dbg                              (DEBUG_TRACE_PNP)
+#endif
+
 NTSTATUS
 FatPnpQueryRemove (
     PIRP_CONTEXT IrpContext,
