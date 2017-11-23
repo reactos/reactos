@@ -1274,12 +1274,6 @@ OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
     DPRINT_OHCI("OHCI_RemainTDs: ... \n");
 
     MaxTDs = OhciEndpoint->MaxTransferDescriptors;
-
-    if (MaxTDs == 0)
-    {
-        return 0;
-    }
-
     TD = (POHCI_HCD_TD)OhciEndpoint->FirstTD;
 
     RemainTDs = 0;
