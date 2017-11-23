@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -27,6 +27,7 @@ Abstract:
 #pragma alloc_text(PAGE, CdDissectName)
 #pragma alloc_text(PAGE, CdGenerate8dot3Name)
 #pragma alloc_text(PAGE, CdFullCompareNames)
+#pragma alloc_text(PAGE, CdIsLegalName)
 #pragma alloc_text(PAGE, CdIs8dot3Name)
 #pragma alloc_text(PAGE, CdIsNameInExpression)
 #pragma alloc_text(PAGE, CdShortNameDirentOffset)
@@ -34,10 +35,12 @@ Abstract:
 #endif
 
 
+_Post_satisfies_(_Old_(CdName->FileName.Length) >=
+                 CdName->FileName.Length + CdName->VersionString.Length)
 VOID
 CdConvertNameToCdName (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PCD_NAME CdName
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PCD_NAME CdName
     )
 
 /*++
@@ -64,6 +67,8 @@ Return Value:
     PWCHAR CurrentCharacter = CdName->FileName.Buffer;
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     //
     //  Look for a separator character.
@@ -103,10 +108,10 @@ Return Value:
 
 VOID
 CdConvertBigToLittleEndian (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCHAR BigEndian,
-    IN ULONG ByteCount,
-    OUT PCHAR LittleEndian
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_reads_bytes_(ByteCount) PCHAR BigEndian,
+    _In_ ULONG ByteCount,
+    _Out_writes_bytes_(ByteCount) PCHAR LittleEndian
     )
 
 /*++
@@ -166,7 +171,10 @@ Return Value:
 
     while (RemainingByteCount != 0) {
 
+#pragma prefast(push)
+#pragma prefast(suppress:26014, "RemainingByteCount is even")
         *Destination = *Source;
+#pragma prefast(pop)
 
         Source += 2;
         Destination += 2;
@@ -180,9 +188,9 @@ Return Value:
 
 VOID
 CdUpcaseName (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCD_NAME Name,
-    IN OUT PCD_NAME UpcaseName
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCD_NAME Name,
+    _Inout_ PCD_NAME UpcaseName
     )
 
 /*++
@@ -206,10 +214,11 @@ Return Value:
 
 {
     NTSTATUS Status;
-    //PVOID NewBuffer; /* ReactOS Change: GCC Uninitialized variable */
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  If the name structures are different then initialize the different components.
     //
@@ -242,6 +251,7 @@ Return Value:
             //  copy the data.
             //
 
+#pragma prefast( suppress:26015, "CD_NAME structures have two UNICODE_STRING structures pointing to the same allocation. there is no way to tell prefast this is the case and that the allocation is always big enough.");
             *(UpcaseName->VersionString.Buffer) = L';';
 
             UpcaseName->VersionString.Buffer += 1;
@@ -260,8 +270,9 @@ Return Value:
     //  This should never fail.
     //
 
-    ASSERT( Status == STATUS_SUCCESS );
-
+    NT_ASSERT( Status == STATUS_SUCCESS );
+    __analysis_assert( Status == STATUS_SUCCESS );
+                
     if (Name->VersionString.Length != 0) {
 
         Status = RtlUpcaseUnicodeString( &UpcaseName->VersionString,
@@ -272,7 +283,8 @@ Return Value:
         //  This should never fail.
         //
 
-        ASSERT( Status == STATUS_SUCCESS );
+        NT_ASSERT( Status == STATUS_SUCCESS );
+        __analysis_assert( Status == STATUS_SUCCESS );        
     }
 
     return;
@@ -281,9 +293,9 @@ Return Value:
 
 VOID
 CdDissectName (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PUNICODE_STRING RemainingName,
-    OUT PUNICODE_STRING FinalName
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PUNICODE_STRING RemainingName,
+    _Out_ PUNICODE_STRING FinalName
     )
 
 /*++
@@ -312,6 +324,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  Find the offset of the next component separators.
     //
@@ -354,9 +368,61 @@ Return Value:
 
 
 BOOLEAN
+CdIsLegalName (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PUNICODE_STRING FileName
+    )
+
+/*++
+
+Routine Description:
+
+    This routine checks if the name is a legal ISO 9660 name.
+
+Arguments:
+
+    FileName - String of bytes containing the name.
+
+Return Value:
+
+    BOOLEAN - TRUE if this name is a legal, FALSE otherwise.
+
+--*/
+
+{
+    PWCHAR Wchar;
+
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
+
+    //
+    //  Check if name corresponds to a legal file name.
+    //
+
+    for (Wchar = FileName->Buffer;
+         Wchar < Add2Ptr( FileName->Buffer, FileName->Length, PWCHAR );
+         Wchar++) {
+
+        if ((*Wchar < 0xff) &&
+            !FsRtlIsAnsiCharacterLegalHpfs( *Wchar, FALSE ) &&
+            (*Wchar != L'"') &&
+            (*Wchar != L'<') &&
+            (*Wchar != L'>') &&
+            (*Wchar != L'|')) {
+
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+
+BOOLEAN
 CdIs8dot3Name (
-    IN PIRP_CONTEXT IrpContext,
-    IN UNICODE_STRING FileName
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ UNICODE_STRING FileName
     )
 
 /*++
@@ -378,7 +444,7 @@ Return Value:
 
 {
     CHAR DbcsNameBuffer[ BYTE_COUNT_8_DOT_3 ];
-    STRING DbcsName;
+    STRING DbcsName = {0};
 
     PWCHAR NextWchar;
     ULONG Count;
@@ -388,11 +454,13 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  The length must be less than 24 bytes.
     //
 
-    ASSERT( FileName.Length != 0 );
+    NT_ASSERT( FileName.Length != 0 );
     if (FileName.Length > BYTE_COUNT_8_DOT_3) {
 
         return FALSE;
@@ -474,11 +542,11 @@ Return Value:
 
 VOID
 CdGenerate8dot3Name (
-    IN PIRP_CONTEXT IrpContext,
-    IN PUNICODE_STRING FileName,
-    IN ULONG DirentOffset,
-    OUT PWCHAR ShortFileName,
-    OUT PUSHORT ShortByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PUNICODE_STRING FileName,
+    _In_ ULONG DirentOffset,
+    _Out_writes_bytes_to_(BYTE_COUNT_8_DOT_3, *ShortByteCount) PWCHAR ShortFileName,
+    _Out_ PUSHORT ShortByteCount
     )
 
 /*++
@@ -517,11 +585,12 @@ Return Value:
 
 --*/
 
-{
+{   
     NTSTATUS Status;
+    
     UNICODE_STRING ShortName;
     UNICODE_STRING BiasedShortName;
-    WCHAR ShortNameBuffer[ BYTE_COUNT_8_DOT_3 / sizeof( WCHAR ) ];
+    WCHAR ShortNameBuffer[ BYTE_COUNT_8_DOT_3 / sizeof( WCHAR ) ] = {0};
     WCHAR BiasedShortNameBuffer[ BYTE_COUNT_8_DOT_3 / sizeof( WCHAR ) ];
 
     GENERATE_NAME_CONTEXT NameContext;
@@ -537,7 +606,7 @@ Return Value:
 
     BOOLEAN FoundTilde = FALSE;
 
-    OEM_STRING OemName;
+    OEM_STRING OemName = {0};
     USHORT OemNameOffset = 0;
     BOOLEAN OverflowBuffer = FALSE;
 
@@ -568,7 +637,7 @@ Return Value:
     //  into the name in order to reduce the chance of name conflicts.  We will use
     //  a tilde character followed by a character representation of the dirent offset.
     //  This will be the hexadecimal representation of the dirent offset in the directory.
-    //  It is actually this offset divided by 32 since we don't need the full
+    //  It is actuall this offset divided by 32 since we don't need the full
     //  granularity.
     //
 
@@ -592,9 +661,14 @@ Return Value:
     
     Status = RtlUnicodeStringToOemString(&OemName, &ShortName, TRUE);
 
-    if (!NT_SUCCESS( Status )) {
+    //
+    //  If this failed, bail out. Don't expect any problems other than no mem.
+    //
+    
+    if (!NT_SUCCESS( Status)) {
 
-        CdRaiseStatus( IrpContext, Status );
+        NT_ASSERT( STATUS_INSUFFICIENT_RESOURCES == Status);
+        CdRaiseStatus( IrpContext, Status);
     }
     
     Length = 0;
@@ -650,7 +724,7 @@ Return Value:
 
     //
     //  Figure out the maximum number of characters we can copy of the base
-    //  name.  We subtract the number of characters in the dirent string from 8.
+    //  name.  We subract the number of characters in the dirent string from 8.
     //  We will copy this many characters or stop when we reach a '.' character
     //  or a '~' character in the name.
     //
@@ -685,18 +759,21 @@ Return Value:
         // may use 2 bytes as DBCS characters.
         //
 
+#pragma prefast(push)
+#pragma prefast(suppress:26014, "OemNameOffset <= BaseNameOffset throughout this loop; OemName buffer previously allocated based on ShortName's length.")
         if (FsRtlIsLeadDbcsCharacter(OemName.Buffer[OemNameOffset])) {
+#pragma prefast(pop)
 
             OemNameOffset += 2;
+
+            if ((OemNameOffset + (BiasedShortName.Length / sizeof(WCHAR))) > 8)  {
+            
+                OverflowBuffer = TRUE;
+            }
         }
         else  {
         
             OemNameOffset++;
-        }
-
-        if ((OemNameOffset + (BiasedShortName.Length / sizeof(WCHAR))) > 8)  {
-        
-            OverflowBuffer = TRUE;
         }
 
         //
@@ -719,9 +796,11 @@ Return Value:
     //  Now copy the dirent string into the biased name buffer.
     //
 
+#pragma prefast(push)
     RtlCopyMemory( NextWchar,
                    BiasedShortName.Buffer,
                    BiasedShortName.Length );
+#pragma prefast(pop)
 
     Length += BiasedShortName.Length;
     NextWchar += (BiasedShortName.Length / sizeof( WCHAR ));
@@ -744,18 +823,16 @@ Return Value:
     //
 
     *ShortByteCount = Length;
-
-    return;
 }
 
 
 BOOLEAN
 CdIsNameInExpression (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCD_NAME CurrentName,
-    IN PCD_NAME SearchExpression,
-    IN ULONG  WildcardFlags,
-    IN BOOLEAN CheckVersion
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCD_NAME CurrentName,
+    _In_ PCD_NAME SearchExpression,
+    _In_ ULONG  WildcardFlags,
+    _In_ BOOLEAN CheckVersion
     )
 
 /*++
@@ -791,6 +868,8 @@ Return Value:
     BOOLEAN Match = TRUE;
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  If there are wildcards in the expression then we call the
     //  appropriate FsRtlRoutine.
@@ -860,8 +939,8 @@ Return Value:
 
 ULONG
 CdShortNameDirentOffset (
-    IN PIRP_CONTEXT IrpContext,
-    IN PUNICODE_STRING Name
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PUNICODE_STRING Name
     )
 
 /*++
@@ -894,6 +973,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  Walk through the name until we either reach the end of the name
     //  or find a tilde character.
@@ -967,9 +1048,9 @@ Return Value:
 
 FSRTL_COMPARISON_RESULT
 CdFullCompareNames (
-    IN PIRP_CONTEXT IrpContext,
-    IN PUNICODE_STRING NameA,
-    IN PUNICODE_STRING NameB
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PUNICODE_STRING NameA,
+    _In_ PUNICODE_STRING NameB
     )
 
 /*++
@@ -987,8 +1068,8 @@ Return Value:
 
     COMPARISON - returns
 
-        LessThan    if NameA < NameB lexicographically,
-        GreaterThan if NameA > NameB lexicographically,
+        LessThan    if NameA < NameB lexicalgraphically,
+        GreaterThan if NameA > NameB lexicalgraphically,
         EqualTo     if NameA is equal to NameB
 
 --*/
@@ -1000,6 +1081,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  Figure out the minimum of the two lengths
     //
@@ -1016,7 +1099,7 @@ Return Value:
 
     //
     //  Loop through looking at all of the characters in both strings
-    //  testing for equality, less than, and greater than
+    //  testing for equalilty, less than, and greater than
     //
 
     i = RtlCompareMemory( NameA->Buffer, NameB->Buffer, MinLength );

@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -33,14 +33,16 @@ Abstract:
 #pragma alloc_text(PAGE, CdSetFileObject)
 #endif
 
-
+
+_When_(TypeOfOpen == UnopenedFileObject, _At_(Fcb, _In_opt_))
+_When_(TypeOfOpen != UnopenedFileObject, _At_(Fcb, _In_))
 VOID
 CdSetFileObject (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_OBJECT FileObject,
-    IN TYPE_OF_OPEN TypeOfOpen,
-    IN PFCB Fcb OPTIONAL,
-    IN PCCB Ccb OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFILE_OBJECT FileObject,
+    _In_ TYPE_OF_OPEN TypeOfOpen,
+    PFCB Fcb,
+    _In_opt_ PCCB Ccb
     )
 
 /*++
@@ -70,12 +72,14 @@ Return Value:
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+
     //
     //  We only have values 0 to 7 available so make sure we didn't
     //  inadvertantly add a new type.
     //
 
-    ASSERTMSG( "FileObject types exceed available bits\n", BeyondValidType <= 8 );
+    NT_ASSERTMSG( "FileObject types exceed available bits\n", BeyondValidType <= 8 );
 
     //
     //  Setting a file object to type UnopenedFileObject means just
@@ -94,7 +98,7 @@ Return Value:
     //  Check that the 3 low-order bits of the Ccb are clear.
     //
 
-    ASSERTMSG( "Ccb is not quad-aligned\n", !FlagOn( ((ULONG_PTR) Ccb), TYPE_OF_OPEN_MASK ));
+    NT_ASSERTMSG( "Ccb is not quad-aligned\n", !FlagOn( ((ULONG_PTR) Ccb), TYPE_OF_OPEN_MASK ));
 
     //
     //  We will or the type of open into the low order bits of FsContext2
@@ -105,7 +109,8 @@ Return Value:
     FileObject->FsContext = Fcb;
     FileObject->FsContext2 = Ccb;
 
-    SetFlag( (*(PULONG_PTR)&FileObject->FsContext2), TypeOfOpen ); /* ReactOS Change: GCC "invalid lvalue in assignment" */
+#pragma warning( suppress: 4213 )
+    SetFlag( ((ULONG_PTR) FileObject->FsContext2), TypeOfOpen );
 
     //
     //  Set the Vpb field in the file object.
@@ -117,13 +122,16 @@ Return Value:
 }
 
 
-
+_When_(return == UnopenedFileObject, _At_(*Fcb, _Post_null_))
+_When_(return != UnopenedFileObject, _At_(Fcb, _Outptr_))
+_When_(return == UnopenedFileObject, _At_(*Ccb, _Post_null_))
+_When_(return != UnopenedFileObject, _At_(Ccb, _Outptr_))
 TYPE_OF_OPEN
 CdDecodeFileObject (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_OBJECT FileObject,
-    OUT PFCB *Fcb,
-    OUT PCCB *Ccb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFILE_OBJECT FileObject,
+    PFCB *Fcb,
+    PCCB *Ccb
     )
 
 /*++
@@ -152,6 +160,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+
     //
     //  If this is an unopened file object then return NULL for the
     //  Fcb/Ccb.  Don't trust any other values in the file object.
@@ -175,8 +185,9 @@ Return Value:
 
         *Fcb = FileObject->FsContext;
         *Ccb = FileObject->FsContext2;
-
-        ClearFlag( (*(PULONG_PTR)Ccb), TYPE_OF_OPEN_MASK ); /* ReactOS Change: GCC "invalid lvalue in assignment" */
+        
+#pragma warning( suppress: 4213 )
+        ClearFlag( (ULONG_PTR) *Ccb, TYPE_OF_OPEN_MASK );
     }
 
     //
@@ -189,8 +200,8 @@ Return Value:
 
 TYPE_OF_OPEN
 CdFastDecodeFileObject (
-    IN PFILE_OBJECT FileObject,
-    OUT PFCB *Fcb
+    _In_ PFILE_OBJECT FileObject,
+    _Out_ PFCB *Fcb
     )
 
 /*++

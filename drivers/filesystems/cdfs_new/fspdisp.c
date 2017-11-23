@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -25,7 +25,7 @@ Abstract:
 
 VOID
 CdFspDispatch (
-    IN PIRP_CONTEXT IrpContext
+    _In_ PVOID Context
     )
 
 /*++
@@ -48,7 +48,8 @@ Return Value:
 --*/
 
 {
-    THREAD_CONTEXT ThreadContext;
+    THREAD_CONTEXT ThreadContext = {0};
+    PIRP_CONTEXT IrpContext = Context;
     NTSTATUS Status;
 
     PIRP Irp = IrpContext->Irp;
@@ -94,7 +95,7 @@ Return Value:
 
         while (TRUE) {
 
-            _SEH2_TRY {
+            try {
 
                 //
                 //  Reinitialize for the next try at completing this
@@ -124,7 +125,7 @@ Return Value:
 
                 case IRP_MJ_CLOSE :
 
-                    ASSERT( FALSE );
+                    NT_ASSERT( FALSE );
                     break;
 
                 case IRP_MJ_READ :
@@ -174,7 +175,7 @@ Return Value:
 
                 case IRP_MJ_PNP :
 
-                    ASSERT( FALSE );
+                    NT_ASSERT( FALSE );
                     CdCommonPnp( IrpContext, Irp );
                     break;
 
@@ -184,10 +185,10 @@ Return Value:
                     CdCompleteRequest( IrpContext, Irp, Status );
                 }
 
-            } _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() )) {
+            } except( CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
 
-                Status = CdProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
-            } _SEH2_END;
+                Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
+            }
 
             //
             //  Break out of the loop if we didn't get CANT_WAIT.
@@ -233,6 +234,12 @@ Return Value:
                 VolDo->OverflowQueueCount -= 1;
 
                 Entry = RemoveHeadList( &VolDo->OverflowQueue );
+
+            } else {
+
+                VolDo->PostedRequestCount -= 1;            
+
+                Entry = NULL;
             }
 
             KeReleaseSpinLock( &VolDo->OverflowQueueSpinLock, SavedIrql );
@@ -242,7 +249,10 @@ Return Value:
             //  the Ex Worker thread.
             //
 
-            if (Entry == NULL) { break; }
+            if (Entry == NULL) { 
+
+                break; 
+            }
 
             //
             //  Extract the IrpContext , Irp, set wait to TRUE, and loop.
@@ -254,20 +264,12 @@ Return Value:
 
             Irp = IrpContext->Irp;
             IrpSp = IoGetCurrentIrpStackLocation( Irp );
+            __analysis_assert( IrpSp != 0 );
 
             continue;
         }
 
         break;
-    }
-
-    //
-    //  Decrement the PostedRequestCount if there was a volume device object.
-    //
-
-    if (VolDo) {
-
-        InterlockedDecrement( &VolDo->PostedRequestCount );
     }
 
     return;

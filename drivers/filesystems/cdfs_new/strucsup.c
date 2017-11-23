@@ -14,7 +14,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -29,46 +29,46 @@ Abstract:
 //
 //  PFCB
 //  CdAllocateFcbData (
-//      IN PIRP_CONTEXT IrpContext
+//      _In_ PIRP_CONTEXT IrpContext
 //      );
 //
 //  VOID
 //  CdDeallocateFcbData (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
 //  PFCB
 //  CdAllocateFcbIndex (
-//      IN PIRP_CONTEXT IrpContext
+//      _In_ PIRP_CONTEXT IrpContext
 //      );
 //
 //  VOID
 //  CdDeallocateFcbIndex (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
 //  PFCB_NONPAGED
 //  CdAllocateFcbNonpaged (
-//      IN PIRP_CONTEXT IrpContext
+//      _In_ PIRP_CONTEXT IrpContext
 //      );
 //
 //  VOID
 //  CdDeallocateFcbNonpaged (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB_NONPAGED FcbNonpaged
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB_NONPAGED FcbNonpaged
 //      );
 //
 //  PCCB
 //  CdAllocateCcb (
-//      IN PIRP_CONTEXT IrpContext
+//      _In_ PIRP_CONTEXT IrpContext
 //      );
 //
 //  VOID
 //  CdDeallocateCcb (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PCCB Ccb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PCCB Ccb
 //      );
 //
 
@@ -114,14 +114,14 @@ typedef struct _FCB_TABLE_ELEMENT {
 //
 //  VOID
 //  CdInsertFcbTable (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _In_ PFCB Fcb
 //      );
 //
 //  VOID
 //  CdDeleteFcbTable (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _In_ PFCB Fcb
 //      );
 //
 
@@ -148,44 +148,53 @@ typedef struct _FCB_TABLE_ELEMENT {
 
 VOID
 CdDeleteFcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb
     );
 
 PFCB_NONPAGED
 CdCreateFcbNonpaged (
-    IN PIRP_CONTEXT IrpContext
+    _In_ PIRP_CONTEXT IrpContext
     );
 
 VOID
 CdDeleteFcbNonpaged (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB_NONPAGED FcbNonpaged
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB_NONPAGED FcbNonpaged
     );
+
+//  Inform prefast that this is a compare routine.
+RTL_GENERIC_COMPARE_ROUTINE CdFcbTableCompare;
 
 RTL_GENERIC_COMPARE_RESULTS
 CdFcbTableCompare (
-    IN PRTL_GENERIC_TABLE FcbTable,
-    IN PVOID Fid1,
-    IN PVOID Fid2
+    _In_ PRTL_GENERIC_TABLE FcbTable,
+    _In_ PVOID Fid1,
+    _In_ PVOID Fid2
     );
+
+//  Inform prefast that this is an alloc reoutine.
+RTL_GENERIC_ALLOCATE_ROUTINE CdAllocateFcbTable;
 
 PVOID
 CdAllocateFcbTable (
-    IN PRTL_GENERIC_TABLE FcbTable,
-    IN CLONG ByteSize
+    _In_ PRTL_GENERIC_TABLE FcbTable,
+    _In_ CLONG ByteSize
     );
+
+//  Inform prefast that this is a free reoutine.
+RTL_GENERIC_FREE_ROUTINE CdDeallocateFcbTable;
 
 VOID
 CdDeallocateFcbTable (
-    IN PRTL_GENERIC_TABLE FcbTable,
-    IN PVOID Buffer
+    _In_ PRTL_GENERIC_TABLE FcbTable,
+    _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer
     );
 
 ULONG
 CdTocSerial (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCDROM_TOC CdromToc
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCDROM_TOC_LARGE CdromToc
     );
 
 #ifdef ALLOC_PRAGMA
@@ -215,19 +224,28 @@ CdTocSerial (
 #pragma alloc_text(PAGE, CdUpdateVcbFromVolDescriptor)
 #endif
 
+//
+//  Some static names for volume streams
+//
+
+UNICODE_STRING CdInternalStreamNames[] = {
+        { 24, 24, L"$PATH_TABLE$"},
+        { 2,  2,  L"\\"}
+};
+
 
 VOID
 CdInitializeVcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PVCB Vcb,
-    IN PDEVICE_OBJECT TargetDeviceObject,
-    IN PVPB Vpb,
-    IN PCDROM_TOC CdromToc,
-    IN ULONG TocLength,
-    IN ULONG TocTrackCount,
-    IN ULONG TocDiskFlags,
-    IN ULONG BlockFactor,
-    IN ULONG MediaChangeCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb,
+    _In_ __drv_aliasesMem  PDEVICE_OBJECT TargetDeviceObject,
+    _In_ __drv_aliasesMem PVPB Vpb,
+    _In_ __drv_aliasesMem PCDROM_TOC_LARGE CdromToc,
+    _In_ ULONG TocLength,
+    _In_ ULONG TocTrackCount,
+    _In_ ULONG TocDiskFlags,
+    _In_ ULONG BlockFactor,
+    _In_ ULONG MediaChangeCount
     )
 
 /*++
@@ -271,6 +289,8 @@ Return Value:
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+
     //
     //  We start by first zeroing out all of the VCB, this will guarantee
     //  that any stale data is wiped clean.
@@ -298,19 +318,19 @@ Return Value:
     //  uninitialize the notify structures before returning.
     //
     
-    _SEH2_TRY  {
+    try  {
 
-        Vcb->SwapVpb = FsRtlAllocatePoolWithTag( NonPagedPool,
+        Vcb->SwapVpb = FsRtlAllocatePoolWithTag( CdNonPagedPool,
                                                  sizeof( VPB ),
                                                  TAG_VPB );
     }
-    _SEH2_FINALLY {
+    finally {
 
-        if (_SEH2_AbnormalTermination())  {
+        if (AbnormalTermination())  {
         
             FsRtlNotifyUninitializeSync( &Vcb->NotifySync );
         }
-    } _SEH2_END;
+    }
 
     //
     //  Nothing beyond this point should raise.
@@ -368,7 +388,7 @@ Return Value:
     CdUpdateVcbCondition( Vcb, VcbMountInProgress);
 
     //
-    //  Reference the Vcb for two reasons.  The first is a reference
+    //  Refererence the Vcb for two reasons.  The first is a reference
     //  that prevents the Vcb from going away on the last close unless
     //  dismount has already occurred.  The second is to make sure
     //  we don't go into the dismount path on any error during mount
@@ -411,9 +431,9 @@ Return Value:
 
 VOID
 CdUpdateVcbFromVolDescriptor (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PVCB Vcb,
-    IN PCHAR RawIsoVd OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb,
+    _In_reads_bytes_opt_(SECTOR_SIZE) PCHAR RawIsoVd
     )
 
 /*++
@@ -438,7 +458,6 @@ Return Value:
 --*/
 
 {
-    //ULONG Shift; /* ReactOS Change: GCC Unused variable */
     ULONG StartingBlock;
     ULONG ByteCount;
 
@@ -456,7 +475,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Copy the block size and compute the various block masks.
@@ -495,7 +514,7 @@ Return Value:
         if (ARGUMENT_PRESENT( RawIsoVd )) {
 
             //
-            //  Create the path table Fcb and reference it and the Vcb.
+            //  Create the path table Fcb and refererence it and the Vcb.
             //
 
             CdLockVcb( IrpContext, Vcb );
@@ -553,7 +572,7 @@ Return Value:
 
             SetFlag( Vcb->PathTableFcb->FcbState, FCB_STATE_INITIALIZED );
 
-            CdCreateInternalStream( IrpContext, Vcb, Vcb->PathTableFcb );
+            CdCreateInternalStream( IrpContext, Vcb, Vcb->PathTableFcb, &CdInternalStreamNames[0]);
 
             //
             //  Create the root index and reference it in the Vcb.
@@ -599,7 +618,7 @@ Return Value:
             //  Create the stream file for the root directory.
             //
 
-            CdCreateInternalStream( IrpContext, Vcb, Vcb->RootIndexFcb );
+            CdCreateInternalStream( IrpContext, Vcb, Vcb->RootIndexFcb, &CdInternalStreamNames[1] );
 
             //
             //  Now do the volume dasd Fcb.  Create this and reference it in the
@@ -686,7 +705,7 @@ Return Value:
             ULONG RootDirectorySize;
 
             //
-            //  Create the path table Fcb and reference it and the Vcb.
+            //  Create the path table Fcb and refererence it and the Vcb.
             //
 
             CdLockVcb( IrpContext, Vcb );
@@ -723,7 +742,7 @@ Return Value:
 
             SetFlag( Vcb->PathTableFcb->FcbState, FCB_STATE_INITIALIZED );
 
-            CdCreateInternalStream( IrpContext, Vcb, Vcb->PathTableFcb );
+            CdCreateInternalStream( IrpContext, Vcb, Vcb->PathTableFcb, &CdInternalStreamNames[0]);
 
             //
             //  Create the root index and reference it in the Vcb.
@@ -781,7 +800,7 @@ Return Value:
             //  Create the stream file for the root directory.
             //
 
-            CdCreateInternalStream( IrpContext, Vcb, Vcb->RootIndexFcb );
+            CdCreateInternalStream( IrpContext, Vcb, Vcb->RootIndexFcb, &CdInternalStreamNames[1] );
 
             //
             //  Now do the volume dasd Fcb.  Create this and reference it in the
@@ -843,17 +862,17 @@ Return Value:
             SetFlag( Vcb->VcbState, VCB_STATE_ISO );
         }
         
-    } _SEH2_FINALLY {
+    } finally {
 
         if (UnlockVcb) { CdUnlockVcb( IrpContext, Vcb ); }
-    } _SEH2_END;
+    }
 }
 
 
 VOID
 CdDeleteVcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PVCB Vcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb
     )
 
 /*++
@@ -862,7 +881,7 @@ Routine Description:
 
     This routine is called to delete a Vcb which failed mount or has been
     dismounted.  The dismount code should have already removed all of the
-    open Fcb's.  We do nothing here but clean up other auxiliary structures.
+    open Fcb's.  We do nothing here but clean up other auxilary structures.
 
 Arguments:
 
@@ -879,24 +898,20 @@ Return Value:
 
     ASSERT_EXCLUSIVE_CDDATA;
     ASSERT_EXCLUSIVE_VCB( Vcb );
-
+    
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  Chuck the backpocket Vpb we kept just in case.
     //
 
-    if (Vcb->SwapVpb) {
-
-        CdFreePool( &Vcb->SwapVpb );
-    }
+    CdFreePool( &Vcb->SwapVpb );
     
     //
     //  If there is a Vpb then we must delete it ourselves.
     //
 
-    if (Vcb->Vpb != NULL) {
-
-        CdFreePool( &Vcb->Vpb );
-    }
+    CdFreePool( &Vcb->Vpb );
 
     //
     //  Dereference our target if we haven't already done so.
@@ -908,12 +923,18 @@ Return Value:
     }
 
     //
-    //  Delete the XA Sector if allocated.
+    //  Delete the XA Sector and sector cache buffer if allocated.
     //
 
-    if (Vcb->XASector != NULL) {
+    CdFreePool( &Vcb->XASector );
+    CdFreePool( &Vcb->SectorCacheBuffer);
 
-        CdFreePool( &Vcb->XASector );
+    if (Vcb->SectorCacheIrp != NULL) {
+
+        IoFreeIrp( Vcb->SectorCacheIrp);
+        Vcb->SectorCacheIrp = NULL;
+
+        ExDeleteResourceLite( &Vcb->SectorCacheResource);
     }
 
     //
@@ -933,10 +954,7 @@ Return Value:
     //  Delete the TOC if present.
     //
 
-    if (Vcb->CdromToc != NULL) {
-
-        CdFreePool( &Vcb->CdromToc );
-    }
+    CdFreePool( &Vcb->CdromToc );
 
     //
     //  Uninitialize the notify structures.
@@ -950,7 +968,7 @@ Return Value:
     //
     //  Now delete the volume device object.
     //
-
+#pragma prefast( suppress: __WARNING_BUFFER_UNDERFLOW, "This is ok, the Vcb is embedded in our volume device object, and that is what we are really deleting." )
     IoDeleteDevice( (PDEVICE_OBJECT) CONTAINING_RECORD( Vcb,
                                                         VOLUME_DEVICE_OBJECT,
                                                         Vcb ));
@@ -961,10 +979,10 @@ Return Value:
 
 PFCB
 CdCreateFcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN FILE_ID FileId,
-    IN NODE_TYPE_CODE NodeTypeCode,
-    OUT PBOOLEAN FcbExisted OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ FILE_ID FileId,
+    _In_ NODE_TYPE_CODE NodeTypeCode,
+    _Out_opt_ PBOOLEAN FcbExisted
     )
 
 /*++
@@ -1051,6 +1069,7 @@ Return Value:
 
         default:
 
+#pragma prefast( suppress: __WARNING_USE_OTHER_FUNCTION, "This is a bug." )   
             CdBugCheck( 0, 0, 0 );
         }
 
@@ -1091,6 +1110,12 @@ Return Value:
         ExInitializeFastMutex( &NewFcb->FcbNonpaged->AdvancedFcbHeaderMutex );
         FsRtlSetupAdvancedHeader( &NewFcb->Header, 
                                   &NewFcb->FcbNonpaged->AdvancedFcbHeaderMutex );
+
+        if (NodeTypeCode == CDFS_NTC_FCB_DATA) {
+
+            FsRtlInitializeOplock( CdGetFcbOplock(NewFcb) );
+        }
+
     } else {
 
         *FcbExisted = TRUE;
@@ -1102,10 +1127,10 @@ Return Value:
 
 VOID
 CdInitializeFcbFromPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PFCB ParentFcb OPTIONAL,
-    IN PPATH_ENTRY PathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_opt_ PFCB ParentFcb,
+    _In_ PPATH_ENTRY PathEntry
     )
 
 /*++
@@ -1167,8 +1192,7 @@ Return Value:
     //  State flags for this Fcb.
     //
 
-    SetFlag( Fcb->FileAttributes,
-             FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_DIRECTORY );
+    SetFlag( Fcb->FileAttributes, FILE_ATTRIBUTE_DIRECTORY );
 
     //
     //  Link into the other in-memory structures and into the Fcb table.
@@ -1192,10 +1216,10 @@ Return Value:
 
 VOID
 CdInitializeFcbFromFileContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PFCB ParentFcb,
-    IN PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ PFCB ParentFcb,
+    _In_ PFILE_ENUM_CONTEXT FileContext
     )
 
 /*++
@@ -1238,7 +1262,7 @@ Return Value:
 
     CdLockFcb( IrpContext, Fcb );
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Initialize the common header in the Fcb.  The node type is already
@@ -1361,10 +1385,10 @@ Return Value:
         CdInsertFcbTable( IrpContext, Fcb );
         SetFlag( Fcb->FcbState, FCB_STATE_IN_FCB_TABLE );
 
-    } _SEH2_FINALLY {
+    } finally {
 
         CdUnlockFcb( IrpContext, Fcb );
-    } _SEH2_END;
+    }
 
     return;
 }
@@ -1372,9 +1396,9 @@ Return Value:
 
 PCCB
 CdCreateCcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG Flags
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ ULONG Flags
     )
 
 /*++
@@ -1399,6 +1423,8 @@ Return Value:
     PCCB NewCcb;
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  Allocate and initialize the structure.
     //
@@ -1427,8 +1453,8 @@ Return Value:
 
 VOID
 CdDeleteCcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCCB Ccb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ __drv_freesMem( Pool ) PCCB Ccb
     )
 /*++
 
@@ -1449,6 +1475,8 @@ Return Value:
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     if (Ccb->SearchExpression.FileName.Buffer != NULL) {
 
         CdFreePool( &Ccb->SearchExpression.FileName.Buffer );
@@ -1459,11 +1487,13 @@ Return Value:
 }
 
 
+_When_(RaiseOnError || return, _At_(Fcb->FileLock, _Post_notnull_))
+_When_(RaiseOnError, _At_(IrpContext, _Pre_notnull_))
 BOOLEAN
 CdCreateFileLock (
-    IN PIRP_CONTEXT IrpContext OPTIONAL,
-    IN PFCB Fcb,
-    IN BOOLEAN RaiseOnError
+    _In_opt_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ BOOLEAN RaiseOnError
     )
 
 /*++
@@ -1520,7 +1550,7 @@ Return Value:
          
         if (RaiseOnError) {
 
-            ASSERT( ARGUMENT_PRESENT( IrpContext ));
+            NT_ASSERT( ARGUMENT_PRESENT( IrpContext ));
 
             CdRaiseStatus( IrpContext, STATUS_INSUFFICIENT_RESOURCES );
         }
@@ -1532,10 +1562,10 @@ Return Value:
 }
 
 
-PIRP_CONTEXT
+_Ret_valid_ PIRP_CONTEXT
 CdCreateIrpContext (
-    IN PIRP Irp,
-    IN BOOLEAN Wait
+    _In_ PIRP Irp,
+    _In_ BOOLEAN Wait
     )
 
 /*++
@@ -1570,12 +1600,7 @@ Return Value:
     //  occur in the context of fileobjects (i.e., mount).
     //
 
-#ifndef __REACTOS__
     if (IrpSp->DeviceObject == CdData.FileSystemDeviceObject) {
-#else
-    if (IrpSp->DeviceObject == CdData.FileSystemDeviceObject ||
-        IrpSp->DeviceObject == CdData.HddFileSystemDeviceObject) {
-#endif
 
         if (IrpSp->FileObject != NULL &&
             IrpSp->MajorFunction != IRP_MJ_CREATE &&
@@ -1585,7 +1610,7 @@ Return Value:
             ExRaiseStatus( STATUS_INVALID_DEVICE_REQUEST );
         }
 
-        ASSERT( IrpSp->FileObject != NULL ||
+        NT_ASSERT( IrpSp->FileObject != NULL ||
                 
                 (IrpSp->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL &&
                  IrpSp->MinorFunction == IRP_MN_USER_FS_REQUEST &&
@@ -1619,7 +1644,7 @@ Return Value:
         //  We didn't get it from our private list so allocate it from pool.
         //
 
-        NewIrpContext = FsRtlAllocatePoolWithTag( NonPagedPool, sizeof( IRP_CONTEXT ), TAG_IRP_CONTEXT );
+        NewIrpContext = FsRtlAllocatePoolWithTag( CdNonPagedPool, sizeof( IRP_CONTEXT ), TAG_IRP_CONTEXT );
     }
 
     RtlZeroMemory( NewIrpContext, sizeof( IRP_CONTEXT ));
@@ -1653,12 +1678,7 @@ Return Value:
     //  the Vcb field.
     //
 
-#ifndef __REACTOS__
     if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject) {
-#else
-    if (IrpSp->DeviceObject != CdData.FileSystemDeviceObject &&
-        IrpSp->DeviceObject != CdData.HddFileSystemDeviceObject) {
-#endif
 
         NewIrpContext->Vcb =  &((PVOLUME_DEVICE_OBJECT) IrpSp->DeviceObject)->Vcb;
     
@@ -1694,8 +1714,8 @@ Return Value:
 
 VOID
 CdCleanupIrpContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN BOOLEAN Post
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ BOOLEAN Post
     )
 
 /*++
@@ -1704,7 +1724,7 @@ Routine Description:
 
     This routine is called to cleanup and possibly deallocate the Irp Context.
     If the request is being posted or this Irp Context is possibly on the
-    stack then we only cleanup any auxiliary structures.
+    stack then we only cleanup any auxilary structures.
 
 Arguments:
 
@@ -1800,8 +1820,8 @@ Return Value:
 
 VOID
 CdInitializeStackIrpContext (
-    OUT PIRP_CONTEXT IrpContext,
-    IN PIRP_CONTEXT_LITE IrpContextLite
+    _Out_ PIRP_CONTEXT IrpContext,
+    _In_ PIRP_CONTEXT_LITE IrpContextLite
     )
 
 /*++
@@ -1874,11 +1894,13 @@ Return Value:
 }
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdTeardownStructures (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB StartingFcb,
-    OUT PBOOLEAN RemovedStartingFcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB StartingFcb,
+    _Out_ PBOOLEAN RemovedStartingFcb
     )
 
 /*++
@@ -1937,7 +1959,7 @@ Return Value:
     //  Use a try-finally to safely clear the top-level field.
     //
 
-    _SEH2_TRY {
+    try {
 
         //
         //  Loop until we find an Fcb we can't remove.
@@ -2041,7 +2063,7 @@ Return Value:
 
         } while (CurrentFcb != NULL);
 
-    } _SEH2_FINALLY {
+    } finally {
 
         //
         //  Release the current Fcb if we have acquired it.
@@ -2057,7 +2079,7 @@ Return Value:
         //
 
         ClearFlag( IrpContext->TopLevel->Flags, IRP_CONTEXT_FLAG_IN_TEARDOWN );
-    } _SEH2_END;
+    }
 
     *RemovedStartingFcb = (CurrentFcb != StartingFcb);
     return;
@@ -2066,9 +2088,9 @@ Return Value:
 
 PFCB
 CdLookupFcbTable (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN FILE_ID FileId
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ FILE_ID FileId
     )
 
 /*++
@@ -2114,9 +2136,9 @@ Return Value:
 
 PFCB
 CdGetNextFcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PVOID *RestartKey
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ PVOID *RestartKey
     )
 
 /*++
@@ -2145,6 +2167,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     Fcb = (PFCB) RtlEnumerateGenericTableWithoutSplaying( &Vcb->FcbTable, RestartKey );
 
     if (Fcb != NULL) {
@@ -2158,12 +2182,12 @@ Return Value:
 
 NTSTATUS
 CdProcessToc (
-    IN PIRP_CONTEXT IrpContext,
-    IN PDEVICE_OBJECT TargetDeviceObject,
-    IN PCDROM_TOC CdromToc,
-    IN OUT PULONG Length,
-    OUT PULONG TrackCount,
-    OUT PULONG DiskFlags
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PDEVICE_OBJECT TargetDeviceObject,
+    _In_ PCDROM_TOC_LARGE CdromToc,
+    _Inout_ PULONG Length,
+    _Out_ PULONG TrackCount,
+    _Inout_ PULONG DiskFlags
     )
 
 /*++
@@ -2196,10 +2220,13 @@ Return Value:
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK Iosb;
+    CDROM_READ_TOC_EX Command;
 
     ULONG CurrentTrack;
     ULONG LocalTrackCount;
     ULONG LocalTocLength;
+    ULONG Address = 0;
+    BOOLEAN UseReadToc = FALSE;
 
     union {
 
@@ -2213,23 +2240,46 @@ Return Value:
     PAGED_CODE();
 
     //
+    //  Zero the command block.  This conveniently corresponds to an
+    //  LBA mode READ_TOC request.
+    //
+    
+    RtlZeroMemory( &Command, sizeof( Command));
+
+RetryReadToc:
+
+    //
     //  Go ahead and read the table of contents
     //
 
-    Status = CdPerformDevIoCtrl( IrpContext,
-                                 IOCTL_CDROM_READ_TOC,
-                                 TargetDeviceObject,
-                                 CdromToc,
-                                 sizeof( CDROM_TOC ),
-                                 FALSE,
-                                 TRUE,
-                                 &Iosb );
+    Status = CdPerformDevIoCtrlEx( IrpContext,
+                                   UseReadToc ? IOCTL_CDROM_READ_TOC : IOCTL_CDROM_READ_TOC_EX,
+                                   TargetDeviceObject,
+                                   &Command,
+                                   sizeof( Command ),
+                                   CdromToc,
+                                   sizeof( CDROM_TOC_LARGE ),
+                                   FALSE,
+                                   TRUE,
+                                   &Iosb );
 
     //
     //  Nothing to process if this request fails.
     //
 
-    if (Status != STATUS_SUCCESS) {
+    if (!NT_SUCCESS( Status )) {
+
+        //
+        //  If the underlying device does not support READ_TOC_EX, try the old method.
+        //
+
+        if (!UseReadToc &&
+            ((Status == STATUS_INVALID_DEVICE_REQUEST) ||
+             (Status == STATUS_INVALID_PARAMETER))) {
+
+            UseReadToc = TRUE;
+            goto RetryReadToc;
+        }
 
         return Status;
     }
@@ -2290,21 +2340,13 @@ Return Value:
                 CdromToc->LastTrack -= 1;
 
                 //
-                //  Knock 2.5 minutes off the current track to
-                //  hide the final leadin.
+                //  Knock 2.5 minutes off the current track to hide the final leadin.
+                //  2.5 min = 150 sec = (x 75) 11250 frames (sectors).
                 //
-
-                Track->Address[1] -= 2;
-                Track->Address[2] += 30;
-
-                if (Track->Address[2] < 60) {
-
-                    Track->Address[1] -= 1;
-
-                } else {
-
-                    Track->Address[2] -= 60;
-                }
+                
+                SwapCopyUchar4( &Address, &Track->Address);
+                Address -= 11250;
+                SwapCopyUchar4( &Track->Address, &Address);
 
                 Track->TrackNumber = TOC_LAST_TRACK;
 
@@ -2362,8 +2404,8 @@ Return Value:
 
 VOID
 CdDeleteFcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb
     )
 
 /*++
@@ -2371,12 +2413,12 @@ CdDeleteFcb (
 Routine Description:
 
     This routine is called to cleanup and deallocate an Fcb.  We know there
-    are no references remaining.  We cleanup any auxiliary structures and
+    are no references remaining.  We cleanup any auxilary structures and
     deallocate this Fcb.
 
 Arguments:
 
-    Fcb - This is the Fcb to deallocate.
+    Fcb - This is the Fcb to deallcoate.
 
 Return Value:
 
@@ -2392,8 +2434,8 @@ Return Value:
     //  Sanity check the counts.
     //
 
-    ASSERT( Fcb->FcbCleanup == 0 );
-    ASSERT( Fcb->FcbReference == 0 );
+    NT_ASSERT( Fcb->FcbCleanup == 0 );
+    NT_ASSERT( Fcb->FcbReference == 0 );
 
     //
     //  Release any Filter Context structures associated with this FCB
@@ -2437,8 +2479,8 @@ Return Value:
     case CDFS_NTC_FCB_PATH_TABLE:
     case CDFS_NTC_FCB_INDEX:
 
-        ASSERT( Fcb->FileObject == NULL );
-        ASSERT( IsListEmpty( &Fcb->FcbQueue ));
+        NT_ASSERT( Fcb->FileObject == NULL );
+        NT_ASSERT( IsListEmpty( &Fcb->FcbQueue ));
 
         if (Fcb == Fcb->Vcb->RootIndexFcb) {
 
@@ -2461,7 +2503,7 @@ Return Value:
             FsRtlFreeFileLock( Fcb->FileLock );
         }
 
-        FsRtlUninitializeOplock( &Fcb->Oplock );
+        FsRtlUninitializeOplock( CdGetFcbOplock(Fcb) );
 
         if (Fcb == Fcb->Vcb->VolumeDasdFcb) {
 
@@ -2479,8 +2521,8 @@ Return Value:
 
     if (Vcb != NULL) {
 
-        InterlockedDecrement( &Vcb->VcbReference );
-        InterlockedDecrement( &Vcb->VcbUserReference );
+        InterlockedDecrement( (LONG*)&Vcb->VcbReference );
+        InterlockedDecrement( (LONG*)&Vcb->VcbUserReference );
     }
 
     return;
@@ -2493,7 +2535,7 @@ Return Value:
 
 PFCB_NONPAGED
 CdCreateFcbNonpaged (
-    IN PIRP_CONTEXT IrpContext
+    _In_ PIRP_CONTEXT IrpContext
     )
 
 /*++
@@ -2515,7 +2557,9 @@ Return Value:
     PFCB_NONPAGED FcbNonpaged;
 
     PAGED_CODE();
-
+    
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  Allocate the non-paged pool and initialize the various
     //  synchronization objects.
@@ -2544,8 +2588,8 @@ Return Value:
 
 VOID
 CdDeleteFcbNonpaged (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB_NONPAGED FcbNonpaged
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB_NONPAGED FcbNonpaged
     )
 
 /*++
@@ -2566,7 +2610,9 @@ Return Value:
 
 {
     PAGED_CODE();
-
+    
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     ExDeleteResourceLite( &FcbNonpaged->FcbResource );
 
     CdDeallocateFcbNonpaged( IrpContext, FcbNonpaged );
@@ -2581,9 +2627,9 @@ Return Value:
 
 RTL_GENERIC_COMPARE_RESULTS
 CdFcbTableCompare (
-    IN PRTL_GENERIC_TABLE FcbTable,
-    IN PVOID Fid1,
-    IN PVOID Fid2
+    _In_ PRTL_GENERIC_TABLE FcbTable,
+    _In_ PVOID Fid1,
+    _In_ PVOID Fid2
     )
 
 /*++
@@ -2638,8 +2684,8 @@ Return Value:
 
 PVOID
 CdAllocateFcbTable (
-    IN PRTL_GENERIC_TABLE FcbTable,
-    IN CLONG ByteSize
+    _In_ PRTL_GENERIC_TABLE FcbTable,
+    _In_ CLONG ByteSize
     )
 
 /*++
@@ -2662,6 +2708,8 @@ Return Value:
 
 {
     PAGED_CODE();
+    
+    UNREFERENCED_PARAMETER( FcbTable );
 
     return( FsRtlAllocatePoolWithTag( CdPagedPool, ByteSize, TAG_FCB_TABLE ));
 }
@@ -2670,13 +2718,11 @@ Return Value:
 //
 //  Local support routine
 //
-
 VOID
 CdDeallocateFcbTable (
-    IN PRTL_GENERIC_TABLE FcbTable,
-    IN PVOID Buffer
+    _In_ PRTL_GENERIC_TABLE FcbTable,
+    _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer
     )
-
 /*++
 
 Routine Description:
@@ -2710,8 +2756,8 @@ Return Value:
 
 ULONG
 CdTocSerial (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCDROM_TOC CdromToc
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCDROM_TOC_LARGE CdromToc
     )
 
 /*++
@@ -2741,9 +2787,13 @@ Return Value:
     ULONG SerialNumber = 0;
     PTRACK_DATA ThisTrack;
     PTRACK_DATA LastTrack;
+    ULONG Address;
+    ULONG MsfAddress = 0;   // satisfy PREFIX
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  Check if there are two tracks or fewer.
     //
@@ -2753,21 +2803,23 @@ Return Value:
 
     if (CdromToc->LastTrack - CdromToc->FirstTrack <= 1) {
 
-        SerialNumber = (((LastTrack->Address[1] * 60) + LastTrack->Address[2]) * 75) + LastTrack->Address[3];
-
-        SerialNumber -= (((ThisTrack->Address[1] * 60) + ThisTrack->Address[2]) * 75) + ThisTrack->Address[3];
+        SwapCopyUchar4( &Address, LastTrack->Address);
+        CdLbnToMmSsFf( Address, (PUCHAR)&SerialNumber);
     }
+    else {
 
-    //
-    //  Now find the starting offset of each track and add to the serial number.
-    //
+        //
+        //  Add the starting offset of each track and add to the serial number.
+        //
 
-    while (ThisTrack != LastTrack) {
-
-        SerialNumber += (ThisTrack->Address[1] << 16);
-        SerialNumber += (ThisTrack->Address[2] << 8);
-        SerialNumber += ThisTrack->Address[3];
-        ThisTrack += 1;
+        while (ThisTrack != LastTrack) {
+            
+            SwapCopyUchar4( &Address, ThisTrack->Address);
+            CdLbnToMmSsFf( Address, (PUCHAR)&MsfAddress);
+            
+            SerialNumber += MsfAddress;
+            ThisTrack += 1;
+        }
     }
 
     return SerialNumber;

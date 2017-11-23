@@ -6,6 +6,7 @@ list(APPEND SOURCE
     cachesup.c
     cddata.c
     cdinit.c
+    cdprocssrc.c
     cleanup.c
     close.c
     create.c
@@ -24,10 +25,12 @@ list(APPEND SOURCE
     prefxsup.c
     read.c
     resrcsup.c
+    shutdown.c
     strucsup.c
     verfysup.c
     volinfo.c
-    workque.c)
+    workque.c
+    write.c)
 
 add_library(cdfs SHARED ${SOURCE} cdfs.rc)
 set_module_type(cdfs kernelmodedriver)

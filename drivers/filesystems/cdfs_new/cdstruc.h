@@ -133,7 +133,7 @@ Abstract:
         5. A fast mutex in the Vcb will protect access to the Fcb table and
             the open counts in the Vcb.  It is also used to modify the reference
             counts in all Fcbs.  This mutex cannot be acquired
-            exclusively and is an end resource.
+            exclusely and is an end resource.
 
         6. A fast mutex in the Fcb will synchronize access to all Fcb fields
             which aren't synchronized in some other way.  A thread may acquire
@@ -244,7 +244,7 @@ typedef struct _CD_NAME {
     UNICODE_STRING FileName;
 
     //
-    //  String containing the version number.
+    //  String containging the version number.
     //
 
     UNICODE_STRING VersionString;
@@ -318,7 +318,7 @@ typedef struct _CD_DATA {
     //  The type and size of this record (must be CDFS_NTC_DATA_HEADER)
     //
 
-    NODE_TYPE_CODE NodeTypeCode;
+    _Field_range_(==, CDFS_NTC_DATA_HEADER) NODE_TYPE_CODE NodeTypeCode;
     NODE_BYTE_SIZE NodeByteSize;
 
     //
@@ -349,10 +349,6 @@ typedef struct _CD_DATA {
 
     PDEVICE_OBJECT FileSystemDeviceObject;
 
-#ifdef __REACTOS__
-    PDEVICE_OBJECT HddFileSystemDeviceObject;
-#endif
-
     //
     //  Following are used to manage the async and delayed close queue.
     //
@@ -360,7 +356,7 @@ typedef struct _CD_DATA {
     //      two close queues.
     //  ReduceDelayedClose - Indicates that we have hit the upper threshold
     //      for the delayed close queue and need to reduce it to lower threshold.
-    //
+    //  Flags - CD flags.
     //  AsyncCloseQueue - Queue of IrpContext waiting for async close operation.
     //  AsyncCloseCount - Number of entries on the async close queue.
     //
@@ -368,7 +364,7 @@ typedef struct _CD_DATA {
     //      operation.
     //  MaxDelayedCloseCount - Trigger delay close work at this threshold.
     //  MinDelayedCloseCount - Turn off delay close work at this threshold.
-    //  DelayedCloseCount - Number of entries on the delayed close queue.
+    //  DelayedCloseCount - Number of entries on the delayted close queue.
     //
     //  CloseItem - Workqueue item used to start FspClose thread.
     //
@@ -377,7 +373,7 @@ typedef struct _CD_DATA {
     ULONG AsyncCloseCount;
     BOOLEAN FspCloseActive;
     BOOLEAN ReduceDelayedClose;
-    USHORT PadUshort;
+    USHORT Flags;
 
     //
     //  The following fields describe the deferred close file objects.
@@ -418,7 +414,48 @@ typedef struct _CD_DATA {
 } CD_DATA;
 typedef CD_DATA *PCD_DATA;
 
-
+
+#define CD_FLAGS_SHUTDOWN                   (0x0001)
+
+
+//
+//  Since DVD drives allow > 100 "sessions", we need to use a larger TOC
+//  than the legacy CD definition.  The maximum is theoretically 0xaa-16 (max
+//  number of open tracks in a session), but it's quite possible that some
+//  drive does not enforce this, so we'll go with 169 (track 0xaa is always the 
+//  leadout).
+//
+
+#define MAXIMUM_NUMBER_TRACKS_LARGE 0xAA
+
+typedef struct _CDROM_TOC_LARGE {
+
+    //
+    // Header
+    //
+
+    UCHAR Length[2];  // add two bytes for this field
+    UCHAR FirstTrack;
+    UCHAR LastTrack;
+
+    //
+    // Track data
+    //
+
+    TRACK_DATA TrackData[ MAXIMUM_NUMBER_TRACKS_LARGE];
+    
+} CDROM_TOC_LARGE, *PCDROM_TOC_LARGE;
+
+typedef struct _CD_SECTOR_CACHE_CHUNK {
+
+    ULONG BaseLbn;
+    PUCHAR Buffer;
+    
+} CD_SECTOR_CACHE_CHUNK, *PCD_SECTOR_CACHE_CHUNK;
+
+#define CD_SEC_CACHE_CHUNKS  4
+#define CD_SEC_CHUNK_BLOCKS  0x18
+
 //
 //  The Vcb (Volume control block) record corresponds to every
 //  volume mounted by the file system.  They are ordered in a queue off
@@ -460,7 +497,7 @@ typedef struct _VCB {
     //  The type and size of this record (must be CDFS_NTC_VCB)
     //
 
-    NODE_TYPE_CODE NodeTypeCode;
+    _Field_range_(==, CDFS_NTC_VCB) NODE_TYPE_CODE NodeTypeCode;
     NODE_BYTE_SIZE NodeByteSize;
 
     //
@@ -508,8 +545,8 @@ typedef struct _VCB {
     //
 
     ULONG VcbCleanup;
-    LONG VcbReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
-    LONG VcbUserReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
+    __volatile ULONG VcbReference;
+    __volatile ULONG VcbUserReference;
 
     //
     //  Fcb for the Volume Dasd file, root directory and the Path Table.
@@ -593,7 +630,7 @@ typedef struct _VCB {
     //  Volume TOC.  Cache this information for quick lookup.
     //
 
-    PCDROM_TOC CdromToc;
+    PCDROM_TOC_LARGE CdromToc;
     ULONG TocLength;
     ULONG TrackCount;
     ULONG DiskFlags;
@@ -625,8 +662,42 @@ typedef struct _VCB {
 
     PVPB SwapVpb;
 
-} VCB;
-typedef VCB *PVCB;
+    //
+    //  Directory block cache. Read large numbers of blocks on directory
+    //  reads, hoping to benefit from the fact that most mastered/pressed
+    //  discs clump metadata in one place thus allowing us to crudely
+    //  pre-cache and reduce seeks back to directory data during app install, 
+    //  file copy etc.
+    //
+    //  Note that the purpose of this is to PRE cache unread data,
+    //  not cache already read data (since Cc already provides that), thus
+    //  speeding initial access to the volume.
+    //
+
+    PUCHAR SectorCacheBuffer;
+    CD_SECTOR_CACHE_CHUNK SecCacheChunks[ CD_SEC_CACHE_CHUNKS];
+    ULONG SecCacheLRUChunkIndex;
+    
+    PIRP SectorCacheIrp;
+    KEVENT SectorCacheEvent;
+    ERESOURCE SectorCacheResource;
+
+#ifdef CDFS_TELEMETRY_DATA
+
+    //
+    //  An ID that is common across the volume stack used to correlate volume events and for telemetry purposes.
+    //  It may have a different value than the VolumeGuid.
+    //
+
+    GUID VolumeCorrelationId;
+
+#endif // CDFS_TELEMETRY_DATA
+
+#if DBG
+    ULONG SecCacheHits;
+    ULONG SecCacheMisses;
+#endif
+} VCB, *PVCB;
 
 #define VCB_STATE_HSG                               (0x00000001)
 #define VCB_STATE_ISO                               (0x00000002)
@@ -637,6 +708,8 @@ typedef VCB *PVCB;
 #define VCB_STATE_AUDIO_DISK                        (0x00000080)
 #define VCB_STATE_NOTIFY_REMOUNT                    (0x00000100)
 #define VCB_STATE_VPB_NOT_ON_DEVICE                 (0x00000200)
+#define VCB_STATE_SHUTDOWN                          (0x00000400)
+#define VCB_STATE_DISMOUNTED                        (0x00000800)
 
 
 //
@@ -659,7 +732,7 @@ typedef struct _VOLUME_DEVICE_OBJECT {
     //  executed later.
     //
 
-    LONG PostedRequestCount; /* ReactOS Change: GCC "pointer targets in passing argument 1 of 'InterlockedDecrement' differ in signedness" */
+    __volatile ULONG PostedRequestCount;
 
     //
     //  The following field indicates the number of IRP's waiting
@@ -706,12 +779,14 @@ typedef enum _FCB_CONDITION {
 
 typedef struct _FCB_DATA {
 
+#if (NTDDI_VERSION < NTDDI_WIN8)
     //
     //  The following field is used by the oplock module
     //  to maintain current oplock information.
     //
 
     OPLOCK Oplock;
+#endif
 
     //
     //  The following field is used by the filelock module
@@ -780,12 +855,12 @@ typedef struct _FCB_NONPAGED {
     //  Type and size of this record must be CDFS_NTC_FCB_NONPAGED
     //
 
-    NODE_TYPE_CODE NodeTypeCode;
+    _Field_range_(==, CDFS_NTC_FCB_NONPAGED) NODE_TYPE_CODE NodeTypeCode;
     NODE_BYTE_SIZE NodeByteSize;
 
     //
     //  The following field contains a record of special pointers used by
-    //  MM and Cache to manipulate section objects.  Note that the values
+    //  MM and Cache to manipluate section objects.  Note that the values
     //  are set outside of the file system.  However the file system on an
     //  open/create will set the file object's SectionObject field to
     //  point to this field
@@ -882,7 +957,7 @@ typedef struct _FCB {
     //
 
     ULONG FcbCleanup;
-    LONG FcbReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
+    __volatile ULONG FcbReference;
     ULONG FcbUserReference;
 
     //
@@ -991,7 +1066,7 @@ typedef struct _CCB {
     //  Type and size of this record (must be CDFS_NTC_CCB)
     //
 
-    NODE_TYPE_CODE NodeTypeCode;
+    _Field_range_(==, CDFS_NTC_CCB) NODE_TYPE_CODE NodeTypeCode;
     NODE_BYTE_SIZE NodeByteSize;
 
     //
@@ -1026,6 +1101,7 @@ typedef CCB *PCCB;
 #define CCB_FLAG_IGNORE_CASE                    (0x00000004)
 #define CCB_FLAG_OPEN_WITH_VERSION              (0x00000008)
 #define CCB_FLAG_DISMOUNT_ON_CLOSE              (0x00000010)
+#define CCB_FLAG_ALLOW_EXTENDED_DASD_IO         (0x00000020)
 
 //
 //  Following flags refer to index enumeration.
@@ -1041,7 +1117,7 @@ typedef CCB *PCCB;
 
 
 //
-//  The Irp Context record is allocated for every originating Irp.  It is
+//  The Irp Context record is allocated for every orginating Irp.  It is
 //  created by the Fsd dispatch routines, and deallocated by the CdComplete
 //  request routine
 //
@@ -1052,7 +1128,7 @@ typedef struct _IRP_CONTEXT {
     //  Type and size of this record (must be CDFS_NTC_IRP_CONTEXT)
     //
 
-    NODE_TYPE_CODE NodeTypeCode;
+    _Field_range_(==, CDFS_NTC_IRP_CONTEXT) NODE_TYPE_CODE NodeTypeCode;
     NODE_BYTE_SIZE NodeByteSize;
 
     //
@@ -1197,7 +1273,7 @@ typedef struct _IRP_CONTEXT_LITE {
     //  Type and size of this record (must be CDFS_NTC_IRP_CONTEXT_LITE)
     //
 
-    NODE_TYPE_CODE NodeTypeCode;
+    _Field_range_(==, CDFS_NTC_IRP_CONTEXT_LITE) NODE_TYPE_CODE NodeTypeCode;
     NODE_BYTE_SIZE NodeByteSize;
 
     //
@@ -1242,9 +1318,9 @@ typedef struct _CD_IO_CONTEXT {
     //  These two fields are used for multiple run Io
     //
 
-    LONG IrpCount;
+    __volatile LONG IrpCount;
     PIRP MasterIrp;
-    NTSTATUS Status;
+    __volatile NTSTATUS Status;
     BOOLEAN AllocatedContext;
 
     union {
@@ -1491,7 +1567,7 @@ typedef DIRENT_ENUM_CONTEXT *PDIRENT_ENUM_CONTEXT;
 
 //
 //  Following structure is used to smooth out the differences in the HSG, ISO
-//  and Joliet directory entries.
+//  and Joliett directory entries.
 //
 
 typedef struct _DIRENT {
@@ -1762,6 +1838,72 @@ typedef AUDIO_PLAY_HEADER *PAUDIO_PLAY_HEADER;
             CdFidSetDirectory((I));                                                     \
         }                                                                               \
 }
+
+#ifdef CDFS_TELEMETRY_DATA
+// ============================================================================
+// ============================================================================
+//
+//                  Telemetry
+//
+// ============================================================================
+// ============================================================================
+
+typedef struct _CDFS_TELEMETRY_DATA_CONTEXT {
+
+    //
+    //  Number of times there was not enough stack space to generate telemetry
+    //
+
+    volatile LONG MissedTelemetryPoints;
+
+    //
+    //  System Time of the last periodic telemtry event.  System Time
+    //  is according to KeQuerySystemTime()
+    //
+
+    LARGE_INTEGER LastPeriodicTelemetrySystemTime;
+
+    //
+    //  TickCount of the last periodic telemtry event.  TickCount is
+    //  according to KeQueryTickCount()
+    //
+
+    LARGE_INTEGER LastPeriodicTelemetryTickCount;
+
+    //
+    //  Hint for Worker thread whether to generate
+    //  periodic telemetry or not
+    //
+
+    BOOLEAN GeneratePeriodicTelemetry;
+
+    //
+    // Guid for ID parity with other file systems telemetry.
+    //
+
+    GUID VolumeGuid;
+
+
+#if DBG
+
+    //
+    //  For DBG builds we want a machanism to change the frequency of
+    //  periodic events
+    //
+
+    LONGLONG PeriodicInterval;
+
+#endif
+
+    //
+    //  File system statistics at time of last period telemetry event
+    //
+
+    FILESYSTEM_STATISTICS CommonStats;
+
+} CDFS_TELEMETRY_DATA_CONTEXT, *PCDFS_TELEMETRY_DATA_CONTEXT;
+
+#endif // CDFS_TELEMETRY_DATA
 
 #endif // _CDSTRUC_
 

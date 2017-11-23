@@ -13,7 +13,7 @@ Abstract:
 
 --*/
 
-#include "cdprocs.h"
+#include "CdProcs.h"
 
 //
 //  The Bug check file id for this module
@@ -23,7 +23,7 @@ Abstract:
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, CdAcquireForCache)
-#pragma alloc_text(PAGE, CdAcquireForCreateSection)
+#pragma alloc_text(PAGE, CdFilterCallbackAcquireForCreateSection)
 #pragma alloc_text(PAGE, CdAcquireResource)
 #pragma alloc_text(PAGE, CdNoopAcquire)
 #pragma alloc_text(PAGE, CdNoopRelease)
@@ -32,12 +32,18 @@ Abstract:
 #endif
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
+_When_(Type == AcquireExclusive && return != FALSE, _Acquires_exclusive_lock_(*Resource))
+_When_(Type == AcquireShared && return != FALSE, _Acquires_shared_lock_(*Resource))
+_When_(Type == AcquireSharedStarveExclusive && return != FALSE, _Acquires_shared_lock_(*Resource))
+_When_(IgnoreWait == FALSE, _Post_satisfies_(return == TRUE))
 BOOLEAN
 CdAcquireResource (
-    IN PIRP_CONTEXT IrpContext,
-    IN PERESOURCE Resource,
-    IN BOOLEAN IgnoreWait,
-    IN TYPE_OF_ACQUIRE Type
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PERESOURCE Resource,
+    _In_ BOOLEAN IgnoreWait,
+    _In_ TYPE_OF_ACQUIRE Type
     )
 
 /*++
@@ -89,27 +95,28 @@ Return Value:
 
     switch (Type) {
         case AcquireExclusive:
-        
+
+#pragma prefast( suppress:28137, "prefast believes Wait should be a constant, but this is ok for CDFS" )
             Acquired = ExAcquireResourceExclusiveLite( Resource, Wait );
             break;
 
         case AcquireShared:
-            
+
             Acquired = ExAcquireResourceSharedLite( Resource, Wait );
             break;
 
         case AcquireSharedStarveExclusive:
-            
+
             Acquired = ExAcquireSharedStarveExclusive( Resource, Wait );
             break;
 
         default:
-        	Acquired = FALSE;
-            ASSERT( FALSE );
+            Acquired = FALSE;
+            NT_ASSERT( FALSE );
     }
 
     //
-    //  If not acquired and the user didn't specify IgnoreWait then
+    //  If not acquired and the user didn't specifiy IgnoreWait then
     //  raise CANT_WAIT.
     //
 
@@ -122,11 +129,13 @@ Return Value:
 }
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
+_When_(return!=0, _Acquires_shared_lock_(*Fcb->Resource))
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAcquireForCache (
-    IN PFCB Fcb,
-    IN BOOLEAN Wait
+    _Inout_ PFCB Fcb,
+    _In_ BOOLEAN Wait
     )
 
 /*++
@@ -152,17 +161,18 @@ Return Value:
 {
     PAGED_CODE();
 
-    ASSERT(IoGetTopLevelIrp() == NULL);
+    NT_ASSERT(IoGetTopLevelIrp() == NULL);
     IoSetTopLevelIrp((PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
 
     return ExAcquireResourceSharedLite( Fcb->Resource, Wait );
 }
 
 
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_lock_(*Fcb->Resource)
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseFromCache (
-    IN PFCB Fcb
+    _Inout_ PFCB Fcb
     )
 
 /*++
@@ -187,7 +197,7 @@ Return Value:
 {
     PAGED_CODE();
 
-    ASSERT(IoGetTopLevelIrp() == (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
+    NT_ASSERT(IoGetTopLevelIrp() == (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
     IoSetTopLevelIrp( NULL );
     
     ExReleaseResourceLite( Fcb->Resource );
@@ -195,10 +205,9 @@ Return Value:
 
 
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopAcquire (
-    IN PVOID Fcb,
-    IN BOOLEAN Wait
+    _In_ PVOID Fcb,
+    _In_ BOOLEAN Wait
     )
 
 /*++
@@ -222,14 +231,17 @@ Return Value:
 
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( Fcb );
+    UNREFERENCED_PARAMETER( Wait );
+    
     return TRUE;
 }
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopRelease (
-    IN PVOID Fcb
+    _In_ PVOID Fcb
     )
 
 /*++
@@ -251,13 +263,17 @@ Return Value:
 
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( Fcb );
 }
 
 
-VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdAcquireForCreateSection (
-    IN PFILE_OBJECT FileObject
+
+_Requires_lock_held_(_Global_critical_region_)
+NTSTATUS
+CdFilterCallbackAcquireForCreateSection (
+    _In_ PFS_FILTER_CALLBACK_DATA CallbackData,
+    _Unreferenced_parameter_ PVOID *CompletionContext
     )
 
 /*++
@@ -268,24 +284,41 @@ Routine Description:
 
 Arguments:
 
-    FileObject - File object for a Cdfs stream.
+    FS_FILTER_CALLBACK_DATA - Filter based callback data that provides the file object we
+                              want to acquire.
+
+    CompletionContext - Ignored.
 
 Return Value:
 
-    None
+    On success we return STATUS_FSFILTER_OP_COMPLETED_SUCCESSFULLY.
+
+    If SyncType is SyncTypeCreateSection, we return a status that indicates there are no
+    writers to this file.
 
 --*/
 
 {
-    PAGED_CODE();
+    PFILE_OBJECT FileObject;
 
+
+    PAGED_CODE();
     
+    NT_ASSERT( CallbackData->Operation == FS_FILTER_ACQUIRE_FOR_SECTION_SYNCHRONIZATION );
+    NT_ASSERT( CallbackData->SizeOfFsFilterCallbackData == sizeof(FS_FILTER_CALLBACK_DATA) );
+
+    //
+    //  Get the file object from the callback data.
+    //
+
+    FileObject = CallbackData->FileObject;
+
     //
     //  Get the Fcb resource exclusively.
     //
 
     ExAcquireResourceExclusiveLite( &((PFCB) FileObject->FsContext)->FcbNonpaged->FcbResource,
-                                TRUE );
+                                    TRUE );
                                 
     //
     //  Take the File resource shared.  We need this later on when MM calls 
@@ -299,13 +332,31 @@ Return Value:
 
     ExAcquireSharedStarveExclusive( ((PFCB) FileObject->FsContext)->Resource,
                                     TRUE );
+
+    //
+    //  CDFS is a read-only file system, so we can always indicate no writers.
+    //  We only do this for create section synchronization.  For others we
+    //  return the generic success STATUS_FSFILTER_OP_COMPLETED_SUCCESSFULLY.
+    //
+
+    if (CallbackData->Parameters.AcquireForSectionSynchronization.SyncType == SyncTypeCreateSection) {
+
+        return STATUS_FILE_LOCKED_WITH_ONLY_READERS;
+
+    } else {
+
+        return STATUS_FSFILTER_OP_COMPLETED_SUCCESSFULLY;
+    }
+
+    UNREFERENCED_PARAMETER( CompletionContext );
 }
 
 
+_Function_class_(FAST_IO_RELEASE_FILE)
+_Requires_lock_held_(_Global_critical_region_)
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseForCreateSection (
-    IN PFILE_OBJECT FileObject
+    _In_ PFILE_OBJECT FileObject
     )
 
 /*++

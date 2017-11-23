@@ -1,4 +1,4 @@
-#include "cdprocs.h"
+#include "CdProcs.h"
 #include <stdio.h>
 
 #define doit(a,b) { printf("%s %04lx %4lx %s\n", #a, FIELD_OFFSET(a,b), sizeof(d.b), #b); }
@@ -127,7 +127,6 @@ main (argc, argv)
     printf("\n");
     {
         FCB_DATA d;
-        doit( FCB_DATA, Oplock );
         doit( FCB_DATA, FileLock );
     }
     printf("\n");
@@ -475,4 +474,3 @@ main (argc, argv)
         doit( SYSTEM_USE_XA, Reserved );
     }
 }
-
