@@ -320,9 +320,13 @@ ModifyWorldTransform(
         return FALSE;
 
     if (dwMode == (MWT_MAX + 1))
+    {
         HANDLE_METADC(BOOL, SetWorldTransform, FALSE, hdc, pxform);
+    }
     else
+    {
         HANDLE_METADC(BOOL, ModifyWorldTransform, FALSE, hdc, pxform, dwMode);
+    }
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
