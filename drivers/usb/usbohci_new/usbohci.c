@@ -1786,26 +1786,23 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
 
         OhciEndpoint->HcdHeadP = LastTD;
 
-        if (OhciEndpoint->MaxTransferDescriptors != 0)
+        TD = OhciEndpoint->FirstTD;
+
+        for (ix = 0; ix < OhciEndpoint->MaxTransferDescriptors; ix++)
         {
-            TD = OhciEndpoint->FirstTD;
-
-            for (ix = 0; ix < OhciEndpoint->MaxTransferDescriptors; ix++)
+            if (TD->OhciTransfer == (ULONG)OhciTransfer)
             {
-                if (TD->OhciTransfer == (ULONG)OhciTransfer)
+                if (IsIsoEndpoint)
                 {
-                    if (IsIsoEndpoint)
-                    {
-                        OHCI_ProcessDoneIsoTD(OhciExtension, TD, FALSE);
-                    }
-                    else
-                    {
-                        OHCI_ProcessDoneTD(OhciExtension, TD, FALSE);
-                    }
+                    OHCI_ProcessDoneIsoTD(OhciExtension, TD, FALSE);
                 }
-
-                TD += 1;
+                else
+                {
+                    OHCI_ProcessDoneTD(OhciExtension, TD, FALSE);
+                }
             }
+
+            TD += 1;
         }
 
         *CompletedLength = OhciTransfer->TransferLen;
@@ -1816,9 +1813,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
     TD = OhciEndpoint->HcdHeadP;
 
     if (TD == NextTD)
-    {
         goto Exit;
-    }
 
     do
     {
