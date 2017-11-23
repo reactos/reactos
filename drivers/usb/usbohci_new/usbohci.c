@@ -1690,7 +1690,7 @@ OHCI_ProcessDoneTD(IN POHCI_EXTENSION OhciExtension,
 
                 Length++;
 
-                if ((Buffer ^ BufferEnd) & ~(PAGE_SIZE - 1))
+                if (Buffer >> PAGE_SHIFT != BufferEnd >> PAGE_SHIFT)
                 {
                     Length += PAGE_SIZE;
                 }
