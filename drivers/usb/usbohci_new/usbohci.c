@@ -1246,13 +1246,12 @@ OHCI_AllocateTD(IN POHCI_EXTENSION OhciExtension,
                 IN POHCI_ENDPOINT OhciEndpoint)
 {
     POHCI_HCD_TD TD;
-    ULONG ix;
 
     DPRINT_OHCI("OHCI_AllocateTD: ... \n");
 
     TD = OhciEndpoint->FirstTD;
 
-    for (ix = 0; TD->Flags & OHCI_HCD_TD_FLAG_ALLOCATED; ix++)
+    while (TD->Flags & OHCI_HCD_TD_FLAG_ALLOCATED)
     {
         TD += 1;
     }
