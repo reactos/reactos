@@ -889,12 +889,12 @@ OHCI_StopController(IN PVOID ohciExtension,
     /* Setup HcControl register */
     Control.AsULONG = READ_REGISTER_ULONG(ControlReg);
 
-    Control.PeriodicListEnable = FALSE;
-    Control.IsochronousEnable = FALSE;
-    Control.ControlListEnable = FALSE;
-    Control.BulkListEnable = FALSE;
+    Control.PeriodicListEnable = 0;
+    Control.IsochronousEnable = 0;
+    Control.ControlListEnable = 0;
+    Control.BulkListEnable = 0;
     Control.HostControllerFunctionalState = OHCI_HC_STATE_SUSPEND;
-    Control.RemoteWakeupEnable = FALSE;
+    Control.RemoteWakeupEnable = 0;
 
     WRITE_REGISTER_ULONG(ControlReg, Control.AsULONG);
 
@@ -1531,7 +1531,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
 
         if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
         {
-            TD->HwTD.gTD.Control.BufferRounding = FALSE;
+            TD->HwTD.gTD.Control.BufferRounding = 0;
             TD->HwTD.gTD.Control.DirectionPID = OHCI_TD_DIRECTION_PID_IN;
         }
         else
