@@ -157,7 +157,13 @@ extern "C"
         for (POSITION pos = shell32_prop_sheet->GetHeadPosition(); pos; )
         {
             DrivePropSheet* pSheet = shell32_prop_sheet->GetNext(pos);
+            if (!pSheet)
+                continue;
+
             HWND& hwndSheet = pSheet->hwnd;
+            if (hwndSheet == NULL)
+                continue;
+
             if (!SendMessageW(hwndSheet, PSM_ISDIALOGMESSAGE, 0, (LPARAM)pMsg))
                 continue;
 
@@ -169,6 +175,7 @@ extern "C"
             DestroyWindow(hwndSheet);
             hwndSheet = NULL;
             shell32_prop_sheet->RemoveAt(pos);
+            delete pSheet;
             break;
         }
 
@@ -177,11 +184,26 @@ extern "C"
 
     void SH_DeleteAllDrivePropSheets()
     {
-        if (shell32_prop_sheet)
+        if (!shell32_prop_sheet)
+            return;
+
+        while (POSITION pos = shell32_prop_sheet->GetHeadPosition())
         {
-            delete shell32_prop_sheet;
-            shell32_prop_sheet = NULL;
+            DrivePropSheet* pSheet = shell32_prop_sheet->GetNext(pos);
+            if (!pSheet)
+                continue;
+
+            HWND& hwndSheet = pSheet->hwnd;
+            if (hwndSheet)
+            {
+                DestroyWindow(hwndSheet);
+                hwndSheet = NULL;
+            }
+            shell32_prop_sheet->RemoveAt(pos);
+            delete pSheet;
         }
+        delete shell32_prop_sheet;
+        shell32_prop_sheet = NULL;
     }
 }
 
