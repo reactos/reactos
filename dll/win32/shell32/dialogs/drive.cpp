@@ -2,6 +2,7 @@
  *                 Shell Library Functions
  *
  * Copyright 2005 Johannes Anderwald
+ * Copyright 2017 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,6 +20,7 @@
  */
 
 #include "precomp.h"
+#include <atlcoll.h>
 
 #define MAX_PROPERTY_SHEET_PAGE 32
 
@@ -120,25 +122,50 @@ AddPropSheetPageCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
     return FALSE;
 }
 
-typedef struct _DRIVE_PROP_PAGE
+struct DrivePropSheet
 {
-    LPCSTR resname;
-    DLGPROC dlgproc;
-    UINT DriveType;
-} DRIVE_PROP_PAGE;
+    DrivePropSheet();
+    virtual ~DrivePropSheet();
+
+    HWND hwnd;
+    HPSXA hpsx;
+    CComObject<CDrvDefExt> *pDrvDefExt;
+    WCHAR wszName[256];
+    PROPSHEETHEADERW psh;
+    HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
+    CComPtr<IDataObject> pDataObj;
+};
+CAtlList<DrivePropSheet*> shell32_prop_sheet;
+
+DrivePropSheet::DrivePropSheet() : hwnd(NULL), hpsx(NULL), pDrvDefExt(NULL)
+{
+    wszName[0] = 0;
+    ZeroMemory(&psh, sizeof(psh));
+    ZeroMemory(&hpsp, sizeof(hpsp));
+}
+
+DrivePropSheet::~DrivePropSheet()
+{
+    if (hpsx)
+        SHDestroyPropSheetExtArray(hpsx);
+    if (pDrvDefExt)
+        pDrvDefExt->Release();
+}
 
 BOOL
 SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl)
 {
-    HPSXA hpsx = NULL;
-    HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
-    PROPSHEETHEADERW psh;
-    CComObject<CDrvDefExt> *pDrvDefExt = NULL;
-    WCHAR wszName[256];
+    DrivePropSheet *pSheet = new DrivePropSheet();
+    shell32_prop_sheet.AddTail(pSheet);
 
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
+    HPSXA& hpsx = pSheet->hpsx;
+    WCHAR *wszName = pSheet->wszName;
+    PROPSHEETHEADERW& psh = pSheet->psh;
+    HPROPSHEETPAGE* hpsp = pSheet->hpsp;
+    CComObject<CDrvDefExt>*& pDrvDefExt = pSheet->pDrvDefExt;
+
     psh.dwSize = sizeof(PROPSHEETHEADERW);
-    psh.dwFlags = 0; // FIXME: make it modeless
+    psh.dwFlags = PSH_MODELESS;     // modeless
     psh.hwndParent = NULL;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
@@ -152,10 +179,9 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHI
         psh.pszCaption = wszName;
         psh.dwFlags |= PSH_PROPTITLE;
     }
-    
     ILFree(completePidl);
 
-    CComPtr<IDataObject> pDataObj;
+    CComPtr<IDataObject>& pDataObj = pSheet->pDataObj;
     HRESULT hr = SHCreateDataObject(pidlFolder, 1, apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
 
     if (SUCCEEDED(hr))
@@ -179,15 +205,14 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHI
             SHAddFromPropSheetExtArray(hpsx, (LPFNADDPROPSHEETPAGE)AddPropSheetPageCallback, (LPARAM)&psh);
     }
 
-    HWND hwnd = (HWND)PropertySheetW(&psh);
+    pSheet->hwnd = (HWND)PropertySheetW(&psh);
 
-    if (hpsx)
-        SHDestroyPropSheetExtArray(hpsx);
-    if (pDrvDefExt)
-        pDrvDefExt->Release();
-
-    if (!hwnd)
+    if (!pSheet->hwnd)
+    {
+        shell32_prop_sheet.RemoveTail();
+        delete pSheet;
         return FALSE;
+    }
     return TRUE;
 }
 

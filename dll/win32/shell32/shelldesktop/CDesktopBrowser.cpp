@@ -2,6 +2,7 @@
  * Shell Desktop
  *
  * Copyright 2008 Thomas Bluemel
+ * Copyright 2017 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,17 +21,25 @@
 
 #include "shelldesktop.h"
 
-// Support for multiple monitors is disabled till LVM_SETWORKAREAS gets implemented
-#ifdef MULTIMONITOR_SUPPORT
-#include <atlcoll.h>
+#ifndef _ATL_NO_EXCEPTIONS
+    #define _ATL_NO_EXCEPTIONS
 #endif
-
-
+#include <atlcoll.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
 static const WCHAR szProgmanClassName[]  = L"Progman";
 static const WCHAR szProgmanWindowName[] = L"Program Manager";
+
+struct DrivePropSheet
+{
+    DrivePropSheet();
+    virtual ~DrivePropSheet();
+
+    HWND hwnd;
+    //...hidden members...
+};
+extern CAtlList<DrivePropSheet*> shell32_prop_sheet;
 
 class CDesktopBrowser :
     public CWindowImpl<CDesktopBrowser, CWindow, CFrameWinTraits>,
@@ -472,14 +481,37 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
 
     while ((bRet = GetMessageW(&Msg, NULL, 0, 0)) != 0)
     {
-        if (bRet != -1)
+        if (bRet == -1)
+            break;  // fatal error, quit
+
+        // do property sheets
+        BOOL bProcessed = FALSE;
+        for (POSITION pos = shell32_prop_sheet.GetHeadPosition(); pos != NULL;)
         {
-            if (shellView->TranslateAcceleratorW(&Msg) != S_OK)
+            DrivePropSheet*& pSheet = shell32_prop_sheet.GetNext(pos);
+            HWND& hwndSheet = pSheet->hwnd;
+            if (SendMessageW(hwndSheet, PSM_ISDIALOGMESSAGE, 0, (LPARAM)&Msg))
             {
-                TranslateMessage(&Msg);
-                DispatchMessage(&Msg);
+                if (!SendMessageW(hwndSheet, PSM_GETCURRENTPAGEHWND, 0, 0))
+                {
+                    // to be destroyed
+                    DestroyWindow(hwndSheet);
+                    hwndSheet = NULL;
+                    shell32_prop_sheet.RemoveAt(pos);
+                }
+                bProcessed = TRUE;
+                break;
             }
         }
+
+        if (bProcessed)
+            continue;
+
+        if (shellView->TranslateAcceleratorW(&Msg) == S_OK)
+            continue;
+
+        TranslateMessage(&Msg);
+        DispatchMessage(&Msg);
     }
 
     return TRUE;
