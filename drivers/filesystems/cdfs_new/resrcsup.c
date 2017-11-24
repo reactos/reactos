@@ -23,7 +23,11 @@ Abstract:
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, CdAcquireForCache)
+#ifndef __REACTOS__
 #pragma alloc_text(PAGE, CdFilterCallbackAcquireForCreateSection)
+#else
+#pragma alloc_text(PAGE, CdAcquireForCreateSection)
+#endif
 #pragma alloc_text(PAGE, CdAcquireResource)
 #pragma alloc_text(PAGE, CdNoopAcquire)
 #pragma alloc_text(PAGE, CdNoopRelease)
@@ -274,6 +278,7 @@ Return Value:
 }
 
 
+#ifndef __REACTOS__
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
@@ -356,6 +361,55 @@ Return Value:
 
     UNREFERENCED_PARAMETER( CompletionContext );
 }
+#else
+VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+CdAcquireForCreateSection (
+    IN PFILE_OBJECT FileObject
+    )
+
+/*++
+
+Routine Description:
+
+    This is the callback routine for MM to use to acquire the file exclusively.
+
+Arguments:
+
+    FileObject - File object for a Cdfs stream.
+
+Return Value:
+
+    None
+
+--*/
+
+{
+    PAGED_CODE();
+
+    
+    //
+    //  Get the Fcb resource exclusively.
+    //
+
+    ExAcquireResourceExclusiveLite( &((PFCB) FileObject->FsContext)->FcbNonpaged->FcbResource,
+                                TRUE );
+                                
+    //
+    //  Take the File resource shared.  We need this later on when MM calls 
+    //  QueryStandardInfo to get the file size.  
+    //
+    //  If we don't use StarveExclusive,  then we can get wedged behind an 
+    //  exclusive waiter who is waiting on someone else holding it shared in the 
+    //  read->initializecachemap path (which calls createsection) who is in turn 
+    //  waiting on us to finish the create section.
+    //
+
+    ExAcquireSharedStarveExclusive( ((PFCB) FileObject->FsContext)->Resource,
+                                    TRUE );
+}
+#endif
+
 
 
 _Function_class_(FAST_IO_RELEASE_FILE)

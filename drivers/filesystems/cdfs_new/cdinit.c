@@ -191,7 +191,9 @@ Return Value:
                    sizeof(FS_FILTER_CALLBACKS) );
 
     FilterCallbacks.SizeOfFsFilterCallbacks = sizeof(FS_FILTER_CALLBACKS);
+#ifndef __REACTOS__
     FilterCallbacks.PreAcquireForSectionSynchronization = CdFilterCallbackAcquireForCreateSection;
+#endif
 
     Status = FsRtlRegisterFileSystemFilterCallbacks( DriverObject,
                                                      &FilterCallbacks );
@@ -357,11 +359,15 @@ Return Value:
     CdFastIoDispatch.FastIoUnlockSingle =      CdFastUnlockSingle;       //  UnlockSingle
     CdFastIoDispatch.FastIoUnlockAll =         CdFastUnlockAll;          //  UnlockAll
     CdFastIoDispatch.FastIoUnlockAllByKey =    CdFastUnlockAllByKey;     //  UnlockAllByKey
+#ifndef __REACTOS__
     //
     //  This callback has been replaced by CdFilterCallbackAcquireForCreateSection.
     //
 
     CdFastIoDispatch.AcquireFileForNtCreateSection =  NULL;
+#else
+    CdFastIoDispatch.AcquireFileForNtCreateSection =  CdAcquireForCreateSection;
+#endif
     CdFastIoDispatch.ReleaseFileForNtCreateSection =  CdReleaseForCreateSection;
     CdFastIoDispatch.FastIoQueryNetworkOpenInfo =     CdFastQueryNetworkInfo;   //  QueryNetworkInfo
     
