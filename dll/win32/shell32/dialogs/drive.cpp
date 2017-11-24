@@ -190,17 +190,17 @@ extern "C"
         while (POSITION pos = shell32_prop_sheet->GetHeadPosition())
         {
             DrivePropSheet* pSheet = shell32_prop_sheet->GetNext(pos);
-            if (!pSheet)
-                continue;
-
-            HWND& hwndSheet = pSheet->hwnd;
-            if (hwndSheet)
+            if (pSheet)
             {
-                DestroyWindow(hwndSheet);
-                hwndSheet = NULL;
+                HWND& hwndSheet = pSheet->hwnd;
+                if (hwndSheet)
+                {
+                    DestroyWindow(hwndSheet);
+                    hwndSheet = NULL;
+                }
+                delete pSheet;
             }
             shell32_prop_sheet->RemoveAt(pos);
-            delete pSheet;
         }
         delete shell32_prop_sheet;
         shell32_prop_sheet = NULL;
