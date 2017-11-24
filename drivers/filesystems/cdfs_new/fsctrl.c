@@ -1066,7 +1066,12 @@ Return Value:
         //
 
         if (!FlagOn( Vcb->VcbState, VCB_STATE_AUDIO_DISK) &&
+#ifndef __REACTOS__
             ((Vcb->CdromToc->LastTrack - Vcb->CdromToc->FirstTrack) == 0)) {
+#else
+           ((FilesystemDeviceType == FILE_DEVICE_DISK_FILE_SYSTEM) ||
+            ((Vcb->CdromToc->LastTrack - Vcb->CdromToc->FirstTrack) == 0))) {
+#endif
 
             ULONG Index;
             PUCHAR Buffer;
