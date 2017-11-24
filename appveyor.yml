@@ -1,0 +1,34 @@
+environment:
+  matrix:
+    - BuildType: "clang-cl"
+    - BuildType: "msvc"
+
+version: reactos.appveyor.{build}
+skip_branch_with_pr: true
+clone_depth: 5
+clone_folder: c:\reactos-cov
+
+init:
+  - ps: (New-Object System.Net.WebClient).DownloadFile("https://svn.reactos.org/amine/RosCMakeNinja.zip","C:\RosCMakeNinja.zip")
+  - 7z x C:\RosCMakeNinja.zip -oC:\RosCMakeNinja
+  - ps: >-
+      If ($env:BuildType -Match "clang-cl") {
+        $env:clang_configure_option="clang"
+        (New-Object System.Net.WebClient).DownloadFile("https://svn.reactos.org/amine/clang-cl.7z","C:\clang-cl.7z")
+        7z x C:\clang-cl.7z -oC:\RosCMakeNinja\bin
+      } Else {
+        $env:clang_configure_option=""
+      }
+
+build_script:
+  - set PATH=C:\RosCMakeNinja\bin;%PATH%
+  - call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
+  - cmake --version
+  - md c:\ros_build
+  - cd c:\ros_build
+  - call %APPVEYOR_BUILD_FOLDER%\configure.cmd %clang_configure_option% -DENABLE_ROSTESTS=1
+  - ninja -k0
+  - ninja bootcd
+
+test: off
+deploy: off
