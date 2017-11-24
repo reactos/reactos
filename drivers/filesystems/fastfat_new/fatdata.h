@@ -234,6 +234,7 @@ extern LONG FatDebugTraceIndent;
     }                                                       \
 }
 
+#ifdef _MSC_VER
 #define DebugDump(STR,LEVEL,PTR) {                          \
     __pragma(warning(push))                                 \
     __pragma(warning(disable:4210))                         \
@@ -248,9 +249,22 @@ extern LONG FatDebugTraceIndent;
     }                                                       \
     __pragma(warning(pop))                                  \
 }
+#else
+#define DebugDump(STR,LEVEL,PTR) {                          \
+    ULONG _i;                                               \
+    VOID FatDump(IN PVOID Ptr);                             \
+    if (((LEVEL) == 0) || (FatDebugTraceLevel & (LEVEL))) { \
+        _i = (ULONG)PsGetCurrentThread();                   \
+        DbgPrint("%08lx:",_i);                              \
+        DbgPrint(STR);                                      \
+        if (PTR != NULL) {FatDump(PTR);}                    \
+        NT_ASSERT(FALSE);                                   \
+    }                                                       \
+}
+#endif
 
 #define DebugUnwind(X) {                                                      \
-    if (AbnormalTermination()) {                                             \
+    if (_SEH2_AbnormalTermination()) {                                        \
         DebugTrace(0, DEBUG_TRACE_UNWIND, #X ", Abnormal termination.\n", 0); \
     }                                                                         \
 }
