@@ -1121,6 +1121,7 @@ CdReleaseFromCache (
     _Inout_ PFCB Fcb
     );
 
+#ifndef __REACTOS__
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
@@ -1128,6 +1129,13 @@ CdFilterCallbackAcquireForCreateSection (
     _In_ PFS_FILTER_CALLBACK_DATA CallbackData,
     _Unreferenced_parameter_ PVOID *CompletionContext
     );
+#else
+VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+CdAcquireForCreateSection (
+    IN PFILE_OBJECT FileObject
+    );
+#endif
 
 _Function_class_(FAST_IO_RELEASE_FILE)
 _Requires_lock_held_(_Global_critical_region_)
