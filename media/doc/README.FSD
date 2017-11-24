@@ -16,5 +16,7 @@ The following FSD are shared with: http://www.acc.umu.se/~bosse/
 reactos/drivers/filesystems/ffs             # Synced to 0.5.2
 reactos/drivers/filesystems/reiserfs        # Synced to 0.26
 
-The following FSD are shared with: https://github.com/Microsoft/Windows-driver-samples.
-reactos/drivers/filesystems/fastfat_new    # Synced to 2817004
+The following FSD are shared with: https://github.com/Microsoft/Windows-driver-samples
+
+reactos/drivers/filesystems/fastfat_new     # Synced to 2817004
+reactos/drivers/filesystems/cdfs_new        # Synced to 2817004
