@@ -31,17 +31,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 static const WCHAR szProgmanClassName[]  = L"Progman";
 static const WCHAR szProgmanWindowName[] = L"Program Manager";
 
-struct DrivePropSheet
-{
-    DrivePropSheet();
-    virtual ~DrivePropSheet();
-
-    HWND hwnd;
-    //...hidden members...
-};
+// for drive property sheets
 extern "C"
 {
-    extern CAtlList<DrivePropSheet*> *shell32_prop_sheet;
+    BOOL SH_IsDrivePropSheetMessage(MSG *pMsg);
+    void SH_DeleteAllDrivePropSheets();
 }
 
 class CDesktopBrowser :
@@ -487,31 +481,9 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
         if (bRet == -1)
             break;  // fatal error, quit
 
-        // do property sheets
-        BOOL bProcessed = FALSE;
-        if (shell32_prop_sheet)
-        {
-            for (POSITION pos = shell32_prop_sheet->GetHeadPosition(); pos != NULL;)
-            {
-                DrivePropSheet*& pSheet = shell32_prop_sheet->GetNext(pos);
-                HWND& hwndSheet = pSheet->hwnd;
-                if (SendMessageW(hwndSheet, PSM_ISDIALOGMESSAGE, 0, (LPARAM)&Msg))
-                {
-                    if (!SendMessageW(hwndSheet, PSM_GETCURRENTPAGEHWND, 0, 0))
-                    {
-                        // to be destroyed
-                        DestroyWindow(hwndSheet);
-                        hwndSheet = NULL;
-                        shell32_prop_sheet->RemoveAt(pos);
-                    }
-                    bProcessed = TRUE;
-                    break;
-                }
-            }
-
-            if (bProcessed)
-                continue;
-        }
+        // do modeless property sheets
+        if (SH_IsDrivePropSheetMessage(&Msg))
+            continue;
 
         if (shellView->TranslateAcceleratorW(&Msg) == S_OK)
             continue;
@@ -520,7 +492,8 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
         DispatchMessage(&Msg);
     }
 
-    delete shell32_prop_sheet;
+    // delete all property sheets
+    SH_DeleteAllDrivePropSheets();
 
     return TRUE;
 }

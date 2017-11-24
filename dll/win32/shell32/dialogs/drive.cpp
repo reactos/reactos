@@ -135,9 +135,54 @@ struct DrivePropSheet
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
     CComPtr<IDataObject> pDataObj;
 };
+CAtlList<DrivePropSheet*> *shell32_prop_sheet;
+
 extern "C"
 {
-    CAtlList<DrivePropSheet*> *shell32_prop_sheet;
+    void SH_AddDrivePropSheet(DrivePropSheet *pSheet)
+    {
+        if (!shell32_prop_sheet)
+        {
+            shell32_prop_sheet = new CAtlList<DrivePropSheet*>();
+        }
+        shell32_prop_sheet->AddTail(pSheet);
+    }
+
+    BOOL SH_IsDrivePropSheetMessage(MSG *pMsg)
+    {
+        if (!shell32_prop_sheet)
+            return FALSE;
+
+        BOOL bProcessed = FALSE;
+        for (POSITION pos = shell32_prop_sheet->GetHeadPosition(); pos; )
+        {
+            DrivePropSheet* pSheet = shell32_prop_sheet->GetNext(pos);
+            HWND& hwndSheet = pSheet->hwnd;
+            if (!SendMessageW(hwndSheet, PSM_ISDIALOGMESSAGE, 0, (LPARAM)pMsg))
+                continue;
+
+            bProcessed = TRUE;
+            if (SendMessageW(hwndSheet, PSM_GETCURRENTPAGEHWND, 0, 0))
+                break;
+
+            // to be destroyed
+            DestroyWindow(hwndSheet);
+            hwndSheet = NULL;
+            shell32_prop_sheet->RemoveAt(pos);
+            break;
+        }
+
+        return bProcessed;
+    }
+
+    void SH_DeleteAllDrivePropSheets()
+    {
+        if (shell32_prop_sheet)
+        {
+            delete shell32_prop_sheet;
+            shell32_prop_sheet = NULL;
+        }
+    }
 }
 
 DrivePropSheet::DrivePropSheet() : hwnd(NULL), hpsx(NULL), pDrvDefExt(NULL)
@@ -159,13 +204,7 @@ BOOL
 SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl)
 {
     DrivePropSheet *pSheet = new DrivePropSheet();
-
-    if (shell32_prop_sheet == NULL)
-    {
-        shell32_prop_sheet = new CAtlList<DrivePropSheet*>();
-    }
-
-    shell32_prop_sheet->AddTail(pSheet);
+    SH_AddDrivePropSheet(pSheet);
 
     HPSXA& hpsx = pSheet->hpsx;
     WCHAR *wszName = pSheet->wszName;
