@@ -2292,6 +2292,7 @@ RetryReadToc:
 
         if (!UseReadToc &&
             ((Status == STATUS_INVALID_DEVICE_REQUEST) ||
+             (Status == STATUS_NOT_IMPLEMENTED) || /* ReactOS Change: we return STATUS_NOT_IMPLEMENTED for IOCTL_CDROM_READ_TOC_EX */
              (Status == STATUS_INVALID_PARAMETER))) {
 
             UseReadToc = TRUE;
