@@ -1529,7 +1529,7 @@ PATH_FillPath(
     /* Go to GM_ADVANCED temporarily to restore the world transform */
     graphicsMode = pdcattr->iGraphicsMode;
     pdcattr->iGraphicsMode = GM_ADVANCED;
-    GreModifyWorldTransform(dc, &xform, MWT_MAX+1);
+    GreModifyWorldTransform(dc, &xform, MWT_SET);
     pdcattr->iGraphicsMode = graphicsMode;
     return TRUE;
 }

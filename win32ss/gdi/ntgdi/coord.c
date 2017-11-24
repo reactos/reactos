@@ -480,7 +480,7 @@ GreModifyWorldTransform(
             XFORMOBJ_iCombine(&xoDC, &xoDC, &xoSrc);
             break;
 
-        case MWT_MAX+1: // Must be MWT_SET????
+        case MWT_SET:
             XFORMOBJ_vInit(&xoDC, &pdc->pdcattr->mxWorldToPage);
             if (XFORMOBJ_iSetXform(&xoDC, pxform) == DDI_ERROR)
                 return FALSE;
