@@ -39,7 +39,10 @@ struct DrivePropSheet
     HWND hwnd;
     //...hidden members...
 };
-extern CAtlList<DrivePropSheet*> shell32_prop_sheet;
+extern "C"
+{
+    extern CAtlList<DrivePropSheet*> *shell32_prop_sheet;
+}
 
 class CDesktopBrowser :
     public CWindowImpl<CDesktopBrowser, CWindow, CFrameWinTraits>,
@@ -486,26 +489,29 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
 
         // do property sheets
         BOOL bProcessed = FALSE;
-        for (POSITION pos = shell32_prop_sheet.GetHeadPosition(); pos != NULL;)
+        if (shell32_prop_sheet)
         {
-            DrivePropSheet*& pSheet = shell32_prop_sheet.GetNext(pos);
-            HWND& hwndSheet = pSheet->hwnd;
-            if (SendMessageW(hwndSheet, PSM_ISDIALOGMESSAGE, 0, (LPARAM)&Msg))
+            for (POSITION pos = shell32_prop_sheet->GetHeadPosition(); pos != NULL;)
             {
-                if (!SendMessageW(hwndSheet, PSM_GETCURRENTPAGEHWND, 0, 0))
+                DrivePropSheet*& pSheet = shell32_prop_sheet->GetNext(pos);
+                HWND& hwndSheet = pSheet->hwnd;
+                if (SendMessageW(hwndSheet, PSM_ISDIALOGMESSAGE, 0, (LPARAM)&Msg))
                 {
-                    // to be destroyed
-                    DestroyWindow(hwndSheet);
-                    hwndSheet = NULL;
-                    shell32_prop_sheet.RemoveAt(pos);
+                    if (!SendMessageW(hwndSheet, PSM_GETCURRENTPAGEHWND, 0, 0))
+                    {
+                        // to be destroyed
+                        DestroyWindow(hwndSheet);
+                        hwndSheet = NULL;
+                        shell32_prop_sheet->RemoveAt(pos);
+                    }
+                    bProcessed = TRUE;
+                    break;
                 }
-                bProcessed = TRUE;
-                break;
             }
-        }
 
-        if (bProcessed)
-            continue;
+            if (bProcessed)
+                continue;
+        }
 
         if (shellView->TranslateAcceleratorW(&Msg) == S_OK)
             continue;
@@ -513,6 +519,8 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
         TranslateMessage(&Msg);
         DispatchMessage(&Msg);
     }
+
+    delete shell32_prop_sheet;
 
     return TRUE;
 }

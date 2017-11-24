@@ -135,7 +135,10 @@ struct DrivePropSheet
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
     CComPtr<IDataObject> pDataObj;
 };
-CAtlList<DrivePropSheet*> shell32_prop_sheet;
+extern "C"
+{
+    CAtlList<DrivePropSheet*> *shell32_prop_sheet;
+}
 
 DrivePropSheet::DrivePropSheet() : hwnd(NULL), hpsx(NULL), pDrvDefExt(NULL)
 {
@@ -156,7 +159,13 @@ BOOL
 SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl)
 {
     DrivePropSheet *pSheet = new DrivePropSheet();
-    shell32_prop_sheet.AddTail(pSheet);
+
+    if (shell32_prop_sheet == NULL)
+    {
+        shell32_prop_sheet = new CAtlList<DrivePropSheet*>();
+    }
+
+    shell32_prop_sheet->AddTail(pSheet);
 
     HPSXA& hpsx = pSheet->hpsx;
     WCHAR *wszName = pSheet->wszName;
@@ -209,7 +218,7 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHI
 
     if (!pSheet->hwnd)
     {
-        shell32_prop_sheet.RemoveTail();
+        shell32_prop_sheet->RemoveTail();
         delete pSheet;
         return FALSE;
     }
