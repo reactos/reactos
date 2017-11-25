@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Project header
+ * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ */
+
 #pragma once
 
 

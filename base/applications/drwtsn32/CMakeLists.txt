@@ -3,7 +3,6 @@ PROJECT(drwtsn32)
 
 set_cpp(WITH_RUNTIME WITH_EXCEPTIONS WITH_STL)
 
-
 list(APPEND CPP_SOURCE
     drwtsn32.cpp
     main.cpp
