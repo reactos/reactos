@@ -22,6 +22,7 @@
 
 #include <config.h>
 #include "iphlpapi_private.h"
+#include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
@@ -2619,13 +2620,96 @@ SetIpForwardEntryToStack(PMIB_IPFORWARDROW pRoute)
     return 0L;
 }
 
+DWORD GetInterfaceNameInternal(_In_ const GUID * pInterfaceGUID,
+                               _Out_writes_bytes_to_(*pOutBufLen, *pOutBufLen) PWCHAR pInterfaceName,
+                               _Inout_ PULONG pOutBufLen)
+{
+    UNICODE_STRING GuidString;
+    DWORD result, type;
+    WCHAR szKeyName[2*MAX_PATH];
+    HRESULT hr;
+    HKEY hKey;
+
+    if (pInterfaceGUID == NULL || pOutBufLen == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    result = RtlStringFromGUID(pInterfaceGUID, &GuidString);
+
+    if (!NT_SUCCESS(result))
+    {
+        // failed to convert guid to string
+        return RtlNtStatusToDosError(result);
+    }
+
+    hr = StringCbPrintfW(szKeyName, sizeof(szKeyName), L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", GuidString.Buffer);
+    RtlFreeUnicodeString(&GuidString);
+
+    if (FAILED(hr))
+    {
+        // key name is too long
+        return ERROR_BUFFER_OVERFLOW;
+    }
+
+    result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_READ, &hKey);
+
+    if (result != ERROR_SUCCESS)
+    {
+        // failed to find adapter entry
+        return ERROR_NOT_FOUND;
+    }
+
+    result = RegQueryValueExW(hKey, L"Name", NULL, &type, (PVOID)pInterfaceName, pOutBufLen);
+
+    RegCloseKey(hKey);
+
+    if (result == ERROR_MORE_DATA)
+    {
+        *pOutBufLen = MAX_INTERFACE_NAME_LEN * 2;
+        return ERROR_INSUFFICIENT_BUFFER;
+    }
+
+    if (result != ERROR_SUCCESS || type != REG_SZ)
+    {
+        // failed to read adapter name
+        return ERROR_NO_DATA;
+    }
+    return ERROR_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
 DWORD WINAPI
-NhGetInterfaceNameFromDeviceGuid(DWORD dwUnknown1,
-                                 DWORD dwUnknown2,
-                                 DWORD dwUnknown3,
+NhGetInterfaceNameFromDeviceGuid(_In_ const GUID * pInterfaceGUID,
+                                 _Out_writes_bytes_to_(*pOutBufLen, *pOutBufLen) PWCHAR pInterfaceName,
+                                 _Inout_ PULONG pOutBufLen,
                                  DWORD dwUnknown4,
                                  DWORD dwUnknown5)
 {
-    FIXME("NhGetInterfaceNameFromDeviceGuid() stub\n");
-    return 0L;
+    SetLastError(ERROR_SUCCESS);
+
+    if (pInterfaceName == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    return GetInterfaceNameInternal(pInterfaceGUID, pInterfaceName, pOutBufLen);
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI
+NhGetInterfaceNameFromGuid(_In_ const GUID * pInterfaceGUID,
+                           _Out_writes_bytes_to_(*pOutBufLen, *pOutBufLen) PWCHAR pInterfaceName,
+                           _Inout_ PULONG pOutBufLen,
+                           DWORD dwUnknown4,
+                           DWORD dwUnknown5)
+{
+    DWORD result;
+
+    result = GetInterfaceNameInternal(pInterfaceGUID, pInterfaceName, pOutBufLen);
+
+    if (result == ERROR_NOT_FOUND)
+        SetLastError(ERROR_PATH_NOT_FOUND);
+
+    return result;
 }
