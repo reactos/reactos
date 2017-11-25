@@ -601,7 +601,7 @@ VOID
 NTAPI
 EHCI_QueryEndpointRequirements(IN PVOID ehciExtension,
                                IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
-                               IN PULONG EndpointRequirements)
+                               IN PUSBPORT_ENDPOINT_REQUIREMENTS EndpointRequirements)
 {
     ULONG TransferType;
 
@@ -616,41 +616,41 @@ EHCI_QueryEndpointRequirements(IN PVOID ehciExtension,
 
             if (EndpointProperties->DeviceSpeed == UsbHighSpeed)
             {
-                EndpointRequirements[0] = 0x40000; // FIXME Isoch
-                EndpointRequirements[1] = EHCI_MAX_HS_ISO_TRANSFER_SIZE;
+                EndpointRequirements->HeaderBufferSize = 0x40000; // FIXME Isoch
+                EndpointRequirements->MaxTransferSize = EHCI_MAX_HS_ISO_TRANSFER_SIZE;
             }
             else
             {
-                EndpointRequirements[0] = 0x1000; // FIXME Isoch
-                EndpointRequirements[1] = EHCI_MAX_FS_ISO_TRANSFER_SIZE;
+                EndpointRequirements->HeaderBufferSize = 0x1000; // FIXME Isoch
+                EndpointRequirements->MaxTransferSize = EHCI_MAX_FS_ISO_TRANSFER_SIZE;
             }
             break;
 
         case USBPORT_TRANSFER_TYPE_CONTROL:
             DPRINT("EHCI_QueryEndpointRequirements: ControlTransfer\n");
-            EndpointRequirements[0] = sizeof(EHCI_HCD_TD) +
+            EndpointRequirements->HeaderBufferSize = sizeof(EHCI_HCD_TD) +
                                       sizeof(EHCI_HCD_QH) +
                                       EHCI_MAX_CONTROL_TD_COUNT * sizeof(EHCI_HCD_TD);
 
-            EndpointRequirements[1] = EHCI_MAX_CONTROL_TRANSFER_SIZE;
+            EndpointRequirements->MaxTransferSize = EHCI_MAX_CONTROL_TRANSFER_SIZE;
             break;
 
         case USBPORT_TRANSFER_TYPE_BULK:
             DPRINT("EHCI_QueryEndpointRequirements: BulkTransfer\n");
-            EndpointRequirements[0] = sizeof(EHCI_HCD_TD) +
+            EndpointRequirements->HeaderBufferSize = sizeof(EHCI_HCD_TD) +
                                       sizeof(EHCI_HCD_QH) +
                                       EHCI_MAX_BULK_TD_COUNT * sizeof(EHCI_HCD_TD);
 
-            EndpointRequirements[1] = EHCI_MAX_BULK_TRANSFER_SIZE;
+            EndpointRequirements->MaxTransferSize = EHCI_MAX_BULK_TRANSFER_SIZE;
             break;
 
         case USBPORT_TRANSFER_TYPE_INTERRUPT:
             DPRINT("EHCI_QueryEndpointRequirements: InterruptTransfer\n");
-            EndpointRequirements[0] = sizeof(EHCI_HCD_TD) +
+            EndpointRequirements->HeaderBufferSize = sizeof(EHCI_HCD_TD) +
                                       sizeof(EHCI_HCD_QH) +
                                       EHCI_MAX_INTERRUPT_TD_COUNT * sizeof(EHCI_HCD_TD);
 
-            EndpointRequirements[1] = EHCI_MAX_INTERRUPT_TRANSFER_SIZE;
+            EndpointRequirements->MaxTransferSize = EHCI_MAX_INTERRUPT_TRANSFER_SIZE;
             break;
 
         default:
