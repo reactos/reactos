@@ -475,19 +475,18 @@ EHCI_OpenIsoEndpoint(IN PEHCI_EXTENSION EhciExtension,
 MPSTATUS
 NTAPI
 EHCI_OpenEndpoint(IN PVOID ehciExtension,
-                  IN PVOID endpointParameters,
+                  IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                   IN PVOID ehciEndpoint)
 {
     PEHCI_EXTENSION EhciExtension = ehciExtension;
     PEHCI_ENDPOINT EhciEndpoint = ehciEndpoint;
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     ULONG TransferType;
     MPSTATUS MPStatus;
 
     DPRINT_EHCI("EHCI_OpenEndpoint: ... \n");
 
     RtlCopyMemory(&EhciEndpoint->EndpointProperties,
-                  endpointParameters,
+                  EndpointProperties,
                   sizeof(USBPORT_ENDPOINT_PROPERTIES));
 
     TransferType = EndpointProperties->TransferType;
@@ -541,17 +540,15 @@ EHCI_OpenEndpoint(IN PVOID ehciExtension,
 MPSTATUS
 NTAPI
 EHCI_ReopenEndpoint(IN PVOID ehciExtension,
-                    IN PVOID endpointParameters,
+                    IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                     IN PVOID ehciEndpoint)
 {
     PEHCI_ENDPOINT EhciEndpoint;
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG TransferType;
     PEHCI_HCD_QH QH;
     MPSTATUS MPStatus;
 
     EhciEndpoint = ehciEndpoint;
-    EndpointProperties = endpointParameters;
 
     TransferType = EndpointProperties->TransferType;
 
@@ -579,7 +576,7 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
         case USBPORT_TRANSFER_TYPE_BULK:
         case USBPORT_TRANSFER_TYPE_INTERRUPT:
             RtlCopyMemory(&EhciEndpoint->EndpointProperties,
-                          endpointParameters,
+                          EndpointProperties,
                           sizeof(USBPORT_ENDPOINT_PROPERTIES));
 
             QH = EhciEndpoint->QH;
@@ -603,15 +600,13 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
 VOID
 NTAPI
 EHCI_QueryEndpointRequirements(IN PVOID ehciExtension,
-                               IN PVOID endpointParameters,
+                               IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                                IN PULONG EndpointRequirements)
 {
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG TransferType;
 
     DPRINT_EHCI("EHCI_QueryEndpointRequirements: ... \n");
 
-    EndpointProperties = endpointParameters;
     TransferType = EndpointProperties->TransferType;
 
     switch (TransferType)
@@ -2444,15 +2439,13 @@ MPSTATUS
 NTAPI
 EHCI_SubmitTransfer(IN PVOID ehciExtension,
                     IN PVOID ehciEndpoint,
-                    IN PVOID transferParameters,
+                    IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
                     IN PVOID ehciTransfer,
-                    IN PVOID sgList)
+                    IN PUSBPORT_SCATTER_GATHER_LIST SgList)
 {
     PEHCI_EXTENSION EhciExtension = ehciExtension;
     PEHCI_ENDPOINT EhciEndpoint = ehciEndpoint;
-    PUSBPORT_TRANSFER_PARAMETERS TransferParameters = transferParameters;
     PEHCI_TRANSFER EhciTransfer = ehciTransfer;
-    PUSBPORT_SCATTER_GATHER_LIST SgList = sgList;
     MPSTATUS MPStatus;
 
     DPRINT_EHCI("EHCI_SubmitTransfer: EhciEndpoint - %p, EhciTransfer - %p\n",
@@ -2504,7 +2497,7 @@ MPSTATUS
 NTAPI
 EHCI_SubmitIsoTransfer(IN PVOID ehciExtension,
                        IN PVOID ehciEndpoint,
-                       IN PVOID transferParameters,
+                       IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
                        IN PVOID ehciTransfer,
                        IN PVOID isoParameters)
 {
@@ -3716,7 +3709,7 @@ EHCI_PassThru(IN PVOID ehciExtension,
 VOID
 NTAPI
 EHCI_RebalanceEndpoint(IN PVOID ohciExtension,
-                       IN PVOID endpointParameters,
+                       IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                        IN PVOID ohciEndpoint)
 {
     DPRINT1("EHCI_RebalanceEndpoint: UNIMPLEMENTED. FIXME\n");
