@@ -215,9 +215,9 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
 
         if (wParam == DFM_CMD_PROPERTIES)
         {
-            if (!SH_ShowDriveProperties(wszBuf, pidlFolder, apidl))
+            hr = SH_ShowDriveProperties(wszBuf, pidlFolder, apidl);
+            if (FAILED(hr))
             {
-                hr = E_FAIL;
                 dwError = ERROR_CAN_NOT_COMPLETE;
                 nStringID = IDS_CANTSHOWPROPERTIES;
             }
