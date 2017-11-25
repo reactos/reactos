@@ -184,10 +184,9 @@ UhciSetNextQH(IN PUHCI_HCD_QH QH,
 MPSTATUS
 NTAPI
 UhciOpenEndpoint(IN PVOID uhciExtension,
-                 IN PVOID endpointParameters,
+                 IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                  IN PVOID uhciEndpoint)
 {
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointParameters = endpointParameters;
     PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
     ULONG TransferType;
     ULONG_PTR BufferVA;
@@ -199,7 +198,7 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
     PUHCI_HCD_QH QH;
 
     RtlCopyMemory(&UhciEndpoint->EndpointProperties,
-                  EndpointParameters,
+                  EndpointProperties,
                   sizeof(UhciEndpoint->EndpointProperties));
 
     InitializeListHead(&UhciEndpoint->ListTDs);
@@ -208,7 +207,7 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
     UhciEndpoint->DataToggle = UHCI_TD_PID_DATA0;
     UhciEndpoint->Flags = 0;
 
-    TransferType = EndpointParameters->TransferType;
+    TransferType = EndpointProperties->TransferType;
 
     DPRINT("UhciOpenEndpoint: UhciEndpoint - %p, TransferType - %x\n",
            UhciEndpoint,
@@ -220,13 +219,13 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
         UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_CONTROLL_OR_ISO;
     }
 
-    BufferVA = EndpointParameters->BufferVA;
-    BufferPA = EndpointParameters->BufferPA;
+    BufferVA = EndpointProperties->BufferVA;
+    BufferPA = EndpointProperties->BufferPA;
 
-    BufferLength = EndpointParameters->BufferLength;
+    BufferLength = EndpointProperties->BufferLength;
 
     /* For Isochronous transfers not used QHs (only TDs) */
-    if (EndpointParameters->TransferType != USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    if (EndpointProperties->TransferType != USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
     {
         /* Initialize HCD Queue Head */
         UhciEndpoint->QH = (PUHCI_HCD_QH)BufferVA;
@@ -271,7 +270,7 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
 MPSTATUS
 NTAPI
 UhciReopenEndpoint(IN PVOID uhciExtension,
-                   IN PVOID endpointParameters,
+                   IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                    IN PVOID uhciEndpoint)
 {
     DPRINT_IMPL("Uhci: UNIMPLEMENTED. FIXME\n");
@@ -281,10 +280,9 @@ UhciReopenEndpoint(IN PVOID uhciExtension,
 VOID
 NTAPI
 UhciQueryEndpointRequirements(IN PVOID uhciExtension,
-                              IN PVOID endpointParameters,
+                              IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                               IN PULONG EndpointRequirements)
 {
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     ULONG TransferType;
     ULONG TdCont;
 
@@ -1517,15 +1515,13 @@ MPSTATUS
 NTAPI
 UhciSubmitTransfer(IN PVOID uhciExtension,
                    IN PVOID uhciEndpoint,
-                   IN PVOID transferParameters,
+                   IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
                    IN PVOID uhciTransfer,
-                   IN PVOID sgList)
+                   IN PUSBPORT_SCATTER_GATHER_LIST SgList)
 {
     PUHCI_EXTENSION UhciExtension = uhciExtension;
     PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
-    PUSBPORT_TRANSFER_PARAMETERS TransferParameters = transferParameters;
     PUHCI_TRANSFER UhciTransfer = uhciTransfer;
-    PUSBPORT_SCATTER_GATHER_LIST SgList = sgList;
     ULONG TransferType;
 
     DPRINT_UHCI("UhciSubmitTransfer: ...\n");
@@ -1739,7 +1735,7 @@ MPSTATUS
 NTAPI
 UhciIsochTransfer(IN PVOID ehciExtension,
                   IN PVOID ehciEndpoint,
-                  IN PVOID transferParameters,
+                  IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
                   IN PVOID ehciTransfer,
                   IN PVOID isoParameters)
 {
@@ -1750,7 +1746,7 @@ UhciIsochTransfer(IN PVOID ehciExtension,
 VOID
 NTAPI
 UhciAbortIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
-                        IN PUHCI_ENDPOINT UhciEndpoint,
+                     IN PUHCI_ENDPOINT UhciEndpoint,
                      IN PUHCI_TRANSFER UhciTransfer)
 {
     DPRINT_IMPL("UhciAbortNonIsoTransfer: UNIMPLEMENTED. FIXME\n");
