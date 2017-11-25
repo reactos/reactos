@@ -2,6 +2,7 @@
  * Shell Desktop
  *
  * Copyright 2008 Thomas Bluemel
+ * Copyright 2017 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,17 +21,22 @@
 
 #include "shelldesktop.h"
 
-// Support for multiple monitors is disabled till LVM_SETWORKAREAS gets implemented
-#ifdef MULTIMONITOR_SUPPORT
-#include <atlcoll.h>
+#ifndef _ATL_NO_EXCEPTIONS
+    #define _ATL_NO_EXCEPTIONS
 #endif
-
-
+#include <atlcoll.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
 static const WCHAR szProgmanClassName[]  = L"Progman";
 static const WCHAR szProgmanWindowName[] = L"Program Manager";
+
+// for drive property sheets
+extern "C"
+{
+    BOOL SH_IsDrivePropSheetMessage(MSG *pMsg);
+    void SH_DeleteAllDrivePropSheets();
+}
 
 class CDesktopBrowser :
     public CWindowImpl<CDesktopBrowser, CWindow, CFrameWinTraits>,
@@ -472,15 +478,22 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
 
     while ((bRet = GetMessageW(&Msg, NULL, 0, 0)) != 0)
     {
-        if (bRet != -1)
-        {
-            if (shellView->TranslateAcceleratorW(&Msg) != S_OK)
-            {
-                TranslateMessage(&Msg);
-                DispatchMessage(&Msg);
-            }
-        }
+        if (bRet == -1)
+            break;  // fatal error, quit
+
+        // do modeless property sheets
+        if (SH_IsDrivePropSheetMessage(&Msg))
+            continue;
+
+        if (shellView->TranslateAcceleratorW(&Msg) == S_OK)
+            continue;
+
+        TranslateMessage(&Msg);
+        DispatchMessage(&Msg);
     }
+
+    // delete all property sheets
+    SH_DeleteAllDrivePropSheets();
 
     return TRUE;
 }
