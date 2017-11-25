@@ -1382,7 +1382,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     TransferedLen = 0;
     DataToggle = OHCI_TD_DATA_TOGGLE_DATA1;
 
-    while (TransferedLen < TransferParameters->TransferBufferLength);
+    while (TransferedLen < TransferParameters->TransferBufferLength)
     {
         OhciTransfer->PendingTDs++;
 
