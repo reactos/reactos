@@ -211,6 +211,7 @@ __drv_dispatchType(IRP_MJ_CLEANUP)
 __drv_dispatchType(IRP_MJ_PNP)
 __drv_dispatchType(IRP_MJ_SHUTDOWN)
 NTSTATUS
+NTAPI
 CdFsdDispatch (
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp
