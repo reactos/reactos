@@ -213,6 +213,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     ACCESS_MASK DesiredAccess;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG BufferLength;
+    POOL_TYPE PoolType;
 
     PAGED_CODE();
 
@@ -495,6 +496,8 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     StackPtr->Parameters.DeviceIoControl.OutputBufferLength =
         OutputBufferLength;
 
+    PoolType = IsDevIoCtl ? NonPagedPoolCacheAligned : NonPagedPool;
+
     /* Handle the Methods */
     switch (AccessType)
     {
@@ -513,7 +516,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 {
                     /* Allocate the System Buffer */
                     Irp->AssociatedIrp.SystemBuffer =
-                        ExAllocatePoolWithTag(NonPagedPool,
+                        ExAllocatePoolWithTag(PoolType,
                                               BufferLength,
                                               TAG_SYS_BUF);
 
@@ -560,7 +563,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 {
                     /* Allocate the System Buffer */
                     Irp->AssociatedIrp.SystemBuffer =
-                        ExAllocatePoolWithTag(NonPagedPool,
+                        ExAllocatePoolWithTag(PoolType,
                                               InputBufferLength,
                                               TAG_SYS_BUF);
 
