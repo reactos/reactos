@@ -318,7 +318,14 @@ ModifyWorldTransform(
     if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
         return FALSE;
 
-    HANDLE_METADC(BOOL, ModifyWorldTransform, FALSE, hdc, pxform, dwMode);
+    if (dwMode == (MWT_MAX + 1))
+    {
+        HANDLE_METADC(BOOL, SetWorldTransform, FALSE, hdc, pxform);
+    }
+    else
+    {
+        HANDLE_METADC(BOOL, ModifyWorldTransform, FALSE, hdc, pxform, dwMode);
+    }
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
