@@ -500,7 +500,7 @@ BOOL
 APIENTRY
 NtGdiModifyWorldTransform(
     HDC hdc,
-    LPXFORM pxformUnsafe,
+    const XFORM* pxformUnsafe,
     DWORD dwMode)
 {
     PDC pdc;

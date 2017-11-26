@@ -2257,7 +2257,7 @@ BOOL
 APIENTRY
 NtGdiModifyWorldTransform(
     _In_ HDC hdc,
-    _In_opt_ LPXFORM pxf,
+    _In_opt_ const XFORM* pxf,
     _In_ DWORD iXform);
 
 __kernel_entry
