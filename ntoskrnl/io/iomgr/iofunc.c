@@ -516,9 +516,9 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 {
                     /* Allocate the System Buffer */
                     Irp->AssociatedIrp.SystemBuffer =
-                        ExAllocatePoolWithTag(PoolType,
-                                              BufferLength,
-                                              TAG_SYS_BUF);
+                        ExAllocatePoolWithQuotaTag(PoolType,
+                                                   BufferLength,
+                                                   TAG_SYS_BUF);
 
                     /* Check if we got a buffer */
                     if (InputBuffer)
@@ -563,9 +563,9 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 {
                     /* Allocate the System Buffer */
                     Irp->AssociatedIrp.SystemBuffer =
-                        ExAllocatePoolWithTag(PoolType,
-                                              InputBufferLength,
-                                              TAG_SYS_BUF);
+                        ExAllocatePoolWithQuotaTag(PoolType,
+                                                   InputBufferLength,
+                                                   TAG_SYS_BUF);
 
                     /* Copy into the System Buffer */
                     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
