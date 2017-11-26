@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test for NtFreeVirtualMemory
  * COPYRIGHT:   Copyright 2011 Jérôme Gardou <jerome.gardou@reactos.org>
+ *              Copyright 2017 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 #include "precomp.h"
@@ -169,8 +170,48 @@ static void Test_NtFreeVirtualMemory(void)
     ok(Length == 2*PAGE_SIZE, "Length mismatch : 0x%08lx\n", (ULONG)Length);
     ok(Buffer2 == Buffer, "The buffer is not aligned to PAGE_SIZE.\n");
 }
-    
+
+static void Test_NtFreeVirtualMemory_Parameters(void)
+{
+    NTSTATUS Status;
+    ULONG FreeType;
+    int i;
+
+    // 4th parameter: "ULONG FreeType".
+
+    // A type is mandatory.
+    Status = NtFreeVirtualMemory(NULL, NULL, NULL, 0ul);
+    ok(Status == STATUS_INVALID_PARAMETER_4, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
+
+    // All but MEM_DECOMMIT and MEM_RELEASE are unsupported.
+    // Each bit one by one.
+    for (i = 0; i < 32; ++i)
+    {
+        FreeType = 1 << i;
+        if (FreeType == MEM_DECOMMIT || FreeType == MEM_RELEASE)
+            continue;
+
+        Status = NtFreeVirtualMemory(NULL, NULL, NULL, FreeType);
+        ok(Status == STATUS_INVALID_PARAMETER_4, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
+    }
+    // All bits at once.
+    // Not testing all other values.
+    Status = NtFreeVirtualMemory(NULL, NULL, NULL, ~(MEM_DECOMMIT | MEM_RELEASE));
+    ok(Status == STATUS_INVALID_PARAMETER_4, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
+    Status = NtFreeVirtualMemory(NULL, NULL, NULL, ~MEM_DECOMMIT);
+    ok(Status == STATUS_INVALID_PARAMETER_4, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
+    Status = NtFreeVirtualMemory(NULL, NULL, NULL, ~MEM_RELEASE);
+    ok(Status == STATUS_INVALID_PARAMETER_4, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
+    Status = NtFreeVirtualMemory(NULL, NULL, NULL, ~0ul);
+    ok(Status == STATUS_INVALID_PARAMETER_4, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
+
+    // MEM_DECOMMIT and MEM_RELEASE are exclusive.
+    Status = NtFreeVirtualMemory(NULL, NULL, NULL, MEM_DECOMMIT | MEM_RELEASE);
+    ok(Status == STATUS_INVALID_PARAMETER_4, "NtFreeVirtualMemory returned status : 0x%08lx\n", Status);
+}
+
 START_TEST(NtFreeVirtualMemory)
 {
     Test_NtFreeVirtualMemory();
+    Test_NtFreeVirtualMemory_Parameters();
 }
