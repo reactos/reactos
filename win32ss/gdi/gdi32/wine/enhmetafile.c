@@ -546,7 +546,6 @@ static void EMF_Update_MF_Xform(HDC hdc, const enum_emh_data *info)
 
     if (!SetWorldTransform(hdc, &final_trans))
     {
-        __debugbreak();
         ERR("World transform failed!\n");
     }
 }

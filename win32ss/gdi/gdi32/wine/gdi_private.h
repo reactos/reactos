@@ -180,10 +180,10 @@ HGDIOBJ WINAPI GdiFixUpHandle(HGDIOBJ hGdiObj);
 
 extern void push_dc_driver_ros(PHYSDEV *dev, PHYSDEV physdev, const struct gdi_dc_funcs *funcs);
 #define push_dc_driver push_dc_driver_ros
-
+#if 0
 BOOL WINAPI SetWorldTransformForMetafile(HDC hdc, const XFORM *pxform);
 #define SetWorldTransform SetWorldTransformForMetafile
-
+#endif
 #ifdef _M_ARM
 #define DbgRaiseAssertionFailure() __emit(0xdefc)
 #else

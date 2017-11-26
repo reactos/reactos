@@ -42,6 +42,10 @@ static INT   NULL_ExtSelectClipRgn(PHYSDEV dev, HRGN hrgn, INT iMode) { return 1
 static INT   NULL_IntersectClipRect(PHYSDEV dev, INT left, INT top, INT right, INT bottom) { return 1; }
 static INT   NULL_OffsetClipRgn(PHYSDEV dev, INT x, INT y) { return SIMPLEREGION; }
 static INT   NULL_ExcludeClipRect(PHYSDEV dev, INT left, INT top, INT right, INT bottom) { return 1; }
+static BOOL  NULL_ExtTextOutW(PHYSDEV dev, INT x, INT y, UINT fuOptions, const RECT *lprc, LPCWSTR lpString, UINT cwc, const INT *lpDx) { return TRUE; }
+static BOOL  NULL_ModifyWorldTransform( PHYSDEV dev, const XFORM* xform, DWORD mode ) { return TRUE; }
+static BOOL  NULL_SetWorldTransform( PHYSDEV dev, const XFORM* xform ) { return TRUE; }
+static BOOL  NULL_PolyPolyline(PHYSDEV dev, const POINT *pt, const DWORD *lpt, DWORD cw) { return TRUE; }
 
 static const struct gdi_dc_funcs DummyPhysDevFuncs =
 {
@@ -73,7 +77,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //INT      (*pExtEscape)(PHYSDEV,INT,INT,LPCVOID,INT,LPVOID);
     (PVOID)NULL_Unused, //BOOL     (*pExtFloodFill)(PHYSDEV,INT,INT,COLORREF,UINT);
     NULL_ExtSelectClipRgn, //INT      (*pExtSelectClipRgn)(PHYSDEV,HRGN,INT);
-    (PVOID)NULL_Unused, //BOOL     (*pExtTextOut)(PHYSDEV,INT,INT,UINT,const RECT*,LPCWSTR,UINT,const INT*);
+    NULL_ExtTextOutW, //BOOL     (*pExtTextOut)(PHYSDEV,INT,INT,UINT,const RECT*,LPCWSTR,UINT,const INT*);
     nulldrv_FillPath,   //BOOL     (*pFillPath)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pFillRgn)(PHYSDEV,HRGN,HBRUSH);
     nulldrv_FlattenPath, //BOOL     (*pFlattenPath)(PHYSDEV);
@@ -108,7 +112,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     NULL_IntersectClipRect, //INT      (*pIntersectClipRect)(PHYSDEV,INT,INT,INT,INT);
     (PVOID)NULL_Unused, //BOOL     (*pInvertRgn)(PHYSDEV,HRGN);
     (PVOID)NULL_Unused, //BOOL     (*pLineTo)(PHYSDEV,INT,INT);
-    (PVOID)NULL_Unused, //BOOL     (*pModifyWorldTransform)(PHYSDEV,const XFORM*,DWORD);
+    NULL_ModifyWorldTransform, //BOOL     (*pModifyWorldTransform)(PHYSDEV,const XFORM*,DWORD);
     (PVOID)NULL_Unused, //BOOL     (*pMoveTo)(PHYSDEV,INT,INT);
     NULL_OffsetClipRgn, //INT      (*pOffsetClipRgn)(PHYSDEV,INT,INT);
     (PVOID)NULL_Unused, //BOOL     (*pOffsetViewportOrgEx)(PHYSDEV,INT,INT,POINT*);
@@ -120,7 +124,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //BOOL     (*pPolyBezierTo)(PHYSDEV,const POINT*,DWORD);
     (PVOID)NULL_Unused, //BOOL     (*pPolyDraw)(PHYSDEV,const POINT*,const BYTE *,DWORD);
     (PVOID)NULL_Unused, //BOOL     (*pPolyPolygon)(PHYSDEV,const POINT*,const INT*,UINT);
-    (PVOID)NULL_Unused, //BOOL     (*pPolyPolyline)(PHYSDEV,const POINT*,const DWORD*,DWORD);
+    NULL_PolyPolyline, //BOOL     (*pPolyPolyline)(PHYSDEV,const POINT*,const DWORD*,DWORD);
     (PVOID)NULL_Unused, //BOOL     (*pPolygon)(PHYSDEV,const POINT*,INT);
     (PVOID)NULL_Unused, //BOOL     (*pPolyline)(PHYSDEV,const POINT*,INT);
     (PVOID)NULL_Unused, //BOOL     (*pPolylineTo)(PHYSDEV,const POINT*,INT);
@@ -165,7 +169,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     NULL_SetViewportOrgEx, //BOOL     (*pSetViewportOrgEx)(PHYSDEV,INT,INT,POINT*);
     NULL_SetWindowExtEx, //BOOL     (*pSetWindowExtEx)(PHYSDEV,INT,INT,SIZE*);
     NULL_SetWindowOrgEx, //BOOL     (*pSetWindowOrgEx)(PHYSDEV,INT,INT,POINT*);
-    (PVOID)NULL_Unused, //BOOL     (*pSetWorldTransform)(PHYSDEV,const XFORM*);
+    NULL_SetWorldTransform, //BOOL     (*pSetWorldTransform)(PHYSDEV,const XFORM*);
     (PVOID)NULL_Unused, //INT      (*pStartDoc)(PHYSDEV,const DOCINFOW*);
     (PVOID)NULL_Unused, //INT      (*pStartPage)(PHYSDEV);
     (PVOID)NULL_Unused, //BOOL     (*pStretchBlt)(PHYSDEV,struct bitblt_coords*,PHYSDEV,struct bitblt_coords*,DWORD);
@@ -534,7 +538,7 @@ DeleteColorSpace(
 {
     return NtGdiDeleteColorSpace(hcs);
 }
-
+#if 0
 BOOL
 WINAPI
 SetWorldTransformForMetafile(
@@ -561,7 +565,7 @@ SetWorldTransformForMetafile(
 
     return SetWorldTransform(hdc, pxform);
 }
-
+#endif
 void
 __cdecl
 _assert (
@@ -1044,6 +1048,11 @@ DRIVER_Dispatch(
                                                    _va_arg_n(argptr, INT, 0), // X
                                                    _va_arg_n(argptr, INT, 1), // Y
                                                    _va_arg_n(argptr, LPPOINT, 2)); // lpPoint
+
+        case DCFUNC_SetWorldTransform:
+            return physdev->funcs->pSetWorldTransform(physdev,
+                                                      va_arg(argptr, const XFORM*));
+
         case DCFUNC_StretchBlt:
             return DRIVER_StretchBlt(physdev,
                                      physdev->hdc,
