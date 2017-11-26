@@ -25,7 +25,7 @@ struct ThreadData
     HANDLE Handle;
     CONTEXT Context;
 
-    ThreadData(HANDLE handle);
+    ThreadData(HANDLE handle = NULL);
 
     void Update();
 };

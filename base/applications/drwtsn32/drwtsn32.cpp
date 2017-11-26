@@ -28,7 +28,7 @@ void ModuleData::Update(HANDLE hProcess)
 }
 
 
-ThreadData::ThreadData(HANDLE handle = NULL)
+ThreadData::ThreadData(HANDLE handle)
     : Handle(handle)
 {
     memset(&Context, 0, sizeof(Context));
