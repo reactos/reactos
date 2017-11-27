@@ -885,6 +885,76 @@ USBPORT_AbortTransfers(IN PDEVICE_OBJECT FdoDevice,
     }
 }
 
+PUSB2_TT_EXTENSION
+NTAPI 
+USBPORT_GetTt(IN PDEVICE_OBJECT FdoDevice,
+              IN PUSBPORT_DEVICE_HANDLE HubDeviceHandle,
+              OUT PUSHORT OutPort,
+              OUT PUSBPORT_DEVICE_HANDLE * OutHubDeviceHandle)
+{
+    PUSBPORT_DEVICE_HANDLE DeviceHandle = HubDeviceHandle;
+    ULONG TtCount;
+    PLIST_ENTRY Entry;
+    PUSB2_TT_EXTENSION TtExtension = NULL;
+
+    DPRINT("USBPORT_GetTt: HubDeviceHandle - %p\n", HubDeviceHandle);
+
+    *OutHubDeviceHandle = NULL;
+
+    while (DeviceHandle->DeviceSpeed != UsbHighSpeed)
+    {
+        DPRINT("USBPORT_GetTt: DeviceHandle - %p, DeviceHandle->PortNumber - %X\n",
+               DeviceHandle,
+               DeviceHandle->PortNumber);
+
+        *OutPort = DeviceHandle->PortNumber;
+
+        DeviceHandle = DeviceHandle->HubDeviceHandle;
+
+        if (!DeviceHandle)
+            return NULL;
+    }
+
+    TtCount = DeviceHandle->TtCount;
+
+    if (!TtCount)
+        return NULL;
+
+    if (IsListEmpty(&DeviceHandle->TtList))
+        return NULL;
+
+    Entry = DeviceHandle->TtList.Flink;
+
+    if (TtCount > 1)
+    {
+        while (Entry != &DeviceHandle->TtList)
+        {
+            ASSERT(Entry != NULL);
+
+            TtExtension = CONTAINING_RECORD(Entry,
+                                            USB2_TT_EXTENSION,
+                                            Link);
+
+            if (TtExtension->TtNumber == *OutPort)
+                break;
+
+            Entry = Entry->Flink;
+
+            TtExtension = NULL;
+        }
+    }
+    else
+    {
+        TtExtension = CONTAINING_RECORD(Entry,
+                                        USB2_TT_EXTENSION,
+                                        Link);
+    }
+
+    *OutHubDeviceHandle = DeviceHandle;
+
+    return TtExtension;
+}
+
 NTSTATUS
 NTAPI
 USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
