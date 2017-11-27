@@ -1770,7 +1770,55 @@ USBPORT_InitializeTT(IN PDEVICE_OBJECT FdoDevice,
                      IN PUSBPORT_DEVICE_HANDLE HubDeviceHandle,
                      IN ULONG TtNumber)
 {
-    DPRINT1("USBPORT_InitializeTT: UNIMPLEMENTED. FIXME. \n");
+    PUSBPORT_DEVICE_EXTENSION FdoExtension;
+    PUSB2_TT_EXTENSION TtExtension;
+    ULONG ix;
+
+    DPRINT("USBPORT_InitializeTT: HubDeviceHandle - %p, TtNumber - %X\n",
+           HubDeviceHandle,
+           TtNumber);
+
+    FdoExtension = FdoDevice->DeviceExtension;
+
+    TtExtension = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(USB2_TT_EXTENSION),
+                                        USB_PORT_TAG);
+
+    if (!TtExtension)
+    {
+        DPRINT1("USBPORT_InitializeTT: ExAllocatePoolWithTag return NULL\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    DPRINT("USBPORT_InitializeTT: TtExtension - %p\n", TtExtension);
+
+    RtlZeroMemory(TtExtension, sizeof(USB2_TT_EXTENSION));
+
+    TtExtension->DeviceAddress = HubDeviceHandle->DeviceAddress;
+    TtExtension->TtNumber = TtNumber;
+    TtExtension->RootHubPdo = FdoExtension->RootHubPdo;
+    TtExtension->BusBandwidth = TOTAL_USB11_BUS_BANDWIDTH;
+
+    InitializeListHead(&TtExtension->TtList);
+
+    /* 90% maximum allowed for periodic endpoints */
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        TtExtension->Bandwidth[ix] = TtExtension->BusBandwidth -
+                                     TtExtension->BusBandwidth / 10;
+    }
+
+    USBPORT_UpdateAllocatedBwTt(TtExtension);
+
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        FdoExtension->Bandwidth[ix] -= TtExtension->MaxBandwidth;
+    }
+
+    USB2_InitTT(FdoExtension->Usb2Extension, &TtExtension->Tt);
+
+    InsertTailList(&HubDeviceHandle->TtList, &TtExtension->Link);
+
     return STATUS_SUCCESS;
 }
 
@@ -1783,7 +1831,7 @@ USBPORT_Initialize20Hub(IN PDEVICE_OBJECT FdoDevice,
     NTSTATUS Status;
     ULONG ix;
 
-    DPRINT("USBPORT_Initialize20Hub \n");
+    DPRINT("USBPORT_Initialize20Hub: TtCount - %X\n", TtCount);
 
     if (!HubDeviceHandle)
     {

@@ -194,6 +194,7 @@ typedef struct _USBPORT_DEVICE_HANDLE {
   LIST_ENTRY DeviceHandleLink;
   LONG DeviceHandleLock;
   ULONG TtCount;
+  LIST_ENTRY TtList;
 } USBPORT_DEVICE_HANDLE, *PUSBPORT_DEVICE_HANDLE;
 
 typedef struct _USBPORT_ENDPOINT {
@@ -379,10 +380,11 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
   KDPC HcWakeDpc;
   /* Usb 2.0 HC Extension */
   PUSB2_HC_EXTENSION Usb2Extension;
+  ULONG Bandwidth[32];
 
   /* Miniport extension should be aligned on 0x100 */
 #if !defined(_M_X64)
-  ULONG Padded[33];
+  ULONG Padded[1];
 #else
   ULONG Padded[0];
 #endif
@@ -1293,6 +1295,12 @@ NTAPI
 USBPORT_FreeBandwidthUSB2(
   IN PDEVICE_OBJECT FdoDevice,
   IN PUSBPORT_ENDPOINT Endpoint);
+
+VOID
+NTAPI
+USB2_InitTT(
+  IN PUSB2_HC_EXTENSION HcExtension,
+  IN PUSB2_TT Tt);
 
 VOID
 NTAPI
