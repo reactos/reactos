@@ -454,6 +454,87 @@ typedef struct _TIMER_WORK_QUEUE_ITEM {
 #define USB2_HS_ISOCHRONOUS_OUT_OVERHEAD       38
 #define USB2_HS_ISOCHRONOUS_IN_OVERHEAD        18
 
+typedef union _USB2_TT_ENDPOINT_PARAMS {
+  struct {
+    ULONG TransferType           : 4;
+    ULONG Direction              : 1;
+    USB_DEVICE_SPEED DeviceSpeed : 2;
+    ULONG EndpointMoved          : 1;
+    ULONG Reserved               : 24;
+  };
+  ULONG AsULONG;
+} USB2_TT_ENDPOINT_PARAMS;
+
+C_ASSERT(sizeof(USB2_TT_ENDPOINT_PARAMS) == sizeof(ULONG));
+
+typedef union _USB2_TT_ENDPOINT_NUMS {
+  struct {
+    ULONG NumStarts     : 4;
+    ULONG NumCompletes  : 4;
+    ULONG Reserved      : 24;
+  };
+  ULONG AsULONG;
+} USB2_TT_ENDPOINT_NUMS;
+
+C_ASSERT(sizeof(USB2_TT_ENDPOINT_NUMS) == sizeof(ULONG));
+
+typedef struct _USB2_TT_ENDPOINT {
+  PUSB2_TT Tt;
+  PUSBPORT_ENDPOINT Endpoint;
+  struct _USB2_TT_ENDPOINT * NextTtEndpoint;
+  USB2_TT_ENDPOINT_PARAMS TtEndpointParams;
+  USB2_TT_ENDPOINT_NUMS Nums;
+  USHORT MaxPacketSize;
+  USHORT PreviosPeriod;
+  USHORT Period;
+  USHORT ActualPeriod;
+  USHORT CalcBusTime;
+  USHORT StartTime;
+  USHORT Reserved2;
+  UCHAR StartFrame;
+  UCHAR StartMicroframe;
+} USB2_TT_ENDPOINT, *PUSB2_TT_ENDPOINT;
+
+typedef struct _USB2_FRAME_BUDGET {
+  PUSB2_TT_ENDPOINT IsoEndpoint;
+  PUSB2_TT_ENDPOINT IntEndpoint;
+  PUSB2_TT_ENDPOINT AltEndpoint;
+  USHORT TimeUsed;
+  USHORT Reserved2;
+} USB2_FRAME_BUDGET, *PUSB2_FRAME_BUDGET;
+
+typedef struct _USB2_TT {
+  PUSB2_HC_EXTENSION HcExtension;
+  ULONG DelayTime;
+  ULONG MaxTime;
+  USB2_TT_ENDPOINT IntEndpoint[USB2_FRAMES];
+  USB2_TT_ENDPOINT IsoEndpoint[USB2_FRAMES];
+  USB2_FRAME_BUDGET FrameBudget[USB2_FRAMES];
+  ULONG NumStartSplits[USB2_FRAMES][USB2_MICROFRAMES];
+  ULONG TimeCS[USB2_FRAMES][USB2_MICROFRAMES];
+} USB2_TT, *PUSB2_TT;
+
+typedef struct _USB2_TT_EXTENSION {
+  PDEVICE_OBJECT RootHubPdo;
+  ULONG Flags;
+  ULONG BusBandwidth;
+  ULONG Bandwidth[USB2_FRAMES];
+  ULONG MaxBandwidth;
+  ULONG MinBandwidth;
+  USHORT DeviceAddress;
+  USHORT TtNumber;
+  LIST_ENTRY TtList;
+  LIST_ENTRY Link;
+  USB2_TT Tt;
+} USB2_TT_EXTENSION, *PUSB2_TT_EXTENSION;
+
+typedef struct _USB2_HC_EXTENSION {
+  ULONG MaxHsBusAllocation;
+  ULONG HcDelayTime;
+  ULONG TimeUsed[USB2_FRAMES][USB2_MICROFRAMES];
+  USB2_TT HcTt;
+} USB2_HC_EXTENSION, *PUSB2_HC_EXTENSION;
+
 /* usbport.c */
 NTSTATUS
 NTAPI
