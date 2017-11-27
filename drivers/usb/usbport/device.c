@@ -893,6 +893,9 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
                      IN USHORT PortStatus,
                      IN USHORT Port)
 {
+    PUSBPORT_DEVICE_HANDLE TtDeviceHandle = NULL;
+    PUSB2_TT_EXTENSION TtExtension = NULL;
+    USHORT port;
     PUSBPORT_DEVICE_HANDLE DeviceHandle;
     PUSBPORT_PIPE_HANDLE PipeHandle;
     BOOL IsOpenedPipe;
@@ -902,7 +905,7 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
     SIZE_T DescriptorMinSize;
     UCHAR MaxPacketSize;
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
-
+    PUSBPORT_REGISTRATION_PACKET Packet;
     NTSTATUS Status;
 
     DPRINT("USBPORT_CreateDevice: PortStatus - %p, Port - %x\n",
@@ -910,6 +913,7 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
            Port);
 
     FdoExtension = FdoDevice->DeviceExtension;
+    Packet = &FdoExtension->MiniPortInterface->Packet;
 
     KeWaitForSingleObject(&FdoExtension->DeviceSemaphore,
                           Executive,
@@ -928,11 +932,21 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
-    if (FdoExtension->MiniPortInterface->Packet.MiniPortFlags & USB_MINIPORT_FLAGS_USB2 &&
+    port = Port;
+
+    if (Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2 &&
         !(PortStatus & USB_PORT_STATUS_HIGH_SPEED))
     {
-        DPRINT1("USBPORT_CreateDevice: USB1 device connected to USB2 port. FIXME: Transaction Translator.\n");
-        DbgBreakPoint();
+        DPRINT1("USBPORT_CreateDevice: USB1 device connected to USB2 port\n");
+
+        TtExtension = USBPORT_GetTt(FdoDevice,
+                                    HubDeviceHandle,
+                                    &port,
+                                    &TtDeviceHandle);
+
+        DPRINT("USBPORT_CreateDevice: TtDeviceHandle - %p, port - %x\n",
+               TtDeviceHandle,
+               port);
     }
 
     KeReleaseSemaphore(&FdoExtension->DeviceSemaphore,
@@ -954,6 +968,7 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
 
     *pUsbdDeviceHandle = NULL;
 
+    DeviceHandle->TtExtension = TtExtension;
     DeviceHandle->PortNumber = Port;
     DeviceHandle->HubDeviceHandle = HubDeviceHandle;
 
@@ -993,6 +1008,7 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
     }
 
     InitializeListHead(&DeviceHandle->PipeHandleList);
+    InitializeListHead(&DeviceHandle->TtList);
 
     Status = USBPORT_OpenPipe(FdoDevice,
                               DeviceHandle,
@@ -1089,7 +1105,36 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
 
 ErrorExit:
 
-    // FIXME: if Transaction Translator
+    if (TtExtension && TtDeviceHandle)
+    {
+        SetupPacket.bmRequestType.Recipient = BMREQUEST_TO_OTHER;
+        SetupPacket.bmRequestType.Reserved = 0;
+        SetupPacket.bmRequestType.Type = BMREQUEST_CLASS;
+        SetupPacket.bmRequestType.Dir = BMREQUEST_HOST_TO_DEVICE;
+
+        /* Table 11-15.  Hub Class Requests */
+        if (TtDeviceHandle == HubDeviceHandle)
+        {
+            SetupPacket.bRequest = USB_REQUEST_RESET_TT;
+        }
+        else
+        {
+            SetupPacket.bRequest = USB_REQUEST_CLEAR_TT_BUFFER;
+        }
+
+        SetupPacket.wValue.LowByte = 0;
+        SetupPacket.wValue.HiByte = 0;
+        SetupPacket.wIndex.W = port;
+        SetupPacket.wLength = 0;
+
+        USBPORT_SendSetupPacket(TtDeviceHandle,
+                                FdoDevice,
+                                &SetupPacket,
+                                NULL,
+                                0,
+                                NULL,
+                                NULL);
+    }
 
     Status = STATUS_DEVICE_DATA_ERROR;
 
