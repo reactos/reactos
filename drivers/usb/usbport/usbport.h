@@ -1294,4 +1294,9 @@ USBPORT_FreeBandwidthUSB2(
   IN PDEVICE_OBJECT FdoDevice,
   IN PUSBPORT_ENDPOINT Endpoint);
 
+VOID
+NTAPI
+USB2_InitController(
+  IN PUSB2_HC_EXTENSION HcExtension);
+
 #endif /* USBPORT_H__ */

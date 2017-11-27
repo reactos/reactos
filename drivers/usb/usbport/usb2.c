@@ -26,3 +26,27 @@ USBPORT_FreeBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
 {
     DPRINT1("USBPORT_FreeBandwidthUSB2: UNIMPLEMENTED. FIXME. \n");
 }
+
+VOID
+NTAPI
+USB2_InitController(IN PUSB2_HC_EXTENSION HcExtension)
+{
+    ULONG ix;
+    ULONG jx;
+
+    DPRINT("USB2_InitController: HcExtension - %p\n", HcExtension);
+
+    HcExtension->MaxHsBusAllocation = USB2_MAX_MICROFRAME_ALLOCATION;
+
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        for (jx = 0; jx < USB2_MICROFRAMES; jx++)
+        {
+            HcExtension->TimeUsed[ix][jx] = 0;
+        }
+    }
+
+    HcExtension->HcDelayTime = USB2_CONTROLLER_DELAY;
+
+    USB2_InitTT(HcExtension, &HcExtension->HcTt);
+}
