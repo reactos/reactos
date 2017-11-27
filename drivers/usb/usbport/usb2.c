@@ -10,6 +10,27 @@
 //#define NDEBUG
 #include <debug.h>
 
+VOID
+NTAPI
+USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                    IN UCHAR TransferType,
+                    IN UCHAR Direction,
+                    IN UCHAR DeviceSpeed,
+                    IN USHORT Period,
+                    IN USHORT MaxPacketSize,
+                    IN PUSB2_TT Tt)
+{
+    RtlZeroMemory(TtEndpoint, sizeof(USB2_TT_ENDPOINT));
+
+    TtEndpoint->TtEndpointParams.TransferType = TransferType;
+    TtEndpoint->TtEndpointParams.Direction = Direction;
+    TtEndpoint->TtEndpointParams.DeviceSpeed = DeviceSpeed;
+
+    TtEndpoint->Period = Period;
+    TtEndpoint->MaxPacketSize = MaxPacketSize;
+    TtEndpoint->Tt = Tt;
+}
+
 BOOLEAN
 NTAPI
 USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
