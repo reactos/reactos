@@ -31,6 +31,40 @@ USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
     TtEndpoint->Tt = Tt;
 }
 
+VOID
+NTAPI
+USBPORT_UpdateAllocatedBwTt(IN PUSB2_TT_EXTENSION TtExtension)
+{
+    ULONG BusBandwidth;
+    ULONG NewBusBandwidth;
+    ULONG MaxBusBandwidth = 0;
+    ULONG MinBusBandwidth;
+    ULONG ix;
+
+    DPRINT("USBPORT_UpdateAllocatedBwTt: TtExtension - %p\n", TtExtension);
+
+    BusBandwidth = TtExtension->BusBandwidth;
+    MinBusBandwidth = BusBandwidth;
+
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        NewBusBandwidth = BusBandwidth - TtExtension->Bandwidth[ix];
+
+        if (NewBusBandwidth > MaxBusBandwidth)
+            MaxBusBandwidth = NewBusBandwidth;
+
+        if (NewBusBandwidth < MinBusBandwidth)
+            MinBusBandwidth = NewBusBandwidth;
+    }
+
+    TtExtension->MaxBandwidth = MaxBusBandwidth;
+
+    if (MinBusBandwidth == BusBandwidth)
+        TtExtension->MinBandwidth = 0;
+    else
+        TtExtension->MinBandwidth = MinBusBandwidth;
+}
+
 BOOLEAN
 NTAPI
 USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,

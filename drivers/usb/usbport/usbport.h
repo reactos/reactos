@@ -1298,6 +1298,11 @@ USBPORT_FreeBandwidthUSB2(
 
 VOID
 NTAPI
+USBPORT_UpdateAllocatedBwTt(
+  IN PUSB2_TT_EXTENSION TtExtension);
+
+VOID
+NTAPI
 USB2_InitTT(
   IN PUSB2_HC_EXTENSION HcExtension,
   IN PUSB2_TT Tt);
