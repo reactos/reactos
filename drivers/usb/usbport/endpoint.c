@@ -672,6 +672,26 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
     Endpoint->DeviceHandle = DeviceHandle;
     Endpoint->LockCounter = -1;
 
+    Endpoint->TtExtension = DeviceHandle->TtExtension;
+
+    if (DeviceHandle->TtExtension)
+    {
+        ExInterlockedInsertTailList(&DeviceHandle->TtExtension->TtList,
+                                    &Endpoint->TtLink,
+                                    &FdoExtension->TtSpinLock);
+    }
+
+    if (Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
+    {
+        Endpoint->TtEndpoint = (PUSB2_TT_ENDPOINT)((ULONG_PTR)Endpoint +
+                                                   sizeof(USBPORT_ENDPOINT) +
+                                                   Packet->MiniPortEndpointSize);
+    }
+    else
+    {
+        Endpoint->TtEndpoint = NULL;
+    }
+
     KeInitializeSpinLock(&Endpoint->EndpointSpinLock);
     KeInitializeSpinLock(&Endpoint->StateChangeSpinLock);
 
@@ -694,6 +714,17 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
     EndpointProperties->MaxPacketSize = MaxPacketSize;
     EndpointProperties->TotalMaxPacketSize = MaxPacketSize *
                                              (AdditionalTransaction + 1);
+
+    if (Endpoint->TtExtension)
+    {
+        EndpointProperties->HubAddr = Endpoint->TtExtension->DeviceAddress;
+    }
+    else
+    {
+        EndpointProperties->HubAddr = -1;
+    }
+
+    EndpointProperties->PortNumber = DeviceHandle->PortNumber;
 
     switch (EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK)
     {
@@ -958,6 +989,13 @@ ExitWithError:
             {
                 USBPORT_FreeBandwidth(FdoDevice, Endpoint);
             }
+        }
+
+        if (Endpoint->TtExtension)
+        {
+            KeAcquireSpinLock(&FdoExtension->TtSpinLock, &OldIrql);
+            RemoveEntryList(&Endpoint->TtLink);
+            KeReleaseSpinLock(&FdoExtension->TtSpinLock, OldIrql);
         }
 
         ExFreePoolWithTag(Endpoint, USB_PORT_TAG);

@@ -154,7 +154,9 @@ typedef struct _USBPORT_COMMON_BUFFER_HEADER {
 typedef struct _USBPORT_ENDPOINT *PUSBPORT_ENDPOINT;
 
 typedef struct _USB2_HC_EXTENSION *PUSB2_HC_EXTENSION;
+typedef struct _USB2_TT_EXTENSION *PUSB2_TT_EXTENSION;
 typedef struct _USB2_TT *PUSB2_TT;
+typedef struct _USB2_TT_ENDPOINT *PUSB2_TT_ENDPOINT;
 
 typedef struct _USBPORT_PIPE_HANDLE {
   ULONG Flags;
@@ -194,6 +196,7 @@ typedef struct _USBPORT_DEVICE_HANDLE {
   LIST_ENTRY DeviceHandleLink;
   LONG DeviceHandleLock;
   ULONG TtCount;
+  PUSB2_TT_EXTENSION TtExtension; // Transaction Translator
   LIST_ENTRY TtList;
 } USBPORT_DEVICE_HANDLE, *PUSBPORT_DEVICE_HANDLE;
 
@@ -202,6 +205,8 @@ typedef struct _USBPORT_ENDPOINT {
   PDEVICE_OBJECT FdoDevice;
   PUSBPORT_COMMON_BUFFER_HEADER HeaderBuffer;
   PUSBPORT_DEVICE_HANDLE DeviceHandle;
+  PUSB2_TT_EXTENSION TtExtension; // Transaction Translator
+  PUSB2_TT_ENDPOINT TtEndpoint;
   USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
   ULONG EndpointWorker;
   ULONG FrameNumber;
@@ -230,6 +235,7 @@ typedef struct _USBPORT_ENDPOINT {
   LIST_ENTRY FlushLink;
   LIST_ENTRY FlushControllerLink;
   LIST_ENTRY FlushAbortLink;
+  LIST_ENTRY TtLink;
 } USBPORT_ENDPOINT, *PUSBPORT_ENDPOINT;
 
 typedef struct _USBPORT_ISO_BLOCK *PUSBPORT_ISO_BLOCK;
@@ -381,10 +387,11 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
   /* Usb 2.0 HC Extension */
   PUSB2_HC_EXTENSION Usb2Extension;
   ULONG Bandwidth[32];
+  KSPIN_LOCK TtSpinLock;
 
   /* Miniport extension should be aligned on 0x100 */
 #if !defined(_M_X64)
-  ULONG Padded[1];
+  ULONG Padded[64];
 #else
   ULONG Padded[0];
 #endif
@@ -392,7 +399,7 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
 } USBPORT_DEVICE_EXTENSION, *PUSBPORT_DEVICE_EXTENSION;
 
 #if !defined(_M_X64)
-C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x400);
+C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x500);
 #else
 C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x600);
 #endif
