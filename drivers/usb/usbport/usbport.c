@@ -1845,7 +1845,8 @@ USBPORT_AddDevice(IN PDRIVER_OBJECT DriverObject,
         RtlInitUnicodeString(&DeviceName, CharDeviceName);
 
         Length = sizeof(USBPORT_DEVICE_EXTENSION) +
-                 MiniPortInterface->Packet.MiniPortExtensionSize;
+                 MiniPortInterface->Packet.MiniPortExtensionSize +
+                 sizeof(USB2_HC_EXTENSION);
 
         /* Create device */
         Status = IoCreateDevice(DriverObject,
@@ -1902,6 +1903,22 @@ USBPORT_AddDevice(IN PDRIVER_OBJECT DriverObject,
 
     FdoExtension->MiniPortExt = (PVOID)((ULONG_PTR)FdoExtension +
                                         sizeof(USBPORT_DEVICE_EXTENSION));
+
+    if (MiniPortInterface->Packet.MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
+    {
+        FdoExtension->Usb2Extension =
+        (PUSB2_HC_EXTENSION)FdoExtension->MiniPortExt +
+                            MiniPortInterface->Packet.MiniPortExtensionSize;
+
+        DPRINT("USBPORT_AddDevice: Usb2Extension - %p\n",
+               FdoExtension->Usb2Extension);
+
+        USB2_InitController(FdoExtension->Usb2Extension);
+    }
+    else
+    {
+        FdoExtension->Usb2Extension = NULL;
+    }
 
     FdoExtension->MiniPortInterface = MiniPortInterface;
     FdoExtension->FdoNameNumber = DeviceNumber;

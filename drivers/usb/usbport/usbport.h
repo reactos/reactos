@@ -153,6 +153,9 @@ typedef struct _USBPORT_COMMON_BUFFER_HEADER {
 
 typedef struct _USBPORT_ENDPOINT *PUSBPORT_ENDPOINT;
 
+typedef struct _USB2_HC_EXTENSION *PUSB2_HC_EXTENSION;
+typedef struct _USB2_TT *PUSB2_TT;
+
 typedef struct _USBPORT_PIPE_HANDLE {
   ULONG Flags;
   ULONG PipeFlags;
@@ -374,10 +377,12 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
   KSPIN_LOCK SetPowerD0SpinLock;
   KDPC WorkerRequestDpc;
   KDPC HcWakeDpc;
+  /* Usb 2.0 HC Extension */
+  PUSB2_HC_EXTENSION Usb2Extension;
 
   /* Miniport extension should be aligned on 0x100 */
 #if !defined(_M_X64)
-  ULONG Padded[34];
+  ULONG Padded[33];
 #else
   ULONG Padded[0];
 #endif
