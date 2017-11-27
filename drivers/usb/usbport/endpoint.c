@@ -20,7 +20,7 @@ USBPORT_CalculateUsbBandwidth(IN PDEVICE_OBJECT FdoDevice,
 {
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG Bandwidth;
-    ULONG Additional;
+    ULONG Overhead;
 
     DPRINT("USBPORT_CalculateUsbBandwidth ... \n");
 
@@ -29,25 +29,25 @@ USBPORT_CalculateUsbBandwidth(IN PDEVICE_OBJECT FdoDevice,
     switch (EndpointProperties->TransferType)
     {
         case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
-            Additional = 9;
+            Overhead = USB2_FS_ISOCHRONOUS_OVERHEAD;
             break;
 
         case USBPORT_TRANSFER_TYPE_INTERRUPT:
-            Additional = 13;
+            Overhead = USB2_FS_INTERRUPT_OVERHEAD;
             break;
 
         default: //USBPORT_TRANSFER_TYPE_CONTROL or USBPORT_TRANSFER_TYPE_BULK
-            Additional = 0;
+            Overhead = 0;
             break;
     }
 
-    if (Additional == 0)
+    if (Overhead == 0)
     {
         Bandwidth = 0;
     }
     else
     {
-        Bandwidth = (EndpointProperties->TotalMaxPacketSize + Additional) * 8 * 7 / 6;
+        Bandwidth = (EndpointProperties->TotalMaxPacketSize + Overhead) * 8 * 7 / 6;
     }
 
     if (EndpointProperties->DeviceSpeed == UsbLowSpeed)
