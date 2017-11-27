@@ -642,13 +642,13 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
 
     if (Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
     {
-        DPRINT1("USBPORT_OpenPipe: FIXME USB2 EndpointSize\n");
+        EndpointSize += sizeof(USB2_TT_ENDPOINT);
     }
 
     if (PipeHandle->EndpointDescriptor.wMaxPacketSize == 0)
     {
         USBPORT_AddPipeHandle(DeviceHandle, PipeHandle);
-  
+
         PipeHandle->Flags = (PipeHandle->Flags & ~PIPE_HANDLE_FLAG_CLOSED) |
                              PIPE_HANDLE_FLAG_NULL_PACKET_SIZE;
 
@@ -739,14 +739,14 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
             Interval = EndpointDescriptor->bInterval;
         }
 
-        EndpointProperties->Period = 32;
+        EndpointProperties->Period = ENDPOINT_INTERRUPT_32ms;
 
-        if (Interval && (Interval < 32))
+        if (Interval && (Interval < USB2_FRAMES))
         {
             if ((EndpointProperties->DeviceSpeed != UsbLowSpeed) ||
-                (Interval >= 8))
+                (Interval >= ENDPOINT_INTERRUPT_8ms))
             {
-                if (!(Interval & 0x20))
+                if (!(Interval & ENDPOINT_INTERRUPT_32ms))
                 {
                     Period = EndpointProperties->Period;
 
@@ -761,7 +761,7 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
             }
             else
             {
-                EndpointProperties->Period = 8;
+                EndpointProperties->Period = ENDPOINT_INTERRUPT_8ms;
             }
         }
     }
@@ -770,13 +770,18 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
     {
         if (EndpointProperties->DeviceSpeed == UsbHighSpeed)
         {
-            EndpointProperties->Period = 
+            EndpointProperties->Period =
                 USBPORT_NormalizeHsInterval(EndpointDescriptor->bInterval);
         }
         else
         {
-            EndpointProperties->Period = 1;
+            EndpointProperties->Period = ENDPOINT_INTERRUPT_1ms;
         }
+    }
+
+    if ((DeviceHandle->Flags & DEVICE_HANDLE_FLAG_ROOTHUB) != 0)
+    {
+        Endpoint->Flags |= ENDPOINT_FLAG_ROOTHUB_EP0;
     }
 
     if (Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
