@@ -430,6 +430,30 @@ typedef struct _TIMER_WORK_QUEUE_ITEM {
   ULONG Context;
 } TIMER_WORK_QUEUE_ITEM, *PTIMER_WORK_QUEUE_ITEM;
 
+/* Transaction Translator */
+/* See Chapter 5 - USB Data Flow Model and Chapter 11 - Hub Specification */
+
+#define USB2_FRAMES           32
+#define USB2_MICROFRAMES      8
+#define USB2_MAX_MICROFRAMES  (USB2_FRAMES * USB2_MICROFRAMES)
+
+#define USB2_MAX_MICROFRAME_ALLOCATION         7000 // bytes
+#define USB2_CONTROLLER_DELAY                  100
+#define USB2_FS_MAX_PERIODIC_ALLOCATION        1157 // ((12000 / 8 bits) * 0.9) / (7/6) - 90% max, and bits stuffing
+#define USB2_FS_SOF_TIME                       6
+#define USB2_HUB_DELAY                         30
+#define USB2_MAX_FS_LS_TRANSACTIONS_IN_UFRAME  16
+#define USB2_FS_RAW_BYTES_IN_MICROFRAME        188  // (12000 / 8 bits / USB2_MICROFRAMES) = 187,5. But we use "best case budget"
+
+/* Overheads */
+#define USB2_LS_INTERRUPT_OVERHEAD             117 // FS-bytes
+#define USB2_FS_INTERRUPT_OVERHEAD             13
+#define USB2_HS_INTERRUPT_OUT_OVERHEAD         45
+#define USB2_HS_INTERRUPT_IN_OVERHEAD          25
+#define USB2_FS_ISOCHRONOUS_OVERHEAD           9
+#define USB2_HS_ISOCHRONOUS_OUT_OVERHEAD       38
+#define USB2_HS_ISOCHRONOUS_IN_OVERHEAD        18
+
 /* usbport.c */
 NTSTATUS
 NTAPI
