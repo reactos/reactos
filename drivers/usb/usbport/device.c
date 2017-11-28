@@ -1564,6 +1564,9 @@ USBPORT_RemoveDevice(IN PDEVICE_OBJECT FdoDevice,
                      IN ULONG Flags)
 {
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
+    PUSB2_TT_EXTENSION TtExtension;
+    ULONG ix;
+    KIRQL OldIrql;
 
     DPRINT("USBPORT_RemoveDevice: DeviceHandle - %p, Flags - %x\n",
            DeviceHandle,
@@ -1621,6 +1624,37 @@ USBPORT_RemoveDevice(IN PDEVICE_OBJECT FdoDevice,
     if (DeviceHandle->DeviceAddress)
     {
         USBPORT_FreeUsbAddress(FdoDevice, DeviceHandle->DeviceAddress);
+    }
+
+    DPRINT("USBPORT_RemoveDevice: DeviceHandle->TtList.Flink - %p\n", DeviceHandle->TtList.Flink);
+
+    while (!IsListEmpty(&DeviceHandle->TtList))
+    {
+        TtExtension = CONTAINING_RECORD(DeviceHandle->TtList.Flink,
+                                        USB2_TT_EXTENSION,
+                                        Link);
+
+        RemoveHeadList(&DeviceHandle->TtList);
+
+        DPRINT("USBPORT_RemoveDevice: TtExtension - %p\n", TtExtension);
+
+        KeAcquireSpinLock(&FdoExtension->TtSpinLock, &OldIrql);
+
+        TtExtension->Flags |= USB2_TT_EXTENSION_FLAG_DELETED;
+
+        if (IsListEmpty(&TtExtension->EndpointList))
+        {
+            USBPORT_UpdateAllocatedBwTt(TtExtension);
+
+            for (ix = 0; ix < USB2_FRAMES; ix++)
+            {
+                FdoExtension->Bandwidth[ix] += TtExtension->MaxBandwidth;
+            }
+
+            ExFreePool(TtExtension);
+        }
+
+        KeReleaseSpinLock(&FdoExtension->TtSpinLock, OldIrql);
     }
 
     KeReleaseSemaphore(&FdoExtension->DeviceSemaphore,
