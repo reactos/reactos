@@ -1377,6 +1377,12 @@ USBPORT_InitializeDevice(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
                (MaxPacketSize == 16) ||
                (MaxPacketSize == 32) ||
                (MaxPacketSize == 64));
+
+        if (DeviceHandle->DeviceSpeed == UsbHighSpeed &&
+            DeviceHandle->DeviceDescriptor.bDeviceClass == USB_DEVICE_CLASS_HUB)
+        {
+            DeviceHandle->Flags |= DEVICE_HANDLE_FLAG_USB2HUB;
+        }
     }
     else
     {
@@ -1761,10 +1767,14 @@ USBPORT_RestoreDevice(IN PDEVICE_OBJECT FdoDevice,
             }
         }
 
-        if (NewDeviceHandle->Flags & DEVICE_HANDLE_FLAG_INITIALIZED)
+        if (NewDeviceHandle->Flags & DEVICE_HANDLE_FLAG_USB2HUB)
         {
             DPRINT1("USBPORT_RestoreDevice: FIXME Transaction Translator\n");
             NewDeviceHandle->TtCount = OldDeviceHandle->TtCount;
+
+#ifndef NDEBUG
+            DbgBreakPoint();
+#endif
         }
 
         while (!IsListEmpty(&OldDeviceHandle->PipeHandleList))
