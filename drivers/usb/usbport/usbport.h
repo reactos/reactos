@@ -528,6 +528,8 @@ typedef struct _USB2_TT {
   ULONG TimeCS[USB2_FRAMES][USB2_MICROFRAMES];
 } USB2_TT, *PUSB2_TT;
 
+#define USB2_TT_EXTENSION_FLAG_DELETED  1
+
 typedef struct _USB2_TT_EXTENSION {
   PDEVICE_OBJECT RootHubPdo;
   ULONG Flags;
@@ -537,7 +539,7 @@ typedef struct _USB2_TT_EXTENSION {
   ULONG MinBandwidth;
   USHORT DeviceAddress;
   USHORT TtNumber;
-  LIST_ENTRY TtList;
+  LIST_ENTRY EndpointList;
   LIST_ENTRY Link;
   USB2_TT Tt;
 } USB2_TT_EXTENSION, *PUSB2_TT_EXTENSION;

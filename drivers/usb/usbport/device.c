@@ -1914,7 +1914,7 @@ USBPORT_InitializeTT(IN PDEVICE_OBJECT FdoDevice,
     TtExtension->RootHubPdo = FdoExtension->RootHubPdo;
     TtExtension->BusBandwidth = TOTAL_USB11_BUS_BANDWIDTH;
 
-    InitializeListHead(&TtExtension->TtList);
+    InitializeListHead(&TtExtension->EndpointList);
 
     /* 90% maximum allowed for periodic endpoints */
     for (ix = 0; ix < USB2_FRAMES; ix++)

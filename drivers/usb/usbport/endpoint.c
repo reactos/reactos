@@ -471,6 +471,9 @@ USBPORT_ClosePipe(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     PUSBPORT_RHDEVICE_EXTENSION PdoExtension;
     PUSBPORT_ENDPOINT Endpoint;
+    PUSBPORT_REGISTRATION_PACKET Packet;
+    PUSB2_TT_EXTENSION TtExtension;
+    ULONG ix;
     BOOLEAN IsReady;
     KIRQL OldIrql;
 
@@ -492,7 +495,6 @@ USBPORT_ClosePipe(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
     }
 
     Endpoint = PipeHandle->Endpoint;
-    DPRINT("USBPORT_ClosePipe: Endpoint - %p\n", Endpoint);
 
     KeAcquireSpinLock(&FdoExtension->EndpointListSpinLock, &OldIrql);
 
@@ -543,16 +545,44 @@ USBPORT_ClosePipe(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
     }
 
     Endpoint->DeviceHandle = NULL;
+    Packet = &FdoExtension->MiniPortInterface->Packet;
 
-    if (FdoExtension->MiniPortInterface->Packet.MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
+    if (Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
     {
-        DPRINT("USBPORT_ClosePipe: FIXME USBPORT_FreeBandwidthUSB20\n");
-        //USBPORT_FreeBandwidthUSB20();
+        USBPORT_FreeBandwidthUSB2(FdoDevice, Endpoint);
+
+        KeAcquireSpinLock(&FdoExtension->TtSpinLock, &OldIrql);
+
+        TtExtension = Endpoint->TtExtension;
+
+        if (TtExtension)
+        {
+            RemoveEntryList(&Endpoint->TtLink);
+
+            Endpoint->TtLink.Flink = NULL;
+            Endpoint->TtLink.Blink = NULL;
+
+            if (TtExtension->Flags & USB2_TT_EXTENSION_FLAG_DELETED)
+            {
+                if (IsListEmpty(&TtExtension->EndpointList))
+                {
+                    USBPORT_UpdateAllocatedBwTt(TtExtension);
+
+                    for (ix = 0; ix < USB2_FRAMES; ix++)
+                    {
+                        FdoExtension->Bandwidth[ix] += TtExtension->MaxBandwidth;
+                    }
+
+                    ExFreePool(TtExtension);
+                }
+            }
+        }
+
+        KeReleaseSpinLock(&FdoExtension->TtSpinLock, OldIrql);
     }
     else
     {
-        DPRINT("USBPORT_ClosePipe: FIXME USBPORT_FreeBandwidthUSB11\n");
-        //USBPORT_FreeBandwidthUSB11();
+        USBPORT_FreeBandwidth(FdoDevice, Endpoint);
     }
 
     KeAcquireSpinLock(&Endpoint->EndpointSpinLock, &Endpoint->EndpointOldIrql);
@@ -676,7 +706,7 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
 
     if (DeviceHandle->TtExtension)
     {
-        ExInterlockedInsertTailList(&DeviceHandle->TtExtension->TtList,
+        ExInterlockedInsertTailList(&DeviceHandle->TtExtension->EndpointList,
                                     &Endpoint->TtLink,
                                     &FdoExtension->TtSpinLock);
     }
