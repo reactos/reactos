@@ -9,6 +9,7 @@ list(APPEND SOURCE
     ole32.c
     shdocvw.c
     shell32.c
+    zipfldr.c
     com_apitest.c
     com_apitest.h)
 
