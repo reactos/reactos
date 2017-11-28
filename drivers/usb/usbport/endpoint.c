@@ -68,9 +68,19 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
     ULONG TransferType;
     ULONG TotalBusBandwidth;
     ULONG EndpointBandwidth;
+    ULONG MinBandwidth;
+    PULONG Bandwidth;
+    ULONG MaxBandwidth = 0;
+    ULONG ix;
+    ULONG Offset;
+    LONG ScheduleOffset = -1;
     ULONG Period;
+    ULONG Factor;
+    UCHAR Bit;
 
-    DPRINT("USBPORT_AllocateBandwidth: ... \n");
+    DPRINT("USBPORT_AllocateBandwidth: FdoDevice - %p, Endpoint - %p\n",
+           FdoDevice,
+           Endpoint);
 
     FdoExtension = FdoDevice->DeviceExtension;
     EndpointProperties = &Endpoint->EndpointProperties;
@@ -87,16 +97,75 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
     TotalBusBandwidth = FdoExtension->TotalBusBandwidth;
     EndpointBandwidth = EndpointProperties->UsbBandwidth;
     Period = EndpointProperties->Period;
+    Factor = USB2_FRAMES / Period;
+    ASSERT(Factor);
 
-    DPRINT1("USBPORT_AllocateBandwidth: FIXME. \n");
-    DPRINT1("USBPORT_AllocateBandwidth: Endpoint - %p, Type - %x, TotalBandwidth - %x, EpBandwidth - %x, Period - %x\n",
-           Endpoint,
-           TransferType,
-           TotalBusBandwidth,
-           EndpointBandwidth,
-           Period);
+    for (Offset = 0; Offset < Period; Offset++)
+    {
+        MinBandwidth = TotalBusBandwidth;
+        Bandwidth = &FdoExtension->Bandwidth[Offset * Factor];
 
-    return TRUE;
+        for (ix = 0; *Bandwidth >= EndpointBandwidth; ix++)
+        {
+            if (MinBandwidth > *Bandwidth)
+            {
+                MinBandwidth = *Bandwidth;
+            }
+
+            Bandwidth++;
+
+            if (Factor <= (ix + 1))
+            {
+                if (MinBandwidth > MaxBandwidth)
+                {
+                    MaxBandwidth = MinBandwidth;
+                    ScheduleOffset = Offset;
+
+                    DPRINT("USBPORT_AllocateBandwidth: ScheduleOffset - %X\n",
+                           ScheduleOffset);
+                }
+
+                break;
+            }
+        }
+    }
+
+    DPRINT("USBPORT_AllocateBandwidth: ScheduleOffset - %X\n", ScheduleOffset);
+
+    if (ScheduleOffset != -1)
+    {
+        EndpointProperties->ScheduleOffset = ScheduleOffset;
+
+        Bandwidth = &FdoExtension->Bandwidth[ScheduleOffset * Factor];
+
+        for (Factor = USB2_FRAMES / Period; Factor; Factor--)
+        {
+            FdoExtension->Bandwidth[ScheduleOffset * Factor] -= EndpointBandwidth;
+        }
+
+        if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+        {
+            for (Bit = 0x80; Bit != 0; Bit >>= 1)
+            {
+                if ((Period & Bit) != 0)
+                {
+                    Period = Bit;
+                    break;
+                }
+            }
+
+            DPRINT("USBPORT_AllocateBandwidth: FIXME AllocedInterrupt_XXms\n");
+        }
+        else
+        {
+            DPRINT("USBPORT_AllocateBandwidth: FIXME AllocedIso\n");
+        }
+    }
+
+    DPRINT("USBPORT_AllocateBandwidth: FIXME USBPORT_UpdateAllocatedBw\n");
+
+    DPRINT("USBPORT_AllocateBandwidth: ScheduleOffset - %X\n", ScheduleOffset);
+    return ScheduleOffset != -1;
 }
 
 VOID
