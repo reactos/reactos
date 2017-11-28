@@ -11,6 +11,7 @@ extern void func_netshell(void);
 extern void func_ole32(void);
 extern void func_shdocvw(void);
 extern void func_shell32(void);
+extern void func_zipfldr(void);
 
 const struct test winetest_testlist[] =
 {
@@ -22,6 +23,7 @@ const struct test winetest_testlist[] =
     { "ole32", func_ole32 },
     { "shdocvw", func_shdocvw },
     { "shell32", func_shell32 },
+    { "zipfldr", func_zipfldr },
 
     { 0, 0 }
 };
