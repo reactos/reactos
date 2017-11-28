@@ -1626,7 +1626,10 @@ USBPORT_RemoveDevice(IN PDEVICE_OBJECT FdoDevice,
         USBPORT_FreeUsbAddress(FdoDevice, DeviceHandle->DeviceAddress);
     }
 
-    DPRINT("USBPORT_RemoveDevice: DeviceHandle->TtList.Flink - %p\n", DeviceHandle->TtList.Flink);
+    if (!IsListEmpty(&DeviceHandle->TtList))
+    {
+        DPRINT1("USBPORT_RemoveDevice: DeviceHandle->TtList not empty\n");
+    }
 
     while (!IsListEmpty(&DeviceHandle->TtList))
     {
