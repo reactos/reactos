@@ -173,7 +173,63 @@ NTAPI
 USBPORT_FreeBandwidth(IN PDEVICE_OBJECT FdoDevice,
                       IN PUSBPORT_ENDPOINT Endpoint)
 {
-    DPRINT1("USBPORT_FreeBandwidth: UNIMPLEMENTED. FIXME. \n");
+    PUSBPORT_DEVICE_EXTENSION FdoExtension;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    ULONG TransferType;
+    ULONG Offset;
+    ULONG EndpointBandwidth;
+    ULONG Period;
+    ULONG Factor;
+    UCHAR Bit;
+
+    DPRINT("USBPORT_FreeBandwidth: FdoDevice - %p, Endpoint - %p\n",
+           FdoDevice,
+           Endpoint);
+
+    FdoExtension = FdoDevice->DeviceExtension;
+
+    EndpointProperties = &Endpoint->EndpointProperties;
+    TransferType = EndpointProperties->TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_BULK ||
+        TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
+        (Endpoint->Flags & ENDPOINT_FLAG_ROOTHUB_EP0))
+    {
+        return;
+    }
+
+    Offset = Endpoint->EndpointProperties.ScheduleOffset;
+    EndpointBandwidth = Endpoint->EndpointProperties.UsbBandwidth;
+    Period = Endpoint->EndpointProperties.Period;
+
+    ASSERT(USB2_FRAMES / Period);
+
+    for (Factor = USB2_FRAMES / Period; Factor; Factor--)
+    {
+        FdoExtension->Bandwidth[Offset * Factor] += EndpointBandwidth;
+    }
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        for (Bit = 0x80; Bit != 0; Bit >>= 1)
+        {
+            if ((Period & Bit) != 0)
+            {
+                Period = Bit;
+                break;
+            }
+        }
+
+        ASSERT(Period != 0);
+
+        DPRINT("USBPORT_AllocateBandwidth: FIXME AllocedInterrupt_XXms\n");
+    }
+    else
+    {
+        DPRINT("USBPORT_AllocateBandwidth: FIXME AllocedIso\n");
+    }
+
+    DPRINT1("USBPORT_FreeBandwidth: FIXME USBPORT_UpdateAllocatedBw\n");
 }
 
 UCHAR
