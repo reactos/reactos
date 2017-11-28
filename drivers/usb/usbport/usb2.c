@@ -31,6 +31,28 @@ USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
     TtEndpoint->Tt = Tt;
 }
 
+BOOLEAN
+NTAPI
+USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                             IN PUSB2_REBALANCE Rebalance,
+                             IN PULONG RebalanceListEntries)
+{
+    DPRINT("USB2_AllocateTimeForEndpoint: UNIMPLEMENTED. FIXME\n");
+    ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+USB2_PromotePeriods(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                    IN PUSB2_REBALANCE Rebalance,
+                    IN PULONG RebalanceListEntries)
+{
+    DPRINT1("USB2_PromotePeriods: UNIMPLEMENTED. FIXME\n");
+    ASSERT(FALSE);
+    return FALSE;
+}
+
 VOID
 NTAPI
 USBPORT_UpdateAllocatedBwTt(IN PUSB2_TT_EXTENSION TtExtension)
@@ -70,8 +92,192 @@ NTAPI
 USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
                               IN PUSBPORT_ENDPOINT Endpoint)
 {
-    DPRINT1("USBPORT_AllocateBandwidthUSB2: UNIMPLEMENTED. FIXME. \n");
-    return TRUE;
+    PUSBPORT_DEVICE_EXTENSION FdoExtension;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    PUSB2_TT_EXTENSION TtExtension;
+    ULONG TransferType;
+    PUSB2_REBALANCE Rebalance;
+    LIST_ENTRY RebalanceList;
+    ULONG RebalanceListEntries;
+    PUSB2_TT_ENDPOINT TtEndpoint;
+    PUSB2_TT_ENDPOINT RebalanceTtEndpoint;
+
+    PUSB2_TT Tt;
+    USB_DEVICE_SPEED DeviceSpeed;
+    ULONG Period;
+
+    ULONG ix;
+    BOOLEAN Direction;
+    BOOLEAN Result;
+
+    DPRINT("USBPORT_AllocateBandwidthUSB2: FdoDevice - %p, Endpoint - %p\n",
+           FdoDevice,
+           Endpoint);
+
+    EndpointProperties = &Endpoint->EndpointProperties;
+    EndpointProperties->ScheduleOffset = 0;
+
+    if (Endpoint->Flags & ENDPOINT_FLAG_ROOTHUB_EP0)
+    {
+        DPRINT("USBPORT_AllocateBandwidthUSB2: ENDPOINT_FLAG_ROOTHUB_EP0\n");
+        return TRUE;
+    }
+
+    FdoExtension = FdoDevice->DeviceExtension;
+
+    TransferType = EndpointProperties->TransferType;
+    DPRINT("USBPORT_AllocateBandwidthUSB2: TransferType - %X\n", TransferType);
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
+        TransferType == USBPORT_TRANSFER_TYPE_BULK)
+    {
+        return TRUE;
+    }
+
+    if (Endpoint->TtExtension)
+        TtExtension = Endpoint->TtExtension;
+    else
+        TtExtension = NULL;
+
+    InitializeListHead(&RebalanceList);
+
+    Rebalance = ExAllocatePoolWithTag(NonPagedPool,
+                                      sizeof(USB2_REBALANCE),
+                                      USB_PORT_TAG);
+
+    DPRINT("USBPORT_AllocateBandwidthUSB2: Rebalance - %p, TtExtension - %p\n",
+           Rebalance,
+           TtExtension);
+
+    if (Rebalance)
+    {
+        RtlZeroMemory(Rebalance, sizeof(USB2_REBALANCE));
+
+        TtEndpoint = Endpoint->TtEndpoint;
+        TtEndpoint->Endpoint = Endpoint;
+
+        Direction = EndpointProperties->Direction == USBPORT_TRANSFER_DIRECTION_OUT;
+        DeviceSpeed = EndpointProperties->DeviceSpeed;
+
+        switch (DeviceSpeed)
+        {
+            case UsbLowSpeed:
+            case UsbFullSpeed:
+            {
+                Tt = &TtExtension->Tt;
+                Period = USB2_FRAMES;
+
+                while (Period && Period > EndpointProperties->Period);
+                {
+                    Period >>= 1;
+                }
+
+                DPRINT("USBPORT_AllocateBandwidthUSB2: Period - %X\n", Period);
+                break;
+            }
+
+            case UsbHighSpeed:
+            {
+                Tt = &FdoExtension->Usb2Extension->HcTt;
+                Period = EndpointProperties->Period;
+
+                if (EndpointProperties->Period > USB2_MAX_MICROFRAMES)
+                    Period = USB2_MAX_MICROFRAMES;
+
+                break;
+            }
+
+            default:
+            {
+                DPRINT1("USBPORT_AllocateBandwidthUSB2: DeviceSpeed - %X!\n", DeviceSpeed);
+                DbgBreakPoint();
+                Tt = &TtExtension->Tt;
+                break;
+            }
+        }
+
+        USB2_InitTtEndpoint(TtEndpoint,
+                            TransferType,
+                            Direction,
+                            DeviceSpeed,
+                            Period,
+                            EndpointProperties->MaxPacketSize,
+                            Tt);
+
+        RebalanceListEntries = USB2_FRAMES - 2;
+
+        Result = USB2_AllocateTimeForEndpoint(TtEndpoint,
+                                              Rebalance,
+                                              &RebalanceListEntries);
+
+        if (Result)
+        {
+            Result = USB2_PromotePeriods(TtEndpoint,
+                                         Rebalance,
+                                         &RebalanceListEntries);
+        }
+
+        RebalanceListEntries = 0;
+
+        for (ix = 0; Rebalance->RebalanceEndpoint[ix]; ix++)
+        {
+            RebalanceListEntries = ix + 1;
+        }
+    }
+    else
+    {
+        RebalanceListEntries = 0;
+        Result = FALSE;
+    }
+
+    DPRINT("USBPORT_AllocateBandwidthUSB2: RebalanceListEntries - %X, Result - %X\n",
+           RebalanceListEntries,
+           Result);
+
+    for (ix = 0; ix < RebalanceListEntries; ix++)
+    {
+        DPRINT("USBPORT_AllocateBandwidthUSB2: RebalanceEndpoint[%X] - %X\n",
+               ix,
+               Rebalance->RebalanceEndpoint[ix]);
+
+        RebalanceTtEndpoint = Rebalance->RebalanceEndpoint[ix];
+
+        InsertTailList(&RebalanceList,
+                       &RebalanceTtEndpoint->Endpoint->RebalanceLink);
+    }
+
+    if (Rebalance)
+        ExFreePool(Rebalance);
+
+    if (Result)
+    {
+        DPRINT1("USBPORT_AllocateBandwidthUSB2: UNIMPLEMENTED. FIXME. \n");
+        ASSERT(FALSE);
+    }
+
+    //USB2_Rebalance(FdoDevice, &RebalanceList);
+
+    if (!TtExtension)
+    {
+        DPRINT("USBPORT_AllocateBandwidthUSB2: Result - %X\n", Result);
+        return Result;
+    }
+
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        FdoExtension->Bandwidth[ix] += TtExtension->MaxBandwidth;
+    }
+
+    USBPORT_UpdateAllocatedBwTt(TtExtension);
+
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        FdoExtension->Bandwidth[ix] -= TtExtension->MaxBandwidth;
+    }
+
+    DPRINT("USBPORT_AllocateBandwidthUSB2: Result - %X\n", Result);
+
+    return Result;
 }
 
 VOID

@@ -105,7 +105,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
         MinBandwidth = TotalBusBandwidth;
         Bandwidth = &FdoExtension->Bandwidth[Offset * Factor];
 
-        for (ix = 0; *Bandwidth >= EndpointBandwidth; ix++)
+        for (ix = 1; *Bandwidth >= EndpointBandwidth; ix++)
         {
             if (MinBandwidth > *Bandwidth)
             {
@@ -114,7 +114,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
             Bandwidth++;
 
-            if (Factor <= (ix + 1))
+            if (Factor <= ix)
             {
                 if (MinBandwidth > MaxBandwidth)
                 {
