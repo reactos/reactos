@@ -10,6 +10,27 @@
 //#define NDEBUG
 #include <debug.h>
 
+BOOLEAN
+NTAPI
+USB2_AllocateCheck(IN OUT PULONG OutTimeUsed,
+                   IN ULONG CalcBusTime,
+                   IN ULONG LimitAllocation)
+{
+    ULONG BusTime;
+    BOOLEAN Result = TRUE;
+
+    BusTime = *OutTimeUsed + CalcBusTime;
+    *OutTimeUsed += CalcBusTime;
+
+    if (BusTime > LimitAllocation)
+    {
+        DPRINT("USB2_AllocateCheck: BusTime > LimitAllocation\n");
+        Result = FALSE;
+    }
+
+    return Result;
+}
+
 USHORT
 NTAPI
 USB2_AddDataBitStuff(IN USHORT DataTime)
