@@ -10,6 +10,13 @@
 //#define NDEBUG
 #include <debug.h>
 
+USHORT
+NTAPI
+USB2_AddDataBitStuff(IN USHORT DataTime)
+{
+    return (DataTime + (DataTime / 16));
+}
+
 ULONG
 NTAPI
 USB2_GetOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint)
