@@ -10,6 +10,54 @@
 //#define NDEBUG
 #include <debug.h>
 
+ULONG
+NTAPI
+USB2_GetOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint)
+{
+    ULONG TransferType;
+    ULONG Direction;
+    ULONG DeviceSpeed;
+    ULONG Overhead;
+    ULONG HostDelay;
+
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+    Direction = TtEndpoint->TtEndpointParams.Direction;
+    DeviceSpeed = TtEndpoint->TtEndpointParams.Direction;
+
+    HostDelay = TtEndpoint->Tt->HcExtension->HcDelayTime;
+
+    if (DeviceSpeed == UsbHighSpeed)
+    {
+        if (Direction == USBPORT_TRANSFER_DIRECTION_OUT)
+        {
+            if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+                Overhead = HostDelay + USB2_HS_ISOCHRONOUS_OUT_OVERHEAD;
+            else
+                Overhead = HostDelay + USB2_HS_INTERRUPT_OUT_OVERHEAD;
+        }
+        else
+        {
+            if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+                Overhead = HostDelay + USB2_HS_ISOCHRONOUS_IN_OVERHEAD;
+            else
+                Overhead = HostDelay + USB2_HS_ISOCHRONOUS_OUT_OVERHEAD;
+        }
+    }
+    else if (DeviceSpeed == UsbFullSpeed)
+    {
+        if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+            Overhead = HostDelay + USB2_FS_ISOCHRONOUS_OVERHEAD;
+        else
+            Overhead = HostDelay + USB2_FS_INTERRUPT_OVERHEAD;
+    }
+    else
+    {
+        Overhead = HostDelay + USB2_LS_INTERRUPT_OVERHEAD;
+    }
+
+    return Overhead;
+}
+
 VOID
 NTAPI
 USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
