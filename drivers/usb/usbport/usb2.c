@@ -132,6 +132,33 @@ USB2_GetOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint)
     return Overhead;
 }
 
+ULONG
+NTAPI
+USB2_GetLastIsoTime(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                    IN ULONG Frame)
+{
+    PUSB2_TT_ENDPOINT nextTtEndpoint;
+    ULONG Result;
+
+    DPRINT("USB2_GetLastIsoTime: TtEndpoint - %p, Frame - %X\n",
+           TtEndpoint,
+           Frame);
+
+    nextTtEndpoint = TtEndpoint->Tt->FrameBudget[Frame].IsoEndpoint->NextTtEndpoint;
+
+    if (nextTtEndpoint ||
+        (nextTtEndpoint = TtEndpoint->Tt->FrameBudget[Frame].AltEndpoint) != NULL)
+    {
+        Result = nextTtEndpoint->StartTime + nextTtEndpoint->CalcBusTime;
+    }
+    else
+    {
+        Result = USB2_FS_SOF_TIME;
+    }
+
+    return Result;
+}
+
 VOID
 NTAPI
 USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
