@@ -159,6 +159,49 @@ USB2_GetLastIsoTime(IN PUSB2_TT_ENDPOINT TtEndpoint,
     return Result;
 }
 
+ULONG
+NTAPI
+USB2_GetStartTime(IN PUSB2_TT_ENDPOINT nextTtEndpoint,
+                  IN PUSB2_TT_ENDPOINT TtEndpoint,
+                  IN PUSB2_TT_ENDPOINT prevTtEndpoint,
+                  IN ULONG Frame)
+{
+    PUSB2_TT_ENDPOINT ttEndpoint;
+    ULONG TransferType;
+
+    DPRINT("USB2_GetStartTime: nextTtEndpoint - %p, TtEndpoint - %p, prevTtEndpoint - %p, Frame - %X\n",
+           nextTtEndpoint,
+           TtEndpoint,
+           prevTtEndpoint,
+           Frame);
+
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+
+    if (nextTtEndpoint && TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        return nextTtEndpoint->StartTime + nextTtEndpoint->CalcBusTime;
+    }
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        ttEndpoint = TtEndpoint->Tt->FrameBudget[Frame].AltEndpoint;
+
+        if (ttEndpoint)
+           return ttEndpoint->StartTime + ttEndpoint->CalcBusTime;
+        else
+           return USB2_FS_SOF_TIME;
+    }
+    else
+    {
+        ttEndpoint = prevTtEndpoint;
+
+        if (ttEndpoint == TtEndpoint->Tt->FrameBudget[Frame].IntEndpoint)
+            return USB2_GetLastIsoTime(TtEndpoint, Frame);
+        else
+            return ttEndpoint->StartTime + ttEndpoint->CalcBusTime;
+    }
+}
+
 VOID
 NTAPI
 USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
