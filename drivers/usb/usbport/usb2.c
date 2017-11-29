@@ -38,6 +38,52 @@ USB2_AddDataBitStuff(IN USHORT DataTime)
     return (DataTime + (DataTime / 16));
 }
 
+BOOLEAN
+NTAPI
+USB2_CheckTtEndpointInsert(IN PUSB2_TT_ENDPOINT nextTtEndpoint,
+                           IN PUSB2_TT_ENDPOINT TtEndpoint)
+{
+    ULONG TransferType;
+
+    DPRINT("USB2_CheckTtEndpointInsert: nextTtEndpoint - %p, TtEndpoint - %p\n",
+           nextTtEndpoint,
+           TtEndpoint);
+
+    ASSERT(TtEndpoint);
+
+    if (TtEndpoint->CalcBusTime >= (USB2_FS_MAX_PERIODIC_ALLOCATION / 2))
+    {
+        DPRINT1("USB2_CheckTtEndpointInsert: Result - FALSE\n");
+        return FALSE;
+    }
+
+    if (!nextTtEndpoint)
+    {
+        DPRINT("USB2_CheckTtEndpointInsert: Result - TRUE\n");
+        return TRUE;
+    }
+
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+
+    if (nextTtEndpoint->ActualPeriod < TtEndpoint->ActualPeriod &&
+        TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        DPRINT("USB2_CheckTtEndpointInsert: Result - TRUE\n");
+        return TRUE;
+    }
+
+    if ((nextTtEndpoint->ActualPeriod <= TtEndpoint->ActualPeriod &&
+        TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS) ||
+        nextTtEndpoint == TtEndpoint)
+    {
+        DPRINT("USB2_CheckTtEndpointInsert: Result - TRUE\n");
+        return TRUE;
+    }
+
+    DPRINT("USB2_CheckTtEndpointInsert: Result - FALSE\n");
+    return FALSE;
+}
+
 ULONG
 NTAPI
 USB2_GetOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint)
