@@ -25,6 +25,7 @@
 
 #endif
 
+static NTSTATUS (NTAPI *pNtUnloadKey2)(POBJECT_ATTRIBUTES, ULONG);
 
 static BOOLEAN
 RetrieveCurrentModuleNTDirectory(
@@ -381,8 +382,12 @@ DisconnectRegistry(
                                OBJ_CASE_INSENSITIVE,
                                RootKey,
                                NULL);
-    // return NtUnloadKey(&ObjectAttributes);
-    return NtUnloadKey2(&ObjectAttributes, Flags);
+    if (!pNtUnloadKey2)
+    {
+        win_skip("NtUnloadKey2 unavailable, using NtUnloadKey. Flags %lu\n", Flags);
+        return NtUnloadKey(&ObjectAttributes);
+    }
+    return pNtUnloadKey2(&ObjectAttributes, Flags);
 }
 
 
@@ -408,6 +413,8 @@ START_TEST(NtLoadUnloadKey)
     UINT i;
     BOOLEAN PrivilegeSet[2] = {FALSE, FALSE};
     WCHAR PathBuffer[MAX_PATH];
+
+    pNtUnloadKey2 = (PVOID)GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtUnloadKey2");
 
     /* Retrieve our current directory */
     RetrieveCurrentModuleNTDirectory(&NtTestPath);

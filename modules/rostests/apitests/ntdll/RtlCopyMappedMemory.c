@@ -7,25 +7,35 @@
 
 #include "precomp.h"
 
+static NTSTATUS (NTAPI *pRtlCopyMappedMemory)(PVOID, const VOID *, SIZE_T);
+
 START_TEST(RtlCopyMappedMemory)
 {
     NTSTATUS Status;
     UCHAR Buffer1[32];
     UCHAR Buffer2[32];
-    
-    StartSeh() RtlCopyMappedMemory(NULL, NULL, 1);      EndSeh(STATUS_ACCESS_VIOLATION);
-    StartSeh() RtlCopyMappedMemory(Buffer1, NULL, 1);   EndSeh(STATUS_ACCESS_VIOLATION);
-    StartSeh() RtlCopyMappedMemory(NULL, Buffer1, 1);   EndSeh(STATUS_ACCESS_VIOLATION);
-    
+
+    pRtlCopyMappedMemory = (PVOID)GetProcAddress(GetModuleHandleW(L"ntdll.dll"),
+                                                 "RtlCopyMappedMemory");
+    if (!pRtlCopyMappedMemory)
+    {
+        win_skip("RtlCopyMappedMemory (NT >= 5.2 API) not available\n");
+        return;
+    }
+
+    StartSeh() pRtlCopyMappedMemory(NULL, NULL, 1);     EndSeh(STATUS_ACCESS_VIOLATION);
+    StartSeh() pRtlCopyMappedMemory(Buffer1, NULL, 1);  EndSeh(STATUS_ACCESS_VIOLATION);
+    StartSeh() pRtlCopyMappedMemory(NULL, Buffer1, 1);  EndSeh(STATUS_ACCESS_VIOLATION);
+
     StartSeh()
-        Status = RtlCopyMappedMemory(NULL, NULL, 0);
+        Status = pRtlCopyMappedMemory(NULL, NULL, 0);
     EndSeh(STATUS_SUCCESS);
     ok(Status == STATUS_SUCCESS, "RtlCopyMappedMemory returned %lx\n", Status);
     
     RtlFillMemory(Buffer1, sizeof(Buffer1), 0x11);
     RtlFillMemory(Buffer2, sizeof(Buffer2), 0x22);
     StartSeh()
-        Status = RtlCopyMappedMemory(Buffer1, Buffer2, sizeof(Buffer1));
+        Status = pRtlCopyMappedMemory(Buffer1, Buffer2, sizeof(Buffer1));
     EndSeh(STATUS_SUCCESS);
     ok(Status == STATUS_SUCCESS, "RtlCopyMappedMemory returned %lx\n", Status);
     ok(RtlCompareMemory(Buffer1, Buffer2, sizeof(Buffer1)) == sizeof(Buffer1), "Data not copied\n");
