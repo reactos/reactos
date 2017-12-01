@@ -252,6 +252,27 @@ USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
 
 BOOLEAN
 NTAPI
+USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                IN ULONG Frame)
+{
+    DPRINT("USB2_AllocateHS: UNIMPLEMENTED FIXME\n");
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                              IN PUSB2_REBALANCE Rebalance,
+                              IN PULONG RebalanceListEntries,
+                              IN ULONG MaxFrames)
+{
+    DPRINT("USB2_DeallocateEndpointBudget: UNIMPLEMENTED FIXME\n");
+    ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
 USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
                              IN PUSB2_REBALANCE Rebalance,
                              IN PULONG RebalanceListEntries)
