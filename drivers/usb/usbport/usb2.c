@@ -52,6 +52,19 @@ USB2_IncMicroFrame(OUT PUCHAR frame,
     }
 }
 
+VOID
+NTAPI
+USB2_GetPrevMicroFrame(OUT PUCHAR frame,
+                       OUT PUCHAR uframe)
+{
+    *uframe = USB2_MICROFRAMES - 1;
+
+    if (*frame)
+        --*frame;
+    else
+        *frame = USB2_FRAMES - 1;
+}
+
 BOOLEAN
 NTAPI
 USB2_CheckTtEndpointInsert(IN PUSB2_TT_ENDPOINT nextTtEndpoint,
