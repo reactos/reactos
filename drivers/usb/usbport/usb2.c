@@ -38,6 +38,20 @@ USB2_AddDataBitStuff(IN USHORT DataTime)
     return (DataTime + (DataTime / 16));
 }
 
+VOID
+NTAPI
+USB2_IncMicroFrame(OUT PUCHAR frame,
+                   OUT PUCHAR uframe)
+{
+    ++*uframe;
+
+    if (*uframe > (USB2_MICROFRAMES - 1))
+    {
+        *uframe = 0;
+        *frame = (*frame + 1) & (USB2_FRAMES - 1);
+    }
+}
+
 BOOLEAN
 NTAPI
 USB2_CheckTtEndpointInsert(IN PUSB2_TT_ENDPOINT nextTtEndpoint,
