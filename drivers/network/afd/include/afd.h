@@ -35,6 +35,24 @@
 #define	IP_MIB_STATS_ID 1
 #define	IP_MIB_ADDRTABLE_ENTRY_ID 0x102
 
+#define TAG_AFD_DATA_BUFFER                'BdfA'
+#define TAG_AFD_TRANSPORT_ADDRESS          'tdfA'
+#define TAG_AFD_SOCKET_CONTEXT             'XdfA'
+#define TAG_AFD_CONNECT_DATA               'cdfA'
+#define TAG_AFD_DISCONNECT_DATA            'ddfA'
+
+#define TAG_AFD_CONNECT_OPTIONS            'ocfA'
+#define TAG_AFD_DISCONNECT_OPTIONS         'odfA'
+#define TAG_AFD_ACCEPT_QUEUE               'qafA'
+#define TAG_AFD_POLL_HANDLE                'hpfA'
+#define TAG_AFD_FCB                        'cffA'
+#define TAG_AFD_ACTIVE_POLL                'pafA'
+#define TAG_AFD_EA_INFO                    'aefA'
+#define TAG_AFD_STORED_DATAGRAM            'gsfA'
+#define TAG_AFD_SNMP_ADDRESS_INFO          'asfA'
+#define TAG_AFD_TDI_CONNECTION_INFORMATION 'cTfA'
+#define TAG_AFD_WSA_BUFFER                 'bWfA'
+
 typedef struct IPADDR_ENTRY {
 	ULONG  Addr;
 	ULONG  Index;

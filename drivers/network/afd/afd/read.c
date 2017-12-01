@@ -409,8 +409,8 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
     if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK))
     {
         FCB->Recv.Content -= DatagramRecv->Len;
-        ExFreePool( DatagramRecv->Address );
-        ExFreePool( DatagramRecv );
+        ExFreePoolWithTag(DatagramRecv->Address, TAG_AFD_TRANSPORT_ADDRESS);
+        ExFreePoolWithTag(DatagramRecv, TAG_AFD_STORED_DATAGRAM);
     }
 
     AFD_DbgPrint(MID_TRACE,("Done\n"));
@@ -584,8 +584,8 @@ PacketSocketRecvComplete(
         while( !IsListEmpty( &FCB->DatagramList ) ) {
                DatagramRecvEntry = RemoveHeadList(&FCB->DatagramList);
                DatagramRecv = CONTAINING_RECORD(DatagramRecvEntry, AFD_STORED_DATAGRAM, ListEntry);
-               ExFreePool( DatagramRecv->Address );
-               ExFreePool( DatagramRecv );
+               ExFreePoolWithTag(DatagramRecv->Address, TAG_AFD_TRANSPORT_ADDRESS);
+               ExFreePoolWithTag(DatagramRecv, TAG_AFD_STORED_DATAGRAM);
         }
 
         SocketStateUnlock( FCB );
@@ -604,7 +604,9 @@ PacketSocketRecvComplete(
         return STATUS_FILE_CLOSED;
     }
 
-    DatagramRecv = ExAllocatePool( NonPagedPool, DGSize );
+    DatagramRecv = ExAllocatePoolWithTag(NonPagedPool,
+                                         DGSize,
+                                         TAG_AFD_STORED_DATAGRAM);
 
     if( DatagramRecv ) {
         DatagramRecv->Len = Irp->IoStatus.Information;
@@ -620,7 +622,12 @@ PacketSocketRecvComplete(
     } else Status = STATUS_NO_MEMORY;
 
     if( !NT_SUCCESS( Status ) ) {
-        if( DatagramRecv ) ExFreePool( DatagramRecv );
+
+        if (DatagramRecv)
+        {
+            ExFreePoolWithTag(DatagramRecv, TAG_AFD_STORED_DATAGRAM);
+        }
+
         SocketStateUnlock( FCB );
         return Status;
     } else {

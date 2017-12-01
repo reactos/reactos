@@ -75,12 +75,13 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if( FCB->Context ) {
-        ExFreePool( FCB->Context );
+        ExFreePoolWithTag(FCB->Context, TAG_AFD_SOCKET_CONTEXT);
         FCB->ContextSize = 0;
     }
 
-    FCB->Context = ExAllocatePool( PagedPool,
-                                   IrpSp->Parameters.DeviceIoControl.InputBufferLength );
+    FCB->Context = ExAllocatePoolWithTag(PagedPool,
+                                         IrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                         TAG_AFD_SOCKET_CONTEXT);
 
     if( !FCB->Context ) return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
 

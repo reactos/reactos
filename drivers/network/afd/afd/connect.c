@@ -59,13 +59,16 @@ AfdSetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->ConnectOptions)
     {
-        ExFreePool(FCB->ConnectOptions);
+        ExFreePoolWithTag(FCB->ConnectOptions, TAG_AFD_CONNECT_OPTIONS);
         FCB->ConnectOptions = NULL;
         FCB->ConnectOptionsSize = 0;
         FCB->FilledConnectOptions = 0;
     }
 
-    FCB->ConnectOptions = ExAllocatePool(PagedPool, ConnectOptionsSize);
+    FCB->ConnectOptions = ExAllocatePoolWithTag(PagedPool,
+                                                ConnectOptionsSize,
+                                                TAG_AFD_CONNECT_OPTIONS);
+
     if (!FCB->ConnectOptions)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
@@ -103,12 +106,15 @@ AfdSetConnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->ConnectOptions)
     {
-        ExFreePool(FCB->ConnectOptions);
+        ExFreePoolWithTag(FCB->ConnectOptions, TAG_AFD_CONNECT_OPTIONS);
         FCB->ConnectOptionsSize = 0;
         FCB->FilledConnectOptions = 0;
     }
 
-    FCB->ConnectOptions = ExAllocatePool(PagedPool, *ConnectOptionsSize);
+    FCB->ConnectOptions = ExAllocatePoolWithTag(PagedPool,
+                                                *ConnectOptionsSize,
+                                                TAG_AFD_CONNECT_OPTIONS);
+
     if (!FCB->ConnectOptions) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     FCB->ConnectOptionsSize = *ConnectOptionsSize;
@@ -165,13 +171,16 @@ AfdSetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->ConnectData)
     {
-        ExFreePool(FCB->ConnectData);
+        ExFreePoolWithTag(FCB->ConnectData, TAG_AFD_CONNECT_DATA);
         FCB->ConnectData = NULL;
         FCB->ConnectDataSize = 0;
         FCB->FilledConnectData = 0;
     }
 
-    FCB->ConnectData = ExAllocatePool(PagedPool, ConnectDataSize);
+    FCB->ConnectData = ExAllocatePoolWithTag(PagedPool,
+                                             ConnectDataSize,
+                                             TAG_AFD_CONNECT_DATA);
+
     if (!FCB->ConnectData) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     RtlCopyMemory(FCB->ConnectData,
@@ -208,12 +217,15 @@ AfdSetConnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->ConnectData)
     {
-        ExFreePool(FCB->ConnectData);
+        ExFreePoolWithTag(FCB->ConnectData, TAG_AFD_CONNECT_DATA);
         FCB->ConnectDataSize = 0;
         FCB->FilledConnectData = 0;
     }
 
-    FCB->ConnectData = ExAllocatePool(PagedPool, *ConnectDataSize);
+    FCB->ConnectData = ExAllocatePoolWithTag(PagedPool,
+                                             *ConnectDataSize,
+                                             TAG_AFD_CONNECT_DATA);
+
     if (!FCB->ConnectData) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     FCB->ConnectDataSize = *ConnectDataSize;
@@ -269,13 +281,19 @@ MakeSocketIntoConnection(PAFD_FCB FCB) {
     /* Allocate the receive area and start receiving */
     if (!FCB->Recv.Window)
     {
-        FCB->Recv.Window = ExAllocatePool( PagedPool, FCB->Recv.Size );
+        FCB->Recv.Window = ExAllocatePoolWithTag(PagedPool,
+                                                 FCB->Recv.Size,
+                                                 TAG_AFD_DATA_BUFFER);
+
         if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
     }
 
     if (!FCB->Send.Window)
     {
-        FCB->Send.Window = ExAllocatePool( PagedPool, FCB->Send.Size );
+        FCB->Send.Window = ExAllocatePoolWithTag(PagedPool,
+                                                 FCB->Send.Size,
+                                                 TAG_AFD_DATA_BUFFER);
+
         if( !FCB->Send.Window ) return STATUS_NO_MEMORY;
     }
 
@@ -434,7 +452,11 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
    {
-        if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
+        if (FCB->RemoteAddress)
+        {
+            ExFreePoolWithTag(FCB->RemoteAddress, TAG_AFD_TRANSPORT_ADDRESS);
+        }
+
         FCB->RemoteAddress =
             TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
@@ -455,7 +477,11 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 
     case SOCKET_STATE_CREATED:
-        if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
+        if (FCB->LocalAddress)
+        {
+            ExFreePoolWithTag(FCB->LocalAddress, TAG_AFD_TRANSPORT_ADDRESS);
+        }
+
         FCB->LocalAddress =
             TaBuildNullTransportAddress( ConnectReq->RemoteAddress.Address[0].AddressType );
 
@@ -473,7 +499,11 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Drop through to SOCKET_STATE_BOUND */
 
     case SOCKET_STATE_BOUND:
-        if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
+        if (FCB->RemoteAddress)
+        {
+            ExFreePoolWithTag(FCB->RemoteAddress, TAG_AFD_TRANSPORT_ADDRESS);
+        }
+
         FCB->RemoteAddress =
             TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
@@ -487,14 +517,22 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         if( !NT_SUCCESS(Status) )
             break;
 
-    if (FCB->ConnectReturnInfo) ExFreePool(FCB->ConnectReturnInfo);
+        if (FCB->ConnectReturnInfo)
+        {
+            ExFreePoolWithTag(FCB->ConnectReturnInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
+        }
+
         Status = TdiBuildConnectionInfo
             ( &FCB->ConnectReturnInfo,
               &ConnectReq->RemoteAddress );
 
         if( NT_SUCCESS(Status) )
         {
-            if (FCB->ConnectCallInfo) ExFreePool(FCB->ConnectCallInfo);
+            if (FCB->ConnectCallInfo)
+            {
+                ExFreePoolWithTag(FCB->ConnectCallInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
+            }
+
             Status = TdiBuildConnectionInfo(&FCB->ConnectCallInfo,
                                               &ConnectReq->RemoteAddress);
         }
