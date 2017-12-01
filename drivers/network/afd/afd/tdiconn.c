@@ -71,26 +71,6 @@ UINT TaLengthOfTransportAddressByType(UINT AddressType)
     return AddrLen;
 }
 
-VOID TaCopyAddressInPlace( PTA_ADDRESS Target,
-                           PTA_ADDRESS Source ) {
-    UINT AddrLen = TaLengthOfAddress( Source );
-    RtlCopyMemory( Target, Source, AddrLen );
-}
-
-PTA_ADDRESS TaCopyAddress( PTA_ADDRESS Source ) {
-    UINT AddrLen = TaLengthOfAddress( Source );
-    PVOID Buffer;
-    if (!AddrLen)
-        return NULL;
-
-    Buffer = ExAllocatePool( NonPagedPool, AddrLen );
-
-    if (Buffer)
-       RtlCopyMemory( Buffer, Source, AddrLen );
-
-    return Buffer;
-}
-
 VOID TaCopyTransportAddressInPlace( PTRANSPORT_ADDRESS Target,
                                     PTRANSPORT_ADDRESS Source ) {
     UINT AddrLen = TaLengthOfTransportAddress( Source );
