@@ -196,7 +196,9 @@ NTSTATUS TdiOpenAddressFile(
     EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
         TDI_TRANSPORT_ADDRESS_LENGTH +
         TaLengthOfTransportAddress( Name ) + 1;
-    EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
+    EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePoolWithTag(NonPagedPool,
+                                                              EaLength,
+                                                              TAG_AFD_EA_INFO);
     if (!EaInfo)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -217,7 +219,7 @@ NTSTATUS TdiOpenAddressFile(
                            ShareType,
                            AddressHandle,
                            AddressObject);
-    ExFreePool(EaInfo);
+    ExFreePoolWithTag(EaInfo, TAG_AFD_EA_INFO);
     return Status;
 }
 
@@ -229,13 +231,16 @@ NTSTATUS TdiQueryMaxDatagramLength(
     PTDI_MAX_DATAGRAM_INFO Buffer;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    Buffer = ExAllocatePool(NonPagedPool, sizeof(TDI_MAX_DATAGRAM_INFO));
+    Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                   sizeof(TDI_MAX_DATAGRAM_INFO),
+                                   TAG_AFD_DATA_BUFFER);
+
     if (!Buffer) return STATUS_NO_MEMORY;
 
     Mdl = IoAllocateMdl(Buffer, sizeof(TDI_MAX_DATAGRAM_INFO), FALSE, FALSE, NULL);
     if (!Mdl)
     {
-        ExFreePool(Buffer);
+        ExFreePoolWithTag(Buffer, TAG_AFD_DATA_BUFFER);
         return STATUS_NO_MEMORY;
     }
 
@@ -253,7 +258,7 @@ NTSTATUS TdiQueryMaxDatagramLength(
     {
         AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
         IoFreeMdl(Mdl);
-        ExFreePool(Buffer);
+        ExFreePoolWithTag(Buffer, TAG_AFD_DATA_BUFFER);
         return Status;
     }
 
@@ -262,13 +267,13 @@ NTSTATUS TdiQueryMaxDatagramLength(
                                  Mdl);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(Buffer);
+        ExFreePoolWithTag(Buffer, TAG_AFD_DATA_BUFFER);
         return Status;
     }
 
     *MaxDatagramLength = Buffer->MaxDatagramSize;
 
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, TAG_AFD_DATA_BUFFER);
 
     return STATUS_SUCCESS;
 }
@@ -299,7 +304,9 @@ NTSTATUS TdiOpenConnectionEndpointFile(
         TDI_CONNECTION_CONTEXT_LENGTH +
         sizeof(PVOID) + 1;
 
-    EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
+    EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePoolWithTag(NonPagedPool,
+                                                              EaLength,
+                                                              TAG_AFD_EA_INFO);
     if (!EaInfo)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -319,7 +326,7 @@ NTSTATUS TdiOpenConnectionEndpointFile(
                            AFD_SHARE_UNIQUE,
                            ConnectionHandle,
                            ConnectionObject);
-    ExFreePool(EaInfo);
+    ExFreePoolWithTag(EaInfo, TAG_AFD_EA_INFO);
     return Status;
 }
 
@@ -776,7 +783,9 @@ NTSTATUS TdiQueryAddress(
     AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
     BufferSize = sizeof(TDIEntityID) * 20;
-    Entities   = (TDIEntityID*)ExAllocatePool(NonPagedPool, BufferSize);
+    Entities = (TDIEntityID*)ExAllocatePoolWithTag(NonPagedPool,
+                                                   BufferSize,
+                                                   TAG_AFD_TRANSPORT_ADDRESS);
     if (!Entities) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -794,7 +803,7 @@ NTSTATUS TdiQueryAddress(
                                    &BufferSize);        /* Output buffer size */
     if (!NT_SUCCESS(Status)) {
         AFD_DbgPrint(MIN_TRACE, ("Unable to get list of supported entities (Status = 0x%X).\n", Status));
-        ExFreePool(Entities);
+        ExFreePoolWithTag(Entities, TAG_AFD_TRANSPORT_ADDRESS);
         return Status;
     }
 
@@ -841,7 +850,9 @@ NTSTATUS TdiQueryAddress(
 
             if (SnmpInfo.ipsi_numaddr != 0) {
                 BufferSize = SnmpInfo.ipsi_numaddr * sizeof(IPADDR_ENTRY);
-                IpAddress = (PIPADDR_ENTRY)ExAllocatePool(NonPagedPool, BufferSize);
+                IpAddress = (PIPADDR_ENTRY)ExAllocatePoolWithTag(NonPagedPool,
+                                                                 BufferSize,
+                                                                 TAG_AFD_SNMP_ADDRESS_INFO);
                 if (!IpAddress) {
                     AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
                     break;
@@ -857,7 +868,7 @@ NTSTATUS TdiQueryAddress(
                                                &BufferSize);                /* Output buffer size */
                 if (!NT_SUCCESS(Status)) {
                     AFD_DbgPrint(MIN_TRACE, ("Unable to get IP address (Status = 0x%X).\n", Status));
-                    ExFreePool(IpAddress);
+                    ExFreePoolWithTag(IpAddress, TAG_AFD_SNMP_ADDRESS_INFO);
                     break;
                 }
 
@@ -869,7 +880,7 @@ NTSTATUS TdiQueryAddress(
                     *Address = DN2H(IpAddress->Addr);
                 }
 
-                ExFreePool(IpAddress);
+                ExFreePoolWithTag(IpAddress, TAG_AFD_SNMP_ADDRESS_INFO);
             } else {
                 Status = STATUS_UNSUCCESSFUL;
                 break;
@@ -877,7 +888,7 @@ NTSTATUS TdiQueryAddress(
         }
     }
 
-    ExFreePool(Entities);
+    ExFreePoolWithTag(Entities, TAG_AFD_TRANSPORT_ADDRESS);
 
     AFD_DbgPrint(MAX_TRACE, ("Leaving\n"));
 

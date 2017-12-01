@@ -55,15 +55,21 @@ NTSTATUS AfdEventReceive(
     AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes on socket\n",
                              BytesAvailable));
 
-    ReceiveBuffer = ExAllocatePool(NonPagedPool, BytesAvailable);
+    ReceiveBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                          BytesAvailable,
+                                          TAG_AFD_DATA_BUFFER);
+
     if (!ReceiveBuffer)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /*Buffer = (PAFD_BUFFER)ExAllocateFromNPagedLookasideList(
       &BufferLookasideList);*/
-    Buffer = (PAFD_BUFFER)ExAllocatePool(NonPagedPool, sizeof(AFD_BUFFER));
+    Buffer = (PAFD_BUFFER)ExAllocatePoolWithTag(NonPagedPool,
+                                                sizeof(AFD_BUFFER),
+                                                TAG_AFD_DATA_BUFFER);
+
     if (!Buffer) {
-        ExFreePool(ReceiveBuffer);
+        ExFreePoolWithTag(ReceiveBuffer, TAG_AFD_DATA_BUFFER);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -149,15 +155,21 @@ NTSTATUS AfdEventReceiveDatagramHandler(
     AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes from (0x%X).\n",
                              BytesAvailable, *(PULONG)SourceAddress));
 
-    ReceiveBuffer = ExAllocatePool(NonPagedPool, BytesAvailable);
+    ReceiveBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                          BytesAvailable,
+                                          TAG_AFD_DATA_BUFFER);
+
     if (!ReceiveBuffer)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /*Buffer = (PAFD_BUFFER)ExAllocateFromNPagedLookasideList(
       &BufferLookasideList);*/
-    Buffer = (PAFD_BUFFER)ExAllocatePool(NonPagedPool, sizeof(AFD_BUFFER));
+    Buffer = (PAFD_BUFFER)ExAllocatePoolWithTag(NonPagedPool,
+                                                sizeof(AFD_BUFFER),
+                                                TAG_AFD_DATA_BUFFER);
+
     if (!Buffer) {
-        ExFreePool(ReceiveBuffer);
+        ExFreePoolWithTag(ReceiveBuffer, TAG_AFD_DATA_BUFFER);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 

@@ -69,7 +69,10 @@ PVOID LockRequest( PIRP Irp,
                 }
 
                 /* The allocated address goes in index 0 */
-                Irp->Tail.Overlay.DriverContext[0] = ExAllocatePool(NonPagedPool, MmGetMdlByteCount(Irp->MdlAddress));
+                Irp->Tail.Overlay.DriverContext[0] = ExAllocatePoolWithTag(NonPagedPool,
+                                                                           MmGetMdlByteCount(Irp->MdlAddress),
+                                                                           TAG_AFD_DATA_BUFFER);
+
                 if (!Irp->Tail.Overlay.DriverContext[0])
                 {
                     AFD_DbgPrint(MIN_TRACE,("Failed to allocate memory\n"));
@@ -126,7 +129,10 @@ PVOID LockRequest( PIRP Irp,
                 }
 
                 /* We need to create the info struct that AFD expects for all send/recv requests */
-                AfdInfo = ExAllocatePool(NonPagedPool, sizeof(AFD_RECV_INFO) + sizeof(AFD_WSABUF));
+                AfdInfo = ExAllocatePoolWithTag(NonPagedPool,
+                                                sizeof(AFD_RECV_INFO) + sizeof(AFD_WSABUF),
+                                                TAG_AFD_DATA_BUFFER);
+
                 if (!AfdInfo)
                 {
                     AFD_DbgPrint(MIN_TRACE,("Failed to allocate memory\n"));
@@ -186,7 +192,7 @@ VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp )
                       MmGetMdlByteCount(Irp->MdlAddress));
     }
 
-    ExFreePool(Irp->Tail.Overlay.DriverContext[0]);
+    ExFreePoolWithTag(Irp->Tail.Overlay.DriverContext[0], TAG_AFD_DATA_BUFFER);
     MmUnlockPages( Irp->MdlAddress );
     IoFreeMdl( Irp->MdlAddress );
     Irp->MdlAddress = NULL;
@@ -204,7 +210,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     /* Copy the buffer array so we don't lose it */
     UINT Lock = LockAddress ? 2 : 0;
     UINT Size = (sizeof(AFD_WSABUF) + sizeof(AFD_MAPBUF)) * (Count + Lock);
-    PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size );
+    PAFD_WSABUF NewBuf = ExAllocatePoolWithTag(PagedPool, Size, TAG_AFD_WSA_BUFFER);
     BOOLEAN LockFailed = FALSE;
     PAFD_MAPBUF MapBuf;
 
@@ -230,7 +236,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
                                     "from userland (%p %p)\n",
                                     Buf, AddressLen));
-            ExFreePool( NewBuf );
+            ExFreePoolWithTag(NewBuf, TAG_AFD_WSA_BUFFER);
             _SEH2_YIELD(return NULL);
         } _SEH2_END;
 
@@ -265,11 +271,11 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
             AFD_DbgPrint(MIN_TRACE,("Failed to lock pages\n"));
                     IoFreeMdl( MapBuf[i].Mdl );
                     MapBuf[i].Mdl = NULL;
-                    ExFreePool( NewBuf );
+                    ExFreePoolWithTag(NewBuf, TAG_AFD_WSA_BUFFER);
                     return NULL;
                 }
             } else {
-                ExFreePool( NewBuf );
+                ExFreePoolWithTag(NewBuf, TAG_AFD_WSA_BUFFER);
                 return NULL;
             }
         }
@@ -295,7 +301,7 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
         }
     }
 
-    ExFreePool( Buf );
+    ExFreePoolWithTag(Buf, TAG_AFD_WSA_BUFFER);
     Buf = NULL;
 }
 
@@ -305,8 +311,9 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     UINT i;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    PAFD_HANDLE FileObjects = ExAllocatePool
-        ( NonPagedPool, HandleCount * sizeof(AFD_HANDLE) );
+    PAFD_HANDLE FileObjects = ExAllocatePoolWithTag(NonPagedPool,
+                                                    HandleCount * sizeof(AFD_HANDLE),
+                                                    TAG_AFD_POLL_HANDLE);
 
     for( i = 0; FileObjects && i < HandleCount; i++ ) {
         FileObjects[i].Status = 0;
@@ -346,7 +353,7 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
             ObDereferenceObject( (PVOID)HandleArray[i].Handle );
     }
 
-    ExFreePool( HandleArray );
+    ExFreePoolWithTag(HandleArray, TAG_AFD_POLL_HANDLE);
     HandleArray = NULL;
 }
 
