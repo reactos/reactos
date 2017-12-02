@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <apitest.h>
-#include <wingdi.h>
+#include "precomp.h"
 
 #define COUNT 26
 

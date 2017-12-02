@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-#include <windows.h>
-#include <stdio.h>
-#include "init.h"
+#include "precomp.h"
 
 void Test_OffsetRgn()
 {

@@ -1,9 +1,5 @@
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
-
+#include "precomp.h"
 
 // FIXME user32
 
@@ -204,5 +200,3 @@ START_TEST(CreateIconIndirect)
     ok(iconinfo2.hbmColor == NULL, "\n");
 
 }
-
-

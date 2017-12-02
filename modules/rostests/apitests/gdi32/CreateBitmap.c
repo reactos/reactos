@@ -5,11 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-
-#define DEFAULT_BITMAP 21
+#include "precomp.h"
 
 void Test_CreateBitmap_Params()
 {

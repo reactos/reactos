@@ -5,11 +5,7 @@
 * PROGRAMMERS:     Ged Murphy
 */
 
-#include <apitest.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <strsafe.h>
-
+#include "precomp.h"
 
 #define ok_lasterrornotchanged() \
     ok_err(0x12345)

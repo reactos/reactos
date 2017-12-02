@@ -1,7 +1,6 @@
 
-#include <stdio.h>
-#include <windef.h>
-#include <wingdi.h>
+#include "precomp.h"
+
 #include "init.h"
 
 HBITMAP ghbmp1, ghbmp4, ghbmp8, ghbmp16, ghbmp24, ghbmp32;

@@ -5,9 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include "precomp.h"
+
 #include "init.h"
 
 START_TEST(RealizePalette)
@@ -19,4 +18,3 @@ START_TEST(RealizePalette)
     ok_int(RealizePalette(ghdcDIB32), 0);
 
 }
-

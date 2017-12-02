@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-#include <wingdi.h>
-
-#define CLIPRGN 1
+#include "precomp.h"
 
 void Test_OffsetClipRgn()
 {

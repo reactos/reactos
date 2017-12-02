@@ -5,11 +5,9 @@
  * PROGRAMMERS:     Víctor Martínez Calvo ( victor.martinez@reactos.org )
  */
 
-#include <apitest.h>
-#include <wingdi.h>
-#include <ndk/rtlfuncs.h>
-#include <strsafe.h>
+#include "precomp.h"
 
+#include <ndk/rtlfuncs.h>
 
 INT
 APIENTRY

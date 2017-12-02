@@ -5,18 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
-
-#define CLIPRGN 1
-
-#define ok_rect(_prc, _left, _top, _right, _bottom) \
-    ok_int((_prc)->left, _left); \
-    ok_int((_prc)->top, _top); \
-    ok_int((_prc)->right, _right); \
-    ok_int((_prc)->bottom, _bottom); \
+#include "precomp.h"
 
 void Test_ExcludeClipRect()
 {
