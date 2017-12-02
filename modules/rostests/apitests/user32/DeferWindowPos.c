@@ -5,12 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#include <winuser.h>
-#include <undocuser.h>
-#include <msgtrace.h>
-#include <user32testhelpers.h>
+#include "precomp.h"
 
 HWND hWnd1, hWnd2, hWnd3, hWnd4;
 

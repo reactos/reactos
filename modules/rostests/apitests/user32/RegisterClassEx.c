@@ -5,14 +5,7 @@
  * PROGRAMMERS:     Giannis Adamopoulos
  */
 
-#include <apitest.h>
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
-
-#include <wchar.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <undocuser.h>
+#include "precomp.h"
 
 static ATOM _RegisterClass(LPCWSTR lpwszClassName, HINSTANCE hInstance, UINT style, WNDPROC lpfnWndProc)
 {

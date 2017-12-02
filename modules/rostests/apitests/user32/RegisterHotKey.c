@@ -5,12 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#include <winuser.h>
-#include <shlobj.h>
-#include <undocshell.h>
-#include <undocuser.h>
+#include "precomp.h"
 
 #define msg_hotkey(msg, id, mod, vk) do                                                             \
     {                                                                                               \

@@ -5,10 +5,7 @@
  * PROGRAMMERS:
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
+#include "precomp.h"
 
 /* Used wine Redraw test for proof in principle. */
 

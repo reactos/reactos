@@ -1,8 +1,5 @@
 
-#include <apitest.h>
-
-#include <winuser.h>
-#include <wingdi.h>
+#include "precomp.h"
 
 START_TEST(CreateIconFromResourceEx)
 {

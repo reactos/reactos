@@ -5,13 +5,7 @@
  * PROGRAMMERS:     Giannis Adamopoulos
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
-
-#include <msgtrace.h>
-#include <user32testhelpers.h>
+#include "precomp.h"
 
 HWND hWnd1, hWnd2;
 

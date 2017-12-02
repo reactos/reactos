@@ -1,7 +1,5 @@
-#include <apitest.h>
 
-#include <wingdi.h>
-#include <winuser.h>
+#include "precomp.h"
 
 #define SIZEOF_DEVMODEW_300_W 188
 #define SIZEOF_DEVMODEW_400_W 212
