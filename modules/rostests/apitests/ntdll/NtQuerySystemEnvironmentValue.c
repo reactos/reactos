@@ -5,12 +5,7 @@
  * PROGRAMMER:      Hermès BÉLUSCA - MAÏTO <hermes.belusca@sfr.fr>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/setypes.h>
-#include <ndk/rtlfuncs.h>
-#include <ndk/exfuncs.h>
+#include "precomp.h"
 
 // Arbitrary-defined constants
 #define MIN_BUFFER_LENGTH 4L

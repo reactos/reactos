@@ -5,11 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#include <winreg.h>
-#include <ndk/cmfuncs.h>
-#include <ndk/obfuncs.h>
+#include "precomp.h"
 
 static
 VOID

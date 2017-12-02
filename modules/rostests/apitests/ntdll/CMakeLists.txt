@@ -55,16 +55,17 @@ list(APPEND SOURCE
     StackOverflow.c
     SystemInfo.c
     Timer.c
-    testlist.c)
+    precomp.h)
 
 if(ARCH STREQUAL "i386")
     add_asm_files(ntdll_apitest_asm i386/NtContinue.S)
 endif()
 
-add_executable(ntdll_apitest ${SOURCE} ${ntdll_apitest_asm})
+add_executable(ntdll_apitest ${SOURCE} ${ntdll_apitest_asm} testlist.c)
 target_link_libraries(ntdll_apitest wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)
+add_pch(ntdll_apitest precomp.h SOURCE)
 
 if(NOT MSVC)
     set_source_files_properties(RtlGetFullPathName_UstrEx.c PROPERTIES COMPILE_FLAGS "-Wno-format")

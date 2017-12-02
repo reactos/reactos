@@ -5,11 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
-#include <ndk/mmfuncs.h>
+#include "precomp.h"
 
 static PVOID Allocations[4096] = { NULL };
 static ULONG CurrentAllocation = 0;

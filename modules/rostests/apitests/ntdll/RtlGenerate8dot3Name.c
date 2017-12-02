@@ -5,11 +5,7 @@
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
-#include <stdio.h>
+#include "precomp.h"
 
 NTSYSAPI
 VOID

@@ -5,13 +5,7 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
-#include <ndk/cmfuncs.h>
-#include <ndk/obfuncs.h>
-#include <ndk/setypes.h>
+#include "precomp.h"
 
 static
 NTSTATUS

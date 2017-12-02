@@ -5,10 +5,7 @@
  * PROGRAMMER:      Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/ldrfuncs.h>
+#include "precomp.h"
 
 typedef struct _TEST_RESOURCES
 {

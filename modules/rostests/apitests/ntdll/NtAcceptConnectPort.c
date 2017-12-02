@@ -5,12 +5,8 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#include <ndk/lpcfuncs.h>
-#include <ndk/obfuncs.h>
-#include <ndk/rtlfuncs.h>
 #include <process.h>
 
 #define TEST_CONNECTION_INFO_SIGNATURE1 0xaabb0123

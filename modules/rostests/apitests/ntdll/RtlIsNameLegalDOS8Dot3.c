@@ -5,10 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 START_TEST(RtlIsNameLegalDOS8Dot3)
 {

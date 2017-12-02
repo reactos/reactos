@@ -6,12 +6,7 @@
  *                  Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/exfuncs.h>
-#include <ndk/rtlfuncs.h>
-#include <ndk/setypes.h>
+#include "precomp.h"
 
 #define ntv6(x) (LOBYTE(LOWORD(GetVersion())) >= 6 ? (x) : 0)
 

@@ -6,10 +6,7 @@
  *                  Thomas Faber
  */
 
-#include <apitest.h>
-#include <strsafe.h>
-#define WIN32_NO_STATUS
-#include <ndk/ntndk.h>
+#include "precomp.h"
 
 void
 Test_PageFileSection(void)

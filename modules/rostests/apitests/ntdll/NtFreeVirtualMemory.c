@@ -1,9 +1,5 @@
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/pstypes.h>
-#include <ndk/mmfuncs.h>
+#include "precomp.h"
 
 static void Test_NtFreeVirtualMemory(void)
 {

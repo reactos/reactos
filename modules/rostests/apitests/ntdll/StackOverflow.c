@@ -5,11 +5,7 @@
  * PROGRAMMER:      Jérôme Gardou
  */
 
-#define WIN32_NO_STATUS
-#include <apitest.h>
-#include <stdio.h>
-#include <ndk/rtlfuncs.h>
-#include <ndk/mmfuncs.h>
+#include "precomp.h"
 
 static int iteration = 0;
 static PVOID StackAllocationBase;

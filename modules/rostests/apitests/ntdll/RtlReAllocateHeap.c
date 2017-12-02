@@ -5,8 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 static
 BOOLEAN
