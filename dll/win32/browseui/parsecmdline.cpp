@@ -382,6 +382,12 @@ SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
             {
                 // Or just a plain old string.
 
+                WCHAR szPath[MAX_PATH];
+                DWORD result = GetFullPathNameW(strField, _countof(szPath), szPath, NULL);
+
+                if (result != 0 && result <= _countof(szPath) && PathFileExistsW(szPath))
+                    StringCchCopyW(strField, _countof(strField), szPath);
+
                 LPITEMIDLIST pidlPath = ILCreateFromPathW(strField);
 
                 pInfo->pidlPath = pidlPath;
