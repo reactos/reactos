@@ -1596,6 +1596,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         case FCIDM_SHVIEW_CUT:
         case FCIDM_SHVIEW_COPY:
         case FCIDM_SHVIEW_RENAME:
+        case FCIDM_SHVIEW_PROPERTIES:
             return OnExplorerCommand(dwCmdID, TRUE);
 
         case FCIDM_SHVIEW_INSERT:
