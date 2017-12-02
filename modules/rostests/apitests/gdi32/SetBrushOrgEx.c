@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
+#include "precomp.h"
 
 void Test_Set(ULONG ulLine, HDC hdc, INT x, INT y, LPPOINT ppt, BOOL bExp, DWORD dwErrExp)
 {

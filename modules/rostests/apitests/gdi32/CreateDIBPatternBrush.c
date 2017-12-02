@@ -5,9 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#include <wingdi.h>
 #include "init.h"
 
 /* New color use parameter. See support.microsoft.com/kb/kbview/108497 */

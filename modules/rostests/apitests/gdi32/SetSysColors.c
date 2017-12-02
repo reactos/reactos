@@ -5,12 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
-
-#define TEST(x) ok(x, #x"\n")
+#include "precomp.h"
 
 #define NUM_SYSCOLORS 31
 

@@ -5,13 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winddi.h>
-#include <include/ntgdityp.h>
-#include <include/ntgdihdl.h>
-#include <stdio.h>
+#include "precomp.h"
 
 #define ok_lasterror(err) \
     ok(GetLastError() == err, "expected last error " #err " but got 0x%lx\n", GetLastError());

@@ -5,12 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-
-#define TEST(x) ok(x, #x"\n")
-#define RTEST(x) ok(x, #x"\n")
+#include "precomp.h"
 
 void Test_GetTextFace()
 {

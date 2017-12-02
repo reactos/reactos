@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Magnus Olsen
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winddi.h>
+#include "precomp.h"
 
 void Test_EngDeleteSemaphore()
 {

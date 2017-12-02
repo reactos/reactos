@@ -5,12 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winddi.h>
-#include <include/ntgdityp.h>
-#include <include/ntgdihdl.h>
+#include "precomp.h"
 
 void Test_CreatePen()
 {

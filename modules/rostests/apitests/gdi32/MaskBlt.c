@@ -5,10 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#include <wingdi.h>
-#include <winuser.h>
 #include "init.h"
 
 void Test_MaskBlt_1bpp()

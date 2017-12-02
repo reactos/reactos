@@ -5,9 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#include <wingdi.h>
 #include <mmsystem.h>
 
 static struct

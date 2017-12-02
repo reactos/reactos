@@ -5,13 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#include <stdio.h>
-#include <wingdi.h>
-#include <winuser.h>
-
-#define CLIPRGN 1
 #define METARGN 2
 #define APIRGN  3
 #define SYSRGN  4

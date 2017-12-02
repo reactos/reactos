@@ -5,12 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#include <winnls.h>
-#include <wingdi.h>
-#include <winddi.h>
-#include <strsafe.h>
+#include "precomp.h"
 
 static BYTE ContextContinue;
 static BYTE ContextStop;

@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <stdio.h>
-#include <wingdi.h>
+#include "precomp.h"
 
 HBITMAP ghbmpTarget;
 PULONG gpulTargetBits;

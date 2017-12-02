@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
+#include "precomp.h"
 
 void Test_BeginPath()
 {
