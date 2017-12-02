@@ -5,11 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#include <ndk/obfuncs.h>
-#include <ndk/psfuncs.h>
-#include <ndk/sefuncs.h>
+#include "precomp.h"
 
 START_TEST(NtOpenProcessToken)
 {

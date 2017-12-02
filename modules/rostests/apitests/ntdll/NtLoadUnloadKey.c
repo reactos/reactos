@@ -5,18 +5,7 @@
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#include <stdio.h>
-
-#include <apitest.h>
-#include <strsafe.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
-#include <ndk/cmfuncs.h>
-#include <ndk/cmtypes.h>
-#include <ndk/iofuncs.h>
-#include <ndk/obfuncs.h>
-#include <ndk/setypes.h>
+#include "precomp.h"
 
 /* See xdk/cmtypes.h */
 #define REG_CREATED_NEW_KEY     1

@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 void Test_RtlInitializeBitmap()
 {

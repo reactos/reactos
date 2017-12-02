@@ -5,12 +5,9 @@
  * PROGRAMMER:      Mark Jansen
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#include <windows.h>
-
-#define WIN32_NO_STATUS
-#include <ntndk.h>
+#include <winsvc.h>
 
 enum ServiceCommands
 {

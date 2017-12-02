@@ -5,10 +5,7 @@
  * PROGRAMMER:  Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-#define WIN32_NO_STATUS
-#include <wine/test.h>
-#include <ndk/pstypes.h>
-#include <ndk/psfuncs.h>
+#include "precomp.h"
 
 START_TEST(NtCreateThread)
 {

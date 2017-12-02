@@ -6,13 +6,7 @@
  *                  Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
-#include <ndk/cmfuncs.h>
-#include <ndk/cmtypes.h>
-#include <ndk/obfuncs.h>
+#include "precomp.h"
 
 static
 void

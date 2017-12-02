@@ -5,10 +5,7 @@
  * PROGRAMMER:      Víctor Martínez Calvo <vicmarcal@gmail.com>
  */
 
-#define WIN32_NO_STATUS
-#include <stdio.h>
-#include <wine/test.h>
-#include <ndk/ntndk.h>
+#include "precomp.h"
 
 static
 VOID

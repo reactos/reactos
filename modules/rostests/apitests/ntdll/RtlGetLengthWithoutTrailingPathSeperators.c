@@ -5,9 +5,7 @@
  * PROGRAMMER:      David Quintana <gigaherz@gmail.com>
  */
 
-#define WIN32_NO_STATUS
-#include <apitest.h>
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 #define MakeTestEntry_Success(str, expect) \
     { str, expect, STATUS_SUCCESS, __LINE__ }
