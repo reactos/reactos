@@ -1,10 +1,29 @@
-# ReactOS Project [![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![flattr.badge]][flattr.link] [![tweetme.badge]][tweetme.link] 
+# ReactOS Project [![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![coverity.badge]][coverity.link]
 
 <p align=center>
   <img src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
 </p>
 
-[![license.badge]][license.link] [![release.badge]][release.link] [![sfstats.badge]][sfstats.link] [![coverity.badge]][coverity.link] 
+<p align=center>
+  <a href="https://reactos.org/project-news/reactos-046-released">
+    <img alt="Release 0.4.6 Release" src="https://img.shields.io/badge/release-0.4.6-brightgreen.svg">
+  </a>
+  <a href="https://reactos.org/download">
+    <img alt="Download ReactOS" src="https://img.shields.io/badge/download-latest-blue.svg">
+  </a>
+  <a href="https://sourceforge.net/projects/reactos">
+    <img alt="SourceForge Download" src="https://img.shields.io/sourceforge/dm/reactos.svg">
+  </a>
+  <a href="https://github.com/reactos/reactos/blob/master/COPYING">
+    <img alt="License" src="https://img.shields.io/badge/license-GNU_GPL_2.0-blue.svg">
+  </a>
+  <a href="https://flattr.com/thing/505443/ReactOS">
+    <img alt="Flattr" src="https://api.flattr.com/button/flattr-badge-large.png">
+  </a>
+  <a href="https://twitter.com/intent/tweet?text=Check%20out%20ReactOS%20-%20Free%20and%20Open%20Source%20Windows%21&url=https%3A%2F%2Fgithub.com%2Freactos%2Freactos&hashtags=ReactOS,opensource,Windows">
+    <img alt="License" src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social">
+  </a>
+</p>
 
 ## Quick Links 
 
@@ -90,21 +109,11 @@ There is also an obsolete [SVN archive repository](https://svn.reactos.org/svn/r
 [travis.badge]:     https://travis-ci.org/reactos/reactos.svg?branch=master
 [appveyor.badge]:   https://ci.appveyor.com/api/projects/status/github/reactos/reactos?branch=master&svg=true
 [coverity.badge]:   https://scan.coverity.com/projects/205/badge.svg?flat=1
-[release.badge]:    https://img.shields.io/badge/release-0.4.6-brightgreen.svg
-[license.badge]:    https://img.shields.io/badge/license-GNU_GPL_2.0+-blue.svg
-[sfstats.badge]:    https://img.shields.io/sourceforge/dm/reactos.svg
 [rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.1.5-blue.svg   
 [rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.1.2-blue.svg
-[tweetme.badge]:    https://img.shields.io/twitter/url/http/shields.io.svg?style=social
-[flattr.badge]:     https://api.flattr.com/button/flattr-badge-large.png
 
 [travis.link]:      https://travis-ci.org/reactos/reactos
 [appveyor.link]:    https://ci.appveyor.com/project/AmineKhaldi/reactos
 [coverity.link]:    https://scan.coverity.com/projects/205
-[release.link]:     https://sourceforge.net/projects/reactos/files/ReactOS/0.4.6
-[license.link]:     https://github.com/reactos/reactos/blob/master/COPYING
-[sfstats.link]:     https://sourceforge.net/projects/reactos
 [rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.1.5/
 [rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.1.2/
-[tweetme.link]:     https://twitter.com/intent/tweet?text=Check%20out%20ReactOS%20-%20Free%20and%20Open%20Source%20Windows%21&url=https%3A%2F%2Fgithub.com%2Freactos%2Freactos&hashtags=ReactOS,opensource,Windows
-[flattr.link]:      https://flattr.com/thing/505443/ReactOS   
