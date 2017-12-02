@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Gregor Gullwi
  */
 
-#include <apitest.h>
-
-#include <stdio.h>
-#include <winuser.h>
+#include "precomp.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
@@ -189,4 +186,3 @@ START_TEST(RealGetWindowClass)
     Test_ClassAtoms();
     Test_RealGetWindowClass();
 }
-

@@ -5,9 +5,8 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-#include <wingdi.h>
-#include <winuser.h>
+#include "precomp.h"
+
 #include <ndk/mmfuncs.h>
 #include <ndk/pstypes.h>
 #include <strsafe.h>

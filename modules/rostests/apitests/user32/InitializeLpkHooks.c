@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Magnus Olsen
  */
 
-#include <apitest.h>
-
-#include <winuser.h>
+#include "precomp.h"
 
 typedef struct _LPK_LPEDITCONTROL_LIST
 {
@@ -106,4 +104,3 @@ START_TEST(InitializeLpkHooks)
 {
     Test_InitializeLpkHooks();
 }
-

@@ -1,10 +1,5 @@
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
-
-#include "resource.h"
+#include "precomp.h"
 
 // FIXME user32
 
@@ -278,5 +273,3 @@ START_TEST(GetIconInfo)
     /* Delete cursor */
     DestroyCursor(hcursor);
 }
-
-

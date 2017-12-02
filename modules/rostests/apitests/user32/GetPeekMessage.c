@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#include <winuser.h>
+#include "precomp.h"
 
 void Test_GetMessage(HWND hWnd)
 {

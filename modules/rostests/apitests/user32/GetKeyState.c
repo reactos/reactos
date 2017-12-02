@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Giannis Adamopoulos
  */
 
-#include <apitest.h>
-
-#include <winuser.h>
-#include <assert.h>
+#include "precomp.h"
 
 HHOOK hKbdHook, hKbdLLHook;
 

@@ -6,17 +6,9 @@
  *                  Thomas Faber
  */
 
-#define WIN32_NO_STATUS
-#include <apitest.h>
+#include "precomp.h"
 
-#include <stdio.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <user32testhelpers.h>
-#include <ndk/umtypes.h>
 #include <ndk/obfuncs.h>
-
-#define DESKTOP_ALL_ACCESS 0x01ff
 
 struct test_info {
     WCHAR* ExpectedWinsta;

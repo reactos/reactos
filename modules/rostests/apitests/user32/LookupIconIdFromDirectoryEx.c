@@ -1,10 +1,5 @@
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
-
-#include "resource.h"
+#include "precomp.h"
 
 START_TEST(LookupIconIdFromDirectoryEx)
 {

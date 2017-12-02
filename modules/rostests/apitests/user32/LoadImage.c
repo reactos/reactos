@@ -1,9 +1,5 @@
 
-#include <apitest.h>
-
-#include <stdio.h>
-#include <wingdi.h>
-#include <winuser.h>
+#include "precomp.h"
 
 START_TEST(LoadImage)
 {
