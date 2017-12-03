@@ -22,9 +22,10 @@ list(APPEND SOURCE
     src/internal.h)
 
 add_library(adns ${SOURCE})
-add_dependencies(adns psdk)
-add_pch(adns src/internal.h SOURCE)
 
-if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+if(NOT MSVC)
     add_target_compile_flags(adns "-Wno-unused-but-set-variable")
 endif()
+
+add_dependencies(adns psdk)
+add_pch(adns src/internal.h SOURCE)

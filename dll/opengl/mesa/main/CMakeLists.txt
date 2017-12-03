@@ -75,4 +75,7 @@ add_pch(mesa_main precomp.h SOURCE)
 
 if(NOT MSVC)
     add_target_compile_flags(mesa_main "-Wno-type-limits")
+elseif(USE_CLANG_CL)
+    add_target_compile_flags(mesa_main "-Wno-cast-calling-convention -Wno-unused-local-typedef")
+    add_target_compile_flags(mesa_main "-Wno-tautological-unsigned-zero-compare -Wno-constant-conversion")
 endif()

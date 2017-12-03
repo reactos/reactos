@@ -48,7 +48,7 @@ list(APPEND SOURCE
 
 add_executable(nfsd ${SOURCE} nfsd.rc)
 
-if(MSVC)
+if(MSVC AND (NOT USE_CLANG_CL))
 else()
     # FIXME: Tons of warnings.
     add_target_compile_flags(nfsd "-w")

@@ -94,7 +94,7 @@ add_library(libtirpc SHARED
     libtirpc/libtirpc_ros.rc
     ${CMAKE_CURRENT_BINARY_DIR}/libtirpc.def)
 
-if(MSVC)
+if(MSVC AND (NOT USE_CLANG_CL))
 else()
     # FIXME: Tons of warnings.
     add_target_compile_flags(libtirpc "-w")

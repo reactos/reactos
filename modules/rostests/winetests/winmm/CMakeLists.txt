@@ -12,14 +12,12 @@ list(APPEND SOURCE
     wave.c)
 
 add_executable(winmm_winetest ${SOURCE})
+
+if(USE_CLANG_CL OR (NOT MSVC))
+    add_target_compile_flags(winmm_winetest "-Wno-format")
+endif()
+
 target_link_libraries(winmm_winetest dxguid)
 set_module_type(winmm_winetest win32cui)
 add_importlibs(winmm_winetest winmm user32 advapi32 ole32 msvcrt kernel32)
 add_rostests_file(TARGET winmm_winetest)
-
-if(NOT MSVC)
-    add_target_compile_flags(winmm_winetest "-Wno-format")
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_target_compile_flags(winmm_winetest "-Wno-unused-but-set-variable")
-    endif()
-endif()
