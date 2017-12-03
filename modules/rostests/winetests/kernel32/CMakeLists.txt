@@ -40,7 +40,7 @@ list(APPEND SOURCE
 
 add_executable(kernel32_winetest ${SOURCE} resource.rc)
 
-if(NOT MSVC)
+if(USE_CLANG_CL OR (NOT MSVC))
     add_target_compile_flags(kernel32_winetest "-Wno-format")
 endif()
 

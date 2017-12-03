@@ -12,7 +12,7 @@ list(APPEND SOURCE
 
 add_library(fbtusb SHARED ${SOURCE} fbtusb.rc)
 
-if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+if(NOT MSVC)
     add_target_compile_flags(fbtusb "-Wno-unused-but-set-variable")
 endif()
 

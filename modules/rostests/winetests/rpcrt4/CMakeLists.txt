@@ -28,11 +28,15 @@ if(MSVC)
 endif()
 
 add_executable(rpcrt4_winetest ${SOURCE})
+
+if(USE_CLANG_CL OR (NOT MSVC))
+    add_target_compile_flags(rpcrt4_winetest "-Wno-format")
+    if(USE_CLANG_CL)
+        add_target_compile_flags(rpcrt4_winetest "-Wno-cast-calling-convention")
+    endif()
+endif()
+
 target_link_libraries(rpcrt4_winetest uuid wine ${PSEH_LIB})
 set_module_type(rpcrt4_winetest win32cui)
 add_importlibs(rpcrt4_winetest oleaut32 ole32 rpcrt4 secur32 advapi32 msvcrt kernel32 ntdll)
 add_rostests_file(TARGET rpcrt4_winetest)
-
-if(NOT MSVC)
-    add_target_compile_flags(rpcrt4_winetest "-Wno-format")
-endif()

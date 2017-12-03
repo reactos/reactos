@@ -33,10 +33,11 @@ if(ARCH STREQUAL "i386")
 endif()
 
 add_executable(ntdll_winetest ${SOURCE})
+
+if(USE_CLANG_CL OR (NOT MSVC))
+    add_target_compile_flags(ntdll_winetest "-Wno-format")
+endif()
+
 set_module_type(ntdll_winetest win32cui)
 add_importlibs(ntdll_winetest user32 ole32 advapi32 msvcrt kernel32 ntdll)
 add_rostests_file(TARGET ntdll_winetest)
-
-if(NOT MSVC)
-    add_target_compile_flags(ntdll_winetest "-Wno-format")
-endif()
