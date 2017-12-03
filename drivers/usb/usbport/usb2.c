@@ -407,7 +407,7 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
                 Tt = &TtExtension->Tt;
                 Period = USB2_FRAMES;
 
-                while (Period && Period > EndpointProperties->Period);
+                while (Period && Period > EndpointProperties->Period)
                 {
                     Period >>= 1;
                 }
