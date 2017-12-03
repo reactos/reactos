@@ -49,6 +49,7 @@ INT cmd_setlocal(LPTSTR param)
     Saved = cmd_alloc(sizeof(SETLOCAL));
     if (!Saved)
     {
+        WARN("Cannot allocate memory for Saved!\n");
         error_out_of_memory();
         return 1;
     }

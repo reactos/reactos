@@ -1390,7 +1390,7 @@ DirList(IN OUT LPTSTR szFullPath,   /* [IN] The full path we are listing with tr
     ptrStartNode = cmd_alloc(sizeof(DIRFINDLISTNODE));
     if (ptrStartNode == NULL)
     {
-        WARN("DEBUG: Cannot allocate memory for ptrStartNode!\n");
+        WARN("Cannot allocate memory for ptrStartNode!\n");
         return 1;   /* Error cannot allocate memory for 1st object */
     }
     ptrStartNode->stInfo.ptrHead = NULL;
@@ -1408,7 +1408,7 @@ DirList(IN OUT LPTSTR szFullPath,   /* [IN] The full path we are listing with tr
                 ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
                 if (ptrNextNode->ptrNext == NULL)
                 {
-                    WARN("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
+                    WARN("Cannot allocate memory for ptrNextNode->ptrNext!\n");
                     DirNodeCleanup(ptrStartNode, &dwCount);
                     FindClose(hSearch);
                     return 1;
@@ -1458,7 +1458,7 @@ DirList(IN OUT LPTSTR szFullPath,   /* [IN] The full path we are listing with tr
                             *ptrCurNode = cmd_alloc(sizeof(DIRFINDSTREAMNODE));
                             if (*ptrCurNode == NULL)
                             {
-                                WARN("DEBUG: Cannot allocate memory for *ptrCurNode!\n");
+                                WARN("Cannot allocate memory for *ptrCurNode!\n");
                                 DirNodeCleanup(ptrStartNode, &dwCount);
                                 FindClose(hStreams);
                                 FindClose(hSearch);
@@ -1512,7 +1512,7 @@ DirList(IN OUT LPTSTR szFullPath,   /* [IN] The full path we are listing with tr
     ptrFileArray = cmd_alloc(sizeof(PDIRFINDINFO) * dwCount);
     if (ptrFileArray == NULL)
     {
-        WARN("DEBUG: Cannot allocate memory for ptrFileArray!\n");
+        WARN("Cannot allocate memory for ptrFileArray!\n");
         DirNodeCleanup(ptrStartNode, &dwCount);
         return 1;
     }
