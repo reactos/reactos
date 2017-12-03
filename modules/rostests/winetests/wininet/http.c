@@ -7306,7 +7306,7 @@ START_TEST(http)
 {
     HMODULE hdll;
     hdll = GetModuleHandleA("wininet.dll");
-
+if (!winetest_interactive) { skip("ReactOS is broken\n"); return; }
     if(!GetProcAddress(hdll, "InternetGetCookieExW")) {
         win_skip("Too old IE (older than 6.0)\n");
         return;

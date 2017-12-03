@@ -1020,7 +1020,7 @@ START_TEST (notification)
     test_connection_cache();
     test_redirect();
     test_async();
-
+if (winetest_interactive){
     si.event = CreateEventW( NULL, 0, 0, NULL );
     si.port = 7533;
 
@@ -1051,4 +1051,5 @@ else
     CloseHandle( thread );
     CloseHandle( server_socket_available );
     CloseHandle( server_socket_done );
+}
 }

@@ -2761,8 +2761,10 @@ START_TEST(exception)
             test_stage = 6;
             test_ripevent(1);
             test_stage = 7;
+if (winetest_interactive)
             test_debug_service(0);
             test_stage = 8;
+if (winetest_interactive)
             test_debug_service(1);
             test_stage = 9;
             test_breakpoint(0);
@@ -2786,6 +2788,7 @@ START_TEST(exception)
     test_debug_registers();
     test_outputdebugstring(1);
     test_ripevent(1);
+if (winetest_interactive)
     test_debug_service(1);
     test_breakpoint(1);
     test_closehandle(0);
@@ -2820,6 +2823,7 @@ START_TEST(exception)
     test_debug_registers();
     test_outputdebugstring(1);
     test_ripevent(1);
+if (winetest_interactive)
     test_debug_service(1);
     test_breakpoint(1);
     test_closehandle(0);
