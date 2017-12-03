@@ -326,10 +326,10 @@ USBPORT_PdoInternalDeviceControl(IN PDEVICE_OBJECT PdoDevice,
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     IoCtl = IoStack->Parameters.DeviceIoControl.IoControlCode;
 
-    DPRINT("USBPORT_PdoInternalDeviceControl: PdoDevice - %p, Irp - %p, IoCtl - %x\n",
-           PdoDevice,
-           Irp,
-           IoCtl);
+    //DPRINT("USBPORT_PdoInternalDeviceControl: PdoDevice - %p, Irp - %p, IoCtl - %x\n",
+    //       PdoDevice,
+    //       Irp,
+    //       IoCtl);
 
     if (IoCtl == IOCTL_INTERNAL_USB_SUBMIT_URB)
     {
