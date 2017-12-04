@@ -128,6 +128,7 @@ class CDesktopFolderEnum :
             BOOL ret = TRUE;
             LPITEMIDLIST pidl;
 
+            static const WCHAR MyComputerClassString[] = L"{20D04FE0-3AEA-1069-A2D8-08002B30309D}";
             static const WCHAR MyDocumentsClassString[] = L"{450D8FBA-AD25-11D0-98A8-0800361B1103}";
 
             TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
@@ -135,7 +136,8 @@ class CDesktopFolderEnum :
             /* enumerate the root folders */
             if (dwFlags & SHCONTF_FOLDERS)
             {
-                AddToEnumList(_ILCreateMyComputer());
+                if (IsNamespaceExtensionHidden(MyComputerClassString) < 1)
+                    AddToEnumList(_ILCreateMyComputer());
                 if (IsNamespaceExtensionHidden(MyDocumentsClassString) < 1)
                     AddToEnumList(_ILCreateMyDocuments());
 
