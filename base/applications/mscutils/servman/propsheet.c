@@ -80,7 +80,6 @@ unsigned int __stdcall PropSheetThread(void* Param)
             /* Pump the message queue */
             while (GetMessageW(&Msg, NULL, 0, 0))
             {
-
                 if (PropSheet_GetCurrentPageHwnd(hDlg) == NULL)
                 {
                     /* The user hit the ok / cancel button, pull it down */

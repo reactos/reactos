@@ -128,11 +128,18 @@ typedef struct _SERVICEPROPSHEET
 {
     PMAIN_WND_INFO Info;
     ENUM_SERVICE_STATUS_PROCESS *pService;
+
+} SERVICEPROPSHEET, *PSERVICEPROPSHEET;
+
+typedef struct _DEPENDDATA
+{
+    PSERVICEPROPSHEET pDlgInfo;
     HIMAGELIST hDependsImageList;
     HWND hDependsWnd;
     HWND hDependsTreeView1;
     HWND hDependsTreeView2;
-} SERVICEPROPSHEET, *PSERVICEPROPSHEET;
+
+} DEPENDDATA, *PDEPENDDATA;
 
 
 HTREEITEM AddItemToTreeView(HWND hTreeView, HTREEITEM hRoot, LPWSTR lpDisplayName, LPWSTR lpServiceName, ULONG serviceType, BOOL bHasChildren);
@@ -147,12 +154,12 @@ LPWSTR DisplayName,
 LPWSTR ServiceList);
 
 /* tv1_dependencies */
-BOOL TV1_Initialize(PSERVICEPROPSHEET pDlgInfo, LPWSTR lpServiceName);
-VOID TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo, HTREEITEM hParent, LPWSTR lpServiceName);
+BOOL TV1_Initialize(PDEPENDDATA pDependData, LPWSTR lpServiceName);
+VOID TV1_AddDependantsToTree(PDEPENDDATA pDependData, HTREEITEM hParent, LPWSTR lpServiceName);
 
 /* tv2_dependencies */
-BOOL TV2_Initialize(PSERVICEPROPSHEET pDlgInfo, LPWSTR lpServiceName);
-VOID TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo, HTREEITEM hParent, LPWSTR lpServiceName);
+BOOL TV2_Initialize(PDEPENDDATA pDependData, LPWSTR lpServiceName);
+VOID TV2_AddDependantsToTree(PDEPENDDATA pDependData, HTREEITEM hParent, LPWSTR lpServiceName);
 BOOL TV2_HasDependantServices(LPWSTR lpServiceName);
 LPENUM_SERVICE_STATUS TV2_GetDependants(LPWSTR lpServiceName, LPDWORD lpdwCount);
 
