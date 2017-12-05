@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/propsheet.c
  * PURPOSE:     Property dialog box message handler
- * COPYRIGHT:   Copyright 2006-2017 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -32,7 +32,9 @@ OpenPropSheet(PMAIN_WND_INFO Info)
     HANDLE hThread;
     hThread = (HANDLE)_beginthreadex(NULL, 0, &PropSheetThread, Info, 0, NULL);
     if (hThread)
+    {
         CloseHandle(hThread);
+    }
 }
 
 
@@ -75,15 +77,13 @@ unsigned int __stdcall PropSheetThread(void* Param)
         hDlg = (HWND)PropertySheetW(&psh);
         if (hDlg)
         {
-            SetWindowLongPtrW(hDlg,
-                              GWLP_USERDATA,
-                              (LONG_PTR)pServicePropSheet);
-
-            /* pump the message queue */
+            /* Pump the message queue */
             while (GetMessageW(&Msg, NULL, 0, 0))
             {
+
                 if (PropSheet_GetCurrentPageHwnd(hDlg) == NULL)
                 {
+                    /* The user hit the ok / cancel button, pull it down */
                     EnableWindow(Info->hMainWnd, TRUE);
                     DestroyWindow(hDlg);
                 }
