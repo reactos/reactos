@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/propsheet.c
  * PURPOSE:     Property dialog box message handler
- * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-2017 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -29,8 +29,20 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
 VOID
 OpenPropSheet(PMAIN_WND_INFO Info)
 {
+    PSERVICEPROPSHEET pServicePropSheet;
     HANDLE hThread;
-    hThread = (HANDLE)_beginthreadex(NULL, 0, &PropSheetThread, Info, 0, NULL);
+
+    pServicePropSheet = HeapAlloc(ProcessHeap,
+                                  0,
+                                  sizeof(*pServicePropSheet));
+    if (!pServicePropSheet) return;
+
+    /* Set the current service in this calling thread to avoid
+     * it being updated before the thread is up */
+    pServicePropSheet->pService = Info->pCurrentService;
+    pServicePropSheet->Info = Info;
+
+    hThread = (HANDLE)_beginthreadex(NULL, 0, &PropSheetThread, pServicePropSheet, 0, NULL);
     if (hThread)
     {
         CloseHandle(hThread);
@@ -40,64 +52,53 @@ OpenPropSheet(PMAIN_WND_INFO Info)
 
 unsigned int __stdcall PropSheetThread(void* Param)
 {
+    PSERVICEPROPSHEET pServicePropSheet;
     PROPSHEETHEADER psh;
     PROPSHEETPAGE psp[4];
-    PSERVICEPROPSHEET pServicePropSheet;
     HWND hDlg = NULL;
     MSG Msg;
 
-    PMAIN_WND_INFO Info = (PMAIN_WND_INFO)Param;
+    pServicePropSheet = (PSERVICEPROPSHEET)Param;
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags = PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS;
-    psh.hwndParent = Info->hMainWnd;
+    psh.hwndParent = pServicePropSheet->Info->hMainWnd;
     psh.hInstance = hInstance;
     psh.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SM_ICON));
-    psh.pszCaption = Info->pCurrentService->lpDisplayName;
+    psh.pszCaption = pServicePropSheet->Info->pCurrentService->lpDisplayName;
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
+    /* Initialize the tabs */
+    InitPropSheetPage(&psp[0], pServicePropSheet, IDD_DLG_GENERAL, GeneralPageProc);
+    InitPropSheetPage(&psp[1], pServicePropSheet, IDD_LOGON, LogonPageProc);
+    InitPropSheetPage(&psp[2], pServicePropSheet, IDD_RECOVERY, RecoveryPageProc);
+    InitPropSheetPage(&psp[3], pServicePropSheet, IDD_DLG_DEPEND, DependenciesPageProc);
 
-    pServicePropSheet = HeapAlloc(ProcessHeap,
-                                  0,
-                                  sizeof(*pServicePropSheet));
-    if (pServicePropSheet)
+    hDlg = (HWND)PropertySheetW(&psh);
+    if (hDlg)
     {
-        /* Save current service, as it could change while the dialog is open */
-        pServicePropSheet->pService = Info->pCurrentService;
-        pServicePropSheet->Info = Info;
-
-        InitPropSheetPage(&psp[0], pServicePropSheet, IDD_DLG_GENERAL, GeneralPageProc);
-        InitPropSheetPage(&psp[1], pServicePropSheet, IDD_LOGON, LogonPageProc);
-        InitPropSheetPage(&psp[2], pServicePropSheet, IDD_RECOVERY, RecoveryPageProc);
-        InitPropSheetPage(&psp[3], pServicePropSheet, IDD_DLG_DEPEND, DependenciesPageProc);
-
-        hDlg = (HWND)PropertySheetW(&psh);
-        if (hDlg)
+        /* Pump the message queue */
+        while (GetMessageW(&Msg, NULL, 0, 0))
         {
-            /* Pump the message queue */
-            while (GetMessageW(&Msg, NULL, 0, 0))
+            if (PropSheet_GetCurrentPageHwnd(hDlg) == NULL)
             {
+                /* The user hit the ok / cancel button, pull it down */
+                EnableWindow(pServicePropSheet->Info->hMainWnd, TRUE);
+                DestroyWindow(hDlg);
+            }
 
-                if (PropSheet_GetCurrentPageHwnd(hDlg) == NULL)
-                {
-                    /* The user hit the ok / cancel button, pull it down */
-                    EnableWindow(Info->hMainWnd, TRUE);
-                    DestroyWindow(hDlg);
-                }
-
-                if (PropSheet_IsDialogMessage(hDlg, &Msg) != 0)
-                {
-                    TranslateMessage(&Msg);
-                    DispatchMessageW(&Msg);
-                }
+            if (PropSheet_IsDialogMessage(hDlg, &Msg) != 0)
+            {
+                TranslateMessage(&Msg);
+                DispatchMessageW(&Msg);
             }
         }
-
-        HeapFree(GetProcessHeap(), 0, pServicePropSheet);
     }
+
+    HeapFree(GetProcessHeap(), 0, pServicePropSheet);
 
     return (hDlg != NULL);
 }

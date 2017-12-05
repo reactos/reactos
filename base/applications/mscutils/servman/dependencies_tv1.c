@@ -10,8 +10,7 @@
 #include "precomp.h"
 
 LPWSTR
-TV1_GetDependants(PSERVICEPROPSHEET pDlgInfo,
-                  SC_HANDLE hService)
+TV1_GetDependants(SC_HANDLE hService)
 {
     LPQUERY_SERVICE_CONFIG lpServiceConfig;
     LPWSTR lpStr = NULL;
@@ -80,7 +79,7 @@ TV1_GetDependants(PSERVICEPROPSHEET pDlgInfo,
 }
 
 VOID
-TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
+TV1_AddDependantsToTree(PDEPENDDATA pDependData,
                         HTREEITEM hParent,
                         LPWSTR lpServiceName)
 {
@@ -103,7 +102,7 @@ TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
         if (hService)
         {
             /* Get a list of service dependents */
-            lpDependants = TV1_GetDependants(pDlgInfo, hService);
+            lpDependants = TV1_GetDependants(hService);
             if (lpDependants)
             {
                 lpStr = lpDependants;
@@ -127,7 +126,7 @@ TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                         }
 
                         /* Add it */
-                        AddItemToTreeView(pDlgInfo->hDependsTreeView1,
+                        AddItemToTreeView(pDependData->hDependsTreeView1,
                                           hParent,
                                           lpServiceConfig->lpDisplayName,
                                           lpStr,
@@ -156,7 +155,7 @@ TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                     /* Load the 'No dependencies' string */
                     AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
 
-                    AddItemToTreeView(pDlgInfo->hDependsTreeView1,
+                    AddItemToTreeView(pDependData->hDependsTreeView1,
                                       NULL,
                                       lpNoDepends,
                                       NULL,
@@ -166,7 +165,7 @@ TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                     LocalFree(lpNoDepends);
 
                     /* Disable the window */
-                    EnableWindow(pDlgInfo->hDependsTreeView1, FALSE);
+                    EnableWindow(pDependData->hDependsTreeView1, FALSE);
                 }
             }
 
@@ -178,25 +177,25 @@ TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
 }
 
 BOOL
-TV1_Initialize(PSERVICEPROPSHEET pDlgInfo,
+TV1_Initialize(PDEPENDDATA pDependData,
                LPWSTR lpServiceName)
 {
     BOOL bRet = FALSE;
 
     /* Associate the imagelist with TV1 */
-    pDlgInfo->hDependsTreeView1 = GetDlgItem(pDlgInfo->hDependsWnd, IDC_DEPEND_TREE1);
-    if (!pDlgInfo->hDependsTreeView1)
+    pDependData->hDependsTreeView1 = GetDlgItem(pDependData->hDependsWnd, IDC_DEPEND_TREE1);
+    if (!pDependData->hDependsTreeView1)
     {
-        ImageList_Destroy(pDlgInfo->hDependsImageList);
-        pDlgInfo->hDependsImageList = NULL;
+        ImageList_Destroy(pDependData->hDependsImageList);
+        pDependData->hDependsImageList = NULL;
         return FALSE;
     }
-    (void)TreeView_SetImageList(pDlgInfo->hDependsTreeView1,
-                                pDlgInfo->hDependsImageList,
+    (void)TreeView_SetImageList(pDependData->hDependsTreeView1,
+                                pDependData->hDependsImageList,
                                 TVSIL_NORMAL);
 
     /* Set the first items in the control */
-    TV1_AddDependantsToTree(pDlgInfo, NULL, lpServiceName);
+    TV1_AddDependantsToTree(pDependData, NULL, lpServiceName);
 
     return bRet;
 }

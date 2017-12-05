@@ -159,20 +159,20 @@ TreeView_GetItemText(HWND hTreeView,
 */
 
 static VOID
-InitDependPage(PSERVICEPROPSHEET pDlgInfo)
+InitDependPage(PDEPENDDATA pDependData)
 {
     /* Initialize the image list */
-    pDlgInfo->hDependsImageList = InitImageList(IDI_NODEPENDS,
-                                                IDI_DRIVER,
-                                                GetSystemMetrics(SM_CXSMICON),
-                                                GetSystemMetrics(SM_CXSMICON),
-                                                IMAGE_ICON);
+    pDependData->hDependsImageList = InitImageList(IDI_NODEPENDS,
+                                                   IDI_DRIVER,
+                                                   GetSystemMetrics(SM_CXSMICON),
+                                                   GetSystemMetrics(SM_CXSMICON),
+                                                   IMAGE_ICON);
 
     /* Set the first tree view */
-    TV1_Initialize(pDlgInfo, pDlgInfo->pService->lpServiceName);
+    TV1_Initialize(pDependData, pDependData->pDlgInfo->pService->lpServiceName);
 
     /* Set the second tree view */
-    TV2_Initialize(pDlgInfo, pDlgInfo->pService->lpServiceName);
+    TV2_Initialize(pDependData, pDependData->pDlgInfo->pService->lpServiceName);
 }
 
 /*
@@ -185,12 +185,13 @@ DependenciesPageProc(HWND hwndDlg,
                      WPARAM wParam,
                      LPARAM lParam)
 {
-    PSERVICEPROPSHEET pDlgInfo;
+    
+    PDEPENDDATA pDependData;
 
     /* Get the window context */
-    pDlgInfo = (PSERVICEPROPSHEET)GetWindowLongPtr(hwndDlg,
-                                                   GWLP_USERDATA);
-    if (pDlgInfo == NULL && uMsg != WM_INITDIALOG)
+    pDependData = (PDEPENDDATA)GetWindowLongPtr(hwndDlg,
+                                                GWLP_USERDATA);
+    if (pDependData == NULL && uMsg != WM_INITDIALOG)
     {
         return FALSE;
     }
@@ -199,16 +200,17 @@ DependenciesPageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            pDlgInfo = (PSERVICEPROPSHEET)(((LPPROPSHEETPAGE)lParam)->lParam);
-            if (pDlgInfo != NULL)
+            pDependData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DEPENDDATA));
+            if (pDependData != NULL)
             {
                 SetWindowLongPtr(hwndDlg,
                                  GWLP_USERDATA,
-                                 (LONG_PTR)pDlgInfo);
+                                 (LONG_PTR)pDependData);
 
-                pDlgInfo->hDependsWnd = hwndDlg;
+                pDependData->pDlgInfo = (PSERVICEPROPSHEET)(((LPPROPSHEETPAGE)lParam)->lParam);
+                pDependData->hDependsWnd = hwndDlg;
 
-                InitDependPage(pDlgInfo);
+                InitDependPage(pDependData);
             }
         }
         break;
@@ -226,19 +228,19 @@ DependenciesPageProc(HWND hwndDlg,
                         if (lpnmtv->hdr.idFrom == IDC_DEPEND_TREE1)
                         {
                             /* Has this node been expanded before */
-                            if (!TreeView_GetChild(pDlgInfo->hDependsTreeView1, lpnmtv->itemNew.hItem))
+                            if (!TreeView_GetChild(pDependData->hDependsTreeView1, lpnmtv->itemNew.hItem))
                             {
                                 /* It's not, add the children */
-                                TV1_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPWSTR)lpnmtv->itemNew.lParam);
+                                TV1_AddDependantsToTree(pDependData, lpnmtv->itemNew.hItem, (LPWSTR)lpnmtv->itemNew.lParam);
                             }
                         }
                         else if (lpnmtv->hdr.idFrom == IDC_DEPEND_TREE2)
                         {
                             /* Has this node been expanded before */
-                            if (!TreeView_GetChild(pDlgInfo->hDependsTreeView2, lpnmtv->itemNew.hItem))
+                            if (!TreeView_GetChild(pDependData->hDependsTreeView2, lpnmtv->itemNew.hItem))
                             {
                                 /* It's not, add the children */
-                                TV2_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPWSTR)lpnmtv->itemNew.lParam);
+                                TV2_AddDependantsToTree(pDependData, lpnmtv->itemNew.hItem, (LPWSTR)lpnmtv->itemNew.lParam);
                             }
                         }
                     }
@@ -256,11 +258,13 @@ DependenciesPageProc(HWND hwndDlg,
             break;
 
         case WM_DESTROY:
-            DestroyTreeView(pDlgInfo->hDependsTreeView1);
-            DestroyTreeView(pDlgInfo->hDependsTreeView2);
+            DestroyTreeView(pDependData->hDependsTreeView1);
+            DestroyTreeView(pDependData->hDependsTreeView2);
 
-            if (pDlgInfo->hDependsImageList)
-                ImageList_Destroy(pDlgInfo->hDependsImageList);
+            if (pDependData->hDependsImageList)
+                ImageList_Destroy(pDependData->hDependsImageList);
+
+            HeapFree(GetProcessHeap(), 0, pDependData);
     }
 
     return FALSE;
