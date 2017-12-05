@@ -1048,7 +1048,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         FontGDI->CharSet = SYMBOL_CHARSET;
     }
 
-    /* delete font substitutes */
+    /* delete old font substitute */
     DeleteFontSubstFromList(&FontSubstListHead, &Entry->FaceName);
     DeleteFontSubstFromRegistry(&Entry->FaceName);
 
