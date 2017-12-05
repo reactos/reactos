@@ -1800,6 +1800,15 @@ public:                                                                         
             return TRUE;                                                                        \
     }
 
+#define COMMAND_CODE_HANDLER(code, func)                                                            \
+    if (uMsg == WM_COMMAND && code == HIWORD(wParam))                                                \
+    {                                                                                            \
+        bHandled = TRUE;                                                                        \
+        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                    \
+        if (bHandled)                                                                            \
+            return TRUE;                                                                        \
+    }
+
 #define COMMAND_RANGE_HANDLER(idFirst, idLast, func)                                            \
     if (uMsg == WM_COMMAND && LOWORD(wParam) >= idFirst  && LOWORD(wParam) <= idLast)            \
     {                                                                                            \
