@@ -460,6 +460,7 @@ ExpComputePartialHashForAddress(IN PVOID BaseAddress)
     return (Result >> 24) ^ (Result >> 16) ^ (Result >> 8) ^ Result;
 }
 
+#if DBG
 FORCEINLINE
 BOOLEAN
 ExpTagAllowPrint(CHAR Tag)
@@ -477,7 +478,7 @@ ExpTagAllowPrint(CHAR Tag)
 VOID
 MiDumpNonPagedPoolConsumers(VOID)
 {
-    USHORT i;
+    SIZE_T i;
 
     DPRINT1("---------------------\n");
     DPRINT1("Out of memory dumper!\n");
@@ -532,6 +533,7 @@ MiDumpNonPagedPoolConsumers(VOID)
 
     DPRINT1("---------------------\n");
 }
+#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -1714,6 +1716,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         Entry = MiAllocatePoolPages(OriginalType, NumberOfBytes);
         if (!Entry)
         {
+#if DBG
             //
             // If non paged backed, display current consumption
             //
@@ -1721,6 +1724,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             {
                 MiDumpNonPagedPoolConsumers();
             }
+#endif
 
             //
             // Must succeed pool is deprecated, but still supported. These allocation
@@ -2048,6 +2052,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     Entry = MiAllocatePoolPages(OriginalType, PAGE_SIZE);
     if (!Entry)
     {
+#if DBG
         //
         // If non paged backed, display current consumption
         //
@@ -2055,6 +2060,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         {
             MiDumpNonPagedPoolConsumers();
         }
+#endif
 
         //
         // Must succeed pool is deprecated, but still supported. These allocation
