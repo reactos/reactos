@@ -3,11 +3,13 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/propsheet.c
  * PURPOSE:     Property dialog box message handler
- * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-2017 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "precomp.h"
+
+unsigned int __stdcall PropSheetThread(void* Param);
 
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp,
@@ -15,26 +17,38 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
                   WORD idDlg,
                   DLGPROC DlgProc)
 {
-  ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-  psp->dwSize = sizeof(PROPSHEETPAGE);
-  psp->dwFlags = PSP_DEFAULT;
-  psp->hInstance = hInstance;
-  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-  psp->pfnDlgProc = DlgProc;
-  psp->lParam = (LPARAM)dlgInfo;
+    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
+    psp->dwSize = sizeof(PROPSHEETPAGE);
+    psp->dwFlags = PSP_DEFAULT;
+    psp->hInstance = hInstance;
+    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+    psp->pfnDlgProc = DlgProc;
+    psp->lParam = (LPARAM)dlgInfo;
 }
 
-LONG APIENTRY
+VOID
 OpenPropSheet(PMAIN_WND_INFO Info)
+{
+    HANDLE hThread;
+    hThread = (HANDLE)_beginthreadex(NULL, 0, &PropSheetThread, Info, 0, NULL);
+    if (hThread)
+        CloseHandle(hThread);
+}
+
+
+unsigned int __stdcall PropSheetThread(void* Param)
 {
     PROPSHEETHEADER psh;
     PROPSHEETPAGE psp[4];
     PSERVICEPROPSHEET pServicePropSheet;
-    LONG Ret = 0;
+    HWND hDlg = NULL;
+    MSG Msg;
+
+    PMAIN_WND_INFO Info = (PMAIN_WND_INFO)Param;
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USECALLBACK;// | PSH_MODELESS;
+    psh.dwFlags = PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS;
     psh.hwndParent = Info->hMainWnd;
     psh.hInstance = hInstance;
     psh.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SM_ICON));
@@ -58,12 +72,33 @@ OpenPropSheet(PMAIN_WND_INFO Info)
         InitPropSheetPage(&psp[2], pServicePropSheet, IDD_RECOVERY, RecoveryPageProc);
         InitPropSheetPage(&psp[3], pServicePropSheet, IDD_DLG_DEPEND, DependenciesPageProc);
 
-        Ret = (LONG)(PropertySheet(&psh) != -1);
+        hDlg = (HWND)PropertySheetW(&psh);
+        if (hDlg)
+        {
+            SetWindowLongPtrW(hDlg,
+                              GWLP_USERDATA,
+                              (LONG_PTR)pServicePropSheet);
 
-        HeapFree(ProcessHeap,
-                 0,
-                 pServicePropSheet);
+            /* pump the message queue */
+            while (GetMessageW(&Msg, NULL, 0, 0))
+            {
+                if (PropSheet_GetCurrentPageHwnd(hDlg) == NULL)
+                {
+                    EnableWindow(Info->hMainWnd, TRUE);
+                    DestroyWindow(hDlg);
+                }
+
+                if (PropSheet_IsDialogMessage(hDlg, &Msg) != 0)
+                {
+                    TranslateMessage(&Msg);
+                    DispatchMessageW(&Msg);
+                }
+            }
+        }
+
+        HeapFree(GetProcessHeap(), 0, pServicePropSheet);
     }
 
-    return Ret;
+    return (hDlg != NULL);
 }
+

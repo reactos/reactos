@@ -13,6 +13,7 @@
 #include <shlobj.h>
 #include <commdlg.h>
 #include <strsafe.h>
+#include <process.h>
 
 #include "resource.h"
 
@@ -155,7 +156,7 @@ VOID TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo, HTREEITEM hParent, LPWS
 BOOL TV2_HasDependantServices(LPWSTR lpServiceName);
 LPENUM_SERVICE_STATUS TV2_GetDependants(LPWSTR lpServiceName, LPDWORD lpdwCount);
 
-LONG APIENTRY OpenPropSheet(PMAIN_WND_INFO Info);
+VOID OpenPropSheet(PMAIN_WND_INFO Info);
 
 /* propsheet window procs */
 INT_PTR CALLBACK DependenciesPageProc(HWND hwndDlg,
