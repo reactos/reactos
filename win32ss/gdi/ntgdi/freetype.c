@@ -56,6 +56,10 @@ static const UNICODE_STRING MarlettW = RTL_CONSTANT_STRING(L"Marlett");
 static UNICODE_STRING FontRegPath =
     RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
+/* the FontSubstitutes registry key */
+static UNICODE_STRING FontSubstKey =
+    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\"
+                        L"Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
 
 /* The FreeType library is not thread safe, so we have
    to serialize access to it */
@@ -323,12 +327,6 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
     BYTE                            CharSets[FONTSUBST_FROM_AND_TO];
     LPWSTR                          pch;
     PFONTSUBST_ENTRY                pEntry;
-
-    /* the FontSubstitutes registry key */
-    static UNICODE_STRING FontSubstKey =
-        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\"
-                            L"Microsoft\\Windows NT\\CurrentVersion\\"
-                            L"FontSubstitutes");
 
     /* open registry key */
     InitializeObjectAttributes(&ObjectAttributes, &FontSubstKey,
@@ -774,7 +772,7 @@ WeightFromStyle(const char *style_name)
 }
 
 BOOL FASTCALL
-DeleteFontSubstituteFromList(
+DeleteFontSubstFromList(
     PLIST_ENTRY     pHead, 
     PUNICODE_STRING pTargetFaceNameW)
 {
@@ -796,7 +794,7 @@ DeleteFontSubstituteFromList(
         {
             RemoveEntryList(pListEntry);
 
-            /* TODO: delete pListEntry */
+            /* TODO: delete pSubstEntry */
             ret = TRUE;
             break;
         }
@@ -807,10 +805,35 @@ DeleteFontSubstituteFromList(
 }
 
 BOOL FASTCALL
-DeleteFontSubstituteFromRegistry(PUNICODE_STRING pTargetFaceNameW)
+DeleteFontSubstFromRegistry(PUNICODE_STRING pTargetFaceNameW)
 {
-    /* TODO: */
-    return FALSE;
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
+    /* open registry key */
+    InitializeObjectAttributes(&ObjectAttributes, &FontSubstKey,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_WRITE, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwOpenKey failed: 0x%08X\n", Status);
+        return FALSE;   /* failure */
+    }
+
+    /* delete the face name value */
+    /* TODO: delete also "(FaceName),(CharSetNumber)" */
+    Status = ZwDeleteValueKey(KeyHandle, pTargetFaceNameW);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwDeleteValueKey failed: 0x%08X\n", Status);
+    }
+
+    /* close now */
+    ZwClose(KeyHandle);
+
+    return NT_SUCCESS(Status);
 }
 
 static INT FASTCALL
@@ -1026,8 +1049,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     }
 
     /* delete font substitutes */
-    DeleteFontSubstituteFromList(&FontSubstListHead, &Entry->FaceName);
-    DeleteFontSubstituteFromRegistry(&Entry->FaceName);
+    DeleteFontSubstFromList(&FontSubstListHead, &Entry->FaceName);
+    DeleteFontSubstFromRegistry(&Entry->FaceName);
 
     ++FaceCount;
     DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
