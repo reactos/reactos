@@ -159,6 +159,53 @@ USB2_GetOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint)
     return Overhead;
 }
 
+VOID
+NTAPI
+USB2_GetHsOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                   IN PULONG OverheadSS,
+                   IN PULONG OverheadCS)
+{
+    ULONG TransferType;
+    ULONG Direction;
+    ULONG HostDelay;
+
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+    Direction = TtEndpoint->TtEndpointParams.Direction;
+
+    HostDelay = TtEndpoint->Tt->HcExtension->HcDelayTime;
+
+    if (Direction == USBPORT_TRANSFER_DIRECTION_OUT)
+    {
+        if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+        {
+            *OverheadSS = HostDelay + USB2_HS_SS_ISOCHRONOUS_OUT_OVERHEAD;
+            *OverheadCS = 0;
+        }
+        else
+        {
+            *OverheadSS = HostDelay + USB2_HS_SS_INTERRUPT_OUT_OVERHEAD;
+            *OverheadCS = HostDelay + USB2_HS_CS_INTERRUPT_OUT_OVERHEAD;
+        }
+    }
+    else
+    {
+        if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+        {
+            *OverheadSS = HostDelay + USB2_HS_SS_ISOCHRONOUS_IN_OVERHEAD;
+            *OverheadCS = HostDelay + USB2_HS_CS_ISOCHRONOUS_IN_OVERHEAD;
+        }
+        else
+        {
+            *OverheadSS = HostDelay + USB2_HS_SS_INTERRUPT_IN_OVERHEAD;
+            *OverheadCS = HostDelay + USB2_HS_CS_INTERRUPT_IN_OVERHEAD;
+        }
+
+        DPRINT("USB2_GetHsOverhead: *OverheadSS - %X, *OverheadCS - %X\n",
+               *OverheadSS,
+               *OverheadCS);
+    }
+}
+
 ULONG
 NTAPI
 USB2_GetLastIsoTime(IN PUSB2_TT_ENDPOINT TtEndpoint,
