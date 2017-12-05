@@ -118,7 +118,7 @@ TV2_GetDependants(LPWSTR lpServiceName,
 }
 
 VOID
-TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
+TV2_AddDependantsToTree(PDEPENDDATA pDependData,
                         HTREEITEM hParent,
                         LPWSTR lpServiceName)
 {
@@ -138,7 +138,7 @@ TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
             bHasChildren = TV2_HasDependantServices(lpServiceStatus[i].lpServiceName);
 
             /* Add it */
-            AddItemToTreeView(pDlgInfo->hDependsTreeView2,
+            AddItemToTreeView(pDependData->hDependsTreeView2,
                               hParent,
                               lpServiceStatus[i].lpDisplayName,
                               lpServiceStatus[i].lpServiceName,
@@ -158,7 +158,7 @@ TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
             /* Load the 'No dependencies' string */
             AllocAndLoadString(&lpNoDepends, hInstance, IDS_NO_DEPENDS);
 
-            AddItemToTreeView(pDlgInfo->hDependsTreeView2,
+            AddItemToTreeView(pDependData->hDependsTreeView2,
                               NULL,
                               lpNoDepends,
                               NULL,
@@ -168,31 +168,31 @@ TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
             LocalFree(lpNoDepends);
 
             /* Disable the window */
-            EnableWindow(pDlgInfo->hDependsTreeView2, FALSE);
+            EnableWindow(pDependData->hDependsTreeView2, FALSE);
         }
     }
 }
 
 BOOL
-TV2_Initialize(PSERVICEPROPSHEET pDlgInfo,
+TV2_Initialize(PDEPENDDATA pDependData,
                LPWSTR lpServiceName)
 {
     BOOL bRet = FALSE;
 
     /* Associate the imagelist with TV2 */
-    pDlgInfo->hDependsTreeView2 = GetDlgItem(pDlgInfo->hDependsWnd, IDC_DEPEND_TREE2);
-    if (!pDlgInfo->hDependsTreeView2)
+    pDependData->hDependsTreeView2 = GetDlgItem(pDependData->hDependsWnd, IDC_DEPEND_TREE2);
+    if (!pDependData->hDependsTreeView2)
     {
-        ImageList_Destroy(pDlgInfo->hDependsImageList);
-        pDlgInfo->hDependsImageList = NULL;
+        ImageList_Destroy(pDependData->hDependsImageList);
+        pDependData->hDependsImageList = NULL;
         return FALSE;
     }
-    (void)TreeView_SetImageList(pDlgInfo->hDependsTreeView2,
-                                pDlgInfo->hDependsImageList,
+    (void)TreeView_SetImageList(pDependData->hDependsTreeView2,
+                                pDependData->hDependsImageList,
                                 TVSIL_NORMAL);
 
     /* Set the first items in the control */
-    TV2_AddDependantsToTree(pDlgInfo, NULL, lpServiceName);
+    TV2_AddDependantsToTree(pDependData, NULL, lpServiceName);
 
     return bRet;
 }

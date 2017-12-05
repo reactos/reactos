@@ -170,7 +170,8 @@ ShowFailureActions(
 {
     WCHAR szBuffer[256];
     PWSTR startPtr, endPtr;
-    INT i, index, id, length;
+    INT index, id, length;
+    DWORD i;
 
     for (i = 0; i < min(pRecoveryData->pServiceFailure->cActions, 3); i++)
     {
