@@ -773,6 +773,45 @@ WeightFromStyle(const char *style_name)
     return FW_NORMAL;
 }
 
+BOOL FASTCALL
+DeleteFontSubstituteFromList(
+    PLIST_ENTRY     pHead, 
+    PUNICODE_STRING pTargetFaceNameW)
+{
+    PLIST_ENTRY         pListEntry;
+    PFONTSUBST_ENTRY    pSubstEntry;
+    PUNICODE_STRING     pFrom;
+    BOOL                ret = FALSE;
+
+    IntLockFreeType;
+    for (pListEntry = pHead->Flink;
+         pListEntry != pHead;
+         pListEntry = pListEntry->Flink)
+    {
+        pSubstEntry =
+            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+
+        pFrom = &pSubstEntry->FontNames[FONTSUBST_FROM];
+        if (RtlEqualUnicodeString(pFrom, pTargetFaceNameW, TRUE))
+        {
+            RemoveEntryList(pListEntry);
+
+            /* TODO: delete pListEntry */
+            ret = TRUE;
+        }
+    }
+    IntUnLockFreeType;
+
+    return ret;
+}
+
+BOOL FASTCALL
+DeleteFontSubstituteFromRegistry(PUNICODE_STRING pTargetFaceNameW)
+{
+    /* TODO: */
+    return FALSE;
+}
+
 static INT FASTCALL
 IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                           PSHARED_FACE SharedFace, FT_Long FontIndex, INT CharSetIndex)
@@ -984,6 +1023,10 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     {
         FontGDI->CharSet = SYMBOL_CHARSET;
     }
+
+    /* delete font substitutes */
+    DeleteFontSubstituteFromList(&FontSubstListHead, &Entry->FaceName);
+    DeleteFontSubstituteFromRegistry(&Entry->FaceName);
 
     ++FaceCount;
     DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
