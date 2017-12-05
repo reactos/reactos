@@ -461,7 +461,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         {
             if (flags & SHGFI_USEFILEATTRIBUTES)
             {
-                return 1;
+                return TRUE;
             }
             else if (GetFileAttributesW(szFullPath) != INVALID_FILE_ATTRIBUTES)
             {
