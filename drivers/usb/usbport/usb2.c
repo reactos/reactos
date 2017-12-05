@@ -300,10 +300,177 @@ USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
 BOOLEAN
 NTAPI
 USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
-                IN ULONG Frame)
+                IN LONG Frame)
 {
-    DPRINT("USB2_AllocateHS: UNIMPLEMENTED FIXME\n");
-    return FALSE;
+    PUSB2_HC_EXTENSION HcExtension;
+    PUSB2_TT Tt;
+    ULONG TransferType;
+    ULONG Direction;
+    ULONG DataTime;
+    ULONG RemainDataTime;
+    ULONG OverheadCS;
+    ULONG OverheadSS;
+    ULONG ix;
+    USHORT PktSize;
+    UCHAR frame;
+    UCHAR uframe;
+    BOOL Result = TRUE;
+
+    DPRINT("USB2_AllocateHS: TtEndpoint - %p, Frame - %X, TtEndpoint->StartFrame - %X\n",
+           TtEndpoint,
+           Frame,
+           TtEndpoint->StartFrame);
+
+    Tt = TtEndpoint->Tt;
+    HcExtension = Tt->HcExtension;
+
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+    Direction = TtEndpoint->TtEndpointParams.Direction;
+
+    if (Frame == 0)
+    {
+        TtEndpoint->StartMicroframe =
+        TtEndpoint->StartTime / USB2_FS_RAW_BYTES_IN_MICROFRAME - 1;
+
+        DPRINT("USB2_AllocateHS: TtEndpoint->StartMicroframe - %X\n",
+               TtEndpoint->StartMicroframe);
+    }
+
+    USB2_GetHsOverhead(TtEndpoint, &OverheadSS, &OverheadCS);
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        if (Frame == 0)
+        {
+            TtEndpoint->Nums.NumStarts = 1;
+
+            if ((CHAR)TtEndpoint->StartMicroframe < 5)
+            {
+                TtEndpoint->Nums.NumCompletes = 3;
+            }
+            else
+            {
+                TtEndpoint->Nums.NumCompletes = 2;
+            }
+        }
+    }
+    else
+    {
+        if (Direction == USBPORT_TRANSFER_DIRECTION_OUT)
+        {
+            DPRINT("USB2_AllocateHS: ISO UNIMPLEMENTED\n");
+            ASSERT(FALSE);
+        }
+        else
+        {
+            DPRINT("USB2_AllocateHS: ISO UNIMPLEMENTED\n");
+            ASSERT(FALSE);
+        }
+    }
+
+    frame = TtEndpoint->StartFrame + Frame;
+    uframe = TtEndpoint->StartMicroframe;
+
+    if (TtEndpoint->StartMicroframe == 0xFF)
+        USB2_GetPrevMicroFrame(&frame, &uframe);
+
+    for (ix = 0; ix < TtEndpoint->Nums.NumStarts; ix++)
+    {
+        if (!USB2_AllocateCheck(&HcExtension->TimeUsed[frame][uframe],
+                                OverheadSS,
+                                USB2_MAX_MICROFRAME_ALLOCATION))
+        {
+            Result = FALSE;
+        }
+
+        if (Tt->NumStartSplits[frame][uframe] > (USB2_MAX_FS_LS_TRANSACTIONS_IN_UFRAME - 1))
+        {
+            DPRINT1("USB2_AllocateHS: Num Start Splits - %X\n",
+                    Tt->NumStartSplits[frame][uframe] + 1);
+
+            ASSERT(FALSE);
+            Result = FALSE;
+        }
+
+        ++Tt->NumStartSplits[frame][uframe];
+        USB2_IncMicroFrame(&frame, &uframe);
+    }
+
+    frame = TtEndpoint->StartFrame + Frame;
+    uframe = TtEndpoint->StartMicroframe + TtEndpoint->Nums.NumStarts + 1;
+
+    for (ix = 0; ix < TtEndpoint->Nums.NumCompletes; ix++)
+    {
+        if (!USB2_AllocateCheck(&HcExtension->TimeUsed[frame][uframe],
+                                OverheadCS,
+                                USB2_MAX_MICROFRAME_ALLOCATION))
+        {
+            Result = FALSE;
+        }
+
+        USB2_IncMicroFrame(&frame, &uframe);
+    }
+
+    if (Direction == USBPORT_TRANSFER_DIRECTION_OUT)
+    {
+        DPRINT("USB2_AllocateHS: DIRECTION OUT UNIMPLEMENTED\n");
+        ASSERT(FALSE);
+    }
+    else
+    {
+        frame = TtEndpoint->StartFrame + Frame;
+        uframe = TtEndpoint->StartMicroframe + TtEndpoint->Nums.NumStarts + 1;
+
+        for (ix = 0; ix < TtEndpoint->Nums.NumCompletes; ix++)
+        {
+            if (Tt->TimeCS[frame][uframe] < USB2_FS_RAW_BYTES_IN_MICROFRAME)
+            {
+                if (Tt->TimeCS[frame][uframe] < USB2_FS_RAW_BYTES_IN_MICROFRAME)
+                {
+                    RemainDataTime = USB2_FS_RAW_BYTES_IN_MICROFRAME -
+                                     Tt->TimeCS[frame][uframe];
+                }
+                else
+                {
+                    RemainDataTime = 0;
+                }
+
+                PktSize = TtEndpoint->MaxPacketSize;
+
+                if (RemainDataTime >= USB2_AddDataBitStuff(PktSize))
+                {
+                    DataTime = USB2_AddDataBitStuff(PktSize);
+                }
+                else
+                {
+                    DataTime = RemainDataTime;
+                }
+
+                if (!USB2_AllocateCheck(&HcExtension->TimeUsed[frame][uframe],
+                                        DataTime,
+                                        USB2_MAX_MICROFRAME_ALLOCATION))
+                {
+                    Result = FALSE;
+                }
+            }
+
+            PktSize = TtEndpoint->MaxPacketSize;
+
+            if (USB2_AddDataBitStuff(PktSize) < USB2_FS_RAW_BYTES_IN_MICROFRAME)
+            {
+                Tt->TimeCS[frame][uframe] += USB2_AddDataBitStuff(PktSize);
+            }
+            else
+            {
+                Tt->TimeCS[frame][uframe] += USB2_FS_RAW_BYTES_IN_MICROFRAME;
+            }
+
+            USB2_IncMicroFrame(&frame, &uframe);
+        }
+    }
+
+    DPRINT("USB2_AllocateHS: Result - %X\n", Result);
+    return Result;
 }
 
 BOOLEAN
