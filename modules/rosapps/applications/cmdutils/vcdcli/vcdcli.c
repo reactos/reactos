@@ -37,9 +37,11 @@ PrintUsage(int type)
     else if (type == 1)
     {
         _ftprintf(stdout, _T("mount usage:\n"));
-        _ftprintf(stdout, _T("\tmount <drive letter> <path.iso>\n"));
+        _ftprintf(stdout, _T("\tmount <drive letter> <path.iso> [/u] [/j]\n"));
         _ftprintf(stdout, _T("\tMount the ISO image given in <path.iso> on the previously created virtual drive <drive letter>\n"));
         _ftprintf(stdout, _T("\t\tDo not use colon for drive letter\n"));
+        _ftprintf(stdout, _T("\t\tUse /u to make UDF volumes not appear as such\n"));
+        _ftprintf(stdout, _T("\t\tUse /j to make Joliet volumes not appear as such\n"));
     }
     else if (type == 2)
     {
@@ -331,6 +333,7 @@ _tmain(int argc, const TCHAR *argv[])
     }
     else if (_tcscmp(argv[1], _T("mount")) == 0)
     {
+        DWORD i;
         HANDLE hFile;
         WCHAR Letter;
         UNICODE_STRING NtPathName;
@@ -377,7 +380,22 @@ _tmain(int argc, const TCHAR *argv[])
         /* Copy it in the parameter structure */
         _tcsncpy(MountParams.Path, NtPathName.Buffer, 255);
         MountParams.Length = Min(NtPathName.Length, 255 * sizeof(WCHAR));
-        MountParams.Flags = 0; /* FIXME */
+        MountParams.Flags = 0;
+
+        /* Do we have to suppress anything? */
+        for (i = 4; i < argc; ++i)
+        {
+            /* Make UDF uneffective */
+            if (_tcscmp(argv[i], _T("/u")) == 0)
+            {
+                MountParams.Flags |= MOUNT_FLAG_SUPP_UDF;
+            }
+            /* Make Joliet uneffective */
+            else if (_tcscmp(argv[i], _T("/j")) == 0)
+            {
+                MountParams.Flags |= MOUNT_FLAG_SUPP_JOLIET;
+            }
+        }
 
         /* No longer needed */
         RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathName.Buffer);
