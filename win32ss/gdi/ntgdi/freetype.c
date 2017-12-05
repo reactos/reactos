@@ -798,6 +798,7 @@ DeleteFontSubstituteFromList(
 
             /* TODO: delete pListEntry */
             ret = TRUE;
+            break;
         }
     }
     IntUnLockFreeType;
