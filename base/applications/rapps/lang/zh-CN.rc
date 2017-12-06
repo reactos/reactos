@@ -1,5 +1,5 @@
 /* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
-
+/* Imporved by Li Keqing <auroracloud4096@gmail.com> */
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_MAINMENU MENU
@@ -154,13 +154,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\n版本："
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\n可用版本: "
     IDS_AINFO_DESCRIPTION "\n描述："
     IDS_AINFO_SIZE "\n大小："
     IDS_AINFO_URLSITE "\n主页："
     IDS_AINFO_LICENSE "\n协议："
     IDS_AINFO_URLDOWNLOAD "\n下载:"
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\n语言: "
 END
 
 STRINGTABLE
@@ -202,49 +202,49 @@ BEGIN
     IDS_APP_REG_REMOVE "您确定要从注册表删除该程序的数据吗？"
     IDS_INFORMATION "信息"
     IDS_UNABLE_TO_DOWNLOAD "无法下载该软件包 ！找不到网络的地址 ！"
-    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
+    IDS_UNABLE_TO_DOWNLOAD2 "无法下载该软件包！请检查网络连接！"
     IDS_UNABLE_TO_REMOVE "无法从注册表删除该程序的数据！"
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
-    IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
-    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
-    IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
-    IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
-    IDS_SELECT_ALL "Select/Deselect All"
-    IDS_INSTALL_SELECTED "Install Selected"
+    IDS_UNABLE_TO_INSTALL "无法打开安装程序！"
+    IDS_CERT_DOES_NOT_MATCH "SSL 证书验证失败。"
+    IDS_INTEG_CHECK_TITLE "正在验证包完整性..."
+    IDS_INTEG_CHECK_FAIL "这个包没有通过完整性验证，它可能在下载过程中损坏或被人为篡改了。不推荐运行这个程序。"
+    IDS_INTERRUPTED_DOWNLOAD "下载中断。请检查网络连接。"
+    IDS_UNABLE_TO_WRITE "无法写入磁盘。磁盘可能已满。"
+    IDS_SELECT_ALL "全选/全反选"
+    IDS_INSTALL_SELECTED "安装已选中的"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
-    IDS_STATUS_DOWNLOADED "Downloaded"
-    IDS_STATUS_UPDATE_AVAILABLE "Update available"
-    IDS_STATUS_DOWNLOADING "Downloading…"
-    IDS_STATUS_INSTALLING "Installing…"
-    IDS_STATUS_WAITING "Waiting to install…"
-    IDS_STATUS_FINISHED "Finished"
+    IDS_STATUS_INSTALLED "已安装"
+    IDS_STATUS_NOTINSTALLED "未安装"
+    IDS_STATUS_DOWNLOADED "下载"
+    IDS_STATUS_UPDATE_AVAILABLE "可用更新"
+    IDS_STATUS_DOWNLOADING "正在下载…"
+    IDS_STATUS_INSTALLING "正在安装…"
+    IDS_STATUS_WAITING "正在等待安装…"
+    IDS_STATUS_FINISHED "完成"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Open Source"
-    IDS_LICENSE_FREEWARE "Freeware"
-    IDS_LICENSE_TRIAL "Trial/Demo"
+    IDS_LICENSE_OPENSOURCE "开源软件"
+    IDS_LICENSE_FREEWARE "免费软件"
+    IDS_LICENSE_TRIAL "试用版/演示版"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
-    IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "支持您的语言"
+    IDS_LANGUAGE_NO_TRANSLATION "支持其他语言"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "支持英语"
+    IDS_LANGUAGE_SINGLE "但语言"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d 及更多)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d 可用)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database..."
+    IDS_DL_DIALOG_DB_DISP "应用程序数据库"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "正在更新数据库..."
 END

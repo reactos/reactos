@@ -1,0 +1,60 @@
+/* Translated by Li Keqing <auroracloud4096@gmail.com> */
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "键入 “EVENTCREATE /?” 以了解用法。\n"
+    IDS_HELP "\n\
+EVENTCREATE [/S computer [/U [domain\\]user [/P password]]] /ID EventID\n\
+            {[/L logname] | [/SO source]} /T type /C category /D description\n\
+\n\
+描述：\n\
+    该工具是管理员能够创建一个自定义事件于某制定事件日志里。\n\
+\n\
+参数列表：\n\
+    /S  computer          指定要连接的远程计算机。\n\
+\n\
+    /U  [domain\\]user     指定应该通过哪个用户执行命令。\n\
+\n\
+    /P  [password]        指定给定用户的密码。如果省略则提示输入。\n\
+\n\
+    /L  logname           指定要在其中创建事件事件日志。有效的日志是：\n\
+                          Application，System，Security\n\
+                          （最后一项仅为 SYSTEM 账户保留）。\n\
+\n\
+    /SO source            指定为此事件要使用的来源（如果没有指定，\n\
+                          默认来源则为‘eventcreate’）有效来源可以是\n\
+                          任意字符串并应该代表应用程序或者生成事件的组件。\n\
+\n\
+    /T  type              指定要创建的事件类型。有效的类型是：\n\
+                          SUCCESS，ERROR，WARNING，INFORMATION。\n\
+\n\
+    /C  category          指定事件的种类（整数）。\n\
+\n\
+    /ID EventID           指定事件的 ID。必须为介于 0 - 65535 以内的整数。\n\
+\n\
+    /D  description       为新事件指定描述文字。\n\
+\n\
+    /?                    显示此帮助消息。\n\
+"
+    IDS_INVALIDSWITCH "无效选项 - '%s'.\n"
+    IDS_BADSYNTAX_0 "错误的命令行语法。\n"
+    IDS_BADSYNTAX_1 "错误的命令行语法。选项 '%s' 需要一个值。\n"
+    IDS_BADSYNTAX_2 "错误的命令行语法。选项 '%s' 的值不能为空。\n"
+    IDS_BADSYNTAX_3 "错误的命令行语法。值 '%s' 不被选项 '%s' 所接受。\n"
+    IDS_BADSYNTAX_4 "错误的命令行语法。值不能被选项 '%s' 所指定。\n"
+    IDS_BADSYNTAX_5 "错误的命令行语法。选项 '%s' 不允许使用超过 %lu 次。\n"
+    IDS_BADSYNTAX_6 "错误的命令行语法。托管选项 '%s' 暂不可用。\n"
+    // IDS_BADSYNTAX_7 "错误的命令行语法。选项 '%s' 的值超过可允许的范围。\n"
+    IDS_BADSYNTAX_7 "错误的命令行语法。选项 '%s' 的值必须介于 %d - %d 以内。\n"
+
+    IDS_LOG_NOT_FOUND "日志 '%s' 不存在。无法创建事件。\n"
+    IDS_SOURCE_NOCREATE "无法创建新的来源因为没有指定日志。请使用 /L 选项来指定日志。\n"
+    IDS_SOURCE_EXISTS "来源已经存在于日志 '%s' 中，不能重复操作。\n"
+    IDS_SOURCE_NOT_CUSTOM "来源参数被用于识别定制脚本/程序（未被安装的程序）。\n"
+
+    IDS_SUCCESS_1   "操作成功：一个 '%s' 类型的事件已经被创建在日志 '%s' 中。\n"
+    IDS_SUCCESS_2   "操作成功：一个 '%s' 类型的事件已经被创建在来源 '%s' 中。\n"
+    IDS_SUCCESS_3   "操作成功：一个 '%s' 类型的事件已经被创建在日志 '%s' 和来源 '%s' 中。\n"
+    IDS_SWITCH_UNIMPLEMENTED "选项 '%s' 目前不被支持，很抱歉造成您的不便！\n"
+END

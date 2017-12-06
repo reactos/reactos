@@ -4,15 +4,16 @@
  * FILE:       base/applications/magnify/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File for Magnifier
  * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
+ *             Li Keqing <auroracloud4096@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDC_MAGNIFIER MENU
 BEGIN
-    POPUP "档案(&F)"
+    POPUP "文件(&F)"
     BEGIN
-        MENUITEM "结束(&X)", IDM_EXIT
+        MENUITEM "退出(&X)", IDM_EXIT
         MENUITEM "选项(&O)", IDM_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "关于(&A)", IDM_ABOUT
@@ -41,21 +42,21 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "放大镜设定"
 FONT 9, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON "结束", IDOK, 96, 161, 50, 14
+    DEFPUSHBUTTON "退出", IDOK, 96, 161, 50, 14
     PUSHBUTTON "帮助(&H)", IDC_BUTTON_HELP, 38, 161, 50, 14
     LTEXT "放大倍数：(&L)", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "追踪", IDC_STATIC, 7, 25, 139, 59
-    GROUPBOX "展示", IDC_STATIC, 7, 87, 139, 57
-    CONTROL "跟随滑鼠游标(&M)", IDC_FOLLOWMOUSECHECK, "Button",
+    GROUPBOX "跟踪", IDC_STATIC, 7, 25, 139, 59
+    GROUPBOX "显示", IDC_STATIC, 7, 87, 139, 57
+    CONTROL "跟随鼠标指针(&M)", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
     CONTROL "跟随键盘焦点(&K)", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
-    CONTROL "跟随文本编辑(&T)", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+    CONTROL "跟随文本插入点(&T)", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
-    CONTROL "色彩对换(&I)", IDC_INVERTCOLORSCHECK, "Button",
+    CONTROL "反色(&I)", IDC_INVERTCOLORSCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
-    CONTROL "开始时隐藏(&S)", IDC_STARTMINIMIZEDCHECK, "Button",
+    CONTROL "启动时隐藏(&S)", IDC_STARTMINIMIZEDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
     CONTROL "显示放大镜(&O)", IDC_SHOWMAGNIFIERCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
