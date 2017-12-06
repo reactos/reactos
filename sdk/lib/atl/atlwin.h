@@ -575,6 +575,17 @@ public:
         return ::GetDlgItemText(m_hWnd, nID, lpStr, nMaxCount);
     }
 
+#ifdef __ATLSTR_H__
+    UINT GetDlgItemText(int nID, CSimpleString& string)
+    {
+        HWND item = GetDlgItem(nID);
+        int len = ::GetWindowTextLength(item);
+        len = GetDlgItemText(nID, string.GetBuffer(len+1), len+1);
+        string.ReleaseBuffer(len);
+        return len;
+    }
+#endif
+
     BOOL GetDlgItemText(int nID, BSTR& bstrText) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
