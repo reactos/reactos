@@ -781,25 +781,26 @@ DeleteFontSubstFromList(
     PUNICODE_STRING     pFrom;
     BOOL                ret = FALSE;
 
-    IntLockFreeType;
     for (pListEntry = pHead->Flink;
          pListEntry != pHead;
          pListEntry = pListEntry->Flink)
     {
-        pSubstEntry =
-            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
 
         pFrom = &pSubstEntry->FontNames[FONTSUBST_FROM];
         if (RtlEqualUnicodeString(pFrom, pTargetFaceNameW, TRUE))
         {
             RemoveEntryList(pListEntry);
 
-            /* TODO: delete pSubstEntry */
+            /* free pSubstEntry */
+            RtlFreeUnicodeString(&pSubstEntry->FontNames[FONTSUBST_FROM]);
+            RtlFreeUnicodeString(&pSubstEntry->FontNames[FONTSUBST_TO]);
+            ExFreePoolWithTag(pSubstEntry, TAG_FONT);
+
             ret = TRUE;
             break;
         }
     }
-    IntUnLockFreeType;
 
     return ret;
 }
@@ -823,12 +824,14 @@ DeleteFontSubstFromRegistry(PUNICODE_STRING pTargetFaceNameW)
     }
 
     /* delete the face name value */
-    /* TODO: delete also "(FaceName),(CharSetNumber)" */
     Status = ZwDeleteValueKey(KeyHandle, pTargetFaceNameW);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("ZwDeleteValueKey failed: 0x%08X\n", Status);
     }
+
+    /* TODO: delete also "(FaceName),(CharSetNumber)" values
+             by using ZwQueryKey, ZwEnumerateValueKey */
 
     /* close now */
     ZwClose(KeyHandle);
@@ -1049,7 +1052,10 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     }
 
     /* delete old font substitute */
+    IntLockFreeType;
     DeleteFontSubstFromList(&FontSubstListHead, &Entry->FaceName);
+    IntUnLockFreeType;
+
     DeleteFontSubstFromRegistry(&Entry->FaceName);
 
     ++FaceCount;
