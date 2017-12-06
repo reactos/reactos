@@ -4037,25 +4037,23 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             Byte = SYMBOL_CHARSET;
         }
     }
-    if (Byte == DEFAULT_CHARSET)
+
+    if (Byte == DEFAULT_CHARSET && Byte != TM->tmCharSet)
     {
-        if (UserCharSet != TM->tmCharSet && ANSI_CHARSET != TM->tmCharSet)
-        {
-            /* CharSet Penalty 65000 */
-            /* Requested charset does not match the candidate's. */
-            Penalty += 65000;
-        }
+        /* Choose better font for user */
         if (UserCharSet != TM->tmCharSet)
         {
             /* UNDOCUMENTED */
-            Penalty += 100;
-        }
-        if (ANSI_CHARSET != TM->tmCharSet)
-        {
-            /* UNDOCUMENTED */
-            Penalty += 50;
+            Penalty += 20;
+
+            if (ANSI_CHARSET != TM->tmCharSet)
+            {
+                /* UNDOCUMENTED */
+                Penalty += 10;
+            }
         }
     }
+
     if (Byte != DEFAULT_CHARSET && Byte != TM->tmCharSet)
     {
         /* CharSet Penalty 65000 */
