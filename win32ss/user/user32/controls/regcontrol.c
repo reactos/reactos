@@ -10,9 +10,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
-
 DWORD RegisterDefaultClasses = FALSE;
 
 static PFNCLIENT pfnClientA;
