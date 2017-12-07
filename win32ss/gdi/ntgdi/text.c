@@ -527,7 +527,7 @@ NtGdiGetTextFaceW(
             return 0;
         }
         /* Terminate if we copied only part of the font name */
-        if (0 < Count && Count <= fLen)
+        if (Count > 0 && Count <= fLen)
         {
             FaceName[Count - 1] = '\0';
         }
