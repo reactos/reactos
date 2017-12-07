@@ -19,8 +19,6 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
 WCHAR swShell32Name[MAX_PATH];
 
 DWORD NumIconOverlayHandlers = 0;
