@@ -155,7 +155,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT "带给你 ReactOS 的是：", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "带给您 ReactOS 的是：", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -194,7 +194,7 @@ BEGIN
     CONTROL "", 14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "运行(&R):", 14016, 8, 136, 68, 10
     COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
-    LTEXT "注解(&O):", 14018, 8, 154, 68, 10
+    LTEXT "备注(&O):", 14018, 8, 154, 68, 10
     EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "查找目标...(&F)", 14020, 9, 172, 70, 14, ES_LEFT
     PUSHBUTTON "更改图标...(&C)", 14021, 84, 172, 70, 14, ES_LEFT
@@ -203,7 +203,7 @@ END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "扩展的属性"
+CAPTION "高级属性"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
@@ -359,7 +359,7 @@ END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "运行作为"
+CAPTION "运行方式"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "你想要使用来运行这个程序哪一个用户帐户？", -1, 10, 20, 220, 20
@@ -439,7 +439,7 @@ BEGIN
     LTEXT "您可以应用您正在使用此文件夹的\n所有文件夹的视图 （如详细信息或平铺)。", -1, 60, 20, 180, 20
     PUSHBUTTON "应用到所有文件夹(&L)", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "重置所有文件夹(&R)", 14002, 150, 50, 80, 14, WS_TABSTOP
-    LTEXT "高级的设置：", -1, 7, 80, 100, 10
+    LTEXT "高级设置：", -1, 7, 80, 100, 10
     CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
     PUSHBUTTON "还原默认值(&D)", 14004, 177, 215, 80, 14, WS_TABSTOP
 END
@@ -457,7 +457,7 @@ BEGIN
     LTEXT "打开方式:", -1, 12, 140, 40, 10
     //ICON
     LTEXT "应用程序名称", 14005, 100, 140, 40, 10
-    PUSHBUTTON "更换...(&C)", 14006, 180, 140, 50, 14, WS_TABSTOP
+    PUSHBUTTON "更改...(&C)", 14006, 180, 140, 50, 14, WS_TABSTOP
     LTEXT "", 14007, 12, 155, 160, 30
     PUSHBUTTON "高级(&V)", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
@@ -489,7 +489,7 @@ CAPTION "注销 ReactOS"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "确信你想要注销吗?", -1, 35, 16, 146, 8
+    LTEXT "确实要注销吗?", -1, 35, 16, 146, 8
     DEFPUSHBUTTON "注销(&L)", IDOK, 41, 39, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 95, 39, 50, 14
 END
@@ -526,7 +526,7 @@ FONT 9, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "此磁盘或设备包含多个类型的内容。", 1001, 32, 7, 191, 20
-    LTEXT "你想要 ReactOS 做的是什么？", 1002, 32, 31, 188, 8
+    LTEXT "你想要 ReactOS 做什么？", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "确定", IDOK, 96, 186, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 160, 186, 60, 14
@@ -570,7 +570,7 @@ BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
     LTEXT "你想让计算机做什么？", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-    LTEXT "维护您的会话，保持在低功耗数据仍在内存中运行的计算机。当你按下一个键或移动鼠标将唤醒这台计算机。", 8225, 39, 40, 167, 37
+    LTEXT "维护会话，计算机数据仍然保持在内存中。当你按下一个键或移动鼠标将唤醒这台计算机。", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "确定", 1, 7, 82, 60, 14, WS_GROUP
     PUSHBUTTON "取消", IDCANCEL, 75, 82, 60, 14
     PUSHBUTTON "帮助(&H)", IDHELP, 144, 82, 60, 14
@@ -688,7 +688,7 @@ BEGIN
     IDS_PROPERTIES "属性(&P)"
     IDS_CUT "剪切(&U)"
     IDS_RESTORE "还原"
-    IDS_FORMATDRIVE "格式..."
+    IDS_FORMATDRIVE "格式化..."
     IDS_RENAME "重命名"
     IDS_PASTE "贴上"
     IDS_EJECT "弹出"
@@ -702,9 +702,9 @@ BEGIN
     IDS_DELETEMULTIPLE_TEXT "确实要删除这 '%1' 项?"
     IDS_DELETESELECTED_TEXT "确实要删除所选的项目吗?"
     IDS_TRASHITEM_TEXT "你确定你想要发送 '%1' 到回收箱？"
-    IDS_TRASHFOLDER_TEXT "确信你想要将 '%1' 和它的所有内容发送到回收站吗?"
+    IDS_TRASHFOLDER_TEXT "确定你想要将 '%1' 和它的所有内容发送到回收站吗?"
     IDS_TRASHMULTIPLE_TEXT "确实要将这 '%1' 项发送到回收站吗?"
-    IDS_CANTTRASH_TEXT "项目 '%1' 不能发送到回收站。你想要删除它相反吗？"
+    IDS_CANTTRASH_TEXT "项目 '%1' 不能发送到回收站。你想要彻底删除它吗？"
     IDS_OVERWRITEFILE_TEXT "此文件夹已包含名为 '%1' 的文件。\n\n你想要替换它吗？"
     IDS_OVERWRITEFILE_CAPTION "确认文件覆盖"
     IDS_OVERWRITEFOLDER_TEXT "此文件夹已包含一个名为 '%1' 文件夹。\n\n如果目标文件夹中的文件具有相同的名称作为\n所选文件夹中的文件，他们将被替换。 你仍然想要移动或\n复制该文件夹吗？"
@@ -733,8 +733,8 @@ BEGIN
     IDS_PERSONAL "我的文档"
     IDS_FAVORITES "收藏夹"
     IDS_STARTUP "开始菜单\\程序\\启动"
-    IDS_RECENT "最近"
-    IDS_SENDTO "为必填项"
+    IDS_RECENT "我最近的文档"
+    IDS_SENDTO "发送到"
     IDS_STARTMENU "开始菜单"
     IDS_MYMUSIC "我的音乐"
     IDS_MYVIDEO "我的视频"
@@ -742,10 +742,10 @@ BEGIN
     IDS_NETHOOD "网上邻居"
     IDS_TEMPLATES "模板"
     IDS_APPDATA "应用程序数据"
-    IDS_PRINTHOOD "PrintHood"
+    IDS_PRINTHOOD "打印文件夹"
     IDS_LOCAL_APPDATA "本地设置\\应用程序数据"
     IDS_INTERNET_CACHE "本地设置\\互联网临时文件"
-    IDS_COOKIES "小型文字檔案"
+    IDS_COOKIES "小型文字档案"
     IDS_HISTORY "本地设置\\历史记录"
     IDS_PROGRAM_FILES "程序文件"
     IDS_MYPICTURES "我的图片"
@@ -808,7 +808,7 @@ BEGIN
     IDS_ICO_FILE "图标"
     IDS_INI_FILE "配置设置"
     IDS_LNK_FILE "快捷方式"
-    IDS_PIF_FILE "NTVDM 程序信息文件"
+    IDS_PIF_FILE "NT VDM 程序信息文件"
     IDS_SCR_FILE "屏幕保护程序"
     IDS_SYS_FILE "系统文件"
     IDS_VXD_FILE "虚拟设备驱动程序"
@@ -816,7 +816,7 @@ BEGIN
 
     IDS_OPEN_VERB "打开"
     IDS_EXPLORE_VERB "浏览"
-    IDS_RUNAS_VERB "运行作为..."
+    IDS_RUNAS_VERB "运行方式..."
     IDS_EDIT_VERB "编辑"
     IDS_FIND_VERB "查找"
     IDS_PRINT_VERB "打印"
@@ -831,14 +831,14 @@ BEGIN
 
     IDS_SHLEXEC_NOASSOC "没有 ReactOS 程序配置为打开这种类型的文件。"
 
-    IDS_FILE_DETAILS "'%S' 扩展的详细信息"
+    IDS_FILE_DETAILS "'%S' 扩展名的详细信息"
     IDS_FILE_DETAILSADV "文件扩展名为 '%s' 的类型 '%s'。若要更改会影响所有的 '%s' 文件的设置，请单击高级。"
     IDS_FILE_TYPES "文件类型"
-    IDS_COLUMN_EXTENSION "扩展"
+    IDS_COLUMN_EXTENSION "扩展名"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "%s 文件"
 
     IDS_BYTES_FORMAT "字节"
     IDS_UNKNOWN_APP "未知应用程序"
@@ -848,23 +848,22 @@ BEGIN
     IDS_OBJECTS "%d 个对象"
     IDS_OBJECTS_SELECTED "%d 个选定的对象"
 
-    IDS_ADVANCED_FOLDER "Files and Folders"
-    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
-    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
-    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
-    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
-    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
-    IDS_ADVANCED_HIDDEN "Hidden files and folders"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
-    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
-    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
-    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
-    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
-    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
-    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
+    IDS_ADVANCED_FOLDER "文件和文件夹"
+    IDS_ADVANCED_NET_CRAWLER "自动搜索网络文件夹和打印机"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "在文件夹提示中显示文件大小信息"
+    IDS_ADVANCED_FRIENDLY_TREE "在资源管理器文件夹列表中显示简单文件夹查看"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "显示系统文件夹的内容"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "在地址栏中显示完整路径"
+    IDS_ADVANCED_SHOW_FULL_PATH "在标题栏中显示完整路径"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "不缓存缩略图"
+    IDS_ADVANCED_HIDDEN "隐藏的文件和文件夹"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "不显示隐藏的文件和文件夹"
+    IDS_ADVANCED_SHOW_HIDDEN "显示隐藏的文件和文件夹"
+    IDS_ADVANCED_HIDE_FILE_EXT "隐藏已知文件类型的拓展名"
+    IDS_ADVANCED_SUPER_HIDDEN "隐藏受保护的操作系统文件 (推荐)"
+    IDS_ADVANCED_DESKTOP_PROCESS "在单独的进程中打开文件夹窗口"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "记住每个文件夹的视图设置"
+    IDS_ADVANCED_PERSIST_BROWSERS "在登录时还原上一个文件夹窗口"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "在我的电脑中显示控制面板"
+    IDS_ADVANCED_SHOW_INFO_TIP "鼠标指向文件夹和桌面项时显示提示信息"
 END
